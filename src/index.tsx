@@ -2,6 +2,8 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
+import Game from './Game';
+import Camera from './Camera';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -11,3 +13,8 @@ root.render(
     <App />
   </React.StrictMode>
 );
+
+window.addEventListener("load", () => {
+   Camera.setup();
+   Game.startGame();
+});

@@ -2,6 +2,28 @@ export function randFloat(min: number, max: number): number {
    return Math.random() * (max - min) + min;
 }
 
+export function randItem<T>(arr: Array<T>): T {
+   return arr[Math.floor(Math.random() * arr.length)];
+}
+
+export function chooseRandomItems<T>(arr: Array<T>, numItems: number): Array<T> {
+   if (numItems > arr.length) {
+      throw new Error(`Tried to find ${numItems} items in an array only ${arr.length} items long!`);
+   }
+
+   const remainingArr = arr.slice();
+
+   const chosenItems = new Array<T>();
+   for (let i = 0; i < numItems; i++) {
+      const idx = Math.floor(Math.random() * remainingArr.length);
+      chosenItems.push(remainingArr[idx]);
+
+      remainingArr.splice(idx, 1);
+   }
+
+   return chosenItems;
+}
+
 export class Point {
    public x: number;
    public y: number;

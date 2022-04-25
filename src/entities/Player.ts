@@ -5,6 +5,7 @@ import { Point, randFloat } from "../utils";
 import Board from "../Board";
 import CameraFollowComponent from "../entity-components/CameraFollowComponent";
 import RenderComponent, { RenderSettings } from "../entity-components/RenderComponent";
+import HitboxComponent from "../entity-components/HitboxComponent";
 
 class Player extends Entity {
    constructor() {
@@ -22,6 +23,7 @@ class Player extends Entity {
 
       super([
          new TransformComponent(Player.getStartingPosition(), PLAYER_SIZE, PLAYER_SIZE),
+         new HitboxComponent(),
          new RenderComponent(RENDER_SETTINGS),
          new PlayerControllerComponent(),
          new CameraFollowComponent()
@@ -36,10 +38,6 @@ class Player extends Entity {
       const y = Board.dimensions * Board.tileSize * randFloat(PADDING / 100, 1 - PADDING / 100);
 
       return new Point(x, y);
-   }
-
-   private static render(ctx: CanvasRenderingContext2D): void {
-
    }
 }
 

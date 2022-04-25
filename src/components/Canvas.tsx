@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import Board from "../Board";
 import Camera from "../Camera";
+import SETTINGS from "../settings";
 import { getTileInfo } from "../tiles";
 
 let canvas: HTMLCanvasElement;
@@ -31,7 +32,9 @@ const setupCanvas = (): void => {
 
 export function render(): void {
    // Clear canvas for redrawing
-   ctx.clearRect(0, 0, canvas.width, canvas.height);
+   // ctx.clearRect(0, 0, canvas.width, canvas.height);
+   ctx.fillStyle = SETTINGS.backgroundColour;
+   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
    // Draw tiles
    for (let y = 0; y < Board.dimensions; y++) {

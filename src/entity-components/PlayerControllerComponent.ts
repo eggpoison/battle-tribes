@@ -9,7 +9,8 @@ class PlayerControllerComponent extends Component {
    private isMovingLeft: boolean = false;
 
    /** The number of cells that the player traverses in a second */
-   private readonly moveSpeed = 5;
+   // private readonly moveSpeed = 5;
+   private readonly moveSpeed = 20;
 
    public tick(): void {
       const angle = this.getMoveAngle();

@@ -1,12 +1,18 @@
 import { getCanvasContext } from "./components/Canvas";
+import Berry from "./entities/Berry";
 import Player from "./entities/Player";
 import Entity from "./Entity";
 import RenderComponent from "./entity-components/RenderComponent";
+import SpawnComponent from "./entity-components/SpawnComponent";
 import TransformComponent from "./entity-components/TransformComponent";
 import { generatePerlinNoise } from "./perlin-noise";
+import SETTINGS from "./settings";
 import { getTileType, TileType } from "./tiles";
+import { chooseRandomItems } from "./utils";
 
 export type Chunk = Array<Entity>;
+
+export type TileCoordinates = [number, number];
 
 abstract class Board {
    /** The width and height of the board in chunks */
@@ -36,7 +42,7 @@ abstract class Board {
       }
 
       // Creates the controllable player character
-      this.createPlayer();
+      this.spawnPlayer();
    }
 
    private static generateTiles(): Array<Array<TileType>> {
@@ -77,9 +83,23 @@ abstract class Board {
    }
 
    public static tick(): void {
-      const ctx = getCanvasContext();
+      // Calculate berry spawn rate
+      const ununitisedBerrySpawnRate = SETTINGS.fruitSpawnRate / SETTINGS.tps;
+      const berrySpawnRate = Math.floor(ununitisedBerrySpawnRate) + (Math.random() < ununitisedBerrySpawnRate % 1 ? 1 : 0);
+
+      // Spawn berries
+      const berrySpawnTileCandidates = SpawnComponent.getSpawnableTiles("berry", Berry.spawnableTileTypes);
+      const berrySpawnTileCoordinates = chooseRandomItems(berrySpawnTileCandidates, berrySpawnRate);
+
+      for (const tileCoordinates of berrySpawnTileCoordinates) {
+         const position = TransformComponent.getRandomPositionInTile(tileCoordinates);
+
+         const berry = new Berry(position);
+         this.addEntity(berry);
+      }
 
       // Tick entities
+      const ctx = getCanvasContext();
       for (let y = 0; y < Board.size; y++) {
          for (let x = 0; x < Board.size; x++) {
             const chunk = this.getChunk(x, y);
@@ -97,7 +117,7 @@ abstract class Board {
       }
    }
 
-   private static createPlayer(): void {
+   private static spawnPlayer(): void {
       const player = new Player();
       this.addEntity(player);
    }

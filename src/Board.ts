@@ -95,7 +95,7 @@ abstract class Board {
          const position = TransformComponent.getRandomPositionInTile(tileCoordinates);
 
          const berry = new Berry(position);
-         this.addEntity(berry);
+         this.addEntityToChunk(berry);
       }
 
       // Tick entities
@@ -108,10 +108,11 @@ abstract class Board {
                // Render the entity
                // If rendered after the entity is ticked, then its position will not match where the camera thinks it is
                if (entity.hasComponent(RenderComponent)) {
-                  entity.getComponent(RenderComponent).renderEntity(ctx);
+                  entity.getComponent(RenderComponent)!.renderEntity(ctx);
                }
 
                entity.tick();
+               this.upateEntityChunk(entity);
             }
          }
       }
@@ -119,16 +120,44 @@ abstract class Board {
 
    private static spawnPlayer(): void {
       const player = new Player();
-      this.addEntity(player);
+      this.addEntityToChunk(player);
    }
 
-   public static addEntity(entity: Entity): void {
+   private static getEntityChunk(entity: Entity): Chunk {
       // Get the chunk
-      const entityPositionComponent = entity.getComponent(TransformComponent);
-      const entityChunk = entityPositionComponent.getChunk();
+      const entityPositionComponent = entity.getComponent(TransformComponent)!;
+      const chunk = entityPositionComponent.getChunk();
+      return chunk;
+   }
+
+   public static addEntityToChunk(entity: Entity): void {
+      const chunk = this.getEntityChunk(entity);
 
       // Add the entity to the chunk
-      entityChunk.push(entity);
+      chunk.push(entity);
+
+      // Update the entity's previous chunk
+      entity.previousChunk = chunk;
+   }
+
+   public static removeEntity(entity: Entity): void {
+      // Remove the entity from its chunk
+      const chunk = entity.previousChunk!;
+      chunk.splice(chunk.indexOf(entity), 1);
+   }
+
+   public static upateEntityChunk(entity: Entity): void {
+      const chunk = this.getEntityChunk(entity);
+
+      // If the chunk is different from the entity's previous chunk
+      if (chunk !== entity.previousChunk) {
+         // Remove it from its previous chunk
+         entity.previousChunk!.splice(entity.previousChunk!.indexOf(entity), 1);
+         // Add it to the new chunk
+         chunk.push(entity);
+
+         entity.previousChunk = chunk;
+      }
    }
 }
 

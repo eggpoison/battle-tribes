@@ -17,7 +17,7 @@ abstract class Camera {
 
    public static updateCameraPosition(): void {
       if (typeof this.followedEntity !== "undefined") {
-         const followedEntityPoistion = this.followedEntity.getComponent(TransformComponent).position;
+         const followedEntityPoistion = this.followedEntity.getComponent(TransformComponent)!.position;
          this.position = new Point(followedEntityPoistion.x, followedEntityPoistion.y);
       }
    }

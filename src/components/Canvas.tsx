@@ -66,6 +66,9 @@ export function render(): void {
       ctx.lineTo(Camera.getXPositionInCamera(Board.dimensions * Board.tileSize), Camera.getYPositionInCamera(y * Board.tileSize));
       ctx.stroke();
    }
+
+   // Enable for a fun time
+   // ctx.rotate(1/SETTINGS.tps);
 }
 
 const Canvas = () => {

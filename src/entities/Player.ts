@@ -4,29 +4,84 @@ import PlayerControllerComponent from "../entity-components/PlayerControllerComp
 import { Point, randFloat } from "../utils";
 import Board from "../Board";
 import CameraFollowComponent from "../entity-components/CameraFollowComponent";
-import RenderComponent, { RenderSettings } from "../entity-components/RenderComponent";
-import HitboxComponent from "../entity-components/HitboxComponent";
+import RenderComponent, { CircleRenderClass, RenderClasses } from "../entity-components/RenderComponent";
+import HitboxComponent, { CircleHitboxInfo } from "../entity-components/HitboxComponent";
+import AttackComponent, { CircleAttack } from "../entity-components/AttackComponent";
 
 class Player extends Entity {
    constructor() {
-      /** Number of cells that the player takes up */
-      const PLAYER_SIZE = 1;
+      const PLAYER_DIAMETER = 1;
 
-      const RENDER_SETTINGS: RenderSettings = {
+      const PLAYER_HITBOX: CircleHitboxInfo = {
          type: "circle",
-         fillColour: "red",
-         border: {
-            width: 4,
-            colour: "#000"
-         }
+         radius: PLAYER_DIAMETER / 2
       };
+      
+      const HAND_SIZE = 0.45;
+      const HAND_ANGLES = 40;
+
+      const PLAYER_COLOUR = "#ffcc17";
+      const HAND_COLOUR = "#cc9f00";
+
+      const BORDER_COLOUR = "#000";
+
+      const RENDER_CLASSES: RenderClasses = [
+         new CircleRenderClass({
+            type: "circle",
+            fillColour: PLAYER_COLOUR,
+            size: {
+               radius: PLAYER_DIAMETER / 2
+            },
+            border: {
+               width: 5,
+               colour: BORDER_COLOUR
+            },
+            zIndex: 1
+         }),
+         new CircleRenderClass({
+            type: "circle",
+            fillColour: HAND_COLOUR,
+            size: {
+               radius: HAND_SIZE / 2
+            },
+            border: {
+               width: 3,
+               colour: BORDER_COLOUR
+            },
+            offset: RenderComponent.getOffset(PLAYER_DIAMETER / 2, HAND_ANGLES),
+            zIndex: 0
+         }),
+         new CircleRenderClass({
+            type: "circle",
+            fillColour: HAND_COLOUR,
+            size: {
+               radius: HAND_SIZE / 2
+            },
+            border: {
+               width: 3,
+               colour: BORDER_COLOUR
+            },
+            offset: RenderComponent.getOffset(PLAYER_DIAMETER / 2, -HAND_ANGLES),
+            zIndex: 0
+         })
+      ];
+
+      const BASE_ATTACK = new CircleAttack({
+         radius: 0.5,
+         getPosition: (): Point => {
+            return this.getComponent(TransformComponent)!.position;
+         },
+         damage: 5,
+         duration: 0.2
+      });
 
       super([
-         new TransformComponent(Player.getStartingPosition(), PLAYER_SIZE, PLAYER_SIZE),
-         new HitboxComponent(),
-         new RenderComponent(RENDER_SETTINGS),
+         new TransformComponent(Player.getStartingPosition()),
+         new HitboxComponent(PLAYER_HITBOX),
+         new RenderComponent(RENDER_CLASSES),
          new PlayerControllerComponent(),
-         new CameraFollowComponent()
+         new CameraFollowComponent(),
+         new AttackComponent(BASE_ATTACK)
       ]);
    }
 

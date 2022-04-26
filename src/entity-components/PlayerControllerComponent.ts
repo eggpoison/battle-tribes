@@ -1,5 +1,6 @@
 import Component from "../Component";
 import { Vector } from "../utils";
+import AttackComponent from "./AttackComponent";
 import TransformComponent from "./TransformComponent";
 
 class PlayerControllerComponent extends Component {
@@ -17,7 +18,13 @@ class PlayerControllerComponent extends Component {
       const velocity = new Vector(angle !== null ? this.moveSpeed : 0, angle || 0);
 
       const entity = this.getEntity();
-      entity.getComponent(TransformComponent).velocity = velocity;
+      const transformComponent = entity.getComponent(TransformComponent)!;
+      transformComponent.velocity = velocity;
+
+      // Update the entity's rotation to match the move direction
+      if (angle !== null) {
+         transformComponent.rotation = angle;
+      }
    }
 
    private getMoveAngle(): number | null {
@@ -52,8 +59,15 @@ class PlayerControllerComponent extends Component {
    }
 
    public onLoad(): void {
+      document.addEventListener("mousedown", () => this.startAttack());
+
       document.addEventListener("keydown", e => this.checkKey(e, true));
       document.addEventListener("keyup", e => this.checkKey(e, false));
+   }
+
+   private startAttack(): void {
+      const attackComponent = this.getEntity().getComponent(AttackComponent)!;
+      attackComponent.startAttack();
    }
 
    private checkKey(e: KeyboardEvent, isKeyDown: boolean): void {

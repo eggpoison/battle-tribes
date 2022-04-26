@@ -33,13 +33,12 @@ const draw = (): void => {
    }
 }
 
-export function drawMinimap(): void {
-   const checkCanvasInterval = setInterval(() => {
-      if (typeof canvas !== "undefined") {
-         draw();
-         clearInterval(checkCanvasInterval);
-      }
-   }, 50);
+export function drawMinimapAttempt(): boolean {
+   if (typeof canvas !== "undefined") {
+      draw();
+      return true;
+   }
+   return false;
 }
 
 const MinimapCanvas = () => {

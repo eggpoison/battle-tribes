@@ -5,7 +5,6 @@ import App from './App';
 import Game from './Game';
 import Camera from './Camera';
 import Board from './Board';
-import { drawMinimap } from './components/MinimapCanvas';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -20,6 +19,4 @@ window.addEventListener("load", () => {
    Camera.setup();
    Board.setup();
    Game.startGame();
-
-   drawMinimap(); 
 });

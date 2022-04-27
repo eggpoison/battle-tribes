@@ -33,7 +33,7 @@ class TransformComponent extends Component {
       this.position = this.position.add(positionAdd);
    }
 
-   public getChunk(): Chunk {
+   public getChunk(): Chunk | null {
       const chunkX = Math.floor(this.position.x / (Board.tileSize * Board.size));
       const chunkY = Math.floor(this.position.y / (Board.tileSize * Board.size));
 
@@ -61,7 +61,8 @@ class TransformComponent extends Component {
       for (let y = minChunkY; y <= maxChunkY; y++) {
          for (let x = minChunkX; x <= maxChunkX; x++) {
             const chunk = Board.getChunk(x, y);
-
+            if (chunk === null) continue;
+            
             for (const entity of chunk) {
                const hitboxComponent = entity.getComponent(HitboxComponent);
                if (hitboxComponent !== null) {

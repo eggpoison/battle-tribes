@@ -2,6 +2,7 @@ import { getCanvasContext } from "./components/Canvas";
 import Berry from "./entities/Berry";
 import Player from "./entities/Player";
 import Entity from "./Entity";
+import HitboxComponent from "./entity-components/HitboxComponent";
 import RenderComponent from "./entity-components/RenderComponent";
 import SpawnComponent from "./entity-components/SpawnComponent";
 import TransformComponent from "./entity-components/TransformComponent";
@@ -78,7 +79,10 @@ abstract class Board {
       return this.tiles[x][y];
    }
 
-   public static getChunk(x: number, y: number): Chunk {
+   public static getChunk(x: number, y: number): Chunk | null {
+      // Don't return chunks which are out of bounds
+      if (x < 0 || x >= this.size || y < 0 || y >= this.size) return null;
+
       return this.chunks[x][y];
    }
 
@@ -95,14 +99,14 @@ abstract class Board {
          const position = TransformComponent.getRandomPositionInTile(tileCoordinates);
 
          const berry = new Berry(position);
-         this.addEntityToChunk(berry);
+         this.addEntity(berry);
       }
 
       // Tick entities
       const ctx = getCanvasContext();
       for (let y = 0; y < Board.size; y++) {
          for (let x = 0; x < Board.size; x++) {
-            const chunk = this.getChunk(x, y);
+            const chunk = this.getChunk(x, y)!;
 
             for (const entity of chunk) {
                // Render the entity
@@ -113,6 +117,16 @@ abstract class Board {
 
                entity.tick();
                this.upateEntityChunk(entity);
+
+               const hitboxComponent = entity.getComponent(HitboxComponent);
+               if (hitboxComponent !== null && typeof entity.onCollision !== "undefined") {
+                  const collidingEntities = hitboxComponent.isInCollision();
+                  if (collidingEntities !== null) {
+                     for (const collidingEntity of collidingEntities) {
+                        entity.onCollision(collidingEntity);
+                     }
+                  }
+               }
             }
          }
       }
@@ -120,18 +134,21 @@ abstract class Board {
 
    private static spawnPlayer(): void {
       const player = new Player();
-      this.addEntityToChunk(player);
+      this.addEntity(player);
    }
 
    private static getEntityChunk(entity: Entity): Chunk {
       // Get the chunk
       const entityPositionComponent = entity.getComponent(TransformComponent)!;
-      const chunk = entityPositionComponent.getChunk();
+      const chunk = entityPositionComponent.getChunk()!;
       return chunk;
    }
 
-   public static addEntityToChunk(entity: Entity): void {
+   public static addEntity(entity: Entity): void {
       const chunk = this.getEntityChunk(entity);
+
+      // If the entity's spawn position is outside the board, don't add it
+      if (chunk === null) return;
 
       // Add the entity to the chunk
       chunk.push(entity);

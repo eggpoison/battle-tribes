@@ -10,6 +10,7 @@ interface BaseAttackInfo {
     getPosition(): Point;
     readonly damage: number;
     readonly duration: number;
+    readonly attackingEntity: Entity;
 }
 abstract class BaseAttack implements BaseAttackInfo {
     public abstract readonly type: string;
@@ -18,11 +19,13 @@ abstract class BaseAttack implements BaseAttackInfo {
     
     public readonly damage: number;
     public readonly duration: number;
+    public readonly attackingEntity: Entity;
 
     constructor(attackInfo: BaseAttackInfo) {
         this.getPosition = attackInfo.getPosition;
         this.damage = attackInfo.damage;
         this.duration = attackInfo.duration;
+        this.attackingEntity = attackInfo.attackingEntity;
     }
 
     public abstract getAttackedEntities(): Array<Entity>;
@@ -46,11 +49,14 @@ export class CircleAttack extends BaseAttack implements CircleAttackInfo {
         const entitiesToAttack = this.getAttackedEntities();
 
         for (const entity of entitiesToAttack) {
+            // Don't attack yourself
+            if (entity === this.attackingEntity) continue;
+
             // If the entity can be attacked
             const healthComponent = entity.getComponent(HealthComponent);
             if (healthComponent !== null) {
                 // Hurt it
-                healthComponent.hurt(this.damage);
+                healthComponent.hurt(this.damage, this.attackingEntity);
             }
         }
     }
@@ -63,30 +69,14 @@ export class CircleAttack extends BaseAttack implements CircleAttackInfo {
 export type Attack = CircleAttack;
 
 class AttackComponent extends Component {
-    private readonly attack: Attack;
+    private readonly attacks: { [key: string]: Attack } = {};
 
-    constructor(attack: Attack) {
-        super();
-
-        this.attack = attack;
+    public startAttack(id: string): void {
+        this.attacks[id].startAttack();
     }
 
-    public startAttack(): void {
-        this.attack.startAttack();
-        // switch (this.attack.type) {
-        //     case "circle": {
-        //         // Circle attack
-        //         const attackedEntities = TransformComponent.getNearbyEntities(this.attack.getPosition(), this.attack.radius);
-
-        //         for (const entity of attackedEntities) {
-        //             // If the entity can be attacked
-        //             const healthComponent = entity.getComponent(HealthComponent);
-        //             if (healthComponent !== null) {
-        //                 healthComponent.hurt(this.attack.damage);
-        //             }
-        //         }
-        //     }
-        // }
+    public addAttack(id: string, attack: Attack): void {
+        this.attacks[id] = attack;
     }
 }
 

@@ -224,14 +224,14 @@ class RenderComponent extends Component {
                const width = renderClass.size.width;
                const height = renderClass.size.height;
 
-               const cameraXWithSize = Camera.getXPositionInCamera(position.x - width * Board.tileSize / 2 + renderClass.offset![0] * Board.tileSize);
-               const cameraYWithSize = Camera.getYPositionInCamera(position.y - height * Board.tileSize / 2 + renderClass.offset![1] * Board.tileSize);
+               const cameraXWithSize = Camera.getXPositionInCamera(position.x - width/2 * Board.tileSize + renderClass.offset![0] * Board.tileSize);
+               const cameraYWithSize = Camera.getYPositionInCamera(position.y - height/2 * Board.tileSize + renderClass.offset![1] * Board.tileSize);
 
                // Move the canvas origin to the center of the image
-               ctx.translate(cameraXWithSize, cameraYWithSize);
+               ctx.translate(cameraX, cameraY);
                ctx.rotate(entityRotation / 180 * Math.PI);
                // Undo the translation
-               ctx.translate(-cameraXWithSize, -cameraYWithSize);
+               ctx.translate(-cameraX, -cameraY);
 
                ctx.drawImage(this.images[i], cameraXWithSize, cameraYWithSize, width * Board.tileSize, height * Board.tileSize);
 

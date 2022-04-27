@@ -1,4 +1,5 @@
 import Component from "../Component";
+import { toggleDevtoolsVisibility } from "../components/Devtools";
 import { Vector } from "../utils";
 import AttackComponent from "./AttackComponent";
 import TransformComponent from "./TransformComponent";
@@ -59,21 +60,39 @@ class PlayerControllerComponent extends Component {
    }
 
    public onLoad(): void {
-      document.addEventListener("mousedown", () => this.startAttack());
+      document.addEventListener("mousedown", e => this.validateInput(e) ? this.startAttack() : null);
 
-      document.addEventListener("keydown", e => this.checkKey(e, true));
-      document.addEventListener("keyup", e => this.checkKey(e, false));
+      document.addEventListener("keydown", e => this.validateInput(e) ? this.checkKey(e, true) : null);
+      document.addEventListener("keyup", e => this.validateInput(e) ? this.checkKey(e, false) : null);
+   }
+
+   private validateInput(e: Event): boolean {
+      if (e instanceof MouseEvent) {
+         // Return false if the player clicked something other than the game canvas.
+         if ((e.target as HTMLElement).id !== "canvas") {
+            e.preventDefault();
+            return false;
+         }
+      }
+
+      return true;
    }
 
    private startAttack(): void {
       const attackComponent = this.getEntity().getComponent(AttackComponent)!;
-      attackComponent.startAttack();
+      attackComponent.startAttack("baseAttack");
    }
 
    private checkKey(e: KeyboardEvent, isKeyDown: boolean): void {
       const key = e.key;
 
       switch (key) {
+         // Devtools
+         case "`":
+            toggleDevtoolsVisibility(isKeyDown);
+            break;
+
+         // Movement
          case "w":
          case "ArrowUp":
             this.isMovingUp = isKeyDown;

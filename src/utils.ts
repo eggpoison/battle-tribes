@@ -2,6 +2,16 @@ export function randFloat(min: number, max: number): number {
    return Math.random() * (max - min) + min;
 }
 
+/**
+ * Returns a random integer inclusively.
+ * @param min The minimum value of the random number.
+ * @param max The maximum value of the random number.
+ * @returns A random integer between the min and max values.
+ */
+export function randInt(min: number, max: number): number {
+   return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
 export function randItem<T>(arr: Array<T>): T {
    return arr[Math.floor(Math.random() * arr.length)];
 }
@@ -61,6 +71,10 @@ export class Point {
       const angle = this.angleBetween(targetPoint);
       return new Vector(distance, angle);
    }
+}
+
+export function getRandomAngle() {
+   return Math.random() * 360;
 }
 
 export class Vector {

@@ -7,6 +7,8 @@ import CameraFollowComponent from "../entity-components/CameraFollowComponent";
 import RenderComponent, { CircleRenderClass, RenderClasses } from "../entity-components/RenderComponent";
 import HitboxComponent, { CircleHitboxInfo } from "../entity-components/HitboxComponent";
 import AttackComponent, { CircleAttack } from "../entity-components/AttackComponent";
+import Resource from "./Resource";
+import InventoryComponent from "../entity-components/InventoryComponent";
 
 class Player extends Entity {
    constructor() {
@@ -66,23 +68,35 @@ class Player extends Entity {
          })
       ];
 
-      const BASE_ATTACK = new CircleAttack({
-         radius: 0.5,
-         getPosition: (): Point => {
-            return this.getComponent(TransformComponent)!.position;
-         },
-         damage: 5,
-         duration: 0.2
-      });
-
       super([
          new TransformComponent(Player.getStartingPosition()),
          new HitboxComponent(PLAYER_HITBOX),
          new RenderComponent(RENDER_CLASSES),
          new PlayerControllerComponent(),
          new CameraFollowComponent(),
-         new AttackComponent(BASE_ATTACK)
+         new AttackComponent(),
+         new InventoryComponent()
       ]);
+
+      /** The distance away from the player (in tiles) that the attack is performed */
+      const ATTACK_OFFSET = 0.5;
+
+      const attackComponent = this.getComponent(AttackComponent)!;
+
+      attackComponent.addAttack("baseAttack", new CircleAttack({
+         radius: 1.5,
+         getPosition: (): Point => {
+            const rotation = this.getComponent(TransformComponent)!.rotation;
+
+            const offset = RenderComponent.getOffset(PLAYER_DIAMETER / 2 + ATTACK_OFFSET, rotation);
+            const offsetPoint = new Point(offset[0], offset[1]);
+
+            return this.getComponent(TransformComponent)!.position.add(offsetPoint);
+         },
+         damage: 5,
+         duration: 0.2,
+         attackingEntity: this
+      }));
    }
 
    private static getStartingPosition(): Point {
@@ -93,6 +107,14 @@ class Player extends Entity {
       const y = Board.dimensions * Board.tileSize * randFloat(PADDING / 100, 1 - PADDING / 100);
 
       return new Point(x, y);
+   }
+
+   public onCollision(collidingEntity: Entity): void {
+      if (collidingEntity instanceof Resource) {
+         // Pick up the resource
+         const inventoryComponent = this.getComponent(InventoryComponent)!;
+         inventoryComponent.pickupResource(collidingEntity);
+      }
    }
 }
 

@@ -1,5 +1,6 @@
 import Board from "../Board";
 import Component from "../Component";
+import Entity from "../Entity";
 import TransformComponent from "./TransformComponent";
 
 interface BaseHitboxInfo {
@@ -26,6 +27,33 @@ class HitboxComponent extends Component {
       super();
 
       this.hitboxInfo = hitboxInfo;
+   }
+
+   public isInCollision(): Array<Entity> | null {
+      const entity = this.getEntity();
+      const position = entity.getComponent(TransformComponent)!.position;
+
+      let radius: number;
+      if (this.hitboxInfo.type === "circle") {
+         radius = this.hitboxInfo.radius;
+      } else {
+         radius = Math.max(this.hitboxInfo.width, this.hitboxInfo.height);
+      }
+
+      let collidingEntities = TransformComponent.getNearbyEntities(position, radius * Board.tileSize);
+
+      // Remove the entity
+      for (let i = 0; i < collidingEntities.length; i++) {
+         if (collidingEntities[i] === entity) {
+            collidingEntities.splice(i, 1);
+            break;
+         }
+      }
+
+      if (collidingEntities.length > 0) {
+         return collidingEntities;
+      }
+      return null;
    }
 
    public willCollideWithWall(): boolean {

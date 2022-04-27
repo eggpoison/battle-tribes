@@ -23,6 +23,10 @@ abstract class Entity {
       }
    }
 
+   public onDie?(causeOfDeath: Entity | null): void;
+
+   public onCollision?(entity: Entity): void;
+
    // TODO: Figure out what the hell "constr: { new(...args: any[]): C }" means and why it works.
    // Yoinked from https://itnext.io/entity-component-system-in-action-with-typescript-f498ca82a08e
    public getComponent<C extends Component>(constr: { new(...args: any[]): C }): C | null {

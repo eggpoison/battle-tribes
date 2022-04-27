@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import Board from "../Board";
 import Camera from "../Camera";
+import OPTIONS from "../options";
 import SETTINGS from "../settings";
 import { getTileInfo } from "../tiles";
 
@@ -49,11 +50,24 @@ export function render(): void {
    }
 
    // Draw lines between tiles
-   ctx.lineWidth = 2;
-   ctx.strokeStyle = "rgba(0, 0, 0, 0.5)";
+
+   const DEFAULT_BORDER_COLOUR = "rgba(0, 0, 0, 0.5)";
+   const CHUNK_BORDER_COLOUR = "red";
+
+   const updateStrokeStyle = (lineIndex: number): void => {
+      if (OPTIONS.showChunkBorders && lineIndex % Board.chunkSize === 0) {
+         ctx.lineWidth = 3;
+         ctx.strokeStyle = CHUNK_BORDER_COLOUR;
+      } else {
+         ctx.lineWidth = 2;
+         ctx.strokeStyle = DEFAULT_BORDER_COLOUR;
+      }
+   }
 
    // Vertical
    for (let x = 0; x <= Board.dimensions; x++) {
+      updateStrokeStyle(x);
+
       ctx.beginPath();
       ctx.moveTo(Camera.getXPositionInCamera(x * Board.tileSize), Camera.getYPositionInCamera(0));
       ctx.lineTo(Camera.getXPositionInCamera(x * Board.tileSize), Camera.getYPositionInCamera(Board.dimensions * Board.tileSize));
@@ -61,6 +75,8 @@ export function render(): void {
    }
    // Horizontal
    for (let y = 0; y <= Board.dimensions; y++) {
+      updateStrokeStyle(y);
+
       ctx.beginPath();
       ctx.moveTo(Camera.getXPositionInCamera(0), Camera.getYPositionInCamera(y * Board.tileSize));
       ctx.lineTo(Camera.getXPositionInCamera(Board.dimensions * Board.tileSize), Camera.getYPositionInCamera(y * Board.tileSize));

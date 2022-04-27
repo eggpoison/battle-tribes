@@ -1,10 +1,12 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import './css/index.css';
 import App from './App';
 import Game from './Game';
 import Camera from './Camera';
 import Board from './Board';
+
+import './css/index.css';
+import "./css/devtools.css";
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement

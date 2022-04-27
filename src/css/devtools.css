@@ -1,0 +1,10 @@
+#devtools {
+    --margin: 20px;
+    color: #fff;
+    background-color: rgba(0, 0, 0, 0.5);
+    position: absolute;
+    top: var(--margin);
+    left: var(--margin);
+    z-index: 1;
+    user-select: none;
+}

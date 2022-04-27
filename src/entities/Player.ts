@@ -9,8 +9,11 @@ import HitboxComponent, { CircleHitboxInfo } from "../entity-components/HitboxCo
 import AttackComponent, { CircleAttack } from "../entity-components/AttackComponent";
 import Resource from "./Resource";
 import InventoryComponent from "../entity-components/InventoryComponent";
+import { InventoryViewerManager } from "../components/InventoryViewer";
 
 class Player extends Entity {
+   public static readonly DEFAULT_INVENTORY_SLOT_COUNT = 2;
+
    constructor() {
       const PLAYER_DIAMETER = 1;
 
@@ -68,6 +71,8 @@ class Player extends Entity {
          })
       ];
 
+      InventoryViewerManager.setSlotCount(Player.DEFAULT_INVENTORY_SLOT_COUNT);
+
       super([
          new TransformComponent(Player.getStartingPosition()),
          new HitboxComponent(PLAYER_HITBOX),
@@ -75,7 +80,7 @@ class Player extends Entity {
          new PlayerControllerComponent(),
          new CameraFollowComponent(),
          new AttackComponent(),
-         new InventoryComponent()
+         new InventoryComponent(Player.DEFAULT_INVENTORY_SLOT_COUNT)
       ]);
 
       /** The distance away from the player (in tiles) that the attack is performed */
@@ -93,7 +98,7 @@ class Player extends Entity {
 
             return this.getComponent(TransformComponent)!.position.add(offsetPoint);
          },
-         damage: 5,
+         damage: 2,
          duration: 0.2,
          attackingEntity: this
       }));
@@ -101,7 +106,7 @@ class Player extends Entity {
 
    private static getStartingPosition(): Point {
       /** % of the board in each direction that the player can't spawn in */
-      const PADDING = 5;
+      const PADDING = 20;
 
       const x = Board.dimensions * Board.tileSize * randFloat(PADDING / 100, 1 - PADDING / 100);
       const y = Board.dimensions * Board.tileSize * randFloat(PADDING / 100, 1 - PADDING / 100);
@@ -114,6 +119,8 @@ class Player extends Entity {
          // Pick up the resource
          const inventoryComponent = this.getComponent(InventoryComponent)!;
          inventoryComponent.pickupResource(collidingEntity);
+
+         InventoryViewerManager.update(inventoryComponent.getItemSlots());
       }
    }
 }

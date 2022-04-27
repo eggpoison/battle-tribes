@@ -101,3 +101,11 @@ export class Vector {
 export function lerp(start: number, end: number, amount: number): number {
    return start * (1 - amount) + end * amount;
 }
+
+/**
+ * Checks if the game is in development mode.
+ * @returns If the game is in development mode.
+ */
+export function isDev(): boolean {
+   return !process.env.NODE_ENV || process.env.NODE_ENV === "development";
+}

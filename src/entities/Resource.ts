@@ -2,7 +2,7 @@ import Entity from "../Entity";
 import HitboxComponent, { CircleHitboxInfo } from "../entity-components/HitboxComponent";
 import RenderComponent, { ImageRenderClass, RenderClasses } from "../entity-components/RenderComponent";
 import TransformComponent from "../entity-components/TransformComponent";
-import Item from "../Item";
+import Item from "../items/Item";
 import { getRandomAngle, Point } from "../utils";
 
 class Resource extends Entity {
@@ -32,7 +32,7 @@ class Resource extends Entity {
             new RenderComponent(renderClasses),
             new HitboxComponent(HITBOX),
         ]);
-        
+
         this.item = item;
     }
 }

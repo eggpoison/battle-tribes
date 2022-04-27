@@ -1,0 +1,37 @@
+#inventory-viewer {
+    --slot-size: 4rem;
+    --slot-count: 1;
+    position: absolute;
+    left: 50%;
+    bottom: 1rem;
+    transform: translateX(-50%);
+    user-select: none;
+    display: flex;
+}
+#inventory-viewer .slot {
+    --border-size: 3px;
+    width: calc(var(--slot-size) - var(--border-size) * 2);
+    height: calc(var(--slot-size) - var(--border-size) * 2);
+    background-color: rgba(179, 110, 0, 0.5);
+    border: var(--border-size) solid rgb(123, 66, 0);
+    margin: 3px;
+    position: relative;
+}
+#inventory-viewer .slot img {
+    --size-multiplier: 0.8;
+    width: calc(var(--slot-size) * var(--size-multiplier));
+    height: calc(var(--slot-size) * var(--size-multiplier));
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+#inventory-viewer .slot .item-count {
+    color: #fff;
+    font-weight: bold;
+    font-size: 1.2rem;
+    --margin: 0.5rem;
+    position: absolute;
+    right: var(--margin);
+    bottom: var(--margin);
+}

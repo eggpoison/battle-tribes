@@ -1,8 +1,28 @@
-import { Chunk } from "./Board";
+import Board, { Chunk } from "./Board";
 import Component from "./Component";
+
+export enum EventType {
+   deathByEntity
+}
+
+type EventsObject = { [key in EventType]: Array<() => void> };
+
+const eventTypeKeys = Object.keys(EventType).filter((_, i, arr) => i <= arr.length / 2);
+const getEventsObject = (): EventsObject => {
+   const eventsObject: Partial<EventsObject> = {};
+
+   for (const key of eventTypeKeys) {
+      const type = EventType[key as keyof typeof EventType];
+      eventsObject[type] = new Array<() => void>();
+   }
+
+   return eventsObject as EventsObject;
+}
 
 abstract class Entity {
    private components: Array<Component>;
+
+   private events: EventsObject = getEventsObject();
 
    public previousChunk?: Chunk;
 
@@ -23,8 +43,15 @@ abstract class Entity {
       }
    }
 
-   public onDie?(causeOfDeath: Entity | null): void;
+   public onDie(causeOfDeath: Entity | null): void {
+      // deathByEntity events
+      if (causeOfDeath !== null) {
+         for (const func of this.events[EventType.deathByEntity]) func();
+      }
 
+      Board.removeEntity(this);
+   }
+      
    public onCollision?(entity: Entity): void;
 
    // TODO: Figure out what the hell "constr: { new(...args: any[]): C }" means and why it works.
@@ -46,6 +73,10 @@ abstract class Entity {
          }
       }
       return false;
+   }
+
+   public createEvent(type: EventType, func: () => void): void {
+      this.events[type].push(func);
    }
 }
 

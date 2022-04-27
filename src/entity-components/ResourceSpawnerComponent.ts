@@ -1,18 +1,30 @@
 import Board from "../Board";
 import Component from "../Component";
 import Resource from "../entities/Resource";
-import Item from "../Item";
-import { getRandomAngle, Point, Vector } from "../utils";
+import { EventType } from "../Entity";
+import ITEMS, { ItemName } from "../items";
+import { getRandomAngle, Point, randInt, Vector } from "../utils";
 import TransformComponent from "./TransformComponent";
 
 class ResourceSpawnComponent extends Component {
-    public spawnResource(item: Item, amount: number = 1): void {
+    public spawnResource(itemName: ItemName, amount: number = 1): void {
+        const item = ITEMS[itemName];
+
         for (let i = 0; i < amount; i++) {
             const position = this.getSpawnPosition();
             
             const resource = new Resource(item, position);
             Board.addEntity(resource);
         }
+    }
+
+    public addResource(itemName: ItemName, amount: number | [number, number], eventType: EventType): void {
+        const entity = this.getEntity();
+
+        entity.createEvent(eventType, () => {
+            const spawnAmount = typeof amount === "number" ? amount : randInt(amount[0], amount[1]);
+            this.spawnResource(itemName, spawnAmount);
+        });
     }
 
     /** Gets a random position around the entity */

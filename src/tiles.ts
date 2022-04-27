@@ -2,7 +2,7 @@ export enum TileType {
    grass,
    rainforest,
    desert,
-   tundra
+   snow
 }
 
 interface TileInfo {
@@ -22,14 +22,13 @@ const TILE_INFO_MAP = new Map<TileType, TileInfo>([
       minTemperature: 0.7,
       maxHumidity: 0.3
    }],
-   [TileType.tundra, {
-      colour: "#98e5ed",
+   [TileType.snow, {
+      colour: "#fff",
       maxTemperature: 0.5,
       maxHumidity: 0.3
    }],
    [TileType.rainforest, {
       colour: "#038a0c",
-      minTemperature: 0.5,
       minHumidity: 0.7
    }],
    [TileType.grass, {

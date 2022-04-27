@@ -5,20 +5,21 @@ import Game from './Game';
 import Camera from './Camera';
 import Board from './Board';
 
-import './css/index.css';
+import "./css/index.css";
 import "./css/devtools.css";
+import "./css/inventory-viewer.css";
 
 const root = ReactDOM.createRoot(
-  document.getElementById('root') as HTMLElement
+    document.getElementById('root') as HTMLElement
 );
 root.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
+    <React.StrictMode>
+        <App />
+    </React.StrictMode>
 );
 
 window.addEventListener("load", () => {
-   Camera.setup();
-   Board.setup();
-   Game.startGame();
+    Camera.setup();
+    Board.setup();
+    Game.startGame();
 });

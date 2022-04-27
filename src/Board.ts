@@ -1,3 +1,4 @@
+import { generateBoard } from "./board-generation";
 import { getCanvasContext } from "./components/Canvas";
 import Berry from "./entities/Berry";
 import Player from "./entities/Player";
@@ -6,9 +7,8 @@ import HitboxComponent from "./entity-components/HitboxComponent";
 import RenderComponent from "./entity-components/RenderComponent";
 import SpawnComponent from "./entity-components/SpawnComponent";
 import TransformComponent from "./entity-components/TransformComponent";
-import { generatePerlinNoise } from "./perlin-noise";
 import SETTINGS from "./settings";
-import { getTileType, TileType } from "./tiles";
+import { TileType } from "./tiles";
 import { chooseRandomItems } from "./utils";
 
 export type Chunk = Array<Entity>;
@@ -31,7 +31,7 @@ abstract class Board {
    private static tiles: Array<Array<TileType>>;
 
    public static setup(): void {
-      this.tiles = this.generateTiles();
+      this.tiles = generateBoard(this.dimensions);
 
       // Initialise the chunks array
       this.chunks = new Array<Array<Chunk>>(this.size);
@@ -44,35 +44,6 @@ abstract class Board {
 
       // Creates the controllable player character
       this.spawnPlayer();
-   }
-
-   private static generateTiles(): Array<Array<TileType>> {
-      const HEIGHT_SCALE = 5;
-      const TEMPERATURE_SCALE = 35;
-      const HUMIDITY_SCALE = 10;
-
-      // Generate the noise
-      const heightMap = generatePerlinNoise(this.dimensions, this.dimensions, HEIGHT_SCALE);
-      const temperatureMap = generatePerlinNoise(this.dimensions, this.dimensions, TEMPERATURE_SCALE);
-      const humidityMap = generatePerlinNoise(this.dimensions, this.dimensions, HUMIDITY_SCALE);
-
-      // Initialise the tiles array
-      const tiles = new Array<Array<TileType>>(this.dimensions);
-      for (let x = 0; x < this.dimensions; x++) {
-         tiles[x] = new Array<TileType>(this.dimensions);
-
-         // Fill the tile array using the noise
-         for (let y = 0; y < this.dimensions; y++) {
-            const height = heightMap[x][y];
-            const temperature = temperatureMap[x][y];
-            const humidity = humidityMap[x][y];
-
-            const tileType = getTileType(height, temperature, humidity);
-            tiles[x][y] = tileType;
-         }
-      }
-
-      return tiles;
    }
 
    public static getTile(x: number, y: number): TileType {

@@ -1,6 +1,6 @@
 import Component from "../Component";
 import { toggleDevtoolsVisibility } from "../components/Devtools";
-import { Vector } from "../utils";
+import { isDev, Vector } from "../utils";
 import AttackComponent from "./AttackComponent";
 import TransformComponent from "./TransformComponent";
 
@@ -89,7 +89,7 @@ class PlayerControllerComponent extends Component {
       switch (key) {
          // Devtools
          case "`":
-            toggleDevtoolsVisibility(isKeyDown);
+            if (isKeyDown && isDev()) toggleDevtoolsVisibility();
             break;
 
          // Movement

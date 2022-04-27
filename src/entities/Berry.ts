@@ -1,12 +1,12 @@
-import Entity from "../Entity";
+import Entity, { EventType } from "../Entity";
 import HealthComponent from "../entity-components/HealthComponent";
 import HitboxComponent, { CircleHitboxInfo } from "../entity-components/HitboxComponent";
 import RenderComponent, { ImageRenderClass, RenderClasses } from "../entity-components/RenderComponent";
 import ResourceSpawnComponent from "../entity-components/ResourceSpawnerComponent";
 import TransformComponent from "../entity-components/TransformComponent";
-import ITEMS, { ItemName } from "../items";
+import { ItemName } from "../items";
 import { TileType } from "../tiles";
-import { Point, randFloat, randInt } from "../utils";
+import { Point, randFloat } from "../utils";
 
 class Berry extends Entity {
    public static spawnableTileTypes = [
@@ -46,16 +46,8 @@ class Berry extends Entity {
          new HealthComponent(BERRY_HEALTH, undefined, undefined, undefined, LIFESPAN),
          new ResourceSpawnComponent()
       ]);
-   }
 
-   public onDie(causeOfDeath: Entity | null): void {
-      // Don't spawn items if the berry died of natural causes
-      if (causeOfDeath === null) return;
-
-      const item = ITEMS[ItemName.berry];
-      
-      const spawnComponent = this.getComponent(ResourceSpawnComponent)!;
-      spawnComponent.spawnResource(item, randInt(1, 2));
+      this.getComponent(ResourceSpawnComponent)!.addResource(ItemName.berry, [1, 2], EventType.deathByEntity);
    }
 }
 

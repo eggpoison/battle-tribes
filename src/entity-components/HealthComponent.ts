@@ -1,4 +1,3 @@
-import Board from "../Board";
 import Component from "../Component";
 import Entity from "../Entity";
 import SETTINGS from "../settings";
@@ -58,8 +57,6 @@ class HealthComponent extends Component {
         if (typeof entity.onDie !== "undefined") {
             entity.onDie(causeOfDeath);
         }
-
-        Board.removeEntity(entity);
     }
 }
 

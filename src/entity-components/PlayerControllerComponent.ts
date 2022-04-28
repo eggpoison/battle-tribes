@@ -4,6 +4,24 @@ import { isDev, Vector } from "../utils";
 import AttackComponent from "./AttackComponent";
 import TransformComponent from "./TransformComponent";
 
+const keyListeners = new Array<(key: string) => void>();
+
+const pressedKeys = new Array<string>();
+
+const addPressedKey = (key: string): void => {
+   if (pressedKeys.includes(key)) return;
+   pressedKeys.push(key);
+
+   for (const func of keyListeners) func(key);
+}
+const removePressedKey = (key: string): void => {
+   pressedKeys.splice(pressedKeys.indexOf(key), 1);
+}
+
+export function keyIsPressed(key: string): boolean {
+   return pressedKeys.includes(key);
+}
+
 class PlayerControllerComponent extends Component {
    private isMovingUp: boolean = false;
    private isMovingRight: boolean = false;
@@ -83,8 +101,13 @@ class PlayerControllerComponent extends Component {
       attackComponent.startAttack("baseAttack");
    }
 
+   public static createKeyEvent(func: (key: string) => void): void {
+      keyListeners.push(func);
+   }
+
    private checkKey(e: KeyboardEvent, isKeyDown: boolean): void {
       const key = e.key;
+      isKeyDown ? addPressedKey(key) : removePressedKey(key);
 
       switch (key) {
          // Devtools

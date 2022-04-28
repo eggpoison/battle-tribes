@@ -21,6 +21,8 @@ export interface CircleHitboxInfo extends BaseHitboxInfo {
 type HitboxInfo = CircleHitboxInfo | RectangleHitboxInfo;
 
 class HitboxComponent extends Component {
+   public readonly entitiesInCollision: Array<Entity> = [];
+
    public readonly hitboxInfo: HitboxInfo;
 
    constructor(hitboxInfo: HitboxInfo) {
@@ -29,7 +31,7 @@ class HitboxComponent extends Component {
       this.hitboxInfo = hitboxInfo;
    }
 
-   public isInCollision(): Array<Entity> | null {
+   public getCollisions(): Array<Entity> | null {
       const entity = this.getEntity();
       const position = entity.getComponent(TransformComponent)!.position;
 

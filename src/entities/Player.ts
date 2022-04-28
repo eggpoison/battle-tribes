@@ -1,20 +1,32 @@
 import Entity from "../Entity";
 import TransformComponent from "../entity-components/TransformComponent";
 import PlayerControllerComponent from "../entity-components/PlayerControllerComponent";
-import { Point, randFloat } from "../utils";
-import Board from "../Board";
+import { getRandomAngle, Point, Vector } from "../utils";
 import CameraFollowComponent from "../entity-components/CameraFollowComponent";
 import RenderComponent, { CircleRenderClass, RenderClasses } from "../entity-components/RenderComponent";
 import HitboxComponent, { CircleHitboxInfo } from "../entity-components/HitboxComponent";
 import AttackComponent, { CircleAttack } from "../entity-components/AttackComponent";
 import Resource from "./Resource";
 import InventoryComponent from "../entity-components/InventoryComponent";
-import { InventoryViewerManager } from "../components/InventoryViewer";
+import TribeStash from "./TribeStash";
+import Tribe from "../Tribe";
+import Board from "../Board";
+import { hideMessageDisplay, setMessageDisplay } from "../components/MessageDisplay";
+import InventoryViewerManager from "../components/InventoryViewerManager";
+import { toggleTribeStashViewerVisibility } from "../components/TribeStashViewer";
 
 class Player extends Entity {
+   public static instance: Player;
+   public static tribe: Tribe;
+
    public static readonly DEFAULT_INVENTORY_SLOT_COUNT = 2;
 
-   constructor() {
+   constructor(tribe: Tribe) {
+      /** How far away the player spawns from their stash */
+      const OFFSET = 2;
+      const offsetPoint = new Vector(OFFSET * Board.tileSize, getRandomAngle()).convertToPoint();
+      const spawnPosition = tribe.position.add(offsetPoint);
+      
       const PLAYER_DIAMETER = 1;
 
       const PLAYER_HITBOX: CircleHitboxInfo = {
@@ -71,10 +83,8 @@ class Player extends Entity {
          })
       ];
 
-      InventoryViewerManager.setSlotCount(Player.DEFAULT_INVENTORY_SLOT_COUNT);
-
       super([
-         new TransformComponent(Player.getStartingPosition()),
+         new TransformComponent(spawnPosition),
          new HitboxComponent(PLAYER_HITBOX),
          new RenderComponent(RENDER_CLASSES),
          new PlayerControllerComponent(),
@@ -82,6 +92,9 @@ class Player extends Entity {
          new AttackComponent(),
          new InventoryComponent(Player.DEFAULT_INVENTORY_SLOT_COUNT)
       ]);
+
+      Player.tribe = tribe;
+      Player.instance = this;
 
       /** The distance away from the player (in tiles) that the attack is performed */
       const ATTACK_OFFSET = 0.5;
@@ -102,25 +115,44 @@ class Player extends Entity {
          duration: 0.2,
          attackingEntity: this
       }));
+
+      PlayerControllerComponent.createKeyEvent((key: string) => this.onKeyPress(key));
    }
 
-   private static getStartingPosition(): Point {
-      /** % of the board in each direction that the player can't spawn in */
-      const PADDING = 20;
-
-      const x = Board.dimensions * Board.tileSize * randFloat(PADDING / 100, 1 - PADDING / 100);
-      const y = Board.dimensions * Board.tileSize * randFloat(PADDING / 100, 1 - PADDING / 100);
-
-      return new Point(x, y);
-   }
-
-   public onCollision(collidingEntity: Entity): void {
+   protected onCollision(collidingEntity: Entity): void {
       if (collidingEntity instanceof Resource) {
          // Pick up the resource
          const inventoryComponent = this.getComponent(InventoryComponent)!;
          inventoryComponent.pickupResource(collidingEntity);
 
-         InventoryViewerManager.update(inventoryComponent.getItemSlots());
+         // Update the player inventory viewer
+         const inventory = inventoryComponent.getItemSlots();
+         InventoryViewerManager.getInstance("playerInventory").setInventory(inventory);
+      } else if (collidingEntity instanceof TribeStash) {
+         // Do nothing if it belongs to a different tribe.
+         if (Player.tribe !== collidingEntity.tribe) return;
+
+         setMessageDisplay(TribeStash.OPEN_MESSAGE);
+      }
+   }
+
+   protected onLeaveCollision(collidingEntity: Entity): void {
+      if (collidingEntity instanceof TribeStash) {
+         hideMessageDisplay();
+      }
+   }
+
+   private onKeyPress(key: string): void {
+      if (key === " ") {
+         const collidingEntities = this.getCollidingEntities();
+
+         for (const entity of collidingEntities) {
+            if (entity instanceof TribeStash) {
+               // Open tribe stash viewer
+               toggleTribeStashViewerVisibility();
+               break;
+            }
+         }
       }
    }
 }

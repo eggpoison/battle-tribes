@@ -8,6 +8,8 @@ import Board from './Board';
 import "./css/index.css";
 import "./css/devtools.css";
 import "./css/inventory-viewer.css";
+import "./css/message-display.css";
+import "./css/tribe-stash-viewer.css";
 
 const root = ReactDOM.createRoot(
     document.getElementById('root') as HTMLElement

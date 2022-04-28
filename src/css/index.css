@@ -7,6 +7,10 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+:root {
+   --slot-size: 4rem;
+}
+
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
@@ -24,4 +28,38 @@ code {
    border-radius: 5px;
    position: absolute;
    z-index: 1;
+}
+
+.inventory {
+   display: flex;
+   flex-wrap: wrap;
+}
+.slot {
+   --border-size: 3px;
+   width: calc(var(--slot-size) - var(--border-size) * 2);
+   height: calc(var(--slot-size) - var(--border-size) * 2);
+   background-color: rgba(179, 110, 0, 0.5);
+   border: var(--border-size) solid rgb(123, 66, 0);
+   margin: 3px;
+   position: relative;
+}
+.slot img {
+   --size-multiplier: 0.8;
+   width: calc(var(--slot-size) * var(--size-multiplier));
+   height: calc(var(--slot-size) * var(--size-multiplier));
+   position: absolute;
+   top: 50%;
+   left: 50%;
+   transform: translate(-50%, -50%);
+   user-select: none;
+}
+.slot .item-count {
+   color: #fff;
+   font-weight: bold;
+   font-size: 1.2rem;
+   --margin: 0.5rem;
+   position: absolute;
+   right: var(--margin);
+   bottom: var(--margin);
+   user-select: none;
 }

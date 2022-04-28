@@ -3,12 +3,12 @@ import { getCanvasContext } from "./components/Canvas";
 import Berry from "./entities/Berry";
 import Player from "./entities/Player";
 import Entity from "./Entity";
-import HitboxComponent from "./entity-components/HitboxComponent";
 import RenderComponent from "./entity-components/RenderComponent";
 import SpawnComponent from "./entity-components/SpawnComponent";
 import TransformComponent from "./entity-components/TransformComponent";
 import SETTINGS from "./settings";
 import { TileType } from "./tiles";
+import Tribe from "./Tribe";
 import { chooseRandomItems } from "./utils";
 
 export type Chunk = Array<Entity>;
@@ -88,23 +88,16 @@ abstract class Board {
 
                entity.tick();
                this.upateEntityChunk(entity);
-
-               const hitboxComponent = entity.getComponent(HitboxComponent);
-               if (hitboxComponent !== null && typeof entity.onCollision !== "undefined") {
-                  const collidingEntities = hitboxComponent.isInCollision();
-                  if (collidingEntities !== null) {
-                     for (const collidingEntity of collidingEntities) {
-                        entity.onCollision(collidingEntity);
-                     }
-                  }
-               }
             }
          }
       }
    }
 
    private static spawnPlayer(): void {
-      const player = new Player();
+      const spawnPosition = Tribe.getPlayerTribeSpawnPosition();
+      const playerTribe = new Tribe(spawnPosition);
+
+      const player = new Player(playerTribe);
       this.addEntity(player);
    }
 

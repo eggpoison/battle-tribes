@@ -7,39 +7,41 @@ import { getRandomAngle, Point, randInt, Vector } from "../utils";
 import TransformComponent from "./TransformComponent";
 
 class ResourceSpawnComponent extends Component {
-    public spawnResource(itemName: ItemName, amount: number = 1): void {
-        const item = ITEMS[itemName];
+   public spawnResource(itemName: ItemName, amount: number = 1): void {
+      if (amount < 1) return;
 
-        for (let i = 0; i < amount; i++) {
-            const position = this.getSpawnPosition();
-            
-            const resource = new Resource(item, position);
-            Board.addEntity(resource);
-        }
-    }
+      const item = ITEMS[itemName];
 
-    public addResource(itemName: ItemName, amount: number | [number, number], eventType: EventType): void {
-        const entity = this.getEntity();
+      for (let i = 0; i < amount; i++) {
+         const position = this.getSpawnPosition();
+         
+         const resource = new Resource(item, position);
+         Board.addEntity(resource);
+      }
+   }
 
-        entity.createEvent(eventType, () => {
-            const spawnAmount = typeof amount === "number" ? amount : randInt(amount[0], amount[1]);
-            this.spawnResource(itemName, spawnAmount);
-        });
-    }
+   public addResource(itemName: ItemName, amount: number | [number, number], eventType: EventType): void {
+      const entity = this.getEntity();
 
-    /** Gets a random position around the entity */
-    private getSpawnPosition(): Point {
-        const entity = this.getEntity();
-        const entityPosition = entity.getComponent(TransformComponent)!.position;
+      entity.createEvent(eventType, () => {
+         const spawnAmount = typeof amount === "number" ? amount : randInt(amount[0], amount[1]);
+         this.spawnResource(itemName, spawnAmount);
+      });
+   }
 
-        const OFFSET_RANGE = 0.5;
+   /** Gets a random position around the entity */
+   private getSpawnPosition(): Point {
+      const entity = this.getEntity();
+      const entityPosition = entity.getComponent(TransformComponent)!.position;
 
-        const offsetVector = new Vector(OFFSET_RANGE * Board.tileSize, getRandomAngle());
-        const offset = offsetVector.convertToPoint();
+      const OFFSET_RANGE = 0.5;
 
-        const position = entityPosition.add(offset);
-        return position;
-    }
+      const offsetVector = new Vector(OFFSET_RANGE * Board.tileSize, getRandomAngle());
+      const offset = offsetVector.convertToPoint();
+
+      const position = entityPosition.add(offset);
+      return position;
+   }
 }
 
 export default ResourceSpawnComponent;

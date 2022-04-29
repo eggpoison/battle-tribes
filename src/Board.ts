@@ -1,15 +1,16 @@
 import { generateBoard } from "./board-generation";
 import { getCanvasContext } from "./components/Canvas";
+import { updateDevtools } from "./components/Devtools";
 import Berry from "./entities/Berry";
+import Cow from "./entities/Cow";
 import Player from "./entities/Player";
 import Entity from "./Entity";
 import RenderComponent from "./entity-components/RenderComponent";
-import SpawnComponent from "./entity-components/SpawnComponent";
 import TransformComponent from "./entity-components/TransformComponent";
 import SETTINGS from "./settings";
 import { TileType } from "./tiles";
 import Tribe from "./Tribe";
-import { chooseRandomItems } from "./utils";
+import { Point } from "./utils";
 
 export type Chunk = Array<Entity>;
 
@@ -63,15 +64,21 @@ abstract class Board {
       const berrySpawnRate = Math.floor(ununitisedBerrySpawnRate) + (Math.random() < ununitisedBerrySpawnRate % 1 ? 1 : 0);
 
       // Spawn berries
-      const berrySpawnTileCandidates = SpawnComponent.getSpawnableTiles("berry", Berry.spawnableTileTypes);
-      const berrySpawnTileCoordinates = chooseRandomItems(berrySpawnTileCandidates, berrySpawnRate);
-
-      for (const tileCoordinates of berrySpawnTileCoordinates) {
-         const position = TransformComponent.getRandomPositionInTile(tileCoordinates);
-
-         const berry = new Berry(position);
+      for (let i = 0; i < berrySpawnRate; i++) {
+         const berry = new Berry();
          this.addEntity(berry);
       }
+      // Calculate berry spawn rate
+      const ununitisedCowSpawnRate = Cow.SPAWN_RATE / SETTINGS.tps;
+      const cowSpawnRate = Math.floor(ununitisedCowSpawnRate) + (Math.random() < ununitisedCowSpawnRate % 1 ? 1 : 0);
+
+      // Spawn berries
+      for (let i = 0; i < cowSpawnRate; i++) {
+         const cow = new Cow();
+         this.addEntity(cow);
+      }
+
+      let entityCount = 0;
 
       // Tick entities
       const ctx = getCanvasContext();
@@ -80,6 +87,8 @@ abstract class Board {
             const chunk = this.getChunk(x, y)!;
 
             for (const entity of chunk) {
+               entityCount++;
+               
                // Render the entity
                // If rendered after the entity is ticked, then its position will not match where the camera thinks it is
                if (entity.hasComponent(RenderComponent)) {
@@ -91,6 +100,10 @@ abstract class Board {
             }
          }
       }
+      
+      updateDevtools({
+         entityCount: entityCount
+      });
    }
 
    private static spawnPlayer(): void {
@@ -139,6 +152,13 @@ abstract class Board {
 
          entity.previousChunk = chunk;
       }
+   }
+
+   public static getRandomPositionInTile(tileCoordinates: TileCoordinates): Point {
+      const x = tileCoordinates[0] * Board.tileSize + Board.tileSize * Math.random();
+      const y = tileCoordinates[1] * Board.tileSize + Board.tileSize * Math.random();
+
+      return new Point(x, y);
    }
 }
 

@@ -7,7 +7,7 @@ interface BaseHitboxInfo {
    readonly type: "rectangle" | "circle";
 }
 
-interface RectangleHitboxInfo extends BaseHitboxInfo {
+export interface RectangleHitboxInfo extends BaseHitboxInfo {
    readonly type: "rectangle";
    readonly width: number;
    readonly height: number;

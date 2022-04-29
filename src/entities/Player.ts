@@ -3,7 +3,7 @@ import TransformComponent from "../entity-components/TransformComponent";
 import PlayerControllerComponent from "../entity-components/PlayerControllerComponent";
 import { getRandomAngle, Point, Vector } from "../utils";
 import CameraFollowComponent from "../entity-components/CameraFollowComponent";
-import RenderComponent, { CircleRenderClass, RenderClasses } from "../entity-components/RenderComponent";
+import RenderComponent, { EllipseRenderClass, RenderClasses } from "../entity-components/RenderComponent";
 import HitboxComponent, { CircleHitboxInfo } from "../entity-components/HitboxComponent";
 import AttackComponent, { CircleAttack } from "../entity-components/AttackComponent";
 import Resource from "./Resource";
@@ -43,8 +43,8 @@ class Player extends Entity {
       const BORDER_COLOUR = "#000";
 
       const RENDER_CLASSES: RenderClasses = [
-         new CircleRenderClass({
-            type: "circle",
+         new EllipseRenderClass({
+            type: "ellipse",
             fillColour: PLAYER_COLOUR,
             size: {
                radius: PLAYER_DIAMETER / 2
@@ -55,8 +55,8 @@ class Player extends Entity {
             },
             zIndex: 1
          }),
-         new CircleRenderClass({
-            type: "circle",
+         new EllipseRenderClass({
+            type: "ellipse",
             fillColour: HAND_COLOUR,
             size: {
                radius: HAND_SIZE / 2
@@ -68,8 +68,8 @@ class Player extends Entity {
             offset: RenderComponent.getOffset(PLAYER_DIAMETER / 2, HAND_ANGLES),
             zIndex: 0
          }),
-         new CircleRenderClass({
-            type: "circle",
+         new EllipseRenderClass({
+            type: "ellipse",
             fillColour: HAND_COLOUR,
             size: {
                radius: HAND_SIZE / 2
@@ -95,6 +95,8 @@ class Player extends Entity {
 
       Player.tribe = tribe;
       Player.instance = this;
+
+      InventoryViewerManager.getInstance("playerInventory").setInventoryComponent(this.getComponent(InventoryComponent)!);
 
       /** The distance away from the player (in tiles) that the attack is performed */
       const ATTACK_OFFSET = 0.5;

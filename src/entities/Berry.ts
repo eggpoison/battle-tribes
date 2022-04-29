@@ -1,3 +1,4 @@
+import Board from "../Board";
 import Entity, { EventType } from "../Entity";
 import HealthComponent from "../entity-components/HealthComponent";
 import HitboxComponent, { CircleHitboxInfo } from "../entity-components/HitboxComponent";
@@ -5,45 +6,48 @@ import RenderComponent, { ImageRenderClass, RenderClasses } from "../entity-comp
 import ResourceSpawnComponent from "../entity-components/ResourceSpawnerComponent";
 import TransformComponent from "../entity-components/TransformComponent";
 import { ItemName } from "../items";
-import { TileType } from "../tiles";
-import { Point, randFloat } from "../utils";
+import { getTilesByType, TileType } from "../tiles";
+import { randFloat, randItem } from "../utils";
 
 class Berry extends Entity {
-   public static spawnableTileTypes = [
+   private static readonly spawnableTileTypes: ReadonlyArray<TileType> = [
       TileType.grass
    ];
 
-   constructor(position: Point) {
-      /** Size of the berry in tiles */
-      const SIZE = 1;
+   private static readonly SIZE = 1;
 
-      const RENDER_CLASSES: RenderClasses = [
+   private static readonly HEALTH = 10;
+   private static readonly LIFESPAN = 30;
+
+   constructor() {
+      // Calculate the position of the berry
+      const potentialTileCoordinates = getTilesByType(Berry.spawnableTileTypes);
+      const spawnTileCoordinates = randItem(potentialTileCoordinates);
+      const position = Board.getRandomPositionInTile(spawnTileCoordinates);
+
+      const renderClasses: RenderClasses = [
          new ImageRenderClass({
             type: "image",
             url: "berry.png",
             size: {
-               width: SIZE,
-               height: SIZE
+               width: Berry.SIZE,
+               height: Berry.SIZE
             }
          })
       ];
 
-      const STARTING_ROTATION = randFloat(0, 360);
+      const startingRotation = randFloat(0, 360);
 
-      const HITBOX: CircleHitboxInfo = {
+      const hitbox: CircleHitboxInfo = {
          type: "circle",
-         radius: SIZE / 2
+         radius: Berry.SIZE / 2
       };
 
-      const BERRY_HEALTH = 10;
-      /** How long the berry lasts in seconds */
-      const LIFESPAN = 30;
-
       super([
-         new TransformComponent(position, undefined, STARTING_ROTATION),
-         new RenderComponent(RENDER_CLASSES),
-         new HitboxComponent(HITBOX),
-         new HealthComponent(BERRY_HEALTH, undefined, undefined, undefined, LIFESPAN),
+         new TransformComponent(position, undefined, startingRotation),
+         new RenderComponent(renderClasses),
+         new HitboxComponent(hitbox),
+         new HealthComponent(Berry.HEALTH, undefined, undefined, undefined, Berry.LIFESPAN),
          new ResourceSpawnComponent()
       ]);
 

@@ -42,7 +42,7 @@ class InventoryComponent extends Component {
          const itemInfo = ITEMS[itemKey];
 
          // If the existing item is of the same type and the stack isn't full, add it
-         if (itemCount + amount <= itemInfo.stackSize) {
+         if (itemName === item.name && itemCount + amount <= itemInfo.stackSize) {
             this.itemSlots[slotNum][1] += amount;
             return true;
          }
@@ -51,7 +51,6 @@ class InventoryComponent extends Component {
    }
 
    public addItemToSlot(slotNum: number, itemName: ItemName, amount: number = 1): void {
-      console.log(slotNum, itemName, amount);
       let remainingAddAmount = amount;
 
       const slot = this.itemSlots[slotNum];
@@ -60,9 +59,7 @@ class InventoryComponent extends Component {
 
       // If the slot is empty initialise the slot
       if (typeof slot === "undefined") {
-         console.log(this.itemSlots.slice());
          this.itemSlots[slotNum] = [itemName, 0];
-         console.log(this.itemSlots.slice());
       }
 
       {
@@ -71,7 +68,6 @@ class InventoryComponent extends Component {
 
          if (addAmount === amount) {
             // If all of the item was added, no need to overflow
-            console.log(addAmount, this.itemSlots);
             return;
          }
 

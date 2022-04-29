@@ -12,7 +12,7 @@ export function randInt(min: number, max: number): number {
    return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-export function randItem<T>(arr: Array<T>): T {
+export function randItem<T>(arr: Array<T> | ReadonlyArray<T>): T {
    return arr[Math.floor(Math.random() * arr.length)];
 }
 
@@ -58,6 +58,12 @@ export class Point {
       const distance = Math.sqrt(Math.pow(this.x - point2.x, 2) + Math.pow(this.y - point2.y, 2));
       return distance;
    };
+
+   public distanceFromRectangle(minX: number, maxX: number, minY: number, maxY: number): number {
+      const dx = Math.max(minX - this.x, 0, this.x - maxX);
+      const dy = Math.max(minY - this.y, 0, this.y - maxY);
+      return Math.sqrt(dx*dx + dy*dy);
+   }
 
    public angleBetween(point2: Point): number {
       const angle = Math.atan2(point2.y - this.y, point2.x - this.x);

@@ -1,4 +1,4 @@
-import Board, { Chunk, TileCoordinates } from "../Board";
+import Board, { Chunk } from "../Board";
 import Component from "../Component";
 import Entity from "../Entity";
 import { Point, Vector } from "../utils";
@@ -40,13 +40,6 @@ class TransformComponent extends Component {
       return Board.getChunk(chunkX, chunkY);
    }
 
-   public static getRandomPositionInTile(tileCoordinates: TileCoordinates): Point {
-      const x = tileCoordinates[0] * Board.tileSize + Board.tileSize * Math.random();
-      const y = tileCoordinates[1] * Board.tileSize + Board.tileSize * Math.random();
-
-      return new Point(x, y);
-   }
-
    public static getNearbyEntities(position: Point, radius: number): Array<Entity> {
       const unitsPerChunk = Board.tileSize * Board.chunkSize;
 
@@ -68,9 +61,21 @@ class TransformComponent extends Component {
                if (hitboxComponent !== null) {
                   const entityPosition = entity.getComponent(TransformComponent)!.position;
 
-                  switch (hitboxComponent.hitboxInfo.type) {
+                  const hitboxInfo = hitboxComponent.hitboxInfo;
+                  switch (hitboxInfo.type) {
                      case "circle": {
-                        if (position.distanceFrom(entityPosition) - hitboxComponent.hitboxInfo.radius <= radius) {
+                        if (position.distanceFrom(entityPosition) + hitboxInfo.radius <= radius) {
+                           nearbyEntities.push(entity);
+                        }
+                        break;
+                     }
+                     case "rectangle": {
+                        const dist = position.distanceFromRectangle(
+                           entityPosition.x - hitboxInfo.width / 2,
+                           entityPosition.x + hitboxInfo.width / 2,
+                           entityPosition.y - hitboxInfo.height / 2,
+                           entityPosition.y + hitboxInfo.height / 2);
+                        if (dist <= radius) {
                            nearbyEntities.push(entity);
                         }
                         break;

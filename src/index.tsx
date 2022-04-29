@@ -10,18 +10,20 @@ import "./css/devtools.css";
 import "./css/inventory-viewer.css";
 import "./css/message-display.css";
 import "./css/tribe-stash-viewer.css";
+import { precomputeTileLocations } from './tiles';
 
 const root = ReactDOM.createRoot(
-    document.getElementById('root') as HTMLElement
+   document.getElementById('root') as HTMLElement
 );
 root.render(
-    <React.StrictMode>
-        <App />
-    </React.StrictMode>
+   <React.StrictMode>
+      <App />
+   </React.StrictMode>
 );
 
 window.addEventListener("load", () => {
-    Camera.setup();
-    Board.setup();
-    Game.startGame();
+   Camera.setup();
+   Board.setup();
+   precomputeTileLocations();
+   Game.startGame();
 });

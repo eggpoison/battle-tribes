@@ -25,7 +25,7 @@ abstract class BaseRenderClass implements BaseRenderSettings {
 }
 
 interface ShapeRenderSettings extends BaseRenderSettings {
-   readonly type: "circle" | "rectangle";
+   readonly type: "ellipse" | "rectangle";
    readonly fillColour: string;
    /** The size of the shape, in tiles. */
    readonly border?: {
@@ -34,7 +34,7 @@ interface ShapeRenderSettings extends BaseRenderSettings {
    }
 }
 abstract class ShapeRenderClass extends BaseRenderClass implements ShapeRenderSettings {
-   public readonly type: "circle" | "rectangle";
+   public readonly type: "ellipse" | "rectangle";
    public readonly fillColour: string;
    public readonly border?: { readonly width: number; readonly colour: string; };
    public readonly offset: [number, number];
@@ -50,19 +50,19 @@ abstract class ShapeRenderClass extends BaseRenderClass implements ShapeRenderSe
 }
 
 // CIRCLES
-interface CircleRenderSettings extends ShapeRenderSettings {
-   readonly type: "circle";
+interface EllipseRenderSettings extends ShapeRenderSettings {
+   readonly type: "ellipse";
    readonly size: {
-      readonly radius: number;
+      readonly radius: number | [number, number];
    }
 }
-export class CircleRenderClass extends ShapeRenderClass implements CircleRenderSettings {
-   public readonly type = "circle";
+export class EllipseRenderClass extends ShapeRenderClass implements EllipseRenderSettings {
+   public readonly type = "ellipse";
    public readonly size: {
-      readonly radius: number;
+      readonly radius: number | [number, number];
    }
 
-   constructor(renderSettings: CircleRenderSettings) {
+   constructor(renderSettings: EllipseRenderSettings) {
       super(renderSettings);
 
       this.size = renderSettings.size;
@@ -116,7 +116,7 @@ export class ImageRenderClass extends BaseRenderClass implements ImageRenderSett
    }
 }
 
-export type RenderClasses = ReadonlyArray<CircleRenderClass | RectangleRenderClass | ImageRenderClass>;
+export type RenderClasses = ReadonlyArray<EllipseRenderClass | RectangleRenderClass | ImageRenderClass>;
 
 class RenderComponent extends Component {
    private readonly renderClasses: RenderClasses;
@@ -182,8 +182,16 @@ class RenderComponent extends Component {
 
          // Render the class
          switch (renderClass.type) {
-            case "circle": {
-               const radius = renderClass.size.radius * Board.tileSize;
+            case "ellipse": {
+               let radiusX!: number;
+               let radiusY!: number;
+               if (typeof renderClass.size.radius === "number") {
+                  radiusX = renderClass.size.radius * Board.tileSize;
+                  radiusY = renderClass.size.radius * Board.tileSize;
+               } else {
+                  radiusX = renderClass.size.radius[0] * Board.tileSize;
+                  radiusY = renderClass.size.radius[1] * Board.tileSize;
+               }
 
                const centerX = Camera.getXPositionInCamera(position.x);
                const centerY = Camera.getYPositionInCamera(position.y);
@@ -197,7 +205,8 @@ class RenderComponent extends Component {
                // Create the circle
                ctx.fillStyle = renderClass.fillColour;
                ctx.beginPath();
-               ctx.arc(cameraX, cameraY, radius, 0, Math.PI * 2);
+               // ctx.arc(cameraX, cameraY, radius, 0, Math.PI * 2);
+               ctx.ellipse(cameraX, cameraY, radiusX, radiusY, 0, 0, Math.PI * 2);
                ctx.fill();
 
                if (typeof renderClass.border !== "undefined") {

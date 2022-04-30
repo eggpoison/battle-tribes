@@ -74,7 +74,7 @@ export class Point {
       const targetPoint = point2 || new Point(0, 0);
 
       const distance = this.distanceFrom(targetPoint);
-      const angle = this.angleBetween(targetPoint);
+      const angle = targetPoint.angleBetween(this);
       return new Vector(distance, angle);
    }
 }
@@ -84,21 +84,25 @@ export function getRandomAngle() {
 }
 
 export class Vector {
-   magnitude: number;
-   direction: number;
+   public magnitude: number;
+   public direction: number;
 
    constructor(magnitude: number, direction: number) {
       this.magnitude = magnitude;
       this.direction = direction;
    }
 
-   convertToPoint(): Point {
+   public convertToPoint(): Point {
       const x = Math.cos(this.direction) * this.magnitude;
       const y = Math.sin(this.direction) * this.magnitude;
       return new Point(x, y);
    }
 
-   static randomUnitVector(): Vector {
+   public add(vector2: Vector): Vector {
+      return (this.convertToPoint().add(vector2.convertToPoint())).convertToVector();
+   }
+
+   public static randomUnitVector(): Vector {
       const theta = randFloat(0, 360);
       return new Vector(1, theta);
    }

@@ -28,8 +28,8 @@ class Cow extends Entity {
       const position = Board.getRandomPositionInTile(spawnTileCoordinates);
 
       const EYE_SIZE = 0.2;
-      const EYE_OFFSET = 0.25;
-      const EYE_POS = 0.45;
+      const EYE_OFFSET = 0.2;
+      const EYE_POS = 0.35;
 
       const renderClasses: RenderClasses = [
          // Main body
@@ -74,6 +74,16 @@ class Cow extends Entity {
             },
             zIndex: 3
          }),
+         // Left eye pupil
+         new EllipseRenderClass({
+            type: "ellipse",
+            fillColour: "#000",
+            offset: [EYE_POS, EYE_OFFSET],
+            size: {
+               radius: EYE_SIZE / 4
+            },
+            zIndex: 4
+         }),
          // Right eye
          new EllipseRenderClass({
             type: "ellipse",
@@ -87,6 +97,16 @@ class Cow extends Entity {
                colour: "#000"
             },
             zIndex: 3
+         }),
+         // Right eye pupil
+         new EllipseRenderClass({
+            type: "ellipse",
+            fillColour: "#000",
+            offset: [EYE_POS, -EYE_OFFSET],
+            size: {
+               radius: EYE_SIZE / 4
+            },
+            zIndex: 4
          })
       ];
 

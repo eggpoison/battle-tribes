@@ -1,6 +1,7 @@
 import Board, { Chunk } from "../Board";
 import Component from "../Component";
 import Entity from "../Entity";
+import SETTINGS from "../settings";
 import { Point, Vector } from "../utils";
 import HitboxComponent from "./HitboxComponent";
 
@@ -11,6 +12,11 @@ class TransformComponent extends Component {
    public velocity: Vector;
    /** Rotation of the entity in degrees */
    public rotation: number;
+
+   private targetVelocity: Vector = new Vector(0, 0);
+
+   /** Number of tiles that acceleration gets reduced by every second */
+   private static FRICTION = 3;
 
    constructor(startingPosition: Point, startingVelocity: Vector = new Vector(0, 0), startingRotation: number = 0) {
       super();
@@ -28,6 +34,20 @@ class TransformComponent extends Component {
 
          if (hitboxComponent.willCollideWithWall()) return;
       }
+
+      // Apply friction
+      this.velocity.magnitude -= TransformComponent.FRICTION / SETTINGS.tps;
+      if (this.velocity.magnitude < 0) this.velocity.magnitude = 0;
+
+      // if (this.acceleration.magnitude > 0) {
+      //    // Apply acceleration
+      //    const newVelocity = this.velocity.add(this.acceleration);
+      //    this.velocity = newVelocity;
+
+      //    // Apply friction to acceleration
+      //    this.acceleration.magnitude -= TransformComponent.FRICTION / SETTINGS.tps;
+      //    if (this.acceleration.magnitude < 0) this.acceleration.magnitude = 0;
+      // }
       
       const positionAdd = this.velocity.convertToPoint();
       this.position = this.position.add(positionAdd);
@@ -87,6 +107,15 @@ class TransformComponent extends Component {
       }
 
       return nearbyEntities;
+   }
+
+   public applyKnockback(knockbackSource: Point): void {
+      const knockback = 1;
+
+      const angle = knockbackSource.angleBetween(this.position);
+
+      const knockbackVector = new Vector(knockback, angle);
+      this.velocity = this.velocity.add(knockbackVector);
    }
 }
 

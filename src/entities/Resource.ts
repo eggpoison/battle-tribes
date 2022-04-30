@@ -30,7 +30,7 @@ class Resource extends Entity {
         super([
             new TransformComponent(position, undefined, getRandomAngle()),
             new RenderComponent(renderClasses),
-            new HitboxComponent(HITBOX),
+            new HitboxComponent(HITBOX)
         ]);
 
         this.item = item;

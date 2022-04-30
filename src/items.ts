@@ -30,7 +30,7 @@ const ITEMS: ItemsType = {
    [ItemName.meat]: new FoodItem({
       displayName: "Raw Meat",
       description: "Restores 4 health when eaten.",
-      imageSrc: "berry.png",
+      imageSrc: "meat.png",
       stackSize: 99,
       healthReplenishAmount: 4,
       eatTime: 1.2

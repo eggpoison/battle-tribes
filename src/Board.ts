@@ -1,4 +1,4 @@
-import { generateBoard } from "./board-generation";
+import { generateBoard } from "./terrain-generation";
 import { getCanvasContext } from "./components/Canvas";
 import { updateDevtools } from "./components/Devtools";
 import InventoryViewerManager from "./components/InventoryViewerManager";

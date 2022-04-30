@@ -12,8 +12,9 @@ let itemInTransit: ItemInTransit | null = null;
 const clickSlot = (slotNum: number, inventoryViewerName: InventoryViewerIDs): void => {
    const inventoryViewer = InventoryViewerManager.getInstance(inventoryViewerName);
    if (typeof inventoryViewer.inventoryComponent === "undefined") {
-      throw new Error("inventoryComponent was undefined!");
+      throw new Error(`inventoryComponent was undefined for ${inventoryViewerName}!`);
    }
+
    const itemSlots = inventoryViewer.inventoryComponent.getItemSlots();
    const slot = itemSlots[slotNum];
 
@@ -115,6 +116,10 @@ class InventoryViewerManager {
 
    public static getInstance(name: InventoryViewerIDs): InventoryViewerManager {
       return this.instances[name]!;
+   }
+
+   public static hasInstance(name: InventoryViewerIDs): boolean {
+      return this.instances.hasOwnProperty(name);
    }
 
    public setInventoryComponent(inventoryComponent: InventoryComponent): void {

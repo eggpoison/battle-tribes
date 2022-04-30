@@ -1,7 +1,7 @@
 import Board from "../Board";
 import Entity, { EventType } from "../Entity";
 import HealthComponent from "../entity-components/HealthComponent";
-import HitboxComponent, { CircleHitboxInfo, RectangleHitboxInfo } from "../entity-components/HitboxComponent";
+import HitboxComponent, { RectangleHitboxInfo } from "../entity-components/HitboxComponent";
 import RenderComponent, { EllipseRenderClass, RenderClasses } from "../entity-components/RenderComponent";
 import ResourceSpawnComponent from "../entity-components/ResourceSpawnerComponent";
 import TransformComponent from "../entity-components/TransformComponent";
@@ -36,7 +36,7 @@ class Cow extends Entity {
          new EllipseRenderClass({
             type: "ellipse",
             fillColour: "#8c3a00",
-            offset: [0, 0.2],
+            offset: [-0.2, 0],
             size: {
                radius: [Cow.HEIGHT / 2, Cow.WIDTH / 2]
             },
@@ -50,7 +50,7 @@ class Cow extends Entity {
          new EllipseRenderClass({
             type: "ellipse",
             fillColour: "#b57910",
-            offset: [0, -0.3],
+            offset: [0.3, 0],
             size: {
                radius: Cow.HEIGHT / 2
             },

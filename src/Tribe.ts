@@ -1,8 +1,6 @@
 import Board from "./Board";
-import InventoryViewerManager from "./components/InventoryViewerManager";
 import TribeStash from "./entities/TribeStash";
 import Entity from "./Entity";
-import InventoryComponent from "./entity-components/InventoryComponent";
 import { Point, randFloat } from "./utils";
 
 // Tribe members are created through the tribe class
@@ -19,9 +17,6 @@ class Tribe {
       this.stash = new TribeStash(this);
       Board.addEntity(this.stash);
       this.addEntityToTribe(this.stash);
-
-      // Link the stash to the stash viewer
-      InventoryViewerManager.getInstance("tribeStash").setInventoryComponent(this.stash.getComponent(InventoryComponent)!);
    }
 
    public createTribeMember(): void {

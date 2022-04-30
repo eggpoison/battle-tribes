@@ -7,11 +7,9 @@ export let toggleTribeStashViewerVisibility: () => void;
 
 const TribeStashViewer = () => {
    const [isVisible, setIsVisible] = useState<boolean>(false);
-   const tribeStashViewerManagerRef = useRef<InventoryViewerManager | null>();
-
-   useEffect(() => {
-      tribeStashViewerManagerRef.current = new InventoryViewerManager("tribeStash", TribeStash.DEFAULT_SLOT_COUNT);
-   }, []);
+   const tribeStashViewerManagerRef = useRef<InventoryViewerManager | null>(
+      !InventoryViewerManager.hasInstance("tribeStash") ? new InventoryViewerManager("tribeStash", TribeStash.DEFAULT_SLOT_COUNT) : InventoryViewerManager.getInstance("tribeStash")
+   );
    
    useEffect(() => {
       toggleTribeStashViewerVisibility = (): void => {

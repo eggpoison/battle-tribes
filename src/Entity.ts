@@ -21,11 +21,11 @@ const getEventsObject = (): EventsObject => {
 }
 
 abstract class Entity {
+   public previousChunk?: Chunk;
+
    private components: Array<Component>;
 
    private events: EventsObject = getEventsObject();
-
-   public previousChunk?: Chunk;
 
    constructor(components: Array<Component>) {
       this.components = components;

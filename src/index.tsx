@@ -21,9 +21,10 @@ root.render(
    </React.StrictMode>
 );
 
-window.addEventListener("load", () => {
+// Called when all elements are rendered
+export function load() {
    Camera.setup();
    Board.setup();
    precomputeTileLocations();
    Game.startGame();
-});
+}

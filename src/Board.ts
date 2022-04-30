@@ -1,10 +1,12 @@
 import { generateBoard } from "./board-generation";
 import { getCanvasContext } from "./components/Canvas";
 import { updateDevtools } from "./components/Devtools";
+import InventoryViewerManager from "./components/InventoryViewerManager";
 import Berry from "./entities/Berry";
 import Cow from "./entities/Cow";
 import Player from "./entities/Player";
 import Entity from "./Entity";
+import InventoryComponent from "./entity-components/InventoryComponent";
 import RenderComponent from "./entity-components/RenderComponent";
 import TransformComponent from "./entity-components/TransformComponent";
 import SETTINGS from "./settings";
@@ -107,8 +109,12 @@ abstract class Board {
    }
 
    private static spawnPlayer(): void {
-      const spawnPosition = Tribe.getPlayerTribeSpawnPosition();
-      const playerTribe = new Tribe(spawnPosition);
+      const tribeSpawnPosition = Tribe.getPlayerTribeSpawnPosition();
+      const playerTribe = new Tribe(tribeSpawnPosition);
+
+      // Link the player tribe's stash to the stash viewer
+      const stash = playerTribe.stash;
+      InventoryViewerManager.getInstance("tribeStash").setInventoryComponent(stash.getComponent(InventoryComponent)!);
 
       const player = new Player(playerTribe);
       this.addEntity(player);

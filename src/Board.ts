@@ -49,7 +49,7 @@ abstract class Board {
       this.spawnPlayer();
    }
 
-   public static getTile(x: number, y: number): TileType {
+   public static getTileType(x: number, y: number): TileType {
       return this.tiles[x][y];
    }
 

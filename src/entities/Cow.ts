@@ -18,7 +18,7 @@ class Cow extends Entity {
    public static readonly SPAWN_RATE = 1;
 
    private static readonly WIDTH = 1.5;
-   private static readonly HEIGHT = 0.75;
+   private static readonly HEIGHT = 1;
    private static readonly MAX_HEALTH = 15;
 
    constructor() {
@@ -28,8 +28,8 @@ class Cow extends Entity {
       const position = Board.getRandomPositionInTile(spawnTileCoordinates);
 
       const EYE_SIZE = 0.2;
-      const EYE_OFFSET = 0.3;
-      const EYE_POS = -0.55;
+      const EYE_OFFSET = 0.25;
+      const EYE_POS = 0.45;
 
       const renderClasses: RenderClasses = [
          // Main body
@@ -38,7 +38,7 @@ class Cow extends Entity {
             fillColour: "#8c3a00",
             offset: [-0.2, 0],
             size: {
-               radius: [Cow.HEIGHT / 2, Cow.WIDTH / 2]
+               radius: [Cow.WIDTH / 2, Cow.HEIGHT / 2]
             },
             border: {
                width: 4,
@@ -52,7 +52,7 @@ class Cow extends Entity {
             fillColour: "#b57910",
             offset: [0.3, 0],
             size: {
-               radius: Cow.HEIGHT / 2
+               radius: [Cow.HEIGHT / 2.5, Cow.HEIGHT / 2]
             },
             border: {
                width: 4,
@@ -64,7 +64,7 @@ class Cow extends Entity {
          new EllipseRenderClass({
             type: "ellipse",
             fillColour: "#fff",
-            offset: [-EYE_OFFSET, EYE_POS],
+            offset: [EYE_POS, EYE_OFFSET],
             size: {
                radius: EYE_SIZE / 2
             },
@@ -78,7 +78,7 @@ class Cow extends Entity {
          new EllipseRenderClass({
             type: "ellipse",
             fillColour: "#fff",
-            offset: [EYE_OFFSET, EYE_POS],
+            offset: [EYE_POS, -EYE_OFFSET],
             size: {
                radius: EYE_SIZE / 2
             },

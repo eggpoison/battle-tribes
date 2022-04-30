@@ -22,7 +22,7 @@ class SpawnComponent extends Component {
 
       for (let y = 0; y < Board.dimensions; y++) {
          for (let x = 0; x < Board.dimensions; x++) {
-            const tileType = Board.getTile(x, y);
+            const tileType = Board.getTileType(x, y);
 
             if (spawnableTileTypes.includes(tileType)) {
                spawnableTiles.push([x, y]);

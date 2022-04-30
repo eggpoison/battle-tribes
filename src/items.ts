@@ -22,9 +22,9 @@ const ITEMS: ItemsType = {
       eatTime: 0.3
    }),
    [ItemName.leather]: new Item({
-      displayName: "Berry",
+      displayName: "Leather",
       description: "It's leather, you know what it does.",
-      imageSrc: "berry.png",
+      imageSrc: "leather.png",
       stackSize: 99
    }),
    [ItemName.meat]: new FoodItem({

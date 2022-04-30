@@ -21,12 +21,12 @@ interface TileInfo {
 // Can't use an object cuz of stupid object ordering shenanigans.
 const TILE_INFO_MAP = new Map<TileType, TileInfo>([
    [TileType.desert, {
-      colour: "yellow",
+      colour: "#ffff00",
       minTemperature: 0.7,
       maxHumidity: 0.3
    }],
    [TileType.snow, {
-      colour: "#fff",
+      colour: "#ffffff",
       maxTemperature: 0.5,
       maxHumidity: 0.3
    }],
@@ -35,7 +35,7 @@ const TILE_INFO_MAP = new Map<TileType, TileInfo>([
       minHumidity: 0.7
    }],
    [TileType.mountain, {
-      colour: "#aaa",
+      colour: "#aaaaaa",
       minHeight: 0.8
    }],
    [TileType.grass, {
@@ -55,7 +55,7 @@ export function precomputeTileLocations(): void {
 
    for (let y = 0; y < Board.dimensions; y++) {
       for (let x = 0; x < Board.dimensions; x++) {
-         const tileType = Board.getTile(x, y);
+         const tileType = Board.getTileType(x, y);
          tileLocations[tileType]!.push([x, y]);
       }
    }

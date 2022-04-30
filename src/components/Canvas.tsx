@@ -40,7 +40,7 @@ export function render(): void {
    // Draw tiles
    for (let y = 0; y < Board.dimensions; y++) {
       for (let x = 0; x < Board.dimensions; x++) {
-         const tileType = Board.getTile(x, y);
+         const tileType = Board.getTileType(x, y);
 
          const tileInfo = getTileInfo(tileType);
          ctx.fillStyle = tileInfo.colour;

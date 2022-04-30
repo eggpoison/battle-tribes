@@ -1,5 +1,5 @@
 import Component from "../Component";
-import Entity from "../Entity";
+import Entity from "../entities/Entity";
 import SETTINGS from "../settings";
 import TransformComponent from "./TransformComponent";
 

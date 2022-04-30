@@ -50,6 +50,13 @@ export class Point {
       );
    };
 
+   public subtract(point2: Point): Point {
+      return new Point(
+         this.x - point2.x,
+         this.y - point2.y
+      );
+   }
+
    public dot(point2: Point): number {
       return this.x * point2.x + this.y * point2.y;
    }

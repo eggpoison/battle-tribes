@@ -1,9 +1,9 @@
-import Entity from "../Entity";
+import Entity from "./Entity";
 import TransformComponent from "../entity-components/TransformComponent";
 import PlayerControllerComponent from "../entity-components/PlayerControllerComponent";
 import { getRandomAngle, Point, Vector } from "../utils";
 import CameraFollowComponent from "../entity-components/CameraFollowComponent";
-import RenderComponent, { EllipseRenderClass, RenderClasses } from "../entity-components/RenderComponent";
+import RenderComponent, { EllipseRenderPart } from "../entity-components/RenderComponent";
 import HitboxComponent, { CircleHitboxInfo } from "../entity-components/HitboxComponent";
 import AttackComponent, { CircleAttack } from "../entity-components/AttackComponent";
 import Resource from "./Resource";
@@ -35,15 +35,26 @@ class Player extends Entity {
       };
       
       const HAND_SIZE = 0.45;
-      const HAND_ANGLES = 40;
+      const HAND_ANGLES = 40 / 180 * Math.PI;
 
       const PLAYER_COLOUR = "#ffcc17";
       const HAND_COLOUR = "#cc9f00";
 
       const BORDER_COLOUR = "#000";
 
-      const RENDER_CLASSES: RenderClasses = [
-         new EllipseRenderClass({
+      super([
+         new TransformComponent(spawnPosition),
+         new HitboxComponent(PLAYER_HITBOX),
+         new RenderComponent(),
+         new PlayerControllerComponent(),
+         new CameraFollowComponent(),
+         new AttackComponent(),
+         new InventoryComponent(Player.DEFAULT_INVENTORY_SLOT_COUNT)
+      ]);
+
+      // Create player body
+      this.getComponent(RenderComponent)!.addPart(
+         new EllipseRenderPart({
             type: "ellipse",
             fillColour: PLAYER_COLOUR,
             size: {
@@ -54,44 +65,30 @@ class Player extends Entity {
                colour: BORDER_COLOUR
             },
             zIndex: 1
-         }),
-         new EllipseRenderClass({
-            type: "ellipse",
-            fillColour: HAND_COLOUR,
-            size: {
-               radius: HAND_SIZE / 2
-            },
-            border: {
-               width: 3,
-               colour: BORDER_COLOUR
-            },
-            offset: RenderComponent.getOffset(PLAYER_DIAMETER / 2, HAND_ANGLES),
-            zIndex: 0
-         }),
-         new EllipseRenderClass({
-            type: "ellipse",
-            fillColour: HAND_COLOUR,
-            size: {
-               radius: HAND_SIZE / 2
-            },
-            border: {
-               width: 3,
-               colour: BORDER_COLOUR
-            },
-            offset: RenderComponent.getOffset(PLAYER_DIAMETER / 2, -HAND_ANGLES),
-            zIndex: 0
          })
-      ];
+      );
 
-      super([
-         new TransformComponent(spawnPosition),
-         new HitboxComponent(PLAYER_HITBOX),
-         new RenderComponent(RENDER_CLASSES),
-         new PlayerControllerComponent(),
-         new CameraFollowComponent(),
-         new AttackComponent(),
-         new InventoryComponent(Player.DEFAULT_INVENTORY_SLOT_COUNT)
-      ]);
+      // Create player hands
+      for (let i = 0; i < 2; i++) {
+         const multiplier = i === 0 ? -1 : 1;
+         const offsetPoint = new Vector(PLAYER_DIAMETER / 2, HAND_ANGLES * multiplier).convertToPoint();
+
+         this.getComponent(RenderComponent)!.addPart(
+            new EllipseRenderPart({
+               type: "ellipse",
+               fillColour: HAND_COLOUR,
+               size: {
+                  radius: HAND_SIZE / 2
+               },
+               border: {
+                  width: 3,
+                  colour: BORDER_COLOUR
+               },
+               offset: [offsetPoint.x, offsetPoint.y],
+               zIndex: 0
+            })
+         );
+      }
 
       Player.tribe = tribe;
       Player.instance = this;

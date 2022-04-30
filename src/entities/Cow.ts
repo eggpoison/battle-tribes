@@ -1,16 +1,18 @@
 import Board from "../Board";
-import Entity, { EventType } from "../Entity";
-import HealthComponent from "../entity-components/HealthComponent";
-import HitboxComponent, { RectangleHitboxInfo } from "../entity-components/HitboxComponent";
-import RenderComponent, { EllipseRenderClass, RenderClasses } from "../entity-components/RenderComponent";
+import { EventType } from "./Entity";
+import { RectangleHitboxInfo } from "../entity-components/HitboxComponent";
+import RenderComponent, { EllipseRenderPart } from "../entity-components/RenderComponent";
 import ResourceSpawnComponent from "../entity-components/ResourceSpawnerComponent";
-import TransformComponent from "../entity-components/TransformComponent";
-import { ItemName } from "../items";
+import  { ItemName } from "../items";
 import { getTilesByType, TileType } from "../tiles";
 import { randItem } from "../utils";
+import Mob from "./Mob";
+import AIManagerComponent from "../entity-components/ai/AIManangerComponent";
+import WanderAI from "../entity-components/ai/WanderAI";
+import TransformComponent from "../entity-components/TransformComponent";
 
-class Cow extends Entity {
-   private static readonly spawnableTileTypes: ReadonlyArray<TileType> = [
+class Cow extends Mob {
+   public readonly preferredTileTypes: ReadonlyArray<TileType> = [
       TileType.grass
    ];
 
@@ -22,18 +24,45 @@ class Cow extends Entity {
    private static readonly MAX_HEALTH = 15;
 
    constructor() {
-      // Calculate the position of the cow
-      const potentialTileCoordinates = getTilesByType(Cow.spawnableTileTypes);
+      const hitboxInfo: RectangleHitboxInfo = {
+         type: "rectangle",
+         width: Cow.WIDTH,
+         height: Cow.HEIGHT
+      };
+
+      super(hitboxInfo, Cow.MAX_HEALTH, [
+         new ResourceSpawnComponent(),
+         new AIManagerComponent()
+      ]);
+
+      this.setPosition();
+
+      this.createRenderParts();
+
+      this.createAI();
+
+      this.getComponent(ResourceSpawnComponent)!.addResource(ItemName.meat, [1, 2], EventType.deathByEntity);
+      this.getComponent(ResourceSpawnComponent)!.addResource(ItemName.leather, [0, 1], EventType.deathByEntity);
+   }
+
+   private setPosition(): void {
+      const potentialTileCoordinates = getTilesByType(this.preferredTileTypes);
+
       const spawnTileCoordinates = randItem(potentialTileCoordinates);
       const position = Board.getRandomPositionInTile(spawnTileCoordinates);
 
+      this.getComponent(TransformComponent)!.position = position;
+   }
+
+   private createRenderParts(): void {
       const EYE_SIZE = 0.2;
       const EYE_OFFSET = 0.2;
       const EYE_POS = 0.35;
 
-      const renderClasses: RenderClasses = [
+      // Create the main parts of the cow
+      this.getComponent(RenderComponent)!.addParts([
          // Main body
-         new EllipseRenderClass({
+         new EllipseRenderPart({
             type: "ellipse",
             fillColour: "#8c3a00",
             offset: [-0.2, 0],
@@ -47,7 +76,7 @@ class Cow extends Entity {
             zIndex: 1
          }),
          // Head
-         new EllipseRenderClass({
+         new EllipseRenderPart({
             type: "ellipse",
             fillColour: "#b57910",
             offset: [0.3, 0],
@@ -59,73 +88,54 @@ class Cow extends Entity {
                colour: "#000"
             },
             zIndex: 2
-         }),
-         // Left eye
-         new EllipseRenderClass({
-            type: "ellipse",
-            fillColour: "#fff",
-            offset: [EYE_POS, EYE_OFFSET],
-            size: {
-               radius: EYE_SIZE / 2
-            },
-            border: {
-               width: 2,
-               colour: "#000"
-            },
-            zIndex: 3
-         }),
-         // Left eye pupil
-         new EllipseRenderClass({
-            type: "ellipse",
-            fillColour: "#000",
-            offset: [EYE_POS, EYE_OFFSET],
-            size: {
-               radius: EYE_SIZE / 4
-            },
-            zIndex: 4
-         }),
-         // Right eye
-         new EllipseRenderClass({
-            type: "ellipse",
-            fillColour: "#fff",
-            offset: [EYE_POS, -EYE_OFFSET],
-            size: {
-               radius: EYE_SIZE / 2
-            },
-            border: {
-               width: 2,
-               colour: "#000"
-            },
-            zIndex: 3
-         }),
-         // Right eye pupil
-         new EllipseRenderClass({
-            type: "ellipse",
-            fillColour: "#000",
-            offset: [EYE_POS, -EYE_OFFSET],
-            size: {
-               radius: EYE_SIZE / 4
-            },
-            zIndex: 4
          })
-      ];
-
-      const hitboxInfo: RectangleHitboxInfo = {
-         type: "rectangle",
-         width: Cow.WIDTH,
-         height: Cow.HEIGHT
-      };
-
-      super([
-         new TransformComponent(position),
-         new RenderComponent(renderClasses),
-         new HitboxComponent(hitboxInfo),
-         new HealthComponent(Cow.MAX_HEALTH),
-         new ResourceSpawnComponent()
       ]);
 
-      this.getComponent(ResourceSpawnComponent)!.addResource(ItemName.meat, [1, 2], EventType.deathByEntity);
-      this.getComponent(ResourceSpawnComponent)!.addResource(ItemName.leather, [0, 1], EventType.deathByEntity);
+      // Create the cow's eyes
+      for (let i = 0; i < 2; i++) {
+         const multipier = i === 0 ? -1 : 1;
+
+         this.getComponent(RenderComponent)!.addParts([
+            // Eye
+            new EllipseRenderPart({
+               type: "ellipse",
+               fillColour: "#fff",
+               offset: [EYE_POS, EYE_OFFSET * multipier],
+               size: {
+                  radius: EYE_SIZE / 2
+               },
+               border: {
+                  width: 2,
+                  colour: "#000"
+               },
+               zIndex: 3
+            }),
+            // Pupil
+            new EllipseRenderPart({
+               type: "ellipse",
+               fillColour: "#000",
+               offset: [EYE_POS, EYE_OFFSET * multipier],
+               size: {
+                  radius: EYE_SIZE / 4
+               },
+               zIndex: 4
+            }),
+         ]);
+      }
+   }
+
+   private createAI(): void {
+      const aiManagerComponent = this.getComponent(AIManagerComponent)!;
+
+      const WANDER_RATE = 0.2;
+      const WANDER_RANGE = 2;
+      const WANDER_SPEED = 0.75;
+
+      aiManagerComponent.addAI(
+         new WanderAI(WANDER_RATE, WANDER_RANGE, WANDER_SPEED)
+      );
+
+      aiManagerComponent.setCurrentAIType("wander");
    }
 }
 

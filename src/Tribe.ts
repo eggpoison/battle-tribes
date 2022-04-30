@@ -1,6 +1,6 @@
 import Board from "./Board";
 import TribeStash from "./entities/TribeStash";
-import Entity from "./Entity";
+import Entity from "./entities/Entity";
 import { Point, randFloat } from "./utils";
 
 // Tribe members are created through the tribe class

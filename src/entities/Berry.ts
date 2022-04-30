@@ -1,8 +1,8 @@
 import Board from "../Board";
-import Entity, { EventType } from "../Entity";
+import Entity, { EventType } from "./Entity";
 import HealthComponent from "../entity-components/HealthComponent";
 import HitboxComponent, { CircleHitboxInfo } from "../entity-components/HitboxComponent";
-import RenderComponent, { ImageRenderClass, RenderClasses } from "../entity-components/RenderComponent";
+import RenderComponent, { ImageRenderPart } from "../entity-components/RenderComponent";
 import ResourceSpawnComponent from "../entity-components/ResourceSpawnerComponent";
 import TransformComponent from "../entity-components/TransformComponent";
 import { ItemName } from "../items";
@@ -25,17 +25,6 @@ class Berry extends Entity {
       const spawnTileCoordinates = randItem(potentialTileCoordinates);
       const position = Board.getRandomPositionInTile(spawnTileCoordinates);
 
-      const renderClasses: RenderClasses = [
-         new ImageRenderClass({
-            type: "image",
-            url: "berry.png",
-            size: {
-               width: Berry.SIZE,
-               height: Berry.SIZE
-            }
-         })
-      ];
-
       const startingRotation = randFloat(0, 360);
 
       const hitbox: CircleHitboxInfo = {
@@ -45,11 +34,22 @@ class Berry extends Entity {
 
       super([
          new TransformComponent(position, undefined, startingRotation),
-         new RenderComponent(renderClasses),
+         new RenderComponent(),
          new HitboxComponent(hitbox),
          new HealthComponent(Berry.HEALTH, undefined, undefined, undefined, Berry.LIFESPAN),
          new ResourceSpawnComponent()
       ]);
+
+      this.getComponent(RenderComponent)!.addPart(
+         new ImageRenderPart({
+            type: "image",
+            url: "berry.png",
+            size: {
+               width: Berry.SIZE,
+               height: Berry.SIZE
+            }
+         })
+      );
 
       this.getComponent(ResourceSpawnComponent)!.addResource(ItemName.berry, [1, 2], EventType.deathByEntity);
    }

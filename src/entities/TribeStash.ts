@@ -1,7 +1,7 @@
-import Entity from "../Entity";
+import Entity from "./Entity";
 import HitboxComponent, { CircleHitboxInfo } from "../entity-components/HitboxComponent";
 import InventoryComponent from "../entity-components/InventoryComponent";
-import RenderComponent, { ImageRenderClass, RenderClasses } from "../entity-components/RenderComponent";
+import RenderComponent, { ImageRenderPart } from "../entity-components/RenderComponent";
 import TransformComponent from "../entity-components/TransformComponent";
 import Tribe from "../Tribe";
 
@@ -22,10 +22,17 @@ class TribeStash extends Entity {
       const HITBOX: CircleHitboxInfo = {
          type: "circle",
          radius: SIZE / 2
-      }
+      };
 
-      const RENDER_CLASSES: RenderClasses = [
-         new ImageRenderClass({
+      super([
+         new TransformComponent(spawnPosition),
+         new HitboxComponent(HITBOX),
+         new RenderComponent(),
+         new InventoryComponent(TribeStash.DEFAULT_SLOT_COUNT)
+      ]);
+
+      this.getComponent(RenderComponent)!.addPart(
+         new ImageRenderPart({
             type: "image",
             size: {
                width: SIZE,
@@ -33,14 +40,7 @@ class TribeStash extends Entity {
             },
             url: "berry.png"
          })
-      ];
-
-      super([
-         new TransformComponent(spawnPosition),
-         new HitboxComponent(HITBOX),
-         new RenderComponent(RENDER_CLASSES),
-         new InventoryComponent(TribeStash.DEFAULT_SLOT_COUNT)
-      ]);
+      );
 
       this.tribe = tribe;
    }

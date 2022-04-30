@@ -5,7 +5,7 @@ import InventoryViewerManager from "./components/InventoryViewerManager";
 import Berry from "./entities/Berry";
 import Cow from "./entities/Cow";
 import Player from "./entities/Player";
-import Entity from "./Entity";
+import Entity from "./entities/Entity";
 import InventoryComponent from "./entity-components/InventoryComponent";
 import RenderComponent from "./entity-components/RenderComponent";
 import TransformComponent from "./entity-components/TransformComponent";
@@ -50,6 +50,9 @@ abstract class Board {
    }
 
    public static getTileType(x: number, y: number): TileType {
+      if (typeof this.tiles[x] === "undefined") {
+         console.log(x, y);
+      }
       return this.tiles[x][y];
    }
 
@@ -58,6 +61,21 @@ abstract class Board {
       if (x < 0 || x >= this.size || y < 0 || y >= this.size) return null;
 
       return this.chunks[x][y];
+   }
+
+   private static getEntities(): ReadonlyArray<Entity> {
+      const entities = new Array<Entity>();
+
+      for (let y = 0; y < this.size; y++) {
+         for (let x = 0; x < this.size; x++) {
+            const chunk = this.getChunk(x, y)!;
+            for (const entity of chunk) {
+               entities.push(entity);
+            }
+         }
+      }
+
+      return entities;
    }
 
    public static tick(): void {
@@ -81,26 +99,22 @@ abstract class Board {
       }
 
       let entityCount = 0;
-
-      // Tick entities
       const ctx = getCanvasContext();
-      for (let y = 0; y < Board.size; y++) {
-         for (let x = 0; x < Board.size; x++) {
-            const chunk = this.getChunk(x, y)!;
 
-            for (const entity of chunk) {
-               entityCount++;
-               
-               // Render the entity
-               // If rendered after the entity is ticked, then its position will not match where the camera thinks it is
-               if (entity.hasComponent(RenderComponent)) {
-                  entity.getComponent(RenderComponent)!.renderEntity(ctx);
-               }
+      // A copy of the entities array has to be used, as otherwise if an entity dies, an entity will get skipped by the loop.
+      const entities = this.getEntities().slice();
+      for (const entity of entities) {
+         entityCount++;
 
-               entity.tick();
-               this.upateEntityChunk(entity);
-            }
+         // Render the entity
+         const renderComponent = entity.getComponent(RenderComponent);
+         if (renderComponent !== null) {
+            renderComponent.renderEntity(ctx);
          }
+
+         entity.tick();
+
+         this.upateEntityChunk(entity);
       }
       
       updateDevtools({
@@ -165,6 +179,26 @@ abstract class Board {
       const y = tileCoordinates[1] * Board.tileSize + Board.tileSize * Math.random();
 
       return new Point(x, y);
+   }
+
+   public static getNearbyTileCoordinates(position: Point, range: number): ReadonlyArray<TileCoordinates> {
+      const tileX = Math.floor(position.x / this.tileSize);
+      const tileY = Math.floor(position.y / this.tileSize);
+
+      const minX = Math.max(tileX - range, 0);
+      const maxX = Math.min(tileX + range, this.dimensions - 1);
+      const minY = Math.max(tileY - range, 0);
+      const maxY = Math.min(tileY + range, this.dimensions - 1);
+
+      const nearbyTileCoordinates = new Array<TileCoordinates>();
+      for (let y = minY; y <= maxY; y++) {
+         for (let x = minX; x <= maxX; x++) {
+            const tileCoordinates = [x, y];
+            nearbyTileCoordinates.push(tileCoordinates as TileCoordinates);
+         }
+      }
+
+      return nearbyTileCoordinates;
    }
 }
 

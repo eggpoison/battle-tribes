@@ -1,13 +1,13 @@
 import Board, { Chunk } from "../Board";
 import Component from "../Component";
-import Entity from "../Entity";
+import Entity from "../entities/Entity";
 import SETTINGS from "../settings";
 import { Point, Vector } from "../utils";
 import HitboxComponent from "./HitboxComponent";
 
 class TransformComponent extends Component {
    /** Position of the entity */
-   public position: Point;
+   public position!: Point;
    /** Velocity of the entity */
    public velocity: Vector;
    /** Rotation of the entity in degrees */
@@ -18,39 +18,34 @@ class TransformComponent extends Component {
    /** Number of tiles that acceleration gets reduced by every second */
    private static FRICTION = 3;
 
-   constructor(startingPosition: Point, startingVelocity: Vector = new Vector(0, 0), startingRotation: number = 0) {
+   constructor(startingPosition?: Point, startingVelocity: Vector = new Vector(0, 0), startingRotation: number = 0) {
       super();
 
-      this.position = startingPosition;
+      if (typeof startingPosition !== "undefined") this.position = startingPosition;
       this.velocity = startingVelocity;
       this.rotation = startingRotation;
    }
 
    public tick(): void {
-      // If the entity has a hitbox, check if it will collide first
+      // If the entity is going to collide into a wall, don't move
       const entity = this.getEntity();
-      if (entity.hasComponent(HitboxComponent)) {
-         const hitboxComponent = entity.getComponent(HitboxComponent)!;
-
-         if (hitboxComponent.willCollideWithWall()) return;
-      }
+      const hitboxComponent = entity.getComponent(HitboxComponent);
+      if (hitboxComponent !== null && hitboxComponent.willCollideWithWall()) return;
 
       // Apply friction
-      this.velocity.magnitude -= TransformComponent.FRICTION / SETTINGS.tps;
-      if (this.velocity.magnitude < 0) this.velocity.magnitude = 0;
-
-      // if (this.acceleration.magnitude > 0) {
-      //    // Apply acceleration
-      //    const newVelocity = this.velocity.add(this.acceleration);
-      //    this.velocity = newVelocity;
-
-      //    // Apply friction to acceleration
-      //    this.acceleration.magnitude -= TransformComponent.FRICTION / SETTINGS.tps;
-      //    if (this.acceleration.magnitude < 0) this.acceleration.magnitude = 0;
-      // }
+      const friction = Math.min(TransformComponent.FRICTION / SETTINGS.tps, Math.abs(this.velocity.magnitude - this.targetVelocity.magnitude));
+      if (this.velocity.magnitude > this.targetVelocity.magnitude) {
+         this.velocity.magnitude -= friction;
+      } else {
+         this.velocity.magnitude += friction;
+      }
       
       const positionAdd = this.velocity.convertToPoint();
       this.position = this.position.add(positionAdd);
+   }
+
+   public setTargetVelocity(targetVelocity: Vector): void {
+      this.targetVelocity = targetVelocity;
    }
 
    public getChunk(): Chunk | null {

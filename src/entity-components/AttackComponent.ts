@@ -1,6 +1,6 @@
 import Board from "../Board";
 import Component from "../Component";
-import Entity from "../Entity";
+import Entity from "../entities/Entity";
 import { Point } from "../utils";
 import HealthComponent from "./HealthComponent";
 import TransformComponent from "./TransformComponent";

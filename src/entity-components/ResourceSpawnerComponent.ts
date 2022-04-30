@@ -1,7 +1,7 @@
 import Board from "../Board";
 import Component from "../Component";
 import Resource from "../entities/Resource";
-import { EventType } from "../Entity";
+import { EventType } from "../entities/Entity";
 import ITEMS, { ItemName } from "../items";
 import { getRandomAngle, Point, randInt, Vector } from "../utils";
 import TransformComponent from "./TransformComponent";

@@ -1,6 +1,6 @@
-import Board, { Chunk } from "./Board";
-import Component from "./Component";
-import HitboxComponent from "./entity-components/HitboxComponent";
+import Board, { Chunk } from "../Board";
+import Component from "../Component";
+import HitboxComponent from "../entity-components/HitboxComponent";
 
 export enum EventType {
    deathByEntity
@@ -23,11 +23,11 @@ const getEventsObject = (): EventsObject => {
 abstract class Entity {
    public previousChunk?: Chunk;
 
-   private components: Array<Component>;
+   private readonly components: ReadonlyArray<Component>;
 
    private events: EventsObject = getEventsObject();
 
-   constructor(components: Array<Component>) {
+   constructor(components: ReadonlyArray<Component>) {
       this.components = components;
 
       for (const component of this.components) {
@@ -107,15 +107,6 @@ abstract class Entity {
       }
 
       return null;
-   }
-
-   public hasComponent<C extends Component>(constr: { new(...args: any[]): C }): boolean {
-      for (const component of this.components) {
-         if (component instanceof constr) {
-            return true;
-         }
-      }
-      return false;
    }
 
    public createEvent(type: EventType, func: () => void): void {

@@ -1,5 +1,5 @@
 import { getCanvasHeight, getCanvasWidth } from "./components/Canvas";
-import Entity from "./Entity";
+import Entity from "./entities/Entity";
 import TransformComponent from "./entity-components/TransformComponent";
 import { Point } from "./utils";
 

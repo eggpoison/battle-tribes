@@ -1,6 +1,6 @@
 import Board from "../Board";
 import Component from "../Component";
-import Entity from "../Entity";
+import Entity from "../entities/Entity";
 import TransformComponent from "./TransformComponent";
 
 interface BaseHitboxInfo {
@@ -18,7 +18,7 @@ export interface CircleHitboxInfo extends BaseHitboxInfo {
    readonly radius: number;
 }
 
-type HitboxInfo = CircleHitboxInfo | RectangleHitboxInfo;
+export type HitboxInfo = CircleHitboxInfo | RectangleHitboxInfo;
 
 class HitboxComponent extends Component {
    public readonly entitiesInCollision: Array<Entity> = [];

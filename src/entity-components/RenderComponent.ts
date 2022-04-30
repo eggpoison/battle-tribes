@@ -10,7 +10,7 @@ interface BaseRenderSettings {
    readonly amount?: number;
    readonly zIndex?: number;
 }
-abstract class BaseRenderClass implements BaseRenderSettings {
+abstract class BaseRenderPart implements BaseRenderSettings {
    public readonly size: unknown;
    public readonly offset: [number, number];
    public readonly amount: number;
@@ -33,7 +33,7 @@ interface ShapeRenderSettings extends BaseRenderSettings {
       readonly colour: string;
    }
 }
-abstract class ShapeRenderClass extends BaseRenderClass implements ShapeRenderSettings {
+abstract class ShapeRenderPart extends BaseRenderPart implements ShapeRenderSettings {
    public readonly type: "ellipse" | "rectangle";
    public readonly fillColour: string;
    public readonly border?: { readonly width: number; readonly colour: string; };
@@ -56,7 +56,7 @@ interface EllipseRenderSettings extends ShapeRenderSettings {
       readonly radius: number | [number, number];
    }
 }
-export class EllipseRenderClass extends ShapeRenderClass implements EllipseRenderSettings {
+export class EllipseRenderPart extends ShapeRenderPart implements EllipseRenderSettings {
    public readonly type = "ellipse";
    public readonly size: {
       readonly radius: number | [number, number];
@@ -77,7 +77,7 @@ interface RectangleRenderSettings extends ShapeRenderSettings {
       readonly height: number;
    }
 }
-export class RectangleRenderClass extends ShapeRenderClass implements RectangleRenderSettings {
+export class RectangleRenderPart extends ShapeRenderPart implements RectangleRenderSettings {
    public readonly type = "rectangle";
    public readonly size: {
       readonly width: number;
@@ -99,7 +99,7 @@ interface ImageRenderSettings extends BaseRenderSettings {
    readonly type: "image";
    readonly url: string;
 }
-export class ImageRenderClass extends BaseRenderClass implements ImageRenderSettings {
+export class ImageRenderPart extends BaseRenderPart implements ImageRenderSettings {
    public readonly type: "image";
    public readonly url: string;
    public readonly size: {
@@ -116,47 +116,36 @@ export class ImageRenderClass extends BaseRenderClass implements ImageRenderSett
    }
 }
 
-export type RenderClasses = ReadonlyArray<EllipseRenderClass | RectangleRenderClass | ImageRenderClass>;
+type RenderPart = EllipseRenderPart | RectangleRenderPart | ImageRenderPart;
+export type RenderParts = Array<RenderPart>;
 
 class RenderComponent extends Component {
-   private readonly renderClasses: RenderClasses;
-   private readonly images: Array<HTMLImageElement>;
+   private readonly renderParts: RenderParts = new Array<RenderPart>();
+   private readonly partImages: Array<HTMLImageElement> = new Array<HTMLImageElement>();
 
-   constructor(renderClasses: RenderClasses) {
-      super();
-
-      this.renderClasses = this.sortRenderClassesByZIndex(renderClasses);
-      this.images = new Array<HTMLImageElement>(renderClasses.length);
-   }
-
-   private sortRenderClassesByZIndex(renderClasses: RenderClasses): RenderClasses {
-      const sortedRenderClasses = renderClasses.slice();
-
-      for (let i = 0; i < renderClasses.length - 1; i++) {
-         for (let j = 0; j < renderClasses.length - i - 1; j++) {
-            let firstItem = sortedRenderClasses[j];
-            let secondItem = sortedRenderClasses[j + 1];
-
-            if (firstItem.zIndex > secondItem.zIndex) {
-               // Swap them
-               const temp = sortedRenderClasses[j];
-               sortedRenderClasses[j] = sortedRenderClasses[j + 1];
-               sortedRenderClasses[j + 1] = temp;
-            }
+   public addPart(renderPart: RenderPart): void {
+      // Find a spot in the renderParts array for the part
+      let idx = 0;
+      for (; idx < this.renderParts.length; idx++) {
+         const currentRenderPart = this.renderParts[idx];
+         if (renderPart.zIndex <= currentRenderPart.zIndex) {
+            break;
          }
       }
 
-      return sortedRenderClasses;
+      // Insert the render part into the array
+      this.renderParts.splice(idx, 0, renderPart);
+
+      // If the render part is an image, preload the image into the images array
+      if (renderPart instanceof ImageRenderPart) {
+         this.partImages[idx] = new Image();
+         this.partImages[idx].src = require("../images/" + renderPart.url);
+      }
    }
 
-   public onLoad(): void {
-      // Preload the images
-      for (let i = 0; i < this.renderClasses.length; i++) {
-         const renderClass = this.renderClasses[i];
-         if (renderClass.type === "image") {   
-            this.images[i] = new Image();
-            this.images[i].src = require("../images/" + renderClass.url);
-         }
+   public addParts(renderParts: ReadonlyArray<RenderPart>): void {
+      for (const renderPart of renderParts) {
+         this.addPart(renderPart);
       }
    }
 
@@ -174,8 +163,8 @@ class RenderComponent extends Component {
       const entityRotation = entityTransformComponent.rotation;
 
 
-      for (let i = 0; i < this.renderClasses.length; i++) {
-         const renderClass = this.renderClasses[i];
+      for (let i = 0; i < this.renderParts.length; i++) {
+         const renderClass = this.renderParts[i];
 
          const cameraX = Camera.getXPositionInCamera(position.x + renderClass.offset![0] * Board.tileSize);
          const cameraY = Camera.getYPositionInCamera(position.y + renderClass.offset![1] * Board.tileSize);
@@ -242,7 +231,7 @@ class RenderComponent extends Component {
                // Undo the translation
                ctx.translate(-cameraX, -cameraY);
 
-               ctx.drawImage(this.images[i], cameraXWithSize, cameraYWithSize, width * Board.tileSize, height * Board.tileSize);
+               ctx.drawImage(this.partImages[i], cameraXWithSize, cameraYWithSize, width * Board.tileSize, height * Board.tileSize);
 
                // Reset rotation
                ctx.setTransform(1, 0, 0, 1, 0, 0);

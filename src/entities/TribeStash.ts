@@ -7,6 +7,8 @@ import Tribe from "../Tribe";
 
 /** Where tribes put their resources in order to use them. */
 class TribeStash extends Entity {
+   private static readonly SIZE = 1.5;
+
    public static OPEN_MESSAGE = "Press space to open stash";
    public static CLOSE_MESSAGE = "Press space to close stash";
 
@@ -17,32 +19,39 @@ class TribeStash extends Entity {
    constructor(tribe: Tribe) {
       const spawnPosition = tribe.position;
 
-      const SIZE = 1.5;
-
       const HITBOX: CircleHitboxInfo = {
          type: "circle",
-         radius: SIZE / 2
+         radius: TribeStash.SIZE / 2
       };
 
       super([
          new TransformComponent(spawnPosition),
-         new HitboxComponent(HITBOX),
+         new HitboxComponent(),
          new RenderComponent(),
          new InventoryComponent(TribeStash.DEFAULT_SLOT_COUNT)
       ]);
+
+      this.setHitbox();
 
       this.getComponent(RenderComponent)!.addPart(
          new ImageRenderPart({
             type: "image",
             size: {
-               width: SIZE,
-               height: SIZE
+               width: TribeStash.SIZE,
+               height: TribeStash.SIZE
             },
             url: "tribe-stash.png"
          })
       );
 
       this.tribe = tribe;
+   }
+
+   private setHitbox(): void {
+      this.getComponent(HitboxComponent)!.setHitbox({
+         type: "circle",
+         radius: TribeStash.SIZE / 2
+      });
    }
 }
 

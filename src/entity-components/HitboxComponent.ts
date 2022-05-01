@@ -1,4 +1,5 @@
 import Board from "../Board";
+import Camera from "../Camera";
 import Component from "../Component";
 import Entity from "../entities/Entity";
 import TransformComponent from "./TransformComponent";
@@ -23,12 +24,10 @@ export type HitboxInfo = CircleHitboxInfo | RectangleHitboxInfo;
 class HitboxComponent extends Component {
    public readonly entitiesInCollision: Array<Entity> = [];
 
-   public readonly hitboxInfo: HitboxInfo;
+   public hitboxInfo!: HitboxInfo;
 
-   constructor(hitboxInfo: HitboxInfo) {
-      super();
-
-      this.hitboxInfo = hitboxInfo;
+   public setHitbox(hitbox: HitboxInfo): void {
+      this.hitboxInfo = hitbox;
    }
 
    public getCollisions(): Array<Entity> | null {
@@ -83,6 +82,40 @@ class HitboxComponent extends Component {
       }
 
       return false;
+   }
+
+   public drawHitbox(ctx: CanvasRenderingContext2D): void {
+      const HITBOX_WIDTH = 2;
+      const HITBOX_COLOUR = "red";
+
+      const position = this.getEntity().getComponent(TransformComponent)!.position;
+
+      ctx.lineWidth = HITBOX_WIDTH;
+      ctx.strokeStyle = HITBOX_COLOUR;
+
+      switch (this.hitboxInfo.type) {
+         case "circle": {
+            ctx.beginPath();
+            ctx.arc(Camera.getXPositionInCamera(position.x), Camera.getYPositionInCamera(position.y), this.hitboxInfo.radius * Board.tileSize, 0, Math.PI * 2);
+            ctx.stroke();
+            break;
+         }
+         case "rectangle": {
+            const measurements = [-this.hitboxInfo.width / 2, this.hitboxInfo.width / 2, -this.hitboxInfo.height / 2, this.hitboxInfo.height / 2];
+ 
+            ctx.beginPath();
+            ctx.moveTo(Camera.getXPositionInCamera(position.x + measurements[0] * Board.tileSize), Camera.getYPositionInCamera(position.y + measurements[2] * Board.tileSize));
+
+            ctx.lineTo(Camera.getXPositionInCamera(position.x + measurements[1] * Board.tileSize), Camera.getYPositionInCamera(position.y + measurements[2] * Board.tileSize));
+            ctx.lineTo(Camera.getXPositionInCamera(position.x + measurements[1] * Board.tileSize), Camera.getYPositionInCamera(position.y + measurements[3] * Board.tileSize));
+            ctx.lineTo(Camera.getXPositionInCamera(position.x + measurements[0] * Board.tileSize), Camera.getYPositionInCamera(position.y + measurements[3] * Board.tileSize));
+            ctx.lineTo(Camera.getXPositionInCamera(position.x + measurements[0] * Board.tileSize), Camera.getYPositionInCamera(position.y + measurements[2] * Board.tileSize));
+
+            ctx.stroke();
+
+            break;
+         }
+      }
    }
 }
 

@@ -1,6 +1,6 @@
 import Board from "../Board";
 import Component from "../Component";
-import Resource from "../entities/Resource";
+import ItemEntity from "../entities/ItemEntity";
 import ITEMS, { ItemName } from "../items";
 import Item from "../items/Item";
 
@@ -22,7 +22,7 @@ class InventoryComponent extends Component {
       this.availableSlotCount = newAvailableSlotCount;
    }
 
-   public pickupResource(resource: Resource): void {
+   public pickupResource(resource: ItemEntity): void {
       const item = resource.item;
 
       const didAdd = this.addItem(item);
@@ -51,8 +51,6 @@ class InventoryComponent extends Component {
    }
 
    public addItemToSlot(slotNum: number, itemName: ItemName, amount: number = 1): void {
-      let remainingAddAmount = amount;
-
       const slot = this.itemSlots[slotNum];
       const itemKey = ItemName[itemName] as unknown as ItemName;
       const itemInfo = ITEMS[itemKey];
@@ -62,20 +60,8 @@ class InventoryComponent extends Component {
          this.itemSlots[slotNum] = [itemName, 0];
       }
 
-      {
-         const addAmount = Math.min(amount, itemInfo.stackSize - this.itemSlots[slotNum][1]);
-         this.itemSlots[slotNum][1] += addAmount;
-
-         if (addAmount === amount) {
-            // If all of the item was added, no need to overflow
-            return;
-         }
-
-         remainingAddAmount -= addAmount;
-      }
-
-
-      // TODO: Overflow add
+      const addAmount = Math.min(amount, itemInfo.stackSize - this.itemSlots[slotNum][1]);
+      this.itemSlots[slotNum][1] += addAmount;
    }
 
    public removeItem(slotNum: number, amount: number = 1): void {

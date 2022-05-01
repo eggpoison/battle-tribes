@@ -1,9 +1,11 @@
 interface OptionsType {
-    showChunkBorders: boolean;
+   showChunkBorders: boolean;
+   showEntityHitboxes: boolean;
 }
 
 const OPTIONS: OptionsType = {
-    showChunkBorders: false
+   showChunkBorders: false,
+   showEntityHitboxes: false
 }
 
 export default OPTIONS;

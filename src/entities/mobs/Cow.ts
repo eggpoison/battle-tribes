@@ -1,5 +1,5 @@
 import { EventType } from "../Entity";
-import { RectangleHitboxInfo } from "../../entity-components/HitboxComponent";
+import HitboxComponent, { RectangleHitboxInfo } from "../../entity-components/HitboxComponent";
 import RenderComponent, { EllipseRenderPart } from "../../entity-components/RenderComponent";
 import ResourceSpawnComponent from "../../entity-components/ResourceSpawnerComponent";
 import  { ItemName } from "../../items";
@@ -8,6 +8,7 @@ import { Point } from "../../utils";
 import Mob from "./Mob";
 import AIManagerComponent from "../../entity-components/ai/AIManangerComponent";
 import WanderAI from "../../entity-components/ai/WanderAI";
+import MOB_INFO_RECORD, { MobInfo } from "../../mob-info";
 
 class Cow extends Mob {
    public readonly preferredTileTypes: ReadonlyArray<TileType> = [
@@ -22,16 +23,12 @@ class Cow extends Mob {
    private static readonly MAX_HEALTH = 15;
 
    constructor(position: Point) {
-      const hitboxInfo: RectangleHitboxInfo = {
-         type: "rectangle",
-         width: Cow.WIDTH,
-         height: Cow.HEIGHT
-      };
-
-      super(position, hitboxInfo, Cow.MAX_HEALTH, [
+      super(position, Cow.MAX_HEALTH, [
          new ResourceSpawnComponent(),
          new AIManagerComponent()
       ]);
+
+      this.setHitbox();
 
       this.createRenderParts();
 
@@ -39,6 +36,18 @@ class Cow extends Mob {
 
       this.getComponent(ResourceSpawnComponent)!.addResource(ItemName.meat, [1, 2], EventType.deathByEntity);
       this.getComponent(ResourceSpawnComponent)!.addResource(ItemName.leather, [0, 1], EventType.deathByEntity);
+   }
+
+   public getInfo(): MobInfo {
+      return MOB_INFO_RECORD.Cow;
+   }
+
+   private setHitbox(): void {
+      this.getComponent(HitboxComponent)!.setHitbox({
+         type: "rectangle",
+         width: Cow.WIDTH,
+         height: Cow.HEIGHT
+      });
    }
 
    private createRenderParts(): void {

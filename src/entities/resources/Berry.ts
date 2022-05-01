@@ -27,18 +27,15 @@ class Berry extends Entity {
 
       const startingRotation = randFloat(0, 360);
 
-      const hitbox: CircleHitboxInfo = {
-         type: "circle",
-         radius: Berry.SIZE / 2
-      };
-
       super([
          new TransformComponent(position, undefined, startingRotation),
          new RenderComponent(),
-         new HitboxComponent(hitbox),
+         new HitboxComponent(),
          new HealthComponent(Berry.HEALTH, undefined, undefined, undefined, Berry.LIFESPAN),
          new ResourceSpawnComponent()
       ]);
+
+      this.setHitbox();
 
       this.getComponent(RenderComponent)!.addPart(
          new ImageRenderPart({
@@ -52,6 +49,13 @@ class Berry extends Entity {
       );
 
       this.getComponent(ResourceSpawnComponent)!.addResource(ItemName.berry, [1, 2], EventType.deathByEntity);
+   }
+
+   private setHitbox(): void {
+      this.getComponent(HitboxComponent)!.setHitbox({
+         type: "circle",
+         radius: Berry.SIZE / 2
+      });
    }
 }
 

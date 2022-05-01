@@ -5,29 +5,26 @@ import TransformComponent from "../entity-components/TransformComponent";
 import Item from "../items/Item";
 import { getRandomAngle, Point } from "../utils";
 
-class Resource extends Entity {
+class ItemEntity extends Entity {
+   private static readonly SIZE = 0.5;
+
    public readonly item: Item;
 
    constructor(item: Item, position: Point) {
-      const SIZE = 0.5;
-
-      const HITBOX: CircleHitboxInfo = {
-         type: "circle",
-         radius: SIZE / 2
-      };
-
       super([
          new TransformComponent(position, undefined, getRandomAngle()),
          new RenderComponent(),
-         new HitboxComponent(HITBOX)
+         new HitboxComponent()
       ]);
+
+      this.setHitbox();
 
       this.getComponent(RenderComponent)!.addPart(
          new ImageRenderPart({
             type: "image",
             size: {
-               width: SIZE,
-               height: SIZE
+               width: ItemEntity.SIZE,
+               height: ItemEntity.SIZE
             },
             url: item.imageSrc
          })
@@ -35,6 +32,13 @@ class Resource extends Entity {
 
       this.item = item;
    }
+
+   private setHitbox(): void {
+      this.getComponent(HitboxComponent)!.setHitbox({
+         type: "circle",
+         radius: ItemEntity.SIZE / 2
+      });
+   }
 }
 
-export default Resource;
+export default ItemEntity;

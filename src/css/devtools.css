@@ -11,3 +11,13 @@
    z-index: 1;
    user-select: none;
 }
+
+#devtools label {
+   display: block;
+}
+#devtools h2 {
+   margin: 0.8rem 0 0.3rem;
+}
+#devtools p {
+   margin: 0;
+}

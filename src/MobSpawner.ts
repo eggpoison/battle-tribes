@@ -16,7 +16,7 @@ const getEligibleMobs = (tileType: TileType): Array<MobInfo> => {
    return eligibleMobs;
 }
 
-abstract class MobSpawning {
+abstract class MobSpawner {
    /** The chance that mob spawning is done in a chunk each second */
    private static MOB_SPAWN_RATE = 0.02;
 
@@ -55,7 +55,7 @@ abstract class MobSpawning {
    }
 
    public static runSpawnAttempt(): void {
-      if (this.mobCount < this.targetMobCount && Math.random() <= 1 / SETTINGS.tps) {
+      if (this.mobCount < this.targetMobCount && Math.random() <= this.MOB_SPAWN_RATE * Board.size * Board.size / SETTINGS.tps) {
          let chosenSpawnTileCoordinates!: [number, number];
 
          while (typeof chosenSpawnTileCoordinates === "undefined") {
@@ -82,4 +82,4 @@ abstract class MobSpawning {
    }
 }
 
-export default MobSpawning;
+export default MobSpawner;

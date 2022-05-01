@@ -23,19 +23,28 @@ function Devtools() {
       }
    });
 
-   const updateShowChunkBordersOption = (e: React.ChangeEvent) => {
+   const updateShowChunkBordersOption = (e: React.ChangeEvent): void => {
       OPTIONS.showChunkBorders = (e.target as HTMLInputElement).checked;
+   }
+
+   const updateShowEntityHitboxesOption = (e: React.ChangeEvent): void => {
+      OPTIONS.showEntityHitboxes = (e.target as HTMLInputElement).checked;
    }
 
    return isVisible ? (
       <div id="devtools">
          <label>
-            Show Chunk Borders
+            Show chunk borders
             <input type="checkbox" defaultChecked={false} onChange={e => updateShowChunkBordersOption(e)} />
          </label>
 
-      <h2>Entities</h2>
-      <p>{census.entityCount} total entities</p>
+         <label>
+            Show entity hitboxes
+            <input type="checkbox" defaultChecked={false} onChange={e => updateShowEntityHitboxesOption(e)} />
+         </label>
+
+         <h2>Entities</h2>
+         <p>{census.entityCount} total entities</p>
       </div>
    ) : null;
 }

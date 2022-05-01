@@ -13,11 +13,6 @@ class WanderAI extends EntityAI {
    constructor(wanderChance: number, wanderRange: number, wanderSpeed: number) {
       super("wander");
 
-      // Throw an error if the mob has no preferred tile types
-      // if (typeof this.entity.preferredTileTypes === "undefined") {
-      //    throw new Error("Entity must have the preferredTileTypes field if it has a WanderAI ai!");
-      // }
-
       this.wanderChance = wanderChance;
       this.wanderRange = wanderRange;
       this.wanderSpeed = wanderSpeed;
@@ -33,7 +28,7 @@ class WanderAI extends EntityAI {
       const preferredNearbyTileCoordinates = new Array<TileCoordinates>();
       for (const tileCoordinates of nearbyTileCoordinates) {
          const tileType = Board.getTileType(tileCoordinates[0], tileCoordinates[1]);
-         if (this.entity.preferredTileTypes!.includes(tileType)) {
+         if (this.entity.getInfo().preferredTileTypes!.includes(tileType)) {
             preferredNearbyTileCoordinates.push(tileCoordinates);
          }
       }

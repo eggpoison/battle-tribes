@@ -3,7 +3,6 @@ import { getCanvasContext } from "./components/Canvas";
 import { updateDevtools } from "./components/Devtools";
 import InventoryViewerManager from "./components/InventoryViewerManager";
 import Berry from "./entities/resources/Berry";
-import Cow from "./entities/mobs/Cow";
 import Player from "./entities/Player";
 import Entity from "./entities/Entity";
 import InventoryComponent from "./entity-components/InventoryComponent";
@@ -15,7 +14,9 @@ import Tribe from "./Tribe";
 import { Point } from "./utils";
 import Camera from "./Camera";
 import Mob from "./entities/mobs/Mob";
-import MobSpawning from "./MobSpawning";
+import MobSpawner from "./MobSpawner";
+import HitboxComponent from "./entity-components/HitboxComponent";
+import OPTIONS from "./options";
 
 export type Chunk = Array<Entity>;
 
@@ -77,7 +78,7 @@ abstract class Board {
          this.addEntity(berry);
       }
 
-      MobSpawning.runSpawnAttempt();
+      MobSpawner.runSpawnAttempt();
       // // Calculate berry spawn rate
       // const ununitisedCowSpawnRate = Cow.SPAWN_RATE / SETTINGS.tps;
       // const cowSpawnRate = Math.floor(ununitisedCowSpawnRate) + (Math.random() < ununitisedCowSpawnRate % 1 ? 1 : 0);
@@ -106,11 +107,19 @@ abstract class Board {
                   mobCount++;
                }
 
-               // Render the entity
                if (chunkIsVisible) {
+                  // Render the entity
                   const renderComponent = entity.getComponent(RenderComponent);
                   if (renderComponent !== null) {
                      renderComponent.renderEntity(ctx);
+                  }
+
+                  if (OPTIONS.showEntityHitboxes) {
+                     // Draw the hitbox
+                     const hitboxComponent = entity.getComponent(HitboxComponent);
+                     if (hitboxComponent !== null) {
+                        hitboxComponent.drawHitbox(ctx);
+                     }
                   }
                }
 
@@ -124,7 +133,7 @@ abstract class Board {
          entityCount: entityCount
       });
 
-      MobSpawning.updateMobCount(mobCount);
+      MobSpawner.updateMobCount(mobCount);
    }
 
    private static spawnPlayer(): void {

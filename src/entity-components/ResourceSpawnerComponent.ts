@@ -1,6 +1,6 @@
 import Board from "../Board";
 import Component from "../Component";
-import Resource from "../entities/Resource";
+import ItemEntity from "../entities/ItemEntity";
 import { EventType } from "../entities/Entity";
 import ITEMS, { ItemName } from "../items";
 import { getRandomAngle, Point, randInt, Vector } from "../utils";
@@ -15,7 +15,7 @@ class ResourceSpawnComponent extends Component {
       for (let i = 0; i < amount; i++) {
          const position = this.getSpawnPosition();
          
-         const resource = new Resource(item, position);
+         const resource = new ItemEntity(item, position);
          Board.addEntity(resource);
       }
    }

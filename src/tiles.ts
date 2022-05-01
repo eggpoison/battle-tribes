@@ -5,7 +5,8 @@ export enum TileType {
    rainforest,
    mountain,
    desert,
-   snow
+   snow,
+   mud
 }
 
 interface TileInfo {
@@ -20,6 +21,10 @@ interface TileInfo {
 
 // Can't use an object cuz of stupid object ordering shenanigans.
 const TILE_INFO_MAP = new Map<TileType, TileInfo>([
+   [TileType.mountain, {
+      colour: "#aaaaaa",
+      minHeight: 0.8
+   }],
    [TileType.desert, {
       colour: "#ffff00",
       minTemperature: 0.7,
@@ -32,15 +37,18 @@ const TILE_INFO_MAP = new Map<TileType, TileInfo>([
    }],
    [TileType.rainforest, {
       colour: "#038a0c",
-      maxHeight: 0.2
+      minHeight: 0.2,
+      maxHeight: 0.4,
+      minHumidity: 0.1
    }],
-   [TileType.mountain, {
-      colour: "#aaaaaa",
-      minHeight: 0.8
+   [TileType.mud, {
+      colour: "#544600",
+      minHumidity: 0.5,
+      maxHeight: 0.8
    }],
    [TileType.grass, {
       colour: "#39f746"
-   }],
+   }]
 ]);
 
 export default TILE_INFO_MAP;

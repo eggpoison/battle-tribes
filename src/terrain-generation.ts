@@ -1,7 +1,7 @@
 import Board from "./Board";
 import { generatePerlinNoise } from "./perlin-noise";
 import { getTileType, TileType } from "./tiles";
-import { ease } from "./utils";
+import { ease, lerp } from "./utils";
 
 export function generateTerrain(): Array<Array<TileType>> {
    const HEIGHT_SCALE = 5;
@@ -30,8 +30,9 @@ export function generateTerrain(): Array<Array<TileType>> {
          let temperature = temperatureMap[x][y];
          let humidity = humidityMap[x][y];
 
-         // Height: 0-0.8 at middle, 0-1 at edges
-         height = height * (1 + (dist - 1) * 0.2);
+         // Height: 0-0.5 at middle, 0.7-1 at edges
+         const heightDist = ease(dist, 1.5);
+         height = height * lerp(0.5, 0.3, heightDist) + lerp(0, 0.7, heightDist);
 
          // Temperature: 0.5 at middle, 0-1 at edges
          temperature = 0.5 + (dist > 0.5 ? ease(temperature, 1.5) - 0.5 : 0);

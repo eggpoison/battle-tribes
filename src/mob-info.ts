@@ -1,7 +1,8 @@
 import Cow from "./entities/mobs/Cow";
+import Slime from "./entities/mobs/Slime";
 import { TileType } from "./tiles";
 
-type MobNames = "Cow";
+type MobNames = "Cow" | "Slime";
 
 export interface MobInfo {
    readonly preferredTileTypes: ReadonlyArray<TileType>;
@@ -16,6 +17,11 @@ const MOB_INFO_RECORD: MobInfoRecord = {
       preferredTileTypes: [TileType.grass],
       packSize: [2, 4],
       getConstr: () => Cow
+   },
+   Slime: {
+      preferredTileTypes: [TileType.grass, TileType.mud],
+      packSize: 1,
+      getConstr: () => Slime
    }
 };
 

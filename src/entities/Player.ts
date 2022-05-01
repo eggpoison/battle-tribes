@@ -6,7 +6,7 @@ import CameraFollowComponent from "../entity-components/CameraFollowComponent";
 import RenderComponent, { EllipseRenderPart } from "../entity-components/RenderComponent";
 import HitboxComponent, { CircleHitboxInfo } from "../entity-components/HitboxComponent";
 import AttackComponent, { CircleAttack } from "../entity-components/AttackComponent";
-import Resource from "./Resource";
+import ItemEntity from "./ItemEntity";
 import InventoryComponent from "../entity-components/InventoryComponent";
 import TribeStash from "./TribeStash";
 import Tribe from "../Tribe";
@@ -16,6 +16,8 @@ import InventoryViewerManager from "../components/InventoryViewerManager";
 import { toggleTribeStashViewerVisibility } from "../components/TribeStashViewer";
 
 class Player extends Entity {
+   private static readonly SIZE = 1;
+
    public static instance: Player;
    public static tribe: Tribe;
 
@@ -27,13 +29,6 @@ class Player extends Entity {
       const offsetPoint = new Vector(OFFSET * Board.tileSize, getRandomAngle()).convertToPoint();
       const spawnPosition = tribe.position.add(offsetPoint);
       
-      const PLAYER_DIAMETER = 1;
-
-      const PLAYER_HITBOX: CircleHitboxInfo = {
-         type: "circle",
-         radius: PLAYER_DIAMETER / 2
-      };
-      
       const HAND_SIZE = 0.45;
       const HAND_ANGLES = 40 / 180 * Math.PI;
 
@@ -44,7 +39,7 @@ class Player extends Entity {
 
       super([
          new TransformComponent(spawnPosition),
-         new HitboxComponent(PLAYER_HITBOX),
+         new HitboxComponent(),
          new RenderComponent(),
          new PlayerControllerComponent(),
          new CameraFollowComponent(),
@@ -52,13 +47,15 @@ class Player extends Entity {
          new InventoryComponent(Player.DEFAULT_INVENTORY_SLOT_COUNT)
       ]);
 
+      this.setHitbox();
+
       // Create player body
       this.getComponent(RenderComponent)!.addPart(
          new EllipseRenderPart({
             type: "ellipse",
             fillColour: PLAYER_COLOUR,
             size: {
-               radius: PLAYER_DIAMETER / 2
+               radius: Player.SIZE / 2
             },
             border: {
                width: 5,
@@ -71,7 +68,7 @@ class Player extends Entity {
       // Create player hands
       for (let i = 0; i < 2; i++) {
          const multiplier = i === 0 ? -1 : 1;
-         const offsetPoint = new Vector(PLAYER_DIAMETER / 2, HAND_ANGLES * multiplier).convertToPoint();
+         const offsetPoint = new Vector(Player.SIZE / 2, HAND_ANGLES * multiplier).convertToPoint();
 
          this.getComponent(RenderComponent)!.addPart(
             new EllipseRenderPart({
@@ -105,7 +102,7 @@ class Player extends Entity {
          getPosition: (): Point => {
             const rotation = this.getComponent(TransformComponent)!.rotation;
 
-            const offset = RenderComponent.getOffset(PLAYER_DIAMETER / 2 + ATTACK_OFFSET, rotation);
+            const offset = RenderComponent.getOffset(Player.SIZE / 2 + ATTACK_OFFSET, rotation);
             const offsetPoint = new Point(offset[0], offset[1]);
 
             return this.getComponent(TransformComponent)!.position.add(offsetPoint);
@@ -118,8 +115,15 @@ class Player extends Entity {
       PlayerControllerComponent.createKeyEvent((key: string) => this.onKeyPress(key));
    }
 
+   private setHitbox(): void {
+      this.getComponent(HitboxComponent)!.setHitbox({
+         type: "circle",
+         radius: Player.SIZE / 2
+      });
+   }
+
    protected onCollision(collidingEntity: Entity): void {
-      if (collidingEntity instanceof Resource) {
+      if (collidingEntity instanceof ItemEntity) {
          // Pick up the resource
          const inventoryComponent = this.getComponent(InventoryComponent)!;
          inventoryComponent.pickupResource(collidingEntity);

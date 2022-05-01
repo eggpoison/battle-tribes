@@ -1,4 +1,5 @@
 import Component from "../../Component";
+import Mob from "../../entities/mobs/Mob";
 import EntityAI, { AIType } from "./EntityAI";
 
 class AIManagerComponent extends Component {
@@ -18,7 +19,7 @@ class AIManagerComponent extends Component {
       this.ai[ai.type] = ai;
 
       // Set the AI's entity
-      const entity = this.getEntity();
+      const entity = this.getEntity() as Mob;
       ai.setEntity(entity);
    }
 

@@ -108,10 +108,12 @@ class TransformComponent extends Component {
    public applyKnockback(knockbackSource: Point): void {
       const knockback = 1;
 
-      const angle = knockbackSource.angleBetween(this.position);
+      // if ()
 
-      const knockbackVector = new Vector(knockback, angle);
-      this.velocity = this.velocity.add(knockbackVector);
+      // const angle = knockbackSource.angleBetween(this.position);
+
+      // const knockbackVector = new Vector(knockback, angle);
+      // this.velocity = this.velocity.add(knockbackVector);
    }
 }
 

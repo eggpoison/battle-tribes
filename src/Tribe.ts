@@ -29,7 +29,7 @@ class Tribe {
 
    public static getPlayerTribeSpawnPosition(): Point {
       /** % of the board in each direction that the player can't spawn in */
-      const PADDING = 20;
+      const PADDING = 40;
 
       const x = Board.dimensions * Board.tileSize * randFloat(PADDING / 100, 1 - PADDING / 100);
       const y = Board.dimensions * Board.tileSize * randFloat(PADDING / 100, 1 - PADDING / 100);

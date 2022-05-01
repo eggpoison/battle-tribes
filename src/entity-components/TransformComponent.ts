@@ -56,13 +56,13 @@ class TransformComponent extends Component {
    }
 
    public static getNearbyEntities(position: Point, radius: number): Array<Entity> {
-      const unitsPerChunk = Board.tileSize * Board.chunkSize;
+      const units = Board.tileSize * Board.size;
 
-      const minChunkX = Math.max(Math.floor((position.x - radius) / unitsPerChunk), 0);
-      const minChunkY = Math.min(Math.floor((position.y - radius) / unitsPerChunk), Board.size - 1);
+      const minChunkX = Math.max(Math.floor((position.x - radius) / units), 0);
+      const minChunkY = Math.min(Math.floor((position.y - radius) / units), Board.size - 1);
 
-      const maxChunkX = Math.max(Math.floor((position.x + radius) / unitsPerChunk), 0);
-      const maxChunkY = Math.min(Math.floor((position.y + radius) / unitsPerChunk), Board.size - 1);
+      const maxChunkX = Math.max(Math.floor((position.x + radius) / units), 0);
+      const maxChunkY = Math.min(Math.floor((position.y + radius) / units), Board.size - 1);
 
       const nearbyEntities = new Array<Entity>();
 
@@ -101,6 +101,7 @@ class TransformComponent extends Component {
          }
       }
 
+      // console.log(nearbyEntities);
       return nearbyEntities;
    }
 

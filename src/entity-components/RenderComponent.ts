@@ -194,7 +194,6 @@ class RenderComponent extends Component {
                // Create the circle
                ctx.fillStyle = renderClass.fillColour;
                ctx.beginPath();
-               // ctx.arc(cameraX, cameraY, radius, 0, Math.PI * 2);
                ctx.ellipse(cameraX, cameraY, radiusX, radiusY, 0, 0, Math.PI * 2);
                ctx.fill();
 

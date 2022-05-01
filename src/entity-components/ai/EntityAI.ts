@@ -1,4 +1,4 @@
-import Mob from "../../entities/Mob";
+import Mob from "../../entities/mobs/Mob";
 import { Point, Vector } from "../../utils";
 import TransformComponent from "../TransformComponent";
 

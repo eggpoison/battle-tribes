@@ -11,6 +11,8 @@ import "./css/inventory-viewer.css";
 import "./css/message-display.css";
 import "./css/tribe-stash-viewer.css";
 import { precomputeTileLocations } from './tiles';
+import { Minimap } from './components/MinimapCanvas';
+import MobSpawning from './MobSpawning';
 
 const root = ReactDOM.createRoot(
    document.getElementById('root') as HTMLElement
@@ -25,6 +27,9 @@ root.render(
 export function load() {
    Camera.setup();
    Board.setup();
+   MobSpawning.setup();
+   Minimap.setup();
+   Minimap.drawBackground();
    precomputeTileLocations();
    Game.startGame();
 }

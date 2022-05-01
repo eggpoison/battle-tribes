@@ -211,3 +211,8 @@ export class Colour {
    //    return hex;
    // }
 }
+
+export function ease(t: number, a: number): number {
+   const tToA = Math.pow(t, a);
+   return tToA / (tToA + Math.pow(1 - t, a));
+}

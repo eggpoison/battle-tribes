@@ -1,9 +1,9 @@
-import { generateBoard } from "./terrain-generation";
+import { generateTerrain } from "./terrain-generation";
 import { getCanvasContext } from "./components/Canvas";
 import { updateDevtools } from "./components/Devtools";
 import InventoryViewerManager from "./components/InventoryViewerManager";
-import Berry from "./entities/Berry";
-import Cow from "./entities/Cow";
+import Berry from "./entities/resources/Berry";
+import Cow from "./entities/mobs/Cow";
 import Player from "./entities/Player";
 import Entity from "./entities/Entity";
 import InventoryComponent from "./entity-components/InventoryComponent";
@@ -13,6 +13,9 @@ import SETTINGS from "./settings";
 import { TileType } from "./tiles";
 import Tribe from "./Tribe";
 import { Point } from "./utils";
+import Camera from "./Camera";
+import Mob from "./entities/mobs/Mob";
+import MobSpawning from "./MobSpawning";
 
 export type Chunk = Array<Entity>;
 
@@ -20,7 +23,7 @@ export type TileCoordinates = [number, number];
 
 abstract class Board {
    /** The width and height of the board in chunks */
-   public static size: number = 8;
+   public static size: number = 16;
    /** The width and height of a chunk in cells */
    public static chunkSize: number = 8;
    /** By default how large the tiles are in pixels */
@@ -34,7 +37,7 @@ abstract class Board {
    private static tiles: Array<Array<TileType>>;
 
    public static setup(): void {
-      this.tiles = generateBoard(this.dimensions);
+      this.tiles = generateTerrain();
 
       // Initialise the chunks array
       this.chunks = new Array<Array<Chunk>>(this.size);
@@ -63,21 +66,6 @@ abstract class Board {
       return this.chunks[x][y];
    }
 
-   private static getEntities(): ReadonlyArray<Entity> {
-      const entities = new Array<Entity>();
-
-      for (let y = 0; y < this.size; y++) {
-         for (let x = 0; x < this.size; x++) {
-            const chunk = this.getChunk(x, y)!;
-            for (const entity of chunk) {
-               entities.push(entity);
-            }
-         }
-      }
-
-      return entities;
-   }
-
    public static tick(): void {
       // Calculate berry spawn rate
       const ununitisedBerrySpawnRate = SETTINGS.fruitSpawnRate / SETTINGS.tps;
@@ -88,38 +76,55 @@ abstract class Board {
          const berry = new Berry();
          this.addEntity(berry);
       }
-      // Calculate berry spawn rate
-      const ununitisedCowSpawnRate = Cow.SPAWN_RATE / SETTINGS.tps;
-      const cowSpawnRate = Math.floor(ununitisedCowSpawnRate) + (Math.random() < ununitisedCowSpawnRate % 1 ? 1 : 0);
 
-      // Spawn berries
-      for (let i = 0; i < cowSpawnRate; i++) {
-         const cow = new Cow();
-         this.addEntity(cow);
-      }
+      MobSpawning.runSpawnAttempt();
+      // // Calculate berry spawn rate
+      // const ununitisedCowSpawnRate = Cow.SPAWN_RATE / SETTINGS.tps;
+      // const cowSpawnRate = Math.floor(ununitisedCowSpawnRate) + (Math.random() < ununitisedCowSpawnRate % 1 ? 1 : 0);
+
+      // // Spawn berries
+      // for (let i = 0; i < cowSpawnRate; i++) {
+      //    const cow = new Cow();
+      //    this.addEntity(cow);
+      // }
 
       let entityCount = 0;
+      let mobCount = 0;
+
       const ctx = getCanvasContext();
+      for (let y = 0; y < this.size; y++) {
+         for (let x = 0; x < this.size; x++) {
+            // A copy of the chunk array has to be used, as otherwise if an entity
+            // dies, an entity will get skipped by the loop.
+            const chunk = this.getChunk(x, y)!.slice();
 
-      // A copy of the entities array has to be used, as otherwise if an entity dies, an entity will get skipped by the loop.
-      const entities = this.getEntities().slice();
-      for (const entity of entities) {
-         entityCount++;
+            const chunkIsVisible = Camera.chunkIsVisible(x, y);
 
-         // Render the entity
-         const renderComponent = entity.getComponent(RenderComponent);
-         if (renderComponent !== null) {
-            renderComponent.renderEntity(ctx);
+            for (const entity of chunk) {
+               entityCount++;
+               if (entity instanceof Mob) {
+                  mobCount++;
+               }
+
+               // Render the entity
+               if (chunkIsVisible) {
+                  const renderComponent = entity.getComponent(RenderComponent);
+                  if (renderComponent !== null) {
+                     renderComponent.renderEntity(ctx);
+                  }
+               }
+
+               entity.tick();
+               this.upateEntityChunk(entity);
+            }
          }
-
-         entity.tick();
-
-         this.upateEntityChunk(entity);
       }
       
       updateDevtools({
          entityCount: entityCount
       });
+
+      MobSpawning.updateMobCount(mobCount);
    }
 
    private static spawnPlayer(): void {

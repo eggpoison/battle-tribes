@@ -1,18 +1,17 @@
 import Board from "./Board";
 import Camera from "./Camera";
-import { render } from "./components/Canvas";
-import { drawMinimapAttempt } from "./components/MinimapCanvas";
+import { renderBoard } from "./components/Canvas";
+import { Minimap } from "./components/MinimapCanvas";
+import Player from "./entities/Player";
+import TransformComponent from "./entity-components/TransformComponent";
 import SETTINGS from "./settings";
-
-let minimapHasBeenDrawn = false;
 
 abstract class Game {
    public static tick(): void {
-      if (!minimapHasBeenDrawn) {
-         minimapHasBeenDrawn = drawMinimapAttempt();
-      }
       Camera.updateCameraPosition();
-      render();
+      Camera.tick();
+      Minimap.drawEntities(Player.instance.getComponent(TransformComponent)!.position);
+      renderBoard();
       Board.tick();
    }
 

@@ -1,13 +1,13 @@
-import Board from "../Board";
-import Entity, { EventType } from "./Entity";
-import HealthComponent from "../entity-components/HealthComponent";
-import HitboxComponent, { CircleHitboxInfo } from "../entity-components/HitboxComponent";
-import RenderComponent, { ImageRenderPart } from "../entity-components/RenderComponent";
-import ResourceSpawnComponent from "../entity-components/ResourceSpawnerComponent";
-import TransformComponent from "../entity-components/TransformComponent";
-import { ItemName } from "../items";
-import { getTilesByType, TileType } from "../tiles";
-import { randFloat, randItem } from "../utils";
+import Board from "../../Board";
+import Entity, { EventType } from "../Entity";
+import HealthComponent from "../../entity-components/HealthComponent";
+import HitboxComponent, { CircleHitboxInfo } from "../../entity-components/HitboxComponent";
+import RenderComponent, { ImageRenderPart } from "../../entity-components/RenderComponent";
+import ResourceSpawnComponent from "../../entity-components/ResourceSpawnerComponent";
+import TransformComponent from "../../entity-components/TransformComponent";
+import { ItemName } from "../../items";
+import { getTilesByType, TileType } from "../../tiles";
+import { randFloat, randItem } from "../../utils";
 
 class Berry extends Entity {
    private static readonly spawnableTileTypes: ReadonlyArray<TileType> = [

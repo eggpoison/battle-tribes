@@ -27,12 +27,12 @@ const TILE_INFO_MAP = new Map<TileType, TileInfo>([
    }],
    [TileType.snow, {
       colour: "#ffffff",
-      maxTemperature: 0.5,
+      maxTemperature: 0.3,
       maxHumidity: 0.3
    }],
    [TileType.rainforest, {
       colour: "#038a0c",
-      minHumidity: 0.7
+      maxHeight: 0.2
    }],
    [TileType.mountain, {
       colour: "#aaaaaa",

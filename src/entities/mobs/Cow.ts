@@ -1,15 +1,13 @@
-import Board from "../Board";
-import { EventType } from "./Entity";
-import { RectangleHitboxInfo } from "../entity-components/HitboxComponent";
-import RenderComponent, { EllipseRenderPart } from "../entity-components/RenderComponent";
-import ResourceSpawnComponent from "../entity-components/ResourceSpawnerComponent";
-import  { ItemName } from "../items";
-import { getTilesByType, TileType } from "../tiles";
-import { randItem } from "../utils";
+import { EventType } from "../Entity";
+import { RectangleHitboxInfo } from "../../entity-components/HitboxComponent";
+import RenderComponent, { EllipseRenderPart } from "../../entity-components/RenderComponent";
+import ResourceSpawnComponent from "../../entity-components/ResourceSpawnerComponent";
+import  { ItemName } from "../../items";
+import { TileType } from "../../tiles";
+import { Point } from "../../utils";
 import Mob from "./Mob";
-import AIManagerComponent from "../entity-components/ai/AIManangerComponent";
-import WanderAI from "../entity-components/ai/WanderAI";
-import TransformComponent from "../entity-components/TransformComponent";
+import AIManagerComponent from "../../entity-components/ai/AIManangerComponent";
+import WanderAI from "../../entity-components/ai/WanderAI";
 
 class Cow extends Mob {
    public readonly preferredTileTypes: ReadonlyArray<TileType> = [
@@ -23,19 +21,17 @@ class Cow extends Mob {
    private static readonly HEIGHT = 1;
    private static readonly MAX_HEALTH = 15;
 
-   constructor() {
+   constructor(position: Point) {
       const hitboxInfo: RectangleHitboxInfo = {
          type: "rectangle",
          width: Cow.WIDTH,
          height: Cow.HEIGHT
       };
 
-      super(hitboxInfo, Cow.MAX_HEALTH, [
+      super(position, hitboxInfo, Cow.MAX_HEALTH, [
          new ResourceSpawnComponent(),
          new AIManagerComponent()
       ]);
-
-      this.setPosition();
 
       this.createRenderParts();
 
@@ -43,15 +39,6 @@ class Cow extends Mob {
 
       this.getComponent(ResourceSpawnComponent)!.addResource(ItemName.meat, [1, 2], EventType.deathByEntity);
       this.getComponent(ResourceSpawnComponent)!.addResource(ItemName.leather, [0, 1], EventType.deathByEntity);
-   }
-
-   private setPosition(): void {
-      const potentialTileCoordinates = getTilesByType(this.preferredTileTypes);
-
-      const spawnTileCoordinates = randItem(potentialTileCoordinates);
-      const position = Board.getRandomPositionInTile(spawnTileCoordinates);
-
-      this.getComponent(TransformComponent)!.position = position;
    }
 
    private createRenderParts(): void {
@@ -127,7 +114,7 @@ class Cow extends Mob {
    private createAI(): void {
       const aiManagerComponent = this.getComponent(AIManagerComponent)!;
 
-      const WANDER_RATE = 0.2;
+      const WANDER_RATE = 0.3;
       const WANDER_RANGE = 2;
       const WANDER_SPEED = 0.75;
 

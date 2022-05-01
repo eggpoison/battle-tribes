@@ -31,15 +31,20 @@ const setupCanvas = (): void => {
    updateCanvasSize();
 }
 
-export function render(): void {
+export function renderBoard(): void {
    // Clear canvas for redrawing
-   // ctx.clearRect(0, 0, canvas.width, canvas.height);
    ctx.fillStyle = SETTINGS.backgroundColour;
    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+   const [chunkMinX, chunkMaxX, chunkMinY, chunkMaxY] = Camera.getVisibleChunkBounds();
+   const minX = Math.max(chunkMinX * Board.chunkSize, 0);
+   const maxX = Math.min((chunkMaxX + 1) * Board.size, Board.dimensions - 1);
+   const minY = Math.max(chunkMinY * Board.chunkSize, 0);
+   const maxY = Math.min((chunkMaxY + 1) * Board.size, Board.dimensions - 1);
+
    // Draw tiles
-   for (let y = 0; y < Board.dimensions; y++) {
-      for (let x = 0; x < Board.dimensions; x++) {
+   for (let y = minY; y <= maxY; y++) {
+      for (let x = minX; x <= maxX; x++) {
          const tileType = Board.getTileType(x, y);
 
          const tileInfo = getTileInfo(tileType);
@@ -82,9 +87,6 @@ export function render(): void {
       ctx.lineTo(Camera.getXPositionInCamera(Board.dimensions * Board.tileSize), Camera.getYPositionInCamera(y * Board.tileSize));
       ctx.stroke();
    }
-
-   // Enable for a fun time
-   // ctx.rotate(1/SETTINGS.tps);
 }
 
 const Canvas = () => {

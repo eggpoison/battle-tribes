@@ -38,7 +38,7 @@ class TribeStash extends Entity {
                width: SIZE,
                height: SIZE
             },
-            url: "berry.png"
+            url: "tribe-stash.png"
          })
       );
 

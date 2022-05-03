@@ -113,6 +113,10 @@ export class Vector {
       const theta = randFloat(0, 360);
       return new Vector(1, theta);
    }
+
+   public copy(): Vector {
+      return new Vector(this.magnitude, this.direction);
+   }
 }
 
 export function lerp(start: number, end: number, amount: number): number {

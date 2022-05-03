@@ -79,15 +79,6 @@ abstract class Board {
       }
 
       MobSpawner.runSpawnAttempt();
-      // // Calculate berry spawn rate
-      // const ununitisedCowSpawnRate = Cow.SPAWN_RATE / SETTINGS.tps;
-      // const cowSpawnRate = Math.floor(ununitisedCowSpawnRate) + (Math.random() < ununitisedCowSpawnRate % 1 ? 1 : 0);
-
-      // // Spawn berries
-      // for (let i = 0; i < cowSpawnRate; i++) {
-      //    const cow = new Cow();
-      //    this.addEntity(cow);
-      // }
 
       let entityCount = 0;
       let mobCount = 0;

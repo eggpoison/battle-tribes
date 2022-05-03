@@ -2,6 +2,7 @@ import Board, { Chunk } from "../Board";
 import Component from "../Component";
 import Entity from "../entities/Entity";
 import SETTINGS from "../settings";
+import TILE_INFO_MAP from "../tiles";
 import { Point, Vector } from "../utils";
 import HitboxComponent from "./HitboxComponent";
 
@@ -16,23 +17,35 @@ class TransformComponent extends Component {
    private knockback!: Point;
    private knockbackTime: number = 0;
 
-   constructor(startingPosition?: Point, startingVelocity: Vector = new Vector(0, 0), startingRotation: number = 0) {
+   private readonly isStatic: boolean;
+
+   constructor(startingPosition?: Point, startingVelocity: Vector = new Vector(0, 0), startingRotation: number = 0, isStatic: boolean = false) {
       super();
 
       if (typeof startingPosition !== "undefined") this.position = startingPosition;
       this.velocity = startingVelocity;
       this.rotation = startingRotation;
+      this.isStatic = isStatic;
    }
 
    public tick(): void {
+      if (this.isStatic) return;
+
       // If the entity is going to collide into a wall, don't move
       const entity = this.getEntity();
       const hitboxComponent = entity.getComponent(HitboxComponent);
       if (hitboxComponent !== null && hitboxComponent.willCollideWithWall()) return;
 
-      const velocityPoint = this.velocity.convertToPoint();
+      const velocity = this.velocity.copy();
 
-      this.position = this.position.add(velocityPoint);
+      // Apply tile slowness
+      const tileType = Board.getTileType(...this.getTileCoordinates());
+      const tileInfo = TILE_INFO_MAP.get(tileType)!;
+      if (typeof tileInfo.effects !== "undefined" && typeof tileInfo.effects.moveSpeedMultiplier !== "undefined") {
+         velocity.magnitude *= tileInfo.effects.moveSpeedMultiplier;
+      }
+
+      this.position = this.position.add(velocity.convertToPoint());
 
       if (this.knockbackTime > 0) {
          // Apply knockback
@@ -55,6 +68,13 @@ class TransformComponent extends Component {
       const chunkY = Math.floor(this.position.y / (Board.tileSize * Board.size));
 
       return Board.getChunk(chunkX, chunkY);
+   }
+
+   private getTileCoordinates(): [number, number] {
+      const x = Math.floor(this.position.x / Board.tileSize);
+      const y = Math.floor(this.position.y / Board.tileSize);
+
+      return [x, y];
    }
 
    public static getNearbyEntities(position: Point, radius: number): Array<Entity> {

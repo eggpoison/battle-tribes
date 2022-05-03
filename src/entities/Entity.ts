@@ -24,8 +24,8 @@ const getEventsObject = (): EventsObject => {
 }
 
 abstract class Entity {
-   // Entities are immune to being hit for 0.1 seconds after being hit
-   public static iframes = 0.1 * SETTINGS.tps;
+   // Entities are immune to being hit for 0.15 seconds after being hit
+   public static iframes = 0.15 * SETTINGS.tps;
 
    public previousChunk?: Chunk;
 

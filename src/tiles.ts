@@ -9,14 +9,19 @@ export enum TileType {
    mud
 }
 
+type TileEffects = {
+   readonly moveSpeedMultiplier?: number;
+}
+
 interface TileInfo {
-   colour: string;
-   minHeight?: number;
-   maxHeight?: number;
-   minTemperature?: number;
-   maxTemperature?: number;
-   minHumidity?: number;
-   maxHumidity?: number;
+   readonly colour: string;
+   readonly minHeight?: number;
+   readonly maxHeight?: number;
+   readonly minTemperature?: number;
+   readonly maxTemperature?: number;
+   readonly minHumidity?: number;
+   readonly maxHumidity?: number;
+   readonly effects?: TileEffects;
 }
 
 // Can't use an object cuz of stupid object ordering shenanigans.
@@ -33,7 +38,10 @@ const TILE_INFO_MAP = new Map<TileType, TileInfo>([
    [TileType.snow, {
       colour: "#ffffff",
       maxTemperature: 0.3,
-      maxHumidity: 0.3
+      maxHumidity: 0.3,
+      effects: {
+         moveSpeedMultiplier: 0.6
+      }
    }],
    [TileType.sludge, {
       colour: "#038a0c",
@@ -43,7 +51,10 @@ const TILE_INFO_MAP = new Map<TileType, TileInfo>([
    [TileType.mud, {
       colour: "#544600",
       minHumidity: 0.5,
-      maxHeight: 0.8
+      maxHeight: 0.8,
+      effects: {
+         moveSpeedMultiplier: 0.4
+      }
    }],
    [TileType.grass, {
       colour: "#39f746"

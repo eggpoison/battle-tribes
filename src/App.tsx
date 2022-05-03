@@ -29,6 +29,9 @@ function App() {
          <Devtools />
          <MessageDisplay />
          <TribeStashViewer />
+
+         {/* Black filter */}
+         <div id="mask" className="hidden"></div>
       </div>
    );
 }

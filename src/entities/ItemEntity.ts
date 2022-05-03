@@ -12,7 +12,7 @@ class ItemEntity extends Entity {
 
    constructor(item: Item, position: Point) {
       super([
-         new TransformComponent(position, undefined, getRandomAngle()),
+         new TransformComponent(position, undefined, getRandomAngle(), true),
          new RenderComponent(),
          new HitboxComponent()
       ]);

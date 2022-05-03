@@ -24,6 +24,7 @@ type SlimeInfo = {
    readonly size: number;
    readonly health: number;
    readonly wanderRange: number;
+   readonly slimeDrop: number | [number, number];
    readonly splitChance: number;
 }
 
@@ -32,24 +33,28 @@ const slimeSizes: Record<SlimeSizeCategory, SlimeInfo> = {
       size: 0.6,
       health: 10,
       wanderRange: 1,
+      slimeDrop: [0, 1],
       splitChance: 0
    },
    [SlimeSizeCategory.medium]: {
       size: 1,
       health: 20,
       wanderRange: 2,
+      slimeDrop: 1,
       splitChance: 0.6
    },
    [SlimeSizeCategory.large]: {
       size: 1.5,
       health: 30,
       wanderRange: 2,
+      slimeDrop: [1, 2],
       splitChance: 0.8
    },
    [SlimeSizeCategory.colossal]: {
       size: 2.5,
       health: 50,
       wanderRange: 3,
+      slimeDrop: [2, 3],
       splitChance: 1
    }
 }
@@ -127,7 +132,7 @@ class Slime extends Mob {
    }
 
    private addItemDrops(): void {
-      const slimeDrops = randInt(0, 2);
+      const slimeDrops = typeof this.info.slimeDrop === "number" ? this.info.slimeDrop : randInt(...this.info.slimeDrop);
       this.getComponent(ResourceSpawnComponent)!.addResource(ItemName.slime, slimeDrops, EventType.deathByEntity);
    }
 

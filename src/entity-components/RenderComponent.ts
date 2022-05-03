@@ -3,7 +3,6 @@ import Camera from "../Camera";
 import Component from "../Component";
 import { Vector } from "../utils";
 import HealthComponent from "./HealthComponent";
-import HitboxComponent from "./HitboxComponent";
 import TransformComponent from "./TransformComponent";
 
 interface BaseRenderSettings {
@@ -150,7 +149,7 @@ class RenderComponent extends Component {
          this.partImages[idx] = new Image();
          this.partImages[idx].src = require("../images/" + renderPart.url);
 
-         if (this.getEntity().getComponent(HitboxComponent) !== null) {
+         if (this.getEntity().getComponent(HealthComponent) !== null) {
             this.partHurtImages[idx] = RenderComponent.getHurtImage(this.partImages[idx]);
          }
       }
@@ -186,14 +185,9 @@ class RenderComponent extends Component {
 
       // Convert all pixels to white
       for (let px = 0; px < imageData.width * imageData.height * 4; px += 4) {
-         const avgCol = (imageData.data[px] + imageData.data[px + 1] + imageData.data[px + 1]) / 3;
-
-         imageData.data[px] = avgCol;
-         imageData.data[px + 1] = avgCol;
-         imageData.data[px + 2] = avgCol;
-         // imageData.data[px] = 255;
-         // imageData.data[px + 1] = 255;
-         // imageData.data[px + 2] = 255;
+         imageData.data[px] = 255;
+         imageData.data[px + 1] = 255;
+         imageData.data[px + 2] = 255;
       }
 
       ctx.putImageData(imageData, 0, 0);
@@ -225,6 +219,9 @@ class RenderComponent extends Component {
          const cameraX = Camera.getXPositionInCamera(position.x + renderClass.offset![0] * Board.tileSize);
          const cameraY = Camera.getYPositionInCamera(position.y + renderClass.offset![1] * Board.tileSize);
 
+         const healthComponent = this.getEntity().getComponent(HealthComponent);
+         const isBeingHit = healthComponent !== null && healthComponent.isBeingHit();
+
          // Render the class
          switch (renderClass.type) {
             case "ellipse": {
@@ -248,7 +245,7 @@ class RenderComponent extends Component {
                ctx.translate(-centerX, -centerY);
 
                // Create the circle
-               ctx.fillStyle = renderClass.fillColour;
+               ctx.fillStyle = isBeingHit ? "#fff" : renderClass.fillColour;
                ctx.beginPath();
                ctx.ellipse(cameraX, cameraY, radiusX, radiusY, 0, 0, Math.PI * 2);
                ctx.fill();
@@ -256,7 +253,7 @@ class RenderComponent extends Component {
                if (typeof renderClass.border !== "undefined") {
                   // Create the circle border
                   ctx.lineWidth = renderClass.border.width;
-                  ctx.strokeStyle = renderClass.border.colour;
+                  ctx.strokeStyle = isBeingHit ? "#fff" : renderClass.border.colour;
                   ctx.stroke();
                }
                
@@ -269,7 +266,7 @@ class RenderComponent extends Component {
                const width = renderClass.size.width;
                const height = renderClass.size.height;
 
-               ctx.fillStyle = renderClass.fillColour;
+               ctx.fillStyle = isBeingHit ? "#fff" : renderClass.fillColour;
                ctx.fillRect(cameraX, cameraY, width, height);
                break;
             }
@@ -285,15 +282,6 @@ class RenderComponent extends Component {
                ctx.rotate(entityRotation / 180 * Math.PI);
                // Undo the translation
                ctx.translate(-cameraX, -cameraY);
-
-               const healthComponent = this.getEntity().getComponent(HealthComponent);
-               const isBeingHit = healthComponent !== null && healthComponent.isBeingHit();
-
-               // if (isBeingHit) {
-               //    ctx.putImageData(this.partHurtImages[i], cameraXWithSize, cameraYWithSize, 0, 0, width * Board.tileSize, height * Board.tileSize);
-               // } else {
-               //    ctx.drawImage(this.partImages[i], cameraXWithSize, cameraYWithSize, width * Board.tileSize, height * Board.tileSize);
-               // }
 
                let image!: HTMLImageElement;
                if (isBeingHit) {

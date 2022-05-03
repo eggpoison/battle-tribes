@@ -20,7 +20,7 @@ class TribeStash extends Entity {
       const spawnPosition = tribe.position;
 
       super([
-         new TransformComponent(spawnPosition),
+         new TransformComponent(spawnPosition, undefined, undefined, true),
          new HitboxComponent(),
          new RenderComponent(),
          new InventoryComponent(TribeStash.DEFAULT_SLOT_COUNT)

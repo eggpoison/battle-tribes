@@ -23,16 +23,24 @@ class AIManagerComponent extends Component {
       ai.setEntity(entity);
    }
 
-   private getCurrentAI(): EntityAI {
-      if (typeof this.currentAIType === "undefined") {
-         throw new Error("The currentAIType field wasn't set! Make sure to call the setCurrentAIType function.");
-      }
+   public getCurrentAI(): EntityAI {
       return this.ai[this.currentAIType]!;
    }
 
    public tick(): void {
       const currentAI = this.getCurrentAI();
-      currentAI.tick();
+      currentAI.checkTargetPosition();
+      if (typeof currentAI.tick !== "undefined") currentAI.tick();
+
+      // If the next AI can be switched, switch
+      for (const [aiType, ai] of Object.entries(this.ai)) {
+         if (aiType === this.currentAIType) continue;
+
+         if (typeof ai.shouldSwitch !== "undefined" && ai.shouldSwitch()) {
+            this.setCurrentAIType(aiType as AIType);
+            break;
+         }
+      }
    }
 }
 

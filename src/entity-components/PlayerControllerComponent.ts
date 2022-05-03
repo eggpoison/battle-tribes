@@ -23,22 +23,20 @@ export function keyIsPressed(key: string): boolean {
 }
 
 class PlayerControllerComponent extends Component {
-   private isMovingUp: boolean = false;
-   private isMovingRight: boolean = false;
-   private isMovingDown: boolean = false;
-   private isMovingLeft: boolean = false;
+   private previousMoveBitmap = 0;
+   private currentMoveBitmap = 0;
 
-   /** The number of cells that the player traverses in a second */
+   /** The number of tiles that the player traverses in a second */
    private readonly moveSpeed = 5;
 
-   public tick(): void {
+   private changeDirection(): void {
       const angle = this.getMoveAngle();
 
       const velocity = new Vector(angle !== null ? this.moveSpeed : 0, angle || 0);
 
       const entity = this.getEntity();
       const transformComponent = entity.getComponent(TransformComponent)!;
-      transformComponent.velocity = velocity;
+      transformComponent.setVelocity(velocity);
 
       // Update the entity's rotation to match the move direction
       if (angle !== null) {
@@ -46,16 +44,18 @@ class PlayerControllerComponent extends Component {
       }
    }
 
-   private getMoveAngle(): number | null {
-      let bitMask = 0;
-      if (this.isMovingUp) bitMask += 1
-      if (this.isMovingRight) bitMask += 2;
-      if (this.isMovingDown) bitMask += 4;
-      if (this.isMovingLeft) bitMask += 8;
+   public tick(): void {
+      if (this.currentMoveBitmap !== this.previousMoveBitmap) {
+         this.changeDirection();
+      }
 
+      this.previousMoveBitmap = this.currentMoveBitmap;
+   }
+
+   private getMoveAngle(): number | null {
       let angle!: number;
 
-      switch (bitMask) {
+      switch (this.currentMoveBitmap) {
          case 0: return null;
          case 1: angle = 0; break;
          case 2: angle = 90; break;
@@ -109,6 +109,8 @@ class PlayerControllerComponent extends Component {
       const key = e.key;
       isKeyDown ? addPressedKey(key) : removePressedKey(key);
 
+      let bitPos!: number;
+
       switch (key) {
          // Devtools
          case "`":
@@ -117,21 +119,22 @@ class PlayerControllerComponent extends Component {
 
          // Movement
          case "w":
-         case "ArrowUp":
-            this.isMovingUp = isKeyDown;
-            break;
+         case "ArrowUp": bitPos = 0; break;
          case "d":
-         case "ArrowRight":
-            this.isMovingRight = isKeyDown;
-            break;
+         case "ArrowRight": bitPos = 1; break;
          case "s":
-         case "ArrowDown":
-            this.isMovingDown = isKeyDown;
-            break;
+         case "ArrowDown": bitPos = 2; break;
          case "a":
-         case "ArrowLeft":
-            this.isMovingLeft = isKeyDown;
-            break;
+         case "ArrowLeft": bitPos = 3; break;
+      }
+
+      if (typeof bitPos !== "undefined") {
+         const bitmap = 1 << bitPos;
+         if (isKeyDown) {
+            this.currentMoveBitmap |= bitmap;
+         } else {
+            this.currentMoveBitmap &= ~bitmap;
+         }
       }
    }
 }

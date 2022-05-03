@@ -13,10 +13,8 @@ class TransformComponent extends Component {
    /** Rotation of the entity in degrees */
    public rotation: number;
 
-   private targetVelocity: Vector = new Vector(0, 0);
-
-   /** Number of tiles that acceleration gets reduced by every second */
-   private static FRICTION = 3;
+   private knockback!: Point;
+   private knockbackTime: number = 0;
 
    constructor(startingPosition?: Point, startingVelocity: Vector = new Vector(0, 0), startingRotation: number = 0) {
       super();
@@ -32,20 +30,24 @@ class TransformComponent extends Component {
       const hitboxComponent = entity.getComponent(HitboxComponent);
       if (hitboxComponent !== null && hitboxComponent.willCollideWithWall()) return;
 
-      // Apply friction
-      const friction = Math.min(TransformComponent.FRICTION / SETTINGS.tps, Math.abs(this.velocity.magnitude - this.targetVelocity.magnitude));
-      if (this.velocity.magnitude > this.targetVelocity.magnitude) {
-         this.velocity.magnitude -= friction;
-      } else {
-         this.velocity.magnitude += friction;
+      const velocityPoint = this.velocity.convertToPoint();
+
+      this.position = this.position.add(velocityPoint);
+
+      if (this.knockbackTime > 0) {
+         // Apply knockback
+         this.position = this.position.add(this.knockback);
+
+         this.knockbackTime -= 1 / SETTINGS.tps;
       }
-      
-      const positionAdd = this.velocity.convertToPoint();
-      this.position = this.position.add(positionAdd);
    }
 
-   public setTargetVelocity(targetVelocity: Vector): void {
-      this.targetVelocity = targetVelocity;
+   public setVelocity(velocity: Vector): void {
+      this.velocity = velocity;
+   }
+
+   public stopVelocity(): void {
+      this.velocity = new Vector(0, 0);
    }
 
    public getChunk(): Chunk | null {
@@ -79,17 +81,17 @@ class TransformComponent extends Component {
                   const hitboxInfo = hitboxComponent.hitboxInfo;
                   switch (hitboxInfo.type) {
                      case "circle": {
-                        if (position.distanceFrom(entityPosition) + hitboxInfo.radius <= radius) {
+                        if (position.distanceFrom(entityPosition) - hitboxInfo.radius * Board.tileSize <= radius) {
                            nearbyEntities.push(entity);
                         }
                         break;
                      }
                      case "rectangle": {
                         const dist = position.distanceFromRectangle(
-                           entityPosition.x - hitboxInfo.width / 2,
-                           entityPosition.x + hitboxInfo.width / 2,
-                           entityPosition.y - hitboxInfo.height / 2,
-                           entityPosition.y + hitboxInfo.height / 2);
+                           entityPosition.x - hitboxInfo.width / 2 * Board.tileSize,
+                           entityPosition.x + hitboxInfo.width / 2 * Board.tileSize,
+                           entityPosition.y - hitboxInfo.height / 2 * Board.tileSize,
+                           entityPosition.y + hitboxInfo.height / 2 * Board.tileSize);
                         if (dist <= radius) {
                            nearbyEntities.push(entity);
                         }
@@ -101,19 +103,19 @@ class TransformComponent extends Component {
          }
       }
 
-      // console.log(nearbyEntities);
       return nearbyEntities;
    }
 
-   public applyKnockback(knockbackSource: Point): void {
-      const knockback = 1;
+   /**
+    * @param source The source of the knockback
+    * @param strength How many blocks the knockback will move the entity in a second
+    */
+   public applyKnockback(source: Point, strength: number): void {
+      const angle = source.angleBetween(this.position);
 
-      // if ()
-
-      // const angle = knockbackSource.angleBetween(this.position);
-
-      // const knockbackVector = new Vector(knockback, angle);
-      // this.velocity = this.velocity.add(knockbackVector);
+      const knockbackVector = new Vector(strength * Board.tileSize / SETTINGS.tps, angle);
+      this.knockback = knockbackVector.convertToPoint();
+      this.knockbackTime = Entity.iframes / SETTINGS.tps;
    }
 }
 

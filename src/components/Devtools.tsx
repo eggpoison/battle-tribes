@@ -45,6 +45,8 @@ function Devtools() {
 
          <h2>Entities</h2>
          <p>{census.entityCount} total entities</p>
+
+         <button>Spawn mob</button>
       </div>
    ) : null;
 }

@@ -1,19 +1,21 @@
-import Entity from "./Entity";
-import TransformComponent from "../entity-components/TransformComponent";
-import PlayerControllerComponent from "../entity-components/PlayerControllerComponent";
-import { getRandomAngle, Point, Vector } from "../utils";
-import CameraFollowComponent from "../entity-components/CameraFollowComponent";
-import RenderComponent, { EllipseRenderPart } from "../entity-components/RenderComponent";
-import HitboxComponent, { CircleHitboxInfo } from "../entity-components/HitboxComponent";
-import AttackComponent, { CircleAttack } from "../entity-components/AttackComponent";
+import Entity, { EventType } from "./Entity";
+import TransformComponent from "./../entity-components/TransformComponent";
+import PlayerControllerComponent from "./../entity-components/PlayerControllerComponent";
+import { getRandomAngle, Point, Vector } from "./../utils";
+import CameraFollowComponent from "./../entity-components/CameraFollowComponent";
+import RenderComponent, { EllipseRenderPart } from "./../entity-components/RenderComponent";
+import HitboxComponent from "./../entity-components/HitboxComponent";
+import AttackComponent, { CircleAttack } from "./../entity-components/AttackComponent";
 import ItemEntity from "./ItemEntity";
-import InventoryComponent from "../entity-components/InventoryComponent";
+import InventoryComponent from "./../entity-components/InventoryComponent";
 import TribeStash from "./TribeStash";
-import Tribe from "../Tribe";
-import Board from "../Board";
-import { hideMessageDisplay, setMessageDisplay } from "../components/MessageDisplay";
-import InventoryViewerManager from "../components/InventoryViewerManager";
-import { toggleTribeStashViewerVisibility } from "../components/TribeStashViewer";
+import Tribe from "./../Tribe";
+import Board from "./../Board";
+import { hideMessageDisplay, setMessageDisplay } from "./../components/MessageDisplay";
+import InventoryViewerManager from "./../components/InventoryViewerManager";
+import { toggleTribeStashViewerVisibility } from "./../components/TribeStashViewer";
+import HealthComponent from "../entity-components/HealthComponent";
+import { HealthBarManager } from "../components/HealthBar";
 
 class Player extends Entity {
    private static readonly SIZE = 1;
@@ -22,6 +24,8 @@ class Player extends Entity {
    public static tribe: Tribe;
 
    public static readonly DEFAULT_INVENTORY_SLOT_COUNT = 2;
+
+   public static readonly HEALTH = 20;
 
    constructor(tribe: Tribe) {
       /** How far away the player spawns from their stash */
@@ -39,13 +43,16 @@ class Player extends Entity {
 
       super([
          new TransformComponent(spawnPosition),
-         new HitboxComponent(),
          new RenderComponent(),
+         new HitboxComponent(),
          new PlayerControllerComponent(),
          new CameraFollowComponent(),
+         new HealthComponent(),
          new AttackComponent(),
          new InventoryComponent(Player.DEFAULT_INVENTORY_SLOT_COUNT)
       ]);
+
+      this.getComponent(HealthComponent)!.setMaxHealth(Player.HEALTH, true);
 
       this.setHitbox();
 
@@ -102,17 +109,23 @@ class Player extends Entity {
          getPosition: (): Point => {
             const rotation = this.getComponent(TransformComponent)!.rotation;
 
-            const offset = RenderComponent.getOffset(Player.SIZE / 2 + ATTACK_OFFSET, rotation);
+            const offset = RenderComponent.getOffset((Player.SIZE / 2 + ATTACK_OFFSET) * Board.tileSize, rotation);
             const offsetPoint = new Point(offset[0], offset[1]);
 
             return this.getComponent(TransformComponent)!.position.add(offsetPoint);
          },
          damage: 2,
          duration: 0.2,
+         knockbackStrength: 3,
          attackingEntity: this
       }));
 
       PlayerControllerComponent.createKeyEvent((key: string) => this.onKeyPress(key));
+
+      super.createEvent(EventType.hurt, () => {
+         const health = this.getComponent(HealthComponent)!.getHealth();
+         HealthBarManager.setHealth(health);
+      });
    }
 
    private setHitbox(): void {

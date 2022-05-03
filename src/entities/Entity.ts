@@ -1,9 +1,12 @@
 import Board, { Chunk } from "../Board";
 import Component from "../Component";
+import HealthComponent from "../entity-components/HealthComponent";
 import HitboxComponent from "../entity-components/HitboxComponent";
+import SETTINGS from "../settings";
 
 export enum EventType {
-   deathByEntity
+   deathByEntity,
+   hurt
 }
 
 type EventsObject = { [key in EventType]: Array<() => void> };
@@ -21,11 +24,13 @@ const getEventsObject = (): EventsObject => {
 }
 
 abstract class Entity {
+   // Entities are immune to being hit for 0.1 seconds after being hit
+   public static iframes = 0.1 * SETTINGS.tps;
+
    public previousChunk?: Chunk;
 
    private readonly components: ReadonlyArray<Component>;
-
-   private events: EventsObject = getEventsObject();
+   private readonly events: EventsObject = getEventsObject();
 
    constructor(components: ReadonlyArray<Component>) {
       this.components = components;
@@ -53,7 +58,6 @@ abstract class Entity {
       }
 
       // Check collisions
-
       const hasCollisionFunc = typeof this.onCollision !== "undefined";
       const hasLeaveCollisionFunc = typeof this.onLeaveCollision !== "undefined";
 
@@ -87,7 +91,7 @@ abstract class Entity {
    public onDie(causeOfDeath: Entity | null): void {
       // deathByEntity events
       if (causeOfDeath !== null) {
-         for (const func of this.events[EventType.deathByEntity]) func();
+         this.callEvents(EventType.deathByEntity);
       }
 
       Board.removeEntity(this);
@@ -110,11 +114,20 @@ abstract class Entity {
    }
 
    public createEvent(type: EventType, func: () => void): void {
+      if (typeof type === "number") type = EventType[type] as unknown as EventType;
+
+      if (!this.events.hasOwnProperty(type)) console.log(type, this.events);
       this.events[type].push(func);
    }
 
    public callEvents(type: EventType): void {
+      if (typeof type === "number") type = EventType[type] as unknown as EventType;
+
       for (const func of this.events[type]) func();
+   }
+
+   protected setMaxHealth(maxHealth: number): void {
+      this.getComponent(HealthComponent)!.setMaxHealth(maxHealth, true);
    }
 }
 

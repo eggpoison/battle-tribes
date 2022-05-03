@@ -1,7 +1,7 @@
 import Board from "../../Board";
 import Entity, { EventType } from "../Entity";
 import HealthComponent from "../../entity-components/HealthComponent";
-import HitboxComponent, { CircleHitboxInfo } from "../../entity-components/HitboxComponent";
+import HitboxComponent from "../../entity-components/HitboxComponent";
 import RenderComponent, { ImageRenderPart } from "../../entity-components/RenderComponent";
 import ResourceSpawnComponent from "../../entity-components/ResourceSpawnerComponent";
 import TransformComponent from "../../entity-components/TransformComponent";

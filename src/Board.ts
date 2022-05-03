@@ -49,14 +49,14 @@ abstract class Board {
          }
       }
 
+      // Spawn initial mobs
+      MobSpawner.spawnInitialMobs();
+
       // Creates the controllable player character
       this.spawnPlayer();
    }
 
    public static getTileType(x: number, y: number): TileType {
-      if (typeof this.tiles[x] === "undefined") {
-         console.log(x, y);
-      }
       return this.tiles[x][y];
    }
 

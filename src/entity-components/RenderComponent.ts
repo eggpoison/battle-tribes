@@ -2,6 +2,8 @@ import Board from "../Board";
 import Camera from "../Camera";
 import Component from "../Component";
 import { Vector } from "../utils";
+import HealthComponent from "./HealthComponent";
+import HitboxComponent from "./HitboxComponent";
 import TransformComponent from "./TransformComponent";
 
 interface BaseRenderSettings {
@@ -119,9 +121,16 @@ export class ImageRenderPart extends BaseRenderPart implements ImageRenderSettin
 type RenderPart = EllipseRenderPart | RectangleRenderPart | ImageRenderPart;
 export type RenderParts = Array<RenderPart>;
 
+type HurtImages = {
+   [key: string]: HTMLImageElement;
+}
+
 class RenderComponent extends Component {
    private readonly renderParts: RenderParts = new Array<RenderPart>();
    private readonly partImages: Array<HTMLImageElement> = new Array<HTMLImageElement>();
+   private readonly partHurtImages: Array<HTMLImageElement> = new Array<HTMLImageElement>();
+
+   public static readonly hurtImages: HurtImages = {};
 
    public addPart(renderPart: RenderPart): void {
       // Find a spot in the renderParts array for the part
@@ -140,6 +149,10 @@ class RenderComponent extends Component {
       if (renderPart instanceof ImageRenderPart) {
          this.partImages[idx] = new Image();
          this.partImages[idx].src = require("../images/" + renderPart.url);
+
+         if (this.getEntity().getComponent(HitboxComponent) !== null) {
+            this.partHurtImages[idx] = RenderComponent.getHurtImage(this.partImages[idx]);
+         }
       }
    }
 
@@ -149,8 +162,51 @@ class RenderComponent extends Component {
       }
    }
 
-   public static getOffset(magnitude: number, degrees: number): [number, number] {
-      const vector = new Vector(magnitude, degrees / 180 * Math.PI);
+   public static getHurtImage(image: HTMLImageElement): HTMLImageElement {
+      if (this.hurtImages.hasOwnProperty(image.src)) {
+         return this.hurtImages[image.src];
+      }
+
+      const imageData = this.createHurtImage(image);
+      
+      this.hurtImages[image.src] = imageData;
+      return imageData;
+   }
+   
+   private static createHurtImage(image: HTMLImageElement): HTMLImageElement {
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d")!;
+
+      canvas.width = image.width;
+      canvas.height = image.height;
+
+      ctx.drawImage(image, 0, 0);
+
+      const imageData = ctx.getImageData(0, 0, image.width, image.height);
+
+      // Convert all pixels to white
+      for (let px = 0; px < imageData.width * imageData.height * 4; px += 4) {
+         const avgCol = (imageData.data[px] + imageData.data[px + 1] + imageData.data[px + 1]) / 3;
+
+         imageData.data[px] = avgCol;
+         imageData.data[px + 1] = avgCol;
+         imageData.data[px + 2] = avgCol;
+         // imageData.data[px] = 255;
+         // imageData.data[px + 1] = 255;
+         // imageData.data[px + 2] = 255;
+      }
+
+      ctx.putImageData(imageData, 0, 0);
+
+      // Create an image from the data
+      const resultImage = new Image();
+      resultImage.src = canvas.toDataURL();
+
+      return resultImage;
+   }
+
+   public static getOffset(magnitude: number, radians: number): [number, number] {
+      const vector = new Vector(magnitude, radians);
       const point = vector.convertToPoint();
       return [point.x, point.y];
    }
@@ -230,7 +286,23 @@ class RenderComponent extends Component {
                // Undo the translation
                ctx.translate(-cameraX, -cameraY);
 
-               ctx.drawImage(this.partImages[i], cameraXWithSize, cameraYWithSize, width * Board.tileSize, height * Board.tileSize);
+               const healthComponent = this.getEntity().getComponent(HealthComponent);
+               const isBeingHit = healthComponent !== null && healthComponent.isBeingHit();
+
+               // if (isBeingHit) {
+               //    ctx.putImageData(this.partHurtImages[i], cameraXWithSize, cameraYWithSize, 0, 0, width * Board.tileSize, height * Board.tileSize);
+               // } else {
+               //    ctx.drawImage(this.partImages[i], cameraXWithSize, cameraYWithSize, width * Board.tileSize, height * Board.tileSize);
+               // }
+
+               let image!: HTMLImageElement;
+               if (isBeingHit) {
+                  image = this.partHurtImages[i];
+               } else {
+                  image = this.partImages[i];
+               }
+
+               ctx.drawImage(image, cameraXWithSize, cameraYWithSize, width * Board.tileSize, height * Board.tileSize);
 
                // Reset rotation
                ctx.setTransform(1, 0, 0, 1, 0, 0);

@@ -42,7 +42,6 @@ export abstract class Minimap {
    }
 
    public static drawBackground(): void {
-
       const imageData = this.minimapBackgroundCtx.createImageData(this.SIZE, this.SIZE);
 
       for (let y = 0; y < this.SIZE; y++) {

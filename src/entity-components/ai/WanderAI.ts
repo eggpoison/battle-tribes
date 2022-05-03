@@ -1,16 +1,16 @@
 import Board, { TileCoordinates } from "../../Board";
 import SETTINGS from "../../settings";
-import { randItem } from "../../utils";
+import { Point, randItem } from "../../utils";
 import TransformComponent from "../TransformComponent";
 import EntityAI from "./EntityAI";
 
 class WanderAI extends EntityAI {
    /** Chance for the entity to wander each second */
-   private readonly wanderChance: number;
-   private readonly wanderRange: number;
-   private readonly wanderSpeed: number;
+   protected readonly wanderChance: number | null;
+   protected readonly wanderRange: number;
+   protected readonly wanderSpeed: number;
 
-   constructor(wanderChance: number, wanderRange: number, wanderSpeed: number) {
+   constructor(wanderChance: number | null, wanderRange: number, wanderSpeed: number) {
       super("wander");
 
       this.wanderChance = wanderChance;
@@ -18,7 +18,7 @@ class WanderAI extends EntityAI {
       this.wanderSpeed = wanderSpeed;
    }
 
-   private wander(): void {
+   protected getWanderTarget(): Point {
       const position = this.entity.getComponent(TransformComponent)!.position;
 
       // Get nearby tiles
@@ -45,14 +45,15 @@ class WanderAI extends EntityAI {
 
       // Move to the target position
       const targetPosition = Board.getRandomPositionInTile(targetTileCoordinates);
-      super.moveToPosition(targetPosition, this.wanderSpeed);
+      return targetPosition;
    }
 
    public tick(): void {
-      super.tick();
+      super.checkTargetPosition();
 
-      if (Math.random() < this.wanderChance / SETTINGS.tps) {
-         this.wander();
+      if (Math.random() < this.wanderChance! / SETTINGS.tps) {
+         const targetPosition = this.getWanderTarget();
+         super.moveToPosition(targetPosition, this.wanderSpeed);
       }
    }
 }

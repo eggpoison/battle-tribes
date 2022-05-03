@@ -12,6 +12,8 @@ let itemInTransit: ItemInTransit | null = null;
 const stackItem = (slotNum: number, inventoryViewer: InventoryViewerManager): void => {
    const [itemName, itemAmount] = itemInTransit!.slotInfo;
    inventoryViewer.inventoryComponent.addItemToSlot(slotNum, itemName, itemAmount);
+
+   itemInTransit = null;
 }
 
 const clickSlot = (slotNum: number, inventoryViewerName: InventoryViewerIDs): void => {
@@ -46,7 +48,7 @@ const clickSlot = (slotNum: number, inventoryViewerName: InventoryViewerIDs): vo
          inventoryViewer.setInventory(itemSlots);
       } else {
          // If there is an item in transit and the clicked item is of the same type, stack them
-         if (slotInfo[0] === itemInTransit.slotInfo[1]) {
+         if (slotInfo[0] === itemInTransit.slotInfo[0]) {
             stackItem(slotNum, inventoryViewer);
 
             inventoryViewer.setInventory(itemSlots);

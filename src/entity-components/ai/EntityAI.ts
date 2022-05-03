@@ -1,8 +1,11 @@
+import Board from "../../Board";
 import Mob from "../../entities/mobs/Mob";
+import SETTINGS from "../../settings";
 import { Point, Vector } from "../../utils";
 import TransformComponent from "../TransformComponent";
+import AIManagerComponent from "./AIManangerComponent";
 
-export type AIType = "wander";
+export type AIType = "wander" | "search";
 
 export interface AIInfo {
    readonly type: AIType;
@@ -23,7 +26,11 @@ abstract class EntityAI implements AIInfo {
       this.entity = entity;
    }
 
-   public tick(): void {
+   public abstract tick(): void;
+
+   public shouldSwitch?(): boolean;
+
+   public checkTargetPosition(): void {
       if (this.targetPosition !== null) {
          const transformComponent = this.entity.getComponent(TransformComponent)!;
 
@@ -36,11 +43,14 @@ abstract class EntityAI implements AIInfo {
       }
    }
 
-   private reachTargetPosition(transformComponent: TransformComponent): void {
+   protected reachTargetPosition(transformComponent: TransformComponent): void {
       this.targetPosition = null;
 
-      transformComponent.setTargetVelocity(new Vector(0, 0));
-      transformComponent.velocity = new Vector(0, 0);
+      transformComponent.stopVelocity();
+   }
+
+   protected setTargetPosition(position: Point): void {
+      this.targetPosition = position;
    }
 
    protected moveToPosition(position: Point, speed: number): void {
@@ -49,12 +59,19 @@ abstract class EntityAI implements AIInfo {
       const transformComponent = this.entity.getComponent(TransformComponent)!;
 
       const angle = transformComponent.position.angleBetween(position);
-      const targetVector = new Vector(speed, angle);
+      const targetVector = new Vector(speed * Board.tileSize / SETTINGS.tps, angle);
 
       transformComponent.rotation = angle;
 
-      transformComponent.setTargetVelocity(targetVector);
-      transformComponent.velocity = targetVector;
+      transformComponent.setVelocity(targetVector);
+   }
+
+   protected changeCurrentAI(newAIType: AIType): void {
+      this.entity.getComponent(AIManagerComponent)!.setCurrentAIType(newAIType);
+   }
+
+   protected isActive(): boolean {
+      return this.entity.getComponent(AIManagerComponent)!.getCurrentAI() === this;
    }
 }
 

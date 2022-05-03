@@ -1,5 +1,5 @@
 import { EventType } from "../Entity";
-import HitboxComponent, { RectangleHitboxInfo } from "../../entity-components/HitboxComponent";
+import HitboxComponent from "../../entity-components/HitboxComponent";
 import RenderComponent, { EllipseRenderPart } from "../../entity-components/RenderComponent";
 import ResourceSpawnComponent from "../../entity-components/ResourceSpawnerComponent";
 import  { ItemName } from "../../items";
@@ -23,10 +23,12 @@ class Cow extends Mob {
    private static readonly MAX_HEALTH = 15;
 
    constructor(position: Point) {
-      super(position, Cow.MAX_HEALTH, [
+      super(position, [
          new ResourceSpawnComponent(),
          new AIManagerComponent()
       ]);
+
+      super.setMaxHealth(Cow.MAX_HEALTH);
 
       this.setHitbox();
 

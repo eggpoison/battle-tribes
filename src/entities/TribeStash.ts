@@ -1,5 +1,5 @@
 import Entity from "./Entity";
-import HitboxComponent, { CircleHitboxInfo } from "../entity-components/HitboxComponent";
+import HitboxComponent from "../entity-components/HitboxComponent";
 import InventoryComponent from "../entity-components/InventoryComponent";
 import RenderComponent, { ImageRenderPart } from "../entity-components/RenderComponent";
 import TransformComponent from "../entity-components/TransformComponent";
@@ -18,11 +18,6 @@ class TribeStash extends Entity {
 
    constructor(tribe: Tribe) {
       const spawnPosition = tribe.position;
-
-      const HITBOX: CircleHitboxInfo = {
-         type: "circle",
-         radius: TribeStash.SIZE / 2
-      };
 
       super([
          new TransformComponent(spawnPosition),

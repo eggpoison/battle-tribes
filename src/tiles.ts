@@ -2,7 +2,7 @@ import Board, { TileCoordinates } from "./Board";
 
 export enum TileType {
    grass,
-   rainforest,
+   sludge,
    mountain,
    desert,
    snow,
@@ -35,9 +35,8 @@ const TILE_INFO_MAP = new Map<TileType, TileInfo>([
       maxTemperature: 0.3,
       maxHumidity: 0.3
    }],
-   [TileType.rainforest, {
+   [TileType.sludge, {
       colour: "#038a0c",
-      minHeight: 0.2,
       maxHeight: 0.4,
       minHumidity: 0.1
    }],

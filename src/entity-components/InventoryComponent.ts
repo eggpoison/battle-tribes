@@ -2,7 +2,7 @@ import Board from "../Board";
 import Component from "../Component";
 import ItemEntity from "../entities/ItemEntity";
 import ITEMS, { ItemName } from "../items";
-import Item from "../items/Item";
+import Item, { ItemInfo } from "../items/Item";
 
 export type ItemSlots = Array<[ItemName, number]>;
 
@@ -52,8 +52,14 @@ class InventoryComponent extends Component {
 
    public addItemToSlot(slotNum: number, itemName: ItemName, amount: number = 1): void {
       const slot = this.itemSlots[slotNum];
-      const itemKey = ItemName[itemName] as unknown as ItemName;
-      const itemInfo = ITEMS[itemKey];
+
+      let itemInfo!: ItemInfo;
+      if (typeof itemName === "number") {
+         itemInfo = ITEMS[itemName];
+      } else {
+         const itemKey = ItemName[itemName] as unknown as ItemName;
+         itemInfo = ITEMS[itemKey];
+      }
 
       // If the slot is empty initialise the slot
       if (typeof slot === "undefined") {

@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { load } from '.';
 import Canvas from './components/Canvas';
 import Devtools from './components/Devtools';
+import HealthBar from './components/HealthBar';
 import MessageDisplay from './components/MessageDisplay';
 import MinimapCanvas from './components/MinimapCanvas';
 import PlayerInventoryViewer from './components/PlayerInventoryViewer';
@@ -22,8 +23,10 @@ function App() {
          <Canvas />
          <MinimapCanvas />
 
-         <Devtools />
+         <HealthBar />
          <PlayerInventoryViewer />
+
+         <Devtools />
          <MessageDisplay />
          <TribeStashViewer />
       </div>

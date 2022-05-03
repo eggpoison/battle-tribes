@@ -74,3 +74,19 @@ code {
    bottom: var(--margin);
    user-select: none;
 }
+
+#health-bar {
+   --height: 20px;
+   width: calc(var(--max-health) * 10px);
+   height: var(--height);
+   border: 4px solid #000;
+   position: absolute;
+   bottom: 6rem;
+   left: 50%;
+   transform: translateX(-50%);
+}
+#health-bar .health {
+   width: calc((var(--max-health) * 10px) * var(--health) / var(--max-health));
+   height: var(--height);
+   background-color: red;
+}

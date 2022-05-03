@@ -4,7 +4,7 @@ import SETTINGS from "./settings";
 import { TileType } from "./tiles";
 import { randInt, randItem } from "./utils";
 
-const getEligibleMobs = (tileType: TileType): Array<MobInfo> => {
+const getEligibleMobs = (tileType: TileType): Array<MobInfo> | null => {
    const eligibleMobs = new Array<MobInfo>();
 
    for (const mobInfo of Object.values(MOB_INFO_RECORD)) {
@@ -13,7 +13,8 @@ const getEligibleMobs = (tileType: TileType): Array<MobInfo> => {
       }
    }
 
-   return eligibleMobs;
+   if (eligibleMobs.length > 0) return eligibleMobs;
+   return null;
 }
 
 abstract class MobSpawner {
@@ -31,6 +32,10 @@ abstract class MobSpawner {
 
    public static setup(): void {
       this.targetMobCount = Math.floor(this.TARGET_MOB_COUNT * Board.size * Board.size);
+   }
+
+   public static updateMobCount(mobCount: number): void {
+      this.mobCount = mobCount;
    }
 
    private static spawnMobs(tileCoordinates: TileCoordinates, mobInfo: MobInfo): void {
@@ -54,6 +59,37 @@ abstract class MobSpawner {
       }
    }
 
+   public static spawnInitialMobs(): void {
+      // Each chunk has a 2/10 chance to spawn a random mob
+      const SPAWN_CHANCE = 0.2;
+
+      const SPAWN_RANGE = 2;
+
+      for (let chunkY = 0; chunkY < Board.size; chunkY++) {
+         for (let chunkX = 0; chunkX < Board.size; chunkX++) {
+            if (Math.random() >= SPAWN_CHANCE) continue;
+
+            const startTileX = chunkX * Board.chunkSize + randInt(0, Board.chunkSize - 1);
+            const startTileY = chunkY * Board.chunkSize + randInt(0, Board.chunkSize - 1);
+
+            yLoop: for (let y = Math.max(startTileY - SPAWN_RANGE, 0); y <= Math.min(startTileY + SPAWN_RANGE, Board.dimensions - 1); y++) {
+               for (let x = Math.max(startTileX - SPAWN_RANGE, 0); x <= Math.min(startTileX + SPAWN_RANGE, Board.dimensions - 1); x++) {
+                  const tileType = Board.getTileType(x, y);
+
+                  const eligibleMobs = getEligibleMobs(tileType);
+
+                  if (eligibleMobs !== null) {
+                     const mobInfo = randItem(eligibleMobs);
+
+                     this.spawnMobs([x, y], mobInfo);
+                     break yLoop;
+                  }
+               }
+            }
+         }
+      }
+   }
+
    public static runSpawnAttempt(): void {
       if (this.mobCount < this.targetMobCount && Math.random() <= this.MOB_SPAWN_RATE * Board.size * Board.size / SETTINGS.tps) {
          let chosenSpawnTileCoordinates!: [number, number];
@@ -65,7 +101,7 @@ abstract class MobSpawner {
             const tileType = Board.getTileType(tileX, tileY);
 
             const eligibleMobs = getEligibleMobs(tileType);
-            if (eligibleMobs.length > 0) {
+            if (eligibleMobs !== null) {
                const mobInfo = randItem(eligibleMobs);
 
                this.spawnMobs([tileX, tileY], mobInfo);
@@ -75,10 +111,6 @@ abstract class MobSpawner {
             }
          }
       }
-   }
-
-   public static updateMobCount(mobCount: number): void {
-      this.mobCount = mobCount;
    }
 }
 

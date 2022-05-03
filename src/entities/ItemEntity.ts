@@ -1,5 +1,5 @@
 import Entity from "./Entity";
-import HitboxComponent, { CircleHitboxInfo } from "../entity-components/HitboxComponent";
+import HitboxComponent from "../entity-components/HitboxComponent";
 import RenderComponent, { ImageRenderPart } from "../entity-components/RenderComponent";
 import TransformComponent from "../entity-components/TransformComponent";
 import Item from "../items/Item";

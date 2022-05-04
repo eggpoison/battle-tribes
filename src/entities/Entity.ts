@@ -2,11 +2,15 @@ import Board, { Chunk } from "../Board";
 import Component from "../Component";
 import HealthComponent from "../entity-components/HealthComponent";
 import HitboxComponent from "../entity-components/HitboxComponent";
+import TransformComponent from "../entity-components/TransformComponent";
 import SETTINGS from "../settings";
+import { Point } from "../utils";
 
 export enum EventType {
    deathByEntity,
-   hurt
+   hurt,
+   attack,
+   killEntity
 }
 
 type EventsObject = { [key in EventType]: Array<() => void> };
@@ -113,21 +117,25 @@ abstract class Entity {
       return null;
    }
 
-   public createEvent(type: EventType, func: () => void): void {
+   public createEvent(type: EventType, func: (args?: any) => void): void {
       if (typeof type === "number") type = EventType[type] as unknown as EventType;
 
       if (!this.events.hasOwnProperty(type)) console.log(type, this.events);
       this.events[type].push(func);
    }
 
-   public callEvents(type: EventType): void {
+   public callEvents(type: EventType, args?: unknown): void {
       if (typeof type === "number") type = EventType[type] as unknown as EventType;
 
-      for (const func of this.events[type]) func();
+      for (const func of this.events[type]) (func as (args: unknown) => void)(args);
    }
 
    protected setMaxHealth(maxHealth: number): void {
       this.getComponent(HealthComponent)!.setMaxHealth(maxHealth, true);
+   }
+
+   public getPosition(): Point {
+      return this.getComponent(TransformComponent)!.position;
    }
 }
 

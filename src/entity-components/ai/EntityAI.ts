@@ -5,7 +5,7 @@ import { Point, Vector } from "../../utils";
 import TransformComponent from "../TransformComponent";
 import AIManagerComponent from "./AIManangerComponent";
 
-export type AIType = "wander" | "search";
+export type AIType = "wander" | "follow";
 
 export interface AIInfo {
    readonly type: AIType;

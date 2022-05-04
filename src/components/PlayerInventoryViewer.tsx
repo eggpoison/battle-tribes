@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import Player from "../entities/Player";
+import Player from "../entities/tribe-members/Player";
 import InventoryViewerManager, { InventoryViewer } from "./InventoryViewerManager";
 
 const PlayerInventoryViewer = () => {

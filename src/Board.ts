@@ -3,7 +3,7 @@ import { getCanvasContext } from "./components/Canvas";
 import { updateDevtools } from "./components/Devtools";
 import InventoryViewerManager from "./components/InventoryViewerManager";
 import Berry from "./entities/resources/Berry";
-import Player from "./entities/Player";
+import Player from "./entities/tribe-members/Player";
 import Entity from "./entities/Entity";
 import InventoryComponent from "./entity-components/InventoryComponent";
 import RenderComponent from "./entity-components/RenderComponent";
@@ -129,7 +129,7 @@ abstract class Board {
 
    private static spawnPlayer(): void {
       const tribeSpawnPosition = Tribe.getPlayerTribeSpawnPosition();
-      const playerTribe = new Tribe(tribeSpawnPosition);
+      const playerTribe = new Tribe(tribeSpawnPosition, Player.TRIBE_COLOUR);
 
       // Link the player tribe's stash to the stash viewer
       const stash = playerTribe.stash;

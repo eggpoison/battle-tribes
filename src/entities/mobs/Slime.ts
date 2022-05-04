@@ -8,9 +8,10 @@ import RenderComponent, { EllipseRenderPart } from "../../entity-components/Rend
 import ResourceSpawnComponent from "../../entity-components/ResourceSpawnerComponent";
 import TransformComponent from "../../entity-components/TransformComponent";
 import { ItemName } from "../../items";
-import MOB_INFO_RECORD, { MobInfo } from "../../mob-info";
-import { Point, randFloat, randInt, Vector } from "../../utils";
+import MOB_INFO_RECORD, { MobBehaviour, MobInfo } from "../../mob-info";
+import { ConstructorFunction, Point, randFloat, randInt, Vector } from "../../utils";
 import Entity, { EventType } from "../Entity";
+import GenericTribeMember from "../tribe-members/GenericTribeMember";
 import Mob from "./Mob";
 
 enum SlimeSizeCategory {
@@ -143,19 +144,25 @@ class Slime extends Mob {
       const SEARCH_RANGE = 4;
       const FOLLOW_SPEED = 5;
 
+      const validEntityConstr: ReadonlyArray<ConstructorFunction> = [GenericTribeMember];
+
       this.getComponent(AIManagerComponent)!.addAI(
          new SlimeWanderAI(WANDER_RATE, this.info.wanderRange, WANDER_SPEED)
       );
       this.getComponent(AIManagerComponent)!.addAI(
-         new SlimeFollowAI(SEARCH_RANGE, FOLLOW_SPEED)
+         new SlimeFollowAI(SEARCH_RANGE, FOLLOW_SPEED, validEntityConstr)
       );
 
       this.getComponent(AIManagerComponent)!.setCurrentAIType("wander");
    }
 
    protected onCollision(entity: Entity): void {
-      if (Mob.entityCanBeAttackedByMob(entity)) {
-         entity.getComponent(HealthComponent)!.hurt(Slime.DAMAGE, this, Slime.KNOCKBACK_STRENGTH);
+      // Don't attack fellow hostile mobs
+      if (entity instanceof Mob && entity.getInfo().behaviour === MobBehaviour.hostile) return;
+
+      const healthCompoment = entity.getComponent(HealthComponent);
+      if (healthCompoment !== null) {
+         healthCompoment.hurt(Slime.DAMAGE, this, Slime.KNOCKBACK_STRENGTH);
       }
    }
 
@@ -167,7 +174,7 @@ class Slime extends Mob {
          const numChildren = randInt(1, 2);
          for (let i = 0; i < numChildren; i++) {
             const offset = Vector.randomUnitVector();
-            offset.magnitude *= this.info.size * 2 * Board.tileSize * randFloat(0.5, 1);
+            offset.magnitude *= this.info.size * 1.5 * Board.tileSize * randFloat(0.5, 1);
 
             const position = this.getComponent(TransformComponent)!.position.add(offset.convertToPoint());
             

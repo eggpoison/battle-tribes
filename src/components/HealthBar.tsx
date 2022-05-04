@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import Player from "../entities/Player";
+import Player from "../entities/tribe-members/Player";
 
 let setHealthBarMaxHealth: (maxHealth: number) => void;
 let setHealthBarHealth: (health: number) => void;

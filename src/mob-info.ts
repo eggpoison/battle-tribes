@@ -4,7 +4,7 @@ import { TileType } from "./tiles";
 
 type MobNames = "Cow" | "Slime";
 
-enum MobBehaviour {
+export enum MobBehaviour {
    peaceful,
    neutral,
    hostile
@@ -14,6 +14,7 @@ export interface MobInfo {
    readonly preferredTileTypes: ReadonlyArray<TileType>;
    readonly packSize: number | [number, number];
    readonly behaviour: MobBehaviour;
+   readonly exp: number;
    getConstr(): { new(...args: any[]): any };
 }
 
@@ -24,12 +25,14 @@ const MOB_INFO_RECORD: MobInfoRecord = {
       preferredTileTypes: [TileType.grass],
       packSize: [2, 4],
       behaviour: MobBehaviour.peaceful,
+      exp: 1,
       getConstr: () => Cow
    },
    Slime: {
       preferredTileTypes: [TileType.sludge],
       packSize: 1,
       behaviour: MobBehaviour.hostile,
+      exp: 2,
       getConstr: () => Slime
    }
 };

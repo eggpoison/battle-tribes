@@ -220,3 +220,5 @@ export function ease(t: number, a: number): number {
    const tToA = Math.pow(t, a);
    return tToA / (tToA + Math.pow(1 - t, a));
 }
+
+export type ConstructorFunction = (abstract new (...args: any[]) => any) | (new (...args: any[]) => any);

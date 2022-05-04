@@ -22,26 +22,34 @@ class WanderAI extends EntityAI {
       const position = this.entity.getComponent(TransformComponent)!.position;
 
       // Get nearby tiles
-      const nearbyTileCoordinates = Board.getNearbyTileCoordinates(position, this.wanderRange);
-      
-      // Find nearby preferred tiles
-      const preferredNearbyTileCoordinates = new Array<TileCoordinates>();
-      for (const tileCoordinates of nearbyTileCoordinates) {
-         const tileType = Board.getTileType(tileCoordinates[0], tileCoordinates[1]);
-         if (this.entity.getInfo().preferredTileTypes!.includes(tileType)) {
-            preferredNearbyTileCoordinates.push(tileCoordinates);
+      let nearbyTileCoordinates = Board.getNearbyTileCoordinates(position, this.wanderRange);
+
+      if (typeof this.entity.getInfo !== "undefined") {
+         // Find nearby preferred tiles
+         const preferredNearbyTileCoordinates = new Array<TileCoordinates>();
+         for (const tileCoordinates of nearbyTileCoordinates) {
+            const tileType = Board.getTileType(tileCoordinates[0], tileCoordinates[1]);
+
+            if (this.entity.getInfo().preferredTileTypes!.includes(tileType)) {
+               preferredNearbyTileCoordinates.push(tileCoordinates);
+            }
          }
+
+         nearbyTileCoordinates = preferredNearbyTileCoordinates;
+      }
+
+      // If there are no nearby tiles, return a random position in the current tile
+      if (nearbyTileCoordinates.length === 0) {
+         const x = Math.floor(position.x / Board.tileSize);
+         const y = Math.floor(position.y / Board.tileSize);
+
+         const targetPosition = Board.getRandomPositionInTile([x, y]);
+         return targetPosition;
       }
 
       let targetTileCoordinates!: [number, number];
-      // If the entity has no preferred tiles
-      if (preferredNearbyTileCoordinates.length === 0) {
-         // Pick one from the list of all nearby tiles
-         targetTileCoordinates = randItem(nearbyTileCoordinates);
-      } else {
-         // Otherwise choose a random nearby tile from the mob's preferred tile types
-         targetTileCoordinates = randItem(preferredNearbyTileCoordinates);
-      }
+      // Choose a random nearby tile from the list of nearby tiles
+      targetTileCoordinates = randItem(nearbyTileCoordinates);
 
       // Move to the target position
       const targetPosition = Board.getRandomPositionInTile(targetTileCoordinates);

@@ -1,7 +1,7 @@
 import Component from "../Component";
 import Tribe from "../Tribe";
 
-class TribeComponent extends Component {
+class TribeMemberComponent extends Component {
    public readonly tribe: Tribe;
 
    constructor(tribe: Tribe) {
@@ -9,6 +9,10 @@ class TribeComponent extends Component {
 
       this.tribe = tribe;
    }
+
+   public addExp(amount: number): void {
+      this.tribe.addExp(amount);
+   }
 }
 
-export default TribeComponent;
+export default TribeMemberComponent;

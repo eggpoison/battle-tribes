@@ -112,6 +112,23 @@ class InventoryComponent extends Component {
 
       return itemList;
    }
+
+   public canPickupItem(item: Item): boolean {
+      for (const itemSlot of this.itemSlots) {
+         // If there is an item in the slot
+         if (typeof itemSlot !== "undefined") {
+            // If the item is of the same type and can fit
+            if (item.name === itemSlot[0] && itemSlot[1] < item.stackSize) {
+               return true;
+            }
+         } else {
+            // If the item is free
+            return true;
+         }
+      }
+
+      return false;
+   }
 }
 
 export default InventoryComponent;

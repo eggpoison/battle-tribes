@@ -12,12 +12,14 @@ export enum ItemName {
 
 type ItemsType = { [key in ItemName]: Item };
 
+const REGULAR_STACK_SIZE = 64;
+
 const ITEMS: ItemsType = {
    [ItemName.berry]: new FoodItem({
       displayName: "Berry",
       description: "Restores 2 health when eaten.",
       imageSrc: "berry.png",
-      stackSize: 99,
+      stackSize: REGULAR_STACK_SIZE,
       healthReplenishAmount: 2,
       eatTime: 0.3
    }),
@@ -25,13 +27,13 @@ const ITEMS: ItemsType = {
       displayName: "Leather",
       description: "It's leather, you know what it does.",
       imageSrc: "leather.png",
-      stackSize: 99
+      stackSize: REGULAR_STACK_SIZE
    }),
    [ItemName.meat]: new FoodItem({
       displayName: "Raw Meat",
       description: "Restores 4 health when eaten.",
       imageSrc: "meat.png",
-      stackSize: 99,
+      stackSize: REGULAR_STACK_SIZE,
       healthReplenishAmount: 4,
       eatTime: 1.2
    }),
@@ -39,7 +41,7 @@ const ITEMS: ItemsType = {
       displayName: "Cooked Meat",
       description: "Restores 15 health when eaten.",
       imageSrc: "berry.png",
-      stackSize: 99,
+      stackSize: REGULAR_STACK_SIZE,
       healthReplenishAmount: 15,
       eatTime: 1.2
    }),
@@ -47,7 +49,7 @@ const ITEMS: ItemsType = {
       displayName: "Slime",
       description: "Military-grade adhesive.",
       imageSrc: "berry.png",
-      stackSize: 99
+      stackSize: REGULAR_STACK_SIZE
    }),
    [ItemName.smallBackpack]: new Item({
       displayName: "Small Backpack",

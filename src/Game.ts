@@ -2,7 +2,7 @@ import Board from "./Board";
 import Camera from "./Camera";
 import { renderBoard } from "./components/Canvas";
 import { Minimap } from "./components/MinimapCanvas";
-import Player from "./entities/Player";
+import Player from "./entities/tribe-members/Player";
 import TransformComponent from "./entity-components/TransformComponent";
 import SETTINGS from "./settings";
 import Timer from "./Timer";
@@ -14,7 +14,12 @@ export function addTimer(timer: Timer): void {
 }
 
 abstract class Game {
+   private static readonly TIME_SPEED = 1.5;
+   private static time: number = 0;
+
    public static tick(): void {
+      Game.time += Game.TIME_SPEED / SETTINGS.tps / 60;
+
       for (const timer of timers.slice()) {
          timer.tick();
 

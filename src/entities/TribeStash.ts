@@ -4,6 +4,7 @@ import InventoryComponent from "../entity-components/InventoryComponent";
 import RenderComponent, { ImageRenderPart } from "../entity-components/RenderComponent";
 import TransformComponent from "../entity-components/TransformComponent";
 import Tribe from "../Tribe";
+import TribeMemberComponent from "../entity-components/TribeMemberComponent";
 
 /** Where tribes put their resources in order to use them. */
 class TribeStash extends Entity {
@@ -11,8 +12,6 @@ class TribeStash extends Entity {
 
    public static OPEN_MESSAGE = "Press space to open stash";
    public static CLOSE_MESSAGE = "Press space to close stash";
-
-   public readonly tribe: Tribe;
 
    public static readonly DEFAULT_SLOT_COUNT = 10;
 
@@ -23,7 +22,8 @@ class TribeStash extends Entity {
          new TransformComponent(spawnPosition, undefined, undefined, true),
          new HitboxComponent(),
          new RenderComponent(),
-         new InventoryComponent(TribeStash.DEFAULT_SLOT_COUNT)
+         new InventoryComponent(TribeStash.DEFAULT_SLOT_COUNT),
+         new TribeMemberComponent(tribe)
       ]);
 
       this.setHitbox();
@@ -38,8 +38,6 @@ class TribeStash extends Entity {
             url: "tribe-stash.png"
          })
       );
-
-      this.tribe = tribe;
    }
 
    private setHitbox(): void {

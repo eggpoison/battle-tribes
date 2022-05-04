@@ -1,32 +1,41 @@
 import Board from "../../Board";
 import Entity from "../../entities/Entity";
 import Mob from "../../entities/mobs/Mob";
-import { Point } from "../../utils";
+import { ConstructorFunction, Point } from "../../utils";
 import TransformComponent from "../TransformComponent";
 import EntityAI from "./EntityAI";
 
-class FollowAI extends EntityAI {
+abstract class FollowAI extends EntityAI {
    private readonly searchRadius: number;
    protected readonly moveSpeed: number;
 
-   constructor(searchRadius: number, moveSpeed: number) {
-      super("search");
+   private validEntityConstr: ReadonlyArray<ConstructorFunction>;
+
+   constructor(searchRadius: number, moveSpeed: number, validEntityConstr: ReadonlyArray<ConstructorFunction>) {
+      super("follow");
 
       this.searchRadius = searchRadius;
       this.moveSpeed = moveSpeed;
+      this.validEntityConstr = validEntityConstr;
    }
 
-   private filterEntities(entityArray: ReadonlyArray<Entity>): Array<Entity> {
+   protected filterEntities(entityArray: ReadonlyArray<Entity>): Array<Entity> {
       // Filter out unwanted entities
       const indexesToRemove = new Array<number>();
 
-      for (let idx = entityArray.length - 1; idx >= 0; idx--) {
+      mainLoop: for (let idx = entityArray.length - 1; idx >= 0; idx--) {
          const entity = entityArray[idx];
 
-         // Remove itself and any entities which are mobs
-         if (entity === this.entity || !Mob.entityCanBeAttackedByMob(entity)) {
+         // Remove itself and any entities which can't be attacked
+         if (entity === this.entity) {
             indexesToRemove.push(idx);
+            continue;
          }
+
+         for (const constr of this.validEntityConstr) {
+            if (entity instanceof constr) continue mainLoop;
+         }
+         indexesToRemove.push(idx);
       }
 
       const filteredEntityArray = entityArray.slice();
@@ -36,7 +45,8 @@ class FollowAI extends EntityAI {
       return filteredEntityArray;
    }
 
-   protected getEntitiesInSearchRadius(entityPosition: Point): Array<Entity> | null {
+   protected getEntitiesInSearchRadius(entityPosition?: Point): Array<Entity> | null {
+      if (typeof entityPosition === "undefined") entityPosition = this.entity.getComponent(TransformComponent)!.position;
       let nearbyEntities = TransformComponent.getNearbyEntities(entityPosition, this.searchRadius * Board.tileSize);
       nearbyEntities = this.filterEntities(nearbyEntities);
 

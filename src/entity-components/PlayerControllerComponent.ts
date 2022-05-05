@@ -1,5 +1,8 @@
+import Board from "../Board";
 import Component from "../Component";
 import { toggleDevtoolsVisibility } from "../components/Devtools";
+import Player from "../entities/tribe-members/Player";
+import SETTINGS from "../settings";
 import { isDev, Vector } from "../utils";
 import AttackComponent from "./AttackComponent";
 import TransformComponent from "./TransformComponent";
@@ -26,13 +29,10 @@ class PlayerControllerComponent extends Component {
    private previousMoveBitmap = 0;
    private currentMoveBitmap = 0;
 
-   /** The number of tiles that the player traverses in a second */
-   private readonly moveSpeed = 5;
-
    private changeDirection(): void {
       const angle = this.getMoveAngle();
 
-      const velocity = new Vector(angle !== null ? this.moveSpeed : 0, angle || 0);
+      const velocity = new Vector(angle !== null ? Player.SPEED * Board.tileSize / SETTINGS.tps : 0, angle || 0);
 
       const entity = this.getEntity();
       const transformComponent = entity.getComponent(TransformComponent)!;

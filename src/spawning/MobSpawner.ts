@@ -1,8 +1,8 @@
-import Board, { TileCoordinates } from "./Board";
-import MOB_INFO_RECORD, { MobInfo } from "./mob-info";
-import SETTINGS from "./settings";
-import { TileType } from "./tiles";
-import { randInt, randItem } from "./utils";
+import Board, { TileCoordinates } from "../Board";
+import MOB_INFO_RECORD, { MobInfo } from "../mob-info";
+import SETTINGS from "../settings";
+import { TileType } from "../tiles";
+import { randInt, randItem } from "../utils";
 
 const getEligibleMobs = (tileType: TileType): Array<MobInfo> | null => {
    const eligibleMobs = new Array<MobInfo>();

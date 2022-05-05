@@ -100,6 +100,12 @@ const getTilePixelData = (minimapSize: number, minimapX: number, minimapY: numbe
    const tileX = Math.floor(minimapX * BOARD_SIZE / minimapSize);
    const tileY = Math.floor(minimapY * BOARD_SIZE / minimapSize);
 
+   // Fog of war
+   const chunkX = Math.floor(tileX / Board.chunkSize);
+   const chunkY = Math.floor(tileY / Board.chunkSize);
+   const fogAmount = Board.getFog(chunkX, chunkY);
+   if (fogAmount === 1) return [0, 0, 0, 255];
+
    const tileType = Board.getTileType(tileX, tileY);
 
    const tileColourCode = TILE_INFO_MAP.get(tileType)!.colour;

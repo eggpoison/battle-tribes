@@ -38,9 +38,9 @@ export function renderBoard(): void {
 
    const [chunkMinX, chunkMaxX, chunkMinY, chunkMaxY] = Camera.getVisibleChunkBounds();
    const minX = Math.max(chunkMinX * Board.chunkSize, 0);
-   const maxX = Math.min((chunkMaxX + 1) * Board.size, Board.dimensions - 1);
+   const maxX = Math.min(chunkMaxX * Board.chunkSize, Board.dimensions - 1);
    const minY = Math.max(chunkMinY * Board.chunkSize, 0);
-   const maxY = Math.min((chunkMaxY + 1) * Board.size, Board.dimensions - 1);
+   const maxY = Math.min(chunkMaxY * Board.chunkSize, Board.dimensions - 1);
 
    // Draw tiles
    for (let y = minY; y <= maxY; y++) {

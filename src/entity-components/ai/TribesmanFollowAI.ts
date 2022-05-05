@@ -3,6 +3,7 @@ import Entity from "../../entities/Entity";
 import ItemEntity from "../../entities/ItemEntity";
 import Mob from "../../entities/mobs/Mob";
 import Tribesman from "../../entities/tribe-members/Tribesman";
+import { MobBehaviour } from "../../mob-info";
 import Timer from "../../Timer";
 import { ConstructorFunction } from "../../utils";
 import AttackComponent from "../AttackComponent";
@@ -26,28 +27,74 @@ class TribesmanFollowAI extends FollowAI {
       return visibleEntities !== null;
    }
 
-   protected filterEntities(entityArray: ReadonlyArray<Entity>): Array<Entity> {
-      const filteredEntities = super.filterEntities(entityArray);
+   protected findClosestEntity(): Entity | null {
+      let entities = super.getEntitiesInSearchRadius();
+      if (entities === null) return null;
 
-      // Remove any items which can't be picked up
-      for (let idx = filteredEntities.length - 1; idx >= 0; idx--) {
-         const entity = filteredEntities[idx];
+      entities = super.filterEntities(entities);
+
+      // Filter out any items which can't be picked up
+      for (let idx = entities.length - 1; idx >= 0; idx--) {
+         const entity = entities[idx];
 
          if (entity instanceof ItemEntity) {
             const inventoryComponent = this.entity.getComponent(InventoryComponent)!;
             const item = entity.item;
-            
+
             if (!inventoryComponent.canPickupItem(item)) {
-               filteredEntities.splice(idx, 1);
+               entities.splice(idx, 1);
             }
          }
       }
 
-      return filteredEntities;
+      // Sort the entities by type
+      const hostileMobs = new Array<Mob>();
+      const otherEntities = new Array<Mob | ItemEntity>(); // Peaceful mobs and item entities
+      for (const entity of entities) {
+         // Mobs
+         if (entity instanceof Mob) {
+            switch (entity.getInfo().behaviour) {
+               case MobBehaviour.hostile:
+                  hostileMobs.push(entity);
+                  break;
+               case MobBehaviour.peaceful:
+                  otherEntities.push(entity);
+            }
+            continue;
+         }
+
+         // Item entities
+         if (entity instanceof ItemEntity) {
+            otherEntities.push(entity);
+         }
+      }
+
+      let entityArr!: Array<Entity>;
+      if (hostileMobs.length > 0) {
+         entityArr = hostileMobs;
+      } else if (otherEntities.length > 0) {
+         entityArr = otherEntities;
+      } else return null;
+
+      const tribesmanPosition = this.entity.getComponent(TransformComponent)!.position;
+
+      // Find the closest entity
+      let closestEntity!: Entity;
+      let closestDistance: number = Number.MAX_SAFE_INTEGER;
+      for (const entity of entityArr) {
+         const dist = tribesmanPosition.distanceFrom(entity.getComponent(TransformComponent)!.position);
+
+         if (dist < closestDistance) {
+            closestDistance = dist;
+            closestEntity = entity;
+         }
+      }  
+
+      return closestEntity;
    }
 
    public tick(): void {
-      const closestEntity = super.findClosestEntity();
+      const closestEntity = this.findClosestEntity();
 
       if (closestEntity !== null) {
          const position = closestEntity.getPosition();

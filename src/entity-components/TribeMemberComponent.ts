@@ -1,3 +1,4 @@
+import Board from "../Board";
 import Component from "../Component";
 import Tribe from "../Tribe";
 
@@ -12,6 +13,12 @@ class TribeMemberComponent extends Component {
 
    public addExp(amount: number): void {
       this.tribe.addExp(amount);
+   }
+
+   public tick(): void {
+      // Reveal any fog of war the tribe member is standing on
+      const position = this.getEntity().getPosition();
+      Board.revealFog(position, false);
    }
 }
 

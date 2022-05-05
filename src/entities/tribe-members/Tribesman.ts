@@ -12,15 +12,17 @@ import { ConstructorFunction, Point } from "../../utils";
 import Entity from "../Entity";
 import ItemEntity from "../ItemEntity";
 import Mob from "../mobs/Mob";
+import Resource from "../resources/Resource";
 import GenericTribeMember from "./GenericTribeMember";
 import Player from "./Player";
 
 class Tribesman extends GenericTribeMember {
    private static readonly SIZE = 1;
+   private static readonly MAX_HEALTH = 25;
+   private static readonly DEFAULT_SLOT_COUNT = 3;
 
-   private static readonly DEFAULT_SLOT_COUNT = 1;
-
-   public static readonly ATTACK_INTERVAL = 0.2;
+   private static readonly ATTACK_DAMAGE = 5;
+   public static readonly ATTACK_INTERVAL = 0.25;
 
    constructor(tribe: Tribe) {
       super(tribe, [
@@ -28,6 +30,8 @@ class Tribesman extends GenericTribeMember {
          new AttackComponent(),
          new InventoryComponent(Tribesman.DEFAULT_SLOT_COUNT)
       ]);
+
+      super.setMaxHealth(Tribesman.MAX_HEALTH);
 
       const HAND_SIZE = 0.45;
       const HAND_ANGLES = 40 / 180 * Math.PI;
@@ -50,7 +54,7 @@ class Tribesman extends GenericTribeMember {
       
       this.getComponent(AttackComponent)!.addAttack("baseAttack", new CircleAttack({
             radius: ATTACK_RADIUS,
-            damage: 5,
+            damage: Tribesman.ATTACK_DAMAGE,
             knockbackStrength: 5,
             getPosition: (): Point => {
                const rotation = this.getComponent(TransformComponent)!.rotation;
@@ -68,14 +72,14 @@ class Tribesman extends GenericTribeMember {
       const WALK_SPEED = 1;
       const RUN_SPEED = 2.5;
       
-      const VISION_RANGE = 6;
+      const VISION_RANGE = 3.5;
 
       const ATTACK_RANGE = 1;
 
       const WANDER_CHANCE = 0.5;
       const WANDER_RANGE = 3;
 
-      const validEntityConstr: ReadonlyArray<ConstructorFunction> = [Mob, ItemEntity];
+      const validEntityConstr: ReadonlyArray<ConstructorFunction> = [Mob, Resource, ItemEntity];
 
       this.getComponent(AIManagerComponent)!.addAI(
          new WanderAI(WANDER_CHANCE, WANDER_RANGE, WALK_SPEED)

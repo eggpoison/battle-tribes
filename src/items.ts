@@ -2,6 +2,7 @@ import FoodItem from "./items/FoodItem";
 import Item from "./items/Item";
 
 export enum ItemName {
+   wood,
    berry,
    leather,
    meat,
@@ -15,6 +16,12 @@ type ItemsType = { [key in ItemName]: Item };
 const REGULAR_STACK_SIZE = 64;
 
 const ITEMS: ItemsType = {
+   [ItemName.wood]: new Item({
+      displayName: "Wood",
+      description: "Do not eat.",
+      imageSrc: "wood.png",
+      stackSize: REGULAR_STACK_SIZE
+   }),
    [ItemName.berry]: new FoodItem({
       displayName: "Berry",
       description: "Restores 2 health when eaten.",

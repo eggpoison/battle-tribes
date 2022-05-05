@@ -6,7 +6,7 @@ import ITEMS, { ItemName } from "../items";
 import { getRandomAngle, Point, randInt, Vector } from "../utils";
 import TransformComponent from "./TransformComponent";
 
-class ResourceSpawnComponent extends Component {
+class ItemSpawnComponent extends Component {
    public spawnResource(itemName: ItemName, amount: number = 1): void {
       if (amount < 1) return;
 
@@ -44,4 +44,4 @@ class ResourceSpawnComponent extends Component {
    }
 }
 
-export default ResourceSpawnComponent;
+export default ItemSpawnComponent;

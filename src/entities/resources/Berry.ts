@@ -1,15 +1,17 @@
 import Board from "../../Board";
-import Entity, { EventType } from "../Entity";
+import { EventType } from "../Entity";
 import HealthComponent from "../../entity-components/HealthComponent";
 import HitboxComponent from "../../entity-components/HitboxComponent";
 import RenderComponent, { ImageRenderPart } from "../../entity-components/RenderComponent";
-import ResourceSpawnComponent from "../../entity-components/ResourceSpawnerComponent";
+import ItemSpawnComponent from "../../entity-components/ItemSpawnerComponent";
 import TransformComponent from "../../entity-components/TransformComponent";
 import { ItemName } from "../../items";
 import { getTilesByType, TileType } from "../../tiles";
 import { randFloat, randItem } from "../../utils";
+import Resource from "./Resource";
+import RESOURCE_INFO, { ResourceInfo } from "../../resource-info";
 
-class Berry extends Entity {
+class Berry extends Resource {
    private static readonly spawnableTileTypes: ReadonlyArray<TileType> = [
       TileType.grass
    ];
@@ -27,13 +29,12 @@ class Berry extends Entity {
 
       const startingRotation = randFloat(0, 360);
 
-      super([
-         new TransformComponent(position, undefined, startingRotation),
-         new RenderComponent(),
-         new HitboxComponent(),
-         new HealthComponent(Berry.HEALTH, undefined, undefined, undefined, Berry.LIFESPAN),
-         new ResourceSpawnComponent()
-      ]);
+      super(position);
+
+      this.getComponent(HealthComponent)!.setMaxHealth(Berry.HEALTH, true);
+      this.getComponent(HealthComponent)!.setLifespan(Berry.LIFESPAN);
+
+      this.getComponent(TransformComponent)!.rotation = startingRotation;
 
       this.setHitbox();
 
@@ -48,7 +49,11 @@ class Berry extends Entity {
          })
       );
 
-      this.getComponent(ResourceSpawnComponent)!.addResource(ItemName.berry, [1, 2], EventType.deathByEntity);
+      this.getComponent(ItemSpawnComponent)!.addResource(ItemName.berry, [1, 2], EventType.deathByEntity);
+   }
+
+   protected getInfo(): ResourceInfo {
+      return RESOURCE_INFO.berry;
    }
 
    private setHitbox(): void {

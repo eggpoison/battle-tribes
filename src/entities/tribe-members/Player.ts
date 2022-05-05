@@ -21,6 +21,7 @@ import GenericTribeMember from "./GenericTribeMember";
 
 class Player extends GenericTribeMember {
    public static readonly SIZE = 1;
+   public static readonly SPEED = 5;
    public static readonly HEALTH = 20;
    public static readonly TRIBE_COLOUR = "#ffcc17";
 
@@ -78,6 +79,9 @@ class Player extends GenericTribeMember {
          const health = this.getComponent(HealthComponent)!.getHealth();
          HealthBarManager.setHealth(health);
       });
+
+      // Reveal the space the player is standing in
+      Board.revealFog(this.getPosition(), true);
    }
 
    private setHitbox(): void {

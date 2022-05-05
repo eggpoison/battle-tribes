@@ -1,7 +1,7 @@
 import { EventType } from "../Entity";
 import HitboxComponent from "../../entity-components/HitboxComponent";
 import RenderComponent, { EllipseRenderPart } from "../../entity-components/RenderComponent";
-import ResourceSpawnComponent from "../../entity-components/ResourceSpawnerComponent";
+import ItemSpawnComponent from "../../entity-components/ItemSpawnerComponent";
 import  { ItemName } from "../../items";
 import { TileType } from "../../tiles";
 import { Point } from "../../utils";
@@ -24,7 +24,7 @@ class Cow extends Mob {
 
    constructor(position: Point) {
       super(position, [
-         new ResourceSpawnComponent(),
+         new ItemSpawnComponent(),
          new AIManagerComponent()
       ]);
 
@@ -36,8 +36,8 @@ class Cow extends Mob {
 
       this.createAI();
 
-      this.getComponent(ResourceSpawnComponent)!.addResource(ItemName.meat, [1, 2], EventType.deathByEntity);
-      this.getComponent(ResourceSpawnComponent)!.addResource(ItemName.leather, [0, 1], EventType.deathByEntity);
+      this.getComponent(ItemSpawnComponent)!.addResource(ItemName.meat, [1, 2], EventType.deathByEntity);
+      this.getComponent(ItemSpawnComponent)!.addResource(ItemName.leather, [0, 1], EventType.deathByEntity);
    }
 
    public getInfo(): MobInfo {

@@ -12,7 +12,7 @@ import "./css/message-display.css";
 import "./css/tribe-stash-viewer.css";
 import { precomputeTileLocations } from './tiles';
 import { Minimap } from './components/MinimapCanvas';
-import MobSpawner from './MobSpawner';
+import MobSpawner from './spawning/MobSpawner';
 
 const root = ReactDOM.createRoot(
    document.getElementById('root') as HTMLElement

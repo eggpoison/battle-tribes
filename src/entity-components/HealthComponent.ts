@@ -45,6 +45,10 @@ class HealthComponent extends Component {
       if (setHealth) this.health = maxHealth;
    }
 
+   public setLifespan(lifespan: number): void {
+      this.lifespan = lifespan;
+   }
+
    public getHealth(): number {
       return this.health;
    }

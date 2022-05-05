@@ -7,13 +7,16 @@ interface SettingsType {
    readonly fruitSpawnRate: number;
    /** The game's starting time, in in-game hours */
    readonly startTime: number;
+   /** The number of seconds it takes for fog of war to be revealed after the player steps on it */
+   readonly fogRevealTime: number;
 }
 
 const SETTINGS: SettingsType = {
    tps: 60,
    backgroundColour: "#09120b",
    fruitSpawnRate: 2,
-   startTime: 0
+   startTime: 0,
+   fogRevealTime: 1
 };
 
 export default SETTINGS;

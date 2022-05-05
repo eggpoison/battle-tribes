@@ -19,17 +19,19 @@ abstract class Camera {
    }
 
    public static tick(): void {
-      const units = Board.size * Board.tileSize;
+      // Number of units in a chunk
+      const chunkUnits = Board.chunkSize * Board.tileSize;
 
       // minX
-      this.visibleChunkBounds[0] = Math.floor((this.position.x - getCanvasWidth() / 2) / units);
+      this.visibleChunkBounds[0] = Math.floor((this.position.x - getCanvasWidth() / 2) / chunkUnits);
       // maxX
-      this.visibleChunkBounds[1] = Math.floor((this.position.x + getCanvasWidth() / 2) / units);
+      this.visibleChunkBounds[1] = Math.ceil((this.position.x + getCanvasWidth() / 2) / chunkUnits) + 1;
       
       // minY
-      this.visibleChunkBounds[2] = Math.floor((this.position.y - getCanvasHeight() / 2) / units);
+      this.visibleChunkBounds[2] = Math.floor((this.position.y - getCanvasWidth() / 2) / chunkUnits);
       // maxY
-      this.visibleChunkBounds[3] = Math.floor((this.position.y + getCanvasHeight() / 2) / units);
+      this.visibleChunkBounds[3] = Math.ceil((this.position.y + getCanvasHeight() / 2) / chunkUnits) + 1;
+      // console.log(this.visibleChunkBounds);
    }
 
    public static getVisibleChunkBounds(): [number, number, number, number] {

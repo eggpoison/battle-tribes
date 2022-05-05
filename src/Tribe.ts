@@ -7,6 +7,14 @@ import Slime from "./entities/mobs/Slime";
 import HealthComponent from "./entity-components/HealthComponent";
 import Cow from "./entities/mobs/Cow";
 
+// const tribeExpRequirements = [
+//    5,
+//    25,
+//    100,
+//    250,
+//    1000
+// ];
+
 const tribeExpRequirements = [
    1,
    2,
@@ -17,18 +25,8 @@ const tribeExpRequirements = [
    7,
    8,
    9,
-   10,
-   11,
-   12,
-   13,
-   14,
-   15,
-   16,
-   17,
-   18,
-   19,
-   20
-];
+   10
+]
 
 // Tribe members are created through the tribe class
 // Other entities such as the player are added to the tribe in their constructor
@@ -46,6 +44,9 @@ class Tribe {
       this.position = position;
       this.colour = colour;
 
+      // Remove fog of war on the tribe position
+      Board.revealFog(this.position, true);
+
       // Create a tribe stash
       this.stash = new TribeStash(this);
       Board.addEntity(this.stash);
@@ -54,7 +55,8 @@ class Tribe {
       // for (let i = 0; i < 360; i++) {
       //    const radians = i / 180 * Math.PI;
 
-      //    const OFFSET = 35 * (Math.random() + 0.2);
+      //    const OFFSET = 6;
+      //    // const OFFSET = 35 * (Math.random() + 0.2);
       //    const a = new Vector(OFFSET * Board.tileSize, radians);
       //    const pos = this.position.add(a.convertToPoint());
 
@@ -63,15 +65,15 @@ class Tribe {
       //    Board.addEntity(ree);
       // }
 
-      for (let i = 0; i < 1000; i++) {
-         const rad = i / 180 * Math.PI;
+      // for (let i = 0; i < 1000; i++) {
+      //    const rad = i / 180 * Math.PI;
 
-         const OFFSET = 35 * Math.random() * Board.tileSize;
-         const a = this.position.add(new Vector(OFFSET, rad).convertToPoint());
+      //    const OFFSET = 35 * Math.random() * Board.tileSize;
+      //    const a = this.position.add(new Vector(OFFSET, rad).convertToPoint());
 
-         const m = new Cow(a);
-         Board.addEntity(m);
-      }
+      //    const m = new Cow(a);
+      //    Board.addEntity(m);
+      // }
    }
 
    private levelUp(): void {

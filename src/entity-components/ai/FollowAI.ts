@@ -1,6 +1,5 @@
 import Board from "../../Board";
 import Entity from "../../entities/Entity";
-import Mob from "../../entities/mobs/Mob";
 import { ConstructorFunction, Point } from "../../utils";
 import TransformComponent from "../TransformComponent";
 import EntityAI from "./EntityAI";

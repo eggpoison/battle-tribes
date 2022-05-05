@@ -131,7 +131,7 @@ class RenderComponent extends Component {
 
    public static readonly hurtImages: HurtImages = {};
 
-   public addPart(renderPart: RenderPart): void {
+   public async addPart(renderPart: RenderPart): Promise<void> {
       // Find a spot in the renderParts array for the part
       let idx = 0;
       for (; idx < this.renderParts.length; idx++) {
@@ -150,7 +150,7 @@ class RenderComponent extends Component {
          this.partImages[idx].src = require("../images/" + renderPart.url);
 
          if (this.getEntity().getComponent(HealthComponent) !== null) {
-            this.partHurtImages[idx] = RenderComponent.getHurtImage(this.partImages[idx]);
+            this.partHurtImages[idx] = await RenderComponent.getHurtImage(this.partImages[idx]);
          }
       }
    }
@@ -161,15 +161,19 @@ class RenderComponent extends Component {
       }
    }
 
-   public static getHurtImage(image: HTMLImageElement): HTMLImageElement {
-      if (this.hurtImages.hasOwnProperty(image.src)) {
-         return this.hurtImages[image.src];
-      }
-
-      const imageData = this.createHurtImage(image);
-      
-      this.hurtImages[image.src] = imageData;
-      return imageData;
+   public static async getHurtImage(image: HTMLImageElement): Promise<HTMLImageElement> {
+      return new Promise(async resolve => {
+         if (this.hurtImages.hasOwnProperty(image.src)) {
+            resolve(this.hurtImages[image.src]);
+         }
+   
+         image.addEventListener("load", () => {
+            const imageData = this.createHurtImage(image);
+            
+            this.hurtImages[image.src] = imageData;
+            resolve(imageData);
+         });
+      });
    }
    
    private static createHurtImage(image: HTMLImageElement): HTMLImageElement {
@@ -284,7 +288,7 @@ class RenderComponent extends Component {
                ctx.translate(-cameraX, -cameraY);
 
                let image!: HTMLImageElement;
-               if (isBeingHit) {
+               if (isBeingHit && typeof this.partHurtImages[i] !== "undefined") {
                   image = this.partHurtImages[i];
                } else {
                   image = this.partImages[i];

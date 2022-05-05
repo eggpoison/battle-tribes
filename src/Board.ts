@@ -2,7 +2,6 @@ import { generateTerrain } from "./terrain-generation";
 import { getCanvasContext } from "./components/Canvas";
 import { updateDevtools } from "./components/Devtools";
 import InventoryViewerManager from "./components/InventoryViewerManager";
-import Berry from "./entities/resources/Berry";
 import Player from "./entities/tribe-members/Player";
 import Entity from "./entities/Entity";
 import InventoryComponent from "./entity-components/InventoryComponent";
@@ -14,9 +13,11 @@ import Tribe from "./Tribe";
 import { Point } from "./utils";
 import Camera from "./Camera";
 import Mob from "./entities/mobs/Mob";
-import MobSpawner from "./MobSpawner";
+import MobSpawner from "./spawning/MobSpawner";
 import HitboxComponent from "./entity-components/HitboxComponent";
 import OPTIONS from "./options";
+import { Minimap } from "./components/MinimapCanvas";
+import ResourceSpawner from "./spawning/ResourceSpawner";
 
 export type Chunk = Array<Entity>;
 
@@ -36,9 +37,12 @@ abstract class Board {
    private static chunks: Array<Array<Chunk>>;
 
    private static tiles: Array<Array<TileType>>;
+   private static fog: Array<Array<number>>;
 
    public static setup(): void {
       this.tiles = generateTerrain();
+
+      this.fog = this.initialiseFog();
 
       // Initialise the chunks array
       this.chunks = new Array<Array<Chunk>>(this.size);
@@ -56,6 +60,24 @@ abstract class Board {
       this.spawnPlayer();
    }
 
+   private static initialiseFog(): Array<Array<number>> {
+      const fog = new Array<Array<number>>();
+
+      for (let y = 0; y < this.size; y++) {
+         fog[y] = new Array<number>();
+
+         for (let x = 0; x < this.size; x++) {
+            fog[y][x] = 1;
+         }
+      }
+
+      return fog;
+   }
+
+   public static getFog(x: number, y: number): number {
+      return this.fog[x][y];
+   }
+
    public static getTileType(x: number, y: number): TileType {
       return this.tiles[x][y];
    }
@@ -68,16 +90,7 @@ abstract class Board {
    }
 
    public static tick(): void {
-      // Calculate berry spawn rate
-      const ununitisedBerrySpawnRate = SETTINGS.fruitSpawnRate / SETTINGS.tps;
-      const berrySpawnRate = Math.floor(ununitisedBerrySpawnRate) + (Math.random() < ununitisedBerrySpawnRate % 1 ? 1 : 0);
-
-      // Spawn berries
-      for (let i = 0; i < berrySpawnRate; i++) {
-         const berry = new Berry();
-         this.addEntity(berry);
-      }
-
+      ResourceSpawner.runSpawnAttempt();
       MobSpawner.runSpawnAttempt();
 
       let entityCount = 0;
@@ -119,12 +132,55 @@ abstract class Board {
             }
          }
       }
+
+      Board.drawFog(ctx);
       
       updateDevtools({
          entityCount: entityCount
       });
 
       MobSpawner.updateMobCount(mobCount);
+   }
+
+   private static drawFog(ctx: CanvasRenderingContext2D): void {
+      const [minX, maxX, minY, maxY] = Camera.getVisibleChunkBounds();
+
+      for (let chunkY = minY; chunkY <= maxY; chunkY++) {
+         for (let chunkX = minX; chunkX <= maxX; chunkX++) {
+
+            // Draw fog of war
+            const x1 = chunkX * this.tileSize * this.chunkSize;
+            const x2 = (chunkX + 1) * this.tileSize * this.chunkSize;
+            const y1 = chunkY * this.tileSize * this.chunkSize;
+            const y2 = (chunkY + 1) * this.tileSize * this.chunkSize;
+
+            const fogAmount = this.getFog(chunkX, chunkY);
+            
+            ctx.fillStyle = `rgba(0, 0, 0, ${fogAmount})`;
+            ctx.fillRect(Camera.getXPositionInCamera(x1), Camera.getYPositionInCamera(y1), x2 - x1, y2 - y1);
+
+            // Decrease fog amount
+            if (fogAmount < 1 && fogAmount > 0) {
+               this.fog[chunkX][chunkY] -= 1 / SETTINGS.tps / SETTINGS.fogRevealTime;
+            }
+         }
+      }
+   }
+
+   public static revealFog(position: Point, isImmediate: boolean): void {
+      const playerChunkX = Math.floor(position.x / Board.tileSize / Board.chunkSize);
+      const playerChunkY = Math.floor(position.y / Board.tileSize / Board.chunkSize);
+
+      if (this.getFog(playerChunkX, playerChunkY) === 1) {
+         if (isImmediate) {
+            this.fog[playerChunkX][playerChunkY] = 0;
+         } else {
+            this.fog[playerChunkX][playerChunkY] -= 1 / SETTINGS.tps / SETTINGS.fogRevealTime;
+         }
+
+         // Update the minimap
+         Minimap.drawBackground();
+      }
    }
 
    private static spawnPlayer(): void {

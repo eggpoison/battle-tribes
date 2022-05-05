@@ -5,11 +5,11 @@ import SlimeWanderAI from "../../entity-components/ai/SlimeWanderAI";
 import HealthComponent from "../../entity-components/HealthComponent";
 import HitboxComponent from "../../entity-components/HitboxComponent";
 import RenderComponent, { EllipseRenderPart } from "../../entity-components/RenderComponent";
-import ResourceSpawnComponent from "../../entity-components/ResourceSpawnerComponent";
+import ItemSpawnComponent from "../../entity-components/ItemSpawnerComponent";
 import TransformComponent from "../../entity-components/TransformComponent";
 import { ItemName } from "../../items";
 import MOB_INFO_RECORD, { MobBehaviour, MobInfo } from "../../mob-info";
-import { ConstructorFunction, Point, randFloat, randInt, Vector } from "../../utils";
+import { ConstructorFunction, Point, randInt, Vector } from "../../utils";
 import Entity, { EventType } from "../Entity";
 import GenericTribeMember from "../tribe-members/GenericTribeMember";
 import Mob from "./Mob";
@@ -69,7 +69,7 @@ class Slime extends Mob {
 
    constructor(position: Point, size?: SlimeSizeCategory) {
       super(position, [
-         new ResourceSpawnComponent(),
+         new ItemSpawnComponent(),
          new AIManagerComponent()
       ]);
 
@@ -134,7 +134,7 @@ class Slime extends Mob {
 
    private addItemDrops(): void {
       const slimeDrops = typeof this.info.slimeDrop === "number" ? this.info.slimeDrop : randInt(...this.info.slimeDrop);
-      this.getComponent(ResourceSpawnComponent)!.addResource(ItemName.slime, slimeDrops, EventType.deathByEntity);
+      this.getComponent(ItemSpawnComponent)!.addResource(ItemName.slime, slimeDrops, EventType.deathByEntity);
    }
 
    private createAI(): void {
@@ -174,7 +174,7 @@ class Slime extends Mob {
          const numChildren = randInt(1, 2);
          for (let i = 0; i < numChildren; i++) {
             const offset = Vector.randomUnitVector();
-            offset.magnitude *= this.info.size * 1.5 * Board.tileSize * randFloat(0.5, 1);
+            offset.magnitude *= this.info.size / 2 * Board.tileSize * Math.random();
 
             const position = this.getComponent(TransformComponent)!.position.add(offset.convertToPoint());
             

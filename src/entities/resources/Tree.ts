@@ -52,7 +52,7 @@ class Tree extends Resource {
    }
 
    private addResourceDrops(): void {
-      this.getComponent(ItemSpawnComponent)!.addResource(ItemName.wood, [2, 4], EventType.deathByEntity);
+      this.getComponent(ItemSpawnComponent)!.addResource(ItemName.wood, [2, 5], EventType.deathByEntity);
    }
 }
 

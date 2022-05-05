@@ -8,7 +8,7 @@ import InventoryComponent from "./entity-components/InventoryComponent";
 import RenderComponent from "./entity-components/RenderComponent";
 import TransformComponent from "./entity-components/TransformComponent";
 import SETTINGS from "./settings";
-import { TileType } from "./tiles";
+import { precomputeTileLocations, TileType } from "./tiles";
 import Tribe from "./Tribe";
 import { Point } from "./utils";
 import Camera from "./Camera";
@@ -53,8 +53,12 @@ abstract class Board {
          }
       }
 
-      // Spawn initial mobs
+      precomputeTileLocations();
+
+
+      // Spawn initial entities
       MobSpawner.spawnInitialMobs();
+      ResourceSpawner.spawnInitialResources();
 
       // Creates the controllable player character
       this.spawnPlayer();

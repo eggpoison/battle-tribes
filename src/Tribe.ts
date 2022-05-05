@@ -26,7 +26,7 @@ const tribeExpRequirements = [
    8,
    9,
    10
-]
+];
 
 // Tribe members are created through the tribe class
 // Other entities such as the player are added to the tribe in their constructor

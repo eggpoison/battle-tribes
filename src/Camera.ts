@@ -23,15 +23,14 @@ abstract class Camera {
       const chunkUnits = Board.chunkSize * Board.tileSize;
 
       // minX
-      this.visibleChunkBounds[0] = Math.floor((this.position.x - getCanvasWidth() / 2) / chunkUnits);
+      this.visibleChunkBounds[0] = Math.max(Math.floor((this.position.x - getCanvasWidth() / 2) / chunkUnits), 0);
       // maxX
-      this.visibleChunkBounds[1] = Math.ceil((this.position.x + getCanvasWidth() / 2) / chunkUnits) + 1;
+      this.visibleChunkBounds[1] = Math.min(Math.ceil(this.position.x / chunkUnits) + 1, Board.size - 1);
       
       // minY
-      this.visibleChunkBounds[2] = Math.floor((this.position.y - getCanvasWidth() / 2) / chunkUnits);
+      this.visibleChunkBounds[2] = Math.max(Math.floor((this.position.y - getCanvasWidth() / 2) / chunkUnits), 0);
       // maxY
-      this.visibleChunkBounds[3] = Math.ceil((this.position.y + getCanvasHeight() / 2) / chunkUnits) + 1;
-      // console.log(this.visibleChunkBounds);
+      this.visibleChunkBounds[3] = Math.min(Math.ceil(this.position.y / chunkUnits) + 1, Board.size - 1);
    }
 
    public static getVisibleChunkBounds(): [number, number, number, number] {

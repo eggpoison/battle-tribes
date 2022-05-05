@@ -67,6 +67,17 @@ abstract class ResourceSpawner {
          }   
       }
    }
+
+   public static spawnInitialResources(): void {
+      for (let chunkY = 0; chunkY < Board.size; chunkY++) {
+         for (let chunkX = 0; chunkX < Board.size; chunkX++) {
+            // 0.5 chance to spawn resource (recursively)
+            while (Math.random() < 0.5) {
+               this.spawnResourceInChunk(chunkX, chunkY);
+            }
+         }   
+      }
+   }
 }
 
 export default ResourceSpawner;

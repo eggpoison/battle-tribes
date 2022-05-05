@@ -10,7 +10,6 @@ import "./css/devtools.css";
 import "./css/inventory-viewer.css";
 import "./css/message-display.css";
 import "./css/tribe-stash-viewer.css";
-import { precomputeTileLocations } from './tiles';
 import { Minimap } from './components/MinimapCanvas';
 import MobSpawner from './spawning/MobSpawner';
 
@@ -30,6 +29,5 @@ export function load() {
    MobSpawner.setup();
    Minimap.setup();
    Minimap.drawBackground();
-   precomputeTileLocations();
    Game.startGame();
 }

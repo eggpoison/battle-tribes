@@ -24,6 +24,8 @@ abstract class EntityAI implements AIInfo {
 
    public setEntity(entity: Mob): void {
       this.entity = entity;
+
+      if (typeof this.onLoad !== "undefined") this.onLoad();
    }
 
    public abstract tick(): void;
@@ -42,6 +44,8 @@ abstract class EntityAI implements AIInfo {
          }
       }
    }
+
+   protected onLoad?(): void;
 
    protected reachTargetPosition(transformComponent: TransformComponent): void {
       this.targetPosition = null;

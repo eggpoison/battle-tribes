@@ -4,7 +4,7 @@ import TribesmanFollowAI from "../../entity-components/ai/TribesmanFollowAI";
 import WanderAI from "../../entity-components/ai/WanderAI";
 import AttackComponent, { CircleAttack } from "../../entity-components/AttackComponent";
 import HitboxComponent from "../../entity-components/HitboxComponent";
-import InventoryComponent from "../../entity-components/InventoryComponent";
+import FiniteInventoryComponent from "../../entity-components/inventory/FiniteInventoryComponent";
 import RenderComponent from "../../entity-components/RenderComponent";
 import TransformComponent from "../../entity-components/TransformComponent";
 import Tribe from "../../Tribe";
@@ -13,22 +13,23 @@ import Entity from "../Entity";
 import ItemEntity from "../ItemEntity";
 import Mob from "../mobs/Mob";
 import Resource from "../resources/Resource";
+import TribeStash from "../TribeStash";
 import GenericTribeMember from "./GenericTribeMember";
 import Player from "./Player";
 
 class Tribesman extends GenericTribeMember {
    private static readonly SIZE = 1;
-   private static readonly MAX_HEALTH = 25;
-   private static readonly DEFAULT_SLOT_COUNT = 3;
+   private static readonly MAX_HEALTH = 250;
+   private static readonly DEFAULT_SLOT_COUNT = 2;
 
-   private static readonly ATTACK_DAMAGE = 5;
+   private static readonly ATTACK_DAMAGE = 50;
    public static readonly ATTACK_INTERVAL = 0.25;
 
    constructor(tribe: Tribe) {
       super(tribe, [
          new AIManagerComponent(),
          new AttackComponent(),
-         new InventoryComponent(Tribesman.DEFAULT_SLOT_COUNT)
+         new FiniteInventoryComponent(Tribesman.DEFAULT_SLOT_COUNT)
       ]);
 
       super.setMaxHealth(Tribesman.MAX_HEALTH);
@@ -91,11 +92,36 @@ class Tribesman extends GenericTribeMember {
       this.getComponent(AIManagerComponent)!.setCurrentAIType("follow");
    }
 
-   protected onCollision(collidingEntity: Entity): void {
+   protected duringCollision(collidingEntity: Entity): void {
       if (collidingEntity instanceof ItemEntity) {
+         // PROBLEM HERE
+
          // Pick up the item
-         const inventoryComponent = this.getComponent(InventoryComponent)!;
+         const inventoryComponent = this.getComponent(FiniteInventoryComponent)!;
          inventoryComponent.pickupResource(collidingEntity);
+      } else if (collidingEntity instanceof TribeStash) {
+         // Put all items into the stash
+         const inventoryComponent = collidingEntity.getComponent(FiniteInventoryComponent)!;
+
+         const thisInventoryComponent = this.getComponent(FiniteInventoryComponent)!;
+
+         const inventory = thisInventoryComponent.getItemSlots();
+         for (let slotNum = 0; slotNum < thisInventoryComponent.slotCount; slotNum++) {
+            const slot = inventory[slotNum];
+
+            if (typeof slot !== "undefined") {
+               const addAmount = inventoryComponent.getItemAddAmount(slot[0], slot[1]);
+
+               if (addAmount !== null) {
+                  inventoryComponent.addItem(slot[0], addAmount);
+
+                  thisInventoryComponent.removeItemFromSlot(slotNum, addAmount);
+               } else {
+                  // If the item can't be added to the stash, remove it from the tribe member's inventory
+                  thisInventoryComponent.removeItemFromSlot(slotNum, slot[1]);
+               }
+            }
+         }
       }
    }
 }

@@ -1,4 +1,4 @@
-import ITEMS, { ItemName } from "../items";
+import ITEMS, { ItemName } from "./items";
 
 export interface ItemInfo {
     readonly displayName: string;

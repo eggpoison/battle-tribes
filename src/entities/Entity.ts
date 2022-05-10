@@ -28,8 +28,7 @@ const getEventsObject = (): EventsObject => {
 }
 
 abstract class Entity {
-   // Entities are immune to being hit for 0.15 seconds after being hit
-   public static iframes = 0.15 * SETTINGS.tps;
+   public static readonly iframes: number = SETTINGS.entityInvulnerabilityDuration * SETTINGS.tps;
 
    public previousChunk?: Chunk;
 
@@ -64,9 +63,10 @@ abstract class Entity {
       // Check collisions
       const hasCollisionFunc = typeof this.onCollision !== "undefined";
       const hasLeaveCollisionFunc = typeof this.onLeaveCollision !== "undefined";
+      const hasDuringCollisionFunc = typeof this.duringCollision !== "undefined";
 
       const hitboxComponent = this.getComponent(HitboxComponent);
-      if (hitboxComponent !== null && (hasCollisionFunc || hasLeaveCollisionFunc)) {
+      if (hitboxComponent !== null && (hasCollisionFunc || hasLeaveCollisionFunc || hasDuringCollisionFunc)) {
          let newCollidingEntities: Array<Entity> = [];
 
          const collidingEntities = hitboxComponent.getCollisions();
@@ -81,13 +81,19 @@ abstract class Entity {
                if (hasCollisionFunc) this.onCollision!(entity);
                hitboxComponent.entitiesInCollision.push(entity);
             } else {
-               unseenEntities.splice(unseenEntities.indexOf(entity));
+               unseenEntities.splice(unseenEntities.indexOf(entity), 1);
             }
          }
 
          for (const entity of unseenEntities) {
             if (hasLeaveCollisionFunc) this.onLeaveCollision!(entity);
-            hitboxComponent.entitiesInCollision.splice(hitboxComponent.entitiesInCollision.indexOf(entity));
+            hitboxComponent.entitiesInCollision.splice(hitboxComponent.entitiesInCollision.indexOf(entity), 1);
+         }
+
+         if (hasDuringCollisionFunc) {
+            for (const collidingEntity of hitboxComponent.entitiesInCollision) {
+               this.duringCollision!(collidingEntity);
+            }
          }
       }
    }
@@ -105,7 +111,9 @@ abstract class Entity {
 
    protected onLeaveCollision?(entity: Entity): void;
 
-   // TODO: Figure out what the hell "constr: { new(...args: any[]): C }" means and why it works.
+   protected duringCollision?(entity: Entity): void;
+
+   // TODO: Figure out what the hell "constr: { new(...args: any[]): C }" means and why it works
    // Yoinked from https://itnext.io/entity-component-system-in-action-with-typescript-f498ca82a08e
    public getComponent<C extends Component>(constr: { new(...args: any[]): C }): C | null {
       for (const component of this.components) {
@@ -120,7 +128,6 @@ abstract class Entity {
    public createEvent(type: EventType, func: (args?: any) => void): void {
       if (typeof type === "number") type = EventType[type] as unknown as EventType;
 
-      if (!this.events.hasOwnProperty(type)) console.log(type, this.events);
       this.events[type].push(func);
    }
 

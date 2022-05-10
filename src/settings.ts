@@ -3,20 +3,20 @@ interface SettingsType {
    readonly tps: number;
    /** The colour of the background visible near the borders */
    readonly backgroundColour: string;
-   /** The number of fruit that spawns each second per chunk of spawnable tiles */
-   readonly fruitSpawnRate: number;
    /** The game's starting time, in in-game hours */
    readonly startTime: number;
    /** The number of seconds it takes for fog of war to be revealed after the player steps on it */
    readonly fogRevealTime: number;
+   /** How long an entity is invulnerable after being hit, in seconds */
+   readonly entityInvulnerabilityDuration: number;
 }
 
 const SETTINGS: SettingsType = {
    tps: 60,
    backgroundColour: "#09120b",
-   fruitSpawnRate: 2,
    startTime: 0,
-   fogRevealTime: 1
+   fogRevealTime: 2,
+   entityInvulnerabilityDuration: 0.15
 };
 
 export default SETTINGS;

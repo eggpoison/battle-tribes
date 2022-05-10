@@ -6,7 +6,6 @@ import HealthComponent from "./HealthComponent";
 import TransformComponent from "./TransformComponent";
 import TribeMemberComponent from "./TribeMemberComponent";
 
-
 interface BaseAttackInfo {
    getPosition(): Point;
    readonly damage: number;

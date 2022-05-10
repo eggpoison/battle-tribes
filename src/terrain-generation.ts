@@ -1,6 +1,6 @@
 import Board from "./Board";
 import { generatePerlinNoise } from "./perlin-noise";
-import { getTileType, TileType } from "./tiles";
+import { getTileDistFromCenter, getTileType, TileType } from "./tiles";
 import { ease, lerp } from "./utils";
 
 export function generateTerrain(): Array<Array<TileType>> {
@@ -8,15 +8,11 @@ export function generateTerrain(): Array<Array<TileType>> {
    const TEMPERATURE_SCALE = 35;
    const HUMIDITY_SCALE = 10;
 
-   const maxDist = Math.sqrt(Math.pow(Board.dimensions / 2, 2) + Math.pow(Board.dimensions / 2, 2));
-
    // Generate the noise
    const heightMap = generatePerlinNoise(Board.dimensions, Board.dimensions, HEIGHT_SCALE);
    const temperatureMap = generatePerlinNoise(Board.dimensions, Board.dimensions, TEMPERATURE_SCALE);
    const humidityMap = generatePerlinNoise(Board.dimensions, Board.dimensions, HUMIDITY_SCALE);
    
-   const middleOfBoard = (Board.dimensions / 2 - 0.5);
-
    // Initialise the tiles array
    const tiles = new Array<Array<TileType>>(Board.dimensions);
    for (let x = 0; x < Board.dimensions; x++) {
@@ -24,7 +20,7 @@ export function generateTerrain(): Array<Array<TileType>> {
 
       // Fill the tile array using the noise
       for (let y = 0; y < Board.dimensions; y++) {
-         const dist = Math.sqrt(Math.pow(x - middleOfBoard, 2) + Math.pow(y - middleOfBoard, 2)) / maxDist;
+         const dist = getTileDistFromCenter(x, y);
 
          let height = heightMap[x][y];
          let temperature = temperatureMap[x][y];

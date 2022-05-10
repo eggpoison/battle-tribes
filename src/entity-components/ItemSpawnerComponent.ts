@@ -2,7 +2,7 @@ import Board from "../Board";
 import Component from "../Component";
 import ItemEntity from "../entities/ItemEntity";
 import { EventType } from "../entities/Entity";
-import ITEMS, { ItemName } from "../items";
+import ITEMS, { ItemName } from "../items/items";
 import { getRandomAngle, Point, randInt, Vector } from "../utils";
 import TransformComponent from "./TransformComponent";
 

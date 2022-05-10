@@ -1,10 +1,9 @@
 import { generateTerrain } from "./terrain-generation";
 import { getCanvasContext } from "./components/Canvas";
 import { updateDevtools } from "./components/Devtools";
-import InventoryViewerManager from "./components/InventoryViewerManager";
+import InventoryViewerManager from "./components/inventory/InventoryViewerManager";
 import Player from "./entities/tribe-members/Player";
 import Entity from "./entities/Entity";
-import InventoryComponent from "./entity-components/InventoryComponent";
 import RenderComponent from "./entity-components/RenderComponent";
 import TransformComponent from "./entity-components/TransformComponent";
 import SETTINGS from "./settings";
@@ -18,6 +17,7 @@ import HitboxComponent from "./entity-components/HitboxComponent";
 import OPTIONS from "./options";
 import { Minimap } from "./components/MinimapCanvas";
 import ResourceSpawner from "./spawning/ResourceSpawner";
+import InfiniteInventoryComponent from "./entity-components/inventory/InfiniteInventoryComponent";
 
 export type Chunk = Array<Entity>;
 
@@ -193,7 +193,7 @@ abstract class Board {
 
       // Link the player tribe's stash to the stash viewer
       const stash = playerTribe.stash;
-      InventoryViewerManager.getInstance("tribeStash").setInventoryComponent(stash.getComponent(InventoryComponent)!);
+      InventoryViewerManager.getInstance("tribeStash").setInventoryComponent(stash.getComponent(InfiniteInventoryComponent)!);
 
       const player = new Player(playerTribe);
       this.addEntity(player);

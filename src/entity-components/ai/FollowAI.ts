@@ -1,5 +1,7 @@
 import Board from "../../Board";
 import Entity from "../../entities/Entity";
+import Resource from "../../entities/resources/Resource";
+import Tribesman from "../../entities/tribe-members/Tribesman";
 import { ConstructorFunction, Point } from "../../utils";
 import TransformComponent from "../TransformComponent";
 import EntityAI from "./EntityAI";
@@ -22,7 +24,7 @@ abstract class FollowAI extends EntityAI {
       // Filter out unwanted entities
       const indexesToRemove = new Array<number>();
 
-      mainLoop: for (let idx = entityArray.length - 1; idx >= 0; idx--) {
+      for (let idx = entityArray.length - 1; idx >= 0; idx--) {
          const entity = entityArray[idx];
 
          // Remove itself and any entities which can't be attacked
@@ -31,10 +33,17 @@ abstract class FollowAI extends EntityAI {
             continue;
          }
 
+         let isValidConstr = false;
          for (const constr of this.validEntityConstr) {
-            if (entity instanceof constr) continue mainLoop;
+            if (entity instanceof constr) {
+               isValidConstr = true;
+               break;
+            }
          }
-         indexesToRemove.push(idx);
+
+         if (!isValidConstr) {
+            indexesToRemove.push(idx);
+         }
       }
 
       const filteredEntityArray = entityArray.slice();

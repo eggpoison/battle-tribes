@@ -1,8 +1,9 @@
 import Cow from "./entities/mobs/Cow";
 import Slime from "./entities/mobs/Slime";
+import Yeti from "./entities/mobs/Yeti";
 import { TileType } from "./tiles";
 
-type MobNames = "Cow" | "Slime";
+type MobNames = "cow" | "slime" | "yeti";
 
 export enum MobBehaviour {
    peaceful,
@@ -21,19 +22,26 @@ export interface MobInfo {
 type MobInfoRecord = Record<MobNames, MobInfo>;
 
 const MOB_INFO_RECORD: MobInfoRecord = {
-   Cow: {
+   cow: {
       preferredTileTypes: [TileType.grass],
       packSize: [2, 4],
       behaviour: MobBehaviour.peaceful,
       exp: 1,
       getConstr: () => Cow
    },
-   Slime: {
+   slime: {
       preferredTileTypes: [TileType.sludge],
-      packSize: 1,
+      packSize: [1, 2],
       behaviour: MobBehaviour.hostile,
       exp: 2,
       getConstr: () => Slime
+   },
+   yeti: {
+      preferredTileTypes: [TileType.snow],
+      packSize: 1,
+      behaviour: MobBehaviour.hostile,
+      exp: 10,
+      getConstr: () => Yeti
    }
 };
 

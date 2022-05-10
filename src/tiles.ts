@@ -126,3 +126,10 @@ export function getTileType(height: number, temperature: number, humidity: numbe
 
    throw new Error(`Couldn't find a tile type! Height: ${height}, temperature: ${temperature}, humidity: ${humidity}`);
 }
+
+export function getTileDistFromCenter(x: number, y: number): number {
+   const middleOfBoard = Board.dimensions / 2 - 0.5;
+   const maxDist = Math.sqrt(Math.pow(Board.dimensions / 2, 2) + Math.pow(Board.dimensions / 2, 2));
+
+   return Math.sqrt(Math.pow(x - middleOfBoard, 2) + Math.pow(y - middleOfBoard, 2)) / maxDist;
+}

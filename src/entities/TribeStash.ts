@@ -1,10 +1,10 @@
 import Entity from "./Entity";
 import HitboxComponent from "../entity-components/HitboxComponent";
-import InventoryComponent from "../entity-components/InventoryComponent";
 import RenderComponent, { ImageRenderPart } from "../entity-components/RenderComponent";
 import TransformComponent from "../entity-components/TransformComponent";
 import Tribe from "../Tribe";
 import TribeMemberComponent from "../entity-components/TribeMemberComponent";
+import InfiniteInventoryComponent from "../entity-components/inventory/InfiniteInventoryComponent";
 
 /** Where tribes put their resources in order to use them. */
 class TribeStash extends Entity {
@@ -13,8 +13,6 @@ class TribeStash extends Entity {
    public static OPEN_MESSAGE = "Press space to open stash";
    public static CLOSE_MESSAGE = "Press space to close stash";
 
-   public static readonly DEFAULT_SLOT_COUNT = 10;
-
    constructor(tribe: Tribe) {
       const spawnPosition = tribe.position;
 
@@ -22,7 +20,7 @@ class TribeStash extends Entity {
          new TransformComponent(spawnPosition, undefined, undefined, true),
          new HitboxComponent(),
          new RenderComponent(),
-         new InventoryComponent(TribeStash.DEFAULT_SLOT_COUNT),
+         new InfiniteInventoryComponent(),
          new TribeMemberComponent(tribe)
       ]);
 

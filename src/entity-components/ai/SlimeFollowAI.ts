@@ -1,10 +1,18 @@
+import { EventType } from "../../entities/Entity";
+import SETTINGS from "../../settings";
 import Timer from "../../Timer";
-import { Point, randFloat } from "../../utils";
+import { Point } from "../../utils";
 import TransformComponent from "../TransformComponent";
 import FollowAI from "./FollowAI";
 
 class SlimeFollowAI extends FollowAI {
    private canMove: boolean = true;
+
+   private waitTimer: Timer | null = null;
+
+   protected onLoad(): void {
+      this.entity.createEvent(EventType.hurt, () => this.getHurt());
+   }
 
    public shouldSwitch(): boolean {
       const closestEntity = super.findClosestEntity();
@@ -21,12 +29,23 @@ class SlimeFollowAI extends FollowAI {
    protected reachTargetPosition(transformComponent: TransformComponent): void {
       super.reachTargetPosition(transformComponent);
 
-      const duration = randFloat(0.15, 0.3);
-      new Timer(duration, () => {
-         if (!this.isActive()) return;
+      this.startWaitTimer();
+   }
 
-         this.canMove = true;
-      });
+   private startWaitTimer(): void {
+      const DURATION = 0.4;
+      this.waitTimer = new Timer(DURATION, () => this.endWaitTimer());
+   }
+
+   private endWaitTimer(): void {
+      this.waitTimer = null;
+      this.canMove = true;
+   }
+
+   private getHurt(): void {
+      if (this.waitTimer !== null) {
+         this.waitTimer.addDuration(SETTINGS.entityInvulnerabilityDuration);
+      }
    }
 
    public tick(): void {

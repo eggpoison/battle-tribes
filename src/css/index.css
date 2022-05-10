@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
@@ -53,6 +55,7 @@ code {
    border: var(--border-size) solid rgb(123, 66, 0);
    margin: 3px;
    position: relative;
+   cursor: pointer;
 }
 .slot img {
    --size-multiplier: 0.8;
@@ -73,6 +76,24 @@ code {
    right: var(--margin);
    bottom: var(--margin);
    user-select: none;
+}
+.slot .item-name {
+   color: #fff;
+   font-family: "Roboto";
+   font-weight: 700;
+   background-color: rgba(0, 0, 0, 0.5);
+   padding: 0 5px;
+   position: absolute;
+   top: 0;
+   left: 50%;
+   transform: translate(-50%, -100%);
+   pointer-events: none;
+   user-select: none;
+   opacity: 0;
+   white-space: nowrap;
+}
+.slot:hover .item-name {
+   opacity: 1;
 }
 
 #health-bar {

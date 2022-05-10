@@ -2,16 +2,21 @@ import Board from "../../Board";
 import Entity from "../../entities/Entity";
 import ItemEntity from "../../entities/ItemEntity";
 import Mob from "../../entities/mobs/Mob";
+import Resource from "../../entities/resources/Resource";
 import Tribesman from "../../entities/tribe-members/Tribesman";
 import { MobBehaviour } from "../../mob-info";
 import Timer from "../../Timer";
 import { ConstructorFunction } from "../../utils";
 import AttackComponent from "../AttackComponent";
-import InventoryComponent from "../InventoryComponent";
+import HealthComponent from "../HealthComponent";
+import FiniteInventoryComponent from "../inventory/FiniteInventoryComponent";
 import TransformComponent from "../TransformComponent";
+import TribeMemberComponent from "../TribeMemberComponent";
 import FollowAI from "./FollowAI";
 
 class TribesmanFollowAI extends FollowAI {
+   private static readonly MAX_DISTANCE_FROM_STASH = 10;
+
    private readonly stopRange: number;
 
    private isAttacking: boolean = false;
@@ -23,14 +28,15 @@ class TribesmanFollowAI extends FollowAI {
    }
 
    public shouldSwitch(): boolean {
-      const visibleEntities = super.getEntitiesInSearchRadius();
+      let visibleEntities = super.getEntitiesInSearchRadius();
+      if (visibleEntities === null) return false;
+
+      visibleEntities = this.filterEntities(visibleEntities);
       return visibleEntities !== null;
    }
 
-   protected findClosestEntity(): Entity | null {
-      let entities = super.getEntitiesInSearchRadius();
-      if (entities === null) return null;
-
+   protected filterEntities(entityArray: ReadonlyArray<Entity>): Array<Entity> {
+      let entities = entityArray.slice();
       entities = super.filterEntities(entities);
 
       // Filter out any items which can't be picked up
@@ -38,7 +44,7 @@ class TribesmanFollowAI extends FollowAI {
          const entity = entities[idx];
 
          if (entity instanceof ItemEntity) {
-            const inventoryComponent = this.entity.getComponent(InventoryComponent)!;
+            const inventoryComponent = this.entity.getComponent(FiniteInventoryComponent)!;
             const item = entity.item;
 
             if (!inventoryComponent.canPickupItem(item)) {
@@ -47,9 +53,17 @@ class TribesmanFollowAI extends FollowAI {
          }
       }
 
+      return entities;
+   }
+
+   protected findClosestEntity(): Entity | null {
+      let entities = super.getEntitiesInSearchRadius();
+      if (entities === null) return null;
+      entities = this.filterEntities(entities);
+
       // Sort the entities by type
       const hostileMobs = new Array<Mob>();
-      const otherEntities = new Array<Mob | ItemEntity>(); // Peaceful mobs and item entities
+      const otherEntities = new Array<Mob | Resource | ItemEntity>();
       for (const entity of entities) {
          // Mobs
          if (entity instanceof Mob) {
@@ -60,6 +74,12 @@ class TribesmanFollowAI extends FollowAI {
                case MobBehaviour.peaceful:
                   otherEntities.push(entity);
             }
+            continue;
+         }
+
+         // Resources
+         if (entity instanceof Resource) {
+            otherEntities.push(entity);
             continue;
          }
 
@@ -93,13 +113,33 @@ class TribesmanFollowAI extends FollowAI {
       return closestEntity;
    }
 
+   private inventoryIsFull(): boolean {
+      const inventoryComponent = this.entity.getComponent(FiniteInventoryComponent)!;
+
+      const inventory = inventoryComponent.getItemSlots();
+      const slotCount = inventoryComponent.slotCount;
+
+      let inventoryIsFull = true;
+      for (let i = 0; i < slotCount; i++) {
+         if (typeof inventory[i] === "undefined") inventoryIsFull = false;
+      }
+      return inventoryIsFull;
+   }
+
    public tick(): void {
+      if (this.inventoryIsFull()) {
+         const targetPosition = this.entity.getComponent(TribeMemberComponent)!.tribe.stash.getPosition();
+         super.moveToPosition(targetPosition, this.moveSpeed);
+         return;
+      }
+
       const closestEntity = this.findClosestEntity();
 
       if (closestEntity !== null) {
          const position = closestEntity.getPosition();
 
-         if (closestEntity instanceof Mob) {
+         const healthComponent = closestEntity.getComponent(HealthComponent);
+         if (healthComponent !== null) {
             const thisPosition = this.entity.getPosition();
    
             const dist = thisPosition.distanceFrom(position);

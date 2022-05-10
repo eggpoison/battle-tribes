@@ -2,7 +2,7 @@ import { EventType } from "../Entity";
 import HitboxComponent from "../../entity-components/HitboxComponent";
 import RenderComponent, { EllipseRenderPart } from "../../entity-components/RenderComponent";
 import ItemSpawnComponent from "../../entity-components/ItemSpawnerComponent";
-import  { ItemName } from "../../items";
+import  { ItemName } from "../../items/items";
 import { TileType } from "../../tiles";
 import { Point } from "../../utils";
 import Mob from "./Mob";
@@ -41,7 +41,7 @@ class Cow extends Mob {
    }
 
    public getInfo(): MobInfo {
-      return MOB_INFO_RECORD.Cow;
+      return MOB_INFO_RECORD.cow;
    }
 
    private setHitbox(): void {

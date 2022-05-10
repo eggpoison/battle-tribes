@@ -5,22 +5,34 @@ import RenderComponent from "../../entity-components/RenderComponent";
 import ItemSpawnComponent from "../../entity-components/ItemSpawnerComponent";
 import TransformComponent from "../../entity-components/TransformComponent";
 import { ResourceInfo } from "../../resource-info";
-import { Point } from "../../utils";
+import { Point, randFloat } from "../../utils";
 import Entity from "../Entity";
 
 abstract class Resource extends Entity {
    constructor(position: Point, components?: ReadonlyArray<Component>) {
+      const transformComponent = new TransformComponent(position);
+      const renderComponent = new RenderComponent();
+      const hitboxComponent = new HitboxComponent();
+
       super([
-         new TransformComponent(position),
+         transformComponent,
          new HealthComponent(),
-         new HitboxComponent(),
-         new RenderComponent(),
+         hitboxComponent,
+         renderComponent,
          new ItemSpawnComponent(),
          ...(components || [])
       ]);
+
+      transformComponent.rotation = randFloat(0, 360);
+
+      this.createRenderParts(renderComponent);
+      this.setHitbox(hitboxComponent);
    }
 
    protected abstract getInfo(): ResourceInfo;
+
+   protected abstract createRenderParts(renderComponent: RenderComponent): void;
+   protected abstract setHitbox(hitboxComponent: HitboxComponent): void;
 }
 
 export default Resource;

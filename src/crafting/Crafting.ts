@@ -1,4 +1,4 @@
-import { ItemName } from "../items";
+import { ItemName } from "../items/items";
 import Recipe from "./Recipe";
 
 type RecipeTypes = "hand" | "campfire" | "workbench";

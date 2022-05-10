@@ -7,17 +7,17 @@ import RenderComponent from "../../entity-components/RenderComponent";
 import HitboxComponent from "../../entity-components/HitboxComponent";
 import AttackComponent, { CircleAttack } from "../../entity-components/AttackComponent";
 import ItemEntity from "../ItemEntity";
-import InventoryComponent from "../../entity-components/InventoryComponent";
 import TribeStash from "../TribeStash";
 import Tribe from "../../Tribe";
 import Board from "../../Board";
 import { hideMessageDisplay, setMessageDisplay } from "../../components/MessageDisplay";
-import InventoryViewerManager from "../../components/InventoryViewerManager";
+import InventoryViewerManager from "../../components/inventory/InventoryViewerManager";
 import { toggleTribeStashViewerVisibility } from "../../components/TribeStashViewer";
 import HealthComponent from "../../entity-components/HealthComponent";
 import { HealthBarManager } from "../../components/HealthBar";
 import TribeMemberComponent from "../../entity-components/TribeMemberComponent";
 import GenericTribeMember from "./GenericTribeMember";
+import FiniteInventoryComponent from "../../entity-components/inventory/FiniteInventoryComponent";
 
 class Player extends GenericTribeMember {
    public static readonly SIZE = 1;
@@ -39,7 +39,7 @@ class Player extends GenericTribeMember {
          new PlayerControllerComponent(),
          new CameraFollowComponent(),
          new AttackComponent(),
-         new InventoryComponent(Player.DEFAULT_INVENTORY_SLOT_COUNT),
+         new FiniteInventoryComponent(Player.DEFAULT_INVENTORY_SLOT_COUNT),
          new TribeMemberComponent(tribe)
       ]);
 
@@ -51,7 +51,7 @@ class Player extends GenericTribeMember {
 
       Player.instance = this;
 
-      InventoryViewerManager.getInstance("playerInventory").setInventoryComponent(this.getComponent(InventoryComponent)!);
+      InventoryViewerManager.getInstance("playerInventory").setInventoryComponent(this.getComponent(FiniteInventoryComponent)!);
 
       /** The distance away from the player (in tiles) that the attack is performed */
       const ATTACK_OFFSET = 0.5;
@@ -94,12 +94,12 @@ class Player extends GenericTribeMember {
    protected onCollision(collidingEntity: Entity): void {
       if (collidingEntity instanceof ItemEntity) {
          // Pick up the item
-         const inventoryComponent = this.getComponent(InventoryComponent)!;
+         const inventoryComponent = this.getComponent(FiniteInventoryComponent)!;
          inventoryComponent.pickupResource(collidingEntity);
 
          // Update the player inventory viewer
-         const inventory = inventoryComponent.getItemSlots();
-         InventoryViewerManager.getInstance("playerInventory").setInventory(inventory);
+         const itemSlots = inventoryComponent.getItemSlots();
+         InventoryViewerManager.getInstance("playerInventory").setItemSlots(itemSlots);
       } else if (collidingEntity instanceof TribeStash) {
          // Do nothing if it belongs to a different tribe.
          const playerTribe = this.getComponent(TribeMemberComponent)!.tribe;

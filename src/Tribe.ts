@@ -7,26 +7,26 @@ import Slime from "./entities/mobs/Slime";
 import HealthComponent from "./entity-components/HealthComponent";
 import Cow from "./entities/mobs/Cow";
 
-// const tribeExpRequirements = [
-//    5,
-//    25,
-//    100,
-//    250,
-//    1000
-// ];
-
 const tribeExpRequirements = [
-   1,
-   2,
-   3,
-   4,
    5,
-   6,
-   7,
-   8,
-   9,
-   10
+   25,
+   100,
+   250,
+   1000
 ];
+
+// const tribeExpRequirements = [
+//    1,
+//    2,
+//    3,
+//    4,
+//    5,
+//    6,
+//    7,
+//    8,
+//    9,
+//    10
+// ];
 
 // Tribe members are created through the tribe class
 // Other entities such as the player are added to the tribe in their constructor
@@ -73,6 +73,18 @@ class Tribe {
 
       //    const m = new Cow(a);
       //    Board.addEntity(m);
+      // }
+
+      // const n = 5;
+      // for (let i = 0; i < 360; i += 360 / n) {
+      //    const radians = i / 180 * Math.PI;
+
+      //    const OFFSET = 7;
+      //    const a = new Vector(OFFSET * Board.tileSize, radians);
+      //    const pos = this.position.add(a.convertToPoint());
+
+      //    const ree = new Slime(pos);
+      //    Board.addEntity(ree);
       // }
    }
 

@@ -1,5 +1,5 @@
-import { ItemList } from "../entity-components/InventoryComponent";
-import ITEMS, { ItemName } from "../items";
+import { ItemList } from "../entity-components/inventory/InventoryComponent";
+import ITEMS, { ItemName } from "../items/items";
 import Item from "../items/Item";
 
 class Recipe {

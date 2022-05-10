@@ -1,15 +1,13 @@
-import { useRef } from "react";
 import Player from "../entities/tribe-members/Player";
-import InventoryViewerManager, { InventoryViewer } from "./InventoryViewerManager";
+import FiniteInventoryViewerManager from "./inventory/FiniteInventoryViewerManager";
+import { InventoryViewer } from "./inventory/InventoryViewer";
 
 const PlayerInventoryViewer = () => {
-   const inventoryViewerManagerRef = useRef<InventoryViewerManager>(
-      new InventoryViewerManager("playerInventory", Player.DEFAULT_INVENTORY_SLOT_COUNT)
-   );
+   const inventoryViewerManager = new FiniteInventoryViewerManager("playerInventory", Player.DEFAULT_INVENTORY_SLOT_COUNT);
 
    return (
       <div id="inventory-viewer">
-         <InventoryViewer inventoryViewerManager={inventoryViewerManagerRef.current} />
+         <InventoryViewer inventoryViewerManager={inventoryViewerManager} />
       </div>
    );
 }

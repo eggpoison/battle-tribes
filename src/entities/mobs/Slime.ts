@@ -6,8 +6,7 @@ import HealthComponent from "../../entity-components/HealthComponent";
 import HitboxComponent from "../../entity-components/HitboxComponent";
 import RenderComponent, { EllipseRenderPart } from "../../entity-components/RenderComponent";
 import ItemSpawnComponent from "../../entity-components/ItemSpawnerComponent";
-import TransformComponent from "../../entity-components/TransformComponent";
-import { ItemName } from "../../items";
+import { ItemName } from "../../items/items";
 import MOB_INFO_RECORD, { MobBehaviour, MobInfo } from "../../mob-info";
 import { ConstructorFunction, Point, randInt, Vector } from "../../utils";
 import Entity, { EventType } from "../Entity";
@@ -98,7 +97,7 @@ class Slime extends Mob {
    }
 
    public getInfo(): MobInfo {
-      return MOB_INFO_RECORD.Slime;
+      return MOB_INFO_RECORD.slime;
    }
 
    private getSize(): number {
@@ -176,7 +175,7 @@ class Slime extends Mob {
             const offset = Vector.randomUnitVector();
             offset.magnitude *= this.info.size / 2 * Board.tileSize * Math.random();
 
-            const position = this.getComponent(TransformComponent)!.position.add(offset.convertToPoint());
+            const position = this.getPosition().add(offset.convertToPoint());
             
             const childSlime = new Slime(position, thisSize - 1);
             Board.addEntity(childSlime);

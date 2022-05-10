@@ -1,17 +1,32 @@
 import Board from "../Board";
 import RESOURCE_INFO, { ResourceInfo } from "../resource-info";
 import SETTINGS from "../settings";
-import { TileType } from "../tiles";
+import { getTileDistFromCenter, TileType } from "../tiles";
 import { randInt } from "../utils";
 
 abstract class ResourceSpawner {
    private static SPAWN_CHANCE = 0.05 / SETTINGS.tps;
 
-   private static getEligibleResources(tileType: TileType): ReadonlyArray<ResourceInfo> | null {
+   private static getEligibleResources(tileType: TileType, dist: number): ReadonlyArray<ResourceInfo> | null {
       const eligibleResources = new Array<ResourceInfo>();
 
       for (const info of Object.values(RESOURCE_INFO)) {
-         if (info.tiles.includes(tileType)) eligibleResources.push(info);
+         // Don't add if the tile isn't a required tile type
+         if (typeof info.spawnRequirements.tileTypes !== "undefined") {
+            if (!info.spawnRequirements.tileTypes.includes(tileType)) {
+               continue;
+            }
+         }
+
+         // Don't add if the resource isn't in the right distance
+         if (typeof info.spawnRequirements.minDist !== "undefined") {
+            if (dist < info.spawnRequirements.minDist) continue;
+         }
+         if (typeof info.spawnRequirements.maxDist !== "undefined") {
+            if (dist > info.spawnRequirements.maxDist) continue;
+         }
+
+         eligibleResources.push(info);
       }
       
       if (eligibleResources.length === 0) return null;
@@ -23,20 +38,20 @@ abstract class ResourceSpawner {
       for (const resource of resources) {
          totalWeight += resource.weight;
       }
-
+      
       const weight = randInt(0, totalWeight);
-
+      
       let currentWeight = 0;
       for (const resource of resources) {
          const newWeight = currentWeight + resource.weight;
-
+         
          if (weight >= currentWeight && weight <= newWeight) {
             return resource;
          }
-
-         currentWeight += newWeight;
+         
+         currentWeight = newWeight;
       }
-
+      
       throw new Error("Couldn't get resource from resource list!");
    }
 
@@ -46,7 +61,8 @@ abstract class ResourceSpawner {
 
       const tileType = Board.getTileType(x, y);
 
-      const eligibleResources = this.getEligibleResources(tileType);
+      const dist = getTileDistFromCenter(x, y);
+      const eligibleResources = this.getEligibleResources(tileType, dist);
 
       if (eligibleResources !== null) {
          const info = this.getRandomResource(eligibleResources);

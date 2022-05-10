@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import TribeStash from "../entities/TribeStash";
-import InventoryViewerManager, { InventoryViewer } from "./InventoryViewerManager";
+import InfiniteInventoryViewerManager from "./inventory/InfiniteInventoryViewerManager";
+import InventoryViewer from "./inventory/InventoryViewer";
+import InventoryViewerManager from "./inventory/InventoryViewerManager";
 import { setMessageDisplay } from "./MessageDisplay";
 
 export let toggleTribeStashViewerVisibility: () => void;
@@ -8,7 +10,7 @@ export let toggleTribeStashViewerVisibility: () => void;
 const TribeStashViewer = () => {
    const [isVisible, setIsVisible] = useState<boolean>(false);
    const tribeStashViewerManagerRef = useRef<InventoryViewerManager | null>(
-      !InventoryViewerManager.hasInstance("tribeStash") ? new InventoryViewerManager("tribeStash", TribeStash.DEFAULT_SLOT_COUNT) : InventoryViewerManager.getInstance("tribeStash")
+      !InventoryViewerManager.hasInstance("tribeStash") ? new InfiniteInventoryViewerManager("tribeStash") : InventoryViewerManager.getInstance("tribeStash")
    );
    
    useEffect(() => {

@@ -19,6 +19,10 @@ class Timer {
       this.timeRemaining -= 1 / SETTINGS.tps;
    }
 
+   public addDuration(time: number): void {
+      this.timeRemaining += time;
+   }
+
    public hasExpired(): boolean {
       return this.timeRemaining <= 0;
    }

@@ -37,7 +37,9 @@ class FiniteInventoryComponent extends InventoryComponent {
             return amount;
          }
 
-         addAmount += itemInfo.stackSize - slotInfo[1];
+         if (slotInfo[0] === itemName) {
+            addAmount += itemInfo.stackSize - slotInfo[1];
+         }
       }
 
       if (addAmount > amount) return amount;

@@ -11,6 +11,7 @@ body {
 
 :root {
    --slot-size: 4rem;
+   --slot-margin: 3px;
 }
 
 code {
@@ -53,7 +54,7 @@ code {
    height: calc(var(--slot-size) - var(--border-size) * 2);
    background-color: rgba(179, 110, 0, 0.5);
    border: var(--border-size) solid rgb(123, 66, 0);
-   margin: 3px;
+   margin: var(--slot-margin);
    position: relative;
    cursor: pointer;
 }

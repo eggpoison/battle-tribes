@@ -1,6 +1,7 @@
 import Board from "../Board";
 import Component from "../Component";
 import { toggleDevtoolsVisibility } from "../components/Devtools";
+import { openMenu } from "../components/menus/MenuManager";
 import Player from "../entities/tribe-members/Player";
 import SETTINGS from "../settings";
 import { isDev, Vector } from "../utils";
@@ -115,6 +116,11 @@ class PlayerControllerComponent extends Component {
          // Devtools
          case "`":
             if (isKeyDown && isDev()) toggleDevtoolsVisibility();
+            break;
+
+         // Crafting menu
+         case "e":
+            openMenu("crafting");
             break;
 
          // Movement

@@ -1,0 +1,13 @@
+#crafting-menu {
+   background-color: blue;
+   position: absolute;
+   top: 50%;
+   left: 50%;
+   transform: translate(-50%, -50%);
+}
+#crafting-menu .slots {
+   width: calc((var(--slot-size) + var(--slot-margin) * 2) * var(--width));
+   background-color: red;
+   display: flex;
+   flex-wrap: wrap;
+}

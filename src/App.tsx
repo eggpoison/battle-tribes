@@ -3,6 +3,7 @@ import { load } from '.';
 import Canvas from './components/Canvas';
 import Devtools from './components/Devtools';
 import HealthBar from './components/HealthBar';
+import MenuManager from './components/menus/MenuManager';
 import MessageDisplay from './components/MessageDisplay';
 import MinimapCanvas from './components/MinimapCanvas';
 import PlayerInventoryViewer from './components/PlayerInventoryViewer';
@@ -29,6 +30,7 @@ function App() {
          <Devtools />
          <MessageDisplay />
          <TribeStashViewer />
+         <MenuManager />
 
          {/* Black filter */}
          <div id="mask" className="hidden"></div>

@@ -1,5 +1,6 @@
 import FoodItem from "./FoodItem";
 import Item from "./Item";
+import ToolItem from "./ToolItem";
 import WeaponItem from "./WeaponItem";
 
 export enum ItemName {
@@ -11,7 +12,9 @@ export enum ItemName {
    cookedMeat,
    slime,
    smallBackpack,
-   woodenSword
+   woodenSword,
+   woodenPickaxe,
+   woodenAxe,
 }
 
 
@@ -81,7 +84,25 @@ const ITEMS: ItemsType = {
       attackCooldown: 0.4
    }),
 
-   // Craftable items
+   // Tools
+   [ItemName.woodenPickaxe]: new ToolItem({
+      displayName: "Wooden Pickaxe",
+      description: "mine",
+      imageSrc: "berry.png",
+      stackSize: 1,
+      swingCooldown: 0.5,
+      type: "pickaxe"
+   }),
+   [ItemName.woodenAxe]: new ToolItem({
+      displayName: "Wooden Axe",
+      description: "chop",
+      imageSrc: "berry.png",
+      stackSize: 1,
+      swingCooldown: 0.5,
+      type: "axe"
+   }),
+
+   // Wearable
    [ItemName.smallBackpack]: new Item({
       displayName: "Small Backpack",
       description: "Increases inventory size by 1 slot.",

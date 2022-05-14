@@ -4,7 +4,7 @@ import ItemEntity from "../../entities/ItemEntity";
 import Mob from "../../entities/mobs/Mob";
 import Resource from "../../entities/resources/Resource";
 import Tribesman from "../../entities/tribe-members/Tribesman";
-import { MobBehaviour } from "../../mob-info";
+import { MobBehaviour } from "../../entity-info";
 import Timer from "../../Timer";
 import { ConstructorFunction } from "../../utils";
 import AttackComponent from "../AttackComponent";
@@ -67,7 +67,7 @@ class TribesmanFollowAI extends FollowAI {
       for (const entity of entities) {
          // Mobs
          if (entity instanceof Mob) {
-            switch (entity.getInfo().behaviour) {
+            switch (entity.entityInfo.behaviour) {
                case MobBehaviour.hostile:
                   hostileMobs.push(entity);
                   break;
@@ -128,24 +128,26 @@ class TribesmanFollowAI extends FollowAI {
 
    public tick(): void {
       if (this.inventoryIsFull()) {
-         const targetPosition = this.entity.getComponent(TribeMemberComponent)!.tribe.stash.getPosition();
-         super.moveToPosition(targetPosition, this.moveSpeed);
+         const tribe = this.entity.getComponent(TribeMemberComponent)!.tribe.stash;
+         const tribeStashPosition = tribe.getComponent(TransformComponent)!.position;
+
+         super.moveToPosition(tribeStashPosition, this.moveSpeed);
          return;
       }
 
       const closestEntity = this.findClosestEntity();
 
       if (closestEntity !== null) {
-         const position = closestEntity.getPosition();
+         const entityPosition = closestEntity.getComponent(TransformComponent)!.position;
 
          const healthComponent = closestEntity.getComponent(HealthComponent);
          if (healthComponent !== null) {
-            const thisPosition = this.entity.getPosition();
+            const thisPosition = this.entity.getComponent(TransformComponent)!.position;
    
-            const dist = thisPosition.distanceFrom(position);
+            const dist = thisPosition.distanceFrom(entityPosition);
 
             if (dist > this.stopRange * Board.tileSize) {
-               super.moveToPosition(position, this.moveSpeed);
+               super.moveToPosition(entityPosition, this.moveSpeed);
             } else {
                // If the tribesman is in range to attack
                if (!this.isAttacking) {
@@ -159,13 +161,13 @@ class TribesmanFollowAI extends FollowAI {
                }
    
                // Rotate it to look at the entity
-               const angle = thisPosition.angleBetween(position);
+               const angle = thisPosition.angleBetween(entityPosition);
                this.entity.getComponent(TransformComponent)!.rotation = angle;
             }
          } else {
             // If it's an item
 
-            super.moveToPosition(position, this.moveSpeed);
+            super.moveToPosition(entityPosition, this.moveSpeed);
          }
       } else {
          super.changeCurrentAI("wander");

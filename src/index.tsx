@@ -11,7 +11,9 @@ import "./css/inventory-viewer.css";
 import "./css/message-display.css";
 import "./css/tribe-stash-viewer.css";
 import { Minimap } from './components/MinimapCanvas';
-import MobSpawner from './spawning/MobSpawner';
+import PlayerControllerComponent, { stopPlayerMovement } from './entity-components/PlayerControllerComponent';
+import { toggleMenu } from './components/menus/MenuManager';
+import EntitySpawner from './EntitySpawner';
 
 const root = ReactDOM.createRoot(
    document.getElementById('root') as HTMLElement
@@ -22,12 +24,25 @@ root.render(
    </React.StrictMode>
 );
 
+// Stop movement on right click
+document.addEventListener("contextmenu", () => {
+   stopPlayerMovement();
+});
+
+const setupHotkeys = (): void => {
+   PlayerControllerComponent.createKeyListener("e", () => {
+      toggleMenu("crafting");
+   });
+}
+
 // Called when all elements are rendered
 export function load() {
    Camera.setup();
+   EntitySpawner.setup();
    Board.setup();
-   MobSpawner.setup();
    Minimap.setup();
    Minimap.drawBackground();
    Game.startGame();
+
+   setupHotkeys();
 }

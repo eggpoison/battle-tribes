@@ -2,13 +2,12 @@ import HitboxComponent from "../../entity-components/HitboxComponent";
 import ItemSpawnComponent from "../../entity-components/ItemSpawnerComponent";
 import RenderComponent, { ImageRenderPart } from "../../entity-components/RenderComponent";
 import { ItemName } from "../../items/items";
-import RESOURCE_INFO, { ResourceInfo } from "../../resource-info";
 import { Point } from "../../utils";
 import { EventType } from "../Entity";
 import Resource from "./Resource";
 
 class Boulder extends Resource {
-   private static readonly SIZE = 1.3;
+   public readonly SIZE: number = 1.3;
    private static readonly HEALTH = 20;
 
    constructor(position: Point) {
@@ -19,16 +18,12 @@ class Boulder extends Resource {
       this.getComponent(ItemSpawnComponent)!.addResource(ItemName.rock, [1, 3], EventType.deathByEntity);
    }
 
-   public getInfo(): ResourceInfo {
-      return RESOURCE_INFO.boulder;
-   }
-
    protected createRenderParts(renderComponent: RenderComponent): void {
       renderComponent.addPart(new ImageRenderPart({
          type: "image",
          size: {
-            width: Boulder.SIZE,
-            height: Boulder.SIZE
+            width: this.SIZE,
+            height: this.SIZE
          },
          url: "boulder.png"
       }));
@@ -37,7 +32,7 @@ class Boulder extends Resource {
    protected setHitbox(hitboxComponent: HitboxComponent): void {
       hitboxComponent.setHitbox({
          type: "circle",
-         radius: Boulder.SIZE / 2
+         radius: this.SIZE / 2
       });
    }
 }

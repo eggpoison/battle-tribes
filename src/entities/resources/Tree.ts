@@ -3,14 +3,13 @@ import HitboxComponent from "../../entity-components/HitboxComponent";
 import ItemSpawnComponent from "../../entity-components/ItemSpawnerComponent";
 import RenderComponent, { ImageRenderPart } from "../../entity-components/RenderComponent";
 import { ItemName } from "../../items/items";
-import RESOURCE_INFO, { ResourceInfo } from "../../resource-info";
 import { Point } from "../../utils";
 import { EventType } from "../Entity";
 import Resource from "./Resource";
 
 class Tree extends Resource {
    private static readonly HEALTH = 10;
-   private static readonly SIZE = 2;
+   public readonly SIZE = 2;
    private static readonly LIFESPAN = 60;
 
    constructor(position: Point) {
@@ -22,16 +21,12 @@ class Tree extends Resource {
       this.addResourceDrops();
    }
 
-   protected getInfo(): ResourceInfo {
-      return RESOURCE_INFO.berry;
-   }
-
    protected createRenderParts(renderComponent: RenderComponent): void {
       renderComponent.addPart(new ImageRenderPart({
          type: "image",
          size: {
-            width: Tree.SIZE,
-            height: Tree.SIZE
+            width: this.SIZE,
+            height: this.SIZE
          },
          url: "tree.png"
       }));
@@ -40,7 +35,7 @@ class Tree extends Resource {
    protected setHitbox(hitboxComponent: HitboxComponent): void {
       hitboxComponent.setHitbox({
          type: "circle",
-         radius: Tree.SIZE / 2
+         radius: this.SIZE / 2
       });
    }
 

@@ -1,5 +1,8 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+
 #crafting-menu {
-   background-color: blue;
+   background-color: rgb(203, 156, 0);
+   border: 4px solid rgb(146, 78, 0);
    position: absolute;
    top: 50%;
    left: 50%;
@@ -7,7 +10,47 @@
 }
 #crafting-menu .slots {
    width: calc((var(--slot-size) + var(--slot-margin) * 2) * var(--width));
-   background-color: red;
    display: flex;
    flex-wrap: wrap;
+}
+
+#crafting-menu .hover-info {
+   font-family: "Roboto";
+   width: 200px;
+   background-color: rgba(0, 0, 0, 0.8);
+   padding: 5px;
+   position: absolute;
+   top: 50%;
+   left: 50%;
+   z-index: 1;
+   opacity: 0;
+   pointer-events: none;
+}
+#crafting-menu .slot:hover .hover-info {
+   opacity: 1;
+}
+#crafting-menu .hover-info h3 {
+   color: #fff;
+   font-size: 1.2rem;
+   font-weight: 700;
+   margin: 0 0 0.3rem;
+}
+#crafting-menu .hover-info .description {
+   color: #ddd;
+   margin: 0.5rem 0;
+}
+#crafting-menu .hover-info ul {
+   margin: 0;
+}
+#crafting-menu .hover-info li {
+   --size: 20px;
+   height: var(--size);
+   color: #eee;
+}
+
+#crafting-menu .material-image-preview {
+   width: var(--size);
+   height: var(--size);
+   position: absolute;
+   margin-left: 10px;
 }

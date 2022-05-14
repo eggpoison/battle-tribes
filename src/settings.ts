@@ -1,3 +1,5 @@
+import { MapGenerationType } from "./terrain-generation";
+
 interface SettingsType {
    /** The number of times that the game ticks every second */
    readonly tps: number;
@@ -9,14 +11,20 @@ interface SettingsType {
    readonly fogRevealTime: number;
    /** How long an entity is invulnerable after being hit, in seconds */
    readonly entityInvulnerabilityDuration: number;
+   /** Which type of map to generate */
+   readonly mapGenerationType: MapGenerationType;
+   /** Whether the fog of war is shown */
+   readonly showFogOfWar: boolean;
 }
 
 const SETTINGS: SettingsType = {
    tps: 60,
    backgroundColour: "#09120b",
    startTime: 0,
-   fogRevealTime: 2,
-   entityInvulnerabilityDuration: 0.15
+   fogRevealTime: 0.5,
+   entityInvulnerabilityDuration: 0.15,
+   mapGenerationType: "valley",
+   showFogOfWar: true
 };
 
 export default SETTINGS;

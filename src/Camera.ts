@@ -28,7 +28,7 @@ abstract class Camera {
       this.visibleChunkBounds[1] = Math.min(Math.ceil(this.position.x / chunkUnits) + 1, Board.size - 1);
       
       // minY
-      this.visibleChunkBounds[2] = Math.max(Math.floor((this.position.y - getCanvasWidth() / 2) / chunkUnits), 0);
+      this.visibleChunkBounds[2] = Math.max(Math.floor((this.position.y - getCanvasHeight() / 2) / chunkUnits), 0);
       // maxY
       this.visibleChunkBounds[3] = Math.min(Math.ceil(this.position.y / chunkUnits) + 1, Board.size - 1);
    }

@@ -1,14 +1,17 @@
 import Board, { Chunk } from "../Board";
 import Component from "../Component";
 import Entity from "../entities/Entity";
+import Cow from "../entities/mobs/Cow";
 import SETTINGS from "../settings";
-import TILE_INFO_MAP from "../tiles";
-import { Point, Vector } from "../utils";
+import TILE_INFO_MAP, { TileType } from "../tiles";
+import { Point, randFloat, Vector } from "../utils";
 import HitboxComponent from "./HitboxComponent";
+
+let a: any;
 
 class TransformComponent extends Component {
    /** Position of the entity */
-   public position!: Point;
+   public _position!: Point;
    /** Velocity of the entity */
    public velocity: Vector;
    /** Rotation of the entity in degrees */
@@ -18,6 +21,13 @@ class TransformComponent extends Component {
    private knockbackTime: number = 0;
 
    private readonly isStatic: boolean;
+
+   set position(a: Point) {
+      this._position = a;
+   }
+   get position() {
+      return this._position;
+   }
 
    constructor(startingPosition?: Point, startingVelocity: Vector = new Vector(0, 0), startingRotation: number = 0, isStatic: boolean = false) {
       super();
@@ -74,6 +84,8 @@ class TransformComponent extends Component {
       const x = Math.floor(this.position.x / Board.tileSize);
       const y = Math.floor(this.position.y / Board.tileSize);
 
+      a = this;
+      
       return [x, y];
    }
 

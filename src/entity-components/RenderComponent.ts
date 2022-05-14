@@ -216,7 +216,6 @@ class RenderComponent extends Component {
 
       const entityRotation = entityTransformComponent.rotation;
 
-
       for (let i = 0; i < this.renderParts.length; i++) {
          const renderClass = this.renderParts[i];
 

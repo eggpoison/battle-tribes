@@ -1,7 +1,5 @@
 import Board from "../../Board";
 import Entity from "../../entities/Entity";
-import Resource from "../../entities/resources/Resource";
-import Tribesman from "../../entities/tribe-members/Tribesman";
 import { ConstructorFunction, Point } from "../../utils";
 import TransformComponent from "../TransformComponent";
 import EntityAI from "./EntityAI";

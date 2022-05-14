@@ -20,7 +20,8 @@ import GenericTribeMember from "./GenericTribeMember";
 import FiniteInventoryComponent from "../../entity-components/inventory/FiniteInventoryComponent";
 
 class Player extends GenericTribeMember {
-   public static readonly SIZE = 1;
+   public readonly SIZE = 1;
+
    public static readonly SPEED = 5;
    public static readonly HEALTH = 20;
    public static readonly TRIBE_COLOUR = "#ffcc17";
@@ -47,7 +48,7 @@ class Player extends GenericTribeMember {
 
       this.setHitbox();
 
-      super.createRenderParts(Player.SIZE, HAND_SIZE, Player.TRIBE_COLOUR, HAND_COLOUR, HAND_ANGLES);
+      super.createRenderParts(this.SIZE, HAND_SIZE, Player.TRIBE_COLOUR, HAND_COLOUR, HAND_ANGLES);
 
       Player.instance = this;
 
@@ -63,7 +64,7 @@ class Player extends GenericTribeMember {
          getPosition: (): Point => {
             const rotation = this.getComponent(TransformComponent)!.rotation;
 
-            const offset = RenderComponent.getOffset((Player.SIZE / 2 + ATTACK_OFFSET) * Board.tileSize, rotation);
+            const offset = RenderComponent.getOffset((this.SIZE / 2 + ATTACK_OFFSET) * Board.tileSize, rotation);
             const offsetPoint = new Point(offset[0], offset[1]);
 
             return this.getComponent(TransformComponent)!.position.add(offsetPoint);
@@ -81,13 +82,14 @@ class Player extends GenericTribeMember {
       });
 
       // Reveal the space the player is standing in
-      Board.revealFog(this.getPosition(), true);
+      const position = this.getComponent(TransformComponent)!.position;
+      Board.revealFog(position, this.SIZE / 2 * Board.tileSize, true);
    }
 
    private setHitbox(): void {
       this.getComponent(HitboxComponent)!.setHitbox({
          type: "circle",
-         radius: Player.SIZE / 2
+         radius: this.SIZE / 2
       });
    }
 

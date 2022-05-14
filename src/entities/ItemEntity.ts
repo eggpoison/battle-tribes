@@ -6,7 +6,7 @@ import Item from "../items/Item";
 import { getRandomAngle, Point } from "../utils";
 
 class ItemEntity extends Entity {
-   private static readonly SIZE = 0.5;
+   public readonly SIZE = 0.5;
 
    public readonly item: Item;
 
@@ -23,8 +23,8 @@ class ItemEntity extends Entity {
          new ImageRenderPart({
             type: "image",
             size: {
-               width: ItemEntity.SIZE,
-               height: ItemEntity.SIZE
+               width: this.SIZE,
+               height: this.SIZE
             },
             url: item.imageSrc
          })
@@ -36,7 +36,7 @@ class ItemEntity extends Entity {
    private setHitbox(): void {
       this.getComponent(HitboxComponent)!.setHitbox({
          type: "circle",
-         radius: ItemEntity.SIZE / 2
+         radius: this.SIZE / 2
       });
    }
 }

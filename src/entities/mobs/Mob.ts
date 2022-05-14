@@ -5,22 +5,13 @@ import HitboxComponent from "../../entity-components/HitboxComponent";
 import RenderComponent from "../../entity-components/RenderComponent";
 import TransformComponent from "../../entity-components/TransformComponent";
 import { Point } from "../../utils";
-import { MobInfo } from "../../mob-info";
+import { MobInfo } from "../../entity-info";
 import Berry from "../resources/Berry";
+import LivingEntity from "../LivingEntity";
 
-abstract class Mob extends Entity {
-   public abstract getInfo(): MobInfo;
-
+abstract class Mob extends LivingEntity<MobInfo> {
    constructor(position: Point, components?: ReadonlyArray<Component>) {
-      super([
-         new TransformComponent(),
-         new RenderComponent(),
-         new HitboxComponent(),
-         new HealthComponent(),
-         ...(components || [])
-      ]);
-
-      this.getComponent(TransformComponent)!.position = position;
+      super(position, components);
    }
 
    public static entityCanBeAttackedByMob(entity: Entity): boolean {

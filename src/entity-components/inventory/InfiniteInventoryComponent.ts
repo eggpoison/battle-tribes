@@ -15,7 +15,7 @@ class InfiniteInventoryComponent extends InventoryComponent {
          // If the item is of a different type, then none can be added
          if (slotInfo[0] !== itemName) return null;
 
-         const addAmount = slotItemInfo.stackSize - slotInfo[1];
+         const addAmount = Math.min(amount, slotItemInfo.stackSize - slotInfo[1]);
          return addAmount;
       }
    }

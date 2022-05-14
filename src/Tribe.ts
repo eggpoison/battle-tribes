@@ -6,27 +6,28 @@ import Tribesman from "./entities/tribe-members/Tribesman";
 import Slime from "./entities/mobs/Slime";
 import HealthComponent from "./entity-components/HealthComponent";
 import Cow from "./entities/mobs/Cow";
-
-const tribeExpRequirements = [
-   5,
-   25,
-   100,
-   250,
-   1000
-];
+import ENTITY_INFO, { MobInfo } from "./entity-info";
 
 // const tribeExpRequirements = [
-//    1,
-//    2,
-//    3,
-//    4,
 //    5,
-//    6,
-//    7,
-//    8,
-//    9,
-//    10
+//    25,
+//    100,
+//    250,
+//    1000
 // ];
+
+const tribeExpRequirements = [
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10
+];
 
 // Tribe members are created through the tribe class
 // Other entities such as the player are added to the tribe in their constructor
@@ -44,13 +45,18 @@ class Tribe {
       this.position = position;
       this.colour = colour;
 
-      // Remove fog of war on the tribe position
-      Board.revealFog(this.position, true);
-
       // Create a tribe stash
       this.stash = new TribeStash(this);
       Board.addEntity(this.stash);
       this.addEntityToTribe(this.stash);
+
+      setTimeout(() => {
+         const a = new Point(this.position.x + 80, this.position.y);
+
+         const z = new Cow(a);
+         z.setInfo(ENTITY_INFO[3] as MobInfo);
+         Board.addEntity(z);
+      }, 500);
 
       // for (let i = 0; i < 360; i++) {
       //    const radians = i / 180 * Math.PI;

@@ -27,7 +27,14 @@ const getEventsObject = (): EventsObject => {
    return eventsObject as EventsObject;
 }
 
+type Size = number | {
+   readonly WIDTH: number;
+   readonly HEIGHT: number;
+}
+
 abstract class Entity {
+   public abstract readonly SIZE: Size;
+
    public static readonly iframes: number = SETTINGS.entityInvulnerabilityDuration * SETTINGS.tps;
 
    public previousChunk?: Chunk;
@@ -43,6 +50,8 @@ abstract class Entity {
          if (typeof component.onLoad !== "undefined") component.onLoad();
       }
    }
+
+   public onLoad?(): void;
 
    protected getCollidingEntities(): Array<Entity> {
       const hitboxComponent = this.getComponent(HitboxComponent);
@@ -139,10 +148,6 @@ abstract class Entity {
 
    protected setMaxHealth(maxHealth: number): void {
       this.getComponent(HealthComponent)!.setMaxHealth(maxHealth, true);
-   }
-
-   public getPosition(): Point {
-      return this.getComponent(TransformComponent)!.position;
    }
 }
 

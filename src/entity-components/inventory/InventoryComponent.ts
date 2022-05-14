@@ -44,6 +44,17 @@ abstract class InventoryComponent extends Component {
       this.itemSlots[slotNum][1] += addAmount;
    }
 
+   public removeItem(name: ItemName, amount: number): void {
+      for (let slotNum = 0; slotNum < this.itemSlots.length; slotNum++) {
+         const itemSlot = this.itemSlots[slotNum];
+         if (itemSlot[0] === name) {
+            itemSlot[1] -= amount;
+            if (itemSlot[1] <= 0) delete this.itemSlots[slotNum];
+            return;
+         }
+      }
+   }
+
    public removeItemFromSlot(slotNum: number, amount: number = 1): void {
       if (typeof this.itemSlots[slotNum] === "undefined") throw new Error("Tried to remove an item from a slot with nothing in it!");
 

@@ -17,7 +17,6 @@ export enum ItemName {
    woodenAxe,
 }
 
-
 const REGULAR_STACK_SIZE = 64;
 
 type ItemsType = Record<ItemName, Item>;
@@ -25,7 +24,7 @@ const ITEMS: ItemsType = {
    // Dropped items
    [ItemName.wood]: new Item({
       displayName: "Wood",
-      description: "Do not eat.",
+      description: "Do not eat.", 
       imageSrc: "wood.png",
       stackSize: REGULAR_STACK_SIZE
    }),
@@ -36,7 +35,7 @@ const ITEMS: ItemsType = {
       stackSize: REGULAR_STACK_SIZE
    }),
    [ItemName.rock]: new Item({
-      displayName: "ROck",
+      displayName: "Rock",
       description: "I Grug. I Hit You Rock.",
       imageSrc: "rock.png",
       stackSize: REGULAR_STACK_SIZE
@@ -88,7 +87,7 @@ const ITEMS: ItemsType = {
    [ItemName.woodenPickaxe]: new ToolItem({
       displayName: "Wooden Pickaxe",
       description: "mine",
-      imageSrc: "berry.png",
+      imageSrc: "wooden-pickaxe.png",
       stackSize: 1,
       swingCooldown: 0.5,
       type: "pickaxe"
@@ -106,7 +105,7 @@ const ITEMS: ItemsType = {
    [ItemName.smallBackpack]: new Item({
       displayName: "Small Backpack",
       description: "Increases inventory size by 1 slot.",
-      imageSrc: "berry.png",
+      imageSrc: "small-backpack.png",
       stackSize: 1
    })
 };

@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import Board from "../Board";
+import SETTINGS from "../settings";
 import TILE_INFO_MAP from "../tiles";
 import { Colour, Point } from "../utils";
 
@@ -101,10 +102,12 @@ const getTilePixelData = (minimapSize: number, minimapX: number, minimapY: numbe
    const tileY = Math.floor(minimapY * BOARD_SIZE / minimapSize);
 
    // Fog of war
-   const chunkX = Math.floor(tileX / Board.chunkSize);
-   const chunkY = Math.floor(tileY / Board.chunkSize);
-   const fogAmount = Board.getFog(chunkX, chunkY);
-   if (fogAmount === 1) return [0, 0, 0, 255];
+   if (SETTINGS.showFogOfWar) {
+      const chunkX = Math.floor(tileX / Board.chunkSize);
+      const chunkY = Math.floor(tileY / Board.chunkSize);
+      const fogAmount = Board.getFog(chunkX, chunkY);
+      if (fogAmount === 1) return [0, 0, 0, 255];
+   }
 
    const tileType = Board.getTileType(tileX, tileY);
 

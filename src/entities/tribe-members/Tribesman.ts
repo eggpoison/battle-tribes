@@ -5,6 +5,7 @@ import WanderAI from "../../entity-components/ai/WanderAI";
 import AttackComponent, { CircleAttack } from "../../entity-components/AttackComponent";
 import HitboxComponent from "../../entity-components/HitboxComponent";
 import FiniteInventoryComponent from "../../entity-components/inventory/FiniteInventoryComponent";
+import InfiniteInventoryComponent from "../../entity-components/inventory/InfiniteInventoryComponent";
 import RenderComponent from "../../entity-components/RenderComponent";
 import TransformComponent from "../../entity-components/TransformComponent";
 import Tribe from "../../Tribe";
@@ -18,7 +19,8 @@ import GenericTribeMember from "./GenericTribeMember";
 import Player from "./Player";
 
 class Tribesman extends GenericTribeMember {
-   private static readonly SIZE = 1;
+   public readonly SIZE = 1;
+   
    private static readonly MAX_HEALTH = 250;
    private static readonly DEFAULT_SLOT_COUNT = 2;
 
@@ -37,11 +39,11 @@ class Tribesman extends GenericTribeMember {
       const HAND_SIZE = 0.45;
       const HAND_ANGLES = 40 / 180 * Math.PI;
 
-      super.createRenderParts(Tribesman.SIZE, HAND_SIZE, Player.TRIBE_COLOUR, Player.TRIBE_COLOUR, HAND_ANGLES);
+      super.createRenderParts(this.SIZE, HAND_SIZE, Player.TRIBE_COLOUR, Player.TRIBE_COLOUR, HAND_ANGLES);
 
       this.getComponent(HitboxComponent)!.setHitbox({
          type: "circle",
-         radius: Tribesman.SIZE / 2
+         radius: this.SIZE / 2
       });
 
       this.createAttacks();
@@ -60,7 +62,7 @@ class Tribesman extends GenericTribeMember {
             getPosition: (): Point => {
                const rotation = this.getComponent(TransformComponent)!.rotation;
 
-               const offset = RenderComponent.getOffset((Tribesman.SIZE / 2 + ATTACK_OFFSET) * Board.tileSize, rotation);
+               const offset = RenderComponent.getOffset((this.SIZE / 2 + ATTACK_OFFSET) * Board.tileSize, rotation);
                const offsetPoint = new Point(offset[0], offset[1]);
    
                return this.getComponent(TransformComponent)!.position.add(offsetPoint);
@@ -94,14 +96,12 @@ class Tribesman extends GenericTribeMember {
 
    protected duringCollision(collidingEntity: Entity): void {
       if (collidingEntity instanceof ItemEntity) {
-         // PROBLEM HERE
-
          // Pick up the item
          const inventoryComponent = this.getComponent(FiniteInventoryComponent)!;
          inventoryComponent.pickupResource(collidingEntity);
       } else if (collidingEntity instanceof TribeStash) {
          // Put all items into the stash
-         const inventoryComponent = collidingEntity.getComponent(FiniteInventoryComponent)!;
+         const inventoryComponent = collidingEntity.getComponent(InfiniteInventoryComponent)!;
 
          const thisInventoryComponent = this.getComponent(FiniteInventoryComponent)!;
 

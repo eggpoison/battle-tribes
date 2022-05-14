@@ -1,4 +1,4 @@
-import Board, { TileCoordinates } from "../../Board";
+import Board from "../../Board";
 import SETTINGS from "../../settings";
 import { Point, randItem } from "../../utils";
 import TransformComponent from "../TransformComponent";
@@ -21,24 +21,24 @@ class WanderAI extends EntityAI {
    protected getWanderTarget(): Point {
       const position = this.entity.getComponent(TransformComponent)!.position;
 
-      // Get nearby tiles
+      // Get all nearby tiles
       let nearbyTileCoordinates = Board.getNearbyTileCoordinates(position, this.wanderRange);
 
-      if (typeof this.entity.getInfo !== "undefined") {
-         // Find nearby preferred tiles
-         const preferredNearbyTileCoordinates = new Array<TileCoordinates>();
-         for (const tileCoordinates of nearbyTileCoordinates) {
-            const tileType = Board.getTileType(tileCoordinates[0], tileCoordinates[1]);
+      // Remove tiles which the entity can't move to
+      if (typeof this.entity.entityInfo !== "undefined") {
+         for (let i = nearbyTileCoordinates.length - 1; i >= 0; i--) {
+            const tileCoordinates = nearbyTileCoordinates[i];
+            const tileType = Board.getTileType(...tileCoordinates);
 
-            if (this.entity.getInfo().preferredTileTypes!.includes(tileType)) {
-               preferredNearbyTileCoordinates.push(tileCoordinates);
+            // Remove the tile if it can't be moved to
+            const preferredTileTypes = this.entity.entityInfo.spawnRequirements.tileTypes;
+            if (typeof preferredTileTypes === "undefined" || !preferredTileTypes.includes(tileType)) {
+               nearbyTileCoordinates.splice(i, 1);
             }
          }
-
-         nearbyTileCoordinates = preferredNearbyTileCoordinates;
       }
 
-      // If there are no nearby tiles, return a random position in the current tile
+      // If there are no eligible tiles, return a random position in the current tile
       if (nearbyTileCoordinates.length === 0) {
          const x = Math.floor(position.x / Board.tileSize);
          const y = Math.floor(position.y / Board.tileSize);
@@ -47,11 +47,10 @@ class WanderAI extends EntityAI {
          return targetPosition;
       }
 
-      let targetTileCoordinates!: [number, number];
       // Choose a random nearby tile from the list of nearby tiles
-      targetTileCoordinates = randItem(nearbyTileCoordinates);
+      const targetTileCoordinates = randItem(nearbyTileCoordinates);
 
-      // Move to the target position
+      // Move to a random position in the chosen tile
       const targetPosition = Board.getRandomPositionInTile(targetTileCoordinates);
       return targetPosition;
    }

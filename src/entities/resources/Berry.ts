@@ -8,14 +8,13 @@ import { ItemName } from "../../items/items";
 import { getTilesByType, TileType } from "../../tiles";
 import { randItem } from "../../utils";
 import Resource from "./Resource";
-import RESOURCE_INFO, { ResourceInfo } from "../../resource-info";
 
 class Berry extends Resource {
    private static readonly spawnableTileTypes: ReadonlyArray<TileType> = [
       TileType.grass
    ];
 
-   private static readonly SIZE = 1;
+   public readonly SIZE = 1;
 
    private static readonly HEALTH = 10;
    private static readonly LIFESPAN = 30;
@@ -34,18 +33,14 @@ class Berry extends Resource {
       this.getComponent(ItemSpawnComponent)!.addResource(ItemName.berry, [1, 2], EventType.deathByEntity);
    }
 
-   protected getInfo(): ResourceInfo {
-      return RESOURCE_INFO.berry;
-   }
-
    protected createRenderParts(renderComponent: RenderComponent): void {
       renderComponent.addPart(
          new ImageRenderPart({
             type: "image",
             url: "berry.png",
             size: {
-               width: Berry.SIZE,
-               height: Berry.SIZE
+               width: this.SIZE,
+               height: this.SIZE
             }
          })
       );
@@ -54,7 +49,7 @@ class Berry extends Resource {
    protected setHitbox(hitboxComponent: HitboxComponent): void {
       hitboxComponent.setHitbox({
          type: "circle",
-         radius: Berry.SIZE / 2
+         radius: this.SIZE / 2
       });
    }
 }

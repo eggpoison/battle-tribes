@@ -8,8 +8,13 @@ const MENUS: Record<MenuNames, () => JSX.Element> = {
    crafting: CraftingMenu
 };
 
+let toggleMenuCallback: (menuName: MenuNames) => void;
 let openMenuCallback: (menuName: MenuNames) => void;
 let closeMenuCallback: () => void;
+
+export function toggleMenu(menuName: MenuNames): void {
+   toggleMenuCallback(menuName);
+}
 
 export function openMenu(menuName: MenuNames): void {
    openMenuCallback(menuName);
@@ -43,6 +48,16 @@ const MenuManager = () => {
          document.removeEventListener("keydown", e => keyPress(e));
       }
    }, []);
+
+   useEffect(() => {
+      toggleMenuCallback = (menuName: MenuNames): void => {
+         if (currentMenu !== menuName) {
+            setCurrentMenu(menuName);
+         } else {
+            setCurrentMenu(null);
+         }
+      }
+   }, [currentMenu]);
 
    return (
       <div>

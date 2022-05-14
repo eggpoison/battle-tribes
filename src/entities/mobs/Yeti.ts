@@ -1,12 +1,13 @@
 import FollowAI from "../../entity-components/ai/FollowAI";
 import WanderAI from "../../entity-components/ai/WanderAI";
 import HitboxComponent from "../../entity-components/HitboxComponent";
-import MOB_INFO_RECORD, { MobInfo } from "../../mob-info";
+import RenderComponent, { EllipseRenderPart } from "../../entity-components/RenderComponent";
 import { Point } from "../../utils";
 import Mob from "./Mob";
 
 class Yeti extends Mob {
-   private static readonly SIZE = 2;
+   public readonly SIZE = 2;
+
    private static readonly WALK_SPEED = 1.25;
    private static readonly RUN_SPEED = 2.5;
 
@@ -18,18 +19,25 @@ class Yeti extends Mob {
          // new WanderAI(WANDER_CHANCE, WANDER_RANGE, Yeti.WALK_SPEED),
          // new FollowAI()
       ]);
-
-      this.createHitbox();
    }
 
-   public getInfo(): MobInfo {
-      return MOB_INFO_RECORD.yeti;
+   protected createRenderParts(renderComponent: RenderComponent): void {
+      renderComponent.addPart(new EllipseRenderPart({
+         type: "ellipse",
+         size: {
+            radius: this.SIZE / 2
+         },
+         fillColour: "#fff",
+         border: {
+            width: 5,
+            colour: "#000"
+         }
+      }))
    }
-
-   private createHitbox(): void {
-      this.getComponent(HitboxComponent)!.setHitbox({
+   protected setHitbox(hitboxComponent: HitboxComponent): void {
+      hitboxComponent.setHitbox({
          type: "circle",
-         radius: Yeti.SIZE / 2
+         radius: this.SIZE / 2
       });
    }
 }

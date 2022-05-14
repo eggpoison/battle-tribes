@@ -1,5 +1,5 @@
 import { generateTerrain } from "./terrain-generation";
-import { getCanvasContext } from "./components/Canvas";
+import { getCanvasContext, getCanvasHeight, getCanvasWidth } from "./components/Canvas";
 import { updateDevtools } from "./components/Devtools";
 import InventoryViewerManager from "./components/inventory/InventoryViewerManager";
 import Player from "./entities/tribe-members/Player";
@@ -12,12 +12,13 @@ import Tribe from "./Tribe";
 import { Point } from "./utils";
 import Camera from "./Camera";
 import Mob from "./entities/mobs/Mob";
-import MobSpawner from "./spawning/MobSpawner";
 import HitboxComponent from "./entity-components/HitboxComponent";
 import OPTIONS from "./options";
 import { Minimap } from "./components/MinimapCanvas";
-import ResourceSpawner from "./spawning/ResourceSpawner";
 import InfiniteInventoryComponent from "./entity-components/inventory/InfiniteInventoryComponent";
+import Game from "./Game";
+import EntitySpawner from "./EntitySpawner";
+import Cow from "./entities/mobs/Cow";
 
 export type Chunk = Array<Entity>;
 
@@ -57,8 +58,9 @@ abstract class Board {
 
 
       // Spawn initial entities
-      MobSpawner.spawnInitialMobs();
-      ResourceSpawner.spawnInitialResources();
+      EntitySpawner.spawnInitialEntities();
+      // MobSpawner.spawnInitialMobs();
+      // ResourceSpawner.spawnInitialResources();
 
       // Creates the controllable player character
       this.spawnPlayer();
@@ -94,11 +96,12 @@ abstract class Board {
    }
 
    public static tick(): void {
-      ResourceSpawner.runSpawnAttempt();
-      MobSpawner.runSpawnAttempt();
+      EntitySpawner.runSpawnAttempt();
 
       let entityCount = 0;
       let mobCount = 0;
+
+      const entitiesToChangeChunk: Array<[Entity, Chunk]> = [];
 
       const ctx = getCanvasContext();
       for (let y = 0; y < this.size; y++) {
@@ -132,18 +135,44 @@ abstract class Board {
                }
 
                entity.tick();
-               this.upateEntityChunk(entity);
+               
+               const newChunk = entity.getComponent(TransformComponent)!.getChunk()!;
+               if (newChunk !== entity.previousChunk) {
+                  entitiesToChangeChunk.push([entity, newChunk]);
+               }
             }
          }
       }
 
-      Board.drawFog(ctx);
+      for (const [entity, newChunk] of entitiesToChangeChunk) {
+         entity.previousChunk!.splice(entity.previousChunk!.indexOf(entity), 1);
+
+         newChunk.push(entity);
+
+         entity.previousChunk = newChunk;
+      }
+
+      this.drawDarkness(ctx);
+
+      this.drawFog(ctx);
       
       updateDevtools({
          entityCount: entityCount
       });
 
-      MobSpawner.updateMobCount(mobCount);
+      EntitySpawner.updateMobCount(mobCount);
+   }
+
+   private static drawDarkness(ctx: CanvasRenderingContext2D): void {
+      let darkness = Game.getSkyDarkness();
+      if (darkness === 0) return;
+
+      const width = getCanvasWidth();
+      const height = getCanvasHeight();
+
+      darkness *= 0.6;
+      ctx.fillStyle = `rgba(0, 0, 0, ${darkness})`;
+      ctx.fillRect(0, 0, width, height);
    }
 
    private static drawFog(ctx: CanvasRenderingContext2D): void {
@@ -171,19 +200,27 @@ abstract class Board {
       }
    }
 
-   public static revealFog(position: Point, isImmediate: boolean): void {
-      const playerChunkX = Math.floor(position.x / Board.tileSize / Board.chunkSize);
-      const playerChunkY = Math.floor(position.y / Board.tileSize / Board.chunkSize);
+   public static revealFog(position: Point, radius: number, isImmediate: boolean): void {
+      const minChunkX = Math.floor((position.x - radius) / Board.tileSize / Board.chunkSize);
+      const maxChunkX = Math.floor((position.x + radius) / Board.tileSize / Board.chunkSize);
 
-      if (this.getFog(playerChunkX, playerChunkY) === 1) {
-         if (isImmediate) {
-            this.fog[playerChunkX][playerChunkY] = 0;
-         } else {
-            this.fog[playerChunkX][playerChunkY] -= 1 / SETTINGS.tps / SETTINGS.fogRevealTime;
+      const minChunkY = Math.floor((position.y - radius) / Board.tileSize / Board.chunkSize);
+      const maxChunkY = Math.floor((position.y + radius) / Board.tileSize / Board.chunkSize);
+
+      for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
+         for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
+
+            if (this.getFog(chunkX, chunkY) === 1) {
+               if (isImmediate) {
+                  this.fog[chunkX][chunkY] = 0;
+               } else {
+                  this.fog[chunkX][chunkY] -= 1 / SETTINGS.tps / SETTINGS.fogRevealTime;
+               }
+               
+               // Update the minimap
+               Minimap.drawBackground();
+            }
          }
-
-         // Update the minimap
-         Minimap.drawBackground();
       }
    }
 
@@ -212,6 +249,8 @@ abstract class Board {
       // If the entity's spawn position is outside the board, don't add it
       if (chunk === null) return;
 
+      if (typeof entity.onLoad !== "undefined") entity.onLoad();
+
       // Add the entity to the chunk
       chunk.push(entity);
 
@@ -225,20 +264,6 @@ abstract class Board {
       chunk.splice(chunk.indexOf(entity), 1);
    }
 
-   public static upateEntityChunk(entity: Entity): void {
-      const chunk = this.getEntityChunk(entity);
-
-      // If the chunk is different from the entity's previous chunk
-      if (chunk !== entity.previousChunk) {
-         // Remove it from its previous chunk
-         entity.previousChunk!.splice(entity.previousChunk!.indexOf(entity), 1);
-         // Add it to the new chunk
-         chunk.push(entity);
-
-         entity.previousChunk = chunk;
-      }
-   }
-
    public static getRandomPositionInTile(tileCoordinates: TileCoordinates): Point {
       const x = tileCoordinates[0] * Board.tileSize + Board.tileSize * Math.random();
       const y = tileCoordinates[1] * Board.tileSize + Board.tileSize * Math.random();
@@ -246,7 +271,7 @@ abstract class Board {
       return new Point(x, y);
    }
 
-   public static getNearbyTileCoordinates(position: Point, range: number): ReadonlyArray<TileCoordinates> {
+   public static getNearbyTileCoordinates(position: Point, range: number): Array<TileCoordinates> {
       const tileX = Math.floor(position.x / this.tileSize);
       const tileY = Math.floor(position.y / this.tileSize);
 

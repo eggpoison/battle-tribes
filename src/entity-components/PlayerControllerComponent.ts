@@ -1,14 +1,14 @@
 import Board from "../Board";
 import Component from "../Component";
 import { toggleDevtoolsVisibility } from "../components/Devtools";
-import { openMenu } from "../components/menus/MenuManager";
 import Player from "../entities/tribe-members/Player";
 import SETTINGS from "../settings";
 import { isDev, Vector } from "../utils";
 import AttackComponent from "./AttackComponent";
 import TransformComponent from "./TransformComponent";
 
-const keyListeners = new Array<(key: string) => void>();
+const keyEvents = new Array<(key: string) => void>();
+const keyListeners: { [key: string]: Array<() => void> } = {};
 
 const pressedKeys = new Array<string>();
 
@@ -16,7 +16,11 @@ const addPressedKey = (key: string): void => {
    if (pressedKeys.includes(key)) return;
    pressedKeys.push(key);
 
-   for (const func of keyListeners) func(key);
+   for (const func of keyEvents) func(key);
+
+   if (keyListeners.hasOwnProperty(key)) {
+      for (const func of keyListeners[key]) func();
+   }
 }
 const removePressedKey = (key: string): void => {
    pressedKeys.splice(pressedKeys.indexOf(key), 1);
@@ -26,9 +30,17 @@ export function keyIsPressed(key: string): boolean {
    return pressedKeys.includes(key);
 }
 
+export function stopPlayerMovement(): void {
+   Player.instance.getComponent(PlayerControllerComponent)!.stopMovement();
+}
+
 class PlayerControllerComponent extends Component {
    private previousMoveBitmap = 0;
    private currentMoveBitmap = 0;
+
+   public stopMovement(): void {
+      this.currentMoveBitmap = 0;
+   }
 
    private changeDirection(): void {
       const angle = this.getMoveAngle();
@@ -103,7 +115,15 @@ class PlayerControllerComponent extends Component {
    }
 
    public static createKeyEvent(func: (key: string) => void): void {
-      keyListeners.push(func);
+      keyEvents.push(func);
+   }
+
+   public static createKeyListener(key: string, func: () => void): void {
+      if (keyListeners.hasOwnProperty(key)) {
+         keyListeners[key].push(func);
+      } else {
+         keyListeners[key] = [func];
+      }
    }
 
    private checkKey(e: KeyboardEvent, isKeyDown: boolean): void {
@@ -116,11 +136,6 @@ class PlayerControllerComponent extends Component {
          // Devtools
          case "`":
             if (isKeyDown && isDev()) toggleDevtoolsVisibility();
-            break;
-
-         // Crafting menu
-         case "e":
-            openMenu("crafting");
             break;
 
          // Movement

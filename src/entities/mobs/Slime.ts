@@ -7,11 +7,12 @@ import HitboxComponent from "../../entity-components/HitboxComponent";
 import RenderComponent, { EllipseRenderPart } from "../../entity-components/RenderComponent";
 import ItemSpawnComponent from "../../entity-components/ItemSpawnerComponent";
 import { ItemName } from "../../items/items";
-import MOB_INFO_RECORD, { MobBehaviour, MobInfo } from "../../mob-info";
+import { MobBehaviour } from "../../entity-info";
 import { ConstructorFunction, Point, randInt, Vector } from "../../utils";
 import Entity, { EventType } from "../Entity";
 import GenericTribeMember from "../tribe-members/GenericTribeMember";
 import Mob from "./Mob";
+import TransformComponent from "../../entity-components/TransformComponent";
 
 enum SlimeSizeCategory {
    small,
@@ -28,7 +29,7 @@ type SlimeInfo = {
    readonly splitChance: number;
 }
 
-const slimeSizes: Record<SlimeSizeCategory, SlimeInfo> = {
+const SLIME_INFO: Record<SlimeSizeCategory, SlimeInfo> = {
    [SlimeSizeCategory.small]: {
       size: 0.6,
       health: 10,
@@ -46,24 +47,26 @@ const slimeSizes: Record<SlimeSizeCategory, SlimeInfo> = {
    [SlimeSizeCategory.large]: {
       size: 1.5,
       health: 30,
-      wanderRange: 2,
+      wanderRange: 3,
       slimeDrop: [1, 2],
       splitChance: 0.8
    },
    [SlimeSizeCategory.colossal]: {
       size: 2.5,
       health: 50,
-      wanderRange: 3,
+      wanderRange: 4,
       slimeDrop: [2, 3],
       splitChance: 1
    }
 }
 
 class Slime extends Mob {
+   public readonly SIZE: number;
+
    private static readonly COLOUR = "#00d432";
    private static readonly DAMAGE = 5;
    private static readonly KNOCKBACK_STRENGTH = 10;
-   
+
    private readonly info: SlimeInfo;
 
    constructor(position: Point, size?: SlimeSizeCategory) {
@@ -74,53 +77,49 @@ class Slime extends Mob {
 
       // Generate a size category
       if (typeof size !== "undefined") {
-         this.info = slimeSizes[size];
+         this.info = SLIME_INFO[size];
       } else {
          let sizeCategory: SlimeSizeCategory = 0;
          while (sizeCategory < 3) {
             if (Math.random() < 0.5 - sizeCategory / 10) {
                sizeCategory++;
-            } else break;
+            } else {
+               break;
+            }
          }
-         this.info = slimeSizes[sizeCategory];
+
+         this.info = SLIME_INFO[sizeCategory];
       }
+      this.SIZE = this.info.size;
 
       super.setMaxHealth(this.info.health);
-
-      this.setHitbox();
-
-      this.createRenderParts();
 
       this.addItemDrops();
 
       this.createAI();
    }
 
-   public getInfo(): MobInfo {
-      return MOB_INFO_RECORD.slime;
-   }
-
    private getSize(): number {
-      for (const [size, info] of Object.entries(slimeSizes)) {
+      for (const [size, info] of Object.entries(SLIME_INFO)) {
          if (info === this.info) return Number(size);
       }
 
       throw new Error("Can't find slime size");
    }
 
-   private setHitbox(): void {
-      this.getComponent(HitboxComponent)!.setHitbox({
+   protected setHitbox(hitboxComponent: HitboxComponent): void {
+      hitboxComponent.setHitbox({
          type: "circle",
-         radius: this.info.size / 2
+         radius: this.SIZE / 2
       });
    }
 
-   private createRenderParts(): void {
+   protected createRenderParts(): void {
       this.getComponent(RenderComponent)!.addPart(
          new EllipseRenderPart({
             type: "ellipse",
             size: {
-               radius: this.info.size / 2
+               radius: this.SIZE / 2
             },
             fillColour: Slime.COLOUR,
             border: {
@@ -157,7 +156,7 @@ class Slime extends Mob {
 
    protected onCollision(entity: Entity): void {
       // Don't attack fellow hostile mobs
-      if (entity instanceof Mob && entity.getInfo().behaviour === MobBehaviour.hostile) return;
+      if (entity instanceof Mob && entity.entityInfo.behaviour === MobBehaviour.hostile) return;
 
       const healthCompoment = entity.getComponent(HealthComponent);
       if (healthCompoment !== null) {
@@ -175,9 +174,10 @@ class Slime extends Mob {
             const offset = Vector.randomUnitVector();
             offset.magnitude *= this.info.size / 2 * Board.tileSize * Math.random();
 
-            const position = this.getPosition().add(offset.convertToPoint());
+            const childSpawnPosition = this.getComponent(TransformComponent)!.position.add(offset.convertToPoint());
             
-            const childSlime = new Slime(position, thisSize - 1);
+            const childSlime = new Slime(childSpawnPosition, thisSize - 1);
+            childSlime.setInfo(this.entityInfo);
             Board.addEntity(childSlime);
          }
       }

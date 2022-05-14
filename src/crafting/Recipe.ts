@@ -3,16 +3,18 @@ import ITEMS, { ItemName } from "../items/items";
 import Item from "../items/Item";
 
 class Recipe {
-   private readonly result: Item;
-   private readonly costs: ItemList;
+   public readonly result: Item;
+   public readonly materials: ItemList;
+   public readonly craftAmount: number;
 
-   constructor(resultName: ItemName, costs: ItemList) {
+   constructor(resultName: ItemName, materials: ItemList, craftAmount: number) {
       this.result = ITEMS[resultName];
-      this.costs = costs;
+      this.materials = materials;
+      this.craftAmount = craftAmount;
    }
 
    public canAfford(availableItems: ItemList) {
-      for (const [itemName, costCount] of Object.entries(this.costs)) {
+      for (const [itemName, costCount] of Object.entries(this.materials)) {
          // If the item isn't available
          if (!availableItems.hasOwnProperty(itemName)) {
             return false;

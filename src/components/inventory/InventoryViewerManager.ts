@@ -14,11 +14,6 @@ const stackItem = (slotNum: number, inventoryComponent: InventoryComponent): voi
    const addAmount = inventoryComponent.getItemAddAmount(itemName, itemAmount, slotNum);
 
    if (addAmount !== null) {
-      if (addAmount === 0) {
-         itemInTransit = null;
-         return;
-      }
-
       inventoryComponent.addItemToSlot(slotNum, itemName, addAmount);
     
       // Remove the item in transit

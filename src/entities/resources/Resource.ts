@@ -4,32 +4,25 @@ import HitboxComponent from "../../entity-components/HitboxComponent";
 import RenderComponent from "../../entity-components/RenderComponent";
 import ItemSpawnComponent from "../../entity-components/ItemSpawnerComponent";
 import TransformComponent from "../../entity-components/TransformComponent";
-import { ResourceInfo } from "../../resource-info";
+import { ResourceInfo } from "../../entity-info";
 import { Point, randFloat } from "../../utils";
-import Entity from "../Entity";
+import LivingEntity from "../LivingEntity";
 
-abstract class Resource extends Entity {
+abstract class Resource extends LivingEntity<ResourceInfo> {
    constructor(position: Point, components?: ReadonlyArray<Component>) {
-      const transformComponent = new TransformComponent(position);
-      const renderComponent = new RenderComponent();
-      const hitboxComponent = new HitboxComponent();
-
-      super([
-         transformComponent,
-         new HealthComponent(),
-         hitboxComponent,
-         renderComponent,
+      super(position, [
          new ItemSpawnComponent(),
          ...(components || [])
       ]);
 
-      transformComponent.rotation = randFloat(0, 360);
-
-      this.createRenderParts(renderComponent);
-      this.setHitbox(hitboxComponent);
+      // Give the resource a random rotation
+      this.getComponent(TransformComponent)!.rotation = randFloat(0, 360);
    }
 
-   protected abstract getInfo(): ResourceInfo;
+   public onLoad(): void {
+      this.createRenderParts(this.getComponent(RenderComponent)!);
+      this.setHitbox(this.getComponent(HitboxComponent)!);
+   }
 
    protected abstract createRenderParts(renderComponent: RenderComponent): void;
    protected abstract setHitbox(hitboxComponent: HitboxComponent): void;

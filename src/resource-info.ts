@@ -11,7 +11,7 @@ type ResourceSpawnRequirements = {
    readonly maxDist?: number;
 }
 
-export type ResourceInfo = {
+type ResourceInfo = {
    readonly spawnRequirements: ResourceSpawnRequirements;
    readonly weight: number;
    readonly getConstr: () => { new(...args: any[]): any };
@@ -44,7 +44,7 @@ const RESOURCE_INFO: Record<ResourceName, ResourceInfo> = {
          ],
          minDist: 0.4
       },
-   weight: 1,
+      weight: 1,
       getConstr: () => Boulder
    }
 };

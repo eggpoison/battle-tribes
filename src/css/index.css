@@ -58,7 +58,7 @@ code {
    position: relative;
    cursor: pointer;
 }
-.slot img {
+.slot .preview {
    --size-multiplier: 0.8;
    width: calc(var(--slot-size) * var(--size-multiplier));
    height: calc(var(--slot-size) * var(--size-multiplier));

@@ -8,9 +8,10 @@ import TransformComponent from "../../entity-components/TransformComponent";
 import TribeMemberComponent from "../../entity-components/TribeMemberComponent";
 import Mob from "../mobs/Mob";
 import { Vector } from "../../utils";
-import Player from "./Player";
 
 abstract class GenericTribeMember extends Entity {
+   public selectedSlot: number = 0;
+
    constructor(tribe: Tribe, components?: ReadonlyArray<Component>) {
       super([
          new TransformComponent(tribe.getMemberSpawnPosition()),
@@ -23,7 +24,7 @@ abstract class GenericTribeMember extends Entity {
 
       super.createEvent(EventType.killEntity, (entity: Entity) => {
          if (entity instanceof Mob) {
-            const expDrop = entity.getInfo().exp;
+            const expDrop = entity.entityInfo.exp;
             
             this.getComponent(TribeMemberComponent)!.addExp(expDrop);
          }
@@ -52,7 +53,7 @@ abstract class GenericTribeMember extends Entity {
       // Create player hands
       for (let i = 0; i < 2; i++) {
          const multiplier = i === 0 ? -1 : 1;
-         const offsetPoint = new Vector(Player.SIZE / 2, handAngles * multiplier).convertToPoint();
+         const offsetPoint = new Vector(bodySize / 2, handAngles * multiplier).convertToPoint();
 
          this.getComponent(RenderComponent)!.addPart(
             new EllipseRenderPart({

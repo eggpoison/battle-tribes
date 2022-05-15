@@ -1,7 +1,5 @@
 import Board from "../../Board";
 import AIManagerComponent from "../../entity-components/ai/AIManangerComponent";
-import SlimeFollowAI from "../../entity-components/ai/SlimeFollowAI";
-import SlimeWanderAI from "../../entity-components/ai/SlimeWanderAI";
 import HealthComponent from "../../entity-components/HealthComponent";
 import HitboxComponent from "../../entity-components/HitboxComponent";
 import RenderComponent, { EllipseRenderPart } from "../../entity-components/RenderComponent";
@@ -13,6 +11,8 @@ import Entity, { EventType } from "../Entity";
 import GenericTribeMember from "../tribe-members/GenericTribeMember";
 import Mob from "./Mob";
 import TransformComponent from "../../entity-components/TransformComponent";
+import WanderAI from "../../entity-components/ai/WanderAI";
+import FollowAI from "../../entity-components/ai/FollowAI";
 
 enum SlimeSizeCategory {
    small,
@@ -24,7 +24,7 @@ enum SlimeSizeCategory {
 type SlimeInfo = {
    readonly size: number;
    readonly health: number;
-   readonly wanderRange: number;
+   readonly searchRange: number;
    readonly slimeDrop: number | [number, number];
    readonly splitChance: number;
 }
@@ -33,28 +33,28 @@ const SLIME_INFO: Record<SlimeSizeCategory, SlimeInfo> = {
    [SlimeSizeCategory.small]: {
       size: 0.6,
       health: 10,
-      wanderRange: 1,
+      searchRange: 2,
       slimeDrop: [0, 1],
       splitChance: 0
    },
    [SlimeSizeCategory.medium]: {
       size: 1,
       health: 20,
-      wanderRange: 2,
+      searchRange: 3,
       slimeDrop: 1,
       splitChance: 0.6
    },
    [SlimeSizeCategory.large]: {
       size: 1.5,
       health: 30,
-      wanderRange: 3,
+      searchRange: 4,
       slimeDrop: [1, 2],
       splitChance: 0.8
    },
    [SlimeSizeCategory.colossal]: {
       size: 2.5,
       health: 50,
-      wanderRange: 4,
+      searchRange: 5,
       slimeDrop: [2, 3],
       splitChance: 1
    }
@@ -136,22 +136,56 @@ class Slime extends Mob {
    }
 
    private createAI(): void {
-      const WANDER_RATE: [number, number] = [2, 3.5];
+      const transformComponent = this.getComponent(TransformComponent)!;
+
+      const WANDER_RATE = 1;
       const WANDER_SPEED = 1.5;
 
-      const SEARCH_RANGE = 4;
       const FOLLOW_SPEED = 5;
 
-      const validEntityConstr: ReadonlyArray<ConstructorFunction> = [GenericTribeMember];
+      const TARGETS = [GenericTribeMember];
 
-      this.getComponent(AIManagerComponent)!.addAI(
-         new SlimeWanderAI(WANDER_RATE, this.info.wanderRange, WANDER_SPEED)
+      // Wander AI
+      const wanderAI = this.getComponent(AIManagerComponent)!.addAI(
+         new WanderAI("wander", {
+            range: this.info.searchRange,
+            speed: WANDER_SPEED,
+            wanderRate: WANDER_RATE
+         })
       );
-      this.getComponent(AIManagerComponent)!.addAI(
-         new SlimeFollowAI(SEARCH_RANGE, FOLLOW_SPEED, validEntityConstr)
-      );
+      wanderAI.setSwitchCondition({
+         newID: "follow",
+         shouldSwitch: (): boolean => {
+            const entitiesInSearchRadius = wanderAI.getEntitiesInSearchRadius(transformComponent.position, this.info.searchRange, TARGETS);
 
-      this.getComponent(AIManagerComponent)!.setCurrentAIType("wander");
+            return entitiesInSearchRadius !== null;
+         },
+         onSwitch: (): void => {
+            transformComponent.stopVelocity();
+         }
+      });
+
+      // Follow AI
+      const followAI = this.getComponent(AIManagerComponent)!.addAI(
+         new FollowAI("follow", {
+            range: this.info.searchRange,
+            speed: FOLLOW_SPEED,
+            targets: TARGETS
+         })
+      );
+      followAI.setSwitchCondition({
+         newID: "wander",
+         shouldSwitch: (): boolean => {
+            const entitiesInSearchRadius = wanderAI.getEntitiesInSearchRadius(transformComponent.position, this.info.searchRange, TARGETS);
+
+            return entitiesInSearchRadius === null;
+         },
+         onSwitch: (): void => {
+            transformComponent.stopVelocity();
+         }
+      });
+
+      this.getComponent(AIManagerComponent)!.changeCurrentAI("follow");
    }
 
    protected onCollision(entity: Entity): void {

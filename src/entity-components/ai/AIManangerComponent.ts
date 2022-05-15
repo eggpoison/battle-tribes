@@ -1,47 +1,46 @@
 import Component from "../../Component";
 import Mob from "../../entities/mobs/Mob";
-import EntityAI, { AIType } from "./EntityAI";
+import EntityAI from "./EntityAI";
 
 class AIManagerComponent extends Component {
-   private readonly ai: Partial<Record<AIType, EntityAI>> = {};
+   private currentAI!: EntityAI;
 
-   private currentAIType!: AIType;
+   private readonly ai: { [key: string]: EntityAI } = {};
 
-   public setCurrentAIType(aiType: AIType): void {
-      this.currentAIType = aiType;
-   }
-
-   public addAI(ai: EntityAI): void {
-      if (this.ai.hasOwnProperty(ai.type)) {
-         throw new Error(`Tried to add an AI of type ${ai.type} but it already existed!`);
+   public addAI(ai: EntityAI): EntityAI {
+      if (this.ai.hasOwnProperty(ai.id)) {
+         throw new Error(`Tried to add an AI with the ID '${ai.id}', but it already existed!`);
       }
 
-      this.ai[ai.type] = ai;
+      this.ai[ai.id] = ai;
 
       // Set the AI's entity
       const entity = this.getEntity() as Mob;
       ai.setEntity(entity);
+
+      return ai;
    }
 
-   public getCurrentAI(): EntityAI {
-      return this.ai[this.currentAIType]!;
+   public changeCurrentAI(id: string): void {
+      if (id in this.ai) {
+         this.currentAI = this.ai[id];
+         return;
+      }
+
+      throw new Error(`Tried to switch to an AI with the ID '${id}', but none existed!`);
    }
 
    public tick(): void {
-      const currentAI = this.getCurrentAI();
-      currentAI.checkTargetPosition();
-      if (typeof currentAI.tick !== "undefined") currentAI.tick();
+      // if (typeof this.tickCallback !== "undefined") this.tickCallback();
 
-      // If the next AI can be switched, switch
-      for (const [aiType, ai] of Object.entries(this.ai)) {
-         if (aiType === this.currentAIType) continue;
-
-         if (typeof ai.shouldSwitch !== "undefined" && ai.shouldSwitch()) {
-            this.setCurrentAIType(aiType as AIType);
-            break;
-         }
-      }
+      this.currentAI.checkTargetPosition();
+      this.currentAI.tick();
    }
+
+   // private tickCallback?: () => void;
+   // public addTickCallback(func: () => void): void {
+   //    this.tickCallback = func;
+   // }
 }
 
 export default AIManagerComponent;

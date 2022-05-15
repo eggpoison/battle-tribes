@@ -1,26 +1,23 @@
 import Board from "../../Board";
+import Entity from "../../entities/Entity";
 import Mob from "../../entities/mobs/Mob";
 import SETTINGS from "../../settings";
-import { Point, Vector } from "../../utils";
+import { ConstructorFunction, Point, Vector } from "../../utils";
 import TransformComponent from "../TransformComponent";
 import AIManagerComponent from "./AIManangerComponent";
 
-export type AIType = "wander" | "follow";
-
-export interface AIInfo {
-   readonly type: AIType;
+type SwitchCondition = {
+   readonly newID: string;
+   shouldSwitch(): boolean;
+   onSwitch?(): void;
 }
 
-abstract class EntityAI implements AIInfo {
-   public readonly type: AIType;
+abstract class EntityAI {
+   public abstract readonly id: string;
 
    protected entity!: Mob;
 
    private targetPosition: Point | null = null;
-
-   constructor(type: AIType) {
-      this.type = type;
-   }
 
    public setEntity(entity: Mob): void {
       this.entity = entity;
@@ -28,9 +25,15 @@ abstract class EntityAI implements AIInfo {
       if (typeof this.onLoad !== "undefined") this.onLoad();
    }
 
-   public abstract tick(): void;
+   public tick(): void {
+      if (typeof this.switchCondition !== "undefined" && this.switchCondition.shouldSwitch()) {
+         this.changeCurrentAI(this.switchCondition.newID);
 
-   public shouldSwitch?(): boolean;
+         if (typeof this.switchCondition.onSwitch !== "undefined") {
+            this.switchCondition.onSwitch();
+         }
+      }
+   }
 
    public checkTargetPosition(): void {
       if (this.targetPosition !== null) {
@@ -45,13 +48,51 @@ abstract class EntityAI implements AIInfo {
       }
    }
 
-   protected onLoad?(): void;
-
-   protected reachTargetPosition(transformComponent: TransformComponent): void {
+   private reachTargetPosition(transformComponent: TransformComponent): void {
       this.targetPosition = null;
 
       transformComponent.stopVelocity();
    }
+
+   /** Filter out unwanted targets */
+   private filterTargets(entities: ReadonlyArray<Entity>, targets: ReadonlyArray<ConstructorFunction>): Array<Entity> {
+      const filteredTargets = entities.slice();
+
+      for (let idx = filteredTargets.length - 1; idx >= 0; idx--) {
+         const entity = filteredTargets[idx];
+
+         // Remove itself and any entities which can't be attacked
+         if (entity === this.entity) {
+            filteredTargets.splice(idx, 1);
+            continue;
+         }
+
+         // Remove entities which aren't targets
+         let isValidConstr = false;
+         for (const target of targets) {
+            if (entity instanceof target) {
+               isValidConstr = true;
+               break;
+            }
+         }
+         if (!isValidConstr) {
+            filteredTargets.splice(idx, 1);
+            continue;
+         }
+      }
+
+      return filteredTargets;
+   }
+
+   public getEntitiesInSearchRadius(position: Point, range: number, validTargets?: ReadonlyArray<ConstructorFunction>): Array<Entity> | null {
+      let nearbyEntities = TransformComponent.getNearbyEntities(position, range * Board.tileSize);
+      if (typeof validTargets !== "undefined") nearbyEntities = this.filterTargets(nearbyEntities, validTargets);
+
+      if (nearbyEntities.length > 0) return nearbyEntities;
+      return null;
+   }
+
+   protected onLoad?(): void;
 
    protected setTargetPosition(position: Point): void {
       this.targetPosition = position;
@@ -70,13 +111,35 @@ abstract class EntityAI implements AIInfo {
       transformComponent.setVelocity(targetVector);
    }
 
-   protected changeCurrentAI(newAIType: AIType): void {
-      this.entity.getComponent(AIManagerComponent)!.setCurrentAIType(newAIType);
+   protected changeCurrentAI(newID: string): void {
+      this.entity.getComponent(AIManagerComponent)!.changeCurrentAI(newID);
    }
 
-   protected isActive(): boolean {
-      return this.entity.getComponent(AIManagerComponent)!.getCurrentAI() === this;
+   // public switchFunction: (() => void) | null = null;
+   // public setSwitchFunction(func: () => void): void {
+   //    this.switchFunction = func;
+   // }
+
+   // public addTickCallback(func: () => void): void {
+
+   // }
+
+   // protected isActive(): boolean {
+   //    return this.entity.getComponent(AIManagerComponent)!.getCurrentAI() === this;
+   // }
+   private switchCondition?: SwitchCondition;
+   public setSwitchCondition(switchCondition: SwitchCondition): void {
+      this.switchCondition = switchCondition;
    }
+
+   /*
+   followAI.setSwitchCondition({
+      newID: "wander",
+      callback: (): boolean => {
+
+      }
+   })
+   */
 }
 
 export default EntityAI;

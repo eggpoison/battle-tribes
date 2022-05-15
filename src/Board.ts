@@ -272,6 +272,8 @@ abstract class Board {
    }
 
    public static getNearbyTileCoordinates(position: Point, range: number): Array<TileCoordinates> {
+      if (!Number.isInteger(range)) throw new Error("Search radius must be an integer!");
+
       const tileX = Math.floor(position.x / this.tileSize);
       const tileY = Math.floor(position.y / this.tileSize);
 

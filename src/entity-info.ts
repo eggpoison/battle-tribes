@@ -7,6 +7,7 @@ import Zombie from "./entities/mobs/Zombie";
 import Berry from "./entities/resources/Berry";
 import Boulder from "./entities/resources/Boulder";
 import Tree from "./entities/resources/Tree";
+import LivingEntity from "./entities/LivingEntity";
 
 type EntitySpawnRequirements = {
    readonly tileTypes: ReadonlyArray<TileType>;
@@ -18,6 +19,7 @@ export interface EntityInfo {
    /** How much exp the entity drops when killed */
    readonly exp: number;
    getConstr: () => { new(...args: any[]): any };
+   /** If true, the entity won't be spawned through conventional means */
    readonly hasCustomSpawnProcess?: boolean;
 }
 
@@ -107,5 +109,16 @@ const ENTITY_INFO: ReadonlyArray<MobInfo | ResourceInfo> = [
       getConstr: () => Yeti
    }
 ];
+
+export function getEntityInfo<T extends EntityInfo>(entity: LivingEntity<T>): T {
+   for (const info of ENTITY_INFO) {
+      if (entity instanceof info.getConstr()) {
+         return info as unknown as T;
+      }
+   }
+
+   console.log(entity);
+   throw new Error("Couldn't find info for an entity!");
+}
 
 export default ENTITY_INFO;

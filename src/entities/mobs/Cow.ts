@@ -116,15 +116,19 @@ class Cow extends Mob {
    private createAI(): void {
       const aiManagerComponent = this.getComponent(AIManagerComponent)!;
 
-      const WANDER_RATE = 0.3;
-      const WANDER_RANGE = 2;
-      const WANDER_SPEED = 0.75;
+      const WANDER_CHANCE = 0.3;
+      const RANGE = 2;
+      const SPEED = 0.75;
 
       aiManagerComponent.addAI(
-         new WanderAI(WANDER_RATE, WANDER_RANGE, WANDER_SPEED)
+         new WanderAI("wander", {
+            range: RANGE,
+            speed: SPEED,
+            wanderRate: WANDER_CHANCE
+         })
       );
 
-      aiManagerComponent.setCurrentAIType("wander");
+      aiManagerComponent.changeCurrentAI("wander");
    }
 }
 

@@ -4,25 +4,36 @@ import { Point, randItem } from "../../utils";
 import TransformComponent from "../TransformComponent";
 import EntityAI from "./EntityAI";
 
+type WanderAIInfo = {
+   readonly range: number;
+   readonly speed: number;
+   /** The average number of times that the entity will wander in a second */
+   readonly wanderRate: number;
+}
+
 class WanderAI extends EntityAI {
+   public readonly id: string;
+
    /** Chance for the entity to wander each second */
-   protected readonly wanderChance: number | null;
-   protected readonly wanderRange: number;
-   protected readonly wanderSpeed: number;
+   protected readonly wanderChance: number;
+   protected readonly range: number;
+   protected readonly speed: number;
 
-   constructor(wanderChance: number | null, wanderRange: number, wanderSpeed: number) {
-      super("wander");
+   constructor(id: string, info: WanderAIInfo) {
+      super();
 
-      this.wanderChance = wanderChance;
-      this.wanderRange = wanderRange;
-      this.wanderSpeed = wanderSpeed;
+      this.id = id;
+
+      this.range = info.range;
+      this.speed = info.speed;
+      this.wanderChance = info.wanderRate;
    }
 
-   protected getWanderTarget(): Point {
+   protected getRandomTargetPosition(): Point {
       const position = this.entity.getComponent(TransformComponent)!.position;
 
       // Get all nearby tiles
-      let nearbyTileCoordinates = Board.getNearbyTileCoordinates(position, this.wanderRange);
+      let nearbyTileCoordinates = Board.getNearbyTileCoordinates(position, this.range);
 
       // Remove tiles which the entity can't move to
       if (typeof this.entity.entityInfo !== "undefined") {
@@ -56,11 +67,14 @@ class WanderAI extends EntityAI {
    }
 
    public tick(): void {
+      super.tick();
+
       super.checkTargetPosition();
 
-      if (Math.random() < this.wanderChance! / SETTINGS.tps) {
-         const targetPosition = this.getWanderTarget();
-         super.moveToPosition(targetPosition, this.wanderSpeed);
+      // Wander randomly
+      if (Math.random() < this.wanderChance / SETTINGS.tps) {
+         const targetPosition = this.getRandomTargetPosition();
+         super.moveToPosition(targetPosition, this.speed);
       }
    }
 }

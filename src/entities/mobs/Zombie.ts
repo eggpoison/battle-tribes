@@ -12,7 +12,11 @@ class Zombie extends Mob {
          size: {
             radius: this.SIZE / 2
          },
-         fillColour: "#098a00"
+         fillColour: "#098a00",
+         border: {
+            width: 5,
+            colour: "#000"
+         }
       }));
    }
 
@@ -20,7 +24,7 @@ class Zombie extends Mob {
       hitboxComponent.setHitbox({
          type: "circle",
          radius: this.SIZE / 2
-      })
+      });
    }
 }
 

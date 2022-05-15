@@ -29,6 +29,8 @@ abstract class LivingEntity<I extends EntityInfo> extends Entity {
       this.setHitbox(this.getComponent(HitboxComponent)!);
    }
 
+   public spawn?(): void;
+
    protected abstract createRenderParts(renderComponent: RenderComponent): void;
    protected abstract setHitbox(hitboxComponent: HitboxComponent): void;
 }

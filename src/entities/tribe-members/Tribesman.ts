@@ -1,6 +1,6 @@
 import Board from "../../Board";
 import AIManagerComponent from "../../entity-components/ai/AIManangerComponent";
-import TribesmanFollowAI from "../../entity-components/ai/TribesmanFollowAI";
+import FollowAI from "../../entity-components/ai/FollowAI";
 import WanderAI from "../../entity-components/ai/WanderAI";
 import AttackComponent, { CircleAttack } from "../../entity-components/AttackComponent";
 import HitboxComponent from "../../entity-components/HitboxComponent";
@@ -75,23 +75,32 @@ class Tribesman extends GenericTribeMember {
       const WALK_SPEED = 1;
       const RUN_SPEED = 2.5;
       
-      const VISION_RANGE = 3.5;
+      const VISION_RANGE = 4;
 
       const ATTACK_RANGE = 1;
 
       const WANDER_CHANCE = 0.5;
-      const WANDER_RANGE = 3;
 
-      const validEntityConstr: ReadonlyArray<ConstructorFunction> = [Mob, Resource, ItemEntity];
+      const targets: ReadonlyArray<ConstructorFunction> = [Mob, Resource, ItemEntity];
 
+      // Wander AI
       this.getComponent(AIManagerComponent)!.addAI(
-         new WanderAI(WANDER_CHANCE, WANDER_RANGE, WALK_SPEED)
+         new WanderAI("wander", {
+            range: VISION_RANGE,
+            speed: WALK_SPEED,
+            wanderRate: WANDER_CHANCE
+         })
       );
+      // Follow AI
       this.getComponent(AIManagerComponent)!.addAI(
-         new TribesmanFollowAI(VISION_RANGE, RUN_SPEED, ATTACK_RANGE, validEntityConstr)
+         new FollowAI("follow", {
+            range: VISION_RANGE,
+            speed: RUN_SPEED,
+            targets: targets
+         })
       );
 
-      this.getComponent(AIManagerComponent)!.setCurrentAIType("follow");
+      this.getComponent(AIManagerComponent)!.changeCurrentAI("wander");
    }
 
    protected duringCollision(collidingEntity: Entity): void {

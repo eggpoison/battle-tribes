@@ -1,9 +1,19 @@
 import Board, { TileCoordinates } from "./Board";
-import TransformComponent from "./entity-components/TransformComponent";
+import Tombstone from "./entities/Tombstone";
 import ENTITY_INFO, { MobInfo, ResourceInfo } from "./entity-info";
+import Game from "./Game";
 import SETTINGS from "./settings";
 import { TileType } from "./tiles";
 import { randInt, randItem } from "./utils";
+
+const GRAVEYARD_SPAWN_CHANCES: Record<TileType, number> = {
+   [TileType.grass]: 1,
+   [TileType.sludge]: 0.3,
+   [TileType.desert]: 0.2,
+   [TileType.mud]: 0.2,
+   [TileType.mountain]: 0.1,
+   [TileType.snow]: 0
+};
 
 let mobInfoArray = new Array<MobInfo>();
 let resourceInfoArray = new Array<ResourceInfo>();
@@ -28,6 +38,12 @@ const getEligibleEntities = (tileType: TileType, entityType: "mob" | "resource")
 
    for (let i = eligibleEntities.length - 1; i >= 0; i--) {
       const entityInfo = eligibleEntities[i];
+
+      // Remove the entity if it is spawned some other way
+      if (entityInfo.hasCustomSpawnProcess) {
+         eligibleEntities.splice(i, 1);
+         continue;
+      }
 
       // Remove the entity if the tile is of the wrong type
       const preferredTileTypes = entityInfo.spawnRequirements.tileTypes;
@@ -62,7 +78,7 @@ abstract class EntitySpawner {
       this.targetMobCount = Math.floor(this.TARGET_MOB_COUNT * Board.size * Board.size);
    }
 
-   private static spawnEntity(entityInfo: MobInfo | ResourceInfo, x: number, y: number): void {
+   public static spawnEntity(entityInfo: MobInfo | ResourceInfo, x: number, y: number): void {
       const position = Board.getRandomPositionInTile([x, y]);
 
       const constr = entityInfo.getConstr();
@@ -89,11 +105,6 @@ abstract class EntitySpawner {
          const y = tileCoordinates[1] + randInt(-this.SPAWN_RADIUS, this.SPAWN_RADIUS);
 
          this.spawnEntity(mobInfo, x, y);
-         // const position = Board.getRandomPositionInTile([x, y]);
-         
-         // const mobConstr = mobInfo.getConstr();
-         // const mob = new mobConstr(position);
-         // Board.addEntity(mob);
       }
    }
 
@@ -167,7 +178,26 @@ abstract class EntitySpawner {
       }
    }
 
+   private static spawnTombstones(): void {
+      if (!Game.isNight()) return;
+
+      const SPAWN_CHANCE_MULTIPLIER = 0.4;
+
+      const x = randInt(0, Board.dimensions - 1);
+      const y = randInt(0, Board.dimensions - 1);
+
+      const tileType = Board.getTileType(x, y);
+
+      if (Math.random() < GRAVEYARD_SPAWN_CHANCES[tileType] * SPAWN_CHANCE_MULTIPLIER) {
+         const position = Board.getRandomPositionInTile([x, y]);
+
+         const tombstone = new Tombstone(position);
+         Board.addEntity(tombstone);
+      }
+   }
+
    public static runSpawnAttempt(): void {
+      return;
       // Spawn mobs
       // Find a random tile in the world which can spawn mobs, and spawn a random mob on it
       if (this.mobCount < this.targetMobCount && Math.random() <= this.MOB_SPAWN_RATE * Board.size * Board.size / SETTINGS.tps) {
@@ -195,9 +225,12 @@ abstract class EntitySpawner {
             }
          }   
       }
+
+      this.spawnTombstones();
    }
 
    public static spawnInitialEntities(): void {
+      return;
       this.spawnInitialMobs();
 
       // Spawn resources

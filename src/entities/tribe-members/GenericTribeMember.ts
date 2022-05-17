@@ -22,7 +22,7 @@ abstract class GenericTribeMember extends Entity {
          ...(components || [])
       ]);
 
-      super.createEvent(EventType.killEntity, (entity: Entity) => {
+      super.createEvent("killEntity", (entity: Entity) => {
          if (entity instanceof Mob) {
             const expDrop = entity.entityInfo.exp;
             

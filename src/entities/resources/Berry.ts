@@ -1,5 +1,4 @@
 import Board from "../../Board";
-import { EventType } from "../Entity";
 import HealthComponent from "../../entity-components/HealthComponent";
 import HitboxComponent from "../../entity-components/HitboxComponent";
 import RenderComponent, { ImageRenderPart } from "../../entity-components/RenderComponent";
@@ -30,7 +29,7 @@ class Berry extends Resource {
       this.setMaxHealth(Berry.HEALTH);
       this.getComponent(HealthComponent)!.setLifespan(Berry.LIFESPAN);
 
-      this.getComponent(ItemSpawnComponent)!.addResource(ItemName.berry, [1, 2], EventType.deathByEntity);
+      this.getComponent(ItemSpawnComponent)!.addResource(ItemName.berry, [1, 2], "deathByEntity");
    }
 
    protected createRenderParts(renderComponent: RenderComponent): void {

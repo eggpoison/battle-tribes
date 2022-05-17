@@ -2,30 +2,11 @@ import Board, { Chunk } from "../Board";
 import Component from "../Component";
 import HealthComponent from "../entity-components/HealthComponent";
 import HitboxComponent from "../entity-components/HitboxComponent";
-import TransformComponent from "../entity-components/TransformComponent";
 import SETTINGS from "../settings";
-import { Point } from "../utils";
 
-export enum EventType {
-   deathByEntity,
-   hurt,
-   attack,
-   killEntity
-}
+export type EventType = "deathByEntity" | "hurt" | "attack" | "killEntity";
 
-type EventsObject = { [key in EventType]: Array<() => void> };
-
-const eventTypeKeys = Object.keys(EventType).filter((_, i, arr) => i <= arr.length / 2);
-const getEventsObject = (): EventsObject => {
-   const eventsObject: Partial<EventsObject> = {};
-
-   for (const key of eventTypeKeys) {
-      const type = EventType[key as keyof typeof EventType];
-      eventsObject[type] = new Array<() => void>();
-   }
-
-   return eventsObject as EventsObject;
-}
+type EventsObject = Partial<Record<EventType, Array<() => void>>>;
 
 type Size = number | {
    readonly WIDTH: number;
@@ -40,7 +21,7 @@ abstract class Entity {
    public previousChunk?: Chunk;
 
    private readonly components: ReadonlyArray<Component>;
-   private readonly events: EventsObject = getEventsObject();
+   private readonly events: EventsObject = {};
 
    constructor(components: ReadonlyArray<Component>) {
       this.components = components;
@@ -110,7 +91,7 @@ abstract class Entity {
    public onDie(causeOfDeath: Entity | null): void {
       // deathByEntity events
       if (causeOfDeath !== null) {
-         this.callEvents(EventType.deathByEntity);
+         this.callEvents("deathByEntity");
       }
 
       Board.removeEntity(this);
@@ -135,15 +116,17 @@ abstract class Entity {
    }
 
    public createEvent(type: EventType, func: (args?: any) => void): void {
-      if (typeof type === "number") type = EventType[type] as unknown as EventType;
-
-      this.events[type].push(func);
+      if (this.events.hasOwnProperty(type)) {
+         this.events[type]!.push(func);
+      } else {
+         this.events[type] = [func];
+      }
    }
 
    public callEvents(type: EventType, args?: unknown): void {
-      if (typeof type === "number") type = EventType[type] as unknown as EventType;
+      if (!this.events.hasOwnProperty(type)) return;
 
-      for (const func of this.events[type]) (func as (args: unknown) => void)(args);
+      for (const func of this.events[type]!) (func as (args: unknown) => void)(args);
    }
 
    protected setMaxHealth(maxHealth: number): void {

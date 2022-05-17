@@ -1,6 +1,6 @@
 import Board from "../Board";
 import Component from "../Component";
-import Entity, { EventType } from "../entities/Entity";
+import Entity from "../entities/Entity";
 import { Point } from "../utils";
 import HealthComponent from "./HealthComponent";
 import TransformComponent from "./TransformComponent";
@@ -98,7 +98,7 @@ class AttackComponent extends Component {
       healthComponent.hurt(attack.damage, attack.attackingEntity, attack.knockbackStrength);
 
       if (healthComponent.getHealth() <= 0) {
-         this.getEntity().callEvents(EventType.killEntity, attackedEntity);
+         this.getEntity().callEvents("killEntity", attackedEntity);
       }
    }
 }

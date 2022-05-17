@@ -1,5 +1,5 @@
 import Component from "../Component";
-import Entity, { EventType } from "../entities/Entity";
+import Entity from "../entities/Entity";
 import SETTINGS from "../settings";
 import TransformComponent from "./TransformComponent";
 
@@ -66,7 +66,7 @@ class HealthComponent extends Component {
 
       this.health -= this.calculateDamageDealt(damage);
 
-      this.getEntity().callEvents(EventType.hurt);
+      this.getEntity().callEvents("hurt");
 
       this.remainingIFrames = Entity.iframes;
 

@@ -6,13 +6,15 @@ import RenderComponent, { EllipseRenderPart } from "../../entity-components/Rend
 import ItemSpawnComponent from "../../entity-components/ItemSpawnerComponent";
 import { ItemName } from "../../items/items";
 import { MobBehaviour } from "../../entity-info";
-import { ConstructorFunction, Point, randInt, Vector } from "../../utils";
-import Entity, { EventType } from "../Entity";
+import { Point, randInt, Vector } from "../../utils";
+import Entity from "../Entity";
 import GenericTribeMember from "../tribe-members/GenericTribeMember";
 import Mob from "./Mob";
 import TransformComponent from "../../entity-components/TransformComponent";
 import WanderAI from "../../entity-components/ai/WanderAI";
 import FollowAI from "../../entity-components/ai/FollowAI";
+import Timer from "../../Timer";
+import SETTINGS from "../../settings";
 
 enum SlimeSizeCategory {
    small,
@@ -33,7 +35,7 @@ const SLIME_INFO: Record<SlimeSizeCategory, SlimeInfo> = {
    [SlimeSizeCategory.small]: {
       size: 0.6,
       health: 10,
-      searchRange: 2,
+      searchRange: 3,
       slimeDrop: [0, 1],
       splitChance: 0
    },
@@ -63,11 +65,15 @@ const SLIME_INFO: Record<SlimeSizeCategory, SlimeInfo> = {
 class Slime extends Mob {
    public readonly SIZE: number;
 
+   private readonly info: SlimeInfo;
+
    private static readonly COLOUR = "#00d432";
    private static readonly DAMAGE = 5;
    private static readonly KNOCKBACK_STRENGTH = 10;
 
-   private readonly info: SlimeInfo;
+   // AI
+   private readonly FOLLOW_WAIT_TIME: number = 1;
+   private followWaitTimer: Timer | null = null;
 
    constructor(position: Point, size?: SlimeSizeCategory) {
       super(position, [
@@ -132,7 +138,7 @@ class Slime extends Mob {
 
    private addItemDrops(): void {
       const slimeDrops = typeof this.info.slimeDrop === "number" ? this.info.slimeDrop : randInt(...this.info.slimeDrop);
-      this.getComponent(ItemSpawnComponent)!.addResource(ItemName.slime, slimeDrops, EventType.deathByEntity);
+      this.getComponent(ItemSpawnComponent)!.addResource(ItemName.slime, slimeDrops, "deathByEntity");
    }
 
    private createAI(): void {
@@ -165,14 +171,13 @@ class Slime extends Mob {
          }
       });
 
-      // Follow AI
       const followAI = this.getComponent(AIManagerComponent)!.addAI(
          new FollowAI("follow", {
             range: this.info.searchRange,
             speed: FOLLOW_SPEED,
             targets: TARGETS
          })
-      );
+      ) as FollowAI;
       followAI.setSwitchCondition({
          newID: "wander",
          shouldSwitch: (): boolean => {
@@ -182,8 +187,27 @@ class Slime extends Mob {
          },
          onSwitch: (): void => {
             transformComponent.stopVelocity();
+
+            this.followWaitTimer = null;
          }
       });
+      followAI.setTickCondition((): boolean => {
+         if (this.followWaitTimer === null) {
+            this.followWaitTimer = new Timer(this.FOLLOW_WAIT_TIME, () => {
+               this.followWaitTimer = null;
+            });
+            return true;
+         }
+         return false;
+      });
+
+      // Increase the duration of the follow wait timer
+      this.createEvent("hurt", () => {
+         if (this.followWaitTimer !== null) {
+            const MULTIPLIER = 1.1;
+            this.followWaitTimer.addDuration(SETTINGS.entityInvulnerabilityDuration * MULTIPLIER);
+         }
+      })
 
       this.getComponent(AIManagerComponent)!.changeCurrentAI("follow");
    }

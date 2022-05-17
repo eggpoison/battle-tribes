@@ -4,7 +4,6 @@ import ItemSpawnComponent from "../../entity-components/ItemSpawnerComponent";
 import RenderComponent, { ImageRenderPart } from "../../entity-components/RenderComponent";
 import { ItemName } from "../../items/items";
 import { Point } from "../../utils";
-import { EventType } from "../Entity";
 import Resource from "./Resource";
 
 class Tree extends Resource {
@@ -40,7 +39,7 @@ class Tree extends Resource {
    }
 
    private addResourceDrops(): void {
-      this.getComponent(ItemSpawnComponent)!.addResource(ItemName.wood, [2, 5], EventType.deathByEntity);
+      this.getComponent(ItemSpawnComponent)!.addResource(ItemName.wood, [2, 5], "deathByEntity");
    }
 }
 

@@ -47,8 +47,14 @@ class FollowAI extends EntityAI {
       return closestEntity;
    }
 
+   private tickCondition?: () => boolean;
+   public setTickCondition(condition: () => boolean): void {
+      this.tickCondition = condition;
+   }
+
    public tick(): void {
       super.tick();
+      if (typeof this.tickCondition !== "undefined" && !this.tickCondition()) return;
 
       const targetEntity = this.findClosestEntity();
 

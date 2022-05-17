@@ -1,4 +1,4 @@
-import Entity, { EventType } from "../Entity";
+import Entity from "../Entity";
 import TransformComponent from "../../entity-components/TransformComponent";
 import PlayerControllerComponent from "../../entity-components/PlayerControllerComponent";
 import { Point } from "../../utils";
@@ -76,7 +76,7 @@ class Player extends GenericTribeMember {
 
       PlayerControllerComponent.createKeyEvent((key: string) => this.onKeyPress(key));
 
-      super.createEvent(EventType.hurt, () => {
+      super.createEvent("hurt", () => {
          const health = this.getComponent(HealthComponent)!.getHealth();
          HealthBarManager.setHealth(health);
       });

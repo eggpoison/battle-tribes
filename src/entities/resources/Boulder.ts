@@ -3,7 +3,6 @@ import ItemSpawnComponent from "../../entity-components/ItemSpawnerComponent";
 import RenderComponent, { ImageRenderPart } from "../../entity-components/RenderComponent";
 import { ItemName } from "../../items/items";
 import { Point } from "../../utils";
-import { EventType } from "../Entity";
 import Resource from "./Resource";
 
 class Boulder extends Resource {
@@ -15,7 +14,7 @@ class Boulder extends Resource {
 
       this.setMaxHealth(Boulder.HEALTH);
 
-      this.getComponent(ItemSpawnComponent)!.addResource(ItemName.rock, [1, 3], EventType.deathByEntity);
+      this.getComponent(ItemSpawnComponent)!.addResource(ItemName.rock, [1, 3], "deathByEntity");
    }
 
    protected createRenderParts(renderComponent: RenderComponent): void {

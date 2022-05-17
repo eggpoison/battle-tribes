@@ -1,4 +1,3 @@
-import { EventType } from "../Entity";
 import HitboxComponent from "../../entity-components/HitboxComponent";
 import RenderComponent, { EllipseRenderPart } from "../../entity-components/RenderComponent";
 import ItemSpawnComponent from "../../entity-components/ItemSpawnerComponent";
@@ -31,8 +30,8 @@ class Cow extends Mob {
 
       this.createAI();
 
-      this.getComponent(ItemSpawnComponent)!.addResource(ItemName.meat, [1, 2], EventType.deathByEntity);
-      this.getComponent(ItemSpawnComponent)!.addResource(ItemName.leather, [0, 1], EventType.deathByEntity);
+      this.getComponent(ItemSpawnComponent)!.addResource(ItemName.meat, [1, 2], "deathByEntity");
+      this.getComponent(ItemSpawnComponent)!.addResource(ItemName.leather, [0, 1], "deathByEntity");
    }
 
    protected setHitbox(hitboxComponent: HitboxComponent): void {

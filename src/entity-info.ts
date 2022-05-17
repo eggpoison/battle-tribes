@@ -23,11 +23,7 @@ export interface EntityInfo {
    readonly hasCustomSpawnProcess?: boolean;
 }
 
-export enum MobBehaviour {
-   peaceful,
-   neutral,
-   hostile
-}
+export type MobBehaviour = "peaceful" | "neutral" | "hostile";
 
 export interface MobInfo extends EntityInfo {
    readonly packSize: number | [number, number];
@@ -72,7 +68,7 @@ const ENTITY_INFO: ReadonlyArray<MobInfo | ResourceInfo> = [
          tileTypes: [TileType.grass]
       },
       packSize: [2, 4],
-      behaviour: MobBehaviour.peaceful,
+      behaviour: "peaceful",
       exp: 1,
       getConstr: () => Cow
    },
@@ -82,7 +78,7 @@ const ENTITY_INFO: ReadonlyArray<MobInfo | ResourceInfo> = [
          tileTypes: [TileType.sludge]
       },
       packSize: [1, 2],
-      behaviour: MobBehaviour.hostile,
+      behaviour: "hostile",
       exp: 2,
       getConstr: () => Slime
    },
@@ -93,7 +89,7 @@ const ENTITY_INFO: ReadonlyArray<MobInfo | ResourceInfo> = [
          isNight: true
       },
       packSize: 1,
-      behaviour: MobBehaviour.hostile,
+      behaviour: "hostile",
       exp: 5,
       getConstr: () => Zombie,
       hasCustomSpawnProcess: true // Spawns through graveyards
@@ -104,7 +100,7 @@ const ENTITY_INFO: ReadonlyArray<MobInfo | ResourceInfo> = [
          tileTypes: [TileType.snow]
       },
       packSize: 1,
-      behaviour: MobBehaviour.hostile,
+      behaviour: "hostile",
       exp: 10,
       getConstr: () => Yeti
    }

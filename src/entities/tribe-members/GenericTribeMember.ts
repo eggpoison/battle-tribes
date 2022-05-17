@@ -1,13 +1,13 @@
 import Component from "../../Component";
-import Entity, { EventType } from "../Entity";
+import Entity from "../Entity";
 import Tribe from "../../Tribe";
 import HealthComponent from "../../entity-components/HealthComponent";
 import HitboxComponent from "../../entity-components/HitboxComponent";
 import RenderComponent, { EllipseRenderPart } from "../../entity-components/RenderComponent";
 import TransformComponent from "../../entity-components/TransformComponent";
 import TribeMemberComponent from "../../entity-components/TribeMemberComponent";
-import Mob from "../mobs/Mob";
 import { Vector } from "../../utils";
+import LivingEntity from "../LivingEntity";
 
 abstract class GenericTribeMember extends Entity {
    public selectedSlot: number = 0;
@@ -23,7 +23,7 @@ abstract class GenericTribeMember extends Entity {
       ]);
 
       super.createEvent("killEntity", (entity: Entity) => {
-         if (entity instanceof Mob) {
+         if (entity instanceof LivingEntity) {
             const expDrop = entity.entityInfo.exp;
             
             this.getComponent(TribeMemberComponent)!.addExp(expDrop);

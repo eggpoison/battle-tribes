@@ -32,7 +32,7 @@ class Yeti extends Mob {
             width: 5,
             colour: "#000"
          }
-      }))
+      }));
    }
    protected setHitbox(hitboxComponent: HitboxComponent): void {
       hitboxComponent.setHitbox({

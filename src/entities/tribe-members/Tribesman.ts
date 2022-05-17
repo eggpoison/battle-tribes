@@ -9,7 +9,7 @@ import InfiniteInventoryComponent from "../../entity-components/inventory/Infini
 import RenderComponent from "../../entity-components/RenderComponent";
 import TransformComponent from "../../entity-components/TransformComponent";
 import Tribe from "../../Tribe";
-import { ConstructorFunction, Point } from "../../utils";
+import { Point } from "../../utils";
 import Entity from "../Entity";
 import ItemEntity from "../ItemEntity";
 import Mob from "../mobs/Mob";
@@ -21,8 +21,15 @@ import Player from "./Player";
 class Tribesman extends GenericTribeMember {
    public readonly SIZE = 1;
    
-   private static readonly MAX_HEALTH = 250;
+   private static readonly MAX_HEALTH = 25;
    private static readonly DEFAULT_SLOT_COUNT = 2;
+
+   private static readonly VISION_RANGE = 4;
+   private static readonly WALK_SPEED = 1;
+   private static readonly RUN_SPEED = 2.5;
+
+   private static readonly WANDER_RATE = 0.5;
+   private static readonly TARGETS = [Mob, Resource, ItemEntity];
 
    private static readonly ATTACK_DAMAGE = 50;
    public static readonly ATTACK_INTERVAL = 0.25;
@@ -72,35 +79,102 @@ class Tribesman extends GenericTribeMember {
    }
 
    private createAI(): void {
-      const WALK_SPEED = 1;
-      const RUN_SPEED = 2.5;
-      
-      const VISION_RANGE = 4;
+      const transformComponent = this.getComponent(TransformComponent)!;
 
-      const ATTACK_RANGE = 1;
-
-      const WANDER_CHANCE = 0.5;
-
-      const targets: ReadonlyArray<ConstructorFunction> = [Mob, Resource, ItemEntity];
+      // If no targets are nearby, use wander AI
+      // Otherwise, move to the closest target sorted based on their priority
 
       // Wander AI
-      this.getComponent(AIManagerComponent)!.addAI(
+      const wanderAI = this.getComponent(AIManagerComponent)!.addAI(
          new WanderAI("wander", {
-            range: VISION_RANGE,
-            speed: WALK_SPEED,
-            wanderRate: WANDER_CHANCE
-         })
-      );
-      // Follow AI
-      this.getComponent(AIManagerComponent)!.addAI(
-         new FollowAI("follow", {
-            range: VISION_RANGE,
-            speed: RUN_SPEED,
-            targets: targets
+            range: Tribesman.VISION_RANGE,
+            speed: Tribesman.WALK_SPEED,
+            wanderRate: Tribesman.WANDER_RATE
          })
       );
 
+      wanderAI.setSwitchCondition({
+         newID: "follow",
+         shouldSwitch: (): boolean => {
+            const entitiesInSearchRadius = wanderAI.getEntitiesInSearchRadius(transformComponent.position, Tribesman.VISION_RANGE, Tribesman.TARGETS);
+
+            return entitiesInSearchRadius === null;
+         },
+         onSwitch: (): void => {
+            transformComponent.stopVelocity();
+         }
+      });
+
+      // Follow AI
+      const followAI = this.getComponent(AIManagerComponent)!.addAI(
+         new FollowAI("follow", {
+            range: Tribesman.VISION_RANGE,
+            speed: Tribesman.RUN_SPEED,
+            targets: Tribesman.TARGETS
+         })
+      ) as FollowAI;
+
+      followAI.setSwitchCondition({
+         newID: "wander",
+         shouldSwitch: (): boolean => {
+            const entitiesInSearchRadius = followAI.getEntitiesInSearchRadius(transformComponent.position, Tribesman.VISION_RANGE, Tribesman.TARGETS);
+
+            return entitiesInSearchRadius === null;
+         },
+         onSwitch: (): void => {
+            transformComponent.stopVelocity();
+         }
+      });
+
+      // Attack
+      followAI.setTickCondition(() => {
+         
+
+         return true;
+      });
+
+      followAI.createSortFunction((entities: Array<Entity>) => this.sortFollowTargets(entities));
+
       this.getComponent(AIManagerComponent)!.changeCurrentAI("wander");
+   }
+
+   private sortFollowTargets(entities: Array<Entity>): Array<Entity> | null {
+      // Sort the entities by type
+      const hostileMobs = new Array<Mob>();
+      const otherEntities = new Array<Mob | Resource | ItemEntity>();
+      for (const entity of entities) {
+         // Mobs
+         if (entity instanceof Mob) {
+            switch (entity.entityInfo.behaviour) {
+               case "hostile":
+                  hostileMobs.push(entity);
+                  break;
+               default:
+                  otherEntities.push(entity);
+                  break;
+            }
+            continue;
+         }
+
+         // Resources
+         if (entity instanceof Resource) {
+            otherEntities.push(entity);
+            continue;
+         }
+
+         // Item entities
+         if (entity instanceof ItemEntity) {
+            otherEntities.push(entity);
+            continue;
+         }
+      }
+
+      if (hostileMobs.length > 0) {
+         return hostileMobs;
+      } else if (otherEntities.length > 0) {
+         return otherEntities;
+      }
+      return null;
    }
 
    protected duringCollision(collidingEntity: Entity): void {

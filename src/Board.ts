@@ -19,6 +19,7 @@ import InfiniteInventoryComponent from "./entity-components/inventory/InfiniteIn
 import Game from "./Game";
 import EntitySpawner from "./EntitySpawner";
 import Cow from "./entities/mobs/Cow";
+import Resource from "./entities/resources/Resource";
 
 export type Chunk = Array<Entity>;
 
@@ -100,6 +101,7 @@ abstract class Board {
 
       let entityCount = 0;
       let mobCount = 0;
+      let resourceCount = 0;
 
       const entitiesToChangeChunk: Array<[Entity, Chunk]> = [];
 
@@ -116,6 +118,8 @@ abstract class Board {
                entityCount++;
                if (entity instanceof Mob) {
                   mobCount++;
+               } else if (entity instanceof Resource) {
+                  resourceCount++;
                }
 
                if (chunkIsVisible) {
@@ -157,7 +161,9 @@ abstract class Board {
       this.drawFog(ctx);
       
       updateDevtools({
-         entityCount: entityCount
+         entityCount: entityCount,
+         mobCount: mobCount,
+         resourceCount: resourceCount
       });
 
       EntitySpawner.updateMobCount(mobCount);

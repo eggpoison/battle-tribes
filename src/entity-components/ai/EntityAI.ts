@@ -48,7 +48,7 @@ abstract class EntityAI {
       }
    }
 
-   private reachTargetPosition(transformComponent: TransformComponent): void {
+   protected reachTargetPosition(transformComponent: TransformComponent): void {
       this.targetPosition = null;
 
       transformComponent.stopVelocity();
@@ -104,42 +104,20 @@ abstract class EntityAI {
       const transformComponent = this.entity.getComponent(TransformComponent)!;
 
       const angle = transformComponent.position.angleBetween(position);
-      const targetVector = new Vector(speed * Board.tileSize / SETTINGS.tps, angle);
-
       transformComponent.rotation = angle;
-
-      transformComponent.setVelocity(targetVector);
+      
+      const movementVector = new Vector(speed * Board.tileSize / SETTINGS.tps, angle);
+      transformComponent.setVelocity(movementVector);
    }
 
    protected changeCurrentAI(newID: string): void {
       this.entity.getComponent(AIManagerComponent)!.changeCurrentAI(newID);
    }
 
-   // public switchFunction: (() => void) | null = null;
-   // public setSwitchFunction(func: () => void): void {
-   //    this.switchFunction = func;
-   // }
-
-   // public addTickCallback(func: () => void): void {
-
-   // }
-
-   // protected isActive(): boolean {
-   //    return this.entity.getComponent(AIManagerComponent)!.getCurrentAI() === this;
-   // }
    private switchCondition?: SwitchCondition;
    public setSwitchCondition(switchCondition: SwitchCondition): void {
       this.switchCondition = switchCondition;
    }
-
-   /*
-   followAI.setSwitchCondition({
-      newID: "wander",
-      callback: (): boolean => {
-
-      }
-   })
-   */
 }
 
 export default EntityAI;

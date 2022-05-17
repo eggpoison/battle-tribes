@@ -1,6 +1,5 @@
-import Board from "../../Board";
 import Entity from "../../entities/Entity";
-import { ConstructorFunction, Point } from "../../utils";
+import { ConstructorFunction } from "../../utils";
 import TransformComponent from "../TransformComponent";
 import EntityAI from "./EntityAI";
 
@@ -12,6 +11,8 @@ type FollowAIInfo = {
 
 class FollowAI extends EntityAI {
    public readonly id: string;
+
+   private target: Entity | null = null;
 
    private readonly range: number;
    private readonly targets: ReadonlyArray<ConstructorFunction>;
@@ -27,11 +28,22 @@ class FollowAI extends EntityAI {
       this.targets = info.targets;
    }
 
+   protected reachTargetPosition(transformComponent: TransformComponent): void {
+      super.reachTargetPosition(transformComponent);
+
+      this.target = null;
+   }
+
    protected findClosestEntity(): Entity | null {
       const transformComponent = this.entity.getComponent(TransformComponent)!;
 
-      const entitiesInSearchRadius = super.getEntitiesInSearchRadius(transformComponent.position, this.range, this.targets);
+      let entitiesInSearchRadius = super.getEntitiesInSearchRadius(transformComponent.position, this.range, this.targets);
       if (entitiesInSearchRadius === null) return null;
+
+      if (typeof this.customSortFunction !== "undefined") {
+         entitiesInSearchRadius = this.customSortFunction(entitiesInSearchRadius);
+         if (entitiesInSearchRadius === null) return null;
+      }
 
       let closestEntity!: Entity;
       let closestDistance: number = Number.MAX_SAFE_INTEGER;
@@ -42,9 +54,14 @@ class FollowAI extends EntityAI {
             closestDistance = dist;
             closestEntity = entity;
          }
-      }  
+      }
 
       return closestEntity;
+   }
+
+   private customSortFunction?: (entities: Array<Entity>) => Array<Entity> | null;
+   public createSortFunction(func: (entities: Array<Entity>) => Array<Entity> | null): void {
+      this.customSortFunction = func;
    }
 
    private tickCondition?: () => boolean;
@@ -59,10 +76,12 @@ class FollowAI extends EntityAI {
       const targetEntity = this.findClosestEntity();
 
       if (targetEntity !== null) {
+         this.target = targetEntity;
+
          const targetPosition = targetEntity.getComponent(TransformComponent)!.position;
          super.moveToPosition(targetPosition, this.speed);
       }
-   }
+   } 
 }
 
 export default FollowAI;

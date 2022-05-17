@@ -1,8 +1,19 @@
 import React, { useEffect, useState } from "react";
+import EntitySpawner from "../EntitySpawner";
 import OPTIONS from "../options";
 
 type DevtoolsCensus = {
    readonly entityCount: number;
+   readonly mobCount: number;
+   readonly resourceCount: number;
+}
+
+const getDefaultCensus = (): DevtoolsCensus => {
+   return {
+      entityCount: 0,
+      mobCount: 0,
+      resourceCount: 0
+   };
 }
 
 export let toggleDevtoolsVisibility: () => void;
@@ -10,7 +21,7 @@ export let updateDevtools: (census: DevtoolsCensus) => void;
 
 function Devtools() {
    const [isVisible, setIsVisible] = useState(false);
-   const [census, setCensus] = useState<DevtoolsCensus>({ entityCount: 0 });
+   const [census, setCensus] = useState<DevtoolsCensus>(getDefaultCensus());
 
    useEffect(() => {
       toggleDevtoolsVisibility = (): void => {
@@ -45,6 +56,10 @@ function Devtools() {
 
          <h2>Entities</h2>
          <p>{census.entityCount} total entities</p>
+         <ul>
+            <li>{census.mobCount}/{EntitySpawner.targetMobCount} mobs</li>
+            <li>{census.resourceCount} resources</li>
+         </ul>
 
          <button>Spawn mob</button>
       </div>

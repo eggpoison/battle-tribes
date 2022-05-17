@@ -178,6 +178,7 @@ class Slime extends Mob {
             targets: TARGETS
          })
       ) as FollowAI;
+
       followAI.setSwitchCondition({
          newID: "wander",
          shouldSwitch: (): boolean => {
@@ -214,7 +215,7 @@ class Slime extends Mob {
 
    protected onCollision(entity: Entity): void {
       // Don't attack fellow hostile mobs
-      if (entity instanceof Mob && entity.entityInfo.behaviour === MobBehaviour.hostile) return;
+      if (entity instanceof Mob && entity.entityInfo.behaviour === "hostile") return;
 
       const healthCompoment = entity.getComponent(HealthComponent);
       if (healthCompoment !== null) {

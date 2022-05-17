@@ -64,8 +64,8 @@ abstract class EntitySpawner {
    private static RESOURCE_SPAWN_CHANCE = 0.05 / SETTINGS.tps;
 
    /** The target number of mobs in a chunk */
-   private static TARGET_MOB_COUNT = 0.1;
-   private static targetMobCount: number;
+   private static TARGET_MOB_COUNT = 0.5;
+   public static targetMobCount: number;
 
    /** How many tiles away from a spawn position a mob can spawn */
    private static SPAWN_RADIUS = 2;
@@ -178,6 +178,10 @@ abstract class EntitySpawner {
       }
    }
 
+   private static canSpawnMobs(): boolean {
+      return this.mobCount < this.targetMobCount;
+   }
+
    private static spawnTombstones(): void {
       if (!Game.isNight()) return;
 
@@ -197,10 +201,9 @@ abstract class EntitySpawner {
    }
 
    public static runSpawnAttempt(): void {
-      return;
       // Spawn mobs
       // Find a random tile in the world which can spawn mobs, and spawn a random mob on it
-      if (this.mobCount < this.targetMobCount && Math.random() <= this.MOB_SPAWN_RATE * Board.size * Board.size / SETTINGS.tps) {
+      if (this.canSpawnMobs() && Math.random() <= this.MOB_SPAWN_RATE * Board.size * Board.size / SETTINGS.tps) {
          while (true) {
             const tileX = randInt(0, Board.dimensions - 1);
             const tileY = randInt(0, Board.dimensions - 1);
@@ -230,7 +233,6 @@ abstract class EntitySpawner {
    }
 
    public static spawnInitialEntities(): void {
-      return;
       this.spawnInitialMobs();
 
       // Spawn resources

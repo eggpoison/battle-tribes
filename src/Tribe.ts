@@ -6,7 +6,7 @@ import Tribesman from "./entities/tribe-members/Tribesman";
 import Slime from "./entities/mobs/Slime";
 import HealthComponent from "./entity-components/HealthComponent";
 import Cow from "./entities/mobs/Cow";
-import ENTITY_INFO, { getEntityInfo, MobInfo } from "./entity-info";
+import { getEntityInfo } from "./entity-info";
 
 // const tribeExpRequirements = [
 //    5,
@@ -49,14 +49,6 @@ class Tribe {
       this.stash = new TribeStash(this);
       Board.addEntity(this.stash);
       this.addEntityToTribe(this.stash);
-
-      setTimeout(() => {
-         const a = new Point(this.position.x + 5 * Board.tileSize, this.position.y);
-
-         const z = new Slime(a);
-         z.setInfo(getEntityInfo(z));
-         Board.addEntity(z);
-      }, 500);
 
       // for (let i = 0; i < 360; i++) {
       //    const radians = i / 180 * Math.PI;

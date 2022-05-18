@@ -5,8 +5,7 @@ import HitboxComponent from "../../entity-components/HitboxComponent";
 import RenderComponent, { EllipseRenderPart } from "../../entity-components/RenderComponent";
 import ItemSpawnComponent from "../../entity-components/ItemSpawnerComponent";
 import { ItemName } from "../../items/items";
-import { MobBehaviour } from "../../entity-info";
-import { Point, randInt, Vector } from "../../utils";
+import { Point, randFloat, randInt, Vector } from "../../utils";
 import Entity from "../Entity";
 import GenericTribeMember from "../tribe-members/GenericTribeMember";
 import Mob from "./Mob";
@@ -205,7 +204,7 @@ class Slime extends Mob {
       // Increase the duration of the follow wait timer
       this.createEvent("hurt", () => {
          if (this.followWaitTimer !== null) {
-            const MULTIPLIER = 1.1;
+            const MULTIPLIER = randFloat(1, 1.5);
             this.followWaitTimer.addDuration(SETTINGS.entityInvulnerabilityDuration * MULTIPLIER);
          }
       })

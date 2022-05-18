@@ -18,7 +18,6 @@ import { Minimap } from "./components/MinimapCanvas";
 import InfiniteInventoryComponent from "./entity-components/inventory/InfiniteInventoryComponent";
 import Game from "./Game";
 import EntitySpawner from "./EntitySpawner";
-import Cow from "./entities/mobs/Cow";
 import Resource from "./entities/resources/Resource";
 
 export type Chunk = Array<Entity>;

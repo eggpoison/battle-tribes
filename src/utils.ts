@@ -131,6 +131,22 @@ export function isDev(): boolean {
    return !process.env.NODE_ENV || process.env.NODE_ENV === "development";
 }
 
+export class BasicCol {
+   private readonly r: number;
+   private readonly g: number;
+   private readonly b: number;
+
+   constructor(r: number, g: number, b: number) {
+      this.r = r * 255/9;
+      this.g = g * 255/9;
+      this.b = b * 255/9;
+   }
+
+   public getCode(): string {
+      return `rgb(${this.r}, ${this.g}, ${this.b})`;
+   }
+}
+
 export class Colour {
    private static readonly HEX_DIGITS: ReadonlyArray<string> = [
       "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f"

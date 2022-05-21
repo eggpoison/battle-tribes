@@ -18,6 +18,7 @@ import { HealthBarManager } from "../../components/HealthBar";
 import TribeMemberComponent from "../../entity-components/TribeMemberComponent";
 import GenericTribeMember from "./GenericTribeMember";
 import FiniteInventoryComponent from "../../entity-components/inventory/FiniteInventoryComponent";
+import { setPlayerRespawnMessageTime, togglePlayerRespawnMessage } from "../../components/PlayerRespawnMessage";
 
 class Player extends GenericTribeMember {
    public readonly SIZE = 1;
@@ -70,13 +71,13 @@ class Player extends GenericTribeMember {
             return this.getComponent(TransformComponent)!.position.add(offsetPoint);
          },
          damage: 2,
-         knockbackStrength: 3,
+         knockbackStrength: 0.3,
          attackingEntity: this
       }));
 
       PlayerControllerComponent.createKeyEvent((key: string) => this.onKeyPress(key));
 
-      super.createEvent("hurt", () => {
+      super.createEvent("healthChange", () => {
          const health = this.getComponent(HealthComponent)!.getHealth();
          HealthBarManager.setHealth(health);
       });
@@ -84,6 +85,22 @@ class Player extends GenericTribeMember {
       // Reveal the space the player is standing in
       const position = this.getComponent(TransformComponent)!.position;
       Board.revealFog(position, this.SIZE / 2 * Board.tileSize, true);
+   }
+
+   protected startRespawn(): void {
+      super.startRespawn();
+
+      togglePlayerRespawnMessage(true);
+   }
+
+   protected respawn(): void {
+      super.respawn();
+
+      togglePlayerRespawnMessage(false);
+   }
+
+   protected respawnTick(duration: number): void {
+      setPlayerRespawnMessageTime(duration);
    }
 
    private setHitbox(): void {

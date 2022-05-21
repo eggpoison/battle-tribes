@@ -128,12 +128,14 @@ class TransformComponent extends Component {
 
    /**
     * @param source The source of the knockback
-    * @param strength How many blocks the knockback will move the entity in a second
+    * @param strength The strength of the knockback. 1 = regular kb
     */
-   public applyKnockback(source: Point, strength: number): void {
+   public applyKnockback(source: Point, strength: number = 1): void {
       const angle = source.angleBetween(this.position);
 
-      const knockbackVector = new Vector(strength * Board.tileSize / SETTINGS.tps, angle);
+      const kb = strength * 10;
+
+      const knockbackVector = new Vector(kb * Board.tileSize / SETTINGS.tps, angle);
       this.knockback = knockbackVector.convertToPoint();
       this.knockbackTime = Entity.iframes / SETTINGS.tps;
    }

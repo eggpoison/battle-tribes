@@ -1,25 +1,35 @@
 import AIManagerComponent from "../../entity-components/ai/AIManangerComponent";
 import FollowAI from "../../entity-components/ai/FollowAI";
 import WanderAI from "../../entity-components/ai/WanderAI";
+import HealthComponent from "../../entity-components/HealthComponent";
 import HitboxComponent from "../../entity-components/HitboxComponent";
 import RenderComponent, { EllipseRenderPart } from "../../entity-components/RenderComponent";
+import TransformComponent from "../../entity-components/TransformComponent";
 import { BasicCol, Point, randInt, Vector } from "../../utils";
+import Entity from "../Entity";
 import GenericTribeMember from "../tribe-members/GenericTribeMember";
 import Mob from "./Mob";
 
 class Zombie extends Mob {
    public readonly SIZE = 1;
 
+   private static readonly HEALTH = 15;
+
    private static readonly WANDER_SPEED = 0.4;
-   private static readonly FOLLOW_SPEED = 1;
+   private static readonly FOLLOW_SPEED = 1.5;
    private static readonly VISION_RANGE = 4;
    private static readonly WANDER_RATE = 0.25
    private static readonly TARGETS = [GenericTribeMember];
+
+   private static readonly ATTACK_DAMAGE = 4;
+   private static readonly KNOCKBACK = 1;
 
    constructor(position: Point) {
       super(position, [
          new AIManagerComponent()
       ]);
+
+      this.getComponent(HealthComponent)!.setMaxHealth(Zombie.HEALTH, true);
 
       this.createAI();
    }
@@ -86,23 +96,58 @@ class Zombie extends Mob {
    }
 
    private createAI(): void {
-      this.getComponent(AIManagerComponent)!.addAI(
+      const transformComponent = this.getComponent(TransformComponent)!;
+
+      const wanderAI = this.getComponent(AIManagerComponent)!.addAI(
          new WanderAI("wander", {
             range: Zombie.VISION_RANGE,
             speed: Zombie.WANDER_SPEED,
             wanderRate: Zombie.WANDER_RATE
          })
       );
+      wanderAI.setSwitchCondition({
+         newID: "follow",
+         shouldSwitch: (): boolean => {
+            const entitiesInSearchRadius = wanderAI.getEntitiesInSearchRadius(transformComponent.position, Zombie.VISION_RANGE, Zombie.TARGETS);
 
-      this.getComponent(AIManagerComponent)!.addAI(
+            return entitiesInSearchRadius !== null;
+         }
+      });
+
+      const followAI = this.getComponent(AIManagerComponent)!.addAI(
          new FollowAI("follow", {
             range: Zombie.VISION_RANGE,
             speed: Zombie.FOLLOW_SPEED,
             targets: Zombie.TARGETS
          })
       );
+      followAI.setSwitchCondition({
+         newID: "wander",
+         shouldSwitch: (): boolean => {
+            const entitiesInSearchRadius = wanderAI.getEntitiesInSearchRadius(transformComponent.position, Zombie.VISION_RANGE, Zombie.TARGETS);
+
+            return entitiesInSearchRadius === null;
+         },
+         onSwitch: (): void => {
+            transformComponent.stopVelocity();
+         }
+      });
 
       this.getComponent(AIManagerComponent)!.changeCurrentAI("wander");
+   }
+
+   duringCollision(collidingEntity: Entity): void {
+      let canHit = false;
+      for (const target of Zombie.TARGETS) {
+         if (collidingEntity instanceof target) {
+            canHit = true;
+            break;
+         }
+      }
+
+      if (canHit) {
+         collidingEntity.getComponent(HealthComponent)!.hurt(Zombie.ATTACK_DAMAGE, this, Zombie.KNOCKBACK);
+      }
    }
 }
 

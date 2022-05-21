@@ -1,0 +1,18 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+
+#player-respawn-message {
+   text-align: center;
+   text-shadow: 2px 2px 4px #000, 2px -2px 4px #000, -2px 2px 4px #000, -2px -2px 4px #000;
+   font-weight: 700;
+   position: absolute;
+   top: 50%;
+   left: 50%;
+   transform: translate(-50%, -50%);
+   z-index: 1;
+}
+#player-respawn-message h1 {
+   color: #fff;
+}
+#player-respawn-message h2 {
+   color: #e5e5e5;
+}

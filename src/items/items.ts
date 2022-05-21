@@ -53,7 +53,7 @@ const ITEMS: ItemsType = {
       description: "Restores 2 health when eaten.",
       imageSrc: "berry.png",
       stackSize: REGULAR_STACK_SIZE,
-      healthReplenishAmount: 2,
+      cooldown: 2,
       eatTime: 0.3
    }),
    [ItemName.meat]: new FoodItem({
@@ -61,7 +61,7 @@ const ITEMS: ItemsType = {
       description: "Restores 4 health when eaten.",
       imageSrc: "meat.png",
       stackSize: REGULAR_STACK_SIZE,
-      healthReplenishAmount: 4,
+      cooldown: 4,
       eatTime: 1.2
    }),
    [ItemName.cookedMeat]: new FoodItem({
@@ -69,7 +69,7 @@ const ITEMS: ItemsType = {
       description: "Restores 15 health when eaten.",
       imageSrc: "berry.png",
       stackSize: REGULAR_STACK_SIZE,
-      healthReplenishAmount: 15,
+      cooldown: 15,
       eatTime: 1.2
    }),
 

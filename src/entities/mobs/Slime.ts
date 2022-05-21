@@ -68,7 +68,7 @@ class Slime extends Mob {
 
    private static readonly COLOUR = "#00d432";
    private static readonly DAMAGE = 5;
-   private static readonly KNOCKBACK_STRENGTH = 10;
+   private static readonly KNOCKBACK_STRENGTH = 1;
 
    // AI
    private readonly FOLLOW_WAIT_TIME: number = 1;
@@ -193,8 +193,11 @@ class Slime extends Mob {
       });
       followAI.setTickCondition((): boolean => {
          if (this.followWaitTimer === null) {
-            this.followWaitTimer = new Timer(this.FOLLOW_WAIT_TIME, () => {
-               this.followWaitTimer = null;
+            this.followWaitTimer = new Timer({
+               duration: this.FOLLOW_WAIT_TIME,
+               onEnd: () => {
+                  this.followWaitTimer = null;
+               }
             });
             return true;
          }
@@ -202,8 +205,8 @@ class Slime extends Mob {
       });
 
       // Increase the duration of the follow wait timer
-      this.createEvent("hurt", () => {
-         if (this.followWaitTimer !== null) {
+      this.createEvent("healthChange", (healthChange: number) => {
+         if (healthChange < 0 && this.followWaitTimer !== null) {
             const MULTIPLIER = randFloat(1, 1.5);
             this.followWaitTimer.addDuration(SETTINGS.entityInvulnerabilityDuration * MULTIPLIER);
          }
@@ -212,7 +215,7 @@ class Slime extends Mob {
       this.getComponent(AIManagerComponent)!.changeCurrentAI("follow");
    }
 
-   protected onCollision(entity: Entity): void {
+   protected duringCollision(entity: Entity): void {
       // Don't attack fellow hostile mobs
       if (entity instanceof Mob && entity.entityInfo.behaviour === "hostile") return;
 

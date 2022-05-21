@@ -66,6 +66,16 @@ class FiniteInventoryComponent extends InventoryComponent {
          }
       }
    }
+
+   public isFull(): boolean {
+      for (let i = 0; i < this.slotCount; i++) {
+         const item = this.itemSlots[i];
+
+         if (typeof item === "undefined") return false;
+      }
+
+      return true;
+   }
 }
 
 export default FiniteInventoryComponent;

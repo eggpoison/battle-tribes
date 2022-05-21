@@ -45,6 +45,10 @@ class HealthComponent extends Component {
       if (setHealth) this.health = maxHealth;
    }
 
+   public getMaxHealth(): number {
+      return this.maxHealth;
+   }
+
    public setLifespan(lifespan: number): void {
       this.lifespan = lifespan;
    }
@@ -61,12 +65,20 @@ class HealthComponent extends Component {
       return this.remainingIFrames > 0;
    }
 
+   public heal(amount: number): void {
+      this.health += amount;
+      if (this.health > this.maxHealth) this.health = this.maxHealth;
+
+      this.getEntity().callEvents("healthChange", amount);
+   }
+
    public hurt(damage: number, attackingEntity: Entity, knockbackStrength: number): void {
       if (this.remainingIFrames > 0) return;
 
-      this.health -= this.calculateDamageDealt(damage);
+      const damageDealt = this.calculateDamageDealt(damage);
 
-      this.getEntity().callEvents("hurt");
+      this.health -= this.calculateDamageDealt(damageDealt);
+      this.getEntity().callEvents("healthChange", -damageDealt);
 
       this.remainingIFrames = Entity.iframes;
 

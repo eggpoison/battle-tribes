@@ -8,9 +8,11 @@ import TransformComponent from "../../entity-components/TransformComponent";
 import TribeMemberComponent from "../../entity-components/TribeMemberComponent";
 import { Vector } from "../../utils";
 import LivingEntity from "../LivingEntity";
+import SelectedSlotComponent from "../../entity-components/SelectedSlotComponent";
+import Timer from "../../Timer";
 
 abstract class GenericTribeMember extends Entity {
-   public selectedSlot: number = 0;
+   public static readonly RESPAWN_TIME = 3;
 
    constructor(tribe: Tribe, components?: ReadonlyArray<Component>) {
       super([
@@ -19,6 +21,7 @@ abstract class GenericTribeMember extends Entity {
          new HitboxComponent(),
          new HealthComponent(),
          new TribeMemberComponent(tribe),
+         new SelectedSlotComponent(),
          ...(components || [])
       ]);
 
@@ -29,7 +32,24 @@ abstract class GenericTribeMember extends Entity {
             this.getComponent(TribeMemberComponent)!.addExp(expDrop);
          }
       });
+
+      // Respawn when killed
+      this.createEvent("die", () => this.startRespawn());
    }
+
+   protected startRespawn(): void {
+      new Timer({
+         duration: GenericTribeMember.RESPAWN_TIME,
+         onEnd: () => this.respawn(),
+         onTick: this.respawnTick
+      });
+   }
+
+   protected respawn(): void {
+      this.getComponent(TribeMemberComponent)!.tribe.respawnEntity(this);
+   }
+
+   protected respawnTick?(duration: number): void;
 
    protected createRenderParts(bodySize: number, handSize: number, bodyColour: string, handColour: string, handAngles: number): void {
       const BORDER_COLOUR = "#000";

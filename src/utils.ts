@@ -238,3 +238,8 @@ export function ease(t: number, a: number): number {
 }
 
 export type ConstructorFunction = (abstract new (...args: any[]) => any) | (new (...args: any[]) => any);
+
+export function roundNum(num: number, dp: number): number {
+   const power = Math.pow(10, dp)
+   return Math.round((num + Number.EPSILON) * power) / power;
+}

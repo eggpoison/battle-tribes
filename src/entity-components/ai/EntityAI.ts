@@ -98,7 +98,7 @@ abstract class EntityAI {
       this.targetPosition = position;
    }
 
-   protected moveToPosition(position: Point, speed: number): void {
+   public moveToPosition(position: Point, speed: number): void {
       this.targetPosition = position;
 
       const transformComponent = this.entity.getComponent(TransformComponent)!;

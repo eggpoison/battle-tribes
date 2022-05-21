@@ -7,6 +7,7 @@ import MenuManager from './components/menus/MenuManager';
 import MessageDisplay from './components/MessageDisplay';
 import MinimapCanvas from './components/MinimapCanvas';
 import PlayerInventoryViewer from './components/PlayerInventoryViewer';
+import PlayerRespawnMessage from './components/PlayerRespawnMessage';
 import TribeStashViewer from './components/TribeStashViewer';
 
 function App() {
@@ -31,6 +32,7 @@ function App() {
          <MessageDisplay />
          <TribeStashViewer />
          <MenuManager />
+         <PlayerRespawnMessage />
 
          {/* Black filter */}
          <div id="mask" className="hidden"></div>

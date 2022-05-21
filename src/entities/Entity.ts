@@ -4,7 +4,7 @@ import HealthComponent from "../entity-components/HealthComponent";
 import HitboxComponent from "../entity-components/HitboxComponent";
 import SETTINGS from "../settings";
 
-export type EventType = "deathByEntity" | "hurt" | "attack" | "killEntity";
+export type EventType = "deathByEntity" | "healthChange" | "attack" | "killEntity" | "die";
 
 type EventsObject = Partial<Record<EventType, Array<() => void>>>;
 
@@ -95,6 +95,8 @@ abstract class Entity {
       }
 
       Board.removeEntity(this);
+      
+      this.callEvents("die");
    }
       
    protected onCollision?(entity: Entity): void;

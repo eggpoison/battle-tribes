@@ -7,6 +7,7 @@ import Slime from "./entities/mobs/Slime";
 import HealthComponent from "./entity-components/HealthComponent";
 import Cow from "./entities/mobs/Cow";
 import { getEntityInfo } from "./entity-info";
+import TransformComponent from "./entity-components/TransformComponent";
 
 // const tribeExpRequirements = [
 //    5,
@@ -59,6 +60,7 @@ class Tribe {
       //    const pos = this.position.add(a.convertToPoint());
 
       //    const ree = new Slime(pos, 3);
+      //    ree.setInfo(getEntityInfo(ree));
       //    ree.getComponent(HealthComponent)!.setMaxHealth(1, true);
       //    Board.addEntity(ree);
       // }
@@ -70,20 +72,36 @@ class Tribe {
       //    const a = this.position.add(new Vector(OFFSET, rad).convertToPoint());
 
       //    const m = new Cow(a);
+      //    m.setInfo(getEntityInfo(m));
       //    Board.addEntity(m);
       // }
 
-      // const n = 5;
-      // for (let i = 0; i < 360; i += 360 / n) {
-      //    const radians = i / 180 * Math.PI;
+      const n = 50;
+      for (let i = 0; i < 360; i += 360 / n) {
+         const radians = i / 180 * Math.PI;
 
-      //    const OFFSET = 7;
-      //    const a = new Vector(OFFSET * Board.tileSize, radians);
-      //    const pos = this.position.add(a.convertToPoint());
+         const OFFSET = 7;
+         const a = new Vector(OFFSET * Board.tileSize, radians);
+         const pos = this.position.add(a.convertToPoint());
 
-      //    const ree = new Slime(pos);
-      //    Board.addEntity(ree);
-      // }
+         const ree = new Slime(pos);
+         ree.setInfo(getEntityInfo(ree));
+         Board.addEntity(ree);
+      }
+   }
+
+   public respawnEntity(entity: Entity): void {
+      // Restore the entity's health
+      const healthComponent = entity.getComponent(HealthComponent)!;
+      healthComponent.heal(healthComponent.getMaxHealth());
+
+      // Set its position
+      const unitVector = Vector.randomUnitVector();
+      unitVector.magnitude *= 5 * Board.tileSize * Math.random();
+      const spawnPosition = this.position.add(unitVector.convertToPoint());
+      entity.getComponent(TransformComponent)!.position = spawnPosition;
+
+      Board.addEntity(entity);
    }
 
    private levelUp(): void {

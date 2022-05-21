@@ -56,7 +56,8 @@ export function renderBoard(): void {
 
    // Draw lines between tiles
 
-   const DEFAULT_BORDER_COLOUR = "#444";
+   // const DEFAULT_BORDER_COLOUR = "#444";
+   const DEFAULT_BORDER_COLOUR = "rgba(0, 0, 0, 0)";
    const CHUNK_BORDER_COLOUR = "red";
 
    const updateStrokeStyle = (lineIndex: number): void => {

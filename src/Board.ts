@@ -157,7 +157,9 @@ abstract class Board {
 
       this.drawDarkness(ctx);
 
-      this.drawFog(ctx);
+      if (SETTINGS.showFogOfWar) {
+         this.drawFog(ctx);
+      }
       
       updateDevtools({
          entityCount: entityCount,

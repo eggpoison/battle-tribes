@@ -1,4 +1,5 @@
 import Board, { TileCoordinates } from "./Board";
+import { MAPS, MapType, TileGenerationInfo } from "./terrain-generation";
 
 export enum TileType {
    grass,
@@ -15,43 +16,28 @@ type TileEffects = {
 
 interface TileInfo {
    readonly colour: string;
-   readonly minHeight?: number;
-   readonly maxHeight?: number;
-   readonly minTemperature?: number;
-   readonly maxTemperature?: number;
-   readonly minHumidity?: number;
-   readonly maxHumidity?: number;
    readonly effects?: TileEffects;
 }
 
 // Can't use an object cuz of stupid object ordering shenanigans.
 const TILE_INFO_MAP = new Map<TileType, TileInfo>([
    [TileType.mountain, {
-      colour: "#aaaaaa",
-      minHeight: 0.8
+      colour: "#aaaaaa"
    }],
    [TileType.desert, {
-      colour: "#ffff00",
-      minTemperature: 0.7,
-      maxHumidity: 0.3
+      colour: "#ffff00"
    }],
    [TileType.snow, {
       colour: "#ffffff",
-      maxTemperature: 0.3,
-      maxHumidity: 0.3,
       effects: {
          moveSpeedMultiplier: 0.6
       }
    }],
    [TileType.sludge, {
-      colour: "#038a0c",
-      maxHeight: 0.4,
-      minHumidity: 0.1
+      colour: "#038a0c"
    }],
    [TileType.mud, {
       colour: "#544600",
-      minHumidity: 0.5,
-      maxHeight: 0.8,
       effects: {
          moveSpeedMultiplier: 0.4
       }
@@ -91,18 +77,18 @@ export function getTilesByType(tileTypes: ReadonlyArray<TileType>): ReadonlyArra
    return tileCoordinates;
 }
 
-const matchesTileRequirements = (tileInfo: TileInfo, height: number, temperature: number, humidity: number): boolean => {
+const matchesTileRequirements = (generationInfo: TileGenerationInfo, height: number, temperature: number, humidity: number): boolean => {
    // Height
-   if (typeof tileInfo.minHeight !== "undefined" && height < tileInfo.minHeight) return false;
-   if (typeof tileInfo.maxHeight !== "undefined" && height > tileInfo.maxHeight) return false;
+   if (typeof generationInfo.minHeight !== "undefined" && height < generationInfo.minHeight) return false;
+   if (typeof generationInfo.maxHeight !== "undefined" && height > generationInfo.maxHeight) return false;
    
    // Temperature
-   if (typeof tileInfo.minTemperature !== "undefined" && temperature < tileInfo.minTemperature) return false;
-   if (typeof tileInfo.maxTemperature !== "undefined" && temperature > tileInfo.maxTemperature) return false;
+   if (typeof generationInfo.minTemperature !== "undefined" && temperature < generationInfo.minTemperature) return false;
+   if (typeof generationInfo.maxTemperature !== "undefined" && temperature > generationInfo.maxTemperature) return false;
    
    // Humidity
-   if (typeof tileInfo.minHumidity !== "undefined" && humidity < tileInfo.minHumidity) return false;
-   if (typeof tileInfo.maxHumidity !== "undefined" && humidity > tileInfo.maxHumidity) return false;
+   if (typeof generationInfo.minHumidity !== "undefined" && humidity < generationInfo.minHumidity) return false;
+   if (typeof generationInfo.maxHumidity !== "undefined" && humidity > generationInfo.maxHumidity) return false;
 
    return true;
 }
@@ -111,16 +97,10 @@ export function getTileInfo(tileType: TileType): TileInfo {
    return TILE_INFO_MAP.get(tileType)!;
 }
 
-export function getTileType(height: number, temperature: number, humidity: number): TileType {
-   const mapKeysIterator = TILE_INFO_MAP.keys();
-
-   for (let i = 0; i < TILE_INFO_MAP.size; i++) {
-      // Get tile info
-      const tileName = mapKeysIterator.next().value;
-      const tileInfo = TILE_INFO_MAP.get(tileName)!;
-
-      if (matchesTileRequirements(tileInfo, height, temperature, humidity)) {
-         return Number(tileName);
+export function getTileType(map: MapType, height: number, temperature: number, humidity: number): TileType {
+   for (const generationInfo of MAPS[map].tileGeneration) {
+      if (matchesTileRequirements(generationInfo, height, temperature, humidity)) {
+         return Number(generationInfo.tileType);
       }
    }
 

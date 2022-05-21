@@ -28,6 +28,10 @@ class FollowAI extends EntityAI {
       this.targets = info.targets;
    }
 
+   public getTarget(): Entity | null {
+      return this.target;
+   }
+
    protected reachTargetPosition(transformComponent: TransformComponent): void {
       super.reachTargetPosition(transformComponent);
 

@@ -1,3 +1,4 @@
+import Entity from "../entities/Entity";
 import ITEMS, { ItemName } from "./items";
 
 export interface ItemInfo {
@@ -28,6 +29,10 @@ class Item implements ItemInfo {
       }
 
       throw new Error("Cannot find item name!");
+   }
+
+   public use(entity: Entity): void {
+      // thing
    }
 }
 

@@ -6,16 +6,10 @@ import Player from "./entities/tribe-members/Player";
 import { stopPlayerMovement } from "./entity-components/PlayerControllerComponent";
 import TransformComponent from "./entity-components/TransformComponent";
 import SETTINGS from "./settings";
-import Timer from "./Timer";
+import { timers } from "./Timer";
 
 const NIGHT_START = 20;
 const NIGHT_END = 6;
-
-const timers = new Array<Timer>();
-
-export function addTimer(timer: Timer): void {
-   timers.push(timer);
-}
 
 let previousFocus = true;
 
@@ -32,7 +26,7 @@ abstract class Game {
          timer.tick();
 
          if (timer.hasExpired()) {
-            timer.callback();
+            timer.onEnd();
 
             timers.splice(timers.indexOf(timer), 1);
          }

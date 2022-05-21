@@ -8,10 +8,13 @@ import FiniteInventoryComponent from "../../entity-components/inventory/FiniteIn
 import InfiniteInventoryComponent from "../../entity-components/inventory/InfiniteInventoryComponent";
 import RenderComponent from "../../entity-components/RenderComponent";
 import TransformComponent from "../../entity-components/TransformComponent";
+import TribeMemberComponent from "../../entity-components/TribeMemberComponent";
+import Timer from "../../Timer";
 import Tribe from "../../Tribe";
 import { Point } from "../../utils";
 import Entity from "../Entity";
 import ItemEntity from "../ItemEntity";
+import LivingEntity from "../LivingEntity";
 import Mob from "../mobs/Mob";
 import Resource from "../resources/Resource";
 import TribeStash from "../TribeStash";
@@ -31,8 +34,11 @@ class Tribesman extends GenericTribeMember {
    private static readonly WANDER_RATE = 0.5;
    private static readonly TARGETS = [Mob, Resource, ItemEntity];
 
-   private static readonly ATTACK_DAMAGE = 50;
+   private static readonly ATTACK_RANGE = 2;
+   private static readonly ATTACK_DAMAGE = 5;
    public static readonly ATTACK_INTERVAL = 0.25;
+
+   private attackTimer: Timer | null = null;
 
    constructor(tribe: Tribe) {
       super(tribe, [
@@ -65,13 +71,13 @@ class Tribesman extends GenericTribeMember {
       this.getComponent(AttackComponent)!.addAttack("baseAttack", new CircleAttack({
             radius: ATTACK_RADIUS,
             damage: Tribesman.ATTACK_DAMAGE,
-            knockbackStrength: 5,
+            knockbackStrength: 0.3,
             getPosition: (): Point => {
                const rotation = this.getComponent(TransformComponent)!.rotation;
 
                const offset = RenderComponent.getOffset((this.SIZE / 2 + ATTACK_OFFSET) * Board.tileSize, rotation);
                const offsetPoint = new Point(offset[0], offset[1]);
-   
+
                return this.getComponent(TransformComponent)!.position.add(offsetPoint);
             },
             attackingEntity: this
@@ -98,7 +104,7 @@ class Tribesman extends GenericTribeMember {
          shouldSwitch: (): boolean => {
             const entitiesInSearchRadius = wanderAI.getEntitiesInSearchRadius(transformComponent.position, Tribesman.VISION_RANGE, Tribesman.TARGETS);
 
-            return entitiesInSearchRadius === null;
+            return entitiesInSearchRadius !== null;
          },
          onSwitch: (): void => {
             transformComponent.stopVelocity();
@@ -123,12 +129,38 @@ class Tribesman extends GenericTribeMember {
          },
          onSwitch: (): void => {
             transformComponent.stopVelocity();
+
+            this.attackTimer = null;
          }
       });
 
-      // Attack
       followAI.setTickCondition(() => {
+         // Move to stash
+         if (this.getComponent(FiniteInventoryComponent)!.isFull()) {
+            const targetPosition = this.getComponent(TribeMemberComponent)!.tribe.position;
+            followAI.moveToPosition(targetPosition, Tribesman.RUN_SPEED);
+
+            return false;
+         }
          
+         const target = followAI.getTarget();
+         
+         if (target !== null && target instanceof LivingEntity) {
+            const distanceFromTarget = this.getComponent(TransformComponent)!.position.distanceFrom(target.getComponent(TransformComponent)!.position);
+            if (distanceFromTarget < Tribesman.ATTACK_RANGE * Board.tileSize) {
+               if (this.attackTimer === null) {
+                  // Attack
+                  this.getComponent(AttackComponent)!.startAttack("baseAttack");
+                  
+                  this.attackTimer = new Timer({
+                     duration: Tribesman.ATTACK_INTERVAL,
+                     onEnd: () => {
+                        this.attackTimer = null;
+                     }
+                  });
+               }
+            }
+         }
 
          return true;
       });
@@ -164,7 +196,10 @@ class Tribesman extends GenericTribeMember {
 
          // Item entities
          if (entity instanceof ItemEntity) {
-            otherEntities.push(entity);
+            // Only add it if it can be picked up
+            if (this.getComponent(FiniteInventoryComponent)!.canPickupItem(entity.item)) {
+               otherEntities.push(entity);
+            }
             continue;
          }
       }

@@ -10,6 +10,7 @@ import "./css/devtools.css";
 import "./css/inventory-viewer.css";
 import "./css/message-display.css";
 import "./css/tribe-stash-viewer.css";
+import "./css/player-respawn-message.css";
 import { Minimap } from './components/MinimapCanvas';
 import PlayerControllerComponent, { stopPlayerMovement } from './entity-components/PlayerControllerComponent';
 import { toggleMenu } from './components/menus/MenuManager';

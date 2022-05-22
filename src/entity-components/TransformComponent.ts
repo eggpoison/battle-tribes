@@ -1,7 +1,6 @@
 import Board, { Chunk, Coordinates } from "../Board";
 import Component from "../Component";
 import Entity from "../entities/Entity";
-import Player from "../entities/tribe-members/Player";
 import SETTINGS from "../settings";
 import TILE_INFO from "../tile-types";
 import { Point, Vector } from "../utils";
@@ -104,26 +103,17 @@ class TransformComponent extends Component {
                   const tile = Board.getTile(x, y);
                   if (!tile.isWall) continue;
 
-
-                  if (x === Board.dimensions/2 && y === Board.dimensions/2) {
-                     console.log("check collisions with sussy bakker");
-                  }
-
                   const xDist = Math.abs(this.position.x - (x + 0.5) * Board.tileSize);
                   const yDist = Math.abs(this.position.y - (y + 0.5) * Board.tileSize);
 
-                  // if (xDist > (Board.tileSize/2 + hitboxRadius * Board.tileSize)) continue;
-                  // if (yDist > (Board.tileSize/2 + hitboxRadius * Board.tileSize)) continue;
-
                   if (xDist <= hitboxRadius * Board.tileSize || yDist <= hitboxRadius * Board.tileSize) {
-                     if (this.getEntity() instanceof Player) console.log(xDist, yDist);
                      collisions.push([x, y]);
                      continue;
                   }
 
-                  const cornerDistance = Math.pow(xDist - Board.tileSize/2, 2) + Math.pow(yDist - Board.tileSize/2, 2);
+                  const cornerDistance = Math.sqrt(Math.pow(xDist, 2) + Math.pow(yDist, 2));
 
-                  if (cornerDistance <= Math.pow(hitboxRadius, 2) * Board.tileSize) {
+                  if (cornerDistance <= Math.sqrt(Math.pow(Board.tileSize, 2) / 2) + hitboxRadius * Board.tileSize) {
                      collisions.push([x, y]);
                   }
                }
@@ -148,12 +138,6 @@ class TransformComponent extends Component {
          const yDistFromEdge = Math.abs(yDist - Board.tileSize/2);
 
          const moveAxis: "x" | "y" = yDistFromEdge >= xDistFromEdge ? "y" : "x";
-         if (this.getEntity() instanceof Player) {
-            // Get distance from edge of tile
-            // distance from center -> distance from edge
-            console.log(moveAxis)
-            console.log(`x distance: ${xDistFromEdge}, y distance: ${yDistFromEdge})`);
-         };
 
          switch (hitboxInfo.type) {
             case "circle": {

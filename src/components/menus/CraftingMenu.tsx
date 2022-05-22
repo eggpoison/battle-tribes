@@ -1,7 +1,6 @@
 import { useEffect, useRef } from "react";
 import Crafting from "../../crafting/Crafting";
 import Recipe from "../../crafting/Recipe";
-import "../../css/crafting-menu.css";
 import Player from "../../entities/tribe-members/Player";
 import FiniteInventoryComponent from "../../entity-components/inventory/FiniteInventoryComponent";
 import ITEMS, { ItemName } from "../../items/items";

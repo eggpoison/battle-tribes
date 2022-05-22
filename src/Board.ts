@@ -1,4 +1,4 @@
-import { generateTerrain } from "./terrain-generation";
+import { generateTerrain, TileType } from "./terrain-generation";
 import { getCanvasContext, getCanvasHeight, getCanvasWidth } from "./components/Canvas";
 import { updateDevtools } from "./components/Devtools";
 import InventoryViewerManager from "./components/inventory/InventoryViewerManager";
@@ -7,7 +7,7 @@ import Entity from "./entities/Entity";
 import RenderComponent from "./entity-components/RenderComponent";
 import TransformComponent from "./entity-components/TransformComponent";
 import SETTINGS from "./settings";
-import { precomputeTileLocations, TileType } from "./tiles";
+import { precomputeTileLocations } from "./tile-types";
 import Tribe from "./Tribe";
 import { Point } from "./utils";
 import Camera from "./Camera";
@@ -22,7 +22,7 @@ import Resource from "./entities/resources/Resource";
 
 export type Chunk = Array<Entity>;
 
-export type TileCoordinates = [number, number];
+export type Coordinates = [number, number];
 
 abstract class Board {
    /** The width and height of the board in chunks */
@@ -59,8 +59,6 @@ abstract class Board {
 
       // Spawn initial entities
       EntitySpawner.spawnInitialEntities();
-      // MobSpawner.spawnInitialMobs();
-      // ResourceSpawner.spawnInitialResources();
 
       // Creates the controllable player character
       this.spawnPlayer();
@@ -84,7 +82,7 @@ abstract class Board {
       return this.fog[x][y];
    }
 
-   public static getTileType(x: number, y: number): TileType {
+   public static getTile(x: number, y: number): TileType {
       return this.tiles[x][y];
    }
 
@@ -189,10 +187,11 @@ abstract class Board {
          for (let chunkX = minX; chunkX <= maxX; chunkX++) {
 
             // Draw fog of war
+            // The "+ 1" in x2 and y2 is to remove gaps between fog.
             const x1 = chunkX * this.tileSize * this.chunkSize;
-            const x2 = (chunkX + 1) * this.tileSize * this.chunkSize;
+            const x2 = (chunkX + 1) * this.tileSize * this.chunkSize + 1;
             const y1 = chunkY * this.tileSize * this.chunkSize;
-            const y2 = (chunkY + 1) * this.tileSize * this.chunkSize;
+            const y2 = (chunkY + 1) * this.tileSize * this.chunkSize + 1;
 
             const fogAmount = this.getFog(chunkX, chunkY);
             
@@ -271,14 +270,14 @@ abstract class Board {
       chunk.splice(chunk.indexOf(entity), 1);
    }
 
-   public static getRandomPositionInTile(tileCoordinates: TileCoordinates): Point {
+   public static getRandomPositionInTile(tileCoordinates: Coordinates): Point {
       const x = tileCoordinates[0] * Board.tileSize + Board.tileSize * Math.random();
       const y = tileCoordinates[1] * Board.tileSize + Board.tileSize * Math.random();
 
       return new Point(x, y);
    }
 
-   public static getNearbyTileCoordinates(position: Point, range: number): Array<TileCoordinates> {
+   public static getNearbyTileCoordinates(position: Point, range: number): Array<Coordinates> {
       if (!Number.isInteger(range)) throw new Error("Search radius must be an integer!");
 
       const tileX = Math.floor(position.x / this.tileSize);
@@ -289,11 +288,11 @@ abstract class Board {
       const minY = Math.max(tileY - range, 0);
       const maxY = Math.min(tileY + range, this.dimensions - 1);
 
-      const nearbyTileCoordinates = new Array<TileCoordinates>();
+      const nearbyTileCoordinates = new Array<Coordinates>();
       for (let y = minY; y <= maxY; y++) {
          for (let x = minX; x <= maxX; x++) {
             const tileCoordinates = [x, y];
-            nearbyTileCoordinates.push(tileCoordinates as TileCoordinates);
+            nearbyTileCoordinates.push(tileCoordinates as Coordinates);
          }
       }
 

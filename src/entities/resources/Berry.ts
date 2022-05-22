@@ -4,13 +4,13 @@ import HitboxComponent from "../../entity-components/HitboxComponent";
 import RenderComponent, { ImageRenderPart } from "../../entity-components/RenderComponent";
 import ItemSpawnComponent from "../../entity-components/ItemSpawnerComponent";
 import { ItemName } from "../../items/items";
-import { getTilesByType, TileType } from "../../tiles";
+import { getTilesByType, TileKind } from "../../tile-types";
 import { randItem } from "../../utils";
 import Resource from "./Resource";
 
 class Berry extends Resource {
-   private static readonly spawnableTileTypes: ReadonlyArray<TileType> = [
-      TileType.grass
+   private static readonly spawnableTileTypes: ReadonlyArray<TileKind> = [
+      TileKind.grass
    ];
 
    public readonly SIZE = 1;

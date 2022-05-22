@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import EntitySpawner from "../EntitySpawner";
 import OPTIONS from "../options";
+import { toggleMenu } from "./menus/MenuManager";
 
 type DevtoolsCensus = {
    readonly entityCount: number;
@@ -61,7 +62,7 @@ function Devtools() {
             <li>{census.resourceCount} resources</li>
          </ul>
 
-         <button>Spawn mob</button>
+         <button onClick={() => toggleMenu("mobSpawn")}>Spawn mob</button>
       </div>
    ) : null;
 }

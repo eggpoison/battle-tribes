@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import Board from "../Board";
 import SETTINGS from "../settings";
-import TILE_INFO_MAP from "../tiles";
+import TILE_INFO from "../tile-types";
 import { Colour, Point } from "../utils";
 
 export abstract class Minimap {
@@ -109,10 +109,10 @@ const getTilePixelData = (minimapSize: number, minimapX: number, minimapY: numbe
       if (fogAmount === 1) return [0, 0, 0, 255];
    }
 
-   const tileType = Board.getTileType(tileX, tileY);
+   const tile = Board.getTile(tileX, tileY);
+   const tileInfo = TILE_INFO[tile.kind];
 
-   const tileColourCode = TILE_INFO_MAP.get(tileType)!.colour;
-   const rgb = new Colour(tileColourCode).getRGB();
+   const rgb = new Colour(tileInfo.colour).getRGB();
    return [rgb[0], rgb[1], rgb[2], 255];
 }
 

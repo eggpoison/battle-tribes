@@ -1,4 +1,4 @@
-import { TileType } from "./tiles";
+import { TileKind } from "./tile-types";
 
 import Cow from "./entities/mobs/Cow";
 import Slime from "./entities/mobs/Slime";
@@ -10,7 +10,7 @@ import Tree from "./entities/resources/Tree";
 import LivingEntity from "./entities/LivingEntity";
 
 type EntitySpawnRequirements = {
-   readonly tileTypes: ReadonlyArray<TileType>;
+   readonly tileTypes: ReadonlyArray<TileKind>;
    readonly isNight?: boolean;
 }
 
@@ -38,7 +38,7 @@ const ENTITY_INFO: ReadonlyArray<MobInfo | ResourceInfo> = [
    // Tree
    {
       spawnRequirements: {
-         tileTypes: [TileType.grass]
+         tileTypes: [TileKind.grass]
       },
       exp: 1,
       getConstr: () => Tree,
@@ -47,7 +47,7 @@ const ENTITY_INFO: ReadonlyArray<MobInfo | ResourceInfo> = [
    // Berry
    {
       spawnRequirements: {
-         tileTypes: [TileType.grass]
+         tileTypes: [TileKind.grass]
       },
       exp: 1,
       getConstr: () => Berry,
@@ -56,7 +56,7 @@ const ENTITY_INFO: ReadonlyArray<MobInfo | ResourceInfo> = [
    // Boulder
    {
       spawnRequirements: {
-         tileTypes: [TileType.grass, TileType.mountain]
+         tileTypes: [TileKind.grass, TileKind.rock]
       },
       exp: 3,
       getConstr: () => Boulder,
@@ -65,7 +65,7 @@ const ENTITY_INFO: ReadonlyArray<MobInfo | ResourceInfo> = [
    // Cow
    {
       spawnRequirements: {
-         tileTypes: [TileType.grass]
+         tileTypes: [TileKind.grass]
       },
       packSize: [2, 4],
       behaviour: "peaceful",
@@ -75,7 +75,7 @@ const ENTITY_INFO: ReadonlyArray<MobInfo | ResourceInfo> = [
    // Slime
    {
       spawnRequirements: {
-         tileTypes: [TileType.sludge]
+         tileTypes: [TileKind.sludge]
       },
       packSize: [1, 2],
       behaviour: "hostile",
@@ -85,7 +85,7 @@ const ENTITY_INFO: ReadonlyArray<MobInfo | ResourceInfo> = [
    // Zombie
    {
       spawnRequirements: {
-         tileTypes: [TileType.grass],
+         tileTypes: [TileKind.grass],
          isNight: true
       },
       packSize: 1,
@@ -97,7 +97,7 @@ const ENTITY_INFO: ReadonlyArray<MobInfo | ResourceInfo> = [
    // Yeti
    {
       spawnRequirements: {
-         tileTypes: [TileType.snow]
+         tileTypes: [TileKind.snow]
       },
       packSize: 1,
       behaviour: "hostile",

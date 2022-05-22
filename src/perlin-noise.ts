@@ -65,7 +65,7 @@ export function generatePerlinNoise(width: number, height: number, scale: number
  * @param lacunarity Controls the increase in scale between octaves (1+)
  * @param persistance Controls the decrease in weight between octaves (0-1)
  */
-export function getOctavePerlinNoise(width: number, height: number, startingScale: number, octaves: number, lacunarity: number, persistance: number): Array<Array<number>> {
+export function generateOctavePerlinNoise(width: number, height: number, startingScale: number, octaves: number, lacunarity: number, persistance: number): Array<Array<number>> {
    let totalNoise = new Array<Array<number>>();
    for (let i = 0; i < octaves; i++) {
       const scale = 1 / Math.pow(lacunarity, i) * startingScale;

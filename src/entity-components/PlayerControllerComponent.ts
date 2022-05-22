@@ -101,7 +101,6 @@ class PlayerControllerComponent extends Component {
       if (e instanceof MouseEvent) {
          // Return false if the player clicked something other than the game canvas.
          if ((e.target as HTMLElement).id !== "canvas") {
-            e.preventDefault();
             return false;
          }
       }

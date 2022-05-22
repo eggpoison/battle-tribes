@@ -3,7 +3,7 @@ import Board from "../Board";
 import Camera from "../Camera";
 import OPTIONS from "../options";
 import SETTINGS from "../settings";
-import { getTileInfo } from "../tiles";
+import TILE_INFO from "../tile-types";
 
 let canvas: HTMLCanvasElement;
 let ctx: CanvasRenderingContext2D;
@@ -45,9 +45,9 @@ export function renderBoard(): void {
    // Draw tiles
    for (let y = minY; y <= maxY; y++) {
       for (let x = minX; x <= maxX; x++) {
-         const tileType = Board.getTileType(x, y);
+         const tile = Board.getTile(x, y);
 
-         const tileInfo = getTileInfo(tileType);
+         const tileInfo = TILE_INFO[tile.kind];
          ctx.fillStyle = tileInfo.colour;
 
          ctx.fillRect(Camera.getXPositionInCamera(x * Board.tileSize), Camera.getYPositionInCamera(y * Board.tileSize), Board.tileSize, Board.tileSize);

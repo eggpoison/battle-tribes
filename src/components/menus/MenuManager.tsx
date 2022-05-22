@@ -1,11 +1,13 @@
 import React from "react";
 import { useEffect, useState } from "react";
 import CraftingMenu from "./CraftingMenu";
+import MobSpawnMenu from "./MobSpawnMenu";
 
-type MenuNames = "crafting";
+type MenuNames = "crafting" | "mobSpawn";
 
 const MENUS: Record<MenuNames, () => JSX.Element> = {
-   crafting: CraftingMenu
+   crafting: CraftingMenu,
+   mobSpawn: MobSpawnMenu
 };
 
 let toggleMenuCallback: (menuName: MenuNames) => void;

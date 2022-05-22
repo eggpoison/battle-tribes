@@ -76,18 +76,18 @@ class Tribe {
       //    Board.addEntity(m);
       // }
 
-      const n = 50;
-      for (let i = 0; i < 360; i += 360 / n) {
-         const radians = i / 180 * Math.PI;
+      // const n = 50;
+      // for (let i = 0; i < 360; i += 360 / n) {
+      //    const radians = i / 180 * Math.PI;
 
-         const OFFSET = 7;
-         const a = new Vector(OFFSET * Board.tileSize, radians);
-         const pos = this.position.add(a.convertToPoint());
+      //    const OFFSET = 7;
+      //    const a = new Vector(OFFSET * Board.tileSize, radians);
+      //    const pos = this.position.add(a.convertToPoint());
 
-         const ree = new Slime(pos);
-         ree.setInfo(getEntityInfo(ree));
-         Board.addEntity(ree);
-      }
+      //    const ree = new Slime(pos);
+      //    ree.setInfo(getEntityInfo(ree));
+      //    Board.addEntity(ree);
+      // }
    }
 
    public respawnEntity(entity: Entity): void {

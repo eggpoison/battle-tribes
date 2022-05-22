@@ -1,12 +1,12 @@
-import Board, { TileCoordinates } from "../Board";
+import Board, { Coordinates } from "../Board";
 import Component from "../Component";
-import { TileType } from "../tiles";
+import { TileKind } from "../tile-types";
 
 /** Responsible for spawning entities */
-class SpawnComponent extends Component {
-   private static spawnableTiles: { [key: string]: Array<TileCoordinates> } = {};
+class SpawnerComponent extends Component {
+   private static spawnableTiles: { [key: string]: Array<Coordinates> } = {};
 
-   public static getSpawnableTiles(id: string, spawnableTileTypes?: Array<TileType>): Array<TileCoordinates> {
+   public static getSpawnableTiles(id: string, spawnableTileTypes?: Array<TileKind>): Array<Coordinates> {
       if (!this.spawnableTiles.hasOwnProperty(id)) {
          if (typeof spawnableTileTypes === "undefined") {
             throw new Error("Parameter 'spawnableTileTypes' is undefined, but has to be used in generating tiles!");
@@ -17,14 +17,14 @@ class SpawnComponent extends Component {
       return this.spawnableTiles[id];
    }
 
-   private static generateSpawnableTiles(spawnableTileTypes: Array<TileType>): Array<TileCoordinates> {
-      const spawnableTiles = new Array<TileCoordinates>();
+   private static generateSpawnableTiles(spawnableTileTypes: Array<TileKind>): Array<Coordinates> {
+      const spawnableTiles = new Array<Coordinates>();
 
       for (let y = 0; y < Board.dimensions; y++) {
          for (let x = 0; x < Board.dimensions; x++) {
-            const tileType = Board.getTileType(x, y);
+            const tile = Board.getTile(x, y);
 
-            if (spawnableTileTypes.includes(tileType)) {
+            if (spawnableTileTypes.includes(tile.kind)) {
                spawnableTiles.push([x, y]);
             }
          }
@@ -34,4 +34,4 @@ class SpawnComponent extends Component {
    }
 }
 
-export default SpawnComponent;
+export default SpawnerComponent;

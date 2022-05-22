@@ -2,15 +2,15 @@ import HitboxComponent from "../../entity-components/HitboxComponent";
 import RenderComponent, { EllipseRenderPart } from "../../entity-components/RenderComponent";
 import ItemSpawnComponent from "../../entity-components/ItemSpawnerComponent";
 import  { ItemName } from "../../items/items";
-import { TileType } from "../../tiles";
+import { TileKind } from "../../tile-types";
 import { Point } from "../../utils";
 import Mob from "./Mob";
 import AIManagerComponent from "../../entity-components/ai/AIManangerComponent";
 import WanderAI from "../../entity-components/ai/WanderAI";
 
 class Cow extends Mob {
-   public readonly preferredTileTypes: ReadonlyArray<TileType> = [
-      TileType.grass
+   public readonly preferredTileTypes: ReadonlyArray<TileKind> = [
+      TileKind.grass
    ];
 
    public readonly SIZE = {

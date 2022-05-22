@@ -9,6 +9,7 @@ abstract class Crafting {
    private static readonly recipes: Recipes = {
       hand: [
          new Recipe(ItemName.smallBackpack, {
+            [ItemName.wood]: 10,
             [ItemName.leather]: 5,
             [ItemName.slime]: 2
          }, 1)

@@ -11,15 +11,18 @@ interface SettingsType {
    readonly entityInvulnerabilityDuration: number;
    /** Whether the fog of war is shown */
    readonly showFogOfWar: boolean;
+   /** The colour of wall outlines */
+   readonly wallOutlineWidth: number;
 }
 
 const SETTINGS: SettingsType = {
    tps: 60,
-   backgroundColour: "#09120b",
    startTime: 0,
    fogRevealTime: 0.5,
    entityInvulnerabilityDuration: 0.15,
-   showFogOfWar: false
+   showFogOfWar: false,
+   backgroundColour: "#09120b",
+   wallOutlineWidth: 5
 };
 
 export default SETTINGS;

@@ -225,7 +225,7 @@ class Slime extends Mob {
       }
    }
 
-   public onDie(causeOfDeath: Entity | null): void {
+   public die(causeOfDeath: Entity | null): void {
       // Split
       if (Math.random() < this.info.splitChance) {
          const thisSize = this.getSize();
@@ -243,7 +243,7 @@ class Slime extends Mob {
          }
       }
 
-      super.onDie(causeOfDeath);
+      super.die(causeOfDeath);
    }
 }
 

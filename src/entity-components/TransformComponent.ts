@@ -1,6 +1,7 @@
-import Board, { Chunk } from "../Board";
+import Board, { Chunk, Coordinates } from "../Board";
 import Component from "../Component";
 import Entity from "../entities/Entity";
+import Player from "../entities/tribe-members/Player";
 import SETTINGS from "../settings";
 import TILE_INFO from "../tile-types";
 import { Point, Vector } from "../utils";
@@ -53,6 +54,12 @@ class TransformComponent extends Component {
 
          this.knockbackTime -= 1 / SETTINGS.tps;
       }
+
+      if (hitboxComponent !== null) {
+         // If the entity is intersecting with a wall tile, move it out of the collision
+         const tileCollisions = this.getTileCollisions();
+         if (tileCollisions.length > 0) this.resolveTileCollisions(tileCollisions);
+      }
    }
 
    public setVelocity(velocity: Vector): void {
@@ -75,6 +82,89 @@ class TransformComponent extends Component {
       const y = Math.floor(this.position.y / Board.tileSize);
       
       return [x, y];
+   }
+
+   private getTileCollisions(): Array<Coordinates> {
+      const hitbox = this.getEntity().getComponent(HitboxComponent)!;
+
+      const collisions = new Array<Coordinates>();
+
+      switch (hitbox.hitboxInfo.type) {
+         case "circle": {
+            const hitboxRadius = hitbox.hitboxInfo.radius;
+
+            const minTileX = Math.max(Math.floor(this.position.x / Board.tileSize - hitboxRadius), 0);
+            const maxTileX = Math.min(Math.floor(this.position.x / Board.tileSize + hitboxRadius), Board.dimensions - 1);
+            
+            const minTileY = Math.max(Math.floor(this.position.y / Board.tileSize - hitboxRadius), 0);
+            const maxTileY = Math.min(Math.floor(this.position.y / Board.tileSize + hitboxRadius), Board.dimensions - 1);
+
+            for (let x = minTileX; x <= maxTileX; x++) {
+               for (let y = minTileY; y <= maxTileY; y++) {
+                  const tile = Board.getTile(x, y);
+                  if (!tile.isWall) continue;
+
+
+                  if (x === Board.dimensions/2 && y === Board.dimensions/2) {
+                     console.log("check collisions with sussy bakker");
+                  }
+
+                  const xDist = Math.abs(this.position.x - (x + 0.5) * Board.tileSize);
+                  const yDist = Math.abs(this.position.y - (y + 0.5) * Board.tileSize);
+
+                  // if (xDist > (Board.tileSize/2 + hitboxRadius * Board.tileSize)) continue;
+                  // if (yDist > (Board.tileSize/2 + hitboxRadius * Board.tileSize)) continue;
+
+                  if (xDist <= hitboxRadius * Board.tileSize || yDist <= hitboxRadius * Board.tileSize) {
+                     if (this.getEntity() instanceof Player) console.log(xDist, yDist);
+                     collisions.push([x, y]);
+                     continue;
+                  }
+
+                  const cornerDistance = Math.pow(xDist - Board.tileSize/2, 2) + Math.pow(yDist - Board.tileSize/2, 2);
+
+                  if (cornerDistance <= Math.pow(hitboxRadius, 2) * Board.tileSize) {
+                     collisions.push([x, y]);
+                  }
+               }
+            }
+         }
+      }
+
+      return collisions;
+   }
+
+   private resolveTileCollisions(collisions: ReadonlyArray<Coordinates>): void {
+      const hitboxInfo = this.getEntity().getComponent(HitboxComponent)!.hitboxInfo;
+
+      for (const [x, y] of collisions) {
+         const xDist = this.position.x - x * Board.tileSize;
+         const yDist = this.position.y - y * Board.tileSize;
+
+         const xDir = xDist >= 0 ? 1 : -1;
+         const yDir = yDist >= 0 ? 1 : -1;
+
+         const xDistFromEdge = Math.abs(xDist - Board.tileSize/2);
+         const yDistFromEdge = Math.abs(yDist - Board.tileSize/2);
+
+         const moveAxis: "x" | "y" = yDistFromEdge >= xDistFromEdge ? "y" : "x";
+         if (this.getEntity() instanceof Player) {
+            // Get distance from edge of tile
+            // distance from center -> distance from edge
+            console.log(moveAxis)
+            console.log(`x distance: ${xDistFromEdge}, y distance: ${yDistFromEdge})`);
+         };
+
+         switch (hitboxInfo.type) {
+            case "circle": {
+               if (moveAxis === "x") {
+                  this.position.x = (x + 0.5 + 0.5 * xDir) * Board.tileSize + hitboxInfo.radius * Board.tileSize * xDir;
+               } else {
+                  this.position.y = (y + 0.5 + 0.5 * yDir) * Board.tileSize + hitboxInfo.radius * Board.tileSize * yDir;
+               }
+            }
+         }
+      }
    }
 
    public static getNearbyEntities(position: Point, radius: number): Array<Entity> {

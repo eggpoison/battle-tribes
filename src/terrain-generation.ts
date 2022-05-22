@@ -1,4 +1,4 @@
-import Board from "./Board";
+import Board, { Coordinates } from "./Board";
 import { generateOctavePerlinNoise, generatePerlinNoise } from "./perlin-noise";
 import { TileKind } from "./tile-types";
 
@@ -76,8 +76,8 @@ const BIOMES: ReadonlyArray<Biome> = [
                kind: TileKind.ice,
                isWall: false
             },
-            minWeight: 0.8,
-            minDist: 2
+            minWeight: 0.6,
+            minDist: 3
          },
          {
             info: {
@@ -101,6 +101,14 @@ const BIOMES: ReadonlyArray<Biome> = [
             },
             minWeight: 0.6,
             minDist: 2
+         },
+         {
+            info: {
+               kind: TileKind.sandstone,
+               isWall: false
+            },
+            minWeight: 0.5,
+            minDist: 1
          },
          {
             info: {
@@ -219,15 +227,20 @@ const getTileDist = (tileArray: Array<Array<TileType>>, tileX: number, tileY: nu
    const tileBiome = tileArray[tileX][tileY].biome;
 
    for (let dist = 1; dist <= MAX_SEARCH_DIST; dist++) {
-      const minX = Math.max(tileX - dist, 0);
-      const maxX = Math.min(tileX + dist, Board.dimensions - 1);
-      const minY = Math.max(tileY - dist, 0);
-      const maxY = Math.min(tileY + dist, Board.dimensions - 1);
+      for (let i = 0; i <= dist; i++) {
+         const tileCoords = new Array<Coordinates>();
 
-      for (let y = minY; y <= maxY; y++) {
-         for (let x = minX; x <= maxX; x++) {
-            const biome = tileArray[x][y].biome;
-            if (biome !== tileBiome) return dist;
+         tileCoords.push([tileX + i, tileY - dist + i]); // Top right
+         tileCoords.push([tileX + dist - i, tileY + i]); // Bottom right
+         tileCoords.push([tileX - dist + i, tileY + i]); // Bottom left
+         tileCoords.push([tileX - i, tileY - dist + i]); // Top left
+
+         for (const [x, y] of tileCoords) {
+            if (x < 0 || x >= Board.dimensions || y <= 0 || y >= Board.dimensions) continue;
+
+            const tile = tileArray[x][y];
+
+            if (tile.biome !== tileBiome) return dist - 1;
          }
       }
    }

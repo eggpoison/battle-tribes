@@ -132,9 +132,13 @@ export function isDev(): boolean {
 }
 
 export class BasicCol {
-   private readonly r: number;
-   private readonly g: number;
-   private readonly b: number;
+   private static readonly HEX_DIGITS: ReadonlyArray<string> = [
+      "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f"
+   ];
+
+   private r: number;
+   private g: number;
+   private b: number;
 
    constructor(r: number, g: number, b: number) {
       this.r = r * 255/9;
@@ -142,8 +146,34 @@ export class BasicCol {
       this.b = b * 255/9;
    }
 
+   public static from(hexCode: string): BasicCol {
+      // Split the hex code into characters
+      const hex = hexCode.split("");
+
+      // Remove the "#" at the start
+      if (hex[0] === "#") hex.splice(0, 1);
+
+      const rgb: [number, number, number] = [0, 0, 0];
+      for (let i = 0; i < 3; i++) {
+         const digit1 = BasicCol.HEX_DIGITS.indexOf(hex[i * 2]);
+         const digit2 = BasicCol.HEX_DIGITS.indexOf(hex[i * 2 + 1]);
+         rgb[i] = (digit1 * 16 + digit2) / 255*9;
+      }
+
+      return new BasicCol(rgb[0], rgb[1], rgb[2]);
+   }
+
    public getCode(): string {
       return `rgb(${this.r}, ${this.g}, ${this.b})`;
+   }
+
+   /**
+    * @param amount How much to darken the colour. (0 = none, 1 = fully black)
+    */
+   public darken(amount: number): void {
+      this.r *= 1 - amount;
+      this.g *= 1 - amount;
+      this.b *= 1 - amount;
    }
 }
 

@@ -88,7 +88,7 @@ abstract class Entity {
       }
    }
 
-   public onDie(causeOfDeath: Entity | null): void {
+   public die(causeOfDeath: Entity | null): void {
       // deathByEntity events
       if (causeOfDeath !== null) {
          this.callEvents("deathByEntity");

@@ -34,7 +34,7 @@ const TILE_INFO: Record<TileKind, TileInfo> = {
       colour: "#eded3e"
    },
    [TileKind.sandstone]: {
-      colour: "#8c8c23"
+      colour: "#abab1b"
    },
    [TileKind.snow]: {
       colour: "#ffffff",

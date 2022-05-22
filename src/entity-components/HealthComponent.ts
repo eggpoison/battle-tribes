@@ -93,8 +93,8 @@ class HealthComponent extends Component {
    private die(causeOfDeath: Entity | null): void {
       const entity = this.getEntity();
 
-      if (typeof entity.onDie !== "undefined") {
-         entity.onDie(causeOfDeath);
+      if (typeof entity.die !== "undefined") {
+         entity.die(causeOfDeath);
       }
    }
 }

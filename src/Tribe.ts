@@ -3,10 +3,7 @@ import TribeStash from "./entities/TribeStash";
 import Entity from "./entities/Entity";
 import { getRandomAngle, Point, randFloat, Vector } from "./utils";
 import Tribesman from "./entities/tribe-members/Tribesman";
-import Slime from "./entities/mobs/Slime";
 import HealthComponent from "./entity-components/HealthComponent";
-import Cow from "./entities/mobs/Cow";
-import { getEntityInfo } from "./entity-info";
 import TransformComponent from "./entity-components/TransformComponent";
 
 // const tribeExpRequirements = [
@@ -27,7 +24,17 @@ const tribeExpRequirements = [
    7,
    8,
    9,
-   10
+   10,
+   11,
+   12,
+   13,
+   14,
+   15,
+   16,
+   17,
+   18,
+   19,
+   20
 ];
 
 // Tribe members are created through the tribe class
@@ -75,7 +82,7 @@ class Tribe {
    public addExp(amount: number): void {
       this.exp += amount;
 
-      if (this.exp >= tribeExpRequirements[this.tribeLevel]) {
+      while (this.exp >= tribeExpRequirements[this.tribeLevel]) {
          this.levelUp();
       }
    }

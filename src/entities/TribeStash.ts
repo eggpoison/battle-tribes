@@ -39,8 +39,8 @@ class TribeStash extends Entity {
       );
 
       // Remove fog of war on the tribe position
-      const position = this.getComponent(TransformComponent)!.position;
-      Board.revealFog(position, this.SIZE / 2 * Board.tileSize, true);
+      const coordinates = this.getComponent(TransformComponent)!.getTileCoordinates();
+      Board.revealFog(coordinates, this.SIZE / 2, true);
    }
 
    private setHitbox(): void {

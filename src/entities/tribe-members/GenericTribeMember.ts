@@ -10,9 +10,12 @@ import { Vector } from "../../utils";
 import LivingEntity from "../LivingEntity";
 import SelectedSlotComponent from "../../entity-components/SelectedSlotComponent";
 import Timer from "../../Timer";
+import Board from "../../Board";
 
 abstract class GenericTribeMember extends Entity {
    public static readonly RESPAWN_TIME = 3;
+
+   public sightRange!: number;
 
    constructor(tribe: Tribe, components?: ReadonlyArray<Component>) {
       super([
@@ -35,6 +38,23 @@ abstract class GenericTribeMember extends Entity {
 
       // Respawn when killed
       this.createEvent("die", () => this.startRespawn());
+   }
+
+   public onLoad(): void {
+      const coordinates = this.getComponent(TransformComponent)!.getTileCoordinates();
+      Board.revealFog(coordinates, this.sightRange, true);
+   }
+
+   public tick(): void {
+      super.tick();
+
+      // Reveal any fog of war the tribe member is standing on
+      const coordinates = this.getComponent(TransformComponent)!.getTileCoordinates();
+      Board.revealFog(coordinates, this.sightRange, false);
+   }
+
+   protected setSightRange(sightRange: number): void {
+      this.sightRange = sightRange;
    }
 
    protected startRespawn(): void {

@@ -20,19 +20,25 @@ abstract class Entity {
 
    public previousChunk?: Chunk;
 
-   private readonly components: ReadonlyArray<Component>;
+   private readonly components = new Map<(abstract new (...args: any[]) => any), Component>();
    private readonly events: EventsObject = {};
 
    constructor(components: ReadonlyArray<Component>) {
-      this.components = components;
+      for (const component of components) {
+         this.components.set(component.constructor as (new (...args: any[]) => any), component);
 
-      for (const component of this.components) {
          component.setEntity(this);
          if (typeof component.onLoad !== "undefined") component.onLoad();
       }
    }
 
    public onLoad?(): void;
+
+   public getComponent<C extends Component>(constr: { new(...args: any[]): C }): C | null {
+      if (this.components.has(constr)) return this.components.get(constr) as C;
+
+      return null;
+   }
 
    protected getCollidingEntities(): Array<Entity> {
       const hitboxComponent = this.getComponent(HitboxComponent);
@@ -44,11 +50,12 @@ abstract class Entity {
    }
 
    public tick(): void {
-      for (const component of this.components) {
+      // Tick components
+      this.components.forEach(component => {
          if (typeof component.tick !== "undefined") {
             component.tick();
          }
-      }
+      });
 
       // Check collisions
       const hasCollisionFunc = typeof this.onCollision !== "undefined";
@@ -104,18 +111,6 @@ abstract class Entity {
    protected onLeaveCollision?(entity: Entity): void;
 
    protected duringCollision?(entity: Entity): void;
-
-   // TODO: Figure out what the hell "constr: { new(...args: any[]): C }" means and why it works
-   // Yoinked from https://itnext.io/entity-component-system-in-action-with-typescript-f498ca82a08e
-   public getComponent<C extends Component>(constr: { new(...args: any[]): C }): C | null {
-      for (const component of this.components) {
-         if (component instanceof constr) {
-            return component;
-         }
-      }
-
-      return null;
-   }
 
    public createEvent(type: EventType, func: (args?: any) => void): void {
       if (this.events.hasOwnProperty(type)) {

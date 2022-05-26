@@ -1,24 +1,40 @@
+import AIManagerComponent from "../../entity-components/ai/AIManangerComponent";
 import FollowAI from "../../entity-components/ai/FollowAI";
 import WanderAI from "../../entity-components/ai/WanderAI";
+import HealthComponent from "../../entity-components/HealthComponent";
 import HitboxComponent from "../../entity-components/HitboxComponent";
 import RenderComponent, { EllipseRenderPart } from "../../entity-components/RenderComponent";
+import TransformComponent from "../../entity-components/TransformComponent";
 import { Point } from "../../utils";
+import Entity from "../Entity";
 import Mob from "./Mob";
 
+// TODO: Leave trail of snow behind
+// TODO: Smash attack
+
 class Yeti extends Mob {
-   public readonly SIZE = 2;
+   public readonly SIZE = 3;
+
+   private static readonly HEALTH = 250;
+
+   private static readonly ATTACK_DAMAGE = 7.5;
+   private static readonly KNOCKBACK = 1.5;
 
    private static readonly WALK_SPEED = 1.25;
-   private static readonly RUN_SPEED = 2.5;
+   private static readonly RUN_SPEED = 3;
+   
+   private static readonly VISION_RANGE = 5;
+   private static readonly WANDER_RATE = 0.25;
+   private static readonly TARGETS = [Entity];
 
    constructor(position: Point) {
-      const WANDER_CHANCE = 0.5;
-      const WANDER_RANGE = 4;
-      
       super(position, [
-         // new WanderAI(WANDER_CHANCE, WANDER_RANGE, Yeti.WALK_SPEED),
-         // new FollowAI()
+         new AIManagerComponent()
       ]);
+
+      this.setMaxHealth(Yeti.HEALTH);
+
+      this.createAI();
    }
 
    protected createRenderParts(renderComponent: RenderComponent): void {
@@ -39,6 +55,61 @@ class Yeti extends Mob {
          type: "circle",
          radius: this.SIZE / 2
       });
+   }
+
+   private createAI(): void {
+      const transformComponent = this.getComponent(TransformComponent)!;
+
+      const wanderAI = this.getComponent(AIManagerComponent)!.addAI(
+         new WanderAI("wander", {
+            range: Yeti.VISION_RANGE,
+            speed: Yeti.WALK_SPEED,
+            wanderRate: Yeti.WANDER_RATE
+         })
+      );
+      wanderAI.setSwitchCondition({
+         newID: "follow",
+         shouldSwitch: (): boolean => {
+            const entitiesInSearchRadius = wanderAI.getEntitiesInSearchRadius(transformComponent.position, Yeti.VISION_RANGE + this.SIZE/2, Yeti.TARGETS);
+
+            return entitiesInSearchRadius !== null;
+         }
+      });
+
+      const followAI = this.getComponent(AIManagerComponent)!.addAI(
+         new FollowAI("follow", {
+            range: Yeti.VISION_RANGE,
+            speed: Yeti.RUN_SPEED,
+            targets: Yeti.TARGETS
+         })
+      );
+      followAI.setSwitchCondition({
+         newID: "wander",
+         shouldSwitch: (): boolean => {
+            const entitiesInSearchRadius = wanderAI.getEntitiesInSearchRadius(transformComponent.position, Yeti.VISION_RANGE + this.SIZE/2, Yeti.TARGETS);
+
+            return entitiesInSearchRadius === null;
+         },
+         onSwitch: (): void => {
+            transformComponent.stopMoving();
+         }
+      });
+
+      this.getComponent(AIManagerComponent)!.changeCurrentAI("wander");
+   }
+
+   duringCollision(collidingEntity: Entity): void {
+      let canHit = false;
+      for (const target of Yeti.TARGETS) {
+         if (collidingEntity instanceof target) {
+            canHit = true;
+            break;
+         }
+      }
+
+      if (canHit && collidingEntity.getComponent(HealthComponent) !== null) {
+         collidingEntity.getComponent(HealthComponent)!.hurt(Yeti.ATTACK_DAMAGE, this, Yeti.KNOCKBACK);
+      }
    }
 }
 

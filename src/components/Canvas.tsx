@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import Board from "../Board";
+import Board, { Coordinates } from "../Board";
 import Camera from "../Camera";
 import OPTIONS from "../options";
 import SETTINGS from "../settings";
@@ -56,73 +56,40 @@ const TILE_X_ENDS = [1, 1, 1, 0];
 const TILE_Y_STARTS = [0, 0, 1, 0];
 const TILE_Y_ENDS = [0, 1, 1, 1];
 
-export function renderBoard(): void {
-   // Clear canvas for redrawing
+/** Clear the canvas for redrawing */
+export function clearCanvas(): void {
    ctx.fillStyle = SETTINGS.backgroundColour;
    ctx.fillRect(0, 0, canvas.width, canvas.height);
+}
 
+let wallTiles = new Array<Coordinates>();
+
+export function renderGroundTiles(): void {
    const [chunkMinX, chunkMaxX, chunkMinY, chunkMaxY] = Camera.getVisibleChunkBounds();
    const minX = Math.max(chunkMinX * Board.chunkSize, 0);
    const maxX = Math.min((chunkMaxX + 1) * Board.chunkSize, Board.dimensions - 1);
    const minY = Math.max(chunkMinY * Board.chunkSize, 0);
    const maxY = Math.min((chunkMaxY + 1) * Board.chunkSize, Board.dimensions - 1);
 
-   const wallBorderCoords = new Array<[number, number, number, number]>();
-
    // Draw tiles
    for (let y = minY; y <= maxY; y++) {
       for (let x = minX; x <= maxX; x++) {
          const tile = Board.getTile(x, y);
 
+         // If the tile is a wall tile, add it to the list of wall tiles to be rendered later
          if (tile.isWall) {
-            ctx.fillStyle = getWallColour(tile.kind);
-         } else {
-            const tileInfo = TILE_INFO[tile.kind];
-            ctx.fillStyle = tileInfo.colour;
+            wallTiles.push([x, y]);
+            continue;
          }
+
+         const tileInfo = TILE_INFO[tile.kind];
+         ctx.fillStyle = tileInfo.colour;
 
          ctx.fillRect(Camera.getXPositionInCamera(x * Board.tileSize), Camera.getYPositionInCamera(y * Board.tileSize), Board.tileSize, Board.tileSize);
-
-         // Wall tile borders
-         if (tile.isWall) {
-            for (let dir = 0; dir < 4; dir++) {
-               const xOffset = TILE_OFFSETS[dir][0];
-               if (x + xOffset < 0 || x + xOffset >= Board.dimensions) continue;
-               const yOffset = TILE_OFFSETS[dir][1];
-               if (y + yOffset < 0 || y + yOffset >= Board.dimensions) continue;
-
-               const offsetTile = Board.getTile(x + xOffset, y + yOffset);
-
-               if (!offsetTile.isWall) {
-                  const xAdd = TILE_Y_STARTS[dir] === TILE_Y_ENDS[dir] ? SETTINGS.wallOutlineWidth/2 : 0;
-                  const yAdd = TILE_X_STARTS[dir] === TILE_X_ENDS[dir] ? SETTINGS.wallOutlineWidth/2 : 0;
-
-                  const startX = (x + TILE_X_STARTS[dir]) * Board.tileSize - xAdd;
-                  const endX = (x + TILE_X_ENDS[dir]) * Board.tileSize + xAdd;
-                  
-                  const startY = (y + TILE_Y_STARTS[dir]) * Board.tileSize - yAdd;
-                  const endY = (y + TILE_Y_ENDS[dir]) * Board.tileSize + yAdd;
-
-                  wallBorderCoords.push([startX, endX, startY, endY]);
-               }
-            }
-         }
       }
    }
 
-   // Draw wall borders
-   ctx.strokeStyle = "#000";
-   ctx.lineWidth = SETTINGS.wallOutlineWidth;
-   for (const [startX, endX, startY, endY] of wallBorderCoords) {
-      ctx.beginPath();
-                  
-      ctx.moveTo(Camera.getXPositionInCamera(startX), Camera.getYPositionInCamera(startY));
-      ctx.lineTo(Camera.getXPositionInCamera(endX), Camera.getYPositionInCamera(endY));
-
-      ctx.stroke();
-   }
-
-   // Draw lines between tiles
+   // Draw borders between tiles
 
    // const DEFAULT_BORDER_COLOUR = "#444";
    const DEFAULT_BORDER_COLOUR = "rgba(0, 0, 0, 0)";
@@ -155,6 +122,77 @@ export function renderBoard(): void {
       ctx.moveTo(Camera.getXPositionInCamera(0), Camera.getYPositionInCamera(y * Board.tileSize));
       ctx.lineTo(Camera.getXPositionInCamera(Board.dimensions * Board.tileSize), Camera.getYPositionInCamera(y * Board.tileSize));
       ctx.stroke();
+   }
+}
+
+export function renderWallTiles(): void {
+   const wallTileBorders = new Array<[number, number, number]>();
+
+   // Render the wall tiles
+   for (const [x, y] of wallTiles) {
+      const tile = Board.getTile(x, y);
+
+      ctx.fillStyle = getWallColour(tile.kind);
+      ctx.fillRect(Camera.getXPositionInCamera(x * Board.tileSize), Camera.getYPositionInCamera(y * Board.tileSize), Board.tileSize, Board.tileSize);
+
+      // Store any tile borders to be rendered later
+      for (let dir = 0; dir < 4; dir++) {
+         const xOffset = TILE_OFFSETS[dir][0];
+         if (x + xOffset < 0 || x + xOffset >= Board.dimensions) continue;
+         const yOffset = TILE_OFFSETS[dir][1];
+         if (y + yOffset < 0 || y + yOffset >= Board.dimensions) continue;
+
+         const offsetTile = Board.getTile(x + xOffset, y + yOffset);
+
+         if (!offsetTile.isWall) {
+            wallTileBorders.push([x, y, dir]);
+         }
+      }
+   }
+
+   // Render the tile borders
+   ctx.strokeStyle = "#000";
+   ctx.lineWidth = SETTINGS.wallOutlineWidth;
+   for (const [x, y, dir] of wallTileBorders) {
+      const xAdd = TILE_Y_STARTS[dir] === TILE_Y_ENDS[dir] ? SETTINGS.wallOutlineWidth/2 : 0;
+      const yAdd = TILE_X_STARTS[dir] === TILE_X_ENDS[dir] ? SETTINGS.wallOutlineWidth/2 : 0;
+
+      const startX = (x + TILE_X_STARTS[dir]) * Board.tileSize - xAdd;
+      const endX = (x + TILE_X_ENDS[dir]) * Board.tileSize + xAdd;
+      
+      const startY = (y + TILE_Y_STARTS[dir]) * Board.tileSize - yAdd;
+      const endY = (y + TILE_Y_ENDS[dir]) * Board.tileSize + yAdd;
+
+      ctx.beginPath();
+                  
+      ctx.moveTo(Camera.getXPositionInCamera(startX), Camera.getYPositionInCamera(startY));
+      ctx.lineTo(Camera.getXPositionInCamera(endX), Camera.getYPositionInCamera(endY));
+
+      ctx.stroke();
+   }
+
+   // Clear the wall tiles array to be used again
+   wallTiles = new Array<Coordinates>();
+}
+
+export function renderFog(): void {
+   const [minChunkX, maxChunkX, minChunkY, maxChunkY] = Camera.getVisibleChunkBounds();
+
+   for (let y = minChunkY * Board.chunkSize; y <= (maxChunkY + 1) * Board.chunkSize - 1; y++) {
+      for (let x = minChunkX * Board.chunkSize; x <= (maxChunkX + 1) * Board.chunkSize - 1; x++) {
+
+         // Draw fog of war
+         // The "+ 1" in x2 and y2 is to remove gaps between fog.
+         const x1 = x * Board.tileSize;
+         const x2 = (x + 1) * Board.tileSize + 1;
+         const y1 = y * Board.tileSize;
+         const y2 = (y + 1) * Board.tileSize + 1;
+
+         const tile = Board.getTile(x, y);
+
+         ctx.fillStyle = `rgba(0, 0, 0, ${tile.fogAmount})`;
+         ctx.fillRect(Camera.getXPositionInCamera(x1), Camera.getYPositionInCamera(y1), x2 - x1, y2 - y1);
+      }
    }
 }
 

@@ -178,9 +178,24 @@ export class BasicCol {
 }
 
 export class Colour {
-   private static readonly HEX_DIGITS: ReadonlyArray<string> = [
-      "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f"
-   ];
+   private static readonly HEX_DIGITS: { [key: string]: number } = {
+      "0": 0,
+      "1": 1,
+      "2": 2,
+      "3": 3,
+      "4": 4,
+      "5": 5,
+      "6": 6,
+      "7": 7,
+      "8": 8,
+      "9": 9,
+      "a": 10,
+      "b": 11,
+      "c": 12,
+      "d": 13,
+      "e": 14,
+      "f": 15
+   };
 
    private hex: string;
    public getHEX(): string {
@@ -199,40 +214,24 @@ export class Colour {
       return `rgb(${r}, ${g}, ${b})`;
    }
 
-   constructor(colour: string | [number, number, number] ) {
-      if (typeof colour === "string") {
-         this.hex = colour.toLowerCase();
-         // If the hex code includes a "#" at the start, remove it
-         if (this.hex.length === 7) {
-            this.hex = this.hex.substring(1, 7);
-         }
-   
-         this.rgb = this.getRGBFromHex(this.hex);
-      } else {
-         this.rgb = colour;
-
-         this.hex = this.getHexFromRGB(this.rgb);
+   constructor(colour: string) {
+      this.hex = colour.toLowerCase();
+      // If the hex code includes a "#" at the start, remove it
+      if (this.hex.length === 7) {
+         this.hex = this.hex.substring(1, 7);
       }
+
+      this.rgb = this.getRGBFromHex(this.hex);
    }
 
    private getRGBFromHex(hex: string): [number, number, number] {
       const rgb: [number, number, number] = [0, 0, 0];
       for (let i = 0; i < 3; i++) {
-         const digit1 = Colour.HEX_DIGITS.indexOf(hex[i * 2]);
-         const digit2 = Colour.HEX_DIGITS.indexOf(hex[i * 2 + 1]);
+         const digit1 = Colour.HEX_DIGITS[hex[i * 2]];
+         const digit2 = Colour.HEX_DIGITS[hex[i * 2 + 1]];
          rgb[i] = digit1 * 16 + digit2;
       }
       return rgb;
-   }
-   private getHexFromRGB(rgb: [number, number, number]): string {
-      let hex = "";
-      for (let i = 0; i < 3; i++) {
-         const col = rgb[i];
-         const digit2 = col % 16;
-         const digit1 = (col-digit2) / 16;
-         hex += Colour.HEX_DIGITS[digit1] + Colour.HEX_DIGITS[digit2];
-      }
-      return hex;
    }
 
    // public darken(amount: number): Colour {

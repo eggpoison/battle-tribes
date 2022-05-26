@@ -129,7 +129,7 @@ class Zombie extends Mob {
             return entitiesInSearchRadius === null;
          },
          onSwitch: (): void => {
-            transformComponent.stopVelocity();
+            transformComponent.stopMoving();
          }
       });
 

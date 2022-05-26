@@ -150,7 +150,7 @@ class RenderComponent extends Component {
          this.partImages[idx].src = require("../images/" + renderPart.url);
 
          if (this.getEntity().getComponent(HealthComponent) !== null) {
-            this.partHurtImages[idx] = await RenderComponent.getHurtImage(this.partImages[idx]);
+            this.partHurtImages[idx] = await RenderComponent.getHurtImage(this.partImages[idx], renderPart.url);
          }
       }
    }
@@ -161,16 +161,21 @@ class RenderComponent extends Component {
       }
    }
 
-   public static async getHurtImage(image: HTMLImageElement): Promise<HTMLImageElement> {
+   public static async getHurtImage(image: HTMLImageElement, url: string): Promise<HTMLImageElement> {
       return new Promise(async resolve => {
          if (this.hurtImages.hasOwnProperty(image.src)) {
             resolve(this.hurtImages[image.src]);
+         }
+
+         if (RenderComponent.hurtImages.hasOwnProperty(url)) {
+            return RenderComponent.hurtImages[url];
          }
    
          image.addEventListener("load", () => {
             const imageData = this.createHurtImage(image);
             
             this.hurtImages[image.src] = imageData;
+            RenderComponent.hurtImages[url] = imageData;
             resolve(imageData);
          });
       });

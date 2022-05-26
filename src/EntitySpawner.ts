@@ -3,7 +3,7 @@ import Tombstone from "./entities/Tombstone";
 import ENTITY_INFO, { MobInfo, ResourceInfo } from "./entity-info";
 import Game from "./Game";
 import SETTINGS from "./settings";
-import { BiomeName } from "./terrain-generation";
+import { BiomeName, TileType } from "./terrain-generation";
 import { TileKind } from "./tile-types";
 import { randInt, randItem } from "./utils";
 
@@ -24,7 +24,7 @@ const prefillEntityArrays = (): void => {
    }
 }
 
-const getEligibleEntities = (tileType: TileKind, entityType: "mob" | "resource"): Array<MobInfo> | Array<ResourceInfo> | null => {
+const getEligibleEntities = (tile: TileType, entityType: "mob" | "resource"): Array<MobInfo> | Array<ResourceInfo> | null => {
    let eligibleEntities!: Array<MobInfo> | Array<ResourceInfo>;
    if (entityType === "mob") {
       eligibleEntities = mobInfoArray.slice();
@@ -42,8 +42,8 @@ const getEligibleEntities = (tileType: TileKind, entityType: "mob" | "resource")
       }
 
       // Remove the entity if the tile is of the wrong type
-      const preferredTileTypes = entityInfo.spawnRequirements.tileTypes;
-      if (typeof preferredTileTypes !== "undefined" && !preferredTileTypes.includes(tileType)) {
+      const preferredBiomes = entityInfo.spawnRequirements.biomes;
+      if (typeof preferredBiomes !== "undefined" && !preferredBiomes.includes(tile.biome.name)) {
          eligibleEntities.splice(i, 1);
          continue;
       }
@@ -121,9 +121,9 @@ abstract class EntitySpawner {
 
             yLoop: for (let y = Math.max(startTileY - SPAWN_RANGE, 0); y <= Math.min(startTileY + SPAWN_RANGE, Board.dimensions - 1); y++) {
                for (let x = Math.max(startTileX - SPAWN_RANGE, 0); x <= Math.min(startTileX + SPAWN_RANGE, Board.dimensions - 1); x++) {
-                  const tileKind = Board.getTile(x, y).kind;
+                  const tile = Board.getTile(x, y);
 
-                  const eligibleMobs = getEligibleEntities(tileKind, "mob") as Array<MobInfo>;
+                  const eligibleMobs = getEligibleEntities(tile, "mob") as Array<MobInfo>;
 
                   if (eligibleMobs !== null) {
                      const mobInfo = randItem(eligibleMobs);
@@ -163,9 +163,9 @@ abstract class EntitySpawner {
       const x = randInt(chunkX * Board.chunkSize, (chunkX + 1) * Board.chunkSize - 1);
       const y = randInt(chunkY * Board.chunkSize, (chunkY + 1) * Board.chunkSize - 1);
 
-      const tileKind = Board.getTile(x, y).kind;
+      const tile = Board.getTile(x, y);
 
-      const eligibleResources = getEligibleEntities(tileKind, "resource") as Array<ResourceInfo>;
+      const eligibleResources = getEligibleEntities(tile, "resource") as Array<ResourceInfo>;
 
       if (eligibleResources !== null) {
          const resource = this.getRandomResource(eligibleResources);
@@ -204,9 +204,9 @@ abstract class EntitySpawner {
             const tileX = randInt(0, Board.dimensions - 1);
             const tileY = randInt(0, Board.dimensions - 1);
 
-            const tileKind = Board.getTile(tileX, tileY).kind;
+            const tile = Board.getTile(tileX, tileY);
 
-            const eligibleMobs = getEligibleEntities(tileKind, "mob") as Array<MobInfo>;
+            const eligibleMobs = getEligibleEntities(tile, "mob") as Array<MobInfo>;
             if (eligibleMobs !== null) {
                const mobInfo = randItem(eligibleMobs);
 

@@ -51,7 +51,7 @@ abstract class EntityAI {
    protected reachTargetPosition(transformComponent: TransformComponent): void {
       this.targetPosition = null;
 
-      transformComponent.stopVelocity();
+      transformComponent.stopMoving();
    }
 
    /** Filter out unwanted targets */

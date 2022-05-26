@@ -35,34 +35,27 @@ export function stopPlayerMovement(): void {
 }
 
 class PlayerControllerComponent extends Component {
-   private previousMoveBitmap = 0;
    private currentMoveBitmap = 0;
 
    public stopMovement(): void {
       this.currentMoveBitmap = 0;
    }
 
-   private changeDirection(): void {
-      const angle = this.getMoveAngle();
-
-      const velocity = new Vector(angle !== null ? Player.SPEED * Board.tileSize / SETTINGS.tps : 0, angle || 0);
-
-      const entity = this.getEntity();
-      const transformComponent = entity.getComponent(TransformComponent)!;
-      transformComponent.setVelocity(velocity);
-
-      // Update the entity's rotation to match the move direction
-      if (angle !== null) {
-         transformComponent.rotation = angle;
-      }
-   }
-
    public tick(): void {
-      if (this.currentMoveBitmap !== this.previousMoveBitmap) {
-         this.changeDirection();
+      const transformComponent = this.getEntity().getComponent(TransformComponent)!;
+      
+      const angle = this.getMoveAngle();
+      if (angle === null) {
+         transformComponent.stopMoving();
+         return;
       }
-
-      this.previousMoveBitmap = this.currentMoveBitmap;
+      
+      const velocity = new Vector(Player.SPEED * Board.tileSize / SETTINGS.tps, angle);
+      
+      transformComponent.setVelocity(velocity);
+      
+      // Update the entity's rotation to match the move direction
+      transformComponent.rotation = angle;
    }
 
    private getMoveAngle(): number | null {

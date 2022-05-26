@@ -6,6 +6,7 @@ export type TileType = {
    kind: TileKind,
    biome: Biome;
    isWall: boolean;
+   fogAmount: number;
 }
 
 const HEIGHT_NOISE_SCALE = 25;
@@ -15,7 +16,7 @@ const HUMIDITY_NOISE_SCALE = 15;
 const TILE_TYPE_NOISE_SCALE = 5;
 
 type TileGenerationInfo = {
-   readonly info: Omit<TileType, "biome">;
+   readonly info: Omit<TileType, "biome" | "fogAmount">;
    readonly minWeight?: number;
    readonly maxWeight?: number;
    /** The minimum number of tiles from the end of the biome */
@@ -71,6 +72,14 @@ const BIOMES: ReadonlyArray<Biome> = [
          maxHumidity: 0.5
       },
       tiles: [
+         {
+            info: {
+               kind: TileKind.rock,
+               isWall: true
+            },
+            minWeight: 0.8,
+            minDist: 4
+         },
          {
             info: {
                kind: TileKind.ice,
@@ -191,7 +200,7 @@ const matchesTileRequirements = (generationInfo: TileGenerationInfo, weight: num
    return true;
 }
 
-const getTileInfo = (biome: Biome, weight: number, dist: number): Omit<TileType, "biome"> => {
+const getTileInfo = (biome: Biome, weight: number, dist: number): Omit<TileType, "biome" | "fogAmount"> => {
    for (const generationInfo of biome.tiles) {
       if (matchesTileRequirements(generationInfo, weight, dist)) {
          return generationInfo.info;
@@ -275,7 +284,8 @@ export function generateTerrain(): Array<Array<TileType>> {
          tiles[x][y] = {
             kind: undefined as unknown as TileKind,
             biome: undefined as unknown as Biome,
-            isWall: undefined as unknown as boolean
+            isWall: undefined as unknown as boolean,
+            fogAmount: 1
          };
       }
    }

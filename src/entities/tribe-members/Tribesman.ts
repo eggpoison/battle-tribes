@@ -23,16 +23,18 @@ import Player from "./Player";
 
 class Tribesman extends GenericTribeMember {
    public readonly SIZE = 1;
+
+   private static readonly SIGHT_RANGE = 4;
    
    private static readonly MAX_HEALTH = 25;
    private static readonly DEFAULT_SLOT_COUNT = 2;
 
-   private static readonly VISION_RANGE = 4;
    private static readonly WALK_SPEED = 1;
    private static readonly RUN_SPEED = 2.5;
 
    private static readonly WANDER_RATE = 0.5;
    private static readonly TARGETS = [Mob, Resource, ItemEntity];
+   private static readonly MAX_DIST_FROM_TARGET = 1;
 
    private static readonly ATTACK_RANGE = 2;
    private static readonly ATTACK_DAMAGE = 5;
@@ -47,6 +49,7 @@ class Tribesman extends GenericTribeMember {
          new FiniteInventoryComponent(Tribesman.DEFAULT_SLOT_COUNT)
       ]);
 
+      super.setSightRange(Tribesman.SIGHT_RANGE);
       super.setMaxHealth(Tribesman.MAX_HEALTH);
 
       const HAND_SIZE = 0.45;
@@ -93,7 +96,7 @@ class Tribesman extends GenericTribeMember {
       // Wander AI
       const wanderAI = this.getComponent(AIManagerComponent)!.addAI(
          new WanderAI("wander", {
-            range: Tribesman.VISION_RANGE,
+            range: Tribesman.SIGHT_RANGE,
             speed: Tribesman.WALK_SPEED,
             wanderRate: Tribesman.WANDER_RATE
          })
@@ -102,33 +105,36 @@ class Tribesman extends GenericTribeMember {
       wanderAI.setSwitchCondition({
          newID: "follow",
          shouldSwitch: (): boolean => {
-            const entitiesInSearchRadius = wanderAI.getEntitiesInSearchRadius(transformComponent.position, Tribesman.VISION_RANGE, Tribesman.TARGETS);
+            const entitiesInSearchRadius = wanderAI.getEntitiesInSearchRadius(transformComponent.position, Tribesman.SIGHT_RANGE, Tribesman.TARGETS);
 
             return entitiesInSearchRadius !== null;
          },
          onSwitch: (): void => {
-            transformComponent.stopVelocity();
+            transformComponent.stopMoving();
          }
       });
 
       // Follow AI
       const followAI = this.getComponent(AIManagerComponent)!.addAI(
          new FollowAI("follow", {
-            range: Tribesman.VISION_RANGE,
+            range: Tribesman.SIGHT_RANGE,
             speed: Tribesman.RUN_SPEED,
             targets: Tribesman.TARGETS
          })
       ) as FollowAI;
 
+      let isMovingToStash = false;
+
       followAI.setSwitchCondition({
          newID: "wander",
          shouldSwitch: (): boolean => {
-            const entitiesInSearchRadius = followAI.getEntitiesInSearchRadius(transformComponent.position, Tribesman.VISION_RANGE, Tribesman.TARGETS);
+            if (isMovingToStash) return false;
 
+            const entitiesInSearchRadius = followAI.getEntitiesInSearchRadius(transformComponent.position, Tribesman.SIGHT_RANGE, Tribesman.TARGETS);
             return entitiesInSearchRadius === null;
          },
          onSwitch: (): void => {
-            transformComponent.stopVelocity();
+            transformComponent.stopMoving();
 
             this.attackTimer = null;
          }
@@ -137,17 +143,32 @@ class Tribesman extends GenericTribeMember {
       followAI.setTickCondition(() => {
          // Move to stash
          if (this.getComponent(FiniteInventoryComponent)!.isFull()) {
+            isMovingToStash = true;
+
             const targetPosition = this.getComponent(TribeMemberComponent)!.tribe.position;
             followAI.moveToPosition(targetPosition, Tribesman.RUN_SPEED);
 
             return false;
          }
-         
-         const target = followAI.getTarget();
-         
+         isMovingToStash = false;
+
+         const target = followAI.target;
          if (target !== null && target instanceof LivingEntity) {
+            const targetSize = typeof target.SIZE === "number" ? target.SIZE : (target.SIZE.WIDTH + target.SIZE.HEIGHT) / 2;
+
+            // Don't move to the target if they're too close
+            let hasStopped = false;
+            const targetPosition = target.getComponent(TransformComponent)!.position;
+            const dist = this.getComponent(TransformComponent)!.position.distanceFrom(targetPosition);
+            if (target !== null && dist < (Tribesman.MAX_DIST_FROM_TARGET + this.SIZE/2 + targetSize/2) * Board.tileSize) {
+               // Stop moving
+               this.getComponent(TransformComponent)!.stopMoving();
+               this.getComponent(TransformComponent)!.velocity.magnitude = 0;
+               hasStopped = true;
+            }
+
             const distanceFromTarget = this.getComponent(TransformComponent)!.position.distanceFrom(target.getComponent(TransformComponent)!.position);
-            if (distanceFromTarget < Tribesman.ATTACK_RANGE * Board.tileSize) {
+            if (distanceFromTarget < (Tribesman.ATTACK_RANGE + this.SIZE/2 + targetSize/2) * Board.tileSize) {
                if (this.attackTimer === null) {
                   // Attack
                   this.getComponent(AttackComponent)!.startAttack("baseAttack");
@@ -160,6 +181,8 @@ class Tribesman extends GenericTribeMember {
                   });
                }
             }
+
+            if (hasStopped) return false;
          }
 
          return true;

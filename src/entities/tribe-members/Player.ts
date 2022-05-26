@@ -23,6 +23,8 @@ import { setPlayerRespawnMessageTime, togglePlayerRespawnMessage } from "../../c
 class Player extends GenericTribeMember {
    public readonly SIZE = 1;
 
+   private static readonly SIGHT_RANGE = 5;
+
    public static readonly SPEED = 5;
    public static readonly HEALTH = 20;
    public static readonly TRIBE_COLOUR = "#ffcc17";
@@ -44,6 +46,8 @@ class Player extends GenericTribeMember {
          new FiniteInventoryComponent(Player.DEFAULT_INVENTORY_SLOT_COUNT),
          new TribeMemberComponent(tribe)
       ]);
+
+      super.setSightRange(Player.SIGHT_RANGE);
 
       this.getComponent(HealthComponent)!.setMaxHealth(Player.HEALTH, true);
 
@@ -81,10 +85,6 @@ class Player extends GenericTribeMember {
          const health = this.getComponent(HealthComponent)!.getHealth();
          HealthBarManager.setHealth(health);
       });
-
-      // Reveal the space the player is standing in
-      const position = this.getComponent(TransformComponent)!.position;
-      Board.revealFog(position, this.SIZE / 2 * Board.tileSize, true);
    }
 
    protected startRespawn(): void {

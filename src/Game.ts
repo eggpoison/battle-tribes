@@ -15,7 +15,7 @@ let previousFocus = true;
 
 abstract class Game {
    // private static readonly TIME_SPEED = 1.5;
-   private static readonly TIME_SPEED = 50;
+   private static readonly TIME_SPEED = 100;
    private static time: number = SETTINGS.startTime;
 
    public static tick(): void {

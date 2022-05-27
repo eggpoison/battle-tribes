@@ -73,6 +73,7 @@ class FollowAI extends EntityAI {
    private validateTarget(): void {
       if (this.target === null) return;
       
+      // Untarget the target if it is dead
       const healthComponent = this.target.getComponent(HealthComponent);
       if (healthComponent !== null) {
          if (healthComponent.getHealth() <= 0) {

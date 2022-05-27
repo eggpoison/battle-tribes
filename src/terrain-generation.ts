@@ -1,6 +1,7 @@
 import Board, { Coordinates } from "./Board";
 import { generateOctavePerlinNoise, generatePerlinNoise } from "./perlin-noise";
 import { TileKind } from "./tile-types";
+import { randInt, randItem } from "./utils";
 
 export type TileType = {
    kind: TileKind,
@@ -34,15 +35,34 @@ type BiomeGenerationInfo = {
    readonly maxHumidity?: number;
 }
 
-export type BiomeName = "Mountains" | "Tundra" | "Desert" | "Swamp" | "Grasslands";
+export type BiomeName = "Magma Fields" | "Mountains" | "Tundra" | "Desert" | "Swamp" | "Grasslands";
 
 type Biome = {
    readonly name: BiomeName;
-   readonly generationInfo: Readonly<BiomeGenerationInfo>;
+   readonly generationInfo?: Readonly<BiomeGenerationInfo>;
    readonly tiles: ReadonlyArray<TileGenerationInfo>;
 }
 
 const BIOMES: ReadonlyArray<Biome> = [
+   {
+      name: "Magma Fields",
+      tiles: [
+         {
+            info: {
+               kind: TileKind.lava,
+               isWall: false
+            },
+            minWeight: 0.2,
+            minDist: 3
+         },
+         {
+            info: {
+               kind: TileKind.magma,
+               isWall: false
+            }
+         }
+      ]
+   },
    {
       name: "Mountains",
       generationInfo: {
@@ -182,7 +202,7 @@ const matchesBiomeRequirements = (generationInfo: BiomeGenerationInfo, height: n
 
 const getBiome = (height: number, temperature: number, humidity: number): Biome => {
    for (const biome of BIOMES) {
-      if (matchesBiomeRequirements(biome.generationInfo, height, temperature, humidity)) {
+      if (typeof biome.generationInfo !== "undefined" && matchesBiomeRequirements(biome.generationInfo, height, temperature, humidity)) {
          return biome;
       }
    }
@@ -225,6 +245,102 @@ const generateTileArrayBiomes = (tileArray: Array<Array<TileType>>): void => {
 
          const biome = getBiome(height, temperature, humidity);
          tileArray[x][y].biome = biome;
+      }
+   }
+}
+
+const ADJACENT_TILE_DIRS = [[0, -1], [1, 0], [0, 1], [-1, 0]] as const;
+
+const generateMagmaFields = (tileArray: Array<Array<TileType>>): void => {
+   // Located randomly in one of the four corners
+
+   // Pre-find the magma biome
+   let magmaBiome!: Biome;
+   for (const biome of BIOMES) {
+      if (biome.name === "Magma Fields") {
+         magmaBiome = biome;
+      }
+   }
+
+   /** How far away the center of the biome is from the edge, in percentage of the total board */
+   const PADDING = 0.1;
+
+   const MIN_TILES = 200;
+   const MAX_TILES = 250;
+
+   // Generate the position for the center of the biome.
+   const xSide = randInt(0, 1);
+   const xDir = xSide === 1 ? 1 : -1;
+   const ySide = randInt(0, 1);
+   const yDir = ySide === 1 ? 1 : -1;
+
+   const centerX = Math.round(Board.dimensions * (xSide + PADDING * -xDir));
+   const centerY = Math.round(Board.dimensions * (ySide + PADDING * -yDir));
+
+   // Make the starting tile magma
+   tileArray[centerX][centerY].biome = magmaBiome;
+
+   // The number of magma tiles
+   const tileCount = randInt(MIN_TILES, MAX_TILES);
+
+   const outerTilePositions: Array<Coordinates> = [[centerX, centerY]];
+
+   for (let i = 0; i < tileCount; i++) {
+      // Pick a random tile from the outer tiles to expand
+      const [originTileX, originTileY] = randItem(outerTilePositions);
+
+      // Pick a random adjacent tile position to expand to
+      let newTileCoords!: Coordinates;
+      let dirs = ADJACENT_TILE_DIRS.slice();
+      for (let k = 0; k < 4; k++) {
+         const idx = randInt(0, dirs.length - 1);
+         const dir = dirs[idx];
+
+         // If the adjacent tile is available, choose it
+         const tile = tileArray[originTileX + dir[0]][originTileY + dir[1]];
+         if (tile.biome.name !== "Magma Fields") {
+            newTileCoords = [originTileX + dir[0], originTileY + dir[1]];
+            break;
+         }
+
+         dirs.splice(idx, 1);
+      }
+      if (typeof newTileCoords === "undefined") {
+         i--;
+         continue;
+      }
+
+      // Convert the new tile into magma
+      const tile = tileArray[newTileCoords[0]][newTileCoords[1]];
+      tile.biome = magmaBiome;
+
+      // Add it to the list of outer tiles
+      outerTilePositions.push(newTileCoords);
+
+      // Remove any tiles from the outer tiles array that have been obscured by the new tile
+      mainLoop: for (const dir of ADJACENT_TILE_DIRS) {
+         const tileX = newTileCoords[0] + dir[0];
+         const tileY = newTileCoords[1] + dir[1];
+         
+         // Check if the tile is in the outer tile array
+         let tileIdx!: number;
+         for (let i = 0; i < outerTilePositions.length; i++) {
+            const coords = outerTilePositions[i];
+            if (tileX === coords[0] && tileY === coords[1]) {
+               tileIdx = i;
+               break;
+            }
+         }
+         // If it isn't, skip it
+         if (typeof tileIdx === "undefined") continue;
+
+         // Check if the four surrounding tiles are all magma
+         for (const dir of ADJACENT_TILE_DIRS) {
+            const checkTile = tileArray[tileX + dir[0]][tileY + dir[1]];
+            if (checkTile.biome.name !== "Magma Fields") continue mainLoop;
+         }
+         // If all four surrounding tiles are magma, remove it from the outer tiles array
+         outerTilePositions.splice(tileIdx, 1);
       }
    }
 }
@@ -291,6 +407,8 @@ export function generateTerrain(): Array<Array<TileType>> {
    }
 
    generateTileArrayBiomes(tiles);
+
+   generateMagmaFields(tiles);
 
    generateTileArrayInfo(tiles);
 

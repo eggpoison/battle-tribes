@@ -15,27 +15,31 @@ import TransformComponent from "./entity-components/TransformComponent";
 // ];
 
 const tribeExpRequirements = [
-   1,
-   2,
-   3,
-   4,
-   5,
-   6,
-   7,
-   8,
-   9,
-   10,
-   11,
-   12,
-   13,
-   14,
-   15,
-   16,
-   17,
-   18,
-   19,
-   20
+   0,
+   // 2,
+   // 3,
+   // 4,
+   // 5,
+   // 6,
+   // 7,
+   // 8,
+   // 9,
+   // 10,
+   // 11,
+   // 12,
+   // 13,
+   // 14,
+   // 15,
+   // 16,
+   // 17,
+   // 18,
+   // 19,
+   // 20
 ];
+
+for (let i = 0; i < 9999; i++) {
+   tribeExpRequirements.push(i);
+}
 
 // Tribe members are created through the tribe class
 // Other entities such as the player are added to the tribe in their constructor

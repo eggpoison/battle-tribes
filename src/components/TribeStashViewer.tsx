@@ -7,6 +7,8 @@ import { setMessageDisplay } from "./MessageDisplay";
 
 export let toggleTribeStashViewerVisibility: () => void;
 
+export let tribeStashViewerIsOpen: () => boolean;
+
 const TribeStashViewer = () => {
    const [isVisible, setIsVisible] = useState<boolean>(false);
    const tribeStashViewerManagerRef = useRef<InventoryViewerManager | null>(
@@ -22,6 +24,10 @@ const TribeStashViewer = () => {
             setMessageDisplay(TribeStash.OPEN_MESSAGE);
          }
          setIsVisible(newIsVisible);
+      }
+
+      tribeStashViewerIsOpen = (): boolean => {
+         return isVisible;
       }
    }, [isVisible]);
 

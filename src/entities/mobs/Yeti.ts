@@ -7,6 +7,7 @@ import RenderComponent, { EllipseRenderPart } from "../../entity-components/Rend
 import TransformComponent from "../../entity-components/TransformComponent";
 import { Point } from "../../utils";
 import Entity from "../Entity";
+import GenericTribeMember from "../tribe-members/GenericTribeMember";
 import Mob from "./Mob";
 
 // TODO: Leave trail of snow behind
@@ -25,7 +26,7 @@ class Yeti extends Mob {
    
    private static readonly VISION_RANGE = 5;
    private static readonly WANDER_RATE = 0.25;
-   private static readonly TARGETS = [Entity];
+   private static readonly TARGETS = [GenericTribeMember];
 
    constructor(position: Point) {
       super(position, [

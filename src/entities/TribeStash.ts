@@ -11,8 +11,8 @@ import Board from "../Board";
 class TribeStash extends Entity {
    public readonly SIZE = 1.5;
 
-   public static OPEN_MESSAGE = "Press space to open stash";
-   public static CLOSE_MESSAGE = "Press space to close stash";
+   public static OPEN_MESSAGE = "Press E to open stash";
+   public static CLOSE_MESSAGE = "Press E to close stash";
 
    constructor(tribe: Tribe) {
       const spawnPosition = tribe.position;

@@ -8,7 +8,6 @@ import AttackComponent from "./AttackComponent";
 import TransformComponent from "./TransformComponent";
 
 const keyEvents = new Array<(key: string) => void>();
-const keyListeners: { [key: string]: Array<() => void> } = {};
 
 const pressedKeys = new Array<string>();
 
@@ -17,10 +16,6 @@ const addPressedKey = (key: string): void => {
    pressedKeys.push(key);
 
    for (const func of keyEvents) func(key);
-
-   if (keyListeners.hasOwnProperty(key)) {
-      for (const func of keyListeners[key]) func();
-   }
 }
 const removePressedKey = (key: string): void => {
    pressedKeys.splice(pressedKeys.indexOf(key), 1);
@@ -108,14 +103,6 @@ class PlayerControllerComponent extends Component {
 
    public static createKeyEvent(func: (key: string) => void): void {
       keyEvents.push(func);
-   }
-
-   public static createKeyListener(key: string, func: () => void): void {
-      if (keyListeners.hasOwnProperty(key)) {
-         keyListeners[key].push(func);
-      } else {
-         keyListeners[key] = [func];
-      }
    }
 
    private checkKey(e: KeyboardEvent, isKeyDown: boolean): void {

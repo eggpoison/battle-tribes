@@ -3,6 +3,7 @@ import AIManagerComponent from "../../entity-components/ai/AIManangerComponent";
 import FollowAI from "../../entity-components/ai/FollowAI";
 import WanderAI from "../../entity-components/ai/WanderAI";
 import AttackComponent, { CircleAttack } from "../../entity-components/AttackComponent";
+import HealthComponent from "../../entity-components/HealthComponent";
 import HitboxComponent from "../../entity-components/HitboxComponent";
 import FiniteInventoryComponent from "../../entity-components/inventory/FiniteInventoryComponent";
 import InfiniteInventoryComponent from "../../entity-components/inventory/InfiniteInventoryComponent";
@@ -34,7 +35,7 @@ class Tribesman extends GenericTribeMember {
 
    private static readonly WANDER_RATE = 0.5;
    private static readonly TARGETS = [Mob, Resource, ItemEntity];
-   private static readonly MAX_DIST_FROM_TARGET = 1;
+   private static readonly MAX_DIST_FROM_TARGET = 1.25;
 
    private static readonly ATTACK_RANGE = 2;
    private static readonly ATTACK_DAMAGE = 5;
@@ -105,9 +106,12 @@ class Tribesman extends GenericTribeMember {
       wanderAI.setSwitchCondition({
          newID: "follow",
          shouldSwitch: (): boolean => {
-            const entitiesInSearchRadius = wanderAI.getEntitiesInSearchRadius(transformComponent.position, Tribesman.SIGHT_RANGE, Tribesman.TARGETS);
-
-            return entitiesInSearchRadius !== null;
+            const entitiesInSearchRadius = followAI.getEntitiesInSearchRadius(transformComponent.position, Tribesman.SIGHT_RANGE, Tribesman.TARGETS);
+            if (entitiesInSearchRadius !== null) {
+               const targetEntities = this.sortFollowTargets(entitiesInSearchRadius);
+               return targetEntities !== null;
+            }
+            return false;
          },
          onSwitch: (): void => {
             transformComponent.stopMoving();
@@ -131,7 +135,10 @@ class Tribesman extends GenericTribeMember {
             if (isMovingToStash) return false;
 
             const entitiesInSearchRadius = followAI.getEntitiesInSearchRadius(transformComponent.position, Tribesman.SIGHT_RANGE, Tribesman.TARGETS);
-            return entitiesInSearchRadius === null;
+            if (entitiesInSearchRadius === null) return true;
+
+            const targetEntities = this.sortFollowTargets(entitiesInSearchRadius);
+            return targetEntities === null;
          },
          onSwitch: (): void => {
             transformComponent.stopMoving();
@@ -142,7 +149,7 @@ class Tribesman extends GenericTribeMember {
 
       followAI.setTickCondition(() => {
          // Move to stash
-         if (this.getComponent(FiniteInventoryComponent)!.isFull()) {
+         if (this.getComponent(FiniteInventoryComponent)!.isFull(false)) {
             isMovingToStash = true;
 
             const targetPosition = this.getComponent(TribeMemberComponent)!.tribe.position;
@@ -156,15 +163,23 @@ class Tribesman extends GenericTribeMember {
          if (target !== null && target instanceof LivingEntity) {
             const targetSize = typeof target.SIZE === "number" ? target.SIZE : (target.SIZE.WIDTH + target.SIZE.HEIGHT) / 2;
 
+            const thisTransformComponent = this.getComponent(TransformComponent)!;
+            const targetTransformComponent = target.getComponent(TransformComponent)!;
+
+            const ROTATION_PADDING = 5;
+
             // Don't move to the target if they're too close
             let hasStopped = false;
             const targetPosition = target.getComponent(TransformComponent)!.position;
             const dist = this.getComponent(TransformComponent)!.position.distanceFrom(targetPosition);
-            if (target !== null && dist < (Tribesman.MAX_DIST_FROM_TARGET + this.SIZE/2 + targetSize/2) * Board.tileSize) {
+            const isFacingTarget = Math.abs(thisTransformComponent.rotation - targetTransformComponent.rotation) < ROTATION_PADDING;
+            if (isFacingTarget && dist - (this.SIZE/2 + targetSize/2) * Board.tileSize < Tribesman.MAX_DIST_FROM_TARGET * Board.tileSize) {
                // Stop moving
                this.getComponent(TransformComponent)!.stopMoving();
                this.getComponent(TransformComponent)!.velocity.magnitude = 0;
                hasStopped = true;
+
+               if (target.getComponent(HealthComponent)!.getHealth() <= 0) console.log("scam");
             }
 
             const distanceFromTarget = this.getComponent(TransformComponent)!.position.distanceFrom(target.getComponent(TransformComponent)!.position);

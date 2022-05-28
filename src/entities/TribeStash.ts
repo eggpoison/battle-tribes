@@ -11,8 +11,8 @@ import Board from "../Board";
 class TribeStash extends Entity {
    public readonly SIZE = 1.5;
 
-   public static OPEN_MESSAGE = "Press space to open stash";
-   public static CLOSE_MESSAGE = "Press space to close stash";
+   public static OPEN_MESSAGE = "Press E to open stash";
+   public static CLOSE_MESSAGE = "Press E to close stash";
 
    constructor(tribe: Tribe) {
       const spawnPosition = tribe.position;
@@ -39,8 +39,8 @@ class TribeStash extends Entity {
       );
 
       // Remove fog of war on the tribe position
-      const position = this.getComponent(TransformComponent)!.position;
-      Board.revealFog(position, this.SIZE / 2 * Board.tileSize, true);
+      const coordinates = this.getComponent(TransformComponent)!.getTileCoordinates();
+      Board.revealFog(coordinates, this.SIZE / 2, true);
    }
 
    private setHitbox(): void {

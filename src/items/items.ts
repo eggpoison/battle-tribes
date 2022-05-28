@@ -6,6 +6,7 @@ import WeaponItem from "./WeaponItem";
 export enum ItemName {
    wood,
    berry,
+   flower,
    rock,
    leather,
    meat,
@@ -38,6 +39,12 @@ const ITEMS: ItemsType = {
       displayName: "Rock",
       description: "I Grug. I Hit You Rock.",
       imageSrc: "rock.png",
+      stackSize: REGULAR_STACK_SIZE
+   }),
+   [ItemName.flower]: new Item({
+      displayName: "Flower",
+      description: "i am a flower",
+      imageSrc: "flower-1.png",
       stackSize: REGULAR_STACK_SIZE
    }),
    [ItemName.slime]: new Item({

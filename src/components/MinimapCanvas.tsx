@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
-import Board from "../Board";
+import Board, { Coordinates } from "../Board";
 import SETTINGS from "../settings";
-import TILE_INFO from "../tile-types";
+import TILE_INFO, { TileKind } from "../tile-types";
 import { Colour, Point } from "../utils";
 
 export abstract class Minimap {
@@ -15,6 +15,10 @@ export abstract class Minimap {
    private static readonly SIZE: number = 150;
    /** How far away the minimap is from the corner of the window */
    private static readonly MARGIN: number = 20;
+
+   private static previousBackgroundImageData: ImageData;
+
+   private static tileColours: Partial<Record<TileKind, [number, number, number]>> = {};
 
    public static setMinimapCanvas(minimapBackgroundCanvas: HTMLCanvasElement): void {
       this.minimapBackgroundCanvas = minimapBackgroundCanvas;
@@ -47,7 +51,7 @@ export abstract class Minimap {
 
       for (let y = 0; y < this.SIZE; y++) {
          for (let x = 0; x < this.SIZE; x++) {
-            const [r, g, b, a] = getTilePixelData(this.SIZE, x, y);
+            const [r, g, b, a] = this.getTilePixelData(x, y);
 
             const pixelIdx = getPixelIndex(this.SIZE, x, y);
             imageData.data[pixelIdx] = r;
@@ -58,6 +62,64 @@ export abstract class Minimap {
       }
 
       this.minimapBackgroundCtx.putImageData(imageData, 0, 0);
+      this.previousBackgroundImageData = imageData;
+   }
+
+   public static updateBackground(changedTiles: Array<Coordinates>): void {
+      for (const [x, y] of changedTiles) {
+         const minimapX = Math.floor(x / Board.dimensions * this.SIZE);
+         const minimapY = Math.floor(y / Board.dimensions * this.SIZE);
+
+         // Fill in gaps (left)
+         const previousMinimapX = Math.floor((x - 1) / Board.dimensions * this.SIZE);
+         if (x > 0 && minimapX - previousMinimapX > 1) {
+            const gapX = previousMinimapX + 1;
+
+            const [r, g, b, a] = this.getTilePixelData(gapX, minimapY);
+
+            const pixelIdx = getPixelIndex(this.SIZE, gapX, minimapY);
+            this.previousBackgroundImageData.data[pixelIdx] = r;
+            this.previousBackgroundImageData.data[pixelIdx + 1] = g;
+            this.previousBackgroundImageData.data[pixelIdx + 2] = b;
+            this.previousBackgroundImageData.data[pixelIdx + 3] = a;
+         }
+         // Fill in gaps (top)
+         const previousMinimapY = Math.floor((y - 1) / Board.dimensions * this.SIZE);
+         if (y > 0 && minimapY - previousMinimapY > 1) {
+            const gapY = previousMinimapY + 1;
+
+            const [r, g, b, a] = this.getTilePixelData(minimapX, gapY);
+
+            const pixelIdx = getPixelIndex(this.SIZE, minimapX, gapY);
+            this.previousBackgroundImageData.data[pixelIdx] = r;
+            this.previousBackgroundImageData.data[pixelIdx + 1] = g;
+            this.previousBackgroundImageData.data[pixelIdx + 2] = b;
+            this.previousBackgroundImageData.data[pixelIdx + 3] = a;
+         }
+         // Fill in gaps (top left)
+         if (x > 0 && y > 0 && minimapX - previousMinimapX > 1 && minimapY - previousMinimapY > 1) {
+            const gapX = previousMinimapX + 1;
+            const gapY = previousMinimapY + 1;
+
+            const [r, g, b, a] = this.getTilePixelData(gapX, gapY);
+
+            const pixelIdx = getPixelIndex(this.SIZE, gapX, gapY);
+            this.previousBackgroundImageData.data[pixelIdx] = r;
+            this.previousBackgroundImageData.data[pixelIdx + 1] = g;
+            this.previousBackgroundImageData.data[pixelIdx + 2] = b;
+            this.previousBackgroundImageData.data[pixelIdx + 3] = a;
+         }
+
+         const [r, g, b, a] = this.getTilePixelData(minimapX, minimapY);
+
+         const pixelIdx = getPixelIndex(this.SIZE, minimapX, minimapY);
+         this.previousBackgroundImageData.data[pixelIdx] = r;
+         this.previousBackgroundImageData.data[pixelIdx + 1] = g;
+         this.previousBackgroundImageData.data[pixelIdx + 2] = b;
+         this.previousBackgroundImageData.data[pixelIdx + 3] = a;
+      }
+
+      this.minimapBackgroundCtx.putImageData(this.previousBackgroundImageData, 0, 0);
    }
 
    public static getPositionInMinimap(position: Point): Point {
@@ -92,28 +154,29 @@ export abstract class Minimap {
       ctx.strokeStyle = PLAYER_BORDER_COLOUR;
       ctx.stroke();
    }
-}
 
-const getTilePixelData = (minimapSize: number, minimapX: number, minimapY: number): [number, number, number, number] => {
-   /** Size of the board */
-   const BOARD_SIZE = Board.dimensions;
+   private static getTilePixelData(minimapX: number, minimapY: number): [number, number, number, number] {
+      const tileX = Math.floor(minimapX * Board.dimensions / this.SIZE);
+      const tileY = Math.floor(minimapY * Board.dimensions / this.SIZE);
+   
+      const tile = Board.getTile(tileX, tileY);
+   
+      // Fog of war
+      const darknessMultiplier = SETTINGS.showFogOfWar ? 1 - tile.fogAmount : 1;
+   
+      let rgb!: [number, number, number];
+      // If the colour for the tile has already been calculated, use the existing value
+      if (this.tileColours.hasOwnProperty(tile.kind)) {
+         rgb = this.tileColours[tile.kind]!;
+      } else {
+         const tileInfo = TILE_INFO[tile.kind];
+         rgb = new Colour(tileInfo.colour).getRGB();
 
-   const tileX = Math.floor(minimapX * BOARD_SIZE / minimapSize);
-   const tileY = Math.floor(minimapY * BOARD_SIZE / minimapSize);
-
-   // Fog of war
-   if (SETTINGS.showFogOfWar) {
-      const chunkX = Math.floor(tileX / Board.chunkSize);
-      const chunkY = Math.floor(tileY / Board.chunkSize);
-      const fogAmount = Board.getFog(chunkX, chunkY);
-      if (fogAmount === 1) return [0, 0, 0, 255];
+         this.tileColours[tile.kind] = rgb;
+      }
+   
+      return [rgb[0] * darknessMultiplier, rgb[1] * darknessMultiplier, rgb[2] * darknessMultiplier, 255];
    }
-
-   const tile = Board.getTile(tileX, tileY);
-   const tileInfo = TILE_INFO[tile.kind];
-
-   const rgb = new Colour(tileInfo.colour).getRGB();
-   return [rgb[0], rgb[1], rgb[2], 255];
 }
 
 const getPixelIndex = (minimapSize: number, x: number, y: number): number => {

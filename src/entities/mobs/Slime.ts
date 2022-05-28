@@ -166,7 +166,7 @@ class Slime extends Mob {
             return entitiesInSearchRadius !== null;
          },
          onSwitch: (): void => {
-            transformComponent.stopVelocity();
+            transformComponent.stopMoving();
          }
       });
 
@@ -186,7 +186,7 @@ class Slime extends Mob {
             return entitiesInSearchRadius === null;
          },
          onSwitch: (): void => {
-            transformComponent.stopVelocity();
+            transformComponent.stopMoving();
 
             this.followWaitTimer = null;
          }

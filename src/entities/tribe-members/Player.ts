@@ -12,16 +12,19 @@ import Tribe from "../../Tribe";
 import Board from "../../Board";
 import { hideMessageDisplay, setMessageDisplay } from "../../components/MessageDisplay";
 import InventoryViewerManager from "../../components/inventory/InventoryViewerManager";
-import { toggleTribeStashViewerVisibility } from "../../components/TribeStashViewer";
+import { toggleTribeStashViewerVisibility, tribeStashViewerIsOpen } from "../../components/TribeStashViewer";
 import HealthComponent from "../../entity-components/HealthComponent";
 import { HealthBarManager } from "../../components/HealthBar";
 import TribeMemberComponent from "../../entity-components/TribeMemberComponent";
 import GenericTribeMember from "./GenericTribeMember";
 import FiniteInventoryComponent from "../../entity-components/inventory/FiniteInventoryComponent";
 import { setPlayerRespawnMessageTime, togglePlayerRespawnMessage } from "../../components/PlayerRespawnMessage";
+import { closeMenu, toggleMenu } from "../../components/menus/MenuManager";
 
 class Player extends GenericTribeMember {
    public readonly SIZE = 1;
+
+   private static readonly SIGHT_RANGE = 5;
 
    public static readonly SPEED = 5;
    public static readonly HEALTH = 20;
@@ -30,6 +33,8 @@ class Player extends GenericTribeMember {
    public static instance: Player;
 
    public static readonly DEFAULT_INVENTORY_SLOT_COUNT = 3;
+
+   public static isOpeningStash: boolean = false;
 
    constructor(tribe: Tribe) {
       const HAND_SIZE = 0.45;
@@ -44,6 +49,8 @@ class Player extends GenericTribeMember {
          new FiniteInventoryComponent(Player.DEFAULT_INVENTORY_SLOT_COUNT),
          new TribeMemberComponent(tribe)
       ]);
+
+      super.setSightRange(Player.SIGHT_RANGE);
 
       this.getComponent(HealthComponent)!.setMaxHealth(Player.HEALTH, true);
 
@@ -81,10 +88,6 @@ class Player extends GenericTribeMember {
          const health = this.getComponent(HealthComponent)!.getHealth();
          HealthBarManager.setHealth(health);
       });
-
-      // Reveal the space the player is standing in
-      const position = this.getComponent(TransformComponent)!.position;
-      Board.revealFog(position, this.SIZE / 2 * Board.tileSize, true);
    }
 
    protected startRespawn(): void {
@@ -131,21 +134,36 @@ class Player extends GenericTribeMember {
 
    protected onLeaveCollision(collidingEntity: Entity): void {
       if (collidingEntity instanceof TribeStash) {
+         // Hide the stash viewer
+         if (tribeStashViewerIsOpen()) {
+            toggleTribeStashViewerVisibility();
+         }
+
          hideMessageDisplay();
       }
    }
 
    private onKeyPress(key: string): void {
-      if (key === " ") {
+      if (key === "e") {
+         let isOpeningStash = false;
          const collidingEntities = this.getCollidingEntities();
-
          for (const entity of collidingEntities) {
             if (entity instanceof TribeStash) {
-               // Open tribe stash viewer
-               toggleTribeStashViewerVisibility();
+               isOpeningStash = true;
                break;
             }
          }
+
+         if (isOpeningStash) {
+            // Open tribe stash viewer
+            toggleTribeStashViewerVisibility();
+            // Hide any open menus
+            closeMenu();
+         } else {
+            toggleMenu("crafting");
+         }
+
+         Player.isOpeningStash = isOpeningStash;
       }
    }
 }

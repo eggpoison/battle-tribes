@@ -6,8 +6,7 @@ import Camera from './Camera';
 import Board from './Board';
 
 import { Minimap } from './components/MinimapCanvas';
-import PlayerControllerComponent, { stopPlayerMovement } from './entity-components/PlayerControllerComponent';
-import { toggleMenu } from './components/menus/MenuManager';
+import { stopPlayerMovement } from './entity-components/PlayerControllerComponent';
 import EntitySpawner from './EntitySpawner';
 
 import "./css/index.css";
@@ -33,12 +32,6 @@ document.addEventListener("contextmenu", () => {
    stopPlayerMovement();
 });
 
-const setupHotkeys = (): void => {
-   PlayerControllerComponent.createKeyListener("e", () => {
-      toggleMenu("crafting");
-   });
-}
-
 // Called when all elements are rendered
 export function load() {
    Camera.setup();
@@ -47,6 +40,4 @@ export function load() {
    Minimap.setup();
    Minimap.drawBackground();
    Game.startGame();
-
-   setupHotkeys();
 }

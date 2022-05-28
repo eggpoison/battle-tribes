@@ -1,13 +1,14 @@
 import Board, { Chunk, Coordinates } from "../Board";
 import Component from "../Component";
 import Entity from "../entities/Entity";
-import Player from "../entities/tribe-members/Player";
 import SETTINGS from "../settings";
 import TILE_INFO from "../tile-types";
 import { Point, Vector } from "../utils";
 import HitboxComponent from "./HitboxComponent";
 
 class TransformComponent extends Component {
+   private static readonly FRICTION_CONSTANT = 1;
+
    /** Position of the entity */
    public position!: Point;
    /** Velocity of the entity */
@@ -19,6 +20,8 @@ class TransformComponent extends Component {
    private knockbackTime: number = 0;
 
    private readonly isStatic: boolean;
+
+   private isMoving: boolean = false;
 
    constructor(startingPosition?: Point, startingVelocity: Vector = new Vector(0, 0), startingRotation: number = 0, isStatic: boolean = false) {
       super();
@@ -32,16 +35,17 @@ class TransformComponent extends Component {
    public tick(): void {
       if (this.isStatic) return;
 
+      const tile = Board.getTile(...this.getTileCoordinates());
+      const tileInfo = TILE_INFO[tile.kind];
+
       // If the entity is going to collide into a wall, don't move
-      const entity = this.getEntity();
-      const hitboxComponent = entity.getComponent(HitboxComponent);
-      if (hitboxComponent !== null && hitboxComponent.willCollideWithWall()) return;
+      // const entity = this.getEntity();
+      const hitboxComponent = this.getEntity().getComponent(HitboxComponent);
+      // if (hitboxComponent !== null && hitboxComponent.willCollideWithWall()) return;
 
       const velocity = this.velocity.copy();
 
-      // Apply tile slowness
-      const tileKind = Board.getTile(...this.getTileCoordinates()).kind;
-      const tileInfo = TILE_INFO[tileKind];
+      // Apply tile slowness to velocity
       if (typeof tileInfo.effects !== "undefined" && typeof tileInfo.effects.moveSpeedMultiplier !== "undefined") {
          velocity.magnitude *= tileInfo.effects.moveSpeedMultiplier;
       }
@@ -49,10 +53,16 @@ class TransformComponent extends Component {
       this.position = this.position.add(velocity.convertToPoint());
 
       if (this.knockbackTime > 0) {
-         // Apply knockback
+         // Add knockback
          this.position = this.position.add(this.knockback);
 
          this.knockbackTime -= 1 / SETTINGS.tps;
+      }
+
+      // Apply friction
+      if (!this.isMoving) {
+         this.velocity.magnitude -= tileInfo.friction / SETTINGS.tps * Board.tileSize * TransformComponent.FRICTION_CONSTANT;
+         if (this.velocity.magnitude < 0) this.velocity.magnitude = 0;
       }
 
       if (hitboxComponent !== null) {
@@ -60,14 +70,19 @@ class TransformComponent extends Component {
          const tileCollisions = this.getTileCollisions();
          if (tileCollisions.length > 0) this.resolveTileCollisions(tileCollisions);
       }
+
+      // Resolve wall collisions
+      this.resolveWallCollisions();
    }
 
    public setVelocity(velocity: Vector): void {
+      this.isMoving = true;
+      
       this.velocity = velocity;
    }
 
-   public stopVelocity(): void {
-      this.velocity = new Vector(0, 0);
+   public stopMoving(): void {
+      this.isMoving = false;
    }
 
    public getChunk(): Chunk | null {
@@ -77,7 +92,7 @@ class TransformComponent extends Component {
       return Board.getChunk(chunkX, chunkY);
    }
 
-   private getTileCoordinates(): [number, number] {
+   public getTileCoordinates(): Coordinates {
       const x = Math.floor(this.position.x / Board.tileSize);
       const y = Math.floor(this.position.y / Board.tileSize);
       
@@ -104,26 +119,17 @@ class TransformComponent extends Component {
                   const tile = Board.getTile(x, y);
                   if (!tile.isWall) continue;
 
-
-                  if (x === Board.dimensions/2 && y === Board.dimensions/2) {
-                     console.log("check collisions with sussy bakker");
-                  }
-
                   const xDist = Math.abs(this.position.x - (x + 0.5) * Board.tileSize);
                   const yDist = Math.abs(this.position.y - (y + 0.5) * Board.tileSize);
 
-                  // if (xDist > (Board.tileSize/2 + hitboxRadius * Board.tileSize)) continue;
-                  // if (yDist > (Board.tileSize/2 + hitboxRadius * Board.tileSize)) continue;
-
                   if (xDist <= hitboxRadius * Board.tileSize || yDist <= hitboxRadius * Board.tileSize) {
-                     if (this.getEntity() instanceof Player) console.log(xDist, yDist);
                      collisions.push([x, y]);
                      continue;
                   }
 
-                  const cornerDistance = Math.pow(xDist - Board.tileSize/2, 2) + Math.pow(yDist - Board.tileSize/2, 2);
+                  const cornerDistance = Math.sqrt(Math.pow(xDist, 2) + Math.pow(yDist, 2));
 
-                  if (cornerDistance <= Math.pow(hitboxRadius, 2) * Board.tileSize) {
+                  if (cornerDistance <= Math.sqrt(Math.pow(Board.tileSize, 2) / 2) + hitboxRadius * Board.tileSize) {
                      collisions.push([x, y]);
                   }
                }
@@ -148,12 +154,6 @@ class TransformComponent extends Component {
          const yDistFromEdge = Math.abs(yDist - Board.tileSize/2);
 
          const moveAxis: "x" | "y" = yDistFromEdge >= xDistFromEdge ? "y" : "x";
-         if (this.getEntity() instanceof Player) {
-            // Get distance from edge of tile
-            // distance from center -> distance from edge
-            console.log(moveAxis)
-            console.log(`x distance: ${xDistFromEdge}, y distance: ${yDistFromEdge})`);
-         };
 
          switch (hitboxInfo.type) {
             case "circle": {
@@ -165,6 +165,15 @@ class TransformComponent extends Component {
             }
          }
       }
+   }
+
+   private resolveWallCollisions(): void {
+      const units = (Board.dimensions - 0.5) * Board.tileSize;
+
+      if (this.position.x < 0) this.position.x = 0;
+      if (this.position.x > units) this.position.x = units;
+      if (this.position.y < 0) this.position.y = 0;
+      if (this.position.y > units) this.position.y = units;
    }
 
    public static getNearbyEntities(position: Point, radius: number): Array<Entity> {

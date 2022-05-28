@@ -14,7 +14,6 @@ import Camera from "./Camera";
 import Mob from "./entities/mobs/Mob";
 import HitboxComponent from "./entity-components/HitboxComponent";
 import OPTIONS from "./options";
-import { Minimap } from "./components/MinimapCanvas";
 import InfiniteInventoryComponent from "./entity-components/inventory/InfiniteInventoryComponent";
 import Game from "./Game";
 import EntitySpawner from "./EntitySpawner";
@@ -38,12 +37,13 @@ abstract class Board {
    private static chunks: Array<Array<Chunk>>;
 
    private static tiles: Array<Array<TileType>>;
-   private static fog: Array<Array<number>>;
+
+   private static disappearingFog = new Array<Coordinates>();
+
+   private static changedTiles = new Array<Coordinates>();
 
    public static setup(): void {
       this.tiles = generateTerrain();
-
-      this.fog = this.initialiseFog();
 
       // Initialise the chunks array
       this.chunks = new Array<Array<Chunk>>(this.size);
@@ -64,22 +64,8 @@ abstract class Board {
       this.spawnPlayer();
    }
 
-   private static initialiseFog(): Array<Array<number>> {
-      const fog = new Array<Array<number>>();
-
-      for (let y = 0; y < this.size; y++) {
-         fog[y] = new Array<number>();
-
-         for (let x = 0; x < this.size; x++) {
-            fog[y][x] = 1;
-         }
-      }
-
-      return fog;
-   }
-
-   public static getFog(x: number, y: number): number {
-      return this.fog[x][y];
+   public static getChangedTiles(): Array<Coordinates> {
+      return this.changedTiles;
    }
 
    public static getTile(x: number, y: number): TileType {
@@ -93,6 +79,12 @@ abstract class Board {
       return this.chunks[x][y];
    }
 
+   /** Clear values */
+   public static clearValues(): void {
+      this.changedTiles = new Array<Coordinates>();
+   }
+
+   /** Tick all entities */
    public static tick(): void {
       EntitySpawner.runSpawnAttempt();
 
@@ -144,7 +136,7 @@ abstract class Board {
                entity.tick();
                
                const newChunk = entity.getComponent(TransformComponent)!.getChunk()!;
-               if (newChunk !== entity.previousChunk) {
+               if (newChunk !== entity.previousChunk && newChunk !== null) {
                   entitiesToChangeChunk.push([entity, newChunk]);
                }
             }
@@ -159,11 +151,7 @@ abstract class Board {
          entity.previousChunk = newChunk;
       }
 
-      this.drawDarkness(ctx);
-
-      if (SETTINGS.showFogOfWar) {
-         this.drawFog(ctx);
-      }
+      this.updateDisappearingFog();
       
       updateDevtools({
          entityCount: entityCount,
@@ -175,9 +163,11 @@ abstract class Board {
       EntitySpawner.setPassiveMobCount(passiveMobCount);
    }
 
-   private static drawDarkness(ctx: CanvasRenderingContext2D): void {
+   public static drawDarkness(): void {
       let darkness = Game.getSkyDarkness();
       if (darkness === 0) return;
+
+      const ctx = getCanvasContext();
 
       const width = getCanvasWidth();
       const height = getCanvasHeight();
@@ -187,53 +177,74 @@ abstract class Board {
       ctx.fillRect(0, 0, width, height);
    }
 
-   private static drawFog(ctx: CanvasRenderingContext2D): void {
-      const [minX, maxX, minY, maxY] = Camera.getVisibleChunkBounds();
+   private static readonly fogDiscoverLocations: { [key: number]: Array<Coordinates> } = {};
 
-      for (let chunkY = minY; chunkY <= maxY; chunkY++) {
-         for (let chunkX = minX; chunkX <= maxX; chunkX++) {
+   private static calculateFogDiscoverLocations(radius: number): Array<Coordinates> {
+      const minX = -Math.floor(radius);
+      const maxX = Math.ceil(radius);
+      const minY = -Math.floor(radius);
+      const maxY = Math.ceil(radius);
 
-            // Draw fog of war
-            // The "+ 1" in x2 and y2 is to remove gaps between fog.
-            const x1 = chunkX * this.tileSize * this.chunkSize;
-            const x2 = (chunkX + 1) * this.tileSize * this.chunkSize + 1;
-            const y1 = chunkY * this.tileSize * this.chunkSize;
-            const y2 = (chunkY + 1) * this.tileSize * this.chunkSize + 1;
+      const fogDiscoverLocations = new Array<Coordinates>();
 
-            const fogAmount = this.getFog(chunkX, chunkY);
-            
-            ctx.fillStyle = `rgba(0, 0, 0, ${fogAmount})`;
-            ctx.fillRect(Camera.getXPositionInCamera(x1), Camera.getYPositionInCamera(y1), x2 - x1, y2 - y1);
-
-            // Decrease fog amount
-            if (fogAmount < 1 && fogAmount > 0) {
-               this.fog[chunkX][chunkY] -= 1 / SETTINGS.tps / SETTINGS.fogRevealTime;
+      for (let x = minX; x <= maxX; x++) {
+         for (let y = minY; y <= maxY; y++) {
+            if (Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2)) <= radius) {
+               fogDiscoverLocations.push([x, y]);
             }
+         }
+      }
+
+      return fogDiscoverLocations;
+   }
+
+   private static updateDisappearingFog(): void {
+      for (let i = this.disappearingFog.length - 1; i >= 0; i--) {
+         const [x, y] = this.disappearingFog[i];
+         const tile = this.getTile(x, y);
+
+         tile.fogAmount -= 1 / SETTINGS.tps / SETTINGS.fogRevealTime;
+
+         if (tile.fogAmount <= 0) {
+            tile.fogAmount = 0;
+
+            this.disappearingFog.splice(i, 1);
          }
       }
    }
 
-   public static revealFog(position: Point, radius: number, isImmediate: boolean): void {
-      const minChunkX = Math.floor((position.x - radius) / Board.tileSize / Board.chunkSize);
-      const maxChunkX = Math.floor((position.x + radius) / Board.tileSize / Board.chunkSize);
+   public static revealFog(startCoordinates: Coordinates, radius: number, isImmediate: boolean): void {
+      let fogDiscoverLocations: Array<Coordinates>;
 
-      const minChunkY = Math.floor((position.y - radius) / Board.tileSize / Board.chunkSize);
-      const maxChunkY = Math.floor((position.y + radius) / Board.tileSize / Board.chunkSize);
+      if (this.fogDiscoverLocations.hasOwnProperty(radius)) {
+         // If the fog discover locations have already been calculated, return the previously calculated values
+         fogDiscoverLocations = this.fogDiscoverLocations[radius];
+      } else {
+         // Calculate the fog discover locations
+         fogDiscoverLocations = this.calculateFogDiscoverLocations(radius);
+         this.fogDiscoverLocations[radius] = fogDiscoverLocations;
+      }
 
-      for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
-         for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
+      const [x, y] = startCoordinates;
+      for (const [offsetX, offsetY] of fogDiscoverLocations) {
+         if (x + offsetX < 0 || x + offsetX >= Board.dimensions || y + offsetY < 0 || y + offsetY >= Board.dimensions) {
+            continue;
+         }
 
-            if (this.getFog(chunkX, chunkY) === 1) {
-               if (isImmediate) {
-                  this.fog[chunkX][chunkY] = 0;
-               } else {
-                  this.fog[chunkX][chunkY] -= 1 / SETTINGS.tps / SETTINGS.fogRevealTime;
-               }
-               
-               // Update the minimap
-               Minimap.drawBackground();
+         const tile = this.getTile(x + offsetX, y + offsetY);
+
+         // Reveal fog
+         if (tile.fogAmount === 1) {
+            if (isImmediate) {
+               tile.fogAmount = 0;
+               this.changedTiles.push([x + offsetX, y + offsetY]);
+            } else {
+               this.disappearingFog.push([x + offsetX, y + offsetY]);
             }
          }
+
+         // Add the fog to the changed tiles
+         this.changedTiles.push([x + offsetX, y + offsetY]);
       }
    }
 
@@ -298,8 +309,7 @@ abstract class Board {
       const nearbyTileCoordinates = new Array<Coordinates>();
       for (let y = minY; y <= maxY; y++) {
          for (let x = minX; x <= maxX; x++) {
-            const tileCoordinates = [x, y];
-            nearbyTileCoordinates.push(tileCoordinates as Coordinates);
+            nearbyTileCoordinates.push([x, y]);
          }
       }
 

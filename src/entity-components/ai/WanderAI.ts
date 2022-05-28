@@ -35,20 +35,6 @@ class WanderAI extends EntityAI {
       // Get all nearby tiles
       let nearbyTileCoordinates = Board.getNearbyTileCoordinates(position, this.range);
 
-      // Remove tiles which the entity can't move to
-      if (typeof this.entity.entityInfo !== "undefined") {
-         for (let i = nearbyTileCoordinates.length - 1; i >= 0; i--) {
-            const tileCoordinates = nearbyTileCoordinates[i];
-            const tile = Board.getTile(...tileCoordinates);
-
-            // Remove the tile if it can't be moved to
-            const preferredTileTypes = this.entity.entityInfo.spawnRequirements.tileTypes;
-            if (typeof preferredTileTypes === "undefined" || !preferredTileTypes.includes(tile.kind)) {
-               nearbyTileCoordinates.splice(i, 1);
-            }
-         }
-      }
-
       // If there are no eligible tiles, return a random position in the current tile
       if (nearbyTileCoordinates.length === 0) {
          const x = Math.floor(position.x / Board.tileSize);

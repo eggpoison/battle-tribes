@@ -1,6 +1,6 @@
 import Board from "./Board";
 import Camera from "./Camera";
-import { renderBoard } from "./components/Canvas";
+import { clearCanvas, renderFog, renderGroundTiles, renderWallTiles } from "./components/Canvas";
 import { Minimap } from "./components/MinimapCanvas";
 import Player from "./entities/tribe-members/Player";
 import { stopPlayerMovement } from "./entity-components/PlayerControllerComponent";
@@ -16,12 +16,13 @@ let previousFocus = true;
 abstract class Game {
    // private static readonly TIME_SPEED = 1.5;
    private static readonly TIME_SPEED = 100;
-   private static time: number = 0;
+   private static time: number = SETTINGS.startTime;
 
    public static tick(): void {
       Game.time += Game.TIME_SPEED / SETTINGS.tps / 60;
       if (Game.time >= 24) Game.time -= 24;
 
+      // Update timers
       for (const timer of timers.slice()) {
          timer.tick();
 
@@ -34,14 +35,28 @@ abstract class Game {
  
       Camera.updateCameraPosition();
       Camera.tick();
-      Minimap.drawEntities(Player.instance.getComponent(TransformComponent)!.position);
-      renderBoard();
+      clearCanvas();
+      renderGroundTiles();
       Board.tick();
+      renderWallTiles();
+      // Draw the darkness effect given by night time
+      Board.drawDarkness();
+      
+      // Update the minimap
+      const changedTiles = Board.getChangedTiles();
+      Minimap.updateBackground(changedTiles);
+      // Update the minimap entities
+      Minimap.drawEntities(Player.instance.getComponent(TransformComponent)!.position);
+
+      if (SETTINGS.showFogOfWar) {
+         renderFog();
+      }
 
       const focus = document.hasFocus();
       if (previousFocus !== focus && focus) stopPlayerMovement();
-
       previousFocus = focus;
+
+      Board.clearValues();
    }
 
    /**

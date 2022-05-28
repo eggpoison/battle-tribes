@@ -1,5 +1,6 @@
 import Entity from "../../entities/Entity";
 import { ConstructorFunction } from "../../utils";
+import HealthComponent from "../HealthComponent";
 import TransformComponent from "../TransformComponent";
 import EntityAI from "./EntityAI";
 
@@ -12,7 +13,7 @@ type FollowAIInfo = {
 class FollowAI extends EntityAI {
    public readonly id: string;
 
-   private target: Entity | null = null;
+   public target: Entity | null = null;
 
    private readonly range: number;
    private readonly targets: ReadonlyArray<ConstructorFunction>;
@@ -26,10 +27,6 @@ class FollowAI extends EntityAI {
       this.range = info.range;
       this.speed = info.speed;
       this.targets = info.targets;
-   }
-
-   public getTarget(): Entity | null {
-      return this.target;
    }
 
    protected reachTargetPosition(transformComponent: TransformComponent): void {
@@ -73,17 +70,33 @@ class FollowAI extends EntityAI {
       this.tickCondition = condition;
    }
 
+   private validateTarget(): void {
+      if (this.target === null) return;
+      
+      // Untarget the target if it is dead
+      const healthComponent = this.target.getComponent(HealthComponent);
+      if (healthComponent !== null) {
+         if (healthComponent.getHealth() <= 0) {
+            this.target = null;
+         }
+      }
+   }
+
    public tick(): void {
       super.tick();
+      this.validateTarget();
       if (typeof this.tickCondition !== "undefined" && !this.tickCondition()) return;
+
 
       const targetEntity = this.findClosestEntity();
 
       if (targetEntity !== null) {
-         this.target = targetEntity;
-
          const targetPosition = targetEntity.getComponent(TransformComponent)!.position;
+
+         // Move to the target
          super.moveToPosition(targetPosition, this.speed);
+         
+         this.target = targetEntity;
       }
    } 
 }

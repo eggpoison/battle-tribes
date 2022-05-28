@@ -5,13 +5,14 @@ import MobSpawnMenu from "./MobSpawnMenu";
 
 type MenuNames = "crafting" | "mobSpawn";
 
-const MENUS: Record<MenuNames, () => JSX.Element> = {
+const MENUS: Record<MenuNames, () => JSX.Element | null> = {
    crafting: CraftingMenu,
    mobSpawn: MobSpawnMenu
 };
 
 let toggleMenuCallback: (menuName: MenuNames) => void;
 let openMenuCallback: (menuName: MenuNames) => void;
+let menuIsOpenCallback: (menuName: MenuNames) => boolean;
 let closeMenuCallback: () => void;
 
 export function toggleMenu(menuName: MenuNames): void {
@@ -24,6 +25,10 @@ export function openMenu(menuName: MenuNames): void {
 
 export function closeMenu(): void {
    closeMenuCallback();
+}
+
+export function menuIsOpen(menuName: MenuNames): boolean {
+   return menuIsOpenCallback(menuName);
 }
 
 const MenuManager = () => {
@@ -58,6 +63,10 @@ const MenuManager = () => {
          } else {
             setCurrentMenu(null);
          }
+      }
+
+      menuIsOpenCallback = (menuName: MenuNames): boolean => {
+         return currentMenu === menuName;
       }
    }, [currentMenu]);
 

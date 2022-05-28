@@ -8,48 +8,83 @@ export enum TileKind {
    sand,
    sandstone,
    snow,
-   ice
+   ice,
+   magma,
+   lava
 }
 
 type TileEffects = {
    readonly moveSpeedMultiplier?: number;
+   readonly walkDamage?: number;
 }
 
 interface TileInfo {
    readonly colour: string;
+   /** How quickly an entity loses acceleration on the tile (1 = instant, 0 = maintains) */
+   readonly friction: number;
    readonly effects?: TileEffects;
+   readonly isLiquid?: boolean;
 }
+
+const DEFAULT_FRICTION = 0.5;
 
 const TILE_INFO: Record<TileKind, TileInfo> = {
    [TileKind.dirt]: {
-      colour: "#784e16"
+      colour: "#784e16",
+      friction: DEFAULT_FRICTION
    },
    [TileKind.grass]: {
-      colour: "#39f746"
+      colour: "#39f746",
+      friction: DEFAULT_FRICTION
    },
    [TileKind.rock]: {
-      colour: "#aaaaaa"
+      colour: "#aaaaaa",
+      friction: DEFAULT_FRICTION
    },
    [TileKind.sand]: {
-      colour: "#eded3e"
+      colour: "#eded3e",
+      friction: DEFAULT_FRICTION
    },
    [TileKind.sandstone]: {
-      colour: "#abab1b"
+      colour: "#abab1b",
+      friction: DEFAULT_FRICTION
    },
    [TileKind.snow]: {
       colour: "#ffffff",
+      friction: DEFAULT_FRICTION,
       effects: {
          moveSpeedMultiplier: 0.7
       }
    },
    [TileKind.ice]: {
-      colour: "#94f6ff"
+      colour: "#94f6ff",
+      friction: 0.1,
+      effects: {
+         moveSpeedMultiplier: 1.2
+      }
    },
    [TileKind.sludge]: {
       colour: "#038a0c",
+      friction: 0.8,
       effects: {
          moveSpeedMultiplier: 0.5
       }
+   },
+   [TileKind.magma]: {
+      colour: "#ff9f0f",
+      friction: DEFAULT_FRICTION,
+      effects: {
+         walkDamage: 1
+      }
+   },
+   [TileKind.lava]: {
+      colour: "#ff130f",
+      friction: 1,
+      effects: {
+         moveSpeedMultiplier: 0.6,
+         walkDamage: 5
+      },
+      isLiquid: true
    }
 };
 export default TILE_INFO;

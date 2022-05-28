@@ -15,9 +15,9 @@ class Tombstone extends Entity {
    private static readonly ZOMBIE_SPAWN_CHANCE = 0.05;
 
    /** Chance for a tombstone to die each second when it's day */
-   private static readonly DIE_CHANCE = 0.1;
+   private static readonly DIE_CHANCE = 0.15;
 
-   private hasZombie: boolean = false;
+   private currentZombie: Zombie | null = null;
    
    constructor(position: Point) {
       super([
@@ -45,21 +45,32 @@ class Tombstone extends Entity {
    }
 
    public tick(): void {
+      // If it's day, remove the tombstone at a random point
       if (!Game.isNight() && Math.random() < Tombstone.DIE_CHANCE / SETTINGS.tps) {
          Board.removeEntity(this);
+
+         // If the current zombie is alive, also kill it
+         if (this.currentZombie !== null) {
+            this.currentZombie.die(null);
+         }
+
          return;
       }
 
       super.tick();
 
-      if (!this.hasZombie && Math.random() < Tombstone.ZOMBIE_SPAWN_CHANCE / SETTINGS.tps) {
+      if (this.currentZombie === null && Math.random() < Tombstone.ZOMBIE_SPAWN_CHANCE / SETTINGS.tps) {
          const position = this.getComponent(TransformComponent)!.position;
          
          const zombie = new Zombie(position);
          zombie.setInfo(getEntityInfo(zombie));
          Board.addEntity(zombie);
 
-         this.hasZombie = true;
+         this.currentZombie = zombie;
+
+         zombie.createEvent("die", () => {
+            this.currentZombie = null;
+         });
       }
    }
 }

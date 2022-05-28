@@ -41,6 +41,16 @@ const getEligibleEntities = (tileType: TileKind, entityType: "mob" | "resource")
          continue;
       }
 
+      // Remove the entity if there is the max number already
+      if (entityType === "mob") {
+         const behaviour = (entityInfo as MobInfo).behaviour;
+         if ((behaviour === "hostile" || behaviour === "neutral") && !EntitySpawner.canSpawnHostileMobs()) {
+            continue;
+         } else if (!EntitySpawner.canSpawnPassiveMobs()) {
+            continue;
+         }
+      }
+
       // Remove the entity if the tile is of the wrong type
       const preferredTileTypes = entityInfo.spawnRequirements.tileTypes;
       if (typeof preferredTileTypes !== "undefined" && !preferredTileTypes.includes(tileType)) {
@@ -66,7 +76,8 @@ abstract class EntitySpawner {
    /** How many tiles away from a spawn position a mob can spawn */
    private static SPAWN_RADIUS = 2;
 
-   private static mobCount: number = 0;
+   private static hostileMobCount: number = 0;
+   private static passiveMobCount: number = 0;
 
    public static setup(): void {
       prefillEntityArrays();
@@ -84,8 +95,12 @@ abstract class EntitySpawner {
       Board.addEntity(entity);
    }
 
-   public static updateMobCount(mobCount: number): void {
-      this.mobCount = mobCount;
+   public static setHostileMobCount(mobCount: number): void {
+      this.hostileMobCount = mobCount;
+   }
+
+   public static setPassiveMobCount(mobCount: number): void {
+      this.passiveMobCount = mobCount;
    }
 
    private static spawnMobs(tileCoordinates: Coordinates, mobInfo: MobInfo): void {
@@ -174,12 +189,16 @@ abstract class EntitySpawner {
       }
    }
 
-   private static canSpawnMobs(): boolean {
-      return this.mobCount < this.targetMobCount;
+   public static canSpawnHostileMobs(): boolean {
+      return this.hostileMobCount < this.targetMobCount;
+   }
+
+   public static canSpawnPassiveMobs(): boolean {
+      return this.passiveMobCount < this.targetMobCount;
    }
 
    private static spawnTombstones(): void {
-      if (!Game.isNight()) return;
+      if (!Game.isNight() || !this.canSpawnHostileMobs()) return;
 
       const SPAWN_CHANCE_MULTIPLIER = 0.4;
 
@@ -199,7 +218,7 @@ abstract class EntitySpawner {
    public static runSpawnAttempt(): void {
       // Spawn mobs
       // Find a random tile in the world which can spawn mobs, and spawn a random mob on it
-      if (this.canSpawnMobs() && Math.random() <= this.MOB_SPAWN_RATE * Board.size * Board.size / SETTINGS.tps) {
+      if (Math.random() <= this.MOB_SPAWN_RATE * Board.size * Board.size / SETTINGS.tps) {
          while (true) {
             const tileX = randInt(0, Board.dimensions - 1);
             const tileY = randInt(0, Board.dimensions - 1);

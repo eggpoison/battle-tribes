@@ -97,7 +97,8 @@ abstract class Board {
       EntitySpawner.runSpawnAttempt();
 
       let entityCount = 0;
-      let mobCount = 0;
+      let passiveMobCount = 0;
+      let hostileMobCount = 0;
       let resourceCount = 0;
 
       const entitiesToChangeChunk: Array<[Entity, Chunk]> = [];
@@ -114,7 +115,12 @@ abstract class Board {
             for (const entity of chunk) {
                entityCount++;
                if (entity instanceof Mob) {
-                  mobCount++;
+                  const behaviour = entity.entityInfo.behaviour;
+                  if (behaviour === "hostile" || behaviour === "neutral") {
+                     hostileMobCount++;
+                  } else {
+                     passiveMobCount++;
+                  }
                } else if (entity instanceof Resource) {
                   resourceCount++;
                }
@@ -161,11 +167,12 @@ abstract class Board {
       
       updateDevtools({
          entityCount: entityCount,
-         mobCount: mobCount,
+         mobCount: hostileMobCount + passiveMobCount,
          resourceCount: resourceCount
       });
 
-      EntitySpawner.updateMobCount(mobCount);
+      EntitySpawner.setHostileMobCount(hostileMobCount);
+      EntitySpawner.setPassiveMobCount(passiveMobCount);
    }
 
    private static drawDarkness(ctx: CanvasRenderingContext2D): void {

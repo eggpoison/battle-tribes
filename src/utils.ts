@@ -13,6 +13,8 @@ export function randInt(min: number, max: number): number {
 }
 
 export function randItem<T>(arr: Array<T> | ReadonlyArray<T>): T {
+   if (arr.length === 0) throw new Error("Array has no items in it!");
+
    return arr[Math.floor(Math.random() * arr.length)];
 }
 

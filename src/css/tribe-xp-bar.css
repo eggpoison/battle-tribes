@@ -1,0 +1,31 @@
+#xp-bar {
+   --width: 20rem;
+   --height: 2rem;
+   width: var(--width);
+   height: var(--height);
+   background-color: #000;
+   border: 3px solid #fff;
+   position: absolute;
+   top: 1rem;
+   left: 50%;
+   transform: translateX(-50%);
+}
+#xp-bar .xp-pool {
+   --margin: 4px;
+   width: calc(var(--xp) / var(--next-xp) * (var(--width) - var(--margin) * 2));
+   height: calc(var(--height) - var(--margin) * 2);
+   background-color: rgb(0, 255, 0);
+   margin: var(--margin) 0 0 var(--margin);
+}
+#xp-bar .amount-label {
+   color: #fff;
+   font-family: "Gaegu";
+   font-weight: 700;
+   font-size: 1.3rem;
+   text-shadow: 0 2px 2px #000, 2px 0 2px #000, 2px 2px 2px #000, -2px -2px 2px #000, -2px 0 2px #000, 0 -2px 2px #000;
+   position: absolute;
+   top: 50%;
+   left: 50%;
+   transform: translate(-50%, -50%);
+   white-space: pre;
+}

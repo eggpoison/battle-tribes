@@ -40,7 +40,7 @@ class WanderAI extends EntityAI {
          const x = Math.floor(position.x / Board.tileSize);
          const y = Math.floor(position.y / Board.tileSize);
 
-         const targetPosition = Board.getRandomPositionInTile([x, y]);
+         const targetPosition = Board.getRandomPositionInTile(x, y);
          return targetPosition;
       }
 
@@ -48,7 +48,7 @@ class WanderAI extends EntityAI {
       const targetTileCoordinates = randItem(nearbyTileCoordinates);
 
       // Move to a random position in the chosen tile
-      const targetPosition = Board.getRandomPositionInTile(targetTileCoordinates);
+      const targetPosition = Board.getRandomPositionInTile(...targetTileCoordinates);
       return targetPosition;
    }
 

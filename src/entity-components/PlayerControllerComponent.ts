@@ -1,10 +1,10 @@
 import Board from "../Board";
 import Component from "../Component";
 import { toggleDevtoolsVisibility } from "../components/Devtools";
+import Chief from "../entities/tribe-members/Chief";
 import Player from "../entities/tribe-members/Player";
 import SETTINGS from "../settings";
 import { isDev, Vector } from "../utils";
-import AttackComponent from "./AttackComponent";
 import TransformComponent from "./TransformComponent";
 
 const keyEvents = new Array<(key: string) => void>();
@@ -45,7 +45,7 @@ class PlayerControllerComponent extends Component {
          return;
       }
       
-      const velocity = new Vector(Player.SPEED * Board.tileSize / SETTINGS.tps, angle);
+      const velocity = new Vector(Chief.SPEED * Board.tileSize / SETTINGS.tps, angle);
       
       transformComponent.setVelocity(velocity);
       
@@ -79,7 +79,7 @@ class PlayerControllerComponent extends Component {
    }
 
    public onLoad(): void {
-      document.addEventListener("mousedown", e => this.validateInput(e) ? this.startAttack() : null);
+      // document.addEventListener("mousedown", e => this.validateInput(e) ? this.startAttack() : null);
 
       document.addEventListener("keydown", e => this.validateInput(e) ? this.checkKey(e, true) : null);
       document.addEventListener("keyup", e => this.validateInput(e) ? this.checkKey(e, false) : null);
@@ -94,11 +94,6 @@ class PlayerControllerComponent extends Component {
       }
 
       return true;
-   }
-
-   private startAttack(): void {
-      const attackComponent = this.getEntity().getComponent(AttackComponent)!;
-      attackComponent.startAttack("baseAttack");
    }
 
    public static createKeyEvent(func: (key: string) => void): void {

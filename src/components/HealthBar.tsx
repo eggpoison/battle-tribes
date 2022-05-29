@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import Player from "../entities/tribe-members/Player";
+import Chief from "../entities/tribe-members/Chief";
 
 let setHealthBarMaxHealth: (maxHealth: number) => void;
 let setHealthBarHealth: (health: number) => void;
@@ -17,8 +17,8 @@ export abstract class HealthBarManager {
 const HealthBar = () => {
    const healthBarRef = useRef<HTMLDivElement | null>(null);
 
-   const [maxHealth, setMaxHealth] = useState(Player.HEALTH);
-   const [health, setHealth] = useState(Player.HEALTH);
+   const [maxHealth, setMaxHealth] = useState(Chief.HEALTH);
+   const [health, setHealth] = useState(Chief.HEALTH);
 
    useEffect(() => {
       setHealthBarMaxHealth = (maxHealth: number): void => {

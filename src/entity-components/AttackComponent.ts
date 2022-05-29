@@ -1,10 +1,10 @@
 import Board from "../Board";
 import Component from "../Component";
 import Entity from "../entities/Entity";
+import GenericTribeMember from "../entities/tribe-members/GenericTribeMember";
 import { Point } from "../utils";
 import HealthComponent from "./HealthComponent";
 import TransformComponent from "./TransformComponent";
-import TribeMemberComponent from "./TribeMemberComponent";
 
 interface BaseAttackInfo {
    getPosition(): Point;
@@ -64,13 +64,11 @@ export class CircleAttack extends BaseAttack implements CircleAttackInfo {
    public getAttackedEntities(): Array<Entity> {
       const nearbyEntities = TransformComponent.getNearbyEntities(this.getPosition(), this.radius * Board.tileSize);
 
-      const tribeComponent = this.attackingEntity.getComponent(TribeMemberComponent);
-      if (tribeComponent !== null) {
+      if (this.attackingEntity instanceof GenericTribeMember) {
          for (let idx = nearbyEntities.length - 1; idx >= 0; idx--) {
             const entity = nearbyEntities[idx];
-
-            const entityTribeComponent = entity.getComponent(TribeMemberComponent);
-            if (entityTribeComponent !== null && entityTribeComponent.tribe === tribeComponent.tribe) {
+            
+            if (entity instanceof GenericTribeMember && entity.tribe === this.attackingEntity.tribe) {
                nearbyEntities.splice(idx, 1);
             }
          }

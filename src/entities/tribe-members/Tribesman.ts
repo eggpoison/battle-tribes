@@ -3,13 +3,11 @@ import AIManagerComponent from "../../entity-components/ai/AIManangerComponent";
 import FollowAI from "../../entity-components/ai/FollowAI";
 import WanderAI from "../../entity-components/ai/WanderAI";
 import AttackComponent, { CircleAttack } from "../../entity-components/AttackComponent";
-import HealthComponent from "../../entity-components/HealthComponent";
 import HitboxComponent from "../../entity-components/HitboxComponent";
 import FiniteInventoryComponent from "../../entity-components/inventory/FiniteInventoryComponent";
 import InfiniteInventoryComponent from "../../entity-components/inventory/InfiniteInventoryComponent";
 import RenderComponent from "../../entity-components/RenderComponent";
 import TransformComponent from "../../entity-components/TransformComponent";
-import TribeMemberComponent from "../../entity-components/TribeMemberComponent";
 import Timer from "../../Timer";
 import Tribe from "../../Tribe";
 import { Point } from "../../utils";
@@ -20,7 +18,6 @@ import Mob from "../mobs/Mob";
 import Resource from "../resources/Resource";
 import TribeStash from "../TribeStash";
 import GenericTribeMember from "./GenericTribeMember";
-import Player from "./Player";
 
 class Tribesman extends GenericTribeMember {
    public readonly SIZE = 1;
@@ -30,11 +27,11 @@ class Tribesman extends GenericTribeMember {
    private static readonly MAX_HEALTH = 25;
    private static readonly DEFAULT_SLOT_COUNT = 2;
 
-   private static readonly WALK_SPEED = 1;
-   private static readonly RUN_SPEED = 2.5;
+   private static readonly WANDER_SPEED = 1;
+   private static readonly FOLLOW_SPEED = 2.5;
 
    private static readonly WANDER_RATE = 0.5;
-   private static readonly TARGETS = [Mob, Resource, ItemEntity];
+   private static readonly TARGETS = [Mob, GenericTribeMember, Resource, ItemEntity];
    private static readonly MAX_DIST_FROM_TARGET = 1.25;
 
    private static readonly ATTACK_RANGE = 2;
@@ -52,11 +49,6 @@ class Tribesman extends GenericTribeMember {
 
       super.setSightRange(Tribesman.SIGHT_RANGE);
       super.setMaxHealth(Tribesman.MAX_HEALTH);
-
-      const HAND_SIZE = 0.45;
-      const HAND_ANGLES = 40 / 180 * Math.PI;
-
-      super.createRenderParts(this.SIZE, HAND_SIZE, Player.TRIBE_COLOUR, Player.TRIBE_COLOUR, HAND_ANGLES);
 
       this.getComponent(HitboxComponent)!.setHitbox({
          type: "circle",
@@ -98,7 +90,7 @@ class Tribesman extends GenericTribeMember {
       const wanderAI = this.getComponent(AIManagerComponent)!.addAI(
          new WanderAI("wander", {
             range: Tribesman.SIGHT_RANGE,
-            speed: Tribesman.WALK_SPEED,
+            speed: Tribesman.WANDER_SPEED,
             wanderRate: Tribesman.WANDER_RATE
          })
       );
@@ -122,10 +114,9 @@ class Tribesman extends GenericTribeMember {
       const followAI = this.getComponent(AIManagerComponent)!.addAI(
          new FollowAI("follow", {
             range: Tribesman.SIGHT_RANGE,
-            speed: Tribesman.RUN_SPEED,
             targets: Tribesman.TARGETS
          })
-      ) as FollowAI;
+      );
 
       let isMovingToStash = false;
 
@@ -147,20 +138,22 @@ class Tribesman extends GenericTribeMember {
          }
       });
 
-      followAI.setTickCondition(() => {
-         // Move to stash
+      followAI.setTickCallback(() => {
+         // If inventory is full, move to the stash
          if (this.getComponent(FiniteInventoryComponent)!.isFull(false)) {
             isMovingToStash = true;
 
-            const targetPosition = this.getComponent(TribeMemberComponent)!.tribe.position;
-            followAI.moveToPosition(targetPosition, Tribesman.RUN_SPEED);
+            const targetPosition = this.tribe.position;
+            followAI.moveToPosition(targetPosition, Tribesman.FOLLOW_SPEED);
 
-            return false;
+            return;
          }
          isMovingToStash = false;
 
-         const target = followAI.target;
-         if (target !== null && target instanceof LivingEntity) {
+         const target = followAI.getTarget();
+         if (target === null) return;
+
+         if (target instanceof LivingEntity || target instanceof GenericTribeMember) {
             const targetSize = typeof target.SIZE === "number" ? target.SIZE : (target.SIZE.WIDTH + target.SIZE.HEIGHT) / 2;
 
             const thisTransformComponent = this.getComponent(TransformComponent)!;
@@ -169,19 +162,22 @@ class Tribesman extends GenericTribeMember {
             const ROTATION_PADDING = 5;
 
             // Don't move to the target if they're too close
-            let hasStopped = false;
-            const targetPosition = target.getComponent(TransformComponent)!.position;
-            const dist = this.getComponent(TransformComponent)!.position.distanceFrom(targetPosition);
+            const dist = thisTransformComponent.position.distanceFrom(targetTransformComponent.position);
             const isFacingTarget = Math.abs(thisTransformComponent.rotation - targetTransformComponent.rotation) < ROTATION_PADDING;
             if (isFacingTarget && dist - (this.SIZE/2 + targetSize/2) * Board.tileSize < Tribesman.MAX_DIST_FROM_TARGET * Board.tileSize) {
                // Stop moving
-               this.getComponent(TransformComponent)!.stopMoving();
+               thisTransformComponent.stopMoving();
                this.getComponent(TransformComponent)!.velocity.magnitude = 0;
-               hasStopped = true;
 
-               if (target.getComponent(HealthComponent)!.getHealth() <= 0) console.log("scam");
+               // Rotate to face the target
+               const angle = thisTransformComponent.position.angleBetween(targetTransformComponent.position);
+               thisTransformComponent.rotation = angle;
+            } else {
+               // If the target isn't too close, move to them
+               followAI.moveToEntity(target, Tribesman.FOLLOW_SPEED);
             }
 
+            // Attack the entity
             const distanceFromTarget = this.getComponent(TransformComponent)!.position.distanceFrom(target.getComponent(TransformComponent)!.position);
             if (distanceFromTarget < (Tribesman.ATTACK_RANGE + this.SIZE/2 + targetSize/2) * Board.tileSize) {
                if (this.attackTimer === null) {
@@ -196,23 +192,30 @@ class Tribesman extends GenericTribeMember {
                   });
                }
             }
-
-            if (hasStopped) return false;
+         } else {
+            followAI.moveToEntity(target, Tribesman.FOLLOW_SPEED);
          }
-
-         return true;
       });
 
-      followAI.createSortFunction((entities: Array<Entity>) => this.sortFollowTargets(entities));
+      followAI.setTargetSortFunction((entities: Array<Entity>) => this.sortFollowTargets(entities));
 
       this.getComponent(AIManagerComponent)!.changeCurrentAI("wander");
    }
 
    private sortFollowTargets(entities: Array<Entity>): Array<Entity> | null {
       // Sort the entities by type
-      const hostileMobs = new Array<Mob>();
+      const hostileMobs = new Array<Mob | GenericTribeMember>();
       const otherEntities = new Array<Mob | Resource | ItemEntity>();
       for (const entity of entities) {
+         // Other tribe members
+         if (entity instanceof GenericTribeMember) {
+            // If it belongs to a different tribe, it can be attacked
+            if (entity.tribe !== this.tribe) {
+               hostileMobs.push(entity);
+            }
+            continue;
+         }
+
          // Mobs
          if (entity instanceof Mob) {
             switch (entity.entityInfo.behaviour) {
@@ -234,10 +237,8 @@ class Tribesman extends GenericTribeMember {
 
          // Item entities
          if (entity instanceof ItemEntity) {
-            // Only add it if it can be picked up
-            if (this.getComponent(FiniteInventoryComponent)!.canPickupItem(entity.item)) {
-               otherEntities.push(entity);
-            }
+            // Don't need to check if the item can be picked up, as if the inventory is full the tribesman will automatically walk to the stash
+            otherEntities.push(entity);
             continue;
          }
       }

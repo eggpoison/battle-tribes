@@ -3,7 +3,6 @@ import HitboxComponent from "../entity-components/HitboxComponent";
 import RenderComponent, { ImageRenderPart } from "../entity-components/RenderComponent";
 import TransformComponent from "../entity-components/TransformComponent";
 import Tribe from "../Tribe";
-import TribeMemberComponent from "../entity-components/TribeMemberComponent";
 import InfiniteInventoryComponent from "../entity-components/inventory/InfiniteInventoryComponent";
 import Board from "../Board";
 
@@ -14,6 +13,8 @@ class TribeStash extends Entity {
    public static OPEN_MESSAGE = "Press E to open stash";
    public static CLOSE_MESSAGE = "Press E to close stash";
 
+   public readonly tribe: Tribe;
+
    constructor(tribe: Tribe) {
       const spawnPosition = tribe.position;
 
@@ -21,9 +22,10 @@ class TribeStash extends Entity {
          new TransformComponent(spawnPosition, undefined, undefined, true),
          new HitboxComponent(),
          new RenderComponent(),
-         new InfiniteInventoryComponent(),
-         new TribeMemberComponent(tribe)
+         new InfiniteInventoryComponent()
       ]);
+
+      this.tribe = tribe;
 
       this.setHitbox();
 

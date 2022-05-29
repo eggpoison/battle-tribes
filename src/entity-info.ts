@@ -28,6 +28,7 @@ export type MobBehaviour = "peaceful" | "neutral" | "hostile";
 export interface MobInfo extends EntityInfo {
    readonly packSize: number | [number, number];
    readonly behaviour: MobBehaviour;
+   readonly spawnChance?: number;
 }
 
 export interface ResourceInfo extends EntityInfo {
@@ -42,7 +43,7 @@ const ENTITY_INFO: ReadonlyArray<MobInfo | ResourceInfo> = [
       },
       exp: 0,
       getConstr: () => Flower,
-      weight: 5
+      weight: 2
    },
    // Tree
    {
@@ -110,6 +111,7 @@ const ENTITY_INFO: ReadonlyArray<MobInfo | ResourceInfo> = [
       },
       packSize: 1,
       behaviour: "hostile",
+      spawnChance: 0.2,
       exp: 10,
       getConstr: () => Yeti
    }

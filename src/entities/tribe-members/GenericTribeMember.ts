@@ -5,17 +5,23 @@ import HealthComponent from "../../entity-components/HealthComponent";
 import HitboxComponent from "../../entity-components/HitboxComponent";
 import RenderComponent, { EllipseRenderPart } from "../../entity-components/RenderComponent";
 import TransformComponent from "../../entity-components/TransformComponent";
-import TribeMemberComponent from "../../entity-components/TribeMemberComponent";
 import { Vector } from "../../utils";
 import LivingEntity from "../LivingEntity";
 import SelectedSlotComponent from "../../entity-components/SelectedSlotComponent";
 import Timer from "../../Timer";
 import Board from "../../Board";
+import TRIBE_INFO from "../../tribe-info";
 
 abstract class GenericTribeMember extends Entity {
    public static readonly RESPAWN_TIME = 3;
 
+   private static readonly SIZE = 1;
+   private static readonly HAND_SIZE = 0.45;
+   private static readonly HAND_ANGLES = 40 / 180 * Math.PI;
+
    public sightRange!: number;
+
+   public readonly tribe: Tribe;
 
    constructor(tribe: Tribe, components?: ReadonlyArray<Component>) {
       super([
@@ -23,16 +29,19 @@ abstract class GenericTribeMember extends Entity {
          new RenderComponent(),
          new HitboxComponent(),
          new HealthComponent(),
-         new TribeMemberComponent(tribe),
          new SelectedSlotComponent(),
          ...(components || [])
       ]);
+
+      this.tribe = tribe;
+
+      this.createRenderParts();
 
       super.createEvent("killEntity", (entity: Entity) => {
          if (entity instanceof LivingEntity) {
             const expDrop = entity.entityInfo.exp;
             
-            this.getComponent(TribeMemberComponent)!.addExp(expDrop);
+            this.addExp(expDrop);
          }
       });
 
@@ -57,6 +66,10 @@ abstract class GenericTribeMember extends Entity {
       this.sightRange = sightRange;
    }
 
+   public addExp(amount: number): void {
+      this.tribe.addExp(amount);
+   }
+
    protected startRespawn(): void {
       new Timer({
          duration: GenericTribeMember.RESPAWN_TIME,
@@ -66,21 +79,23 @@ abstract class GenericTribeMember extends Entity {
    }
 
    protected respawn(): void {
-      this.getComponent(TribeMemberComponent)!.tribe.respawnEntity(this);
+      this.tribe.respawnEntity(this);
    }
 
    protected respawnTick?(duration: number): void;
 
-   protected createRenderParts(bodySize: number, handSize: number, bodyColour: string, handColour: string, handAngles: number): void {
+   private createRenderParts(): void {
       const BORDER_COLOUR = "#000";
+
+      const colour = TRIBE_INFO[this.tribe.type].colour;
 
       // Create player body
       this.getComponent(RenderComponent)!.addPart(
          new EllipseRenderPart({
             type: "ellipse",
-            fillColour: bodyColour,
+            fillColour: colour,
             size: {
-               radius: bodySize / 2
+               radius: GenericTribeMember.SIZE / 2
             },
             border: {
                width: 5,
@@ -93,14 +108,14 @@ abstract class GenericTribeMember extends Entity {
       // Create player hands
       for (let i = 0; i < 2; i++) {
          const multiplier = i === 0 ? -1 : 1;
-         const offsetPoint = new Vector(bodySize / 2, handAngles * multiplier).convertToPoint();
+         const offsetPoint = new Vector(GenericTribeMember.SIZE / 2, GenericTribeMember.HAND_ANGLES * multiplier).convertToPoint();
 
          this.getComponent(RenderComponent)!.addPart(
             new EllipseRenderPart({
                type: "ellipse",
-               fillColour: handColour,
+               fillColour: colour,
                size: {
-                  radius: handSize / 2
+                  radius: GenericTribeMember.HAND_SIZE / 2
                },
                border: {
                   width: 3,

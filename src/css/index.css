@@ -71,7 +71,7 @@ code {
    left: 50%;
    transform: translate(-50%, -50%);
    user-select: none;
-   image-rendering: pixelated;
+   /* image-rendering: pixelated; */
 }
 .slot .item-count {
    color: #fff;

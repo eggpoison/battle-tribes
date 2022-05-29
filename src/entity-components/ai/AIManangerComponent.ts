@@ -7,7 +7,7 @@ class AIManagerComponent extends Component {
 
    private readonly ai: { [key: string]: EntityAI } = {};
 
-   public addAI(ai: EntityAI): EntityAI {
+   public addAI<A extends EntityAI>(ai: A): A {
       if (this.ai.hasOwnProperty(ai.id)) {
          throw new Error(`Tried to add an AI with the ID '${ai.id}', but it already existed!`);
       }

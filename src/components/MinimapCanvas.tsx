@@ -1,5 +1,8 @@
 import { useEffect, useRef } from "react";
 import Board, { Coordinates } from "../Board";
+import Player from "../entities/tribe-members/Player";
+import TribeStash from "../entities/TribeStash";
+import TransformComponent from "../entity-components/TransformComponent";
 import SETTINGS from "../settings";
 import TILE_INFO, { TileKind } from "../tile-types";
 import { Colour, Point } from "../utils";
@@ -131,28 +134,62 @@ export abstract class Minimap {
       return new Point(x, y);
    }
 
-   public static drawEntities(playerPosition: Point): void {
+   public static drawEntities(): void {
       const ctx = this.minimapEntityCtx;
 
       ctx.clearRect(0, 0, this.SIZE, this.SIZE);
 
-      const PLAYER_RADIUS = 7;
-      const PLAYER_COLOUR = "red";
+      const playerTribe = Player.instance.tribe;
+      for (const tribeMember of playerTribe.members) {
+         const position = tribeMember.getComponent(TransformComponent)!.position;
+         const positionInCanvas = this.getPositionInMinimap(position);
 
-      const PLAYER_BORDER_WIDTH = 3;
-      const PLAYER_BORDER_COLOUR = "#000";
+         if (tribeMember instanceof Player) {
+            const PLAYER_RADIUS = 7;
+            const PLAYER_COLOUR = "#f5ff36";
+      
+            const PLAYER_BORDER_WIDTH = 3;
+            const PLAYER_BORDER_COLOUR = "#000";
+      
+            ctx.fillStyle = PLAYER_COLOUR;
+            ctx.beginPath();
+            ctx.arc(positionInCanvas.x, positionInCanvas.y, PLAYER_RADIUS, 0, Math.PI * 2);
+            ctx.fill();
+      
+            // Create the circle border
+            ctx.lineWidth = PLAYER_BORDER_WIDTH;
+            ctx.strokeStyle = PLAYER_BORDER_COLOUR;
+            ctx.stroke();
+         } else if (tribeMember instanceof TribeStash) {
+            const ICON_SIZE = 15;
+            const ICON_COLOUR = "red";
 
-      const playerPositionInCanvas = this.getPositionInMinimap(playerPosition);
+            const BORDER_WIDTH = 2;
+            const BORDER_COLOUR = "#000";
 
-      ctx.fillStyle = PLAYER_COLOUR;
-      ctx.beginPath();
-      ctx.arc(playerPositionInCanvas.x, playerPositionInCanvas.y, PLAYER_RADIUS, 0, Math.PI * 2);
-      ctx.fill();
+            ctx.fillStyle = ICON_COLOUR;
+            ctx.fillRect(positionInCanvas.x - ICON_SIZE/2, positionInCanvas.y - ICON_SIZE/2, ICON_SIZE, ICON_SIZE);
+            
+            // Draw border
+            ctx.lineWidth = BORDER_WIDTH;
+            ctx.strokeStyle = BORDER_COLOUR;
 
-      // Create the circle border
-      ctx.lineWidth = PLAYER_BORDER_WIDTH;
-      ctx.strokeStyle = PLAYER_BORDER_COLOUR;
-      ctx.stroke();
+            ctx.beginPath();
+
+            // Top left
+            ctx.moveTo(positionInCanvas.x - ICON_SIZE/2, positionInCanvas.y - ICON_SIZE/2);
+            // Top right
+            ctx.lineTo(positionInCanvas.x + ICON_SIZE/2, positionInCanvas.y - ICON_SIZE/2);
+            // Bottom right
+            ctx.lineTo(positionInCanvas.x + ICON_SIZE/2, positionInCanvas.y + ICON_SIZE/2);
+            // Bottom left
+            ctx.lineTo(positionInCanvas.x - ICON_SIZE/2, positionInCanvas.y + ICON_SIZE/2);
+            // Top left
+            ctx.lineTo(positionInCanvas.x - ICON_SIZE/2, positionInCanvas.y - ICON_SIZE/2);
+
+            ctx.stroke();
+         }
+      }
    }
 
    private static getTilePixelData(minimapX: number, minimapY: number): [number, number, number, number] {

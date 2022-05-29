@@ -1,23 +1,21 @@
 import { generateTerrain, TileType } from "./terrain-generation";
 import { getCanvasContext, getCanvasHeight, getCanvasWidth } from "./components/Canvas";
 import { updateDevtools } from "./components/Devtools";
-import InventoryViewerManager from "./components/inventory/InventoryViewerManager";
-import Player from "./entities/tribe-members/Player";
 import Entity from "./entities/Entity";
 import RenderComponent from "./entity-components/RenderComponent";
 import TransformComponent from "./entity-components/TransformComponent";
 import SETTINGS from "./settings";
 import { precomputeTileLocations } from "./tile-types";
-import Tribe from "./Tribe";
 import { Point } from "./utils";
 import Camera from "./Camera";
 import Mob from "./entities/mobs/Mob";
 import HitboxComponent from "./entity-components/HitboxComponent";
 import OPTIONS from "./options";
-import InfiniteInventoryComponent from "./entity-components/inventory/InfiniteInventoryComponent";
 import Game from "./Game";
 import EntitySpawner from "./EntitySpawner";
 import Resource from "./entities/resources/Resource";
+import Mouse from "./Mouse";
+import GenericTribeMember from "./entities/tribe-members/GenericTribeMember";
 
 export type Chunk = Array<Entity>;
 
@@ -59,9 +57,6 @@ abstract class Board {
 
       // Spawn initial entities
       EntitySpawner.spawnInitialEntities();
-
-      // Creates the controllable player character
-      this.spawnPlayer();
    }
 
    public static getChangedTiles(): Array<Coordinates> {
@@ -93,6 +88,9 @@ abstract class Board {
       let hostileMobCount = 0;
       let resourceCount = 0;
 
+      const selectedEntities = Mouse.getSelectedUnits();
+      const visibleSelectedEntities = new Array<GenericTribeMember>();
+
       const entitiesToChangeChunk: Array<[Entity, Chunk]> = [];
 
       const ctx = getCanvasContext();
@@ -122,6 +120,11 @@ abstract class Board {
                   const renderComponent = entity.getComponent(RenderComponent);
                   if (renderComponent !== null) {
                      renderComponent.renderEntity(ctx);
+
+                     // If the entity is selected, add it to an array to render the selection icon later
+                     if (entity instanceof GenericTribeMember && selectedEntities.includes(entity)) {
+                        visibleSelectedEntities.push(entity);
+                     }
                   }
 
                   if (OPTIONS.showEntityHitboxes) {
@@ -151,6 +154,9 @@ abstract class Board {
          entity.previousChunk = newChunk;
       }
 
+      // Render the selection icons
+      this.renderSelectionIcons(ctx, visibleSelectedEntities);
+
       this.updateDisappearingFog();
       
       updateDevtools({
@@ -161,6 +167,34 @@ abstract class Board {
 
       EntitySpawner.setHostileMobCount(hostileMobCount);
       EntitySpawner.setPassiveMobCount(passiveMobCount);
+      EntitySpawner.setResourceCount(resourceCount);
+   }
+
+   private static renderSelectionIcons(ctx: CanvasRenderingContext2D, entities: Array<GenericTribeMember>): void {
+      const WIDTH = 5;
+      const SIZE = 90;
+
+      ctx.lineWidth = WIDTH;
+      ctx.strokeStyle = Mouse.UNIT_SELECTION_COLOUR;
+
+      for (const entity of entities) {
+         const entityPosition = entity.getComponent(TransformComponent)!.position;
+
+         const x1 = Camera.getXPositionInCamera(entityPosition.x - SIZE/2);
+         const x2 = Camera.getXPositionInCamera(entityPosition.x + SIZE/2);
+         const y1 = Camera.getYPositionInCamera(entityPosition.y - SIZE/2);
+         const y2 = Camera.getYPositionInCamera(entityPosition.y + SIZE/2);
+
+         ctx.beginPath();
+
+         ctx.moveTo(x1, y1); // Move to top left
+         ctx.lineTo(x2, y1); // Top right
+         ctx.lineTo(x2, y2); // Bottom right
+         ctx.lineTo(x1, y2); // Bottom left
+         ctx.lineTo(x1, y1); // Top left
+
+         ctx.stroke();
+      }
    }
 
    public static drawDarkness(): void {
@@ -248,18 +282,6 @@ abstract class Board {
       }
    }
 
-   private static spawnPlayer(): void {
-      const tribeSpawnPosition = Tribe.getPlayerTribeSpawnPosition();
-      const playerTribe = new Tribe(tribeSpawnPosition, Player.TRIBE_COLOUR);
-
-      // Link the player tribe's stash to the stash viewer
-      const stash = playerTribe.stash;
-      InventoryViewerManager.getInstance("tribeStash").setInventoryComponent(stash.getComponent(InfiniteInventoryComponent)!);
-
-      const player = new Player(playerTribe);
-      this.addEntity(player);
-   }
-
    private static getEntityChunk(entity: Entity): Chunk {
       // Get the chunk
       const entityPositionComponent = entity.getComponent(TransformComponent)!;
@@ -288,9 +310,9 @@ abstract class Board {
       chunk.splice(chunk.indexOf(entity), 1);
    }
 
-   public static getRandomPositionInTile(tileCoordinates: Coordinates): Point {
-      const x = tileCoordinates[0] * Board.tileSize + Board.tileSize * Math.random();
-      const y = tileCoordinates[1] * Board.tileSize + Board.tileSize * Math.random();
+   public static getRandomPositionInTile(tileX: number, tileY: number): Point {
+      const x = tileX * Board.tileSize + Board.tileSize * Math.random();
+      const y = tileY * Board.tileSize + Board.tileSize * Math.random();
 
       return new Point(x, y);
    }

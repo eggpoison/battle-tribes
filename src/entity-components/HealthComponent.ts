@@ -57,6 +57,10 @@ class HealthComponent extends Component {
       return this.health;
    }
 
+   public isAlive(): boolean {
+      return this.health > 0;
+   }
+
    private calculateDamageDealt(damage: number): number {
       return Math.max(damage - this.armour, 0);
    }

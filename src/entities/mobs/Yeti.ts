@@ -21,8 +21,8 @@ class Yeti extends Mob {
    private static readonly ATTACK_DAMAGE = 7.5;
    private static readonly KNOCKBACK = 1.5;
 
-   private static readonly WALK_SPEED = 1.25;
-   private static readonly RUN_SPEED = 3;
+   private static readonly WANDER_SPEED = 1.25;
+   private static readonly FOLLOW_SPEED = 3;
    
    private static readonly VISION_RANGE = 5;
    private static readonly WANDER_RATE = 0.25;
@@ -64,7 +64,7 @@ class Yeti extends Mob {
       const wanderAI = this.getComponent(AIManagerComponent)!.addAI(
          new WanderAI("wander", {
             range: Yeti.VISION_RANGE,
-            speed: Yeti.WALK_SPEED,
+            speed: Yeti.WANDER_SPEED,
             wanderRate: Yeti.WANDER_RATE
          })
       );
@@ -80,7 +80,6 @@ class Yeti extends Mob {
       const followAI = this.getComponent(AIManagerComponent)!.addAI(
          new FollowAI("follow", {
             range: Yeti.VISION_RANGE,
-            speed: Yeti.RUN_SPEED,
             targets: Yeti.TARGETS
          })
       );
@@ -95,6 +94,15 @@ class Yeti extends Mob {
             transformComponent.stopMoving();
          }
       });
+
+      followAI.setTickCallback(() => {
+         const target = followAI.getTarget();
+
+         // Move to the target
+         if (target !== null) {
+            followAI.moveToPosition(target.getComponent(TransformComponent)!.position, Yeti.FOLLOW_SPEED);
+         }
+      })
 
       this.getComponent(AIManagerComponent)!.changeCurrentAI("wander");
    }

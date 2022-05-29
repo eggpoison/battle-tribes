@@ -58,7 +58,7 @@ function Devtools() {
          <h2>Entities</h2>
          <p>{census.entityCount} total entities</p>
          <ul>
-            <li>{census.mobCount}/{EntitySpawner.targetMobCount} mobs</li>
+            <li>{census.mobCount}/{EntitySpawner.targetHostileMobCount} mobs</li>
             <li>{census.resourceCount} resources</li>
          </ul>
 

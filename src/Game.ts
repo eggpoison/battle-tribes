@@ -2,9 +2,7 @@ import Board from "./Board";
 import Camera from "./Camera";
 import { clearCanvas, renderFog, renderGroundTiles, renderWallTiles } from "./components/Canvas";
 import { Minimap } from "./components/MinimapCanvas";
-import Player from "./entities/tribe-members/Player";
 import { stopPlayerMovement } from "./entity-components/PlayerControllerComponent";
-import TransformComponent from "./entity-components/TransformComponent";
 import SETTINGS from "./settings";
 import { timers } from "./Timer";
 
@@ -15,7 +13,7 @@ let previousFocus = true;
 
 abstract class Game {
    // private static readonly TIME_SPEED = 1.5;
-   private static readonly TIME_SPEED = 100;
+   private static readonly TIME_SPEED = 50;
    private static time: number = SETTINGS.startTime;
 
    public static tick(): void {
@@ -46,7 +44,7 @@ abstract class Game {
       const changedTiles = Board.getChangedTiles();
       Minimap.updateBackground(changedTiles);
       // Update the minimap entities
-      Minimap.drawEntities(Player.instance.getComponent(TransformComponent)!.position);
+      Minimap.drawEntities();
 
       if (SETTINGS.showFogOfWar) {
          renderFog();

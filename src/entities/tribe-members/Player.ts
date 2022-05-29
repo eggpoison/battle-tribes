@@ -1,86 +1,36 @@
-import Entity from "../Entity";
-import TransformComponent from "../../entity-components/TransformComponent";
-import PlayerControllerComponent from "../../entity-components/PlayerControllerComponent";
-import { Point } from "../../utils";
-import CameraFollowComponent from "../../entity-components/CameraFollowComponent";
-import RenderComponent from "../../entity-components/RenderComponent";
-import HitboxComponent from "../../entity-components/HitboxComponent";
-import AttackComponent, { CircleAttack } from "../../entity-components/AttackComponent";
-import ItemEntity from "../ItemEntity";
-import TribeStash from "../TribeStash";
-import Tribe from "../../Tribe";
-import Board from "../../Board";
-import { hideMessageDisplay, setMessageDisplay } from "../../components/MessageDisplay";
-import InventoryViewerManager from "../../components/inventory/InventoryViewerManager";
-import { toggleTribeStashViewerVisibility, tribeStashViewerIsOpen } from "../../components/TribeStashViewer";
-import HealthComponent from "../../entity-components/HealthComponent";
 import { HealthBarManager } from "../../components/HealthBar";
-import TribeMemberComponent from "../../entity-components/TribeMemberComponent";
-import GenericTribeMember from "./GenericTribeMember";
-import FiniteInventoryComponent from "../../entity-components/inventory/FiniteInventoryComponent";
-import { setPlayerRespawnMessageTime, togglePlayerRespawnMessage } from "../../components/PlayerRespawnMessage";
+import InventoryViewerManager from "../../components/inventory/InventoryViewerManager";
 import { closeMenu, toggleMenu } from "../../components/menus/MenuManager";
+import { togglePlayerRespawnMessage, setPlayerRespawnMessageTime } from "../../components/PlayerRespawnMessage";
+import { toggleTribeStashViewerVisibility } from "../../components/TribeStashViewer";
+import AttackComponent from "../../entity-components/AttackComponent";
+import CameraFollowComponent from "../../entity-components/CameraFollowComponent";
+import HealthComponent from "../../entity-components/HealthComponent";
+import FiniteInventoryComponent from "../../entity-components/inventory/FiniteInventoryComponent";
+import PlayerControllerComponent from "../../entity-components/PlayerControllerComponent";
+import Mouse from "../../Mouse";
+import Tribe from "../../Tribe";
+import TribeStash from "../TribeStash";
+import Chief from "./Chief";
 
-class Player extends GenericTribeMember {
-   public readonly SIZE = 1;
+export enum PlayerInteractionMode {
+   Play,
+   SelectUnits
+}
 
-   private static readonly SIGHT_RANGE = 5;
-
-   public static readonly SPEED = 5;
-   public static readonly HEALTH = 20;
-   public static readonly TRIBE_COLOUR = "#ffcc17";
-
+class Player extends Chief {
    public static instance: Player;
 
-   public static readonly DEFAULT_INVENTORY_SLOT_COUNT = 3;
-
-   public static isOpeningStash: boolean = false;
+   public static currentInteractionMode: PlayerInteractionMode = PlayerInteractionMode.Play;
 
    constructor(tribe: Tribe) {
-      const HAND_SIZE = 0.45;
-      const HAND_ANGLES = 40 / 180 * Math.PI;
-
-      const HAND_COLOUR = "#cc9f00";
-
       super(tribe, [
          new PlayerControllerComponent(),
-         new CameraFollowComponent(),
-         new AttackComponent(),
-         new FiniteInventoryComponent(Player.DEFAULT_INVENTORY_SLOT_COUNT),
-         new TribeMemberComponent(tribe)
+         new CameraFollowComponent()
       ]);
 
-      super.setSightRange(Player.SIGHT_RANGE);
-
-      this.getComponent(HealthComponent)!.setMaxHealth(Player.HEALTH, true);
-
-      this.setHitbox();
-
-      super.createRenderParts(this.SIZE, HAND_SIZE, Player.TRIBE_COLOUR, HAND_COLOUR, HAND_ANGLES);
-
       Player.instance = this;
-
       InventoryViewerManager.getInstance("playerInventory").setInventoryComponent(this.getComponent(FiniteInventoryComponent)!);
-
-      /** The distance away from the player (in tiles) that the attack is performed */
-      const ATTACK_OFFSET = 0.5;
-
-      const attackComponent = this.getComponent(AttackComponent)!;
-
-      attackComponent.addAttack("baseAttack", new CircleAttack({
-         radius: 1,
-         getPosition: (): Point => {
-            const rotation = this.getComponent(TransformComponent)!.rotation;
-
-            const offset = RenderComponent.getOffset((this.SIZE / 2 + ATTACK_OFFSET) * Board.tileSize, rotation);
-            const offsetPoint = new Point(offset[0], offset[1]);
-
-            return this.getComponent(TransformComponent)!.position.add(offsetPoint);
-         },
-         damage: 2,
-         knockbackStrength: 0.3,
-         attackingEntity: this
-      }));
 
       PlayerControllerComponent.createKeyEvent((key: string) => this.onKeyPress(key));
 
@@ -106,64 +56,59 @@ class Player extends GenericTribeMember {
       setPlayerRespawnMessageTime(duration);
    }
 
-   private setHitbox(): void {
-      this.getComponent(HitboxComponent)!.setHitbox({
-         type: "circle",
-         radius: this.SIZE / 2
-      });
+   public attack(): void {
+      this.getComponent(AttackComponent)!.startAttack("baseAttack");
    }
 
-   protected onCollision(collidingEntity: Entity): void {
-      if (collidingEntity instanceof ItemEntity) {
-         // Pick up the item
-         const inventoryComponent = this.getComponent(FiniteInventoryComponent)!;
-         inventoryComponent.pickupResource(collidingEntity);
+   public static isAlive(): boolean {
+      if (typeof this.instance === "undefined") return false;
 
-         // Update the player inventory viewer
-         const itemSlots = inventoryComponent.getItemSlots();
-         InventoryViewerManager.getInstance("playerInventory").setItemSlots(itemSlots);
-      } else if (collidingEntity instanceof TribeStash) {
-         // Do nothing if it belongs to a different tribe.
-         const playerTribe = this.getComponent(TribeMemberComponent)!.tribe;
-         const stashTribe = collidingEntity.getComponent(TribeMemberComponent)!.tribe;
-         if (playerTribe !== stashTribe) return;
-
-         setMessageDisplay(TribeStash.OPEN_MESSAGE);
-      }
-   }
-
-   protected onLeaveCollision(collidingEntity: Entity): void {
-      if (collidingEntity instanceof TribeStash) {
-         // Hide the stash viewer
-         if (tribeStashViewerIsOpen()) {
-            toggleTribeStashViewerVisibility();
-         }
-
-         hideMessageDisplay();
-      }
+      return this.instance.getComponent(HealthComponent)!.isAlive();
    }
 
    private onKeyPress(key: string): void {
-      if (key === "e") {
-         let isOpeningStash = false;
-         const collidingEntities = this.getCollidingEntities();
-         for (const entity of collidingEntities) {
-            if (entity instanceof TribeStash) {
-               isOpeningStash = true;
-               break;
+      switch (key) {
+         case "e": {
+            // Don't open stuff if dead
+            if (!Player.isAlive()) return;
+
+            let isOpeningStash = false;
+            const collidingEntities = this.getCollidingEntities();
+            for (const entity of collidingEntities) {
+               if (entity instanceof TribeStash) {
+                  isOpeningStash = true;
+                  break;
+               }
+            }
+
+            if (isOpeningStash) {
+               // Open tribe stash viewer
+               toggleTribeStashViewerVisibility();
+               // Hide any open menus
+               closeMenu();
+            } else {
+               toggleMenu("crafting");
+            }
+
+            Chief.isOpeningStash = isOpeningStash;
+
+            break;
+         }
+
+         case " ": {
+            // Switch interaction mode
+            if (Player.currentInteractionMode === PlayerInteractionMode.Play) {
+               // Switch to unit selection mode
+
+               Player.currentInteractionMode = PlayerInteractionMode.SelectUnits;
+            } else {
+               // Switch to play mode
+
+               Player.currentInteractionMode = PlayerInteractionMode.Play;
+
+               Mouse.deselectUnits();
             }
          }
-
-         if (isOpeningStash) {
-            // Open tribe stash viewer
-            toggleTribeStashViewerVisibility();
-            // Hide any open menus
-            closeMenu();
-         } else {
-            toggleMenu("crafting");
-         }
-
-         Player.isOpeningStash = isOpeningStash;
       }
    }
 }

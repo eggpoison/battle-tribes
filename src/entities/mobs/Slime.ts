@@ -71,8 +71,14 @@ class Slime extends Mob {
    private static readonly KNOCKBACK_STRENGTH = 1;
 
    // AI
-   private readonly FOLLOW_WAIT_TIME: number = 1;
-   private followWaitTimer: Timer | null = null;
+   private static readonly FOLLOW_WAIT_TIMER_DURATION = 1;
+   private static readonly FOLLOW_WAIT_TIMER_DURATION_VARIANCE = 0.1;
+   private followWaitTimer: Timer | null = new Timer({ duration: Slime.FOLLOW_WAIT_TIMER_DURATION, onEnd: () => this.followWaitTimer = null });
+   
+   private static readonly TARGETS = [GenericTribeMember];
+
+   private static readonly FOLLOW_SPEED = 5;
+   private static readonly FOLLOW_SPEED_VARIANCE = 0.3;
 
    constructor(position: Point, size?: SlimeSizeCategory) {
       super(position, [
@@ -146,10 +152,6 @@ class Slime extends Mob {
       const WANDER_RATE = 1;
       const WANDER_SPEED = 1.5;
 
-      const FOLLOW_SPEED = 5;
-
-      const TARGETS = [GenericTribeMember];
-
       // Wander AI
       const wanderAI = this.getComponent(AIManagerComponent)!.addAI(
          new WanderAI("wander", {
@@ -161,7 +163,7 @@ class Slime extends Mob {
       wanderAI.setSwitchCondition({
          newID: "follow",
          shouldSwitch: (): boolean => {
-            const entitiesInSearchRadius = wanderAI.getEntitiesInSearchRadius(transformComponent.position, this.info.searchRange, TARGETS);
+            const entitiesInSearchRadius = wanderAI.getEntitiesInSearchRadius(transformComponent.position, this.info.searchRange, Slime.TARGETS);
 
             return entitiesInSearchRadius !== null;
          },
@@ -173,15 +175,14 @@ class Slime extends Mob {
       const followAI = this.getComponent(AIManagerComponent)!.addAI(
          new FollowAI("follow", {
             range: this.info.searchRange,
-            speed: FOLLOW_SPEED,
-            targets: TARGETS
+            targets: Slime.TARGETS
          })
-      ) as FollowAI;
+      );
 
       followAI.setSwitchCondition({
          newID: "wander",
          shouldSwitch: (): boolean => {
-            const entitiesInSearchRadius = wanderAI.getEntitiesInSearchRadius(transformComponent.position, this.info.searchRange, TARGETS);
+            const entitiesInSearchRadius = wanderAI.getEntitiesInSearchRadius(transformComponent.position, this.info.searchRange, Slime.TARGETS);
 
             return entitiesInSearchRadius === null;
          },
@@ -191,17 +192,28 @@ class Slime extends Mob {
             this.followWaitTimer = null;
          }
       });
-      followAI.setTickCondition((): boolean => {
+      followAI.setTickCallback(() => {
          if (this.followWaitTimer === null) {
+            const target = followAI.getTarget();
+            if (target === null) return;
+
+            // Get move speed
+            const speed = Slime.FOLLOW_SPEED + randFloat(-Slime.FOLLOW_SPEED_VARIANCE, Slime.FOLLOW_SPEED_VARIANCE);
+
+            // Move to the target
+            followAI.moveToPosition(target.getComponent(TransformComponent)!.position, speed);
+
+            // Get timer duration
+            const duration = Slime.FOLLOW_WAIT_TIMER_DURATION + randFloat(-Slime.FOLLOW_WAIT_TIMER_DURATION_VARIANCE, Slime.FOLLOW_WAIT_TIMER_DURATION_VARIANCE);
+
+            // Reset the timer
             this.followWaitTimer = new Timer({
-               duration: this.FOLLOW_WAIT_TIME,
+               duration: duration,
                onEnd: () => {
                   this.followWaitTimer = null;
                }
             });
-            return true;
          }
-         return false;
       });
 
       // Increase the duration of the follow wait timer
@@ -210,19 +222,24 @@ class Slime extends Mob {
             const MULTIPLIER = randFloat(1, 1.5);
             this.followWaitTimer.addDuration(SETTINGS.entityInvulnerabilityDuration * MULTIPLIER);
          }
-      })
+      });
 
       this.getComponent(AIManagerComponent)!.changeCurrentAI("follow");
    }
 
    protected duringCollision(entity: Entity): void {
-      // Don't attack fellow hostile mobs
-      if (entity instanceof Mob && entity.entityInfo.behaviour === "hostile") return;
-
-      const healthCompoment = entity.getComponent(HealthComponent);
-      if (healthCompoment !== null) {
-         healthCompoment.hurt(Slime.DAMAGE, this, Slime.KNOCKBACK_STRENGTH);
+      // Only attack targets
+      let canHit = false;
+      for (const constr of Slime.TARGETS) {
+         if (entity instanceof constr) {
+            canHit = true;
+            break;
+         }
       }
+      if (!canHit) return;
+
+      const healthCompoment = entity.getComponent(HealthComponent)!;
+      healthCompoment.hurt(Slime.DAMAGE, this, Slime.KNOCKBACK_STRENGTH);
    }
 
    public die(causeOfDeath: Entity | null): void {

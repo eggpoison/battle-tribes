@@ -9,6 +9,17 @@ import MinimapCanvas from './components/MinimapCanvas';
 import PlayerInventoryViewer from './components/PlayerInventoryViewer';
 import PlayerRespawnMessage from './components/PlayerRespawnMessage';
 import TribeStashViewer from './components/TribeStashViewer';
+import TribeXPBar from './components/TribeXPBar';
+
+import "./css/index.css";
+import "./css/devtools.css";
+import "./css/inventory-viewer.css";
+import "./css/message-display.css";
+import "./css/tribe-stash-viewer.css";
+import "./css/player-respawn-message.css";
+import "./css/menus/crafting-menu.css";
+import "./css/menus/mob-spawn-menu.css";
+import "./css/tribe-xp-bar.css";
 
 function App() {
    const hasLoaded = useRef<boolean>(false);
@@ -33,6 +44,7 @@ function App() {
          <TribeStashViewer />
          <MenuManager />
          <PlayerRespawnMessage />
+         <TribeXPBar />
 
          {/* Black filter */}
          <div id="mask" className="hidden"></div>

@@ -22,7 +22,7 @@ class Berry extends Resource {
       // Calculate the position of the berry
       const potentialTileCoordinates = getTilesByType(Berry.spawnableTileTypes);
       const spawnTileCoordinates = randItem(potentialTileCoordinates);
-      const position = Board.getRandomPositionInTile(spawnTileCoordinates);
+      const position = Board.getRandomPositionInTile(...spawnTileCoordinates);
 
       super(position);
 

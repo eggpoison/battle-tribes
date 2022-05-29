@@ -6,7 +6,6 @@ import EntityAI from "./EntityAI";
 
 type FollowAIInfo = {
    readonly range: number;
-   readonly speed: number;
    readonly targets: ReadonlyArray<ConstructorFunction>;
 }
 
@@ -17,7 +16,6 @@ class FollowAI extends EntityAI {
 
    private readonly range: number;
    private readonly targets: ReadonlyArray<ConstructorFunction>;
-   private readonly speed: number;
 
    constructor(id: string, info: FollowAIInfo) {
       super();
@@ -25,7 +23,6 @@ class FollowAI extends EntityAI {
       this.id = id;
 
       this.range = info.range;
-      this.speed = info.speed;
       this.targets = info.targets;
    }
 
@@ -35,14 +32,14 @@ class FollowAI extends EntityAI {
       this.target = null;
    }
 
-   protected findClosestEntity(): Entity | null {
+   public getTarget(): Entity | null {
       const transformComponent = this.entity.getComponent(TransformComponent)!;
 
       let entitiesInSearchRadius = super.getEntitiesInSearchRadius(transformComponent.position, this.range, this.targets);
       if (entitiesInSearchRadius === null) return null;
 
-      if (typeof this.customSortFunction !== "undefined") {
-         entitiesInSearchRadius = this.customSortFunction(entitiesInSearchRadius);
+      if (typeof this.targetSortFunction !== "undefined") {
+         entitiesInSearchRadius = this.targetSortFunction(entitiesInSearchRadius);
          if (entitiesInSearchRadius === null) return null;
       }
 
@@ -60,14 +57,19 @@ class FollowAI extends EntityAI {
       return closestEntity;
    }
 
-   private customSortFunction?: (entities: Array<Entity>) => Array<Entity> | null;
-   public createSortFunction(func: (entities: Array<Entity>) => Array<Entity> | null): void {
-      this.customSortFunction = func;
+   public moveToEntity(entity: Entity, speed: number): void {
+      const position = entity.getComponent(TransformComponent)!.position;
+      super.moveToPosition(position, speed);
    }
 
-   private tickCondition?: () => boolean;
-   public setTickCondition(condition: () => boolean): void {
-      this.tickCondition = condition;
+   private targetSortFunction?: (entities: Array<Entity>) => Array<Entity> | null;
+   public setTargetSortFunction(func: (entities: Array<Entity>) => Array<Entity> | null): void {
+      this.targetSortFunction = func;
+   }
+
+   private tickCallback?: () => void;
+   public setTickCallback(callback: () => void): void {
+      this.tickCallback = callback;
    }
 
    private validateTarget(): void {
@@ -84,21 +86,12 @@ class FollowAI extends EntityAI {
 
    public tick(): void {
       super.tick();
+
+      // Make sure the target isn't dead
       this.validateTarget();
-      if (typeof this.tickCondition !== "undefined" && !this.tickCondition()) return;
 
-
-      const targetEntity = this.findClosestEntity();
-
-      if (targetEntity !== null) {
-         const targetPosition = targetEntity.getComponent(TransformComponent)!.position;
-
-         // Move to the target
-         super.moveToPosition(targetPosition, this.speed);
-         
-         this.target = targetEntity;
-      }
-   } 
+      if (typeof this.tickCallback !== "undefined") this.tickCallback();
+   }
 }
 
 export default FollowAI;

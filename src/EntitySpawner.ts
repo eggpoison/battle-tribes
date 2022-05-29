@@ -4,7 +4,6 @@ import ENTITY_INFO, { MobInfo, ResourceInfo } from "./entity-info";
 import Game from "./Game";
 import SETTINGS from "./settings";
 import { BiomeName, TileType } from "./terrain-generation";
-import { TileKind } from "./tile-types";
 import { randInt, randItem } from "./utils";
 
 const GRAVEYARD_SPAWN_CHANCES: Partial<Record<BiomeName, number>> = {
@@ -32,12 +31,12 @@ const getEligibleEntities = (tile: TileType, entityType: "mob" | "resource"): Ar
       eligibleEntities = resourceInfoArray.slice();
    }
 
-   for (let i = eligibleEntities.length - 1; i >= 0; i--) {
-      const entityInfo = eligibleEntities[i];
+   for (let idx = eligibleEntities.length - 1; idx >= 0; idx--) {
+      const entityInfo = eligibleEntities[idx];
 
       // Remove the entity if it is spawned some other way
       if (entityInfo.hasCustomSpawnProcess) {
-         eligibleEntities.splice(i, 1);
+         eligibleEntities.splice(idx, 1);
          continue;
       }
 
@@ -45,8 +44,10 @@ const getEligibleEntities = (tile: TileType, entityType: "mob" | "resource"): Ar
       if (entityType === "mob") {
          const behaviour = (entityInfo as MobInfo).behaviour;
          if ((behaviour === "hostile" || behaviour === "neutral") && !EntitySpawner.canSpawnHostileMobs()) {
+            eligibleEntities.splice(idx, 1);
             continue;
-         } else if (!EntitySpawner.canSpawnPassiveMobs()) {
+         } else if (behaviour === "peaceful" && !EntitySpawner.canSpawnPassiveMobs()) {
+            eligibleEntities.splice(idx, 1);
             continue;
          }
       }
@@ -54,7 +55,7 @@ const getEligibleEntities = (tile: TileType, entityType: "mob" | "resource"): Ar
       // Remove the entity if the tile is of the wrong type
       const preferredBiomes = entityInfo.spawnRequirements.biomes;
       if (typeof preferredBiomes !== "undefined" && !preferredBiomes.includes(tile.biome.name)) {
-         eligibleEntities.splice(i, 1);
+         eligibleEntities.splice(idx, 1);
          continue;
       }
    }
@@ -65,28 +66,40 @@ const getEligibleEntities = (tile: TileType, entityType: "mob" | "resource"): Ar
 
 abstract class EntitySpawner {
    /** The chance that mob spawning is done in a chunk each second */
-   private static MOB_SPAWN_RATE = 0.02;
+   private static readonly MOB_SPAWN_RATE = 0.02;
 
    private static RESOURCE_SPAWN_CHANCE = 0.05 / SETTINGS.tps;
 
-   /** The target number of mobs in a chunk */
-   private static TARGET_MOB_COUNT = 0.5;
-   public static targetMobCount: number;
+   /** The target number of hostile mobs in a chunk */
+   private static readonly TARGET_HOSTILE_MOB_COUNT = 0.5;
+   public static targetHostileMobCount: number;
+
+   /** The target number of hostile mobs in a chunk */
+   private static readonly TARGET_PASSIVE_MOB_COUNT = 0.25;
+   public static targetPassiveMobCount: number;
+
+   /** The target number of resources in a chunk */
+   private static readonly TARGET_RESOURCE_COUNT = 2;
+   private static targetResourceCount: number;
 
    /** How many tiles away from a spawn position a mob can spawn */
-   private static SPAWN_RADIUS = 2;
+   private static readonly SPAWN_RADIUS = 2;
 
    private static hostileMobCount: number = 0;
    private static passiveMobCount: number = 0;
+   private static resourceCount: number = 0;
 
    public static setup(): void {
       prefillEntityArrays();
 
-      this.targetMobCount = Math.floor(this.TARGET_MOB_COUNT * Board.size * Board.size);
+      this.targetHostileMobCount = Math.floor(this.TARGET_HOSTILE_MOB_COUNT * Board.size * Board.size);
+      this.targetPassiveMobCount = Math.floor(this.TARGET_PASSIVE_MOB_COUNT * Board.size * Board.size);
+
+      this.targetResourceCount = Math.floor(this.TARGET_RESOURCE_COUNT * Board.size * Board.size);
    }
 
    public static spawnEntity(entityInfo: MobInfo | ResourceInfo, x: number, y: number): void {
-      const position = Board.getRandomPositionInTile([x, y]);
+      const position = Board.getRandomPositionInTile(x, y);
 
       const constr = entityInfo.getConstr();
 
@@ -95,12 +108,16 @@ abstract class EntitySpawner {
       Board.addEntity(entity);
    }
 
-   public static setHostileMobCount(mobCount: number): void {
-      this.hostileMobCount = mobCount;
+   public static setHostileMobCount(hostileMobCount: number): void {
+      this.hostileMobCount = hostileMobCount;
    }
 
-   public static setPassiveMobCount(mobCount: number): void {
-      this.passiveMobCount = mobCount;
+   public static setPassiveMobCount(passiveMobCount: number): void {
+      this.passiveMobCount = passiveMobCount;
+   }
+
+   public static setResourceCount(resourceCount: number): void {
+      this.resourceCount = resourceCount;
    }
 
    private static spawnMobs(tileCoordinates: Coordinates, mobInfo: MobInfo): void {
@@ -190,11 +207,15 @@ abstract class EntitySpawner {
    }
 
    public static canSpawnHostileMobs(): boolean {
-      return this.hostileMobCount < this.targetMobCount;
+      return this.hostileMobCount < this.targetHostileMobCount;
    }
 
    public static canSpawnPassiveMobs(): boolean {
-      return this.passiveMobCount < this.targetMobCount;
+      return this.passiveMobCount < this.targetPassiveMobCount;
+   }
+
+   public static canSpawnResources(): boolean {
+      return this.resourceCount < this.targetResourceCount;
    }
 
    private static spawnTombstones(): void {
@@ -208,7 +229,7 @@ abstract class EntitySpawner {
       const tileBiome = Board.getTile(x, y).biome;
 
       if (tileBiome.name in GRAVEYARD_SPAWN_CHANCES && Math.random() < GRAVEYARD_SPAWN_CHANCES[tileBiome.name]! * SPAWN_CHANCE_MULTIPLIER) {
-         const position = Board.getRandomPositionInTile([x, y]);
+         const position = Board.getRandomPositionInTile(x, y);
 
          const tombstone = new Tombstone(position);
          Board.addEntity(tombstone);
@@ -216,9 +237,12 @@ abstract class EntitySpawner {
    }
 
    public static runSpawnAttempt(): void {
+      const MAX_SPAWN_ATTEMPTS = 50;
+
       // Spawn mobs
       // Find a random tile in the world which can spawn mobs, and spawn a random mob on it
       if (Math.random() <= this.MOB_SPAWN_RATE * Board.size * Board.size / SETTINGS.tps) {
+         let spawnAttempts = 0;
          while (true) {
             const tileX = randInt(0, Board.dimensions - 1);
             const tileY = randInt(0, Board.dimensions - 1);
@@ -229,7 +253,16 @@ abstract class EntitySpawner {
             if (eligibleMobs !== null) {
                const mobInfo = randItem(eligibleMobs);
 
+               if (typeof mobInfo.spawnChance !== "undefined" && Math.random() > mobInfo.spawnChance) {
+                  continue;
+               }
+
                this.spawnMobs([tileX, tileY], mobInfo);
+               break;
+            }
+
+            spawnAttempts++;
+            if (spawnAttempts >= MAX_SPAWN_ATTEMPTS) {
                break;
             }
          }

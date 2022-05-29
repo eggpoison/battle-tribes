@@ -336,6 +336,11 @@ const generateMagmaFields = (tileArray: Array<Array<TileType>>): void => {
 
          // Check if the four surrounding tiles are all magma
          for (const dir of ADJACENT_TILE_DIRS) {
+            // If the surrouding tile is out of bounds, don't check it
+            if (tileX + dir[0] < 0 || tileX + dir[0] >= Board.dimensions || tileY + dir[1] < 0 || tileY + dir[1] >= Board.dimensions) {
+               continue;
+            }
+
             const checkTile = tileArray[tileX + dir[0]][tileY + dir[1]];
             if (checkTile.biome.name !== "Magma Fields") continue mainLoop;
          }

@@ -117,7 +117,6 @@ class Zombie extends Mob {
       const followAI = this.getComponent(AIManagerComponent)!.addAI(
          new FollowAI("follow", {
             range: Zombie.VISION_RANGE,
-            speed: Zombie.FOLLOW_SPEED,
             targets: Zombie.TARGETS
          })
       );
@@ -130,6 +129,18 @@ class Zombie extends Mob {
          },
          onSwitch: (): void => {
             transformComponent.stopMoving();
+         }
+      });
+
+      followAI.setTickCallback(() => {
+         const targetEntity = followAI.getTarget();
+
+         if (targetEntity !== null) {
+            const targetPosition = targetEntity.getComponent(TransformComponent)!.position;
+
+            // Move to the target
+            followAI.moveToPosition(targetPosition, Zombie.FOLLOW_SPEED);
+            followAI.target = targetEntity;
          }
       });
 

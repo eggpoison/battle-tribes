@@ -1,10 +1,16 @@
-import Board from "./Board";
+import Board, { Coordinates } from "./Board";
 import TribeStash from "./entities/TribeStash";
 import Entity from "./entities/Entity";
-import { getRandomAngle, Point, randFloat, Vector } from "./utils";
+import { getRandomAngle, Point, randItem, Vector } from "./utils";
 import Tribesman from "./entities/tribe-members/Tribesman";
 import HealthComponent from "./entity-components/HealthComponent";
 import TransformComponent from "./entity-components/TransformComponent";
+import InventoryViewerManager from "./components/inventory/InventoryViewerManager";
+import Chief from "./entities/tribe-members/Chief";
+import InfiniteInventoryComponent from "./entity-components/inventory/InfiniteInventoryComponent";
+import TRIBE_INFO, { TribeTypes } from "./tribe-info";
+import Player from "./entities/tribe-members/Player";
+import { setTribeEXPBarAmount } from "./components/TribeXPBar";
 
 // const tribeExpRequirements = [
 //    5,
@@ -14,48 +20,53 @@ import TransformComponent from "./entity-components/TransformComponent";
 //    1000
 // ];
 
-const tribeExpRequirements = [
-   0,
-   // 2,
-   // 3,
-   // 4,
-   // 5,
-   // 6,
-   // 7,
-   // 8,
-   // 9,
-   // 10,
-   // 11,
-   // 12,
-   // 13,
-   // 14,
-   // 15,
-   // 16,
-   // 17,
-   // 18,
-   // 19,
-   // 20
+export const TRIBE_XP_REQUIREMENTS = [
+   1,
+   3,
+   5,
+   10,
+   15,
+   25,
+   50,
+   75,
+   100,
+   150,
+   250,
+   500,
+   750,
+   1000,
+   1500
 ];
-
-for (let i = 0; i < 9999; i++) {
-   tribeExpRequirements.push(i);
-}
 
 // Tribe members are created through the tribe class
 // Other entities such as the player are added to the tribe in their constructor
 class Tribe {
-   private readonly entities: Array<Entity> = new Array<Entity>();
+   public readonly members: Array<Entity> = new Array<Entity>();
 
    public readonly position: Point;
    public readonly stash: TribeStash;
-   public readonly colour: string;
+   public readonly type: TribeTypes;
 
    private exp: number = 0;
    private tribeLevel: number = 0;
 
-   constructor(position: Point, colour: string) {
+   constructor(position: Point, type: TribeTypes) {
       this.position = position;
-      this.colour = colour;
+      this.type = type;
+
+      // Create the chief
+      let chief!: Chief;
+      if (type === "humans") {
+         chief = new Player(this);
+      } else {
+         chief = new Chief(this);
+      }
+      Board.addEntity(chief);
+      this.addEntityToTribe(chief);
+
+      if (type !== "humans") {
+         this.addExp(1);
+      }
 
       // Create a tribe stash
       this.stash = new TribeStash(this);
@@ -86,8 +97,13 @@ class Tribe {
    public addExp(amount: number): void {
       this.exp += amount;
 
-      while (this.exp >= tribeExpRequirements[this.tribeLevel]) {
+      while (this.exp >= TRIBE_XP_REQUIREMENTS[this.tribeLevel]) {
          this.levelUp();
+      }
+
+      // Update the XP Bar
+      if (this.type === "humans") {
+         setTribeEXPBarAmount(this.exp);
       }
    }
 
@@ -97,17 +113,52 @@ class Tribe {
    }
 
    public addEntityToTribe(entity: Entity): void {
-      this.entities.push(entity);
+      this.members.push(entity);
    }
 
-   public static getPlayerTribeSpawnPosition(): Point {
-      /** % of the board in each direction that the player can't spawn in */
-      const PADDING = 40;
+   public static spawnTribes(): void {
+      // Spawn all non-player tribes
+      const keys = Object.keys(TRIBE_INFO) as Array<TribeTypes>;
+      for (const type of keys) {
+         const position = this.getTribeSpawnPosition(type);
 
-      const x = Board.dimensions * Board.tileSize * randFloat(PADDING / 100, 1 - PADDING / 100);
-      const y = Board.dimensions * Board.tileSize * randFloat(PADDING / 100, 1 - PADDING / 100);
+         const tribe = new Tribe(position, type);
 
-      return new Point(x, y);
+         if (type === "humans") {
+            // Link the player tribe's stash to the stash viewer
+            const stash = tribe.stash;
+            InventoryViewerManager.getInstance("tribeStash").setInventoryComponent(stash.getComponent(InfiniteInventoryComponent)!);
+         }
+      }
+   }
+
+   private static getTribeSpawnPosition(type: TribeTypes): Point {
+      /** % of the board in each direction that the tribe can't spawn in */
+      const PADDING = 20;
+
+      // Calculate spawn area bounds
+      const minX = Math.floor(Board.dimensions * PADDING / 100);
+      const maxX = Math.ceil(Board.dimensions * (1 - PADDING / 100));
+      const minY = Math.ceil(Board.dimensions * PADDING / 100);
+      const maxY = Math.ceil(Board.dimensions * (1 - PADDING / 100));
+
+      const eligibleTiles = new Array<Coordinates>();
+
+      // Find all grasslands tiles
+      for (let x = minX; x <= maxX; x++) {
+         for (let y = minY; y <= maxY; y++) {
+            const tile = Board.getTile(x, y);
+
+            if (tile.biome.name === TRIBE_INFO[type].biome) {
+               eligibleTiles.push([x, y]);
+            }
+         }
+      }
+
+      // Pick a random eligible tile to spawn the player in
+      const [spawnTileX, spawnTileY] = randItem(eligibleTiles);
+
+      return Board.getRandomPositionInTile(spawnTileX, spawnTileY);
    }
 
    public getMemberSpawnPosition(): Point {

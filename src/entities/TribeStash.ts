@@ -4,7 +4,6 @@ import RenderComponent, { ImageRenderPart } from "../entity-components/RenderCom
 import TransformComponent from "../entity-components/TransformComponent";
 import Tribe from "../Tribe";
 import InfiniteInventoryComponent from "../entity-components/inventory/InfiniteInventoryComponent";
-import Board from "../Board";
 
 /** Where tribes put their resources in order to use them. */
 class TribeStash extends Entity {
@@ -39,10 +38,6 @@ class TribeStash extends Entity {
             url: "tribe-stash.png"
          })
       );
-
-      // Remove fog of war on the tribe position
-      const coordinates = this.getComponent(TransformComponent)!.getTileCoordinates();
-      Board.revealFog(coordinates, this.SIZE / 2, true);
    }
 
    private setHitbox(): void {

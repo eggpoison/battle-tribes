@@ -3,7 +3,7 @@ import TribeStash from "../entities/TribeStash";
 import InfiniteInventoryViewerManager from "./inventory/InfiniteInventoryViewerManager";
 import InventoryViewer from "./inventory/InventoryViewer";
 import InventoryViewerManager from "./inventory/InventoryViewerManager";
-import { setMessageDisplay } from "./MessageDisplay";
+import { displayMessage } from "./MessageDisplay";
 
 export let toggleTribeStashViewerVisibility: () => void;
 
@@ -19,9 +19,9 @@ const TribeStashViewer = () => {
       toggleTribeStashViewerVisibility = (): void => {
          const newIsVisible = isVisible ? false : true;
          if (newIsVisible) {
-            setMessageDisplay(TribeStash.CLOSE_MESSAGE);
+            displayMessage(TribeStash.CLOSE_MESSAGE);
          } else {
-            setMessageDisplay(TribeStash.OPEN_MESSAGE);
+            displayMessage(TribeStash.OPEN_MESSAGE);
          }
          setIsVisible(newIsVisible);
       }

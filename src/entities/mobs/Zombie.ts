@@ -132,7 +132,7 @@ class Zombie extends Mob {
          }
       });
 
-      followAI.setTickCallback(() => {
+      followAI.addTickCallback(() => {
          const targetEntity = followAI.getTarget();
 
          if (targetEntity !== null) {

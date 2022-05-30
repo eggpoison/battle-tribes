@@ -95,7 +95,7 @@ class Yeti extends Mob {
          }
       });
 
-      followAI.setTickCallback(() => {
+      followAI.addTickCallback(() => {
          const target = followAI.getTarget();
 
          // Move to the target

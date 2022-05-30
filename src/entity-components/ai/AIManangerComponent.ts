@@ -31,16 +31,9 @@ class AIManagerComponent extends Component {
    }
 
    public tick(): void {
-      // if (typeof this.tickCallback !== "undefined") this.tickCallback();
-
       this.currentAI.checkTargetPosition();
       this.currentAI.tick();
    }
-
-   // private tickCallback?: () => void;
-   // public addTickCallback(func: () => void): void {
-   //    this.tickCallback = func;
-   // }
 }
 
 export default AIManagerComponent;

@@ -39,8 +39,8 @@ export abstract class Minimap {
       container.style.width = this.SIZE + "px";
       container.style.height = this.SIZE + "px";
 
-      container.style.left = this.MARGIN + "px";
-      container.style.bottom = this.MARGIN + "px";
+      container.style.top = this.MARGIN + "px";
+      container.style.right = this.MARGIN + "px";
 
       this.minimapBackgroundCanvas.width = this.SIZE;
       this.minimapBackgroundCanvas.height = this.SIZE;

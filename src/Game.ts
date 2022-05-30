@@ -3,6 +3,7 @@ import Camera from "./Camera";
 import { clearCanvas, renderFog, renderGroundTiles, renderWallTiles } from "./components/Canvas";
 import { Minimap } from "./components/MinimapCanvas";
 import { stopPlayerMovement } from "./entity-components/PlayerControllerComponent";
+import Mouse from "./Mouse";
 import SETTINGS from "./settings";
 import { timers } from "./Timer";
 
@@ -12,11 +13,15 @@ const NIGHT_END = 6;
 let previousFocus = true;
 
 abstract class Game {
+   public static ticks = 0;
+
    // private static readonly TIME_SPEED = 1.5;
    private static readonly TIME_SPEED = 50;
    private static time: number = SETTINGS.startTime;
 
    public static tick(): void {
+      this.ticks++;
+
       Game.time += Game.TIME_SPEED / SETTINGS.tps / 60;
       if (Game.time >= 24) Game.time -= 24;
 
@@ -37,6 +42,9 @@ abstract class Game {
       renderGroundTiles();
       Board.tick();
       renderWallTiles();
+      Mouse.updateUnitSelectionBounds();
+      Mouse.drawUnitSelectionTool();
+
       // Draw the darkness effect given by night time
       Board.drawDarkness();
       

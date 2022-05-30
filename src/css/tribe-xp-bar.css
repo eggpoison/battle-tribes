@@ -12,6 +12,7 @@
 }
 #xp-bar .xp-pool {
    --margin: 4px;
+   max-width: calc(var(--width) - var(--margin) * 2);
    width: calc(var(--xp) / var(--next-xp) * (var(--width) - var(--margin) * 2));
    height: calc(var(--height) - var(--margin) * 2);
    background-color: rgb(0, 255, 0);

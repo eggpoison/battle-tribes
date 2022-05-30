@@ -18,8 +18,9 @@ import Mob from "../mobs/Mob";
 import Resource from "../resources/Resource";
 import TribeStash from "../TribeStash";
 import GenericTribeMember from "./GenericTribeMember";
+import TribeWorker from "./TribeWorker";
 
-class Tribesman extends GenericTribeMember {
+class Tribesman extends TribeWorker {
    public readonly SIZE = 1;
 
    private static readonly SIGHT_RANGE = 4;
@@ -98,6 +99,8 @@ class Tribesman extends GenericTribeMember {
       wanderAI.setSwitchCondition({
          newID: "follow",
          shouldSwitch: (): boolean => {
+            if (this.targetCommandPosition !== null) return true;
+
             const entitiesInSearchRadius = followAI.getEntitiesInSearchRadius(transformComponent.position, Tribesman.SIGHT_RANGE, Tribesman.TARGETS);
             if (entitiesInSearchRadius !== null) {
                const targetEntities = this.sortFollowTargets(entitiesInSearchRadius);
@@ -138,7 +141,13 @@ class Tribesman extends GenericTribeMember {
          }
       });
 
-      followAI.setTickCallback(() => {
+      followAI.addTickCallback(() => {
+         // Move to the command position
+         if (this.targetCommandPosition !== null) {
+            followAI.moveToPosition(this.targetCommandPosition, Tribesman.FOLLOW_SPEED);
+            return;
+         }
+
          // If inventory is full, move to the stash
          if (this.getComponent(FiniteInventoryComponent)!.isFull(false)) {
             isMovingToStash = true;
@@ -195,6 +204,10 @@ class Tribesman extends GenericTribeMember {
          } else {
             followAI.moveToEntity(target, Tribesman.FOLLOW_SPEED);
          }
+      });
+
+      followAI.addReachTargetCallback(() => {
+         this.targetCommandPosition = null;
       });
 
       followAI.setTargetSortFunction((entities: Array<Entity>) => this.sortFollowTargets(entities));

@@ -1,3 +1,4 @@
+import HealthComponent from "../../entity-components/HealthComponent";
 import HitboxComponent from "../../entity-components/HitboxComponent";
 import ItemSpawnComponent from "../../entity-components/ItemSpawnerComponent";
 import RenderComponent, { ImageRenderPart } from "../../entity-components/RenderComponent";
@@ -8,8 +9,12 @@ import Resource from "./Resource";
 class Flower extends Resource {
    public readonly SIZE = 0.3;
 
+   private static readonly LIFESPAN = 20;
+
    constructor(position: Point) {
       super(position);
+
+      this.getComponent(HealthComponent)!.setLifespan(Flower.LIFESPAN);
       
       this.getComponent(ItemSpawnComponent)!.addResource(ItemName.flower, 1, "deathByEntity");
    }

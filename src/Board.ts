@@ -15,7 +15,9 @@ import Game from "./Game";
 import EntitySpawner from "./EntitySpawner";
 import Resource from "./entities/resources/Resource";
 import Mouse from "./Mouse";
-import GenericTribeMember from "./entities/tribe-members/GenericTribeMember";
+import TribeWorker from "./entities/tribe-members/TribeWorker";
+import Particle from "./particles/Particle";
+import ParticleSource from "./particles/ParticleSource";
 
 export type Chunk = Array<Entity>;
 
@@ -33,12 +35,14 @@ abstract class Board {
 
    /** Each chunk contains an array of entities */
    private static chunks: Array<Array<Chunk>>;
-
    private static tiles: Array<Array<TileType>>;
 
    private static disappearingFog = new Array<Coordinates>();
 
    private static changedTiles = new Array<Coordinates>();
+
+   private static particleSources = new Array<ParticleSource>();
+   private static particles = new Array<Particle>();
 
    public static setup(): void {
       this.tiles = generateTerrain();
@@ -53,7 +57,6 @@ abstract class Board {
       }
 
       precomputeTileLocations();
-
 
       // Spawn initial entities
       EntitySpawner.spawnInitialEntities();
@@ -74,7 +77,14 @@ abstract class Board {
       return this.chunks[x][y];
    }
 
-   /** Clear values */
+   public static addParticle(particle: Particle): void {
+      this.particles.push(particle);
+   }
+
+   public static addParticleSource(particleSource: ParticleSource): void {
+      this.particleSources.push(particleSource);
+   }
+
    public static clearValues(): void {
       this.changedTiles = new Array<Coordinates>();
    }
@@ -89,7 +99,7 @@ abstract class Board {
       let resourceCount = 0;
 
       const selectedEntities = Mouse.getSelectedUnits();
-      const visibleSelectedEntities = new Array<GenericTribeMember>();
+      const visibleSelectedEntities = new Array<TribeWorker>();
 
       const entitiesToChangeChunk: Array<[Entity, Chunk]> = [];
 
@@ -122,7 +132,7 @@ abstract class Board {
                      renderComponent.renderEntity(ctx);
 
                      // If the entity is selected, add it to an array to render the selection icon later
-                     if (entity instanceof GenericTribeMember && selectedEntities.includes(entity)) {
+                     if (entity instanceof TribeWorker && selectedEntities.includes(entity)) {
                         visibleSelectedEntities.push(entity);
                      }
                   }
@@ -154,6 +164,9 @@ abstract class Board {
          entity.previousChunk = newChunk;
       }
 
+      this.tickParticles();
+      this.renderParticles(ctx);
+
       // Render the selection icons
       this.renderSelectionIcons(ctx, visibleSelectedEntities);
 
@@ -170,7 +183,25 @@ abstract class Board {
       EntitySpawner.setResourceCount(resourceCount);
    }
 
-   private static renderSelectionIcons(ctx: CanvasRenderingContext2D, entities: Array<GenericTribeMember>): void {
+   private static tickParticles(): void {
+      // Tick existing particles
+      for (const particle of this.particles) {
+         particle.tick();
+      }
+
+      // Tick particle sources
+      for (const particleSource of this.particleSources) {
+         particleSource.tick();
+      }
+   }
+
+   private static renderParticles(ctx: CanvasRenderingContext2D): void {
+      for (const particle of this.particles) {
+         particle.render(ctx);
+      }
+   }
+
+   private static renderSelectionIcons(ctx: CanvasRenderingContext2D, entities: Array<TribeWorker>): void {
       const WIDTH = 5;
       const SIZE = 90;
 

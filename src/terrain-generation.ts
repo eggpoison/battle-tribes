@@ -296,6 +296,11 @@ const generateMagmaFields = (tileArray: Array<Array<TileType>>): void => {
          const idx = randInt(0, dirs.length - 1);
          const dir = dirs[idx];
 
+         // Don't choose the tile if it is out of bounds
+         if (originTileX + dir[0] < 0 || originTileX + dir[0] >= Board.dimensions || originTileY + dir[1] < 0 || originTileY + dir[1] >= Board.dimensions) {
+            continue;
+         }
+
          // If the adjacent tile is available, choose it
          const tile = tileArray[originTileX + dir[0]][originTileY + dir[1]];
          if (tile.biome.name !== "Magma Fields") {

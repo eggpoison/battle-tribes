@@ -33,6 +33,8 @@ abstract class EntityAI {
             this.switchCondition.onSwitch();
          }
       }
+
+      if (typeof this.tickCallback !== "undefined") this.tickCallback();
    }
 
    public checkTargetPosition(): void {
@@ -117,6 +119,11 @@ abstract class EntityAI {
    private switchCondition?: SwitchCondition;
    public setSwitchCondition(switchCondition: SwitchCondition): void {
       this.switchCondition = switchCondition;
+   }
+
+   private tickCallback?: () => void;
+   public addTickCallback(callback: () => void): void {
+      this.tickCallback = callback;
    }
 }
 

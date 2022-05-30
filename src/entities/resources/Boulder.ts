@@ -1,3 +1,4 @@
+import HealthComponent from "../../entity-components/HealthComponent";
 import HitboxComponent from "../../entity-components/HitboxComponent";
 import ItemSpawnComponent from "../../entity-components/ItemSpawnerComponent";
 import RenderComponent, { ImageRenderPart } from "../../entity-components/RenderComponent";
@@ -6,13 +7,17 @@ import { Point } from "../../utils";
 import Resource from "./Resource";
 
 class Boulder extends Resource {
-   public readonly SIZE: number = 1.3;
    private static readonly HEALTH = 20;
+   private static readonly LIFESPAN = 50;
+
+   public readonly SIZE: number = 1.3;
 
    constructor(position: Point) {
       super(position);
 
       this.setMaxHealth(Boulder.HEALTH);
+      
+      this.getComponent(HealthComponent)!.setLifespan(Boulder.LIFESPAN);
 
       this.getComponent(ItemSpawnComponent)!.addResource(ItemName.rock, [1, 3], "deathByEntity");
    }

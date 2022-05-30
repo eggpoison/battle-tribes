@@ -48,6 +48,8 @@ function App() {
 
          {/* Black filter */}
          <div id="mask" className="hidden"></div>
+         {/* Yellow border around screen in unit selection mode */}
+         <div id="unit-selection-mode-border" className="hidden"></div>
       </div>
    );
 }

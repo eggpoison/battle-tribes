@@ -36,7 +36,18 @@ export function chooseRandomItems<T>(arr: Array<T>, numItems: number): Array<T> 
    return chosenItems;
 }
 
-export class Point {
+interface PointInfo<P, V> {
+   x: number;
+   y: number;
+   add(other: P): P;
+   subtract(other: P): P;
+   dot(other: P): number;
+   distanceFrom(other: P): number;
+   angleBetween(other: P): number;
+   convertToVector(other?: P): V;
+}
+
+export class Point implements PointInfo<Point, Vector> {
    public x: number;
    public y: number;
 
@@ -45,26 +56,26 @@ export class Point {
       this.y = y;
    }
 
-   public add(point2: Point): Point {
+   public add(other: Point): Point {
       return new Point(
-         this.x + point2.x,
-         this.y + point2.y
+         this.x + other.x,
+         this.y + other.y
       );
    };
 
-   public subtract(point2: Point): Point {
+   public subtract(other: Point): Point {
       return new Point(
-         this.x - point2.x,
-         this.y - point2.y
+         this.x - other.x,
+         this.y - other.y
       );
    }
 
-   public dot(point2: Point): number {
-      return this.x * point2.x + this.y * point2.y;
+   public dot(other: Point): number {
+      return this.x * other.x + this.y * other.y;
    }
 
-   public distanceFrom(point2: Point): number {
-      const distance = Math.sqrt(Math.pow(this.x - point2.x, 2) + Math.pow(this.y - point2.y, 2));
+   public distanceFrom(other: Point): number {
+      const distance = Math.sqrt(Math.pow(this.x - other.x, 2) + Math.pow(this.y - other.y, 2));
       return distance;
    };
 
@@ -74,13 +85,13 @@ export class Point {
       return Math.sqrt(dx*dx + dy*dy);
    }
 
-   public angleBetween(point2: Point): number {
-      const angle = Math.atan2(point2.y - this.y, point2.x - this.x);
+   public angleBetween(other: Point): number {
+      const angle = Math.atan2(other.y - this.y, other.x - this.x);
       return angle;
    }
 
-   public convertToVector(point2?: Point): Vector {
-      const targetPoint = point2 || new Point(0, 0);
+   public convertToVector(other?: Point): Vector {
+      const targetPoint = other || new Point(0, 0);
 
       const distance = this.distanceFrom(targetPoint);
       const angle = targetPoint.angleBetween(this);
@@ -88,11 +99,69 @@ export class Point {
    }
 }
 
+export class Point3 {
+   public x: number;
+   public y: number;
+   public z: number;
+
+   constructor(x: number, y: number, z: number) {
+      this.x = x;
+      this.y = y;
+      this.z = z;
+   }
+
+   public add(other: Point3): Point3 {
+      return new Point3(
+         this.x + other.x,
+         this.y + other.y,
+         this.z + other.z
+      );
+   };
+
+   public subtract(other: Point3): Point3 {
+      return new Point3(
+         this.x - other.x,
+         this.y - other.y,
+         this.z - other.z
+      );
+   }
+
+   public dot(other: Point3): number {
+      return this.x * other.x + this.y * other.y + this.z * other.z;
+   }
+
+   public distanceFrom(other: Point3): number {
+      const distance = Math.sqrt(Math.pow(this.x - other.x, 2) + Math.pow(this.y - other.y, 2) + Math.pow(this.z - other.z, 2));
+      return distance;
+   };
+
+   // public angleBetween(other: Point3): number {
+   //    const angle = Math.atan2(other.y - this.y, other.x - this.x);
+   //    return angle;
+   // }
+
+   // public convertToVector(other?: Point3): Vector3 {
+   //    const relativeMeasuringPoint = other || new Point3(0, 0, 0);
+
+   //    const distance = this.distanceFrom(relativeMeasuringPoint);
+   //    const angle = relativeMeasuringPoint.angleBetween(this);
+   //    return new Vector3(distance, angle);
+   // }
+}
+
 export function getRandomAngle() {
    return Math.random() * 360;
 }
 
-export class Vector {
+interface VectorType<V, P> {
+   magnitude: number;
+   direction: number;
+   convertToPoint(): P;
+   add(other: V): V;
+   copy(): V;
+}
+
+export class Vector implements VectorType<Vector, Point> {
    public magnitude: number;
    public direction: number;
 
@@ -107,17 +176,50 @@ export class Vector {
       return new Point(x, y);
    }
 
-   public add(vector2: Vector): Vector {
-      return (this.convertToPoint().add(vector2.convertToPoint())).convertToVector();
+   public add(other: Vector): Vector {
+      return (this.convertToPoint().add(other.convertToPoint())).convertToVector();
+   }
+
+   public copy(): Vector {
+      return new Vector(this.magnitude, this.direction);
    }
 
    public static randomUnitVector(): Vector {
       const theta = randFloat(0, 360);
       return new Vector(1, theta);
    }
+}
 
-   public copy(): Vector {
-      return new Vector(this.magnitude, this.direction);
+export class Vector3 {
+   public magnitude: number;
+   public yDirection: number;
+   public zDirection: number;
+
+   constructor(magnitude: number, yDirection: number, zDirection: number) {
+      this.magnitude = magnitude;
+      this.yDirection = yDirection;
+      this.zDirection = zDirection;
+   }
+
+   public convertToPoint(): Point3 {
+      const x = Math.cos(this.yDirection) * this.magnitude;
+      const y = Math.sin(this.yDirection) * this.magnitude;
+      const z = Math.cos(this.zDirection) * this.magnitude;
+      return new Point3(x, y, z);
+   }
+
+   // public add(other: Vector3): Vector3 {
+   //    return (this.convertToPoint().add(other.convertToPoint())).convertToVector();
+   // }
+
+   // public copy(): Vector3 {
+   //    return new Vector3(this.magnitude, this.yDirection);
+   // }
+
+   public static randomUnitVector(): Vector3 {
+      const yDirection = randFloat(0, 360);
+      const zDirection = randFloat(0, 360);
+      return new Vector3(1, yDirection, zDirection);
    }
 }
 
@@ -274,3 +376,20 @@ export function roundNum(num: number, dp: number): number {
    const power = Math.pow(10, dp)
    return Math.round((num + Number.EPSILON) * power) / power;
 }
+
+let isInFocus = true;
+
+export function setWindowFocus(newFocus: boolean): void {
+   isInFocus = newFocus;
+}
+
+export function gameIsInFocus(): boolean {
+   return isInFocus;
+}
+
+window.addEventListener("focus", () => {
+   isInFocus = true;
+});
+window.addEventListener("blur", () => {
+   isInFocus = false;
+});

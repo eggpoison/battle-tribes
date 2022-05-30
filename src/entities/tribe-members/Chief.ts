@@ -8,9 +8,6 @@ import ItemEntity from "../ItemEntity";
 import TribeStash from "../TribeStash";
 import Tribe from "../../Tribe";
 import Board from "../../Board";
-import { hideMessageDisplay, setMessageDisplay } from "../../components/MessageDisplay";
-import InventoryViewerManager from "../../components/inventory/InventoryViewerManager";
-import { toggleTribeStashViewerVisibility, tribeStashViewerIsOpen } from "../../components/TribeStashViewer";
 import HealthComponent from "../../entity-components/HealthComponent";
 import GenericTribeMember from "./GenericTribeMember";
 import FiniteInventoryComponent from "../../entity-components/inventory/FiniteInventoryComponent";
@@ -74,28 +71,8 @@ class Chief extends GenericTribeMember {
          // Pick up the item
          const inventoryComponent = this.getComponent(FiniteInventoryComponent)!;
          inventoryComponent.pickupResource(collidingEntity);
-
-         // Update the player inventory viewer
-         const itemSlots = inventoryComponent.getItemSlots();
-         InventoryViewerManager.getInstance("playerInventory").setItemSlots(itemSlots);
       } else if (collidingEntity instanceof TribeStash) {
-         // Do nothing if it belongs to a different tribe.
-         const playerTribe = this.tribe;
-         const stashTribe = collidingEntity.tribe;
-         if (playerTribe !== stashTribe) return;
-
-         setMessageDisplay(TribeStash.OPEN_MESSAGE);
-      }
-   }
-
-   protected onLeaveCollision(collidingEntity: Entity): void {
-      if (collidingEntity instanceof TribeStash) {
-         // Hide the stash viewer
-         if (tribeStashViewerIsOpen()) {
-            toggleTribeStashViewerVisibility();
-         }
-
-         hideMessageDisplay();
+         // TODO: Deposit all items
       }
    }
 }

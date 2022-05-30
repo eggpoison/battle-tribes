@@ -1,12 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
 
 body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+   margin: 0;
 }
 
 :root {
@@ -14,9 +9,8 @@ body {
    --slot-margin: 3px;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+.hidden {
+   display: none !important;
 }
 
 #canvas {
@@ -119,10 +113,6 @@ code {
    background-color: red;
 }
 
-.hidden {
-   display: none !important;
-}
-
 #mask {
    background-color: rgba(0, 0, 0, 0.3);
    position: absolute;
@@ -131,4 +121,14 @@ code {
    bottom: 0;
    left: 0;
    z-index: 2;
+}
+
+#unit-selection-mode-border {
+   position: absolute;
+   top: 0;
+   right: 0;
+   bottom: 0;
+   left: 0;
+   box-shadow: 0 0 0 4px #ffff00 inset;
+   pointer-events: none;
 }

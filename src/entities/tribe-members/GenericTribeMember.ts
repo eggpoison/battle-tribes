@@ -50,16 +50,20 @@ abstract class GenericTribeMember extends Entity {
    }
 
    public onLoad(): void {
-      const coordinates = this.getComponent(TransformComponent)!.getTileCoordinates();
-      Board.revealFog(coordinates, this.sightRange, true);
+      if (this.tribe.type === "humans") {
+         const coordinates = this.getComponent(TransformComponent)!.getTileCoordinates();
+         Board.revealFog(coordinates, this.sightRange, true);
+      }
    }
 
    public tick(): void {
       super.tick();
 
       // Reveal any fog of war the tribe member is standing on
-      const coordinates = this.getComponent(TransformComponent)!.getTileCoordinates();
-      Board.revealFog(coordinates, this.sightRange, false);
+      if (this.tribe.type === "humans") {
+         const coordinates = this.getComponent(TransformComponent)!.getTileCoordinates();
+         Board.revealFog(coordinates, this.sightRange, false);
+      }
    }
 
    protected setSightRange(sightRange: number): void {

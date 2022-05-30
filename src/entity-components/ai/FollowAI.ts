@@ -17,6 +17,8 @@ class FollowAI extends EntityAI {
    private readonly range: number;
    private readonly targets: ReadonlyArray<ConstructorFunction>;
 
+   private reachTargetCallbacks: Array<() => void> | undefined;
+
    constructor(id: string, info: FollowAIInfo) {
       super();
 
@@ -30,6 +32,13 @@ class FollowAI extends EntityAI {
       super.reachTargetPosition(transformComponent);
 
       this.target = null;
+
+      // Call all reach target callbacks
+      if (typeof this.reachTargetCallbacks !== "undefined") {
+         for (const callback of this.reachTargetCallbacks) {
+            callback();
+         }
+      }
    }
 
    public getTarget(): Entity | null {
@@ -67,11 +76,6 @@ class FollowAI extends EntityAI {
       this.targetSortFunction = func;
    }
 
-   private tickCallback?: () => void;
-   public setTickCallback(callback: () => void): void {
-      this.tickCallback = callback;
-   }
-
    private validateTarget(): void {
       if (this.target === null) return;
       
@@ -84,13 +88,19 @@ class FollowAI extends EntityAI {
       }
    }
 
+   public addReachTargetCallback(callback: () => void): void {
+      if (typeof this.reachTargetCallbacks === "undefined") {
+         this.reachTargetCallbacks = new Array<() => void>();
+      }
+
+      this.reachTargetCallbacks.push(callback);
+   }
+
    public tick(): void {
       super.tick();
-
+      
       // Make sure the target isn't dead
       this.validateTarget();
-
-      if (typeof this.tickCallback !== "undefined") this.tickCallback();
    }
 }
 

@@ -71,9 +71,9 @@ class Slime extends Mob {
    private static readonly KNOCKBACK_STRENGTH = 1;
 
    // AI
-   private static readonly FOLLOW_WAIT_TIMER_DURATION = 1;
+   private static readonly FOLLOW_WAIT_TIMER_DURATION = 0.4;
    private static readonly FOLLOW_WAIT_TIMER_DURATION_VARIANCE = 0.1;
-   private followWaitTimer: Timer | null = new Timer({ duration: Slime.FOLLOW_WAIT_TIMER_DURATION, onEnd: () => this.followWaitTimer = null });
+   private followWaitTimer: Timer | null = new Timer({ duration: 1, onEnd: () => this.followWaitTimer = null });
    
    private static readonly TARGETS = [GenericTribeMember];
 
@@ -179,6 +179,8 @@ class Slime extends Mob {
          })
       );
 
+      let isMovingToTarget = false;
+
       followAI.setSwitchCondition({
          newID: "wander",
          shouldSwitch: (): boolean => {
@@ -190,31 +192,41 @@ class Slime extends Mob {
             transformComponent.stopMoving();
 
             this.followWaitTimer = null;
+
+            isMovingToTarget = false;
          }
       });
-      followAI.setTickCallback(() => {
-         if (this.followWaitTimer === null) {
+
+      followAI.addTickCallback(() => {
+         if (this.followWaitTimer === null && !isMovingToTarget) {
             const target = followAI.getTarget();
             if (target === null) return;
+
+            isMovingToTarget = true;
 
             // Get move speed
             const speed = Slime.FOLLOW_SPEED + randFloat(-Slime.FOLLOW_SPEED_VARIANCE, Slime.FOLLOW_SPEED_VARIANCE);
 
             // Move to the target
             followAI.moveToPosition(target.getComponent(TransformComponent)!.position, speed);
-
-            // Get timer duration
-            const duration = Slime.FOLLOW_WAIT_TIMER_DURATION + randFloat(-Slime.FOLLOW_WAIT_TIMER_DURATION_VARIANCE, Slime.FOLLOW_WAIT_TIMER_DURATION_VARIANCE);
-
-            // Reset the timer
-            this.followWaitTimer = new Timer({
-               duration: duration,
-               onEnd: () => {
-                  this.followWaitTimer = null;
-               }
-            });
          }
       });
+
+      // When the target entity is reached, reset the move timer
+      followAI.addReachTargetCallback(() => {
+         isMovingToTarget = false;
+
+         // Get timer duration
+         const duration = Slime.FOLLOW_WAIT_TIMER_DURATION + randFloat(-Slime.FOLLOW_WAIT_TIMER_DURATION_VARIANCE, Slime.FOLLOW_WAIT_TIMER_DURATION_VARIANCE);
+
+         // Reset the timer
+         this.followWaitTimer = new Timer({
+            duration: duration,
+            onEnd: () => {
+               this.followWaitTimer = null;
+            }
+         });
+      })
 
       // Increase the duration of the follow wait timer
       this.createEvent("healthChange", (healthChange: number) => {

@@ -8,8 +8,6 @@ import Board from './Board';
 import EntitySpawner from './EntitySpawner';
 import Tribe from './Tribe';
 import { Minimap } from './components/MinimapCanvas';
-
-import { stopPlayerMovement } from './entity-components/PlayerControllerComponent';
 import Mouse from './Mouse';
 
 
@@ -21,11 +19,6 @@ root.render(
       <App />
    </React.StrictMode>
 );
-
-// Stop movement on right click
-document.addEventListener("contextmenu", () => {
-   stopPlayerMovement();
-});
 
 // Called when all elements are rendered
 export function load() {

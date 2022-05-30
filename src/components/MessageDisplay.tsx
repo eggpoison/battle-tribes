@@ -1,17 +1,17 @@
 import { useEffect, useState } from "react";
 
-export let setMessageDisplay: (message: string) => void;
-export let hideMessageDisplay: () => void;
+export let displayMessage: (message: string) => void;
+export let clearMessage: () => void;
 
 function MessageDisplay() {
    const [message, setMessage] = useState<string | null>(null);
 
    useEffect(() => {
-      setMessageDisplay = (message: string): void => {
+      displayMessage = (message: string): void => {
          setMessage(message);
       }
 
-      hideMessageDisplay = (): void => {
+      clearMessage = (): void => {
          setMessage(null);
       }
    }, []);

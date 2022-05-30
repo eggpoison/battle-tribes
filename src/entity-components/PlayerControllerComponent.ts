@@ -4,7 +4,7 @@ import { toggleDevtoolsVisibility } from "../components/Devtools";
 import Chief from "../entities/tribe-members/Chief";
 import Player from "../entities/tribe-members/Player";
 import SETTINGS from "../settings";
-import { isDev, Vector } from "../utils";
+import { gameIsInFocus, isDev, Vector } from "../utils";
 import TransformComponent from "./TransformComponent";
 
 const keyEvents = new Array<(key: string) => void>();
@@ -40,7 +40,7 @@ class PlayerControllerComponent extends Component {
       const transformComponent = this.getEntity().getComponent(TransformComponent)!;
       
       const angle = this.getMoveAngle();
-      if (angle === null) {
+      if (angle === null || !gameIsInFocus()) {
          transformComponent.stopMoving();
          return;
       }
@@ -79,8 +79,6 @@ class PlayerControllerComponent extends Component {
    }
 
    public onLoad(): void {
-      // document.addEventListener("mousedown", e => this.validateInput(e) ? this.startAttack() : null);
-
       document.addEventListener("keydown", e => this.validateInput(e) ? this.checkKey(e, true) : null);
       document.addEventListener("keyup", e => this.validateInput(e) ? this.checkKey(e, false) : null);
    }
@@ -114,12 +112,16 @@ class PlayerControllerComponent extends Component {
 
          // Movement
          case "w":
+         case "W":
          case "ArrowUp": bitPos = 0; break;
          case "d":
+         case "D":
          case "ArrowRight": bitPos = 1; break;
          case "s":
+         case "S":
          case "ArrowDown": bitPos = 2; break;
          case "a":
+         case "A":
          case "ArrowLeft": bitPos = 3; break;
       }
 

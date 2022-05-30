@@ -38,11 +38,6 @@ class TransformComponent extends Component {
       const tile = Board.getTile(...this.getTileCoordinates());
       const tileInfo = TILE_INFO[tile.kind];
 
-      // If the entity is going to collide into a wall, don't move
-      // const entity = this.getEntity();
-      const hitboxComponent = this.getEntity().getComponent(HitboxComponent);
-      // if (hitboxComponent !== null && hitboxComponent.willCollideWithWall()) return;
-
       const velocity = this.velocity.copy();
 
       // Apply tile slowness to velocity
@@ -65,6 +60,7 @@ class TransformComponent extends Component {
          if (this.velocity.magnitude < 0) this.velocity.magnitude = 0;
       }
 
+      const hitboxComponent = this.getEntity().getComponent(HitboxComponent);
       if (hitboxComponent !== null) {
          // If the entity is intersecting with a wall tile, move it out of the collision
          const tileCollisions = this.getTileCollisions();

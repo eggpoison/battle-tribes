@@ -39,6 +39,8 @@ abstract class ShapeRenderPart extends BaseRenderPart implements ShapeRenderSett
    public readonly fillColour: string;
    public readonly border?: { readonly width: number; readonly colour: string; };
    public readonly offset: [number, number];
+
+   public isTargeted: boolean = false;
    
    constructor(renderSettings: ShapeRenderSettings) {
       super(renderSettings);

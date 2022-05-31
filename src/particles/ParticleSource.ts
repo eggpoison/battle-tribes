@@ -1,5 +1,4 @@
 import Board from "../Board";
-import Game from "../Game";
 import SETTINGS from "../settings";
 import { Point, Point3 } from "../utils";
 import Particle, { ParticleInfoType } from "./Particle";
@@ -31,6 +30,7 @@ class ParticleSource implements ParticleSourceInfo {
    }
 
    public tick(): void {
+      // console.log("m");
       this.spawnTimer -= 1 / SETTINGS.tps;
 
       while (this.spawnTimer <= 0) {
@@ -41,7 +41,7 @@ class ParticleSource implements ParticleSourceInfo {
    }
 
    private spawnParticle(): void {
-      const position = new Point3(this.position.x, this.position.y, 0);
+      const position = new Point3(this.position.x, 0, this.position.y);
 
       const particle = new Particle(position, this.particleInfo);
       Board.addParticle(particle);

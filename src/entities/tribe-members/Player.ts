@@ -58,12 +58,13 @@ class Player extends Chief {
          particleInfo: {
             type: "rectangle",
             size: {
-               width: 5,
-               height: 5
+               width: 20,
+               height: 20
             },
-            initialVelocity: new Vector3(5, 0, 0),
+            initialVelocity: new Vector3(5, 0, 5),
             initialAcceleration: new Vector3(0, 0, 0),
-            angularVelocity: 0
+            angularVelocity: 0,
+            colour: "red"
          }
       });
    }

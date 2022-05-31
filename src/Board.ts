@@ -167,6 +167,8 @@ abstract class Board {
       this.tickParticles();
       this.renderParticles(ctx);
 
+      this.renderCommandTileTargets(ctx);
+
       // Render the selection icons
       this.renderSelectionIcons(ctx, visibleSelectedEntities);
 
@@ -198,6 +200,44 @@ abstract class Board {
    private static renderParticles(ctx: CanvasRenderingContext2D): void {
       for (const particle of this.particles) {
          particle.render(ctx);
+      }
+   }
+
+   private static renderCommandTileTargets(ctx: CanvasRenderingContext2D): void {
+      ctx.strokeStyle = Mouse.UNIT_SELECTION_COLOUR;
+      ctx.lineWidth = 5;
+
+      for (const [x, y] of Mouse.getCommandTileTargets()) {
+         const scaleFactor = (Math.sin(Game.ticks / SETTINGS.tps * 2) + 1) / 2 * Board.tileSize / 3;
+
+         const x1 = Camera.getXPositionInCamera(x * Board.tileSize - scaleFactor);
+         const x2 = Camera.getXPositionInCamera((x + 1) * Board.tileSize + scaleFactor);
+         const y1 = Camera.getYPositionInCamera(y * Board.tileSize - scaleFactor);
+         const y2 = Camera.getYPositionInCamera((y + 1) * Board.tileSize + scaleFactor);
+
+         const middleX = Camera.getXPositionInCamera((x + 0.5) * Board.tileSize);
+         const middleY = Camera.getYPositionInCamera((y + 0.5) * Board.tileSize);
+
+         const rotation = (Game.ticks / SETTINGS.tps * 2) % 360;
+
+         // Move the canvas origin to the center of the tile
+         ctx.translate(middleX, middleY);
+         ctx.rotate(rotation);
+         // Undo the translation
+         ctx.translate(-middleX, -middleY);
+
+         ctx.beginPath();
+
+         ctx.moveTo(x1, y1);
+         ctx.lineTo(x2, y1);
+         ctx.lineTo(x2, y2);
+         ctx.lineTo(x1, y2);
+         ctx.lineTo(x1, y1);
+
+         ctx.stroke();
+         
+         // Reset rotation
+         ctx.setTransform(1, 0, 0, 1, 0, 0);
       }
    }
 

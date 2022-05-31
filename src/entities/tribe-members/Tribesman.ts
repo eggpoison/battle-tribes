@@ -99,7 +99,7 @@ class Tribesman extends TribeWorker {
       wanderAI.setSwitchCondition({
          newID: "follow",
          shouldSwitch: (): boolean => {
-            if (this.targetCommandPosition !== null) return true;
+            if (this.targetCommandTileCoordinates !== null) return true;
 
             const entitiesInSearchRadius = followAI.getEntitiesInSearchRadius(transformComponent.position, Tribesman.SIGHT_RANGE, Tribesman.TARGETS);
             if (entitiesInSearchRadius !== null) {
@@ -126,6 +126,8 @@ class Tribesman extends TribeWorker {
       followAI.setSwitchCondition({
          newID: "wander",
          shouldSwitch: (): boolean => {
+            if (this.targetCommandTileCoordinates !== null) return true;
+            
             if (isMovingToStash) return false;
 
             const entitiesInSearchRadius = followAI.getEntitiesInSearchRadius(transformComponent.position, Tribesman.SIGHT_RANGE, Tribesman.TARGETS);
@@ -143,8 +145,9 @@ class Tribesman extends TribeWorker {
 
       followAI.addTickCallback(() => {
          // Move to the command position
-         if (this.targetCommandPosition !== null) {
-            followAI.moveToPosition(this.targetCommandPosition, Tribesman.FOLLOW_SPEED);
+         if (this.targetCommandTileCoordinates !== null) {
+            const targetPosition = new Point((this.targetCommandTileCoordinates[0] + 0.5) * Board.tileSize, (this.targetCommandTileCoordinates[1] + 0.5) * Board.tileSize);
+            followAI.moveToPosition(targetPosition, Tribesman.FOLLOW_SPEED);
             return;
          }
 
@@ -207,7 +210,12 @@ class Tribesman extends TribeWorker {
       });
 
       followAI.addReachTargetCallback(() => {
-         this.targetCommandPosition = null;
+         if (this.targetCommandTileCoordinates === null) return;
+         
+         const currentTileCoordinates = this.getComponent(TransformComponent)!.getTileCoordinates();
+         if (currentTileCoordinates[0] === this.targetCommandTileCoordinates[0] && currentTileCoordinates[1] === this.targetCommandTileCoordinates[1]) {
+            this.targetCommandTileCoordinates = null;
+         }
       });
 
       followAI.setTargetSortFunction((entities: Array<Entity>) => this.sortFollowTargets(entities));

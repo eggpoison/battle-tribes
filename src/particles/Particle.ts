@@ -1,4 +1,6 @@
+import Board from "../Board";
 import Camera from "../Camera";
+import SETTINGS from "../settings";
 import { Point3, Vector3 } from "../utils";
 
 type ParticleType = "rectangle" | "ellipse" | "image";
@@ -29,6 +31,7 @@ interface RectangleParticleInfo extends ParticleInfo {
       readonly width: number;
       readonly height: number;
    }
+   readonly colour: string;
 }
 
 export type ParticleInfoType = ImageParticleInfo | RectangleParticleInfo;
@@ -48,6 +51,7 @@ class Particle {
    constructor(initialPosition: Point3, info: ParticleInfoType) {
       this.type = info.type;
       this.size = info.size;
+      if (info.hasOwnProperty("colour")) this.colour = (info as RectangleParticleInfo).colour;
 
       this.position = initialPosition;
       this.velocity = info.initialVelocity;
@@ -55,7 +59,13 @@ class Particle {
    }
 
    public tick(): void {
+      const velocity = this.velocity.copy();
+      velocity.magnitude /= SETTINGS.tps;
+      velocity.magnitude *= Board.tileSize;
+      
+      console.log(this.position.copy());
       this.position = this.position.add(this.velocity.convertToPoint());
+      console.log(this.position.copy());
    }
 
    public render(ctx: CanvasRenderingContext2D): void {
@@ -64,7 +74,8 @@ class Particle {
             const { width, height } = this.size as { width: number, height: number };
 
             const canvasX = Camera.getXPositionInCamera(this.position.x);
-            const canvasY = Camera.getXPositionInCamera(this.position.z - this.position.y);
+            const canvasY = Camera.getYPositionInCamera(this.position.z);
+            // const canvasY = Camera.getYPositionInCamera(this.position.z + this.position.y);
 
             ctx.fillStyle = this.colour!;
 

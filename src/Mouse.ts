@@ -1,4 +1,4 @@
-import Board from "./Board";
+import Board, { Coordinates } from "./Board";
 import Camera from "./Camera";
 import { getCanvasContext, getCanvasHeight, getCanvasWidth } from "./components/Canvas";
 import Player, { PlayerInteractionMode } from "./entities/tribe-members/Player";
@@ -9,6 +9,7 @@ import { Point, setWindowFocus } from "./utils";
 abstract class Mouse {
    public static readonly UNIT_SELECTION_COLOUR = "#ffff00";
    public static readonly OPAQUE_UNIT_SELECTION_COLOUR = "rgba(255, 255, 0, 0.3)";
+   private static readonly ENTITY_ATTACK_COMMAND_RADIUS = 3;
 
    private static tribeSelectStartPosition: Point | null = null;
    private static tribeSelectEndPosition: Point | null = null;
@@ -23,7 +24,7 @@ abstract class Mouse {
       document.addEventListener("mousedown", e => this.mouseDown(e));
       document.addEventListener("mousemove", e => this.mouseMove(e));
       document.addEventListener("mouseup", e => this.mouseUp(e));
-      document.addEventListener("contextmenu", e => this.openContextMenu(e))
+      document.addEventListener("contextmenu", e => this.openContextMenu(e));
    }
 
    private static validateEvent(e: Event): boolean {
@@ -35,6 +36,18 @@ abstract class Mouse {
       }
 
       return true;
+   }
+
+   public static getCommandTileTargets(): Array<Coordinates> {
+      const commandTileTargets = new Array<Coordinates>();
+
+      for (const unit of this.selectedUnits) {
+         if (unit.targetCommandTileCoordinates !== null) {
+            commandTileTargets.push(unit.targetCommandTileCoordinates);
+         }
+      }
+
+      return commandTileTargets;
    }
 
    public static getSelectedUnits(): Array<TribeWorker> {
@@ -73,7 +86,7 @@ abstract class Mouse {
       }
 
       // Command units
-      if (e.button === 2) {
+      if (e.button === 2 && Player.currentInteractionMode === PlayerInteractionMode.SelectUnits) {
          this.commandUnits(e);
       }
    }
@@ -121,7 +134,6 @@ abstract class Mouse {
    private static openContextMenu(e: MouseEvent): void {
       if (!this.validateEvent(e)) {
          setWindowFocus(false);
-
          return;
       }
       
@@ -216,11 +228,17 @@ abstract class Mouse {
       const playerPosition = Player.instance.getComponent(TransformComponent)!.position;
       const x = playerPosition.x + e.clientX - getCanvasWidth() / 2;
       const y = playerPosition.y + e.clientY - getCanvasHeight() / 2;
-      const clickedPosition = new Point(x, y);
+
+      const tileX = Math.floor(x / Board.tileSize);
+      const tileY = Math.floor(y / Board.tileSize);
+
+      // Don't command units into wall tiles
+      const tile = Board.getTile(tileX, tileY);
+      if (tile.isWall) return;
 
       // Move all selected units to that position
       for (const unit of this.selectedUnits) {
-         unit.commandToPosition(clickedPosition);
+         unit.commandToTile([tileX, tileY]);
       }
    }
 }

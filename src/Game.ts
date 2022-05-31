@@ -20,7 +20,7 @@ abstract class Game {
    private static time: number = SETTINGS.startTime;
 
    public static tick(): void {
-      this.ticks++;
+      Game.ticks++;
 
       Game.time += Game.TIME_SPEED / SETTINGS.tps / 60;
       if (Game.time >= 24) Game.time -= 24;

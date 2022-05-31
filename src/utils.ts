@@ -135,6 +135,10 @@ export class Point3 {
       return distance;
    };
 
+   public copy(): Point3 {
+      return new Point3(this.x, this.y, this.z);
+   }
+
    // public angleBetween(other: Point3): number {
    //    const angle = Math.atan2(other.y - this.y, other.x - this.x);
    //    return angle;
@@ -202,9 +206,12 @@ export class Vector3 {
    }
 
    public convertToPoint(): Point3 {
+      // cos sin sin: top right
+      // sin cos cos: up
+      // cos sin cos: middle down something idk
       const x = Math.cos(this.yDirection) * this.magnitude;
       const y = Math.sin(this.yDirection) * this.magnitude;
-      const z = Math.cos(this.zDirection) * this.magnitude;
+      const z = Math.sin(this.zDirection) * this.magnitude;
       return new Point3(x, y, z);
    }
 
@@ -212,9 +219,9 @@ export class Vector3 {
    //    return (this.convertToPoint().add(other.convertToPoint())).convertToVector();
    // }
 
-   // public copy(): Vector3 {
-   //    return new Vector3(this.magnitude, this.yDirection);
-   // }
+   public copy(): Vector3 {
+      return new Vector3(this.magnitude, this.yDirection, this.zDirection);
+   }
 
    public static randomUnitVector(): Vector3 {
       const yDirection = randFloat(0, 360);

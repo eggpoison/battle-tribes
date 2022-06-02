@@ -9,11 +9,9 @@ import CameraFollowComponent from "../../entity-components/CameraFollowComponent
 import HealthComponent from "../../entity-components/HealthComponent";
 import FiniteInventoryComponent from "../../entity-components/inventory/FiniteInventoryComponent";
 import PlayerControllerComponent from "../../entity-components/PlayerControllerComponent";
-import TransformComponent from "../../entity-components/TransformComponent";
 import Mouse from "../../Mouse";
-import ParticleSource from "../../particles/ParticleSource";
 import Tribe from "../../Tribe";
-import { setWindowFocus, Vector3 } from "../../utils";
+import { setWindowFocus } from "../../utils";
 import Entity from "../Entity";
 import ItemEntity from "../ItemEntity";
 import TribeStash from "../TribeStash";
@@ -48,24 +46,6 @@ class Player extends Chief {
       this.createEvent("die", () => {
          // Hide any open menus
          closeMenu();
-      });
-
-      // test
-      new ParticleSource({
-         spawnRate: 1,
-         initialSpawnAmount: 1,
-         position: this.getComponent(TransformComponent)!.position,
-         particleInfo: {
-            type: "rectangle",
-            size: {
-               width: 20,
-               height: 20
-            },
-            initialVelocity: new Vector3(5, 0, 5),
-            initialAcceleration: new Vector3(0, 0, 0),
-            angularVelocity: 0,
-            colour: "red"
-         }
       });
    }
 

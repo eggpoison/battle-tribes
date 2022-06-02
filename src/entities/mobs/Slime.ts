@@ -229,7 +229,7 @@ class Slime extends Mob {
       })
 
       // Increase the duration of the follow wait timer
-      this.createEvent("healthChange", (healthChange: number) => {
+      this.createEvent("healthChange", ([healthChange]: [number]) => {
          if (healthChange < 0 && this.followWaitTimer !== null) {
             const MULTIPLIER = randFloat(1, 1.5);
             this.followWaitTimer.addDuration(SETTINGS.entityInvulnerabilityDuration * MULTIPLIER);

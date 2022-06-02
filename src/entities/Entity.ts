@@ -2,11 +2,22 @@ import Board, { Chunk } from "../Board";
 import Component from "../Component";
 import HealthComponent from "../entity-components/HealthComponent";
 import HitboxComponent from "../entity-components/HitboxComponent";
+import TransformComponent from "../entity-components/TransformComponent";
+import ParticleSource, { ParticleSourceInfo } from "../particles/ParticleSource";
 import SETTINGS from "../settings";
+import STATUS_EFFECT_RECORD, { StatusEffectType } from "../status-effects";
+import { Point } from "../utils";
 
-export type EventType = "deathByEntity" | "healthChange" | "attack" | "killEntity" | "die";
+export type EventType = "deathByEntity" | "healthChange" | "hurt" | "attack" | "killEntity" | "die";
 
 type EventsObject = Partial<Record<EventType, Array<() => void>>>;
+
+type StatusEffect = {
+   readonly type: StatusEffectType;
+   readonly initialDuration: number;
+   remainingDuration: number;
+   readonly particleSource?: ParticleSource;
+}
 
 type Size = number | {
    readonly WIDTH: number;
@@ -23,6 +34,8 @@ abstract class Entity {
    private readonly components = new Map<(abstract new (...args: any[]) => any), Component>();
    private readonly events: EventsObject = {};
 
+   private readonly statusEffects: Partial<Record<StatusEffectType, StatusEffect>> = {};
+
    constructor(components: ReadonlyArray<Component>) {
       for (const component of components) {
          this.components.set(component.constructor as (new (...args: any[]) => any), component);
@@ -30,6 +43,15 @@ abstract class Entity {
          component.setEntity(this);
          if (typeof component.onLoad !== "undefined") component.onLoad();
       }
+
+      // Clear status effects on death
+      this.createEvent("die", () => {
+         for (const statusEffect of Object.values(this.statusEffects)) {
+            if (typeof statusEffect.particleSource !== "undefined") {
+               statusEffect.particleSource.destroy();
+            }
+         }
+      });
    }
 
    public onLoad?(): void;
@@ -56,6 +78,37 @@ abstract class Entity {
             component.tick();
          }
       });
+
+      // Update status effects
+      const entries = Object.entries(this.statusEffects) as Array<[StatusEffectType, StatusEffect]>;
+      for (const [type, statusEffect] of entries) {
+         statusEffect.remainingDuration -= 1 / SETTINGS.tps;
+
+         // Remove the status effect if it has expired
+         if (statusEffect.remainingDuration <= 0) {
+            // If the status effect had a particle source, remove it
+            if (typeof statusEffect.particleSource !== "undefined") {
+               statusEffect.particleSource.destroy();
+            }
+            
+            delete this.statusEffects[type];
+
+            continue;
+         }
+
+         const info = STATUS_EFFECT_RECORD[statusEffect.type];
+         // Damage over time
+         if (typeof info.effects.damageOverTime !== "undefined") {
+            const damageTime = statusEffect.initialDuration - statusEffect.remainingDuration;
+            if (damageTime % 1 === 0 && damageTime < statusEffect.initialDuration) {
+               // Hurt the entity
+               const healthComponent = this.getComponent(HealthComponent);
+               if (healthComponent !== null) {
+                  healthComponent.hurt(info.effects.damageOverTime, null)
+               }
+            }
+         }
+      }
 
       // Check collisions
       const hasCollisionFunc = typeof this.onCollision !== "undefined";
@@ -98,7 +151,7 @@ abstract class Entity {
    public die(causeOfDeath: Entity | null): void {
       // deathByEntity events
       if (causeOfDeath !== null) {
-         this.callEvents("deathByEntity");
+         this.callEvents("deathByEntity", causeOfDeath);
       }
 
       Board.removeEntity(this);
@@ -112,7 +165,7 @@ abstract class Entity {
 
    protected duringCollision?(entity: Entity): void;
 
-   public createEvent(type: EventType, func: (args?: any) => void): void {
+   public createEvent(type: EventType, func: (...args: Array<any>) => void): void {
       if (this.events.hasOwnProperty(type)) {
          this.events[type]!.push(func);
       } else {
@@ -120,7 +173,7 @@ abstract class Entity {
       }
    }
 
-   public callEvents(type: EventType, args?: unknown): void {
+   public callEvents(type: EventType, ...args: Array<unknown>): void {
       if (!this.events.hasOwnProperty(type)) return;
 
       for (const func of this.events[type]!) (func as (args: unknown) => void)(args);
@@ -128,6 +181,39 @@ abstract class Entity {
 
    protected setMaxHealth(maxHealth: number): void {
       this.getComponent(HealthComponent)!.setMaxHealth(maxHealth, true);
+   }
+
+   public applyStatusEffect(type: StatusEffectType, duration: number): void {
+      // Don't apply the status effect if it already exists
+      if (this.statusEffects.hasOwnProperty(type)) {
+         // Update its duration
+         this.statusEffects[type]!.remainingDuration = duration;
+
+         return;
+      }
+
+      const info = STATUS_EFFECT_RECORD[type];
+
+      let particleSource: ParticleSource | undefined = undefined;
+      const transformComponent = this.getComponent(TransformComponent)!;
+      if (transformComponent !== null) {
+         // Create the particle source
+         if (typeof info.particleSource !== "undefined") {
+            const getPosition = (): Point => {
+               return this.getComponent(TransformComponent)!.position.copy();
+            }
+
+            const particleSourceInfo: ParticleSourceInfo = { position: getPosition, ...info.particleSource };
+            particleSource = new ParticleSource(particleSourceInfo);
+         }
+      }
+
+      this.statusEffects[type] = {
+         type: type,
+         initialDuration: duration,
+         remainingDuration: duration,
+         particleSource: particleSource
+      };
    }
 }
 

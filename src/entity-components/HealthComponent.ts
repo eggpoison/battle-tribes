@@ -76,21 +76,28 @@ class HealthComponent extends Component {
       this.getEntity().callEvents("healthChange", amount);
    }
 
-   public hurt(damage: number, attackingEntity: Entity, knockbackStrength: number): void {
+   public hurt(damage: number, source: Entity | null, knockbackStrength?: number): void {
       if (this.remainingIFrames > 0) return;
+
+      if (source !== null && typeof knockbackStrength === "undefined") {
+         throw new Error("An entity source must have the knockback field!");
+      }
 
       const damageDealt = this.calculateDamageDealt(damage);
 
       this.health -= this.calculateDamageDealt(damageDealt);
-      this.getEntity().callEvents("healthChange", -damageDealt);
+      this.getEntity().callEvents("healthChange", -damageDealt, source);
 
       this.remainingIFrames = Entity.iframes;
 
       if (this.health <= 0) {
-         this.die(attackingEntity);
+         this.die(source);
       } else {
-         const attackingEntityPosition = attackingEntity.getComponent(TransformComponent)!.position;
-         this.getEntity().getComponent(TransformComponent)!.applyKnockback(attackingEntityPosition, knockbackStrength);
+         // Apply knockback
+         if (source !== null) {
+            const attackingEntityPosition = source.getComponent(TransformComponent)!.position;
+            this.getEntity().getComponent(TransformComponent)!.applyKnockback(attackingEntityPosition, knockbackStrength);
+         }
       }
    }
 

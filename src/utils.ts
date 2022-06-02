@@ -36,18 +36,7 @@ export function chooseRandomItems<T>(arr: Array<T>, numItems: number): Array<T> 
    return chosenItems;
 }
 
-interface PointInfo<P, V> {
-   x: number;
-   y: number;
-   add(other: P): P;
-   subtract(other: P): P;
-   dot(other: P): number;
-   distanceFrom(other: P): number;
-   angleBetween(other: P): number;
-   convertToVector(other?: P): V;
-}
-
-export class Point implements PointInfo<Point, Vector> {
+export class Point {
    public x: number;
    public y: number;
 
@@ -77,7 +66,11 @@ export class Point implements PointInfo<Point, Vector> {
    public distanceFrom(other: Point): number {
       const distance = Math.sqrt(Math.pow(this.x - other.x, 2) + Math.pow(this.y - other.y, 2));
       return distance;
-   };
+   }
+
+   public copy(): Point {
+      return new Point(this.x, this.y);
+   }
 
    public distanceFromRectangle(minX: number, maxX: number, minY: number, maxY: number): number {
       const dx = Math.max(minX - this.x, 0, this.x - maxX);
@@ -96,6 +89,10 @@ export class Point implements PointInfo<Point, Vector> {
       const distance = this.distanceFrom(targetPoint);
       const angle = targetPoint.angleBetween(this);
       return new Vector(distance, angle);
+   }
+
+   public convertTo3D(): Point3 {
+      return new Point3(this.x, this.y, 0);
    }
 }
 
@@ -144,28 +141,40 @@ export class Point3 {
    //    return angle;
    // }
 
-   // public convertToVector(other?: Point3): Vector3 {
-   //    const relativeMeasuringPoint = other || new Point3(0, 0, 0);
+   public convertToVector(other?: Point3): Vector3 {
+      const x = this.x - (typeof other !== "undefined" ? other.x : 0);
+      const y = this.y - (typeof other !== "undefined" ? other.y : 0);
+      const z = this.z - (typeof other !== "undefined" ? other.z : 0);
 
-   //    const distance = this.distanceFrom(relativeMeasuringPoint);
-   //    const angle = relativeMeasuringPoint.angleBetween(this);
-   //    return new Vector3(distance, angle);
-   // }
+      const radius = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2) + Math.pow(z, 2));
+
+      const inclination = Math.acos(z / radius);
+      
+      let azimuth!: number;
+      if (x > 0) {
+         azimuth = Math.atan(y / x);
+      } else if (x < 0 && y >= 0) {
+         azimuth = Math.atan(y / x) + Math.PI;
+      } else if (x < 0 && y < 0) {
+         azimuth = Math.atan(y / x) - Math.PI;
+      } else if (x === 0 && y > 0) {
+         azimuth = Math.PI / 2;
+      } else if (x === 0 && y < 0) {
+         azimuth = -Math.PI / 2;
+      } else { // x = 0, y = 0
+         // Angle doesn't really matter
+         azimuth = 0;
+      }
+
+      return new Vector3(radius, inclination, azimuth);
+   }
 }
 
 export function getRandomAngle() {
    return Math.random() * 360;
 }
 
-interface VectorType<V, P> {
-   magnitude: number;
-   direction: number;
-   convertToPoint(): P;
-   add(other: V): V;
-   copy(): V;
-}
-
-export class Vector implements VectorType<Vector, Point> {
+export class Vector {
    public magnitude: number;
    public direction: number;
 
@@ -178,6 +187,11 @@ export class Vector implements VectorType<Vector, Point> {
       const x = Math.cos(this.direction) * this.magnitude;
       const y = Math.sin(this.direction) * this.magnitude;
       return new Point(x, y);
+   }
+
+   public convertTo3D(): Vector3 {
+      const point3 = this.convertToPoint().convertTo3D();
+      return point3.convertToVector();
    }
 
    public add(other: Vector): Vector {
@@ -194,41 +208,41 @@ export class Vector implements VectorType<Vector, Point> {
    }
 }
 
+// Uses a spherical point system
 export class Vector3 {
-   public magnitude: number;
-   public yDirection: number;
-   public zDirection: number;
+   public radius: number;
+   public inclination: number;
+   public azimuth: number;
 
-   constructor(magnitude: number, yDirection: number, zDirection: number) {
-      this.magnitude = magnitude;
-      this.yDirection = yDirection;
-      this.zDirection = zDirection;
+   constructor(radius: number, inclination: number, azimuth: number) {
+      this.radius = radius;
+      this.inclination = inclination;
+      this.azimuth = azimuth;
    }
 
    public convertToPoint(): Point3 {
-      // cos sin sin: top right
-      // sin cos cos: up
-      // cos sin cos: middle down something idk
-      const x = Math.cos(this.yDirection) * this.magnitude;
-      const y = Math.sin(this.yDirection) * this.magnitude;
-      const z = Math.sin(this.zDirection) * this.magnitude;
+      const x = this.radius * Math.cos(this.azimuth) * Math.sin(this.inclination);
+      const y = this.radius * Math.sin(this.azimuth) * Math.sin(this.inclination);
+      const z = this.radius * Math.cos(this.inclination);
       return new Point3(x, y, z);
    }
 
-   // public add(other: Vector3): Vector3 {
-   //    return (this.convertToPoint().add(other.convertToPoint())).convertToVector();
-   // }
+   public add(other: Vector3): Vector3 {
+      return (this.convertToPoint().add(other.convertToPoint())).convertToVector();
+   }
 
    public copy(): Vector3 {
-      return new Vector3(this.magnitude, this.yDirection, this.zDirection);
+      return new Vector3(this.radius, this.inclination, this.azimuth);
    }
 
    public static randomUnitVector(): Vector3 {
-      const yDirection = randFloat(0, 360);
-      const zDirection = randFloat(0, 360);
-      return new Vector3(1, yDirection, zDirection);
+      const inclination = randFloat(0, Math.PI * 2);
+      const azimuth = randFloat(0, Math.PI * 2);
+      return new Vector3(1, inclination, azimuth);
    }
 }
+
+// console.log(new Vector3(1, Math.PI / 2, -Math.PI / 2).convertToPoint());
 
 export function lerp(start: number, end: number, amount: number): number {
    return start * (1 - amount) + end * amount;
@@ -400,3 +414,7 @@ window.addEventListener("focus", () => {
 window.addEventListener("blur", () => {
    isInFocus = false;
 });
+
+export type Mutable<T> = {
+   -readonly [key in keyof T]: T[key];
+}

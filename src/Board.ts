@@ -43,6 +43,7 @@ abstract class Board {
 
    private static particleSources = new Array<ParticleSource>();
    private static particles = new Array<Particle>();
+   private static particlesToDestroy = new Array<Particle>();
 
    public static setup(): void {
       this.tiles = generateTerrain();
@@ -81,8 +82,19 @@ abstract class Board {
       this.particles.push(particle);
    }
 
+   public static removeParticle(particle: Particle): void {
+      this.particlesToDestroy.push(particle);
+   }
+
    public static addParticleSource(particleSource: ParticleSource): void {
       this.particleSources.push(particleSource);
+   }
+
+   public static removeParticleSource(particleSource: ParticleSource): void {
+      const idx = this.particleSources.indexOf(particleSource);
+      if (idx === -1) throw new Error("Can't remove a particle source which doesn't exist");
+
+      this.particleSources.splice(idx, 1);
    }
 
    public static clearValues(): void {
@@ -190,6 +202,11 @@ abstract class Board {
       for (const particle of this.particles) {
          particle.tick();
       }
+      // Remove destroyed particles
+      for (const particle of this.particlesToDestroy) {
+         this.particles.splice(this.particles.indexOf(particle), 1);
+      }
+      this.particlesToDestroy = new Array<Particle>();
 
       // Tick particle sources
       for (const particleSource of this.particleSources) {

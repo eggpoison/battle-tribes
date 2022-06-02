@@ -5,6 +5,7 @@ import HealthComponent from "../../entity-components/HealthComponent";
 import HitboxComponent from "../../entity-components/HitboxComponent";
 import RenderComponent, { EllipseRenderPart } from "../../entity-components/RenderComponent";
 import TransformComponent from "../../entity-components/TransformComponent";
+import Game from "../../Game";
 import { BasicCol, Point, randInt, Vector } from "../../utils";
 import Entity from "../Entity";
 import GenericTribeMember from "../tribe-members/GenericTribeMember";
@@ -84,7 +85,7 @@ class Zombie extends Mob {
                offset: [-offset.x, -offset.y],
                zIndex: 2
             })
-         ])
+         ]);
       }
    }
 
@@ -147,7 +148,15 @@ class Zombie extends Mob {
       this.getComponent(AIManagerComponent)!.changeCurrentAI("wander");
    }
 
-   duringCollision(collidingEntity: Entity): void {
+   public tick(): void {
+      super.tick();
+
+      if (!Game.isNight()) {
+         this.applyStatusEffect("fire", 5);
+      }
+   }
+
+   public duringCollision(collidingEntity: Entity): void {
       let canHit = false;
       for (const target of Zombie.TARGETS) {
          if (collidingEntity instanceof target) {

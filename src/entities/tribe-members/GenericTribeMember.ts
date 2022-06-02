@@ -5,12 +5,13 @@ import HealthComponent from "../../entity-components/HealthComponent";
 import HitboxComponent from "../../entity-components/HitboxComponent";
 import RenderComponent, { EllipseRenderPart } from "../../entity-components/RenderComponent";
 import TransformComponent from "../../entity-components/TransformComponent";
-import { Vector } from "../../utils";
+import { Colour, randFloat, randInt, Vector, Vector3 } from "../../utils";
 import LivingEntity from "../LivingEntity";
 import SelectedSlotComponent from "../../entity-components/SelectedSlotComponent";
 import Timer from "../../Timer";
 import Board from "../../Board";
 import TRIBE_INFO from "../../tribe-info";
+import Particle from "../../particles/Particle";
 
 abstract class GenericTribeMember extends Entity {
    public static readonly RESPAWN_TIME = 3;
@@ -37,11 +38,53 @@ abstract class GenericTribeMember extends Entity {
 
       this.createRenderParts();
 
-      super.createEvent("killEntity", (entity: Entity) => {
+      this.createEvent("killEntity", ([entity]: [Entity]) => {
          if (entity instanceof LivingEntity) {
             const expDrop = entity.entityInfo.exp;
             
             this.addExp(expDrop);
+         }
+      });
+
+      // Create gore particles when hit
+      this.createEvent("deathByEntity", ([attackingEntity]: [Entity]) => {
+         const particleAmount = randInt(3, 5);
+
+         const initialPosition = this.getComponent(TransformComponent)!.position.convertTo3D();
+
+         // Calculate the push vector
+         const angle = this.getComponent(TransformComponent)!.position.angleBetween(attackingEntity.getComponent(TransformComponent)!.position);
+         const pushVector = new Vector3(1, Math.PI/2, angle + Math.PI);
+
+         for (let i = 0; i < particleAmount; i++) {
+            const inclination = randFloat(Math.PI / 4, Math.PI / 3);
+            const azimuth = randFloat(0, Math.PI * 2);
+            let velocity = new Vector3(3, inclination, azimuth);
+
+            // Randomize the strength of the push vector
+            pushVector.radius = randFloat(1, 1.5);
+
+            velocity = velocity.add(pushVector);
+
+            const width = randFloat(5, 12.5);
+            const height = randFloat(5, 12.5);
+
+            const colour = new Colour(TRIBE_INFO[this.tribe.type].bloodColour).getRGB();
+
+            const lifespan = randFloat(0.5, 1);
+            
+            new Particle(initialPosition, {
+               type: "rectangle",
+               size: {
+                  width: width,
+                  height: height
+               },
+               initialVelocity: velocity,
+               angularVelocity: 0,
+               colour: colour,
+               lifespan: lifespan,
+               friction: 1
+            });
          }
       });
 

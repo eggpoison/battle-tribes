@@ -49,11 +49,6 @@ class Tombstone extends Entity {
       if (!Game.isNight() && Math.random() < Tombstone.DIE_CHANCE / SETTINGS.tps) {
          Board.removeEntity(this);
 
-         // If the current zombie is alive, also kill it
-         if (this.currentZombie !== null) {
-            this.currentZombie.die(null);
-         }
-
          return;
       }
 

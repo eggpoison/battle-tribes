@@ -76,7 +76,7 @@ class HealthComponent extends Component {
       this.getEntity().callEvents("healthChange", amount);
    }
 
-   public hurt(damage: number, source: Entity | null, knockbackStrength?: number): void {
+   public hurt(damage: number, source: Entity | null, knockbackStrength?: number, iframes?: number): void {
       if (this.remainingIFrames > 0) return;
 
       if (source !== null && typeof knockbackStrength === "undefined") {
@@ -88,7 +88,7 @@ class HealthComponent extends Component {
       this.health -= this.calculateDamageDealt(damageDealt);
       this.getEntity().callEvents("healthChange", -damageDealt, source);
 
-      this.remainingIFrames = Entity.iframes;
+      this.remainingIFrames = typeof iframes !== "undefined" ? iframes : Entity.iframes;
 
       if (this.health <= 0) {
          this.die(source);
@@ -103,10 +103,7 @@ class HealthComponent extends Component {
 
    private die(causeOfDeath: Entity | null): void {
       const entity = this.getEntity();
-
-      if (typeof entity.die !== "undefined") {
-         entity.die(causeOfDeath);
-      }
+      entity.die(causeOfDeath);
    }
 }
 

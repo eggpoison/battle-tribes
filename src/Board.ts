@@ -5,8 +5,8 @@ import Entity from "./entities/Entity";
 import RenderComponent from "./entity-components/RenderComponent";
 import TransformComponent from "./entity-components/TransformComponent";
 import SETTINGS from "./settings";
-import { precomputeTileLocations } from "./tile-types";
-import { Point } from "./utils";
+import { precomputeTileLocations, TILE_PARTICLES } from "./data/tile-types";
+import { Point, Point3, randFloat, randInt } from "./utils";
 import Camera from "./Camera";
 import Mob from "./entities/mobs/Mob";
 import HitboxComponent from "./entity-components/HitboxComponent";
@@ -41,7 +41,7 @@ abstract class Board {
 
    private static changedTiles = new Array<Coordinates>();
 
-   private static particleSources = new Array<ParticleSource>();
+   public static particleSources = new Array<ParticleSource>();
    private static particles = new Array<Particle>();
    private static particlesToDestroy = new Array<Particle>();
 
@@ -92,7 +92,8 @@ abstract class Board {
 
    public static removeParticleSource(particleSource: ParticleSource): void {
       const idx = this.particleSources.indexOf(particleSource);
-      if (idx === -1) throw new Error("Can't remove a particle source which doesn't exist");
+      // Don't remove particle sources which have already been removed
+      if (idx === -1) return;
 
       this.particleSources.splice(idx, 1);
    }
@@ -116,6 +117,9 @@ abstract class Board {
       const entitiesToChangeChunk: Array<[Entity, Chunk]> = [];
 
       const ctx = getCanvasContext();
+
+      this.renderParticleShadows(ctx);
+
       for (let y = 0; y < this.size; y++) {
          for (let x = 0; x < this.size; x++) {
             // A copy of the chunk array has to be used, as otherwise if an entity
@@ -176,6 +180,8 @@ abstract class Board {
          entity.previousChunk = newChunk;
       }
 
+      this.tickTiles();
+
       this.tickParticles();
       this.renderParticles(ctx);
 
@@ -197,6 +203,41 @@ abstract class Board {
       EntitySpawner.setResourceCount(resourceCount);
    }
 
+   private static tickTiles(): void {
+      const [minChunkX, maxChunkX, minChunkY, maxChunkY] = Camera.getVisibleChunkBounds();
+
+      const minX = minChunkX * this.chunkSize;
+      const maxX = maxChunkX * this.chunkSize;
+      const minY = minChunkY * this.chunkSize;
+      const maxY = maxChunkY * this.chunkSize;
+
+      for (let tileX = minX; tileX <= maxX; tileX++) {
+         for (let tileY = minY; tileY <= maxY; tileY++) {
+            const tile = Board.getTile(tileX, tileY);
+
+            // If the tile can produce a particle
+            if (TILE_PARTICLES.hasOwnProperty(tile.kind)) {
+               // If it passes the chance check
+               const tileParticleInfo = TILE_PARTICLES[tile.kind]!;
+               if (Math.random() < tileParticleInfo.spawnChance / SETTINGS.tps) {
+                  // Amount of particles to spawn
+                  const amount = typeof tileParticleInfo.amount !== "undefined" ? (typeof tileParticleInfo.amount === "number" ? tileParticleInfo.amount : randInt(...tileParticleInfo.amount)) : 1;
+
+                  // Get the spawn position
+                  const x = randFloat(0, Board.tileSize);
+                  const y = randFloat(0, Board.tileSize);
+                  const spawnPosition = new Point3(tileX * Board.tileSize + x, tileY * Board.tileSize + y, 0);
+
+                  // Create the particles
+                  for (let i = 0; i < amount; i++) {
+                     new Particle(spawnPosition, tileParticleInfo.particleInfo);
+                  }
+               }
+            }
+         }
+      }
+   }
+
    private static tickParticles(): void {
       // Tick existing particles
       for (const particle of this.particles) {
@@ -211,6 +252,12 @@ abstract class Board {
       // Tick particle sources
       for (const particleSource of this.particleSources) {
          particleSource.tick();
+      }
+   }
+
+   private static renderParticleShadows(ctx: CanvasRenderingContext2D): void {
+      for (const particle of this.particles) {
+         particle.renderShadow(ctx);
       }
    }
 

@@ -1,6 +1,6 @@
 import Board, { Coordinates } from "../Board";
 import Component from "../Component";
-import { TileKind } from "../tile-types";
+import { TileKind } from "../data/tile-types";
 
 /** Responsible for spawning entities */
 class SpawnerComponent extends Component {

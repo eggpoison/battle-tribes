@@ -132,3 +132,14 @@ body {
    box-shadow: 0 0 0 4px #ffff00 inset;
    pointer-events: none;
 }
+
+#entity-health {
+   color: #fff;
+   font-family: "Gaegu";
+   font-weight: 700;
+   font-size: 1.2rem;
+   text-shadow: 0 2px 2px #000, 2px 0 2px #000, 2px 2px 2px #000, -2px -2px 2px #000, -2px 0 2px #000, 0 -2px 2px #000;
+   position: absolute;
+   pointer-events: none;
+   transform: translateY(-100%);
+}

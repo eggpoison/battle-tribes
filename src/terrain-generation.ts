@@ -1,6 +1,6 @@
 import Board, { Coordinates } from "./Board";
 import { generateOctavePerlinNoise, generatePerlinNoise } from "./perlin-noise";
-import { TileKind } from "./tile-types";
+import { TileKind } from "./data/tile-types";
 import { randInt, randItem } from "./utils";
 
 export type TileType = {

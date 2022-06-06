@@ -2,7 +2,7 @@ import Board, { Chunk, Coordinates } from "../Board";
 import Component from "../Component";
 import Entity from "../entities/Entity";
 import SETTINGS from "../settings";
-import TILE_INFO from "../tile-types";
+import TILE_INFO from "../data/tile-types";
 import { Point, Vector } from "../utils";
 import HitboxComponent from "./HitboxComponent";
 
@@ -41,8 +41,14 @@ class TransformComponent extends Component {
       const velocity = this.velocity.copy();
 
       // Apply tile slowness to velocity
-      if (typeof tileInfo.effects !== "undefined" && typeof tileInfo.effects.moveSpeedMultiplier !== "undefined") {
+      if (typeof tileInfo.effects?.moveSpeedMultiplier !== "undefined") {
          velocity.magnitude *= tileInfo.effects.moveSpeedMultiplier;
+      }
+
+      // Apply status effects
+      if (typeof tileInfo.effects?.statusEffectOnWalk !== "undefined") {
+         const { type, duration } = tileInfo.effects.statusEffectOnWalk;
+         this.getEntity().applyStatusEffect(type, duration);
       }
 
       this.position = this.position.add(velocity.convertToPoint());

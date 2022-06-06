@@ -1,4 +1,7 @@
-import Board, { Coordinates } from "./Board";
+import Board, { Coordinates } from "../Board";
+import { ParticleInfoType } from "../particles/Particle";
+import { StatusEffectType } from "./status-effects";
+import { Point3, randFloat, randItem } from "../utils";
 
 export enum TileKind {
    dirt,
@@ -16,6 +19,10 @@ export enum TileKind {
 type TileEffects = {
    readonly moveSpeedMultiplier?: number;
    readonly walkDamage?: number;
+   readonly statusEffectOnWalk?: {
+      readonly type: StatusEffectType;
+      readonly duration: number;
+   }
 }
 
 interface TileInfo {
@@ -74,7 +81,11 @@ const TILE_INFO: Record<TileKind, TileInfo> = {
       colour: "#ff9f0f",
       friction: DEFAULT_FRICTION,
       effects: {
-         walkDamage: 1
+         walkDamage: 1,
+         statusEffectOnWalk: {
+            type: "fire",
+            duration: 1
+         }
       }
    },
    [TileKind.lava]: {
@@ -82,12 +93,55 @@ const TILE_INFO: Record<TileKind, TileInfo> = {
       friction: 1,
       effects: {
          moveSpeedMultiplier: 0.6,
-         walkDamage: 5
+         walkDamage: 5,
+         statusEffectOnWalk: {
+            type: "fire",
+            duration: 5
+         }
       },
       isLiquid: true
    }
 };
 export default TILE_INFO;
+
+type TileParticleInfo = {
+   /** The average number of particles produced by the tile every second */
+   readonly spawnChance: number;
+   readonly amount?: number | [number, number];
+   readonly particleInfo: ParticleInfoType;
+}
+export const TILE_PARTICLES: Partial<Record<TileKind, TileParticleInfo>> = {
+   [TileKind.lava]: {
+      spawnChance: 0.05,
+      amount: [2, 3],
+      particleInfo: {
+         type: "rectangle",
+         size: [7.5, 12.5],
+         colour: () => {
+            const COLOURS: Array<[number, number, number]> = [
+               [255, 147, 38], // Orange magma
+               [252, 216, 149], // White hot magma
+               [105, 0, 0] // Black rock
+            ];
+
+            return randItem(COLOURS);
+         },
+         initialVelocity: () => {
+            const SPREAD_RANGE = 2;
+            const xVel = randFloat(-SPREAD_RANGE, SPREAD_RANGE);
+            const yVel = randFloat(-SPREAD_RANGE, SPREAD_RANGE);
+            const zVel = randFloat(1, 3.5);
+            
+            return new Point3(xVel, yVel, zVel).convertToVector();
+         },
+         lifespan: [2, 3],
+         friction: 0.5,
+         shadowOpacity: 0.3,
+         endOpacity: 0,
+         doesBounce: false
+      }
+   }
+}
 
 const tileLocations: Partial<Record<TileKind, Array<Coordinates>>> = {};
 export function precomputeTileLocations(): void {

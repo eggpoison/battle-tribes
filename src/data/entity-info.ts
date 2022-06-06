@@ -1,13 +1,13 @@
-import Cow from "./entities/mobs/Cow";
-import Slime from "./entities/mobs/Slime";
-import Yeti from "./entities/mobs/Yeti";
-import Zombie from "./entities/mobs/Zombie";
-import Berry from "./entities/resources/Berry";
-import Boulder from "./entities/resources/Boulder";
-import Tree from "./entities/resources/Tree";
-import LivingEntity from "./entities/LivingEntity";
-import { BiomeName } from "./terrain-generation";
-import Flower from "./entities/resources/Flower";
+import Cow from "../entities/mobs/Cow";
+import Slime from "../entities/mobs/Slime";
+import Yeti from "../entities/mobs/Yeti";
+import Zombie from "../entities/mobs/Zombie";
+import Berry from "../entities/resources/Berry";
+import Boulder from "../entities/resources/Boulder";
+import Tree from "../entities/resources/Tree";
+import LivingEntity from "../entities/LivingEntity";
+import { BiomeName } from "../terrain-generation";
+import Flower from "../entities/resources/Flower";
 
 type EntitySpawnRequirements = {
    readonly biomes: ReadonlyArray<BiomeName>;

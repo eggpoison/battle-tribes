@@ -3,7 +3,7 @@ import Board, { Coordinates } from "../Board";
 import Camera from "../Camera";
 import OPTIONS from "../options";
 import SETTINGS from "../settings";
-import TILE_INFO, { TileKind } from "../tile-types";
+import TILE_INFO, { TileKind } from "../data/tile-types";
 import { BasicCol } from "../utils";
 
 const wallColours: Partial<Record<TileKind, string>> = {};

@@ -5,7 +5,7 @@ import HitboxComponent from "../entity-components/HitboxComponent";
 import TransformComponent from "../entity-components/TransformComponent";
 import ParticleSource, { ParticleSourceInfo } from "../particles/ParticleSource";
 import SETTINGS from "../settings";
-import STATUS_EFFECT_RECORD, { StatusEffectType } from "../status-effects";
+import STATUS_EFFECT_RECORD, { StatusEffectType } from "../data/status-effects";
 import { Point } from "../utils";
 
 export type EventType = "deathByEntity" | "healthChange" | "hurt" | "attack" | "killEntity" | "die";
@@ -14,8 +14,8 @@ type EventsObject = Partial<Record<EventType, Array<() => void>>>;
 
 type StatusEffect = {
    readonly type: StatusEffectType;
-   readonly initialDuration: number;
    remainingDuration: number;
+   age: number;
    readonly particleSource?: ParticleSource;
 }
 
@@ -26,8 +26,10 @@ type Size = number | {
 
 abstract class Entity {
    public abstract readonly SIZE: Size;
-
+   public abstract readonly name: string;
+   
    public static readonly iframes: number = SETTINGS.entityInvulnerabilityDuration * SETTINGS.tps;
+   
 
    public previousChunk?: Chunk;
 
@@ -46,10 +48,18 @@ abstract class Entity {
 
       // Clear status effects on death
       this.createEvent("die", () => {
-         for (const statusEffect of Object.values(this.statusEffects)) {
+         const entries = Object.entries(this.statusEffects) as Array<[StatusEffectType, StatusEffect]>;
+         for (const [type, statusEffect] of entries) {
             if (typeof statusEffect.particleSource !== "undefined") {
                statusEffect.particleSource.destroy();
             }
+         }
+
+         // Remove all status effects
+         // This has to be done as otherwise entities which respawn can have status effects carry over between lives because garbage collection doesn't stab them
+         const keys = Object.keys(this.statusEffects) as Array<StatusEffectType>;
+         for (const key of keys) {
+            delete this.statusEffects[key];
          }
       });
    }
@@ -57,9 +67,8 @@ abstract class Entity {
    public onLoad?(): void;
 
    public getComponent<C extends Component>(constr: { new(...args: any[]): C }): C | null {
-      if (this.components.has(constr)) return this.components.get(constr) as C;
-
-      return null;
+      const component = this.components.get(constr);
+      return typeof component !== "undefined" ? (component as C) : null;
    }
 
    protected getCollidingEntities(): Array<Entity> {
@@ -83,6 +92,7 @@ abstract class Entity {
       const entries = Object.entries(this.statusEffects) as Array<[StatusEffectType, StatusEffect]>;
       for (const [type, statusEffect] of entries) {
          statusEffect.remainingDuration -= 1 / SETTINGS.tps;
+         statusEffect.age += 1 / SETTINGS.tps;
 
          // Remove the status effect if it has expired
          if (statusEffect.remainingDuration <= 0) {
@@ -99,8 +109,9 @@ abstract class Entity {
          const info = STATUS_EFFECT_RECORD[statusEffect.type];
          // Damage over time
          if (typeof info.effects.damageOverTime !== "undefined") {
-            const damageTime = statusEffect.initialDuration - statusEffect.remainingDuration;
-            if (damageTime % 1 === 0 && damageTime < statusEffect.initialDuration) {
+            // Only damage the entity once every second
+            const previousAge = statusEffect.age - 1 / SETTINGS.tps;
+            if (Math.floor(previousAge) !== Math.floor(statusEffect.age)) {
                // Hurt the entity
                const healthComponent = this.getComponent(HealthComponent);
                if (healthComponent !== null) {
@@ -153,10 +164,10 @@ abstract class Entity {
       if (causeOfDeath !== null) {
          this.callEvents("deathByEntity", causeOfDeath);
       }
-
-      Board.removeEntity(this);
       
       this.callEvents("die");
+
+      Board.removeEntity(this);
    }
       
    protected onCollision?(entity: Entity): void;
@@ -186,8 +197,10 @@ abstract class Entity {
    public applyStatusEffect(type: StatusEffectType, duration: number): void {
       // Don't apply the status effect if it already exists
       if (this.statusEffects.hasOwnProperty(type)) {
-         // Update its duration
-         this.statusEffects[type]!.remainingDuration = duration;
+         const statusEffect = this.statusEffects[type]!;
+
+         // Refresh its duration
+         if (duration > statusEffect.remainingDuration) statusEffect.remainingDuration = duration;
 
          return;
       }
@@ -210,8 +223,8 @@ abstract class Entity {
 
       this.statusEffects[type] = {
          type: type,
-         initialDuration: duration,
          remainingDuration: duration,
+         age: 0,
          particleSource: particleSource
       };
    }

@@ -12,6 +12,7 @@ import GenericTribeMember from "../tribe-members/GenericTribeMember";
 import Mob from "./Mob";
 
 class Zombie extends Mob {
+   public readonly name = "Zombie";
    public readonly SIZE = 1;
 
    private static readonly HEALTH = 15;
@@ -149,11 +150,12 @@ class Zombie extends Mob {
    }
 
    public tick(): void {
-      super.tick();
-
+      // Set the zombie on fire when it's daytime
       if (!Game.isNight()) {
          this.applyStatusEffect("fire", 5);
       }
+
+      super.tick();
    }
 
    public duringCollision(collidingEntity: Entity): void {

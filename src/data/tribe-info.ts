@@ -1,4 +1,4 @@
-import { BiomeName } from "./terrain-generation";
+import { BiomeName } from "../terrain-generation";
 
 export type TribeTypes = "humans" | "barbarians" | "frostlings";
 

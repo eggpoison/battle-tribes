@@ -4,7 +4,7 @@ import HitboxComponent from "../../entity-components/HitboxComponent";
 import RenderComponent from "../../entity-components/RenderComponent";
 import ItemSpawnComponent from "../../entity-components/ItemSpawnerComponent";
 import TransformComponent from "../../entity-components/TransformComponent";
-import { ResourceInfo } from "../../entity-info";
+import { ResourceInfo } from "../../data/entity-info";
 import { Point, randFloat } from "../../utils";
 import LivingEntity from "../LivingEntity";
 

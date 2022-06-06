@@ -10,6 +10,7 @@ class Boulder extends Resource {
    private static readonly HEALTH = 20;
    private static readonly LIFESPAN = 50;
 
+   public readonly name = "Boulder";
    public readonly SIZE: number = 1.3;
 
    constructor(position: Point) {

@@ -67,7 +67,7 @@ class Player extends Chief {
 
    public attack(): void {
       if (Player.currentInteractionMode === PlayerInteractionMode.Play) {
-         this.getComponent(AttackComponent)!.startAttack("baseAttack");
+         this.getComponent(AttackComponent)!.attack("baseAttack");
       }
    }
 

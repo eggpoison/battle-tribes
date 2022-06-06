@@ -14,6 +14,7 @@ import Mob from "./Mob";
 // TODO: Smash attack
 
 class Yeti extends Mob {
+   public readonly name = "Yeti";
    public readonly SIZE = 3;
 
    private static readonly HEALTH = 250;

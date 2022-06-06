@@ -7,6 +7,7 @@ import InfiniteInventoryComponent from "../entity-components/inventory/InfiniteI
 
 /** Where tribes put their resources in order to use them. */
 class TribeStash extends Entity {
+   public readonly name = "Tribe Stash";
    public readonly SIZE = 1.5;
 
    public static OPEN_MESSAGE = "Press E to open stash";

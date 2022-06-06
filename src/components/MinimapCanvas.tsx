@@ -4,7 +4,7 @@ import Player from "../entities/tribe-members/Player";
 import TribeStash from "../entities/TribeStash";
 import TransformComponent from "../entity-components/TransformComponent";
 import SETTINGS from "../settings";
-import TILE_INFO, { TileKind } from "../tile-types";
+import TILE_INFO, { TileKind } from "../data/tile-types";
 import { Colour, Point } from "../utils";
 
 export abstract class Minimap {

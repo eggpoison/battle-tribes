@@ -15,7 +15,7 @@ class ItemSpawnComponent extends Component {
       for (let i = 0; i < amount; i++) {
          const position = this.getSpawnPosition();
          
-         const resource = new ItemEntity(item, position);
+         const resource = new ItemEntity(position, item, 1);
          Board.addEntity(resource);
       }
    }

@@ -1,6 +1,6 @@
 import Entity from "../Entity";
 import HealthComponent from "../../entity-components/HealthComponent";
-import { MobInfo } from "../../entity-info";
+import { MobInfo } from "../../data/entity-info";
 import Berry from "../resources/Berry";
 import LivingEntity from "../LivingEntity";
 

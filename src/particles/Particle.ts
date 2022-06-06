@@ -11,6 +11,11 @@ type ParticleInfo = {
       readonly width: number | [number, number];
       readonly height: number | [number, number];
    } | number | [number, number];
+   readonly endSize?: {
+      readonly width: number | [number, number];
+      readonly height: number | [number, number];
+   } | number | [number, number];
+   readonly initialOffset?: Point3 | (() => Point3);
    readonly initialVelocity: Vector3 | (() => Vector3);
    /** By default, set to gravity */
    readonly initialAcceleration?: Vector3;
@@ -18,10 +23,12 @@ type ParticleInfo = {
    readonly initialRotation?: number;
    readonly angularVelocity?: number;
    readonly angularAcceleration?: number;
-   readonly lifespan?: number | [number, number];
+   readonly lifespan: number | [number, number];
    /** How much the velocity decreases each second */
    readonly friction?: number;
    readonly endOpacity?: number;
+   readonly shadowOpacity?: number;
+   readonly doesBounce?: boolean;
 }
 
 interface ImageParticleInfo extends ParticleInfo {
@@ -31,7 +38,7 @@ interface ImageParticleInfo extends ParticleInfo {
 
 interface RectangleParticleInfo extends ParticleInfo {
    readonly type: "rectangle";
-   readonly colour: [number, number, number];
+   readonly colour: [number, number, number] | (() => [number, number, number]);
    readonly endColour?: [number, number, number];
 }
 
@@ -45,9 +52,15 @@ class Particle {
       readonly width: number;
       readonly height: number;
    };
+   readonly endSize?: {
+      readonly width: number;
+      readonly height: number;
+   };
    private readonly colour?: [number, number, number];
    private readonly endColour?: [number, number, number];
    private readonly endOpacity?: number;
+   private readonly shadowOpacity: number;
+   private readonly doesBounce: boolean;
    
    private position: Point3;
    private velocity: Vector3;
@@ -58,7 +71,7 @@ class Particle {
    private angularAcceleration: number;
 
    private age: number = 0;
-   private lifespan?: number;
+   private lifespan: number;
    private friction?: number;
 
    constructor(initialPosition: Point3, info: ParticleInfoType) {
@@ -89,13 +102,49 @@ class Particle {
          size.height = info.size;
       }
       this.size = size as { width: number, height: number };
+      
+      // End size
 
-      if (info.hasOwnProperty("colour")) this.colour = (info as RectangleParticleInfo).colour;
-      if (info.hasOwnProperty("endColour")) this.endColour = (info as RectangleParticleInfo).endColour;
+      if (typeof info.endSize !== "undefined") {
+         const endSize: Mutable<Partial<typeof this.endSize>> = {};
+         if (typeof info.endSize === "object" && !Array.isArray(info.endSize)) {
+            // Object endSize
+            if (typeof info.endSize.width === "object") {
+               endSize.width = randFloat(info.endSize.width[0], info.endSize.width[1]);
+            } else {
+               endSize.width = info.endSize.width;
+            }
+            if (typeof info.endSize.height === "object") {
+               endSize.height = randFloat(info.endSize.height[0], info.endSize.height[1]);
+            } else {
+               endSize.height = info.endSize.height;
+            }
+         } else if (typeof info.endSize === "object" && Array.isArray(info.endSize)) {
+            // Array endSize
+            const randomSize = randFloat(info.endSize[0], info.endSize[1]);
+            endSize.width = randomSize;
+            endSize.height = randomSize;
+         } else {
+            // Number endSize
+            endSize.width = info.endSize;
+            endSize.height = info.endSize;
+         }
+         this.endSize = endSize as { width: number, height: number }
+      }
+
+      if (info.type === "rectangle") {
+         // Colour
+         this.colour = (typeof info.colour === "function") ? info.colour() : info.colour;
+         // End colour
+         if (typeof info.endColour !== "undefined") this.endColour = info.endColour;
+      }
 
       if (typeof info.endOpacity !== "undefined") this.endOpacity = info.endOpacity;
 
+      this.shadowOpacity = typeof info.shadowOpacity !== "undefined" ? info.shadowOpacity : 1;
+
       this.position = initialPosition;
+      if (typeof info.initialOffset !== "undefined") this.position = this.position.add(typeof info.initialOffset === "function" ? info.initialOffset() : info.initialOffset);
       this.velocity = typeof info.initialVelocity === "function" ? info.initialVelocity() : info.initialVelocity;
       this.acceleration = typeof info.initialAcceleration !== "undefined" ? info.initialAcceleration : Particle.GRAVITY;
 
@@ -103,21 +152,22 @@ class Particle {
       this.angularVelocity = typeof info.angularVelocity !== "undefined" ? info.angularVelocity : 0;
       this.angularAcceleration = typeof info.angularAcceleration !== "undefined" ? info.angularAcceleration : 0;
 
+      // Lifespan
       this.lifespan = typeof info.lifespan === "number" ? info.lifespan : randFloat(...(info.lifespan as [number, number]));
       this.friction = info.friction;
+
+      this.doesBounce = typeof info.doesBounce !== "undefined" ? info.doesBounce : true;
 
       Board.addParticle(this);
    }
 
    public tick(): void {
       // Decrement lifespan
-      if (typeof this.lifespan !== "undefined") {
-         this.age += 1 / SETTINGS.tps;
+      this.age += 1 / SETTINGS.tps;
 
-         if (this.age >= this.lifespan) {
-            this.destroy();
-            return;
-         }
+      if (this.age >= this.lifespan) {
+         this.destroy();
+         return;
       }
 
       // Apply acceleration
@@ -151,7 +201,7 @@ class Particle {
       this.position = this.position.add(this.velocity.convertToPoint());
 
       // Bounce when hitting the ground
-      if (this.position.z < 0) {
+      if (this.doesBounce && this.position.z < 0) {
          // Push the particle back above the ground
          this.position.z *= -1;
 
@@ -168,39 +218,35 @@ class Particle {
       this.rotation += this.angularVelocity;
    }
 
+   private isVisible(): boolean {
+      if (this.doesBounce) return true;
+
+      return this.position.z + this.size.height/2 >= 0;
+   }
+
    public render(ctx: CanvasRenderingContext2D): void {
+      if (!this.isVisible()) return;
+
       switch (this.type) {
          case "rectangle": {
-            const { width, height } = this.size as { width: number, height: number };
+            let { width, height } = this.size;
 
-            const opacity = (typeof this.endOpacity !== "undefined" && typeof this.lifespan !== "undefined") ? 1 - this.age / this.lifespan : 1;
+            if (typeof this.endSize !== "undefined") {
+               width = lerp(width, this.endSize.width, this.age / this.lifespan);
+               height = lerp(height, this.endSize.height, this.age / this.lifespan);
+            }
 
-            // Draw shadow:
-
-            // Rotate canvas
-            ctx.translate(Camera.getXPositionInCamera(this.position.x), Camera.getYPositionInCamera(this.position.y));
-            ctx.rotate(this.rotation);
-            ctx.translate(-Camera.getXPositionInCamera(this.position.x), -Camera.getYPositionInCamera(this.position.y));
-
-            const shadowCanvasX = Camera.getXPositionInCamera(this.position.x);
-            const shadowCanvasY = Camera.getYPositionInCamera(this.position.y);
-            ctx.fillStyle = `rgba(0, 0, 0, ${0.5 * opacity})`;
-            ctx.fillRect(shadowCanvasX - width/2, shadowCanvasY - height/2, width, height);
-
-            // Reset transform
-            ctx.setTransform(1, 0, 0, 1, 0, 0);
-
-            // Draw particle:
+            const opacity = (typeof this.endOpacity !== "undefined") ? 1 - this.age / this.lifespan : 1;
 
             // Rotate canvas
             ctx.translate(Camera.getXPositionInCamera(this.position.x), Camera.getYPositionInCamera(this.position.y - this.position.z));
-            ctx.rotate(this.rotation);
+            ctx.rotate(this.rotation / 180 * Math.PI);
             ctx.translate(-Camera.getXPositionInCamera(this.position.x), -Camera.getYPositionInCamera(this.position.y - this.position.z));
 
             let r!: number;
             let g!: number;
             let b!: number;
-            if (typeof this.lifespan !== "undefined" && typeof this.endColour !== "undefined") {
+            if (typeof this.endColour !== "undefined") {
                const amount = this.age / this.lifespan;
 
                r = lerp(this.colour![0], this.endColour![0], amount);
@@ -219,6 +265,44 @@ class Particle {
 
             // Reset transform
             ctx.setTransform(1, 0, 0, 1, 0, 0);
+         }
+      }
+   }
+
+   public renderShadow(ctx: CanvasRenderingContext2D): void {
+      if (!this.isVisible()) return;
+
+      switch (this.type) {
+         case "rectangle": {
+            let { width, height } = this.size;
+
+            if (typeof this.endSize !== "undefined") {
+               width = lerp(width, this.endSize.width, this.age / this.lifespan);
+               height = lerp(height, this.endSize.height, this.age / this.lifespan);
+            }
+
+            let opacity = (typeof this.endOpacity !== "undefined") ? 1 - this.age / this.lifespan : 1;
+            opacity *= this.shadowOpacity;
+
+            // Rotate canvas
+            ctx.translate(Camera.getXPositionInCamera(this.position.x), Camera.getYPositionInCamera(this.position.y));
+            ctx.rotate(this.rotation / 180 * Math.PI);
+            ctx.translate(-Camera.getXPositionInCamera(this.position.x), -Camera.getYPositionInCamera(this.position.y));
+
+            ctx.shadowColor = `rgba(0, 0, 0, ${0.7 * opacity})`;
+            ctx.shadowBlur = 10;
+
+            const shadowCanvasX = Camera.getXPositionInCamera(this.position.x);
+            const shadowCanvasY = Camera.getYPositionInCamera(this.position.y);
+            ctx.fillStyle = `rgba(0, 0, 0, ${0.5 * opacity})`;
+            ctx.fillRect(shadowCanvasX - width/2, shadowCanvasY - height/2, width, height);
+
+            ctx.shadowColor = "transparent";
+
+            // Reset transform
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+
+            break;
          }
       }
    }

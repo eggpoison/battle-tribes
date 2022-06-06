@@ -1,7 +1,7 @@
 import Board from "../Board";
 import RenderComponent, { ImageRenderPart } from "../entity-components/RenderComponent";
 import TransformComponent from "../entity-components/TransformComponent";
-import { getEntityInfo } from "../entity-info";
+import { getEntityInfo } from "../data/entity-info";
 import Game from "../Game";
 import SETTINGS from "../settings";
 import { Point, randInt } from "../utils";
@@ -9,6 +9,7 @@ import Entity from "./Entity";
 import Zombie from "./mobs/Zombie";
 
 class Tombstone extends Entity {
+   public readonly name = "Tombstone";
    public readonly SIZE: number = 1.5;
 
    /** Chance for a tombstone to spawn a zombie each second */

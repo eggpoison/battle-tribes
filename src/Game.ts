@@ -42,6 +42,7 @@ abstract class Game {
       renderGroundTiles();
       Board.tick();
       renderWallTiles();
+      Mouse.updateHoverSelection();
       Mouse.updateUnitSelectionBounds();
       Mouse.drawUnitSelectionTool();
 

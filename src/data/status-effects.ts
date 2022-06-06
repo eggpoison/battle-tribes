@@ -1,5 +1,6 @@
-import { ParticleSourceInfo } from "./particles/ParticleSource";
-import { Point3, randFloat } from "./utils";
+import Board from "../Board";
+import { ParticleSourceInfo } from "../particles/ParticleSource";
+import { Point3, randFloat, Vector3 } from "../utils";
 
 export type StatusEffectType = "fire";
 
@@ -18,14 +19,22 @@ const FIRE_ACCELERATION = new Point3(0, 0, 1).convertToVector();
 const STATUS_EFFECT_RECORD: Record<StatusEffectType, StatusEffectInfo> = {
    fire: {
       effects: {
-         damageOverTime: 1
+         damageOverTime: 2.5
       },
       particleSource: {
-         spawnRate: 0.05,
+         spawnRate: 0.1,
          initialSpawnAmount: 0,
          particleInfo: {
             type: "rectangle",
             size: [5, 10],
+            endSize: [25, 30],
+            initialOffset: () => {
+               const RANGE = 0.35;
+               
+               const offset = Vector3.randomUnitVector();
+               offset.radius *= RANGE * Board.tileSize;
+               return offset.convertToPoint();
+            },
             initialVelocity: () => {
                const xVel = randFloat(-1, 1);
                const yVel = randFloat(-1, 1);
@@ -38,7 +47,7 @@ const STATUS_EFFECT_RECORD: Record<StatusEffectType, StatusEffectInfo> = {
             angularVelocity: 2,
             angularAcceleration: 10,
             colour: [255, 0, 0],
-            endColour: [200, 200, 200],
+            endColour: [50, 0, 0],
             lifespan: [1.5, 2],
             endOpacity: 0,
             friction: 0.3

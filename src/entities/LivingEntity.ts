@@ -3,7 +3,7 @@ import HealthComponent from "../entity-components/HealthComponent";
 import HitboxComponent from "../entity-components/HitboxComponent";
 import RenderComponent from "../entity-components/RenderComponent";
 import TransformComponent from "../entity-components/TransformComponent";
-import { EntityInfo } from "../entity-info";
+import { EntityInfo } from "../data/entity-info";
 import { Point } from "../utils";
 import Entity from "./Entity";
 

@@ -2,7 +2,7 @@ import Board from "../../Board";
 import AIManagerComponent from "../../entity-components/ai/AIManangerComponent";
 import FollowAI from "../../entity-components/ai/FollowAI";
 import WanderAI from "../../entity-components/ai/WanderAI";
-import AttackComponent, { CircleAttack } from "../../entity-components/AttackComponent";
+import AttackComponent from "../../entity-components/AttackComponent";
 import HitboxComponent from "../../entity-components/HitboxComponent";
 import FiniteInventoryComponent from "../../entity-components/inventory/FiniteInventoryComponent";
 import InfiniteInventoryComponent from "../../entity-components/inventory/InfiniteInventoryComponent";
@@ -21,6 +21,7 @@ import GenericTribeMember from "./GenericTribeMember";
 import TribeWorker from "./TribeWorker";
 
 class Tribesman extends TribeWorker {
+   public readonly name = "Tribesman";
    public readonly SIZE = 1;
 
    private static readonly SIGHT_RANGE = 4;
@@ -55,30 +56,8 @@ class Tribesman extends TribeWorker {
          type: "circle",
          radius: this.SIZE / 2
       });
-
-      this.createAttacks();
       
       this.createAI();
-   }
-
-   private createAttacks(): void {
-      const ATTACK_RADIUS = 1;
-      const ATTACK_OFFSET = 0.5;
-      
-      this.getComponent(AttackComponent)!.addAttack("baseAttack", new CircleAttack({
-            radius: ATTACK_RADIUS,
-            damage: Tribesman.ATTACK_DAMAGE,
-            knockbackStrength: 0.3,
-            getPosition: (): Point => {
-               const rotation = this.getComponent(TransformComponent)!.rotation;
-
-               const offset = RenderComponent.getOffset((this.SIZE / 2 + ATTACK_OFFSET) * Board.tileSize, rotation);
-               const offsetPoint = new Point(offset[0], offset[1]);
-
-               return this.getComponent(TransformComponent)!.position.add(offsetPoint);
-            },
-            attackingEntity: this
-      }));
    }
 
    private createAI(): void {
@@ -193,8 +172,26 @@ class Tribesman extends TribeWorker {
             const distanceFromTarget = this.getComponent(TransformComponent)!.position.distanceFrom(target.getComponent(TransformComponent)!.position);
             if (distanceFromTarget < (Tribesman.ATTACK_RANGE + this.SIZE/2 + targetSize/2) * Board.tileSize) {
                if (this.attackTimer === null) {
+                  const ATTACK_RADIUS = 1;
+                  const ATTACK_OFFSET = 0.5;
+
+                  // Calculate the attack position
+                  const rotation = this.getComponent(TransformComponent)!.rotation;
+
+                  const offset = RenderComponent.getOffset((this.SIZE / 2 + ATTACK_OFFSET) * Board.tileSize, rotation);
+                  const offsetPoint = new Point(offset[0], offset[1]);
+
+                  const attackPosition = this.getComponent(TransformComponent)!.position.add(offsetPoint);
+
                   // Attack
-                  this.getComponent(AttackComponent)!.startAttack("baseAttack");
+                  this.getComponent(AttackComponent)!.attack({
+                     position: attackPosition,
+                     attackingEntity: this,
+                     radius: ATTACK_RADIUS,
+                     damage: Tribesman.ATTACK_DAMAGE,
+                     pierce: 1,
+                     knockbackStrength: 0.3
+                  });
                   
                   this.attackTimer = new Timer({
                      duration: Tribesman.ATTACK_INTERVAL,

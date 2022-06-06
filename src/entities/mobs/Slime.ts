@@ -62,6 +62,7 @@ const SLIME_INFO: Record<SlimeSizeCategory, SlimeInfo> = {
 }
 
 class Slime extends Mob {
+   public readonly name = "Slime";
    public readonly SIZE: number;
 
    private readonly info: SlimeInfo;

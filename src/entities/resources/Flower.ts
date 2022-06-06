@@ -7,6 +7,7 @@ import { Point, randInt } from "../../utils";
 import Resource from "./Resource";
 
 class Flower extends Resource {
+   public readonly name = "Flower";
    public readonly SIZE = 0.3;
 
    private static readonly LIFESPAN = 20;

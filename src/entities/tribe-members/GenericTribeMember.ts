@@ -10,7 +10,7 @@ import LivingEntity from "../LivingEntity";
 import SelectedSlotComponent from "../../entity-components/SelectedSlotComponent";
 import Timer from "../../Timer";
 import Board from "../../Board";
-import TRIBE_INFO from "../../tribe-info";
+import TRIBE_INFO from "../../data/tribe-info";
 import Particle from "../../particles/Particle";
 
 abstract class GenericTribeMember extends Entity {
@@ -89,7 +89,11 @@ abstract class GenericTribeMember extends Entity {
       });
 
       // Respawn when killed
-      this.createEvent("die", () => this.startRespawn());
+      this.createEvent("die", () => {
+         this.startRespawn();
+
+         // this.
+      });
    }
 
    public onLoad(): void {

@@ -1,6 +1,6 @@
 import Board, { Coordinates } from "./Board";
 import Tombstone from "./entities/Tombstone";
-import ENTITY_INFO, { MobInfo, ResourceInfo } from "./entity-info";
+import ENTITY_INFO, { MobInfo, ResourceInfo } from "./data/entity-info";
 import Game from "./Game";
 import SETTINGS from "./settings";
 import { BiomeName, TileType } from "./terrain-generation";

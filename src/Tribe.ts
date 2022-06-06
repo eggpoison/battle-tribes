@@ -8,7 +8,7 @@ import TransformComponent from "./entity-components/TransformComponent";
 import InventoryViewerManager from "./components/inventory/InventoryViewerManager";
 import Chief from "./entities/tribe-members/Chief";
 import InfiniteInventoryComponent from "./entity-components/inventory/InfiniteInventoryComponent";
-import TRIBE_INFO, { TribeTypes } from "./tribe-info";
+import TRIBE_INFO, { TribeTypes } from "./data/tribe-info";
 import Player from "./entities/tribe-members/Player";
 import { setTribeEXPBarAmount } from "./components/TribeXPBar";
 

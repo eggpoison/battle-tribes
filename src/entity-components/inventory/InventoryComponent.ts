@@ -82,16 +82,18 @@ abstract class InventoryComponent extends Component {
       return itemList;
    }
 
-   public canPickupItem(item: Item): boolean {
+   public canPickupItem(item: Item, amount: number): boolean {
       for (const itemSlot of this.itemSlots) {
          // If there is an item in the slot
          if (typeof itemSlot !== "undefined") {
-            // If the item is of the same type and can fit
-            if (item.name === itemSlot[0] && itemSlot[1] < item.stackSize) {
+            const [currentItemName, currentItemAmount] = itemSlot;
+
+            // If the item is of the same type and it can fit
+            if (item.name === currentItemName && currentItemAmount + amount <= item.stackSize) {
                return true;
             }
          } else {
-            // If the item slot is empty
+            // If any item slot is empty, then it can be picked up
             return true;
          }
       }

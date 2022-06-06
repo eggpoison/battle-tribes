@@ -3,10 +3,13 @@ import Camera from "./Camera";
 import { getCanvasContext, getCanvasHeight, getCanvasWidth } from "./components/Canvas";
 import Player, { PlayerInteractionMode } from "./entities/tribe-members/Player";
 import TribeWorker from "./entities/tribe-members/TribeWorker";
+import HealthComponent from "./entity-components/HealthComponent";
 import TransformComponent from "./entity-components/TransformComponent";
 import { Point, setWindowFocus } from "./utils";
 
 abstract class Mouse {
+   private static readonly ENTITY_HOVER_RANGE = 1;
+
    public static readonly UNIT_SELECTION_COLOUR = "#ffff00";
    public static readonly OPAQUE_UNIT_SELECTION_COLOUR = "rgba(255, 255, 0, 0.3)";
    private static readonly ENTITY_ATTACK_COMMAND_RADIUS = 3;
@@ -19,12 +22,49 @@ abstract class Mouse {
    private static isSelectingUnits: boolean = false;
 
    private static lastMouseEvent: MouseEvent | undefined;
+   private static lastCommandMouseEvent: MouseEvent | undefined;
 
    public static setup(): void {
       document.addEventListener("mousedown", e => this.mouseDown(e));
       document.addEventListener("mousemove", e => this.mouseMove(e));
       document.addEventListener("mouseup", e => this.mouseUp(e));
       document.addEventListener("contextmenu", e => this.openContextMenu(e));
+   }
+
+   public static updateHoverSelection(): void {
+      if (typeof this.lastMouseEvent === "undefined") return;
+
+      // Get the cursor position in game space
+      const playerPosition = Player.instance.getComponent(TransformComponent)!.position;
+      const x = playerPosition.x + this.lastMouseEvent.clientX - getCanvasWidth() / 2;
+      const y = playerPosition.y + this.lastMouseEvent.clientY - getCanvasHeight() / 2;
+      const cursorPosition = new Point(x, y);
+
+      // Check if the mouse is hovering over any entities
+      const hoverEntities = TransformComponent.getNearbyEntities(cursorPosition, Mouse.ENTITY_HOVER_RANGE);
+
+      // Remove hover entities which can't be hovered over
+      for (let idx = hoverEntities.length - 1; idx >= 0; idx--) {
+         const entity = hoverEntities[idx];
+         if (entity.getComponent(HealthComponent) === null) {
+            hoverEntities.splice(idx, 1);
+         }
+      }
+
+      const hoverText = document.getElementById("entity-health")!;
+      if (hoverEntities.length > 0) {
+         const hoverEntity = hoverEntities[0];
+         const health = hoverEntity.getComponent(HealthComponent)!.getHealth();
+         const maxHealth = hoverEntity.getComponent(HealthComponent)!.getMaxHealth();
+
+         hoverText.classList.remove("hidden");
+         hoverText.innerHTML = `${hoverEntity.name} (${health}/${maxHealth})`;
+
+         hoverText.style.left = this.lastMouseEvent.clientX + "px";
+         hoverText.style.top = this.lastMouseEvent.clientY + "px";
+      } else {
+         hoverText.classList.add("hidden");
+      }
    }
 
    private static validateEvent(e: Event): boolean {
@@ -70,6 +110,8 @@ abstract class Mouse {
 
       if (!this.validateEvent(e)) return;
 
+      this.lastMouseEvent = e;
+
       // Player attack
       Player.instance.attack();
 
@@ -82,7 +124,7 @@ abstract class Mouse {
          const y = playerPosition.y + e.clientY - getCanvasHeight() / 2;
          this.tribeSelectStartPosition = new Point(x, y);
 
-         this.lastMouseEvent = e;
+         this.lastCommandMouseEvent = e;
       }
 
       // Command units
@@ -94,24 +136,28 @@ abstract class Mouse {
    private static mouseMove(e: MouseEvent): void {
       if (!this.validateEvent(e)) return;
 
+      this.lastMouseEvent = e;
+
       if (this.isSelectingUnits) {
-         this.lastMouseEvent = e;
+         this.lastCommandMouseEvent = e;
       }
    }
 
    public static updateUnitSelectionBounds(): void {
-      if (typeof this.lastMouseEvent === "undefined") return;
+      if (typeof this.lastCommandMouseEvent === "undefined") return;
 
       if (this.isSelectingUnits) {
          const playerPosition = Player.instance.getComponent(TransformComponent)!.position;
-         const x = playerPosition.x + this.lastMouseEvent.clientX - getCanvasWidth() / 2;
-         const y = playerPosition.y + this.lastMouseEvent.clientY - getCanvasHeight() / 2;
+         const x = playerPosition.x + this.lastCommandMouseEvent.clientX - getCanvasWidth() / 2;
+         const y = playerPosition.y + this.lastCommandMouseEvent.clientY - getCanvasHeight() / 2;
          this.tribeSelectEndPosition = new Point(x, y);
       }
    }
 
    private static mouseUp(e: MouseEvent): void {
       if (!this.validateEvent(e)) return;
+
+      this.lastMouseEvent = e;
 
       // Tribe select
       if (e.button === 0 && Player.currentInteractionMode === PlayerInteractionMode.SelectUnits) {
@@ -127,7 +173,7 @@ abstract class Mouse {
          this.tribeSelectStartPosition = null;
          this.tribeSelectEndPosition = null;
 
-         this.lastMouseEvent = undefined;
+         this.lastCommandMouseEvent = undefined;
       }
    }
 

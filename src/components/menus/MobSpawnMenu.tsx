@@ -3,7 +3,7 @@ import Board from "../../Board";
 import LivingEntity from "../../entities/LivingEntity";
 import Player from "../../entities/tribe-members/Player";
 import TransformComponent from "../../entity-components/TransformComponent";
-import ENTITY_INFO, { MobInfo } from "../../entity-info";
+import ENTITY_INFO, { MobInfo } from "../../data/entity-info";
 import { randFloat, Vector } from "../../utils";
 
 const spawnMobs = (mobInfo: MobInfo, amount: number, offsetRange: [number, number]): void => {

@@ -8,6 +8,7 @@ import Resource from "./Resource";
 
 class Tree extends Resource {
    private static readonly HEALTH = 10;
+   public readonly name = "Tree";
    public readonly SIZE = 2;
    private static readonly LIFESPAN = 60;
 

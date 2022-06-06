@@ -3,7 +3,7 @@ import TransformComponent from "../../entity-components/TransformComponent";
 import { Point } from "../../utils";
 import RenderComponent from "../../entity-components/RenderComponent";
 import HitboxComponent from "../../entity-components/HitboxComponent";
-import AttackComponent, { CircleAttack } from "../../entity-components/AttackComponent";
+import AttackComponent from "../../entity-components/AttackComponent";
 import ItemEntity from "../ItemEntity";
 import TribeStash from "../TribeStash";
 import Tribe from "../../Tribe";
@@ -14,6 +14,7 @@ import FiniteInventoryComponent from "../../entity-components/inventory/FiniteIn
 import Component from "../../Component";
 
 class Chief extends GenericTribeMember {
+   public readonly name = "Chief";
    public readonly SIZE = 1;
 
    private static readonly SIGHT_RANGE = 5;
@@ -43,20 +44,21 @@ class Chief extends GenericTribeMember {
 
       const attackComponent = this.getComponent(AttackComponent)!;
 
-      attackComponent.addAttack("baseAttack", new CircleAttack({
-         radius: 1,
-         getPosition: (): Point => {
+      attackComponent.addAttack("baseAttack", {
+         attackingEntity: this,
+         position: (): Point => {
             const rotation = this.getComponent(TransformComponent)!.rotation;
-
+            
             const offset = RenderComponent.getOffset((this.SIZE / 2 + ATTACK_OFFSET) * Board.tileSize, rotation);
             const offsetPoint = new Point(offset[0], offset[1]);
-
+            
             return this.getComponent(TransformComponent)!.position.add(offsetPoint);
          },
+         radius: 1,
          damage: 2,
-         knockbackStrength: 0.3,
-         attackingEntity: this
-      }));
+         pierce: 1,
+         knockbackStrength: 0.3
+      });
    }
 
    private setHitbox(): void {

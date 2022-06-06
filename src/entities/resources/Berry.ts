@@ -4,7 +4,7 @@ import HitboxComponent from "../../entity-components/HitboxComponent";
 import RenderComponent, { ImageRenderPart } from "../../entity-components/RenderComponent";
 import ItemSpawnComponent from "../../entity-components/ItemSpawnerComponent";
 import { ItemName } from "../../items/items";
-import { getTilesByType, TileKind } from "../../tile-types";
+import { getTilesByType, TileKind } from "../../data/tile-types";
 import { randItem } from "../../utils";
 import Resource from "./Resource";
 
@@ -13,6 +13,7 @@ class Berry extends Resource {
       TileKind.grass
    ];
 
+   public readonly name = "Berry";
    public readonly SIZE = 1;
 
    private static readonly HEALTH = 10;

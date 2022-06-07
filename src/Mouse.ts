@@ -1,10 +1,12 @@
 import Board, { Coordinates } from "./Board";
 import Camera from "./Camera";
 import { getCanvasContext, getCanvasHeight, getCanvasWidth } from "./components/Canvas";
+import { getHeldItem } from "./components/inventory/ItemSlot";
 import Player, { PlayerInteractionMode } from "./entities/tribe-members/Player";
 import TribeWorker from "./entities/tribe-members/TribeWorker";
 import HealthComponent from "./entity-components/HealthComponent";
 import TransformComponent from "./entity-components/TransformComponent";
+import ITEMS, { ItemName } from "./items/items";
 import { Point, roundNum, setWindowFocus } from "./utils";
 
 abstract class Mouse {
@@ -31,42 +33,68 @@ abstract class Mouse {
       document.addEventListener("contextmenu", e => this.openContextMenu(e));
    }
 
-   public static updateHoverSelection(): void {
+   public static updateMouse(): void {
       if (typeof this.lastMouseEvent === "undefined") return;
 
-      // Get the cursor position in game space
-      const playerPosition = Player.instance.getComponent(TransformComponent)!.position;
-      const x = playerPosition.x + this.lastMouseEvent.clientX - getCanvasWidth() / 2;
-      const y = playerPosition.y + this.lastMouseEvent.clientY - getCanvasHeight() / 2;
-      const cursorPosition = new Point(x, y);
+      const hoverTextElement = document.getElementById("hover-text")!;
+      const heldItemElement = document.getElementById("held-item")!;
 
-      // Check if the mouse is hovering over any entities
-      const hoverEntities = Board.getEntitiesInRange(cursorPosition, Mouse.ENTITY_HOVER_RANGE);
+      const heldItem = getHeldItem();
 
-      const hoverTextElement = document.getElementById("entity-health")!;
-      if (hoverEntities.length > 0) {
-         const hoverEntity = hoverEntities[0];
-
-         let hoverText = hoverEntity.name;
-
-         const healthComponent = hoverEntity.getComponent(HealthComponent);
-         if (healthComponent !== null) {
-            const health = healthComponent.getHealth();
-            const maxHealth = healthComponent.getMaxHealth();
-
-            const displayHealth = roundNum(health, 0);
-            const displayMaxHealth = roundNum(maxHealth, 0);
-
-            hoverText += ` (${displayHealth}/${displayMaxHealth})`;
-         }
-
-         hoverTextElement.classList.remove("hidden");
-         hoverTextElement.innerHTML = hoverText;
-
-         hoverTextElement.style.left = this.lastMouseEvent.clientX + "px";
-         hoverTextElement.style.top = this.lastMouseEvent.clientY + "px";
-      } else {
+      if (heldItem !== null) {
+         // Hide the hover text and show the held item element
          hoverTextElement.classList.add("hidden");
+         heldItemElement.classList.remove("hidden");
+
+         // Position the held item element on the cursor
+         heldItemElement.style.left = this.lastMouseEvent.clientX + "px";
+         heldItemElement.style.top = this.lastMouseEvent.clientY + "px";
+
+         const itemInfo = ITEMS[ItemName[heldItem.name] as unknown as ItemName];
+
+         // Update image src
+         const image = heldItemElement.querySelector(".item-image") as HTMLImageElement;
+         image.src = require("./images/" + itemInfo.imageSrc);
+
+         // Update amount
+         const amount = heldItemElement.querySelector(".amount") as HTMLImageElement;
+         amount.innerHTML = heldItem.amount.toString();
+      } else {
+         // Hide the held item element and show the hover text
+         heldItemElement.classList.add("hidden");
+         hoverTextElement.classList.remove("hidden");
+
+         // Get the cursor position in game space
+         const playerPosition = Player.instance.getComponent(TransformComponent)!.position;
+         const x = playerPosition.x + this.lastMouseEvent.clientX - getCanvasWidth() / 2;
+         const y = playerPosition.y + this.lastMouseEvent.clientY - getCanvasHeight() / 2;
+         const cursorPosition = new Point(x, y);
+         
+         // Check if the mouse is hovering over any entities
+         const hoverEntities = Board.getEntitiesInRange(cursorPosition, Mouse.ENTITY_HOVER_RANGE);
+         if (hoverEntities.length > 0) {
+            const hoverEntity = hoverEntities[0];
+
+            let hoverText = hoverEntity.name;
+
+            const healthComponent = hoverEntity.getComponent(HealthComponent);
+            if (healthComponent !== null) {
+               const health = healthComponent.getHealth();
+               const maxHealth = healthComponent.getMaxHealth();
+
+               const displayHealth = roundNum(health, 0);
+               const displayMaxHealth = roundNum(maxHealth, 0);
+
+               hoverText += ` (${displayHealth}/${displayMaxHealth})`;
+            }
+
+            hoverTextElement.innerHTML = hoverText;
+
+            hoverTextElement.style.left = this.lastMouseEvent.clientX + "px";
+            hoverTextElement.style.top = this.lastMouseEvent.clientY + "px";
+         } else {
+            hoverTextElement.classList.add("hidden");
+         }
       }
    }
 
@@ -111,10 +139,10 @@ abstract class Mouse {
    private static mouseDown(e: MouseEvent): void {
       setWindowFocus(true);
 
-      if (!this.validateEvent(e)) return;
-
       this.lastMouseEvent = e;
-
+      
+      if (!this.validateEvent(e)) return;
+      
       // Player attack
       Player.instance.attack();
 
@@ -137,9 +165,9 @@ abstract class Mouse {
    }
 
    private static mouseMove(e: MouseEvent): void {
-      if (!this.validateEvent(e)) return;
-
       this.lastMouseEvent = e;
+
+      if (!this.validateEvent(e)) return;
 
       if (this.isSelectingUnits) {
          this.lastCommandMouseEvent = e;
@@ -158,9 +186,9 @@ abstract class Mouse {
    }
 
    private static mouseUp(e: MouseEvent): void {
-      if (!this.validateEvent(e)) return;
-
       this.lastMouseEvent = e;
+      
+      if (!this.validateEvent(e)) return;
 
       // Tribe select
       if (e.button === 0 && Player.currentInteractionMode === PlayerInteractionMode.SelectUnits) {

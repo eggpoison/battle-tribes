@@ -1,11 +1,15 @@
 import InventoryComponent from "../../entity-components/inventory/InventoryComponent";
 import ITEMS, { ItemName } from "../../items/items";
 
-type HeldItem = {
+export type HeldItem = {
    readonly name: ItemName;
    amount: number;
 }
 let heldItem: HeldItem | null = null;
+
+export function getHeldItem(): HeldItem | null {
+   return heldItem;
+}
 
 const stackItem = (slotNum: number, inventoryComponent: InventoryComponent): void => {
    let { name: itemName, amount: itemAmount } = heldItem!;

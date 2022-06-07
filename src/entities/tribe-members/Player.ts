@@ -1,7 +1,7 @@
 import { HealthBarManager } from "../../components/HealthBar";
 import { closeMenu, toggleMenu } from "../../components/menus/MenuManager";
 import { clearMessage, displayMessage } from "../../components/MessageDisplay";
-import { updatePlayerInventoryViewer } from "../../components/inventory/PlayerInventoryViewer";
+import { updatePlayerInventoryViewer, updatePlayerInventoryViewerSelectedSlot } from "../../components/inventory/PlayerInventoryViewer";
 import { togglePlayerRespawnMessage, setPlayerRespawnMessageTime } from "../../components/PlayerRespawnMessage";
 import { toggleTribeStashViewerVisibility, tribeStashViewerIsOpen } from "../../components/inventory/TribeStashViewer";
 import AttackComponent from "../../entity-components/AttackComponent";
@@ -16,6 +16,7 @@ import { setWindowFocus } from "../../utils";
 import Entity from "../Entity";
 import TribeStash from "../TribeStash";
 import Chief from "./Chief";
+import SelectedSlotComponent from "../../entity-components/SelectedSlotComponent";
 
 export enum PlayerInteractionMode {
    Play,
@@ -83,6 +84,16 @@ class Player extends Chief {
       return this.instance.getComponent(HealthComponent)!.isAlive();
    }
 
+   private changeSelectedSlot(newSelectedSlot: number): void {
+      // Don't select the slot if it's out of bounds
+      const slotCount = this.getComponent(FiniteInventoryComponent)!.slotCount;
+      if (newSelectedSlot > slotCount) return;
+
+      this.getComponent(SelectedSlotComponent)!.changeSlot(newSelectedSlot);
+
+      updatePlayerInventoryViewerSelectedSlot(newSelectedSlot);
+   }
+
    private onKeyPress(key: string): void {
       setWindowFocus(true);
 
@@ -147,6 +158,43 @@ class Player extends Chief {
          case "Escape": {
             Mouse.deselectUnits();
 
+            break;
+         }
+
+         case "1": {
+            this.changeSelectedSlot(0);
+            break;
+         }
+         case "2": {
+            this.changeSelectedSlot(1);
+            break;
+         }
+         case "3": {
+            this.changeSelectedSlot(2);
+            break;
+         }
+         case "4": {
+            this.changeSelectedSlot(3);
+            break;
+         }
+         case "5": {
+            this.changeSelectedSlot(4);
+            break;
+         }
+         case "6": {
+            this.changeSelectedSlot(5);
+            break;
+         }
+         case "7": {
+            this.changeSelectedSlot(6);
+            break;
+         }
+         case "8": {
+            this.changeSelectedSlot(7);
+            break;
+         }
+         case "9": {
+            this.changeSelectedSlot(8);
             break;
          }
       }

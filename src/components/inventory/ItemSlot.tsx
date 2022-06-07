@@ -64,19 +64,21 @@ interface ItemSlotProps {
    readonly amount?: number;
    readonly slotNum: number;
    getInventoryComponent: () => InventoryComponent;
+   readonly isSelected: boolean;
 }
 
-const ItemSlot = ({ itemName, amount, slotNum, getInventoryComponent }: ItemSlotProps) => {
+const ItemSlot = ({ itemName, amount, slotNum, getInventoryComponent, isSelected }: ItemSlotProps) => {
    const info = typeof itemName !== "undefined" ? ITEMS[ItemName[itemName] as unknown as ItemName] : undefined;
 
-   const onClick = (): void => {
-      const inventoryComponent = getInventoryComponent();
+   const onClick = (e: MouseEvent): void => {
+      e.preventDefault();
 
+      const inventoryComponent = getInventoryComponent();
       clickInventorySlot(slotNum, inventoryComponent)
    }
 
    return (
-      <div onClick={onClick} className="item-slot">
+      <div onClick={e => onClick(e.nativeEvent)} className={`item-slot${isSelected ? " selected" : ""}`}>
          {typeof info !== "undefined" ? <>
             <img src={require("../../images/" + info.imageSrc)} alt={info.displayName} className="preview" />
             <div className="amount">{amount}</div>

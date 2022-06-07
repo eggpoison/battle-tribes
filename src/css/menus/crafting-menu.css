@@ -20,13 +20,14 @@
    background-color: rgba(0, 0, 0, 0.8);
    padding: 5px;
    position: absolute;
-   top: 50%;
+   bottom: -0.5rem;
    left: 50%;
+   transform: translate(-50%, 100%);
    z-index: 1;
    opacity: 0;
    pointer-events: none;
 }
-#crafting-menu .slot:hover .hover-info {
+#crafting-menu .item-slot:hover .hover-info {
    opacity: 1;
 }
 #crafting-menu .hover-info h3 {

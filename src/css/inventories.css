@@ -22,6 +22,7 @@
 }
 .item-slot {
    --border-size: 3px;
+   --selected-border-size: 5px;
    width: calc(var(--slot-size) - var(--border-size) * 2);
    height: calc(var(--slot-size) - var(--border-size) * 2);
    background-color: rgb(196, 131, 0);
@@ -31,12 +32,15 @@
    margin: var(--slot-margin);
    position: relative;
    cursor: pointer;
+   box-shadow: 0 0 6px 3px rgba(0, 0, 0, 0.15) inset;
 }
 .item-slot:hover {
    background-color: rgb(206, 151, 0);
 }
-.item-slot:active {
-   background-color: rgb(187, 116, 2);
+.item-slot.selected {
+   background-color: rgb(209, 157, 15);
+   border-color: rgb(255, 241, 211) rgb(224, 188, 149) rgb(224, 188, 149) rgb(255, 241, 211);
+   border-width: var(--selected-border-size);
 }
 .item-slot .preview {
    width: calc(var(--slot-size) * var(--item-size-multiplier));
@@ -92,4 +96,7 @@
    left: 50%;
    bottom: 1rem;
    transform: translateX(-50%);
+}
+#inventory-viewer .inventory {
+   align-items: center;
 }

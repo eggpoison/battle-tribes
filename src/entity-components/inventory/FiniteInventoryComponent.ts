@@ -47,22 +47,48 @@ class FiniteInventoryComponent extends InventoryComponent {
       return null;
    }
 
+   /**
+    * @returns The number of items left after being added
+    */
    public addItem(itemName: ItemName, amount: number): void {
-      for (let slotNum = 0; slotNum < this.slotCount; slotNum++) {
-         // If the slot is available, add the item to the slot
-         if (typeof this.itemSlots[slotNum] === "undefined") {
-            this.itemSlots[slotNum] = [itemName, amount];
-            break;
+      // Get the item info
+      const itemKey = ItemName[itemName] as unknown as ItemName;
+      const itemInfo = ITEMS[itemKey];
+
+      let remainingAmountToAdd = amount;
+
+      // Add the item to any existing stacks in the inventory
+      for (const itemSlot of this.itemSlots) {
+         if (typeof itemSlot === "undefined") continue;
+
+         const [currentItemName, currentItemAmount] = itemSlot;
+
+         if (currentItemName === itemName) {
+            // If the item can be stacked with the current item, stack them
+            const addAmount = Math.min(itemInfo.stackSize - currentItemAmount, remainingAmountToAdd);
+            if (addAmount > 0) {
+               itemSlot[1] += addAmount;
+
+               remainingAmountToAdd -= amount;
+
+               // If all of the item has been added, don't look for any more stacks to add it to
+               if (remainingAmountToAdd === 0) {
+                  break;
+               }
+            }
          }
+      }
 
-         let [currentItemName, currentItemCount] = this.itemSlots[slotNum];
-         const itemKey = ItemName[itemName] as unknown as ItemName;
-         const itemInfo = ITEMS[itemKey];
+      if (remainingAmountToAdd > 0) {
+         // Add the item to any available slots
+         for (let slotNum = 0; slotNum < this.slotCount; slotNum++) {
+            // If the slot is available, add the item to the slot
+            if (typeof this.itemSlots[slotNum] === "undefined") {
+               remainingAmountToAdd -= amount;
+               this.itemSlots[slotNum] = [itemName, amount];
 
-         // If the existing item is of the same type and the stack isn't full, add it
-         if (currentItemName === itemName && currentItemCount + amount <= itemInfo.stackSize) {
-            this.itemSlots[slotNum][1] += amount;
-            break;
+               break;
+            }
          }
       }
 

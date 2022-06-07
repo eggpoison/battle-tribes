@@ -116,7 +116,7 @@ abstract class InventoryComponent extends Component {
          if (typeof itemSlot === "undefined") continue;
 
          // Clear the item
-         this.itemSlots.splice(idx, 1);
+         delete this.itemSlots[idx];
       }
 
       this.callInventoryChangeEvents();

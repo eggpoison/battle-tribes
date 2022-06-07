@@ -70,7 +70,7 @@ const Slot = ({ recipe }: SlotInfo) => {
       const imageSrc = require("../../images/" + recipe.result.imageSrc);
 
       return (
-         <div className="slot" onClick={() => craft(recipe)}>
+         <div className="item-slot" onClick={() => craft(recipe)}>
             <img src={imageSrc} alt={recipe.result.imageSrc} className="preview" />
             <div className="hover-info">
                <h3 className="result">{recipe.result.displayName}</h3>
@@ -86,6 +86,7 @@ const Slot = ({ recipe }: SlotInfo) => {
                   })}
                </ul>
             </div>
+            <div className="amount">{recipe.craftAmount}</div>
          </div>
       );
    }

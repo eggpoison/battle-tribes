@@ -13,7 +13,6 @@ import Mouse from "../../Mouse";
 import Tribe from "../../Tribe";
 import { setWindowFocus } from "../../utils";
 import Entity from "../Entity";
-import ItemEntity from "../ItemEntity";
 import TribeStash from "../TribeStash";
 import Chief from "./Chief";
 
@@ -46,6 +45,12 @@ class Player extends Chief {
       this.createEvent("die", () => {
          // Hide any open menus
          closeMenu();
+      });
+
+      this.createEvent("inventoryChange", () => {
+         // Update inventory viewer
+         const itemSlots = this.getComponent(FiniteInventoryComponent)!.getItemSlots();
+         InventoryViewerManager.getInstance("playerInventory").setItemSlots(itemSlots);
       });
    }
 
@@ -146,14 +151,10 @@ class Player extends Chief {
       }
    }
 
-   protected onCollision(collidingEntity: Entity): void {
+   public onCollision(collidingEntity: Entity): void {
       super.onCollision(collidingEntity);
 
-      if (collidingEntity instanceof ItemEntity) {
-         // Update the player inventory viewer
-         const itemSlots = this.getComponent(FiniteInventoryComponent)!.getItemSlots();
-         InventoryViewerManager.getInstance("playerInventory").setItemSlots(itemSlots);
-      } else if (collidingEntity instanceof TribeStash) {
+      if (collidingEntity instanceof TribeStash) {
          // If the stash is belongs to the player's tribe, display the open message
          if (collidingEntity.tribe === this.tribe && Player.currentInteractionMode === PlayerInteractionMode.Play) {
             displayMessage(TribeStash.OPEN_MESSAGE);
@@ -161,7 +162,7 @@ class Player extends Chief {
       }
    }
 
-   protected onLeaveCollision(collidingEntity: Entity): void {
+   public onLeaveCollision(collidingEntity: Entity): void {
       if (collidingEntity instanceof TribeStash) {
          // Hide the stash viewer
          if (tribeStashViewerIsOpen()) {

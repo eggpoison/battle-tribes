@@ -34,7 +34,7 @@ class Yeti extends Mob {
          new AIManagerComponent()
       ]);
 
-      this.setMaxHealth(Yeti.HEALTH);
+      this.getComponent(HealthComponent)!.setMaxHealth(Yeti.HEALTH, true);
 
       this.createAI();
    }

@@ -41,7 +41,7 @@ abstract class Mouse {
       const cursorPosition = new Point(x, y);
 
       // Check if the mouse is hovering over any entities
-      const hoverEntities = TransformComponent.getNearbyEntities(cursorPosition, Mouse.ENTITY_HOVER_RANGE);
+      const hoverEntities = Board.getEntitiesInRange(cursorPosition, Mouse.ENTITY_HOVER_RANGE);
 
       // Remove hover entities which can't be hovered over
       for (let idx = hoverEntities.length - 1; idx >= 0; idx--) {

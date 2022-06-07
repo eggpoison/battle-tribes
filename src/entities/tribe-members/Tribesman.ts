@@ -3,6 +3,7 @@ import AIManagerComponent from "../../entity-components/ai/AIManangerComponent";
 import FollowAI from "../../entity-components/ai/FollowAI";
 import WanderAI from "../../entity-components/ai/WanderAI";
 import AttackComponent from "../../entity-components/AttackComponent";
+import HealthComponent from "../../entity-components/HealthComponent";
 import HitboxComponent from "../../entity-components/HitboxComponent";
 import FiniteInventoryComponent from "../../entity-components/inventory/FiniteInventoryComponent";
 import InfiniteInventoryComponent from "../../entity-components/inventory/InfiniteInventoryComponent";
@@ -50,7 +51,7 @@ class Tribesman extends TribeWorker {
       ]);
 
       super.setSightRange(Tribesman.SIGHT_RANGE);
-      super.setMaxHealth(Tribesman.MAX_HEALTH);
+      this.getComponent(HealthComponent)!.setMaxHealth(Tribesman.MAX_HEALTH, true);
 
       this.getComponent(HitboxComponent)!.setHitbox({
          type: "circle",
@@ -269,11 +270,11 @@ class Tribesman extends TribeWorker {
       return null;
    }
 
-   protected duringCollision(collidingEntity: Entity): void {
+   public duringCollision(collidingEntity: Entity): void {
       if (collidingEntity instanceof ItemEntity) {
          // Pick up the item
          const inventoryComponent = this.getComponent(FiniteInventoryComponent)!;
-         inventoryComponent.pickupResource(collidingEntity);
+         inventoryComponent.pickupItemEntity(collidingEntity);
       } else if (collidingEntity instanceof TribeStash) {
          // Put all items into the stash
          const inventoryComponent = collidingEntity.getComponent(InfiniteInventoryComponent)!;

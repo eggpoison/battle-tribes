@@ -1,3 +1,4 @@
+import StatusEffectComponent from "../../components/StatusEffectComponent";
 import AIManagerComponent from "../../entity-components/ai/AIManangerComponent";
 import FollowAI from "../../entity-components/ai/FollowAI";
 import WanderAI from "../../entity-components/ai/WanderAI";
@@ -149,13 +150,13 @@ class Zombie extends Mob {
       this.getComponent(AIManagerComponent)!.changeCurrentAI("wander");
    }
 
-   public tick(): void {
+   public tickComponents(): void {
       // Set the zombie on fire when it's daytime
       if (!Game.isNight()) {
-         this.applyStatusEffect("fire", 5);
+         this.getComponent(StatusEffectComponent)!.applyStatusEffect("fire", 5);
       }
 
-      super.tick();
+      super.tickComponents();
    }
 
    public duringCollision(collidingEntity: Entity): void {

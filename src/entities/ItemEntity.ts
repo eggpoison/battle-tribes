@@ -43,7 +43,7 @@ class ItemEntity extends Entity {
       this.amount = amount;
    }
 
-   public tick(): void {
+   public tickComponents(): void {
       this.age += 1 / SETTINGS.tps;
 
       if (this.age >= ItemEntity.LIFESPAN) this.die(null);

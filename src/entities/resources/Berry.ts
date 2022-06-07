@@ -27,7 +27,7 @@ class Berry extends Resource {
 
       super(position);
 
-      this.setMaxHealth(Berry.HEALTH);
+      this.getComponent(HealthComponent)!.setMaxHealth(Berry.HEALTH, true);
       this.getComponent(HealthComponent)!.setLifespan(Berry.LIFESPAN);
 
       this.getComponent(ItemSpawnComponent)!.addResource(ItemName.berry, [1, 2], "deathByEntity");

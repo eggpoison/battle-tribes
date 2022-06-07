@@ -52,7 +52,7 @@ class FiniteInventoryComponent extends InventoryComponent {
          // If the slot is available, add the item to the slot
          if (typeof this.itemSlots[slotNum] === "undefined") {
             this.itemSlots[slotNum] = [itemName, amount];
-            return;
+            break;
          }
 
          let [currentItemName, currentItemCount] = this.itemSlots[slotNum];
@@ -62,9 +62,11 @@ class FiniteInventoryComponent extends InventoryComponent {
          // If the existing item is of the same type and the stack isn't full, add it
          if (currentItemName === itemName && currentItemCount + amount <= itemInfo.stackSize) {
             this.itemSlots[slotNum][1] += amount;
-            return;
+            break;
          }
       }
+
+      this.callInventoryChangeEvents();
    }
 
    public isFull(isStrict: boolean): boolean {

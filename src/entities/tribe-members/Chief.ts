@@ -68,11 +68,11 @@ class Chief extends GenericTribeMember {
       });
    }
 
-   protected onCollision(collidingEntity: Entity): void {
+   public onCollision(collidingEntity: Entity): void {
       if (collidingEntity instanceof ItemEntity) {
          // Pick up the item
          const inventoryComponent = this.getComponent(FiniteInventoryComponent)!;
-         inventoryComponent.pickupResource(collidingEntity);
+         inventoryComponent.pickupItemEntity(collidingEntity);
       } else if (collidingEntity instanceof TribeStash) {
          // TODO: Deposit all items
       }

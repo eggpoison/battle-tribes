@@ -16,7 +16,7 @@ class Boulder extends Resource {
    constructor(position: Point) {
       super(position);
 
-      this.setMaxHealth(Boulder.HEALTH);
+      this.getComponent(HealthComponent)!.setMaxHealth(Boulder.HEALTH, true);
       
       this.getComponent(HealthComponent)!.setLifespan(Boulder.LIFESPAN);
 

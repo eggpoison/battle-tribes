@@ -1,32 +1,34 @@
 import Component from "../Component";
 import Entity from "../entities/Entity";
+import Game from "../Game";
 import SETTINGS from "../settings";
 import TransformComponent from "./TransformComponent";
 
 class HealthComponent extends Component {
+   private static readonly TIME_UNTIL_REGEN = 3;
+
    private health: number;
    
    private maxHealth: number;
-   private readonly regenerationRate: number;
    private readonly armour: number;
-   private lifespan: number | null;
+   private lifespan?: number;
 
+   private lastHitTime: number = 0;
    private remainingIFrames = 0;
 
-   constructor(maxHealth?: number, startingHealth?: number, regenerationRate?: number, armour?: number, lifespan?: number) {
+   constructor(maxHealth?: number, startingHealth?: number, armour?: number, lifespan?: number) {
       super();
 
       this.maxHealth = maxHealth || 1;
       this.health = startingHealth || this.maxHealth;
-      this.regenerationRate = regenerationRate || 0;
       this.armour = armour || 0;
-      this.lifespan = lifespan || null;
+      this.lifespan = lifespan;
    }
 
    public tick(): void {
       this.remainingIFrames--;
 
-      if (this.lifespan !== null) {
+      if (typeof this.lifespan !== "undefined") {
          this.lifespan -= 1 / SETTINGS.tps;
 
          if (this.lifespan <= 0) {
@@ -35,9 +37,20 @@ class HealthComponent extends Component {
          return;
       }
 
-      const regenAmount = this.regenerationRate / SETTINGS.tps;
-      this.health += regenAmount;
-      if (this.health > this.maxHealth) this.health = this.maxHealth;
+      // Natural health regen
+      const timeSinceLastHit = (Game.ticks - this.lastHitTime) / SETTINGS.tps;
+      if (timeSinceLastHit >= HealthComponent.TIME_UNTIL_REGEN) {
+         // Heal once every second
+         const previousHitTime = this.lastHitTime - 1;
+         if (Math.floor(previousHitTime) !== Math.floor(this.lastHitTime)) {
+            this.doNaturalRegen();
+         }
+      }
+   }
+
+   private doNaturalRegen(): void {
+      const healAmount = 1 + Math.floor(this.maxHealth / 5);
+      this.heal(healAmount);
    }
 
    public setMaxHealth(maxHealth: number, setHealth: boolean): void {
@@ -88,17 +101,21 @@ class HealthComponent extends Component {
       this.health -= this.calculateDamageDealt(damageDealt);
       this.getEntity().callEvents("healthChange", -damageDealt, source);
 
-      this.remainingIFrames = typeof iframes !== "undefined" ? iframes : Entity.iframes;
-
       if (this.health <= 0) {
          this.die(source);
-      } else {
-         // Apply knockback
-         if (source !== null) {
-            const attackingEntityPosition = source.getComponent(TransformComponent)!.position;
-            this.getEntity().getComponent(TransformComponent)!.applyKnockback(attackingEntityPosition, knockbackStrength);
-         }
+         return;
       }
+
+      this.remainingIFrames = typeof iframes !== "undefined" ? iframes : Entity.iframes;
+
+      // Apply knockback
+      if (source !== null) {
+         const attackingEntityPosition = source.getComponent(TransformComponent)!.position;
+         this.getEntity().getComponent(TransformComponent)!.applyKnockback(attackingEntityPosition, knockbackStrength);
+      }
+
+      // Refresh last hit time
+      this.lastHitTime = Game.ticks;
    }
 
    private die(causeOfDeath: Entity | null): void {

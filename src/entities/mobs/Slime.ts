@@ -104,7 +104,7 @@ class Slime extends Mob {
       }
       this.SIZE = this.info.size;
 
-      super.setMaxHealth(this.info.health);
+      this.getComponent(HealthComponent)!.setMaxHealth(this.info.health, true);
 
       this.addItemDrops();
 
@@ -240,7 +240,7 @@ class Slime extends Mob {
       this.getComponent(AIManagerComponent)!.changeCurrentAI("follow");
    }
 
-   protected duringCollision(entity: Entity): void {
+   public duringCollision(entity: Entity): void {
       // Only attack targets
       let canHit = false;
       for (const constr of Slime.TARGETS) {

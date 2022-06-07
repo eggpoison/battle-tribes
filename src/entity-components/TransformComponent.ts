@@ -5,6 +5,7 @@ import SETTINGS from "../settings";
 import TILE_INFO from "../data/tile-types";
 import { Point, Vector } from "../utils";
 import HitboxComponent from "./HitboxComponent";
+import StatusEffectComponent from "../components/StatusEffectComponent";
 
 class TransformComponent extends Component {
    private static readonly FRICTION_CONSTANT = 1;
@@ -48,7 +49,11 @@ class TransformComponent extends Component {
       // Apply status effects
       if (typeof tileInfo.effects?.statusEffectOnWalk !== "undefined") {
          const { type, duration } = tileInfo.effects.statusEffectOnWalk;
-         this.getEntity().applyStatusEffect(type, duration);
+
+         const statusEffectComponent = this.getEntity().getComponent(StatusEffectComponent);
+         if (statusEffectComponent !== null) {
+            statusEffectComponent.applyStatusEffect(type, duration);
+         }
       }
 
       this.position = this.position.add(velocity.convertToPoint());
@@ -176,55 +181,6 @@ class TransformComponent extends Component {
       if (this.position.x > units) this.position.x = units;
       if (this.position.y < 0) this.position.y = 0;
       if (this.position.y > units) this.position.y = units;
-   }
-
-   public static getNearbyEntities(position: Point, radius: number): Array<Entity> {
-      const units = Board.tileSize * Board.chunkSize;
-
-      const minChunkX = Math.max(Math.floor((position.x - radius) / units), 0);
-      const maxChunkX = Math.max(Math.floor((position.x + radius) / units), 0);
-      
-      const minChunkY = Math.min(Math.floor((position.y - radius) / units), Board.size - 1);
-      const maxChunkY = Math.min(Math.floor((position.y + radius) / units), Board.size - 1);
-
-      const nearbyEntities = new Array<Entity>();
-
-      for (let y = minChunkY; y <= maxChunkY; y++) {
-         for (let x = minChunkX; x <= maxChunkX; x++) {
-            const chunk = Board.getChunk(x, y);
-            if (chunk === null) continue;
-            
-            for (const entity of chunk) {
-               const hitboxComponent = entity.getComponent(HitboxComponent);
-               if (hitboxComponent !== null) {
-                  const entityPosition = entity.getComponent(TransformComponent)!.position;
-
-                  const hitboxInfo = hitboxComponent.hitboxInfo;
-                  switch (hitboxInfo.type) {
-                     case "circle": {
-                        if (position.distanceFrom(entityPosition) - hitboxInfo.radius * Board.tileSize <= radius) {
-                           nearbyEntities.push(entity);
-                        }
-                        break;
-                     }
-                     case "rectangle": {
-                        const dist = position.distanceFromRectangle(
-                           entityPosition.x - hitboxInfo.width / 2 * Board.tileSize,
-                           entityPosition.x + hitboxInfo.width / 2 * Board.tileSize,
-                           entityPosition.y - hitboxInfo.height / 2 * Board.tileSize,
-                           entityPosition.y + hitboxInfo.height / 2 * Board.tileSize);
-                        if (dist <= radius) {
-                           nearbyEntities.push(entity);
-                        }
-                        break;
-                     }
-                  }
-               }
-            }
-         }
-      }
-
-      return nearbyEntities;
    }
 
    /**

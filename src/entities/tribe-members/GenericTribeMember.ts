@@ -12,6 +12,10 @@ import Timer from "../../Timer";
 import Board from "../../Board";
 import TRIBE_INFO from "../../data/tribe-info";
 import Particle from "../../particles/Particle";
+import FiniteInventoryComponent from "../../entity-components/inventory/FiniteInventoryComponent";
+import ItemEntity from "../ItemEntity";
+import ITEMS, { ItemName } from "../../items/items";
+import StatusEffectComponent from "../../components/StatusEffectComponent";
 
 abstract class GenericTribeMember extends Entity {
    public static readonly RESPAWN_TIME = 3;
@@ -31,6 +35,7 @@ abstract class GenericTribeMember extends Entity {
          new HitboxComponent(),
          new HealthComponent(),
          new SelectedSlotComponent(),
+         new StatusEffectComponent(),
          ...(components || [])
       ]);
 
@@ -92,7 +97,7 @@ abstract class GenericTribeMember extends Entity {
       this.createEvent("die", () => {
          this.startRespawn();
 
-         // this.
+         this.unloadItems();
       });
    }
 
@@ -103,8 +108,8 @@ abstract class GenericTribeMember extends Entity {
       }
    }
 
-   public tick(): void {
-      super.tick();
+   public tickComponents(): void {
+      super.tickComponents();
 
       // Reveal any fog of war the tribe member is standing on
       if (this.tribe.type === "humans") {
@@ -177,6 +182,32 @@ abstract class GenericTribeMember extends Entity {
             })
          );
       }
+   }
+
+   private unloadItems(): void {
+      const inventoryComponent = this.getComponent(FiniteInventoryComponent)!;
+      const OFFSET_RANGE = 0.5 * Board.tileSize;
+
+      // 'Explode' the tribe member's items out in a small range
+      for (const itemSlot of inventoryComponent.getItemSlots()) {
+         // Skip empty slots
+         if (typeof itemSlot === "undefined") continue;
+
+         const [itemName, itemAmount] = itemSlot;
+
+         const item = ITEMS[ItemName[itemName] as unknown as ItemName];
+
+         // Calculate the position
+         const offsetVector = new Vector(OFFSET_RANGE, randFloat(0, 360));
+         let position = this.getComponent(TransformComponent)!.position.copy();
+         position = position.add(offsetVector.convertToPoint());
+
+         const itemEntity = new ItemEntity(position, item, itemAmount);
+         Board.addEntity(itemEntity);
+      }
+
+      // Clear the tribe member's inventory
+      inventoryComponent.clear();
    }
 }
 

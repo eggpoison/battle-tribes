@@ -87,7 +87,7 @@ abstract class EntityAI {
    }
 
    public getEntitiesInSearchRadius(position: Point, range: number, validTargets?: ReadonlyArray<ConstructorFunction>): Array<Entity> | null {
-      let nearbyEntities = TransformComponent.getNearbyEntities(position, range * Board.tileSize);
+      let nearbyEntities = Board.getEntitiesInRange(position, range * Board.tileSize);
       if (typeof validTargets !== "undefined") nearbyEntities = this.filterTargets(nearbyEntities, validTargets);
 
       if (nearbyEntities.length > 0) return nearbyEntities;

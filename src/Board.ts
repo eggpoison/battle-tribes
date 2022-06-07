@@ -162,7 +162,7 @@ abstract class Board {
                   }
                }
 
-               entity.tick();
+               entity.tickComponents();
                
                const newChunk = entity.getComponent(TransformComponent)!.getChunk()!;
                if (newChunk !== entity.previousChunk && newChunk !== null) {
@@ -257,14 +257,31 @@ abstract class Board {
 
    private static renderParticleShadows(ctx: CanvasRenderingContext2D): void {
       for (const particle of this.particles) {
-         particle.renderShadow(ctx);
+         if (this.particleIsVisible(particle)) {
+            particle.renderShadow(ctx);
+         }
       }
    }
 
    private static renderParticles(ctx: CanvasRenderingContext2D): void {
       for (const particle of this.particles) {
-         particle.render(ctx);
+         if (this.particleIsVisible(particle)) {
+            particle.render(ctx);
+         }
       }
+   }
+
+   private static particleIsVisible(particle: Particle): boolean {
+      const [minChunkX, maxChunkX, minChunkY, maxChunkY] = Camera.getVisibleChunkBounds();
+
+      const unitsInChunk = this.chunkSize * this.tileSize;
+
+      const minX = minChunkX * unitsInChunk;
+      const maxX = maxChunkX * unitsInChunk;
+      const minY = minChunkY * unitsInChunk;
+      const maxY = maxChunkY * unitsInChunk;
+
+      return particle.position.x >= minX && particle.position.x <= maxX && particle.position.y >= minY && particle.position.y <= maxY;
    }
 
    private static renderCommandTileTargets(ctx: CanvasRenderingContext2D): void {
@@ -471,6 +488,55 @@ abstract class Board {
       }
 
       return nearbyTileCoordinates;
+   }
+
+   public static getEntitiesInRange(position: Point, radius: number): Array<Entity> {
+      const unitsInChunk = Board.tileSize * Board.chunkSize;
+
+      const minChunkX = Math.max(Math.floor((position.x - radius) / unitsInChunk), 0);
+      const maxChunkX = Math.min(Math.floor((position.x + radius) / unitsInChunk), Board.size - 1);
+      
+      const minChunkY = Math.max(Math.floor((position.y - radius) / unitsInChunk), 0);
+      const maxChunkY = Math.min(Math.floor((position.y + radius) / unitsInChunk), Board.size - 1);
+
+      const nearbyEntities = new Array<Entity>();
+
+      for (let y = minChunkY; y <= maxChunkY; y++) {
+         for (let x = minChunkX; x <= maxChunkX; x++) {
+            const chunk = Board.getChunk(x, y);
+            if (chunk === null) continue;
+            
+            for (const entity of chunk) {
+               const hitboxComponent = entity.getComponent(HitboxComponent);
+               if (hitboxComponent !== null) {
+                  const entityPosition = entity.getComponent(TransformComponent)!.position;
+
+                  const hitboxInfo = hitboxComponent.hitboxInfo;
+                  switch (hitboxInfo.type) {
+                     case "circle": {
+                        if (position.distanceFrom(entityPosition) - hitboxInfo.radius * Board.tileSize <= radius) {
+                           nearbyEntities.push(entity);
+                        }
+                        break;
+                     }
+                     case "rectangle": {
+                        const dist = position.distanceFromRectangle(
+                           entityPosition.x - hitboxInfo.width / 2 * Board.tileSize,
+                           entityPosition.x + hitboxInfo.width / 2 * Board.tileSize,
+                           entityPosition.y - hitboxInfo.height / 2 * Board.tileSize,
+                           entityPosition.y + hitboxInfo.height / 2 * Board.tileSize);
+                        if (dist <= radius) {
+                           nearbyEntities.push(entity);
+                        }
+                        break;
+                     }
+                  }
+               }
+            }
+         }
+      }
+
+      return nearbyEntities;
    }
 }
 

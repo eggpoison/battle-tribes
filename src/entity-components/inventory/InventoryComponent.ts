@@ -10,13 +10,13 @@ export type ItemList = Partial<Record<ItemName, number>>;
 abstract class InventoryComponent extends Component {
    protected itemSlots: ItemSlots = new Array<[ItemName, number]>();
 
-   public pickupResource(resource: ItemEntity): void {
-      const item = resource.item;
+   public pickupItemEntity(itemEntity: ItemEntity): void {
+      const item = itemEntity.item;
 
-      const addAmount = this.getItemAddAmount(item.name, 1);
+      const addAmount = this.getItemAddAmount(item.name, itemEntity.amount);
       if (addAmount !== null) {
          this.addItem(item.name, addAmount);
-         Board.removeEntity(resource);
+         Board.removeEntity(itemEntity);
       }
    }
 
@@ -42,6 +42,8 @@ abstract class InventoryComponent extends Component {
 
       const addAmount = Math.min(amount, itemInfo.stackSize - this.itemSlots[slotNum][1]);
       this.itemSlots[slotNum][1] += addAmount;
+
+      this.getEntity().callEvents("inventoryChange");
    }
 
    public removeItem(name: ItemName, amount: number): void {
@@ -53,6 +55,8 @@ abstract class InventoryComponent extends Component {
             return;
          }
       }
+
+      this.callInventoryChangeEvents();
    }
 
    public removeItemFromSlot(slotNum: number, amount: number = 1): void {
@@ -62,6 +66,8 @@ abstract class InventoryComponent extends Component {
       if (this.itemSlots[slotNum][1] <= 0) {
          delete this.itemSlots[slotNum];
       }
+
+      this.callInventoryChangeEvents();
    }
 
    public getItemSlots(): ItemSlots {
@@ -99,6 +105,25 @@ abstract class InventoryComponent extends Component {
       }
 
       return false;
+   }
+
+   /** Remove all items from the inventory */
+   public clear(): void {
+      for (let idx = this.itemSlots.length - 1; idx >= 0; idx--) {
+         const itemSlot = this.itemSlots[idx];
+
+         // Skip empty item slots
+         if (typeof itemSlot === "undefined") continue;
+
+         // Clear the item
+         this.itemSlots.splice(idx, 1);
+      }
+
+      this.callInventoryChangeEvents();
+   }
+
+   protected callInventoryChangeEvents(): void {
+      this.getEntity().callEvents("inventoryChange");
    }
 }
 

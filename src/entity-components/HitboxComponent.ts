@@ -30,6 +30,46 @@ class HitboxComponent extends Component {
       this.hitboxInfo = hitbox;
    }
 
+   public tick(): void {
+      const entity = this.getEntity();
+
+      // Check collisions
+      const hasCollisionFunc = typeof entity.onCollision !== "undefined";
+      const hasLeaveCollisionFunc = typeof entity.onLeaveCollision !== "undefined";
+      const hasDuringCollisionFunc = typeof entity.duringCollision !== "undefined";
+
+      if (hasCollisionFunc || hasLeaveCollisionFunc || hasDuringCollisionFunc) {
+         let newCollidingEntities: Array<Entity> = [];
+
+         const collidingEntities = this.getCollisions();
+         if (collidingEntities !== null) {
+            newCollidingEntities = collidingEntities;
+         }
+
+         const unseenEntities = this.entitiesInCollision.slice();
+         for (const collidingEntity of newCollidingEntities) {
+            // If the entity was not previously in a collision
+            if (!this.entitiesInCollision.includes(collidingEntity)) {
+               if (hasCollisionFunc) entity.onCollision!(collidingEntity);
+               this.entitiesInCollision.push(collidingEntity);
+            } else {
+               unseenEntities.splice(unseenEntities.indexOf(collidingEntity), 1);
+            }
+         }
+
+         for (const unseenEntity of unseenEntities) {
+            if (hasLeaveCollisionFunc) entity.onLeaveCollision!(unseenEntity);
+            this.entitiesInCollision.splice(this.entitiesInCollision.indexOf(unseenEntity), 1);
+         }
+
+         if (hasDuringCollisionFunc) {
+            for (const collidingEntity of this.entitiesInCollision) {
+               entity.duringCollision!(collidingEntity);
+            }
+         }
+      }
+   }
+
    public getCollisions(): Array<Entity> | null {
       const entity = this.getEntity();
       const position = entity.getComponent(TransformComponent)!.position;
@@ -41,7 +81,7 @@ class HitboxComponent extends Component {
          radius = Math.max(this.hitboxInfo.width, this.hitboxInfo.height);
       }
 
-      let collidingEntities = TransformComponent.getNearbyEntities(position, radius * Board.tileSize);
+      let collidingEntities = Board.getEntitiesInRange(position, radius * Board.tileSize);
 
       // Remove the entity
       for (let i = 0; i < collidingEntities.length; i++) {

@@ -7,6 +7,7 @@ import { Point } from "../../utils";
 import Mob from "./Mob";
 import AIManagerComponent from "../../entity-components/ai/AIManangerComponent";
 import WanderAI from "../../entity-components/ai/WanderAI";
+import HealthComponent from "../../entity-components/HealthComponent";
 
 class Cow extends Mob {
    public readonly name = "Cow";
@@ -28,7 +29,7 @@ class Cow extends Mob {
          new AIManagerComponent()
       ]);
 
-      super.setMaxHealth(Cow.MAX_HEALTH);
+      this.getComponent(HealthComponent)!.setMaxHealth(Cow.MAX_HEALTH, true);
 
       this.createAI();
 

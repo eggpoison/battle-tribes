@@ -62,7 +62,7 @@ class Particle {
    private readonly shadowOpacity: number;
    private readonly doesBounce: boolean;
    
-   private position: Point3;
+   public position: Point3;
    private velocity: Vector3;
    private acceleration: Vector3;
 

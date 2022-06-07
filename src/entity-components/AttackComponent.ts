@@ -11,83 +11,18 @@ type AttackInfo = {
    /** Where the attack should sort the entities from */
    readonly origin?: Point | (() => Point);
    readonly attackingEntity: Entity;
+   /** Radius of the check circle (in tiles) */
    readonly radius: number;
    readonly damage: number;
+   /** How many enemies can be hit by the attack */
    readonly pierce: number;
    readonly knockbackStrength: number;
 }
-// abstract class BaseAttack implements BaseAttackInfo {
-//    public abstract readonly type: string;
-
-//    public getPosition: () => Point;
-   
-//    public readonly damage: number;
-//    public readonly attackingEntity: Entity;
-//    public readonly knockbackStrength: number;
-
-//    constructor(attackInfo: BaseAttackInfo) {
-//       this.getPosition = attackInfo.getPosition;
-//       this.damage = attackInfo.damage;
-//       this.attackingEntity = attackInfo.attackingEntity;
-//       this.knockbackStrength = attackInfo.knockbackStrength;
-//    }
-
-//    public abstract getAttackedEntities(): Array<Entity>;
-// }
-
-// interface CircleAttackInfo extends BaseAttackInfo {
-//     readonly radius: number;
-// }
-// export class CircleAttack extends BaseAttack implements CircleAttackInfo {
-//    public readonly type = "circle";
-
-//    public readonly radius: number;
-
-//    constructor(attackInfo: CircleAttackInfo) {
-//       super(attackInfo);
-
-//       this.radius = attackInfo.radius;
-//    }
-
-//    public startAttack(): void {
-//       const entitiesToAttack = this.getAttackedEntities();
-
-//       for (const entity of entitiesToAttack) {
-//          // Don't attack yourself
-//          if (entity === this.attackingEntity) continue;
-
-//          // If the entity can be attacked
-//          const healthComponent = entity.getComponent(HealthComponent);
-//          if (healthComponent !== null) {
-//             // Attack it
-//             this.attackingEntity.getComponent(AttackComponent)!.attack(entity, this);
-//          }
-//       }
-//    }
-
-//    public getAttackedEntities(): Array<Entity> {
-//       const nearbyEntities = TransformComponent.getNearbyEntities(this.getPosition(), this.radius * Board.tileSize);
-
-//       if (this.attackingEntity instanceof GenericTribeMember) {
-//          for (let idx = nearbyEntities.length - 1; idx >= 0; idx--) {
-//             const entity = nearbyEntities[idx];
-            
-//             if (entity instanceof GenericTribeMember && entity.tribe === this.attackingEntity.tribe) {
-//                nearbyEntities.splice(idx, 1);
-//             }
-//          }
-//       }
-
-//       return nearbyEntities;
-//    }
-// }
-
-// export type Attack = CircleAttack;
 
 const getAttackedEntities = (attackInfo: AttackInfo): Array<Entity> => {
    const attackingEntityPosition = typeof attackInfo.position === "function" ? attackInfo.position() : attackInfo.position;
 
-   const nearbyEntities = TransformComponent.getNearbyEntities(attackingEntityPosition, attackInfo.radius * Board.tileSize);
+   const nearbyEntities = Board.getEntitiesInRange(attackingEntityPosition, attackInfo.radius * Board.tileSize);
 
    return nearbyEntities;
 }

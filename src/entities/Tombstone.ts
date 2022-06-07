@@ -45,7 +45,7 @@ class Tombstone extends Entity {
       }));
    }
 
-   public tick(): void {
+   public tickComponents(): void {
       // If it's day, remove the tombstone at a random point
       if (!Game.isNight() && Math.random() < Tombstone.DIE_CHANCE / SETTINGS.tps) {
          Board.removeEntity(this);
@@ -53,7 +53,7 @@ class Tombstone extends Entity {
          return;
       }
 
-      super.tick();
+      super.tickComponents();
 
       if (this.currentZombie === null && Math.random() < Tombstone.ZOMBIE_SPAWN_CHANCE / SETTINGS.tps) {
          const position = this.getComponent(TransformComponent)!.position;

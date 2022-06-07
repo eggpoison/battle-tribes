@@ -6,6 +6,7 @@ import TransformComponent from "../entity-components/TransformComponent";
 import { EntityInfo } from "../data/entity-info";
 import { Point } from "../utils";
 import Entity from "./Entity";
+import StatusEffectComponent from "../components/StatusEffectComponent";
 
 abstract class LivingEntity<I extends EntityInfo> extends Entity {
    public entityInfo!: I;
@@ -16,6 +17,7 @@ abstract class LivingEntity<I extends EntityInfo> extends Entity {
          new RenderComponent(),
          new HitboxComponent(),
          new HealthComponent(),
+         new StatusEffectComponent(),
          ...(components || [])
       ]);
    }

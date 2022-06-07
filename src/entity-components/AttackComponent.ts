@@ -68,22 +68,22 @@ const sortAttackedEntities = (attackedEntities: ReadonlyArray<Entity>, attackInf
       let insertIdx = 0;
       for (const entity of sortedEntities) {
          // Get distance
-         let distance2!: number;
+         let currentDistance!: number;
          if (distanceMap.has(entity)) {
-            distance2 = distanceMap.get(entity)!;
+            currentDistance = distanceMap.get(entity)!;
          } else {
             // Calculate distance
-            distance2 = attackInfo.attackingEntity.getComponent(TransformComponent)!.position.distanceFrom(entity.getComponent(TransformComponent)!.position);
+            currentDistance = originPoint.distanceFrom(entity.getComponent(TransformComponent)!.position);
             // Add the distance to the distance map
-            distanceMap.set(entity, distance2);
+            distanceMap.set(entity, currentDistance);
+         }
+
+         // If the attacked entity is closer than the entity, insert the entity
+         if (distance < currentDistance) {
+            break;
          }
          
          insertIdx++;
-
-         // If the attacked entity is closer than the entity, insert the entity
-         if (distance > distance2) {
-            break;
-         }
       }
       sortedEntities.splice(insertIdx, 0, attackedEntity);
    }

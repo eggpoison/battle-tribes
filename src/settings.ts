@@ -17,8 +17,8 @@ interface SettingsType {
 
 const SETTINGS: SettingsType = {
    tps: 60,
-   startTime: 0,
-   // startTime: 8,
+   // startTime: 0,
+   startTime: 8,
    fogRevealTime: 0.5,
    entityInvulnerabilityDuration: 0.15,
    showFogOfWar: false,

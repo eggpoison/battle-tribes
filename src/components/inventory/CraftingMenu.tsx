@@ -4,6 +4,8 @@ import Recipe from "../../crafting/Recipe";
 import Player from "../../entities/tribe-members/Player";
 import FiniteInventoryComponent from "../../entity-components/inventory/FiniteInventoryComponent";
 import ITEMS, { ItemName } from "../../items/items";
+import InventoryTitle from "./InventoryTitle";
+import InventoryWrapper from "./InventoryWrapper";
 import { updatePlayerInventoryViewer } from "./PlayerInventoryViewer";
 
 const craft = (recipe: Recipe): void => {
@@ -122,11 +124,12 @@ const CraftingMenu = () => {
    }
 
    return (
-      <div id="crafting-menu" ref={craftingMenuRef}>
+      <InventoryWrapper id="crafting-menu" ref={craftingMenuRef}>
+         <InventoryTitle content="Crafting" />
          <div className="slots">
             {slots}
          </div>
-      </div>
+      </InventoryWrapper>
    );
 }
 

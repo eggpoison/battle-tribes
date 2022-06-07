@@ -81,6 +81,13 @@ export function clickInventorySlot(slotNum: number, inventoryComponent: Inventor
             // If there is a held item and the clicked item is of the same type, stack them
             if (itemName === heldItem.name) {
                stackItem(slotNum, inventoryComponent);
+            } else { // Otherwise switch them
+               inventoryComponent.setItem(slotNum, heldItem.name, heldItem.amount);
+
+               heldItem = {
+                  name: itemName,
+                  amount: itemAmount
+               };
             }
          }
       }

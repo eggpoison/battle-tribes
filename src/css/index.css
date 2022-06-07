@@ -43,6 +43,16 @@ body {
    z-index: 2;
 }
 
+#vignette {
+   position: absolute;
+   top: 0;
+   right: 0;
+   bottom: 0;
+   left: 0;
+   box-shadow: 0 0 40px 20px rgba(0, 0, 0, 0.3) inset;
+   pointer-events: none;
+}
+
 #health-bar {
    --height: 20px;
    width: calc(var(--max-health) * 10px);

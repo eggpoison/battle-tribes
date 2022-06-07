@@ -24,6 +24,12 @@ abstract class InventoryComponent extends Component {
       return this.itemSlots[slotNum];
    }
 
+   public setItem(slotNum: number, itemName: ItemName, amount: number): void {
+      this.itemSlots[slotNum] = [itemName, amount];
+
+      this.callInventoryChangeEvents();
+   }
+
    public abstract getItemAddAmount(itemName: ItemName, amount: number, slotNum?: number): number | null;
 
    /**

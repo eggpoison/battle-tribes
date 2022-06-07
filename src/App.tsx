@@ -45,6 +45,7 @@ function App() {
          <PlayerRespawnMessage />
          <TribeXPBar />
 
+         <div id="vignette"></div>
          {/* Black filter */}
          <div id="mask" className="hidden"></div>
          {/* Yellow border around screen in unit selection mode */}

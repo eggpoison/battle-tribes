@@ -21,6 +21,7 @@ import FiniteInventoryComponent from "../../entity-components/inventory/FiniteIn
 import InventoryComponent, { ItemSlots } from "../../entity-components/inventory/InventoryComponent";
 import { ItemName } from "../../items/items";
 import Inventory from "./Inventory";
+import InventoryWrapper from "./InventoryWrapper";
 
 const getPlayerInventoryComponent = (): InventoryComponent => {
    return Player.instance.getComponent(FiniteInventoryComponent)!;
@@ -38,9 +39,9 @@ const PlayerInventoryViewer = () => {
    }, []);
 
    return (
-      <div id="inventory-viewer">
+      <InventoryWrapper id="inventory-viewer">
          <Inventory itemSlots={itemSlots} slotCount={Chief.DEFAULT_INVENTORY_SLOT_COUNT} getInventoryComponent={getPlayerInventoryComponent} />
-      </div>
+      </InventoryWrapper>
    );
 }
 

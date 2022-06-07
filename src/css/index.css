@@ -43,59 +43,6 @@ body {
    z-index: 2;
 }
 
-.inventory {
-   display: flex;
-   flex-wrap: wrap;
-}
-.item-slot {
-   --border-size: 3px;
-   width: calc(var(--slot-size) - var(--border-size) * 2);
-   height: calc(var(--slot-size) - var(--border-size) * 2);
-   background-color: rgba(179, 110, 0, 0.5);
-   border: var(--border-size) solid rgb(123, 66, 0);
-   margin: var(--slot-margin);
-   position: relative;
-   cursor: pointer;
-}
-.item-slot .preview {
-   width: calc(var(--slot-size) * var(--item-size-multiplier));
-   height: calc(var(--slot-size) * var(--item-size-multiplier));
-   position: absolute;
-   top: 50%;
-   left: 50%;
-   transform: translate(-50%, -50%);
-   user-select: none;
-   /* image-rendering: pixelated; */
-}
-.item-slot .amount, #held-item .amount {
-   color: #fff;
-   font-weight: bold;
-   font-size: 1.2rem;
-   --margin: 0.5rem;
-   position: absolute;
-   right: var(--margin);
-   bottom: var(--margin);
-   user-select: none;
-}
-.item-slot .name {
-   color: #fff;
-   font-family: "Roboto";
-   font-weight: 700;
-   background-color: rgba(0, 0, 0, 0.5);
-   padding: 0 5px;
-   position: absolute;
-   top: 0;
-   left: 50%;
-   transform: translate(-50%, -100%);
-   pointer-events: none;
-   user-select: none;
-   opacity: 0;
-   white-space: nowrap;
-}
-.item-slot:hover .name {
-   opacity: 1;
-}
-
 #health-bar {
    --height: 20px;
    width: calc(var(--max-health) * 10px);

@@ -13,9 +13,8 @@ import TribeXPBar from './components/TribeXPBar';
 
 import "./css/index.css";
 import "./css/devtools.css";
-import "./css/inventory-viewer.css";
+import "./css/inventories.css";
 import "./css/message-display.css";
-import "./css/tribe-stash-viewer.css";
 import "./css/player-respawn-message.css";
 import "./css/menus/crafting-menu.css";
 import "./css/menus/mob-spawn-menu.css";

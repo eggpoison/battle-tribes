@@ -4,6 +4,8 @@ import InfiniteInventoryComponent from "../../entity-components/inventory/Infini
 import InventoryComponent, { ItemSlots } from "../../entity-components/inventory/InventoryComponent";
 import { ItemName } from "../../items/items";
 import Inventory from "./Inventory";
+import InventoryTitle from "./InventoryTitle";
+import InventoryWrapper from "./InventoryWrapper";
 
 export let toggleTribeStashViewerVisibility: (newVisibility?: boolean) => void;
 export let tribeStashViewerIsOpen: () => boolean;
@@ -36,10 +38,10 @@ const TribeStashViewer = () => {
    }, [isVisible]);
 
    return isVisible ? (
-      <div id="tribe-stash-viewer">
+      <InventoryWrapper id="tribe-stash-viewer">
+         <InventoryTitle content="Tribe Stash" />
          <Inventory itemSlots={itemSlots} slotCount={40} getInventoryComponent={getInventoryComponent} />
-         {/* <InventoryViewer inventoryViewerManager={tribeStashViewerManagerRef.current!} /> */}
-      </div>
+      </InventoryWrapper>
    ) : null;
 }
 

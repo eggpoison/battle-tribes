@@ -28,22 +28,17 @@ export function clickInventorySlot(slotNum: number, inventoryComponent: Inventor
    const itemSlots = inventoryComponent.getItemSlots();
    const slotInfo = itemSlots[slotNum];
 
-   if (typeof slotInfo === "undefined") {
-      // If the clicked slot is empty
-
-      // If there is an item in transit, deposit it
+   if (typeof slotInfo === "undefined") { // If the clicked slot is empty
+      // If there is a held item, add it to the inventory
       if (heldItem !== null) {
          inventoryComponent.addItemToSlot(slotNum, heldItem.name, heldItem.amount);
-         // inventoryViewerManager.setItemSlots(inventoryComponent.getItemSlots());
-
          heldItem = null;
       }
-   } else {
-      // If the clicked slot has an item
+   } else { // If the clicked slot has an item
 
       const [itemName, itemAmount] = slotInfo;
 
-      // If there isn't an item in transit, move it into transit
+      // If there isn't a held item, hold the clicked item
       if (heldItem === null) {
          heldItem = {
             name: itemName,
@@ -51,13 +46,10 @@ export function clickInventorySlot(slotNum: number, inventoryComponent: Inventor
          };
 
          inventoryComponent.removeItemFromSlot(slotNum, itemAmount);
-         // inventoryViewerManager.setItemSlots(inventoryComponent.getItemSlots());
       } else {
-         // If there is an item in transit and the clicked item is of the same type, stack them
+         // If there is a held item and the clicked item is of the same type, stack them
          if (itemName === heldItem.name) {
             stackItem(slotNum, inventoryComponent);
-
-            // inventoryViewerManager.setItemSlots(inventoryComponent.getItemSlots());
          }
       }
    }

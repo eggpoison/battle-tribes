@@ -124,7 +124,7 @@ export function getEntityInfo<T extends EntityInfo>(entity: LivingEntity<T>): T 
       }
    }
 
-   console.log(entity);
+   console.warn("Bad entity: ", entity);
    throw new Error("Couldn't find info for an entity!");
 }
 

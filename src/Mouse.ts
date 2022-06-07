@@ -5,7 +5,7 @@ import Player, { PlayerInteractionMode } from "./entities/tribe-members/Player";
 import TribeWorker from "./entities/tribe-members/TribeWorker";
 import HealthComponent from "./entity-components/HealthComponent";
 import TransformComponent from "./entity-components/TransformComponent";
-import { Point, setWindowFocus } from "./utils";
+import { Point, roundNum, setWindowFocus } from "./utils";
 
 abstract class Mouse {
    private static readonly ENTITY_HOVER_RANGE = 1;
@@ -43,27 +43,30 @@ abstract class Mouse {
       // Check if the mouse is hovering over any entities
       const hoverEntities = Board.getEntitiesInRange(cursorPosition, Mouse.ENTITY_HOVER_RANGE);
 
-      // Remove hover entities which can't be hovered over
-      for (let idx = hoverEntities.length - 1; idx >= 0; idx--) {
-         const entity = hoverEntities[idx];
-         if (entity.getComponent(HealthComponent) === null) {
-            hoverEntities.splice(idx, 1);
-         }
-      }
-
-      const hoverText = document.getElementById("entity-health")!;
+      const hoverTextElement = document.getElementById("entity-health")!;
       if (hoverEntities.length > 0) {
          const hoverEntity = hoverEntities[0];
-         const health = hoverEntity.getComponent(HealthComponent)!.getHealth();
-         const maxHealth = hoverEntity.getComponent(HealthComponent)!.getMaxHealth();
 
-         hoverText.classList.remove("hidden");
-         hoverText.innerHTML = `${hoverEntity.name} (${health}/${maxHealth})`;
+         let hoverText = hoverEntity.name;
 
-         hoverText.style.left = this.lastMouseEvent.clientX + "px";
-         hoverText.style.top = this.lastMouseEvent.clientY + "px";
+         const healthComponent = hoverEntity.getComponent(HealthComponent);
+         if (healthComponent !== null) {
+            const health = healthComponent.getHealth();
+            const maxHealth = healthComponent.getMaxHealth();
+
+            const displayHealth = roundNum(health, 0);
+            const displayMaxHealth = roundNum(maxHealth, 0);
+
+            hoverText += ` (${displayHealth}/${displayMaxHealth})`;
+         }
+
+         hoverTextElement.classList.remove("hidden");
+         hoverTextElement.innerHTML = hoverText;
+
+         hoverTextElement.style.left = this.lastMouseEvent.clientX + "px";
+         hoverTextElement.style.top = this.lastMouseEvent.clientY + "px";
       } else {
-         hoverText.classList.add("hidden");
+         hoverTextElement.classList.add("hidden");
       }
    }
 

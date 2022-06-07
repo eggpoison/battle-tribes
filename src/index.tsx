@@ -20,6 +20,10 @@ root.render(
    </React.StrictMode>
 );
 
+// export function onLoad(callback: () => void): void {
+
+// }
+
 // Called when all elements are rendered
 export function load() {
    Camera.setup();

@@ -4,7 +4,7 @@ import Recipe from "../../crafting/Recipe";
 import Player from "../../entities/tribe-members/Player";
 import FiniteInventoryComponent from "../../entity-components/inventory/FiniteInventoryComponent";
 import ITEMS, { ItemName } from "../../items/items";
-import InventoryViewerManager from "../inventory/InventoryViewerManager";
+import { updatePlayerInventoryViewer } from "./PlayerInventoryViewer";
 
 const craft = (recipe: Recipe): void => {
    const playerInventory = Player.instance.getComponent(FiniteInventoryComponent)!;
@@ -55,7 +55,8 @@ const craft = (recipe: Recipe): void => {
    playerInventory.addItem(recipe.result.name, recipe.craftAmount);
 
    // Update inventory display
-   InventoryViewerManager.getInstance("playerInventory").setItemSlots(playerInventory.getItemSlots());
+   const playerItemSlots = playerInventory.getItemSlots();
+   updatePlayerInventoryViewer(playerItemSlots);
 }
 
 const WIDTH = 6;

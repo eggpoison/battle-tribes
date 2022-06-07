@@ -41,15 +41,15 @@ class HealthComponent extends Component {
       const timeSinceLastHit = (Game.ticks - this.lastHitTime) / SETTINGS.tps;
       if (timeSinceLastHit >= HealthComponent.TIME_UNTIL_REGEN) {
          // Heal once every second
-         const previousHitTime = this.lastHitTime - 1;
-         if (Math.floor(previousHitTime) !== Math.floor(this.lastHitTime)) {
+         const previousTimeSinceLastHit = (Game.ticks - this.lastHitTime + 1) / SETTINGS.tps;
+         if (Math.floor(previousTimeSinceLastHit) !== Math.floor(timeSinceLastHit)) {
             this.doNaturalRegen();
          }
       }
    }
 
    private doNaturalRegen(): void {
-      const healAmount = 1 + Math.floor(this.maxHealth / 5);
+      const healAmount = 0.5 + Math.pow(this.maxHealth, 0.75) / 10;
       this.heal(healAmount);
    }
 

@@ -30,6 +30,10 @@ class HitboxComponent extends Component {
       this.hitboxInfo = hitbox;
    }
 
+   public getCollidingEntities(): Array<Entity> {
+      return this.entitiesInCollision;
+   }
+
    public tick(): void {
       const entity = this.getEntity();
 

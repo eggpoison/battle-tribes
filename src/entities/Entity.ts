@@ -1,6 +1,5 @@
 import Board, { Chunk } from "../Board";
 import Component from "../Component";
-import HitboxComponent from "../entity-components/HitboxComponent";
 import SETTINGS from "../settings";
 
 export type EventType = "deathByEntity" | "healthChange" | "hurt" | "attack" | "killEntity" | "die" | "inventoryChange";
@@ -37,15 +36,6 @@ abstract class Entity {
    public getComponent<C extends Component>(constr: { new(...args: any[]): C }): C | null {
       const component = this.components.get(constr);
       return typeof component !== "undefined" ? (component as C) : null;
-   }
-
-   protected getCollidingEntities(): Array<Entity> {
-      const hitboxComponent = this.getComponent(HitboxComponent);
-      if (hitboxComponent === null) {
-         throw new Error("Tried to get the collisions of an entity without a hitbox!");
-      }
-
-      return hitboxComponent.entitiesInCollision;
    }
 
    public tickComponents(): void {

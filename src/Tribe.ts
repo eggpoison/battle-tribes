@@ -5,20 +5,10 @@ import { getRandomAngle, Point, randItem, Vector } from "./utils";
 import Tribesman from "./entities/tribe-members/Tribesman";
 import HealthComponent from "./entity-components/HealthComponent";
 import TransformComponent from "./entity-components/TransformComponent";
-import InventoryViewerManager from "./components/inventory/InventoryViewerManager";
 import Chief from "./entities/tribe-members/Chief";
-import InfiniteInventoryComponent from "./entity-components/inventory/InfiniteInventoryComponent";
 import TRIBE_INFO, { TribeTypes } from "./data/tribe-info";
 import Player from "./entities/tribe-members/Player";
 import { setTribeEXPBarAmount } from "./components/TribeXPBar";
-
-// const tribeExpRequirements = [
-//    5,
-//    25,
-//    100,
-//    250,
-//    1000
-// ];
 
 export const TRIBE_XP_REQUIREMENTS = [
    1,
@@ -122,13 +112,7 @@ class Tribe {
       for (const type of keys) {
          const position = this.getTribeSpawnPosition(type);
 
-         const tribe = new Tribe(position, type);
-
-         if (type === "humans") {
-            // Link the player tribe's stash to the stash viewer
-            const stash = tribe.stash;
-            InventoryViewerManager.getInstance("tribeStash").setInventoryComponent(stash.getComponent(InfiniteInventoryComponent)!);
-         }
+         new Tribe(position, type);
       }
    }
 

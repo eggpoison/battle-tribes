@@ -1,6 +1,6 @@
 import React from "react";
 import { useEffect, useState } from "react";
-import CraftingMenu from "./CraftingMenu";
+import CraftingMenu from "../inventory/CraftingMenu";
 import MobSpawnMenu from "./MobSpawnMenu";
 
 type MenuNames = "crafting" | "mobSpawn";

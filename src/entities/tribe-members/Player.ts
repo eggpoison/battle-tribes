@@ -1,12 +1,13 @@
 import { HealthBarManager } from "../../components/HealthBar";
-import InventoryViewerManager from "../../components/inventory/InventoryViewerManager";
 import { closeMenu, toggleMenu } from "../../components/menus/MenuManager";
 import { clearMessage, displayMessage } from "../../components/MessageDisplay";
+import { updatePlayerInventoryViewer } from "../../components/inventory/PlayerInventoryViewer";
 import { togglePlayerRespawnMessage, setPlayerRespawnMessageTime } from "../../components/PlayerRespawnMessage";
-import { toggleTribeStashViewerVisibility, tribeStashViewerIsOpen } from "../../components/TribeStashViewer";
+import { toggleTribeStashViewerVisibility, tribeStashViewerIsOpen } from "../../components/inventory/TribeStashViewer";
 import AttackComponent from "../../entity-components/AttackComponent";
 import CameraFollowComponent from "../../entity-components/CameraFollowComponent";
 import HealthComponent from "../../entity-components/HealthComponent";
+import HitboxComponent from "../../entity-components/HitboxComponent";
 import FiniteInventoryComponent from "../../entity-components/inventory/FiniteInventoryComponent";
 import PlayerControllerComponent from "../../entity-components/PlayerControllerComponent";
 import Mouse from "../../Mouse";
@@ -33,7 +34,6 @@ class Player extends Chief {
       ]);
 
       Player.instance = this;
-      InventoryViewerManager.getInstance("playerInventory").setInventoryComponent(this.getComponent(FiniteInventoryComponent)!);
 
       PlayerControllerComponent.createKeyEvent((key: string) => this.onKeyPress(key));
 
@@ -50,7 +50,8 @@ class Player extends Chief {
       this.createEvent("inventoryChange", () => {
          // Update inventory viewer
          const itemSlots = this.getComponent(FiniteInventoryComponent)!.getItemSlots();
-         InventoryViewerManager.getInstance("playerInventory").setItemSlots(itemSlots);
+         updatePlayerInventoryViewer(itemSlots);
+         // InventoryViewerManager.getInstance("playerInventory").setItemSlots(itemSlots);
       });
    }
 
@@ -94,7 +95,7 @@ class Player extends Chief {
             if (Player.currentInteractionMode === PlayerInteractionMode.SelectUnits) return;
 
             let isOpeningStash = false;
-            const collidingEntities = this.getCollidingEntities();
+            const collidingEntities = this.getComponent(HitboxComponent)!.getCollidingEntities();
             for (const entity of collidingEntities) {
                if (entity instanceof TribeStash) {
                   isOpeningStash = true;
@@ -107,7 +108,7 @@ class Player extends Chief {
                closeMenu();
 
                // Open tribe stash viewer
-               toggleTribeStashViewerVisibility();
+               this.toggleTribeStash();
             } else {
                // Open the crafting menu
                toggleMenu("crafting");
@@ -166,12 +167,24 @@ class Player extends Chief {
       if (collidingEntity instanceof TribeStash) {
          // Hide the stash viewer
          if (tribeStashViewerIsOpen()) {
-            toggleTribeStashViewerVisibility();
+            this.toggleTribeStash(false);
          }
 
          if (Player.currentInteractionMode === PlayerInteractionMode.Play) {
             clearMessage();
          }
+      }
+   }
+
+   private toggleTribeStash(newVisibility?: boolean): void {
+      toggleTribeStashViewerVisibility(newVisibility);
+
+      const isVisible = tribeStashViewerIsOpen();
+
+      if (!isVisible) {
+         displayMessage(TribeStash.CLOSE_MESSAGE);
+      } else {
+         displayMessage(TribeStash.OPEN_MESSAGE);
       }
    }
 }

@@ -6,9 +6,9 @@ import HealthBar from './components/HealthBar';
 import MenuManager from './components/menus/MenuManager';
 import MessageDisplay from './components/MessageDisplay';
 import MinimapCanvas from './components/MinimapCanvas';
-import PlayerInventoryViewer from './components/PlayerInventoryViewer';
+import PlayerInventoryViewer from './components/inventory/PlayerInventoryViewer';
 import PlayerRespawnMessage from './components/PlayerRespawnMessage';
-import TribeStashViewer from './components/TribeStashViewer';
+import TribeStashViewer from './components/inventory/TribeStashViewer';
 import TribeXPBar from './components/TribeXPBar';
 
 import "./css/index.css";

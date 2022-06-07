@@ -4,6 +4,7 @@ import RenderComponent, { ImageRenderPart } from "../entity-components/RenderCom
 import TransformComponent from "../entity-components/TransformComponent";
 import Tribe from "../Tribe";
 import InfiniteInventoryComponent from "../entity-components/inventory/InfiniteInventoryComponent";
+import { updateTribeStashViewer } from "../components/inventory/TribeStashViewer";
 
 /** Where tribes put their resources in order to use them. */
 class TribeStash extends Entity {
@@ -39,6 +40,15 @@ class TribeStash extends Entity {
             url: "tribe-stash.png"
          })
       );
+
+      // Link the player's tribe stash to the tribe stash viewer
+      if (this.tribe.type === "humans") {
+         // When the inventory changes, update the tribe stash viewer to match those changes
+         this.createEvent("inventoryChange", () => {
+            const itemSlots = this.getComponent(InfiniteInventoryComponent)!.getItemSlots();
+            updateTribeStashViewer(itemSlots);
+         });
+      }
    }
 
    private setHitbox(): void {

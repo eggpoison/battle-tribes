@@ -55,14 +55,14 @@ const filterAttackedEntities = (attackedEntities: Array<Entity>, attackInfo: Att
 
 const sortAttackedEntities = (attackedEntities: ReadonlyArray<Entity>, attackInfo: AttackInfo): void => {
    // Where the entities should be sorted from
-   // const originPoint = typeof attackInfo.origin !== "undefined" ? (typeof attackInfo.origin === "function" ? attackInfo.origin() : attackInfo.origin) : (typeof attackInfo.position === "function" ? attackInfo.position() : attackInfo.position);
+   const originPoint = typeof attackInfo.origin !== "undefined" ? (typeof attackInfo.origin === "function" ? attackInfo.origin() : attackInfo.origin) : (typeof attackInfo.position === "function" ? attackInfo.position() : attackInfo.position);
 
    const sortedEntities = new Array<Entity>();
 
    const distanceMap = new Map<Entity, number>();
 
    for (const attackedEntity of attackedEntities) {
-      const distance = attackInfo.attackingEntity.getComponent(TransformComponent)!.position.distanceFrom(attackedEntity.getComponent(TransformComponent)!.position);
+      const distance = originPoint.distanceFrom(attackedEntity.getComponent(TransformComponent)!.position);
 
       // Insert the entity into the sorted array
       let insertIdx = 0;

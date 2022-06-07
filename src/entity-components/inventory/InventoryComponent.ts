@@ -20,9 +20,16 @@ abstract class InventoryComponent extends Component {
       }
    }
 
+   public getItem(slotNum: number): [ItemName, number] | undefined {
+      return this.itemSlots[slotNum];
+   }
+
    public abstract getItemAddAmount(itemName: ItemName, amount: number, slotNum?: number): number | null;
 
-   public abstract addItem(itemName: ItemName, amount?: number): void;
+   /**
+    * @returns The number of items added
+    */
+   public abstract addItem(itemName: ItemName, amount?: number): number;
 
    public addItemToSlot(slotNum: number, itemName: ItemName, amount: number = 1): void {
       const slot = this.itemSlots[slotNum];
@@ -43,7 +50,7 @@ abstract class InventoryComponent extends Component {
       const addAmount = Math.min(amount, itemInfo.stackSize - this.itemSlots[slotNum][1]);
       this.itemSlots[slotNum][1] += addAmount;
 
-      this.getEntity().callEvents("inventoryChange");
+      this.callInventoryChangeEvents();
    }
 
    public removeItem(name: ItemName, amount: number): void {

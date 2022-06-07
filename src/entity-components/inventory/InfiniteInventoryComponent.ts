@@ -20,7 +20,7 @@ class InfiniteInventoryComponent extends InventoryComponent {
       }
    }
 
-   public addItem(itemName: ItemName, amount: number = 1): void {
+   public addItem(itemName: ItemName, amount: number = 1): number {
       // Get the item info
       const itemKey = ItemName[itemName] as unknown as ItemName;
       const itemInfo = ITEMS[itemKey];
@@ -63,6 +63,8 @@ class InfiniteInventoryComponent extends InventoryComponent {
       }
 
       this.callInventoryChangeEvents();
+
+      return amount;
    }
 }
 

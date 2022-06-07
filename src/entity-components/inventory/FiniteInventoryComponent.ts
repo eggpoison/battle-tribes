@@ -47,10 +47,7 @@ class FiniteInventoryComponent extends InventoryComponent {
       return null;
    }
 
-   /**
-    * @returns The number of items left after being added
-    */
-   public addItem(itemName: ItemName, amount: number): void {
+   public addItem(itemName: ItemName, amount: number): number {
       // Get the item info
       const itemKey = ItemName[itemName] as unknown as ItemName;
       const itemInfo = ITEMS[itemKey];
@@ -93,6 +90,8 @@ class FiniteInventoryComponent extends InventoryComponent {
       }
 
       this.callInventoryChangeEvents();
+
+      return amount - remainingAmountToAdd;
    }
 
    public isFull(isStrict: boolean): boolean {

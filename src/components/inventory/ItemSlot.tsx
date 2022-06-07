@@ -1,5 +1,13 @@
+import Player from "../../entities/tribe-members/Player";
+import FiniteInventoryComponent from "../../entity-components/inventory/FiniteInventoryComponent";
 import InventoryComponent from "../../entity-components/inventory/InventoryComponent";
 import ITEMS, { ItemName } from "../../items/items";
+
+let openedInventoryComponent: InventoryComponent | null = null;
+
+export function updateOpenedInventoryComponent(inventoryComponent: InventoryComponent | null): void {
+   openedInventoryComponent = inventoryComponent;
+}
 
 export type HeldItem = {
    readonly name: ItemName;
@@ -9,6 +17,21 @@ let heldItem: HeldItem | null = null;
 
 export function getHeldItem(): HeldItem | null {
    return heldItem;
+}
+
+const getPlayerInventoryComponent = (): FiniteInventoryComponent => {
+   return Player.instance.getComponent(FiniteInventoryComponent)!;
+}
+
+const quickMoveItem = (slotNum: number, clickedInventoryComponent: InventoryComponent, otherInventoryComponent: InventoryComponent): void => {
+   // Get the item
+   const [itemName, itemAmount] = clickedInventoryComponent.getItem(slotNum)!;
+
+   // Add the item to the other inventory component
+   const numItemsAdded = otherInventoryComponent.addItem(itemName, itemAmount);
+
+   // Remove the item from the clicked inventory component
+   clickedInventoryComponent.removeItemFromSlot(slotNum, numItemsAdded);
 }
 
 const stackItem = (slotNum: number, inventoryComponent: InventoryComponent): void => {
@@ -28,7 +51,7 @@ const stackItem = (slotNum: number, inventoryComponent: InventoryComponent): voi
    }
 }
 
-export function clickInventorySlot(slotNum: number, inventoryComponent: InventoryComponent): void {
+export function clickInventorySlot(slotNum: number, inventoryComponent: InventoryComponent, e: MouseEvent): void {
    const itemSlots = inventoryComponent.getItemSlots();
    const slotInfo = itemSlots[slotNum];
 
@@ -39,21 +62,26 @@ export function clickInventorySlot(slotNum: number, inventoryComponent: Inventor
          heldItem = null;
       }
    } else { // If the clicked slot has an item
-
       const [itemName, itemAmount] = slotInfo;
 
-      // If there isn't a held item, hold the clicked item
-      if (heldItem === null) {
-         heldItem = {
-            name: itemName,
-            amount: itemAmount
-         };
+      if (openedInventoryComponent !== null && e.shiftKey) {
+         const otherInventoryComponent = inventoryComponent === openedInventoryComponent ? getPlayerInventoryComponent() : openedInventoryComponent;         
 
-         inventoryComponent.removeItemFromSlot(slotNum, itemAmount);
+         quickMoveItem(slotNum, inventoryComponent, otherInventoryComponent);
       } else {
-         // If there is a held item and the clicked item is of the same type, stack them
-         if (itemName === heldItem.name) {
-            stackItem(slotNum, inventoryComponent);
+         // If there isn't currently a held item, hold the clicked item
+         if (heldItem === null) {
+            heldItem = {
+               name: itemName,
+               amount: itemAmount
+            };
+            
+            inventoryComponent.removeItemFromSlot(slotNum, itemAmount);
+         } else {
+            // If there is a held item and the clicked item is of the same type, stack them
+            if (itemName === heldItem.name) {
+               stackItem(slotNum, inventoryComponent);
+            }
          }
       }
    }
@@ -71,10 +99,10 @@ const ItemSlot = ({ itemName, amount, slotNum, getInventoryComponent, isSelected
    const info = typeof itemName !== "undefined" ? ITEMS[ItemName[itemName] as unknown as ItemName] : undefined;
 
    const onClick = (e: MouseEvent): void => {
-      e.preventDefault();
-
       const inventoryComponent = getInventoryComponent();
-      clickInventorySlot(slotNum, inventoryComponent)
+      clickInventorySlot(slotNum, inventoryComponent, e);
+      
+      e.preventDefault();
    }
 
    return (

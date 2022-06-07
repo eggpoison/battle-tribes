@@ -1,5 +1,5 @@
 import { HealthBarManager } from "../../components/HealthBar";
-import { closeMenu, toggleMenu } from "../../components/menus/MenuManager";
+import { closeMenu, menuIsOpen, toggleMenu } from "../../components/menus/MenuManager";
 import { clearMessage, displayMessage } from "../../components/MessageDisplay";
 import { updatePlayerInventoryViewer, updatePlayerInventoryViewerSelectedSlot } from "../../components/inventory/PlayerInventoryViewer";
 import { togglePlayerRespawnMessage, setPlayerRespawnMessageTime } from "../../components/PlayerRespawnMessage";
@@ -17,6 +17,8 @@ import Entity from "../Entity";
 import TribeStash from "../TribeStash";
 import Chief from "./Chief";
 import SelectedSlotComponent from "../../entity-components/SelectedSlotComponent";
+import InfiniteInventoryComponent from "../../entity-components/inventory/InfiniteInventoryComponent";
+import { updateOpenedInventoryComponent } from "../../components/inventory/ItemSlot";
 
 export enum PlayerInteractionMode {
    Play,
@@ -118,10 +120,10 @@ class Player extends Chief {
                // Hide any open menus
                closeMenu();
 
-               // Open tribe stash viewer
+               // Toggle the stash viewer
                this.toggleTribeStash();
             } else {
-               // Open the crafting menu
+               // Toggle the crafting menu
                toggleMenu("crafting");
             }
 
@@ -225,15 +227,17 @@ class Player extends Chief {
    }
 
    private toggleTribeStash(newVisibility?: boolean): void {
-      toggleTribeStashViewerVisibility(newVisibility);
-
       const isVisible = tribeStashViewerIsOpen();
 
       if (!isVisible) {
          displayMessage(TribeStash.CLOSE_MESSAGE);
+         updateOpenedInventoryComponent(Player.instance.tribe.stash.getComponent(InfiniteInventoryComponent));
       } else {
          displayMessage(TribeStash.OPEN_MESSAGE);
+         updateOpenedInventoryComponent(null);
       }
+
+      toggleTribeStashViewerVisibility(newVisibility);
    }
 }
 

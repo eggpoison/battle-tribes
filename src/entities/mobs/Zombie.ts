@@ -8,7 +8,7 @@ import RenderComponent, { EllipseRenderPart } from "../../entity-components/Rend
 import TransformComponent from "../../entity-components/TransformComponent";
 import Game from "../../Game";
 import { BasicCol, Point, randInt, Vector } from "../../utils";
-import Entity from "../Entity";
+import Entity, { RenderLayer } from "../Entity";
 import GenericTribeMember from "../tribe-members/GenericTribeMember";
 import Mob from "./Mob";
 
@@ -28,7 +28,7 @@ class Zombie extends Mob {
    private static readonly KNOCKBACK = 1;
 
    constructor(position: Point) {
-      super(position, [
+      super(RenderLayer.HostileEntities, position, [
          new AIManagerComponent()
       ]);
 
@@ -150,13 +150,13 @@ class Zombie extends Mob {
       this.getComponent(AIManagerComponent)!.changeCurrentAI("wander");
    }
 
-   public tickComponents(): void {
+   public tick(): void {
       // Set the zombie on fire when it's daytime
       if (!Game.isNight()) {
          this.getComponent(StatusEffectComponent)!.applyStatusEffect("fire", 5);
       }
 
-      super.tickComponents();
+      super.tick();
    }
 
    public duringCollision(collidingEntity: Entity): void {

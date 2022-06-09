@@ -16,8 +16,8 @@ const craft = (recipe: Recipe): void => {
    // Check if the player has the materials
    const remainingMaterials = Object.assign({}, recipe.materials);
    for (const itemSlot of itemSlots) {
-      const key = ItemName[itemSlot[0]] as unknown as ItemName;
-      if (!(key in remainingMaterials)) continue;
+      const key = itemSlot[0];
+      if (!remainingMaterials.hasOwnProperty(key)) continue;
 
       remainingMaterials[key]! -= itemSlot[1];
    }
@@ -49,8 +49,9 @@ const craft = (recipe: Recipe): void => {
    }
 
    // Take away materials
-   for (const [name, amount] of Object.entries(recipe.materials)) {
-      playerInventory.removeItem(ItemName[name as unknown as ItemName] as unknown as ItemName, amount);
+   const entries = Object.entries(recipe.materials) as unknown as Array<[ItemName, number]>;
+   for (const [name, amount] of entries) {
+      playerInventory.removeItem(name, amount);
    }
 
    // Add result

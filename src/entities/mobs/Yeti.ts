@@ -6,7 +6,7 @@ import HitboxComponent from "../../entity-components/HitboxComponent";
 import RenderComponent, { EllipseRenderPart } from "../../entity-components/RenderComponent";
 import TransformComponent from "../../entity-components/TransformComponent";
 import { Point } from "../../utils";
-import Entity from "../Entity";
+import Entity, { RenderLayer } from "../Entity";
 import GenericTribeMember from "../tribe-members/GenericTribeMember";
 import Mob from "./Mob";
 
@@ -30,7 +30,7 @@ class Yeti extends Mob {
    private static readonly TARGETS = [GenericTribeMember];
 
    constructor(position: Point) {
-      super(position, [
+      super(RenderLayer.HostileEntities, position, [
          new AIManagerComponent()
       ]);
 

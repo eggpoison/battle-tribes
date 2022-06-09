@@ -1,4 +1,4 @@
-import Entity from "./Entity";
+import Entity, { RenderLayer } from "./Entity";
 import HitboxComponent from "../entity-components/HitboxComponent";
 import RenderComponent, { ImageRenderPart } from "../entity-components/RenderComponent";
 import TransformComponent from "../entity-components/TransformComponent";
@@ -19,7 +19,7 @@ class TribeStash extends Entity {
    constructor(tribe: Tribe) {
       const spawnPosition = tribe.position;
 
-      super([
+      super(RenderLayer.LowResources, [
          new TransformComponent(spawnPosition, undefined, undefined, true),
          new HitboxComponent(),
          new RenderComponent(),

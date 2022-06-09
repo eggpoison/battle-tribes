@@ -1,4 +1,4 @@
-import Entity from "./Entity";
+import Entity, { RenderLayer } from "./Entity";
 import HitboxComponent from "../entity-components/HitboxComponent";
 import RenderComponent, { ImageRenderPart } from "../entity-components/RenderComponent";
 import TransformComponent from "../entity-components/TransformComponent";
@@ -20,7 +20,7 @@ class ItemEntity extends Entity {
    private age: number = 0;
 
    constructor(position: Point, item: Item, amount: number) {
-      super([
+      super(RenderLayer.Items, [
          new TransformComponent(position, undefined, getRandomAngle(), true),
          new RenderComponent(),
          new HitboxComponent()
@@ -43,7 +43,7 @@ class ItemEntity extends Entity {
       this.amount = amount;
    }
 
-   public tickComponents(): void {
+   public tick(): void {
       this.age += 1 / SETTINGS.tps;
 
       if (this.age >= ItemEntity.LIFESPAN) this.die(null);

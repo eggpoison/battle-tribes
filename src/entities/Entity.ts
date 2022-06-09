@@ -1,4 +1,5 @@
-import Board, { Chunk } from "../Board";
+import Board from "../Board";
+import Chunk from "../Chunk";
 import Component from "../Component";
 import SETTINGS from "../settings";
 
@@ -11,6 +12,22 @@ type Size = number | {
    readonly HEIGHT: number;
 }
 
+// The order in which entities are rendered
+export enum RenderLayer {
+   // (particle shadows get rendered before all)
+   LowParticles,
+   LowResources,
+   Items,
+   PeacefulEntities,
+   HostileEntities,
+   Tribesmen,
+   HighResources,
+   HighParticles
+}
+
+export type EntityRenderLayer = RenderLayer.LowResources | RenderLayer.Items | RenderLayer.PeacefulEntities | RenderLayer.HostileEntities | RenderLayer.Tribesmen | RenderLayer.HighResources;
+export type ParticleRenderLayer = RenderLayer.LowParticles | RenderLayer.HighParticles;
+
 abstract class Entity {
    public abstract readonly SIZE: Size;
    public abstract readonly name: string;
@@ -22,7 +39,11 @@ abstract class Entity {
    private readonly components = new Map<(abstract new (...args: any[]) => any), Component>();
    private readonly events: EventsObject = {};
 
-   constructor(components: ReadonlyArray<Component>) {
+   public renderLayer: EntityRenderLayer;
+
+   constructor(renderLayer: EntityRenderLayer, components: ReadonlyArray<Component>) {
+      this.renderLayer = renderLayer;
+
       for (const component of components) {
          this.components.set(component.constructor as (new (...args: any[]) => any), component);
 
@@ -43,7 +64,7 @@ abstract class Entity {
       return typeof component !== "undefined" ? (component as C) : null;
    }
 
-   public tickComponents(): void {
+   public tick(): void {
       this.components.forEach(component => {
          if (typeof component.tick !== "undefined") {
             component.tick();

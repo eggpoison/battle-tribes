@@ -1,4 +1,4 @@
-import Board, { Chunk, Coordinates } from "../Board";
+import Board, { Coordinates } from "../Board";
 import Component from "../Component";
 import Entity from "../entities/Entity";
 import SETTINGS from "../settings";
@@ -6,6 +6,7 @@ import TILE_INFO from "../data/tile-types";
 import { Point, Vector } from "../utils";
 import HitboxComponent from "./HitboxComponent";
 import StatusEffectComponent from "../components/StatusEffectComponent";
+import Chunk from "../Chunk";
 
 class TransformComponent extends Component {
    private static readonly FRICTION_CONSTANT = 1;
@@ -22,7 +23,7 @@ class TransformComponent extends Component {
 
    private readonly isStatic: boolean;
 
-   private isMoving: boolean = false;
+   public isMoving: boolean = false;
 
    constructor(startingPosition?: Point, startingVelocity: Vector = new Vector(0, 0), startingRotation: number = 0, isStatic: boolean = false) {
       super();

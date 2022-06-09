@@ -1,27 +1,33 @@
 import { generateTerrain, TileType } from "./terrain-generation";
-import { getCanvasContext, getCanvasHeight, getCanvasWidth } from "./components/Canvas";
+import { getGameCanvasContext, getCanvasHeight, getCanvasWidth } from "./components/Canvas";
 import { updateDevtools } from "./components/Devtools";
-import Entity from "./entities/Entity";
+import Entity, { EntityRenderLayer, ParticleRenderLayer, RenderLayer } from "./entities/Entity";
 import RenderComponent from "./entity-components/RenderComponent";
 import TransformComponent from "./entity-components/TransformComponent";
 import SETTINGS from "./settings";
 import { precomputeTileLocations, TILE_PARTICLES } from "./data/tile-types";
 import { Point, Point3, randFloat, randInt } from "./utils";
 import Camera from "./Camera";
-import Mob from "./entities/mobs/Mob";
 import HitboxComponent from "./entity-components/HitboxComponent";
 import OPTIONS from "./options";
 import Game from "./Game";
 import EntitySpawner from "./EntitySpawner";
-import Resource from "./entities/resources/Resource";
 import Mouse from "./Mouse";
 import TribeWorker from "./entities/tribe-members/TribeWorker";
 import Particle from "./particles/Particle";
 import ParticleSource from "./particles/ParticleSource";
-
-export type Chunk = Array<Entity>;
+import Chunk from "./Chunk";
+import Mob from "./entities/mobs/Mob";
+import Resource from "./entities/resources/Resource";
 
 export type Coordinates = [number, number];
+
+type Census = {
+   passiveMobCount: number;
+   hostileMobCount: number;
+   resourceCount: number;
+   readonly visibleSelectedUnits: Array<TribeWorker>;
+}
 
 abstract class Board {
    /** The width and height of the board in chunks */
@@ -42,25 +48,32 @@ abstract class Board {
    private static changedTiles = new Array<Coordinates>();
 
    public static particleSources = new Array<ParticleSource>();
-   private static particles = new Array<Particle>();
+   private static particles: Record<ParticleRenderLayer, Array<Particle>> = {
+      [RenderLayer.LowParticles]: new Array<Particle>(),
+      [RenderLayer.HighParticles]: new Array<Particle>()
+   };
    private static particlesToDestroy = new Array<Particle>();
 
    public static setup(): void {
       this.tiles = generateTerrain();
 
-      // Initialise the chunks array
-      this.chunks = new Array<Array<Chunk>>(this.size);
-      for (let x = 0; x < this.size; x++) {
-         this.chunks[x] = new Array<Chunk>(this.size);
-         for (let y = 0; y < this.size; y++) {
-            this.chunks[x][y] = new Array<Entity>();
-         }
-      }
+      this.initialiseChunkArray();
 
       precomputeTileLocations();
 
       // Spawn initial entities
       EntitySpawner.spawnInitialEntities();
+   }
+
+   private static initialiseChunkArray(): void {
+      this.chunks = new Array<Array<Chunk>>(this.size);
+
+      for (let x = 0; x < this.size; x++) {
+         this.chunks[x] = new Array<Chunk>(this.size);
+         for (let y = 0; y < this.size; y++) {
+            this.chunks[x][y] = new Chunk();
+         }
+      }
    }
 
    public static getChangedTiles(): Array<Coordinates> {
@@ -79,7 +92,7 @@ abstract class Board {
    }
 
    public static addParticle(particle: Particle): void {
-      this.particles.push(particle);
+      this.particles[particle.renderLayer].push(particle);
    }
 
    public static removeParticle(particle: Particle): void {
@@ -104,41 +117,77 @@ abstract class Board {
 
    /** Tick all entities */
    public static tick(): void {
-      EntitySpawner.runSpawnAttempt();
+      const ctx = getGameCanvasContext();
 
-      let entityCount = 0;
-      let passiveMobCount = 0;
-      let hostileMobCount = 0;
-      let resourceCount = 0;
+      // Gather data about the entities
+      const entityCensus: Census = {
+         passiveMobCount: 0,
+         hostileMobCount: 0,
+         resourceCount: 0,
+         visibleSelectedUnits: new Array<TribeWorker>()
+      };
 
-      const selectedEntities = Mouse.getSelectedUnits();
-      const visibleSelectedEntities = new Array<TribeWorker>();
+      this.renderParticleShadows();
 
-      const entitiesToChangeChunk: Array<[Entity, Chunk]> = [];
+      this.updateParticles(RenderLayer.LowParticles);
+      this.updateEntities(RenderLayer.LowResources, entityCensus);
+      this.updateEntities(RenderLayer.Items, entityCensus);
+      this.updateEntities(RenderLayer.PeacefulEntities, entityCensus);
+      this.updateEntities(RenderLayer.HostileEntities, entityCensus);
+      this.updateEntities(RenderLayer.Tribesmen, entityCensus);
+      this.updateEntities(RenderLayer.HighResources, entityCensus);
+      this.updateParticles(RenderLayer.HighParticles);
 
-      const ctx = getCanvasContext();
+      this.tickTiles();
 
-      this.renderParticleShadows(ctx);
+      this.removeDestroyedParticles();
+      this.tickParticleSources();
+
+      this.renderCommandTileTargets(ctx);
+
+      // Render the selection icons
+      this.renderSelectionIcons(entityCensus.visibleSelectedUnits);
+
+      this.updateDisappearingFog();
+      
+
+      const totalEntityCount = entityCensus.passiveMobCount + entityCensus.hostileMobCount + entityCensus.resourceCount;
+      updateDevtools({
+         entityCount: totalEntityCount,
+         mobCount: entityCensus.hostileMobCount + entityCensus.passiveMobCount,
+         resourceCount: entityCensus.resourceCount
+      });
+
+      EntitySpawner.setHostileMobCount(entityCensus.hostileMobCount);
+      EntitySpawner.setPassiveMobCount(entityCensus.passiveMobCount);
+      EntitySpawner.setResourceCount(entityCensus.resourceCount);
+   }
+
+   private static updateEntities(renderLayer: EntityRenderLayer, census: Census): void {
+      const ctx = getGameCanvasContext();
+
+      const entitiesToChangeChunk = new Array<[Entity, Chunk]>();
 
       for (let y = 0; y < this.size; y++) {
          for (let x = 0; x < this.size; x++) {
-            // A copy of the chunk array has to be used, as otherwise if an entity
-            // dies, an entity will get skipped by the loop.
-            const chunk = this.getChunk(x, y)!.slice();
+            const chunk = this.getChunk(x, y)!
 
             const chunkIsVisible = Camera.chunkIsVisible(x, y);
 
-            for (const entity of chunk) {
-               entityCount++;
+            // A copy of the chunk array has to be used, as otherwise if an entity
+            // dies, an entity will get skipped by the loop.
+            const entities = chunk.getEntitiesByRenderLayer(renderLayer).slice();
+            for (const entity of entities) {
+               // Add the entity to the census
                if (entity instanceof Mob) {
                   const behaviour = entity.entityInfo.behaviour;
                   if (behaviour === "hostile" || behaviour === "neutral") {
-                     hostileMobCount++;
+                     census.hostileMobCount++;
                   } else {
-                     passiveMobCount++;
+                     census.passiveMobCount++;
                   }
                } else if (entity instanceof Resource) {
-                  resourceCount++;
+                  census.resourceCount++;
                }
 
                if (chunkIsVisible) {
@@ -148,8 +197,8 @@ abstract class Board {
                      renderComponent.renderEntity(ctx);
 
                      // If the entity is selected, add it to an array to render the selection icon later
-                     if (entity instanceof TribeWorker && selectedEntities.includes(entity)) {
-                        visibleSelectedEntities.push(entity);
+                     if (entity instanceof TribeWorker && Mouse.unitIsSelected(entity)) {
+                        census.visibleSelectedUnits.push(entity);
                      }
                   }
 
@@ -162,7 +211,7 @@ abstract class Board {
                   }
                }
 
-               entity.tickComponents();
+               entity.tick();
                
                const newChunk = entity.getComponent(TransformComponent)!.getChunk()!;
                if (newChunk !== entity.previousChunk && newChunk !== null) {
@@ -173,34 +222,22 @@ abstract class Board {
       }
 
       for (const [entity, newChunk] of entitiesToChangeChunk) {
-         entity.previousChunk!.splice(entity.previousChunk!.indexOf(entity), 1);
+         entity.previousChunk!.removeEntity(entity);
 
-         newChunk.push(entity);
+         newChunk.addEntity(entity);
 
          entity.previousChunk = newChunk;
       }
+   }
 
-      this.tickTiles();
+   private static updateParticles(renderLayer: ParticleRenderLayer): void {
+      for (const particle of this.particles[renderLayer]) {
+         if (this.particleIsVisible(particle)) {
+            particle.render();
+         }
 
-      this.tickParticles();
-      this.renderParticles(ctx);
-
-      this.renderCommandTileTargets(ctx);
-
-      // Render the selection icons
-      this.renderSelectionIcons(ctx, visibleSelectedEntities);
-
-      this.updateDisappearingFog();
-      
-      updateDevtools({
-         entityCount: entityCount,
-         mobCount: hostileMobCount + passiveMobCount,
-         resourceCount: resourceCount
-      });
-
-      EntitySpawner.setHostileMobCount(hostileMobCount);
-      EntitySpawner.setPassiveMobCount(passiveMobCount);
-      EntitySpawner.setResourceCount(resourceCount);
+         particle.tick();
+      }
    }
 
    private static tickTiles(): void {
@@ -238,35 +275,28 @@ abstract class Board {
       }
    }
 
-   private static tickParticles(): void {
-      // Tick existing particles
-      for (const particle of this.particles) {
-         particle.tick();
-      }
-      // Remove destroyed particles
+   private static removeDestroyedParticles(): void {
       for (const particle of this.particlesToDestroy) {
-         this.particles.splice(this.particles.indexOf(particle), 1);
+         this.particles[particle.renderLayer].splice(this.particles[particle.renderLayer].indexOf(particle), 1);
       }
       this.particlesToDestroy = new Array<Particle>();
+   }
 
+   private static tickParticleSources(): void {
       // Tick particle sources
       for (const particleSource of this.particleSources) {
          particleSource.tick();
       }
    }
 
-   private static renderParticleShadows(ctx: CanvasRenderingContext2D): void {
-      for (const particle of this.particles) {
-         if (this.particleIsVisible(particle)) {
-            particle.renderShadow(ctx);
-         }
-      }
-   }
+   private static renderParticleShadows(): void {
+      const ctx = getGameCanvasContext();
 
-   private static renderParticles(ctx: CanvasRenderingContext2D): void {
-      for (const particle of this.particles) {
-         if (this.particleIsVisible(particle)) {
-            particle.render(ctx);
+      for (const particleArray of Object.values(this.particles)) {
+         for (const particle of particleArray) {
+            if (this.particleIsVisible(particle)) {
+               particle.renderShadow();
+            }
          }
       }
    }
@@ -322,9 +352,11 @@ abstract class Board {
       }
    }
 
-   private static renderSelectionIcons(ctx: CanvasRenderingContext2D, entities: Array<TribeWorker>): void {
+   private static renderSelectionIcons(entities: Array<TribeWorker>): void {
       const WIDTH = 5;
       const SIZE = 90;
+
+      const ctx = getGameCanvasContext();
 
       ctx.lineWidth = WIDTH;
       ctx.strokeStyle = Mouse.UNIT_SELECTION_COLOUR;
@@ -353,7 +385,7 @@ abstract class Board {
       let darkness = Game.getSkyDarkness();
       if (darkness === 0) return;
 
-      const ctx = getCanvasContext();
+      const ctx = getGameCanvasContext();
 
       const width = getCanvasWidth();
       const height = getCanvasHeight();
@@ -451,7 +483,7 @@ abstract class Board {
       entity.loadComponents();
 
       // Add the entity to the chunk
-      chunk.push(entity);
+      chunk.addEntity(entity);
 
       // Update the entity's previous chunk
       entity.previousChunk = chunk;
@@ -460,7 +492,7 @@ abstract class Board {
    public static removeEntity(entity: Entity): void {
       // Remove the entity from its chunk
       const chunk = entity.previousChunk!;
-      chunk.splice(chunk.indexOf(entity), 1);
+      chunk.removeEntity(entity);
    }
 
    public static getRandomPositionInTile(tileX: number, tileY: number): Point {
@@ -507,7 +539,8 @@ abstract class Board {
             const chunk = Board.getChunk(x, y);
             if (chunk === null) continue;
             
-            for (const entity of chunk) {
+            const entities = chunk.getEntityList();
+            for (const entity of entities) {
                const hitboxComponent = entity.getComponent(HitboxComponent);
                if (hitboxComponent !== null) {
                   const entityPosition = entity.getComponent(TransformComponent)!.position;

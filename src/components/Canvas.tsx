@@ -26,7 +26,7 @@ const getWallColour = (tileKind: TileKind): string => {
 let canvas: HTMLCanvasElement;
 let ctx: CanvasRenderingContext2D;
 
-export function getCanvasContext(): CanvasRenderingContext2D { return ctx; }
+export function getGameCanvasContext(): CanvasRenderingContext2D { return ctx; }
 
 let width: number;
 let height: number;

@@ -3,6 +3,7 @@ import Camera from "./Camera";
 import { clearCanvas, renderFog, renderGroundTiles, renderWallTiles } from "./components/Canvas";
 import { Minimap } from "./components/MinimapCanvas";
 import { stopPlayerMovement } from "./entity-components/PlayerControllerComponent";
+import EntitySpawner from "./EntitySpawner";
 import Mouse from "./Mouse";
 import SETTINGS from "./settings";
 import { timers } from "./Timer";
@@ -14,6 +15,7 @@ let previousFocus = true;
 
 abstract class Game {
    public static ticks = 0;
+   public static secondsElapsed = 0;
 
    // private static readonly TIME_SPEED = 1.5;
    private static readonly TIME_SPEED = 50;
@@ -21,30 +23,46 @@ abstract class Game {
 
    public static tick(): void {
       Game.ticks++;
+      Game.secondsElapsed += 1 / SETTINGS.tps;
 
       Game.time += Game.TIME_SPEED / SETTINGS.tps / 60;
       if (Game.time >= 24) Game.time -= 24;
 
       // Update timers
-      for (const timer of timers.slice()) {
+      for (let idx = timers.length - 1; idx >= 0; idx--) {
+         const timer = timers[idx];
          timer.tick();
 
          if (timer.hasExpired()) {
             timer.onEnd();
 
-            timers.splice(timers.indexOf(timer), 1);
+            timers.splice(idx, 1);
          }
       }
  
+      // Update the camera position to match the followed entity
       Camera.updateCameraPosition();
       Camera.tick();
+
+      // Clear the canvas for redrawing
       clearCanvas();
+
+      // Order of rendering: Ground tiles -> Entities -> Wall tiles
+
+      // Draw ground layer of tiles
       renderGroundTiles();
+
+      // Spawn mobs and resources
+      EntitySpawner.runSpawnAttempt();
+
       Board.tick();
-      renderWallTiles();
       Mouse.updateMouse();
       Mouse.updateUnitSelectionBounds();
       Mouse.drawUnitSelectionTool();
+
+      // Draw walls
+      // Called after the Board.tick() function so that walls are rendered above entities
+      renderWallTiles();
 
       // Draw the darkness effect given by night time
       Board.drawDarkness();

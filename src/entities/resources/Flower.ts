@@ -4,6 +4,7 @@ import ItemSpawnComponent from "../../entity-components/ItemSpawnerComponent";
 import RenderComponent, { ImageRenderPart } from "../../entity-components/RenderComponent";
 import { ItemName } from "../../items/items";
 import { Point, randInt } from "../../utils";
+import { RenderLayer } from "../Entity";
 import Resource from "./Resource";
 
 class Flower extends Resource {
@@ -13,7 +14,7 @@ class Flower extends Resource {
    private static readonly LIFESPAN = 20;
 
    constructor(position: Point) {
-      super(position);
+      super(RenderLayer.LowResources, position);
 
       this.getComponent(HealthComponent)!.setLifespan(Flower.LIFESPAN);
       

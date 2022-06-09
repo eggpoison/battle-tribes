@@ -2,7 +2,7 @@ import Board from "../../Board";
 import Component from "../../Component";
 import ItemEntity from "../../entities/ItemEntity";
 import ITEMS, { ItemName } from "../../items/items";
-import Item, { ItemInfo } from "../../items/Item";
+import Item from "../../items/Item";
 
 export type ItemSlots = Array<[ItemName, number]>;
 export type ItemList = Partial<Record<ItemName, number>>;
@@ -13,9 +13,11 @@ abstract class InventoryComponent extends Component {
    public pickupItemEntity(itemEntity: ItemEntity): void {
       const item = itemEntity.item;
 
-      const addAmount = this.getItemAddAmount(item.name, itemEntity.amount);
+      const itemName = ItemName[item.name] as unknown as ItemName;
+      const addAmount = this.getItemAddAmount(itemName, itemEntity.amount);
       if (addAmount !== null) {
-         this.addItem(item.name, addAmount);
+         const key = itemName;
+         this.addItem(key, addAmount);
          Board.removeEntity(itemEntity);
       }
    }
@@ -37,16 +39,13 @@ abstract class InventoryComponent extends Component {
     */
    public abstract addItem(itemName: ItemName, amount?: number): number;
 
-   public addItemToSlot(slotNum: number, itemName: ItemName, amount: number = 1): void {
+   /**
+    * @returns The number of items added
+    */
+   public addItemToSlot(slotNum: number, itemName: ItemName, amount: number): number {
       const slot = this.itemSlots[slotNum];
-
-      let itemInfo!: ItemInfo;
-      if (typeof itemName === "number") {
-         itemInfo = ITEMS[itemName];
-      } else {
-         const itemKey = ItemName[itemName] as unknown as ItemName;
-         itemInfo = ITEMS[itemKey];
-      }
+      
+      const itemInfo = ITEMS[itemName];
 
       // If the slot is empty initialise the slot
       if (typeof slot === "undefined") {
@@ -57,6 +56,8 @@ abstract class InventoryComponent extends Component {
       this.itemSlots[slotNum][1] += addAmount;
 
       this.callInventoryChangeEvents();
+
+      return addAmount;
    }
 
    public removeItem(name: ItemName, amount: number): void {

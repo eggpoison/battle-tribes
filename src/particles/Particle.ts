@@ -1,5 +1,7 @@
 import Board from "../Board";
 import Camera from "../Camera";
+import { getGameCanvasContext } from "../components/Canvas";
+import { ParticleRenderLayer } from "../entities/Entity";
 import SETTINGS from "../settings";
 import { lerp, Mutable, Point3, randFloat, Vector3 } from "../utils";
 
@@ -15,6 +17,7 @@ type ParticleInfo = {
       readonly width: number | [number, number];
       readonly height: number | [number, number];
    } | number | [number, number];
+   readonly renderLayer: ParticleRenderLayer;
    readonly initialOffset?: Point3 | (() => Point3);
    readonly initialVelocity: Vector3 | (() => Vector3);
    /** By default, set to gravity */
@@ -28,6 +31,7 @@ type ParticleInfo = {
    readonly friction?: number;
    readonly endOpacity?: number;
    readonly shadowOpacity?: number;
+   readonly hasShadow?: boolean;
    readonly doesBounce?: boolean;
 }
 
@@ -56,10 +60,12 @@ class Particle {
       readonly width: number;
       readonly height: number;
    };
+   readonly renderLayer: ParticleRenderLayer;
    private readonly colour?: [number, number, number];
    private readonly endColour?: [number, number, number];
    private readonly endOpacity?: number;
    private readonly shadowOpacity: number;
+   private readonly hasShadow: boolean;
    private readonly doesBounce: boolean;
    
    public position: Point3;
@@ -132,6 +138,8 @@ class Particle {
          this.endSize = endSize as { width: number, height: number }
       }
 
+      this.renderLayer = info.renderLayer;
+
       if (info.type === "rectangle") {
          // Colour
          this.colour = (typeof info.colour === "function") ? info.colour() : info.colour;
@@ -155,6 +163,8 @@ class Particle {
       // Lifespan
       this.lifespan = typeof info.lifespan === "number" ? info.lifespan : randFloat(...(info.lifespan as [number, number]));
       this.friction = info.friction;
+
+      this.hasShadow = typeof info.hasShadow !== "undefined" ? info.hasShadow : true;
 
       this.doesBounce = typeof info.doesBounce !== "undefined" ? info.doesBounce : true;
 
@@ -224,8 +234,10 @@ class Particle {
       return this.position.z + this.size.height/2 >= 0;
    }
 
-   public render(ctx: CanvasRenderingContext2D): void {
+   public render(): void {
       if (!this.isVisible()) return;
+
+      const ctx = getGameCanvasContext();
 
       switch (this.type) {
          case "rectangle": {
@@ -269,8 +281,10 @@ class Particle {
       }
    }
 
-   public renderShadow(ctx: CanvasRenderingContext2D): void {
-      if (!this.isVisible()) return;
+   public renderShadow(): void {
+      if (!this.hasShadow || !this.isVisible()) return;
+
+      const ctx = getGameCanvasContext();
 
       switch (this.type) {
          case "rectangle": {

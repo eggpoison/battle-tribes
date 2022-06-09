@@ -1,5 +1,5 @@
 import Component from "../../Component";
-import Entity from "../Entity";
+import Entity, { RenderLayer } from "../Entity";
 import Tribe from "../../Tribe";
 import HealthComponent from "../../entity-components/HealthComponent";
 import HitboxComponent from "../../entity-components/HitboxComponent";
@@ -14,8 +14,24 @@ import TRIBE_INFO from "../../data/tribe-info";
 import Particle from "../../particles/Particle";
 import FiniteInventoryComponent from "../../entity-components/inventory/FiniteInventoryComponent";
 import ItemEntity from "../ItemEntity";
-import ITEMS, { ItemName } from "../../items/items";
+import ITEMS from "../../items/items";
 import StatusEffectComponent from "../../components/StatusEffectComponent";
+import SETTINGS from "../../settings";
+import { TileKind } from "../../data/tile-types";
+import Game from "../../Game";
+
+const TILE_WALK_COLOURS: Record<TileKind, [number, number, number]> = {
+   [TileKind.grass]: [0, 153, 28],
+   [TileKind.dirt]: [196, 98, 0],
+   [TileKind.ice]: [158, 250, 255],
+   [TileKind.magma]: [255, 142, 66],
+   [TileKind.rock]: [89, 89, 89],
+   [TileKind.sand]: [255, 247, 0],
+   [TileKind.sandstone]: [138, 133, 0],
+   [TileKind.sludge]: [0, 138, 16],
+   [TileKind.snow]: [161, 161, 161],
+   [TileKind.lava]: [140, 9, 0]
+}
 
 abstract class GenericTribeMember extends Entity {
    public static readonly RESPAWN_TIME = 3;
@@ -28,8 +44,10 @@ abstract class GenericTribeMember extends Entity {
 
    public readonly tribe: Tribe;
 
+   private isRespawning: boolean = false;
+
    constructor(tribe: Tribe, components?: ReadonlyArray<Component>) {
-      super([
+      super(RenderLayer.Tribesmen, [
          new TransformComponent(tribe.getMemberSpawnPosition()),
          new RenderComponent(),
          new HitboxComponent(),
@@ -84,6 +102,7 @@ abstract class GenericTribeMember extends Entity {
                   width: width,
                   height: height
                },
+               renderLayer: RenderLayer.HighParticles,
                initialVelocity: velocity,
                angularVelocity: 0,
                colour: colour,
@@ -95,26 +114,39 @@ abstract class GenericTribeMember extends Entity {
 
       // Respawn when killed
       this.createEvent("die", () => {
-         this.startRespawn();
-
-         this.unloadItems();
+         if (!this.isRespawning) {
+            this.startRespawn();
+            this.unloadItems();
+         }
       });
    }
 
    public onLoad(): void {
+      // Reveal fog
       if (this.tribe.type === "humans") {
          const coordinates = this.getComponent(TransformComponent)!.getTileCoordinates();
          Board.revealFog(coordinates, this.sightRange, true);
       }
    }
 
-   public tickComponents(): void {
-      super.tickComponents();
+   public tick(): void {
+      super.tick();
 
       // Reveal any fog of war the tribe member is standing on
       if (this.tribe.type === "humans") {
          const coordinates = this.getComponent(TransformComponent)!.getTileCoordinates();
          Board.revealFog(coordinates, this.sightRange, false);
+      }
+
+      const isMoving = this.getComponent(TransformComponent)!.isMoving;
+
+      const SPAWN_RATE = 8;
+      const currentTime = Game.secondsElapsed * SPAWN_RATE;
+      const previousTime = (Game.secondsElapsed - 1 / SETTINGS.tps) * SPAWN_RATE;
+
+      // Create walk particle
+      if (isMoving && Math.floor(currentTime) !== Math.floor(previousTime)) {
+         this.createWalkParticle();
       }
    }
 
@@ -127,6 +159,8 @@ abstract class GenericTribeMember extends Entity {
    }
 
    protected startRespawn(): void {
+      this.isRespawning = true;
+
       new Timer({
          duration: GenericTribeMember.RESPAWN_TIME,
          onEnd: () => this.respawn(),
@@ -135,6 +169,8 @@ abstract class GenericTribeMember extends Entity {
    }
 
    protected respawn(): void {
+      this.isRespawning = false;
+      
       this.tribe.respawnEntity(this);
    }
 
@@ -202,7 +238,7 @@ abstract class GenericTribeMember extends Entity {
             rotation: Math.PI / 2,
             url: (): string => {
                const itemName = selectedSlotComponent.getItem()!;
-               const itemInfo = ITEMS[ItemName[itemName] as unknown as ItemName];
+               const itemInfo = ITEMS[itemName];
                return itemInfo.imageSrc;
             },
             isVisible: (): boolean => {
@@ -225,7 +261,7 @@ abstract class GenericTribeMember extends Entity {
 
          const [itemName, itemAmount] = itemSlot;
 
-         const item = ITEMS[ItemName[itemName] as unknown as ItemName];
+         const item = ITEMS[itemName];
 
          // Calculate the position
          const offsetVector = new Vector(OFFSET_RANGE, randFloat(0, 360));
@@ -238,6 +274,39 @@ abstract class GenericTribeMember extends Entity {
 
       // Clear the tribe member's inventory
       inventoryComponent.clear();
+   }
+
+   public useItem(): void {
+      this.getComponent(SelectedSlotComponent)!.useItem();
+   }
+
+   private createWalkParticle(): void {
+      const entityPosition = this.getComponent(TransformComponent)!.position;
+      const offset = Vector.randomUnitVector();
+      offset.magnitude *= 0.2 * Board.tileSize;
+
+      const particlePosition = (entityPosition.add(offset.convertToPoint())).convertTo3D();
+
+      // Get the colour
+      const tileCoordinates = this.getComponent(TransformComponent)!.getTileCoordinates();
+      const tile = Board.getTile(...tileCoordinates);
+      const colour = TILE_WALK_COLOURS[tile.kind];
+
+      const radius = randFloat(1, 1.5);
+      const inclination = randFloat(Math.PI / 8, 3 * Math.PI / 8);
+      const azimuth = randFloat(0, Math.PI * 2);
+      const initialVelocity = new Vector3(radius, inclination, azimuth);
+
+      new Particle(particlePosition, {
+         type: "rectangle",
+         size: [7, 10],
+         colour: colour,
+         renderLayer: RenderLayer.LowParticles,
+         initialVelocity: initialVelocity,
+         lifespan: [0.75, 1],
+         endOpacity: 0,
+         hasShadow: false
+      });
    }
 }
 

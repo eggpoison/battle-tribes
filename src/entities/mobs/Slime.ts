@@ -6,7 +6,7 @@ import RenderComponent, { EllipseRenderPart } from "../../entity-components/Rend
 import ItemSpawnComponent from "../../entity-components/ItemSpawnerComponent";
 import { ItemName } from "../../items/items";
 import { Point, randFloat, randInt, Vector } from "../../utils";
-import Entity from "../Entity";
+import Entity, { RenderLayer } from "../Entity";
 import GenericTribeMember from "../tribe-members/GenericTribeMember";
 import Mob from "./Mob";
 import TransformComponent from "../../entity-components/TransformComponent";
@@ -82,7 +82,7 @@ class Slime extends Mob {
    private static readonly FOLLOW_SPEED_VARIANCE = 0.3;
 
    constructor(position: Point, size?: SlimeSizeCategory) {
-      super(position, [
+      super(RenderLayer.HostileEntities, position, [
          new ItemSpawnComponent(),
          new AIManagerComponent()
       ]);

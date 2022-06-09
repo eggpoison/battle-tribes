@@ -6,7 +6,7 @@ class InfiniteInventoryComponent extends InventoryComponent {
       if (typeof slotNum === "undefined") return amount;
 
       const slotInfo = this.itemSlots[slotNum];
-      const slotItemInfo = ITEMS[ItemName[slotInfo[0]] as unknown as ItemName];
+      const slotItemInfo = ITEMS[slotInfo[0]];
 
       if (typeof slotInfo === "undefined") {
          // If the slot is empty, return the max amount
@@ -22,8 +22,7 @@ class InfiniteInventoryComponent extends InventoryComponent {
 
    public addItem(itemName: ItemName, amount: number = 1): number {
       // Get the item info
-      const itemKey = ItemName[itemName] as unknown as ItemName;
-      const itemInfo = ITEMS[itemKey];
+      const itemInfo = ITEMS[itemName];
 
       let remainingAmountToAdd = amount;
 

@@ -1,31 +1,21 @@
-import Board from "../../Board";
 import HealthComponent from "../../entity-components/HealthComponent";
 import HitboxComponent from "../../entity-components/HitboxComponent";
 import RenderComponent, { ImageRenderPart } from "../../entity-components/RenderComponent";
 import ItemSpawnComponent from "../../entity-components/ItemSpawnerComponent";
 import { ItemName } from "../../items/items";
-import { getTilesByType, TileKind } from "../../data/tile-types";
-import { randItem } from "../../utils";
+import { Point } from "../../utils";
 import Resource from "./Resource";
+import { RenderLayer } from "../Entity";
 
 class Berry extends Resource {
-   private static readonly spawnableTileTypes: ReadonlyArray<TileKind> = [
-      TileKind.grass
-   ];
-
    public readonly name = "Berry";
    public readonly SIZE = 1;
 
    private static readonly HEALTH = 10;
    private static readonly LIFESPAN = 30;
 
-   constructor() {
-      // Calculate the position of the berry
-      const potentialTileCoordinates = getTilesByType(Berry.spawnableTileTypes);
-      const spawnTileCoordinates = randItem(potentialTileCoordinates);
-      const position = Board.getRandomPositionInTile(...spawnTileCoordinates);
-
-      super(position);
+   constructor(position: Point) {
+      super(RenderLayer.LowResources, position);
 
       this.getComponent(HealthComponent)!.setMaxHealth(Berry.HEALTH, true);
       this.getComponent(HealthComponent)!.setLifespan(Berry.LIFESPAN);

@@ -1,12 +1,12 @@
 import Board, { Coordinates } from "./Board";
 import Camera from "./Camera";
-import { getCanvasContext, getCanvasHeight, getCanvasWidth } from "./components/Canvas";
+import { getGameCanvasContext, getCanvasHeight, getCanvasWidth } from "./components/Canvas";
 import { getHeldItem } from "./components/inventory/ItemSlot";
 import Player, { PlayerInteractionMode } from "./entities/tribe-members/Player";
 import TribeWorker from "./entities/tribe-members/TribeWorker";
 import HealthComponent from "./entity-components/HealthComponent";
 import TransformComponent from "./entity-components/TransformComponent";
-import ITEMS, { ItemName } from "./items/items";
+import ITEMS from "./items/items";
 import { Point, roundNum, setWindowFocus } from "./utils";
 
 abstract class Mouse {
@@ -50,7 +50,7 @@ abstract class Mouse {
          heldItemElement.style.left = this.lastMouseEvent.clientX + "px";
          heldItemElement.style.top = this.lastMouseEvent.clientY + "px";
 
-         const itemInfo = ITEMS[ItemName[heldItem.name] as unknown as ItemName];
+         const itemInfo = ITEMS[heldItem.name];
 
          // Update image src
          const image = heldItemElement.querySelector(".item-image") as HTMLImageElement;
@@ -121,6 +121,10 @@ abstract class Mouse {
       return commandTileTargets;
    }
 
+   public static unitIsSelected(entity: TribeWorker): boolean {
+      return this.selectedUnits.includes(entity);
+   }
+
    public static getSelectedUnits(): Array<TribeWorker> {
       return this.selectedUnits;
    }
@@ -158,9 +162,20 @@ abstract class Mouse {
          this.lastCommandMouseEvent = e;
       }
 
-      // Command units
-      if (e.button === 2 && Player.currentInteractionMode === PlayerInteractionMode.SelectUnits) {
-         this.commandUnits(e);
+      // Right click
+      if (e.button === 2) {
+         switch (Player.currentInteractionMode) {
+            // Command units
+            case PlayerInteractionMode.SelectUnits: {
+               this.commandUnits(e);
+               break;
+            }
+            // Use item
+            case PlayerInteractionMode.Play: {
+               Player.instance.useItem();
+               break;
+            }
+         }
       }
    }
 
@@ -242,7 +257,8 @@ abstract class Mouse {
          for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
             const chunk = Board.getChunk(chunkX, chunkY)!;
 
-            for (const entity of chunk) {
+            const entities = chunk.getEntityList();
+            for (const entity of entities) {
                // If the entity is a tribe member
                if (entity instanceof TribeWorker && entity.tribe.type === "humans") {
                   const position = entity.getComponent(TransformComponent)!.position;
@@ -273,7 +289,7 @@ abstract class Mouse {
       const minSelectY = Math.min(this.tribeSelectStartPosition.y, this.tribeSelectEndPosition.y);
       const maxSelectY = Math.max(this.tribeSelectStartPosition.y, this.tribeSelectEndPosition.y);
       
-      const ctx = getCanvasContext();
+      const ctx = getGameCanvasContext();
 
       ctx.fillStyle = this.OPAQUE_UNIT_SELECTION_COLOUR;
 

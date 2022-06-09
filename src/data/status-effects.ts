@@ -1,4 +1,5 @@
 import Board from "../Board";
+import { RenderLayer } from "../entities/Entity";
 import { ParticleSourceInfo } from "../particles/ParticleSource";
 import { Point3, randFloat, Vector3 } from "../utils";
 
@@ -43,6 +44,7 @@ const STATUS_EFFECT_RECORD: Record<StatusEffectType, StatusEffectInfo> = {
                const velocity = new Point3(xVel, yVel, zVel);
                return velocity.convertToVector();
             },
+            renderLayer: RenderLayer.HighParticles,
             initialAcceleration: FIRE_ACCELERATION,
             angularVelocity: 2,
             angularAcceleration: 10,
@@ -50,7 +52,8 @@ const STATUS_EFFECT_RECORD: Record<StatusEffectType, StatusEffectInfo> = {
             endColour: [50, 0, 0],
             lifespan: [1.5, 2],
             endOpacity: 0,
-            friction: 0.3
+            friction: 0.3,
+            hasShadow: false
          }
       }
    }

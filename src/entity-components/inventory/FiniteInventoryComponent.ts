@@ -11,11 +11,11 @@ class FiniteInventoryComponent extends InventoryComponent {
    }
 
    public getItemAddAmount(itemName: ItemName, amount: number, slotNum?: number): number | null {
-      const itemInfo = ITEMS[ItemName[itemName] as unknown as ItemName];
+      const itemInfo = ITEMS[itemName];
 
       if (typeof slotNum !== "undefined") {
          const slotInfo = this.itemSlots[slotNum];
-         const slotItemInfo = ITEMS[ItemName[slotInfo[0]] as unknown as ItemName];
+         const slotItemInfo = ITEMS[slotInfo[0]];
 
          if (typeof slotInfo === "undefined") {
             // If the slot is empty, return the max amount
@@ -49,8 +49,7 @@ class FiniteInventoryComponent extends InventoryComponent {
 
    public addItem(itemName: ItemName, amount: number): number {
       // Get the item info
-      const itemKey = ItemName[itemName] as unknown as ItemName;
-      const itemInfo = ITEMS[itemKey];
+      const itemInfo = ITEMS[itemName];
 
       let remainingAmountToAdd = amount;
 
@@ -100,7 +99,7 @@ class FiniteInventoryComponent extends InventoryComponent {
          if (typeof item === "undefined") return false;
 
          if (isStrict) {
-            const info = ITEMS[ItemName[item[0]] as unknown as ItemName];
+            const info = ITEMS[item[0]];
             if (item[1] < info.stackSize) return false;
          }
       }

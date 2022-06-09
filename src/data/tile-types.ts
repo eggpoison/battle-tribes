@@ -2,6 +2,7 @@ import Board, { Coordinates } from "../Board";
 import { ParticleInfoType } from "../particles/Particle";
 import { StatusEffectType } from "./status-effects";
 import { Point3, randFloat, randItem } from "../utils";
+import { RenderLayer } from "../entities/Entity";
 
 export enum TileKind {
    dirt,
@@ -117,6 +118,7 @@ export const TILE_PARTICLES: Partial<Record<TileKind, TileParticleInfo>> = {
       particleInfo: {
          type: "rectangle",
          size: [7.5, 12.5],
+         renderLayer: RenderLayer.HighParticles,
          colour: () => {
             const COLOURS: Array<[number, number, number]> = [
                [255, 147, 38], // Orange magma

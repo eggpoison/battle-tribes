@@ -4,6 +4,7 @@ import ItemSpawnComponent from "../../entity-components/ItemSpawnerComponent";
 import RenderComponent, { ImageRenderPart } from "../../entity-components/RenderComponent";
 import { ItemName } from "../../items/items";
 import { Point } from "../../utils";
+import { RenderLayer } from "../Entity";
 import Resource from "./Resource";
 
 class Boulder extends Resource {
@@ -14,7 +15,7 @@ class Boulder extends Resource {
    public readonly SIZE: number = 1.3;
 
    constructor(position: Point) {
-      super(position);
+      super(RenderLayer.LowResources, position);
 
       this.getComponent(HealthComponent)!.setMaxHealth(Boulder.HEALTH, true);
       

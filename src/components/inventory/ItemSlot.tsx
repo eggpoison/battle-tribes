@@ -23,6 +23,23 @@ const getPlayerInventoryComponent = (): FiniteInventoryComponent => {
    return Player.instance.getComponent(FiniteInventoryComponent)!;
 }
 
+const splitItem = (slotNum: number, inventoryComponent: InventoryComponent): void => {
+   const itemSlots = inventoryComponent.getItemSlots();
+   const itemSlot = itemSlots[slotNum];
+   const [ itemName, itemAmount ] = itemSlot;
+   
+   const holdAmount = Math.round((itemAmount + Number.EPSILON) / 2);
+
+   // Hold the item
+   heldItem = {
+      name: itemName,
+      amount: holdAmount
+   };
+
+   // Take away from the clicked item
+   inventoryComponent.removeItemFromSlot(slotNum, holdAmount);
+}
+
 const quickMoveItem = (slotNum: number, clickedInventoryComponent: InventoryComponent, otherInventoryComponent: InventoryComponent): void => {
    // Get the item
    const [itemName, itemAmount] = clickedInventoryComponent.getItem(slotNum)!;
@@ -51,18 +68,47 @@ const stackItem = (slotNum: number, inventoryComponent: InventoryComponent): voi
    }
 }
 
-export function clickInventorySlot(slotNum: number, inventoryComponent: InventoryComponent, e: MouseEvent): void {
+const clickInventorySlot = (slotNum: number, inventoryComponent: InventoryComponent, e: MouseEvent): void => {
    const itemSlots = inventoryComponent.getItemSlots();
    const slotInfo = itemSlots[slotNum];
 
    if (typeof slotInfo === "undefined") { // If the clicked slot is empty
       // If there is a held item, add it to the inventory
       if (heldItem !== null) {
-         inventoryComponent.addItemToSlot(slotNum, heldItem.name, heldItem.amount);
-         heldItem = null;
+         // Add the item to the inventory
+         let amountAdded: number;
+         if (e.button === 2) { // If the button was a right click, only add one item
+            amountAdded = inventoryComponent.addItemToSlot(slotNum, heldItem.name, 1);
+         } else { // If the button was a left click, then add the whole stack.
+            amountAdded = inventoryComponent.addItemToSlot(slotNum, heldItem.name, heldItem.amount);
+         }
+
+         // Clear the held item
+         heldItem.amount -= amountAdded;
+         if (heldItem.amount <= 0) {
+            heldItem = null;
+         }
       }
    } else { // If the clicked slot has an item
       const [itemName, itemAmount] = slotInfo;
+
+      // On right click
+      if (e.button === 2) {
+         // Split the item if there isn't a held item
+         if (heldItem === null) {
+            splitItem(slotNum, inventoryComponent);
+         } else if (itemName === heldItem.name) { // Otherwise if the held item is of the same type, add 1 to the item
+            inventoryComponent.addItemToSlot(slotNum, itemName, 1);
+
+            // Remove from the held item
+            heldItem.amount -= 1;
+            if (heldItem.amount === 0) {
+               heldItem = null;
+            }
+         }
+
+         return;
+      }
 
       if (openedInventoryComponent !== null && e.shiftKey) {
          const otherInventoryComponent = inventoryComponent === openedInventoryComponent ? getPlayerInventoryComponent() : openedInventoryComponent;         
@@ -103,9 +149,9 @@ interface ItemSlotProps {
 }
 
 const ItemSlot = ({ itemName, amount, slotNum, getInventoryComponent, isSelected }: ItemSlotProps) => {
-   const info = typeof itemName !== "undefined" ? ITEMS[ItemName[itemName] as unknown as ItemName] : undefined;
+   const info = typeof itemName !== "undefined" ? ITEMS[itemName] : undefined;
 
-   const onClick = (e: MouseEvent): void => {
+   const mouseEvent = (e: MouseEvent): void => {
       const inventoryComponent = getInventoryComponent();
       clickInventorySlot(slotNum, inventoryComponent, e);
       
@@ -113,7 +159,7 @@ const ItemSlot = ({ itemName, amount, slotNum, getInventoryComponent, isSelected
    }
 
    return (
-      <div onClick={e => onClick(e.nativeEvent)} className={`item-slot${isSelected ? " selected" : ""}`}>
+      <div onClick={e => mouseEvent(e.nativeEvent)} onContextMenu={e => mouseEvent(e.nativeEvent)} className={`item-slot${isSelected ? " selected" : ""}`}>
          {typeof info !== "undefined" ? <>
             <img src={require("../../images/" + info.imageSrc)} alt={info.displayName} className="preview" />
             <div className="amount">{amount}</div>

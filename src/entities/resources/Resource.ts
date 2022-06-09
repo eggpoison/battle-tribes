@@ -1,5 +1,4 @@
 import Component from "../../Component";
-import HealthComponent from "../../entity-components/HealthComponent";
 import HitboxComponent from "../../entity-components/HitboxComponent";
 import RenderComponent from "../../entity-components/RenderComponent";
 import ItemSpawnComponent from "../../entity-components/ItemSpawnerComponent";
@@ -7,10 +6,11 @@ import TransformComponent from "../../entity-components/TransformComponent";
 import { ResourceInfo } from "../../data/entity-info";
 import { Point, randFloat } from "../../utils";
 import LivingEntity from "../LivingEntity";
+import { RenderLayer } from "../Entity";
 
 abstract class Resource extends LivingEntity<ResourceInfo> {
-   constructor(position: Point, components?: ReadonlyArray<Component>) {
-      super(position, [
+   constructor(renderLayer: RenderLayer.LowResources | RenderLayer.HighResources, position: Point, components?: ReadonlyArray<Component>) {
+      super(renderLayer, position, [
          new ItemSpawnComponent(),
          ...(components || [])
       ]);

@@ -5,14 +5,14 @@ import RenderComponent from "../entity-components/RenderComponent";
 import TransformComponent from "../entity-components/TransformComponent";
 import { EntityInfo } from "../data/entity-info";
 import { Point } from "../utils";
-import Entity from "./Entity";
+import Entity, { EntityRenderLayer } from "./Entity";
 import StatusEffectComponent from "../components/StatusEffectComponent";
 
 abstract class LivingEntity<I extends EntityInfo> extends Entity {
    public entityInfo!: I;
 
-   constructor(position: Point, components?: ReadonlyArray<Component>) {
-      super([
+   constructor(renderLayer: EntityRenderLayer, position: Point, components?: ReadonlyArray<Component>) {
+      super(renderLayer, [
          new TransformComponent(position),
          new RenderComponent(),
          new HitboxComponent(),

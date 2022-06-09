@@ -48,6 +48,11 @@ class Player extends Chief {
          new CameraFollowComponent()
       ]);
 
+      // If an instance of the player has already been created, throw an error
+      if (typeof Player.instance !== "undefined") {
+         throw new Error("A player instance already exists!");
+      }
+
       Player.instance = this;
 
       PlayerControllerComponent.createKeyEvent((key: string) => this.onKeyPress(key));
@@ -106,7 +111,7 @@ class Player extends Chief {
    private changeSelectedSlot(newSelectedSlot: number): void {
       // Don't select the slot if it's out of bounds
       const slotCount = this.getComponent(FiniteInventoryComponent)!.slotCount;
-      if (newSelectedSlot > slotCount) return;
+      if (newSelectedSlot >= slotCount) return;
 
       this.getComponent(SelectedSlotComponent)!.changeSlot(newSelectedSlot);
 
@@ -180,42 +185,15 @@ class Player extends Chief {
             break;
          }
 
-         case "1": {
-            this.changeSelectedSlot(0);
-            break;
-         }
-         case "2": {
-            this.changeSelectedSlot(1);
-            break;
-         }
-         case "3": {
-            this.changeSelectedSlot(2);
-            break;
-         }
-         case "4": {
-            this.changeSelectedSlot(3);
-            break;
-         }
-         case "5": {
-            this.changeSelectedSlot(4);
-            break;
-         }
-         case "6": {
-            this.changeSelectedSlot(5);
-            break;
-         }
-         case "7": {
-            this.changeSelectedSlot(6);
-            break;
-         }
-         case "8": {
-            this.changeSelectedSlot(7);
-            break;
-         }
-         case "9": {
-            this.changeSelectedSlot(8);
-            break;
-         }
+         case "1": { this.changeSelectedSlot(0); break; }
+         case "2": { this.changeSelectedSlot(1); break; }
+         case "3": { this.changeSelectedSlot(2); break; }
+         case "4": { this.changeSelectedSlot(3); break; }
+         case "5": { this.changeSelectedSlot(4); break; }
+         case "6": { this.changeSelectedSlot(5); break; }
+         case "7": { this.changeSelectedSlot(6); break; }
+         case "8": { this.changeSelectedSlot(7); break; }
+         case "9": { this.changeSelectedSlot(8); break; }
       }
    }
 

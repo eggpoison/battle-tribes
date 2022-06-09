@@ -5,7 +5,7 @@ import { getEntityInfo } from "../data/entity-info";
 import Game from "../Game";
 import SETTINGS from "../settings";
 import { Point, randInt } from "../utils";
-import Entity from "./Entity";
+import Entity, { RenderLayer } from "./Entity";
 import Zombie from "./mobs/Zombie";
 
 class Tombstone extends Entity {
@@ -21,7 +21,7 @@ class Tombstone extends Entity {
    private currentZombie: Zombie | null = null;
    
    constructor(position: Point) {
-      super([
+      super(RenderLayer.LowResources, [
          new TransformComponent(),
          new RenderComponent()
       ]);
@@ -45,7 +45,7 @@ class Tombstone extends Entity {
       }));
    }
 
-   public tickComponents(): void {
+   public tick(): void {
       // If it's day, remove the tombstone at a random point
       if (!Game.isNight() && Math.random() < Tombstone.DIE_CHANCE / SETTINGS.tps) {
          Board.removeEntity(this);
@@ -53,7 +53,7 @@ class Tombstone extends Entity {
          return;
       }
 
-      super.tickComponents();
+      super.tick();
 
       if (this.currentZombie === null && Math.random() < Tombstone.ZOMBIE_SPAWN_CHANCE / SETTINGS.tps) {
          const position = this.getComponent(TransformComponent)!.position;

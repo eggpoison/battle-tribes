@@ -4,6 +4,7 @@ import ItemSpawnComponent from "../../entity-components/ItemSpawnerComponent";
 import RenderComponent, { ImageRenderPart } from "../../entity-components/RenderComponent";
 import { ItemName } from "../../items/items";
 import { Point } from "../../utils";
+import { RenderLayer } from "../Entity";
 import Resource from "./Resource";
 
 class Tree extends Resource {
@@ -13,7 +14,7 @@ class Tree extends Resource {
    private static readonly LIFESPAN = 60;
 
    constructor(position: Point) {
-      super(position);
+      super(RenderLayer.HighResources, position);
 
       this.getComponent(HealthComponent)!.setMaxHealth(Tree.HEALTH, true);
       this.getComponent(HealthComponent)!.setLifespan(Tree.LIFESPAN);

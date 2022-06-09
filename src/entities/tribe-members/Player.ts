@@ -1,5 +1,5 @@
 import { HealthBarManager } from "../../components/HealthBar";
-import { closeMenu, menuIsOpen, toggleMenu } from "../../components/menus/MenuManager";
+import { closeMenu, toggleMenu } from "../../components/menus/MenuManager";
 import { clearMessage, displayMessage } from "../../components/MessageDisplay";
 import { updatePlayerInventoryViewer, updatePlayerInventoryViewerSelectedSlot } from "../../components/inventory/PlayerInventoryViewer";
 import { togglePlayerRespawnMessage, setPlayerRespawnMessageTime } from "../../components/PlayerRespawnMessage";
@@ -19,6 +19,18 @@ import Chief from "./Chief";
 import SelectedSlotComponent from "../../entity-components/SelectedSlotComponent";
 import InfiniteInventoryComponent from "../../entity-components/inventory/InfiniteInventoryComponent";
 import { updateOpenedInventoryComponent } from "../../components/inventory/ItemSlot";
+
+const showGUIS = (): void => {
+   document.getElementById("health-bar")!.classList.remove("hidden");
+   document.getElementById("inventory-viewer")!.classList.remove("hidden");
+   document.getElementById("xp-bar")!.classList.remove("hidden");
+}
+
+const hideGUIs = (): void => {
+   document.getElementById("health-bar")!.classList.add("hidden");
+   document.getElementById("inventory-viewer")!.classList.add("hidden");
+   document.getElementById("xp-bar")!.classList.add("hidden");
+}
 
 export enum PlayerInteractionMode {
    Play,
@@ -54,18 +66,21 @@ class Player extends Chief {
          // Update inventory viewer
          const itemSlots = this.getComponent(FiniteInventoryComponent)!.getItemSlots();
          updatePlayerInventoryViewer(itemSlots);
-         // InventoryViewerManager.getInstance("playerInventory").setItemSlots(itemSlots);
       });
    }
 
    protected startRespawn(): void {
       super.startRespawn();
 
+      hideGUIs();
+
       togglePlayerRespawnMessage(true);
    }
 
    protected respawn(): void {
       super.respawn();
+
+      showGUIS();
 
       togglePlayerRespawnMessage(false);
    }
@@ -75,6 +90,8 @@ class Player extends Chief {
    }
 
    public attack(): void {
+      if (!Player.isAlive()) return;
+
       if (Player.currentInteractionMode === PlayerInteractionMode.Play) {
          this.getComponent(AttackComponent)!.attack("baseAttack");
       }

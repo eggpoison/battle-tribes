@@ -54,6 +54,9 @@ class Chief extends GenericTribeMember {
             
             return this.getComponent(TransformComponent)!.position.add(offsetPoint);
          },
+         origin: (): Point => {
+            return this.getComponent(TransformComponent)!.position;
+         },
          radius: 1,
          damage: 2,
          pierce: 1,

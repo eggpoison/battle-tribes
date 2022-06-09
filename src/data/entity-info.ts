@@ -79,7 +79,7 @@ const ENTITY_INFO: ReadonlyArray<MobInfo | ResourceInfo> = [
       },
       packSize: [2, 4],
       behaviour: "peaceful",
-      exp: 1,
+      exp: 2,
       getConstr: () => Cow
    },
    // Slime
@@ -112,7 +112,7 @@ const ENTITY_INFO: ReadonlyArray<MobInfo | ResourceInfo> = [
       packSize: 1,
       behaviour: "hostile",
       spawnChance: 0.2,
-      exp: 10,
+      exp: 25,
       getConstr: () => Yeti
    }
 ];

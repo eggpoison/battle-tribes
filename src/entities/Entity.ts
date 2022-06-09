@@ -27,8 +27,13 @@ abstract class Entity {
          this.components.set(component.constructor as (new (...args: any[]) => any), component);
 
          component.setEntity(this);
-         if (typeof component.onLoad !== "undefined") component.onLoad();
       }
+   }
+
+   public loadComponents(): void {
+      this.components.forEach(component => {
+         if (typeof component.onLoad !== "undefined") component.onLoad();
+      });
    }
 
    public onLoad?(): void;

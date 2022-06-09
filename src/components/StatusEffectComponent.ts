@@ -74,6 +74,9 @@ class StatusEffectComponent extends Component {
    }
 
    public applyStatusEffect(type: StatusEffectType, duration: number): void {
+      // Don't apply the status effect to dead entities
+      if (!this.getEntity().getComponent(HealthComponent)!.isAlive()) return;
+
       // Don't apply the status effect if it already exists
       if (this.hasStatusEffect(type)) {
          const statusEffect = this.statusEffects[type]!;

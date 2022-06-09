@@ -448,6 +448,7 @@ abstract class Board {
       if (chunk === null) return;
 
       if (typeof entity.onLoad !== "undefined") entity.onLoad();
+      entity.loadComponents();
 
       // Add the entity to the chunk
       chunk.push(entity);

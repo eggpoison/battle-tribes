@@ -3,7 +3,7 @@ import Entity from "../Entity";
 import Tribe from "../../Tribe";
 import HealthComponent from "../../entity-components/HealthComponent";
 import HitboxComponent from "../../entity-components/HitboxComponent";
-import RenderComponent, { EllipseRenderPart } from "../../entity-components/RenderComponent";
+import RenderComponent, { EllipseRenderPart, ImageRenderPart } from "../../entity-components/RenderComponent";
 import TransformComponent from "../../entity-components/TransformComponent";
 import { Colour, randFloat, randInt, Vector, Vector3 } from "../../utils";
 import LivingEntity from "../LivingEntity";
@@ -141,6 +141,8 @@ abstract class GenericTribeMember extends Entity {
    protected respawnTick?(duration: number): void;
 
    private createRenderParts(): void {
+      const renderComponent = this.getComponent(RenderComponent)!;
+
       const BORDER_COLOUR = "#000";
 
       const colour = TRIBE_INFO[this.tribe.type].colour;
@@ -166,7 +168,7 @@ abstract class GenericTribeMember extends Entity {
          const multiplier = i === 0 ? -1 : 1;
          const offsetPoint = new Vector(GenericTribeMember.SIZE / 2, GenericTribeMember.HAND_ANGLES * multiplier).convertToPoint();
 
-         this.getComponent(RenderComponent)!.addPart(
+         renderComponent.addPart(
             new EllipseRenderPart({
                type: "ellipse",
                fillColour: colour,
@@ -182,6 +184,34 @@ abstract class GenericTribeMember extends Entity {
             })
          );
       }
+
+      const ITEM_SIZE = 1;
+
+      const selectedSlotComponent = this.getComponent(SelectedSlotComponent)!;
+
+      // Held item
+      const heldItemOffset = new Vector(GenericTribeMember.SIZE / 2, GenericTribeMember.HAND_ANGLES).convertToPoint();
+      renderComponent.addPart(
+         new ImageRenderPart({
+            type: "image",
+            size: {
+               width: ITEM_SIZE,
+               height: ITEM_SIZE
+            },
+            offset: [heldItemOffset.x, heldItemOffset.y],
+            rotation: Math.PI / 2,
+            url: (): string => {
+               const itemName = selectedSlotComponent.getItem()!;
+               const itemInfo = ITEMS[ItemName[itemName] as unknown as ItemName];
+               return itemInfo.imageSrc;
+            },
+            isVisible: (): boolean => {
+               const itemName = selectedSlotComponent.getItem();
+               return itemName !== null;
+            },
+            zIndex: 0
+         })
+      );
    }
 
    private unloadItems(): void {

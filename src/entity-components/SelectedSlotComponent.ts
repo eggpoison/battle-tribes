@@ -19,6 +19,11 @@ class SelectedSlotComponent extends Component {
       return this.selectedSlot;
    }
 
+   public getItem(): ItemName | null {
+      const itemSlot = this.inventory.getItem(this.selectedSlot)
+      return typeof itemSlot !== "undefined" ? itemSlot[0] : null;
+   }
+
    public useItem(): void {
       // Get the item
       const itemName = this.inventory.getItemSlots()[this.selectedSlot][1];

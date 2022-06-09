@@ -10,18 +10,24 @@ interface BaseRenderSettings {
    readonly offset?: [number, number];
    readonly amount?: number;
    readonly zIndex?: number;
+   readonly rotation?: number;
+   isVisible?(): boolean;
 }
 abstract class BaseRenderPart implements BaseRenderSettings {
    public readonly size: unknown;
    public readonly offset: [number, number];
    public readonly amount: number;
    public readonly zIndex: number;
+   public readonly rotation: number;
+   public isVisible?(): boolean;
 
    constructor(renderSettings: BaseRenderSettings) {
       this.size = renderSettings.size;
       this.offset = renderSettings.offset || [0, 0];
       this.amount = renderSettings.amount || 1;
       this.zIndex = renderSettings.zIndex || 0;
+      this.rotation = renderSettings.rotation || 0;
+      this.isVisible = renderSettings.isVisible
    }
 }
 
@@ -100,11 +106,11 @@ interface ImageRenderSettings extends BaseRenderSettings {
       readonly height: number;
    }
    readonly type: "image";
-   readonly url: string;
+   readonly url: string | (() => string);
 }
 export class ImageRenderPart extends BaseRenderPart implements ImageRenderSettings {
    public readonly type: "image";
-   public readonly url: string;
+   public readonly url: string | (() => string);
    public readonly size: {
       readonly width: number;
       readonly height: number;
@@ -117,21 +123,50 @@ export class ImageRenderPart extends BaseRenderPart implements ImageRenderSettin
       this.url = renderSettings.url;
       this.size = renderSettings.size;
    }
+
+   public getURL(): string {
+      return typeof this.url === "function" ? this.url() : this.url;
+   }
 }
+   
+const getHurtImageData = (image: HTMLImageElement): HTMLImageElement => {
+   const canvas = document.createElement("canvas");
+   const ctx = canvas.getContext("2d")!;
+
+   canvas.width = image.width;
+   canvas.height = image.height;
+
+   ctx.drawImage(image, 0, 0);
+
+   const imageData = ctx.getImageData(0, 0, image.width, image.height);
+
+   // Convert all pixels to white
+   for (let px = 0; px < imageData.width * imageData.height * 4; px += 4) {
+      imageData.data[px] = 255;
+      imageData.data[px + 1] = 255;
+      imageData.data[px + 2] = 255;
+   }
+
+   ctx.putImageData(imageData, 0, 0);
+
+   // Create an image from the data
+   const resultImage = new Image();
+   resultImage.src = canvas.toDataURL();
+
+   return resultImage;
+}
+
+type ImageRecord = {
+   [key: string]: HTMLImageElement;
+}
+const PART_IMAGES: ImageRecord = {};
+const HURT_IMAGES: ImageRecord = {};
 
 type RenderPart = EllipseRenderPart | RectangleRenderPart | ImageRenderPart;
 export type RenderParts = Array<RenderPart>;
 
-type HurtImages = {
-   [key: string]: HTMLImageElement;
-}
-
 class RenderComponent extends Component {
    private readonly renderParts: RenderParts = new Array<RenderPart>();
-   private readonly partImages: Array<HTMLImageElement> = new Array<HTMLImageElement>();
-   private readonly partHurtImages: Array<HTMLImageElement> = new Array<HTMLImageElement>();
-
-   public static readonly hurtImages: HurtImages = {};
 
    public async addPart(renderPart: RenderPart): Promise<void> {
       // Find a spot in the renderParts array for the part
@@ -145,16 +180,6 @@ class RenderComponent extends Component {
 
       // Insert the render part into the array
       this.renderParts.splice(idx, 0, renderPart);
-
-      // If the render part is an image, preload the image into the images array
-      if (renderPart instanceof ImageRenderPart) {
-         this.partImages[idx] = new Image();
-         this.partImages[idx].src = require("../images/" + renderPart.url);
-
-         if (this.getEntity().getComponent(HealthComponent) !== null) {
-            this.partHurtImages[idx] = await RenderComponent.getHurtImage(this.partImages[idx], renderPart.url);
-         }
-      }
    }
 
    public addParts(renderParts: ReadonlyArray<RenderPart>): void {
@@ -163,51 +188,19 @@ class RenderComponent extends Component {
       }
    }
 
-   public static async getHurtImage(image: HTMLImageElement, url: string): Promise<HTMLImageElement> {
+   private async createHurtImage(image: HTMLImageElement, url: string): Promise<HTMLImageElement> {
       return new Promise(async resolve => {
-         if (this.hurtImages.hasOwnProperty(image.src)) {
-            resolve(this.hurtImages[image.src]);
-         }
-
-         if (RenderComponent.hurtImages.hasOwnProperty(url)) {
-            return RenderComponent.hurtImages[url];
+         if (HURT_IMAGES.hasOwnProperty(url)) {
+            resolve(HURT_IMAGES[image.src]);
          }
    
          image.addEventListener("load", () => {
-            const imageData = this.createHurtImage(image);
+            const imageData = getHurtImageData(image);
             
-            this.hurtImages[image.src] = imageData;
-            RenderComponent.hurtImages[url] = imageData;
+            HURT_IMAGES[url] = imageData;
             resolve(imageData);
          });
       });
-   }
-   
-   private static createHurtImage(image: HTMLImageElement): HTMLImageElement {
-      const canvas = document.createElement("canvas");
-      const ctx = canvas.getContext("2d")!;
-
-      canvas.width = image.width;
-      canvas.height = image.height;
-
-      ctx.drawImage(image, 0, 0);
-
-      const imageData = ctx.getImageData(0, 0, image.width, image.height);
-
-      // Convert all pixels to white
-      for (let px = 0; px < imageData.width * imageData.height * 4; px += 4) {
-         imageData.data[px] = 255;
-         imageData.data[px + 1] = 255;
-         imageData.data[px + 2] = 255;
-      }
-
-      ctx.putImageData(imageData, 0, 0);
-
-      // Create an image from the data
-      const resultImage = new Image();
-      resultImage.src = canvas.toDataURL();
-
-      return resultImage;
    }
 
    public static getOffset(magnitude: number, radians: number): [number, number] {
@@ -216,18 +209,26 @@ class RenderComponent extends Component {
       return [point.x, point.y];
    }
 
-   public renderEntity(ctx: CanvasRenderingContext2D): void {
+   public async renderEntity(ctx: CanvasRenderingContext2D): Promise<void> {
       // Get the entity transform information
       const entityTransformComponent = this.getEntity().getComponent(TransformComponent)!;
       const position = entityTransformComponent.position;
-
-      const entityRotation = entityTransformComponent.rotation;
-
+      
       for (let i = 0; i < this.renderParts.length; i++) {
          const renderClass = this.renderParts[i];
+         
+         if (typeof renderClass.isVisible !== "undefined" && !renderClass.isVisible()) continue;
+         
+         const entityRotation = entityTransformComponent.rotation;
 
-         const cameraX = Camera.getXPositionInCamera(position.x + renderClass.offset![0] * Board.tileSize);
-         const cameraY = Camera.getYPositionInCamera(position.y + renderClass.offset![1] * Board.tileSize);
+         const offsetX = renderClass.offset![0] * Board.tileSize;
+         const offsetY = renderClass.offset![1] * Board.tileSize;
+
+         const centerX = Camera.getXPositionInCamera(position.x);
+         const centerY = Camera.getYPositionInCamera(position.y);
+
+         const cameraX = Camera.getXPositionInCamera(position.x + offsetX);
+         const cameraY = Camera.getYPositionInCamera(position.y + offsetY);
 
          const healthComponent = this.getEntity().getComponent(HealthComponent);
          const isBeingHit = healthComponent !== null && healthComponent.isBeingHit();
@@ -244,9 +245,6 @@ class RenderComponent extends Component {
                   radiusX = renderClass.size.radius[0] * Board.tileSize;
                   radiusY = renderClass.size.radius[1] * Board.tileSize;
                }
-
-               const centerX = Camera.getXPositionInCamera(position.x);
-               const centerY = Camera.getYPositionInCamera(position.y);
 
                // Move the canvas origin to the center of the image
                ctx.translate(centerX, centerY);
@@ -284,20 +282,39 @@ class RenderComponent extends Component {
                const width = renderClass.size.width;
                const height = renderClass.size.height;
 
-               const cameraXWithSize = Camera.getXPositionInCamera(position.x - width/2 * Board.tileSize + renderClass.offset![0] * Board.tileSize);
-               const cameraYWithSize = Camera.getYPositionInCamera(position.y - height/2 * Board.tileSize + renderClass.offset![1] * Board.tileSize);
+               // Entity rotation
+               ctx.translate(centerX, centerY);
+               ctx.rotate(entityRotation);
+               // Undo the translation
+               ctx.translate(-centerX, -centerY);
 
-               // Move the canvas origin to the center of the image
+               const cameraXWithSize = Camera.getXPositionInCamera(position.x - width/2 * Board.tileSize + offsetX);
+               const cameraYWithSize = Camera.getYPositionInCamera(position.y - height/2 * Board.tileSize + offsetY);
+
+               // Render part rotation
                ctx.translate(cameraX, cameraY);
-               ctx.rotate(entityRotation / 180 * Math.PI);
+               ctx.rotate(renderClass.rotation);
                // Undo the translation
                ctx.translate(-cameraX, -cameraY);
 
+               const url = renderClass.getURL();
+
+               // If the image hasn't been created yet, create it
+               if (!PART_IMAGES.hasOwnProperty(url)) {
+                  PART_IMAGES[url] = new Image();
+                  PART_IMAGES[url].src = require("../images/" + url);
+
+                  // If the entity will get hit, create the hurt image
+                  if (this.getEntity().getComponent(HealthComponent) !== null) {
+                     HURT_IMAGES[url] = await this.createHurtImage(PART_IMAGES[url], url);
+                  }
+               }
+
                let image!: HTMLImageElement;
-               if (isBeingHit && typeof this.partHurtImages[i] !== "undefined") {
-                  image = this.partHurtImages[i];
+               if (isBeingHit && HURT_IMAGES.hasOwnProperty(url)) {
+                  image = HURT_IMAGES[url];
                } else {
-                  image = this.partImages[i];
+                  image = PART_IMAGES[url];
                }
 
                ctx.drawImage(image, cameraXWithSize, cameraYWithSize, width * Board.tileSize, height * Board.tileSize);

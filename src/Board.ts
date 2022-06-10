@@ -290,11 +290,10 @@ abstract class Board {
    }
 
    private static renderParticleShadows(): void {
-      const ctx = getGameCanvasContext();
-
+      // Render the shadows of all visible particles
       for (const particleArray of Object.values(this.particles)) {
          for (const particle of particleArray) {
-            if (this.particleIsVisible(particle)) {
+         if (this.particleIsVisible(particle)) {
                particle.renderShadow();
             }
          }

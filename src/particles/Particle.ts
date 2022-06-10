@@ -37,7 +37,7 @@ type ParticleInfo = {
 
 interface ImageParticleInfo extends ParticleInfo {
    readonly type: "image";
-   readonly imageSrc: string;
+   readonly image: HTMLImageElement;
 }
 
 interface RectangleParticleInfo extends ParticleInfo {
@@ -67,6 +67,7 @@ class Particle {
    private readonly shadowOpacity: number;
    private readonly hasShadow: boolean;
    private readonly doesBounce: boolean;
+   private readonly image?: HTMLImageElement;
    
    public position: Point3;
    private velocity: Vector3;
@@ -148,6 +149,8 @@ class Particle {
       }
 
       if (typeof info.endOpacity !== "undefined") this.endOpacity = info.endOpacity;
+
+      if (info.type === "image") this.image = info.image;
 
       this.shadowOpacity = typeof info.shadowOpacity !== "undefined" ? info.shadowOpacity : 1;
 
@@ -239,6 +242,8 @@ class Particle {
 
       const ctx = getGameCanvasContext();
 
+      const opacity = (typeof this.endOpacity !== "undefined") ? 1 - this.age / this.lifespan : 1;
+
       switch (this.type) {
          case "rectangle": {
             let { width, height } = this.size;
@@ -247,8 +252,6 @@ class Particle {
                width = lerp(width, this.endSize.width, this.age / this.lifespan);
                height = lerp(height, this.endSize.height, this.age / this.lifespan);
             }
-
-            const opacity = (typeof this.endOpacity !== "undefined") ? 1 - this.age / this.lifespan : 1;
 
             // Rotate canvas
             ctx.translate(Camera.getXPositionInCamera(this.position.x), Camera.getYPositionInCamera(this.position.y - this.position.z));
@@ -277,6 +280,20 @@ class Particle {
 
             // Reset transform
             ctx.setTransform(1, 0, 0, 1, 0, 0);
+
+            break;
+         }
+         case "image": {
+            const canvasX = Camera.getXPositionInCamera(this.position.x - this.size.width / 2);
+            const canvasY = Camera.getYPositionInCamera((this.position.y - this.position.z) - this.size.height / 2);
+
+            ctx.globalAlpha = opacity;
+
+            ctx.drawImage(this.image!, canvasX, canvasY, this.size.width, this.size.height);
+
+            ctx.globalAlpha = 1;
+
+            break;
          }
       }
    }

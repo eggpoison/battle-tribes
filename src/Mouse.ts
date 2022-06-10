@@ -172,7 +172,7 @@ abstract class Mouse {
             }
             // Use item
             case PlayerInteractionMode.Play: {
-               Player.instance.useItem();
+               Player.instance.startItemUse();
                break;
             }
          }
@@ -220,6 +220,14 @@ abstract class Mouse {
          this.tribeSelectEndPosition = null;
 
          this.lastCommandMouseEvent = undefined;
+      } else if (e.button === 2) { // Right click
+         switch (Player.currentInteractionMode) {
+            // End item use
+            case PlayerInteractionMode.Play: {
+               Player.instance.endItemUse();
+               break;
+            }
+         }
       }
    }
 

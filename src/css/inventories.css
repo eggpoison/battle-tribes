@@ -52,6 +52,7 @@
    transform: translate(-50%, -50%);
    pointer-events: none;
    user-select: none;
+   image-rendering: pixelated;
 }
 .item-slot .amount, #held-item .amount {
    color: #fff;

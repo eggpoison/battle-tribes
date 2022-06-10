@@ -136,11 +136,6 @@ export class Point3 {
       return new Point3(this.x, this.y, this.z);
    }
 
-   // public angleBetween(other: Point3): number {
-   //    const angle = Math.atan2(other.y - this.y, other.x - this.x);
-   //    return angle;
-   // }
-
    public convertToVector(other?: Point3): Vector3 {
       const x = this.x - (typeof other !== "undefined" ? other.x : 0);
       const y = this.y - (typeof other !== "undefined" ? other.y : 0);

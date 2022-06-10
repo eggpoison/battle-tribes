@@ -26,9 +26,9 @@ const TILE_WALK_COLOURS: Record<TileKind, [number, number, number]> = {
    [TileKind.ice]: [158, 250, 255],
    [TileKind.magma]: [255, 142, 66],
    [TileKind.rock]: [89, 89, 89],
-   [TileKind.sand]: [255, 247, 0],
-   [TileKind.sandstone]: [138, 133, 0],
-   [TileKind.sludge]: [0, 138, 16],
+   [TileKind.sand]: [173, 168, 0],
+   [TileKind.sandstone]: [125, 120, 0],
+   [TileKind.sludge]: [0, 87, 10],
    [TileKind.snow]: [161, 161, 161],
    [TileKind.lava]: [140, 9, 0]
 }
@@ -234,15 +234,15 @@ abstract class GenericTribeMember extends Entity {
                width: ITEM_SIZE,
                height: ITEM_SIZE
             },
-            offset: [heldItemOffset.x, heldItemOffset.y],
+            offset: [heldItemOffset.x + GenericTribeMember.HAND_SIZE / 4, heldItemOffset.y],
             rotation: Math.PI / 2,
             url: (): string => {
-               const itemName = selectedSlotComponent.getItem()!;
+               const itemName = selectedSlotComponent.getSelectedItemName()!;
                const itemInfo = ITEMS[itemName];
                return itemInfo.imageSrc;
             },
             isVisible: (): boolean => {
-               const itemName = selectedSlotComponent.getItem();
+               const itemName = selectedSlotComponent.getSelectedItemName();
                return itemName !== null;
             },
             zIndex: 0
@@ -276,8 +276,12 @@ abstract class GenericTribeMember extends Entity {
       inventoryComponent.clear();
    }
 
-   public useItem(): void {
-      this.getComponent(SelectedSlotComponent)!.useItem();
+   public startItemUse(): void {
+      this.getComponent(SelectedSlotComponent)!.startItemUse();
+   }
+
+   public endItemUse(): void {
+      this.getComponent(SelectedSlotComponent)!.endItemUse();
    }
 
    private createWalkParticle(): void {
@@ -299,7 +303,7 @@ abstract class GenericTribeMember extends Entity {
 
       new Particle(particlePosition, {
          type: "rectangle",
-         size: [7, 10],
+         size: [7, 13],
          colour: colour,
          renderLayer: RenderLayer.LowParticles,
          initialVelocity: initialVelocity,

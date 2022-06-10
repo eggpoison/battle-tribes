@@ -1,4 +1,5 @@
 import Entity from "../entities/Entity";
+import InventoryComponent from "../entity-components/inventory/InventoryComponent";
 import ITEMS, { ItemName } from "./items";
 
 export interface ItemInfo {
@@ -24,15 +25,20 @@ class Item implements ItemInfo {
    public get name(): ItemName {
       for (const [itemName, item] of Object.entries(ITEMS)) {
          if (item === this) {
-               return ItemName[itemName as keyof typeof ItemName];
+            return ItemName[itemName as keyof typeof ItemName];
          }
       }
 
       throw new Error("Cannot find item name!");
    }
 
-   public use(entity: Entity): void {
-      // thing
+   public startUse?(entity: Entity, inventoryComponent: InventoryComponent, slotNum: number): void;
+
+   public duringUse?(entity: Entity, inventoryComponent: InventoryComponent, slotNum: number): void;
+
+   public endUse(_entity: Entity, inventoryComponent: InventoryComponent, slotNum: number): void {
+      // Remove one of the item from the inventory
+      inventoryComponent.removeItemFromSlot(slotNum, 1);
    }
 }
 

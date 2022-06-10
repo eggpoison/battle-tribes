@@ -56,6 +56,7 @@ abstract class Game {
       EntitySpawner.runSpawnAttempt();
 
       Board.tick();
+      
       Mouse.updateMouse();
       Mouse.updateUnitSelectionBounds();
       Mouse.drawUnitSelectionTool();

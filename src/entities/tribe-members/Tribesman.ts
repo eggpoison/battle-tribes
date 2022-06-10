@@ -35,7 +35,7 @@ class Tribesman extends TribeWorker {
 
    private static readonly WANDER_RATE = 0.5;
    private static readonly TARGETS = [Mob, GenericTribeMember, Resource, ItemEntity];
-   private static readonly MAX_DIST_FROM_TARGET = 1.25;
+   private static readonly MAX_DIST_FROM_TARGET = 1;
 
    private static readonly ATTACK_RANGE = 2;
    private static readonly ATTACK_DAMAGE = 5;

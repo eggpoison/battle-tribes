@@ -1,19 +1,19 @@
 import Board from "../Board";
 import Component from "../Component";
 import Entity from "../entities/Entity";
-import GenericTribeMember from "../entities/tribe-members/GenericTribeMember";
+import Tribesman from "../entities/tribe-members/Tribesman";
 import { Point } from "../utils";
 import HealthComponent from "./HealthComponent";
 import TransformComponent from "./TransformComponent";
 
-type AttackInfo = {
+export type AttackInfo = {
    readonly position: Point | (() => Point);
    /** Where the attack should sort the entities from */
    readonly origin?: Point | (() => Point);
    readonly attackingEntity: Entity;
    /** Radius of the check circle (in tiles) */
    readonly radius: number;
-   readonly damage: number;
+   readonly damage: number | ((entity: Entity) => number);
    /** How many enemies can be hit by the attack */
    readonly pierce: number;
    readonly knockbackStrength: number;
@@ -44,7 +44,7 @@ const filterAttackedEntities = (attackedEntities: Array<Entity>, attackInfo: Att
       }
 
       // Don't attack tribe members which belong to the same tribe
-      if (attackInfo.attackingEntity instanceof GenericTribeMember && entity instanceof GenericTribeMember) {
+      if (attackInfo.attackingEntity instanceof Tribesman && entity instanceof Tribesman) {
          if (entity.tribe === attackInfo.attackingEntity.tribe) {
             attackedEntities.splice(idx, 1);
             continue;
@@ -119,9 +119,12 @@ class AttackComponent extends Component {
       for (let i = 0; i < maxIdx; i++) {
          const closestEntity = attackedEntities[0];
 
+         // Get the damage dealt
+         const damage = typeof attackInfo.damage === "function" ? attackInfo.damage(closestEntity) : attackInfo.damage;
+
          // Attack the entity
          const healthComponent = closestEntity.getComponent(HealthComponent)!;
-         healthComponent.hurt(attackInfo.damage, attackInfo.attackingEntity, attackInfo.knockbackStrength);
+         healthComponent.hurt(damage, attackInfo.attackingEntity, attackInfo.knockbackStrength);
 
          // If the entity was killed by the attack, call this entity's killEntity events
          if (healthComponent.getHealth() <= 0) {

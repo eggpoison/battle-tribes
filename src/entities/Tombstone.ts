@@ -36,7 +36,6 @@ class Tombstone extends Entity {
       const url = `tombstone-${id}.png`;
 
       this.getComponent(RenderComponent)!.addPart(new ImageRenderPart({
-         type: "image",
          size: {
             width: this.SIZE,
             height: this.SIZE

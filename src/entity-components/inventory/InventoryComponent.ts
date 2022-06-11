@@ -63,6 +63,8 @@ abstract class InventoryComponent extends Component {
    public removeItem(name: ItemName, amount: number): void {
       for (let slotNum = 0; slotNum < this.itemSlots.length; slotNum++) {
          const itemSlot = this.itemSlots[slotNum];
+         if (typeof itemSlot === "undefined") continue;
+
          if (itemSlot[0] === name) {
             itemSlot[1] -= amount;
             if (itemSlot[1] <= 0) delete this.itemSlots[slotNum];
@@ -91,11 +93,14 @@ abstract class InventoryComponent extends Component {
    public getItemList(): ItemList {
       const itemList: ItemList = {};
 
-      for (const [itemName, itemCount] of this.itemSlots) {
+      for (const itemSlot of this.itemSlots) {
+         if (typeof itemSlot === "undefined") continue;
+
+         const [itemName, itemAmount] = itemSlot;
          if (itemList.hasOwnProperty(itemName)) {
-            itemList[itemName]! += itemCount;
+            itemList[itemName]! += itemAmount;
          } else {
-            itemList[itemName] = itemCount;
+            itemList[itemName] = itemAmount;
          }
       }
 

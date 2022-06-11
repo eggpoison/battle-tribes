@@ -18,9 +18,6 @@ abstract class Crafting {
          new Recipe(ItemName.woodenPickaxe, {
             [ItemName.wood]: 10
          }, 1),
-         new Recipe(ItemName.woodenAxe, {
-            [ItemName.wood]: 10
-         }, 1),
          new Recipe(ItemName.woodenSword, {
             [ItemName.wood]: 15
          }, 1)

@@ -7,9 +7,10 @@ import HitboxComponent from "../../entity-components/HitboxComponent";
 import RenderComponent, { EllipseRenderPart } from "../../entity-components/RenderComponent";
 import TransformComponent from "../../entity-components/TransformComponent";
 import Game from "../../Game";
+import SETTINGS from "../../settings";
 import { BasicCol, Point, randInt, Vector } from "../../utils";
 import Entity, { RenderLayer } from "../Entity";
-import GenericTribeMember from "../tribe-members/GenericTribeMember";
+import Tribesman from "../tribe-members/Tribesman";
 import Mob from "./Mob";
 
 class Zombie extends Mob {
@@ -22,7 +23,7 @@ class Zombie extends Mob {
    private static readonly FOLLOW_SPEED = 1.5;
    private static readonly VISION_RANGE = 4;
    private static readonly WANDER_RATE = 0.25
-   private static readonly TARGETS = [GenericTribeMember];
+   private static readonly TARGETS = [Tribesman];
 
    private static readonly ATTACK_DAMAGE = 4;
    private static readonly KNOCKBACK = 1;
@@ -46,7 +47,6 @@ class Zombie extends Mob {
       const eyeColour = new BasicCol(randInt(7, 9), eyeDarkness, eyeDarkness).getCode();
 
       renderComponent.addPart(new EllipseRenderPart({
-         type: "ellipse",
          size: {
             radius: this.SIZE / 2
          },
@@ -65,7 +65,6 @@ class Zombie extends Mob {
          // Main part
          renderComponent.addParts([
             new EllipseRenderPart({
-               type: "ellipse",
                size: {
                   radius: EYE_SIZE / 2
                },
@@ -79,7 +78,6 @@ class Zombie extends Mob {
             }),
             // Pupil
             new EllipseRenderPart({
-               type: "ellipse",
                size: {
                   radius: PUPIL_SIZE / 2
                },
@@ -153,7 +151,12 @@ class Zombie extends Mob {
    public tick(): void {
       // Set the zombie on fire when it's daytime
       if (!Game.isNight()) {
-         this.getComponent(StatusEffectComponent)!.applyStatusEffect("fire", 5);
+         const SPONTANEOUS_COMBUSTION_CHANCE = 0.3;
+
+         const statusEffectComponent = this.getComponent(StatusEffectComponent)!;
+         if (statusEffectComponent.hasStatusEffect("fire") || Math.random() < SPONTANEOUS_COMBUSTION_CHANCE / SETTINGS.tps) {
+            statusEffectComponent.applyStatusEffect("fire", 5);
+         }
       }
 
       super.tick();

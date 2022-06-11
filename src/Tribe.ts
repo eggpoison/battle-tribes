@@ -2,7 +2,7 @@ import Board, { Coordinates } from "./Board";
 import TribeStash from "./entities/TribeStash";
 import Entity from "./entities/Entity";
 import { getRandomAngle, Point, randItem, Vector } from "./utils";
-import Tribesman from "./entities/tribe-members/Tribesman";
+import Warrior from "./entities/tribe-members/Warrior";
 import HealthComponent from "./entity-components/HealthComponent";
 import TransformComponent from "./entity-components/TransformComponent";
 import Chief from "./entities/tribe-members/Chief";
@@ -98,7 +98,7 @@ class Tribe {
    }
 
    public createTribeMember(): void {
-      const tribesman = new Tribesman(this);
+      const tribesman = new Warrior(this);
       Board.addEntity(tribesman);
    }
 

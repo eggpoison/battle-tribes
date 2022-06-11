@@ -6,7 +6,6 @@ import FiniteInventoryComponent from "../../entity-components/inventory/FiniteIn
 import ITEMS, { ItemName } from "../../items/items";
 import InventoryTitle from "./InventoryTitle";
 import InventoryWrapper from "./InventoryWrapper";
-import { updatePlayerInventoryViewer } from "./PlayerInventoryViewer";
 
 const craft = (recipe: Recipe): void => {
    const playerInventory = Player.instance.getComponent(FiniteInventoryComponent)!;
@@ -16,10 +15,12 @@ const craft = (recipe: Recipe): void => {
    // Check if the player has the materials
    const remainingMaterials = Object.assign({}, recipe.materials);
    for (const itemSlot of itemSlots) {
-      const key = itemSlot[0];
-      if (!remainingMaterials.hasOwnProperty(key)) continue;
+      if (typeof itemSlot === "undefined") continue;
 
-      remainingMaterials[key]! -= itemSlot[1];
+      const [itemName, itemAmount] = itemSlot;
+      if (!remainingMaterials.hasOwnProperty(itemName)) continue;
+
+      remainingMaterials[itemName]! -= itemAmount;
    }
 
    let containsExactAmount = true;
@@ -28,19 +29,23 @@ const craft = (recipe: Recipe): void => {
       if (amount > 0) return;
    }
 
+   const resultName = ItemName[recipe.result.name] as unknown as ItemName;
+
    if (!containsExactAmount) {
       let canCraft = false;
       for (let slotNum = 0; slotNum < playerInventory.slotCount; slotNum++) {
-         const slotInfo = itemSlots[slotNum];
+         const itemSlot = itemSlots[slotNum];
          
          // Can craft if there is an available spot
-         if (typeof slotInfo === "undefined") {
+         if (typeof itemSlot === "undefined") {
             canCraft = true;
             break;
          }
+
+         const [currentItemName, currentItemAmount] = itemSlot;
          
          // If there is already one of the result in the inventory and it won't exceed the stack size
-         if (slotInfo[0] === recipe.result.name && slotInfo[1] < recipe.result.stackSize) {
+         if (currentItemName === resultName && currentItemAmount + recipe.craftAmount <= recipe.result.stackSize) {
             canCraft = true;
             break;
          }
@@ -51,15 +56,11 @@ const craft = (recipe: Recipe): void => {
    // Take away materials
    const entries = Object.entries(recipe.materials) as unknown as Array<[ItemName, number]>;
    for (const [name, amount] of entries) {
-      playerInventory.removeItem(name, amount);
+      playerInventory.removeItem(Number(name), amount);
    }
 
    // Add result
-   playerInventory.addItem(recipe.result.name, recipe.craftAmount);
-
-   // Update inventory display
-   const playerItemSlots = playerInventory.getItemSlots();
-   updatePlayerInventoryViewer(playerItemSlots);
+   playerInventory.addItem(resultName, recipe.craftAmount);
 }
 
 const WIDTH = 6;

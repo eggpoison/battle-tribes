@@ -1,7 +1,6 @@
 import FoodItem from "./FoodItem";
 import Item from "./Item";
 import ToolItem from "./ToolItem";
-import WeaponItem from "./WeaponItem";
 
 export enum ItemName {
    wood,
@@ -14,14 +13,12 @@ export enum ItemName {
    slime,
    smallBackpack,
    woodenSword,
-   woodenPickaxe,
-   woodenAxe,
+   woodenPickaxe
 }
 
 const REGULAR_STACK_SIZE = 64;
 
-type ItemsType = Record<ItemName, Item>;
-const ITEMS: ItemsType = {
+const ITEMS: Record<ItemName, Item> = {
    // Dropped items
    [ItemName.wood]: new Item({
       displayName: "Wood",
@@ -80,32 +77,32 @@ const ITEMS: ItemsType = {
       eatTime: 1.2
    }),
 
-   // Weapons
-   [ItemName.woodenSword]: new WeaponItem({
+   // Tools
+   [ItemName.woodenSword]: new ToolItem({
       displayName: "Wooden Sword",
       description: "stab stab",
       imageSrc: "berry.png",
       stackSize: 1,
-      damage: 2,
-      attackCooldown: 0.4
+      type: "sword",
+      mobDamage: 3,
+      resourceDamage: 1,
+      knockback: 0.5,
+      swingTime: 0.4,
+      size: 1,
+      interactionRadius: 1
    }),
-
-   // Tools
    [ItemName.woodenPickaxe]: new ToolItem({
       displayName: "Wooden Pickaxe",
       description: "mine",
       imageSrc: "wooden-pickaxe.png",
       stackSize: 1,
-      swingCooldown: 0.5,
-      type: "pickaxe"
-   }),
-   [ItemName.woodenAxe]: new ToolItem({
-      displayName: "Wooden Axe",
-      description: "chop",
-      imageSrc: "berry.png",
-      stackSize: 1,
-      swingCooldown: 0.5,
-      type: "axe"
+      type: "pickaxe",
+      mobDamage: 1,
+      resourceDamage: 3,
+      knockback: 0.1,
+      swingTime: 0.5,
+      size: 1,
+      interactionRadius: 1
    }),
 
    // Wearable

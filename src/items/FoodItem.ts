@@ -10,7 +10,7 @@ import { randFloat, randInt, randItem, Vector, Vector3 } from "../utils";
 import Item, { ItemInfo } from "./Item";
 import ITEMS from "./items";
 
-const IMAGE_SLICE_COUNT = 5;
+const IMAGE_SLICE_COUNT = 10;
 
 const IMAGE_SLICES: Partial<Record<string, Array<HTMLImageElement>>> = {};
 
@@ -99,7 +99,7 @@ class FoodItem extends Item implements FoodItemInfo {
       this.eatTime = itemInfo.eatTime;
    }
 
-   public async duringUse(entity: Entity, inventoryComponent: InventoryComponent, slotNum: number): Promise<void> {
+   public async duringRightClick(entity: Entity, inventoryComponent: InventoryComponent, slotNum: number): Promise<void> {
       // Average number of particles that get created each second
       const particleRate = 7.5;
 
@@ -143,11 +143,12 @@ class FoodItem extends Item implements FoodItemInfo {
       }
    }
 
-   public endUse(entity: Entity, inventoryComponent: InventoryComponent, slotNum: number): void {
-      super.endUse(entity, inventoryComponent, slotNum);
-
+   public endRightClick(entity: Entity, inventoryComponent: InventoryComponent, slotNum: number): void {
       // Heal the entity
       entity.getComponent(HealthComponent)!.heal(this.cooldown);
+
+      // Remove one of the food from the inventory
+      inventoryComponent.removeItemFromSlot(slotNum, 1);
    }
 }
 

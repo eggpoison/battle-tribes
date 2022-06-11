@@ -55,7 +55,6 @@ class Cow extends Mob {
       renderComponent.addParts([
          // Main body
          new EllipseRenderPart({
-            type: "ellipse",
             fillColour: "#8c3a00",
             offset: [-0.2, 0],
             size: {
@@ -69,7 +68,6 @@ class Cow extends Mob {
          }),
          // Head
          new EllipseRenderPart({
-            type: "ellipse",
             fillColour: "#b57910",
             offset: [0.3, 0],
             size: {
@@ -90,7 +88,6 @@ class Cow extends Mob {
          renderComponent.addParts([
             // Eye
             new EllipseRenderPart({
-               type: "ellipse",
                fillColour: "#fff",
                offset: [EYE_POS, EYE_OFFSET * multipier],
                size: {
@@ -104,7 +101,6 @@ class Cow extends Mob {
             }),
             // Pupil
             new EllipseRenderPart({
-               type: "ellipse",
                fillColour: "#000",
                offset: [EYE_POS, EYE_OFFSET * multipier],
                size: {

@@ -26,7 +26,6 @@ class Flower extends Resource {
       
       renderComponent.addPart(
          new ImageRenderPart({
-            type: "image",
             size: {
                width: this.SIZE,
                height: this.SIZE

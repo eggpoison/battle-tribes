@@ -30,7 +30,6 @@ class ItemEntity extends Entity {
 
       this.getComponent(RenderComponent)!.addPart(
          new ImageRenderPart({
-            type: "image",
             size: {
                width: this.SIZE,
                height: this.SIZE

@@ -2,9 +2,9 @@ import { Coordinates } from "../../Board";
 import Component from "../../Component";
 import Mouse from "../../Mouse";
 import Tribe from "../../Tribe";
-import GenericTribeMember from "./GenericTribeMember";
+import Tribesman from "./Tribesman";
 
-abstract class TribeWorker extends GenericTribeMember {
+abstract class TribeWorker extends Tribesman {
    public targetCommandTileCoordinates: Coordinates | null = null;
 
    constructor(tribe: Tribe, components?: ReadonlyArray<Component>) {

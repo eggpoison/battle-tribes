@@ -26,7 +26,6 @@ class Boulder extends Resource {
 
    protected createRenderParts(renderComponent: RenderComponent): void {
       renderComponent.addPart(new ImageRenderPart({
-         type: "image",
          size: {
             width: this.SIZE,
             height: this.SIZE

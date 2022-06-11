@@ -14,6 +14,8 @@ interface BaseRenderSettings {
    isVisible?(): boolean;
 }
 abstract class BaseRenderPart implements BaseRenderSettings {
+   public abstract type: string;
+
    public readonly size: unknown;
    public readonly offset: [number, number];
    public readonly amount: number;
@@ -32,7 +34,6 @@ abstract class BaseRenderPart implements BaseRenderSettings {
 }
 
 interface ShapeRenderSettings extends BaseRenderSettings {
-   readonly type: "ellipse" | "rectangle";
    readonly fillColour: string;
    /** The size of the shape, in tiles. */
    readonly border?: {
@@ -41,7 +42,6 @@ interface ShapeRenderSettings extends BaseRenderSettings {
    }
 }
 abstract class ShapeRenderPart extends BaseRenderPart implements ShapeRenderSettings {
-   public readonly type: "ellipse" | "rectangle";
    public readonly fillColour: string;
    public readonly border?: { readonly width: number; readonly colour: string; };
    public readonly offset: [number, number];
@@ -51,7 +51,6 @@ abstract class ShapeRenderPart extends BaseRenderPart implements ShapeRenderSett
    constructor(renderSettings: ShapeRenderSettings) {
       super(renderSettings);
 
-      this.type = renderSettings.type;
       this.fillColour = renderSettings.fillColour;
       this.border = renderSettings.border;
       this.offset = renderSettings.offset || [0, 0];
@@ -60,7 +59,6 @@ abstract class ShapeRenderPart extends BaseRenderPart implements ShapeRenderSett
 
 // CIRCLES
 interface EllipseRenderSettings extends ShapeRenderSettings {
-   readonly type: "ellipse";
    readonly size: {
       readonly radius: number | [number, number];
    }
@@ -80,7 +78,6 @@ export class EllipseRenderPart extends ShapeRenderPart implements EllipseRenderS
 
 // RECTANGLES
 interface RectangleRenderSettings extends ShapeRenderSettings {
-   readonly type: "rectangle";
    readonly size: {
       readonly width: number;
       readonly height: number;
@@ -105,11 +102,10 @@ interface ImageRenderSettings extends BaseRenderSettings {
       readonly width: number;
       readonly height: number;
    }
-   readonly type: "image";
    readonly url: string | (() => string);
 }
 export class ImageRenderPart extends BaseRenderPart implements ImageRenderSettings {
-   public readonly type: "image";
+   public readonly type = "image";
    public readonly url: string | (() => string);
    public readonly size: {
       readonly width: number;
@@ -119,7 +115,6 @@ export class ImageRenderPart extends BaseRenderPart implements ImageRenderSettin
    constructor(renderSettings: ImageRenderSettings) {
       super(renderSettings);
 
-      this.type = renderSettings.type;
       this.url = renderSettings.url;
       this.size = renderSettings.size;
    }

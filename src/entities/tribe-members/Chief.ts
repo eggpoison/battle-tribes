@@ -9,11 +9,11 @@ import TribeStash from "../TribeStash";
 import Tribe from "../../Tribe";
 import Board from "../../Board";
 import HealthComponent from "../../entity-components/HealthComponent";
-import GenericTribeMember from "./GenericTribeMember";
+import Tribesman from "./Tribesman";
 import FiniteInventoryComponent from "../../entity-components/inventory/FiniteInventoryComponent";
 import Component from "../../Component";
 
-class Chief extends GenericTribeMember {
+class Chief extends Tribesman {
    public readonly name = "Chief";
    public readonly SIZE = 1;
 

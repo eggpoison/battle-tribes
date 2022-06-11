@@ -1,5 +1,5 @@
-import Entity from "../entities/Entity";
-import InventoryComponent from "../entity-components/inventory/InventoryComponent";
+import Tribesman from "../entities/tribe-members/Warrior";
+import FiniteInventoryComponent from "../entity-components/inventory/FiniteInventoryComponent";
 import ITEMS, { ItemName } from "./items";
 
 export interface ItemInfo {
@@ -32,14 +32,13 @@ class Item implements ItemInfo {
       throw new Error("Cannot find item name!");
    }
 
-   public startUse?(entity: Entity, inventoryComponent: InventoryComponent, slotNum: number): void;
+   public startLeftClick?(entity: Tribesman, inventoryComponent: FiniteInventoryComponent, slotNum: number): void;
+   public duringLeftClick?(entity: Tribesman, inventoryComponent: FiniteInventoryComponent, slotNum: number): void;
+   public endLeftClick?(entity: Tribesman, inventoryComponent: FiniteInventoryComponent, slotNum: number): void;
 
-   public duringUse?(entity: Entity, inventoryComponent: InventoryComponent, slotNum: number): void;
-
-   public endUse(_entity: Entity, inventoryComponent: InventoryComponent, slotNum: number): void {
-      // Remove one of the item from the inventory
-      inventoryComponent.removeItemFromSlot(slotNum, 1);
-   }
+   public startRightClick?(entity: Tribesman, inventoryComponent: FiniteInventoryComponent, slotNum: number): void;
+   public duringRightClick?(entity: Tribesman, inventoryComponent: FiniteInventoryComponent, slotNum: number): void;
+   public endRightClick?(entity: Tribesman, inventoryComponent: FiniteInventoryComponent, slotNum: number): void;
 }
 
 export default Item;

@@ -1,4 +1,5 @@
 import Component from "../Component";
+import Warrior from "../entities/tribe-members/Warrior";
 import Item from "../items/Item";
 import ITEMS, { ItemName } from "../items/items";
 import FiniteInventoryComponent from "./inventory/FiniteInventoryComponent";
@@ -19,7 +20,7 @@ class SelectedSlotComponent extends Component {
          // Use the current item
          const item = this.getSelectedItem();
          if (item !== null) {
-            if (typeof item.duringUse !== "undefined") item.duringUse(this.getEntity(), this.inventory, this.selectedSlot);
+            if (typeof item.duringRightClick !== "undefined") item.duringRightClick(this.getEntity() as Warrior, this.inventory, this.selectedSlot);
          }
       }
    }
@@ -48,24 +49,38 @@ class SelectedSlotComponent extends Component {
       }
    }
 
-   public startItemUse(): void {
+   public startLeftClick(): void {
       const item = this.getSelectedItem();
       if (item === null) return;
-
-      this.isUsingItem = true;
          
       // Use it
-      if (typeof item.startUse !== "undefined") item.startUse(this.getEntity(), this.inventory, this.selectedSlot);
+      if (typeof item.startLeftClick !== "undefined") item.startLeftClick(this.getEntity() as Warrior, this.inventory, this.selectedSlot);
    }
 
-   public endItemUse(): void {
+   public endLeftClick(): void {
+      const item = this.getSelectedItem();
+      if (item === null) return;
+         
+      // Use it
+      if (typeof item.endLeftClick !== "undefined") item.endLeftClick(this.getEntity() as Warrior, this.inventory, this.selectedSlot);
+   }
+
+   public startRightClick(): void {
+      const item = this.getSelectedItem();
+      if (item === null) return;
+         
+      // Use it
+      if (typeof item.startRightClick !== "undefined") item.startRightClick(this.getEntity() as Warrior, this.inventory, this.selectedSlot);
+   }
+
+   public endRightClick(): void {
       const item = this.getSelectedItem();
       if (item === null) return;
 
       this.isUsingItem = false;
          
       // Use it
-      if (typeof item.endUse !== "undefined") item.endUse(this.getEntity(), this.inventory, this.selectedSlot);
+      if (typeof item.endRightClick !== "undefined") item.endRightClick(this.getEntity() as Warrior, this.inventory, this.selectedSlot);
    }
 }
 

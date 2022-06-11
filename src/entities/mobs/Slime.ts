@@ -7,7 +7,7 @@ import ItemSpawnComponent from "../../entity-components/ItemSpawnerComponent";
 import { ItemName } from "../../items/items";
 import { Point, randFloat, randInt, Vector } from "../../utils";
 import Entity, { RenderLayer } from "../Entity";
-import GenericTribeMember from "../tribe-members/GenericTribeMember";
+import Tribesman from "../tribe-members/Tribesman";
 import Mob from "./Mob";
 import TransformComponent from "../../entity-components/TransformComponent";
 import WanderAI from "../../entity-components/ai/WanderAI";
@@ -76,7 +76,7 @@ class Slime extends Mob {
    private static readonly FOLLOW_WAIT_TIMER_DURATION_VARIANCE = 0.1;
    private followWaitTimer: Timer | null = new Timer({ duration: 1, onEnd: () => this.followWaitTimer = null });
    
-   private static readonly TARGETS = [GenericTribeMember];
+   private static readonly TARGETS = [Tribesman];
 
    private static readonly FOLLOW_SPEED = 5;
    private static readonly FOLLOW_SPEED_VARIANCE = 0.3;
@@ -129,7 +129,6 @@ class Slime extends Mob {
    protected createRenderParts(): void {
       this.getComponent(RenderComponent)!.addPart(
          new EllipseRenderPart({
-            type: "ellipse",
             size: {
                radius: this.SIZE / 2
             },

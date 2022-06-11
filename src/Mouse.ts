@@ -148,22 +148,28 @@ abstract class Mouse {
       if (!this.validateEvent(e)) return;
       
       // Player attack
-      Player.instance.attack();
+      // Player.instance.leftClick();
 
-      // Select units
-      if (e.button === 0 && Player.currentInteractionMode === PlayerInteractionMode.SelectUnits) {
-         this.isSelectingUnits = true;
-         
-         const playerPosition = Player.instance.getComponent(TransformComponent)!.position;
-         const x = playerPosition.x + e.clientX - getCanvasWidth() / 2;
-         const y = playerPosition.y + e.clientY - getCanvasHeight() / 2;
-         this.tribeSelectStartPosition = new Point(x, y);
+      if (e.button === 0) { // Left click
+         switch (Player.currentInteractionMode) {
+            case PlayerInteractionMode.Play: {
+               Player.instance.startLeftClick();
+               break;
+            }
+            case PlayerInteractionMode.SelectUnits: {
+               this.isSelectingUnits = true;
+               
+               const playerPosition = Player.instance.getComponent(TransformComponent)!.position;
+               const x = playerPosition.x + e.clientX - getCanvasWidth() / 2;
+               const y = playerPosition.y + e.clientY - getCanvasHeight() / 2;
+               this.tribeSelectStartPosition = new Point(x, y);
+      
+               this.lastCommandMouseEvent = e;
 
-         this.lastCommandMouseEvent = e;
-      }
-
-      // Right click
-      if (e.button === 2) {
+               break;
+            }
+         }
+      } else if (e.button === 2) { // Right click
          switch (Player.currentInteractionMode) {
             // Command units
             case PlayerInteractionMode.SelectUnits: {
@@ -172,7 +178,7 @@ abstract class Mouse {
             }
             // Use item
             case PlayerInteractionMode.Play: {
-               Player.instance.startItemUse();
+               Player.instance.startRightClick();
                break;
             }
          }
@@ -206,25 +212,34 @@ abstract class Mouse {
       if (!this.validateEvent(e)) return;
 
       // Tribe select
-      if (e.button === 0 && Player.currentInteractionMode === PlayerInteractionMode.SelectUnits) {
-         const playerPosition = Player.instance.getComponent(TransformComponent)!.position;
-         const x = playerPosition.x + e.clientX - getCanvasWidth() / 2;
-         const y = playerPosition.y + e.clientY - getCanvasHeight() / 2;
-         this.tribeSelectEndPosition = new Point(x, y);
+      if (e.button === 0) {
+         switch (Player.currentInteractionMode) {
+            case PlayerInteractionMode.Play: {
+               Player.instance.endLeftClick();
+               break;
+            }
+            case PlayerInteractionMode.SelectUnits: {
+               const playerPosition = Player.instance.getComponent(TransformComponent)!.position;
+               const x = playerPosition.x + e.clientX - getCanvasWidth() / 2;
+               const y = playerPosition.y + e.clientY - getCanvasHeight() / 2;
+               this.tribeSelectEndPosition = new Point(x, y);
+      
+               this.runTribeSelect();
+               
+               this.isSelectingUnits = false;         
+      
+               this.tribeSelectStartPosition = null;
+               this.tribeSelectEndPosition = null;
+      
+               this.lastCommandMouseEvent = undefined;
 
-         this.runTribeSelect();
-         
-         this.isSelectingUnits = false;         
-
-         this.tribeSelectStartPosition = null;
-         this.tribeSelectEndPosition = null;
-
-         this.lastCommandMouseEvent = undefined;
+               break;
+            }
+         }
       } else if (e.button === 2) { // Right click
          switch (Player.currentInteractionMode) {
-            // End item use
             case PlayerInteractionMode.Play: {
-               Player.instance.endItemUse();
+               Player.instance.endRightClick();
                break;
             }
          }

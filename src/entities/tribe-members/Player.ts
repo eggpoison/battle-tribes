@@ -19,6 +19,8 @@ import Chief from "./Chief";
 import SelectedSlotComponent from "../../entity-components/SelectedSlotComponent";
 import InfiniteInventoryComponent from "../../entity-components/inventory/InfiniteInventoryComponent";
 import { updateOpenedInventoryComponent } from "../../components/inventory/ItemSlot";
+import ITEMS, { ItemName } from "../../items/items";
+import ToolItem from "../../items/ToolItem";
 
 const showGUIS = (): void => {
    document.getElementById("health-bar")!.classList.remove("hidden");
@@ -71,7 +73,10 @@ class Player extends Chief {
          // Update inventory viewer
          const itemSlots = this.getComponent(FiniteInventoryComponent)!.getItemSlots();
          updatePlayerInventoryViewer(itemSlots);
-      });
+      }); 
+
+      this.getComponent(FiniteInventoryComponent)!.addItem(ItemName.woodenPickaxe, 1);
+      this.getComponent(FiniteInventoryComponent)!.addItem(ItemName.wood, 16);
    }
 
    protected startRespawn(): void {
@@ -94,12 +99,32 @@ class Player extends Chief {
       setPlayerRespawnMessageTime(duration);
    }
 
-   public attack(): void {
+   public startLeftClick(): void {
       if (!Player.isAlive()) return;
 
-      if (Player.currentInteractionMode === PlayerInteractionMode.Play) {
+      // Attack
+      const heldItemName = this.getComponent(SelectedSlotComponent)!.getSelectedItemName();
+      if (heldItemName === null || !(ITEMS[heldItemName] instanceof ToolItem)) {
          this.getComponent(AttackComponent)!.attack("baseAttack");
+      } else {
+         this.getComponent(SelectedSlotComponent)!.startLeftClick();
       }
+   }
+
+   public endLeftClick(): void {
+      this.getComponent(SelectedSlotComponent)!.endLeftClick();
+   }
+
+   public startRightClick(): void {
+      this.getComponent(SelectedSlotComponent)!.startRightClick();
+   }
+
+   public endRightClick(): void {
+      this.getComponent(SelectedSlotComponent)!.endRightClick();
+   }
+
+   public rightClick(): void {
+
    }
 
    public static isAlive(): boolean {

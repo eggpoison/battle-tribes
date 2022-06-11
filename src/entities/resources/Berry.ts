@@ -26,7 +26,6 @@ class Berry extends Resource {
    protected createRenderParts(renderComponent: RenderComponent): void {
       renderComponent.addPart(
          new ImageRenderPart({
-            type: "image",
             url: "berry.png",
             size: {
                width: this.SIZE,

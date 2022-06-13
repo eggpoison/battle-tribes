@@ -68,6 +68,8 @@ class SelectedSlotComponent extends Component {
    public startRightClick(): void {
       const item = this.getSelectedItem();
       if (item === null) return;
+
+      this.isUsingItem = true;
          
       // Use it
       if (typeof item.startRightClick !== "undefined") item.startRightClick(this.getEntity() as Warrior, this.inventory, this.selectedSlot);

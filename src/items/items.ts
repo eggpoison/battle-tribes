@@ -57,7 +57,7 @@ const ITEMS: Record<ItemName, Item> = {
       description: "Restores 2 health when eaten.",
       imageSrc: "berry.png",
       stackSize: REGULAR_STACK_SIZE,
-      cooldown: 2,
+      healthRestoreAmount: 2,
       eatTime: 0.3
    }),
    [ItemName.meat]: new FoodItem({
@@ -65,7 +65,7 @@ const ITEMS: Record<ItemName, Item> = {
       description: "Restores 4 health when eaten.",
       imageSrc: "meat.png",
       stackSize: REGULAR_STACK_SIZE,
-      cooldown: 4,
+      healthRestoreAmount: 4,
       eatTime: 1.2
    }),
    [ItemName.cookedMeat]: new FoodItem({
@@ -73,7 +73,7 @@ const ITEMS: Record<ItemName, Item> = {
       description: "Restores 15 health when eaten.",
       imageSrc: "berry.png",
       stackSize: REGULAR_STACK_SIZE,
-      cooldown: 15,
+      healthRestoreAmount: 15,
       eatTime: 1.2
    }),
 
@@ -99,7 +99,7 @@ const ITEMS: Record<ItemName, Item> = {
       type: "pickaxe",
       mobDamage: 1,
       resourceDamage: 3,
-      knockback: 0.1,
+      knockback: 0.15,
       swingTime: 0.5,
       size: 1,
       interactionRadius: 1

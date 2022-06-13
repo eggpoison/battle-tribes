@@ -4,6 +4,7 @@ import Resource from "../entities/resources/Resource";
 import Tribesman from "../entities/tribe-members/Tribesman";
 import AttackComponent, { AttackInfo } from "../entity-components/AttackComponent";
 import FiniteInventoryComponent from "../entity-components/inventory/FiniteInventoryComponent";
+import TransformComponent from "../entity-components/TransformComponent";
 import Item, { ItemInfo } from "./Item";
 
 type ToolType = "sword" | "pickaxe";
@@ -43,8 +44,11 @@ class ToolItem extends Item implements ToolItemInfo {
       // Get the position to interact from
       const interactPosition = entity.getInteractPosition();
 
+      const entityPosition = entity.getComponent(TransformComponent)!.position;
+
       const attackInfo: AttackInfo = {
          position: interactPosition,
+         origin: entityPosition,
          attackingEntity: entity,
          radius: this.interactionRadius,
          damage: (entity: Entity): number => {

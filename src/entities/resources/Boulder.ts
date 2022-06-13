@@ -8,7 +8,7 @@ import { RenderLayer } from "../Entity";
 import Resource from "./Resource";
 
 class Boulder extends Resource {
-   private static readonly HEALTH = 20;
+   private static readonly HEALTH = 40;
    private static readonly LIFESPAN = 50;
 
    public readonly name = "Boulder";

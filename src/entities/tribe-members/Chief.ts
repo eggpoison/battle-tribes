@@ -1,13 +1,9 @@
 import Entity from "../Entity";
-import TransformComponent from "../../entity-components/TransformComponent";
-import { Point } from "../../utils";
-import RenderComponent from "../../entity-components/RenderComponent";
 import HitboxComponent from "../../entity-components/HitboxComponent";
 import AttackComponent from "../../entity-components/AttackComponent";
 import ItemEntity from "../ItemEntity";
 import TribeStash from "../TribeStash";
 import Tribe from "../../Tribe";
-import Board from "../../Board";
 import HealthComponent from "../../entity-components/HealthComponent";
 import Tribesman from "./Tribesman";
 import FiniteInventoryComponent from "../../entity-components/inventory/FiniteInventoryComponent";
@@ -38,30 +34,6 @@ class Chief extends Tribesman {
       this.getComponent(HealthComponent)!.setMaxHealth(Chief.HEALTH, true);
 
       this.setHitbox();
-
-      /** The distance away from the player (in tiles) that the attack is performed */
-      const ATTACK_OFFSET = 0.5;
-
-      const attackComponent = this.getComponent(AttackComponent)!;
-
-      attackComponent.addAttack("baseAttack", {
-         attackingEntity: this,
-         position: (): Point => {
-            const rotation = this.getComponent(TransformComponent)!.rotation;
-            
-            const offset = RenderComponent.getOffset((this.SIZE / 2 + ATTACK_OFFSET) * Board.tileSize, rotation);
-            const offsetPoint = new Point(offset[0], offset[1]);
-            
-            return this.getComponent(TransformComponent)!.position.add(offsetPoint);
-         },
-         origin: (): Point => {
-            return this.getComponent(TransformComponent)!.position;
-         },
-         radius: 1,
-         damage: 2,
-         pierce: 1,
-         knockbackStrength: 0.3
-      });
    }
 
    private setHitbox(): void {

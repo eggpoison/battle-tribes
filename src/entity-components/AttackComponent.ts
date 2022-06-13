@@ -59,6 +59,7 @@ const sortAttackedEntities = (attackedEntities: ReadonlyArray<Entity>, attackInf
 
    const sortedEntities = new Array<Entity>();
 
+   // Used to store the distances of the entities, to avoid calculating their distances more than once
    const distanceMap = new Map<Entity, number>();
 
    for (const attackedEntity of attackedEntities) {
@@ -66,16 +67,16 @@ const sortAttackedEntities = (attackedEntities: ReadonlyArray<Entity>, attackInf
 
       // Insert the entity into the sorted array
       let insertIdx = 0;
-      for (const entity of sortedEntities) {
+      for (const currentEntity of sortedEntities) {
          // Get distance
          let currentDistance!: number;
-         if (distanceMap.has(entity)) {
-            currentDistance = distanceMap.get(entity)!;
+         if (distanceMap.has(currentEntity)) {
+            currentDistance = distanceMap.get(currentEntity)!;
          } else {
             // Calculate distance
-            currentDistance = originPoint.distanceFrom(entity.getComponent(TransformComponent)!.position);
+            currentDistance = originPoint.distanceFrom(currentEntity.getComponent(TransformComponent)!.position);
             // Add the distance to the distance map
-            distanceMap.set(entity, currentDistance);
+            distanceMap.set(currentEntity, currentDistance);
          }
 
          // If the attacked entity is closer than the entity, insert the entity

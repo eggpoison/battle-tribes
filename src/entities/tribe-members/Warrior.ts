@@ -168,23 +168,12 @@ class Warrior extends TribeWorker {
                followAI.moveToEntity(target, Warrior.FOLLOW_SPEED);
             }
 
-            // Attack the entity
-            const distanceFromTarget = this.getComponent(TransformComponent)!.position.distanceFrom(target.getComponent(TransformComponent)!.position);
-            if (distanceFromTarget < (Warrior.ATTACK_RANGE + this.SIZE/2 + targetSize/2) * Board.tileSize) {
-               if (this.attackTimer === null) {
-                  const ATTACK_RADIUS = 1;
-
-                  const attackPosition = this.getInteractPosition();
-
-                  // Attack
-                  this.getComponent(AttackComponent)!.attack({
-                     position: attackPosition,
-                     attackingEntity: this,
-                     radius: ATTACK_RADIUS,
-                     damage: Warrior.ATTACK_DAMAGE,
-                     pierce: 1,
-                     knockbackStrength: 0.3
-                  });
+            // If the warrior can attack, try to attack
+            if (this.attackTimer === null) {
+               const distanceFromTarget = this.getComponent(TransformComponent)!.position.distanceFrom(target.getComponent(TransformComponent)!.position);
+               // If the distance from the target is close enough, attack it
+               if (distanceFromTarget < (Warrior.ATTACK_RANGE + this.SIZE/2 + targetSize/2) * Board.tileSize) {
+                  this.attack();
                   
                   this.attackTimer = new Timer({
                      duration: Warrior.ATTACK_INTERVAL,

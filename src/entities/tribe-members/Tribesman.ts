@@ -19,6 +19,8 @@ import StatusEffectComponent from "../../components/StatusEffectComponent";
 import SETTINGS from "../../settings";
 import { TileKind } from "../../data/tile-types";
 import Game from "../../Game";
+import AttackComponent, { AttackInfo } from "../../entity-components/AttackComponent";
+import ToolItem from "../../items/ToolItem";
 
 const TILE_WALK_COLOURS: Record<TileKind, [number, number, number]> = {
    [TileKind.grass]: [0, 153, 28],
@@ -317,6 +319,36 @@ abstract class Tribesman extends Entity {
 
       const attackPosition = this.getComponent(TransformComponent)!.position.add(offsetPoint);
       return attackPosition;
+   }
+
+   /**
+    * Calls the base attack
+    */
+   private baseAttack(): void {
+      const interactPosition = this.getInteractPosition();
+
+      const entityPosition = this.getComponent(TransformComponent)!.position;
+      
+      const attackInfo: AttackInfo = {
+         position: interactPosition,
+         origin: entityPosition,
+         attackingEntity: this,
+         radius: 0.75,
+         damage: 1,
+         pierce: 1,
+         knockbackStrength: 0.2
+      }
+
+      this.getComponent(AttackComponent)!.attack(attackInfo);
+   }
+
+   protected attack(): void {
+      const heldItemName = this.getComponent(SelectedSlotComponent)!.getSelectedItemName();
+      if (heldItemName === null || !(ITEMS[heldItemName] instanceof ToolItem)) {
+         this.baseAttack();
+      } else {
+         this.getComponent(SelectedSlotComponent)!.startLeftClick();
+      }
    }
 }
 

@@ -83,19 +83,19 @@ const createImageSlices = (imageSrc: string): Promise<Array<HTMLImageElement>> =
 
 interface FoodItemInfo extends ItemInfo {
    /** Amount of entity health restored by eating. */
-   readonly cooldown: number;
+   readonly healthRestoreAmount: number;
    /** The time it takes to eat one of the food, in seconds. */
    readonly eatTime: number;
 }
 
 class FoodItem extends Item implements FoodItemInfo {
-   public readonly cooldown: number;
+   public readonly healthRestoreAmount: number;
    public readonly eatTime: number;
    
    constructor(itemInfo: FoodItemInfo) {
       super(itemInfo);
 
-      this.cooldown = itemInfo.cooldown;
+      this.healthRestoreAmount = itemInfo.healthRestoreAmount;
       this.eatTime = itemInfo.eatTime;
    }
 
@@ -144,11 +144,16 @@ class FoodItem extends Item implements FoodItemInfo {
    }
 
    public endRightClick(entity: Entity, inventoryComponent: InventoryComponent, slotNum: number): void {
-      // Heal the entity
-      entity.getComponent(HealthComponent)!.heal(this.cooldown);
+      const healthComponent = entity.getComponent(HealthComponent)!;
 
-      // Remove one of the food from the inventory
-      inventoryComponent.removeItemFromSlot(slotNum, 1);
+      // Don't eat the food if the player's health is already full
+      if (healthComponent.getHealth() < healthComponent.getMaxHealth()) {
+         // Heal the entity
+         entity.getComponent(HealthComponent)!.heal(this.healthRestoreAmount);
+         
+         // Remove one of the food from the inventory
+         inventoryComponent.removeItemFromSlot(slotNum, 1);
+      }
    }
 }
 

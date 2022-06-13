@@ -4,7 +4,6 @@ import { clearMessage, displayMessage } from "../../components/MessageDisplay";
 import { updatePlayerInventoryViewer, updatePlayerInventoryViewerSelectedSlot } from "../../components/inventory/PlayerInventoryViewer";
 import { togglePlayerRespawnMessage, setPlayerRespawnMessageTime } from "../../components/PlayerRespawnMessage";
 import { toggleTribeStashViewerVisibility, tribeStashViewerIsOpen } from "../../components/inventory/TribeStashViewer";
-import AttackComponent from "../../entity-components/AttackComponent";
 import CameraFollowComponent from "../../entity-components/CameraFollowComponent";
 import HealthComponent from "../../entity-components/HealthComponent";
 import HitboxComponent from "../../entity-components/HitboxComponent";
@@ -19,8 +18,6 @@ import Chief from "./Chief";
 import SelectedSlotComponent from "../../entity-components/SelectedSlotComponent";
 import InfiniteInventoryComponent from "../../entity-components/inventory/InfiniteInventoryComponent";
 import { updateOpenedInventoryComponent } from "../../components/inventory/ItemSlot";
-import ITEMS, { ItemName } from "../../items/items";
-import ToolItem from "../../items/ToolItem";
 
 const showGUIS = (): void => {
    document.getElementById("health-bar")!.classList.remove("hidden");
@@ -54,7 +51,6 @@ class Player extends Chief {
       if (typeof Player.instance !== "undefined") {
          throw new Error("A player instance already exists!");
       }
-
       Player.instance = this;
 
       PlayerControllerComponent.createKeyEvent((key: string) => this.onKeyPress(key));
@@ -74,9 +70,6 @@ class Player extends Chief {
          const itemSlots = this.getComponent(FiniteInventoryComponent)!.getItemSlots();
          updatePlayerInventoryViewer(itemSlots);
       }); 
-
-      this.getComponent(FiniteInventoryComponent)!.addItem(ItemName.woodenPickaxe, 1);
-      this.getComponent(FiniteInventoryComponent)!.addItem(ItemName.wood, 16);
    }
 
    protected startRespawn(): void {
@@ -102,13 +95,7 @@ class Player extends Chief {
    public startLeftClick(): void {
       if (!Player.isAlive()) return;
 
-      // Attack
-      const heldItemName = this.getComponent(SelectedSlotComponent)!.getSelectedItemName();
-      if (heldItemName === null || !(ITEMS[heldItemName] instanceof ToolItem)) {
-         this.getComponent(AttackComponent)!.attack("baseAttack");
-      } else {
-         this.getComponent(SelectedSlotComponent)!.startLeftClick();
-      }
+      this.attack();
    }
 
    public endLeftClick(): void {

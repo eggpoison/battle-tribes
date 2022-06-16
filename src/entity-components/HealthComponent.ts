@@ -1,4 +1,5 @@
 import Component from "../Component";
+import DamageText from "../DamageText";
 import Entity from "../entities/Entity";
 import Game from "../Game";
 import SETTINGS from "../settings";
@@ -89,24 +90,25 @@ class HealthComponent extends Component {
       this.getEntity().callEvents("healthChange", amount);
    }
 
-   public hurt(damage: number, source: Entity | null, knockbackStrength?: number, iframes?: number): void {
+   public hurt(damage: number, source: Entity | null, knockbackStrength?: number): void {
       if (this.remainingIFrames > 0) return;
-
-      if (source !== null && typeof knockbackStrength === "undefined") {
-         throw new Error("An entity source must have the knockback field!");
-      }
 
       const damageDealt = this.calculateDamageDealt(damage);
 
       this.health -= this.calculateDamageDealt(damageDealt);
+      this.getEntity().callEvents("hurt", damageDealt, source);
       this.getEntity().callEvents("healthChange", -damageDealt, source);
+
+      // Create the damage text
+      const position = this.getEntity().getComponent(TransformComponent)!.position;
+      new DamageText(damageDealt, position.x, position.y);
 
       if (this.health <= 0) {
          this.die(source);
          return;
       }
 
-      this.remainingIFrames = typeof iframes !== "undefined" ? iframes : Entity.iframes;
+      this.remainingIFrames = Entity.iframes;
 
       // Apply knockback
       if (source !== null) {

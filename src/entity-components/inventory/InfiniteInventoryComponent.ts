@@ -38,7 +38,7 @@ class InfiniteInventoryComponent extends InventoryComponent {
             if (addAmount > 0) {
                itemSlot[1] += addAmount;
 
-               remainingAmountToAdd -= amount;
+               remainingAmountToAdd -= addAmount;
 
                // If all of the item has been added, don't look for any more stacks to add it to
                if (remainingAmountToAdd === 0) {
@@ -53,8 +53,8 @@ class InfiniteInventoryComponent extends InventoryComponent {
          for (let slotNum = 0; ; slotNum++) {
             // If the slot is available, add the item to the slot
             if (typeof this.itemSlots[slotNum] === "undefined") {
-               remainingAmountToAdd -= amount;
-               this.itemSlots[slotNum] = [itemName, amount];
+               this.itemSlots[slotNum] = [itemName, remainingAmountToAdd];
+               remainingAmountToAdd -= remainingAmountToAdd;
 
                break;
             }

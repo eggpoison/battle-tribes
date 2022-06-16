@@ -43,6 +43,7 @@ const HealthBar = () => {
 
    return (
       <div id="health-bar" ref={healthBarRef}>
+         <div className="health-text">{Math.ceil(health)}/{maxHealth}</div>
          <div className="health"></div>
       </div>
    );

@@ -3,7 +3,7 @@ import HitboxComponent from "../entity-components/HitboxComponent";
 import RenderComponent, { ImageRenderPart } from "../entity-components/RenderComponent";
 import TransformComponent from "../entity-components/TransformComponent";
 import Item from "../items/Item";
-import { getRandomAngle, Point } from "../utils";
+import { Point } from "../utils";
 import SETTINGS from "../settings";
 
 class ItemEntity extends Entity {
@@ -21,10 +21,12 @@ class ItemEntity extends Entity {
 
    constructor(position: Point, item: Item, amount: number) {
       super(RenderLayer.Items, [
-         new TransformComponent(position, undefined, getRandomAngle(), true),
+         new TransformComponent(position, true),
          new RenderComponent(),
          new HitboxComponent()
       ]);
+
+      this.getComponent(TransformComponent)!.rotation = 360 * Math.random();
 
       this.setHitbox();
 

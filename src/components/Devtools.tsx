@@ -45,24 +45,27 @@ function Devtools() {
 
    return isVisible ? (
       <div id="devtools">
-         <label>
-            Show chunk borders
-            <input type="checkbox" defaultChecked={false} onChange={e => updateShowChunkBordersOption(e)} />
-         </label>
+         <div className="section">
+            <label>
+               Show chunk borders
+               <input type="checkbox" defaultChecked={false} onChange={e => updateShowChunkBordersOption(e)} />
+            </label>
 
-         <label>
-            Show entity hitboxes
-            <input type="checkbox" defaultChecked={false} onChange={e => updateShowEntityHitboxesOption(e)} />
-         </label>
+            <label>
+               Show entity hitboxes
+               <input type="checkbox" defaultChecked={false} onChange={e => updateShowEntityHitboxesOption(e)} />
+            </label>
+         </div>
 
-         <h2>Entities</h2>
-         <p>{census.entityCount} total entities</p>
-         <ul>
-            <li>{census.mobCount}/{EntitySpawner.targetHostileMobCount} mobs</li>
-            <li>{census.resourceCount} resources</li>
-         </ul>
-
-         <button onClick={() => toggleMenu("mobSpawn")}>Spawn mob</button>
+         <div className="section">
+            <h2>Entities</h2>
+            <p>{census.entityCount} total entities</p>
+            <ul>
+               <li>{census.mobCount}/{EntitySpawner.targetHostileMobCount} mobs</li>
+               <li>{census.resourceCount} resources</li>
+            </ul>
+            <button onClick={() => toggleMenu("entitySpawn")}>Spawn entity</button>
+         </div>
       </div>
    ) : null;
 }

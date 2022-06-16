@@ -269,8 +269,11 @@ class RenderComponent extends Component {
                const width = renderClass.size.width;
                const height = renderClass.size.height;
 
+               const cameraXWithSize = Camera.getXPositionInCamera(position.x - width/2 * Board.tileSize + offsetX);
+               const cameraYWithSize = Camera.getYPositionInCamera(position.y - height/2 * Board.tileSize + offsetY);
+
                ctx.fillStyle = isBeingHit ? "#fff" : renderClass.fillColour;
-               ctx.fillRect(cameraX, cameraY, width, height);
+               ctx.fillRect(cameraXWithSize, cameraYWithSize, width, height);
                break;
             }
             case "image": {

@@ -13,10 +13,15 @@ class TransformComponent extends Component {
 
    /** Position of the entity */
    public position!: Point;
-   /** Velocity of the entity */
-   public velocity: Vector;
+   /** Velocity of the entity (tiles per second) */
+   public velocity: Vector | null = null;
+   /** Acceleration of the entity (tiles per second) */
+   public acceleration: Vector | null = null;
    /** Rotation of the entity in degrees */
-   public rotation: number;
+   public rotation: number = 0;
+
+   /** Limit to how fast the entity can go (tiles per second) */
+   public terminalVelocity: number = 0;
 
    private knockback!: Point;
    private knockbackTime: number = 0;
@@ -25,12 +30,11 @@ class TransformComponent extends Component {
 
    public isMoving: boolean = false;
 
-   constructor(startingPosition?: Point, startingVelocity: Vector = new Vector(0, 0), startingRotation: number = 0, isStatic: boolean = false) {
+   constructor(startingPosition?: Point, isStatic: boolean = false) {
       super();
 
       if (typeof startingPosition !== "undefined") this.position = startingPosition;
-      this.velocity = startingVelocity;
-      this.rotation = startingRotation;
+
       this.isStatic = isStatic;
    }
 
@@ -40,11 +44,40 @@ class TransformComponent extends Component {
       const tile = Board.getTile(...this.getTileCoordinates());
       const tileInfo = TILE_INFO[tile.kind];
 
-      const velocity = this.velocity.copy();
+      // Apply acceleration
+      if (this.acceleration !== null) {
+         const acceleration = this.acceleration.copy();
+         acceleration.magnitude /= SETTINGS.tps;
 
-      // Apply tile slowness to velocity
-      if (typeof tileInfo.effects?.moveSpeedMultiplier !== "undefined") {
-         velocity.magnitude *= tileInfo.effects.moveSpeedMultiplier;
+         // Add acceleration to velocity
+         if (this.velocity === null) {
+            this.velocity = acceleration;
+         } else {
+            this.velocity = this.velocity.add(acceleration);
+         }
+      }
+
+      // Apply friction
+      if (!this.isMoving && this.velocity !== null) {
+         this.velocity.magnitude -= tileInfo.friction * TransformComponent.FRICTION_CONSTANT * Board.tileSize / SETTINGS.tps;
+         if (this.velocity.magnitude < 0) this.velocity = null;
+      }
+
+      // Terminal velocity
+      if (this.velocity !== null && this.velocity.magnitude > this.terminalVelocity) {
+         this.velocity.magnitude = this.terminalVelocity;
+      }
+
+      // Apply velocity
+      if (this.velocity !== null) {
+         const velocity = this.velocity.copy();
+         
+         // Apply tile slowness to velocity
+         if (typeof tileInfo.effects?.moveSpeedMultiplier !== "undefined") {
+            velocity.magnitude *= tileInfo.effects.moveSpeedMultiplier;
+         }
+         
+         this.position = this.position.add(velocity.convertToPoint());
       }
 
       // Apply status effects
@@ -57,19 +90,11 @@ class TransformComponent extends Component {
          }
       }
 
-      this.position = this.position.add(velocity.convertToPoint());
-
       if (this.knockbackTime > 0) {
          // Add knockback
          this.position = this.position.add(this.knockback);
 
          this.knockbackTime -= 1 / SETTINGS.tps;
-      }
-
-      // Apply friction
-      if (!this.isMoving) {
-         this.velocity.magnitude -= tileInfo.friction / SETTINGS.tps * Board.tileSize * TransformComponent.FRICTION_CONSTANT;
-         if (this.velocity.magnitude < 0) this.velocity.magnitude = 0;
       }
 
       const hitboxComponent = this.getEntity().getComponent(HitboxComponent);
@@ -176,12 +201,30 @@ class TransformComponent extends Component {
    }
 
    private resolveWallCollisions(): void {
-      const units = (Board.dimensions - 0.5) * Board.tileSize;
+      const units = Board.dimensions * Board.tileSize;
 
-      if (this.position.x < 0) this.position.x = 0;
-      if (this.position.x > units) this.position.x = units;
-      if (this.position.y < 0) this.position.y = 0;
-      if (this.position.y > units) this.position.y = units;
+      const hitboxComponent = this.getEntity().getComponent(HitboxComponent)!;
+      if (hitboxComponent === null) return;
+
+      let width!: number;
+      let height!: number;
+      switch (hitboxComponent.hitboxInfo.type) {
+         case "circle": {
+            width = hitboxComponent.hitboxInfo.radius * 2 * Board.tileSize;
+            height = hitboxComponent.hitboxInfo.radius * 2 * Board.tileSize;
+            break;
+         }
+         case "rectangle": {
+            width = hitboxComponent.hitboxInfo.width * Board.tileSize;
+            height = hitboxComponent.hitboxInfo.height * Board.tileSize;
+            break;
+         }
+      }
+
+      if (this.position.x - width/2 < 0) this.position.x = width/2;
+      if (this.position.x + width/2 > units) this.position.x = units - width/2;
+      if (this.position.y - height/2 < 0) this.position.y = height/2;
+      if (this.position.y + height/2 > units) this.position.y = units - height/2;
    }
 
    /**

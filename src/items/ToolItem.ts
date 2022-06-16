@@ -11,8 +11,7 @@ type ToolType = "sword" | "pickaxe";
 
 interface ToolItemInfo extends ItemInfo {
    readonly type: ToolType;
-   readonly mobDamage: number;
-   readonly resourceDamage: number;
+   readonly damage: number;
    readonly knockback: number;
    readonly swingTime: number;
    readonly size: number;
@@ -21,8 +20,7 @@ interface ToolItemInfo extends ItemInfo {
 
 class ToolItem extends Item implements ToolItemInfo {
    public readonly type: ToolType;
-   public readonly mobDamage: number;
-   public readonly resourceDamage: number;
+   public readonly damage: number;
    public readonly knockback: number;
    public readonly swingTime: number;
    public readonly size: number;
@@ -32,8 +30,7 @@ class ToolItem extends Item implements ToolItemInfo {
       super(toolInfo);
 
       this.type = toolInfo.type;
-      this.mobDamage = toolInfo.mobDamage;
-      this.resourceDamage = toolInfo.resourceDamage;
+      this.damage = toolInfo.damage;
       this.knockback = toolInfo.knockback;
       this.swingTime = toolInfo.swingTime;
       this.size = toolInfo.size;
@@ -43,7 +40,6 @@ class ToolItem extends Item implements ToolItemInfo {
    public startLeftClick(entity: Tribesman, _inventoryComponent: FiniteInventoryComponent, slotNum: number): void {
       // Get the position to interact from
       const interactPosition = entity.getInteractPosition();
-
       const entityPosition = entity.getComponent(TransformComponent)!.position;
 
       const attackInfo: AttackInfo = {
@@ -52,19 +48,33 @@ class ToolItem extends Item implements ToolItemInfo {
          attackingEntity: entity,
          radius: this.interactionRadius,
          damage: (entity: Entity): number => {
-            if (entity instanceof Mob) {
-               return this.mobDamage;
-            } else if (entity instanceof Resource) {
-               return this.resourceDamage;
+            if (this.isCorrectDamageType(entity)) {
+               return this.damage;
+            } else {
+               return 0;
             }
-
-            return 0;
          },
          pierce: 1,
-         knockbackStrength: this.knockback
+         knockbackStrength: (entity: Entity): number => {
+            if (this.isCorrectDamageType(entity)) {
+               return this.knockback;
+            } else {
+               return 0;
+            }
+         }
       }
 
       entity.getComponent(AttackComponent)!.attack(attackInfo);
+   }
+
+   private isCorrectDamageType(entity: Entity): boolean {
+      if (entity instanceof Mob) {
+         return this.type === "sword";
+      } else if (entity instanceof Resource) {
+         return this.type === "pickaxe";
+      }
+
+      return false;
    }
 }
 

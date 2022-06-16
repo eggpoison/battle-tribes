@@ -21,7 +21,7 @@ const SETTINGS: SettingsType = {
    startTime: 8,
    fogRevealTime: 0.5,
    entityInvulnerabilityDuration: 0.15,
-   showFogOfWar: true,
+   showFogOfWar: false,
    backgroundColour: "#09120b",
    wallOutlineWidth: 5
 };

@@ -102,6 +102,10 @@ abstract class Entity {
 
       for (const func of this.events[type]!) (func as (args: unknown) => void)(args);
    }
+
+   public destroy(): void {
+      Board.removeEntity(this);
+   }
 }
 
 export default Entity;

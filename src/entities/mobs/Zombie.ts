@@ -109,7 +109,7 @@ class Zombie extends Mob {
       wanderAI.setSwitchCondition({
          newID: "follow",
          shouldSwitch: (): boolean => {
-            const entitiesInSearchRadius = wanderAI.getEntitiesInSearchRadius(transformComponent.position, Zombie.VISION_RANGE, Zombie.TARGETS);
+            const entitiesInSearchRadius = followAI.getEntitiesInSearchRadius(transformComponent.position, Zombie.VISION_RANGE);
 
             return entitiesInSearchRadius !== null;
          }
@@ -124,7 +124,7 @@ class Zombie extends Mob {
       followAI.setSwitchCondition({
          newID: "wander",
          shouldSwitch: (): boolean => {
-            const entitiesInSearchRadius = wanderAI.getEntitiesInSearchRadius(transformComponent.position, Zombie.VISION_RANGE, Zombie.TARGETS);
+            const entitiesInSearchRadius = followAI.getEntitiesInSearchRadius(transformComponent.position, Zombie.VISION_RANGE);
 
             return entitiesInSearchRadius === null;
          },

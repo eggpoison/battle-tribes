@@ -19,6 +19,7 @@ import ParticleSource from "./particles/ParticleSource";
 import Chunk from "./Chunk";
 import Mob from "./entities/mobs/Mob";
 import Resource from "./entities/resources/Resource";
+import DamageText from "./DamageText";
 
 export type Coordinates = [number, number];
 
@@ -53,6 +54,8 @@ abstract class Board {
       [RenderLayer.HighParticles]: new Array<Particle>()
    };
    private static particlesToDestroy = new Array<Particle>();
+
+   public static damageTexts = new Array<DamageText>();
 
    public static setup(): void {
       this.tiles = generateTerrain();
@@ -138,10 +141,10 @@ abstract class Board {
       this.updateEntities(RenderLayer.HighResources, entityCensus);
       this.updateParticles(RenderLayer.HighParticles);
 
-      this.tickTiles();
-
       this.removeDestroyedParticles();
       this.tickParticleSources();
+      
+      this.tickTiles();
 
       this.renderCommandTileTargets(ctx);
 
@@ -150,7 +153,6 @@ abstract class Board {
 
       this.updateDisappearingFog();
       
-
       const totalEntityCount = entityCensus.passiveMobCount + entityCensus.hostileMobCount + entityCensus.resourceCount;
       updateDevtools({
          entityCount: totalEntityCount,
@@ -230,6 +232,14 @@ abstract class Board {
       }
    }
 
+   public static updateDamageTexts(): void {
+      for (let i = this.damageTexts.length - 1; i >= 0; i--) {
+         const damageText = this.damageTexts[i];
+         damageText.render();
+         damageText.tick();
+      }
+   }
+
    private static updateParticles(renderLayer: ParticleRenderLayer): void {
       for (const particle of this.particles[renderLayer]) {
          if (this.particleIsVisible(particle)) {
@@ -306,9 +316,9 @@ abstract class Board {
       const unitsInChunk = this.chunkSize * this.tileSize;
 
       const minX = minChunkX * unitsInChunk;
-      const maxX = maxChunkX * unitsInChunk;
+      const maxX = (maxChunkX + 1) * unitsInChunk;
       const minY = minChunkY * unitsInChunk;
-      const maxY = maxChunkY * unitsInChunk;
+      const maxY = (maxChunkY + 1) * unitsInChunk;
 
       return particle.position.x >= minX && particle.position.x <= maxX && particle.position.y >= minY && particle.position.y <= maxY;
    }

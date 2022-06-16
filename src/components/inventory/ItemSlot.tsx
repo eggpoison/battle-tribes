@@ -52,19 +52,15 @@ const quickMoveItem = (slotNum: number, clickedInventoryComponent: InventoryComp
 }
 
 const stackItem = (slotNum: number, inventoryComponent: InventoryComponent): void => {
-   let { name: itemName, amount: itemAmount } = heldItem!;
+   const { name: itemName, amount: itemAmount } = heldItem!;
 
-   const addAmount = inventoryComponent.getItemAddAmount(itemName, itemAmount, slotNum);
+   const amountAdded = inventoryComponent.addItemToSlot(slotNum, itemName, itemAmount);
 
-   if (addAmount !== null) {
-      inventoryComponent.addItemToSlot(slotNum, itemName, addAmount);
-    
-      // Remove from the held item
-      itemAmount -= addAmount;
-      // If the held item doesn't have any left, remove it
-      if (itemAmount <= 0) {
-         heldItem = null;
-      }
+   // Remove from the held item
+   heldItem!.amount -= amountAdded;
+   // If the held item doesn't have any left, remove it
+   if (heldItem!.amount <= 0) {
+      heldItem = null;
    }
 }
 
@@ -98,10 +94,10 @@ const clickInventorySlot = (slotNum: number, inventoryComponent: InventoryCompon
          if (heldItem === null) {
             splitItem(slotNum, inventoryComponent);
          } else if (itemName === heldItem.name) { // Otherwise if the held item is of the same type, add 1 to the item
-            inventoryComponent.addItemToSlot(slotNum, itemName, 1);
+            const amountAdded = inventoryComponent.addItemToSlot(slotNum, itemName, 1);
 
             // Remove from the held item
-            heldItem.amount -= 1;
+            heldItem.amount -= amountAdded;
             if (heldItem.amount === 0) {
                heldItem = null;
             }

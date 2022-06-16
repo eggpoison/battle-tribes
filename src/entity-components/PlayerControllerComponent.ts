@@ -1,9 +1,6 @@
-import Board from "../Board";
 import Component from "../Component";
 import { toggleDevtoolsVisibility } from "../components/Devtools";
-import Chief from "../entities/tribe-members/Chief";
 import Player from "../entities/tribe-members/Player";
-import SETTINGS from "../settings";
 import { gameIsInFocus, isDev, Vector } from "../utils";
 import TransformComponent from "./TransformComponent";
 
@@ -38,16 +35,20 @@ class PlayerControllerComponent extends Component {
 
    public tick(): void {
       const transformComponent = this.getEntity().getComponent(TransformComponent)!;
-      
       const angle = this.getMoveAngle();
+      
       if (angle === null || !gameIsInFocus()) {
-         transformComponent.stopMoving();
+         // Stop the player moving
+         transformComponent.isMoving = false;
+         transformComponent.acceleration = null;
          return;
       }
+
+      transformComponent.isMoving = true;
       
-      const velocity = new Vector(Chief.SPEED * Board.tileSize / SETTINGS.tps, angle);
-      
-      transformComponent.setVelocity(velocity);
+      // Set the entity's acceleration
+      const acceleration = new Vector(Player.ACCELERATION, angle);
+      transformComponent.acceleration = acceleration;
       
       // Update the entity's rotation to match the move direction
       transformComponent.rotation = angle;

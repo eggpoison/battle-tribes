@@ -20,7 +20,7 @@ class TribeStash extends Entity {
       const spawnPosition = tribe.position;
 
       super(RenderLayer.LowResources, [
-         new TransformComponent(spawnPosition, undefined, undefined, true),
+         new TransformComponent(spawnPosition, true),
          new HitboxComponent(),
          new RenderComponent(),
          new InfiniteInventoryComponent()

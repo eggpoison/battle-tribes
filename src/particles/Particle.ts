@@ -320,15 +320,10 @@ class Particle {
             ctx.rotate(this.rotation / 180 * Math.PI);
             ctx.translate(-Camera.getXPositionInCamera(this.position.x), -Camera.getYPositionInCamera(this.position.y));
 
-            ctx.shadowColor = `rgba(0, 0, 0, ${0.7 * opacity})`;
-            ctx.shadowBlur = 10;
-
             const shadowCanvasX = Camera.getXPositionInCamera(this.position.x);
             const shadowCanvasY = Camera.getYPositionInCamera(this.position.y);
             ctx.fillStyle = `rgba(0, 0, 0, ${0.5 * opacity})`;
             ctx.fillRect(shadowCanvasX - width/2, shadowCanvasY - height/2, width, height);
-
-            ctx.shadowColor = "transparent";
 
             // Reset transform
             ctx.setTransform(1, 0, 0, 1, 0, 0);

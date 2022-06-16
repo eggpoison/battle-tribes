@@ -16,7 +16,7 @@ export type AttackInfo = {
    readonly damage: number | ((entity: Entity) => number);
    /** How many enemies can be hit by the attack */
    readonly pierce: number;
-   readonly knockbackStrength: number;
+   readonly knockbackStrength: number | ((entity: Entity) => number);
 }
 
 const getAttackedEntities = (attackInfo: AttackInfo): Array<Entity> => {
@@ -120,16 +120,16 @@ class AttackComponent extends Component {
       for (let i = 0; i < maxIdx; i++) {
          const closestEntity = attackedEntities[0];
 
-         // Get the damage dealt
+         // Get the attack values
          const damage = typeof attackInfo.damage === "function" ? attackInfo.damage(closestEntity) : attackInfo.damage;
+         const knockbackStrength = typeof attackInfo.knockbackStrength === "function" ? attackInfo.knockbackStrength(closestEntity) : attackInfo.knockbackStrength;
 
          // Attack the entity
          const healthComponent = closestEntity.getComponent(HealthComponent)!;
-         healthComponent.hurt(damage, attackInfo.attackingEntity, attackInfo.knockbackStrength);
+         healthComponent.hurt(damage, attackInfo.attackingEntity, knockbackStrength);
 
          // If the entity was killed by the attack, call this entity's killEntity events
          if (healthComponent.getHealth() <= 0) {
-            // console.log("test");
             this.getEntity().callEvents("killEntity", closestEntity);
          }
 

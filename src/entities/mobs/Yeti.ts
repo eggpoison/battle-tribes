@@ -59,9 +59,10 @@ class Yeti extends Mob {
    }
 
    private createAI(): void {
+      const aiManagerComponent = this.getComponent(AIManagerComponent)!;
       const transformComponent = this.getComponent(TransformComponent)!;
 
-      const wanderAI = this.getComponent(AIManagerComponent)!.addAI(
+      const wanderAI = aiManagerComponent.addAI(
          new WanderAI("wander", {
             range: Yeti.VISION_RANGE,
             speed: Yeti.WANDER_SPEED,
@@ -71,29 +72,18 @@ class Yeti extends Mob {
       wanderAI.setSwitchCondition({
          newID: "follow",
          shouldSwitch: (): boolean => {
-            const entitiesInSearchRadius = wanderAI.getEntitiesInSearchRadius(transformComponent.position, Yeti.VISION_RANGE + this.SIZE/2, Yeti.TARGETS);
+            const entitiesInSearchRadius = followAI.getEntitiesInSearchRadius(transformComponent.position, Yeti.VISION_RANGE + this.SIZE/2);
 
             return entitiesInSearchRadius !== null;
          }
       });
 
-      const followAI = this.getComponent(AIManagerComponent)!.addAI(
+      const followAI = aiManagerComponent.addAI(
          new FollowAI("follow", {
             range: Yeti.VISION_RANGE,
             targets: Yeti.TARGETS
          })
       );
-      followAI.setSwitchCondition({
-         newID: "wander",
-         shouldSwitch: (): boolean => {
-            const entitiesInSearchRadius = wanderAI.getEntitiesInSearchRadius(transformComponent.position, Yeti.VISION_RANGE + this.SIZE/2, Yeti.TARGETS);
-
-            return entitiesInSearchRadius === null;
-         },
-         onSwitch: (): void => {
-            transformComponent.stopMoving();
-         }
-      });
 
       followAI.addTickCallback(() => {
          const target = followAI.getTarget();
@@ -101,8 +91,13 @@ class Yeti extends Mob {
          // Move to the target
          if (target !== null) {
             followAI.moveToPosition(target.getComponent(TransformComponent)!.position, Yeti.FOLLOW_SPEED);
+            transformComponent.terminalVelocity = Yeti.FOLLOW_SPEED;
+         } else {
+            // If a target can't be found, switch to wander AI
+            aiManagerComponent.changeCurrentAI("wander");
+            transformComponent.terminalVelocity = Yeti.WANDER_SPEED;
          }
-      })
+      });
 
       this.getComponent(AIManagerComponent)!.changeCurrentAI("wander");
    }

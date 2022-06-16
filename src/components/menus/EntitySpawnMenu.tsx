@@ -25,7 +25,7 @@ const spawnMobs = (mobInfo: MobInfo, amount: number, offsetRange: [number, numbe
 
 type OffsetInputType = "static" | "range";
 
-const MobSpawnMenu = () => {
+const EntitySpawnMenu = () => {
    const inputSpawnAmountRef = useRef<HTMLInputElement | null>(null);
    const inputSpawnTypeRef = useRef<HTMLSelectElement | null>(null);
 
@@ -34,10 +34,6 @@ const MobSpawnMenu = () => {
    const offsetInputRangeRef = useRef<HTMLInputElement | null>(null);
    const offsetInputMinRef = useRef<HTMLInputElement | null>(null);
    const offsetInputMaxRef = useRef<HTMLInputElement | null>(null);
-   
-   const mobTypes = useRef<Array<MobInfo>>(ENTITY_INFO.reduce((previousValue, currentValue) => {
-      return currentValue.hasOwnProperty("behaviour") ? previousValue.concat([currentValue as MobInfo]) : previousValue;
-   }, new Array<MobInfo>()));
 
    const spawn = useCallback((): void => {
       const rawMobType = Number(inputSpawnTypeRef.current!.value);
@@ -64,17 +60,17 @@ const MobSpawnMenu = () => {
 
    return (
       <div id="mob-spawn-menu">
-         <h1>Mob Spawn Menu</h1>
+         <h1>Entity Spawn Menu</h1>
 
          <div className="formatter">
             <div className="section">
-               <h2 className="section-title">Mob Details</h2>
+               <h2 className="section-title">Details</h2>
 
                <div>
                   <label>
                      Type
                      <select ref={inputSpawnTypeRef}>
-                        {mobTypes.current.map((info, i) => {
+                        {ENTITY_INFO.map((info, i) => {
                            const idx = ENTITY_INFO.indexOf(info);
                            const constrName = info.getConstr().name;
                            return <option value={idx} key={i}>{constrName}</option>
@@ -117,4 +113,4 @@ const MobSpawnMenu = () => {
    );
 }
 
-export default MobSpawnMenu;
+export default EntitySpawnMenu;

@@ -11,9 +11,11 @@
    transform: translate(-50%, -50%);
    z-index: 1;
    pointer-events: none;
+   user-select: none;
 }
 #player-respawn-message h1 {
    color: #fff;
+   /* color: red; */
 }
 #player-respawn-message h2 {
    color: #e5e5e5;

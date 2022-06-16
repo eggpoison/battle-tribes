@@ -15,7 +15,7 @@ class Chief extends Tribesman {
 
    private static readonly SIGHT_RANGE = 5;
 
-   public static readonly SPEED = 5;
+   public static readonly SPEED = 4;
    public static readonly HEALTH = 20;
 
    public static readonly DEFAULT_INVENTORY_SLOT_COUNT = 3;

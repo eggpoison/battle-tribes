@@ -22,11 +22,9 @@ class Tombstone extends Entity {
    
    constructor(position: Point) {
       super(RenderLayer.LowResources, [
-         new TransformComponent(),
+         new TransformComponent(position, true),
          new RenderComponent()
       ]);
-
-      this.getComponent(TransformComponent)!.position = position;
       
       this.createRenderParts();
    }

@@ -82,7 +82,7 @@ class HitboxComponent extends Component {
       if (this.hitboxInfo.type === "circle") {
          radius = this.hitboxInfo.radius;
       } else {
-         radius = Math.max(this.hitboxInfo.width, this.hitboxInfo.height);
+         radius = Math.max(this.hitboxInfo.width, this.hitboxInfo.height) / 2;
       }
 
       let collidingEntities = Board.getEntitiesInRange(position, radius * Board.tileSize);
@@ -99,33 +99,6 @@ class HitboxComponent extends Component {
          return collidingEntities;
       }
       return null;
-   }
-
-   public willCollideWithWall(): boolean {
-      // Get the next position
-      const transformComponent = this.getEntity().getComponent(TransformComponent)!;
-      const currentPosition = transformComponent.position;
-      const nextPosition = currentPosition.add(transformComponent.velocity.convertToPoint());
-
-      // Check if the entity will collide with the wall
-      switch (this.hitboxInfo.type) {
-         case "circle": {
-            if (nextPosition.x + this.hitboxInfo.radius * Board.tileSize > Board.dimensions * Board.tileSize) return true;
-            if (nextPosition.x - this.hitboxInfo.radius * Board.tileSize < 0) return true;
-            if (nextPosition.y + this.hitboxInfo.radius * Board.tileSize > Board.dimensions * Board.tileSize) return true;
-            if (nextPosition.y - this.hitboxInfo.radius * Board.tileSize < 0) return true;
-            break;
-         }
-         case "rectangle": {
-            if (nextPosition.x + this.hitboxInfo.width / 2 * Board.tileSize > Board.dimensions * Board.tileSize) return true;
-            if (nextPosition.x - this.hitboxInfo.width / 2 * Board.tileSize < 0) return true;
-            if (nextPosition.y + this.hitboxInfo.height / 2 * Board.tileSize > Board.dimensions * Board.tileSize) return true;
-            if (nextPosition.y - this.hitboxInfo.height / 2 * Board.tileSize < 0) return true;
-            break;
-         }
-      }
-
-      return false;
    }
 
    public drawHitbox(ctx: CanvasRenderingContext2D): void {

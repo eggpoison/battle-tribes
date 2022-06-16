@@ -6,21 +6,21 @@ import AttackComponent from "../../entity-components/AttackComponent";
 import HealthComponent from "../../entity-components/HealthComponent";
 import HitboxComponent from "../../entity-components/HitboxComponent";
 import FiniteInventoryComponent from "../../entity-components/inventory/FiniteInventoryComponent";
-import InfiniteInventoryComponent from "../../entity-components/inventory/InfiniteInventoryComponent";
 import TransformComponent from "../../entity-components/TransformComponent";
 import Timer from "../../Timer";
 import Tribe from "../../Tribe";
-import { Point } from "../../utils";
 import Entity from "../Entity";
 import ItemEntity from "../ItemEntity";
 import LivingEntity from "../LivingEntity";
 import Mob from "../mobs/Mob";
 import Resource from "../resources/Resource";
-import TribeStash from "../TribeStash";
 import Tribesman from "./Tribesman";
 import TribeWorker from "./TribeWorker";
 
 class Warrior extends TribeWorker {
+   protected readonly mainAIid = "follow";
+   protected readonly speed = 2.5;
+
    public readonly name = "Tribesman";
    public readonly SIZE = 1;
 
@@ -29,15 +29,11 @@ class Warrior extends TribeWorker {
    private static readonly MAX_HEALTH = 25;
    private static readonly DEFAULT_SLOT_COUNT = 2;
 
-   private static readonly WANDER_SPEED = 1;
-   private static readonly FOLLOW_SPEED = 2.5;
-
    private static readonly WANDER_RATE = 0.5;
    private static readonly TARGETS = [Mob, Tribesman, Resource, ItemEntity];
-   private static readonly MAX_DIST_FROM_TARGET = 1;
+   private static readonly MAX_DIST_FROM_TARGET = 0.5;
 
    private static readonly ATTACK_RANGE = 2;
-   private static readonly ATTACK_DAMAGE = 5;
    public static readonly ATTACK_INTERVAL = 0.25;
 
    private attackTimer: Timer | null = null;
@@ -70,7 +66,7 @@ class Warrior extends TribeWorker {
       const wanderAI = this.getComponent(AIManagerComponent)!.addAI(
          new WanderAI("wander", {
             range: Warrior.SIGHT_RANGE,
-            speed: Warrior.WANDER_SPEED,
+            speed: this.speed,
             wanderRate: Warrior.WANDER_RATE
          })
       );
@@ -78,9 +74,7 @@ class Warrior extends TribeWorker {
       wanderAI.setSwitchCondition({
          newID: "follow",
          shouldSwitch: (): boolean => {
-            if (this.targetCommandTileCoordinates !== null) return true;
-
-            const entitiesInSearchRadius = followAI.getEntitiesInSearchRadius(transformComponent.position, Warrior.SIGHT_RANGE, Warrior.TARGETS);
+            const entitiesInSearchRadius = followAI.getEntitiesInSearchRadius(transformComponent.position, Warrior.SIGHT_RANGE);
             if (entitiesInSearchRadius !== null) {
                const targetEntities = this.sortFollowTargets(entitiesInSearchRadius);
                return targetEntities !== null;
@@ -105,11 +99,9 @@ class Warrior extends TribeWorker {
       followAI.setSwitchCondition({
          newID: "wander",
          shouldSwitch: (): boolean => {
-            if (this.targetCommandTileCoordinates !== null) return true;
-            
             if (isMovingToStash) return false;
 
-            const entitiesInSearchRadius = followAI.getEntitiesInSearchRadius(transformComponent.position, Warrior.SIGHT_RANGE, Warrior.TARGETS);
+            const entitiesInSearchRadius = followAI.getEntitiesInSearchRadius(transformComponent.position, Warrior.SIGHT_RANGE);
             if (entitiesInSearchRadius === null) return true;
 
             const targetEntities = this.sortFollowTargets(entitiesInSearchRadius);
@@ -123,25 +115,16 @@ class Warrior extends TribeWorker {
       });
 
       followAI.addTickCallback(() => {
-         // Move to the command position
-         if (this.targetCommandTileCoordinates !== null) {
-            const targetPosition = new Point((this.targetCommandTileCoordinates[0] + 0.5) * Board.tileSize, (this.targetCommandTileCoordinates[1] + 0.5) * Board.tileSize);
-            followAI.moveToPosition(targetPosition, Warrior.FOLLOW_SPEED);
-            return;
-         }
-
          // If inventory is full, move to the stash
          if (this.getComponent(FiniteInventoryComponent)!.isFull(false)) {
-            isMovingToStash = true;
-
             const targetPosition = this.tribe.position;
-            followAI.moveToPosition(targetPosition, Warrior.FOLLOW_SPEED);
+            followAI.moveToPosition(targetPosition, this.speed);
 
             return;
          }
-         isMovingToStash = false;
 
          const target = followAI.getTarget();
+         // Don't follow a target that doesn't exist
          if (target === null) return;
 
          if (target instanceof LivingEntity || target instanceof Tribesman) {
@@ -150,22 +133,19 @@ class Warrior extends TribeWorker {
             const thisTransformComponent = this.getComponent(TransformComponent)!;
             const targetTransformComponent = target.getComponent(TransformComponent)!;
 
-            const ROTATION_PADDING = 5;
-
             // Don't move to the target if they're too close
             const dist = thisTransformComponent.position.distanceFrom(targetTransformComponent.position);
-            const isFacingTarget = Math.abs(thisTransformComponent.rotation - targetTransformComponent.rotation) < ROTATION_PADDING;
-            if (isFacingTarget && dist - (this.SIZE/2 + targetSize/2) * Board.tileSize < Warrior.MAX_DIST_FROM_TARGET * Board.tileSize) {
+            if (dist - (this.SIZE/2 + targetSize/2) * Board.tileSize < Warrior.MAX_DIST_FROM_TARGET * Board.tileSize) {
                // Stop moving
                thisTransformComponent.stopMoving();
-               this.getComponent(TransformComponent)!.velocity.magnitude = 0;
+               this.getComponent(TransformComponent)!.velocity = null;
 
                // Rotate to face the target
                const angle = thisTransformComponent.position.angleBetween(targetTransformComponent.position);
                thisTransformComponent.rotation = angle;
             } else {
                // If the target isn't too close, move to them
-               followAI.moveToEntity(target, Warrior.FOLLOW_SPEED);
+               followAI.moveToEntity(target, this.speed);
             }
 
             // If the warrior can attack, try to attack
@@ -184,16 +164,7 @@ class Warrior extends TribeWorker {
                }
             }
          } else {
-            followAI.moveToEntity(target, Warrior.FOLLOW_SPEED);
-         }
-      });
-
-      followAI.addReachTargetCallback(() => {
-         if (this.targetCommandTileCoordinates === null) return;
-         
-         const currentTileCoordinates = this.getComponent(TransformComponent)!.getTileCoordinates();
-         if (currentTileCoordinates[0] === this.targetCommandTileCoordinates[0] && currentTileCoordinates[1] === this.targetCommandTileCoordinates[1]) {
-            this.targetCommandTileCoordinates = null;
+            followAI.moveToEntity(target, this.speed);
          }
       });
 
@@ -249,37 +220,6 @@ class Warrior extends TribeWorker {
          return otherEntities;
       }
       return null;
-   }
-
-   public duringCollision(collidingEntity: Entity): void {
-      if (collidingEntity instanceof ItemEntity) {
-         // Pick up the item
-         const inventoryComponent = this.getComponent(FiniteInventoryComponent)!;
-         inventoryComponent.pickupItemEntity(collidingEntity);
-      } else if (collidingEntity instanceof TribeStash) {
-         // Put all items into the stash
-         const inventoryComponent = collidingEntity.getComponent(InfiniteInventoryComponent)!;
-
-         const thisInventoryComponent = this.getComponent(FiniteInventoryComponent)!;
-
-         const inventory = thisInventoryComponent.getItemSlots();
-         for (let slotNum = 0; slotNum < thisInventoryComponent.slotCount; slotNum++) {
-            const slot = inventory[slotNum];
-
-            if (typeof slot !== "undefined") {
-               const addAmount = inventoryComponent.getItemAddAmount(slot[0], slot[1]);
-
-               if (addAmount !== null) {
-                  inventoryComponent.addItem(slot[0], addAmount);
-
-                  thisInventoryComponent.removeItemFromSlot(slotNum, addAmount);
-               } else {
-                  // If the item can't be added to the stash, remove it from the tribe member's inventory
-                  thisInventoryComponent.removeItemFromSlot(slotNum, slot[1]);
-               }
-            }
-         }
-      }
    }
 }
 

@@ -18,6 +18,7 @@ import Chief from "./Chief";
 import SelectedSlotComponent from "../../entity-components/SelectedSlotComponent";
 import InfiniteInventoryComponent from "../../entity-components/inventory/InfiniteInventoryComponent";
 import { updateOpenedInventoryComponent } from "../../components/inventory/ItemSlot";
+import TransformComponent from "../../entity-components/TransformComponent";
 
 const showGUIS = (): void => {
    document.getElementById("health-bar")!.classList.remove("hidden");
@@ -41,6 +42,8 @@ class Player extends Chief {
 
    public static currentInteractionMode: PlayerInteractionMode = PlayerInteractionMode.Play;
 
+   public static readonly ACCELERATION: number = 20;
+
    constructor(tribe: Tribe) {
       super(tribe, [
          new PlayerControllerComponent(),
@@ -52,6 +55,8 @@ class Player extends Chief {
          throw new Error("A player instance already exists!");
       }
       Player.instance = this;
+      
+      this.getComponent(TransformComponent)!.terminalVelocity = Player.SPEED;
 
       PlayerControllerComponent.createKeyEvent((key: string) => this.onKeyPress(key));
 
@@ -110,9 +115,7 @@ class Player extends Chief {
       this.getComponent(SelectedSlotComponent)!.endRightClick();
    }
 
-   public rightClick(): void {
-
-   }
+   public rightClick(): void {}
 
    public static isAlive(): boolean {
       if (typeof this.instance === "undefined") return false;

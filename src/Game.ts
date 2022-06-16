@@ -62,8 +62,10 @@ abstract class Game {
       Mouse.drawUnitSelectionTool();
 
       // Draw walls
-      // Called after the Board.tick() function so that walls are rendered above entities
+      // Called after the Board.tick function so that walls are rendered above entities
       renderWallTiles();
+
+      Board.updateDamageTexts();
 
       // Draw the darkness effect given by night time
       Board.drawDarkness();

@@ -1,5 +1,6 @@
+import Board from "../../Board";
 import Entity from "../../entities/Entity";
-import { ConstructorFunction } from "../../utils";
+import { ConstructorFunction, Point } from "../../utils";
 import HealthComponent from "../HealthComponent";
 import TransformComponent from "../TransformComponent";
 import EntityAI from "./EntityAI";
@@ -17,8 +18,6 @@ class FollowAI extends EntityAI {
    private readonly range: number;
    private readonly targets: ReadonlyArray<ConstructorFunction>;
 
-   private reachTargetCallbacks: Array<() => void> | undefined;
-
    constructor(id: string, info: FollowAIInfo) {
       super();
 
@@ -32,25 +31,31 @@ class FollowAI extends EntityAI {
       super.reachTargetPosition(transformComponent);
 
       this.target = null;
+   }
 
-      // Call all reach target callbacks
-      if (typeof this.reachTargetCallbacks !== "undefined") {
-         for (const callback of this.reachTargetCallbacks) {
-            callback();
-         }
+   public getEntitiesInSearchRadius(position: Point, range: number): Array<Entity> | null {
+      let validTargets = Board.getEntitiesInRange(position, range * Board.tileSize);
+      if (validTargets === null) return null;
+
+      // If possible sort the entities
+      if (typeof this.targetSortFunction !== "undefined") {
+         const sortedEntities = this.targetSortFunction(validTargets);
+         if (sortedEntities === null) return null;
+         validTargets = sortedEntities;
       }
+
+      // Filter the targets to only include targets the entity can pursue
+      validTargets = this.filterTargets(validTargets, this.targets);
+
+      if (validTargets.length > 0) return validTargets;
+      return null;
    }
 
    public getTarget(): Entity | null {
       const transformComponent = this.entity.getComponent(TransformComponent)!;
 
-      let entitiesInSearchRadius = super.getEntitiesInSearchRadius(transformComponent.position, this.range, this.targets);
+      const entitiesInSearchRadius = this.getEntitiesInSearchRadius(transformComponent.position, this.range);
       if (entitiesInSearchRadius === null) return null;
-
-      if (typeof this.targetSortFunction !== "undefined") {
-         entitiesInSearchRadius = this.targetSortFunction(entitiesInSearchRadius);
-         if (entitiesInSearchRadius === null) return null;
-      }
 
       let closestEntity!: Entity;
       let closestDistance: number = Number.MAX_SAFE_INTEGER;
@@ -86,14 +91,6 @@ class FollowAI extends EntityAI {
             this.target = null;
          }
       }
-   }
-
-   public addReachTargetCallback(callback: () => void): void {
-      if (typeof this.reachTargetCallbacks === "undefined") {
-         this.reachTargetCallbacks = new Array<() => void>();
-      }
-
-      this.reachTargetCallbacks.push(callback);
    }
 
    public tick(): void {

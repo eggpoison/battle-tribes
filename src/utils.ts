@@ -237,8 +237,6 @@ export class Vector3 {
    }
 }
 
-// console.log(new Vector3(1, Math.PI / 2, -Math.PI / 2).convertToPoint());
-
 export function lerp(start: number, end: number, amount: number): number {
    return start * (1 - amount) + end * amount;
 }

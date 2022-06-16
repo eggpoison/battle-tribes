@@ -113,8 +113,9 @@ abstract class Mouse {
       const commandTileTargets = new Array<Coordinates>();
 
       for (const unit of this.selectedUnits) {
-         if (unit.targetCommandTileCoordinates !== null) {
-            commandTileTargets.push(unit.targetCommandTileCoordinates);
+         const targetTileCoordinates = unit.getTargetTile();
+         if (targetTileCoordinates !== null) {
+            commandTileTargets.push(targetTileCoordinates);
          }
       }
 

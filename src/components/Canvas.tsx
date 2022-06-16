@@ -203,7 +203,7 @@ const Canvas = () => {
    useEffect(() => {
       if (canvasRef.current !== null) {
          canvas = canvasRef.current;
-         ctx = canvas.getContext("2d")!;
+         ctx = canvas.getContext("2d", { alpha: false })!;
 
          setupCanvas();
       }

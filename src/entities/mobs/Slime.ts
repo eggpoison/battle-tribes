@@ -163,7 +163,7 @@ class Slime extends Mob {
       wanderAI.setSwitchCondition({
          newID: "follow",
          shouldSwitch: (): boolean => {
-            const entitiesInSearchRadius = wanderAI.getEntitiesInSearchRadius(transformComponent.position, this.info.searchRange, Slime.TARGETS);
+            const entitiesInSearchRadius = followAI.getEntitiesInSearchRadius(transformComponent.position, this.info.searchRange);
 
             return entitiesInSearchRadius !== null;
          },
@@ -184,7 +184,7 @@ class Slime extends Mob {
       followAI.setSwitchCondition({
          newID: "wander",
          shouldSwitch: (): boolean => {
-            const entitiesInSearchRadius = wanderAI.getEntitiesInSearchRadius(transformComponent.position, this.info.searchRange, Slime.TARGETS);
+            const entitiesInSearchRadius = followAI.getEntitiesInSearchRadius(transformComponent.position, this.info.searchRange);
 
             return entitiesInSearchRadius === null;
          },

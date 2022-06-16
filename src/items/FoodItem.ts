@@ -131,10 +131,12 @@ class FoodItem extends Item implements FoodItemInfo {
          const image = randItem(imageSlices);
 
          const scaleFactor = randFloat(0.25, 0.35);
+         const width = Math.floor(image.width * scaleFactor);
+         const height = Math.floor(image.height * scaleFactor);
 
          new Particle(position, {
             type: "image",
-            size: [image.width * scaleFactor, image.height * scaleFactor],
+            size: [width, height],
             image: image,
             renderLayer: RenderLayer.HighParticles,
             initialVelocity: initialVelocity,

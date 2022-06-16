@@ -62,15 +62,30 @@ body {
    height: var(--height);
    background-color: rgba(0, 0, 0, 0.5);
    border: 4px solid #000;
+   border-radius: 5px;
    position: absolute;
    bottom: 6.5rem;
    left: 50%;
    transform: translateX(-50%);
 }
+#health-bar .health-text {
+   color: #fff;
+   font-family: "Gaegu";
+   font-weight: 700;
+   font-size: 1.3rem;
+   text-shadow: 0 2px 2px #000, 2px 0 2px #000, 2px 2px 2px #000, -2px -2px 2px #000, -2px 0 2px #000, 0 -2px 2px #000;
+   position: absolute;
+   top: 50%;
+   left: 50%;
+   transform: translate(-50%, -50%);
+   user-select: none;
+}
 #health-bar .health {
+   --shadow-size: 2px;
    width: calc((var(--max-health) * 10px) * var(--health) / var(--max-health));
    height: var(--height);
    background-color: red;
+   box-shadow: var(--shadow-size) var(--shadow-size) 2px 0 rgb(238, 204, 187) inset, calc(var(--shadow-size) * -1) calc(var(--shadow-size) * -1) 2px 0 rgb(160, 2, 33) inset;
 }
 
 #mask {

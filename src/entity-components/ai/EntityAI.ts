@@ -1,16 +1,8 @@
-import Board from "../../Board";
 import Entity from "../../entities/Entity";
 import Mob from "../../entities/mobs/Mob";
-import SETTINGS from "../../settings";
 import { ConstructorFunction, Point, Vector } from "../../utils";
 import TransformComponent from "../TransformComponent";
-import AIManagerComponent from "./AIManangerComponent";
-
-type SwitchCondition = {
-   readonly newID: string;
-   shouldSwitch(): boolean;
-   onSwitch?(): void;
-}
+import AIManagerComponent, { SwitchCondition } from "./AIManangerComponent";
 
 abstract class EntityAI {
    public abstract readonly id: string;
@@ -18,6 +10,9 @@ abstract class EntityAI {
    protected entity!: Mob;
 
    private targetPosition: Point | null = null;
+
+   private readonly tickCallbacks = new Array<() => void>();
+   private readonly reachTargetCallbacks = new Array<() => void>();
 
    public setEntity(entity: Mob): void {
       this.entity = entity;
@@ -34,12 +29,15 @@ abstract class EntityAI {
          }
       }
 
-      if (typeof this.tickCallback !== "undefined") this.tickCallback();
+      for (const tickCallback of this.tickCallbacks) {
+         tickCallback();
+      }
    }
 
    public checkTargetPosition(): void {
       if (this.targetPosition !== null) {
          const transformComponent = this.entity.getComponent(TransformComponent)!;
+         if (transformComponent.velocity === null) return;
 
          const relativeTargetPos = transformComponent.position.subtract(this.targetPosition);
 
@@ -54,10 +52,17 @@ abstract class EntityAI {
       this.targetPosition = null;
 
       transformComponent.stopMoving();
+
+      // Call all reach target callbacks
+      if (typeof this.reachTargetCallbacks !== "undefined") {
+         for (const callback of this.reachTargetCallbacks) {
+            callback();
+         }
+      }
    }
 
    /** Filter out unwanted targets */
-   private filterTargets(entities: ReadonlyArray<Entity>, targets: ReadonlyArray<ConstructorFunction>): Array<Entity> {
+   protected filterTargets(entities: ReadonlyArray<Entity>, targets: ReadonlyArray<ConstructorFunction>): Array<Entity> {
       const filteredTargets = entities.slice();
 
       for (let idx = filteredTargets.length - 1; idx >= 0; idx--) {
@@ -86,20 +91,27 @@ abstract class EntityAI {
       return filteredTargets;
    }
 
-   public getEntitiesInSearchRadius(position: Point, range: number, validTargets?: ReadonlyArray<ConstructorFunction>): Array<Entity> | null {
-      let nearbyEntities = Board.getEntitiesInRange(position, range * Board.tileSize);
-      if (typeof validTargets !== "undefined") nearbyEntities = this.filterTargets(nearbyEntities, validTargets);
-
-      if (nearbyEntities.length > 0) return nearbyEntities;
-      return null;
-   }
-
    protected onLoad?(): void;
 
    protected setTargetPosition(position: Point): void {
       this.targetPosition = position;
    }
 
+   public move(vector: Vector): void {
+      const transformComponent = this.entity.getComponent(TransformComponent)!;
+
+      // Rotate to face the position
+      transformComponent.rotation = vector.direction;
+
+      transformComponent.setVelocity(vector);
+      transformComponent.isMoving = true;
+   }
+
+   /**
+    * Moves the entity to a specified position
+    * @param position The position to move to
+    * @param speed The speed at which to move to the position (in tiles per second)
+    */
    public moveToPosition(position: Point, speed: number): void {
       this.targetPosition = position;
 
@@ -108,8 +120,9 @@ abstract class EntityAI {
       const angle = transformComponent.position.angleBetween(position);
       transformComponent.rotation = angle;
       
-      const movementVector = new Vector(speed * Board.tileSize / SETTINGS.tps, angle);
+      const movementVector = new Vector(speed, angle);
       transformComponent.setVelocity(movementVector);
+      transformComponent.isMoving = true;
    }
 
    protected changeCurrentAI(newID: string): void {
@@ -121,9 +134,12 @@ abstract class EntityAI {
       this.switchCondition = switchCondition;
    }
 
-   private tickCallback?: () => void;
    public addTickCallback(callback: () => void): void {
-      this.tickCallback = callback;
+      this.tickCallbacks.push(callback);
+   }
+
+   public addReachTargetCallback(callback: () => void): void {
+      this.reachTargetCallbacks.push(callback);
    }
 }
 

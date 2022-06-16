@@ -9,7 +9,8 @@ import StatusEffectComponent from "../components/StatusEffectComponent";
 import Chunk from "../Chunk";
 
 class TransformComponent extends Component {
-   private static readonly FRICTION_CONSTANT = 1;
+   /** How much an entity's velocity gets decreased each second (tiles per second) */
+   private static readonly FRICTION_CONSTANT = 0.5;
 
    /** Position of the entity */
    public position!: Point;
@@ -56,9 +57,8 @@ class TransformComponent extends Component {
             this.velocity = this.velocity.add(acceleration);
          }
       }
-
-      // Apply friction
-      if (!this.isMoving && this.velocity !== null) {
+      else if (!this.isMoving && this.velocity !== null) {
+         // Apply friction
          this.velocity.magnitude -= tileInfo.friction * TransformComponent.FRICTION_CONSTANT * Board.tileSize / SETTINGS.tps;
          if (this.velocity.magnitude < 0) this.velocity = null;
       }

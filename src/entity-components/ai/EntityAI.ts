@@ -9,7 +9,7 @@ abstract class EntityAI {
 
    protected entity!: Mob;
 
-   private targetPosition: Point | null = null;
+   protected targetPosition: Point | null = null;
 
    private readonly tickCallbacks = new Array<() => void>();
    private readonly reachTargetCallbacks = new Array<() => void>();
@@ -51,7 +51,8 @@ abstract class EntityAI {
    protected reachTargetPosition(transformComponent: TransformComponent): void {
       this.targetPosition = null;
 
-      transformComponent.stopMoving();
+      transformComponent.isMoving = false;
+      transformComponent.acceleration = null;
 
       // Call all reach target callbacks
       if (typeof this.reachTargetCallbacks !== "undefined") {
@@ -103,7 +104,7 @@ abstract class EntityAI {
       // Rotate to face the position
       transformComponent.rotation = vector.direction;
 
-      transformComponent.setVelocity(vector);
+      transformComponent.acceleration = vector;
       transformComponent.isMoving = true;
    }
 
@@ -112,7 +113,7 @@ abstract class EntityAI {
     * @param position The position to move to
     * @param speed The speed at which to move to the position (in tiles per second)
     */
-   public moveToPosition(position: Point, speed: number): void {
+   public moveToPosition(position: Point, speed: number, acceleration: number): void {
       this.targetPosition = position;
 
       const transformComponent = this.entity.getComponent(TransformComponent)!;
@@ -120,9 +121,9 @@ abstract class EntityAI {
       const angle = transformComponent.position.angleBetween(position);
       transformComponent.rotation = angle;
       
-      const movementVector = new Vector(speed, angle);
-      transformComponent.setVelocity(movementVector);
+      transformComponent.acceleration = new Vector(acceleration, angle);
       transformComponent.isMoving = true;
+      transformComponent.terminalVelocity = speed;
    }
 
    protected changeCurrentAI(newID: string): void {

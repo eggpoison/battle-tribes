@@ -23,6 +23,7 @@ class Zombie extends Mob {
    private static readonly FOLLOW_SPEED = 1.5;
    private static readonly VISION_RANGE = 4;
    private static readonly WANDER_RATE = 0.25
+   private static readonly ACCELERATION = 5;
    private static readonly TARGETS = [Tribesman];
 
    private static readonly ATTACK_DAMAGE = 4;
@@ -102,7 +103,8 @@ class Zombie extends Mob {
       const wanderAI = this.getComponent(AIManagerComponent)!.addAI(
          new WanderAI("wander", {
             range: Zombie.VISION_RANGE,
-            speed: Zombie.WANDER_SPEED,
+            terminalVelocity: Zombie.WANDER_SPEED,
+            acceleration: Zombie.ACCELERATION,
             wanderRate: Zombie.WANDER_RATE
          })
       );
@@ -140,7 +142,7 @@ class Zombie extends Mob {
             const targetPosition = targetEntity.getComponent(TransformComponent)!.position;
 
             // Move to the target
-            followAI.moveToPosition(targetPosition, Zombie.FOLLOW_SPEED);
+            followAI.moveToPosition(targetPosition, Zombie.FOLLOW_SPEED, Zombie.ACCELERATION);
             followAI.target = targetEntity;
          }
       });

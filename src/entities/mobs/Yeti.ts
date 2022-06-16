@@ -22,8 +22,9 @@ class Yeti extends Mob {
    private static readonly ATTACK_DAMAGE = 7.5;
    private static readonly KNOCKBACK = 1.5;
 
-   private static readonly WANDER_SPEED = 1.25;
-   private static readonly FOLLOW_SPEED = 3;
+   private static readonly WANDER_TERMINAL_VELOCITY = 1.25;
+   private static readonly FOLLOW_TERMINAL_VELOCITY = 3;
+   private static readonly ACCELERATION = 5;
    
    private static readonly VISION_RANGE = 5;
    private static readonly WANDER_RATE = 0.25;
@@ -65,7 +66,8 @@ class Yeti extends Mob {
       const wanderAI = aiManagerComponent.addAI(
          new WanderAI("wander", {
             range: Yeti.VISION_RANGE,
-            speed: Yeti.WANDER_SPEED,
+            terminalVelocity: Yeti.WANDER_TERMINAL_VELOCITY,
+            acceleration: Yeti.ACCELERATION,
             wanderRate: Yeti.WANDER_RATE
          })
       );
@@ -90,12 +92,12 @@ class Yeti extends Mob {
 
          // Move to the target
          if (target !== null) {
-            followAI.moveToPosition(target.getComponent(TransformComponent)!.position, Yeti.FOLLOW_SPEED);
-            transformComponent.terminalVelocity = Yeti.FOLLOW_SPEED;
+            followAI.moveToPosition(target.getComponent(TransformComponent)!.position, Yeti.FOLLOW_TERMINAL_VELOCITY, Yeti.ACCELERATION);
+            transformComponent.terminalVelocity = Yeti.FOLLOW_TERMINAL_VELOCITY;
          } else {
             // If a target can't be found, switch to wander AI
             aiManagerComponent.changeCurrentAI("wander");
-            transformComponent.terminalVelocity = Yeti.WANDER_SPEED;
+            transformComponent.terminalVelocity = Yeti.WANDER_TERMINAL_VELOCITY;
          }
       });
 

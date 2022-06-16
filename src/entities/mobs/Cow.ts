@@ -33,6 +33,7 @@ class Cow extends Mob {
    private static readonly WANDER_SPEED = 0.75;
    private static readonly FOLLOW_SPEED = 1.5;
    private static readonly ESCAPE_SPEED = 4;
+   private static readonly ACCELERATION = 3;
 
    private static readonly TARGETS = [Berry, ItemEntity];
 
@@ -135,7 +136,8 @@ class Cow extends Mob {
       const wanderAI = aiManagerComponent.addAI(
          new WanderAI("wander", {
             range: WANDER_RANGE,
-            speed: Cow.WANDER_SPEED,
+            terminalVelocity: Cow.WANDER_SPEED,
+            acceleration: Cow.ACCELERATION,
             wanderRate: WANDER_CHANCE
          })
       );
@@ -164,7 +166,7 @@ class Cow extends Mob {
             const targetPosition = targetEntity.getComponent(TransformComponent)!.position;
 
             // Move to the target
-            followAI.moveToPosition(targetPosition, Cow.FOLLOW_SPEED);
+            followAI.moveToPosition(targetPosition, Cow.FOLLOW_SPEED, Cow.ACCELERATION);
             followAI.target = targetEntity;
          }
       });
@@ -190,6 +192,8 @@ class Cow extends Mob {
          if (entity !== null) {
             attackingEntity = entity;
             aiManagerComponent.changeCurrentAI("custom");
+
+            transformComponent.terminalVelocity = Cow.ESCAPE_SPEED
          }
       });
 
@@ -200,18 +204,18 @@ class Cow extends Mob {
          // Make sure the attacking entity is still in range
          const distBetween = cowPosition.distanceFrom(attackingEntityPosition);
          if (distBetween <= SIGHT_RANGE * Board.tileSize) {  
+            // Get the angle away from the entity
             const angle = cowPosition.angleBetween(attackingEntityPosition);
-            // Move away from the entity not towards them
             const flippedAngle = angle + Math.PI;
             
-            const movementVector = new Vector(Cow.ESCAPE_SPEED, flippedAngle);
-            
+            // Move away from the entity
+            const movementVector = new Vector(Cow.ACCELERATION, flippedAngle);
             customAI.move(movementVector);
          } else {
             // If the attacking entity is out of range, go back to regular behaviour
             aiManagerComponent.changeCurrentAI("wander");
             transformComponent.isMoving = false;
-            transformComponent.velocity = null;
+            transformComponent.acceleration = null;
          }
       });
    }

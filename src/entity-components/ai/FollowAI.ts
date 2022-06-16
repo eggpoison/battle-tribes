@@ -71,9 +71,9 @@ class FollowAI extends EntityAI {
       return closestEntity;
    }
 
-   public moveToEntity(entity: Entity, speed: number): void {
+   public moveToEntity(entity: Entity, speed: number, acceleration: number): void {
       const position = entity.getComponent(TransformComponent)!.position;
-      super.moveToPosition(position, speed);
+      super.moveToPosition(position, speed, acceleration);
    }
 
    private targetSortFunction?: (entities: Array<Entity>) => Array<Entity> | null;

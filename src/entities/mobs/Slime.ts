@@ -71,6 +71,8 @@ class Slime extends Mob {
    private static readonly DAMAGE = 5;
    private static readonly KNOCKBACK_STRENGTH = 1;
 
+   private static readonly ACCELERATION = 999;
+
    // AI
    private static readonly FOLLOW_WAIT_TIMER_DURATION = 0.4;
    private static readonly FOLLOW_WAIT_TIMER_DURATION_VARIANCE = 0.1;
@@ -156,7 +158,8 @@ class Slime extends Mob {
       const wanderAI = this.getComponent(AIManagerComponent)!.addAI(
          new WanderAI("wander", {
             range: this.info.searchRange,
-            speed: WANDER_SPEED,
+            terminalVelocity: WANDER_SPEED,
+            acceleration: 999,
             wanderRate: WANDER_RATE
          })
       );
@@ -208,7 +211,7 @@ class Slime extends Mob {
             const speed = Slime.FOLLOW_SPEED + randFloat(-Slime.FOLLOW_SPEED_VARIANCE, Slime.FOLLOW_SPEED_VARIANCE);
 
             // Move to the target
-            followAI.moveToPosition(target.getComponent(TransformComponent)!.position, speed);
+            followAI.moveToPosition(target.getComponent(TransformComponent)!.position, speed, Slime.ACCELERATION);
          }
       });
 

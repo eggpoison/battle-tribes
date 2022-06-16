@@ -6,18 +6,20 @@ import EntityAI from "./EntityAI";
 
 type WanderAIInfo = {
    readonly range: number;
-   readonly speed: number;
    /** The average number of times that the entity will wander in a second */
    readonly wanderRate: number;
+   readonly acceleration: number;
+   readonly terminalVelocity: number;
 }
 
 class WanderAI extends EntityAI {
    public readonly id: string;
 
-   /** Chance for the entity to wander each second */
-   protected readonly wanderChance: number;
    protected readonly range: number;
-   protected readonly speed: number;
+   /** Chance for the entity to wander each second */
+   protected readonly wanderRate: number;
+   protected readonly acceleration: number;
+   protected readonly terminalVelocity: number;
 
    constructor(id: string, info: WanderAIInfo) {
       super();
@@ -25,8 +27,9 @@ class WanderAI extends EntityAI {
       this.id = id;
 
       this.range = info.range;
-      this.speed = info.speed;
-      this.wanderChance = info.wanderRate;
+      this.wanderRate = info.wanderRate;
+      this.terminalVelocity = info.terminalVelocity;
+      this.acceleration = info.acceleration
    }
 
    protected getRandomTargetPosition(): Point {
@@ -57,10 +60,13 @@ class WanderAI extends EntityAI {
 
       super.checkTargetPosition();
 
+      // Don't choose a new location to wander to if already going to one
+      if (this.targetPosition !== null) return;
+
       // Wander randomly
-      if (Math.random() < this.wanderChance / SETTINGS.tps) {
+      if (Math.random() < this.wanderRate / SETTINGS.tps) {
          const targetPosition = this.getRandomTargetPosition();
-         super.moveToPosition(targetPosition, this.speed);
+         super.moveToPosition(targetPosition, this.terminalVelocity, this.acceleration);
       }
    }
 }

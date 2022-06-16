@@ -29,6 +29,7 @@ type ParticleInfo = {
    readonly lifespan: number | [number, number];
    /** How much the velocity decreases each second */
    readonly friction?: number;
+   readonly startOpacity?: number;
    readonly endOpacity?: number;
    readonly shadowOpacity?: number;
    readonly hasShadow?: boolean;
@@ -63,6 +64,7 @@ class Particle {
    readonly renderLayer: ParticleRenderLayer;
    private readonly colour?: [number, number, number];
    private readonly endColour?: [number, number, number];
+   private readonly startOpacity: number;
    private readonly endOpacity?: number;
    private readonly shadowOpacity: number;
    private readonly hasShadow: boolean;
@@ -145,10 +147,12 @@ class Particle {
          // Colour
          this.colour = (typeof info.colour === "function") ? info.colour() : info.colour;
          // End colour
-         if (typeof info.endColour !== "undefined") this.endColour = info.endColour;
+         this.endColour = info.endColour;
       }
 
-      if (typeof info.endOpacity !== "undefined") this.endOpacity = info.endOpacity;
+      // Opacity
+      this.startOpacity = info.startOpacity || 1;
+      this.endOpacity = info.endOpacity;
 
       if (info.type === "image") this.image = info.image;
 
@@ -242,7 +246,7 @@ class Particle {
 
       const ctx = getGameCanvasContext();
 
-      const opacity = (typeof this.endOpacity !== "undefined") ? 1 - this.age / this.lifespan : 1;
+      const opacity = (typeof this.endOpacity !== "undefined") ? lerp(this.startOpacity, this.endOpacity, this.age / this.lifespan) : this.startOpacity;
 
       switch (this.type) {
          case "rectangle": {
@@ -312,7 +316,7 @@ class Particle {
                height = lerp(height, this.endSize.height, this.age / this.lifespan);
             }
 
-            let opacity = (typeof this.endOpacity !== "undefined") ? 1 - this.age / this.lifespan : 1;
+            let opacity = (typeof this.endOpacity !== "undefined") ? lerp(this.startOpacity, this.endOpacity, this.age / this.lifespan) : this.startOpacity;
             opacity *= this.shadowOpacity;
 
             // Rotate canvas

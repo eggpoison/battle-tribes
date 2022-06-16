@@ -301,6 +301,7 @@ abstract class Tribesman extends Entity {
          renderLayer: RenderLayer.LowParticles,
          initialVelocity: initialVelocity,
          lifespan: [0.75, 1],
+         startOpacity: 0.8,
          endOpacity: 0,
          hasShadow: false
       });

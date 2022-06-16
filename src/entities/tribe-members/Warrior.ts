@@ -19,7 +19,8 @@ import TribeWorker from "./TribeWorker";
 
 class Warrior extends TribeWorker {
    protected readonly mainAIid = "follow";
-   protected readonly speed = 2.5;
+   protected readonly terminalVelocity = 2.5;
+   protected readonly acceleration = 5;
 
    public readonly name = "Tribesman";
    public readonly SIZE = 1;
@@ -66,7 +67,8 @@ class Warrior extends TribeWorker {
       const wanderAI = this.getComponent(AIManagerComponent)!.addAI(
          new WanderAI("wander", {
             range: Warrior.SIGHT_RANGE,
-            speed: this.speed,
+            terminalVelocity: this.terminalVelocity,
+            acceleration: this.acceleration,
             wanderRate: Warrior.WANDER_RATE
          })
       );
@@ -118,7 +120,7 @@ class Warrior extends TribeWorker {
          // If inventory is full, move to the stash
          if (this.getComponent(FiniteInventoryComponent)!.isFull(false)) {
             const targetPosition = this.tribe.position;
-            followAI.moveToPosition(targetPosition, this.speed);
+            followAI.moveToPosition(targetPosition, this.terminalVelocity, this.acceleration);
 
             return;
          }
@@ -145,7 +147,7 @@ class Warrior extends TribeWorker {
                thisTransformComponent.rotation = angle;
             } else {
                // If the target isn't too close, move to them
-               followAI.moveToEntity(target, this.speed);
+               followAI.moveToEntity(target, this.terminalVelocity, this.acceleration);
             }
 
             // If the warrior can attack, try to attack
@@ -164,7 +166,7 @@ class Warrior extends TribeWorker {
                }
             }
          } else {
-            followAI.moveToEntity(target, this.speed);
+            followAI.moveToEntity(target, this.terminalVelocity, this.acceleration);
          }
       });
 

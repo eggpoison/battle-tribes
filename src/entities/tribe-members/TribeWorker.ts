@@ -16,7 +16,8 @@ import Tribesman from "./Tribesman";
 
 abstract class TribeWorker extends Tribesman {
    protected abstract readonly mainAIid: string;
-   protected abstract readonly speed: number;
+   protected abstract readonly terminalVelocity: number;
+   protected abstract readonly acceleration: number;
 
    /** The path the user has commanded the unit to follow */
    private commandPath: Array<Coordinates> | null = null;
@@ -35,7 +36,7 @@ abstract class TribeWorker extends Tribesman {
    }
 
    public onLoad(): void {
-      this.getComponent(TransformComponent)!.terminalVelocity = this.speed;
+      this.getComponent(TransformComponent)!.terminalVelocity = this.terminalVelocity;
    }
 
    public commandToTile(targetTileCoordinates: Coordinates): void {
@@ -58,7 +59,8 @@ abstract class TribeWorker extends Tribesman {
 
       // Start moving to the first tile in the path
       const customAI = aiManagerComponent.getAI("custom");
-      customAI.moveToPosition(new Point((path[0][0] + 0.5) * Board.tileSize, (path[0][1] + 0.5) * Board.tileSize), this.speed);
+      const firstTilePosition = new Point((path[0][0] + 0.5) * Board.tileSize, (path[0][1] + 0.5) * Board.tileSize);
+      customAI.moveToPosition(firstTilePosition, this.terminalVelocity, this.acceleration);
       
       this.commandPath = path;
    }
@@ -92,7 +94,7 @@ abstract class TribeWorker extends Tribesman {
             // Move to the next tile
             const nextTile = this.commandPath[0];
             const targetPosition = new Point((nextTile[0] + 0.5) * Board.tileSize, (nextTile[1] + 0.5) * Board.tileSize);
-            customAI.moveToPosition(targetPosition, this.speed);
+            customAI.moveToPosition(targetPosition, this.terminalVelocity, this.acceleration);
          }
       });
    }

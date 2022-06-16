@@ -3,7 +3,6 @@ import Mob from "../entities/mobs/Mob";
 import Resource from "../entities/resources/Resource";
 import Tribesman from "../entities/tribe-members/Tribesman";
 import AttackComponent, { AttackInfo } from "../entity-components/AttackComponent";
-import FiniteInventoryComponent from "../entity-components/inventory/FiniteInventoryComponent";
 import TransformComponent from "../entity-components/TransformComponent";
 import Item, { ItemInfo } from "./Item";
 
@@ -37,7 +36,7 @@ class ToolItem extends Item implements ToolItemInfo {
       this.interactionRadius = toolInfo.interactionRadius;
    }
 
-   public startLeftClick(entity: Tribesman, _inventoryComponent: FiniteInventoryComponent, slotNum: number): void {
+   public startLeftClick(entity: Tribesman): void {
       // Get the position to interact from
       const interactPosition = entity.getInteractPosition();
       const entityPosition = entity.getComponent(TransformComponent)!.position;
@@ -68,7 +67,7 @@ class ToolItem extends Item implements ToolItemInfo {
    }
 
    private isCorrectDamageType(entity: Entity): boolean {
-      if (entity instanceof Mob) {
+      if (entity instanceof Mob || entity instanceof Tribesman) {
          return this.type === "sword";
       } else if (entity instanceof Resource) {
          return this.type === "pickaxe";

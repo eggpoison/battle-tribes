@@ -28,6 +28,83 @@ export const TRIBE_XP_REQUIREMENTS = [
    1500
 ];
 
+type TribeCoordinatesRecord = Partial<{ [key in TribeTypes]: Coordinates }>;
+
+const getPotentialTribeSpawnCoordinates = (type: TribeTypes): Array<Coordinates> => {
+   /** % of the board in each direction that the tribe can't spawn in */
+   const PADDING = 20;
+
+   // Calculate spawn area bounds
+   const minX = Math.floor(Board.dimensions * PADDING / 100);
+   const maxX = Math.ceil(Board.dimensions * (1 - PADDING / 100));
+   const minY = Math.ceil(Board.dimensions * PADDING / 100);
+   const maxY = Math.ceil(Board.dimensions * (1 - PADDING / 100));
+
+   // All tiles where the tribe could potentially spawn
+   const eligibleTiles = new Array<Coordinates>();
+
+   // Find all grasslands tiles
+   for (let x = minX; x <= maxX; x++) {
+      for (let y = minY; y <= maxY; y++) {
+         const tile = Board.getTile(x, y);
+
+         if (tile.biome.name === TRIBE_INFO[type].biome && !tile.isWall) {
+            eligibleTiles.push([x, y]);
+         }
+      }
+   }
+
+   return eligibleTiles;
+}
+
+const getTribeSpawnCoordinates = (type: TribeTypes, tribePositions: TribeCoordinatesRecord): Coordinates => {
+   const potentialTiles = getPotentialTribeSpawnCoordinates(type);
+
+   // If no other tribes have been created, just choose a random position for the tribe
+   if (Object.keys(tribePositions).length === 0) {
+      return randItem(potentialTiles);
+   }
+
+   // Otherwise find the tile with the highest minimum distance from all other tribes
+   let furthestTile!: Coordinates;
+   let furthestDistance: number = -1;
+   for (const tile of potentialTiles) {
+      const [x, y] = tile;
+
+      // Calculate the distance from the tile to the other tribes
+      const distancesFromOtherTribes = new Array<number>();
+      for (const [tribeX, tribeY] of Object.values(tribePositions)) {
+         const dist = Math.sqrt(Math.pow(x - tribeX, 2) + Math.pow(y - tribeY, 2));
+         distancesFromOtherTribes.push(dist);
+      }
+
+      const minDist = Math.min(...distancesFromOtherTribes);
+      if (minDist > furthestDistance) {
+         furthestTile = tile;
+         furthestDistance = minDist;
+      }
+   }
+
+   return furthestTile;
+}
+
+export function spawnTribes(): void {
+   const tribeCoordinates: TribeCoordinatesRecord = {};
+
+   // Spawn all tribes
+   const keys = Object.keys(TRIBE_INFO) as Array<TribeTypes>;
+   for (const type of keys) {
+      // Get a valid position for the tribe to spawn in
+      const spawnCoordinates = getTribeSpawnCoordinates(type, tribeCoordinates);
+      const spawnPosition = Board.getRandomPositionInTile(...spawnCoordinates);
+
+      new Tribe(spawnPosition, type);
+
+      // Store the tribe position for later use
+      tribeCoordinates[type] = spawnCoordinates;
+   }
+}
+
 // Tribe members are created through the tribe class
 // Other entities such as the player are added to the tribe in their constructor
 class Tribe {
@@ -104,45 +181,6 @@ class Tribe {
 
    public addEntityToTribe(entity: Entity): void {
       this.members.push(entity);
-   }
-
-   public static spawnTribes(): void {
-      // Spawn all non-player tribes
-      const keys = Object.keys(TRIBE_INFO) as Array<TribeTypes>;
-      for (const type of keys) {
-         const position = this.getTribeSpawnPosition(type);
-
-         new Tribe(position, type);
-      }
-   }
-
-   private static getTribeSpawnPosition(type: TribeTypes): Point {
-      /** % of the board in each direction that the tribe can't spawn in */
-      const PADDING = 20;
-
-      // Calculate spawn area bounds
-      const minX = Math.floor(Board.dimensions * PADDING / 100);
-      const maxX = Math.ceil(Board.dimensions * (1 - PADDING / 100));
-      const minY = Math.ceil(Board.dimensions * PADDING / 100);
-      const maxY = Math.ceil(Board.dimensions * (1 - PADDING / 100));
-
-      const eligibleTiles = new Array<Coordinates>();
-
-      // Find all grasslands tiles
-      for (let x = minX; x <= maxX; x++) {
-         for (let y = minY; y <= maxY; y++) {
-            const tile = Board.getTile(x, y);
-
-            if (tile.biome.name === TRIBE_INFO[type].biome) {
-               eligibleTiles.push([x, y]);
-            }
-         }
-      }
-
-      // Pick a random eligible tile to spawn the player in
-      const [spawnTileX, spawnTileY] = randItem(eligibleTiles);
-
-      return Board.getRandomPositionInTile(spawnTileX, spawnTileY);
    }
 
    public getMemberSpawnPosition(): Point {

@@ -52,7 +52,7 @@ const STATUS_EFFECT_RECORD: Record<StatusEffectType, StatusEffectInfo> = {
             endColour: [50, 0, 0],
             lifespan: [1.5, 2],
             endOpacity: 0,
-            friction: 0.3,
+            groundFriction: 0.3,
             hasShadow: false
          }
       }

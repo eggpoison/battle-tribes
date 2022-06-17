@@ -58,6 +58,15 @@ abstract class Camera {
    public static followEntity(entity: Entity): void {
       this.followedEntity = entity;
    }
+
+   public static pointIsVisible(point: Point): boolean {
+      const unitsInChunk = Board.tileSize * Board.chunkSize;
+
+      const pointChunkX = Math.floor(point.x / unitsInChunk);
+      const pointChunkY = Math.floor(point.y / unitsInChunk);
+
+      return pointChunkX >= this.visibleChunkBounds[0] && pointChunkX <= this.visibleChunkBounds[1] && pointChunkY >= this.visibleChunkBounds[2] && pointChunkY <= this.visibleChunkBounds[3];
+   }
 }
 
 export default Camera;

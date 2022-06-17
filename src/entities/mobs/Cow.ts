@@ -32,7 +32,7 @@ class Cow extends Mob {
 
    private static readonly WANDER_SPEED = 0.75;
    private static readonly FOLLOW_SPEED = 1.5;
-   private static readonly ESCAPE_SPEED = 4;
+   private static readonly ESCAPE_SPEED = 3.1; // Slightly slower than the player - annoying but not impossible to catch
    private static readonly ACCELERATION = 3;
 
    private static readonly TARGETS = [Berry, ItemEntity];

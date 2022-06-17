@@ -1,5 +1,8 @@
-import Board from "../../Board";
+import Board, { Coordinates } from "../../Board";
+import ENTITY_INFO from "../../data/entity-info";
+import TILE_INFO from "../../data/tile-types";
 import SETTINGS from "../../settings";
+import { Biome, BIOMES, TileType } from "../../terrain-generation";
 import { Point, randItem } from "../../utils";
 import TransformComponent from "../TransformComponent";
 import EntityAI from "./EntityAI";
@@ -53,6 +56,31 @@ class WanderAI extends EntityAI {
       // Move to a random position in the chosen tile
       const targetPosition = Board.getRandomPositionInTile(...targetTileCoordinates);
       return targetPosition;
+   }
+
+   private getTileWeight(tileCoordinates: Coordinates): void {
+      const tile = Board.getTile(...tileCoordinates);
+      const biome = tile.biome;
+      
+      const idealBiomes = this.entity.entityInfo.spawnRequirements.biomes;
+
+      let minHumidityDist = 0;
+      
+      for (const biomeName of idealBiomes) {
+         let biome!: Biome;
+         for (const currentBiome of BIOMES) {
+            if (currentBiome.name === biomeName) {
+               biome = currentBiome;
+               break;
+            }
+         }
+
+         
+
+         for (const generationInfo of biome.tiles) {
+            const distDifference = Math.abs()
+         }
+      }
    }
 
    public tick(): void {

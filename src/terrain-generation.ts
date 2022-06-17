@@ -37,13 +37,13 @@ type BiomeGenerationInfo = {
 
 export type BiomeName = "Magma Fields" | "Mountains" | "Tundra" | "Desert" | "Swamp" | "Grasslands";
 
-type Biome = {
+export type Biome = {
    readonly name: BiomeName;
    readonly generationInfo?: Readonly<BiomeGenerationInfo>;
    readonly tiles: ReadonlyArray<TileGenerationInfo>;
 }
 
-const BIOMES: ReadonlyArray<Biome> = [
+export const BIOMES: ReadonlyArray<Biome> = [
    {
       name: "Magma Fields",
       tiles: [

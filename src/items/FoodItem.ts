@@ -6,21 +6,13 @@ import TransformComponent from "../entity-components/TransformComponent";
 import Game from "../Game";
 import Particle from "../particles/Particle";
 import SETTINGS from "../settings";
-import { randFloat, randInt, randItem, Vector, Vector3 } from "../utils";
+import { imageIsLoaded, randFloat, randInt, randItem, Vector, Vector3 } from "../utils";
 import Item, { ItemInfo } from "./Item";
 import ITEMS from "./items";
 
 const IMAGE_SLICE_COUNT = 10;
 
 const IMAGE_SLICES: Partial<Record<string, Array<HTMLImageElement>>> = {};
-
-const imageIsLoaded = (image: HTMLImageElement): Promise<boolean> => {
-   return new Promise(resolve => {
-      image.addEventListener("load", () => {
-         resolve(true);
-      });
-   })
-}
 
 const createImageSlices = (imageSrc: string): Promise<Array<HTMLImageElement>> => {
    return new Promise(async resolve => {
@@ -34,7 +26,6 @@ const createImageSlices = (imageSrc: string): Promise<Array<HTMLImageElement>> =
          tempCanvas.height = IMAGE_SIZE;
       
          const image = new Image(IMAGE_SIZE, IMAGE_SIZE);
-         
          image.src = require("../images/" + imageSrc);
 
          await imageIsLoaded(image).then(() => {
@@ -138,9 +129,11 @@ class FoodItem extends Item implements FoodItemInfo {
             type: "image",
             size: [width, height],
             image: image,
+            imageSrc: imageSrc,
             renderLayer: RenderLayer.HighParticles,
             initialVelocity: initialVelocity,
-            lifespan: [0.25, 0.5]
+            lifespan: [0.25, 0.5],
+            hasShadow: false
          });
       }
    }

@@ -23,7 +23,7 @@ class Yeti extends Mob {
    private static readonly KNOCKBACK = 1.5;
 
    private static readonly WANDER_TERMINAL_VELOCITY = 1.25;
-   private static readonly FOLLOW_TERMINAL_VELOCITY = 3;
+   private static readonly FOLLOW_TERMINAL_VELOCITY = 3.5;
    private static readonly ACCELERATION = 5;
    
    private static readonly VISION_RANGE = 5;
@@ -71,6 +71,8 @@ class Yeti extends Mob {
             wanderRate: Yeti.WANDER_RATE
          })
       );
+      this.getComponent(AIManagerComponent)!.changeCurrentAI("wander");
+
       wanderAI.setSwitchCondition({
          newID: "follow",
          shouldSwitch: (): boolean => {
@@ -100,8 +102,6 @@ class Yeti extends Mob {
             transformComponent.terminalVelocity = Yeti.WANDER_TERMINAL_VELOCITY;
          }
       });
-
-      this.getComponent(AIManagerComponent)!.changeCurrentAI("wander");
    }
 
    duringCollision(collidingEntity: Entity): void {

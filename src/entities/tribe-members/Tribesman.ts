@@ -21,6 +21,8 @@ import { TileKind } from "../../data/tile-types";
 import Game from "../../Game";
 import AttackComponent, { AttackInfo } from "../../entity-components/AttackComponent";
 import ToolItem from "../../items/ToolItem";
+import Camera from "../../Camera";
+import { createEXPOrbs } from "../../exp-orbs";
 
 const TILE_WALK_COLOURS: Record<TileKind, [number, number, number]> = {
    [TileKind.grass]: [0, 153, 28],
@@ -67,9 +69,16 @@ abstract class Tribesman extends Entity {
 
       this.createEvent("killEntity", ([entity]: [Entity]) => {
          if (entity instanceof LivingEntity) {
-            const expDrop = entity.entityInfo.exp;
-            
-            this.addExp(expDrop);
+            const expAmount = entity.entityInfo.exp;
+            if (expAmount <= 0) return;
+
+            const entityPosition = entity.getComponent(TransformComponent)!.position;
+
+            if (Camera.pointIsVisible(entityPosition)) {
+               createEXPOrbs(entityPosition, expAmount, this.tribe);
+            } else {
+               this.addExp(expAmount);
+            }
          }
       });
 
@@ -111,7 +120,7 @@ abstract class Tribesman extends Entity {
                angularVelocity: 0,
                colour: colour,
                lifespan: lifespan,
-               friction: 1
+               groundFriction: 1
             });
          }
       });

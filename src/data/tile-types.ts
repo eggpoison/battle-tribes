@@ -137,7 +137,7 @@ export const TILE_PARTICLES: Partial<Record<TileKind, TileParticleInfo>> = {
             return new Point3(xVel, yVel, zVel).convertToVector();
          },
          lifespan: [2, 3],
-         friction: 0.5,
+         groundFriction: 0.5,
          shadowOpacity: 0.3,
          endOpacity: 0,
          doesBounce: false

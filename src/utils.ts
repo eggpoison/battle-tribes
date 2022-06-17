@@ -163,6 +163,10 @@ export class Point3 {
 
       return new Vector3(radius, inclination, azimuth);
    }
+
+   public convertTo2D(): Point {
+      return new Point(this.x, this.y);
+   }
 }
 
 export function getRandomAngle() {
@@ -203,7 +207,7 @@ export class Vector {
    }
 }
 
-// Uses a spherical point system
+// Uses a spherical point system (pain)
 export class Vector3 {
    public radius: number;
    public inclination: number;
@@ -410,4 +414,12 @@ window.addEventListener("blur", () => {
 
 export type Mutable<T> = {
    -readonly [key in keyof T]: T[key];
+}
+
+export function imageIsLoaded(image: HTMLImageElement): Promise<boolean> {
+   return new Promise(resolve => {
+      image.addEventListener("load", () => {
+         resolve(true);
+      });
+   })
 }

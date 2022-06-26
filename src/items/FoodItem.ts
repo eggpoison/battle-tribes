@@ -1,6 +1,7 @@
 import Board from "../Board";
 import Entity, { RenderLayer } from "../entities/Entity";
 import HealthComponent from "../entity-components/HealthComponent";
+import FiniteInventoryComponent from "../entity-components/inventory/FiniteInventoryComponent";
 import InventoryComponent from "../entity-components/inventory/InventoryComponent";
 import TransformComponent from "../entity-components/TransformComponent";
 import Game from "../Game";
@@ -8,7 +9,6 @@ import Particle from "../particles/Particle";
 import SETTINGS from "../settings";
 import { imageIsLoaded, randFloat, randInt, randItem, Vector, Vector3 } from "../utils";
 import Item, { ItemInfo } from "./Item";
-import ITEMS from "./items";
 
 const IMAGE_SLICE_COUNT = 10;
 
@@ -82,6 +82,8 @@ interface FoodItemInfo extends ItemInfo {
 class FoodItem extends Item implements FoodItemInfo {
    public readonly healthRestoreAmount: number;
    public readonly eatTime: number;
+
+   public static readonly COOLDOWN: number = 0.5;
    
    constructor(itemInfo: FoodItemInfo) {
       super(itemInfo);
@@ -108,7 +110,7 @@ class FoodItem extends Item implements FoodItemInfo {
          const initialVelocity = new Vector3(radius, inclination, azimuth);
 
          const item = inventoryComponent.getItem(slotNum)!;
-         const imageSrc = ITEMS[item[0]].imageSrc;
+         const imageSrc = item.imageSrc;
 
          let imageSlices: Array<HTMLImageElement>;
          // If the image slices array doesn't exist yet, create it
@@ -138,7 +140,9 @@ class FoodItem extends Item implements FoodItemInfo {
       }
    }
 
-   public endRightClick(entity: Entity, inventoryComponent: InventoryComponent, slotNum: number): void {
+   public endRightClick(entity: Entity, inventoryComponent: FiniteInventoryComponent, slotNum: number): void {
+      super.endRightClick(entity, inventoryComponent, slotNum);
+
       const healthComponent = entity.getComponent(HealthComponent)!;
 
       // Don't eat the food if the player's health is already full

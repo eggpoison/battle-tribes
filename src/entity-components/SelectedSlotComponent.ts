@@ -1,11 +1,14 @@
 import Component from "../Component";
-import Warrior from "../entities/tribe-members/Warrior";
+import FoodItem from "../items/FoodItem";
 import Item from "../items/Item";
 import ITEMS, { ItemName } from "../items/items";
+import SETTINGS from "../settings";
 import FiniteInventoryComponent from "./inventory/FiniteInventoryComponent";
 
 class SelectedSlotComponent extends Component {
    private selectedSlot: number = 0;
+
+   private foodEatCooldown: number = 0;
 
    private inventory!: FiniteInventoryComponent;
 
@@ -17,11 +20,17 @@ class SelectedSlotComponent extends Component {
 
    public tick(): void {
       if (this.isUsingItem) {
-         // Use the current item
          const item = this.getSelectedItem();
-         if (item !== null) {
-            if (typeof item.duringRightClick !== "undefined") item.duringRightClick(this.getEntity() as Warrior, this.inventory, this.selectedSlot);
+         if (item === null) return;
+         
+         // Don't use food if on cooldown
+         if (item instanceof FoodItem) {
+            this.foodEatCooldown -= 1 / SETTINGS.tps;
+            if (this.foodEatCooldown > 0) return;
          }
+         
+         // Use the current item
+         if (typeof item.duringRightClick !== "undefined") item.duringRightClick(this.getEntity(), this.inventory, this.selectedSlot);
       }
    }
 
@@ -34,7 +43,7 @@ class SelectedSlotComponent extends Component {
    }
 
    public getSelectedItemName(): ItemName | null {
-      const itemSlot = this.inventory.getItem(this.selectedSlot)
+      const itemSlot = this.inventory.getSlot(this.selectedSlot)
       return typeof itemSlot !== "undefined" ? itemSlot[0] : null;
    }
 
@@ -52,9 +61,9 @@ class SelectedSlotComponent extends Component {
    public startLeftClick(): void {
       const item = this.getSelectedItem();
       if (item === null) return;
-         
+
       // Use it
-      if (typeof item.startLeftClick !== "undefined") item.startLeftClick(this.getEntity() as Warrior, this.inventory, this.selectedSlot);
+      if (typeof item.startLeftClick !== "undefined") item.startLeftClick(this.getEntity(), this.inventory, this.selectedSlot);
    }
 
    public endLeftClick(): void {
@@ -62,17 +71,23 @@ class SelectedSlotComponent extends Component {
       if (item === null) return;
          
       // Use it
-      if (typeof item.endLeftClick !== "undefined") item.endLeftClick(this.getEntity() as Warrior, this.inventory, this.selectedSlot);
+      if (typeof item.endLeftClick !== "undefined") item.endLeftClick(this.getEntity(), this.inventory, this.selectedSlot);
    }
 
    public startRightClick(): void {
       const item = this.getSelectedItem();
       if (item === null) return;
 
+      // if (item instanceof FoodItem) {
+      //    if (this.foodEatCooldown > 0) return;
+         
+      //    this.foodEatCooldown = FoodItem.COOLDOWN;
+      // }
+
       this.isUsingItem = true;
          
       // Use it
-      if (typeof item.startRightClick !== "undefined") item.startRightClick(this.getEntity() as Warrior, this.inventory, this.selectedSlot);
+      if (typeof item.startRightClick !== "undefined") item.startRightClick(this.getEntity(), this.inventory, this.selectedSlot);
    }
 
    public endRightClick(): void {
@@ -82,7 +97,7 @@ class SelectedSlotComponent extends Component {
       this.isUsingItem = false;
          
       // Use it
-      if (typeof item.endRightClick !== "undefined") item.endRightClick(this.getEntity() as Warrior, this.inventory, this.selectedSlot);
+      if (typeof item.endRightClick !== "undefined") item.endRightClick(this.getEntity(), this.inventory, this.selectedSlot);
    }
 }
 

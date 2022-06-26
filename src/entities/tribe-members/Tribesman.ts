@@ -20,9 +20,9 @@ import SETTINGS from "../../settings";
 import { TileKind } from "../../data/tile-types";
 import Game from "../../Game";
 import AttackComponent, { AttackInfo } from "../../entity-components/AttackComponent";
-import ToolItem from "../../items/ToolItem";
 import Camera from "../../Camera";
 import { createEXPOrbs } from "../../exp-orbs";
+import ToolItem from "../../items/ToolItem";
 
 const TILE_WALK_COLOURS: Record<TileKind, [number, number, number]> = {
    [TileKind.grass]: [0, 153, 28],

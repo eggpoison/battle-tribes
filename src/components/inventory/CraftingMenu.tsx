@@ -3,7 +3,7 @@ import Crafting from "../../crafting/Crafting";
 import Recipe from "../../crafting/Recipe";
 import Player from "../../entities/tribe-members/Player";
 import FiniteInventoryComponent from "../../entity-components/inventory/FiniteInventoryComponent";
-import ITEMS, { ItemName } from "../../items/items";
+import ITEMS, { getItemName, ItemName } from "../../items/items";
 import InventoryTitle from "./InventoryTitle";
 import InventoryWrapper from "./InventoryWrapper";
 
@@ -29,7 +29,7 @@ const craft = (recipe: Recipe): void => {
       if (amount > 0) return;
    }
 
-   const resultName = ItemName[recipe.result.name] as unknown as ItemName;
+   const resultName = ItemName[getItemName(recipe.result)] as unknown as ItemName;
 
    if (!containsExactAmount) {
       let canCraft = false;
@@ -86,7 +86,7 @@ const Slot = ({ recipe }: SlotInfo) => {
 
                      const previewSrc = require("../../images/" + item.imageSrc);
                      
-                     return <li key={i}>{amount} {item.displayName} <img src={previewSrc} alt={item.name as unknown as string} className="material-image-preview" /></li>;
+                     return <li key={i}>{amount} {item.displayName} <img src={previewSrc} alt={getItemName(item) as unknown as string} className="material-image-preview" /></li>;
                   })}
                </ul>
             </div>

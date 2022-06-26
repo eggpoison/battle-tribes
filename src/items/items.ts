@@ -16,6 +16,17 @@ export enum ItemName {
    woodenPickaxe
 }
 
+export function getItemName(item: Item): ItemName {
+   for (const [itemName, currentItem] of Object.entries(ITEMS)) {
+      if (currentItem === item) {
+         return ItemName[itemName as keyof typeof ItemName];
+      }
+   }
+
+   console.warn(item);
+   throw new Error("Cannot find item name!");
+}
+
 const REGULAR_STACK_SIZE = 64;
 
 const ITEMS: Record<ItemName, Item> = {

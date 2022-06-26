@@ -26,7 +26,7 @@ class ItemEntity extends Entity {
          new HitboxComponent()
       ]);
 
-      this.getComponent(TransformComponent)!.rotation = 360 * Math.random();
+      this.getComponent(TransformComponent)!.rotation = Math.PI * 2 * Math.random();
 
       this.setHitbox();
 

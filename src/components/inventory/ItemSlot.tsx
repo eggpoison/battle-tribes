@@ -42,7 +42,7 @@ const splitItem = (slotNum: number, inventoryComponent: InventoryComponent): voi
 
 const quickMoveItem = (slotNum: number, clickedInventoryComponent: InventoryComponent, otherInventoryComponent: InventoryComponent): void => {
    // Get the item
-   const [itemName, itemAmount] = clickedInventoryComponent.getItem(slotNum)!;
+   const [itemName, itemAmount] = clickedInventoryComponent.getSlot(slotNum)!;
 
    // Add the item to the other inventory component
    const numItemsAdded = otherInventoryComponent.addItem(itemName, itemAmount);

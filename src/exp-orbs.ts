@@ -108,7 +108,8 @@ const getOrbType = (expAmount: number): number => {
       }
    }
 
-   throw new Error("");
+   // If all thresholds have been passed, return the highest value
+   return EXP_ORB_TYPES.length - 1;
 }
 
 const createEXPOrb = (position: Point, expAmount: number, tribe: Tribe): void => {

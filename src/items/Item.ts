@@ -1,6 +1,5 @@
-import Tribesman from "../entities/tribe-members/Warrior";
+import Entity from "../entities/Entity";
 import FiniteInventoryComponent from "../entity-components/inventory/FiniteInventoryComponent";
-import ITEMS, { ItemName } from "./items";
 
 export interface ItemInfo {
    readonly displayName: string;
@@ -10,6 +9,9 @@ export interface ItemInfo {
 }
 
 class Item implements ItemInfo {
+   public isInLeftClick: boolean = false;
+   public isInRightClick: boolean = false;
+
    public readonly displayName: string;
    public readonly description: string;
    public readonly imageSrc: string;
@@ -22,23 +24,21 @@ class Item implements ItemInfo {
       this.stackSize = itemInfo.stackSize;
    }
 
-   public get name(): ItemName {
-      for (const [itemName, item] of Object.entries(ITEMS)) {
-         if (item === this) {
-            return ItemName[itemName as keyof typeof ItemName];
-         }
-      }
-
-      throw new Error("Cannot find item name!");
+   public startLeftClick(_entity: Entity, _inventoryComponent: FiniteInventoryComponent, _slotNum: number): void {
+      this.isInLeftClick = true;
+   };
+   public duringLeftClick?(entity: Entity, inventoryComponent: FiniteInventoryComponent, slotNum: number): void;
+   public endLeftClick(_entity: Entity, _inventoryComponent: FiniteInventoryComponent, _slotNum: number): void {
+      this.isInLeftClick = false;
    }
 
-   public startLeftClick?(entity: Tribesman, inventoryComponent: FiniteInventoryComponent, slotNum: number): void;
-   public duringLeftClick?(entity: Tribesman, inventoryComponent: FiniteInventoryComponent, slotNum: number): void;
-   public endLeftClick?(entity: Tribesman, inventoryComponent: FiniteInventoryComponent, slotNum: number): void;
-
-   public startRightClick?(entity: Tribesman, inventoryComponent: FiniteInventoryComponent, slotNum: number): void;
-   public duringRightClick?(entity: Tribesman, inventoryComponent: FiniteInventoryComponent, slotNum: number): void;
-   public endRightClick?(entity: Tribesman, inventoryComponent: FiniteInventoryComponent, slotNum: number): void;
+   public startRightClick(_entity: Entity, _inventoryComponent: FiniteInventoryComponent, _slotNum: number): void {
+      this.isInRightClick = true;
+   }
+   public duringRightClick?(entity: Entity, inventoryComponent: FiniteInventoryComponent, slotNum: number): void;
+   public endRightClick(_entity: Entity, _inventoryComponent: FiniteInventoryComponent, _slotNum: number): void {
+      this.isInRightClick = false;
+   }
 }
 
 export default Item;

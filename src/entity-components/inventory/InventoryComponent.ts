@@ -1,7 +1,7 @@
 import Board from "../../Board";
 import Component from "../../Component";
 import ItemEntity from "../../entities/ItemEntity";
-import ITEMS, { ItemName } from "../../items/items";
+import ITEMS, { getItemName, ItemName } from "../../items/items";
 import Item from "../../items/Item";
 
 export type ItemSlots = Array<[ItemName, number]>;
@@ -13,7 +13,7 @@ abstract class InventoryComponent extends Component {
    public pickupItemEntity(itemEntity: ItemEntity): void {
       const item = itemEntity.item;
 
-      const itemName = ItemName[item.name] as unknown as ItemName;
+      const itemName = ItemName[getItemName(item)] as unknown as ItemName;
       const addAmount = this.getItemAddAmount(itemName, itemEntity.amount);
       if (addAmount !== null) {
          const key = itemName;
@@ -22,8 +22,16 @@ abstract class InventoryComponent extends Component {
       }
    }
 
-   public getItem(slotNum: number): [ItemName, number] | undefined {
+   public getSlot(slotNum: number): [ItemName, number] | undefined {
       return this.itemSlots[slotNum];
+   }
+
+   public getItem(slotNum: number): Item | undefined {
+      const itemSlot = this.itemSlots[slotNum];
+      if (typeof itemSlot === "undefined") return undefined;
+
+      const itemName = itemSlot[0];
+      return ITEMS[itemName];
    }
 
    public setItem(slotNum: number, itemName: ItemName, amount: number): void {
@@ -114,7 +122,7 @@ abstract class InventoryComponent extends Component {
             const [currentItemName, currentItemAmount] = itemSlot;
 
             // If the item is of the same type and it can fit
-            if (item.name === currentItemName && currentItemAmount + amount <= item.stackSize) {
+            if (getItemName(item) === currentItemName && currentItemAmount + amount <= item.stackSize) {
                return true;
             }
          } else {

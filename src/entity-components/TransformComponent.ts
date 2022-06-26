@@ -18,7 +18,7 @@ class TransformComponent extends Component {
    public velocity: Vector | null = null;
    /** Acceleration of the entity (tiles per second) */
    public acceleration: Vector | null = null;
-   /** Rotation of the entity in degrees */
+   /** Rotation of the entity in radians */
    public rotation: number = 0;
 
    /** Limit to how fast the entity can go (tiles per second) */

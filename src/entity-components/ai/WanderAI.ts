@@ -1,9 +1,7 @@
 import Board, { Coordinates } from "../../Board";
-import ENTITY_INFO from "../../data/entity-info";
-import TILE_INFO from "../../data/tile-types";
 import SETTINGS from "../../settings";
-import { Biome, BIOMES, TileType } from "../../terrain-generation";
-import { Point, randItem } from "../../utils";
+import { BIOMES } from "../../terrain-generation";
+import { Point, randInt, randItem } from "../../utils";
 import TransformComponent from "../TransformComponent";
 import EntityAI from "./EntityAI";
 
@@ -51,36 +49,52 @@ class WanderAI extends EntityAI {
       }
 
       // Choose a random nearby tile from the list of nearby tiles
-      const targetTileCoordinates = randItem(nearbyTileCoordinates);
+      const targetTileCoordinates = this.getTargetTileCoordinates(nearbyTileCoordinates);
 
       // Move to a random position in the chosen tile
       const targetPosition = Board.getRandomPositionInTile(...targetTileCoordinates);
       return targetPosition;
    }
 
-   private getTileWeight(tileCoordinates: Coordinates): void {
-      const tile = Board.getTile(...tileCoordinates);
-      const biome = tile.biome;
-      
-      const idealBiomes = this.entity.entityInfo.spawnRequirements.biomes;
+   private getTargetTileCoordinates(tileCoordinateArray: Array<Coordinates>): Coordinates {
+      // If the entity doesn't have entity info, return a random tile
+      if (typeof this.entity.entityInfo === "undefined") return randItem(tileCoordinateArray);
 
-      let minHumidityDist = 0;
-      
-      for (const biomeName of idealBiomes) {
-         let biome!: Biome;
-         for (const currentBiome of BIOMES) {
-            if (currentBiome.name === biomeName) {
-               biome = currentBiome;
-               break;
-            }
-         }
+      // How much more chance a tile from the spawn requirements has to be chosen
+      const BIAS = 5;
 
+      const idealBiomeNames = this.entity.entityInfo.spawnRequirements.biomes;
+      const idealBiomes = BIOMES.filter(biome => idealBiomeNames.includes(biome.name));
+      
+      // Calculate the total weight of all cells
+      let totalWeight = 0;
+      for (const [x, y] of tileCoordinateArray) {
+         totalWeight++;
          
-
-         for (const generationInfo of biome.tiles) {
-            const distDifference = Math.abs()
+         const tile = Board.getTile(x, y);
+         if (idealBiomes.includes(tile.biome)) {
+            totalWeight += BIAS;
          }
       }
+
+      const targetWeight = randInt(1, totalWeight);
+      let weight = 0;
+      for (const coordinates of tileCoordinateArray) {
+         weight++;
+         
+         const [x, y] = coordinates;
+         const tile = Board.getTile(x, y);
+         if (idealBiomes.includes(tile.biome)) {
+            weight += BIAS;
+         }
+
+         if (weight >= targetWeight) {
+            return coordinates;
+         }
+      }
+
+      console.warn(tileCoordinateArray, targetWeight, totalWeight);
+      throw new Error("Couldn't find a random tile!");
    }
 
    public tick(): void {

@@ -16,7 +16,7 @@ abstract class Resource extends LivingEntity<ResourceInfo> {
       ]);
 
       // Give the resource a random rotation
-      this.getComponent(TransformComponent)!.rotation = randFloat(0, 360);
+      this.getComponent(TransformComponent)!.rotation = randFloat(0, Math.PI * 2);
    }
 
    public onLoad(): void {

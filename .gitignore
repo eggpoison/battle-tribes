@@ -35,5 +35,5 @@ package-lock.json
 #            SHARED              #
 # ------------------------------ #
 
-/server/node_modules
-/server/dist
+/shared/node_modules
+/shared/dist

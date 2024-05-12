@@ -1,0 +1,14 @@
+{
+   "compilerOptions": {
+      "target": "es2015",
+      "moduleResolution": "node",
+      "esModuleInterop": true,
+      "strict": true,
+      "sourceMap": false,
+      "removeComments": false,
+      "baseUrl": "./"
+   },
+   "include": [
+      "src"
+   ]
+}

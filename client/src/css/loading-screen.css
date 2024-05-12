@@ -1,0 +1,23 @@
+@import url('https://fonts.googleapis.com/css2?family=Inconsolata:wght@400;700;900&display=swap');
+
+#loading-screen {
+   position: absolute;
+   top: 0;
+   right: 0;
+   bottom: 0;
+   left: 0;
+   box-shadow: 0 0 10px 5px rgba(0, 0, 0, 0.5) inset;
+}
+#loading-screen .content {
+   position: absolute;
+   top: 50%;
+   left: 50%;
+   transform: translate(-50%, -50%);
+}
+#loading-screen .content *  {
+   font-family: "Inconsolata";
+   text-align: center;
+}
+#loading-screen h1 {
+   font-weight: 70 ;
+}

@@ -1,0 +1,68 @@
+@import url('https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+
+#terminal {
+   --border-width: 3px;
+   --border-colour: #999;
+   --line-height: 1.5rem;
+   width: max(50%, 40rem);
+   background-color: #000;
+   border: var(--border-width) solid var(--border-colour);
+   border-radius: 5px;
+   position: absolute;
+   top: 50%;
+   left: 50%;
+   transform: translate(-50%, -50%);
+   z-index: 3;
+   box-shadow: 0 0 6px 3px rgba(0, 0, 0, 0.3);
+}
+#terminal.focused {
+   --border-colour: #ddd;
+}
+
+#terminal * {
+   color: #fff;
+   font-family: "Source Code Pro";
+   font-size: 1rem;
+   white-space: pre;
+}
+
+#terminal .line-reader {
+   height: var(--line-height);
+   border-top: var(--border-width) solid var(--border-colour);
+   position: relative;
+   display: flex;
+   align-items: center;
+   justify-content: flex-start;
+}
+
+#terminal .line-reader .line-input {
+   width: 0;
+   background-color: #000;
+   display: inline-block;
+   padding: 0;
+   border: none;
+   outline: none;
+}
+
+#terminal .caret {
+   width: 0.4rem;
+   height: 1rem;
+   background-color: #fff;
+   display: inline-block;
+   animation: 1s CaretFlash infinite;
+   animation-timing-function: step-end;
+}
+
+#terminal .lines {
+   height: calc(var(--line-height) * 10);
+   overflow-y: scroll;
+}
+
+@keyframes CaretFlash {
+   0% {
+      opacity: 1;
+   }
+   50% {
+      opacity: 0;
+   }
+}

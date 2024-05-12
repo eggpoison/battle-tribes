@@ -1,0 +1,59 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant:wght@300;400;700&display=swap');
+
+#tombstone-epitaph {
+   background-image: linear-gradient( rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3) ), url(../../../images/miscellaneous/tombstone-epitaph-background.png);
+   background-size: 64px;
+   background-repeat: repeat;
+   border: 5px solid #000;
+   position: absolute;
+   left: 50%;
+   top: 8rem;
+   transform: translateX(-50%);
+   padding: 1rem;
+   z-index: 2;
+}
+
+#tombstone-epitaph .content {
+   min-width: 25rem;
+   /* background-color: #ccc; */
+   background-image: url(../../../images/miscellaneous/tombstone-epitaph-background.png);
+   background-size: 64px;
+   background-repeat: repeat;
+   border: 3px solid #666;
+   padding: 0.3rem;
+}
+
+#tombstone-epitaph h1.name {
+   font-family: "Cormorant";
+   font-weight: 700;
+   font-size: 2.5rem;
+   text-align: center;
+   margin: 0 0 0.5rem;
+   letter-spacing: 0.05rem;
+}
+
+#tombstone-epitaph .life-message {
+   font-family: "Cormorant";
+   font-weight: 400;
+   font-size: 1.5rem;
+   text-align: center;
+   margin: 0;
+}
+
+#tombstone-epitaph h3.cause-of-death-caption {
+   color: #444;
+   font-family: "Cormorant";
+   font-weight: 700;
+   font-size: 1rem;
+   text-align: center;
+   margin: 1rem 0 0.1rem;
+   letter-spacing: 0.04rem;
+}
+
+#tombstone-epitaph .cause-of-death {
+   font-family: "Cormorant";
+   font-weight: 400;
+   font-size: 1.4rem;
+   text-align: center;
+   margin: 0;
+}

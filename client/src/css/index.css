@@ -1,0 +1,75 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inconsolata:wght@400;700;900&display=swap');
+
+html, body {
+   margin: 0;
+   padding: 0;
+}
+
+body {
+   overflow: hidden;
+}
+
+:root {
+   --item-slot-size: 5rem;
+   --item-image-size: 3.75rem;
+}
+
+#canvas-wrapper > canvas {
+   position: absolute;
+}
+
+/* Vignette */
+#game-canvas::after {
+   position: absolute;
+   top: 0;
+   right: 0;
+   bottom: 0;
+   left: 0;
+   box-shadow: 0 0 15px 5px #000 inset;
+}
+
+#text-canvas {
+   pointer-events: none;
+}
+
+.game-message {
+   position: absolute;
+   top: 50%;
+   left: 50%;
+   transform: translate(-50%, -50%);
+}
+.game-message p {
+   text-align: center;
+}
+.game-message button {
+   margin-left: 50%;
+   transform: translateX(-50%);
+}
+
+.hidden {
+   opacity: 0 !important;
+   pointer-events: none !important;
+}
+
+/* Held item */
+
+#held-item {
+   width: var(--item-slot-size);
+   height: var(--item-slot-size);
+   position: absolute;
+   pointer-events: none;
+   z-index: 3;
+   user-select: none;
+}
+#held-item img {
+   width: var(--item-image-size);
+   height: var(--item-image-size);
+   image-rendering: pixelated;
+   position: absolute;
+   top: 50%;
+   left: 50%;
+   transform: translate(-50%, -50%);
+   z-index: 1;
+}
+/* NOTE: The held item count style is defined in inventory.css file. */

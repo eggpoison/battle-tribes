@@ -1,0 +1,13 @@
+#infocards {
+   max-width: 25rem;
+   position: absolute;
+   top: 0;
+   right: 0;
+   z-index: 2;
+   transform: scale(var(--zoom));
+   transform-origin: top right;
+}
+
+#infocards .infocard {
+   margin: 0.2rem;
+}

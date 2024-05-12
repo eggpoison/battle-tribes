@@ -1,0 +1,21 @@
+#hotbar {
+   position: absolute;
+   bottom: calc(3.4rem * var(--zoom));
+   left: 50%;
+   z-index: 2;
+   display: flex;
+   transform: translate(-50%, 50%) scale(var(--zoom));
+}
+
+#hotbar > .middle {
+   margin: 0 5rem;
+}
+
+#hotbar .inventory {
+   display: flex;
+}
+
+#hotbar .inventory .item-slot.dark img {
+   filter: brightness(0.5);
+   opacity: 0.8;
+}

@@ -1,0 +1,173 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant:wght@300;400;700&display=swap');
+
+#tech-tree {
+   position: absolute;
+   top: 0;
+   right: 0;
+   bottom: 0;
+   left: 0;
+   z-index: 4;
+}
+
+#tech-tree-canvas {
+   z-index: 2;
+}
+
+#tech-tree > h1 {
+   color: #fff;
+   font-family: "Cormorant";
+   font-size: 3.5rem;
+   background-color: #4a4a4a;
+   border: 4px solid #999;
+   border-top: none;
+   border-bottom-left-radius: 7px;
+   border-bottom-right-radius: 7px;
+   margin: 0;
+   padding: 0 0.5rem;
+   position: absolute;
+   top: 0;
+   left: 50%;
+   transform: translateX(-50%);
+   text-shadow: 0 0 7px #aaa, 0 0 10px #000, 0 0 5px #000, 0 0 3px #000;
+   box-shadow: 0 0 20px 2px #111 inset;
+   user-select: none;
+   z-index: 2;
+}
+
+#tech-tree .tech {
+   --border-thickness: 5px;
+   --locked-base-colour: rgb(138, 138, 138);
+   --selected-base-colour: rgb(178, 0, 223);
+   --unlocked-base-colour: rgb(219, 219, 219);
+   background-color: var(--locked-base-colour);
+   border: var(--border-thickness) solid #000;
+   border-radius: 100%;
+   position: absolute;
+   transform: translate(-50%, -50%) scale(var(--tech-tree-zoom));
+   z-index: 1;
+   white-space: pre;
+   user-select: none;
+   box-shadow: 0 0 5px 2px #000;
+   cursor: pointer;
+}
+#tech-tree .tech.unlocked {
+   background-color: var(--unlocked-base-colour);
+   cursor: default;
+}
+#tech-tree .tech.selected {
+   background-color: var(--selected-base-colour);
+   cursor: pointer;
+}
+
+#tech-tree .tech .icon-wrapper {
+   background-color: rgb(75, 75, 75);
+   border: var(--border-thickness) solid #000;
+   border-radius: 100%;
+   padding: 4px;
+   margin: 10px;
+   box-shadow: 0 0 15px 3px #222 inset;
+   pointer-events: none;
+}
+
+#tech-tree .tech .icon {
+   width: 64px;
+   height: 64px;
+   image-rendering: pixelated;
+}
+
+
+
+
+
+
+
+#tech-tooltip {
+   width: 20rem;
+   font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+   position: absolute;
+   transform: translateY(-50%);
+   z-index: 2;
+   user-select: none;
+}
+
+#tech-tooltip .container {
+   background-color: #bbb;
+   border: 3px solid #000;
+   padding: 5px;
+   position: relative;
+   box-shadow: 0 0 11px 0 rgba(255, 255, 255, 0.5), 0 0 15px 3px rgba(0, 0, 0, 0.3) inset;
+}
+
+#tech-tooltip h2 {
+   margin: 0;
+   text-align: center;
+}
+
+#tech-tooltip p {
+   margin: 0 0 0.5rem;
+}
+
+#tech-tooltip .description {
+   font-size: 1.05rem;
+   font-style: italic;
+   margin-bottom: 1rem;
+}
+
+#tech-tooltip .unlocks {
+   color: #333;
+}
+
+#tech-tooltip .conflict {
+   font-weight: bold;
+   color: rgb(179, 0, 0);
+   margin: 0.5rem 0 0;
+}
+
+#tech-tooltip ul {
+   background-color: #888;
+   margin: 0.4rem 0 0.4rem 1rem;
+   padding: 0.2rem 0.4rem 0.2rem 0.2rem;
+   display: inline-block;
+}
+
+#tech-tooltip li {
+   height: 1.4rem;
+   list-style-type: none;
+}
+
+#tech-tooltip li span {
+   margin-left: 27px;
+}
+
+#tech-tooltip ul img {
+   width: 24px;
+   height: 24px;
+   image-rendering: pixelated;
+   position: absolute;
+   transform: translateY(-3px);
+}
+
+#tech-tooltip .study-progress-bar-bg {
+   border: 3px solid #000;
+   background-color: #333;
+   padding: 0.1rem;
+}
+
+#tech-tooltip .research-progress {
+   color: #fff;
+   text-align: center;
+   text-shadow: 2px 2px #000, -2px 2px #000, -2px -2px #000, 2px -2px #000;
+   font-weight: bold;
+   margin: 0;
+   position: absolute;
+   top: 50%;
+   left: 50%;
+   transform: translate(-50%, -50%);
+   white-space: pre;
+}
+
+#tech-tooltip .study-progress-bar {
+   width: calc(100% * var(--study-progress));
+   height: 1rem;
+   background-color: rgb(67, 238, 33);
+}

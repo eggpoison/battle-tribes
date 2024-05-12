@@ -1,0 +1,30 @@
+@import url('https://fonts.googleapis.com/css2?family=Inconsolata:wght@400;700;900&display=swap');
+
+#debug-info {
+   position: absolute;
+   top: 0;
+   right: 0;
+   z-index: 1;
+}
+#debug-info * {
+   color: #fff;
+   text-shadow: 2px 2px 2px #000;
+   font-family: "Inconsolata";
+   background-color: rgba(0, 0, 0, 0.3);
+   user-select: none;
+}
+#debug-info span.highlight {
+   background-color: #000;
+}
+#debug-info .title {
+   margin: 0.5rem 0;
+   padding: 0 0.5rem;
+}
+#debug-info .title .id {
+   background-color: #000;
+   float: right;
+}
+#debug-info p {
+   margin: 0.5rem 0;
+   padding: 0 0.5rem;
+}

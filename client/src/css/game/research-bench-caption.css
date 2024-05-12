@@ -1,0 +1,9 @@
+#research-bench-caption {
+   background-image: url(../../images/miscellaneous/research-bench-caption.png);
+   position: absolute;
+   left: 50%;
+   bottom: 25%;
+   transform: translate(-50%, 50%);
+   z-index: 1;
+   user-select: none;
+}

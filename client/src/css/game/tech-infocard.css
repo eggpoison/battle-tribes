@@ -1,0 +1,25 @@
+#tech-infocard {
+   background-color: #aaa;
+   border: 3px solid #000;
+   position: absolute;
+   top: 0.5rem;
+   right: 0.5rem;
+   z-index: 2;
+}
+
+#tech-infocard h2 {
+   margin: 0 36px 0 0;
+}
+
+#tech-infocard p {
+   margin: 0;
+}
+
+#tech-infocard img {
+   width: 32px;
+   height: 32px;
+   position: absolute;
+   top: 0;
+   right: 0;
+   image-rendering: pixelated;
+}

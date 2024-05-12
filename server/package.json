@@ -1,0 +1,27 @@
+{
+   "license": "UNLICENSED",
+   "scripts": {
+      "start": "nodemon",
+      "perf": "node -r ts-node/register -r tsconfig-paths/register --inspect src/server.ts",
+      "gigaperf": "node -r ts-node/register --log-deopt --redirect-code-traces --redirect-code-traces-to=./NUL --log-ic --log-maps --log-maps-details --log-code --log-source-code --prof --log-internal-timer-events --detailed-line-info --logfile=v8.log --no-logfile-per-isolate src/server.ts",
+      "debug": "nodemon --inspect",
+      "time": "node -r ts-node/register -r tsconfig-paths/register --expose-gc src/server.ts timed",
+      "perfticks": "node -r ts-node/register -r tsconfig-paths/register --prof src/server.ts",
+      "lint": "npx eslint ."
+   },
+   "dependencies": {
+      "webgl-test-shared": "file:../webgl-test-shared",
+      "@eslint/js": "^9.2.0",
+      "@types/ws": "^8.5.3",
+      "eslint": "^8.57.0",
+      "socket.io": "^4.5.1",
+      "typescript-eslint": "^7.8.0",
+      "ws": "^8.8.0"
+   },
+   "devDependencies": {
+      "madge": "^6.1.0",
+      "nodemon": "^2.0.18",
+      "ts-node": "^10.9.1",
+      "typescript": "^4.9.4"
+   }
+}

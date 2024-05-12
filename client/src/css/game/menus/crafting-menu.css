@@ -1,0 +1,268 @@
+@import url('https://fonts.googleapis.com/css2?family=Inconsolata:wght@400;700;900&display=swap');
+
+#crafting-menu {
+   max-height: 25rem;
+   position: absolute;
+   top: 50%;
+   left: 50%;
+   transform: translate(-50%, -50%) scale(var(--zoom));
+   z-index: 2;
+   display: flex;
+}
+
+#backpack-inventory + #crafting-menu {
+   margin-top: -15rem;
+}
+
+/* Ingredients */
+
+#crafting-menu .ingredients {
+   padding: 0;
+   margin: 0.25rem 0.5rem;
+}
+#crafting-menu .ingredient {
+   list-style-type: none;
+}
+#crafting-menu .ingredient .ingredient-icon-wrapper {
+   display: inline-block;
+   position: relative;
+}
+#crafting-menu .ingredient .ingredient-icon {
+   --size: 2rem;
+   width: var(--size);
+   height: var(--size);
+   image-rendering: pixelated;
+   cursor: help;
+}
+#crafting-menu .ingredient .ingredient-count {
+   color: #eee;
+   font-weight: bold;
+   text-shadow: 2px 2px 0 #000;
+}
+#crafting-menu .crafting-area .ingredient .ingredient-count.not-enough {
+   color: rgb(255, 120, 120);
+}
+
+/* Ingredient tooltip */
+#crafting-menu .ingredient-tooltip {
+   font-family: "Inconsolata";
+   color: #fff;
+   background-color: rgba(0, 0, 0, 0.8);
+   padding: 0.1rem 0.3rem;
+   pointer-events: none;
+   position: absolute;
+   bottom: 0;
+   right: 0;
+   transform: translate(100%, 100%);
+   box-shadow: 3px 3px 2px rgba(0, 0, 0, 0.2);
+   white-space: pre;
+}
+
+/* Available crafting stations */
+
+#crafting-menu .available-crafting-stations {
+   position: absolute;
+   left: 50%;
+   top: -10px;
+   transform: translate(-50%, -100%);
+   display: flex;
+   opacity: 0.5;
+}
+#crafting-menu .crafting-station-image {
+   --size: 32px;
+   width: var(--size);
+   height: var(--size);
+   image-rendering: pixelated;
+}
+
+/* Recipe browser */
+
+#crafting-menu .recipe-browser {
+   padding: 0.25rem;
+   overflow-y: scroll;
+}
+#crafting-menu .item-row {
+   display: flex;
+}
+#crafting-menu .recipe-browser .item-slot:not(.craftable) img {
+   opacity: 0.5;
+}
+#crafting-menu .recipe-browser .item-slot:not(.empty):not(.selected):not(.craftable):hover:not(:active) img {
+   opacity: 0.8;
+}
+#crafting-menu .recipe-browser .item-slot:not(.empty):not(.selected) {
+   cursor: pointer;
+}
+#crafting-menu .recipe-browser .item-slot.craftable::after {
+   content: "";
+   background-image: radial-gradient(circle at center, #555 0%, transparent 50%);
+   position: absolute;
+   top: 0;
+   right: 0;
+   bottom: 0;
+   left: 0;
+}
+
+#crafting-menu .recipe-browser .item-slot.craftable:not(.selected):hover img {
+   filter: brightness(1.1);
+}
+#crafting-menu .recipe-browser .item-slot.craftable:not(.selected):active img {
+   filter: brightness(0.9);
+}
+
+/* Recipe viewer */
+
+#crafting-menu .recipe-viewer {
+   min-width: 15rem;
+   background-color: #aaa;
+   padding: 2px;
+   border: 5px solid #333;
+   border-radius: 5px;
+   position: absolute;
+   left: -5px;
+   transform: translate(-100%, -50%);
+   box-shadow: 0 0 5px 5px rgba(0, 0, 0, 0.3) inset;
+}
+#crafting-menu .recipe-viewer * {
+   font-family: "Inconsolata";
+}
+#crafting-menu .recipe-viewer .header {
+   padding: 0.25rem;
+   display: flex;
+   align-items: center;
+}
+#crafting-menu .recipe-viewer .header .recipe-product-icon {
+   --size: 32px;
+   width: var(--size);
+   height: var(--size);
+   image-rendering: pixelated;
+}
+#crafting-menu .recipe-viewer .header .recipe-product-name {
+   color: #fff;
+   font-size: 1.15rem;
+   font-weight: bold;
+   letter-spacing: 0.05rem;
+   text-shadow: 2px 2px 0 #000;
+   margin-left: 0.75rem;
+}
+#crafting-menu .recipe-viewer .ingredients {
+   margin: 0.2rem 0 1rem 0.5rem;
+}
+#crafting-menu .recipe-viewer .splitter {
+   width: 80%;
+   height: 2px;
+   background-image: linear-gradient(to right, transparent 0%, #222 30%, #222 70%, transparent 100%);
+   margin-left: 10%;
+}
+#crafting-menu .recipe-viewer .caption {
+   color: #000;
+   font-weight: bold;
+   text-align: center;
+   margin: 0.2rem;
+}
+
+/* Crafting area */
+
+#crafting-menu .crafting-area {
+   width: 25rem;
+   background-color: #888;
+   border-left: 5px solid #000;
+   position: relative;
+   box-shadow: 0 0 5px 3px rgba(0, 0, 0, 0.3) inset;
+}
+#crafting-menu .crafting-area * {
+   font-family: "Inconsolata";
+}
+#crafting-menu .crafting-area .header {
+   background-color: #3a3a3a;
+   padding: 0.25rem;
+   border-bottom: 3px solid #111;
+   display: flex;
+   align-items: center;
+}
+#crafting-menu .crafting-area .recipe-product-name {
+   width: 100%;
+   color: #fff;
+   font-size: 1.3rem;
+   font-weight: bold;
+   text-align: center;
+   text-shadow: 3px 3px 0 #000;
+}
+#crafting-menu .crafting-area .recipe-product-icon {
+   --size: 32px;
+   width: var(--size);
+   height: var(--size);
+   image-rendering:pixelated;
+}
+#crafting-menu .crafting-area .content {
+   padding: 0.25rem;
+}
+#crafting-menu .crafting-area .recipe-product-description {
+   color: #fff;
+   text-shadow: 2px 2px 0 #000;
+   margin-top: 0.5rem;
+}
+#crafting-menu .crafting-area .ingredients-title {
+   color: #fff;
+   font-weight: bold;
+   letter-spacing: 0.04rem;
+   text-shadow: 2px 2px 0 #000;
+   margin-top: 1.5rem;
+}
+#crafting-menu .crafting-area .bottom {
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   position: absolute;
+   right: 0;
+   bottom: 0;
+   left: 0;
+}
+
+/* Craft button */
+#crafting-menu .crafting-area .craft-button {
+   color: #222;
+   font-size: 1.25rem;
+   font-weight: bold;
+   letter-spacing: 0.05rem;
+   background-color: #666;
+   border: 4px solid #000;
+   padding: 0.4rem 1rem;
+   margin-right: 0.5rem;
+   box-shadow: 0 0 0 3px #333 inset;
+   outline: none;
+   cursor: not-allowed;
+}
+#crafting-menu .crafting-area .craft-button.craftable, body #crafting-menu .crafting-area .craft-button.craftable:active {
+   color: rgb(255, 247, 132);
+   text-shadow: 2px 2px 0 #000;
+   background-color: rgb(32, 231, 13);
+   box-shadow: 0 0 0 3px rgb(75, 148, 46) inset;
+   cursor: pointer;
+}
+#crafting-menu .crafting-area .craft-button.craftable:hover {
+   background-color: rgb(48, 252, 29);
+   box-shadow: 0 0 0 3px rgb(82, 185, 41) inset;
+}
+
+#crafting-menu .crafting-area .select-message {
+   color: #ddd;
+   font-size: 1.1rem;
+   font-weight: bold;
+   text-shadow: 2px 2px 0 #000;
+   text-transform: uppercase;
+   letter-spacing: 0.05rem;
+   position: absolute;
+   top: 50%;
+   left: 50%;
+   transform: translate(-50%, -50%);
+   white-space: pre;
+}
+
+#crafting-menu .crafting-area .crafting-output:not(.empty) {
+   cursor: pointer;
+}
+
+#crafting-menu .crafting-area .crafting-output:not(.empty):hover img {
+   filter: brightness(1.1);
+}

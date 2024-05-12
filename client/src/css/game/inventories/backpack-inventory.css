@@ -1,0 +1,8 @@
+#backpack-inventory {
+   padding: 0.25rem;
+   position: absolute;
+   bottom: 20rem;
+   left: 50%;
+   transform: translateX(-50%);
+   z-index: 1;
+}

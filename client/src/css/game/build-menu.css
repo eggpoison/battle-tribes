@@ -1,0 +1,165 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Patua+One&display=swap');
+
+#blueprint-menu {
+   --menu-size: 28rem;
+   width: var(--menu-size);
+   height: var(--menu-size);
+   border: 5px solid #e2e2e2;
+   border-radius: 100%;
+   position: absolute;
+   left: calc(1px * var(--x));
+   bottom: calc(1px * var(--y));
+   transform: translate(-50%, 50%);
+   z-index: 2;
+   box-shadow: 0 0 0 5px #000;
+   cursor: pointer;
+}
+
+#blueprint-menu .inner-ring {
+   --inner-ring-size: 15rem;
+   width: var(--inner-ring-size);
+   height: var(--inner-ring-size);
+   border: 5px solid #a7a7a7;
+   border-radius: 100%;
+   position: absolute;
+   top: 50%;
+   left: 50%;
+   transform: translate(-50%, -50%);
+   z-index: 2;
+   box-shadow: 0 0 0 5px #000 inset;
+}
+
+#blueprint-menu .separator {
+   width: 5px;
+   height: 6.4rem;
+   background-color: #a7a7a7;
+   position: absolute;
+   top: 50%;
+   left: 50%;
+   transform: translate(calc(11rem * var(--x-proj) - 50%), calc(11rem * var(--y-proj) - 50%)) rotate(calc(var(--direction) * 1rad));
+   z-index: 2;
+}
+
+#blueprint-menu .segment {
+   --bg-colour: rgba(0.2, 0.2, 0.2, 0.3);
+   width: var(--menu-size);
+   height: var(--menu-size);
+   border-radius: 100%;
+   background-color: var(--bg-colour);
+   position: absolute;
+   top: 50%;
+   left: 50%;
+   transform: translate(-50%, -50%) rotate(calc(var(--direction) * -1rad + 90deg));
+   z-index: 1;
+   mask: conic-gradient(#fff 0deg, #fff calc(var(--coverage) * 0.5 * 1deg), transparent calc(var(--coverage) * 0.5 * 1deg), transparent calc(360deg - (var(--coverage) * 0.5 * 1deg)), #fff calc(360deg - (var(--coverage) * 0.5 * 1deg))), radial-gradient(circle at 50% 50%, transparent 0%, transparent 39%, #fff 39%);
+   mask-composite: intersect;
+   pointer-events: none;
+}
+#blueprint-menu .segment.hovered {
+   --bg-colour: rgba(117, 117, 117, 0.5);
+}
+#blueprint-menu .segment.highlighted {
+   --bg-colour: rgba(200, 200, 200, 0.5);
+}
+#blueprint-menu .segment.highlighted.hovered {
+   --bg-colour: rgba(220, 220, 220, 0.6);
+}
+
+#blueprint-menu .option {
+   width: 5.5rem;
+   height: 5.5rem;
+   background-color: rgba(0, 0, 0, 0.3);
+   border-radius: 100%;
+   position: absolute;
+   top: 50%;
+   left: 50%;
+   transform: translate(calc(11rem * var(--x-proj) - 50%), calc(11rem * var(--y-proj) - 50%));
+   z-index: 4;
+   pointer-events: none;
+   user-select: none;
+}
+
+#blueprint-menu .option.unclickable > img {
+   filter: grayscale(1);
+}
+
+#blueprint-menu .option > img {
+   width: calc(1px * var(--width));
+   height: calc(1px * var(--height));
+   image-rendering: pixelated;
+   position: absolute;
+   top: 50%;
+   left: 50%;
+   transform: translate(-50%, -50%);
+   z-index: -1;
+}
+
+#blueprint-menu .option .hover-div {
+   font-family: "Inconsolata";
+   font-weight: bold;
+   color: #fff;
+   background-color: rgba(0, 0, 0, 0.4);
+   border-radius: 4px;
+}
+#blueprint-menu .option:not(.hovered) .hover-div {
+   visibility: hidden;
+}
+#blueprint-menu .option > .name {
+   font-size: 1.4rem;
+   padding: 0.1rem 0.5rem;
+   position: absolute;
+   left: 50%;
+   top: 0;
+   transform: translate(-50%, -100%);
+   white-space: pre;
+}
+#blueprint-menu .option > .cost {
+   font-size: 1.2rem;
+   padding: 0 0.2rem;
+   position: absolute;
+   left: 50%;
+   bottom: 0;
+   transform: translate(-50%, 100%);
+}
+#blueprint-menu .option .cost p {
+   color: rgb(255, 156, 140);
+   font-weight: bold;
+   text-align: center;
+   text-decoration: underline;
+   margin: 0 0 0.3rem;
+}
+#blueprint-menu .option .cost ul {
+   margin: 0;
+   padding: 0;
+}
+#blueprint-menu .option .cost li {
+   white-space: pre;
+   list-style-type: none;
+   display: flex;
+   align-items: center;
+   margin-top: -8px;
+}
+#blueprint-menu .option .cost li img {
+   width: 32px;
+   height: 32px;
+}
+
+/* @Temporary? */
+/* #blueprint-menu .hotkey-label {
+   text-align: center;
+   width: 1.7rem;
+   height: 1.7rem;
+   color: #000;
+   font-size: 1.4rem;
+   font-family: "Patua One";
+   border-radius: 100%;
+   border: 3px solid #444;
+   background-color: #d3d3d3;
+   position: absolute;
+   top: 50%;
+   left: 50%;
+   transform: translate(calc(7.7rem * var(--x-proj) - 50%), calc(7.7rem * var(--y-proj) - 50%));
+   z-index: 3;
+   user-select: none;
+} */

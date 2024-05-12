@@ -1,0 +1,11 @@
+#charge-meter-container {
+   position: absolute;
+   transform: translate(-50%, -50%);
+   z-index: 1;
+   pointer-events: none;
+   user-select: none;
+}
+#charge-meter-container img {
+   width: 3.5rem;
+   image-rendering: pixelated;
+}

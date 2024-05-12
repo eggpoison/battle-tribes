@@ -1,0 +1,27 @@
+@import url('https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+
+#terminal-button {
+   color: #999;
+   font-family: "Source Code Pro";
+   background-color: #000;
+   border: 2px solid #bbb;
+   border-top: none;
+   z-index: 2;
+   position: absolute;
+   top: 0;
+   left: 50%;
+   transform: translateX(-50%);
+   outline: none;
+   cursor: pointer;
+   user-select: none;
+}
+
+#terminal-button:not(.opened):active {
+   color: #888;
+}
+
+#terminal-button.opened {
+   color: #eee;
+   border-color: #fff;
+   box-shadow: 0 2px 7px 1px rgba(0, 0, 0, 0.3);
+}

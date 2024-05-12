@@ -30,7 +30,7 @@ abstract class Board {
    public static time: number;
 
    private static tiles = new Array<Tile>();
-   private static chunks: Array<Array<Chunk>>;
+   private static chunks: Array<Chunk>;
 
    public static edgeRiverFlowDirections: RiverFlowDirections; 
 
@@ -119,11 +119,11 @@ abstract class Board {
       }
       
       // Create the chunk array
-      this.chunks = new Array<Array<Chunk>>();
+      this.chunks = [];
       for (let x = 0; x < Settings.BOARD_SIZE; x++) {
-         this.chunks[x] = new Array<Chunk>();
          for (let y = 0; y < Settings.BOARD_SIZE; y++) {
-            this.chunks[x][y] = new Chunk(x, y);
+            const chunk = new Chunk(x, y);
+            this.chunks.push(chunk);
          }
       }
 
@@ -276,8 +276,13 @@ abstract class Board {
       return tileX >= -Settings.EDGE_GENERATION_DISTANCE && tileX < Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE && tileY >= -Settings.EDGE_GENERATION_DISTANCE && tileY < Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE;
    }
 
-   public static getChunk(x: number, y: number): Chunk {
-      return this.chunks[x][y];
+   public static getChunk(chunkX: number, chunkY: number): Chunk {
+      const chunkIndex = chunkY * Settings.BOARD_SIZE + chunkX;
+      return this.chunks[chunkIndex];
+   }
+
+   public static getChunks(): ReadonlyArray<Readonly<Chunk>> {
+      return this.chunks;
    }
 
    private static updateParticleArray(particles: Array<Particle>, bufferContainer: ObjectBufferContainer): void {

@@ -6,7 +6,7 @@ import CLIENT_ITEM_INFO_RECORD, { getItemTypeImage } from "../../../client-item-
 import Client from "../../../client/Client";
 import { windowHeight } from "../../../webgl";
 import ItemSlot from "../inventories/ItemSlot";
-import { leftClickItemSlot } from "../../../inventory-manipulation";
+import { countItemTypesInInventory, leftClickItemSlot } from "../../../inventory-manipulation";
 import Player from "../../../entities/Player";
 import { definiteGameState } from "../../../game-state/game-states";
 import Game from "../../../Game";
@@ -57,24 +57,6 @@ const RecipeViewer = ({ recipe, hoverPosition, craftingMenuHeight }: RecipeViewe
    </div>;
 }
 
-const getNumItemsOfType = (itemType: ItemType): number => {
-   if (definiteGameState.hotbar === null) {
-      return 0;
-   }
-
-   let numItems = 0;
-   for (let itemSlot = 1; itemSlot <= definiteGameState.hotbar.width; itemSlot++) {
-      if (definiteGameState.hotbar.itemSlots.hasOwnProperty(itemSlot)) {
-         const item = definiteGameState.hotbar.itemSlots[itemSlot];
-         if (item.type === itemType) {
-            numItems += item.count;
-         }
-      }
-   }
-
-   return numItems;
-}
-
 interface IngredientProps {
    readonly ingredientType: ItemType;
    readonly amountRequiredForRecipe: number;
@@ -88,7 +70,7 @@ const Ingredient = ({ ingredientType, amountRequiredForRecipe }: IngredientProps
    const itemIconSource = getItemTypeImage(ingredientType);
 
    // Find whether the player has enough available ingredients to craft the recipe
-   const numIngredientsAvailableToPlayer = getNumItemsOfType(ingredientType);
+   const numIngredientsAvailableToPlayer = countItemTypesInInventory(definiteGameState.hotbar, ingredientType);
    const playerHasEnoughIngredients = numIngredientsAvailableToPlayer >= amountRequiredForRecipe;
 
    const showIngredientTooltip = () => {
@@ -201,10 +183,10 @@ const CraftingMenu = () => {
       // Find which item slots are available for use in crafting
       const availableItemSlots = new Array<ItemSlots>();
       if (definiteGameState.hotbar !== null) {
-         availableItemSlots.push(definiteGameState.hotbar.itemSlots)
+         availableItemSlots.push(definiteGameState.hotbar.itemSlots);
       }
       if (definiteGameState.backpack !== null) {
-         availableItemSlots.push(definiteGameState.backpack.itemSlots)
+         availableItemSlots.push(definiteGameState.backpack.itemSlots);
       }
       
       if (availableItemSlots.length === 0) {

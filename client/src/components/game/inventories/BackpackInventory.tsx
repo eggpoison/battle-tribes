@@ -33,9 +33,8 @@ const BackpackInventoryMenu = () => {
       for (let x = 0; x < definiteGameState.backpack.width; x++) {
          const itemSlot = y * definiteGameState.backpack.width + x + 1;
 
-         if (definiteGameState.backpack.itemSlots.hasOwnProperty(itemSlot)) {
-            const item = definiteGameState.backpack.itemSlots[itemSlot];
-
+         const item = definiteGameState.backpack.itemSlots[itemSlot];
+         if (typeof item !== "undefined") {
             const itemImageSrc = getItemTypeImage(item.type);
 
             rowItemSlots.push(

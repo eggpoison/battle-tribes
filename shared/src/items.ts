@@ -2,7 +2,7 @@ import { EntityType } from "./entities";
 import { Settings } from "./settings";
 import { StructureType } from "./structures";
 
-export enum ItemType {
+export const enum ItemType {
    wood,
    workbench,
    wooden_sword,
@@ -67,6 +67,72 @@ export enum ItemType {
    gardening_gloves,
    wooden_fence
 }
+
+export const ItemTypeString: Record<ItemType, string> = {
+   [ItemType.wood]: "wood",
+   [ItemType.workbench]: "workbench",
+   [ItemType.wooden_sword]: "wooden sword",
+   [ItemType.wooden_axe]: "wooden axe",
+   [ItemType.wooden_pickaxe]: "wooden pickaxe",
+   [ItemType.berry]: "berry",
+   [ItemType.raw_beef]: "raw beef",
+   [ItemType.cooked_beef]: "cooked beef",
+   [ItemType.rock]: "rock",
+   [ItemType.stone_sword]: "stone sword",
+   [ItemType.stone_axe]: "stone axe",
+   [ItemType.stone_pickaxe]: "stone pickaxe",
+   [ItemType.stone_hammer]: "stone hammer",
+   [ItemType.leather]: "leather",
+   [ItemType.leather_backpack]: "leather backpack",
+   [ItemType.cactus_spine]: "cactus spine",
+   [ItemType.yeti_hide]: "yeti hide",
+   [ItemType.frostcicle]: "frostcicle",
+   [ItemType.slimeball]: "slimeball",
+   [ItemType.eyeball]: "eyeball",
+   [ItemType.flesh_sword]: "flesh sword",
+   [ItemType.tribe_totem]: "tribe totem",
+   [ItemType.worker_hut]: "worker hut",
+   [ItemType.barrel]: "barrel",
+   [ItemType.frost_armour]: "frost armour",
+   [ItemType.campfire]: "campfire",
+   [ItemType.furnace]: "furnace",
+   [ItemType.wooden_bow]: "wooden bow",
+   [ItemType.meat_suit]: "meat suit",
+   [ItemType.deepfrost_heart]: "deepfrost heart",
+   [ItemType.deepfrost_sword]: "deepfrost sword",
+   [ItemType.deepfrost_pickaxe]: "deepfrost pickaxe",
+   [ItemType.deepfrost_axe]: "deepfrost axe",
+   [ItemType.deepfrost_armour]: "deepfrost armour",
+   [ItemType.raw_fish]: "raw fish",
+   [ItemType.cooked_fish]: "cooked fish",
+   [ItemType.fishlord_suit]: "fishlord suit",
+   [ItemType.gathering_gloves]: "gathering gloves",
+   [ItemType.throngler]: "throngler",
+   [ItemType.leather_armour]: "leather armour",
+   [ItemType.spear]: "spear",
+   [ItemType.paper]: "paper",
+   [ItemType.research_bench]: "research bench",
+   [ItemType.wooden_wall]: "wooden wall",
+   [ItemType.wooden_hammer]: "wooden hammer",
+   [ItemType.stone_battleaxe]: "stone battleaxe",
+   [ItemType.living_rock]: "living rock",
+   [ItemType.planter_box]: "planter box",
+   [ItemType.reinforced_bow]: "reinforced bow",
+   [ItemType.crossbow]: "crossbow",
+   [ItemType.ice_bow]: "ice bow",
+   [ItemType.poop]: "poop",
+   [ItemType.wooden_spikes]: "wooden spikes",
+   [ItemType.punji_sticks]: "punji sticks",
+   [ItemType.ballista]: "ballista",
+   [ItemType.sling_turret]: "sling turret",
+   [ItemType.healing_totem]: "healing totem",
+   [ItemType.leaf]: "leaf",
+   [ItemType.herbal_medicine]: "herbal medicine",
+   [ItemType.leaf_suit]: "leaf suit",
+   [ItemType.seed]: "seed",
+   [ItemType.gardening_gloves]: "gardening gloves",
+   [ItemType.wooden_fence]: "wooden fence"
+};''
 
 export interface BaseItemInfo {}
 
@@ -595,19 +661,81 @@ export type HammerItemType = keyof {
    [T in ItemType as ExcludeNonHammerItemTypes<T>]: T;
 }
 
-export type ItemSlot = Item | null;
-
 /** Stores the items inside an inventory, indexed by their slot number. */
-export type ItemSlots = { [itemSlot: number]: Item };
+export type ItemSlots = Partial<{ [itemSlot: number]: Item }>;
 
-export interface Inventory {
-   /** Width of the inventory in item slots */
+export const enum InventoryName {
+   hotbar,
+   offhand,
+   craftingOutputSlot,
+   heldItemSlot,
+   armourSlot,
+   backpackSlot,
+   gloveSlot,
+   backpack,
+   fuelInventory,
+   ingredientInventory,
+   outputInventory,
+   inventory,
+   handSlot,
+   ammoBoxInventory
+}
+
+/** Inventory data sent between client and server */
+export interface InventoryData {
    width: number;
-   /** Height of the inventory in item slots */
    height: number;
-   /** The items contained by the inventory. */
    readonly itemSlots: ItemSlots;
-   readonly name: string;
+   readonly name: InventoryName;
+}
+
+export class Inventory {
+   public width: number;
+   public height: number;
+   public readonly name: InventoryName;
+
+   public readonly itemSlots: ItemSlots = {};
+   public readonly items = new Array<Item>;
+
+   constructor(width: number, height: number, name: InventoryName) {
+      this.width = width;
+      this.height = height;
+      this.name = name;
+   }
+
+   public addItem(item: Item, itemSlot: number): void {
+      this.itemSlots[itemSlot] = item;
+      this.items.push(item);
+   }
+
+   public removeItem(itemSlot: number): void {
+      const item = this.itemSlots[itemSlot];
+      if (typeof item === "undefined") {
+         return;
+      }
+      
+      delete this.itemSlots[itemSlot];
+
+      const idx = this.items.indexOf(item);
+      if (idx !== -1) {
+         this.items.splice(idx, 1);
+      }
+   }
+   
+   public hasItem(itemSlot: number): boolean {
+      return typeof this.itemSlots[itemSlot] !== "undefined";
+   }
+
+   public getItemSlot(item: Item): number {
+      for (let i = 0; i < this.items.length; i++) {
+         const currentItem = this.items[i];
+         if (item === currentItem) {
+            return i;
+         }
+      }
+
+      return -1;
+   }
 }
 
 export class Item {

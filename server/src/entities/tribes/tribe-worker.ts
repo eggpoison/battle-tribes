@@ -10,16 +10,17 @@ import Tribe from "../../Tribe";
 import { HealthComponentArray, HutComponentArray, InventoryComponentArray, InventoryUseComponentArray, TribeComponentArray, TribeMemberComponentArray, TribesmanComponentArray } from "../../components/ComponentArray";
 import CircularHitbox from "../../hitboxes/CircularHitbox";
 import { HealthComponent } from "../../components/HealthComponent";
-import { InventoryComponent, addItemToInventory, createNewInventory, dropInventory, pickupItemEntity } from "../../components/InventoryComponent";
+import { InventoryComponent, createNewInventory } from "../../components/InventoryComponent";
 import { InventoryUseComponent } from "../../components/InventoryUseComponent";
 import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
-import { TribeMemberComponent, awardTitle } from "../../components/TribeMemberComponent";
+import { TribeMemberComponent } from "../../components/TribeMemberComponent";
 import { TribesmanComponent } from "../../components/TribesmanComponent";
 import Board from "../../Board";
 import { AIHelperComponent, AIHelperComponentArray } from "../../components/AIHelperComponent";
 import { tickTribesman } from "./tribesman-ai/tribesman-ai";
 import { PhysicsComponent, PhysicsComponentArray } from "../../components/PhysicsComponent";
 import { TribeComponent } from "../../components/TribeComponent";
+import { InventoryName } from "webgl-test-shared/dist/items";
 
 export const TRIBE_WORKER_RADIUS = 28;
 const INVENTORY_SIZE = 5;
@@ -86,14 +87,14 @@ export function createTribeWorker(position: Point, tribeID: number, hutID: numbe
    const inventoryComponent = new InventoryComponent();
    InventoryComponentArray.addComponent(worker.id, inventoryComponent);
 
-   const hotbarInventory = createNewInventory(inventoryComponent, "hotbar", INVENTORY_SIZE, 1, true);
+   const hotbarInventory = createNewInventory(inventoryComponent, InventoryName.hotbar, INVENTORY_SIZE, 1, true);
    inventoryUseComponent.addInventoryUseInfo(hotbarInventory);
-   const offhandInventory = createNewInventory(inventoryComponent, "offhand", 1, 1, false);
+   const offhandInventory = createNewInventory(inventoryComponent, InventoryName.offhand, 1, 1, false);
    inventoryUseComponent.addInventoryUseInfo(offhandInventory);
-   createNewInventory(inventoryComponent, "armourSlot", 1, 1, false);
-   createNewInventory(inventoryComponent, "backpackSlot", 1, 1, false);
-   createNewInventory(inventoryComponent, "gloveSlot", 1, 1, false);
-   createNewInventory(inventoryComponent, "backpack", 0, 0, false);
+   createNewInventory(inventoryComponent, InventoryName.armourSlot, 1, 1, false);
+   createNewInventory(inventoryComponent, InventoryName.backpackSlot, 1, 1, false);
+   createNewInventory(inventoryComponent, InventoryName.gloveSlot, 1, 1, false);
+   createNewInventory(inventoryComponent, InventoryName.backpack, 0, 0, false);
 
    return worker;
 }

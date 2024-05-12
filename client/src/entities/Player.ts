@@ -2,7 +2,7 @@ import { CRAFTING_RECIPES, CraftingRecipe, CraftingStation } from "webgl-test-sh
 import { Settings } from "webgl-test-shared/dist/settings";
 import { EntityType, LimbAction } from "webgl-test-shared/dist/entities";
 import { TileType } from "webgl-test-shared/dist/tiles";
-import { Item, ItemSlot } from "webgl-test-shared/dist/items";
+import { Inventory, InventoryName, Item } from "webgl-test-shared/dist/items";
 import { EntityComponentsData, LimbData, ServerComponentType } from "webgl-test-shared/dist/components";
 import { Point } from "webgl-test-shared/dist/utils";
 import Camera from "../Camera";
@@ -112,14 +112,14 @@ export function updateAvailableCraftingRecipes(): void {
    setCraftingMenuAvailableCraftingStations(availableCraftingStations);
 }
 
-export function getPlayerSelectedItem(): ItemSlot {
+export function getPlayerSelectedItem(): Item | null {
    if (Player.instance === null || definiteGameState.hotbar === null) return null;
 
    const item: Item | undefined = definiteGameState.hotbar.itemSlots[latencyGameState.selectedHotbarItemSlot];
    return item || null;
 }
 
-const createInitialInventoryUseInfo = (inventoryName: string): LimbData => {
+const createInitialInventoryUseInfo = (inventoryName: InventoryName): LimbData => {
    return {
       selectedItemSlot: 1,
       inventoryName: inventoryName,
@@ -187,48 +187,18 @@ class Player extends TribeMember {
          },
          {
             inventories: {
-               hotbar: {
-                  width: Settings.INITIAL_PLAYER_HOTBAR_SIZE,
-                  height: 1,
-                  itemSlots: {},
-                  name: "hotbar"
-               },
-               armourSlot: {
-                  width: 1,
-                  height: 1,
-                  itemSlots: {},
-                  name: "armourSlot"
-               },
-               gloveSlot: {
-                  width: 1,
-                  height: 1,
-                  itemSlots: {},
-                  name: "gloveSlot"
-               },
-               backpackSlot: {
-                  width: 1,
-                  height: 1,
-                  itemSlots: {},
-                  name: "backpackSlot"
-               },
-               backpack: {
-                  width: 1,
-                  height: 1,
-                  itemSlots: {},
-                  name: "backpack"
-               },
-               offhand: {
-                  width: 1,
-                  height: 1,
-                  itemSlots: {},
-                  name: "offhand"
-               },
+               [InventoryName.hotbar]: new Inventory(Settings.INITIAL_PLAYER_HOTBAR_SIZE, 1, InventoryName.hotbar),
+               [InventoryName.armourSlot]: new Inventory(1, 1, InventoryName.armourSlot),
+               [InventoryName.gloveSlot]: new Inventory(1, 1, InventoryName.gloveSlot),
+               [InventoryName.backpackSlot]: new Inventory(1, 1, InventoryName.backpackSlot),
+               [InventoryName.backpack]: new Inventory(1, 1, InventoryName.backpack),
+               [InventoryName.offhand]: new Inventory(1, 1, InventoryName.offhand),
             }
          },
          {
             inventoryUseInfos: [
-               createInitialInventoryUseInfo("hotbar"),
-               createInitialInventoryUseInfo("offhand")
+               createInitialInventoryUseInfo(InventoryName.hotbar),
+               createInitialInventoryUseInfo(InventoryName.offhand)
             ]
          },
          {
@@ -248,12 +218,7 @@ class Player extends TribeMember {
 
       // @Cleanup: Shouldn't be in this function
       definiteGameState.setPlayerHealth(maxHealth);
-      definiteGameState.hotbar = {
-         itemSlots: {},
-         width: Settings.INITIAL_PLAYER_HOTBAR_SIZE,
-         height: 1,
-         name: "hotbar"
-      };
+      definiteGameState.hotbar = new Inventory(Settings.INITIAL_PLAYER_HOTBAR_SIZE, 1, InventoryName.hotbar);
    }
 
    protected onHit(hitData: HitData): void {

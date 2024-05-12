@@ -1,4 +1,4 @@
-import { ItemType, PlaceableItemType } from "./items";
+import { ItemSlots, ItemType, PlaceableItemType } from "./items";
 export declare enum CraftingStation {
     workbench = 0,
     slime = 1,
@@ -18,13 +18,6 @@ export interface CraftingRecipe {
 export declare const CRAFTING_RECIPES: ReadonlyArray<CraftingRecipe>;
 export declare function getItemRecipe(itemType: ItemType): CraftingRecipe | null;
 export declare function forceGetItemRecipe(itemType: ItemType): CraftingRecipe;
-type Item = {
-    type: ItemType;
-    count: number;
-};
-type ItemSlots = {
-    [itemSlot: number]: Item;
-};
 export declare function hasEnoughItems(itemSlotRecords: ReadonlyArray<ItemSlots>, requiredItems: ItemRequirements): boolean;
 export type ItemTally = Partial<Record<ItemType, number>>;
 export interface ProductInfo {
@@ -32,4 +25,3 @@ export interface ProductInfo {
     readonly amountRequired: number;
 }
 export declare function getRecipeProductChain(itemType: ItemType, availableItems: Readonly<ItemTally>): ReadonlyArray<ProductInfo>;
-export {};

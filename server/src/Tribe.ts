@@ -3,7 +3,7 @@ import { HitboxVertexPositions } from "webgl-test-shared/dist/collision-detectio
 import { BlueprintType } from "webgl-test-shared/dist/components";
 import { CraftingRecipe } from "webgl-test-shared/dist/crafting-recipes";
 import { EntityType } from "webgl-test-shared/dist/entities";
-import { ItemType } from "webgl-test-shared/dist/items";
+import { InventoryName, ItemType } from "webgl-test-shared/dist/items";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { StructureType } from "webgl-test-shared/dist/structures";
 import { TechID, TechTreeUnlockProgress, TechInfo, getTechByID, TECHS } from "webgl-test-shared/dist/techs";
@@ -925,14 +925,10 @@ class Tribe {
          const barrel = this.barrels[i];
 
          const inventoryComponent = InventoryComponentArray.getComponent(barrel.id);
-         const inventory = getInventory(inventoryComponent, "inventory");
+         const inventory = getInventory(inventoryComponent, InventoryName.inventory);
 
-         for (let itemSlot = 1; itemSlot <= inventory.width * inventory.height; itemSlot++) {
-            if (!inventory.itemSlots.hasOwnProperty(itemSlot)) {
-               continue;
-            }
-
-            const item = inventory.itemSlots[itemSlot];
+         for (let i = 0; i < inventory.items.length; i++) {
+            const item = inventory.items[i];
             if (!newAvailableResources.hasOwnProperty(item.type)) {
                newAvailableResources[item.type] = item.count;
             } else {

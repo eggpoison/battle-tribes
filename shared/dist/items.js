@@ -1,146 +1,146 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.BALLISTA_AMMO_TYPES = exports.getItemStackSize = exports.itemIsStackable = exports.Item = exports.ITEM_INFO_RECORD = exports.ITEM_TYPE_RECORD = exports.ItemType = void 0;
-var ItemType;
-(function (ItemType) {
-    ItemType[ItemType["wood"] = 0] = "wood";
-    ItemType[ItemType["workbench"] = 1] = "workbench";
-    ItemType[ItemType["wooden_sword"] = 2] = "wooden_sword";
-    ItemType[ItemType["wooden_axe"] = 3] = "wooden_axe";
-    ItemType[ItemType["wooden_pickaxe"] = 4] = "wooden_pickaxe";
-    ItemType[ItemType["berry"] = 5] = "berry";
-    ItemType[ItemType["raw_beef"] = 6] = "raw_beef";
-    ItemType[ItemType["cooked_beef"] = 7] = "cooked_beef";
-    ItemType[ItemType["rock"] = 8] = "rock";
-    ItemType[ItemType["stone_sword"] = 9] = "stone_sword";
-    ItemType[ItemType["stone_axe"] = 10] = "stone_axe";
-    ItemType[ItemType["stone_pickaxe"] = 11] = "stone_pickaxe";
-    ItemType[ItemType["stone_hammer"] = 12] = "stone_hammer";
-    ItemType[ItemType["leather"] = 13] = "leather";
-    ItemType[ItemType["leather_backpack"] = 14] = "leather_backpack";
-    ItemType[ItemType["cactus_spine"] = 15] = "cactus_spine";
-    ItemType[ItemType["yeti_hide"] = 16] = "yeti_hide";
-    ItemType[ItemType["frostcicle"] = 17] = "frostcicle";
-    ItemType[ItemType["slimeball"] = 18] = "slimeball";
-    ItemType[ItemType["eyeball"] = 19] = "eyeball";
-    ItemType[ItemType["flesh_sword"] = 20] = "flesh_sword";
-    ItemType[ItemType["tribe_totem"] = 21] = "tribe_totem";
-    ItemType[ItemType["worker_hut"] = 22] = "worker_hut";
-    ItemType[ItemType["barrel"] = 23] = "barrel";
-    ItemType[ItemType["frost_armour"] = 24] = "frost_armour";
-    ItemType[ItemType["campfire"] = 25] = "campfire";
-    ItemType[ItemType["furnace"] = 26] = "furnace";
-    ItemType[ItemType["wooden_bow"] = 27] = "wooden_bow";
-    ItemType[ItemType["meat_suit"] = 28] = "meat_suit";
-    ItemType[ItemType["deepfrost_heart"] = 29] = "deepfrost_heart";
-    ItemType[ItemType["deepfrost_sword"] = 30] = "deepfrost_sword";
-    ItemType[ItemType["deepfrost_pickaxe"] = 31] = "deepfrost_pickaxe";
-    ItemType[ItemType["deepfrost_axe"] = 32] = "deepfrost_axe";
-    ItemType[ItemType["deepfrost_armour"] = 33] = "deepfrost_armour";
-    ItemType[ItemType["raw_fish"] = 34] = "raw_fish";
-    ItemType[ItemType["cooked_fish"] = 35] = "cooked_fish";
-    ItemType[ItemType["fishlord_suit"] = 36] = "fishlord_suit";
-    ItemType[ItemType["gathering_gloves"] = 37] = "gathering_gloves";
-    ItemType[ItemType["throngler"] = 38] = "throngler";
-    ItemType[ItemType["leather_armour"] = 39] = "leather_armour";
-    ItemType[ItemType["spear"] = 40] = "spear";
-    ItemType[ItemType["paper"] = 41] = "paper";
-    ItemType[ItemType["research_bench"] = 42] = "research_bench";
-    ItemType[ItemType["wooden_wall"] = 43] = "wooden_wall";
-    ItemType[ItemType["wooden_hammer"] = 44] = "wooden_hammer";
-    ItemType[ItemType["stone_battleaxe"] = 45] = "stone_battleaxe";
-    ItemType[ItemType["living_rock"] = 46] = "living_rock";
-    ItemType[ItemType["planter_box"] = 47] = "planter_box";
-    ItemType[ItemType["reinforced_bow"] = 48] = "reinforced_bow";
-    ItemType[ItemType["crossbow"] = 49] = "crossbow";
-    ItemType[ItemType["ice_bow"] = 50] = "ice_bow";
-    ItemType[ItemType["poop"] = 51] = "poop";
-    ItemType[ItemType["wooden_spikes"] = 52] = "wooden_spikes";
-    ItemType[ItemType["punji_sticks"] = 53] = "punji_sticks";
-    ItemType[ItemType["ballista"] = 54] = "ballista";
-    ItemType[ItemType["sling_turret"] = 55] = "sling_turret";
-    ItemType[ItemType["healing_totem"] = 56] = "healing_totem";
-    ItemType[ItemType["leaf"] = 57] = "leaf";
-    ItemType[ItemType["herbal_medicine"] = 58] = "herbal_medicine";
-    ItemType[ItemType["leaf_suit"] = 59] = "leaf_suit";
-    ItemType[ItemType["seed"] = 60] = "seed";
-    ItemType[ItemType["gardening_gloves"] = 61] = "gardening_gloves";
-    ItemType[ItemType["wooden_fence"] = 62] = "wooden_fence";
-})(ItemType = exports.ItemType || (exports.ItemType = {}));
+exports.BALLISTA_AMMO_TYPES = exports.getItemStackSize = exports.itemIsStackable = exports.Item = exports.Inventory = exports.ITEM_INFO_RECORD = exports.ITEM_TYPE_RECORD = exports.ItemTypeString = void 0;
+exports.ItemTypeString = {
+    [0 /* ItemType.wood */]: "wood",
+    [1 /* ItemType.workbench */]: "workbench",
+    [2 /* ItemType.wooden_sword */]: "wooden sword",
+    [3 /* ItemType.wooden_axe */]: "wooden axe",
+    [4 /* ItemType.wooden_pickaxe */]: "wooden pickaxe",
+    [5 /* ItemType.berry */]: "berry",
+    [6 /* ItemType.raw_beef */]: "raw beef",
+    [7 /* ItemType.cooked_beef */]: "cooked beef",
+    [8 /* ItemType.rock */]: "rock",
+    [9 /* ItemType.stone_sword */]: "stone sword",
+    [10 /* ItemType.stone_axe */]: "stone axe",
+    [11 /* ItemType.stone_pickaxe */]: "stone pickaxe",
+    [12 /* ItemType.stone_hammer */]: "stone hammer",
+    [13 /* ItemType.leather */]: "leather",
+    [14 /* ItemType.leather_backpack */]: "leather backpack",
+    [15 /* ItemType.cactus_spine */]: "cactus spine",
+    [16 /* ItemType.yeti_hide */]: "yeti hide",
+    [17 /* ItemType.frostcicle */]: "frostcicle",
+    [18 /* ItemType.slimeball */]: "slimeball",
+    [19 /* ItemType.eyeball */]: "eyeball",
+    [20 /* ItemType.flesh_sword */]: "flesh sword",
+    [21 /* ItemType.tribe_totem */]: "tribe totem",
+    [22 /* ItemType.worker_hut */]: "worker hut",
+    [23 /* ItemType.barrel */]: "barrel",
+    [24 /* ItemType.frost_armour */]: "frost armour",
+    [25 /* ItemType.campfire */]: "campfire",
+    [26 /* ItemType.furnace */]: "furnace",
+    [27 /* ItemType.wooden_bow */]: "wooden bow",
+    [28 /* ItemType.meat_suit */]: "meat suit",
+    [29 /* ItemType.deepfrost_heart */]: "deepfrost heart",
+    [30 /* ItemType.deepfrost_sword */]: "deepfrost sword",
+    [31 /* ItemType.deepfrost_pickaxe */]: "deepfrost pickaxe",
+    [32 /* ItemType.deepfrost_axe */]: "deepfrost axe",
+    [33 /* ItemType.deepfrost_armour */]: "deepfrost armour",
+    [34 /* ItemType.raw_fish */]: "raw fish",
+    [35 /* ItemType.cooked_fish */]: "cooked fish",
+    [36 /* ItemType.fishlord_suit */]: "fishlord suit",
+    [37 /* ItemType.gathering_gloves */]: "gathering gloves",
+    [38 /* ItemType.throngler */]: "throngler",
+    [39 /* ItemType.leather_armour */]: "leather armour",
+    [40 /* ItemType.spear */]: "spear",
+    [41 /* ItemType.paper */]: "paper",
+    [42 /* ItemType.research_bench */]: "research bench",
+    [43 /* ItemType.wooden_wall */]: "wooden wall",
+    [44 /* ItemType.wooden_hammer */]: "wooden hammer",
+    [45 /* ItemType.stone_battleaxe */]: "stone battleaxe",
+    [46 /* ItemType.living_rock */]: "living rock",
+    [47 /* ItemType.planter_box */]: "planter box",
+    [48 /* ItemType.reinforced_bow */]: "reinforced bow",
+    [49 /* ItemType.crossbow */]: "crossbow",
+    [50 /* ItemType.ice_bow */]: "ice bow",
+    [51 /* ItemType.poop */]: "poop",
+    [52 /* ItemType.wooden_spikes */]: "wooden spikes",
+    [53 /* ItemType.punji_sticks */]: "punji sticks",
+    [54 /* ItemType.ballista */]: "ballista",
+    [55 /* ItemType.sling_turret */]: "sling turret",
+    [56 /* ItemType.healing_totem */]: "healing totem",
+    [57 /* ItemType.leaf */]: "leaf",
+    [58 /* ItemType.herbal_medicine */]: "herbal medicine",
+    [59 /* ItemType.leaf_suit */]: "leaf suit",
+    [60 /* ItemType.seed */]: "seed",
+    [61 /* ItemType.gardening_gloves */]: "gardening gloves",
+    [62 /* ItemType.wooden_fence */]: "wooden fence"
+};
+'';
 exports.ITEM_TYPE_RECORD = {
-    [ItemType.wood]: "material",
-    [ItemType.workbench]: "placeable",
-    [ItemType.wooden_sword]: "sword",
-    [ItemType.wooden_axe]: "axe",
-    [ItemType.wooden_pickaxe]: "pickaxe",
-    [ItemType.wooden_hammer]: "hammer",
-    [ItemType.berry]: "healing",
-    [ItemType.raw_beef]: "healing",
-    [ItemType.cooked_beef]: "healing",
-    [ItemType.rock]: "material",
-    [ItemType.stone_sword]: "sword",
-    [ItemType.stone_axe]: "axe",
-    [ItemType.stone_pickaxe]: "pickaxe",
-    [ItemType.stone_hammer]: "hammer",
-    [ItemType.leather]: "material",
-    [ItemType.leather_backpack]: "backpack",
-    [ItemType.cactus_spine]: "material",
-    [ItemType.yeti_hide]: "material",
-    [ItemType.frostcicle]: "material",
-    [ItemType.slimeball]: "material",
-    [ItemType.eyeball]: "material",
-    [ItemType.flesh_sword]: "sword",
-    [ItemType.tribe_totem]: "placeable",
-    [ItemType.worker_hut]: "placeable",
-    [ItemType.barrel]: "placeable",
-    [ItemType.frost_armour]: "armour",
-    [ItemType.campfire]: "placeable",
-    [ItemType.furnace]: "placeable",
-    [ItemType.wooden_bow]: "bow",
-    [ItemType.meat_suit]: "armour",
-    [ItemType.deepfrost_heart]: "material",
-    [ItemType.deepfrost_sword]: "sword",
-    [ItemType.deepfrost_pickaxe]: "pickaxe",
-    [ItemType.deepfrost_axe]: "axe",
-    [ItemType.deepfrost_armour]: "armour",
-    [ItemType.raw_fish]: "healing",
-    [ItemType.cooked_fish]: "healing",
-    [ItemType.fishlord_suit]: "armour",
-    [ItemType.gathering_gloves]: "glove",
-    [ItemType.throngler]: "sword",
-    [ItemType.leather_armour]: "armour",
-    [ItemType.spear]: "spear",
-    [ItemType.paper]: "material",
-    [ItemType.research_bench]: "placeable",
-    [ItemType.wooden_wall]: "placeable",
-    [ItemType.stone_battleaxe]: "battleaxe",
-    [ItemType.living_rock]: "material",
-    [ItemType.planter_box]: "placeable",
-    [ItemType.reinforced_bow]: "bow",
-    [ItemType.crossbow]: "crossbow",
-    [ItemType.ice_bow]: "bow",
-    [ItemType.poop]: "material",
-    [ItemType.wooden_spikes]: "placeable",
-    [ItemType.punji_sticks]: "placeable",
-    [ItemType.ballista]: "placeable",
-    [ItemType.sling_turret]: "placeable",
-    [ItemType.healing_totem]: "placeable",
-    [ItemType.leaf]: "material",
-    [ItemType.herbal_medicine]: "healing",
-    [ItemType.leaf_suit]: "armour",
-    [ItemType.seed]: "material",
-    [ItemType.gardening_gloves]: "glove",
-    [ItemType.wooden_fence]: "placeable"
+    [0 /* ItemType.wood */]: "material",
+    [1 /* ItemType.workbench */]: "placeable",
+    [2 /* ItemType.wooden_sword */]: "sword",
+    [3 /* ItemType.wooden_axe */]: "axe",
+    [4 /* ItemType.wooden_pickaxe */]: "pickaxe",
+    [44 /* ItemType.wooden_hammer */]: "hammer",
+    [5 /* ItemType.berry */]: "healing",
+    [6 /* ItemType.raw_beef */]: "healing",
+    [7 /* ItemType.cooked_beef */]: "healing",
+    [8 /* ItemType.rock */]: "material",
+    [9 /* ItemType.stone_sword */]: "sword",
+    [10 /* ItemType.stone_axe */]: "axe",
+    [11 /* ItemType.stone_pickaxe */]: "pickaxe",
+    [12 /* ItemType.stone_hammer */]: "hammer",
+    [13 /* ItemType.leather */]: "material",
+    [14 /* ItemType.leather_backpack */]: "backpack",
+    [15 /* ItemType.cactus_spine */]: "material",
+    [16 /* ItemType.yeti_hide */]: "material",
+    [17 /* ItemType.frostcicle */]: "material",
+    [18 /* ItemType.slimeball */]: "material",
+    [19 /* ItemType.eyeball */]: "material",
+    [20 /* ItemType.flesh_sword */]: "sword",
+    [21 /* ItemType.tribe_totem */]: "placeable",
+    [22 /* ItemType.worker_hut */]: "placeable",
+    [23 /* ItemType.barrel */]: "placeable",
+    [24 /* ItemType.frost_armour */]: "armour",
+    [25 /* ItemType.campfire */]: "placeable",
+    [26 /* ItemType.furnace */]: "placeable",
+    [27 /* ItemType.wooden_bow */]: "bow",
+    [28 /* ItemType.meat_suit */]: "armour",
+    [29 /* ItemType.deepfrost_heart */]: "material",
+    [30 /* ItemType.deepfrost_sword */]: "sword",
+    [31 /* ItemType.deepfrost_pickaxe */]: "pickaxe",
+    [32 /* ItemType.deepfrost_axe */]: "axe",
+    [33 /* ItemType.deepfrost_armour */]: "armour",
+    [34 /* ItemType.raw_fish */]: "healing",
+    [35 /* ItemType.cooked_fish */]: "healing",
+    [36 /* ItemType.fishlord_suit */]: "armour",
+    [37 /* ItemType.gathering_gloves */]: "glove",
+    [38 /* ItemType.throngler */]: "sword",
+    [39 /* ItemType.leather_armour */]: "armour",
+    [40 /* ItemType.spear */]: "spear",
+    [41 /* ItemType.paper */]: "material",
+    [42 /* ItemType.research_bench */]: "placeable",
+    [43 /* ItemType.wooden_wall */]: "placeable",
+    [45 /* ItemType.stone_battleaxe */]: "battleaxe",
+    [46 /* ItemType.living_rock */]: "material",
+    [47 /* ItemType.planter_box */]: "placeable",
+    [48 /* ItemType.reinforced_bow */]: "bow",
+    [49 /* ItemType.crossbow */]: "crossbow",
+    [50 /* ItemType.ice_bow */]: "bow",
+    [51 /* ItemType.poop */]: "material",
+    [52 /* ItemType.wooden_spikes */]: "placeable",
+    [53 /* ItemType.punji_sticks */]: "placeable",
+    [54 /* ItemType.ballista */]: "placeable",
+    [55 /* ItemType.sling_turret */]: "placeable",
+    [56 /* ItemType.healing_totem */]: "placeable",
+    [57 /* ItemType.leaf */]: "material",
+    [58 /* ItemType.herbal_medicine */]: "healing",
+    [59 /* ItemType.leaf_suit */]: "armour",
+    [60 /* ItemType.seed */]: "material",
+    [61 /* ItemType.gardening_gloves */]: "glove",
+    [62 /* ItemType.wooden_fence */]: "placeable"
 };
 exports.ITEM_INFO_RECORD = {
-    [ItemType.wood]: {
+    [0 /* ItemType.wood */]: {
         stackSize: 99
     },
-    [ItemType.workbench]: {
+    [1 /* ItemType.workbench */]: {
         stackSize: 99,
         entityType: 4 /* EntityType.workbench */
     },
-    [ItemType.wooden_sword]: {
+    [2 /* ItemType.wooden_sword */]: {
         stackSize: 1,
         toolType: "sword",
         damage: 2,
@@ -148,7 +148,7 @@ exports.ITEM_INFO_RECORD = {
         attackCooldown: 0.3,
         level: 1
     },
-    [ItemType.wooden_axe]: {
+    [3 /* ItemType.wooden_axe */]: {
         stackSize: 1,
         toolType: "axe",
         damage: 3,
@@ -156,7 +156,7 @@ exports.ITEM_INFO_RECORD = {
         attackCooldown: 0.5,
         level: 1
     },
-    [ItemType.wooden_pickaxe]: {
+    [4 /* ItemType.wooden_pickaxe */]: {
         stackSize: 1,
         toolType: "pickaxe",
         damage: 5,
@@ -164,7 +164,7 @@ exports.ITEM_INFO_RECORD = {
         attackCooldown: 0.5,
         level: 1
     },
-    [ItemType.wooden_hammer]: {
+    [44 /* ItemType.wooden_hammer */]: {
         stackSize: 1,
         toolType: "hammer",
         damage: 2,
@@ -174,28 +174,28 @@ exports.ITEM_INFO_RECORD = {
         repairAmount: 3,
         workAmount: 1
     },
-    [ItemType.berry]: {
+    [5 /* ItemType.berry */]: {
         stackSize: 99,
         healAmount: 1,
         consumeTime: 0.75,
         consumableItemCategory: 0 /* ConsumableItemCategory.food */
     },
-    [ItemType.raw_beef]: {
+    [6 /* ItemType.raw_beef */]: {
         stackSize: 99,
         healAmount: 1,
         consumeTime: 1.5,
         consumableItemCategory: 0 /* ConsumableItemCategory.food */
     },
-    [ItemType.cooked_beef]: {
+    [7 /* ItemType.cooked_beef */]: {
         stackSize: 99,
         healAmount: 5,
         consumeTime: 1.5,
         consumableItemCategory: 0 /* ConsumableItemCategory.food */
     },
-    [ItemType.rock]: {
+    [8 /* ItemType.rock */]: {
         stackSize: 99
     },
-    [ItemType.stone_sword]: {
+    [9 /* ItemType.stone_sword */]: {
         stackSize: 1,
         toolType: "sword",
         damage: 3,
@@ -203,7 +203,7 @@ exports.ITEM_INFO_RECORD = {
         attackCooldown: 0.3,
         level: 2
     },
-    [ItemType.stone_axe]: {
+    [10 /* ItemType.stone_axe */]: {
         stackSize: 1,
         toolType: "axe",
         damage: 5,
@@ -211,7 +211,7 @@ exports.ITEM_INFO_RECORD = {
         attackCooldown: 0.5,
         level: 2
     },
-    [ItemType.stone_pickaxe]: {
+    [11 /* ItemType.stone_pickaxe */]: {
         stackSize: 1,
         toolType: "pickaxe",
         damage: 8,
@@ -219,7 +219,7 @@ exports.ITEM_INFO_RECORD = {
         attackCooldown: 0.5,
         level: 2
     },
-    [ItemType.stone_hammer]: {
+    [12 /* ItemType.stone_hammer */]: {
         stackSize: 1,
         toolType: "hammer",
         damage: 3,
@@ -229,30 +229,30 @@ exports.ITEM_INFO_RECORD = {
         repairAmount: 5,
         workAmount: 2
     },
-    [ItemType.leather]: {
+    [13 /* ItemType.leather */]: {
         stackSize: 99
     },
-    [ItemType.leather_backpack]: {
+    [14 /* ItemType.leather_backpack */]: {
         inventoryWidth: 2,
         inventoryHeight: 2,
         level: 1
     },
-    [ItemType.cactus_spine]: {
+    [15 /* ItemType.cactus_spine */]: {
         stackSize: 99
     },
-    [ItemType.yeti_hide]: {
+    [16 /* ItemType.yeti_hide */]: {
         stackSize: 99
     },
-    [ItemType.frostcicle]: {
+    [17 /* ItemType.frostcicle */]: {
         stackSize: 99
     },
-    [ItemType.slimeball]: {
+    [18 /* ItemType.slimeball */]: {
         stackSize: 99
     },
-    [ItemType.eyeball]: {
+    [19 /* ItemType.eyeball */]: {
         stackSize: 99
     },
-    [ItemType.flesh_sword]: {
+    [20 /* ItemType.flesh_sword */]: {
         stackSize: 1,
         toolType: "sword",
         damage: 2,
@@ -260,31 +260,31 @@ exports.ITEM_INFO_RECORD = {
         attackCooldown: 0.3,
         level: 1.5
     },
-    [ItemType.tribe_totem]: {
+    [21 /* ItemType.tribe_totem */]: {
         stackSize: 99,
         entityType: 15 /* EntityType.tribeTotem */
     },
-    [ItemType.worker_hut]: {
+    [22 /* ItemType.worker_hut */]: {
         stackSize: 99,
         entityType: 16 /* EntityType.workerHut */
     },
-    [ItemType.barrel]: {
+    [23 /* ItemType.barrel */]: {
         stackSize: 99,
         entityType: 18 /* EntityType.barrel */
     },
-    [ItemType.frost_armour]: {
+    [24 /* ItemType.frost_armour */]: {
         defence: 0.25,
         level: 2
     },
-    [ItemType.campfire]: {
+    [25 /* ItemType.campfire */]: {
         stackSize: 99,
         entityType: 19 /* EntityType.campfire */
     },
-    [ItemType.furnace]: {
+    [26 /* ItemType.furnace */]: {
         stackSize: 99,
         entityType: 20 /* EntityType.furnace */
     },
-    [ItemType.wooden_bow]: {
+    [27 /* ItemType.wooden_bow */]: {
         projectileDamage: 4,
         projectileKnockback: 150,
         shotCooldownTicks: 1 * 60 /* Settings.TPS */,
@@ -292,7 +292,7 @@ exports.ITEM_INFO_RECORD = {
         airResistance: 400,
         level: 2
     },
-    [ItemType.reinforced_bow]: {
+    [48 /* ItemType.reinforced_bow */]: {
         projectileDamage: 6,
         projectileKnockback: 200,
         shotCooldownTicks: 1 * 60 /* Settings.TPS */,
@@ -300,7 +300,7 @@ exports.ITEM_INFO_RECORD = {
         airResistance: 300,
         level: 2.5
     },
-    [ItemType.ice_bow]: {
+    [50 /* ItemType.ice_bow */]: {
         projectileDamage: 0,
         projectileKnockback: 0,
         shotCooldownTicks: 1.25 * 60 /* Settings.TPS */,
@@ -308,7 +308,7 @@ exports.ITEM_INFO_RECORD = {
         airResistance: 400,
         level: 2.5
     },
-    [ItemType.crossbow]: {
+    [49 /* ItemType.crossbow */]: {
         projectileDamage: 6,
         projectileKnockback: 200,
         shotCooldownTicks: 1 * 60 /* Settings.TPS */,
@@ -316,14 +316,14 @@ exports.ITEM_INFO_RECORD = {
         airResistance: 300,
         level: 2.5
     },
-    [ItemType.meat_suit]: {
+    [28 /* ItemType.meat_suit */]: {
         defence: 0,
         level: 1
     },
-    [ItemType.deepfrost_heart]: {
+    [29 /* ItemType.deepfrost_heart */]: {
         stackSize: 99
     },
-    [ItemType.deepfrost_sword]: {
+    [30 /* ItemType.deepfrost_sword */]: {
         stackSize: 1,
         toolType: "sword",
         damage: 4,
@@ -331,7 +331,7 @@ exports.ITEM_INFO_RECORD = {
         attackCooldown: 0.3,
         level: 3
     },
-    [ItemType.deepfrost_pickaxe]: {
+    [31 /* ItemType.deepfrost_pickaxe */]: {
         stackSize: 1,
         toolType: "pickaxe",
         damage: 13,
@@ -339,7 +339,7 @@ exports.ITEM_INFO_RECORD = {
         attackCooldown: 0.5,
         level: 3
     },
-    [ItemType.deepfrost_axe]: {
+    [32 /* ItemType.deepfrost_axe */]: {
         stackSize: 1,
         toolType: "axe",
         damage: 8,
@@ -347,30 +347,30 @@ exports.ITEM_INFO_RECORD = {
         attackCooldown: 0.5,
         level: 3
     },
-    [ItemType.deepfrost_armour]: {
+    [33 /* ItemType.deepfrost_armour */]: {
         defence: 0.4,
         level: 3
     },
-    [ItemType.raw_fish]: {
+    [34 /* ItemType.raw_fish */]: {
         stackSize: 99,
         consumeTime: 2,
         healAmount: 1,
         consumableItemCategory: 0 /* ConsumableItemCategory.food */
     },
-    [ItemType.cooked_fish]: {
+    [35 /* ItemType.cooked_fish */]: {
         stackSize: 99,
         consumeTime: 1.5,
         healAmount: 4,
         consumableItemCategory: 0 /* ConsumableItemCategory.food */
     },
-    [ItemType.fishlord_suit]: {
+    [36 /* ItemType.fishlord_suit */]: {
         defence: 0.1,
         level: 1
     },
-    [ItemType.gathering_gloves]: {
+    [37 /* ItemType.gathering_gloves */]: {
         level: 1
     },
-    [ItemType.throngler]: {
+    [38 /* ItemType.throngler */]: {
         stackSize: 1,
         toolType: "sword",
         damage: 2,
@@ -378,11 +378,11 @@ exports.ITEM_INFO_RECORD = {
         attackCooldown: 0.5,
         level: 2.5
     },
-    [ItemType.leather_armour]: {
+    [39 /* ItemType.leather_armour */]: {
         defence: 0.1,
         level: 1
     },
-    [ItemType.spear]: {
+    [40 /* ItemType.spear */]: {
         stackSize: 99,
         toolType: "spear",
         damage: 4,
@@ -390,18 +390,18 @@ exports.ITEM_INFO_RECORD = {
         attackCooldown: 0.8,
         level: 2.5
     },
-    [ItemType.paper]: {
+    [41 /* ItemType.paper */]: {
         stackSize: 99
     },
-    [ItemType.research_bench]: {
+    [42 /* ItemType.research_bench */]: {
         stackSize: 99,
         entityType: 30 /* EntityType.researchBench */
     },
-    [ItemType.wooden_wall]: {
+    [43 /* ItemType.wooden_wall */]: {
         stackSize: 99,
         entityType: 31 /* EntityType.wall */
     },
-    [ItemType.stone_battleaxe]: {
+    [45 /* ItemType.stone_battleaxe */]: {
         stackSize: 1,
         toolType: "battleaxe",
         damage: 3,
@@ -409,62 +409,99 @@ exports.ITEM_INFO_RECORD = {
         attackCooldown: 0.5,
         level: 2.5
     },
-    [ItemType.living_rock]: {
+    [46 /* ItemType.living_rock */]: {
         stackSize: 99
     },
-    [ItemType.planter_box]: {
+    [47 /* ItemType.planter_box */]: {
         stackSize: 99,
         entityType: 37 /* EntityType.planterBox */
     },
-    [ItemType.poop]: {
+    [51 /* ItemType.poop */]: {
         stackSize: 99
     },
-    [ItemType.wooden_spikes]: {
+    [52 /* ItemType.wooden_spikes */]: {
         stackSize: 99,
         // @Incomplete?
         entityType: 42 /* EntityType.floorSpikes */
     },
-    [ItemType.punji_sticks]: {
+    [53 /* ItemType.punji_sticks */]: {
         stackSize: 99,
         // @Incomplete?
         entityType: 44 /* EntityType.floorPunjiSticks */
     },
-    [ItemType.ballista]: {
+    [54 /* ItemType.ballista */]: {
         stackSize: 99,
         entityType: 47 /* EntityType.ballista */
     },
-    [ItemType.sling_turret]: {
+    [55 /* ItemType.sling_turret */]: {
         stackSize: 99,
         entityType: 48 /* EntityType.slingTurret */
     },
-    [ItemType.healing_totem]: {
+    [56 /* ItemType.healing_totem */]: {
         stackSize: 99,
         entityType: 49 /* EntityType.healingTotem */
     },
-    [ItemType.leaf]: {
+    [57 /* ItemType.leaf */]: {
         stackSize: 99
     },
-    [ItemType.herbal_medicine]: {
+    [58 /* ItemType.herbal_medicine */]: {
         stackSize: 99,
         consumeTime: 1.5,
         healAmount: 3,
         consumableItemCategory: 1 /* ConsumableItemCategory.medicine */
     },
-    [ItemType.leaf_suit]: {
+    [59 /* ItemType.leaf_suit */]: {
         defence: 0,
         level: 1
     },
-    [ItemType.seed]: {
+    [60 /* ItemType.seed */]: {
         stackSize: 99
     },
-    [ItemType.gardening_gloves]: {
+    [61 /* ItemType.gardening_gloves */]: {
         level: 2
     },
-    [ItemType.wooden_fence]: {
+    [62 /* ItemType.wooden_fence */]: {
         stackSize: 99,
         entityType: 51 /* EntityType.fence */
     }
 };
+class Inventory {
+    constructor(width, height, name) {
+        this.itemSlots = {};
+        this.items = new Array;
+        this.width = width;
+        this.height = height;
+        this.name = name;
+    }
+    addItem(item, itemSlot) {
+        this.itemSlots[itemSlot] = item;
+        this.items.push(item);
+    }
+    removeItem(itemSlot) {
+        const item = this.itemSlots[itemSlot];
+        if (typeof item === "undefined") {
+            return;
+        }
+        delete this.itemSlots[itemSlot];
+        const idx = this.items.indexOf(item);
+        if (idx !== -1) {
+            this.items.splice(idx, 1);
+        }
+    }
+    hasItem(itemSlot) {
+        return typeof this.itemSlots[itemSlot] !== "undefined";
+    }
+    getItemSlot(item) {
+        for (let i = 0; i < this.items.length; i++) {
+            const currentItem = this.items[i];
+            if (item === currentItem) {
+                return i;
+            }
+        }
+        return -1;
+    }
+}
+exports.Inventory = Inventory;
 class Item {
     constructor(itemType, count, id) {
         this.type = itemType;
@@ -486,4 +523,4 @@ function getItemStackSize(item) {
     return exports.ITEM_INFO_RECORD[item.type].stackSize;
 }
 exports.getItemStackSize = getItemStackSize;
-exports.BALLISTA_AMMO_TYPES = [ItemType.wood, ItemType.rock, ItemType.slimeball, ItemType.frostcicle];
+exports.BALLISTA_AMMO_TYPES = [0 /* ItemType.wood */, 8 /* ItemType.rock */, 18 /* ItemType.slimeball */, 17 /* ItemType.frostcicle */];

@@ -2,7 +2,7 @@ import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types"
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision-detection";
 import { ScarInfo } from "webgl-test-shared/dist/components";
 import { EntityType } from "webgl-test-shared/dist/entities";
-import { ItemType } from "webgl-test-shared/dist/items";
+import { InventoryName, ItemType } from "webgl-test-shared/dist/items";
 import { TribesmanTitle } from "webgl-test-shared/dist/titles";
 import { TRIBE_INFO_RECORD } from "webgl-test-shared/dist/tribes";
 import { randInt, Point } from "webgl-test-shared/dist/utils";
@@ -70,19 +70,19 @@ export function createTribeWarrior(position: Point, tribe: Tribe, hutID: number)
    const inventoryComponent = new InventoryComponent();
    InventoryComponentArray.addComponent(warrior.id, inventoryComponent);
 
-   const hotbarInventory = createNewInventory(inventoryComponent, "hotbar", INVENTORY_SIZE, 1, true);
+   const hotbarInventory = createNewInventory(inventoryComponent, InventoryName.hotbar, INVENTORY_SIZE, 1, true);
    inventoryUseComponent.addInventoryUseInfo(hotbarInventory);
-   const offhandInventory = createNewInventory(inventoryComponent, "offhand", 1, 1, false);
+   const offhandInventory = createNewInventory(inventoryComponent, InventoryName.offhand, 1, 1, false);
    inventoryUseComponent.addInventoryUseInfo(offhandInventory);
-   createNewInventory(inventoryComponent, "armourSlot", 1, 1, false);
-   createNewInventory(inventoryComponent, "backpackSlot", 1, 1, false);
-   createNewInventory(inventoryComponent, "gloveSlot", 1, 1, false);
-   createNewInventory(inventoryComponent, "backpack", 0, 0, false);
+   createNewInventory(inventoryComponent, InventoryName.armourSlot, 1, 1, false);
+   createNewInventory(inventoryComponent, InventoryName.backpackSlot, 1, 1, false);
+   createNewInventory(inventoryComponent, InventoryName.gloveSlot, 1, 1, false);
+   createNewInventory(inventoryComponent, InventoryName.backpack, 0, 0, false);
 
    // @Temporary
-   addItemToInventory(inventoryComponent, "hotbar", ItemType.deepfrost_sword, 1);
-   addItemToInventory(inventoryComponent, "offhand", ItemType.deepfrost_sword, 1);
-   addItemToInventory(inventoryComponent, "armourSlot", ItemType.frost_armour, 1);
+   addItemToInventory(inventoryComponent, InventoryName.hotbar, ItemType.deepfrost_sword, 1);
+   addItemToInventory(inventoryComponent, InventoryName.offhand, ItemType.deepfrost_sword, 1);
+   addItemToInventory(inventoryComponent, InventoryName.armourSlot, ItemType.frost_armour, 1);
    
    // @Temporary
    setTimeout(() => {
@@ -117,10 +117,10 @@ export function onTribeWarriorDeath(warrior: Entity): void {
    tribeComponent.tribe.respawnTribesman(hut);
    
    const inventoryComponent = InventoryComponentArray.getComponent(warrior.id);
-   dropInventory(warrior, inventoryComponent, "hotbar", 38);
-   dropInventory(warrior, inventoryComponent, "armourSlot", 38);
-   dropInventory(warrior, inventoryComponent, "backpackSlot", 38);
-   dropInventory(warrior, inventoryComponent, "offhand", 38);
+   dropInventory(warrior, inventoryComponent, InventoryName.hotbar, 38);
+   dropInventory(warrior, inventoryComponent, InventoryName.armourSlot, 38);
+   dropInventory(warrior, inventoryComponent, InventoryName.backpackSlot, 38);
+   dropInventory(warrior, inventoryComponent, InventoryName.offhand, 38);
 }
 
 export function onTribeWarriorRemove(warrior: Entity): void {

@@ -1,6 +1,6 @@
 import { TribesmanAIType } from "webgl-test-shared/dist/components";
 import { EntityType, LimbAction } from "webgl-test-shared/dist/entities";
-import { ITEM_TYPE_RECORD, ITEM_INFO_RECORD, BowItemInfo } from "webgl-test-shared/dist/items";
+import { ITEM_TYPE_RECORD, ITEM_INFO_RECORD, BowItemInfo, InventoryName } from "webgl-test-shared/dist/items";
 import { Settings, PathfindingSettings } from "webgl-test-shared/dist/settings";
 import { TribeType } from "webgl-test-shared/dist/tribes";
 import { Point, distance } from "webgl-test-shared/dist/utils";
@@ -8,7 +8,7 @@ import Board from "../../../Board";
 import Entity from "../../../Entity";
 import { getDistanceFromPointToEntity, stopEntity, entityIsInLineOfSight, willStopAtDesiredDistance } from "../../../ai-shared";
 import { InventoryComponentArray, InventoryUseComponentArray, TribesmanComponentArray, TribeComponentArray } from "../../../components/ComponentArray";
-import { getInventory, inventoryHasItemInSlot, getItem } from "../../../components/InventoryComponent";
+import { getInventory } from "../../../components/InventoryComponent";
 import { getInventoryUseInfo, setLimbActions } from "../../../components/InventoryUseComponent";
 import { PhysicsComponentArray } from "../../../components/PhysicsComponent";
 import { TribesmanPathType } from "../../../components/TribesmanComponent";
@@ -42,15 +42,15 @@ const doMeleeAttack = (tribesman: Entity): void => {
    // Register the hit
    if (target !== null) {
       const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman.id);
-      const hotbarUseInfo = getInventoryUseInfo(inventoryUseComponent, "hotbar");
-      const didSucceed = attemptAttack(tribesman, target, hotbarUseInfo.selectedItemSlot, "hotbar");
+      const hotbarUseInfo = getInventoryUseInfo(inventoryUseComponent, InventoryName.hotbar);
+      const didSucceed = attemptAttack(tribesman, target, hotbarUseInfo.selectedItemSlot, InventoryName.hotbar);
 
       if (!didSucceed) {
          // Use offhand
          const tribeComponent = TribeComponentArray.getComponent(tribesman.id);
          if (tribeComponent.tribe.type === TribeType.barbarians) {
-            const offhandUseInfo = getInventoryUseInfo(inventoryUseComponent, "offhand");
-            attemptAttack(tribesman, target, offhandUseInfo.selectedItemSlot, "offhand");
+            const offhandUseInfo = getInventoryUseInfo(inventoryUseComponent, InventoryName.offhand);
+            attemptAttack(tribesman, target, offhandUseInfo.selectedItemSlot, InventoryName.offhand);
          }
       }
    }
@@ -58,14 +58,15 @@ const doMeleeAttack = (tribesman: Entity): void => {
 
 const getMostDamagingItemSlot = (tribesman: Entity, huntedEntity: Entity): number => {
    const inventoryComponent = InventoryComponentArray.getComponent(tribesman.id);
-   const hotbarInventory = getInventory(inventoryComponent, "hotbar");
+   const hotbarInventory = getInventory(inventoryComponent, InventoryName.hotbar);
 
    // @Incomplete: Account for status effects
    
    let bestItemSlot = 1;
    let mostDps = 0;
    for (let itemSlot = 1; itemSlot <= hotbarInventory.width * hotbarInventory.height; itemSlot++) {
-      if (!hotbarInventory.itemSlots.hasOwnProperty(itemSlot)) {
+      const item = hotbarInventory.itemSlots[itemSlot];
+      if (typeof item === "undefined") {
          if (mostDps < 1 / Settings.DEFAULT_ATTACK_COOLDOWN) {
             mostDps = 1 / Settings.DEFAULT_ATTACK_COOLDOWN;
             bestItemSlot = itemSlot;
@@ -73,7 +74,6 @@ const getMostDamagingItemSlot = (tribesman: Entity, huntedEntity: Entity): numbe
          continue;
       }
 
-      const item = hotbarInventory.itemSlots[itemSlot];
 
       const attackCooldown = getItemAttackCooldown(item);
       const damage = calculateItemDamage(tribesman, item, huntedEntity);
@@ -147,14 +147,14 @@ export function huntEntity(tribesman: Entity, huntedEntity: Entity, isAggressive
    const mostDamagingItemSlot = getMostDamagingItemSlot(tribesman, huntedEntity);
 
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman.id);
-   const hotbarUseInfo = getInventoryUseInfo(inventoryUseComponent, "hotbar");
+   const hotbarUseInfo = getInventoryUseInfo(inventoryUseComponent, InventoryName.hotbar);
    
    // Select the item slot
    hotbarUseInfo.selectedItemSlot = mostDamagingItemSlot;
    
-   const inventory = getInventory(inventoryComponent, "hotbar");
-   if (inventoryHasItemInSlot(inventory, mostDamagingItemSlot)) {
-      const selectedItem = getItem(inventoryComponent, "hotbar", hotbarUseInfo.selectedItemSlot)!;
+   const inventory = getInventory(inventoryComponent, InventoryName.hotbar);
+   if (inventory.hasItem(mostDamagingItemSlot)) {
+      const selectedItem = hotbarUseInfo.inventory.itemSlots[hotbarUseInfo.selectedItemSlot]!;
       const weaponCategory = ITEM_TYPE_RECORD[selectedItem.type];
 
       // Throw spears if there is multiple
@@ -189,7 +189,7 @@ export function huntEntity(tribesman: Entity, huntedEntity: Entity, isAggressive
          const ticksSinceLastAction = Board.ticks - hotbarUseInfo.lastSpearChargeTicks;
          if (ticksSinceLastAction >= 3 * Settings.TPS) {
             // Throw spear
-            useItem(tribesman, selectedItem, "hotbar", hotbarUseInfo.selectedItemSlot);
+            useItem(tribesman, selectedItem, InventoryName.hotbar, hotbarUseInfo.selectedItemSlot);
             setLimbActions(inventoryUseComponent, LimbAction.none);
          } else {
             // Charge spear
@@ -246,7 +246,7 @@ export function huntEntity(tribesman: Entity, huntedEntity: Entity, isAggressive
                tribesmanComponent.extraBowCooldownTicks--;
             } else {
                // If the bow is fully charged, fire it
-               useItem(tribesman, selectedItem, "hotbar", hotbarUseInfo.selectedItemSlot);
+               useItem(tribesman, selectedItem, InventoryName.hotbar, hotbarUseInfo.selectedItemSlot);
                tribesmanComponent.extraBowCooldownTicks = EXTRA_BOW_COOLDOWNS[tribesman.type]!;
             }
             hotbarUseInfo.action = LimbAction.chargeBow;
@@ -297,7 +297,7 @@ export function huntEntity(tribesman: Entity, huntedEntity: Entity, isAggressive
             const ticksSinceLastAction = Board.ticks - hotbarUseInfo.lastBattleaxeChargeTicks;
             if (ticksSinceLastAction >= 3 * Settings.TPS) {
                // Throw the battleaxe
-               useItem(tribesman, selectedItem, "hotbar", mostDamagingItemSlot);
+               useItem(tribesman, selectedItem, InventoryName.hotbar, mostDamagingItemSlot);
                setLimbActions(inventoryUseComponent, LimbAction.none);
             } else {
                setLimbActions(inventoryUseComponent, LimbAction.chargeBattleaxe);
@@ -317,7 +317,7 @@ export function huntEntity(tribesman: Entity, huntedEntity: Entity, isAggressive
    // If there isn't a path to the entity, try to repair buildings
    // @Incomplete: This will cause a delay after the tribesman finishes repairing the building.
    if (tribesman.ageTicks % (Settings.TPS / 2) === 0) {
-      const hotbarInventory = getInventory(inventoryComponent, "hotbar");
+      const hotbarInventory = getInventory(inventoryComponent, InventoryName.hotbar);
       const hammerItemSlot = getBestHammerItemSlot(hotbarInventory);
       if (hammerItemSlot !== 0) {
          const tribeComponent = TribeComponentArray.getComponent(tribesman.id);

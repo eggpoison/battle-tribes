@@ -2,7 +2,6 @@
 // @Cleanup: Move server-only stuff to the server and client-only stuff to the client
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getTechChain = exports.getTechRequiredForItem = exports.getTechByID = exports.TECHS = exports.TechID = void 0;
-const items_1 = require("./items");
 const tribes_1 = require("./tribes");
 var TechID;
 (function (TechID) {
@@ -34,12 +33,12 @@ exports.TECHS = [
         name: "Fire",
         description: "A primitive method of cooking your food.",
         iconSrc: "fire.png",
-        unlockedItems: [items_1.ItemType.campfire],
+        unlockedItems: [25 /* ItemType.campfire */],
         positionX: 0,
         positionY: 0,
         dependencies: [],
         researchItemRequirements: {
-            [items_1.ItemType.wood]: 10
+            [0 /* ItemType.wood */]: 10
         },
         researchStudyRequirements: 0,
         blacklistedTribes: [],
@@ -50,13 +49,13 @@ exports.TECHS = [
         name: "Society",
         description: "The beginning of civilisation.",
         iconSrc: "society.png",
-        unlockedItems: [items_1.ItemType.tribe_totem, items_1.ItemType.worker_hut],
+        unlockedItems: [21 /* ItemType.tribe_totem */, 22 /* ItemType.worker_hut */],
         positionX: 1,
         positionY: 35,
         dependencies: [TechID.fire],
         researchItemRequirements: {
-            [items_1.ItemType.wooden_pickaxe]: 1,
-            [items_1.ItemType.wood]: 10
+            [4 /* ItemType.wooden_pickaxe */]: 1,
+            [0 /* ItemType.wood */]: 10
         },
         researchStudyRequirements: 20,
         blacklistedTribes: [],
@@ -67,13 +66,13 @@ exports.TECHS = [
         name: "Gathering",
         description: "Efficient gathering of resources.",
         iconSrc: "gathering.png",
-        unlockedItems: [items_1.ItemType.gathering_gloves],
+        unlockedItems: [37 /* ItemType.gathering_gloves */],
         positionX: 22,
         positionY: -28,
         dependencies: [TechID.fire],
         researchItemRequirements: {
-            [items_1.ItemType.wood]: 25,
-            [items_1.ItemType.berry]: 10
+            [0 /* ItemType.wood */]: 25,
+            [5 /* ItemType.berry */]: 10
         },
         researchStudyRequirements: 0,
         blacklistedTribes: [],
@@ -84,12 +83,12 @@ exports.TECHS = [
         name: "Stoneworking",
         description: "Manipulation of stone in crafting.",
         iconSrc: "stoneworking.png",
-        unlockedItems: [items_1.ItemType.stone_pickaxe, items_1.ItemType.stone_axe, items_1.ItemType.stone_sword, items_1.ItemType.spear],
+        unlockedItems: [11 /* ItemType.stone_pickaxe */, 10 /* ItemType.stone_axe */, 9 /* ItemType.stone_sword */, 40 /* ItemType.spear */],
         positionX: -40,
         positionY: -1,
         dependencies: [TechID.fire],
         researchItemRequirements: {
-            [items_1.ItemType.rock]: 20
+            [8 /* ItemType.rock */]: 20
         },
         researchStudyRequirements: 0,
         blacklistedTribes: [],
@@ -100,12 +99,12 @@ exports.TECHS = [
         name: "Woodworking",
         description: "Use a workbench to manipulate wood into more complex shapes",
         iconSrc: "woodworking.png",
-        unlockedItems: [items_1.ItemType.workbench, items_1.ItemType.paper, items_1.ItemType.research_bench],
+        unlockedItems: [1 /* ItemType.workbench */, 41 /* ItemType.paper */, 42 /* ItemType.research_bench */],
         positionX: 44,
         positionY: 4,
         dependencies: [TechID.fire],
         researchItemRequirements: {
-            [items_1.ItemType.wood]: 20
+            [0 /* ItemType.wood */]: 20
         },
         researchStudyRequirements: 0,
         blacklistedTribes: [],
@@ -116,13 +115,13 @@ exports.TECHS = [
         name: "Furnace",
         description: "A better way to cook your food.",
         iconSrc: "furnace.png",
-        unlockedItems: [items_1.ItemType.furnace],
+        unlockedItems: [26 /* ItemType.furnace */],
         positionX: 62,
         positionY: 15,
         dependencies: [TechID.woodworking],
         researchItemRequirements: {
-            [items_1.ItemType.campfire]: 2,
-            [items_1.ItemType.rock]: 20
+            [25 /* ItemType.campfire */]: 2,
+            [8 /* ItemType.rock */]: 20
         },
         researchStudyRequirements: 10,
         blacklistedTribes: [],
@@ -133,13 +132,13 @@ exports.TECHS = [
         name: "Throngling",
         description: "The way of the throngle",
         iconSrc: "throngling.png",
-        unlockedItems: [items_1.ItemType.throngler],
+        unlockedItems: [38 /* ItemType.throngler */],
         positionX: -28,
         positionY: 18,
         dependencies: [TechID.stoneTools],
         researchItemRequirements: {
-            [items_1.ItemType.rock]: 20,
-            [items_1.ItemType.cactus_spine]: 30
+            [8 /* ItemType.rock */]: 20,
+            [15 /* ItemType.cactus_spine */]: 30
         },
         researchStudyRequirements: 40,
         blacklistedTribes: [],
@@ -150,12 +149,12 @@ exports.TECHS = [
         name: "Archery",
         description: "Ranged combat",
         iconSrc: "archery.png",
-        unlockedItems: [items_1.ItemType.wooden_bow],
+        unlockedItems: [27 /* ItemType.wooden_bow */],
         positionX: -53,
         positionY: 19,
         dependencies: [TechID.stoneTools],
         researchItemRequirements: {
-            [items_1.ItemType.wood]: 35
+            [0 /* ItemType.wood */]: 35
         },
         // researchStudyRequirements: 75,
         researchStudyRequirements: 1,
@@ -167,12 +166,12 @@ exports.TECHS = [
         name: "Reinforced Bows",
         description: "Reinforced bows",
         iconSrc: "reinforced-bows.png",
-        unlockedItems: [items_1.ItemType.reinforced_bow],
+        unlockedItems: [48 /* ItemType.reinforced_bow */],
         positionX: -67,
         positionY: 26,
         dependencies: [TechID.archery],
         researchItemRequirements: {
-            [items_1.ItemType.wood]: 35
+            [0 /* ItemType.wood */]: 35
         },
         researchStudyRequirements: 75,
         blacklistedTribes: [],
@@ -183,12 +182,12 @@ exports.TECHS = [
         name: "Crossbows",
         description: "Crossbows",
         iconSrc: "crossbows.png",
-        unlockedItems: [items_1.ItemType.crossbow],
+        unlockedItems: [49 /* ItemType.crossbow */],
         positionX: -50,
         positionY: 34,
         dependencies: [TechID.archery],
         researchItemRequirements: {
-            [items_1.ItemType.wood]: 35
+            [0 /* ItemType.wood */]: 35
         },
         researchStudyRequirements: 75,
         blacklistedTribes: [],
@@ -199,12 +198,12 @@ exports.TECHS = [
         name: "Ice Bows",
         description: "Ice bows",
         iconSrc: "ice-bows.png",
-        unlockedItems: [items_1.ItemType.ice_bow],
+        unlockedItems: [50 /* ItemType.ice_bow */],
         positionX: -76,
         positionY: 17,
         dependencies: [TechID.archery, TechID.frostshaping],
         researchItemRequirements: {
-            [items_1.ItemType.wood]: 35
+            [0 /* ItemType.wood */]: 35
         },
         researchStudyRequirements: 75,
         blacklistedTribes: [tribes_1.TribeType.plainspeople, tribes_1.TribeType.barbarians, tribes_1.TribeType.goblins],
@@ -215,12 +214,12 @@ exports.TECHS = [
         name: "Warmongering",
         description: "Allows the crafting of deadly battleaxes, able to be thrown at enemies.",
         iconSrc: "warmongering.png",
-        unlockedItems: [items_1.ItemType.stone_battleaxe],
+        unlockedItems: [45 /* ItemType.stone_battleaxe */],
         positionX: -55,
         positionY: 21,
         dependencies: [TechID.stoneTools],
         researchItemRequirements: {
-            [items_1.ItemType.living_rock]: 30
+            [46 /* ItemType.living_rock */]: 30
         },
         researchStudyRequirements: 75,
         blacklistedTribes: [tribes_1.TribeType.frostlings, tribes_1.TribeType.goblins, tribes_1.TribeType.plainspeople],
@@ -231,12 +230,12 @@ exports.TECHS = [
         name: "Leatherworking",
         description: "Stretch and meld leather into armour",
         iconSrc: "leatherworking.png",
-        unlockedItems: [items_1.ItemType.leather_armour],
+        unlockedItems: [39 /* ItemType.leather_armour */],
         positionX: -56,
         positionY: -18,
         dependencies: [TechID.stoneTools],
         researchItemRequirements: {
-            [items_1.ItemType.leather]: 20
+            [13 /* ItemType.leather */]: 20
         },
         researchStudyRequirements: 50,
         blacklistedTribes: [],
@@ -253,8 +252,8 @@ exports.TECHS = [
         positionY: 48,
         dependencies: [TechID.society],
         researchItemRequirements: {
-            [items_1.ItemType.wood]: 30,
-            [items_1.ItemType.rock]: 50
+            [0 /* ItemType.wood */]: 30,
+            [8 /* ItemType.rock */]: 50
         },
         researchStudyRequirements: 100,
         blacklistedTribes: [],
@@ -265,12 +264,12 @@ exports.TECHS = [
         name: "Basic Architecture",
         description: "Primitive structures to build your first defences with.",
         iconSrc: "basic-architecture.png",
-        unlockedItems: [items_1.ItemType.wooden_wall, items_1.ItemType.wooden_hammer, items_1.ItemType.wooden_spikes, items_1.ItemType.punji_sticks],
+        unlockedItems: [43 /* ItemType.wooden_wall */, 44 /* ItemType.wooden_hammer */, 52 /* ItemType.wooden_spikes */, 53 /* ItemType.punji_sticks */],
         positionX: 69,
         positionY: -4,
         dependencies: [TechID.woodworking],
         researchItemRequirements: {
-            [items_1.ItemType.wood]: 40
+            [0 /* ItemType.wood */]: 40
         },
         researchStudyRequirements: 150,
         blacklistedTribes: [],
@@ -281,12 +280,12 @@ exports.TECHS = [
         name: "Storage",
         description: "",
         iconSrc: "storage.png",
-        unlockedItems: [items_1.ItemType.barrel],
+        unlockedItems: [23 /* ItemType.barrel */],
         positionX: 51,
         positionY: -15,
         dependencies: [TechID.woodworking],
         researchItemRequirements: {
-            [items_1.ItemType.wood]: 50
+            [0 /* ItemType.wood */]: 50
         },
         researchStudyRequirements: 50,
         blacklistedTribes: [],
@@ -297,12 +296,12 @@ exports.TECHS = [
         name: "Frostshaping",
         description: "",
         iconSrc: "frostshaping.png",
-        unlockedItems: [items_1.ItemType.frost_armour, items_1.ItemType.deepfrost_pickaxe, items_1.ItemType.deepfrost_sword, items_1.ItemType.deepfrost_axe, items_1.ItemType.deepfrost_armour],
+        unlockedItems: [24 /* ItemType.frost_armour */, 31 /* ItemType.deepfrost_pickaxe */, 30 /* ItemType.deepfrost_sword */, 32 /* ItemType.deepfrost_axe */, 33 /* ItemType.deepfrost_armour */],
         positionX: -65,
         positionY: 0,
         dependencies: [TechID.stoneTools],
         researchItemRequirements: {
-            [items_1.ItemType.frostcicle]: 15
+            [17 /* ItemType.frostcicle */]: 15
         },
         researchStudyRequirements: 50,
         blacklistedTribes: [],
@@ -313,13 +312,13 @@ exports.TECHS = [
         name: "Basic Machinery",
         description: "The first turrets and automatic buildings.",
         iconSrc: "basic-machinery.png",
-        unlockedItems: [items_1.ItemType.sling_turret, items_1.ItemType.ballista],
+        unlockedItems: [55 /* ItemType.sling_turret */, 54 /* ItemType.ballista */],
         positionX: 81,
         positionY: -12,
         dependencies: [TechID.basicArchitecture],
         researchItemRequirements: {
-            [items_1.ItemType.wood]: 50,
-            [items_1.ItemType.rock]: 50
+            [0 /* ItemType.wood */]: 50,
+            [8 /* ItemType.rock */]: 50
         },
         researchStudyRequirements: 200,
         blacklistedTribes: [],
@@ -330,13 +329,13 @@ exports.TECHS = [
         name: "Herbal Medicine",
         description: "A more effective source of healing.",
         iconSrc: "herbal-medicine.png",
-        unlockedItems: [items_1.ItemType.herbal_medicine],
+        unlockedItems: [58 /* ItemType.herbal_medicine */],
         positionX: 45,
         positionY: -34,
         dependencies: [TechID.gathering],
         researchItemRequirements: {
-            [items_1.ItemType.berry]: 20,
-            [items_1.ItemType.slimeball]: 20
+            [5 /* ItemType.berry */]: 20,
+            [18 /* ItemType.slimeball */]: 20
         },
         researchStudyRequirements: 0,
         blacklistedTribes: [],
@@ -347,14 +346,14 @@ exports.TECHS = [
         name: "Gardening",
         description: "Sustainable plant growth",
         iconSrc: "planter-box.png",
-        unlockedItems: [items_1.ItemType.planter_box, items_1.ItemType.gardening_gloves],
+        unlockedItems: [47 /* ItemType.planter_box */, 61 /* ItemType.gardening_gloves */],
         positionX: 30,
         positionY: -51,
         dependencies: [TechID.gathering],
         researchItemRequirements: {
-            [items_1.ItemType.wood]: 40,
-            [items_1.ItemType.leaf]: 30,
-            [items_1.ItemType.berry]: 20
+            [0 /* ItemType.wood */]: 40,
+            [57 /* ItemType.leaf */]: 30,
+            [5 /* ItemType.berry */]: 20
         },
         researchStudyRequirements: 30,
         blacklistedTribes: [],
@@ -365,13 +364,13 @@ exports.TECHS = [
         name: "Healing Totem",
         description: "A source of infinite healing.",
         iconSrc: "healing-totem.png",
-        unlockedItems: [items_1.ItemType.healing_totem],
+        unlockedItems: [56 /* ItemType.healing_totem */],
         positionX: 70,
         positionY: -28,
         dependencies: [TechID.herbalMedicine, TechID.basicArchitecture],
         researchItemRequirements: {
-            [items_1.ItemType.wood]: 50,
-            [items_1.ItemType.herbal_medicine]: 15
+            [0 /* ItemType.wood */]: 50,
+            [58 /* ItemType.herbal_medicine */]: 15
         },
         researchStudyRequirements: 100,
         blacklistedTribes: [],

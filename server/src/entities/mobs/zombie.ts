@@ -1,13 +1,13 @@
 import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision-detection";
 import { EntityType, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
-import { ItemType } from "webgl-test-shared/dist/items";
+import { InventoryName, ItemType } from "webgl-test-shared/dist/items";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { STRUCTURE_TYPES, StructureType } from "webgl-test-shared/dist/structures";
 import { Point, randInt, randFloat } from "webgl-test-shared/dist/utils";
 import Entity from "../../Entity";
-import { HealthComponentArray, InventoryComponentArray, InventoryUseComponentArray, ItemComponentArray, TombstoneComponentArray, WanderAIComponentArray, ZombieComponentArray } from "../../components/ComponentArray";
+import { HealthComponentArray, InventoryComponentArray, InventoryUseComponentArray, ItemComponentArray, TombstoneComponentArray, TribeMemberComponentArray, WanderAIComponentArray, ZombieComponentArray } from "../../components/ComponentArray";
 import { HealthComponent, addLocalInvulnerabilityHash, canDamageEntity, damageEntity, healEntity } from "../../components/HealthComponent";
 import { ZombieComponent } from "../../components/ZombieComponent";
 import CircularHitbox from "../../hitboxes/CircularHitbox";
@@ -73,14 +73,14 @@ export function createZombie(position: Point, isGolden: boolean, tombstoneID: nu
    const inventoryComponent = new InventoryComponent();
    InventoryComponentArray.addComponent(zombie.id, inventoryComponent);
 
-   const inventory = createNewInventory(inventoryComponent, "handSlot", 1, 1, true);
+   const inventory = createNewInventory(inventoryComponent, InventoryName.handSlot, 1, 1, true);
 
    const inventoryUseComponent = new InventoryUseComponent();
    InventoryUseComponentArray.addComponent(zombie.id, inventoryUseComponent);
    inventoryUseComponent.addInventoryUseInfo(inventory);
 
    if (Math.random() < 0.7) {
-      const offhandInventory = createNewInventory(inventoryComponent, "offhand", 0, 0, false);
+      const offhandInventory = createNewInventory(inventoryComponent, InventoryName.offhand, 0, 0, false);
       inventoryUseComponent.addInventoryUseInfo(offhandInventory);
    }
    
@@ -129,7 +129,7 @@ const doMeleeAttack = (zombie: Entity, target: Entity): void => {
 
    // Register the hit
    if (attackTargets.includes(target)) {
-      attemptAttack(zombie, target, 1, "handSlot");
+      attemptAttack(zombie, target, 1, InventoryName.handSlot);
 
       // Reset attack cooldown
       const zombieComponent = ZombieComponentArray.getComponent(zombie.id);
@@ -150,9 +150,9 @@ const doBiteAttack = (zombie: Entity, target: Entity): void => {
    zombieComponent.attackCooldownTicks = Math.floor(randFloat(3, 4) * Settings.TPS);
 
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(zombie.id);
-   getInventoryUseInfo(inventoryUseComponent, "handSlot").lastAttackTicks = Board.ticks;
-   if (hasInventoryUseInfo(inventoryUseComponent, "offhand")) {
-      getInventoryUseInfo(inventoryUseComponent, "offhand").lastAttackTicks = Board.ticks;
+   getInventoryUseInfo(inventoryUseComponent, InventoryName.handSlot).lastAttackTicks = Board.ticks;
+   if (hasInventoryUseInfo(inventoryUseComponent, InventoryName.offhand)) {
+      getInventoryUseInfo(inventoryUseComponent, InventoryName.offhand).lastAttackTicks = Board.ticks;
    }
 }
 
@@ -160,7 +160,7 @@ const doAttack = (zombie: Entity, target: Entity): void => {
    const inventoryComponent = InventoryComponentArray.getComponent(zombie.id);
 
    // If holding an item, do a melee attack
-   const handInventory = getInventory(inventoryComponent, "handSlot");
+   const handInventory = getInventory(inventoryComponent, InventoryName.handSlot);
    if (handInventory.itemSlots.hasOwnProperty(1)) {
       doMeleeAttack(zombie, target);
    } else {
@@ -300,6 +300,14 @@ export function tickZombie(zombie: Entity): void {
    }
 }
 
+const tribesmanIsWearingMeatSuit = (entityID: number): boolean => {
+   const inventoryComponent = InventoryComponentArray.getComponent(entityID);
+   const armourInventory = getInventory(inventoryComponent, InventoryName.armourSlot);
+
+   const armour = armourInventory.itemSlots[1];
+   return typeof armour === "undefined" || armour.type === ItemType.meat_suit;
+}
+
 const shouldAttackEntity = (zombie: Entity, entity: Entity): boolean => {
    if (!HealthComponentArray.hasComponent(entity.id)) {
       return false;
@@ -312,14 +320,7 @@ const shouldAttackEntity = (zombie: Entity, entity: Entity): boolean => {
    }
 
    // Attack tribe members, but only if they aren't wearing a meat suit
-   if (entity.type === EntityType.player || entity.type === EntityType.tribeWorker || entity.type === EntityType.tribeWarrior) {
-      const inventoryComponent = InventoryComponentArray.getComponent(entity.id);
-      const armourInventory = getInventory(inventoryComponent, "armourSlot");
-      if (armourInventory.itemSlots.hasOwnProperty(1)) {
-         if (armourInventory.itemSlots[1].type === ItemType.meat_suit) {
-            return false;
-         }
-      }
+   if (TribeMemberComponentArray.hasComponent(entity.id) && !tribesmanIsWearingMeatSuit(entity.id)) {
       return true;
    }
 
@@ -338,23 +339,11 @@ const shouldHurtEntity = (zombie: Entity, entity: Entity): boolean => {
    }
 
    // Attack tribe members, but only if they aren't wearing a meat suit
-   if (entity.type === EntityType.player || entity.type === EntityType.tribeWorker || entity.type === EntityType.tribeWarrior) {
-      const inventoryComponent = InventoryComponentArray.getComponent(entity.id);
-      const armourInventory = getInventory(inventoryComponent, "armourSlot");
-      if (armourInventory.itemSlots.hasOwnProperty(1)) {
-         if (armourInventory.itemSlots[1].type === ItemType.meat_suit) {
-            return false;
-         }
-      }
+   if (TribeMemberComponentArray.hasComponent(entity.id) && !tribesmanIsWearingMeatSuit(entity.id)) {
       return true;
    }
 
-   return entity.type === EntityType.tribeTotem
-      || entity.type === EntityType.workerHut
-      || entity.type === EntityType.warriorHut
-      || entity.type === EntityType.barrel
-      || entity.type === EntityType.researchBench
-      || STRUCTURE_TYPES.includes(entity.type as StructureType);
+   return STRUCTURE_TYPES.includes(entity.type as StructureType);
 }
 
 export function onZombieCollision(zombie: Entity, collidingEntity: Entity): void {
@@ -403,7 +392,7 @@ export function onZombieHurt(zombie: Entity, attackingEntity: Entity): void {
 
 export function onZombieDeath(zombie: Entity): void {
    const inventoryComponent = InventoryComponentArray.getComponent(zombie.id);
-   dropInventory(zombie, inventoryComponent, "handSlot", 38);
+   dropInventory(zombie, inventoryComponent, InventoryName.handSlot, 38);
 
    const zombieComponent = ZombieComponentArray.getComponent(zombie.id);
    if (zombieComponent.tombstoneID !== 0 && TombstoneComponentArray.hasComponent(zombieComponent.tombstoneID)) {

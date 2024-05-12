@@ -2,7 +2,7 @@ import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { TRIBESMAN_TITLE_RECORD, TitleGenerationInfo, TribesmanTitle } from "webgl-test-shared/dist/titles";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { TribeType } from "webgl-test-shared/dist/tribes";
-import { ITEM_TYPE_RECORD } from "webgl-test-shared/dist/items";
+import { ITEM_TYPE_RECORD, InventoryName } from "webgl-test-shared/dist/items";
 import { useCallback } from "react";
 import { getItemTypeImage } from "../../../client-item-info";
 import Tribesman from "../../../entities/Tribesman";
@@ -232,21 +232,23 @@ const TribesmanInteractMenu = () => {
    const inventoryUseComponent = tribesman.getServerComponent(ServerComponentType.inventoryUse);
    const tribeComponent = tribesman.getServerComponent(ServerComponentType.tribe);
 
-   const backpackSlotInventory = inventoryComponent.getInventory("backpackSlot");
-   const armourSlotInventory = inventoryComponent.getInventory("armourSlot");
+   const backpackSlotInventory = inventoryComponent.getInventory(InventoryName.backpackSlot);
+   const armourSlotInventory = inventoryComponent.getInventory(InventoryName.armourSlot);
 
    // @Cleanup: Copy-pasted from hotbar
 
    const clickBackpackSlot = useCallback((e: MouseEvent): void => {
       // Stop the player placing a non-backpack item in the backpack slot
-      if (definiteGameState.heldItemSlot.itemSlots.hasOwnProperty(1) && !backpackItemTypes.includes(definiteGameState.heldItemSlot.itemSlots[1].type)) {
+      const heldItem = definiteGameState.heldItemSlot.itemSlots[1];
+      if (typeof heldItem !== "undefined" && !backpackItemTypes.includes(heldItem.type)) {
          return;
       }
       leftClickItemSlot(e, tribesman.id, backpackSlotInventory, 1);
    }, [backpackSlotInventory, tribesman.id]);
 
    const clickArmourItemSlot = useCallback((e: MouseEvent): void => {
-      if (definiteGameState.heldItemSlot.itemSlots.hasOwnProperty(1) && ITEM_TYPE_RECORD[definiteGameState.heldItemSlot.itemSlots[1].type] !== "armour") {
+      const heldItem = definiteGameState.heldItemSlot.itemSlots[1];
+      if (typeof heldItem !== "undefined" && ITEM_TYPE_RECORD[heldItem.type] !== "armour") {
          return;
       }
       leftClickItemSlot(e, tribesman.id, armourSlotInventory, 1);
@@ -255,8 +257,9 @@ const TribesmanInteractMenu = () => {
    // @Copy and paste from hotbar
 
    let backpackSlotElement: JSX.Element;
-   if (backpackSlotInventory.itemSlots.hasOwnProperty(1)) {
-      const image = getItemTypeImage(backpackSlotInventory.itemSlots[1].type);
+   const backpackItem = backpackSlotInventory.itemSlots[1];
+   if (typeof backpackItem !== "undefined") {
+      const image = getItemTypeImage(backpackItem.type);
       backpackSlotElement = <ItemSlot className="armour-slot" onClick={clickBackpackSlot} isSelected={false} picturedItemImageSrc={image} />
    } else {
       const imageSrc = require("../../../images/miscellaneous/backpack-wireframe.png");
@@ -264,8 +267,9 @@ const TribesmanInteractMenu = () => {
    }
 
    let armourItemSlotElement: JSX.Element;
-   if (armourSlotInventory.itemSlots.hasOwnProperty(1)) {
-      const image = getItemTypeImage(armourSlotInventory.itemSlots[1].type);
+   const armourItem = backpackSlotInventory.itemSlots[1];
+   if (typeof armourItem !== "undefined") {
+      const image = getItemTypeImage(armourItem.type);
       armourItemSlotElement = <ItemSlot className="backpack-slot" onClick={clickArmourItemSlot} isSelected={false} picturedItemImageSrc={image} />
    } else {
       const imageSrc = require("../../../images/miscellaneous/armour-wireframe.png");
@@ -276,7 +280,7 @@ const TribesmanInteractMenu = () => {
       <div className="flex-container space-around">
          {backpackSlotInventory.itemSlots.hasOwnProperty(1) ? (
             <div>
-               <InventoryContainer isBordered className="backpack" entityID={tribesman.id} inventory={inventoryComponent.getInventory("backpack")} />
+               <InventoryContainer isBordered className="backpack" entityID={tribesman.id} inventory={inventoryComponent.getInventory(InventoryName.backpack)} />
             </div>
          ) : undefined}
          <div>
@@ -286,7 +290,7 @@ const TribesmanInteractMenu = () => {
 
       {tribeComponent.tribeID === Game.tribe.id ? (
          <div className="hotbar-container">
-            <InventoryContainer isBordered className="hotbar" entityID={tribesman.id} inventory={inventoryComponent.getInventory("hotbar")} selectedItemSlot={inventoryUseComponent.getUseInfo("hotbar").selectedItemSlot} />
+            <InventoryContainer isBordered className="hotbar" entityID={tribesman.id} inventory={inventoryComponent.getInventory(InventoryName.hotbar)} selectedItemSlot={inventoryUseComponent.getUseInfo(InventoryName.hotbar).selectedItemSlot} />
             <div className="inventory">
                {backpackSlotElement}
                {armourItemSlotElement}

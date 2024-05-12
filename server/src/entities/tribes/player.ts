@@ -3,7 +3,7 @@ import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/c
 import { PlanterBoxPlant, BuildingMaterial, MATERIAL_TO_ITEM_MAP } from "webgl-test-shared/dist/components";
 import { CRAFTING_RECIPES, ItemRequirements } from "webgl-test-shared/dist/crafting-recipes";
 import { EntityType, EntityTypeString, LimbAction } from "webgl-test-shared/dist/entities";
-import { ItemType, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, ConsumableItemInfo, ConsumableItemCategory, BowItemInfo } from "webgl-test-shared/dist/items";
+import { ItemType, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, ConsumableItemInfo, ConsumableItemCategory, BowItemInfo, InventoryName } from "webgl-test-shared/dist/items";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { TechInfo, TechID, getTechByID } from "webgl-test-shared/dist/techs";
 import { TRIBE_INFO_RECORD, TribeType } from "webgl-test-shared/dist/tribes";
@@ -12,7 +12,7 @@ import Entity from "../../Entity";
 import { attemptAttack, calculateAttackTarget, calculateBlueprintWorkTarget, calculateRadialAttackTargets, calculateRepairTarget, getAvailableCraftingStations, onTribeMemberHurt, repairBuilding, tickTribeMember, tribeMemberCanPickUpItem, useItem } from "./tribe-member";
 import Tribe from "../../Tribe";
 import { BuildingMaterialComponentArray, HealthComponentArray, HutComponentArray, InventoryComponentArray, InventoryUseComponentArray, ItemComponentArray, PlayerComponentArray, SpikesComponentArray, TribeComponentArray, TribeMemberComponentArray, TunnelComponentArray } from "../../components/ComponentArray";
-import { InventoryComponent, addItemToSlot, recipeCraftingStationIsAvailable, consumeItemFromSlot, consumeItemType, consumeItemTypeFromInventory, countItemType, craftRecipe, createNewInventory, dropInventory, getInventory, getItem, inventoryComponentCanAffordRecipe, pickupItemEntity, addItem } from "../../components/InventoryComponent";
+import { InventoryComponent, addItemToSlot, recipeCraftingStationIsAvailable, consumeItemFromSlot, consumeItemType, consumeItemTypeFromInventory, countItemType, craftRecipe, createNewInventory, dropInventory, getInventory, inventoryComponentCanAffordRecipe, pickupItemEntity, addItem } from "../../components/InventoryComponent";
 import Board from "../../Board";
 import { itemEntityCanBePickedUp } from "../item-entity";
 import { HealthComponent } from "../../components/HealthComponent";
@@ -60,16 +60,16 @@ export function createPlayer(position: Point, tribe: Tribe): Entity {
    const inventoryComponent = new InventoryComponent();
    InventoryComponentArray.addComponent(player.id, inventoryComponent);
 
-   const hotbarInventory = createNewInventory(inventoryComponent, "hotbar", Settings.INITIAL_PLAYER_HOTBAR_SIZE, 1, true);
+   const hotbarInventory = createNewInventory(inventoryComponent, InventoryName.hotbar, Settings.INITIAL_PLAYER_HOTBAR_SIZE, 1, true);
    inventoryUseComponent.addInventoryUseInfo(hotbarInventory);
-   const offhandInventory = createNewInventory(inventoryComponent, "offhand", 1, 1, false);
+   const offhandInventory = createNewInventory(inventoryComponent, InventoryName.offhand, 1, 1, false);
    inventoryUseComponent.addInventoryUseInfo(offhandInventory);
-   createNewInventory(inventoryComponent, "craftingOutputSlot", 1, 1, false);
-   createNewInventory(inventoryComponent, "heldItemSlot", 1, 1, false);
-   createNewInventory(inventoryComponent, "armourSlot", 1, 1, false);
-   createNewInventory(inventoryComponent, "backpackSlot", 1, 1, false);
-   createNewInventory(inventoryComponent, "gloveSlot", 1, 1, false);
-   createNewInventory(inventoryComponent, "backpack", 0, 0, false);
+   createNewInventory(inventoryComponent, InventoryName.craftingOutputSlot, 1, 1, false);
+   createNewInventory(inventoryComponent, InventoryName.heldItemSlot, 1, 1, false);
+   createNewInventory(inventoryComponent, InventoryName.armourSlot, 1, 1, false);
+   createNewInventory(inventoryComponent, InventoryName.backpackSlot, 1, 1, false);
+   createNewInventory(inventoryComponent, InventoryName.gloveSlot, 1, 1, false);
+   createNewInventory(inventoryComponent, InventoryName.backpack, 0, 0, false);
 
    // @Temporary
    // addItem(inventoryComponent, createItem(ItemType.gardening_gloves, 1));
@@ -85,6 +85,7 @@ export function createPlayer(position: Point, tribe: Tribe): Entity {
    addItem(inventoryComponent, createItem(ItemType.wooden_fence, 99));
    addItem(inventoryComponent, createItem(ItemType.wooden_hammer, 1));
    addItem(inventoryComponent, createItem(ItemType.wood, 10));
+   addItem(inventoryComponent, createItem(ItemType.wooden_wall, 50));
    
    // setTimeout(() => {
    //    awardTitle(player, TribesmanTitle.yetisbane);
@@ -145,10 +146,10 @@ export function onPlayerHurt(player: Entity, collidingEntity: Entity): void {
 export function onPlayerDeath(player: Entity): void {
    const inventoryComponent = InventoryComponentArray.getComponent(player.id);
    
-   dropInventory(player, inventoryComponent, "hotbar", 38);
-   dropInventory(player, inventoryComponent, "armourSlot", 38);
-   dropInventory(player, inventoryComponent, "backpackSlot", 38);
-   dropInventory(player, inventoryComponent, "offhand", 38);
+   dropInventory(player, inventoryComponent, InventoryName.hotbar, 38);
+   dropInventory(player, inventoryComponent, InventoryName.armourSlot, 38);
+   dropInventory(player, inventoryComponent, InventoryName.backpackSlot, 38);
+   dropInventory(player, inventoryComponent, InventoryName.offhand, 38);
 }
 
 export function onPlayerJoin(player: Entity): void {
@@ -174,36 +175,40 @@ export function processPlayerCraftingPacket(player: Entity, recipeIndex: number)
       return;
    }
 
-   if (inventoryComponentCanAffordRecipe(inventoryComponent, craftingRecipe, "craftingOutputSlot")) {
-      craftRecipe(inventoryComponent, craftingRecipe, "craftingOutputSlot");
+   if (inventoryComponentCanAffordRecipe(inventoryComponent, craftingRecipe, InventoryName.craftingOutputSlot)) {
+      craftRecipe(inventoryComponent, craftingRecipe, InventoryName.craftingOutputSlot);
    }
 }
 
-export function processItemPickupPacket(player: Entity, entityID: number, inventoryName: string, itemSlot: number, amount: number): void {
+export function processItemPickupPacket(player: Entity, entityID: number, inventoryName: InventoryName, itemSlot: number, amount: number): void {
    if (!Board.entityRecord.hasOwnProperty(entityID)) {
       return;
    }
 
    const inventoryComponent = InventoryComponentArray.getComponent(player.id);
+   const heldItemInventory = getInventory(inventoryComponent, InventoryName.heldItemSlot);
    
    // Don't pick up the item if there is already a held item
-   if (getInventory(inventoryComponent, "heldItemSlot").itemSlots.hasOwnProperty(1)) {
+   if (typeof heldItemInventory.itemSlots[1] !== "undefined") {
       return;
    }
 
    const targetInventoryComponent = InventoryComponentArray.getComponent(entityID);
+   const targetInventory = getInventory(targetInventoryComponent, inventoryName);
 
-   const pickedUpItem = getItem(targetInventoryComponent, inventoryName, itemSlot);
-   if (pickedUpItem === null) return;
+   const pickedUpItem = targetInventory.itemSlots[itemSlot];
+   if (typeof pickedUpItem === "undefined") {
+      return;
+   }
 
    // Hold the item
-   addItemToSlot(inventoryComponent, "heldItemSlot", 1, pickedUpItem.type, amount);
+   heldItemInventory.addItem(pickedUpItem, 1);
 
    // Remove the item from its previous inventory
    consumeItemFromSlot(targetInventoryComponent, inventoryName, itemSlot, amount);
 }
 
-export function processItemReleasePacket(player: Entity, entityID: number, inventoryName: string, itemSlot: number, amount: number): void {
+export function processItemReleasePacket(player: Entity, entityID: number, inventoryName: InventoryName, itemSlot: number, amount: number): void {
    if (!Board.entityRecord.hasOwnProperty(entityID)) {
       return;
    }
@@ -211,34 +216,39 @@ export function processItemReleasePacket(player: Entity, entityID: number, inven
    const inventoryComponent = InventoryComponentArray.getComponent(player.id);
 
    // Don't release an item if there is no held item
-   const heldItemInventory = getInventory(inventoryComponent, "heldItemSlot");
-   if (!heldItemInventory.itemSlots.hasOwnProperty(1)) return;
+   const heldItemInventory = getInventory(inventoryComponent, InventoryName.heldItemSlot);
+   const heldItem = heldItemInventory.itemSlots[1];
+   if (typeof heldItem === "undefined") {
+      return;
+   }
 
    const targetInventoryComponent = InventoryComponentArray.getComponent(entityID);
 
-   const heldItem = heldItemInventory.itemSlots[1];
    
    // Add the item to the inventory
    const amountAdded = addItemToSlot(targetInventoryComponent, inventoryName, itemSlot, heldItem.type, amount);
 
    // If all of the item was added, clear the held item
-   consumeItemTypeFromInventory(inventoryComponent, "heldItemSlot", heldItem.type, amountAdded);
+   consumeItemTypeFromInventory(inventoryComponent, InventoryName.heldItemSlot, heldItem.type, amountAdded);
 }
 
 export function processItemUsePacket(player: Entity, itemSlot: number): void {
    const inventoryComponent = InventoryComponentArray.getComponent(player.id);
+   const hotbarInventory = getInventory(inventoryComponent, InventoryName.hotbar);
 
-   const item = getItem(inventoryComponent, "hotbar", itemSlot);
-   if (item !== null)  {
-      useItem(player, item, "hotbar", itemSlot);
+   const item = hotbarInventory.itemSlots[itemSlot];
+   if (typeof item !== "undefined")  {
+      useItem(player, item, InventoryName.hotbar, itemSlot);
    }
 }
 
 /** Returns whether the swing was successfully swang or not */
-const attemptSwing = (player: Entity, attackTargets: ReadonlyArray<Entity>, itemSlot: number, inventoryName: string): boolean => {
+const attemptSwing = (player: Entity, attackTargets: ReadonlyArray<Entity>, itemSlot: number, inventoryName: InventoryName): boolean => {
    const inventoryComponent = InventoryComponentArray.getComponent(player.id);
-   const item = getItem(inventoryComponent, inventoryName, itemSlot);
-   if (item !== null && ITEM_TYPE_RECORD[item.type] === "hammer") {
+   const inventory = getInventory(inventoryComponent, inventoryName);
+
+   const item = inventory.itemSlots[itemSlot];
+   if (typeof item !== "undefined" && ITEM_TYPE_RECORD[item.type] === "hammer") {
       // First look for friendly buildings to repair
       const repairTarget = calculateRepairTarget(player, attackTargets);
       if (repairTarget !== null) {
@@ -272,7 +282,7 @@ const attemptSwing = (player: Entity, attackTargets: ReadonlyArray<Entity>, item
 export function processPlayerAttackPacket(player: Entity, attackPacket: AttackPacket): void {
    const targets = calculateRadialAttackTargets(player, ATTACK_OFFSET, ATTACK_RADIUS);
 
-   const didSwingWithRightHand = attemptSwing(player, targets, attackPacket.itemSlot, "hotbar");
+   const didSwingWithRightHand = attemptSwing(player, targets, attackPacket.itemSlot, InventoryName.hotbar);
    if (didSwingWithRightHand) {
       return;
    }
@@ -280,19 +290,23 @@ export function processPlayerAttackPacket(player: Entity, attackPacket: AttackPa
    // If a barbarian, attack with offhand
    const tribeComponent = TribeComponentArray.getComponent(player.id);
    if (tribeComponent.tribe.type === TribeType.barbarians) {
-      attemptSwing(player, targets, 1, "offhand");
+      attemptSwing(player, targets, 1, InventoryName.offhand);
    }
 }
 
-export function startEating(player: Entity, inventoryName: string): boolean {
+// @Cleanup: ton of copy and paste between these functions
+
+export function startEating(player: Entity, inventoryName: InventoryName): boolean {
    const inventoryComponent = InventoryComponentArray.getComponent(player.id);
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(player.id);
 
    const useInfo = getInventoryUseInfo(inventoryUseComponent, inventoryName);
    
+   const inventory = getInventory(inventoryComponent, inventoryName);
+   const foodItem = inventory.itemSlots[useInfo.selectedItemSlot];
+   
    // Reset the food timer so that the food isn't immediately eaten
-   const foodItem = getItem(inventoryComponent, inventoryName, useInfo.selectedItemSlot);
-   if (foodItem !== null) {
+   if (typeof foodItem !== "undefined") {
       const itemInfo = ITEM_INFO_RECORD[foodItem.type] as ConsumableItemInfo;
       useInfo.foodEatingTimer = itemInfo.consumeTime;
 
@@ -306,15 +320,17 @@ export function startEating(player: Entity, inventoryName: string): boolean {
    return false;
 }
 
-export function startChargingBow(player: Entity, inventoryName: string): void {
+export function startChargingBow(player: Entity, inventoryName: InventoryName): void {
    const inventoryComponent = InventoryComponentArray.getComponent(player.id);
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(player.id);
 
    const useInfo = getInventoryUseInfo(inventoryUseComponent, inventoryName);
 
+   const inventory = getInventory(inventoryComponent, inventoryName);
+   const bow = inventory.itemSlots[useInfo.selectedItemSlot];
+
    // Reset the cooldown so the bow doesn't fire immediately
-   const bow = getItem(inventoryComponent, inventoryName, useInfo.selectedItemSlot);
-   if (bow !== null) {
+   if (typeof bow !== "undefined") {
       const itemInfo = ITEM_INFO_RECORD[bow.type] as BowItemInfo;
       useInfo.bowCooldownTicks = itemInfo.shotCooldownTicks;
       useInfo.lastBowChargeTicks = Board.ticks;
@@ -323,30 +339,34 @@ export function startChargingBow(player: Entity, inventoryName: string): void {
    useInfo.action = LimbAction.chargeBow;
 }
 
-export function startChargingSpear(player: Entity, inventoryName: string): void {
+export function startChargingSpear(player: Entity, inventoryName: InventoryName): void {
    const inventoryComponent = InventoryComponentArray.getComponent(player.id);
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(player.id);
 
    const useInfo = getInventoryUseInfo(inventoryUseComponent, inventoryName);
 
+   const inventory = getInventory(inventoryComponent, inventoryName);
+   const spear = inventory.itemSlots[useInfo.selectedItemSlot];
+
    // Reset the cooldown so the battleaxe doesn't fire immediately
-   const spear = getItem(inventoryComponent, inventoryName, useInfo.selectedItemSlot);
-   if (spear !== null) {
+   if (typeof spear !== "undefined") {
       useInfo.lastSpearChargeTicks = Board.ticks;
    }
    
    useInfo.action = LimbAction.chargeSpear;
 }
 
-export function startChargingBattleaxe(player: Entity, inventoryName: string): void {
+export function startChargingBattleaxe(player: Entity, inventoryName: InventoryName): void {
    const inventoryComponent = InventoryComponentArray.getComponent(player.id);
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(player.id);
 
    const useInfo = getInventoryUseInfo(inventoryUseComponent, inventoryName);
 
+   const inventory = getInventory(inventoryComponent, inventoryName);
+   const battleaxe = inventory.itemSlots[useInfo.selectedItemSlot];
+
    // Reset the cooldown so the battleaxe doesn't fire immediately
-   const battleaxe = getItem(inventoryComponent, inventoryName, useInfo.selectedItemSlot);
-   if (battleaxe !== null) {
+   if (typeof battleaxe !== "undefined") {
       useInfo.lastBattleaxeChargeTicks = Board.ticks;
    }
    
@@ -397,15 +417,12 @@ export function processTechUnlock(player: Entity, techID: TechID): void {
    const tribeComponent = TribeComponentArray.getComponent(player.id);
    const inventoryComponent = InventoryComponentArray.getComponent(player.id);
 
-   const hotbarInventory = getInventory(inventoryComponent, "hotbar");
+   const hotbarInventory = getInventory(inventoryComponent, InventoryName.hotbar);
    
    // Consume any available items
-   for (let itemSlot = 1; itemSlot <= hotbarInventory.width * hotbarInventory.height; itemSlot++) {
-      if (!hotbarInventory.itemSlots.hasOwnProperty(itemSlot)) {
-         continue;
-      }
+   for (let i = 0; i < hotbarInventory.items.length; i++) {
+      const item = hotbarInventory.items[i];
 
-      const item = hotbarInventory.itemSlots[itemSlot];
       const itemProgress = tribeComponent.tribe.techTreeUnlockProgress[techID]?.itemProgress || {};
       if (itemIsNeededInTech(tech, itemProgress, item.type)) {
          const amountNeeded = tech.researchItemRequirements[item.type]!;
@@ -415,11 +432,13 @@ export function processTechUnlock(player: Entity, techID: TechID): void {
 
          item.count -= amountToAdd;
          if (item.count === 0) {
-            delete hotbarInventory.itemSlots[itemSlot];
+            const itemSlot = hotbarInventory.getItemSlot(item);
+            hotbarInventory.removeItem(itemSlot);
          }
 
-         if (tribeComponent.tribe.techTreeUnlockProgress.hasOwnProperty(techID)) {
-            tribeComponent.tribe.techTreeUnlockProgress[techID]!.itemProgress[item.type] = amountCommitted + amountToAdd;
+         const unlockProgress = tribeComponent.tribe.techTreeUnlockProgress[techID];
+         if (typeof unlockProgress !== "undefined") {
+            unlockProgress.itemProgress[item.type] = amountCommitted + amountToAdd;
          } else {
             tribeComponent.tribe.techTreeUnlockProgress[techID] = {
                itemProgress: {

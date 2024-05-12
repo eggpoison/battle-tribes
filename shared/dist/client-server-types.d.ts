@@ -1,7 +1,7 @@
 import { BuildingPlanData, BuildingSafetyData, SafetyNodeData, TribeWallData, WallConnectionData } from "./ai-building-types";
 import { BlueprintType, EntityComponentsData } from "./components";
 import { EntityType, LimbAction } from "./entities";
-import { Inventory } from "./items";
+import { Inventory, InventoryName } from "./items";
 import { StatusEffect } from "./status-effects";
 import { EnemyTribeData, PlayerTribeData, TechID } from "./techs";
 import { Biome, TileType } from "./tiles";
@@ -126,7 +126,7 @@ export interface GameDataPacket {
     readonly enemyTribesData: ReadonlyArray<EnemyTribeData>;
     readonly hasFrostShield: boolean;
     readonly pickedUpItem: boolean;
-    readonly hotbarCrossbowLoadProgressRecord: Record<number, number>;
+    readonly hotbarCrossbowLoadProgressRecord: Partial<Record<number, number>>;
     readonly titleOffer: TribesmanTitle | null;
     readonly visiblePathfindingNodeOccupances: ReadonlyArray<PathfindingNodeIndex>;
     readonly visibleSafetyNodes: ReadonlyArray<SafetyNodeData>;
@@ -297,8 +297,8 @@ export interface ClientToServerEvents {
     chat_message: (message: string) => void;
     player_movement: (position: [number, number], movementHash: number) => void;
     crafting_packet: (recipeIndex: number) => void;
-    item_pickup: (entityID: number, inventoryName: string, itemSlot: number, amount: number) => void;
-    item_release: (entityID: number, inventoryName: string, itemSlot: number, amount: number) => void;
+    item_pickup: (entityID: number, inventoryName: InventoryName, itemSlot: number, amount: number) => void;
+    item_release: (entityID: number, inventoryName: InventoryName, itemSlot: number, amount: number) => void;
     attack_packet: (attackPacket: AttackPacket) => void;
     item_use_packet: (itemSlot: number) => void;
     held_item_drop: (dropAmount: number, dropDirection: number) => void;

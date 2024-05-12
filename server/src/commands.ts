@@ -154,11 +154,10 @@ export function registerCommand(command: string, player: Entity): void {
       case "give": {
          const itemType = commandComponents[1];
 
-         if (!Object.keys(ItemType).includes(itemType.toString())) {
-            break;
-         }
+         // @Incomplete: validate item type
 
-         const confirmedItemType = ItemType[itemType as keyof typeof ItemType];
+         // @Bug: doesn't work.
+         const confirmedItemType = Number(itemType) as ItemType;
 
          if (numParameters === 1) {
             giveItem(player, confirmedItemType, 1);

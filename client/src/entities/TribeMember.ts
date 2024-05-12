@@ -4,7 +4,7 @@ import { TribeType } from "webgl-test-shared/dist/tribes";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { EntityData, HitData } from "webgl-test-shared/dist/client-server-types";
 import { lerp, randFloat, randInt, randItem } from "webgl-test-shared/dist/utils";
-import { ItemType } from "webgl-test-shared/dist/items";
+import { InventoryName, ItemType } from "webgl-test-shared/dist/items";
 import { TileType } from "webgl-test-shared/dist/tiles";
 import RenderPart from "../render-parts/RenderPart";
 import Entity, { getFrameProgress } from "../Entity";
@@ -238,7 +238,7 @@ abstract class TribeMember extends Entity {
 
       // If the tribesman is wearing a leaf suit, create leaf particles
       const inventoryComponent = this.getServerComponent(ServerComponentType.inventory);
-      const armourInventory = inventoryComponent.getInventory("armourSlot");
+      const armourInventory = inventoryComponent.getInventory(InventoryName.armourSlot);
       const armour = armourInventory.itemSlots[1];
       if (typeof armour !== "undefined" && armour.type === ItemType.leaf_suit) {
          for (let i = 0; i < 3; i++) {
@@ -276,15 +276,16 @@ abstract class TribeMember extends Entity {
 
    protected overrideTileMoveSpeedMultiplier(): number | null {
       const inventoryComponent = this.getServerComponent(ServerComponentType.inventory);
-      const armourSlotInventory = inventoryComponent.getInventory("armourSlot");
+      const armourSlotInventory = inventoryComponent.getInventory(InventoryName.armourSlot);
 
-      if (armourSlotInventory.itemSlots.hasOwnProperty(1)) {
+      const armour = armourSlotInventory.itemSlots[1];
+      if (typeof armour !== "undefined") {
          // If snow armour is equipped, move at normal speed on snow tiles
-         if ((armourSlotInventory.itemSlots[1].type === ItemType.frost_armour || armourSlotInventory.itemSlots[1].type === ItemType.deepfrost_armour) && this.tile.type === TileType.snow) {
+         if ((armour.type === ItemType.frost_armour || armour.type === ItemType.deepfrost_armour) && this.tile.type === TileType.snow) {
             return 1;
          }
          // If fishlord suit is equipped, move at normal speed on snow tiles
-         if (armourSlotInventory.itemSlots[1].type === ItemType.fishlord_suit && this.tile.type === TileType.water) {
+         if (armour.type === ItemType.fishlord_suit && this.tile.type === TileType.water) {
             return 1;
          }
       }

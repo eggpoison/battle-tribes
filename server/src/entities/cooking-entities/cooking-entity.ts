@@ -1,5 +1,5 @@
 import { EntityType } from "webgl-test-shared/dist/entities";
-import { ItemType } from "webgl-test-shared/dist/items";
+import { InventoryName, ItemType, ItemTypeString } from "webgl-test-shared/dist/items";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { CookingIngredientItemType, FuelSourceItemType } from "webgl-test-shared/dist/cooking-info";
 import Entity from "../../Entity";
@@ -70,32 +70,35 @@ export function tickCookingEntity(entity: Entity): void {
    const cookingEntityComponent = CookingComponentArray.getComponent(entity.id);
    const inventoryComponent = InventoryComponentArray.getComponent(entity.id);
 
-   const fuelInventory = getInventory(inventoryComponent, "fuelInventory");
-   const ingredientInventory = getInventory(inventoryComponent, "ingredientInventory");
+   const fuelInventory = getInventory(inventoryComponent, InventoryName.fuelInventory);
+   const ingredientInventory = getInventory(inventoryComponent, InventoryName.ingredientInventory);
    
-   if (ingredientInventory.itemSlots.hasOwnProperty(1)) {
-      cookingEntityComponent.currentRecipe = getHeatingRecipeByIngredientType(entity.type, ingredientInventory.itemSlots[1].type);
+   const ingredient = ingredientInventory.itemSlots[1];
+   if (typeof ingredient !== "undefined") {
+      cookingEntityComponent.currentRecipe = getHeatingRecipeByIngredientType(entity.type, ingredient.type);
    }
    
    if (cookingEntityComponent.currentRecipe !== null) {
       // If the heating entity needs more heat, attempt to use a fuel item
-      if (cookingEntityComponent.remainingHeatSeconds <= 0 && fuelInventory.itemSlots.hasOwnProperty(1)) {
+      if (cookingEntityComponent.remainingHeatSeconds <= 0) {
          const fuel = fuelInventory.itemSlots[1];
-         if (!FUEL_SOURCES.hasOwnProperty(fuel.type)) {
-            console.warn(`Item type '${ItemType[fuel.type]}' is not a valid fuel type.`);
-            return;
+         if (typeof fuel !== "undefined") {
+            if (!FUEL_SOURCES.hasOwnProperty(fuel.type)) {
+               console.warn(`Item type '${ItemTypeString[fuel.type]}' is not a valid fuel type.`);
+               return;
+            }
+   
+            cookingEntityComponent.remainingHeatSeconds += FUEL_SOURCES[fuel.type as keyof typeof FUEL_SOURCES];
+            consumeItemTypeFromInventory(inventoryComponent, InventoryName.fuelInventory, fuel.type, 1);
          }
-
-         consumeItemTypeFromInventory(inventoryComponent, "fuelInventory", fuelInventory.itemSlots[1].type, 1);
-         cookingEntityComponent.remainingHeatSeconds += FUEL_SOURCES[fuel.type as keyof typeof FUEL_SOURCES];
       }
 
       if (cookingEntityComponent.remainingHeatSeconds > 0) {
          cookingEntityComponent.heatingTimer += Settings.I_TPS;
          if (cookingEntityComponent.heatingTimer >= cookingEntityComponent.currentRecipe.cookTime) {
             // Remove from ingredient inventory and add to output inventory
-            consumeItemTypeFromInventory(inventoryComponent, "ingredientInventory", cookingEntityComponent.currentRecipe.ingredientType, cookingEntityComponent.currentRecipe.ingredientAmount);
-            addItemToInventory(inventoryComponent, "outputInventory", cookingEntityComponent.currentRecipe.productType, cookingEntityComponent.currentRecipe.productAmount);
+            consumeItemTypeFromInventory(inventoryComponent, InventoryName.ingredientInventory, cookingEntityComponent.currentRecipe.ingredientType, cookingEntityComponent.currentRecipe.ingredientAmount);
+            addItemToInventory(inventoryComponent, InventoryName.outputInventory, cookingEntityComponent.currentRecipe.productType, cookingEntityComponent.currentRecipe.productAmount);
 
             cookingEntityComponent.heatingTimer = 0;
             cookingEntityComponent.currentRecipe = null;

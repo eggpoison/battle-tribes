@@ -1,4 +1,4 @@
-import { BallistaAmmoType, Inventory, ItemType } from "webgl-test-shared/dist/items";
+import { BallistaAmmoType, Inventory, InventoryName, ItemType } from "webgl-test-shared/dist/items";
 import { AMMO_INFO_RECORD, ServerComponentType } from "webgl-test-shared/dist/components";
 import { Settings } from "webgl-test-shared/dist/settings";
 import Ballista from "../../../entities/Ballista";
@@ -45,7 +45,7 @@ const AmmoBoxInventory = () => {
    const ballista = getSelectedEntity() as Ballista;
    
    const inventoryComponent = ballista.getServerComponent(ServerComponentType.inventory);
-   const inventory = inventoryComponent.getInventory("ammoBoxInventory");
+   const inventory = inventoryComponent.getInventory(InventoryName.ammoBoxInventory);
    
    const nextAmmoSlot = getAmmoSlot(inventory);
    const ammoBoxComponent = ballista.getServerComponent(ServerComponentType.ammoBox);

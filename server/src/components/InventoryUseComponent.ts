@@ -1,6 +1,6 @@
 import { InventoryUseComponentData } from "webgl-test-shared/dist/components";
 import { LimbAction } from "webgl-test-shared/dist/entities";
-import { Inventory } from "webgl-test-shared/dist/items";
+import { Inventory, InventoryName } from "webgl-test-shared/dist/items";
 import { Settings } from "webgl-test-shared/dist/settings";
 import Entity from "../Entity";
 import { InventoryUseComponentArray } from "./ComponentArray";
@@ -9,9 +9,9 @@ export interface InventoryUseInfo {
    selectedItemSlot: number;
    readonly inventory: Inventory;
    bowCooldownTicks: number;
-   readonly itemAttackCooldowns: Record<number, number>;
-   readonly spearWindupCooldowns: Record<number, number>;
-   readonly crossbowLoadProgressRecord: Record<number, number>;
+   readonly itemAttackCooldowns: Partial<Record<number, number>>;
+   readonly spearWindupCooldowns: Partial<Record<number, number>>;
+   readonly crossbowLoadProgressRecord: Partial<Record<number, number>>;
    foodEatingTimer: number;
    action: LimbAction;
    lastAttackTicks: number;
@@ -68,9 +68,9 @@ export function tickInventoryUseComponent(inventoryUseComponent: InventoryUseCom
 
       // Update attack cooldowns
       for (let itemSlot = 1; itemSlot <= useInfo.inventory.width * useInfo.inventory.height; itemSlot++) {
-         if (useInfo.itemAttackCooldowns.hasOwnProperty(itemSlot)) {
-            useInfo.itemAttackCooldowns[itemSlot] -= Settings.I_TPS;
-            if (useInfo.itemAttackCooldowns[itemSlot] < 0) {
+         if (typeof useInfo.itemAttackCooldowns[itemSlot] !== "undefined") {
+            useInfo.itemAttackCooldowns[itemSlot]! -= Settings.I_TPS;
+            if (useInfo.itemAttackCooldowns[itemSlot]! < 0) {
                delete useInfo.itemAttackCooldowns[itemSlot];
             }
          }
@@ -87,7 +87,7 @@ export function tickInventoryUseComponent(inventoryUseComponent: InventoryUseCom
    }
 }
 
-export function getInventoryUseInfo(inventoryUseComponent: InventoryUseComponent, inventoryName: string): InventoryUseInfo {
+export function getInventoryUseInfo(inventoryUseComponent: InventoryUseComponent, inventoryName: InventoryName): InventoryUseInfo {
    for (let i = 0; i < inventoryUseComponent.inventoryUseInfos.length; i++) {
       const useInfo = inventoryUseComponent.inventoryUseInfos[i];
       if (useInfo.inventory.name === inventoryName) {
@@ -98,7 +98,7 @@ export function getInventoryUseInfo(inventoryUseComponent: InventoryUseComponent
    throw new Error("Can't find inventory use info for inventory name " + inventoryName);
 }
 
-export function hasInventoryUseInfo(inventoryUseComponent: InventoryUseComponent, inventoryName: string): boolean {
+export function hasInventoryUseInfo(inventoryUseComponent: InventoryUseComponent, inventoryName: InventoryName): boolean {
    for (let i = 0; i < inventoryUseComponent.inventoryUseInfos.length; i++) {
       const useInfo = inventoryUseComponent.inventoryUseInfos[i];
       if (useInfo.inventory.name === inventoryName) {

@@ -1,6 +1,6 @@
 import { CraftingRecipe, CRAFTING_STATION_ITEM_TYPE_RECORD, ItemTally, getRecipeProductChain, forceGetItemRecipe } from "webgl-test-shared/dist/crafting-recipes";
 import { EntityType } from "webgl-test-shared/dist/entities";
-import { ItemType, ToolType, Inventory, PlaceableItemType, ITEM_INFO_RECORD, PlaceableItemInfo } from "webgl-test-shared/dist/items";
+import { ItemType, ToolType, Inventory, PlaceableItemType, ITEM_INFO_RECORD, PlaceableItemInfo, InventoryName } from "webgl-test-shared/dist/items";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { StructureType } from "webgl-test-shared/dist/structures";
 import { TechInfo, getTechChain } from "webgl-test-shared/dist/techs";
@@ -11,7 +11,6 @@ import { InventoryComponentArray, TribeComponentArray, TribesmanComponentArray }
 import { getInventory, getItemTypeSlot, inventoryComponentCanAffordRecipe, inventoryHasItemType, tallyInventoryComponentItems } from "../../../components/InventoryComponent";
 import Tribe, { BuildingPlan, BuildingPlanType, BuildingUpgradePlan, NewBuildingPlan } from "../../../Tribe";
 import { createBuildingHitboxes } from "../../../buildings";
-import { TribesmanComponent } from "../../../components/TribesmanComponent";
 import { generateBuildingPosition } from "../../../ai-tribe-building/ai-building-plans";
 
 // @Cleanup: can this be inferred from stuff like the entity->resource-dropped record?
@@ -176,15 +175,16 @@ export type TribesmanGoal = TribesmanCraftGoal | TribesmanPlaceGoal | TribesmanU
 //    return true;
 // }
 
-const hasMatchingPersonalPlan = (tribesmanComponent: TribesmanComponent, planType: BuildingPlanType): boolean => {
-   const personalPlan = tribesmanComponent.personalBuildingPlan;
+// @Temporary?
+// const hasMatchingPersonalPlan = (tribesmanComponent: TribesmanComponent, planType: BuildingPlanType): boolean => {
+//    const personalPlan = tribesmanComponent.personalBuildingPlan;
    
-   if (personalPlan === null || personalPlan.type !== planType) {
-      return false;
-   }
+//    if (personalPlan === null || personalPlan.type !== planType) {
+//       return false;
+//    }
 
-   return true;
-}
+//    return true;
+// }
 
 const planIsAvailable = (tribesman: Entity, plan: BuildingPlan): boolean => {
    if (plan.assignedTribesmanID !== 0) {
@@ -313,7 +313,7 @@ const createGoalForRecipe = (goals: Array<TribesmanGoal>, tribesman: Entity, tri
    if (typeof recipe.craftingStation !== "undefined" && !craftingStationExists(tribe, recipe.craftingStation)) {
       // @Cleanup: Copy and paste
       const inventoryComponent = InventoryComponentArray.getComponent(tribesman.id);
-      const hotbarInventory = getInventory(inventoryComponent, "hotbar");
+      const hotbarInventory = getInventory(inventoryComponent, InventoryName.hotbar);
       
       const craftingStationItemType = CRAFTING_STATION_ITEM_TYPE_RECORD[recipe.craftingStation]!;
       createBuildingPlaceGoal(goals, tribesman, hotbarInventory, craftingStationItemType);
@@ -324,7 +324,7 @@ const createGoalForRecipe = (goals: Array<TribesmanGoal>, tribesman: Entity, tri
    if (!hasNecessaryIngredients) {
       // @Cleanup: Copy and paste
       const inventoryComponent = InventoryComponentArray.getComponent(tribesman.id);
-      const hotbarInventory = getInventory(inventoryComponent, "hotbar");
+      const hotbarInventory = getInventory(inventoryComponent, InventoryName.hotbar);
       
       const requiredItems = Object.keys(recipe.ingredients).map(ingredientTypeString => Number(ingredientTypeString));
       createItemGatherGoal(goals, tribesman, hotbarInventory, requiredItems);
@@ -350,7 +350,7 @@ const createCraftGoal = (goals: Array<TribesmanGoal>, tribesman: Entity, itemTyp
 
       // If the item can be crafted, go craft it
       const recipe = forceGetItemRecipe(currentProductInfo.type);
-      if (inventoryComponentCanAffordRecipe(inventoryComponent, recipe, "hotbar")) {
+      if (inventoryComponentCanAffordRecipe(inventoryComponent, recipe, InventoryName.hotbar)) {
          createGoalForRecipe(goals, tribesman, tribeComponent.tribe, recipe, true);
          return;
       } else {
@@ -395,7 +395,7 @@ const createTechResearchGoal = (goals: Array<TribesmanGoal>, tribesman: Entity, 
    if (tech.researchStudyRequirements > 0 && !tribeHasResearchBench(tribe)) {
       // @Cleanup: Copy and paste
       const inventoryComponent = InventoryComponentArray.getComponent(tribesman.id);
-      const hotbarInventory = getInventory(inventoryComponent, "hotbar");
+      const hotbarInventory = getInventory(inventoryComponent, InventoryName.hotbar);
 
       createBuildingPlaceGoal(goals, tribesman, hotbarInventory, ItemType.research_bench);
       return;
@@ -405,7 +405,7 @@ const createTechResearchGoal = (goals: Array<TribesmanGoal>, tribesman: Entity, 
    if (itemTypesRequiredToResearch.length > 0) {
       // @Cleanup: Copy and paste
       const inventoryComponent = InventoryComponentArray.getComponent(tribesman.id);
-      const hotbarInventory = getInventory(inventoryComponent, "hotbar");
+      const hotbarInventory = getInventory(inventoryComponent, InventoryName.hotbar);
 
       createItemGatherGoal(goals, tribesman, hotbarInventory, itemTypesRequiredToResearch);
    }

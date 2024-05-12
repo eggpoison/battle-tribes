@@ -1,6 +1,6 @@
 import { StatusEffectData } from "./client-server-types";
 import { CactusBodyFlowerData, CactusLimbData, CowSpecies, DeathInfo, DoorToggleType, FishColour, FrozenYetiAttackType, GenericArrowType, EntityType, RockSpikeProjectileSize, SlimeSize, SnowballSize, TreeSize, LimbAction, TribeTotemBanner } from "./entities";
-import { BallistaAmmoType, Inventory, ItemType } from "./items";
+import { BallistaAmmoType, Inventory, InventoryName, ItemType } from "./items";
 import { StatusEffect } from "./status-effects";
 import { TitleGenerationInfo } from "./titles";
 export declare enum ServerComponentType {
@@ -254,15 +254,15 @@ export interface IceShardComponentData {
 export interface IceSpikesComponentData {
 }
 export interface InventoryComponentData {
-    readonly inventories: Record<string, Inventory>;
+    readonly inventories: Partial<Record<InventoryName, Inventory>>;
 }
 export interface LimbData {
     selectedItemSlot: number;
-    readonly inventoryName: string;
+    readonly inventoryName: InventoryName;
     bowCooldownTicks: number;
-    itemAttackCooldowns: Record<number, number>;
-    spearWindupCooldowns: Record<number, number>;
-    crossbowLoadProgressRecord: Record<number, number>;
+    itemAttackCooldowns: Partial<Record<number, number>>;
+    spearWindupCooldowns: Partial<Record<number, number>>;
+    crossbowLoadProgressRecord: Partial<Record<number, number>>;
     foodEatingTimer: number;
     action: LimbAction;
     lastAttackTicks: number;

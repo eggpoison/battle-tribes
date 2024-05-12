@@ -7,43 +7,48 @@ import ItemSlot from "./ItemSlot";
 import { leftClickItemSlot } from "../../../inventory-manipulation";
 import { definiteGameState } from "../../../game-state/game-states";
 import { getSelectedEntity } from "../../../entity-selection";
+import { InventoryName } from "webgl-test-shared/dist/items";
 
 const CookingInventory = () => {
    const cookingEntity = getSelectedEntity();
    const cookingComponent = cookingEntity.getServerComponent(ServerComponentType.cooking);
    const inventoryComponent = cookingEntity.getServerComponent(ServerComponentType.inventory);
 
-   const fuelInventory = inventoryComponent.getInventory("fuelInventory");
-   const ingredientInventory = inventoryComponent.getInventory("ingredientInventory");
-   const outputInventory = inventoryComponent.getInventory("outputInventory");
+   const fuelInventory = inventoryComponent.getInventory(InventoryName.fuelInventory);
+   const ingredientInventory = inventoryComponent.getInventory(InventoryName.ingredientInventory);
+   const outputInventory = inventoryComponent.getInventory(InventoryName.outputInventory);
 
    let fuelPicturedItemImageSrc: string | undefined = undefined;
    let fuelItemCount: number | undefined;
-   if (fuelInventory.itemSlots.hasOwnProperty(1)) {
-      const fuel = fuelInventory.itemSlots[1];
+
+   const fuel = fuelInventory.itemSlots[1];
+   if (typeof fuel !== "undefined") {
       fuelPicturedItemImageSrc = getItemTypeImage(fuel.type);
       fuelItemCount = fuel.count;
    }
 
    let ingredientPicturedItemImageSrc: string | undefined = undefined;
    let ingredientItemCount: number | undefined;
-   if (ingredientInventory.itemSlots.hasOwnProperty(1)) {
-      const ingredient = ingredientInventory.itemSlots[1];
+
+   const ingredient = ingredientInventory.itemSlots[1];
+   if (typeof ingredient !== "undefined") {
       ingredientPicturedItemImageSrc = getItemTypeImage(ingredient.type);
       ingredientItemCount = ingredient.count;
    }
 
    let outputPicturedItemImageSrc: string | undefined = undefined;
    let outputItemCount: number | undefined;
-   if (outputInventory.itemSlots.hasOwnProperty(1)) {
-      const output = outputInventory.itemSlots[1];
+
+   const output = outputInventory.itemSlots[1];
+   if (typeof output !== "undefined") {
       outputPicturedItemImageSrc = getItemTypeImage(output.type);
       outputItemCount = output.count;
    }
 
    const clickIngredientItemSlot = useCallback((e: MouseEvent): void => {
       // Stop the player placing a non-backpack item in the backpack slot
-      if (definiteGameState.heldItemSlot.itemSlots.hasOwnProperty(1) && !COOKING_INGREDIENT_ITEM_TYPES.includes(definiteGameState.heldItemSlot.itemSlots[1].type as CookingIngredientItemType)) {
+      const heldItem = definiteGameState.heldItemSlot.itemSlots[1];
+      if (typeof heldItem !== "undefined" && !COOKING_INGREDIENT_ITEM_TYPES.includes(heldItem.type as CookingIngredientItemType)) {
          return;
       }
       leftClickItemSlot(e, cookingEntity.id, ingredientInventory, 1);
@@ -51,7 +56,8 @@ const CookingInventory = () => {
 
    const clickFuelItemSlot = useCallback((e: MouseEvent): void => {
       // Stop the player placing a non-backpack item in the backpack slot
-      if (definiteGameState.heldItemSlot.itemSlots.hasOwnProperty(1) && !FUEL_SOURCE_ITEM_TYPES.includes(definiteGameState.heldItemSlot.itemSlots[1].type as FuelSourceItemType)) {
+      const heldItem = definiteGameState.heldItemSlot.itemSlots[1];
+      if (typeof heldItem !== "undefined" && !FUEL_SOURCE_ITEM_TYPES.includes(heldItem.type as FuelSourceItemType)) {
          return;
       }
       leftClickItemSlot(e, cookingEntity.id, fuelInventory, 1);

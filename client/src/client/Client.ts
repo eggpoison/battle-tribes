@@ -6,7 +6,7 @@ import { Settings } from "webgl-test-shared/dist/settings";
 import { BlueprintType, EntityComponentsData, LimbData, ServerComponentType } from "webgl-test-shared/dist/components";
 import { PlayerTribeData, TechID } from "webgl-test-shared/dist/techs";
 import { STRUCTURE_TYPES } from "webgl-test-shared/dist/structures";
-import { Inventory } from "webgl-test-shared/dist/items";
+import { Inventory, InventoryName } from "webgl-test-shared/dist/items";
 import { TRIBE_INFO_RECORD, TribeType } from "webgl-test-shared/dist/tribes";
 import { TribesmanTitle } from "webgl-test-shared/dist/titles";
 import { io, Socket } from "socket.io-client";
@@ -401,7 +401,7 @@ abstract class Client {
                let hotbarUseInfo: LimbData | undefined;
                for (let i = 0; i < inventoryUseComponentsData.inventoryUseInfos.length; i++) {
                   const useInfo = inventoryUseComponentsData.inventoryUseInfos[i];
-                  if (useInfo.inventoryName === "hotbar") {
+                  if (useInfo.inventoryName === InventoryName.hotbar) {
                      hotbarUseInfo = useInfo;
                      break;
                   }
@@ -411,7 +411,7 @@ abstract class Client {
                }
 
                const inventoryUseComponent = Player.instance.getServerComponent(ServerComponentType.inventoryUse);
-               inventoryUseComponent.getUseInfo("hotbar").thrownBattleaxeItemID = hotbarUseInfo.thrownBattleaxeItemID;
+               inventoryUseComponent.getUseInfo(InventoryName.hotbar).thrownBattleaxeItemID = hotbarUseInfo.thrownBattleaxeItemID;
                
                Hotbar_updateRightThrownBattleaxeItemID(hotbarUseInfo.thrownBattleaxeItemID);
 
@@ -450,12 +450,14 @@ abstract class Client {
 
    private static updatePlayerInventory(playerInventoryData: PlayerInventoryData) {
       // Call the remove function if the selected item has been removed, and the select function for new selected item slots
-      if (definiteGameState.hotbar.itemSlots.hasOwnProperty(latencyGameState.selectedHotbarItemSlot) && !playerInventoryData.hotbar.itemSlots.hasOwnProperty(latencyGameState.selectedHotbarItemSlot)) {
-         const item = definiteGameState.hotbar.itemSlots[latencyGameState.selectedHotbarItemSlot];
-         removeSelectedItem(item);
-      } else if (!definiteGameState.hotbar.itemSlots.hasOwnProperty(latencyGameState.selectedHotbarItemSlot) && playerInventoryData.hotbar.itemSlots.hasOwnProperty(latencyGameState.selectedHotbarItemSlot)) {
-         const item = playerInventoryData.hotbar.itemSlots[latencyGameState.selectedHotbarItemSlot];
-         selectItem(item);
+      const previouslySelectedItem = definiteGameState.hotbar.itemSlots[latencyGameState.selectedHotbarItemSlot];
+      if (typeof previouslySelectedItem !== "undefined" && !playerInventoryData.hotbar.itemSlots.hasOwnProperty(latencyGameState.selectedHotbarItemSlot)) {
+         removeSelectedItem(previouslySelectedItem);
+      } else {
+         const newSelectedItem = playerInventoryData.hotbar.itemSlots[latencyGameState.selectedHotbarItemSlot];
+         if (!definiteGameState.hotbar.itemSlots.hasOwnProperty(latencyGameState.selectedHotbarItemSlot) && typeof newSelectedItem !== "undefined") {
+            selectItem(newSelectedItem);
+         }
       }
 
       const hotbarHasChanged = this.inventoryHasChanged(definiteGameState.hotbar, playerInventoryData.hotbar);
@@ -474,7 +476,7 @@ abstract class Client {
       } else {
          definiteGameState.craftingOutputSlot = playerInventoryData.craftingOutputItemSlot;
       }
-      CraftingMenu_setCraftingMenuOutputItem(definiteGameState.craftingOutputSlot?.itemSlots.hasOwnProperty(1) ? definiteGameState.craftingOutputSlot.itemSlots[1] : null);
+      CraftingMenu_setCraftingMenuOutputItem(definiteGameState.craftingOutputSlot?.itemSlots[1] || null);
 
       // Backpack slot
       const backpackSlotHasChanged = this.inventoryHasChanged(definiteGameState.backpackSlot, playerInventoryData.backpackSlot);
@@ -482,7 +484,7 @@ abstract class Client {
 
       // Held item
       updateInventoryFromData(definiteGameState.heldItemSlot, playerInventoryData.heldItemSlot);
-      setHeldItemVisual(definiteGameState.heldItemSlot.itemSlots.hasOwnProperty(1) ? definiteGameState.heldItemSlot.itemSlots[1] : null);
+      setHeldItemVisual(definiteGameState.heldItemSlot.itemSlots[1] || null);
 
       // Armour slot
       const armourSlotHasChanged = this.inventoryHasChanged(definiteGameState.armourSlot, playerInventoryData.armourSlot);
@@ -499,16 +501,16 @@ abstract class Client {
       if (Player.instance !== null) {
          const inventoryComponent = Player.instance.getServerComponent(ServerComponentType.inventory);
          if (hotbarHasChanged) {
-            updateInventoryFromData(inventoryComponent.getInventory("hotbar"), playerInventoryData.hotbar);
+            updateInventoryFromData(inventoryComponent.getInventory(InventoryName.hotbar), playerInventoryData.hotbar);
          }
          if (offhandHasChanged) {
-            updateInventoryFromData(inventoryComponent.getInventory("offhand"), playerInventoryData.offhand);
+            updateInventoryFromData(inventoryComponent.getInventory(InventoryName.offhand), playerInventoryData.offhand);
          }
          if (armourSlotHasChanged) {
-            updateInventoryFromData(inventoryComponent.getInventory("armourSlot"), playerInventoryData.armourSlot);
+            updateInventoryFromData(inventoryComponent.getInventory(InventoryName.armourSlot), playerInventoryData.armourSlot);
          }
          if (gloveSlotHasChanged) {
-            updateInventoryFromData(inventoryComponent.getInventory("gloveSlot"), playerInventoryData.gloveSlot);
+            updateInventoryFromData(inventoryComponent.getInventory(InventoryName.gloveSlot), playerInventoryData.gloveSlot);
          }
       }
 
@@ -532,7 +534,8 @@ abstract class Client {
       }
       
       for (let itemSlot = 1; itemSlot <= newInventoryData.width * newInventoryData.height; itemSlot++) {
-         if (!newInventoryData.itemSlots.hasOwnProperty(itemSlot)) {
+         const newItem = newInventoryData.itemSlots[itemSlot];
+         if (typeof newItem === "undefined") {
             // If there is no item in the server data but there is one in the game state
             if (previousInventory.itemSlots.hasOwnProperty(itemSlot)) {
                return true;
@@ -543,13 +546,14 @@ abstract class Client {
          }
 
          // If the item has changed, update it
-         if (previousInventory.itemSlots.hasOwnProperty(itemSlot)) {
+         const previousItem = previousInventory.itemSlots[itemSlot];
+         if (typeof previousItem !== "undefined") {
             // Update type
-            if (newInventoryData.itemSlots[itemSlot].type !== previousInventory.itemSlots[itemSlot].type) {
+            if (newItem.type !== previousItem.type) {
                return true;
             }
             // Update count
-            if (newInventoryData.itemSlots[itemSlot].count !== previousInventory.itemSlots[itemSlot].count) {
+            if (newItem.count !== previousItem.count) {
                return true;
             }
          } else {
@@ -730,13 +734,13 @@ abstract class Client {
       }
    }
 
-   public static sendItemPickupPacket(entityID: number, inventoryName: string, itemSlot: number, amount: number): void {
+   public static sendItemPickupPacket(entityID: number, inventoryName: InventoryName, itemSlot: number, amount: number): void {
       if (Game.isRunning && this.socket !== null) {
          this.socket.emit("item_pickup", entityID, inventoryName, itemSlot, amount);
       }
    }
 
-   public static sendItemReleasePacket(entityID: number, inventoryName: string, itemSlot: number, amount: number): void {
+   public static sendItemReleasePacket(entityID: number, inventoryName: InventoryName, itemSlot: number, amount: number): void {
       if (Game.isRunning && this.socket !== null) {
          this.socket.emit("item_release", entityID, inventoryName, itemSlot, amount);
       }

@@ -1,7 +1,7 @@
 import { EntityDebugData } from "webgl-test-shared/dist/client-server-types";
 import { TribesmanAIType } from "webgl-test-shared/dist/components";
 import { EntityTypeString } from "webgl-test-shared/dist/entities";
-import { ItemType, ITEM_INFO_RECORD, PlaceableItemInfo } from "webgl-test-shared/dist/items";
+import { ITEM_INFO_RECORD, PlaceableItemInfo, ItemTypeString } from "webgl-test-shared/dist/items";
 import { getTechByID } from "webgl-test-shared/dist/techs";
 import { Mutable } from "webgl-test-shared/dist/utils";
 import Entity from "./Entity";
@@ -55,7 +55,7 @@ export function getEntityDebugData(entity: Entity): EntityDebugData {
          let goalString = "";
          switch (goal.type) {
             case TribesmanGoalType.craftRecipe: {
-               goalString = "Craft " + ItemType[goal.recipe.product];
+               goalString = "Craft " + ItemTypeString[goal.recipe.product];
                break;
             }
             case TribesmanGoalType.placeBuilding: {
@@ -68,7 +68,7 @@ export function getEntityDebugData(entity: Entity): EntityDebugData {
                break;
             }
             case TribesmanGoalType.gatherItems: {
-               goalString = "Gather " + goal.itemTypesToGather.map(itemType => ItemType[itemType]).join(", ");
+               goalString = "Gather " + goal.itemTypesToGather.map(itemType => ItemTypeString[itemType]).join(", ");
                break;
             }
             case TribesmanGoalType.upgradeBuilding: {

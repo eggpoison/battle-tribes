@@ -2,7 +2,6 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AMMO_INFO_RECORD = exports.PlanterBoxPlant = exports.MATERIAL_TO_ITEM_MAP = exports.BuildingMaterial = exports.TribesmanAIType = exports.BlueprintType = exports.EntityComponents = exports.ServerComponentType = void 0;
 const entities_1 = require("./entities");
-const items_1 = require("./items");
 /*
 data sent:
 - Array of components (corresponding to the array of component types)
@@ -223,8 +222,8 @@ var BuildingMaterial;
     BuildingMaterial[BuildingMaterial["stone"] = 1] = "stone";
 })(BuildingMaterial = exports.BuildingMaterial || (exports.BuildingMaterial = {}));
 exports.MATERIAL_TO_ITEM_MAP = {
-    [BuildingMaterial.wood]: items_1.ItemType.wood,
-    [BuildingMaterial.stone]: items_1.ItemType.rock
+    [BuildingMaterial.wood]: 0 /* ItemType.wood */,
+    [BuildingMaterial.stone]: 8 /* ItemType.rock */
 };
 /* Plant Component Data */
 var PlanterBoxPlant;
@@ -234,7 +233,7 @@ var PlanterBoxPlant;
     PlanterBoxPlant[PlanterBoxPlant["iceSpikes"] = 2] = "iceSpikes";
 })(PlanterBoxPlant = exports.PlanterBoxPlant || (exports.PlanterBoxPlant = {}));
 exports.AMMO_INFO_RECORD = {
-    [items_1.ItemType.wood]: {
+    [0 /* ItemType.wood */]: {
         type: entities_1.GenericArrowType.woodenBolt,
         damage: 5,
         knockback: 150,
@@ -246,7 +245,7 @@ exports.AMMO_INFO_RECORD = {
         ammoMultiplier: 3,
         statusEffect: null
     },
-    [items_1.ItemType.rock]: {
+    [8 /* ItemType.rock */]: {
         type: entities_1.GenericArrowType.ballistaRock,
         damage: 8,
         knockback: 350,
@@ -258,7 +257,7 @@ exports.AMMO_INFO_RECORD = {
         ammoMultiplier: 3,
         statusEffect: null
     },
-    [items_1.ItemType.slimeball]: {
+    [18 /* ItemType.slimeball */]: {
         type: entities_1.GenericArrowType.ballistaSlimeball,
         damage: 3,
         knockback: 0,
@@ -273,7 +272,7 @@ exports.AMMO_INFO_RECORD = {
             durationTicks: 2.5 * 60 /* Settings.TPS */
         }
     },
-    [items_1.ItemType.frostcicle]: {
+    [17 /* ItemType.frostcicle */]: {
         type: entities_1.GenericArrowType.ballistaFrostcicle,
         damage: 1,
         knockback: 50,

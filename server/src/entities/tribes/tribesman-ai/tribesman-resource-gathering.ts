@@ -1,5 +1,5 @@
 import { EntityType } from "webgl-test-shared/dist/entities";
-import { ItemType } from "webgl-test-shared/dist/items";
+import { InventoryName, ItemType } from "webgl-test-shared/dist/items";
 import Entity from "../../../Entity";
 import { HealthComponentArray, InventoryComponentArray, TribeComponentArray } from "../../../components/ComponentArray";
 import { entityIsAccessible, positionIsSafeForTribesman, tribesmanShouldEscape } from "./tribesman-ai";
@@ -84,7 +84,7 @@ export function getGatherTarget(tribesman: Entity, visibleEntities: ReadonlyArra
    const inventoryComponent = InventoryComponentArray.getComponent(tribesman.id);
    
    // @Incomplete: Doesn't account for room in backpack/other
-   const isFull = inventoryIsFull(inventoryComponent, "hotbar");
+   const isFull = inventoryIsFull(inventoryComponent, InventoryName.hotbar);
    
    let minDist = Number.MAX_SAFE_INTEGER;
    let closestResource: Entity | undefined;

@@ -9,8 +9,8 @@ export const latencyGameState = new LatencyGameState();
 export function playerIsHoldingHammer(): boolean {
    if (Player.instance === null || definiteGameState.hotbar === null) return false;
 
-   if (definiteGameState.hotbar.itemSlots.hasOwnProperty(latencyGameState.selectedHotbarItemSlot)) {
-      const item = definiteGameState.hotbar.itemSlots[latencyGameState.selectedHotbarItemSlot];
+   const item = definiteGameState.hotbar.itemSlots[latencyGameState.selectedHotbarItemSlot];
+   if (typeof item !== "undefined") {
       return ITEM_TYPE_RECORD[item.type] === "hammer";
    } 
    return false;

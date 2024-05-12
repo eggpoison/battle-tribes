@@ -1,11 +1,11 @@
 import { Point, lerp, randFloat, rotateXAroundOrigin, rotateXAroundPoint, rotateYAroundOrigin, rotateYAroundPoint } from "webgl-test-shared/dist/utils";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityType } from "webgl-test-shared/dist/entities";
-import { ItemType, PlaceableItemType } from "webgl-test-shared/dist/items";
-import { StructureType } from "webgl-test-shared/dist/structures";
+import { ITEM_INFO_RECORD, ITEM_TYPE_RECORD, ItemType, PlaceableItemType } from "webgl-test-shared/dist/items";
+import { StructureType, calculateStructurePlaceInfo } from "webgl-test-shared/dist/structures";
 import Player, { getPlayerSelectedItem } from "../entities/Player";
 import { gl, createWebGLProgram, CAMERA_UNIFORM_BUFFER_BINDING_INDEX } from "../webgl";
-import { PLACEABLE_ENTITY_INFO_RECORD, calculatePlacePosition, calculatePlaceRotation, calculateSnapInfo, canPlaceItem } from "../player-input";
+import { canPlaceItem } from "../player-input";
 import { ENTITY_TEXTURE_ATLAS, ENTITY_TEXTURE_ATLAS_SIZE, ENTITY_TEXTURE_SLOT_INDEXES, getTextureArrayIndex, getTextureHeight, getTextureWidth } from "../texture-atlases/entity-texture-atlas";
 import Board from "../Board";
 import { getHoveredEntityID, getSelectedEntityID } from "../entity-selection";
@@ -19,8 +19,9 @@ import OPTIONS from "../options";
 import { calculatePotentialPlanIdealness, getHoveredBuildingPlan, getPotentialPlanStats, getVisibleBuildingPlans } from "../client/Client";
 import { SEED_TO_PLANT_RECORD } from "../entity-components/PlantComponent";
 import { NUM_LARGE_COVER_LEAVES, NUM_SMALL_COVER_LEAVES } from "../entity-components/SpikesComponent";
+import Camera from "../Camera";
 
-// @Temporary
+// @Temporary: might be useful later
 // // Detect the entity types which need ghosts
 // type PlaceableItemInfoRecord = {
 //    [T in PlaceableItemType]: (typeof ITEM_INFO_RECORD)[T];
@@ -70,7 +71,7 @@ export enum GhostType {
 }
 
 interface GhostInfo {
-   readonly position: Point;
+   readonly position: Readonly<Point>;
    readonly rotation: number;
    readonly ghostType: GhostType;
    readonly snappedEntities: ReadonlyArray<Entity>;
@@ -735,22 +736,17 @@ const getPlantGhostType = (): GhostType | null => {
 const getGhostInfo = (): GhostInfo | null => {
    // Placeable item ghost
    const playerSelectedItem = getPlayerSelectedItem();
-   if (playerSelectedItem !== null && PLACEABLE_ENTITY_INFO_RECORD.hasOwnProperty(playerSelectedItem.type)) {
-      const placeableEntityInfo = PLACEABLE_ENTITY_INFO_RECORD[playerSelectedItem.type as PlaceableItemType];
+   if (playerSelectedItem !== null && ITEM_TYPE_RECORD[playerSelectedItem.type] === "placeable") {
+      const structureType = ITEM_INFO_RECORD[playerSelectedItem.type as PlaceableItemType].entityType;
+      const placeInfo = calculateStructurePlaceInfo(Camera.position, Player.instance!.rotation, structureType, Board.getChunks());
       
-      const snapInfo = calculateSnapInfo(placeableEntityInfo, true);
-      const placePosition = calculatePlacePosition(placeableEntityInfo, snapInfo, true);
-      const placeRotation = calculatePlaceRotation(snapInfo);
-
-      const isPlacedOnWall = snapInfo !== null && Board.entityRecord[snapInfo.snappedEntityID].type === EntityType.wall;
-      const canPlace = canPlaceItem(placePosition, placeRotation, playerSelectedItem, snapInfo !== null ? snapInfo.entityType : placeableEntityInfo.entityType, isPlacedOnWall);
-
       return {
-         position: placePosition,
-         rotation: placeRotation,
-         ghostType: ENTITY_TYPE_TO_GHOST_TYPE_MAP[placeableEntityInfo.entityType],
-         tint: canPlace ? [1, 1, 1] : [1.5, 0.5, 0.5],
-         snappedEntities: snapInfo !== null ? [Board.entityRecord[snapInfo.snappedEntityID]] : [],
+         position: placeInfo.position,
+         rotation: placeInfo.rotation,
+         ghostType: ENTITY_TYPE_TO_GHOST_TYPE_MAP[placeInfo.entityType],
+         // @Incomplete: isPlacedOnWall
+         tint: canPlaceItem(placeInfo.position, placeInfo.rotation, playerSelectedItem, structureType, false) ? [1, 1, 1] : [1.5, 0.5, 0.5],
+         snappedEntities: placeInfo.snappedEntityIDs.map(id => Board.entityRecord[id]),
          opacity: PARTIAL_OPACITY
       };
    }

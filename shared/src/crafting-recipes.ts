@@ -1,4 +1,4 @@
-import { ItemType, PlaceableItemType } from "./items";
+import { ItemSlots, ItemType, ItemTypeString, PlaceableItemType } from "./items";
 import { Settings } from "./settings";
 
 const enum Vars {
@@ -416,19 +416,20 @@ export function getItemRecipe(itemType: ItemType): CraftingRecipe | null {
 export function forceGetItemRecipe(itemType: ItemType): CraftingRecipe {
    const recipe = getItemRecipe(itemType);
    if (recipe === null) {
-      throw new Error("No recipe for item type " + ItemType[itemType]);
+      throw new Error("No recipe for item type " + ItemTypeString[itemType]);
    }
    return recipe;
 }
-
-type Item = { type: ItemType, count: number };
-type ItemSlots = { [itemSlot: number]: Item };
 
 export function hasEnoughItems(itemSlotRecords: ReadonlyArray<ItemSlots>, requiredItems: ItemRequirements): boolean {
    // Tally the total resources available for crafting
    const availableResources: Partial<Record<ItemType, number>> = {};
    for (const itemSlots of itemSlotRecords) {
       for (const item of Object.values(itemSlots)) {
+         if (typeof item === "undefined") {
+            continue;
+         }
+         
          if (!availableResources.hasOwnProperty(item.type)) {
             availableResources[item.type] = item.count;
          } else {

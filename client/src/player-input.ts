@@ -17,15 +17,13 @@ import CircularHitbox from "./hitboxes/CircularHitbox";
 import Hitbox from "./hitboxes/Hitbox";
 import RectangularHitbox from "./hitboxes/RectangularHitbox";
 import { closeTechTree, techTreeIsOpen } from "./components/game/TechTree";
-import Entity from "./Entity";
 import { attemptEntitySelection, deselectSelectedEntity, getSelectedEntityID } from "./entity-selection";
 import { playSound } from "./sound";
 import { InventoryMenuType, InventorySelector_inventoryIsOpen, InventorySelector_setInventoryMenuType } from "./components/game/inventories/InventorySelector";
 import { attemptToCompleteNode } from "./research";
 import { BuildMenu_isOpen, BuildMenu_hide } from "./components/game/BuildMenu";
-import Camera from "./Camera";
-import { STRUCTURE_TYPES, StructureType } from "webgl-test-shared/dist/structures";
-import { ConsumableItemCategory, ConsumableItemInfo, ITEM_INFO_RECORD, ITEM_TYPE_RECORD, Inventory, Item, ItemType, PlaceableItemType, ToolItemInfo } from "webgl-test-shared/dist/items";
+import { StructureType, calculateStructurePlaceInfo } from "webgl-test-shared/dist/structures";
+import { ConsumableItemCategory, ConsumableItemInfo, ITEM_INFO_RECORD, ITEM_TYPE_RECORD, Inventory, InventoryName, Item, ItemType, PlaceableItemType, ToolItemInfo } from "webgl-test-shared/dist/items";
 import { EntityType, LimbAction } from "webgl-test-shared/dist/entities";
 import { AttackPacket, HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
 import { Settings } from "webgl-test-shared/dist/settings";
@@ -238,8 +236,9 @@ export function updatePlayerItems(): void {
    updateAttackCooldowns(definiteGameState.offhandInventory, offhandItemAttackCooldowns);
 
    // Tick items
-   for (const [_itemSlot, item] of Object.entries(definiteGameState.hotbar.itemSlots)) {
-      tickItem(item, Number(_itemSlot));
+   for (let i = 0; i < definiteGameState.hotbar.items.length; i++) {
+      const item = definiteGameState.hotbar.items[i];
+      tickItem(item, definiteGameState.hotbar.getItemSlot(item));
    }
 }
 
@@ -273,7 +272,7 @@ const getSwingTimeMulitplier = (): number => {
 }
 
 const attemptInventoryAttack = (inventory: Inventory): boolean => {
-   const isOffhand = inventory.name !== "hotbar";
+   const isOffhand = inventory.name !== InventoryName.hotbar;
 
    const inventoryUseComponent = Player.instance!.getServerComponent(ServerComponentType.inventoryUse);
    const useInfo = inventoryUseComponent.useInfos[isOffhand ? 1 : 0];
@@ -281,10 +280,10 @@ const attemptInventoryAttack = (inventory: Inventory): boolean => {
    const attackCooldowns = isOffhand ? offhandItemAttackCooldowns : hotbarItemAttackCooldowns;
    const selectedItemSlot = useInfo.selectedItemSlot;
 
-   if (inventory.itemSlots.hasOwnProperty(selectedItemSlot)) {
+   const selectedItem = inventory.itemSlots[selectedItemSlot];
+   if (typeof selectedItem !== "undefined") {
       // Attack with item
       if (!attackCooldowns.hasOwnProperty(selectedItemSlot)) {
-         const selectedItem = inventory.itemSlots[selectedItemSlot];
          
          // Reset the attack cooldown of the weapon
          let baseAttackCooldown: number;
@@ -339,19 +338,19 @@ interface SelectedItemInfo {
 }
 
 const getSelectedItemInfo = (): SelectedItemInfo | null => {
-   if (definiteGameState.hotbar.itemSlots.hasOwnProperty(latencyGameState.selectedHotbarItemSlot)) {
-      const item = definiteGameState.hotbar.itemSlots[latencyGameState.selectedHotbarItemSlot];
+   const hotbarItem = definiteGameState.hotbar.itemSlots[latencyGameState.selectedHotbarItemSlot];
+   if (typeof hotbarItem !== "undefined") {
       return {
-         item: item,
+         item: hotbarItem,
          itemSlot: latencyGameState.selectedHotbarItemSlot,
          isOffhand: false
       };
    }
 
-   if (definiteGameState.offhandInventory.itemSlots.hasOwnProperty(1)) {
-      const item = definiteGameState.offhandInventory.itemSlots[1];
+   const offhandItem = definiteGameState.offhandInventory.itemSlots[1];
+   if (typeof offhandItem !== "undefined") {
       return {
-         item: item,
+         item: offhandItem,
          itemSlot: 1,
          isOffhand: true
       };
@@ -654,165 +653,7 @@ const unuseItem = (item: Item): void => {
    }
 }
 
-const calculateRegularPlacePosition = (placeableEntityInfo: PlaceableEntityInfo, isVisualPosition: boolean): Point => {
-   let placeOrigin: Point;
-   if (isVisualPosition) {
-      placeOrigin = Camera.position;
-   } else {
-      placeOrigin = Player.instance!.position;
-   }
-   
-   const placeOffset = placeableEntityInfo.height / 2;
-   const placePositionX = placeOrigin.x + (Settings.ITEM_PLACE_DISTANCE + placeOffset) * Math.sin(Player.instance!.rotation);
-   const placePositionY = placeOrigin.y + (Settings.ITEM_PLACE_DISTANCE + placeOffset) * Math.cos(Player.instance!.rotation);
-   return new Point(placePositionX, placePositionY);
-}
-
-const calculateStructureSnapPositions = (snapOrigin: Point, snapEntity: Entity, placeRotation: number, isPlacedOnWall: boolean, placeableEntityInfo: PlaceableEntityInfo): ReadonlyArray<Point> => {
-   const snapPositions = new Array<Point>();
-   for (let i = 0; i < 4; i++) {
-      const direction = i * Math.PI / 2 + snapEntity.rotation;
-      let snapEntityOffset: number = 0;
-      if (i % 2 === 0) {
-         // Top and bottom snap positions
-         // @Incomplete: is wall
-         // snapEntityOffset = getSnapOffsetHeight(snapEntity.type as unknown as StructureTypeConst, entityIsPlacedOnWall(snapEntity)) * 0.5;
-      } else {
-         // Left and right snap positions
-         // snapEntityOffset = getSnapOffsetWidth(snapEntity.type as unknown as StructureTypeConst, entityIsPlacedOnWall(snapEntity)) * 0.5;
-      }
-
-      const epsilon = 0.01; // @Speed: const enum?
-      let structureOffsetI = i;
-      // If placing on the left or right side of the snap entity, use the width offset
-      if (!(Math.abs(direction - placeRotation) < epsilon || Math.abs(direction - (placeRotation + Math.PI)) < epsilon)) {
-         structureOffsetI++;
-      }
-
-      let structureOffset: number = 0;
-      if (structureOffsetI % 2 === 0 || (isPlacedOnWall && (placeableEntityInfo.entityType === EntityType.floorSpikes || placeableEntityInfo.entityType === EntityType.floorPunjiSticks))) {
-         // Top and bottom
-         // structureOffset = getSnapOffsetHeight(placeableEntityInfo.entityType as unknown as StructureTypeConst, isPlacedOnWall) * 0.5;
-      } else {
-         // Left and right
-         // structureOffset = getSnapOffsetWidth(placeableEntityInfo.entityType as unknown as StructureTypeConst, isPlacedOnWall) * 0.5;
-      }
-
-      const offset = snapEntityOffset + structureOffset;
-      const positionX = snapOrigin.x + offset * Math.sin(direction);
-      const positionY = snapOrigin.y + offset * Math.cos(direction);
-      snapPositions.push(new Point(positionX, positionY));
-   }
-
-   return snapPositions;
-}
-
-// @Incomplete: fix placing spike snapped to other spike is sometimes illegal
-
-const calculateStructureSnapPosition = (snapPositions: ReadonlyArray<Point>, regularPlacePosition: Point): Point | null => {
-   let minDist = Settings.STRUCTURE_POSITION_SNAP;
-   let closestPosition: Point | null = null;
-   for (let i = 0; i < 4; i++) {
-      const position = snapPositions[i];
-
-      const dist = position.calculateDistanceBetween(regularPlacePosition);
-      if (dist < minDist) {
-         minDist = dist;
-         closestPosition = position;
-      }
-   }
-
-   return closestPosition;
-}
-
-interface BuildingSnapInfo {
-   /** -1 if no snap was found */
-   readonly x: number;
-   readonly y: number;
-   readonly rotation: number;
-   readonly entityType: EntityType;
-   readonly snappedEntityID: number;
-}
-export function calculateSnapInfo(placeableEntityInfo: PlaceableEntityInfo, isVisualPosition: boolean): BuildingSnapInfo | null {
-   const regularPlacePosition = calculateRegularPlacePosition(placeableEntityInfo, isVisualPosition);
-
-   const minChunkX = Math.max(Math.floor((regularPlacePosition.x - Settings.STRUCTURE_SNAP_RANGE) / Settings.CHUNK_UNITS), 0);
-   const maxChunkX = Math.min(Math.floor((regularPlacePosition.x + Settings.STRUCTURE_SNAP_RANGE) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1);
-   const minChunkY = Math.max(Math.floor((regularPlacePosition.y - Settings.STRUCTURE_SNAP_RANGE) / Settings.CHUNK_UNITS), 0);
-   const maxChunkY = Math.min(Math.floor((regularPlacePosition.y + Settings.STRUCTURE_SNAP_RANGE) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1);
-   
-   const snappableEntities = new Array<Entity>();
-   for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
-      for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
-         const chunk = Board.getChunk(chunkX, chunkY);
-         for (const entity of chunk.entities) {
-            const distance = regularPlacePosition.calculateDistanceBetween(entity.position);
-            if (distance > Settings.STRUCTURE_SNAP_RANGE) {
-               continue;
-            }
-            
-            if (STRUCTURE_TYPES.includes(entity.type as StructureType)) {
-               snappableEntities.push(entity);
-            }
-         }
-      }
-   }
-
-   for (const snapEntity of snappableEntities) {
-      const snapOrigin = snapEntity.position.copy();
-      if (snapEntity.type === EntityType.embrasure) {
-         snapOrigin.x -= 22 * Math.sin(snapEntity.rotation);
-         snapOrigin.y -= 22 * Math.cos(snapEntity.rotation);
-      }
-
-      const isPlacedOnWall = snapEntity.type === EntityType.wall;
-
-      // @Cleanup
-      let clampedSnapRotation = snapEntity.rotation;
-      while (clampedSnapRotation >= Math.PI * 0.25) {
-         clampedSnapRotation -= Math.PI * 0.5;
-      }
-      while (clampedSnapRotation < Math.PI * 0.25) {
-         clampedSnapRotation += Math.PI * 0.5;
-      }
-      const placeRotation = Math.round(Player.instance!.rotation / (Math.PI * 0.5)) * Math.PI * 0.5 + clampedSnapRotation;
-
-      const snapPositions = calculateStructureSnapPositions(snapOrigin, snapEntity, placeRotation, isPlacedOnWall, placeableEntityInfo);
-      const snapPosition = calculateStructureSnapPosition(snapPositions, regularPlacePosition);
-      if (snapPosition !== null) {
-         let finalPlaceRotation = placeRotation;
-         if (isPlacedOnWall && (placeableEntityInfo.entityType === EntityType.floorSpikes || placeableEntityInfo.entityType === EntityType.floorPunjiSticks)) {
-            finalPlaceRotation = snapEntity.position.calculateAngleBetween(snapPosition);
-         }
-         return {
-            x: snapPosition.x,
-            y: snapPosition.y,
-            rotation: finalPlaceRotation,
-            entityType: placeableEntityInfo.entityType,
-            snappedEntityID: snapEntity.id
-         };
-      }
-   }
-   
-   return null;
-}
-
-export function calculatePlacePosition(placeableEntityInfo: PlaceableEntityInfo, snapInfo: BuildingSnapInfo | null, isVisualPosition: boolean): Point {
-   if (snapInfo === null) {
-      return calculateRegularPlacePosition(placeableEntityInfo, isVisualPosition);
-   }
-
-   return new Point(snapInfo.x, snapInfo.y);
-}
-
-export function calculatePlaceRotation(snapInfo: BuildingSnapInfo | null): number {
-   if (snapInfo === null) {
-      return Player.instance!.rotation;
-   }
-
-   return snapInfo.rotation;
-}
-
+// @Cleanup: sucks.
 export function canPlaceItem(placePosition: Point, placeRotation: number, item: Item, placingEntityType: EntityType, isPlacedOnWall: boolean): boolean {
    if (!PLACEABLE_ENTITY_INFO_RECORD.hasOwnProperty(item.type)) {
       throw new Error(`Item type '${item.type}' is not placeable.`);
@@ -959,7 +800,7 @@ const itemRightClickDown = (item: Item, isOffhand: boolean, itemSlot: number): v
          break;
       }
       case "crossbow": {
-         if (!definiteGameState.hotbarCrossbowLoadProgressRecord.hasOwnProperty(itemSlot) || definiteGameState.hotbarCrossbowLoadProgressRecord[itemSlot] < 1) {
+         if (!definiteGameState.hotbarCrossbowLoadProgressRecord.hasOwnProperty(itemSlot) || definiteGameState.hotbarCrossbowLoadProgressRecord[itemSlot]! < 1) {
             // Start loading crossbow
             useInfo.action = LimbAction.loadCrossbow;
             useInfo.lastCrossbowLoadTicks = Board.ticks;
@@ -1020,19 +861,13 @@ const itemRightClickDown = (item: Item, isOffhand: boolean, itemSlot: number): v
          break;
       }
       case "placeable": {
-         const placeableEntityInfo = PLACEABLE_ENTITY_INFO_RECORD[item.type as PlaceableItemType]!;
-         const snapInfo = calculateSnapInfo(placeableEntityInfo, false);
-         const placePosition = calculatePlacePosition(placeableEntityInfo, snapInfo, false);
-         const placeRotation = calculatePlaceRotation(snapInfo);
-
-         const isPlacedOnWall = snapInfo !== null && Board.entityRecord[snapInfo.snappedEntityID].type === EntityType.wall;
-         if (!canPlaceItem(placePosition, placeRotation, item, snapInfo !== null ? snapInfo.entityType : placeableEntityInfo.entityType, isPlacedOnWall)) {
-            return;
+         const structureType = ITEM_INFO_RECORD[item.type as PlaceableItemType].entityType;
+         const placeInfo = calculateStructurePlaceInfo(Player.instance!.position, Player.instance!.rotation, structureType, Board.getChunks());
+         
+         if (placeInfo !== null) {
+            Client.sendItemUsePacket();
+            useInfo.lastAttackTicks = Board.ticks;
          }
-
-         Client.sendItemUsePacket();
-
-         useInfo.lastAttackTicks = Board.ticks;
 
          break;
       }
@@ -1112,13 +947,15 @@ const selectItemSlot = (itemSlot: number): void => {
    }
 
    // Deselect the previous item and select the new item
-   if (definiteGameState.hotbar.itemSlots.hasOwnProperty(latencyGameState.selectedHotbarItemSlot)) {
-      deselectItem(definiteGameState.hotbar.itemSlots[latencyGameState.selectedHotbarItemSlot], false);
+   const previousItem = definiteGameState.hotbar.itemSlots[latencyGameState.selectedHotbarItemSlot];
+   if (typeof previousItem !== "undefined") {
+      deselectItem(previousItem, false);
    }
-   if (definiteGameState.hotbar.itemSlots.hasOwnProperty(itemSlot)) {
-      selectItem(definiteGameState.hotbar.itemSlots[itemSlot]);
-      if (rightMouseButtonIsPressed && ITEM_TYPE_RECORD[definiteGameState.hotbar.itemSlots[itemSlot].type] === "bow") {
-         itemRightClickDown(definiteGameState.hotbar.itemSlots[itemSlot], false, itemSlot);
+   const newItem = definiteGameState.hotbar.itemSlots[itemSlot];
+   if (typeof newItem !== "undefined") {
+      selectItem(newItem);
+      if (rightMouseButtonIsPressed && ITEM_TYPE_RECORD[newItem.type] === "bow") {
+         itemRightClickDown(newItem, false, itemSlot);
       }
    }
 
@@ -1127,7 +964,7 @@ const selectItemSlot = (itemSlot: number): void => {
    Hotbar_setHotbarSelectedItemSlot(itemSlot);
 
    const playerInventoryUseComponent = Player.instance.getServerComponent(ServerComponentType.inventoryUse);
-   const hotbarUseInfo = playerInventoryUseComponent.getUseInfo("hotbar");
+   const hotbarUseInfo = playerInventoryUseComponent.getUseInfo(InventoryName.hotbar);
    hotbarUseInfo.selectedItemSlot = itemSlot;
 
    // @Incomplete

@@ -1,4 +1,4 @@
-import { ArmourItemType, GloveItemType, ItemType } from "webgl-test-shared/dist/items";
+import { ArmourItemType, GloveItemType, InventoryName, ItemType, ItemTypeString } from "webgl-test-shared/dist/items";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import Entity from "../Entity";
 import RenderPart from "../render-parts/RenderPart";
@@ -47,7 +47,7 @@ const GLOVES_TEXTURE_SOURCE_RECORD: Record<GloveItemType, string> = {
 
 const getArmourTextureSource = (armourType: ItemType): string => {
    if (!ARMOUR_WORN_INFO.hasOwnProperty(armourType)) {
-      console.warn("Can't find armour info for item type '" + ItemType[armourType] + ".");
+      console.warn("Can't find armour info for item type '" + ItemTypeString[armourType] + ".");
       return "";
    }
 
@@ -56,7 +56,7 @@ const getArmourTextureSource = (armourType: ItemType): string => {
 
 const getGloveTextureSource = (gloveType: ItemType): string => {
    if (!GLOVES_TEXTURE_SOURCE_RECORD.hasOwnProperty(gloveType)) {
-      console.warn("Can't find glove info for item type '" + ItemType[gloveType] + ".");
+      console.warn("Can't find glove info for item type '" + ItemTypeString[gloveType] + ".");
       return "";
    }
 
@@ -87,10 +87,10 @@ class EquipmentComponent extends Component {
    /** Updates the current armour render part based on the entity's inventory component */
    public updateArmourRenderPart(): void {
       const inventoryComponent = this.entity.getServerComponent(ServerComponentType.inventory);
-      const armourInventory = inventoryComponent.getInventory("armourSlot");
+      const armourInventory = inventoryComponent.getInventory(InventoryName.armourSlot);
       
-      if (armourInventory.itemSlots.hasOwnProperty(1)) {
-         const armour = armourInventory.itemSlots[1];
+      const armour = armourInventory.itemSlots[1];
+      if (typeof armour !== "undefined") {
          
          if (this.armourRenderPart === null) {
             this.armourRenderPart = new RenderPart(
@@ -112,11 +112,11 @@ class EquipmentComponent extends Component {
    // @Cleanup: Copy and paste from armour
    private updateGloveRenderParts(): void {
       const inventoryComponent = this.entity.getServerComponent(ServerComponentType.inventory);
-      const gloveInventory = inventoryComponent.getInventory("gloveSlot");
+      const gloveInventory = inventoryComponent.getInventory(InventoryName.gloveSlot);
       
       // @Incomplete: Make a glove for every hand
-      if (gloveInventory.itemSlots.hasOwnProperty(1)) {
-         const glove = gloveInventory.itemSlots[1];
+      const glove = gloveInventory.itemSlots[1];
+      if (typeof glove !== "undefined") {
          const inventoryUseComponent = this.entity.getServerComponent(ServerComponentType.inventoryUse);
 
          if (this.gloveRenderParts.length === 0) {

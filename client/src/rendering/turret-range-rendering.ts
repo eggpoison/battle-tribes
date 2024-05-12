@@ -1,11 +1,12 @@
-import { ItemType, PlaceableItemType } from "webgl-test-shared/dist/items";
+import { ITEM_INFO_RECORD, ItemType, PlaceableItemType } from "webgl-test-shared/dist/items";
 import { EntityType } from "webgl-test-shared/dist/entities";
-import { getPlayerSelectedItem } from "../entities/Player";
+import Player, { getPlayerSelectedItem } from "../entities/Player";
 import { CAMERA_UNIFORM_BUFFER_BINDING_INDEX, TIME_UNIFORM_BUFFER_BINDING_INDEX, createWebGLProgram, gl } from "../webgl";
-import { PLACEABLE_ENTITY_INFO_RECORD, calculatePlacePosition, calculatePlaceRotation, calculateSnapInfo } from "../player-input";
 import Board from "../Board";
 import Entity from "../Entity";
 import { getHoveredEntityID } from "../entity-selection";
+import { calculateStructurePlaceInfo } from "webgl-test-shared/dist/structures";
+import Camera from "../Camera";
 
 const CIRCLE_DETAIL = 300;
 
@@ -142,16 +143,13 @@ const getTurretItemType = (turret: Entity): ItemType => {
 const getRenderingInfo = (): TurretRangeRenderingInfo | null => {
    const playerSelectedItem = getPlayerSelectedItem();
    if (playerSelectedItem !== null && (playerSelectedItem.type === ItemType.ballista || playerSelectedItem.type === ItemType.sling_turret)) {
-      const placeableEntityInfo = PLACEABLE_ENTITY_INFO_RECORD[playerSelectedItem.type as PlaceableItemType]!;
-   
-      const snapInfo = calculateSnapInfo(placeableEntityInfo, true);
-      const placePosition = calculatePlacePosition(placeableEntityInfo, snapInfo, true);
-      const placeRotation = calculatePlaceRotation(snapInfo);
+      const structureType = ITEM_INFO_RECORD[playerSelectedItem.type as PlaceableItemType].entityType;
+      const placeInfo = calculateStructurePlaceInfo(Camera.position, Player.instance!.rotation, structureType, Board.getChunks());
 
       return {
-         x: placePosition.x,
-         y: placePosition.y,
-         rotation: placeRotation,
+         x: placeInfo.position.x,
+         y: placeInfo.position.y,
+         rotation: placeInfo.rotation,
          itemType: playerSelectedItem.type,
          rangeInfo: TURRET_RANGE_INFO_RECORD[playerSelectedItem.type]!
       }

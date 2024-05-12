@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.assertUnreachable = exports.distBetweenPointAndRectangle = exports.smoothstep = exports.pointIsInRectangle = exports.distToSegment = exports.customTickIntervalHasPassed = exports.angle = exports.calculateDistanceSquared = exports.distance = exports.randSign = exports.clamp = exports.clampToBoardDimensions = exports.veryBadHash = exports.curveWeight = exports.roundNum = exports.rotatePoint = exports.rotateYAroundOrigin = exports.rotateXAroundOrigin = exports.rotateYAroundPoint = exports.rotateXAroundPoint = exports.flipAngle = exports.randItem = exports.lerp = exports.Vector = exports.Point = exports.randFloat = exports.randInt = void 0;
+exports.getAngleDiff = exports.assertUnreachable = exports.distBetweenPointAndRectangle = exports.smoothstep = exports.pointIsInRectangle = exports.distToSegment = exports.customTickIntervalHasPassed = exports.angle = exports.calculateDistanceSquared = exports.distance = exports.randSign = exports.clamp = exports.clampToBoardDimensions = exports.veryBadHash = exports.curveWeight = exports.roundNum = exports.rotatePoint = exports.rotateYAroundOrigin = exports.rotateXAroundOrigin = exports.rotateYAroundPoint = exports.rotateXAroundPoint = exports.flipAngle = exports.randItem = exports.lerp = exports.Vector = exports.Point = exports.randFloat = exports.randInt = void 0;
 /**
  * Returns a random integer inclusively.
  * @param min The minimum value of the random number.
@@ -273,3 +273,9 @@ function assertUnreachable(x) {
     throw new Error("Why must I exist?");
 }
 exports.assertUnreachable = assertUnreachable;
+function getAngleDiff(sourceAngle, targetAngle) {
+    let a = targetAngle - sourceAngle;
+    a = Math.abs((a + Math.PI) % (Math.PI * 2)) - Math.PI;
+    return a;
+}
+exports.getAngleDiff = getAngleDiff;

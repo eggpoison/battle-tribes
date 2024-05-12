@@ -14,12 +14,13 @@ import { tickCookingEntity } from "./cooking-entity";
 import Tribe from "../../Tribe";
 import { TribeComponent } from "../../components/TribeComponent";
 import CircularHitbox from "../../hitboxes/CircularHitbox";
+import { InventoryName } from "webgl-test-shared/dist/items";
 
-export const FURNACE_SIZE = 80;
+const HITBOX_SIZE = 80;
 
 export function createFurnaceHitboxes(parentX: number, parentY: number, localID: number, parentRotation: number): ReadonlyArray<RectangularHitbox | CircularHitbox> {
    const hitboxes = new Array<RectangularHitbox | CircularHitbox>();
-   hitboxes.push(new RectangularHitbox(parentX, parentY, 2, 0, 0, HitboxCollisionType.hard, localID, parentRotation, FURNACE_SIZE, FURNACE_SIZE, 0));
+   hitboxes.push(new RectangularHitbox(parentX, parentY, 2, 0, 0, HitboxCollisionType.hard, localID, parentRotation, HITBOX_SIZE, HITBOX_SIZE, 0));
    return hitboxes;
 }
 
@@ -38,9 +39,9 @@ export function createFurnace(position: Point, rotation: number, tribe: Tribe): 
 
    const inventoryComponent = new InventoryComponent();
    InventoryComponentArray.addComponent(furnace.id, inventoryComponent);
-   createNewInventory(inventoryComponent, "fuelInventory", 1, 1, false);
-   createNewInventory(inventoryComponent, "ingredientInventory", 1, 1, false);
-   createNewInventory(inventoryComponent, "outputInventory", 1, 1, false);
+   createNewInventory(inventoryComponent, InventoryName.fuelInventory, 1, 1, false);
+   createNewInventory(inventoryComponent, InventoryName.ingredientInventory, 1, 1, false);
+   createNewInventory(inventoryComponent, InventoryName.outputInventory, 1, 1, false);
 
    CookingComponentArray.addComponent(furnace.id, new CookingComponent());
 

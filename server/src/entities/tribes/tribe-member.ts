@@ -3,26 +3,26 @@ import { COLLISION_BITS } from "webgl-test-shared/dist/collision-detection";
 import { PlanterBoxPlant, BlueprintType, BuildingMaterial, MATERIAL_TO_ITEM_MAP } from "webgl-test-shared/dist/components";
 import { CraftingStation } from "webgl-test-shared/dist/crafting-recipes";
 import { EntityType, LimbAction, PlayerCauseOfDeath, GenericArrowType, EntityTypeString } from "webgl-test-shared/dist/entities";
-import { PlaceableItemType, ItemType, Item, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, BattleaxeItemInfo, SwordItemInfo, AxeItemInfo, ToolItemInfo, HammerItemInfo, ConsumableItemInfo, BowItemInfo, itemIsStackable, getItemStackSize, BackpackItemInfo, ArmourItemInfo } from "webgl-test-shared/dist/items";
+import { PlaceableItemType, ItemType, Item, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, BattleaxeItemInfo, SwordItemInfo, AxeItemInfo, ToolItemInfo, HammerItemInfo, ConsumableItemInfo, BowItemInfo, itemIsStackable, getItemStackSize, BackpackItemInfo, ArmourItemInfo, InventoryName } from "webgl-test-shared/dist/items";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
-import { StructureType, STRUCTURE_TYPES } from "webgl-test-shared/dist/structures";
+import { StructureType, STRUCTURE_TYPES, calculateStructurePlaceInfo } from "webgl-test-shared/dist/structures";
 import { TribesmanTitle } from "webgl-test-shared/dist/titles";
 import { TribeType } from "webgl-test-shared/dist/tribes";
 import { Point, lerp } from "webgl-test-shared/dist/utils";
 import Entity from "../../Entity";
 import Board from "../../Board";
 import { BerryBushComponentArray, BuildingMaterialComponentArray, HealthComponentArray, InventoryComponentArray, InventoryUseComponentArray, ItemComponentArray, PlantComponentArray, SpikesComponentArray, TreeComponentArray, TribeComponentArray, TribeMemberComponentArray, TribesmanComponentArray } from "../../components/ComponentArray";
-import { addItemToSlot, consumeItemFromSlot, consumeItemType, countItemType, getInventory, getItem, getItemFromInventory, inventoryHasItemInSlot, pickupItemEntity, removeItemFromInventory, resizeInventory } from "../../components/InventoryComponent";
+import { consumeItemFromSlot, consumeItemType, countItemType, getInventory, pickupItemEntity, resizeInventory } from "../../components/InventoryComponent";
 import { getEntitiesInRange } from "../../ai-shared";
 import { addDefence, damageEntity, healEntity, removeDefence } from "../../components/HealthComponent";
-import { WORKBENCH_SIZE, createWorkbench } from "../workbench";
-import { TRIBE_TOTEM_SIZE, createTribeTotem } from "./tribe-totem";
-import { WORKER_HUT_SIZE, createWorkerHut } from "./worker-hut";
+import { createWorkbench } from "../workbench";
+import { createTribeTotem } from "./tribe-totem";
+import { createWorkerHut } from "./worker-hut";
 import { applyStatusEffect } from "../../components/StatusEffectComponent";
-import { BARREL_SIZE, createBarrel } from "./barrel";
-import { CAMPFIRE_SIZE, createCampfire } from "../cooking-entities/campfire";
-import { FURNACE_SIZE, createFurnace } from "../cooking-entities/furnace";
+import { createBarrel } from "./barrel";
+import { createCampfire } from "../cooking-entities/campfire";
+import { createFurnace } from "../cooking-entities/furnace";
 import { GenericArrowInfo, createWoodenArrow } from "../projectiles/wooden-arrow";
 import { onFishLeaderHurt } from "../mobs/fish";
 import { createSpearProjectile } from "../projectiles/spear-projectile";
@@ -55,173 +55,21 @@ import { createFence } from "../buildings/fence";
 import { createFenceGate } from "../buildings/fence-gate";
 import { createBuildingHitboxes } from "../../buildings";
 import { getHitboxesCollidingEntities } from "../../collision";
-import { FenceConnectionComponentArray, addFenceConnection } from "../../components/FenceConnectionComponent";
 
 const enum Vars {
    ITEM_THROW_FORCE = 100,
    ITEM_THROW_OFFSET = 32
 }
 
-interface PotentialSnapPosition {
-   readonly position: Point;
-   readonly sideBit: number;
-   readonly i: number;
-}
-
 /** 1st bit = top, 2nd bit = right, 3rd bit = bottom, 4th bit = left */
 export type ConnectedSidesBitset = number;
 export type ConnectedEntityIDs = [number, number, number, number];
-
-interface BuildingSnapInfo {
-   /** -1 if no snap was found */
-   readonly x: number;
-   readonly y: number;
-   readonly rotation: number;
-   readonly entityType: StructureType;
-   readonly connectedSidesBitset: ConnectedSidesBitset;
-   readonly connectedEntityIDs: ConnectedEntityIDs;
-}
 
 const DEFAULT_ATTACK_KNOCKBACK = 125;
 
 const SWORD_DAMAGEABLE_ENTITIES: ReadonlyArray<EntityType> = [EntityType.zombie, EntityType.krumblid, EntityType.cactus, EntityType.tribeWorker, EntityType.tribeWarrior, EntityType.player, EntityType.yeti, EntityType.frozenYeti, EntityType.berryBush, EntityType.fish, EntityType.tribeTotem, EntityType.workerHut, EntityType.warriorHut, EntityType.cow, EntityType.golem, EntityType.slime, EntityType.slimewisp];
 const PICKAXE_DAMAGEABLE_ENTITIES: ReadonlyArray<EntityType> = [EntityType.boulder, EntityType.tombstone, EntityType.iceSpikes, EntityType.furnace, EntityType.golem];
 const AXE_DAMAGEABLE_ENTITIES: ReadonlyArray<EntityType> = [EntityType.tree, EntityType.wall, EntityType.door, EntityType.embrasure, EntityType.researchBench, EntityType.workbench, EntityType.floorSpikes, EntityType.wallSpikes, EntityType.floorPunjiSticks, EntityType.wallPunjiSticks, EntityType.tribeTotem, EntityType.workerHut, EntityType.warriorHut, EntityType.barrel];
-
-// @Cleanup: Copy and paste. This placeable entity stuff is shared between server and client
-
-enum PlaceableItemHitboxType {
-   circular = 0,
-   rectangular = 1
-}
-
-interface PlaceableItemHitboxInfo {
-   readonly entityType: StructureType;
-   readonly type: PlaceableItemHitboxType;
-   readonly placeOffset: number;
-}
-
-interface PlaceableItemCircularHitboxInfo extends PlaceableItemHitboxInfo {
-   readonly type: PlaceableItemHitboxType.circular;
-   readonly radius: number;
-}
-
-interface PlaceableItemRectangularHitboxInfo extends PlaceableItemHitboxInfo {
-   readonly type: PlaceableItemHitboxType.rectangular;
-   readonly width: number;
-   readonly height: number;
-}
-
-// @Cleanup: Shared between both client and server
-const PLACEABLE_ITEM_HITBOX_INFO: Record<PlaceableItemType, PlaceableItemCircularHitboxInfo | PlaceableItemRectangularHitboxInfo> = {
-   [ItemType.workbench]: {
-      entityType: EntityType.workbench,
-      type: PlaceableItemHitboxType.rectangular,
-      width: WORKBENCH_SIZE,
-      height: WORKBENCH_SIZE,
-      placeOffset: WORKBENCH_SIZE / 2
-   },
-   [ItemType.tribe_totem]: {
-      entityType: EntityType.tribeTotem,
-      type: PlaceableItemHitboxType.circular,
-      radius: TRIBE_TOTEM_SIZE / 2,
-      placeOffset: TRIBE_TOTEM_SIZE / 2
-   },
-   [ItemType.worker_hut]: {
-      entityType: EntityType.workerHut,
-      type: PlaceableItemHitboxType.rectangular,
-      width: WORKER_HUT_SIZE,
-      height: WORKER_HUT_SIZE,
-      placeOffset: WORKER_HUT_SIZE / 2
-   },
-   [ItemType.barrel]: {
-      entityType: EntityType.barrel,
-      type: PlaceableItemHitboxType.circular,
-      radius: BARREL_SIZE / 2,
-      placeOffset: BARREL_SIZE / 2
-   },
-   [ItemType.campfire]: {
-      entityType: EntityType.campfire,
-      type: PlaceableItemHitboxType.rectangular,
-      width: CAMPFIRE_SIZE,
-      height: CAMPFIRE_SIZE,
-      placeOffset: CAMPFIRE_SIZE / 2
-   },
-   [ItemType.furnace]: {
-      entityType: EntityType.furnace,
-      type: PlaceableItemHitboxType.rectangular,
-      width: FURNACE_SIZE,
-      height: FURNACE_SIZE,
-      placeOffset: FURNACE_SIZE / 2
-   },
-   [ItemType.research_bench]: {
-      entityType: EntityType.researchBench,
-      type: PlaceableItemHitboxType.rectangular,
-      width: 32 * 4,
-      height: 20 * 4,
-      placeOffset: 50
-   },
-   [ItemType.wooden_wall]: {
-      entityType: EntityType.wall,
-      type: PlaceableItemHitboxType.rectangular,
-      width: 64,
-      height: 64,
-      placeOffset: 32
-   },
-   [ItemType.planter_box]: {
-      entityType: EntityType.planterBox,
-      type: PlaceableItemHitboxType.rectangular,
-      width: 80,
-      height: 80,
-      placeOffset: 40
-   },
-   [ItemType.wooden_spikes]: {
-      entityType: EntityType.floorSpikes,
-      type: PlaceableItemHitboxType.rectangular,
-      width: 48,
-      height: 48,
-      placeOffset: 20
-   },
-   [ItemType.punji_sticks]: {
-      entityType: EntityType.floorPunjiSticks,
-      type: PlaceableItemHitboxType.rectangular,
-      width: 48,
-      height: 48,
-      placeOffset: 20
-   },
-   [ItemType.ballista]: {
-      entityType: EntityType.ballista,
-      type: PlaceableItemHitboxType.rectangular,
-      width: 100,
-      height: 100,
-      placeOffset: 50
-   },
-   [ItemType.sling_turret]: {
-      entityType: EntityType.slingTurret,
-      type: PlaceableItemHitboxType.circular,
-      radius: 36,
-      placeOffset: 36
-   },
-   [ItemType.healing_totem]: {
-      entityType: EntityType.healingTotem,
-      type: PlaceableItemHitboxType.circular,
-      radius: 48,
-      placeOffset: 48
-   },
-   [ItemType.wooden_fence]: {
-      entityType: EntityType.fence,
-      type: PlaceableItemHitboxType.rectangular,
-      width: 64,
-      height: 16,
-      placeOffset: 8
-   }
-};
-
-function assertItemTypeIsPlaceable(itemType: ItemType): asserts itemType is PlaceableItemType {
-   if (!PLACEABLE_ITEM_HITBOX_INFO.hasOwnProperty(itemType)) {
-      throw new Error(`Entity type '${itemType}' is not placeable.`);
-   }
-}
 
 const getDamageMultiplier = (entity: Entity): number => {
    let multiplier = 1;
@@ -318,7 +166,7 @@ const getRepairTimeMultiplier = (tribeMember: Entity): number => {
 }
 
 // @Cleanup: Maybe split this up into repair and work functions
-export function repairBuilding(tribeMember: Entity, targetEntity: Entity, itemSlot: number, inventoryName: string): boolean {
+export function repairBuilding(tribeMember: Entity, targetEntity: Entity, itemSlot: number, inventoryName: InventoryName): boolean {
    const inventoryComponent = InventoryComponentArray.getComponent(tribeMember.id);
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribeMember.id);
 
@@ -330,8 +178,9 @@ export function repairBuilding(tribeMember: Entity, targetEntity: Entity, itemSl
    }
    
    // Find the selected item
-   const item = getItem(inventoryComponent, inventoryName, itemSlot);
-   if (item === null) {
+   const inventory = getInventory(inventoryComponent, inventoryName);
+   const item = inventory.itemSlots[itemSlot];
+   if (typeof item === "undefined") {
       console.warn("Tried to repair a building without a hammer!");
       return false;
    }
@@ -458,7 +307,7 @@ const gatherPlant = (plant: Entity, attacker: Entity): void => {
  */
 // @Cleanup: (?) Pass in the item to use directly instead of passing in the item slot and inventory name
 // @Cleanup: Not just for tribe members, move to different file
-export function attemptAttack(attacker: Entity, targetEntity: Entity, itemSlot: number, inventoryName: string): boolean {
+export function attemptAttack(attacker: Entity, targetEntity: Entity, itemSlot: number, inventoryName: InventoryName): boolean {
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(attacker.id);
    if (inventoryUseComponent.globalAttackCooldown > 0) {
       return false;
@@ -473,9 +322,9 @@ export function attemptAttack(attacker: Entity, targetEntity: Entity, itemSlot: 
    
    // Find the selected item
    const inventoryComponent = InventoryComponentArray.getComponent(attacker.id);
-   let item = getItem(inventoryComponent, inventoryName, itemSlot);
-   
-   if (item !== null && useInfo.thrownBattleaxeItemID === item.id) {
+   const inventory = getInventory(inventoryComponent, inventoryName);
+   let item: Item | null | undefined = inventory.itemSlots[itemSlot];
+   if (typeof item === "undefined" || useInfo.thrownBattleaxeItemID === item.id) {
       item = null;
    }
 
@@ -496,8 +345,8 @@ export function attemptAttack(attacker: Entity, targetEntity: Entity, itemSlot: 
 
    // Harvest leaves from trees and berries when wearing the gathering or gardening gloves
    if ((item === null || item.type === ItemType.leaf) && (targetEntity.type === EntityType.tree || targetEntity.type === EntityType.berryBush || targetEntity.type === EntityType.plant)) {
-      const glove = getItem(inventoryComponent, "gloveSlot", 1);
-      if (glove !== null && (glove.type === ItemType.gathering_gloves || glove.type === ItemType.gardening_gloves)) {
+      const glove = inventory.itemSlots[1];
+      if (typeof glove !== "undefined" && (glove.type === ItemType.gathering_gloves || glove.type === ItemType.gardening_gloves)) {
          gatherPlant(targetEntity, attacker);
          return true;
       }
@@ -638,7 +487,7 @@ export function calculateRadialAttackTargets(entity: Entity, attackOffset: numbe
    const attackedEntities = getEntitiesInRange(attackPositionX, attackPositionY, attackRadius);
    
    // Don't attack yourself
-   while (true) {
+   for (;;) {
       const idx = attackedEntities.indexOf(entity);
       if (idx !== -1) {
          attackedEntities.splice(idx, 1);
@@ -648,169 +497,6 @@ export function calculateRadialAttackTargets(entity: Entity, attackOffset: numbe
    }
 
    return attackedEntities;
-}
-
-const calculateRegularPlacePosition = (entity: Entity, placeInfo: PlaceableItemHitboxInfo): Point => {
-   const placePositionX = entity.position.x + (Settings.ITEM_PLACE_DISTANCE + placeInfo.placeOffset) * Math.sin(entity.rotation);
-   const placePositionY = entity.position.y + (Settings.ITEM_PLACE_DISTANCE + placeInfo.placeOffset) * Math.cos(entity.rotation);
-   return new Point(placePositionX, placePositionY);
-}
-
-const entityIsPlacedOnWall = (entity: Entity): boolean => {
-   return entity.type === EntityType.wallSpikes || entity.type === EntityType.wallPunjiSticks;
-}
-
-const calculateStructureSnapPositions = (snapOrigin: Point, snapEntity: Entity, placeRotation: number, isPlacedOnWall: boolean, placeInfo: PlaceableItemHitboxInfo): ReadonlyArray<Point> => {
-   const snapPositions = new Array<Point>();
-   for (let i = 0; i < 4; i++) {
-      const direction = i * Math.PI / 2 + snapEntity.rotation;
-      let snapEntityOffset: number = 0;
-      if (i % 2 === 0) {
-         // Top and bottom snap positions
-         // snapEntityOffset = getSnapOffsetHeight(snapEntity.type as unknown as StructureType, entityIsPlacedOnWall(snapEntity)) * 0.5;
-      } else {
-         // Left and right snap positions
-         // snapEntityOffset = getSnapOffsetWidth(snapEntity.type as unknown as StructureType, entityIsPlacedOnWall(snapEntity)) * 0.5;
-      }
-
-      const epsilon = 0.01; // @Speed: const enum?
-      let structureOffsetI = i;
-      // If placing on the left or right side of the snap entity, use the width offset
-      if (!(Math.abs(direction - placeRotation) < epsilon || Math.abs(direction - (placeRotation + Math.PI)) < epsilon)) {
-         structureOffsetI++;
-      }
-
-      let structureOffset: number = 0;
-      if (structureOffsetI % 2 === 0 || (isPlacedOnWall && (placeInfo.entityType === EntityType.floorSpikes || placeInfo.entityType === EntityType.floorPunjiSticks))) {
-         // Top and bottom
-         // structureOffset = getSnapOffsetHeight(placeInfo.entityType as StructureType, isPlacedOnWall) * 0.5;
-      } else {
-         // Left and right
-         // structureOffset = getSnapOffsetWidth(placeInfo.entityType as StructureType, isPlacedOnWall) * 0.5;
-      }
-
-      const offset = snapEntityOffset + structureOffset;
-      const positionX = snapOrigin.x + offset * Math.sin(direction);
-      const positionY = snapOrigin.y + offset * Math.cos(direction);
-      snapPositions.push(new Point(positionX, positionY));
-   }
-
-   return snapPositions;
-}
-
-const calculateStructureSnapPosition = (snapPositions: ReadonlyArray<Point>, regularPlacePosition: Point): PotentialSnapPosition | null => {
-   // @Incomplete: position can never be null
-   
-   let minDist = Settings.STRUCTURE_POSITION_SNAP;
-   let closestPosition: PotentialSnapPosition | null = null;
-   for (let i = 0; i < 4; i++) {
-      const position = snapPositions[i];
-
-      const snapDistance = position.calculateDistanceBetween(regularPlacePosition);
-      if (snapDistance < minDist) {
-         const oppositeI = (i + 2) % 4;
-
-         minDist = snapDistance;
-         closestPosition = {
-            position: position,
-            sideBit: 1 << oppositeI,
-            i: oppositeI
-         };
-      }
-   }
-
-   return closestPosition;
-}
-
-export function calculateSnapInfo(entity: Entity, placeInfo: PlaceableItemHitboxInfo): BuildingSnapInfo | null {
-   const regularPlacePosition = calculateRegularPlacePosition(entity, placeInfo);
-
-   const minChunkX = Math.max(Math.floor((regularPlacePosition.x - Settings.STRUCTURE_SNAP_RANGE) / Settings.CHUNK_UNITS), 0);
-   const maxChunkX = Math.min(Math.floor((regularPlacePosition.x + Settings.STRUCTURE_SNAP_RANGE) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1);
-   const minChunkY = Math.max(Math.floor((regularPlacePosition.y - Settings.STRUCTURE_SNAP_RANGE) / Settings.CHUNK_UNITS), 0);
-   const maxChunkY = Math.min(Math.floor((regularPlacePosition.y + Settings.STRUCTURE_SNAP_RANGE) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1);
-   
-   const snappableEntities = new Array<Entity>();
-   for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
-      for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
-         const chunk = Board.getChunk(chunkX, chunkY);
-         for (const currentEntity of chunk.entities) {
-            const distance = regularPlacePosition.calculateDistanceBetween(currentEntity.position);
-            // @Cleanup: need?
-            if (distance > Settings.STRUCTURE_SNAP_RANGE) {
-               continue;
-            }
-            
-            if (STRUCTURE_TYPES.includes(currentEntity.type as StructureType)) {
-               snappableEntities.push(currentEntity);
-            }
-         }
-      }
-   }
-
-   for (const snapEntity of snappableEntities) {
-      const snapOrigin = snapEntity.position.copy();
-      if (snapEntity.type === EntityType.embrasure) {
-         snapOrigin.x -= 22 * Math.sin(snapEntity.rotation);
-         snapOrigin.y -= 22 * Math.cos(snapEntity.rotation);
-      }
-
-      const isPlacedOnWall = snapEntity.type === EntityType.wall;
-
-      // @Cleanup
-      let clampedSnapRotation = snapEntity.rotation;
-      while (clampedSnapRotation >= Math.PI * 0.25) {
-         clampedSnapRotation -= Math.PI * 0.5;
-      }
-      while (clampedSnapRotation < Math.PI * 0.25) {
-         clampedSnapRotation += Math.PI * 0.5;
-      }
-      const placeRotation = Math.round(entity.rotation / (Math.PI * 0.5)) * Math.PI * 0.5 + clampedSnapRotation;
-
-      const snapPositions = calculateStructureSnapPositions(snapOrigin, snapEntity, placeRotation, isPlacedOnWall, placeInfo);
-      const snapPosition = calculateStructureSnapPosition(snapPositions, regularPlacePosition);
-      if (snapPosition !== null) {
-         // @incomplete
-         // @Hack
-         let finalPlaceRotation = placeRotation;
-         // if (isPlacedOnWall && (placeInfo.entityType === EntityType.spikes || placeInfo.entityType === EntityType.punjiSticks)) {
-         if (isPlacedOnWall) {
-            finalPlaceRotation = snapEntity.position.calculateAngleBetween(snapPosition.position);
-         } else if (placeInfo.entityType === EntityType.fence) {
-            finalPlaceRotation = snapEntity.rotation;
-         }
-
-         const connectedEntityIDs: ConnectedEntityIDs = [0, 0, 0, 0];
-         connectedEntityIDs[snapPosition.i] = snapEntity.id;
-
-         return {
-            x: snapPosition.position.x,
-            y: snapPosition.position.y,
-            rotation: finalPlaceRotation,
-            entityType: placeInfo.entityType,
-            connectedSidesBitset: snapPosition.sideBit,
-            connectedEntityIDs: connectedEntityIDs
-         };
-      }
-   }
-   
-   return null;
-}
-
-const calculatePlacePosition = (entity: Entity, placeInfo: PlaceableItemHitboxInfo, snapInfo: BuildingSnapInfo | null): Point => {
-   if (snapInfo === null) {
-      return calculateRegularPlacePosition(entity, placeInfo);
-   }
-
-   return new Point(snapInfo.x, snapInfo.y);
-}
-
-const calculatePlaceRotation = (entity: Entity, snapInfo: BuildingSnapInfo | null): number => {
-   if (snapInfo === null) {
-      return entity.rotation;
-   }
-
-   return snapInfo.rotation;
 }
 
 const buildingCanBePlaced = (x: number, y: number, rotation: number, entityType: StructureType): boolean => {
@@ -873,7 +559,7 @@ export function placeBuilding(tribe: Tribe, position: Point, rotation: number, e
    }
 }
 
-export function useItem(tribeMember: Entity, item: Item, inventoryName: string, itemSlot: number): void {
+export function useItem(tribeMember: Entity, item: Item, inventoryName: InventoryName, itemSlot: number): void {
    const itemCategory = ITEM_TYPE_RECORD[item.type];
 
    const inventoryComponent = InventoryComponentArray.getComponent(tribeMember.id);
@@ -886,15 +572,18 @@ export function useItem(tribeMember: Entity, item: Item, inventoryName: string, 
          // Equip the armour
          // 
          
-         const targetItem = getItem(inventoryComponent, "armourSlot", 1);
+         const armourSlotInventory = getInventory(inventoryComponent, InventoryName.armourSlot);
+         const targetItem = armourSlotInventory.itemSlots[1];
+         
          // If the target item slot has a different item type, don't attempt to transfer
-         if (targetItem !== null && targetItem.type !== item.type) {
+         if (typeof targetItem !== "undefined" && targetItem.type !== item.type) {
             return;
          }
-
-         // Move from hotbar to armour slot
-         removeItemFromInventory(inventoryComponent, inventoryName, itemSlot);
-         addItemToSlot(inventoryComponent, "armourSlot", 1, item.type, 1);
+         
+         // Move to armour slot
+         const inventory = getInventory(inventoryComponent, inventoryName);
+         inventory.removeItem(itemSlot);
+         armourSlotInventory.addItem(item, 1);
          break;
       }
       case "glove": {
@@ -902,15 +591,18 @@ export function useItem(tribeMember: Entity, item: Item, inventoryName: string, 
          // Equip the glove
          // 
          
-         const targetItem = getItem(inventoryComponent, "gloveSlot", 1);
+         const gloveSlotInventory = getInventory(inventoryComponent, InventoryName.armourSlot);
+         const targetItem = gloveSlotInventory.itemSlots[1];
+
          // If the target item slot has a different item type, don't attempt to transfer
-         if (targetItem !== null && targetItem.type !== item.type) {
+         if (typeof targetItem !== "undefined" && targetItem.type !== item.type) {
             return;
          }
 
-         // Move from hotbar to glove slot
-         removeItemFromInventory(inventoryComponent, inventoryName, itemSlot);
-         addItemToSlot(inventoryComponent, "gloveSlot", 1, item.type, 1);
+         // Move to glove slot
+         const inventory = getInventory(inventoryComponent, inventoryName);
+         inventory.removeItem(itemSlot);
+         gloveSlotInventory.addItem(item, 1);
          break;
       }
       case "healing": {
@@ -935,23 +627,16 @@ export function useItem(tribeMember: Entity, item: Item, inventoryName: string, 
          break;
       }
       case "placeable": {
-         assertItemTypeIsPlaceable(item.type);
-
-         const placeInfo = PLACEABLE_ITEM_HITBOX_INFO[item.type];
-
-         const snapInfo = calculateSnapInfo(tribeMember, placeInfo);
-         const placePosition = calculatePlacePosition(tribeMember, placeInfo, snapInfo);
-         const placeRotation = calculatePlaceRotation(tribeMember, snapInfo);
-
-         const placedEntityType = snapInfo !== null ? snapInfo.entityType : placeInfo.entityType;
+         const structureType = ITEM_INFO_RECORD[item.type as PlaceableItemType].entityType;
+         const placeInfo = calculateStructurePlaceInfo(tribeMember.position, tribeMember.rotation, structureType, Board.chunks);
 
          // Make sure the placeable item can be placed
-         if (!buildingCanBePlaced(placePosition.x, placePosition.y, placeRotation, placedEntityType)) return;
+         if (!buildingCanBePlaced(placeInfo.position.x, placeInfo.position.y, placeInfo.rotation, placeInfo.entityType)) return;
          
          const tribeComponent = TribeComponentArray.getComponent(tribeMember.id);
-         placeBuilding(tribeComponent.tribe, placePosition, placeRotation, placedEntityType, snapInfo !== null ? snapInfo.connectedSidesBitset : 0, snapInfo !== null ? snapInfo.connectedEntityIDs : [0, 0, 0, 0]);
+         placeBuilding(tribeComponent.tribe, placeInfo.position, placeInfo.rotation, placeInfo.entityType, placeInfo.snappedSidesBitset, placeInfo.snappedEntityIDs);
 
-         consumeItemFromSlot(inventoryComponent, "hotbar", itemSlot, 1);
+         consumeItemFromSlot(inventoryComponent, InventoryName.hotbar, itemSlot, 1);
 
          break;
       }
@@ -1008,7 +693,9 @@ export function useItem(tribeMember: Entity, item: Item, inventoryName: string, 
          // Don't fire if not loaded
          const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribeMember.id);
          const useInfo = getInventoryUseInfo(inventoryUseComponent, inventoryName);
-         if (!useInfo.crossbowLoadProgressRecord.hasOwnProperty(itemSlot) || useInfo.crossbowLoadProgressRecord[itemSlot] < 1) {
+
+         const loadProgress = useInfo.crossbowLoadProgressRecord[itemSlot];
+         if (typeof loadProgress === "undefined" || loadProgress < 1) {
             return;
          }
 
@@ -1102,14 +789,11 @@ export function useItem(tribeMember: Entity, item: Item, inventoryName: string, 
 
 export function tribeMemberCanPickUpItem(tribeMember: Entity, itemType: ItemType): boolean {
    const inventoryComponent = InventoryComponentArray.getComponent(tribeMember.id);
-   const inventory = getInventory(inventoryComponent, "hotbar");
+   const inventory = getInventory(inventoryComponent, InventoryName.hotbar);
    
-   for (let itemSlot = 1; itemSlot <= inventory.width * inventory.height; itemSlot++) {
-      if (!inventory.itemSlots.hasOwnProperty(itemSlot)) {
-         return true;
-      }
+   for (let i = 0; i < inventory.items.length; i++) {
+      const item = inventory.items[i];
 
-      const item = inventory.itemSlots[itemSlot];
       if (item.type === itemType && itemIsStackable(item.type) && getItemStackSize(item) - item.count > 0) {
          return true;
       }
@@ -1124,9 +808,9 @@ const tickInventoryUseInfo = (tribeMember: Entity, inventoryUseInfo: InventoryUs
       case LimbAction.useMedicine: {
          inventoryUseInfo.foodEatingTimer -= Settings.I_TPS;
    
-         if (inventoryUseInfo.foodEatingTimer <= 0 && inventoryHasItemInSlot(inventoryUseInfo.inventory, inventoryUseInfo.selectedItemSlot)) {
-            const selectedItem = getItemFromInventory(inventoryUseInfo.inventory, inventoryUseInfo.selectedItemSlot);
-            if (selectedItem !== null) {
+         if (inventoryUseInfo.foodEatingTimer <= 0) {
+            const selectedItem = inventoryUseInfo.inventory.itemSlots[inventoryUseInfo.selectedItemSlot];
+            if (typeof selectedItem !== "undefined") {
                const itemCategory = ITEM_TYPE_RECORD[selectedItem.type];
                if (itemCategory === "healing") {
                   useItem(tribeMember, selectedItem, inventoryUseInfo.inventory.name, inventoryUseInfo.selectedItemSlot);
@@ -1143,13 +827,14 @@ const tickInventoryUseInfo = (tribeMember: Entity, inventoryUseInfo: InventoryUs
          break;
       }
       case LimbAction.loadCrossbow: {
-         if (!inventoryUseInfo.crossbowLoadProgressRecord.hasOwnProperty(inventoryUseInfo.selectedItemSlot)) {
+         const loadProgress = inventoryUseInfo.crossbowLoadProgressRecord[inventoryUseInfo.selectedItemSlot];
+         if (typeof loadProgress === "undefined") {
             inventoryUseInfo.crossbowLoadProgressRecord[inventoryUseInfo.selectedItemSlot] = Settings.I_TPS;
          } else {
-            inventoryUseInfo.crossbowLoadProgressRecord[inventoryUseInfo.selectedItemSlot] += Settings.I_TPS;
+            inventoryUseInfo.crossbowLoadProgressRecord[inventoryUseInfo.selectedItemSlot]! += Settings.I_TPS;
          }
          
-         if (inventoryUseInfo.crossbowLoadProgressRecord[inventoryUseInfo.selectedItemSlot] >= 1) {
+         if (inventoryUseInfo.crossbowLoadProgressRecord[inventoryUseInfo.selectedItemSlot]! >= 1) {
             inventoryUseInfo.crossbowLoadProgressRecord[inventoryUseInfo.selectedItemSlot] = 1;
             inventoryUseInfo.action = LimbAction.none;
          }
@@ -1170,34 +855,36 @@ export function tickTribeMember(tribeMember: Entity): void {
    const inventoryComponent = InventoryComponentArray.getComponent(tribeMember.id);
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribeMember.id);
 
-   const useInfo = getInventoryUseInfo(inventoryUseComponent, "hotbar");
+   const useInfo = getInventoryUseInfo(inventoryUseComponent, InventoryName.hotbar);
    tickInventoryUseInfo(tribeMember, useInfo);
 
    const tribeComponent = TribeComponentArray.getComponent(tribeMember.id);
    if (tribeComponent.tribe.type === TribeType.barbarians && tribeMember.type !== EntityType.tribeWorker) {
-      const useInfo = getInventoryUseInfo(inventoryUseComponent, "offhand");
+      const useInfo = getInventoryUseInfo(inventoryUseComponent, InventoryName.offhand);
       tickInventoryUseInfo(tribeMember, useInfo);
    }
 
    // @Speed: Shouldn't be done every tick, only do when the backpack changes
    // Update backpack
-   const backpackSlotInventory = getInventory(inventoryComponent, "backpackSlot");
-   if (backpackSlotInventory.itemSlots.hasOwnProperty(1)) {
-      const itemInfo = ITEM_INFO_RECORD[backpackSlotInventory.itemSlots[1].type] as BackpackItemInfo;
-      resizeInventory(inventoryComponent, "backpack", itemInfo.inventoryWidth, itemInfo.inventoryHeight);
+   const backpackSlotInventory = getInventory(inventoryComponent, InventoryName.backpackSlot);
+   const backpack = backpackSlotInventory.itemSlots[1];
+   if (typeof backpack !== "undefined") {
+      const itemInfo = ITEM_INFO_RECORD[backpack.type] as BackpackItemInfo;
+      resizeInventory(inventoryComponent, InventoryName.backpack, itemInfo.inventoryWidth, itemInfo.inventoryHeight);
    } else {
-      resizeInventory(inventoryComponent, "backpack", -1, -1);
+      resizeInventory(inventoryComponent, InventoryName.backpack, 0, 0);
    }
       
+   const healthComponent = HealthComponentArray.getComponent(tribeMember.id);
+
    // @Speed: Shouldn't be done every tick, only do when the armour changes
    // Armour defence
-   const armourSlotInventory = getInventory(inventoryComponent, "armourSlot");
-   const healthComponent = HealthComponentArray.getComponent(tribeMember.id);
-   if (armourSlotInventory.itemSlots.hasOwnProperty(1)) {
-      const itemInfo = ITEM_INFO_RECORD[armourSlotInventory.itemSlots[1].type] as ArmourItemInfo;
+   const armourSlotInventory = getInventory(inventoryComponent, InventoryName.armourSlot);
+   const armour = armourSlotInventory.itemSlots[1];
+   if (typeof armour !== "undefined") {
+      const itemInfo = ITEM_INFO_RECORD[armour.type] as ArmourItemInfo;
       addDefence(healthComponent, itemInfo.defence, "armour");
 
-      const armour = armourSlotInventory.itemSlots[1];
       if (armour.type === ItemType.leaf_suit) {
          tribeMember.collisionMask &= ~COLLISION_BITS.plants;
       } else {
@@ -1423,14 +1110,16 @@ export function onTribesmanCollision(tribesman: Entity, collidingEntity: Entity)
    }
 }
 
-export function throwItem(tribesman: Entity, inventoryName: string, itemSlot: number, dropAmount: number, throwDirection: number): void {
+export function throwItem(tribesman: Entity, inventoryName: InventoryName, itemSlot: number, dropAmount: number, throwDirection: number): void {
+   // Get the item
    const inventoryComponent = InventoryComponentArray.getComponent(tribesman.id);
    const inventory = getInventory(inventoryComponent, inventoryName);
-   if (!inventory.itemSlots.hasOwnProperty(itemSlot)) {
+   const item = inventory.itemSlots[itemSlot];
+   if (typeof item === "undefined") {
       return;
    }
    
-   const itemType = inventory.itemSlots[itemSlot].type;
+   const itemType = item.type;
    const amountRemoved = consumeItemFromSlot(inventoryComponent, inventoryName, itemSlot, dropAmount);
 
    const dropPosition = tribesman.position.copy();

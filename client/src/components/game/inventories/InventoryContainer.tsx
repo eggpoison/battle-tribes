@@ -18,11 +18,10 @@ const InventoryContainer = ({ entityID, inventory, className, selectedItemSlot, 
       const rowItemSlots = new Array<JSX.Element>();
       for (let x = 0; x < inventory.width; x++) {
          const itemSlot = y * inventory.width + x + 1;
+         const item = inventory.itemSlots[itemSlot];
 
          const isSelected = typeof selectedItemSlot !== "undefined" && itemSlot=== selectedItemSlot;
-         if (inventory.itemSlots.hasOwnProperty(itemSlot)) {
-            const item = inventory.itemSlots[itemSlot];
-
+         if (typeof item !== "undefined") {
             rowItemSlots.push(
                <ItemSlot key={x} onClick={e => leftClickItemSlot(e, entityID, inventory, itemSlot)} onContextMenu={e => rightClickItemSlot(e, entityID, inventory, itemSlot)} picturedItemImageSrc={getItemTypeImage(item.type)} itemCount={item.count} isSelected={isSelected} />
             );

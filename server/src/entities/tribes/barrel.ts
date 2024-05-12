@@ -12,12 +12,13 @@ import Tribe from "../../Tribe";
 import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
 import { TribeComponent } from "../../components/TribeComponent";
 import RectangularHitbox from "../../hitboxes/RectangularHitbox";
+import { InventoryName } from "webgl-test-shared/dist/items";
 
-export const BARREL_SIZE = 80 - 0.05;
+const HITBOX_SIZE = 80 - 0.05;
 
 export function createBarrelHitboxes(parentX: number, parentY: number, localID: number, parentRotation: number): ReadonlyArray<CircularHitbox | RectangularHitbox> {
    const hitboxes = new Array<CircularHitbox | RectangularHitbox>();
-   hitboxes.push(new CircularHitbox(parentX, parentY, 1.5, 0, 0, HitboxCollisionType.hard, BARREL_SIZE / 2, localID, parentRotation));
+   hitboxes.push(new CircularHitbox(parentX, parentY, 1.5, 0, 0, HitboxCollisionType.hard, HITBOX_SIZE / 2, localID, parentRotation));
    return hitboxes;
 }
 
@@ -36,7 +37,7 @@ export function createBarrel(position: Point, rotation: number, tribe: Tribe): E
 
    const inventoryComponent = new InventoryComponent();
    InventoryComponentArray.addComponent(barrel.id, inventoryComponent);
-   createNewInventory(inventoryComponent, "inventory", 3, 3, false);
+   createNewInventory(inventoryComponent, InventoryName.inventory, 3, 3, false);
 
    return barrel;
 }

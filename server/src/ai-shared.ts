@@ -398,6 +398,7 @@ export function getEntitiesInRange(x: number, y: number, range: number): Array<E
    return entities;
 }
 
+// @Cleanup: the getAngleDiff function already does this
 export function getAngleDifference(angle1: number, angle2: number): number {
    let angleDifference = angle1 - angle2;
    if (angleDifference >= Math.PI) {
@@ -410,12 +411,6 @@ export function getAngleDifference(angle1: number, angle2: number): number {
 
 export function cleanAngle(angle: number): number {
    return angle - 2 * Math.PI * Math.floor(angle / (2 * Math.PI));
-}
-
-export function getAngleDiff(sourceAngle: number, targetAngle: number): number {
-   let a = targetAngle - sourceAngle;
-   a = Math.abs((a + Math.PI) % (Math.PI * 2)) - Math.PI;
-   return a;
 }
 
 export function getMinAngleToCircularHitbox(x: number, y: number, hitbox: CircularHitbox): number {

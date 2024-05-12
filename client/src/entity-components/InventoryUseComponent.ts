@@ -1,4 +1,4 @@
-import { BowItemInfo, ITEM_INFO_RECORD, ITEM_TYPE_RECORD, Item, ItemType } from "webgl-test-shared/dist/items";
+import { BowItemInfo, ITEM_INFO_RECORD, ITEM_TYPE_RECORD, InventoryName, Item, ItemType } from "webgl-test-shared/dist/items";
 import { EntityType, LimbAction } from "webgl-test-shared/dist/entities";
 import { Point, lerp, randFloat, randItem } from "webgl-test-shared/dist/utils";
 import { InventoryUseComponentData, LimbData, ServerComponentType } from "webgl-test-shared/dist/components";
@@ -17,11 +17,11 @@ import { animateLimb, createCraftingAnimationParticles, createMedicineAnimationP
 
 export interface LimbInfo {
    selectedItemSlot: number;
-   readonly inventoryName: string;
+   readonly inventoryName: InventoryName;
    bowCooldownTicks: number;
-   itemAttackCooldowns: Record<number, number>;
-   spearWindupCooldowns: Record<number, number>;
-   crossbowLoadProgressRecord: Record<number, number>;
+   itemAttackCooldowns: Partial<Record<number, number>>;
+   spearWindupCooldowns: Partial<Record<number, number>>;
+   crossbowLoadProgressRecord: Partial<Record<number, number>>;
    foodEatingTimer: number;
    action: LimbAction;
    lastAttackTicks: number;
@@ -279,11 +279,11 @@ class InventoryUseComponent extends ServerComponent<ServerComponentType.inventor
             continue;
          }
    
-         if (!inventory.itemSlots.hasOwnProperty(useInfo.selectedItemSlot)) {
+         const item = inventory.itemSlots[useInfo.selectedItemSlot];
+         if (typeof item === "undefined") {
             continue;
          }
          
-         const item = inventory.itemSlots[useInfo.selectedItemSlot];
 
          // Make the deep frost heart item spew blue blood particles
          if (item.type === ItemType.deepfrost_heart) {
@@ -507,9 +507,9 @@ class InventoryUseComponent extends ServerComponent<ServerComponentType.inventor
       const inventoryComponent = this.entity.getServerComponent(ServerComponentType.inventory);
       const inventory = inventoryComponent.getInventory(limbInfo.inventoryName);
       
-      let item = inventory.itemSlots.hasOwnProperty(limbInfo.selectedItemSlot) ? inventory.itemSlots[limbInfo.selectedItemSlot] : null;
+      let item: Item | null | undefined = inventory.itemSlots[limbInfo.selectedItemSlot];
 
-      if (item !== null && limbInfo.thrownBattleaxeItemID === item.id) {
+      if (typeof item === "undefined" || limbInfo.thrownBattleaxeItemID === item.id) {
          item = null;
       }
       
@@ -524,7 +524,7 @@ class InventoryUseComponent extends ServerComponent<ServerComponentType.inventor
       // Zombie lunge attack
       if (this.entity.type === EntityType.zombie) {
          const inventoryComponent = this.entity.getServerComponent(ServerComponentType.inventory);
-         const heldItemInventory = inventoryComponent.getInventory("handSlot");
+         const heldItemInventory = inventoryComponent.getInventory(InventoryName.handSlot);
          if (!heldItemInventory.itemSlots.hasOwnProperty(1)) {
             let attackProgress = secondsSinceLastAction / ATTACK_LUNGE_TIME;
             if (attackProgress > 1) {
@@ -779,7 +779,7 @@ class InventoryUseComponent extends ServerComponent<ServerComponentType.inventor
       }
    }
 
-   public getUseInfo(inventoryName: string): LimbData {
+   public getUseInfo(inventoryName: InventoryName): LimbData {
       for (let i = 0; i < this.useInfos.length; i++) {
          const useInfo = this.useInfos[i];
          if (useInfo.inventoryName === inventoryName) {

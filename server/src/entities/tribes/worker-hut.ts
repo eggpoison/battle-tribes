@@ -13,11 +13,11 @@ import { HutComponent } from "../../components/HutComponent";
 import { TribeComponent } from "../../components/TribeComponent";
 import CircularHitbox from "../../hitboxes/CircularHitbox";
 
-export const WORKER_HUT_SIZE = 88;
+const HITBOX_SIZE = 88;
 
 export function createWorkerHutHitboxes(parentX: number, parentY: number, localID: number, parentRotation: number): ReadonlyArray<CircularHitbox | RectangularHitbox> {
    const hitboxes = new Array<CircularHitbox | RectangularHitbox>();
-   hitboxes.push(new RectangularHitbox(parentX, parentY, 1.8, 0, 0, HitboxCollisionType.soft, localID, parentRotation, WORKER_HUT_SIZE, WORKER_HUT_SIZE, 0));
+   hitboxes.push(new RectangularHitbox(parentX, parentY, 1.8, 0, 0, HitboxCollisionType.soft, localID, parentRotation, HITBOX_SIZE, HITBOX_SIZE, 0));
    return hitboxes;
 }
 
@@ -29,9 +29,6 @@ export function createWorkerHut(position: Point, rotation: number, tribe: Tribe)
    for (let i = 0; i < hitboxes.length; i++) {
       hut.addHitbox(hitboxes[i]);
    }
-
-   const hitbox = new RectangularHitbox(hut.position.x, hut.position.y, 1.8, 0, 0, HitboxCollisionType.soft, hut.getNextHitboxLocalID(), hut.rotation, WORKER_HUT_SIZE, WORKER_HUT_SIZE, 0);
-   hut.addHitbox(hitbox);
 
    HealthComponentArray.addComponent(hut.id, new HealthComponent(50));
    StatusEffectComponentArray.addComponent(hut.id, new StatusEffectComponent(StatusEffect.poisoned));

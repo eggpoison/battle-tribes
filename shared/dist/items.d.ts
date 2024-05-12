@@ -1,6 +1,6 @@
 import { EntityType } from "./entities";
 import { StructureType } from "./structures";
-export declare enum ItemType {
+export declare const enum ItemType {
     wood = 0,
     workbench = 1,
     wooden_sword = 2,
@@ -65,6 +65,7 @@ export declare enum ItemType {
     gardening_gloves = 61,
     wooden_fence = 62
 }
+export declare const ItemTypeString: Record<ItemType, string>;
 export interface BaseItemInfo {
 }
 export interface StackableItemInfo extends BaseItemInfo {
@@ -569,19 +570,44 @@ type ExcludeNonHammerItemTypes<T extends ItemType> = typeof ITEM_TYPE_RECORD[T] 
 export type HammerItemType = keyof {
     [T in ItemType as ExcludeNonHammerItemTypes<T>]: T;
 };
-export type ItemSlot = Item | null;
 /** Stores the items inside an inventory, indexed by their slot number. */
-export type ItemSlots = {
+export type ItemSlots = Partial<{
     [itemSlot: number]: Item;
-};
-export interface Inventory {
-    /** Width of the inventory in item slots */
+}>;
+export declare const enum InventoryName {
+    hotbar = 0,
+    offhand = 1,
+    craftingOutputSlot = 2,
+    heldItemSlot = 3,
+    armourSlot = 4,
+    backpackSlot = 5,
+    gloveSlot = 6,
+    backpack = 7,
+    fuelInventory = 8,
+    ingredientInventory = 9,
+    outputInventory = 10,
+    inventory = 11,
+    handSlot = 12,
+    ammoBoxInventory = 13
+}
+/** Inventory data sent between client and server */
+export interface InventoryData {
     width: number;
-    /** Height of the inventory in item slots */
     height: number;
-    /** The items contained by the inventory. */
     readonly itemSlots: ItemSlots;
-    readonly name: string;
+    readonly name: InventoryName;
+}
+export declare class Inventory {
+    width: number;
+    height: number;
+    readonly name: InventoryName;
+    readonly itemSlots: ItemSlots;
+    readonly items: Item[];
+    constructor(width: number, height: number, name: InventoryName);
+    addItem(item: Item, itemSlot: number): void;
+    removeItem(itemSlot: number): void;
+    hasItem(itemSlot: number): boolean;
+    getItemSlot(item: Item): number;
 }
 export declare class Item {
     /** Unique identifier for the item */

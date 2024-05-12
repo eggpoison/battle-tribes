@@ -10,6 +10,7 @@ import Board from "../Board";
 import { getInventoryUseInfo } from "./InventoryUseComponent";
 import { TITLE_REWARD_CHANCES } from "../tribesman-title-generation";
 import { awardTitle, hasTitle } from "./TribeMemberComponent";
+import { InventoryName } from "webgl-test-shared/dist/items";
 
 const ORB_COMPLETE_TICKS = Math.floor(RESEARCH_ORB_COMPLETE_TIME * Settings.TPS);
 
@@ -115,7 +116,7 @@ export function continueResearching(researchBench: Entity, researcher: Entity, t
 
       // Make the tribesman slap the bench each time they complete an orb
       const inventoryUseComponent = InventoryUseComponentArray.getComponent(researcher.id);
-      const useInfo = getInventoryUseInfo(inventoryUseComponent, "hotbar");
+      const useInfo = getInventoryUseInfo(inventoryUseComponent, InventoryName.hotbar);
       useInfo.lastAttackTicks = Board.ticks;
    }
 

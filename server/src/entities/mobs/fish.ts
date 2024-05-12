@@ -2,7 +2,7 @@ import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types"
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision-detection";
 import { FishComponentData } from "webgl-test-shared/dist/components";
 import { EntityType, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
-import { ItemType } from "webgl-test-shared/dist/items";
+import { InventoryName, ItemType } from "webgl-test-shared/dist/items";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { Biome, TileType } from "webgl-test-shared/dist/tiles";
 import { Point, randInt, customTickIntervalHasPassed, randFloat } from "webgl-test-shared/dist/utils";
@@ -126,6 +126,18 @@ const unfollowLeader = (fish: Entity, leader: Entity): void => {
    }
 }
 
+const entityIsWearingFishlordSuit = (entityID: number): boolean => {
+   if (!InventoryComponentArray.hasComponent(entityID)) {
+      return false;
+   }
+   
+   const inventoryComponent = InventoryComponentArray.getComponent(entityID);
+   const armourInventory = getInventory(inventoryComponent, InventoryName.armourSlot);
+
+   const armour = armourInventory.itemSlots[1];
+   return typeof armour === "undefined" || armour.type === ItemType.fishlord_suit;
+}
+
 export function tickFish(fish: Entity): void {
    const physicsComponent = PhysicsComponentArray.getComponent(fish.id);
    physicsComponent.overrideMoveSpeedMultiplier = fish.tile.type === TileType.water;
@@ -163,15 +175,11 @@ export function tickFish(fish: Entity): void {
    if (fishComponent.leader === null) {
       for (let i = 0; i < aiHelperComponent.visibleEntities.length; i++) {
          const entity = aiHelperComponent.visibleEntities[i];
-         if (entity.type === EntityType.player || entity.type === EntityType.tribeWorker || entity.type === EntityType.tribeWarrior) {
-            const inventoryComponent = InventoryComponentArray.getComponent(entity.id);
-            const armourSlotInventory = getInventory(inventoryComponent, "armourSlot");
-            if (armourSlotInventory.itemSlots.hasOwnProperty(1) && armourSlotInventory.itemSlots[1].type === ItemType.fishlord_suit) {
-               // New leader
-               fishComponent.leader = entity;
-               followLeader(fish, entity);
-               break;
-            }
+         if (entityIsWearingFishlordSuit(entity.id)) {
+            // New leader
+            fishComponent.leader = entity;
+            followLeader(fish, entity);
+            break;
          }
       }
    }

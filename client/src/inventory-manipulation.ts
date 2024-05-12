@@ -13,28 +13,27 @@ export function leftClickItemSlot(e: MouseEvent, entityID: number, inventory: In
    // Item slots can only be interacted with while the inventory is open
    if (!canInteractWithItemSlots()) return;
 
-   if (inventory.itemSlots.hasOwnProperty(itemSlot)) {
-      // There is an item in the item slot
-
-      const clickedItem = inventory.itemSlots[itemSlot];
-
+   const clickedItem = inventory.itemSlots[itemSlot];
+   if (typeof clickedItem !== "undefined") {
       // Attempt to pick up the item if there isn't a held item
-      if (!definiteGameState.heldItemSlot!.itemSlots.hasOwnProperty(1)) {
+      const heldItem = definiteGameState.heldItemSlot.itemSlots[1];
+      if (typeof heldItem === "undefined") {
          Client.sendItemPickupPacket(entityID, inventory.name, itemSlot, clickedItem.count);
    
          setHeldItemVisualPosition(e.clientX, e.clientY);
       } else {
          // If both the held item and the clicked item are of the same type, attempt to add the held item to the clicked item
-         if (clickedItem.type === definiteGameState.heldItemSlot!.itemSlots[1].type) {
-            Client.sendItemReleasePacket(entityID, inventory.name, itemSlot, definiteGameState.heldItemSlot!.itemSlots[1].count);
+         if (clickedItem.type === heldItem.type) {
+            Client.sendItemReleasePacket(entityID, inventory.name, itemSlot, heldItem.count);
          }
       }
    } else {
       // There is no item in the item slot
 
       // Attempt to release the held item into the item slot if there is a held item
-      if (definiteGameState.heldItemSlot!.itemSlots.hasOwnProperty(1)) {
-         Client.sendItemReleasePacket(entityID, inventory.name, itemSlot, definiteGameState.heldItemSlot!.itemSlots[1].count);
+      const heldItem = definiteGameState.heldItemSlot.itemSlots[1];
+      if (typeof heldItem !== "undefined") {
+         Client.sendItemReleasePacket(entityID, inventory.name, itemSlot, heldItem.count);
       }
    }
 }
@@ -45,10 +44,10 @@ export function rightClickItemSlot(e: MouseEvent, entityID: number, inventory: I
 
    e.preventDefault();
 
-   if (inventory.itemSlots.hasOwnProperty(itemSlot)) {
-      const clickedItem = inventory.itemSlots[itemSlot];
-
-      if (definiteGameState.heldItemSlot === null || !definiteGameState.heldItemSlot.itemSlots.hasOwnProperty(1)) {
+   const clickedItem = inventory.itemSlots[itemSlot];
+   if (typeof clickedItem !== "undefined") {
+      const heldItem = definiteGameState.heldItemSlot.itemSlots[1];
+      if (definiteGameState.heldItemSlot === null || typeof heldItem === "undefined") {
          const numItemsInSlot = clickedItem.count;
          const pickupCount = Math.ceil(numItemsInSlot / 2);
 
@@ -57,7 +56,7 @@ export function rightClickItemSlot(e: MouseEvent, entityID: number, inventory: I
          setHeldItemVisualPosition(e.clientX, e.clientY);
       } else {
          // If both the held item and the clicked item are of the same type, attempt to drop 1 of the held item
-         if (clickedItem.type === definiteGameState.heldItemSlot.itemSlots[1].type) {
+         if (clickedItem.type === heldItem.type) {
             Client.sendItemReleasePacket(entityID, inventory.name, itemSlot, 1);
          }
       }
@@ -79,30 +78,32 @@ export function updateInventoryFromData(inventory: Inventory, inventoryData: Inv
 
    // Remove any items which have been removed from the inventory
    for (let itemSlot = 1; itemSlot <= inventory.width * inventory.height; itemSlot++) {
-      if (!inventory.itemSlots.hasOwnProperty(itemSlot)) {
+      const item = inventory.itemSlots[itemSlot];
+      if (typeof item === "undefined") {
          continue;
       }
       
       // If it doesn't exist in the server data, remove it
-      const item = inventory.itemSlots[itemSlot];
-      if (!inventoryData.itemSlots.hasOwnProperty(itemSlot) || inventoryData.itemSlots[itemSlot].id !== item.id) {
+      const itemData = inventoryData.itemSlots[itemSlot];
+      if (typeof itemData === "undefined" || itemData.id !== item.id) {
          delete inventory.itemSlots[itemSlot];
       }
    }
 
    // Add all new items from the server data
    for (let itemSlot = 1; itemSlot <= inventoryData.width * inventoryData.height; itemSlot++) {
-      if (!inventoryData.itemSlots.hasOwnProperty(itemSlot)) {
+      const itemData = inventoryData.itemSlots[itemSlot];
+      if (typeof itemData === "undefined") {
          continue;
       }
 
       // If the item doesn't exist in the inventory, add it
-      const itemData = inventoryData.itemSlots[itemSlot];
-      if (!inventory.itemSlots.hasOwnProperty(itemSlot) || inventory.itemSlots[itemSlot].id !== itemData.id) {
+      const item = inventory.itemSlots[itemSlot];
+      if (typeof item === "undefined" || item.id !== itemData.id) {
          inventory.itemSlots[itemSlot] = new Item(itemData.type, itemData.count, itemData.id);
       } else {
          // Otherwise the item needs to be updated with the new server data
-         inventory.itemSlots[itemSlot].count = itemData.count;
+         item.count = itemData.count;
       }
    }
 }
@@ -119,12 +120,10 @@ export function inventoryHasItems(inventory: Inventory): boolean {
 export function countItemTypesInInventory(inventory: Inventory, itemType: ItemType): number {
    let count = 0;
 
-   for (let itemSlot = 1; itemSlot <= inventory.width * inventory.height; itemSlot++) {
-      if (inventory.itemSlots.hasOwnProperty(itemSlot)) {
-         const item = inventory.itemSlots[itemSlot];
-         if (item.type === itemType) {
-            count += item.count;
-         }
+   for (let i = 0; i < inventory.items.length; i++) {
+      const item = inventory.items[i];
+      if (item.type === itemType) {
+         count += item.count;
       }
    }
    

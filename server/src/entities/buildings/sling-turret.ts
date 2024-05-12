@@ -3,7 +3,7 @@ import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/c
 import { EntityType, GenericArrowType } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
-import { Point } from "webgl-test-shared/dist/utils";
+import { Point, getAngleDiff } from "webgl-test-shared/dist/utils";
 import Entity from "../../Entity";
 import { HealthComponentArray, TribeComponentArray, TurretComponentArray } from "../../components/ComponentArray";
 import { HealthComponent } from "../../components/HealthComponent";
@@ -12,7 +12,6 @@ import CircularHitbox from "../../hitboxes/CircularHitbox";
 import { AIHelperComponent, AIHelperComponentArray } from "../../components/AIHelperComponent";
 import Tribe from "../../Tribe";
 import { EntityRelationship, TribeComponent, getEntityRelationship } from "../../components/TribeComponent";
-import { getAngleDiff } from "../../ai-shared";
 import { TurretComponent } from "../../components/TurretComponent";
 import { GenericArrowInfo, createWoodenArrow } from "../projectiles/wooden-arrow";
 import RectangularHitbox from "../../hitboxes/RectangularHitbox";

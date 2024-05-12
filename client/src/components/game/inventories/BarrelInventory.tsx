@@ -1,6 +1,7 @@
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import InventoryContainer from "./InventoryContainer";
 import { getSelectedEntity } from "../../../entity-selection";
+import { InventoryName } from "webgl-test-shared/dist/items";
 
 const BarrelInventory = () => {
    const barrel = getSelectedEntity();
@@ -9,7 +10,7 @@ const BarrelInventory = () => {
    return <>
       <div id="barrel-inventory" className="menu">
          <h2 className="menu-title">Barrel</h2>
-         <InventoryContainer entityID={barrel.id} inventory={inventoryComponent.getInventory("inventory")} />
+         <InventoryContainer entityID={barrel.id} inventory={inventoryComponent.getInventory(InventoryName.inventory)} />
       </div>
       {/* @Incomplete */}
       <div className="menu">

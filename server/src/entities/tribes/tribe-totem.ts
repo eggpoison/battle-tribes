@@ -13,7 +13,7 @@ import Tribe from "../../Tribe";
 import { TribeComponent } from "../../components/TribeComponent";
 import RectangularHitbox from "../../hitboxes/RectangularHitbox";
 
-export const TRIBE_TOTEM_SIZE = 120;
+const HITBOX_SIZE = 120;
 
 const NUM_TOTEM_POSITIONS = [4, 6, 8];
 
@@ -31,7 +31,7 @@ for (let layerIdx = 0; layerIdx < 3; layerIdx++) {
 
 export function createTribeTotemHitboxes(parentX: number, parentY: number, localID: number, parentRotation: number): ReadonlyArray<CircularHitbox | RectangularHitbox> {
    const hitboxes = new Array<CircularHitbox | RectangularHitbox>();
-   hitboxes.push(new CircularHitbox(parentX, parentY, 2.2, 0, 0, HitboxCollisionType.hard, TRIBE_TOTEM_SIZE / 2, localID, parentRotation));
+   hitboxes.push(new CircularHitbox(parentX, parentY, 2.2, 0, 0, HitboxCollisionType.hard, HITBOX_SIZE / 2, localID, parentRotation));
    return hitboxes;
 }
 

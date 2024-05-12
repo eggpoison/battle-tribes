@@ -2,7 +2,7 @@ import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types"
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision-detection";
 import { AMMO_INFO_RECORD } from "webgl-test-shared/dist/components";
 import { EntityType } from "webgl-test-shared/dist/entities";
-import { BallistaAmmoType, BALLISTA_AMMO_TYPES, ItemType } from "webgl-test-shared/dist/items";
+import { BallistaAmmoType, BALLISTA_AMMO_TYPES, ItemType, InventoryName } from "webgl-test-shared/dist/items";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { Point } from "webgl-test-shared/dist/utils";
@@ -17,7 +17,7 @@ import { HealthComponent } from "../../components/HealthComponent";
 import { AIHelperComponent, AIHelperComponentArray } from "../../components/AIHelperComponent";
 import { AmmoBoxComponent } from "../../components/AmmoBoxComponent";
 import { GenericArrowInfo, createWoodenArrow } from "../projectiles/wooden-arrow";
-import { InventoryComponent, consumeItemTypeFromInventory, createNewInventory, getFirstOccupiedItemSlotInInventory, getInventory, getItemFromInventory } from "../../components/InventoryComponent";
+import { InventoryComponent, consumeItemTypeFromInventory, createNewInventory, getFirstOccupiedItemSlotInInventory, getInventory } from "../../components/InventoryComponent";
 import { angleIsInRange, getClockwiseAngleDistance, getMaxAngleToCircularHitbox, getMaxAngleToRectangularHitbox, getMinAngleToCircularHitbox, getMinAngleToRectangularHitbox } from "../../ai-shared";
 import CircularHitbox from "../../hitboxes/CircularHitbox";
 import Board from "../../Board";
@@ -50,21 +50,21 @@ export function createBallista(position: Point, rotation: number, tribe: Tribe):
 
    const inventoryComponent = new InventoryComponent();
    InventoryComponentArray.addComponent(ballista.id, inventoryComponent);
-   createNewInventory(inventoryComponent, "ammoBoxInventory", 3, 1, false);
+   createNewInventory(inventoryComponent, InventoryName.ammoBoxInventory, 3, 1, false);
 
    return ballista;
 }
 
 const getAmmoType = (turret: Entity): BallistaAmmoType | null => {
    const inventoryComponent = InventoryComponentArray.getComponent(turret.id);
-   const ammoBoxInventory = getInventory(inventoryComponent, "ammoBoxInventory");
+   const ammoBoxInventory = getInventory(inventoryComponent, InventoryName.ammoBoxInventory);
 
    const firstOccupiedSlot = getFirstOccupiedItemSlotInInventory(ammoBoxInventory);
    if (firstOccupiedSlot === 0) {
       return null;
    }
 
-   const item = getItemFromInventory(ammoBoxInventory, firstOccupiedSlot)!;
+   const item = ammoBoxInventory.itemSlots[firstOccupiedSlot]!;
    if (!BALLISTA_AMMO_TYPES.includes(item.type as BallistaAmmoType)) {
       console.warn("Item type in ammo box isn't ammo");
       return null;
@@ -154,7 +154,7 @@ const attemptAmmoLoad = (ballista: Entity): void => {
       ballistaComponent.ammoRemaining = AMMO_INFO_RECORD[ammoType].ammoMultiplier;
 
       const inventoryComponent = InventoryComponentArray.getComponent(ballista.id);
-      consumeItemTypeFromInventory(inventoryComponent, "ammoBoxInventory", ammoType, 1);
+      consumeItemTypeFromInventory(inventoryComponent, InventoryName.ammoBoxInventory, ammoType, 1);
    }
 }
 

@@ -1,6 +1,6 @@
 import { StatusEffectData } from "./client-server-types";
 import { CactusBodyFlowerData, CactusLimbData, CowSpecies, DeathInfo, DoorToggleType, FishColour, FrozenYetiAttackType, GenericArrowType, EntityType, RockSpikeProjectileSize, SlimeSize, SnowballSize, TreeSize, LimbAction, TribeTotemBanner } from "./entities";
-import { BallistaAmmoType, Inventory, ItemType } from "./items";
+import { BallistaAmmoType, Inventory, InventoryName, ItemType } from "./items";
 import { Settings } from "./settings";
 import { StatusEffect } from "./status-effects";
 import { TitleGenerationInfo } from "./titles";
@@ -321,7 +321,7 @@ export interface IceSpikesComponentData {}
 /* Inventory Component */
 
 export interface InventoryComponentData {
-   readonly inventories: Record<string, Inventory>;
+   readonly inventories: Partial<Record<InventoryName, Inventory>>;
 }
 
 /* Inventory Use Component */
@@ -329,11 +329,11 @@ export interface InventoryComponentData {
 // @Cleanup: Merge with server definition
 export interface LimbData {
    selectedItemSlot: number;
-   readonly inventoryName: string;
+   readonly inventoryName: InventoryName;
    bowCooldownTicks: number;
-   itemAttackCooldowns: Record<number, number>;
-   spearWindupCooldowns: Record<number, number>;
-   crossbowLoadProgressRecord: Record<number, number>;
+   itemAttackCooldowns: Partial<Record<number, number>>;
+   spearWindupCooldowns: Partial<Record<number, number>>;
+   crossbowLoadProgressRecord: Partial<Record<number, number>>;
    foodEatingTimer: number;
    action: LimbAction;
    lastAttackTicks: number;

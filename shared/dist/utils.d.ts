@@ -67,3 +67,4 @@ export declare function pointIsInRectangle(pointX: number, pointY: number, rectP
 export declare function smoothstep(value: number): number;
 export declare function distBetweenPointAndRectangle(pointX: number, pointY: number, rectPosX: number, rectPosY: number, rectWidth: number, rectHeight: number, rectRotation: number): number;
 export declare function assertUnreachable(x: never): never;
+export declare function getAngleDiff(sourceAngle: number, targetAngle: number): number;

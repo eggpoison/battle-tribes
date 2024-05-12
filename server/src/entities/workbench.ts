@@ -11,11 +11,11 @@ import Tribe from "../Tribe";
 import { TribeComponent } from "../components/TribeComponent";
 import CircularHitbox from "../hitboxes/CircularHitbox";
 
-export const WORKBENCH_SIZE = 80;
+export const HITBOX_SIZE = 80;
 
 export function createWorbenchHitboxes(parentX: number, parentY: number, localID: number, parentRotation: number): ReadonlyArray<CircularHitbox | RectangularHitbox> {
    const hitboxes = new Array<CircularHitbox | RectangularHitbox>();
-   hitboxes.push(new RectangularHitbox(parentX, parentY, 1.6, 0, 0, HitboxCollisionType.hard, localID, parentRotation, WORKBENCH_SIZE, WORKBENCH_SIZE, 0));
+   hitboxes.push(new RectangularHitbox(parentX, parentY, 1.6, 0, 0, HitboxCollisionType.hard, localID, parentRotation, HITBOX_SIZE, HITBOX_SIZE, 0));
    return hitboxes;
 }
 
@@ -23,7 +23,7 @@ export function createWorkbench(position: Point, rotation: number, tribe: Tribe)
    const workbench = new Entity(position, EntityType.workbench, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
    workbench.rotation = rotation;
 
-   const hitbox = new RectangularHitbox(workbench.position.x, workbench.position.y, 1.6, 0, 0, HitboxCollisionType.hard, workbench.getNextHitboxLocalID(), workbench.rotation, WORKBENCH_SIZE, WORKBENCH_SIZE, 0);
+   const hitbox = new RectangularHitbox(workbench.position.x, workbench.position.y, 1.6, 0, 0, HitboxCollisionType.hard, workbench.getNextHitboxLocalID(), workbench.rotation, HITBOX_SIZE, HITBOX_SIZE, 0);
    workbench.addHitbox(hitbox);
 
    const hitboxes = createWorbenchHitboxes(workbench.position.x, workbench.position.y, workbench.getNextHitboxLocalID(), workbench.rotation);

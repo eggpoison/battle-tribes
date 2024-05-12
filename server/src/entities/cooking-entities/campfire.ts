@@ -14,6 +14,7 @@ import { CookingComponent } from "../../components/CookingComponent";
 import Tribe from "../../Tribe";
 import { TribeComponent } from "../../components/TribeComponent";
 import RectangularHitbox from "../../hitboxes/RectangularHitbox";
+import { InventoryName } from "webgl-test-shared/dist/items";
 
 export const CAMPFIRE_SIZE = 104;
 
@@ -40,9 +41,9 @@ export function createCampfire(position: Point, rotation: number, tribe: Tribe):
 
    const inventoryComponent = new InventoryComponent();
    InventoryComponentArray.addComponent(campfire.id, inventoryComponent);
-   createNewInventory(inventoryComponent, "fuelInventory", 1, 1, false);
-   createNewInventory(inventoryComponent, "ingredientInventory", 1, 1, false);
-   createNewInventory(inventoryComponent, "outputInventory", 1, 1, false);
+   createNewInventory(inventoryComponent, InventoryName.fuelInventory, 1, 1, false);
+   createNewInventory(inventoryComponent, InventoryName.ingredientInventory, 1, 1, false);
+   createNewInventory(inventoryComponent, InventoryName.outputInventory, 1, 1, false);
 
    const cookingEntityComponent = new CookingComponent();
    cookingEntityComponent.remainingHeatSeconds = LIFETIME_SECONDS;

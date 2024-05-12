@@ -1,17 +1,17 @@
 import { TribesmanAIType } from "webgl-test-shared/dist/components";
 import { CraftingStation, CraftingRecipe, CRAFTING_RECIPES } from "webgl-test-shared/dist/crafting-recipes";
 import { EntityType, EntityTypeString, LimbAction } from "webgl-test-shared/dist/entities";
-import { ITEM_TYPE_RECORD, ITEM_INFO_RECORD, ToolItemInfo, ArmourItemInfo, Item, ConsumableItemInfo, Inventory, ItemType, HammerItemInfo, PlaceableItemInfo, ConsumableItemCategory } from "webgl-test-shared/dist/items";
+import { ITEM_TYPE_RECORD, ITEM_INFO_RECORD, Item, ConsumableItemInfo, Inventory, ItemType, HammerItemInfo, PlaceableItemInfo, ConsumableItemCategory, InventoryName } from "webgl-test-shared/dist/items";
 import { Settings, PathfindingSettings } from "webgl-test-shared/dist/settings";
 import { TechInfo, getTechByID } from "webgl-test-shared/dist/techs";
 import { TribesmanTitle } from "webgl-test-shared/dist/titles";
 import { TRIBE_INFO_RECORD } from "webgl-test-shared/dist/tribes";
-import { distance, angle, Point, randInt } from "webgl-test-shared/dist/utils";
+import { distance, angle, Point, randInt, getAngleDiff } from "webgl-test-shared/dist/utils";
 import Entity from "../../../Entity";
-import { getEntitiesInRange, willStopAtDesiredDistance, getClosestAccessibleEntity, stopEntity, moveEntityToPosition, getAngleDiff, getDistanceFromPointToEntity } from "../../../ai-shared";
+import { getEntitiesInRange, willStopAtDesiredDistance, getClosestAccessibleEntity, stopEntity, moveEntityToPosition, getDistanceFromPointToEntity } from "../../../ai-shared";
 import { InventoryComponentArray, TribeComponentArray, TribesmanComponentArray, HealthComponentArray, InventoryUseComponentArray, PlayerComponentArray, ItemComponentArray, TribeMemberComponentArray, HutComponentArray } from "../../../components/ComponentArray";
 import { HealthComponent } from "../../../components/HealthComponent";
-import { getInventory, addItemToInventory, consumeItemFromSlot, addItemToSlot, removeItemFromInventory, getItem, craftRecipe, recipeCraftingStationIsAvailable, inventoryComponentCanAffordRecipe } from "../../../components/InventoryComponent";
+import { getInventory, addItemToInventory, consumeItemFromSlot, craftRecipe, recipeCraftingStationIsAvailable, inventoryComponentCanAffordRecipe } from "../../../components/InventoryComponent";
 import { TribesmanPathType, getItemGiftAppreciation, itemThrowIsOnCooldown } from "../../../components/TribesmanComponent";
 import { tickTribeMember, tribeMemberCanPickUpItem, calculateRadialAttackTargets, repairBuilding, calculateRepairTarget, placeBuilding, placeBlueprint, getAvailableCraftingStations, throwItem } from "../tribe-member";
 import { TRIBE_WORKER_RADIUS, TRIBE_WORKER_VISION_RANGE } from "../tribe-worker";
@@ -178,17 +178,20 @@ const getAcceleration = (tribesman: Entity): number => {
    return ACCELERATION * getAccelerationMultiplier(tribesman);
 }
 
-const getFoodItemSlot = (tribesman: Entity): number | null => {
+const getFoodItemSlot = (tribesman: Entity): number => {
    const inventoryComponent = InventoryComponentArray.getComponent(tribesman.id);
-   const hotbarInventory = getInventory(inventoryComponent, "hotbar");
-   // @Speed
-   for (const [_itemSlot, item] of Object.entries(hotbarInventory.itemSlots)) {
+   const hotbarInventory = getInventory(inventoryComponent, InventoryName.hotbar);
+
+   for (let i = 0; i < hotbarInventory.items.length; i++) {
+      const item = hotbarInventory.items[i];
+
       const itemCategory = ITEM_TYPE_RECORD[item.type];
       if (itemCategory === "healing") {
-         return Number(_itemSlot);
+         return hotbarInventory.getItemSlot(item);
       }
    }
-   return null;
+
+   return -1;
 }
 
 export function tribesmanShouldEscape(entityType: EntityType, healthComponent: HealthComponent): boolean {
@@ -215,131 +218,115 @@ export function positionIsSafeForTribesman(tribesman: Entity, x: number, y: numb
 }
 
 // @Cleanup: unused?
-const findNearestBarrel = (tribesman: Entity): Entity | null => {
-   const tribeComponent = TribeComponentArray.getComponent(tribesman.id);
+// const findNearestBarrel = (tribesman: Entity): Entity | null => {
+//    const tribeComponent = TribeComponentArray.getComponent(tribesman.id);
    
-   let minDistance = Number.MAX_SAFE_INTEGER;
-   let closestBarrel: Entity | null = null;
-   for (const barrel of tribeComponent.tribe.barrels) {
-      const distance = tribesman.position.calculateDistanceBetween(barrel.position);
-      if (distance < minDistance) {
-         minDistance = distance;
-         closestBarrel = barrel;
-      }
-   }
+//    let minDistance = Number.MAX_SAFE_INTEGER;
+//    let closestBarrel: Entity | null = null;
+//    for (const barrel of tribeComponent.tribe.barrels) {
+//       const distance = tribesman.position.calculateDistanceBetween(barrel.position);
+//       if (distance < minDistance) {
+//          minDistance = distance;
+//          closestBarrel = barrel;
+//       }
+//    }
    
-   return closestBarrel;
-}
+//    return closestBarrel;
+// }
 
-/** Deposit all resources from the tribesman's inventory into a barrel */
-const depositResources = (tribesman: Entity, barrel: Entity): void => {
-   const tribesmanInventoryComponent = InventoryComponentArray.getComponent(tribesman.id);
-   const barrelInventoryComponent = InventoryComponentArray.getComponent(barrel.id);
-   const tribesmanInventory = getInventory(tribesmanInventoryComponent, "hotbar");
+// @Incomplete
+// /** Deposit all resources from the tribesman's inventory into a barrel */
+// const depositResources = (tribesman: Entity, barrel: Entity): void => {
+//    const tribesmanInventoryComponent = InventoryComponentArray.getComponent(tribesman.id);
+//    const barrelInventoryComponent = InventoryComponentArray.getComponent(barrel.id);
+//    const tribesmanInventory = getInventory(tribesmanInventoryComponent, "hotbar");
 
-   // 
-   // Isolate the items the tribesman will want to keep
-   // 
-   // @Incomplete @Temporary
-   const bestWeaponItemSlot = 1;
-   // const bestWeaponItemSlot = getBestWeaponSlot(tribesman);
-   let bestPickaxeLevel = -1;
-   let bestPickaxeItemSlot = -1;
-   let bestAxeLevel = -1;
-   let bestAxeItemSlot = -1;
-   let bestArmourLevel = -1;
-   let bestArmourItemSlot = -1;
-   let bestHammerLevel = -1;
-   let bestHammerItemSlot = -1;
-   let firstFoodItemSlot = -1; // Tribesman will only keep the first food item type in their inventory
-   for (let itemSlot = 1; itemSlot <= tribesmanInventory.width * tribesmanInventory.height; itemSlot++) {
-      if (!tribesmanInventory.itemSlots.hasOwnProperty(itemSlot)) {
-         continue;
-      }
-
-      const item = tribesmanInventory.itemSlots[itemSlot];
+//    // 
+//    // Isolate the items the tribesman will want to keep
+//    // 
+//    // @Incomplete @Temporary
+//    const bestWeaponItemSlot = 1;
+//    // const bestWeaponItemSlot = getBestWeaponSlot(tribesman);
+//    let bestPickaxeLevel = -1;
+//    let bestPickaxeItemSlot = -1;
+//    let bestAxeLevel = -1;
+//    let bestAxeItemSlot = -1;
+//    let bestArmourLevel = -1;
+//    let bestArmourItemSlot = -1;
+//    let bestHammerLevel = -1;
+//    let bestHammerItemSlot = -1;
+//    let firstFoodItemSlot = -1; // Tribesman will only keep the first food item type in their inventory
+//    for (let itemSlot = 1; itemSlot <= tribesmanInventory.width * tribesmanInventory.height; itemSlot++) {
+//       const item = tribesmanInventory.itemSlots[itemSlot]; 
+//       if (typeof item === "undefined") {
+//          continue;
+//       }
       
-      const itemInfo = ITEM_INFO_RECORD[item.type];
-      const itemCategory = ITEM_TYPE_RECORD[item.type];
-      switch (itemCategory) {
-         case "pickaxe": {
-            if ((itemInfo as ToolItemInfo).level > bestPickaxeLevel) {
-               bestPickaxeLevel = (itemInfo as ToolItemInfo).level;
-               bestPickaxeItemSlot = itemSlot;
-            }
-            break;
-         }
-         case "axe": {
-            if ((itemInfo as ToolItemInfo).level > bestAxeLevel) {
-               bestAxeLevel = (itemInfo as ToolItemInfo).level;
-               bestAxeItemSlot = itemSlot;
-            }
-            break;
-         }
-         case "armour": {
-            if ((itemInfo as ArmourItemInfo).level > bestArmourLevel) {
-               bestArmourLevel = (itemInfo as ArmourItemInfo).level;
-               bestArmourItemSlot = itemSlot;
-            }
-            break;
-         }
-         case "hammer": {
-            if ((itemInfo as ArmourItemInfo).level > bestHammerLevel) {
-               bestHammerLevel = (itemInfo as ArmourItemInfo).level;
-               bestHammerItemSlot = itemSlot;
-            }
-            break;
-         }
-         case "healing": {
-            if (firstFoodItemSlot === -1) {
-               firstFoodItemSlot = itemSlot;
-            }
-            break;
-         }
-      }
-   }
+//       const itemInfo = ITEM_INFO_RECORD[item.type];
+//       const itemCategory = ITEM_TYPE_RECORD[item.type];
+//       switch (itemCategory) {
+//          case "pickaxe": {
+//             if ((itemInfo as ToolItemInfo).level > bestPickaxeLevel) {
+//                bestPickaxeLevel = (itemInfo as ToolItemInfo).level;
+//                bestPickaxeItemSlot = itemSlot;
+//             }
+//             break;
+//          }
+//          case "axe": {
+//             if ((itemInfo as ToolItemInfo).level > bestAxeLevel) {
+//                bestAxeLevel = (itemInfo as ToolItemInfo).level;
+//                bestAxeItemSlot = itemSlot;
+//             }
+//             break;
+//          }
+//          case "armour": {
+//             if ((itemInfo as ArmourItemInfo).level > bestArmourLevel) {
+//                bestArmourLevel = (itemInfo as ArmourItemInfo).level;
+//                bestArmourItemSlot = itemSlot;
+//             }
+//             break;
+//          }
+//          case "hammer": {
+//             if ((itemInfo as ArmourItemInfo).level > bestHammerLevel) {
+//                bestHammerLevel = (itemInfo as ArmourItemInfo).level;
+//                bestHammerItemSlot = itemSlot;
+//             }
+//             break;
+//          }
+//          case "healing": {
+//             if (firstFoodItemSlot === -1) {
+//                firstFoodItemSlot = itemSlot;
+//             }
+//             break;
+//          }
+//       }
+//    }
    
-   // @Speed
-   for (const [_itemSlot, item] of Object.entries(tribesmanInventory.itemSlots)) {
-      const itemSlot = Number(_itemSlot);
+//    // @Speed
+//    for (const [_itemSlot, item] of Object.entries(tribesmanInventory.itemSlots)) {
+//       const itemSlot = Number(_itemSlot);
       
-      if (itemSlot === bestWeaponItemSlot || itemSlot === bestAxeItemSlot || itemSlot === bestPickaxeItemSlot || itemSlot === bestArmourItemSlot || itemSlot === firstFoodItemSlot || itemSlot === bestHammerItemSlot) {
-         continue;
-      }
+//       if (itemSlot === bestWeaponItemSlot || itemSlot === bestAxeItemSlot || itemSlot === bestPickaxeItemSlot || itemSlot === bestArmourItemSlot || itemSlot === firstFoodItemSlot || itemSlot === bestHammerItemSlot) {
+//          continue;
+//       }
       
-      // Add the item to the barrel inventory and remove from tribesman inventory
-      const amountAdded = addItemToInventory(barrelInventoryComponent, "inventory", item.type, item.count);
-      consumeItemFromSlot(tribesmanInventoryComponent, "hotbar", itemSlot, amountAdded);
-   }
-}
+//       // Add the item to the barrel inventory and remove from tribesman inventory
+//       const amountAdded = addItemToInventory(barrelInventoryComponent, "inventory", item.type, item.count);
+//       consumeItemFromSlot(tribesmanInventoryComponent, "hotbar", itemSlot, amountAdded);
+//    }
+// }
 
-const haulToBarrel = (tribesman: Entity, barrel: Entity): boolean => {
-   // @Incomplete: goal radius
-   const didPathfind = pathfindToPosition(tribesman, barrel.position.x, barrel.position.y, barrel.id, TribesmanPathType.haulingToBarrel, 0, PathfindFailureDefault.returnEmpty);
+// @Incomplete
+// const haulToBarrel = (tribesman: Entity, barrel: Entity): boolean => {
+//    // @Incomplete: goal radius
+//    const didPathfind = pathfindToPosition(tribesman, barrel.position.x, barrel.position.y, barrel.id, TribesmanPathType.haulingToBarrel, 0, PathfindFailureDefault.returnEmpty);
 
-   if (tribesman.position.calculateDistanceBetween(barrel.position) <= BARREL_INTERACT_DISTANCE) {
-      depositResources(tribesman, barrel);
-   }
+//    if (tribesman.position.calculateDistanceBetween(barrel.position) <= BARREL_INTERACT_DISTANCE) {
+//       depositResources(tribesman, barrel);
+//    }
 
-   return didPathfind;
-}
-
-const hasFood = (tribesman: Entity): boolean => {
-   const inventoryComponent = InventoryComponentArray.getComponent(tribesman.id);
-   const hotbarInventory = getInventory(inventoryComponent, "hotbar");
-
-   for (let slotNum = 1; slotNum <= hotbarInventory.width * hotbarInventory.height; slotNum++) {
-      if (hotbarInventory.itemSlots.hasOwnProperty(slotNum)) {
-         const item = hotbarInventory.itemSlots[slotNum];
-
-         if (ITEM_TYPE_RECORD[item.type] === "healing") {
-            return true;
-         }
-      }
-   }
-
-   return false;
-}
+//    return didPathfind;
+// }
 
 const grabBarrelFood = (tribesman: Entity, barrel: Entity): void => {
    // 
@@ -347,26 +334,27 @@ const grabBarrelFood = (tribesman: Entity, barrel: Entity): void => {
    // 
 
    const barrelInventoryComponent = InventoryComponentArray.getComponent(barrel.id);
-   const barrelInventory = getInventory(barrelInventoryComponent, "inventory");
+   const barrelInventory = getInventory(barrelInventoryComponent, InventoryName.inventory);
 
    let foodItemSlot = -1;
    let food: Item | undefined;
    let maxFoodValue = 0;
    for (let slotNum = 1; slotNum <= barrelInventory.width * barrelInventory.height; slotNum++) {
-      if (barrelInventory.itemSlots.hasOwnProperty(slotNum)) {
-         const item = barrelInventory.itemSlots[slotNum];
+      const item = barrelInventory.itemSlots[slotNum];
+      if (typeof item === "undefined") {
+         continue;
+      }
+      
+      // Skip non-food
+      if (ITEM_TYPE_RECORD[item.type] !== "healing") {
+         continue;
+      }
 
-         // Skip non-food
-         if (ITEM_TYPE_RECORD[item.type] !== "healing") {
-            continue;
-         }
-
-         const foodValue = (ITEM_INFO_RECORD[item.type] as ConsumableItemInfo).healAmount * item.count;
-         if (typeof food === "undefined" || foodValue > maxFoodValue) {
-            food = item;
-            foodItemSlot = slotNum;
-            maxFoodValue = foodValue;
-         }
+      const foodValue = (ITEM_INFO_RECORD[item.type] as ConsumableItemInfo).healAmount * item.count;
+      if (typeof food === "undefined" || foodValue > maxFoodValue) {
+         food = item;
+         foodItemSlot = slotNum;
+         maxFoodValue = foodValue;
       }
    }
    if (typeof food === "undefined") {
@@ -374,8 +362,8 @@ const grabBarrelFood = (tribesman: Entity, barrel: Entity): void => {
    }
 
    const tribesmanInventoryComponent = InventoryComponentArray.getComponent(tribesman.id);
-   addItemToInventory(tribesmanInventoryComponent, "hotbar", food.type, food.count);
-   consumeItemFromSlot(barrelInventoryComponent, "inventory", foodItemSlot, 999);
+   addItemToInventory(tribesmanInventoryComponent, InventoryName.hotbar, food.type, food.count);
+   consumeItemFromSlot(barrelInventoryComponent, InventoryName.inventory, foodItemSlot, 999);
 }
 
 const hasAvailableHotbarSlot = (hotbarInventory: Inventory): boolean => {
@@ -390,11 +378,11 @@ const hasAvailableHotbarSlot = (hotbarInventory: Inventory): boolean => {
 
 const barrelHasFood = (barrel: Entity): boolean => {
    const inventoryComponent = InventoryComponentArray.getComponent(barrel.id);
-   const inventory = getInventory(inventoryComponent, "inventory");
+   const inventory = getInventory(inventoryComponent, InventoryName.inventory);
 
    for (let slotNum = 1; slotNum <= inventory.width * inventory.height; slotNum++) {
-      if (inventory.itemSlots.hasOwnProperty(slotNum)) {
-         const item = inventory.itemSlots[slotNum];
+      const item = inventory.itemSlots[slotNum];
+      if (typeof item !== "undefined") {
          if (ITEM_TYPE_RECORD[item.type] === "healing") {
             return true;
          }
@@ -409,17 +397,15 @@ const barrelHasFood = (barrel: Entity): boolean => {
 export function getBestHammerItemSlot (inventory: Inventory): number {
    let bestLevel = 0;
    let bestItemSlot = 0;
-   for (let itemSlot = 1; itemSlot <= inventory.width * inventory.height; itemSlot++) {
-      if (!inventory.itemSlots.hasOwnProperty(itemSlot)) {
-         continue;
-      }
 
-      const item = inventory.itemSlots[itemSlot];
+   for (let i = 0; i < inventory.items.length; i++) {
+      const item = inventory.items[i];
+
       if (item.type === ItemType.wooden_hammer || item.type === ItemType.stone_hammer) {
          const itemInfo = ITEM_INFO_RECORD[item.type] as HammerItemInfo;
          if (itemInfo.level > bestLevel) {
             bestLevel = itemInfo.level;
-            bestItemSlot = itemSlot;
+            bestItemSlot = inventory.getItemSlot(item);
          }
       }
    }
@@ -507,7 +493,7 @@ const openDoors = (tribesman: Entity, tribe: Tribe): void => {
          toggleDoor(entity);
 
          const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman.id);
-         const useInfo = getInventoryUseInfo(inventoryUseComponent, "hotbar");
+         const useInfo = getInventoryUseInfo(inventoryUseComponent, InventoryName.hotbar);
          useInfo.lastAttackTicks = Board.ticks;
       }
    }
@@ -744,12 +730,12 @@ export function attemptToRepairBuildings(tribesman: Entity): boolean {
 
    if (typeof closestDamagedBuilding !== "undefined") {
       const inventoryComponent = InventoryComponentArray.getComponent(tribesman.id);
-      const hotbarInventory = getInventory(inventoryComponent, "hotbar");
+      const hotbarInventory = getInventory(inventoryComponent, InventoryName.hotbar);
       const hammerItemSlot = getBestHammerItemSlot(hotbarInventory);
 
       // Select the hammer item slot
       const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman.id);
-      const useInfo = getInventoryUseInfo(inventoryUseComponent, "hotbar");
+      const useInfo = getInventoryUseInfo(inventoryUseComponent, InventoryName.hotbar);
       useInfo.selectedItemSlot = hammerItemSlot;
       setLimbActions(inventoryUseComponent, LimbAction.none);
 
@@ -773,7 +759,7 @@ export function attemptToRepairBuildings(tribesman: Entity): boolean {
             const targets = calculateRadialAttackTargets(tribesman, getTribesmanAttackOffset(tribesman), getTribesmanAttackRadius(tribesman));
             const repairTarget = calculateRepairTarget(tribesman, targets);
             if (repairTarget !== null) {
-               repairBuilding(tribesman, repairTarget, hammerItemSlot, "hotbar");
+               repairBuilding(tribesman, repairTarget, hammerItemSlot, InventoryName.hotbar);
             }
          }
       } else {
@@ -879,7 +865,7 @@ const goCraftItem = (tribesman: Entity, recipe: CraftingRecipe, tribe: Tribe): b
       if (tribesmanComponent.currentCraftingTicks >= recipe.aiCraftTimeTicks) {
          // Craft the item
          const inventoryComponent = InventoryComponentArray.getComponent(tribesman.id);
-         craftRecipe(inventoryComponent, recipe, "hotbar");
+         craftRecipe(inventoryComponent, recipe, InventoryName.hotbar);
 
          tribesmanComponent.currentCraftingTicks = 0;
       }
@@ -918,7 +904,7 @@ const goPlaceBuilding = (tribesman: Entity, hotbarInventory: Inventory, tribe: T
    if (distance < Vars.BUILDING_PLACE_DISTANCE) {
       // Equip the item
       const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman.id);
-      const useInfo = getInventoryUseInfo(inventoryUseComponent, "hotbar");
+      const useInfo = getInventoryUseInfo(inventoryUseComponent, InventoryName.hotbar);
       useInfo.selectedItemSlot = goal.placeableItemSlot;
       
       const targetDirection = angle(plan.position.x - tribesman.position.x, plan.position.y - tribesman.position.y);
@@ -937,7 +923,7 @@ const goPlaceBuilding = (tribesman: Entity, hotbarInventory: Inventory, tribe: T
          return true;
       } else if (Math.abs(getAngleDiff(tribesman.rotation, targetDirection)) < 0.02) {
          // Place the item
-         const item = hotbarInventory.itemSlots[goal.placeableItemSlot];
+         const item = hotbarInventory.itemSlots[goal.placeableItemSlot]!;
          const placingEntityType = (ITEM_INFO_RECORD[item.type] as PlaceableItemInfo).entityType;
          // @Temporary @Incomplete
          placeBuilding(tribe, plan.position, plan.rotation, placingEntityType, 0, [0, 0, 0, 0]);
@@ -946,7 +932,7 @@ const goPlaceBuilding = (tribesman: Entity, hotbarInventory: Inventory, tribe: T
             awardTitle(tribesman, TribesmanTitle.architect);
          }
 
-         consumeItemFromSlot(inventoryComponent, "hotbar", goal.placeableItemSlot, 1);
+         consumeItemFromSlot(inventoryComponent, InventoryName.hotbar, goal.placeableItemSlot, 1);
          
          useInfo.lastAttackTicks = Board.ticks;
       } else {
@@ -979,12 +965,12 @@ const goUpgradeBuilding = (tribesman: Entity, goal: TribesmanUpgradeGoal): void 
    // @Cleanup: Copy and paste from attemptToRepairBuildings
    
    const inventoryComponent = InventoryComponentArray.getComponent(tribesman.id);
-   const hotbarInventory = getInventory(inventoryComponent, "hotbar");
+   const hotbarInventory = getInventory(inventoryComponent, InventoryName.hotbar);
    const hammerItemSlot = getBestHammerItemSlot(hotbarInventory);
 
    // Select the hammer item slot
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman.id);
-   const useInfo = getInventoryUseInfo(inventoryUseComponent, "hotbar");
+   const useInfo = getInventoryUseInfo(inventoryUseComponent, InventoryName.hotbar);
    useInfo.selectedItemSlot = hammerItemSlot;
    setLimbActions(inventoryUseComponent, LimbAction.none);
 
@@ -1159,7 +1145,7 @@ const getGiftableItemSlot = (tribesman: Entity): number => {
    // @Incomplete: don't gift items useful to the tribesman
    
    const inventoryComponent = InventoryComponentArray.getComponent(tribesman.id);
-   const hotbarInventory = getInventory(inventoryComponent, "hotbar");
+   const hotbarInventory = getInventory(inventoryComponent, InventoryName.hotbar);
 
    let maxGiftWeight = 0;
    let bestItemSlot = 0;
@@ -1254,19 +1240,20 @@ export function tickTribesman(tribesman: Entity): void {
 
    const inventoryComponent = InventoryComponentArray.getComponent(tribesman.id);
 
-   const hotbarInventory = getInventory(inventoryComponent, "hotbar");
-   const armourInventory = getInventory(inventoryComponent, "armourSlot");
+   const hotbarInventory = getInventory(inventoryComponent, InventoryName.hotbar);
+   const armourInventory = getInventory(inventoryComponent, InventoryName.armourSlot);
 
    // Automatically equip armour from the hotbar
-   if (!armourInventory.itemSlots.hasOwnProperty(1)) {
-      for (let itemSlot = 1; itemSlot <= hotbarInventory.width * hotbarInventory.height; itemSlot++) {
-         if (hotbarInventory.itemSlots.hasOwnProperty(itemSlot)) {
-            const item = hotbarInventory.itemSlots[itemSlot];
-            if (ITEM_TYPE_RECORD[item.type] === "armour") {
-               addItemToSlot(inventoryComponent, "armourSlot", 1, item.type, 1);
-               removeItemFromInventory(inventoryComponent, "hotbar", itemSlot);
-               break;
-            }
+   if (typeof armourInventory.itemSlots[1] === "undefined") {
+      for (let i = 0; i < hotbarInventory.items.length; i++) {
+         const item = hotbarInventory.items[i];
+         if (ITEM_TYPE_RECORD[item.type] === "armour") {
+            armourInventory.addItem(item, 1);
+
+            // Remove from hotbar
+            const itemSlot = hotbarInventory.getItemSlot(item);
+            hotbarInventory.removeItem(itemSlot);
+            break;
          }
       }
    }
@@ -1352,7 +1339,7 @@ export function tickTribesman(tribesman: Entity): void {
          }
 
          const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman.id);
-         const useInfo = getInventoryUseInfo(inventoryUseComponent, "hotbar");
+         const useInfo = getInventoryUseInfo(inventoryUseComponent, InventoryName.hotbar);
          
          tribesmanComponent.currentAIType = TribesmanAIType.idle;
          useInfo.action = LimbAction.none;
@@ -1447,11 +1434,12 @@ export function tickTribesman(tribesman: Entity): void {
       const foodItemSlot = getFoodItemSlot(tribesman);
       if (foodItemSlot !== null) {
          const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman.id);
-         const useInfo = getInventoryUseInfo(inventoryUseComponent, "hotbar");
+         const useInfo = getInventoryUseInfo(inventoryUseComponent, InventoryName.hotbar);
          useInfo.selectedItemSlot = foodItemSlot;
 
-         const foodItem = getItem(inventoryComponent, "hotbar", foodItemSlot)!;
+         const foodItem = hotbarInventory.itemSlots[foodItemSlot]!;
          const itemInfo = ITEM_INFO_RECORD[foodItem.type] as ConsumableItemInfo;
+
          let action: LimbAction;
          switch (itemInfo.consumableItemCategory) {
             case ConsumableItemCategory.food: {
@@ -1528,15 +1516,15 @@ export function tickTribesman(tribesman: Entity): void {
 
          // Select the hammer item slot
          const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman.id);
-         const useInfo = getInventoryUseInfo(inventoryUseComponent, "hotbar");
+         const useInfo = getInventoryUseInfo(inventoryUseComponent, InventoryName.hotbar);
          useInfo.selectedItemSlot = hammerItemSlot;
          setLimbActions(inventoryUseComponent, LimbAction.none);
 
          // Find the target
          const targets = calculateRadialAttackTargets(tribesman, getTribesmanAttackOffset(tribesman), getTribesmanAttackRadius(tribesman));
          if (targets.includes(closestBlueprint)) {
-            const useInfo = getInventoryUseInfo(inventoryUseComponent, "hotbar");
-            repairBuilding(tribesman, closestBlueprint, useInfo.selectedItemSlot, "hotbar");
+            const useInfo = getInventoryUseInfo(inventoryUseComponent, InventoryName.hotbar);
+            repairBuilding(tribesman, closestBlueprint, useInfo.selectedItemSlot, InventoryName.hotbar);
          }
          
          return;
@@ -1570,7 +1558,7 @@ export function tickTribesman(tribesman: Entity): void {
          const giftItemSlot = getGiftableItemSlot(tribesman);
          if (giftItemSlot !== 0) {
             const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman.id);
-            const useInfo = getInventoryUseInfo(inventoryUseComponent, "hotbar");
+            const useInfo = getInventoryUseInfo(inventoryUseComponent, InventoryName.hotbar);
             useInfo.selectedItemSlot = giftItemSlot;
    
             // Swap to that item slot
@@ -1590,8 +1578,8 @@ export function tickTribesman(tribesman: Entity): void {
                tribesman.turn(targetDirection, TRIBESMAN_TURN_SPEED);
    
                if (Math.abs(getAngleDiff(targetDirection, tribesman.rotation)) < 0.1 && !itemThrowIsOnCooldown(tribesmanComponent)) {
-                  const item = hotbarInventory.itemSlots[giftItemSlot];
-                  throwItem(tribesman, "hotbar", giftItemSlot, item.count, targetDirection);
+                  const item = hotbarInventory.itemSlots[giftItemSlot]!;
+                  throwItem(tribesman, InventoryName.hotbar, giftItemSlot, item.count, targetDirection);
                }
    
                setLimbActions(inventoryUseComponent, LimbAction.none);
@@ -1672,7 +1660,7 @@ export function tickTribesman(tribesman: Entity): void {
       
       switch (goal.type) {
          case TribesmanGoalType.craftRecipe: {
-            if (inventoryComponentCanAffordRecipe(inventoryComponent, goal.recipe, "hotbar")) {
+            if (inventoryComponentCanAffordRecipe(inventoryComponent, goal.recipe, InventoryName.hotbar)) {
                const isGoing = goCraftItem(tribesman, goal.recipe, tribeComponent.tribe);
                if (isGoing) {
                   return;
@@ -1767,14 +1755,16 @@ export function tickTribesman(tribesman: Entity): void {
       
       // @Incomplete: take into account backpack
       for (let itemSlot = 1; itemSlot <= hotbarInventory.width * hotbarInventory.height; itemSlot++) {
-         if (hotbarInventory.itemSlots[itemSlot] === undefined) {
+         const item = hotbarInventory.itemSlots[itemSlot];
+         if (typeof item === "undefined") {
             continue;
          }
 
-         const item = hotbarInventory.itemSlots[itemSlot];
 
          const amountUsed = tribeComponent.tribe.useItemInTechResearch(researchGoal.tech, item.type, item.count);
-         consumeItemFromSlot(inventoryComponent, "hotbar", itemSlot, amountUsed);
+         if (amountUsed > 0) {
+            consumeItemFromSlot(inventoryComponent, InventoryName.hotbar, itemSlot, amountUsed);
+         }
       }
 
       if (tribeComponent.tribe.techIsComplete(researchGoal.tech)) {
@@ -1793,7 +1783,7 @@ export function tickTribesman(tribesman: Entity): void {
    setLimbActions(inventoryUseComponent, LimbAction.none);
 
    // Grab food from barrel
-   if (!hasFood(tribesman) && hasAvailableHotbarSlot(hotbarInventory)) {
+   if (getFoodItemSlot(tribesman) === -1 && hasAvailableHotbarSlot(hotbarInventory)) {
       let closestBarrelWithFood: Entity | undefined;
       let minDist = Number.MAX_SAFE_INTEGER;
       for (const entity of aiHelperComponent.visibleEntities) {

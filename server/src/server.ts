@@ -2,7 +2,7 @@ import { BlueprintType, ComponentData, EntityComponents, EntityComponentsData, S
 import { AttackPacket, CircularHitboxData, ClientToServerEvents, EntityData, EntityDebugData, GameDataPacket, GameDataPacketOptions, GameDataSyncPacket, HealData, HitData, InitialGameDataPacket, InterServerEvents, PlayerDataPacket, PlayerInventoryData, RectangularHitboxData, ResearchOrbCompleteData, RespawnDataPacket, ServerTileData, ServerToClientEvents, SocketData, VisibleChunkBounds } from "webgl-test-shared/dist/client-server-types";
 import { EntityType, LimbAction } from "webgl-test-shared/dist/entities";
 import { EnemyTribeData, PlayerTribeData, TechID, getTechByID } from "webgl-test-shared/dist/techs";
-import { Inventory } from "webgl-test-shared/dist/items";
+import { Inventory, InventoryName } from "webgl-test-shared/dist/items";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { TribesmanTitle } from "webgl-test-shared/dist/titles";
 import { TribeType, TRIBE_INFO_RECORD } from "webgl-test-shared/dist/tribes";
@@ -310,6 +310,19 @@ const snapRotationToPlayer = (player: Entity, placePosition: Point, rotation: nu
 
    snapRotation += rotation;
    return snapRotation;
+}
+
+const createNewPlayerInventories = (): PlayerInventoryData => {
+   return {
+      hotbar: new Inventory(Settings.INITIAL_PLAYER_HOTBAR_SIZE, 1, InventoryName.hotbar),
+      backpackInventory: new Inventory(0, 0, InventoryName.backpack),
+      backpackSlot: new Inventory(1, 1, InventoryName.backpackSlot),
+      heldItemSlot: new Inventory(1, 1, InventoryName.heldItemSlot),
+      craftingOutputItemSlot: new Inventory(1, 1, InventoryName.craftingOutputSlot),
+      armourSlot: new Inventory(1, 1, InventoryName.armourSlot),
+      offhand: new Inventory(1, 1, InventoryName.offhand),
+      gloveSlot: new Inventory(1, 1, InventoryName.gloveSlot)
+   }
 }
 
 // @Cleanup: Remove class, just have functions
@@ -653,56 +666,7 @@ class GameServer {
                heals: [],
                visibleEntityDeathIDs: [],
                orbCompletes: [],
-               inventory: {
-                  hotbar: {
-                     itemSlots: {},
-                     width: Settings.INITIAL_PLAYER_HOTBAR_SIZE,
-                     height: 1,
-                     name: "hotbar"
-                  },
-                  backpackInventory: {
-                     itemSlots: {},
-                     width: -1,
-                     height: -1,
-                     name: "backpack"
-                  },
-                  backpackSlot: {
-                     itemSlots: {},
-                     width: 1,
-                     height: 1,
-                     name: "backpackSlot"
-                  },
-                  heldItemSlot: {
-                     itemSlots: {},
-                     width: 1,
-                     height: 1,
-                     name: "heldItemSlot"
-                  },
-                  craftingOutputItemSlot: {
-                     itemSlots: {},
-                     width: 1,
-                     height: 1,
-                     name: "craftingOutputSlot"
-                  },
-                  armourSlot: {
-                     itemSlots: {},
-                     width: 1,
-                     height: 1,
-                     name: "armourSlot"
-                  },
-                  offhand: {
-                     itemSlots: {},
-                     width: 1,
-                     height: 1,
-                     name: "armourSlot"
-                  },
-                  gloveSlot: {
-                     itemSlots: {},
-                     width: 1,
-                     height: 1,
-                     name: "gloveSlot"
-                  }
-               },
+               inventory: createNewPlayerInventories(),
                tileUpdates: [],
                serverTicks: Board.ticks,
                serverTime: Board.time,
@@ -772,7 +736,7 @@ class GameServer {
             }
          });
 
-         socket.on("item_pickup", (entityID: number, inventoryName: string, itemSlot: number, amount: number) => {
+         socket.on("item_pickup", (entityID: number, inventoryName: InventoryName, itemSlot: number, amount: number) => {
             const playerData = SERVER.playerDataRecord[socket.id];
             if (typeof playerData !== "undefined") {
                const player = this.getPlayerInstance(playerData);
@@ -782,7 +746,7 @@ class GameServer {
             }
          });
 
-         socket.on("item_release", (entityID: number, inventoryName: string, itemSlot: number, amount: number) => {
+         socket.on("item_release", (entityID: number, inventoryName: InventoryName, itemSlot: number, amount: number) => {
             const playerData = SERVER.playerDataRecord[socket.id];
             if (typeof playerData !== "undefined") {
                const player = this.getPlayerInstance(playerData);
@@ -807,7 +771,7 @@ class GameServer {
             if (typeof playerData !== "undefined") {
                const player = this.getPlayerInstance(playerData);
                if (player !== null) {
-                  throwItem(player, "heldItemSlot", 1, dropAmount, throwDirection);
+                  throwItem(player, InventoryName.heldItemSlot, 1, dropAmount, throwDirection);
                }
             }
          });
@@ -817,7 +781,7 @@ class GameServer {
             if (typeof playerData !== "undefined") {
                const player = this.getPlayerInstance(playerData);
                if (player !== null) {
-                  throwItem(player, "hotbar", itemSlot, dropAmount, throwDirection);
+                  throwItem(player, InventoryName.hotbar, itemSlot, dropAmount, throwDirection);
                }
             }
          });
@@ -986,13 +950,13 @@ class GameServer {
       });
    }
 
-   private bundleHotbarCrossbowLoadProgressRecord(player: Entity | null): Record<number, number> {
+   private bundleHotbarCrossbowLoadProgressRecord(player: Entity | null): Partial<Record<number, number>> {
       if (player === null) {
          return {};
       }
       
       const inventoryUseComponent = InventoryUseComponentArray.getComponent(player.id);
-      const useInfo = getInventoryUseInfo(inventoryUseComponent, "hotbar");
+      const useInfo = getInventoryUseInfo(inventoryUseComponent, InventoryName.hotbar);
 
       return useInfo.crossbowLoadProgressRecord;
    }
@@ -1182,80 +1146,21 @@ class GameServer {
 
    private bundlePlayerInventoryData(player: Entity | null): PlayerInventoryData {
       if (player === null) {
-         return {
-            hotbar: {
-               itemSlots: {},
-               width: Settings.INITIAL_PLAYER_HOTBAR_SIZE,
-               height: 1,
-               name: "hotbar"
-            },
-            backpackInventory: {
-               itemSlots: {},
-               width: -1,
-               height: -1,
-               name: "backpack"
-            },
-            backpackSlot: {
-               itemSlots: {},
-               width: 1,
-               height: 1,
-               name: "backpackSlot"
-            },
-            heldItemSlot: {
-               itemSlots: {},
-               width: 1,
-               height: 1,
-               name: "heldItemSlot"
-            },
-            craftingOutputItemSlot: {
-               itemSlots: {},
-               width: 1,
-               height: 1,
-               name: "craftingOutputSlot"
-            },
-            armourSlot: {
-               itemSlots: {},
-               width: 1,
-               height: 1,
-               name: "armourSlot"
-            },
-            offhand: {
-               itemSlots: {},
-               width: 1,
-               height: 1,
-               name: "offhand"
-            },
-            gloveSlot: {
-               itemSlots: {},
-               width: 1,
-               height: 1,
-               name: "gloveSlot"
-            }
-         };
-      } else {
-         const tribeComponent = TribeComponentArray.getComponent(player.id);
-         
-         return {
-            hotbar: SERVER.bundleInventory(player, "hotbar"),
-            backpackInventory: SERVER.bundleInventory(player, "backpack"),
-            backpackSlot: SERVER.bundleInventory(player, "backpackSlot"),
-            heldItemSlot: SERVER.bundleInventory(player, "heldItemSlot"),
-            craftingOutputItemSlot: SERVER.bundleInventory(player, "craftingOutputSlot"),
-            armourSlot: SERVER.bundleInventory(player, "armourSlot"),
-            offhand: tribeComponent.tribe.type === TribeType.barbarians ? SERVER.bundleInventory(player, "offhand") : {
-               itemSlots: {},
-               width: 1,
-               height: 1,
-               name: "offhand"
-            },
-            gloveSlot: SERVER.bundleInventory(player, "gloveSlot")
-         };
+         return createNewPlayerInventories();
       }
-   }
 
-   private bundleInventory(player: Entity, inventoryName: string): Inventory {
       const inventoryComponent = InventoryComponentArray.getComponent(player.id);
-      return getInventory(inventoryComponent, inventoryName);
+
+      return {
+         hotbar: getInventory(inventoryComponent, InventoryName.hotbar),
+         backpackInventory: getInventory(inventoryComponent, InventoryName.backpack),
+         backpackSlot: getInventory(inventoryComponent, InventoryName.backpackSlot),
+         heldItemSlot: getInventory(inventoryComponent, InventoryName.heldItemSlot),
+         craftingOutputItemSlot: getInventory(inventoryComponent, InventoryName.craftingOutputSlot),
+         armourSlot: getInventory(inventoryComponent, InventoryName.armourSlot),
+         offhand: getInventory(inventoryComponent, InventoryName.offhand),
+         gloveSlot: getInventory(inventoryComponent, InventoryName.gloveSlot)
+      };
    }
 
    private handlePlayerDisconnect(socket: ISocket): void {
@@ -1312,7 +1217,7 @@ class GameServer {
       }
 
       const inventoryUseComponent = InventoryUseComponentArray.getComponent(player.id);
-      const hotbarUseInfo = getInventoryUseInfo(inventoryUseComponent, "hotbar");
+      const hotbarUseInfo = getInventoryUseInfo(inventoryUseComponent, InventoryName.hotbar);
 
       player.position.x = playerDataPacket.position[0];
       player.position.y = playerDataPacket.position[1];
@@ -1335,13 +1240,13 @@ class GameServer {
       let overrideOffhand = false;
       
       if ((playerDataPacket.mainAction === LimbAction.eat || playerDataPacket.mainAction === LimbAction.useMedicine) && (hotbarUseInfo.action !== LimbAction.eat && hotbarUseInfo.action !== LimbAction.useMedicine)) {
-         overrideOffhand = startEating(player, "hotbar");
+         overrideOffhand = startEating(player, InventoryName.hotbar);
       } else if (playerDataPacket.mainAction === LimbAction.chargeBow && hotbarUseInfo.action !== LimbAction.chargeBow) {
-         startChargingBow(player, "hotbar");
+         startChargingBow(player, InventoryName.hotbar);
       } else if (playerDataPacket.mainAction === LimbAction.chargeSpear && hotbarUseInfo.action !== LimbAction.chargeSpear) {
-         startChargingSpear(player, "hotbar");
+         startChargingSpear(player, InventoryName.hotbar);
       } else if (playerDataPacket.mainAction === LimbAction.chargeBattleaxe && hotbarUseInfo.action !== LimbAction.chargeBattleaxe) {
-         startChargingBattleaxe(player, "hotbar");
+         startChargingBattleaxe(player, InventoryName.hotbar);
       } else {
          hotbarUseInfo.action = playerDataPacket.mainAction;
       }
@@ -1349,16 +1254,16 @@ class GameServer {
       if (!overrideOffhand) {
          const tribeComponent = TribeComponentArray.getComponent(player.id);
          if (tribeComponent.tribe.type === TribeType.barbarians) {
-            const offhandUseInfo = getInventoryUseInfo(inventoryUseComponent, "offhand");
+            const offhandUseInfo = getInventoryUseInfo(inventoryUseComponent, InventoryName.offhand);
    
             if ((playerDataPacket.offhandAction === LimbAction.eat || playerDataPacket.offhandAction === LimbAction.useMedicine) && (offhandUseInfo.action !== LimbAction.eat && offhandUseInfo.action !== LimbAction.useMedicine)) {
-               startEating(player, "offhand");
+               startEating(player, InventoryName.offhand);
             } else if (playerDataPacket.offhandAction === LimbAction.chargeBow && offhandUseInfo.action !== LimbAction.chargeBow) {
-               startChargingBow(player, "offhand");
+               startChargingBow(player, InventoryName.offhand);
             } else if (playerDataPacket.offhandAction === LimbAction.chargeSpear && offhandUseInfo.action !== LimbAction.chargeSpear) {
-               startChargingSpear(player, "offhand");
+               startChargingSpear(player, InventoryName.offhand);
             } else if (playerDataPacket.offhandAction === LimbAction.chargeBattleaxe && offhandUseInfo.action !== LimbAction.chargeBattleaxe) {
-               startChargingBattleaxe(player, "offhand");
+               startChargingBattleaxe(player, InventoryName.offhand);
             } else {
                offhandUseInfo.action = playerDataPacket.offhandAction;
             }

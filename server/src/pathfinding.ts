@@ -403,8 +403,8 @@ const aStarHeuristic = (startNode: PathfindingNodeIndex, endNode: PathfindingNod
    const endNodeX = endNode % PathfindingSettings.NODES_IN_WORLD_WIDTH - 1;
    const endNodeY = ((endNode / PathfindingSettings.NODES_IN_WORLD_WIDTH) | 0) - 1;
 
-   let diffX = startNodeX - endNodeX;
-   let diffY = startNodeY - endNodeY;
+   const diffX = startNodeX - endNodeX;
+   const diffY = startNodeY - endNodeY;
    return Math.sqrt(diffX * diffX + diffY * diffY);
 }
 

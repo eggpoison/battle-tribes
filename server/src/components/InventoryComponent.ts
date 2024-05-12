@@ -1,6 +1,6 @@
 import { InventoryComponentData } from "webgl-test-shared/dist/components";
 import { ItemTally, CraftingRecipe, CraftingStation } from "webgl-test-shared/dist/crafting-recipes";
-import { Inventory, Item, ItemType, itemIsStackable, ITEM_INFO_RECORD, StackableItemInfo, getItemStackSize } from "webgl-test-shared/dist/items";
+import { Inventory, Item, ItemType, itemIsStackable, ITEM_INFO_RECORD, StackableItemInfo, getItemStackSize, InventoryName } from "webgl-test-shared/dist/items";
 import Entity from "../Entity";
 import { createItemEntity, itemEntityCanBePickedUp } from "../entities/item-entity";
 import { InventoryComponentArray, ItemComponentArray } from "./ComponentArray";
@@ -8,24 +8,21 @@ import { createItem } from "../items";
 
 export class InventoryComponent {
    /** Stores a record of all inventories associated with the inventory component. */
-   public readonly inventoryRecord: Record<string, Inventory> = {};
+   public readonly inventoryRecord: Partial<Record<InventoryName, Inventory>> = {};
    /** Stores all inventories associated with the inventory component in the order of when they were added. */
    public readonly inventories = new Array<Inventory>();
    public readonly accessibleInventories = new Array<Inventory>();
 }
 
 /** Creates and stores a new inventory in the component. */
-export function createNewInventory(inventoryComponent: InventoryComponent, name: string, width: number, height: number, acceptsPickedUpItems: boolean): Inventory {
-   if (inventoryComponent.inventoryRecord.hasOwnProperty(name)) throw new Error(`Tried to create an inventory when an inventory by the name of '${name}' already exists.`);
+export function createNewInventory(inventoryComponent: InventoryComponent, inventoryName: InventoryName, width: number, height: number, acceptsPickedUpItems: boolean): Inventory {
+   if (typeof inventoryComponent.inventoryRecord[inventoryName] !== "undefined") {
+      throw new Error(`Tried to create an inventory when an inventory by the name of '${name}' already exists.`);
+   }
    
-   const inventory: Inventory = {
-      width: width,
-      height: height,
-      itemSlots: {},
-      name: name
-   };
+   const inventory = new Inventory(width, height, inventoryName);
 
-   inventoryComponent.inventoryRecord[name] = inventory;
+   inventoryComponent.inventoryRecord[inventoryName] = inventory;
    inventoryComponent.inventories.push(inventory);
 
    if (acceptsPickedUpItems) {
@@ -35,45 +32,23 @@ export function createNewInventory(inventoryComponent: InventoryComponent, name:
    return inventory;
 }
 
-export function resizeInventory(inventoryComponent: InventoryComponent, name: string, width: number, height: number): void {
-   if (!inventoryComponent.inventoryRecord.hasOwnProperty(name)) throw new Error(`Could not find an inventory by the name of '${name}'.`);
+export function resizeInventory(inventoryComponent: InventoryComponent, inventoryName: InventoryName, width: number, height: number): void {
+   const inventory = inventoryComponent.inventoryRecord[inventoryName];
+   if (typeof inventory === "undefined") {
+      throw new Error(`Could not find an inventory by the name of '${inventoryName}'.`);
+   }
 
-   inventoryComponent.inventoryRecord[name].width = width;
-   inventoryComponent.inventoryRecord[name].height = height;
+   inventory.width = width;
+   inventory.height = height;
 }
 
-export function getInventory(inventoryComponent: InventoryComponent, name: string): Inventory {
-   if (!inventoryComponent.inventoryRecord.hasOwnProperty(name)) {
-      throw new Error(`Could not find an inventory by the name of '${name}'.`);
+export function getInventory(inventoryComponent: InventoryComponent, inventoryName: InventoryName): Inventory {
+   const inventory = inventoryComponent.inventoryRecord[inventoryName];
+   if (typeof inventory === "undefined") {
+      throw new Error(`Could not find an inventory by the name of '${inventoryName}'.`);
    }
    
-   return inventoryComponent.inventoryRecord[name];
-}
-
-export function getItemFromInventory(inventory: Inventory, itemSlot: number): Item | null {
-   return inventory.itemSlots[itemSlot];
-}
-
-export function inventoryHasItemInSlot(inventory: Inventory, itemSlot: number): boolean {
-   return inventory.itemSlots.hasOwnProperty(itemSlot);
-}
-
-export function getItem(inventoryComponent: InventoryComponent, inventoryName: string, itemSlot: number): Item | null {
-   const inventory = getInventory(inventoryComponent, inventoryName);
-   if (inventoryHasItemInSlot(inventory, itemSlot)) {
-      return getItemFromInventory(inventory, itemSlot);
-   }
-   return null;
-}
-
-export function setItem(inventoryComponent: InventoryComponent, inventoryName: string, itemSlot: number, item: Item | null): void {
-   const inventory = getInventory(inventoryComponent, inventoryName);
-
-   if (item !== null) {
-      inventory.itemSlots[itemSlot] = item;
-   } else {
-      delete inventory.itemSlots[itemSlot];
-   }
+   return inventory;
 }
 
 export function inventoryHasItemType(inventory: Inventory, itemType: ItemType): boolean {
@@ -150,7 +125,7 @@ export function addItem(inventoryComponent: InventoryComponent, item: Item): num
  * Adds as much of an item as possible to a specific inventory.
  * @returns The number of items added to the inventory
  */
-export function addItemToInventory(inventoryComponent: InventoryComponent, inventoryName: string, itemType: ItemType, itemAmount: number): number {
+export function addItemToInventory(inventoryComponent: InventoryComponent, inventoryName: InventoryName, itemType: ItemType, itemAmount: number): number {
    let remainingAmountToAdd = itemAmount;
    let amountAdded = 0;
 
@@ -161,11 +136,14 @@ export function addItemToInventory(inventoryComponent: InventoryComponent, inven
       const stackSize = (ITEM_INFO_RECORD[itemType] as StackableItemInfo).stackSize;
       
       // If there is already an item of the same type in the inventory, add it there
-      for (const [itemSlot, currentItem] of Object.entries(inventory.itemSlots) as unknown as ReadonlyArray<[number, Item]>) {
+      for (let i = 0; i < inventory.items.length; i++) {
+         const item = inventory.items[i];
+
          // If the item is of the same type, add it
-         if (currentItem.type === itemType) {
-            const maxAddAmount = Math.min(stackSize - currentItem.count, remainingAmountToAdd);
-            inventory.itemSlots[itemSlot].count += maxAddAmount;
+         if (item.type === itemType) {
+            const maxAddAmount = Math.min(stackSize - item.count, remainingAmountToAdd);
+            
+            item.count += maxAddAmount;
             remainingAmountToAdd -= maxAddAmount;
             amountAdded += maxAddAmount;
 
@@ -174,9 +152,9 @@ export function addItemToInventory(inventoryComponent: InventoryComponent, inven
       }
    }
    
-   for (let i = 1; i <= inventory.width * inventory.height; i++) {
+   for (let itemSlot = 1; itemSlot <= inventory.width * inventory.height; itemSlot++) {
       // If the slot is empty then add the rest of the item
-      if (!inventory.itemSlots.hasOwnProperty(i)) {
+      if (typeof inventory.itemSlots[itemSlot] === "undefined") {
          let addAmount: number;
          if (isStackable) {
             const stackSize = (ITEM_INFO_RECORD[itemType] as StackableItemInfo).stackSize;
@@ -185,7 +163,8 @@ export function addItemToInventory(inventoryComponent: InventoryComponent, inven
             addAmount = 1;
          }
 
-         inventory.itemSlots[i] = createItem(itemType, addAmount);
+         const item = createItem(itemType, addAmount);
+         inventory.addItem(item, itemSlot);
 
          amountAdded += addAmount;
          remainingAmountToAdd -= addAmount;
@@ -205,7 +184,7 @@ export function addItemToInventory(inventoryComponent: InventoryComponent, inven
  * @param amount The amount of item to attempt to add.
  * @returns The number of items added to the item slot.
  */
-export function addItemToSlot(inventoryComponent: InventoryComponent, inventoryName: string, itemSlot: number, itemType: ItemType, amount: number): number {
+export function addItemToSlot(inventoryComponent: InventoryComponent, inventoryName: InventoryName, itemSlot: number, itemType: ItemType, amount: number): number {
    const inventory = getInventory(inventoryComponent, inventoryName);
    
    if (itemSlot < 1 || itemSlot > inventory.width * inventory.height) {
@@ -214,9 +193,8 @@ export function addItemToSlot(inventoryComponent: InventoryComponent, inventoryN
 
    let amountAdded: number;
 
-   if (inventory.itemSlots.hasOwnProperty(itemSlot)) {
-      const item = getItem(inventoryComponent, inventoryName, itemSlot)!;
-
+   const item = inventory.itemSlots[itemSlot];
+   if (typeof item !== "undefined") {
       if (item.type !== itemType) {
          // Items are of different types, so none can be added
          return 0;
@@ -234,7 +212,9 @@ export function addItemToSlot(inventoryComponent: InventoryComponent, inventoryN
       }
    } else {
       amountAdded = amount;
-      inventory.itemSlots[itemSlot] = createItem(itemType, amount);
+
+      const item = createItem(itemType, amount);
+      inventory.addItem(item, itemSlot);
    }
 
    return amountAdded;
@@ -244,16 +224,14 @@ export function addItemToSlot(inventoryComponent: InventoryComponent, inventoryN
  * Attempts to consume a certain amount of an item type from an inventory.
  * @returns The number of items consumed from the inventory.
 */
-export function consumeItemTypeFromInventory(inventoryComponent: InventoryComponent, inventoryName: string, itemType: ItemType, amount: number): number {
+export function consumeItemTypeFromInventory(inventoryComponent: InventoryComponent, inventoryName: InventoryName, itemType: ItemType, amount: number): number {
    const inventory = getInventory(inventoryComponent, inventoryName);
    
    let remainingAmountToConsume = amount;
    let totalAmountConsumed = 0;
    for (let itemSlot = 1; itemSlot <= inventory.width * inventory.height; itemSlot++) {
-      if (!inventory.itemSlots.hasOwnProperty(itemSlot)) continue;
-
       const item = inventory.itemSlots[itemSlot];
-      if (item.type !== itemType) continue;
+      if (typeof item === "undefined" || item.type !== itemType) continue;
 
       const amountConsumed = Math.min(remainingAmountToConsume, item.count);
 
@@ -262,7 +240,7 @@ export function consumeItemTypeFromInventory(inventoryComponent: InventoryCompon
       totalAmountConsumed += amountConsumed;
 
       if (item.count === 0) {
-         delete inventory.itemSlots[itemSlot];
+         inventory.removeItem(itemSlot);
       }
    }
 
@@ -281,7 +259,7 @@ export function consumeItemType(inventoryComponent: InventoryComponent, itemType
 /**
  * @returns The amount of items consumed
  */
-export function consumeItemFromSlot(inventoryComponent: InventoryComponent, inventoryName: string, itemSlot: number, amount: number): number {
+export function consumeItemFromSlot(inventoryComponent: InventoryComponent, inventoryName: InventoryName, itemSlot: number, amount: number): number {
    const inventory = getInventory(inventoryComponent, inventoryName);
    
    const item = inventory.itemSlots[itemSlot];
@@ -291,7 +269,7 @@ export function consumeItemFromSlot(inventoryComponent: InventoryComponent, inve
 
    // If all items have been removed, delete that item
    if (item.count <= 0) {
-      delete inventory.itemSlots[itemSlot];
+      inventory.removeItem(itemSlot);
       // As the item count is 0 or negative, we add instead of subtract
       return amount + item.count;
    }
@@ -300,41 +278,27 @@ export function consumeItemFromSlot(inventoryComponent: InventoryComponent, inve
    return amount;
 }
 
-export function removeItemFromInventory(inventoryComponent: InventoryComponent, inventoryName: string, itemSlot: number): void {
-   const inventory = getInventory(inventoryComponent, inventoryName);
-
-   delete inventory.itemSlots[itemSlot];
-}
-
 /**
  * @returns True if the inventory has no item slots available, false if there is at least one
  */
-export function inventoryIsFull(inventoryComponent: InventoryComponent, inventoryName: string): boolean {
+export function inventoryIsFull(inventoryComponent: InventoryComponent, inventoryName: InventoryName): boolean {
    const inventory = getInventory(inventoryComponent, inventoryName);
-
-   for (let itemSlot = 1; itemSlot <= inventory.width * inventory.height; itemSlot++) {
-      if (!inventory.itemSlots.hasOwnProperty(itemSlot)) {
-         return false;
-      }
-   }
-
-   return true;
+   return inventory.items.length < inventory.width * inventory.height;
 }
 
-export function dropInventory(entity: Entity, inventoryComponent: InventoryComponent, inventoryName: string, dropRange: number): void {
+export function dropInventory(entity: Entity, inventoryComponent: InventoryComponent, inventoryName: InventoryName, dropRange: number): void {
    const inventory = getInventory(inventoryComponent, inventoryName);
-   for (let itemSlot = 1; itemSlot <= inventory.width * inventory.height; itemSlot++) {
-      if (inventory.itemSlots.hasOwnProperty(itemSlot)) {
-         const position = entity.position.copy();
+   for (let i = 0; i < inventory.items.length; i++) {
+      const item = inventory.items[i];
 
-         const spawnOffsetMagnitude = dropRange * Math.random();
-         const spawnOffsetDirection = 2 * Math.PI * Math.random();
-         position.x += spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
-         position.y += spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
-         
-         const item = inventory.itemSlots[itemSlot];
-         createItemEntity(position, item.type, item.count, 0);
-      }
+      const position = entity.position.copy();
+
+      const spawnOffsetMagnitude = dropRange * Math.random();
+      const spawnOffsetDirection = 2 * Math.PI * Math.random();
+      position.x += spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
+      position.y += spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
+      
+      createItemEntity(position, item.type, item.count, 0);
    }
 }
 
@@ -372,12 +336,11 @@ export function countItemType(inventoryComponent: InventoryComponent, itemType: 
    for (let i = 0; i < inventoryComponent.inventories.length; i++) {
       const inventory = inventoryComponent.inventories[i];
 
-      for (let itemSlot = 1; itemSlot <= inventory.width * inventory.height; itemSlot++) {
-         if (inventory.itemSlots.hasOwnProperty(itemSlot)) {
-            const item = inventory.itemSlots[itemSlot];
-            if (item.type === itemType) {
-               count += item.count;
-            }
+      for (let i = 0; i < inventory.items.length; i++) {
+         const item = inventory.items[i];
+
+         if (item.type === itemType) {
+            count += item.count;
          }
       }
    }
@@ -386,8 +349,10 @@ export function countItemType(inventoryComponent: InventoryComponent, itemType: 
 }
 
 export function tallyInventoryItems(tally: ItemTally, inventory: Inventory): void {
-   for (const item of Object.values(inventory.itemSlots)) {
-      if (!tally.hasOwnProperty(item.type)) {
+   for (let i = 0; i < inventory.items.length; i++) {
+      const item = inventory.items[i];
+      
+      if (typeof tally[item.type] === "undefined") {
          tally[item.type] = item.count;
       } else {
          tally[item.type]! += item.count;
@@ -402,17 +367,17 @@ export function tallyInventoryComponentItems(tally: ItemTally, inventoryComponen
    }
 }
 
-export function inventoryComponentCanAffordRecipe(inventoryComponent: InventoryComponent, recipe: CraftingRecipe, outputInventoryName: string): boolean {
+export function inventoryComponentCanAffordRecipe(inventoryComponent: InventoryComponent, recipe: CraftingRecipe, outputInventoryName: InventoryName): boolean {
    // Don't craft if there isn't space
    let hasSpace = false;
    const outputInventory = getInventory(inventoryComponent, outputInventoryName);
    for (let itemSlot = 1; itemSlot <= outputInventory.width * outputInventory.height; itemSlot++) {
-      if (outputInventory.itemSlots[itemSlot] === undefined) {
+      const item = outputInventory.itemSlots[itemSlot];
+      if (typeof item === "undefined") {
          hasSpace = true;
          break;
       }
 
-      const item = outputInventory.itemSlots[itemSlot];
       if (item.type === recipe.product && itemIsStackable(recipe.product) && item.count + recipe.yield <= getItemStackSize(item)) {
          hasSpace = true;
          break;
@@ -443,7 +408,7 @@ export function recipeCraftingStationIsAvailable(availableCraftingStations: Read
    return availableCraftingStations.indexOf(recipe.craftingStation) !== -1;
 }
 
-export function craftRecipe(inventoryComponent: InventoryComponent, recipe: CraftingRecipe, outputInventoryName: string): void {
+export function craftRecipe(inventoryComponent: InventoryComponent, recipe: CraftingRecipe, outputInventoryName: InventoryName): void {
    // Consume ingredients
    for (const [ingredientType, ingredientCount] of Object.entries(recipe.ingredients).map(entry => [Number(entry[0]), entry[1]]) as ReadonlyArray<[ItemType, number]>) {
       for (let remainingAmountToConsume = ingredientCount, i = 0; remainingAmountToConsume > 0 && i < inventoryComponent.inventories.length; i++) {

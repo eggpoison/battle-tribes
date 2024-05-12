@@ -7,8 +7,9 @@ import { ItemComponentArray } from "./ComponentArray";
 export class ItemComponent {
    readonly itemType: ItemType;
    amount: number;
+   
    /** Stores which entities are on cooldown to pick up the item, and their remaining cooldowns */
-   readonly entityPickupCooldowns: Record<number, number> = {};
+   readonly entityPickupCooldowns: Partial<Record<number, number>> = {};
 
    /** The ID of the entity which threw the item. 0 if was not thrown by an entity */
    public readonly throwingEntityID: number;

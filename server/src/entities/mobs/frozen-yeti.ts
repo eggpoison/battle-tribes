@@ -522,6 +522,7 @@ export function tickFrozenYeti(frozenYeti: Entity): void {
             case 1: {
                frozenYetiComponent.stageProgress += 2 / Settings.TPS;
                attemptToAdvanceStage(frozenYetiComponent);
+               break;
             }
             // Daze
             case 2: {
@@ -531,6 +532,7 @@ export function tickFrozenYeti(frozenYeti: Entity): void {
                   frozenYetiComponent.stompCooldownTimer = FROZEN_YETI_STOMP_COOLDOWN;
                   frozenYetiComponent.globalAttackCooldownTimer = FROZEN_YETI_GLOBAL_ATTACK_COOLDOWN;
                }
+               break;
             }
          }
          

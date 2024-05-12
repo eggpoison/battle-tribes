@@ -50,7 +50,7 @@ export function addItemEntityPlayerPickupCooldown(itemEntity: Entity, entityID: 
 
 export function itemEntityCanBePickedUp(itemEntity: Entity, entityID: number): boolean {
    const itemComponent = ItemComponentArray.getComponent(itemEntity.id);
-   return !itemComponent.entityPickupCooldowns.hasOwnProperty(entityID);
+   return typeof itemComponent.entityPickupCooldowns[entityID] === "undefined";
 }
 
 export function onItemEntityRemove(itemEntity: Entity): void {

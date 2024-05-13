@@ -27,15 +27,14 @@ export function createDoorHitboxes(parentX: number, parentY: number, localID: nu
 }
 
 export function createDoor(position: Point, rotation: number, tribe: Tribe, material: BuildingMaterial): Entity {
-   const door = new Entity(position, EntityType.door, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
-   door.rotation = rotation;
+   const door = new Entity(position, rotation, EntityType.door, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
    const hitboxes = createDoorHitboxes(door.position.x, door.position.y, door.getNextHitboxLocalID(), door.rotation);
    for (let i = 0; i < hitboxes.length; i++) {
       door.addHitbox(hitboxes[i]);
    }
    
-   PhysicsComponentArray.addComponent(door.id, new PhysicsComponent(false, true));
+   PhysicsComponentArray.addComponent(door.id, new PhysicsComponent(0, 0, 0, 0, false, true));
    HealthComponentArray.addComponent(door.id, new HealthComponent(DOOR_HEALTHS[material]));
    StatusEffectComponentArray.addComponent(door.id, new StatusEffectComponent(0));
    DoorComponentArray.addComponent(door.id, new DoorComponent(position.x, position.y, rotation));

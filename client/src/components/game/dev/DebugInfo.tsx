@@ -53,8 +53,10 @@ const EntityDebugInfo = ({ entity, debugData }: EntityDebugInfoProps) => {
    const displayX = roundNum(entity.position.x, 0);
    const displayY = roundNum(entity.position.y, 0);
 
-   const displayVelocityMagnitude = roundNum(entity.velocity.length(), 0);
-   const displayAccelerationMagnitude = roundNum(entity.acceleration.length(), 0);
+   const physicsComponent = entity.getServerComponent(ServerComponentType.physics);
+
+   const displayVelocityMagnitude = roundNum(physicsComponent.velocity.length(), 0);
+   const displayAccelerationMagnitude = roundNum(physicsComponent.acceleration.length(), 0);
 
    const chunks = Array.from(entity.chunks).map(chunk => `${chunk.x}-${chunk.y}`);
    const chunkDisplayText = chunks.reduce((previousValue, chunk, idx) => {

@@ -220,8 +220,9 @@ class TribeMemberComponent extends ServerComponent<ServerComponentType.tribeMemb
          }
       }
 
-      if (this.hasTitle(TribesmanTitle.sprinter) && this.entity.velocity.length() > 100) {
-         const sprintParticleSpawnRate = Math.sqrt(this.entity.velocity.length() * 0.8);
+      const physicsComponent = this.entity.getServerComponent(ServerComponentType.physics);
+      if (this.hasTitle(TribesmanTitle.sprinter) && physicsComponent.velocity.length() > 100) {
+         const sprintParticleSpawnRate = Math.sqrt(physicsComponent.velocity.length() * 0.8);
          if (Math.random() < sprintParticleSpawnRate / Settings.TPS) {
             const offsetMagnitude = 32 * Math.random();
             const offsetDirection = 2 * Math.PI * Math.random();

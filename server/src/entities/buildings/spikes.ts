@@ -40,8 +40,7 @@ export function createWallSpikesHitboxes(parentX: number, parentY: number, local
 export function createSpikes(position: Point, rotation: number, tribe: Tribe, attachedWallID: number): Entity {
    const entityType = attachedWallID !== 0 ? EntityType.wallSpikes : EntityType.floorSpikes;
 
-   const spikes = new Entity(position, entityType, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
-   spikes.rotation = rotation;
+   const spikes = new Entity(position, rotation, entityType, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
    const hitboxes = attachedWallID !== 0 ? createWallSpikesHitboxes(position.x, position.y, spikes.getNextHitboxLocalID(), rotation) : createFloorSpikesHitboxes(position.x, position.y, spikes.getNextHitboxLocalID(), rotation);
    for (let i = 0; i < hitboxes.length; i++) {

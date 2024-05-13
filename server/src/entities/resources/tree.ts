@@ -20,11 +20,10 @@ const WOOD_DROP_AMOUNTS: ReadonlyArray<[number, number]> = [
    [5, 7]
 ];
 
-export function createTree(position: Point): Entity {
+export function createTree(position: Point, rotation: number): Entity {
    const size = Math.random() > 1/3 ? 1 : 0;
 
-   const tree = new Entity(position, EntityType.tree, COLLISION_BITS.plants, DEFAULT_COLLISION_MASK);
-   tree.rotation = 2 * Math.PI * Math.random();
+   const tree = new Entity(position, rotation, EntityType.tree, COLLISION_BITS.plants, DEFAULT_COLLISION_MASK);
 
    const mass = 1.25 + size * 0.25;
    const hitbox = new CircularHitbox(tree.position.x, tree.position.y, mass, 0, 0, HitboxCollisionType.soft, TREE_RADII[size], tree.getNextHitboxLocalID(), tree.rotation);

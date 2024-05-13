@@ -699,12 +699,10 @@ class Tribe {
       
       let tribesman: Entity;
       if (hut.type === EntityType.workerHut) {
-         tribesman = createTribeWorker(position, this.id, hut.id);
+         tribesman = createTribeWorker(position, hut.rotation, this.id, hut.id);
       } else {
-         tribesman = createTribeWarrior(position, this, hut.id);
+         tribesman = createTribeWarrior(position, hut.rotation, this, hut.id);
       }
-      // @Incomplete: Will make hitboxes dirty!!
-      tribesman.rotation = hut.rotation;
    }
 
    // @Cleanup
@@ -734,7 +732,7 @@ class Tribe {
    private destroy(): void {
       // Remove huts
       for (const hut of this.huts) {
-         hut.remove();
+         hut.destroy();
       }
 
       Board.removeTribe(this);

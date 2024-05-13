@@ -31,6 +31,7 @@ import { TRIBE_INFO_RECORD } from "webgl-test-shared/dist/tribes";
 import { randInt } from "webgl-test-shared/dist/utils";
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision-detection";
 import { HitData, HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
+import PhysicsComponent from "../entity-components/PhysicsComponent";
 
 const CRAFTING_RECIPE_RECORD: Record<CraftingStation | "hand", Array<CraftingRecipe>> = {
    hand: [],
@@ -148,6 +149,7 @@ class Player extends TribeMember {
    constructor(position: Point, id: number, ageTicks: number, componentsData: EntityComponentsData<EntityType.player>) {
       super(position, id, EntityType.player, ageTicks);
 
+      this.addServerComponent(ServerComponentType.physics, new PhysicsComponent(this, componentsData[0]));
       this.addServerComponent(ServerComponentType.health, new HealthComponent(this, componentsData[1]));
       this.addServerComponent(ServerComponentType.statusEffect, new StatusEffectComponent(this, componentsData[2]));
       this.addServerComponent(ServerComponentType.tribe, new TribeComponent(this, componentsData[3]));
@@ -168,8 +170,12 @@ class Player extends TribeMember {
 
       const maxHealth = TRIBE_INFO_RECORD[Game.tribe.tribeType].maxHealthPlayer;
 
+      // @Cleanup: is there a better way to do this? maybe wait for the first packet to then set this?
       const componentsData: EntityComponentsData<EntityType.player> = [
-         {},
+         {
+            velocity: [0, 0],
+            acceleration: [0, 0]
+         },
          {
             health: maxHealth,
             maxHealth: maxHealth
@@ -226,11 +232,13 @@ class Player extends TribeMember {
       
       // Knockback
       if (this === Player.instance && hitData.angleFromAttacker !== null) {
-         this.velocity.x *= 0.5;
-         this.velocity.y *= 0.5;
+         const physicsComponent = this.getServerComponent(ServerComponentType.physics);
 
-         this.velocity.x += hitData.knockback * Math.sin(hitData.angleFromAttacker);
-         this.velocity.y += hitData.knockback * Math.cos(hitData.angleFromAttacker);
+         physicsComponent.velocity.x *= 0.5;
+         physicsComponent.velocity.y *= 0.5;
+
+         physicsComponent.velocity.x += hitData.knockback * Math.sin(hitData.angleFromAttacker);
+         physicsComponent.velocity.y += hitData.knockback * Math.cos(hitData.angleFromAttacker);
       }
    }
 
@@ -248,27 +256,27 @@ class Player extends TribeMember {
    }
 
    private static resolveBorderCollisions(): void {
-      const boardUnits = Settings.BOARD_DIMENSIONS * Settings.TILE_SIZE;
+      const physicsComponent = Player.instance!.getServerComponent(ServerComponentType.physics);
 
       for (const hitbox of Player.instance!.hitboxes) {
          // Left wall
          if (hitbox.bounds[0] < 0) {
-            Player.instance!.velocity.x = 0;
             Player.instance!.position.x -= hitbox.bounds[0];
+            physicsComponent.velocity.x = 0;
             // Right wall
-         } else if (hitbox.bounds[1] > boardUnits) {
-            Player.instance!.position.x -= hitbox.bounds[1] - boardUnits;
-            Player.instance!.velocity.x = 0;
+         } else if (hitbox.bounds[1] > Settings.BOARD_UNITS) {
+            Player.instance!.position.x -= hitbox.bounds[1] - Settings.BOARD_UNITS;
+            physicsComponent.velocity.x = 0;
          }
          
          // Bottom wall
          if (hitbox.bounds[2] < 0) {
             Player.instance!.position.y -= hitbox.bounds[2];
-            Player.instance!.velocity.y = 0;
+            physicsComponent.velocity.y = 0;
             // Top wall
-         } else if (hitbox.bounds[3] > boardUnits) {
-            Player.instance!.position.y -= hitbox.bounds[3] - boardUnits;
-            Player.instance!.velocity.y = 0;
+         } else if (hitbox.bounds[3] > Settings.BOARD_UNITS) {
+            Player.instance!.position.y -= hitbox.bounds[3] - Settings.BOARD_UNITS;
+            physicsComponent.velocity.y = 0;
          }
       }
    }

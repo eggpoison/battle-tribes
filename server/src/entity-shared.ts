@@ -14,6 +14,6 @@ export function createItemsOverEntity(entity: Entity, itemType: ItemType, amount
       position.x += magnitude * Math.sin(direction);
       position.y += magnitude * Math.cos(direction);
 
-      createItemEntity(position, itemType, 1, 0);
+      createItemEntity(position, 2 * Math.PI * Math.random(), itemType, 1, 0);
    }
 }

@@ -6,7 +6,7 @@ import Entity from "../Entity";
 import { FrozenYetiComponentArray } from "./ComponentArray";
 
 export class FrozenYetiComponent {
-   public readonly attackingEntities: Record<number, FrozenYetiTargetInfo> = {};
+   public readonly attackingEntities: Partial<Record<number, FrozenYetiTargetInfo>> = {};
 
    public attackType = FrozenYetiAttackType.none;
    public attackStage = 0;

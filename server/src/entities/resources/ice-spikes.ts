@@ -1,6 +1,6 @@
 import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision-detection";
-import { IceSpikesComponentData } from "webgl-test-shared/dist/components";
+import { IceSpikesComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityType, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
 import { ItemType } from "webgl-test-shared/dist/items";
 import { Settings } from "webgl-test-shared/dist/settings";
@@ -25,9 +25,8 @@ const TICKS_TO_GROW = 1/5 * Settings.TPS;
 const GROWTH_TICK_CHANCE = 0.5;
 const GROWTH_OFFSET = 60;
 
-export function createIceSpikes(position: Point, rootIceSpike?: Entity): Entity {
-   const iceSpikes = new Entity(position, EntityType.iceSpikes, COLLISION_BITS.iceSpikes, DEFAULT_COLLISION_MASK & ~COLLISION_BITS.iceSpikes);
-   iceSpikes.rotation = 2 * Math.PI * Math.random();
+export function createIceSpikes(position: Point, rotation: number, rootIceSpike?: Entity): Entity {
+   const iceSpikes = new Entity(position, rotation, EntityType.iceSpikes, COLLISION_BITS.iceSpikes, DEFAULT_COLLISION_MASK & ~COLLISION_BITS.iceSpikes);
 
    const hitbox = new CircularHitbox(iceSpikes.position.x, iceSpikes.position.y, 1, 0, 0, HitboxCollisionType.soft, ICE_SPIKE_RADIUS, iceSpikes.getNextHitboxLocalID(), iceSpikes.rotation);
    iceSpikes.addHitbox(hitbox);
@@ -71,7 +70,7 @@ const grow = (iceSpikes: Entity): void => {
    const minDistanceToEntity = Board.distanceToClosestEntity(position);
    if (minDistanceToEntity >= 40) {
       const iceSpikesComponent = IceSpikesComponentArray.getComponent(iceSpikes.id);
-      createIceSpikes(position, iceSpikesComponent.rootIceSpike);
+      createIceSpikes(position, 2 * Math.PI * Math.random(), iceSpikesComponent.rootIceSpike);
       
       const rootIceSpikesComponent = IceSpikesComponentArray.getComponent(iceSpikesComponent.rootIceSpike.id);
       rootIceSpikesComponent.numChildrenIceSpikes++;
@@ -127,10 +126,11 @@ export function createIceShardExplosion(originX: number, originY: number, numPro
       const y = originY + 10 * Math.cos(moveDirection);
       const position = new Point(x, y);
 
-      const iceShard = createIceShard(position, moveDirection);
+      const iceShardCreationInfo = createIceShard(position, moveDirection);
 
-      iceShard.velocity.x = 700 * Math.sin(moveDirection);
-      iceShard.velocity.y = 700 * Math.cos(moveDirection);
+      const physicsComponent = iceShardCreationInfo.components[ServerComponentType.physics];
+      physicsComponent.velocity.x = 700 * Math.sin(moveDirection);
+      physicsComponent.velocity.y = 700 * Math.cos(moveDirection);
    }
 }
 

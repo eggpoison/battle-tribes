@@ -284,11 +284,12 @@ class InventoryUseComponent extends ServerComponent<ServerComponentType.inventor
             continue;
          }
          
+         const physicsComponent = this.entity.getServerComponent(ServerComponentType.physics);
 
          // Make the deep frost heart item spew blue blood particles
          if (item.type === ItemType.deepfrost_heart) {
             const activeItemRenderPart = this.activeItemRenderParts[limbIdx];
-            createDeepFrostHeartBloodParticles(activeItemRenderPart.renderPosition.x, activeItemRenderPart.renderPosition.y, this.entity.velocity.x, this.entity.velocity.y);
+            createDeepFrostHeartBloodParticles(activeItemRenderPart.renderPosition.x, activeItemRenderPart.renderPosition.y, physicsComponent.velocity.x, physicsComponent.velocity.y);
          }
 
          if (useInfo.action === LimbAction.eat && ITEM_TYPE_RECORD[item.type] === "healing") {
@@ -301,12 +302,12 @@ class InventoryUseComponent extends ServerComponent<ServerComponentType.inventor
                const spawnOffsetDirection = 2 * Math.PI * Math.random();
                spawnPositionX += spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
                spawnPositionY += spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
-   
+
                let velocityMagnitude = randFloat(130, 170);
                const velocityDirection = 2 * Math.PI * Math.random();
-               const velocityX = velocityMagnitude * Math.sin(velocityDirection) + this.entity.velocity.x;
-               const velocityY = velocityMagnitude * Math.cos(velocityDirection) + this.entity.velocity.y;
-               velocityMagnitude += this.entity.velocity.length();
+               const velocityX = velocityMagnitude * Math.sin(velocityDirection) + physicsComponent.velocity.x;
+               const velocityY = velocityMagnitude * Math.cos(velocityDirection) + physicsComponent.velocity.y;
+               velocityMagnitude += physicsComponent.velocity.length();
                
                const lifetime = randFloat(0.3, 0.4);
    

@@ -31,8 +31,7 @@ const MAX_SPAWNED_ZOMBIES = 4;
 const ZOMBIE_SPAWN_TIME = 3;
 
 export function createTombstone(position: Point): Entity {
-   const tombstone = new Entity(position, EntityType.tombstone, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
-   tombstone.rotation = 2 * Math.PI * Math.random();
+   const tombstone = new Entity(position, 2 * Math.PI * Math.random(), EntityType.tombstone, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
    const hitbox = new RectangularHitbox(tombstone.position.x, tombstone.position.y, 1.25, 0, 0, HitboxCollisionType.soft, tombstone.getNextHitboxLocalID(), tombstone.rotation, WIDTH, HEIGHT, 0);
    tombstone.addHitbox(hitbox);
@@ -46,7 +45,7 @@ export function createTombstone(position: Point): Entity {
 
 const generateZombieSpawnPosition = (tombstone: Entity): Point => {
    const seenIs = new Array<number>();
-   while (true) {
+   for (;;) {
       let i: number;
       do {
          i = randInt(0, 3);
@@ -76,7 +75,7 @@ const spawnZombie = (tombstone: Entity, tombstoneComponent: TombstoneComponent):
    
    // Spawn zombie
    const spawnPosition = new Point(tombstoneComponent.zombieSpawnPositionX, tombstoneComponent.zombieSpawnPositionY);
-   createZombie(spawnPosition, isGolden, tombstone.id);
+   createZombie(spawnPosition, 2 * Math.PI * Math.random(), isGolden, tombstone.id);
 
    tombstoneComponent.numZombies++;
    tombstoneComponent.isSpawningZombie = false;
@@ -89,7 +88,7 @@ export function tickTombstone(tombstone: Entity): void {
       const crumbleChance = Math.exp(dayProgress * 12 - 6);
       if (Math.random() < crumbleChance * Settings.I_TPS) {
          // Crumble
-         tombstone.remove();
+         tombstone.destroy();
          return;
       }
    }
@@ -122,7 +121,7 @@ export function onTombstoneDeath(tombstone: Entity, attackingEntity: Entity | nu
    if (attackingEntity !== null) {
       createItemsOverEntity(tombstone, ItemType.rock, randInt(2, 3), 40);
 
-      createZombie(tombstone.position.copy(), false, tombstone.id);
+      createZombie(tombstone.position.copy(), 2 * Math.PI * Math.random(), false, tombstone.id);
    }
 }
 

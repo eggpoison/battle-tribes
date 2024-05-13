@@ -47,7 +47,8 @@ class Snowball extends Entity {
    public tick(): void {
       super.tick();
 
-      if ((this.velocity.x !== 0 || this.velocity.y !== 0) && this.velocity.lengthSquared() > 2500) {
+      const physicsComponent = this.getServerComponent(ServerComponentType.physics);
+      if ((physicsComponent.velocity.x !== 0 || physicsComponent.velocity.y !== 0) && physicsComponent.velocity.lengthSquared() > 2500) {
          if (Board.tickIntervalHasPassed(0.05)) {
             createSnowParticle(this.position.x, this.position.y, randFloat(40, 60));
          }

@@ -32,7 +32,7 @@ class Slime extends Entity {
       this.addServerComponent(ServerComponentType.slime, new SlimeComponent(this, componentsData[3]));
    }
 
-   protected overrideTileMoveSpeedMultiplier(): number | null {
+   public overrideTileMoveSpeedMultiplier(): number | null {
       // Slimes move at normal speed on slime blocks
       if (this.tile.type === TileType.slime) {
          return 1;

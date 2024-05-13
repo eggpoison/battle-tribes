@@ -15,15 +15,16 @@ export function registerAttackingEntity(entity: Entity, attackingEntity: Entity)
    }
 }
 
-export function runFromAttackingEntity(entity: Entity, attackingEntity: Entity, acceleration: number): void {
+export function runFromAttackingEntity(entity: Entity, attackingEntity: Entity, acceleration: number, turnSpeed: number): void {
+   const physicsComponent = PhysicsComponentArray.getComponent(entity.id);
    const direction = attackingEntity.position.calculateAngleBetween(entity.position);
-   entity.acceleration.x = acceleration * Math.sin(direction);
-   entity.acceleration.y = acceleration * Math.cos(direction);
+
+   physicsComponent.acceleration.x = acceleration * Math.sin(direction);
+   physicsComponent.acceleration.y = acceleration * Math.cos(direction);
+
    if (direction !== entity.rotation) {
-      entity.rotation = direction;
-      
-      const physicsComponent = PhysicsComponentArray.getComponent(entity.id);
-      physicsComponent.hitboxesAreDirty = true;
+      physicsComponent.targetRotation = direction;
+      physicsComponent.turnSpeed = turnSpeed;
    }
 }
 

@@ -47,14 +47,14 @@ const generateScars = (): ReadonlyArray<ScarInfo> => {
    return scars;
 }
 
-export function createTribeWarrior(position: Point, tribe: Tribe, hutID: number): Entity {
-   const warrior = new Entity(position, EntityType.tribeWarrior, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
+export function createTribeWarrior(position: Point, rotation: number, tribe: Tribe, hutID: number): Entity {
+   const warrior = new Entity(position, rotation, EntityType.tribeWarrior, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
    const hitbox = new CircularHitbox(warrior.position.x, warrior.position.y, 1.5, 0, 0, HitboxCollisionType.soft, TRIBE_WARRIOR_RADIUS, warrior.getNextHitboxLocalID(), warrior.rotation);
    warrior.addHitbox(hitbox);
    
    const tribeInfo = TRIBE_INFO_RECORD[tribe.type];
-   PhysicsComponentArray.addComponent(warrior.id, new PhysicsComponent(true, false));
+   PhysicsComponentArray.addComponent(warrior.id, new PhysicsComponent(0, 0, 0, 0, true, false));
    // @Temporary
    HealthComponentArray.addComponent(warrior.id, new HealthComponent(tribeInfo.maxHealthPlayer * 100));
    StatusEffectComponentArray.addComponent(warrior.id, new StatusEffectComponent(0));

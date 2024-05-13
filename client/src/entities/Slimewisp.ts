@@ -30,7 +30,7 @@ class Slimewisp extends Entity {
       this.addServerComponent(ServerComponentType.statusEffect, new StatusEffectComponent(this, componentsData[2]));
    }
 
-   protected overrideTileMoveSpeedMultiplier(): number | null {
+   public overrideTileMoveSpeedMultiplier(): number | null {
       // Slimewisps move at normal speed on slime blocks
       if (this.tile.type === TileType.slime) {
          return 1;

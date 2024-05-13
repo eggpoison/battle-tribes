@@ -26,6 +26,8 @@ import { SERVER } from "../../server";
 import { PhysicsComponent, PhysicsComponentArray, applyKnockback } from "../../components/PhysicsComponent";
 import { CollisionVars, entitiesAreColliding } from "../../collision";
 
+const TURN_SPEED = Math.PI / 1.5;
+
 const MAX_HEALTH = 5;
 
 const FISH_WIDTH = 7 * 4;
@@ -47,13 +49,12 @@ const LUNGE_FORCE = 200;
 const LUNGE_INTERVAL = 1;
 
 export function createFish(position: Point): Entity {
-   const fish = new Entity(position, EntityType.fish, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
-   fish.rotation = 2 * Math.PI * Math.random();
+   const fish = new Entity(position, 2 * Math.PI * Math.random(), EntityType.fish, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
    const hitbox = new RectangularHitbox(fish.position.x, fish.position.y, 0.5, 0, 0, HitboxCollisionType.soft, fish.getNextHitboxLocalID(), fish.rotation, FISH_WIDTH, FISH_HEIGHT, 0);
    fish.addHitbox(hitbox);
 
-   PhysicsComponentArray.addComponent(fish.id, new PhysicsComponent(true, false));
+   PhysicsComponentArray.addComponent(fish.id, new PhysicsComponent(0, 0, 0, 0, true, false));
    HealthComponentArray.addComponent(fish.id, new HealthComponent(MAX_HEALTH));
    StatusEffectComponentArray.addComponent(fish.id, new StatusEffectComponent(0));
    WanderAIComponentArray.addComponent(fish.id, new WanderAIComponent());
@@ -83,26 +84,25 @@ const isValidWanderPosition = (x: number, y: number): boolean => {
 }
 
 const move = (fish: Entity, direction: number): void => {
+   const physicsComponent = PhysicsComponentArray.getComponent(fish.id);
+   
    if (fish.tile.type === TileType.water) {
       // Swim on water
-      
-      fish.acceleration.x = 40 * Math.sin(direction);
-      fish.acceleration.y = 40 * Math.cos(direction);
-      fish.rotation = direction;
-
-      const physicsComponent = PhysicsComponentArray.getComponent(fish.id);
-      physicsComponent.hitboxesAreDirty = true;
+      physicsComponent.acceleration.x = 40 * Math.sin(direction);
+      physicsComponent.acceleration.y = 40 * Math.cos(direction);
+      physicsComponent.targetRotation = direction;
+      physicsComponent.turnSpeed = TURN_SPEED;
    } else {
       // 
       // Lunge on land
       // 
 
-      stopEntity(fish);
+      stopEntity(physicsComponent);
 
       const fishComponent = FishComponentArray.getComponent(fish.id);
       if (customTickIntervalHasPassed(fishComponent.secondsOutOfWater * Settings.TPS, LUNGE_INTERVAL)) {
-         fish.velocity.x += LUNGE_FORCE * Math.sin(direction);
-         fish.velocity.y += LUNGE_FORCE * Math.cos(direction);
+         physicsComponent.velocity.x += LUNGE_FORCE * Math.sin(direction);
+         physicsComponent.velocity.y += LUNGE_FORCE * Math.cos(direction);
          if (direction !== fish.rotation) {
             fish.rotation = direction;
 
@@ -186,31 +186,28 @@ export function tickFish(fish: Entity): void {
 
    // If a tribe member is wearing a fishlord suit, follow them
    if (fishComponent.leader !== null) {
-      if (fishComponent.attackTarget !== null && !Board.entityRecord.hasOwnProperty(fishComponent.attackTarget.id)) {
-         fishComponent.attackTarget = null;
-      }
-      
-      if (fishComponent.attackTarget === null) {
+      const target = Board.entityRecord[fishComponent.attackTargetID];
+      if (typeof target === "undefined") {
          // Follow leader
          move(fish, fish.position.calculateAngleBetween(fishComponent.leader.position));
       } else {
          // Attack the target
-         move(fish, fish.position.calculateAngleBetween(fishComponent.attackTarget.position));
+         move(fish, fish.position.calculateAngleBetween(target.position));
 
-         if (entitiesAreColliding(fish, fishComponent.attackTarget) !== CollisionVars.NO_COLLISION) {
-            const healthComponent = HealthComponentArray.getComponent(fishComponent.attackTarget.id);
+         if (entitiesAreColliding(fish, target) !== CollisionVars.NO_COLLISION) {
+            const healthComponent = HealthComponentArray.getComponent(target.id);
             if (!canDamageEntity(healthComponent, "fish")) {
                return;
             }
             
-            const hitDirection = fish.position.calculateAngleBetween(fishComponent.attackTarget.position);
+            const hitDirection = fish.position.calculateAngleBetween(target.position);
 
-            damageEntity(fishComponent.attackTarget, 2, fish, PlayerCauseOfDeath.fish, "fish");
-            applyKnockback(fishComponent.attackTarget, 100, hitDirection);
+            damageEntity(target, 2, fish, PlayerCauseOfDeath.fish, "fish");
+            applyKnockback(target, 100, hitDirection);
             SERVER.registerEntityHit({
-               entityPositionX: fishComponent.attackTarget.position.x,
-               entityPositionY: fishComponent.attackTarget.position.y,
-               hitEntityID: fishComponent.attackTarget.id,
+               entityPositionX: target.position.x,
+               entityPositionY: target.position.y,
+               hitEntityID: target.id,
                damage: 2,
                knockback: 100,
                angleFromAttacker: hitDirection,
@@ -228,19 +225,17 @@ export function tickFish(fish: Entity): void {
       fishComponent.flailTimer += Settings.I_TPS;
       if (fishComponent.flailTimer >= 0.75) {
          const flailDirection = 2 * Math.PI * Math.random();
-   
-         fish.velocity.x += 200 * Math.sin(flailDirection);
-         fish.velocity.y += 200 * Math.cos(flailDirection);
-   
          fish.rotation = flailDirection + randFloat(-0.5, 0.5);
-
-         const physicsComponent = PhysicsComponentArray.getComponent(fish.id);
+         
          physicsComponent.hitboxesAreDirty = true;
+         
+         physicsComponent.velocity.x += 200 * Math.sin(flailDirection);
+         physicsComponent.velocity.y += 200 * Math.cos(flailDirection);
    
          fishComponent.flailTimer = 0;
       }
 
-      stopEntity(fish);
+      stopEntity(physicsComponent);
       return;
    }
 
@@ -250,7 +245,7 @@ export function tickFish(fish: Entity): void {
    if (escapeAIComponent.attackingEntityIDs.length > 0) {
       const escapeEntity = chooseEscapeEntity(fish, aiHelperComponent.visibleEntities);
       if (escapeEntity !== null) {
-         runFromAttackingEntity(fish, escapeEntity, 200);
+         runFromAttackingEntity(fish, escapeEntity, 200, TURN_SPEED);
          return;
       }
    }
@@ -266,8 +261,9 @@ export function tickFish(fish: Entity): void {
    }
    if (herdMembers.length >= 1) {
       runHerdAI(fish, herdMembers, VISION_RANGE, TURN_RATE, MIN_SEPARATION_DISTANCE, SEPARATION_INFLUENCE, ALIGNMENT_INFLUENCE, COHESION_INFLUENCE);
-      fish.acceleration.x = 100 * Math.sin(fish.rotation);
-      fish.acceleration.y = 100 * Math.cos(fish.rotation);
+
+      physicsComponent.acceleration.x = 100 * Math.sin(fish.rotation);
+      physicsComponent.acceleration.y = 100 * Math.cos(fish.rotation);
       return;
    }
 
@@ -276,9 +272,9 @@ export function tickFish(fish: Entity): void {
    if (wanderAIComponent.targetPositionX !== -1) {
       if (entityHasReachedPosition(fish, wanderAIComponent.targetPositionX, wanderAIComponent.targetPositionY)) {
          wanderAIComponent.targetPositionX = -1;
-         stopEntity(fish);
+         stopEntity(physicsComponent);
       }
-   } else if (shouldWander(fish, 0.5)) {
+   } else if (shouldWander(physicsComponent, 0.5)) {
       let attempts = 0;
       let targetTile: Tile;
       do {
@@ -286,7 +282,7 @@ export function tickFish(fish: Entity): void {
       } while (++attempts <= 50 && (targetTile.isWall || targetTile.biome !== Biome.river));
 
       if (attempts > 50) {
-         stopEntity(fish);
+         stopEntity(physicsComponent);
          return;
       }
       
@@ -306,19 +302,19 @@ export function tickFish(fish: Entity): void {
       }
 
       if (attempts <= 10) {
-         wander(fish, x, y, ACCELERATION);
+         wander(fish, x, y, ACCELERATION, TURN_SPEED);
       } else {
-         stopEntity(fish);
+         stopEntity(physicsComponent);
       }
    } else {
-      stopEntity(fish);
+      stopEntity(physicsComponent);
    }
 }
 
-export function onFishLeaderHurt(fish: Entity, leaderAttacker: Entity): void {
-   if (HealthComponentArray.hasComponent(leaderAttacker.id)) {
+export function onFishLeaderHurt(fish: Entity, attackingEntityID: number): void {
+   if (HealthComponentArray.hasComponent(attackingEntityID)) {
       const fishComponent = FishComponentArray.getComponent(fish.id);
-      fishComponent.attackTarget = leaderAttacker;
+      fishComponent.attackTargetID = attackingEntityID;
    }
 }
 

@@ -36,8 +36,7 @@ export function createTribeTotemHitboxes(parentX: number, parentY: number, local
 }
 
 export function createTribeTotem(position: Point, rotation: number, tribe: Tribe): Entity {
-   const totem = new Entity(position, EntityType.tribeTotem, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
-   totem.rotation = rotation;
+   const totem = new Entity(position, rotation, EntityType.tribeTotem, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
    
    const hitboxes = createTribeTotemHitboxes(totem.position.x, totem.position.y, totem.getNextHitboxLocalID(), totem.rotation);
    for (let i = 0; i < hitboxes.length; i++) {

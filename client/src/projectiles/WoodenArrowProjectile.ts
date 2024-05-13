@@ -44,8 +44,9 @@ class WoodenArrowProjectile extends Entity {
 
    public onRemove(): void {
       // Create arrow break particles
+      const physicsComponent = this.getServerComponent(ServerComponentType.physics);
       for (let i = 0; i < 6; i++) {
-         createArrowDestroyParticle(this.position.x, this.position.y, this.velocity.x, this.velocity.y);
+         createArrowDestroyParticle(this.position.x, this.position.y, physicsComponent.velocity.x, physicsComponent.velocity.y);
       }
    }
 

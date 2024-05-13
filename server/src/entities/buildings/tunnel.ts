@@ -40,8 +40,7 @@ export function createTunnelHitboxes(parentX: number, parentY: number, localID: 
 }
 
 export function createTunnel(position: Point, rotation: number, tribe: Tribe, material: BuildingMaterial): Entity {
-   const tunnel = new Entity(position, EntityType.tunnel, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
-   tunnel.rotation = rotation;
+   const tunnel = new Entity(position, rotation, EntityType.tunnel, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
    const hitboxes = createTunnelHitboxes(tunnel.position.x, tunnel.position.y, tunnel.getNextHitboxLocalID(), tunnel.rotation);
    for (let i = 0; i < hitboxes.length; i++) {

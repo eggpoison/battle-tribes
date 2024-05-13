@@ -25,8 +25,7 @@ export function createFenceGateHitboxes(parentX: number, parentY: number, localI
 }
 
 export function createFenceGate(position: Point, rotation: number, tribe: Tribe, connectedSidesBitset: number, connectedEntityIDs: ConnectedEntityIDs): Entity {
-   const fenceGate = new Entity(position, EntityType.fenceGate, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
-   fenceGate.rotation = rotation;
+   const fenceGate = new Entity(position, rotation, EntityType.fenceGate, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
    const hitboxes = createFenceGateHitboxes(position.x, position.y, fenceGate.getNextHitboxLocalID(), rotation);
    for (let i = 0; i < hitboxes.length; i++) {

@@ -15,9 +15,8 @@ import { wasTribeMemberKill } from "../tribes/tribe-member";
 
 const RADIUS = 40;
 
-export function createBoulder(position: Point): Entity {
-   const boulder = new Entity(position, EntityType.boulder, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
-   boulder.rotation = 2 * Math.PI * Math.random();
+export function createBoulder(position: Point, rotation: number): Entity {
+   const boulder = new Entity(position, rotation, EntityType.boulder, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
    const hitbox = new CircularHitbox(boulder.position.x, boulder.position.y, 1.25, 0, 0, HitboxCollisionType.soft, RADIUS, boulder.getNextHitboxLocalID(), boulder.rotation);
    boulder.addHitbox(hitbox);

@@ -25,8 +25,7 @@ export function createFurnaceHitboxes(parentX: number, parentY: number, localID:
 }
 
 export function createFurnace(position: Point, rotation: number, tribe: Tribe): Entity {
-   const furnace = new Entity(position, EntityType.furnace, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
-   furnace.rotation = rotation;
+   const furnace = new Entity(position, rotation, EntityType.furnace, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
    const hitboxes = createFurnaceHitboxes(position.x, position.y, furnace.getNextHitboxLocalID(), rotation);
    for (let i = 0; i < hitboxes.length; i++) {

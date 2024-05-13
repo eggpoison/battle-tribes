@@ -12,7 +12,7 @@ import { BerryBushComponentArray, CowComponentArray, EscapeAIComponentArray, Fol
 import { HealthComponent, getEntityHealth, healEntity } from "../../components/HealthComponent";
 import { createItemsOverEntity } from "../../entity-shared";
 import { WanderAIComponent } from "../../components/WanderAIComponent";
-import { chaseAndEatItemEntity, entityHasReachedPosition, moveEntityToPosition, runHerdAI, stopEntity } from "../../ai-shared";
+import { entityHasReachedPosition, moveEntityToPosition, runHerdAI, stopEntity } from "../../ai-shared";
 import { getWanderTargetTile, shouldWander, wander } from "../../ai/wander-ai";
 import Tile from "../../Tile";
 import { chooseEscapeEntity, registerAttackingEntity, runFromAttackingEntity } from "../../ai/escape-ai";
@@ -24,6 +24,7 @@ import { CowComponent, updateCowComponent } from "../../components/CowComponent"
 import { dropBerry } from "../resources/berry-bush";
 import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
 import { PhysicsComponent, PhysicsComponentArray } from "../../components/PhysicsComponent";
+import { CollisionVars, entitiesAreColliding } from "../../collision";
 
 const MAX_HEALTH = 10;
 const VISION_RANGE = 256;
@@ -43,15 +44,17 @@ const SEPARATION_INFLUENCE = 0.7;
 const ALIGNMENT_INFLUENCE = 0.5;
 const COHESION_INFLUENCE = 0.3;
 
-export function createCow(position: Point): Entity {
+const TURN_SPEED = Math.PI;
+
+export function createCow(position: Point, rotation: number): Entity {
    const species: CowSpecies = randInt(0, 1);
    
-   const cow = new Entity(position, EntityType.cow, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
+   const cow = new Entity(position, rotation, EntityType.cow, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
    const hitbox = new RectangularHitbox(cow.position.x, cow.position.y, 1.2, 0, 0, HitboxCollisionType.soft, cow.getNextHitboxLocalID(), cow.rotation, 50, 100, 0);
    cow.addHitbox(hitbox);
 
-   PhysicsComponentArray.addComponent(cow.id, new PhysicsComponent(true, false));
+   PhysicsComponentArray.addComponent(cow.id, new PhysicsComponent(0, 0, 0, 0, true, false));
    HealthComponentArray.addComponent(cow.id, new HealthComponent(MAX_HEALTH));
    StatusEffectComponentArray.addComponent(cow.id, new StatusEffectComponent(0));
    AIHelperComponentArray.addComponent(cow.id, new AIHelperComponent(VISION_RANGE));
@@ -64,7 +67,9 @@ export function createCow(position: Point): Entity {
 }
 
 const graze = (cow: Entity, cowComponent: CowComponent): void => {
-   stopEntity(cow);
+   const physicsComponent = PhysicsComponentArray.getComponent(cow.id);
+   stopEntity(physicsComponent);
+   
    if (++cowComponent.grazeProgressTicks >= COW_GRAZE_TIME_TICKS) {
       // Eat grass
       const previousTile = cow.tile;
@@ -102,6 +107,17 @@ const findHerdMembers = (cowComponent: CowComponent, visibleEntities: ReadonlyAr
    return herdMembers;
 }
 
+const chaseAndEatItemEntity = (entity: Entity, itemEntity: Entity, acceleration: number): boolean => {
+   if (entitiesAreColliding(entity, itemEntity) !== CollisionVars.NO_COLLISION) {
+      itemEntity.destroy();
+      return true;
+   }
+
+   moveEntityToPosition(entity, itemEntity.position.x, itemEntity.position.y, acceleration, TURN_SPEED);
+   
+   return false;
+}
+
 export function tickCow(cow: Entity): void {
    const cowComponent = CowComponentArray.getComponent(cow.id);
    updateCowComponent(cowComponent);
@@ -114,7 +130,7 @@ export function tickCow(cow: Entity): void {
    if (escapeAIComponent.attackingEntityIDs.length > 0) {
       const escapeEntity = chooseEscapeEntity(cow, aiHelperComponent.visibleEntities);
       if (escapeEntity !== null) {
-         runFromAttackingEntity(cow, escapeEntity, 300);
+         runFromAttackingEntity(cow, escapeEntity, 300, TURN_SPEED);
          return;
       }
    }
@@ -143,15 +159,10 @@ export function tickCow(cow: Entity): void {
       }
    }
 
-   // If the target berry bush was killed, don't try to shake it
-   if (cowComponent.targetBushID !== 0 && !Board.entityRecord.hasOwnProperty(cowComponent.targetBushID)) {
-      cowComponent.targetBushID = 0;
-   }
-
    // Shake berries off berry bushes
    if (getEntityHealth(cow) < MAX_HEALTH) {
-      if (cowComponent.targetBushID === 0) {
-         // Attempt to find a berry bush
+      // Attempt to find a berry bush
+      if (typeof Board.entityRecord[cowComponent.targetBushID] === "undefined") {
          let target: Entity | null = null;
          let minDistance = Number.MAX_SAFE_INTEGER;
          for (let i = 0; i < aiHelperComponent.visibleEntities.length; i++) {
@@ -177,20 +188,20 @@ export function tickCow(cow: Entity): void {
             cowComponent.targetBushID = target.id;
          }
       }
-      if (cowComponent.targetBushID !== 0) {
-         const berryBush = Board.entityRecord[cowComponent.targetBushID]!;
-   
-         moveEntityToPosition(cow, berryBush.position.x, berryBush.position.y, 200);
+
+      const targetBerryBush = Board.entityRecord[cowComponent.targetBushID];
+      if (typeof targetBerryBush !== "undefined") {
+         moveEntityToPosition(cow, targetBerryBush.position.x, targetBerryBush.position.y, 200, TURN_SPEED);
    
          // If the target entity is directly in front of the cow, start eatin it
          const testPositionX = cow.position.x + 60 * Math.sin(cow.rotation);
          const testPositionY = cow.position.y + 60 * Math.cos(cow.rotation);
          if (Board.positionIsInBoard(testPositionX, testPositionY)) {
             const testEntities = Board.getEntitiesAtPosition(testPositionX, testPositionY);
-            if (testEntities.indexOf(berryBush) !== -1) {
+            if (testEntities.indexOf(targetBerryBush) !== -1) {
                cowComponent.bushShakeTimer++;
                if (cowComponent.bushShakeTimer >= 1.5 * Settings.TPS) {
-                  dropBerry(berryBush, null);
+                  dropBerry(targetBerryBush, null);
                   cowComponent.bushShakeTimer = 0;
                   cowComponent.targetBushID = 0;
                }
@@ -211,26 +222,29 @@ export function tickCow(cow: Entity): void {
    if (followAIComponent.followTargetID !== 0) {
       // Continue following the entity
       const followedEntity = Board.entityRecord[followAIComponent.followTargetID]!;
-      moveEntityToPosition(cow, followedEntity.position.x, followedEntity.position.y, 200);
+      moveEntityToPosition(cow, followedEntity.position.x, followedEntity.position.y, 200, TURN_SPEED);
       return;
    } else if (canFollow(followAIComponent)) {
       for (let i = 0; i < aiHelperComponent.visibleEntities.length; i++) {
          const entity = aiHelperComponent.visibleEntities[i];
          if (entity.type === EntityType.player) {
             // Follow the entity
-            followEntity(cow, entity, 200, randInt(MIN_FOLLOW_COOLDOWN, MAX_FOLLOW_COOLDOWN));
+            followEntity(cow, entity, 200, TURN_SPEED, randInt(MIN_FOLLOW_COOLDOWN, MAX_FOLLOW_COOLDOWN));
             return;
          }
       }
    }
+
+   const physicsComponent = PhysicsComponentArray.getComponent(cow.id);
    
    // Herd AI
    // @Incomplete: Steer the herd away from non-grasslands biomes
    const herdMembers = findHerdMembers(cowComponent, aiHelperComponent.visibleEntities);
    if (herdMembers.length >= 2 && herdMembers.length <= 6) {
       runHerdAI(cow, herdMembers, VISION_RANGE, TURN_RATE, MIN_SEPARATION_DISTANCE, SEPARATION_INFLUENCE, ALIGNMENT_INFLUENCE, COHESION_INFLUENCE);
-      cow.acceleration.x = 200 * Math.sin(cow.rotation);
-      cow.acceleration.y = 200 * Math.cos(cow.rotation);
+
+      physicsComponent.acceleration.x = 200 * Math.sin(cow.rotation);
+      physicsComponent.acceleration.y = 200 * Math.cos(cow.rotation);
       return;
    }
 
@@ -239,9 +253,9 @@ export function tickCow(cow: Entity): void {
    if (wanderAIComponent.targetPositionX !== -1) {
       if (entityHasReachedPosition(cow, wanderAIComponent.targetPositionX, wanderAIComponent.targetPositionY)) {
          wanderAIComponent.targetPositionX = -1;
-         stopEntity(cow);
+         stopEntity(physicsComponent);
       }
-   } else if (shouldWander(cow, 0.6)) {
+   } else if (shouldWander(physicsComponent, 0.6)) {
       let attempts = 0;
       let targetTile: Tile;
       do {
@@ -250,9 +264,9 @@ export function tickCow(cow: Entity): void {
 
       const x = (targetTile.x + Math.random()) * Settings.TILE_SIZE;
       const y = (targetTile.y + Math.random()) * Settings.TILE_SIZE;
-      wander(cow, x, y, 200)
+      wander(cow, x, y, 200, TURN_SPEED);
    } else {
-      stopEntity(cow);
+      stopEntity(physicsComponent);
    }
 }
 

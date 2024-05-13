@@ -20,8 +20,7 @@ export function createResearchBenchHitboxes(parentX: number, parentY: number, lo
 }
 
 export function createResearchBench(position: Point, rotation: number, tribe: Tribe): Entity {
-   const bench = new Entity(position, EntityType.researchBench, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
-   bench.rotation = rotation;
+   const bench = new Entity(position, rotation, EntityType.researchBench, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
    const hitboxes = createResearchBenchHitboxes(bench.position.x, bench.position.y, bench.getNextHitboxLocalID(), bench.rotation);
    for (let i = 0; i < hitboxes.length; i++) {

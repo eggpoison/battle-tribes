@@ -484,16 +484,20 @@ export function pathfind(startX: number, startY: number, endX: number, endY: num
          break;
       }
 
-      let current = openSet.removeFirst();
+      // @Cleanup: name
+      const current = openSet.removeFirst();
       closedSet.add(current);
 
       // If reached the goal, return the path from start to the goal
       if ((options.goalRadius === 0 && current === goal) || (options.goalRadius > 0 && getDistBetweenNodes(current, goal) <= options.goalRadius)) {
+         let currentNode: PathfindingNodeIndex | undefined = current;
+         
          // Reconstruct the path
-         const path: Array<PathfindingNodeIndex> = [current];
-         while (cameFrom.hasOwnProperty(current)) {
-            current = cameFrom[current];
-            path.splice(0, 0, current);
+         const path = new Array<PathfindingNodeIndex>();
+         // @Speed: two accesses
+         while (typeof currentNode !== "undefined") {
+            path.splice(0, 0, currentNode);
+            currentNode = cameFrom[currentNode];
          }
          return path;
       }
@@ -619,7 +623,7 @@ export function pathfind(startX: number, startY: number, endX: number, endY: num
          // @Cleanup: Copy and paste
          let current = closestNodeToGoal;
          const path: Array<PathfindingNodeIndex> = [current];
-         while (cameFrom.hasOwnProperty(current)) {
+         while (typeof cameFrom[current] !== "undefined") {
             current = cameFrom[current];
             path.splice(0, 0, current);
          }

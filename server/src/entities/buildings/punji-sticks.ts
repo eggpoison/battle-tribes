@@ -37,8 +37,7 @@ export function createWallPunjiSticksHitboxes(parentX: number, parentY: number, 
 export function createPunjiSticks(position: Point, rotation: number, tribe: Tribe, attachedWallID: number): Entity {
    const entityType = attachedWallID !== 0 ? EntityType.wallPunjiSticks : EntityType.floorPunjiSticks;
    
-   const punjiSticks = new Entity(position, entityType, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
-   punjiSticks.rotation = rotation;
+   const punjiSticks = new Entity(position, rotation, entityType, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
    const hitboxes = attachedWallID !== 0 ? createWallPunjiSticksHitboxes(position.x, position.y, punjiSticks.getNextHitboxLocalID(), rotation) : createFloorPunjiSticksHitboxes(position.x, position.y, punjiSticks.getNextHitboxLocalID(), rotation);
    for (let i = 0; i < hitboxes.length; i++) {

@@ -284,6 +284,8 @@ export interface ItemComponentData {
 export interface PebblumComponentData {
 }
 export interface PhysicsComponentData {
+    readonly velocity: [number, number];
+    readonly acceleration: [number, number];
 }
 export interface PlayerComponentData {
     readonly username: string;

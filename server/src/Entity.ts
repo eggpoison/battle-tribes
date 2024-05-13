@@ -92,19 +92,13 @@ class Entity<T extends EntityType = EntityType> {
 
    /** Position of the entity in the world */
    public position: Point;
-   // @Cleanup: Might be able to be put on the physics component
-   /** Velocity of the entity */
-   public velocity = new Point(0, 0);
-   // @Cleanup: Might be able to be put on the physics component
-   /** Acceleration of the entity */
-   public acceleration = new Point(0, 0);
 
    // @Cleanup @Memory: Do we really need this??
    /** Last position when the entities' hitboxes were clean */
    private lastCleanedPosition: Point;
 
    /** Direction the entity is facing in radians */
-   public rotation = Number.EPSILON;
+   public rotation: number;
 
    public collisionPushForceMultiplier = 1;
 
@@ -131,8 +125,9 @@ class Entity<T extends EntityType = EntityType> {
 
    private nextHitboxLocalID = 1;
 
-   constructor(position: Point, type: T, collisionBit: number, collisionMask: number) {
+   constructor(position: Point, rotation: number, type: T, collisionBit: number, collisionMask: number) {
       this.position = position;
+      this.rotation = rotation;
       this.lastCleanedPosition = new Point(position.x, position.y);
       this.type = type;
       this.collisionBit = collisionBit;
@@ -515,7 +510,9 @@ class Entity<T extends EntityType = EntityType> {
       // The 0.0001 epsilon value is used so that the game object isn't put exactly on the border between tiles
       // We don't use Number.EPSILON because it doesn't work in some cases
       this.position.x = tile.x * Settings.TILE_SIZE + (0.5 + 0.5 * xDir) * Settings.TILE_SIZE + (hitbox.radius + 0.0001) * xDir;
-      this.velocity.x = 0;
+
+      const physicsComponent = PhysicsComponentArray.getComponent(this.id);
+      physicsComponent.velocity.x = 0;
    }
 
    private resolveYAxisCircularTileCollision(tile: Tile, hitbox: CircularHitbox): void {
@@ -524,7 +521,9 @@ class Entity<T extends EntityType = EntityType> {
       // The 0.0001 epsilon value is used so that the game object isn't put exactly on the border between tiles
       // We don't use Number.EPSILON because it doesn't work in some cases
       this.position.y = tile.y * Settings.TILE_SIZE + (0.5 + 0.5 * yDir) * Settings.TILE_SIZE + (hitbox.radius + 0.0001) * yDir;
-      this.velocity.y = 0;
+      
+      const physicsComponent = PhysicsComponentArray.getComponent(this.id);
+      physicsComponent.velocity.y = 0;
    }
 
    private resolveDiagonalCircularTileCollision(tile: Tile, hitbox: CircularHitbox): void {
@@ -539,12 +538,13 @@ class Entity<T extends EntityType = EntityType> {
 
       // The 0.0001 epsilon value is used so that the game object isn't put exactly on the border between tiles
       // We don't use Number.EPSILON because it doesn't work in some cases
+      const physicsComponent = PhysicsComponentArray.getComponent(this.id);
       if (yDistFromEdge < xDistFromEdge) {
          this.position.x = (tile.x + 0.5 + 0.5 * xDir) * Settings.TILE_SIZE + (hitbox.radius + 0.0001) * xDir;
-         this.velocity.x = 0;
+         physicsComponent.velocity.x = 0;
       } else {
          this.position.y = (tile.y + 0.5 + 0.5 * yDir) * Settings.TILE_SIZE + (hitbox.radius + 0.0001) * yDir;
-         this.velocity.y = 0;
+         physicsComponent.velocity.y = 0;
       }
    }
 
@@ -845,8 +845,8 @@ class Entity<T extends EntityType = EntityType> {
                            break;
                         }
                         case TileCollisionAxis.diagonal: {
-                           // this.resolveDiagonalRectangularTileCollision(tile, hitbox as RectangularHitbox);
                            // @Incomplete
+                           // this.resolveDiagonalRectangularTileCollision(tile, hitbox as RectangularHitbox);
                            break;
                         }
                      }
@@ -863,13 +863,13 @@ class Entity<T extends EntityType = EntityType> {
       if (this.boundingAreaMinX < 0) {
          const physicsComponent = PhysicsComponentArray.getComponent(this.id);
          this.position.x -= this.boundingAreaMinX;
-         this.velocity.x = 0;
+         physicsComponent.velocity.x = 0;
          physicsComponent.positionIsDirty = true;
          // Right border
       } else if (this.boundingAreaMaxX > Settings.BOARD_UNITS) {
          const physicsComponent = PhysicsComponentArray.getComponent(this.id);
          this.position.x -= this.boundingAreaMaxX - Settings.BOARD_UNITS;
-         this.velocity.x = 0;
+         physicsComponent.velocity.x = 0;
          physicsComponent.positionIsDirty = true;
       }
 
@@ -877,13 +877,13 @@ class Entity<T extends EntityType = EntityType> {
       if (this.boundingAreaMinY < 0) {
          const physicsComponent = PhysicsComponentArray.getComponent(this.id);
          this.position.y -= this.boundingAreaMinY;
-         this.velocity.y = 0;
+         physicsComponent.velocity.y = 0;
          physicsComponent.positionIsDirty = true;
          // Top border
       } else if (this.boundingAreaMaxY > Settings.BOARD_UNITS) {
          const physicsComponent = PhysicsComponentArray.getComponent(this.id);
          this.position.y -= this.boundingAreaMaxY - Settings.BOARD_UNITS;
-         this.velocity.y = 0;
+         physicsComponent.velocity.y = 0;
          physicsComponent.positionIsDirty = true;
       }
 
@@ -894,14 +894,14 @@ class Entity<T extends EntityType = EntityType> {
       }
    }
 
-   public remove(): void {
+   public destroy(): void {
       // @Temporary
       if (!Board.entityRecord.hasOwnProperty(this.id)) {
          throw new Error("Tried to remove an entity before it was added to the board.");
       }
       
       // Don't try to remove if already being removed
-      if (Board.entityIsFlaggedForRemoval(this)) {
+      if (Board.entityIsFlaggedForDestruction(this)) {
          return;
       }
 
@@ -932,54 +932,6 @@ class Entity<T extends EntityType = EntityType> {
          tileHighlights: [],
          debugEntries: []
       };
-   }
-
-   public turn(targetRotation: number, turnSpeed: number): void {
-      if (this.shouldTurnClockwise(targetRotation)) {  
-         this.rotation += turnSpeed / Settings.TPS;
-         if (!this.shouldTurnClockwise(targetRotation)) {
-            this.rotation = targetRotation;
-         } else if (this.rotation >= Math.PI * 2) {
-            this.rotation -= Math.PI * 2;
-         }
-      } else {
-         this.rotation -= turnSpeed / Settings.TPS
-         if (this.shouldTurnClockwise(targetRotation)) {
-            this.rotation = targetRotation;
-         } else if (this.rotation < 0) {
-            this.rotation += Math.PI * 2;
-         }
-      }
-
-      const physicsComponent = PhysicsComponentArray.getComponent(this.id);
-      physicsComponent.hitboxesAreDirty = true;
-   }
-
-   protected shouldTurnClockwise(targetRotation: number): boolean {
-      // @Temporary @Speed: instead of doing this, probably just clean rotation after all places which could dirty it
-      this.cleanRotation();
-
-      // @Hack
-      if (targetRotation < 0) {
-         targetRotation += 2 * Math.PI;
-      }
-      
-      const clockwiseDist = (targetRotation - this.rotation + Math.PI * 2) % (Math.PI * 2);
-      const anticlockwiseDist = (Math.PI * 2) - clockwiseDist;
-      if (clockwiseDist < 0 || anticlockwiseDist < 0) {
-         throw new Error("Either targetRotation or this.rotation wasn't in the 0-to-2-pi range. Target rotation: " + targetRotation + ", rotation: " + this.rotation);
-      }
-      return clockwiseDist < anticlockwiseDist;
-   }
-
-   protected cleanRotation(): void {
-      const rotation = cleanAngle(this.rotation);
-      if (rotation !== this.rotation) {
-         this.rotation = rotation;
-         
-         const physicsComponent = PhysicsComponentArray.getComponent(this.id);
-         physicsComponent.hitboxesAreDirty = true;
-      }
    }
 }
 

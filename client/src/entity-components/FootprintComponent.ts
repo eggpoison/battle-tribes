@@ -6,6 +6,7 @@ import { playSound, AudioFilePath } from "../sound";
 import Board from "../Board";
 import { createFootprintParticle } from "../particles";
 import Entity from "../Entity";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 
 export class FootprintComponent extends Component {
    private readonly footstepParticleIntervalSeconds: number;
@@ -28,12 +29,14 @@ export class FootprintComponent extends Component {
    private distanceTracker = 0;
 
    public tick(): void {
+      const physicsComponent = this.entity.getServerComponent(ServerComponentType.physics);
+
       // Footsteps
-      if (this.entity.velocity.lengthSquared() >= 2500 && !this.entity.isInRiver() && Board.tickIntervalHasPassed(this.footstepParticleIntervalSeconds)) {
+      if (physicsComponent.velocity.lengthSquared() >= 2500 && !this.entity.isInRiver() && Board.tickIntervalHasPassed(this.footstepParticleIntervalSeconds)) {
          createFootprintParticle(this.entity, this.numFootstepsTaken, this.footstepOffset, this.footstepSize, this.footstepLifetime);
          this.numFootstepsTaken++;
       }
-      this.distanceTracker += this.entity.velocity.length() / Settings.TPS;
+      this.distanceTracker += physicsComponent.velocity.length() / Settings.TPS;
       if (this.distanceTracker > this.footstepSoundIntervalDist) {
          this.distanceTracker -= this.footstepSoundIntervalDist;
          this.createFootstepSound();

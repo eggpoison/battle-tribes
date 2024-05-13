@@ -11,7 +11,7 @@ import Entity from "../../../Entity";
 import { getEntitiesInRange, willStopAtDesiredDistance, getClosestAccessibleEntity, stopEntity, moveEntityToPosition, getDistanceFromPointToEntity } from "../../../ai-shared";
 import { InventoryComponentArray, TribeComponentArray, TribesmanComponentArray, HealthComponentArray, InventoryUseComponentArray, PlayerComponentArray, ItemComponentArray, TribeMemberComponentArray, HutComponentArray } from "../../../components/ComponentArray";
 import { HealthComponent } from "../../../components/HealthComponent";
-import { getInventory, addItemToInventory, consumeItemFromSlot, craftRecipe, recipeCraftingStationIsAvailable, inventoryComponentCanAffordRecipe } from "../../../components/InventoryComponent";
+import { getInventory, addItemToInventory, consumeItemFromSlot, craftRecipe, recipeCraftingStationIsAvailable, inventoryComponentCanAffordRecipe, inventoryIsFull } from "../../../components/InventoryComponent";
 import { TribesmanPathType, getItemGiftAppreciation, itemThrowIsOnCooldown } from "../../../components/TribesmanComponent";
 import { tickTribeMember, tribeMemberCanPickUpItem, calculateRadialAttackTargets, repairBuilding, calculateRepairTarget, placeBuilding, placeBlueprint, getAvailableCraftingStations, throwItem } from "../tribe-member";
 import { TRIBE_WORKER_RADIUS, TRIBE_WORKER_VISION_RANGE } from "../tribe-worker";
@@ -366,16 +366,6 @@ const grabBarrelFood = (tribesman: Entity, barrel: Entity): void => {
    consumeItemFromSlot(barrelInventoryComponent, InventoryName.inventory, foodItemSlot, 999);
 }
 
-const hasAvailableHotbarSlot = (hotbarInventory: Inventory): boolean => {
-   for (let slotNum = 1; slotNum <= hotbarInventory.width * hotbarInventory.height; slotNum++) {
-      if (!hotbarInventory.itemSlots.hasOwnProperty(slotNum)) {
-         return true;
-      }
-   }
-
-   return false;
-}
-
 const barrelHasFood = (barrel: Entity): boolean => {
    const inventoryComponent = InventoryComponentArray.getComponent(barrel.id);
    const inventory = getInventory(inventoryComponent, InventoryName.inventory);
@@ -457,7 +447,8 @@ const shouldRecalculatePath = (tribesman: Entity, goalX: number, goalY: number, 
    } else {
       // @Speed
       // Recalculate if the tribesman isn't making any progress
-      if (tribesmanComponent.rawPath.length > 2 && tribesman.ageTicks % Settings.TPS === 0 && tribesman.velocity.lengthSquared() < 10 * 10) {
+      const physicsComponent = PhysicsComponentArray.getComponent(tribesman.id);
+      if (tribesmanComponent.rawPath.length > 2 && tribesman.ageTicks % Settings.TPS === 0 && physicsComponent.velocity.lengthSquared() < 10 * 10) {
          return true;
       }
 
@@ -515,11 +506,15 @@ const continueCurrentPath = (tribesman: Entity, goalX: number, goalY: number): b
       // If the path is clear, just move in a direct line to the goal
       if (pathIsClear(tribesman.position.x, tribesman.position.y, goalX, goalY, tribeComponent.tribe.pathfindingGroupID, footprint)) {
          const targetDirection = angle(goalX - tribesman.position.x, goalY - tribesman.position.y);
-         tribesman.turn(targetDirection, TRIBESMAN_TURN_SPEED);
-   
+
+         const physicsComponent = PhysicsComponentArray.getComponent(tribesman.id);
+         
          const acceleration = getAcceleration(tribesman);
-         tribesman.acceleration.x = acceleration * Math.sin(targetDirection);
-         tribesman.acceleration.y = acceleration * Math.cos(targetDirection);
+         physicsComponent.acceleration.x = acceleration * Math.sin(targetDirection);
+         physicsComponent.acceleration.y = acceleration * Math.cos(targetDirection);
+
+         physicsComponent.targetRotation = targetDirection;
+         physicsComponent.turnSpeed = TRIBESMAN_TURN_SPEED;
 
          // Remove all nodes except the goal node
          while (path.length > 1) {
@@ -530,16 +525,19 @@ const continueCurrentPath = (tribesman: Entity, goalX: number, goalY: number): b
 
          const nextNode = path[0];
          const targetDirection = getAngleToNode(tribesman, nextNode);
-         tribesman.turn(targetDirection, TRIBESMAN_TURN_SPEED);
+
+         const physicsComponent = PhysicsComponentArray.getComponent(tribesman.id);
+         physicsComponent.targetRotation = targetDirection;
+         physicsComponent.turnSpeed = TRIBESMAN_TURN_SPEED;
 
          // If the tribesman is close to the next node, slow down as to not overshoot it
          const distFromNode = getDistanceToNode(tribesman, nextNode);
-         if (willStopAtDesiredDistance(tribesman, -2, distFromNode)) {
-            stopEntity(tribesman);
+         if (willStopAtDesiredDistance(physicsComponent, -2, distFromNode)) {
+            stopEntity(physicsComponent);
          } else {
             const acceleration = getAcceleration(tribesman);
-            tribesman.acceleration.x = acceleration * Math.sin(tribesman.rotation);
-            tribesman.acceleration.y = acceleration * Math.cos(tribesman.rotation);
+            physicsComponent.acceleration.x = acceleration * Math.sin(tribesman.rotation);
+            physicsComponent.acceleration.y = acceleration * Math.cos(tribesman.rotation);
          }
       }
 
@@ -554,7 +552,9 @@ const continueCurrentPath = (tribesman: Entity, goalX: number, goalY: number): b
       return true;
    } else {
       // Reached path!
-      stopEntity(tribesman);
+      const physicsComponent = PhysicsComponentArray.getComponent(tribesman.id);
+      stopEntity(physicsComponent);
+
       tribesmanComponent.rawPath = [];
       tribesmanComponent.pathType = TribesmanPathType.default;
       tribesmanComponent.isPathfinding = false;
@@ -661,7 +661,9 @@ export function pathfindToPosition(tribesman: Entity, goalX: number, goalY: numb
       // @Incomplete: figure out why this happens
       // If the pathfinding failed, don't do anything
       if (rawPath.length === 0) {
-         stopEntity(tribesman);
+         const physicsComponent = PhysicsComponentArray.getComponent(tribesman.id);
+         stopEntity(physicsComponent);
+         
          cleanupPathfinding(targetEntityID, tribe, blockingTribesmen);
          return false;
       }
@@ -740,19 +742,21 @@ export function attemptToRepairBuildings(tribesman: Entity): boolean {
       setLimbActions(inventoryUseComponent, LimbAction.none);
 
       const desiredAttackRange = getTribesmanDesiredAttackRange(tribesman);
+      const physicsComponent = PhysicsComponentArray.getComponent(tribesman.id);
 
       const distance = getDistanceFromPointToEntity(tribesman.position.x, tribesman.position.y, closestDamagedBuilding) - getTribesmanRadius(tribesman);
-      if (willStopAtDesiredDistance(tribesman, desiredAttackRange, distance)) {
+      if (willStopAtDesiredDistance(physicsComponent, desiredAttackRange, distance)) {
          // If the tribesman will stop too close to the target, move back a bit
-         if (willStopAtDesiredDistance(tribesman, desiredAttackRange - 20, distance)) {
-            tribesman.acceleration.x = getTribesmanSlowAcceleration(tribesman) * Math.sin(tribesman.rotation + Math.PI);
-            tribesman.acceleration.y = getTribesmanSlowAcceleration(tribesman) * Math.cos(tribesman.rotation + Math.PI);
+         if (willStopAtDesiredDistance(physicsComponent, desiredAttackRange - 20, distance)) {
+            physicsComponent.acceleration.x = getTribesmanSlowAcceleration(tribesman) * Math.sin(tribesman.rotation + Math.PI);
+            physicsComponent.acceleration.y = getTribesmanSlowAcceleration(tribesman) * Math.cos(tribesman.rotation + Math.PI);
          } else {
-            stopEntity(tribesman);
+            stopEntity(physicsComponent);
          }
 
          const targetRotation = tribesman.position.calculateAngleBetween(closestDamagedBuilding.position);
-         tribesman.turn(targetRotation, TRIBESMAN_TURN_SPEED);
+         physicsComponent.targetRotation = targetRotation;
+         physicsComponent.turnSpeed = TRIBESMAN_TURN_SPEED;
 
          if (Math.abs(getAngleDiff(tribesman.rotation, targetRotation)) < 0.1) {
             // If in melee range, try to repair the building
@@ -834,12 +838,15 @@ const goCraftItem = (tribesman: Entity, recipe: CraftingRecipe, tribe: Tribe): b
    } else {
       // Continue crafting the item
 
-      stopEntity(tribesman);
+      const physicsComponent = PhysicsComponentArray.getComponent(tribesman.id);
+      stopEntity(physicsComponent);
       
       if (typeof recipe.craftingStation !== "undefined") {
          const craftingStation = getClosestCraftingStation(tribesman, tribe, recipe.craftingStation);
          const targetDirection = tribesman.position.calculateAngleBetween(craftingStation.position);
-         tribesman.turn(targetDirection, TRIBESMAN_TURN_SPEED);
+
+         physicsComponent.targetRotation = targetDirection;
+         physicsComponent.turnSpeed = TRIBESMAN_TURN_SPEED;
       }
 
       const tribesmanComponent = TribesmanComponentArray.getComponent(tribesman.id);
@@ -912,11 +919,18 @@ const goPlaceBuilding = (tribesman: Entity, hotbarInventory: Inventory, tribe: T
          // @Incomplete: Shouldn't move backwards from the target position, should instead pathfind to the closest position
          // which is far enough away, as currently it will try to back into buildings and get stuck like this.
          
+         // 
          // If too close to the plan position, move back a bit
-         tribesman.turn(targetDirection, TRIBESMAN_TURN_SPEED);
+         // 
+
+         const physicsComponent = PhysicsComponentArray.getComponent(tribesman.id);
+
          const acceleration = getTribesmanSlowAcceleration(tribesman);
-         tribesman.acceleration.x = acceleration * Math.sin(targetDirection + Math.PI);
-         tribesman.acceleration.y = acceleration * Math.cos(targetDirection + Math.PI);
+         physicsComponent.acceleration.x = acceleration * Math.sin(targetDirection + Math.PI);
+         physicsComponent.acceleration.y = acceleration * Math.cos(targetDirection + Math.PI);
+
+         physicsComponent.targetRotation = targetDirection;
+         physicsComponent.turnSpeed = TRIBESMAN_TURN_SPEED;
          
          setLimbActions(inventoryUseComponent, LimbAction.none);
          tribesmanComponent.currentAIType = TribesmanAIType.building;
@@ -936,8 +950,11 @@ const goPlaceBuilding = (tribesman: Entity, hotbarInventory: Inventory, tribe: T
          
          useInfo.lastAttackTicks = Board.ticks;
       } else {
-         tribesman.turn(targetDirection, TRIBESMAN_TURN_SPEED);
-         stopEntity(tribesman);
+         const physicsComponent = PhysicsComponentArray.getComponent(tribesman.id);
+         
+         stopEntity(physicsComponent);
+         physicsComponent.targetRotation = targetDirection;
+         physicsComponent.turnSpeed = TRIBESMAN_TURN_SPEED;
 
          setLimbActions(inventoryUseComponent, LimbAction.none);
          tribesmanComponent.currentAIType = TribesmanAIType.building;
@@ -975,19 +992,22 @@ const goUpgradeBuilding = (tribesman: Entity, goal: TribesmanUpgradeGoal): void 
    setLimbActions(inventoryUseComponent, LimbAction.none);
 
    const desiredAttackRange = getTribesmanDesiredAttackRange(tribesman);
+   const physicsComponent = PhysicsComponentArray.getComponent(tribesman.id);
    
    const distance = getDistanceFromPointToEntity(tribesman.position.x, tribesman.position.y, building) - getTribesmanRadius(tribesman);
-   if (willStopAtDesiredDistance(tribesman, desiredAttackRange, distance)) {
+   if (willStopAtDesiredDistance(physicsComponent, desiredAttackRange, distance)) {
       // If the tribesman will stop too close to the target, move back a bit
-      if (willStopAtDesiredDistance(tribesman, desiredAttackRange - 20, distance)) {
-         tribesman.acceleration.x = getTribesmanSlowAcceleration(tribesman) * Math.sin(tribesman.rotation + Math.PI);
-         tribesman.acceleration.y = getTribesmanSlowAcceleration(tribesman) * Math.cos(tribesman.rotation + Math.PI);
+      if (willStopAtDesiredDistance(physicsComponent, desiredAttackRange - 20, distance)) {
+         physicsComponent.acceleration.x = getTribesmanSlowAcceleration(tribesman) * Math.sin(tribesman.rotation + Math.PI);
+         physicsComponent.acceleration.y = getTribesmanSlowAcceleration(tribesman) * Math.cos(tribesman.rotation + Math.PI);
       } else {
-         stopEntity(tribesman);
+         stopEntity(physicsComponent);
       }
 
       const targetRotation = tribesman.position.calculateAngleBetween(building.position);
-      tribesman.turn(targetRotation, TRIBESMAN_TURN_SPEED);
+
+      physicsComponent.targetRotation = targetRotation;
+      physicsComponent.turnSpeed = TRIBESMAN_TURN_SPEED;
 
       if (Math.abs(getAngleDiff(tribesman.rotation, targetRotation)) < 0.1) {
          placeBlueprint(tribesman, building.id, plan.blueprintType, plan.rotation);
@@ -1012,11 +1032,14 @@ const goResearchTech = (tribesman: Entity, tech: TechInfo): boolean => {
       const bench = Board.entityRecord[occupiedBenchID]!;
       
       const targetDirection = tribesman.position.calculateAngleBetween(bench.position);
-      tribesman.turn(targetDirection, TRIBESMAN_TURN_SPEED);
+      const physicsComponent = PhysicsComponentArray.getComponent(tribesman.id);
 
       const slowAcceleration = getTribesmanSlowAcceleration(tribesman);
-      tribesman.acceleration.x = slowAcceleration * Math.sin(targetDirection);
-      tribesman.acceleration.y = slowAcceleration * Math.cos(targetDirection);
+      physicsComponent.acceleration.x = slowAcceleration * Math.sin(targetDirection);
+      physicsComponent.acceleration.y = slowAcceleration * Math.cos(targetDirection);
+
+      physicsComponent.targetRotation = targetDirection;
+      physicsComponent.turnSpeed = TRIBESMAN_TURN_SPEED;
       
       continueResearching(bench, tribesman, tech);
       
@@ -1034,7 +1057,7 @@ const goResearchTech = (tribesman: Entity, tech: TechInfo): boolean => {
       const bench = Board.entityRecord[benchID]!;
       
       markPreemptiveMoveToBench(bench, tribesman);
-      moveEntityToPosition(tribesman, bench.position.x, bench.position.y, getAcceleration(tribesman));
+      moveEntityToPosition(tribesman, bench.position.x, bench.position.y, getAcceleration(tribesman), TRIBESMAN_TURN_SPEED);
       
       tribesmanComponent.targetResearchBenchID = benchID;
       tribesmanComponent.currentAIType = TribesmanAIType.researching;
@@ -1230,7 +1253,7 @@ export function tickTribesman(tribesman: Entity): void {
             pathfindToPosition(tribesman, hut.position.x, hut.position.y, hut.id, TribesmanPathType.default, Math.floor(50 / PathfindingSettings.NODE_SEPARATION), PathfindFailureDefault.returnEmpty);
             
             if (entitiesAreColliding(tribesman, hut) !== CollisionVars.NO_COLLISION) {
-               tribesman.remove();
+               tribesman.destroy();
             }
             
             return;
@@ -1326,17 +1349,18 @@ export function tickTribesman(tribesman: Entity): void {
       const playerComponent = PlayerComponentArray.getComponent(entity.id);
       if (playerComponent.interactingEntityID === tribesman.id) {
          const physicsComponent = PhysicsComponentArray.getComponent(tribesman.id);
-         physicsComponent.hitboxesAreDirty = true;
 
-         tribesman.turn(tribesman.position.calculateAngleBetween(entity.position), TRIBESMAN_TURN_SPEED);
          const distance = tribesman.position.calculateDistanceBetween(entity.position);
-         if (willStopAtDesiredDistance(tribesman, 80, distance)) {
-            tribesman.acceleration.x = 0;
-            tribesman.acceleration.y = 0;
+         if (willStopAtDesiredDistance(physicsComponent, 80, distance)) {
+            physicsComponent.acceleration.x = 0;
+            physicsComponent.acceleration.y = 0;
          } else {
-            tribesman.acceleration.x = getAcceleration(tribesman) * Math.sin(tribesman.rotation);
-            tribesman.acceleration.y = getAcceleration(tribesman) * Math.cos(tribesman.rotation);
+            physicsComponent.acceleration.x = getAcceleration(tribesman) * Math.sin(tribesman.rotation);
+            physicsComponent.acceleration.y = getAcceleration(tribesman) * Math.cos(tribesman.rotation);
          }
+
+         physicsComponent.targetRotation = tribesman.position.calculateAngleBetween(entity.position);
+         physicsComponent.turnSpeed = TRIBESMAN_TURN_SPEED;
 
          const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman.id);
          const useInfo = getInventoryUseInfo(inventoryUseComponent, InventoryName.hotbar);
@@ -1457,7 +1481,8 @@ export function tickTribesman(tribesman: Entity): void {
             useInfo.foodEatingTimer = itemInfo.consumeTime;
          }
          
-         stopEntity(tribesman);
+         const physicsComponent = PhysicsComponentArray.getComponent(tribesman.id);
+         stopEntity(physicsComponent);
          
          useInfo.action = action;
          tribesmanComponent.currentAIType = TribesmanAIType.eating;
@@ -1495,24 +1520,27 @@ export function tickTribesman(tribesman: Entity): void {
 
       if (typeof closestBlueprint !== "undefined") {
          const targetDirection = tribesman.position.calculateAngleBetween(closestBlueprint.position);
-         tribesman.turn(targetDirection, TRIBESMAN_TURN_SPEED);
 
          const desiredAttackRange = getTribesmanDesiredAttackRange(tribesman);
+         const physicsComponent = PhysicsComponentArray.getComponent(tribesman.id);
          
          // @Incomplete: use pathfinding
          // @Cleanup: Copy and pasted from huntEntity. Should be combined into its own function
          const distance = getDistanceFromPointToEntity(tribesman.position.x, tribesman.position.y, closestBlueprint) - getTribesmanRadius(tribesman);
-         if (willStopAtDesiredDistance(tribesman, desiredAttackRange - 20, distance)) {
+         if (willStopAtDesiredDistance(physicsComponent, desiredAttackRange - 20, distance)) {
             // If the tribesman will stop too close to the target, move back a bit
-            tribesman.acceleration.x = getTribesmanSlowAcceleration(tribesman) * Math.sin(tribesman.rotation + Math.PI);
-            tribesman.acceleration.y = getTribesmanSlowAcceleration(tribesman) * Math.cos(tribesman.rotation + Math.PI);
-         } else if (willStopAtDesiredDistance(tribesman, desiredAttackRange, distance)) {
-            stopEntity(tribesman);
+            physicsComponent.acceleration.x = getTribesmanSlowAcceleration(tribesman) * Math.sin(tribesman.rotation + Math.PI);
+            physicsComponent.acceleration.y = getTribesmanSlowAcceleration(tribesman) * Math.cos(tribesman.rotation + Math.PI);
+         } else if (willStopAtDesiredDistance(physicsComponent, desiredAttackRange, distance)) {
+            stopEntity(physicsComponent);
          } else {
             // Too far away; move closer
-            tribesman.acceleration.x = getAcceleration(tribesman) * Math.sin(targetDirection);
-            tribesman.acceleration.y = getAcceleration(tribesman) * Math.cos(targetDirection);
+            physicsComponent.acceleration.x = getAcceleration(tribesman) * Math.sin(targetDirection);
+            physicsComponent.acceleration.y = getAcceleration(tribesman) * Math.cos(targetDirection);
          }
+
+         physicsComponent.targetRotation = targetDirection;
+         physicsComponent.turnSpeed = TRIBESMAN_TURN_SPEED;
 
          // Select the hammer item slot
          const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman.id);
@@ -1562,20 +1590,23 @@ export function tickTribesman(tribesman: Entity): void {
             useInfo.selectedItemSlot = giftItemSlot;
    
             // Swap to that item slot
+            const physicsComponent = PhysicsComponentArray.getComponent(tribesman.id);
             const distance = getDistanceFromPointToEntity(tribesman.position.x, tribesman.position.y, recruitTarget);
             
             // @Incomplete: account for tribesman radius
             const giftRange = 50;
-            if (willStopAtDesiredDistance(tribesman, giftRange, distance)) {
-               if (willStopAtDesiredDistance(tribesman, giftRange - 20, distance)) {
-                  tribesman.acceleration.x = getTribesmanSlowAcceleration(tribesman) * Math.sin(tribesman.rotation + Math.PI);
-                  tribesman.acceleration.y = getTribesmanSlowAcceleration(tribesman) * Math.cos(tribesman.rotation + Math.PI);
+            if (willStopAtDesiredDistance(physicsComponent, giftRange, distance)) {
+               if (willStopAtDesiredDistance(physicsComponent, giftRange - 20, distance)) {
+                  physicsComponent.acceleration.x = getTribesmanSlowAcceleration(tribesman) * Math.sin(tribesman.rotation + Math.PI);
+                  physicsComponent.acceleration.y = getTribesmanSlowAcceleration(tribesman) * Math.cos(tribesman.rotation + Math.PI);
                } else {
-                  stopEntity(tribesman);
+                  stopEntity(physicsComponent);
                }
 
                const targetDirection = tribesman.position.calculateAngleBetween(recruitTarget.position);
-               tribesman.turn(targetDirection, TRIBESMAN_TURN_SPEED);
+
+               physicsComponent.targetRotation = targetDirection;
+               physicsComponent.turnSpeed = TRIBESMAN_TURN_SPEED;
    
                if (Math.abs(getAngleDiff(targetDirection, tribesman.rotation)) < 0.1 && !itemThrowIsOnCooldown(tribesmanComponent)) {
                   const item = hotbarInventory.itemSlots[giftItemSlot]!;
@@ -1783,7 +1814,7 @@ export function tickTribesman(tribesman: Entity): void {
    setLimbActions(inventoryUseComponent, LimbAction.none);
 
    // Grab food from barrel
-   if (getFoodItemSlot(tribesman) === -1 && hasAvailableHotbarSlot(hotbarInventory)) {
+   if (getFoodItemSlot(tribesman) === -1 && !inventoryIsFull(hotbarInventory)) {
       let closestBarrelWithFood: Entity | undefined;
       let minDist = Number.MAX_SAFE_INTEGER;
       for (const entity of aiHelperComponent.visibleEntities) {
@@ -1799,8 +1830,10 @@ export function tickTribesman(tribesman: Entity): void {
          if (tribesman.position.calculateDistanceBetween(closestBarrelWithFood.position) > BARREL_INTERACT_DISTANCE) {
             pathfindToPosition(tribesman, closestBarrelWithFood.position.x, closestBarrelWithFood.position.y, closestBarrelWithFood.id, TribesmanPathType.default, Math.floor(BARREL_INTERACT_DISTANCE / PathfindingSettings.NODE_SEPARATION), PathfindFailureDefault.returnEmpty);
          } else {
+            const physicsComponent = PhysicsComponentArray.getComponent(tribesman.id);
+            stopEntity(physicsComponent);
+            
             grabBarrelFood(tribesman, closestBarrelWithFood);
-            stopEntity(tribesman);
             clearTribesmanPath(tribesman);
          }
          tribesmanComponent.currentAIType = TribesmanAIType.grabbingFood;
@@ -1827,7 +1860,8 @@ export function tickTribesman(tribesman: Entity): void {
       // reset target patrol position when not patrolling
       
       if (!isPathfinding) {
-         stopEntity(tribesman);
+         const physicsComponent = PhysicsComponentArray.getComponent(tribesman.id);
+         stopEntity(physicsComponent);
 
          tribesmanComponent.currentAIType = TribesmanAIType.idle;
          tribesmanComponent.targetPatrolPositionX = -1
@@ -1840,7 +1874,9 @@ export function tickTribesman(tribesman: Entity): void {
    }
 
    // If all else fails, don't do anything
-   stopEntity(tribesman);
+   const physicsComponent = PhysicsComponentArray.getComponent(tribesman.id);
+   stopEntity(physicsComponent);
+
    tribesmanComponent.currentAIType = TribesmanAIType.idle;
    clearTribesmanPath(tribesman);
 }
@@ -1893,11 +1929,17 @@ const escape = (tribesman: Entity, visibleEnemies: ReadonlyArray<Entity>, visibl
    averageEnemyX /= visibleEnemies.length + visibleHostileMobs.length;
    averageEnemyY /= visibleEnemies.length + visibleHostileMobs.length;
 
+   // 
    // Run away from that position
+   // 
+
    const runDirection = angle(averageEnemyX - tribesman.position.x, averageEnemyY - tribesman.position.y) + Math.PI;
-   tribesman.turn(runDirection, TRIBESMAN_TURN_SPEED);
-   tribesman.acceleration.x = getAcceleration(tribesman) * Math.sin(runDirection);
-   tribesman.acceleration.y = getAcceleration(tribesman) * Math.cos(runDirection);
+   const physicsComponent = PhysicsComponentArray.getComponent(tribesman.id);
+
+   physicsComponent.acceleration.x = getAcceleration(tribesman) * Math.sin(runDirection);
+   physicsComponent.acceleration.y = getAcceleration(tribesman) * Math.cos(runDirection);
+   physicsComponent.targetRotation = runDirection;
+   physicsComponent.turnSpeed = TRIBESMAN_TURN_SPEED;
 
    clearTribesmanPath(tribesman);
 }

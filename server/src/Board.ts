@@ -263,12 +263,12 @@ abstract class Board {
       tickTribes();
    }
 
-   public static entityIsFlaggedForRemoval(entity: Entity): boolean {
+   public static entityIsFlaggedForDestruction(entity: Entity): boolean {
       return this.entityRemoveBuffer.indexOf(entity) !== -1;
    }
 
    /** Removes game objects flagged for deletion */
-   public static removeFlaggedEntities(): void {
+   public static destroyFlaggedEntities(): void {
       for (const entity of this.entityRemoveBuffer) {
          const idx = this.entities.indexOf(entity);
          if (idx === -1) {

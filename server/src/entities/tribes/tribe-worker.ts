@@ -57,8 +57,8 @@ const getTribeType = (workerPosition: Point): TribeType => {
    }
 }
 
-export function createTribeWorker(position: Point, tribeID: number, hutID: number): Entity {
-   const worker = new Entity(position, EntityType.tribeWorker, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
+export function createTribeWorker(position: Point, rotation: number, tribeID: number, hutID: number): Entity {
+   const worker = new Entity(position, rotation, EntityType.tribeWorker, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
    const hitbox = new CircularHitbox(worker.position.x, worker.position.y, 1, 0, 0, HitboxCollisionType.soft, TRIBE_WORKER_RADIUS, worker.getNextHitboxLocalID(), worker.rotation);
    worker.addHitbox(hitbox);
@@ -73,7 +73,7 @@ export function createTribeWorker(position: Point, tribeID: number, hutID: numbe
    }
    
    const tribeInfo = TRIBE_INFO_RECORD[tribe.type];
-   PhysicsComponentArray.addComponent(worker.id, new PhysicsComponent(true, false));
+   PhysicsComponentArray.addComponent(worker.id, new PhysicsComponent(0, 0, 0, 0, true, false));
    HealthComponentArray.addComponent(worker.id, new HealthComponent(tribeInfo.maxHealthWorker));
    StatusEffectComponentArray.addComponent(worker.id, new StatusEffectComponent(0));
    TribeComponentArray.addComponent(worker.id, new TribeComponent(tribe));
@@ -110,11 +110,14 @@ export function onTribeWorkerJoin(worker: Entity): void {
 
 // @Cleanup: copy and paste
 export function onTribeWorkerDeath(worker: Entity): void {
+   // 
    // Attempt to respawn the tribesman when it is killed
-   // Only respawn the tribesman if their hut is alive
- 
+   // 
+   
    const tribesmanComponent = TribesmanComponentArray.getComponent(worker.id);
-   if (!Board.entityRecord.hasOwnProperty(tribesmanComponent.hutID)) {
+
+   // Only respawn the tribesman if their hut is alive
+   if (typeof Board.entityRecord[tribesmanComponent.hutID] === "undefined") {
       return;
    }
    

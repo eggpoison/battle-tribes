@@ -96,7 +96,7 @@ export function pickupItemEntity(entity: Entity, itemEntity: Entity): boolean {
 
    // If all of the item was added, destroy it
    if (itemComponent.amount === 0) {
-      itemEntity.remove();
+      itemEntity.destroy();
       return true;
    }
 
@@ -281,8 +281,7 @@ export function consumeItemFromSlot(inventoryComponent: InventoryComponent, inve
 /**
  * @returns True if the inventory has no item slots available, false if there is at least one
  */
-export function inventoryIsFull(inventoryComponent: InventoryComponent, inventoryName: InventoryName): boolean {
-   const inventory = getInventory(inventoryComponent, inventoryName);
+export function inventoryIsFull(inventory: Inventory): boolean {
    return inventory.items.length < inventory.width * inventory.height;
 }
 
@@ -298,7 +297,7 @@ export function dropInventory(entity: Entity, inventoryComponent: InventoryCompo
       position.x += spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
       position.y += spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
       
-      createItemEntity(position, item.type, item.count, 0);
+      createItemEntity(position, 2 * Math.PI * Math.random(), item.type, item.count, 0);
    }
 }
 

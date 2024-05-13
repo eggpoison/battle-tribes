@@ -79,7 +79,7 @@ export function damageEntity(entity: Entity, damage: number, attackingEntity: En
 
    // If the entity was killed by the attack, destroy the entity
    if (healthComponent.health <= 0) {
-      entity.remove();
+      entity.destroy();
 
       SERVER.registerEntityDeath(entity.position.x, entity.position.y, entity.id);
 
@@ -189,7 +189,7 @@ export function damageEntity(entity: Entity, damage: number, attackingEntity: En
       }
       case EntityType.player: {
          if (attackingEntity !== null) {
-            onPlayerHurt(entity, attackingEntity);
+            onPlayerHurt(entity, attackingEntity.id);
          }
          break;
       }
@@ -208,7 +208,7 @@ export function damageEntity(entity: Entity, damage: number, attackingEntity: En
       case EntityType.tribeWorker:
       case EntityType.tribeWarrior: {
          if (attackingEntity !== null) {
-            onTribeMemberHurt(entity, attackingEntity);
+            onTribeMemberHurt(entity, attackingEntity.id);
             adjustTribesmanRelationsAfterHurt(entity, attackingEntity.id);
          }
          break;

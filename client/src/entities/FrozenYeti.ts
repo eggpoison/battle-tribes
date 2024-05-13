@@ -174,8 +174,9 @@ class FrozenYeti extends Entity {
                      angleDifference += Math.PI * 2;
                   }
                   if (Math.abs(angleDifference) <= FrozenYeti.ROAR_ARC / 2 && distanceToPlayer <= FrozenYeti.ROAR_REACH) {
-                     Player.instance.velocity.x += 50 * Math.sin(angleToPlayer);
-                     Player.instance.velocity.y += 50 * Math.cos(angleToPlayer);
+                     const physicsComponent = this.getServerComponent(ServerComponentType.physics);
+                     physicsComponent.velocity.x += 50 * Math.sin(angleToPlayer);
+                     physicsComponent.velocity.y += 50 * Math.cos(angleToPlayer);
                   }
                   
                   break;

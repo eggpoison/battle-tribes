@@ -274,7 +274,7 @@ abstract class TribeMember extends Entity {
       }
    }
 
-   protected overrideTileMoveSpeedMultiplier(): number | null {
+   public overrideTileMoveSpeedMultiplier(): number | null {
       const inventoryComponent = this.getServerComponent(ServerComponentType.inventory);
       const armourSlotInventory = inventoryComponent.getInventory(InventoryName.armourSlot);
 

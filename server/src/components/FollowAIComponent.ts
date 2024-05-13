@@ -39,12 +39,12 @@ export function updateFollowAIComponent(entity: Entity, visibleEntities: Readonl
    }
 }
 
-export function followEntity(entity: Entity, followedEntity: Entity, acceleration: number, newFollowCooldownTicks: number): void {
+export function followEntity(entity: Entity, followedEntity: Entity, acceleration: number, turnSpeed: number, newFollowCooldownTicks: number): void {
    const followAIComponent = FollowAIComponentArray.getComponent(entity.id);
    followAIComponent.followTargetID = followedEntity.id;
    followAIComponent.followCooldownTicks = newFollowCooldownTicks;
    followAIComponent.interestTimer = 0;
-   moveEntityToPosition(entity, followedEntity.position.x, followedEntity.position.y, acceleration);
+   moveEntityToPosition(entity, followedEntity.position.x, followedEntity.position.y, acceleration, turnSpeed);
 };
 
 export function canFollow(followAIComponent: FollowAIComponent): boolean {

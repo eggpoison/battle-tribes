@@ -23,6 +23,9 @@ import { createSlimeSpit } from "../projectiles/slime-spit";
 import { SERVER } from "../../server";
 import { PhysicsComponent, PhysicsComponentArray } from "../../components/PhysicsComponent";
 import { wasTribeMemberKill } from "../tribes/tribe-member";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
+
+const TURN_SPEED = 2 * Math.PI;
 
 const RADII: ReadonlyArray<number> = [32, 44, 60];
 const MAX_HEALTH: ReadonlyArray<number> = [10, 20, 35];
@@ -64,16 +67,14 @@ interface AngerPropagationInfo {
 }
 
 export function createSlime(position: Point, size: SlimeSize, orbSizes: Array<SlimeSize>): Entity {
-   const slime = new Entity(position, EntityType.slime, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
-   slime.rotation = 2 * Math.PI * Math.random();
-   slime.
-   collisionPushForceMultiplier = 0.5;
+   const slime = new Entity(position, 2 * Math.PI * Math.random(), EntityType.slime, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
+   slime.collisionPushForceMultiplier = 0.5;
 
    const mass = 1 + size * 0.5;
    const hitbox = new CircularHitbox(slime.position.x, slime.position.y, mass, 0, 0, HitboxCollisionType.soft, RADII[size], slime.getNextHitboxLocalID(), slime.rotation);
    slime.addHitbox(hitbox);
 
-   PhysicsComponentArray.addComponent(slime.id, new PhysicsComponent(true, false));
+   PhysicsComponentArray.addComponent(slime.id, new PhysicsComponent(0, 0, 0, 0, true, false));
    HealthComponentArray.addComponent(slime.id, new HealthComponent(MAX_HEALTH[size]));
    StatusEffectComponentArray.addComponent(slime.id, new StatusEffectComponent(StatusEffect.poisoned));
    SlimeComponentArray.addComponent(slime.id, new SlimeComponent(size, MERGE_WEIGHTS[size], orbSizes));
@@ -136,10 +137,11 @@ const wantsToMerge = (slimeComponent1: SlimeComponent, slime2: Entity): boolean 
 const createSpit = (slime: Entity, slimeComponent: SlimeComponent): void => {
    const x = slime.position.x + RADII[slimeComponent.size] * Math.sin(slime.rotation);
    const y = slime.position.y + RADII[slimeComponent.size] * Math.cos(slime.rotation);
-   const spit = createSlimeSpit(new Point(x, y), slimeComponent.size === SlimeSize.medium ? 0 : 1);
+   const spitCreationInfo = createSlimeSpit(new Point(x, y), 2 * Math.PI * Math.random(), slimeComponent.size === SlimeSize.medium ? 0 : 1);
 
-   spit.velocity.x = 500 * Math.sin(slime.rotation);
-   spit.velocity.y = 500 * Math.cos(slime.rotation);
+   const physicsComponent = spitCreationInfo.components[ServerComponentType.physics];
+   physicsComponent.velocity.x = 500 * Math.sin(slime.rotation);
+   physicsComponent.velocity.y = 500 * Math.cos(slime.rotation);
 }
 
 // @Incomplete @Speed: Figure out why this first faster function seemingly gets called way less than the second one
@@ -230,7 +232,9 @@ export function tickSlime(slime: Entity): void {
    if (angerTarget !== null) {
       const targetDirection = slime.position.calculateAngleBetween(angerTarget.position);
       slimeComponent.eyeRotation = turnAngle(slimeComponent.eyeRotation, targetDirection, 5 * Math.PI);
-      slime.turn(targetDirection, 2 * Math.PI);
+
+      physicsComponent.targetRotation = targetDirection;
+      physicsComponent.turnSpeed = TURN_SPEED;
 
       if (slimeComponent.size > SlimeSize.small) {
          // If it has been more than one tick since the slime has been angry, reset the charge progress
@@ -241,7 +245,7 @@ export function tickSlime(slime: Entity): void {
          
          slimeComponent.spitChargeTicks++;
          if (slimeComponent.spitChargeTicks >= SPIT_COOLDOWN_TICKS) {
-            stopEntity(slime);
+            stopEntity(physicsComponent);
             
             // Spit attack
             if (slimeComponent.spitChargeTicks >= SPIT_CHARGE_TIME_TICKS) {
@@ -253,8 +257,8 @@ export function tickSlime(slime: Entity): void {
       }
 
       const speedMultiplier = SPEED_MULTIPLIERS[slimeComponent.size];
-      slime.acceleration.x = ACCELERATION * speedMultiplier * Math.sin(slime.rotation);
-      slime.acceleration.y = ACCELERATION * speedMultiplier * Math.cos(slime.rotation);
+      physicsComponent.acceleration.x = ACCELERATION * speedMultiplier * Math.sin(slime.rotation);
+      physicsComponent.acceleration.y = ACCELERATION * speedMultiplier * Math.cos(slime.rotation);
       return;
    }
 
@@ -272,11 +276,13 @@ export function tickSlime(slime: Entity): void {
       
       const targetDirection = slime.position.calculateAngleBetween(chaseTarget.position);
       slimeComponent.eyeRotation = turnAngle(slimeComponent.eyeRotation, targetDirection, 5 * Math.PI);
-      slime.turn(targetDirection, 2 * Math.PI);
 
       const speedMultiplier = SPEED_MULTIPLIERS[slimeComponent.size];
-      slime.acceleration.x = ACCELERATION * speedMultiplier * Math.sin(slime.rotation);
-      slime.acceleration.y = ACCELERATION * speedMultiplier * Math.cos(slime.rotation);
+      physicsComponent.acceleration.x = ACCELERATION * speedMultiplier * Math.sin(slime.rotation);
+      physicsComponent.acceleration.y = ACCELERATION * speedMultiplier * Math.cos(slime.rotation);
+
+      physicsComponent.targetRotation = targetDirection;
+      physicsComponent.turnSpeed = TURN_SPEED;
       return;
    }
 
@@ -285,9 +291,9 @@ export function tickSlime(slime: Entity): void {
    if (wanderAIComponent.targetPositionX !== -1) {
       if (entityHasReachedPosition(slime, wanderAIComponent.targetPositionX, wanderAIComponent.targetPositionY)) {
          wanderAIComponent.targetPositionX = -1;
-         stopEntity(slime);
+         stopEntity(physicsComponent);
       }
-   } else if (shouldWander(slime, 0.5)) {
+   } else if (shouldWander(physicsComponent, 0.5)) {
       const visionRange = VISION_RANGES[slimeComponent.size];
 
       let attempts = 0;
@@ -299,15 +305,15 @@ export function tickSlime(slime: Entity): void {
       const x = (targetTile.x + Math.random()) * Settings.TILE_SIZE;
       const y = (targetTile.y + Math.random()) * Settings.TILE_SIZE;
       const speedMultiplier = SPEED_MULTIPLIERS[slimeComponent.size];
-      wander(slime, x, y, ACCELERATION * speedMultiplier);
+      wander(slime, x, y, ACCELERATION * speedMultiplier, TURN_SPEED);
    } else {
-      stopEntity(slime);
+      stopEntity(physicsComponent);
    }
 }
 
 const merge = (slime1: Entity, slime2: Entity): void => {
    // Prevents both slimes fromj calling this function
-   if (Board.entityIsFlaggedForRemoval(slime2)) return;
+   if (Board.entityIsFlaggedForDestruction(slime2)) return;
 
    const slimeComponent1 = SlimeComponentArray.getComponent(slime1.id);
    const slimeComponent2 = SlimeComponentArray.getComponent(slime2.id);
@@ -333,7 +339,7 @@ const merge = (slime1: Entity, slime2: Entity): void => {
       const slimeSpawnPosition = new Point((slime1.position.x + slime2.position.x) / 2, (slime1.position.y + slime2.position.y) / 2);
       createSlime(slimeSpawnPosition, slimeComponent1.size + 1, orbSizes);
       
-      slime1.remove();
+      slime1.destroy();
    } else {
       // @Incomplete: This allows small slimes to eat larger slimes. Very bad.
       
@@ -345,7 +351,7 @@ const merge = (slime1: Entity, slime2: Entity): void => {
       slimeComponent1.lastMergeTicks = Board.ticks;
    }
    
-   slime2.remove();
+   slime2.destroy();
 }
 
 export function onSlimeCollision(slime: Entity, collidingEntity: Entity): void {

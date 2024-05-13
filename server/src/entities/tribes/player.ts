@@ -19,7 +19,7 @@ import { HealthComponent } from "../../components/HealthComponent";
 import CircularHitbox from "../../hitboxes/CircularHitbox";
 import { InventoryUseComponent, getInventoryUseInfo, setLimbActions } from "../../components/InventoryUseComponent";
 import { SERVER } from "../../server";
-import { TribeMemberComponent, awardTitle } from "../../components/TribeMemberComponent";
+import { TribeMemberComponent } from "../../components/TribeMemberComponent";
 import { PlayerComponent } from "../../components/PlayerComponent";
 import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
 import { toggleDoor } from "../../components/DoorComponent";
@@ -41,13 +41,13 @@ const VACUUM_RANGE = 85;
 const VACUUM_STRENGTH = 25;
 
 export function createPlayer(position: Point, tribe: Tribe): Entity {
-   const player = new Entity(position, EntityType.player, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
+   const player = new Entity(position, 0, EntityType.player, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
    const hitbox = new CircularHitbox(player.position.x, player.position.y, 1.25, 0, 0, HitboxCollisionType.soft, 32, player.getNextHitboxLocalID(), player.rotation);
    player.addHitbox(hitbox);
 
    const tribeInfo = TRIBE_INFO_RECORD[tribe.type];
-   PhysicsComponentArray.addComponent(player.id, new PhysicsComponent(true, false));
+   PhysicsComponentArray.addComponent(player.id, new PhysicsComponent(0, 0, 0, 0, true, false));
    HealthComponentArray.addComponent(player.id, new HealthComponent(tribeInfo.maxHealthPlayer));
    StatusEffectComponentArray.addComponent(player.id, new StatusEffectComponent(0));
    TribeComponentArray.addComponent(player.id, new TribeComponent(tribe));
@@ -122,8 +122,9 @@ export function tickPlayer(player: Entity): void {
             const distance = player.position.calculateDistanceBetween(itemEntity.position);
             if (distance <= VACUUM_RANGE) {
                const vacuumDirection = itemEntity.position.calculateAngleBetween(player.position);
-               itemEntity.velocity.x += VACUUM_STRENGTH * Math.sin(vacuumDirection);
-               itemEntity.velocity.y += VACUUM_STRENGTH * Math.cos(vacuumDirection);
+               const physicsComponent = PhysicsComponentArray.getComponent(itemEntity.id);
+               physicsComponent.velocity.x += VACUUM_STRENGTH * Math.sin(vacuumDirection);
+               physicsComponent.velocity.y += VACUUM_STRENGTH * Math.cos(vacuumDirection);
             }
          }
       }
@@ -139,8 +140,8 @@ export function onPlayerCollision(player: Entity, collidingEntity: Entity): void
    }
 }
 
-export function onPlayerHurt(player: Entity, collidingEntity: Entity): void {
-   onTribeMemberHurt(player, collidingEntity);
+export function onPlayerHurt(player: Entity, attackingEntityID: number): void {
+   onTribeMemberHurt(player, attackingEntityID);
 }
 
 export function onPlayerDeath(player: Entity): void {
@@ -181,7 +182,7 @@ export function processPlayerCraftingPacket(player: Entity, recipeIndex: number)
 }
 
 export function processItemPickupPacket(player: Entity, entityID: number, inventoryName: InventoryName, itemSlot: number, amount: number): void {
-   if (!Board.entityRecord.hasOwnProperty(entityID)) {
+   if (typeof Board.entityRecord[entityID] === "undefined") {
       return;
    }
 
@@ -209,7 +210,7 @@ export function processItemPickupPacket(player: Entity, entityID: number, invent
 }
 
 export function processItemReleasePacket(player: Entity, entityID: number, inventoryName: InventoryName, itemSlot: number, amount: number): void {
-   if (!Board.entityRecord.hasOwnProperty(entityID)) {
+   if (typeof Board.entityRecord[entityID] === "undefined") {
       return;
    }
 
@@ -224,7 +225,6 @@ export function processItemReleasePacket(player: Entity, entityID: number, inven
 
    const targetInventoryComponent = InventoryComponentArray.getComponent(entityID);
 
-   
    // Add the item to the inventory
    const amountAdded = addItemToSlot(targetInventoryComponent, inventoryName, itemSlot, heldItem.type, amount);
 
@@ -373,25 +373,25 @@ export function startChargingBattleaxe(player: Entity, inventoryName: InventoryN
    useInfo.action = LimbAction.chargeBattleaxe;
 }
 
-const itemIsNeededInTech = (tech: TechInfo, itemProgress: ItemRequirements, itemType: ItemType): boolean => {
+const itemIsNeededInTech = (tech: TechInfo, itemRequirements: ItemRequirements, itemType: ItemType): boolean => {
    // If the item isn't present in the item requirements then it isn't needed
-   if (!tech.researchItemRequirements.hasOwnProperty(itemType)) {
+   const amountNeeded = tech.researchItemRequirements[itemType];
+   if (typeof amountNeeded === "undefined") {
       return false;
    }
    
-   const amountNeeded = tech.researchItemRequirements[itemType]!;
-   const amountCommitted = itemProgress.hasOwnProperty(itemType) ? itemProgress[itemType]! : 0;
-
+   const amountCommitted = itemRequirements[itemType] || 0;
    return amountCommitted < amountNeeded;
 }
 
-const hasMetTechItemRequirements = (tech: TechInfo, itemProgress: ItemRequirements): boolean => {
+const hasMetTechItemRequirements = (tech: TechInfo, itemRequirements: ItemRequirements): boolean => {
    for (const [itemType, itemAmount] of Object.entries(tech.researchItemRequirements)) {
-      if (!itemProgress.hasOwnProperty(itemType)) {
+      const itemProgress = itemRequirements[itemType as unknown as ItemType];
+      if (typeof itemProgress === "undefined") {
          return false;
       }
 
-      if (itemAmount !== itemProgress[itemType as unknown as ItemType]) {
+      if (itemAmount < itemProgress) {
          return false;
       }
    }
@@ -426,7 +426,7 @@ export function processTechUnlock(player: Entity, techID: TechID): void {
       const itemProgress = tribeComponent.tribe.techTreeUnlockProgress[techID]?.itemProgress || {};
       if (itemIsNeededInTech(tech, itemProgress, item.type)) {
          const amountNeeded = tech.researchItemRequirements[item.type]!;
-         const amountCommitted = itemProgress.hasOwnProperty(item.type) ? itemProgress[item.type]! : 0;
+         const amountCommitted = itemProgress[item.type] || 0;
 
          const amountToAdd = Math.min(item.count, amountNeeded - amountCommitted);
 
@@ -577,7 +577,7 @@ export function deconstructBuilding(buildingID: number): void {
    }
 
    // Deconstruct
-   building.remove();
+   building.destroy();
 
    const materialComponent = BuildingMaterialComponentArray.getComponent(building.id);
    

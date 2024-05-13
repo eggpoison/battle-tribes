@@ -15,6 +15,7 @@ import { EntityRelationship, TribeComponent, getEntityRelationship } from "../..
 import { TurretComponent } from "../../components/TurretComponent";
 import { GenericArrowInfo, createWoodenArrow } from "../projectiles/wooden-arrow";
 import RectangularHitbox from "../../hitboxes/RectangularHitbox";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 
 // @Cleanup: A lot of copy and paste from ballista.ts
 
@@ -29,8 +30,7 @@ export function createSlingTurretHitboxes(parentX: number, parentY: number, loca
 }
 
 export function createSlingTurret(position: Point, rotation: number, tribe: Tribe): Entity {
-   const slingTurret = new Entity(position, EntityType.slingTurret, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
-   slingTurret.rotation = rotation;
+   const slingTurret = new Entity(position, rotation, EntityType.slingTurret, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
    const hitboxes = createSlingTurretHitboxes(slingTurret.position.x, slingTurret.position.y, slingTurret.getNextHitboxLocalID(), slingTurret.rotation);
    for (let i = 0; i < hitboxes.length; i++) {
@@ -88,13 +88,13 @@ const fire = (turret: Entity, slingTurretComponent: TurretComponent): void => {
       statusEffect: null
    };
    
-   const spawnPosition = turret.position.copy();
-   const rock = createWoodenArrow(spawnPosition, turret, arrowInfo);
+   const fireDirection = slingTurretComponent.aimDirection + turret.rotation;
+   const arrowCreationInfo = createWoodenArrow(turret.position.copy(), fireDirection, turret.id, arrowInfo);
 
-   const direction = slingTurretComponent.aimDirection + turret.rotation;
-   rock.rotation = direction;
-   rock.velocity.x = 550 * Math.sin(direction);
-   rock.velocity.y = 550 * Math.cos(direction);
+   // @Cleanup: copy and paste
+   const physicsComponent = arrowCreationInfo.components[ServerComponentType.physics];
+   physicsComponent.velocity.x = 550 * Math.sin(fireDirection);
+   physicsComponent.velocity.y = 550 * Math.cos(fireDirection);
 }
 
 export function tickSlingTurret(turret: Entity): void {

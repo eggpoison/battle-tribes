@@ -1,6 +1,6 @@
 import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision-detection";
-import { PlanterBoxPlant } from "webgl-test-shared/dist/components";
+import { PlanterBoxPlant, ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityType, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
@@ -12,27 +12,38 @@ import { addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../.
 import { StatusEffectComponentArray, applyStatusEffect } from "../../components/StatusEffectComponent";
 import { SERVER } from "../../server";
 import { PhysicsComponent, PhysicsComponentArray, applyKnockback } from "../../components/PhysicsComponent";
+import { EntityCreationInfo } from "../../entity-components";
 
-export function createIceShard(position: Point, moveDirection: number): Entity {
-   const iceShard = new Entity(position, EntityType.iceShardProjectile, COLLISION_BITS.default, DEFAULT_COLLISION_MASK & ~COLLISION_BITS.planterBox);
-   iceShard.rotation = moveDirection;
+type ComponentTypes = [ServerComponentType.physics, ServerComponentType.iceShard];
+
+export function createIceShard(position: Point, rotation: number): EntityCreationInfo<ComponentTypes> {
+   const iceShard = new Entity(position, rotation, EntityType.iceShardProjectile, COLLISION_BITS.default, DEFAULT_COLLISION_MASK & ~COLLISION_BITS.planterBox);
 
    const hitbox = new RectangularHitbox(iceShard.position.x, iceShard.position.y, 0.4, 0, 0, HitboxCollisionType.soft, iceShard.getNextHitboxLocalID(), iceShard.rotation, 24, 24, 0);
    iceShard.addHitbox(hitbox);
    
-   PhysicsComponentArray.addComponent(iceShard.id, new PhysicsComponent(true, false));
-   IceShardComponentArray.addComponent(iceShard.id, {
+   const physicsComponent = new PhysicsComponent(0, 0, 0, 0, true, false);
+   PhysicsComponentArray.addComponent(iceShard.id, physicsComponent);
+   
+   const iceShardComponent = {
       lifetime: randFloat(0.1, 0.2)
-   });
+   };
+   IceShardComponentArray.addComponent(iceShard.id, iceShardComponent);
 
-   return iceShard;
+   return {
+      entity: iceShard,
+      components: {
+         [ServerComponentType.physics]: physicsComponent,
+         [ServerComponentType.iceShard]: iceShardComponent
+      }
+   };
 }
 
 export function tickIceShard(iceShard: Entity): void {
    // @Cleanup @Speed: Don't even need a component for this, just do it based on age with a random chance
    const iceShardComponent = IceShardComponentArray.getComponent(iceShard.id);
    if (iceShard.ageTicks / Settings.TPS >= iceShardComponent.lifetime) {
-      iceShard.remove();
+      iceShard.destroy();
    }
 }
 
@@ -57,7 +68,7 @@ export function onIceShardCollision(iceShard: Entity, collidingEntity: Entity): 
    }
 
    // Shatter the ice spike
-   iceShard.remove();
+   iceShard.destroy();
 
    if (entityIsIceSpikes(collidingEntity)) {
       // Instantly destroy ice spikes

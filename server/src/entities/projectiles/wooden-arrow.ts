@@ -1,6 +1,6 @@
 import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision-detection";
-import { ArrowStatusEffectInfo } from "webgl-test-shared/dist/components";
+import { ArrowStatusEffectInfo, ServerComponentType } from "webgl-test-shared/dist/components";
 import { GenericArrowType, EntityType, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { Point } from "webgl-test-shared/dist/utils";
@@ -14,8 +14,11 @@ import { SERVER } from "../../server";
 import { PhysicsComponent, PhysicsComponentArray, applyKnockback } from "../../components/PhysicsComponent";
 import { EntityRelationship, TribeComponent, getEntityRelationship } from "../../components/TribeComponent";
 import { StatusEffectComponentArray, applyStatusEffect } from "../../components/StatusEffectComponent";
+import { EntityCreationInfo } from "../../entity-components";
 
 // @Cleanup: Rename file to something more generic
+
+type ComponentTypes = [ServerComponentType.physics, ServerComponentType.tribe, ServerComponentType.arrow];
 
 const ARROW_WIDTH = 12;
 const ARROW_HEIGHT = 64;
@@ -32,25 +35,35 @@ export interface GenericArrowInfo {
    readonly statusEffect: ArrowStatusEffectInfo | null;
 }
 
-export function createWoodenArrow(position: Point, thrower: Entity, arrowInfo: GenericArrowInfo): Entity {
-   const arrow = new Entity(position, EntityType.woodenArrowProjectile, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
-   arrow.rotation = thrower.rotation;
+export function createWoodenArrow(position: Point, rotation: number, throwerID: number, arrowInfo: GenericArrowInfo): EntityCreationInfo<ComponentTypes> {
+   const arrow = new Entity(position, rotation, EntityType.woodenArrowProjectile, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
    
    const hitbox = new RectangularHitbox(arrow.position.x, arrow.position.y, 0.5, 0, 0, HitboxCollisionType.soft, arrow.getNextHitboxLocalID(), arrow.rotation, arrowInfo.hitboxWidth, arrowInfo.hitboxHeight, 0);
    arrow.addHitbox(hitbox);
 
-   const throwerTribeComponent = TribeComponentArray.getComponent(thrower.id);
+   const physicsComponent = new PhysicsComponent(0, 0, 0, 0, false, true);
+   PhysicsComponentArray.addComponent(arrow.id, physicsComponent);
    
-   PhysicsComponentArray.addComponent(arrow.id, new PhysicsComponent(false, true));
-   TribeComponentArray.addComponent(arrow.id, new TribeComponent(throwerTribeComponent.tribe));
-   ArrowComponentArray.addComponent(arrow.id, new ArrowComponent(thrower.id, arrowInfo.type, arrowInfo.damage, arrowInfo.knockback, arrowInfo.ignoreFriendlyBuildings, arrowInfo.statusEffect));
+   const throwerTribeComponent = TribeComponentArray.getComponent(throwerID);
+   const tribeComponent = new TribeComponent(throwerTribeComponent.tribe);
+   TribeComponentArray.addComponent(arrow.id, tribeComponent);
+
+   const arrowComponent = new ArrowComponent(throwerID, arrowInfo.type, arrowInfo.damage, arrowInfo.knockback, arrowInfo.ignoreFriendlyBuildings, arrowInfo.statusEffect);
+   ArrowComponentArray.addComponent(arrow.id, arrowComponent);
    
-   return arrow;
+   return {
+      entity: arrow,
+      components: {
+         [ServerComponentType.physics]: physicsComponent,
+         [ServerComponentType.tribe]: tribeComponent,
+         [ServerComponentType.arrow]: arrowComponent
+      }
+   };
 }
 
 export function tickArrowProjectile(arrow: Entity): void {
    if (arrow.ageTicks >= 1.5 * Settings.TPS) {
-      arrow.remove();
+      arrow.destroy();
       return;
    }
    
@@ -58,19 +71,21 @@ export function tickArrowProjectile(arrow: Entity): void {
    // Air resistance
    // 
 
-   const xSignBefore = Math.sign(arrow.velocity.x);
+   const physicsComponent = PhysicsComponentArray.getComponent(arrow.id);
+
+   const xSignBefore = Math.sign(physicsComponent.velocity.x);
    
-   const velocityLength = arrow.velocity.length();
-   arrow.velocity.x = (velocityLength - 3) * arrow.velocity.x / velocityLength;
-   arrow.velocity.y = (velocityLength - 3) * arrow.velocity.y / velocityLength;
-   if (Math.sign(arrow.velocity.x) !== xSignBefore) {
-      arrow.velocity.x = 0;
-      arrow.velocity.y = 0;
+   const velocityLength = physicsComponent.velocity.length();
+   physicsComponent.velocity.x = (velocityLength - 3) * physicsComponent.velocity.x / velocityLength;
+   physicsComponent.velocity.y = (velocityLength - 3) * physicsComponent.velocity.y / velocityLength;
+   if (Math.sign(physicsComponent.velocity.x) !== xSignBefore) {
+      physicsComponent.velocity.x = 0;
+      physicsComponent.velocity.y = 0;
    }
    
    // Destroy the arrow if it reaches the border
    if (arrow.position.x <= ARROW_DESTROY_DISTANCE || arrow.position.x >= Settings.BOARD_DIMENSIONS * Settings.TILE_SIZE - ARROW_DESTROY_DISTANCE || arrow.position.y <= ARROW_DESTROY_DISTANCE || arrow.position.y >= Settings.BOARD_DIMENSIONS * Settings.TILE_SIZE - ARROW_DESTROY_DISTANCE) {
-      arrow.remove();
+      arrow.destroy();
       return;
    }
 }
@@ -126,6 +141,6 @@ export function onWoodenArrowCollision(arrow: Entity, collidingEntity: Entity): 
          applyStatusEffect(collidingEntity.id, arrowComponent.statusEffect.type, arrowComponent.statusEffect.durationTicks);
       }
 
-      arrow.remove();
+      arrow.destroy();
    }
 }

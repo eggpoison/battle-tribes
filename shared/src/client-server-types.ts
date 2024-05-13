@@ -102,7 +102,6 @@ export interface ResearchOrbCompleteData {
 export interface EntityData<T extends EntityType = EntityType> {
    readonly id: number;
    readonly position: [number, number];
-   readonly velocity: [number, number];
    readonly rotation: number;
    readonly rectangularHitboxes: ReadonlyArray<RectangularHitboxData>;
    readonly circularHitboxes: ReadonlyArray<CircularHitboxData>;

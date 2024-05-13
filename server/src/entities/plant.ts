@@ -23,8 +23,7 @@ const PLANT_HEALTHS: Record<PlanterBoxPlant, number> = {
 };
 
 export function createPlant(position: Point, rotation: number, planterBoxID: number, plantType: PlanterBoxPlant): Entity {
-   const plantEntity = new Entity(position, EntityType.plant, COLLISION_BITS.plants, DEFAULT_COLLISION_MASK);
-   plantEntity.rotation = rotation;
+   const plantEntity = new Entity(position, rotation, EntityType.plant, COLLISION_BITS.plants, DEFAULT_COLLISION_MASK);
 
    plantEntity.addHitbox(new CircularHitbox(plantEntity.position.x, plantEntity.position.y, 0.3, 0, 0, HitboxCollisionType.soft, 28, plantEntity.getNextHitboxLocalID(), plantEntity.rotation))
 

@@ -76,11 +76,23 @@ const getPositionsOffEntity = (snapOrigin, snapEntity, placeRotation, isPlacedOn
     const snapPositions = new Array();
     for (let i = 0; i < 4; i++) {
         const direction = i * Math.PI / 2 + snapEntity.rotation;
+        let directionIdx = i + 2;
         const snapType = i % 2 === 0 ? 1 /* SnapType.vertical */ : 0 /* SnapType.horizontal */;
         const snapEntityOffset = getSnapOffset(snapEntity.type, snapType);
         // @Incomplete
-        const placingSnapType = 1 /* SnapType.vertical */;
+        // const placingSnapType = SnapType.vertical;`
+        const placingSnapType = (Math.abs(direction - placeRotation) < 0.01 || Math.abs(direction - (placeRotation + Math.PI)) < 0.01) ? 1 /* SnapType.vertical */ : 0 /* SnapType.horizontal */;
         const placingEntityOffset = getSnapOffset(structureType, placingSnapType);
+        // Account for place rotation
+        if (Math.abs(direction - (placeRotation + Math.PI / 2)) < 0.01) {
+            directionIdx += 3;
+        }
+        else if (Math.abs(direction - (placeRotation + Math.PI)) < 0.01) {
+            directionIdx += 2;
+        }
+        else if (Math.abs(direction - (placeRotation + Math.PI * 3 / 2)) < 0.01) {
+            directionIdx += 1;
+        }
         // const epsilon = 0.01; // @Speed: const enum?
         // let structureOffsetI = i;
         // // If placing on the left or right side of the snap entity, use the width offset
@@ -101,8 +113,7 @@ const getPositionsOffEntity = (snapOrigin, snapEntity, placeRotation, isPlacedOn
         snapPositions.push({
             position: new utils_1.Point(positionX, positionY),
             rotation: placeRotation,
-            // @Incomplete
-            snappedSideBit: 0,
+            snappedSideBit: directionIdx % 4,
             snappedEntityID: snapEntity.id
         });
     }
@@ -174,9 +185,19 @@ const groupTransforms = (transforms, structureType) => {
     for (let i = 0; i < groups.length; i++) {
         const group = groups[i];
         const firstTransform = group[0];
-        // @Incomplete
         let snappedSidesBitset = 0;
         const snappedEntityIDs = [0, 0, 0, 0];
+        for (let j = 0; j < group.length; j++) {
+            const transform = group[j];
+            const bit = 1 << transform.snappedSideBit;
+            if ((snappedSidesBitset & bit)) {
+                console.warn("Found multiple snaps to the same side of the structure being placed!");
+            }
+            else {
+                snappedSidesBitset |= bit;
+                snappedEntityIDs[transform.snappedSideBit] = transform.snappedEntityID;
+            }
+        }
         const placeInfo = {
             position: firstTransform.position,
             rotation: firstTransform.rotation,
@@ -213,7 +234,10 @@ function calculateStructurePlaceInfo(placeOrigin, placingEntityRotation, structu
         };
     }
     else {
-        // @Incomplete: return best
+        // @Incomplete:
+        // - First filter by num snaps
+        // - Then filter by proximity to regular place position
+        console.log(placeInfos[0].snappedSidesBitset);
         return placeInfos[0];
     }
 }

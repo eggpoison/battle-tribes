@@ -5,6 +5,11 @@ import { TileType, TILE_MOVE_SPEED_MULTIPLIERS, TILE_FRICTIONS } from "webgl-tes
 import Entity from "../Entity";
 import { ComponentArray } from "./ComponentArray";
 import { addDirtyPathfindingEntity, entityCanBlockPathfinding } from "../pathfinding";
+import { cleanAngle } from "../ai-shared";
+import { Point } from "webgl-test-shared/dist/utils";
+
+// @Speed: freeze physics components which aren't moving/rotation.
+// - problem: how to account for hitboxesAreDirty? solution: give angularVelocity variable. change everything to use that.
 
 // @Cleanup: Variable names
 const a = new Array<number>();
@@ -17,6 +22,14 @@ for (let i = 0; i < 8; i++) {
 
 /** Anything to do with entities moving */
 export class PhysicsComponent {
+   public velocity: Point;
+   public acceleration: Point;
+
+   public turnSpeed = 0;
+   public targetRotation = 0;
+   /** Can be negative. Unaffected by target rotation */
+   public angularVelocity = 0;
+   
    public moveSpeedMultiplier = 1 + Number.EPSILON;
 
    // @Cleanup: Might be able to be put on the physics component
@@ -36,13 +49,79 @@ export class PhysicsComponent {
 
    public pathfindingNodesAreDirty = false;
    
-   constructor(isAffectedByFriction: boolean, isImmovable: boolean) {
+   constructor(velocityX: number, velocityY: number, accelerationX: number, accelerationY: number, isAffectedByFriction: boolean, isImmovable: boolean) {
+      this.velocity = new Point(velocityX, velocityY);
+      this.acceleration = new Point(accelerationX, accelerationY);
+      
       this.isAffectedByFriction = isAffectedByFriction;
       this.isImmovable = isImmovable;
    }
 }
 
 export const PhysicsComponentArray = new ComponentArray<PhysicsComponent>(true);
+
+const cleanRotation = (entity: Entity): void => {
+   const rotation = cleanAngle(entity.rotation);
+   if (rotation !== entity.rotation) {
+      entity.rotation = rotation;
+      
+      const physicsComponent = PhysicsComponentArray.getComponent(entity.id);
+      physicsComponent.hitboxesAreDirty = true;
+   }
+}
+
+const shouldTurnClockwise = (entity: Entity, physicsComponent: PhysicsComponent): boolean => {
+   // @Cleanup: Introduces side effects
+   // @Temporary @Speed: instead of doing this, probably just clean rotation after all places which could dirty it
+   cleanRotation(entity);
+
+   // @Hack
+   if (physicsComponent.targetRotation < 0) {
+      physicsComponent.targetRotation += 2 * Math.PI;
+   }
+   
+   const clockwiseDist = (physicsComponent.targetRotation - entity.rotation + Math.PI * 2) % (Math.PI * 2);
+   const anticlockwiseDist = (Math.PI * 2) - clockwiseDist;
+   if (clockwiseDist < 0 || anticlockwiseDist < 0) {
+      throw new Error("Either targetRotation or this.rotation wasn't in the 0-to-2-pi range. Target rotation: " + physicsComponent.targetRotation + ", rotation: " + entity.rotation);
+   }
+   return clockwiseDist < anticlockwiseDist;
+}
+
+const turnEntity = (entity: Entity, physicsComponent: PhysicsComponent): void => {
+   let previousRotation = entity.rotation;
+
+   entity.rotation += physicsComponent.angularVelocity * Settings.I_TPS;
+   if (entity.rotation < 0) {
+      entity.rotation += Math.PI / 2;
+   }
+   if (entity.rotation >= Math.PI * 2) {
+      entity.rotation -= Math.PI * 2;
+   }
+   
+   // @Incomplete ?
+   // entity.rotation = turnAngle(entity.rotation, physicsComponent.targetRotation, physicsComponent.angularVelocity);
+
+   if (shouldTurnClockwise(entity, physicsComponent)) {  
+      entity.rotation += physicsComponent.turnSpeed / Settings.TPS;
+      if (!shouldTurnClockwise(entity, physicsComponent)) {
+         entity.rotation = physicsComponent.targetRotation;
+      } else if (entity.rotation >= Math.PI * 2) {
+         entity.rotation -= Math.PI * 2;
+      }
+   } else {
+      entity.rotation -= physicsComponent.turnSpeed / Settings.TPS
+      if (shouldTurnClockwise(entity, physicsComponent)) {
+         entity.rotation = physicsComponent.targetRotation;
+      } else if (entity.rotation < 0) {
+         entity.rotation += Math.PI * 2;
+      }
+   }
+
+   if (entity.rotation !== previousRotation) {
+      physicsComponent.hitboxesAreDirty = true;
+   }
+}
 
 const applyPhysics = (entity: Entity, physicsComponent: PhysicsComponent): void => {
    // @Speed: There are a whole bunch of conditions in here which rely on physicsComponent.isAffectedByFriction,
@@ -51,14 +130,16 @@ const applyPhysics = (entity: Entity, physicsComponent: PhysicsComponent): void 
    // the corresponding groups
    
    // @Temporary @Hack
-   if (isNaN(entity.velocity.x) || isNaN(entity.velocity.x)) {
+   if (isNaN(physicsComponent.velocity.x) || isNaN(physicsComponent.velocity.x)) {
       console.warn("Entity type " + EntityTypeString[entity.type] + " velocity was NaN.");
-      entity.velocity.x = 0;
-      entity.velocity.y = 0;
+      physicsComponent.velocity.x = 0;
+      physicsComponent.velocity.y = 0;
    }
 
+   turnEntity(entity, physicsComponent);
+
    // Apply acceleration
-   if (entity.acceleration.x !== 0 || entity.acceleration.y !== 0) {
+   if (physicsComponent.acceleration.x !== 0 || physicsComponent.acceleration.y !== 0) {
       // @Speed: very complicated logic
       let moveSpeedMultiplier: number;
       if (physicsComponent.overrideMoveSpeedMultiplier || !physicsComponent.isAffectedByFriction) {
@@ -72,44 +153,44 @@ const applyPhysics = (entity: Entity, physicsComponent: PhysicsComponent): void 
       const tileFriction = TILE_FRICTIONS[entity.tile.type];
       
       // @Speed: A lot of multiplies
-      entity.velocity.x += entity.acceleration.x * tileFriction * moveSpeedMultiplier * Settings.I_TPS;
-      entity.velocity.y += entity.acceleration.y * tileFriction * moveSpeedMultiplier * Settings.I_TPS;
+      physicsComponent.velocity.x += physicsComponent.acceleration.x * tileFriction * moveSpeedMultiplier * Settings.I_TPS;
+      physicsComponent.velocity.y += physicsComponent.acceleration.y * tileFriction * moveSpeedMultiplier * Settings.I_TPS;
    }
 
    // If the game object is in a river, push them in the flow direction of the river
    // The tileMoveSpeedMultiplier check is so that game objects on stepping stones aren't pushed
    if (entity.isInRiver && !physicsComponent.overrideMoveSpeedMultiplier && physicsComponent.isAffectedByFriction) {
       const flowDirection = entity.tile.riverFlowDirection;
-      entity.velocity.x += 240 * Settings.I_TPS * a[flowDirection];
-      entity.velocity.y += 240 * Settings.I_TPS * b[flowDirection];
+      physicsComponent.velocity.x += 240 * Settings.I_TPS * a[flowDirection];
+      physicsComponent.velocity.y += 240 * Settings.I_TPS * b[flowDirection];
    }
 
    // Apply velocity
-   if (entity.velocity.x !== 0 || entity.velocity.y !== 0) {
+   if (physicsComponent.velocity.x !== 0 || physicsComponent.velocity.y !== 0) {
       // Friction
       if (physicsComponent.isAffectedByFriction) {
          // @Speed: pre-multiply the array
          const tileFriction = TILE_FRICTIONS[entity.tile.type];
 
          // Apply a friction based on the tile type for air resistance (???)
-         entity.velocity.x *= 1 - tileFriction * Settings.I_TPS * 2;
-         entity.velocity.y *= 1 - tileFriction * Settings.I_TPS * 2;
+         physicsComponent.velocity.x *= 1 - tileFriction * Settings.I_TPS * 2;
+         physicsComponent.velocity.y *= 1 - tileFriction * Settings.I_TPS * 2;
 
          // Apply a constant friction based on the tile type to simulate ground friction
          // @Incomplete @Bug: Doesn't take into acount the TPS. Would also be fixed by pre-multiplying the array
-         const velocityMagnitude = entity.velocity.length();
+         const velocityMagnitude = physicsComponent.velocity.length();
          if (tileFriction < velocityMagnitude) {
-            entity.velocity.x -= tileFriction * entity.velocity.x / velocityMagnitude;
-            entity.velocity.y -= tileFriction * entity.velocity.y / velocityMagnitude;
+            physicsComponent.velocity.x -= tileFriction * physicsComponent.velocity.x / velocityMagnitude;
+            physicsComponent.velocity.y -= tileFriction * physicsComponent.velocity.y / velocityMagnitude;
          } else {
-            entity.velocity.x = 0;
-            entity.velocity.y = 0;
+            physicsComponent.velocity.x = 0;
+            physicsComponent.velocity.y = 0;
          }
       }
       
       // @Incomplete(???): Multiply by move speed multiplier
-      entity.position.x += entity.velocity.x * Settings.I_TPS;
-      entity.position.y += entity.velocity.y * Settings.I_TPS;
+      entity.position.x += physicsComponent.velocity.x * Settings.I_TPS;
+      entity.position.y += physicsComponent.velocity.y * Settings.I_TPS;
 
       physicsComponent.positionIsDirty = true;
    }
@@ -179,10 +260,15 @@ export function applyKnockback(entity: Entity, knockback: number, knockbackDirec
    }
    
    const knockbackForce = knockback / entity.totalMass;
-   entity.velocity.x += knockbackForce * Math.sin(knockbackDirection);
-   entity.velocity.y += knockbackForce * Math.cos(knockbackDirection);
+   physicsComponent.velocity.x += knockbackForce * Math.sin(knockbackDirection);
+   physicsComponent.velocity.y += knockbackForce * Math.cos(knockbackDirection);
 }
 
-export function serialisePhysicsComponent(_entity: Entity): PhysicsComponentData {
-   return {};
+export function serialisePhysicsComponent(entityID: number): PhysicsComponentData {
+   const physicsComponent = PhysicsComponentArray.getComponent(entityID);
+
+   return {
+      velocity: physicsComponent.velocity.package(),
+      acceleration: physicsComponent.acceleration.package()
+   };
 }

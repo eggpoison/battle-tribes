@@ -23,8 +23,7 @@ export function createBarrelHitboxes(parentX: number, parentY: number, localID: 
 }
 
 export function createBarrel(position: Point, rotation: number, tribe: Tribe): Entity {
-   const barrel = new Entity(position, EntityType.barrel, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
-   barrel.rotation = rotation;
+   const barrel = new Entity(position, rotation, EntityType.barrel, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
    const hitboxes = createBarrelHitboxes(barrel.position.x, barrel.position.y, barrel.getNextHitboxLocalID(), barrel.rotation);
    for (let i = 0; i < hitboxes.length; i++) {

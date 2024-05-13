@@ -159,27 +159,27 @@ export function huntEntity(tribesman: Entity, huntedEntity: Entity, isAggressive
 
       // Throw spears if there is multiple
       if (weaponCategory === "spear" && selectedItem.count > 1) {
+         const physicsComponent = PhysicsComponentArray.getComponent(tribesman.id);
+
          // Rotate to face the target
          const direction = tribesman.position.calculateAngleBetween(huntedEntity.position);
          if (direction !== tribesman.rotation) {
-            tribesman.rotation = direction;
-
-            const physicsComponent = PhysicsComponentArray.getComponent(tribesman.id);
-            physicsComponent.hitboxesAreDirty = true;
+            physicsComponent.turnSpeed = TRIBESMAN_TURN_SPEED;
+            physicsComponent.targetRotation = direction;
          }
 
          const distance = getDistanceFromPointToEntity(tribesman.position.x, tribesman.position.y, huntedEntity) - getTribesmanRadius(tribesman);
          if (distance > 250) {
             // Move closer
-            tribesman.acceleration.x = getTribesmanSlowAcceleration(tribesman) * Math.sin(direction);
-            tribesman.acceleration.y = getTribesmanSlowAcceleration(tribesman) * Math.cos(direction);
+            physicsComponent.acceleration.x = getTribesmanSlowAcceleration(tribesman) * Math.sin(direction);
+            physicsComponent.acceleration.y = getTribesmanSlowAcceleration(tribesman) * Math.cos(direction);
          } else if (distance > 150) {
-            stopEntity(tribesman);
+            stopEntity(physicsComponent);
          } else {
             // Backpedal away from the entity if too close
             const backwards = direction + Math.PI;
-            tribesman.acceleration.x = getTribesmanSlowAcceleration(tribesman) * Math.sin(backwards);
-            tribesman.acceleration.y = getTribesmanSlowAcceleration(tribesman) * Math.cos(backwards);
+            physicsComponent.acceleration.x = getTribesmanSlowAcceleration(tribesman) * Math.sin(backwards);
+            physicsComponent.acceleration.y = getTribesmanSlowAcceleration(tribesman) * Math.cos(backwards);
          }
 
          if (hotbarUseInfo.action !== LimbAction.chargeSpear) {
@@ -214,6 +214,7 @@ export function huntEntity(tribesman: Entity, huntedEntity: Entity, isAggressive
          }
          
          if (isInLineOfSight || (Board.ticks - tribesmanComponent.lastEnemyLineOfSightTicks) <= Vars.BOW_LINE_OF_SIGHT_WAIT_TIME) {
+            const physicsComponent = PhysicsComponentArray.getComponent(tribesman.id);
             const distance = getDistanceFromPointToEntity(tribesman.position.x, tribesman.position.y, huntedEntity) - getTribesmanRadius(tribesman);
             
             // If there are any nearby embrasure use points, move to them
@@ -223,18 +224,20 @@ export function huntEntity(tribesman: Entity, huntedEntity: Entity, isAggressive
                const targetUsePoint = getClosestEmbrasureUsePoint(tribesman, nearbyEmbrasureUsePoints);
                
                const moveDirection = tribesman.position.calculateAngleBetween(targetUsePoint);
-               tribesman.acceleration.x = getTribesmanSlowAcceleration(tribesman) * Math.sin(moveDirection);
-               tribesman.acceleration.y = getTribesmanSlowAcceleration(tribesman) * Math.cos(moveDirection);
-            } else if (willStopAtDesiredDistance(tribesman, Vars.DESIRED_RANGED_ATTACK_DISTANCE - 20, distance)) {
+               physicsComponent.acceleration.x = getTribesmanSlowAcceleration(tribesman) * Math.sin(moveDirection);
+               physicsComponent.acceleration.y = getTribesmanSlowAcceleration(tribesman) * Math.cos(moveDirection);
+            } else if (willStopAtDesiredDistance(physicsComponent, Vars.DESIRED_RANGED_ATTACK_DISTANCE - 20, distance)) {
                // If the tribesman will stop too close to the target, move back a bit
-               tribesman.acceleration.x = getTribesmanSlowAcceleration(tribesman) * Math.sin(tribesman.rotation + Math.PI);
-               tribesman.acceleration.y = getTribesmanSlowAcceleration(tribesman) * Math.cos(tribesman.rotation + Math.PI);
+               physicsComponent.acceleration.x = getTribesmanSlowAcceleration(tribesman) * Math.sin(tribesman.rotation + Math.PI);
+               physicsComponent.acceleration.y = getTribesmanSlowAcceleration(tribesman) * Math.cos(tribesman.rotation + Math.PI);
             } else {
-               stopEntity(tribesman);
+               stopEntity(physicsComponent);
             }
 
             const targetRotation = tribesman.position.calculateAngleBetween(huntedEntity.position);
-            tribesman.turn(targetRotation, TRIBESMAN_TURN_SPEED);
+
+            physicsComponent.targetRotation = targetRotation;
+            physicsComponent.turnSpeed = TRIBESMAN_TURN_SPEED;
 
             if (hotbarUseInfo.action !== LimbAction.chargeBow) {
                // If the tribesman is only just charging the bow, reset the cooldown to prevent the bow firing immediately
@@ -258,7 +261,10 @@ export function huntEntity(tribesman: Entity, huntedEntity: Entity, isAggressive
             // If reached goal, turn towards the enemy
             if (tribesmanComponent.path.length === 0) {
                const targetRotation = tribesman.position.calculateAngleBetween(huntedEntity.position);
-               tribesman.turn(targetRotation, TRIBESMAN_TURN_SPEED);
+
+               const physicsComponent = PhysicsComponentArray.getComponent(tribesman.id);
+               physicsComponent.targetRotation = targetRotation;
+               physicsComponent.turnSpeed = TRIBESMAN_TURN_SPEED;
             }
 
             setLimbActions(inventoryUseComponent, LimbAction.none);
@@ -276,22 +282,25 @@ export function huntEntity(tribesman: Entity, huntedEntity: Entity, isAggressive
             }
 
             const targetDirection = tribesman.position.calculateAngleBetween(huntedEntity.position);
-            tribesman.turn(targetDirection, TRIBESMAN_TURN_SPEED);
+
+            const physicsComponent = PhysicsComponentArray.getComponent(tribesman.id);
+            physicsComponent.targetRotation = targetDirection;
+            physicsComponent.turnSpeed = TRIBESMAN_TURN_SPEED;
 
             if (distance > Vars.BATTLEAXE_IDEAL_USE_RANGE + 10) {
                // Move closer
                const acceleration = getTribesmanSlowAcceleration(tribesman);
-               tribesman.acceleration.x = acceleration * Math.sin(targetDirection);
-               tribesman.acceleration.y = acceleration * Math.cos(targetDirection);
+               physicsComponent.acceleration.x = acceleration * Math.sin(targetDirection);
+               physicsComponent.acceleration.y = acceleration * Math.cos(targetDirection);
             } else if (distance < Vars.BATTLEAXE_IDEAL_USE_RANGE - 10) {
                // Move futher away
                const acceleration = getTribesmanSlowAcceleration(tribesman);
                const moveDirection = targetDirection + Math.PI;
-               tribesman.acceleration.x = acceleration * Math.sin(moveDirection);
-               tribesman.acceleration.y = acceleration * Math.cos(moveDirection);
+               physicsComponent.acceleration.x = acceleration * Math.sin(moveDirection);
+               physicsComponent.acceleration.y = acceleration * Math.cos(moveDirection);
             } else {
                // Sweet spot
-               stopEntity(tribesman);
+               stopEntity(physicsComponent);
             }
 
             const ticksSinceLastAction = Board.ticks - hotbarUseInfo.lastBattleaxeChargeTicks;
@@ -337,21 +346,21 @@ export function huntEntity(tribesman: Entity, huntedEntity: Entity, isAggressive
       }
    }
 
+   const physicsComponent = PhysicsComponentArray.getComponent(tribesman.id);
    const desiredAttackRange = getTribesmanDesiredAttackRange(tribesman);
 
    const distance = getDistanceFromPointToEntity(tribesman.position.x, tribesman.position.y, huntedEntity) - getTribesmanRadius(tribesman);
-   // console.log("dist from hunt target: " + distance);
-   if (willStopAtDesiredDistance(tribesman, desiredAttackRange, distance)) {
+   if (willStopAtDesiredDistance(physicsComponent, desiredAttackRange, distance)) {
       // If the tribesman will stop too close to the target, move back a bit
-      if (willStopAtDesiredDistance(tribesman, desiredAttackRange - 20, distance)) {
-         tribesman.acceleration.x = getTribesmanSlowAcceleration(tribesman) * Math.sin(tribesman.rotation + Math.PI);
-         tribesman.acceleration.y = getTribesmanSlowAcceleration(tribesman) * Math.cos(tribesman.rotation + Math.PI);
+      if (willStopAtDesiredDistance(physicsComponent, desiredAttackRange - 20, distance)) {
+         physicsComponent.acceleration.x = getTribesmanSlowAcceleration(tribesman) * Math.sin(tribesman.rotation + Math.PI);
+         physicsComponent.acceleration.y = getTribesmanSlowAcceleration(tribesman) * Math.cos(tribesman.rotation + Math.PI);
       } else {
-         stopEntity(tribesman);
+         stopEntity(physicsComponent);
       }
 
-      const targetRotation = tribesman.position.calculateAngleBetween(huntedEntity.position);
-      tribesman.turn(targetRotation, TRIBESMAN_TURN_SPEED);
+      physicsComponent.targetRotation = tribesman.position.calculateAngleBetween(huntedEntity.position);
+      physicsComponent.turnSpeed = TRIBESMAN_TURN_SPEED;
    
       // If in melee range, try to do a melee attack
       doMeleeAttack(tribesman);

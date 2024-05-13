@@ -74,9 +74,8 @@ const generateRandomLimbs = (): ReadonlyArray<CactusLimbData> => {
    return limbs;
 }
 
-export function createCactus(position: Point): Entity {
-   const cactus = new Entity(position, EntityType.cactus, COLLISION_BITS.cactus, DEFAULT_COLLISION_MASK);
-   cactus.rotation = 2 * Math.PI * Math.random();
+export function createCactus(position: Point, rotation: number): Entity {
+   const cactus = new Entity(position, rotation, EntityType.cactus, COLLISION_BITS.cactus, DEFAULT_COLLISION_MASK);
 
    const hitbox = new CircularHitbox(cactus.position.x, cactus.position.y, 1, 0, 0, HitboxCollisionType.soft, RADIUS - HITBOX_PADDING, cactus.getNextHitboxLocalID(), cactus.rotation);
    cactus.addHitbox(hitbox);
@@ -100,7 +99,7 @@ export function createCactus(position: Point): Entity {
 
 export function onCactusCollision(cactus: Entity, collidingEntity: Entity): void {
    if (collidingEntity.type === EntityType.itemEntity) {
-      collidingEntity.remove();
+      collidingEntity.destroy();
       return;
    }
    

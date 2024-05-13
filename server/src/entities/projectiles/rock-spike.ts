@@ -14,9 +14,8 @@ import { applyKnockback } from "../../components/PhysicsComponent";
 export const ROCK_SPIKE_HITBOX_SIZES = [12 * 2, 16 * 2, 20 * 2];
 export const ROCK_SPIKE_MASSES = [1, 1.75, 2.5];
 
-export function createRockSpikeProjectile(spawnPosition: Point, size: number, frozenYetiID: number): Entity {
-   const rockSpikeProjectile = new Entity(spawnPosition, EntityType.rockSpikeProjectile, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
-   rockSpikeProjectile.rotation = 2 * Math.PI * Math.random();
+export function createRockSpikeProjectile(spawnPosition: Point, rotation: number, size: number, frozenYetiID: number): Entity {
+   const rockSpikeProjectile = new Entity(spawnPosition, rotation, EntityType.rockSpikeProjectile, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
    const hitbox = new CircularHitbox(rockSpikeProjectile.position.x, rockSpikeProjectile.position.y, ROCK_SPIKE_MASSES[size], 0, 0, HitboxCollisionType.soft, ROCK_SPIKE_HITBOX_SIZES[size], rockSpikeProjectile.getNextHitboxLocalID(), rockSpikeProjectile.rotation);
    rockSpikeProjectile.addHitbox(hitbox);
@@ -31,7 +30,7 @@ export function tickRockSpikeProjectile(rockSpikeProjectile: Entity): void {
    // Remove if past lifetime
    const rockSpikeProjectileComponent = RockSpikeProjectileComponentArray.getComponent(rockSpikeProjectile.id);
    if (rockSpikeProjectile.ageTicks >= rockSpikeProjectileComponent.lifetimeTicks) {
-      rockSpikeProjectile.remove();
+      rockSpikeProjectile.destroy();
    }
 }
 

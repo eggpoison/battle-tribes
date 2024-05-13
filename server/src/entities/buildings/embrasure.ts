@@ -37,8 +37,7 @@ export function createEmbrasureHitboxes(parentX: number, parentY: number, localI
 }
 
 export function createEmbrasure(position: Point, rotation: number, tribe: Tribe, material: BuildingMaterial): Entity {
-   const embrasure = new Entity(position, EntityType.embrasure, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
-   embrasure.rotation = rotation;
+   const embrasure = new Entity(position, rotation, EntityType.embrasure, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
    const hitboxes = createEmbrasureHitboxes(embrasure.position.x, embrasure.position.y, embrasure.getNextHitboxLocalID(), embrasure.rotation);
    for (let i = 0; i < hitboxes.length; i++) {
@@ -61,7 +60,7 @@ export function onEmbrasureCollision(embrasure: Entity, collidingEntity: Entity,
       }
 
       if (pushedHitboxIdx <= 1) {
-         collidingEntity.remove();
+         collidingEntity.destroy();
       }
    }
 }

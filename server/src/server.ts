@@ -138,13 +138,13 @@ const serialiseComponent = <T extends ServerComponentType>(entity: Entity, compo
       case ServerComponentType.golem: return serialiseGolemComponent(entity);
       case ServerComponentType.health: return serialiseHealthComponent(entity);
       case ServerComponentType.hut: return serialiseHutComponent(entity);
-      case ServerComponentType.iceShard: return serialiseIceShardComponent(entity);
+      case ServerComponentType.iceShard: return serialiseIceShardComponent();
       case ServerComponentType.iceSpikes: return serialiseIceSpikesComponent(entity);
       case ServerComponentType.inventory: return serialiseInventoryComponent(entity);
       case ServerComponentType.inventoryUse: return serialiseInventoryUseComponent(entity);
       case ServerComponentType.item: return serialiseItemComponent(entity);
       case ServerComponentType.pebblum: return serialisePebblumComponent(entity);
-      case ServerComponentType.physics: return serialisePhysicsComponent(entity);
+      case ServerComponentType.physics: return serialisePhysicsComponent(entity.id);
       case ServerComponentType.player: return serialisePlayerComponent(entity);
       case ServerComponentType.researchBench: return serialiseResearchBenchComponent(entity);
       case ServerComponentType.rockSpike: return serialiseRockSpikeComponent(entity);
@@ -205,7 +205,6 @@ const serialiseEntityData = (entity: Entity, player: Entity | null): EntityData<
    return {
       id: entity.id,
       position: entity.position.package(),
-      velocity: entity.velocity.package(),
       rotation: entity.rotation,
       circularHitboxes: circularHitboxes,
       rectangularHitboxes: rectangularHitboxes,
@@ -455,7 +454,7 @@ class GameServer {
    private async tick(): Promise<void> {
       // These are done before each tick to account for player packets causing entities to be removed/added between ticks.
       Board.pushJoinBuffer();
-      Board.removeFlaggedEntities();
+      Board.destroyFlaggedEntities();
       Board.updateTribes();
       
       Board.spreadGrass();
@@ -467,7 +466,7 @@ class GameServer {
       runSpawnAttempt();
       
       Board.pushJoinBuffer();
-      Board.removeFlaggedEntities();
+      Board.destroyFlaggedEntities();
       Board.updateTribes();
 
       if (!isTimed) {
@@ -1168,7 +1167,7 @@ class GameServer {
       if (typeof playerData !== "undefined") {
          const player = this.getPlayerInstance(playerData);
          if (player !== null) {
-            player.remove();
+            player.destroy();
          }
 
          delete SERVER.playerDataRecord[socket.id];
@@ -1192,10 +1191,12 @@ class GameServer {
             return;
          }
 
+         const physicsComponent = PhysicsComponentArray.getComponent(player.id);
+
          const packet: GameDataSyncPacket = {
             position: player.position.package(),
-            velocity: player.velocity.package(),
-            acceleration: player.acceleration.package(),
+            velocity: physicsComponent.velocity.package(),
+            acceleration: physicsComponent.acceleration.package(),
             rotation: player.rotation,
             health: HealthComponentArray.getComponent(player.id).health,
             inventory: SERVER.bundlePlayerInventoryData(player)
@@ -1221,8 +1222,6 @@ class GameServer {
 
       player.position.x = playerDataPacket.position[0];
       player.position.y = playerDataPacket.position[1];
-      player.velocity = Point.unpackage(playerDataPacket.velocity);
-      player.acceleration = Point.unpackage(playerDataPacket.acceleration);
       player.rotation = playerDataPacket.rotation;
 
       playerData.visibleChunkBounds = playerDataPacket.visibleChunkBounds;
@@ -1230,6 +1229,11 @@ class GameServer {
       
       const physicsComponent = PhysicsComponentArray.getComponent(player.id);
       physicsComponent.hitboxesAreDirty = true;
+      
+      physicsComponent.velocity.x = playerDataPacket.velocity[0];
+      physicsComponent.velocity.y = playerDataPacket.velocity[1];
+      physicsComponent.acceleration.x = playerDataPacket.acceleration[0];
+      physicsComponent.acceleration.y = playerDataPacket.acceleration[1];
       
       hotbarUseInfo.selectedItemSlot = playerDataPacket.selectedItemSlot;
 

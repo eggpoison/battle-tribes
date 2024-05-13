@@ -3,7 +3,7 @@ import { EntityType } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { TILE_FRICTIONS, TILE_MOVE_SPEED_MULTIPLIERS, TileType } from "webgl-test-shared/dist/tiles";
 import { EntityData, HitData, HitFlags, HitboxCollisionType, RIVER_STEPPING_STONE_SIZES } from "webgl-test-shared/dist/client-server-types";
-import { EntityComponents } from "webgl-test-shared/dist/components";
+import { EntityComponents, ServerComponentType } from "webgl-test-shared/dist/components";
 import RenderPart, { RenderObject } from "./render-parts/RenderPart";
 import Chunk from "./Chunk";
 import RectangularHitbox from "./hitboxes/RectangularHitbox";
@@ -67,8 +67,6 @@ abstract class Entity extends RenderObject {
    public readonly type: EntityType;
 
    public position: Point;
-   public velocity = new Point(0, 0);
-   public acceleration = new Point(0, 0);
 
    /** Angle the object is facing, taken counterclockwise from the positive x axis (radians) */
    public rotation = 0;
@@ -249,7 +247,7 @@ abstract class Entity extends RenderObject {
 
    protected onRemove?(): void;
 
-   protected overrideTileMoveSpeedMultiplier?(): number | null;
+   public overrideTileMoveSpeedMultiplier?(): number | null;
 
    public tick(): void {
       this.tintR = 0;
@@ -264,7 +262,8 @@ abstract class Entity extends RenderObject {
 
       // Water splash particles
       // @Cleanup: Move to particles file
-      if (this.isInRiver() && Board.tickIntervalHasPassed(0.15) && this.acceleration !== null && this.type !== EntityType.fish) {
+      const physicsComponent = this.getServerComponent(ServerComponentType.physics);
+      if (this.isInRiver() && Board.tickIntervalHasPassed(0.15) && physicsComponent.acceleration !== null && this.type !== EntityType.fish) {
          const lifetime = 2.5;
 
          const particle = new Particle(lifetime);
@@ -309,7 +308,6 @@ abstract class Entity extends RenderObject {
    public update(): void {
       this.ageTicks++;
       
-      this.applyPhysics();
       this.resolveBorderCollisions();
       this.updateCurrentTile();
       this.updateHitboxes();
@@ -339,53 +337,6 @@ abstract class Entity extends RenderObject {
       }
 
       return true;
-   }
-
-   private applyPhysics(): void {
-      // Apply acceleration
-      if (this.acceleration.x !== 0 || this.acceleration.y !== 0) {
-         let tileMoveSpeedMultiplier = TILE_MOVE_SPEED_MULTIPLIERS[this.tile.type];
-         if (this.tile.type === TileType.water && !this.isInRiver()) {
-            tileMoveSpeedMultiplier = 1;
-         }
-
-         const friction = TILE_FRICTIONS[this.tile.type];
-         
-         this.velocity.x += this.acceleration.x * friction * tileMoveSpeedMultiplier * Settings.I_TPS;
-         this.velocity.y += this.acceleration.y * friction * tileMoveSpeedMultiplier * Settings.I_TPS;
-      }
-
-      // If the game object is in a river, push them in the flow direction of the river
-      const moveSpeedIsOverridden = typeof this.overrideTileMoveSpeedMultiplier !== "undefined" && this.overrideTileMoveSpeedMultiplier() !== null;
-      if (this.isInRiver() && !moveSpeedIsOverridden) {
-         const flowDirection = Board.getRiverFlowDirection(this.tile.x, this.tile.y);
-         this.velocity.x += 240 / Settings.TPS * Math.sin(flowDirection);
-         this.velocity.y += 240 / Settings.TPS * Math.cos(flowDirection);
-      }
-
-      // Apply velocity
-      if (this.velocity.x !== 0 || this.velocity.y !== 0) {
-         const friction = TILE_FRICTIONS[this.tile.type];
-
-         // Apply a friction based on the tile type to simulate air resistance (???)
-         this.velocity.x *= 1 - friction * Settings.I_TPS * 2;
-         this.velocity.y *= 1 - friction * Settings.I_TPS * 2;
-
-         // Apply a constant friction based on the tile type to simulate ground friction
-         const velocityMagnitude = this.velocity.length();
-         if (velocityMagnitude > 0) {
-            const groundFriction = Math.min(friction, velocityMagnitude);
-            this.velocity.x -= groundFriction * this.velocity.x / velocityMagnitude;
-            this.velocity.y -= groundFriction * this.velocity.y / velocityMagnitude;
-         }
-         
-         this.position.x += this.velocity.x * Settings.I_TPS;
-         this.position.y += this.velocity.y * Settings.I_TPS;
-      }
-
-      if (isNaN(this.position.x)) {
-         throw new Error("Position was NaN.");
-      }
    }
 
    // @Cleanup: Should this be protected?
@@ -450,8 +401,15 @@ abstract class Entity extends RenderObject {
    }
 
    public updateRenderPosition(): void {
-      this.renderPosition.x = this.position.x + this.velocity.x * frameProgress / Settings.TPS;
-      this.renderPosition.y = this.position.y + this.velocity.y * frameProgress / Settings.TPS;
+      this.renderPosition.x = this.position.x;
+      this.renderPosition.y = this.position.y;
+
+      if (this.hasServerComponent(ServerComponentType.physics)) {
+         const physicsComponent = this.getServerComponent(ServerComponentType.physics);
+         
+         this.renderPosition.x += physicsComponent.velocity.x * frameProgress / Settings.TPS;
+         this.renderPosition.y += physicsComponent.velocity.y * frameProgress / Settings.TPS;
+      }
 
       // Shake
       if (this.shakeAmount > 0) {
@@ -471,8 +429,6 @@ abstract class Entity extends RenderObject {
    public updateFromData(data: EntityData): void {
       this.position.x = data.position[0];
       this.position.y = data.position[1];
-      this.velocity.x = data.velocity[0];
-      this.velocity.y = data.velocity[1];
 
       this.updateCurrentTile();
 

@@ -1,6 +1,6 @@
 import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision-detection";
-import { BerryBushComponentData } from "webgl-test-shared/dist/components";
+import { BerryBushComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { ItemType } from "webgl-test-shared/dist/items";
 import { Settings } from "webgl-test-shared/dist/settings";
@@ -19,9 +19,8 @@ export const BERRY_BUSH_RADIUS = 40;
 /** Number of seconds it takes for a berry bush to regrow one of its berries */
 const BERRY_GROW_TIME = 30;
 
-export function createBerryBush(position: Point): Entity {
-   const berryBush = new Entity(position, EntityType.berryBush, COLLISION_BITS.plants, DEFAULT_COLLISION_MASK);
-   berryBush.rotation = 2 * Math.PI * Math.random();
+export function createBerryBush(position: Point, rotation: number): Entity {
+   const berryBush = new Entity(position, rotation, EntityType.berryBush, COLLISION_BITS.plants, DEFAULT_COLLISION_MASK);
 
    const hitbox = new CircularHitbox(berryBush.position.x, berryBush.position.y, 1, 0, 0, HitboxCollisionType.soft, BERRY_BUSH_RADIUS, berryBush.getNextHitboxLocalID(), berryBush.rotation);
    berryBush.addHitbox(hitbox);
@@ -64,11 +63,12 @@ export function dropBerryOverEntity(entity: Entity): void {
       position.add(spawnOffset);
    } while (!Board.isInBoard(position));
 
-   const itemEntity = createItemEntity(position, ItemType.berry, 1, 0);
+   const itemEntityCreationInfo = createItemEntity(position, 2 * Math.PI * Math.random(), ItemType.berry, 1, 0);
    
    const velocityDirectionOffset = (Math.random() - 0.5) * Math.PI * 0.15
-   itemEntity.velocity.x = 40 * Math.sin(spawnDirection + velocityDirectionOffset);
-   itemEntity.velocity.y = 40 * Math.cos(spawnDirection + velocityDirectionOffset);
+   const physicsComponent = itemEntityCreationInfo.components[ServerComponentType.physics];
+   physicsComponent.velocity.x = 40 * Math.sin(spawnDirection + velocityDirectionOffset);
+   physicsComponent.velocity.y = 40 * Math.cos(spawnDirection + velocityDirectionOffset);
 }
 
 export function dropBerry(berryBush: Entity, attackingEntity: Entity | null): void {

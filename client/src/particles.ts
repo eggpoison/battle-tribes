@@ -4,6 +4,7 @@ import Particle from "./Particle";
 import { ParticleColour, ParticleRenderLayer, addMonocolourParticleToBufferContainer, addTexturedParticleToBufferContainer } from "./rendering/particle-rendering";
 import Board from "./Board";
 import Entity from "./Entity";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 
 // @Cleanup: Standardise all these functions to just take the stuff necessary to create them, then have the places which call them modify the returned particle
 
@@ -119,7 +120,8 @@ export function createLeafParticle(spawnPositionX: number, spawnPositionY: numbe
 export function createFootprintParticle(entity: Entity, numFootstepsTaken: number, footstepOffset: number, size: number, lifetime: number): void {
    const footstepAngleOffset = numFootstepsTaken % 2 === 0 ? Math.PI : 0;
 
-   const velocityDirection = angle(entity.velocity.x, entity.velocity.y);
+   const physicsComponent = entity.getServerComponent(ServerComponentType.physics);
+   const velocityDirection = angle(physicsComponent.velocity.x, physicsComponent.velocity.y);
 
    const offsetMagnitude = footstepOffset / 2;
    const offsetDirection = velocityDirection + footstepAngleOffset + Math.PI/2;

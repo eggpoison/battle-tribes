@@ -48,7 +48,7 @@ class Cow extends Entity {
       headRenderPart.offset.y = (Cow.BODY_HEIGHT - Cow.HEAD_OVERLAP) / 2;
       this.attachRenderPart(headRenderPart);
 
-      this.addServerComponent(ServerComponentType.physics, new PhysicsComponent(this, componentsData[1]));
+      this.addServerComponent(ServerComponentType.physics, new PhysicsComponent(this, componentsData[0]));
       this.addServerComponent(ServerComponentType.health, new HealthComponent(this, componentsData[1]));
       this.addServerComponent(ServerComponentType.statusEffect, new StatusEffectComponent(this, componentsData[2]));
       this.addServerComponent(ServerComponentType.cow, new CowComponent(this, cowComponentData));

@@ -13,8 +13,8 @@ import { SERVER } from "../../server";
 
 const RADIUS = 55;
 
-export function createSpitPoison(position: Point): Entity {
-   const poison = new Entity(position, EntityType.spitPoison, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
+export function createSpitPoison(position: Point, rotation: number): Entity {
+   const poison = new Entity(position, rotation, EntityType.spitPoison, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
    
    // @Hack mass
    const hitbox = new CircularHitbox(poison.position.x, poison.position.y, Number.EPSILON, 0, 0, HitboxCollisionType.soft, RADIUS, poison.getNextHitboxLocalID(), poison.rotation);
@@ -27,7 +27,7 @@ export function tickSpitPoison(spit: Entity): void {
    const hitbox = spit.hitboxes[0] as CircularHitbox;
    hitbox.radius -= 5 / Settings.TPS;
    if (hitbox.radius <= 0) {
-      spit.remove();
+      spit.destroy();
    }
    
    // @Incomplete: Shrinking the hitbox should make the hitboxes dirty, but hitboxes being dirty only has an impact on entities with a physics component.

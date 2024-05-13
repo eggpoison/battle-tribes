@@ -5,16 +5,10 @@ import Tile from "../Tile";
 import Board from "../Board";
 import { WanderAIComponentArray } from "../components/ComponentArray";
 import { moveEntityToPosition } from "../ai-shared";
+import { PhysicsComponent } from "../components/PhysicsComponent";
 
-export function runWanderAI(entity: Entity, wanderRate: number): void {
-   // Only try to wander if not moving
-   if (entity.velocity.x !== 0 || entity.velocity.y !== 0 || Math.random() >= wanderRate / Settings.TPS) {
-      return;
-   }
-}
-
-export function shouldWander(entity: Entity, wanderRate: number) {
-   return entity.velocity.x === 0 && entity.velocity.y === 0 && Math.random() < wanderRate / Settings.TPS;
+export function shouldWander(physicsComponent: PhysicsComponent, wanderRate: number) {
+   return physicsComponent.velocity.x === 0 && physicsComponent.velocity.y === 0 && Math.random() < wanderRate / Settings.TPS;
 }
 
 export function getWanderTargetTile(entity: Entity, visionRange: number): Tile {
@@ -40,9 +34,9 @@ export function getWanderTargetTile(entity: Entity, visionRange: number): Tile {
    return Board.getTile(tileX, tileY);
 }
 
-export function wander(entity: Entity, x: number, y: number, acceleration: number): void {
+export function wander(entity: Entity, x: number, y: number, acceleration: number, turnSpeed: number): void {
    const wanderAIComponent = WanderAIComponentArray.getComponent(entity.id);
    wanderAIComponent.targetPositionX = x;
    wanderAIComponent.targetPositionY = y;
-   moveEntityToPosition(entity, wanderAIComponent.targetPositionX, wanderAIComponent.targetPositionY, acceleration);
+   moveEntityToPosition(entity, wanderAIComponent.targetPositionX, wanderAIComponent.targetPositionY, acceleration, turnSpeed);
 }

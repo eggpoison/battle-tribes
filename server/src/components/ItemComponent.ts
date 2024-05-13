@@ -24,8 +24,8 @@ export class ItemComponent {
 export function tickItemComponent(itemComponent: ItemComponent): void {
    // @Speed
    for (const entityID of Object.keys(itemComponent.entityPickupCooldowns).map(idString => Number(idString))) {
-      itemComponent.entityPickupCooldowns[entityID] -= Settings.I_TPS;
-      if (itemComponent.entityPickupCooldowns[entityID] <= 0) {
+      itemComponent.entityPickupCooldowns[entityID]! -= Settings.I_TPS;
+      if (itemComponent.entityPickupCooldowns[entityID]! <= 0) {
          delete itemComponent.entityPickupCooldowns[entityID];
       }
    }

@@ -5,7 +5,7 @@ import { HealthComponentArray, InventoryComponentArray, TribeComponentArray } fr
 import { entityIsAccessible, positionIsSafeForTribesman, tribesmanShouldEscape } from "./tribesman-ai";
 import { HealthComponent } from "../../../components/HealthComponent";
 import { tribeMemberCanPickUpItem } from "../tribe-member";
-import { inventoryIsFull } from "../../../components/InventoryComponent";
+import { getInventory, inventoryIsFull } from "../../../components/InventoryComponent";
 
 const RESOURCE_PRODUCTS: Partial<Record<EntityType, ReadonlyArray<ItemType>>> = {
    [EntityType.cow]: [ItemType.leather, ItemType.raw_beef],
@@ -84,7 +84,8 @@ export function getGatherTarget(tribesman: Entity, visibleEntities: ReadonlyArra
    const inventoryComponent = InventoryComponentArray.getComponent(tribesman.id);
    
    // @Incomplete: Doesn't account for room in backpack/other
-   const isFull = inventoryIsFull(inventoryComponent, InventoryName.hotbar);
+   const hotbarInventory = getInventory(inventoryComponent, InventoryName.hotbar);
+   const isFull = inventoryIsFull(hotbarInventory);
    
    let minDist = Number.MAX_SAFE_INTEGER;
    let closestResource: Entity | undefined;

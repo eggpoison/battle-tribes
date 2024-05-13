@@ -7,6 +7,7 @@ import Hitbox from "./hitboxes/Hitbox";
 import RectangularHitbox from "./hitboxes/RectangularHitbox";
 import Entity from "./Entity";
 import Board from "./Board";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 
 interface CollisionPushInfo {
    direction: number;
@@ -114,12 +115,14 @@ const resolveHardCollision = (entity: Entity, pushInfo: CollisionPushInfo): void
    entity.position.x += pushInfo.amountIn * Math.sin(pushInfo.direction);
    entity.position.y += pushInfo.amountIn * Math.cos(pushInfo.direction);
 
+   const physicsComponent = entity.getServerComponent(ServerComponentType.physics);
+
    // Kill all the velocity going into the hitbox
    const bx = Math.sin(pushInfo.direction + Math.PI/2);
    const by = Math.cos(pushInfo.direction + Math.PI/2);
-   const projectionCoeff = entity.velocity.x * bx + entity.velocity.y * by;
-   entity.velocity.x = bx * projectionCoeff;
-   entity.velocity.y = by * projectionCoeff;
+   const projectionCoeff = physicsComponent.velocity.x * bx + physicsComponent.velocity.y * by;
+   physicsComponent.velocity.x = bx * projectionCoeff;
+   physicsComponent.velocity.y = by * projectionCoeff;
 }
 
 const resolveSoftCollision = (entity: Entity, pushedHitbox: Hitbox, pushingHitbox: Hitbox, pushInfo: CollisionPushInfo): void => {
@@ -127,9 +130,11 @@ const resolveSoftCollision = (entity: Entity, pushedHitbox: Hitbox, pushingHitbo
    const distMultiplier = Math.pow(pushInfo.amountIn, 1.1);
    // @Incomplete: divide by total mass not just pushed hitbox mass
    const pushForce = Settings.ENTITY_PUSH_FORCE * Settings.I_TPS * distMultiplier * pushingHitbox.mass / pushedHitbox.mass;
+
+   const physicsComponent = entity.getServerComponent(ServerComponentType.physics);
    
-   entity.velocity.x += pushForce * Math.sin(pushInfo.direction);
-   entity.velocity.y += pushForce * Math.cos(pushInfo.direction);
+   physicsComponent.velocity.x += pushForce * Math.sin(pushInfo.direction);
+   physicsComponent.velocity.y += pushForce * Math.cos(pushInfo.direction);
 }
 
 export function collide(entity: Entity, pushedHitbox: Hitbox, pushingHitbox: Hitbox): void {

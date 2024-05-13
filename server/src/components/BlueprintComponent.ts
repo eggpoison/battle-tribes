@@ -90,7 +90,7 @@ const upgradeBuilding = (building: Entity): void => {
 const completeBlueprint = (blueprintEntity: Entity, blueprintComponent: BlueprintComponent): void => {
    const tribeComponent = TribeComponentArray.getComponent(blueprintEntity.id);
    
-   blueprintEntity.remove();
+   blueprintEntity.destroy();
    
    switch (blueprintComponent.blueprintType) {
       case BlueprintType.woodenDoor: {
@@ -131,7 +131,7 @@ const completeBlueprint = (blueprintEntity: Entity, blueprintComponent: Blueprin
          createFenceGate(blueprintEntity.position.copy(), blueprintEntity.rotation, tribeComponent.tribe, previousFenceConnectionComponent.connectedSidesBitset, previousFenceConnectionComponent.connectedEntityIDs);
          
          const fence = Board.entityRecord[blueprintComponent.associatedEntityID]!;
-         fence.remove();
+         fence.destroy();
          
          return;
       }
@@ -140,7 +140,7 @@ const completeBlueprint = (blueprintEntity: Entity, blueprintComponent: Blueprin
 
          // Remove the previous hut
          const previousHut = Board.entityRecord[blueprintComponent.associatedEntityID]!;
-         previousHut.remove();
+         previousHut.destroy();
 
          // Transfer the worker to the warrior hut
          const hutComponent = HutComponentArray.getComponent(previousHut.id);

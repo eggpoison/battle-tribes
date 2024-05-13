@@ -28,17 +28,18 @@ const VISION_RANGE = 100;
 
 const ACCELERATION = 100;
 
+const TURN_SPEED = Math.PI;
+
 export const SLIMEWISP_MERGE_TIME = 2;
 
 export function createSlimewisp(position: Point): Entity {
-   const slimewisp = new Entity(position, EntityType.slimewisp, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
-   slimewisp.rotation = 2 * Math.PI * Math.random();
+   const slimewisp = new Entity(position, 2 * Math.PI * Math.random(), EntityType.slimewisp, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
    slimewisp.collisionPushForceMultiplier = 0.3;
 
    const hitbox = new CircularHitbox(slimewisp.position.x, slimewisp.position.y, 0.5, 0, 0, HitboxCollisionType.soft, RADIUS, slimewisp.getNextHitboxLocalID(), slimewisp.rotation);
    slimewisp.addHitbox(hitbox);
 
-   PhysicsComponentArray.addComponent(slimewisp.id, new PhysicsComponent(true, false));
+   PhysicsComponentArray.addComponent(slimewisp.id, new PhysicsComponent(0, 0, 0, 0, true, false));
    HealthComponentArray.addComponent(slimewisp.id, new HealthComponent(MAX_HEALTH));
    StatusEffectComponentArray.addComponent(slimewisp.id, new StatusEffectComponent(StatusEffect.poisoned));
    SlimewispComponentArray.addComponent(slimewisp.id, new SlimewispComponent());
@@ -59,19 +60,19 @@ export function tickSlimewisp(slimewisp: Entity): void {
    for (let i = 0; i < aiHelperComponent.visibleEntities.length; i++) {
       const mergingSlimewisp = aiHelperComponent.visibleEntities[i];
       if (mergingSlimewisp.type === EntityType.slimewisp) {
-         moveEntityToPosition(slimewisp, mergingSlimewisp.position.x, mergingSlimewisp.position.y, ACCELERATION);
+         moveEntityToPosition(slimewisp, mergingSlimewisp.position.x, mergingSlimewisp.position.y, ACCELERATION, TURN_SPEED);
    
          // Continue merge
          if (entitiesAreColliding(slimewisp, mergingSlimewisp) !== CollisionVars.NO_COLLISION) {
             const slimewispComponent = SlimewispComponentArray.getComponent(slimewisp.id);
             slimewispComponent.mergeTimer -= Settings.I_TPS;
-            if (slimewispComponent.mergeTimer <= 0 && !Board.entityIsFlaggedForRemoval(mergingSlimewisp)) {
+            if (slimewispComponent.mergeTimer <= 0 && !Board.entityIsFlaggedForDestruction(mergingSlimewisp)) {
                // Create a slime between the two wisps
                const slimeSpawnPosition = new Point((slimewisp.position.x + mergingSlimewisp.position.x) / 2, (slimewisp.position.y + mergingSlimewisp.position.y) / 2);
                createSlime(slimeSpawnPosition, SlimeSize.small, []);
             
-               slimewisp.remove();
-               mergingSlimewisp.remove();
+               slimewisp.destroy();
+               mergingSlimewisp.destroy();
             }
          }
          return;
@@ -83,9 +84,9 @@ export function tickSlimewisp(slimewisp: Entity): void {
    if (wanderAIComponent.targetPositionX !== -1) {
       if (entityHasReachedPosition(slimewisp, wanderAIComponent.targetPositionX, wanderAIComponent.targetPositionY)) {
          wanderAIComponent.targetPositionX = -1;
-         stopEntity(slimewisp);
+         stopEntity(physicsComponent);
       }
-   } else if (shouldWander(slimewisp, 99999)) {
+   } else if (shouldWander(physicsComponent, 99999)) {
       let attempts = 0;
       let targetTile: Tile;
       do {
@@ -94,8 +95,8 @@ export function tickSlimewisp(slimewisp: Entity): void {
 
       const x = (targetTile.x + Math.random()) * Settings.TILE_SIZE;
       const y = (targetTile.y + Math.random()) * Settings.TILE_SIZE;
-      wander(slimewisp, x, y, ACCELERATION);
+      wander(slimewisp, x, y, ACCELERATION, TURN_SPEED);
    } else {
-      stopEntity(slimewisp);
+      stopEntity(physicsComponent);
    }
 }

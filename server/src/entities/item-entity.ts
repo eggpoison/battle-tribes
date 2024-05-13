@@ -10,17 +10,22 @@ import RectangularHitbox from "../hitboxes/RectangularHitbox";
 import { ItemComponent } from "../components/ItemComponent";
 import { PhysicsComponent, PhysicsComponentArray } from "../components/PhysicsComponent";
 import { addFleshSword, removeFleshSword } from "../flesh-sword-ai";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { EntityCreationInfo } from "../entity-components";
+
+type ComponentTypes = [ServerComponentType.physics, ServerComponentType.item];
 
 const TICKS_TO_DESPAWN = 300 * Settings.TPS;
 
-export function createItemEntity(position: Point, itemType: ItemType, amount: number, throwingEntityID: number): Entity {
-   const itemEntity = new Entity(position, EntityType.itemEntity, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
-   itemEntity.rotation = 2 * Math.PI * Math.random();
+export function createItemEntity(position: Point, rotation: number, itemType: ItemType, amount: number, throwingEntityID: number): EntityCreationInfo<ComponentTypes> {
+   const itemEntity = new Entity(position, rotation, EntityType.itemEntity, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
    const hitbox = new RectangularHitbox(itemEntity.position.x, itemEntity.position.y, 0.2, 0, 0, HitboxCollisionType.soft, itemEntity.getNextHitboxLocalID(), itemEntity.rotation, Settings.ITEM_SIZE, Settings.ITEM_SIZE, 0);
    itemEntity.addHitbox(hitbox);
 
-   PhysicsComponentArray.addComponent(itemEntity.id, new PhysicsComponent(true, false));
+   const physicsComponent = new PhysicsComponent(0, 0, 0, 0, true, false);
+   PhysicsComponentArray.addComponent(itemEntity.id, physicsComponent);
+
    const itemComponent = new ItemComponent(itemType, amount, throwingEntityID);
    ItemComponentArray.addComponent(itemEntity.id, itemComponent);
 
@@ -33,13 +38,19 @@ export function createItemEntity(position: Point, itemType: ItemType, amount: nu
       addFleshSword(itemEntity);
    }
 
-   return itemEntity;
+   return {
+      entity: itemEntity,
+      components: {
+         [ServerComponentType.physics]: physicsComponent,
+         [ServerComponentType.item]: itemComponent
+      }
+   };
 }
 
 export function tickItemEntity(itemEntity: Entity): void {
    // Despawn old items
    if (itemEntity.ageTicks >= TICKS_TO_DESPAWN) {
-      itemEntity.remove();
+      itemEntity.destroy();
    }
 }
 

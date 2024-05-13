@@ -212,21 +212,25 @@ const resolveHardCollision = (entity: Entity, pushInfo: CollisionPushInfo): void
    entity.position.x += pushInfo.amountIn * Math.sin(pushInfo.direction);
    entity.position.y += pushInfo.amountIn * Math.cos(pushInfo.direction);
 
+   const physicsComponent = PhysicsComponentArray.getComponent(entity.id);
+
    // Kill all the velocity going into the hitbox
    const bx = Math.sin(pushInfo.direction + Math.PI/2);
    const by = Math.cos(pushInfo.direction + Math.PI/2);
-   const projectionCoeff = entity.velocity.x * bx + entity.velocity.y * by;
-   entity.velocity.x = bx * projectionCoeff;
-   entity.velocity.y = by * projectionCoeff;
+   const projectionCoeff = physicsComponent.velocity.x * bx + physicsComponent.velocity.y * by;
+   physicsComponent.velocity.x = bx * projectionCoeff;
+   physicsComponent.velocity.y = by * projectionCoeff;
 }
 
 const resolveSoftCollision = (entity: Entity, pushingHitbox: Hitbox, pushInfo: CollisionPushInfo): void => {
    // Force gets greater the further into each other the entities are
    const distMultiplier = Math.pow(pushInfo.amountIn, 1.1);
    const pushForce = Settings.ENTITY_PUSH_FORCE * Settings.I_TPS * distMultiplier * pushingHitbox.mass / entity.totalMass;
+
+   const physicsComponent = PhysicsComponentArray.getComponent(entity.id);
    
-   entity.velocity.x += pushForce * Math.sin(pushInfo.direction);
-   entity.velocity.y += pushForce * Math.cos(pushInfo.direction);
+   physicsComponent.velocity.x += pushForce * Math.sin(pushInfo.direction);
+   physicsComponent.velocity.y += pushForce * Math.cos(pushInfo.direction);
 }
 
 const entityCollisionBitsAreCompatible = (entity1: Entity, entity2: Entity): boolean => {

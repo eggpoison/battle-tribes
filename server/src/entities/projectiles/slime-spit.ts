@@ -13,27 +13,41 @@ import { damageEntity } from "../../components/HealthComponent";
 import { StatusEffectComponentArray, applyStatusEffect } from "../../components/StatusEffectComponent";
 import { SERVER } from "../../server";
 import { PhysicsComponent, PhysicsComponentArray, applyKnockback } from "../../components/PhysicsComponent";
+import { EntityCreationInfo } from "../../entity-components";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
+
+type ComponentTypes = [ServerComponentType.physics, ServerComponentType.slimeSpit];
 
 const BREAK_VELOCITY = 100;
 
 const SIZES = [20, 30];
 
-export function createSlimeSpit(position: Point, size: number): Entity {
-   const spit = new Entity(position, EntityType.slimeSpit, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
+export function createSlimeSpit(position: Point, rotation: number, size: number): EntityCreationInfo<ComponentTypes> {
+   const spit = new Entity(position, rotation, EntityType.slimeSpit, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
    const hitboxSize = SIZES[size];
    const hitbox = new RectangularHitbox(spit.position.x, spit.position.y, 0.2, 0, 0, HitboxCollisionType.soft, spit.getNextHitboxLocalID(), spit.rotation, hitboxSize, hitboxSize, 0);
    spit.addHitbox(hitbox);
 
-   PhysicsComponentArray.addComponent(spit.id, new PhysicsComponent(true, false));
-   SlimeSpitComponentArray.addComponent(spit.id, new SlimeSpitComponent(size));
+   const physicsComponent = new PhysicsComponent(0, 0, 0, 0, true, false);
+   PhysicsComponentArray.addComponent(spit.id, physicsComponent);
 
-   return spit;
+   const slimeSpitComponent = new SlimeSpitComponent(size);
+   SlimeSpitComponentArray.addComponent(spit.id, slimeSpitComponent);
+
+   return {
+      entity: spit,
+      components: {
+         [ServerComponentType.physics]: physicsComponent,
+         [ServerComponentType.slimeSpit]: slimeSpitComponent
+      }
+   };
 }
 
 export function tickSlimeSpit(spit: Entity): void {
-   if (spit.velocity.lengthSquared() <= BREAK_VELOCITY * BREAK_VELOCITY) {
-      spit.remove();
+   const physicsComponent = PhysicsComponentArray.getComponent(spit.id);
+   if (physicsComponent.velocity.lengthSquared() <= BREAK_VELOCITY * BREAK_VELOCITY) {
+      spit.destroy();
    }
 }
 
@@ -63,12 +77,12 @@ export function onSlimeSpitCollision(spit: Entity, collidingEntity: Entity): voi
       applyStatusEffect(collidingEntity.id, StatusEffect.poisoned, 2 * Settings.TPS);
    }
 
-   spit.remove();
+   spit.destroy();
 }
 
 export function onSlimeSpitDeath(spit: Entity): void {
    const spitComponent = SlimeSpitComponentArray.getComponent(spit.id);
    if (spitComponent.size === 1) {
-      createSpitPoison(spit.position.copy());
+      createSpitPoison(spit.position.copy(), 2 * Math.PI * Math.random());
    }
 }

@@ -576,7 +576,6 @@ abstract class Client {
       
       entity.callOnLoadFunctions();
       
-      entity.velocity = Point.unpackage(entityData.velocity);
       entity.rotation = entityData.rotation;
       entity.collisionBit = entityData.collisionBit;
       entity.collisionMask = entityData.collisionMask;
@@ -623,10 +622,14 @@ abstract class Client {
 
       if (Player.instance !== null) {
          Player.instance.position = Point.unpackage(gameDataSyncPacket.position);
-         Player.instance.velocity = Point.unpackage(gameDataSyncPacket.velocity);
-         Player.instance.acceleration = Point.unpackage(gameDataSyncPacket.acceleration)
          Player.instance.rotation = gameDataSyncPacket.rotation;
          this.updatePlayerInventory(gameDataSyncPacket.inventory);
+
+         const physicsComponent = Player.instance.getServerComponent(ServerComponentType.physics);
+         physicsComponent.velocity.x = gameDataSyncPacket.velocity[0];
+         physicsComponent.velocity.y = gameDataSyncPacket.velocity[1];
+         physicsComponent.acceleration.x = gameDataSyncPacket.acceleration[0];
+         physicsComponent.acceleration.y = gameDataSyncPacket.acceleration[1];
          
          definiteGameState.setPlayerHealth(gameDataSyncPacket.health);
          if (definiteGameState.playerIsDead()) {
@@ -710,11 +713,13 @@ abstract class Client {
             gameDataOptions |= GameDataPacketOptions.sendVisibleWallConnections;
          }
          // @Incomplete: do option for walls
+
+         const physicsComponent = Player.instance.getServerComponent(ServerComponentType.physics);
          
          const packet: PlayerDataPacket = {
             position: Player.instance.position.package(),
-            velocity: Player.instance.velocity.package() || null,
-            acceleration: Player.instance.acceleration.package() || null,
+            velocity: physicsComponent.velocity.package() || null,
+            acceleration: physicsComponent.acceleration.package() || null,
             rotation: Player.instance.rotation,
             visibleChunkBounds: Camera.getVisibleChunkBounds(),
             selectedItemSlot: latencyGameState.selectedHotbarItemSlot,

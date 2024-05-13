@@ -86,6 +86,8 @@ class GolemComponent extends ServerComponent<ServerComponentType.golem> {
    }
 
    public tick(): void {
+      const physicsComponent = this.entity.getServerComponent(ServerComponentType.physics);
+
       if (this.wakeProgress > 0 && this.wakeProgress < 1) {
          for (let i = 0; i < this.entity.hitboxes.length; i++) {
             const hitbox = this.entity.hitboxes[i] as CircularHitbox;
@@ -93,7 +95,7 @@ class GolemComponent extends ServerComponent<ServerComponentType.golem> {
             const offsetDirection = 2 * Math.PI * Math.random();
             const x = hitbox.position.x + hitbox.radius * Math.sin(offsetDirection);
             const y = hitbox.position.y + hitbox.radius * Math.cos(offsetDirection);
-            createRockSpeckParticle(x, y, 0, this.entity.velocity.x, this.entity.velocity.y, ParticleRenderLayer.low);
+            createRockSpeckParticle(x, y, 0, physicsComponent.velocity.x, physicsComponent.velocity.y, ParticleRenderLayer.low);
          }
       } else if (this.wakeProgress === 1) {
          for (let i = 0; i < this.entity.hitboxes.length; i++) {
@@ -106,7 +108,7 @@ class GolemComponent extends ServerComponent<ServerComponentType.golem> {
             const offsetDirection = 2 * Math.PI * Math.random();
             const x = hitbox.position.x + hitbox.radius * Math.sin(offsetDirection);
             const y = hitbox.position.y + hitbox.radius * Math.cos(offsetDirection);
-            createRockSpeckParticle(x, y, 0, this.entity.velocity.x, this.entity.velocity.y, ParticleRenderLayer.low);
+            createRockSpeckParticle(x, y, 0, physicsComponent.velocity.x, physicsComponent.velocity.y, ParticleRenderLayer.low);
          }
       }
    }

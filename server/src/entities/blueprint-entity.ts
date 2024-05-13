@@ -36,8 +36,7 @@ const getBlueprintEntityType = (blueprintType: BlueprintType): StructureType => 
 }
 
 export function createBlueprintEntity(position: Point, rotation: number, blueprintType: BlueprintType, associatedEntityID: number, tribe: Tribe): Entity {
-   const blueprintEntity = new Entity(position, EntityType.blueprintEntity, COLLISION_BITS.none, 0);
-   blueprintEntity.rotation = rotation;
+   const blueprintEntity = new Entity(position, rotation, EntityType.blueprintEntity, COLLISION_BITS.none, 0);
 
    const entityType = getBlueprintEntityType(blueprintType);
    const hitboxes = createBuildingHitboxes(entityType, position.x, position.y, blueprintEntity.getNextHitboxLocalID(), rotation);

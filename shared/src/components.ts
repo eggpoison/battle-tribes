@@ -364,7 +364,10 @@ export interface PebblumComponentData {}
 
 /* Physics Component */
 
-export interface PhysicsComponentData {}
+export interface PhysicsComponentData {
+   readonly velocity: [number, number];
+   readonly acceleration: [number, number];
+}
 
 /* Player Component */
 

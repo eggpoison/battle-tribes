@@ -75,8 +75,7 @@ const updateGolemHitboxPositions = (golem: Entity, golemComponent: GolemComponen
 }
 
 export function createGolem(position: Point): Entity {
-   const golem = new Entity(position, EntityType.golem, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
-   golem.rotation = 2 * Math.PI * Math.random();
+   const golem = new Entity(position, 2 * Math.PI * Math.random(), EntityType.golem, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
    // Create core hitbox
    const hitbox = new CircularHitbox(golem.position.x, golem.position.y, ROCK_MASSIVE_MASS, 0, 0, HitboxCollisionType.soft, 36, golem.getNextHitboxLocalID(), golem.rotation);
@@ -128,7 +127,7 @@ export function createGolem(position: Point): Entity {
       golem.addHitbox(new CircularHitbox(golem.position.x, golem.position.y, ROCK_TINY_MASS, offsetX * inFactor, 50 * inFactor, HitboxCollisionType.soft, 12, golem.getNextHitboxLocalID(), golem.rotation));
    }
 
-   PhysicsComponentArray.addComponent(golem.id, new PhysicsComponent(true, false));
+   PhysicsComponentArray.addComponent(golem.id, new PhysicsComponent(0, 0, 0, 0, true, false));
    HealthComponentArray.addComponent(golem.id, new HealthComponent(150));
    StatusEffectComponentArray.addComponent(golem.id, new StatusEffectComponent(StatusEffect.bleeding | StatusEffect.burning | StatusEffect.poisoned));
    const golemComponent = new GolemComponent(golem.hitboxes, PEBBLUM_SUMMON_COOLDOWN_TICKS);
@@ -191,7 +190,7 @@ const summonPebblums = (golem: Entity, golemComponent: GolemComponent, target: E
       const x = golem.position.x + offsetMagnitude * Math.sin(offsetDirection);
       const y = golem.position.y + offsetMagnitude * Math.cos(offsetDirection);
       
-      const pebblum = createPebblum(new Point(x, y), target.id);
+      const pebblum = createPebblum(new Point(x, y), 2 * Math.PI * Math.random(), target.id);
       golemComponent.summonedPebblumIDs.push(pebblum.id);
    }
 }
@@ -205,19 +204,17 @@ export function tickGolem(golem: Entity): void {
    for (const _targetID of Object.keys(golemComponent.attackingEntities)) {
       const targetID = Number(_targetID);
 
-      if (!Board.entityRecord.hasOwnProperty(targetID)) {
+      const target = golemComponent.attackingEntities[targetID];
+      if (typeof target === "undefined" || target.timeSinceLastAggro >= TARGET_ENTITY_FORGET_TIME) {
          delete golemComponent.attackingEntities[targetID];
-         continue;
-      }
-
-      golemComponent.attackingEntities[targetID].timeSinceLastAggro += Settings.I_TPS;
-      if (golemComponent.attackingEntities[targetID].timeSinceLastAggro >= TARGET_ENTITY_FORGET_TIME) {
-         delete golemComponent.attackingEntities[targetID];
+      } else {
+         target.timeSinceLastAggro += Settings.I_TPS;
       }
    }
 
    if (Object.keys(golemComponent.attackingEntities).length === 0) {
-      stopEntity(golem);
+      const physicsComponent = PhysicsComponentArray.getComponent(golem.id);
+      stopEntity(physicsComponent);
 
       // Remove summoned pebblums
       for (let i = 0; i < golemComponent.summonedPebblumIDs.length; i++) {
@@ -225,7 +222,7 @@ export function tickGolem(golem: Entity): void {
 
          const pebblum = Board.entityRecord[pebblumID];
          if (typeof pebblum !== "undefined") {
-            pebblum.remove();
+            pebblum.destroy();
          }
       }
       return;
@@ -254,7 +251,10 @@ export function tickGolem(golem: Entity): void {
       updateGolemHitboxPositions(golem, golemComponent, wakeProgress);
       
       golemComponent.wakeTimerTicks++;
-      golem.turn(angleToTarget, Math.PI / 4);
+
+      const physicsComponent = PhysicsComponentArray.getComponent(golem.id);
+      physicsComponent.targetRotation = angleToTarget;
+      physicsComponent.turnSpeed = Math.PI / 4;
       return;
    }
 
@@ -269,9 +269,13 @@ export function tickGolem(golem: Entity): void {
       }
    }
 
-   golem.turn(angleToTarget, Math.PI / 1.5);
-   golem.acceleration.x = 350 * Math.sin(angleToTarget);
-   golem.acceleration.y = 350 * Math.cos(angleToTarget);
+   const physicsComponent = PhysicsComponentArray.getComponent(golem.id);
+
+   physicsComponent.acceleration.x = 350 * Math.sin(angleToTarget);
+   physicsComponent.acceleration.y = 350 * Math.cos(angleToTarget);
+
+   physicsComponent.targetRotation = angleToTarget;
+   physicsComponent.turnSpeed = Math.PI / 1.5;
 }
 
 // @Cleanup: Copy and paste from frozen-yeti

@@ -83,12 +83,13 @@ const getTileWanderTargets = (itemEntity: Entity): Array<Tile> => {
 }
 
 const hasReachedTargetPosition = (itemEntity: Entity, targetPosition: Point): boolean => {
-   if (itemEntity.velocity === null) return true;
+   const physicsComponent = PhysicsComponentArray.getComponent(itemEntity.id);
+   if (physicsComponent.velocity.x === 0 || physicsComponent.velocity.y === 0) return true;
    
    const relativeTargetPosition = itemEntity.position.copy();
    relativeTargetPosition.subtract(targetPosition);
 
-   const dotProduct = itemEntity.velocity.calculateDotProduct(relativeTargetPosition);
+   const dotProduct = physicsComponent.velocity.calculateDotProduct(relativeTargetPosition);
    return dotProduct > 0;
 }
 
@@ -185,12 +186,13 @@ export function runFleshSwordAI(itemEntity: Entity) {
 
       const moveAngleOffset = Math.sin(info.internalWiggleTicks / Settings.TPS * 10) * Math.PI * 0.2;
 
+      const physicsComponent = PhysicsComponentArray.getComponent(itemEntity.id);
+
       const moveAngle = directMoveAngle + moveAngleOffset;
       itemEntity.rotation = moveAngle - Math.PI/4;
-      itemEntity.velocity.x = moveSpeed! * Math.sin(moveAngle);
-      itemEntity.velocity.y = moveSpeed! * Math.cos(moveAngle);
+      physicsComponent.velocity.x = moveSpeed! * Math.sin(moveAngle);
+      physicsComponent.velocity.y = moveSpeed! * Math.cos(moveAngle);
 
-      const physicsComponent = PhysicsComponentArray.getComponent(itemEntity.id);
       physicsComponent.hitboxesAreDirty = true;
    }
 }

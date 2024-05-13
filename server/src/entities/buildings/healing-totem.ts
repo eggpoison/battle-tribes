@@ -22,8 +22,7 @@ export function createHealingTotemHitboxes(parentX: number, parentY: number, loc
 }
 
 export function createHealingTotem(position: Point, rotation: number, tribe: Tribe): Entity {
-   const healingTotem = new Entity(position, EntityType.healingTotem, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
-   healingTotem.rotation = rotation;
+   const healingTotem = new Entity(position, rotation, EntityType.healingTotem, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
    const hitboxes = createHealingTotemHitboxes(healingTotem.position.x, healingTotem.position.y, healingTotem.getNextHitboxLocalID(), healingTotem.rotation);
    for (let i = 0; i < hitboxes.length; i++) {

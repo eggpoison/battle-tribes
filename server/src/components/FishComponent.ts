@@ -8,7 +8,7 @@ export class FishComponent {
    public secondsOutOfWater = 0;
 
    public leader: Entity | null = null;
-   public attackTarget: Entity | null = null;
+   public attackTargetID = 0;
 
    constructor(colour: FishColour) {
       this.colour = colour;

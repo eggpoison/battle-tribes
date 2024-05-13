@@ -13,7 +13,7 @@ export class YetiComponent {
    public readonly territory: ReadonlyArray<Tile>;
 
    // Stores the ids of all entities which have recently attacked the yeti
-   public readonly attackingEntities: Record<number, YetiTargetInfo> = {};
+   public readonly attackingEntities: Partial<Record<number, YetiTargetInfo>> = {};
 
    public attackTarget: Entity | null = null;
    public isThrowingSnow = false;

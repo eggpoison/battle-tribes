@@ -20,8 +20,7 @@ export function createWorbenchHitboxes(parentX: number, parentY: number, localID
 }
 
 export function createWorkbench(position: Point, rotation: number, tribe: Tribe): Entity {
-   const workbench = new Entity(position, EntityType.workbench, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
-   workbench.rotation = rotation;
+   const workbench = new Entity(position, rotation, EntityType.workbench, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
    const hitbox = new RectangularHitbox(workbench.position.x, workbench.position.y, 1.6, 0, 0, HitboxCollisionType.hard, workbench.getNextHitboxLocalID(), workbench.rotation, HITBOX_SIZE, HITBOX_SIZE, 0);
    workbench.addHitbox(hitbox);

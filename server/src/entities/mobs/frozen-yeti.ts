@@ -24,6 +24,7 @@ import { createSnowball } from "../snowball";
 import { SERVER } from "../../server";
 import { PhysicsComponent, PhysicsComponentArray, applyKnockback } from "../../components/PhysicsComponent";
 import { wasTribeMemberKill } from "../tribes/tribe-member";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 
 const FROZEN_YETI_SIZE = 144;
 const HEAD_HITBOX_SIZE = 72;
@@ -67,8 +68,7 @@ export interface FrozenYetiRockSpikeInfo {
 }
 
 export function createFrozenYeti(position: Point): Entity {
-   const frozenYeti = new Entity(position, EntityType.frozenYeti, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
-   frozenYeti.rotation = 2 * Math.PI * Math.random();
+   const frozenYeti = new Entity(position, 2 * Math.PI * Math.random(), EntityType.frozenYeti, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
    const bodyHitbox = new CircularHitbox(frozenYeti.position.x, frozenYeti.position.y, 4, 0, 0, HitboxCollisionType.soft, FROZEN_YETI_SIZE / 2, frozenYeti.getNextHitboxLocalID(), frozenYeti.rotation);
    frozenYeti.addHitbox(bodyHitbox);
@@ -83,7 +83,7 @@ export function createFrozenYeti(position: Point): Entity {
       frozenYeti.addHitbox(hitbox);
    }
 
-   PhysicsComponentArray.addComponent(frozenYeti.id, new PhysicsComponent(true, false));
+   PhysicsComponentArray.addComponent(frozenYeti.id, new PhysicsComponent(0, 0, 0, 0, true, false));
    HealthComponentArray.addComponent(frozenYeti.id, new HealthComponent(250));
    StatusEffectComponentArray.addComponent(frozenYeti.id, new StatusEffectComponent(StatusEffect.freezing));
    AIHelperComponentArray.addComponent(frozenYeti.id, new AIHelperComponent(VISION_RANGE));
@@ -289,7 +289,7 @@ const generateRockSpikeAttackInfo = (frozenYeti: Entity, targets: ReadonlyArray<
 const createRockSpikes = (frozenYetiID: number, frozenYetiComponent: FrozenYetiComponent): void => {
    for (const info of frozenYetiComponent.rockSpikeInfoArray) {
       const position = new Point(info.positionX, info.positionY);
-      createRockSpikeProjectile(position, info.size, frozenYetiID);
+      createRockSpikeProjectile(position, 2 * Math.PI * Math.random(), info.size, frozenYetiID);
    }
    frozenYetiComponent.rockSpikeInfoArray = [];
 }
@@ -301,11 +301,12 @@ const spawnSnowball = (frozenYeti: Entity, size: SnowballSize): void => {
    position.x += SNOWBALL_THROW_OFFSET * Math.sin(angle);
    position.y += SNOWBALL_THROW_OFFSET * Math.cos(angle);
 
-   const snowball = createSnowball(position, size, frozenYeti.id)
+   const snowballCreationInfo = createSnowball(position, size, frozenYeti.id)
 
    const velocityMagnitude = randFloat(SNOWBALL_THROW_SPEED[0], SNOWBALL_THROW_SPEED[1]);
-   snowball.velocity.x = velocityMagnitude * Math.sin(angle);
-   snowball.velocity.y = velocityMagnitude * Math.cos(angle);
+   const physicsComponent = snowballCreationInfo.components[ServerComponentType.physics];
+   physicsComponent.velocity.x = velocityMagnitude * Math.sin(angle);
+   physicsComponent.velocity.y = velocityMagnitude * Math.cos(angle);
 }
 
 const throwSnow = (frozenYeti: Entity): void => {
@@ -320,8 +321,9 @@ const throwSnow = (frozenYeti: Entity): void => {
    }
 
    // Kickback
-   frozenYeti.velocity.x += 50 * Math.sin(frozenYeti.rotation + Math.PI);
-   frozenYeti.velocity.y += 50 * Math.cos(frozenYeti.rotation + Math.PI);
+   const physicsComponent = PhysicsComponentArray.getComponent(frozenYeti.id);
+   physicsComponent.velocity.x += 50 * Math.sin(frozenYeti.rotation + Math.PI);
+   physicsComponent.velocity.y += 50 * Math.cos(frozenYeti.rotation + Math.PI);
 }
 
 const duringRoar = (frozenYeti: Entity, targets: ReadonlyArray<Entity>): void => {
@@ -335,8 +337,9 @@ const duringRoar = (frozenYeti: Entity, targets: ReadonlyArray<Entity>): void =>
       const angle = frozenYeti.position.calculateAngleBetween(entity.position);
       const angleDifference = getAngleDifference(frozenYeti.rotation, angle);
       if (Math.abs(angleDifference) <= ROAR_ARC / 2) {
-         entity.velocity.x += 1500 / Settings.TPS * Math.sin(angle);
-         entity.velocity.y += 1500 / Settings.TPS * Math.cos(angle);
+         const physicsComponent = PhysicsComponentArray.getComponent(frozenYeti.id);
+         physicsComponent.velocity.x += 1500 / Settings.TPS * Math.sin(angle);
+         physicsComponent.velocity.y += 1500 / Settings.TPS * Math.cos(angle);
 
          if (StatusEffectComponentArray.hasComponent(entity.id)) {
             applyStatusEffect(entity.id, StatusEffect.freezing, 5 * Settings.TPS);
@@ -384,14 +387,11 @@ export function tickFrozenYeti(frozenYeti: Entity): void {
    for (const _targetID of Object.keys(frozenYetiComponent.attackingEntities)) {
       const targetID = Number(_targetID);
 
-      if (!Board.entityRecord.hasOwnProperty(targetID)) {
+      const attackingInfo = frozenYetiComponent.attackingEntities[targetID];
+      if (typeof attackingInfo === "undefined" || attackingInfo.timeSinceLastAggro >= TARGET_ENTITY_FORGET_TIME) {
          delete frozenYetiComponent.attackingEntities[targetID];
-         continue;
-      }
-
-      frozenYetiComponent.attackingEntities[targetID].timeSinceLastAggro += Settings.I_TPS;
-      if (frozenYetiComponent.attackingEntities[targetID].timeSinceLastAggro >= TARGET_ENTITY_FORGET_TIME) {
-         delete frozenYetiComponent.attackingEntities[targetID];
+      } else {
+         attackingInfo.timeSinceLastAggro += Settings.I_TPS;
       }
    }
 
@@ -411,14 +411,16 @@ export function tickFrozenYeti(frozenYeti: Entity): void {
       frozenYetiComponent.roarCooldownTimer = FROZEN_YETI_ROAR_COOLDOWN;
       frozenYetiComponent.stompCooldownTimer = FROZEN_YETI_STOMP_COOLDOWN;
 
+      const physicsComponent = PhysicsComponentArray.getComponent(frozenYeti.id);
+      
       // Wander AI
       const wanderAIComponent = WanderAIComponentArray.getComponent(frozenYeti.id);
       if (wanderAIComponent.targetPositionX !== -1) {
          if (entityHasReachedPosition(frozenYeti, wanderAIComponent.targetPositionX, wanderAIComponent.targetPositionY)) {
             wanderAIComponent.targetPositionX = -1;
-            stopEntity(frozenYeti);
+            stopEntity(physicsComponent);
          }
-      } else if (shouldWander(frozenYeti, 0.6)) {
+      } else if (shouldWander(physicsComponent, 0.6)) {
          let attempts = 0;
          let targetTile: Tile;
          do {
@@ -427,9 +429,9 @@ export function tickFrozenYeti(frozenYeti: Entity): void {
 
          const x = (targetTile.x + Math.random()) * Settings.TILE_SIZE;
          const y = (targetTile.y + Math.random()) * Settings.TILE_SIZE;
-         wander(frozenYeti, x, y, SLOW_ACCELERATION)
+         wander(frozenYeti, x, y, SLOW_ACCELERATION, Math.PI * 0.7);
       } else {
-         stopEntity(frozenYeti);
+         stopEntity(physicsComponent);
       }
 
       return;
@@ -472,12 +474,10 @@ export function tickFrozenYeti(frozenYeti: Entity): void {
    } else {
       let mostDamageDealt = -1;
       for (const currentTarget of targets) {
-         if (frozenYetiComponent.attackingEntities.hasOwnProperty(currentTarget.id)) {
-            const targetInfo = frozenYetiComponent.attackingEntities[currentTarget.id];
-            if (targetInfo.damageDealtToSelf > mostDamageDealt) {
-               mostDamageDealt = targetInfo.damageDealtToSelf;
-               target = currentTarget;
-            }
+         const targetInfo = frozenYetiComponent.attackingEntities[currentTarget.id];
+         if (typeof targetInfo !== "undefined" && targetInfo.damageDealtToSelf > mostDamageDealt) {
+            mostDamageDealt = targetInfo.damageDealtToSelf;
+            target = currentTarget;
          }
       }
    }
@@ -495,14 +495,15 @@ export function tickFrozenYeti(frozenYeti: Entity): void {
    if (angleToTarget < 0) {
       angleToTarget += 2 * Math.PI;
    }
+   
+   const physicsComponent = PhysicsComponentArray.getComponent(frozenYeti.id);
 
    if (frozenYetiComponent.attackType === FrozenYetiAttackType.none && target !== null) {
       frozenYetiComponent.attackType = getAttackType(frozenYeti, target, angleToTarget, targets.length);
    }
    switch (frozenYetiComponent.attackType) {
       case FrozenYetiAttackType.stomp: {
-         frozenYeti.acceleration.x = 0;
-         frozenYeti.acceleration.y = 0;
+         stopEntity(physicsComponent);
 
          switch (frozenYetiComponent.attackStage) {
             // Windup
@@ -539,13 +540,13 @@ export function tickFrozenYeti(frozenYeti: Entity): void {
          break;
       }
       case FrozenYetiAttackType.snowThrow: {
-         frozenYeti.acceleration.x = 0;
-         frozenYeti.acceleration.y = 0;
+         stopEntity(physicsComponent);
          
          switch (frozenYetiComponent.attackStage) {
             // Windup
             case 0: {
-               frozenYeti.turn(angleToTarget, 0.9);
+               physicsComponent.targetRotation = angleToTarget;
+               physicsComponent.turnSpeed = 0.9;
                
                frozenYetiComponent.stageProgress += 0.55 / Settings.TPS;
                attemptToAdvanceStage(frozenYetiComponent);
@@ -575,14 +576,14 @@ export function tickFrozenYeti(frozenYeti: Entity): void {
          break;
       }
       case FrozenYetiAttackType.roar: {
-         frozenYeti.acceleration.x = 0;
-         frozenYeti.acceleration.y = 0;
+         stopEntity(physicsComponent);
 
          switch (frozenYetiComponent.attackStage) {
             // Windup
             case 0: {
                // Track target
-               frozenYeti.turn(angleToTarget, 0.7);
+               physicsComponent.targetRotation = angleToTarget;
+               physicsComponent.turnSpeed = 0.7;
 
                frozenYetiComponent.stageProgress += 0.4 / Settings.TPS;
                attemptToAdvanceStage(frozenYetiComponent);
@@ -591,7 +592,8 @@ export function tickFrozenYeti(frozenYeti: Entity): void {
             // Roar attack
             case 1: {
                // Track target
-               frozenYeti.turn(angleToTarget, 0.35);
+               physicsComponent.targetRotation = angleToTarget;
+               physicsComponent.turnSpeed = 0.35;
 
                duringRoar(frozenYeti, targets);
                
@@ -612,9 +614,10 @@ export function tickFrozenYeti(frozenYeti: Entity): void {
             // Charge
             case 0: {
                // Move towards the target
-               frozenYeti.acceleration.x = 0;
-               frozenYeti.acceleration.y = 0;
-               frozenYeti.turn(angleToTarget, 0.9);
+               stopEntity(physicsComponent);
+
+               physicsComponent.targetRotation = angleToTarget;
+               physicsComponent.turnSpeed = 0.9;
 
                frozenYetiComponent.stageProgress += 1.15 / Settings.TPS;
                attemptToAdvanceStage(frozenYetiComponent);
@@ -622,13 +625,13 @@ export function tickFrozenYeti(frozenYeti: Entity): void {
             }
             // Lunge
             case 1: {
-               frozenYeti.acceleration.x = ACCELERATION * Math.sin(angleToTarget);
-               frozenYeti.acceleration.y = ACCELERATION * Math.cos(angleToTarget);
+               physicsComponent.acceleration.x = ACCELERATION * Math.sin(angleToTarget);
+               physicsComponent.acceleration.y = ACCELERATION * Math.cos(angleToTarget);
 
                // Lunge forwards at the beginning of this stage
                if (frozenYetiComponent.stageProgress === 0) {
-                  frozenYeti.velocity.x += 450 * Math.sin(frozenYeti.rotation);
-                  frozenYeti.velocity.y += 450 * Math.cos(frozenYeti.rotation);
+                  physicsComponent.velocity.x += 450 * Math.sin(frozenYeti.rotation);
+                  physicsComponent.velocity.y += 450 * Math.cos(frozenYeti.rotation);
                }
 
                frozenYetiComponent.stageProgress += 2 / Settings.TPS;
@@ -642,9 +645,11 @@ export function tickFrozenYeti(frozenYeti: Entity): void {
             }
             // Wind-down
             case 2: {
-               frozenYeti.acceleration.x = ACCELERATION * Math.sin(angleToTarget);
-               frozenYeti.acceleration.y = ACCELERATION * Math.cos(angleToTarget);
-               frozenYeti.turn(angleToTarget, 1.3);
+               physicsComponent.acceleration.x = ACCELERATION * Math.sin(angleToTarget);
+               physicsComponent.acceleration.y = ACCELERATION * Math.cos(angleToTarget);
+
+               physicsComponent.targetRotation = angleToTarget;
+               physicsComponent.turnSpeed = 1.3;
 
                frozenYetiComponent.stageProgress += 2.5 / Settings.TPS;
                clearAttack(frozenYetiComponent);
@@ -655,9 +660,11 @@ export function tickFrozenYeti(frozenYeti: Entity): void {
       }
       case FrozenYetiAttackType.none: {
          // Move towards the target
-         frozenYeti.turn(angleToTarget, Math.PI);
-         frozenYeti.acceleration.x = ACCELERATION * Math.sin(angleToTarget);
-         frozenYeti.acceleration.y = ACCELERATION * Math.cos(angleToTarget);
+         physicsComponent.acceleration.x = ACCELERATION * Math.sin(angleToTarget);
+         physicsComponent.acceleration.y = ACCELERATION * Math.cos(angleToTarget);
+
+         physicsComponent.targetRotation = angleToTarget;
+         physicsComponent.turnSpeed = Math.PI;
          
          break;
       }
@@ -705,9 +712,10 @@ export function onFrozenYetiHurt(frozenYeti: Entity, attackingEntity: Entity, da
    const frozenYetiComponent = FrozenYetiComponentArray.getComponent(frozenYeti.id);
 
    // Update/create the entity's targetInfo record
-   if (frozenYetiComponent.attackingEntities.hasOwnProperty(attackingEntity.id)) {
-      frozenYetiComponent.attackingEntities[attackingEntity.id].damageDealtToSelf += damage;
-      frozenYetiComponent.attackingEntities[attackingEntity.id].timeSinceLastAggro = 0;
+   const attackingInfo = frozenYetiComponent.attackingEntities[attackingEntity.id];
+   if (typeof attackingInfo !== "undefined") {
+      attackingInfo.damageDealtToSelf += damage;
+      attackingInfo.timeSinceLastAggro = 0;
    } else {
       frozenYetiComponent.attackingEntities[attackingEntity.id] = {
          damageDealtToSelf: damage,

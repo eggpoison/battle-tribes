@@ -22,8 +22,7 @@ export function createPlanterBoxHitboxes(parentX: number, parentY: number, local
 }
 
 export function createPlanterBox(position: Point, rotation: number, tribe: Tribe): Entity {
-   const planterBox = new Entity(position, EntityType.planterBox, COLLISION_BITS.planterBox, DEFAULT_COLLISION_MASK);
-   planterBox.rotation = rotation;
+   const planterBox = new Entity(position, rotation, EntityType.planterBox, COLLISION_BITS.planterBox, DEFAULT_COLLISION_MASK);
 
    const hitboxes = createPlanterBoxHitboxes(position.x, position.y, planterBox.getNextHitboxLocalID(), rotation);
    for (let i = 0; i < hitboxes.length; i++) {

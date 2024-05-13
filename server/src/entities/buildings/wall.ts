@@ -26,8 +26,7 @@ export function createWallHitboxes(parentX: number, parentY: number, localID: nu
 }
 
 export function createWall(position: Point, rotation: number, tribe: Tribe): Entity {
-   const wall = new Entity(position, EntityType.wall, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
-   wall.rotation = rotation;
+   const wall = new Entity(position, rotation, EntityType.wall, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
    const hitboxes = createWallHitboxes(wall.position.x, wall.position.y, wall.getNextHitboxLocalID(), wall.rotation);
    for (let i = 0; i < hitboxes.length; i++) {
@@ -53,7 +52,7 @@ export function onWallRemove(wall: Entity): void {
       if (entity.type === EntityType.blueprintEntity) {
          const blueprintComponent = BlueprintComponentArray.getComponent(entity.id);
          if (blueprintComponent.associatedEntityID === wall.id) {
-            entity.remove();
+            entity.destroy();
             break;
          }
       }

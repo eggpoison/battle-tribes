@@ -8,7 +8,7 @@ import Tile from "./Tile";
 import CircularHitbox from "./hitboxes/CircularHitbox";
 import Entity from "./Entity";
 import RectangularHitbox from "./hitboxes/RectangularHitbox";
-import { PhysicsComponentArray } from "./components/PhysicsComponent";
+import { PhysicsComponent, PhysicsComponentArray } from "./components/PhysicsComponent";
 import { CollisionVars, entitiesAreColliding } from "./collision";
 import { getEntityPathfindingGroupID } from "./pathfinding";
 
@@ -36,44 +36,36 @@ export function getClosestAccessibleEntity(entity: Entity, entities: ReadonlyArr
 }
 
 /** Estimates the distance it will take for the entity to stop */
-const estimateStopDistance = (entity: Entity): number => {
+const estimateStopDistance = (physicsComponent: PhysicsComponent): number => {
    // @Incomplete: Hard-coded
    // Estimate time it will take for the entity to stop
-   const stopTime = Math.pow(entity.velocity.length(), 0.8) / (3 * 50);
-   const stopDistance = (Math.pow(stopTime, 2) + stopTime) * entity.velocity.length();
+   const stopTime = Math.pow(physicsComponent.velocity.length(), 0.8) / (3 * 50);
+   const stopDistance = (Math.pow(stopTime, 2) + stopTime) * physicsComponent.velocity.length();
    return stopDistance;
 }
 
-export function willStopAtDesiredDistance(entity: Entity, desiredDistance: number, distance: number): boolean {
+export function willStopAtDesiredDistance(physicsComponent: PhysicsComponent, desiredDistance: number, distance: number): boolean {
    // If the entity has a desired distance from its target, try to stop at that desired distance
-   const stopDistance = estimateStopDistance(entity);
+   const stopDistance = estimateStopDistance(physicsComponent);
    return distance - stopDistance <= desiredDistance;
 }
 
-export function chaseAndEatItemEntity(entity: Entity, itemEntity: Entity, acceleration: number): boolean {
-   if (entitiesAreColliding(entity, itemEntity) !== CollisionVars.NO_COLLISION) {
-      itemEntity.remove();
-      return true;
-   }
-
-   moveEntityToPosition(entity, itemEntity.position.x, itemEntity.position.y, acceleration);
-   return false;
+export function stopEntity(physicsComponent: PhysicsComponent): void {
+   physicsComponent.acceleration.x = 0;
+   physicsComponent.acceleration.y = 0;
 }
 
-export function stopEntity(entity: Entity): void {
-   entity.acceleration.x = 0;
-   entity.acceleration.y = 0;
-}
+export function moveEntityToPosition(entity: Entity, positionX: number, positionY: number, acceleration: number, turnSpeed: number): void {
+   const targetDirection = angle(positionX - entity.position.x, positionY - entity.position.y);
 
-export function moveEntityToPosition(entity: Entity, positionX: number, positionY: number, acceleration: number): void {
-   const direction = angle(positionX - entity.position.x, positionY - entity.position.y);
-   entity.acceleration.x = acceleration * Math.sin(direction);
-   entity.acceleration.y = acceleration * Math.cos(direction);
-   if (direction !== entity.rotation) {
-      const physicsComponent = PhysicsComponentArray.getComponent(entity.id);
-      physicsComponent.hitboxesAreDirty = true;
+   const physicsComponent = PhysicsComponentArray.getComponent(entity.id);
+   physicsComponent.acceleration.x = acceleration * Math.sin(targetDirection);
+   physicsComponent.acceleration.y = acceleration * Math.cos(targetDirection);
+
+   if (targetDirection !== entity.rotation) {
+      physicsComponent.targetRotation = targetDirection;
+      physicsComponent.turnSpeed = turnSpeed;
    }
-   entity.rotation = direction;
 }
 
 export function entityHasReachedPosition(entity: Entity, positionX: number, positionY: number): boolean {
@@ -82,7 +74,8 @@ export function entityHasReachedPosition(entity: Entity, positionX: number, posi
    relativeTargetPosition.x -= positionX;
    relativeTargetPosition.y -= positionY;
 
-   const dotProduct = entity.velocity.calculateDotProduct(relativeTargetPosition);
+   const physicsComponent = PhysicsComponentArray.getComponent(entity.id);
+   const dotProduct = physicsComponent.velocity.calculateDotProduct(relativeTargetPosition);
    return dotProduct > 0;
 }
 
@@ -273,10 +266,8 @@ export function runHerdAI(entity: Entity, herdMembers: ReadonlyArray<Entity>, vi
       }
    }
 
-   entity.rotation += angularVelocity;
-   
    const physicsComponent = PhysicsComponentArray.getComponent(entity.id);
-   physicsComponent.hitboxesAreDirty = true;
+   physicsComponent.angularVelocity = angularVelocity;
 }
 
 /** Gets all tiles within a given distance from a position */

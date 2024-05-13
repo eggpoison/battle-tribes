@@ -575,6 +575,8 @@ export function updatePlayerMovement(): void {
       case 15: moveDirection = null;          break;
    }
 
+   const physicsComponent = Player.instance.getServerComponent(ServerComponentType.physics);
+
    if (moveDirection !== null) {
       let acceleration: number;
       if (keyIsPressed("l")) {
@@ -589,11 +591,11 @@ export function updatePlayerMovement(): void {
          acceleration *= 0.5;
       }
       
-      Player.instance.acceleration.x = acceleration * Math.sin(moveDirection);
-      Player.instance.acceleration.y = acceleration * Math.cos(moveDirection);
+      physicsComponent.acceleration.x = acceleration * Math.sin(moveDirection);
+      physicsComponent.acceleration.y = acceleration * Math.cos(moveDirection);
    } else {
-      Player.instance.acceleration.x = 0;
-      Player.instance.acceleration.y = 0;
+      physicsComponent.acceleration.x = 0;
+      physicsComponent.acceleration.y = 0;
    }
 }
 

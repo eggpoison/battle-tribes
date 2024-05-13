@@ -1,6 +1,6 @@
 import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision-detection";
-import { AMMO_INFO_RECORD } from "webgl-test-shared/dist/components";
+import { AMMO_INFO_RECORD, ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { BallistaAmmoType, BALLISTA_AMMO_TYPES, ItemType, InventoryName } from "webgl-test-shared/dist/items";
 import { Settings } from "webgl-test-shared/dist/settings";
@@ -33,8 +33,7 @@ export function createBallistaHitboxes(parentX: number, parentY: number, localID
 }
 
 export function createBallista(position: Point, rotation: number, tribe: Tribe): Entity {
-   const ballista = new Entity(position, EntityType.ballista, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
-   ballista.rotation = rotation;
+   const ballista = new Entity(position, rotation, EntityType.ballista, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
    const hitboxes = createBallistaHitboxes(ballista.position.x, ballista.position.y, ballista.getNextHitboxLocalID(), ballista.rotation);
    for (let i = 0; i < hitboxes.length; i++) {
@@ -177,26 +176,26 @@ const fire = (ballista: Entity, ammoType: BallistaAmmoType): void => {
    if (ammoType === ItemType.frostcicle) {
       // Frostcicles shoot twin bolts
       for (let i = 0; i < 2; i++) {
-         const spawnPosition = ballista.position.copy();
-         const bolt = createWoodenArrow(spawnPosition, ballista, arrowInfo);
-   
-         const direction = turretComponent.aimDirection + ballista.rotation + (i === 0 ? 1 : -1) * 0.02;
-         bolt.rotation = direction;
-         bolt.velocity.x = ammoInfo.projectileSpeed * Math.sin(direction);
-         bolt.velocity.y = ammoInfo.projectileSpeed * Math.cos(direction);
+         const fireDirection = turretComponent.aimDirection + ballista.rotation + (i === 0 ? 1 : -1) * 0.02;
+         
+         const arrowCreationInfo = createWoodenArrow(ballista.position.copy(), fireDirection, ballista.id, arrowInfo);
+
+         // @Cleanup: copy and paste
+         const physicsComponent = arrowCreationInfo.components[ServerComponentType.physics];
+         physicsComponent.velocity.x = ammoInfo.projectileSpeed * Math.sin(fireDirection);
+         physicsComponent.velocity.y = ammoInfo.projectileSpeed * Math.cos(fireDirection);
       }
    } else {
-      const spawnPosition = ballista.position.copy();
-      const bolt = createWoodenArrow(spawnPosition, ballista, arrowInfo);
+      const fireDirection = turretComponent.aimDirection + ballista.rotation;
+      
+      const rotation = ammoType === ItemType.rock || ammoType === ItemType.slimeball ? 2 * Math.PI * Math.random() : fireDirection;
+      
+      const arrowCreationInfo = createWoodenArrow(ballista.position.copy(), rotation, ballista.id, arrowInfo);
 
-      const direction = turretComponent.aimDirection + ballista.rotation;
-      bolt.rotation = direction;
-      bolt.velocity.x = ammoInfo.projectileSpeed * Math.sin(direction);
-      bolt.velocity.y = ammoInfo.projectileSpeed * Math.cos(direction);
-
-      if (ammoType === ItemType.rock || ammoType === ItemType.slimeball) {
-         bolt.rotation = 2 * Math.PI * Math.random();
-      }
+      // @Cleanup: copy and paste
+      const physicsComponent = arrowCreationInfo.components[ServerComponentType.physics];
+      physicsComponent.velocity.x = ammoInfo.projectileSpeed * Math.sin(fireDirection);
+      physicsComponent.velocity.y = ammoInfo.projectileSpeed * Math.cos(fireDirection);
    }
 
    // Consume ammo

@@ -22,8 +22,7 @@ export function createWarriorHutHitboxes(parentX: number, parentY: number, local
 }
 
 export function createWarriorHut(position: Point, rotation: number, tribe: Tribe): Entity {
-   const hut = new Entity(position, EntityType.warriorHut, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
-   hut.rotation = rotation;
+   const hut = new Entity(position, rotation, EntityType.warriorHut, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
    const hitboxes = createWarriorHutHitboxes(hut.position.x, hut.position.y, hut.getNextHitboxLocalID(), hut.rotation);
    for (let i = 0; i < hitboxes.length; i++) {

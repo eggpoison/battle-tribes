@@ -61,11 +61,8 @@ export function moveEntityToPosition(entity: Entity, positionX: number, position
    const physicsComponent = PhysicsComponentArray.getComponent(entity.id);
    physicsComponent.acceleration.x = acceleration * Math.sin(targetDirection);
    physicsComponent.acceleration.y = acceleration * Math.cos(targetDirection);
-
-   if (targetDirection !== entity.rotation) {
-      physicsComponent.targetRotation = targetDirection;
-      physicsComponent.turnSpeed = turnSpeed;
-   }
+   physicsComponent.targetRotation = targetDirection;
+   physicsComponent.turnSpeed = turnSpeed;
 }
 
 export function entityHasReachedPosition(entity: Entity, positionX: number, positionY: number): boolean {

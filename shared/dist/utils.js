@@ -217,7 +217,12 @@ function calculateDistanceSquared(x1, y1, x2, y2) {
 }
 exports.calculateDistanceSquared = calculateDistanceSquared;
 function angle(x, y) {
-    return Math.PI / 2 - Math.atan2(y, x);
+    let angle = Math.PI / 2 - Math.atan2(y, x);
+    // @Hack @Speed: won't be necessary when switch angle system
+    if (angle >= Math.PI) {
+        angle -= Math.PI * 2;
+    }
+    return angle;
 }
 exports.angle = angle;
 function customTickIntervalHasPassed(ticks, intervalSeconds) {

@@ -91,6 +91,8 @@ const move = (fish: Entity, direction: number): void => {
       physicsComponent.acceleration.x = 40 * Math.sin(direction);
       physicsComponent.acceleration.y = 40 * Math.cos(direction);
       physicsComponent.targetRotation = direction;
+      // @Temporary
+      if (direction>=Math.PI)throw new Error();
       physicsComponent.turnSpeed = TURN_SPEED;
    } else {
       // 

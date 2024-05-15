@@ -3,7 +3,7 @@ import { Biome, TileInfo, TileType } from "webgl-test-shared/dist/tiles";
 import { smoothstep } from "webgl-test-shared/dist/utils";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { generateOctavePerlinNoise, generatePerlinNoise, generatePointPerlinNoise } from "../perlin-noise";
-import BIOME_GENERATION_INFO, { BiomeSpawnRequirements, TileGenerationInfo } from "./terrain-generation-info";
+import BIOME_GENERATION_INFO, { BIOME_GENERATION_PRIORITY, BiomeSpawnRequirements, TileGenerationInfo } from "./terrain-generation-info";
 import Tile from "../Tile";
 import { WaterTileGenerationInfo, generateRiverFeatures, generateRiverTiles } from "./river-generation";
 import OPTIONS from "../options";
@@ -30,9 +30,12 @@ const matchesBiomeRequirements = (generationInfo: BiomeSpawnRequirements, height
 }
 
 const getBiome = (height: number, temperature: number, humidity: number): Biome => {
+   // @Speed
    const numBiomes = Object.keys(BIOME_GENERATION_INFO).length;
 
-   for (let biome: Biome = 0; biome < numBiomes; biome++) {
+   for (let i = 0; i < numBiomes; i++) {
+      const biome = BIOME_GENERATION_PRIORITY[i];
+      
       const generationInfo = BIOME_GENERATION_INFO[biome];
       if (generationInfo.spawnRequirements !== null && matchesBiomeRequirements(generationInfo.spawnRequirements, height, temperature, humidity)) {
          return biome;

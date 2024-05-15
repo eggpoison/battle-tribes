@@ -49,7 +49,7 @@ export function dropBerryBushCropBerries(plant: Entity, attackingEntity: Entity 
 export function onPlantHit(plant: Entity, attackingEntity: Entity | null): void {
    const plantComponent = PlantComponentArray.getComponent(plant.id);
 
-   plantComponent.plantGrowthTicks = 0;
+   plantComponent.fruitRandomGrowthTicks = 0;
 
    switch (plantComponent.plantType) {
       case PlanterBoxPlant.berryBush: {

@@ -106,9 +106,10 @@ const findTargets = (frozenYeti: Entity, visibleEntities: ReadonlyArray<Entity>)
    // Add attacking entities to targets
    const frozenYetiComponent = FrozenYetiComponentArray.getComponent(frozenYeti.id);
    // @Speed
-   for (const _targetID of Object.keys(frozenYetiComponent.attackingEntities)) {
-      const entity = Board.entityRecord[Number(_targetID)]!;
-      if (targets.indexOf(entity) === -1) {
+   for (const targetID of Object.keys(frozenYetiComponent.attackingEntities)) {
+      const entity = Board.entityRecord[Number(targetID)];
+      // @Hack. should always be defined here. should be removed.
+      if (typeof entity !== "undefined" && targets.indexOf(entity) === -1) {
          targets.push(entity);
       }
    }

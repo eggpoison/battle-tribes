@@ -72,15 +72,15 @@ const getSnapOffset = (structureType: StructureType, snapType: SnapType): number
       case EntityType.floorPunjiSticks: return 28;
       case EntityType.wallPunjiSticks: return snapType === SnapType.horizontal ? 28 : 16;
       case EntityType.slingTurret: { return 40; }
-      case EntityType.ballista: { return 25; }
+      case EntityType.ballista: { return 50; }
       case EntityType.tribeTotem: return 60;
-      case EntityType.workerHut: return 4;
+      case EntityType.workerHut: return 44;
       case EntityType.warriorHut: return 52;
       case EntityType.barrel: return 40;
       case EntityType.workbench: return 40;
       case EntityType.researchBench: return snapType === SnapType.horizontal ? 62 : 40;
       case EntityType.healingTotem: return 48;
-      case EntityType.planterBox: return 20;
+      case EntityType.planterBox: return 40;
       case EntityType.furnace: return 40;
       case EntityType.campfire: return 52;
       case EntityType.fence: return 32;
@@ -89,10 +89,9 @@ const getSnapOffset = (structureType: StructureType, snapType: SnapType): number
 }
 
 const calculateRegularPlacePosition = (placeOrigin: Point, placingEntityRotation: number, structureType: StructureType): Point => {
-   const placeOffsetX = getSnapOffset(structureType, SnapType.horizontal);
    const placeOffsetY = getSnapOffset(structureType, SnapType.vertical);
    
-   const placePositionX = placeOrigin.x + (Vars.STRUCTURE_PLACE_DISTANCE + placeOffsetX) * Math.sin(placingEntityRotation);
+   const placePositionX = placeOrigin.x + (Vars.STRUCTURE_PLACE_DISTANCE + placeOffsetY) * Math.sin(placingEntityRotation);
    const placePositionY = placeOrigin.y + (Vars.STRUCTURE_PLACE_DISTANCE + placeOffsetY) * Math.cos(placingEntityRotation);
    return new Point(placePositionX, placePositionY);
 }

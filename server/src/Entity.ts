@@ -17,7 +17,6 @@ import { onKrumblidDeath } from "./entities/mobs/krumblid";
 import { onTribeWorkerDeath } from "./entities/tribes/tribe-worker";
 import { onYetiDeath } from "./entities/mobs/yeti";
 import { onFishDeath } from "./entities/mobs/fish";
-import { cleanAngle } from "./ai-shared";
 import { onTribeWarriorDeath } from "./entities/tribes/tribe-warrior";
 import { onSlimeSpitDeath } from "./entities/projectiles/slime-spit";
 import { AIHelperComponentArray } from "./components/AIHelperComponent";
@@ -107,11 +106,10 @@ class Entity<T extends EntityType = EntityType> {
 
    /** The tile the entity is currently standing on. */
    public tile!: Tile;
+   public isInRiver!: boolean;
 
    /** All hitboxes attached to the entity */
    public hitboxes = new Array<RectangularHitbox | CircularHitbox>();
-
-   public isInRiver!: boolean;
    
    public boundingAreaMinX = Number.MAX_SAFE_INTEGER;
    public boundingAreaMaxX = Number.MIN_SAFE_INTEGER;

@@ -11,6 +11,7 @@ import { ClientComponentType } from "../entity-components/components";
 import FootprintComponent from "../entity-components/FootprintComponent";
 import HealthComponent from "../entity-components/HealthComponent";
 import StatusEffectComponent from "../entity-components/StatusEffectComponent";
+import PhysicsComponent from "../entity-components/PhysicsComponent";
 
 class Yeti extends Entity {
    private static readonly SIZE = 128;
@@ -36,6 +37,7 @@ class Yeti extends Entity {
       );
 
       const yetiComponent = new YetiComponent(this, componentsData[5]);
+      this.addServerComponent(ServerComponentType.physics, new PhysicsComponent(this, componentsData[0]));
       this.addServerComponent(ServerComponentType.health, new HealthComponent(this, componentsData[1]));
       this.addServerComponent(ServerComponentType.statusEffect, new StatusEffectComponent(this, componentsData[2]));
       this.addServerComponent(ServerComponentType.yeti, yetiComponent);

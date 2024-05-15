@@ -52,7 +52,7 @@ import { FenceGateComponent } from "./FenceGateComponent";
 
 export const ComponentArrays = new Array<ComponentArray>();
 
-export class ComponentArray<T extends {} = {}> {
+export class ComponentArray<T = {}> {
    private readonly isActiveByDefault: boolean;
    
    public components = new Array<T>();

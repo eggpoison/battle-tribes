@@ -4,6 +4,7 @@ import Entity from "../Entity";
 import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
 import { playSound } from "../sound";
+import { randInt } from "webgl-test-shared/dist/utils";
 
 class PlanterBoxComponent extends ServerComponent<ServerComponentType.planterBox> {
    private fertiliserRenderPart: RenderPart | null = null;
@@ -27,7 +28,7 @@ class PlanterBoxComponent extends ServerComponent<ServerComponentType.planterBox
                this.entity,
                getTextureArrayIndex(textureSource),
                1,
-               2 * Math.PI * Math.random()
+               Math.PI / 2 * randInt(0, 3)
             );
             this.entity.attachRenderPart(this.fertiliserRenderPart);
          }

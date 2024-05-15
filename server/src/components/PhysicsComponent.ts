@@ -5,11 +5,7 @@ import { TileType, TILE_MOVE_SPEED_MULTIPLIERS, TILE_FRICTIONS } from "webgl-tes
 import Entity from "../Entity";
 import { ComponentArray } from "./ComponentArray";
 import { addDirtyPathfindingEntity, entityCanBlockPathfinding } from "../pathfinding";
-import { cleanAngle } from "../ai-shared";
 import { Point } from "webgl-test-shared/dist/utils";
-
-// @Speed: freeze physics components which aren't moving/rotation.
-// - problem: how to account for hitboxesAreDirty? solution: give angularVelocity variable. change everything to use that.
 
 // @Cleanup: Variable names
 const a = new Array<number>();
@@ -26,6 +22,7 @@ export class PhysicsComponent {
    public acceleration: Point;
 
    public turnSpeed = 0;
+   /** Rotation the entity will try to turn towards. SHOULD ALWAYS BE IN RANGE [-PI, PI) */
    public targetRotation = 0;
    /** Can be negative. Unaffected by target rotation */
    public angularVelocity = 0;
@@ -61,16 +58,25 @@ export class PhysicsComponent {
 export const PhysicsComponentArray = new ComponentArray<PhysicsComponent>(true);
 
 const cleanRotation = (entity: Entity): void => {
-   const rotation = cleanAngle(entity.rotation);
-   if (rotation !== entity.rotation) {
-      entity.rotation = rotation;
-      
-      const physicsComponent = PhysicsComponentArray.getComponent(entity.id);
-      physicsComponent.hitboxesAreDirty = true;
+   // Clamp rotation to [-PI, PI) range
+   if (entity.rotation < -Math.PI) {
+      entity.rotation += Math.PI * 2;
+   } else if (entity.rotation >= Math.PI) {
+      entity.rotation -= Math.PI * 2;
    }
+   
+   // const rotation = cleanAngle(entity.rotation);
+   // if (rotation !== entity.rotation) {
+   //    entity.rotation = rotation;
+      
+   //    const physicsComponent = PhysicsComponentArray.getComponent(entity.id);
+   //    physicsComponent.hitboxesAreDirty = true;
+   // }
 }
 
 const shouldTurnClockwise = (entity: Entity, physicsComponent: PhysicsComponent): boolean => {
+   const before = entity.rotation;
+   const before2 = physicsComponent.targetRotation;
    // @Cleanup: Introduces side effects
    // @Temporary @Speed: instead of doing this, probably just clean rotation after all places which could dirty it
    cleanRotation(entity);
@@ -85,40 +91,40 @@ const shouldTurnClockwise = (entity: Entity, physicsComponent: PhysicsComponent)
    if (clockwiseDist < 0 || anticlockwiseDist < 0) {
       throw new Error("Either targetRotation or this.rotation wasn't in the 0-to-2-pi range. Target rotation: " + physicsComponent.targetRotation + ", rotation: " + entity.rotation);
    }
+
+   entity.rotation = before;
+   physicsComponent.targetRotation = before2;
    return clockwiseDist < anticlockwiseDist;
 }
 
 const turnEntity = (entity: Entity, physicsComponent: PhysicsComponent): void => {
-   let previousRotation = entity.rotation;
+   const previousRotation = entity.rotation;
 
    entity.rotation += physicsComponent.angularVelocity * Settings.I_TPS;
-   if (entity.rotation < 0) {
-      entity.rotation += Math.PI * 2;
-   }
-   if (entity.rotation >= Math.PI * 2) {
-      entity.rotation -= Math.PI * 2;
+   cleanRotation(entity);
+   
+   let diff = physicsComponent.targetRotation - entity.rotation;
+   if (diff < 0) {
+      diff += Math.PI * 2;
    }
    
-   // @Incomplete ?
-   // entity.rotation = turnAngle(entity.rotation, physicsComponent.targetRotation, physicsComponent.angularVelocity);
-
-   if (shouldTurnClockwise(entity, physicsComponent)) {  
-      entity.rotation += physicsComponent.turnSpeed / Settings.TPS;
-      if (!shouldTurnClockwise(entity, physicsComponent)) {
+   if (diff <= Math.PI) {  
+      entity.rotation += physicsComponent.turnSpeed * Settings.I_TPS;
+      // If the entity would turn past the target direction, snap back to the target direction
+      if (physicsComponent.turnSpeed * Settings.I_TPS > diff) {
          entity.rotation = physicsComponent.targetRotation;
-      } else if (entity.rotation >= Math.PI * 2) {
-         entity.rotation -= Math.PI * 2;
       }
    } else {
-      entity.rotation -= physicsComponent.turnSpeed / Settings.TPS
-      if (shouldTurnClockwise(entity, physicsComponent)) {
+      entity.rotation -= physicsComponent.turnSpeed * Settings.I_TPS
+      // If the entity would turn past the target direction, snap back to the target direction
+      if (physicsComponent.turnSpeed * Settings.I_TPS < diff) {
          entity.rotation = physicsComponent.targetRotation;
-      } else if (entity.rotation < 0) {
-         entity.rotation += Math.PI * 2;
       }
    }
 
    if (entity.rotation !== previousRotation) {
+      cleanRotation(entity);
+
       physicsComponent.hitboxesAreDirty = true;
    }
 }
@@ -135,8 +141,6 @@ const applyPhysics = (entity: Entity, physicsComponent: PhysicsComponent): void 
       physicsComponent.velocity.x = 0;
       physicsComponent.velocity.y = 0;
    }
-
-   turnEntity(entity, physicsComponent);
 
    // Apply acceleration
    if (physicsComponent.acceleration.x !== 0 || physicsComponent.acceleration.y !== 0) {
@@ -243,9 +247,11 @@ const updatePosition = (entity: Entity, physicsComponent: PhysicsComponent): voi
 export function tickPhysicsComponents(): void {
    for (let i = 0; i < PhysicsComponentArray.components.length; i++) {
       const entity = PhysicsComponentArray.getEntity(i);
-      const component = PhysicsComponentArray.components[i];
-      applyPhysics(entity, component);
-      updatePosition(entity, component);
+      const physicsComponent = PhysicsComponentArray.components[i];
+
+      turnEntity(entity, physicsComponent);
+      applyPhysics(entity, physicsComponent);
+      updatePosition(entity, physicsComponent);
    }
 }
 

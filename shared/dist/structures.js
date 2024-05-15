@@ -25,16 +25,16 @@ const getSnapOffset = (structureType, snapType) => {
             return 40;
         }
         case 47 /* EntityType.ballista */: {
-            return 25;
+            return 50;
         }
         case 15 /* EntityType.tribeTotem */: return 60;
-        case 16 /* EntityType.workerHut */: return 4;
+        case 16 /* EntityType.workerHut */: return 44;
         case 17 /* EntityType.warriorHut */: return 52;
         case 18 /* EntityType.barrel */: return 40;
         case 4 /* EntityType.workbench */: return 40;
         case 30 /* EntityType.researchBench */: return snapType === 0 /* SnapType.horizontal */ ? 62 : 40;
         case 49 /* EntityType.healingTotem */: return 48;
-        case 37 /* EntityType.planterBox */: return 20;
+        case 37 /* EntityType.planterBox */: return 40;
         case 20 /* EntityType.furnace */: return 40;
         case 19 /* EntityType.campfire */: return 52;
         case 51 /* EntityType.fence */: return 32;
@@ -42,10 +42,8 @@ const getSnapOffset = (structureType, snapType) => {
     }
 };
 const calculateRegularPlacePosition = (placeOrigin, placingEntityRotation, structureType) => {
-    console.log("offset direction:", placingEntityRotation);
-    const placeOffsetX = getSnapOffset(structureType, 0 /* SnapType.horizontal */);
     const placeOffsetY = getSnapOffset(structureType, 1 /* SnapType.vertical */);
-    const placePositionX = placeOrigin.x + (60 /* Vars.STRUCTURE_PLACE_DISTANCE */ + placeOffsetX) * Math.sin(placingEntityRotation);
+    const placePositionX = placeOrigin.x + (60 /* Vars.STRUCTURE_PLACE_DISTANCE */ + placeOffsetY) * Math.sin(placingEntityRotation);
     const placePositionY = placeOrigin.y + (60 /* Vars.STRUCTURE_PLACE_DISTANCE */ + placeOffsetY) * Math.cos(placingEntityRotation);
     return new utils_1.Point(placePositionX, placePositionY);
 };
@@ -230,7 +228,6 @@ function calculateStructurePlaceInfo(placeOrigin, placingEntityRotation, structu
     filterCandidatePositions(candidatePositions, regularPlacePosition);
     const placeInfos = groupTransforms(candidatePositions, structureType);
     if (placeInfos.length === 0) {
-        console.log("regular");
         return {
             position: regularPlacePosition,
             rotation: placingEntityRotation,
@@ -240,7 +237,6 @@ function calculateStructurePlaceInfo(placeOrigin, placingEntityRotation, structu
         };
     }
     else {
-        console.log("irregular");
         // @Incomplete:
         // - First filter by num snaps
         // - Then filter by proximity to regular place position

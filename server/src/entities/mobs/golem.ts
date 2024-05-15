@@ -149,10 +149,16 @@ const getTarget = (golemComponent: GolemComponent): Entity => {
    for (const _targetID of Object.keys(golemComponent.attackingEntities)) {
       const targetID = Number(_targetID);
 
+      // @Hack: shouldn't be undefined.
+      const target = Board.entityRecord[targetID];
+      if (typeof target === "undefined") {
+         continue;
+      }
+
       const damageDealt = golemComponent.attackingEntities[targetID].damageDealtToSelf;
       if (damageDealt > mostDamage) {
          mostDamage = damageDealt;
-         mostDamagingEntity = Board.entityRecord[targetID]!;
+         mostDamagingEntity = target;
       }
    }
    return mostDamagingEntity;
@@ -229,6 +235,23 @@ export function tickGolem(golem: Entity): void {
    }
 
    const target = getTarget(golemComponent);
+
+   // @Hack @Copynpaste: remove once the above guard works
+   if (typeof target === "undefined") {
+      const physicsComponent = PhysicsComponentArray.getComponent(golem.id);
+      stopEntity(physicsComponent);
+
+      // Remove summoned pebblums
+      for (let i = 0; i < golemComponent.summonedPebblumIDs.length; i++) {
+         const pebblumID = golemComponent.summonedPebblumIDs[i];
+
+         const pebblum = Board.entityRecord[pebblumID];
+         if (typeof pebblum !== "undefined") {
+            pebblum.destroy();
+         }
+      }
+      return;
+   }
 
    // Update summoned pebblums
    for (let i = 0; i < golemComponent.summonedPebblumIDs.length; i++) {

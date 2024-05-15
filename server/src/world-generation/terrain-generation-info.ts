@@ -28,6 +28,16 @@ export interface BiomeGenerationInfo {
    readonly tiles: ReadonlyArray<TileGenerationInfo>;
 }
 
+export const BIOME_GENERATION_PRIORITY = [
+   Biome.magmaFields,
+   Biome.river,
+   Biome.tundra,
+   Biome.desert,
+   Biome.mountains,
+   Biome.swamp,
+   Biome.grasslands
+];
+
 const BIOME_GENERATION_INFO: Record<Biome, BiomeGenerationInfo> = {
    [Biome.magmaFields]: {
       spawnRequirements: null,

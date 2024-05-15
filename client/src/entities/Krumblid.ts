@@ -10,6 +10,7 @@ import FootprintComponent from "../entity-components/FootprintComponent";
 import Entity from "../Entity";
 import StatusEffectComponent from "../entity-components/StatusEffectComponent";
 import HealthComponent from "../entity-components/HealthComponent";
+import PhysicsComponent from "../entity-components/PhysicsComponent";
 
 class Krumblid extends Entity {
    private static readonly BLOOD_FOUNTAIN_INTERVAL = 0.1;
@@ -26,6 +27,7 @@ class Krumblid extends Entity {
          )
       );
 
+      this.addServerComponent(ServerComponentType.physics, new PhysicsComponent(this, componentsData[0]));
       this.addServerComponent(ServerComponentType.health, new HealthComponent(this, componentsData[1]));
       this.addServerComponent(ServerComponentType.statusEffect, new StatusEffectComponent(this, componentsData[2]));
       this.addClientComponent(ClientComponentType.footprint, new FootprintComponent(this, 0.3, 20, 64, 5, 50));

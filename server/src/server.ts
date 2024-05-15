@@ -150,7 +150,7 @@ const serialiseComponent = <T extends ServerComponentType>(entity: Entity, compo
       case ServerComponentType.rockSpike: return serialiseRockSpikeComponent(entity);
       case ServerComponentType.slime: return serialiseSlimeComponent(entity);
       case ServerComponentType.slimeSpit: return serialiseSlimeSpitComponent(entity);
-      case ServerComponentType.slimewisp: return serialiseSlimewispComponent(entity);
+      case ServerComponentType.slimewisp: return serialiseSlimewispComponent();
       case ServerComponentType.snowball: return serialiseSnowballComponent(entity);
       case ServerComponentType.statusEffect: return serialiseStatusEffectComponent(entity);
       case ServerComponentType.throwingProjectile: return serialiseThrowingProjectileComponent(entity);

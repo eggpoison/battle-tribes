@@ -21,11 +21,8 @@ export function runFromAttackingEntity(entity: Entity, attackingEntity: Entity, 
 
    physicsComponent.acceleration.x = acceleration * Math.sin(direction);
    physicsComponent.acceleration.y = acceleration * Math.cos(direction);
-
-   if (direction !== entity.rotation) {
-      physicsComponent.targetRotation = direction;
-      physicsComponent.turnSpeed = turnSpeed;
-   }
+   physicsComponent.targetRotation = direction;
+   physicsComponent.turnSpeed = turnSpeed;
 }
 
 export function chooseEscapeEntity(entity: Entity, visibleEntities: ReadonlyArray<Entity>): Entity | null {

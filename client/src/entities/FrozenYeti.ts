@@ -13,6 +13,7 @@ import FrozenYetiComponent from "../entity-components/FrozenYetiComponent";
 import Entity from "../Entity";
 import HealthComponent from "../entity-components/HealthComponent";
 import StatusEffectComponent from "../entity-components/StatusEffectComponent";
+import PhysicsComponent from "../entity-components/PhysicsComponent";
 
 class FrozenYeti extends Entity {
    private static readonly SIZE = 152;
@@ -63,6 +64,7 @@ class FrozenYeti extends Entity {
          pawRenderParts.push(paw);
       }
 
+      this.addServerComponent(ServerComponentType.physics, new PhysicsComponent(this, componentsData[0]))
       this.addServerComponent(ServerComponentType.health, new HealthComponent(this, componentsData[1]))
       this.addServerComponent(ServerComponentType.statusEffect, new StatusEffectComponent(this, componentsData[2]))
       this.addServerComponent(ServerComponentType.frozenYeti, new FrozenYetiComponent(this, componentsData[4], headRenderPart, pawRenderParts))

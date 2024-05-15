@@ -1,6 +1,8 @@
 import { FenceConnectionComponentData } from "webgl-test-shared/dist/components";
 import { ConnectedEntityIDs } from "../entities/tribes/tribe-member";
 import { ComponentArray } from "./ComponentArray";
+import { getSnapDirection } from "webgl-test-shared/dist/structures";
+import Board from "../Board";
 
 export class FenceConnectionComponent {
    public connectedSidesBitset: number;
@@ -15,6 +17,9 @@ export class FenceConnectionComponent {
 export const FenceConnectionComponentArray = new ComponentArray<FenceConnectionComponent>(true, onJoin);
 
 export function onJoin(entityID: number, fenceConnectionComponent: FenceConnectionComponent): void {
+   // @Incomplete: change to be done when every structure is joined. Which will necessitate a structure component, so that they can store the connected values.
+   // @Bug: walls don't register secondary connections with connected fences
+   
    // Mark opposite connections
    for (let i = 0; i < 4; i++) {
       const connectedEntityID = fenceConnectionComponent.connectedEntityIDs[i];
@@ -22,8 +27,10 @@ export function onJoin(entityID: number, fenceConnectionComponent: FenceConnecti
       if (connectedEntityID !== 0 && FenceConnectionComponentArray.hasComponent(connectedEntityID)) {
          const fenceConnectionComponent = FenceConnectionComponentArray.getComponent(connectedEntityID);
 
-         const otherI = (i + 2) % 4;
-         addFenceConnection(fenceConnectionComponent, otherI, entityID);
+         const entity = Board.entityRecord[entityID]!;
+         const connectedEntity = Board.entityRecord[connectedEntityID]!;
+         const connectionDirection = getSnapDirection(connectedEntity.position.calculateAngleBetween(entity.position), connectedEntity.rotation);
+         addFenceConnection(fenceConnectionComponent, connectionDirection, entityID);
       }
    }
 }

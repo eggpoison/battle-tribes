@@ -315,3 +315,7 @@ export function getAngleDiff(sourceAngle: number, targetAngle: number): number {
    a = Math.abs((a + Math.PI) % (Math.PI * 2)) - Math.PI;
    return a;
 }
+
+export function getAbsAngleDiff(sourceAngle: number, targetAngle: number): number {
+   return Math.abs(getAngleDiff(sourceAngle, targetAngle));
+}

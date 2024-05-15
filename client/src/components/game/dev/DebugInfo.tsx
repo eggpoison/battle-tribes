@@ -53,10 +53,14 @@ const EntityDebugInfo = ({ entity, debugData }: EntityDebugInfoProps) => {
    const displayX = roundNum(entity.position.x, 0);
    const displayY = roundNum(entity.position.y, 0);
 
-   const physicsComponent = entity.getServerComponent(ServerComponentType.physics);
+   let displayVelocityMagnitude: number | undefined;
+   let displayAccelerationMagnitude: number | undefined;
+   if (entity.hasServerComponent(ServerComponentType.physics)) {
+      const physicsComponent = entity.getServerComponent(ServerComponentType.physics);
 
-   const displayVelocityMagnitude = roundNum(physicsComponent.velocity.length(), 0);
-   const displayAccelerationMagnitude = roundNum(physicsComponent.acceleration.length(), 0);
+      displayVelocityMagnitude = roundNum(physicsComponent.velocity.length(), 0);
+      displayAccelerationMagnitude = roundNum(physicsComponent.acceleration.length(), 0);
+   }
 
    const chunks = Array.from(entity.chunks).map(chunk => `${chunk.x}-${chunk.y}`);
    const chunkDisplayText = chunks.reduce((previousValue, chunk, idx) => {
@@ -79,8 +83,13 @@ const EntityDebugInfo = ({ entity, debugData }: EntityDebugInfoProps) => {
       
       <p>x: <span className="highlight">{displayX}</span>, y: <span className="highlight">{displayY}</span></p>
 
-      <p>Velocity: <span className="highlight">{displayVelocityMagnitude}</span></p>
-      <p>Acceleration: <span className="highlight">{displayAccelerationMagnitude}</span></p>
+      { typeof displayVelocityMagnitude !== "undefined" ? (
+         <p>Velocity: <span className="highlight">{displayVelocityMagnitude}</span></p>
+      ) : null }
+      { typeof displayAccelerationMagnitude !== "undefined" ? (
+         <p>Acceleration: <span className="highlight">{displayAccelerationMagnitude}</span></p>
+      ) : null }
+      
 
       <p>Rotation: <span className="highlight">{entity.rotation.toFixed(2)}</span></p>
 

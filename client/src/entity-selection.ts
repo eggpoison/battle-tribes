@@ -243,6 +243,10 @@ export function attemptEntitySelection(): void {
       const highlightedEntity = Board.entityRecord[highlightedEntityID];
 
       switch (highlightedEntity.type) {
+         case EntityType.wall: {
+            shouldShowBuildMenu = true;
+            break;
+         }
          case EntityType.tunnel: {
             if (playerIsHoldingHammer()) {
                shouldShowBuildMenu = true;

@@ -81,7 +81,7 @@ const shouldTurnClockwise = (entity: Entity, physicsComponent: PhysicsComponent)
    }
    
    const clockwiseDist = (physicsComponent.targetRotation - entity.rotation + Math.PI * 2) % (Math.PI * 2);
-   const anticlockwiseDist = (Math.PI * 2) - clockwiseDist;
+   const anticlockwiseDist = Math.PI * 2 - clockwiseDist;
    if (clockwiseDist < 0 || anticlockwiseDist < 0) {
       throw new Error("Either targetRotation or this.rotation wasn't in the 0-to-2-pi range. Target rotation: " + physicsComponent.targetRotation + ", rotation: " + entity.rotation);
    }
@@ -93,7 +93,7 @@ const turnEntity = (entity: Entity, physicsComponent: PhysicsComponent): void =>
 
    entity.rotation += physicsComponent.angularVelocity * Settings.I_TPS;
    if (entity.rotation < 0) {
-      entity.rotation += Math.PI / 2;
+      entity.rotation += Math.PI * 2;
    }
    if (entity.rotation >= Math.PI * 2) {
       entity.rotation -= Math.PI * 2;

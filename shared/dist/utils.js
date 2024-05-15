@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getAngleDiff = exports.assertUnreachable = exports.distBetweenPointAndRectangle = exports.smoothstep = exports.pointIsInRectangle = exports.distToSegment = exports.customTickIntervalHasPassed = exports.angle = exports.calculateDistanceSquared = exports.distance = exports.randSign = exports.clamp = exports.clampToBoardDimensions = exports.veryBadHash = exports.curveWeight = exports.roundNum = exports.rotatePoint = exports.rotateYAroundOrigin = exports.rotateXAroundOrigin = exports.rotateYAroundPoint = exports.rotateXAroundPoint = exports.flipAngle = exports.randItem = exports.lerp = exports.Vector = exports.Point = exports.randFloat = exports.randInt = void 0;
+exports.getAbsAngleDiff = exports.getAngleDiff = exports.assertUnreachable = exports.distBetweenPointAndRectangle = exports.smoothstep = exports.pointIsInRectangle = exports.distToSegment = exports.customTickIntervalHasPassed = exports.angle = exports.calculateDistanceSquared = exports.distance = exports.randSign = exports.clamp = exports.clampToBoardDimensions = exports.veryBadHash = exports.curveWeight = exports.roundNum = exports.rotatePoint = exports.rotateYAroundOrigin = exports.rotateXAroundOrigin = exports.rotateYAroundPoint = exports.rotateXAroundPoint = exports.flipAngle = exports.randItem = exports.lerp = exports.Vector = exports.Point = exports.randFloat = exports.randInt = void 0;
 /**
  * Returns a random integer inclusively.
  * @param min The minimum value of the random number.
@@ -279,3 +279,7 @@ function getAngleDiff(sourceAngle, targetAngle) {
     return a;
 }
 exports.getAngleDiff = getAngleDiff;
+function getAbsAngleDiff(sourceAngle, targetAngle) {
+    return Math.abs(getAngleDiff(sourceAngle, targetAngle));
+}
+exports.getAbsAngleDiff = getAbsAngleDiff;

@@ -1,8 +1,16 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.calculateStructurePlaceInfo = exports.STRUCTURE_TYPES = void 0;
+exports.calculateStructurePlaceInfo = exports.getSnapDirection = exports.SnapDirection = exports.STRUCTURE_TYPES = void 0;
 const utils_1 = require("./utils");
 exports.STRUCTURE_TYPES = [31 /* EntityType.wall */, 34 /* EntityType.door */, 40 /* EntityType.embrasure */, 42 /* EntityType.floorSpikes */, 43 /* EntityType.wallSpikes */, 44 /* EntityType.floorPunjiSticks */, 45 /* EntityType.wallPunjiSticks */, 47 /* EntityType.ballista */, 48 /* EntityType.slingTurret */, 41 /* EntityType.tunnel */, 15 /* EntityType.tribeTotem */, 16 /* EntityType.workerHut */, 17 /* EntityType.warriorHut */, 18 /* EntityType.barrel */, 4 /* EntityType.workbench */, 30 /* EntityType.researchBench */, 49 /* EntityType.healingTotem */, 37 /* EntityType.planterBox */, 20 /* EntityType.furnace */, 19 /* EntityType.campfire */, 51 /* EntityType.fence */, 52 /* EntityType.fenceGate */];
+// @Temporary: make const
+var SnapDirection;
+(function (SnapDirection) {
+    SnapDirection[SnapDirection["top"] = 0] = "top";
+    SnapDirection[SnapDirection["right"] = 1] = "right";
+    SnapDirection[SnapDirection["bottom"] = 2] = "bottom";
+    SnapDirection[SnapDirection["left"] = 3] = "left";
+})(SnapDirection = exports.SnapDirection || (exports.SnapDirection = {}));
 const getSnapOffset = (structureType, snapType) => {
     switch (structureType) {
         case 41 /* EntityType.tunnel */:
@@ -34,6 +42,7 @@ const getSnapOffset = (structureType, snapType) => {
     }
 };
 const calculateRegularPlacePosition = (placeOrigin, placingEntityRotation, structureType) => {
+    console.log("offset direction:", placingEntityRotation);
     const placeOffsetX = getSnapOffset(structureType, 0 /* SnapType.horizontal */);
     const placeOffsetY = getSnapOffset(structureType, 1 /* SnapType.vertical */);
     const placePositionX = placeOrigin.x + (60 /* Vars.STRUCTURE_PLACE_DISTANCE */ + placeOffsetX) * Math.sin(placingEntityRotation);
@@ -72,48 +81,44 @@ const getNearbyStructures = (regularPlacePosition, chunks) => {
     }
     return nearbyStructures;
 };
+function getSnapDirection(directionToSnappingEntity, structureRotation) {
+    /*
+    Note: Assumes that the structure position can properly snap to the snapping entity.
+    */
+    if ((0, utils_1.getAbsAngleDiff)(directionToSnappingEntity, structureRotation) < 0.01) {
+        return SnapDirection.top;
+    }
+    else if ((0, utils_1.getAbsAngleDiff)(directionToSnappingEntity, structureRotation + Math.PI / 2) < 0.01) {
+        return SnapDirection.right;
+    }
+    else if ((0, utils_1.getAbsAngleDiff)(directionToSnappingEntity, structureRotation + Math.PI) < 0.01) {
+        return SnapDirection.bottom;
+    }
+    else if ((0, utils_1.getAbsAngleDiff)(directionToSnappingEntity, structureRotation + Math.PI * 3 / 2) < 0.01) {
+        return SnapDirection.left;
+    }
+    console.log(directionToSnappingEntity, structureRotation);
+    throw new Error("Misaligned directions!");
+}
+exports.getSnapDirection = getSnapDirection;
 const getPositionsOffEntity = (snapOrigin, snapEntity, placeRotation, isPlacedOnWall, structureType) => {
     const snapPositions = new Array();
     for (let i = 0; i < 4; i++) {
-        const direction = i * Math.PI / 2 + snapEntity.rotation;
-        let directionIdx = i + 2;
+        const offsetDirection = i * Math.PI / 2 + snapEntity.rotation;
         const snapType = i % 2 === 0 ? 1 /* SnapType.vertical */ : 0 /* SnapType.horizontal */;
         const snapEntityOffset = getSnapOffset(snapEntity.type, snapType);
-        // @Incomplete
-        // const placingSnapType = SnapType.vertical;`
-        const placingSnapType = (Math.abs(direction - placeRotation) < 0.01 || Math.abs(direction - (placeRotation + Math.PI)) < 0.01) ? 1 /* SnapType.vertical */ : 0 /* SnapType.horizontal */;
+        // direction to the snapping entity is opposite of the offset from the snapping entity
+        const snapDirection = getSnapDirection(offsetDirection + Math.PI, placeRotation);
+        const placingSnapType = snapDirection % 2 === 0 ? 1 /* SnapType.vertical */ : 0 /* SnapType.horizontal */;
         const placingEntityOffset = getSnapOffset(structureType, placingSnapType);
-        // Account for place rotation
-        if (Math.abs(direction - (placeRotation + Math.PI / 2)) < 0.01) {
-            directionIdx += 3;
-        }
-        else if (Math.abs(direction - (placeRotation + Math.PI)) < 0.01) {
-            directionIdx += 2;
-        }
-        else if (Math.abs(direction - (placeRotation + Math.PI * 3 / 2)) < 0.01) {
-            directionIdx += 1;
-        }
-        // const epsilon = 0.01; // @Speed: const enum?
-        // let structureOffsetI = i;
-        // // If placing on the left or right side of the snap entity, use the width offset
-        // if (!(Math.abs(direction - placeRotation) < epsilon || Math.abs(direction - (placeRotation + Math.PI)) < epsilon)) {
-        //    structureOffsetI++;
-        // }
-        // let structureOffset: number;
-        // if (structureOffsetI % 2 === 0 || (isPlacedOnWall && (placeInfo.entityType === IEntityType.spikes || placeInfo.entityType === IEntityType.punjiSticks))) {
-        //    // Top and bottom
-        //    structureOffset = getSnapOffsetHeight(placeInfo.entityType as StructureType, isPlacedOnWall) * 0.5;
-        // } else {
-        //    // Left and right
-        //    structureOffset = getSnapOffsetWidth(placeInfo.entityType as StructureType, isPlacedOnWall) * 0.5;
-        // }
         const offset = snapEntityOffset + placingEntityOffset;
-        const positionX = snapOrigin.x + offset * Math.sin(direction);
-        const positionY = snapOrigin.y + offset * Math.cos(direction);
+        const positionX = snapOrigin.x + offset * Math.sin(offsetDirection);
+        const positionY = snapOrigin.y + offset * Math.cos(offsetDirection);
+        const position = new utils_1.Point(positionX, positionY);
         snapPositions.push({
-            position: new utils_1.Point(positionX, positionY),
+            position: position,
             rotation: placeRotation,
-            snappedSideBit: directionIdx % 4,
+            snapDirection: snapDirection,
             snappedEntityID: snapEntity.id
         });
     }
@@ -189,13 +194,13 @@ const groupTransforms = (transforms, structureType) => {
         const snappedEntityIDs = [0, 0, 0, 0];
         for (let j = 0; j < group.length; j++) {
             const transform = group[j];
-            const bit = 1 << transform.snappedSideBit;
+            const bit = 1 << transform.snapDirection;
             if ((snappedSidesBitset & bit)) {
                 console.warn("Found multiple snaps to the same side of the structure being placed!");
             }
             else {
                 snappedSidesBitset |= bit;
-                snappedEntityIDs[transform.snappedSideBit] = transform.snappedEntityID;
+                snappedEntityIDs[transform.snapDirection] = transform.snappedEntityID;
             }
         }
         const placeInfo = {
@@ -225,6 +230,7 @@ function calculateStructurePlaceInfo(placeOrigin, placingEntityRotation, structu
     filterCandidatePositions(candidatePositions, regularPlacePosition);
     const placeInfos = groupTransforms(candidatePositions, structureType);
     if (placeInfos.length === 0) {
+        console.log("regular");
         return {
             position: regularPlacePosition,
             rotation: placingEntityRotation,
@@ -234,10 +240,10 @@ function calculateStructurePlaceInfo(placeOrigin, placingEntityRotation, structu
         };
     }
     else {
+        console.log("irregular");
         // @Incomplete:
         // - First filter by num snaps
         // - Then filter by proximity to regular place position
-        console.log(placeInfos[0].snappedSidesBitset);
         return placeInfos[0];
     }
 }

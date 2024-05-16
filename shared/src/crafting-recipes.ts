@@ -398,6 +398,34 @@ export const CRAFTING_RECIPES: ReadonlyArray<CraftingRecipe> = [
       },
       aiCraftTimeTicks: Vars.NORMAL_CRAFT_TIME,
       craftingStation: CraftingStation.workbench
+   },
+   {
+      product: ItemType.gathering_gloves,
+      yield: 1,
+      ingredients: {
+         [ItemType.leather]: 7
+      },
+      aiCraftTimeTicks: Vars.NORMAL_CRAFT_TIME,
+      craftingStation: CraftingStation.workbench
+   },
+   {
+      product: ItemType.gardening_gloves,
+      yield: 1,
+      ingredients: {
+         [ItemType.leather]: 10,
+         [ItemType.leaf]: 15
+      },
+      aiCraftTimeTicks: Vars.NORMAL_CRAFT_TIME,
+      craftingStation: CraftingStation.workbench
+   },
+   {
+      product: ItemType.planter_box,
+      yield: 1,
+      ingredients: {
+         [ItemType.wood]: 20
+      },
+      aiCraftTimeTicks: Vars.NORMAL_CRAFT_TIME,
+      craftingStation: CraftingStation.workbench
    }
 ];
 

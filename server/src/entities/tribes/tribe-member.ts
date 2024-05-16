@@ -3,7 +3,7 @@ import { COLLISION_BITS } from "webgl-test-shared/dist/collision-detection";
 import { PlanterBoxPlant, BlueprintType, BuildingMaterial, MATERIAL_TO_ITEM_MAP, ServerComponentType } from "webgl-test-shared/dist/components";
 import { CraftingStation } from "webgl-test-shared/dist/crafting-recipes";
 import { EntityType, LimbAction, PlayerCauseOfDeath, GenericArrowType, EntityTypeString } from "webgl-test-shared/dist/entities";
-import { PlaceableItemType, ItemType, Item, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, BattleaxeItemInfo, SwordItemInfo, AxeItemInfo, ToolItemInfo, HammerItemInfo, ConsumableItemInfo, BowItemInfo, itemIsStackable, getItemStackSize, BackpackItemInfo, ArmourItemInfo, InventoryName } from "webgl-test-shared/dist/items";
+import { PlaceableItemType, ItemType, Item, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, BattleaxeItemInfo, SwordItemInfo, AxeItemInfo, ToolItemInfo, HammerItemInfo, ConsumableItemInfo, BowItemInfo, itemIsStackable, getItemStackSize, BackpackItemInfo, ArmourItemInfo, InventoryName, ConsumableItemCategory } from "webgl-test-shared/dist/items";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { StructureType, STRUCTURE_TYPES, calculateStructurePlaceInfo } from "webgl-test-shared/dist/structures";
@@ -13,13 +13,13 @@ import { Point, lerp } from "webgl-test-shared/dist/utils";
 import Entity from "../../Entity";
 import Board from "../../Board";
 import { BerryBushComponentArray, BuildingMaterialComponentArray, HealthComponentArray, InventoryComponentArray, InventoryUseComponentArray, ItemComponentArray, PlantComponentArray, TreeComponentArray, TribeComponentArray, TribeMemberComponentArray, TribesmanComponentArray } from "../../components/ComponentArray";
-import { consumeItemFromSlot, consumeItemType, countItemType, getInventory, pickupItemEntity, resizeInventory } from "../../components/InventoryComponent";
+import { consumeItemFromSlot, consumeItemType, countItemType, getInventory, inventoryIsFull, pickupItemEntity, resizeInventory } from "../../components/InventoryComponent";
 import { getEntitiesInRange } from "../../ai-shared";
 import { addDefence, damageEntity, healEntity, removeDefence } from "../../components/HealthComponent";
 import { createWorkbench } from "../workbench";
 import { createTribeTotem } from "./tribe-totem";
 import { createWorkerHut } from "./worker-hut";
-import { applyStatusEffect } from "../../components/StatusEffectComponent";
+import { applyStatusEffect, clearStatusEffects } from "../../components/StatusEffectComponent";
 import { createBarrel } from "./barrel";
 import { createCampfire } from "../cooking-entities/campfire";
 import { createFurnace } from "../cooking-entities/furnace";
@@ -49,7 +49,7 @@ import { awardTitle, hasTitle } from "../../components/TribeMemberComponent";
 import { createHealingTotem } from "../buildings/healing-totem";
 import { TREE_RADII } from "../resources/tree";
 import { BERRY_BUSH_RADIUS, dropBerry } from "../resources/berry-bush";
-import { createItemEntity } from "../item-entity";
+import { createItemEntity, itemEntityCanBePickedUp } from "../item-entity";
 import { dropBerryBushCropBerries } from "../plant";
 import { createFence } from "../buildings/fence";
 import { createFenceGate } from "../buildings/fence-gate";
@@ -70,6 +70,9 @@ const DEFAULT_ATTACK_KNOCKBACK = 125;
 const SWORD_DAMAGEABLE_ENTITIES: ReadonlyArray<EntityType> = [EntityType.zombie, EntityType.krumblid, EntityType.cactus, EntityType.tribeWorker, EntityType.tribeWarrior, EntityType.player, EntityType.yeti, EntityType.frozenYeti, EntityType.berryBush, EntityType.fish, EntityType.tribeTotem, EntityType.workerHut, EntityType.warriorHut, EntityType.cow, EntityType.golem, EntityType.slime, EntityType.slimewisp];
 const PICKAXE_DAMAGEABLE_ENTITIES: ReadonlyArray<EntityType> = [EntityType.boulder, EntityType.tombstone, EntityType.iceSpikes, EntityType.furnace, EntityType.golem];
 const AXE_DAMAGEABLE_ENTITIES: ReadonlyArray<EntityType> = [EntityType.tree, EntityType.wall, EntityType.door, EntityType.embrasure, EntityType.researchBench, EntityType.workbench, EntityType.floorSpikes, EntityType.wallSpikes, EntityType.floorPunjiSticks, EntityType.wallPunjiSticks, EntityType.tribeTotem, EntityType.workerHut, EntityType.warriorHut, EntityType.barrel];
+
+export const VACUUM_RANGE = 85;
+const VACUUM_STRENGTH = 25;
 
 const getDamageMultiplier = (entity: Entity): number => {
    let multiplier = 1;
@@ -345,7 +348,8 @@ export function attemptAttack(attacker: Entity, targetEntity: Entity, itemSlot: 
 
    // Harvest leaves from trees and berries when wearing the gathering or gardening gloves
    if ((item === null || item.type === ItemType.leaf) && (targetEntity.type === EntityType.tree || targetEntity.type === EntityType.berryBush || targetEntity.type === EntityType.plant)) {
-      const glove = inventory.itemSlots[1];
+      const gloveInventory = getInventory(inventoryComponent, InventoryName.gloveSlot);
+      const glove = gloveInventory.itemSlots[1];
       if (typeof glove !== "undefined" && (glove.type === ItemType.gathering_gloves || glove.type === ItemType.gardening_gloves)) {
          gatherPlant(targetEntity, attacker);
          return true;
@@ -591,7 +595,7 @@ export function useItem(tribeMember: Entity, item: Item, inventoryName: Inventor
          // Equip the glove
          // 
          
-         const gloveSlotInventory = getInventory(inventoryComponent, InventoryName.armourSlot);
+         const gloveSlotInventory = getInventory(inventoryComponent, InventoryName.gloveSlot);
          const targetItem = gloveSlotInventory.itemSlots[1];
 
          // If the target item slot has a different item type, don't attempt to transfer
@@ -612,16 +616,23 @@ export function useItem(tribeMember: Entity, item: Item, inventoryName: Inventor
          if (healthComponent.health >= healthComponent.maxHealth) return;
 
          const itemInfo = ITEM_INFO_RECORD[item.type] as ConsumableItemInfo;
-
-         healEntity(tribeMember, itemInfo.healAmount, tribeMember.id);
-         consumeItemFromSlot(inventoryComponent, inventoryName, itemSlot, 1);
-
+         
          const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribeMember.id);
          const useInfo = getInventoryUseInfo(inventoryUseComponent, inventoryName)
+         const inventory = useInfo.inventory;
+         
+         healEntity(tribeMember, itemInfo.healAmount, tribeMember.id);
+         consumeItemFromSlot(inventory, itemSlot, 1);
+
          useInfo.lastEatTicks = Board.ticks;
 
          if (item.type === ItemType.berry && Math.random() < 0.05) {
             awardTitle(tribeMember, TribesmanTitle.berrymuncher);
+         }
+
+         if (itemInfo.consumableItemCategory === ConsumableItemCategory.medicine) {
+            // Remove all debuffs
+            clearStatusEffects(tribeMember.id);
          }
 
          break;
@@ -636,7 +647,8 @@ export function useItem(tribeMember: Entity, item: Item, inventoryName: Inventor
          const tribeComponent = TribeComponentArray.getComponent(tribeMember.id);
          placeBuilding(tribeComponent.tribe, placeInfo.position, placeInfo.rotation, placeInfo.entityType, placeInfo.snappedSidesBitset, placeInfo.snappedEntityIDs);
 
-         consumeItemFromSlot(inventoryComponent, InventoryName.hotbar, itemSlot, 1);
+         const inventory = getInventory(inventoryComponent, InventoryName.hotbar);
+         consumeItemFromSlot(inventory, itemSlot, 1);
 
          break;
       }
@@ -738,6 +750,7 @@ export function useItem(tribeMember: Entity, item: Item, inventoryName: Inventor
 
          const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribeMember.id);
          const useInfo = getInventoryUseInfo(inventoryUseComponent, inventoryName);
+         const inventory = useInfo.inventory;
 
          const offsetDirection = tribeMember.rotation + Math.PI / 1.5 - Math.PI / 14;
          const x = tribeMember.position.x + 35 * Math.sin(offsetDirection);
@@ -752,7 +765,7 @@ export function useItem(tribeMember: Entity, item: Item, inventoryName: Inventor
          physicsComponent.velocity.x = velocityMagnitude * Math.sin(tribeMember.rotation);
          physicsComponent.velocity.y = velocityMagnitude * Math.cos(tribeMember.rotation);
 
-         consumeItemFromSlot(inventoryComponent, inventoryName, itemSlot, 1);
+         consumeItemFromSlot(inventory, itemSlot, 1);
 
          useInfo.lastSpearChargeTicks = Board.ticks;
          
@@ -793,11 +806,15 @@ export function useItem(tribeMember: Entity, item: Item, inventoryName: Inventor
 export function tribeMemberCanPickUpItem(tribeMember: Entity, itemType: ItemType): boolean {
    const inventoryComponent = InventoryComponentArray.getComponent(tribeMember.id);
    const inventory = getInventory(inventoryComponent, InventoryName.hotbar);
+
+   if (!inventoryIsFull(inventory)) {
+      return true;
+   }
    
    for (let i = 0; i < inventory.items.length; i++) {
       const item = inventory.items[i];
 
-      if (item.type === itemType && itemIsStackable(item.type) && getItemStackSize(item) - item.count > 0) {
+      if (item.type === itemType && itemIsStackable(item.type) && item.count < getItemStackSize(item)) {
          return true;
       }
    }
@@ -848,6 +865,37 @@ const tickInventoryUseInfo = (tribeMember: Entity, inventoryUseInfo: InventoryUs
 }
 
 export function tickTribeMember(tribeMember: Entity): void {
+   // Vacuum nearby items to the tribesman
+   // @Incomplete: Don't vacuum items which the player doesn't have the inventory space for
+   // @Bug: permits vacuuming the same item entity twice
+   const minChunkX = Math.max(Math.floor((tribeMember.position.x - VACUUM_RANGE) / Settings.CHUNK_UNITS), 0);
+   const maxChunkX = Math.min(Math.floor((tribeMember.position.x + VACUUM_RANGE) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1);
+   const minChunkY = Math.max(Math.floor((tribeMember.position.y - VACUUM_RANGE) / Settings.CHUNK_UNITS), 0);
+   const maxChunkY = Math.min(Math.floor((tribeMember.position.y + VACUUM_RANGE) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1);
+   for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
+      for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
+         const chunk = Board.getChunk(chunkX, chunkY);
+         for (const itemEntity of chunk.entities) {
+            if (itemEntity.type !== EntityType.itemEntity || !itemEntityCanBePickedUp(itemEntity, tribeMember.id)) {
+               continue;
+            }
+
+            const itemComponent = ItemComponentArray.getComponent(itemEntity.id);
+            if (!tribeMemberCanPickUpItem(tribeMember, itemComponent.itemType)) {
+               continue;
+            }
+            
+            const distance = tribeMember.position.calculateDistanceBetween(itemEntity.position);
+            if (distance <= VACUUM_RANGE) {
+               const vacuumDirection = itemEntity.position.calculateAngleBetween(tribeMember.position);
+               const physicsComponent = PhysicsComponentArray.getComponent(itemEntity.id);
+               physicsComponent.velocity.x += VACUUM_STRENGTH * Math.sin(vacuumDirection);
+               physicsComponent.velocity.y += VACUUM_STRENGTH * Math.cos(vacuumDirection);
+            }
+         }
+      }
+   }
+
    const physicsComponent = PhysicsComponentArray.getComponent(tribeMember.id);
    if (physicsComponent.velocity.x !== 0 || physicsComponent.velocity.y !== 0) {
       const chance = TITLE_REWARD_CHANCES.SPRINTER_REWARD_CHANCE_PER_SPEED * physicsComponent.velocity.length();
@@ -909,6 +957,10 @@ export function onTribeMemberHurt(tribeMember: Entity, attackingEntityID: number
       const fish = Board.entityRecord[fishID]!;
       onFishLeaderHurt(fish, attackingEntityID);
    }
+}
+
+export function entityIsTribesman(entityType: EntityType): boolean {
+   return entityType === EntityType.player || entityType === EntityType.tribeWorker || entityType === EntityType.tribeWarrior;
 }
 
 export function wasTribeMemberKill(attackingEntity: Entity | null): boolean {
@@ -1115,16 +1167,16 @@ export function onTribesmanCollision(tribesman: Entity, collidingEntity: Entity)
 }
 
 export function throwItem(tribesman: Entity, inventoryName: InventoryName, itemSlot: number, dropAmount: number, throwDirection: number): void {
-   // Get the item
    const inventoryComponent = InventoryComponentArray.getComponent(tribesman.id);
    const inventory = getInventory(inventoryComponent, inventoryName);
+
    const item = inventory.itemSlots[itemSlot];
    if (typeof item === "undefined") {
       return;
    }
    
    const itemType = item.type;
-   const amountRemoved = consumeItemFromSlot(inventoryComponent, inventoryName, itemSlot, dropAmount);
+   const amountRemoved = consumeItemFromSlot(inventory, itemSlot, dropAmount);
 
    const dropPosition = tribesman.position.copy();
    dropPosition.x += Vars.ITEM_THROW_OFFSET * Math.sin(throwDirection);

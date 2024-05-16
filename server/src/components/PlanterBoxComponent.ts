@@ -6,22 +6,21 @@ import Board from "../Board";
 
 export class PlanterBoxComponent {
    public plantEntityID = 0;
+
+   /** Plant type that AI tribesman will attempt to place in the planter box */
+   public replantType: PlanterBoxPlant | null = null;
 }
 
 export function serialisePlanterBoxComponent(entityID: number): PlanterBoxComponentData {
    const planterBoxComponent = PlanterBoxComponentArray.getComponent(entityID);
    
-   let plantType: PlanterBoxPlant | null;
+   let plantType: PlanterBoxPlant | null = null;
    if (planterBoxComponent.plantEntityID !== null) {
       const plant = Board.entityRecord[planterBoxComponent.plantEntityID];
       if (typeof plant !== "undefined") {
          const plantComponent = PlantComponentArray.getComponent(plant.id);
          plantType = plantComponent.plantType;
-      } else {
-         plantType = null;
       }
-   } else {
-      plantType = null;
    }
    
    return {
@@ -29,12 +28,10 @@ export function serialisePlanterBoxComponent(entityID: number): PlanterBoxCompon
    };
 }
 
-export function placePlantInPlanterBox(planterBox: Entity, plant: PlanterBoxPlant): void {
+export function placePlantInPlanterBox(planterBox: Entity, plantType: PlanterBoxPlant): void {
    const planterBoxComponent = PlanterBoxComponentArray.getComponent(planterBox.id);
-   if (planterBoxComponent.plantEntityID !== 0) {
-      return;
-   }
 
-   const plantEntity = createPlant(planterBox.position.copy(), 2 * Math.PI * Math.random(), planterBox.id, plant);
+   const plantEntity = createPlant(planterBox.position.copy(), 2 * Math.PI * Math.random(), planterBox.id, plantType);
    planterBoxComponent.plantEntityID = plantEntity.id;
+   planterBoxComponent.replantType = plantType;
 }

@@ -71,68 +71,80 @@ export const enum ItemType {
 export const ItemTypeString: Record<ItemType, string> = {
    [ItemType.wood]: "wood",
    [ItemType.workbench]: "workbench",
-   [ItemType.wooden_sword]: "wooden sword",
-   [ItemType.wooden_axe]: "wooden axe",
-   [ItemType.wooden_pickaxe]: "wooden pickaxe",
+   [ItemType.wooden_sword]: "wooden_sword",
+   [ItemType.wooden_axe]: "wooden_axe",
+   [ItemType.wooden_pickaxe]: "wooden_pickaxe",
    [ItemType.berry]: "berry",
    [ItemType.raw_beef]: "raw beef",
-   [ItemType.cooked_beef]: "cooked beef",
+   [ItemType.cooked_beef]: "cooked_beef",
    [ItemType.rock]: "rock",
-   [ItemType.stone_sword]: "stone sword",
-   [ItemType.stone_axe]: "stone axe",
-   [ItemType.stone_pickaxe]: "stone pickaxe",
-   [ItemType.stone_hammer]: "stone hammer",
+   [ItemType.stone_sword]: "stone_sword",
+   [ItemType.stone_axe]: "stone_axe",
+   [ItemType.stone_pickaxe]: "stone_pickaxe",
+   [ItemType.stone_hammer]: "stone_hammer",
    [ItemType.leather]: "leather",
-   [ItemType.leather_backpack]: "leather backpack",
-   [ItemType.cactus_spine]: "cactus spine",
-   [ItemType.yeti_hide]: "yeti hide",
+   [ItemType.leather_backpack]: "leather_backpack",
+   [ItemType.cactus_spine]: "cactus_spine",
+   [ItemType.yeti_hide]: "yeti_hide",
    [ItemType.frostcicle]: "frostcicle",
    [ItemType.slimeball]: "slimeball",
    [ItemType.eyeball]: "eyeball",
-   [ItemType.flesh_sword]: "flesh sword",
-   [ItemType.tribe_totem]: "tribe totem",
-   [ItemType.worker_hut]: "worker hut",
+   [ItemType.flesh_sword]: "flesh_sword",
+   [ItemType.tribe_totem]: "tribe_totem",
+   [ItemType.worker_hut]: "worker_hut",
    [ItemType.barrel]: "barrel",
-   [ItemType.frost_armour]: "frost armour",
+   [ItemType.frost_armour]: "frost_armour",
    [ItemType.campfire]: "campfire",
    [ItemType.furnace]: "furnace",
-   [ItemType.wooden_bow]: "wooden bow",
-   [ItemType.meat_suit]: "meat suit",
-   [ItemType.deepfrost_heart]: "deepfrost heart",
-   [ItemType.deepfrost_sword]: "deepfrost sword",
-   [ItemType.deepfrost_pickaxe]: "deepfrost pickaxe",
-   [ItemType.deepfrost_axe]: "deepfrost axe",
-   [ItemType.deepfrost_armour]: "deepfrost armour",
-   [ItemType.raw_fish]: "raw fish",
-   [ItemType.cooked_fish]: "cooked fish",
-   [ItemType.fishlord_suit]: "fishlord suit",
-   [ItemType.gathering_gloves]: "gathering gloves",
+   [ItemType.wooden_bow]: "wooden_bow",
+   [ItemType.meat_suit]: "meat_suit",
+   [ItemType.deepfrost_heart]: "deepfrost_heart",
+   [ItemType.deepfrost_sword]: "deepfrost_sword",
+   [ItemType.deepfrost_pickaxe]: "deepfrost_pickaxe",
+   [ItemType.deepfrost_axe]: "deepfrost_axe",
+   [ItemType.deepfrost_armour]: "deepfrost_armour",
+   [ItemType.raw_fish]: "raw_fish",
+   [ItemType.cooked_fish]: "cooked_fish",
+   [ItemType.fishlord_suit]: "fishlord_suit",
+   [ItemType.gathering_gloves]: "gathering_gloves",
    [ItemType.throngler]: "throngler",
-   [ItemType.leather_armour]: "leather armour",
+   [ItemType.leather_armour]: "leather_armour",
    [ItemType.spear]: "spear",
    [ItemType.paper]: "paper",
-   [ItemType.research_bench]: "research bench",
-   [ItemType.wooden_wall]: "wooden wall",
-   [ItemType.wooden_hammer]: "wooden hammer",
-   [ItemType.stone_battleaxe]: "stone battleaxe",
-   [ItemType.living_rock]: "living rock",
-   [ItemType.planter_box]: "planter box",
-   [ItemType.reinforced_bow]: "reinforced bow",
+   [ItemType.research_bench]: "research_bench",
+   [ItemType.wooden_wall]: "wooden_wall",
+   [ItemType.wooden_hammer]: "wooden_hammer",
+   [ItemType.stone_battleaxe]: "stone_battleaxe",
+   [ItemType.living_rock]: "living_rock",
+   [ItemType.planter_box]: "planter_box",
+   [ItemType.reinforced_bow]: "reinforced_bow",
    [ItemType.crossbow]: "crossbow",
-   [ItemType.ice_bow]: "ice bow",
+   [ItemType.ice_bow]: "ice_bow",
    [ItemType.poop]: "poop",
-   [ItemType.wooden_spikes]: "wooden spikes",
-   [ItemType.punji_sticks]: "punji sticks",
+   [ItemType.wooden_spikes]: "wooden_spikes",
+   [ItemType.punji_sticks]: "punji_sticks",
    [ItemType.ballista]: "ballista",
-   [ItemType.sling_turret]: "sling turret",
-   [ItemType.healing_totem]: "healing totem",
+   [ItemType.sling_turret]: "sling_turret",
+   [ItemType.healing_totem]: "healing_totem",
    [ItemType.leaf]: "leaf",
-   [ItemType.herbal_medicine]: "herbal medicine",
-   [ItemType.leaf_suit]: "leaf suit",
+   [ItemType.herbal_medicine]: "herbal_medicine",
+   [ItemType.leaf_suit]: "leaf_suit",
    [ItemType.seed]: "seed",
-   [ItemType.gardening_gloves]: "gardening gloves",
-   [ItemType.wooden_fence]: "wooden fence"
-};''
+   [ItemType.gardening_gloves]: "gardening_gloves",
+   [ItemType.wooden_fence]: "wooden_fence"
+};
+
+const numItemTypes = Object.keys(ItemTypeString).length;
+
+export function getItemTypeFromString(itemTypeString: string): ItemType | null {
+   for (let itemType: ItemType = 0; itemType < numItemTypes; itemType++) {
+      if (ItemTypeString[itemType] === itemTypeString) {
+         return itemType;
+      }
+   }
+
+   return null;
+}
 
 export interface BaseItemInfo {}
 
@@ -726,15 +738,16 @@ export class Inventory {
       return typeof this.itemSlots[itemSlot] !== "undefined";
    }
 
+   /** Returns 0 if the item is not in the inventory */
    public getItemSlot(item: Item): number {
-      for (let i = 0; i < this.items.length; i++) {
-         const currentItem = this.items[i];
-         if (item === currentItem) {
-            return i;
+      for (let itemSlot = 1; itemSlot <= this.width * this.height; itemSlot++) {
+         const currentItem = this.itemSlots[itemSlot];
+         if (currentItem === item) {
+            return itemSlot;
          }
       }
-
-      return -1;
+      
+      return 0;
    }
 }
 

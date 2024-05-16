@@ -54,7 +54,7 @@ const COHESION_INFLUENCE = 0.3;
 /** The time in ticks after being hit that the zombie will move towards the source of damage */
 const DAMAGE_INVESTIGATE_TIME_TICKS = Math.floor(0.8 * Settings.TPS);
 
-const HURT_ENTITY_INVESTIGATE_TICKS= Math.floor(0.5 * Settings.TPS);
+const HURT_ENTITY_INVESTIGATE_TICKS = Math.floor(1 * Settings.TPS);
 
 // @Cleanup: We don't need to pass the isGolden parameter, can deduce whether the tombstone is golden from the tombstoneID instead
 export function createZombie(position: Point, rotation: number, isGolden: boolean, tombstoneID: number): Entity {

@@ -63,53 +63,65 @@ export const EntityTypeString: Record<EntityType, string> = {
    [EntityType.tree]: "tree",
    [EntityType.workbench]: "workbench",
    [EntityType.boulder]: "boulder",
-   [EntityType.berryBush]: "berry bush",
+   [EntityType.berryBush]: "berry_bush",
    [EntityType.cactus]: "cactus",
    [EntityType.yeti]: "yeti",
    [EntityType.iceSpikes]: "ice spikes",
    [EntityType.slime]: "slime",
    [EntityType.slimewisp]: "slimewisp",
    [EntityType.player]: "player",
-   [EntityType.tribeWorker]: "tribe worker",
-   [EntityType.tribeWarrior]: "tribe warrior",
-   [EntityType.tribeTotem]: "tribe totem",
-   [EntityType.workerHut]: "worker hut",
-   [EntityType.warriorHut]: "warrior hut",
+   [EntityType.tribeWorker]: "tribe_worker",
+   [EntityType.tribeWarrior]: "tribe_warrior",
+   [EntityType.tribeTotem]: "tribe_totem",
+   [EntityType.workerHut]: "worker_hut",
+   [EntityType.warriorHut]: "warrior_hut",
    [EntityType.barrel]: "barrel",
    [EntityType.campfire]: "campfire",
    [EntityType.furnace]: "furnace",
    [EntityType.snowball]: "snowball",
    [EntityType.krumblid]: "krumblid",
-   [EntityType.frozenYeti]: "frozen yeti",
+   [EntityType.frozenYeti]: "frozen_yeti",
    [EntityType.fish]: "fish",
-   [EntityType.itemEntity]: "item entity",
-   [EntityType.woodenArrowProjectile]: "wooden arrow projectile",
-   [EntityType.iceShardProjectile]: "ice shard projectile",
-   [EntityType.rockSpikeProjectile]: "rock spike projectile",
-   [EntityType.spearProjectile]: "spear projectile",
-   [EntityType.researchBench]: "research bench",
+   [EntityType.itemEntity]: "item_entity",
+   [EntityType.woodenArrowProjectile]: "wooden_arrow_projectile",
+   [EntityType.iceShardProjectile]: "ice_shard_projectile",
+   [EntityType.rockSpikeProjectile]: "rock_spike_projectile",
+   [EntityType.spearProjectile]: "spear_projectile",
+   [EntityType.researchBench]: "research_bench",
    [EntityType.wall]: "wall",
-   [EntityType.slimeSpit]: "slime spit",
-   [EntityType.spitPoison]: "spit poison",
+   [EntityType.slimeSpit]: "slime_spit",
+   [EntityType.spitPoison]: "spit_poison",
    [EntityType.door]: "door",
-   [EntityType.battleaxeProjectile]: "battleaxe projectile",
+   [EntityType.battleaxeProjectile]: "battleaxe_projectile",
    [EntityType.golem]: "golem",
-   [EntityType.planterBox]: "planter box",
-   [EntityType.iceArrow]: "ice arrow",
+   [EntityType.planterBox]: "planter_box",
+   [EntityType.iceArrow]: "ice_arrow",
    [EntityType.pebblum]: "pebblum",
    [EntityType.embrasure]: "embrasure",
    [EntityType.tunnel]: "tunnel",
-   [EntityType.floorSpikes]: "floor spikes",
-   [EntityType.wallSpikes]: "wall spikes",
-   [EntityType.floorPunjiSticks]: "floor punji sticks",
-   [EntityType.wallPunjiSticks]: "wall punji sticks",
-   [EntityType.blueprintEntity]: "blueprint entity",
+   [EntityType.floorSpikes]: "floor_spikes",
+   [EntityType.wallSpikes]: "wall_spikes",
+   [EntityType.floorPunjiSticks]: "floor_punji_sticks",
+   [EntityType.wallPunjiSticks]: "wall_punji_sticks",
+   [EntityType.blueprintEntity]: "blueprint_entity",
    [EntityType.ballista]: "ballista",
-   [EntityType.slingTurret]: "sling turret",
-   [EntityType.healingTotem]: "healing totem",
+   [EntityType.slingTurret]: "sling_turret",
+   [EntityType.healingTotem]: "healing_totem",
    [EntityType.plant]: "plant",
    [EntityType.fence]: "fence",
-   [EntityType.fenceGate]: "fence gate"
+   [EntityType.fenceGate]: "fence_gate"
+};
+
+const numEntityTypes = Object.keys(EntityTypeString).length;
+
+export function getEntityTypeFromString(entityTypeString: string): EntityType | null {
+   for (let entityType: EntityType = 0; entityType < numEntityTypes; entityType++) {
+      if (EntityTypeString[entityType] === entityTypeString) {
+         return entityType;
+      }
+   }
+
+   return null;
 }
    
 export const RESOURCE_ENTITY_TYPES: ReadonlyArray<EntityType> = [EntityType.tree, EntityType.berryBush, EntityType.iceSpikes, EntityType.cactus, EntityType.boulder];

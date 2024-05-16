@@ -12,6 +12,7 @@ import SnowballComponent from "../entity-components/SnowballComponent";
 import Entity from "../Entity";
 import HealthComponent from "../entity-components/HealthComponent";
 import StatusEffectComponent from "../entity-components/StatusEffectComponent";
+import PhysicsComponent from "../entity-components/PhysicsComponent";
 
 const getTextureSource = (size: SnowballSize): string => {
    switch (size) {
@@ -39,6 +40,7 @@ class Snowball extends Entity {
          )
       );
 
+      this.addServerComponent(ServerComponentType.physics, new PhysicsComponent(this, componentsData[0]));
       this.addServerComponent(ServerComponentType.health, new HealthComponent(this, componentsData[1]));
       this.addServerComponent(ServerComponentType.statusEffect, new StatusEffectComponent(this, componentsData[2]));
       this.addServerComponent(ServerComponentType.snowball, new SnowballComponent(this, snowballComponentData));

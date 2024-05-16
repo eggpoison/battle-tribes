@@ -85,6 +85,19 @@ export function clearStatusEffect(entityID: number, statusEffectIndex: number): 
    statusEffectComponent.activeStatusEffectTicksElapsed.splice(statusEffectIndex, 1);
 }
 
+export function clearStatusEffects(entityID: number): void {
+   const statusEffectComponent = StatusEffectComponentArray.getComponent(entityID);
+   if (typeof statusEffectComponent === "undefined") {
+      return;
+   }
+   
+   if (statusEffectComponent.activeStatusEffectTypes.length > 0) {
+      statusEffectComponent.activeStatusEffectTypes.splice(0, statusEffectComponent.activeStatusEffectTypes.length);
+      statusEffectComponent.activeStatusEffectTicksElapsed.splice(0, statusEffectComponent.activeStatusEffectTicksElapsed.length);
+      statusEffectComponent.activeStatusEffectTicksRemaining.splice(0, statusEffectComponent.activeStatusEffectTicksRemaining.length);
+   }
+}
+
 export function tickStatusEffectComponent(statusEffectComponent: StatusEffectComponent, entityID: number): void {
    const entity = Board.entityRecord[entityID]!;
 

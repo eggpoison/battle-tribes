@@ -12,6 +12,7 @@ import Tribe from "../../Tribe";
 import { TribeComponent } from "../../components/TribeComponent";
 import { PlanterBoxComponent } from "../../components/PlanterBoxComponent";
 import CircularHitbox from "../../hitboxes/CircularHitbox";
+import Board from "../../Board";
 
 const HITBOX_SIZE = 80 - 0.05;
 
@@ -35,4 +36,13 @@ export function createPlanterBox(position: Point, rotation: number, tribe: Tribe
    PlanterBoxComponentArray.addComponent(planterBox.id, new PlanterBoxComponent());
    
    return planterBox;
+}
+
+export function onPlanterBoxRemove(planterBox: Entity): void {
+   const planterBoxComponent = PlanterBoxComponentArray.getComponent(planterBox.id);
+
+   const plant = Board.entityRecord[planterBoxComponent.plantEntityID];
+   if (typeof plant !== "undefined") {
+      plant.destroy();
+   }
 }

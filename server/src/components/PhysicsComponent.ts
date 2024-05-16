@@ -64,37 +64,6 @@ const cleanRotation = (entity: Entity): void => {
    } else if (entity.rotation >= Math.PI) {
       entity.rotation -= Math.PI * 2;
    }
-   
-   // const rotation = cleanAngle(entity.rotation);
-   // if (rotation !== entity.rotation) {
-   //    entity.rotation = rotation;
-      
-   //    const physicsComponent = PhysicsComponentArray.getComponent(entity.id);
-   //    physicsComponent.hitboxesAreDirty = true;
-   // }
-}
-
-const shouldTurnClockwise = (entity: Entity, physicsComponent: PhysicsComponent): boolean => {
-   const before = entity.rotation;
-   const before2 = physicsComponent.targetRotation;
-   // @Cleanup: Introduces side effects
-   // @Temporary @Speed: instead of doing this, probably just clean rotation after all places which could dirty it
-   cleanRotation(entity);
-
-   // @Hack
-   if (physicsComponent.targetRotation < 0) {
-      physicsComponent.targetRotation += 2 * Math.PI;
-   }
-   
-   const clockwiseDist = (physicsComponent.targetRotation - entity.rotation + Math.PI * 2) % (Math.PI * 2);
-   const anticlockwiseDist = Math.PI * 2 - clockwiseDist;
-   if (clockwiseDist < 0 || anticlockwiseDist < 0) {
-      throw new Error("Either targetRotation or this.rotation wasn't in the 0-to-2-pi range. Target rotation: " + physicsComponent.targetRotation + ", rotation: " + entity.rotation);
-   }
-
-   entity.rotation = before;
-   physicsComponent.targetRotation = before2;
-   return clockwiseDist < anticlockwiseDist;
 }
 
 const turnEntity = (entity: Entity, physicsComponent: PhysicsComponent): void => {
@@ -103,22 +72,24 @@ const turnEntity = (entity: Entity, physicsComponent: PhysicsComponent): void =>
    entity.rotation += physicsComponent.angularVelocity * Settings.I_TPS;
    cleanRotation(entity);
    
-   let diff = physicsComponent.targetRotation - entity.rotation;
-   if (diff < 0) {
-      diff += Math.PI * 2;
-   }
-   
-   if (diff <= Math.PI) {  
-      entity.rotation += physicsComponent.turnSpeed * Settings.I_TPS;
-      // If the entity would turn past the target direction, snap back to the target direction
-      if (physicsComponent.turnSpeed * Settings.I_TPS > diff) {
-         entity.rotation = physicsComponent.targetRotation;
+   if (physicsComponent.turnSpeed !== 0) {
+      let diff = physicsComponent.targetRotation - entity.rotation;
+      if (diff < 0) {
+         diff += Math.PI * 2;
       }
-   } else {
-      entity.rotation -= physicsComponent.turnSpeed * Settings.I_TPS
-      // If the entity would turn past the target direction, snap back to the target direction
-      if (physicsComponent.turnSpeed * Settings.I_TPS < diff) {
-         entity.rotation = physicsComponent.targetRotation;
+      
+      if (diff <= Math.PI) {  
+         entity.rotation += physicsComponent.turnSpeed * Settings.I_TPS;
+         // If the entity would turn past the target direction, snap back to the target direction
+         if (physicsComponent.turnSpeed * Settings.I_TPS > diff) {
+            entity.rotation = physicsComponent.targetRotation;
+         }
+      } else {
+         entity.rotation -= physicsComponent.turnSpeed * Settings.I_TPS
+         // If the entity would turn past the target direction, snap back to the target direction
+         if (physicsComponent.turnSpeed * Settings.I_TPS > 2 * Math.PI - diff) {
+            entity.rotation = physicsComponent.targetRotation;
+         }
       }
    }
 

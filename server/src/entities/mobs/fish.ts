@@ -20,7 +20,7 @@ import { FishComponent } from "../../components/FishComponent";
 import { createItemsOverEntity } from "../../entity-shared";
 import { EscapeAIComponent, updateEscapeAIComponent } from "../../components/EscapeAIComponent";
 import { chooseEscapeEntity, registerAttackingEntity, runFromAttackingEntity } from "../../ai/escape-ai";
-import { getInventory } from "../../components/InventoryComponent";
+import { getInventory, hasInventory } from "../../components/InventoryComponent";
 import { AIHelperComponent, AIHelperComponentArray } from "../../components/AIHelperComponent";
 import { SERVER } from "../../server";
 import { PhysicsComponent, PhysicsComponentArray, applyKnockback } from "../../components/PhysicsComponent";
@@ -91,8 +91,6 @@ const move = (fish: Entity, direction: number): void => {
       physicsComponent.acceleration.x = 40 * Math.sin(direction);
       physicsComponent.acceleration.y = 40 * Math.cos(direction);
       physicsComponent.targetRotation = direction;
-      // @Temporary
-      if (direction>=Math.PI)throw new Error();
       physicsComponent.turnSpeed = TURN_SPEED;
    } else {
       // 
@@ -132,12 +130,16 @@ const entityIsWearingFishlordSuit = (entityID: number): boolean => {
    if (!InventoryComponentArray.hasComponent(entityID)) {
       return false;
    }
-   
+
    const inventoryComponent = InventoryComponentArray.getComponent(entityID);
+   if (!hasInventory(inventoryComponent, InventoryName.armourSlot)) {
+      return false;
+   }
+   
    const armourInventory = getInventory(inventoryComponent, InventoryName.armourSlot);
 
    const armour = armourInventory.itemSlots[1];
-   return typeof armour === "undefined" || armour.type === ItemType.fishlord_suit;
+   return typeof armour !== "undefined" && armour.type === ItemType.fishlord_suit;
 }
 
 export function tickFish(fish: Entity): void {

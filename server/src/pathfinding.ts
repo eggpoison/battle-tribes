@@ -473,10 +473,14 @@ export function pathfind(startX: number, startY: number, endX: number, endY: num
    openSet.addNode(start);
 
    const closedSet = new Set<PathfindingNodeIndex>();
+
+   // @Speed: attempt prioritising the neighbour closest to direction
    
    let i = 0;
    while (openSet.currentItemCount > 0) {
-      if (++i >= 20000) {
+      // @Temporary
+      if (++i >= 500) {
+      // if (++i >= 10000) {
          // @Temporary
          // console.warn("!!! POTENTIAL UNRESOLVEABLE PATH !!!");
          // console.log("goal @ " + endX + " " + endY);

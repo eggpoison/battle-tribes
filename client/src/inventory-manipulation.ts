@@ -70,6 +70,20 @@ export function rightClickItemSlot(e: MouseEvent, entityID: number, inventory: I
    }
 }
 
+export function createInventoryFromData(inventoryData: Inventory): Inventory {
+   const inventory = new Inventory(inventoryData.width, inventoryData.height, inventoryData.name);
+   for (let itemSlot = 1; itemSlot <= inventoryData.width * inventoryData.height; itemSlot++) {
+      const item = inventoryData.itemSlots[itemSlot];
+      if (typeof item === "undefined") {
+         continue;
+      }
+
+      inventory.addItem(item, itemSlot);
+   }
+
+   return inventory;
+}
+
 export function updateInventoryFromData(inventory: Inventory, inventoryData: Inventory): void {
    inventory.width = inventoryData.width;
    inventory.height = inventoryData.height;
@@ -86,7 +100,7 @@ export function updateInventoryFromData(inventory: Inventory, inventoryData: Inv
       // If it doesn't exist in the server data, remove it
       const itemData = inventoryData.itemSlots[itemSlot];
       if (typeof itemData === "undefined" || itemData.id !== item.id) {
-         delete inventory.itemSlots[itemSlot];
+         inventory.removeItem(itemSlot);
       }
    }
 
@@ -100,7 +114,8 @@ export function updateInventoryFromData(inventory: Inventory, inventoryData: Inv
       // If the item doesn't exist in the inventory, add it
       const item = inventory.itemSlots[itemSlot];
       if (typeof item === "undefined" || item.id !== itemData.id) {
-         inventory.itemSlots[itemSlot] = new Item(itemData.type, itemData.count, itemData.id);
+         const item = new Item(itemData.type, itemData.count, itemData.id);
+         inventory.addItem(item, itemSlot);
       } else {
          // Otherwise the item needs to be updated with the new server data
          item.count = itemData.count;

@@ -471,7 +471,8 @@ export enum TribesmanAIType {
    researching,
    giftingItems,
    idle,
-   recruiting
+   recruiting,
+   planting
 }
 
 export interface TribesmanComponentData {

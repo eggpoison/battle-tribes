@@ -38,10 +38,7 @@ class Wall extends Entity {
       this.addServerComponent(ServerComponentType.tribe, new TribeComponent(this, componentsData[1]));
       this.addServerComponent(ServerComponentType.buildingMaterial, new BuildingMaterialComponent(this, buildingMaterialComponentData, mainRenderPart));
 
-      if (this.ageTicks === 0) {
-         for (let i = 0; i < 12; i++) {
-            createLightWoodSpeckParticle(this.position.x, this.position.y, 32);
-         }
+      if (this.ageTicks <= 1) {
          playSound("wooden-wall-place.mp3", 0.3, 1, this.position.x, this.position.y);
       }
    }

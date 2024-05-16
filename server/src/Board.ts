@@ -63,6 +63,7 @@ import { tickHealingTotemComponent } from "./components/HealingTotemComponent";
 import { tickPlantComponent } from "./components/PlantComponent";
 import { onFenceRemove } from "./entities/buildings/fence";
 import { tickFenceGateComponent } from "./components/FenceGateComponent";
+import { onPlanterBoxRemove } from "./entities/buildings/planter-box";
 
 const START_TIME = 6;
 
@@ -318,6 +319,7 @@ abstract class Board {
             case EntityType.itemEntity: onItemEntityRemove(entity); break;
             case EntityType.battleaxeProjectile: onBattleaxeProjectileRemove(entity); break;
             case EntityType.blueprintEntity: onBlueprintEntityRemove(entity); break;
+            case EntityType.planterBox: onPlanterBoxRemove(entity); break;
          }
 
          // Remove components

@@ -463,9 +463,14 @@ const createBuildingPlaceGoal = (goals: Array<TribesmanGoal>, tribesman: Entity,
       };
    }
 
+   const itemSlot = getItemTypeSlot(hotbarInventory, placeableItemType);
+   if (itemSlot === null) {
+      throw new Error("Item type not in inventory")
+   }
+
    const goal: TribesmanPlaceGoal = {
       type: TribesmanGoalType.placeBuilding,
-      placeableItemSlot: getItemTypeSlot(hotbarInventory, placeableItemType),
+      placeableItemSlot: itemSlot,
       plan: plan,
       isPersonalPlan: true
    };
@@ -515,9 +520,14 @@ export function getTribesmanGoals(tribesman: Entity, hotbarInventory: Inventory)
          case BuildingPlanType.newBuilding: {
             // If they have the desired item, go place it
             if (inventoryHasItemType(hotbarInventory, plan.buildingRecipe.product)) {
+               const itemSlot = getItemTypeSlot(hotbarInventory, plan.buildingRecipe.product);
+               if (itemSlot === null) {
+                  throw new Error("Item type not in inventory")
+               }
+
                return [{
                   type: TribesmanGoalType.placeBuilding,
-                  placeableItemSlot: getItemTypeSlot(hotbarInventory, plan.buildingRecipe.product),
+                  placeableItemSlot: itemSlot,
                   plan: plan,
                   isPersonalPlan: false
                }];

@@ -30,7 +30,7 @@ class Barrel extends Entity {
       this.addServerComponent(ServerComponentType.tribe, new TribeComponent(this, componentsData[2]));
       this.addServerComponent(ServerComponentType.inventory, new InventoryComponent(this, componentsData[3]));
 
-      if (ageTicks === 0) {
+      if (ageTicks <= 1) {
          playSound("barrel-place.mp3", 0.4, 1, this.position.x, this.position.y);
       }
    }

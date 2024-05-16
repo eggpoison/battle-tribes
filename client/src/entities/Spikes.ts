@@ -41,7 +41,7 @@ class Spikes extends Entity {
       this.addServerComponent(ServerComponentType.spikes, new SpikesComponent(this, spikesComponentData, mainRenderPart));
       this.addServerComponent(ServerComponentType.buildingMaterial, new BuildingMaterialComponent(this, materialComponentData, mainRenderPart));
       
-      if (ageTicks === 0) {
+      if (ageTicks <= 1) {
          playSound("spike-place.mp3", 0.5, 1, this.position.x, this.position.y);
       }
    }

@@ -6,9 +6,10 @@ import HealthComponent from "../entity-components/HealthComponent";
 import StatusEffectComponent from "../entity-components/StatusEffectComponent";
 import Entity from "../Entity";
 import PlantComponent from "../entity-components/PlantComponent";
-import { LeafParticleSize, createLeafParticle, createLeafSpeckParticle, createWoodSpeckParticle } from "../particles";
+import { LeafParticleSize, createDirtParticle, createLeafParticle, createLeafSpeckParticle, createWoodSpeckParticle } from "../particles";
 import Tree, { TREE_DESTROY_SOUNDS, TREE_HIT_SOUNDS } from "./Tree";
 import { playSound, AudioFilePath } from "../sound";
+import { ParticleRenderLayer } from "../rendering/particle-rendering";
 
 class Plant extends Entity {
    public static readonly SIZE = 80;
@@ -19,6 +20,18 @@ class Plant extends Entity {
       this.addServerComponent(ServerComponentType.health, new HealthComponent(this, componentsData[0]));
       this.addServerComponent(ServerComponentType.statusEffect, new StatusEffectComponent(this, componentsData[1]));
       this.addServerComponent(ServerComponentType.plant, new PlantComponent(this, componentsData[2]));
+
+      if (this.ageTicks <= 1) {
+         // Create dirt particles
+
+         for (let i = 0; i < 7; i++) {
+            const offsetDirection = 2 * Math.PI * Math.random();
+            const offsetMagnitude = randFloat(0, 10);
+            const x = this.position.x + offsetMagnitude * Math.sin(offsetDirection);
+            const y = this.position.y + offsetMagnitude * Math.cos(offsetDirection);
+            createDirtParticle(x, y, ParticleRenderLayer.high);
+         }
+      }
    }
 
    // @Cleanup: move to plant component file

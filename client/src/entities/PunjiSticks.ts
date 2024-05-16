@@ -43,7 +43,7 @@ class PunjiSticks extends Entity {
       this.addServerComponent(ServerComponentType.tribe, new TribeComponent(this, componentsData[2]));
       this.addServerComponent(ServerComponentType.spikes, new SpikesComponent(this, spikesComponentData, renderPart));
 
-      if (ageTicks === 0) {
+      if (ageTicks <= 1) {
          playSound("spike-place.mp3", 0.5, 1, this.position.x, this.position.y);
       }
    }

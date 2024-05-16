@@ -62,7 +62,7 @@ export function inventoryHasItemType(inventory: Inventory, itemType: ItemType): 
    return false;
 }
 
-export function getItemTypeSlot(inventory: Inventory, itemType: ItemType): number {
+export function getItemTypeSlot(inventory: Inventory, itemType: ItemType): number | null {
    for (let itemSlot = 1; itemSlot <= inventory.width * inventory.height; itemSlot++) {
       const item = inventory.itemSlots[itemSlot];
       if (typeof item !== "undefined" && item.type === itemType) {
@@ -70,7 +70,7 @@ export function getItemTypeSlot(inventory: Inventory, itemType: ItemType): numbe
       }
    }
 
-   throw new Error("Item type not in inventory")
+   return null;
 }
 
 /**
@@ -259,9 +259,7 @@ export function consumeItemType(inventoryComponent: InventoryComponent, itemType
 /**
  * @returns The amount of items consumed
  */
-export function consumeItemFromSlot(inventoryComponent: InventoryComponent, inventoryName: InventoryName, itemSlot: number, amount: number): number {
-   const inventory = getInventory(inventoryComponent, inventoryName);
-   
+export function consumeItemFromSlot(inventory: Inventory, itemSlot: number, amount: number): number {
    const item = inventory.itemSlots[itemSlot];
    if (typeof item === "undefined") return 0;
 
@@ -282,7 +280,7 @@ export function consumeItemFromSlot(inventoryComponent: InventoryComponent, inve
  * @returns True if the inventory has no item slots available, false if there is at least one
  */
 export function inventoryIsFull(inventory: Inventory): boolean {
-   return inventory.items.length < inventory.width * inventory.height;
+   return inventory.items.length === inventory.width * inventory.height;
 }
 
 export function dropInventory(entity: Entity, inventoryComponent: InventoryComponent, inventoryName: InventoryName, dropRange: number): void {
@@ -425,4 +423,8 @@ export function serialiseInventoryComponent(entity: Entity): InventoryComponentD
    return {
       inventories: inventoryComponent.inventoryRecord
    };
+}
+
+export function hasInventory(inventoryComponent: InventoryComponent, inventoryName: InventoryName): boolean {
+   return typeof inventoryComponent.inventoryRecord[inventoryName] !== "undefined";
 }

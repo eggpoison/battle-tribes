@@ -15,11 +15,13 @@ import { getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
 import EquipmentComponent from "../entity-components/EquipmentComponent";
 import TribeMemberComponent from "../entity-components/TribeMemberComponent";
 import TribesmanComponent from "../entity-components/TribesmanComponent";
+import PhysicsComponent from "../entity-components/PhysicsComponent";
 
 class TribeWarrior extends Tribesman {
    constructor(position: Point, id: number, ageTicks: number, componentsData: EntityComponentsData<EntityType.tribeWarrior>) {
       super(position, id, EntityType.tribeWarrior, ageTicks);
 
+      this.addServerComponent(ServerComponentType.physics, new PhysicsComponent(this, componentsData[0]));
       this.addServerComponent(ServerComponentType.health, new HealthComponent(this, componentsData[1]));
       this.addServerComponent(ServerComponentType.statusEffect, new StatusEffectComponent(this, componentsData[2]));
       this.addServerComponent(ServerComponentType.tribe, new TribeComponent(this, componentsData[3]));

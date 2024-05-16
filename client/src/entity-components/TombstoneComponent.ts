@@ -6,6 +6,7 @@ import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import { createDirtParticle } from "../particles";
 import { playSound, AudioFilePath } from "../sound";
+import { ParticleRenderLayer } from "../rendering/particle-rendering";
 
 class TombstoneComponent extends ServerComponent<ServerComponentType.tombstone> {
    private zombieSpawnProgress: number;
@@ -27,11 +28,11 @@ class TombstoneComponent extends ServerComponent<ServerComponentType.tombstone> 
          // Create zombie digging particles
          if (this.zombieSpawnProgress < 0.8) {
             if (Math.random() < 7.5 / Settings.TPS) {
-               createDirtParticle(this.zombieSpawnX, this.zombieSpawnY);
+               createDirtParticle(this.zombieSpawnX, this.zombieSpawnY, ParticleRenderLayer.low);
             }
          } else {
             if (Math.random() < 20 / Settings.TPS) {
-               createDirtParticle(this.zombieSpawnX, this.zombieSpawnY);
+               createDirtParticle(this.zombieSpawnX, this.zombieSpawnY, ParticleRenderLayer.low);
             }
          }
          if (this.entity.ageTicks % 6 === 0) {

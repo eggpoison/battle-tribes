@@ -2,7 +2,7 @@ import { InventoryComponentData, ServerComponentType } from "webgl-test-shared/d
 import { Inventory, InventoryName } from "webgl-test-shared/dist/items";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
-import { updateInventoryFromData } from "../inventory-manipulation";
+import { createInventoryFromData, updateInventoryFromData } from "../inventory-manipulation";
 
 class InventoryComponent extends ServerComponent<ServerComponentType.inventory> {
    private readonly inventories: Partial<Record<InventoryName, Inventory>> = {};
@@ -27,11 +27,13 @@ class InventoryComponent extends ServerComponent<ServerComponentType.inventory> 
       // Add new inventories
       for (const inventoryNameKey of Object.keys(data.inventories)) {
          const inventoryName = Number(inventoryNameKey) as InventoryName;
-         if (this.inventories.hasOwnProperty(inventoryName)) {
+
+         const inventoryData = data.inventories[inventoryName];
+         if (typeof inventoryData === "undefined") {
             continue;
          }
 
-         this.inventories[inventoryName] = data.inventories[inventoryName];
+         this.inventories[inventoryName] = createInventoryFromData(inventoryData);
       }
       
       // @Speed

@@ -137,7 +137,6 @@ const getClosestEmbrasureUsePoint = (tribesman: Entity, usePoints: ReadonlyArray
 }
 
 export function huntEntity(tribesman: Entity, huntedEntity: Entity, isAggressive: boolean): void {
-   // console.log("hunt entity #" + huntedEntity.id);
    // @Cleanup: Refactor to not be so big
    
    // @Incomplete: Only accounts for hotbar
@@ -330,7 +329,7 @@ export function huntEntity(tribesman: Entity, huntedEntity: Entity, isAggressive
       const hammerItemSlot = getBestHammerItemSlot(hotbarInventory);
       if (hammerItemSlot !== 0) {
          const tribeComponent = TribeComponentArray.getComponent(tribesman.id);
-         const pathExists = pathToEntityExists(tribesman, huntedEntity, tribeComponent.tribe);
+         const pathExists = pathToEntityExists(tribesman, huntedEntity, tribeComponent.tribe, getTribesmanRadius(tribesman));
          if (!pathExists) {
             const isRepairing = attemptToRepairBuildings(tribesman);
             if (isRepairing) {
@@ -341,8 +340,10 @@ export function huntEntity(tribesman: Entity, huntedEntity: Entity, isAggressive
    } else {
       const tribesmanComponent = TribesmanComponentArray.getComponent(tribesman.id);
       if (tribesmanComponent.currentAIType === TribesmanAIType.repairing) {
-         attemptToRepairBuildings(tribesman);
-         return;
+         const isRepairing = attemptToRepairBuildings(tribesman);
+         if (isRepairing) {
+            return;
+         }
       }
    }
 
@@ -367,7 +368,10 @@ export function huntEntity(tribesman: Entity, huntedEntity: Entity, isAggressive
 
       clearTribesmanPath(tribesman);
    } else {
-      const goalRadius = Math.floor(32 / PathfindingSettings.NODE_SEPARATION);
+      const pointDistance = tribesman.position.calculateDistanceBetween(huntedEntity.position);
+      const targetDirectRadius = pointDistance - distance;
+
+      const goalRadius = Math.floor((desiredAttackRange + targetDirectRadius) / PathfindingSettings.NODE_SEPARATION);
       const failureDefault = isAggressive ? PathfindFailureDefault.returnClosest : PathfindFailureDefault.throwError;
       pathfindToPosition(tribesman, huntedEntity.position.x, huntedEntity.position.y, huntedEntity.id, TribesmanPathType.default, goalRadius, failureDefault);
    }

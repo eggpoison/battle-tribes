@@ -55,8 +55,7 @@ export function createTribeWarrior(position: Point, rotation: number, tribe: Tri
    
    const tribeInfo = TRIBE_INFO_RECORD[tribe.type];
    PhysicsComponentArray.addComponent(warrior.id, new PhysicsComponent(0, 0, 0, 0, true, false));
-   // @Temporary
-   HealthComponentArray.addComponent(warrior.id, new HealthComponent(tribeInfo.maxHealthPlayer * 100));
+   HealthComponentArray.addComponent(warrior.id, new HealthComponent(tribeInfo.maxHealthPlayer));
    StatusEffectComponentArray.addComponent(warrior.id, new StatusEffectComponent(0));
    TribeComponentArray.addComponent(warrior.id, new TribeComponent(tribe));
    TribeMemberComponentArray.addComponent(warrior.id, new TribeMemberComponent(tribe.type, EntityType.tribeWarrior));
@@ -78,18 +77,6 @@ export function createTribeWarrior(position: Point, rotation: number, tribe: Tri
    createNewInventory(inventoryComponent, InventoryName.backpackSlot, 1, 1, false);
    createNewInventory(inventoryComponent, InventoryName.gloveSlot, 1, 1, false);
    createNewInventory(inventoryComponent, InventoryName.backpack, 0, 0, false);
-
-   // @Temporary
-   addItemToInventory(inventoryComponent, InventoryName.hotbar, ItemType.deepfrost_sword, 1);
-   addItemToInventory(inventoryComponent, InventoryName.offhand, ItemType.deepfrost_sword, 1);
-   addItemToInventory(inventoryComponent, InventoryName.armourSlot, ItemType.frost_armour, 1);
-   
-   // @Temporary
-   setTimeout(() => {
-      awardTitle(warrior, TribesmanTitle.bloodaxe);
-      awardTitle(warrior, TribesmanTitle.deathbringer);
-      awardTitle(warrior, TribesmanTitle.sprinter);
-   }, 100);
    
    return warrior;
 }

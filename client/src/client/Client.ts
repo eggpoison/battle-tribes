@@ -30,7 +30,7 @@ import { updateRenderChunkFromTileUpdate } from "../rendering/render-chunks";
 import Board from "../Board";
 import { definiteGameState, latencyGameState } from "../game-state/game-states";
 import { BackpackInventoryMenu_update } from "../components/game/inventories/BackpackInventory";
-import { updateInventoryFromData } from "../inventory-manipulation";
+import { createInventoryFromData, updateInventoryFromData } from "../inventory-manipulation";
 import Entity from "../Entity";
 import { createDamageNumber, createHealNumber, createResearchNumber, setVisibleBuildingSafetys } from "../text-canvas";
 import { playSound } from "../sound";
@@ -467,14 +467,14 @@ abstract class Client {
       if (definiteGameState.backpack !== null) {
          updateInventoryFromData(definiteGameState.backpack, playerInventoryData.backpackInventory);
       } else {
-         definiteGameState.backpack = playerInventoryData.backpackInventory;
+         definiteGameState.backpack = createInventoryFromData(playerInventoryData.backpackInventory);
       }
 
       // Crafting output item
       if (definiteGameState.craftingOutputSlot !== null) {
          updateInventoryFromData(definiteGameState.craftingOutputSlot, playerInventoryData.craftingOutputItemSlot);
       } else {
-         definiteGameState.craftingOutputSlot = playerInventoryData.craftingOutputItemSlot;
+         definiteGameState.craftingOutputSlot = createInventoryFromData(playerInventoryData.craftingOutputItemSlot);
       }
       CraftingMenu_setCraftingMenuOutputItem(definiteGameState.craftingOutputSlot?.itemSlots[1] || null);
 

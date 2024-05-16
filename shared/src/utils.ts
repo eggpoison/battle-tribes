@@ -55,6 +55,10 @@ export class Point {
 
    public calculateAngleBetween(other: Point): number {
       let angle = Math.atan2(other.y - this.y, other.x - this.x);
+      // @Hack @Speed: won't be necessary when we switch the angle system
+      if (angle >= Math.PI) {
+         angle -= Math.PI * 2;
+      }
       return Math.PI/2 - angle;
    }
 
@@ -250,7 +254,7 @@ export function calculateDistanceSquared(x1: number, y1: number, x2: number, y2:
 
 export function angle(x: number, y: number): number {
    let angle = Math.PI/2 - Math.atan2(y, x);
-   // @Hack @Speed: won't be necessary when switch angle system
+   // @Hack @Speed: won't be necessary when we switch the angle system
    if (angle >= Math.PI) {
       angle -= Math.PI * 2;
    }

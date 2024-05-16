@@ -6,6 +6,7 @@ import ServerComponent from "./ServerComponent";
 import Board from "../Board";
 import { createDirtParticle } from "../particles";
 import { AudioFilePath, playSound } from "../sound";
+import { ParticleRenderLayer } from "../rendering/particle-rendering";
 
 class CowComponent extends ServerComponent<ServerComponentType.cow> {
    private grazeProgress: number;
@@ -22,7 +23,7 @@ class CowComponent extends ServerComponent<ServerComponentType.cow> {
          const spawnOffsetDirection = 2 * Math.PI * Math.random();
          const spawnPositionX = this.entity.position.x + spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
          const spawnPositionY = this.entity.position.y + spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
-         createDirtParticle(spawnPositionX, spawnPositionY);
+         createDirtParticle(spawnPositionX, spawnPositionY, ParticleRenderLayer.low);
       }
 
       if (Math.random() < 0.1 / Settings.TPS) {
@@ -36,7 +37,7 @@ class CowComponent extends ServerComponent<ServerComponentType.cow> {
          for (let i = 0; i < 15; i++) {
             const x = (this.entity.tile.x + Math.random()) * Settings.TILE_SIZE;
             const y = (this.entity.tile.y + Math.random()) * Settings.TILE_SIZE;
-            createDirtParticle(x, y);
+            createDirtParticle(x, y, ParticleRenderLayer.low);
          }
       }
       this.grazeProgress = data.grazeProgress;

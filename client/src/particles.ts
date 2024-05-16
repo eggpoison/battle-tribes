@@ -240,31 +240,43 @@ export function createRockParticle(spawnPositionX: number, spawnPositionY: numbe
    }
 }
 
-export function createDirtParticle(spawnPositionX: number, spawnPositionY: number): void {
+export function createDirtParticle(spawnPositionX: number, spawnPositionY: number, renderLayer: ParticleRenderLayer): void {
    const speedMultiplier = randFloat(1, 2.2);
 
    const velocityDirection = 2 * Math.PI * Math.random();
    const velocityX = 80 * speedMultiplier * Math.sin(velocityDirection);
    const velocityY = 80 * speedMultiplier * Math.cos(velocityDirection);
 
-   const particle = new Particle(1.5);
+   const lifetime = 1.5;
+   
+   const particle = new Particle(lifetime);
+   particle.getOpacity = (): number => {
+      return 1 - Math.pow(particle.age / lifetime, 3);
+   }
+
+   const angularVelocityMagnitude = Math.PI * randFloat(3, 4);
 
    addTexturedParticleToBufferContainer(
       particle,
-      ParticleRenderLayer.low,
+      renderLayer,
       64, 64,
       spawnPositionX, spawnPositionY,
       velocityX, velocityY,
       0, 0,
       300,
       2 * Math.PI * Math.random(),
-      Math.PI * randFloat(3, 4) * randSign(),
+      angularVelocityMagnitude * randSign(),
       0,
-      Math.PI,
+      angularVelocityMagnitude / lifetime,
       3,
       0, 0, 0
    );
-   Board.lowTexturedParticles.push(particle);
+
+   if (renderLayer === ParticleRenderLayer.low) {
+      Board.lowTexturedParticles.push(particle);
+   } else {
+      Board.highTexturedParticles.push(particle);
+   }
 }
 
 const SNOW_PARTICLE_COLOUR_LOW: ParticleColour = [164/255, 175/255, 176/255];

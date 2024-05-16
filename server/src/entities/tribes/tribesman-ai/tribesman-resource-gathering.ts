@@ -1,23 +1,41 @@
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { InventoryName, ItemType } from "webgl-test-shared/dist/items";
 import Entity from "../../../Entity";
-import { HealthComponentArray, InventoryComponentArray, TribeComponentArray } from "../../../components/ComponentArray";
-import { entityIsAccessible, positionIsSafeForTribesman, tribesmanShouldEscape } from "./tribesman-ai";
+import { HealthComponentArray, InventoryComponentArray, PlantComponentArray, TribeComponentArray } from "../../../components/ComponentArray";
+import { positionIsSafeForTribesman, tribesmanShouldEscape } from "./tribesman-ai";
 import { HealthComponent } from "../../../components/HealthComponent";
 import { tribeMemberCanPickUpItem } from "../tribe-member";
 import { getInventory, inventoryIsFull } from "../../../components/InventoryComponent";
+import { PlanterBoxPlant } from "webgl-test-shared/dist/components";
+import { plantIsFullyGrown } from "../../../components/PlantComponent";
 
-const RESOURCE_PRODUCTS: Partial<Record<EntityType, ReadonlyArray<ItemType>>> = {
-   [EntityType.cow]: [ItemType.leather, ItemType.raw_beef],
-   [EntityType.berryBush]: [ItemType.berry],
-   [EntityType.tree]: [ItemType.wood],
-   [EntityType.iceSpikes]: [ItemType.frostcicle],
-   [EntityType.cactus]: [ItemType.cactus_spine],
-   [EntityType.boulder]: [ItemType.rock],
-   [EntityType.krumblid]: [ItemType.leather],
-   [EntityType.yeti]: [ItemType.yeti_hide, ItemType.raw_beef]
-};
+const getResourceProducts = (entity: Entity): ReadonlyArray<ItemType> | null => {
+   switch (entity.type) {
+      case EntityType.cow: return [ItemType.leather, ItemType.raw_beef];
+      case EntityType.berryBush: return [ItemType.berry];
+      case EntityType.tree: return [ItemType.wood, ItemType.seed];
+      case EntityType.iceSpikes: return [ItemType.frostcicle];
+      case EntityType.cactus: return [ItemType.cactus_spine];
+      case EntityType.boulder: return [ItemType.rock];
+      case EntityType.krumblid: return [ItemType.leather];
+      case EntityType.yeti: return [ItemType.yeti_hide, ItemType.raw_beef];
+      case EntityType.plant: {
+         const plantComponent = PlantComponentArray.getComponent(entity.id);
+         switch (plantComponent.plantType) {
+            case PlanterBoxPlant.tree: return [ItemType.wood, ItemType.seed];
+            case PlanterBoxPlant.berryBush: return [ItemType.berry];
+            case PlanterBoxPlant.iceSpikes: return [ItemType.frostcicle];
+            default: {
+               const unreachable: never = plantComponent.plantType;
+               return unreachable;
+            }
+         }
+      }
+      default: return null;
+   }
+}
 
+// @Cleanup: should we keep this?
 /** Record of whether or not an entity type should only be harvested if the resource is urgently needed */
 const SHOULD_HARVEST_CONSERVATIVELY: Partial<Record<EntityType, boolean>> = {
    [EntityType.cow]: false,
@@ -51,24 +69,46 @@ const resourceIsPrioritised = (resourceProducts: ReadonlyArray<ItemType>, priori
    return false;
 }
 
-const canGatherResource = (tribesman: Entity, healthComponent: HealthComponent, inventoryIsFull: boolean, resource: Entity): boolean => {
+const shouldGatherPlant = (plantID: number): boolean => {
+   const plantComponent = PlantComponentArray.getComponent(plantID);
+
+   switch (plantComponent.plantType) {
+      // Harvest when fully grown
+      case PlanterBoxPlant.tree:
+      case PlanterBoxPlant.iceSpikes: {
+         return plantIsFullyGrown(plantComponent);
+      }
+      // Harvest when they have fruit
+      case PlanterBoxPlant.berryBush: {
+         return plantComponent.numFruit > 0;
+      }
+   }
+}
+
+const shouldGatherResource = (tribesman: Entity, healthComponent: HealthComponent, inventoryIsFull: boolean, resource: Entity, resourceProducts: ReadonlyArray<ItemType>): boolean => {
    const tribeComponent = TribeComponentArray.getComponent(tribesman.id); // @Speed
    
    // If the tribesman is within the escape health threshold, make sure there wouldn't be any enemies visible while picking up the dropped item
-   if (tribesmanShouldEscape(tribesman.type, healthComponent) || !positionIsSafeForTribesman(tribesman, resource.position.x, resource.position.y) || !entityIsAccessible(tribesman, resource, tribeComponent.tribe)) {
+   // @Hack: the accessibility check doesn't work for plants in planter boxes
+   if (tribesmanShouldEscape(tribesman.type, healthComponent) || !positionIsSafeForTribesman(tribesman, resource.position.x, resource.position.y)) {
+   // if (tribesmanShouldEscape(tribesman.type, healthComponent) || !positionIsSafeForTribesman(tribesman, resource.position.x, resource.position.y) || !entityIsAccessible(tribesman, resource, tribeComponent.tribe, getTribesmanAttackRadius(tribesman))) {
+      return false;
+   }
+
+   // Only try to gather plants if they are fully grown
+   if (resource.type === EntityType.plant && !shouldGatherPlant(resource.id)) {
       return false;
    }
 
    // If the tribesman's inventory is full, make sure the tribesman would be able to pick up the product the resource would produce
    if (inventoryIsFull) {
-      const resourceProducts = RESOURCE_PRODUCTS[resource.type];
-      if (resourceProducts !== undefined) {
-         for (const itemType of RESOURCE_PRODUCTS[resource.type]!) {
-            if (tribeMemberCanPickUpItem(tribesman, itemType)) {
-               return true;
-            }
+      for (const itemType of resourceProducts) {
+         if (tribeMemberCanPickUpItem(tribesman, itemType)) {
+            return true;
          }
       }
+
+      return false;
    }
 
    return true;
@@ -82,6 +122,7 @@ export interface GatherTargetInfo {
 export function getGatherTarget(tribesman: Entity, visibleEntities: ReadonlyArray<Entity>, prioritisedItemTypes: ReadonlyArray<ItemType>): GatherTargetInfo {
    const healthComponent = HealthComponentArray.getComponent(tribesman.id);
    const inventoryComponent = InventoryComponentArray.getComponent(tribesman.id);
+   const tribeComponent = TribeComponentArray.getComponent(tribesman.id);
    
    // @Incomplete: Doesn't account for room in backpack/other
    const hotbarInventory = getInventory(inventoryComponent, InventoryName.hotbar);
@@ -93,29 +134,31 @@ export function getGatherTarget(tribesman: Entity, visibleEntities: ReadonlyArra
    let minPrioritisedDist = Number.MAX_SAFE_INTEGER;
    let closestPrioritisedResource: Entity | undefined;
 
-   // Prioritise gathering resources which can be used in the tribe's building plan
    for (let i = 0; i < visibleEntities.length; i++) {
       const resource = visibleEntities[i];
       
-      if (RESOURCE_PRODUCTS[resource.type] === undefined || !canGatherResource(tribesman, healthComponent, isFull, resource)) {
+      const resourceProducts = getResourceProducts(resource);
+      if (resourceProducts === null || !shouldGatherResource(tribesman, healthComponent, isFull, resource, resourceProducts)) {
          continue;
       }
-
+      
       const dist = tribesman.position.calculateDistanceBetween(resource.position);
-      const resourceProducts = RESOURCE_PRODUCTS[resource.type];
-      if (resourceProducts !== undefined && resourceIsPrioritised(resourceProducts, prioritisedItemTypes)) {
+      if (tribeComponent.tribe.isAIControlled && resourceIsPrioritised(resourceProducts, prioritisedItemTypes)) {
          if (dist < minPrioritisedDist) {
             closestPrioritisedResource = resource;
             minPrioritisedDist = dist;
          }
       } else {
-         if (!SHOULD_HARVEST_CONSERVATIVELY[resource.type] && dist < minDist) {
+         // @Temporary?
+         // if (!SHOULD_HARVEST_CONSERVATIVELY[resource.type] && dist < minDist) {
+         if (dist < minDist) {
             closestResource = resource;
             minDist = dist;
          }
       }
    }
-
+   
+   // Prioritise gathering resources which can be used in the tribe's building plan
    if (typeof closestPrioritisedResource !== "undefined") {
       return {
          target: closestPrioritisedResource,

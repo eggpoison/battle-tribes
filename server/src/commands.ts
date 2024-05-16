@@ -1,5 +1,5 @@
-import { PlayerCauseOfDeath, EntityType, EntityTypeString } from "webgl-test-shared/dist/entities";
-import { ItemType } from "webgl-test-shared/dist/items";
+import { PlayerCauseOfDeath, EntityType, EntityTypeString, getEntityTypeFromString } from "webgl-test-shared/dist/entities";
+import { ItemType, getItemTypeFromString } from "webgl-test-shared/dist/items";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { Biome } from "webgl-test-shared/dist/tiles";
 import { Point, randItem } from "webgl-test-shared/dist/utils";
@@ -152,18 +152,21 @@ export function registerCommand(command: string, player: Entity): void {
          break;
       }
       case "give": {
-         const itemType = commandComponents[1];
+         const itemTypeString = commandComponents[1];
+         if (typeof itemTypeString === "number") {
+            break;
+         }
 
-         // @Incomplete: validate item type
-
-         // @Bug: doesn't work.
-         const confirmedItemType = Number(itemType) as ItemType;
+         const itemType = getItemTypeFromString(itemTypeString);
+         if (itemType === null) {
+            break;
+         }
 
          if (numParameters === 1) {
-            giveItem(player, confirmedItemType, 1);
+            giveItem(player, itemType, 1);
          } else if (numParameters === 2) {
             const amount = commandComponents[2] as number;
-            giveItem(player, confirmedItemType, amount);
+            giveItem(player, itemType, amount);
          }
          
          break;
@@ -180,12 +183,21 @@ export function registerCommand(command: string, player: Entity): void {
          break;
       }
       case "summon": {
-         const unguardedEntityType = EntityTypeString[commandComponents[1] as EntityType] as unknown as number;
+         const entityTypeString = commandComponents[1];
+         if (typeof entityTypeString === "number") {
+            break;
+         }
+
+         const entityType = getEntityTypeFromString(entityTypeString);
+         if (entityType === null) {
+            break;
+         }
+         
          if (numParameters === 1) {
-            summonEntities(player, unguardedEntityType, 1);
+            summonEntities(player, entityType, 1);
          } else {
             const amount = commandComponents[2] as number;
-            summonEntities(player, unguardedEntityType, amount);
+            summonEntities(player, entityType, amount);
          }
          break;
       }

@@ -2,7 +2,7 @@ import { EntityType } from "webgl-test-shared/dist/entities";
 import { circleAndRectangleDoIntersect, circlesDoIntersect } from "webgl-test-shared/dist/collision-detection";
 import { Point } from "webgl-test-shared/dist/utils";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { ITEM_TYPE_RECORD } from "webgl-test-shared/dist/items";
+import { ITEM_TYPE_RECORD, InventoryName } from "webgl-test-shared/dist/items";
 import { getTechByID } from "webgl-test-shared/dist/techs";
 import { Settings } from "webgl-test-shared/dist/settings";
 import Player, { getPlayerSelectedItem } from "./entities/Player";
@@ -362,7 +362,17 @@ export function attemptEntitySelection(): void {
             if (typeof plant !== "undefined") {
                Client.sendModifyBuilding(highlightedEntityID, plant);
                shouldSetSelectedEntity = false;
+
+               // @Hack
+               const inventoryUseComponent = Player.instance!.getServerComponent(ServerComponentType.inventoryUse);
+               const hotbarUseInfo = inventoryUseComponent.getUseInfo(InventoryName.hotbar);
+               hotbarUseInfo.lastAttackTicks = Board.ticks;
             }
+            break;
+         }
+         case EntityType.workerHut:
+         case EntityType.warriorHut: {
+            shouldShowBuildMenu = true;
             break;
          }
          default: {

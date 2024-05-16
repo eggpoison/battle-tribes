@@ -11,10 +11,9 @@ import { Point } from "webgl-test-shared/dist/utils";
 import Entity from "../../Entity";
 import { attemptAttack, calculateAttackTarget, calculateBlueprintWorkTarget, calculateRadialAttackTargets, calculateRepairTarget, getAvailableCraftingStations, onTribeMemberHurt, repairBuilding, tickTribeMember, tribeMemberCanPickUpItem, useItem } from "./tribe-member";
 import Tribe from "../../Tribe";
-import { BuildingMaterialComponentArray, HealthComponentArray, HutComponentArray, InventoryComponentArray, InventoryUseComponentArray, ItemComponentArray, PlayerComponentArray, SpikesComponentArray, TribeComponentArray, TribeMemberComponentArray, TunnelComponentArray } from "../../components/ComponentArray";
+import { BuildingMaterialComponentArray, HealthComponentArray, HutComponentArray, InventoryComponentArray, InventoryUseComponentArray, ItemComponentArray, PlanterBoxComponentArray, PlayerComponentArray, SpikesComponentArray, TribeComponentArray, TribeMemberComponentArray, TunnelComponentArray } from "../../components/ComponentArray";
 import { InventoryComponent, addItemToSlot, recipeCraftingStationIsAvailable, consumeItemFromSlot, consumeItemType, consumeItemTypeFromInventory, countItemType, craftRecipe, createNewInventory, dropInventory, getInventory, inventoryComponentCanAffordRecipe, pickupItemEntity, addItem } from "../../components/InventoryComponent";
 import Board from "../../Board";
-import { itemEntityCanBePickedUp } from "../item-entity";
 import { HealthComponent } from "../../components/HealthComponent";
 import CircularHitbox from "../../hitboxes/CircularHitbox";
 import { InventoryUseComponent, getInventoryUseInfo, setLimbActions } from "../../components/InventoryUseComponent";
@@ -36,9 +35,6 @@ import { toggleFenceGateDoor } from "../../components/FenceGateComponent";
 const ATTACK_OFFSET = 50;
 /** Max distance from the attack position that the attack will be registered from */
 const ATTACK_RADIUS = 50;
-
-const VACUUM_RANGE = 85;
-const VACUUM_STRENGTH = 25;
 
 export function createPlayer(position: Point, tribe: Tribe): Entity {
    const player = new Entity(position, 0, EntityType.player, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
@@ -77,16 +73,15 @@ export function createPlayer(position: Point, tribe: Tribe): Entity {
    // addItem(inventoryComponent, createItem(ItemType.wooden_spikes, 5));
    // addItem(inventoryComponent, createItem(ItemType.leaf, 10));
 
-   addItem(inventoryComponent, createItem(ItemType.planter_box, 5));
-   addItem(inventoryComponent, createItem(ItemType.seed, 10));
-   addItem(inventoryComponent, createItem(ItemType.berry, 10));
-   addItem(inventoryComponent, createItem(ItemType.frostcicle, 10));
+   // addItem(inventoryComponent, createItem(ItemType.planter_box, 5));
+   // addItem(inventoryComponent, createItem(ItemType.seed, 10));
+   // addItem(inventoryComponent, createItem(ItemType.berry, 10));
+   // addItem(inventoryComponent, createItem(ItemType.frostcicle, 10));
 
    // addItem(inventoryComponent, createItem(ItemType.wooden_fence, 99));
-   addItem(inventoryComponent, createItem(ItemType.wooden_hammer, 1));
+   // addItem(inventoryComponent, createItem(ItemType.wooden_hammer, 1));
    // addItem(inventoryComponent, createItem(ItemType.wood, 10));
-   addItem(inventoryComponent, createItem(ItemType.wooden_wall, 50));
-   // addItem(inventoryComponent, createItem(ItemType.worker_hut, 50));
+   // addItem(inventoryComponent, createItem(ItemType.wooden_wall, 50));
    
    // setTimeout(() => {
    //    awardTitle(player, TribesmanTitle.yetisbane);
@@ -100,36 +95,6 @@ export function createPlayer(position: Point, tribe: Tribe): Entity {
 
 export function tickPlayer(player: Entity): void {
    tickTribeMember(player);
-   
-   // Vacuum nearby items to the player
-   // @Incomplete: Don't vacuum items which the player doesn't have the inventory space for
-   const minChunkX = Math.max(Math.floor((player.position.x - VACUUM_RANGE) / Settings.CHUNK_UNITS), 0);
-   const maxChunkX = Math.min(Math.floor((player.position.x + VACUUM_RANGE) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1);
-   const minChunkY = Math.max(Math.floor((player.position.y - VACUUM_RANGE) / Settings.CHUNK_UNITS), 0);
-   const maxChunkY = Math.min(Math.floor((player.position.y + VACUUM_RANGE) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1);
-   for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
-      for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
-         const chunk = Board.getChunk(chunkX, chunkY);
-         for (const itemEntity of chunk.entities) {
-            if (itemEntity.type !== EntityType.itemEntity || !itemEntityCanBePickedUp(itemEntity, player.id)) {
-               continue;
-            }
-
-            const itemComponent = ItemComponentArray.getComponent(itemEntity.id);
-            if (!tribeMemberCanPickUpItem(player, itemComponent.itemType)) {
-               continue;
-            }
-            
-            const distance = player.position.calculateDistanceBetween(itemEntity.position);
-            if (distance <= VACUUM_RANGE) {
-               const vacuumDirection = itemEntity.position.calculateAngleBetween(player.position);
-               const physicsComponent = PhysicsComponentArray.getComponent(itemEntity.id);
-               physicsComponent.velocity.x += VACUUM_STRENGTH * Math.sin(vacuumDirection);
-               physicsComponent.velocity.y += VACUUM_STRENGTH * Math.cos(vacuumDirection);
-            }
-         }
-      }
-   }
 }
 
 export function onPlayerCollision(player: Entity, collidingEntity: Entity): void {
@@ -187,8 +152,8 @@ export function processItemPickupPacket(player: Entity, entityID: number, invent
       return;
    }
 
-   const inventoryComponent = InventoryComponentArray.getComponent(player.id);
-   const heldItemInventory = getInventory(inventoryComponent, InventoryName.heldItemSlot);
+   const playerInventoryComponent = InventoryComponentArray.getComponent(player.id);
+   const heldItemInventory = getInventory(playerInventoryComponent, InventoryName.heldItemSlot);
    
    // Don't pick up the item if there is already a held item
    if (typeof heldItemInventory.itemSlots[1] !== "undefined") {
@@ -204,10 +169,12 @@ export function processItemPickupPacket(player: Entity, entityID: number, invent
    }
 
    // Hold the item
-   heldItemInventory.addItem(pickedUpItem, 1);
+   // Copy it as the consumeItemFromSlot function modifies the original item's count
+   const heldItem = createItem(pickedUpItem.type, pickedUpItem.count);
+   heldItemInventory.addItem(heldItem, 1);
 
    // Remove the item from its previous inventory
-   consumeItemFromSlot(targetInventoryComponent, inventoryName, itemSlot, amount);
+   consumeItemFromSlot(targetInventory, itemSlot, amount);
 }
 
 export function processItemReleasePacket(player: Entity, entityID: number, inventoryName: InventoryName, itemSlot: number, amount: number): void {
@@ -216,7 +183,7 @@ export function processItemReleasePacket(player: Entity, entityID: number, inven
    }
 
    const inventoryComponent = InventoryComponentArray.getComponent(player.id);
-
+   
    // Don't release an item if there is no held item
    const heldItemInventory = getInventory(inventoryComponent, InventoryName.heldItemSlot);
    const heldItem = heldItemInventory.itemSlots[1];
@@ -529,8 +496,21 @@ const modifySpikes = (player: Entity, spikes: Entity): void => {
    spikesComponent.isCovered = true;
 }
 
-const modifyPlanterBox = (planterBox: Entity, plant: PlanterBoxPlant): void => {
-   placePlantInPlanterBox(planterBox, plant);
+const modifyPlanterBox = (player: Entity, planterBox: Entity, plantType: PlanterBoxPlant): void => {
+   // Don't place plant if there's already a plant
+   const planterBoxComponent = PlanterBoxComponentArray.getComponent(planterBox.id);
+   if (typeof Board.entityRecord[planterBoxComponent.plantEntityID] !== "undefined") {
+      return;
+   }
+   
+   placePlantInPlanterBox(planterBox, plantType);
+
+   // Consume the item
+   const inventoryUseComponent = InventoryUseComponentArray.getComponent(player.id);
+   const hotbarUseInfo = getInventoryUseInfo(inventoryUseComponent, InventoryName.hotbar);
+   const hotbarInventory = hotbarUseInfo.inventory;
+
+   consumeItemFromSlot(hotbarInventory, hotbarUseInfo.selectedItemSlot, 1);
 }
 
 export function modifyBuilding(player: Entity, buildingID: number, data: number): void {
@@ -557,7 +537,7 @@ export function modifyBuilding(player: Entity, buildingID: number, data: number)
          break;
       }
       case EntityType.planterBox: {
-         modifyPlanterBox(building, data);
+         modifyPlanterBox(player, building, data);
          break;
       }
       default: {

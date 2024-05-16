@@ -13,11 +13,13 @@ import { addTribeMemberRenderParts } from "./TribeMember";
 import TribesmanComponent from "../entity-components/TribesmanComponent";
 import EquipmentComponent from "../entity-components/EquipmentComponent";
 import TribeMemberComponent from "../entity-components/TribeMemberComponent";
+import PhysicsComponent from "../entity-components/PhysicsComponent";
 
 class TribeWorker extends Tribesman {
    constructor(position: Point, id: number, ageTicks: number, componentsData: EntityComponentsData<EntityType.tribeWorker>) {
       super(position, id, EntityType.tribeWorker, ageTicks);
 
+      this.addServerComponent(ServerComponentType.physics, new PhysicsComponent(this, componentsData[0]));
       this.addServerComponent(ServerComponentType.health, new HealthComponent(this, componentsData[1]));
       this.addServerComponent(ServerComponentType.statusEffect, new StatusEffectComponent(this, componentsData[2]));
       this.addServerComponent(ServerComponentType.tribe, new TribeComponent(this, componentsData[3]));

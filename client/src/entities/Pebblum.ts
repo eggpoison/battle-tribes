@@ -8,6 +8,7 @@ import FootprintComponent from "../entity-components/FootprintComponent";
 import Entity from "../Entity";
 import HealthComponent from "../entity-components/HealthComponent";
 import StatusEffectComponent from "../entity-components/StatusEffectComponent";
+import PhysicsComponent from "../entity-components/PhysicsComponent";
 
 class Pebblum extends Entity {
    constructor(position: Point, id: number, ageTicks: number, componentsData: EntityComponentsData<EntityType.pebblum>) {
@@ -33,6 +34,7 @@ class Pebblum extends Entity {
       body.offset.y = -8;
       this.attachRenderPart(body);
 
+      this.addServerComponent(ServerComponentType.physics, new PhysicsComponent(this, componentsData[0]));
       this.addServerComponent(ServerComponentType.health, new HealthComponent(this, componentsData[1]));
       this.addServerComponent(ServerComponentType.statusEffect, new StatusEffectComponent(this, componentsData[2]));
       this.addClientComponent(ClientComponentType.footprint, new FootprintComponent(this, 0.3, 20, 64, 5, 40));

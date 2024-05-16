@@ -12,6 +12,7 @@ import FishComponent from "../entity-components/FishComponent";
 import Entity from "../Entity";
 import HealthComponent from "../entity-components/HealthComponent";
 import StatusEffectComponent from "../entity-components/StatusEffectComponent";
+import PhysicsComponent from "../entity-components/PhysicsComponent";
 
 const TEXTURE_SOURCES: Record<FishColour, string> = {
    [FishColour.blue]: "entities/fish/fish-blue.png",
@@ -35,6 +36,7 @@ class Fish extends Entity {
          )
       );
 
+      this.addServerComponent(ServerComponentType.physics, new PhysicsComponent(this, componentsData[0]))
       this.addServerComponent(ServerComponentType.health, new HealthComponent(this, componentsData[1]))
       this.addServerComponent(ServerComponentType.statusEffect, new StatusEffectComponent(this, componentsData[2]))
       this.addServerComponent(ServerComponentType.fish, new FishComponent(this, randFloat(0.6, 1)))

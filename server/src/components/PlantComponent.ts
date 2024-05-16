@@ -4,10 +4,11 @@ import Entity from "../Entity";
 import { PlantComponentArray } from "./ComponentArray";
 
 export const PLANT_GROWTH_TICKS: Record<PlanterBoxPlant, number> = {
+   [PlanterBoxPlant.tree]: 90 * Settings.TPS,
    // @Temporary
-   [PlanterBoxPlant.tree]: 15 * Settings.TPS,
-   [PlanterBoxPlant.berryBush]: 15 * Settings.TPS,
-   [PlanterBoxPlant.iceSpikes]: 15 * Settings.TPS
+   // [PlanterBoxPlant.berryBush]: 60 * Settings.TPS,
+   [PlanterBoxPlant.berryBush]: 10 * Settings.TPS,
+   [PlanterBoxPlant.iceSpikes]: 120 * Settings.TPS
 };
 
 export class PlantComponent {
@@ -51,6 +52,11 @@ export function tickPlantComponent(plantComponent: PlantComponent): void {
          }
       }
    }
+}
+
+export function plantIsFullyGrown(plantComponent: PlantComponent): boolean {
+   const ticksToGrow = PLANT_GROWTH_TICKS[plantComponent.plantType];
+   return plantComponent.plantGrowthTicks === ticksToGrow;
 }
 
 export function serialisePlantComponent(entity: Entity): PlantComponentData {

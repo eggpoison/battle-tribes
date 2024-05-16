@@ -4,11 +4,14 @@ import Entity from "../Entity";
 import { PlantComponentArray } from "./ComponentArray";
 
 export const PLANT_GROWTH_TICKS: Record<PlanterBoxPlant, number> = {
-   [PlanterBoxPlant.tree]: 90 * Settings.TPS,
+   // @Temporary
+   // [PlanterBoxPlant.tree]: 90 * Settings.TPS,
+   [PlanterBoxPlant.tree]: 50 * Settings.TPS,
    // @Temporary
    // [PlanterBoxPlant.berryBush]: 60 * Settings.TPS,
    [PlanterBoxPlant.berryBush]: 10 * Settings.TPS,
-   [PlanterBoxPlant.iceSpikes]: 120 * Settings.TPS
+   // [PlanterBoxPlant.iceSpikes]: 120 * Settings.TPS
+   [PlanterBoxPlant.iceSpikes]: 12 * Settings.TPS
 };
 
 export class PlantComponent {

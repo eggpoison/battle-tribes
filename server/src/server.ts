@@ -1,4 +1,4 @@
-import { BlueprintType, ComponentData, EntityComponents, EntityComponentsData, ServerComponentType } from "webgl-test-shared/dist/components";
+import { BlueprintType, ComponentData, EntityComponents, EntityComponentsData, PlanterBoxPlant, ServerComponentType } from "webgl-test-shared/dist/components";
 import { AttackPacket, CircularHitboxData, ClientToServerEvents, EntityData, EntityDebugData, GameDataPacket, GameDataPacketOptions, GameDataSyncPacket, HealData, HitData, InitialGameDataPacket, InterServerEvents, PlayerDataPacket, PlayerInventoryData, RectangularHitboxData, ResearchOrbCompleteData, RespawnDataPacket, ServerTileData, ServerToClientEvents, SocketData, VisibleChunkBounds } from "webgl-test-shared/dist/client-server-types";
 import { EntityType, LimbAction } from "webgl-test-shared/dist/entities";
 import { EnemyTribeData, PlayerTribeData, TechID, getTechByID } from "webgl-test-shared/dist/techs";
@@ -6,7 +6,7 @@ import { Inventory, InventoryName } from "webgl-test-shared/dist/items";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { TribesmanTitle } from "webgl-test-shared/dist/titles";
 import { TribeType, TRIBE_INFO_RECORD } from "webgl-test-shared/dist/tribes";
-import { assertUnreachable, Point, randInt, randItem } from "webgl-test-shared/dist/utils";
+import { assertUnreachable, Point, randFloat, randInt, randItem } from "webgl-test-shared/dist/utils";
 import { Server, Socket } from "socket.io";
 import Board from "./Board";
 import { registerCommand } from "./commands";
@@ -16,7 +16,7 @@ import RectangularHitbox from "./hitboxes/RectangularHitbox";
 import CircularHitbox from "./hitboxes/CircularHitbox";
 import OPTIONS from "./options";
 import Entity from "./Entity";
-import { HealthComponentArray, InventoryComponentArray, InventoryUseComponentArray, PlayerComponentArray, TribeComponentArray, TribesmanComponentArray } from "./components/ComponentArray";
+import { HealthComponentArray, InventoryComponentArray, InventoryUseComponentArray, PlanterBoxComponentArray, PlayerComponentArray, TribeComponentArray, TribesmanComponentArray } from "./components/ComponentArray";
 import { getInventory, serialiseInventoryComponent } from "./components/InventoryComponent";
 import { createPlayer, interactWithStructure, processItemPickupPacket, processItemReleasePacket, processItemUsePacket, processPlayerAttackPacket, processPlayerCraftingPacket, processTechUnlock, startChargingBattleaxe, startChargingBow, startChargingSpear, startEating, uninteractWithStructure, modifyBuilding, deconstructBuilding } from "./entities/tribes/player";
 import { serialiseCowComponent } from "./entities/mobs/cow";
@@ -78,10 +78,16 @@ import { updateResourceDistributions } from "./resource-distributions";
 import { serialiseHealingTotemComponent } from "./components/HealingTotemComponent";
 import { recruitTribesman } from "./entities/tribes/tribesman-ai/tribesman-ai";
 import { serialisePlantComponent } from "./components/PlantComponent";
-import { serialisePlanterBoxComponent } from "./components/PlanterBoxComponent";
+import { placePlantInPlanterBox, serialisePlanterBoxComponent } from "./components/PlanterBoxComponent";
 import { serialiseFenceComponent } from "./components/FenceComponent";
 import { serialiseFenceGateComponent } from "./components/FenceGateComponent";
 import { serialiseFenceConnectionComponent } from "./components/FenceConnectionComponent";
+import { createTribeTotem } from "./entities/tribes/tribe-totem";
+import { createWorkerHut } from "./entities/tribes/worker-hut";
+import { createTribeWorker } from "./entities/tribes/tribe-worker";
+import { createPlanterBox } from "./entities/buildings/planter-box";
+import { createBarrel } from "./entities/tribes/barrel";
+import { createWall } from "./entities/buildings/wall";
 
 // @Cleanup: file is way too large
 
@@ -540,46 +546,77 @@ class GameServer {
          //    createTribeWorker(new Point(spawnPosition.x + 500, spawnPosition.y + 150), -1, 0);
          // }, 5000);
          
-         // setTimeout(() => {
-         //    if(1+1===2)return;
-         //    // const p = this.getPlayerFromUsername(username)!;
-         //    // const tc = TribeComponentArray.getComponent(p.id);
-         //    // const tribe = tc.tribe;
+         setTimeout(() => {
+            // if(1+1===2)return;
+            const p = this.getPlayerFromUsername(username)!;
+            const tc = TribeComponentArray.getComponent(p.id);
+            const tribe = tc.tribe;
+            const TRIB = tribe;
             
-         //    const TRIB = new Tribe(TribeType.goblins, true);
+            // const TRIB = new Tribe(TribeType.goblins, true);
 
-         //    createTribeTotem(new Point(spawnPosition.x + 500, spawnPosition.y), 0, TRIB);
+            createTribeTotem(new Point(spawnPosition.x + 500, spawnPosition.y), 0, TRIB);
 
-         //    const h1 = createWorkerHut(new Point(spawnPosition.x + 380, spawnPosition.y + 50), Math.PI * 1.27, TRIB);
-         //    const h2 = createWorkerHut(new Point(spawnPosition.x + 547, spawnPosition.y - 100), Math.PI * 2.87, TRIB);
-         //    const h3 = createWorkerHut(new Point(spawnPosition.x + 600, spawnPosition.y + 65), 0.7, TRIB);
-         //    const h4 = createWorkerHut(new Point(spawnPosition.x + 700, spawnPosition.y - 65), -0.7, TRIB);
-         //    const h5 = createWorkerHut(new Point(spawnPosition.x + 320, spawnPosition.y + 100), -Math.PI*0.4, TRIB);
+            const h1 = createWorkerHut(new Point(spawnPosition.x + 380, spawnPosition.y + 50), Math.PI * 1.27, TRIB);
+            const h2 = createWorkerHut(new Point(spawnPosition.x + 547, spawnPosition.y - 100), Math.PI * 2.87, TRIB);
+            const h3 = createWorkerHut(new Point(spawnPosition.x + 600, spawnPosition.y + 65), 0.7, TRIB);
+            const h4 = createWorkerHut(new Point(spawnPosition.x + 700, spawnPosition.y - 65), -0.7, TRIB);
+            const h5 = createWorkerHut(new Point(spawnPosition.x + 320, spawnPosition.y + 100), -Math.PI*0.4, TRIB);
 
-         //    const w1 = createTribeWorker(h1.position.copy(), TRIB.id, h1.id);
-         //    const w2 = createTribeWorker(h2.position.copy(), TRIB.id, h2.id);
-         //    const w3 = createTribeWorker(h3.position.copy(), TRIB.id, h3.id);
-         //    const w4 = createTribeWorker(h4.position.copy(), TRIB.id, h4.id);
-         //    const w5 = createTribeWorker(h5.position.copy(), TRIB.id, h5.id);
+            const w1 = createTribeWorker(h1.position.copy(), 0, TRIB.id, h1.id);
+            const w2 = createTribeWorker(h2.position.copy(), 0, TRIB.id, h2.id);
+            const w3 = createTribeWorker(h3.position.copy(), 0, TRIB.id, h3.id);
+            const w4 = createTribeWorker(h4.position.copy(), 0, TRIB.id, h4.id);
+            const w5 = createTribeWorker(h5.position.copy(), 0, TRIB.id, h5.id);
 
-         //    // setTimeout(() => {
-         //    //    damageEntity(w1, 9999, null, 0);
-         //    //    damageEntity(w2, 9999, null, 0);
-         //    //    damageEntity(w3, 9999, null, 0);
-         //    //    damageEntity(w4, 9999, null, 0);
-         //    // }, 100);
+            const ps = new Array<Entity>();
 
-         //    createWorkbench(new Point(spawnPosition.x + 520, spawnPosition.y + 230), 0.8, TRIB);
-         //    // createTree(new Point(spawnPosition.x, spawnPosition.y + 200), 0, tribe);
-         //    // createWall(new Point(spawnPosition.x + 64, spawnPosition.y + 200), 0, TRIB);
-         //    createBarrel(new Point(spawnPosition.x + 350, spawnPosition.y - 130), 0, TRIB);
-         //    // createDoor(new Point(spawnPosition.x, spawnPosition.y + 200), 0, TRIB, BuildingMaterial.wood);
+            for (let y = -2; y <= 1; y++) {
+               const yo = randFloat(-3, 3);
+               for (let x = 0; x <= 10; x++) {
+                  const p = createPlanterBox(new Point(spawnPosition.x - 0 - 80 * x, spawnPosition.y + 150 * y + yo), 0, tribe);
+                  ps.push(p);
+               }
+            }
 
-         //    // setTimeout(() => {
-         //    //    const TRIB = new Tribe(TribeType.frostlings, true);
-         //    //    createTribeWorker(new Point(spawnPosition.x + 700, spawnPosition.y), TRIB.id, 0);
-         //    // }, 3500);
-         // }, 4000);
+            // top walls
+            for (let x = 0; x <= 14; x++) {
+               createWall(new Point(spawnPosition.x - 64 * x, spawnPosition.y + 220), 0, tribe);
+            }
+
+            // bottom walls
+            for (let x = 0; x <= 14; x++) {
+               createWall(new Point(spawnPosition.x - 64 * x, spawnPosition.y - 368), 0, tribe);
+            }
+
+            // left walls
+            for (let y = -4; y <= 3; y++) {
+               createWall(new Point(spawnPosition.x - 64 * 14, spawnPosition.y + y * 64 - 40), 0, tribe);
+            }
+
+            // const p1 = createPlanterBox(new Point(spawnPosition.x - 50, spawnPosition.y + 80), 0, tribe);
+            // const p2 = createPlanterBox(new Point(spawnPosition.x - 50, spawnPosition.y - 80), 0.1, tribe);
+            // const p3 = createPlanterBox(new Point(spawnPosition.x - 210, spawnPosition.y + 80), 0, tribe);
+            // const p4 = createPlanterBox(new Point(spawnPosition.x - 210, spawnPosition.y - 80), 0.1, tribe);
+
+            setTimeout(() => {
+               // placePlantInPlanterBox(p1, PlanterBoxPlant.berryBush);
+               // placePlantInPlanterBox(p2, PlanterBoxPlant.berryBush);
+               // placePlantInPlanterBox(p3, PlanterBoxPlant.berryBush);
+               // placePlantInPlanterBox(p4, PlanterBoxPlant.berryBush);
+               for (let i = 0; i < ps.length; i++) {
+                  const p = ps[i];
+                  placePlantInPlanterBox(p, PlanterBoxPlant.tree);
+               }
+            }, 100);
+
+            // createWorkbench(new Point(spawnPosition.x + 520, spawnPosition.y + 230), 0.8, TRIB);
+            // createTree(new Point(spawnPosition.x, spawnPosition.y + 200), 0, tribe);
+            // createWall(new Point(spawnPosition.x + 64, spawnPosition.y + 200), 0, TRIB);
+            createBarrel(new Point(spawnPosition.x + 170, spawnPosition.y - 150), Math.PI * 0.38, TRIB);
+            createBarrel(new Point(spawnPosition.x + 230, spawnPosition.y - 210), Math.PI * 0.8, TRIB);
+            // createDoor(new Point(spawnPosition.x, spawnPosition.y + 200), 0, TRIB, BuildingMaterial.wood);
+         }, 4000);
 
 
          socket.on("initial_player_data", (_username: string, _tribeType: TribeType) => {

@@ -55,6 +55,7 @@ import { createFence } from "../buildings/fence";
 import { createFenceGate } from "../buildings/fence-gate";
 import { createBuildingHitboxes } from "../../buildings";
 import { getHitboxesCollidingEntities } from "../../collision";
+import { plantIsFullyGrown } from "../../components/PlantComponent";
 
 const enum Vars {
    ITEM_THROW_FORCE = 100,
@@ -71,7 +72,9 @@ const SWORD_DAMAGEABLE_ENTITIES: ReadonlyArray<EntityType> = [EntityType.zombie,
 const PICKAXE_DAMAGEABLE_ENTITIES: ReadonlyArray<EntityType> = [EntityType.boulder, EntityType.tombstone, EntityType.iceSpikes, EntityType.furnace, EntityType.golem];
 const AXE_DAMAGEABLE_ENTITIES: ReadonlyArray<EntityType> = [EntityType.tree, EntityType.wall, EntityType.door, EntityType.embrasure, EntityType.researchBench, EntityType.workbench, EntityType.floorSpikes, EntityType.wallSpikes, EntityType.floorPunjiSticks, EntityType.wallPunjiSticks, EntityType.tribeTotem, EntityType.workerHut, EntityType.warriorHut, EntityType.barrel];
 
-export const VACUUM_RANGE = 85;
+// @Temporary
+export const VACUUM_RANGE = 120;
+// export const VACUUM_RANGE = 85;
 const VACUUM_STRENGTH = 25;
 
 const getDamageMultiplier = (entity: Entity): number => {
@@ -403,6 +406,14 @@ export function calculateAttackTarget(tribeMember: Entity, targetEntities: Reado
       // Don't attack entities without health components
       if (!HealthComponentArray.hasComponent(targetEntity.id)) {
          continue;
+      }
+
+      // @Temporary
+      if (targetEntity.type === EntityType.plant) {
+         const plantComponent = PlantComponentArray.getComponent(targetEntity.id);
+         if (!plantIsFullyGrown(plantComponent)) {
+            continue;
+         }
       }
 
       const relationship = getEntityRelationship(tribeMember.id, targetEntity);
@@ -887,10 +898,14 @@ export function tickTribeMember(tribeMember: Entity): void {
             
             const distance = tribeMember.position.calculateDistanceBetween(itemEntity.position);
             if (distance <= VACUUM_RANGE) {
+               // @Temporary
+               let forceMult = 1 - distance / VACUUM_RANGE;
+               forceMult = lerp(0.5, 1, forceMult);
+
                const vacuumDirection = itemEntity.position.calculateAngleBetween(tribeMember.position);
                const physicsComponent = PhysicsComponentArray.getComponent(itemEntity.id);
-               physicsComponent.velocity.x += VACUUM_STRENGTH * Math.sin(vacuumDirection);
-               physicsComponent.velocity.y += VACUUM_STRENGTH * Math.cos(vacuumDirection);
+               physicsComponent.velocity.x += VACUUM_STRENGTH * forceMult * Math.sin(vacuumDirection);
+               physicsComponent.velocity.y += VACUUM_STRENGTH * forceMult * Math.cos(vacuumDirection);
             }
          }
       }

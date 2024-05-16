@@ -1751,54 +1751,55 @@ export function tickTribesman(tribesman: Entity): void {
    const gatherTargetInfo = getGatherTarget(tribesman, aiHelperComponent.visibleEntities, prioritisedItemTypes);
 
    // Pick up dropped items
-   if (visibleItemEntities.length > 0) {
-      const goalRadius = getTribesmanRadius(tribesman);
+   // @Temporary
+   // if (visibleItemEntities.length > 0) {
+   //    const goalRadius = getTribesmanRadius(tribesman);
       
-      let closestDroppedItem: Entity | undefined;
-      let minDistance = Number.MAX_SAFE_INTEGER;
-      for (const itemEntity of visibleItemEntities) {
-         // If the tribesman is within the escape health threshold, make sure there wouldn't be any enemies visible while picking up the dropped item
-         if (tribesmanShouldEscape(tribesman.type, healthComponent) && !positionIsSafeForTribesman(tribesman, itemEntity.position.x, itemEntity.position.y)) {
-            continue;
-         }
+   //    let closestDroppedItem: Entity | undefined;
+   //    let minDistance = Number.MAX_SAFE_INTEGER;
+   //    for (const itemEntity of visibleItemEntities) {
+   //       // If the tribesman is within the escape health threshold, make sure there wouldn't be any enemies visible while picking up the dropped item
+   //       if (tribesmanShouldEscape(tribesman.type, healthComponent) && !positionIsSafeForTribesman(tribesman, itemEntity.position.x, itemEntity.position.y)) {
+   //          continue;
+   //       }
 
-         // @Temporary @Bug @Incomplete: Will cause the tribesman to incorrectly skip items which are JUST inside a hitbox, but are still accessible via vacuum.
-         // if (!entityIsAccessible(tribesman, itemEntity, tribeComponent.tribe, goalRadius)) {
-         //    console.log("b");
-         //    continue;
-         // }
+   //       // @Temporary @Bug @Incomplete: Will cause the tribesman to incorrectly skip items which are JUST inside a hitbox, but are still accessible via vacuum.
+   //       // if (!entityIsAccessible(tribesman, itemEntity, tribeComponent.tribe, goalRadius)) {
+   //       //    console.log("b");
+   //       //    continue;
+   //       // }
 
-         const itemComponent = ItemComponentArray.getComponent(itemEntity.id);
-         if (!tribeMemberCanPickUpItem(tribesman, itemComponent.itemType)) {
-            continue;
-         }
+   //       const itemComponent = ItemComponentArray.getComponent(itemEntity.id);
+   //       if (!tribeMemberCanPickUpItem(tribesman, itemComponent.itemType)) {
+   //          continue;
+   //       }
          
-         // If gathering is prioritised, make sure the dropped item is useful for gathering
-         if (gatherTargetInfo.isPrioritised) {
-            if (prioritisedItemTypes.indexOf(itemComponent.itemType) === -1) {
-               continue;
-            }
-         }
+   //       // If gathering is prioritised, make sure the dropped item is useful for gathering
+   //       if (gatherTargetInfo.isPrioritised) {
+   //          if (prioritisedItemTypes.indexOf(itemComponent.itemType) === -1) {
+   //             continue;
+   //          }
+   //       }
 
-         const distance = tribesman.position.calculateDistanceBetween(itemEntity.position);
-         if (distance < minDistance) {
-            closestDroppedItem = itemEntity;
-            minDistance = distance;
-         }
-      }
+   //       const distance = tribesman.position.calculateDistanceBetween(itemEntity.position);
+   //       if (distance < minDistance) {
+   //          closestDroppedItem = itemEntity;
+   //          minDistance = distance;
+   //       }
+   //    }
 
-      if (typeof closestDroppedItem !== "undefined") {
-         // @Temporary
-         // pathfindToPosition(tribesman, closestDroppedItem.position.x, closestDroppedItem.position.y, closestDroppedItem.id, TribesmanPathType.default, Math.floor(32 / PathfindingSettings.NODE_SEPARATION), PathfindFailureDefault.throwError);
-         pathfindToPosition(tribesman, closestDroppedItem.position.x, closestDroppedItem.position.y, closestDroppedItem.id, TribesmanPathType.default, Math.floor((32 + VACUUM_RANGE) / PathfindingSettings.NODE_SEPARATION), PathfindFailureDefault.returnClosest);
+   //    if (typeof closestDroppedItem !== "undefined") {
+   //       // @Temporary
+   //       // pathfindToPosition(tribesman, closestDroppedItem.position.x, closestDroppedItem.position.y, closestDroppedItem.id, TribesmanPathType.default, Math.floor(32 / PathfindingSettings.NODE_SEPARATION), PathfindFailureDefault.throwError);
+   //       pathfindToPosition(tribesman, closestDroppedItem.position.x, closestDroppedItem.position.y, closestDroppedItem.id, TribesmanPathType.default, Math.floor((32 + VACUUM_RANGE) / PathfindingSettings.NODE_SEPARATION), PathfindFailureDefault.returnClosest);
 
-         const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman.id);
-         setLimbActions(inventoryUseComponent, LimbAction.none);
+   //       const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman.id);
+   //       setLimbActions(inventoryUseComponent, LimbAction.none);
          
-         tribesmanComponent.currentAIType = TribesmanAIType.pickingUpDroppedItems;
-         return;
-      }
-   }
+   //       tribesmanComponent.currentAIType = TribesmanAIType.pickingUpDroppedItems;
+   //       return;
+   //    }
+   // }
 
    // Use items in research
    // @Hack

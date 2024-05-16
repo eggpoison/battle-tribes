@@ -12,7 +12,7 @@ const OPTIONS: Options = {
    spawnEntities: false,
    spawnTribes: false,
    generateRivers: false,
-   generateWalls: true,
+   generateWalls: false,
    inBenchmarkMode: true,
    warp: false
 };

@@ -26,7 +26,9 @@ export function createIceShard(position: Point, rotation: number): EntityCreatio
    PhysicsComponentArray.addComponent(iceShard.id, physicsComponent);
    
    const iceShardComponent = {
-      lifetime: randFloat(0.1, 0.2)
+      // @Temporary
+      // lifetime: randFloat(0.1, 0.2)
+      lifetime: 0.4
    };
    IceShardComponentArray.addComponent(iceShard.id, iceShardComponent);
 

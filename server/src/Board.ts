@@ -4,7 +4,7 @@ import { Settings } from "webgl-test-shared/dist/settings";
 import { STRUCTURE_TYPES, StructureType } from "webgl-test-shared/dist/structures";
 import { TileType, Biome } from "webgl-test-shared/dist/tiles";
 import { randItem, Point } from "webgl-test-shared/dist/utils";
-import { circlesDoIntersect, circleAndRectangleDoIntersect } from "webgl-test-shared/dist/collision-detection";
+import { circlesDoIntersect, circleAndRectangleDoIntersect } from "webgl-test-shared/dist/collision";
 import Chunk from "./Chunk";
 import Tile from "./Tile";
 import CircularHitbox from "./hitboxes/CircularHitbox";

@@ -1,4 +1,4 @@
-import { HitboxVertexPositions } from "webgl-test-shared/dist/collision-detection";
+import { HitboxVertexPositions } from "webgl-test-shared/dist/collision";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { StructureType } from "webgl-test-shared/dist/structures";

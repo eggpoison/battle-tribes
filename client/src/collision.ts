@@ -1,6 +1,6 @@
 import { Point, clampToBoardDimensions, distance, rotateXAroundPoint, rotateYAroundPoint } from "webgl-test-shared/dist/utils";
 import { Settings } from "webgl-test-shared/dist/settings";
-import { HitboxVertexPositions, circleAndRectangleDoIntersect, rectanglePointsDoIntersect } from "webgl-test-shared/dist/collision-detection";
+import { HitboxVertexPositions, circleAndRectangleDoIntersect, rectanglesAreColliding } from "webgl-test-shared/dist/collision";
 import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
 import CircularHitbox from "./hitboxes/CircularHitbox";
 import Hitbox from "./hitboxes/Hitbox";
@@ -189,7 +189,8 @@ export function resolveWallTileCollisions(entity: Entity): void {
                new Point(tileCenterX - Settings.TILE_SIZE/2, tileCenterY - Settings.TILE_SIZE/2),
                new Point(tileCenterX + Settings.TILE_SIZE/2, tileCenterY - Settings.TILE_SIZE/2)
             ];
-            if (!rectanglePointsDoIntersect(tileVertexPositions, (hitbox as RectangularHitbox).vertexPositions, 0, 0, 0, 0, 0, 1, (hitbox as RectangularHitbox).sideAxes[0].x, (hitbox as RectangularHitbox).sideAxes[0].y)) {
+            const collisionData = rectanglesAreColliding(tileVertexPositions, (hitbox as RectangularHitbox).vertexPositions, 0, 0, 0, 0, 0, 1, (hitbox as RectangularHitbox).sideAxes[0].x, (hitbox as RectangularHitbox).sideAxes[0].y);
+            if (!collisionData.isColliding) {
                continue;
             }
          }

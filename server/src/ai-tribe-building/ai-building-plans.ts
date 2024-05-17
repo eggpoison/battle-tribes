@@ -1,5 +1,5 @@
 import { PotentialBuildingPlanData } from "webgl-test-shared/dist/ai-building-types";
-import { HitboxVertexPositions, circleAndRectangleDoIntersect, rectanglePointsDoIntersect } from "webgl-test-shared/dist/collision-detection";
+import { HitboxVertexPositions, circleAndRectangleDoIntersect, rectanglesAreColliding } from "webgl-test-shared/dist/collision";
 import { getItemRecipe } from "webgl-test-shared/dist/crafting-recipes";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { ItemType, ITEM_INFO_RECORD, PlaceableItemInfo } from "webgl-test-shared/dist/items";
@@ -31,7 +31,9 @@ const virtualBuildingTakesUpWallSpace = (x: number, y: number, wallRotation: num
       } else {
          const sinRotation = Math.sin(wallRotation);
          const cosRotation = Math.cos(wallRotation);
-         if (rectanglePointsDoIntersect(wallVertexOffsets, (hitbox as RectangularHitbox).vertexOffsets, x, y, hitbox.x, hitbox.y, cosRotation, -sinRotation, (hitbox as RectangularHitbox).axisX, (hitbox as RectangularHitbox).axisY)) {
+
+         const collisionData = rectanglesAreColliding(wallVertexOffsets, (hitbox as RectangularHitbox).vertexOffsets, x, y, hitbox.x, hitbox.y, cosRotation, -sinRotation, (hitbox as RectangularHitbox).axisX, (hitbox as RectangularHitbox).axisY);
+         if (collisionData.isColliding) {
             return true;
          }
       }
@@ -100,7 +102,8 @@ const wallSpaceIsFree = (x: number, y: number, wallRotation: number, tribe: Trib
    for (let i = 0; i < tribe.restrictedBuildingAreas.length; i++) {
       const restrictedArea = tribe.restrictedBuildingAreas[i];
 
-      if (rectanglePointsDoIntersect(wallVertexOffsets, restrictedArea.vertexOffsets, x, y, restrictedArea.x, restrictedArea.y, cosRotation, -sinRotation, Math.sin(restrictedArea.rotation), Math.cos(restrictedArea.rotation))) {
+      const collisionData = rectanglesAreColliding(wallVertexOffsets, restrictedArea.vertexOffsets, x, y, restrictedArea.x, restrictedArea.y, cosRotation, -sinRotation, Math.sin(restrictedArea.rotation), Math.cos(restrictedArea.rotation));
+      if (collisionData.isColliding) {
          return false;
       }
    }
@@ -134,7 +137,8 @@ const wallSpaceIsFree = (x: number, y: number, wallRotation: number, tribe: Trib
          const tileXUnits = (tile.x + 0.5) * Settings.TILE_SIZE;
          const tileYUnits = (tile.y + 0.5) * Settings.TILE_SIZE;
 
-         if (rectanglePointsDoIntersect(wallVertexOffsets, tileVertexOffsets, x, y, tileXUnits, tileYUnits, cosRotation, -sinRotation, 1, 0)) {
+         const collisionData = rectanglesAreColliding(wallVertexOffsets, tileVertexOffsets, x, y, tileXUnits, tileYUnits, cosRotation, -sinRotation, 1, 0);
+         if (collisionData.isColliding) {
             return false;
          }
       }

@@ -1,5 +1,5 @@
 import { HitboxCollisionType, AttackPacket } from "webgl-test-shared/dist/client-server-types";
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision-detection";
+import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision";
 import { PlanterBoxPlant, BuildingMaterial, MATERIAL_TO_ITEM_MAP } from "webgl-test-shared/dist/components";
 import { CRAFTING_RECIPES, ItemRequirements } from "webgl-test-shared/dist/crafting-recipes";
 import { EntityType, EntityTypeString, LimbAction } from "webgl-test-shared/dist/entities";
@@ -73,9 +73,9 @@ export function createPlayer(position: Point, tribe: Tribe): Entity {
    // addItem(inventoryComponent, createItem(ItemType.wooden_spikes, 5));
    // addItem(inventoryComponent, createItem(ItemType.leaf, 10));
 
-   // addItem(inventoryComponent, createItem(ItemType.planter_box, 5));
+   addItem(inventoryComponent, createItem(ItemType.planter_box, 5));
    // addItem(inventoryComponent, createItem(ItemType.seed, 10));
-   // addItem(inventoryComponent, createItem(ItemType.berry, 10));
+   addItem(inventoryComponent, createItem(ItemType.berry, 10));
    // addItem(inventoryComponent, createItem(ItemType.frostcicle, 10));
 
    // addItem(inventoryComponent, createItem(ItemType.wooden_fence, 99));

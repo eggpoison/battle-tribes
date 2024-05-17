@@ -2,7 +2,7 @@ import { Point, clampToBoardDimensions } from "webgl-test-shared/dist/utils";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { EntityComponents } from "webgl-test-shared/dist/components";
 import { Settings } from "webgl-test-shared/dist/settings";
-import { EntityDebugData, HitboxCollisionType, PathfindingNodeIndex, RIVER_STEPPING_STONE_SIZES } from "webgl-test-shared/dist/client-server-types";
+import { EntityDebugData, PathfindingNodeIndex, RIVER_STEPPING_STONE_SIZES } from "webgl-test-shared/dist/client-server-types";
 import { TileType } from "webgl-test-shared/dist/tiles";
 import Tile from "./Tile";
 import Chunk from "./Chunk";
@@ -22,6 +22,7 @@ import { onSlimeSpitDeath } from "./entities/projectiles/slime-spit";
 import { AIHelperComponentArray } from "./components/AIHelperComponent";
 import { PhysicsComponentArray } from "./components/PhysicsComponent";
 import { onCactusDeath } from "./entities/resources/cactus";
+import { resolveEntityTileCollision } from "./collision";
 
 let idCounter = 1;
 
@@ -30,55 +31,12 @@ export function findAvailableEntityID(): number {
    return idCounter++;
 }
 
-// @Cleanup: Remove this and just do all collision stuff in one function
-enum TileCollisionAxis {
-   none = 0,
-   x = 1,
-   y = 2,
-   diagonal = 3
-}
-
 export const RESOURCE_ENTITY_TYPES: ReadonlyArray<EntityType> = [EntityType.krumblid, EntityType.fish, EntityType.cow, EntityType.tree, EntityType.boulder, EntityType.cactus, EntityType.iceSpikes, EntityType.berryBush];
 
 export const NUM_ENTITY_TYPES = Object.keys(EntityComponents).length;
 
-// @Cleanup: Copy and pasted from shared repo
-
-const findMinWithOffset = (vertices: ReadonlyArray<Point>, offsetX: number, offsetY: number, axis: Point): number => {
-   const firstVertex = vertices[0];
-   let min = axis.x * (firstVertex.x + offsetX) + axis.y * (firstVertex.y + offsetY);
-
-   for (let i = 1; i < 4; i++) {
-      const vertex = vertices[i];
-      const dotProduct = axis.x * (vertex.x + offsetX) + axis.y * (vertex.y + offsetY);
-      if (dotProduct < min) {
-         min = dotProduct;
-      }
-   }
-
-   return min;
-}
-
-const findMaxWithOffset = (vertices: ReadonlyArray<Point>, offsetX: number, offsetY: number, axis: Point): number => {
-   const firstVertex = vertices[0];
-   let max = axis.x * (firstVertex.x + offsetX) + axis.y * (firstVertex.y + offsetY);
-
-   for (let i = 1; i < 4; i++) {
-      const vertex = vertices[i];
-      const dotProduct = axis.x * (vertex.x + offsetX) + axis.y * (vertex.y + offsetY);
-      if (dotProduct > max) {
-         max = dotProduct;
-      }
-   }
-
-   return max;
-}
-
 /** A generic class for any object in the world */
 class Entity<T extends EntityType = EntityType> {
-   // @Cleanup: Remove
-   private static readonly rectangularTestHitbox = new RectangularHitbox(0, 0, 1, 0, 0, HitboxCollisionType.soft, 1, 0, 0.1, 0.1, 0);
-   
    /** Unique identifier for each entity */
    public readonly id: number;
 
@@ -481,297 +439,6 @@ class Entity<T extends EntityType = EntityType> {
       }
    }
 
-   private checkForCircularTileCollision(tile: Tile, hitbox: CircularHitbox): TileCollisionAxis {
-      // Get the distance between the player's position and the center of the tile
-      const xDist = Math.abs(this.position.x - (tile.x + 0.5) * Settings.TILE_SIZE);
-      const yDist = Math.abs(this.position.y - (tile.y + 0.5) * Settings.TILE_SIZE);
-
-      if (xDist <= hitbox.radius) {
-         return TileCollisionAxis.y;
-      }
-      if (yDist <= hitbox.radius) {
-         return TileCollisionAxis.x;
-      }
-
-      const cornerDistance = Math.sqrt(Math.pow(xDist, 2) + Math.pow(yDist, 2));
-
-      if (cornerDistance <= Math.sqrt(Math.pow(Settings.TILE_SIZE, 2) / 2) + hitbox.radius) {
-         return TileCollisionAxis.diagonal;
-      }
-
-      return TileCollisionAxis.none;
-   }
-
-   private resolveXAxisCircularTileCollision(tile: Tile, hitbox: CircularHitbox): void {
-      const xDist = this.position.x - tile.x * Settings.TILE_SIZE;
-      const xDir = xDist >= 0 ? 1 : -1;
-      // The 0.0001 epsilon value is used so that the game object isn't put exactly on the border between tiles
-      // We don't use Number.EPSILON because it doesn't work in some cases
-      this.position.x = tile.x * Settings.TILE_SIZE + (0.5 + 0.5 * xDir) * Settings.TILE_SIZE + (hitbox.radius + 0.0001) * xDir;
-
-      const physicsComponent = PhysicsComponentArray.getComponent(this.id);
-      physicsComponent.velocity.x = 0;
-   }
-
-   private resolveYAxisCircularTileCollision(tile: Tile, hitbox: CircularHitbox): void {
-      const yDist = this.position.y - tile.y * Settings.TILE_SIZE;
-      const yDir = yDist >= 0 ? 1 : -1;
-      // The 0.0001 epsilon value is used so that the game object isn't put exactly on the border between tiles
-      // We don't use Number.EPSILON because it doesn't work in some cases
-      this.position.y = tile.y * Settings.TILE_SIZE + (0.5 + 0.5 * yDir) * Settings.TILE_SIZE + (hitbox.radius + 0.0001) * yDir;
-      
-      const physicsComponent = PhysicsComponentArray.getComponent(this.id);
-      physicsComponent.velocity.y = 0;
-   }
-
-   private resolveDiagonalCircularTileCollision(tile: Tile, hitbox: CircularHitbox): void {
-      const xDist = this.position.x - tile.x * Settings.TILE_SIZE;
-      const yDist = this.position.y - tile.y * Settings.TILE_SIZE;
-
-      const xDir = xDist >= 0 ? 1 : -1;
-      const yDir = yDist >= 0 ? 1 : -1;
-
-      const xDistFromEdge = Math.abs(xDist - Settings.TILE_SIZE/2);
-      const yDistFromEdge = Math.abs(yDist - Settings.TILE_SIZE/2);
-
-      // The 0.0001 epsilon value is used so that the game object isn't put exactly on the border between tiles
-      // We don't use Number.EPSILON because it doesn't work in some cases
-      const physicsComponent = PhysicsComponentArray.getComponent(this.id);
-      if (yDistFromEdge < xDistFromEdge) {
-         this.position.x = (tile.x + 0.5 + 0.5 * xDir) * Settings.TILE_SIZE + (hitbox.radius + 0.0001) * xDir;
-         physicsComponent.velocity.x = 0;
-      } else {
-         this.position.y = (tile.y + 0.5 + 0.5 * yDir) * Settings.TILE_SIZE + (hitbox.radius + 0.0001) * yDir;
-         physicsComponent.velocity.y = 0;
-      }
-   }
-
-   private checkForRectangularTileCollision(tile: Tile, hitbox: RectangularHitbox): TileCollisionAxis {
-      // 
-      // Check if any of the hitboxes' vertices are inside the tile
-      // 
-
-      const tileMinX = tile.x * Settings.TILE_SIZE;
-      const tileMaxX = (tile.x + 1) * Settings.TILE_SIZE;
-      const tileMinY = tile.y * Settings.TILE_SIZE;
-      const tileMaxY = (tile.y + 1) * Settings.TILE_SIZE;
-
-      for (let i = 0; i < 4; i++) {
-         const vertex = hitbox.vertexOffsets[i];
-         if (vertex.x >= tileMinX && vertex.x <= tileMaxX && vertex.y >= tileMinY && vertex.y <= tileMaxY) {
-            const distX = Math.abs(this.position.x - (tile.x + 0.5) * Settings.TILE_SIZE);
-            const distY = Math.abs(this.position.y - (tile.y + 0.5) * Settings.TILE_SIZE);
-
-            if (distX >= distY) {
-               return TileCollisionAxis.x;
-            } else {
-               return TileCollisionAxis.y;
-            }
-         }
-      }
-
-      // 
-      // Check for diagonal collisions
-      // 
-      
-      Entity.rectangularTestHitbox.width = Settings.TILE_SIZE;
-      Entity.rectangularTestHitbox.height = Settings.TILE_SIZE;
-      // @Incomplete(?): Do we need to update vertices and axes?
-      Entity.rectangularTestHitbox.updatePosition((tile.x + 0.5) * Settings.TILE_SIZE, (tile.y + 0.5) * Settings.TILE_SIZE, 0);
-
-      if (Entity.rectangularTestHitbox.isColliding(hitbox)) {
-         return TileCollisionAxis.diagonal;
-      }
-
-      return TileCollisionAxis.none;
-   }
-
-   private resolveXAxisRectangularTileCollision(tile: Tile, hitbox: RectangularHitbox): void {
-      const tileMinX = tile.x * Settings.TILE_SIZE;
-      const tileMaxX = (tile.x + 1) * Settings.TILE_SIZE;
-      const tileMinY = tile.y * Settings.TILE_SIZE;
-      const tileMaxY = (tile.y + 1) * Settings.TILE_SIZE;
-
-      let vertexPositionX = -99999;
-      for (let i = 0; i < 4; i++) {
-         const vertexOffset = hitbox.vertexOffsets[i];
-         const vertexPosX = this.position.x + vertexOffset.x;
-         const vertexPosY = this.position.y + vertexOffset.y;
-         if (vertexPosX >= tileMinX && vertexPosX <= tileMaxX && vertexPosY >= tileMinY && vertexPosY <= tileMaxY) {
-            vertexPositionX = vertexPosX;
-            break;
-         }
-      }
-      if (vertexPositionX === -99999) {
-         throw new Error();
-      }
-
-      const startXDist = vertexPositionX - tile.x * Settings.TILE_SIZE;
-      const xDist = vertexPositionX - (tile.x + 0.5) * Settings.TILE_SIZE;
-
-      // Push left
-      if (xDist < 0) {
-         this.position.x -= startXDist;
-      } else {
-         // Push right
-         this.position.x += Settings.TILE_SIZE - startXDist;
-      }
-   }
-
-   private resolveYAxisRectangularTileCollision(tile: Tile, hitbox: RectangularHitbox): void {
-      const tileMinX = tile.x * Settings.TILE_SIZE;
-      const tileMaxX = (tile.x + 1) * Settings.TILE_SIZE;
-      const tileMinY = tile.y * Settings.TILE_SIZE;
-      const tileMaxY = (tile.y + 1) * Settings.TILE_SIZE;
-
-      let vertexPositionY = -99999;
-      for (let i = 0; i < 4; i++) {
-         const vertexOffset = hitbox.vertexOffsets[i];
-         const vertexPosX = this.position.x + vertexOffset.x;
-         const vertexPosY = this.position.y + vertexOffset.y;
-         if (vertexPosX >= tileMinX && vertexPosX <= tileMaxX && vertexPosY >= tileMinY && vertexPosY <= tileMaxY) {
-            vertexPositionY = vertexPosY;
-            break;
-         }
-      }
-      if (vertexPositionY === -99999) {
-         throw new Error();
-      }
-
-      const startYDist = vertexPositionY - tile.y * Settings.TILE_SIZE;
-      const yDist = vertexPositionY - (tile.y + 0.5) * Settings.TILE_SIZE;
-
-      // Push left
-      if (yDist < 0) {
-         this.position.y -= startYDist;
-      } else {
-         // Push right
-         this.position.y += Settings.TILE_SIZE - startYDist;
-      }
-   }
-
-   // private resolveDiagonalRectangularTileCollision(tile: Tile, hitbox: RectangularHitbox): void {
-   //    const vertexOffsetPairs: ReadonlyArray<[Point, Point]> = [
-   //       [hitbox.vertexOffsets[0], hitbox.vertexOffsets[1]],
-   //       [hitbox.vertexOffsets[1], hitbox.vertexOffsets[3]],
-   //       [hitbox.vertexOffsets[3], hitbox.vertexOffsets[2]],
-   //       [hitbox.vertexOffsets[2], hitbox.vertexOffsets[0]]
-   //    ];
-
-   //    const tileX1 = tile.x * Settings.TILE_SIZE;
-   //    const tileX2 = (tile.x + 1) * Settings.TILE_SIZE;
-   //    const tileY1 = tile.y * Settings.TILE_SIZE;
-   //    const tileY2 = (tile.y + 1) * Settings.TILE_SIZE;
-
-   //    let collidingVertex1!: Point;
-   //    let collidingVertex2!: Point;
-      
-   //    for (const offsetPair of vertexOffsetPairs) {
-   //       const leftPoint =   offsetPair[0].x < offsetPair[1].x ? offsetPair[0] : offsetPair[1];
-   //       const rightPoint =  offsetPair[0].x < offsetPair[1].x ? offsetPair[1] : offsetPair[0];
-   //       const bottomPoint = offsetPair[0].y < offsetPair[1].y ? offsetPair[0] : offsetPair[1];
-   //       const topPoint =    offsetPair[0].y < offsetPair[1].y ? offsetPair[1] : offsetPair[0];
-
-   //       if (offsetPair[0].x === offsetPair[1].x) {
-   //          // Division by 0 error
-   //          // @Incomplete: Do stuff
-   //          return;
-   //       }
-
-   //       const leftPointX = leftPoint.x + this.position.x;
-   //       const leftPointY = leftPoint.y + this.position.y;
-   //       const rightPointX = rightPoint.x + this.position.x;
-   //       const rightPointY = rightPoint.y + this.position.y;
-
-   //       const slope = (rightPointY - leftPointY) / (rightPointX - leftPointX);
-
-   //       // Check left projection
-   //       if (leftPointX < tileX1) {
-   //          const leftProjectionY = leftPointY + slope * (tileX1 - leftPointX);
-   //          if (leftProjectionY >= tileY1 && leftProjectionY <= tileY2) {
-   //             collidingVertex1 = offsetPair[0];
-   //             collidingVertex2 = offsetPair[1];
-   //             break;
-   //          }
-   //       }
-
-   //       // Check right projection
-   //       if (rightPointX > tileX2) {
-   //          const rightProjectionY = rightPointY - slope * (rightPointX - tileX2);
-   //          if (rightProjectionY >= tileY1 && rightProjectionY <= tileY2) {
-   //             collidingVertex1 = offsetPair[0];
-   //             collidingVertex2 = offsetPair[1];
-   //             break;
-   //          }
-   //       }
-
-   //       const topPointX = topPoint.x + this.position.x;
-   //       const topPointY = topPoint.y + this.position.y;
-
-   //       // Check top projection
-   //       if (topPointY > tileY2) {
-   //          const topProjectionX = topPointX + (topPointY - tileY2) / slope;
-   //          if (topProjectionX >= tileX1 && topProjectionX <= tileX2) {
-   //             collidingVertex1 = offsetPair[0];
-   //             collidingVertex2 = offsetPair[1];
-   //             break;
-   //          }
-   //       }
-
-   //       const bottomPointX = bottomPoint.x + this.position.x;
-   //       const bottomPointY = bottomPoint.y + this.position.y;
-
-   //       // Check bottom projection
-   //       if (bottomPointY < tileY1) {
-   //          const bottomProjectionX = bottomPointX - (tileY2 - topPointY) / slope;
-   //          if (bottomProjectionX >= tileX1 && bottomProjectionX <= tileX2) {
-   //             collidingVertex1 = offsetPair[0];
-   //             collidingVertex2 = offsetPair[1];
-   //             break;
-   //          }
-   //       }
-   //    }
-
-   //    if (typeof collidingVertex1 === "undefined" || typeof collidingVertex2 === "undefined") {
-   //       // @Incomplete: Couldn't find colliding vertex pair
-   //       return;
-   //    }
-
-   //    const pairs2: ReadonlyArray<[number, number]> = [
-   //       [tileX1, tileY1],
-   //       [tileX2, tileY1],
-   //       [tileX1, tileY2],
-   //       [tileX2, tileY2]
-   //    ];
-
-   //    // Find point of tile in collision
-   //    let tileVertexX!: number;
-   //    let tileVertexY!: number;
-   //    for (const pair of pairs2) {
-   //       const tilePosX = hitbox.x;
-   //       const tilePosY = hitbox.y;
-   //       if (pointIsInRectangle(pair[0], pair[1], tilePosX, tilePosY, hitbox.width, hitbox.height, this.rotation + hitbox.relativeRotation)) {
-   //          tileVertexX = pair[0];
-   //          tileVertexY = pair[1];
-   //          break;
-   //       }
-   //    }
-   //    if (typeof tileVertexX === "undefined") {
-   //       // @Temporary
-   //       // console.warn("Couldn't find vertex");
-   //       return;
-   //    }
-
-   //    // @Speed: Garbage collection
-   //    const distance = distToSegment(new Point(tileVertexX, tileVertexY), collidingVertex1, collidingVertex2);
-
-   //    const pushDirection = collidingVertex1.calculateAngleBetween(collidingVertex2) + Math.PI / 2;
-
-   //    console.log(distance);
-   //    this.position.x += distance * Math.sin(pushDirection);
-   //    this.position.y += distance * Math.cos(pushDirection);
-   // }
-
    public resolveWallTileCollisions(): void {
       // Looser check that there are any wall tiles in any of the entities' chunks
       let hasWallTiles = false;
@@ -798,58 +465,11 @@ class Entity<T extends EntityType = EntityType> {
          const minTileY = clampToBoardDimensions(Math.floor(boundsMinY / Settings.TILE_SIZE));
          const maxTileY = clampToBoardDimensions(Math.floor(boundsMaxY / Settings.TILE_SIZE));
 
-         // @Cleanup: Combine the check and resolve functions into one
-
-         // @Cleanup: bad, and a slow check
-         if (hitbox.hasOwnProperty("radius")) {
-            for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
-               for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
-                  const tile = Board.getTile(tileX, tileY);
-                  if (tile.isWall) {
-                     const physicsComponent = PhysicsComponentArray.getComponent(this.id);
-                     const collisionAxis = this.checkForCircularTileCollision(tile, hitbox as CircularHitbox);
-                     switch (collisionAxis) {
-                        case TileCollisionAxis.x: {
-                           this.resolveXAxisCircularTileCollision(tile, hitbox as CircularHitbox);
-                           break;
-                        }
-                        case TileCollisionAxis.y: {
-                           this.resolveYAxisCircularTileCollision(tile, hitbox as CircularHitbox);
-                           break;
-                        }
-                        case TileCollisionAxis.diagonal: {
-                           this.resolveDiagonalCircularTileCollision(tile, hitbox as CircularHitbox);
-                           break;
-                        }
-                     }
-                     physicsComponent.positionIsDirty = true;
-                  }
-               }
-            }
-         } else {
-            for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
-               for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
-                  const tile = Board.getTile(tileX, tileY);
-                  if (tile.isWall) {
-                     const physicsComponent = PhysicsComponentArray.getComponent(this.id);
-                     const collisionAxis = this.checkForRectangularTileCollision(tile, hitbox as RectangularHitbox);
-                     switch (collisionAxis) {
-                        case TileCollisionAxis.x: {
-                           this.resolveXAxisRectangularTileCollision(tile, hitbox as RectangularHitbox);
-                           break;
-                        }
-                        case TileCollisionAxis.y: {
-                           this.resolveYAxisRectangularTileCollision(tile, hitbox as RectangularHitbox);
-                           break;
-                        }
-                        case TileCollisionAxis.diagonal: {
-                           // @Incomplete
-                           // this.resolveDiagonalRectangularTileCollision(tile, hitbox as RectangularHitbox);
-                           break;
-                        }
-                     }
-                     physicsComponent.positionIsDirty = true;
-                  }
+         for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
+            for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
+               const tile = Board.getTile(tileX, tileY);
+               if (tile.isWall) {
+                  resolveEntityTileCollision(this, hitbox, tileX, tileY);
                }
             }
          }

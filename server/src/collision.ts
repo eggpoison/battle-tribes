@@ -5,7 +5,7 @@ import { angle, rotateXAroundPoint, rotateYAroundPoint } from "webgl-test-shared
 import Entity from "./Entity";
 import Hitbox from "./hitboxes/Hitbox";
 import CircularHitbox from "./hitboxes/CircularHitbox";
-import RectangularHitbox from "./hitboxes/RectangularHitbox";
+import RectangularHitbox, { assertIsRectangular } from "./hitboxes/RectangularHitbox";
 import { PhysicsComponentArray } from "./components/PhysicsComponent";
 import { onFrozenYetiCollision } from "./entities/mobs/frozen-yeti";
 import { onGolemCollision } from "./entities/mobs/golem";
@@ -30,6 +30,7 @@ import { onPlayerCollision } from "./entities/tribes/player";
 import { onEmbrasureCollision } from "./entities/buildings/embrasure";
 import Board from "./Board";
 import { onTribesmanCollision } from "./entities/tribes/tribe-member";
+import { rectanglesAreColliding } from "webgl-test-shared/dist/collision";
 
 interface CollisionPushInfo {
    direction: number;
@@ -141,10 +142,20 @@ const getCollisionPushInfo = (pushedHitbox: Hitbox, pushingHitbox: Hitbox): Coll
       return pushInfo;
    } else {
       // Rectangle + Rectangle
-      // @Incomplete
+      
+      assertIsRectangular(pushedHitbox);
+      assertIsRectangular(pushingHitbox);
+      
+      // @Cleanup: copy and paste
+      const collisionData = rectanglesAreColliding(pushedHitbox.vertexOffsets, pushingHitbox.vertexOffsets, pushedHitbox.x, pushedHitbox.y, pushingHitbox.x, pushingHitbox.y, pushedHitbox.axisX, pushedHitbox.axisY, pushingHitbox.axisX, pushingHitbox.axisY);
+      if (!collisionData.isColliding) {
+         throw new Error();
+      }
+      
       return {
-         amountIn: 0,
-         direction: 0
+         amountIn: collisionData.overlap,
+         // @Hack
+         direction: angle(collisionData.axisX, collisionData.axisY)
       }
    }
 }
@@ -337,4 +348,14 @@ export function getHitboxesCollidingEntities(hitboxes: ReadonlyArray<CircularHit
    }
 
    return collidingEntities;
+}
+
+/** If no collision is found, does nothing. */
+export function resolveEntityTileCollision(entity: Entity, hitbox: Hitbox, tileX: number, tileY: number): void {
+   const tileHitbox = new RectangularHitbox((tileX + 0.5) * Settings.TILE_SIZE, (tileY + 0.5) * Settings.TILE_SIZE, 1, 0, 0, HitboxCollisionType.hard, 1, 0, Settings.TILE_SIZE, Settings.TILE_SIZE, 0);
+   
+   if (hitbox.isColliding(tileHitbox)) {
+      const pushInfo = getCollisionPushInfo(hitbox, tileHitbox);
+      resolveHardCollision(entity, pushInfo);
+   }
 }

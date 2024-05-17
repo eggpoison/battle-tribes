@@ -547,7 +547,7 @@ class GameServer {
          // }, 5000);
          
          setTimeout(() => {
-            // if(1+1===2)return;
+            if(1+1===2)return;
             const p = this.getPlayerFromUsername(username)!;
             const tc = TribeComponentArray.getComponent(p.id);
             const tribe = tc.tribe;

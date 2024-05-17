@@ -1,5 +1,5 @@
 import { Point, rotateXAroundPoint, rotateYAroundPoint } from "webgl-test-shared/dist/utils";
-import { HitboxVertexPositions, circleAndRectangleDoIntersect, rectanglePointsDoIntersect } from "webgl-test-shared/dist/collision-detection";
+import { HitboxVertexPositions, circleAndRectangleDoIntersect, rectanglesAreColliding } from "webgl-test-shared/dist/collision";
 import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
 import Hitbox from "./Hitbox";
 import CircularHitbox from "./CircularHitbox";
@@ -90,7 +90,8 @@ class RectangularHitbox extends Hitbox {
             return false;
          }
          
-         return rectanglePointsDoIntersect(this.vertexPositions, (otherHitbox as RectangularHitbox).vertexPositions, 0, 0, 0, 0, this.sideAxes[0].x, this.sideAxes[0].y, (otherHitbox as RectangularHitbox).sideAxes[0].x, (otherHitbox as RectangularHitbox).sideAxes[0].y);
+         const collisionData = rectanglesAreColliding(this.vertexPositions, (otherHitbox as RectangularHitbox).vertexPositions, 0, 0, 0, 0, this.sideAxes[0].x, this.sideAxes[0].y, (otherHitbox as RectangularHitbox).sideAxes[0].x, (otherHitbox as RectangularHitbox).sideAxes[0].y);
+         return collisionData.isColliding;
       }
    }
 }

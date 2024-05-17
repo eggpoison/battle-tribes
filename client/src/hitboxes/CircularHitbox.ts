@@ -1,4 +1,4 @@
-import { circleAndRectangleDoIntersect, circlesDoIntersect } from "webgl-test-shared/dist/collision-detection";
+import { circleAndRectangleDoIntersect, circlesDoIntersect } from "webgl-test-shared/dist/collision";
 import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
 import Hitbox from "./Hitbox";
 import RectangularHitbox from "./RectangularHitbox";

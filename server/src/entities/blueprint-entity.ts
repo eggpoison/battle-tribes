@@ -1,4 +1,4 @@
-import { COLLISION_BITS } from "webgl-test-shared/dist/collision-detection";
+import { COLLISION_BITS } from "webgl-test-shared/dist/collision";
 import { BlueprintType } from "webgl-test-shared/dist/components";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { StructureType } from "webgl-test-shared/dist/structures";

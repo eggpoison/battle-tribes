@@ -29,7 +29,7 @@ import { collide, resolveWallTileCollisions } from "../collision";
 import TribeMemberComponent from "../entity-components/TribeMemberComponent";
 import { TRIBE_INFO_RECORD } from "webgl-test-shared/dist/tribes";
 import { randInt } from "webgl-test-shared/dist/utils";
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision-detection";
+import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision";
 import { HitData, HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
 import PhysicsComponent from "../entity-components/PhysicsComponent";
 

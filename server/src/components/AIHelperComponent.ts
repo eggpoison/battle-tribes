@@ -1,4 +1,4 @@
-import { circlesDoIntersect, circleAndRectangleDoIntersect } from "webgl-test-shared/dist/collision-detection";
+import { circlesDoIntersect, circleAndRectangleDoIntersect } from "webgl-test-shared/dist/collision";
 import { AIHelperComponentData } from "webgl-test-shared/dist/components";
 import { Settings } from "webgl-test-shared/dist/settings";
 import Chunk from "../Chunk";

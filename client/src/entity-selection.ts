@@ -1,5 +1,5 @@
 import { EntityType } from "webgl-test-shared/dist/entities";
-import { circleAndRectangleDoIntersect, circlesDoIntersect } from "webgl-test-shared/dist/collision-detection";
+import { circleAndRectangleDoIntersect, circlesDoIntersect } from "webgl-test-shared/dist/collision";
 import { Point } from "webgl-test-shared/dist/utils";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { ITEM_TYPE_RECORD, InventoryName } from "webgl-test-shared/dist/items";

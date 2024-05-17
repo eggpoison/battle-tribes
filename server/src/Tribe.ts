@@ -1,5 +1,5 @@
 import { PotentialBuildingPlanData } from "webgl-test-shared/dist/ai-building-types";
-import { HitboxVertexPositions } from "webgl-test-shared/dist/collision-detection";
+import { HitboxVertexPositions } from "webgl-test-shared/dist/collision";
 import { BlueprintType } from "webgl-test-shared/dist/components";
 import { CraftingRecipe } from "webgl-test-shared/dist/crafting-recipes";
 import { EntityType } from "webgl-test-shared/dist/entities";

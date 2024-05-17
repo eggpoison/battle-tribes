@@ -1,8 +1,16 @@
 import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
-import { HitboxVertexPositions, circleAndRectangleDoIntersect, rectanglePointsDoIntersect } from "webgl-test-shared/dist/collision-detection";
+import { HitboxVertexPositions, circleAndRectangleDoIntersect, rectanglesAreColliding } from "webgl-test-shared/dist/collision";
 import { Point } from "webgl-test-shared/dist/utils";
 import Hitbox from "./Hitbox";
 import CircularHitbox from "./CircularHitbox";
+
+// @Cleanup: remove the need to have this
+export function assertIsRectangular(hitbox: Hitbox): asserts hitbox is RectangularHitbox {
+   // @Speed
+   if (hitbox.hasOwnProperty("radius")) {
+      throw new Error();
+   }
+}
 
 class RectangularHitbox extends Hitbox {
    public width: number;
@@ -94,7 +102,8 @@ class RectangularHitbox extends Hitbox {
             return false;
          }
          
-         return rectanglePointsDoIntersect(this.vertexOffsets, (otherHitbox as RectangularHitbox).vertexOffsets, this.x, this.y, otherHitbox.x, otherHitbox.y, this.axisX, this.axisY, (otherHitbox as RectangularHitbox).axisX, (otherHitbox as RectangularHitbox).axisY);
+         const collisionData = rectanglesAreColliding(this.vertexOffsets, (otherHitbox as RectangularHitbox).vertexOffsets, this.x, this.y, otherHitbox.x, otherHitbox.y, this.axisX, this.axisY, (otherHitbox as RectangularHitbox).axisX, (otherHitbox as RectangularHitbox).axisY);
+         return collisionData.isColliding;
       }
    }
 }

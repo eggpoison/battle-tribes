@@ -1,5 +1,5 @@
 import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision";
+import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { Point } from "webgl-test-shared/dist/utils";
 import Entity from "../Entity";
@@ -13,19 +13,16 @@ import CircularHitbox from "../hitboxes/CircularHitbox";
 
 export const HITBOX_SIZE = 80;
 
-export function createWorbenchHitboxes(parentX: number, parentY: number, localID: number, parentRotation: number): ReadonlyArray<CircularHitbox | RectangularHitbox> {
+export function createWorbenchHitboxes(parentPosition: Point, localID: number, parentRotation: number): ReadonlyArray<CircularHitbox | RectangularHitbox> {
    const hitboxes = new Array<CircularHitbox | RectangularHitbox>();
-   hitboxes.push(new RectangularHitbox(parentX, parentY, 1.6, 0, 0, HitboxCollisionType.hard, localID, parentRotation, HITBOX_SIZE, HITBOX_SIZE, 0));
+   hitboxes.push(new RectangularHitbox(parentPosition, 1.6, 0, 0, HitboxCollisionType.hard, localID, parentRotation, HITBOX_SIZE, HITBOX_SIZE, 0, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK));
    return hitboxes;
 }
 
 export function createWorkbench(position: Point, rotation: number, tribe: Tribe): Entity {
    const workbench = new Entity(position, rotation, EntityType.workbench, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
-   const hitbox = new RectangularHitbox(workbench.position.x, workbench.position.y, 1.6, 0, 0, HitboxCollisionType.hard, workbench.getNextHitboxLocalID(), workbench.rotation, HITBOX_SIZE, HITBOX_SIZE, 0);
-   workbench.addHitbox(hitbox);
-
-   const hitboxes = createWorbenchHitboxes(workbench.position.x, workbench.position.y, workbench.getNextHitboxLocalID(), workbench.rotation);
+   const hitboxes = createWorbenchHitboxes(position, workbench.getNextHitboxLocalID(), workbench.rotation);
    for (let i = 0; i < hitboxes.length; i++) {
       workbench.addHitbox(hitboxes[i]);
    }

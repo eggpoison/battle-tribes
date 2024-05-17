@@ -1,5 +1,5 @@
 import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision";
+import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { PlanterBoxPlant } from "webgl-test-shared/dist/components";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { ItemType } from "webgl-test-shared/dist/items";
@@ -25,7 +25,7 @@ const PLANT_HEALTHS: Record<PlanterBoxPlant, number> = {
 export function createPlant(position: Point, rotation: number, planterBoxID: number, plantType: PlanterBoxPlant): Entity {
    const plantEntity = new Entity(position, rotation, EntityType.plant, COLLISION_BITS.plants, DEFAULT_COLLISION_MASK);
 
-   plantEntity.addHitbox(new CircularHitbox(plantEntity.position.x, plantEntity.position.y, 0.3, 0, 0, HitboxCollisionType.soft, 28, plantEntity.getNextHitboxLocalID(), plantEntity.rotation))
+   plantEntity.addHitbox(new CircularHitbox(plantEntity.position, 0.3, 0, 0, HitboxCollisionType.soft, 28, plantEntity.getNextHitboxLocalID(), plantEntity.rotation, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK))
 
    HealthComponentArray.addComponent(plantEntity.id, new HealthComponent(PLANT_HEALTHS[plantType]));
    StatusEffectComponentArray.addComponent(plantEntity.id, new StatusEffectComponent(0));

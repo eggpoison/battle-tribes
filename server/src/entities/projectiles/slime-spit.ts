@@ -1,5 +1,5 @@
 import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision";
+import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { EntityType, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
@@ -26,7 +26,7 @@ export function createSlimeSpit(position: Point, rotation: number, size: number)
    const spit = new Entity(position, rotation, EntityType.slimeSpit, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
    const hitboxSize = SIZES[size];
-   const hitbox = new RectangularHitbox(spit.position.x, spit.position.y, 0.2, 0, 0, HitboxCollisionType.soft, spit.getNextHitboxLocalID(), spit.rotation, hitboxSize, hitboxSize, 0);
+   const hitbox = new RectangularHitbox(position, 0.2, 0, 0, HitboxCollisionType.soft, spit.getNextHitboxLocalID(), spit.rotation, hitboxSize, hitboxSize, 0, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK);
    spit.addHitbox(hitbox);
 
    const physicsComponent = new PhysicsComponent(0, 0, 0, 0, true, false);

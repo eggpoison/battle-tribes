@@ -894,7 +894,7 @@ const goPlaceBuilding = (tribesman: Entity, hotbarInventory: Inventory, tribe: T
    const plan = goal.plan;
    
    const entityType = (ITEM_INFO_RECORD[plan.buildingRecipe.product] as PlaceableItemInfo).entityType;
-   const hitboxes = createBuildingHitboxes(entityType, plan.position.x, plan.position.y, 1, plan.rotation);
+   const hitboxes = createBuildingHitboxes(entityType, plan.position, 1, plan.rotation);
    
    const blockingEntities = getHitboxesCollidingEntities(hitboxes);
    for (let i = 0; i < blockingEntities.length; i++) {

@@ -1,5 +1,5 @@
 import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision";
+import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { BuildingMaterial } from "webgl-test-shared/dist/components";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { Point } from "webgl-test-shared/dist/utils";
@@ -20,16 +20,16 @@ const HITBOX_HEIGHT = 16 - 0.05;
 
 export const DOOR_HEALTHS = [15, 45];
 
-export function createDoorHitboxes(parentX: number, parentY: number, localID: number, parentRotation: number): ReadonlyArray<CircularHitbox | RectangularHitbox> {
+export function createDoorHitboxes(parentPosition: Point, localID: number, parentRotation: number): ReadonlyArray<CircularHitbox | RectangularHitbox> {
    const hitboxes = new Array<CircularHitbox | RectangularHitbox>();
-   hitboxes.push(new RectangularHitbox(parentX, parentY, 0.5, 0, 0, HitboxCollisionType.hard, localID, parentRotation, HITBOX_WIDTH, HITBOX_HEIGHT, 0));
+   hitboxes.push(new RectangularHitbox(parentPosition, 0.5, 0, 0, HitboxCollisionType.hard, localID, parentRotation, HITBOX_WIDTH, HITBOX_HEIGHT, 0, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK));
    return hitboxes;
 }
 
 export function createDoor(position: Point, rotation: number, tribe: Tribe, material: BuildingMaterial): Entity {
    const door = new Entity(position, rotation, EntityType.door, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
-   const hitboxes = createDoorHitboxes(door.position.x, door.position.y, door.getNextHitboxLocalID(), door.rotation);
+   const hitboxes = createDoorHitboxes(position, door.getNextHitboxLocalID(), door.rotation);
    for (let i = 0; i < hitboxes.length; i++) {
       door.addHitbox(hitboxes[i]);
    }

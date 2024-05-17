@@ -1,5 +1,5 @@
 import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision";
+import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { EntityType, FrozenYetiAttackType, SnowballSize, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
 import { ItemType } from "webgl-test-shared/dist/items";
 import { Settings } from "webgl-test-shared/dist/settings";
@@ -70,16 +70,16 @@ export interface FrozenYetiRockSpikeInfo {
 export function createFrozenYeti(position: Point): Entity {
    const frozenYeti = new Entity(position, 2 * Math.PI * Math.random(), EntityType.frozenYeti, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
-   const bodyHitbox = new CircularHitbox(frozenYeti.position.x, frozenYeti.position.y, 4, 0, 0, HitboxCollisionType.soft, FROZEN_YETI_SIZE / 2, frozenYeti.getNextHitboxLocalID(), frozenYeti.rotation);
+   const bodyHitbox = new CircularHitbox(frozenYeti.position, 4, 0, 0, HitboxCollisionType.soft, FROZEN_YETI_SIZE / 2, frozenYeti.getNextHitboxLocalID(), frozenYeti.rotation, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK);
    frozenYeti.addHitbox(bodyHitbox);
 
-   const headHitbox = new CircularHitbox(frozenYeti.position.x, frozenYeti.position.y, 0.8, 0, HEAD_DISTANCE, HitboxCollisionType.soft, HEAD_HITBOX_SIZE / 2, frozenYeti.getNextHitboxLocalID(), frozenYeti.rotation);
+   const headHitbox = new CircularHitbox(frozenYeti.position, 0.8, 0, HEAD_DISTANCE, HitboxCollisionType.soft, HEAD_HITBOX_SIZE / 2, frozenYeti.getNextHitboxLocalID(), frozenYeti.rotation, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK);
    frozenYeti.addHitbox(headHitbox);
 
    // Paw hitboxes
    for (let i = 0; i < 2; i++) {
       const pawDirection = PAW_RESTING_ANGLE * (i === 0 ? -1 : 1);
-      const hitbox = new CircularHitbox(frozenYeti.position.x, frozenYeti.position.y, 0.6, PAW_OFFSET * Math.sin(pawDirection), PAW_OFFSET * Math.cos(pawDirection), HitboxCollisionType.soft, PAW_SIZE / 2, frozenYeti.getNextHitboxLocalID(), frozenYeti.rotation);
+      const hitbox = new CircularHitbox(frozenYeti.position, 0.6, PAW_OFFSET * Math.sin(pawDirection), PAW_OFFSET * Math.cos(pawDirection), HitboxCollisionType.soft, PAW_SIZE / 2, frozenYeti.getNextHitboxLocalID(), frozenYeti.rotation, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK);
       frozenYeti.addHitbox(hitbox);
    }
 

@@ -51,6 +51,7 @@ export class GolemComponent {
    public readonly rockInfoArray: Array<RockInfo>;
    public readonly attackingEntities: Record<number, GolemTargetInfo> = {};
    public wakeTimerTicks = 0;
+   public lastWakeTicks = 0;
 
    public summonedPebblumIDs = new Array<number>();
    public pebblumSummonCooldownTicks: number;

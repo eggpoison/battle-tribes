@@ -1,5 +1,5 @@
 import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision";
+import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { PlanterBoxPlant, ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityType, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
@@ -19,7 +19,7 @@ type ComponentTypes = [ServerComponentType.physics, ServerComponentType.iceShard
 export function createIceShard(position: Point, rotation: number): EntityCreationInfo<ComponentTypes> {
    const iceShard = new Entity(position, rotation, EntityType.iceShardProjectile, COLLISION_BITS.default, DEFAULT_COLLISION_MASK & ~COLLISION_BITS.planterBox);
 
-   const hitbox = new RectangularHitbox(iceShard.position.x, iceShard.position.y, 0.4, 0, 0, HitboxCollisionType.soft, iceShard.getNextHitboxLocalID(), iceShard.rotation, 24, 24, 0);
+   const hitbox = new RectangularHitbox(iceShard.position, 0.4, 0, 0, HitboxCollisionType.soft, iceShard.getNextHitboxLocalID(), iceShard.rotation, 24, 24, 0, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK);
    iceShard.addHitbox(hitbox);
    
    const physicsComponent = new PhysicsComponent(0, 0, 0, 0, true, false);

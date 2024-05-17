@@ -1,5 +1,5 @@
 import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision";
+import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { AMMO_INFO_RECORD, ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { BallistaAmmoType, BALLISTA_AMMO_TYPES, ItemType, InventoryName } from "webgl-test-shared/dist/items";
@@ -26,16 +26,16 @@ const VISION_RANGE = 550;
 const HITBOX_SIZE = 100 - 0.05;
 const AIM_ARC_SIZE = Math.PI / 2;
 
-export function createBallistaHitboxes(parentX: number, parentY: number, localID: number, parentRotation: number): ReadonlyArray<CircularHitbox | RectangularHitbox> {
+export function createBallistaHitboxes(parentPosition: Point, localID: number, parentRotation: number): ReadonlyArray<CircularHitbox | RectangularHitbox> {
    const hitboxes = new Array<CircularHitbox | RectangularHitbox>();
-   hitboxes.push(new RectangularHitbox(parentX, parentY, 2, 0, 0, HitboxCollisionType.hard, localID, parentRotation, HITBOX_SIZE, HITBOX_SIZE, 0));
+   hitboxes.push(new RectangularHitbox(parentPosition, 2, 0, 0, HitboxCollisionType.hard, localID, parentRotation, HITBOX_SIZE, HITBOX_SIZE, 0, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK));
    return hitboxes;
 }
 
 export function createBallista(position: Point, rotation: number, tribe: Tribe): Entity {
    const ballista = new Entity(position, rotation, EntityType.ballista, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
-   const hitboxes = createBallistaHitboxes(ballista.position.x, ballista.position.y, ballista.getNextHitboxLocalID(), ballista.rotation);
+   const hitboxes = createBallistaHitboxes(position, ballista.getNextHitboxLocalID(), ballista.rotation);
    for (let i = 0; i < hitboxes.length; i++) {
       ballista.addHitbox(hitboxes[i]);
    }

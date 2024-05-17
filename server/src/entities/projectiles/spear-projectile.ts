@@ -1,5 +1,5 @@
 import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision";
+import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { EntityType, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
 import { Item, ItemType } from "webgl-test-shared/dist/items";
 import { Point } from "webgl-test-shared/dist/utils";
@@ -23,7 +23,7 @@ const DROP_VELOCITY = 400;
 export function createSpearProjectile(position: Point, rotation: number, tribeMemberID: number, item: Item): EntityCreationInfo<ComponentTypes> {
    const spear = new Entity(position, rotation, EntityType.spearProjectile, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
-   const hitbox = new RectangularHitbox(spear.position.x, spear.position.y, 0.5, 0, 0, HitboxCollisionType.soft, spear.getNextHitboxLocalID(), spear.rotation, 12, 60, 0);
+   const hitbox = new RectangularHitbox(position, 0.5, 0, 0, HitboxCollisionType.soft, spear.getNextHitboxLocalID(), spear.rotation, 12, 60, 0, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK);
    spear.addHitbox(hitbox);
 
    const physicsComponent = new PhysicsComponent(0, 0, 0, 0, true, false);

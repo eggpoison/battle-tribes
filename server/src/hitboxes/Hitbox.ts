@@ -2,6 +2,7 @@ import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types"
 import { Point } from "webgl-test-shared/dist/utils";
 import RectangularHitbox from "./RectangularHitbox";
 import CircularHitbox from "./CircularHitbox";
+import { HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 
 export type HitboxObject = { position: Point, rotation: number };
 
@@ -22,15 +23,19 @@ abstract class Hitbox {
    public chunkBounds: HitboxBounds = [-1, -1, -1, -1];
 
    public collisionType: HitboxCollisionType;
+   public readonly collisionBit: HitboxCollisionBit;
+   public readonly collisionMask: number;
 
-   constructor(parentX: number, parentY: number, mass: number, offsetX: number, offsetY: number, collisionType: HitboxCollisionType, localID: number, initialRotation: number) {
+   constructor(parentPosition: Point, mass: number, offsetX: number, offsetY: number, collisionType: HitboxCollisionType, localID: number, initialRotation: number, collisionBit: number, collisionMask: number) {
       this.mass = mass;
       this.offsetX = offsetX;
       this.offsetY = offsetY;
       this.collisionType = collisionType;
       this.localID = localID;
+      this.collisionBit = collisionBit;
+      this.collisionMask = collisionMask;
 
-      this.updatePosition(parentX, parentY, initialRotation);
+      this.updatePosition(parentPosition.x, parentPosition.y, initialRotation);
    }
 
    public updatePosition(parentX: number, parentY: number, parentRotation: number): void {

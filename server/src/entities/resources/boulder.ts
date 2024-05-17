@@ -1,5 +1,5 @@
 import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision";
+import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { BoulderComponentData } from "webgl-test-shared/dist/components";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { ItemType } from "webgl-test-shared/dist/items";
@@ -18,7 +18,7 @@ const RADIUS = 40;
 export function createBoulder(position: Point, rotation: number): Entity {
    const boulder = new Entity(position, rotation, EntityType.boulder, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
-   const hitbox = new CircularHitbox(boulder.position.x, boulder.position.y, 1.25, 0, 0, HitboxCollisionType.soft, RADIUS, boulder.getNextHitboxLocalID(), boulder.rotation);
+   const hitbox = new CircularHitbox(position, 1.25, 0, 0, HitboxCollisionType.soft, RADIUS, boulder.getNextHitboxLocalID(), boulder.rotation, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK);
    boulder.addHitbox(hitbox);
 
    HealthComponentArray.addComponent(boulder.id, new HealthComponent(40));

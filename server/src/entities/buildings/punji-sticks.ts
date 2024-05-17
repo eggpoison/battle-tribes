@@ -1,5 +1,5 @@
 import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision";
+import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { EntityType, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
@@ -20,17 +20,17 @@ const FLOOR_HITBOX_SIZE = 48 - 0.05;
 const WALL_HITBOX_WIDTH = 56 - 0.05;
 const WALL_HITBOX_HEIGHT = 32 - 0.05;
 
-export function createFloorPunjiSticksHitboxes(parentX: number, parentY: number, localID: number, parentRotation: number): ReadonlyArray<CircularHitbox | RectangularHitbox> {
+export function createFloorPunjiSticksHitboxes(parentPosition: Point, localID: number, parentRotation: number): ReadonlyArray<CircularHitbox | RectangularHitbox> {
    const hitboxes = new Array<CircularHitbox | RectangularHitbox>();
    // @Hack mass
-   hitboxes.push(new RectangularHitbox(parentX, parentY, Number.EPSILON, 0, 0, HitboxCollisionType.soft, localID, parentRotation, FLOOR_HITBOX_SIZE, FLOOR_HITBOX_SIZE, 0));
+   hitboxes.push(new RectangularHitbox(parentPosition, Number.EPSILON, 0, 0, HitboxCollisionType.soft, localID, parentRotation, FLOOR_HITBOX_SIZE, FLOOR_HITBOX_SIZE, 0, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK));
    return hitboxes;
 }
 
-export function createWallPunjiSticksHitboxes(parentX: number, parentY: number, localID: number, parentRotation: number): ReadonlyArray<CircularHitbox | RectangularHitbox> {
+export function createWallPunjiSticksHitboxes(parentPosition: Point, localID: number, parentRotation: number): ReadonlyArray<CircularHitbox | RectangularHitbox> {
    const hitboxes = new Array<CircularHitbox | RectangularHitbox>();
    // @Hack mass
-   hitboxes.push(new RectangularHitbox(parentX, parentY, Number.EPSILON, 0, 0, HitboxCollisionType.soft, localID, parentRotation, WALL_HITBOX_WIDTH, WALL_HITBOX_HEIGHT, 0));
+   hitboxes.push(new RectangularHitbox(parentPosition, Number.EPSILON, 0, 0, HitboxCollisionType.soft, localID, parentRotation, WALL_HITBOX_WIDTH, WALL_HITBOX_HEIGHT, 0, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK));
    return hitboxes;
 }
 
@@ -39,7 +39,7 @@ export function createPunjiSticks(position: Point, rotation: number, tribe: Trib
    
    const punjiSticks = new Entity(position, rotation, entityType, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
-   const hitboxes = attachedWallID !== 0 ? createWallPunjiSticksHitboxes(position.x, position.y, punjiSticks.getNextHitboxLocalID(), rotation) : createFloorPunjiSticksHitboxes(position.x, position.y, punjiSticks.getNextHitboxLocalID(), rotation);
+   const hitboxes = attachedWallID !== 0 ? createWallPunjiSticksHitboxes(position, punjiSticks.getNextHitboxLocalID(), rotation) : createFloorPunjiSticksHitboxes(position, punjiSticks.getNextHitboxLocalID(), rotation);
    for (let i = 0; i < hitboxes.length; i++) {
       punjiSticks.addHitbox(hitboxes[i]);
    }

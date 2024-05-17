@@ -9,13 +9,14 @@ import CircularHitbox from "./hitboxes/CircularHitbox";
 import Entity from "./Entity";
 import RectangularHitbox from "./hitboxes/RectangularHitbox";
 import { PhysicsComponent, PhysicsComponentArray } from "./components/PhysicsComponent";
-import { CollisionVars, entitiesAreColliding } from "./collision";
 import { getEntityPathfindingGroupID } from "./pathfinding";
+import { DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 
 const TURN_CONSTANT = Math.PI / Settings.TPS;
 const WALL_AVOIDANCE_MULTIPLIER = 1.5;
    
-const testCircularHitbox = new CircularHitbox(0, 0, 1, 0, 0, HitboxCollisionType.soft, -1, 1, 0);
+// @Cleanup: remove
+const testCircularHitbox = new CircularHitbox(new Point(0, 0), 1, 0, 0, HitboxCollisionType.soft, -1, 1, 0, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK);
 
 // @Cleanup: Only used in tribesman.ts, so move there.
 export function getClosestAccessibleEntity(entity: Entity, entities: ReadonlyArray<Entity>): Entity {

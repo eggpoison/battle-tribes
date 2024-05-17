@@ -148,7 +148,15 @@ const AUDIO_FILE_PATHS = [
    "barrel-place.mp3",
    "error.mp3",
    "conversion.mp3",
-   "plant.mp3"
+   "plant.mp3",
+   "slime-hit-1.mp3",
+   "slime-hit-2.mp3",
+   "slime-death.mp3",
+   "golem-angry.mp3",
+   "slime-ambient-1.mp3",
+   "slime-ambient-2.mp3",
+   "slime-ambient-3.mp3",
+   "slime-ambient-4.mp3"
 ] as const;
 
 export type AudioFilePath = typeof AUDIO_FILE_PATHS[number];

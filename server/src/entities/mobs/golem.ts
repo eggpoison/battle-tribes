@@ -1,5 +1,5 @@
 import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision";
+import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { GolemComponentData } from "webgl-test-shared/dist/components";
 import { EntityType, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
 import { ItemType } from "webgl-test-shared/dist/items";
@@ -78,11 +78,11 @@ export function createGolem(position: Point): Entity {
    const golem = new Entity(position, 2 * Math.PI * Math.random(), EntityType.golem, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
    // Create core hitbox
-   const hitbox = new CircularHitbox(golem.position.x, golem.position.y, ROCK_MASSIVE_MASS, 0, 0, HitboxCollisionType.soft, 36, golem.getNextHitboxLocalID(), golem.rotation);
+   const hitbox = new CircularHitbox(golem.position, ROCK_MASSIVE_MASS, 0, 0, HitboxCollisionType.soft, 36, golem.getNextHitboxLocalID(), golem.rotation, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK);
    golem.addHitbox(hitbox);
 
    // Create head hitbox
-   golem.addHitbox(new CircularHitbox(golem.position.x, golem.position.y, ROCK_LARGE_MASS, 0, 45, HitboxCollisionType.soft, 32, golem.getNextHitboxLocalID(), golem.rotation));
+   golem.addHitbox(new CircularHitbox(golem.position, ROCK_LARGE_MASS, 0, 45, HitboxCollisionType.soft, 32, golem.getNextHitboxLocalID(), golem.rotation, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK));
    
    // Create body hitboxes
    let i = 0;
@@ -110,7 +110,7 @@ export function createGolem(position: Point): Entity {
       }
 
       const mass = size === 0 ? ROCK_SMALL_MASS : ROCK_MEDIUM_MASS;
-      const hitbox = new CircularHitbox(golem.position.x, golem.position.y, mass, offsetX, offsetY, HitboxCollisionType.soft, radius, golem.getNextHitboxLocalID(), golem.rotation);
+      const hitbox = new CircularHitbox(golem.position, mass, offsetX, offsetY, HitboxCollisionType.soft, radius, golem.getNextHitboxLocalID(), golem.rotation, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK);
       golem.addHitbox(hitbox);
 
       i++;
@@ -119,12 +119,12 @@ export function createGolem(position: Point): Entity {
    // Create hand hitboxes
    for (let j = 0; j < 2; j++) {
       const offsetX = 60 * (j === 0 ? -1 : 1);
-      const hitbox = new CircularHitbox(golem.position.x, golem.position.y, ROCK_MEDIUM_MASS, offsetX, 50, HitboxCollisionType.soft, 20, golem.getNextHitboxLocalID(), golem.rotation);
+      const hitbox = new CircularHitbox(golem.position, ROCK_MEDIUM_MASS, offsetX, 50, HitboxCollisionType.soft, 20, golem.getNextHitboxLocalID(), golem.rotation, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK);
       golem.addHitbox(hitbox);
 
       // Wrist
       const inFactor = 0.75;
-      golem.addHitbox(new CircularHitbox(golem.position.x, golem.position.y, ROCK_TINY_MASS, offsetX * inFactor, 50 * inFactor, HitboxCollisionType.soft, 12, golem.getNextHitboxLocalID(), golem.rotation));
+      golem.addHitbox(new CircularHitbox(golem.position, ROCK_TINY_MASS, offsetX * inFactor, 50 * inFactor, HitboxCollisionType.soft, 12, golem.getNextHitboxLocalID(), golem.rotation, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK));
    }
 
    PhysicsComponentArray.addComponent(golem.id, new PhysicsComponent(0, 0, 0, 0, true, false));
@@ -309,6 +309,10 @@ export function onGolemHurt(golem: Entity, attackingEntity: Entity, damage: numb
    
    const golemComponent = GolemComponentArray.getComponent(golem.id);
 
+   if (Object.keys(golemComponent.attackingEntities).length === 0) {
+      golemComponent.lastWakeTicks = Board.ticks;
+   }
+   
    // Update/create the entity's targetInfo record
    if (golemComponent.attackingEntities.hasOwnProperty(attackingEntity.id)) {
       golemComponent.attackingEntities[attackingEntity.id].damageDealtToSelf += damage;
@@ -362,6 +366,8 @@ export function onGolemDeath(golem: Entity): void {
 export function serialiseGolemComponent(golem: Entity): GolemComponentData {
    const golemComponent = GolemComponentArray.getComponent(golem.id);
    return {
-      wakeProgress: golemComponent.wakeTimerTicks / GOLEM_WAKE_TIME_TICKS
+      wakeProgress: golemComponent.wakeTimerTicks / GOLEM_WAKE_TIME_TICKS,
+      ticksAwake: Board.ticks - golemComponent.lastWakeTicks,
+      isAwake: golemComponent.wakeTimerTicks === GOLEM_WAKE_TIME_TICKS
    };
 }

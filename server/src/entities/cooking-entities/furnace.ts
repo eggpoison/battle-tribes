@@ -1,5 +1,5 @@
 import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision";
+import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { Point } from "webgl-test-shared/dist/utils";
@@ -18,16 +18,16 @@ import { InventoryName } from "webgl-test-shared/dist/items";
 
 const HITBOX_SIZE = 80;
 
-export function createFurnaceHitboxes(parentX: number, parentY: number, localID: number, parentRotation: number): ReadonlyArray<RectangularHitbox | CircularHitbox> {
+export function createFurnaceHitboxes(parentPosition: Point, localID: number, parentRotation: number): ReadonlyArray<RectangularHitbox | CircularHitbox> {
    const hitboxes = new Array<RectangularHitbox | CircularHitbox>();
-   hitboxes.push(new RectangularHitbox(parentX, parentY, 2, 0, 0, HitboxCollisionType.hard, localID, parentRotation, HITBOX_SIZE, HITBOX_SIZE, 0));
+   hitboxes.push(new RectangularHitbox(parentPosition, 2, 0, 0, HitboxCollisionType.hard, localID, parentRotation, HITBOX_SIZE, HITBOX_SIZE, 0, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK));
    return hitboxes;
 }
 
 export function createFurnace(position: Point, rotation: number, tribe: Tribe): Entity {
    const furnace = new Entity(position, rotation, EntityType.furnace, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
-   const hitboxes = createFurnaceHitboxes(position.x, position.y, furnace.getNextHitboxLocalID(), rotation);
+   const hitboxes = createFurnaceHitboxes(position, furnace.getNextHitboxLocalID(), rotation);
    for (let i = 0; i < hitboxes.length; i++) {
       furnace.addHitbox(hitboxes[i]);
    }

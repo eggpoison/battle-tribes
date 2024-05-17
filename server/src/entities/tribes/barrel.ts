@@ -1,5 +1,5 @@
 import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision";
+import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { Point } from "webgl-test-shared/dist/utils";
@@ -16,16 +16,16 @@ import { InventoryName } from "webgl-test-shared/dist/items";
 
 const HITBOX_SIZE = 80 - 0.05;
 
-export function createBarrelHitboxes(parentX: number, parentY: number, localID: number, parentRotation: number): ReadonlyArray<CircularHitbox | RectangularHitbox> {
+export function createBarrelHitboxes(parentPosition: Point, localID: number, parentRotation: number): ReadonlyArray<CircularHitbox | RectangularHitbox> {
    const hitboxes = new Array<CircularHitbox | RectangularHitbox>();
-   hitboxes.push(new CircularHitbox(parentX, parentY, 1.5, 0, 0, HitboxCollisionType.hard, HITBOX_SIZE / 2, localID, parentRotation));
+   hitboxes.push(new CircularHitbox(parentPosition, 1.5, 0, 0, HitboxCollisionType.hard, HITBOX_SIZE / 2, localID, parentRotation, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK));
    return hitboxes;
 }
 
 export function createBarrel(position: Point, rotation: number, tribe: Tribe): Entity {
    const barrel = new Entity(position, rotation, EntityType.barrel, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
-   const hitboxes = createBarrelHitboxes(barrel.position.x, barrel.position.y, barrel.getNextHitboxLocalID(), barrel.rotation);
+   const hitboxes = createBarrelHitboxes(position, barrel.getNextHitboxLocalID(), barrel.rotation);
    for (let i = 0; i < hitboxes.length; i++) {
       barrel.addHitbox(hitboxes[i]);
    }

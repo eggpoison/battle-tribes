@@ -186,8 +186,8 @@ export function getVisibleRestrictedBuildingAreas(visibleTribes: ReadonlyArray<T
          // @Incomplete: filter out areas which aren't in the chunk bounds
 
          restrictedAreasData.push({
-            x: restrictedArea.x,
-            y: restrictedArea.y,
+            x: restrictedArea.position.x,
+            y: restrictedArea.position.y,
             rotation: restrictedArea.rotation,
             width: restrictedArea.width,
             height: restrictedArea.height
@@ -247,29 +247,29 @@ export function getVisibleWallConnections(visibleTribes: ReadonlyArray<Tribe>, c
 
          if (wallInfo.connectionBitset & 0b0001) {
             connectionsData.push({
-               x: wallInfo.wall.x + 24 * Math.sin(wallInfo.wall.rotation),
-               y: wallInfo.wall.y + 24 * Math.cos(wallInfo.wall.rotation),
+               x: wallInfo.wall.position.x + 24 * Math.sin(wallInfo.wall.rotation),
+               y: wallInfo.wall.position.y + 24 * Math.cos(wallInfo.wall.rotation),
                rotation: wallInfo.wall.rotation
             });
          }
          if (wallInfo.connectionBitset & 0b0010) {
             connectionsData.push({
-               x: wallInfo.wall.x + 24 * Math.sin(wallInfo.wall.rotation + Math.PI/2),
-               y: wallInfo.wall.y + 24 * Math.cos(wallInfo.wall.rotation + Math.PI/2),
+               x: wallInfo.wall.position.x + 24 * Math.sin(wallInfo.wall.rotation + Math.PI/2),
+               y: wallInfo.wall.position.y + 24 * Math.cos(wallInfo.wall.rotation + Math.PI/2),
                rotation: wallInfo.wall.rotation + Math.PI/2
             });
          }
          if (wallInfo.connectionBitset & 0b0100) {
             connectionsData.push({
-               x: wallInfo.wall.x + 24 * Math.sin(wallInfo.wall.rotation + Math.PI),
-               y: wallInfo.wall.y + 24 * Math.cos(wallInfo.wall.rotation + Math.PI),
+               x: wallInfo.wall.position.x + 24 * Math.sin(wallInfo.wall.rotation + Math.PI),
+               y: wallInfo.wall.position.y + 24 * Math.cos(wallInfo.wall.rotation + Math.PI),
                rotation: wallInfo.wall.rotation + Math.PI
             });
          }
          if (wallInfo.connectionBitset & 0b1000) {
             connectionsData.push({
-               x: wallInfo.wall.x + 24 * Math.sin(wallInfo.wall.rotation + Math.PI*3/2),
-               y: wallInfo.wall.y + 24 * Math.cos(wallInfo.wall.rotation + Math.PI*3/2),
+               x: wallInfo.wall.position.x + 24 * Math.sin(wallInfo.wall.rotation + Math.PI*3/2),
+               y: wallInfo.wall.position.y + 24 * Math.cos(wallInfo.wall.rotation + Math.PI*3/2),
                rotation: wallInfo.wall.rotation + Math.PI*3/2
             });
          }

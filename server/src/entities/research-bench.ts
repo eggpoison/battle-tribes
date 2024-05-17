@@ -1,5 +1,5 @@
 import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision";
+import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { Point } from "webgl-test-shared/dist/utils";
@@ -13,16 +13,16 @@ import { TribeComponent } from "../components/TribeComponent";
 import { ResearchBenchComponent } from "../components/ResearchBenchComponent";
 import CircularHitbox from "../hitboxes/CircularHitbox";
 
-export function createResearchBenchHitboxes(parentX: number, parentY: number, localID: number, parentRotation: number): ReadonlyArray<CircularHitbox | RectangularHitbox> {
+export function createResearchBenchHitboxes(parentPosition: Point, localID: number, parentRotation: number): ReadonlyArray<CircularHitbox | RectangularHitbox> {
    const hitboxes = new Array<CircularHitbox | RectangularHitbox>();
-   hitboxes.push(new RectangularHitbox(parentX, parentY, 1.8, 0, 0, HitboxCollisionType.hard, localID, parentRotation, 128, 80, 0));
+   hitboxes.push(new RectangularHitbox(parentPosition, 1.8, 0, 0, HitboxCollisionType.hard, localID, parentRotation, 128, 80, 0, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK));
    return hitboxes;
 }
 
 export function createResearchBench(position: Point, rotation: number, tribe: Tribe): Entity {
    const bench = new Entity(position, rotation, EntityType.researchBench, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
-   const hitboxes = createResearchBenchHitboxes(bench.position.x, bench.position.y, bench.getNextHitboxLocalID(), bench.rotation);
+   const hitboxes = createResearchBenchHitboxes(position, bench.getNextHitboxLocalID(), bench.rotation);
    for (let i = 0; i < hitboxes.length; i++) {
       bench.addHitbox(hitboxes[i]);
    }

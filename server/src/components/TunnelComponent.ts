@@ -6,6 +6,7 @@ import { angle, lerp } from "webgl-test-shared/dist/utils";
 import Entity from "../Entity";
 import { TunnelComponentArray } from "./ComponentArray";
 import RectangularHitbox from "../hitboxes/RectangularHitbox";
+import { HitboxCollisionBit, DEFAULT_HITBOX_COLLISION_MASK } from "webgl-test-shared/dist/collision";
 
 const DOOR_HITBOX_MASS = 1;
 const DOOR_HITBOX_WIDTH = 48;
@@ -47,7 +48,7 @@ const updateDoorOpenProgress = (tunnel: Entity, tunnelComponent: TunnelComponent
       // Create hard hitbox
       const alreadyExists = doorBit === tunnelComponent.firstHitboxDoorBit ? (tunnel.hitboxes.length > 5 && tunnel.hitboxes[5].collisionType === HitboxCollisionType.hard) : tunnel.hitboxes[tunnel.hitboxes.length - 1].collisionType === HitboxCollisionType.hard;
       if (!alreadyExists) {
-         const hitbox = new RectangularHitbox(tunnel.position.x, tunnel.position.y, 0.5, 0, 0, HitboxCollisionType.hard, tunnel.getNextHitboxLocalID(), tunnel.rotation, DOOR_HITBOX_WIDTH, THIN_HITBOX_HEIGHT, 0);
+         const hitbox = new RectangularHitbox(tunnel.position, 0.5, 0, 0, HitboxCollisionType.hard, tunnel.getNextHitboxLocalID(), tunnel.rotation, DOOR_HITBOX_WIDTH, THIN_HITBOX_HEIGHT, 0, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK);
          tunnel.addHitbox(hitbox);
          
          // @Hack!!! Wouldn't be needed if we had a hitbox awake/asleep system
@@ -187,7 +188,7 @@ export function updateTunnelDoorBitset(tunnel: Entity, doorBitset: number): void
 
    if ((tunnelComponent.doorBitset & 0b01) !== (doorBitset & 0b01)) {
       // Add top door hitbox
-      tunnel.addHitbox(new RectangularHitbox(tunnel.position.x, tunnel.position.y, DOOR_HITBOX_MASS, 0, DOOR_HITBOX_OFFSET, HitboxCollisionType.soft, tunnel.getNextHitboxLocalID(), tunnel.rotation, DOOR_HITBOX_WIDTH, DOOR_HITBOX_HEIGHT, 0));
+      tunnel.addHitbox(new RectangularHitbox(tunnel.position, DOOR_HITBOX_MASS, 0, DOOR_HITBOX_OFFSET, HitboxCollisionType.soft, tunnel.getNextHitboxLocalID(), tunnel.rotation, DOOR_HITBOX_WIDTH, DOOR_HITBOX_HEIGHT, 0, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK));
       if (tunnel.hitboxes.length === 5) {
          tunnelComponent.firstHitboxDoorBit = 0b01;
       }
@@ -195,7 +196,7 @@ export function updateTunnelDoorBitset(tunnel: Entity, doorBitset: number): void
    }
    if ((tunnelComponent.doorBitset & 0b10) !== (doorBitset & 0b10)) {
       // Add bottom door hitbox
-      tunnel.addHitbox(new RectangularHitbox(tunnel.position.x, tunnel.position.y, DOOR_HITBOX_MASS, 0, -DOOR_HITBOX_OFFSET, HitboxCollisionType.soft, tunnel.getNextHitboxLocalID(), tunnel.rotation, DOOR_HITBOX_WIDTH, DOOR_HITBOX_HEIGHT, 0));
+      tunnel.addHitbox(new RectangularHitbox(tunnel.position, DOOR_HITBOX_MASS, 0, -DOOR_HITBOX_OFFSET, HitboxCollisionType.soft, tunnel.getNextHitboxLocalID(), tunnel.rotation, DOOR_HITBOX_WIDTH, DOOR_HITBOX_HEIGHT, 0, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK));
       if (tunnel.hitboxes.length === 5) {
          tunnelComponent.firstHitboxDoorBit = 0b10;
       }

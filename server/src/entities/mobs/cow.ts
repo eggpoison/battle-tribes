@@ -1,5 +1,5 @@
 import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision";
+import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { CowComponentData } from "webgl-test-shared/dist/components";
 import { CowSpecies, EntityType } from "webgl-test-shared/dist/entities";
 import { ItemType } from "webgl-test-shared/dist/items";
@@ -51,7 +51,7 @@ export function createCow(position: Point, rotation: number): Entity {
    
    const cow = new Entity(position, rotation, EntityType.cow, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
-   const hitbox = new RectangularHitbox(cow.position.x, cow.position.y, 1.2, 0, 0, HitboxCollisionType.soft, cow.getNextHitboxLocalID(), cow.rotation, 50, 100, 0);
+   const hitbox = new RectangularHitbox(cow.position, 1.2, 0, 0, HitboxCollisionType.soft, cow.getNextHitboxLocalID(), cow.rotation, 50, 100, 0, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK);
    cow.addHitbox(hitbox);
 
    PhysicsComponentArray.addComponent(cow.id, new PhysicsComponent(0, 0, 0, 0, true, false));

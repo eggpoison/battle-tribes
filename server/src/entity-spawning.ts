@@ -7,11 +7,12 @@ import Board from "./Board";
 import { addEntityToCensus, getEntityCount, getTileTypeCount } from "./census";
 import OPTIONS from "./options";
 import SRandom from "./SRandom";
-import { NUM_ENTITY_TYPES } from "./Entity";
+import { NUM_ENTITY_TYPES, entityIsStructure } from "./Entity";
 import { createEntity } from "./entity-creation";
 import { yetiSpawnPositionIsValid } from "./entities/mobs/yeti";
 import { SERVER } from "./server";
 import { getDistributionWeightedSpawnPosition } from "./resource-distributions";
+import { entityIsTribesman } from "./entities/tribes/tribe-member";
 
 const PACK_SPAWN_RANGE = 200;
 
@@ -211,9 +212,7 @@ const tribesmanSpawnPositionIsValid = (x: number, y: number): boolean => {
       for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
          const chunk = Board.getChunk(chunkX, chunkY);
          for (const entity of chunk.entities) {
-            if (!STRUCTURE_TYPES.includes(entity.type as StructureType)
-               && entity.type !== EntityType.tribeWorker
-               && entity.type !== EntityType.tribeWarrior) {
+            if (!entityIsStructure(entity) && !entityIsTribesman(entity.type)) {
                continue;
             }
             

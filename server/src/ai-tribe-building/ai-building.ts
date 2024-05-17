@@ -48,7 +48,7 @@ const BUILDING_SAFETY: Record<StructureType, number> = {
    [EntityType.furnace]: 10
 };
 
-export function createRestrictedBuildingArea(x: number, y: number, width: number, height: number, rotation: number, associatedBuildingID: number): RestrictedBuildingArea {
+export function createRestrictedBuildingArea(position: Point, width: number, height: number, rotation: number, associatedBuildingID: number): RestrictedBuildingArea {
    const sinRotation = Math.sin(rotation);
    const cosRotation = Math.cos(rotation);
 
@@ -69,8 +69,7 @@ export function createRestrictedBuildingArea(x: number, y: number, width: number
    ];
    
    return {
-      x: x,
-      y: y,
+      position: position,
       width: width,
       height: height,
       rotation: rotation,
@@ -654,16 +653,15 @@ export function tickTribes(): void {
    }
 }
 
-export function placeVirtualBuilding(tribe: Tribe, x: number, y: number, rotation: number, entityType: StructureType, virtualEntityID: number): VirtualBuilding {
-   const hitboxes = createBuildingHitboxes(entityType, x, y, 1, rotation);
+export function placeVirtualBuilding(tribe: Tribe, position: Readonly<Point>, rotation: number, entityType: StructureType, virtualEntityID: number): VirtualBuilding {
+   const hitboxes = createBuildingHitboxes(entityType, position, 1, rotation);
    
    const occupiedNodes = new Set<SafetyNode>();
    addHitboxesOccupiedNodes(hitboxes, occupiedNodes);
    
    const virtualBuilding: VirtualBuilding = {
       id: virtualEntityID,
-      x: x,
-      y: y,
+      position: position,
       rotation: rotation,
       occupiedNodes: occupiedNodes,
       entityType: entityType

@@ -1,5 +1,5 @@
 import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision";
+import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { TileType } from "webgl-test-shared/dist/tiles";
@@ -60,7 +60,7 @@ const getTribeType = (workerPosition: Point): TribeType => {
 export function createTribeWorker(position: Point, rotation: number, tribeID: number, hutID: number): Entity {
    const worker = new Entity(position, rotation, EntityType.tribeWorker, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
-   const hitbox = new CircularHitbox(worker.position.x, worker.position.y, 1, 0, 0, HitboxCollisionType.soft, TRIBE_WORKER_RADIUS, worker.getNextHitboxLocalID(), worker.rotation);
+   const hitbox = new CircularHitbox(position, 1, 0, 0, HitboxCollisionType.soft, TRIBE_WORKER_RADIUS, worker.getNextHitboxLocalID(), worker.rotation, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK);
    worker.addHitbox(hitbox);
    
    let tribe: Tribe;

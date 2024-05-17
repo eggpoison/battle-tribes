@@ -1,6 +1,6 @@
 import { EntityComponentsData, ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityType } from "webgl-test-shared/dist/entities";
-import { Point } from "webgl-test-shared/dist/utils";
+import { Point, randInt } from "webgl-test-shared/dist/utils";
 import { TileType } from "webgl-test-shared/dist/tiles";
 import { EntityData } from "webgl-test-shared/dist/client-server-types";
 import { createSlimePoolParticle, createSlimeSpeckParticle } from "../particles";
@@ -9,6 +9,8 @@ import StatusEffectComponent from "../entity-components/StatusEffectComponent";
 import HealthComponent from "../entity-components/HealthComponent";
 import PhysicsComponent from "../entity-components/PhysicsComponent";
 import Entity from "../Entity";
+import { AudioFilePath, playSound } from "../sound";
+import { Settings } from "webgl-test-shared/dist/settings";
 
 class Slime extends Entity {
    public static readonly SIZES: ReadonlyArray<number> = [
@@ -40,8 +42,10 @@ class Slime extends Entity {
       return null;
    }
 
-   public updateFromData(entityData: EntityData<EntityType.slime>): void {
-      super.updateFromData(entityData);
+   public tick(): void {
+      if (Math.random() < 0.2 / Settings.TPS) {
+         playSound(("slime-ambient-" + randInt(1, 4) + ".mp3") as AudioFilePath, 0.4, 1, this.position.x, this.position.y);
+      }
    }
 
    protected onHit(): void {
@@ -55,6 +59,8 @@ class Slime extends Entity {
       for (let i = 0; i < Slime.NUM_SPECK_PARTICLES_ON_HIT[slimeComponent.size]; i++) {
          createSlimeSpeckParticle(this.position.x, this.position.y, radius * Math.random());
       }
+
+      playSound(("slime-hit-" + randInt(1, 2) + ".mp3") as AudioFilePath, 0.4, 1, this.position.x, this.position.y);
    }
 
    public onDie(): void {
@@ -68,6 +74,8 @@ class Slime extends Entity {
       for (let i = 0; i < Slime.NUM_SPECK_PARTICLES_ON_DEATH[slimeComponent.size]; i++) {
          createSlimeSpeckParticle(this.position.x, this.position.y, radius * Math.random());
       }
+
+      playSound("slime-death.mp3", 0.4, 1, this.position.x, this.position.y);
    }
 }
 

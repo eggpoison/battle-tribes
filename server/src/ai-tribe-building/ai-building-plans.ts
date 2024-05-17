@@ -19,7 +19,7 @@ import { getHitboxesCollidingEntities } from "../collision";
 
 const virtualBuildingTakesUpWallSpace = (x: number, y: number, wallRotation: number, virtualBuilding: VirtualBuilding, wallVertexOffsets: HitboxVertexPositions): boolean => {
    // @Speed: cache when virutal entity is first created
-   const hitboxes = createBuildingHitboxes(virtualBuilding.entityType, virtualBuilding.x, virtualBuilding.y, 1, virtualBuilding.rotation);
+   const hitboxes = createBuildingHitboxes(virtualBuilding.entityType, virtualBuilding.position, 1, virtualBuilding.rotation);
    
    for (let i = 0; i < hitboxes.length; i++) {
       const hitbox = hitboxes[i];
@@ -102,7 +102,7 @@ const wallSpaceIsFree = (x: number, y: number, wallRotation: number, tribe: Trib
    for (let i = 0; i < tribe.restrictedBuildingAreas.length; i++) {
       const restrictedArea = tribe.restrictedBuildingAreas[i];
 
-      const collisionData = rectanglesAreColliding(wallVertexOffsets, restrictedArea.vertexOffsets, x, y, restrictedArea.x, restrictedArea.y, cosRotation, -sinRotation, Math.sin(restrictedArea.rotation), Math.cos(restrictedArea.rotation));
+      const collisionData = rectanglesAreColliding(wallVertexOffsets, restrictedArea.vertexOffsets, x, y, restrictedArea.position.x, restrictedArea.position.y, cosRotation, -sinRotation, Math.sin(restrictedArea.rotation), Math.cos(restrictedArea.rotation));
       if (collisionData.isColliding) {
          return false;
       }
@@ -227,8 +227,8 @@ const addGridAlignedWallCandidates = (tribe: Tribe, placeCandidates: Array<WallP
       let maxY = Number.MIN_SAFE_INTEGER;
       for (let i = 0; i < 4; i++) {
          const offset = restrictedArea.vertexOffsets[i];
-         const x = restrictedArea.x + offset.x;
-         const y = restrictedArea.y + offset.y;
+         const x = restrictedArea.position.x + offset.x;
+         const y = restrictedArea.position.y + offset.y;
 
          if (x < minX) {
             minX = x;
@@ -244,7 +244,7 @@ const addGridAlignedWallCandidates = (tribe: Tribe, placeCandidates: Array<WallP
          }
       }
       
-      addRectangularSafetyNodePositions(restrictedArea.x, restrictedArea.y, restrictedArea.width, restrictedArea.height, restrictedArea.rotation, minX, maxX, minY, maxY, occupiedNodes);
+      addRectangularSafetyNodePositions(restrictedArea.position.x, restrictedArea.position.y, restrictedArea.width, restrictedArea.height, restrictedArea.rotation, minX, maxX, minY, maxY, occupiedNodes);
    }
 
    // Convert to occupied tile indexes
@@ -378,8 +378,8 @@ const addSnappedWallCandidates = (tribe: Tribe, placeCandidates: Array<WallPlace
       
       for (let i = 0; i < 4; i++) {
          const offsetDirection = virtualBuilding.rotation + i * Math.PI / 2;
-         const x = virtualBuilding.x + 64 * Math.sin(offsetDirection);
-         const y = virtualBuilding.y + 64 * Math.cos(offsetDirection);
+         const x = virtualBuilding.position.x + 64 * Math.sin(offsetDirection);
+         const y = virtualBuilding.position.y + 64 * Math.cos(offsetDirection);
 
          if (wallSpaceIsFree(x, y, virtualBuilding.rotation, tribe) && !wallCandidateAlreadyExists(x, y, virtualBuilding.rotation, placeCandidates)) {
             placeCandidates.push({
@@ -421,7 +421,7 @@ const findIdealWallPlacePosition = (tribe: Tribe): NewBuildingPlan | null => {
       const candidate = potentialCandidates[i];
 
       // Simulate placing the wall
-      placeVirtualBuilding(tribe, candidate.position.x, candidate.position.y, candidate.rotation, EntityType.wall, tribe.virtualEntityIDCounter);
+      placeVirtualBuilding(tribe, candidate.position, candidate.rotation, EntityType.wall, tribe.virtualEntityIDCounter);
       tribe.virtualEntityIDCounter++;
       
       updateTribeBuildingInfo(tribe);
@@ -477,7 +477,7 @@ const tribeHasWorkbench = (tribe: Tribe): boolean => {
 }
 
 const buildingPositionIsValid = (tribe: Tribe, x: number, y: number, rotation: number, entityType: StructureType): boolean => {
-   const hitboxes = createBuildingHitboxes(entityType, x, y, 1, rotation);
+   const hitboxes = createBuildingHitboxes(entityType, new Point(x, y), 1, rotation);
    const collidingEntities = getHitboxesCollidingEntities(hitboxes);
    
    for (let i = 0; i < collidingEntities.length; i++) {
@@ -534,7 +534,7 @@ export function generateBuildingPosition(tribe: Tribe, entityType: StructureType
       const y = randFloat(minY, maxY);
       const rotation = 2 * Math.PI * Math.random();
       
-      const hitboxes = createBuildingHitboxes(entityType, x, y, 1, rotation);
+      const hitboxes = createBuildingHitboxes(entityType, new Point(x, y), 1, rotation);
 
       // Make sure the hitboxes don't go outside the world
       for (let i = 0; i < hitboxes.length; i++) {
@@ -689,13 +689,13 @@ export function updateTribePlans(tribe: Tribe): void {
       switch (plan.type) {
          case BuildingPlanType.newBuilding: {
             const entityType = (ITEM_INFO_RECORD[plan.buildingRecipe.product] as PlaceableItemInfo).entityType;
-            virtualBuilding = placeVirtualBuilding(tribe, plan.position.x, plan.position.y, plan.rotation, entityType as StructureType, virtualEntityID);
+            virtualBuilding = placeVirtualBuilding(tribe, plan.position, plan.rotation, entityType as StructureType, virtualEntityID);
             break;
          }
          case BuildingPlanType.upgrade: {
             // @Bug: Get from virtual buildings not actual entities
             const baseBuilding = Board.entityRecord[plan.baseBuildingID]!;
-            virtualBuilding = placeVirtualBuilding(tribe, baseBuilding.position.x, baseBuilding.position.y, plan.rotation, plan.entityType, virtualEntityID);
+            virtualBuilding = placeVirtualBuilding(tribe, baseBuilding.position, plan.rotation, plan.entityType, virtualEntityID);
             break;
          }
       }

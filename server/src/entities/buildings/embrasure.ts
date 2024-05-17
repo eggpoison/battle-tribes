@@ -1,5 +1,5 @@
 import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision";
+import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { BuildingMaterial } from "webgl-test-shared/dist/components";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
@@ -22,16 +22,16 @@ const HORIZONTAL_HITBOX_HEIGHT = 16 - 0.05;
 
 export const EMBRASURE_HEALTHS = [15, 45];
 
-export function createEmbrasureHitboxes(parentX: number, parentY: number, localID: number, parentRotation: number): ReadonlyArray<CircularHitbox | RectangularHitbox> {
+export function createEmbrasureHitboxes(parentPosition: Point, localID: number, parentRotation: number): ReadonlyArray<CircularHitbox | RectangularHitbox> {
    const hitboxes = new Array<CircularHitbox | RectangularHitbox>();
    
    // Add the two vertical hitboxes (can stop arrows)
-   hitboxes.push(new RectangularHitbox(parentX, parentY, 0.4, -(64 - VERTICAL_HITBOX_WIDTH) / 2 + 0.025, 0, HitboxCollisionType.hard, localID, parentRotation, VERTICAL_HITBOX_WIDTH, VERTICAL_HITBOX_HEIGHT, 0));
-   hitboxes.push(new RectangularHitbox(parentX, parentY, 0.4, (64 - VERTICAL_HITBOX_WIDTH) / 2 - 0.025, 0, HitboxCollisionType.hard, localID, parentRotation, VERTICAL_HITBOX_WIDTH, VERTICAL_HITBOX_HEIGHT, 0));
+   hitboxes.push(new RectangularHitbox(parentPosition, 0.4, -(64 - VERTICAL_HITBOX_WIDTH) / 2 + 0.025, 0, HitboxCollisionType.hard, localID, parentRotation, VERTICAL_HITBOX_WIDTH, VERTICAL_HITBOX_HEIGHT, 0, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK));
+   hitboxes.push(new RectangularHitbox(parentPosition, 0.4, (64 - VERTICAL_HITBOX_WIDTH) / 2 - 0.025, 0, HitboxCollisionType.hard, localID, parentRotation, VERTICAL_HITBOX_WIDTH, VERTICAL_HITBOX_HEIGHT, 0, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK));
 
    // Add the two horizontal hitboxes (cannot stop arrows)
-   hitboxes.push(new RectangularHitbox(parentX, parentY, 0.4, -(64 - HORIZONTAL_HITBOX_WIDTH) / 2 + 0.025, 0, HitboxCollisionType.hard, localID, parentRotation, HORIZONTAL_HITBOX_WIDTH, HORIZONTAL_HITBOX_HEIGHT, 0));
-   hitboxes.push(new RectangularHitbox(parentX, parentY, 0.4, (64 - HORIZONTAL_HITBOX_WIDTH) / 2 + 0.025, 0, HitboxCollisionType.hard, localID, parentRotation, HORIZONTAL_HITBOX_WIDTH, HORIZONTAL_HITBOX_HEIGHT, 0));
+   hitboxes.push(new RectangularHitbox(parentPosition, 0.4, -(64 - HORIZONTAL_HITBOX_WIDTH) / 2 + 0.025, 0, HitboxCollisionType.hard, localID, parentRotation, HORIZONTAL_HITBOX_WIDTH, HORIZONTAL_HITBOX_HEIGHT, 0, HitboxCollisionBit.ARROW_PASSABLE, DEFAULT_HITBOX_COLLISION_MASK));
+   hitboxes.push(new RectangularHitbox(parentPosition, 0.4, (64 - HORIZONTAL_HITBOX_WIDTH) / 2 + 0.025, 0, HitboxCollisionType.hard, localID, parentRotation, HORIZONTAL_HITBOX_WIDTH, HORIZONTAL_HITBOX_HEIGHT, 0, HitboxCollisionBit.ARROW_PASSABLE, DEFAULT_HITBOX_COLLISION_MASK));
 
    return hitboxes;
 }
@@ -39,7 +39,7 @@ export function createEmbrasureHitboxes(parentX: number, parentY: number, localI
 export function createEmbrasure(position: Point, rotation: number, tribe: Tribe, material: BuildingMaterial): Entity {
    const embrasure = new Entity(position, rotation, EntityType.embrasure, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
-   const hitboxes = createEmbrasureHitboxes(embrasure.position.x, embrasure.position.y, embrasure.getNextHitboxLocalID(), embrasure.rotation);
+   const hitboxes = createEmbrasureHitboxes(position, embrasure.getNextHitboxLocalID(), embrasure.rotation);
    for (let i = 0; i < hitboxes.length; i++) {
       embrasure.addHitbox(hitboxes[i]);
    }

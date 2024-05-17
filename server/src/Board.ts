@@ -16,7 +16,7 @@ import generateTerrain from "./world-generation/terrain-generation";
 import { HealthComponentArray, InventoryUseComponentArray, ItemComponentArray, TribeComponentArray, DoorComponentArray, ResearchBenchComponentArray, TunnelComponentArray, HealingTotemComponentArray, PlantComponentArray, FenceGateComponentArray, ComponentArrays } from "./components/ComponentArray";
 import { tickInventoryUseComponent } from "./components/InventoryUseComponent";
 import { onPlayerJoin, onPlayerRemove, tickPlayer } from "./entities/tribes/player";
-import Entity from "./Entity";
+import Entity, { entityIsStructure } from "./Entity";
 import { tickHealthComponent } from "./components/HealthComponent";
 import { tickBerryBush } from "./entities/resources/berry-bush";
 import { tickIceShard } from "./entities/projectiles/ice-shard";
@@ -300,7 +300,7 @@ abstract class Board {
             }
          }
 
-         if (STRUCTURE_TYPES.indexOf(entity.type as StructureType) !== -1) {
+         if (entityIsStructure(entity)) {
             const tribeComponent = TribeComponentArray.getComponent(entity.id);
             tribeComponent.tribe.removeBuilding(entity);
          }
@@ -570,7 +570,7 @@ abstract class Board {
             updateEntityPathfindingNodeOccupance(entity);
          }
 
-         if (STRUCTURE_TYPES.indexOf(entity.type as StructureType) !== -1) {
+         if (entityIsStructure(entity)) {
             const tribeComponent = TribeComponentArray.getComponent(entity.id);
             tribeComponent.tribe.addBuilding(entity);
          }

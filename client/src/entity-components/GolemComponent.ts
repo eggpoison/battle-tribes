@@ -9,6 +9,9 @@ import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
 import { ParticleRenderLayer } from "../rendering/particle-rendering";
 import { Light, addLight, attachLightToRenderPart } from "../lights";
+import { playSound } from "../sound";
+
+const ANGRY_SOUND_INTERVAL_TICKS = Settings.TPS * 3;
 
 enum GolemRockSize {
    massive,
@@ -114,6 +117,10 @@ class GolemComponent extends ServerComponent<ServerComponentType.golem> {
    }
    
    public updateFromData(data: GolemComponentData): void {
+      if (data.isAwake && data.ticksAwake % ANGRY_SOUND_INTERVAL_TICKS === 0) {
+         playSound("golem-angry.mp3", 0.4, 1, this.entity.position.x, this.entity.position.y);
+      }
+      
       this.wakeProgress = data.wakeProgress;
 
       // Add new rocks

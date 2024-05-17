@@ -1,5 +1,5 @@
 import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision";
+import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { Point } from "webgl-test-shared/dist/utils";
@@ -29,16 +29,16 @@ for (let layerIdx = 0; layerIdx < 3; layerIdx++) {
    }
 }
 
-export function createTribeTotemHitboxes(parentX: number, parentY: number, localID: number, parentRotation: number): ReadonlyArray<CircularHitbox | RectangularHitbox> {
+export function createTribeTotemHitboxes(parentPosition: Point, localID: number, parentRotation: number): ReadonlyArray<CircularHitbox | RectangularHitbox> {
    const hitboxes = new Array<CircularHitbox | RectangularHitbox>();
-   hitboxes.push(new CircularHitbox(parentX, parentY, 2.2, 0, 0, HitboxCollisionType.hard, HITBOX_SIZE / 2, localID, parentRotation));
+   hitboxes.push(new CircularHitbox(parentPosition, 2.2, 0, 0, HitboxCollisionType.hard, HITBOX_SIZE / 2, localID, parentRotation, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK));
    return hitboxes;
 }
 
 export function createTribeTotem(position: Point, rotation: number, tribe: Tribe): Entity {
    const totem = new Entity(position, rotation, EntityType.tribeTotem, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
    
-   const hitboxes = createTribeTotemHitboxes(totem.position.x, totem.position.y, totem.getNextHitboxLocalID(), totem.rotation);
+   const hitboxes = createTribeTotemHitboxes(position, totem.getNextHitboxLocalID(), totem.rotation);
    for (let i = 0; i < hitboxes.length; i++) {
       totem.addHitbox(hitboxes[i]);
    }

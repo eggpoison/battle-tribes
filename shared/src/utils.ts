@@ -86,6 +86,12 @@ export class Point {
       return [this.x, this.y];
    }
 
+   public offset(offsetMagnitude: number, offsetDirection: number): Point {
+      const x = this.x + offsetMagnitude * Math.sin(offsetDirection);
+      const y = this.y + offsetMagnitude * Math.cos(offsetDirection);
+      return new Point(x, y);
+   }
+
    public static unpackage(packagedPoint: [number, number]): Point {
       return new Point(packagedPoint[0], packagedPoint[1]);
    }

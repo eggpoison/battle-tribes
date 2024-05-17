@@ -294,6 +294,8 @@ export interface FrozenYetiComponentData {
 
 export interface GolemComponentData {
    readonly wakeProgress: number;
+   readonly ticksAwake: number;
+   readonly isAwake: boolean;
 }
 
 /* Health Component */

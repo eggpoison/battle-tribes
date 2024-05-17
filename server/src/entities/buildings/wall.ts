@@ -1,5 +1,5 @@
 import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision";
+import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { BuildingMaterial } from "webgl-test-shared/dist/components";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
@@ -19,16 +19,16 @@ const SIZE = 64 - 0.05;
 
 export const WALL_HEALTHS = [25, 75];
 
-export function createWallHitboxes(parentX: number, parentY: number, localID: number, parentRotation: number): ReadonlyArray<RectangularHitbox | CircularHitbox> {
+export function createWallHitboxes(parentPosition: Point, localID: number, parentRotation: number): ReadonlyArray<RectangularHitbox | CircularHitbox> {
    const hitboxes = new Array<RectangularHitbox | CircularHitbox>();
-   hitboxes.push(new RectangularHitbox(parentX, parentY, 1, 0, 0, HitboxCollisionType.hard, localID, parentRotation, SIZE, SIZE, 0));
+   hitboxes.push(new RectangularHitbox(parentPosition, 1, 0, 0, HitboxCollisionType.hard, localID, parentRotation, SIZE, SIZE, 0, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK));
    return hitboxes;
 }
 
 export function createWall(position: Point, rotation: number, tribe: Tribe): Entity {
    const wall = new Entity(position, rotation, EntityType.wall, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
-   const hitboxes = createWallHitboxes(wall.position.x, wall.position.y, wall.getNextHitboxLocalID(), wall.rotation);
+   const hitboxes = createWallHitboxes(position, wall.getNextHitboxLocalID(), rotation);
    for (let i = 0; i < hitboxes.length; i++) {
       wall.addHitbox(hitboxes[i]);
    }

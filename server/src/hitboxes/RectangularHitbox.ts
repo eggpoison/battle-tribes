@@ -26,8 +26,8 @@ class RectangularHitbox extends Hitbox {
    public axisX = 0;
    public axisY = 0;
 
-   constructor(parentX: number, parentY: number, mass: number, offsetX: number, offsetY: number, collisionType: HitboxCollisionType, localID: number, parentRotation: number, width: number, height: number, rotation: number) {
-      super(parentX, parentY, mass, offsetX, offsetY, collisionType, localID, parentRotation);
+   constructor(parentPosition: Point, mass: number, offsetX: number, offsetY: number, collisionType: HitboxCollisionType, localID: number, parentRotation: number, width: number, height: number, rotation: number, collisionBit: number, collisionMask: number) {
+      super(parentPosition, mass, offsetX, offsetY, collisionType, localID, parentRotation, collisionBit, collisionMask);
 
       this.width = width;
       this.height = height;

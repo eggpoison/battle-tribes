@@ -12,6 +12,13 @@ export const COLLISION_BITS = {
 
 export const DEFAULT_COLLISION_MASK = COLLISION_BITS.default | COLLISION_BITS.cactus | COLLISION_BITS.iceSpikes | COLLISION_BITS.plants | COLLISION_BITS.planterBox;
 
+export const enum HitboxCollisionBit {
+   DEFAULT = 1 << 0,
+   ARROW_PASSABLE = 1 << 1
+}
+
+export const DEFAULT_HITBOX_COLLISION_MASK = HitboxCollisionBit.DEFAULT | HitboxCollisionBit.ARROW_PASSABLE;
+
 export type HitboxVertexPositions = [tl: Point, tr: Point, bl: Point, br: Point];
 
 export interface CollisionData {

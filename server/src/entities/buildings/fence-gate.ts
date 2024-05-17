@@ -1,5 +1,5 @@
 import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision";
+import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { Point } from "webgl-test-shared/dist/utils";
@@ -18,16 +18,16 @@ import { ConnectedEntityIDs } from "../tribes/tribe-member";
 const HITBOX_WIDTH = 56 - 0.05;
 const HITBOX_HEIGHT = 16 - 0.05;
 
-export function createFenceGateHitboxes(parentX: number, parentY: number, localID: number, parentRotation: number): ReadonlyArray<RectangularHitbox | CircularHitbox> {
+export function createFenceGateHitboxes(parentPosition: Point, localID: number, parentRotation: number): ReadonlyArray<RectangularHitbox | CircularHitbox> {
    const hitboxes = new Array<RectangularHitbox | CircularHitbox>();
-   hitboxes.push(new RectangularHitbox(parentX, parentY, 1, 0, 0, HitboxCollisionType.hard, localID, parentRotation, HITBOX_WIDTH, HITBOX_HEIGHT, 0));
+   hitboxes.push(new RectangularHitbox(parentPosition, 1, 0, 0, HitboxCollisionType.hard, localID, parentRotation, HITBOX_WIDTH, HITBOX_HEIGHT, 0, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK));
    return hitboxes;
 }
 
 export function createFenceGate(position: Point, rotation: number, tribe: Tribe, connectedSidesBitset: number, connectedEntityIDs: ConnectedEntityIDs): Entity {
    const fenceGate = new Entity(position, rotation, EntityType.fenceGate, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
-   const hitboxes = createFenceGateHitboxes(position.x, position.y, fenceGate.getNextHitboxLocalID(), rotation);
+   const hitboxes = createFenceGateHitboxes(position, fenceGate.getNextHitboxLocalID(), rotation);
    for (let i = 0; i < hitboxes.length; i++) {
       fenceGate.addHitbox(hitboxes[i]);
    }

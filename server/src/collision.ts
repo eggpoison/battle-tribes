@@ -1,7 +1,7 @@
 import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
-import { angle, rotateXAroundPoint, rotateYAroundPoint } from "webgl-test-shared/dist/utils";
+import { Point, angle, rotateXAroundPoint, rotateYAroundPoint } from "webgl-test-shared/dist/utils";
 import Entity from "./Entity";
 import Hitbox from "./hitboxes/Hitbox";
 import CircularHitbox from "./hitboxes/CircularHitbox";
@@ -30,7 +30,7 @@ import { onPlayerCollision } from "./entities/tribes/player";
 import { onEmbrasureCollision } from "./entities/buildings/embrasure";
 import Board from "./Board";
 import { onTribesmanCollision } from "./entities/tribes/tribe-member";
-import { rectanglesAreColliding } from "webgl-test-shared/dist/collision";
+import { DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit, rectanglesAreColliding } from "webgl-test-shared/dist/collision";
 
 interface CollisionPushInfo {
    direction: number;
@@ -174,6 +174,10 @@ export function hitboxesAreColliding(hitbox: CircularHitbox | RectangularHitbox,
    return false;
 }
 
+const collisionBitsAreCompatible = (collisionMask1: number, collisionBit1: number, collisionMask2: number, collisionBit2: number): boolean => {
+   return (collisionMask1 & collisionBit2) !== 0 && (collisionMask2 & collisionBit1) !== 0;
+}
+
 /**
  * @returns A number where the first 8 bits hold the index of the entity's colliding hitbox, and the next 8 bits hold the index of the other entity's colliding hitbox
 */
@@ -196,19 +200,7 @@ export function entitiesAreColliding(entity1: Entity, entity2: Entity): number {
          const otherHitbox = entity2.hitboxes[j];
 
          // If the objects are colliding, add the colliding object and this object
-         if (hitbox.isColliding(otherHitbox)) {
-            // @Cleanup: Merge with hitboxesAreColliding
-            // @Speed @Hack: Remove once the multiple collisions per tick thing is done
-            if (entity1.type === EntityType.embrasure && entity2.type === EntityType.woodenArrowProjectile) {
-               if (i >= 2) {
-                  continue;
-               }
-            } else if (entity2.type === EntityType.embrasure && entity1.type === EntityType.woodenArrowProjectile) {
-               if (j >= 2) {
-                  continue;
-               }
-            }
-            
+         if (collisionBitsAreCompatible(hitbox.collisionMask, hitbox.collisionBit, otherHitbox.collisionMask, otherHitbox.collisionBit) && hitbox.isColliding(otherHitbox)) {
             return i + (j << 8);
          }
       }
@@ -244,12 +236,8 @@ const resolveSoftCollision = (entity: Entity, pushingHitbox: Hitbox, pushInfo: C
    physicsComponent.velocity.y += pushForce * Math.cos(pushInfo.direction);
 }
 
-const entityCollisionBitsAreCompatible = (entity1: Entity, entity2: Entity): boolean => {
-   return (entity1.collisionMask & entity2.collisionBit) !== 0 && (entity2.collisionMask & entity1.collisionBit) !== 0;
-}
-
 export function collide(entity: Entity, pushingEntity: Entity, pushedHitboxIdx: number, pushingHitboxIdx: number): void {
-   if (entityCollisionBitsAreCompatible(entity, pushingEntity) && PhysicsComponentArray.hasComponent(entity.id)) {
+   if (collisionBitsAreCompatible(entity.collisionMask, entity.collisionBit, pushingEntity.collisionMask, pushingEntity.collisionBit) && PhysicsComponentArray.hasComponent(entity.id)) {
       const physicsComponent = PhysicsComponentArray.getComponent(entity.id);
       if (!physicsComponent.isImmovable) {
          const pushedHitbox = entity.hitboxes[pushedHitboxIdx];
@@ -352,7 +340,9 @@ export function getHitboxesCollidingEntities(hitboxes: ReadonlyArray<CircularHit
 
 /** If no collision is found, does nothing. */
 export function resolveEntityTileCollision(entity: Entity, hitbox: Hitbox, tileX: number, tileY: number): void {
-   const tileHitbox = new RectangularHitbox((tileX + 0.5) * Settings.TILE_SIZE, (tileY + 0.5) * Settings.TILE_SIZE, 1, 0, 0, HitboxCollisionType.hard, 1, 0, Settings.TILE_SIZE, Settings.TILE_SIZE, 0);
+   // @Speed
+   const tilePos = new Point((tileX + 0.5) * Settings.TILE_SIZE, (tileY + 0.5) * Settings.TILE_SIZE);
+   const tileHitbox = new RectangularHitbox(tilePos, 1, 0, 0, HitboxCollisionType.hard, 1, 0, Settings.TILE_SIZE, Settings.TILE_SIZE, 0, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK);
    
    if (hitbox.isColliding(tileHitbox)) {
       const pushInfo = getCollisionPushInfo(hitbox, tileHitbox);

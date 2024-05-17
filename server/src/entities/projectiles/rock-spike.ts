@@ -1,5 +1,5 @@
 import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision";
+import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { EntityType, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { Point, randFloat } from "webgl-test-shared/dist/utils";
@@ -11,13 +11,14 @@ import { addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../.
 import { SERVER } from "../../server";
 import { applyKnockback } from "../../components/PhysicsComponent";
 
+// @Cleanup: why do we have to export these?
 export const ROCK_SPIKE_HITBOX_SIZES = [12 * 2, 16 * 2, 20 * 2];
 export const ROCK_SPIKE_MASSES = [1, 1.75, 2.5];
 
-export function createRockSpikeProjectile(spawnPosition: Point, rotation: number, size: number, frozenYetiID: number): Entity {
-   const rockSpikeProjectile = new Entity(spawnPosition, rotation, EntityType.rockSpikeProjectile, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
+export function createRockSpikeProjectile(position: Point, rotation: number, size: number, frozenYetiID: number): Entity {
+   const rockSpikeProjectile = new Entity(position, rotation, EntityType.rockSpikeProjectile, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
-   const hitbox = new CircularHitbox(rockSpikeProjectile.position.x, rockSpikeProjectile.position.y, ROCK_SPIKE_MASSES[size], 0, 0, HitboxCollisionType.soft, ROCK_SPIKE_HITBOX_SIZES[size], rockSpikeProjectile.getNextHitboxLocalID(), rockSpikeProjectile.rotation);
+   const hitbox = new CircularHitbox(position, ROCK_SPIKE_MASSES[size], 0, 0, HitboxCollisionType.soft, ROCK_SPIKE_HITBOX_SIZES[size], rockSpikeProjectile.getNextHitboxLocalID(), rockSpikeProjectile.rotation, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK);
    rockSpikeProjectile.addHitbox(hitbox);
 
    const lifetimeTicks = Math.floor(randFloat(3.5, 4.5) * Settings.TPS);

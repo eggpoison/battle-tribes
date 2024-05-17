@@ -170,7 +170,7 @@ export function getOutsideDoorPlacePlan(tribe: Tribe, area: TribeArea): Building
       // @Incomplete: Make sure the door's restricted areas wouldn't be occupied if it were placed
    
       const virtualBuildingID = tribe.virtualEntityIDCounter++;
-      const virtualBuilding = placeVirtualBuilding(tribe, wallInfo.wall.x, wallInfo.wall.y, doorRotation, EntityType.door, virtualBuildingID);
+      const virtualBuilding = placeVirtualBuilding(tribe, wallInfo.wall.position, doorRotation, EntityType.door, virtualBuildingID);
    
       let isValidPosition = true;
       for (const node of virtualBuilding.occupiedNodes) {
@@ -188,8 +188,8 @@ export function getOutsideDoorPlacePlan(tribe: Tribe, area: TribeArea): Building
       }
 
       potentialPlans.push({
-         x: wallInfo.wall.x,
-         y: wallInfo.wall.y,
+         x: wallInfo.wall.position.x,
+         y: wallInfo.wall.position.y,
          rotation: doorRotation,
          buildingType: EntityType.door,
          safety: 0,

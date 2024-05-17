@@ -1,5 +1,5 @@
 import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision";
+import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
@@ -23,7 +23,7 @@ const ARROW_DESTROY_DISTANCE = Math.sqrt(Math.pow(ARROW_WIDTH / 2, 2) + Math.pow
 export function createIceArrow(position: Point, rotation: number, tribe: Tribe): EntityCreationInfo<ComponentTypes> {
    const iceArrow = new Entity(position, rotation, EntityType.iceArrow, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
    
-   const hitbox = new RectangularHitbox(iceArrow.position.x, iceArrow.position.y, 0.4, 0, 0, HitboxCollisionType.soft, iceArrow.getNextHitboxLocalID(), iceArrow.rotation, ARROW_WIDTH, ARROW_HEIGHT, 0);
+   const hitbox = new RectangularHitbox(position, 0.4, 0, 0, HitboxCollisionType.soft, iceArrow.getNextHitboxLocalID(), iceArrow.rotation, ARROW_WIDTH, ARROW_HEIGHT, 0, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK);
    iceArrow.addHitbox(hitbox);
    
    const physicsComponent = new PhysicsComponent(0, 0, 0, 0, false, true);

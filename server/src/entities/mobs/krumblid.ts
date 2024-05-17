@@ -1,5 +1,5 @@
 import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision";
+import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { ItemType } from "webgl-test-shared/dist/items";
 import { Settings } from "webgl-test-shared/dist/settings";
@@ -34,7 +34,7 @@ const TURN_SPEED = Math.PI * 2;
 export function createKrumblid(position: Point): Entity {
    const krumblid = new Entity(position, 2 * Math.PI * Math.random(), EntityType.krumblid, COLLISION_BITS.default, DEFAULT_COLLISION_MASK & ~COLLISION_BITS.cactus);
 
-   const hitbox = new CircularHitbox(krumblid.position.x, krumblid.position.y, 0.75, 0, 0, HitboxCollisionType.soft, KRUMBLID_SIZE / 2, krumblid.getNextHitboxLocalID(), krumblid.rotation);
+   const hitbox = new CircularHitbox(krumblid.position, 0.75, 0, 0, HitboxCollisionType.soft, KRUMBLID_SIZE / 2, krumblid.getNextHitboxLocalID(), krumblid.rotation, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK);
    krumblid.addHitbox(hitbox);
 
    PhysicsComponentArray.addComponent(krumblid.id, new PhysicsComponent(0, 0, 0, 0, true, false));

@@ -1,12 +1,12 @@
 import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision";
+import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { EntityType, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
 import { InventoryName, ItemType } from "webgl-test-shared/dist/items";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { STRUCTURE_TYPES, StructureType } from "webgl-test-shared/dist/structures";
 import { Point, randInt, randFloat } from "webgl-test-shared/dist/utils";
-import Entity from "../../Entity";
+import Entity, { entityIsStructure } from "../../Entity";
 import { HealthComponentArray, InventoryComponentArray, InventoryUseComponentArray, ItemComponentArray, TombstoneComponentArray, TribeMemberComponentArray, WanderAIComponentArray, ZombieComponentArray } from "../../components/ComponentArray";
 import { HealthComponent, addLocalInvulnerabilityHash, canDamageEntity, damageEntity, healEntity } from "../../components/HealthComponent";
 import { ZombieComponent } from "../../components/ZombieComponent";
@@ -60,7 +60,7 @@ const HURT_ENTITY_INVESTIGATE_TICKS = Math.floor(1 * Settings.TPS);
 export function createZombie(position: Point, rotation: number, isGolden: boolean, tombstoneID: number): Entity {
    const zombie = new Entity(position, rotation, EntityType.zombie, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
-   const hitbox = new CircularHitbox(zombie.position.x, zombie.position.y, 1, 0, 0, HitboxCollisionType.soft, 32, zombie.getNextHitboxLocalID(), zombie.rotation);
+   const hitbox = new CircularHitbox(position, 1, 0, 0, HitboxCollisionType.soft, 32, zombie.getNextHitboxLocalID(), zombie.rotation, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK);
    zombie.addHitbox(hitbox);
    
    PhysicsComponentArray.addComponent(zombie.id, new PhysicsComponent(0, 0, 0, 0, true, false));
@@ -301,7 +301,7 @@ const tribesmanIsWearingMeatSuit = (entityID: number): boolean => {
    const armourInventory = getInventory(inventoryComponent, InventoryName.armourSlot);
 
    const armour = armourInventory.itemSlots[1];
-   return typeof armour === "undefined" || armour.type === ItemType.meat_suit;
+   return typeof armour !== "undefined" && armour.type === ItemType.meat_suit;
 }
 
 const shouldAttackEntity = (zombie: Entity, entity: Entity): boolean => {
@@ -320,26 +320,7 @@ const shouldAttackEntity = (zombie: Entity, entity: Entity): boolean => {
       return true;
    }
 
-   return STRUCTURE_TYPES.indexOf(entity.type as StructureType) !== -1;
-}
-
-const shouldHurtEntity = (zombie: Entity, entity: Entity): boolean => {
-   if (!HealthComponentArray.hasComponent(entity.id)) {
-      return false;
-   }
-
-   // If the entity is attacking the zombie, attack back
-   const zombieComponent = ZombieComponentArray.getComponent(zombie.id);
-   if (zombieComponent.attackingEntityIDs.hasOwnProperty(entity.id)) {
-      return true;
-   }
-
-   // Attack tribe members, but only if they aren't wearing a meat suit
-   if (TribeMemberComponentArray.hasComponent(entity.id) && !tribesmanIsWearingMeatSuit(entity.id)) {
-      return true;
-   }
-
-   return STRUCTURE_TYPES.includes(entity.type as StructureType);
+   return entityIsStructure(entity);
 }
 
 export function onZombieCollision(zombie: Entity, collidingEntity: Entity): void {
@@ -348,10 +329,10 @@ export function onZombieCollision(zombie: Entity, collidingEntity: Entity): void
       pickupItemEntity(zombie, collidingEntity);
    }
    
-   // Hurt enemies on collision
-   if (!shouldHurtEntity(zombie, collidingEntity)) {
+   if (!shouldAttackEntity(zombie, collidingEntity)) {
       return;
    }
+
    const healthComponent = HealthComponentArray.getComponent(collidingEntity.id);
    if (!canDamageEntity(healthComponent, "zombie")) {
       return;

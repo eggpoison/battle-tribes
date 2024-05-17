@@ -1,5 +1,5 @@
 import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision";
+import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { SlimeSize, EntityType, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
 import { ItemType } from "webgl-test-shared/dist/items";
 import { Settings } from "webgl-test-shared/dist/settings";
@@ -71,7 +71,7 @@ export function createSlime(position: Point, size: SlimeSize, orbSizes: Array<Sl
    slime.collisionPushForceMultiplier = 0.5;
 
    const mass = 1 + size * 0.5;
-   const hitbox = new CircularHitbox(slime.position.x, slime.position.y, mass, 0, 0, HitboxCollisionType.soft, RADII[size], slime.getNextHitboxLocalID(), slime.rotation);
+   const hitbox = new CircularHitbox(position, mass, 0, 0, HitboxCollisionType.soft, RADII[size], slime.getNextHitboxLocalID(), slime.rotation, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK);
    slime.addHitbox(hitbox);
 
    PhysicsComponentArray.addComponent(slime.id, new PhysicsComponent(0, 0, 0, 0, true, false));

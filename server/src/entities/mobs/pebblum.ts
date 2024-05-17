@@ -1,5 +1,5 @@
 import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision";
+import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { EntityType, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { Point } from "webgl-test-shared/dist/utils";
@@ -20,9 +20,9 @@ export function createPebblum(position: Point, rotation: number, targetID: numbe
    const pebblum = new Entity(position, rotation, EntityType.pebblum, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
    // Body
-   pebblum.addHitbox(new CircularHitbox(pebblum.position.x, pebblum.position.y, 0.4, 0, -4, HitboxCollisionType.soft, 10 * 2, pebblum.getNextHitboxLocalID(), pebblum.rotation));
+   pebblum.addHitbox(new CircularHitbox(position, 0.4, 0, -4, HitboxCollisionType.soft, 10 * 2, pebblum.getNextHitboxLocalID(), pebblum.rotation, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK));
    // Nose
-   pebblum.addHitbox(new CircularHitbox(pebblum.position.x, pebblum.position.y, 0.3, 0, 6, HitboxCollisionType.soft, 8 * 2, pebblum.getNextHitboxLocalID(), pebblum.rotation));
+   pebblum.addHitbox(new CircularHitbox(position, 0.3, 0, 6, HitboxCollisionType.soft, 8 * 2, pebblum.getNextHitboxLocalID(), pebblum.rotation, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK));
    
    PhysicsComponentArray.addComponent(pebblum.id, new PhysicsComponent(0, 0, 0, 0, true, false));
    HealthComponentArray.addComponent(pebblum.id, new HealthComponent(20));

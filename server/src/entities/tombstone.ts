@@ -1,5 +1,5 @@
 import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision";
+import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { ItemType } from "webgl-test-shared/dist/items";
 import { Settings } from "webgl-test-shared/dist/settings";
@@ -30,10 +30,10 @@ const MAX_SPAWNED_ZOMBIES = 4;
 /** Seconds it takes for a tombstone to spawn a zombie */
 const ZOMBIE_SPAWN_TIME = 3;
 
-export function createTombstone(position: Point): Entity {
-   const tombstone = new Entity(position, 2 * Math.PI * Math.random(), EntityType.tombstone, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
+export function createTombstone(position: Point, rotation: number): Entity {
+   const tombstone = new Entity(position, rotation, EntityType.tombstone, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
-   const hitbox = new RectangularHitbox(tombstone.position.x, tombstone.position.y, 1.25, 0, 0, HitboxCollisionType.soft, tombstone.getNextHitboxLocalID(), tombstone.rotation, WIDTH, HEIGHT, 0);
+   const hitbox = new RectangularHitbox(position, 1.25, 0, 0, HitboxCollisionType.soft, tombstone.getNextHitboxLocalID(), tombstone.rotation, WIDTH, HEIGHT, 0, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK);
    tombstone.addHitbox(hitbox);
 
    HealthComponentArray.addComponent(tombstone.id, new HealthComponent(MAX_HEALTH));

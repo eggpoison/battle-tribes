@@ -23,6 +23,7 @@ import { AIHelperComponentArray } from "./components/AIHelperComponent";
 import { PhysicsComponentArray } from "./components/PhysicsComponent";
 import { onCactusDeath } from "./entities/resources/cactus";
 import { resolveEntityTileCollision } from "./collision";
+import { STRUCTURE_TYPES, StructureType } from "webgl-test-shared/dist/structures";
 
 let idCounter = 1;
 
@@ -554,3 +555,7 @@ class Entity<T extends EntityType = EntityType> {
 }
 
 export default Entity;
+
+export function entityIsStructure(entity: Entity): entity is Entity<StructureType> {
+   return STRUCTURE_TYPES.indexOf(entity.type as StructureType) !== -1
+}

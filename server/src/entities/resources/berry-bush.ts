@@ -1,5 +1,5 @@
 import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision";
+import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { BerryBushComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { ItemType } from "webgl-test-shared/dist/items";
@@ -22,7 +22,7 @@ const BERRY_GROW_TIME = 30;
 export function createBerryBush(position: Point, rotation: number): Entity {
    const berryBush = new Entity(position, rotation, EntityType.berryBush, COLLISION_BITS.plants, DEFAULT_COLLISION_MASK);
 
-   const hitbox = new CircularHitbox(berryBush.position.x, berryBush.position.y, 1, 0, 0, HitboxCollisionType.soft, BERRY_BUSH_RADIUS, berryBush.getNextHitboxLocalID(), berryBush.rotation);
+   const hitbox = new CircularHitbox(position, 1, 0, 0, HitboxCollisionType.soft, BERRY_BUSH_RADIUS, berryBush.getNextHitboxLocalID(), berryBush.rotation, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK);
    berryBush.addHitbox(hitbox);
 
    HealthComponentArray.addComponent(berryBush.id, new HealthComponent(10));

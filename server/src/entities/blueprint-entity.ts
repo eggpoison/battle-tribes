@@ -39,7 +39,7 @@ export function createBlueprintEntity(position: Point, rotation: number, bluepri
    const blueprintEntity = new Entity(position, rotation, EntityType.blueprintEntity, COLLISION_BITS.none, 0);
 
    const entityType = getBlueprintEntityType(blueprintType);
-   const hitboxes = createBuildingHitboxes(entityType, position.x, position.y, blueprintEntity.getNextHitboxLocalID(), rotation);
+   const hitboxes = createBuildingHitboxes(entityType, position, blueprintEntity.getNextHitboxLocalID(), rotation);
    for (let i = 0; i < hitboxes.length; i++) {
       blueprintEntity.addHitbox(hitboxes[i]);
    }
@@ -58,7 +58,7 @@ export function onBlueprintEntityJoin(blueprintEntity: Entity): void {
    const blueprintComponent = BlueprintComponentArray.getComponent(blueprintEntity.id);
 
    const entityType = getBlueprintEntityType(blueprintComponent.blueprintType);
-   placeVirtualBuilding(tribeComponent.tribe, blueprintEntity.position.x, blueprintEntity.position.y, blueprintEntity.rotation, entityType, blueprintComponent.virtualEntityID);
+   placeVirtualBuilding(tribeComponent.tribe, blueprintEntity.position, blueprintEntity.rotation, entityType, blueprintComponent.virtualEntityID);
    tribeComponent.tribe.buildingsAreDirty = true;
 }
 

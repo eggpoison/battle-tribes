@@ -1,5 +1,5 @@
 import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision";
+import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { EntityType, SlimeSize } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
@@ -36,7 +36,7 @@ export function createSlimewisp(position: Point): Entity {
    const slimewisp = new Entity(position, 2 * Math.PI * Math.random(), EntityType.slimewisp, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
    slimewisp.collisionPushForceMultiplier = 0.3;
 
-   const hitbox = new CircularHitbox(slimewisp.position.x, slimewisp.position.y, 0.5, 0, 0, HitboxCollisionType.soft, RADIUS, slimewisp.getNextHitboxLocalID(), slimewisp.rotation);
+   const hitbox = new CircularHitbox(position, 0.5, 0, 0, HitboxCollisionType.soft, RADIUS, slimewisp.getNextHitboxLocalID(), slimewisp.rotation, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK);
    slimewisp.addHitbox(hitbox);
 
    PhysicsComponentArray.addComponent(slimewisp.id, new PhysicsComponent(0, 0, 0, 0, true, false));

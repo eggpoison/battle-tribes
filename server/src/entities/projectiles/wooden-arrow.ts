@@ -1,5 +1,5 @@
 import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision";
+import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { ArrowStatusEffectInfo, ServerComponentType } from "webgl-test-shared/dist/components";
 import { GenericArrowType, EntityType, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
@@ -38,7 +38,7 @@ export interface GenericArrowInfo {
 export function createWoodenArrow(position: Point, rotation: number, throwerID: number, arrowInfo: GenericArrowInfo): EntityCreationInfo<ComponentTypes> {
    const arrow = new Entity(position, rotation, EntityType.woodenArrowProjectile, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
    
-   const hitbox = new RectangularHitbox(arrow.position.x, arrow.position.y, 0.5, 0, 0, HitboxCollisionType.soft, arrow.getNextHitboxLocalID(), arrow.rotation, arrowInfo.hitboxWidth, arrowInfo.hitboxHeight, 0);
+   const hitbox = new RectangularHitbox(position, 0.5, 0, 0, HitboxCollisionType.soft, arrow.getNextHitboxLocalID(), arrow.rotation, arrowInfo.hitboxWidth, arrowInfo.hitboxHeight, 0, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK & ~HitboxCollisionBit.ARROW_PASSABLE);
    arrow.addHitbox(hitbox);
 
    const physicsComponent = new PhysicsComponent(0, 0, 0, 0, false, true);

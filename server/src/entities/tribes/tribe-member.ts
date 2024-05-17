@@ -10,7 +10,7 @@ import { StructureType, STRUCTURE_TYPES, calculateStructurePlaceInfo } from "web
 import { TribesmanTitle } from "webgl-test-shared/dist/titles";
 import { TribeType } from "webgl-test-shared/dist/tribes";
 import { Point, lerp } from "webgl-test-shared/dist/utils";
-import Entity from "../../Entity";
+import Entity, { entityIsStructure } from "../../Entity";
 import Board from "../../Board";
 import { BerryBushComponentArray, BuildingMaterialComponentArray, HealthComponentArray, InventoryComponentArray, InventoryUseComponentArray, ItemComponentArray, PlantComponentArray, TreeComponentArray, TribeComponentArray, TribeMemberComponentArray, TribesmanComponentArray } from "../../components/ComponentArray";
 import { consumeItemFromSlot, consumeItemType, countItemType, getInventory, inventoryIsFull, pickupItemEntity, resizeInventory } from "../../components/InventoryComponent";
@@ -208,7 +208,7 @@ export function repairBuilding(tribeMember: Entity, targetEntity: Entity, itemSl
          doBlueprintWork(targetEntity, item);
          return true;
       }
-   } else if (STRUCTURE_TYPES.includes(targetEntity.type as StructureType)) {
+   } else if (entityIsStructure(targetEntity)) {
       // Heal friendly structures
       const tribeComponent = TribeComponentArray.getComponent(tribeMember.id);
       const buildingTribeComponent = TribeComponentArray.getComponent(targetEntity.id);
@@ -514,9 +514,9 @@ export function calculateRadialAttackTargets(entity: Entity, attackOffset: numbe
    return attackedEntities;
 }
 
-const buildingCanBePlaced = (x: number, y: number, rotation: number, entityType: StructureType): boolean => {
+const buildingCanBePlaced = (placePosition: Point, rotation: number, entityType: StructureType): boolean => {
    // @Incomplete: doesn't account for wall/floor spikes
-   const testHitboxes = createBuildingHitboxes(entityType, x, y, 1, rotation);
+   const testHitboxes = createBuildingHitboxes(entityType, placePosition, 1, rotation);
    const collidingEntities = getHitboxesCollidingEntities(testHitboxes);
 
    for (let i = 0; i < collidingEntities.length; i++) {
@@ -653,7 +653,7 @@ export function useItem(tribeMember: Entity, item: Item, inventoryName: Inventor
          const placeInfo = calculateStructurePlaceInfo(tribeMember.position, tribeMember.rotation, structureType, Board.chunks);
 
          // Make sure the placeable item can be placed
-         if (!buildingCanBePlaced(placeInfo.position.x, placeInfo.position.y, placeInfo.rotation, placeInfo.entityType)) return;
+         if (!buildingCanBePlaced(placeInfo.position, placeInfo.rotation, placeInfo.entityType)) return;
          
          const tribeComponent = TribeComponentArray.getComponent(tribeMember.id);
          placeBuilding(tribeComponent.tribe, placeInfo.position, placeInfo.rotation, placeInfo.entityType, placeInfo.snappedSidesBitset, placeInfo.snappedEntityIDs);

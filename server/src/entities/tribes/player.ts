@@ -1,5 +1,5 @@
 import { HitboxCollisionType, AttackPacket } from "webgl-test-shared/dist/client-server-types";
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision";
+import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { PlanterBoxPlant, BuildingMaterial, MATERIAL_TO_ITEM_MAP } from "webgl-test-shared/dist/components";
 import { CRAFTING_RECIPES, ItemRequirements } from "webgl-test-shared/dist/crafting-recipes";
 import { EntityType, EntityTypeString, LimbAction } from "webgl-test-shared/dist/entities";
@@ -39,7 +39,7 @@ const ATTACK_RADIUS = 50;
 export function createPlayer(position: Point, tribe: Tribe): Entity {
    const player = new Entity(position, 0, EntityType.player, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
-   const hitbox = new CircularHitbox(player.position.x, player.position.y, 1.25, 0, 0, HitboxCollisionType.soft, 32, player.getNextHitboxLocalID(), player.rotation);
+   const hitbox = new CircularHitbox(position, 1.25, 0, 0, HitboxCollisionType.soft, 32, player.getNextHitboxLocalID(), player.rotation, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK);
    player.addHitbox(hitbox);
 
    const tribeInfo = TRIBE_INFO_RECORD[tribe.type];

@@ -34,7 +34,7 @@ export function createEntity(position: Point, entityType: EntityType): Entity {
       case EntityType.slime: return createSlime(position, SlimeSize.small, []);
       case EntityType.slimewisp: return createSlimewisp(position);
       case EntityType.snowball: return createSnowball(position).entity;
-      case EntityType.tombstone: return createTombstone(position);
+      case EntityType.tombstone: return createTombstone(position, 2 * Math.PI * Math.random());
       case EntityType.tree: return createTree(position, 2 * Math.PI * Math.random());
       case EntityType.yeti: return createYeti(position);
       case EntityType.zombie: return createZombie(position, 2 * Math.PI * Math.random(), false, 0);

@@ -1,5 +1,5 @@
 import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision";
+import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { FishComponentData } from "webgl-test-shared/dist/components";
 import { EntityType, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
 import { InventoryName, ItemType } from "webgl-test-shared/dist/items";
@@ -51,7 +51,7 @@ const LUNGE_INTERVAL = 1;
 export function createFish(position: Point): Entity {
    const fish = new Entity(position, 2 * Math.PI * Math.random(), EntityType.fish, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
-   const hitbox = new RectangularHitbox(fish.position.x, fish.position.y, 0.5, 0, 0, HitboxCollisionType.soft, fish.getNextHitboxLocalID(), fish.rotation, FISH_WIDTH, FISH_HEIGHT, 0);
+   const hitbox = new RectangularHitbox(fish.position, 0.5, 0, 0, HitboxCollisionType.soft, fish.getNextHitboxLocalID(), fish.rotation, FISH_WIDTH, FISH_HEIGHT, 0, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK);
    fish.addHitbox(hitbox);
 
    PhysicsComponentArray.addComponent(fish.id, new PhysicsComponent(0, 0, 0, 0, true, false));

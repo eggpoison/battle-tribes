@@ -1,5 +1,5 @@
 import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision";
+import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { TreeComponentData } from "webgl-test-shared/dist/components";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { ItemType } from "webgl-test-shared/dist/items";
@@ -26,7 +26,7 @@ export function createTree(position: Point, rotation: number): Entity {
    const tree = new Entity(position, rotation, EntityType.tree, COLLISION_BITS.plants, DEFAULT_COLLISION_MASK);
 
    const mass = 1.25 + size * 0.25;
-   const hitbox = new CircularHitbox(tree.position.x, tree.position.y, mass, 0, 0, HitboxCollisionType.soft, TREE_RADII[size], tree.getNextHitboxLocalID(), tree.rotation);
+   const hitbox = new CircularHitbox(position, mass, 0, 0, HitboxCollisionType.soft, TREE_RADII[size], tree.getNextHitboxLocalID(), tree.rotation, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK);
    tree.addHitbox(hitbox);
 
    HealthComponentArray.addComponent(tree.id, new HealthComponent(TREE_MAX_HEALTHS[size]));

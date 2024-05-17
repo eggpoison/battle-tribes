@@ -79,8 +79,7 @@ export interface BuildingUpgradePlan extends BaseBuildingPlan {
 export type BuildingPlan = NewBuildingPlan | BuildingUpgradePlan;
 
 export interface RestrictedBuildingArea {
-   readonly x: number;
-   readonly y: number;
+   readonly position: Point;
    readonly width: number;
    readonly height: number;
    readonly rotation: number;
@@ -91,8 +90,7 @@ export interface RestrictedBuildingArea {
 
 export interface VirtualBuilding {
    readonly id: number;
-   readonly x: number;
-   readonly y: number;
+   readonly position: Readonly<Point>;
    readonly rotation: number;
    readonly entityType: StructureType;
    readonly occupiedNodes: Set<SafetyNode>;
@@ -118,7 +116,7 @@ const getWallSideNodeDir = (node: SafetyNode, wall: VirtualBuilding): number => 
    const x = (nodeX + 0.5) * Settings.SAFETY_NODE_SEPARATION;
    const y = (nodeY + 0.5) * Settings.SAFETY_NODE_SEPARATION;
 
-   let dir = angle(x - wall.x, y - wall.y) - wall.rotation;
+   let dir = angle(x - wall.position.x, y - wall.position.y) - wall.rotation;
    dir += Math.PI/4;
    dir = cleanAngle(dir);
 
@@ -395,7 +393,7 @@ class Tribe {
       Board.addTribe(this);
    }
 
-   public addBuilding(building: Entity): void {
+   public addBuilding(building: Entity<StructureType>): void {
       const occupiedSafetyNodes = new Set<SafetyNode>();
       addHitboxesOccupiedNodes(building.hitboxes, occupiedSafetyNodes);
       
@@ -403,10 +401,9 @@ class Tribe {
 
       this.addVirtualBuilding({
          id: building.id,
-         x: building.position.x,
-         y: building.position.y,
+         position: building.position.copy(),
          rotation: building.rotation,
-         entityType: building.type as StructureType,
+         entityType: building.type,
          occupiedNodes: occupiedSafetyNodes
       });
 
@@ -538,10 +535,10 @@ class Tribe {
       switch (virtualBuilding.entityType) {
          case EntityType.workerHut: {
             const offsetAmount = 88 / 2 + 55;
-            const x = virtualBuilding.x + offsetAmount * Math.sin(virtualBuilding.rotation);
-            const y = virtualBuilding.y + offsetAmount * Math.cos(virtualBuilding.rotation);
+            const x = virtualBuilding.position.x + offsetAmount * Math.sin(virtualBuilding.rotation);
+            const y = virtualBuilding.position.y + offsetAmount * Math.cos(virtualBuilding.rotation);
 
-            const restrictedArea = createRestrictedBuildingArea(x, y, 100, 70, virtualBuilding.rotation, virtualBuilding.id);
+            const restrictedArea = createRestrictedBuildingArea(new Point(x, y), 100, 70, virtualBuilding.rotation, virtualBuilding.id);
             this.restrictedBuildingAreas.push(restrictedArea);
             
             break;
@@ -555,10 +552,9 @@ class Tribe {
             for (let i = 0; i < 2; i++) {
                const offsetAmount = 16 / 2 + 50;
                const offsetDirection = virtualBuilding.rotation + (i === 1 ? Math.PI : 0);
-               const x = virtualBuilding.x + offsetAmount * Math.sin(offsetDirection);
-               const y = virtualBuilding.y + offsetAmount * Math.cos(offsetDirection);
+               const position = virtualBuilding.position.offset(offsetAmount, offsetDirection);
             
-               const restrictedArea = createRestrictedBuildingArea(x, y, 50, 50, offsetDirection, virtualBuilding.id);
+               const restrictedArea = createRestrictedBuildingArea(position, 50, 50, offsetDirection, virtualBuilding.id);
                this.restrictedBuildingAreas.push(restrictedArea);
             }
             break;
@@ -566,10 +562,9 @@ class Tribe {
          case EntityType.workbench: {
             const offsetAmount = 80 / 2 + 55;
             const offsetDirection = virtualBuilding.rotation + Math.PI;
-            const x = virtualBuilding.x + offsetAmount * Math.sin(offsetDirection);
-            const y = virtualBuilding.y + offsetAmount * Math.cos(offsetDirection);
+            const position = virtualBuilding.position.offset(offsetAmount, offsetDirection);
 
-            const restrictedArea = createRestrictedBuildingArea(x, y, 80, 80, offsetDirection, virtualBuilding.id);
+            const restrictedArea = createRestrictedBuildingArea(position, 80, 80, offsetDirection, virtualBuilding.id);
             this.restrictedBuildingAreas.push(restrictedArea);
             
             break;

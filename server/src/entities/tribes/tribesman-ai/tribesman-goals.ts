@@ -208,13 +208,11 @@ const generateRandomNearbyPosition = (tribesman: Entity, entityType: StructureTy
    while (attempts++ < 999) {
       const offsetMagnitude = 200 * Math.random();
       const offsetDirection = 2 * Math.PI;
-      
-      const x = tribesman.position.x + offsetMagnitude * Math.sin(offsetDirection);
-      const y = tribesman.position.y + offsetMagnitude * Math.cos(offsetDirection);
+      const position = tribesman.position.offset(offsetMagnitude, offsetDirection);
       
       const rotation = 2 * Math.PI * Math.random();
 
-      const hitboxes = createBuildingHitboxes(entityType, x, y, 1, rotation);
+      const hitboxes = createBuildingHitboxes(entityType, position, 1, rotation);
 
       // @Incomplete: Make sure hitboxes aren't colliding with an entity
 
@@ -232,8 +230,8 @@ const generateRandomNearbyPosition = (tribesman: Entity, entityType: StructureTy
       }
       
       return {
-         x: x,
-         y: y,
+         x: position.x,
+         y: position.y,
          rotation: rotation
       };
    }

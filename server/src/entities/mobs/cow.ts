@@ -201,7 +201,7 @@ export function tickCow(cow: Entity): void {
             if (testEntities.indexOf(targetBerryBush) !== -1) {
                cowComponent.bushShakeTimer++;
                if (cowComponent.bushShakeTimer >= 1.5 * Settings.TPS) {
-                  dropBerry(targetBerryBush, null);
+                  dropBerry(targetBerryBush, 1);
                   cowComponent.bushShakeTimer = 0;
                   cowComponent.targetBushID = 0;
                }

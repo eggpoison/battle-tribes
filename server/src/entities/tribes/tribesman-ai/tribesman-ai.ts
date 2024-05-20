@@ -913,7 +913,6 @@ const goPlaceBuilding = (tribesman: Entity, hotbarInventory: Inventory, tribe: T
    }
    
    const tribesmanComponent = TribesmanComponentArray.getComponent(tribesman.id);
-   const inventoryComponent = InventoryComponentArray.getComponent(tribesman.id);
    
    const distance = getDistanceFromPointToEntity(plan.position.x, plan.position.y, tribesman);
    if (distance < Vars.BUILDING_PLACE_DISTANCE) {
@@ -1872,6 +1871,8 @@ export function tickTribesman(tribesman: Entity): void {
          const desiredDistance = getTribesmanAttackRadius(tribesman);
          const distance = getDistanceFromPointToEntity(tribesman.position.x, tribesman.position.y, closestReplantablePlanterBox) - getTribesmanRadius(tribesman);
          if (willStopAtDesiredDistance(physicsComponent, desiredDistance, distance)) {
+            // @Incomplete: turn to face direction and then place
+            
             // @Cleanup: copy and pasted from player replant logic
    
             const planterBoxComponent = PlanterBoxComponentArray.getComponent(closestReplantablePlanterBox.id);

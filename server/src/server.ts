@@ -88,6 +88,8 @@ import { createTribeWorker } from "./entities/tribes/tribe-worker";
 import { createPlanterBox } from "./entities/buildings/planter-box";
 import { createBarrel } from "./entities/tribes/barrel";
 import { createWall } from "./entities/buildings/wall";
+import { GrassBlocker } from "webgl-test-shared/dist/grass-blockers";
+import { updateGrassBlockers } from "./grass-blockers";
 
 // @Cleanup: file is way too large
 
@@ -219,7 +221,8 @@ const serialiseEntityData = (entity: Entity, player: Entity | null): EntityData<
       collisionBit: entity.collisionBit,
       collisionMask: entity.collisionMask,
       // @Cleanup: Is there some typescript magic we can do to avoid this evil cast
-      components: components as unknown as EntityComponentsData<EntityType>
+      components: components as unknown as EntityComponentsData<EntityType>,
+      tickEvents: entity.tickEvents
    };
 }
 
@@ -328,6 +331,27 @@ const createNewPlayerInventories = (): PlayerInventoryData => {
       offhand: new Inventory(1, 1, InventoryName.offhand),
       gloveSlot: new Inventory(1, 1, InventoryName.gloveSlot)
    }
+}
+
+const getVisibleGrassBlockers = (visibleChunkBounds: VisibleChunkBounds): ReadonlyArray<GrassBlocker> => {
+   const visibleGrassBlockers = new Array<GrassBlocker>();
+   const seenBlockers = new Set<GrassBlocker>();
+   
+   for (let chunkX = visibleChunkBounds[0]; chunkX <= visibleChunkBounds[1]; chunkX++) {
+      for (let chunkY = visibleChunkBounds[2]; chunkY <= visibleChunkBounds[3]; chunkY++) {
+         const chunk = Board.getChunk(chunkX, chunkY);
+         for (const grassBlocker of chunk.grassBlockers) {
+            if (seenBlockers.has(grassBlocker)) {
+               continue;
+            }
+            
+            seenBlockers.add(grassBlocker);
+            visibleGrassBlockers.push(grassBlocker);
+         }
+      }
+   }
+
+   return visibleGrassBlockers;
 }
 
 // @Cleanup: Remove class, just have functions
@@ -463,7 +487,9 @@ class GameServer {
       Board.destroyFlaggedEntities();
       Board.updateTribes();
       
+      // @Temporary: remove once blockers are done
       Board.spreadGrass();
+      updateGrassBlockers();
 
       Board.updateEntities();
       updateDynamicPathfindingNodes();
@@ -719,7 +745,8 @@ class GameServer {
                visibleBuildingSafetys: [],
                visibleRestrictedBuildingAreas: [],
                visibleWalls: [],
-               visibleWallConnections: []
+               visibleWallConnections: [],
+               visibleGrassBlockers: getVisibleGrassBlockers(playerData.visibleChunkBounds)
             };
 
             SERVER.playerDataRecord[socket.id] = playerData;
@@ -1078,7 +1105,8 @@ class GameServer {
                   visibleBuildingSafetys: (playerData.gameDataOptions & GameDataPacketOptions.sendVisibleBuildingSafetys) ? getVisibleBuildingSafetys(visibleTribes, extendedVisibleChunkBounds) : [],
                   visibleRestrictedBuildingAreas: (playerData.gameDataOptions & GameDataPacketOptions.sendVisibleRestrictedBuildingAreas) ? getVisibleRestrictedBuildingAreas(visibleTribes, extendedVisibleChunkBounds) : [],
                   visibleWalls: getVisibleWallsData(visibleTribes, extendedVisibleChunkBounds),
-                  visibleWallConnections: (playerData.gameDataOptions & GameDataPacketOptions.sendVisibleWallConnections) ? getVisibleWallConnections(visibleTribes, extendedVisibleChunkBounds) : []
+                  visibleWallConnections: (playerData.gameDataOptions & GameDataPacketOptions.sendVisibleWallConnections) ? getVisibleWallConnections(visibleTribes, extendedVisibleChunkBounds) : [],
+                  visibleGrassBlockers: getVisibleGrassBlockers(playerData.visibleChunkBounds)
                };
    
                // Send the game data to the player

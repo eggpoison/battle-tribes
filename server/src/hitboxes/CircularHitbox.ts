@@ -1,10 +1,10 @@
 import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
 import { circlesDoIntersect, circleAndRectangleDoIntersect } from "webgl-test-shared/dist/collision";
-import Hitbox from "./Hitbox";
+import BaseHitbox from "./BaseHitbox";
 import RectangularHitbox from "./RectangularHitbox";
 import { Point } from "webgl-test-shared/dist/utils";
 
-class CircularHitbox extends Hitbox {
+class CircularHitbox extends BaseHitbox {
    public radius: number;
 
    constructor(parentPosition: Point, mass: number, offsetX: number, offsetY: number, collisionType: HitboxCollisionType, radius: number, localID: number, initialParentRotation: number, collisionBit: number, collisionMask: number) {
@@ -26,7 +26,7 @@ class CircularHitbox extends Hitbox {
       return this.y + this.radius;
    }
 
-   public isColliding(otherHitbox: Hitbox): boolean {
+   public isColliding(otherHitbox: BaseHitbox): boolean {
       // @Speed: This check is slow
       if (otherHitbox.hasOwnProperty("radius")) {
          // Circular hitbox

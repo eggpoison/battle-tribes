@@ -10,7 +10,7 @@ import Tile from "./Tile";
 import CircularHitbox from "./hitboxes/CircularHitbox";
 import { addTileToCensus, getTilesOfType, removeEntityFromCensus, removeTileFromCensus } from "./census";
 import Tribe from "./Tribe";
-import Hitbox from "./hitboxes/Hitbox";
+import BaseHitbox from "./hitboxes/BaseHitbox";
 import RectangularHitbox from "./hitboxes/RectangularHitbox";
 import generateTerrain from "./world-generation/terrain-generation";
 import { HealthComponentArray, InventoryUseComponentArray, ItemComponentArray, TribeComponentArray, DoorComponentArray, ResearchBenchComponentArray, TunnelComponentArray, HealingTotemComponentArray, PlantComponentArray, FenceGateComponentArray, ComponentArrays } from "./components/ComponentArray";
@@ -64,6 +64,7 @@ import { tickPlantComponent } from "./components/PlantComponent";
 import { onFenceRemove } from "./entities/buildings/fence";
 import { tickFenceGateComponent } from "./components/FenceGateComponent";
 import { onPlanterBoxRemove } from "./entities/buildings/planter-box";
+import { createStructureGrassBlockers } from "./grass-blockers";
 
 const START_TIME = 6;
 
@@ -346,6 +347,9 @@ abstract class Board {
       for (let i = 0; i < this.entities.length; i++) {
          const entity = this.entities[i];
 
+         // @Speed
+         entity.tickEvents = [];
+
          switch (entity.type) {
             case EntityType.player: tickPlayer(entity); break;
             case EntityType.tribeWorker: tickTribeWorker(entity); break;
@@ -379,7 +383,7 @@ abstract class Board {
             case EntityType.slingTurret: tickSlingTurret(entity); break;
          }
 
-         entity.tick();
+         entity.ageTicks++;
       }
 
       for (let i = 0; i < InventoryUseComponentArray.components.length; i++) {
@@ -570,9 +574,12 @@ abstract class Board {
             updateEntityPathfindingNodeOccupance(entity);
          }
 
+         // @Cleanup: move to a component onJoin maybe?
          if (entityIsStructure(entity)) {
             const tribeComponent = TribeComponentArray.getComponent(entity.id);
             tribeComponent.tribe.addBuilding(entity);
+
+            createStructureGrassBlockers(entity);
          }
 
          this.entities.push(entity);
@@ -670,7 +677,7 @@ abstract class Board {
    }
 
    // @Cleanup: Move this into ai-shared
-   public static hitboxIsInRange(testPosition: Point, hitbox: Hitbox, range: number): boolean {
+   public static hitboxIsInRange(testPosition: Point, hitbox: BaseHitbox, range: number): boolean {
       // @Speed: This check is slow
       if (hitbox.hasOwnProperty("radius")) {
          // Circular hitbox
@@ -865,4 +872,21 @@ export function raytraceHasWallTile(startX: number, startY: number, endX: number
    }
 
    return false;
+}
+
+export function getChunksInBounds(minX: number, maxX: number, minY: number, maxY: number): ReadonlyArray<Chunk> {
+   const minChunkX = Math.max(Math.min(Math.floor(minX / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
+   const maxChunkX = Math.max(Math.min(Math.floor(maxX / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
+   const minChunkY = Math.max(Math.min(Math.floor(minY / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
+   const maxChunkY = Math.max(Math.min(Math.floor(maxY / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
+
+   const chunks = new Array<Chunk>();
+   for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
+      for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
+         const chunk = Board.getChunk(chunkX, chunkY);
+         chunks.push(chunk);
+      }
+   }
+
+   return chunks;
 }

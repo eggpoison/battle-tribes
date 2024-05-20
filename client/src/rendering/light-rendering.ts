@@ -158,7 +158,6 @@ export function createNightShaders(): void {
    const darknessCameraBlockIndex = gl.getUniformBlockIndex(darknessProgram, "Camera");
    gl.uniformBlockBinding(colourProgram, darknessCameraBlockIndex, CAMERA_UNIFORM_BUFFER_BINDING_INDEX);
 
-   // darkenFactorUniformLocation = gl.getUniformLocation(darknessProgram, "u_darkenFactor")!;
    darkenFactorUniformLocation = gl.getUniformLocation(darknessProgram, "u_darkenFactor")!;
 
    vao = gl.createVertexArray()!;

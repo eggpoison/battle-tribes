@@ -274,24 +274,22 @@ export const BLUEPRINT_PROGRESS_TEXTURE_SOURCES: Record<BlueprintType, ReadonlyA
       }
    ],
    [BlueprintType.fenceGate]: [
-      // @Temporary
       {
-         progressTextureSources: ["entities/warrior-hut/warrior-hut-blueprint-1.png", "entities/warrior-hut/warrior-hut-blueprint-2.png", "entities/warrior-hut/warrior-hut-blueprint-3.png", "entities/warrior-hut/warrior-hut-blueprint-4.png", "entities/warrior-hut/warrior-hut-blueprint-5.png", "entities/warrior-hut/warrior-hut-blueprint-6.png"],
+         progressTextureSources: ["entities/fence-gate/fence-gate-sides-blueprint-1.png"],
+         completedTextureSource: "entities/fence-gate/fence-gate-sides.png",
+         offsetX: 0,
+         offsetY: 0,
+         rotation: 0,
+         zIndex: 1
+      },
+      {
+         progressTextureSources: ["entities/fence-gate/fence-gate-door-blueprint-1.png"],
          completedTextureSource: "entities/fence-gate/fence-gate-door.png",
          offsetX: 0,
          offsetY: 0,
          rotation: 0,
          zIndex: 0
       },
-      // @Temporary
-      {
-         progressTextureSources: ["entities/warrior-hut/warrior-hut-blueprint-1.png", "entities/warrior-hut/warrior-hut-blueprint-2.png", "entities/warrior-hut/warrior-hut-blueprint-3.png", "entities/warrior-hut/warrior-hut-blueprint-4.png", "entities/warrior-hut/warrior-hut-blueprint-5.png", "entities/warrior-hut/warrior-hut-blueprint-6.png"],
-         completedTextureSource: "entities/fence-gate/fence-gate-sides.png",
-         offsetX: 0,
-         offsetY: 0,
-         rotation: 0,
-         zIndex: 0
-      }
    ]
 };
 

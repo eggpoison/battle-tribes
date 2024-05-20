@@ -1,6 +1,8 @@
 import { BuildingPlanData, BuildingSafetyData, SafetyNodeData, TribeWallData, WallConnectionData } from "./ai-building-types";
 import { BlueprintType, EntityComponentsData } from "./components";
 import { EntityType, LimbAction } from "./entities";
+import { EntityEvent } from "./entity-events";
+import { GrassBlocker } from "./grass-blockers";
 import { Inventory, InventoryName } from "./items";
 import { StatusEffect } from "./status-effects";
 import { EnemyTribeData, PlayerTribeData, TechID } from "./techs";
@@ -110,6 +112,7 @@ export interface EntityData<T extends EntityType = EntityType> {
    readonly collisionBit: number;
    readonly collisionMask: number;
    readonly components: EntityComponentsData<T>;
+   readonly tickEvents: ReadonlyArray<EntityEvent>;
 }
 
 export enum GameDataPacketOptions {
@@ -155,6 +158,7 @@ export interface GameDataPacket {
    readonly visibleWalls: ReadonlyArray<TribeWallData>;
    readonly visibleWallConnections: ReadonlyArray<WallConnectionData>;
    readonly visibleEntityDeathIDs: ReadonlyArray<number>;
+   readonly visibleGrassBlockers: ReadonlyArray<GrassBlocker>;
 }
 
 export enum WaterRockSize {

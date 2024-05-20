@@ -8,7 +8,7 @@ import { Biome, TileInfo, TileType } from "webgl-test-shared/dist/tiles";
 import { Point, randInt } from "webgl-test-shared/dist/utils";
 import Entity from "../../Entity";
 import RectangularHitbox from "../../hitboxes/RectangularHitbox";
-import { BerryBushComponentArray, CowComponentArray, EscapeAIComponentArray, FollowAIComponentArray, HealthComponentArray, ItemComponentArray, WanderAIComponentArray } from "../../components/ComponentArray";
+import { BerryBushComponentArray, CowComponentArray, EscapeAIComponentArray, FollowAIComponentArray, HealthComponentArray, InventoryComponentArray, InventoryUseComponentArray, ItemComponentArray, WanderAIComponentArray } from "../../components/ComponentArray";
 import { HealthComponent, getEntityHealth, healEntity } from "../../components/HealthComponent";
 import { createItemsOverEntity } from "../../entity-shared";
 import { WanderAIComponent } from "../../components/WanderAIComponent";
@@ -20,11 +20,12 @@ import { EscapeAIComponent, updateEscapeAIComponent } from "../../components/Esc
 import Board from "../../Board";
 import { AIHelperComponent, AIHelperComponentArray } from "../../components/AIHelperComponent";
 import { FollowAIComponent, canFollow, followEntity, updateFollowAIComponent } from "../../components/FollowAIComponent";
-import { CowComponent, updateCowComponent } from "../../components/CowComponent";
+import { CowComponent, eatBerry, updateCowComponent, wantsToEatBerries } from "../../components/CowComponent";
 import { dropBerry } from "../resources/berry-bush";
 import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
 import { PhysicsComponent, PhysicsComponentArray } from "../../components/PhysicsComponent";
 import { CollisionVars, entitiesAreColliding } from "../../collision";
+import { entityIsTribesman } from "../tribes/tribe-member";
 
 const MAX_HEALTH = 10;
 const VISION_RANGE = 256;
@@ -82,14 +83,6 @@ const graze = (cow: Entity, cowComponent: CowComponent): void => {
 
       healEntity(cow, 3, cow.id);
       cowComponent.grazeCooldownTicks = randInt(MIN_GRAZE_COOLDOWN, MAX_GRAZE_COOLDOWN);
-
-      // Create poop item entity
-      // @Incomplete: Only create if tamed and in an enclosure
-      // const poopOffsetMagnitude = 32 * Math.random();
-      // const poopOffsetDirection = 2 * Math.PI * Math.random();
-      // const poopX = cow.position.x + poopOffsetMagnitude * Math.sin(poopOffsetDirection);
-      // const poopY = cow.position.y + poopOffsetMagnitude * Math.cos(poopOffsetDirection);
-      // createItemEntity(new Point(poopX, poopY), ItemType.poop, 1);
    }
 }
 
@@ -107,20 +100,59 @@ const findHerdMembers = (cowComponent: CowComponent, visibleEntities: ReadonlyAr
    return herdMembers;
 }
 
-const chaseAndEatItemEntity = (entity: Entity, itemEntity: Entity, acceleration: number): boolean => {
-   if (entitiesAreColliding(entity, itemEntity) !== CollisionVars.NO_COLLISION) {
-      itemEntity.destroy();
+const chaseAndEatBerry = (cow: Entity, cowComponent: CowComponent, berryItemEntity: Entity, acceleration: number): boolean => {
+   if (entitiesAreColliding(cow, berryItemEntity) !== CollisionVars.NO_COLLISION) {
+      eatBerry(berryItemEntity, cowComponent);
       return true;
    }
 
-   moveEntityToPosition(entity, itemEntity.position.x, itemEntity.position.y, acceleration, TURN_SPEED);
+   moveEntityToPosition(cow, berryItemEntity.position.x, berryItemEntity.position.y, acceleration, TURN_SPEED);
    
    return false;
 }
 
+const entityIsHoldingBerry = (entity: Entity): boolean => {
+   const inventoryUseComponent = InventoryUseComponentArray.getComponent(entity.id);
+
+   for (let i = 0 ; i < inventoryUseComponent.inventoryUseInfos.length; i++) {
+      const useInfo = inventoryUseComponent.inventoryUseInfos[i];
+      
+      const heldItem = useInfo.inventory.itemSlots[useInfo.selectedItemSlot];
+      if (typeof heldItem !== "undefined" && heldItem.type === ItemType.berry) {
+         return true;
+      }
+   }
+
+   return false;
+}
+
+const getFollowTarget = (followAIComponent: FollowAIComponent, visibleEntities: ReadonlyArray<Entity>): Entity | null => {
+   const wantsToFollow = canFollow(followAIComponent);
+   
+   let currentTargetIsHoldingBerry = false;
+   let target: Entity | null = null;
+   for (let i = 0; i < visibleEntities.length; i++) {
+      const entity = visibleEntities[i];
+
+      if (!InventoryUseComponentArray.hasComponent(entity.id)) {
+         continue;
+      }
+
+      const isHoldingBerry = entityIsHoldingBerry(entity);
+      if (target === null && wantsToFollow && !isHoldingBerry) {
+         target = entity;
+      } else if (!currentTargetIsHoldingBerry && isHoldingBerry) {
+         target = entity;
+         currentTargetIsHoldingBerry = true;
+      }
+   }
+
+   return target;
+}
+
 export function tickCow(cow: Entity): void {
    const cowComponent = CowComponentArray.getComponent(cow.id);
-   updateCowComponent(cowComponent);
+   updateCowComponent(cow, cowComponent);
 
    const aiHelperComponent = AIHelperComponentArray.getComponent(cow.id);
    
@@ -144,17 +176,19 @@ export function tickCow(cow: Entity): void {
    }
 
    // Eat berries
-   for (let i = 0; i < aiHelperComponent.visibleEntities.length; i++) {
-      const itemEntity = aiHelperComponent.visibleEntities[i];
-      if (itemEntity.type === EntityType.itemEntity) {
-         const itemComponent = ItemComponentArray.getComponent(itemEntity.id);
-         if (itemComponent.itemType === ItemType.berry) {
-            const wasEaten = chaseAndEatItemEntity(cow, itemEntity, 200);
-            if (wasEaten) {
-               healEntity(cow, 3, cow.id);
-               break;
+   if (wantsToEatBerries(cowComponent)) {
+      for (let i = 0; i < aiHelperComponent.visibleEntities.length; i++) {
+         const itemEntity = aiHelperComponent.visibleEntities[i];
+         if (itemEntity.type === EntityType.itemEntity) {
+            const itemComponent = ItemComponentArray.getComponent(itemEntity.id);
+            if (itemComponent.itemType === ItemType.berry) {
+               const wasEaten = chaseAndEatBerry(cow, cowComponent, itemEntity, 200);
+               if (wasEaten) {
+                  healEntity(cow, 3, cow.id);
+                  break;
+               }
+               return;
             }
-            return;
          }
       }
    }
@@ -219,19 +253,18 @@ export function tickCow(cow: Entity): void {
    // Follow AI
    const followAIComponent = FollowAIComponentArray.getComponent(cow.id);
    updateFollowAIComponent(cow, aiHelperComponent.visibleEntities, 7)
-   if (followAIComponent.followTargetID !== 0) {
+   
+   const followedEntity = Board.entityRecord[followAIComponent.followTargetID];
+   if (typeof followedEntity !== "undefined") {
       // Continue following the entity
-      const followedEntity = Board.entityRecord[followAIComponent.followTargetID]!;
       moveEntityToPosition(cow, followedEntity.position.x, followedEntity.position.y, 200, TURN_SPEED);
       return;
-   } else if (canFollow(followAIComponent)) {
-      for (let i = 0; i < aiHelperComponent.visibleEntities.length; i++) {
-         const entity = aiHelperComponent.visibleEntities[i];
-         if (entity.type === EntityType.player) {
-            // Follow the entity
-            followEntity(cow, entity, 200, TURN_SPEED, randInt(MIN_FOLLOW_COOLDOWN, MAX_FOLLOW_COOLDOWN));
-            return;
-         }
+   } {
+      const followTarget = getFollowTarget(followAIComponent, aiHelperComponent.visibleEntities);
+      if (followTarget !== null) {
+         // Follow the entity
+         followEntity(cow, followTarget, 200, TURN_SPEED, randInt(MIN_FOLLOW_COOLDOWN, MAX_FOLLOW_COOLDOWN));
+         return;
       }
    }
 

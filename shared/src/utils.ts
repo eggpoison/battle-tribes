@@ -334,3 +334,7 @@ export function getAngleDiff(sourceAngle: number, targetAngle: number): number {
 export function getAbsAngleDiff(sourceAngle: number, targetAngle: number): number {
    return Math.abs(getAngleDiff(sourceAngle, targetAngle));
 }
+
+export function dotAngles(angle1: number, angle2: number): number {
+   return Math.sin(angle1) * Math.sin(angle2) + Math.cos(angle1) * Math.cos(angle2);
+}

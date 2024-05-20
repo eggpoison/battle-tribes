@@ -19,23 +19,26 @@ export class FollowAIComponent {
 
 export function updateFollowAIComponent(entity: Entity, visibleEntities: ReadonlyArray<Entity>, interestDuration: number): void {
    const followAIComponent = FollowAIComponentArray.getComponent(entity.id);
-   if (followAIComponent.followTargetID !== 0) {
-      if (followAIComponent.followCooldownTicks > 0) {
-         followAIComponent.followCooldownTicks--;
-      }
-      
-      // Make sure the follow target is still within the vision range
-      const followTarget = Board.entityRecord[followAIComponent.followTargetID]!;
-      if (!visibleEntities.includes(followTarget)) {
-         followAIComponent.followTargetID = 0;
-         followAIComponent.interestTimer = 0;
-         return;
-      }
-      
-      followAIComponent.interestTimer += Settings.I_TPS;
-      if (followAIComponent.interestTimer >= interestDuration) {
-         followAIComponent.followTargetID = 0;
-      }
+
+   if (followAIComponent.followCooldownTicks > 0) {
+      followAIComponent.followCooldownTicks--;
+   }
+
+   const followTarget = Board.entityRecord[followAIComponent.followTargetID];
+   if (typeof followTarget === "undefined") {
+      return;
+   }
+   
+   // Make sure the follow target is still within the vision range
+   if (!visibleEntities.includes(followTarget)) {
+      followAIComponent.followTargetID = 0;
+      followAIComponent.interestTimer = 0;
+      return;
+   }
+   
+   followAIComponent.interestTimer += Settings.I_TPS;
+   if (followAIComponent.interestTimer >= interestDuration) {
+      followAIComponent.followTargetID = 0;
    }
 }
 

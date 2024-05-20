@@ -1,18 +1,18 @@
 import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
 import { HitboxVertexPositions, circleAndRectangleDoIntersect, rectanglesAreColliding } from "webgl-test-shared/dist/collision";
 import { Point } from "webgl-test-shared/dist/utils";
-import Hitbox from "./Hitbox";
+import BaseHitbox from "./BaseHitbox";
 import CircularHitbox from "./CircularHitbox";
 
 // @Cleanup: remove the need to have this
-export function assertIsRectangular(hitbox: Hitbox): asserts hitbox is RectangularHitbox {
+export function assertIsRectangular(hitbox: BaseHitbox): asserts hitbox is RectangularHitbox {
    // @Speed
    if (hitbox.hasOwnProperty("radius")) {
       throw new Error();
    }
 }
 
-class RectangularHitbox extends Hitbox {
+class RectangularHitbox extends BaseHitbox {
    public width: number;
    public height: number;
    

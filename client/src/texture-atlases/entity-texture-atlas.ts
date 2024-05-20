@@ -306,7 +306,9 @@ const TEXTURE_SOURCES: Array<string> = [
    "entities/fence/fence-bottom-rail.png",
    "entities/fence/fence-left-rail.png",
    "entities/fence-gate/fence-gate-sides.png",
-   "entities/fence-gate/fence-gate-door.png"
+   "entities/fence-gate/fence-gate-door.png",
+   "entities/fence-gate/fence-gate-sides-blueprint-1.png",
+   "entities/fence-gate/fence-gate-door-blueprint-1.png"
 ];
 
 const addTextureSource = (textureSource: string): void => {

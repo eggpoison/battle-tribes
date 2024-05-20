@@ -8,7 +8,7 @@ export type HitboxObject = { position: Point, rotation: number };
 
 export type HitboxBounds = [minX: number, maxX: number, minY: number, maxY: number];
 
-abstract class Hitbox {
+abstract class BaseHitbox {
    /** Unique identifier in its entities' hitboxes */
    public readonly localID: number;
 
@@ -54,4 +54,4 @@ abstract class Hitbox {
    public abstract isColliding(otherHitbox: RectangularHitbox | CircularHitbox): boolean;
 }
 
-export default Hitbox;
+export default BaseHitbox;

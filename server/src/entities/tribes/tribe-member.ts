@@ -6,10 +6,10 @@ import { EntityType, LimbAction, PlayerCauseOfDeath, GenericArrowType, EntityTyp
 import { PlaceableItemType, ItemType, Item, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, BattleaxeItemInfo, SwordItemInfo, AxeItemInfo, ToolItemInfo, HammerItemInfo, ConsumableItemInfo, BowItemInfo, itemIsStackable, getItemStackSize, BackpackItemInfo, ArmourItemInfo, InventoryName, ConsumableItemCategory } from "webgl-test-shared/dist/items";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
-import { StructureType, STRUCTURE_TYPES, calculateStructurePlaceInfo } from "webgl-test-shared/dist/structures";
+import { StructureType, calculateStructurePlaceInfo } from "webgl-test-shared/dist/structures";
 import { TribesmanTitle } from "webgl-test-shared/dist/titles";
 import { TribeType } from "webgl-test-shared/dist/tribes";
-import { Point, lerp } from "webgl-test-shared/dist/utils";
+import { Point, dotAngles, lerp } from "webgl-test-shared/dist/utils";
 import Entity, { entityIsStructure } from "../../Entity";
 import Board from "../../Board";
 import { BerryBushComponentArray, BuildingMaterialComponentArray, HealthComponentArray, InventoryComponentArray, InventoryUseComponentArray, ItemComponentArray, PlantComponentArray, TreeComponentArray, TribeComponentArray, TribeMemberComponentArray, TribesmanComponentArray } from "../../components/ComponentArray";
@@ -56,6 +56,7 @@ import { createFenceGate } from "../buildings/fence-gate";
 import { createBuildingHitboxes } from "../../buildings";
 import { getHitboxesCollidingEntities } from "../../collision";
 import { plantIsFullyGrown } from "../../components/PlantComponent";
+import { FenceConnectionComponentArray } from "../../components/FenceConnectionComponent";
 
 const enum Vars {
    ITEM_THROW_FORCE = 100,
@@ -72,9 +73,7 @@ const SWORD_DAMAGEABLE_ENTITIES: ReadonlyArray<EntityType> = [EntityType.zombie,
 const PICKAXE_DAMAGEABLE_ENTITIES: ReadonlyArray<EntityType> = [EntityType.boulder, EntityType.tombstone, EntityType.iceSpikes, EntityType.furnace, EntityType.golem];
 const AXE_DAMAGEABLE_ENTITIES: ReadonlyArray<EntityType> = [EntityType.tree, EntityType.wall, EntityType.door, EntityType.embrasure, EntityType.researchBench, EntityType.workbench, EntityType.floorSpikes, EntityType.wallSpikes, EntityType.floorPunjiSticks, EntityType.wallPunjiSticks, EntityType.tribeTotem, EntityType.workerHut, EntityType.warriorHut, EntityType.barrel];
 
-// @Temporary
-export const VACUUM_RANGE = 120;
-// export const VACUUM_RANGE = 85;
+export const VACUUM_RANGE = 85;
 const VACUUM_STRENGTH = 25;
 
 const getDamageMultiplier = (entity: Entity): number => {
@@ -1060,6 +1059,22 @@ const blueprintTypeMatchesBuilding = (building: Entity, blueprintType: Blueprint
    return false;
 }
 
+const getFenceGatePlaceDirection = (fence: Entity): number | null => {
+   const fenceConnectionComponent = FenceConnectionComponentArray.getComponent(fence.id);
+
+   // Top and bottom fence connections
+   let normalDirectionOffset: number;
+   if (fenceConnectionComponent.connectedSidesBitset === 0b0101) {
+      normalDirectionOffset = Math.PI * 0.5;
+   } else if (fenceConnectionComponent.connectedSidesBitset === 0b1010) {
+      normalDirectionOffset = 0;
+   } else {
+      return null;
+   }
+
+   return fence.rotation + normalDirectionOffset;
+}
+
 export function placeBlueprint(tribeMember: Entity, buildingID: number, blueprintType: BlueprintType, dynamicRotation: number): void {
    const building = Board.entityRecord[buildingID];
    if (typeof building === "undefined") {
@@ -1132,9 +1147,20 @@ export function placeBlueprint(tribeMember: Entity, buildingID: number, blueprin
          if (countItemType(inventoryComponent, ItemType.wood) < 5) {
             return;
          }
+
+         let rotation = getFenceGatePlaceDirection(building);
+         if (rotation === null) {
+            console.warn("Tried to place a blueprint for a fence gate which had no valid direction!");
+            return;
+         }
+
+         // Make rotation face away from player
+         if (dotAngles(rotation, tribeMember.rotation) < 0) {
+            rotation = rotation + Math.PI;
+         }
          
          const tribeComponent = TribeComponentArray.getComponent(tribeMember.id);
-         createBlueprintEntity(building.position.copy(), building.rotation, blueprintType, building.id, tribeComponent.tribe);
+         createBlueprintEntity(building.position.copy(), rotation, blueprintType, building.id, tribeComponent.tribe);
 
          consumeItemType(inventoryComponent, ItemType.wood, 5);
       }

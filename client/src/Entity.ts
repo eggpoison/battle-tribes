@@ -18,6 +18,7 @@ import Component from "./entity-components/Component";
 import Particle from "./Particle";
 import { addTexturedParticleToBufferContainer, ParticleRenderLayer } from "./rendering/particle-rendering";
 import { removeLightsAttachedToEntity, removeLightsAttachedToRenderPart } from "./lights";
+import { EntityEvent } from "webgl-test-shared/dist/entity-events";
 
 // Use prime numbers / 100 to ensure a decent distribution of different types of particles
 const HEALING_PARTICLE_AMOUNTS = [0.05, 0.37, 1.01];
@@ -434,6 +435,17 @@ abstract class Entity extends RenderObject {
 
       this.rotation = data.rotation;
       this.ageTicks = data.ageTicks;
+
+      for (let i = 0; i < data.tickEvents.length; i++) {
+         const event = data.tickEvents[i];
+
+         switch (event) {
+            case EntityEvent.cowFart: {
+               playSound("fart.mp3", 0.3, randFloat(0.9, 1.2), this.position.x, this.position.y);
+               break;
+            }
+         }
+      }
 
       // 
       // Update hitboxes

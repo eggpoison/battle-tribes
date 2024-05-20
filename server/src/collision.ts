@@ -3,7 +3,7 @@ import { EntityType } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { Point, angle, rotateXAroundPoint, rotateYAroundPoint } from "webgl-test-shared/dist/utils";
 import Entity from "./Entity";
-import Hitbox from "./hitboxes/Hitbox";
+import BaseHitbox from "./hitboxes/BaseHitbox";
 import CircularHitbox from "./hitboxes/CircularHitbox";
 import RectangularHitbox, { assertIsRectangular } from "./hitboxes/RectangularHitbox";
 import { PhysicsComponentArray } from "./components/PhysicsComponent";
@@ -128,7 +128,7 @@ const getCircleRectCollisionPushInfo = (pushedHitbox: CircularHitbox, pushingHit
    };
 }
 
-const getCollisionPushInfo = (pushedHitbox: Hitbox, pushingHitbox: Hitbox): CollisionPushInfo => {
+const getCollisionPushInfo = (pushedHitbox: BaseHitbox, pushingHitbox: BaseHitbox): CollisionPushInfo => {
    if (pushedHitbox.hasOwnProperty("radius") && pushingHitbox.hasOwnProperty("radius")) {
       // Circle + Circle
       return getCircleCircleCollisionPushInfo(pushedHitbox as CircularHitbox, pushingHitbox as CircularHitbox);
@@ -225,7 +225,7 @@ const resolveHardCollision = (entity: Entity, pushInfo: CollisionPushInfo): void
    physicsComponent.velocity.y = by * projectionCoeff;
 }
 
-const resolveSoftCollision = (entity: Entity, pushingHitbox: Hitbox, pushInfo: CollisionPushInfo): void => {
+const resolveSoftCollision = (entity: Entity, pushingHitbox: BaseHitbox, pushInfo: CollisionPushInfo): void => {
    // Force gets greater the further into each other the entities are
    const distMultiplier = Math.pow(pushInfo.amountIn, 1.1);
    const pushForce = Settings.ENTITY_PUSH_FORCE * Settings.I_TPS * distMultiplier * pushingHitbox.mass / entity.totalMass;
@@ -339,7 +339,7 @@ export function getHitboxesCollidingEntities(hitboxes: ReadonlyArray<CircularHit
 }
 
 /** If no collision is found, does nothing. */
-export function resolveEntityTileCollision(entity: Entity, hitbox: Hitbox, tileX: number, tileY: number): void {
+export function resolveEntityTileCollision(entity: Entity, hitbox: BaseHitbox, tileX: number, tileY: number): void {
    // @Speed
    const tilePos = new Point((tileX + 0.5) * Settings.TILE_SIZE, (tileY + 0.5) * Settings.TILE_SIZE);
    const tileHitbox = new RectangularHitbox(tilePos, 1, 0, 0, HitboxCollisionType.hard, 1, 0, Settings.TILE_SIZE, Settings.TILE_SIZE, 0, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK);

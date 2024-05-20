@@ -44,6 +44,7 @@ import { setVisibleWallConnections } from "../rendering/wall-connection-renderin
 import OPTIONS from "../options";
 import { Infocards_setTitleOffer } from "../components/game/infocards/Infocards";
 import { calculateEntityRenderDepth } from "../render-layers";
+import { GrassBlocker } from "webgl-test-shared/dist/grass-blockers";
 
 type ISocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 
@@ -132,6 +133,11 @@ const shouldShowDamageNumber = (attackerID: number): boolean => {
    return false;
 }
 
+// @Cleanup
+let grassBlockers: ReadonlyArray<GrassBlocker>;
+export function getGrassBlockers(): ReadonlyArray<GrassBlocker> {
+   return grassBlockers;
+}
 
 abstract class Client {
    private static socket: ISocket | null = null;
@@ -360,6 +366,7 @@ abstract class Client {
 
       buildingPlans = gameDataPacket.visibleBuildingPlans;
       visibleWalls = gameDataPacket.visibleWalls;
+      grassBlockers = gameDataPacket.visibleGrassBlockers;
    }
 
    private static updateTribe(tribeData: PlayerTribeData): void {
@@ -431,8 +438,9 @@ abstract class Client {
       // Update the game entities
       for (const entityData of entityDataArray) {
          // If it already exists, update it
-         if (Board.entityRecord.hasOwnProperty(entityData.id)) {
-            Board.entityRecord[entityData.id].updateFromData(entityData);
+         const entity = Board.entityRecord[entityData.id];
+         if (typeof entity !== "undefined") {
+            entity.updateFromData(entityData);
          } else {
             this.createEntityFromData(entityData);
          }

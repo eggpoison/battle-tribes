@@ -24,6 +24,8 @@ import { PhysicsComponentArray } from "./components/PhysicsComponent";
 import { onCactusDeath } from "./entities/resources/cactus";
 import { resolveEntityTileCollision } from "./collision";
 import { STRUCTURE_TYPES, StructureType } from "webgl-test-shared/dist/structures";
+import { EntityEvent } from "webgl-test-shared/dist/entity-events";
+import { Hitbox } from "./hitboxes/hitboxes";
 
 let idCounter = 1;
 
@@ -68,7 +70,7 @@ class Entity<T extends EntityType = EntityType> {
    public isInRiver!: boolean;
 
    /** All hitboxes attached to the entity */
-   public hitboxes = new Array<RectangularHitbox | CircularHitbox>();
+   public hitboxes = new Array<Hitbox>();
    
    public boundingAreaMinX = Number.MAX_SAFE_INTEGER;
    public boundingAreaMaxX = Number.MIN_SAFE_INTEGER;
@@ -81,6 +83,8 @@ class Entity<T extends EntityType = EntityType> {
    public occupiedPathfindingNodes = new Set<PathfindingNodeIndex>();
 
    private nextHitboxLocalID = 1;
+
+   public tickEvents = new Array<EntityEvent>();
 
    constructor(position: Point, rotation: number, type: T, collisionBit: number, collisionMask: number) {
       this.position = position;
@@ -264,10 +268,6 @@ class Entity<T extends EntityType = EntityType> {
       if (hitboxChunkBoundsHaveChanged) {
          this.updateContainingChunks();
       }
-   }
-
-   public tick(): void {
-      this.ageTicks++;
    }
 
    /** Updates the tile the object is on. */

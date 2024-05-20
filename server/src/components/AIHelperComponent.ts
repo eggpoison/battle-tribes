@@ -4,7 +4,7 @@ import { Settings } from "webgl-test-shared/dist/settings";
 import Chunk from "../Chunk";
 import Entity from "../Entity";
 import Board from "../Board";
-import Hitbox from "../hitboxes/Hitbox";
+import BaseHitbox from "../hitboxes/BaseHitbox";
 import CircularHitbox from "../hitboxes/CircularHitbox";
 import RectangularHitbox from "../hitboxes/RectangularHitbox";
 import { ComponentArray } from "./ComponentArray";
@@ -27,7 +27,7 @@ export class AIHelperComponent {
 
 export const AIHelperComponentArray = new ComponentArray<AIHelperComponent>(true);
 
-const hitboxIsVisible = (entity: Entity, hitbox: Hitbox, visionRange: number): boolean => {
+const hitboxIsVisible = (entity: Entity, hitbox: BaseHitbox, visionRange: number): boolean => {
    if ((hitbox as any).radius !== undefined) {
       // Circular hitbox
       return circlesDoIntersect(entity.position.x, entity.position.y, visionRange, hitbox.x, hitbox.y, (hitbox as CircularHitbox).radius);

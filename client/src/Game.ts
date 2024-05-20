@@ -56,6 +56,7 @@ import { createRestrictedBuildingAreaShaders, renderRestrictedBuildingAreas } fr
 import { createWallConnectionShaders, renderWallConnections } from "./rendering/wall-connection-rendering";
 import { createHealingBeamShaders, renderHealingBeams } from "./rendering/healing-beam-rendering";
 import { BuildMenu_refreshBuildingID, BuildMenu_updateBuilding } from "./components/game/BuildMenu";
+import { createGrassBlockerShaders, renderGrassBlockers } from "./rendering/grass-blocker-rendering";
 
 let listenersHaveBeenCreated = false;
 
@@ -238,6 +239,7 @@ abstract class Game {
             createRestrictedBuildingAreaShaders();
             createWallConnectionShaders();
             createHealingBeamShaders();
+            createGrassBlockerShaders();
 
             await setupAudio();
 
@@ -408,6 +410,7 @@ abstract class Game {
       renderText();
 
       renderSolidTiles(false);
+      renderGrassBlockers();
       renderRivers();
       renderDecorations();
       renderTurretRange();

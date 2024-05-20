@@ -65,9 +65,9 @@ export function tickKrumblid(krumblid: Entity): void {
    // Follow AI: Make the krumblid like to hide in cacti
    const followAIComponent = FollowAIComponentArray.getComponent(krumblid.id);
    updateFollowAIComponent(krumblid, aiHelperComponent.visibleEntities, 5);
-   if (followAIComponent.followTargetID !== 0) {
+   const followedEntity = Board.entityRecord[followAIComponent.followTargetID];
+   if (typeof followedEntity !== "undefined") {
       // Continue following the entity
-      const followedEntity = Board.entityRecord[followAIComponent.followTargetID]!;
       moveEntityToPosition(krumblid, followedEntity.position.x, followedEntity.position.y, 200, TURN_SPEED);
       return;
    } else if (canFollow(followAIComponent)) {

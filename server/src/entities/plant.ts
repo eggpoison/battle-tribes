@@ -14,7 +14,6 @@ import CircularHitbox from "../hitboxes/CircularHitbox";
 import { dropBerryOverEntity } from "./resources/berry-bush";
 import { createItemsOverEntity } from "../entity-shared";
 import { createIceShardExplosion } from "./resources/ice-spikes";
-import { getEntityPlantGatherMultiplier } from "./tribes/tribe-member";
 
 const PLANT_HEALTHS: Record<PlanterBoxPlant, number> = {
    [PlanterBoxPlant.tree]: 10,
@@ -34,19 +33,20 @@ export function createPlant(position: Point, rotation: number, planterBoxID: num
    return plantEntity;
 }
 
-export function dropBerryBushCropBerries(plant: Entity, attackingEntity: Entity | null): void {
+export function dropBerryBushCropBerries(plant: Entity, multiplier: number): void {
    const plantComponent = PlantComponentArray.getComponent(plant.id);
+   if (plantComponent.numFruit === 0) {
+      return;
+   }
 
-   const gatherMultiplier = attackingEntity !== null ? getEntityPlantGatherMultiplier(attackingEntity, plant) : 1;
-   const numDroppedBerries = Math.min(plantComponent.numFruit, gatherMultiplier);
-
-   plantComponent.numFruit--;
-   for (let i = 0; i < numDroppedBerries; i++) {
+   for (let i = 0; i < multiplier; i++) {
       dropBerryOverEntity(plant);
    }
+
+   plantComponent.numFruit--;
 }
 
-export function onPlantHit(plant: Entity, attackingEntity: Entity | null): void {
+export function onPlantHit(plant: Entity): void {
    const plantComponent = PlantComponentArray.getComponent(plant.id);
 
    plantComponent.fruitRandomGrowthTicks = 0;
@@ -54,7 +54,7 @@ export function onPlantHit(plant: Entity, attackingEntity: Entity | null): void 
    switch (plantComponent.plantType) {
       case PlanterBoxPlant.berryBush: {
          if (plantComponent.numFruit > 0) {
-            dropBerryBushCropBerries(plant, attackingEntity);
+            dropBerryBushCropBerries(plant, 1);
          }
          break;
       }

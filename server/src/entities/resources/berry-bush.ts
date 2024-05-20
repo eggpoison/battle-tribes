@@ -12,7 +12,6 @@ import { HealthComponent } from "../../components/HealthComponent";
 import { createItemEntity } from "../item-entity";
 import Board from "../../Board";
 import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
-import { getEntityPlantGatherMultiplier } from "../tribes/tribe-member";
 
 export const BERRY_BUSH_RADIUS = 40;
 
@@ -71,23 +70,21 @@ export function dropBerryOverEntity(entity: Entity): void {
    physicsComponent.velocity.y = 40 * Math.cos(spawnDirection + velocityDirectionOffset);
 }
 
-export function dropBerry(berryBush: Entity, attackingEntity: Entity | null): void {
+export function dropBerry(berryBush: Entity, multiplier: number): void {
    const berryBushComponent = BerryBushComponentArray.getComponent(berryBush.id);
    if (berryBushComponent.numBerries === 0) {
       return;
    }
 
-   const gatherMultiplier = attackingEntity !== null ? getEntityPlantGatherMultiplier(attackingEntity, berryBush) : 1;
-   const numDroppedBerries = Math.min(berryBushComponent.numBerries, gatherMultiplier);
-
-   for (let i = 0; i < numDroppedBerries; i++) {
+   for (let i = 0; i < multiplier; i++) {
       dropBerryOverEntity(berryBush);
    }
+
    berryBushComponent.numBerries--;
 }
 
 export function onBerryBushHurt(berryBush: Entity, attackingEntity: Entity | null): void {
-   dropBerry(berryBush, attackingEntity);
+   dropBerry(berryBush, 1);
 }
 
 export function serialiseBerryBushComponent(berryBush: Entity): BerryBushComponentData {

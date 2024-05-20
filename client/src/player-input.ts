@@ -188,13 +188,6 @@ const offhandItemAttackCooldowns: Record<number, number> = {};
 /** Whether the inventory is open or not. */
 let _inventoryIsOpen = false;
 
-// let _interactInventoryIsOpen = false;
-// let interactInventoryEntity: Entity | null = null;
-
-// export function getInteractEntityID(): number | null {
-//    return interactInventoryEntity !== null ? interactInventoryEntity.id : null;
-// }
-
 const updateAttackCooldowns = (inventory: Inventory, attackCooldowns: Record<number, number>): void => {
    for (let itemSlot = 1; itemSlot <= inventory.width; itemSlot++) {
       if (attackCooldowns.hasOwnProperty(itemSlot)) {
@@ -287,6 +280,7 @@ const attemptInventoryAttack = (inventory: Inventory): boolean => {
          
          // Reset the attack cooldown of the weapon
          let baseAttackCooldown: number;
+         // @Cleanup
          const itemTypeInfo = ITEM_TYPE_RECORD[selectedItem.type];
          if (itemTypeInfo === "axe" || itemTypeInfo === "pickaxe" || itemTypeInfo === "sword" || itemTypeInfo === "spear" || itemTypeInfo === "hammer" || itemTypeInfo === "battleaxe" || itemTypeInfo === "crossbow") {
             if (selectedItem.id === useInfo.thrownBattleaxeItemID) {
@@ -297,6 +291,11 @@ const attemptInventoryAttack = (inventory: Inventory): boolean => {
             }
          } else {
             baseAttackCooldown = Settings.DEFAULT_ATTACK_COOLDOWN;
+         }
+
+         // @Hack
+         if (selectedItem.type === ItemType.gardening_gloves) {
+            baseAttackCooldown = 1;
          }
 
          const attackCooldown = baseAttackCooldown * getSwingTimeMulitplier();

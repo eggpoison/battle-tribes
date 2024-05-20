@@ -15,8 +15,7 @@ export const PLANT_GROWTH_TICKS: Record<PlanterBoxPlant, number> = {
 };
 
 export class PlantComponent {
-   public readonly planterBoxI
-   : number;
+   public readonly planterBoxID: number;
 
    public readonly plantType: PlanterBoxPlant;
    public plantGrowthTicks = 0;

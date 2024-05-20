@@ -223,7 +223,7 @@ export function repairBuilding(tribeMember: Entity, targetEntity: Entity, itemSl
    return false;
 }
 
-const getSwingTimeMulitplier = (entity: Entity, targetEntity: Entity): number => {
+const getSwingTimeMultiplier = (entity: Entity, targetEntity: Entity): number => {
    let swingTimeMultiplier = 1;
 
    if (TribeComponentArray.hasComponent(entity.id)) {
@@ -259,12 +259,32 @@ const isBerryBushWithBerries = (entity: Entity): boolean => {
    }
 }
 
-const gatherPlant = (plant: Entity, attacker: Entity): void => {
+const getEntityPlantGatherMultiplier = (tribeman: Entity, plant: Entity, gloves: Item | null): number => {
+   let multiplier = 1;
+
+   if (hasTitle(tribeman.id, TribesmanTitle.berrymuncher) && isBerryBush(plant)) {
+      multiplier++;
+   }
+
+   if (hasTitle(tribeman.id, TribesmanTitle.gardener)) {
+      multiplier++;
+   }
+
+   if (gloves !== null && gloves.type === ItemType.gardening_gloves) {
+      multiplier++;
+   }
+
+   return multiplier;
+}
+
+const gatherPlant = (plant: Entity, attacker: Entity, gloves: Item | null): void => {
    if (isBerryBushWithBerries(plant)) {
+      const gatherMultiplier = getEntityPlantGatherMultiplier(attacker, plant, gloves);
+
       if (plant.type === EntityType.berryBush) {
-         dropBerry(plant, attacker);
+         dropBerry(plant, gatherMultiplier);
       } else {
-         dropBerryBushCropBerries(plant, attacker);
+         dropBerryBushCropBerries(plant, gatherMultiplier);
       }
    } else {
       let plantRadius: number;
@@ -335,8 +355,10 @@ export function attemptAttack(attacker: Entity, targetEntity: Entity, itemSlot: 
    }
 
    // Reset attack cooldown
-   const baseAttackCooldown = item !== null ? getItemAttackCooldown(item) : Settings.DEFAULT_ATTACK_COOLDOWN;
-   const attackCooldown = baseAttackCooldown * getSwingTimeMulitplier(attacker, targetEntity);
+   // @Hack
+   // const baseAttackCooldown = item !== null ? getItemAttackCooldown(item) : Settings.DEFAULT_ATTACK_COOLDOWN;
+   const baseAttackCooldown = item !== null ? (item.type === ItemType.gardening_gloves ? 1 : getItemAttackCooldown(item)) : Settings.DEFAULT_ATTACK_COOLDOWN;
+   const attackCooldown = baseAttackCooldown * getSwingTimeMultiplier(attacker, targetEntity);
    useInfo.itemAttackCooldowns[itemSlot] = attackCooldown;
    useInfo.lastAttackCooldown = attackCooldown;
    useInfo.lastAttackTicks = Board.ticks;
@@ -352,9 +374,9 @@ export function attemptAttack(attacker: Entity, targetEntity: Entity, itemSlot: 
    // Harvest leaves from trees and berries when wearing the gathering or gardening gloves
    if ((item === null || item.type === ItemType.leaf) && (targetEntity.type === EntityType.tree || targetEntity.type === EntityType.berryBush || targetEntity.type === EntityType.plant)) {
       const gloveInventory = getInventory(inventoryComponent, InventoryName.gloveSlot);
-      const glove = gloveInventory.itemSlots[1];
-      if (typeof glove !== "undefined" && (glove.type === ItemType.gathering_gloves || glove.type === ItemType.gardening_gloves)) {
-         gatherPlant(targetEntity, attacker);
+      const gloves = gloveInventory.itemSlots[1];
+      if (typeof gloves !== "undefined" && (gloves.type === ItemType.gathering_gloves || gloves.type === ItemType.gardening_gloves)) {
+         gatherPlant(targetEntity, attacker, gloves);
          return true;
       }
    }
@@ -1227,21 +1249,21 @@ const isBerryBush = (entity: Entity): boolean => {
    }
 }
 
-export function getEntityPlantGatherMultiplier(entity: Entity, plant: Entity): number {
-   // For when called with non-tribesmen
-   if (!TribeMemberComponentArray.hasComponent(entity.id)) {
-      return 1;
-   }
+// export function getEntityPlantGatherMultiplier(entity: Entity, plant: Entity): number {
+//    // For when called with non-tribesmen
+//    if (!TribeMemberComponentArray.hasComponent(entity.id)) {
+//       return 1;
+//    }
    
-   let multiplier = 1;
+//    let multiplier = 1;
 
-   if (hasTitle(entity.id, TribesmanTitle.berrymuncher) && isBerryBush(plant)) {
-      multiplier++;
-   }
+//    if (hasTitle(entity.id, TribesmanTitle.berrymuncher) && isBerryBush(plant)) {
+//       multiplier++;
+//    }
 
-   if (hasTitle(entity.id, TribesmanTitle.gardener)) {
-      multiplier++;
-   }
+//    if (hasTitle(entity.id, TribesmanTitle.gardener)) {
+//       multiplier++;
+//    }
 
-   return multiplier;
-}
+//    return multiplier;
+// }

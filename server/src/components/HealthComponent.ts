@@ -214,7 +214,7 @@ export function damageEntity(entity: Entity, damage: number, attackingEntity: En
          break;
       }
       case EntityType.plant: {
-         onPlantHit(entity, attackingEntity);
+         onPlantHit(entity);
          break;
       }
    }

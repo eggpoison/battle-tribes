@@ -123,9 +123,10 @@ const shouldShowDamageNumber = (attackerID: number): boolean => {
    }
 
    // Show friendly turrets' damage numbers
-   if (Board.entityRecord.hasOwnProperty(attackerID)) {
-      const entity = Board.entityRecord[attackerID];
-      if ((entity.type === EntityType.slingTurret || entity.type === EntityType.ballista) && (entity as any).tribeID === Game.tribe.id) {
+   const entity = Board.entityRecord[attackerID];
+   if (typeof entity !== "undefined" && entity.hasServerComponent(ServerComponentType.turret)) {
+      const tribeComponent = entity.getServerComponent(ServerComponentType.tribe);
+      if (tribeComponent.tribeID === Game.tribe.id) {
          return true;
       }
    }

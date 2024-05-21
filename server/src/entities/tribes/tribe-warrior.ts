@@ -77,7 +77,7 @@ export function createTribeWarrior(position: Point, rotation: number, tribe: Tri
    createNewInventory(inventoryComponent, InventoryName.backpackSlot, 1, 1, false);
    createNewInventory(inventoryComponent, InventoryName.gloveSlot, 1, 1, false);
    createNewInventory(inventoryComponent, InventoryName.backpack, 0, 0, false);
-   
+
    return warrior;
 }
 

@@ -18,7 +18,7 @@ import { HealthComponent } from "../../components/HealthComponent";
 import CircularHitbox from "../../hitboxes/CircularHitbox";
 import { InventoryUseComponent, getInventoryUseInfo, setLimbActions } from "../../components/InventoryUseComponent";
 import { SERVER } from "../../server";
-import { TribeMemberComponent } from "../../components/TribeMemberComponent";
+import { TribeMemberComponent, awardTitle } from "../../components/TribeMemberComponent";
 import { PlayerComponent } from "../../components/PlayerComponent";
 import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
 import { toggleDoor } from "../../components/DoorComponent";
@@ -30,6 +30,7 @@ import { toggleTunnelDoor, updateTunnelDoorBitset } from "../../components/Tunne
 import { placePlantInPlanterBox } from "../../components/PlanterBoxComponent";
 import { createItem } from "../../items";
 import { toggleFenceGateDoor } from "../../components/FenceGateComponent";
+import { TribesmanTitle } from "webgl-test-shared/dist/titles";
 
 /** How far away from the entity the attack is done */
 const ATTACK_OFFSET = 50;
@@ -83,12 +84,9 @@ export function createPlayer(position: Point, tribe: Tribe): Entity {
    addItem(inventoryComponent, createItem(ItemType.wood, 10));
    addItem(inventoryComponent, createItem(ItemType.wooden_wall, 50));
    
-   // setTimeout(() => {
-   //    awardTitle(player, TribesmanTitle.yetisbane);
-   // }, 200);
-   // setTimeout(() => {
-   //    awardTitle(player, TribesmanTitle.berrymuncher);
-   // }, 4000);
+   setTimeout(() => {
+      awardTitle(player, TribesmanTitle.gardener);
+   }, 200);
 
    return player;
 }

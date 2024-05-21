@@ -39,7 +39,7 @@ export function createSlingTurret(position: Point, rotation: number, tribe: Trib
 
    HealthComponentArray.addComponent(slingTurret.id, new HealthComponent(25));
    StatusEffectComponentArray.addComponent(slingTurret.id, new StatusEffectComponent(StatusEffect.bleeding | StatusEffect.poisoned));
-   TurretComponentArray.addComponent(slingTurret.id, new TurretComponent(SLING_TURRET_SHOT_COOLDOWN_TICKS));
+   TurretComponentArray.addComponent(slingTurret.id, new TurretComponent(SLING_TURRET_SHOT_COOLDOWN_TICKS + SLING_TURRET_RELOAD_TIME_TICKS));
    TribeComponentArray.addComponent(slingTurret.id, new TribeComponent(tribe));
    AIHelperComponentArray.addComponent(slingTurret.id, new AIHelperComponent(VISION_RANGE));
    

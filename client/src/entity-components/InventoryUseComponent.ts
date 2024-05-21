@@ -1,4 +1,4 @@
-import { BowItemInfo, ITEM_INFO_RECORD, ITEM_TYPE_RECORD, InventoryName, Item, ItemType } from "webgl-test-shared/dist/items";
+import { BowItemInfo, ITEM_INFO_RECORD, ITEM_TYPE_RECORD, InventoryName, Item, ItemType, itemInfoIsBow, itemInfoIsTool, itemInfoIsUtility } from "webgl-test-shared/dist/items";
 import { EntityType, LimbAction } from "webgl-test-shared/dist/entities";
 import { Point, lerp, randFloat, randItem } from "webgl-test-shared/dist/utils";
 import { InventoryUseComponentData, LimbData, ServerComponentType } from "webgl-test-shared/dist/components";
@@ -195,11 +195,6 @@ const getHandRestingOffset = (entityType: InventoryUseEntityType): number => {
    }
 }
 
-const showLargeItemTexture = (itemType: ItemType): boolean => {
-   const itemTypeInfo = ITEM_TYPE_RECORD[itemType];
-   return itemTypeInfo === "axe" || itemTypeInfo === "sword" || itemTypeInfo === "bow" || itemTypeInfo === "pickaxe" || itemTypeInfo === "spear" || itemTypeInfo === "hammer" || itemTypeInfo === "battleaxe" || itemTypeInfo === "crossbow";
-}
-
 const getLimbRestingDirection = (entityType: InventoryUseEntityType): number => {
    switch (entityType) {
       case EntityType.player:
@@ -377,14 +372,14 @@ class InventoryUseComponent extends ServerComponent<ServerComponentType.inventor
          const activeItemRenderPart = this.activeItemRenderParts[limbIdx];
          activeItemRenderPart.flipX = limbIdx === 1;
          
-         if (showLargeItemTexture(activeItem.type)) {
+         const itemInfo = ITEM_INFO_RECORD[activeItem.type];
+         if (itemInfoIsUtility(activeItem.type, itemInfo)) {
             // Change the bow charging texture based on the charge progress
-            if (useInfo.action === LimbAction.chargeBow || useInfo.action === LimbAction.loadCrossbow) {
-               const bowInfo = ITEM_INFO_RECORD[activeItem.type] as BowItemInfo;
-               
+            if (useInfo.action === LimbAction.chargeBow || useInfo.action === LimbAction.loadCrossbow && itemInfoIsBow(activeItem.type, itemInfo)) {
                const lastActionTicks = useInfo.action === LimbAction.chargeBow ? useInfo.lastBowChargeTicks : useInfo.lastCrossbowLoadTicks;
                const secondsSinceLastAction = getSecondsSinceLastAction(lastActionTicks);
-               const chargeProgress = secondsSinceLastAction / bowInfo.shotCooldownTicks * Settings.TPS;
+               // @Hack: why does itemInfoIsBow not narrow this fully??
+               const chargeProgress = secondsSinceLastAction / (itemInfo as BowItemInfo).shotCooldownTicks * Settings.TPS;
 
                let textureSourceArray: ReadonlyArray<string>;
                let arrowTextureSource: string;
@@ -514,7 +509,7 @@ class InventoryUseComponent extends ServerComponent<ServerComponentType.inventor
          item = null;
       }
       
-      const itemSize = item !== null && showLargeItemTexture(item.type) ? 8 * 4 : 4 * 4;
+      const itemSize = item !== null && itemInfoIsTool(item.type, ITEM_INFO_RECORD[item.type]) ? 8 * 4 : 4 * 4;
       
       // @Hack
       this.updateActiveItemRenderPart(limbIdx, limbInfo, item, true);
@@ -713,7 +708,7 @@ class InventoryUseComponent extends ServerComponent<ServerComponentType.inventor
                   itemRenderPart.rotation = 0;
                   itemRenderPart.offset.x = 4 * handMult;
                   itemRenderPart.offset.y = 4;
-               } else if (item !== null && showLargeItemTexture(item.type)) {
+               } else if (item !== null && itemInfoIsTool(item.type, ITEM_INFO_RECORD[item.type])) {
                   itemRenderPart.rotation = 0;
                   itemRenderPart.offset.x = (itemSize - 8) * handMult;
                   itemRenderPart.offset.y = itemSize - 8;

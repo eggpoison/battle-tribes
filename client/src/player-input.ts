@@ -23,7 +23,7 @@ import { InventoryMenuType, InventorySelector_inventoryIsOpen, InventorySelector
 import { attemptToCompleteNode } from "./research";
 import { BuildMenu_isOpen, BuildMenu_hide } from "./components/game/BuildMenu";
 import { StructureType, calculateStructurePlaceInfo } from "webgl-test-shared/dist/structures";
-import { ConsumableItemCategory, ConsumableItemInfo, ITEM_INFO_RECORD, ITEM_TYPE_RECORD, Inventory, InventoryName, Item, ItemType, PlaceableItemType, ToolItemInfo } from "webgl-test-shared/dist/items";
+import { ConsumableItemCategory, ConsumableItemInfo, ITEM_INFO_RECORD, ITEM_TYPE_RECORD, Inventory, InventoryName, Item, ItemType, PlaceableItemType, ToolItemInfo, itemInfoIsTool } from "webgl-test-shared/dist/items";
 import { EntityType, LimbAction } from "webgl-test-shared/dist/entities";
 import { AttackPacket, HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
 import { Settings } from "webgl-test-shared/dist/settings";
@@ -32,6 +32,8 @@ import { TRIBE_INFO_RECORD, TribeType } from "webgl-test-shared/dist/tribes";
 import { STATUS_EFFECT_MODIFIERS } from "webgl-test-shared/dist/status-effects";
 import { TribesmanTitle } from "webgl-test-shared/dist/titles";
 import { Point } from "webgl-test-shared/dist/utils";
+import InventoryUseComponent, { LimbInfo } from "./entity-components/InventoryUseComponent";
+import InventoryComponent from "./entity-components/InventoryComponent";
 
 /** Acceleration of the player while moving without any modifiers. */
 const PLAYER_ACCELERATION = 700;
@@ -253,7 +255,7 @@ const attack = (isOffhand: boolean, attackCooldown: number): void => {
    }
 }
 
-const getSwingTimeMulitplier = (): number => {
+const getSwingTimeMultiplier = (): number => {
    let swingTimeMultiplier = 1;
 
    if (Game.tribe.tribeType === TribeType.barbarians) {
@@ -264,61 +266,56 @@ const getSwingTimeMulitplier = (): number => {
    return swingTimeMultiplier;
 }
 
+const getBaseAttackCooldown = (item: Item | undefined, itemLimbInfo: LimbInfo, inventoryComponent: InventoryComponent): number => {
+   // @Hack
+   if (typeof item === "undefined" || item.type === ItemType.leaf && inventoryComponent.hasInventory(InventoryName.gloveSlot)) {
+      const glovesInventory = inventoryComponent.getInventory(InventoryName.gloveSlot);
+
+      const gloves = glovesInventory.itemSlots[1];
+      if (typeof gloves !== "undefined" && gloves.type === ItemType.gardening_gloves) {
+         return Settings.DEFAULT_ATTACK_COOLDOWN * 1.5;
+      }
+   }
+   
+   if (typeof item === "undefined") {
+      return Settings.DEFAULT_ATTACK_COOLDOWN;
+   }
+
+   const itemInfo = ITEM_INFO_RECORD[item.type];
+   if (itemInfoIsTool(item.type, itemInfo) && item.id !== itemLimbInfo.thrownBattleaxeItemID) {
+      return itemInfo.attackCooldown;
+   }
+
+   return Settings.DEFAULT_ATTACK_COOLDOWN;
+}
+
 const attemptInventoryAttack = (inventory: Inventory): boolean => {
    const isOffhand = inventory.name !== InventoryName.hotbar;
 
+   const inventoryComponent = Player.instance!.getServerComponent(ServerComponentType.inventory);
    const inventoryUseComponent = Player.instance!.getServerComponent(ServerComponentType.inventoryUse);
+   
    const useInfo = inventoryUseComponent.useInfos[isOffhand ? 1 : 0];
    
    const attackCooldowns = isOffhand ? offhandItemAttackCooldowns : hotbarItemAttackCooldowns;
    const selectedItemSlot = useInfo.selectedItemSlot;
 
-   const selectedItem = inventory.itemSlots[selectedItemSlot];
-   if (typeof selectedItem !== "undefined") {
-      // Attack with item
-      if (!attackCooldowns.hasOwnProperty(selectedItemSlot)) {
-         
-         // Reset the attack cooldown of the weapon
-         let baseAttackCooldown: number;
-         // @Cleanup
-         const itemTypeInfo = ITEM_TYPE_RECORD[selectedItem.type];
-         if (itemTypeInfo === "axe" || itemTypeInfo === "pickaxe" || itemTypeInfo === "sword" || itemTypeInfo === "spear" || itemTypeInfo === "hammer" || itemTypeInfo === "battleaxe" || itemTypeInfo === "crossbow") {
-            if (selectedItem.id === useInfo.thrownBattleaxeItemID) {
-               baseAttackCooldown = Settings.DEFAULT_ATTACK_COOLDOWN;
-            } else {
-               const itemInfo = ITEM_INFO_RECORD[selectedItem.type];
-               baseAttackCooldown = (itemInfo as ToolItemInfo).attackCooldown;
-            }
-         } else {
-            baseAttackCooldown = Settings.DEFAULT_ATTACK_COOLDOWN;
-         }
-
-         // @Hack
-         if (selectedItem.type === ItemType.gardening_gloves) {
-            baseAttackCooldown = 1;
-         }
-
-         const attackCooldown = baseAttackCooldown * getSwingTimeMulitplier();
-         
-         // @Cleanup: Should be done in attack function
-         attackCooldowns[selectedItemSlot] = attackCooldown;
-
-         attack(isOffhand, attackCooldown);
-
-         return true;
-      }
-   } else {
-      // Attack without item
-      if (!attackCooldowns.hasOwnProperty(selectedItemSlot)) {
-         const attackCooldown = Settings.DEFAULT_ATTACK_COOLDOWN * getSwingTimeMulitplier();
-         attackCooldowns[selectedItemSlot] = attackCooldown;
-         attack(isOffhand, attackCooldown);
-
-         return true;
-      }
+   // If on cooldown, don't swing
+   if (typeof attackCooldowns[selectedItemSlot] !== "undefined") {
+      return false;
    }
 
-   return false;
+   const selectedItem = inventory.itemSlots[selectedItemSlot];
+
+   let attackCooldown = getBaseAttackCooldown(selectedItem, useInfo, inventoryComponent);
+   attackCooldown *= getSwingTimeMultiplier();
+      
+   // @Cleanup: Should be done in attack function
+   attackCooldowns[selectedItemSlot] = attackCooldown;
+
+   attack(isOffhand, attackCooldown);
+
+   return true;
 }
 
 const attemptAttack = (): void => {

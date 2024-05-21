@@ -69,6 +69,7 @@ export function getReloadProgress(turret: Entity): number {
    const shotCooldownTicks = getShotCooldownTicks(turret);
    const turretComponent = TurretComponentArray.getComponent(turret.id);
 
+   // If the shot is charging, the turret has already reloaded
    if (turretComponent.fireCooldownTicks < shotCooldownTicks) {
       return 0;
    }

@@ -13,6 +13,12 @@ class InventoryComponent extends ServerComponent<ServerComponentType.inventory> 
       this.updateFromData(data);
    }
 
+   // @Cleanup: just combine these 2 and make it able to return undefined
+
+   public hasInventory(inventoryName: InventoryName): boolean {
+      return typeof this.inventories[inventoryName] !== "undefined";
+   }
+
    public getInventory(inventoryName: InventoryName): Inventory {
       const inventory = this.inventories[inventoryName];
 

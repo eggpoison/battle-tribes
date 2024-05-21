@@ -323,6 +323,7 @@ abstract class Board {
             case EntityType.planterBox: onPlanterBoxRemove(entity); break;
          }
 
+         // @Speed: don't do per entity, do per component array and add entity to component array buffers
          // Remove components
          for (let i = 0; i < ComponentArrays.length; i++) {
             const componentArray = ComponentArrays[i];

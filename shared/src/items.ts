@@ -778,5 +778,21 @@ export function getItemStackSize(item: Item): number {
    return (ITEM_INFO_RECORD[item.type] as StackableItemInfo).stackSize;
 }
 
+export function itemInfoIsTool(itemType: ItemType, itemInfo: unknown): itemInfo is ToolItemInfo {
+   const itemTypeInfo = ITEM_TYPE_RECORD[itemType];
+   return itemTypeInfo === "axe" || itemTypeInfo === "sword" || itemTypeInfo === "pickaxe" || itemTypeInfo === "spear" || itemTypeInfo === "hammer" || itemTypeInfo === "battleaxe";
+}
+
+export function itemInfoIsUtility(itemType: ItemType, itemInfo: unknown): itemInfo is AxeItemInfo | SwordItemInfo | BowItemInfo | PickaxeItemInfo | SpearItemInfo | HammerItemInfo | BattleaxeItemInfo | CrossbowItemInfo {
+   const itemTypeInfo = ITEM_TYPE_RECORD[itemType];
+   return itemTypeInfo === "axe" || itemTypeInfo === "sword" || itemTypeInfo === "bow" || itemTypeInfo === "pickaxe" || itemTypeInfo === "spear" || itemTypeInfo === "hammer" || itemTypeInfo === "battleaxe" || itemTypeInfo === "crossbow";
+}
+
+export function itemInfoIsBow(itemType: ItemType, itemInfo: unknown): itemInfo is BowItemInfo {
+   const itemTypeInfo = ITEM_TYPE_RECORD[itemType];
+   return itemTypeInfo === "bow";
+}
+
+// @Cleanup: move elsewhere
 export const BALLISTA_AMMO_TYPES = [ItemType.wood, ItemType.rock, ItemType.slimeball, ItemType.frostcicle] as const;
 export type BallistaAmmoType = typeof BALLISTA_AMMO_TYPES[number];

@@ -142,29 +142,34 @@ class TurretComponent extends ServerComponent<ServerComponentType.turret> {
       }
    }
 
-   private updateProjectileRenderPart(aimDirection: number, chargeProgress: number, reloadProgress: number): void {
-      // If the ballista has no ammo, then don't show the render part
-      // @Speed: Would be easier on render part rendering if we remove the render part instead of setting its opacity to 0
-      if (this.entity.type === EntityType.ballista) {
-         const ammoBoxComponent = this.entity.getServerComponent(ServerComponentType.ammoBox);
-
-         if (ammoBoxComponent.ammoType === null) {
-            if (this.projectileRenderPart !== null) {
-               this.entity.removeRenderPart(this.projectileRenderPart);
-               this.projectileRenderPart = null;
-            }
-            return;
-         } else if (reloadProgress === 0 && chargeProgress === 0) {
-            // Update rotation for projectiles which have a random rotation each load
-            if (ammoBoxComponent.ammoType === ItemType.rock || ammoBoxComponent.ammoType === ItemType.slimeball) {
-               this.projectileRenderPart!.rotation = 2 * Math.PI * Math.random();
-            } else {
-               this.projectileRenderPart!.rotation = 0;
-            }
+   private shouldShowProjectile(chargeProgress: number, reloadProgress: number): boolean {
+      switch (this.entity.type) {
+         case EntityType.ballista: {
+            const ammoBoxComponent = this.entity.getServerComponent(ServerComponentType.ammoBox);
+            return ammoBoxComponent.ammoType !== null;
          }
+         case EntityType.slingTurret: {
+            return chargeProgress > 0 || reloadProgress > 0;
+         }
+         default: throw new Error();
       }
+   }
 
-      if (chargeProgress > 0 || reloadProgress > 0) {
+   private projectileHasRandomRotation(): boolean {
+      switch (this.entity.type) {
+         case EntityType.ballista: {
+            const ammoBoxComponent = this.entity.getServerComponent(ServerComponentType.ammoBox);
+            return ammoBoxComponent.ammoType === ItemType.rock || ammoBoxComponent.ammoType === ItemType.slimeball;
+         }
+         case EntityType.slingTurret: {
+            return true;
+         }
+         default: throw new Error();
+      }
+   }
+
+   private updateProjectileRenderPart(chargeProgress: number, reloadProgress: number): void {
+      if (this.shouldShowProjectile(chargeProgress, reloadProgress)) {
          const textureSource = getProjectileTextureSource(this.entity);
          if (this.projectileRenderPart === null) {
             this.projectileRenderPart = new RenderPart(
@@ -173,6 +178,11 @@ class TurretComponent extends ServerComponent<ServerComponentType.turret> {
                getProjectileZIndex(this.entity.type as TurretType),
                0
             );
+
+            if (this.projectileHasRandomRotation()) {
+               this.projectileRenderPart.rotation = 2 * Math.PI * Math.random();
+            }
+
             this.entity.attachRenderPart(this.projectileRenderPart);
          } else {
             this.projectileRenderPart.switchTextureSource(textureSource);
@@ -204,7 +214,7 @@ class TurretComponent extends ServerComponent<ServerComponentType.turret> {
       this.aimingRenderPart.switchTextureSource(getChargeTextureSource(this.entity.type as TurretType, chargeProgress));
       
       this.updateAimDirection(aimDirection, chargeProgress);
-      this.updateProjectileRenderPart(aimDirection, chargeProgress, reloadProgress);
+      this.updateProjectileRenderPart(chargeProgress, reloadProgress);
    }
 }
 

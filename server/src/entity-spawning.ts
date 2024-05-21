@@ -84,16 +84,17 @@ const SPAWN_INFOS: ReadonlyArray<EntitySpawnInfo> = [
       minSpawnDistance: 75,
       usesSpawnDistribution: true
    },
-   {
-      entityType: EntityType.tombstone,
-      spawnRate: 0.01,
-      maxDensity: 0.003,
-      minPackSize: 1,
-      maxPackSize: 1,
-      onlySpawnsInNight: true,
-      minSpawnDistance: 150,
-      usesSpawnDistribution: false
-   },
+   // @Temporary
+   // {
+   //    entityType: EntityType.tombstone,
+   //    spawnRate: 0.01,
+   //    maxDensity: 0.003,
+   //    minPackSize: 1,
+   //    maxPackSize: 1,
+   //    onlySpawnsInNight: true,
+   //    minSpawnDistance: 150,
+   //    usesSpawnDistribution: false
+   // },
    {
       entityType: EntityType.boulder,
       spawnRate: 0.005,

@@ -1,14 +1,17 @@
 import { Settings } from "webgl-test-shared/dist/settings";
-import Board, { getChunksInBounds } from "./Board";
+import { getChunksInBounds } from "./Board";
 import { GrassBlocker, GrassBlockerCircle, GrassBlockerRectangle, blockerIsCircluar } from "webgl-test-shared/dist/grass-blockers";
 import Chunk from "./Chunk";
 import { StructureType } from "webgl-test-shared/dist/structures";
 import Entity from "./Entity";
 import { hitboxIsCircular } from "./hitboxes/hitboxes";
 
+const blockers = new Array<GrassBlocker>();
+
 const enum Vars {
    // @Temporary
-   GRASS_FULL_REGROW_TICKS = Settings.TPS * 10
+   GRASS_FULL_REGROW_TICKS = Settings.TPS * 60,
+   BLOCKER_PADDING = 0
 }
 
 const getBlockerChunks = (blocker: GrassBlocker): ReadonlyArray<Chunk> => {
@@ -31,7 +34,17 @@ const getBlockerChunks = (blocker: GrassBlocker): ReadonlyArray<Chunk> => {
    return getChunksInBounds(minX, maxX, minY, maxY);
 }
 
-const removeGrassBlocker = (blocker: GrassBlocker): void => {
+export function addGrassBlocker(blocker: GrassBlocker): void {
+   const chunks = getBlockerChunks(blocker);
+   for (let i = 0; i < chunks.length; i++) {
+      const chunk = chunks[i];
+      chunk.grassBlockers.push(blocker);
+   }
+
+   blockers.push(blocker);
+}
+
+const removeGrassBlocker = (blocker: GrassBlocker, i: number): void => {
    const chunks = getBlockerChunks(blocker);
    for (let i = 0; i < chunks.length; i++) {
       const chunk = chunks[i];
@@ -41,30 +54,20 @@ const removeGrassBlocker = (blocker: GrassBlocker): void => {
          chunk.grassBlockers.splice(idx, 1);
       }
    }
+
+   // @Speed
+   blockers.splice(i, 1);
 }
 
 export function updateGrassBlockers(): void {
-   // @Incomplete: causes grass blockers to be updated multiple times
-   for (let i = 0; i < Board.chunks.length; i++) {
-      const chunk = Board.chunks[i];
+   for (let i = 0; i < blockers.length; i++) {
+      const blocker = blockers[i];
 
-      for (let j = 0; j < chunk.grassBlockers.length; j++) {
-         const blocker = chunk.grassBlockers[j];
-
-         blocker.blockAmount -= 1 / Vars.GRASS_FULL_REGROW_TICKS;
-         if (blocker.blockAmount <= 0) {
-            removeGrassBlocker(blocker);
-            j--;
-         }
+      blocker.blockAmount -= 1 / Vars.GRASS_FULL_REGROW_TICKS;
+      if (blocker.blockAmount <= 0) {
+         removeGrassBlocker(blocker, i);
+         i--;
       }
-   }
-}
-
-export function addGrassBlocker(blocker: GrassBlocker): void {
-   const chunks = getBlockerChunks(blocker);
-   for (let i = 0; i < chunks.length; i++) {
-      const chunk = chunks[i];
-      chunk.grassBlockers.push(blocker);
    }
 }
 
@@ -80,15 +83,15 @@ export function createStructureGrassBlockers(structure: Entity<StructureType>): 
          const blocker: GrassBlockerCircle = {
             position: position,
             blockAmount: 1,
-            radius: hitbox.radius
+            radius: hitbox.radius + Vars.BLOCKER_PADDING
          };
          addGrassBlocker(blocker);
       } else {
          const blocker: GrassBlockerRectangle = {
             position: position,
             blockAmount: 1,
-            width: hitbox.width,
-            height: hitbox.height,
+            width: hitbox.width + Vars.BLOCKER_PADDING * 2,
+            height: hitbox.height + Vars.BLOCKER_PADDING * 2,
             rotation: structure.rotation + hitbox.relativeRotation
          };
          addGrassBlocker(blocker);

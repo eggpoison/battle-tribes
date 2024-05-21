@@ -2,7 +2,6 @@ import { EntityComponentsData, ServerComponentType } from "webgl-test-shared/dis
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { Point, randInt } from "webgl-test-shared/dist/utils";
 import { TileType } from "webgl-test-shared/dist/tiles";
-import { EntityData } from "webgl-test-shared/dist/client-server-types";
 import { createSlimePoolParticle, createSlimeSpeckParticle } from "../particles";
 import SlimeComponent from "../entity-components/SlimeComponent";
 import StatusEffectComponent from "../entity-components/StatusEffectComponent";

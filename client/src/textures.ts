@@ -19,7 +19,8 @@ const TEXTURE_SOURCES: Array<string> = [
    "miscellaneous/river/river-bed-highlights-3.png",
    "miscellaneous/particle-texture-atlas.png",
    "miscellaneous/gravel-noise-texture.png",
-   "tiles/dirt.png"
+   // @Temporary
+   "tiles/dirt2.png"
 ];
 
 export const TEXTURE_IMAGE_RECORD: Record<string, HTMLImageElement> = {};

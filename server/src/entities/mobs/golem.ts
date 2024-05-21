@@ -362,7 +362,6 @@ export function onGolemDeath(golem: Entity): void {
    createItemsOverEntity(golem, ItemType.living_rock, randInt(10, 20), 60);
 }
 
-
 export function serialiseGolemComponent(golem: Entity): GolemComponentData {
    const golemComponent = GolemComponentArray.getComponent(golem.id);
    return {

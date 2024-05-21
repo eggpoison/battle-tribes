@@ -1,5 +1,5 @@
 import { Point, clampToBoardDimensions } from "webgl-test-shared/dist/utils";
-import { EntityType } from "webgl-test-shared/dist/entities";
+import { EntityType, EntityTypeString } from "webgl-test-shared/dist/entities";
 import { EntityComponents } from "webgl-test-shared/dist/components";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { EntityDebugData, PathfindingNodeIndex, RIVER_STEPPING_STONE_SIZES } from "webgl-test-shared/dist/client-server-types";
@@ -509,7 +509,7 @@ class Entity<T extends EntityType = EntityType> {
       // @Temporary
       if (this.position.x < 0 || this.position.x >= Settings.BOARD_UNITS || this.position.y < 0 || this.position.y >= Settings.BOARD_UNITS) {
          console.log(this);
-         throw new Error("Unable to properly resolve border collisions.");
+         throw new Error("Unable to properly resolve border collisions for " + EntityTypeString[this.type] + ".");
       }
    }
 

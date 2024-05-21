@@ -1,7 +1,7 @@
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { TribeComponentData } from "webgl-test-shared/dist/components";
 import Tribe from "../Tribe";
-import { GolemComponentArray, TribeComponentArray, TribeMemberComponentArray, TribesmanComponentArray } from "./ComponentArray";
+import { GolemComponentArray, PlantComponentArray, PlanterBoxComponentArray, TribeComponentArray, TribeMemberComponentArray, TribesmanComponentArray } from "./ComponentArray";
 import Entity from "../Entity";
 import { getTribesmanRelationship } from "./TribesmanComponent";
 
@@ -63,6 +63,14 @@ export function getEntityRelationship(entityID: number, comparingEntity: Entity)
          }
          return EntityRelationship.enemyBuilding;
       }
+      case EntityType.plant: {
+         const plantComponent = PlantComponentArray.getComponent(entityID);
+         
+         const tribeComponent = TribeComponentArray.getComponent(entityID);
+         const planterBoxTribeComponent = TribeComponentArray.getComponent(plantComponent.planterBoxID);
+
+         return planterBoxTribeComponent.tribe === tribeComponent.tribe ? EntityRelationship.friendlyBuilding : EntityRelationship.enemyBuilding;
+      }
       // Friendlies
       case EntityType.player:
       case EntityType.tribeWorker:
@@ -115,13 +123,12 @@ export function getEntityRelationship(entityID: number, comparingEntity: Entity)
       case EntityType.snowball:
       case EntityType.spearProjectile:
       case EntityType.spitPoison:
-      case EntityType.battleaxeProjectile:
-      case EntityType.plant: {
+      case EntityType.battleaxeProjectile:{
          return EntityRelationship.neutral;
       }
       default: {
-         const _unreachable: never = comparingEntity.type;
-         return _unreachable;
+         const unreachable: never = comparingEntity.type;
+         return unreachable;
       }
    }
 }

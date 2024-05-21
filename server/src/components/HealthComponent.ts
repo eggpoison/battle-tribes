@@ -17,7 +17,7 @@ import { onFishHurt } from "../entities/mobs/fish";
 import { onBoulderDeath } from "../entities/resources/boulder";
 import { onFrozenYetiDeath, onFrozenYetiHurt } from "../entities/mobs/frozen-yeti";
 import { onPlayerHurt } from "../entities/tribes/player";
-import { onGolemHurt } from "../entities/mobs/golem";
+import { onGolemDeath, onGolemHurt } from "../entities/mobs/golem";
 import { AIHelperComponentArray } from "./AIHelperComponent";
 import { SERVER } from "../server";
 import { adjustTribesmanRelationsAfterHurt, adjustTribesmanRelationsAfterKill } from "./TribesmanComponent";
@@ -114,6 +114,10 @@ export function damageEntity(entity: Entity, damage: number, attackingEntity: En
          }
          case EntityType.plant: {
             onPlantDeath(entity);
+            break;
+         }
+         case EntityType.golem: {
+            onGolemDeath(entity);
             break;
          }
       }

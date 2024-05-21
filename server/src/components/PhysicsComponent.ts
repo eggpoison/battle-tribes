@@ -73,21 +73,30 @@ const turnEntity = (entity: Entity, physicsComponent: PhysicsComponent): void =>
    cleanRotation(entity);
    
    if (physicsComponent.turnSpeed !== 0) {
-      let diff = physicsComponent.targetRotation - entity.rotation;
-      if (diff < 0) {
-         diff += Math.PI * 2;
+      let clockwiseDist = physicsComponent.targetRotation - entity.rotation;
+      if (clockwiseDist < 0) {
+         clockwiseDist += 2 * Math.PI;
+      } else if (clockwiseDist >= 2 * Math.PI) {
+         clockwiseDist -= 2 * Math.PI;
+      }
+
+      // @Temporary?
+      if (clockwiseDist < 0 || clockwiseDist > 2 * Math.PI) {
+         console.warn("BAD ROTATION!!!", physicsComponent.targetRotation, entity.rotation, physicsComponent.targetRotation - entity.rotation, clockwiseDist, 2 * Math.PI);
       }
       
-      if (diff <= Math.PI) {  
+      if (clockwiseDist <= Math.PI) {  
          entity.rotation += physicsComponent.turnSpeed * Settings.I_TPS;
          // If the entity would turn past the target direction, snap back to the target direction
-         if (physicsComponent.turnSpeed * Settings.I_TPS > diff) {
+         if (physicsComponent.turnSpeed * Settings.I_TPS > clockwiseDist) {
             entity.rotation = physicsComponent.targetRotation;
          }
       } else {
+         const anticlockwiseDist = 2 * Math.PI - clockwiseDist;
+         
          entity.rotation -= physicsComponent.turnSpeed * Settings.I_TPS
          // If the entity would turn past the target direction, snap back to the target direction
-         if (physicsComponent.turnSpeed * Settings.I_TPS > 2 * Math.PI - diff) {
+         if (physicsComponent.turnSpeed * Settings.I_TPS > anticlockwiseDist) {
             entity.rotation = physicsComponent.targetRotation;
          }
       }

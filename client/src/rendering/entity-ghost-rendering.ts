@@ -746,7 +746,13 @@ const getGhostInfo = (): GhostInfo | null => {
          ghostType: ENTITY_TYPE_TO_GHOST_TYPE_MAP[placeInfo.entityType],
          // @Incomplete: isPlacedOnWall
          tint: canPlaceItem(placeInfo.position, placeInfo.rotation, playerSelectedItem, structureType, false) ? [1, 1, 1] : [1.5, 0.5, 0.5],
-         snappedEntities: placeInfo.snappedEntityIDs.map(id => Board.entityRecord[id]),
+         snappedEntities: placeInfo.snappedEntityIDs.filter(id => id !== 0).map(id => {
+            const entity = Board.entityRecord[id];
+            if (typeof entity === "undefined") {
+               console.warn("undefined!");
+            }
+            return entity;
+         }),
          opacity: PARTIAL_OPACITY
       };
    }

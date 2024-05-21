@@ -101,7 +101,7 @@ export function createGrassBlockerShaders(): void {
    out vec4 outputColour;
    
    float roundPixel(float num) {
-      return ceil(num / PIXEL_SIZE) * PIXEL_SIZE;
+      return round(num / PIXEL_SIZE) * PIXEL_SIZE;
    }
 
    vec2 pixelateVector(vec2 pos) {
@@ -154,13 +154,11 @@ export function createGrassBlockerShaders(): void {
       float pixelatedX = roundPixel(v_position.x);
       float pixelatedY = roundPixel(v_position.y);
 
-      // Problem: player pos
+      // Problem: when player pos goes up by 1 but the v_position stays the same?
       
       vec2 screenPos = (pixelateVector(v_position) - u_playerPos) * u_zoom + u_halfWindowSize;
-      // vec2 screenPos = (v_position - pixelateVector(u_playerPos)) * u_zoom + u_halfWindowSize;
-      // vec2 screenPos = (pixelateVector(v_position) - pixelateVector(u_playerPos)) * u_zoom + u_halfWindowSize;
-      // vec2 screenPos = pixelateVector(v_position - u_playerPos) * u_zoom + u_halfWindowSize;
       vec2 clipSpacePos = screenPos / u_halfWindowSize - 1.0;
+      // Translate to [0, 1]
       vec2 texturePos = (clipSpacePos + 1.0) * 0.5;
       float u = texturePos.x;
       float v = texturePos.y;
@@ -198,10 +196,11 @@ export function createGrassBlockerShaders(): void {
       float blockAmount = col.r;
 
       // Add random noise to the block amount
-      if (blockAmount > 0.0) {
-         float noise = getNoise(vec2(pixelatedX, pixelatedY), 4.0);
-         blockAmount += noise * 0.3;
-      }
+      // if (blockAmount > 0.0) {
+      //    float noise = getNoise(pixelateVector(v_position), 4.0);
+      //    // noise = (noise - 0.5) * 2.0;
+      //    blockAmount += noise * 0.3;
+      // }
 
       // Sample the dirt texture
       float dirtTextureU = fract(v_position.x / 64.0);

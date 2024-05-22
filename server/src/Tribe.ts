@@ -13,13 +13,13 @@ import Board from "./Board";
 import Tile from "./Tile";
 import Chunk from "./Chunk";
 import Entity from "./Entity";
-import { HutComponentArray, InventoryComponentArray, TotemBannerComponentArray } from "./components/ComponentArray";
+import { HutComponentArray, TotemBannerComponentArray } from "./components/ComponentArray";
 import { createTribeWorker } from "./entities/tribes/tribe-worker";
 import { TotemBannerComponent, addBannerToTotem, removeBannerFromTotem } from "./components/TotemBannerComponent";
 import { createTribeWarrior } from "./entities/tribes/tribe-warrior";
 import { SERVER } from "./server";
 import { SafetyNode, addHitboxesOccupiedNodes, createRestrictedBuildingArea, getSafetyNode } from "./ai-tribe-building/ai-building";
-import { getInventory } from "./components/InventoryComponent";
+import { InventoryComponentArray, getInventory } from "./components/InventoryComponent";
 import { TribeArea } from "./ai-tribe-building/ai-building-areas";
 import { cleanAngle } from "./ai-shared";
 import { getPathfindingGroupID } from "./pathfinding";
@@ -354,7 +354,7 @@ class Tribe {
    private readonly respawnTimesRemaining = new Array<number>();
    private readonly respawnHutIDs = new Array<number>();
 
-   public tribeMembers = new Array<Entity>();
+   public tribesmanIDs = new Array<number>();
 
    public virtualBuildings = new Array<VirtualBuilding>;
    public virtualBuildingRecord: Record<number, VirtualBuilding> = {};
@@ -629,7 +629,7 @@ class Tribe {
 
    public tick(): void {
       // Destroy tribe if it has no entities left
-      if (this.totem === null && this.tribeMembers.length === 0 && this.barrels.length === 0 && this.huts.length === 0 && this.researchBenches.length === 0) {
+      if (this.totem === null && this.tribesmanIDs.length === 0 && this.barrels.length === 0 && this.huts.length === 0 && this.researchBenches.length === 0) {
          this.destroy();
          return;
       }
@@ -702,19 +702,15 @@ class Tribe {
 
    // @Cleanup
    
-   public registerNewTribeMember(tribeMember: Entity): void {
+   public registerNewTribeMember(tribesmanID: number): void {
       // this.friendlyTribesmenIDs.push(tribeMember.id);
-      this.tribeMembers.push(tribeMember);
+      this.tribesmanIDs.push(tribesmanID);
    }
 
-   public registerTribeMemberDeath(tribeMember: Entity): void {
-      // const idx = this.friendlyTribesmenIDs.indexOf(tribeMember.id);
-      // if (idx !== -1) {
-      //    this.friendlyTribesmenIDs.splice(idx, 1);
-      // }
-      const idx = this.tribeMembers.indexOf(tribeMember);
+   public registerTribeMemberDeath(tribesmanID: number): void {
+      const idx = this.tribesmanIDs.indexOf(tribesmanID);
       if (idx !== -1) {
-         this.tribeMembers.splice(idx, 1);
+         this.tribesmanIDs.splice(idx, 1);
       }
    }
 

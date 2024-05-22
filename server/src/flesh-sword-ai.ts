@@ -204,6 +204,6 @@ export function addFleshSword(itemEntity: Entity): void {
    };
 }
 
-export function removeFleshSword(itemEntity: Entity): void {
-   delete FLESH_SWORD_INFO[itemEntity.id];
+export function removeFleshSword(entityID: number): void {
+   delete FLESH_SWORD_INFO[entityID];
 }

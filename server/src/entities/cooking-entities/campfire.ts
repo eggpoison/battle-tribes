@@ -5,10 +5,10 @@ import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { Point } from "webgl-test-shared/dist/utils";
 import Entity from "../../Entity";
 import CircularHitbox from "../../hitboxes/CircularHitbox";
-import { CookingComponentArray, HealthComponentArray, InventoryComponentArray, TribeComponentArray } from "../../components/ComponentArray";
+import { CookingComponentArray, HealthComponentArray, TribeComponentArray } from "../../components/ComponentArray";
 import { HealthComponent } from "../../components/HealthComponent";
 import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
-import { InventoryComponent, createNewInventory } from "../../components/InventoryComponent";
+import { InventoryComponent, InventoryComponentArray, createNewInventory } from "../../components/InventoryComponent";
 import { tickCookingEntity } from "./cooking-entity";
 import { CookingComponent } from "../../components/CookingComponent";
 import Tribe from "../../Tribe";
@@ -40,9 +40,9 @@ export function createCampfire(position: Point, rotation: number, tribe: Tribe):
 
    const inventoryComponent = new InventoryComponent();
    InventoryComponentArray.addComponent(campfire.id, inventoryComponent);
-   createNewInventory(inventoryComponent, InventoryName.fuelInventory, 1, 1, false);
-   createNewInventory(inventoryComponent, InventoryName.ingredientInventory, 1, 1, false);
-   createNewInventory(inventoryComponent, InventoryName.outputInventory, 1, 1, false);
+   createNewInventory(inventoryComponent, InventoryName.fuelInventory, 1, 1, { acceptsPickedUpItems: false, isDroppedOnDeath: true });
+   createNewInventory(inventoryComponent, InventoryName.ingredientInventory, 1, 1, { acceptsPickedUpItems: false, isDroppedOnDeath: true });
+   createNewInventory(inventoryComponent, InventoryName.outputInventory, 1, 1, { acceptsPickedUpItems: false, isDroppedOnDeath: true });
 
    const cookingEntityComponent = new CookingComponent();
    cookingEntityComponent.remainingHeatSeconds = LIFETIME_SECONDS;

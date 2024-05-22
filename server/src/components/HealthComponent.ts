@@ -4,7 +4,7 @@ import { Settings } from "webgl-test-shared/dist/settings";
 import { TribesmanTitle } from "webgl-test-shared/dist/titles";
 import { clamp } from "webgl-test-shared/dist/utils";
 import Entity from "../Entity";
-import { HealthComponentArray, TribeMemberComponentArray } from "./ComponentArray";
+import { HealthComponentArray } from "./ComponentArray";
 import TombstoneDeathManager from "../tombstone-deaths";
 import { onBerryBushHurt } from "../entities/resources/berry-bush";
 import { onCowHurt } from "../entities/mobs/cow";
@@ -23,7 +23,7 @@ import { SERVER } from "../server";
 import { adjustTribesmanRelationsAfterHurt, adjustTribesmanRelationsAfterKill } from "./TribesmanComponent";
 import { onTribeMemberHurt } from "../entities/tribes/tribe-member";
 import { TITLE_REWARD_CHANCES } from "../tribesman-title-generation";
-import { awardTitle } from "./TribeMemberComponent";
+import { TribeMemberComponentArray, awardTitle } from "./TribeMemberComponent";
 import { onPlantDeath, onPlantHit } from "../entities/plant";
 
 export class HealthComponent {

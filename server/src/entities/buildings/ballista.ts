@@ -8,7 +8,7 @@ import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { Point } from "webgl-test-shared/dist/utils";
 import Entity from "../../Entity";
 import Tribe from "../../Tribe";
-import { AmmoBoxComponentArray, HealthComponentArray, InventoryComponentArray, TribeComponentArray, TurretComponentArray } from "../../components/ComponentArray";
+import { AmmoBoxComponentArray, HealthComponentArray, TribeComponentArray, TurretComponentArray } from "../../components/ComponentArray";
 import { EntityRelationship, TribeComponent, getEntityRelationship } from "../../components/TribeComponent";
 import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
 import RectangularHitbox from "../../hitboxes/RectangularHitbox";
@@ -17,7 +17,7 @@ import { HealthComponent } from "../../components/HealthComponent";
 import { AIHelperComponent, AIHelperComponentArray } from "../../components/AIHelperComponent";
 import { AmmoBoxComponent } from "../../components/AmmoBoxComponent";
 import { GenericArrowInfo, createWoodenArrow } from "../projectiles/wooden-arrow";
-import { InventoryComponent, consumeItemTypeFromInventory, createNewInventory, getFirstOccupiedItemSlotInInventory, getInventory } from "../../components/InventoryComponent";
+import { InventoryComponent, InventoryComponentArray, consumeItemTypeFromInventory, createNewInventory, getFirstOccupiedItemSlotInInventory, getInventory } from "../../components/InventoryComponent";
 import { angleIsInRange, getClockwiseAngleDistance, getMaxAngleToCircularHitbox, getMaxAngleToRectangularHitbox, getMinAngleToCircularHitbox, getMinAngleToRectangularHitbox } from "../../ai-shared";
 import CircularHitbox from "../../hitboxes/CircularHitbox";
 import Board from "../../Board";
@@ -49,7 +49,7 @@ export function createBallista(position: Point, rotation: number, tribe: Tribe):
 
    const inventoryComponent = new InventoryComponent();
    InventoryComponentArray.addComponent(ballista.id, inventoryComponent);
-   createNewInventory(inventoryComponent, InventoryName.ammoBoxInventory, 3, 1, false);
+   createNewInventory(inventoryComponent, InventoryName.ammoBoxInventory, 3, 1, { acceptsPickedUpItems: false, isDroppedOnDeath: true });
 
    return ballista;
 }

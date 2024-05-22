@@ -4,14 +4,13 @@ import { EntityType, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities"
 import { InventoryName, ItemType } from "webgl-test-shared/dist/items";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
-import { STRUCTURE_TYPES, StructureType } from "webgl-test-shared/dist/structures";
 import { Point, randInt, randFloat } from "webgl-test-shared/dist/utils";
 import Entity, { entityIsStructure } from "../../Entity";
-import { HealthComponentArray, InventoryComponentArray, InventoryUseComponentArray, ItemComponentArray, TombstoneComponentArray, TribeMemberComponentArray, WanderAIComponentArray, ZombieComponentArray } from "../../components/ComponentArray";
+import { HealthComponentArray, InventoryUseComponentArray, TombstoneComponentArray, WanderAIComponentArray, ZombieComponentArray } from "../../components/ComponentArray";
 import { HealthComponent, addLocalInvulnerabilityHash, canDamageEntity, damageEntity, healEntity } from "../../components/HealthComponent";
 import { ZombieComponent } from "../../components/ZombieComponent";
 import CircularHitbox from "../../hitboxes/CircularHitbox";
-import { InventoryComponent, createNewInventory, dropInventory, getInventory, pickupItemEntity } from "../../components/InventoryComponent";
+import { InventoryComponent, InventoryComponentArray, createNewInventory, getInventory, pickupItemEntity } from "../../components/InventoryComponent";
 import Board from "../../Board";
 import { StatusEffectComponent, StatusEffectComponentArray, applyStatusEffect, hasStatusEffect } from "../../components/StatusEffectComponent";
 import { WanderAIComponent } from "../../components/WanderAIComponent";
@@ -26,6 +25,8 @@ import { PhysicsComponent, PhysicsComponentArray, applyKnockback } from "../../c
 import { createItemsOverEntity } from "../../entity-shared";
 import { CollisionVars, entitiesAreColliding } from "../../collision";
 import { Biome } from "webgl-test-shared/dist/tiles";
+import { TribeMemberComponentArray } from "../../components/TribeMemberComponent";
+import { ItemComponentArray } from "../../components/ItemComponent";
 
 const TURN_SPEED = 3 * Math.PI;
 
@@ -73,14 +74,14 @@ export function createZombie(position: Point, rotation: number, isGolden: boolea
    const inventoryComponent = new InventoryComponent();
    InventoryComponentArray.addComponent(zombie.id, inventoryComponent);
 
-   const inventory = createNewInventory(inventoryComponent, InventoryName.handSlot, 1, 1, true);
+   const inventory = createNewInventory(inventoryComponent, InventoryName.handSlot, 1, 1, { acceptsPickedUpItems: true, isDroppedOnDeath: true });
 
    const inventoryUseComponent = new InventoryUseComponent();
    InventoryUseComponentArray.addComponent(zombie.id, inventoryUseComponent);
    inventoryUseComponent.addInventoryUseInfo(inventory);
 
    if (Math.random() < 0.7) {
-      const offhandInventory = createNewInventory(inventoryComponent, InventoryName.offhand, 0, 0, false);
+      const offhandInventory = createNewInventory(inventoryComponent, InventoryName.offhand, 0, 0, { acceptsPickedUpItems: true, isDroppedOnDeath: true });
       inventoryUseComponent.addInventoryUseInfo(offhandInventory);
    }
    
@@ -326,7 +327,7 @@ const shouldAttackEntity = (zombie: Entity, entity: Entity): boolean => {
 export function onZombieCollision(zombie: Entity, collidingEntity: Entity): void {
    // Pick up item entities
    if (collidingEntity.type === EntityType.itemEntity) {
-      pickupItemEntity(zombie, collidingEntity);
+      pickupItemEntity(zombie.id, collidingEntity);
    }
    
    if (!shouldAttackEntity(zombie, collidingEntity)) {
@@ -370,9 +371,6 @@ export function onZombieHurt(zombie: Entity, attackingEntity: Entity): void {
 }
 
 export function onZombieDeath(zombie: Entity): void {
-   const inventoryComponent = InventoryComponentArray.getComponent(zombie.id);
-   dropInventory(zombie, inventoryComponent, InventoryName.handSlot, 38);
-
    const zombieComponent = ZombieComponentArray.getComponent(zombie.id);
    if (zombieComponent.tombstoneID !== 0 && TombstoneComponentArray.hasComponent(zombieComponent.tombstoneID)) {
       const tombstoneComponent = TombstoneComponentArray.getComponent(zombieComponent.tombstoneID);

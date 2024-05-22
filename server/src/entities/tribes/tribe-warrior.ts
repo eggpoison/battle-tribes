@@ -2,19 +2,17 @@ import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types"
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { ScarInfo } from "webgl-test-shared/dist/components";
 import { EntityType } from "webgl-test-shared/dist/entities";
-import { InventoryName, ItemType } from "webgl-test-shared/dist/items";
-import { TribesmanTitle } from "webgl-test-shared/dist/titles";
 import { TRIBE_INFO_RECORD } from "webgl-test-shared/dist/tribes";
 import { randInt, Point } from "webgl-test-shared/dist/utils";
 import Entity from "../../Entity";
 import Tribe from "../../Tribe";
-import { HealthComponentArray, InventoryComponentArray, InventoryUseComponentArray, TribeComponentArray, TribeMemberComponentArray, TribeWarriorComponentArray, TribesmanComponentArray } from "../../components/ComponentArray";
+import { HealthComponentArray, InventoryUseComponentArray, TribeComponentArray, TribeWarriorComponentArray, TribesmanComponentArray } from "../../components/ComponentArray";
 import CircularHitbox from "../../hitboxes/CircularHitbox";
 import { HealthComponent } from "../../components/HealthComponent";
-import { InventoryComponent, addItemToInventory, createNewInventory, dropInventory } from "../../components/InventoryComponent";
+import { InventoryComponent, InventoryComponentArray } from "../../components/InventoryComponent";
 import { InventoryUseComponent } from "../../components/InventoryUseComponent";
 import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
-import { TribeMemberComponent, awardTitle } from "../../components/TribeMemberComponent";
+import { TribeMemberComponent, TribeMemberComponentArray } from "../../components/TribeMemberComponent";
 import { TribesmanComponent } from "../../components/TribesmanComponent";
 import Board from "../../Board";
 import { AIHelperComponent, AIHelperComponentArray } from "../../components/AIHelperComponent";
@@ -24,7 +22,6 @@ import { TribeComponent } from "../../components/TribeComponent";
 import { TribeWarriorComponent } from "../../components/TribeWarriorComponent";
 
 export const TRIBE_WARRIOR_RADIUS = 32;
-const INVENTORY_SIZE = 5;
 export const TRIBE_WARRIOR_VISION_RANGE = 560;
 
 const generateScars = (): ReadonlyArray<ScarInfo> => {
@@ -69,25 +66,11 @@ export function createTribeWarrior(position: Point, rotation: number, tribe: Tri
    const inventoryComponent = new InventoryComponent();
    InventoryComponentArray.addComponent(warrior.id, inventoryComponent);
 
-   const hotbarInventory = createNewInventory(inventoryComponent, InventoryName.hotbar, INVENTORY_SIZE, 1, true);
-   inventoryUseComponent.addInventoryUseInfo(hotbarInventory);
-   const offhandInventory = createNewInventory(inventoryComponent, InventoryName.offhand, 1, 1, false);
-   inventoryUseComponent.addInventoryUseInfo(offhandInventory);
-   createNewInventory(inventoryComponent, InventoryName.armourSlot, 1, 1, false);
-   createNewInventory(inventoryComponent, InventoryName.backpackSlot, 1, 1, false);
-   createNewInventory(inventoryComponent, InventoryName.gloveSlot, 1, 1, false);
-   createNewInventory(inventoryComponent, InventoryName.backpack, 0, 0, false);
-
    return warrior;
 }
 
 export function tickTribeWarrior(warrior: Entity): void {
    tickTribesman(warrior);
-}
-
-export function onTribeWarriorJoin(warrior: Entity): void {
-   const tribeComponent = TribeComponentArray.getComponent(warrior.id);
-   tribeComponent.tribe.registerNewTribeMember(warrior);
 }
 
 export function onTribeWarriorDeath(warrior: Entity): void {
@@ -102,15 +85,4 @@ export function onTribeWarriorDeath(warrior: Entity): void {
    
    const tribeComponent = TribeComponentArray.getComponent(warrior.id);
    tribeComponent.tribe.respawnTribesman(hut);
-   
-   const inventoryComponent = InventoryComponentArray.getComponent(warrior.id);
-   dropInventory(warrior, inventoryComponent, InventoryName.hotbar, 38);
-   dropInventory(warrior, inventoryComponent, InventoryName.armourSlot, 38);
-   dropInventory(warrior, inventoryComponent, InventoryName.backpackSlot, 38);
-   dropInventory(warrior, inventoryComponent, InventoryName.offhand, 38);
-}
-
-export function onTribeWarriorRemove(warrior: Entity): void {
-   const tribeComponent = TribeComponentArray.getComponent(warrior.id);
-   tribeComponent.tribe.registerTribeMemberDeath(warrior);
 }

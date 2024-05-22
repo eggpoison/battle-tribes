@@ -11,7 +11,6 @@ import Board from "./Board";
 import CircularHitbox from "./hitboxes/CircularHitbox";
 import { onCowDeath } from "./entities/mobs/cow";
 import { onTreeDeath } from "./entities/resources/tree";
-import { onPlayerDeath } from "./entities/tribes/player";
 import { onIceSpikesDeath } from "./entities/resources/ice-spikes";
 import { onKrumblidDeath } from "./entities/mobs/krumblid";
 import { onTribeWorkerDeath } from "./entities/tribes/tribe-worker";
@@ -538,7 +537,6 @@ class Entity<T extends EntityType = EntityType> {
          case EntityType.tribeWarrior: onTribeWarriorDeath(this); break;
          case EntityType.yeti: onYetiDeath(this); break;
          case EntityType.fish: onFishDeath(this); break;
-         case EntityType.player: onPlayerDeath(this); break;
          case EntityType.slimeSpit: onSlimeSpitDeath(this); break;
       }
    }

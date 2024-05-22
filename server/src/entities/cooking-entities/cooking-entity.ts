@@ -3,8 +3,8 @@ import { InventoryName, ItemType, ItemTypeString } from "webgl-test-shared/dist/
 import { Settings } from "webgl-test-shared/dist/settings";
 import { CookingIngredientItemType, FuelSourceItemType } from "webgl-test-shared/dist/cooking-info";
 import Entity from "../../Entity";
-import { CookingComponentArray, InventoryComponentArray } from "../../components/ComponentArray";
-import { addItemToInventory, consumeItemTypeFromInventory, getInventory } from "../../components/InventoryComponent";
+import { CookingComponentArray } from "../../components/ComponentArray";
+import { InventoryComponentArray, addItemToInventory, consumeItemTypeFromInventory, getInventory } from "../../components/InventoryComponent";
 
 export interface HeatingRecipe {
    readonly ingredientType: CookingIngredientItemType;

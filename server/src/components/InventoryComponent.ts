@@ -3,19 +3,57 @@ import { ItemTally, CraftingRecipe, CraftingStation } from "webgl-test-shared/di
 import { Inventory, Item, ItemType, itemIsStackable, ITEM_INFO_RECORD, StackableItemInfo, getItemStackSize, InventoryName } from "webgl-test-shared/dist/items";
 import Entity from "../Entity";
 import { createItemEntity, itemEntityCanBePickedUp } from "../entities/item-entity";
-import { InventoryComponentArray, ItemComponentArray } from "./ComponentArray";
+import { ComponentArray } from "./ComponentArray";
 import { createItem } from "../items";
+import Board from "../Board";
+import { ItemComponentArray } from "./ItemComponent";
+
+export interface InventoryOptions {
+   readonly acceptsPickedUpItems: boolean;
+   readonly isDroppedOnDeath: boolean;
+}
 
 export class InventoryComponent {
    /** Stores a record of all inventories associated with the inventory component. */
    public readonly inventoryRecord: Partial<Record<InventoryName, Inventory>> = {};
    /** Stores all inventories associated with the inventory component in the order of when they were added. */
    public readonly inventories = new Array<Inventory>();
+
    public readonly accessibleInventories = new Array<Inventory>();
+   /** Inventories which are dropped on death */
+   public readonly droppableInventories = new Array<Inventory>();
+}
+
+export const InventoryComponentArray = new ComponentArray<InventoryComponent>(true);
+
+const dropInventory = (entity: Entity, inventory: Inventory, dropRange: number): void => {
+   for (let i = 0; i < inventory.items.length; i++) {
+      const item = inventory.items[i];
+
+      const position = entity.position.copy();
+
+      const spawnOffsetMagnitude = dropRange * Math.random();
+      const spawnOffsetDirection = 2 * Math.PI * Math.random();
+      position.x += spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
+      position.y += spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
+      
+      createItemEntity(position, 2 * Math.PI * Math.random(), item.type, item.count, 0);
+   }
+}
+
+function onRemove(entityID: number, inventoryComponent: InventoryComponent): void {
+   const entity = Board.entityRecord[entityID]!;
+   
+   for (let i = 0; i < inventoryComponent.droppableInventories.length; i++) {
+      const inventory = inventoryComponent.droppableInventories[i];
+
+      // @Incomplete: drop range
+      dropInventory(entity, inventory, 38);
+   }
 }
 
 /** Creates and stores a new inventory in the component. */
-export function createNewInventory(inventoryComponent: InventoryComponent, inventoryName: InventoryName, width: number, height: number, acceptsPickedUpItems: boolean): Inventory {
+export function createNewInventory(inventoryComponent: InventoryComponent, inventoryName: InventoryName, width: number, height: number, options: InventoryOptions): Inventory {
    if (typeof inventoryComponent.inventoryRecord[inventoryName] !== "undefined") {
       throw new Error(`Tried to create an inventory when an inventory by the name of '${name}' already exists.`);
    }
@@ -25,8 +63,11 @@ export function createNewInventory(inventoryComponent: InventoryComponent, inven
    inventoryComponent.inventoryRecord[inventoryName] = inventory;
    inventoryComponent.inventories.push(inventory);
 
-   if (acceptsPickedUpItems) {
+   if (options.acceptsPickedUpItems) {
       inventoryComponent.accessibleInventories.push(inventory);
+   }
+   if (options.isDroppedOnDeath) {
+      inventoryComponent.droppableInventories.push(inventory);
    }
 
    return inventory;
@@ -78,10 +119,10 @@ export function getItemTypeSlot(inventory: Inventory, itemType: ItemType): numbe
  * @param itemEntity The dropped item to attempt to pick up
  * @returns Whether some non-zero amount of the item was picked up or not
  */
-export function pickupItemEntity(entity: Entity, itemEntity: Entity): boolean {
-   if (!itemEntityCanBePickedUp(itemEntity, entity.id)) return false;
+export function pickupItemEntity(pickingUpEntityID: number, itemEntity: Entity): boolean {
+   if (!itemEntityCanBePickedUp(itemEntity, pickingUpEntityID)) return false;
    
-   const inventoryComponent = InventoryComponentArray.getComponent(entity.id);
+   const inventoryComponent = InventoryComponentArray.getComponent(pickingUpEntityID);
    const itemComponent = ItemComponentArray.getComponent(itemEntity.id);
 
    for (const inventory of inventoryComponent.accessibleInventories) {
@@ -281,22 +322,6 @@ export function consumeItemFromSlot(inventory: Inventory, itemSlot: number, amou
  */
 export function inventoryIsFull(inventory: Inventory): boolean {
    return inventory.items.length === inventory.width * inventory.height;
-}
-
-export function dropInventory(entity: Entity, inventoryComponent: InventoryComponent, inventoryName: InventoryName, dropRange: number): void {
-   const inventory = getInventory(inventoryComponent, inventoryName);
-   for (let i = 0; i < inventory.items.length; i++) {
-      const item = inventory.items[i];
-
-      const position = entity.position.copy();
-
-      const spawnOffsetMagnitude = dropRange * Math.random();
-      const spawnOffsetDirection = 2 * Math.PI * Math.random();
-      position.x += spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
-      position.y += spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
-      
-      createItemEntity(position, 2 * Math.PI * Math.random(), item.type, item.count, 0);
-   }
 }
 
 export function findInventoryContainingItem(inventoryComponent: InventoryComponent, item: Item): Inventory | null {

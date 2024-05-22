@@ -8,7 +8,7 @@ import { Biome, TileType } from "webgl-test-shared/dist/tiles";
 import { Point, randInt, customTickIntervalHasPassed, randFloat } from "webgl-test-shared/dist/utils";
 import Entity from "../../Entity";
 import RectangularHitbox from "../../hitboxes/RectangularHitbox";
-import { EscapeAIComponentArray, FishComponentArray, HealthComponentArray, InventoryComponentArray, TribeMemberComponentArray, WanderAIComponentArray } from "../../components/ComponentArray";
+import { EscapeAIComponentArray, HealthComponentArray, WanderAIComponentArray } from "../../components/ComponentArray";
 import { HealthComponent, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
 import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
 import { WanderAIComponent } from "../../components/WanderAIComponent";
@@ -16,15 +16,16 @@ import { entityHasReachedPosition, runHerdAI, stopEntity } from "../../ai-shared
 import { shouldWander, getWanderTargetTile, wander } from "../../ai/wander-ai";
 import Tile from "../../Tile";
 import Board, { tileRaytraceMatchesTileTypes } from "../../Board";
-import { FishComponent } from "../../components/FishComponent";
+import { FishComponent, FishComponentArray } from "../../components/FishComponent";
 import { createItemsOverEntity } from "../../entity-shared";
 import { EscapeAIComponent, updateEscapeAIComponent } from "../../components/EscapeAIComponent";
 import { chooseEscapeEntity, registerAttackingEntity, runFromAttackingEntity } from "../../ai/escape-ai";
-import { getInventory, hasInventory } from "../../components/InventoryComponent";
+import { InventoryComponentArray, getInventory, hasInventory } from "../../components/InventoryComponent";
 import { AIHelperComponent, AIHelperComponentArray } from "../../components/AIHelperComponent";
 import { SERVER } from "../../server";
 import { PhysicsComponent, PhysicsComponentArray, applyKnockback } from "../../components/PhysicsComponent";
 import { CollisionVars, entitiesAreColliding } from "../../collision";
+import { TribeMemberComponentArray } from "../../components/TribeMemberComponent";
 
 const TURN_SPEED = Math.PI / 1.5;
 
@@ -118,9 +119,10 @@ const followLeader = (fish: Entity, leader: Entity): void => {
    tribeMemberComponent.fishFollowerIDs.push(fish.id);
 }
 
-const unfollowLeader = (fish: Entity, leader: Entity): void => {
+// @Cleanup: shouldn't be exported
+export function unfollowLeader(fishID: number, leader: Entity): void {
    const tribeMemberComponent = TribeMemberComponentArray.getComponent(leader.id);
-   const idx = tribeMemberComponent.fishFollowerIDs.indexOf(fish.id);
+   const idx = tribeMemberComponent.fishFollowerIDs.indexOf(fishID);
    if (idx !== -1) {
       tribeMemberComponent.fishFollowerIDs.splice(idx, 1);
    }
@@ -171,7 +173,7 @@ export function tickFish(fish: Entity): void {
 
    // If the leader dies or is out of vision range, stop following them
    if (fishComponent.leader !== null && (!Board.entityRecord.hasOwnProperty(fishComponent.leader.id) || !aiHelperComponent.visibleEntities.includes(fishComponent.leader))) {
-      unfollowLeader(fish, fishComponent.leader);
+      unfollowLeader(fish.id, fishComponent.leader);
       fishComponent.leader = null;
    }
 
@@ -328,14 +330,6 @@ export function onFishHurt(fish: Entity, attackingEntity: Entity): void {
 
 export function onFishDeath(fish: Entity): void {
    createItemsOverEntity(fish, ItemType.raw_fish, 1, 40);
-}
-
-export function onFishRemove(fish: Entity): void {
-   // Remove the fish from its leaders' follower array
-   const fishComponent = FishComponentArray.getComponent(fish.id);
-   if (fishComponent.leader !== null) {
-      unfollowLeader(fish, fishComponent.leader);
-   }
 }
 
 export function serialiseFishComponent(fish: Entity): FishComponentData {

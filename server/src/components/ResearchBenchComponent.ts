@@ -5,11 +5,11 @@ import { TechInfo } from "webgl-test-shared/dist/techs";
 import { TribesmanTitle } from "webgl-test-shared/dist/titles";
 import { RESEARCH_ORB_AMOUNTS, RESEARCH_ORB_COMPLETE_TIME, getRandomResearchOrbSize } from "webgl-test-shared/dist/research";
 import Entity from "../Entity";
-import { InventoryUseComponentArray, ResearchBenchComponentArray, TribeComponentArray, TribeMemberComponentArray, TribesmanComponentArray } from "./ComponentArray";
+import { InventoryUseComponentArray, ResearchBenchComponentArray, TribeComponentArray, TribesmanComponentArray } from "./ComponentArray";
 import Board from "../Board";
 import { getInventoryUseInfo } from "./InventoryUseComponent";
 import { TITLE_REWARD_CHANCES } from "../tribesman-title-generation";
-import { awardTitle, hasTitle } from "./TribeMemberComponent";
+import { TribeMemberComponentArray, awardTitle, hasTitle } from "./TribeMemberComponent";
 import { InventoryName } from "webgl-test-shared/dist/items";
 
 const ORB_COMPLETE_TICKS = Math.floor(RESEARCH_ORB_COMPLETE_TIME * Settings.TPS);

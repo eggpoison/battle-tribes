@@ -9,16 +9,16 @@ import { TechInfo, TechID, getTechByID } from "webgl-test-shared/dist/techs";
 import { TRIBE_INFO_RECORD, TribeType } from "webgl-test-shared/dist/tribes";
 import { Point } from "webgl-test-shared/dist/utils";
 import Entity from "../../Entity";
-import { attemptAttack, calculateAttackTarget, calculateBlueprintWorkTarget, calculateRadialAttackTargets, calculateRepairTarget, getAvailableCraftingStations, onTribeMemberHurt, repairBuilding, tickTribeMember, tribeMemberCanPickUpItem, useItem } from "./tribe-member";
+import { attemptAttack, calculateAttackTarget, calculateBlueprintWorkTarget, calculateRadialAttackTargets, calculateRepairTarget, getAvailableCraftingStations, onTribeMemberHurt, repairBuilding, tickTribeMember, useItem } from "./tribe-member";
 import Tribe from "../../Tribe";
-import { BuildingMaterialComponentArray, HealthComponentArray, HutComponentArray, InventoryComponentArray, InventoryUseComponentArray, ItemComponentArray, PlanterBoxComponentArray, PlayerComponentArray, SpikesComponentArray, TribeComponentArray, TribeMemberComponentArray, TunnelComponentArray } from "../../components/ComponentArray";
-import { InventoryComponent, addItemToSlot, recipeCraftingStationIsAvailable, consumeItemFromSlot, consumeItemType, consumeItemTypeFromInventory, countItemType, craftRecipe, createNewInventory, dropInventory, getInventory, inventoryComponentCanAffordRecipe, pickupItemEntity, addItem } from "../../components/InventoryComponent";
+import { BuildingMaterialComponentArray, HealthComponentArray, HutComponentArray, InventoryUseComponentArray, PlanterBoxComponentArray, PlayerComponentArray, SpikesComponentArray, TribeComponentArray, TunnelComponentArray } from "../../components/ComponentArray";
+import { InventoryComponent, addItemToSlot, recipeCraftingStationIsAvailable, consumeItemFromSlot, consumeItemType, consumeItemTypeFromInventory, countItemType, craftRecipe, createNewInventory, getInventory, inventoryComponentCanAffordRecipe, pickupItemEntity, addItem, InventoryComponentArray } from "../../components/InventoryComponent";
 import Board from "../../Board";
 import { HealthComponent } from "../../components/HealthComponent";
 import CircularHitbox from "../../hitboxes/CircularHitbox";
 import { InventoryUseComponent, getInventoryUseInfo, setLimbActions } from "../../components/InventoryUseComponent";
 import { SERVER } from "../../server";
-import { TribeMemberComponent, awardTitle } from "../../components/TribeMemberComponent";
+import { TribeMemberComponent, TribeMemberComponentArray, awardTitle } from "../../components/TribeMemberComponent";
 import { PlayerComponent } from "../../components/PlayerComponent";
 import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
 import { toggleDoor } from "../../components/DoorComponent";
@@ -57,17 +57,6 @@ export function createPlayer(position: Point, tribe: Tribe): Entity {
    const inventoryComponent = new InventoryComponent();
    InventoryComponentArray.addComponent(player.id, inventoryComponent);
 
-   const hotbarInventory = createNewInventory(inventoryComponent, InventoryName.hotbar, Settings.INITIAL_PLAYER_HOTBAR_SIZE, 1, true);
-   inventoryUseComponent.addInventoryUseInfo(hotbarInventory);
-   const offhandInventory = createNewInventory(inventoryComponent, InventoryName.offhand, 1, 1, false);
-   inventoryUseComponent.addInventoryUseInfo(offhandInventory);
-   createNewInventory(inventoryComponent, InventoryName.craftingOutputSlot, 1, 1, false);
-   createNewInventory(inventoryComponent, InventoryName.heldItemSlot, 1, 1, false);
-   createNewInventory(inventoryComponent, InventoryName.armourSlot, 1, 1, false);
-   createNewInventory(inventoryComponent, InventoryName.backpackSlot, 1, 1, false);
-   createNewInventory(inventoryComponent, InventoryName.gloveSlot, 1, 1, false);
-   createNewInventory(inventoryComponent, InventoryName.backpack, 0, 0, false);
-
    // @Temporary
    // addItem(inventoryComponent, createItem(ItemType.gardening_gloves, 1));
    // addItem(inventoryComponent, createItem(ItemType.gathering_gloves, 1));
@@ -97,7 +86,7 @@ export function tickPlayer(player: Entity): void {
 
 export function onPlayerCollision(player: Entity, collidingEntity: Entity): void {
    if (collidingEntity.type === EntityType.itemEntity) {
-      const wasPickedUp = pickupItemEntity(player, collidingEntity);
+      const wasPickedUp = pickupItemEntity(player.id, collidingEntity);
       if (wasPickedUp) {
          SERVER.registerPlayerDroppedItemPickup(player);
       }
@@ -106,25 +95,6 @@ export function onPlayerCollision(player: Entity, collidingEntity: Entity): void
 
 export function onPlayerHurt(player: Entity, attackingEntityID: number): void {
    onTribeMemberHurt(player, attackingEntityID);
-}
-
-export function onPlayerDeath(player: Entity): void {
-   const inventoryComponent = InventoryComponentArray.getComponent(player.id);
-   
-   dropInventory(player, inventoryComponent, InventoryName.hotbar, 38);
-   dropInventory(player, inventoryComponent, InventoryName.armourSlot, 38);
-   dropInventory(player, inventoryComponent, InventoryName.backpackSlot, 38);
-   dropInventory(player, inventoryComponent, InventoryName.offhand, 38);
-}
-
-export function onPlayerJoin(player: Entity): void {
-   const tribeComponent = TribeComponentArray.getComponent(player.id);
-   tribeComponent.tribe.registerNewTribeMember(player);
-}
-
-export function onPlayerRemove(player: Entity): void {
-   const tribeComponent = TribeComponentArray.getComponent(player.id);
-   tribeComponent.tribe.registerTribeMemberDeath(player);
 }
 
 export function processPlayerCraftingPacket(player: Entity, recipeIndex: number): void {

@@ -263,7 +263,7 @@ export function collide(entity: Entity, pushingEntity: Entity, pushedHitboxIdx: 
    switch (entity.type) {
       case EntityType.player: onPlayerCollision(entity, pushingEntity); break;
       case EntityType.tribeWorker:
-      case EntityType.tribeWarrior: onTribesmanCollision(entity, pushingEntity); break;
+      case EntityType.tribeWarrior: onTribesmanCollision(entity.id, pushingEntity); break;
       case EntityType.iceSpikes: onIceSpikesCollision(entity, pushingEntity); break;
       case EntityType.cactus: onCactusCollision(entity, pushingEntity); break;
       case EntityType.zombie: onZombieCollision(entity, pushingEntity); break;

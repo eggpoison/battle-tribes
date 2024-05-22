@@ -1,4 +1,4 @@
-import { PlayerCauseOfDeath, EntityType, EntityTypeString, getEntityTypeFromString } from "webgl-test-shared/dist/entities";
+import { PlayerCauseOfDeath, EntityType, getEntityTypeFromString } from "webgl-test-shared/dist/entities";
 import { ItemType, getItemTypeFromString } from "webgl-test-shared/dist/items";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { Biome } from "webgl-test-shared/dist/tiles";
@@ -10,8 +10,8 @@ import Board from "./Board";
 import Tile from "./Tile";
 import { damageEntity, healEntity } from "./components/HealthComponent";
 import Entity, { NUM_ENTITY_TYPES } from "./Entity";
-import { InventoryComponentArray, TribeComponentArray } from "./components/ComponentArray";
-import { addItem } from "./components/InventoryComponent";
+import { TribeComponentArray } from "./components/ComponentArray";
+import { InventoryComponentArray, addItem } from "./components/InventoryComponent";
 import { createEntity } from "./entity-creation";
 import { createItem } from "./items";
 import { forceBuildPlans } from "./ai-tribe-building/ai-building-plans";

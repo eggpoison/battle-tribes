@@ -12,8 +12,8 @@ import { TribeType } from "webgl-test-shared/dist/tribes";
 import { Point, dotAngles, lerp } from "webgl-test-shared/dist/utils";
 import Entity, { entityIsStructure } from "../../Entity";
 import Board from "../../Board";
-import { BerryBushComponentArray, BuildingMaterialComponentArray, HealthComponentArray, InventoryComponentArray, InventoryUseComponentArray, ItemComponentArray, PlantComponentArray, TreeComponentArray, TribeComponentArray, TribeMemberComponentArray, TribesmanComponentArray } from "../../components/ComponentArray";
-import { consumeItemFromSlot, consumeItemType, countItemType, getInventory, inventoryIsFull, pickupItemEntity, resizeInventory } from "../../components/InventoryComponent";
+import { BerryBushComponentArray, BuildingMaterialComponentArray, HealthComponentArray, InventoryUseComponentArray, PlantComponentArray, TreeComponentArray, TribeComponentArray, TribesmanComponentArray } from "../../components/ComponentArray";
+import { InventoryComponentArray, consumeItemFromSlot, consumeItemType, countItemType, getInventory, inventoryIsFull, pickupItemEntity, resizeInventory } from "../../components/InventoryComponent";
 import { getEntitiesInRange } from "../../ai-shared";
 import { addDefence, damageEntity, healEntity, removeDefence } from "../../components/HealthComponent";
 import { createWorkbench } from "../workbench";
@@ -45,7 +45,7 @@ import Tribe from "../../Tribe";
 import { entityIsResource } from "./tribesman-ai/tribesman-resource-gathering";
 import { adjustTribesmanRelationsAfterGift } from "../../components/TribesmanComponent";
 import { TITLE_REWARD_CHANCES } from "../../tribesman-title-generation";
-import { awardTitle, hasTitle } from "../../components/TribeMemberComponent";
+import { TribeMemberComponentArray, awardTitle, hasTitle } from "../../components/TribeMemberComponent";
 import { createHealingTotem } from "../buildings/healing-totem";
 import { TREE_RADII } from "../resources/tree";
 import { BERRY_BUSH_RADIUS, dropBerry } from "../resources/berry-bush";
@@ -57,6 +57,7 @@ import { createBuildingHitboxes } from "../../buildings";
 import { getHitboxesCollidingEntities } from "../../collision";
 import { plantIsFullyGrown } from "../../components/PlantComponent";
 import { FenceConnectionComponentArray } from "../../components/FenceConnectionComponent";
+import { ItemComponentArray } from "../../components/ItemComponent";
 
 const enum Vars {
    ITEM_THROW_FORCE = 100,
@@ -1215,16 +1216,16 @@ export function onTribeMemberCollision(tribesman: Entity, collidingEntity: Entit
 }
 
 // @Cleanup: not for player. reflect in function name
-export function onTribesmanCollision(tribesman: Entity, collidingEntity: Entity): void {
+export function onTribesmanCollision(tribesmanID: number, collidingEntity: Entity): void {
    if (collidingEntity.type === EntityType.itemEntity) {
       const itemComponent = ItemComponentArray.getComponent(collidingEntity.id);
       // Keep track of it beforehand as the amount variable gets changed when being picked up
       const itemAmount = itemComponent.amount;
 
-      const wasPickedUp = pickupItemEntity(tribesman, collidingEntity);
+      const wasPickedUp = pickupItemEntity(tribesmanID, collidingEntity);
 
-      if (wasPickedUp && itemComponent.throwingEntityID !== 0 && itemComponent.throwingEntityID !== tribesman.id) {
-         adjustTribesmanRelationsAfterGift(tribesman, itemComponent.throwingEntityID, itemComponent.itemType, itemAmount);
+      if (wasPickedUp && itemComponent.throwingEntityID !== 0 && itemComponent.throwingEntityID !== tribesmanID) {
+         adjustTribesmanRelationsAfterGift(tribesmanID, itemComponent.throwingEntityID, itemComponent.itemType, itemAmount);
       }
    }
 }

@@ -4,8 +4,9 @@ import { EntityTypeString } from "webgl-test-shared/dist/entities";
 import { TileType, TILE_MOVE_SPEED_MULTIPLIERS, TILE_FRICTIONS } from "webgl-test-shared/dist/tiles";
 import Entity from "../Entity";
 import { ComponentArray } from "./ComponentArray";
-import { addDirtyPathfindingEntity, entityCanBlockPathfinding } from "../pathfinding";
+import { addDirtyPathfindingEntity, entityCanBlockPathfinding, removeDirtyPathfindingEntity } from "../pathfinding";
 import { Point } from "webgl-test-shared/dist/utils";
+import Board from "../Board";
 
 // @Cleanup: Variable names
 const a = new Array<number>();
@@ -55,7 +56,17 @@ export class PhysicsComponent {
    }
 }
 
-export const PhysicsComponentArray = new ComponentArray<PhysicsComponent>(true);
+export const PhysicsComponentArray = new ComponentArray<PhysicsComponent>(true, undefined, onRemove);
+
+function onRemove(entityID: number): void {
+   const physicsComponent = PhysicsComponentArray.getComponent(entityID);
+   if (physicsComponent.pathfindingNodesAreDirty) {
+      // @Hack
+      const entity = Board.entityRecord[entityID]!;
+      
+      removeDirtyPathfindingEntity(entity);
+   }
+}
 
 const cleanRotation = (entity: Entity): void => {
    // Clamp rotation to [-PI, PI) range

@@ -5,11 +5,10 @@ import { ItemType } from "webgl-test-shared/dist/items";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { Point } from "webgl-test-shared/dist/utils";
 import Entity from "../Entity";
-import { ItemComponentArray } from "../components/ComponentArray";
 import RectangularHitbox from "../hitboxes/RectangularHitbox";
-import { ItemComponent } from "../components/ItemComponent";
+import { ItemComponent, ItemComponentArray } from "../components/ItemComponent";
 import { PhysicsComponent, PhysicsComponentArray } from "../components/PhysicsComponent";
-import { addFleshSword, removeFleshSword } from "../flesh-sword-ai";
+import { addFleshSword } from "../flesh-sword-ai";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityCreationInfo } from "../entity-components";
 
@@ -62,12 +61,4 @@ export function addItemEntityPlayerPickupCooldown(itemEntity: Entity, entityID: 
 export function itemEntityCanBePickedUp(itemEntity: Entity, entityID: number): boolean {
    const itemComponent = ItemComponentArray.getComponent(itemEntity.id);
    return typeof itemComponent.entityPickupCooldowns[entityID] === "undefined";
-}
-
-export function onItemEntityRemove(itemEntity: Entity): void {
-   // Remove flesh sword item entities
-   const itemComponent = ItemComponentArray.getComponent(itemEntity.id);
-   if (itemComponent.itemType === ItemType.flesh_sword) {
-      removeFleshSword(itemEntity);
-   }
 }

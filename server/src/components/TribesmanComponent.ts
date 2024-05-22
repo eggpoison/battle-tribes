@@ -178,8 +178,8 @@ export function serialiseTribesmanComponent(entity: Entity, player: Entity | nul
    };
 }
 
-const adjustTribesmanRelations = (tribesman: Entity, otherTribesmanID: number, adjustment: number): void => {
-   const tribesmanComponent = TribesmanComponentArray.getComponent(tribesman.id);
+const adjustTribesmanRelations = (tribesmanID: number, otherTribesmanID: number, adjustment: number): void => {
+   const tribesmanComponent = TribesmanComponentArray.getComponent(tribesmanID);
    const relations = tribesmanComponent.tribesmanRelations;
 
    if (typeof relations[otherTribesmanID] === "undefined") {
@@ -197,16 +197,14 @@ const adjustTribesmanRelations = (tribesman: Entity, otherTribesmanID: number, a
 
 export function adjustTribeRelations(attackedTribe: Tribe, attackingTribe: Tribe, attackedEntityID: number, attackedAdjustment: number, defaultAdjustment: number): void {
    // @Speed
-   for (let i = 0; i < attackingTribe.tribeMembers.length; i++) {
-      const tribesman = attackingTribe.tribeMembers[i];
+   for (let i = 0; i < attackingTribe.tribesmanIDs.length; i++) {
+      const tribesmanID = attackingTribe.tribesmanIDs[i];
 
-      for (let j = 0; j < attackedTribe.tribeMembers.length; j++) {
-         const attackedTribesman = attackedTribe.tribeMembers[j];
+      for (let j = 0; j < attackedTribe.tribesmanIDs.length; j++) {
+         const attackedTribesmanID = attackedTribe.tribesmanIDs[j];
 
-         if (attackedTribesman.type !== EntityType.player) {
-            const adjustment = attackedTribesman.id === attackedEntityID ? attackedAdjustment : defaultAdjustment;
-            adjustTribesmanRelations(attackedTribesman, tribesman.id, adjustment);
-         }
+         const adjustment = attackedTribesmanID === attackedEntityID ? attackedAdjustment : defaultAdjustment;
+         adjustTribesmanRelations(attackedTribesmanID, tribesmanID, adjustment);
       }
    }
 }
@@ -234,9 +232,9 @@ export function adjustTribesmanRelationsAfterKill(tribesman: Entity, attackingTr
    adjustTribeRelations(tribeComponent.tribe, otherTribeComponent.tribe, tribesman.id, -200, -200);
 }
 
-export function adjustTribesmanRelationsAfterGift(tribesman: Entity, giftingTribesmanID: number, giftItemType: ItemType, giftItemAmount: number): void {
+export function adjustTribesmanRelationsAfterGift(tribesmanID: number, giftingTribesmanID: number, giftItemType: ItemType, giftItemAmount: number): void {
    const adjustment = GIFT_APPRECIATION_WEIGHTS[giftItemType] * giftItemAmount;
-   adjustTribesmanRelations(tribesman, giftingTribesmanID, adjustment);
+   adjustTribesmanRelations(tribesmanID, giftingTribesmanID, adjustment);
 }
 
 export function getTribesmanRelationship(tribesmanID: number, comparingTribesmanID: number): EntityRelationship {

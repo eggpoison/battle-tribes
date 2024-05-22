@@ -5,10 +5,10 @@ import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { Point } from "webgl-test-shared/dist/utils";
 import Entity from "../../Entity";
 import RectangularHitbox from "../../hitboxes/RectangularHitbox";
-import { HealthComponentArray, InventoryComponentArray, CookingComponentArray, TribeComponentArray } from "../../components/ComponentArray";
+import { HealthComponentArray, CookingComponentArray, TribeComponentArray } from "../../components/ComponentArray";
 import { CookingComponent } from "../../components/CookingComponent";
 import { HealthComponent } from "../../components/HealthComponent";
-import { InventoryComponent, createNewInventory } from "../../components/InventoryComponent";
+import { InventoryComponent, InventoryComponentArray, createNewInventory } from "../../components/InventoryComponent";
 import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
 import { tickCookingEntity } from "./cooking-entity";
 import Tribe from "../../Tribe";
@@ -38,9 +38,9 @@ export function createFurnace(position: Point, rotation: number, tribe: Tribe): 
 
    const inventoryComponent = new InventoryComponent();
    InventoryComponentArray.addComponent(furnace.id, inventoryComponent);
-   createNewInventory(inventoryComponent, InventoryName.fuelInventory, 1, 1, false);
-   createNewInventory(inventoryComponent, InventoryName.ingredientInventory, 1, 1, false);
-   createNewInventory(inventoryComponent, InventoryName.outputInventory, 1, 1, false);
+   createNewInventory(inventoryComponent, InventoryName.fuelInventory, 1, 1, { acceptsPickedUpItems: false, isDroppedOnDeath: true });
+   createNewInventory(inventoryComponent, InventoryName.ingredientInventory, 1, 1, { acceptsPickedUpItems: false, isDroppedOnDeath: true });
+   createNewInventory(inventoryComponent, InventoryName.outputInventory, 1, 1, { acceptsPickedUpItems: false, isDroppedOnDeath: true });
 
    CookingComponentArray.addComponent(furnace.id, new CookingComponent());
 

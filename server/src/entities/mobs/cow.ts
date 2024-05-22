@@ -8,7 +8,7 @@ import { Biome, TileInfo, TileType } from "webgl-test-shared/dist/tiles";
 import { Point, randInt } from "webgl-test-shared/dist/utils";
 import Entity from "../../Entity";
 import RectangularHitbox from "../../hitboxes/RectangularHitbox";
-import { BerryBushComponentArray, CowComponentArray, EscapeAIComponentArray, FollowAIComponentArray, HealthComponentArray, InventoryComponentArray, InventoryUseComponentArray, ItemComponentArray, WanderAIComponentArray } from "../../components/ComponentArray";
+import { BerryBushComponentArray, CowComponentArray, EscapeAIComponentArray, FollowAIComponentArray, HealthComponentArray, InventoryUseComponentArray, WanderAIComponentArray } from "../../components/ComponentArray";
 import { HealthComponent, getEntityHealth, healEntity } from "../../components/HealthComponent";
 import { createItemsOverEntity } from "../../entity-shared";
 import { WanderAIComponent } from "../../components/WanderAIComponent";
@@ -25,7 +25,7 @@ import { dropBerry } from "../resources/berry-bush";
 import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
 import { PhysicsComponent, PhysicsComponentArray } from "../../components/PhysicsComponent";
 import { CollisionVars, entitiesAreColliding } from "../../collision";
-import { entityIsTribesman } from "../tribes/tribe-member";
+import { ItemComponentArray } from "../../components/ItemComponent";
 
 const MAX_HEALTH = 10;
 const VISION_RANGE = 256;

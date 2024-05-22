@@ -2,7 +2,8 @@ import { ItemComponentData } from "webgl-test-shared/dist/components";
 import { ItemType } from "webgl-test-shared/dist/items";
 import { Settings } from "webgl-test-shared/dist/settings";
 import Entity from "../Entity";
-import { ItemComponentArray } from "./ComponentArray";
+import { ComponentArray } from "./ComponentArray";
+import { removeFleshSword } from "../flesh-sword-ai";
 
 export class ItemComponent {
    readonly itemType: ItemType;
@@ -18,6 +19,16 @@ export class ItemComponent {
       this.itemType = itemType;
       this.amount = amount;
       this.throwingEntityID = throwingEntityID;
+   }
+}
+
+export const ItemComponentArray = new ComponentArray<ItemComponent>(true, undefined, onRemove);
+
+export function onRemove(entityID: number): void {
+   // Remove flesh sword item entities
+   const itemComponent = ItemComponentArray.getComponent(entityID);
+   if (itemComponent.itemType === ItemType.flesh_sword) {
+      removeFleshSword(entityID);
    }
 }
 

@@ -1,9 +1,10 @@
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { TribeComponentData } from "webgl-test-shared/dist/components";
 import Tribe from "../Tribe";
-import { GolemComponentArray, PlantComponentArray, PlanterBoxComponentArray, TribeComponentArray, TribeMemberComponentArray, TribesmanComponentArray } from "./ComponentArray";
+import { GolemComponentArray, PlantComponentArray, TribeComponentArray, TribesmanComponentArray } from "./ComponentArray";
 import Entity from "../Entity";
 import { getTribesmanRelationship } from "./TribesmanComponent";
+import { TribeMemberComponentArray } from "./TribeMemberComponent";
 
 // /** Relationships a tribe member can have, in increasing order of threat */
 export const enum EntityRelationship {

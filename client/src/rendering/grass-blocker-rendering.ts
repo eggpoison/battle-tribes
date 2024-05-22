@@ -196,17 +196,18 @@ export function createGrassBlockerShaders(): void {
       float blockAmount = col.r;
 
       // Add random noise to the block amount
-      // if (blockAmount > 0.0) {
-      //    float noise = getNoise(pixelateVector(v_position), 4.0);
-      //    // noise = (noise - 0.5) * 2.0;
-      //    blockAmount += noise * 0.3;
-      // }
+      if (blockAmount > 0.0) {
+         float noiseMult = 1.0 - blockAmount * blockAmount;
+         
+         float noise = getNoise(pixelateVector(v_position), 200.0);
+         blockAmount -= noise * 0.4 * noiseMult;
+      }
 
       // Sample the dirt texture
       float dirtTextureU = fract(v_position.x / 64.0);
       float dirtTextureV = fract(v_position.y / 64.0);
       vec4 dirtTexture = texture(u_dirtTexture, vec2(dirtTextureU, dirtTextureV));
-
+      
       outputColour = vec4(dirtTexture.r, dirtTexture.g, dirtTexture.b, blockAmount);
    }
    `;

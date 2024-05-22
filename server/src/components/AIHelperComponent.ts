@@ -25,7 +25,18 @@ export class AIHelperComponent {
    }
 }
 
-export const AIHelperComponentArray = new ComponentArray<AIHelperComponent>(true);
+export const AIHelperComponentArray = new ComponentArray<AIHelperComponent>(true, undefined, onRemove);
+
+function onRemove(entityID: number): void {
+   const aiHelperComponent = AIHelperComponentArray.getComponent(entityID);
+   for (let i = 0; i < aiHelperComponent.visibleChunks.length; i++) {
+      // @Hack
+      const entity = Board.entityRecord[entityID]!;
+      
+      const chunk = aiHelperComponent.visibleChunks[i];
+      chunk.viewingEntities.splice(chunk.viewingEntities.indexOf(entity), 1);
+   }
+}
 
 const hitboxIsVisible = (entity: Entity, hitbox: BaseHitbox, visionRange: number): boolean => {
    if ((hitbox as any).radius !== undefined) {

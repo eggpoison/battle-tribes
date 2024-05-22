@@ -3,7 +3,6 @@ import { HealthComponent } from "./HealthComponent";
 import { ItemComponent } from "./ItemComponent";
 import { TribeComponent } from "./TribeComponent";
 import { TotemBannerComponent } from "./TotemBannerComponent";
-import { InventoryComponent } from "./InventoryComponent";
 import { TreeComponent } from "./TreeComponent";
 import { BerryBushComponent } from "./BerryBushComponent";
 import { InventoryUseComponent } from "./InventoryUseComponent";
@@ -14,7 +13,6 @@ import { WanderAIComponent } from "./WanderAIComponent";
 import { EscapeAIComponent } from "./EscapeAIComponent";
 import { FollowAIComponent } from "./FollowAIComponent";
 import { CactusComponent } from "./CactusComponent";
-import { TribeMemberComponent } from "./TribeMemberComponent";
 import { PlayerComponent } from "./PlayerComponent";
 import { TribesmanComponent } from "./TribesmanComponent";
 import { TombstoneComponent } from "./TombstoneComponent";
@@ -52,6 +50,13 @@ import { FenceGateComponent } from "./FenceGateComponent";
 
 export const ComponentArrays = new Array<ComponentArray>();
 
+export function resetComponents(): void {
+   for (let i = 0; i < ComponentArrays.length; i++) {
+      const componentArray = ComponentArrays[i];
+      componentArray.reset();
+   }
+}
+
 export class ComponentArray<T = {}> {
    private readonly isActiveByDefault: boolean;
    
@@ -75,11 +80,14 @@ export class ComponentArray<T = {}> {
 
    private deactivateBuffer = new Array<number>();
 
+   // @Bug: This function shouldn't create an entity, as that will cause a crash. (Can't add components to the join buffer while iterating it)
    public onJoin: ((entityID: number, component: T) => void) | undefined;
+   public onRemove: ((entityID: number) => void) | undefined;
    
-   constructor(isActiveByDefault: boolean, onJoin?: (entityID: number, component: T) => void) {
+   constructor(isActiveByDefault: boolean, onJoin?: (entityID: number, component: T) => void, onRemove?: (entityID: number) => void) {
       this.isActiveByDefault = isActiveByDefault;
       this.onJoin = onJoin;
+      this.onRemove = onRemove;
 
       // @Cleanup
       ComponentArrays.push(this as unknown as ComponentArray);
@@ -219,9 +227,7 @@ export class ComponentArray<T = {}> {
 }
 
 export const TribeComponentArray = new ComponentArray<TribeComponent>(true);
-export const InventoryComponentArray = new ComponentArray<InventoryComponent>(true);
 export const HealthComponentArray = new ComponentArray<HealthComponent>(true);
-export const ItemComponentArray = new ComponentArray<ItemComponent>(true);
 export const TotemBannerComponentArray = new ComponentArray<TotemBannerComponent>(true);
 export const TreeComponentArray = new ComponentArray<TreeComponent>(true);
 export const BerryBushComponentArray = new ComponentArray<BerryBushComponent>(true);
@@ -233,7 +239,6 @@ export const WanderAIComponentArray = new ComponentArray<WanderAIComponent>(true
 export const EscapeAIComponentArray = new ComponentArray<EscapeAIComponent>(true);
 export const FollowAIComponentArray = new ComponentArray<FollowAIComponent>(true);
 export const CactusComponentArray = new ComponentArray<CactusComponent>(true);
-export const TribeMemberComponentArray = new ComponentArray<TribeMemberComponent>(true);
 export const PlayerComponentArray = new ComponentArray<PlayerComponent>(true);
 export const TribesmanComponentArray = new ComponentArray<TribesmanComponent>(true);
 export const TombstoneComponentArray = new ComponentArray<TombstoneComponent>(true);
@@ -243,7 +248,6 @@ export const SlimeComponentArray = new ComponentArray<SlimeComponent>(true);
 export const ArrowComponentArray = new ComponentArray<ArrowComponent>(true);
 export const YetiComponentArray = new ComponentArray<YetiComponent>(true);
 export const SnowballComponentArray = new ComponentArray<SnowballComponent>(true);
-export const FishComponentArray = new ComponentArray<FishComponent>(true);
 export const FrozenYetiComponentArray = new ComponentArray<FrozenYetiComponent>(true);
 export const RockSpikeProjectileComponentArray = new ComponentArray<RockSpikeProjectileComponent>(true);
 export const CookingComponentArray = new ComponentArray<CookingComponent>(true);

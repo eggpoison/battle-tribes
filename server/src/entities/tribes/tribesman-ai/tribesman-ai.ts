@@ -1,7 +1,7 @@
 import { PlanterBoxPlant, TribesmanAIType } from "webgl-test-shared/dist/components";
 import { CraftingStation, CraftingRecipe, CRAFTING_RECIPES } from "webgl-test-shared/dist/crafting-recipes";
 import { EntityType, EntityTypeString, LimbAction } from "webgl-test-shared/dist/entities";
-import { ITEM_TYPE_RECORD, ITEM_INFO_RECORD, Item, ConsumableItemInfo, Inventory, ItemType, HammerItemInfo, PlaceableItemInfo, ConsumableItemCategory, InventoryName, ItemTypeString } from "webgl-test-shared/dist/items";
+import { ITEM_TYPE_RECORD, ITEM_INFO_RECORD, Item, ConsumableItemInfo, Inventory, ItemType, HammerItemInfo, PlaceableItemInfo, ConsumableItemCategory, InventoryName } from "webgl-test-shared/dist/items";
 import { Settings, PathfindingSettings } from "webgl-test-shared/dist/settings";
 import { TechInfo, getTechByID } from "webgl-test-shared/dist/techs";
 import { TribesmanTitle } from "webgl-test-shared/dist/titles";
@@ -9,11 +9,11 @@ import { TRIBE_INFO_RECORD } from "webgl-test-shared/dist/tribes";
 import { distance, angle, Point, randInt, getAngleDiff } from "webgl-test-shared/dist/utils";
 import Entity from "../../../Entity";
 import { getEntitiesInRange, willStopAtDesiredDistance, getClosestAccessibleEntity, stopEntity, moveEntityToPosition, getDistanceFromPointToEntity } from "../../../ai-shared";
-import { InventoryComponentArray, TribeComponentArray, TribesmanComponentArray, HealthComponentArray, InventoryUseComponentArray, PlayerComponentArray, ItemComponentArray, TribeMemberComponentArray, HutComponentArray, PlanterBoxComponentArray } from "../../../components/ComponentArray";
+import { TribeComponentArray, TribesmanComponentArray, HealthComponentArray, InventoryUseComponentArray, PlayerComponentArray, HutComponentArray, PlanterBoxComponentArray } from "../../../components/ComponentArray";
 import { HealthComponent } from "../../../components/HealthComponent";
-import { getInventory, addItemToInventory, consumeItemFromSlot, craftRecipe, recipeCraftingStationIsAvailable, inventoryComponentCanAffordRecipe, inventoryIsFull, getItemTypeSlot } from "../../../components/InventoryComponent";
+import { getInventory, addItemToInventory, consumeItemFromSlot, craftRecipe, recipeCraftingStationIsAvailable, inventoryComponentCanAffordRecipe, inventoryIsFull, getItemTypeSlot, InventoryComponentArray } from "../../../components/InventoryComponent";
 import { TribesmanPathType, getItemGiftAppreciation, itemThrowIsOnCooldown } from "../../../components/TribesmanComponent";
-import { tickTribeMember, tribeMemberCanPickUpItem, calculateRadialAttackTargets, repairBuilding, calculateRepairTarget, placeBuilding, placeBlueprint, getAvailableCraftingStations, throwItem, VACUUM_RANGE } from "../tribe-member";
+import { tickTribeMember, calculateRadialAttackTargets, repairBuilding, calculateRepairTarget, placeBuilding, placeBlueprint, getAvailableCraftingStations, throwItem, } from "../tribe-member";
 import { TRIBE_WORKER_RADIUS, TRIBE_WORKER_VISION_RANGE } from "../tribe-worker";
 import { getInventoryUseInfo, setLimbActions } from "../../../components/InventoryUseComponent";
 import Board from "../../../Board";
@@ -31,7 +31,7 @@ import { CollisionVars, entitiesAreColliding, getHitboxesCollidingEntities } fro
 import { huntEntity } from "./tribesman-combat-ai";
 import { doorIsClosed, toggleDoor } from "../../../components/DoorComponent";
 import { TITLE_REWARD_CHANCES } from "../../../tribesman-title-generation";
-import { awardTitle, tribeMemberHasTitle } from "../../../components/TribeMemberComponent";
+import { TribeMemberComponentArray, awardTitle, tribeMemberHasTitle } from "../../../components/TribeMemberComponent";
 import { placePlantInPlanterBox } from "../../../components/PlanterBoxComponent";
 
 // @Cleanup: Move all of this to the TribesmanComponent file

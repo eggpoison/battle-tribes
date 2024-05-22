@@ -5,9 +5,9 @@ import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { Point } from "webgl-test-shared/dist/utils";
 import Entity from "../../Entity";
 import CircularHitbox from "../../hitboxes/CircularHitbox";
-import { HealthComponentArray, InventoryComponentArray, TribeComponentArray } from "../../components/ComponentArray";
+import { HealthComponentArray, TribeComponentArray } from "../../components/ComponentArray";
 import { HealthComponent } from "../../components/HealthComponent";
-import { InventoryComponent, createNewInventory } from "../../components/InventoryComponent";
+import { InventoryComponent, InventoryComponentArray, createNewInventory } from "../../components/InventoryComponent";
 import Tribe from "../../Tribe";
 import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
 import { TribeComponent } from "../../components/TribeComponent";
@@ -36,7 +36,7 @@ export function createBarrel(position: Point, rotation: number, tribe: Tribe): E
 
    const inventoryComponent = new InventoryComponent();
    InventoryComponentArray.addComponent(barrel.id, inventoryComponent);
-   createNewInventory(inventoryComponent, InventoryName.inventory, 3, 3, false);
+   createNewInventory(inventoryComponent, InventoryName.inventory, 3, 3, { acceptsPickedUpItems: false, isDroppedOnDeath: true });
 
    return barrel;
 }

@@ -1,7 +1,6 @@
 import { WaterRockData, RiverSteppingStoneData, GrassTileInfo, DecorationInfo, RIVER_STEPPING_STONE_SIZES, ServerTileUpdateData, RiverFlowDirections } from "webgl-test-shared/dist/client-server-types";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
-import { STRUCTURE_TYPES, StructureType } from "webgl-test-shared/dist/structures";
 import { TileType, Biome } from "webgl-test-shared/dist/tiles";
 import { randItem, Point } from "webgl-test-shared/dist/utils";
 import { circlesDoIntersect, circleAndRectangleDoIntersect } from "webgl-test-shared/dist/collision";
@@ -13,17 +12,17 @@ import Tribe from "./Tribe";
 import BaseHitbox from "./hitboxes/BaseHitbox";
 import RectangularHitbox from "./hitboxes/RectangularHitbox";
 import generateTerrain from "./world-generation/terrain-generation";
-import { HealthComponentArray, InventoryUseComponentArray, ItemComponentArray, TribeComponentArray, DoorComponentArray, ResearchBenchComponentArray, TunnelComponentArray, HealingTotemComponentArray, PlantComponentArray, FenceGateComponentArray, ComponentArrays } from "./components/ComponentArray";
+import { HealthComponentArray, InventoryUseComponentArray, TribeComponentArray, DoorComponentArray, ResearchBenchComponentArray, TunnelComponentArray, HealingTotemComponentArray, PlantComponentArray, FenceGateComponentArray, ComponentArrays } from "./components/ComponentArray";
 import { tickInventoryUseComponent } from "./components/InventoryUseComponent";
-import { onPlayerJoin, onPlayerRemove, tickPlayer } from "./entities/tribes/player";
+import { tickPlayer } from "./entities/tribes/player";
 import Entity, { entityIsStructure } from "./Entity";
 import { tickHealthComponent } from "./components/HealthComponent";
 import { tickBerryBush } from "./entities/resources/berry-bush";
 import { tickIceShard } from "./entities/projectiles/ice-shard";
 import { tickCow } from "./entities/mobs/cow";
 import { tickKrumblid } from "./entities/mobs/krumblid";
-import { tickItemComponent } from "./components/ItemComponent";
-import { onTribeWorkerJoin, onTribeWorkerRemove, tickTribeWorker } from "./entities/tribes/tribe-worker";
+import { ItemComponentArray, tickItemComponent } from "./components/ItemComponent";
+import { tickTribeWorker } from "./entities/tribes/tribe-worker";
 import { tickTombstone } from "./entities/tombstone";
 import { tickZombie } from "./entities/mobs/zombie";
 import { tickSlimewisp } from "./entities/mobs/slimewisp";
@@ -31,17 +30,17 @@ import { tickSlime } from "./entities/mobs/slime";
 import { tickArrowProjectile } from "./entities/projectiles/wooden-arrow";
 import { tickYeti } from "./entities/mobs/yeti";
 import { tickSnowball } from "./entities/snowball";
-import { onFishRemove, tickFish } from "./entities/mobs/fish";
+import { tickFish } from "./entities/mobs/fish";
 import { tickStatusEffectComponents } from "./components/StatusEffectComponent";
 import { tickIceSpikes } from "./entities/resources/ice-spikes";
-import { onItemEntityRemove, tickItemEntity } from "./entities/item-entity";
+import { tickItemEntity } from "./entities/item-entity";
 import { tickFrozenYeti } from "./entities/mobs/frozen-yeti";
 import { tickRockSpikeProjectile } from "./entities/projectiles/rock-spike";
 import { AIHelperComponentArray, tickAIHelperComponent } from "./components/AIHelperComponent";
 import {  tickCampfire } from "./entities/cooking-entities/campfire";
 import {  tickFurnace } from "./entities/cooking-entities/furnace";
 import { tickSpearProjectile } from "./entities/projectiles/spear-projectile";
-import { onTribeWarriorJoin, onTribeWarriorRemove, tickTribeWarrior } from "./entities/tribes/tribe-warrior";
+import { tickTribeWarrior } from "./entities/tribes/tribe-warrior";
 import { tickSlimeSpit } from "./entities/projectiles/slime-spit";
 import { tickSpitPoison } from "./entities/projectiles/spit-poison";
 import { tickDoorComponent } from "./components/DoorComponent";
@@ -277,47 +276,15 @@ abstract class Board {
             throw new Error("Tried to remove a game object which doesn't exist or was already removed.");
          }
    
-         this.entities.splice(idx, 1);
-
          const entityID = entity.id;
-   
-         for (let i = 0; i < entity.chunks.length; i++) {
-            const chunk = entity.chunks[i];
-            entity.removeFromChunk(chunk);
-         }
-
-         if (AIHelperComponentArray.hasComponent(entityID)) {
-            const aiHelperComponent = AIHelperComponentArray.getComponent(entityID);
-            for (let i = 0; i < aiHelperComponent.visibleChunks.length; i++) {
-               const chunk = aiHelperComponent.visibleChunks[i];
-               chunk.viewingEntities.splice(chunk.viewingEntities.indexOf(entity), 1);
-            }
-         }
-
-         if (PhysicsComponentArray.hasComponent(entityID)) {
-            const physicsComponent = PhysicsComponentArray.getComponent(entityID);
-            if (physicsComponent.pathfindingNodesAreDirty) {
-               removeDirtyPathfindingEntity(entity);
-            }
-         }
 
          if (entityIsStructure(entity)) {
             const tribeComponent = TribeComponentArray.getComponent(entity.id);
             tribeComponent.tribe.removeBuilding(entity);
          }
 
-         delete this.entityRecord[entityID];
-         removeEntityFromCensus(entity);
-
-         clearEntityPathfindingNodes(entity);
-
          switch (entity.type) {
-            case EntityType.fish: onFishRemove(entity); break;
-            case EntityType.player: onPlayerRemove(entity); break;
-            case EntityType.tribeWorker: onTribeWorkerRemove(entity); break;
-            case EntityType.tribeWarrior: onTribeWarriorRemove(entity); break;
             case EntityType.fence: onFenceRemove(entity); break;
-            case EntityType.itemEntity: onItemEntityRemove(entity); break;
             case EntityType.battleaxeProjectile: onBattleaxeProjectileRemove(entity); break;
             case EntityType.blueprintEntity: onBlueprintEntityRemove(entity); break;
             case EntityType.planterBox: onPlanterBoxRemove(entity); break;
@@ -328,8 +295,26 @@ abstract class Board {
          for (let i = 0; i < ComponentArrays.length; i++) {
             const componentArray = ComponentArrays[i];
             if (componentArray.hasComponent(entityID)) {
+               if (typeof componentArray.onRemove !== "undefined") {
+                  componentArray.onRemove(entityID);
+               }
+               
                componentArray.removeComponent(entityID);
             }
+         }
+
+         this.entities.splice(idx, 1);
+
+         delete this.entityRecord[entityID];
+         removeEntityFromCensus(entity);
+
+         if (entityCanBlockPathfinding(entity.type)) {
+            clearEntityPathfindingNodes(entity);
+         }
+   
+         for (let i = 0; i < entity.chunks.length; i++) {
+            const chunk = entity.chunks[i];
+            entity.removeFromChunk(chunk);
          }
       }
 
@@ -586,12 +571,8 @@ abstract class Board {
          this.entities.push(entity);
          this.entityRecord[entity.id] = entity;
 
-         // NOTE: These functions should never create an entity, as that will cause a crash. (Can't add components to the join buffer while iterating it)
          switch (entity.type) {
             case EntityType.blueprintEntity: onBlueprintEntityJoin(entity); break;
-            case EntityType.tribeWorker: onTribeWorkerJoin(entity); break;
-            case EntityType.tribeWarrior: onTribeWarriorJoin(entity); break;
-            case EntityType.player: onPlayerJoin(entity); break;
          }
       }
 

@@ -1,7 +1,8 @@
 import { PlanterBoxPlant, PlantComponentData } from "webgl-test-shared/dist/components";
 import { Settings } from "webgl-test-shared/dist/settings";
 import Entity from "../Entity";
-import { PlantComponentArray } from "./ComponentArray";
+import { ComponentArray } from "./ComponentArray";
+import { PlanterBoxComponentArray } from "./PlanterBoxComponent";
 
 export const PLANT_GROWTH_TICKS: Record<PlanterBoxPlant, number> = {
    // @Temporary
@@ -26,6 +27,19 @@ export class PlantComponent {
    constructor(planterBoxID: number, plant: PlanterBoxPlant) {
       this.planterBoxID = planterBoxID;
       this.plantType = plant;
+   }
+}
+
+export const PlantComponentArray = new ComponentArray<PlantComponent>(true, undefined, onPlantRemove);
+
+export function onPlantRemove(entityID: number): void {
+   // Register in the planter box that the plant has been removed
+   const plantComponent = PlantComponentArray.getComponent(entityID);
+
+   const planterBoxID = plantComponent.planterBoxID;
+   if (PlanterBoxComponentArray.hasComponent(planterBoxID)) {
+      const planterBoxComponent = PlanterBoxComponentArray.getComponent(planterBoxID);
+      planterBoxComponent.plantEntityID = 0;
    }
 }
 

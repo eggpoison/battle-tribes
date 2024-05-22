@@ -14,6 +14,7 @@ import RectangularHitbox from "../../hitboxes/RectangularHitbox";
 import { TunnelComponent } from "../../components/TunnelComponent";
 import { BuildingMaterialComponent } from "../../components/BuildingMaterialComponent";
 import CircularHitbox from "../../hitboxes/CircularHitbox";
+import { StructureComponentArray, StructureComponent, StructureInfo } from "../../components/StructureComponent";
 
 const HITBOX_WIDTH = 8 - 0.05;
 const HITBOX_HEIGHT = 64 - 0.05;
@@ -39,7 +40,7 @@ export function createTunnelHitboxes(parentPosition: Point, localID: number, par
    return hitboxes;
 }
 
-export function createTunnel(position: Point, rotation: number, tribe: Tribe, material: BuildingMaterial): Entity {
+export function createTunnel(position: Point, rotation: number, tribe: Tribe, structureInfo: StructureInfo, material: BuildingMaterial): Entity {
    const tunnel = new Entity(position, rotation, EntityType.tunnel, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
    const hitboxes = createTunnelHitboxes(position, tunnel.getNextHitboxLocalID(), tunnel.rotation);
@@ -49,6 +50,7 @@ export function createTunnel(position: Point, rotation: number, tribe: Tribe, ma
    
    HealthComponentArray.addComponent(tunnel.id, new HealthComponent(TUNNEL_HEALTHS[material]));
    StatusEffectComponentArray.addComponent(tunnel.id, new StatusEffectComponent(StatusEffect.bleeding));
+   StructureComponentArray.addComponent(tunnel.id, new StructureComponent(structureInfo));
    TribeComponentArray.addComponent(tunnel.id, new TribeComponent(tribe));
    TunnelComponentArray.addComponent(tunnel.id, new TunnelComponent());
    BuildingMaterialComponentArray.addComponent(tunnel.id, new BuildingMaterialComponent(material));

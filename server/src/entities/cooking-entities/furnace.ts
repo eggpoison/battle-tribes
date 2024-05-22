@@ -15,6 +15,7 @@ import Tribe from "../../Tribe";
 import { TribeComponent } from "../../components/TribeComponent";
 import CircularHitbox from "../../hitboxes/CircularHitbox";
 import { InventoryName } from "webgl-test-shared/dist/items";
+import { StructureComponent, StructureComponentArray, StructureInfo } from "../../components/StructureComponent";
 
 const HITBOX_SIZE = 80;
 
@@ -24,7 +25,7 @@ export function createFurnaceHitboxes(parentPosition: Point, localID: number, pa
    return hitboxes;
 }
 
-export function createFurnace(position: Point, rotation: number, tribe: Tribe): Entity {
+export function createFurnace(position: Point, rotation: number, tribe: Tribe, structureInfo: StructureInfo): Entity {
    const furnace = new Entity(position, rotation, EntityType.furnace, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
    const hitboxes = createFurnaceHitboxes(position, furnace.getNextHitboxLocalID(), rotation);
@@ -35,6 +36,7 @@ export function createFurnace(position: Point, rotation: number, tribe: Tribe): 
    HealthComponentArray.addComponent(furnace.id, new HealthComponent(25));
    StatusEffectComponentArray.addComponent(furnace.id, new StatusEffectComponent(StatusEffect.poisoned));
    TribeComponentArray.addComponent(furnace.id, new TribeComponent(tribe));
+   StructureComponentArray.addComponent(furnace.id, new StructureComponent(structureInfo));
 
    const inventoryComponent = new InventoryComponent();
    InventoryComponentArray.addComponent(furnace.id, inventoryComponent);

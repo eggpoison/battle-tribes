@@ -9,7 +9,7 @@ import { TRIBE_INFO_RECORD } from "webgl-test-shared/dist/tribes";
 import { distance, angle, Point, randInt, getAngleDiff } from "webgl-test-shared/dist/utils";
 import Entity from "../../../Entity";
 import { getEntitiesInRange, willStopAtDesiredDistance, getClosestAccessibleEntity, stopEntity, moveEntityToPosition, getDistanceFromPointToEntity } from "../../../ai-shared";
-import { TribeComponentArray, TribesmanComponentArray, HealthComponentArray, InventoryUseComponentArray, PlayerComponentArray, HutComponentArray, PlanterBoxComponentArray } from "../../../components/ComponentArray";
+import { TribeComponentArray, TribesmanComponentArray, HealthComponentArray, InventoryUseComponentArray, PlayerComponentArray, HutComponentArray } from "../../../components/ComponentArray";
 import { HealthComponent } from "../../../components/HealthComponent";
 import { getInventory, addItemToInventory, consumeItemFromSlot, craftRecipe, recipeCraftingStationIsAvailable, inventoryComponentCanAffordRecipe, inventoryIsFull, getItemTypeSlot, InventoryComponentArray } from "../../../components/InventoryComponent";
 import { TribesmanPathType, getItemGiftAppreciation, itemThrowIsOnCooldown } from "../../../components/TribesmanComponent";
@@ -32,7 +32,7 @@ import { huntEntity } from "./tribesman-combat-ai";
 import { doorIsClosed, toggleDoor } from "../../../components/DoorComponent";
 import { TITLE_REWARD_CHANCES } from "../../../tribesman-title-generation";
 import { TribeMemberComponentArray, awardTitle, tribeMemberHasTitle } from "../../../components/TribeMemberComponent";
-import { placePlantInPlanterBox } from "../../../components/PlanterBoxComponent";
+import { PlanterBoxComponentArray, placePlantInPlanterBox } from "../../../components/PlanterBoxComponent";
 
 // @Cleanup: Move all of this to the TribesmanComponent file
 

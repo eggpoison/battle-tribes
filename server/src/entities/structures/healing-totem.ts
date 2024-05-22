@@ -12,6 +12,7 @@ import { TribeComponent } from "../../components/TribeComponent";
 import CircularHitbox from "../../hitboxes/CircularHitbox";
 import RectangularHitbox from "../../hitboxes/RectangularHitbox";
 import { HealingTotemComponent } from "../../components/HealingTotemComponent";
+import { StructureComponentArray, StructureComponent, StructureInfo } from "../../components/StructureComponent";
 
 const SIZE = 96 - 0.05;
 
@@ -21,7 +22,7 @@ export function createHealingTotemHitboxes(parentPosition: Point, localID: numbe
    return hitboxes;
 }
 
-export function createHealingTotem(position: Point, rotation: number, tribe: Tribe): Entity {
+export function createHealingTotem(position: Point, rotation: number, tribe: Tribe, structureInfo: StructureInfo): Entity {
    const healingTotem = new Entity(position, rotation, EntityType.healingTotem, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
    const hitboxes = createHealingTotemHitboxes(position, healingTotem.getNextHitboxLocalID(), healingTotem.rotation);
@@ -31,6 +32,7 @@ export function createHealingTotem(position: Point, rotation: number, tribe: Tri
 
    HealthComponentArray.addComponent(healingTotem.id, new HealthComponent(50));
    StatusEffectComponentArray.addComponent(healingTotem.id, new StatusEffectComponent(StatusEffect.bleeding));
+   StructureComponentArray.addComponent(healingTotem.id, new StructureComponent(structureInfo));
    TribeComponentArray.addComponent(healingTotem.id, new TribeComponent(tribe));
    HealingTotemComponentArray.addComponent(healingTotem.id, new HealingTotemComponent());
    

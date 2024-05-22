@@ -12,8 +12,7 @@ import { TribeComponent } from "../../components/TribeComponent";
 import RectangularHitbox from "../../hitboxes/RectangularHitbox";
 import CircularHitbox from "../../hitboxes/CircularHitbox";
 import { FenceComponent } from "../../components/FenceComponent";
-import { ConnectedEntityIDs } from "../tribes/tribe-member";
-import { FenceConnectionComponent, FenceConnectionComponentArray, removeFenceConnection } from "../../components/FenceConnectionComponent";
+import { StructureComponent, StructureComponentArray, StructureInfo } from "../../components/StructureComponent";
 
 const NODE_HITBOX_WIDTH = 20 - 0.05;
 const NODE_HITBOX_HEIGHT = 20 - 0.05;
@@ -24,7 +23,7 @@ export function createFenceHitboxes(parentPosition: Point, localID: number, pare
    return hitboxes;
 }
 
-export function createFence(position: Point, rotation: number, tribe: Tribe, connectedSidesBitset: number, connectedEntityIDs: ConnectedEntityIDs): Entity {
+export function createFence(position: Point, rotation: number, tribe: Tribe, structureInfo: StructureInfo): Entity {
    const fence = new Entity(position, rotation, EntityType.fence, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
    const hitboxes = createFenceHitboxes(position, fence.getNextHitboxLocalID(), rotation);
@@ -34,31 +33,9 @@ export function createFence(position: Point, rotation: number, tribe: Tribe, con
 
    HealthComponentArray.addComponent(fence.id, new HealthComponent(5));
    StatusEffectComponentArray.addComponent(fence.id, new StatusEffectComponent(StatusEffect.poisoned));
+   StructureComponentArray.addComponent(fence.id, new StructureComponent(structureInfo));
    TribeComponentArray.addComponent(fence.id, new TribeComponent(tribe));
-   FenceConnectionComponentArray.addComponent(fence.id, new FenceConnectionComponent(connectedSidesBitset, connectedEntityIDs));
    FenceComponentArray.addComponent(fence.id, new FenceComponent());
    
    return fence;
-}
-
-const removeConnection = (fenceID: number, removedEntityID: number): void => {
-   const fenceConnectionComponent = FenceConnectionComponentArray.getComponent(fenceID);
-   
-   for (let i = 0; i < 4; i++) {
-      const entityID = fenceConnectionComponent.connectedEntityIDs[i];
-      if (entityID === removedEntityID) {
-         removeFenceConnection(fenceConnectionComponent, i);
-         break;
-      }
-   }
-}
-
-export function onFenceRemove(fence: Entity): void {
-   const fenceConnectionComponent = FenceConnectionComponentArray.getComponent(fence.id);
-   for (let i = 0; i < 4; i++) {
-      const entityID = fenceConnectionComponent.connectedEntityIDs[i];
-      if (FenceConnectionComponentArray.hasComponent(entityID)) {
-         removeConnection(entityID, fence.id);
-      }
-   }
 }

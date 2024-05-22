@@ -1,13 +1,13 @@
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { InventoryName, ItemType } from "webgl-test-shared/dist/items";
 import Entity from "../../../Entity";
-import { HealthComponentArray, PlantComponentArray, TribeComponentArray } from "../../../components/ComponentArray";
+import { HealthComponentArray, TribeComponentArray } from "../../../components/ComponentArray";
 import { positionIsSafeForTribesman, tribesmanShouldEscape } from "./tribesman-ai";
 import { HealthComponent } from "../../../components/HealthComponent";
 import { tribeMemberCanPickUpItem } from "../tribe-member";
 import { InventoryComponentArray, getInventory, inventoryIsFull } from "../../../components/InventoryComponent";
 import { PlanterBoxPlant } from "webgl-test-shared/dist/components";
-import { plantIsFullyGrown } from "../../../components/PlantComponent";
+import { PlantComponentArray, plantIsFullyGrown } from "../../../components/PlantComponent";
 
 const getResourceProducts = (entity: Entity): ReadonlyArray<ItemType> | null => {
    switch (entity.type) {

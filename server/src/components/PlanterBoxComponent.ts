@@ -1,14 +1,28 @@
 import { PlanterBoxComponentData, PlanterBoxPlant } from "webgl-test-shared/dist/components";
-import { PlantComponentArray, PlanterBoxComponentArray } from "./ComponentArray";
+import { ComponentArray } from "./ComponentArray";
 import Entity from "../Entity";
 import { createPlant } from "../entities/plant";
 import Board from "../Board";
+import { PlantComponentArray } from "./PlantComponent";
 
 export class PlanterBoxComponent {
    public plantEntityID = 0;
 
    /** Plant type that AI tribesman will attempt to place in the planter box */
    public replantType: PlanterBoxPlant | null = null;
+}
+
+export const PlanterBoxComponentArray = new ComponentArray<PlanterBoxComponent>(true, undefined, onRemove);
+
+function onRemove(entityID: number): void {
+   // When a planter box is destroyed, destroy the plant that was in it
+   
+   const planterBoxComponent = PlanterBoxComponentArray.getComponent(entityID);
+
+   const plant = Board.entityRecord[planterBoxComponent.plantEntityID];
+   if (typeof plant !== "undefined") {
+      plant.destroy();
+   }
 }
 
 export function serialisePlanterBoxComponent(entityID: number): PlanterBoxComponentData {

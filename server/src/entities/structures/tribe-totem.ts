@@ -12,6 +12,7 @@ import { StatusEffectComponent, StatusEffectComponentArray } from "../../compone
 import Tribe from "../../Tribe";
 import { TribeComponent } from "../../components/TribeComponent";
 import RectangularHitbox from "../../hitboxes/RectangularHitbox";
+import { StructureComponent, StructureComponentArray, StructureInfo } from "../../components/StructureComponent";
 
 const HITBOX_SIZE = 120;
 
@@ -35,7 +36,7 @@ export function createTribeTotemHitboxes(parentPosition: Point, localID: number,
    return hitboxes;
 }
 
-export function createTribeTotem(position: Point, rotation: number, tribe: Tribe): Entity {
+export function createTribeTotem(position: Point, rotation: number, tribe: Tribe, structureInfo: StructureInfo): Entity {
    const totem = new Entity(position, rotation, EntityType.tribeTotem, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
    
    const hitboxes = createTribeTotemHitboxes(position, totem.getNextHitboxLocalID(), totem.rotation);
@@ -45,6 +46,7 @@ export function createTribeTotem(position: Point, rotation: number, tribe: Tribe
 
    HealthComponentArray.addComponent(totem.id, new HealthComponent(50));
    StatusEffectComponentArray.addComponent(totem.id, new StatusEffectComponent(StatusEffect.poisoned));
+   StructureComponentArray.addComponent(totem.id, new StructureComponent(structureInfo));
    TribeComponentArray.addComponent(totem.id, new TribeComponent(tribe));
    TotemBannerComponentArray.addComponent(totem.id, {
       banners: {},

@@ -1,20 +1,21 @@
 import { BlueprintType, BuildingMaterial, BlueprintComponentData } from "webgl-test-shared/dist/components";
 import { EntityType, EntityTypeString } from "webgl-test-shared/dist/entities";
 import { Item, ITEM_INFO_RECORD, HammerItemInfo } from "webgl-test-shared/dist/items";
-import { assertUnreachable } from "webgl-test-shared/dist/utils";
 import Entity from "../Entity";
-import { BlueprintComponentArray, BuildingMaterialComponentArray, HealthComponentArray, HutComponentArray, TribeComponentArray } from "./ComponentArray";
-import { DOOR_HEALTHS, createDoor } from "../entities/buildings/door";
-import { EMBRASURE_HEALTHS, createEmbrasure } from "../entities/buildings/embrasure";
-import { createBallista } from "../entities/buildings/ballista";
-import { createSlingTurret } from "../entities/buildings/sling-turret";
-import { TUNNEL_HEALTHS, createTunnel } from "../entities/buildings/tunnel";
+import { BuildingMaterialComponentArray, ComponentArray, HealthComponentArray, HutComponentArray, TribeComponentArray } from "./ComponentArray";
+import { DOOR_HEALTHS, createDoor } from "../entities/structures/door";
+import { EMBRASURE_HEALTHS, createEmbrasure } from "../entities/structures/embrasure";
+import { createBallista } from "../entities/structures/ballista";
+import { createSlingTurret } from "../entities/structures/sling-turret";
+import { TUNNEL_HEALTHS, createTunnel } from "../entities/structures/tunnel";
 import Board from "../Board";
-import { WALL_HEALTHS } from "../entities/buildings/wall";
-import { SPIKE_HEALTHS } from "../entities/buildings/spikes";
-import { createWarriorHut } from "../entities/tribes/warrior-hut";
-import { createFenceGate } from "../entities/buildings/fence-gate";
-import { FenceConnectionComponentArray, addFenceConnection } from "./FenceConnectionComponent";
+import { WALL_HEALTHS } from "../entities/structures/wall";
+import { SPIKE_HEALTHS } from "../entities/structures/spikes";
+import { createWarriorHut } from "../entities/structures/warrior-hut";
+import { createFenceGate } from "../entities/structures/fence-gate";
+import { placeVirtualBuilding } from "../ai-tribe-building/ai-building";
+import { getBlueprintEntityType } from "../entities/blueprint-entity";
+import { StructureComponentArray } from "./StructureComponent";
 
 const STRUCTURE_WORK_REQUIRED: Record<BlueprintType, number> = {
    [BlueprintType.woodenDoor]: 3,
@@ -46,6 +47,31 @@ export class BlueprintComponent {
       this.associatedEntityID = associatedEntityID;
       this.virtualEntityID = virtualEntityID;
    }
+}
+
+export const BlueprintComponentArray = new ComponentArray<BlueprintComponent>(true, onJoin, onRemove);
+
+function onJoin(entityID: number): void {
+   const tribeComponent = TribeComponentArray.getComponent(entityID);
+   const blueprintComponent = BlueprintComponentArray.getComponent(entityID);
+
+   // @Hack
+   const blueprintEntity = Board.entityRecord[entityID]!;
+   
+   const entityType = getBlueprintEntityType(blueprintComponent.blueprintType);
+   placeVirtualBuilding(tribeComponent.tribe, blueprintEntity.position, blueprintEntity.rotation, entityType, blueprintComponent.virtualEntityID);
+   tribeComponent.tribe.buildingsAreDirty = true;
+
+   if (StructureComponentArray.hasComponent(blueprintComponent.associatedEntityID)) {
+      const structureComponent = StructureComponentArray.getComponent(blueprintComponent.associatedEntityID);
+      structureComponent.activeBlueprintID = entityID;
+   }
+}
+
+function onRemove(entityID: number): void {
+   const tribeComponent = TribeComponentArray.getComponent(entityID);
+   const blueprintComponent = BlueprintComponentArray.getComponent(entityID);
+   tribeComponent.tribe.removeVirtualBuilding(blueprintComponent.virtualEntityID);
 }
 
 const upgradeBuilding = (building: Entity): void => {
@@ -126,9 +152,9 @@ const completeBlueprint = (blueprintEntity: Entity, blueprintComponent: Blueprin
          return;
       }
       case BlueprintType.fenceGate: {
-         const previousFenceConnectionComponent = FenceConnectionComponentArray.getComponent(blueprintComponent.associatedEntityID);
+         const previousStructureComponent = StructureComponentArray.getComponent(blueprintComponent.associatedEntityID);
          
-         createFenceGate(blueprintEntity.position.copy(), blueprintEntity.rotation, tribeComponent.tribe, previousFenceConnectionComponent.connectedSidesBitset, previousFenceConnectionComponent.connectedEntityIDs);
+         createFenceGate(blueprintEntity.position.copy(), blueprintEntity.rotation, tribeComponent.tribe, previousStructureComponent.connectedSidesBitset, previousStructureComponent.connectedEntityIDs);
          
          const fence = Board.entityRecord[blueprintComponent.associatedEntityID]!;
          fence.destroy();

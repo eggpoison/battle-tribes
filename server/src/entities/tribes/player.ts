@@ -4,14 +4,13 @@ import { PlanterBoxPlant, BuildingMaterial, MATERIAL_TO_ITEM_MAP } from "webgl-t
 import { CRAFTING_RECIPES, ItemRequirements } from "webgl-test-shared/dist/crafting-recipes";
 import { EntityType, EntityTypeString, LimbAction } from "webgl-test-shared/dist/entities";
 import { ItemType, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, ConsumableItemInfo, ConsumableItemCategory, BowItemInfo, InventoryName } from "webgl-test-shared/dist/items";
-import { Settings } from "webgl-test-shared/dist/settings";
 import { TechInfo, TechID, getTechByID } from "webgl-test-shared/dist/techs";
 import { TRIBE_INFO_RECORD, TribeType } from "webgl-test-shared/dist/tribes";
 import { Point } from "webgl-test-shared/dist/utils";
 import Entity from "../../Entity";
 import { attemptAttack, calculateAttackTarget, calculateBlueprintWorkTarget, calculateRadialAttackTargets, calculateRepairTarget, getAvailableCraftingStations, onTribeMemberHurt, repairBuilding, tickTribeMember, useItem } from "./tribe-member";
 import Tribe from "../../Tribe";
-import { BuildingMaterialComponentArray, HealthComponentArray, HutComponentArray, InventoryUseComponentArray, PlanterBoxComponentArray, PlayerComponentArray, SpikesComponentArray, TribeComponentArray, TunnelComponentArray } from "../../components/ComponentArray";
+import { BuildingMaterialComponentArray, HealthComponentArray, HutComponentArray, InventoryUseComponentArray, PlayerComponentArray, SpikesComponentArray, TribeComponentArray, TunnelComponentArray } from "../../components/ComponentArray";
 import { InventoryComponent, addItemToSlot, recipeCraftingStationIsAvailable, consumeItemFromSlot, consumeItemType, consumeItemTypeFromInventory, countItemType, craftRecipe, createNewInventory, getInventory, inventoryComponentCanAffordRecipe, pickupItemEntity, addItem, InventoryComponentArray } from "../../components/InventoryComponent";
 import Board from "../../Board";
 import { HealthComponent } from "../../components/HealthComponent";
@@ -27,7 +26,7 @@ import { EntityRelationship, TribeComponent } from "../../components/TribeCompon
 import { deoccupyResearchBench, attemptToOccupyResearchBench } from "../../components/ResearchBenchComponent";
 import { createItemsOverEntity } from "../../entity-shared";
 import { toggleTunnelDoor, updateTunnelDoorBitset } from "../../components/TunnelComponent";
-import { placePlantInPlanterBox } from "../../components/PlanterBoxComponent";
+import { PlanterBoxComponentArray, placePlantInPlanterBox } from "../../components/PlanterBoxComponent";
 import { createItem } from "../../items";
 import { toggleFenceGateDoor } from "../../components/FenceGateComponent";
 import { TribesmanTitle } from "webgl-test-shared/dist/titles";

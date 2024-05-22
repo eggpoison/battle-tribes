@@ -13,6 +13,7 @@ import { StatusEffectComponent, StatusEffectComponentArray } from "../../compone
 import { TribeComponent } from "../../components/TribeComponent";
 import RectangularHitbox from "../../hitboxes/RectangularHitbox";
 import { InventoryName } from "webgl-test-shared/dist/items";
+import { StructureComponent, StructureComponentArray, StructureInfo } from "../../components/StructureComponent";
 
 const HITBOX_SIZE = 80 - 0.05;
 
@@ -22,7 +23,7 @@ export function createBarrelHitboxes(parentPosition: Point, localID: number, par
    return hitboxes;
 }
 
-export function createBarrel(position: Point, rotation: number, tribe: Tribe): Entity {
+export function createBarrel(position: Point, rotation: number, tribe: Tribe, structureInfo: StructureInfo): Entity {
    const barrel = new Entity(position, rotation, EntityType.barrel, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
    const hitboxes = createBarrelHitboxes(position, barrel.getNextHitboxLocalID(), barrel.rotation);
@@ -33,6 +34,7 @@ export function createBarrel(position: Point, rotation: number, tribe: Tribe): E
    HealthComponentArray.addComponent(barrel.id, new HealthComponent(20));
    StatusEffectComponentArray.addComponent(barrel.id, new StatusEffectComponent(StatusEffect.poisoned));
    TribeComponentArray.addComponent(barrel.id, new TribeComponent(tribe));
+   StructureComponentArray.addComponent(barrel.id, new StructureComponent(structureInfo));
 
    const inventoryComponent = new InventoryComponent();
    InventoryComponentArray.addComponent(barrel.id, inventoryComponent);

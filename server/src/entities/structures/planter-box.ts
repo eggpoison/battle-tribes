@@ -4,15 +4,15 @@ import { EntityType } from "webgl-test-shared/dist/entities";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { Point } from "webgl-test-shared/dist/utils";
 import Entity from "../../Entity";
-import { HealthComponentArray, PlanterBoxComponentArray, TribeComponentArray } from "../../components/ComponentArray";
+import { HealthComponentArray, TribeComponentArray } from "../../components/ComponentArray";
 import { HealthComponent } from "../../components/HealthComponent";
 import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
 import RectangularHitbox from "../../hitboxes/RectangularHitbox";
 import Tribe from "../../Tribe";
 import { TribeComponent } from "../../components/TribeComponent";
-import { PlanterBoxComponent } from "../../components/PlanterBoxComponent";
+import { PlanterBoxComponent, PlanterBoxComponentArray } from "../../components/PlanterBoxComponent";
 import CircularHitbox from "../../hitboxes/CircularHitbox";
-import Board from "../../Board";
+import { StructureComponent, StructureComponentArray, StructureInfo } from "../../components/StructureComponent";
 
 const HITBOX_SIZE = 80 - 0.05;
 
@@ -22,7 +22,7 @@ export function createPlanterBoxHitboxes(parentPosition: Point, localID: number,
    return hitboxes;
 }
 
-export function createPlanterBox(position: Point, rotation: number, tribe: Tribe): Entity {
+export function createPlanterBox(position: Point, rotation: number, tribe: Tribe, structureInfo: StructureInfo): Entity {
    const planterBox = new Entity(position, rotation, EntityType.planterBox, COLLISION_BITS.planterBox, DEFAULT_COLLISION_MASK);
 
    const hitboxes = createPlanterBoxHitboxes(position, planterBox.getNextHitboxLocalID(), rotation);
@@ -33,16 +33,8 @@ export function createPlanterBox(position: Point, rotation: number, tribe: Tribe
    HealthComponentArray.addComponent(planterBox.id, new HealthComponent(15));
    StatusEffectComponentArray.addComponent(planterBox.id, new StatusEffectComponent(StatusEffect.poisoned | StatusEffect.bleeding));
    TribeComponentArray.addComponent(planterBox.id, new TribeComponent(tribe));
+   StructureComponentArray.addComponent(planterBox.id, new StructureComponent(structureInfo));
    PlanterBoxComponentArray.addComponent(planterBox.id, new PlanterBoxComponent());
    
    return planterBox;
-}
-
-export function onPlanterBoxRemove(planterBox: Entity): void {
-   const planterBoxComponent = PlanterBoxComponentArray.getComponent(planterBox.id);
-
-   const plant = Board.entityRecord[planterBoxComponent.plantEntityID];
-   if (typeof plant !== "undefined") {
-      plant.destroy();
-   }
 }

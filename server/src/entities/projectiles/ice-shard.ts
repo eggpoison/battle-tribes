@@ -4,15 +4,16 @@ import { PlanterBoxPlant, ServerComponentType } from "webgl-test-shared/dist/com
 import { EntityType, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
-import { Point, randFloat } from "webgl-test-shared/dist/utils";
+import { Point } from "webgl-test-shared/dist/utils";
 import Entity from "../../Entity";
 import RectangularHitbox from "../../hitboxes/RectangularHitbox";
-import { HealthComponentArray, IceShardComponentArray, PlantComponentArray } from "../../components/ComponentArray";
+import { HealthComponentArray, IceShardComponentArray } from "../../components/ComponentArray";
 import { addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
 import { StatusEffectComponentArray, applyStatusEffect } from "../../components/StatusEffectComponent";
 import { SERVER } from "../../server";
 import { PhysicsComponent, PhysicsComponentArray, applyKnockback } from "../../components/PhysicsComponent";
 import { EntityCreationInfo } from "../../entity-components";
+import { PlantComponentArray } from "../../components/PlantComponent";
 
 type ComponentTypes = [ServerComponentType.physics, ServerComponentType.iceShard];
 

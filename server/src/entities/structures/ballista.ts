@@ -21,6 +21,7 @@ import { InventoryComponent, InventoryComponentArray, consumeItemTypeFromInvento
 import { angleIsInRange, getClockwiseAngleDistance, getMaxAngleToCircularHitbox, getMaxAngleToRectangularHitbox, getMinAngleToCircularHitbox, getMinAngleToRectangularHitbox } from "../../ai-shared";
 import CircularHitbox from "../../hitboxes/CircularHitbox";
 import Board from "../../Board";
+import { StructureComponentArray, StructureComponent, StructureInfo } from "../../components/StructureComponent";
 
 const VISION_RANGE = 550;
 const HITBOX_SIZE = 100 - 0.05;
@@ -32,7 +33,7 @@ export function createBallistaHitboxes(parentPosition: Point, localID: number, p
    return hitboxes;
 }
 
-export function createBallista(position: Point, rotation: number, tribe: Tribe): Entity {
+export function createBallista(position: Point, rotation: number, tribe: Tribe, structureInfo: StructureInfo): Entity {
    const ballista = new Entity(position, rotation, EntityType.ballista, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
    const hitboxes = createBallistaHitboxes(position, ballista.getNextHitboxLocalID(), ballista.rotation);
@@ -42,6 +43,7 @@ export function createBallista(position: Point, rotation: number, tribe: Tribe):
    
    HealthComponentArray.addComponent(ballista.id, new HealthComponent(100));
    StatusEffectComponentArray.addComponent(ballista.id, new StatusEffectComponent(StatusEffect.poisoned | StatusEffect.bleeding));
+   StructureComponentArray.addComponent(ballista.id, new StructureComponent(structureInfo));
    TribeComponentArray.addComponent(ballista.id, new TribeComponent(tribe));
    TurretComponentArray.addComponent(ballista.id, new TurretComponent(0));
    AIHelperComponentArray.addComponent(ballista.id, new AIHelperComponent(VISION_RANGE));

@@ -13,6 +13,7 @@ import { TribeComponent } from "../../components/TribeComponent";
 import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
 import { BuildingMaterialComponent } from "../../components/BuildingMaterialComponent";
 import CircularHitbox from "../../hitboxes/CircularHitbox";
+import { StructureComponentArray, StructureComponent } from "../../components/StructureComponent";
 
 const VERTICAL_HITBOX_WIDTH = 12 - 0.05;
 const VERTICAL_HITBOX_HEIGHT = 20 - 0.05;
@@ -46,13 +47,14 @@ export function createEmbrasure(position: Point, rotation: number, tribe: Tribe,
    
    HealthComponentArray.addComponent(embrasure.id, new HealthComponent(EMBRASURE_HEALTHS[material]));
    StatusEffectComponentArray.addComponent(embrasure.id, new StatusEffectComponent(StatusEffect.bleeding));
+   StructureComponentArray.addComponent(embrasure.id, new StructureComponent());
    TribeComponentArray.addComponent(embrasure.id, new TribeComponent(tribe));
    BuildingMaterialComponentArray.addComponent(embrasure.id, new BuildingMaterialComponent(material));
 
    return embrasure;
 }
 
-export function onEmbrasureCollision(embrasure: Entity, collidingEntity: Entity, pushedHitboxIdx: number): void {
+export function onEmbrasureCollision(collidingEntity: Entity, pushedHitboxIdx: number): void {
    if (collidingEntity.type === EntityType.woodenArrowProjectile) {
       const arrowComponent = ArrowComponentArray.getComponent(collidingEntity.id);
       if (arrowComponent.ignoreFriendlyBuildings) {

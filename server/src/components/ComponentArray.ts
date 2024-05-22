@@ -22,7 +22,6 @@ import { SlimeComponent } from "./SlimeComponent";
 import { ArrowComponent } from "./ArrowComponent";
 import { YetiComponent } from "./YetiComponent";
 import { SnowballComponent } from "./SnowballComponent";
-import { FishComponent } from "./FishComponent";
 import Board from "../Board";
 import { FrozenYetiComponent } from "./FrozenYetiComponent";
 import { RockSpikeProjectileComponent } from "./RockSpikeProjectileComponent";
@@ -43,8 +42,6 @@ import { TunnelComponent } from "./TunnelComponent";
 import { BuildingMaterialComponent } from "./BuildingMaterialComponent";
 import { TribeWarriorComponent } from "./TribeWarriorComponent";
 import { HealingTotemComponent } from "./HealingTotemComponent";
-import { PlantComponent } from "./PlantComponent";
-import { PlanterBoxComponent } from "./PlanterBoxComponent";
 import { FenceComponent } from "./FenceComponent";
 import { FenceGateComponent } from "./FenceGateComponent";
 
@@ -81,10 +78,10 @@ export class ComponentArray<T = {}> {
    private deactivateBuffer = new Array<number>();
 
    // @Bug: This function shouldn't create an entity, as that will cause a crash. (Can't add components to the join buffer while iterating it)
-   public onJoin: ((entityID: number, component: T) => void) | undefined;
+   public onJoin: ((entityID: number) => void) | undefined;
    public onRemove: ((entityID: number) => void) | undefined;
    
-   constructor(isActiveByDefault: boolean, onJoin?: (entityID: number, component: T) => void, onRemove?: (entityID: number) => void) {
+   constructor(isActiveByDefault: boolean, onJoin?: (entityID: number) => void, onRemove?: (entityID: number) => void) {
       this.isActiveByDefault = isActiveByDefault;
       this.onJoin = onJoin;
       this.onRemove = onRemove;
@@ -258,7 +255,6 @@ export const DoorComponentArray = new ComponentArray<DoorComponent>(true);
 export const GolemComponentArray = new ComponentArray<GolemComponent>(true);
 export const IceSpikesComponentArray = new ComponentArray<IceSpikesComponent>(true);
 export const PebblumComponentArray = new ComponentArray<PebblumComponent>(true);
-export const BlueprintComponentArray = new ComponentArray<BlueprintComponent>(true);
 export const TurretComponentArray = new ComponentArray<TurretComponent>(true);
 export const AmmoBoxComponentArray = new ComponentArray<AmmoBoxComponent>(true);
 export const ResearchBenchComponentArray = new ComponentArray<ResearchBenchComponent>(true);
@@ -267,7 +263,5 @@ export const TunnelComponentArray = new ComponentArray<TunnelComponent>(true);
 export const BuildingMaterialComponentArray = new ComponentArray<BuildingMaterialComponent>(true);
 export const TribeWarriorComponentArray = new ComponentArray<TribeWarriorComponent>(true);
 export const HealingTotemComponentArray = new ComponentArray<HealingTotemComponent>(true);
-export const PlanterBoxComponentArray = new ComponentArray<PlanterBoxComponent>(true);
-export const PlantComponentArray = new ComponentArray<PlantComponent>(true);
 export const FenceComponentArray = new ComponentArray<FenceComponent>(true);
 export const FenceGateComponentArray = new ComponentArray<FenceGateComponent>(true);

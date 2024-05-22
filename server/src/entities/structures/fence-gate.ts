@@ -12,8 +12,7 @@ import { TribeComponent } from "../../components/TribeComponent";
 import RectangularHitbox from "../../hitboxes/RectangularHitbox";
 import CircularHitbox from "../../hitboxes/CircularHitbox";
 import { FenceGateComponent } from "../../components/FenceGateComponent";
-import { FenceConnectionComponent, FenceConnectionComponentArray } from "../../components/FenceConnectionComponent";
-import { ConnectedEntityIDs } from "../tribes/tribe-member";
+import { StructureComponentArray, StructureComponent, StructureInfo } from "../../components/StructureComponent";
 
 const HITBOX_WIDTH = 56 - 0.05;
 const HITBOX_HEIGHT = 16 - 0.05;
@@ -24,7 +23,7 @@ export function createFenceGateHitboxes(parentPosition: Point, localID: number, 
    return hitboxes;
 }
 
-export function createFenceGate(position: Point, rotation: number, tribe: Tribe, connectedSidesBitset: number, connectedEntityIDs: ConnectedEntityIDs): Entity {
+export function createFenceGate(position: Point, rotation: number, tribe: Tribe, structureInfo: StructureInfo): Entity {
    const fenceGate = new Entity(position, rotation, EntityType.fenceGate, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
    const hitboxes = createFenceGateHitboxes(position, fenceGate.getNextHitboxLocalID(), rotation);
@@ -34,8 +33,8 @@ export function createFenceGate(position: Point, rotation: number, tribe: Tribe,
 
    HealthComponentArray.addComponent(fenceGate.id, new HealthComponent(5));
    StatusEffectComponentArray.addComponent(fenceGate.id, new StatusEffectComponent(StatusEffect.poisoned));
+   StructureComponentArray.addComponent(fenceGate.id, new StructureComponent(structureInfo));
    TribeComponentArray.addComponent(fenceGate.id, new TribeComponent(tribe));
-   FenceConnectionComponentArray.addComponent(fenceGate.id, new FenceConnectionComponent(connectedSidesBitset, connectedEntityIDs));
    FenceGateComponentArray.addComponent(fenceGate.id, new FenceGateComponent());
    
    return fenceGate;

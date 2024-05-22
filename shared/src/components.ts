@@ -64,7 +64,7 @@ export enum ServerComponentType {
    healingTotem,
    planterBox,
    plant,
-   fenceConnection,
+   structure,
    fence,
    fenceGate
 }
@@ -74,7 +74,7 @@ export const EntityComponents = {
    [EntityType.zombie]: [ServerComponentType.physics, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.zombie, ServerComponentType.wanderAI, ServerComponentType.aiHelper, ServerComponentType.inventory, ServerComponentType.inventoryUse] as const,
    [EntityType.tombstone]: [ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.tombstone] as const,
    [EntityType.tree]: [ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.tree] as const,
-   [EntityType.workbench]: [ServerComponentType.health, ServerComponentType.statusEffect] as const,
+   [EntityType.workbench]: [ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.tribe] as const,
    [EntityType.boulder]: [ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.boulder] as const,
    [EntityType.berryBush]: [ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.berryBush] as const,
    [EntityType.cactus]: [ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.cactus] as const,
@@ -85,9 +85,9 @@ export const EntityComponents = {
    [EntityType.player]: [ServerComponentType.physics, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.tribe, ServerComponentType.tribeMember, ServerComponentType.inventory, ServerComponentType.inventoryUse, ServerComponentType.player] as const,
    [EntityType.tribeWorker]: [ServerComponentType.physics, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.tribe, ServerComponentType.tribeMember, ServerComponentType.inventory, ServerComponentType.inventoryUse, ServerComponentType.tribesman] as const,
    [EntityType.tribeWarrior]: [ServerComponentType.physics, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.tribe, ServerComponentType.tribeMember, ServerComponentType.inventory, ServerComponentType.inventoryUse, ServerComponentType.tribesman, ServerComponentType.tribeWarrior] as const,
-   [EntityType.tribeTotem]: [ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.tribe, ServerComponentType.totemBanner] as const,
-   [EntityType.workerHut]: [ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.tribe, ServerComponentType.hut] as const,
-   [EntityType.warriorHut]: [ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.tribe, ServerComponentType.hut] as const,
+   [EntityType.tribeTotem]: [ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.tribe, ServerComponentType.totemBanner] as const,
+   [EntityType.workerHut]: [ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.tribe, ServerComponentType.hut] as const,
+   [EntityType.warriorHut]: [ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.tribe, ServerComponentType.hut] as const,
    [EntityType.barrel]: [ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.tribe, ServerComponentType.inventory] as const,
    [EntityType.campfire]: [ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.inventory, ServerComponentType.cooking] as const,
    [EntityType.furnace]: [ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.inventory, ServerComponentType.cooking] as const,
@@ -100,29 +100,29 @@ export const EntityComponents = {
    [EntityType.iceShardProjectile]: [ServerComponentType.physics, ServerComponentType.iceShard] as const,
    [EntityType.rockSpikeProjectile]: [ServerComponentType.rockSpike] as const,
    [EntityType.spearProjectile]: [ServerComponentType.physics, ServerComponentType.throwingProjectile] as const,
-   [EntityType.researchBench]: [ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.tribe, ServerComponentType.researchBench] as const,
-   [EntityType.wall]: [ServerComponentType.health, ServerComponentType.tribe, ServerComponentType.buildingMaterial] as const,
+   [EntityType.researchBench]: [ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.tribe, ServerComponentType.researchBench] as const,
+   [EntityType.wall]: [ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.tribe, ServerComponentType.buildingMaterial] as const,
    [EntityType.slimeSpit]: [ServerComponentType.physics, ServerComponentType.slimeSpit] as const,
    [EntityType.spitPoison]: [] as const,
-   [EntityType.door]: [ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.door, ServerComponentType.tribe, ServerComponentType.buildingMaterial] as const,
+   [EntityType.door]: [ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.door, ServerComponentType.structure, ServerComponentType.tribe, ServerComponentType.buildingMaterial] as const,
    [EntityType.battleaxeProjectile]: [ServerComponentType.physics, ServerComponentType.throwingProjectile] as const,
    [EntityType.golem]: [ServerComponentType.physics, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.golem] as const,
-   [EntityType.planterBox]: [ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.tribe, ServerComponentType.planterBox] as const,
+   [EntityType.planterBox]: [ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.tribe, ServerComponentType.planterBox] as const,
    [EntityType.iceArrow]: [ServerComponentType.physics, ServerComponentType.tribe] as const,
    [EntityType.pebblum]: [ServerComponentType.physics, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.pebblum] as const,
-   [EntityType.embrasure]: [ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.tribe, ServerComponentType.buildingMaterial] as const,
-   [EntityType.floorSpikes]: [ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.tribe, ServerComponentType.spikes, ServerComponentType.buildingMaterial] as const,
-   [EntityType.wallSpikes]:  [ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.tribe, ServerComponentType.spikes, ServerComponentType.buildingMaterial] as const,
-   [EntityType.floorPunjiSticks]: [ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.tribe, ServerComponentType.spikes] as const,
-   [EntityType.wallPunjiSticks]:  [ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.tribe, ServerComponentType.spikes] as const,
+   [EntityType.embrasure]: [ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.tribe, ServerComponentType.buildingMaterial] as const,
+   [EntityType.floorSpikes]: [ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.tribe, ServerComponentType.spikes, ServerComponentType.buildingMaterial] as const,
+   [EntityType.wallSpikes]:  [ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.tribe, ServerComponentType.spikes, ServerComponentType.buildingMaterial] as const,
+   [EntityType.floorPunjiSticks]: [ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.tribe, ServerComponentType.spikes] as const,
+   [EntityType.wallPunjiSticks]:  [ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.tribe, ServerComponentType.spikes] as const,
    [EntityType.blueprintEntity]: [ServerComponentType.health, ServerComponentType.blueprint, ServerComponentType.tribe] as const,
-   [EntityType.ballista]: [ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.tribe, ServerComponentType.turret, ServerComponentType.aiHelper, ServerComponentType.ammoBox, ServerComponentType.inventory] as const,
-   [EntityType.slingTurret]: [ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.tribe, ServerComponentType.turret, ServerComponentType.aiHelper] as const,
-   [EntityType.tunnel]: [ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.tribe, ServerComponentType.tunnel, ServerComponentType.buildingMaterial] as const,
-   [EntityType.healingTotem]: [ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.tribe, ServerComponentType.healingTotem] as const,
+   [EntityType.ballista]: [ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.tribe, ServerComponentType.turret, ServerComponentType.aiHelper, ServerComponentType.ammoBox, ServerComponentType.inventory] as const,
+   [EntityType.slingTurret]: [ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.tribe, ServerComponentType.turret, ServerComponentType.aiHelper] as const,
+   [EntityType.tunnel]: [ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.tribe, ServerComponentType.tunnel, ServerComponentType.buildingMaterial] as const,
+   [EntityType.healingTotem]: [ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.tribe, ServerComponentType.healingTotem] as const,
    [EntityType.plant]: [ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.plant] as const,
-   [EntityType.fence]: [ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.tribe, ServerComponentType.fenceConnection, ServerComponentType.fence] as const,
-   [EntityType.fenceGate]: [ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.tribe, ServerComponentType.fenceConnection, ServerComponentType.fenceGate] as const
+   [EntityType.fence]: [ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.tribe, ServerComponentType.fence] as const,
+   [EntityType.fenceGate]: [ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.tribe, ServerComponentType.fenceGate] as const
 } satisfies Record<EntityType, ReadonlyArray<ServerComponentType>>;
 
 export type EntityComponentTypes<T extends EntityType> = typeof EntityComponents[T];
@@ -178,7 +178,7 @@ const _ComponentData = {
    [ServerComponentType.healingTotem]: (): HealingTotemComponentData => 0 as any,
    [ServerComponentType.planterBox]: (): PlanterBoxComponentData => 0 as any,
    [ServerComponentType.plant]: (): PlantComponentData => 0 as any,
-   [ServerComponentType.fenceConnection]: (): FenceConnectionComponentData => 0 as any,
+   [ServerComponentType.structure]: (): StructureComponentData => 0 as any,
    [ServerComponentType.fence]: (): FenceComponentData => 0 as any,
    [ServerComponentType.fenceGate]: (): FenceGateComponentData => 0 as any
 } satisfies Record<ServerComponentType, () => unknown>;
@@ -549,7 +549,6 @@ export interface ResearchBenchComponentData {
 
 export interface SpikesComponentData {
    readonly isCovered: boolean;
-   readonly attachedWallID: number;
 }
 
 /* Tunnel Component */
@@ -623,9 +622,9 @@ export interface PlanterBoxComponentData {
    readonly plantType: PlanterBoxPlant | null;
 }
 
-/* Fence Connection Component Data */
+/* Structure Component Data */
 
-export interface FenceConnectionComponentData {
+export interface StructureComponentData {
    readonly connectedSidesBitset: number;
 }
 

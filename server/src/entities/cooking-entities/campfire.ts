@@ -15,6 +15,7 @@ import Tribe from "../../Tribe";
 import { TribeComponent } from "../../components/TribeComponent";
 import RectangularHitbox from "../../hitboxes/RectangularHitbox";
 import { InventoryName } from "webgl-test-shared/dist/items";
+import { StructureComponent, StructureComponentArray, StructureInfo } from "../../components/StructureComponent";
 
 export const CAMPFIRE_SIZE = 104;
 
@@ -26,7 +27,7 @@ export function createCampfireHitboxes(parentPosition: Point, localID: number, p
    return hitboxes;
 }
 
-export function createCampfire(position: Point, rotation: number, tribe: Tribe): Entity {
+export function createCampfire(position: Point, rotation: number, tribe: Tribe, structureInfo: StructureInfo): Entity {
    const campfire = new Entity(position, rotation, EntityType.campfire, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
    const hitboxes = createCampfireHitboxes(position, campfire.getNextHitboxLocalID(), rotation);
@@ -37,6 +38,7 @@ export function createCampfire(position: Point, rotation: number, tribe: Tribe):
    HealthComponentArray.addComponent(campfire.id, new HealthComponent(25));
    StatusEffectComponentArray.addComponent(campfire.id, new StatusEffectComponent(StatusEffect.poisoned));
    TribeComponentArray.addComponent(campfire.id, new TribeComponent(tribe));
+   StructureComponentArray.addComponent(campfire.id, new StructureComponent(structureInfo));
 
    const inventoryComponent = new InventoryComponent();
    InventoryComponentArray.addComponent(campfire.id, inventoryComponent);

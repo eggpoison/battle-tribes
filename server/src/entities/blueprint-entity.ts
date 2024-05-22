@@ -4,17 +4,16 @@ import { EntityType } from "webgl-test-shared/dist/entities";
 import { StructureType } from "webgl-test-shared/dist/structures";
 import { Point } from "webgl-test-shared/dist/utils";
 import Entity from "../Entity";
-import { BlueprintComponentArray, HealthComponentArray, TribeComponentArray } from "../components/ComponentArray";
+import { HealthComponentArray, TribeComponentArray } from "../components/ComponentArray";
 import { HealthComponent } from "../components/HealthComponent";
-import { BlueprintComponent } from "../components/BlueprintComponent";
+import { BlueprintComponent, BlueprintComponentArray } from "../components/BlueprintComponent";
 import { TribeComponent } from "../components/TribeComponent";
 import Tribe from "../Tribe";
-import { placeVirtualBuilding } from "../ai-tribe-building/ai-building";
 import { createBuildingHitboxes } from "../buildings";
 
 // @Incomplete: Remove if the associated entity is removed
 
-const getBlueprintEntityType = (blueprintType: BlueprintType): StructureType => {
+export function getBlueprintEntityType(blueprintType: BlueprintType): StructureType {
    switch (blueprintType) {
       case BlueprintType.woodenTunnel:
       case BlueprintType.stoneTunnel:
@@ -51,19 +50,4 @@ export function createBlueprintEntity(position: Point, rotation: number, bluepri
    tribe.virtualEntityIDCounter++;
    
    return blueprintEntity;
-}
-
-export function onBlueprintEntityJoin(blueprintEntity: Entity): void {
-   const tribeComponent = TribeComponentArray.getComponent(blueprintEntity.id);
-   const blueprintComponent = BlueprintComponentArray.getComponent(blueprintEntity.id);
-
-   const entityType = getBlueprintEntityType(blueprintComponent.blueprintType);
-   placeVirtualBuilding(tribeComponent.tribe, blueprintEntity.position, blueprintEntity.rotation, entityType, blueprintComponent.virtualEntityID);
-   tribeComponent.tribe.buildingsAreDirty = true;
-}
-
-export function onBlueprintEntityRemove(blueprintEntity: Entity): void {
-   const tribeComponent = TribeComponentArray.getComponent(blueprintEntity.id);
-   const blueprintComponent = BlueprintComponentArray.getComponent(blueprintEntity.id);
-   tribeComponent.tribe.removeVirtualBuilding(blueprintComponent.virtualEntityID);
 }

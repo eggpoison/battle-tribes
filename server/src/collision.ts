@@ -24,10 +24,10 @@ import { onWoodenArrowCollision } from "./entities/projectiles/wooden-arrow";
 import { onCactusCollision } from "./entities/resources/cactus";
 import { onIceSpikesCollision } from "./entities/resources/ice-spikes";
 import { onSnowballCollision } from "./entities/snowball";
-import { onPunjiSticksCollision } from "./entities/buildings/punji-sticks";
-import { onSpikesCollision } from "./entities/buildings/spikes";
+import { onPunjiSticksCollision } from "./entities/structures/punji-sticks";
+import { onSpikesCollision } from "./entities/structures/spikes";
 import { onPlayerCollision } from "./entities/tribes/player";
-import { onEmbrasureCollision } from "./entities/buildings/embrasure";
+import { onEmbrasureCollision } from "./entities/structures/embrasure";
 import Board from "./Board";
 import { onTribesmanCollision } from "./entities/tribes/tribe-member";
 import { DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit, rectanglesAreColliding } from "webgl-test-shared/dist/collision";
@@ -284,7 +284,7 @@ export function collide(entity: Entity, pushingEntity: Entity, pushedHitboxIdx: 
       case EntityType.wallSpikes: onSpikesCollision(entity, pushingEntity); break;
       case EntityType.floorPunjiSticks:
       case EntityType.wallPunjiSticks: onPunjiSticksCollision(entity, pushingEntity); break;
-      case EntityType.embrasure: onEmbrasureCollision(entity, pushingEntity, pushedHitboxIdx); break;
+      case EntityType.embrasure: onEmbrasureCollision(pushingEntity, pushedHitboxIdx); break;
    }
 }
 

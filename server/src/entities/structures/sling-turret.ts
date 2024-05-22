@@ -16,6 +16,7 @@ import { TurretComponent } from "../../components/TurretComponent";
 import { GenericArrowInfo, createWoodenArrow } from "../projectiles/wooden-arrow";
 import RectangularHitbox from "../../hitboxes/RectangularHitbox";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { StructureComponentArray, StructureComponent, StructureInfo } from "../../components/StructureComponent";
 
 // @Cleanup: A lot of copy and paste from ballista.ts
 
@@ -29,7 +30,7 @@ export function createSlingTurretHitboxes(parentPosition: Point, localID: number
    return hitboxes;
 }
 
-export function createSlingTurret(position: Point, rotation: number, tribe: Tribe): Entity {
+export function createSlingTurret(position: Point, rotation: number, tribe: Tribe, structureInfo: StructureInfo): Entity {
    const slingTurret = new Entity(position, rotation, EntityType.slingTurret, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
    const hitboxes = createSlingTurretHitboxes(position, slingTurret.getNextHitboxLocalID(), slingTurret.rotation);
@@ -40,6 +41,7 @@ export function createSlingTurret(position: Point, rotation: number, tribe: Trib
    HealthComponentArray.addComponent(slingTurret.id, new HealthComponent(25));
    StatusEffectComponentArray.addComponent(slingTurret.id, new StatusEffectComponent(StatusEffect.bleeding | StatusEffect.poisoned));
    TurretComponentArray.addComponent(slingTurret.id, new TurretComponent(SLING_TURRET_SHOT_COOLDOWN_TICKS + SLING_TURRET_RELOAD_TIME_TICKS));
+   StructureComponentArray.addComponent(slingTurret.id, new StructureComponent(structureInfo));
    TribeComponentArray.addComponent(slingTurret.id, new TribeComponent(tribe));
    AIHelperComponentArray.addComponent(slingTurret.id, new AIHelperComponent(VISION_RANGE));
    

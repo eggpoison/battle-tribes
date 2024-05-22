@@ -16,6 +16,7 @@ import { TribeArea, areaHasOutsideDoor, getOutsideDoorPlacePlan } from "./ai-bui
 import CircularHitbox from "../hitboxes/CircularHitbox";
 import RectangularHitbox from "../hitboxes/RectangularHitbox";
 import { getHitboxesCollidingEntities } from "../collision";
+import { StructureInfo } from "../components/StructureComponent";
 
 const virtualBuildingTakesUpWallSpace = (x: number, y: number, wallRotation: number, virtualBuilding: VirtualBuilding, wallVertexOffsets: HitboxVertexPositions): boolean => {
    // @Speed: cache when virutal entity is first created
@@ -714,9 +715,15 @@ export function forceBuildPlans(tribe: Tribe): void {
 
       switch (plan.type) {
          case BuildingPlanType.newBuilding: {
-            const entityType = (ITEM_INFO_RECORD[plan.buildingRecipe.product] as PlaceableItemInfo).entityType;
             // @Incomplete
-            placeBuilding(tribe, plan.position, plan.rotation, entityType, 0, [0, 0, 0, 0]);
+
+            const entityType = (ITEM_INFO_RECORD[plan.buildingRecipe.product] as PlaceableItemInfo).entityType;
+            const structureInfo: StructureInfo = {
+               connectedSidesBitset: 0,
+               connectedEntityIDs: [0, 0, 0, 0]
+            };
+
+            placeBuilding(tribe, plan.position, plan.rotation, entityType, structureInfo);
             break;
          }
       }

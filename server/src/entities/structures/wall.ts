@@ -6,14 +6,14 @@ import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { Point } from "webgl-test-shared/dist/utils";
 import Tribe from "../../Tribe";
 import Entity from "../../Entity";
-import { BlueprintComponentArray, BuildingMaterialComponentArray, HealthComponentArray, TribeComponentArray } from "../../components/ComponentArray";
+import { BuildingMaterialComponentArray, HealthComponentArray, TribeComponentArray } from "../../components/ComponentArray";
 import { HealthComponent } from "../../components/HealthComponent";
 import RectangularHitbox from "../../hitboxes/RectangularHitbox";
 import { TribeComponent } from "../../components/TribeComponent";
 import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
 import { BuildingMaterialComponent } from "../../components/BuildingMaterialComponent";
-import Board from "../../Board";
 import CircularHitbox from "../../hitboxes/CircularHitbox";
+import { StructureComponent, StructureComponentArray, StructureInfo } from "../../components/StructureComponent";
 
 const SIZE = 64 - 0.05;
 
@@ -25,7 +25,7 @@ export function createWallHitboxes(parentPosition: Point, localID: number, paren
    return hitboxes;
 }
 
-export function createWall(position: Point, rotation: number, tribe: Tribe): Entity {
+export function createWall(position: Point, rotation: number, tribe: Tribe, structureInfo: StructureInfo): Entity {
    const wall = new Entity(position, rotation, EntityType.wall, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
    const hitboxes = createWallHitboxes(position, wall.getNextHitboxLocalID(), rotation);
@@ -37,24 +37,9 @@ export function createWall(position: Point, rotation: number, tribe: Tribe): Ent
    
    HealthComponentArray.addComponent(wall.id, new HealthComponent(WALL_HEALTHS[material]));
    StatusEffectComponentArray.addComponent(wall.id, new StatusEffectComponent(StatusEffect.bleeding));
+   StructureComponentArray.addComponent(wall.id, new StructureComponent(structureInfo));
    TribeComponentArray.addComponent(wall.id, new TribeComponent(tribe));
    BuildingMaterialComponentArray.addComponent(wall.id, new BuildingMaterialComponent(material));
 
    return wall;
-}
-
-export function onWallRemove(wall: Entity): void {
-   // Check if the wall has a corresponding blueprint
-   const ontopEntities = Board.getEntitiesAtPosition(wall.position.x, wall.position.y);
-   for (let i = 0; i < ontopEntities.length; i++) {
-      const entity = ontopEntities[i];
-
-      if (entity.type === EntityType.blueprintEntity) {
-         const blueprintComponent = BlueprintComponentArray.getComponent(entity.id);
-         if (blueprintComponent.associatedEntityID === wall.id) {
-            entity.destroy();
-            break;
-         }
-      }
-   }
 }

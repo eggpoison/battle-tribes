@@ -14,6 +14,7 @@ import { TribeComponent } from "../../components/TribeComponent";
 import Tribe from "../../Tribe";
 import CircularHitbox from "../../hitboxes/CircularHitbox";
 import { SpikesComponent } from "../../components/SpikesComponent";
+import { StructureComponentArray, StructureComponent, StructureInfo, isAttachedToWall } from "../../components/StructureComponent";
 
 const FLOOR_HITBOX_SIZE = 48 - 0.05;
 
@@ -34,20 +35,22 @@ export function createWallPunjiSticksHitboxes(parentPosition: Point, localID: nu
    return hitboxes;
 }
 
-export function createPunjiSticks(position: Point, rotation: number, tribe: Tribe, attachedWallID: number): Entity {
-   const entityType = attachedWallID !== 0 ? EntityType.wallPunjiSticks : EntityType.floorPunjiSticks;
+export function createPunjiSticks(position: Point, rotation: number, tribe: Tribe, structureInfo: StructureInfo): Entity {
+   const isAttached = isAttachedToWall(structureInfo);
+   const entityType = isAttached ? EntityType.wallPunjiSticks : EntityType.floorPunjiSticks;
    
    const punjiSticks = new Entity(position, rotation, entityType, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
-   const hitboxes = attachedWallID !== 0 ? createWallPunjiSticksHitboxes(position, punjiSticks.getNextHitboxLocalID(), rotation) : createFloorPunjiSticksHitboxes(position, punjiSticks.getNextHitboxLocalID(), rotation);
+   const hitboxes = isAttached ? createWallPunjiSticksHitboxes(position, punjiSticks.getNextHitboxLocalID(), rotation) : createFloorPunjiSticksHitboxes(position, punjiSticks.getNextHitboxLocalID(), rotation);
    for (let i = 0; i < hitboxes.length; i++) {
       punjiSticks.addHitbox(hitboxes[i]);
    }
 
    HealthComponentArray.addComponent(punjiSticks.id, new HealthComponent(10));
    StatusEffectComponentArray.addComponent(punjiSticks.id, new StatusEffectComponent(StatusEffect.bleeding | StatusEffect.poisoned));
+   StructureComponentArray.addComponent(punjiSticks.id, new StructureComponent(structureInfo));
    TribeComponentArray.addComponent(punjiSticks.id, new TribeComponent(tribe));
-   SpikesComponentArray.addComponent(punjiSticks.id, new SpikesComponent(attachedWallID));
+   SpikesComponentArray.addComponent(punjiSticks.id, new SpikesComponent());
 
    return punjiSticks;
 }

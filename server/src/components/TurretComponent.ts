@@ -2,7 +2,7 @@ import { AMMO_INFO_RECORD, TurretComponentData } from "webgl-test-shared/dist/co
 import { EntityType } from "webgl-test-shared/dist/entities";
 import Entity from "../Entity";
 import { AmmoBoxComponentArray, TurretComponentArray } from "./ComponentArray";
-import { SLING_TURRET_RELOAD_TIME_TICKS, SLING_TURRET_SHOT_COOLDOWN_TICKS } from "../entities/buildings/sling-turret";
+import { SLING_TURRET_RELOAD_TIME_TICKS, SLING_TURRET_SHOT_COOLDOWN_TICKS } from "../entities/structures/sling-turret";
 
 export class TurretComponent {
    public aimDirection = 0;

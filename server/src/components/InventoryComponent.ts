@@ -24,7 +24,7 @@ export class InventoryComponent {
    public readonly droppableInventories = new Array<Inventory>();
 }
 
-export const InventoryComponentArray = new ComponentArray<InventoryComponent>(true);
+export const InventoryComponentArray = new ComponentArray<InventoryComponent>(true, undefined, onRemove);
 
 const dropInventory = (entity: Entity, inventory: Inventory, dropRange: number): void => {
    for (let i = 0; i < inventory.items.length; i++) {
@@ -41,13 +41,16 @@ const dropInventory = (entity: Entity, inventory: Inventory, dropRange: number):
    }
 }
 
-function onRemove(entityID: number, inventoryComponent: InventoryComponent): void {
+function onRemove(entityID: number): void {
+   const inventoryComponent = InventoryComponentArray.getComponent(entityID);
+   
+   // @Hack
    const entity = Board.entityRecord[entityID]!;
    
    for (let i = 0; i < inventoryComponent.droppableInventories.length; i++) {
       const inventory = inventoryComponent.droppableInventories[i];
 
-      // @Incomplete: drop range
+      // @Incomplete: Don't use a drop range. Instead pick a random point in any of the entities hitboxes, weighted by their area.
       dropInventory(entity, inventory, 38);
    }
 }

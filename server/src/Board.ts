@@ -12,7 +12,7 @@ import Tribe from "./Tribe";
 import BaseHitbox from "./hitboxes/BaseHitbox";
 import RectangularHitbox from "./hitboxes/RectangularHitbox";
 import generateTerrain from "./world-generation/terrain-generation";
-import { HealthComponentArray, InventoryUseComponentArray, TribeComponentArray, DoorComponentArray, ResearchBenchComponentArray, TunnelComponentArray, HealingTotemComponentArray, PlantComponentArray, FenceGateComponentArray, ComponentArrays } from "./components/ComponentArray";
+import { HealthComponentArray, InventoryUseComponentArray, TribeComponentArray, DoorComponentArray, ResearchBenchComponentArray, TunnelComponentArray, HealingTotemComponentArray, FenceGateComponentArray, ComponentArrays } from "./components/ComponentArray";
 import { tickInventoryUseComponent } from "./components/InventoryUseComponent";
 import { tickPlayer } from "./entities/tribes/player";
 import Entity, { entityIsStructure } from "./Entity";
@@ -48,22 +48,18 @@ import { onBattleaxeProjectileRemove, tickBattleaxeProjectile } from "./entities
 import { tickGolem } from "./entities/mobs/golem";
 import { tickIceArrow } from "./entities/projectiles/ice-arrow";
 import { tickPebblum } from "./entities/mobs/pebblum";
-import { PhysicsComponentArray, tickPhysicsComponents } from "./components/PhysicsComponent";
-import { onBlueprintEntityJoin, onBlueprintEntityRemove } from "./entities/blueprint-entity";
-import { tickBallista } from "./entities/buildings/ballista";
-import { tickSlingTurret } from "./entities/buildings/sling-turret";
+import { tickPhysicsComponents } from "./components/PhysicsComponent";
+import { tickBallista } from "./entities/structures/ballista";
+import { tickSlingTurret } from "./entities/structures/sling-turret";
 import { tickResearchBenchComponent } from "./components/ResearchBenchComponent";
-import { clearEntityPathfindingNodes, entityCanBlockPathfinding, markWallTileInPathfinding, removeDirtyPathfindingEntity, updateEntityPathfindingNodeOccupance } from "./pathfinding";
+import { clearEntityPathfindingNodes, entityCanBlockPathfinding, markWallTileInPathfinding, updateEntityPathfindingNodeOccupance } from "./pathfinding";
 import OPTIONS from "./options";
 import { CollisionVars, collide, entitiesAreColliding } from "./collision";
 import { tickTunnelComponent } from "./components/TunnelComponent";
 import { tickTribes } from "./ai-tribe-building/ai-building";
 import { tickHealingTotemComponent } from "./components/HealingTotemComponent";
-import { tickPlantComponent } from "./components/PlantComponent";
-import { onFenceRemove } from "./entities/buildings/fence";
+import { PlantComponentArray, tickPlantComponent } from "./components/PlantComponent";
 import { tickFenceGateComponent } from "./components/FenceGateComponent";
-import { onPlanterBoxRemove } from "./entities/buildings/planter-box";
-import { createStructureGrassBlockers } from "./grass-blockers";
 
 const START_TIME = 6;
 
@@ -202,7 +198,6 @@ abstract class Board {
    }
 
    private static initialiseChunks(): void {
-      // @Speed: change to 1-nested
       for (let i = 0; i < Settings.BOARD_SIZE * Settings.BOARD_SIZE; i++) {
          const chunk = new Chunk();
          this.chunks.push(chunk);
@@ -257,6 +252,8 @@ abstract class Board {
    }
 
    public static updateTribes(): void {
+      // @Cleanup: why do we have two different ones??
+      
       for (const tribe of this.tribes) {
          tribe.tick();
       }
@@ -278,27 +275,25 @@ abstract class Board {
    
          const entityID = entity.id;
 
-         if (entityIsStructure(entity)) {
-            const tribeComponent = TribeComponentArray.getComponent(entity.id);
-            tribeComponent.tribe.removeBuilding(entity);
+         // @Speed: don't do per entity, do per component array
+         // Call remove functions
+         for (let i = 0; i < ComponentArrays.length; i++) {
+            const componentArray = ComponentArrays[i];
+            if (componentArray.hasComponent(entityID) && typeof componentArray.onRemove !== "undefined") {
+               componentArray.onRemove(entityID);
+            }
          }
 
+         // @Cleanup: remove
          switch (entity.type) {
-            case EntityType.fence: onFenceRemove(entity); break;
             case EntityType.battleaxeProjectile: onBattleaxeProjectileRemove(entity); break;
-            case EntityType.blueprintEntity: onBlueprintEntityRemove(entity); break;
-            case EntityType.planterBox: onPlanterBoxRemove(entity); break;
          }
 
-         // @Speed: don't do per entity, do per component array and add entity to component array buffers
+         // @Speed: don't do per entity, do per component array
          // Remove components
          for (let i = 0; i < ComponentArrays.length; i++) {
             const componentArray = ComponentArrays[i];
             if (componentArray.hasComponent(entityID)) {
-               if (typeof componentArray.onRemove !== "undefined") {
-                  componentArray.onRemove(entityID);
-               }
-               
                componentArray.removeComponent(entityID);
             }
          }
@@ -334,6 +329,7 @@ abstract class Board {
          const entity = this.entities[i];
 
          // @Speed
+         // @Cleanup: awkward to do it here
          entity.tickEvents = [];
 
          switch (entity.type) {
@@ -560,20 +556,8 @@ abstract class Board {
             updateEntityPathfindingNodeOccupance(entity);
          }
 
-         // @Cleanup: move to a component onJoin maybe?
-         if (entityIsStructure(entity)) {
-            const tribeComponent = TribeComponentArray.getComponent(entity.id);
-            tribeComponent.tribe.addBuilding(entity);
-
-            createStructureGrassBlockers(entity);
-         }
-
          this.entities.push(entity);
          this.entityRecord[entity.id] = entity;
-
-         switch (entity.type) {
-            case EntityType.blueprintEntity: onBlueprintEntityJoin(entity); break;
-         }
       }
 
       // Call on join functions and clear buffers
@@ -582,13 +566,11 @@ abstract class Board {
 
          const onJoin = componentArray.onJoin;
          if (typeof onJoin !== "undefined") {
-            const componentBuffer = componentArray.getComponentBuffer();
             const componentBufferIDs = componentArray.getComponentBufferIDs();
 
-            for (let j = 0; j < componentBuffer.length; j++) {
-               const component = componentBuffer[j];
+            for (let j = 0; j < componentBufferIDs.length; j++) {
                const entityID = componentBufferIDs[j];
-               onJoin(entityID, component);
+               onJoin(entityID);
             }
          }
 

@@ -12,27 +12,29 @@ import { StatusEffectComponent, StatusEffectComponentArray } from "../../compone
 import { HutComponent } from "../../components/HutComponent";
 import { TribeComponent } from "../../components/TribeComponent";
 import CircularHitbox from "../../hitboxes/CircularHitbox";
+import { StructureComponent, StructureComponentArray, StructureInfo } from "../../components/StructureComponent";
 
-export const WARRIOR_HUT_SIZE = 104 - 0.05;
+const HITBOX_SIZE = 88;
 
-export function createWarriorHutHitboxes(parentPosition: Point, localID: number, parentRotation: number): ReadonlyArray<CircularHitbox | RectangularHitbox> {
+export function createWorkerHutHitboxes(parentPosition: Point, localID: number, parentRotation: number): ReadonlyArray<CircularHitbox | RectangularHitbox> {
    const hitboxes = new Array<CircularHitbox | RectangularHitbox>();
-   hitboxes.push(new RectangularHitbox(parentPosition, 2, 0, 0, HitboxCollisionType.soft, localID, parentRotation, WARRIOR_HUT_SIZE, WARRIOR_HUT_SIZE, 0, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK));
+   hitboxes.push(new RectangularHitbox(parentPosition, 1.8, 0, 0, HitboxCollisionType.soft, localID, parentRotation, HITBOX_SIZE, HITBOX_SIZE, 0, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK));
    return hitboxes;
 }
 
-export function createWarriorHut(position: Point, rotation: number, tribe: Tribe): Entity {
-   const hut = new Entity(position, rotation, EntityType.warriorHut, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
+export function createWorkerHut(position: Point, rotation: number, tribe: Tribe, structureInfo: StructureInfo): Entity {
+   const hut = new Entity(position, rotation, EntityType.workerHut, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
-   const hitboxes = createWarriorHutHitboxes(position, hut.getNextHitboxLocalID(), hut.rotation);
+   const hitboxes = createWorkerHutHitboxes(position, hut.getNextHitboxLocalID(), hut.rotation);
    for (let i = 0; i < hitboxes.length; i++) {
       hut.addHitbox(hitboxes[i]);
    }
 
-   HealthComponentArray.addComponent(hut.id, new HealthComponent(75));
+   HealthComponentArray.addComponent(hut.id, new HealthComponent(50));
    StatusEffectComponentArray.addComponent(hut.id, new StatusEffectComponent(StatusEffect.poisoned));
-   HutComponentArray.addComponent(hut.id, new HutComponent());
+   StructureComponentArray.addComponent(hut.id, new StructureComponent(structureInfo));
    TribeComponentArray.addComponent(hut.id, new TribeComponent(tribe));
+   HutComponentArray.addComponent(hut.id, new HutComponent());
 
    return hut;
 }

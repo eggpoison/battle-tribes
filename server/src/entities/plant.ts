@@ -5,11 +5,10 @@ import { EntityType } from "webgl-test-shared/dist/entities";
 import { ItemType } from "webgl-test-shared/dist/items";
 import { Point, randInt } from "webgl-test-shared/dist/utils";
 import Entity from "../Entity";
-import { HealthComponentArray, PlantComponentArray, PlanterBoxComponentArray } from "../components/ComponentArray";
+import { HealthComponentArray } from "../components/ComponentArray";
 import { HealthComponent } from "../components/HealthComponent";
 import { StatusEffectComponent, StatusEffectComponentArray } from "../components/StatusEffectComponent";
-import { PLANT_GROWTH_TICKS, PlantComponent } from "../components/PlantComponent";
-import Board from "../Board";
+import { PLANT_GROWTH_TICKS, PlantComponent, PlantComponentArray } from "../components/PlantComponent";
 import CircularHitbox from "../hitboxes/CircularHitbox";
 import { dropBerryOverEntity } from "./resources/berry-bush";
 import { createItemsOverEntity } from "../entity-shared";
@@ -84,15 +83,5 @@ export function onPlantDeath(plant: Entity): void {
          }
          break;
       }
-   }
-}
-
-export function onPlantRemove(entityID: number): void {
-   // Register in the planter box that the plant has been removed
-   const plantComponent = PlantComponentArray.getComponent(entityID);
-   const planterBox = Board.entityRecord[plantComponent.planterBoxID];
-   if (typeof planterBox !== "undefined") {
-      const planterBoxComponent = PlanterBoxComponentArray.getComponent(planterBox.id);
-      planterBoxComponent.plantEntityID = 0;
    }
 }

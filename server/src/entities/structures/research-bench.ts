@@ -3,15 +3,16 @@ import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, 
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { Point } from "webgl-test-shared/dist/utils";
-import Entity from "../Entity";
-import { HealthComponentArray, ResearchBenchComponentArray, TribeComponentArray } from "../components/ComponentArray";
-import { HealthComponent } from "../components/HealthComponent";
-import { StatusEffectComponent, StatusEffectComponentArray } from "../components/StatusEffectComponent";
-import RectangularHitbox from "../hitboxes/RectangularHitbox";
-import Tribe from "../Tribe";
-import { TribeComponent } from "../components/TribeComponent";
-import { ResearchBenchComponent } from "../components/ResearchBenchComponent";
-import CircularHitbox from "../hitboxes/CircularHitbox";
+import Entity from "../../Entity";
+import { HealthComponentArray, ResearchBenchComponentArray, TribeComponentArray } from "../../components/ComponentArray";
+import { HealthComponent } from "../../components/HealthComponent";
+import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
+import RectangularHitbox from "../../hitboxes/RectangularHitbox";
+import Tribe from "../../Tribe";
+import { TribeComponent } from "../../components/TribeComponent";
+import { ResearchBenchComponent } from "../../components/ResearchBenchComponent";
+import CircularHitbox from "../../hitboxes/CircularHitbox";
+import { StructureComponent, StructureComponentArray, StructureInfo } from "../../components/StructureComponent";
 
 export function createResearchBenchHitboxes(parentPosition: Point, localID: number, parentRotation: number): ReadonlyArray<CircularHitbox | RectangularHitbox> {
    const hitboxes = new Array<CircularHitbox | RectangularHitbox>();
@@ -19,7 +20,7 @@ export function createResearchBenchHitboxes(parentPosition: Point, localID: numb
    return hitboxes;
 }
 
-export function createResearchBench(position: Point, rotation: number, tribe: Tribe): Entity {
+export function createResearchBench(position: Point, rotation: number, tribe: Tribe, structureInfo: StructureInfo): Entity {
    const bench = new Entity(position, rotation, EntityType.researchBench, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
    const hitboxes = createResearchBenchHitboxes(position, bench.getNextHitboxLocalID(), bench.rotation);
@@ -29,6 +30,7 @@ export function createResearchBench(position: Point, rotation: number, tribe: Tr
    
    HealthComponentArray.addComponent(bench.id, new HealthComponent(40));
    StatusEffectComponentArray.addComponent(bench.id, new StatusEffectComponent(StatusEffect.poisoned));
+   StructureComponentArray.addComponent(bench.id, new StructureComponent(structureInfo));
    TribeComponentArray.addComponent(bench.id, new TribeComponent(tribe));
    ResearchBenchComponentArray.addComponent(bench.id, new ResearchBenchComponent());
 

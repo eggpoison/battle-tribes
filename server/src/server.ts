@@ -80,15 +80,15 @@ import { serialisePlantComponent } from "./components/PlantComponent";
 import { placePlantInPlanterBox, serialisePlanterBoxComponent } from "./components/PlanterBoxComponent";
 import { serialiseFenceComponent } from "./components/FenceComponent";
 import { serialiseFenceGateComponent } from "./components/FenceGateComponent";
-import { serialiseFenceConnectionComponent } from "./components/FenceConnectionComponent";
-import { createTribeTotem } from "./entities/tribes/tribe-totem";
-import { createWorkerHut } from "./entities/tribes/worker-hut";
+import { createTribeTotem } from "./entities/structures/tribe-totem";
+import { createWorkerHut } from "./entities/structures/worker-hut";
 import { createTribeWorker } from "./entities/tribes/tribe-worker";
-import { createPlanterBox } from "./entities/buildings/planter-box";
-import { createBarrel } from "./entities/tribes/barrel";
-import { createWall } from "./entities/buildings/wall";
+import { createPlanterBox } from "./entities/structures/planter-box";
+import { createBarrel } from "./entities/structures/barrel";
+import { createWall } from "./entities/structures/wall";
 import { GrassBlocker } from "webgl-test-shared/dist/grass-blockers";
 import { updateGrassBlockers } from "./grass-blockers";
+import { serialiseStructureComponent } from "./components/StructureComponent";
 
 // @Cleanup: file is way too large
 
@@ -178,7 +178,7 @@ const serialiseComponent = <T extends ServerComponentType>(entity: Entity, compo
       case ServerComponentType.healingTotem: return serialiseHealingTotemComponent(entity);
       case ServerComponentType.planterBox: return serialisePlanterBoxComponent(entity.id);
       case ServerComponentType.plant: return serialisePlantComponent(entity);
-      case ServerComponentType.fenceConnection: return serialiseFenceConnectionComponent(entity.id);
+      case ServerComponentType.structure: return serialiseStructureComponent(entity.id);
       case ServerComponentType.fence: return serialiseFenceComponent(entity.id);
       case ServerComponentType.fenceGate: return serialiseFenceGateComponent(entity.id);
       default: {

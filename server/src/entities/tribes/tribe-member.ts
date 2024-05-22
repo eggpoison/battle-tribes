@@ -12,30 +12,30 @@ import { TribeType } from "webgl-test-shared/dist/tribes";
 import { Point, dotAngles, lerp } from "webgl-test-shared/dist/utils";
 import Entity, { entityIsStructure } from "../../Entity";
 import Board from "../../Board";
-import { BerryBushComponentArray, BuildingMaterialComponentArray, HealthComponentArray, InventoryUseComponentArray, PlantComponentArray, TreeComponentArray, TribeComponentArray, TribesmanComponentArray } from "../../components/ComponentArray";
+import { BerryBushComponentArray, BuildingMaterialComponentArray, HealthComponentArray, InventoryUseComponentArray, TreeComponentArray, TribeComponentArray, TribesmanComponentArray } from "../../components/ComponentArray";
 import { InventoryComponentArray, consumeItemFromSlot, consumeItemType, countItemType, getInventory, inventoryIsFull, pickupItemEntity, resizeInventory } from "../../components/InventoryComponent";
 import { getEntitiesInRange } from "../../ai-shared";
 import { addDefence, damageEntity, healEntity, removeDefence } from "../../components/HealthComponent";
-import { createWorkbench } from "../workbench";
-import { createTribeTotem } from "./tribe-totem";
-import { createWorkerHut } from "./worker-hut";
+import { createWorkbench } from "../structures/workbench";
+import { createTribeTotem } from "../structures/tribe-totem";
+import { createWorkerHut } from "../structures/worker-hut";
 import { applyStatusEffect, clearStatusEffects } from "../../components/StatusEffectComponent";
-import { createBarrel } from "./barrel";
+import { createBarrel } from "../structures/barrel";
 import { createCampfire } from "../cooking-entities/campfire";
 import { createFurnace } from "../cooking-entities/furnace";
 import { GenericArrowInfo, createWoodenArrow } from "../projectiles/wooden-arrow";
 import { onFishLeaderHurt } from "../mobs/fish";
 import { createSpearProjectile } from "../projectiles/spear-projectile";
-import { createResearchBench } from "../research-bench";
-import { createWarriorHut } from "./warrior-hut";
-import { createWall } from "../buildings/wall";
+import { createResearchBench } from "../structures/research-bench";
+import { createWarriorHut } from "../structures/warrior-hut";
+import { createWall } from "../structures/wall";
 import { InventoryUseInfo, getInventoryUseInfo } from "../../components/InventoryUseComponent";
 import { createBattleaxeProjectile } from "../projectiles/battleaxe-projectile";
 import { SERVER } from "../../server";
-import { createPlanterBox } from "../buildings/planter-box";
+import { createPlanterBox } from "../structures/planter-box";
 import { createIceArrow } from "../projectiles/ice-arrow";
-import { createSpikes } from "../buildings/spikes";
-import { createPunjiSticks } from "../buildings/punji-sticks";
+import { createSpikes } from "../structures/spikes";
+import { createPunjiSticks } from "../structures/punji-sticks";
 import { doBlueprintWork } from "../../components/BlueprintComponent";
 import { EntityRelationship, getEntityRelationship } from "../../components/TribeComponent";
 import { createBlueprintEntity } from "../blueprint-entity";
@@ -46,18 +46,18 @@ import { entityIsResource } from "./tribesman-ai/tribesman-resource-gathering";
 import { adjustTribesmanRelationsAfterGift } from "../../components/TribesmanComponent";
 import { TITLE_REWARD_CHANCES } from "../../tribesman-title-generation";
 import { TribeMemberComponentArray, awardTitle, hasTitle } from "../../components/TribeMemberComponent";
-import { createHealingTotem } from "../buildings/healing-totem";
+import { createHealingTotem } from "../structures/healing-totem";
 import { TREE_RADII } from "../resources/tree";
 import { BERRY_BUSH_RADIUS, dropBerry } from "../resources/berry-bush";
 import { createItemEntity, itemEntityCanBePickedUp } from "../item-entity";
 import { dropBerryBushCropBerries } from "../plant";
-import { createFence } from "../buildings/fence";
-import { createFenceGate } from "../buildings/fence-gate";
+import { createFence } from "../structures/fence";
+import { createFenceGate } from "../structures/fence-gate";
 import { createBuildingHitboxes } from "../../buildings";
 import { getHitboxesCollidingEntities } from "../../collision";
-import { plantIsFullyGrown } from "../../components/PlantComponent";
-import { FenceConnectionComponentArray } from "../../components/FenceConnectionComponent";
+import { PlantComponentArray, plantIsFullyGrown } from "../../components/PlantComponent";
 import { ItemComponentArray } from "../../components/ItemComponent";
+import { StructureComponentArray, StructureInfo } from "../../components/StructureComponent";
 
 const enum Vars {
    ITEM_THROW_FORCE = 100,
@@ -551,36 +551,26 @@ const buildingCanBePlaced = (placePosition: Point, rotation: number, entityType:
    return true;
 }
 
-const getAttachedWallID = (connectedEntityIDs: ConnectedEntityIDs): number => {
-   for (let i = 0; i < connectedEntityIDs.length; i++) {
-      const entityID = connectedEntityIDs[i];
-      if (entityID !== 0) {
-         return entityID;
-      }
-   }
-   return 0;
-}
-
-export function placeBuilding(tribe: Tribe, position: Point, rotation: number, entityType: StructureType, connectedSidesBitset: ConnectedSidesBitset, connectedEntityIDs: ConnectedEntityIDs): void {
+export function placeBuilding(tribe: Tribe, position: Point, rotation: number, entityType: StructureType, structureInfo: StructureInfo): void {
    // Spawn the placeable entity
    switch (entityType) {
-      case EntityType.workbench: createWorkbench(position, rotation, tribe); break;
-      case EntityType.tribeTotem: createTribeTotem(position, rotation, tribe); break;
-      case EntityType.workerHut: createWorkerHut(position, rotation, tribe); break;
-      case EntityType.warriorHut: createWarriorHut(position, rotation, tribe); break;
-      case EntityType.barrel: createBarrel(position, rotation, tribe); break;
-      case EntityType.campfire: createCampfire(position, rotation, tribe); break;
-      case EntityType.furnace: createFurnace(position, rotation, tribe); break;
-      case EntityType.researchBench: createResearchBench(position, rotation, tribe); break;
-      case EntityType.wall: createWall(position, rotation, tribe); break;
-      case EntityType.planterBox: createPlanterBox(position, rotation, tribe); break;
-      case EntityType.floorSpikes: createSpikes(position, rotation, tribe, getAttachedWallID(connectedEntityIDs)); break;
-      case EntityType.floorPunjiSticks: createPunjiSticks(position, rotation, tribe, getAttachedWallID(connectedEntityIDs)); break;
+      case EntityType.workbench: createWorkbench(position, rotation, tribe, structureInfo); break;
+      case EntityType.tribeTotem: createTribeTotem(position, rotation, tribe, structureInfo); break;
+      case EntityType.workerHut: createWorkerHut(position, rotation, tribe, structureInfo); break;
+      case EntityType.warriorHut: createWarriorHut(position, rotation, tribe, structureInfo); break;
+      case EntityType.barrel: createBarrel(position, rotation, tribe, structureInfo); break;
+      case EntityType.campfire: createCampfire(position, rotation, tribe, structureInfo); break;
+      case EntityType.furnace: createFurnace(position, rotation, tribe, structureInfo); break;
+      case EntityType.researchBench: createResearchBench(position, rotation, tribe, structureInfo); break;
+      case EntityType.wall: createWall(position, rotation, tribe, structureInfo); break;
+      case EntityType.planterBox: createPlanterBox(position, rotation, tribe, structureInfo); break;
+      case EntityType.floorSpikes: createSpikes(position, rotation, tribe, structureInfo); break;
+      case EntityType.floorPunjiSticks: createPunjiSticks(position, rotation, tribe, structureInfo); break;
       case EntityType.ballista: createBlueprintEntity(position, rotation, BlueprintType.ballista, 0, tribe); break;
       case EntityType.slingTurret: createBlueprintEntity(position, rotation, BlueprintType.slingTurret, 0, tribe); break;
-      case EntityType.healingTotem: createHealingTotem(position, rotation, tribe); break;
-      case EntityType.fence: createFence(position, rotation, tribe, connectedSidesBitset, connectedEntityIDs); break;
-      case EntityType.fenceGate: createFenceGate(position, rotation, tribe, connectedSidesBitset, connectedEntityIDs); break;
+      case EntityType.healingTotem: createHealingTotem(position, rotation, tribe, structureInfo); break;
+      case EntityType.fence: createFence(position, rotation, tribe, structureInfo); break;
+      case EntityType.fenceGate: createFenceGate(position, rotation, tribe, structureInfo); break;
       case EntityType.wallSpikes:
       case EntityType.wallPunjiSticks:
       case EntityType.embrasure:
@@ -677,8 +667,13 @@ export function useItem(tribeMember: Entity, item: Item, inventoryName: Inventor
          // Make sure the placeable item can be placed
          if (!buildingCanBePlaced(placeInfo.position, placeInfo.rotation, placeInfo.entityType)) return;
          
+         const structureInfo: StructureInfo = {
+            connectedEntityIDs: placeInfo.snappedEntityIDs,
+            connectedSidesBitset: placeInfo.snappedSidesBitset
+         };
+         
          const tribeComponent = TribeComponentArray.getComponent(tribeMember.id);
-         placeBuilding(tribeComponent.tribe, placeInfo.position, placeInfo.rotation, placeInfo.entityType, placeInfo.snappedSidesBitset, placeInfo.snappedEntityIDs);
+         placeBuilding(tribeComponent.tribe, placeInfo.position, placeInfo.rotation, placeInfo.entityType, structureInfo);
 
          const inventory = getInventory(inventoryComponent, InventoryName.hotbar);
          consumeItemFromSlot(inventory, itemSlot, 1);
@@ -1060,14 +1055,15 @@ const blueprintTypeMatchesBuilding = (building: Entity, blueprintType: Blueprint
    return false;
 }
 
+// @Hack
 const getFenceGatePlaceDirection = (fence: Entity): number | null => {
-   const fenceConnectionComponent = FenceConnectionComponentArray.getComponent(fence.id);
+   const structureComponent = StructureComponentArray.getComponent(fence.id);
 
    // Top and bottom fence connections
    let normalDirectionOffset: number;
-   if (fenceConnectionComponent.connectedSidesBitset === 0b0101) {
+   if (structureComponent.connectedSidesBitset === 0b0101) {
       normalDirectionOffset = Math.PI * 0.5;
-   } else if (fenceConnectionComponent.connectedSidesBitset === 0b1010) {
+   } else if (structureComponent.connectedSidesBitset === 0b1010) {
       normalDirectionOffset = 0;
    } else {
       return null;

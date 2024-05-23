@@ -12,7 +12,7 @@ import { getHoveredEntityID, getSelectedEntityID } from "../entity-selection";
 import Entity from "../Entity";
 import { ATLAS_SLOT_SIZE } from "../texture-atlases/texture-atlas-stitching";
 import { BALLISTA_AMMO_BOX_OFFSET_X, BALLISTA_AMMO_BOX_OFFSET_Y, BALLISTA_GEAR_X, BALLISTA_GEAR_Y } from "../utils";
-import { getHoveredGhostType } from "../components/game/BuildMenu";
+import { getHoveredBlueprintGhostType } from "../components/game/BuildMenu";
 import WorkerHut from "../entities/WorkerHut";
 import WarriorHut from "../entities/WarriorHut";
 import OPTIONS from "../options";
@@ -70,7 +70,7 @@ export enum GhostType {
    fenceGate
 }
 
-interface GhostInfo {
+export interface GhostInfo {
    readonly position: Readonly<Point>;
    readonly rotation: number;
    readonly ghostType: GhostType;
@@ -86,10 +86,10 @@ interface TextureInfo {
    readonly rotation: number;
 }
 
-const PARTIAL_OPACITY = 0.5;
+export const PARTIAL_OPACITY = 0.5;
 
 // @Robustness: Should automatically detect which entity types to have an entry for
-const ENTITY_TYPE_TO_GHOST_TYPE_MAP: Record<StructureType, GhostType> = {
+export const ENTITY_TYPE_TO_GHOST_TYPE_MAP: Record<StructureType, GhostType> = {
    [EntityType.campfire]: GhostType.campfire,
    [EntityType.furnace]: GhostType.furnace,
    [EntityType.tribeTotem]: GhostType.tribeTotem,
@@ -113,6 +113,12 @@ const ENTITY_TYPE_TO_GHOST_TYPE_MAP: Record<StructureType, GhostType> = {
    [EntityType.fence]: GhostType.fence,
    [EntityType.fenceGate]: GhostType.fenceGate
 };
+
+let ghostInfo: GhostInfo | null = null;
+
+export function setGhostInfo(newGhostInfo: GhostInfo | null): void {
+   ghostInfo = newGhostInfo;
+}
 
 const generateCoverLeavesTextureInfo = (isSmall: boolean): TextureInfo => {
    const spawnRange = isSmall ? 24 : 18;
@@ -644,57 +650,6 @@ const calculateVertices = (ghostInfos: ReadonlyArray<GhostInfo>): ReadonlyArray<
    return vertices;
 }
 
-const getGhostRotation = (building: Entity, ghostType: GhostType): number => {
-   switch (ghostType) {
-      case GhostType.tunnelDoor: {
-         const tunnelComponent = building.getServerComponent(ServerComponentType.tunnel);
-         switch (tunnelComponent.doorBitset) {
-            case 0b00: {
-               // Show the door closest to the player
-               const dirToPlayer = building.position.calculateAngleBetween(Player.instance!.position);
-               const dot = Math.sin(building.rotation) * Math.sin(dirToPlayer) + Math.cos(building.rotation) * Math.cos(dirToPlayer);
-
-               return dot > 0 ? building.rotation : building.rotation + Math.PI;
-            }
-            case 0b01: {
-               // Show bottom door
-               return building.rotation + Math.PI;
-            }
-            case 0b10: {
-               // Show top door
-               return building.rotation;
-            }
-            default: {
-               throw new Error("Unknown door bitset " + tunnelComponent.doorBitset);
-            }
-         }
-      }
-      case GhostType.stoneDoorUpgrade:
-      case GhostType.stoneEmbrasureUpgrade:
-      case GhostType.stoneTunnelUpgrade:
-      case GhostType.stoneFloorSpikes:
-      case GhostType.stoneWallSpikes:
-      case GhostType.coverLeaves:
-      case GhostType.warriorHut: {
-         return building.rotation;
-      }
-      default: {
-         return snapRotationToPlayer(building, building.rotation);
-      }
-   }
-}
-
-const snapRotationToPlayer = (structure: Entity, rotation: number): number => {
-   const playerDirection = Player.instance!.position.calculateAngleBetween(structure.position);
-   let snapRotation = playerDirection - rotation;
-
-   // Snap to nearest PI/2 interval
-   snapRotation = Math.round(snapRotation / Math.PI*2) * Math.PI/2;
-
-   snapRotation += rotation;
-   return snapRotation;
-}
-
 const getPlantGhostType = (): GhostType | null => {
    const hoveredEntityID = getHoveredEntityID();
    const hoveredEntity = Board.entityRecord[hoveredEntityID];
@@ -757,22 +712,22 @@ const getGhostInfo = (): GhostInfo | null => {
    }
 
    // Blueprint ghost
-   const hoveredGhostType = getHoveredGhostType();
-   if (hoveredGhostType !== null) {
-      const selectedStructureID = getSelectedEntityID();
-      const selectedStructure = Board.entityRecord[selectedStructureID];
+   // const blueprintGhostType = getHoveredBlueprintGhostType();
+   // if (blueprintGhostType !== null) {
+   //    const selectedStructureID = getSelectedEntityID();
+   //    const selectedStructure = Board.entityRecord[selectedStructureID];
 
-      if (typeof selectedStructure !== "undefined") {
-         return {
-            position: selectedStructure.position.copy(),
-            rotation: getGhostRotation(selectedStructure, hoveredGhostType),
-            ghostType: hoveredGhostType,
-            snappedEntities: [],
-            tint: [1, 1, 1],
-            opacity: hoveredGhostType === GhostType.deconstructMarker ? 0.8 : PARTIAL_OPACITY
-         };
-      }
-   }
+   //    if (typeof selectedStructure !== "undefined") {
+   //       return {
+   //          position: selectedStructure.position.copy(),
+   //          rotation: getGhostRotation(selectedStructure, blueprintGhostType),
+   //          ghostType: blueprintGhostType,
+   //          snappedEntities: [],
+   //          tint: [1, 1, 1],
+   //          opacity: blueprintGhostType === GhostType.deconstructMarker ? 0.8 : PARTIAL_OPACITY
+   //       };
+   //    }
+   // }
 
    // Plant ghost
    const plantGhostType = getPlantGhostType();
@@ -800,7 +755,6 @@ export function renderGhostEntities(): void {
 
    const ghostInfos = new Array<GhostInfo>();
 
-   const ghostInfo = getGhostInfo();
    if (ghostInfo !== null) {
       ghostInfos.push(ghostInfo);
    }

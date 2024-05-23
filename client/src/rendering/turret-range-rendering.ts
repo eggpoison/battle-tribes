@@ -141,6 +141,7 @@ const getTurretItemType = (turret: Entity): ItemType => {
 }
 
 const getRenderingInfo = (): TurretRangeRenderingInfo | null => {
+   // @Cleanup: shouldn't call structure place info func. should have it passed in probably
    const playerSelectedItem = getPlayerSelectedItem();
    if (playerSelectedItem !== null && (playerSelectedItem.type === ItemType.ballista || playerSelectedItem.type === ItemType.sling_turret)) {
       const structureType = ITEM_INFO_RECORD[playerSelectedItem.type as PlaceableItemType].entityType;

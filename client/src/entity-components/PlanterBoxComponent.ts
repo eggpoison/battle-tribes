@@ -7,38 +7,42 @@ import { playSound } from "../sound";
 import { randInt } from "webgl-test-shared/dist/utils";
 
 class PlanterBoxComponent extends ServerComponent<ServerComponentType.planterBox> {
-   private fertiliserRenderPart: RenderPart | null = null;
+   private moundRenderPart: RenderPart | null = null;
    
    public hasPlant: boolean;
+   public isFertilised: boolean;
    
    constructor(entity: Entity, data: PlanterBoxComponentData) {
       super(entity);
 
       this.hasPlant = data.plantType !== null;
-      this.updateFertiliserRenderPart(data.plantType);
+      this.isFertilised = data.isFertilised;
+      this.updateMoundRenderPart(data.plantType);
    }
 
-   private updateFertiliserRenderPart(plantType: PlanterBoxPlant | null): void {
+   private updateMoundRenderPart(plantType: PlanterBoxPlant | null): void {
       if (plantType !== null) {
-         if (this.fertiliserRenderPart === null) {
+         if (this.moundRenderPart === null) {
             // @Temporary
             const textureSource = plantType === PlanterBoxPlant.iceSpikes ? "entities/plant/snow-clump.png" : "entities/plant/dirt-clump.png";
             
-            this.fertiliserRenderPart = new RenderPart(
+            this.moundRenderPart = new RenderPart(
                this.entity,
                getTextureArrayIndex(textureSource),
                1,
                Math.PI / 2 * randInt(0, 3)
             );
-            this.entity.attachRenderPart(this.fertiliserRenderPart);
+            this.entity.attachRenderPart(this.moundRenderPart);
          }
-      } else if (this.fertiliserRenderPart !== null) {
-         this.entity.removeRenderPart(this.fertiliserRenderPart);
-         this.fertiliserRenderPart = null;
+      } else if (this.moundRenderPart !== null) {
+         this.entity.removeRenderPart(this.moundRenderPart);
+         this.moundRenderPart = null;
       }
    }
 
    public updateFromData(data: PlanterBoxComponentData): void {
+      this.isFertilised = data.isFertilised;
+      
       const hasPlant = data.plantType !== null;
       if (hasPlant && this.hasPlant !== hasPlant) {
          // Plant sound effect
@@ -46,7 +50,7 @@ class PlanterBoxComponent extends ServerComponent<ServerComponentType.planterBox
       }
       this.hasPlant = hasPlant;
 
-      this.updateFertiliserRenderPart(data.plantType);
+      this.updateMoundRenderPart(data.plantType);
    }
 }
 

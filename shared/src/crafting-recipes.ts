@@ -436,6 +436,16 @@ export const CRAFTING_RECIPES: ReadonlyArray<CraftingRecipe> = [
       },
       aiCraftTimeTicks: Vars.SLOW_CRAFT_TIME,
       craftingStation: CraftingStation.workbench
+   },
+   {
+      product: ItemType.fertiliser,
+      yield: 2,
+      ingredients: {
+         [ItemType.poop]: 3,
+         [ItemType.leaf]: 3
+      },
+      aiCraftTimeTicks: Vars.SLOW_CRAFT_TIME,
+      craftingStation: CraftingStation.workbench
    }
 ];
 

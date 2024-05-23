@@ -449,13 +449,20 @@ const CLIENT_ITEM_INFO_RECORD: Record<ItemType, ClientItemInfo> = {
       description: ""
    },
    [ItemType.wooden_fence]: {
-      // @Temporary
       entityTextureSource: "items/small/fence.png",
       textureSource: "items/large/fence.png",
       toolTextureSource: "",
       name: "Wooden Fence",
       description: "Good for keeping cows in, not so good for defending your valuables."
    },
+   // @Incomplete
+   [ItemType.fertiliser]: {
+      entityTextureSource: "items/small/fence.png",
+      textureSource: "items/large/fertiliser.png",
+      toolTextureSource: "",
+      name: "Fertiliser",
+      description: "Speeds up plant growth when used on planter boxes."
+   }
 };
 
 export function getItemTypeImage(itemType: ItemType): any {

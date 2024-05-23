@@ -628,6 +628,7 @@ class Tribe {
    }
 
    public tick(): void {
+      // @Incomplete: automatically detect if there are no entities left which have a tribe component with this tribe
       // Destroy tribe if it has no entities left
       if (this.totem === null && this.tribesmanIDs.length === 0 && this.buildings.length === 0) {
          this.destroy();

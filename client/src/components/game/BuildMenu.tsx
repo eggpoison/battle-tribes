@@ -6,7 +6,7 @@ import { deselectSelectedEntity, getSelectedEntityID } from "../../entity-select
 import Board from "../../Board";
 import Camera from "../../Camera";
 import Client from "../../client/Client";
-import { GhostType } from "../../rendering/entity-ghost-rendering";
+import { GhostInfo, GhostType, PARTIAL_OPACITY, setGhostInfo } from "../../rendering/entity-ghost-rendering";
 import { getItemTypeImage } from "../../client-item-info";
 import Entity from "../../Entity";
 import { definiteGameState, playerIsHoldingHammer } from "../../game-state/game-states";
@@ -27,7 +27,7 @@ export let BuildMenu_setBuildingID: (buildingID: number) => void = () => {};
 export let BuildMenu_refreshBuildingID: () => void = () => {};
 
 let hoveredGhostType: GhostType | null = null;
-export function getHoveredGhostType(): GhostType | null {
+export function getHoveredBlueprintGhostType(): GhostType | null {
    return hoveredGhostType;
 }
 
@@ -336,6 +336,58 @@ export function entityCanOpenBuildMenu(entity: Entity): boolean {
    return menuOptions.length > 0;
 }
 
+// @Cleanup: copy paste of shared function
+const snapRotationToPlayer = (structure: Entity, rotation: number): number => {
+   const playerDirection = Player.instance!.position.calculateAngleBetween(structure.position);
+   let snapRotation = playerDirection - rotation;
+
+   // Snap to nearest PI/2 interval
+   snapRotation = Math.round(snapRotation / Math.PI*2) * Math.PI/2;
+
+   snapRotation += rotation;
+   return snapRotation;
+}
+
+const getGhostRotation = (building: Entity, ghostType: GhostType): number => {
+   switch (ghostType) {
+      case GhostType.tunnelDoor: {
+         const tunnelComponent = building.getServerComponent(ServerComponentType.tunnel);
+         switch (tunnelComponent.doorBitset) {
+            case 0b00: {
+               // Show the door closest to the player
+               const dirToPlayer = building.position.calculateAngleBetween(Player.instance!.position);
+               const dot = Math.sin(building.rotation) * Math.sin(dirToPlayer) + Math.cos(building.rotation) * Math.cos(dirToPlayer);
+
+               return dot > 0 ? building.rotation : building.rotation + Math.PI;
+            }
+            case 0b01: {
+               // Show bottom door
+               return building.rotation + Math.PI;
+            }
+            case 0b10: {
+               // Show top door
+               return building.rotation;
+            }
+            default: {
+               throw new Error("Unknown door bitset " + tunnelComponent.doorBitset);
+            }
+         }
+      }
+      case GhostType.stoneDoorUpgrade:
+      case GhostType.stoneEmbrasureUpgrade:
+      case GhostType.stoneTunnelUpgrade:
+      case GhostType.stoneFloorSpikes:
+      case GhostType.stoneWallSpikes:
+      case GhostType.coverLeaves:
+      case GhostType.warriorHut: {
+         return building.rotation;
+      }
+      default: {
+         return snapRotationToPlayer(building, building.rotation);
+      }
+   }
+}
+
 const BuildMenu = () => {
    const [x, setX] = useState(0);
    const [y, setY] = useState(0);
@@ -351,6 +403,13 @@ const BuildMenu = () => {
    }, []);
 
    useEffect(() => {
+      // Clear blueprint ghost type when the build menu is closed
+      const building = Board.entityRecord[buildingID];
+      if (typeof building === "undefined") {
+         setGhostInfo(null);
+         return;
+      }
+      
       BuildMenu_isOpen = () => typeof Board.entityRecord[buildingID] !== "undefined";
 
       BuildMenu_hide = (): void => {
@@ -378,6 +437,32 @@ const BuildMenu = () => {
          forcedUpdate();
       }
    }, [buildingID]);
+
+   // Blueprint ghost type
+   useEffect(() => {
+      if (hoveredOptionIdx === null) {
+         setGhostInfo(null);
+         return;
+      }
+      
+      const option = options[hoveredOptionIdx];
+
+      const building = Board.entityRecord[buildingID];
+      if (typeof building === "undefined") {
+         setGhostInfo(null);
+         return;
+      }
+
+      const ghostInfo: GhostInfo = {
+         position: building.position.copy(),
+         rotation: getGhostRotation(building, option.ghostType),
+         ghostType: option.ghostType,
+         snappedEntities: [],
+         tint: [1, 1, 1],
+         opacity: hoveredGhostType === GhostType.deconstructMarker ? 0.8 : PARTIAL_OPACITY
+      };
+      setGhostInfo(ghostInfo);
+   }, [hoveredOptionIdx]);
    
    const setHoveredGhostType = (ghostType: GhostType): void => {
       hoveredGhostType = ghostType;

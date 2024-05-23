@@ -193,32 +193,50 @@ const getEntityHighlightInfoArray = (entity: Entity): ReadonlyArray<HighlightInf
             group: 0
          }],
       ];
-      case EntityType.floorSpikes: {
-         return [
-            [{
-               width: 56,
-               height: 56,
-               isCircle: false,
-               xOffset: 0,
-               yOffset: 0,
-               rotation: 0,
-               group: 0
-            }],
-         ];
-      }
-      case EntityType.wallSpikes: {
-         return [
-            [{
-               width: 68,
-               height: 28,
-               isCircle: false,
-               xOffset: 0,
-               yOffset: 0,
-               rotation: 0,
-               group: 0
-            }],
-         ];
-      }
+      case EntityType.floorSpikes: return [
+         [{
+            width: 56,
+            height: 56,
+            isCircle: false,
+            xOffset: 0,
+            yOffset: 0,
+            rotation: 0,
+            group: 0
+         }],
+      ];
+      case EntityType.wallSpikes: return [
+         [{
+            width: 68,
+            height: 28,
+            isCircle: false,
+            xOffset: 0,
+            yOffset: 0,
+            rotation: 0,
+            group: 0
+         }],
+      ];
+      case EntityType.floorPunjiSticks: return [
+         [{
+            width: 56,
+            height: 56,
+            isCircle: false,
+            xOffset: 0,
+            yOffset: 0,
+            rotation: 0,
+            group: 0
+         }],
+      ];
+      case EntityType.wallPunjiSticks: return [
+         [{
+            width: 68,
+            height: 32,
+            isCircle: false,
+            xOffset: 0,
+            yOffset: 0,
+            rotation: 0,
+            group: 0
+         }],
+      ];
       case EntityType.slingTurret: return [
          [{
             width: 64,

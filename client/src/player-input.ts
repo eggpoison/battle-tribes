@@ -34,6 +34,8 @@ import { TribesmanTitle } from "webgl-test-shared/dist/titles";
 import { Point } from "webgl-test-shared/dist/utils";
 import { LimbInfo } from "./entity-components/InventoryUseComponent";
 import InventoryComponent from "./entity-components/InventoryComponent";
+import { ENTITY_TYPE_TO_GHOST_TYPE_MAP, GhostInfo, setGhostInfo } from "./rendering/entity-ghost-rendering";
+import Camera from "./Camera";
 
 /** Acceleration of the player while moving without any modifiers. */
 const PLAYER_ACCELERATION = 700;
@@ -633,6 +635,9 @@ const deselectItem = (item: Item, isOffhand: boolean): void => {
       }
       case "placeable": {
          latencyGameState.playerIsPlacingEntity = false;
+         
+         // Clear placeable item ghost
+         setGhostInfo(null);
          break;
       }
    }
@@ -1003,14 +1008,46 @@ const selectItemSlot = (itemSlot: number): void => {
 }
 
 const tickItem = (item: Item, itemSlot: number): void => {
+   const isSelected = itemSlot === latencyGameState.selectedHotbarItemSlot;
+   
    const itemCategory = ITEM_TYPE_RECORD[item.type];
    switch (itemCategory) {
       case "healing": {
          // If the player can no longer eat food without wasting it, stop eating
          const maxHealth = TRIBE_INFO_RECORD[Game.tribe.tribeType].maxHealthPlayer;
-         if (itemSlot === latencyGameState.selectedHotbarItemSlot && (latencyGameState.mainAction === LimbAction.eat || latencyGameState.mainAction === LimbAction.useMedicine) && definiteGameState.playerHealth >= maxHealth) {
+         if (isSelected && (latencyGameState.mainAction === LimbAction.eat || latencyGameState.mainAction === LimbAction.useMedicine) && definiteGameState.playerHealth >= maxHealth) {
             unuseItem(item);
          }
+
+         break;
+      }
+      case "placeable": {
+         // 
+         // Placeable item ghost
+         // 
+
+         if (!isSelected) {
+            break;
+         }
+
+         const structureType = ITEM_INFO_RECORD[item.type as PlaceableItemType].entityType;
+         const placeInfo = calculateStructurePlaceInfo(Camera.position, Player.instance!.rotation, structureType, Board.getChunks());
+         
+         const ghostInfo: GhostInfo = {
+            position: placeInfo.position,
+            rotation: placeInfo.rotation,
+            ghostType: ENTITY_TYPE_TO_GHOST_TYPE_MAP[placeInfo.entityType],
+            tint: canPlaceItem(placeInfo.position, placeInfo.rotation, item, structureType, false) ? [1, 1, 1] : [1.5, 0.5, 0.5],
+            snappedEntities: placeInfo.connectedEntityIDs.filter(id => typeof Board.entityRecord[id] !== "undefined").map(id => {
+               const entity = Board.entityRecord[id]!;
+               if (typeof entity === "undefined") {
+                  console.warn("undefined!");
+               }
+               return entity;
+            }),
+            opacity: 0.5
+         };
+         setGhostInfo(ghostInfo);
 
          break;
       }

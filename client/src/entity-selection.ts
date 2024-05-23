@@ -2,7 +2,7 @@ import { EntityType } from "webgl-test-shared/dist/entities";
 import { circleAndRectangleDoIntersect, circlesDoIntersect } from "webgl-test-shared/dist/collision";
 import { Point } from "webgl-test-shared/dist/utils";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { ITEM_TYPE_RECORD, InventoryName } from "webgl-test-shared/dist/items";
+import { ITEM_TYPE_RECORD, InventoryName, ItemType } from "webgl-test-shared/dist/items";
 import { getTechByID } from "webgl-test-shared/dist/techs";
 import { Settings } from "webgl-test-shared/dist/settings";
 import Player, { getPlayerSelectedItem } from "./entities/Player";
@@ -18,6 +18,7 @@ import { BuildMenu_hide, BuildMenu_setBuildingID, BuildMenu_updateBuilding, enti
 import { InventoryMenuType, InventorySelector_inventoryIsOpen, InventorySelector_setInventoryMenuType } from "./components/game/inventories/InventorySelector";
 import { getClosestGroupNum } from "./rendering/entity-selection-rendering";
 import { SEED_TO_PLANT_RECORD } from "./entity-components/PlantComponent";
+import { GhostInfo, GhostType, PARTIAL_OPACITY, setGhostInfo } from "./rendering/entity-ghost-rendering";
 
 const HIGHLIGHT_RANGE = 75;
 const HIGHLIGHT_DISTANCE = 150;
@@ -87,6 +88,7 @@ export function deselectHighlightedEntity(): void {
    highlightedEntityID = -1;
 }
 
+// @Cleanup: Rework so that this double-logic can be removed
 const entityCanBeSelected = (entity: Entity): boolean => {
    // Tunnels can be selected if they have doors
    if (entity.type === EntityType.tunnel) {
@@ -96,19 +98,22 @@ const entityCanBeSelected = (entity: Entity): boolean => {
       }
    }
 
-   // Planter boxes can be selected if the player is trying to place a plant in them
+   // Planter boxes can be selected if the player is trying to place a plant in them or fertilise them
    if (entity.type === EntityType.planterBox) {
       const selectedItem = getPlayerSelectedItem();
-      if (selectedItem !== null && typeof SEED_TO_PLANT_RECORD[selectedItem.type] !== "undefined") {
-         const planterBoxComponent = entity.getServerComponent(ServerComponentType.planterBox);
-         if (!planterBoxComponent.hasPlant) {
-            return true;
-         }
+      const planterBoxComponent = entity.getServerComponent(ServerComponentType.planterBox);
+
+      if (selectedItem !== null && selectedItem.type === ItemType.fertiliser && planterBoxComponent.hasPlant) {
+         return true;
+      }
+
+      if (selectedItem !== null && typeof SEED_TO_PLANT_RECORD[selectedItem.type] !== "undefined" && !planterBoxComponent.hasPlant) {
+         return true;
       }
    }
    
    // Buildings can be selected if the player is holding a hammer
-   if (entity.type === EntityType.wall || entity.type === EntityType.tunnel || entity.type === EntityType.embrasure || entity.type === EntityType.planterBox || entity.type === EntityType.fence) {
+   if (entity.type === EntityType.wall || entity.type === EntityType.tunnel || entity.type === EntityType.embrasure || entity.type === EntityType.fence) {
       const selectedItem = getPlayerSelectedItem();
       return selectedItem !== null && ITEM_TYPE_RECORD[selectedItem.type] === "hammer";
    }
@@ -153,7 +158,8 @@ const entityCanBeSelected = (entity: Entity): boolean => {
       || entity.type === EntityType.wallSpikes
       || entity.type === EntityType.floorPunjiSticks
       || entity.type === EntityType.wallPunjiSticks
-      || entity.type === EntityType.fenceGate;
+      || entity.type === EntityType.fenceGate
+      || entity.type === EntityType.planterBox;
 }
 
 // @Cleanup: name
@@ -215,7 +221,7 @@ export function updateHighlightedAndHoveredEntities(): void {
    }
 
    // If the player is interacting with an inventory, only consider the distance from the player not the cursor
-   if (selectedEntityID !== -1 && Board.entityRecord.hasOwnProperty(selectedEntityID) && (isHoveringInBlueprintMenu() || InventorySelector_inventoryIsOpen())) {
+   if (Board.entityRecord.hasOwnProperty(selectedEntityID) && (isHoveringInBlueprintMenu() || InventorySelector_inventoryIsOpen())) {
       const selectedEntity = getSelectedEntity();
       const distance = Player.instance.position.calculateDistanceBetween(selectedEntity.position);
       if (distance <= HIGHLIGHT_DISTANCE) {
@@ -233,6 +239,39 @@ export function updateHighlightedAndHoveredEntities(): void {
    }
 }
 
+// @Incomplete
+
+// // @Cleanup: should be a function
+// let plantGhostType: GhostType;
+// switch (selectedItem.type) {
+//    case ItemType.seed: {
+//       plantGhostType = GhostType.treeSeed;
+//       break;
+//    }
+//    case ItemType.berry: {
+//       plantGhostType = GhostType.berryBushSeed;
+//       break;
+//    }
+//    case ItemType.frostcicle: {
+//       plantGhostType = GhostType.iceSpikesSeed;
+//       break;
+//    }
+//    default: {
+//       throw new Error();
+//    }
+// }
+
+// // Create plant ghost
+// const ghostInfo: GhostInfo = {
+//    position: highlightedEntity.position,
+//    rotation: highlightedEntity.rotation,
+//    ghostType: plantGhostType,
+//    snappedEntities: [],
+//    tint: [1, 1, 1],
+//    opacity: PARTIAL_OPACITY
+// };
+// setGhostInfo(ghostInfo);
+
 export function attemptEntitySelection(): void {
    // Deselect the previous entity
    // @Cleanup: why is this needed?
@@ -243,6 +282,45 @@ export function attemptEntitySelection(): void {
    const highlightedEntity = Board.entityRecord[highlightedEntityID];
    if (typeof highlightedEntity === "undefined") {
       return;
+   }
+
+   // Priority over building
+   switch (highlightedEntity.type) {
+      case EntityType.planterBox: {
+         const selectedItem = getPlayerSelectedItem();
+         if (selectedItem === null) {
+            break;
+         }
+         
+         const planterBoxComponent = highlightedEntity.getServerComponent(ServerComponentType.planterBox);
+
+         // If holding a plant, try to place the seed in the planter box
+         const plant = SEED_TO_PLANT_RECORD[selectedItem.type];
+         if (typeof plant !== "undefined" && !planterBoxComponent.hasPlant) {
+            Client.sendModifyBuilding(highlightedEntityID, plant);
+
+            // @Hack
+            const inventoryUseComponent = Player.instance!.getServerComponent(ServerComponentType.inventoryUse);
+            const hotbarUseInfo = inventoryUseComponent.getUseInfo(InventoryName.hotbar);
+            hotbarUseInfo.lastAttackTicks = Board.ticks;
+            
+            return;
+         }
+
+         // If holding fertiliser, try to fertilise the planter box
+         if (selectedItem.type === ItemType.fertiliser && planterBoxComponent.hasPlant && !planterBoxComponent.isFertilised) {
+            Client.sendModifyBuilding(highlightedEntityID, -1);
+
+            // @Hack
+            const inventoryUseComponent = Player.instance!.getServerComponent(ServerComponentType.inventoryUse);
+            const hotbarUseInfo = inventoryUseComponent.getUseInfo(InventoryName.hotbar);
+            hotbarUseInfo.lastAttackTicks = Board.ticks;
+
+            return;
+         }
+
+         break;
+      }
    }
    
    if (entityCanOpenBuildMenu(highlightedEntity)) {
@@ -310,19 +388,6 @@ export function attemptEntitySelection(): void {
          }
          case EntityType.ballista: {
             InventorySelector_setInventoryMenuType(InventoryMenuType.ammoBox);
-            break;
-         }
-         case EntityType.planterBox: {
-            const selectedItem = getPlayerSelectedItem()!;
-            const plant = SEED_TO_PLANT_RECORD[selectedItem.type];
-            if (typeof plant !== "undefined") {
-               Client.sendModifyBuilding(highlightedEntityID, plant);
-
-               // @Hack
-               const inventoryUseComponent = Player.instance!.getServerComponent(ServerComponentType.inventoryUse);
-               const hotbarUseInfo = inventoryUseComponent.getUseInfo(InventoryName.hotbar);
-               hotbarUseInfo.lastAttackTicks = Board.ticks;
-            }
             break;
          }
       }

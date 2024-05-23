@@ -1434,18 +1434,18 @@ export function tickTribesman(tribesman: Entity): void {
       }
    }
       
-   // Attack enemies
-   if (visibleEnemies.length > 0) {
-      const target = getClosestAccessibleEntity(tribesman, visibleEnemies);
-      tribesmanComponent.huntedEntityID = target.id;
-      huntEntity(tribesman, target, true);
+   // // Attack enemies
+   // if (visibleEnemies.length > 0) {
+   //    const target = getClosestAccessibleEntity(tribesman, visibleEnemies);
+   //    tribesmanComponent.huntedEntityID = target.id;
+   //    huntEntity(tribesman, target, true);
 
-      if (tribesman.ageTicks % MESSAGE_INTERVAL_TICKS === 0) {
-         const communcationTargets = getCommunicationTargets(tribesman);
-         sendCallToArmsMessage(tribesman, communcationTargets, target);
-      }
-      return;
-   }
+   //    if (tribesman.ageTicks % MESSAGE_INTERVAL_TICKS === 0) {
+   //       const communcationTargets = getCommunicationTargets(tribesman);
+   //       sendCallToArmsMessage(tribesman, communcationTargets, target);
+   //    }
+   //    return;
+   // }
 
    // @Temporary? Do we keep?
    // // Continue hunting existing entity
@@ -1464,18 +1464,18 @@ export function tickTribesman(tribesman: Entity): void {
    //    return;
    // }
    
-   // Attack hostile mobs
-   if (visibleHostileMobs.length > 0) {
-      const target = getClosestAccessibleEntity(tribesman, visibleHostileMobs);
-      huntEntity(tribesman, target, true);
+   // // Attack hostile mobs
+   // if (visibleHostileMobs.length > 0) {
+   //    const target = getClosestAccessibleEntity(tribesman, visibleHostileMobs);
+   //    huntEntity(tribesman, target, true);
 
-      // @Cleanup: Copy and paste from hunting enemies section
-      if (tribesman.ageTicks % MESSAGE_INTERVAL_TICKS === 0) {
-         const communcationTargets = getCommunicationTargets(tribesman);
-         sendCallToArmsMessage(tribesman, communcationTargets, target);
-      }
-      return;
-   }
+   //    // @Cleanup: Copy and paste from hunting enemies section
+   //    if (tribesman.ageTicks % MESSAGE_INTERVAL_TICKS === 0) {
+   //       const communcationTargets = getCommunicationTargets(tribesman);
+   //       sendCallToArmsMessage(tribesman, communcationTargets, target);
+   //    }
+   //    return;
+   // }
 
    // Help other tribesmen
    if (tribesmanComponent.ticksSinceLastHelpRequest <= Vars.HELP_TIME) {
@@ -1490,11 +1490,11 @@ export function tickTribesman(tribesman: Entity): void {
       }
    }
    
-   // Attack enemy buildings
-   if (visibleEnemyBuildings.length > 0) {
-      huntEntity(tribesman, getClosestAccessibleEntity(tribesman, visibleEnemyBuildings), true);
-      return;
-   }
+   // // Attack enemy buildings
+   // if (visibleEnemyBuildings.length > 0) {
+   //    huntEntity(tribesman, getClosestAccessibleEntity(tribesman, visibleEnemyBuildings), true);
+   //    return;
+   // }
 
    // Heal when missing health
    if (healthComponent.health < healthComponent.maxHealth) {
@@ -1695,75 +1695,75 @@ export function tickTribesman(tribesman: Entity): void {
    //    }
    // }
 
-   const goals = getTribesmanGoals(tribesman, hotbarInventory);
+   // const goals = getTribesmanGoals(tribesman, hotbarInventory);
 
-   // @Cleanup: don't use null
-   const goal = goals.length > 0 ? goals[0] : null;
-   tribesmanComponent.goals = goals;
+   // // @Cleanup: don't use null
+   // const goal = goals.length > 0 ? goals[0] : null;
+   // tribesmanComponent.goals = goals;
    
-   if (goal !== null) {
-      // @Cleanup: messy
-      if (goal.type === TribesmanGoalType.craftRecipe || goal.type === TribesmanGoalType.placeBuilding || goal.type === TribesmanGoalType.upgradeBuilding) {
-         if (goal.isPersonalPlan && goal.plan !== null) {
-            // @Cleanup: copy and paste
-            if (tribesmanComponent.personalBuildingPlan !== null) {
-               const idx = tribeComponent.tribe.personalBuildingPlans.indexOf(tribesmanComponent.personalBuildingPlan);
-               if (idx !== -1) {
-                  tribeComponent.tribe.personalBuildingPlans.splice(idx, 1);
-               }
-            }
+   // if (goal !== null) {
+   //    // @Cleanup: messy
+   //    if (goal.type === TribesmanGoalType.craftRecipe || goal.type === TribesmanGoalType.placeBuilding || goal.type === TribesmanGoalType.upgradeBuilding) {
+   //       if (goal.isPersonalPlan && goal.plan !== null) {
+   //          // @Cleanup: copy and paste
+   //          if (tribesmanComponent.personalBuildingPlan !== null) {
+   //             const idx = tribeComponent.tribe.personalBuildingPlans.indexOf(tribesmanComponent.personalBuildingPlan);
+   //             if (idx !== -1) {
+   //                tribeComponent.tribe.personalBuildingPlans.splice(idx, 1);
+   //             }
+   //          }
    
-            tribesmanComponent.personalBuildingPlan = goal.plan;
-            tribeComponent.tribe.personalBuildingPlans.push(goal.plan);
-         } else {
-            // @Cleanup: copy and paste
-            if (tribesmanComponent.personalBuildingPlan !== null) {
-               const idx = tribeComponent.tribe.personalBuildingPlans.indexOf(tribesmanComponent.personalBuildingPlan);
-               if (idx !== -1) {
-                  tribeComponent.tribe.personalBuildingPlans.splice(idx, 1);
-               }
-            }
+   //          tribesmanComponent.personalBuildingPlan = goal.plan;
+   //          tribeComponent.tribe.personalBuildingPlans.push(goal.plan);
+   //       } else {
+   //          // @Cleanup: copy and paste
+   //          if (tribesmanComponent.personalBuildingPlan !== null) {
+   //             const idx = tribeComponent.tribe.personalBuildingPlans.indexOf(tribesmanComponent.personalBuildingPlan);
+   //             if (idx !== -1) {
+   //                tribeComponent.tribe.personalBuildingPlans.splice(idx, 1);
+   //             }
+   //          }
             
-            tribesmanComponent.personalBuildingPlan = null;
-         }
+   //          tribesmanComponent.personalBuildingPlan = null;
+   //       }
          
-         if (goal.plan !== null) {
-            goal.plan.assignedTribesmanID = tribesman.id;
-         }
-      }
+   //       if (goal.plan !== null) {
+   //          goal.plan.assignedTribesmanID = tribesman.id;
+   //       }
+   //    }
       
-      switch (goal.type) {
-         case TribesmanGoalType.craftRecipe: {
-            if (inventoryComponentCanAffordRecipe(inventoryComponent, goal.recipe, InventoryName.hotbar)) {
-               const isGoing = goCraftItem(tribesman, goal.recipe, tribeComponent.tribe);
-               if (isGoing) {
-                  return;
-               }
-            }
-            break;
-         }
-         case TribesmanGoalType.placeBuilding: {
-            const isGoing = goPlaceBuilding(tribesman, hotbarInventory, tribeComponent.tribe, goal);
-            if (isGoing) {
-               return;
-            }
-            break;
-         }
-         case TribesmanGoalType.upgradeBuilding: {
-            goUpgradeBuilding(tribesman, goal);
-            return;
-         }
-         case TribesmanGoalType.researchTech: {
-            if (tribeComponent.tribe.techRequiresResearching(goal.tech)) {
-               const isGoing = goResearchTech(tribesman, goal.tech);
-               if (isGoing) {
-                  return;
-               }
-            }
-            break;
-         }
-      }
-   }
+   //    switch (goal.type) {
+   //       case TribesmanGoalType.craftRecipe: {
+   //          if (inventoryComponentCanAffordRecipe(inventoryComponent, goal.recipe, InventoryName.hotbar)) {
+   //             const isGoing = goCraftItem(tribesman, goal.recipe, tribeComponent.tribe);
+   //             if (isGoing) {
+   //                return;
+   //             }
+   //          }
+   //          break;
+   //       }
+   //       case TribesmanGoalType.placeBuilding: {
+   //          const isGoing = goPlaceBuilding(tribesman, hotbarInventory, tribeComponent.tribe, goal);
+   //          if (isGoing) {
+   //             return;
+   //          }
+   //          break;
+   //       }
+   //       case TribesmanGoalType.upgradeBuilding: {
+   //          goUpgradeBuilding(tribesman, goal);
+   //          return;
+   //       }
+   //       case TribesmanGoalType.researchTech: {
+   //          if (tribeComponent.tribe.techRequiresResearching(goal.tech)) {
+   //             const isGoing = goResearchTech(tribesman, goal.tech);
+   //             if (isGoing) {
+   //                return;
+   //             }
+   //          }
+   //          break;
+   //       }
+   //    }
+   // }
 
    // @Speed: shouldn't have to run for tribesmen which can't research
    // Research
@@ -1774,8 +1774,8 @@ export function tickTribesman(tribesman: Entity): void {
       }
    }
 
-   const prioritisedItemTypes = goal !== null && goal.type === TribesmanGoalType.gatherItems ? goal.itemTypesToGather : [];
-   const gatherTargetInfo = getGatherTarget(tribesman, aiHelperComponent.visibleEntities, prioritisedItemTypes);
+   // const prioritisedItemTypes = goal !== null && goal.type === TribesmanGoalType.gatherItems ? goal.itemTypesToGather : [];
+   // const gatherTargetInfo = getGatherTarget(tribesman, aiHelperComponent.visibleEntities, prioritisedItemTypes);
 
    // Pick up dropped items
    // @Temporary
@@ -1828,29 +1828,29 @@ export function tickTribesman(tribesman: Entity): void {
    //    }
    // }
 
-   // Use items in research
-   // @Hack
-   if (goals.length >= 2 && goal!.type === TribesmanGoalType.gatherItems && goals[1].type === TribesmanGoalType.researchTech) {
-      const researchGoal = goals[1];
+   // // Use items in research
+   // // @Hack
+   // if (goals.length >= 2 && goal!.type === TribesmanGoalType.gatherItems && goals[1].type === TribesmanGoalType.researchTech) {
+   //    const researchGoal = goals[1];
       
-      // @Incomplete: take into account backpack
-      for (let itemSlot = 1; itemSlot <= hotbarInventory.width * hotbarInventory.height; itemSlot++) {
-         const item = hotbarInventory.itemSlots[itemSlot];
-         if (typeof item === "undefined") {
-            continue;
-         }
+   //    // @Incomplete: take into account backpack
+   //    for (let itemSlot = 1; itemSlot <= hotbarInventory.width * hotbarInventory.height; itemSlot++) {
+   //       const item = hotbarInventory.itemSlots[itemSlot];
+   //       if (typeof item === "undefined") {
+   //          continue;
+   //       }
 
 
-         const amountUsed = tribeComponent.tribe.useItemInTechResearch(researchGoal.tech, item.type, item.count);
-         if (amountUsed > 0) {
-            consumeItemFromSlot(hotbarInventory, itemSlot, amountUsed);
-         }
-      }
+   //       const amountUsed = tribeComponent.tribe.useItemInTechResearch(researchGoal.tech, item.type, item.count);
+   //       if (amountUsed > 0) {
+   //          consumeItemFromSlot(hotbarInventory, itemSlot, amountUsed);
+   //       }
+   //    }
 
-      if (tribeComponent.tribe.techIsComplete(researchGoal.tech)) {
-         tribeComponent.tribe.unlockTech(researchGoal.tech.id);
-      }
-   }
+   //    if (tribeComponent.tribe.techIsComplete(researchGoal.tech)) {
+   //       tribeComponent.tribe.unlockTech(researchGoal.tech.id);
+   //    }
+   // }
 
    // Replace plants in planter boxes
    // @Speed
@@ -1930,10 +1930,10 @@ export function tickTribesman(tribesman: Entity): void {
    }
 
    // Gather resources
-   if (gatherTargetInfo.target !== null) {
-      huntEntity(tribesman, gatherTargetInfo.target, false);
-      return;
-   }
+   // if (gatherTargetInfo.target !== null) {
+   //    huntEntity(tribesman, gatherTargetInfo.target, false);
+   //    return;
+   // }
 
    // @Cleanup: Remove once all paths set their limb actions
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman.id);
@@ -1969,7 +1969,8 @@ export function tickTribesman(tribesman: Entity): void {
 
    // If nothing else to do, patrol tribe area
    if (tribesmanComponent.targetPatrolPositionX === -1 && Math.random() < 0.3 / Settings.TPS) {
-      const patrolPosition = generatePatrolPosition(tribesman, tribeComponent.tribe, goal);
+      // const patrolPosition = generatePatrolPosition(tribesman, tribeComponent.tribe, goal);
+      const patrolPosition = generatePatrolPosition(tribesman, tribeComponent.tribe, null);
       if (patrolPosition !== null) {
          const didPathfind = pathfindToPosition(tribesman, patrolPosition.x, patrolPosition.y, 0, TribesmanPathType.default, 0, PathfindFailureDefault.returnEmpty);
          if (didPathfind) {

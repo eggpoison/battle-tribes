@@ -26,7 +26,7 @@ import { EntityRelationship, TribeComponent } from "../../components/TribeCompon
 import { deoccupyResearchBench, attemptToOccupyResearchBench } from "../../components/ResearchBenchComponent";
 import { createItemsOverEntity } from "../../entity-shared";
 import { toggleTunnelDoor, updateTunnelDoorBitset } from "../../components/TunnelComponent";
-import { PlanterBoxComponentArray, placePlantInPlanterBox } from "../../components/PlanterBoxComponent";
+import { PlanterBoxComponentArray, fertilisePlanterBox, placePlantInPlanterBox } from "../../components/PlanterBoxComponent";
 import { createItem } from "../../items";
 import { toggleFenceGateDoor } from "../../components/FenceGateComponent";
 import { TribesmanTitle } from "webgl-test-shared/dist/titles";
@@ -508,7 +508,19 @@ export function modifyBuilding(player: Entity, buildingID: number, data: number)
          break;
       }
       case EntityType.planterBox: {
-         modifyPlanterBox(player, building, data);
+         if (data === -1) {
+            const planterBoxComponent = PlanterBoxComponentArray.getComponent(buildingID);
+            fertilisePlanterBox(planterBoxComponent);
+
+            // Consume the item
+            // @Cleanup: copy and paste
+            const inventoryUseComponent = InventoryUseComponentArray.getComponent(player.id);
+            const hotbarUseInfo = getInventoryUseInfo(inventoryUseComponent, InventoryName.hotbar);
+            const hotbarInventory = hotbarUseInfo.inventory;
+            consumeItemFromSlot(hotbarInventory, hotbarUseInfo.selectedItemSlot, 1);
+         } else {
+            modifyPlanterBox(player, building, data);
+         }
          break;
       }
       default: {

@@ -24,7 +24,7 @@ export enum TechID {
    frostshaping,
    basicMachinery,
    herbalMedicine,
-   planterBox,
+   gardening,
    healingTotem
 }
 
@@ -388,11 +388,11 @@ export const TECHS: ReadonlyArray<TechInfo> = [
       conflictingTechs: []
    },
    {
-      id: TechID.planterBox,
+      id: TechID.gardening,
       name: "Gardening",
       description: "Sustainable plant growth",
       iconSrc: "planter-box.png",
-      unlockedItems: [ItemType.planter_box, ItemType.gardening_gloves],
+      unlockedItems: [ItemType.planter_box, ItemType.gardening_gloves, ItemType.fertiliser],
       positionX: 30,
       positionY: -51,
       dependencies: [TechID.gathering],

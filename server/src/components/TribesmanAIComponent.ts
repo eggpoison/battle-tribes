@@ -84,7 +84,8 @@ const GIFT_APPRECIATION_WEIGHTS: Record<ItemType, number> = {
    [ItemType.leaf_suit]: 3,
    [ItemType.seed]: 1,
    [ItemType.gardening_gloves]: 9,
-   [ItemType.wooden_fence]: 2
+   [ItemType.wooden_fence]: 2,
+   [ItemType.fertiliser]: 2
 };
 
 export const enum TribesmanPathType {

@@ -621,6 +621,7 @@ export interface PlantComponentData {
 
 export interface PlanterBoxComponentData {
    readonly plantType: PlanterBoxPlant | null;
+   readonly isFertilised: boolean;
 }
 
 /* Structure Component Data */

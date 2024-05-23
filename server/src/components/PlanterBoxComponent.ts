@@ -4,9 +4,15 @@ import Entity from "../Entity";
 import { createPlant } from "../entities/plant";
 import Board from "../Board";
 import { PlantComponentArray } from "./PlantComponent";
+import { Settings } from "webgl-test-shared/dist/settings";
+
+const enum Vars {
+   FERTILISER_DURATION_TICKS = 300 * Settings.TPS
+}
 
 export class PlanterBoxComponent {
    public plantEntityID = 0;
+   public remainingFertiliserTicks = 0;
 
    /** Plant type that AI tribesman will attempt to place in the planter box */
    public replantType: PlanterBoxPlant | null = null;
@@ -38,7 +44,8 @@ export function serialisePlanterBoxComponent(entityID: number): PlanterBoxCompon
    }
    
    return {
-      plantType: plantType
+      plantType: plantType,
+      isFertilised: planterBoxComponent.remainingFertiliserTicks > 0
    };
 }
 
@@ -48,4 +55,8 @@ export function placePlantInPlanterBox(planterBox: Entity, plantType: PlanterBox
    const plantEntity = createPlant(planterBox.position.copy(), 2 * Math.PI * Math.random(), planterBox.id, plantType);
    planterBoxComponent.plantEntityID = plantEntity.id;
    planterBoxComponent.replantType = plantType;
+}
+
+export function fertilisePlanterBox(planterBoxComponent: PlanterBoxComponent): void {
+   planterBoxComponent.remainingFertiliserTicks = Vars.FERTILISER_DURATION_TICKS;
 }

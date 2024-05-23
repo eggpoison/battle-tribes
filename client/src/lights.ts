@@ -79,7 +79,7 @@ export function removeLight(light: Light): void {
    delete lightToEntityRecord[lightID];
    if (typeof entityID !== "undefined") {
       const idx = entityToLightsRecord[entityID]!.indexOf(lightID);
-      entityToLightsRecord[entityID]!.splice(idx);
+      entityToLightsRecord[entityID]!.splice(idx, 1);
       if (entityToLightsRecord[entityID]!.length === 0) {
          delete entityToLightsRecord[entityID];
       }
@@ -89,7 +89,7 @@ export function removeLight(light: Light): void {
    delete lightToRenderPartRecord[lightID];
    if (typeof renderPartID !== "undefined") {
       const idx = renderPartToLightsRecord[renderPartID]!.indexOf(lightID);
-      renderPartToLightsRecord[renderPartID]!.splice(idx);
+      renderPartToLightsRecord[renderPartID]!.splice(idx, 1);
       if (renderPartToLightsRecord[renderPartID]!.length === 0) {
          delete renderPartToLightsRecord[renderPartID];
       }
@@ -138,12 +138,14 @@ export function getLightPosition(lightIdx: number): Point {
 
    const attachedEntityID = lightToEntityRecord[lightID];
    if (typeof attachedEntityID !== "undefined") {
-      const entity = Board.entityRecord[attachedEntityID];
-      const offset = light.position;
-
-      const x = entity.renderPosition.x + rotateXAroundOrigin(offset.x, offset.y, entity.rotation);
-      const y = entity.renderPosition.y + rotateYAroundOrigin(offset.x, offset.y, entity.rotation);
-      return new Point(x, y);
+      const attachedEntity = Board.entityRecord[attachedEntityID];
+      if (typeof attachedEntity !== "undefined") {
+         const offset = light.position;
+         
+         const x = attachedEntity.renderPosition.x + rotateXAroundOrigin(offset.x, offset.y, attachedEntity.rotation);
+         const y = attachedEntity.renderPosition.y + rotateYAroundOrigin(offset.x, offset.y, attachedEntity.rotation);
+         return new Point(x, y);
+      }
    }
 
    return light.position;

@@ -10,20 +10,26 @@ import { HealthComponent } from "../../components/HealthComponent";
 import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
 import { TribeComponent } from "../../components/TribeComponent";
 import RectangularHitbox from "../../hitboxes/RectangularHitbox";
-import CircularHitbox from "../../hitboxes/CircularHitbox";
 import { FenceGateComponent } from "../../components/FenceGateComponent";
-import { StructureComponentArray, StructureComponent, StructureInfo } from "../../components/StructureComponent";
+import { StructureComponentArray, StructureComponent } from "../../components/StructureComponent";
+import { StructureConnectionInfo } from "webgl-test-shared/dist/structures";
+import { Hitbox } from "../../hitboxes/hitboxes";
+import { HitboxFlags } from "../../hitboxes/BaseHitbox";
 
 const HITBOX_WIDTH = 56 - 0.05;
 const HITBOX_HEIGHT = 16 - 0.05;
 
-export function createFenceGateHitboxes(parentPosition: Point, localID: number, parentRotation: number): ReadonlyArray<RectangularHitbox | CircularHitbox> {
-   const hitboxes = new Array<RectangularHitbox | CircularHitbox>();
-   hitboxes.push(new RectangularHitbox(parentPosition, 1, 0, 0, HitboxCollisionType.hard, localID, parentRotation, HITBOX_WIDTH, HITBOX_HEIGHT, 0, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK));
+export function createFenceGateHitboxes(parentPosition: Point, localID: number, parentRotation: number): ReadonlyArray<Hitbox> {
+   const hitboxes = new Array<Hitbox>();
+
+   const hitbox = new RectangularHitbox(parentPosition, 1, 0, 0, HitboxCollisionType.hard, localID, parentRotation, HITBOX_WIDTH, HITBOX_HEIGHT, 0, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK);
+   hitbox.flags |= HitboxFlags.NON_GRASS_BLOCKING;
+   hitboxes.push(hitbox);
+   
    return hitboxes;
 }
 
-export function createFenceGate(position: Point, rotation: number, tribe: Tribe, structureInfo: StructureInfo): Entity {
+export function createFenceGate(position: Point, rotation: number, tribe: Tribe, connectionInfo: StructureConnectionInfo): Entity {
    const fenceGate = new Entity(position, rotation, EntityType.fenceGate, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
    const hitboxes = createFenceGateHitboxes(position, fenceGate.getNextHitboxLocalID(), rotation);
@@ -33,7 +39,7 @@ export function createFenceGate(position: Point, rotation: number, tribe: Tribe,
 
    HealthComponentArray.addComponent(fenceGate.id, new HealthComponent(5));
    StatusEffectComponentArray.addComponent(fenceGate.id, new StatusEffectComponent(StatusEffect.poisoned));
-   StructureComponentArray.addComponent(fenceGate.id, new StructureComponent(structureInfo));
+   StructureComponentArray.addComponent(fenceGate.id, new StructureComponent(connectionInfo));
    TribeComponentArray.addComponent(fenceGate.id, new TribeComponent(tribe));
    FenceGateComponentArray.addComponent(fenceGate.id, new FenceGateComponent());
    

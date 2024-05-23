@@ -135,6 +135,7 @@ const generateCoverLeavesTextureInfoArray = (): ReadonlyArray<TextureInfo> => {
    }
    return textureInfoArray;
 }
+const coverLeavesTextureInfoArray = generateCoverLeavesTextureInfoArray();
 
 let program: WebGLProgram;
 
@@ -248,9 +249,7 @@ const getGhostTextureInfoArray = (ghostInfo: GhostInfo): ReadonlyArray<TextureIn
             rotation: 0
          }
       ];
-      case GhostType.coverLeaves: {
-         return generateCoverLeavesTextureInfoArray();
-      }
+      case GhostType.coverLeaves: return coverLeavesTextureInfoArray;
       case GhostType.treeSeed: return [
          {
             textureSource: "entities/plant/tree-sapling-1.png",
@@ -562,8 +561,9 @@ const getGhostTextureInfoArray = (ghostInfo: GhostInfo): ReadonlyArray<TextureIn
             rotation: 0
          }
       ];
-      // @Temporary
       case GhostType.fence: {
+         // @Incomplete: show connections as well
+         
          const textureInfoArray = new Array<TextureInfo>();
 
          textureInfoArray.push({
@@ -575,7 +575,6 @@ const getGhostTextureInfoArray = (ghostInfo: GhostInfo): ReadonlyArray<TextureIn
 
          return textureInfoArray;
       }
-      // @Temporary
       case GhostType.fenceGate: return [
          {
             textureSource: "entities/fence-gate/fence-gate-door.png",
@@ -698,11 +697,11 @@ const snapRotationToPlayer = (structure: Entity, rotation: number): number => {
 
 const getPlantGhostType = (): GhostType | null => {
    const hoveredEntityID = getHoveredEntityID();
-   if (hoveredEntityID === -1) {
+   const hoveredEntity = Board.entityRecord[hoveredEntityID];
+   if (typeof hoveredEntity === "undefined") {
       return null;
    }
 
-   const hoveredEntity = Board.entityRecord[hoveredEntityID];
    if (hoveredEntity.type !== EntityType.planterBox) {
       return null;
    }
@@ -746,8 +745,8 @@ const getGhostInfo = (): GhostInfo | null => {
          ghostType: ENTITY_TYPE_TO_GHOST_TYPE_MAP[placeInfo.entityType],
          // @Incomplete: isPlacedOnWall
          tint: canPlaceItem(placeInfo.position, placeInfo.rotation, playerSelectedItem, structureType, false) ? [1, 1, 1] : [1.5, 0.5, 0.5],
-         snappedEntities: placeInfo.snappedEntityIDs.filter(id => id !== 0).map(id => {
-            const entity = Board.entityRecord[id];
+         snappedEntities: placeInfo.connectedEntityIDs.filter(id => typeof Board.entityRecord[id] !== "undefined").map(id => {
+            const entity = Board.entityRecord[id]!;
             if (typeof entity === "undefined") {
                console.warn("undefined!");
             }
@@ -779,7 +778,7 @@ const getGhostInfo = (): GhostInfo | null => {
    const plantGhostType = getPlantGhostType();
    if (plantGhostType !== null) {
       const hoveredEntityID = getHoveredEntityID();
-      const hoveredEntity = Board.entityRecord[hoveredEntityID];
+      const hoveredEntity = Board.entityRecord[hoveredEntityID]!;
 
       return {
          position: hoveredEntity.position,

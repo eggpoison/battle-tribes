@@ -13,8 +13,9 @@ import { TribeComponent } from "../../components/TribeComponent";
 import RectangularHitbox from "../../hitboxes/RectangularHitbox";
 import { TunnelComponent } from "../../components/TunnelComponent";
 import { BuildingMaterialComponent } from "../../components/BuildingMaterialComponent";
-import CircularHitbox from "../../hitboxes/CircularHitbox";
-import { StructureComponentArray, StructureComponent, StructureInfo } from "../../components/StructureComponent";
+import { StructureComponentArray, StructureComponent } from "../../components/StructureComponent";
+import { StructureConnectionInfo } from "webgl-test-shared/dist/structures";
+import { Hitbox } from "../../hitboxes/hitboxes";
 
 const HITBOX_WIDTH = 8 - 0.05;
 const HITBOX_HEIGHT = 64 - 0.05;
@@ -23,8 +24,8 @@ const THIN_HITBOX_WIDTH = 0.1;
 export const TUNNEL_HEALTHS = [25, 75];
 
 // @Incomplete: increments local id many times
-export function createTunnelHitboxes(parentPosition: Point, localID: number, parentRotation: number): ReadonlyArray<CircularHitbox | RectangularHitbox> {
-   const hitboxes = new Array<CircularHitbox | RectangularHitbox>();
+export function createTunnelHitboxes(parentPosition: Point, localID: number, parentRotation: number): ReadonlyArray<Hitbox> {
+   const hitboxes = new Array<Hitbox>();
    
    // Soft hitboxes
    hitboxes.push(new RectangularHitbox(parentPosition, 1, -32 + HITBOX_WIDTH / 2, 0, HitboxCollisionType.soft, localID, parentRotation, HITBOX_WIDTH, HITBOX_HEIGHT, 0, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK));
@@ -40,7 +41,7 @@ export function createTunnelHitboxes(parentPosition: Point, localID: number, par
    return hitboxes;
 }
 
-export function createTunnel(position: Point, rotation: number, tribe: Tribe, structureInfo: StructureInfo, material: BuildingMaterial): Entity {
+export function createTunnel(position: Point, rotation: number, tribe: Tribe, connectionInfo: StructureConnectionInfo, material: BuildingMaterial): Entity {
    const tunnel = new Entity(position, rotation, EntityType.tunnel, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
    const hitboxes = createTunnelHitboxes(position, tunnel.getNextHitboxLocalID(), tunnel.rotation);
@@ -50,7 +51,7 @@ export function createTunnel(position: Point, rotation: number, tribe: Tribe, st
    
    HealthComponentArray.addComponent(tunnel.id, new HealthComponent(TUNNEL_HEALTHS[material]));
    StatusEffectComponentArray.addComponent(tunnel.id, new StatusEffectComponent(StatusEffect.bleeding));
-   StructureComponentArray.addComponent(tunnel.id, new StructureComponent(structureInfo));
+   StructureComponentArray.addComponent(tunnel.id, new StructureComponent(connectionInfo));
    TribeComponentArray.addComponent(tunnel.id, new TribeComponent(tribe));
    TunnelComponentArray.addComponent(tunnel.id, new TunnelComponent());
    BuildingMaterialComponentArray.addComponent(tunnel.id, new BuildingMaterialComponent(material));

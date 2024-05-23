@@ -8,6 +8,7 @@ import TribeComponent from "../entity-components/TribeComponent";
 import StatusEffectComponent from "../entity-components/StatusEffectComponent";
 import HealthComponent from "../entity-components/HealthComponent";
 import Entity from "../Entity";
+import StructureComponent from "../entity-components/StructureComponent";
 
 class ResearchBench extends Entity {
    public static readonly WIDTH = 32 * 4;
@@ -27,8 +28,9 @@ class ResearchBench extends Entity {
 
       this.addServerComponent(ServerComponentType.health, new HealthComponent(this, componentsData[0]));
       this.addServerComponent(ServerComponentType.statusEffect, new StatusEffectComponent(this, componentsData[1]));
-      this.addServerComponent(ServerComponentType.tribe, new TribeComponent(this, componentsData[2]));
-      this.addServerComponent(ServerComponentType.researchBench, new ResearchBenchComponent(this, componentsData[3]));
+      this.addServerComponent(ServerComponentType.structure, new StructureComponent(this, componentsData[2]));
+      this.addServerComponent(ServerComponentType.tribe, new TribeComponent(this, componentsData[3]));
+      this.addServerComponent(ServerComponentType.researchBench, new ResearchBenchComponent(this, componentsData[4]));
    }
 }
 

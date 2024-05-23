@@ -86,8 +86,6 @@ const shouldGatherPlant = (plantID: number): boolean => {
 }
 
 const shouldGatherResource = (tribesman: Entity, healthComponent: HealthComponent, inventoryIsFull: boolean, resource: Entity, resourceProducts: ReadonlyArray<ItemType>): boolean => {
-   const tribeComponent = TribeComponentArray.getComponent(tribesman.id); // @Speed
-   
    // If the tribesman is within the escape health threshold, make sure there wouldn't be any enemies visible while picking up the dropped item
    // @Hack: the accessibility check doesn't work for plants in planter boxes
    if (tribesmanShouldEscape(tribesman.type, healthComponent) || !positionIsSafeForTribesman(tribesman, resource.position.x, resource.position.y)) {

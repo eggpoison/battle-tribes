@@ -10,6 +10,8 @@ import CookingComponent from "../entity-components/CookingComponent";
 import HealthComponent from "../entity-components/HealthComponent";
 import StatusEffectComponent from "../entity-components/StatusEffectComponent";
 import InventoryComponent from "../entity-components/InventoryComponent";
+import StructureComponent from "../entity-components/StructureComponent";
+import TribeComponent from "../entity-components/TribeComponent";
 
 class Campfire extends Entity {
    public static readonly SIZE = 104;
@@ -28,8 +30,10 @@ class Campfire extends Entity {
 
       this.addServerComponent(ServerComponentType.health, new HealthComponent(this, componentsData[0]));
       this.addServerComponent(ServerComponentType.statusEffect, new StatusEffectComponent(this, componentsData[1]));
-      this.addServerComponent(ServerComponentType.inventory, new InventoryComponent(this, componentsData[2]));
-      this.addServerComponent(ServerComponentType.cooking, new CookingComponent(this, componentsData[3]));
+      this.addServerComponent(ServerComponentType.structure, new StructureComponent(this, componentsData[2]));
+      this.addServerComponent(ServerComponentType.tribe, new TribeComponent(this, componentsData[3]));
+      this.addServerComponent(ServerComponentType.inventory, new InventoryComponent(this, componentsData[4]));
+      this.addServerComponent(ServerComponentType.cooking, new CookingComponent(this, componentsData[5]));
    }
 
    public tick(): void {

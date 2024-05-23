@@ -231,6 +231,7 @@ export function tickCow(cow: Entity): void {
          const testPositionX = cow.position.x + 60 * Math.sin(cow.rotation);
          const testPositionY = cow.position.y + 60 * Math.cos(cow.rotation);
          if (Board.positionIsInBoard(testPositionX, testPositionY)) {
+            // @Hack? The only place which uses this weird function
             const testEntities = Board.getEntitiesAtPosition(testPositionX, testPositionY);
             if (testEntities.indexOf(targetBerryBush) !== -1) {
                cowComponent.bushShakeTimer++;

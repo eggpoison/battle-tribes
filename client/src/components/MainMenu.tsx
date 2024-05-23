@@ -3,9 +3,11 @@ import { useCallback, useRef } from "react";
 import { setGameState } from "./App";
 import { createAudioContext } from "../sound";
 
+const MAX_USERNAME_CHARS = 21;
+
 /** Checks whether a given username is valid or not */
 const usernameIsValid = (username: string): [warning: string, isValid: false] | [warning: null, isValid: true] => {
-   if (username.length > 15) return ["Name cannot be more than 15 characters long!", false];
+   if (username.length > MAX_USERNAME_CHARS) return ["Name cannot be more than " + MAX_USERNAME_CHARS + " characters long!", false];
    if (username.length === 0) return ["Name cannot be empty!", false];
 
    return [null, true];

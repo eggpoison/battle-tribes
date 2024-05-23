@@ -11,7 +11,7 @@ import Entity from "../../Entity";
 import { attemptAttack, calculateAttackTarget, calculateBlueprintWorkTarget, calculateRadialAttackTargets, calculateRepairTarget, getAvailableCraftingStations, onTribeMemberHurt, repairBuilding, tickTribeMember, useItem } from "./tribe-member";
 import Tribe from "../../Tribe";
 import { BuildingMaterialComponentArray, HealthComponentArray, HutComponentArray, InventoryUseComponentArray, PlayerComponentArray, SpikesComponentArray, TribeComponentArray, TunnelComponentArray } from "../../components/ComponentArray";
-import { InventoryComponent, addItemToSlot, recipeCraftingStationIsAvailable, consumeItemFromSlot, consumeItemType, consumeItemTypeFromInventory, countItemType, craftRecipe, createNewInventory, getInventory, inventoryComponentCanAffordRecipe, pickupItemEntity, addItem, InventoryComponentArray } from "../../components/InventoryComponent";
+import { InventoryComponent, addItemToSlot, recipeCraftingStationIsAvailable, consumeItemFromSlot, consumeItemType, consumeItemTypeFromInventory, countItemType, craftRecipe, getInventory, inventoryComponentCanAffordRecipe, pickupItemEntity, addItem, InventoryComponentArray } from "../../components/InventoryComponent";
 import Board from "../../Board";
 import { HealthComponent } from "../../components/HealthComponent";
 import CircularHitbox from "../../hitboxes/CircularHitbox";
@@ -30,6 +30,7 @@ import { PlanterBoxComponentArray, placePlantInPlanterBox } from "../../componen
 import { createItem } from "../../items";
 import { toggleFenceGateDoor } from "../../components/FenceGateComponent";
 import { TribesmanTitle } from "webgl-test-shared/dist/titles";
+import { StructureComponentArray, isAttachedToWall } from "../../components/StructureComponent";
 
 /** How far away from the entity the attack is done */
 const ATTACK_OFFSET = 50;
@@ -74,7 +75,7 @@ export function createPlayer(position: Point, tribe: Tribe): Entity {
    
    setTimeout(() => {
       awardTitle(player, TribesmanTitle.gardener);
-   }, 200);
+   }, 300);
 
    return player;
 }
@@ -335,7 +336,8 @@ const hasMetTechItemRequirements = (tech: TechInfo, itemRequirements: ItemRequir
 }
 
 const hasMetTechStudyRequirements = (tech: TechInfo, tribe: Tribe): boolean => {
-   if (!tribe.techTreeUnlockProgress.hasOwnProperty(tech.id)) {
+   const techUnlockProgress = tribe.techTreeUnlockProgress[tech.id];
+   if (typeof techUnlockProgress === "undefined") {
       return false;
    }
 
@@ -343,7 +345,7 @@ const hasMetTechStudyRequirements = (tech: TechInfo, tribe: Tribe): boolean => {
       return true;
    }
 
-   return tribe.techTreeUnlockProgress[tech.id]!.studyProgress >= tech.researchStudyRequirements;
+   return techUnlockProgress.studyProgress >= tech.researchStudyRequirements;
 }
 
 export function processTechUnlock(player: Entity, techID: TechID): void {
@@ -385,7 +387,7 @@ export function processTechUnlock(player: Entity, techID: TechID): void {
       }
    }
 
-   if (hasMetTechItemRequirements(tech, tribeComponent.tribe.techTreeUnlockProgress[techID]?.itemProgress || {}) && hasMetTechStudyRequirements(tech, tribeComponent.tribe)) {
+   if (tribeComponent.tribe.techIsComplete(tech)) {
       tribeComponent.tribe.unlockTech(techID);
    }
 }
@@ -448,8 +450,10 @@ const modifyHut = (hut: Entity): void => {
 
 const modifySpikes = (player: Entity, spikes: Entity): void => {
    const spikesComponent = SpikesComponentArray.getComponent(spikes.id);
+   const structureComponent = StructureComponentArray.getComponent(spikes.id);
+   
    // Can only cover non-covered floor spikes
-   if (spikesComponent.isCovered || spikesComponent.attachedWallID !== 0) {
+   if (spikesComponent.isCovered || isAttachedToWall(structureComponent)) {
       return;
    }
    

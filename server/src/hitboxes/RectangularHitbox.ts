@@ -2,7 +2,7 @@ import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types"
 import { HitboxVertexPositions, circleAndRectangleDoIntersect, rectanglesAreColliding } from "webgl-test-shared/dist/collision";
 import { Point } from "webgl-test-shared/dist/utils";
 import BaseHitbox from "./BaseHitbox";
-import CircularHitbox from "./CircularHitbox";
+import { Hitbox, hitboxIsCircular } from "./hitboxes";
 
 // @Cleanup: remove the need to have this
 export function assertIsRectangular(hitbox: BaseHitbox): asserts hitbox is RectangularHitbox {
@@ -81,11 +81,10 @@ class RectangularHitbox extends BaseHitbox {
       return this.y + Math.max(this.vertexOffsets[0].y, this.vertexOffsets[1].y, this.vertexOffsets[2].y, this.vertexOffsets[3].y);
    }
 
-   public isColliding(otherHitbox: RectangularHitbox | CircularHitbox): boolean {
-      // @Speed: This check is slow
-      if (otherHitbox.hasOwnProperty("radius")) {
+   public isColliding(otherHitbox: Hitbox): boolean {
+      if (hitboxIsCircular(otherHitbox)) {
          // Circular hitbox
-         return circleAndRectangleDoIntersect(otherHitbox.x, otherHitbox.y, (otherHitbox as CircularHitbox).radius, this.x, this.y, this.width, this.height, this.rotation);
+         return circleAndRectangleDoIntersect(otherHitbox.x, otherHitbox.y, otherHitbox.radius, this.x, this.y, this.width, this.height, this.rotation);
       } else {
          // Rectangular hitbox
 
@@ -94,15 +93,15 @@ class RectangularHitbox extends BaseHitbox {
          
          const width1Squared = this.width * this.width;
          const height1Squared = this.height * this.height;
-         const width2Squared = (otherHitbox as RectangularHitbox).width * (otherHitbox as RectangularHitbox).width;
-         const height2Squared = (otherHitbox as RectangularHitbox).height * (otherHitbox as RectangularHitbox).height;
+         const width2Squared = otherHitbox.width * otherHitbox.width;
+         const height2Squared = otherHitbox.height * otherHitbox.height;
 
          // If the distance between the entities is greater than the sum of their half diagonals then they can never collide
          if (diffX * diffX + diffY * diffY > (width1Squared + height1Squared + width2Squared + height2Squared + 2 * Math.sqrt((width1Squared + height1Squared) * (width2Squared + height2Squared))) * 0.25) {
             return false;
          }
          
-         const collisionData = rectanglesAreColliding(this.vertexOffsets, (otherHitbox as RectangularHitbox).vertexOffsets, this.x, this.y, otherHitbox.x, otherHitbox.y, this.axisX, this.axisY, (otherHitbox as RectangularHitbox).axisX, (otherHitbox as RectangularHitbox).axisY);
+         const collisionData = rectanglesAreColliding(this.vertexOffsets, otherHitbox.vertexOffsets, this.x, this.y, otherHitbox.x, otherHitbox.y, this.axisX, this.axisY, otherHitbox.axisX, otherHitbox.axisY);
          return collisionData.isColliding;
       }
    }

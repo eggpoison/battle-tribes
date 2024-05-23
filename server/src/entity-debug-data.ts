@@ -1,47 +1,43 @@
-import { EntityDebugData } from "webgl-test-shared/dist/client-server-types";
+import { CircleDebugData, EntityDebugData, LineDebugData, PathData, TileHighlightData } from "webgl-test-shared/dist/client-server-types";
 import { TribesmanAIType } from "webgl-test-shared/dist/components";
 import { EntityTypeString } from "webgl-test-shared/dist/entities";
 import { ITEM_INFO_RECORD, PlaceableItemInfo, ItemTypeString } from "webgl-test-shared/dist/items";
 import { getTechByID } from "webgl-test-shared/dist/techs";
-import { Mutable } from "webgl-test-shared/dist/utils";
 import Entity from "./Entity";
 import { TribeComponentArray, TribesmanComponentArray } from "./components/ComponentArray";
 import { TRIBESMAN_COMMUNICATION_RANGE, getTribesmanVisionRange } from "./entities/tribes/tribesman-ai/tribesman-ai";
 import { TribesmanGoalType } from "./entities/tribes/tribesman-ai/tribesman-goals";
 import Board from "./Board";
-import { FenceConnectionComponentArray } from "./components/FenceConnectionComponent";
+import { StructureComponentArray } from "./components/StructureComponent";
 
 export function getEntityDebugData(entity: Entity): EntityDebugData {
-   // @Cleanup: I really don't like this mutable partial type situation
-   const debugData: Mutable<Partial<EntityDebugData>> = {
-      entityID: entity.id,
-      lines: [],
-      circles: [],
-      tileHighlights: [],
-      debugEntries: []
-   };
+   const lines = new Array<LineDebugData>();
+   const circles = new Array<CircleDebugData>();
+   const tileHighlights = new Array<TileHighlightData>();
+   const debugEntries = new Array<string>();
+   let pathData: PathData | undefined;
 
    if (TribesmanComponentArray.hasComponent(entity.id)) {
       const tribesmanComponent = TribesmanComponentArray.getComponent(entity.id);
 
-      debugData.debugEntries!.push("Current AI type: " + TribesmanAIType[tribesmanComponent.currentAIType]);
+      debugEntries.push("Current AI type: " + TribesmanAIType[tribesmanComponent.currentAIType]);
       
       if (tribesmanComponent.path.length > 0 && tribesmanComponent.isPathfinding) {
-         debugData.pathData = {
+         pathData = {
             pathNodes: tribesmanComponent.path,
             rawPathNodes: tribesmanComponent.rawPath
          };
       }
 
       // Vision range
-      debugData.circles!.push({
+      circles.push({
          radius: getTribesmanVisionRange(entity),
          thickness: 8,
          colour: [0.3, 0, 1]
       });
       
       // Communication range
-      debugData.circles!.push({
+      circles.push({
          radius: TRIBESMAN_COMMUNICATION_RANGE,
          thickness: 8,
          colour: [1, 0, 0.3]
@@ -80,25 +76,32 @@ export function getEntityDebugData(entity: Entity): EntityDebugData {
 
          goalStrings.push(goalString);
       }
-      debugData.debugEntries!.push(goalStrings.join(" -> "));
+      debugEntries.push(goalStrings.join(" -> "));
    }
 
    if (TribeComponentArray.hasComponent(entity.id)) {
       const tribeComponent = TribeComponentArray.getComponent(entity.id);
-      debugData.debugEntries!.push("Researched techs: " + tribeComponent.tribe.unlockedTechs.map(techID => getTechByID(techID).name).join(", "));
+      debugEntries.push("Researched techs: " + tribeComponent.tribe.unlockedTechs.map(techID => getTechByID(techID).name).join(", "));
    }
 
-   if (FenceConnectionComponentArray.hasComponent(entity.id)) {
-      const fenceConnectionComponent = FenceConnectionComponentArray.getComponent(entity.id);
+   if (StructureComponentArray.hasComponent(entity.id)) {
+      const structureComponent = StructureComponentArray.getComponent(entity.id);
 
-      const hasTopConnection = (fenceConnectionComponent.connectedSidesBitset & 0b0001) !== 0;
-      const hasRightConnection = (fenceConnectionComponent.connectedSidesBitset & 0b0010) !== 0;
-      const hasBottomConnection = (fenceConnectionComponent.connectedSidesBitset & 0b0100) !== 0;
-      const hasLeftConnection = (fenceConnectionComponent.connectedSidesBitset & 0b1000) !== 0;
+      const hasTopConnection = (structureComponent.connectedSidesBitset & 0b0001) !== 0;
+      const hasRightConnection = (structureComponent.connectedSidesBitset & 0b0010) !== 0;
+      const hasBottomConnection = (structureComponent.connectedSidesBitset & 0b0100) !== 0;
+      const hasLeftConnection = (structureComponent.connectedSidesBitset & 0b1000) !== 0;
       
-      debugData.debugEntries!.push("connectedSidesBitset: " + fenceConnectionComponent.connectedSidesBitset);
-      debugData.debugEntries!.push("Connections:" + (hasTopConnection ? " top" : "") + (hasRightConnection ? " right" : "") + (hasBottomConnection ? " bottom" : "") + (hasLeftConnection ? " left" : ""));
+      debugEntries.push("connectedSidesBitset: " + structureComponent.connectedSidesBitset);
+      debugEntries.push("Connections:" + (hasTopConnection ? " top" : "") + (hasRightConnection ? " right" : "") + (hasBottomConnection ? " bottom" : "") + (hasLeftConnection ? " left" : ""));
    }
 
-   return debugData as EntityDebugData;
+   return {
+      entityID: entity.id,
+      lines: lines,
+      circles: circles,
+      tileHighlights: tileHighlights,
+      debugEntries: debugEntries,
+      pathData: pathData
+   };
 }

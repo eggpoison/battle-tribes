@@ -1,4 +1,4 @@
-import { ServerComponentType, TribesmanAIType, TribesmanComponentData } from "webgl-test-shared/dist/components";
+import { ServerComponentType, TribesmanAIType, TribesmanAIComponentData } from "webgl-test-shared/dist/components";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { ItemType } from "webgl-test-shared/dist/items";
 import { TribeType } from "webgl-test-shared/dist/tribes";
@@ -11,7 +11,7 @@ const GOBLIN_ANGRY_SOUNDS: ReadonlyArray<AudioFilePath> = ["goblin-angry-1.mp3",
 const GOBLIN_ESCAPE_SOUNDS: ReadonlyArray<AudioFilePath> = ["goblin-escape-1.mp3", "goblin-escape-2.mp3", "goblin-escape-3.mp3"];
 const GOBLIN_AMBIENT_SOUNDS: ReadonlyArray<AudioFilePath> = ["goblin-ambient-1.mp3", "goblin-ambient-2.mp3", "goblin-ambient-3.mp3", "goblin-ambient-4.mp3", "goblin-ambient-5.mp3"];
 
-class TribesmanComponent extends ServerComponent<ServerComponentType.tribesman> {
+class TribesmanAIComponent extends ServerComponent<ServerComponentType.tribesman> {
    public readonly name: number;
    public readonly untitledDescriptor: number;
    public aiType: TribesmanAIType;
@@ -20,12 +20,12 @@ class TribesmanComponent extends ServerComponent<ServerComponentType.tribesman> 
    public craftingProgress: number;
    public craftingItemType: ItemType;
 
-   constructor(entity: Entity, data: TribesmanComponentData) {
+   constructor(entity: Entity, data: TribesmanAIComponentData) {
       super(entity);
 
       this.name = data.name;
       this.untitledDescriptor = data.untitledDescriptor;
-      this.aiType = data.aiType;
+      this.aiType = data.currentAIType;
       this.relationsWithPlayer = data.relationsWithPlayer;
       this.craftingProgress = data.craftingProgress;
       this.craftingItemType = data.craftingItemType;
@@ -80,12 +80,12 @@ class TribesmanComponent extends ServerComponent<ServerComponentType.tribesman> 
       }
    }
 
-   public updateFromData(data: TribesmanComponentData): void {
-      this.aiType = data.aiType;
+   public updateFromData(data: TribesmanAIComponentData): void {
+      this.aiType = data.currentAIType;
       this.relationsWithPlayer = data.relationsWithPlayer;
       this.craftingProgress = data.craftingProgress;
       this.craftingItemType = data.craftingItemType;
    }
 }
 
-export default TribesmanComponent;
+export default TribesmanAIComponent;

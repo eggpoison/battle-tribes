@@ -6,16 +6,13 @@ import { randItem, Point } from "webgl-test-shared/dist/utils";
 import { circlesDoIntersect, circleAndRectangleDoIntersect } from "webgl-test-shared/dist/collision";
 import Chunk from "./Chunk";
 import Tile from "./Tile";
-import CircularHitbox from "./hitboxes/CircularHitbox";
 import { addTileToCensus, getTilesOfType, removeEntityFromCensus, removeTileFromCensus } from "./census";
 import Tribe from "./Tribe";
-import BaseHitbox from "./hitboxes/BaseHitbox";
-import RectangularHitbox from "./hitboxes/RectangularHitbox";
 import generateTerrain from "./world-generation/terrain-generation";
-import { HealthComponentArray, InventoryUseComponentArray, TribeComponentArray, DoorComponentArray, ResearchBenchComponentArray, TunnelComponentArray, HealingTotemComponentArray, FenceGateComponentArray, ComponentArrays } from "./components/ComponentArray";
+import { HealthComponentArray, InventoryUseComponentArray, DoorComponentArray, ResearchBenchComponentArray, TunnelComponentArray, HealingTotemComponentArray, FenceGateComponentArray, ComponentArrays } from "./components/ComponentArray";
 import { tickInventoryUseComponent } from "./components/InventoryUseComponent";
 import { tickPlayer } from "./entities/tribes/player";
-import Entity, { entityIsStructure } from "./Entity";
+import Entity from "./Entity";
 import { tickHealthComponent } from "./components/HealthComponent";
 import { tickBerryBush } from "./entities/resources/berry-bush";
 import { tickIceShard } from "./entities/projectiles/ice-shard";
@@ -60,6 +57,7 @@ import { tickTribes } from "./ai-tribe-building/ai-building";
 import { tickHealingTotemComponent } from "./components/HealingTotemComponent";
 import { PlantComponentArray, tickPlantComponent } from "./components/PlantComponent";
 import { tickFenceGateComponent } from "./components/FenceGateComponent";
+import { Hitbox, hitboxIsCircular } from "./hitboxes/hitboxes";
 
 const START_TIME = 6;
 
@@ -74,7 +72,7 @@ const OFFSETS: ReadonlyArray<[xOffest: number, yOffset: number]> = [
    [1, 1],
 ];
 
-interface Testt {
+interface CollisionPair {
    readonly entity1: Entity;
    readonly entity2: Entity;
    readonly collisionNum: number;
@@ -112,6 +110,8 @@ abstract class Board {
    public static grassInfo: Record<number, Record<number, GrassTileInfo>>;
 
    public static decorations: ReadonlyArray<DecorationInfo>;
+
+   public static globalCollisionData: Partial<Record<number, ReadonlyArray<number>>> = {}
 
    public static setup(): void {
       this.initialiseChunks();
@@ -289,6 +289,11 @@ abstract class Board {
             case EntityType.battleaxeProjectile: onBattleaxeProjectileRemove(entity); break;
          }
 
+         // @Cleanup
+         if (entityCanBlockPathfinding(entity.type)) {
+            clearEntityPathfindingNodes(entity);
+         }
+
          // @Speed: don't do per entity, do per component array
          // Remove components
          for (let i = 0; i < ComponentArrays.length; i++) {
@@ -299,13 +304,8 @@ abstract class Board {
          }
 
          this.entities.splice(idx, 1);
-
          delete this.entityRecord[entityID];
          removeEntityFromCensus(entity);
-
-         if (entityCanBlockPathfinding(entity.type)) {
-            clearEntityPathfindingNodes(entity);
-         }
    
          for (let i = 0; i < entity.chunks.length; i++) {
             const chunk = entity.chunks[i];
@@ -420,10 +420,16 @@ abstract class Board {
       tickPhysicsComponents();
    }
 
+   public static getEntityCollisions(entityID: number): ReadonlyArray<number> {
+      const collidingEntityIDs = this.globalCollisionData[entityID];
+      return typeof collidingEntityIDs !== "undefined" ? collidingEntityIDs : [];
+   }
+
+   // @Cleanup: Split into collision detection and resolution
    public static resolveEntityCollisions(): void {
-      // @Speed: Multithreading
-      
-      const a = new Array<Testt>();
+      const collisionPairs = new Array<CollisionPair>();
+
+      const globalCollisionData: Partial<Record<number, Array<number>>> = {};
       
       const numChunks = Settings.BOARD_SIZE * Settings.BOARD_SIZE;
       for (let i = 0; i < numChunks; i++) {
@@ -435,7 +441,7 @@ abstract class Board {
 
                const collisionNum = entitiesAreColliding(entity1, entity2);
                if (collisionNum !== CollisionVars.NO_COLLISION) {
-                  a.push({
+                  collisionPairs.push({
                      entity1: entity1,
                      entity2: entity2,
                      collisionNum: collisionNum
@@ -445,14 +451,14 @@ abstract class Board {
          }
       }
 
-      for (let i = 0; i < a.length; i++) {
-         const test = a[i];
+      for (let i = 0; i < collisionPairs.length; i++) {
+         const test = collisionPairs[i];
 
          // Check for duplicates
          // @Speed O(n^2)
          let isDupe = false;
          for (let j = 0; j < i; j++) {
-            const test2 = a[j];
+            const test2 = collisionPairs[j];
             if (test.entity1.id === test2.entity1.id && test.entity2.id === test2.entity2.id && test.collisionNum === test2.collisionNum) {
                isDupe = true;
                break;
@@ -461,13 +467,29 @@ abstract class Board {
          if (isDupe) {
             continue;
          }
-                  
+         
+         const entity1Collisions = globalCollisionData[test.entity1.id];
+         if (typeof entity1Collisions !== "undefined") {
+            entity1Collisions.push(test.entity2.id);
+         } else {
+            globalCollisionData[test.entity1.id] = [test.entity2.id];
+         }
+         
+         const entity2Collisions = globalCollisionData[test.entity2.id];
+         if (typeof entity2Collisions !== "undefined") {
+            entity2Collisions.push(test.entity1.id);
+         } else {
+            globalCollisionData[test.entity2.id] = [test.entity1.id];
+         }
+         
          const entity1HitboxIndex = test.collisionNum & 0xFF;
          const entity2HitboxIndex = (test.collisionNum & 0xFF00) >> 8;
          
          collide(test.entity1, test.entity2, entity1HitboxIndex, entity2HitboxIndex);
          collide(test.entity2, test.entity1, entity2HitboxIndex, entity1HitboxIndex);
       }
+
+      this.globalCollisionData = globalCollisionData;
    }
 
    /** Registers a tile update to be sent to the clients */
@@ -487,7 +509,7 @@ abstract class Board {
          const tile = this.getTile(tileX, tileY);
          tileUpdates.push({
             tileIndex: tileIndex,
-            type: tile.type as unknown as TileType,
+            type: tile.type,
             isWall: tile.isWall
          });
       }
@@ -552,6 +574,7 @@ abstract class Board {
          // accessible but its components won't.
          entity.updateContainingChunks();
 
+         // @Cleanup
          if (entityCanBlockPathfinding(entity.type)) {
             updateEntityPathfindingNodeOccupance(entity);
          }
@@ -641,15 +664,13 @@ abstract class Board {
    }
 
    // @Cleanup: Move this into ai-shared
-   public static hitboxIsInRange(testPosition: Point, hitbox: BaseHitbox, range: number): boolean {
-      // @Speed: This check is slow
-      if (hitbox.hasOwnProperty("radius")) {
+   public static hitboxIsInRange(testPosition: Point, hitbox: Hitbox, range: number): boolean {
+      if (hitboxIsCircular(hitbox)) {
          // Circular hitbox
-         return circlesDoIntersect(testPosition.x, testPosition.y, range, hitbox.x, hitbox.y, (hitbox as CircularHitbox).radius);
+         return circlesDoIntersect(testPosition.x, testPosition.y, range, hitbox.x, hitbox.y, hitbox.radius);
       } else {
          // Rectangular hitbox
-         // @Speed
-         return circleAndRectangleDoIntersect(testPosition.x, testPosition.y, range, hitbox.x, hitbox.y, (hitbox as RectangularHitbox).width, (hitbox as RectangularHitbox).height, (hitbox as RectangularHitbox).relativeRotation);
+         return circleAndRectangleDoIntersect(testPosition.x, testPosition.y, range, hitbox.x, hitbox.y, hitbox.width, hitbox.height, hitbox.relativeRotation);
       }
    }
 

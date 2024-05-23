@@ -5,6 +5,7 @@ import Chunk from "./Chunk";
 import { StructureType } from "webgl-test-shared/dist/structures";
 import Entity from "./Entity";
 import { hitboxIsCircular } from "./hitboxes/hitboxes";
+import { HitboxFlags } from "./hitboxes/BaseHitbox";
 
 const blockers = new Array<GrassBlocker>();
 const blockerAssociatedEntityIDs = new Array<number>();
@@ -12,7 +13,7 @@ const blockerAssociatedEntityIDs = new Array<number>();
 const enum Vars {
    GRASS_FULL_REGROW_TICKS = Settings.TPS * 60,
    GRASS_FULL_DIE_TICKS = Settings.TPS * 20,
-   BLOCKER_PADDING = 4
+   BLOCKER_PADDING = 0
 }
 
 const getBlockerChunks = (blocker: GrassBlocker): ReadonlyArray<Chunk> => {
@@ -85,6 +86,10 @@ export function updateGrassBlockers(): void {
 export function createStructureGrassBlockers(structure: Entity<StructureType>): void {
    for (let i = 0; i < structure.hitboxes.length; i++) {
       const hitbox = structure.hitboxes[i];
+
+      if ((hitbox.flags & HitboxFlags.NON_GRASS_BLOCKING) !== 0) {
+         continue;
+      }
 
       const position = structure.position.copy();
       position.x += hitbox.offsetX;

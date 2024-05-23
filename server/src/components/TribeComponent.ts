@@ -3,7 +3,7 @@ import { TribeComponentData } from "webgl-test-shared/dist/components";
 import Tribe from "../Tribe";
 import { GolemComponentArray, TribeComponentArray, TribesmanComponentArray } from "./ComponentArray";
 import Entity from "../Entity";
-import { getTribesmanRelationship } from "./TribesmanComponent";
+import { getTribesmanRelationship } from "./TribesmanAIComponent";
 import { TribeMemberComponentArray } from "./TribeMemberComponent";
 import { PlantComponentArray } from "./PlantComponent";
 

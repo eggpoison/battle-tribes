@@ -12,12 +12,13 @@ import BuildingMaterialComponent, { DOOR_TEXTURE_SOURCES } from "../entity-compo
 import HealthComponent from "../entity-components/HealthComponent";
 import StatusEffectComponent from "../entity-components/StatusEffectComponent";
 import TribeComponent from "../entity-components/TribeComponent";
+import StructureComponent from "../entity-components/StructureComponent";
 
 class Door extends Entity {
    constructor(position: Point, id: number, ageTicks: number, componentsData: EntityComponentsData<EntityType.door>) {
       super(position, id, EntityType.door, ageTicks);
 
-      const buildingMaterialComponentData = componentsData[4];
+      const buildingMaterialComponentData = componentsData[5];
 
       const renderPart = new RenderPart(
          this,
@@ -30,8 +31,9 @@ class Door extends Entity {
       this.addServerComponent(ServerComponentType.health, new HealthComponent(this, componentsData[0]));
       this.addServerComponent(ServerComponentType.statusEffect, new StatusEffectComponent(this, componentsData[1]));
       this.addServerComponent(ServerComponentType.door, new DoorComponent(this, componentsData[2]));
-      this.addServerComponent(ServerComponentType.tribe, new TribeComponent(this, componentsData[3]));
-      this.addServerComponent(ServerComponentType.buildingMaterial, new BuildingMaterialComponent(this, componentsData[4], renderPart));
+      this.addServerComponent(ServerComponentType.structure, new StructureComponent(this, componentsData[3]));
+      this.addServerComponent(ServerComponentType.tribe, new TribeComponent(this, componentsData[4]));
+      this.addServerComponent(ServerComponentType.buildingMaterial, new BuildingMaterialComponent(this, componentsData[5], renderPart));
    }
 
    protected onHit(hitData: HitData): void {

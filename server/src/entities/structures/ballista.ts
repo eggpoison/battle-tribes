@@ -19,21 +19,22 @@ import { AmmoBoxComponent } from "../../components/AmmoBoxComponent";
 import { GenericArrowInfo, createWoodenArrow } from "../projectiles/wooden-arrow";
 import { InventoryComponent, InventoryComponentArray, consumeItemTypeFromInventory, createNewInventory, getFirstOccupiedItemSlotInInventory, getInventory } from "../../components/InventoryComponent";
 import { angleIsInRange, getClockwiseAngleDistance, getMaxAngleToCircularHitbox, getMaxAngleToRectangularHitbox, getMinAngleToCircularHitbox, getMinAngleToRectangularHitbox } from "../../ai-shared";
-import CircularHitbox from "../../hitboxes/CircularHitbox";
 import Board from "../../Board";
-import { StructureComponentArray, StructureComponent, StructureInfo } from "../../components/StructureComponent";
+import { StructureComponentArray, StructureComponent } from "../../components/StructureComponent";
+import { StructureConnectionInfo } from "webgl-test-shared/dist/structures";
+import { Hitbox, hitboxIsCircular } from "../../hitboxes/hitboxes";
 
 const VISION_RANGE = 550;
 const HITBOX_SIZE = 100 - 0.05;
 const AIM_ARC_SIZE = Math.PI / 2;
 
-export function createBallistaHitboxes(parentPosition: Point, localID: number, parentRotation: number): ReadonlyArray<CircularHitbox | RectangularHitbox> {
-   const hitboxes = new Array<CircularHitbox | RectangularHitbox>();
+export function createBallistaHitboxes(parentPosition: Point, localID: number, parentRotation: number): ReadonlyArray<Hitbox> {
+   const hitboxes = new Array<Hitbox>();
    hitboxes.push(new RectangularHitbox(parentPosition, 2, 0, 0, HitboxCollisionType.hard, localID, parentRotation, HITBOX_SIZE, HITBOX_SIZE, 0, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK));
    return hitboxes;
 }
 
-export function createBallista(position: Point, rotation: number, tribe: Tribe, structureInfo: StructureInfo): Entity {
+export function createBallista(position: Point, rotation: number, tribe: Tribe, connectionInfo: StructureConnectionInfo): Entity {
    const ballista = new Entity(position, rotation, EntityType.ballista, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
    const hitboxes = createBallistaHitboxes(position, ballista.getNextHitboxLocalID(), ballista.rotation);
@@ -43,7 +44,7 @@ export function createBallista(position: Point, rotation: number, tribe: Tribe, 
    
    HealthComponentArray.addComponent(ballista.id, new HealthComponent(100));
    StatusEffectComponentArray.addComponent(ballista.id, new StatusEffectComponent(StatusEffect.poisoned | StatusEffect.bleeding));
-   StructureComponentArray.addComponent(ballista.id, new StructureComponent(structureInfo));
+   StructureComponentArray.addComponent(ballista.id, new StructureComponent(connectionInfo));
    TribeComponentArray.addComponent(ballista.id, new TribeComponent(tribe));
    TurretComponentArray.addComponent(ballista.id, new TurretComponent(0));
    AIHelperComponentArray.addComponent(ballista.id, new AIHelperComponent(VISION_RANGE));
@@ -105,14 +106,14 @@ const entityIsTargetted = (turret: Entity, entity: Entity): boolean => {
       let maxAngleToHitbox: number;
       
       const hitbox = entity.hitboxes[i];
-      if (hitbox.hasOwnProperty("radius")) {
+      if (hitboxIsCircular(hitbox)) {
          // Circular hitbox
-         minAngleToHitbox = getMinAngleToCircularHitbox(turret.position.x, turret.position.y, hitbox as CircularHitbox);
-         maxAngleToHitbox = getMaxAngleToCircularHitbox(turret.position.x, turret.position.y, hitbox as CircularHitbox);
+         minAngleToHitbox = getMinAngleToCircularHitbox(turret.position.x, turret.position.y, hitbox);
+         maxAngleToHitbox = getMaxAngleToCircularHitbox(turret.position.x, turret.position.y, hitbox);
       } else {
          // Rectangular hitbox
-         minAngleToHitbox = getMinAngleToRectangularHitbox(turret.position.x, turret.position.y, hitbox as RectangularHitbox);
-         maxAngleToHitbox = getMaxAngleToRectangularHitbox(turret.position.x, turret.position.y, hitbox as RectangularHitbox);
+         minAngleToHitbox = getMinAngleToRectangularHitbox(turret.position.x, turret.position.y, hitbox);
+         maxAngleToHitbox = getMaxAngleToRectangularHitbox(turret.position.x, turret.position.y, hitbox);
       }
 
       if (angleIsInRange(minAngleToHitbox, minAngle, maxAngle) || angleIsInRange(maxAngleToHitbox, minAngle, maxAngle)) {

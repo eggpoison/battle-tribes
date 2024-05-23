@@ -14,7 +14,7 @@ import RectangularHitbox from "./hitboxes/RectangularHitbox";
 import Entity from "./Entity";
 import Client from "./client/Client";
 import { latencyGameState, playerIsHoldingHammer } from "./game-state/game-states";
-import { BuildMenu_hide, BuildMenu_setBuildingID, BuildMenu_updateBuilding, isHoveringInBlueprintMenu } from "./components/game/BuildMenu";
+import { BuildMenu_hide, BuildMenu_setBuildingID, BuildMenu_updateBuilding, entityCanOpenBuildMenu, isHoveringInBlueprintMenu } from "./components/game/BuildMenu";
 import { InventoryMenuType, InventorySelector_inventoryIsOpen, InventorySelector_setInventoryMenuType } from "./components/game/inventories/InventorySelector";
 import { getClosestGroupNum } from "./rendering/entity-selection-rendering";
 import { SEED_TO_PLANT_RECORD } from "./entity-components/PlantComponent";
@@ -55,16 +55,18 @@ export function resetInteractableEntityIDs(): void {
 }
 
 export function getSelectedEntity(): Entity {
-   if (!Board.entityRecord.hasOwnProperty(selectedEntityID)) {
+   const entity = Board.entityRecord[selectedEntityID];
+   
+   if (typeof entity === "undefined") {
       throw new Error("Can't select: Entity with ID " + selectedEntityID + " doesn't exist");
    }
 
-   return Board.entityRecord[selectedEntityID];
+   return entity;
 }
 
 export function deselectSelectedEntity(closeInventory: boolean = true): void {
-   if (Board.entityRecord.hasOwnProperty(selectedEntityID)) {
-      const previouslySelectedEntity = Board.entityRecord[selectedEntityID];
+   const previouslySelectedEntity = Board.entityRecord[selectedEntityID];
+   if (typeof previouslySelectedEntity !== "undefined") {
       Client.sendStructureUninteract(previouslySelectedEntity.id);
 
       BuildMenu_hide();
@@ -232,27 +234,27 @@ export function updateHighlightedAndHoveredEntities(): void {
 }
 
 export function attemptEntitySelection(): void {
+   // Deselect the previous entity
+   // @Cleanup: why is this needed?
    if (selectedEntityID !== -1) {
       deselectSelectedEntity();
    }
 
-   let shouldShowBuildMenu = false;
-   let shouldSetSelectedEntity = true;
-
-   if (Board.entityRecord.hasOwnProperty(highlightedEntityID)) {
-      const highlightedEntity = Board.entityRecord[highlightedEntityID];
-
+   const highlightedEntity = Board.entityRecord[highlightedEntityID];
+   if (typeof highlightedEntity === "undefined") {
+      return;
+   }
+   
+   if (entityCanOpenBuildMenu(highlightedEntity)) {
+      // Select the entity and open the build menu
+      selectedEntityID = highlightedEntityID;
+      BuildMenu_setBuildingID(highlightedEntityID);
+      BuildMenu_updateBuilding(highlightedEntityID);
+   } else {
+      BuildMenu_setBuildingID(0);
+      
       switch (highlightedEntity.type) {
-         case EntityType.wall: {
-            shouldShowBuildMenu = true;
-            break;
-         }
          case EntityType.tunnel: {
-            if (playerIsHoldingHammer()) {
-               shouldShowBuildMenu = true;
-               break;
-            }
-            
             const groupNum = getClosestGroupNum(highlightedEntity);
             if (groupNum === 0) {
                break;
@@ -266,72 +268,35 @@ export function attemptEntitySelection(): void {
             }
 
             Client.sendStructureInteract(highlightedEntityID, interactData);
-            shouldSetSelectedEntity = false;
             break;
          }
          case EntityType.door: {
-            if (playerIsHoldingHammer()) {
-               shouldShowBuildMenu = true;
-            } else {
-               Client.sendStructureInteract(highlightedEntityID, 0);
-               shouldSetSelectedEntity = false;
-            }
+            Client.sendStructureInteract(highlightedEntityID, 0);
             break;
          }
          case EntityType.researchBench: {
-            if (playerIsHoldingHammer()) {
-               shouldShowBuildMenu = true;
-            } else {
-               Client.sendStructureInteract(highlightedEntityID, 0);
-            }
-            break;
-         }
-         case EntityType.fence: {
-            if (playerIsHoldingHammer()) {
-               shouldShowBuildMenu = true;
-            }
+            Client.sendStructureInteract(highlightedEntityID, 0);
             break;
          }
          case EntityType.fenceGate: {
-            if (playerIsHoldingHammer()) {
-               shouldShowBuildMenu = true;
-            } else {
-               Client.sendStructureInteract(highlightedEntityID, 0);
-               shouldSetSelectedEntity = false;
-            }
+            Client.sendStructureInteract(highlightedEntityID, 0);
             break;
          }
          case EntityType.barrel: {
-            if (playerIsHoldingHammer()) {
-               shouldShowBuildMenu = true;
-            } else {
-               InventorySelector_setInventoryMenuType(InventoryMenuType.barrel);
-            }
+            InventorySelector_setInventoryMenuType(InventoryMenuType.barrel);
             break;
          }
          case EntityType.tribeWorker:
          case EntityType.tribeWarrior: {
-            if (playerIsHoldingHammer()) {
-               shouldShowBuildMenu = true;
-            } else {
-               InventorySelector_setInventoryMenuType(InventoryMenuType.tribesman);
-            }
+            InventorySelector_setInventoryMenuType(InventoryMenuType.tribesman);
             break;
          }
          case EntityType.campfire: {
-            if (playerIsHoldingHammer()) {
-               shouldShowBuildMenu = true;
-            } else {
-               InventorySelector_setInventoryMenuType(InventoryMenuType.campfire);
-            }
+            InventorySelector_setInventoryMenuType(InventoryMenuType.campfire);
             break;
          }
          case EntityType.furnace: {
-            if (playerIsHoldingHammer()) {
-               shouldShowBuildMenu = true;
-            } else {
-               InventorySelector_setInventoryMenuType(InventoryMenuType.furnace);
-            }
+            InventorySelector_setInventoryMenuType(InventoryMenuType.furnace);
             break;
          }
          case EntityType.tombstone: {
@@ -344,24 +309,14 @@ export function attemptEntitySelection(): void {
             break;
          }
          case EntityType.ballista: {
-            if (playerIsHoldingHammer()) {
-               shouldShowBuildMenu = true;
-            } else {
-               InventorySelector_setInventoryMenuType(InventoryMenuType.ammoBox);
-            }
+            InventorySelector_setInventoryMenuType(InventoryMenuType.ammoBox);
             break;
          }
          case EntityType.planterBox: {
-            if (playerIsHoldingHammer()) {
-               shouldShowBuildMenu = true;
-               break;
-            }
-            
             const selectedItem = getPlayerSelectedItem()!;
             const plant = SEED_TO_PLANT_RECORD[selectedItem.type];
             if (typeof plant !== "undefined") {
                Client.sendModifyBuilding(highlightedEntityID, plant);
-               shouldSetSelectedEntity = false;
 
                // @Hack
                const inventoryUseComponent = Player.instance!.getServerComponent(ServerComponentType.inventoryUse);
@@ -370,28 +325,169 @@ export function attemptEntitySelection(): void {
             }
             break;
          }
-         case EntityType.workerHut:
-         case EntityType.warriorHut: {
-            shouldShowBuildMenu = true;
-            break;
-         }
-         default: {
-            InventorySelector_setInventoryMenuType(InventoryMenuType.none);
-            break;
-         }
       }
    }
 
-   if (shouldSetSelectedEntity) {
-      selectedEntityID = highlightedEntityID;
-   }
 
-   if (shouldShowBuildMenu) {
-      BuildMenu_setBuildingID(highlightedEntityID);
-      BuildMenu_updateBuilding(highlightedEntityID);
-   } else {
-      BuildMenu_setBuildingID(0);
-   }
+
+      
+
+   // let shouldShowBuildMenu = false;
+   // let shouldSetSelectedEntity = true;
+
+   // const highlightedEntity = Board.entityRecord[highlightedEntityID];
+   // if (typeof highlightedEntity !== "undefined") {
+
+   //    switch (highlightedEntity.type) {
+   //       case EntityType.wall: {
+   //          shouldShowBuildMenu = true;
+   //          break;
+   //       }
+   //       case EntityType.tunnel: {
+   //          if (playerIsHoldingHammer()) {
+   //             shouldShowBuildMenu = true;
+   //             break;
+   //          }
+            
+   //          const groupNum = getClosestGroupNum(highlightedEntity);
+   //          if (groupNum === 0) {
+   //             break;
+   //          }
+            
+   //          let interactData: number;
+   //          switch (groupNum) {
+   //             case 1: interactData = 0b01; break;
+   //             case 2: interactData = 0b10; break;
+   //             default: throw new Error();
+   //          }
+
+   //          Client.sendStructureInteract(highlightedEntityID, interactData);
+   //          shouldSetSelectedEntity = false;
+   //          break;
+   //       }
+   //       case EntityType.door: {
+   //          if (playerIsHoldingHammer()) {
+   //             shouldShowBuildMenu = true;
+   //          } else {
+   //             Client.sendStructureInteract(highlightedEntityID, 0);
+   //             shouldSetSelectedEntity = false;
+   //          }
+   //          break;
+   //       }
+   //       case EntityType.researchBench: {
+   //          if (playerIsHoldingHammer()) {
+   //             shouldShowBuildMenu = true;
+   //          } else {
+   //             Client.sendStructureInteract(highlightedEntityID, 0);
+   //          }
+   //          break;
+   //       }
+   //       case EntityType.fence: {
+   //          if (playerIsHoldingHammer()) {
+   //             shouldShowBuildMenu = true;
+   //          }
+   //          break;
+   //       }
+   //       case EntityType.fenceGate: {
+   //          if (playerIsHoldingHammer()) {
+   //             shouldShowBuildMenu = true;
+   //          } else {
+   //             Client.sendStructureInteract(highlightedEntityID, 0);
+   //             shouldSetSelectedEntity = false;
+   //          }
+   //          break;
+   //       }
+   //       case EntityType.barrel: {
+   //          if (playerIsHoldingHammer()) {
+   //             shouldShowBuildMenu = true;
+   //          } else {
+   //             InventorySelector_setInventoryMenuType(InventoryMenuType.barrel);
+   //          }
+   //          break;
+   //       }
+   //       case EntityType.tribeWorker:
+   //       case EntityType.tribeWarrior: {
+   //          if (playerIsHoldingHammer()) {
+   //             shouldShowBuildMenu = true;
+   //          } else {
+   //             InventorySelector_setInventoryMenuType(InventoryMenuType.tribesman);
+   //          }
+   //          break;
+   //       }
+   //       case EntityType.campfire: {
+   //          if (playerIsHoldingHammer()) {
+   //             shouldShowBuildMenu = true;
+   //          } else {
+   //             InventorySelector_setInventoryMenuType(InventoryMenuType.campfire);
+   //          }
+   //          break;
+   //       }
+   //       case EntityType.furnace: {
+   //          if (playerIsHoldingHammer()) {
+   //             shouldShowBuildMenu = true;
+   //          } else {
+   //             InventorySelector_setInventoryMenuType(InventoryMenuType.furnace);
+   //          }
+   //          break;
+   //       }
+   //       case EntityType.tombstone: {
+   //          const tombstoneComponent = highlightedEntity.getServerComponent(ServerComponentType.tombstone);
+   //          if (tombstoneComponent.deathInfo !== null) {
+   //             InventorySelector_setInventoryMenuType(InventoryMenuType.tombstone);
+   //          } else {
+   //             InventorySelector_setInventoryMenuType(InventoryMenuType.none);
+   //          }
+   //          break;
+   //       }
+   //       case EntityType.ballista: {
+   //          if (playerIsHoldingHammer()) {
+   //             shouldShowBuildMenu = true;
+   //          } else {
+   //             InventorySelector_setInventoryMenuType(InventoryMenuType.ammoBox);
+   //          }
+   //          break;
+   //       }
+   //       case EntityType.planterBox: {
+   //          if (playerIsHoldingHammer()) {
+   //             shouldShowBuildMenu = true;
+   //             break;
+   //          }
+            
+   //          const selectedItem = getPlayerSelectedItem()!;
+   //          const plant = SEED_TO_PLANT_RECORD[selectedItem.type];
+   //          if (typeof plant !== "undefined") {
+   //             Client.sendModifyBuilding(highlightedEntityID, plant);
+   //             shouldSetSelectedEntity = false;
+
+   //             // @Hack
+   //             const inventoryUseComponent = Player.instance!.getServerComponent(ServerComponentType.inventoryUse);
+   //             const hotbarUseInfo = inventoryUseComponent.getUseInfo(InventoryName.hotbar);
+   //             hotbarUseInfo.lastAttackTicks = Board.ticks;
+   //          }
+   //          break;
+   //       }
+   //       case EntityType.workerHut:
+   //       case EntityType.warriorHut: {
+   //          shouldShowBuildMenu = true;
+   //          break;
+   //       }
+   //       default: {
+   //          InventorySelector_setInventoryMenuType(InventoryMenuType.none);
+   //          break;
+   //       }
+   //    }
+   // }
+
+   // if (shouldSetSelectedEntity) {
+   //    selectedEntityID = highlightedEntityID;
+   // }
+
+   // if (shouldShowBuildMenu) {
+   //    BuildMenu_setBuildingID(highlightedEntityID);
+   //    BuildMenu_updateBuilding(highlightedEntityID);
+   // } else {
+   //    BuildMenu_setBuildingID(0);
+   // }
 }
 
 export function updateSelectedStructure(): void {

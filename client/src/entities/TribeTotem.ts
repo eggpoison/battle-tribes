@@ -9,6 +9,7 @@ import HealthComponent from "../entity-components/HealthComponent";
 import StatusEffectComponent from "../entity-components/StatusEffectComponent";
 import TotemBannerComponent from "../entity-components/TotemBannerComponent";
 import Entity from "../Entity";
+import StructureComponent from "../entity-components/StructureComponent";
 
 class TribeTotem extends Entity {
    public static readonly SIZE = 120;
@@ -26,8 +27,9 @@ class TribeTotem extends Entity {
 
       this.addServerComponent(ServerComponentType.health, new HealthComponent(this, componentsData[0]))
       this.addServerComponent(ServerComponentType.statusEffect, new StatusEffectComponent(this, componentsData[1]))
-      this.addServerComponent(ServerComponentType.tribe, new TribeComponent(this, componentsData[2]))
-      this.addServerComponent(ServerComponentType.totemBanner, new TotemBannerComponent(this, componentsData[3]));
+      this.addServerComponent(ServerComponentType.structure, new StructureComponent(this, componentsData[2]))
+      this.addServerComponent(ServerComponentType.tribe, new TribeComponent(this, componentsData[3]))
+      this.addServerComponent(ServerComponentType.totemBanner, new TotemBannerComponent(this, componentsData[4]));
    }
 
    protected onHit(): void {

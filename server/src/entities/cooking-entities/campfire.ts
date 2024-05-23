@@ -13,21 +13,22 @@ import { tickCookingEntity } from "./cooking-entity";
 import { CookingComponent } from "../../components/CookingComponent";
 import Tribe from "../../Tribe";
 import { TribeComponent } from "../../components/TribeComponent";
-import RectangularHitbox from "../../hitboxes/RectangularHitbox";
 import { InventoryName } from "webgl-test-shared/dist/items";
-import { StructureComponent, StructureComponentArray, StructureInfo } from "../../components/StructureComponent";
+import { StructureComponent, StructureComponentArray } from "../../components/StructureComponent";
+import { StructureConnectionInfo } from "webgl-test-shared/dist/structures";
+import { Hitbox } from "../../hitboxes/hitboxes";
 
 export const CAMPFIRE_SIZE = 104;
 
 const LIFETIME_SECONDS = 30;
 
-export function createCampfireHitboxes(parentPosition: Point, localID: number, parentRotation: number): ReadonlyArray<RectangularHitbox | CircularHitbox> {
-   const hitboxes = new Array<RectangularHitbox | CircularHitbox>();
+export function createCampfireHitboxes(parentPosition: Point, localID: number, parentRotation: number): ReadonlyArray<Hitbox> {
+   const hitboxes = new Array<Hitbox>();
    hitboxes.push(new CircularHitbox(parentPosition, 2, 0, 0, HitboxCollisionType.soft, CAMPFIRE_SIZE / 2, localID, parentRotation, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK));
    return hitboxes;
 }
 
-export function createCampfire(position: Point, rotation: number, tribe: Tribe, structureInfo: StructureInfo): Entity {
+export function createCampfire(position: Point, rotation: number, tribe: Tribe, connectionInfo: StructureConnectionInfo): Entity {
    const campfire = new Entity(position, rotation, EntityType.campfire, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
    const hitboxes = createCampfireHitboxes(position, campfire.getNextHitboxLocalID(), rotation);
@@ -38,7 +39,7 @@ export function createCampfire(position: Point, rotation: number, tribe: Tribe, 
    HealthComponentArray.addComponent(campfire.id, new HealthComponent(25));
    StatusEffectComponentArray.addComponent(campfire.id, new StatusEffectComponent(StatusEffect.poisoned));
    TribeComponentArray.addComponent(campfire.id, new TribeComponent(tribe));
-   StructureComponentArray.addComponent(campfire.id, new StructureComponent(structureInfo));
+   StructureComponentArray.addComponent(campfire.id, new StructureComponent(connectionInfo));
 
    const inventoryComponent = new InventoryComponent();
    InventoryComponentArray.addComponent(campfire.id, inventoryComponent);

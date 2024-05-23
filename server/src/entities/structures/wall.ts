@@ -12,20 +12,21 @@ import RectangularHitbox from "../../hitboxes/RectangularHitbox";
 import { TribeComponent } from "../../components/TribeComponent";
 import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
 import { BuildingMaterialComponent } from "../../components/BuildingMaterialComponent";
-import CircularHitbox from "../../hitboxes/CircularHitbox";
-import { StructureComponent, StructureComponentArray, StructureInfo } from "../../components/StructureComponent";
+import { StructureComponent, StructureComponentArray } from "../../components/StructureComponent";
+import { StructureConnectionInfo } from "webgl-test-shared/dist/structures";
+import { Hitbox } from "../../hitboxes/hitboxes";
 
 const SIZE = 64 - 0.05;
 
 export const WALL_HEALTHS = [25, 75];
 
-export function createWallHitboxes(parentPosition: Point, localID: number, parentRotation: number): ReadonlyArray<RectangularHitbox | CircularHitbox> {
-   const hitboxes = new Array<RectangularHitbox | CircularHitbox>();
+export function createWallHitboxes(parentPosition: Point, localID: number, parentRotation: number): ReadonlyArray<Hitbox> {
+   const hitboxes = new Array<Hitbox>();
    hitboxes.push(new RectangularHitbox(parentPosition, 1, 0, 0, HitboxCollisionType.hard, localID, parentRotation, SIZE, SIZE, 0, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK));
    return hitboxes;
 }
 
-export function createWall(position: Point, rotation: number, tribe: Tribe, structureInfo: StructureInfo): Entity {
+export function createWall(position: Point, rotation: number, tribe: Tribe, connectionInfo: StructureConnectionInfo): Entity {
    const wall = new Entity(position, rotation, EntityType.wall, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
    const hitboxes = createWallHitboxes(position, wall.getNextHitboxLocalID(), rotation);
@@ -37,7 +38,7 @@ export function createWall(position: Point, rotation: number, tribe: Tribe, stru
    
    HealthComponentArray.addComponent(wall.id, new HealthComponent(WALL_HEALTHS[material]));
    StatusEffectComponentArray.addComponent(wall.id, new StatusEffectComponent(StatusEffect.bleeding));
-   StructureComponentArray.addComponent(wall.id, new StructureComponent(structureInfo));
+   StructureComponentArray.addComponent(wall.id, new StructureComponent(connectionInfo));
    TribeComponentArray.addComponent(wall.id, new TribeComponent(tribe));
    BuildingMaterialComponentArray.addComponent(wall.id, new BuildingMaterialComponent(material));
 

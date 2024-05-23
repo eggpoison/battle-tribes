@@ -415,7 +415,7 @@ abstract class Game {
       renderDecorations();
       renderTurretRange();
       renderAmbientOcclusion();
-      if (nerdVisionIsVisible() && this.entityDebugData !== null && Board.hasEntityID(this.entityDebugData.entityID)) {
+      if (nerdVisionIsVisible() && this.entityDebugData !== null && typeof Board.entityRecord[this.entityDebugData.entityID] !== "undefined") {
          renderTriangleDebugData(this.entityDebugData);
       }
       renderForcefield();
@@ -455,15 +455,14 @@ abstract class Game {
       if (nerdVisionIsVisible() && OPTIONS.showHitboxes) {
          renderEntityHitboxes();
       }
-      if (nerdVisionIsVisible() && this.entityDebugData !== null && Board.hasEntityID(this.entityDebugData.entityID)) {
+      if (nerdVisionIsVisible() && this.entityDebugData !== null && typeof Board.entityRecord[this.entityDebugData.entityID] !== "undefined") {
          renderLineDebugData(this.entityDebugData);
       }
 
       if (isDev()) {
-         // @Temporary
-         if (Board.entityRecord.hasOwnProperty(Camera.trackedEntityID) && Camera.trackedEntityID !== Player.instance?.id) {
-            const entity = Board.entityRecord[Camera.trackedEntityID];
-            Client.sendTrackEntity(entity.id);
+         const trackedEntity = Board.entityRecord[Camera.trackedEntityID];
+         if (typeof trackedEntity !== "undefined" && Camera.trackedEntityID !== Player.instance?.id) {
+            Client.sendTrackEntity(Camera.trackedEntityID);
          } else if (nerdVisionIsVisible()) {
             const targettedEntity = getMouseTargetEntity();
             Client.sendTrackEntity(targettedEntity !== null ? targettedEntity.id : null);

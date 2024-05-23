@@ -82,7 +82,11 @@ const TechTooltip = ({ techInfo, techPositionX, techPositionY, zoom }: TechToolt
          <p className="unlocks">Unlocks {techInfo.unlockedItems.map((itemType, i) => {
             const techRequired = getTechRequiredForItem(itemType);
             if (techRequired === null || !getTechByID(techRequired).blacklistedTribes.includes(Game.tribe.tribeType)) {
-               return <span key={i}><b>{CLIENT_ITEM_INFO_RECORD[itemType].name}</b>{i <= techInfo.unlockedItems.length - 2 ? ", " : "."}</span>
+               return <span key={i}>
+                  <img src={getItemTypeImage(itemType)} alt="" />
+                  <b>{CLIENT_ITEM_INFO_RECORD[itemType].name}</b>
+                  {i <= techInfo.unlockedItems.length - 2 ? ", " : "."}
+               </span>;
             } else {
                return undefined;
             }

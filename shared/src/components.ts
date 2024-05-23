@@ -88,9 +88,9 @@ export const EntityComponents = {
    [EntityType.tribeTotem]: [ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.tribe, ServerComponentType.totemBanner] as const,
    [EntityType.workerHut]: [ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.tribe, ServerComponentType.hut] as const,
    [EntityType.warriorHut]: [ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.tribe, ServerComponentType.hut] as const,
-   [EntityType.barrel]: [ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.tribe, ServerComponentType.inventory] as const,
-   [EntityType.campfire]: [ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.inventory, ServerComponentType.cooking] as const,
-   [EntityType.furnace]: [ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.inventory, ServerComponentType.cooking] as const,
+   [EntityType.barrel]: [ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.tribe, ServerComponentType.inventory] as const,
+   [EntityType.campfire]: [ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.tribe, ServerComponentType.inventory, ServerComponentType.cooking] as const,
+   [EntityType.furnace]: [ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.tribe, ServerComponentType.inventory, ServerComponentType.cooking] as const,
    [EntityType.snowball]: [ServerComponentType.physics, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.snowball] as const,
    [EntityType.krumblid]: [ServerComponentType.physics, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.wanderAI, ServerComponentType.followAI, ServerComponentType.escapeAI, ServerComponentType.aiHelper] as const,
    [EntityType.frozenYeti]: [ServerComponentType.physics, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.wanderAI, ServerComponentType.frozenYeti, ServerComponentType.aiHelper] as const,
@@ -163,7 +163,7 @@ const _ComponentData = {
    [ServerComponentType.tree]: (): TreeComponentData => 0 as any,
    [ServerComponentType.tribe]: (): TribeComponentData => 0 as any,
    [ServerComponentType.tribeMember]: (): TribeMemberComponentData => 0 as any,
-   [ServerComponentType.tribesman]: (): TribesmanComponentData => 0 as any,
+   [ServerComponentType.tribesman]: (): TribesmanAIComponentData => 0 as any,
    [ServerComponentType.turret]: (): TurretComponentData => 0 as any,
    [ServerComponentType.yeti]: (): YetiComponentData => 0 as any,
    [ServerComponentType.zombie]: (): ZombieComponentData => 0 as any,
@@ -477,10 +477,11 @@ export enum TribesmanAIType {
    planting
 }
 
-export interface TribesmanComponentData {
+export interface TribesmanAIComponentData {
+   // @Cleanup: just send a string.
    readonly name: number;
    readonly untitledDescriptor: number;
-   readonly aiType: TribesmanAIType;
+   readonly currentAIType: TribesmanAIType;
    readonly relationsWithPlayer: number;
 
    readonly craftingProgress: number;

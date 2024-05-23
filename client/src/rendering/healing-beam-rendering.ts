@@ -142,8 +142,8 @@ const createData = (visibleBeams: ReadonlyArray<HealingBeam>): ReadonlyArray<num
 
       let endX: number;
       let endY: number;
-      if (typeof Board.entityRecord[beam.entityID]) {
-         const entity = Board.entityRecord[beam.entityID];
+      const entity = Board.entityRecord[beam.entityID];
+      if (typeof entity !== "undefined") {
          endX = entity.renderPosition.x;
          endY = entity.renderPosition.y;
       } else {

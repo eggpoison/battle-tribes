@@ -59,7 +59,7 @@ const getChargeProgress = (turret: Entity): number => {
    return 1 - turretComponent.fireCooldownTicks / shotCooldownTicks;
 }
 
-export function getReloadProgress(turret: Entity): number {
+const getReloadProgress = (turret: Entity): number => {
    // @Incomplete?
    // const ballistaComponent = BallistaComponentArray.getComponent(ballista.id);
    // if (ballistaComponent.ammoRemaining === 0) {

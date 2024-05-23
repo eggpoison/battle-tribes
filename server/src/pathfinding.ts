@@ -10,6 +10,7 @@ import PathfindingHeap from "./PathfindingHeap";
 import OPTIONS from "./options";
 import { TribeComponentArray } from "./components/ComponentArray";
 import { PhysicsComponentArray } from "./components/PhysicsComponent";
+import { Hitbox, hitboxIsCircular } from "./hitboxes/hitboxes";
 
 const enum Vars {
    NODE_ACCESSIBILITY_RESOLUTION = 3,
@@ -297,7 +298,7 @@ const getRectangularHitboxOccupiedNodes = (hitbox: RectangularHitbox): ReadonlyA
          if (distBetweenPointAndRectangle(x, y, rectPosX, rectPosY, hitbox.width, hitbox.height, hitbox.rotation) <= nodeClearance) {
             const node = getNode(nodeX, nodeY);
             // @Temporary
-            if (node>=PathfindingSettings.NODES_IN_WORLD_WIDTH*PathfindingSettings.NODES_IN_WORLD_WIDTH) {
+            if (node >= PathfindingSettings.NODES_IN_WORLD_WIDTH*PathfindingSettings.NODES_IN_WORLD_WIDTH) {
                throw new Error();
             }
             occupiedNodes.push(node);
@@ -307,11 +308,11 @@ const getRectangularHitboxOccupiedNodes = (hitbox: RectangularHitbox): ReadonlyA
    return occupiedNodes;
 }
 
-export function getHitboxOccupiedNodes(hitbox: CircularHitbox | RectangularHitbox): ReadonlyArray<PathfindingNodeIndex> {
-   if ((hitbox as any).radius !== undefined) {
-      return getCircularHitboxOccupiedNodes(hitbox as CircularHitbox);
+export function getHitboxOccupiedNodes(hitbox: Hitbox): ReadonlyArray<PathfindingNodeIndex> {
+   if (hitboxIsCircular(hitbox)) {
+      return getCircularHitboxOccupiedNodes(hitbox);
    } else {
-      return getRectangularHitboxOccupiedNodes(hitbox as RectangularHitbox);
+      return getRectangularHitboxOccupiedNodes(hitbox);
    }
 }
 

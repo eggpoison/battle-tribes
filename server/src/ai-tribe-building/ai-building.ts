@@ -5,11 +5,11 @@ import { StructureType } from "webgl-test-shared/dist/structures";
 import { Point, distBetweenPointAndRectangle } from "webgl-test-shared/dist/utils";
 import Tribe, { RestrictedBuildingArea, VirtualBuilding, getNumWallConnections, updateTribeWalls } from "../Tribe";
 import CircularHitbox from "../hitboxes/CircularHitbox";
-import RectangularHitbox from "../hitboxes/RectangularHitbox";
 import Board from "../Board";
 import { createBuildingHitboxes } from "../buildings";
 import { TribeArea, createTribeArea, updateTribeAreaDoors } from "./ai-building-areas";
 import { updateTribePlans } from "./ai-building-plans";
+import { Hitbox, hitboxIsCircular } from "../hitboxes/hitboxes";
 
 const enum Vars {
    /** How much safety increases when moving in a node */
@@ -130,16 +130,15 @@ export function addRectangularSafetyNodePositions(rectX: number, rectY: number, 
    }
 }
 
-export function addHitboxesOccupiedNodes(hitboxes: ReadonlyArray<RectangularHitbox | CircularHitbox>, positions: Set<SafetyNode>): void {
+export function addHitboxesOccupiedNodes(hitboxes: ReadonlyArray<Hitbox>, positions: Set<SafetyNode>): void {
    for (let i = 0; i < hitboxes.length; i++) {
       const hitbox = hitboxes[i];
 
       // Add to occupied pathfinding nodes
-      if (hitbox.hasOwnProperty("radius")) {
-         addCircularHitboxNodePositions(hitbox as CircularHitbox, positions);
+      if (hitboxIsCircular(hitbox)) {
+         addCircularHitboxNodePositions(hitbox, positions);
       } else {
-         const rect = hitbox as RectangularHitbox;
-         addRectangularSafetyNodePositions(rect.x, rect.y, rect.width, rect.height, rect.rotation, rect.calculateHitboxBoundsMinX(), rect.calculateHitboxBoundsMaxX(), rect.calculateHitboxBoundsMinY(), rect.calculateHitboxBoundsMaxY(), positions);
+         addRectangularSafetyNodePositions(hitbox.x, hitbox.y, hitbox.width, hitbox.height, hitbox.rotation, hitbox.calculateHitboxBoundsMinX(), hitbox.calculateHitboxBoundsMaxX(), hitbox.calculateHitboxBoundsMinY(), hitbox.calculateHitboxBoundsMaxY(), positions);
       }
    }
 }
@@ -607,7 +606,7 @@ export function updateTribeBuildingInfo(tribe: Tribe): void {
    const borderNodes = getBorderNodes(tribe, insideNodes);
 
    // Create padding nodes
-   let outmostPaddingNodes = new Set<SafetyNode>()
+   const outmostPaddingNodes = new Set<SafetyNode>()
    const paddingNodes = new Set(borderNodes);
    createPaddingNodes(tribe, outmostPaddingNodes, borderNodes, paddingNodes);
    

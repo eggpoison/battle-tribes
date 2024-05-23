@@ -488,11 +488,11 @@ const calculateVertices = (entity: Entity): ReadonlyArray<number> => {
 
 export function renderStructureHighlights(): void {
    const highlightedStructureID = getHighlightedEntityID();
-   if (highlightedStructureID === -1 || !Board.entityRecord.hasOwnProperty(highlightedStructureID)) {
+   const highlightedEntity = Board.entityRecord[highlightedStructureID];
+   if (typeof highlightedEntity === "undefined") {
       return;
    }
 
-   const highlightedEntity = Board.entityRecord[highlightedStructureID];
    const vertices = calculateVertices(highlightedEntity);
    
    gl.useProgram(program);

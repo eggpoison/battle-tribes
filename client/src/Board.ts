@@ -43,7 +43,7 @@ abstract class Board {
    public static readonly fish = new Array<Fish>();
 
    public static readonly entities = new Set<Entity>();
-   public static readonly entityRecord: Record<number, Entity> = {};
+   public static readonly entityRecord: Partial<Record<number, Entity>> = {};
 
    public static readonly renderPartRecord: Record<number, RenderPart> = {};
 
@@ -354,10 +354,6 @@ abstract class Board {
 
    public static tileIsInBoard(tileX: number, tileY: number): boolean {
       return tileX >= 0 && tileX < Settings.BOARD_DIMENSIONS && tileY >= 0 && tileY < Settings.BOARD_DIMENSIONS;
-   }
-
-   public static hasEntityID(entityID: number): boolean {
-      return this.entityRecord.hasOwnProperty(entityID);
    }
 }
 

@@ -95,8 +95,8 @@ class FenceComponent extends ServerComponent<ServerComponentType.fence> {
    }
 
    private updateRails(): void {
-      const fenceConnectionComponent = this.entity.getServerComponent(ServerComponentType.fenceConnection);
-      const connectedSidesBitset = fenceConnectionComponent.connectedSidesBitset;
+      const structureComponent = this.entity.getServerComponent(ServerComponentType.structure);
+      const connectedSidesBitset = structureComponent.connectedSidesBitset;
       
       this.checkBit(0b0001, connectedSidesBitset);
       this.checkBit(0b0010, connectedSidesBitset);

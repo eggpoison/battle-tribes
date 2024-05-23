@@ -13,7 +13,7 @@ import { InventoryComponent, InventoryComponentArray } from "../../components/In
 import { InventoryUseComponent } from "../../components/InventoryUseComponent";
 import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
 import { TribeMemberComponent, TribeMemberComponentArray } from "../../components/TribeMemberComponent";
-import { TribesmanComponent } from "../../components/TribesmanComponent";
+import { TribesmanAIComponent } from "../../components/TribesmanAIComponent";
 import Board from "../../Board";
 import { AIHelperComponent, AIHelperComponentArray } from "../../components/AIHelperComponent";
 import { tickTribesman } from "./tribesman-ai/tribesman-ai";
@@ -56,7 +56,7 @@ export function createTribeWarrior(position: Point, rotation: number, tribe: Tri
    StatusEffectComponentArray.addComponent(warrior.id, new StatusEffectComponent(0));
    TribeComponentArray.addComponent(warrior.id, new TribeComponent(tribe));
    TribeMemberComponentArray.addComponent(warrior.id, new TribeMemberComponent(tribe.type, EntityType.tribeWarrior));
-   TribesmanComponentArray.addComponent(warrior.id, new TribesmanComponent(hutID));
+   TribesmanComponentArray.addComponent(warrior.id, new TribesmanAIComponent(hutID));
    AIHelperComponentArray.addComponent(warrior.id, new AIHelperComponent(TRIBE_WARRIOR_VISION_RANGE));
    TribeWarriorComponentArray.addComponent(warrior.id, new TribeWarriorComponent(generateScars()));
 

@@ -26,8 +26,7 @@ class HealingTotemComponent extends ServerComponent<ServerComponentType.healingT
       // Update eye lights
       const isHealing = this.healingTargetsData.length > 0;
       if (isHealing) {
-         this.ticksSpentHealing++;
-         if (this.ticksSpentHealing === 1) {
+         if (this.eyeLights.length === 0) {
             for (let i = 0; i < 2; i++) {
                const offsetX = -12 * (i === 0 ? 1 : -1);
                const offsetY = 8;
@@ -43,8 +42,12 @@ class HealingTotemComponent extends ServerComponent<ServerComponentType.healingT
                };
                const lightID = addLight(light);
                attachLightToEntity(lightID, this.entity.id);
+
+               this.eyeLights.push(light);
             }
          }
+         
+         this.ticksSpentHealing++;
          
          let lightIntensity: number;
          if (this.ticksSpentHealing < EYE_LIGHTS_TRANSFORM_TICKS) {

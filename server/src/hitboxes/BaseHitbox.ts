@@ -1,8 +1,11 @@
 import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
 import { Point } from "webgl-test-shared/dist/utils";
-import RectangularHitbox from "./RectangularHitbox";
-import CircularHitbox from "./CircularHitbox";
 import { HitboxCollisionBit } from "webgl-test-shared/dist/collision";
+import { Hitbox } from "./hitboxes";
+
+export const enum HitboxFlags {
+   NON_GRASS_BLOCKING = 1 << 0
+}
 
 export type HitboxObject = { position: Point, rotation: number };
 
@@ -25,6 +28,8 @@ abstract class BaseHitbox {
    public collisionType: HitboxCollisionType;
    public readonly collisionBit: HitboxCollisionBit;
    public readonly collisionMask: number;
+
+   public flags = 0;
 
    constructor(parentPosition: Point, mass: number, offsetX: number, offsetY: number, collisionType: HitboxCollisionType, localID: number, initialRotation: number, collisionBit: number, collisionMask: number) {
       this.mass = mass;
@@ -51,7 +56,7 @@ abstract class BaseHitbox {
    public abstract calculateHitboxBoundsMinY(): number;
    public abstract calculateHitboxBoundsMaxY(): number;
 
-   public abstract isColliding(otherHitbox: RectangularHitbox | CircularHitbox): boolean;
+   public abstract isColliding(otherHitbox: Hitbox): boolean;
 }
 
 export default BaseHitbox;

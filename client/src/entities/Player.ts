@@ -286,13 +286,11 @@ class Player extends TribeMember {
       
       const potentialCollidingEntities = this.getPotentialCollidingEntities();
 
+      Player.instance.collidingEntities = [];
+
       for (let i = 0; i < potentialCollidingEntities.length; i++) {
          const entity = potentialCollidingEntities[i];
 
-         if (entity instanceof ItemEntity) {
-            continue;
-         }
-      
          // If the two entities are exactly on top of each other, don't do anything
          if (entity.position.x === Player.instance!.position.x && entity.position.y === Player.instance!.position.y) {
             continue;
@@ -301,10 +299,14 @@ class Player extends TribeMember {
          for (const hitbox of Player.instance!.hitboxes) {
             for (const otherHitbox of entity.hitboxes) {
                if (hitbox.isColliding(otherHitbox)) {
+                  if (!Player.instance.collidingEntities.includes(entity)) {
+                     Player.instance.collidingEntities.push(entity);
+                  }
                   
                   if ((entity.collisionMask & Player.instance.collisionBit) !== 0 && (Player.instance.collisionMask & entity.collisionBit) !== 0) {
                      collide(Player.instance!, hitbox, otherHitbox);
                   } else {
+                     // @Hack
                      if (entity.collisionBit === COLLISION_BITS.plants) {
                         latencyGameState.lastPlantCollisionTicks = Board.ticks;
                      }

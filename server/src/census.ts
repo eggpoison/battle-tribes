@@ -1,7 +1,7 @@
-import { EntityType } from "webgl-test-shared/dist/entities";
+import { EntityType, NUM_ENTITY_TYPES } from "webgl-test-shared/dist/entities";
 import { TileType, Biome } from "webgl-test-shared/dist/tiles";
 import Tile from "./Tile";
-import Entity, { NUM_ENTITY_TYPES } from "./Entity";
+import Entity from "./Entity";
 
 const entityCounts = new Array<EntityType>();
 for (let i = 0; i < NUM_ENTITY_TYPES; i++) {
@@ -9,6 +9,7 @@ for (let i = 0; i < NUM_ENTITY_TYPES; i++) {
 }
 
 interface TileCensus {
+   // @Cleanup: remove the partial. Have them always be defined
    types: Partial<Record<TileType, Array<Tile>>>;
    biomes: Partial<Record<Biome, Array<Tile>>>;
 }
@@ -75,27 +76,18 @@ export function removeTileFromCensus(tile: Tile): void {
 }
 
 export function getTileTypeCount(tileType: TileType): number {
-   if (!tileCensus.types.hasOwnProperty(tileType)) {
-      return 0;
-   }
-
-   return tileCensus.types[tileType]!.length;
+   const tiles = tileCensus.types[tileType];
+   return typeof tiles !== "undefined" ? tiles.length : 0;
 }
 
 export function getTilesOfBiome(biomeName: Biome): ReadonlyArray<Tile> {
-   if (!tileCensus.biomes.hasOwnProperty(biomeName)) {
-      return [];
-   }
-   
-   return tileCensus.biomes[biomeName]!;
+   const tiles = tileCensus.biomes[biomeName];
+   return typeof tiles !== "undefined" ? tiles : [];
 }
 
 export function getTilesOfType(type: TileType): ReadonlyArray<Tile> {
-   if (!tileCensus.types.hasOwnProperty(type)) {
-      return [];
-   }
-   
-   return tileCensus.types[type]!;
+   const tiles = tileCensus.types[type];
+   return typeof tiles !== "undefined" ? tiles : [];
 }
 
 export function resetCensus(): void {

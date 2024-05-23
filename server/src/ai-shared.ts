@@ -11,6 +11,7 @@ import RectangularHitbox from "./hitboxes/RectangularHitbox";
 import { PhysicsComponent, PhysicsComponentArray } from "./components/PhysicsComponent";
 import { getEntityPathfindingGroupID } from "./pathfinding";
 import { DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
+import { hitboxIsCircular } from "./hitboxes/hitboxes";
 
 const TURN_CONSTANT = Math.PI / Settings.TPS;
 const WALL_AVOIDANCE_MULTIPLIER = 1.5;
@@ -556,13 +557,13 @@ const lineIntersectsCircularHitbox = (lineX1: number, lineY1: number, lineX2: nu
    const circleX = hitbox.x;
    const circleY = hitbox.y;
    
-   let x_linear = lineX2 - lineX1;
-   let x_constant = lineX1 - circleX;
-   let y_linear = lineY2 - lineY1;
-   let y_constant = lineY1 - circleY;
-   let a = x_linear * x_linear + y_linear * y_linear;
-   let half_b = x_linear * x_constant + y_linear * y_constant;
-   let c = x_constant * x_constant + y_constant * y_constant - hitbox.radius * hitbox.radius;
+   const x_linear = lineX2 - lineX1;
+   const x_constant = lineX1 - circleX;
+   const y_linear = lineY2 - lineY1;
+   const y_constant = lineY1 - circleY;
+   const a = x_linear * x_linear + y_linear * y_linear;
+   const half_b = x_linear * x_constant + y_linear * y_constant;
+   const c = x_constant * x_constant + y_constant * y_constant - hitbox.radius * hitbox.radius;
    return (
       half_b * half_b >= a * c &&
       (-half_b <= a || c + half_b + half_b + a <= 0) &&
@@ -580,12 +581,12 @@ const entityIntersectsLineOfSight = (entity: Entity, originEntity: Entity, targe
          continue;
       }
 
-      if (hitbox.hasOwnProperty("radius")) {
-         if (lineIntersectsCircularHitbox(originEntity.position.x, originEntity.position.y, targetEntity.position.x, targetEntity.position.y, hitbox as CircularHitbox)) {
+      if (hitboxIsCircular(hitbox)) {
+         if (lineIntersectsCircularHitbox(originEntity.position.x, originEntity.position.y, targetEntity.position.x, targetEntity.position.y, hitbox)) {
             return false;
          }
       } else {
-         if (lineIntersectsRectangularHitbox(originEntity.position.x, originEntity.position.y, targetEntity.position.x, targetEntity.position.y, hitbox as RectangularHitbox)) {
+         if (lineIntersectsRectangularHitbox(originEntity.position.x, originEntity.position.y, targetEntity.position.x, targetEntity.position.y, hitbox)) {
             return true;
          }
       }
@@ -638,14 +639,14 @@ export function entityIsInLineOfSight(originEntity: Entity, targetEntity: Entity
 export function getDistanceFromPointToEntity(x: number, y: number, entity: Entity): number {
    let minDistance = Math.sqrt(Math.pow(x - entity.position.x, 2) + Math.pow(y - entity.position.y, 2));
    for (const hitbox of entity.hitboxes) {
-      if (hitbox.hasOwnProperty("radius")) {
+      if (hitboxIsCircular(hitbox)) {
          const rawDistance = distance(x, y, hitbox.x, hitbox.y);
-         const hitboxDistance = rawDistance - (hitbox as CircularHitbox).radius;
+         const hitboxDistance = rawDistance - hitbox.radius;
          if (hitboxDistance < minDistance) {
             minDistance = hitboxDistance;
          }
       } else {
-         let dist = distBetweenPointAndRectangle(x, y, hitbox.x, hitbox.y, (hitbox as RectangularHitbox).width, (hitbox as RectangularHitbox).height, (hitbox as RectangularHitbox).rotation);
+         const dist = distBetweenPointAndRectangle(x, y, hitbox.x, hitbox.y, hitbox.width, hitbox.height, hitbox.rotation);
          if (dist < minDistance) {
             minDistance = dist;
          }

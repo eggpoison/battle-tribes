@@ -168,7 +168,7 @@ const getEnemyChaseTargetID = (slime: Entity): number => {
    return closestEnemyID;
 }
 
-const getChaseTargetID = (slime: Entity, slimeComponent: SlimeComponent): number => {
+const getChaseTargetID = (slime: Entity): number => {
    const aiHelperComponent = AIHelperComponentArray.getComponent(slime.id);
 
    let minDist = Number.MAX_SAFE_INTEGER;
@@ -266,7 +266,7 @@ export function tickSlime(slime: Entity): void {
    let chaseTargetID: number;
    if (slimeWantsToMerge(slimeComponent)) {
       // Chase enemies and merge targets
-      chaseTargetID = getChaseTargetID(slime, slimeComponent);
+      chaseTargetID = getChaseTargetID(slime);
    } else {
       // Chase enemies
       chaseTargetID = getEnemyChaseTargetID(slime);

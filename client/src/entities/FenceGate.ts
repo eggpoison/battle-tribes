@@ -8,7 +8,7 @@ import TribeComponent from "../entity-components/TribeComponent";
 import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
 import FenceGateComponent from "../entity-components/FenceGateComponent";
-import FenceConnectionComponent from "../entity-components/FenceConnectionComponent";
+import StructureComponent from "../entity-components/StructureComponent";
 
 class FenceGate extends Entity {
    constructor(position: Point, id: number, ageTicks: number, componentsData: EntityComponentsData<EntityType.fenceGate>) {
@@ -33,8 +33,8 @@ class FenceGate extends Entity {
 
       this.addServerComponent(ServerComponentType.health, new HealthComponent(this, componentsData[0]));
       this.addServerComponent(ServerComponentType.statusEffect, new StatusEffectComponent(this, componentsData[1]));
-      this.addServerComponent(ServerComponentType.tribe, new TribeComponent(this, componentsData[2]));
-      this.addServerComponent(ServerComponentType.fenceConnection, new FenceConnectionComponent(this, componentsData[3]));
+      this.addServerComponent(ServerComponentType.structure, new StructureComponent(this, componentsData[2]));
+      this.addServerComponent(ServerComponentType.tribe, new TribeComponent(this, componentsData[3]));
       this.addServerComponent(ServerComponentType.fenceGate, new FenceGateComponent(this, componentsData[4], doorRenderPart));
    }
 }

@@ -3,7 +3,6 @@ import { EntityType } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { Point, angle, rotateXAroundPoint, rotateYAroundPoint } from "webgl-test-shared/dist/utils";
 import Entity from "./Entity";
-import BaseHitbox from "./hitboxes/BaseHitbox";
 import CircularHitbox from "./hitboxes/CircularHitbox";
 import RectangularHitbox, { assertIsRectangular } from "./hitboxes/RectangularHitbox";
 import { PhysicsComponentArray } from "./components/PhysicsComponent";
@@ -31,6 +30,7 @@ import { onEmbrasureCollision } from "./entities/structures/embrasure";
 import Board from "./Board";
 import { onTribesmanCollision } from "./entities/tribes/tribe-member";
 import { DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit, rectanglesAreColliding } from "webgl-test-shared/dist/collision";
+import { Hitbox, hitboxIsCircular } from "./hitboxes/hitboxes";
 
 interface CollisionPushInfo {
    direction: number;
@@ -128,16 +128,16 @@ const getCircleRectCollisionPushInfo = (pushedHitbox: CircularHitbox, pushingHit
    };
 }
 
-const getCollisionPushInfo = (pushedHitbox: BaseHitbox, pushingHitbox: BaseHitbox): CollisionPushInfo => {
-   if (pushedHitbox.hasOwnProperty("radius") && pushingHitbox.hasOwnProperty("radius")) {
+const getCollisionPushInfo = (pushedHitbox: Hitbox, pushingHitbox: Hitbox): CollisionPushInfo => {
+   if (hitboxIsCircular(pushedHitbox) && hitboxIsCircular(pushingHitbox)) {
       // Circle + Circle
-      return getCircleCircleCollisionPushInfo(pushedHitbox as CircularHitbox, pushingHitbox as CircularHitbox);
-   } else if (pushedHitbox.hasOwnProperty("radius") && !pushingHitbox.hasOwnProperty("radius")) {
+      return getCircleCircleCollisionPushInfo(pushedHitbox, pushingHitbox);
+   } else if (hitboxIsCircular(pushedHitbox) && !hitboxIsCircular(pushingHitbox)) {
       // Circle + Rectangle
-      return getCircleRectCollisionPushInfo(pushedHitbox as CircularHitbox, pushingHitbox as RectangularHitbox);
-   } else if (!pushedHitbox.hasOwnProperty("radius") && pushingHitbox.hasOwnProperty("radius")) {
+      return getCircleRectCollisionPushInfo(pushedHitbox, pushingHitbox);
+   } else if (!hitboxIsCircular(pushedHitbox) && hitboxIsCircular(pushingHitbox)) {
       // Rectangle + Circle
-      const pushInfo = getCircleRectCollisionPushInfo(pushingHitbox as CircularHitbox, pushedHitbox as RectangularHitbox);
+      const pushInfo = getCircleRectCollisionPushInfo(pushingHitbox, pushedHitbox);
       pushInfo.direction += Math.PI;
       return pushInfo;
    } else {
@@ -160,7 +160,7 @@ const getCollisionPushInfo = (pushedHitbox: BaseHitbox, pushingHitbox: BaseHitbo
    }
 }
 
-export function hitboxesAreColliding(hitbox: CircularHitbox | RectangularHitbox, hitboxes: ReadonlyArray<CircularHitbox | RectangularHitbox>): boolean {
+export function hitboxesAreColliding(hitbox: Hitbox, hitboxes: ReadonlyArray<Hitbox>): boolean {
    for (let j = 0; j < hitboxes.length; j++) {
       const otherHitbox = hitboxes[j];
 
@@ -225,7 +225,7 @@ const resolveHardCollision = (entity: Entity, pushInfo: CollisionPushInfo): void
    physicsComponent.velocity.y = by * projectionCoeff;
 }
 
-const resolveSoftCollision = (entity: Entity, pushingHitbox: BaseHitbox, pushInfo: CollisionPushInfo): void => {
+const resolveSoftCollision = (entity: Entity, pushingHitbox: Hitbox, pushInfo: CollisionPushInfo): void => {
    // Force gets greater the further into each other the entities are
    const distMultiplier = Math.pow(pushInfo.amountIn, 1.1);
    const pushForce = Settings.ENTITY_PUSH_FORCE * Settings.I_TPS * distMultiplier * pushingHitbox.mass / entity.totalMass;
@@ -288,7 +288,7 @@ export function collide(entity: Entity, pushingEntity: Entity, pushedHitboxIdx: 
    }
 }
 
-export function getHitboxesCollidingEntities(hitboxes: ReadonlyArray<CircularHitbox | RectangularHitbox>): ReadonlyArray<Entity> {
+export function getHitboxesCollidingEntities(hitboxes: ReadonlyArray<Hitbox>): ReadonlyArray<Entity> {
    const collidingEntities = new Array<Entity>();
    const seenEntityIDs = new Set<number>();
    
@@ -339,7 +339,7 @@ export function getHitboxesCollidingEntities(hitboxes: ReadonlyArray<CircularHit
 }
 
 /** If no collision is found, does nothing. */
-export function resolveEntityTileCollision(entity: Entity, hitbox: BaseHitbox, tileX: number, tileY: number): void {
+export function resolveEntityTileCollision(entity: Entity, hitbox: Hitbox, tileX: number, tileY: number): void {
    // @Speed
    const tilePos = new Point((tileX + 0.5) * Settings.TILE_SIZE, (tileY + 0.5) * Settings.TILE_SIZE);
    const tileHitbox = new RectangularHitbox(tilePos, 1, 0, 0, HitboxCollisionType.hard, 1, 0, Settings.TILE_SIZE, Settings.TILE_SIZE, 0, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK);

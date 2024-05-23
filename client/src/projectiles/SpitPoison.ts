@@ -8,6 +8,7 @@ import { Sound, playSound } from "../sound";
 import { Point, lerp, randFloat } from "webgl-test-shared/dist/utils";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
+import { EntityComponentsData } from "webgl-test-shared/dist/components";
 
 const createParticle = (spawnPositionX: number, spawnPositionY: number): void => {
    const lifetime = randFloat(0.5, 0.7);
@@ -44,7 +45,7 @@ class SpitPoison extends Entity {
    private readonly trackSource: AudioBufferSourceNode;
    private readonly sound: Sound;
    
-   constructor(position: Point, id: number, ageTicks: number) {
+   constructor(position: Point, id: number, ageTicks: number, componentsData: EntityComponentsData<EntityType.spitPoison>) {
       super(position, id, EntityType.spitPoison, ageTicks);
 
       const audioInfo = playSound("acid-burn.mp3", 0.25, 1, this.position.x, this.position.y);

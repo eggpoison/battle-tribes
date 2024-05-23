@@ -11,16 +11,17 @@ import RectangularHitbox from "../../hitboxes/RectangularHitbox";
 import Tribe from "../../Tribe";
 import { TribeComponent } from "../../components/TribeComponent";
 import { ResearchBenchComponent } from "../../components/ResearchBenchComponent";
-import CircularHitbox from "../../hitboxes/CircularHitbox";
-import { StructureComponent, StructureComponentArray, StructureInfo } from "../../components/StructureComponent";
+import { StructureComponent, StructureComponentArray } from "../../components/StructureComponent";
+import { StructureConnectionInfo } from "webgl-test-shared/dist/structures";
+import { Hitbox } from "../../hitboxes/hitboxes";
 
-export function createResearchBenchHitboxes(parentPosition: Point, localID: number, parentRotation: number): ReadonlyArray<CircularHitbox | RectangularHitbox> {
-   const hitboxes = new Array<CircularHitbox | RectangularHitbox>();
+export function createResearchBenchHitboxes(parentPosition: Point, localID: number, parentRotation: number): ReadonlyArray<Hitbox> {
+   const hitboxes = new Array<Hitbox>();
    hitboxes.push(new RectangularHitbox(parentPosition, 1.8, 0, 0, HitboxCollisionType.hard, localID, parentRotation, 128, 80, 0, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK));
    return hitboxes;
 }
 
-export function createResearchBench(position: Point, rotation: number, tribe: Tribe, structureInfo: StructureInfo): Entity {
+export function createResearchBench(position: Point, rotation: number, tribe: Tribe, connectionInfo: StructureConnectionInfo): Entity {
    const bench = new Entity(position, rotation, EntityType.researchBench, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
    const hitboxes = createResearchBenchHitboxes(position, bench.getNextHitboxLocalID(), bench.rotation);
@@ -30,7 +31,7 @@ export function createResearchBench(position: Point, rotation: number, tribe: Tr
    
    HealthComponentArray.addComponent(bench.id, new HealthComponent(40));
    StatusEffectComponentArray.addComponent(bench.id, new StatusEffectComponent(StatusEffect.poisoned));
-   StructureComponentArray.addComponent(bench.id, new StructureComponent(structureInfo));
+   StructureComponentArray.addComponent(bench.id, new StructureComponent(connectionInfo));
    TribeComponentArray.addComponent(bench.id, new TribeComponent(tribe));
    ResearchBenchComponentArray.addComponent(bench.id, new ResearchBenchComponent());
 

@@ -11,11 +11,13 @@ import { HealthComponent, addLocalInvulnerabilityHash, canDamageEntity, damageEn
 import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
 import { SERVER } from "../../server";
 import Tribe from "../../Tribe";
-import { TribeComponent } from "../../components/TribeComponent";
+import { EntityRelationship, TribeComponent, getEntityRelationship } from "../../components/TribeComponent";
 import { SpikesComponent } from "../../components/SpikesComponent";
 import { BuildingMaterialComponent } from "../../components/BuildingMaterialComponent";
-import CircularHitbox from "../../hitboxes/CircularHitbox";
-import { StructureComponentArray, StructureComponent, StructureInfo, isAttachedToWall } from "../../components/StructureComponent";
+import { StructureComponentArray, StructureComponent, isAttachedToWall } from "../../components/StructureComponent";
+import { StructureConnectionInfo } from "webgl-test-shared/dist/structures";
+import { Hitbox } from "../../hitboxes/hitboxes";
+import { HitboxFlags } from "../../hitboxes/BaseHitbox";
 
 const FLOOR_HITBOX_SIZE = 48 - 0.05;
 
@@ -24,22 +26,30 @@ const WALL_HITBOX_HEIGHT = 28 - 0.05;
 
 export const SPIKE_HEALTHS = [15, 45];
 
-export function createFloorSpikesHitboxes(parentPosition: Point, localID: number, parentRotation: number): ReadonlyArray<CircularHitbox | RectangularHitbox> {
-   const hitboxes = new Array<CircularHitbox | RectangularHitbox>();
+export function createFloorSpikesHitboxes(parentPosition: Point, localID: number, parentRotation: number): ReadonlyArray<Hitbox> {
+   const hitboxes = new Array<Hitbox>();
+   
    // @Hack mass
-   hitboxes.push(new RectangularHitbox(parentPosition, Number.EPSILON, 0, 0, HitboxCollisionType.soft, localID, parentRotation, FLOOR_HITBOX_SIZE, FLOOR_HITBOX_SIZE, 0, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK));
+   const hitbox = new RectangularHitbox(parentPosition, Number.EPSILON, 0, 0, HitboxCollisionType.soft, localID, parentRotation, FLOOR_HITBOX_SIZE, FLOOR_HITBOX_SIZE, 0, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK);
+   hitbox.flags |= HitboxFlags.NON_GRASS_BLOCKING;
+   hitboxes.push(hitbox);
+   
    return hitboxes;
 }
 
-export function createWallSpikesHitboxes(parentPosition: Point, localID: number, parentRotation: number): ReadonlyArray<CircularHitbox | RectangularHitbox> {
-   const hitboxes = new Array<CircularHitbox | RectangularHitbox>();
+export function createWallSpikesHitboxes(parentPosition: Point, localID: number, parentRotation: number): ReadonlyArray<Hitbox> {
+   const hitboxes = new Array<Hitbox>();
+
    // @Hack mass
-   hitboxes.push(new RectangularHitbox(parentPosition, Number.EPSILON, 0, 0, HitboxCollisionType.soft, localID, parentRotation, WALL_HITBOX_WIDTH, WALL_HITBOX_HEIGHT, 0, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK));
+   const hitbox = new RectangularHitbox(parentPosition, Number.EPSILON, 0, 0, HitboxCollisionType.soft, localID, parentRotation, WALL_HITBOX_WIDTH, WALL_HITBOX_HEIGHT, 0, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK);
+   hitbox.flags |= HitboxFlags.NON_GRASS_BLOCKING;
+   hitboxes.push(hitbox);
+   
    return hitboxes;
 }
 
-export function createSpikes(position: Point, rotation: number, tribe: Tribe, structureInfo: StructureInfo): Entity {
-   const isAttached = isAttachedToWall(structureInfo);
+export function createSpikes(position: Point, rotation: number, tribe: Tribe, connectionInfo: StructureConnectionInfo): Entity {
+   const isAttached = isAttachedToWall(connectionInfo);
    const entityType = isAttached ? EntityType.wallSpikes : EntityType.floorSpikes;
 
    const spikes = new Entity(position, rotation, entityType, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
@@ -53,7 +63,7 @@ export function createSpikes(position: Point, rotation: number, tribe: Tribe, st
    
    HealthComponentArray.addComponent(spikes.id, new HealthComponent(SPIKE_HEALTHS[material]));
    StatusEffectComponentArray.addComponent(spikes.id, new StatusEffectComponent(StatusEffect.bleeding | StatusEffect.poisoned));
-   StructureComponentArray.addComponent(spikes.id, new StructureComponent(structureInfo));
+   StructureComponentArray.addComponent(spikes.id, new StructureComponent(connectionInfo));
    TribeComponentArray.addComponent(spikes.id, new TribeComponent(tribe));
    SpikesComponentArray.addComponent(spikes.id, new SpikesComponent());
    BuildingMaterialComponentArray.addComponent(spikes.id, new BuildingMaterialComponent(material));
@@ -70,6 +80,15 @@ export function onSpikesCollision(spikes: Entity, collidingEntity: Entity): void
    if (!HealthComponentArray.hasComponent(collidingEntity.id)) {
       return;
    }
+
+   // Don't collide with friendly entities if the spikes are covered
+   const spikesComponent = SpikesComponentArray.getComponent(spikes.id);
+   if (spikesComponent.isCovered && getEntityRelationship(spikes.id, collidingEntity) === EntityRelationship.friendly) {
+      return;
+   }
+
+   // Reveal
+   spikesComponent.isCovered = false;
 
    const healthComponent = HealthComponentArray.getComponent(collidingEntity.id);
    if (!canDamageEntity(healthComponent, "woodenSpikes")) {

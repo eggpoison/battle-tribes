@@ -11,18 +11,19 @@ import RectangularHitbox from "../../hitboxes/RectangularHitbox";
 import Tribe from "../../Tribe";
 import { TribeComponent } from "../../components/TribeComponent";
 import { PlanterBoxComponent, PlanterBoxComponentArray } from "../../components/PlanterBoxComponent";
-import CircularHitbox from "../../hitboxes/CircularHitbox";
-import { StructureComponent, StructureComponentArray, StructureInfo } from "../../components/StructureComponent";
+import { StructureComponent, StructureComponentArray } from "../../components/StructureComponent";
+import { StructureConnectionInfo } from "webgl-test-shared/dist/structures";
+import { Hitbox } from "../../hitboxes/hitboxes";
 
 const HITBOX_SIZE = 80 - 0.05;
 
-export function createPlanterBoxHitboxes(parentPosition: Point, localID: number, parentRotation: number): ReadonlyArray<RectangularHitbox | CircularHitbox> {
-   const hitboxes = new Array<RectangularHitbox | CircularHitbox>();
+export function createPlanterBoxHitboxes(parentPosition: Point, localID: number, parentRotation: number): ReadonlyArray<Hitbox> {
+   const hitboxes = new Array<Hitbox>();
    hitboxes.push(new RectangularHitbox(parentPosition, 1.5, 0, 0, HitboxCollisionType.hard, localID, parentRotation, HITBOX_SIZE, HITBOX_SIZE, 0, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK));
    return hitboxes;
 }
 
-export function createPlanterBox(position: Point, rotation: number, tribe: Tribe, structureInfo: StructureInfo): Entity {
+export function createPlanterBox(position: Point, rotation: number, tribe: Tribe, connectionInfo: StructureConnectionInfo): Entity {
    const planterBox = new Entity(position, rotation, EntityType.planterBox, COLLISION_BITS.planterBox, DEFAULT_COLLISION_MASK);
 
    const hitboxes = createPlanterBoxHitboxes(position, planterBox.getNextHitboxLocalID(), rotation);
@@ -33,7 +34,7 @@ export function createPlanterBox(position: Point, rotation: number, tribe: Tribe
    HealthComponentArray.addComponent(planterBox.id, new HealthComponent(15));
    StatusEffectComponentArray.addComponent(planterBox.id, new StatusEffectComponent(StatusEffect.poisoned | StatusEffect.bleeding));
    TribeComponentArray.addComponent(planterBox.id, new TribeComponent(tribe));
-   StructureComponentArray.addComponent(planterBox.id, new StructureComponent(structureInfo));
+   StructureComponentArray.addComponent(planterBox.id, new StructureComponent(connectionInfo));
    PlanterBoxComponentArray.addComponent(planterBox.id, new PlanterBoxComponent());
    
    return planterBox;

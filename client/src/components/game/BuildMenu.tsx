@@ -51,21 +51,18 @@ interface OptionCost {
 
 interface MenuOption {
    readonly name: string;
-   readonly imageSource: string | ((entity: Entity) => string);
-   readonly imageWidth: number | ((entity: Entity) => number);
-   readonly imageHeight: number | ((entity: Entity) => number);
+   readonly imageSource: string;
+   readonly imageWidth: number;
+   readonly imageHeight: number;
    /** The type of the ghost which gets shown when previewing this option */
-   readonly ghostType: GhostType | ((entity: Entity) => GhostType);
+   readonly ghostType: GhostType;
    readonly optionType: OptionType;
    readonly costs: ReadonlyArray<OptionCost>;
-   /** If false, the option won't be shown at all. */
-   readonly requirement?: (entity: Entity) => boolean;
    readonly blueprintType: BlueprintType | ((entity: Entity) => BlueprintType) | null;
    readonly isClickable?: (entity: Entity) => boolean;
    readonly isHighlighted?: (entity: Entity) => boolean;
    readonly deselectsOnClick: boolean;
 }
-
 
 const EMBRASURE_IMAGE_SOURCES = [require("../../images/entities/embrasure/wooden-embrasure.png"), ];
 const DOOR_IMAGE_SOURCES = [require("../../images/entities/door/wooden-door.png"), ];
@@ -119,45 +116,40 @@ const getMenuOptions = (entity: Entity): ReadonlyArray<MenuOption> => {
 
    // Material upgrade option
    if (entity.type === EntityType.wall || entity.type === EntityType.floorSpikes || entity.type === EntityType.wallSpikes || entity.type === EntityType.door || entity.type === EntityType.embrasure || entity.type === EntityType.tunnel) {
-      const imageSource = MATERIAL_UPGRADE_IMAGE_SOURCES[entity.type];
-      const ghostType = MATERIAL_UPGRADE_GHOST_TYPES[entity.type];
-      const imageSize = MATERIAL_UPGRADE_IMAGE_SIZES[entity.type];
-      const blueprintType = MATERIAL_UPGRADE_BLUEPRINT_TYPES[entity.type];
-      
-      options.push({
-         name: "UPGRADE",
-         imageSource: imageSource,
-         imageWidth: imageSize[0],
-         imageHeight: imageSize[1],
-         ghostType: ghostType,
-         optionType: OptionType.placeBlueprint,
-         blueprintType: blueprintType,
-         costs: [{
-            itemType: ItemType.rock,
-            amount: 5
-         }],
-         requirement: (entity: Entity): boolean => {
-            const wallComponent = entity.getServerComponent(ServerComponentType.buildingMaterial);
-            return wallComponent.material < BuildingMaterial.stone;
-         },
-         deselectsOnClick: true
-      })
+      const wallComponent = entity.getServerComponent(ServerComponentType.buildingMaterial);
+      if (wallComponent.material < BuildingMaterial.stone) {
+         const imageSource = MATERIAL_UPGRADE_IMAGE_SOURCES[entity.type];
+         const ghostType = MATERIAL_UPGRADE_GHOST_TYPES[entity.type];
+         const imageSize = MATERIAL_UPGRADE_IMAGE_SIZES[entity.type];
+         const blueprintType = MATERIAL_UPGRADE_BLUEPRINT_TYPES[entity.type];
+         
+         options.push({
+            name: "UPGRADE",
+            imageSource: imageSource,
+            imageWidth: imageSize[0],
+            imageHeight: imageSize[1],
+            ghostType: ghostType,
+            optionType: OptionType.placeBlueprint,
+            blueprintType: blueprintType,
+            costs: [{
+               itemType: ItemType.rock,
+               amount: 5
+            }],
+            deselectsOnClick: true
+         });
+      }
    }
 
    // Wall shaping options
    if (entity.type === EntityType.wall) {
+      const wallComponent = entity.getServerComponent(ServerComponentType.buildingMaterial);
+
       options.push({
          name: "DOOR",
-         imageSource: (wall: Entity) => {
-            const wallComponent = wall.getServerComponent(ServerComponentType.buildingMaterial);
-            return DOOR_IMAGE_SOURCES[wallComponent.material];
-         },
+         imageSource: DOOR_IMAGE_SOURCES[wallComponent.material],
          imageWidth: 64,
          imageHeight: 24,
-         ghostType: (wall: Entity) => {
-            const wallComponent = wall.getServerComponent(ServerComponentType.buildingMaterial);
-            return DOOR_GHOST_TYPES[wallComponent.material];
-         },
+         ghostType: DOOR_GHOST_TYPES[wallComponent.material],
          optionType: OptionType.placeBlueprint,
          blueprintType: (wall: Entity) => {
             const wallComponent = wall.getServerComponent(ServerComponentType.buildingMaterial);
@@ -168,16 +160,10 @@ const getMenuOptions = (entity: Entity): ReadonlyArray<MenuOption> => {
       });
       options.push({
          name: "EMBRASURE",
-         imageSource: (wall: Entity) => {
-            const wallComponent = wall.getServerComponent(ServerComponentType.buildingMaterial);
-            return EMBRASURE_IMAGE_SOURCES[wallComponent.material];
-         },
+         imageSource: EMBRASURE_IMAGE_SOURCES[wallComponent.material],
          imageWidth: 64,
          imageHeight: 20,
-         ghostType: (wall: Entity) => {
-            const wallComponent = wall.getServerComponent(ServerComponentType.buildingMaterial);
-            return EMBRASURE_GHOST_TYPES[wallComponent.material];
-         },
+         ghostType: EMBRASURE_GHOST_TYPES[wallComponent.material],
          optionType: OptionType.placeBlueprint,
          blueprintType: (wall: Entity) => {
             const wallComponent = wall.getServerComponent(ServerComponentType.buildingMaterial);
@@ -188,16 +174,10 @@ const getMenuOptions = (entity: Entity): ReadonlyArray<MenuOption> => {
       });
       options.push({
          name: "TUNNEL",
-         imageSource: (wall: Entity) => {
-            const wallComponent = wall.getServerComponent(ServerComponentType.buildingMaterial);
-            return TUNNEL_IMAGE_SOURCES[wallComponent.material];
-         },
+         imageSource: TUNNEL_IMAGE_SOURCES[wallComponent.material],
          imageWidth: 64,
          imageHeight: 64,
-         ghostType: (wall: Entity) => {
-            const wallComponent = wall.getServerComponent(ServerComponentType.buildingMaterial);
-            return TUNNEL_GHOST_TYPES[wallComponent.material];
-         },
+         ghostType: TUNNEL_GHOST_TYPES[wallComponent.material],
          optionType: OptionType.placeBlueprint,
          blueprintType: (wall: Entity) => {
             const wallComponent = wall.getServerComponent(ServerComponentType.buildingMaterial);
@@ -270,38 +250,29 @@ const getMenuOptions = (entity: Entity): ReadonlyArray<MenuOption> => {
 
    // Hut options
    if (entity.type === EntityType.workerHut) {
-      options.push({
-         name: "WARRIOR HUT",
-         imageSource: (): string => {
-            return WARRIOR_HUT_IMAGE_SOURCE;
-         },
-         // @Cleanup: actual = 104.
-         imageWidth: (): number => {
-            return 104;
-         },
-         imageHeight: (): number => {
-            return 104;
-         },
-         ghostType: (): number => {
-            return GhostType.warriorHut
-         },
-         optionType: OptionType.placeBlueprint,
-         costs: [
-            {
-               itemType: ItemType.rock,
-               amount: 25
-            },
-            {
-               itemType: ItemType.wood,
-               amount: 15
-            }
-         ],
-         requirement: (): boolean => {
-            return playerIsHoldingHammer();
-         },
-         blueprintType: BlueprintType.warriorHutUpgrade,
-         deselectsOnClick: true
-      });
+      if (playerIsHoldingHammer()) {
+         options.push({
+            name: "WARRIOR HUT",
+            imageSource: WARRIOR_HUT_IMAGE_SOURCE,
+            imageWidth: 104,
+            imageHeight: 104,
+            ghostType: GhostType.warriorHut,
+            optionType: OptionType.placeBlueprint,
+            costs: [
+               {
+                  itemType: ItemType.rock,
+                  amount: 25
+               },
+               {
+                  itemType: ItemType.wood,
+                  amount: 15
+               }
+            ],
+            blueprintType: BlueprintType.warriorHutUpgrade,
+            deselectsOnClick: true
+         });
+      }
+
       options.push({
          name: "RECALL",
          imageSource: require("../../images/miscellaneous/recall.png"),
@@ -341,7 +312,6 @@ const getMenuOptions = (entity: Entity): ReadonlyArray<MenuOption> => {
 
    // Fence gate option
    if (entity.type === EntityType.fence) {
-      // @Incomplete
       options.push({
          name: "FENCE GATE",
          imageSource: require("../../images/miscellaneous/full-fence-gate.png"),
@@ -359,6 +329,11 @@ const getMenuOptions = (entity: Entity): ReadonlyArray<MenuOption> => {
    }
 
    return options;
+}
+
+export function entityCanOpenBuildMenu(entity: Entity): boolean {
+   const menuOptions = getMenuOptions(entity);
+   return menuOptions.length > 0;
 }
 
 const BuildMenu = () => {
@@ -477,49 +452,30 @@ const BuildMenu = () => {
 
    const options = getMenuOptions(building);
 
-   const availableOptionIndexes = new Array<number>();
-   let numOptions = 0;
-   for (let i = 0; i < options.length; i++) {
-      const option = options[i];
-      if (typeof option.requirement === "undefined" || option.requirement(building)) {
-         numOptions++;
-         availableOptionIndexes.push(i);
-      }
-   }
-
-   if (numOptions === 0) {
+   if (options.length === 0) {
       console.warn("0 options for entity type " + EntityTypeString[building.type]);
       return null;
    }
 
    const separators = new Array<JSX.Element>();
-   if (numOptions > 1) {
-      for (let i = 0; i < numOptions; i++) {
-         const optionIdx = availableOptionIndexes[i];
-         const option = options[optionIdx];
-         if (typeof option.requirement !== "undefined" && !option.requirement(building)) {
-            continue;
-         }
-         
-         let direction = 2 * Math.PI * i / numOptions;
+   if (options.length > 1) {
+      for (let i = 0; i < options.length; i++) {
+         // + 0.5 so that the segments go between the options
+         let direction = 2 * Math.PI * (i + 0.5) / options.length;
          direction = -direction + Math.PI/2;
          
          separators.push(
-            <div key={i} className="separator" style={{"--direction": direction.toString(), "--x-proj": Math.cos(direction + Math.PI/2).toString(), "--y-proj": Math.sin(direction + Math.PI/2).toString()} as React.CSSProperties}></div>
+            <div key={i} className="separator" style={{"--direction": direction.toString(), "--x-proj": Math.cos(direction - Math.PI/2).toString(), "--y-proj": Math.sin(direction - Math.PI/2).toString()} as React.CSSProperties}></div>
          );
       }
    }
 
    const segments = new Array<JSX.Element>();
-   const segmentCoverage = 2 * Math.PI / numOptions * (180 / Math.PI);
-   for (let i = 0; i < numOptions; i++) {
-      const optionIdx = availableOptionIndexes[i];
-      const option = options[optionIdx];
-      if (typeof option.requirement !== "undefined" && !option.requirement(building)) {
-         continue;
-      }
+   const segmentCoverage = 2 * Math.PI / options.length * (180 / Math.PI);
+   for (let i = 0; i < options.length; i++) {
+      const option = options[i];
 
-      const direction = 2 * Math.PI * i / numOptions;
+      const direction = 2 * Math.PI * i / options.length;
 
       const isHighlighted = typeof option.isHighlighted !== "undefined" && option.isHighlighted(building);
 
@@ -529,44 +485,19 @@ const BuildMenu = () => {
    }
 
    const optionElements = new Array<JSX.Element>();
-   for (let i = 0; i < numOptions; i++) {
-      const optionIdx = availableOptionIndexes[i];
-      const option = options[optionIdx];
-      if (typeof option.requirement !== "undefined" && !option.requirement(building)) {
-         continue;
-      }
+   for (let i = 0; i < options.length; i++) {
+      const option = options[i];
 
       const isUnclickable = typeof option.isClickable !== "undefined" && !option.isClickable(building);
-
-      let imageSource: string;
-      if (typeof option.imageSource === "string") {
-         imageSource = option.imageSource;
-      } else {
-         imageSource = option.imageSource(building);
-      }
-
-      let imageWidth: number;
-      if (typeof option.imageWidth === "number") {
-         imageWidth = option.imageWidth;
-      } else {
-         imageWidth = option.imageWidth(building);
-      }
-
-      let imageHeight: number;
-      if (typeof option.imageHeight === "number") {
-         imageHeight = option.imageHeight;
-      } else {
-         imageHeight = option.imageHeight(building);
-      }
 
       let direction = 2 * Math.PI * i / options.length;
       direction = -direction + Math.PI/2;
 
       optionElements.push(
-         <div key={i} className={`option${optionIdx === hoveredOptionIdx ? " hovered" : ""}${isUnclickable ? " unclickable" : ""}`} style={{"--x-proj": Math.cos(direction - Math.PI/2).toString(), "--y-proj": Math.sin(direction - Math.PI/2).toString()} as React.CSSProperties}>
+         <div key={i} className={`option${i === hoveredOptionIdx ? " hovered" : ""}${isUnclickable ? " unclickable" : ""}`} style={{"--x-proj": Math.cos(direction - Math.PI/2).toString(), "--y-proj": Math.sin(direction - Math.PI/2).toString()} as React.CSSProperties}>
             <div className="hover-div name">{option.name}</div>
             
-            <img src={imageSource} alt="" style={{"--width": imageWidth.toString(), "--height": imageHeight.toString()} as React.CSSProperties} />
+            <img src={option.imageSource} alt="" style={{"--width": option.imageWidth.toString(), "--height": option.imageHeight.toString()} as React.CSSProperties} />
 
             {option.costs.length > 0 ? (
                <div className="hover-div cost">
@@ -621,15 +552,13 @@ const BuildMenu = () => {
       }
       
       let angle = Math.atan2(diffY, diffX);
-      angle += Math.PI / numOptions;
+      angle += Math.PI / options.length;
       if (angle < 0) {
          angle += Math.PI * 2;
       }
 
-      const segmentIdx = Math.floor(angle / (2 * Math.PI) * numOptions);
-
-      // Account for skipped options
-      return availableOptionIndexes[segmentIdx];
+      const segmentIdx = Math.floor(angle / (2 * Math.PI) * options.length);
+      return segmentIdx;
    }
 
    const mouseMove = (e: MouseEvent) => {
@@ -639,15 +568,8 @@ const BuildMenu = () => {
       if (optionIdx !== null) {
          const option = options[optionIdx];
          
-         let ghostType: GhostType;
-         if (typeof option.ghostType === "number") {
-            ghostType = option.ghostType;
-         } else {
-            ghostType = option.ghostType(building);
-         }
-
          if (typeof option.isClickable === "undefined" || option.isClickable(building)) {
-            setHoveredGhostType(ghostType);
+            setHoveredGhostType(option.ghostType);
          } else {
             clearHoveredGhostType();
          }

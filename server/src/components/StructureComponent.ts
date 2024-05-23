@@ -1,4 +1,4 @@
-import { StructureType, getSnapDirection } from "webgl-test-shared/dist/structures";
+import { StructureConnectionInfo, StructureType, getSnapDirection } from "webgl-test-shared/dist/structures";
 import Board from "../Board";
 import Entity from "../Entity";
 import { createStructureGrassBlockers } from "../grass-blockers";
@@ -9,19 +9,14 @@ import { Mutable } from "webgl-test-shared/dist/utils";
 import { StructureComponentData } from "webgl-test-shared/dist/components";
 import { EntityType } from "webgl-test-shared/dist/entities";
 
-export interface StructureInfo {
-   readonly connectedSidesBitset: number;
-   readonly connectedEntityIDs: ConnectedEntityIDs;
-}
-
-export class StructureComponent implements Mutable<StructureInfo> {
+export class StructureComponent implements Mutable<StructureConnectionInfo> {
    /** The ID of any blueprint currently placed on the structure */
    public activeBlueprintID = 0;
    
    public connectedSidesBitset: number;
    public connectedEntityIDs: ConnectedEntityIDs;
 
-   constructor(structureInfo: StructureInfo) {
+   constructor(structureInfo: StructureConnectionInfo) {
       this.connectedSidesBitset = structureInfo.connectedSidesBitset;
       this.connectedEntityIDs = structureInfo.connectedEntityIDs;
    }
@@ -60,9 +55,6 @@ function onJoin(entityID: number): void {
 
    createStructureGrassBlockers(entity);
 
-   // @Incomplete: change to be done when every structure is joined. Which will necessitate a structure component, so that they can store the connected values.
-   // @Bug: walls don't register secondary connections with connected fences
-
    const structureComponent = StructureComponentArray.getComponent(entityID);
    
    // Mark opposite connections
@@ -91,7 +83,6 @@ function onRemove(entityID: number): void {
 
    const structureComponent = StructureComponentArray.getComponent(entityID);
 
-   // @Cleanup: unnecessary layer of indirection
    for (let i = 0; i < 4; i++) {
       const currentConnectedEntityID = structureComponent.connectedEntityIDs[i];
       if (StructureComponentArray.hasComponent(currentConnectedEntityID)) {
@@ -112,9 +103,9 @@ export function serialiseStructureComponent(entityID: number): StructureComponen
    };
 }
 
-export function isAttachedToWall(structureInfo: StructureInfo): boolean {
-   for (let i = 0; i < structureInfo.connectedEntityIDs.length; i++) {
-      const entityID = structureInfo.connectedEntityIDs[i];
+export function isAttachedToWall(connectionInfo: StructureConnectionInfo): boolean {
+   for (let i = 0; i < connectionInfo.connectedEntityIDs.length; i++) {
+      const entityID = connectionInfo.connectedEntityIDs[i];
 
       const entity = Board.entityRecord[entityID];
       if (typeof entity !== "undefined" && entity.type === EntityType.wall) {

@@ -9,6 +9,7 @@ import StatusEffectComponent from "../entity-components/StatusEffectComponent";
 import TribeComponent from "../entity-components/TribeComponent";
 import PlanterBoxComponent from "../entity-components/PlanterBoxComponent";
 import { playSound } from "../sound";
+import StructureComponent from "../entity-components/StructureComponent";
 
 class PlanterBox extends Entity {
    constructor(position: Point, id: number, ageTicks: number, componentsData: EntityComponentsData<EntityType.planterBox>) {
@@ -25,8 +26,9 @@ class PlanterBox extends Entity {
 
       this.addServerComponent(ServerComponentType.health, new HealthComponent(this, componentsData[0]));
       this.addServerComponent(ServerComponentType.statusEffect, new StatusEffectComponent(this, componentsData[1]));
-      this.addServerComponent(ServerComponentType.tribe, new TribeComponent(this, componentsData[2]));
-      this.addServerComponent(ServerComponentType.planterBox, new PlanterBoxComponent(this, componentsData[3]));
+      this.addServerComponent(ServerComponentType.structure, new StructureComponent(this, componentsData[2]));
+      this.addServerComponent(ServerComponentType.tribe, new TribeComponent(this, componentsData[3]));
+      this.addServerComponent(ServerComponentType.planterBox, new PlanterBoxComponent(this, componentsData[4]));
       
       if (this.ageTicks <= 1) {
          playSound("wooden-wall-place.mp3", 0.3, 1, this.position.x, this.position.y);

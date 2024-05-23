@@ -8,6 +8,11 @@ import Board from "../Board";
 import Entity from "../Entity";
 import CookingComponent from "../entity-components/CookingComponent";
 import { ParticleRenderLayer } from "../rendering/particle-rendering";
+import HealthComponent from "../entity-components/HealthComponent";
+import StructureComponent from "../entity-components/StructureComponent";
+import TribeComponent from "../entity-components/TribeComponent";
+import StatusEffectComponent from "../entity-components/StatusEffectComponent";
+import InventoryComponent from "../entity-components/InventoryComponent";
 
 class Furnace extends Entity {
    public static readonly SIZE = 80;
@@ -24,7 +29,12 @@ class Furnace extends Entity {
          )
       );
 
-      this.addServerComponent(ServerComponentType.cooking, new CookingComponent(this, componentsData[3]));
+      this.addServerComponent(ServerComponentType.health, new HealthComponent(this, componentsData[0]));
+      this.addServerComponent(ServerComponentType.statusEffect, new StatusEffectComponent(this, componentsData[1]));
+      this.addServerComponent(ServerComponentType.structure, new StructureComponent(this, componentsData[2]));
+      this.addServerComponent(ServerComponentType.tribe, new TribeComponent(this, componentsData[3]));
+      this.addServerComponent(ServerComponentType.inventory, new InventoryComponent(this, componentsData[4]));
+      this.addServerComponent(ServerComponentType.cooking, new CookingComponent(this, componentsData[5]));
    }
 
    public tick(): void {

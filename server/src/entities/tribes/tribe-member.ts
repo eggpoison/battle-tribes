@@ -3,10 +3,10 @@ import { COLLISION_BITS } from "webgl-test-shared/dist/collision";
 import { PlanterBoxPlant, BlueprintType, BuildingMaterial, MATERIAL_TO_ITEM_MAP, ServerComponentType } from "webgl-test-shared/dist/components";
 import { CraftingStation } from "webgl-test-shared/dist/crafting-recipes";
 import { EntityType, LimbAction, PlayerCauseOfDeath, GenericArrowType, EntityTypeString } from "webgl-test-shared/dist/entities";
-import { PlaceableItemType, ItemType, Item, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, BattleaxeItemInfo, SwordItemInfo, AxeItemInfo, ToolItemInfo, HammerItemInfo, ConsumableItemInfo, BowItemInfo, itemIsStackable, getItemStackSize, BackpackItemInfo, ArmourItemInfo, InventoryName, ConsumableItemCategory } from "webgl-test-shared/dist/items";
+import { PlaceableItemType, ItemType, Item, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, BattleaxeItemInfo, SwordItemInfo, AxeItemInfo, ToolItemInfo, HammerItemInfo, ConsumableItemInfo, BowItemInfo, itemIsStackable, getItemStackSize, BackpackItemInfo, ArmourItemInfo, InventoryName, ConsumableItemCategory, itemInfoIsTool } from "webgl-test-shared/dist/items";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
-import { StructureType, calculateStructurePlaceInfo } from "webgl-test-shared/dist/structures";
+import { StructureConnectionInfo, StructureType, calculateStructurePlaceInfo } from "webgl-test-shared/dist/structures";
 import { TribesmanTitle } from "webgl-test-shared/dist/titles";
 import { TribeType } from "webgl-test-shared/dist/tribes";
 import { Point, dotAngles, lerp } from "webgl-test-shared/dist/utils";
@@ -43,7 +43,7 @@ import { getItemAttackCooldown } from "../../items";
 import { PhysicsComponent, PhysicsComponentArray, applyKnockback } from "../../components/PhysicsComponent";
 import Tribe from "../../Tribe";
 import { entityIsResource } from "./tribesman-ai/tribesman-resource-gathering";
-import { adjustTribesmanRelationsAfterGift } from "../../components/TribesmanComponent";
+import { adjustTribesmanRelationsAfterGift } from "../../components/TribesmanAIComponent";
 import { TITLE_REWARD_CHANCES } from "../../tribesman-title-generation";
 import { TribeMemberComponentArray, awardTitle, hasTitle } from "../../components/TribeMemberComponent";
 import { createHealingTotem } from "../structures/healing-totem";
@@ -57,7 +57,7 @@ import { createBuildingHitboxes } from "../../buildings";
 import { getHitboxesCollidingEntities } from "../../collision";
 import { PlantComponentArray, plantIsFullyGrown } from "../../components/PlantComponent";
 import { ItemComponentArray } from "../../components/ItemComponent";
-import { StructureComponentArray, StructureInfo } from "../../components/StructureComponent";
+import { StructureComponentArray } from "../../components/StructureComponent";
 
 const enum Vars {
    ITEM_THROW_FORCE = 100,
@@ -72,7 +72,7 @@ const DEFAULT_ATTACK_KNOCKBACK = 125;
 
 const SWORD_DAMAGEABLE_ENTITIES: ReadonlyArray<EntityType> = [EntityType.zombie, EntityType.krumblid, EntityType.cactus, EntityType.tribeWorker, EntityType.tribeWarrior, EntityType.player, EntityType.yeti, EntityType.frozenYeti, EntityType.berryBush, EntityType.fish, EntityType.tribeTotem, EntityType.workerHut, EntityType.warriorHut, EntityType.cow, EntityType.golem, EntityType.slime, EntityType.slimewisp];
 const PICKAXE_DAMAGEABLE_ENTITIES: ReadonlyArray<EntityType> = [EntityType.boulder, EntityType.tombstone, EntityType.iceSpikes, EntityType.furnace, EntityType.golem];
-const AXE_DAMAGEABLE_ENTITIES: ReadonlyArray<EntityType> = [EntityType.tree, EntityType.wall, EntityType.door, EntityType.embrasure, EntityType.researchBench, EntityType.workbench, EntityType.floorSpikes, EntityType.wallSpikes, EntityType.floorPunjiSticks, EntityType.wallPunjiSticks, EntityType.tribeTotem, EntityType.workerHut, EntityType.warriorHut, EntityType.barrel];
+const AXE_DAMAGEABLE_ENTITIES: ReadonlyArray<EntityType> = [EntityType.tree, EntityType.wall, EntityType.door, EntityType.embrasure, EntityType.researchBench, EntityType.workbench, EntityType.floorSpikes, EntityType.wallSpikes, EntityType.floorPunjiSticks, EntityType.wallPunjiSticks, EntityType.tribeTotem, EntityType.workerHut, EntityType.warriorHut, EntityType.barrel, EntityType.healingTotem];
 
 export const VACUUM_RANGE = 85;
 const VACUUM_STRENGTH = 25;
@@ -157,8 +157,8 @@ const calculateItemKnockback = (item: Item | null): number => {
    }
 
    const itemInfo = ITEM_INFO_RECORD[item.type];
-   if (itemInfo.hasOwnProperty("toolType")) {
-      return (itemInfo as ToolItemInfo).knockback;
+   if (itemInfoIsTool(item.type, itemInfo)) {
+      return itemInfo.knockback;
    }
 
    return DEFAULT_ATTACK_KNOCKBACK;
@@ -342,7 +342,7 @@ export function attemptAttack(attacker: Entity, targetEntity: Entity, itemSlot: 
    const useInfo = getInventoryUseInfo(inventoryUseComponent, inventoryName);
 
    // Don't attack if on cooldown or not doing another action
-   if (useInfo.itemAttackCooldowns.hasOwnProperty(itemSlot) || useInfo.extraAttackCooldownTicks > 0 || useInfo.action !== LimbAction.none) {
+   if (typeof useInfo.itemAttackCooldowns[itemSlot] !== "undefined" || useInfo.extraAttackCooldownTicks > 0 || useInfo.action !== LimbAction.none) {
       return false;
    }
    
@@ -551,26 +551,26 @@ const buildingCanBePlaced = (placePosition: Point, rotation: number, entityType:
    return true;
 }
 
-export function placeBuilding(tribe: Tribe, position: Point, rotation: number, entityType: StructureType, structureInfo: StructureInfo): void {
+export function placeBuilding(tribe: Tribe, position: Point, rotation: number, entityType: StructureType, connectionInfo: StructureConnectionInfo): void {
    // Spawn the placeable entity
    switch (entityType) {
-      case EntityType.workbench: createWorkbench(position, rotation, tribe, structureInfo); break;
-      case EntityType.tribeTotem: createTribeTotem(position, rotation, tribe, structureInfo); break;
-      case EntityType.workerHut: createWorkerHut(position, rotation, tribe, structureInfo); break;
-      case EntityType.warriorHut: createWarriorHut(position, rotation, tribe, structureInfo); break;
-      case EntityType.barrel: createBarrel(position, rotation, tribe, structureInfo); break;
-      case EntityType.campfire: createCampfire(position, rotation, tribe, structureInfo); break;
-      case EntityType.furnace: createFurnace(position, rotation, tribe, structureInfo); break;
-      case EntityType.researchBench: createResearchBench(position, rotation, tribe, structureInfo); break;
-      case EntityType.wall: createWall(position, rotation, tribe, structureInfo); break;
-      case EntityType.planterBox: createPlanterBox(position, rotation, tribe, structureInfo); break;
-      case EntityType.floorSpikes: createSpikes(position, rotation, tribe, structureInfo); break;
-      case EntityType.floorPunjiSticks: createPunjiSticks(position, rotation, tribe, structureInfo); break;
+      case EntityType.workbench: createWorkbench(position, rotation, tribe, connectionInfo); break;
+      case EntityType.tribeTotem: createTribeTotem(position, rotation, tribe, connectionInfo); break;
+      case EntityType.workerHut: createWorkerHut(position, rotation, tribe, connectionInfo); break;
+      case EntityType.warriorHut: createWarriorHut(position, rotation, tribe, connectionInfo); break;
+      case EntityType.barrel: createBarrel(position, rotation, tribe, connectionInfo); break;
+      case EntityType.campfire: createCampfire(position, rotation, tribe, connectionInfo); break;
+      case EntityType.furnace: createFurnace(position, rotation, tribe, connectionInfo); break;
+      case EntityType.researchBench: createResearchBench(position, rotation, tribe, connectionInfo); break;
+      case EntityType.wall: createWall(position, rotation, tribe, connectionInfo); break;
+      case EntityType.planterBox: createPlanterBox(position, rotation, tribe, connectionInfo); break;
+      case EntityType.floorSpikes: createSpikes(position, rotation, tribe, connectionInfo); break;
+      case EntityType.floorPunjiSticks: createPunjiSticks(position, rotation, tribe, connectionInfo); break;
       case EntityType.ballista: createBlueprintEntity(position, rotation, BlueprintType.ballista, 0, tribe); break;
       case EntityType.slingTurret: createBlueprintEntity(position, rotation, BlueprintType.slingTurret, 0, tribe); break;
-      case EntityType.healingTotem: createHealingTotem(position, rotation, tribe, structureInfo); break;
-      case EntityType.fence: createFence(position, rotation, tribe, structureInfo); break;
-      case EntityType.fenceGate: createFenceGate(position, rotation, tribe, structureInfo); break;
+      case EntityType.healingTotem: createHealingTotem(position, rotation, tribe, connectionInfo); break;
+      case EntityType.fence: createFence(position, rotation, tribe, connectionInfo); break;
+      case EntityType.fenceGate: createFenceGate(position, rotation, tribe, connectionInfo); break;
       case EntityType.wallSpikes:
       case EntityType.wallPunjiSticks:
       case EntityType.embrasure:
@@ -667,9 +667,9 @@ export function useItem(tribeMember: Entity, item: Item, inventoryName: Inventor
          // Make sure the placeable item can be placed
          if (!buildingCanBePlaced(placeInfo.position, placeInfo.rotation, placeInfo.entityType)) return;
          
-         const structureInfo: StructureInfo = {
-            connectedEntityIDs: placeInfo.snappedEntityIDs,
-            connectedSidesBitset: placeInfo.snappedSidesBitset
+         const structureInfo: StructureConnectionInfo = {
+            connectedEntityIDs: placeInfo.connectedEntityIDs,
+            connectedSidesBitset: placeInfo.connectedSidesBitset
          };
          
          const tribeComponent = TribeComponentArray.getComponent(tribeMember.id);

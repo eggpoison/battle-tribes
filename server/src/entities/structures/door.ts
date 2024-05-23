@@ -13,21 +13,22 @@ import { DoorComponent } from "../../components/DoorComponent";
 import { TribeComponent } from "../../components/TribeComponent";
 import { PhysicsComponent, PhysicsComponentArray } from "../../components/PhysicsComponent";
 import { BuildingMaterialComponent } from "../../components/BuildingMaterialComponent";
-import CircularHitbox from "../../hitboxes/CircularHitbox";
-import { StructureComponentArray, StructureComponent, StructureInfo } from "../../components/StructureComponent";
+import { StructureComponentArray, StructureComponent } from "../../components/StructureComponent";
+import { StructureConnectionInfo } from "webgl-test-shared/dist/structures";
+import { Hitbox } from "../../hitboxes/hitboxes";
 
 const HITBOX_WIDTH = 64 - 0.05;
 const HITBOX_HEIGHT = 16 - 0.05;
 
 export const DOOR_HEALTHS = [15, 45];
 
-export function createDoorHitboxes(parentPosition: Point, localID: number, parentRotation: number): ReadonlyArray<CircularHitbox | RectangularHitbox> {
-   const hitboxes = new Array<CircularHitbox | RectangularHitbox>();
+export function createDoorHitboxes(parentPosition: Point, localID: number, parentRotation: number): ReadonlyArray<Hitbox> {
+   const hitboxes = new Array<Hitbox>();
    hitboxes.push(new RectangularHitbox(parentPosition, 0.5, 0, 0, HitboxCollisionType.hard, localID, parentRotation, HITBOX_WIDTH, HITBOX_HEIGHT, 0, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK));
    return hitboxes;
 }
 
-export function createDoor(position: Point, rotation: number, tribe: Tribe, structureInfo: StructureInfo, material: BuildingMaterial): Entity {
+export function createDoor(position: Point, rotation: number, tribe: Tribe, connectionInfo: StructureConnectionInfo, material: BuildingMaterial): Entity {
    const door = new Entity(position, rotation, EntityType.door, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
    const hitboxes = createDoorHitboxes(position, door.getNextHitboxLocalID(), door.rotation);
@@ -39,7 +40,7 @@ export function createDoor(position: Point, rotation: number, tribe: Tribe, stru
    HealthComponentArray.addComponent(door.id, new HealthComponent(DOOR_HEALTHS[material]));
    StatusEffectComponentArray.addComponent(door.id, new StatusEffectComponent(0));
    DoorComponentArray.addComponent(door.id, new DoorComponent(position.x, position.y, rotation));
-   StructureComponentArray.addComponent(door.id, new StructureComponent(structureInfo));
+   StructureComponentArray.addComponent(door.id, new StructureComponent(connectionInfo));
    TribeComponentArray.addComponent(door.id, new TribeComponent(tribe)); 
    BuildingMaterialComponentArray.addComponent(door.id, new BuildingMaterialComponent(material));
 

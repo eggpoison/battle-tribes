@@ -4,10 +4,8 @@ import { Settings } from "webgl-test-shared/dist/settings";
 import Chunk from "../Chunk";
 import Entity from "../Entity";
 import Board from "../Board";
-import BaseHitbox from "../hitboxes/BaseHitbox";
-import CircularHitbox from "../hitboxes/CircularHitbox";
-import RectangularHitbox from "../hitboxes/RectangularHitbox";
 import { ComponentArray } from "./ComponentArray";
+import { Hitbox, hitboxIsCircular } from "../hitboxes/hitboxes";
 
 export class AIHelperComponent {
    public visibleChunkBounds = [999, 999, 999, 999];
@@ -38,13 +36,13 @@ function onRemove(entityID: number): void {
    }
 }
 
-const hitboxIsVisible = (entity: Entity, hitbox: BaseHitbox, visionRange: number): boolean => {
-   if ((hitbox as any).radius !== undefined) {
+const hitboxIsVisible = (entity: Entity, hitbox: Hitbox, visionRange: number): boolean => {
+   if (hitboxIsCircular(hitbox)) {
       // Circular hitbox
-      return circlesDoIntersect(entity.position.x, entity.position.y, visionRange, hitbox.x, hitbox.y, (hitbox as CircularHitbox).radius);
+      return circlesDoIntersect(entity.position.x, entity.position.y, visionRange, hitbox.x, hitbox.y, hitbox.radius);
    } else {
       // Rectangular hitbox
-      return circleAndRectangleDoIntersect(entity.position.x, entity.position.y, visionRange, hitbox.x, hitbox.y, (hitbox as RectangularHitbox).width, (hitbox as RectangularHitbox).height, (hitbox as RectangularHitbox).relativeRotation);
+      return circleAndRectangleDoIntersect(entity.position.x, entity.position.y, visionRange, hitbox.x, hitbox.y, hitbox.width, hitbox.height, hitbox.relativeRotation);
    }
 }
 

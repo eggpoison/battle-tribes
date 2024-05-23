@@ -1,7 +1,6 @@
 import { PathfindingNodeIndex } from "webgl-test-shared/dist/client-server-types";
-import { TribesmanAIType, TribesmanComponentData } from "webgl-test-shared/dist/components";
+import { TribesmanAIComponentData, TribesmanAIType } from "webgl-test-shared/dist/components";
 import { CRAFTING_RECIPES } from "webgl-test-shared/dist/crafting-recipes";
-import { EntityType } from "webgl-test-shared/dist/entities";
 import { ItemType } from "webgl-test-shared/dist/items";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { randInt } from "webgl-test-shared/dist/utils";
@@ -95,7 +94,7 @@ export const enum TribesmanPathType {
    tribesmanRequest
 }
 
-export class TribesmanComponent {
+export class TribesmanAIComponent {
    /** ID of the hut which spawned the tribesman */
    public hutID: number;
 
@@ -153,7 +152,7 @@ export class TribesmanComponent {
    }
 }
 
-export function serialiseTribesmanComponent(entity: Entity, player: Entity | null): TribesmanComponentData {
+export function serialiseTribesmanComponent(entity: Entity, player: Entity | null): TribesmanAIComponentData {
    const tribesmanComponent = TribesmanComponentArray.getComponent(entity.id);
 
    let craftingProgress: number;
@@ -171,7 +170,7 @@ export function serialiseTribesmanComponent(entity: Entity, player: Entity | nul
    return {
       name: tribesmanComponent.name,
       untitledDescriptor: tribesmanComponent.untitledDescriptor,
-      aiType: tribesmanComponent.currentAIType,
+      currentAIType: tribesmanComponent.currentAIType,
       relationsWithPlayer: player !== null && typeof tribesmanComponent.tribesmanRelations[player.id] !== "undefined" ? tribesmanComponent.tribesmanRelations[player.id]! : 0,
       craftingItemType: craftingItemType,
       craftingProgress: craftingProgress
@@ -179,6 +178,11 @@ export function serialiseTribesmanComponent(entity: Entity, player: Entity | nul
 }
 
 const adjustTribesmanRelations = (tribesmanID: number, otherTribesmanID: number, adjustment: number): void => {
+   // Players don't have relations
+   if (!TribesmanComponentArray.hasComponent(tribesmanID)) {
+      return;
+   }
+   
    const tribesmanComponent = TribesmanComponentArray.getComponent(tribesmanID);
    const relations = tribesmanComponent.tribesmanRelations;
 
@@ -196,6 +200,10 @@ const adjustTribesmanRelations = (tribesmanID: number, otherTribesmanID: number,
 }
 
 export function adjustTribeRelations(attackedTribe: Tribe, attackingTribe: Tribe, attackedEntityID: number, attackedAdjustment: number, defaultAdjustment: number): void {
+   if (attackedTribe === attackingTribe) {
+      return;
+   }
+   
    // @Speed
    for (let i = 0; i < attackingTribe.tribesmanIDs.length; i++) {
       const tribesmanID = attackingTribe.tribesmanIDs[i];
@@ -266,7 +274,7 @@ export function getItemGiftAppreciation(itemType: ItemType): number {
    return GIFT_APPRECIATION_WEIGHTS[itemType];
 }
 
-export function itemThrowIsOnCooldown(tribesmanComponent: TribesmanComponent): boolean {
+export function itemThrowIsOnCooldown(tribesmanComponent: TribesmanAIComponent): boolean {
    const ticksSinceThrow = Board.ticks - tribesmanComponent.lastItemThrowTicks;
    return ticksSinceThrow <= Vars.ITEM_THROW_COOLDOWN_TICKS;
 }

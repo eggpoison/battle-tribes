@@ -11,19 +11,20 @@ import { InventoryComponent, InventoryComponentArray, createNewInventory } from 
 import Tribe from "../../Tribe";
 import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
 import { TribeComponent } from "../../components/TribeComponent";
-import RectangularHitbox from "../../hitboxes/RectangularHitbox";
 import { InventoryName } from "webgl-test-shared/dist/items";
-import { StructureComponent, StructureComponentArray, StructureInfo } from "../../components/StructureComponent";
+import { StructureComponent, StructureComponentArray } from "../../components/StructureComponent";
+import { StructureConnectionInfo } from "webgl-test-shared/dist/structures";
+import { Hitbox } from "../../hitboxes/hitboxes";
 
 const HITBOX_SIZE = 80 - 0.05;
 
-export function createBarrelHitboxes(parentPosition: Point, localID: number, parentRotation: number): ReadonlyArray<CircularHitbox | RectangularHitbox> {
-   const hitboxes = new Array<CircularHitbox | RectangularHitbox>();
+export function createBarrelHitboxes(parentPosition: Point, localID: number, parentRotation: number): ReadonlyArray<Hitbox> {
+   const hitboxes = new Array<Hitbox>();
    hitboxes.push(new CircularHitbox(parentPosition, 1.5, 0, 0, HitboxCollisionType.hard, HITBOX_SIZE / 2, localID, parentRotation, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK));
    return hitboxes;
 }
 
-export function createBarrel(position: Point, rotation: number, tribe: Tribe, structureInfo: StructureInfo): Entity {
+export function createBarrel(position: Point, rotation: number, tribe: Tribe, connectionInfo: StructureConnectionInfo): Entity {
    const barrel = new Entity(position, rotation, EntityType.barrel, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
    const hitboxes = createBarrelHitboxes(position, barrel.getNextHitboxLocalID(), barrel.rotation);
@@ -34,7 +35,7 @@ export function createBarrel(position: Point, rotation: number, tribe: Tribe, st
    HealthComponentArray.addComponent(barrel.id, new HealthComponent(20));
    StatusEffectComponentArray.addComponent(barrel.id, new StatusEffectComponent(StatusEffect.poisoned));
    TribeComponentArray.addComponent(barrel.id, new TribeComponent(tribe));
-   StructureComponentArray.addComponent(barrel.id, new StructureComponent(structureInfo));
+   StructureComponentArray.addComponent(barrel.id, new StructureComponent(connectionInfo));
 
    const inventoryComponent = new InventoryComponent();
    InventoryComponentArray.addComponent(barrel.id, inventoryComponent);

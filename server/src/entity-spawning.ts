@@ -1,13 +1,12 @@
-import { EntityType, EntityTypeString } from "webgl-test-shared/dist/entities";
+import { EntityType, EntityTypeString, NUM_ENTITY_TYPES } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
-import { STRUCTURE_TYPES, StructureType } from "webgl-test-shared/dist/structures";
 import { TileType } from "webgl-test-shared/dist/tiles";
 import { Point, randInt, randFloat } from "webgl-test-shared/dist/utils";
 import Board from "./Board";
 import { addEntityToCensus, getEntityCount, getTileTypeCount } from "./census";
 import OPTIONS from "./options";
 import SRandom from "./SRandom";
-import { NUM_ENTITY_TYPES, entityIsStructure } from "./Entity";
+import { entityIsStructure } from "./Entity";
 import { createEntity } from "./entity-creation";
 import { yetiSpawnPositionIsValid } from "./entities/mobs/yeti";
 import { SERVER } from "./server";

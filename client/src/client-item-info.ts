@@ -410,7 +410,7 @@ const CLIENT_ITEM_INFO_RECORD: Record<ItemType, ClientItemInfo> = {
       textureSource: "items/large/healing-totem.png",
       toolTextureSource: "",
       name: "Healing Totem",
-      description: ""
+      description: "Concentrates healing beams to heal nearby tribesmen."
    },
    [ItemType.leaf]: {
       entityTextureSource: "items/small/leaf.png",

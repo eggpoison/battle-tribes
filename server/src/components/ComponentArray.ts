@@ -1,6 +1,5 @@
 import Entity from "../Entity";
 import { HealthComponent } from "./HealthComponent";
-import { ItemComponent } from "./ItemComponent";
 import { TribeComponent } from "./TribeComponent";
 import { TotemBannerComponent } from "./TotemBannerComponent";
 import { TreeComponent } from "./TreeComponent";
@@ -14,7 +13,7 @@ import { EscapeAIComponent } from "./EscapeAIComponent";
 import { FollowAIComponent } from "./FollowAIComponent";
 import { CactusComponent } from "./CactusComponent";
 import { PlayerComponent } from "./PlayerComponent";
-import { TribesmanComponent } from "./TribesmanComponent";
+import { TribesmanAIComponent } from "./TribesmanAIComponent";
 import { TombstoneComponent } from "./TombstoneComponent";
 import { ZombieComponent } from "./ZombieComponent";
 import { SlimewispComponent } from "./SlimewispComponent";
@@ -33,7 +32,6 @@ import { DoorComponent } from "./DoorComponent";
 import { GolemComponent } from "./GolemComponent";
 import { IceSpikesComponent } from "./IceSpikesComponent";
 import { PebblumComponent } from "./PebblumComponent";
-import { BlueprintComponent } from "./BlueprintComponent";
 import { TurretComponent } from "./TurretComponent";
 import { AmmoBoxComponent } from "./AmmoBoxComponent";
 import { ResearchBenchComponent } from "./ResearchBenchComponent";
@@ -47,23 +45,16 @@ import { FenceGateComponent } from "./FenceGateComponent";
 
 export const ComponentArrays = new Array<ComponentArray>();
 
-export function resetComponents(): void {
-   for (let i = 0; i < ComponentArrays.length; i++) {
-      const componentArray = ComponentArrays[i];
-      componentArray.reset();
-   }
-}
-
-export class ComponentArray<T = {}> {
+export class ComponentArray<T = object> {
    private readonly isActiveByDefault: boolean;
    
    public components = new Array<T>();
    private componentBuffer = new Array<T>();
 
    /** Maps entity IDs to component indexes */
-   private entityToIndexMap: Record<number, number> = {};
+   private entityToIndexMap: Partial<Record<number, number>> = {};
    /** Maps component indexes to entity IDs */
-   private indexToEntityMap: Record<number, number> = {};
+   private indexToEntityMap: Partial<Record<number, number>> = {};
    
    public activeComponents = new Array<T>();
    public activeEntityIDs = new Array<number>();
@@ -130,7 +121,7 @@ export class ComponentArray<T = {}> {
    }
 
    public getComponent(entityID: number): T {
-      return this.components[this.entityToIndexMap[entityID]];
+      return this.components[this.entityToIndexMap[entityID]!];
    }
 
    // Much slower than the regular getComponent array, and only able to be done when the entity hasn't been added to the board yet
@@ -146,11 +137,11 @@ export class ComponentArray<T = {}> {
 
    public removeComponent(entityID: number): void {
 		// Copy element at end into deleted element's place to maintain density
-      const indexOfRemovedEntity = this.entityToIndexMap[entityID];
+      const indexOfRemovedEntity = this.entityToIndexMap[entityID]!;
       this.components[indexOfRemovedEntity] = this.components[this.components.length - 1];
 
 		// Update map to point to moved spot
-      const entityOfLastElement = this.indexToEntityMap[this.components.length - 1];
+      const entityOfLastElement = this.indexToEntityMap[this.components.length - 1]!;
       this.entityToIndexMap[entityOfLastElement] = indexOfRemovedEntity;
       this.indexToEntityMap[indexOfRemovedEntity] = entityOfLastElement;
 
@@ -159,14 +150,13 @@ export class ComponentArray<T = {}> {
 
       this.components.pop();
 
-      // @Cleanup: copy and paste
-      if (this.activeEntityToIndexMap[entityID] !== undefined) {
+      if (typeof this.activeEntityToIndexMap[entityID] !== "undefined") {
          this.deactivateComponent(entityID);
       }
    }
 
    public hasComponent(entityID: number): boolean {
-      return this.entityToIndexMap.hasOwnProperty(entityID);
+      return typeof this.entityToIndexMap[entityID] !== "undefined";
    }
 
    public activateComponent(component: T, entityID: number): void {
@@ -209,8 +199,9 @@ export class ComponentArray<T = {}> {
       this.deactivateBuffer = [];
    }
 
+   // @Hack: should never be allowed.
    public getEntity(index: number): Entity {
-      const id = this.indexToEntityMap[index];
+      const id = this.indexToEntityMap[index]!;
       return Board.entityRecord[id]!;
    }
 
@@ -220,6 +211,13 @@ export class ComponentArray<T = {}> {
       this.entityToIndexMap = {};
       this.indexToEntityMap = {};
       this.componentBufferIDs = [];
+   }
+}
+
+export function resetComponents(): void {
+   for (let i = 0; i < ComponentArrays.length; i++) {
+      const componentArray = ComponentArrays[i];
+      componentArray.reset();
    }
 }
 
@@ -237,7 +235,7 @@ export const EscapeAIComponentArray = new ComponentArray<EscapeAIComponent>(true
 export const FollowAIComponentArray = new ComponentArray<FollowAIComponent>(true);
 export const CactusComponentArray = new ComponentArray<CactusComponent>(true);
 export const PlayerComponentArray = new ComponentArray<PlayerComponent>(true);
-export const TribesmanComponentArray = new ComponentArray<TribesmanComponent>(true);
+export const TribesmanComponentArray = new ComponentArray<TribesmanAIComponent>(true);
 export const TombstoneComponentArray = new ComponentArray<TombstoneComponent>(true);
 export const ZombieComponentArray = new ComponentArray<ZombieComponent>(true);
 export const SlimewispComponentArray = new ComponentArray<SlimewispComponent>(true);

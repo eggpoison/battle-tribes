@@ -24,7 +24,7 @@ export interface PlayerInventoryData {
 }
 
 export interface ServerTileData {
-   // @Cleanup: We don't need to send the x and y coordinates of a tile
+   // @Cleanup @Bandwidth: We don't need to send the x and y coordinates of a tile
    readonly x: number;
    readonly y: number;
    readonly type: TileType;

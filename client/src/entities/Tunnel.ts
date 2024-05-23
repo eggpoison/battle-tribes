@@ -9,12 +9,13 @@ import StatusEffectComponent from "../entity-components/StatusEffectComponent";
 import TunnelComponent from "../entity-components/TunnelComponent";
 import BuildingMaterialComponent, { TUNNEL_TEXTURE_SOURCES } from "../entity-components/BuildingMaterialComponent";
 import TribeComponent from "../entity-components/TribeComponent";
+import StructureComponent from "../entity-components/StructureComponent";
 
 class Tunnel extends Entity {
    constructor(position: Point, id: number, ageTicks: number, componentsData: EntityComponentsData<EntityType.tunnel>) {
       super(position, id, EntityType.tunnel, ageTicks);
 
-      const buildingMaterialComponentData = componentsData[4];
+      const buildingMaterialComponentData = componentsData[5];
 
       const renderPart = new RenderPart(
          this,
@@ -26,9 +27,10 @@ class Tunnel extends Entity {
 
       this.addServerComponent(ServerComponentType.health, new HealthComponent(this, componentsData[0]));
       this.addServerComponent(ServerComponentType.statusEffect, new StatusEffectComponent(this, componentsData[1]));
-      this.addServerComponent(ServerComponentType.tribe, new TribeComponent(this, componentsData[2]));
-      this.addServerComponent(ServerComponentType.tunnel, new TunnelComponent(this, componentsData[3]));
-      this.addServerComponent(ServerComponentType.buildingMaterial, new BuildingMaterialComponent(this, componentsData[4], renderPart));
+      this.addServerComponent(ServerComponentType.structure, new StructureComponent(this, componentsData[2]));
+      this.addServerComponent(ServerComponentType.tribe, new TribeComponent(this, componentsData[3]));
+      this.addServerComponent(ServerComponentType.tunnel, new TunnelComponent(this, componentsData[4]));
+      this.addServerComponent(ServerComponentType.buildingMaterial, new BuildingMaterialComponent(this, componentsData[5], renderPart));
    }
 }
 

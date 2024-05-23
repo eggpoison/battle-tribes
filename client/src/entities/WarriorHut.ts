@@ -9,6 +9,7 @@ import Entity from "../Entity";
 import HealthComponent from "../entity-components/HealthComponent";
 import StatusEffectComponent from "../entity-components/StatusEffectComponent";
 import TribeComponent from "../entity-components/TribeComponent";
+import StructureComponent from "../entity-components/StructureComponent";
 
 class WarriorHut extends Entity {
    public static readonly SIZE = 104;
@@ -40,8 +41,9 @@ class WarriorHut extends Entity {
 
       this.addServerComponent(ServerComponentType.health, new HealthComponent(this, componentsData[0]));
       this.addServerComponent(ServerComponentType.statusEffect, new StatusEffectComponent(this, componentsData[1]));
-      this.addServerComponent(ServerComponentType.tribe, new TribeComponent(this, componentsData[2]));
-      this.addServerComponent(ServerComponentType.hut, new HutComponent(this, componentsData[3], doorRenderParts));
+      this.addServerComponent(ServerComponentType.structure, new StructureComponent(this, componentsData[2]));
+      this.addServerComponent(ServerComponentType.tribe, new TribeComponent(this, componentsData[3]));
+      this.addServerComponent(ServerComponentType.hut, new HutComponent(this, componentsData[4], doorRenderParts));
    }
 
    protected onHit(): void {

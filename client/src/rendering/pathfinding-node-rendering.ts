@@ -120,10 +120,10 @@ export function createPathfindNodeShaders(): void {
 }
 
 const renderConnectors = (mainPathNodes: ReadonlyArray<PathfindingNodeIndex>): void => {
-   if (!Board.entityRecord.hasOwnProperty(Game.entityDebugData!.entityID)) {
+   const debugEntity = Board.entityRecord[Game.entityDebugData!.entityID];
+   if (typeof debugEntity === "undefined") {
       return;
    }
-   const debugEntity = Board.entityRecord[Game.entityDebugData!.entityID];
    
    const vertices = new Array<number>();
    let lastNodeX = debugEntity.position.x;
@@ -273,7 +273,7 @@ export function renderPathfindingNodes(): void {
       }
    }
 
-   if (Game.entityDebugData !== null && Board.hasEntityID(Game.entityDebugData.entityID) && Game.entityDebugData.hasOwnProperty("pathData")) {
+   if (Game.entityDebugData !== null && typeof Board.entityRecord[Game.entityDebugData.entityID] !== "undefined" && Game.entityDebugData.hasOwnProperty("pathData")) {
       for (const node of Game.entityDebugData.pathData!.rawPathNodes) {
          nodeInfoArray.push({
             node: node,

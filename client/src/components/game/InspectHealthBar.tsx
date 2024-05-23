@@ -69,12 +69,12 @@ export function updateInspectHealthBar(): void {
       return;
    }
 
-   if (!Board.entityRecord.hasOwnProperty(hoveredEntityID)) {
+   const hoveredEntity = Board.entityRecord[hoveredEntityID];
+   if (typeof hoveredEntity === "undefined") {
       InspectHealthBar_setEntity(null);
       return;
    }
 
-   const hoveredEntity = Board.entityRecord[hoveredEntityID];
    if (!hoveredEntity.hasServerComponent(ServerComponentType.health)) {
       InspectHealthBar_setEntity(null);
       return;

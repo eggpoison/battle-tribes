@@ -9,9 +9,10 @@ import { getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
 import Entity from "../Entity";
 import { playSound } from "../sound";
 import { createSnowflakeParticle } from "../particles";
+import { EntityComponentsData } from "webgl-test-shared/dist/components";
 
 class IceArrow extends Entity {
-   constructor(position: Point, id: number, ageTicks: number) {
+   constructor(position: Point, id: number, ageTicks: number, componentsData: EntityComponentsData<EntityType.iceArrow>) {
       super(position, id, EntityType.iceArrow, ageTicks);
 
       this.attachRenderPart(

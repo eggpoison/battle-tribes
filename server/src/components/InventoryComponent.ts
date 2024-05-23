@@ -329,12 +329,9 @@ export function inventoryIsFull(inventory: Inventory): boolean {
 
 export function findInventoryContainingItem(inventoryComponent: InventoryComponent, item: Item): Inventory | null {
    for (const inventory of inventoryComponent.inventories) {
-      for (let itemSlot = 1; itemSlot <= inventory.width * inventory.height; itemSlot++) {
-         if (!inventory.itemSlots.hasOwnProperty(itemSlot)) {
-            continue;
-         }
+      for (let i = 0; i < inventory.items.length; i++) {
+         const currentItem = inventory.items[i];
 
-         const currentItem = inventory.itemSlots[itemSlot];
          if (currentItem === item) {
             return inventory;
          }

@@ -14,9 +14,10 @@ import Tribe from "../../Tribe";
 import { EntityRelationship, TribeComponent, getEntityRelationship } from "../../components/TribeComponent";
 import { TurretComponent } from "../../components/TurretComponent";
 import { GenericArrowInfo, createWoodenArrow } from "../projectiles/wooden-arrow";
-import RectangularHitbox from "../../hitboxes/RectangularHitbox";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { StructureComponentArray, StructureComponent, StructureInfo } from "../../components/StructureComponent";
+import { StructureComponentArray, StructureComponent } from "../../components/StructureComponent";
+import { StructureConnectionInfo } from "webgl-test-shared/dist/structures";
+import { Hitbox } from "../../hitboxes/hitboxes";
 
 // @Cleanup: A lot of copy and paste from ballista.ts
 
@@ -24,13 +25,13 @@ export const SLING_TURRET_SHOT_COOLDOWN_TICKS = 1.5 * Settings.TPS;
 export const SLING_TURRET_RELOAD_TIME_TICKS = Math.floor(0.4 * Settings.TPS);
 const VISION_RANGE = 400;
 
-export function createSlingTurretHitboxes(parentPosition: Point, localID: number, parentRotation: number): ReadonlyArray<CircularHitbox | RectangularHitbox> {
-   const hitboxes = new Array<CircularHitbox | RectangularHitbox>();
+export function createSlingTurretHitboxes(parentPosition: Point, localID: number, parentRotation: number): ReadonlyArray<Hitbox> {
+   const hitboxes = new Array<Hitbox>();
    hitboxes.push(new CircularHitbox(parentPosition, 1.5, 0, 0, HitboxCollisionType.hard, 40 - 0.05, localID, parentRotation, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK));
    return hitboxes;
 }
 
-export function createSlingTurret(position: Point, rotation: number, tribe: Tribe, structureInfo: StructureInfo): Entity {
+export function createSlingTurret(position: Point, rotation: number, tribe: Tribe, connectionInfo: StructureConnectionInfo): Entity {
    const slingTurret = new Entity(position, rotation, EntityType.slingTurret, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
    const hitboxes = createSlingTurretHitboxes(position, slingTurret.getNextHitboxLocalID(), slingTurret.rotation);
@@ -41,7 +42,7 @@ export function createSlingTurret(position: Point, rotation: number, tribe: Trib
    HealthComponentArray.addComponent(slingTurret.id, new HealthComponent(25));
    StatusEffectComponentArray.addComponent(slingTurret.id, new StatusEffectComponent(StatusEffect.bleeding | StatusEffect.poisoned));
    TurretComponentArray.addComponent(slingTurret.id, new TurretComponent(SLING_TURRET_SHOT_COOLDOWN_TICKS + SLING_TURRET_RELOAD_TIME_TICKS));
-   StructureComponentArray.addComponent(slingTurret.id, new StructureComponent(structureInfo));
+   StructureComponentArray.addComponent(slingTurret.id, new StructureComponent(connectionInfo));
    TribeComponentArray.addComponent(slingTurret.id, new TribeComponent(tribe));
    AIHelperComponentArray.addComponent(slingTurret.id, new AIHelperComponent(VISION_RANGE));
    

@@ -10,33 +10,43 @@ import { HealthComponentArray, SpikesComponentArray, TribeComponentArray } from 
 import { HealthComponent, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
 import { StatusEffectComponent, StatusEffectComponentArray, applyStatusEffect } from "../../components/StatusEffectComponent";
 import { SERVER } from "../../server";
-import { TribeComponent } from "../../components/TribeComponent";
+import { EntityRelationship, TribeComponent, getEntityRelationship } from "../../components/TribeComponent";
 import Tribe from "../../Tribe";
-import CircularHitbox from "../../hitboxes/CircularHitbox";
 import { SpikesComponent } from "../../components/SpikesComponent";
-import { StructureComponentArray, StructureComponent, StructureInfo, isAttachedToWall } from "../../components/StructureComponent";
+import { StructureComponentArray, StructureComponent, isAttachedToWall } from "../../components/StructureComponent";
+import { StructureConnectionInfo } from "webgl-test-shared/dist/structures";
+import { Hitbox } from "../../hitboxes/hitboxes";
+import { HitboxFlags } from "../../hitboxes/BaseHitbox";
 
 const FLOOR_HITBOX_SIZE = 48 - 0.05;
 
 const WALL_HITBOX_WIDTH = 56 - 0.05;
 const WALL_HITBOX_HEIGHT = 32 - 0.05;
 
-export function createFloorPunjiSticksHitboxes(parentPosition: Point, localID: number, parentRotation: number): ReadonlyArray<CircularHitbox | RectangularHitbox> {
-   const hitboxes = new Array<CircularHitbox | RectangularHitbox>();
+export function createFloorPunjiSticksHitboxes(parentPosition: Point, localID: number, parentRotation: number): ReadonlyArray<Hitbox> {
+   const hitboxes = new Array<Hitbox>();
+   
    // @Hack mass
-   hitboxes.push(new RectangularHitbox(parentPosition, Number.EPSILON, 0, 0, HitboxCollisionType.soft, localID, parentRotation, FLOOR_HITBOX_SIZE, FLOOR_HITBOX_SIZE, 0, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK));
+   const hitbox = new RectangularHitbox(parentPosition, Number.EPSILON, 0, 0, HitboxCollisionType.soft, localID, parentRotation, FLOOR_HITBOX_SIZE, FLOOR_HITBOX_SIZE, 0, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK);
+   hitbox.flags |= HitboxFlags.NON_GRASS_BLOCKING;
+   hitboxes.push(hitbox);
+   
    return hitboxes;
 }
 
-export function createWallPunjiSticksHitboxes(parentPosition: Point, localID: number, parentRotation: number): ReadonlyArray<CircularHitbox | RectangularHitbox> {
-   const hitboxes = new Array<CircularHitbox | RectangularHitbox>();
+export function createWallPunjiSticksHitboxes(parentPosition: Point, localID: number, parentRotation: number): ReadonlyArray<Hitbox> {
+   const hitboxes = new Array<Hitbox>();
+
    // @Hack mass
-   hitboxes.push(new RectangularHitbox(parentPosition, Number.EPSILON, 0, 0, HitboxCollisionType.soft, localID, parentRotation, WALL_HITBOX_WIDTH, WALL_HITBOX_HEIGHT, 0, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK));
+   const hitbox = new RectangularHitbox(parentPosition, Number.EPSILON, 0, 0, HitboxCollisionType.soft, localID, parentRotation, WALL_HITBOX_WIDTH, WALL_HITBOX_HEIGHT, 0, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK);
+   hitbox.flags |= HitboxFlags.NON_GRASS_BLOCKING;
+   hitboxes.push(hitbox);
+   
    return hitboxes;
 }
 
-export function createPunjiSticks(position: Point, rotation: number, tribe: Tribe, structureInfo: StructureInfo): Entity {
-   const isAttached = isAttachedToWall(structureInfo);
+export function createPunjiSticks(position: Point, rotation: number, tribe: Tribe, connectionInfo: StructureConnectionInfo): Entity {
+   const isAttached = isAttachedToWall(connectionInfo);
    const entityType = isAttached ? EntityType.wallPunjiSticks : EntityType.floorPunjiSticks;
    
    const punjiSticks = new Entity(position, rotation, entityType, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
@@ -48,7 +58,7 @@ export function createPunjiSticks(position: Point, rotation: number, tribe: Trib
 
    HealthComponentArray.addComponent(punjiSticks.id, new HealthComponent(10));
    StatusEffectComponentArray.addComponent(punjiSticks.id, new StatusEffectComponent(StatusEffect.bleeding | StatusEffect.poisoned));
-   StructureComponentArray.addComponent(punjiSticks.id, new StructureComponent(structureInfo));
+   StructureComponentArray.addComponent(punjiSticks.id, new StructureComponent(connectionInfo));
    TribeComponentArray.addComponent(punjiSticks.id, new TribeComponent(tribe));
    SpikesComponentArray.addComponent(punjiSticks.id, new SpikesComponent());
 
@@ -64,6 +74,15 @@ export function onPunjiSticksCollision(punjiSticks: Entity, collidingEntity: Ent
    if (!HealthComponentArray.hasComponent(collidingEntity.id)) {
       return;
    }
+
+   // Don't collide with friendly entities if the spikes are covered
+   const spikesComponent = SpikesComponentArray.getComponent(punjiSticks.id);
+   if (spikesComponent.isCovered && getEntityRelationship(punjiSticks.id, collidingEntity) === EntityRelationship.friendly) {
+      return;
+   }
+
+   // Reveal
+   spikesComponent.isCovered = false;
 
    const healthComponent = HealthComponentArray.getComponent(collidingEntity.id);
    if (!canDamageEntity(healthComponent, "punjiSticks")) {

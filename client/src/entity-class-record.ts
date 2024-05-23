@@ -53,64 +53,76 @@ import HealingTotem from "./entities/HealingTotem";
 import Plant from "./entities/Plant";
 import Fence from "./entities/Fence";
 import FenceGate from "./entities/FenceGate";
+import { EntityData } from "webgl-test-shared/dist/client-server-types";
 
 export type EntityClassType<T extends EntityType> = new (position: Point, id: number, ageTicks: number, componentsData: EntityComponentsData<T>) => Entity;
 
-// @Incomplete: Move to server-like system
-const ENTITY_CLASS_RECORD: { [E in EntityType]: () => EntityClassType<E>} = {
-   [EntityType.cow]: () => Cow,
-   [EntityType.zombie]: () => Zombie,
-   [EntityType.tombstone]: () => Tombstone,
-   [EntityType.tree]: () => Tree,
-   [EntityType.workbench]: () => Workbench,
-   [EntityType.boulder]: () => Boulder,
-   [EntityType.berryBush]: () => BerryBush,
-   [EntityType.cactus]: () => Cactus,
-   [EntityType.yeti]: () => Yeti,
-   [EntityType.iceSpikes]: () => IceSpikes,
-   [EntityType.slime]: () => Slime,
-   [EntityType.slimewisp]: () => Slimewisp,
-   [EntityType.tribeWorker]: () => TribeWorker,
-   [EntityType.tribeWarrior]: () => TribeWarrior,
-   [EntityType.player]: () => Player,
-   [EntityType.tribeTotem]: () => TribeTotem,
-   [EntityType.workerHut]: () => WorkerHut,
-   [EntityType.warriorHut]: () => WarriorHut,
-   [EntityType.barrel]: () => Barrel,
-   [EntityType.campfire]: () => Campfire,
-   [EntityType.furnace]: () => Furnace,
-   [EntityType.snowball]: () => Snowball,
-   [EntityType.krumblid]: () => Krumblid,
-   [EntityType.frozenYeti]: () => FrozenYeti,
-   [EntityType.fish]: () => Fish,
-   [EntityType.itemEntity]: () => ItemEntity,
-   [EntityType.woodenArrowProjectile]: () => WoodenArrowProjectile,
-   [EntityType.iceShardProjectile]: () => IceShardsProjectile,
-   [EntityType.rockSpikeProjectile]: () => RockSpikeProjectile,
-   [EntityType.spearProjectile]: () => SpearProjectile,
-   [EntityType.researchBench]: () => ResearchBench,
-   [EntityType.wall]: () => Wall,
-   [EntityType.slimeSpit]: () => SlimeSpit,
-   [EntityType.spitPoison]: () => SpitPoison,
-   [EntityType.door]: () => Door,
-   [EntityType.battleaxeProjectile]: () => BattleaxeProjectile,
-   [EntityType.golem]: () => Golem,
-   [EntityType.planterBox]: () => PlanterBox,
-   [EntityType.iceArrow]: () => IceArrow,
-   [EntityType.pebblum]: () => Pebblum,
-   [EntityType.embrasure]: () => Embrasure,
-   [EntityType.floorSpikes]: () => Spikes,
-   [EntityType.wallSpikes]: () => Spikes,
-   [EntityType.floorPunjiSticks]: () => PunjiSticks,
-   [EntityType.wallPunjiSticks]: () => PunjiSticks,
-   [EntityType.blueprintEntity]: () => BlueprintEntity,
-   [EntityType.ballista]: () => Ballista,
-   [EntityType.slingTurret]: () => SlingTurret,
-   [EntityType.tunnel]: () => Tunnel,
-   [EntityType.healingTotem]: () => HealingTotem,
-   [EntityType.plant]: () => Plant,
-   [EntityType.fence]: () => Fence,
-   [EntityType.fenceGate]: () => FenceGate
-};
-
-export default ENTITY_CLASS_RECORD;
+// @Cleanup: remove this and just have entities be a collection of components
+export function createEntity<T extends EntityType>(entityData: EntityData<T>): Entity {
+   const position = Point.unpackage(entityData.position);
+   const id = entityData.id;
+   const ageTicks = entityData.ageTicks;
+   const entityType = entityData.type;
+   // @Cleanup: can we do some type magic to remove the need for this cast?
+   const componentsData = entityData.components as any;
+   
+   switch (entityType) {
+      case EntityType.cow: return new Cow(position, id, ageTicks, componentsData);
+      case EntityType.zombie: return new Zombie(position, id, ageTicks, componentsData);
+      case EntityType.tombstone: return new Tombstone(position, id, ageTicks, componentsData);
+      case EntityType.tree: return new Tree(position, id, ageTicks, componentsData);
+      case EntityType.workbench: return new Workbench(position, id, ageTicks, componentsData);
+      case EntityType.boulder: return new Boulder(position, id, ageTicks, componentsData);
+      case EntityType.berryBush: return new BerryBush(position, id, ageTicks, componentsData);
+      case EntityType.cactus: return new Cactus(position, id, ageTicks, componentsData);
+      case EntityType.yeti: return new Yeti(position, id, ageTicks, componentsData);
+      case EntityType.iceSpikes: return new IceSpikes(position, id, ageTicks, componentsData);
+      case EntityType.slime: return new Slime(position, id, ageTicks, componentsData);
+      case EntityType.slimewisp: return new Slimewisp(position, id, ageTicks, componentsData);
+      case EntityType.tribeWorker: return new TribeWorker(position, id, ageTicks, componentsData);
+      case EntityType.tribeWarrior: return new TribeWarrior(position, id, ageTicks, componentsData);
+      case EntityType.player: return new Player(position, id, ageTicks, componentsData);
+      case EntityType.tribeTotem: return new TribeTotem(position, id, ageTicks, componentsData);
+      case EntityType.workerHut: return new WorkerHut(position, id, ageTicks, componentsData);
+      case EntityType.warriorHut: return new WarriorHut(position, id, ageTicks, componentsData);
+      case EntityType.barrel: return new Barrel(position, id, ageTicks, componentsData);
+      case EntityType.campfire: return new Campfire(position, id, ageTicks, componentsData);
+      case EntityType.furnace: return new Furnace(position, id, ageTicks, componentsData);
+      case EntityType.snowball: return new Snowball(position, id, ageTicks, componentsData);
+      case EntityType.krumblid: return new Krumblid(position, id, ageTicks, componentsData);
+      case EntityType.frozenYeti: return new FrozenYeti(position, id, ageTicks, componentsData);
+      case EntityType.fish: return new Fish(position, id, ageTicks, componentsData);
+      case EntityType.itemEntity: return new ItemEntity(position, id, ageTicks, componentsData);
+      case EntityType.woodenArrowProjectile: return new WoodenArrowProjectile(position, id, ageTicks, componentsData);
+      case EntityType.iceShardProjectile: return new IceShardsProjectile(position, id, ageTicks, componentsData);
+      case EntityType.rockSpikeProjectile: return new RockSpikeProjectile(position, id, ageTicks, componentsData);
+      case EntityType.spearProjectile: return new SpearProjectile(position, id, ageTicks, componentsData);
+      case EntityType.researchBench: return new ResearchBench(position, id, ageTicks, componentsData);
+      case EntityType.wall: return new Wall(position, id, ageTicks, componentsData);
+      case EntityType.slimeSpit: return new SlimeSpit(position, id, ageTicks, componentsData);
+      case EntityType.spitPoison: return new SpitPoison(position, id, ageTicks, componentsData);
+      case EntityType.door: return new Door(position, id, ageTicks, componentsData);
+      case EntityType.battleaxeProjectile: return new BattleaxeProjectile(position, id, ageTicks, componentsData);
+      case EntityType.golem: return new Golem(position, id, ageTicks, componentsData);
+      case EntityType.planterBox: return new PlanterBox(position, id, ageTicks, componentsData);
+      case EntityType.iceArrow: return new IceArrow(position, id, ageTicks, componentsData);
+      case EntityType.pebblum: return new Pebblum(position, id, ageTicks, componentsData);
+      case EntityType.embrasure: return new Embrasure(position, id, ageTicks, componentsData);
+      case EntityType.floorSpikes: return new Spikes(position, id, ageTicks, entityType, componentsData);
+      case EntityType.wallSpikes: return new Spikes(position, id, ageTicks, entityType, componentsData);
+      case EntityType.floorPunjiSticks: return new PunjiSticks(position, id, ageTicks, entityType, componentsData);
+      case EntityType.wallPunjiSticks: return new PunjiSticks(position, id, ageTicks, entityType, componentsData);
+      case EntityType.blueprintEntity: return new BlueprintEntity(position, id, ageTicks, componentsData);
+      case EntityType.ballista: return new Ballista(position, id, ageTicks, componentsData);
+      case EntityType.slingTurret: return new SlingTurret(position, id, ageTicks, componentsData);
+      case EntityType.tunnel: return new Tunnel(position, id, ageTicks, componentsData);
+      case EntityType.healingTotem: return new HealingTotem(position, id, ageTicks, componentsData);
+      case EntityType.plant: return new Plant(position, id, ageTicks, componentsData);
+      case EntityType.fence: return new Fence(position, id, ageTicks, componentsData);
+      case EntityType.fenceGate: return new FenceGate(position, id, ageTicks, componentsData);
+      default: {
+         const unreachable: never = entityType;
+         return unreachable;
+      }
+   }
+}

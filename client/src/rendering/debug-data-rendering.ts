@@ -110,10 +110,10 @@ const addLineVertices = (vertices: Array<number>, debugData: EntityDebugData, en
 export function renderLineDebugData(debugData: EntityDebugData): void {
    gl.useProgram(lineProgram);
 
-   if (!Board.hasEntityID(debugData.entityID)) {
+   const gameObject = Board.entityRecord[debugData.entityID];
+   if (typeof gameObject === "undefined") {
       throw new Error("Couldn't find game object.");
    }
-   const gameObject = Board.entityRecord[debugData.entityID];
 
    const vertices = new Array<number>();
    addCircleVertices(vertices, debugData, gameObject);

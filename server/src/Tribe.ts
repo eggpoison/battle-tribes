@@ -226,7 +226,7 @@ const wallSideIsConnected = (tribe: Tribe, sideNodes: ReadonlyArray<SafetyNode>)
    return true;
 }
 
-const getWallConnectionBitset = (tribe: Tribe, topWallSide: ReadonlyArray<SafetyNode>, rightWallSide: ReadonlyArray<SafetyNode>, bottomWallSide: ReadonlyArray<SafetyNode>, leftWallSide: ReadonlyArray<SafetyNode>, i: number): number => {
+const getWallConnectionBitset = (tribe: Tribe, topWallSide: ReadonlyArray<SafetyNode>, rightWallSide: ReadonlyArray<SafetyNode>, bottomWallSide: ReadonlyArray<SafetyNode>, leftWallSide: ReadonlyArray<SafetyNode>): number => {
    let connections = 0;
 
    if (wallSideIsConnected(tribe, topWallSide)) {
@@ -253,7 +253,7 @@ export function updateTribeWalls(tribe: Tribe): void {
       }
       
       const wallInfo = tribe.wallInfoRecord[virtualBuilding.id];
-      wallInfo.connectionBitset = getWallConnectionBitset(tribe, wallInfo.topSideNodes, wallInfo.rightSideNodes, wallInfo.bottomSideNodes, wallInfo.leftSideNodes, wallInfo.wall.id);
+      wallInfo.connectionBitset = getWallConnectionBitset(tribe, wallInfo.topSideNodes, wallInfo.rightSideNodes, wallInfo.bottomSideNodes, wallInfo.leftSideNodes);
    }
 }
 
@@ -525,7 +525,7 @@ class Tribe {
                rightSideNodes: sides[1],
                bottomSideNodes: sides[2],
                leftSideNodes: sides[3],
-               connectionBitset: getWallConnectionBitset(this, sides[0], sides[1], sides[2], sides[3], virtualBuilding.id)
+               connectionBitset: getWallConnectionBitset(this, sides[0], sides[1], sides[2], sides[3])
             };
             this.wallInfoRecord[virtualBuilding.id] = wallInfo;
             break;
@@ -629,7 +629,7 @@ class Tribe {
 
    public tick(): void {
       // Destroy tribe if it has no entities left
-      if (this.totem === null && this.tribesmanIDs.length === 0 && this.barrels.length === 0 && this.huts.length === 0 && this.researchBenches.length === 0) {
+      if (this.totem === null && this.tribesmanIDs.length === 0 && this.buildings.length === 0) {
          this.destroy();
          return;
       }
@@ -692,11 +692,10 @@ class Tribe {
       // Offset the spawn position so the tribesman comes out of the correct side of the hut
       const position = new Point(hut.position.x + 10 * Math.sin(hut.rotation), hut.position.y + 10 * Math.cos(hut.rotation));
       
-      let tribesman: Entity;
       if (hut.type === EntityType.workerHut) {
-         tribesman = createTribeWorker(position, hut.rotation, this.id, hut.id);
+         createTribeWorker(position, hut.rotation, this.id, hut.id);
       } else {
-         tribesman = createTribeWarrior(position, hut.rotation, this, hut.id);
+         createTribeWarrior(position, hut.rotation, this, hut.id);
       }
    }
 
@@ -711,6 +710,8 @@ class Tribe {
       const idx = this.tribesmanIDs.indexOf(tribesmanID);
       if (idx !== -1) {
          this.tribesmanIDs.splice(idx, 1);
+      } else {
+         console.warn("Tribesman was not in tribe");
       }
    }
 
@@ -934,7 +935,7 @@ class Tribe {
       
       for (const [itemTypeString, itemAmountRequired] of Object.entries(tech.researchItemRequirements)) {
          const itemType = Number(itemTypeString) as ItemType;
-         if (this.techTreeUnlockProgress[tech.id] === undefined || this.techTreeUnlockProgress[tech.id]!.itemProgress[itemType]! < itemAmountRequired) {
+         if (typeof this.techTreeUnlockProgress[tech.id] === "undefined" || this.techTreeUnlockProgress[tech.id]!.itemProgress[itemType]! < itemAmountRequired) {
             requiredItemType.push(itemType);
          }
       }

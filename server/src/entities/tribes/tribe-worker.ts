@@ -14,7 +14,7 @@ import { InventoryComponent, InventoryComponentArray } from "../../components/In
 import { InventoryUseComponent } from "../../components/InventoryUseComponent";
 import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
 import { TribeMemberComponent, TribeMemberComponentArray } from "../../components/TribeMemberComponent";
-import { TribesmanComponent } from "../../components/TribesmanComponent";
+import { TribesmanAIComponent } from "../../components/TribesmanAIComponent";
 import Board from "../../Board";
 import { AIHelperComponent, AIHelperComponentArray } from "../../components/AIHelperComponent";
 import { tickTribesman } from "./tribesman-ai/tribesman-ai";
@@ -76,7 +76,7 @@ export function createTribeWorker(position: Point, rotation: number, tribeID: nu
    StatusEffectComponentArray.addComponent(worker.id, new StatusEffectComponent(0));
    TribeComponentArray.addComponent(worker.id, new TribeComponent(tribe));
    TribeMemberComponentArray.addComponent(worker.id, new TribeMemberComponent(tribe.type, EntityType.tribeWorker));
-   TribesmanComponentArray.addComponent(worker.id, new TribesmanComponent(hutID));
+   TribesmanComponentArray.addComponent(worker.id, new TribesmanAIComponent(hutID));
    AIHelperComponentArray.addComponent(worker.id, new AIHelperComponent(TRIBE_WORKER_VISION_RANGE));
 
    const inventoryUseComponent = new InventoryUseComponent();

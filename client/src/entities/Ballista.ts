@@ -12,6 +12,7 @@ import HealthComponent from "../entity-components/HealthComponent";
 import AmmoBoxComponent from "../entity-components/AmmoBoxComponent";
 import Entity from "../Entity";
 import { BALLISTA_AMMO_BOX_OFFSET_X, BALLISTA_AMMO_BOX_OFFSET_Y, BALLISTA_GEAR_X, BALLISTA_GEAR_Y } from "../utils";
+import StructureComponent from "../entity-components/StructureComponent";
 
 class Ballista extends Entity {
    constructor(position: Point, id: number, ageTicks: number, componentsData: EntityComponentsData<EntityType.ballista>) {
@@ -83,10 +84,11 @@ class Ballista extends Entity {
 
       this.addServerComponent(ServerComponentType.health, new HealthComponent(this, componentsData[0]));
       this.addServerComponent(ServerComponentType.statusEffect, new StatusEffectComponent(this, componentsData[1]));
-      this.addServerComponent(ServerComponentType.tribe, new TribeComponent(this, componentsData[2]));
-      this.addServerComponent(ServerComponentType.turret, new TurretComponent(this, componentsData[3], crossbowRenderPart, shaftRenderPart, gearRenderParts));
-      this.addServerComponent(ServerComponentType.ammoBox, new AmmoBoxComponent(this, componentsData[5]));
-      this.addServerComponent(ServerComponentType.inventory, new InventoryComponent(this, componentsData[6]));
+      this.addServerComponent(ServerComponentType.structure, new StructureComponent(this, componentsData[2]));
+      this.addServerComponent(ServerComponentType.tribe, new TribeComponent(this, componentsData[3]));
+      this.addServerComponent(ServerComponentType.turret, new TurretComponent(this, componentsData[4], crossbowRenderPart, shaftRenderPart, gearRenderParts));
+      this.addServerComponent(ServerComponentType.ammoBox, new AmmoBoxComponent(this, componentsData[6]));
+      this.addServerComponent(ServerComponentType.inventory, new InventoryComponent(this, componentsData[7]));
    }
 
    protected onHit(): void {

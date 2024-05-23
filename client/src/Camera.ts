@@ -65,8 +65,8 @@ abstract class Camera {
          return;
       }
       
-      if (Board.entityRecord.hasOwnProperty(this.trackedEntityID)) {
-         const entity = Board.entityRecord[this.trackedEntityID];
+      const entity = Board.entityRecord[this.trackedEntityID];
+      if (typeof entity !== "undefined") {
          this.position.x = entity.renderPosition.x;
          this.position.y = entity.renderPosition.y;
       }

@@ -116,6 +116,12 @@
 #tech-tooltip .unlocks {
    color: #333;
 }
+#tech-tooltip .unlocks img {
+   width: 20px;
+   height: 20px;
+   image-rendering: pixelated;
+   margin-bottom: -4px;
+}
 
 #tech-tooltip .conflict {
    font-weight: bold;

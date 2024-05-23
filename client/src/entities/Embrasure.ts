@@ -11,12 +11,13 @@ import StatusEffectComponent from "../entity-components/StatusEffectComponent";
 import { createLightWoodSpeckParticle, createWoodShardParticle } from "../particles";
 import BuildingMaterialComponent, { EMBRASURE_TEXTURE_SOURCES } from "../entity-components/BuildingMaterialComponent";
 import TribeComponent from "../entity-components/TribeComponent";
+import StructureComponent from "../entity-components/StructureComponent";
 
 class Embrasure extends Entity {
    constructor(position: Point, id: number, ageTicks: number, componentsData: EntityComponentsData<EntityType.embrasure>) {
       super(position, id, EntityType.embrasure, ageTicks);
 
-      const buildingMaterialComponentData = componentsData[3];
+      const buildingMaterialComponentData = componentsData[4];
 
       const renderPart = new RenderPart(
          this,
@@ -28,8 +29,9 @@ class Embrasure extends Entity {
 
       this.addServerComponent(ServerComponentType.health, new HealthComponent(this, componentsData[0]));
       this.addServerComponent(ServerComponentType.statusEffect, new StatusEffectComponent(this, componentsData[1]));
-      this.addServerComponent(ServerComponentType.tribe, new TribeComponent(this, componentsData[2]));
-      this.addServerComponent(ServerComponentType.buildingMaterial, new BuildingMaterialComponent(this, componentsData[3], renderPart));
+      this.addServerComponent(ServerComponentType.structure, new StructureComponent(this, componentsData[2]));
+      this.addServerComponent(ServerComponentType.tribe, new TribeComponent(this, componentsData[3]));
+      this.addServerComponent(ServerComponentType.buildingMaterial, new BuildingMaterialComponent(this, componentsData[4], renderPart));
    }
 
    protected onHit(hitData: HitData): void {

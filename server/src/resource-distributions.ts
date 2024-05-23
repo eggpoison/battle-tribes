@@ -1,8 +1,7 @@
-import { EntityType } from "webgl-test-shared/dist/entities";
+import { EntityType, NUM_ENTITY_TYPES } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { TileType } from "webgl-test-shared/dist/tiles";
 import { Point } from "webgl-test-shared/dist/utils";
-import { NUM_ENTITY_TYPES } from "./Entity";
 import Board from "./Board";
 import { SPAWNABLE_TILE_RECORD } from "./entity-spawning";
 

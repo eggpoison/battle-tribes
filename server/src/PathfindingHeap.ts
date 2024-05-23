@@ -52,7 +52,7 @@ class PathfindingHeap {
    }
 
    private sortDown(item: HeapItem): void {
-      while (true) {
+      for (;;) {
          const childIndexLeft = item.heapIndex * 2 + 1;
          const childIndexRight = item.heapIndex * 2 + 2;
          

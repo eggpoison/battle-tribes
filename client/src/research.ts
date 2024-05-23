@@ -12,6 +12,7 @@ import { getSelectedEntityID } from "./entity-selection";
 import { playSound } from "./sound";
 import { createMagicParticle, createStarParticle } from "./particles";
 import ResearchBench from "./entities/ResearchBench";
+import Entity from "./Entity";
 
 export interface ResearchOrb {
    /* X position of the node in the world */
@@ -31,9 +32,7 @@ const ORB_NUM_PARTICLES = [2, 4, 7];
 const ORB_COMPLETE_SOUND_PITCHES = [1, 0.85, 0.7];
 const ORB_PARTICLES_PER_SECOND = [2, 3.5, 6];
 
-const generateResearchOrb = (): ResearchOrb => {
-   const researchBench = Board.entityRecord[currentBenchID];
-
+const generateResearchOrb = (researchBench: Entity): ResearchOrb => {
    const xInBench = randFloat(-ResearchBench.WIDTH * 0.5, ResearchBench.WIDTH * 0.5) * 0.8;
    const yInBench = randFloat(-ResearchBench.HEIGHT * 0.5, ResearchBench.HEIGHT * 0.5) * 0.8;
    
@@ -58,20 +57,20 @@ export function getResearchOrbCompleteProgress(): number {
 
 export function updateActiveResearchBench(): void {
    const selectedStructureID = getSelectedEntityID();
-   if (selectedStructureID === -1 || !Board.entityRecord.hasOwnProperty(selectedStructureID)) {
+   const structure = Board.entityRecord[selectedStructureID];
+   if (typeof structure === "undefined") {
       currentResearchOrb = null;
       currentBenchID = -1;
       return;
    }
 
-   const structure = Board.entityRecord[selectedStructureID];
    if (structure.type !== EntityType.researchBench) {
       return;
    }
 
    currentBenchID = selectedStructureID;
    if (currentResearchOrb === null) {
-      currentResearchOrb = generateResearchOrb();
+      currentResearchOrb = generateResearchOrb(structure);
    }
 }
 
@@ -108,7 +107,9 @@ const completeOrb = (): void => {
    const useInfo = inventoryUseComponent.useInfos[0];
    useInfo.lastAttackTicks = Board.ticks;
    
-   currentResearchOrb = generateResearchOrb();
+   const selectedStructureID = getSelectedEntityID();
+   const structure = Board.entityRecord[selectedStructureID]!;
+   currentResearchOrb = generateResearchOrb(structure);
    orbCompleteProgress = 0;
 }
 

@@ -1,8 +1,8 @@
 import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
 import { circlesDoIntersect, circleAndRectangleDoIntersect } from "webgl-test-shared/dist/collision";
 import BaseHitbox from "./BaseHitbox";
-import RectangularHitbox from "./RectangularHitbox";
 import { Point } from "webgl-test-shared/dist/utils";
+import { Hitbox, hitboxIsCircular } from "./hitboxes";
 
 class CircularHitbox extends BaseHitbox {
    public radius: number;
@@ -26,14 +26,13 @@ class CircularHitbox extends BaseHitbox {
       return this.y + this.radius;
    }
 
-   public isColliding(otherHitbox: BaseHitbox): boolean {
-      // @Speed: This check is slow
-      if (otherHitbox.hasOwnProperty("radius")) {
+   public isColliding(otherHitbox: Hitbox): boolean {
+      if (hitboxIsCircular(otherHitbox)) {
          // Circular hitbox
-         return circlesDoIntersect(this.x, this.y, this.radius, otherHitbox.x, otherHitbox.y, (otherHitbox as CircularHitbox).radius);
+         return circlesDoIntersect(this.x, this.y, this.radius, otherHitbox.x, otherHitbox.y, otherHitbox.radius);
       } else {
          // Rectangular hitbox
-         return circleAndRectangleDoIntersect(this.x, this.y, this.radius, otherHitbox.x, otherHitbox.y, (otherHitbox as RectangularHitbox).width, (otherHitbox as RectangularHitbox).height, (otherHitbox as RectangularHitbox).rotation);
+         return circleAndRectangleDoIntersect(this.x, this.y, this.radius, otherHitbox.x, otherHitbox.y, otherHitbox.width, otherHitbox.height, otherHitbox.rotation);
       }
    }
 }

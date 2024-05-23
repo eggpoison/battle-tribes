@@ -10,6 +10,8 @@ import Entity from "../Entity";
 import { createLightWoodSpeckParticle, createWoodShardParticle } from "../particles";
 import BuildingMaterialComponent, { WALL_TEXTURE_SOURCES } from "../entity-components/BuildingMaterialComponent";
 import TribeComponent from "../entity-components/TribeComponent";
+import StatusEffectComponent from "../entity-components/StatusEffectComponent";
+import StructureComponent from "../entity-components/StructureComponent";
 
 
 class Wall extends Entity {
@@ -20,7 +22,7 @@ class Wall extends Entity {
    constructor(position: Point, id: number, ageTicks: number, componentsData: EntityComponentsData<EntityType.wall>) {
       super(position, id, EntityType.wall, ageTicks);
 
-      const buildingMaterialComponentData = componentsData[2];
+      const buildingMaterialComponentData = componentsData[4];
       
       const mainRenderPart = new RenderPart(
          this,
@@ -35,7 +37,9 @@ class Wall extends Entity {
       this.updateDamageRenderPart(healthComponentData.health, healthComponentData.maxHealth);
 
       this.addServerComponent(ServerComponentType.health, new HealthComponent(this, healthComponentData));
-      this.addServerComponent(ServerComponentType.tribe, new TribeComponent(this, componentsData[1]));
+      this.addServerComponent(ServerComponentType.statusEffect, new StatusEffectComponent(this, componentsData[1]));
+      this.addServerComponent(ServerComponentType.structure, new StructureComponent(this, componentsData[2]));
+      this.addServerComponent(ServerComponentType.tribe, new TribeComponent(this, componentsData[3]));
       this.addServerComponent(ServerComponentType.buildingMaterial, new BuildingMaterialComponent(this, buildingMaterialComponentData, mainRenderPart));
 
       if (this.ageTicks <= 1) {

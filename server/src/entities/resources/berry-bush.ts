@@ -83,7 +83,7 @@ export function dropBerry(berryBush: Entity, multiplier: number): void {
    berryBushComponent.numBerries--;
 }
 
-export function onBerryBushHurt(berryBush: Entity, attackingEntity: Entity | null): void {
+export function onBerryBushHurt(berryBush: Entity): void {
    dropBerry(berryBush, 1);
 }
 

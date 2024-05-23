@@ -20,7 +20,7 @@ import { onPlayerHurt } from "../entities/tribes/player";
 import { onGolemDeath, onGolemHurt } from "../entities/mobs/golem";
 import { AIHelperComponentArray } from "./AIHelperComponent";
 import { SERVER } from "../server";
-import { adjustTribesmanRelationsAfterHurt, adjustTribesmanRelationsAfterKill } from "./TribesmanComponent";
+import { adjustTribesmanRelationsAfterHurt, adjustTribesmanRelationsAfterKill } from "./TribesmanAIComponent";
 import { onTribeMemberHurt } from "../entities/tribes/tribe-member";
 import { TITLE_REWARD_CHANCES } from "../tribesman-title-generation";
 import { TribeMemberComponentArray, awardTitle } from "./TribeMemberComponent";
@@ -141,7 +141,7 @@ export function damageEntity(entity: Entity, damage: number, attackingEntity: En
 
    switch (entity.type) {
       case EntityType.berryBush: {
-         onBerryBushHurt(entity, attackingEntity);
+         onBerryBushHurt(entity);
 
          // Award gardener title
          if (attackingEntity !== null && TribeMemberComponentArray.hasComponent(attackingEntity.id) && Math.random() < TITLE_REWARD_CHANCES.GARDENER_REWARD_CHANCE) {

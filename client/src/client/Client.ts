@@ -12,7 +12,6 @@ import { TribesmanTitle } from "webgl-test-shared/dist/titles";
 import { io, Socket } from "socket.io-client";
 import { setGameState, setLoadingScreenInitialStatus } from "../components/App";
 import Player from "../entities/Player";
-import ENTITY_CLASS_RECORD, { EntityClassType } from "../entity-class-record";
 import Game from "../Game";
 import CircularHitbox from "../hitboxes/CircularHitbox";
 import RectangularHitbox from "../hitboxes/RectangularHitbox";
@@ -45,6 +44,7 @@ import OPTIONS from "../options";
 import { Infocards_setTitleOffer } from "../components/game/infocards/Infocards";
 import { calculateEntityRenderDepth } from "../render-layers";
 import { GrassBlocker } from "webgl-test-shared/dist/grass-blockers";
+import { createEntity } from "../entity-class-record";
 
 type ISocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 
@@ -312,15 +312,15 @@ abstract class Client {
       // Register hits
       for (const hitData of gameDataPacket.hits) {
          // Register hit
-         if (Board.entityRecord.hasOwnProperty(hitData.hitEntityID)) {
-            const entity = Board.entityRecord[hitData.hitEntityID];
-            entity.registerHit(hitData);
+         const hitEntity = Board.entityRecord[hitData.hitEntityID];
+         if (typeof hitEntity !== "undefined") {
+            hitEntity.registerHit(hitData);
          }
 
          if (hitData.damage > 0 && shouldShowDamageNumber(hitData.attackerID)) {
-            if (Board.entityRecord.hasOwnProperty(hitData.hitEntityID)) {
-               const entity = Board.entityRecord[hitData.hitEntityID];
-               createDamageNumber(entity.position.x, entity.position.y, hitData.damage);
+            const hitEntity = Board.entityRecord[hitData.hitEntityID];
+            if (typeof hitEntity !== "undefined") {
+               createDamageNumber(hitEntity.position.x, hitEntity.position.y, hitData.damage);
             } else {
                createDamageNumber(hitData.entityPositionX, hitData.entityPositionY, hitData.damage);
             }
@@ -337,8 +337,8 @@ abstract class Client {
             createHealNumber(healData.healedID, healData.entityPositionX, healData.entityPositionY, healData.healAmount);
          }
 
-         if (Board.entityRecord.hasOwnProperty(healData.healedID)) {
-            const healedEntity = Board.entityRecord[healData.healedID];
+         const healedEntity = Board.entityRecord[healData.healedID];
+         if (typeof healedEntity !== "undefined") {
             healedEntity.createHealingParticles(healData.healAmount);
 
             // @Hack @Incomplete: This will trigger the repair sound effect even if a hammer isn't the one healing the structure
@@ -452,7 +452,7 @@ abstract class Client {
       // All known entity ids which haven't been removed are ones which are dead
       for (const id of knownEntityIDs) {
          const isDeath = entityDeathIDs.indexOf(id) !== -1;
-         const entity = Board.entityRecord[id];
+         const entity = Board.entityRecord[id]!;
          Board.removeEntity(entity, isDeath);
       }
    }
@@ -574,11 +574,8 @@ abstract class Client {
    }
 
    private static createEntityFromData(entityData: EntityData): void {
-      const position = Point.unpackage(entityData.position); 
-
       // Create the entity
-      const entityConstructor = ENTITY_CLASS_RECORD[entityData.type]() as EntityClassType<EntityType>;
-      const entity = new entityConstructor(position, entityData.id, entityData.ageTicks, entityData.components);
+      const entity = createEntity(entityData);
 
       // @Cleanup: initialise the value in the constructor
       entity.renderDepth = calculateEntityRenderDepth(entity.type);
@@ -695,10 +692,11 @@ abstract class Client {
       if (Game.isRunning && this.socket !== null && Player.instance !== null) {
          let interactingEntityID = -1;
          const selectedEntityID = getSelectedEntityID();
-         if (Board.entityRecord.hasOwnProperty(selectedEntityID)) {
-            const entity = Board.entityRecord[selectedEntityID];
-            if (entity.type === EntityType.tribeWorker || entity.type === EntityType.tribeWarrior) {
-               interactingEntityID = entity.id;
+
+         const selectedEntity = Board.entityRecord[selectedEntityID];
+         if (typeof selectedEntity !== "undefined") {
+            if (selectedEntity.type === EntityType.tribeWorker || selectedEntity.type === EntityType.tribeWarrior) {
+               interactingEntityID = selectedEntity.id;
             }
          }
 

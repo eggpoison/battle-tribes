@@ -1,14 +1,11 @@
 import { Point, clampToBoardDimensions } from "webgl-test-shared/dist/utils";
 import { EntityType, EntityTypeString } from "webgl-test-shared/dist/entities";
-import { EntityComponents } from "webgl-test-shared/dist/components";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { EntityDebugData, PathfindingNodeIndex, RIVER_STEPPING_STONE_SIZES } from "webgl-test-shared/dist/client-server-types";
 import { TileType } from "webgl-test-shared/dist/tiles";
 import Tile from "./Tile";
 import Chunk from "./Chunk";
-import RectangularHitbox from "./hitboxes/RectangularHitbox";
 import Board from "./Board";
-import CircularHitbox from "./hitboxes/CircularHitbox";
 import { onCowDeath } from "./entities/mobs/cow";
 import { onTreeDeath } from "./entities/resources/tree";
 import { onIceSpikesDeath } from "./entities/resources/ice-spikes";
@@ -24,7 +21,7 @@ import { onCactusDeath } from "./entities/resources/cactus";
 import { resolveEntityTileCollision } from "./collision";
 import { STRUCTURE_TYPES, StructureType } from "webgl-test-shared/dist/structures";
 import { EntityEvent } from "webgl-test-shared/dist/entity-events";
-import { Hitbox } from "./hitboxes/hitboxes";
+import { Hitbox, hitboxIsCircular } from "./hitboxes/hitboxes";
 
 let idCounter = 1;
 
@@ -32,10 +29,6 @@ let idCounter = 1;
 export function findAvailableEntityID(): number {
    return idCounter++;
 }
-
-export const RESOURCE_ENTITY_TYPES: ReadonlyArray<EntityType> = [EntityType.krumblid, EntityType.fish, EntityType.cow, EntityType.tree, EntityType.boulder, EntityType.cactus, EntityType.iceSpikes, EntityType.berryBush];
-
-export const NUM_ENTITY_TYPES = Object.keys(EntityComponents).length;
 
 /** A generic class for any object in the world */
 class Entity<T extends EntityType = EntityType> {
@@ -111,7 +104,7 @@ class Entity<T extends EntityType = EntityType> {
       return this.nextHitboxLocalID++;
    }
 
-   public addHitbox(hitbox: RectangularHitbox | CircularHitbox): void {
+   public addHitbox(hitbox: Hitbox): void {
       this.hitboxes.push(hitbox);
       this.totalMass += hitbox.mass;
 
@@ -159,9 +152,8 @@ class Entity<T extends EntityType = EntityType> {
          const hitbox = this.hitboxes[i];
 
          hitbox.updatePosition(this.position.x, this.position.y, this.rotation);
-         // @Speed: This check is slow
-         if (!hitbox.hasOwnProperty("radius")) {
-            (hitbox as RectangularHitbox).updateRotationAndVertexPositionsAndSideAxes(this.rotation);
+         if (!hitboxIsCircular(hitbox)) {
+            hitbox.updateRotationAndVertexPositionsAndSideAxes(this.rotation);
          }
 
          const boundsMinX = hitbox.calculateHitboxBoundsMinX();
@@ -514,7 +506,7 @@ class Entity<T extends EntityType = EntityType> {
 
    public destroy(): void {
       // @Temporary
-      if (!Board.entityRecord.hasOwnProperty(this.id)) {
+      if (typeof Board.entityRecord[this.id] === "undefined") {
          throw new Error("Tried to remove an entity before it was added to the board.");
       }
       
@@ -555,5 +547,5 @@ class Entity<T extends EntityType = EntityType> {
 export default Entity;
 
 export function entityIsStructure(entity: Entity): entity is Entity<StructureType> {
-   return STRUCTURE_TYPES.indexOf(entity.type as StructureType) !== -1
+   return STRUCTURE_TYPES.indexOf(entity.type as StructureType) !== -1;
 }

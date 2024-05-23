@@ -16,6 +16,7 @@ import { createFenceGate } from "../entities/structures/fence-gate";
 import { placeVirtualBuilding } from "../ai-tribe-building/ai-building";
 import { getBlueprintEntityType } from "../entities/blueprint-entity";
 import { StructureComponentArray } from "./StructureComponent";
+import { calculateStructureConnectionInfo } from "webgl-test-shared/dist/structures";
 
 const STRUCTURE_WORK_REQUIRED: Record<BlueprintType, number> = {
    [BlueprintType.woodenDoor]: 3,
@@ -117,44 +118,47 @@ const completeBlueprint = (blueprintEntity: Entity, blueprintComponent: Blueprin
    const tribeComponent = TribeComponentArray.getComponent(blueprintEntity.id);
    
    blueprintEntity.destroy();
+
+   const entityType = getBlueprintEntityType(blueprintComponent.blueprintType);
+   const position = blueprintEntity.position.copy();
+   const connectionInfo = calculateStructureConnectionInfo(position, blueprintEntity.rotation, entityType, Board.chunks);
    
+   // @Cleanup: a lot of copy and paste
    switch (blueprintComponent.blueprintType) {
       case BlueprintType.woodenDoor: {
-         createDoor(blueprintEntity.position.copy(), blueprintEntity.rotation, tribeComponent.tribe, BuildingMaterial.wood);
+         createDoor(blueprintEntity.position.copy(), blueprintEntity.rotation, tribeComponent.tribe, connectionInfo, BuildingMaterial.wood);
          return;
       }
       case BlueprintType.stoneDoor: {
-         createDoor(blueprintEntity.position.copy(), blueprintEntity.rotation, tribeComponent.tribe, BuildingMaterial.stone);
+         createDoor(blueprintEntity.position.copy(), blueprintEntity.rotation, tribeComponent.tribe, connectionInfo, BuildingMaterial.stone);
          return;
       }
       case BlueprintType.woodenEmbrasure: {
-         createEmbrasure(blueprintEntity.position.copy(), blueprintEntity.rotation, tribeComponent.tribe, BuildingMaterial.wood);
+         createEmbrasure(blueprintEntity.position.copy(), blueprintEntity.rotation, tribeComponent.tribe, connectionInfo, BuildingMaterial.wood);
          return;
       }
       case BlueprintType.stoneEmbrasure: {
-         createEmbrasure(blueprintEntity.position.copy(), blueprintEntity.rotation, tribeComponent.tribe, BuildingMaterial.stone);
+         createEmbrasure(blueprintEntity.position.copy(), blueprintEntity.rotation, tribeComponent.tribe, connectionInfo, BuildingMaterial.stone);
          return;
       }
       case BlueprintType.ballista: {
-         createBallista(blueprintEntity.position.copy(), blueprintEntity.rotation, tribeComponent.tribe);
+         createBallista(blueprintEntity.position.copy(), blueprintEntity.rotation, tribeComponent.tribe, connectionInfo);
          return;
       }
       case BlueprintType.slingTurret: {
-         createSlingTurret(blueprintEntity.position.copy(), blueprintEntity.rotation, tribeComponent.tribe);
+         createSlingTurret(blueprintEntity.position.copy(), blueprintEntity.rotation, tribeComponent.tribe, connectionInfo);
          return;
       }
       case BlueprintType.woodenTunnel: {
-         createTunnel(blueprintEntity.position.copy(), blueprintEntity.rotation, tribeComponent.tribe, BuildingMaterial.wood);
+         createTunnel(blueprintEntity.position.copy(), blueprintEntity.rotation, tribeComponent.tribe, connectionInfo, BuildingMaterial.wood);
          return;
       }
       case BlueprintType.stoneTunnel: {
-         createTunnel(blueprintEntity.position.copy(), blueprintEntity.rotation, tribeComponent.tribe, BuildingMaterial.stone);
+         createTunnel(blueprintEntity.position.copy(), blueprintEntity.rotation, tribeComponent.tribe, connectionInfo, BuildingMaterial.stone);
          return;
       }
       case BlueprintType.fenceGate: {
-         const previousStructureComponent = StructureComponentArray.getComponent(blueprintComponent.associatedEntityID);
-         
-         createFenceGate(blueprintEntity.position.copy(), blueprintEntity.rotation, tribeComponent.tribe, previousStructureComponent.connectedSidesBitset, previousStructureComponent.connectedEntityIDs);
+         createFenceGate(blueprintEntity.position.copy(), blueprintEntity.rotation, tribeComponent.tribe, connectionInfo);
          
          const fence = Board.entityRecord[blueprintComponent.associatedEntityID]!;
          fence.destroy();
@@ -162,12 +166,13 @@ const completeBlueprint = (blueprintEntity: Entity, blueprintComponent: Blueprin
          return;
       }
       case BlueprintType.warriorHutUpgrade: {
-         const hut = createWarriorHut(blueprintEntity.position.copy(), blueprintEntity.rotation, tribeComponent.tribe)
+         const hut = createWarriorHut(blueprintEntity.position.copy(), blueprintEntity.rotation, tribeComponent.tribe, connectionInfo)
 
          // Remove the previous hut
          const previousHut = Board.entityRecord[blueprintComponent.associatedEntityID]!;
          previousHut.destroy();
 
+         // @Cleanup: should this be done here?
          // Transfer the worker to the warrior hut
          const hutComponent = HutComponentArray.getComponent(previousHut.id);
          if (hutComponent.hasTribesman) {

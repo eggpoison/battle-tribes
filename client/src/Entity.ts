@@ -94,6 +94,8 @@ abstract class Entity extends RenderObject {
    public collisionBit = 0;
    public collisionMask = 0;
 
+   public collidingEntities = new Array<Entity>();
+
    private readonly serverComponents: ServerComponentsType = {};
    private readonly clientComponents: ClientComponentsType = {};
    private readonly tickableComponents = new Array<Component>();
@@ -629,8 +631,8 @@ abstract class Entity extends RenderObject {
       }
 
       // a bit @Hacky
-      if (Board.entityRecord.hasOwnProperty(hitData.attackerID)) {
-         const attacker = Board.entityRecord[hitData.attackerID];
+      const attacker = Board.entityRecord[hitData.attackerID];
+      if (typeof attacker !== "undefined") {
          switch (attacker.type) {
             case EntityType.floorSpikes:
             case EntityType.wallSpikes:

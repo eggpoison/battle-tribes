@@ -128,6 +128,9 @@ export function onBattleaxeProjectileCollision(battleaxe: Entity, collidingEntit
 }
 
 export function onBattleaxeProjectileRemove(battleaxe: Entity): void {
+   // @Hack?
+   
+   
    const throwingProjectileComponent = ThrowingProjectileComponentArray.getComponent(battleaxe.id);
    if (typeof Board.entityRecord[throwingProjectileComponent.tribeMemberID] === "undefined") {
       return;

@@ -53,7 +53,7 @@ import { serialiseTotemBannerComponent } from "./components/TotemBannerComponent
 import { serialiseTreeComponent } from "./entities/resources/tree";
 import { serialiseTribeComponent } from "./components/TribeComponent";
 import { acceptTitleOffer, rejectTitleOffer, serialiseTribeMemberComponent } from "./components/TribeMemberComponent";
-import { serialiseTribesmanComponent } from "./components/TribesmanComponent";
+import { serialiseTribesmanComponent } from "./components/TribesmanAIComponent";
 import { serialiseTurretComponent } from "./components/TurretComponent";
 import { serialiseWanderAIComponent } from "./components/WanderAIComponent";
 import { serialiseYetiComponent } from "./components/YetiComponent";
@@ -89,6 +89,7 @@ import { createWall } from "./entities/structures/wall";
 import { GrassBlocker } from "webgl-test-shared/dist/grass-blockers";
 import { updateGrassBlockers } from "./grass-blockers";
 import { serialiseStructureComponent } from "./components/StructureComponent";
+import { hitboxIsCircular } from "./hitboxes/hitboxes";
 
 // @Cleanup: file is way too large
 
@@ -179,7 +180,7 @@ const serialiseComponent = <T extends ServerComponentType>(entity: Entity, compo
       case ServerComponentType.planterBox: return serialisePlanterBoxComponent(entity.id);
       case ServerComponentType.plant: return serialisePlantComponent(entity);
       case ServerComponentType.structure: return serialiseStructureComponent(entity.id);
-      case ServerComponentType.fence: return serialiseFenceComponent(entity.id);
+      case ServerComponentType.fence: return serialiseFenceComponent();
       case ServerComponentType.fenceGate: return serialiseFenceGateComponent(entity.id);
       default: {
          assertUnreachable(componentType);
@@ -193,11 +194,11 @@ const serialiseEntityData = (entity: Entity, player: Entity | null): EntityData<
 
    for (let i = 0; i < entity.hitboxes.length; i++) {
       const hitbox = entity.hitboxes[i];
-      // @Cleanup
-      if (typeof (hitbox as any)["radius"] !== "undefined") {
-         circularHitboxes.push(bundleCircularHitboxData(hitbox as CircularHitbox));
+      
+      if (hitboxIsCircular(hitbox)) {
+         circularHitboxes.push(bundleCircularHitboxData(hitbox));
       } else {
-         rectangularHitboxes.push(bundleRectangularHitboxData(hitbox as RectangularHitbox));
+         rectangularHitboxes.push(bundleRectangularHitboxData(hitbox));
       }
    }
 
@@ -216,7 +217,7 @@ const serialiseEntityData = (entity: Entity, player: Entity | null): EntityData<
       circularHitboxes: circularHitboxes,
       rectangularHitboxes: rectangularHitboxes,
       ageTicks: entity.ageTicks,
-      type: entity.type as unknown as EntityType,
+      type: entity.type,
       collisionBit: entity.collisionBit,
       collisionMask: entity.collisionMask,
       // @Cleanup: Is there some typescript magic we can do to avoid this evil cast
@@ -571,77 +572,77 @@ class GameServer {
          //    createTribeWorker(new Point(spawnPosition.x + 500, spawnPosition.y + 150), -1, 0);
          // }, 5000);
          
-         setTimeout(() => {
-            if(1+1===2)return;
-            const p = this.getPlayerFromUsername(username)!;
-            const tc = TribeComponentArray.getComponent(p.id);
-            const tribe = tc.tribe;
-            const TRIB = tribe;
+         // setTimeout(() => {
+         //    if(1+1===2)return;
+         //    const p = this.getPlayerFromUsername(username)!;
+         //    const tc = TribeComponentArray.getComponent(p.id);
+         //    const tribe = tc.tribe;
+         //    const TRIB = tribe;
             
-            // const TRIB = new Tribe(TribeType.goblins, true);
+         //    // const TRIB = new Tribe(TribeType.goblins, true);
 
-            createTribeTotem(new Point(spawnPosition.x + 500, spawnPosition.y), 0, TRIB);
+         //    createTribeTotem(new Point(spawnPosition.x + 500, spawnPosition.y), 0, TRIB);
 
-            const h1 = createWorkerHut(new Point(spawnPosition.x + 380, spawnPosition.y + 50), Math.PI * 1.27, TRIB);
-            const h2 = createWorkerHut(new Point(spawnPosition.x + 547, spawnPosition.y - 100), Math.PI * 2.87, TRIB);
-            const h3 = createWorkerHut(new Point(spawnPosition.x + 600, spawnPosition.y + 65), 0.7, TRIB);
-            const h4 = createWorkerHut(new Point(spawnPosition.x + 700, spawnPosition.y - 65), -0.7, TRIB);
-            const h5 = createWorkerHut(new Point(spawnPosition.x + 320, spawnPosition.y + 100), -Math.PI*0.4, TRIB);
+         //    const h1 = createWorkerHut(new Point(spawnPosition.x + 380, spawnPosition.y + 50), Math.PI * 1.27, TRIB);
+         //    const h2 = createWorkerHut(new Point(spawnPosition.x + 547, spawnPosition.y - 100), Math.PI * 2.87, TRIB);
+         //    const h3 = createWorkerHut(new Point(spawnPosition.x + 600, spawnPosition.y + 65), 0.7, TRIB);
+         //    const h4 = createWorkerHut(new Point(spawnPosition.x + 700, spawnPosition.y - 65), -0.7, TRIB);
+         //    const h5 = createWorkerHut(new Point(spawnPosition.x + 320, spawnPosition.y + 100), -Math.PI*0.4, TRIB);
 
-            const w1 = createTribeWorker(h1.position.copy(), 0, TRIB.id, h1.id);
-            const w2 = createTribeWorker(h2.position.copy(), 0, TRIB.id, h2.id);
-            const w3 = createTribeWorker(h3.position.copy(), 0, TRIB.id, h3.id);
-            const w4 = createTribeWorker(h4.position.copy(), 0, TRIB.id, h4.id);
-            const w5 = createTribeWorker(h5.position.copy(), 0, TRIB.id, h5.id);
+         //    const w1 = createTribeWorker(h1.position.copy(), 0, TRIB.id, h1.id);
+         //    const w2 = createTribeWorker(h2.position.copy(), 0, TRIB.id, h2.id);
+         //    const w3 = createTribeWorker(h3.position.copy(), 0, TRIB.id, h3.id);
+         //    const w4 = createTribeWorker(h4.position.copy(), 0, TRIB.id, h4.id);
+         //    const w5 = createTribeWorker(h5.position.copy(), 0, TRIB.id, h5.id);
 
-            const ps = new Array<Entity>();
+         //    const ps = new Array<Entity>();
 
-            for (let y = -2; y <= 1; y++) {
-               const yo = randFloat(-3, 3);
-               for (let x = 0; x <= 10; x++) {
-                  const p = createPlanterBox(new Point(spawnPosition.x - 0 - 80 * x, spawnPosition.y + 150 * y + yo), 0, tribe);
-                  ps.push(p);
-               }
-            }
+         //    for (let y = -2; y <= 1; y++) {
+         //       const yo = randFloat(-3, 3);
+         //       for (let x = 0; x <= 10; x++) {
+         //          const p = createPlanterBox(new Point(spawnPosition.x - 0 - 80 * x, spawnPosition.y + 150 * y + yo), 0, tribe);
+         //          ps.push(p);
+         //       }
+         //    }
 
-            // top walls
-            for (let x = 0; x <= 14; x++) {
-               createWall(new Point(spawnPosition.x - 64 * x, spawnPosition.y + 220), 0, tribe);
-            }
+         //    // top walls
+         //    for (let x = 0; x <= 14; x++) {
+         //       createWall(new Point(spawnPosition.x - 64 * x, spawnPosition.y + 220), 0, tribe);
+         //    }
 
-            // bottom walls
-            for (let x = 0; x <= 14; x++) {
-               createWall(new Point(spawnPosition.x - 64 * x, spawnPosition.y - 368), 0, tribe);
-            }
+         //    // bottom walls
+         //    for (let x = 0; x <= 14; x++) {
+         //       createWall(new Point(spawnPosition.x - 64 * x, spawnPosition.y - 368), 0, tribe);
+         //    }
 
-            // left walls
-            for (let y = -4; y <= 3; y++) {
-               createWall(new Point(spawnPosition.x - 64 * 14, spawnPosition.y + y * 64 - 40), 0, tribe);
-            }
+         //    // left walls
+         //    for (let y = -4; y <= 3; y++) {
+         //       createWall(new Point(spawnPosition.x - 64 * 14, spawnPosition.y + y * 64 - 40), 0, tribe);
+         //    }
 
-            // const p1 = createPlanterBox(new Point(spawnPosition.x - 50, spawnPosition.y + 80), 0, tribe);
-            // const p2 = createPlanterBox(new Point(spawnPosition.x - 50, spawnPosition.y - 80), 0.1, tribe);
-            // const p3 = createPlanterBox(new Point(spawnPosition.x - 210, spawnPosition.y + 80), 0, tribe);
-            // const p4 = createPlanterBox(new Point(spawnPosition.x - 210, spawnPosition.y - 80), 0.1, tribe);
+         //    // const p1 = createPlanterBox(new Point(spawnPosition.x - 50, spawnPosition.y + 80), 0, tribe);
+         //    // const p2 = createPlanterBox(new Point(spawnPosition.x - 50, spawnPosition.y - 80), 0.1, tribe);
+         //    // const p3 = createPlanterBox(new Point(spawnPosition.x - 210, spawnPosition.y + 80), 0, tribe);
+         //    // const p4 = createPlanterBox(new Point(spawnPosition.x - 210, spawnPosition.y - 80), 0.1, tribe);
 
-            setTimeout(() => {
-               // placePlantInPlanterBox(p1, PlanterBoxPlant.berryBush);
-               // placePlantInPlanterBox(p2, PlanterBoxPlant.berryBush);
-               // placePlantInPlanterBox(p3, PlanterBoxPlant.berryBush);
-               // placePlantInPlanterBox(p4, PlanterBoxPlant.berryBush);
-               for (let i = 0; i < ps.length; i++) {
-                  const p = ps[i];
-                  placePlantInPlanterBox(p, PlanterBoxPlant.tree);
-               }
-            }, 100);
+         //    setTimeout(() => {
+         //       // placePlantInPlanterBox(p1, PlanterBoxPlant.berryBush);
+         //       // placePlantInPlanterBox(p2, PlanterBoxPlant.berryBush);
+         //       // placePlantInPlanterBox(p3, PlanterBoxPlant.berryBush);
+         //       // placePlantInPlanterBox(p4, PlanterBoxPlant.berryBush);
+         //       for (let i = 0; i < ps.length; i++) {
+         //          const p = ps[i];
+         //          placePlantInPlanterBox(p, PlanterBoxPlant.tree);
+         //       }
+         //    }, 100);
 
-            // createWorkbench(new Point(spawnPosition.x + 520, spawnPosition.y + 230), 0.8, TRIB);
-            // createTree(new Point(spawnPosition.x, spawnPosition.y + 200), 0, tribe);
-            // createWall(new Point(spawnPosition.x + 64, spawnPosition.y + 200), 0, TRIB);
-            createBarrel(new Point(spawnPosition.x + 170, spawnPosition.y - 150), Math.PI * 0.38, TRIB);
-            createBarrel(new Point(spawnPosition.x + 230, spawnPosition.y - 210), Math.PI * 0.8, TRIB);
-            // createDoor(new Point(spawnPosition.x, spawnPosition.y + 200), 0, TRIB, BuildingMaterial.wood);
-         }, 4000);
+         //    // createWorkbench(new Point(spawnPosition.x + 520, spawnPosition.y + 230), 0.8, TRIB);
+         //    // createTree(new Point(spawnPosition.x, spawnPosition.y + 200), 0, tribe);
+         //    // createWall(new Point(spawnPosition.x + 64, spawnPosition.y + 200), 0, TRIB);
+         //    createBarrel(new Point(spawnPosition.x + 170, spawnPosition.y - 150), Math.PI * 0.38, TRIB);
+         //    createBarrel(new Point(spawnPosition.x + 230, spawnPosition.y - 210), Math.PI * 0.8, TRIB);
+         //    // createDoor(new Point(spawnPosition.x, spawnPosition.y + 200), 0, TRIB, BuildingMaterial.wood);
+         // }, 4000);
 
 
          socket.on("initial_player_data", (_username: string, _tribeType: TribeType) => {

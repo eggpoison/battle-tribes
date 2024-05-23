@@ -8,6 +8,7 @@ import TribeComponent from "../entity-components/TribeComponent";
 import StatusEffectComponent from "../entity-components/StatusEffectComponent";
 import HealthComponent from "../entity-components/HealthComponent";
 import Entity from "../Entity";
+import StructureComponent from "../entity-components/StructureComponent";
 
 class SlingTurret extends Entity {
    constructor(position: Point, id: number, ageTicks: number, componentsData: EntityComponentsData<EntityType.slingTurret>) {
@@ -43,8 +44,9 @@ class SlingTurret extends Entity {
       
       this.addServerComponent(ServerComponentType.health, new HealthComponent(this, componentsData[0]));
       this.addServerComponent(ServerComponentType.statusEffect, new StatusEffectComponent(this, componentsData[1]));
-      this.addServerComponent(ServerComponentType.tribe, new TribeComponent(this, componentsData[2]));
-      this.addServerComponent(ServerComponentType.turret, new TurretComponent(this, componentsData[3], slingRenderPart, plateRenderPart, []));
+      this.addServerComponent(ServerComponentType.structure, new StructureComponent(this, componentsData[2]));
+      this.addServerComponent(ServerComponentType.tribe, new TribeComponent(this, componentsData[3]));
+      this.addServerComponent(ServerComponentType.turret, new TurretComponent(this, componentsData[4], slingRenderPart, plateRenderPart, []));
    }
 }
 

@@ -32,7 +32,7 @@ import { TRIBE_INFO_RECORD, TribeType } from "webgl-test-shared/dist/tribes";
 import { STATUS_EFFECT_MODIFIERS } from "webgl-test-shared/dist/status-effects";
 import { TribesmanTitle } from "webgl-test-shared/dist/titles";
 import { Point } from "webgl-test-shared/dist/utils";
-import InventoryUseComponent, { LimbInfo } from "./entity-components/InventoryUseComponent";
+import { LimbInfo } from "./entity-components/InventoryUseComponent";
 import InventoryComponent from "./entity-components/InventoryComponent";
 
 /** Acceleration of the player while moving without any modifiers. */
@@ -519,6 +519,21 @@ export function createPlayerInputListeners(): void {
    });
 }
 
+const isCollidingWithCoveredSpikes = (): boolean => {
+   for (let i = 0; i < Player.instance!.collidingEntities.length; i++) {
+      const entity = Player.instance!.collidingEntities[i];
+
+      if (entity.hasServerComponent(ServerComponentType.spikes)) {
+         const spikesComponent = entity.getServerComponent(ServerComponentType.spikes);
+         if (spikesComponent.isCovered) {
+            return true;
+         }
+      }
+   }
+
+   return false;
+}
+
 const getPlayerMoveSpeedMultiplier = (): number => {
    let moveSpeedMultiplier = 1;
 
@@ -532,6 +547,10 @@ const getPlayerMoveSpeedMultiplier = (): number => {
    const tribeMemberComponent = Player.instance!.getServerComponent(ServerComponentType.tribeMember);
    if (tribeMemberComponent.hasTitle(TribesmanTitle.sprinter)) {
       moveSpeedMultiplier *= 1.2;
+   }
+
+   if (isCollidingWithCoveredSpikes()) {
+      moveSpeedMultiplier *= 0.5;
    }
 
    return moveSpeedMultiplier;

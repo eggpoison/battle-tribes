@@ -4,7 +4,7 @@ import { getItemRecipe } from "webgl-test-shared/dist/crafting-recipes";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { ItemType, ITEM_INFO_RECORD, PlaceableItemInfo } from "webgl-test-shared/dist/items";
 import { Settings } from "webgl-test-shared/dist/settings";
-import { StructureType } from "webgl-test-shared/dist/structures";
+import { StructureType, calculateStructureConnectionInfo } from "webgl-test-shared/dist/structures";
 import { Point, getAngleDiff, randFloat } from "webgl-test-shared/dist/utils";
 import Board from "../Board";
 import Tribe, { BuildingPlan, NewBuildingPlan, BuildingPlanType, VirtualBuilding } from "../Tribe";
@@ -13,10 +13,8 @@ import { placeBuilding } from "../entities/tribes/tribe-member";
 import { SafetyNode, addHitboxesOccupiedNodes, addRectangularSafetyNodePositions, placeVirtualBuilding, updateTribeBuildingInfo } from "./ai-building";
 import { buildingIsInfrastructure, getTribeSafety, tribeIsVulnerable } from "./ai-building-heuristics";
 import { TribeArea, areaHasOutsideDoor, getOutsideDoorPlacePlan } from "./ai-building-areas";
-import CircularHitbox from "../hitboxes/CircularHitbox";
-import RectangularHitbox from "../hitboxes/RectangularHitbox";
 import { getHitboxesCollidingEntities } from "../collision";
-import { StructureInfo } from "../components/StructureComponent";
+import { hitboxIsCircular } from "../hitboxes/hitboxes";
 
 const virtualBuildingTakesUpWallSpace = (x: number, y: number, wallRotation: number, virtualBuilding: VirtualBuilding, wallVertexOffsets: HitboxVertexPositions): boolean => {
    // @Speed: cache when virutal entity is first created
@@ -25,15 +23,15 @@ const virtualBuildingTakesUpWallSpace = (x: number, y: number, wallRotation: num
    for (let i = 0; i < hitboxes.length; i++) {
       const hitbox = hitboxes[i];
       // @Cleanup: copy and paste
-      if (hitbox.hasOwnProperty("radius")) {
-         if (circleAndRectangleDoIntersect(hitbox.x, hitbox.y, (hitbox as CircularHitbox).radius, x, y, Settings.TILE_SIZE, Settings.TILE_SIZE, wallRotation)) {
+      if (hitboxIsCircular(hitbox)) {
+         if (circleAndRectangleDoIntersect(hitbox.x, hitbox.y, hitbox.radius, x, y, Settings.TILE_SIZE, Settings.TILE_SIZE, wallRotation)) {
             return true;
          }
       } else {
          const sinRotation = Math.sin(wallRotation);
          const cosRotation = Math.cos(wallRotation);
 
-         const collisionData = rectanglesAreColliding(wallVertexOffsets, (hitbox as RectangularHitbox).vertexOffsets, x, y, hitbox.x, hitbox.y, cosRotation, -sinRotation, (hitbox as RectangularHitbox).axisX, (hitbox as RectangularHitbox).axisY);
+         const collisionData = rectanglesAreColliding(wallVertexOffsets, hitbox.vertexOffsets, x, y, hitbox.x, hitbox.y, cosRotation, -sinRotation, hitbox.axisX, hitbox.axisY);
          if (collisionData.isColliding) {
             return true;
          }
@@ -541,10 +539,10 @@ export function generateBuildingPosition(tribe: Tribe, entityType: StructureType
       for (let i = 0; i < hitboxes.length; i++) {
          const hitbox = hitboxes[i];
 
-         let minX = hitbox.calculateHitboxBoundsMinX();
-         let maxX = hitbox.calculateHitboxBoundsMaxX();
-         let minY = hitbox.calculateHitboxBoundsMinY();
-         let maxY = hitbox.calculateHitboxBoundsMaxY();
+         const minX = hitbox.calculateHitboxBoundsMinX();
+         const maxX = hitbox.calculateHitboxBoundsMaxX();
+         const minY = hitbox.calculateHitboxBoundsMinY();
+         const maxY = hitbox.calculateHitboxBoundsMaxY();
          if (minX < 0 || maxX >= Settings.BOARD_UNITS || minY < 0 || maxY >= Settings.BOARD_UNITS) {
             continue main;
          }
@@ -715,15 +713,10 @@ export function forceBuildPlans(tribe: Tribe): void {
 
       switch (plan.type) {
          case BuildingPlanType.newBuilding: {
-            // @Incomplete
-
             const entityType = (ITEM_INFO_RECORD[plan.buildingRecipe.product] as PlaceableItemInfo).entityType;
-            const structureInfo: StructureInfo = {
-               connectedSidesBitset: 0,
-               connectedEntityIDs: [0, 0, 0, 0]
-            };
+            const connectionInfo = calculateStructureConnectionInfo(plan.position, plan.rotation, entityType, Board.chunks);
 
-            placeBuilding(tribe, plan.position, plan.rotation, entityType, structureInfo);
+            placeBuilding(tribe, plan.position, plan.rotation, entityType, connectionInfo);
             break;
          }
       }

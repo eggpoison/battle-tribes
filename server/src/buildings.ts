@@ -1,8 +1,6 @@
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { StructureType } from "webgl-test-shared/dist/structures";
 import { createWallHitboxes } from "./entities/structures/wall";
-import CircularHitbox from "./hitboxes/CircularHitbox";
-import RectangularHitbox from "./hitboxes/RectangularHitbox";
 import { createWorbenchHitboxes } from "./entities/structures/workbench";
 import { createDoorHitboxes } from "./entities/structures/door";
 import { createBarrelHitboxes } from "./entities/structures/barrel";
@@ -23,9 +21,10 @@ import { createPlanterBoxHitboxes } from "./entities/structures/planter-box";
 import { createFurnaceHitboxes } from "./entities/cooking-entities/furnace";
 import { createCampfireHitboxes } from "./entities/cooking-entities/campfire";
 import { Point } from "webgl-test-shared/dist/utils";
+import { Hitbox } from "./hitboxes/hitboxes";
 
 // @Cleanup: If it's only the add hitboxes function in this file, move it to a different file and remove this file
-export function createBuildingHitboxes(entityType: StructureType, parentPosition: Readonly<Point>, localID: number, parentRotation: number): ReadonlyArray<CircularHitbox | RectangularHitbox> {
+export function createBuildingHitboxes(entityType: StructureType, parentPosition: Readonly<Point>, localID: number, parentRotation: number): ReadonlyArray<Hitbox> {
    switch (entityType) {
       case EntityType.wall:             return createWallHitboxes(parentPosition, localID, parentRotation);
       case EntityType.workbench:        return createWorbenchHitboxes(parentPosition, localID, parentRotation);

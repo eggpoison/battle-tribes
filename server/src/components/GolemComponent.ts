@@ -1,10 +1,10 @@
 import { BODY_GENERATION_RADIUS } from "../entities/mobs/golem";
 import CircularHitbox from "../hitboxes/CircularHitbox";
-import BaseHitbox from "../hitboxes/BaseHitbox";
+import { Hitbox } from "../hitboxes/hitboxes";
 
 export interface RockInfo {
    /** The hitbox corresponding to the rock info */
-   readonly hitbox: BaseHitbox;
+   readonly hitbox: Hitbox;
    readonly sleepOffsetX: number;
    readonly sleepOffsetY: number;
    readonly awakeOffsetX: number;
@@ -16,7 +16,7 @@ export interface RockInfo {
    currentShiftTimerTicks: number;
 }
 
-const generateRockInfoArray = (hitboxes: ReadonlyArray<BaseHitbox>): Array<RockInfo> => {
+const generateRockInfoArray = (hitboxes: ReadonlyArray<Hitbox>): Array<RockInfo> => {
    const rockInfoArray = new Array<RockInfo>();
    
    for (let i = 0; i < hitboxes.length; i++) {
@@ -56,7 +56,7 @@ export class GolemComponent {
    public summonedPebblumIDs = new Array<number>();
    public pebblumSummonCooldownTicks: number;
    
-   constructor(hitboxes: ReadonlyArray<BaseHitbox>, pebblumSummonCooldownTicks: number) {
+   constructor(hitboxes: ReadonlyArray<Hitbox>, pebblumSummonCooldownTicks: number) {
       this.rockInfoArray = generateRockInfoArray(hitboxes);
       this.pebblumSummonCooldownTicks = pebblumSummonCooldownTicks;
    }

@@ -112,10 +112,10 @@ export const EntityTypeString: Record<EntityType, string> = {
    [EntityType.fenceGate]: "fence_gate"
 };
 
-const numEntityTypes = Object.keys(EntityTypeString).length;
+export const NUM_ENTITY_TYPES = Object.keys(EntityTypeString).length;
 
 export function getEntityTypeFromString(entityTypeString: string): EntityType | null {
-   for (let entityType: EntityType = 0; entityType < numEntityTypes; entityType++) {
+   for (let entityType: EntityType = 0; entityType < NUM_ENTITY_TYPES; entityType++) {
       if (EntityTypeString[entityType] === entityTypeString) {
          return entityType;
       }

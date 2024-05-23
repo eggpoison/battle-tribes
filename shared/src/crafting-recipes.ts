@@ -426,6 +426,16 @@ export const CRAFTING_RECIPES: ReadonlyArray<CraftingRecipe> = [
       },
       aiCraftTimeTicks: Vars.NORMAL_CRAFT_TIME,
       craftingStation: CraftingStation.workbench
+   },
+   {
+      product: ItemType.healing_totem,
+      yield: 1,
+      ingredients: {
+         [ItemType.wood]: 40,
+         [ItemType.leaf]: 80
+      },
+      aiCraftTimeTicks: Vars.SLOW_CRAFT_TIME,
+      craftingStation: CraftingStation.workbench
    }
 ];
 

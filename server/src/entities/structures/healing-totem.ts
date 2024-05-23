@@ -10,19 +10,20 @@ import { HealthComponent } from "../../components/HealthComponent";
 import { StatusEffectComponentArray, StatusEffectComponent } from "../../components/StatusEffectComponent";
 import { TribeComponent } from "../../components/TribeComponent";
 import CircularHitbox from "../../hitboxes/CircularHitbox";
-import RectangularHitbox from "../../hitboxes/RectangularHitbox";
 import { HealingTotemComponent } from "../../components/HealingTotemComponent";
-import { StructureComponentArray, StructureComponent, StructureInfo } from "../../components/StructureComponent";
+import { StructureComponentArray, StructureComponent } from "../../components/StructureComponent";
+import { StructureConnectionInfo } from "webgl-test-shared/dist/structures";
+import { Hitbox } from "../../hitboxes/hitboxes";
 
 const SIZE = 96 - 0.05;
 
-export function createHealingTotemHitboxes(parentPosition: Point, localID: number, parentRotation: number): ReadonlyArray<RectangularHitbox | CircularHitbox> {
-   const hitboxes = new Array<RectangularHitbox | CircularHitbox>();
+export function createHealingTotemHitboxes(parentPosition: Point, localID: number, parentRotation: number): ReadonlyArray<Hitbox> {
+   const hitboxes = new Array<Hitbox>();
    hitboxes.push(new CircularHitbox(parentPosition, 1, 0, 0, HitboxCollisionType.hard, SIZE / 2, localID, parentRotation, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK));
    return hitboxes;
 }
 
-export function createHealingTotem(position: Point, rotation: number, tribe: Tribe, structureInfo: StructureInfo): Entity {
+export function createHealingTotem(position: Point, rotation: number, tribe: Tribe, connectionInfo: StructureConnectionInfo): Entity {
    const healingTotem = new Entity(position, rotation, EntityType.healingTotem, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
    const hitboxes = createHealingTotemHitboxes(position, healingTotem.getNextHitboxLocalID(), healingTotem.rotation);
@@ -32,7 +33,7 @@ export function createHealingTotem(position: Point, rotation: number, tribe: Tri
 
    HealthComponentArray.addComponent(healingTotem.id, new HealthComponent(50));
    StatusEffectComponentArray.addComponent(healingTotem.id, new StatusEffectComponent(StatusEffect.bleeding));
-   StructureComponentArray.addComponent(healingTotem.id, new StructureComponent(structureInfo));
+   StructureComponentArray.addComponent(healingTotem.id, new StructureComponent(connectionInfo));
    TribeComponentArray.addComponent(healingTotem.id, new TribeComponent(tribe));
    HealingTotemComponentArray.addComponent(healingTotem.id, new HealingTotemComponent());
    

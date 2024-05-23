@@ -13,19 +13,20 @@ import { StatusEffectComponent, StatusEffectComponentArray } from "../../compone
 import { tickCookingEntity } from "./cooking-entity";
 import Tribe from "../../Tribe";
 import { TribeComponent } from "../../components/TribeComponent";
-import CircularHitbox from "../../hitboxes/CircularHitbox";
 import { InventoryName } from "webgl-test-shared/dist/items";
-import { StructureComponent, StructureComponentArray, StructureInfo } from "../../components/StructureComponent";
+import { StructureComponent, StructureComponentArray } from "../../components/StructureComponent";
+import { StructureConnectionInfo } from "webgl-test-shared/dist/structures";
+import { Hitbox } from "../../hitboxes/hitboxes";
 
 const HITBOX_SIZE = 80;
 
-export function createFurnaceHitboxes(parentPosition: Point, localID: number, parentRotation: number): ReadonlyArray<RectangularHitbox | CircularHitbox> {
-   const hitboxes = new Array<RectangularHitbox | CircularHitbox>();
+export function createFurnaceHitboxes(parentPosition: Point, localID: number, parentRotation: number): ReadonlyArray<Hitbox> {
+   const hitboxes = new Array<Hitbox>();
    hitboxes.push(new RectangularHitbox(parentPosition, 2, 0, 0, HitboxCollisionType.hard, localID, parentRotation, HITBOX_SIZE, HITBOX_SIZE, 0, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK));
    return hitboxes;
 }
 
-export function createFurnace(position: Point, rotation: number, tribe: Tribe, structureInfo: StructureInfo): Entity {
+export function createFurnace(position: Point, rotation: number, tribe: Tribe, connectionInfo: StructureConnectionInfo): Entity {
    const furnace = new Entity(position, rotation, EntityType.furnace, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
    const hitboxes = createFurnaceHitboxes(position, furnace.getNextHitboxLocalID(), rotation);
@@ -36,7 +37,7 @@ export function createFurnace(position: Point, rotation: number, tribe: Tribe, s
    HealthComponentArray.addComponent(furnace.id, new HealthComponent(25));
    StatusEffectComponentArray.addComponent(furnace.id, new StatusEffectComponent(StatusEffect.poisoned));
    TribeComponentArray.addComponent(furnace.id, new TribeComponent(tribe));
-   StructureComponentArray.addComponent(furnace.id, new StructureComponent(structureInfo));
+   StructureComponentArray.addComponent(furnace.id, new StructureComponent(connectionInfo));
 
    const inventoryComponent = new InventoryComponent();
    InventoryComponentArray.addComponent(furnace.id, inventoryComponent);

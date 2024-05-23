@@ -9,7 +9,7 @@ import { getTilesOfBiome } from "./census";
 import Board from "./Board";
 import Tile from "./Tile";
 import { damageEntity, healEntity } from "./components/HealthComponent";
-import Entity, { NUM_ENTITY_TYPES } from "./Entity";
+import Entity from "./Entity";
 import { TribeComponentArray } from "./components/ComponentArray";
 import { InventoryComponentArray, addItem } from "./components/InventoryComponent";
 import { createEntity } from "./entity-creation";
@@ -77,11 +77,7 @@ const tpBiome = (player: Entity, biomeName: Biome): void => {
    SERVER.sendForcePositionUpdatePacket(player, newPosition);
 }
 
-const summonEntities = (player: Entity, unguardedEntityType: number, amount: number): void => {
-   if (!Number.isInteger(unguardedEntityType) || unguardedEntityType < 0 || unguardedEntityType >= NUM_ENTITY_TYPES) {
-      return;
-   }
-   
+const summonEntities = (player: Entity, entityType: EntityType, amount: number): void => {
    for (let i = 0; i < amount; i++) {
       const spawnPosition = player.position.copy();
 
@@ -90,7 +86,7 @@ const summonEntities = (player: Entity, unguardedEntityType: number, amount: num
       spawnPosition.x += spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
       spawnPosition.y += spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
 
-      createEntity(spawnPosition, unguardedEntityType as EntityType);
+      createEntity(spawnPosition, entityType);
    }
 }
 

@@ -1,5 +1,5 @@
 import { CowSpecies, EntityType } from "webgl-test-shared/dist/entities";
-import { Point, randFloat, randInt } from "webgl-test-shared/dist/utils";
+import { Point, angle, randFloat, randInt } from "webgl-test-shared/dist/utils";
 import { EntityComponentsData, ServerComponentType } from "webgl-test-shared/dist/components";
 import { HitData } from "webgl-test-shared/dist/client-server-types";
 import RenderPart from "../render-parts/RenderPart";
@@ -63,13 +63,13 @@ class Cow extends Entity {
       }
       
       // Blood particles
-      if (hitData.angleFromAttacker !== null) {
-         for (let i = 0; i < 10; i++) {
-            const offsetDirection = hitData.angleFromAttacker + Math.PI + 0.2 * Math.PI * (Math.random() - 0.5);
-            const spawnPositionX = this.position.x + 32 * Math.sin(offsetDirection);
-            const spawnPositionY = this.position.y + 32 * Math.cos(offsetDirection);
-            createBloodParticle(Math.random() < 0.6 ? BloodParticleSize.small : BloodParticleSize.large, spawnPositionX, spawnPositionY, 2 * Math.PI * Math.random(), randFloat(150, 250), true);
-         }
+      for (let i = 0; i < 10; i++) {
+         let offsetDirection = angle(hitData.hitPosition[0] - this.position.x, hitData.hitPosition[1] - this.position.y);
+         offsetDirection += 0.2 * Math.PI * (Math.random() - 0.5);
+
+         const spawnPositionX = this.position.x + 32 * Math.sin(offsetDirection);
+         const spawnPositionY = this.position.y + 32 * Math.cos(offsetDirection);
+         createBloodParticle(Math.random() < 0.6 ? BloodParticleSize.small : BloodParticleSize.large, spawnPositionX, spawnPositionY, 2 * Math.PI * Math.random(), randFloat(150, 250), true);
       }
 
       playSound(("cow-hurt-" + randInt(1, 3) + ".mp3") as AudioFilePath, 0.4, 1, this.position.x, this.position.y);

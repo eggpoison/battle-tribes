@@ -88,8 +88,8 @@ const addCircularHitboxNodePositions = (hitbox: CircularHitbox, positions: Set<S
    const minY = hitbox.calculateHitboxBoundsMinY();
    const maxY = hitbox.calculateHitboxBoundsMaxY();
 
-   const centerX = hitbox.x / Settings.SAFETY_NODE_SEPARATION;
-   const centerY = hitbox.y / Settings.SAFETY_NODE_SEPARATION;
+   const centerX = hitbox.position.x / Settings.SAFETY_NODE_SEPARATION;
+   const centerY = hitbox.position.y / Settings.SAFETY_NODE_SEPARATION;
    
    const minNodeX = Math.max(Math.floor(minX / Settings.SAFETY_NODE_SEPARATION), 0);
    const maxNodeX = Math.min(Math.ceil(maxX / Settings.SAFETY_NODE_SEPARATION), Settings.SAFETY_NODES_IN_WORLD_WIDTH - 1);
@@ -111,7 +111,7 @@ const addCircularHitboxNodePositions = (hitbox: CircularHitbox, positions: Set<S
    }
 }
 
-export function addRectangularSafetyNodePositions(rectX: number, rectY: number, rectWidth: number, rectHeight: number, rectRotation: number, rectMinX: number, rectMaxX: number, rectMinY: number, rectMaxY: number, positions: Set<SafetyNode>): void {
+export function addRectangularSafetyNodePositions(rectPosition: Point, rectWidth: number, rectHeight: number, rectRotation: number, rectMinX: number, rectMaxX: number, rectMinY: number, rectMaxY: number, positions: Set<SafetyNode>): void {
    // @Speed: Math.round might also work
    const minNodeX = Math.max(Math.floor(rectMinX / Settings.SAFETY_NODE_SEPARATION), 0);
    const maxNodeX = Math.min(Math.ceil(rectMaxX / Settings.SAFETY_NODE_SEPARATION), Settings.SAFETY_NODES_IN_WORLD_WIDTH - 1);
@@ -122,7 +122,7 @@ export function addRectangularSafetyNodePositions(rectX: number, rectY: number, 
       for (let nodeY = minNodeY; nodeY <= maxNodeY; nodeY++) {
          const x = nodeX * Settings.SAFETY_NODE_SEPARATION;
          const y = nodeY * Settings.SAFETY_NODE_SEPARATION;
-         if (distBetweenPointAndRectangle(x, y, rectX, rectY, rectWidth, rectHeight, rectRotation) <= Settings.SAFETY_NODE_SEPARATION * 0.5) {
+         if (distBetweenPointAndRectangle(new Point(x, y), rectPosition, rectWidth, rectHeight, rectRotation) <= Settings.SAFETY_NODE_SEPARATION * 0.5) {
             const node = getSafetyNode(nodeX, nodeY);
             positions.add(node);
          }
@@ -138,7 +138,7 @@ export function addHitboxesOccupiedNodes(hitboxes: ReadonlyArray<Hitbox>, positi
       if (hitboxIsCircular(hitbox)) {
          addCircularHitboxNodePositions(hitbox, positions);
       } else {
-         addRectangularSafetyNodePositions(hitbox.x, hitbox.y, hitbox.width, hitbox.height, hitbox.rotation, hitbox.calculateHitboxBoundsMinX(), hitbox.calculateHitboxBoundsMaxX(), hitbox.calculateHitboxBoundsMinY(), hitbox.calculateHitboxBoundsMaxY(), positions);
+         addRectangularSafetyNodePositions(hitbox.position, hitbox.width, hitbox.height, hitbox.rotation, hitbox.calculateHitboxBoundsMinX(), hitbox.calculateHitboxBoundsMaxX(), hitbox.calculateHitboxBoundsMinY(), hitbox.calculateHitboxBoundsMaxY(), positions);
       }
    }
 }

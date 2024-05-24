@@ -1,5 +1,5 @@
 import { EntityType, TreeSize } from "webgl-test-shared/dist/entities";
-import { Point, randFloat, randInt, randItem } from "webgl-test-shared/dist/utils";
+import { Point, angle, randFloat, randInt, randItem } from "webgl-test-shared/dist/utils";
 import { EntityComponentsData, ServerComponentType } from "webgl-test-shared/dist/components";
 import { HitData, HitFlags } from "webgl-test-shared/dist/client-server-types";
 import RenderPart from "../render-parts/RenderPart";
@@ -71,7 +71,7 @@ class Tree extends Entity {
 
       if (isDamagingHit) {
          // Create wood specks at the point of hit
-         const spawnOffsetDirection = (hitData.angleFromAttacker || 2 * Math.PI * Math.random()) + Math.PI;
+         const spawnOffsetDirection = angle(hitData.hitPosition[0] - this.position.x, hitData.hitPosition[1] - this.position.y);
          const spawnPositionX = this.position.x + (radius + 2) * Math.sin(spawnOffsetDirection);
          const spawnPositionY = this.position.y + (radius + 2) * Math.cos(spawnOffsetDirection);
          for (let i = 0; i < 4; i++) {

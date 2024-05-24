@@ -3,7 +3,7 @@ import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { TribeType } from "webgl-test-shared/dist/tribes";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { EntityData, HitData } from "webgl-test-shared/dist/client-server-types";
-import { lerp, randFloat, randInt, randItem } from "webgl-test-shared/dist/utils";
+import { angle, lerp, randFloat, randInt, randItem } from "webgl-test-shared/dist/utils";
 import { InventoryName, ItemType } from "webgl-test-shared/dist/items";
 import { TileType } from "webgl-test-shared/dist/tiles";
 import RenderPart from "../render-parts/RenderPart";
@@ -211,13 +211,13 @@ abstract class TribeMember extends Entity {
       createBloodPoolParticle(this.position.x, this.position.y, 20);
       
       // Blood particles
-      if (hitData.angleFromAttacker !== null) {
-         for (let i = 0; i < 10; i++) {
-            const offsetDirection = hitData.angleFromAttacker + Math.PI + 0.2 * Math.PI * (Math.random() - 0.5);
-            const spawnPositionX = this.position.x + 32 * Math.sin(offsetDirection);
-            const spawnPositionY = this.position.y + 32 * Math.cos(offsetDirection);
-            createBloodParticle(Math.random() < 0.6 ? BloodParticleSize.small : BloodParticleSize.large, spawnPositionX, spawnPositionY, 2 * Math.PI * Math.random(), randFloat(150, 250), true);
-         }
+      for (let i = 0; i < 10; i++) {
+         let offsetDirection = angle(hitData.hitPosition[0] - this.position.x, hitData.hitPosition[1] - this.position.y);
+         offsetDirection += 0.2 * Math.PI * (Math.random() - 0.5);
+
+         const spawnPositionX = this.position.x + 32 * Math.sin(offsetDirection);
+         const spawnPositionY = this.position.y + 32 * Math.cos(offsetDirection);
+         createBloodParticle(Math.random() < 0.6 ? BloodParticleSize.small : BloodParticleSize.large, spawnPositionX, spawnPositionY, 2 * Math.PI * Math.random(), randFloat(150, 250), true);
       }
 
       const tribeComponent = this.getServerComponent(ServerComponentType.tribe);

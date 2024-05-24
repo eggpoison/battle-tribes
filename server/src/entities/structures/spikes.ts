@@ -9,7 +9,6 @@ import RectangularHitbox from "../../hitboxes/RectangularHitbox";
 import { BuildingMaterialComponentArray, HealthComponentArray, SpikesComponentArray, TribeComponentArray } from "../../components/ComponentArray";
 import { HealthComponent, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
 import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
-import { SERVER } from "../../server";
 import Tribe from "../../Tribe";
 import { EntityRelationship, TribeComponent, getEntityRelationship } from "../../components/TribeComponent";
 import { SpikesComponent } from "../../components/SpikesComponent";
@@ -18,6 +17,7 @@ import { StructureComponentArray, StructureComponent, isAttachedToWall } from ".
 import { StructureConnectionInfo } from "webgl-test-shared/dist/structures";
 import { Hitbox } from "../../hitboxes/hitboxes";
 import { HitboxFlags } from "../../hitboxes/BaseHitbox";
+import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
 
 const FLOOR_HITBOX_SIZE = 48 - 0.05;
 
@@ -71,7 +71,7 @@ export function createSpikes(position: Point, rotation: number, tribe: Tribe, co
    return spikes;
 }
 
-export function onSpikesCollision(spikes: Entity, collidingEntity: Entity): void {
+export function onSpikesCollision(spikes: Entity, collidingEntity: Entity, collisionPoint: Point): void {
    // @Incomplete: Why is this condition neeeded? Shouldn't be able to be placed colliding with other structures anyway.
    if (collidingEntity.type === EntityType.floorSpikes || collidingEntity.type === EntityType.wallSpikes || collidingEntity.type === EntityType.door || collidingEntity.type === EntityType.wall) {
       return;
@@ -95,19 +95,7 @@ export function onSpikesCollision(spikes: Entity, collidingEntity: Entity): void
       return;
    }
    
-   const hitDirection = spikes.position.calculateAngleBetween(collidingEntity.position);
    // @Incomplete: Cause of death
-   damageEntity(collidingEntity, 1, spikes, PlayerCauseOfDeath.yeti, "woodenSpikes");
-   SERVER.registerEntityHit({
-      entityPositionX: collidingEntity.position.x,
-      entityPositionY: collidingEntity.position.y,
-      hitEntityID: collidingEntity.id,
-      damage: 1,
-      knockback: 0,
-      angleFromAttacker: hitDirection,
-      attackerID: spikes.id,
-      flags: 0
-   });
-
+   damageEntity(collidingEntity, spikes, 1, PlayerCauseOfDeath.yeti, AttackEffectiveness.effective, collisionPoint, 0);
    addLocalInvulnerabilityHash(healthComponent, "woodenSpikes", 0.3);
 }

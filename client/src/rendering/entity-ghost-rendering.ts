@@ -1,25 +1,16 @@
 import { Point, lerp, randFloat, rotateXAroundOrigin, rotateXAroundPoint, rotateYAroundOrigin, rotateYAroundPoint } from "webgl-test-shared/dist/utils";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityType } from "webgl-test-shared/dist/entities";
-import { ITEM_INFO_RECORD, ITEM_TYPE_RECORD, ItemType, PlaceableItemType } from "webgl-test-shared/dist/items";
-import { StructureType, calculateStructurePlaceInfo } from "webgl-test-shared/dist/structures";
-import Player, { getPlayerSelectedItem } from "../entities/Player";
+import { StructureType } from "webgl-test-shared/dist/structures";
+import Player from "../entities/Player";
 import { gl, createWebGLProgram, CAMERA_UNIFORM_BUFFER_BINDING_INDEX } from "../webgl";
-import { canPlaceItem } from "../player-input";
 import { ENTITY_TEXTURE_ATLAS, ENTITY_TEXTURE_ATLAS_SIZE, ENTITY_TEXTURE_SLOT_INDEXES, getTextureArrayIndex, getTextureHeight, getTextureWidth } from "../texture-atlases/entity-texture-atlas";
-import Board from "../Board";
-import { getHoveredEntityID, getSelectedEntityID } from "../entity-selection";
-import Entity from "../Entity";
 import { ATLAS_SLOT_SIZE } from "../texture-atlases/texture-atlas-stitching";
 import { BALLISTA_AMMO_BOX_OFFSET_X, BALLISTA_AMMO_BOX_OFFSET_Y, BALLISTA_GEAR_X, BALLISTA_GEAR_Y } from "../utils";
-import { getHoveredBlueprintGhostType } from "../components/game/BuildMenu";
 import WorkerHut from "../entities/WorkerHut";
 import WarriorHut from "../entities/WarriorHut";
 import OPTIONS from "../options";
 import { calculatePotentialPlanIdealness, getHoveredBuildingPlan, getPotentialPlanStats, getVisibleBuildingPlans } from "../client/Client";
-import { SEED_TO_PLANT_RECORD } from "../entity-components/PlantComponent";
 import { NUM_LARGE_COVER_LEAVES, NUM_SMALL_COVER_LEAVES } from "../entity-components/SpikesComponent";
-import Camera from "../Camera";
 
 // @Temporary: might be useful later
 // // Detect the entity types which need ghosts
@@ -31,6 +22,7 @@ import Camera from "../Camera";
 // }
 // type GhostEntityType = PlaceableItemEntityRecord[PlaceableItemType];
 
+// @Cleanup: a lot of these are just mirrors of entity textures. Is there some way to utilise the existing render part definnitions?
 export enum GhostType {
    deconstructMarker,
    recallMarker,
@@ -47,8 +39,10 @@ export enum GhostType {
    warriorHut,
    researchBench,
    planterBox,
-   woodenSpikes,
-   punjiSticks,
+   woodenFloorSpikes,
+   woodenWallSpikes,
+   floorPunjiSticks,
+   wallPunjiSticks,
    woodenDoor,
    stoneDoor,
    stoneDoorUpgrade,
@@ -74,7 +68,6 @@ export interface GhostInfo {
    readonly position: Readonly<Point>;
    readonly rotation: number;
    readonly ghostType: GhostType;
-   readonly snappedEntities: ReadonlyArray<Entity>;
    readonly tint: [number, number, number];
    readonly opacity: number;
 }
@@ -99,10 +92,10 @@ export const ENTITY_TYPE_TO_GHOST_TYPE_MAP: Record<StructureType, GhostType> = {
    [EntityType.warriorHut]: GhostType.warriorHut,
    [EntityType.researchBench]: GhostType.researchBench,
    [EntityType.planterBox]: GhostType.planterBox,
-   [EntityType.floorSpikes]: GhostType.woodenSpikes,
-   [EntityType.wallSpikes]: GhostType.woodenSpikes,
-   [EntityType.floorPunjiSticks]: GhostType.punjiSticks,
-   [EntityType.wallPunjiSticks]: GhostType.punjiSticks,
+   [EntityType.floorSpikes]: GhostType.woodenFloorSpikes,
+   [EntityType.wallSpikes]: GhostType.woodenWallSpikes,
+   [EntityType.floorPunjiSticks]: GhostType.floorPunjiSticks,
+   [EntityType.wallPunjiSticks]: GhostType.wallPunjiSticks,
    [EntityType.door]: GhostType.woodenDoor,
    [EntityType.embrasure]: GhostType.woodenEmbrasure,
    [EntityType.wall]: GhostType.woodenWall,
@@ -225,16 +218,6 @@ export function createPlaceableItemProgram(): void {
    gl.uniform1i(programTextureUniformLocation, 0);
    gl.uniform1f(atlasPixelSizeUniformLocation, ENTITY_TEXTURE_ATLAS_SIZE);
    gl.uniform1f(atlasSlotSizeUniformLocation, ATLAS_SLOT_SIZE);
-}
-
-const isAttachedToWall = (ghostInfo: GhostInfo): boolean => {
-   for (let i = 0; i < ghostInfo.snappedEntities.length; i++) {
-      const entity = ghostInfo.snappedEntities[i];
-      if (entity.type === EntityType.wall) {
-         return true;
-      }
-   }
-   return false;
 }
 
 const getGhostTextureInfoArray = (ghostInfo: GhostInfo): ReadonlyArray<TextureInfo> => {
@@ -370,17 +353,33 @@ const getGhostTextureInfoArray = (ghostInfo: GhostInfo): ReadonlyArray<TextureIn
             rotation: 0
          }
       ];
-      case GhostType.woodenSpikes: return [
+      case GhostType.woodenFloorSpikes: return [
          {
-            textureSource: isAttachedToWall(ghostInfo) ? "entities/spikes/wooden-wall-spikes.png" : "entities/spikes/wooden-floor-spikes.png",
+            textureSource: "entities/spikes/wooden-floor-spikes.png",
             offsetX: 0,
             offsetY: 0,
             rotation: 0
          }
       ];
-      case GhostType.punjiSticks: return [
+      case GhostType.woodenWallSpikes: return [
          {
-            textureSource: isAttachedToWall(ghostInfo) ? "entities/wall-punji-sticks/wall-punji-sticks.png" : "entities/floor-punji-sticks/floor-punji-sticks.png",
+            textureSource: "entities/spikes/wooden-wall-spikes.png",
+            offsetX: 0,
+            offsetY: 0,
+            rotation: 0
+         }
+      ];
+      case GhostType.floorPunjiSticks: return [
+         {
+            textureSource: "entities/floor-punji-sticks/floor-punji-sticks.png",
+            offsetX: 0,
+            offsetY: 0,
+            rotation: 0
+         }
+      ];
+      case GhostType.wallPunjiSticks: return [
+         {
+            textureSource: "entities/wall-punji-sticks/wall-punji-sticks.png",
             offsetX: 0,
             offsetY: 0,
             rotation: 0
@@ -650,104 +649,6 @@ const calculateVertices = (ghostInfos: ReadonlyArray<GhostInfo>): ReadonlyArray<
    return vertices;
 }
 
-const getPlantGhostType = (): GhostType | null => {
-   const hoveredEntityID = getHoveredEntityID();
-   const hoveredEntity = Board.entityRecord[hoveredEntityID];
-   if (typeof hoveredEntity === "undefined") {
-      return null;
-   }
-
-   if (hoveredEntity.type !== EntityType.planterBox) {
-      return null;
-   }
-
-   const selectedItem = getPlayerSelectedItem();
-   if (selectedItem === null || typeof SEED_TO_PLANT_RECORD[selectedItem.type] === "undefined") {
-      return null;
-   }
-
-   const planterBoxComponent = hoveredEntity.getServerComponent(ServerComponentType.planterBox);
-   if (planterBoxComponent.hasPlant) {
-      return null;
-   }
-
-   switch (selectedItem.type) {
-      case ItemType.seed: {
-         return GhostType.treeSeed;
-      }
-      case ItemType.berry: {
-         return GhostType.berryBushSeed;
-      }
-      case ItemType.frostcicle: {
-         return GhostType.iceSpikesSeed;
-      }
-      default: {
-         throw new Error();
-      }
-   }
-}
-
-const getGhostInfo = (): GhostInfo | null => {
-   // Placeable item ghost
-   const playerSelectedItem = getPlayerSelectedItem();
-   if (playerSelectedItem !== null && ITEM_TYPE_RECORD[playerSelectedItem.type] === "placeable") {
-      const structureType = ITEM_INFO_RECORD[playerSelectedItem.type as PlaceableItemType].entityType;
-      const placeInfo = calculateStructurePlaceInfo(Camera.position, Player.instance!.rotation, structureType, Board.getChunks());
-      
-      return {
-         position: placeInfo.position,
-         rotation: placeInfo.rotation,
-         ghostType: ENTITY_TYPE_TO_GHOST_TYPE_MAP[placeInfo.entityType],
-         // @Incomplete: isPlacedOnWall
-         tint: canPlaceItem(placeInfo.position, placeInfo.rotation, playerSelectedItem, structureType, false) ? [1, 1, 1] : [1.5, 0.5, 0.5],
-         snappedEntities: placeInfo.connectedEntityIDs.filter(id => typeof Board.entityRecord[id] !== "undefined").map(id => {
-            const entity = Board.entityRecord[id]!;
-            if (typeof entity === "undefined") {
-               console.warn("undefined!");
-            }
-            return entity;
-         }),
-         opacity: PARTIAL_OPACITY
-      };
-   }
-
-   // Blueprint ghost
-   // const blueprintGhostType = getHoveredBlueprintGhostType();
-   // if (blueprintGhostType !== null) {
-   //    const selectedStructureID = getSelectedEntityID();
-   //    const selectedStructure = Board.entityRecord[selectedStructureID];
-
-   //    if (typeof selectedStructure !== "undefined") {
-   //       return {
-   //          position: selectedStructure.position.copy(),
-   //          rotation: getGhostRotation(selectedStructure, blueprintGhostType),
-   //          ghostType: blueprintGhostType,
-   //          snappedEntities: [],
-   //          tint: [1, 1, 1],
-   //          opacity: blueprintGhostType === GhostType.deconstructMarker ? 0.8 : PARTIAL_OPACITY
-   //       };
-   //    }
-   // }
-
-   // Plant ghost
-   const plantGhostType = getPlantGhostType();
-   if (plantGhostType !== null) {
-      const hoveredEntityID = getHoveredEntityID();
-      const hoveredEntity = Board.entityRecord[hoveredEntityID]!;
-
-      return {
-         position: hoveredEntity.position,
-         rotation: hoveredEntity.rotation,
-         ghostType: plantGhostType,
-         snappedEntities: [],
-         tint: [1, 1, 1],
-         opacity: PARTIAL_OPACITY
-      };
-   }
-
-   return null;
-}
-
 export function renderGhostEntities(): void {
    if (Player.instance === null) {
       return;
@@ -769,7 +670,6 @@ export function renderGhostEntities(): void {
             position: new Point(plan.x, plan.y),
             rotation: plan.rotation,
             ghostType: ENTITY_TYPE_TO_GHOST_TYPE_MAP[plan.entityType],
-            snappedEntities: [],
             opacity: 0.5,
             tint: [0.9, 1.5, 0.8]
          });
@@ -803,7 +703,6 @@ export function renderGhostEntities(): void {
                position: new Point(potentialPlan.x, potentialPlan.y),
                rotation: potentialPlan.rotation,
                ghostType: ENTITY_TYPE_TO_GHOST_TYPE_MAP[potentialPlan.buildingType],
-               snappedEntities: [],
                opacity: lerp(0.15, 0.6, idealness),
                tint: [1.2, 1.4, 0.8]
             });

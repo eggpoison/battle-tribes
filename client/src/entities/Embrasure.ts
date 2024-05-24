@@ -1,6 +1,6 @@
 import { EntityComponentsData, ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityType } from "webgl-test-shared/dist/entities";
-import { Point } from "webgl-test-shared/dist/utils";
+import { Point, angle } from "webgl-test-shared/dist/utils";
 import { HitData } from "webgl-test-shared/dist/client-server-types";
 import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
@@ -40,13 +40,14 @@ class Embrasure extends Entity {
       for (let i = 0; i < 4; i++) {
          createLightWoodSpeckParticle(this.position.x, this.position.y, 20);
       }
-      if (hitData.angleFromAttacker !== null) {
-         for (let i = 0; i < 7; i++) {
-            const offsetDirection = hitData.angleFromAttacker + Math.PI + 0.2 * Math.PI * (Math.random() - 0.5);
-            const spawnPositionX = this.position.x + 20 * Math.sin(offsetDirection);
-            const spawnPositionY = this.position.y + 20 * Math.cos(offsetDirection);
-            createLightWoodSpeckParticle(spawnPositionX, spawnPositionY, 5);
-         }
+
+      for (let i = 0; i < 7; i++) {
+         let offsetDirection = angle(hitData.hitPosition[0] - this.position.x, hitData.hitPosition[1] - this.position.y);
+         offsetDirection += 0.2 * Math.PI * (Math.random() - 0.5);
+
+         const spawnPositionX = this.position.x + 20 * Math.sin(offsetDirection);
+         const spawnPositionY = this.position.y + 20 * Math.cos(offsetDirection);
+         createLightWoodSpeckParticle(spawnPositionX, spawnPositionY, 5);
       }
    }
    

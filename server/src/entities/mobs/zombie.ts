@@ -27,6 +27,7 @@ import { CollisionVars, entitiesAreColliding } from "../../collision";
 import { Biome } from "webgl-test-shared/dist/tiles";
 import { TribeMemberComponentArray } from "../../components/TribeMemberComponent";
 import { ItemComponentArray } from "../../components/ItemComponent";
+import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
 
 const TURN_SPEED = 3 * Math.PI;
 
@@ -324,7 +325,7 @@ const shouldAttackEntity = (zombie: Entity, entity: Entity): boolean => {
    return entityIsStructure(entity);
 }
 
-export function onZombieCollision(zombie: Entity, collidingEntity: Entity): void {
+export function onZombieCollision(zombie: Entity, collidingEntity: Entity, collisionPoint: Point): void {
    // Pick up item entities
    if (collidingEntity.type === EntityType.itemEntity) {
       pickupItemEntity(zombie.id, collidingEntity);
@@ -342,18 +343,8 @@ export function onZombieCollision(zombie: Entity, collidingEntity: Entity): void
    const hitDirection = zombie.position.calculateAngleBetween(collidingEntity.position);
 
    // Damage and knock back the player
-   damageEntity(collidingEntity, 1, zombie, PlayerCauseOfDeath.zombie, "zombie");
+   damageEntity(collidingEntity, zombie, 1, PlayerCauseOfDeath.zombie, AttackEffectiveness.effective, collisionPoint, 0);
    applyKnockback(collidingEntity, 150, hitDirection);
-   SERVER.registerEntityHit({
-      entityPositionX: collidingEntity.position.x,
-      entityPositionY: collidingEntity.position.y,
-      hitEntityID: collidingEntity.id,
-      damage: 1,
-      knockback: 150,
-      angleFromAttacker: hitDirection,
-      attackerID: zombie.id,
-      flags: 0
-   });
    addLocalInvulnerabilityHash(healthComponent, "zombie", 0.3);
 
    // Push the zombie away from the entity

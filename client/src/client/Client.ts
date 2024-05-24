@@ -45,6 +45,7 @@ import { Infocards_setTitleOffer } from "../components/game/infocards/Infocards"
 import { calculateEntityRenderDepth } from "../render-layers";
 import { GrassBlocker } from "webgl-test-shared/dist/grass-blockers";
 import { createEntity } from "../entity-class-record";
+import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
 
 type ISocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 
@@ -310,20 +311,33 @@ abstract class Client {
       HealthBar_setHasFrostShield(gameDataPacket.hasFrostShield);
 
       // Register hits
-      for (const hitData of gameDataPacket.hits) {
+      for (const hitData of gameDataPacket.visibleHits) {
          // Register hit
          const hitEntity = Board.entityRecord[hitData.hitEntityID];
          if (typeof hitEntity !== "undefined") {
-            hitEntity.registerHit(hitData);
+            if (hitData.attackEffectiveness === AttackEffectiveness.stopped) {
+               hitEntity.registerStoppedHit(hitData);
+            } else {
+               hitEntity.registerHit(hitData);
+            }
          }
 
-         if (hitData.damage > 0 && shouldShowDamageNumber(hitData.attackerID)) {
-            const hitEntity = Board.entityRecord[hitData.hitEntityID];
-            if (typeof hitEntity !== "undefined") {
-               createDamageNumber(hitEntity.position.x, hitEntity.position.y, hitData.damage);
-            } else {
-               createDamageNumber(hitData.entityPositionX, hitData.entityPositionY, hitData.damage);
-            }
+         if (hitData.damage > 0 && hitData.shouldShowDamageNumber) {
+            createDamageNumber(hitData.hitPosition[0], hitData.hitPosition[1], hitData.damage);
+         }
+      }
+
+      if (Player.instance !== null) {
+         const physicsComponent = Player.instance.getServerComponent(ServerComponentType.physics);
+         // Register player knockback
+         for (let i = 0; i < gameDataPacket.playerKnockbacks.length; i++) {
+            const knockbackData = gameDataPacket.playerKnockbacks[i];
+            
+            physicsComponent.velocity.x *= 0.5;
+            physicsComponent.velocity.y *= 0.5;
+   
+            physicsComponent.velocity.x += knockbackData.knockback * Math.sin(knockbackData.knockbackDirection);
+            physicsComponent.velocity.y += knockbackData.knockback * Math.cos(knockbackData.knockbackDirection);
          }
       }
 

@@ -2,7 +2,7 @@ import { HealthComponentData } from "webgl-test-shared/dist/components";
 import { PlayerCauseOfDeath, EntityType } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { TribesmanTitle } from "webgl-test-shared/dist/titles";
-import { clamp } from "webgl-test-shared/dist/utils";
+import { Point, clamp } from "webgl-test-shared/dist/utils";
 import Entity from "../Entity";
 import { HealthComponentArray } from "./ComponentArray";
 import TombstoneDeathManager from "../tombstone-deaths";
@@ -25,6 +25,7 @@ import { onTribeMemberHurt } from "../entities/tribes/tribe-member";
 import { TITLE_REWARD_CHANCES } from "../tribesman-title-generation";
 import { TribeMemberComponentArray, awardTitle } from "./TribeMemberComponent";
 import { onPlantDeath, onPlantHit } from "../entities/plant";
+import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
 
 export class HealthComponent {
    public maxHealth: number;
@@ -69,13 +70,15 @@ export function canDamageEntity(healthComponent: HealthComponent, attackHash: st
  * @param damage The amount of damage given
  * @returns Whether the damage was received
  */
-export function damageEntity(entity: Entity, damage: number, attackingEntity: Entity | null, causeOfDeath: PlayerCauseOfDeath, attackHash?: string): boolean {
+export function damageEntity(entity: Entity, attackingEntity: Entity | null, damage: number, causeOfDeath: PlayerCauseOfDeath, attackEffectiveness: AttackEffectiveness, hitPosition: Point, hitFlags: number): boolean {
    const healthComponent = HealthComponentArray.getComponent(entity.id);
 
    const absorbedDamage = damage * clamp(healthComponent.defence, 0, 1);
    const actualDamage = damage - absorbedDamage;
    
    healthComponent.health -= actualDamage;
+
+   SERVER.registerEntityHit(entity.id, attackingEntity, hitPosition, attackEffectiveness, damage, hitFlags);
 
    // If the entity was killed by the attack, destroy the entity
    if (healthComponent.health <= 0) {

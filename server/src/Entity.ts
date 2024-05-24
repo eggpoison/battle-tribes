@@ -1,4 +1,4 @@
-import { Point, clampToBoardDimensions } from "webgl-test-shared/dist/utils";
+import { Point, clampToBoardDimensions, randFloat, randInt, rotateXAroundOrigin, rotateYAroundOrigin } from "webgl-test-shared/dist/utils";
 import { EntityType, EntityTypeString } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { EntityDebugData, PathfindingNodeIndex, RIVER_STEPPING_STONE_SIZES } from "webgl-test-shared/dist/client-server-types";
@@ -548,4 +548,22 @@ export default Entity;
 
 export function entityIsStructure(entity: Entity): entity is Entity<StructureType> {
    return STRUCTURE_TYPES.indexOf(entity.type as StructureType) !== -1;
+}
+
+export function getRandomPositionInEntity(entity: Entity): Point {
+   const hitbox = entity.hitboxes[randInt(0, entity.hitboxes.length - 1)];
+
+   if (hitboxIsCircular(hitbox)) {
+      return hitbox.position.offset(hitbox.radius * Math.random(), 2 * Math.PI * Math.random());
+   } else {
+      const halfWidth = hitbox.width / 2;
+      const halfHeight = hitbox.height / 2;
+      
+      const xOffset = randFloat(-halfWidth, halfWidth);
+      const yOffset = randFloat(-halfHeight, halfHeight);
+
+      const x = entity.position.x + rotateXAroundOrigin(xOffset, yOffset, entity.rotation + hitbox.rotation);
+      const y = entity.position.y + rotateYAroundOrigin(xOffset, yOffset, entity.rotation + hitbox.rotation);
+      return new Point(x, y);
+   }
 }

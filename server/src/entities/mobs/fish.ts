@@ -6,7 +6,7 @@ import { InventoryName, ItemType } from "webgl-test-shared/dist/items";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { Biome, TileType } from "webgl-test-shared/dist/tiles";
 import { Point, randInt, customTickIntervalHasPassed, randFloat } from "webgl-test-shared/dist/utils";
-import Entity from "../../Entity";
+import Entity, { getRandomPositionInEntity } from "../../Entity";
 import RectangularHitbox from "../../hitboxes/RectangularHitbox";
 import { EscapeAIComponentArray, HealthComponentArray, WanderAIComponentArray } from "../../components/ComponentArray";
 import { HealthComponent, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
@@ -26,6 +26,7 @@ import { SERVER } from "../../server";
 import { PhysicsComponent, PhysicsComponentArray, applyKnockback } from "../../components/PhysicsComponent";
 import { CollisionVars, entitiesAreColliding } from "../../collision";
 import { TribeMemberComponentArray } from "../../components/TribeMemberComponent";
+import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
 
 const TURN_SPEED = Math.PI / 1.5;
 
@@ -153,17 +154,8 @@ export function tickFish(fish: Entity): void {
    if (fish.tile.type !== TileType.water) {
       fishComponent.secondsOutOfWater += Settings.I_TPS;
       if (fishComponent.secondsOutOfWater >= 5 && customTickIntervalHasPassed(fishComponent.secondsOutOfWater * Settings.TPS, 1.5)) {
-         damageEntity(fish, 1, null, PlayerCauseOfDeath.lack_of_oxygen);
-         SERVER.registerEntityHit({
-            entityPositionX: fish.position.x,
-            entityPositionY: fish.position.y,
-            hitEntityID: fish.id,
-            damage: 1,
-            knockback: 0,
-            angleFromAttacker: null,
-            attackerID: -1,
-            flags: 0
-         });
+         const hitPosition = getRandomPositionInEntity(fish);
+         damageEntity(fish, null, 1, PlayerCauseOfDeath.lack_of_oxygen, AttackEffectiveness.effective, hitPosition, 0);
       }
    } else {
       fishComponent.secondsOutOfWater = 0;
@@ -208,18 +200,11 @@ export function tickFish(fish: Entity): void {
             
             const hitDirection = fish.position.calculateAngleBetween(target.position);
 
-            damageEntity(target, 2, fish, PlayerCauseOfDeath.fish, "fish");
+            // @Hack
+            const collisionPoint = new Point((fish.position.x + target.position.x) / 2, (fish.position.y + target.position.y) / 2);
+            
+            damageEntity(target, fish, 2, PlayerCauseOfDeath.fish, AttackEffectiveness.effective, collisionPoint, 0);
             applyKnockback(target, 100, hitDirection);
-            SERVER.registerEntityHit({
-               entityPositionX: target.position.x,
-               entityPositionY: target.position.y,
-               hitEntityID: target.id,
-               damage: 2,
-               knockback: 100,
-               angleFromAttacker: hitDirection,
-               attackerID: fish.id,
-               flags: 0
-            });
             addLocalInvulnerabilityHash(healthComponent, "fish", 0.3);
          }
       }

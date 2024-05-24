@@ -10,6 +10,7 @@ import { addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../.
 import CircularHitbox from "../../hitboxes/CircularHitbox";
 import { StatusEffectComponentArray, applyStatusEffect } from "../../components/StatusEffectComponent";
 import { SERVER } from "../../server";
+import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
 
 const RADIUS = 55;
 
@@ -34,7 +35,7 @@ export function tickSpitPoison(spit: Entity): void {
    // Fundamental problem with the hitbox/dirty system.
 }
 
-export function onSpitPoisonCollision(spit: Entity, collidingEntity: Entity): void {
+export function onSpitPoisonCollision(spit: Entity, collidingEntity: Entity, collisionPoint: Point): void {
    if (collidingEntity.type === EntityType.slime || collidingEntity.type === EntityType.slimewisp || !HealthComponentArray.hasComponent(collidingEntity.id)) {
       return;
    }
@@ -44,17 +45,7 @@ export function onSpitPoisonCollision(spit: Entity, collidingEntity: Entity): vo
       return;
    }
 
-   damageEntity(collidingEntity, 1, spit, PlayerCauseOfDeath.poison, "spitPoison");
-   SERVER.registerEntityHit({
-      entityPositionX: collidingEntity.position.x,
-      entityPositionY: collidingEntity.position.y,
-      hitEntityID: collidingEntity.id,
-      damage: 1,
-      knockback: 0,
-      angleFromAttacker: null,
-      attackerID: spit.id,
-      flags: 0
-   });
+   damageEntity(collidingEntity, spit, 1, PlayerCauseOfDeath.poison, AttackEffectiveness.effective, collisionPoint, 0);
    addLocalInvulnerabilityHash(healthComponent, "spitPoison", 0.35);
 
    if (StatusEffectComponentArray.hasComponent(collidingEntity.id)) {

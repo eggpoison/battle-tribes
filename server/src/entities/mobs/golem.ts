@@ -18,6 +18,7 @@ import { createPebblum } from "./pebblum";
 import { SERVER } from "../../server";
 import { createItemsOverEntity } from "../../entity-shared";
 import { PhysicsComponent, PhysicsComponentArray, applyKnockback } from "../../components/PhysicsComponent";
+import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
 
 export const BODY_GENERATION_RADIUS = 55;
 
@@ -325,7 +326,7 @@ export function onGolemHurt(golem: Entity, attackingEntity: Entity, damage: numb
    }
 }
 
-export function onGolemCollision(golem: Entity, collidingEntity: Entity): void {
+export function onGolemCollision(golem: Entity, collidingEntity: Entity, collisionPoint: Point): void {
    if (!HealthComponentArray.hasComponent(collidingEntity.id)) {
       return;
    }
@@ -342,19 +343,10 @@ export function onGolemCollision(golem: Entity, collidingEntity: Entity): void {
    }
    
    const hitDirection = golem.position.calculateAngleBetween(collidingEntity.position);
+
    // @Incomplete: Cause of death
-   damageEntity(collidingEntity, 3, golem, PlayerCauseOfDeath.yeti, "golem");
+   damageEntity(collidingEntity, golem, 3, PlayerCauseOfDeath.yeti, AttackEffectiveness.effective, collisionPoint, 0);
    applyKnockback(collidingEntity, 300, hitDirection);
-   SERVER.registerEntityHit({
-      entityPositionX: collidingEntity.position.x,
-      entityPositionY: collidingEntity.position.y,
-      hitEntityID: collidingEntity.id,
-      damage: 3,
-      knockback: 300,
-      angleFromAttacker: hitDirection,
-      attackerID: golem.id,
-      flags: 0
-   });
    addLocalInvulnerabilityHash(healthComponent, "golem", 0.3);
 }
 

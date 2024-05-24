@@ -16,7 +16,7 @@ import { TribeArea, areaHasOutsideDoor, getOutsideDoorPlacePlan } from "./ai-bui
 import { getHitboxesCollidingEntities } from "../collision";
 import { hitboxIsCircular } from "../hitboxes/hitboxes";
 
-const virtualBuildingTakesUpWallSpace = (x: number, y: number, wallRotation: number, virtualBuilding: VirtualBuilding, wallVertexOffsets: HitboxVertexPositions): boolean => {
+const virtualBuildingTakesUpWallSpace = (wallPosition: Point, wallRotation: number, virtualBuilding: VirtualBuilding, wallVertexOffsets: HitboxVertexPositions): boolean => {
    // @Speed: cache when virutal entity is first created
    const hitboxes = createBuildingHitboxes(virtualBuilding.entityType, virtualBuilding.position, 1, virtualBuilding.rotation);
    
@@ -24,14 +24,14 @@ const virtualBuildingTakesUpWallSpace = (x: number, y: number, wallRotation: num
       const hitbox = hitboxes[i];
       // @Cleanup: copy and paste
       if (hitboxIsCircular(hitbox)) {
-         if (circleAndRectangleDoIntersect(hitbox.x, hitbox.y, hitbox.radius, x, y, Settings.TILE_SIZE, Settings.TILE_SIZE, wallRotation)) {
+         if (circleAndRectangleDoIntersect(hitbox.position, hitbox.radius, wallPosition, Settings.TILE_SIZE, Settings.TILE_SIZE, wallRotation)) {
             return true;
          }
       } else {
          const sinRotation = Math.sin(wallRotation);
          const cosRotation = Math.cos(wallRotation);
 
-         const collisionData = rectanglesAreColliding(wallVertexOffsets, hitbox.vertexOffsets, x, y, hitbox.x, hitbox.y, cosRotation, -sinRotation, hitbox.axisX, hitbox.axisY);
+         const collisionData = rectanglesAreColliding(wallVertexOffsets, hitbox.vertexOffsets, wallPosition, hitbox.position, cosRotation, -sinRotation, hitbox.axisX, hitbox.axisY);
          if (collisionData.isColliding) {
             return true;
          }
@@ -42,7 +42,7 @@ const virtualBuildingTakesUpWallSpace = (x: number, y: number, wallRotation: num
 }
 
 
-const wallSpaceIsFree = (x: number, y: number, wallRotation: number, tribe: Tribe): boolean => {
+const wallSpaceIsFree = (wallPosition: Point, wallRotation: number, tribe: Tribe): boolean => {
    // @Cleanup
    // @Speed: Can do a constant smaller than tile size
    // const minChunkX = Math.max(Math.floor((x - Settings.TILE_SIZE) / Settings.CHUNK_UNITS), 0);
@@ -74,7 +74,7 @@ const wallSpaceIsFree = (x: number, y: number, wallRotation: number, tribe: Trib
    for (let i = 0; i < tribe.virtualBuildings.length; i++) {
       const virtualBuilding = tribe.virtualBuildings[i];
 
-      if (virtualBuildingTakesUpWallSpace(x, y, wallRotation, virtualBuilding, wallVertexOffsets)) {
+      if (virtualBuildingTakesUpWallSpace(wallPosition, wallRotation, virtualBuilding, wallVertexOffsets)) {
          return false;
       }
    }
@@ -101,7 +101,7 @@ const wallSpaceIsFree = (x: number, y: number, wallRotation: number, tribe: Trib
    for (let i = 0; i < tribe.restrictedBuildingAreas.length; i++) {
       const restrictedArea = tribe.restrictedBuildingAreas[i];
 
-      const collisionData = rectanglesAreColliding(wallVertexOffsets, restrictedArea.vertexOffsets, x, y, restrictedArea.position.x, restrictedArea.position.y, cosRotation, -sinRotation, Math.sin(restrictedArea.rotation), Math.cos(restrictedArea.rotation));
+      const collisionData = rectanglesAreColliding(wallVertexOffsets, restrictedArea.vertexOffsets, wallPosition, restrictedArea.position, cosRotation, -sinRotation, Math.sin(restrictedArea.rotation), Math.cos(restrictedArea.rotation));
       if (collisionData.isColliding) {
          return false;
       }
@@ -109,10 +109,10 @@ const wallSpaceIsFree = (x: number, y: number, wallRotation: number, tribe: Trib
 
    // @Speed: Can do a constant smaller than tile size
    // Check for wall tiles
-   const minTileX = Math.max(Math.floor((x - Settings.TILE_SIZE) / Settings.TILE_SIZE), 0);
-   const maxTileX = Math.min(Math.floor((x + Settings.TILE_SIZE) / Settings.TILE_SIZE), Settings.TILES_IN_WORLD_WIDTH - 1);
-   const minTileY = Math.max(Math.floor((y - Settings.TILE_SIZE) / Settings.TILE_SIZE), 0);
-   const maxTileY = Math.min(Math.floor((y + Settings.TILE_SIZE) / Settings.TILE_SIZE), Settings.TILES_IN_WORLD_WIDTH - 1);
+   const minTileX = Math.max(Math.floor((wallPosition.x - Settings.TILE_SIZE) / Settings.TILE_SIZE), 0);
+   const maxTileX = Math.min(Math.floor((wallPosition.x + Settings.TILE_SIZE) / Settings.TILE_SIZE), Settings.TILES_IN_WORLD_WIDTH - 1);
+   const minTileY = Math.max(Math.floor((wallPosition.y - Settings.TILE_SIZE) / Settings.TILE_SIZE), 0);
+   const maxTileY = Math.min(Math.floor((wallPosition.y + Settings.TILE_SIZE) / Settings.TILE_SIZE), Settings.TILES_IN_WORLD_WIDTH - 1);
    for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
       for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
          const tile = Board.getTile(tileX, tileY);
@@ -135,8 +135,9 @@ const wallSpaceIsFree = (x: number, y: number, wallRotation: number, tribe: Trib
 
          const tileXUnits = (tile.x + 0.5) * Settings.TILE_SIZE;
          const tileYUnits = (tile.y + 0.5) * Settings.TILE_SIZE;
+         const tilePos = new Point(tileXUnits, tileYUnits);
 
-         const collisionData = rectanglesAreColliding(wallVertexOffsets, tileVertexOffsets, x, y, tileXUnits, tileYUnits, cosRotation, -sinRotation, 1, 0);
+         const collisionData = rectanglesAreColliding(wallVertexOffsets, tileVertexOffsets, wallPosition, tilePos, cosRotation, -sinRotation, 1, 0);
          if (collisionData.isColliding) {
             return false;
          }
@@ -243,7 +244,7 @@ const addGridAlignedWallCandidates = (tribe: Tribe, placeCandidates: Array<WallP
          }
       }
       
-      addRectangularSafetyNodePositions(restrictedArea.position.x, restrictedArea.position.y, restrictedArea.width, restrictedArea.height, restrictedArea.rotation, minX, maxX, minY, maxY, occupiedNodes);
+      addRectangularSafetyNodePositions(restrictedArea.position, restrictedArea.width, restrictedArea.height, restrictedArea.rotation, minX, maxX, minY, maxY, occupiedNodes);
    }
 
    // Convert to occupied tile indexes
@@ -359,7 +360,9 @@ const addGridAlignedWallCandidates = (tribe: Tribe, placeCandidates: Array<WallP
 
       const x = (tileX + 0.5) * Settings.TILE_SIZE;
       const y = (tileY + 0.5) * Settings.TILE_SIZE;
-      if (wallSpaceIsFree(x, y, 0, tribe) && !wallCandidateAlreadyExists(x, y, 0, placeCandidates)) {
+      const wallPos = new Point(x, y);
+      
+      if (wallSpaceIsFree(wallPos, 0, tribe) && !wallCandidateAlreadyExists(x, y, 0, placeCandidates)) {
          placeCandidates.push({
             position: new Point(x, y),
             rotation: 0
@@ -379,8 +382,9 @@ const addSnappedWallCandidates = (tribe: Tribe, placeCandidates: Array<WallPlace
          const offsetDirection = virtualBuilding.rotation + i * Math.PI / 2;
          const x = virtualBuilding.position.x + 64 * Math.sin(offsetDirection);
          const y = virtualBuilding.position.y + 64 * Math.cos(offsetDirection);
+         const wallPosition = new Point(x, y);
 
-         if (wallSpaceIsFree(x, y, virtualBuilding.rotation, tribe) && !wallCandidateAlreadyExists(x, y, virtualBuilding.rotation, placeCandidates)) {
+         if (wallSpaceIsFree(wallPosition, virtualBuilding.rotation, tribe) && !wallCandidateAlreadyExists(x, y, virtualBuilding.rotation, placeCandidates)) {
             placeCandidates.push({
                position: new Point(x, y),
                rotation: virtualBuilding.rotation

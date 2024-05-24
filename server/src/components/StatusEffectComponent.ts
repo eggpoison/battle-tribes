@@ -4,11 +4,12 @@ import { PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
 import { StatusEffect, STATUS_EFFECT_MODIFIERS } from "webgl-test-shared/dist/status-effects";
 import { customTickIntervalHasPassed } from "webgl-test-shared/dist/utils";
 import { ComponentArray } from "./ComponentArray";
-import Entity from "../Entity";
+import Entity, { getRandomPositionInEntity } from "../Entity";
 import { damageEntity } from "./HealthComponent";
 import { SERVER } from "../server";
 import { PhysicsComponentArray } from "./PhysicsComponent";
 import Board from "../Board";
+import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
 
 export class StatusEffectComponent {
    public readonly activeStatusEffectTypes = new Array<StatusEffect>();
@@ -115,18 +116,8 @@ export function tickStatusEffectComponent(statusEffectComponent: StatusEffectCom
                // Fire tick
                const ticksElapsed = statusEffectComponent.activeStatusEffectTicksElapsed[i];
                if (customTickIntervalHasPassed(ticksElapsed, 0.75)) {
-                  damageEntity(entity, 1, null, PlayerCauseOfDeath.fire);
-                  SERVER.registerEntityHit({
-                     entityPositionX: entity.position.x,
-                     entityPositionY: entity.position.y,
-                     hitEntityID: entity.id,
-                     damage: 1,
-                     knockback: 0,
-                     angleFromAttacker: null,
-                     // @Bug: show the id of the entity which caused the burning in the first place
-                     attackerID: -1,
-                     flags: 0
-                  });
+                  const hitPosition = getRandomPositionInEntity(entity);
+                  damageEntity(entity, null, 1, PlayerCauseOfDeath.fire, AttackEffectiveness.effective, hitPosition, 0);
                }
             }
             break;
@@ -134,36 +125,16 @@ export function tickStatusEffectComponent(statusEffectComponent: StatusEffectCom
          case StatusEffect.poisoned: {
             const ticksElapsed = statusEffectComponent.activeStatusEffectTicksElapsed[i];
             if (customTickIntervalHasPassed(ticksElapsed, 0.5)) {
-               damageEntity(entity, 1, null, PlayerCauseOfDeath.poison);
-               SERVER.registerEntityHit({
-                  entityPositionX: entity.position.x,
-                  entityPositionY: entity.position.y,
-                  hitEntityID: entity.id,
-                  damage: 1,
-                  knockback: 0,
-                  angleFromAttacker: null,
-                  // @Bug: show the id of the entity which caused the poisoning in the first place
-                  attackerID: -1,
-                  flags: 0
-               });
+               const hitPosition = getRandomPositionInEntity(entity);
+               damageEntity(entity, null, 1, PlayerCauseOfDeath.poison, AttackEffectiveness.effective, hitPosition, 0);
             }
             break;
          }
          case StatusEffect.bleeding: {
             const ticksElapsed = statusEffectComponent.activeStatusEffectTicksElapsed[i];
             if (customTickIntervalHasPassed(ticksElapsed, 1)) {
-               damageEntity(entity, 1, null, PlayerCauseOfDeath.bloodloss);
-               SERVER.registerEntityHit({
-                  entityPositionX: entity.position.x,
-                  entityPositionY: entity.position.y,
-                  hitEntityID: entity.id,
-                  damage: 1,
-                  knockback: 0,
-                  angleFromAttacker: null,
-                  // @Bug: show the id of the entity which caused the bleeding in the first place
-                  attackerID: -1,
-                  flags: 0
-               });
+               const hitPosition = getRandomPositionInEntity(entity);
+               damageEntity(entity, null, 1, PlayerCauseOfDeath.bloodloss, AttackEffectiveness.effective, hitPosition, 0);
             }
             break;
          }

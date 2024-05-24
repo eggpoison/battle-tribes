@@ -61,16 +61,12 @@ class Snowball extends Entity {
       const snowballComponent = this.getServerComponent(ServerComponentType.snowball);
       
       // Create a bunch of snow particles at the point of hit
-      if (hitData.angleFromAttacker !== null) {
-         const numParticles = snowballComponent.size === SnowballSize.large ? 10 : 7;
-         for (let i = 0; i < numParticles; i++) {
-            const pixelSize = SNOWBALL_SIZES[snowballComponent.size];
-            
-            const offsetDirection = hitData.angleFromAttacker + Math.PI + 0.2 * Math.PI * (Math.random() - 0.5);
-            const spawnPositionX = this.position.x + pixelSize / 2 * Math.sin(offsetDirection);
-            const spawnPositionY = this.position.y + pixelSize / 2 * Math.cos(offsetDirection);
-            this.createSnowSpeckParticle(spawnPositionX, spawnPositionY);
-         }
+      const numParticles = snowballComponent.size === SnowballSize.large ? 10 : 7;
+      for (let i = 0; i < numParticles; i++) {
+         const pixelSize = SNOWBALL_SIZES[snowballComponent.size];
+         
+         const position = this.position.offset(pixelSize / 2, 2 * Math.PI * Math.random());
+         this.createSnowSpeckParticle(position.x, position.y);
       }
    }
 

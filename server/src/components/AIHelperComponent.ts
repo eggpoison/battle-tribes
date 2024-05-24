@@ -39,10 +39,10 @@ function onRemove(entityID: number): void {
 const hitboxIsVisible = (entity: Entity, hitbox: Hitbox, visionRange: number): boolean => {
    if (hitboxIsCircular(hitbox)) {
       // Circular hitbox
-      return circlesDoIntersect(entity.position.x, entity.position.y, visionRange, hitbox.x, hitbox.y, hitbox.radius);
+      return circlesDoIntersect(entity.position, visionRange, hitbox.position, hitbox.radius);
    } else {
       // Rectangular hitbox
-      return circleAndRectangleDoIntersect(entity.position.x, entity.position.y, visionRange, hitbox.x, hitbox.y, hitbox.width, hitbox.height, hitbox.relativeRotation);
+      return circleAndRectangleDoIntersect(entity.position, visionRange, hitbox.position, hitbox.width, hitbox.height, hitbox.relativeRotation);
    }
 }
 

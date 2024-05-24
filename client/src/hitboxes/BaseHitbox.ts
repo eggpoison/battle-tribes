@@ -6,7 +6,7 @@ import Entity from "../Entity";
 
 export type HitboxBounds = [minX: number, maxX: number, minY: number, maxY: number];
 
-abstract class Hitbox {
+abstract class BaseHitbox {
    public readonly localID: number;
    
    public readonly mass: number;
@@ -40,4 +40,4 @@ abstract class Hitbox {
    public abstract isColliding(otherHitbox: CircularHitbox | RectangularHitbox): boolean;
 }
 
-export default Hitbox;
+export default BaseHitbox;

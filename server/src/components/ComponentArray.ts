@@ -224,7 +224,6 @@ export function resetComponents(): void {
 export const TribeComponentArray = new ComponentArray<TribeComponent>(true);
 export const HealthComponentArray = new ComponentArray<HealthComponent>(true);
 export const TotemBannerComponentArray = new ComponentArray<TotemBannerComponent>(true);
-export const TreeComponentArray = new ComponentArray<TreeComponent>(true);
 export const BerryBushComponentArray = new ComponentArray<BerryBushComponent>(true);
 export const InventoryUseComponentArray = new ComponentArray<InventoryUseComponent>(true);
 export const BoulderComponentArray = new ComponentArray<BoulderComponent>(true);

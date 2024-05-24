@@ -57,6 +57,15 @@ export function stopEntity(physicsComponent: PhysicsComponent): void {
    physicsComponent.acceleration.y = 0;
 }
 
+export function turnToPosition(entity: Entity, targetPosition: Point, turnSpeed: number): void {
+   const physicsComponent = PhysicsComponentArray.getComponent(entity.id);
+
+   const targetDirection = angle(targetPosition.x - entity.position.x, targetPosition.y - entity.position.y);
+
+   physicsComponent.targetRotation = targetDirection;
+   physicsComponent.turnSpeed = turnSpeed;
+}
+
 export function moveEntityToPosition(entity: Entity, positionX: number, positionY: number, acceleration: number, turnSpeed: number): void {
    const targetDirection = angle(positionX - entity.position.x, positionY - entity.position.y);
 
@@ -331,8 +340,8 @@ export function entityIsInVisionRange(position: Point, visionRange: number, enti
    }
 
    testCircularHitbox.radius = visionRange;
-   testCircularHitbox.x = position.x;
-   testCircularHitbox.y = position.y;
+   testCircularHitbox.position.x = position.x;
+   testCircularHitbox.position.y = position.y;
 
    // If the test hitbox can 'see' any of the game object's hitboxes, it is visible
    for (const hitbox of entity.hitboxes) {
@@ -351,8 +360,8 @@ export function getEntitiesInRange(x: number, y: number, range: number): Array<E
    const maxChunkY = Math.max(Math.min(Math.floor((y + range) / Settings.TILE_SIZE / Settings.CHUNK_SIZE), Settings.BOARD_SIZE - 1), 0);
 
    testCircularHitbox.radius = range;
-   testCircularHitbox.x = x;
-   testCircularHitbox.y = y;
+   testCircularHitbox.position.x = x;
+   testCircularHitbox.position.y = y;
 
    const visionRangeSquared = Math.pow(range, 2);
    
@@ -404,8 +413,8 @@ export function cleanAngle(angle: number): number {
 }
 
 export function getMinAngleToCircularHitbox(x: number, y: number, hitbox: CircularHitbox): number {
-   const xDiff = hitbox.x - x;
-   const yDiff = hitbox.y - y;
+   const xDiff = hitbox.position.x - x;
+   const yDiff = hitbox.position.y - y;
 
    const angleToHitboxCenter = angle(xDiff, yDiff);
    
@@ -416,8 +425,8 @@ export function getMinAngleToCircularHitbox(x: number, y: number, hitbox: Circul
 }
 
 export function getMaxAngleToCircularHitbox(x: number, y: number, hitbox: CircularHitbox): number {
-   const xDiff = hitbox.x - x;
-   const yDiff = hitbox.y - y;
+   const xDiff = hitbox.position.x - x;
+   const yDiff = hitbox.position.y - y;
 
    const angleToHitboxCenter = angle(xDiff, yDiff);
    
@@ -432,8 +441,8 @@ export function getMinAngleToRectangularHitbox(x: number, y: number, hitbox: Rec
    for (let i = 0; i < 4; i++) {
       const vertexOffset = hitbox.vertexOffsets[i];
 
-      const vertexX = hitbox.x + vertexOffset.x;
-      const vertexY = hitbox.y + vertexOffset.y;
+      const vertexX = hitbox.position.x + vertexOffset.x;
+      const vertexY = hitbox.position.y + vertexOffset.y;
 
       const angleToVertex = angle(vertexX - x, vertexY - y);
       if (angleToVertex < minAngle) {
@@ -449,8 +458,8 @@ export function getMaxAngleToRectangularHitbox(x: number, y: number, hitbox: Rec
    for (let i = 0; i < 4; i++) {
       const vertexOffset = hitbox.vertexOffsets[i];
 
-      const vertexX = hitbox.x + vertexOffset.x;
-      const vertexY = hitbox.y + vertexOffset.y;
+      const vertexX = hitbox.position.x + vertexOffset.x;
+      const vertexY = hitbox.position.y + vertexOffset.y;
 
       const angleToVertex = angle(vertexX - x, vertexY - y);
       if (angleToVertex > maxAngle) {
@@ -509,38 +518,35 @@ export function turnAngle(angle: number, targetAngle: number, turnSpeed: number)
    }
 }
 
-const lineIntersectsRectangularHitbox = (lineX1: number, lineY1: number, lineX2: number, lineY2: number, hitbox: RectangularHitbox): boolean => {
-   const rectPosX = hitbox.x;
-   const rectPosY = hitbox.y;
-   
+const lineIntersectsRectangularHitbox = (lineX1: number, lineY1: number, lineX2: number, lineY2: number, rect: RectangularHitbox): boolean => {
    // Rotate the line and rectangle to axis-align the rectangle
-   const rectRotation = hitbox.rotation;
-   const x1 = rotateXAroundPoint(lineX1, lineY1, rectPosX, rectPosY, -rectRotation);
-   const y1 = rotateYAroundPoint(lineX1, lineY1, rectPosX, rectPosY, -rectRotation);
-   const x2 = rotateXAroundPoint(lineX2, lineY2, rectPosX, rectPosY, -rectRotation);
-   const y2 = rotateYAroundPoint(lineX2, lineY2, rectPosX, rectPosY, -rectRotation);
+   const rectRotation = rect.rotation;
+   const x1 = rotateXAroundPoint(lineX1, lineY1, rect.position.x, rect.position.y, -rectRotation);
+   const y1 = rotateYAroundPoint(lineX1, lineY1, rect.position.x, rect.position.y, -rectRotation);
+   const x2 = rotateXAroundPoint(lineX2, lineY2, rect.position.x, rect.position.y, -rectRotation);
+   const y2 = rotateYAroundPoint(lineX2, lineY2, rect.position.x, rect.position.y, -rectRotation);
 
    const xMin = Math.min(x1, x2);
    const xMax = Math.max(x1, x2);
    const yMin = Math.min(y1, y2);
    const yMax = Math.max(y1, y2);
    
-   if (rectPosX - hitbox.width / 2 > xMax || rectPosX + hitbox.width / 2 < xMin) {
+   if (rect.position.x - rect.width / 2 > xMax || rect.position.x + rect.width / 2 < xMin) {
       return false;
    } 
    
-   if (rectPosY - hitbox.height / 2 > yMax || rectPosY + hitbox.height / 2 < yMin) {
+   if (rect.position.y - rect.height / 2 > yMax || rect.position.y + rect.height / 2 < yMin) {
       return false;
    }
 
-   const yAtRectLeft = y1 + (y2 - y1) * ((rectPosX - hitbox.width / 2 - x1) / (x2 - x1));
-   const yAtRectRight = y1 + (y2 - y1) * ((rectPosX + hitbox.width / 2 - x1) / (x2 - x1));
+   const yAtRectLeft = y1 + (y2 - y1) * ((rect.position.x - rect.width / 2 - x1) / (x2 - x1));
+   const yAtRectRight = y1 + (y2 - y1) * ((rect.position.x + rect.width / 2 - x1) / (x2 - x1));
 
-   if (rectPosY - hitbox.height / 2 > yAtRectLeft && rectPosY - hitbox.height / 2 > yAtRectRight) {
+   if (rect.position.y - rect.height / 2 > yAtRectLeft && rect.position.y - rect.height / 2 > yAtRectRight) {
       return false;
    }
 
-   if (rectPosY + hitbox.height / 2 < yAtRectLeft && rectPosY + hitbox.height / 2 < yAtRectRight) {
+   if (rect.position.y + rect.height / 2 < yAtRectLeft && rect.position.y + rect.height / 2 < yAtRectRight) {
       return false;
    }
 
@@ -554,8 +560,8 @@ const entityAffectsLineOfSight = (entityType: EntityType): boolean => {
 const lineIntersectsCircularHitbox = (lineX1: number, lineY1: number, lineX2: number, lineY2: number, hitbox: CircularHitbox): boolean => {
    // https://stackoverflow.com/questions/67116296/is-this-code-for-determining-if-a-circle-and-line-segment-intersects-correct
    
-   const circleX = hitbox.x;
-   const circleY = hitbox.y;
+   const circleX = hitbox.position.x;
+   const circleY = hitbox.position.y;
    
    const x_linear = lineX2 - lineX1;
    const x_constant = lineX1 - circleX;
@@ -636,17 +642,17 @@ export function entityIsInLineOfSight(originEntity: Entity, targetEntity: Entity
    return true;
 }
 
-export function getDistanceFromPointToEntity(x: number, y: number, entity: Entity): number {
-   let minDistance = Math.sqrt(Math.pow(x - entity.position.x, 2) + Math.pow(y - entity.position.y, 2));
+export function getDistanceFromPointToEntity(point: Point, entity: Entity): number {
+   let minDistance = Math.sqrt(Math.pow(point.x - entity.position.x, 2) + Math.pow(point.y - entity.position.y, 2));
    for (const hitbox of entity.hitboxes) {
       if (hitboxIsCircular(hitbox)) {
-         const rawDistance = distance(x, y, hitbox.x, hitbox.y);
+         const rawDistance = distance(point.x, point.y, hitbox.position.x, hitbox.position.y);
          const hitboxDistance = rawDistance - hitbox.radius;
          if (hitboxDistance < minDistance) {
             minDistance = hitboxDistance;
          }
       } else {
-         const dist = distBetweenPointAndRectangle(x, y, hitbox.x, hitbox.y, hitbox.width, hitbox.height, hitbox.rotation);
+         const dist = distBetweenPointAndRectangle(point, hitbox.position, hitbox.width, hitbox.height, hitbox.rotation);
          if (dist < minDistance) {
             minDistance = dist;
          }

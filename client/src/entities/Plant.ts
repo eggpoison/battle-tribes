@@ -1,4 +1,4 @@
-import { Point, randFloat, randInt, randItem } from "webgl-test-shared/dist/utils";
+import { Point, angle, randFloat, randInt, randItem } from "webgl-test-shared/dist/utils";
 import { EntityComponentsData, PlanterBoxPlant, ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { HitData, HitFlags } from "webgl-test-shared/dist/client-server-types";
@@ -62,9 +62,12 @@ class Plant extends Entity {
       
             if (isDamagingHit) {
                // Create wood specks at the point of hit
-               const spawnOffsetDirection = (hitData.angleFromAttacker || 2 * Math.PI * Math.random()) + Math.PI;
-               const spawnPositionX = this.position.x + (radius + 2) * Math.sin(spawnOffsetDirection);
-               const spawnPositionY = this.position.y + (radius + 2) * Math.cos(spawnOffsetDirection);
+
+               let offsetDirection = angle(hitData.hitPosition[0] - this.position.x, hitData.hitPosition[1] - this.position.y);
+               offsetDirection += 0.2 * Math.PI * (Math.random() - 0.5);
+
+               const spawnPositionX = this.position.x + (radius + 2) * Math.sin(offsetDirection);
+               const spawnPositionY = this.position.y + (radius + 2) * Math.cos(offsetDirection);
                for (let i = 0; i < 4; i++) {
                   createWoodSpeckParticle(spawnPositionX, spawnPositionY, 3);
                }

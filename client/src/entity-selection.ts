@@ -1,39 +1,236 @@
 import { EntityType } from "webgl-test-shared/dist/entities";
-import { circleAndRectangleDoIntersect, circlesDoIntersect } from "webgl-test-shared/dist/collision";
 import { Point } from "webgl-test-shared/dist/utils";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { ITEM_TYPE_RECORD, InventoryName, ItemType } from "webgl-test-shared/dist/items";
-import { getTechByID } from "webgl-test-shared/dist/techs";
+import { PlanterBoxPlant, ServerComponentType, TunnelDoorSide } from "webgl-test-shared/dist/components";
+import { InventoryName, ItemType } from "webgl-test-shared/dist/items";
 import { Settings } from "webgl-test-shared/dist/settings";
 import Player, { getPlayerSelectedItem } from "./entities/Player";
 import Game from "./Game";
 import Board from "./Board";
-import Hitbox from "./hitboxes/Hitbox";
-import CircularHitbox from "./hitboxes/CircularHitbox";
-import RectangularHitbox from "./hitboxes/RectangularHitbox";
 import Entity from "./Entity";
 import Client from "./client/Client";
-import { latencyGameState, playerIsHoldingHammer } from "./game-state/game-states";
+import { latencyGameState } from "./game-state/game-states";
 import { BuildMenu_hide, BuildMenu_setBuildingID, BuildMenu_updateBuilding, entityCanOpenBuildMenu, isHoveringInBlueprintMenu } from "./components/game/BuildMenu";
 import { InventoryMenuType, InventorySelector_inventoryIsOpen, InventorySelector_setInventoryMenuType } from "./components/game/inventories/InventorySelector";
-import { getClosestGroupNum } from "./rendering/entity-selection-rendering";
 import { SEED_TO_PLANT_RECORD } from "./entity-components/PlantComponent";
+import { hitboxIsWithinRange } from "./hitboxes/hitboxes";
 import { GhostInfo, GhostType, PARTIAL_OPACITY, setGhostInfo } from "./rendering/entity-ghost-rendering";
+import { getClosestGroupNum } from "./rendering/entity-selection-rendering";
+
+const enum InteractActionType {
+   openBuildMenu,
+   plantSeed,
+   useFertiliser,
+   toggleTunnelDoor,
+   startResearching,
+   toggleDoor,
+   openInventory
+}
+
+interface BaseInteractAction {
+   readonly type: InteractActionType;
+}
+
+interface OpenBuildMenuAction extends BaseInteractAction {
+   readonly type: InteractActionType.openBuildMenu;
+}
+
+interface PlantSeedAction extends BaseInteractAction {
+   readonly type: InteractActionType.plantSeed;
+   readonly plantType: PlanterBoxPlant;
+}
+
+interface UseFertiliserAction extends BaseInteractAction {
+   readonly type: InteractActionType.useFertiliser;
+}
+
+interface ToggleTunnelDoorAction extends BaseInteractAction {
+   readonly type: InteractActionType.toggleTunnelDoor;
+   readonly doorSide: TunnelDoorSide;
+}
+
+interface StartResearchingAction extends BaseInteractAction {
+   readonly type: InteractActionType.startResearching;
+}
+
+interface ToggleDoorAction extends BaseInteractAction {
+   readonly type: InteractActionType.toggleDoor;
+}
+
+interface OpenInventoryAction extends BaseInteractAction {
+   readonly type: InteractActionType.openInventory;
+   readonly inventoryMenuType: InventoryMenuType;
+}
+
+type InteractAction = OpenBuildMenuAction | PlantSeedAction | UseFertiliserAction | ToggleTunnelDoorAction | StartResearchingAction | ToggleDoorAction | OpenInventoryAction;
 
 const HIGHLIGHT_RANGE = 75;
 const HIGHLIGHT_DISTANCE = 150;
 
+// @Cleanup: should we merge hovered and highlighted? having two very similar ones is confusing.
 let hoveredEntityID = -1;
 let highlightedEntityID = -1;
 let selectedEntityID = -1;
 
-const hitboxIsWithinRange = (position: Point, hitbox: Hitbox, visionRange: number): boolean => {
-   if (hitbox.hasOwnProperty("radius")) {
-      // Circular hitbox
-      return circlesDoIntersect(position.x, position.y, visionRange, hitbox.position.x, hitbox.position.y, (hitbox as CircularHitbox).radius);
-   } else {
-      // Rectangular hitbox
-      return circleAndRectangleDoIntersect(position.x, position.y, visionRange, hitbox.position.x, hitbox.position.y, (hitbox as RectangularHitbox).width, (hitbox as RectangularHitbox).height, (hitbox as RectangularHitbox).rotation + (hitbox as RectangularHitbox).externalRotation);
+const getInventoryMenuType = (entity: Entity): InventoryMenuType | null => {
+   switch (entity.type) {
+      case EntityType.barrel: return InventoryMenuType.barrel;
+      case EntityType.tribeWorker:
+      case EntityType.tribeWarrior: return InventoryMenuType.tribesman;
+      case EntityType.campfire: return InventoryMenuType.campfire;
+      case EntityType.furnace: return InventoryMenuType.furnace;
+      case EntityType.tombstone: {
+         const tombstoneComponent = entity.getServerComponent(ServerComponentType.tombstone);
+         if (tombstoneComponent.deathInfo !== null) {
+            return InventoryMenuType.tombstone;
+         } else {
+            return InventoryMenuType.none;
+         }
+      }
+      case EntityType.ballista: return InventoryMenuType.ammoBox;
+      default: return null;
+   }
+}
+
+const getTunnelDoorSide = (groupNum: number): TunnelDoorSide => {
+   switch (groupNum) {
+      case 1: return 0b01;
+      case 2: return 0b10;
+      default: throw new Error();
+   }
+}
+
+const getEntityInteractAction = (entity: Entity): InteractAction | null => {
+   const selectedItem = getPlayerSelectedItem();
+
+   // Toggle tunnel doors
+   if (entity.hasServerComponent(ServerComponentType.tunnel)) {
+      const groupNum = getClosestGroupNum(entity);
+      if (groupNum !== 0) {
+         return {
+            type: InteractActionType.toggleTunnelDoor,
+            doorSide: getTunnelDoorSide(groupNum)
+         };
+      }
+   }
+
+   // Use fertiliser / plant seeds
+   if (selectedItem !== null && entity.hasServerComponent(ServerComponentType.planterBox)) {
+      const planterBoxComponent = entity.getServerComponent(ServerComponentType.planterBox);
+
+      // If holding fertiliser, try to fertilise the planter box
+      if (selectedItem.type === ItemType.fertiliser && planterBoxComponent.hasPlant && !planterBoxComponent.isFertilised) {
+         return {
+            type: InteractActionType.useFertiliser
+         };
+      }
+      
+      // If holding a plant, try to place the seed in the planter box
+      const plant = SEED_TO_PLANT_RECORD[selectedItem.type];
+      if (typeof plant !== "undefined" && !planterBoxComponent.hasPlant) {
+         return {
+            type: InteractActionType.plantSeed,
+            plantType: plant
+         };
+      }
+   }
+   
+   // See if the entity can be used in the build menu
+   if (entityCanOpenBuildMenu(entity)) {
+      return {
+         type: InteractActionType.openBuildMenu
+      };
+   }
+
+   // Start researching
+   if (entity.type === EntityType.researchBench) {
+      return {
+         type: InteractActionType.startResearching
+      };
+   }
+
+   // Toggle door
+   if (entity.type === EntityType.door || entity.type === EntityType.fenceGate) {
+      return {
+         type: InteractActionType.toggleDoor
+      };
+   }
+
+   const inventoryMenuType = getInventoryMenuType(entity);
+   if (inventoryMenuType !== null) {
+      return {
+         type: InteractActionType.openInventory,
+         inventoryMenuType: inventoryMenuType
+      };
+   }
+   
+   return null;
+}
+
+const interactWithEntity = (entity: Entity, action: InteractAction): void => {
+   switch (action.type) {
+      case InteractActionType.openBuildMenu: {
+         // Select the entity and open the build menu
+         selectedEntityID = entity.id;
+         BuildMenu_setBuildingID(entity.id);
+         BuildMenu_updateBuilding(entity.id);
+
+         break;
+      }
+      case InteractActionType.plantSeed: {
+         Client.sendModifyBuilding(highlightedEntityID, action.plantType);
+
+         // @Hack
+         const inventoryUseComponent = Player.instance!.getServerComponent(ServerComponentType.inventoryUse);
+         const hotbarUseInfo = inventoryUseComponent.getUseInfo(InventoryName.hotbar);
+         hotbarUseInfo.lastAttackTicks = Board.ticks;
+         
+         break;
+      }
+      case InteractActionType.useFertiliser: {
+         Client.sendModifyBuilding(entity.id, -1);
+
+         // @Hack
+         const inventoryUseComponent = Player.instance!.getServerComponent(ServerComponentType.inventoryUse);
+         const hotbarUseInfo = inventoryUseComponent.getUseInfo(InventoryName.hotbar);
+         hotbarUseInfo.lastAttackTicks = Board.ticks;
+
+         break;
+      }
+      case InteractActionType.toggleTunnelDoor: {
+         Client.sendStructureInteract(highlightedEntityID, action.doorSide);
+
+         // @Hack
+         const inventoryUseComponent = Player.instance!.getServerComponent(ServerComponentType.inventoryUse);
+         const hotbarUseInfo = inventoryUseComponent.getUseInfo(InventoryName.hotbar);
+         hotbarUseInfo.lastAttackTicks = Board.ticks;
+         
+         break;
+      }
+      case InteractActionType.startResearching: {
+         selectedEntityID = entity.id;
+
+         Client.sendStructureInteract(highlightedEntityID, 0);
+         break;
+      }
+      case InteractActionType.toggleDoor: {
+         Client.sendStructureInteract(highlightedEntityID, 0);
+
+         // @Hack
+         const inventoryUseComponent = Player.instance!.getServerComponent(ServerComponentType.inventoryUse);
+         const hotbarUseInfo = inventoryUseComponent.getUseInfo(InventoryName.hotbar);
+         hotbarUseInfo.lastAttackTicks = Board.ticks;
+
+         break;
+      }
+      case InteractActionType.openInventory: {
+         selectedEntityID = entity.id;
+         InventorySelector_setInventoryMenuType(action.inventoryMenuType);
+         break;
+      }
+      default: {
+         const unreachable: never = action;
+         return unreachable;
+      }
    }
 }
 
@@ -88,80 +285,6 @@ export function deselectHighlightedEntity(): void {
    highlightedEntityID = -1;
 }
 
-// @Cleanup: Rework so that this double-logic can be removed
-const entityCanBeSelected = (entity: Entity): boolean => {
-   // Tunnels can be selected if they have doors
-   if (entity.type === EntityType.tunnel) {
-      const tunnelComponent = entity.getServerComponent(ServerComponentType.tunnel);
-      if (tunnelComponent.doorBitset !== 0) {
-         return true;
-      }
-   }
-
-   // Planter boxes can be selected if the player is trying to place a plant in them or fertilise them
-   if (entity.type === EntityType.planterBox) {
-      const selectedItem = getPlayerSelectedItem();
-      const planterBoxComponent = entity.getServerComponent(ServerComponentType.planterBox);
-
-      if (selectedItem !== null && selectedItem.type === ItemType.fertiliser && planterBoxComponent.hasPlant) {
-         return true;
-      }
-
-      if (selectedItem !== null && typeof SEED_TO_PLANT_RECORD[selectedItem.type] !== "undefined" && !planterBoxComponent.hasPlant) {
-         return true;
-      }
-   }
-   
-   // Buildings can be selected if the player is holding a hammer
-   if (entity.type === EntityType.wall || entity.type === EntityType.tunnel || entity.type === EntityType.embrasure || entity.type === EntityType.fence) {
-      const selectedItem = getPlayerSelectedItem();
-      return selectedItem !== null && ITEM_TYPE_RECORD[selectedItem.type] === "hammer";
-   }
-
-   // Research benches can be selected if there is study able to be done
-   if (entity.type === EntityType.researchBench) {
-      if (Game.tribe.selectedTechID === null) {
-         return false;
-      }
-
-      if (Game.tribe.techTreeUnlockProgress.hasOwnProperty(Game.tribe.selectedTechID)) {
-         const techInfo = getTechByID(Game.tribe.selectedTechID);
-         if (Game.tribe.techTreeUnlockProgress[Game.tribe.selectedTechID]!.studyProgress >= techInfo.researchStudyRequirements) {
-            return false;
-         }
-      }
-
-      return true;
-   }
-
-   if (entity.type === EntityType.tribeWorker || entity.type === EntityType.tribeWarrior) {
-      const tribeComponent = entity.getServerComponent(ServerComponentType.tribe);
-      if (tribeComponent.tribeID === Game.tribe.id) {
-         return true;
-      } else {
-         const tribesmanComponent = entity.getServerComponent(ServerComponentType.tribesman);
-         if (tribesmanComponent.relationsWithPlayer > -30) {
-            return true;
-         }
-      }
-   }
-
-   return entity.type === EntityType.door
-      || entity.type === EntityType.barrel
-      || entity.type === EntityType.furnace
-      || entity.type === EntityType.campfire
-      || entity.type === EntityType.ballista
-      || entity.type === EntityType.slingTurret
-      || entity.type === EntityType.workerHut
-      || entity.type === EntityType.warriorHut
-      || entity.type === EntityType.floorSpikes
-      || entity.type === EntityType.wallSpikes
-      || entity.type === EntityType.floorPunjiSticks
-      || entity.type === EntityType.wallPunjiSticks
-      || entity.type === EntityType.fenceGate
-      || entity.type === EntityType.planterBox;
-}
-
 // @Cleanup: name
 const getEntityID = (doPlayerProximityCheck: boolean, doCanSelectCheck: boolean): number => {
    const minChunkX = Math.max(Math.floor((Game.cursorPositionX! - HIGHLIGHT_RANGE) / Settings.CHUNK_UNITS), 0);
@@ -177,7 +300,7 @@ const getEntityID = (doPlayerProximityCheck: boolean, doCanSelectCheck: boolean)
       for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
          const chunk = Board.getChunk(chunkX, chunkY);
          for (const entity of chunk.entities) {
-            if (doCanSelectCheck && !entityCanBeSelected(entity)) {
+            if (doCanSelectCheck && getEntityInteractAction(entity) === null) {
                continue;
             }
 
@@ -206,6 +329,61 @@ const getEntityID = (doPlayerProximityCheck: boolean, doCanSelectCheck: boolean)
    return entityID;
 }
 
+const getPlantGhostType = (itemType: ItemType): GhostType => {
+   switch (itemType) {
+      case ItemType.seed: {
+         return GhostType.treeSeed;
+      }
+      case ItemType.berry: {
+         return GhostType.berryBushSeed;
+      }
+      case ItemType.frostcicle: {
+         return GhostType.iceSpikesSeed;
+      }
+      default: {
+         throw new Error();
+      }
+   }
+}
+
+// @Cleanup: setGhostInfo called at every return
+const updateHighlightedEntity = (entity: Entity | null): void => {
+   if (entity === null) {
+      setGhostInfo(null);
+      return;
+   }
+
+   switch (entity.type) {
+      case EntityType.planterBox: {
+         const selectedItem = getPlayerSelectedItem();
+         if (selectedItem === null) {
+            setGhostInfo(null);
+            break;
+         }
+         
+         const planterBoxComponent = entity.getServerComponent(ServerComponentType.planterBox);
+
+         // Create plant ghost
+         const plant = SEED_TO_PLANT_RECORD[selectedItem.type];
+         if (typeof plant === "undefined" || planterBoxComponent.hasPlant) {
+            setGhostInfo(null);
+            break;
+         }
+      
+         const ghostInfo: GhostInfo = {
+            position: entity.position,
+            rotation: entity.rotation,
+            ghostType: getPlantGhostType(selectedItem.type),
+            tint: [1, 1, 1],
+            opacity: PARTIAL_OPACITY
+         };
+         setGhostInfo(ghostInfo);
+
+         break;
+      }
+   }
+}
+
 export function updateHighlightedAndHoveredEntities(): void {
    if (Player.instance === null || Game.cursorPositionX === null || Game.cursorPositionY === null) {
       return;
@@ -213,6 +391,7 @@ export function updateHighlightedAndHoveredEntities(): void {
 
    // @Cleanup: This is a pretty messy function: has 3 different scenarios, only separated by guards. Maybe refactor?
 
+   // @Hack?
    if (latencyGameState.playerIsPlacingEntity) {
       // When the player is placing an entity, we don't want them to be able to select entities.
       deselectHighlightedEntity();
@@ -234,325 +413,27 @@ export function updateHighlightedAndHoveredEntities(): void {
 
    const newHighlightedEntityID = getEntityID(true, true);
    if (newHighlightedEntityID !== highlightedEntityID) {
+      setGhostInfo(null);
       deselectHighlightedEntity();
       highlightedEntityID = newHighlightedEntityID;
    }
-}
-
-// @Incomplete
-
-// // @Cleanup: should be a function
-// let plantGhostType: GhostType;
-// switch (selectedItem.type) {
-//    case ItemType.seed: {
-//       plantGhostType = GhostType.treeSeed;
-//       break;
-//    }
-//    case ItemType.berry: {
-//       plantGhostType = GhostType.berryBushSeed;
-//       break;
-//    }
-//    case ItemType.frostcicle: {
-//       plantGhostType = GhostType.iceSpikesSeed;
-//       break;
-//    }
-//    default: {
-//       throw new Error();
-//    }
-// }
-
-// // Create plant ghost
-// const ghostInfo: GhostInfo = {
-//    position: highlightedEntity.position,
-//    rotation: highlightedEntity.rotation,
-//    ghostType: plantGhostType,
-//    snappedEntities: [],
-//    tint: [1, 1, 1],
-//    opacity: PARTIAL_OPACITY
-// };
-// setGhostInfo(ghostInfo);
-
-export function attemptEntitySelection(): void {
-   // Deselect the previous entity
-   // @Cleanup: why is this needed?
-   if (selectedEntityID !== -1) {
-      deselectSelectedEntity();
-   }
 
    const highlightedEntity = Board.entityRecord[highlightedEntityID];
+   updateHighlightedEntity(typeof highlightedEntity !== "undefined" ? highlightedEntity : null);
+}
+
+export function attemptEntitySelection(): void {
+   const highlightedEntity = Board.entityRecord[highlightedEntityID];
    if (typeof highlightedEntity === "undefined") {
+      // When a new entity is selected, deselect the previous entity
+      deselectSelectedEntity();
       return;
    }
 
-   // Priority over building
-   switch (highlightedEntity.type) {
-      case EntityType.planterBox: {
-         const selectedItem = getPlayerSelectedItem();
-         if (selectedItem === null) {
-            break;
-         }
-         
-         const planterBoxComponent = highlightedEntity.getServerComponent(ServerComponentType.planterBox);
-
-         // If holding a plant, try to place the seed in the planter box
-         const plant = SEED_TO_PLANT_RECORD[selectedItem.type];
-         if (typeof plant !== "undefined" && !planterBoxComponent.hasPlant) {
-            Client.sendModifyBuilding(highlightedEntityID, plant);
-
-            // @Hack
-            const inventoryUseComponent = Player.instance!.getServerComponent(ServerComponentType.inventoryUse);
-            const hotbarUseInfo = inventoryUseComponent.getUseInfo(InventoryName.hotbar);
-            hotbarUseInfo.lastAttackTicks = Board.ticks;
-            
-            return;
-         }
-
-         // If holding fertiliser, try to fertilise the planter box
-         if (selectedItem.type === ItemType.fertiliser && planterBoxComponent.hasPlant && !planterBoxComponent.isFertilised) {
-            Client.sendModifyBuilding(highlightedEntityID, -1);
-
-            // @Hack
-            const inventoryUseComponent = Player.instance!.getServerComponent(ServerComponentType.inventoryUse);
-            const hotbarUseInfo = inventoryUseComponent.getUseInfo(InventoryName.hotbar);
-            hotbarUseInfo.lastAttackTicks = Board.ticks;
-
-            return;
-         }
-
-         break;
-      }
+   const interactAction = getEntityInteractAction(highlightedEntity);
+   if (interactAction !== null) {
+      interactWithEntity(highlightedEntity, interactAction);
    }
-   
-   if (entityCanOpenBuildMenu(highlightedEntity)) {
-      // Select the entity and open the build menu
-      selectedEntityID = highlightedEntityID;
-      BuildMenu_setBuildingID(highlightedEntityID);
-      BuildMenu_updateBuilding(highlightedEntityID);
-   } else {
-      BuildMenu_setBuildingID(0);
-      
-      switch (highlightedEntity.type) {
-         case EntityType.tunnel: {
-            const groupNum = getClosestGroupNum(highlightedEntity);
-            if (groupNum === 0) {
-               break;
-            }
-            
-            let interactData: number;
-            switch (groupNum) {
-               case 1: interactData = 0b01; break;
-               case 2: interactData = 0b10; break;
-               default: throw new Error();
-            }
-
-            Client.sendStructureInteract(highlightedEntityID, interactData);
-            break;
-         }
-         case EntityType.door: {
-            Client.sendStructureInteract(highlightedEntityID, 0);
-            break;
-         }
-         case EntityType.researchBench: {
-            Client.sendStructureInteract(highlightedEntityID, 0);
-            break;
-         }
-         case EntityType.fenceGate: {
-            Client.sendStructureInteract(highlightedEntityID, 0);
-            break;
-         }
-         case EntityType.barrel: {
-            InventorySelector_setInventoryMenuType(InventoryMenuType.barrel);
-            break;
-         }
-         case EntityType.tribeWorker:
-         case EntityType.tribeWarrior: {
-            InventorySelector_setInventoryMenuType(InventoryMenuType.tribesman);
-            break;
-         }
-         case EntityType.campfire: {
-            InventorySelector_setInventoryMenuType(InventoryMenuType.campfire);
-            break;
-         }
-         case EntityType.furnace: {
-            InventorySelector_setInventoryMenuType(InventoryMenuType.furnace);
-            break;
-         }
-         case EntityType.tombstone: {
-            const tombstoneComponent = highlightedEntity.getServerComponent(ServerComponentType.tombstone);
-            if (tombstoneComponent.deathInfo !== null) {
-               InventorySelector_setInventoryMenuType(InventoryMenuType.tombstone);
-            } else {
-               InventorySelector_setInventoryMenuType(InventoryMenuType.none);
-            }
-            break;
-         }
-         case EntityType.ballista: {
-            InventorySelector_setInventoryMenuType(InventoryMenuType.ammoBox);
-            break;
-         }
-      }
-   }
-
-
-
-      
-
-   // let shouldShowBuildMenu = false;
-   // let shouldSetSelectedEntity = true;
-
-   // const highlightedEntity = Board.entityRecord[highlightedEntityID];
-   // if (typeof highlightedEntity !== "undefined") {
-
-   //    switch (highlightedEntity.type) {
-   //       case EntityType.wall: {
-   //          shouldShowBuildMenu = true;
-   //          break;
-   //       }
-   //       case EntityType.tunnel: {
-   //          if (playerIsHoldingHammer()) {
-   //             shouldShowBuildMenu = true;
-   //             break;
-   //          }
-            
-   //          const groupNum = getClosestGroupNum(highlightedEntity);
-   //          if (groupNum === 0) {
-   //             break;
-   //          }
-            
-   //          let interactData: number;
-   //          switch (groupNum) {
-   //             case 1: interactData = 0b01; break;
-   //             case 2: interactData = 0b10; break;
-   //             default: throw new Error();
-   //          }
-
-   //          Client.sendStructureInteract(highlightedEntityID, interactData);
-   //          shouldSetSelectedEntity = false;
-   //          break;
-   //       }
-   //       case EntityType.door: {
-   //          if (playerIsHoldingHammer()) {
-   //             shouldShowBuildMenu = true;
-   //          } else {
-   //             Client.sendStructureInteract(highlightedEntityID, 0);
-   //             shouldSetSelectedEntity = false;
-   //          }
-   //          break;
-   //       }
-   //       case EntityType.researchBench: {
-   //          if (playerIsHoldingHammer()) {
-   //             shouldShowBuildMenu = true;
-   //          } else {
-   //             Client.sendStructureInteract(highlightedEntityID, 0);
-   //          }
-   //          break;
-   //       }
-   //       case EntityType.fence: {
-   //          if (playerIsHoldingHammer()) {
-   //             shouldShowBuildMenu = true;
-   //          }
-   //          break;
-   //       }
-   //       case EntityType.fenceGate: {
-   //          if (playerIsHoldingHammer()) {
-   //             shouldShowBuildMenu = true;
-   //          } else {
-   //             Client.sendStructureInteract(highlightedEntityID, 0);
-   //             shouldSetSelectedEntity = false;
-   //          }
-   //          break;
-   //       }
-   //       case EntityType.barrel: {
-   //          if (playerIsHoldingHammer()) {
-   //             shouldShowBuildMenu = true;
-   //          } else {
-   //             InventorySelector_setInventoryMenuType(InventoryMenuType.barrel);
-   //          }
-   //          break;
-   //       }
-   //       case EntityType.tribeWorker:
-   //       case EntityType.tribeWarrior: {
-   //          if (playerIsHoldingHammer()) {
-   //             shouldShowBuildMenu = true;
-   //          } else {
-   //             InventorySelector_setInventoryMenuType(InventoryMenuType.tribesman);
-   //          }
-   //          break;
-   //       }
-   //       case EntityType.campfire: {
-   //          if (playerIsHoldingHammer()) {
-   //             shouldShowBuildMenu = true;
-   //          } else {
-   //             InventorySelector_setInventoryMenuType(InventoryMenuType.campfire);
-   //          }
-   //          break;
-   //       }
-   //       case EntityType.furnace: {
-   //          if (playerIsHoldingHammer()) {
-   //             shouldShowBuildMenu = true;
-   //          } else {
-   //             InventorySelector_setInventoryMenuType(InventoryMenuType.furnace);
-   //          }
-   //          break;
-   //       }
-   //       case EntityType.tombstone: {
-   //          const tombstoneComponent = highlightedEntity.getServerComponent(ServerComponentType.tombstone);
-   //          if (tombstoneComponent.deathInfo !== null) {
-   //             InventorySelector_setInventoryMenuType(InventoryMenuType.tombstone);
-   //          } else {
-   //             InventorySelector_setInventoryMenuType(InventoryMenuType.none);
-   //          }
-   //          break;
-   //       }
-   //       case EntityType.ballista: {
-   //          if (playerIsHoldingHammer()) {
-   //             shouldShowBuildMenu = true;
-   //          } else {
-   //             InventorySelector_setInventoryMenuType(InventoryMenuType.ammoBox);
-   //          }
-   //          break;
-   //       }
-   //       case EntityType.planterBox: {
-   //          if (playerIsHoldingHammer()) {
-   //             shouldShowBuildMenu = true;
-   //             break;
-   //          }
-            
-   //          const selectedItem = getPlayerSelectedItem()!;
-   //          const plant = SEED_TO_PLANT_RECORD[selectedItem.type];
-   //          if (typeof plant !== "undefined") {
-   //             Client.sendModifyBuilding(highlightedEntityID, plant);
-   //             shouldSetSelectedEntity = false;
-
-   //             // @Hack
-   //             const inventoryUseComponent = Player.instance!.getServerComponent(ServerComponentType.inventoryUse);
-   //             const hotbarUseInfo = inventoryUseComponent.getUseInfo(InventoryName.hotbar);
-   //             hotbarUseInfo.lastAttackTicks = Board.ticks;
-   //          }
-   //          break;
-   //       }
-   //       case EntityType.workerHut:
-   //       case EntityType.warriorHut: {
-   //          shouldShowBuildMenu = true;
-   //          break;
-   //       }
-   //       default: {
-   //          InventorySelector_setInventoryMenuType(InventoryMenuType.none);
-   //          break;
-   //       }
-   //    }
-   // }
-
-   // if (shouldSetSelectedEntity) {
-   //    selectedEntityID = highlightedEntityID;
-   // }
-
-   // if (shouldShowBuildMenu) {
-   //    BuildMenu_setBuildingID(highlightedEntityID);
-   //    BuildMenu_updateBuilding(highlightedEntityID);
-   // } else {
-   //    BuildMenu_setBuildingID(0);
-   // }
 }
 
 export function updateSelectedStructure(): void {

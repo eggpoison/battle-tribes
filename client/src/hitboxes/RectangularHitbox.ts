@@ -1,11 +1,11 @@
 import { Point, rotateXAroundPoint, rotateYAroundPoint } from "webgl-test-shared/dist/utils";
 import { HitboxVertexPositions, circleAndRectangleDoIntersect, rectanglesAreColliding } from "webgl-test-shared/dist/collision";
 import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
-import Hitbox from "./Hitbox";
-import CircularHitbox from "./CircularHitbox";
+import BaseHitbox from "./BaseHitbox";
 import Entity from "../Entity";
+import { Hitbox, hitboxIsCircular } from "./hitboxes";
 
-class RectangularHitbox extends Hitbox {
+class RectangularHitbox extends BaseHitbox {
    public width: number;
    public height: number;
    public rotation: number;
@@ -77,20 +77,20 @@ class RectangularHitbox extends Hitbox {
       this.bounds[3] = Math.max(this.vertexPositions[0].y, this.vertexPositions[1].y, this.vertexPositions[2].y, this.vertexPositions[3].y);
    }
 
-   public isColliding(otherHitbox: CircularHitbox | RectangularHitbox): boolean {
-      if (otherHitbox.hasOwnProperty("radius")) {
+   public isColliding(otherHitbox: Hitbox): boolean {
+      if (hitboxIsCircular(otherHitbox)) {
          // Circular
-         return circleAndRectangleDoIntersect(otherHitbox.position.x, otherHitbox.position.y, (otherHitbox as CircularHitbox).radius, this.position.x, this.position.y, this.width, this.height, this.rotation + this.externalRotation);
+         return circleAndRectangleDoIntersect(otherHitbox.position, otherHitbox.radius, this.position, this.width, this.height, this.rotation + this.externalRotation);
       } else {
          // Rectangular
 
          // If the distance between the hitboxes is greater than the sum of their half diagonals then they're not colliding
          const distance = this.position.calculateDistanceBetween(otherHitbox.position);
-         if (distance > this.halfDiagonalLength + (otherHitbox as RectangularHitbox).halfDiagonalLength) {
+         if (distance > this.halfDiagonalLength + otherHitbox.halfDiagonalLength) {
             return false;
          }
          
-         const collisionData = rectanglesAreColliding(this.vertexPositions, (otherHitbox as RectangularHitbox).vertexPositions, 0, 0, 0, 0, this.sideAxes[0].x, this.sideAxes[0].y, (otherHitbox as RectangularHitbox).sideAxes[0].x, (otherHitbox as RectangularHitbox).sideAxes[0].y);
+         const collisionData = rectanglesAreColliding(this.vertexPositions, otherHitbox.vertexPositions, new Point(0, 0), new Point(0, 0), this.sideAxes[0].x, this.sideAxes[0].y, otherHitbox.sideAxes[0].x, otherHitbox.sideAxes[0].y);
          return collisionData.isColliding;
       }
    }

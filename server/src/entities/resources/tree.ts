@@ -6,10 +6,11 @@ import { ItemType } from "webgl-test-shared/dist/items";
 import { Point, randInt } from "webgl-test-shared/dist/utils";
 import Entity from "../../Entity";
 import CircularHitbox from "../../hitboxes/CircularHitbox";
-import { HealthComponentArray, TreeComponentArray } from "../../components/ComponentArray";
+import { HealthComponentArray } from "../../components/ComponentArray";
 import { HealthComponent } from "../../components/HealthComponent";
 import { createItemsOverEntity } from "../../entity-shared";
 import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
+import { TreeComponentArray } from "../../components/TreeComponent";
 
 const TREE_MAX_HEALTHS = [10, 15];
 export const TREE_RADII: ReadonlyArray<number> = [40, 50];

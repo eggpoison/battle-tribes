@@ -15,6 +15,7 @@ import { PhysicsComponent, PhysicsComponentArray, applyKnockback } from "../../c
 import { EntityRelationship, TribeComponent, getEntityRelationship } from "../../components/TribeComponent";
 import { StatusEffectComponentArray, applyStatusEffect } from "../../components/StatusEffectComponent";
 import { EntityCreationInfo } from "../../entity-components";
+import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
 
 // @Cleanup: Rename file to something more generic
 
@@ -90,7 +91,7 @@ export function tickArrowProjectile(arrow: Entity): void {
    }
 }
 
-export function onWoodenArrowCollision(arrow: Entity, collidingEntity: Entity): void {
+export function onWoodenArrowCollision(arrow: Entity, collidingEntity: Entity, collisionPoint: Point): void {
    const arrowComponent = ArrowComponentArray.getComponent(arrow.id);
 
    // Ignore friendlies, and friendly buildings if the ignoreFriendlyBuildings flag is set
@@ -124,18 +125,8 @@ export function onWoodenArrowCollision(arrow: Entity, collidingEntity: Entity): 
       const thrower = Board.tentativelyGetEntity(arrowComponent.throwerID);
       const hitDirection = arrow.position.calculateAngleBetween(collidingEntity.position);
       
-      damageEntity(collidingEntity, arrowComponent.damage, thrower, PlayerCauseOfDeath.arrow);
+      damageEntity(collidingEntity, thrower, arrowComponent.damage, PlayerCauseOfDeath.arrow, AttackEffectiveness.effective, collisionPoint, 0);
       applyKnockback(collidingEntity, arrowComponent.knockback, hitDirection);
-      SERVER.registerEntityHit({
-         entityPositionX: collidingEntity.position.x,
-         entityPositionY: collidingEntity.position.y,
-         hitEntityID: collidingEntity.id,
-         damage: arrowComponent.damage,
-         knockback: arrowComponent.knockback,
-         angleFromAttacker: hitDirection,
-         attackerID: arrowComponent.throwerID,
-         flags: 0
-      });
 
       if (StatusEffectComponentArray.hasComponent(collidingEntity.id) && arrowComponent.statusEffect !== null) {
          applyStatusEffect(collidingEntity.id, arrowComponent.statusEffect.type, arrowComponent.statusEffect.durationTicks);

@@ -10,6 +10,7 @@ import { RockSpikeProjectileComponent } from "../../components/RockSpikeProjecti
 import { addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
 import { SERVER } from "../../server";
 import { applyKnockback } from "../../components/PhysicsComponent";
+import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
 
 // @Cleanup: why do we have to export these?
 export const ROCK_SPIKE_HITBOX_SIZES = [12 * 2, 16 * 2, 20 * 2];
@@ -35,7 +36,7 @@ export function tickRockSpikeProjectile(rockSpikeProjectile: Entity): void {
    }
 }
 
-export function onRockSpikeProjectileCollision(rockSpikeProjectile: Entity, collidingEntity: Entity): void {
+export function onRockSpikeProjectileCollision(rockSpikeProjectile: Entity, collidingEntity: Entity, collisionPoint: Point): void {
    const rockSpikeProjectileComponent = RockSpikeProjectileComponentArray.getComponent(rockSpikeProjectile.id);
 
    // Don't hurt the yeti which created the spike
@@ -52,18 +53,8 @@ export function onRockSpikeProjectileCollision(rockSpikeProjectile: Entity, coll
       
       const hitDirection = rockSpikeProjectile.position.calculateAngleBetween(collidingEntity.position);
       
-      damageEntity(collidingEntity, 5, null, PlayerCauseOfDeath.rock_spike, "rock_spike");
+      damageEntity(collidingEntity, null, 5, PlayerCauseOfDeath.rock_spike, AttackEffectiveness.effective, collisionPoint, 0);
       applyKnockback(collidingEntity, 200, hitDirection);
-      SERVER.registerEntityHit({
-         entityPositionX: collidingEntity.position.x,
-         entityPositionY: collidingEntity.position.y,
-         hitEntityID: collidingEntity.id,
-         damage: 5,
-         knockback: 200,
-         angleFromAttacker: hitDirection,
-         attackerID: rockSpikeProjectile.id,
-         flags: 0
-      });
       addLocalInvulnerabilityHash(healthComponent, "rock_spike", 0.3);
    }
 }

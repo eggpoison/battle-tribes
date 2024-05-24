@@ -13,6 +13,7 @@ import { definiteGameState, playerIsHoldingHammer } from "../../game-state/game-
 import { countItemTypesInInventory } from "../../inventory-manipulation";
 import { playSound } from "../../sound";
 import Player from "../../entities/Player";
+import Game from "../../Game";
 
 /*
 // @Incomplete
@@ -112,16 +113,26 @@ const MATERIAL_UPGRADE_BLUEPRINT_TYPES: Record<UpgradeableEntityType, BlueprintT
 };
 
 const getMenuOptions = (entity: Entity): ReadonlyArray<MenuOption> => {
+   if (!entity.hasServerComponent(ServerComponentType.structure) || !entity.hasServerComponent(ServerComponentType.tribe)) {
+      return [];
+   }
+   
+   // Enemy buildings can't be selected
+   const tribeComponent = entity.getServerComponent(ServerComponentType.tribe);
+   if (tribeComponent.tribeID !== Game.tribe.id) {
+      return [];
+   }
+   
    const options = new Array<MenuOption>();
 
    // Material upgrade option
-   if (entity.type === EntityType.wall || entity.type === EntityType.floorSpikes || entity.type === EntityType.wallSpikes || entity.type === EntityType.door || entity.type === EntityType.embrasure || entity.type === EntityType.tunnel) {
+   if (playerIsHoldingHammer() && entity.hasServerComponent(ServerComponentType.buildingMaterial)) {
       const wallComponent = entity.getServerComponent(ServerComponentType.buildingMaterial);
       if (wallComponent.material < BuildingMaterial.stone) {
-         const imageSource = MATERIAL_UPGRADE_IMAGE_SOURCES[entity.type];
-         const ghostType = MATERIAL_UPGRADE_GHOST_TYPES[entity.type];
-         const imageSize = MATERIAL_UPGRADE_IMAGE_SIZES[entity.type];
-         const blueprintType = MATERIAL_UPGRADE_BLUEPRINT_TYPES[entity.type];
+         const imageSource = MATERIAL_UPGRADE_IMAGE_SOURCES[entity.type as UpgradeableEntityType];
+         const ghostType = MATERIAL_UPGRADE_GHOST_TYPES[entity.type as UpgradeableEntityType];
+         const imageSize = MATERIAL_UPGRADE_IMAGE_SIZES[entity.type as UpgradeableEntityType];
+         const blueprintType = MATERIAL_UPGRADE_BLUEPRINT_TYPES[entity.type as UpgradeableEntityType];
          
          options.push({
             name: "UPGRADE",
@@ -141,7 +152,7 @@ const getMenuOptions = (entity: Entity): ReadonlyArray<MenuOption> => {
    }
 
    // Wall shaping options
-   if (entity.type === EntityType.wall) {
+   if (playerIsHoldingHammer() && entity.type === EntityType.wall) {
       const wallComponent = entity.getServerComponent(ServerComponentType.buildingMaterial);
 
       options.push({
@@ -189,7 +200,7 @@ const getMenuOptions = (entity: Entity): ReadonlyArray<MenuOption> => {
    }
 
    // Tunnel doors
-   if (entity.type === EntityType.tunnel) {
+   if (playerIsHoldingHammer() && entity.type === EntityType.tunnel) {
       options.push({
          name: "DOOR",
          imageSource: require("../../images/entities/tunnel/tunnel-door.png"),
@@ -311,7 +322,7 @@ const getMenuOptions = (entity: Entity): ReadonlyArray<MenuOption> => {
    }
 
    // Fence gate option
-   if (entity.type === EntityType.fence) {
+   if (playerIsHoldingHammer() && entity.type === EntityType.fence) {
       options.push({
          name: "FENCE GATE",
          imageSource: require("../../images/miscellaneous/full-fence-gate.png"),
@@ -457,7 +468,6 @@ const BuildMenu = () => {
          position: building.position.copy(),
          rotation: getGhostRotation(building, option.ghostType),
          ghostType: option.ghostType,
-         snappedEntities: [],
          tint: [1, 1, 1],
          opacity: hoveredGhostType === GhostType.deconstructMarker ? 0.8 : PARTIAL_OPACITY
       };

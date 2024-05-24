@@ -24,6 +24,7 @@ import { SERVER } from "../../server";
 import { PhysicsComponent, PhysicsComponentArray } from "../../components/PhysicsComponent";
 import { wasTribeMemberKill } from "../tribes/tribe-member";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
 
 const TURN_SPEED = 2 * Math.PI;
 
@@ -354,7 +355,7 @@ const merge = (slime1: Entity, slime2: Entity): void => {
    slime2.destroy();
 }
 
-export function onSlimeCollision(slime: Entity, collidingEntity: Entity): void {
+export function onSlimeCollision(slime: Entity, collidingEntity: Entity, collisionPoint: Point): void {
    // Merge with slimes
    if (collidingEntity.type === EntityType.slime) {
       const slimeComponent = SlimeComponentArray.getComponent(slime.id);
@@ -378,17 +379,7 @@ export function onSlimeCollision(slime: Entity, collidingEntity: Entity): void {
       const slimeComponent = SlimeComponentArray.getComponent(slime.id);
       const damage = CONTACT_DAMAGE[slimeComponent.size];
 
-      damageEntity(collidingEntity, damage, slime, PlayerCauseOfDeath.slime, "slime");
-      SERVER.registerEntityHit({
-         entityPositionX: collidingEntity.position.x,
-         entityPositionY: collidingEntity.position.y,
-         hitEntityID: collidingEntity.id,
-         damage: damage,
-         knockback: 0,
-         angleFromAttacker: slime.position.calculateAngleBetween(collidingEntity.position),
-         attackerID: slime.id,
-         flags: 0
-      });
+      damageEntity(collidingEntity, slime, damage, PlayerCauseOfDeath.slime, AttackEffectiveness.effective, collisionPoint, 0);
       addLocalInvulnerabilityHash(healthComponent, "slime", 0.3);
    }
 }

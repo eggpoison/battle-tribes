@@ -42,13 +42,10 @@ class Door extends Entity {
       for (let i = 0; i < 4; i++) {
          createLightWoodSpeckParticle(this.position.x, this.position.y, 20);
       }
-      if (hitData.angleFromAttacker !== null) {
-         for (let i = 0; i < 7; i++) {
-            const offsetDirection = hitData.angleFromAttacker + Math.PI + 0.2 * Math.PI * (Math.random() - 0.5);
-            const spawnPositionX = this.position.x + 20 * Math.sin(offsetDirection);
-            const spawnPositionY = this.position.y + 20 * Math.cos(offsetDirection);
-            createLightWoodSpeckParticle(spawnPositionX, spawnPositionY, 5);
-         }
+
+      for (let i = 0; i < 7; i++) {
+         const position = this.position.offset(20, 2 * Math.PI * Math.random());
+         createLightWoodSpeckParticle(position.x, position.y, 5);
       }
    }
    

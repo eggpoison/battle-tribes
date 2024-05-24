@@ -667,10 +667,10 @@ abstract class Board {
    public static hitboxIsInRange(testPosition: Point, hitbox: Hitbox, range: number): boolean {
       if (hitboxIsCircular(hitbox)) {
          // Circular hitbox
-         return circlesDoIntersect(testPosition.x, testPosition.y, range, hitbox.x, hitbox.y, hitbox.radius);
+         return circlesDoIntersect(testPosition, range, hitbox.position, hitbox.radius);
       } else {
          // Rectangular hitbox
-         return circleAndRectangleDoIntersect(testPosition.x, testPosition.y, range, hitbox.x, hitbox.y, hitbox.width, hitbox.height, hitbox.relativeRotation);
+         return circleAndRectangleDoIntersect(testPosition, range, hitbox.position, hitbox.width, hitbox.height, hitbox.relativeRotation);
       }
    }
 

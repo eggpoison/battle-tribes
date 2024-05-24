@@ -18,6 +18,7 @@ import Board from "../../Board";
 import { createItemsOverEntity } from "../../entity-shared";
 import { applyKnockback } from "../../components/PhysicsComponent";
 import { Biome } from "webgl-test-shared/dist/tiles";
+import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
 
 const ICE_SPIKE_RADIUS = 40;
 
@@ -88,7 +89,7 @@ export function tickIceSpikes(iceSpikes: Entity): void {
    }
 }
 
-export function onIceSpikesCollision(iceSpikes: Entity, collidingEntity: Entity): void {
+export function onIceSpikesCollision(iceSpikes: Entity, collidingEntity: Entity, collisionPoint: Point): void {
    if (collidingEntity.type === EntityType.yeti || collidingEntity.type === EntityType.frozenYeti || collidingEntity.type === EntityType.iceSpikes || collidingEntity.type === EntityType.snowball) {
       return;
    }
@@ -98,18 +99,8 @@ export function onIceSpikesCollision(iceSpikes: Entity, collidingEntity: Entity)
       if (canDamageEntity(healthComponent, "ice_spikes")) {
          const hitDirection = iceSpikes.position.calculateAngleBetween(collidingEntity.position);
          
-         damageEntity(collidingEntity, 1, iceSpikes, PlayerCauseOfDeath.ice_spikes, "ice_spikes");
+         damageEntity(collidingEntity, iceSpikes, 1, PlayerCauseOfDeath.ice_spikes, AttackEffectiveness.effective, collisionPoint, 0);
          applyKnockback(collidingEntity, 180, hitDirection);
-         SERVER.registerEntityHit({
-            entityPositionX: collidingEntity.position.x,
-            entityPositionY: collidingEntity.position.y,
-            hitEntityID: collidingEntity.id,
-            damage: 1,
-            knockback: 180,
-            angleFromAttacker: hitDirection,
-            attackerID: iceSpikes.id,
-            flags: 0
-         });
          addLocalInvulnerabilityHash(healthComponent, "ice_spikes", 0.3);
    
          if (StatusEffectComponentArray.hasComponent(collidingEntity.id)) {

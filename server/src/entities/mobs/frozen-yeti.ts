@@ -25,6 +25,7 @@ import { SERVER } from "../../server";
 import { PhysicsComponent, PhysicsComponentArray, applyKnockback } from "../../components/PhysicsComponent";
 import { wasTribeMemberKill } from "../tribes/tribe-member";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
 
 const FROZEN_YETI_SIZE = 144;
 const HEAD_HITBOX_SIZE = 72;
@@ -358,19 +359,11 @@ const doBiteAttack = (frozenYeti: Entity, angleToTarget: number): void => {
       const hitEntity = hitEntities[i];
       if (hitEntity !== frozenYeti) {
          if (HealthComponentArray.hasComponent(hitEntity.id)) {
-            damageEntity(hitEntity, 3, frozenYeti, PlayerCauseOfDeath.frozen_yeti);
-            // @Incomplete
+            // @Hack
+            const collisionPoint = new Point((hitEntity.position.x + frozenYeti.position.x) / 2, (hitEntity.position.y + frozenYeti.position.y) / 2);
+
+            damageEntity(hitEntity, frozenYeti, 3, PlayerCauseOfDeath.frozen_yeti, AttackEffectiveness.effective, collisionPoint, 0);
             applyKnockback(hitEntity, 200, angleToTarget);
-            SERVER.registerEntityHit({
-               entityPositionX: hitEntity.position.x,
-               entityPositionY: hitEntity.position.y,
-               hitEntityID: hitEntity.id,
-               damage: 3,
-               knockback: 200,
-               angleFromAttacker: angleToTarget,
-               attackerID: frozenYeti.id,
-               flags: 0
-            });
 
             if (StatusEffectComponentArray.hasComponent(hitEntity.id)) {
                applyStatusEffect(hitEntity.id, StatusEffect.bleeding, 5 * Settings.TPS);
@@ -672,7 +665,7 @@ export function tickFrozenYeti(frozenYeti: Entity): void {
    }
 }
 
-export function onFrozenYetiCollision(frozenYeti: Entity, collidingEntity: Entity): void {
+export function onFrozenYetiCollision(frozenYeti: Entity, collidingEntity: Entity, collisionPoint: Point): void {
    if (collidingEntity === null || collidingEntity.type === EntityType.iceSpikes) {
       return;
    }
@@ -693,18 +686,9 @@ export function onFrozenYetiCollision(frozenYeti: Entity, collidingEntity: Entit
       
       const hitDirection = frozenYeti.position.calculateAngleBetween(collidingEntity.position);
 
-      damageEntity(collidingEntity, 5, frozenYeti, PlayerCauseOfDeath.yeti, "frozen_yeti");
+      damageEntity(collidingEntity, frozenYeti, 5, PlayerCauseOfDeath.yeti, AttackEffectiveness.effective, collisionPoint, 0);
       applyKnockback(collidingEntity, 250, hitDirection);
-      SERVER.registerEntityHit({
-         entityPositionX: collidingEntity.position.x,
-         entityPositionY: collidingEntity.position.y,
-         hitEntityID: collidingEntity.id,
-         damage: 5,
-         knockback: 250,
-         angleFromAttacker: hitDirection,
-         attackerID: frozenYeti.id,
-         flags: 0
-      });
+
       addLocalInvulnerabilityHash(healthComponent, "frozen_yeti", 0.3);
    }
 }

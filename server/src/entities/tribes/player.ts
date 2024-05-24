@@ -73,9 +73,10 @@ export function createPlayer(position: Point, tribe: Tribe): Entity {
    addItem(inventoryComponent, createItem(ItemType.wood, 10));
    addItem(inventoryComponent, createItem(ItemType.wooden_wall, 50));
    
-   setTimeout(() => {
-      awardTitle(player, TribesmanTitle.gardener);
-   }, 300);
+   // @Temporary
+   // setTimeout(() => {
+   //    awardTitle(player, TribesmanTitle.gardener);
+   // }, 300);
 
    return player;
 }
@@ -536,22 +537,20 @@ export function deconstructBuilding(buildingID: number): void {
       return;
    }
 
-   if (!BuildingMaterialComponentArray.hasComponent(building.id)) {
-      return;
-   }
-
    // Deconstruct
    building.destroy();
 
-   const materialComponent = BuildingMaterialComponentArray.getComponent(building.id);
-   
-   if (building.type === EntityType.wall && materialComponent.material === BuildingMaterial.wood) {
-      createItemsOverEntity(building, ItemType.wooden_wall, 1, 40);
-      return;
+   if (BuildingMaterialComponentArray.hasComponent(building.id)) {
+      const materialComponent = BuildingMaterialComponentArray.getComponent(building.id);
+      
+      if (building.type === EntityType.wall && materialComponent.material === BuildingMaterial.wood) {
+         createItemsOverEntity(building, ItemType.wooden_wall, 1, 40);
+         return;
+      }
+      
+      const materialItemType = MATERIAL_TO_ITEM_MAP[materialComponent.material];
+      createItemsOverEntity(building, materialItemType, 5, 40);
    }
-   
-   const materialItemType = MATERIAL_TO_ITEM_MAP[materialComponent.material];
-   createItemsOverEntity(building, materialItemType, 5, 40);
    return;
 }
 

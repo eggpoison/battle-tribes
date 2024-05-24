@@ -1,9 +1,10 @@
+import { AttackEffectiveness, calculateAttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
 import { HitFlags } from "webgl-test-shared/dist/client-server-types";
 import { COLLISION_BITS } from "webgl-test-shared/dist/collision";
 import { PlanterBoxPlant, BlueprintType, BuildingMaterial, MATERIAL_TO_ITEM_MAP, ServerComponentType } from "webgl-test-shared/dist/components";
 import { CraftingStation } from "webgl-test-shared/dist/crafting-recipes";
 import { EntityType, LimbAction, PlayerCauseOfDeath, GenericArrowType, EntityTypeString } from "webgl-test-shared/dist/entities";
-import { PlaceableItemType, ItemType, Item, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, BattleaxeItemInfo, SwordItemInfo, AxeItemInfo, ToolItemInfo, HammerItemInfo, ConsumableItemInfo, BowItemInfo, itemIsStackable, getItemStackSize, BackpackItemInfo, ArmourItemInfo, InventoryName, ConsumableItemCategory, itemInfoIsTool } from "webgl-test-shared/dist/items";
+import { PlaceableItemType, ItemType, Item, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, BattleaxeItemInfo, SwordItemInfo, AxeItemInfo, HammerItemInfo, ConsumableItemInfo, BowItemInfo, itemIsStackable, getItemStackSize, BackpackItemInfo, ArmourItemInfo, InventoryName, ConsumableItemCategory, itemInfoIsTool } from "webgl-test-shared/dist/items";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { StructureConnectionInfo, StructureType, calculateStructurePlaceInfo } from "webgl-test-shared/dist/structures";
@@ -12,7 +13,7 @@ import { TribeType } from "webgl-test-shared/dist/tribes";
 import { Point, dotAngles, lerp } from "webgl-test-shared/dist/utils";
 import Entity, { entityIsStructure } from "../../Entity";
 import Board from "../../Board";
-import { BerryBushComponentArray, BuildingMaterialComponentArray, HealthComponentArray, InventoryUseComponentArray, TreeComponentArray, TribeComponentArray, TribesmanComponentArray } from "../../components/ComponentArray";
+import { BerryBushComponentArray, BuildingMaterialComponentArray, HealthComponentArray, InventoryUseComponentArray, TribeComponentArray, TribesmanComponentArray } from "../../components/ComponentArray";
 import { InventoryComponentArray, consumeItemFromSlot, consumeItemType, countItemType, getInventory, inventoryIsFull, pickupItemEntity, resizeInventory } from "../../components/InventoryComponent";
 import { getEntitiesInRange } from "../../ai-shared";
 import { addDefence, damageEntity, healEntity, removeDefence } from "../../components/HealthComponent";
@@ -58,6 +59,7 @@ import { getHitboxesCollidingEntities } from "../../collision";
 import { PlantComponentArray, plantIsFullyGrown } from "../../components/PlantComponent";
 import { ItemComponentArray } from "../../components/ItemComponent";
 import { StructureComponentArray } from "../../components/StructureComponent";
+import { TreeComponentArray } from "../../components/TreeComponent";
 
 const enum Vars {
    ITEM_THROW_FORCE = 100,
@@ -98,16 +100,21 @@ const getDamageMultiplier = (entity: Entity): number => {
    return multiplier;
 }
 
-export function calculateItemDamage(entity: Entity, item: Item | null, entityToAttack: Entity): number {
+export function calculateItemDamage(entity: Entity, item: Item | null, attackEffectiveness: AttackEffectiveness): number {
+   if (attackEffectiveness === AttackEffectiveness.stopped) {
+      return 0;
+   }
+   
    let baseItemDamage: number;
    if (item === null) {
       baseItemDamage = 1;
    } else {
+      // @Cleanup
       const itemCategory = ITEM_TYPE_RECORD[item.type];
       switch (itemCategory) {
          case "battleaxe": {
             const itemInfo = ITEM_INFO_RECORD[item.type] as BattleaxeItemInfo;
-            if (SWORD_DAMAGEABLE_ENTITIES.includes(entityToAttack.type) || AXE_DAMAGEABLE_ENTITIES.includes(entityToAttack.type)) {
+            if (attackEffectiveness === AttackEffectiveness.effective) {
                baseItemDamage = itemInfo.damage;
             } else {
                baseItemDamage = Math.floor(itemInfo.damage / 2);
@@ -117,7 +124,7 @@ export function calculateItemDamage(entity: Entity, item: Item | null, entityToA
          case "spear":
          case "sword": {
             const itemInfo = ITEM_INFO_RECORD[item.type] as SwordItemInfo;
-            if (SWORD_DAMAGEABLE_ENTITIES.includes(entityToAttack.type)) {
+            if (attackEffectiveness === AttackEffectiveness.effective) {
                baseItemDamage = itemInfo.damage;
             } else {
                baseItemDamage = Math.floor(itemInfo.damage / 2);
@@ -126,7 +133,7 @@ export function calculateItemDamage(entity: Entity, item: Item | null, entityToA
          }
          case "axe": {
             const itemInfo = ITEM_INFO_RECORD[item.type] as AxeItemInfo;
-            if (AXE_DAMAGEABLE_ENTITIES.includes(entityToAttack.type)) {
+            if (attackEffectiveness === AttackEffectiveness.effective) {
                baseItemDamage = itemInfo.damage;
             } else {
                baseItemDamage = Math.ceil(itemInfo.damage / 3);
@@ -135,7 +142,7 @@ export function calculateItemDamage(entity: Entity, item: Item | null, entityToA
          }
          case "pickaxe": {
             const itemInfo = ITEM_INFO_RECORD[item.type] as AxeItemInfo;
-            if (PICKAXE_DAMAGEABLE_ENTITIES.includes(entityToAttack.type)) {
+            if (attackEffectiveness === AttackEffectiveness.effective) {
                baseItemDamage = itemInfo.damage;
             } else {
                baseItemDamage = Math.floor(itemInfo.damage / 4);
@@ -314,16 +321,10 @@ const gatherPlant = (plant: Entity, attacker: Entity, gloves: Item | null): void
       createItemEntity(new Point(x, y), 2 * Math.PI * Math.random(), ItemType.leaf, 1, 0);
    }
 
-   SERVER.registerEntityHit({
-      entityPositionX: plant.position.x,
-      entityPositionY: plant.position.y,
-      hitEntityID: plant.id,
-      damage: 0,
-      knockback: 0,
-      angleFromAttacker: plant.position.calculateAngleBetween(attacker.position),
-      attackerID: attacker.id,
-      flags: HitFlags.NON_DAMAGING_HIT
-   });
+   // @Hack
+   const collisionPoint = new Point((plant.position.x + attacker.position.x) / 2, (plant.position.y + attacker.position.y) / 2);
+
+   damageEntity(plant, attacker, 0, 0, AttackEffectiveness.ineffective, collisionPoint, HitFlags.NON_DAMAGING_HIT);
 }
 
 /**
@@ -354,6 +355,8 @@ export function attemptAttack(attacker: Entity, targetEntity: Entity, itemSlot: 
       item = null;
    }
 
+   const attackEffectiveness = calculateAttackEffectiveness(item, targetEntity.type);
+
    // Reset attack cooldown
    // @Hack
    // const baseAttackCooldown = item !== null ? getItemAttackCooldown(item) : Settings.DEFAULT_ATTACK_COOLDOWN;
@@ -381,24 +384,18 @@ export function attemptAttack(attacker: Entity, targetEntity: Entity, itemSlot: 
       }
    }
 
-   const attackDamage = calculateItemDamage(attacker, item, targetEntity);
+   const attackDamage = calculateItemDamage(attacker, item, attackEffectiveness);
    const attackKnockback = calculateItemKnockback(item);
 
    const hitDirection = attacker.position.calculateAngleBetween(targetEntity.position);
 
+   // @Hack
+   const collisionPoint = new Point((targetEntity.position.x + attacker.position.x) / 2, (targetEntity.position.y + attacker.position.y) / 2);
+
    // Register the hit
-   damageEntity(targetEntity, attackDamage, attacker, PlayerCauseOfDeath.tribe_member);
+   const hitFlags = item !== null && item.type === ItemType.flesh_sword ? HitFlags.HIT_BY_FLESH_SWORD : 0;
+   damageEntity(targetEntity, attacker, attackDamage, PlayerCauseOfDeath.tribe_member, attackEffectiveness, collisionPoint, hitFlags);
    applyKnockback(targetEntity, attackKnockback, hitDirection);
-   SERVER.registerEntityHit({
-      entityPositionX: targetEntity.position.x,
-      entityPositionY: targetEntity.position.y,
-      hitEntityID: targetEntity.id,
-      damage: attackDamage,
-      knockback: attackKnockback,
-      angleFromAttacker: hitDirection,
-      attackerID: attacker.id,
-      flags: item !== null && item.type === ItemType.flesh_sword ? HitFlags.HIT_BY_FLESH_SWORD : 0
-   });
 
    if (item !== null && item.type === ItemType.flesh_sword) {
       applyStatusEffect(targetEntity.id, StatusEffect.poisoned, 3 * Settings.TPS);
@@ -1271,22 +1268,3 @@ const isBerryBush = (entity: Entity): boolean => {
       }
    }
 }
-
-// export function getEntityPlantGatherMultiplier(entity: Entity, plant: Entity): number {
-//    // For when called with non-tribesmen
-//    if (!TribeMemberComponentArray.hasComponent(entity.id)) {
-//       return 1;
-//    }
-   
-//    let multiplier = 1;
-
-//    if (hasTitle(entity.id, TribesmanTitle.berrymuncher) && isBerryBush(plant)) {
-//       multiplier++;
-//    }
-
-//    if (hasTitle(entity.id, TribesmanTitle.gardener)) {
-//       multiplier++;
-//    }
-
-//    return multiplier;
-// }

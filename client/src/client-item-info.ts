@@ -457,7 +457,7 @@ const CLIENT_ITEM_INFO_RECORD: Record<ItemType, ClientItemInfo> = {
    },
    // @Incomplete
    [ItemType.fertiliser]: {
-      entityTextureSource: "items/small/fence.png",
+      entityTextureSource: "items/small/fertiliser.png",
       textureSource: "items/large/fertiliser.png",
       toolTextureSource: "",
       name: "Fertiliser",

@@ -1,10 +1,11 @@
 import { PlanterBoxComponentData, PlanterBoxPlant, ServerComponentType } from "webgl-test-shared/dist/components";
 import ServerComponent from "./ServerComponent";
-import Entity from "../Entity";
+import Entity, { getRandomPointInEntity } from "../Entity";
 import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
 import { playSound } from "../sound";
 import { randInt } from "webgl-test-shared/dist/utils";
+import { createGrowthParticle } from "../particles";
 
 class PlanterBoxComponent extends ServerComponent<ServerComponentType.planterBox> {
    private moundRenderPart: RenderPart | null = null;
@@ -41,6 +42,12 @@ class PlanterBoxComponent extends ServerComponent<ServerComponentType.planterBox
    }
 
    public updateFromData(data: PlanterBoxComponentData): void {
+      if (data.isFertilised && !this.isFertilised) {
+         for (let i = 0; i < 17; i++) {
+            const pos = getRandomPointInEntity(this.entity);
+            createGrowthParticle(pos.x, pos.y);
+         }
+      }
       this.isFertilised = data.isFertilised;
       
       const hasPlant = data.plantType !== null;

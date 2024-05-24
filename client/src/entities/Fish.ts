@@ -58,13 +58,9 @@ class Fish extends Entity {
 
    protected onHit(hitData: HitData): void {
       // Blood particles
-      if (hitData.angleFromAttacker !== null) {
-         for (let i = 0; i < 5; i++) {
-            const offsetDirection = hitData.angleFromAttacker + Math.PI + 0.2 * Math.PI * (Math.random() - 0.5);
-            const spawnPositionX = this.position.x + 16 * Math.sin(offsetDirection);
-            const spawnPositionY = this.position.y + 16 * Math.cos(offsetDirection);
-            createBloodParticle(Math.random() < 0.6 ? BloodParticleSize.small : BloodParticleSize.large, spawnPositionX, spawnPositionY, 2 * Math.PI * Math.random(), randFloat(150, 250), true);
-         }
+      for (let i = 0; i < 5; i++) {
+         const position = this.position.offset(16, 2 * Math.PI * Math.random());
+         createBloodParticle(Math.random() < 0.6 ? BloodParticleSize.small : BloodParticleSize.large, position.x, position.y, 2 * Math.PI * Math.random(), randFloat(150, 250), true);
       }
 
       playSound(("fish-hurt-" + randInt(1, 4) + ".mp3") as AudioFilePath, 0.4, 1, this.position.x, this.position.y);

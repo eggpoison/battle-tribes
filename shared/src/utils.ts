@@ -305,15 +305,15 @@ export function smoothstep(value: number): number {
    return clamped * clamped * (3 - 2 * clamped);
 }
 
-export function distBetweenPointAndRectangle(pointX: number, pointY: number, rectPosX: number, rectPosY: number, rectWidth: number, rectHeight: number, rectRotation: number): number {
+export function distBetweenPointAndRectangle(point: Point, rectPos: Point, rectWidth: number, rectHeight: number, rectRotation: number): number {
    // Rotate point around rect to make the situation axis-aligned
-   const alignedPointX = rotateXAroundPoint(pointX, pointY, rectPosX, rectPosY, -rectRotation);
-   const alignedPointY = rotateYAroundPoint(pointX, pointY, rectPosX, rectPosY, -rectRotation);
+   const alignedPointX = rotateXAroundPoint(point.x, point.y, rectPos.x, rectPos.y, -rectRotation);
+   const alignedPointY = rotateYAroundPoint(point.x, point.y, rectPos.x, rectPos.y, -rectRotation);
 
-   const rectMinX = rectPosX - rectWidth * 0.5;
-   const rectMaxX = rectPosX + rectWidth * 0.5;
-   const rectMinY = rectPosY - rectHeight * 0.5;
-   const rectMaxY = rectPosY + rectHeight * 0.5;
+   const rectMinX = rectPos.x - rectWidth * 0.5;
+   const rectMaxX = rectPos.x + rectWidth * 0.5;
+   const rectMinY = rectPos.y - rectHeight * 0.5;
+   const rectMaxY = rectPos.y + rectHeight * 0.5;
    
    var dx = Math.max(rectMinX - alignedPointX, 0, alignedPointX - rectMaxX);
    var dy = Math.max(rectMinY - alignedPointY, 0, alignedPointY - rectMaxY);

@@ -26,6 +26,7 @@ import { PhysicsComponent, PhysicsComponentArray, applyKnockback } from "../../c
 import { CollisionVars, entitiesAreColliding } from "../../collision";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { ItemComponentArray } from "../../components/ItemComponent";
+import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
 
 const MIN_TERRITORY_SIZE = 50;
 const MAX_TERRITORY_SIZE = 100;
@@ -395,7 +396,7 @@ export function tickYeti(yeti: Entity): void {
    }
 }
 
-export function onYetiCollision(yeti: Entity, collidingEntity: Entity): void {
+export function onYetiCollision(yeti: Entity, collidingEntity: Entity, collisionPoint: Point): void {
    // Don't damage ice spikes
    if (collidingEntity.type === EntityType.iceSpikes) return;
 
@@ -420,18 +421,9 @@ export function onYetiCollision(yeti: Entity, collidingEntity: Entity): void {
       }
       
       const hitDirection = yeti.position.calculateAngleBetween(collidingEntity.position);
-      damageEntity(collidingEntity, 2, yeti, PlayerCauseOfDeath.yeti, "yeti");
+      
+      damageEntity(collidingEntity, yeti, 2, PlayerCauseOfDeath.yeti, AttackEffectiveness.effective, collisionPoint, 0);
       applyKnockback(collidingEntity, 200, hitDirection);
-      SERVER.registerEntityHit({
-         entityPositionX: collidingEntity.position.x,
-         entityPositionY: collidingEntity.position.y,
-         hitEntityID: collidingEntity.id,
-         damage: 2,
-         knockback: 200,
-         angleFromAttacker: hitDirection,
-         attackerID: yeti.id,
-         flags: 0
-      });
       addLocalInvulnerabilityHash(healthComponent, "yeti", 0.3);
    }
 }

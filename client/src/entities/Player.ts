@@ -227,21 +227,6 @@ class Player extends TribeMember {
       definiteGameState.hotbar = new Inventory(Settings.INITIAL_PLAYER_HOTBAR_SIZE, 1, InventoryName.hotbar);
    }
 
-   protected onHit(hitData: HitData): void {
-      super.onHit(hitData);
-      
-      // Knockback
-      if (this === Player.instance && hitData.angleFromAttacker !== null) {
-         const physicsComponent = this.getServerComponent(ServerComponentType.physics);
-
-         physicsComponent.velocity.x *= 0.5;
-         physicsComponent.velocity.y *= 0.5;
-
-         physicsComponent.velocity.x += hitData.knockback * Math.sin(hitData.angleFromAttacker);
-         physicsComponent.velocity.y += hitData.knockback * Math.cos(hitData.angleFromAttacker);
-      }
-   }
-
    public static resolveCollisions(): void {
       // Don't resolve wall tile collisions in lightspeed mode
       if (!keyIsPressed("l")) {

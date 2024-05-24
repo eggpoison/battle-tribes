@@ -17,6 +17,7 @@ import { attemptAttack, calculateAttackTarget, calculateItemDamage, calculateRad
 import { TRIBESMAN_TURN_SPEED, attemptToRepairBuildings, clearTribesmanPath, getBestHammerItemSlot, getTribesmanAttackOffset, getTribesmanAttackRadius, getTribesmanDesiredAttackRange, getTribesmanRadius, getTribesmanSlowAcceleration, pathToEntityExists, pathfindToPosition } from "./tribesman-ai";
 import { EntityRelationship } from "../../../components/TribeComponent";
 import { getItemAttackCooldown } from "../../../items";
+import { calculateAttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
 
 const enum Vars {
    BOW_LINE_OF_SIGHT_WAIT_TIME = 0.5 * Settings.TPS,
@@ -74,9 +75,10 @@ const getMostDamagingItemSlot = (tribesman: Entity, huntedEntity: Entity): numbe
          continue;
       }
 
-
+      const attackEffectiveness = calculateAttackEffectiveness(item, huntedEntity.type);
+      
       const attackCooldown = getItemAttackCooldown(item);
-      const damage = calculateItemDamage(tribesman, item, huntedEntity);
+      const damage = calculateItemDamage(tribesman, item, attackEffectiveness);
       const dps = damage / attackCooldown;
 
       if (dps > mostDps) {
@@ -167,7 +169,7 @@ export function huntEntity(tribesman: Entity, huntedEntity: Entity, isAggressive
             physicsComponent.targetRotation = direction;
          }
 
-         const distance = getDistanceFromPointToEntity(tribesman.position.x, tribesman.position.y, huntedEntity) - getTribesmanRadius(tribesman);
+         const distance = getDistanceFromPointToEntity(tribesman.position, huntedEntity) - getTribesmanRadius(tribesman);
          if (distance > 250) {
             // Move closer
             physicsComponent.acceleration.x = getTribesmanSlowAcceleration(tribesman.id) * Math.sin(direction);
@@ -214,7 +216,7 @@ export function huntEntity(tribesman: Entity, huntedEntity: Entity, isAggressive
          
          if (isInLineOfSight || (Board.ticks - tribesmanComponent.lastEnemyLineOfSightTicks) <= Vars.BOW_LINE_OF_SIGHT_WAIT_TIME) {
             const physicsComponent = PhysicsComponentArray.getComponent(tribesman.id);
-            const distance = getDistanceFromPointToEntity(tribesman.position.x, tribesman.position.y, huntedEntity) - getTribesmanRadius(tribesman);
+            const distance = getDistanceFromPointToEntity(tribesman.position, huntedEntity) - getTribesmanRadius(tribesman);
             
             // If there are any nearby embrasure use points, move to them
             const nearbyEmbrasureUsePoints = getNearbyEmbrasureUsePoints(tribesman);
@@ -274,7 +276,7 @@ export function huntEntity(tribesman: Entity, huntedEntity: Entity, isAggressive
 
       if (isAggressive && weaponCategory === "battleaxe") {
          // Use the battleaxe if the entity is in the use range
-         const distance = getDistanceFromPointToEntity(tribesman.position.x, tribesman.position.y, huntedEntity) - getTribesmanRadius(tribesman);
+         const distance = getDistanceFromPointToEntity(tribesman.position, huntedEntity) - getTribesmanRadius(tribesman);
          if (distance >= Vars.BATTLEAXE_MIN_USE_RANGE && distance <= Vars.BATTLEAXE_MAX_USE_RANGE && selectedItem.id !== hotbarUseInfo.thrownBattleaxeItemID) {
             if (hotbarUseInfo.action !== LimbAction.chargeBattleaxe) {
                hotbarUseInfo.lastBattleaxeChargeTicks = Board.ticks;
@@ -350,7 +352,7 @@ export function huntEntity(tribesman: Entity, huntedEntity: Entity, isAggressive
    const physicsComponent = PhysicsComponentArray.getComponent(tribesman.id);
    const desiredAttackRange = getTribesmanDesiredAttackRange(tribesman);
 
-   const distance = getDistanceFromPointToEntity(tribesman.position.x, tribesman.position.y, huntedEntity) - getTribesmanRadius(tribesman);
+   const distance = getDistanceFromPointToEntity(tribesman.position, huntedEntity) - getTribesmanRadius(tribesman);
    if (willStopAtDesiredDistance(physicsComponent, desiredAttackRange, distance)) {
       // If the tribesman will stop too close to the target, move back a bit
       if (willStopAtDesiredDistance(physicsComponent, desiredAttackRange - 20, distance)) {

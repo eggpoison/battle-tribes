@@ -1,12 +1,13 @@
 import { Settings } from "webgl-test-shared/dist/settings";
 import { PhysicsComponentData } from "webgl-test-shared/dist/components";
-import { EntityTypeString } from "webgl-test-shared/dist/entities";
+import { EntityType, EntityTypeString } from "webgl-test-shared/dist/entities";
 import { TileType, TILE_MOVE_SPEED_MULTIPLIERS, TILE_FRICTIONS } from "webgl-test-shared/dist/tiles";
 import Entity from "../Entity";
 import { ComponentArray } from "./ComponentArray";
 import { addDirtyPathfindingEntity, entityCanBlockPathfinding, removeDirtyPathfindingEntity } from "../pathfinding";
 import { Point } from "webgl-test-shared/dist/utils";
 import Board from "../Board";
+import { SERVER } from "../server";
 
 // @Cleanup: Variable names
 const a = new Array<number>();
@@ -259,6 +260,10 @@ export function applyKnockback(entity: Entity, knockback: number, knockbackDirec
    const knockbackForce = knockback / entity.totalMass;
    physicsComponent.velocity.x += knockbackForce * Math.sin(knockbackDirection);
    physicsComponent.velocity.y += knockbackForce * Math.cos(knockbackDirection);
+
+   if (entity.type === EntityType.player) {
+      SERVER.registerPlayerKnockback(entity, knockback, knockbackDirection);
+   }
 }
 
 export function serialisePhysicsComponent(entityID: number): PhysicsComponentData {

@@ -66,7 +66,7 @@ export const EntityTypeString: Record<EntityType, string> = {
    [EntityType.berryBush]: "berry_bush",
    [EntityType.cactus]: "cactus",
    [EntityType.yeti]: "yeti",
-   [EntityType.iceSpikes]: "ice spikes",
+   [EntityType.iceSpikes]: "ice_spikes",
    [EntityType.slime]: "slime",
    [EntityType.slimewisp]: "slimewisp",
    [EntityType.player]: "player",

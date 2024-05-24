@@ -444,7 +444,7 @@ export const CRAFTING_RECIPES: ReadonlyArray<CraftingRecipe> = [
          [ItemType.poop]: 3,
          [ItemType.leaf]: 3
       },
-      aiCraftTimeTicks: Vars.SLOW_CRAFT_TIME,
+      aiCraftTimeTicks: Vars.NORMAL_CRAFT_TIME,
       craftingStation: CraftingStation.workbench
    }
 ];

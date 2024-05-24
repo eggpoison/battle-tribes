@@ -1,5 +1,5 @@
 import { EntityComponentsData, ServerComponentType } from "webgl-test-shared/dist/components";
-import { Point, lerp, randFloat } from "webgl-test-shared/dist/utils";
+import { Point, angle, lerp, randFloat } from "webgl-test-shared/dist/utils";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { HitData } from "webgl-test-shared/dist/client-server-types";
 import RenderPart from "../render-parts/RenderPart";
@@ -112,13 +112,13 @@ class Yeti extends Entity {
       createBloodPoolParticle(this.position.x, this.position.y, Yeti.BLOOD_POOL_SIZE);
       
       // Blood particles
-      if (hitData.angleFromAttacker !== null) {
-         for (let i = 0; i < 10; i++) {
-            const offsetDirection = hitData.angleFromAttacker + Math.PI + 0.2 * Math.PI * (Math.random() - 0.5);
-            const spawnPositionX = this.position.x + Yeti.SIZE / 2 * Math.sin(offsetDirection);
-            const spawnPositionY = this.position.y + Yeti.SIZE / 2 * Math.cos(offsetDirection);
-            createBloodParticle(Math.random() < 0.6 ? BloodParticleSize.small : BloodParticleSize.large, spawnPositionX, spawnPositionY, 2 * Math.PI * Math.random(), randFloat(150, 250), true);
-         }
+      for (let i = 0; i < 10; i++) {
+         let offsetDirection = angle(hitData.hitPosition[0] - this.position.x, hitData.hitPosition[1] - this.position.y);
+         offsetDirection += 0.2 * Math.PI * (Math.random() - 0.5);
+
+         const spawnPositionX = this.position.x + Yeti.SIZE / 2 * Math.sin(offsetDirection);
+         const spawnPositionY = this.position.y + Yeti.SIZE / 2 * Math.cos(offsetDirection);
+         createBloodParticle(Math.random() < 0.6 ? BloodParticleSize.small : BloodParticleSize.large, spawnPositionX, spawnPositionY, 2 * Math.PI * Math.random(), randFloat(150, 250), true);
       }
    }
 

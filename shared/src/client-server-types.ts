@@ -1,6 +1,7 @@
 import { BuildingPlanData, BuildingSafetyData, SafetyNodeData, TribeWallData, WallConnectionData } from "./ai-building-types";
 import { BlueprintType, EntityComponentsData } from "./components";
 import { EntityType, LimbAction } from "./entities";
+import { AttackEffectiveness } from "./entity-damage-types";
 import { EntityEvent } from "./entity-events";
 import { GrassBlocker } from "./grass-blockers";
 import { Inventory, InventoryName } from "./items";
@@ -68,21 +69,22 @@ export interface StatusEffectData {
 
 export const HitFlags = {
    HIT_BY_FLESH_SWORD: 1 << 0,
-   NON_DAMAGING_HIT: 1 << 1
+   NON_DAMAGING_HIT: 1 << 1,
+   HIT_BY_SPIKES: 1 << 2
+};
+
+export interface HitData {
+   readonly hitEntityID: number;
+   readonly hitPosition: [number, number];
+   readonly attackEffectiveness: AttackEffectiveness;
+   readonly damage: number;
+   readonly shouldShowDamageNumber: boolean;
+   readonly flags: number;
 }
 
-// @Cleanup: A whole bunch of this data isn't needed client-side except for when the player itself is hit, maybe make 2 types - 1 for player hits, 1 for non-player hits
-export interface HitData {
-   // Two following values are used for if the hit is a killing blow so the client doesn't know where the hit entity is
-   readonly entityPositionX: number;
-   readonly entityPositionY: number;
-   readonly hitEntityID: number;
-   /** Used for client-side damage numbers */
-   readonly damage: number;
+export interface PlayerKnockbackData {
    readonly knockback: number;
-   readonly angleFromAttacker: number | null;
-   readonly attackerID: number;
-   readonly flags: number;
+   readonly knockbackDirection: number;
 }
 
 export interface HealData {
@@ -131,7 +133,8 @@ export interface GameDataPacket {
    readonly entityDataArray: Array<EntityData<EntityType>>;
    readonly tileUpdates: ReadonlyArray<ServerTileUpdateData>;
    /** All hits taken by visible entities server-side */
-   readonly hits: ReadonlyArray<HitData>;
+   readonly visibleHits: ReadonlyArray<HitData>;
+   readonly playerKnockbacks: ReadonlyArray<PlayerKnockbackData>;
    /** All healing received by visible entities server-side */
    readonly heals: ReadonlyArray<HealData>;
    readonly orbCompletes: ReadonlyArray<ResearchOrbCompleteData>;

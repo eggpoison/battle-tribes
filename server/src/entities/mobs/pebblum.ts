@@ -13,6 +13,7 @@ import { SERVER } from "../../server";
 import CircularHitbox from "../../hitboxes/CircularHitbox";
 import { PhysicsComponent, PhysicsComponentArray, applyKnockback } from "../../components/PhysicsComponent";
 import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
+import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
 
 const TURN_SPEED = Math.PI * 2;
 
@@ -44,7 +45,7 @@ export function tickPebblum(pebblum: Entity): void {
    }
 }
 
-export function onPebblumCollision(pebblum: Entity, collidingEntity: Entity): void {
+export function onPebblumCollision(pebblum: Entity, collidingEntity: Entity, collisionPoint: Point): void {
    const pebblumComponent = PebblumComponentArray.getComponent(pebblum.id);
    if (collidingEntity.id !== pebblumComponent.targetEntityID) {
       return;
@@ -57,17 +58,7 @@ export function onPebblumCollision(pebblum: Entity, collidingEntity: Entity): vo
    
    const hitDirection = pebblum.position.calculateAngleBetween(collidingEntity.position);
    // @Incomplete: Cause of death
-   damageEntity(collidingEntity, 1, pebblum, PlayerCauseOfDeath.yeti, "pebblum");
+   damageEntity(collidingEntity, pebblum, 1, PlayerCauseOfDeath.yeti, AttackEffectiveness.effective, collisionPoint, 0);
    applyKnockback(collidingEntity, 100, hitDirection);
-   SERVER.registerEntityHit({
-      entityPositionX: collidingEntity.position.x,
-      entityPositionY: collidingEntity.position.y,
-      hitEntityID: collidingEntity.id,
-      damage: 1,
-      knockback: 100,
-      angleFromAttacker: hitDirection,
-      attackerID: pebblum.id,
-      flags: 0
-   });
    addLocalInvulnerabilityHash(healthComponent, "pebblum", 0.3);
 }

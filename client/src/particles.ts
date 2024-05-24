@@ -1508,3 +1508,76 @@ export function createConversionParticle(x: number, y: number, vx: number, vy: n
    );
    Board.lowTexturedParticles.push(particle);
 }
+
+export function createSparkParticle(x: number, y: number): void {
+   const lifetime = randFloat(0.15, 0.2);
+   const opacityMult = randFloat(0.5, 0.75);
+
+   const particle = new Particle(lifetime);
+   particle.getOpacity = () => {
+      const progress = particle.age / lifetime;
+      return (1 - progress * progress) * opacityMult;
+   };
+
+   const velocityMagnitude = randFloat(70, 110);
+   const velocityDirection = 2 * Math.PI * Math.random();
+   const vx = velocityMagnitude * Math.sin(velocityDirection);
+   const vy = velocityMagnitude * Math.cos(velocityDirection);
+   
+   addMonocolourParticleToBufferContainer(
+      particle,
+      ParticleRenderLayer.high,
+      4, 4,
+      x, y,
+      vx, vy,
+      0, 0,
+      0,
+      2 * Math.PI * Math.random(),
+      randFloat(2, 5) * randSign(),
+      3,
+      0,
+      1, 1, 1
+   );
+   Board.highMonocolourParticles.push(particle);
+}
+
+export function createGrowthParticle(x: number, y: number): void {
+   const opacityMult = randFloat(0.5, 1);
+   
+   const lifetime = randFloat(1, 1.45);
+
+   const particle = new Particle(lifetime);
+   particle.getOpacity = () => {
+      const progress = particle.age / lifetime;
+      return (1 - progress * progress) * opacityMult;
+   };
+
+   const velocityMagnitude = randFloat(22, 35);
+   const velocityDirection = 2 * Math.PI * Math.random();
+   const vx = velocityMagnitude * Math.sin(velocityDirection);
+   const vy = velocityMagnitude * Math.cos(velocityDirection);
+
+   const minCol = [87/255, 245/255, 66/255];
+   const maxCol = [176/255, 255/255, 166/255];
+   const colourLerp = Math.random();
+   
+   // const size = Math.random() < 0.5 ? 4 : 6;
+   const size = 6;
+   
+   addMonocolourParticleToBufferContainer(
+      particle,
+      ParticleRenderLayer.high,
+      size, size,
+      x, y,
+      vx, vy,
+      0, 0,
+      30,
+      2 * Math.PI * Math.random(),
+      randFloat(2, 5) * randSign(),
+      3,
+      0,
+      // lerp(minCol[0], maxCol[0], colourLerp), lerp(minCol[1], maxCol[1], colourLerp), lerp(minCol[2], maxCol[2], colourLerp)
+      minCol[0], minCol[1], minCol[2]
+   );
+   Board.highMonocolourParticles.push(particle);
+}

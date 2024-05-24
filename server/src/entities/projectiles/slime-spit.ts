@@ -15,6 +15,7 @@ import { SERVER } from "../../server";
 import { PhysicsComponent, PhysicsComponentArray, applyKnockback } from "../../components/PhysicsComponent";
 import { EntityCreationInfo } from "../../entity-components";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
 
 type ComponentTypes = [ServerComponentType.physics, ServerComponentType.slimeSpit];
 
@@ -51,7 +52,7 @@ export function tickSlimeSpit(spit: Entity): void {
    }
 }
 
-export function onSlimeSpitCollision(spit: Entity, collidingEntity: Entity): void {
+export function onSlimeSpitCollision(spit: Entity, collidingEntity: Entity, collisionPoint: Point): void {
    if (collidingEntity.type === EntityType.slime || collidingEntity.type === EntityType.slimewisp || !HealthComponentArray.hasComponent(collidingEntity.id)) {
       return;
    }
@@ -60,18 +61,8 @@ export function onSlimeSpitCollision(spit: Entity, collidingEntity: Entity): voi
    const damage = spitComponent.size === 0 ? 2 : 3;
    const hitDirection = spit.position.calculateAngleBetween(collidingEntity.position);
 
-   damageEntity(collidingEntity, damage, spit, PlayerCauseOfDeath.poison);
+   damageEntity(collidingEntity, spit, damage, PlayerCauseOfDeath.poison, AttackEffectiveness.effective, collisionPoint, 0);
    applyKnockback(collidingEntity, 150, hitDirection);
-   SERVER.registerEntityHit({
-      entityPositionX: collidingEntity.position.x,
-      entityPositionY: collidingEntity.position.y,
-      hitEntityID: collidingEntity.id,
-      damage: damage,
-      knockback: 150,
-      angleFromAttacker: hitDirection,
-      attackerID: spit.id,
-      flags: 0
-   });
    
    if (StatusEffectComponentArray.hasComponent(collidingEntity.id)) {
       applyStatusEffect(collidingEntity.id, StatusEffect.poisoned, 2 * Settings.TPS);

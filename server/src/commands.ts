@@ -9,31 +9,24 @@ import { getTilesOfBiome } from "./census";
 import Board from "./Board";
 import Tile from "./Tile";
 import { damageEntity, healEntity } from "./components/HealthComponent";
-import Entity from "./Entity";
+import Entity, { getRandomPositionInEntity } from "./Entity";
 import { TribeComponentArray } from "./components/ComponentArray";
 import { InventoryComponentArray, addItem } from "./components/InventoryComponent";
 import { createEntity } from "./entity-creation";
 import { createItem } from "./items";
 import { forceBuildPlans } from "./ai-tribe-building/ai-building-plans";
+import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
 
 const ENTITY_SPAWN_RANGE = 200;
 
 const killPlayer = (player: Entity): void => {
-   damageEntity(player, 999999, null, PlayerCauseOfDeath.god);
+   const hitPosition = getRandomPositionInEntity(player);
+   damageEntity(player, null, 999999, PlayerCauseOfDeath.god, AttackEffectiveness.effective, hitPosition, 0);
 }
 
 const damagePlayer = (player: Entity, damage: number): void => {
-   damageEntity(player, damage, null, PlayerCauseOfDeath.god);
-   SERVER.registerEntityHit({
-      entityPositionX: player.position.x,
-      entityPositionY: player.position.y,
-      hitEntityID: player.id,
-      damage: damage,
-      knockback: 0,
-      angleFromAttacker: null,
-      attackerID: -1,
-      flags: 0
-   });
+   const hitPosition = getRandomPositionInEntity(player);
+   damageEntity(player, null, damage, PlayerCauseOfDeath.god, AttackEffectiveness.effective, hitPosition, 0);
 }
 
 const setTime = (time: number): void => {

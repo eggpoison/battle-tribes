@@ -554,9 +554,16 @@ export interface SpikesComponentData {
 
 /* Tunnel Component */
 
+export const enum TunnelDoorSide {
+   top = 0b01,
+   bottom = 0b10
+}
+
+export type TunnelDoorSides = TunnelDoorSide.top | TunnelDoorSide.bottom;
+
 export interface TunnelComponentData {
    /** 1st bit = door at top, 2nd bit = door at bottom */
-   readonly doorBitset: number;
+   readonly doorBitset: TunnelDoorSides;
    readonly topDoorOpenProgress: number;
    readonly bottomDoorOpenProgress: number;
 }

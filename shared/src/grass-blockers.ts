@@ -4,6 +4,8 @@ interface BaseGrassBlocker {
    readonly position: Readonly<Point>;
    /** Amount of grass that the blocker blocks (from 0 -> 1) */
    blockAmount: number;
+   // @Bandwidth: unnecessary
+   readonly maxBlockAmount: number;
 }
 
 export interface GrassBlockerRectangle extends BaseGrassBlocker {

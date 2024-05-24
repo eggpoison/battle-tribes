@@ -69,27 +69,27 @@ class RectangularHitbox extends BaseHitbox {
    }
 
    public calculateHitboxBoundsMinX(): number {
-      return this.x + Math.min(this.vertexOffsets[0].x, this.vertexOffsets[1].x, this.vertexOffsets[2].x, this.vertexOffsets[3].x);
+      return this.position.x + Math.min(this.vertexOffsets[0].x, this.vertexOffsets[1].x, this.vertexOffsets[2].x, this.vertexOffsets[3].x);
    }
    public calculateHitboxBoundsMaxX(): number {
-      return this.x + Math.max(this.vertexOffsets[0].x, this.vertexOffsets[1].x, this.vertexOffsets[2].x, this.vertexOffsets[3].x);
+      return this.position.x + Math.max(this.vertexOffsets[0].x, this.vertexOffsets[1].x, this.vertexOffsets[2].x, this.vertexOffsets[3].x);
    }
    public calculateHitboxBoundsMinY(): number {
-      return this.y + Math.min(this.vertexOffsets[0].y, this.vertexOffsets[1].y, this.vertexOffsets[2].y, this.vertexOffsets[3].y);
+      return this.position.y + Math.min(this.vertexOffsets[0].y, this.vertexOffsets[1].y, this.vertexOffsets[2].y, this.vertexOffsets[3].y);
    }
    public calculateHitboxBoundsMaxY(): number {
-      return this.y + Math.max(this.vertexOffsets[0].y, this.vertexOffsets[1].y, this.vertexOffsets[2].y, this.vertexOffsets[3].y);
+      return this.position.y + Math.max(this.vertexOffsets[0].y, this.vertexOffsets[1].y, this.vertexOffsets[2].y, this.vertexOffsets[3].y);
    }
 
    public isColliding(otherHitbox: Hitbox): boolean {
       if (hitboxIsCircular(otherHitbox)) {
          // Circular hitbox
-         return circleAndRectangleDoIntersect(otherHitbox.x, otherHitbox.y, otherHitbox.radius, this.x, this.y, this.width, this.height, this.rotation);
+         return circleAndRectangleDoIntersect(otherHitbox.position, otherHitbox.radius, this.position, this.width, this.height, this.rotation);
       } else {
          // Rectangular hitbox
 
-         const diffX = this.x - otherHitbox.x;
-         const diffY = this.y - otherHitbox.y;
+         const diffX = this.position.x - otherHitbox.position.x;
+         const diffY = this.position.y - otherHitbox.position.y;
          
          const width1Squared = this.width * this.width;
          const height1Squared = this.height * this.height;
@@ -101,7 +101,7 @@ class RectangularHitbox extends BaseHitbox {
             return false;
          }
          
-         const collisionData = rectanglesAreColliding(this.vertexOffsets, otherHitbox.vertexOffsets, this.x, this.y, otherHitbox.x, otherHitbox.y, this.axisX, this.axisY, otherHitbox.axisX, otherHitbox.axisY);
+         const collisionData = rectanglesAreColliding(this.vertexOffsets, otherHitbox.vertexOffsets, this.position, otherHitbox.position, this.axisX, this.axisY, otherHitbox.axisX, otherHitbox.axisY);
          return collisionData.isColliding;
       }
    }

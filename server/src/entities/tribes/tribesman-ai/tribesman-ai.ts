@@ -777,7 +777,7 @@ export function attemptToRepairBuildings(tribesman: Entity): boolean {
    const desiredAttackRange = getTribesmanDesiredAttackRange(tribesman);
    const physicsComponent = PhysicsComponentArray.getComponent(tribesman.id);
 
-   const distance = getDistanceFromPointToEntity(tribesman.position.x, tribesman.position.y, closestDamagedBuilding) - getTribesmanRadius(tribesman);
+   const distance = getDistanceFromPointToEntity(tribesman.position, closestDamagedBuilding) - getTribesmanRadius(tribesman);
    if (willStopAtDesiredDistance(physicsComponent, desiredAttackRange, distance)) {
       // If the tribesman will stop too close to the target, move back a bit
       if (willStopAtDesiredDistance(physicsComponent, desiredAttackRange - 20, distance)) {
@@ -936,7 +936,7 @@ const goPlaceBuilding = (tribesman: Entity, hotbarInventory: Inventory, tribe: T
    
    const tribesmanComponent = TribesmanComponentArray.getComponent(tribesman.id);
    
-   const distance = getDistanceFromPointToEntity(plan.position.x, plan.position.y, tribesman);
+   const distance = getDistanceFromPointToEntity(plan.position, tribesman);
    if (distance < Vars.BUILDING_PLACE_DISTANCE) {
       // Equip the item
       const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman.id);
@@ -1029,7 +1029,7 @@ const goUpgradeBuilding = (tribesman: Entity, goal: TribesmanUpgradeGoal): void 
    const desiredAttackRange = getTribesmanDesiredAttackRange(tribesman);
    const physicsComponent = PhysicsComponentArray.getComponent(tribesman.id);
    
-   const distance = getDistanceFromPointToEntity(tribesman.position.x, tribesman.position.y, building) - getTribesmanRadius(tribesman);
+   const distance = getDistanceFromPointToEntity(tribesman.position, building) - getTribesmanRadius(tribesman);
    if (willStopAtDesiredDistance(physicsComponent, desiredAttackRange, distance)) {
       // If the tribesman will stop too close to the target, move back a bit
       if (willStopAtDesiredDistance(physicsComponent, desiredAttackRange - 20, distance)) {
@@ -1098,7 +1098,7 @@ const goResearchTech = (tribesman: Entity, tech: TechInfo): boolean => {
       tribesmanComponent.currentAIType = TribesmanAIType.researching;
 
       // If close enough, switch to doing research
-      const dist = getDistanceFromPointToEntity(tribesman.position.x, tribesman.position.y, bench) - getTribesmanRadius(tribesman);
+      const dist = getDistanceFromPointToEntity(tribesman.position, bench) - getTribesmanRadius(tribesman);
       if (dist < 50) {
          attemptToOccupyResearchBench(bench, tribesman);
       }
@@ -1569,7 +1569,7 @@ export function tickTribesman(tribesman: Entity): void {
          
          // @Incomplete: use pathfinding
          // @Cleanup: Copy and pasted from huntEntity. Should be combined into its own function
-         const distance = getDistanceFromPointToEntity(tribesman.position.x, tribesman.position.y, closestBlueprint) - getTribesmanRadius(tribesman);
+         const distance = getDistanceFromPointToEntity(tribesman.position, closestBlueprint) - getTribesmanRadius(tribesman);
          if (willStopAtDesiredDistance(physicsComponent, desiredAttackRange - 20, distance)) {
             // If the tribesman will stop too close to the target, move back a bit
             physicsComponent.acceleration.x = getTribesmanSlowAcceleration(tribesman.id) * Math.sin(tribesman.rotation + Math.PI);
@@ -1613,7 +1613,7 @@ export function tickTribesman(tribesman: Entity): void {
          // Try to recruit the target
          
          const recruitRange = 50;
-         const distance = getDistanceFromPointToEntity(tribesman.position.x, tribesman.position.y, recruitTarget);
+         const distance = getDistanceFromPointToEntity(tribesman.position, recruitTarget);
          if (distance <= recruitRange) {
             recruitTribesman(recruitTarget, tribeComponent.tribe);
          } else {
@@ -1634,7 +1634,7 @@ export function tickTribesman(tribesman: Entity): void {
    
             // Swap to that item slot
             const physicsComponent = PhysicsComponentArray.getComponent(tribesman.id);
-            const distance = getDistanceFromPointToEntity(tribesman.position.x, tribesman.position.y, recruitTarget);
+            const distance = getDistanceFromPointToEntity(tribesman.position, recruitTarget);
             
             // @Incomplete: account for tribesman radius
             const giftRange = 50;
@@ -1897,7 +1897,7 @@ export function tickTribesman(tribesman: Entity): void {
 
          // @Cleanup: copy and pasted from tribesman-combat-ai
          const desiredDistance = getTribesmanAttackRadius(tribesman);
-         const distance = getDistanceFromPointToEntity(tribesman.position.x, tribesman.position.y, closestReplantablePlanterBox) - getTribesmanRadius(tribesman);
+         const distance = getDistanceFromPointToEntity(tribesman.position, closestReplantablePlanterBox) - getTribesmanRadius(tribesman);
          if (willStopAtDesiredDistance(physicsComponent, desiredDistance, distance)) {
             // @Incomplete: turn to face direction and then place
             

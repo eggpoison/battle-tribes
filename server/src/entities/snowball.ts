@@ -14,6 +14,7 @@ import { SERVER } from "../server";
 import { PhysicsComponent, PhysicsComponentArray, applyKnockback } from "../components/PhysicsComponent";
 import { EntityCreationInfo } from "../entity-components";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
    
 type ComponentTypes = [ServerComponentType.physics, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.snowball];
 
@@ -77,7 +78,7 @@ export function tickSnowball(snowball: Entity): void {
    }
 }
 
-export function onSnowballCollision(snowball: Entity, collidingEntity: Entity): void {
+export function onSnowballCollision(snowball: Entity, collidingEntity: Entity, collisionPoint: Point): void {
    if (collidingEntity.type === EntityType.snowball) {
       return;
    }
@@ -100,18 +101,8 @@ export function onSnowballCollision(snowball: Entity, collidingEntity: Entity): 
       if (canDamageEntity(healthComponent, "snowball")) {
          const hitDirection = snowball.position.calculateAngleBetween(collidingEntity.position);
 
-         damageEntity(collidingEntity, 4, null, PlayerCauseOfDeath.snowball, "snowball");
+         damageEntity(collidingEntity, null, 4, PlayerCauseOfDeath.snowball, AttackEffectiveness.effective, collisionPoint, 0);
          applyKnockback(collidingEntity, 100, hitDirection);
-         SERVER.registerEntityHit({
-            entityPositionX: collidingEntity.position.x,
-            entityPositionY: collidingEntity.position.y,
-            hitEntityID: collidingEntity.id,
-            damage: 4,
-            knockback: 100,
-            angleFromAttacker: hitDirection,
-            attackerID: snowball.id,
-            flags: 0
-         });
          addLocalInvulnerabilityHash(healthComponent, "snowball", 0.3);
       }
    }

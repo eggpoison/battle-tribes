@@ -171,3 +171,11 @@ export function generateThickCircleWireframeVertices(position: Point, radius: nu
 
    return vertices;
 }
+
+export function getCirclePoint(numPoints: number, i: number, origin: Readonly<Point>, radius: number): Point {
+   const radians = i / numPoints * 2 * Math.PI;
+
+   const x = origin.x + radius * Math.sin(radians);
+   const y = origin.y + radius * Math.cos(radians);
+   return new Point(x, y);
+}

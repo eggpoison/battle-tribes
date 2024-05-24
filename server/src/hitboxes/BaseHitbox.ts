@@ -15,8 +15,7 @@ abstract class BaseHitbox {
    /** Unique identifier in its entities' hitboxes */
    public readonly localID: number;
 
-   public x!: number;
-   public y!: number;
+   public position!: Point;
    
    public readonly mass: number;
    public offsetX: number;
@@ -47,8 +46,9 @@ abstract class BaseHitbox {
       const cosRotation = Math.cos(parentRotation);
       const sinRotation = Math.sin(parentRotation);
       
-      this.x = parentX + cosRotation * this.offsetX + sinRotation * this.offsetY;
-      this.y = parentY + cosRotation * this.offsetY - sinRotation * this.offsetX;
+      const x = parentX + cosRotation * this.offsetX + sinRotation * this.offsetY;
+      const y = parentY + cosRotation * this.offsetY - sinRotation * this.offsetX;
+      this.position = new Point(x, y);
    }
 
    public abstract calculateHitboxBoundsMinX(): number;

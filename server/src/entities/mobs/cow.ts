@@ -19,7 +19,7 @@ import { chooseEscapeEntity, registerAttackingEntity, runFromAttackingEntity } f
 import { EscapeAIComponent, updateEscapeAIComponent } from "../../components/EscapeAIComponent";
 import Board from "../../Board";
 import { AIHelperComponent, AIHelperComponentArray } from "../../components/AIHelperComponent";
-import { FollowAIComponent, canFollow, followEntity, updateFollowAIComponent } from "../../components/FollowAIComponent";
+import { FollowAIComponent, continueFollowingEntity, entityWantsToFollow, startFollowingEntity, updateFollowAIComponent } from "../../components/FollowAIComponent";
 import { CowComponent, eatBerry, updateCowComponent, wantsToEatBerries } from "../../components/CowComponent";
 import { dropBerry } from "../resources/berry-bush";
 import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
@@ -35,6 +35,7 @@ const MAX_GRAZE_COOLDOWN = 60 * Settings.TPS;
 
 const MIN_FOLLOW_COOLDOWN = 15 * Settings.TPS;
 const MAX_FOLLOW_COOLDOWN = 30 * Settings.TPS;
+const FOLLOW_CHANCE_PER_SECOND = 0.2;
 
 export const COW_GRAZE_TIME_TICKS = 5 * Settings.TPS;
 
@@ -61,7 +62,7 @@ export function createCow(position: Point, rotation: number): Entity {
    AIHelperComponentArray.addComponent(cow.id, new AIHelperComponent(VISION_RANGE));
    WanderAIComponentArray.addComponent(cow.id, new WanderAIComponent());
    EscapeAIComponentArray.addComponent(cow.id, new EscapeAIComponent());
-   FollowAIComponentArray.addComponent(cow.id, new FollowAIComponent(randInt(MIN_FOLLOW_COOLDOWN, MAX_FOLLOW_COOLDOWN)));
+   FollowAIComponentArray.addComponent(cow.id, new FollowAIComponent(randInt(MIN_FOLLOW_COOLDOWN, MAX_FOLLOW_COOLDOWN), FOLLOW_CHANCE_PER_SECOND, 60));
    CowComponentArray.addComponent(cow.id, new CowComponent(species, randInt(MIN_GRAZE_COOLDOWN, MAX_GRAZE_COOLDOWN)));
 
    return cow;
@@ -127,7 +128,7 @@ const entityIsHoldingBerry = (entity: Entity): boolean => {
 }
 
 const getFollowTarget = (followAIComponent: FollowAIComponent, visibleEntities: ReadonlyArray<Entity>): Entity | null => {
-   const wantsToFollow = canFollow(followAIComponent);
+   const wantsToFollow = entityWantsToFollow(followAIComponent);
    
    let currentTargetIsHoldingBerry = false;
    let target: Entity | null = null;
@@ -257,14 +258,13 @@ export function tickCow(cow: Entity): void {
    
    const followedEntity = Board.entityRecord[followAIComponent.followTargetID];
    if (typeof followedEntity !== "undefined") {
-      // Continue following the entity
-      moveEntityToPosition(cow, followedEntity.position.x, followedEntity.position.y, 200, TURN_SPEED);
+      continueFollowingEntity(cow, followedEntity, 200, TURN_SPEED);
       return;
-   } {
+   } else {
       const followTarget = getFollowTarget(followAIComponent, aiHelperComponent.visibleEntities);
       if (followTarget !== null) {
          // Follow the entity
-         followEntity(cow, followTarget, 200, TURN_SPEED, randInt(MIN_FOLLOW_COOLDOWN, MAX_FOLLOW_COOLDOWN));
+         startFollowingEntity(cow, followTarget, 200, TURN_SPEED, randInt(MIN_FOLLOW_COOLDOWN, MAX_FOLLOW_COOLDOWN));
          return;
       }
    }

@@ -1,8 +1,10 @@
 import { GrassBlocker, blockerIsCircluar } from "webgl-test-shared/dist/grass-blockers";
 import { getGrassBlockers } from "../client/Client";
-import { CAMERA_UNIFORM_BUFFER_BINDING_INDEX, createWebGLProgram, gl, windowHeight, windowWidth } from "../webgl";
+import { CAMERA_UNIFORM_BUFFER_BINDING_INDEX, createWebGLProgram, getCirclePoint, gl, windowHeight, windowWidth } from "../webgl";
 import { rotateXAroundOrigin, rotateYAroundOrigin } from "webgl-test-shared/dist/utils";
 import { getTexture } from "../textures";
+
+const NUM_CIRCLE_POINTS = 20;
 
 let framebufferProgram: WebGLProgram;
 let renderProgram: WebGLProgram;
@@ -244,8 +246,8 @@ const calculateGrassBlockerVertices = (grassBlockers: ReadonlyArray<GrassBlocker
 
    for (let i = 0; i < grassBlockers.length; i++) {
       const blocker = grassBlockers[i];
+      const opacity = blocker.blockAmount;
 
-      // @Incomplete
       if (!blockerIsCircluar(blocker)) {
          const halfWidth = blocker.width * 0.5;
          const halfHeight = blocker.height * 0.5;
@@ -259,8 +261,6 @@ const calculateGrassBlockerVertices = (grassBlockers: ReadonlyArray<GrassBlocker
          const bottomRightOffsetX = -topLeftOffsetX;
          const bottomRightOffsetY = -topLeftOffsetY;
 
-         const opacity = blocker.blockAmount;
-         
          vertices.push(
             blocker.position.x + bottomLeftOffsetX, blocker.position.y + bottomLeftOffsetY, opacity,
             blocker.position.x + bottomRightOffsetX, blocker.position.y + bottomRightOffsetY, opacity,
@@ -269,6 +269,19 @@ const calculateGrassBlockerVertices = (grassBlockers: ReadonlyArray<GrassBlocker
             blocker.position.x + bottomRightOffsetX, blocker.position.y + bottomRightOffsetY, opacity,
             blocker.position.x + topRightOffsetX, blocker.position.y + topRightOffsetY, opacity
          );
+      } else {
+         let lastPos = getCirclePoint(NUM_CIRCLE_POINTS, 0, blocker.position, blocker.radius);
+         for (let i = 1; i <= NUM_CIRCLE_POINTS; i++) {
+            const pos = getCirclePoint(NUM_CIRCLE_POINTS, i, blocker.position, blocker.radius);
+
+            vertices.push(
+               blocker.position.x, blocker.position.y, opacity,
+               pos.x, pos.y, opacity,
+               lastPos.x, lastPos.y, opacity
+            )
+            
+            lastPos = pos;
+         }
       }
    }
 

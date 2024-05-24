@@ -42,35 +42,23 @@ export const enum CollisionVars {
 }
 
 const getCircleCircleCollisionPushInfo = (pushedHitbox: CircularHitbox, pushingHitbox: CircularHitbox): CollisionPushInfo => {
-   const pushedHitboxPositionX = pushedHitbox.x;
-   const pushedHitboxPositionY = pushedHitbox.y;
-
-   const pushingHitboxPositionX = pushingHitbox.x;
-   const pushingHitboxPositionY = pushingHitbox.y;
-   
-   const dist = Math.sqrt(Math.pow(pushedHitboxPositionX - pushingHitboxPositionX, 2) + Math.pow(pushedHitboxPositionY - pushingHitboxPositionY, 2));
+   const dist = Math.sqrt(Math.pow(pushedHitbox.position.x - pushingHitbox.position.x, 2) + Math.pow(pushedHitbox.position.y - pushingHitbox.position.y, 2));
    
    return {
       amountIn: pushedHitbox.radius + pushingHitbox.radius - dist,
       // Angle from pushing hitbox to pushed hitbox
-      direction: angle(pushedHitboxPositionX - pushingHitboxPositionX, pushedHitboxPositionY - pushingHitboxPositionY)
+      direction: angle(pushedHitbox.position.x - pushingHitbox.position.x, pushedHitbox.position.y - pushingHitbox.position.y)
    };
 }
 
 const getCircleRectCollisionPushInfo = (pushedHitbox: CircularHitbox, pushingHitbox: RectangularHitbox): CollisionPushInfo => {
    const rectRotation = pushingHitbox.rotation;
 
-   const pushedHitboxPositionX = pushedHitbox.x;
-   const pushedHitboxPositionY = pushedHitbox.y;
-
-   const pushingHitboxPositionX = pushingHitbox.x;
-   const pushingHitboxPositionY = pushingHitbox.y;
+   const circlePosX = rotateXAroundPoint(pushedHitbox.position.x, pushedHitbox.position.y, pushingHitbox.position.x, pushingHitbox.position.y, -rectRotation);
+   const circlePosY = rotateYAroundPoint(pushedHitbox.position.x, pushedHitbox.position.y, pushingHitbox.position.x, pushingHitbox.position.y, -rectRotation);
    
-   const circlePosX = rotateXAroundPoint(pushedHitboxPositionX, pushedHitboxPositionY, pushingHitboxPositionX, pushingHitboxPositionY, -rectRotation);
-   const circlePosY = rotateYAroundPoint(pushedHitboxPositionX, pushedHitboxPositionY, pushingHitboxPositionX, pushingHitboxPositionY, -rectRotation);
-   
-   const distanceX = circlePosX - pushingHitboxPositionX;
-   const distanceY = circlePosY - pushingHitboxPositionY;
+   const distanceX = circlePosX - pushingHitbox.position.x;
+   const distanceY = circlePosY - pushingHitbox.position.y;
 
    const absDistanceX = Math.abs(distanceX);
    const absDistanceY = Math.abs(distanceY);
@@ -97,8 +85,8 @@ const getCircleRectCollisionPushInfo = (pushedHitbox: CircularHitbox, pushingHit
       const amountInX = absDistanceX - pushingHitbox.width/2 - pushedHitbox.radius;
       const amountInY = absDistanceY - pushingHitbox.height/2 - pushedHitbox.radius;
       if (Math.abs(amountInY) < Math.abs(amountInX)) {
-         const closestRectBorderY = circlePosY < pushingHitboxPositionY ? pushingHitboxPositionY - pushingHitbox.height/2 : pushingHitboxPositionY + pushingHitbox.height/2;
-         const closestRectBorderX = circlePosX < pushingHitboxPositionX ? pushingHitboxPositionX - pushingHitbox.width/2 : pushingHitboxPositionX + pushingHitbox.width/2;
+         const closestRectBorderY = circlePosY < pushingHitbox.position.y ? pushingHitbox.position.y - pushingHitbox.height/2 : pushingHitbox.position.y + pushingHitbox.height/2;
+         const closestRectBorderX = circlePosX < pushingHitbox.position.x ? pushingHitbox.position.x - pushingHitbox.width/2 : pushingHitbox.position.x + pushingHitbox.width/2;
          const xDistanceFromRectBorder = Math.abs(closestRectBorderX - circlePosX);
          const len = Math.sqrt(pushedHitbox.radius * pushedHitbox.radius - xDistanceFromRectBorder * xDistanceFromRectBorder);
 
@@ -107,9 +95,9 @@ const getCircleRectCollisionPushInfo = (pushedHitbox: CircularHitbox, pushingHit
             direction: rectRotation + Math.PI + (distanceY > 0 ? Math.PI : 0)
          };
       } else {
-         const closestRectBorderX = circlePosX < pushingHitboxPositionX ? pushingHitboxPositionX - pushingHitbox.width/2 : pushingHitboxPositionX + pushingHitbox.width/2;
+         const closestRectBorderX = circlePosX < pushingHitbox.position.x ? pushingHitbox.position.x - pushingHitbox.width/2 : pushingHitbox.position.x + pushingHitbox.width/2;
          
-         const closestRectBorderY = circlePosY < pushingHitboxPositionY ? pushingHitboxPositionY - pushingHitbox.height/2 : pushingHitboxPositionY + pushingHitbox.height/2;
+         const closestRectBorderY = circlePosY < pushingHitbox.position.y ? pushingHitbox.position.y - pushingHitbox.height/2 : pushingHitbox.position.y + pushingHitbox.height/2;
          const yDistanceFromRectBorder = Math.abs(closestRectBorderY - circlePosY);
          const len = Math.sqrt(pushedHitbox.radius * pushedHitbox.radius - yDistanceFromRectBorder * yDistanceFromRectBorder);
 
@@ -147,7 +135,7 @@ const getCollisionPushInfo = (pushedHitbox: Hitbox, pushingHitbox: Hitbox): Coll
       assertIsRectangular(pushingHitbox);
       
       // @Cleanup: copy and paste
-      const collisionData = rectanglesAreColliding(pushedHitbox.vertexOffsets, pushingHitbox.vertexOffsets, pushedHitbox.x, pushedHitbox.y, pushingHitbox.x, pushingHitbox.y, pushedHitbox.axisX, pushedHitbox.axisY, pushingHitbox.axisX, pushingHitbox.axisY);
+      const collisionData = rectanglesAreColliding(pushedHitbox.vertexOffsets, pushingHitbox.vertexOffsets, pushedHitbox.position, pushingHitbox.position, pushedHitbox.axisX, pushedHitbox.axisY, pushingHitbox.axisX, pushingHitbox.axisY);
       if (!collisionData.isColliding) {
          throw new Error();
       }
@@ -237,13 +225,17 @@ const resolveSoftCollision = (entity: Entity, pushingHitbox: Hitbox, pushInfo: C
 }
 
 export function collide(entity: Entity, pushingEntity: Entity, pushedHitboxIdx: number, pushingHitboxIdx: number): void {
+   const pushedHitbox = entity.hitboxes[pushedHitboxIdx];
+   const pushingHitbox = pushingEntity.hitboxes[pushingHitboxIdx];
+   
+   const pushInfo = getCollisionPushInfo(pushedHitbox, pushingHitbox);
+
+   // @Hack
+   const collisionPoint = new Point((entity.position.x + pushingEntity.position.x) / 2, (entity.position.y + pushingEntity.position.y) / 2);
+
    if (collisionBitsAreCompatible(entity.collisionMask, entity.collisionBit, pushingEntity.collisionMask, pushingEntity.collisionBit) && PhysicsComponentArray.hasComponent(entity.id)) {
       const physicsComponent = PhysicsComponentArray.getComponent(entity.id);
       if (!physicsComponent.isImmovable) {
-         const pushedHitbox = entity.hitboxes[pushedHitboxIdx];
-         const pushingHitbox = pushingEntity.hitboxes[pushingHitboxIdx];
-         
-         const pushInfo = getCollisionPushInfo(pushedHitbox, pushingHitbox);
          if (pushingHitbox.collisionType === HitboxCollisionType.hard) {
             resolveHardCollision(entity, pushInfo);
          } else {
@@ -256,7 +248,7 @@ export function collide(entity: Entity, pushingEntity: Entity, pushedHitboxIdx: 
 
       // @Hack
       switch (entity.type) {
-         case EntityType.iceShardProjectile: onIceShardCollision(entity, pushingEntity); break;
+         case EntityType.iceShardProjectile: onIceShardCollision(entity, pushingEntity, collisionPoint); break;
       }
    }
 
@@ -264,26 +256,26 @@ export function collide(entity: Entity, pushingEntity: Entity, pushedHitboxIdx: 
       case EntityType.player: onPlayerCollision(entity, pushingEntity); break;
       case EntityType.tribeWorker:
       case EntityType.tribeWarrior: onTribesmanCollision(entity.id, pushingEntity); break;
-      case EntityType.iceSpikes: onIceSpikesCollision(entity, pushingEntity); break;
-      case EntityType.cactus: onCactusCollision(entity, pushingEntity); break;
-      case EntityType.zombie: onZombieCollision(entity, pushingEntity); break;
-      case EntityType.slime: onSlimeCollision(entity, pushingEntity); break;
-      case EntityType.woodenArrowProjectile: onWoodenArrowCollision(entity, pushingEntity); break;
-      case EntityType.yeti: onYetiCollision(entity, pushingEntity); break;
-      case EntityType.snowball: onSnowballCollision(entity, pushingEntity); break;
-      case EntityType.frozenYeti: onFrozenYetiCollision(entity, pushingEntity); break;
-      case EntityType.rockSpikeProjectile: onRockSpikeProjectileCollision(entity, pushingEntity); break;
-      case EntityType.spearProjectile: onSpearProjectileCollision(entity, pushingEntity); break;
-      case EntityType.slimeSpit: onSlimeSpitCollision(entity, pushingEntity); break;
-      case EntityType.spitPoison: onSpitPoisonCollision(entity, pushingEntity); break;
-      case EntityType.battleaxeProjectile: onBattleaxeProjectileCollision(entity, pushingEntity); break;
+      case EntityType.iceSpikes: onIceSpikesCollision(entity, pushingEntity, collisionPoint); break;
+      case EntityType.cactus: onCactusCollision(entity, pushingEntity, collisionPoint); break;
+      case EntityType.zombie: onZombieCollision(entity, pushingEntity, collisionPoint); break;
+      case EntityType.slime: onSlimeCollision(entity, pushingEntity, collisionPoint); break;
+      case EntityType.woodenArrowProjectile: onWoodenArrowCollision(entity, pushingEntity, collisionPoint); break;
+      case EntityType.yeti: onYetiCollision(entity, pushingEntity, collisionPoint); break;
+      case EntityType.snowball: onSnowballCollision(entity, pushingEntity, collisionPoint); break;
+      case EntityType.frozenYeti: onFrozenYetiCollision(entity, pushingEntity, collisionPoint); break;
+      case EntityType.rockSpikeProjectile: onRockSpikeProjectileCollision(entity, pushingEntity, collisionPoint); break;
+      case EntityType.spearProjectile: onSpearProjectileCollision(entity, pushingEntity, collisionPoint); break;
+      case EntityType.slimeSpit: onSlimeSpitCollision(entity, pushingEntity, collisionPoint); break;
+      case EntityType.spitPoison: onSpitPoisonCollision(entity, pushingEntity, collisionPoint); break;
+      case EntityType.battleaxeProjectile: onBattleaxeProjectileCollision(entity, pushingEntity, collisionPoint); break;
       case EntityType.iceArrow: onIceArrowCollision(entity, pushingEntity); break;
-      case EntityType.pebblum: onPebblumCollision(entity, pushingEntity); break;
-      case EntityType.golem: onGolemCollision(entity, pushingEntity); break;
+      case EntityType.pebblum: onPebblumCollision(entity, pushingEntity, collisionPoint); break;
+      case EntityType.golem: onGolemCollision(entity, pushingEntity, collisionPoint); break;
       case EntityType.floorSpikes:
-      case EntityType.wallSpikes: onSpikesCollision(entity, pushingEntity); break;
+      case EntityType.wallSpikes: onSpikesCollision(entity, pushingEntity, collisionPoint); break;
       case EntityType.floorPunjiSticks:
-      case EntityType.wallPunjiSticks: onPunjiSticksCollision(entity, pushingEntity); break;
+      case EntityType.wallPunjiSticks: onPunjiSticksCollision(entity, pushingEntity, collisionPoint); break;
       case EntityType.embrasure: onEmbrasureCollision(pushingEntity, pushedHitboxIdx); break;
    }
 }

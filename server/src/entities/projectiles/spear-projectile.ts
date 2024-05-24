@@ -15,6 +15,7 @@ import { PhysicsComponent, PhysicsComponentArray, applyKnockback } from "../../c
 import { EntityRelationship, getEntityRelationship } from "../../components/TribeComponent";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityCreationInfo } from "../../entity-components";
+import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
 
 type ComponentTypes = [ServerComponentType.physics, ServerComponentType.throwingProjectile];
 
@@ -50,7 +51,7 @@ export function tickSpearProjectile(spear: Entity): void {
    }
 }
 
-export function onSpearProjectileCollision(spear: Entity, collidingEntity: Entity): void {
+export function onSpearProjectileCollision(spear: Entity, collidingEntity: Entity, collisionPoint: Point): void {
    // Don't hurt the entity who threw the spear
    const spearComponent = ThrowingProjectileComponentArray.getComponent(spear.id);
    if (typeof Board.entityRecord[spearComponent.tribeMemberID] !== "undefined" && getEntityRelationship(spearComponent.tribeMemberID, collidingEntity) === EntityRelationship.friendly) {
@@ -72,18 +73,8 @@ export function onSpearProjectileCollision(spear: Entity, collidingEntity: Entit
    // Damage the entity
    // @Temporary
    const hitDirection = spear.position.calculateAngleBetween(collidingEntity.position);
-   damageEntity(collidingEntity, damage, tribeMember, PlayerCauseOfDeath.spear);
+   damageEntity(collidingEntity, tribeMember, damage, PlayerCauseOfDeath.spear, AttackEffectiveness.effective, collisionPoint, 0);
    applyKnockback(collidingEntity, 200, hitDirection);
-   SERVER.registerEntityHit({
-      entityPositionX: collidingEntity.position.x,
-      entityPositionY: collidingEntity.position.y,
-      hitEntityID: collidingEntity.id,
-      damage: damage,
-      knockback: 200,
-      angleFromAttacker: hitDirection,
-      attackerID: spearComponent.tribeMemberID,
-      flags: 0
-   });
    
    spear.destroy();
 }

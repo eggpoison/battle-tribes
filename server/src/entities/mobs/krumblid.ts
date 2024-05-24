@@ -14,7 +14,7 @@ import { entityHasReachedPosition, moveEntityToPosition, stopEntity } from "../.
 import { shouldWander, getWanderTargetTile, wander } from "../../ai/wander-ai";
 import Tile from "../../Tile";
 import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
-import { FollowAIComponent, canFollow, followEntity, updateFollowAIComponent } from "../../components/FollowAIComponent";
+import { FollowAIComponent, entityWantsToFollow, startFollowingEntity, updateFollowAIComponent } from "../../components/FollowAIComponent";
 import Board from "../../Board";
 import { chooseEscapeEntity, registerAttackingEntity, runFromAttackingEntity } from "../../ai/escape-ai";
 import { EscapeAIComponent, updateEscapeAIComponent } from "../../components/EscapeAIComponent";
@@ -28,6 +28,7 @@ const VISION_RANGE = 224;
 
 const MIN_FOLLOW_COOLDOWN = 7;
 const MAX_FOLLOW_COOLDOWN = 9;
+const FOLLOW_CHANCE_PER_SECOND = 0.3;
 
 const TURN_SPEED = Math.PI * 2;
 
@@ -41,7 +42,7 @@ export function createKrumblid(position: Point): Entity {
    HealthComponentArray.addComponent(krumblid.id, new HealthComponent(MAX_HEALTH));
    StatusEffectComponentArray.addComponent(krumblid.id, new StatusEffectComponent(0));
    WanderAIComponentArray.addComponent(krumblid.id, new WanderAIComponent());
-   FollowAIComponentArray.addComponent(krumblid.id, new FollowAIComponent(randInt(MIN_FOLLOW_COOLDOWN, MAX_FOLLOW_COOLDOWN)));
+   FollowAIComponentArray.addComponent(krumblid.id, new FollowAIComponent(randInt(MIN_FOLLOW_COOLDOWN, MAX_FOLLOW_COOLDOWN), FOLLOW_CHANCE_PER_SECOND, 20));
    EscapeAIComponentArray.addComponent(krumblid.id, new EscapeAIComponent());
    AIHelperComponentArray.addComponent(krumblid.id, new AIHelperComponent(VISION_RANGE));
 
@@ -70,12 +71,12 @@ export function tickKrumblid(krumblid: Entity): void {
       // Continue following the entity
       moveEntityToPosition(krumblid, followedEntity.position.x, followedEntity.position.y, 200, TURN_SPEED);
       return;
-   } else if (canFollow(followAIComponent)) {
+   } else if (entityWantsToFollow(followAIComponent)) {
       for (let i = 0; i < aiHelperComponent.visibleEntities.length; i++) {
          const entity = aiHelperComponent.visibleEntities[i];
          if (entity.type === EntityType.player) {
             // Follow the entity
-            followEntity(krumblid, entity, 200, TURN_SPEED, randInt(MIN_FOLLOW_COOLDOWN, MAX_FOLLOW_COOLDOWN));
+            startFollowingEntity(krumblid, entity, 200, TURN_SPEED, randInt(MIN_FOLLOW_COOLDOWN, MAX_FOLLOW_COOLDOWN));
             return;
          }
       }

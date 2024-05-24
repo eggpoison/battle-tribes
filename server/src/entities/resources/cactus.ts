@@ -13,6 +13,7 @@ import { CactusComponent } from "../../components/CactusComponent";
 import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
 import { SERVER } from "../../server";
 import { applyKnockback } from "../../components/PhysicsComponent";
+import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
 
 const RADIUS = 40;
 /** Amount the hitbox is brought in. */
@@ -97,7 +98,7 @@ export function createCactus(position: Point, rotation: number): Entity {
    return cactus;
 }
 
-export function onCactusCollision(cactus: Entity, collidingEntity: Entity): void {
+export function onCactusCollision(cactus: Entity, collidingEntity: Entity, collisionPoint: Point): void {
    if (collidingEntity.type === EntityType.itemEntity) {
       collidingEntity.destroy();
       return;
@@ -114,18 +115,8 @@ export function onCactusCollision(cactus: Entity, collidingEntity: Entity): void
 
    const hitDirection = cactus.position.calculateAngleBetween(collidingEntity.position);
 
-   damageEntity(collidingEntity, 1, cactus, PlayerCauseOfDeath.cactus, "cactus");
+   damageEntity(collidingEntity, cactus, 1, PlayerCauseOfDeath.cactus, AttackEffectiveness.effective, collisionPoint, 0);
    applyKnockback(collidingEntity, 200, hitDirection);
-   SERVER.registerEntityHit({
-      entityPositionX: collidingEntity.position.x,
-      entityPositionY: collidingEntity.position.y,
-      hitEntityID: collidingEntity.id,
-      damage: 1,
-      knockback: 200,
-      angleFromAttacker: hitDirection,
-      attackerID: cactus.id,
-      flags: 0
-   });
    addLocalInvulnerabilityHash(healthComponent, "cactus", 0.3);
 }
 

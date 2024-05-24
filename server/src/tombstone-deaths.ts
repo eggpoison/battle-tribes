@@ -13,7 +13,7 @@ abstract class TombstoneDeathManager {
          this.deathInfos.shift();
       }
 
-      const playerData = SERVER.getPlayerDataFromInstance(player);
+      const playerData = SERVER.getPlayerDataFromInstance(player.id);
       if (playerData === null) {
          return;
       }

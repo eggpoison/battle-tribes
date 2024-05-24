@@ -1,7 +1,7 @@
 import { PathfindingNodeIndex, HitboxCollisionType, VisibleChunkBounds } from "webgl-test-shared/dist/client-server-types";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { PathfindingSettings, Settings } from "webgl-test-shared/dist/settings";
-import { distBetweenPointAndRectangle, angle, calculateDistanceSquared } from "webgl-test-shared/dist/utils";
+import { distBetweenPointAndRectangle, angle, calculateDistanceSquared, Point } from "webgl-test-shared/dist/utils";
 import Entity from "./Entity";
 import CircularHitbox from "./hitboxes/CircularHitbox";
 import RectangularHitbox from "./hitboxes/RectangularHitbox";
@@ -218,8 +218,8 @@ const getCircularHitboxOccupiedNodes = (hitbox: CircularHitbox): ReadonlyArray<P
    const minY = hitbox.calculateHitboxBoundsMinY();
    const maxY = hitbox.calculateHitboxBoundsMaxY();
 
-   const centerX = hitbox.x / PathfindingSettings.NODE_SEPARATION;
-   const centerY = hitbox.y / PathfindingSettings.NODE_SEPARATION;
+   const centerX = hitbox.position.x / PathfindingSettings.NODE_SEPARATION;
+   const centerY = hitbox.position.y / PathfindingSettings.NODE_SEPARATION;
    
    let minNodeX = Math.floor(minX / PathfindingSettings.NODE_SEPARATION);
    let maxNodeX = Math.ceil(maxX / PathfindingSettings.NODE_SEPARATION);
@@ -264,9 +264,6 @@ const getRectangularHitboxOccupiedNodes = (hitbox: RectangularHitbox): ReadonlyA
    const minY = hitbox.calculateHitboxBoundsMinY();
    const maxY = hitbox.calculateHitboxBoundsMaxY();
 
-   const rectPosX = hitbox.x;
-   const rectPosY = hitbox.y;
-   
    // @Speed: Math.round might also work
    let minNodeX = Math.floor(minX / PathfindingSettings.NODE_SEPARATION);
    let maxNodeX = Math.ceil(maxX / PathfindingSettings.NODE_SEPARATION);
@@ -295,7 +292,9 @@ const getRectangularHitboxOccupiedNodes = (hitbox: RectangularHitbox): ReadonlyA
       for (let nodeY = minNodeY; nodeY <= maxNodeY; nodeY++) {
          const x = nodeX * PathfindingSettings.NODE_SEPARATION;
          const y = nodeY * PathfindingSettings.NODE_SEPARATION;
-         if (distBetweenPointAndRectangle(x, y, rectPosX, rectPosY, hitbox.width, hitbox.height, hitbox.rotation) <= nodeClearance) {
+         const nodePos = new Point(x, y);
+         
+         if (distBetweenPointAndRectangle(nodePos, hitbox.position, hitbox.width, hitbox.height, hitbox.rotation) <= nodeClearance) {
             const node = getNode(nodeX, nodeY);
             // @Temporary
             if (node >= PathfindingSettings.NODES_IN_WORLD_WIDTH*PathfindingSettings.NODES_IN_WORLD_WIDTH) {

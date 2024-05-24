@@ -17,6 +17,7 @@ import { StructureComponentArray, StructureComponent, isAttachedToWall } from ".
 import { StructureConnectionInfo } from "webgl-test-shared/dist/structures";
 import { Hitbox } from "../../hitboxes/hitboxes";
 import { HitboxFlags } from "../../hitboxes/BaseHitbox";
+import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
 
 const FLOOR_HITBOX_SIZE = 48 - 0.05;
 
@@ -65,7 +66,7 @@ export function createPunjiSticks(position: Point, rotation: number, tribe: Trib
    return punjiSticks;
 }
 
-export function onPunjiSticksCollision(punjiSticks: Entity, collidingEntity: Entity): void {
+export function onPunjiSticksCollision(punjiSticks: Entity, collidingEntity: Entity, collisionPoint: Point): void {
    // @Incomplete: Why is this condition neeeded? Shouldn't be able to be placed colliding with other structures anyway.
    if (collidingEntity.type === EntityType.floorSpikes || collidingEntity.type === EntityType.wallSpikes || collidingEntity.type === EntityType.door || collidingEntity.type === EntityType.wall) {
       return;
@@ -89,19 +90,8 @@ export function onPunjiSticksCollision(punjiSticks: Entity, collidingEntity: Ent
       return;
    }
    
-   const hitDirection = punjiSticks.position.calculateAngleBetween(collidingEntity.position);
    // @Incomplete: Cause of death
-   damageEntity(collidingEntity, 1, punjiSticks, PlayerCauseOfDeath.yeti, "punjiSticks");
-   SERVER.registerEntityHit({
-      entityPositionX: collidingEntity.position.x,
-      entityPositionY: collidingEntity.position.y,
-      hitEntityID: collidingEntity.id,
-      damage: 1,
-      knockback: 0,
-      angleFromAttacker: hitDirection,
-      attackerID: punjiSticks.id,
-      flags: 0
-   });
+   damageEntity(collidingEntity, punjiSticks, 1, PlayerCauseOfDeath.yeti, AttackEffectiveness.effective, collisionPoint, 0);
    addLocalInvulnerabilityHash(healthComponent, "punjiSticks", 0.3);
 
    if (StatusEffectComponentArray.hasComponent(collidingEntity.id)) {

@@ -1,7 +1,7 @@
 import { Point, distance, lerp, randFloat, randInt, rotateXAroundOrigin, rotateYAroundOrigin } from "webgl-test-shared/dist/utils";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
-import { TILE_FRICTIONS, TILE_MOVE_SPEED_MULTIPLIERS, TileType } from "webgl-test-shared/dist/tiles";
+import { TileType } from "webgl-test-shared/dist/tiles";
 import { EntityData, HitData, HitFlags, HitboxCollisionType, RIVER_STEPPING_STONE_SIZES } from "webgl-test-shared/dist/client-server-types";
 import { EntityComponents, ServerComponentType } from "webgl-test-shared/dist/components";
 import RenderPart, { RenderObject } from "./render-parts/RenderPart";
@@ -10,7 +10,7 @@ import RectangularHitbox from "./hitboxes/RectangularHitbox";
 import { Tile } from "./Tile";
 import CircularHitbox from "./hitboxes/CircularHitbox";
 import Board from "./Board";
-import { createHealingParticle, createSlimePoolParticle, createWaterSplashParticle } from "./particles";
+import { createHealingParticle, createSlimePoolParticle, createSparkParticle, createWaterSplashParticle } from "./particles";
 import { AudioFilePath, playSound } from "./sound";
 import ServerComponent from "./entity-components/ServerComponent";
 import { ClientComponentClass, ClientComponentType, ClientComponents, ServerComponentClass, ServerComponents } from "./entity-components/components";
@@ -19,6 +19,7 @@ import Particle from "./Particle";
 import { addTexturedParticleToBufferContainer, ParticleRenderLayer } from "./rendering/particle-rendering";
 import { removeLightsAttachedToEntity, removeLightsAttachedToRenderPart } from "./lights";
 import { EntityEvent } from "webgl-test-shared/dist/entity-events";
+import { Hitbox } from "./hitboxes/hitboxes";
 
 // Use prime numbers / 100 to ensure a decent distribution of different types of particles
 const HEALING_PARTICLE_AMOUNTS = [0.05, 0.37, 1.01];
@@ -34,6 +35,7 @@ export function getFrameProgress(): number {
    return frameProgress;
 }
 
+// @Cleanup: copy and paste from server
 export function getRandomPointInEntity(entity: Entity): Point {
    const hitbox = entity.hitboxes[randInt(0, entity.hitboxes.length - 1)];
 
@@ -79,7 +81,7 @@ abstract class Entity extends RenderObject {
    /** Stores all render parts attached to the object, sorted ascending based on zIndex. (So that render part with smallest zIndex is rendered first) */
    public readonly allRenderParts = new Array<RenderPart>();
 
-   public hitboxes = new Array<CircularHitbox | RectangularHitbox>();
+   public hitboxes = new Array<Hitbox>();
    public readonly hitboxHalfDiagonalLength?: number;
    
    public chunks = new Set<Chunk>();
@@ -630,18 +632,9 @@ abstract class Entity extends RenderObject {
          }
       }
 
-      // a bit @Hacky
-      const attacker = Board.entityRecord[hitData.attackerID];
-      if (typeof attacker !== "undefined") {
-         switch (attacker.type) {
-            case EntityType.floorSpikes:
-            case EntityType.wallSpikes:
-            case EntityType.floorPunjiSticks:
-            case EntityType.wallPunjiSticks: {
-               playSound("spike-stab.mp3", 0.3, 1, attacker.position.x, attacker.position.y);
-               break;
-            }
-         }
+      // @Incomplete
+      if (hitData.flags & HitFlags.HIT_BY_SPIKES) {
+         playSound("spike-stab.mp3", 0.3, 1, hitData.hitPosition[0], hitData.hitPosition[1]);
       }
       
       if (typeof this.onHit !== "undefined") {
@@ -660,6 +653,13 @@ abstract class Entity extends RenderObject {
          if (typeof component.onHit !== "undefined") {
             component.onHit(isDamagingHit);
          }
+      }
+   }
+
+   public registerStoppedHit(hitData: HitData): void {
+      for (let i = 0; i < 6; i++) {
+         const position = this.position.offset(randFloat(0, 6), 2 * Math.PI * Math.random());
+         createSparkParticle(position.x, position.y);
       }
    }
 

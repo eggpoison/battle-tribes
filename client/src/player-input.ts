@@ -14,7 +14,6 @@ import WorkerHut from "./entities/WorkerHut";
 import TribeTotem from "./entities/TribeTotem";
 import Workbench from "./entities/Workbench";
 import CircularHitbox from "./hitboxes/CircularHitbox";
-import Hitbox from "./hitboxes/Hitbox";
 import RectangularHitbox from "./hitboxes/RectangularHitbox";
 import { closeTechTree, techTreeIsOpen } from "./components/game/TechTree";
 import { attemptEntitySelection, deselectSelectedEntity, getSelectedEntityID } from "./entity-selection";
@@ -36,6 +35,7 @@ import { LimbInfo } from "./entity-components/InventoryUseComponent";
 import InventoryComponent from "./entity-components/InventoryComponent";
 import { ENTITY_TYPE_TO_GHOST_TYPE_MAP, GhostInfo, setGhostInfo } from "./rendering/entity-ghost-rendering";
 import Camera from "./Camera";
+import { Hitbox } from "./hitboxes/hitboxes";
 
 /** Acceleration of the player while moving without any modifiers. */
 const PLAYER_ACCELERATION = 700;
@@ -1038,13 +1038,6 @@ const tickItem = (item: Item, itemSlot: number): void => {
             rotation: placeInfo.rotation,
             ghostType: ENTITY_TYPE_TO_GHOST_TYPE_MAP[placeInfo.entityType],
             tint: canPlaceItem(placeInfo.position, placeInfo.rotation, item, structureType, false) ? [1, 1, 1] : [1.5, 0.5, 0.5],
-            snappedEntities: placeInfo.connectedEntityIDs.filter(id => typeof Board.entityRecord[id] !== "undefined").map(id => {
-               const entity = Board.entityRecord[id]!;
-               if (typeof entity === "undefined") {
-                  console.warn("undefined!");
-               }
-               return entity;
-            }),
             opacity: 0.5
          };
          setGhostInfo(ghostInfo);

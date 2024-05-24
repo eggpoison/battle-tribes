@@ -70,8 +70,8 @@ export function updateGrassBlockers(): void {
       const associatedEntityID = blockerAssociatedEntityIDs[i];
       if (typeof Board.entityRecord[associatedEntityID] !== "undefined") {
          blocker.blockAmount += 1 / Vars.GRASS_FULL_DIE_TICKS;
-         if (blocker.blockAmount > 1) {
-            blocker.blockAmount = 1;
+         if (blocker.blockAmount > blocker.maxBlockAmount) {
+            blocker.blockAmount = blocker.maxBlockAmount;
          }
       } else {
          blocker.blockAmount -= 1 / Vars.GRASS_FULL_REGROW_TICKS;
@@ -99,7 +99,8 @@ export function createStructureGrassBlockers(structure: Entity<StructureType>): 
          const blocker: GrassBlockerCircle = {
             position: position,
             blockAmount: 0,
-            radius: hitbox.radius + Vars.BLOCKER_PADDING
+            radius: hitbox.radius + Vars.BLOCKER_PADDING,
+            maxBlockAmount: 1
          };
          addGrassBlocker(blocker, structure.id);
       } else {
@@ -108,7 +109,8 @@ export function createStructureGrassBlockers(structure: Entity<StructureType>): 
             blockAmount: 0,
             width: hitbox.width + Vars.BLOCKER_PADDING * 2,
             height: hitbox.height + Vars.BLOCKER_PADDING * 2,
-            rotation: structure.rotation + hitbox.relativeRotation
+            rotation: structure.rotation + hitbox.relativeRotation,
+            maxBlockAmount: 1
          };
          addGrassBlocker(blocker, structure.id);
       }

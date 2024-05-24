@@ -11,7 +11,7 @@ export class PlayerComponent {
 }
 
 export function serialisePlayerComponent(player: Entity): PlayerComponentData {
-   const playerData = SERVER.getPlayerDataFromInstance(player);
+   const playerData = SERVER.getPlayerDataFromInstance(player.id);
    if (playerData === null) {
       throw new Error("Can't find player data");
    }

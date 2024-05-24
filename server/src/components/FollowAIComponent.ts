@@ -2,8 +2,9 @@ import { FollowAIComponentData } from "webgl-test-shared/dist/components";
 import { Settings } from "webgl-test-shared/dist/settings";
 import Board from "../Board";
 import Entity from "../Entity";
-import { moveEntityToPosition } from "../ai-shared";
+import { getDistanceFromPointToEntity, moveEntityToPosition, stopEntity, turnToPosition, willStopAtDesiredDistance } from "../ai-shared";
 import { FollowAIComponentArray } from "./ComponentArray";
+import { PhysicsComponentArray } from "./PhysicsComponent";
 
 export class FollowAIComponent {
    /** ID of the followed entity */
@@ -12,8 +13,13 @@ export class FollowAIComponent {
    /** Keeps track of how long the mob has been interested in its target */
    public interestTimer = 0;
 
-   constructor(followCooldownTicks: number) {
+   public readonly followChancePerSecond: number;
+   public readonly followDistance: number;
+
+   constructor(followCooldownTicks: number, followChancePerSecond: number, followDistance: number) {
       this.followCooldownTicks = followCooldownTicks;
+      this.followChancePerSecond = followChancePerSecond;
+      this.followDistance = followDistance;
    }
 }
 
@@ -42,16 +48,32 @@ export function updateFollowAIComponent(entity: Entity, visibleEntities: Readonl
    }
 }
 
-export function followEntity(entity: Entity, followedEntity: Entity, acceleration: number, turnSpeed: number, newFollowCooldownTicks: number): void {
+export function startFollowingEntity(entity: Entity, followedEntity: Entity, acceleration: number, turnSpeed: number, newFollowCooldownTicks: number): void {
    const followAIComponent = FollowAIComponentArray.getComponent(entity.id);
    followAIComponent.followTargetID = followedEntity.id;
    followAIComponent.followCooldownTicks = newFollowCooldownTicks;
    followAIComponent.interestTimer = 0;
+
    moveEntityToPosition(entity, followedEntity.position.x, followedEntity.position.y, acceleration, turnSpeed);
 };
 
-export function canFollow(followAIComponent: FollowAIComponent): boolean {
-   return followAIComponent.followCooldownTicks === 0;
+export function continueFollowingEntity(entity: Entity, followTarget: Entity, acceleration: number, turnSpeed: number): void {
+   const followAIComponent = FollowAIComponentArray.getComponent(entity.id);
+   const physicsComponent = PhysicsComponentArray.getComponent(entity.id);
+
+   // @Incomplete: do getDistanceBetweenEntities
+   // @Hack
+   const distance = getDistanceFromPointToEntity(followTarget.position, entity) - 32;
+   if (willStopAtDesiredDistance(physicsComponent, followAIComponent.followDistance, distance)) {
+      stopEntity(physicsComponent);
+      turnToPosition(entity, followTarget.position, turnSpeed);
+   } else {
+      moveEntityToPosition(entity, followTarget.position.x, followTarget.position.y, acceleration, turnSpeed);
+   }
+}
+
+export function entityWantsToFollow(followAIComponent: FollowAIComponent): boolean {
+   return followAIComponent.followCooldownTicks === 0 && Math.random() < followAIComponent.followChancePerSecond / Settings.TPS;
 }
 
 export function serialiseFollowAIComponent(entity: Entity): FollowAIComponentData {

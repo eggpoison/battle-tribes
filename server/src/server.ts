@@ -16,7 +16,7 @@ import RectangularHitbox from "./hitboxes/RectangularHitbox";
 import CircularHitbox from "./hitboxes/CircularHitbox";
 import OPTIONS from "./options";
 import Entity from "./Entity";
-import { HealthComponentArray, InventoryUseComponentArray, PlayerComponentArray, SpikesComponentArray, TribeComponentArray, TribesmanComponentArray, resetComponents } from "./components/ComponentArray";
+import { HealthComponentArray, InventoryUseComponentArray, PlayerComponentArray, SpikesComponentArray, TribeComponentArray, TribesmanComponentArray, TurretComponentArray, resetComponents } from "./components/ComponentArray";
 import { InventoryComponentArray, getInventory, serialiseInventoryComponent } from "./components/InventoryComponent";
 import { createPlayer, interactWithStructure, processItemPickupPacket, processItemReleasePacket, processItemUsePacket, processPlayerAttackPacket, processPlayerCraftingPacket, processTechUnlock, startChargingBattleaxe, startChargingBow, startChargingSpear, startEating, uninteractWithStructure, modifyBuilding, deconstructBuilding } from "./entities/tribes/player";
 import { serialiseCowComponent } from "./entities/mobs/cow";
@@ -1147,19 +1147,31 @@ class GameServer {
          // }, this.nextTickTime - currentTime);
       });
    }
+   
+   private shouldShowDamageNumber(playerData: PlayerData, attackingEntity: Entity | null): boolean {
+      if (attackingEntity === null) {
+         return false;
+      }
+      
+      // Show damage from the player
+      const player = Board.entityRecord[playerData.instanceID];
+      if (typeof player !== "undefined" && attackingEntity === player) {
+         return true;
+      }
+
+      // Show damage from friendly turrets
+      if (TurretComponentArray.hasComponent(attackingEntity.id)) {
+         const tribeComponent = TribeComponentArray.getComponent(attackingEntity.id);
+         if (tribeComponent.tribe === playerData.tribe) {
+            return true;
+         }
+      }
+
+      return false;
+   }
 
    public registerEntityHit(hitEntityID: number, attackingEntity: Entity | null, hitPosition: Point, attackEffectiveness: AttackEffectiveness, damage: number, flags: number): void {
       // @Incomplete: Consider all chunks the entity is in instead of just the one at its position
-
-      const hitData: HitData = {
-         hitEntityID: hitEntityID,
-         hitPosition: hitPosition.package(),
-         attackEffectiveness: attackEffectiveness,
-         damage: damage,
-         // @Incomplete
-         shouldShowDamageNumber: true,
-         flags: flags
-      };
       
       // @Cleanup: copy and paste
       const chunkX = Math.floor(hitPosition.x / Settings.CHUNK_UNITS);
@@ -1168,6 +1180,15 @@ class GameServer {
          if (typeof playerData === "undefined") {
             continue;
          }
+
+         const hitData: HitData = {
+            hitEntityID: hitEntityID,
+            hitPosition: hitPosition.package(),
+            attackEffectiveness: attackEffectiveness,
+            damage: damage,
+            shouldShowDamageNumber: this.shouldShowDamageNumber(playerData, attackingEntity),
+            flags: flags
+         };
          
          if (chunkX >= playerData.visibleChunkBounds[0] && chunkX <= playerData.visibleChunkBounds[1] && chunkY >= playerData.visibleChunkBounds[2] && chunkY <= playerData.visibleChunkBounds[3]) {
             playerData.visibleHits.push(hitData);

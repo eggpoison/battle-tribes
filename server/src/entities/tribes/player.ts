@@ -29,7 +29,6 @@ import { toggleTunnelDoor, updateTunnelDoorBitset } from "../../components/Tunne
 import { PlanterBoxComponentArray, fertilisePlanterBox, placePlantInPlanterBox } from "../../components/PlanterBoxComponent";
 import { createItem } from "../../items";
 import { toggleFenceGateDoor } from "../../components/FenceGateComponent";
-import { TribesmanTitle } from "webgl-test-shared/dist/titles";
 import { StructureComponentArray, isAttachedToWall } from "../../components/StructureComponent";
 
 /** How far away from the entity the attack is done */
@@ -63,15 +62,18 @@ export function createPlayer(position: Point, tribe: Tribe): Entity {
    // addItem(inventoryComponent, createItem(ItemType.wooden_spikes, 5));
    // addItem(inventoryComponent, createItem(ItemType.leaf, 10));
 
-   // addItem(inventoryComponent, createItem(ItemType.planter_box, 5));
+   setTimeout(() => {
+      addItem(inventoryComponent, createItem(ItemType.planter_box, 5));
+      addItem(inventoryComponent, createItem(ItemType.berry, 10));
+      addItem(inventoryComponent, createItem(ItemType.fertiliser, 10));
+   }, 200);
    // addItem(inventoryComponent, createItem(ItemType.seed, 10));
-   // addItem(inventoryComponent, createItem(ItemType.berry, 10));
    // addItem(inventoryComponent, createItem(ItemType.frostcicle, 10));
 
-   addItem(inventoryComponent, createItem(ItemType.wooden_fence, 99));
-   addItem(inventoryComponent, createItem(ItemType.wooden_hammer, 1));
-   addItem(inventoryComponent, createItem(ItemType.wood, 10));
-   addItem(inventoryComponent, createItem(ItemType.wooden_wall, 50));
+   // addItem(inventoryComponent, createItem(ItemType.wooden_fence, 99));
+   // addItem(inventoryComponent, createItem(ItemType.wooden_hammer, 1));
+   // addItem(inventoryComponent, createItem(ItemType.wood, 10));
+   // addItem(inventoryComponent, createItem(ItemType.wooden_wall, 50));
    
    // @Temporary
    // setTimeout(() => {

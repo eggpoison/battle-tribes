@@ -66,7 +66,7 @@ export function getEntityRelationship(entityID: number, comparingEntity: Entity)
          return EntityRelationship.enemyBuilding;
       }
       case EntityType.plant: {
-         const plantComponent = PlantComponentArray.getComponent(entityID);
+         const plantComponent = PlantComponentArray.getComponent(comparingEntity.id);
          
          const tribeComponent = TribeComponentArray.getComponent(entityID);
          const planterBoxTribeComponent = TribeComponentArray.getComponent(plantComponent.planterBoxID);

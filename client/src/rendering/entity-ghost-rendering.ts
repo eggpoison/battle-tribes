@@ -30,6 +30,7 @@ export enum GhostType {
    treeSeed,
    berryBushSeed,
    iceSpikesSeed,
+   fertiliser,
    campfire,
    furnace,
    tribeTotem,
@@ -263,6 +264,14 @@ const getGhostTextureInfoArray = (ghostInfo: GhostInfo): ReadonlyArray<TextureIn
             rotation: 0
          }
       ];
+      case GhostType.fertiliser: return [
+         {
+            textureSource: "items/large/fertiliser.png",
+            offsetX: 0,
+            offsetY: 0,
+            rotation: 0
+         }
+      ]
       case GhostType.campfire: return [
          {
             textureSource: "entities/campfire/campfire.png",

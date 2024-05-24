@@ -58,6 +58,7 @@ import { tickHealingTotemComponent } from "./components/HealingTotemComponent";
 import { PlantComponentArray, tickPlantComponent } from "./components/PlantComponent";
 import { tickFenceGateComponent } from "./components/FenceGateComponent";
 import { Hitbox, hitboxIsCircular } from "./hitboxes/hitboxes";
+import { PlanterBoxComponentArray, tickPlanterBoxComponent } from "./components/PlanterBoxComponent";
 
 const START_TIME = 6;
 
@@ -384,13 +385,18 @@ abstract class Board {
       }
 
       for (let i = 0; i < PlantComponentArray.components.length; i++) {
-         const planterBoxComponent = PlantComponentArray.components[i];
-         tickPlantComponent(planterBoxComponent);
+         const plantComponent = PlantComponentArray.components[i];
+         tickPlantComponent(plantComponent);
       }
 
       for (let i = 0; i < FenceGateComponentArray.components.length; i++) {
          const entity = FenceGateComponentArray.getEntity(i);
          tickFenceGateComponent(entity);
+      }
+
+      for (let i = 0; i < PlanterBoxComponentArray.components.length; i++) {
+         const planterBoxComponent = PlanterBoxComponentArray.components[i];
+         tickPlanterBoxComponent(planterBoxComponent);
       }
 
       tickStatusEffectComponents();

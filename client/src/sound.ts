@@ -159,7 +159,8 @@ const AUDIO_FILE_PATHS = [
    "slime-ambient-4.mp3",
    "fart.mp3",
    "trap-spring.mp3",
-   "trap-cover.mp3"
+   "trap-cover.mp3",
+   "fertiliser.mp3"
 ] as const;
 
 export type AudioFilePath = typeof AUDIO_FILE_PATHS[number];

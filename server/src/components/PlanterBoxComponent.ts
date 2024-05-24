@@ -31,6 +31,12 @@ function onRemove(entityID: number): void {
    }
 }
 
+export function tickPlanterBoxComponent(planterBoxComponent: PlanterBoxComponent): void {
+   if (planterBoxComponent.remainingFertiliserTicks > 0) {
+      planterBoxComponent.remainingFertiliserTicks--;
+   }
+}
+
 export function serialisePlanterBoxComponent(entityID: number): PlanterBoxComponentData {
    const planterBoxComponent = PlanterBoxComponentArray.getComponent(entityID);
    

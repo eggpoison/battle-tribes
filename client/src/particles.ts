@@ -1544,7 +1544,7 @@ export function createSparkParticle(x: number, y: number): void {
 export function createGrowthParticle(x: number, y: number): void {
    const opacityMult = randFloat(0.5, 1);
    
-   const lifetime = randFloat(1, 1.45);
+   const lifetime = randFloat(0.8, 1.1);
 
    const particle = new Particle(lifetime);
    particle.getOpacity = () => {
@@ -1562,7 +1562,7 @@ export function createGrowthParticle(x: number, y: number): void {
    const colourLerp = Math.random();
    
    // const size = Math.random() < 0.5 ? 4 : 6;
-   const size = 6;
+   const size = 4;
    
    addMonocolourParticleToBufferContainer(
       particle,
@@ -1571,13 +1571,13 @@ export function createGrowthParticle(x: number, y: number): void {
       x, y,
       vx, vy,
       0, 0,
-      30,
+      2,
       2 * Math.PI * Math.random(),
       randFloat(2, 5) * randSign(),
       3,
       0,
-      // lerp(minCol[0], maxCol[0], colourLerp), lerp(minCol[1], maxCol[1], colourLerp), lerp(minCol[2], maxCol[2], colourLerp)
-      minCol[0], minCol[1], minCol[2]
+      lerp(minCol[0], maxCol[0], colourLerp), lerp(minCol[1], maxCol[1], colourLerp), lerp(minCol[2], maxCol[2], colourLerp)
+      // minCol[0], minCol[1], minCol[2]
    );
    Board.highMonocolourParticles.push(particle);
 }

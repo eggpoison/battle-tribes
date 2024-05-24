@@ -329,19 +329,16 @@ const getEntityID = (doPlayerProximityCheck: boolean, doCanSelectCheck: boolean)
    return entityID;
 }
 
-const getPlantGhostType = (itemType: ItemType): GhostType => {
-   switch (itemType) {
-      case ItemType.seed: {
+const getPlantGhostType = (plantType: PlanterBoxPlant): GhostType => {
+   switch (plantType) {
+      case PlanterBoxPlant.tree: {
          return GhostType.treeSeed;
       }
-      case ItemType.berry: {
+      case PlanterBoxPlant.berryBush: {
          return GhostType.berryBushSeed;
       }
-      case ItemType.frostcicle: {
+      case PlanterBoxPlant.iceSpikes: {
          return GhostType.iceSpikesSeed;
-      }
-      default: {
-         throw new Error();
       }
    }
 }
@@ -352,33 +349,38 @@ const updateHighlightedEntity = (entity: Entity | null): void => {
       setGhostInfo(null);
       return;
    }
-
-   switch (entity.type) {
-      case EntityType.planterBox: {
-         const selectedItem = getPlayerSelectedItem();
-         if (selectedItem === null) {
-            setGhostInfo(null);
-            break;
-         }
-         
-         const planterBoxComponent = entity.getServerComponent(ServerComponentType.planterBox);
-
-         // Create plant ghost
-         const plant = SEED_TO_PLANT_RECORD[selectedItem.type];
-         if (typeof plant === "undefined" || planterBoxComponent.hasPlant) {
-            setGhostInfo(null);
-            break;
-         }
-      
+   
+   const interactAction = getEntityInteractAction(entity);
+   if (interactAction === null) {
+      setGhostInfo(null);
+      return;
+   }
+   
+   switch (interactAction.type) {
+      case InteractActionType.plantSeed: {
          const ghostInfo: GhostInfo = {
             position: entity.position,
             rotation: entity.rotation,
-            ghostType: getPlantGhostType(selectedItem.type),
+            ghostType: getPlantGhostType(interactAction.plantType),
             tint: [1, 1, 1],
             opacity: PARTIAL_OPACITY
          };
          setGhostInfo(ghostInfo);
-
+         break;
+      }
+      case InteractActionType.useFertiliser: {
+         const ghostInfo: GhostInfo = {
+            position: entity.position,
+            rotation: entity.rotation,
+            ghostType: GhostType.fertiliser,
+            tint: [1, 1, 1],
+            opacity: PARTIAL_OPACITY
+         };
+         setGhostInfo(ghostInfo);
+         break;
+      }
+      default: {
+         setGhostInfo(null);
          break;
       }
    }

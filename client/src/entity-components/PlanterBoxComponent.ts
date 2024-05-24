@@ -4,7 +4,7 @@ import Entity, { getRandomPointInEntity } from "../Entity";
 import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
 import { playSound } from "../sound";
-import { randInt } from "webgl-test-shared/dist/utils";
+import { customTickIntervalHasPassed, randInt } from "webgl-test-shared/dist/utils";
 import { createGrowthParticle } from "../particles";
 
 class PlanterBoxComponent extends ServerComponent<ServerComponentType.planterBox> {
@@ -19,6 +19,17 @@ class PlanterBoxComponent extends ServerComponent<ServerComponentType.planterBox
       this.hasPlant = data.plantType !== null;
       this.isFertilised = data.isFertilised;
       this.updateMoundRenderPart(data.plantType);
+   }
+
+   private createGrowthParticle(): void {
+      const pos = getRandomPointInEntity(this.entity);
+      createGrowthParticle(pos.x, pos.y);
+   }
+   
+   public tick(): void {
+      if (this.isFertilised && customTickIntervalHasPassed(this.entity.ageTicks, 0.35)) {
+         this.createGrowthParticle();
+      }
    }
 
    private updateMoundRenderPart(plantType: PlanterBoxPlant | null): void {
@@ -43,10 +54,11 @@ class PlanterBoxComponent extends ServerComponent<ServerComponentType.planterBox
 
    public updateFromData(data: PlanterBoxComponentData): void {
       if (data.isFertilised && !this.isFertilised) {
-         for (let i = 0; i < 17; i++) {
-            const pos = getRandomPointInEntity(this.entity);
-            createGrowthParticle(pos.x, pos.y);
+         for (let i = 0; i < 25; i++) {
+            this.createGrowthParticle();
          }
+
+         playSound("fertiliser.mp3", 0.6, 1, this.entity.position.x, this.entity.position.y);
       }
       this.isFertilised = data.isFertilised;
       

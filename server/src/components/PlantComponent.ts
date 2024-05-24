@@ -51,21 +51,33 @@ const plantCanGrowFruit = (plantComponent: PlantComponent): boolean => {
    return plantComponent.numFruit < 4;
 }
 
+const plantIsFertilised = (plantComponent: PlantComponent): boolean => {
+   const planterBoxComponent = PlanterBoxComponentArray.getComponent(plantComponent.planterBoxID);
+   return planterBoxComponent.remainingFertiliserTicks > 0;
+}
+
 export function tickPlantComponent(plantComponent: PlantComponent): void {
    if (plantComponent.plantType === null) {
       return;
    }
 
+   const isFertilised = plantIsFertilised(plantComponent);
+
    const ticksToGrow = PLANT_GROWTH_TICKS[plantComponent.plantType];
-   if (plantComponent.plantGrowthTicks < ticksToGrow) {
-      plantComponent.plantGrowthTicks++;
-   } else if (plantCanGrowFruit(plantComponent)) {
-      // Grow fruit
-      if (Math.random() < 0.3 / Settings.TPS) {
-         plantComponent.fruitRandomGrowthTicks++;
-         if (plantComponent.fruitRandomGrowthTicks === 5) {
-            plantComponent.numFruit++;
-            plantComponent.fruitRandomGrowthTicks = 0;
+   plantComponent.plantGrowthTicks += isFertilised ? 1.5 : 1;
+   if (plantComponent.plantGrowthTicks >= ticksToGrow) {
+      plantComponent.plantGrowthTicks = ticksToGrow;
+      
+      if (plantCanGrowFruit(plantComponent)) {
+         const tickChance = isFertilised ? 0.45 : 0.3;
+         
+         // Grow fruit
+         if (Math.random() < tickChance / Settings.TPS) {
+            plantComponent.fruitRandomGrowthTicks++;
+            if (plantComponent.fruitRandomGrowthTicks === 5) {
+               plantComponent.numFruit++;
+               plantComponent.fruitRandomGrowthTicks = 0;
+            }
          }
       }
    }

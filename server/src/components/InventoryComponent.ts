@@ -58,7 +58,7 @@ function onRemove(entityID: number): void {
 /** Creates and stores a new inventory in the component. */
 export function createNewInventory(inventoryComponent: InventoryComponent, inventoryName: InventoryName, width: number, height: number, options: InventoryOptions): Inventory {
    if (typeof inventoryComponent.inventoryRecord[inventoryName] !== "undefined") {
-      throw new Error(`Tried to create an inventory when an inventory by the name of '${name}' already exists.`);
+      throw new Error(`Tried to create an inventory when an inventory by the name of '${inventoryName}' already exists.`);
    }
    
    const inventory = new Inventory(width, height, inventoryName);

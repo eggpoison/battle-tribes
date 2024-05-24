@@ -32,7 +32,6 @@ import { createWarriorHut } from "../structures/warrior-hut";
 import { createWall } from "../structures/wall";
 import { InventoryUseInfo, getInventoryUseInfo } from "../../components/InventoryUseComponent";
 import { createBattleaxeProjectile } from "../projectiles/battleaxe-projectile";
-import { SERVER } from "../../server";
 import { createPlanterBox } from "../structures/planter-box";
 import { createIceArrow } from "../projectiles/ice-arrow";
 import { createSpikes } from "../structures/spikes";

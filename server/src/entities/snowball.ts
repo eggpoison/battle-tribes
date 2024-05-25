@@ -10,7 +10,7 @@ import { HealthComponentArray, SnowballComponentArray } from "../components/Comp
 import { HealthComponent, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../components/HealthComponent";
 import { StatusEffectComponent, StatusEffectComponentArray } from "../components/StatusEffectComponent";
 import { SnowballComponent } from "../components/SnowballComponent";
-import { SERVER } from "../server";
+import { SERVER } from "../server/server";
 import { PhysicsComponent, PhysicsComponentArray, applyKnockback } from "../components/PhysicsComponent";
 import { EntityCreationInfo } from "../entity-components";
 import { ServerComponentType } from "webgl-test-shared/dist/components";

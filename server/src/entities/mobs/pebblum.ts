@@ -9,7 +9,7 @@ import { HealthComponent, addLocalInvulnerabilityHash, canDamageEntity, damageEn
 import { PebblumComponent } from "../../components/PebblumComponent";
 import { moveEntityToPosition, stopEntity } from "../../ai-shared";
 import Board from "../../Board";
-import { SERVER } from "../../server";
+import { SERVER } from "../../server/server";
 import CircularHitbox from "../../hitboxes/CircularHitbox";
 import { PhysicsComponent, PhysicsComponentArray, applyKnockback } from "../../components/PhysicsComponent";
 import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";

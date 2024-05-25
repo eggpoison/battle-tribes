@@ -21,7 +21,7 @@ import Tile from "../../Tile";
 import { WanderAIComponent } from "../../components/WanderAIComponent";
 import { ROCK_SPIKE_HITBOX_SIZES, createRockSpikeProjectile } from "../projectiles/rock-spike";
 import { createSnowball } from "../snowball";
-import { SERVER } from "../../server";
+import { SERVER } from "../../server/server";
 import { PhysicsComponent, PhysicsComponentArray, applyKnockback } from "../../components/PhysicsComponent";
 import { wasTribeMemberKill } from "../tribes/tribe-member";
 import { ServerComponentType } from "webgl-test-shared/dist/components";

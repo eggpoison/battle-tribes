@@ -46,6 +46,7 @@ import { calculateEntityRenderDepth } from "../render-layers";
 import { GrassBlocker } from "webgl-test-shared/dist/grass-blockers";
 import { createEntity } from "../entity-class-record";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
+import { windowHeight, windowWidth } from "../webgl";
 
 type ISocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 
@@ -116,23 +117,6 @@ export function calculatePotentialPlanIdealness(potentialPlan: PotentialBuilding
       idealness = 1;
    }
    return idealness;
-}
-
-const shouldShowDamageNumber = (attackerID: number): boolean => {
-   if (Player.instance !== null && attackerID === Player.instance.id) {
-      return true;
-   }
-
-   // Show friendly turrets' damage numbers
-   const entity = Board.entityRecord[attackerID];
-   if (typeof entity !== "undefined" && entity.hasServerComponent(ServerComponentType.turret)) {
-      const tribeComponent = entity.getServerComponent(ServerComponentType.tribe);
-      if (tribeComponent.tribeID === Game.tribe.id) {
-         return true;
-      }
-   }
-
-   return false;
 }
 
 // @Cleanup
@@ -218,30 +202,41 @@ abstract class Client {
       });
    }
 
-   public static async requestSpawnPosition(): Promise<Point> {
-      return new Promise(resolve => {
-         if (this.socket === null) throw new Error("Socket hadn't been created when requesting game data")
+   // public static async requestInitialGameData(): Promise<InitialGameDataPacket> {
+   //    return new Promise(resolve => {
+   //       if (this.socket === null) throw new Error("Socket hadn't been created when requesting game data")
 
-         this.socket.emit("spawn_position_request");
+   //       this.socket.emit("initial_game_data_request");
          
-         this.socket.off("spawn_position");
-         this.socket.on("spawn_position", (spawnPositionPackaged: [number, number]) => {
-            resolve(Point.unpackage(spawnPositionPackaged));
-         });
-      });
-   }
+   //       this.socket.off("initial_game_data_packet");
+   //       this.socket.on("initial_game_data_packet", (initialGameDataPacket: InitialGameDataPacket) => {
+   //          resolve(initialGameDataPacket);
+   //       });
+   //    });
+   // }
 
-   public static async requestInitialGameData(): Promise<InitialGameDataPacket> {
+   public static getInitialGameDataPacket(): Promise<InitialGameDataPacket> {
       return new Promise(resolve => {
-         if (this.socket === null) throw new Error("Socket hadn't been created when requesting game data")
+         if (this.socket === null) {
+            throw new Error();
+         }
 
-         this.socket.emit("initial_game_data_request");
-         
-         this.socket.off("initial_game_data_packet");
-         this.socket.on("initial_game_data_packet", (initialGameDataPacket: InitialGameDataPacket) => {
+         this.socket.once("initial_game_data_packet", initialGameDataPacket => {
             resolve(initialGameDataPacket);
          });
-      });
+      })
+   }
+
+   public static getNextGameDataPacket(): Promise<GameDataPacket> {
+      return new Promise(resolve => {
+         if (this.socket === null) {
+            throw new Error();
+         }
+
+         this.socket.once("game_data_packet", gameDataPacket => {
+            resolve(gameDataPacket);
+         });
+      })
    }
 
    /** Creates the socket used to connect to the server */
@@ -691,7 +686,7 @@ abstract class Client {
    public static sendInitialPlayerData(username: string, tribeType: TribeType): void {
       // Send player data to the server
       if (this.socket !== null) {
-         this.socket.emit("initial_player_data", username, tribeType);
+         this.socket.emit("initial_player_data", username, tribeType, windowWidth, windowHeight);
       }
    }
 
@@ -821,7 +816,7 @@ abstract class Client {
       }
    }
 
-   public static sendTrackEntity(id: number | null): void {
+   public static sendTrackEntity(id: number): void {
       if (Game.isRunning && this.socket !== null) {
          this.socket.emit("track_game_object", id);
       }

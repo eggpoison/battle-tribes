@@ -10,7 +10,7 @@ import { ArrowComponentArray, HealthComponentArray, TribeComponentArray } from "
 import { damageEntity } from "../../components/HealthComponent";
 import { ArrowComponent } from "../../components/ArrowComponent";
 import Board from "../../Board";
-import { SERVER } from "../../server";
+import { SERVER } from "../../server/server";
 import { PhysicsComponent, PhysicsComponentArray, applyKnockback } from "../../components/PhysicsComponent";
 import { EntityRelationship, TribeComponent, getEntityRelationship } from "../../components/TribeComponent";
 import { StatusEffectComponentArray, applyStatusEffect } from "../../components/StatusEffectComponent";

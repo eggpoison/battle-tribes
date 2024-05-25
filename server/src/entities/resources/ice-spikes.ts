@@ -12,7 +12,7 @@ import { HealthComponentArray, IceSpikesComponentArray } from "../../components/
 import { HealthComponent, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
 import { StatusEffectComponent, StatusEffectComponentArray, applyStatusEffect } from "../../components/StatusEffectComponent";
 import { createIceShard } from "../projectiles/ice-shard";
-import { SERVER } from "../../server";
+import { SERVER } from "../../server/server";
 import { IceSpikesComponent } from "../../components/IceSpikesComponent";
 import Board from "../../Board";
 import { createItemsOverEntity } from "../../entity-shared";

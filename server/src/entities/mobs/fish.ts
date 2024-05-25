@@ -22,7 +22,7 @@ import { EscapeAIComponent, updateEscapeAIComponent } from "../../components/Esc
 import { chooseEscapeEntity, registerAttackingEntity, runFromAttackingEntity } from "../../ai/escape-ai";
 import { InventoryComponentArray, getInventory, hasInventory } from "../../components/InventoryComponent";
 import { AIHelperComponent, AIHelperComponentArray } from "../../components/AIHelperComponent";
-import { SERVER } from "../../server";
+import { SERVER } from "../../server/server";
 import { PhysicsComponent, PhysicsComponentArray, applyKnockback } from "../../components/PhysicsComponent";
 import { CollisionVars, entitiesAreColliding } from "../../collision";
 import { TribeMemberComponentArray } from "../../components/TribeMemberComponent";

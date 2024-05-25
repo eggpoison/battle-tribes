@@ -10,7 +10,7 @@ import { HealthComponentArray, ThrowingProjectileComponentArray } from "../../co
 import { damageEntity } from "../../components/HealthComponent";
 import { ThrowingProjectileComponent } from "../../components/ThrowingProjectileComponent";
 import Board from "../../Board";
-import { SERVER } from "../../server";
+import { SERVER } from "../../server/server";
 import { PhysicsComponent, PhysicsComponentArray, applyKnockback } from "../../components/PhysicsComponent";
 import { EntityRelationship, getEntityRelationship } from "../../components/TribeComponent";
 import { ServerComponentType } from "webgl-test-shared/dist/components";

@@ -465,9 +465,9 @@ abstract class Game {
             Client.sendTrackEntity(Camera.trackedEntityID);
          } else if (nerdVisionIsVisible()) {
             const targettedEntity = getMouseTargetEntity();
-            Client.sendTrackEntity(targettedEntity !== null ? targettedEntity.id : null);
+            Client.sendTrackEntity(targettedEntity !== null ? targettedEntity.id : 0);
          } else {
-            Client.sendTrackEntity(null);
+            Client.sendTrackEntity(0);
          }
       }
 

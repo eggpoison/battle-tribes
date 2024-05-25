@@ -1,6 +1,6 @@
 import { DeathInfo, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
 import Entity from "./Entity";
-import { SERVER } from "./server";
+import { PlayerComponentArray } from "./components/ComponentArray";
 
 abstract class TombstoneDeathManager {
    private static readonly MAX_TRACKED_DEATHS = 100;
@@ -13,13 +13,10 @@ abstract class TombstoneDeathManager {
          this.deathInfos.shift();
       }
 
-      const playerData = SERVER.getPlayerDataFromInstance(player.id);
-      if (playerData === null) {
-         return;
-      }
+      const playerComponent = PlayerComponentArray.getComponent(player.id);
       
       this.deathInfos.push({
-         username: playerData.username,
+         username: playerComponent.username,
          causeOfDeath: causeOfDeath
       });
    }

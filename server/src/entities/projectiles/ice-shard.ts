@@ -10,7 +10,7 @@ import RectangularHitbox from "../../hitboxes/RectangularHitbox";
 import { HealthComponentArray, IceShardComponentArray } from "../../components/ComponentArray";
 import { addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
 import { StatusEffectComponentArray, applyStatusEffect } from "../../components/StatusEffectComponent";
-import { SERVER } from "../../server";
+import { SERVER } from "../../server/server";
 import { PhysicsComponent, PhysicsComponentArray, applyKnockback } from "../../components/PhysicsComponent";
 import { EntityCreationInfo } from "../../entity-components";
 import { PlantComponentArray } from "../../components/PlantComponent";

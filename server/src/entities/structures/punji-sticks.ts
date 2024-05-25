@@ -9,7 +9,7 @@ import RectangularHitbox from "../../hitboxes/RectangularHitbox";
 import { HealthComponentArray, SpikesComponentArray, TribeComponentArray } from "../../components/ComponentArray";
 import { HealthComponent, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
 import { StatusEffectComponent, StatusEffectComponentArray, applyStatusEffect } from "../../components/StatusEffectComponent";
-import { SERVER } from "../../server";
+import { SERVER } from "../../server/server";
 import { EntityRelationship, TribeComponent, getEntityRelationship } from "../../components/TribeComponent";
 import Tribe from "../../Tribe";
 import { SpikesComponent } from "../../components/SpikesComponent";

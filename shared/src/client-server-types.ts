@@ -227,8 +227,9 @@ export interface DecorationInfo {
 export type RiverFlowDirections = Partial<Record<number, Partial<Record<number, number>>>>;
 
 /** Initial data sent to the client */
-export interface InitialGameDataPacket extends GameDataPacket {
+export interface InitialGameDataPacket {
    readonly playerID: number;
+   readonly spawnPosition: [number, number];
    readonly tiles: Array<ServerTileData>;
    readonly waterRocks: ReadonlyArray<WaterRockData>;
    readonly riverSteppingStones: ReadonlyArray<RiverSteppingStoneData>;
@@ -334,7 +335,6 @@ export interface RestrictedBuildingAreaData {
 export interface SocketData {}
 
 export interface ServerToClientEvents {
-   spawn_position: (spawnPosition: [number, number]) => void;
    initial_game_data_packet: (gameDataPacket: InitialGameDataPacket) => void;
    game_data_packet: (gameDataPacket: GameDataPacket) => void;
    game_data_sync_packet: (gameDataSyncPacket: GameDataSyncPacket) => void;
@@ -345,10 +345,8 @@ export interface ServerToClientEvents {
 }
 
 export interface ClientToServerEvents {
-   spawn_position_request: () => void;
-   initial_player_data: (username: string, tribeType: TribeType) => void;
+   initial_player_data: (username: string, tribeType: TribeType, screenWidth: number, screenHeight: number) => void;
    visible_chunk_bounds: (visibleChunkBounds: VisibleChunkBounds) => void;
-   initial_game_data_request: () => void;
    deactivate: () => void;
    activate: () => void;
    player_data_packet: (playerDataPacket: PlayerDataPacket) => void;
@@ -368,7 +366,7 @@ export interface ClientToServerEvents {
    respawn: () => void;
    command: (command: string) => void;
    // Tells the server to start sending debug information about a certain game object
-   track_game_object: (gameObjectID: number | null) => void;
+   track_game_object: (gameObjectID: number) => void;
    select_tech: (techID: TechID) => void;
    unlock_tech: (techID: TechID) => void;
    force_unlock_tech: (techID: TechID) => void;

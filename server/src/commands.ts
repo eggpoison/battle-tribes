@@ -4,7 +4,6 @@ import { Settings } from "webgl-test-shared/dist/settings";
 import { Biome } from "webgl-test-shared/dist/tiles";
 import { Point, randItem } from "webgl-test-shared/dist/utils";
 import { parseCommand } from "webgl-test-shared/dist/commands";
-import { SERVER } from "./server";
 import { getTilesOfBiome } from "./census";
 import Board from "./Board";
 import Tile from "./Tile";
@@ -16,6 +15,7 @@ import { createEntity } from "./entity-creation";
 import { createItem } from "./items";
 import { forceBuildPlans } from "./ai-tribe-building/ai-building-plans";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
+import { forcePlayerTeleport, getPlayerFromUsername } from "./server/player-clients";
 
 const ENTITY_SPAWN_RANGE = 200;
 
@@ -44,7 +44,7 @@ const giveItem = (player: Entity, itemType: ItemType, amount: number): void => {
 
 const tp = (player: Entity, x: number, y: number): void => {
    const newPosition = new Point(x, y);
-   SERVER.sendForcePositionUpdatePacket(player, newPosition);
+   forcePlayerTeleport(player, newPosition);
 }
 
 const tpBiome = (player: Entity, biomeName: Biome): void => {
@@ -67,7 +67,7 @@ const tpBiome = (player: Entity, biomeName: Biome): void => {
    const y = (tile.y + Math.random()) * Settings.TILE_SIZE;
 
    const newPosition = new Point(x, y);
-   SERVER.sendForcePositionUpdatePacket(player, newPosition);
+   forcePlayerTeleport(player, newPosition);
 }
 
 const summonEntities = (player: Entity, entityType: EntityType, amount: number): void => {
@@ -93,7 +93,7 @@ export function registerCommand(command: string, player: Entity): void {
             killPlayer(player);
          } else if (numParameters === 1) {
             const targetPlayerName = commandComponents[1] as string;
-            const player = SERVER.getPlayerFromUsername(targetPlayerName);
+            const player = getPlayerFromUsername(targetPlayerName);
             if (player !== null) {
                killPlayer(player);
             }
@@ -109,7 +109,7 @@ export function registerCommand(command: string, player: Entity): void {
             const username = commandComponents[1] as string;
             const damage = commandComponents[2] as number;
 
-            const player = SERVER.getPlayerFromUsername(username);
+            const player = getPlayerFromUsername(username);
             if (player !== null) {
                damagePlayer(player, damage);
             }
@@ -127,7 +127,7 @@ export function registerCommand(command: string, player: Entity): void {
             const username = commandComponents[1] as string;
             const healing = commandComponents[2] as number;
 
-            const player = SERVER.getPlayerFromUsername(username);
+            const player = getPlayerFromUsername(username);
             if (player !== null) {
                healEntity(player, healing, -1);
             }

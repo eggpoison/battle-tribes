@@ -6,7 +6,7 @@ import { customTickIntervalHasPassed } from "webgl-test-shared/dist/utils";
 import { ComponentArray } from "./ComponentArray";
 import Entity, { getRandomPositionInEntity } from "../Entity";
 import { damageEntity } from "./HealthComponent";
-import { SERVER } from "../server";
+import { SERVER } from "../server/server";
 import { PhysicsComponentArray } from "./PhysicsComponent";
 import Board from "../Board";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";

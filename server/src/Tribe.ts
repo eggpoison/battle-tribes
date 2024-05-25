@@ -17,12 +17,13 @@ import { HutComponentArray, TotemBannerComponentArray } from "./components/Compo
 import { createTribeWorker } from "./entities/tribes/tribe-worker";
 import { TotemBannerComponent, addBannerToTotem, removeBannerFromTotem } from "./components/TotemBannerComponent";
 import { createTribeWarrior } from "./entities/tribes/tribe-warrior";
-import { SERVER } from "./server";
+import { SERVER } from "./server/server";
 import { SafetyNode, addHitboxesOccupiedNodes, createRestrictedBuildingArea, getSafetyNode } from "./ai-tribe-building/ai-building";
 import { InventoryComponentArray, getInventory } from "./components/InventoryComponent";
 import { TribeArea } from "./ai-tribe-building/ai-building-areas";
 import { cleanAngle } from "./ai-shared";
 import { getPathfindingGroupID } from "./pathfinding";
+import { registerResearchOrbComplete } from "./server/player-clients";
 
 const ENEMY_ATTACK_REMEMBER_TIME_TICKS = 30 * Settings.TPS;
 const RESPAWN_TIME_TICKS = 5 * Settings.TPS;
@@ -868,7 +869,7 @@ class Tribe {
          }
       }
 
-      SERVER.registerResearchOrbComplete({
+      registerResearchOrbComplete({
          x: researcherX,
          y: researcherY,
          amount: studyAmount

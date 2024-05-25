@@ -7,7 +7,8 @@ import { ComponentArray } from "./ComponentArray";
 import { addDirtyPathfindingEntity, entityCanBlockPathfinding, removeDirtyPathfindingEntity } from "../pathfinding";
 import { Point } from "webgl-test-shared/dist/utils";
 import Board from "../Board";
-import { SERVER } from "../server";
+import { SERVER } from "../server/server";
+import { registerPlayerKnockback } from "../server/player-clients";
 
 // @Cleanup: Variable names
 const a = new Array<number>();
@@ -262,7 +263,7 @@ export function applyKnockback(entity: Entity, knockback: number, knockbackDirec
    physicsComponent.velocity.y += knockbackForce * Math.cos(knockbackDirection);
 
    if (entity.type === EntityType.player) {
-      SERVER.registerPlayerKnockback(entity, knockback, knockbackDirection);
+      registerPlayerKnockback(entity.id, knockback, knockbackDirection);
    }
 }
 

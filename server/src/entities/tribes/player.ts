@@ -1,28 +1,25 @@
-import { HitboxCollisionType, AttackPacket } from "webgl-test-shared/dist/client-server-types";
+import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { PlanterBoxPlant, BuildingMaterial, MATERIAL_TO_ITEM_MAP } from "webgl-test-shared/dist/components";
-import { CRAFTING_RECIPES, ItemRequirements } from "webgl-test-shared/dist/crafting-recipes";
 import { EntityType, EntityTypeString, LimbAction } from "webgl-test-shared/dist/entities";
-import { ItemType, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, ConsumableItemInfo, ConsumableItemCategory, BowItemInfo, InventoryName } from "webgl-test-shared/dist/items";
-import { TechInfo, TechID, getTechByID } from "webgl-test-shared/dist/techs";
-import { TRIBE_INFO_RECORD, TribeType } from "webgl-test-shared/dist/tribes";
+import { ItemType, ITEM_INFO_RECORD, ConsumableItemInfo, ConsumableItemCategory, BowItemInfo, InventoryName } from "webgl-test-shared/dist/items";
+import { TRIBE_INFO_RECORD } from "webgl-test-shared/dist/tribes";
 import { Point } from "webgl-test-shared/dist/utils";
 import Entity from "../../Entity";
-import { attemptAttack, calculateAttackTarget, calculateBlueprintWorkTarget, calculateRadialAttackTargets, calculateRepairTarget, getAvailableCraftingStations, onTribeMemberHurt, repairBuilding, tickTribeMember, useItem } from "./tribe-member";
+import { onTribeMemberHurt, tickTribeMember } from "./tribe-member";
 import Tribe from "../../Tribe";
 import { BuildingMaterialComponentArray, HealthComponentArray, HutComponentArray, InventoryUseComponentArray, PlayerComponentArray, SpikesComponentArray, TribeComponentArray, TunnelComponentArray } from "../../components/ComponentArray";
-import { InventoryComponent, addItemToSlot, recipeCraftingStationIsAvailable, consumeItemFromSlot, consumeItemType, consumeItemTypeFromInventory, countItemType, craftRecipe, getInventory, inventoryComponentCanAffordRecipe, pickupItemEntity, addItem, InventoryComponentArray } from "../../components/InventoryComponent";
+import { InventoryComponent, consumeItemFromSlot, consumeItemType, countItemType, getInventory, pickupItemEntity, addItem, InventoryComponentArray } from "../../components/InventoryComponent";
 import Board from "../../Board";
 import { HealthComponent } from "../../components/HealthComponent";
 import CircularHitbox from "../../hitboxes/CircularHitbox";
 import { InventoryUseComponent, getInventoryUseInfo, setLimbActions } from "../../components/InventoryUseComponent";
-import { SERVER } from "../../server";
-import { TribeMemberComponent, TribeMemberComponentArray, awardTitle } from "../../components/TribeMemberComponent";
+import { TribeMemberComponent, TribeMemberComponentArray } from "../../components/TribeMemberComponent";
 import { PlayerComponent } from "../../components/PlayerComponent";
 import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
 import { toggleDoor } from "../../components/DoorComponent";
 import { PhysicsComponent, PhysicsComponentArray } from "../../components/PhysicsComponent";
-import { EntityRelationship, TribeComponent } from "../../components/TribeComponent";
+import { TribeComponent } from "../../components/TribeComponent";
 import { deoccupyResearchBench, attemptToOccupyResearchBench } from "../../components/ResearchBenchComponent";
 import { createItemsOverEntity } from "../../entity-shared";
 import { toggleTunnelDoor, updateTunnelDoorBitset } from "../../components/TunnelComponent";
@@ -30,13 +27,9 @@ import { PlanterBoxComponentArray, fertilisePlanterBox, placePlantInPlanterBox }
 import { createItem } from "../../items";
 import { toggleFenceGateDoor } from "../../components/FenceGateComponent";
 import { StructureComponentArray, isAttachedToWall } from "../../components/StructureComponent";
+import { registerPlayerDroppedItemPickup } from "../../server/player-clients";
 
-/** How far away from the entity the attack is done */
-const ATTACK_OFFSET = 50;
-/** Max distance from the attack position that the attack will be registered from */
-const ATTACK_RADIUS = 50;
-
-export function createPlayer(position: Point, tribe: Tribe): Entity {
+export function createPlayer(position: Point, tribe: Tribe, username: string): Entity {
    const player = new Entity(position, 0, EntityType.player, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
    const hitbox = new CircularHitbox(position, 1.25, 0, 0, HitboxCollisionType.soft, 32, player.getNextHitboxLocalID(), player.rotation, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK);
@@ -48,7 +41,7 @@ export function createPlayer(position: Point, tribe: Tribe): Entity {
    StatusEffectComponentArray.addComponent(player.id, new StatusEffectComponent(0));
    TribeComponentArray.addComponent(player.id, new TribeComponent(tribe));
    TribeMemberComponentArray.addComponent(player.id, new TribeMemberComponent(tribe.type, EntityType.player));
-   PlayerComponentArray.addComponent(player.id, new PlayerComponent());
+   PlayerComponentArray.addComponent(player.id, new PlayerComponent(username));
 
    const inventoryUseComponent = new InventoryUseComponent();
    InventoryUseComponentArray.addComponent(player.id, inventoryUseComponent);
@@ -91,146 +84,13 @@ export function onPlayerCollision(player: Entity, collidingEntity: Entity): void
    if (collidingEntity.type === EntityType.itemEntity) {
       const wasPickedUp = pickupItemEntity(player.id, collidingEntity);
       if (wasPickedUp) {
-         SERVER.registerPlayerDroppedItemPickup(player);
+         registerPlayerDroppedItemPickup(player);
       }
    }
 }
 
 export function onPlayerHurt(player: Entity, attackingEntityID: number): void {
    onTribeMemberHurt(player, attackingEntityID);
-}
-
-export function processPlayerCraftingPacket(player: Entity, recipeIndex: number): void {
-   if (recipeIndex < 0 || recipeIndex >= CRAFTING_RECIPES.length) {
-      return;
-   }
-   
-   const inventoryComponent = InventoryComponentArray.getComponent(player.id);
-   const craftingRecipe = CRAFTING_RECIPES[recipeIndex];
-
-   const availableCraftingStations = getAvailableCraftingStations(player);
-   if (!recipeCraftingStationIsAvailable(availableCraftingStations, craftingRecipe)) {
-      return;
-   }
-
-   if (inventoryComponentCanAffordRecipe(inventoryComponent, craftingRecipe, InventoryName.craftingOutputSlot)) {
-      craftRecipe(inventoryComponent, craftingRecipe, InventoryName.craftingOutputSlot);
-   }
-}
-
-export function processItemPickupPacket(player: Entity, entityID: number, inventoryName: InventoryName, itemSlot: number, amount: number): void {
-   if (typeof Board.entityRecord[entityID] === "undefined") {
-      return;
-   }
-
-   const playerInventoryComponent = InventoryComponentArray.getComponent(player.id);
-   const heldItemInventory = getInventory(playerInventoryComponent, InventoryName.heldItemSlot);
-   
-   // Don't pick up the item if there is already a held item
-   if (typeof heldItemInventory.itemSlots[1] !== "undefined") {
-      return;
-   }
-
-   const targetInventoryComponent = InventoryComponentArray.getComponent(entityID);
-   const targetInventory = getInventory(targetInventoryComponent, inventoryName);
-
-   const pickedUpItem = targetInventory.itemSlots[itemSlot];
-   if (typeof pickedUpItem === "undefined") {
-      return;
-   }
-
-   // Hold the item
-   // Copy it as the consumeItemFromSlot function modifies the original item's count
-   const heldItem = createItem(pickedUpItem.type, pickedUpItem.count);
-   heldItemInventory.addItem(heldItem, 1);
-
-   // Remove the item from its previous inventory
-   consumeItemFromSlot(targetInventory, itemSlot, amount);
-}
-
-export function processItemReleasePacket(player: Entity, entityID: number, inventoryName: InventoryName, itemSlot: number, amount: number): void {
-   if (typeof Board.entityRecord[entityID] === "undefined") {
-      return;
-   }
-
-   const inventoryComponent = InventoryComponentArray.getComponent(player.id);
-   
-   // Don't release an item if there is no held item
-   const heldItemInventory = getInventory(inventoryComponent, InventoryName.heldItemSlot);
-   const heldItem = heldItemInventory.itemSlots[1];
-   if (typeof heldItem === "undefined") {
-      return;
-   }
-
-   const targetInventoryComponent = InventoryComponentArray.getComponent(entityID);
-
-   // Add the item to the inventory
-   const amountAdded = addItemToSlot(targetInventoryComponent, inventoryName, itemSlot, heldItem.type, amount);
-
-   // If all of the item was added, clear the held item
-   consumeItemTypeFromInventory(inventoryComponent, InventoryName.heldItemSlot, heldItem.type, amountAdded);
-}
-
-export function processItemUsePacket(player: Entity, itemSlot: number): void {
-   const inventoryComponent = InventoryComponentArray.getComponent(player.id);
-   const hotbarInventory = getInventory(inventoryComponent, InventoryName.hotbar);
-
-   const item = hotbarInventory.itemSlots[itemSlot];
-   if (typeof item !== "undefined")  {
-      useItem(player, item, InventoryName.hotbar, itemSlot);
-   }
-}
-
-/** Returns whether the swing was successfully swang or not */
-const attemptSwing = (player: Entity, attackTargets: ReadonlyArray<Entity>, itemSlot: number, inventoryName: InventoryName): boolean => {
-   const inventoryComponent = InventoryComponentArray.getComponent(player.id);
-   const inventory = getInventory(inventoryComponent, inventoryName);
-
-   const item = inventory.itemSlots[itemSlot];
-   if (typeof item !== "undefined" && ITEM_TYPE_RECORD[item.type] === "hammer") {
-      // First look for friendly buildings to repair
-      const repairTarget = calculateRepairTarget(player, attackTargets);
-      if (repairTarget !== null) {
-         return repairBuilding(player, repairTarget, itemSlot, inventoryName);
-      }
-
-      // Then look for attack targets
-      const attackTarget = calculateAttackTarget(player, attackTargets, ~(EntityRelationship.friendly | EntityRelationship.friendlyBuilding));
-      if (attackTarget !== null) {
-         return attemptAttack(player, attackTarget, itemSlot, inventoryName);
-      }
-
-      // Then look for blueprints to work on
-      const workTarget = calculateBlueprintWorkTarget(player, attackTargets);
-      if (workTarget !== null) {
-         return repairBuilding(player, workTarget, itemSlot, inventoryName);
-      }
-
-      return false;
-   }
-   
-   // For non-hammer items, just look for attack targets
-   const attackTarget = calculateAttackTarget(player, attackTargets, ~EntityRelationship.friendly);
-   if (attackTarget !== null) {
-      return attemptAttack(player, attackTarget, itemSlot, inventoryName);
-   }
-
-   return false;
-}
-
-export function processPlayerAttackPacket(player: Entity, attackPacket: AttackPacket): void {
-   const targets = calculateRadialAttackTargets(player, ATTACK_OFFSET, ATTACK_RADIUS);
-
-   const didSwingWithRightHand = attemptSwing(player, targets, attackPacket.itemSlot, InventoryName.hotbar);
-   if (didSwingWithRightHand) {
-      return;
-   }
-
-   // If a barbarian, attack with offhand
-   const tribeComponent = TribeComponentArray.getComponent(player.id);
-   if (tribeComponent.tribe.type === TribeType.barbarians) {
-      attemptSwing(player, targets, 1, InventoryName.offhand);
-   }
 }
 
 // @Cleanup: ton of copy and paste between these functions
@@ -310,89 +170,6 @@ export function startChargingBattleaxe(player: Entity, inventoryName: InventoryN
    }
    
    useInfo.action = LimbAction.chargeBattleaxe;
-}
-
-const itemIsNeededInTech = (tech: TechInfo, itemRequirements: ItemRequirements, itemType: ItemType): boolean => {
-   // If the item isn't present in the item requirements then it isn't needed
-   const amountNeeded = tech.researchItemRequirements[itemType];
-   if (typeof amountNeeded === "undefined") {
-      return false;
-   }
-   
-   const amountCommitted = itemRequirements[itemType] || 0;
-   return amountCommitted < amountNeeded;
-}
-
-const hasMetTechItemRequirements = (tech: TechInfo, itemRequirements: ItemRequirements): boolean => {
-   for (const [itemType, itemAmount] of Object.entries(tech.researchItemRequirements)) {
-      const itemProgress = itemRequirements[itemType as unknown as ItemType];
-      if (typeof itemProgress === "undefined") {
-         return false;
-      }
-
-      if (itemAmount < itemProgress) {
-         return false;
-      }
-   }
-
-   return true;
-}
-
-const hasMetTechStudyRequirements = (tech: TechInfo, tribe: Tribe): boolean => {
-   const techUnlockProgress = tribe.techTreeUnlockProgress[tech.id];
-   if (typeof techUnlockProgress === "undefined") {
-      return false;
-   }
-
-   if (tech.researchStudyRequirements === 0) {
-      return true;
-   }
-
-   return techUnlockProgress.studyProgress >= tech.researchStudyRequirements;
-}
-
-export function processTechUnlock(player: Entity, techID: TechID): void {
-   const tech = getTechByID(techID);
-   
-   const tribeComponent = TribeComponentArray.getComponent(player.id);
-   const inventoryComponent = InventoryComponentArray.getComponent(player.id);
-
-   const hotbarInventory = getInventory(inventoryComponent, InventoryName.hotbar);
-   
-   // Consume any available items
-   for (let i = 0; i < hotbarInventory.items.length; i++) {
-      const item = hotbarInventory.items[i];
-
-      const itemProgress = tribeComponent.tribe.techTreeUnlockProgress[techID]?.itemProgress || {};
-      if (itemIsNeededInTech(tech, itemProgress, item.type)) {
-         const amountNeeded = tech.researchItemRequirements[item.type]!;
-         const amountCommitted = itemProgress[item.type] || 0;
-
-         const amountToAdd = Math.min(item.count, amountNeeded - amountCommitted);
-
-         item.count -= amountToAdd;
-         if (item.count === 0) {
-            const itemSlot = hotbarInventory.getItemSlot(item);
-            hotbarInventory.removeItem(itemSlot);
-         }
-
-         const unlockProgress = tribeComponent.tribe.techTreeUnlockProgress[techID];
-         if (typeof unlockProgress !== "undefined") {
-            unlockProgress.itemProgress[item.type] = amountCommitted + amountToAdd;
-         } else {
-            tribeComponent.tribe.techTreeUnlockProgress[techID] = {
-               itemProgress: {
-                  [item.type]: amountCommitted + amountToAdd
-               },
-               studyProgress: 0
-            };
-         }
-      }
-   }
-
-   if (tribeComponent.tribe.techIsComplete(tech)) {
-      tribeComponent.tribe.unlockTech(techID);
-   }
 }
 
 const modifyTunnel = (player: Entity, tunnel: Entity): void => {
@@ -528,70 +305,6 @@ export function modifyBuilding(player: Entity, buildingID: number, data: number)
       }
       default: {
          console.warn("Don't know how to modify building of type " + EntityTypeString[building.type]);
-         break;
-      }
-   }
-}
-
-export function deconstructBuilding(buildingID: number): void {
-   const building = Board.entityRecord[buildingID];
-   if (typeof building === "undefined") {
-      return;
-   }
-
-   // Deconstruct
-   building.destroy();
-
-   if (BuildingMaterialComponentArray.hasComponent(building.id)) {
-      const materialComponent = BuildingMaterialComponentArray.getComponent(building.id);
-      
-      if (building.type === EntityType.wall && materialComponent.material === BuildingMaterial.wood) {
-         createItemsOverEntity(building, ItemType.wooden_wall, 1, 40);
-         return;
-      }
-      
-      const materialItemType = MATERIAL_TO_ITEM_MAP[materialComponent.material];
-      createItemsOverEntity(building, materialItemType, 5, 40);
-   }
-   return;
-}
-
-export function interactWithStructure(player: Entity, structureID: number, interactData: number): void {
-   const structure = Board.entityRecord[structureID];
-   if (typeof structure === "undefined") {
-      return;
-   }
-
-   switch (structure.type) {
-      case EntityType.door: {
-         toggleDoor(structure);
-         break;
-      }
-      case EntityType.researchBench: {
-         attemptToOccupyResearchBench(structure, player);
-         break;
-      }
-      case EntityType.tunnel: {
-         const doorBit = interactData;
-         toggleTunnelDoor(structure, doorBit);
-         break;
-      }
-      case EntityType.fenceGate: {
-         toggleFenceGateDoor(structure);
-         break;
-      }
-   }
-}
-
-export function uninteractWithStructure(player: Entity, structureID: number): void {
-   const structure = Board.entityRecord[structureID];
-   if (typeof structure === "undefined") {
-      return;
-   }
-
-   switch (structure.type) {
-      case EntityType.researchBench: {
-         deoccupyResearchBench(structure, player);
          break;
       }
    }

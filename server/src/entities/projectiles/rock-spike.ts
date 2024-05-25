@@ -8,7 +8,7 @@ import CircularHitbox from "../../hitboxes/CircularHitbox";
 import { HealthComponentArray, RockSpikeProjectileComponentArray } from "../../components/ComponentArray";
 import { RockSpikeProjectileComponent } from "../../components/RockSpikeProjectileComponent";
 import { addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
-import { SERVER } from "../../server";
+import { SERVER } from "../../server/server";
 import { applyKnockback } from "../../components/PhysicsComponent";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
 

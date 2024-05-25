@@ -1084,7 +1084,7 @@ export function placeBlueprint(tribeMember: Entity, buildingID: number, blueprin
       case BlueprintType.woodenTunnel:
       case BlueprintType.stoneDoor:
       case BlueprintType.stoneEmbrasure:
-      case BlueprintType.stoneTunnel:{
+      case BlueprintType.stoneTunnel: {
          const position = building.position.copy();
          if (blueprintType === BlueprintType.woodenEmbrasure || blueprintType === BlueprintType.stoneEmbrasure) {
             position.x += 22 * Math.sin(dynamicRotation);

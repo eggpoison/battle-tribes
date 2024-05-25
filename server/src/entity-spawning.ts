@@ -9,7 +9,7 @@ import SRandom from "./SRandom";
 import { entityIsStructure } from "./Entity";
 import { createEntity } from "./entity-creation";
 import { yetiSpawnPositionIsValid } from "./entities/mobs/yeti";
-import { SERVER } from "./server";
+import { SERVER } from "./server/server";
 import { getDistributionWeightedSpawnPosition } from "./resource-distributions";
 import { entityIsTribesman } from "./entities/tribes/tribe-member";
 

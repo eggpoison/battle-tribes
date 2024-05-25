@@ -20,7 +20,7 @@ import Tile from "../../Tile";
 import { AIHelperComponent, AIHelperComponentArray } from "../../components/AIHelperComponent";
 import { InventoryUseComponent, getInventoryUseInfo, hasInventoryUseInfo } from "../../components/InventoryUseComponent";
 import { attemptAttack, calculateRadialAttackTargets, wasTribeMemberKill } from "../tribes/tribe-member";
-import { SERVER } from "../../server";
+import { SERVER } from "../../server/server";
 import { PhysicsComponent, PhysicsComponentArray, applyKnockback } from "../../components/PhysicsComponent";
 import { createItemsOverEntity } from "../../entity-shared";
 import { CollisionVars, entitiesAreColliding } from "../../collision";

@@ -20,7 +20,7 @@ import { createItemsOverEntity } from "../../entity-shared";
 import Board from "../../Board";
 import { AIHelperComponent, AIHelperComponentArray } from "../../components/AIHelperComponent";
 import { createSlimeSpit } from "../projectiles/slime-spit";
-import { SERVER } from "../../server";
+import { SERVER } from "../../server/server";
 import { PhysicsComponent, PhysicsComponentArray } from "../../components/PhysicsComponent";
 import { wasTribeMemberKill } from "../tribes/tribe-member";
 import { ServerComponentType } from "webgl-test-shared/dist/components";

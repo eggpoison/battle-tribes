@@ -11,7 +11,7 @@ import { HealthComponent, addLocalInvulnerabilityHash, canDamageEntity, damageEn
 import { createItemsOverEntity } from "../../entity-shared";
 import { CactusComponent } from "../../components/CactusComponent";
 import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
-import { SERVER } from "../../server";
+import { SERVER } from "../../server/server";
 import { applyKnockback } from "../../components/PhysicsComponent";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
 

@@ -1,21 +1,24 @@
 import { TribesmanTitle } from "webgl-test-shared/dist/titles";
 import { PlayerComponentData } from "webgl-test-shared/dist/components";
 import Entity from "../Entity";
-import { SERVER } from "../server";
+import { PlayerComponentArray } from "./ComponentArray";
 
 export class PlayerComponent {
+   public readonly username: string;
+   
    /** ID of the tribesman the player is interacting with */
    public interactingEntityID = 0;
 
    public titleOffer: TribesmanTitle | null = null;
+
+   constructor(username: string) {
+      this.username = username;
+   }
 }
 
 export function serialisePlayerComponent(player: Entity): PlayerComponentData {
-   const playerData = SERVER.getPlayerDataFromInstance(player.id);
-   if (playerData === null) {
-      throw new Error("Can't find player data");
-   }
+   const playerComponent = PlayerComponentArray.getComponent(player.id);
    return {
-      username: playerData.username
+      username: playerComponent.username
    };
 }

@@ -12,7 +12,7 @@ import Board from "../../Board";
 import { InventoryComponentArray, findInventoryContainingItem } from "../../components/InventoryComponent";
 import { getInventoryUseInfo } from "../../components/InventoryUseComponent";
 import CircularHitbox from "../../hitboxes/CircularHitbox";
-import { SERVER } from "../../server";
+import { SERVER } from "../../server/server";
 import { PhysicsComponent, PhysicsComponentArray, applyKnockback } from "../../components/PhysicsComponent";
 import { CollisionVars, entitiesAreColliding } from "../../collision";
 import Tribe from "../../Tribe";

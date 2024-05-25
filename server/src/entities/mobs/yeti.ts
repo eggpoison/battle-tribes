@@ -21,7 +21,7 @@ import Board from "../../Board";
 import { createItemsOverEntity } from "../../entity-shared";
 import { createSnowball } from "../snowball";
 import { AIHelperComponent, AIHelperComponentArray } from "../../components/AIHelperComponent";
-import { SERVER } from "../../server";
+import { SERVER } from "../../server/server";
 import { PhysicsComponent, PhysicsComponentArray, applyKnockback } from "../../components/PhysicsComponent";
 import { CollisionVars, entitiesAreColliding } from "../../collision";
 import { ServerComponentType } from "webgl-test-shared/dist/components";

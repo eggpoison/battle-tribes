@@ -15,7 +15,7 @@ import { GolemComponent } from "../../components/GolemComponent";
 import Board from "../../Board";
 import { stopEntity } from "../../ai-shared";
 import { createPebblum } from "./pebblum";
-import { SERVER } from "../../server";
+import { SERVER } from "../../server/server";
 import { createItemsOverEntity } from "../../entity-shared";
 import { PhysicsComponent, PhysicsComponentArray, applyKnockback } from "../../components/PhysicsComponent";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";

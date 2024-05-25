@@ -19,13 +19,13 @@ import { onFrozenYetiDeath, onFrozenYetiHurt } from "../entities/mobs/frozen-yet
 import { onPlayerHurt } from "../entities/tribes/player";
 import { onGolemDeath, onGolemHurt } from "../entities/mobs/golem";
 import { AIHelperComponentArray } from "./AIHelperComponent";
-import { SERVER } from "../server";
 import { adjustTribesmanRelationsAfterHurt, adjustTribesmanRelationsAfterKill } from "./TribesmanAIComponent";
 import { onTribeMemberHurt } from "../entities/tribes/tribe-member";
 import { TITLE_REWARD_CHANCES } from "../tribesman-title-generation";
 import { TribeMemberComponentArray, awardTitle } from "./TribeMemberComponent";
 import { onPlantDeath, onPlantHit } from "../entities/plant";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
+import { registerEntityDeath, registerEntityHeal, registerEntityHit } from "../server/player-clients";
 
 export class HealthComponent {
    public maxHealth: number;
@@ -78,13 +78,12 @@ export function damageEntity(entity: Entity, attackingEntity: Entity | null, dam
    
    healthComponent.health -= actualDamage;
 
-   SERVER.registerEntityHit(entity.id, attackingEntity, hitPosition, attackEffectiveness, damage, hitFlags);
+   registerEntityHit(entity.id, attackingEntity, hitPosition, attackEffectiveness, damage, hitFlags);
 
    // If the entity was killed by the attack, destroy the entity
    if (healthComponent.health <= 0) {
       entity.destroy();
-
-      SERVER.registerEntityDeath(entity.position.x, entity.position.y, entity.id);
+      registerEntityDeath(entity);
 
       switch (entity.type) {
          case EntityType.tombstone: {
@@ -267,23 +266,11 @@ export function healEntity(entity: Entity, healAmount: number, healerID: number)
    // @Speed: Is there a smart way to remove this branch?
    if (healthComponent.health > healthComponent.maxHealth) {
       const amountHealed = healAmount - (healthComponent.health - healthComponent.maxHealth); // Calculate by removing excess healing from amount healed
-      SERVER.registerEntityHeal({
-         entityPositionX: entity.position.x,
-         entityPositionY: entity.position.y,
-         healedID: entity.id,
-         healerID: healerID,
-         healAmount: amountHealed
-      });
+      registerEntityHeal(entity, healerID, amountHealed);
 
       healthComponent.health = healthComponent.maxHealth;
    } else {
-      SERVER.registerEntityHeal({
-         entityPositionX: entity.position.x,
-         entityPositionY: entity.position.y,
-         healedID: entity.id,
-         healerID: healerID,
-         healAmount: healAmount
-      });
+      registerEntityHeal(entity, healerID, healAmount);
    }
 }
 

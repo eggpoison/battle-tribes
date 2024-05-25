@@ -11,7 +11,7 @@ import { SlimeSpitComponent } from "../../components/SlimeSpitComponent";
 import { createSpitPoison } from "./spit-poison";
 import { damageEntity } from "../../components/HealthComponent";
 import { StatusEffectComponentArray, applyStatusEffect } from "../../components/StatusEffectComponent";
-import { SERVER } from "../../server";
+import { SERVER } from "../../server/server";
 import { PhysicsComponent, PhysicsComponentArray, applyKnockback } from "../../components/PhysicsComponent";
 import { EntityCreationInfo } from "../../entity-components";
 import { ServerComponentType } from "webgl-test-shared/dist/components";

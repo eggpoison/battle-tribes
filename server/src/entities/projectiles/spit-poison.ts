@@ -9,7 +9,7 @@ import { HealthComponentArray } from "../../components/ComponentArray";
 import { addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
 import CircularHitbox from "../../hitboxes/CircularHitbox";
 import { StatusEffectComponentArray, applyStatusEffect } from "../../components/StatusEffectComponent";
-import { SERVER } from "../../server";
+import { SERVER } from "../../server/server";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
 
 const RADIUS = 55;

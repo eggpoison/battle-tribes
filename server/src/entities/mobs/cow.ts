@@ -5,7 +5,7 @@ import { CowSpecies, EntityType } from "webgl-test-shared/dist/entities";
 import { ItemType } from "webgl-test-shared/dist/items";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { Biome, TileInfo, TileType } from "webgl-test-shared/dist/tiles";
-import { Point, randInt } from "webgl-test-shared/dist/utils";
+import { Point, randFloat, randInt } from "webgl-test-shared/dist/utils";
 import Entity from "../../Entity";
 import RectangularHitbox from "../../hitboxes/RectangularHitbox";
 import { BerryBushComponentArray, CowComponentArray, EscapeAIComponentArray, FollowAIComponentArray, HealthComponentArray, InventoryUseComponentArray, WanderAIComponentArray } from "../../components/ComponentArray";
@@ -26,6 +26,8 @@ import { StatusEffectComponent, StatusEffectComponentArray } from "../../compone
 import { PhysicsComponent, PhysicsComponentArray } from "../../components/PhysicsComponent";
 import { CollisionVars, entitiesAreColliding } from "../../collision";
 import { ItemComponentArray } from "../../components/ItemComponent";
+import { GrassBlockerCircle } from "webgl-test-shared/dist/grass-blockers";
+import { addGrassBlocker } from "../../grass-blockers";
 
 const MAX_HEALTH = 10;
 const VISION_RANGE = 256;
@@ -73,14 +75,28 @@ const graze = (cow: Entity, cowComponent: CowComponent): void => {
    stopEntity(physicsComponent);
    
    if (++cowComponent.grazeProgressTicks >= COW_GRAZE_TIME_TICKS) {
+      // 
       // Eat grass
-      const previousTile = cow.tile;
-      const newTileInfo: TileInfo = {
-         type: TileType.dirt,
-         biome: previousTile.biome,
-         isWall: false
-      };
-      Board.replaceTile(previousTile.x, previousTile.y, newTileInfo.type, newTileInfo.biome, newTileInfo.isWall, 0);
+      // 
+
+      for (let i = 0; i < 7; i++) {
+         const blockAmount = randFloat(0.6, 0.9);
+         
+         const grassBlocker: GrassBlockerCircle = {
+            radius: randFloat(10, 20),
+            position: cow.position.offset(randFloat(0, 55), 2 * Math.PI * Math.random()),
+            blockAmount: blockAmount,
+            maxBlockAmount: blockAmount
+         };
+         addGrassBlocker(grassBlocker, 0);
+      }
+      // const previousTile = cow.tile;
+      // const newTileInfo: TileInfo = {
+      //    type: TileType.dirt,
+      //    biome: previousTile.biome,
+      //    isWall: false
+      // };
+      // Board.replaceTile(previousTile.x, previousTile.y, newTileInfo.type, newTileInfo.biome, newTileInfo.isWall, 0);
 
       healEntity(cow, 3, cow.id);
       cowComponent.grazeCooldownTicks = randInt(MIN_GRAZE_COOLDOWN, MAX_GRAZE_COOLDOWN);

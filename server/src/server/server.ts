@@ -21,13 +21,6 @@ import { createGameDataPacket } from "./game-data-packets";
 import PlayerClient from "./PlayerClient";
 import { addPlayerClient, generatePlayerSpawnPosition, getPlayerClients } from "./player-clients";
 
-// @Cleanup: file is way too large
-/*
-- game data packets
-- server/client communication
-- server
-*/
-
 const isTimed = process.argv[2] === "timed";
 const averageTickTimes = new Array<number>();
 
@@ -166,7 +159,7 @@ class GameServer {
          }
       }
    }
-   
+
    private async tick(): Promise<void> {
       // These are done before each tick to account for player packets causing entities to be removed/added between ticks.
       Board.pushJoinBuffer();

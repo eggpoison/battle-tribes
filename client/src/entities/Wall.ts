@@ -98,7 +98,8 @@ class Wall extends Entity {
       }
    }
    
-   public onDie(): void {
+   // onRemove so that the effects also play when the wall is removed by deconstruction
+   public onRemove(): void {
       // @Speed @Hack
       // Don't play death effects if the wall was replaced by a blueprint
       for (const chunk of this.chunks) {

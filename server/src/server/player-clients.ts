@@ -48,36 +48,6 @@ export function getPlayerClients(): ReadonlyArray<PlayerClient> {
    return playerClients;
 }
 
-// private getPlayerInstance(data: PlayerData): Entity | null {
-//    const player = Board.entityRecord[data.instanceID];
-//    if (typeof player !== "undefined") {
-//       return player;
-//    }
-//    return null;
-// }
-
-// public getPlayerFromUsername(username: string): Entity | null {
-//    for (const data of Object.values(SERVER.playerDataRecord)) {
-//       if (typeof data !== "undefined" && data.username === username) {
-//          // Found the player!
-//          return this.getPlayerInstance(data);
-//       }
-//    }
-
-//    return null;
-// }
-
-// public getPlayerDataFromInstance(instanceID: number): PlayerData | null {
-//    for (const data of Object.values(SERVER.playerDataRecord)) {
-//       if (typeof data !== "undefined" && data.instanceID === instanceID) {
-//          // Found the player!
-//          return data;
-//       }
-//    }
-
-//    return null;
-// }
-
 const getPlayerClientFromInstanceID = (instanceID: number): PlayerClient | null => {
    for (let i = 0; i < playerClients.length; i++) {
       const playerClient = playerClients[i];

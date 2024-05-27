@@ -31,6 +31,8 @@ export function getEntityRelationship(entityID: number, comparingEntity: Entity)
    if (TribesmanComponentArray.hasComponent(entityID) && TribeMemberComponentArray.hasComponent(comparingEntity.id)) {
       return getTribesmanRelationship(entityID, comparingEntity.id);
    }
+
+   // @Cleanup: do this based on which components they have
    
    switch (comparingEntity.type) {
       // Buildings
@@ -56,7 +58,9 @@ export function getEntityRelationship(entityID: number, comparingEntity: Entity)
       case EntityType.planterBox:
       case EntityType.researchBench:
       case EntityType.healingTotem:
-      case EntityType.campfire: {
+      case EntityType.campfire:
+      case EntityType.frostshaper:
+      case EntityType.stonecarvingTable: {
          const tribeComponent = TribeComponentArray.getComponent(entityID);
          const comparingEntityTribeComponent = TribeComponentArray.getComponent(comparingEntity.id);
 

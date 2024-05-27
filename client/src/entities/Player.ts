@@ -1,16 +1,12 @@
-import { CRAFTING_RECIPES, CraftingRecipe, CraftingStation } from "webgl-test-shared/dist/crafting-recipes";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { EntityType, LimbAction } from "webgl-test-shared/dist/entities";
-import { TileType } from "webgl-test-shared/dist/tiles";
 import { Inventory, InventoryName, Item } from "webgl-test-shared/dist/items";
 import { EntityComponentsData, LimbData, ServerComponentType } from "webgl-test-shared/dist/components";
 import { Point } from "webgl-test-shared/dist/utils";
 import Camera from "../Camera";
-import { setCraftingMenuAvailableRecipes, setCraftingMenuAvailableCraftingStations } from "../components/game/menus/CraftingMenu";
 import CircularHitbox from "../hitboxes/CircularHitbox";
 import { halfWindowHeight, halfWindowWidth } from "../webgl";
 import Entity from "../Entity";
-import ItemEntity from "../items/ItemEntity";
 import TribeMember, { addTribeMemberRenderParts } from "./TribeMember";
 import Board from "../Board";
 import { definiteGameState, latencyGameState } from "../game-state/game-states";
@@ -30,24 +26,8 @@ import TribeMemberComponent from "../entity-components/TribeMemberComponent";
 import { TRIBE_INFO_RECORD } from "webgl-test-shared/dist/tribes";
 import { randInt } from "webgl-test-shared/dist/utils";
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision";
-import { HitData, HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
+import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
 import PhysicsComponent from "../entity-components/PhysicsComponent";
-
-const CRAFTING_RECIPE_RECORD: Record<CraftingStation | "hand", Array<CraftingRecipe>> = {
-   hand: [],
-   [CraftingStation.workbench]: [],
-   [CraftingStation.slime]: [],
-   [CraftingStation.water]: []
-};
-
-// Categorise the crafting recipes
-for (const craftingRecipe of CRAFTING_RECIPES) {
-   if (typeof craftingRecipe.craftingStation === "undefined") {
-      CRAFTING_RECIPE_RECORD.hand.push(craftingRecipe);
-   } else {
-      CRAFTING_RECIPE_RECORD[craftingRecipe.craftingStation].push(craftingRecipe);
-   }
-}
 
 /** Updates the rotation of the player to match the cursor position */
 export function updatePlayerRotation(cursorX: number, cursorY: number): void {
@@ -61,57 +41,72 @@ export function updatePlayerRotation(cursorX: number, cursorY: number): void {
    Player.instance.rotation = cursorDirection;
 }
 
-export function updateAvailableCraftingRecipes(): void {
-   if (Player.instance === null) return;
+// export function updateAvailableCraftingRecipes(): void {
+//    if (Player.instance === null) return;
    
-   // 
-   // Find which crafting recipes are available to the player
-   // 
+//    // 
+//    // Find which crafting recipes are available to the player
+//    // 
 
-   let availableCraftingRecipes: Array<CraftingRecipe> = CRAFTING_RECIPE_RECORD.hand.slice();
-   let availableCraftingStations = new Set<CraftingStation>();
+//    let availableCraftingRecipes: Array<CraftingRecipe> = CRAFTING_RECIPE_RECORD.hand.slice();
+//    let availableCraftingStations = new Set<CraftingStation>();
 
-   if (Player.instance.tile.type === TileType.water) {
-      availableCraftingRecipes = availableCraftingRecipes.concat(CRAFTING_RECIPE_RECORD[CraftingStation.water].slice());
-      availableCraftingStations.add(CraftingStation.water);
-   }
+//    if (Player.instance.tile.type === TileType.water) {
+//       availableCraftingRecipes = availableCraftingRecipes.concat(CRAFTING_RECIPE_RECORD[CraftingStation.water].slice());
+//       availableCraftingStations.add(CraftingStation.water);
+//    }
    
-   const minChunkX = Math.max(Math.min(Math.floor((Player.instance!.position.x - Settings.MAX_CRAFTING_STATION_USE_DISTANCE) / Settings.CHUNK_SIZE / Settings.TILE_SIZE), Settings.BOARD_SIZE - 1), 0);
-   const maxChunkX = Math.max(Math.min(Math.floor((Player.instance!.position.x + Settings.MAX_CRAFTING_STATION_USE_DISTANCE) / Settings.CHUNK_SIZE / Settings.TILE_SIZE), Settings.BOARD_SIZE - 1), 0);
-   const minChunkY = Math.max(Math.min(Math.floor((Player.instance!.position.y - Settings.MAX_CRAFTING_STATION_USE_DISTANCE) / Settings.CHUNK_SIZE / Settings.TILE_SIZE), Settings.BOARD_SIZE - 1), 0);
-   const maxChunkY = Math.max(Math.min(Math.floor((Player.instance!.position.y + Settings.MAX_CRAFTING_STATION_USE_DISTANCE) / Settings.CHUNK_SIZE / Settings.TILE_SIZE), Settings.BOARD_SIZE - 1), 0);
+//    const minChunkX = Math.max(Math.min(Math.floor((Player.instance!.position.x - Settings.MAX_CRAFTING_STATION_USE_DISTANCE) / Settings.CHUNK_SIZE / Settings.TILE_SIZE), Settings.BOARD_SIZE - 1), 0);
+//    const maxChunkX = Math.max(Math.min(Math.floor((Player.instance!.position.x + Settings.MAX_CRAFTING_STATION_USE_DISTANCE) / Settings.CHUNK_SIZE / Settings.TILE_SIZE), Settings.BOARD_SIZE - 1), 0);
+//    const minChunkY = Math.max(Math.min(Math.floor((Player.instance!.position.y - Settings.MAX_CRAFTING_STATION_USE_DISTANCE) / Settings.CHUNK_SIZE / Settings.TILE_SIZE), Settings.BOARD_SIZE - 1), 0);
+//    const maxChunkY = Math.max(Math.min(Math.floor((Player.instance!.position.y + Settings.MAX_CRAFTING_STATION_USE_DISTANCE) / Settings.CHUNK_SIZE / Settings.TILE_SIZE), Settings.BOARD_SIZE - 1), 0);
 
-   for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
-      for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
-         const chunk = Board.getChunk(chunkX, chunkY);
-         for (const entity of chunk.entities) {
-            const distance = Player.instance!.position.calculateDistanceBetween(entity.position);
-            if (distance <= Settings.MAX_CRAFTING_STATION_USE_DISTANCE) {
-               switch (entity.type) {
-                  case EntityType.workbench: {
-                     if (!availableCraftingStations.has(CraftingStation.workbench)) {
-                        availableCraftingRecipes = availableCraftingRecipes.concat(CRAFTING_RECIPE_RECORD[CraftingStation.workbench].slice());
-                        availableCraftingStations.add(CraftingStation.workbench);
-                     }
-                     break;
-                  }
-                  case EntityType.slime: {
-                     if (!availableCraftingStations.has(CraftingStation.slime)) {
-                        availableCraftingRecipes = availableCraftingRecipes.concat(CRAFTING_RECIPE_RECORD[CraftingStation.slime].slice());
-                        availableCraftingStations.add(CraftingStation.slime);
-                     }
-                     break;
-                  }
-               }
-            }
-         }
-      }
-   }
+//    // @Cleanup: can be better
+//    for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
+//       for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
+//          const chunk = Board.getChunk(chunkX, chunkY);
+//          for (const entity of chunk.entities) {
+//             const distance = Player.instance!.position.calculateDistanceBetween(entity.position);
+//             if (distance <= Settings.MAX_CRAFTING_STATION_USE_DISTANCE) {
+//                switch (entity.type) {
+//                   case EntityType.workbench: {
+//                      if (!availableCraftingStations.has(CraftingStation.workbench)) {
+//                         availableCraftingRecipes = availableCraftingRecipes.concat(CRAFTING_RECIPE_RECORD[CraftingStation.workbench].slice());
+//                         availableCraftingStations.add(CraftingStation.workbench);
+//                      }
+//                      break;
+//                   }
+//                   case EntityType.slime: {
+//                      if (!availableCraftingStations.has(CraftingStation.slime)) {
+//                         availableCraftingRecipes = availableCraftingRecipes.concat(CRAFTING_RECIPE_RECORD[CraftingStation.slime].slice());
+//                         availableCraftingStations.add(CraftingStation.slime);
+//                      }
+//                      break;
+//                   }
+//                   case EntityType.frostshaper: {
+//                      if (!availableCraftingStations.has(CraftingStation.frostshaper)) {
+//                         availableCraftingRecipes = availableCraftingRecipes.concat(CRAFTING_RECIPE_RECORD[CraftingStation.frostshaper].slice());
+//                         availableCraftingStations.add(CraftingStation.frostshaper);
+//                      }
+//                      break;
+//                   }
+//                   case EntityType.stonecarvingTable: {
+//                      if (!availableCraftingStations.has(CraftingStation.stonecarvingTable)) {
+//                         availableCraftingRecipes = availableCraftingRecipes.concat(CRAFTING_RECIPE_RECORD[CraftingStation.stonecarvingTable].slice());
+//                         availableCraftingStations.add(CraftingStation.stonecarvingTable);
+//                      }
+//                      break;
+//                   }
+//                }
+//             }
+//          }
+//       }
+//    }
 
-   // Send that information to the crafting menu
-   setCraftingMenuAvailableRecipes(availableCraftingRecipes);
-   setCraftingMenuAvailableCraftingStations(availableCraftingStations);
-}
+//    // Send that information to the crafting menu
+//    setCraftingMenuAvailableRecipes(availableCraftingRecipes);
+//    setCraftingMenuAvailableCraftingStations(availableCraftingStations);
+// }
 
 export function getPlayerSelectedItem(): Item | null {
    if (Player.instance === null || definiteGameState.hotbar === null) return null;

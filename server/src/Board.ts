@@ -222,20 +222,6 @@ abstract class Board {
       return this.tiles[tileIndex];
    }
 
-   public static replaceTile(tileX: number, tileY: number, tileType: TileType, biomeName: Biome, isWall: boolean, riverFlowDirection: number): void {
-      const tileIndex = tileY * Settings.BOARD_DIMENSIONS + tileX;
-      const tile = this.tiles[tileIndex];
-
-      removeTileFromCensus(tile);
-      
-      tile.type = tileType;
-      tile.biome = biomeName;
-      tile.isWall = isWall;
-      tile.riverFlowDirection = riverFlowDirection;
-
-      addTileToCensus(tile);
-   }
-
    public static getChunk(chunkX: number, chunkY: number): Chunk {
       const chunkIndex = chunkY * Settings.BOARD_SIZE + chunkX;
       return this.chunks[chunkIndex];
@@ -524,32 +510,6 @@ abstract class Board {
       this.tileUpdateCoordinates.clear();
 
       return tileUpdates;
-   }
-
-   public static spreadGrass(): void {
-      const grassTiles = getTilesOfType(TileType.grass);
-
-      let numSpreadedGrass = grassTiles.length / Settings.BOARD_DIMENSIONS / Settings.BOARD_DIMENSIONS / Settings.TPS;
-      if (Math.random() > numSpreadedGrass % 1) {
-         numSpreadedGrass = Math.ceil(numSpreadedGrass);
-      } else {
-         numSpreadedGrass = Math.floor(numSpreadedGrass);
-      }
-      for (let i = 0; i < numSpreadedGrass; i++) {
-         const tile = randItem(grassTiles);
-         
-         const offset = randItem(OFFSETS);
-         const tileX = tile.x + offset[0];
-         const tileY = tile.y + offset[1];
-         if (!Board.tileIsInBoard(tileX, tileY)) {
-            continue;
-         }
-
-         const dirtTile = Board.getTile(tileX, tileY);
-         if (dirtTile.type === TileType.dirt) {
-            this.replaceTile(tileX, tileY, TileType.grass, Biome.grasslands, false, 0);
-         }
-      }
    }
 
    public static addEntityToJoinBuffer(entity: Entity): void {

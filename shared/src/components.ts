@@ -122,7 +122,9 @@ export const EntityComponents = {
    [EntityType.healingTotem]: [ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.tribe, ServerComponentType.healingTotem] as const,
    [EntityType.plant]: [ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.plant] as const,
    [EntityType.fence]: [ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.tribe, ServerComponentType.fence] as const,
-   [EntityType.fenceGate]: [ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.tribe, ServerComponentType.fenceGate] as const
+   [EntityType.fenceGate]: [ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.tribe, ServerComponentType.fenceGate] as const,
+   [EntityType.frostshaper]: [ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.tribe] as const,
+   [EntityType.stonecarvingTable]: [ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.tribe] as const
 } satisfies Record<EntityType, ReadonlyArray<ServerComponentType>>;
 
 export type EntityComponentTypes<T extends EntityType> = typeof EntityComponents[T];
@@ -634,6 +636,7 @@ export interface PlanterBoxComponentData {
 /* Structure Component Data */
 
 export interface StructureComponentData {
+   readonly hasActiveBlueprint: boolean;
    readonly connectedSidesBitset: number;
 }
 

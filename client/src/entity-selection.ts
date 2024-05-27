@@ -15,6 +15,8 @@ import { SEED_TO_PLANT_RECORD } from "./entity-components/PlantComponent";
 import { hitboxIsWithinRange } from "./hitboxes/hitboxes";
 import { GhostInfo, GhostType, PARTIAL_OPACITY, setGhostInfo } from "./rendering/entity-ghost-rendering";
 import { getClosestGroupNum } from "./rendering/entity-selection-rendering";
+import { CraftingStation, ENTITY_CRAFTING_STATION_RECORD } from "webgl-test-shared/dist/crafting-recipes";
+import { CraftingMenu_setCraftingStation } from "./components/game/menus/CraftingMenu";
 
 const enum InteractActionType {
    openBuildMenu,
@@ -23,7 +25,8 @@ const enum InteractActionType {
    toggleTunnelDoor,
    startResearching,
    toggleDoor,
-   openInventory
+   openInventory,
+   openCraftingStation
 }
 
 interface BaseInteractAction {
@@ -61,7 +64,12 @@ interface OpenInventoryAction extends BaseInteractAction {
    readonly inventoryMenuType: InventoryMenuType;
 }
 
-type InteractAction = OpenBuildMenuAction | PlantSeedAction | UseFertiliserAction | ToggleTunnelDoorAction | StartResearchingAction | ToggleDoorAction | OpenInventoryAction;
+interface OpenCraftingMenuAction extends BaseInteractAction {
+   readonly type: InteractActionType.openCraftingStation;
+   readonly craftingStation: CraftingStation;
+}
+
+type InteractAction = OpenBuildMenuAction | PlantSeedAction | UseFertiliserAction | ToggleTunnelDoorAction | StartResearchingAction | ToggleDoorAction | OpenInventoryAction | OpenCraftingMenuAction;
 
 const HIGHLIGHT_RANGE = 75;
 const HIGHLIGHT_DISTANCE = 150;
@@ -155,6 +163,15 @@ const getEntityInteractAction = (entity: Entity): InteractAction | null => {
       };
    }
 
+   // Crafting stations
+   const craftingStation = ENTITY_CRAFTING_STATION_RECORD[entity.type];
+   if (typeof craftingStation !== "undefined") {
+      return {
+         type: InteractActionType.openCraftingStation,
+         craftingStation: craftingStation
+      };
+   }
+
    const inventoryMenuType = getInventoryMenuType(entity);
    if (inventoryMenuType !== null) {
       return {
@@ -225,6 +242,11 @@ const interactWithEntity = (entity: Entity, action: InteractAction): void => {
       case InteractActionType.openInventory: {
          selectedEntityID = entity.id;
          InventorySelector_setInventoryMenuType(action.inventoryMenuType);
+         break;
+      }
+      case InteractActionType.openCraftingStation: {
+         selectedEntityID = entity.id;
+         CraftingMenu_setCraftingStation(action.craftingStation);
          break;
       }
       default: {
@@ -424,18 +446,21 @@ export function updateHighlightedAndHoveredEntities(): void {
    updateHighlightedEntity(typeof highlightedEntity !== "undefined" ? highlightedEntity : null);
 }
 
-export function attemptEntitySelection(): void {
+export function attemptEntitySelection(): boolean {
    const highlightedEntity = Board.entityRecord[highlightedEntityID];
    if (typeof highlightedEntity === "undefined") {
       // When a new entity is selected, deselect the previous entity
       deselectSelectedEntity();
-      return;
+      return false;
    }
 
    const interactAction = getEntityInteractAction(highlightedEntity);
    if (interactAction !== null) {
       interactWithEntity(highlightedEntity, interactAction);
+      return true;
    }
+
+   return false;
 }
 
 export function updateSelectedStructure(): void {

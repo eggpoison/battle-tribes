@@ -53,7 +53,9 @@ export const enum EntityType {
    healingTotem,
    plant,
    fence,
-   fenceGate
+   fenceGate,
+   frostshaper,
+   stonecarvingTable
 }
 
 export const EntityTypeString: Record<EntityType, string> = {
@@ -109,7 +111,9 @@ export const EntityTypeString: Record<EntityType, string> = {
    [EntityType.healingTotem]: "healing_totem",
    [EntityType.plant]: "plant",
    [EntityType.fence]: "fence",
-   [EntityType.fenceGate]: "fence_gate"
+   [EntityType.fenceGate]: "fence_gate",
+   [EntityType.frostshaper]: "frostshaper",
+   [EntityType.stonecarvingTable]: "stonecarving_table"
 };
 
 export const NUM_ENTITY_TYPES = Object.keys(EntityTypeString).length;

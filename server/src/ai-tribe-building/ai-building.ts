@@ -22,6 +22,7 @@ const enum Vars {
 export type SafetyNode = number;
 
 // @Incomplete: investigate only adding an entity's safety once. (so that it doesn't vary between placements as much)
+// @Cleanup: don't hardcode these. Instead just do it based on the entity's health.
 
 const BUILDING_SAFETY: Record<StructureType, number> = {
    [EntityType.wall]: 10,
@@ -45,7 +46,9 @@ const BUILDING_SAFETY: Record<StructureType, number> = {
    [EntityType.fence]: 5,
    [EntityType.fenceGate]: 5,
    [EntityType.campfire]: 10,
-   [EntityType.furnace]: 10
+   [EntityType.furnace]: 10,
+   [EntityType.frostshaper]: 10,
+   [EntityType.stonecarvingTable]: 10
 };
 
 export function createRestrictedBuildingArea(position: Point, width: number, height: number, rotation: number, associatedBuildingID: number): RestrictedBuildingArea {

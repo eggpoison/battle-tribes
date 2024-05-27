@@ -9,7 +9,21 @@ import { InventoryComponentArray, getInventory, inventoryIsFull } from "../../..
 import { PlanterBoxPlant } from "webgl-test-shared/dist/components";
 import { PlantComponentArray, plantIsFullyGrown } from "../../../components/PlantComponent";
 
-const getResourceProducts = (entity: Entity): ReadonlyArray<ItemType> | null => {
+// Goal: find which items should be used to gather a resource
+
+const RESOURCE_PRODUCT_TO_ENTITY_RECORD: Partial<Record<ItemType, ReadonlyArray<EntityType>>> = {
+   [ItemType.leather]: [EntityType.cow, EntityType.krumblid],
+   [ItemType.raw_beef]: [EntityType.cow, EntityType.yeti],
+   [ItemType.berry]: [EntityType.berryBush],
+   [ItemType.wood]: [EntityType.tree],
+   [ItemType.seed]: [EntityType.tree],
+   [ItemType.frostcicle]: [EntityType.iceSpikes],
+   [ItemType.cactus_spine]: [EntityType.cactus],
+   [ItemType.rock]: [EntityType.boulder],
+   [ItemType.yeti_hide]: [EntityType.yeti]
+};
+
+const getResourceProducts = (entity: Entity): ReadonlyArray<ItemType> => {
    switch (entity.type) {
       case EntityType.cow: return [ItemType.leather, ItemType.raw_beef];
       case EntityType.berryBush: return [ItemType.berry];
@@ -31,30 +45,13 @@ const getResourceProducts = (entity: Entity): ReadonlyArray<ItemType> | null => 
             }
          }
       }
-      default: return null;
+      default: return [];
    }
 }
 
-// @Cleanup: should we keep this?
-/** Record of whether or not an entity type should only be harvested if the resource is urgently needed */
-const SHOULD_HARVEST_CONSERVATIVELY: Partial<Record<EntityType, boolean>> = {
-   [EntityType.cow]: false,
-   [EntityType.berryBush]: false,
-   [EntityType.tree]: false,
-   [EntityType.iceSpikes]: true,
-   [EntityType.cactus]: false,
-   [EntityType.boulder]: false,
-   [EntityType.krumblid]: false
-};
-
 export function entityIsResource(entity: Entity): boolean {
-   return entity.type === EntityType.cow
-      || entity.type === EntityType.berryBush
-      || entity.type === EntityType.tree
-      || entity.type === EntityType.iceSpikes
-      || entity.type === EntityType.cactus
-      || entity.type === EntityType.boulder
-      || entity.type === EntityType.krumblid;
+   const resourceProducts = getResourceProducts(entity);
+   return resourceProducts.length > 0;
 }
 
 const resourceIsPrioritised = (resourceProducts: ReadonlyArray<ItemType>, prioritisedItemTypes: ReadonlyArray<ItemType>): boolean => {
@@ -136,7 +133,7 @@ export function getGatherTarget(tribesman: Entity, visibleEntities: ReadonlyArra
       const resource = visibleEntities[i];
       
       const resourceProducts = getResourceProducts(resource);
-      if (resourceProducts === null || !shouldGatherResource(tribesman, healthComponent, isFull, resource, resourceProducts)) {
+      if (!shouldGatherResource(tribesman, healthComponent, isFull, resource, resourceProducts)) {
          continue;
       }
       

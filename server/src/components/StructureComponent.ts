@@ -1,4 +1,4 @@
-import { StructureConnectionInfo, StructureType, getSnapDirection } from "webgl-test-shared/dist/structures";
+import { StructureConnectionInfo, StructureType, getSnapDirection, getStructureSnapOrigin } from "webgl-test-shared/dist/structures";
 import Board from "../Board";
 import Entity from "../Entity";
 import { createStructureGrassBlockers } from "../grass-blockers";
@@ -65,10 +65,13 @@ function onJoin(entityID: number): void {
          const otherStructureComponent = StructureComponentArray.getComponent(connectedEntityID);
 
          // @Cleanup
-         const entity = Board.entityRecord[entityID]!;
-         const connectedEntity = Board.entityRecord[connectedEntityID]!;
+         const entity = Board.entityRecord[entityID]! as Entity<StructureType>;
+         const connectedEntity = Board.entityRecord[connectedEntityID]! as Entity<StructureType>;
          
-         const connectionDirection = getSnapDirection(connectedEntity.position.calculateAngleBetween(entity.position), connectedEntity.rotation);
+         const snapOrigin = getStructureSnapOrigin(entity);
+         const connectedSnapOrigin = getStructureSnapOrigin(connectedEntity);
+         const connectionDirection = getSnapDirection(connectedSnapOrigin.calculateAngleBetween(snapOrigin), connectedEntity.rotation);
+
          addConnection(otherStructureComponent, connectionDirection, entityID);
       }
    }
@@ -99,6 +102,7 @@ function onRemove(entityID: number): void {
 export function serialiseStructureComponent(entityID: number): StructureComponentData {
    const structureComponent = StructureComponentArray.getComponent(entityID);
    return {
+      hasActiveBlueprint: BlueprintComponentArray.hasComponent(structureComponent.activeBlueprintID),
       connectedSidesBitset: structureComponent.connectedSidesBitset
    };
 }

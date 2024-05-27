@@ -75,6 +75,8 @@ export function createEntity(position: Point, entityType: EntityType): Entity {
       case EntityType.blueprintEntity:
       case EntityType.researchBench:
       case EntityType.healingTotem:
+      case EntityType.frostshaper:
+      case EntityType.stonecarvingTable:
       case EntityType.itemEntity: throw new Error("Can't dynamically create entity of type '" + EntityTypeString[entityType] + "'.");
    }
 }

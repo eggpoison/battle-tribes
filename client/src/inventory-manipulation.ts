@@ -1,12 +1,12 @@
 import { Inventory, Item, ItemType } from "webgl-test-shared/dist/items";
 import Client from "./client/Client";
-import { inventoryIsOpen } from "./components/game/menus/CraftingMenu";
+import { craftingMenuIsOpen } from "./components/game/menus/CraftingMenu";
 import { setHeldItemVisualPosition } from "./components/game/HeldItem";
 import { definiteGameState } from "./game-state/game-states";
 import { InventorySelector_inventoryIsOpen } from "./components/game/inventories/InventorySelector";
 
 const canInteractWithItemSlots = (): boolean => {
-   return inventoryIsOpen() || InventorySelector_inventoryIsOpen();
+   return craftingMenuIsOpen() || InventorySelector_inventoryIsOpen();
 }
 
 export function leftClickItemSlot(e: MouseEvent, entityID: number, inventory: Inventory, itemSlot: number): void {

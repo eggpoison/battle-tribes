@@ -59,6 +59,8 @@ import { PlantComponentArray, plantIsFullyGrown } from "../../components/PlantCo
 import { ItemComponentArray } from "../../components/ItemComponent";
 import { StructureComponentArray } from "../../components/StructureComponent";
 import { TreeComponentArray } from "../../components/TreeComponent";
+import { createFrostshaper } from "../structures/frostshaper";
+import { createStonecarvingTable } from "../structures/stonecarving-table";
 
 const enum Vars {
    ITEM_THROW_FORCE = 100,
@@ -567,6 +569,8 @@ export function placeBuilding(tribe: Tribe, position: Point, rotation: number, e
       case EntityType.healingTotem: createHealingTotem(position, rotation, tribe, connectionInfo); break;
       case EntityType.fence: createFence(position, rotation, tribe, connectionInfo); break;
       case EntityType.fenceGate: createFenceGate(position, rotation, tribe, connectionInfo); break;
+      case EntityType.frostshaper: createFrostshaper(position, rotation, tribe, connectionInfo); break;
+      case EntityType.stonecarvingTable: createStonecarvingTable(position, rotation, tribe, connectionInfo); break;
       case EntityType.wallSpikes:
       case EntityType.wallPunjiSticks:
       case EntityType.embrasure:

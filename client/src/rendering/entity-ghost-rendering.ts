@@ -62,7 +62,9 @@ export enum GhostType {
    stoneWallSpikes,
    healingTotem,
    fence,
-   fenceGate
+   fenceGate,
+   frostshaper,
+   stonecarvingTable
 }
 
 export interface GhostInfo {
@@ -82,7 +84,6 @@ interface TextureInfo {
 
 export const PARTIAL_OPACITY = 0.5;
 
-// @Robustness: Should automatically detect which entity types to have an entry for
 export const ENTITY_TYPE_TO_GHOST_TYPE_MAP: Record<StructureType, GhostType> = {
    [EntityType.campfire]: GhostType.campfire,
    [EntityType.furnace]: GhostType.furnace,
@@ -105,7 +106,9 @@ export const ENTITY_TYPE_TO_GHOST_TYPE_MAP: Record<StructureType, GhostType> = {
    [EntityType.slingTurret]: GhostType.slingTurret,
    [EntityType.healingTotem]: GhostType.healingTotem,
    [EntityType.fence]: GhostType.fence,
-   [EntityType.fenceGate]: GhostType.fenceGate
+   [EntityType.fenceGate]: GhostType.fenceGate,
+   [EntityType.frostshaper]: GhostType.frostshaper,
+   [EntityType.stonecarvingTable]: GhostType.stonecarvingTable
 };
 
 let ghostInfo: GhostInfo | null = null;
@@ -598,6 +601,22 @@ const getGhostTextureInfoArray = (ghostInfo: GhostInfo): ReadonlyArray<TextureIn
          },
          {
             textureSource: "entities/fence-gate/fence-gate-sides.png",
+            offsetX: 0,
+            offsetY: 0,
+            rotation: 0
+         }
+      ];
+      case GhostType.frostshaper: return [
+         {
+            textureSource: "entities/frostshaper/frostshaper.png",
+            offsetX: 0,
+            offsetY: 0,
+            rotation: 0
+         }
+      ];
+      case GhostType.stonecarvingTable: return [
+         {
+            textureSource: "entities/stonecarving-table/stonecarving-table.png",
             offsetX: 0,
             offsetY: 0,
             rotation: 0

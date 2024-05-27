@@ -99,7 +99,7 @@ const TEXTURE_SOURCES: Array<string> = [
    "entities/warrior-hut/warrior-hut-blueprint-1.png",
    "entities/warrior-hut/warrior-hut-blueprint-2.png",
    "entities/warrior-hut/warrior-hut-blueprint-3.png",
-   "entities/warrior-hut/warrior-hut-blueprint-4.png",
+"entities/warrior-hut/warrior-hut-blueprint-4.png",
    "entities/warrior-hut/warrior-hut-blueprint-5.png",
    "entities/warrior-hut/warrior-hut-blueprint-6.png",
    "entities/barrel/barrel.png",
@@ -309,7 +309,9 @@ const TEXTURE_SOURCES: Array<string> = [
    "entities/fence-gate/fence-gate-door.png",
    "entities/fence-gate/fence-gate-sides-blueprint-1.png",
    "entities/fence-gate/fence-gate-door-blueprint-1.png",
-   "items/large/fertiliser.png"
+   "items/large/fertiliser.png",
+   "entities/frostshaper/frostshaper.png",
+   "entities/stonecarving-table/stonecarving-table.png"
 ];
 
 const addTextureSource = (textureSource: string): void => {

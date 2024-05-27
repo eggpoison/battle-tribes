@@ -55,16 +55,18 @@ export function createPlayer(position: Point, tribe: Tribe, username: string): E
    // addItem(inventoryComponent, createItem(ItemType.wooden_spikes, 5));
    // addItem(inventoryComponent, createItem(ItemType.leaf, 10));
 
-   setTimeout(() => {
-      addItem(inventoryComponent, createItem(ItemType.planter_box, 5));
-      addItem(inventoryComponent, createItem(ItemType.berry, 10));
-      addItem(inventoryComponent, createItem(ItemType.fertiliser, 10));
-   }, 200);
+   // setTimeout (() => {
+   //    addItem(inventoryComponent, createItem(ItemType.planter_box, 5));
+   //    addItem(inventoryComponent, createItem(ItemType.berry, 10));
+   //    addItem(inventoryComponent, createItem(ItemType.fertiliser, 10));
+   // }, 200);
    // addItem(inventoryComponent, createItem(ItemType.seed, 10));
    // addItem(inventoryComponent, createItem(ItemType.frostcicle, 10));
 
-   // addItem(inventoryComponent, createItem(ItemType.wooden_fence, 99));
-   // addItem(inventoryComponent, createItem(ItemType.wooden_hammer, 1));
+   setTimeout(() => {
+      addItem(inventoryComponent, createItem(ItemType.frostshaper, 99));
+      addItem(inventoryComponent, createItem(ItemType.stonecarvingTable, 5));
+   }, 50);
    // addItem(inventoryComponent, createItem(ItemType.wood, 10));
    // addItem(inventoryComponent, createItem(ItemType.wooden_wall, 50));
    

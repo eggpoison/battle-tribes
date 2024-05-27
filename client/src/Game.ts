@@ -2,7 +2,7 @@ import { DecorationInfo, EntityDebugData, GameDataPacket, GrassTileInfo, RiverFl
 import { EnemyTribeData } from "webgl-test-shared/dist/techs";
 import { Settings } from "webgl-test-shared/dist/settings";
 import Board from "./Board";
-import Player, { updateAvailableCraftingRecipes, updatePlayerRotation } from "./entities/Player";
+import Player, { updatePlayerRotation } from "./entities/Player";
 import { isDev } from "./utils";
 import { createTextCanvasContext, updateTextNumbers, renderText } from "./text-canvas";
 import Camera from "./Camera";
@@ -46,7 +46,7 @@ import { createTechTreeShaders, renderTechTree } from "./rendering/tech-tree-ren
 import { createResearchOrbShaders, renderResearchOrb } from "./rendering/research-orb-rendering";
 import { attemptToResearch, updateActiveResearchBench, updateResearchOrb } from "./research";
 import { resetInteractableEntityIDs, updateHighlightedAndHoveredEntities, updateSelectedStructure } from "./entity-selection";
-import { createStructureHighlightShaders, renderStructureHighlights } from "./rendering/entity-selection-rendering";
+import { createStructureHighlightShaders, renderEntitySelection } from "./rendering/entity-selection-rendering";
 import { InventorySelector_forceUpdate } from "./components/game/inventories/InventorySelector";
 import { createTurretRangeShaders, renderTurretRange } from "./rendering/turret-range-rendering";
 import { createPathfindNodeShaders, renderPathfindingNodes } from "./rendering/pathfinding-node-rendering";
@@ -329,7 +329,8 @@ abstract class Game {
       updateSpamFilter();
 
       updatePlayerMovement();
-      updateAvailableCraftingRecipes();
+      // @Temporary
+      // updateAvailableCraftingRecipes();
       
       updatePlayerItems();
       updateActiveResearchBench();
@@ -440,7 +441,7 @@ abstract class Game {
       renderSolidTiles(true);
       renderWallBorders();
 
-      renderStructureHighlights();
+      renderEntitySelection();
       
       if (OPTIONS.showParticles) {
          renderMonocolourParticles(ParticleRenderLayer.high);

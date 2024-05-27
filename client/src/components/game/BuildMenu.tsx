@@ -122,6 +122,12 @@ const getMenuOptions = (entity: Entity): ReadonlyArray<MenuOption> => {
    if (tribeComponent.tribeID !== Game.tribe.id) {
       return [];
    }
+
+   // Buildings with active blueprints can't access the build menu
+   const structureComponent = entity.getServerComponent(ServerComponentType.structure);
+   if (structureComponent.hasActiveBlueprint) {
+      return [];
+   }
    
    const options = new Array<MenuOption>();
 

@@ -12,7 +12,7 @@ import { getSecondsSinceLastAction } from "../entities/TribeMember";
 import CLIENT_ITEM_INFO_RECORD from "../client-item-info";
 import Particle from "../Particle";
 import { ParticleColour, ParticleRenderLayer, addMonocolourParticleToBufferContainer } from "../rendering/particle-rendering";
-import { createDeepFrostHeartBloodParticles } from "../items/ItemEntity";
+import { createDeepFrostHeartBloodParticles } from "../entities/ItemEntity";
 import { animateLimb, createCraftingAnimationParticles, createMedicineAnimationParticles, generateRandomLimbPosition, updateBandageRenderPart, updateCustomItemRenderPart } from "../limb-animations";
 
 export interface LimbInfo {

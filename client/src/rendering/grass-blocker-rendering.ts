@@ -1,6 +1,6 @@
 import { GrassBlocker, blockerIsCircluar } from "webgl-test-shared/dist/grass-blockers";
 import { getGrassBlockers } from "../client/Client";
-import { CAMERA_UNIFORM_BUFFER_BINDING_INDEX, createWebGLProgram, getCirclePoint, gl, windowHeight, windowWidth } from "../webgl";
+import { CAMERA_UNIFORM_BUFFER_BINDING_INDEX, createTexture, createWebGLProgram, getCirclePoint, gl, windowHeight, windowWidth } from "../webgl";
 import { rotateXAroundOrigin, rotateYAroundOrigin } from "webgl-test-shared/dist/utils";
 import { getTexture } from "../textures";
 
@@ -252,10 +252,10 @@ const calculateGrassBlockerVertices = (grassBlockers: ReadonlyArray<GrassBlocker
          const halfWidth = blocker.width * 0.5;
          const halfHeight = blocker.height * 0.5;
          
-         const topLeftOffsetX = rotateXAroundOrigin(halfWidth, halfHeight, blocker.rotation);
-         const topLeftOffsetY = rotateYAroundOrigin(halfWidth, halfHeight, blocker.rotation);
-         const topRightOffsetX = rotateXAroundOrigin(halfWidth, halfHeight, blocker.rotation + Math.PI * 0.5);
-         const topRightOffsetY = rotateYAroundOrigin(halfWidth, halfHeight, blocker.rotation + Math.PI * 0.5);
+         const topLeftOffsetX = rotateXAroundOrigin(-halfWidth, halfHeight, blocker.rotation);
+         const topLeftOffsetY = rotateYAroundOrigin(-halfWidth, halfHeight, blocker.rotation);
+         const topRightOffsetX = rotateXAroundOrigin(halfWidth, halfHeight, blocker.rotation);
+         const topRightOffsetY = rotateYAroundOrigin(halfWidth, halfHeight, blocker.rotation);
          const bottomLeftOffsetX = -topRightOffsetX;
          const bottomLeftOffsetY = -topRightOffsetY;
          const bottomRightOffsetX = -topLeftOffsetX;
@@ -286,27 +286,6 @@ const calculateGrassBlockerVertices = (grassBlockers: ReadonlyArray<GrassBlocker
    }
 
    return vertices;
-}
-
-const createTexture = (width: number, height: number): WebGLTexture => {
-   const texture = gl.createTexture()!;
-   gl.bindTexture(gl.TEXTURE_2D, texture);
-   
-   // Define size and format of level 0
-   const level = 0;
-   const internalFormat = gl.RGBA;
-   const border = 0;
-   const format = gl.RGBA;
-   const type = gl.UNSIGNED_BYTE;
-   const data = null;
-   gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, width, height, border, format, type, data);
-   
-   // Set the filtering so we don't need mips
-   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-
-   return texture;
 }
 
 export function renderGrassBlockers(): void {

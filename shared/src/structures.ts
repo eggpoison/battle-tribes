@@ -16,7 +16,7 @@ const enum Vars {
    MULTI_SNAP_ROTATION_TOLERANCE = 0.02
 }
 
-export const STRUCTURE_TYPES = [EntityType.wall, EntityType.door,  EntityType.embrasure,  EntityType.floorSpikes,  EntityType.wallSpikes,  EntityType.floorPunjiSticks,  EntityType.wallPunjiSticks,  EntityType.ballista,  EntityType.slingTurret,  EntityType.tunnel,  EntityType.tribeTotem,  EntityType.workerHut,  EntityType.warriorHut,  EntityType.barrel,  EntityType.workbench,  EntityType.researchBench,  EntityType.healingTotem,  EntityType.planterBox,  EntityType.furnace,  EntityType.campfire,  EntityType.fence,  EntityType.fenceGate] as const;
+export const STRUCTURE_TYPES = [EntityType.wall, EntityType.door, EntityType.embrasure, EntityType.floorSpikes, EntityType.wallSpikes, EntityType.floorPunjiSticks, EntityType.wallPunjiSticks, EntityType.ballista, EntityType.slingTurret, EntityType.tunnel, EntityType.tribeTotem, EntityType.workerHut, EntityType.warriorHut, EntityType.barrel, EntityType.workbench, EntityType.researchBench, EntityType.healingTotem, EntityType.planterBox, EntityType.furnace, EntityType.campfire, EntityType.fence, EntityType.fenceGate, EntityType.frostshaper, EntityType.stonecarvingTable] as const;
 export type StructureType = typeof STRUCTURE_TYPES[number];
 
 // @Temporary: make const
@@ -90,6 +90,8 @@ const getSnapOffset = (structureType: StructureType, snapType: SnapType): number
       case EntityType.campfire: return 52;
       case EntityType.fence: return 32;
       case EntityType.fenceGate: return 32;
+      case EntityType.frostshaper: return snapType === SnapType.horizontal ? 60 : 40;
+      case EntityType.stonecarvingTable: return snapType === SnapType.horizontal ? 60 : 40;
    }
 }
 
@@ -140,6 +142,15 @@ const getNearbyStructures = (regularPlacePosition: Point, chunks: ReadonlyArray<
    return nearbyStructures;
 }
 
+export function getStructureSnapOrigin(structure: EntityInfo<StructureType>): Point {
+   const snapOrigin = structure.position.copy();
+   if (structure.type === EntityType.embrasure) {
+      snapOrigin.x -= 22 * Math.sin(structure.rotation);
+      snapOrigin.y -= 22 * Math.cos(structure.rotation);
+   }
+   return snapOrigin;
+}
+
 export function getSnapDirection(directionToSnappingEntity: number, structureRotation: number): SnapDirection {
    /*
    Note: Assumes that the structure position can properly snap to the snapping entity.
@@ -159,7 +170,7 @@ export function getSnapDirection(directionToSnappingEntity: number, structureRot
    throw new Error("Misaligned directions!");
 }
 
-const getPositionsOffEntity = (snapOrigin: Readonly<Point>, snapEntity: EntityInfo<StructureType>, placeRotation: number, isPlacedOnWall: boolean, structureType: StructureType): ReadonlyArray<StructureTransformInfo> => {
+const getPositionsOffEntity = (snapOrigin: Readonly<Point>, snapEntity: EntityInfo<StructureType>, placeRotation: number, structureType: StructureType): ReadonlyArray<StructureTransformInfo> => {
    const snapPositions = new Array<StructureTransformInfo>();
 
    for (let i = 0; i < 4; i++) {
@@ -196,13 +207,6 @@ const findCandidatePlacePositions = (nearbyStructures: ReadonlyArray<EntityInfo<
    for (let i = 0; i < nearbyStructures.length; i++) {
       const entity = nearbyStructures[i];
 
-      // @Cleanup: make into func
-      const snapOrigin = entity.position.copy();
-      if (entity.type === EntityType.embrasure) {
-         snapOrigin.x -= 22 * Math.sin(entity.rotation);
-         snapOrigin.y -= 22 * Math.cos(entity.rotation);
-      }
-
       // @Cleanup
       let clampedSnapRotation = entity.rotation;
       while (clampedSnapRotation >= Math.PI * 0.25) {
@@ -213,8 +217,8 @@ const findCandidatePlacePositions = (nearbyStructures: ReadonlyArray<EntityInfo<
       }
       const placeRotation = Math.round(placingEntityRotation / (Math.PI * 0.5)) * Math.PI * 0.5 + clampedSnapRotation;
 
-      // @Incomplete: placedOnWall
-      const positionsOffEntity = getPositionsOffEntity(snapOrigin, entity, placeRotation, false, structureType);
+      const snapOrigin = getStructureSnapOrigin(entity);
+      const positionsOffEntity = getPositionsOffEntity(snapOrigin, entity, placeRotation, structureType);
 
       for (let i = 0; i < positionsOffEntity.length; i++) {
          const position = positionsOffEntity[i];

@@ -17,7 +17,7 @@ import CircularHitbox from "../hitboxes/CircularHitbox";
 import RectangularHitbox from "../hitboxes/RectangularHitbox";
 import { Tile } from "../Tile";
 import { gameScreenSetIsDead } from "../components/game/GameScreen";
-import { removeSelectedItem, selectItem, updateInventoryIsOpen } from "../player-input";
+import { removeSelectedItem, selectItem, hideInventory } from "../player-input";
 import { Hotbar_setHotbarSelectedItemSlot, Hotbar_update, Hotbar_updateRightThrownBattleaxeItemID } from "../components/game/inventories/Hotbar";
 import { setHeldItemVisual } from "../components/game/HeldItem";
 import { CraftingMenu_setCraftingMenuOutputItem } from "../components/game/menus/CraftingMenu";
@@ -241,7 +241,7 @@ abstract class Client {
 
    /** Creates the socket used to connect to the server */
    private static createSocket(): ISocket {
-      return io(`http://172.24.235.137:${Settings.SERVER_PORT}`, {
+      return io(`ws://172.24.239.73:${Settings.SERVER_PORT}`, {
       // return io(`ws://localhost:${Settings.SERVER_PORT}`, {
          transports: ["websocket", "polling", "flashsocket"],
          autoConnect: false,
@@ -831,7 +831,7 @@ abstract class Client {
       definiteGameState.resetFlags();
 
       gameScreenSetIsDead(true);
-      updateInventoryIsOpen(false);
+      hideInventory();
       closeTechTree();
    }
 

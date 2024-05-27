@@ -12,16 +12,36 @@ import { definiteGameState } from "../../../game-state/game-states";
 import Game from "../../../Game";
 import { playSound } from "../../../sound";
 
-const CRAFTING_STATION_ICON_TEXTURE_SOURCES: Record<CraftingStation, string> = {
-   [CraftingStation.workbench]: CLIENT_ITEM_INFO_RECORD[ItemType.workbench].textureSource,
-   [CraftingStation.slime]: CLIENT_ITEM_INFO_RECORD[ItemType.slimeball].textureSource,
-   [CraftingStation.water]: "miscellaneous/water-droplet.png"
-};
-
 interface RecipeViewerProps {
    readonly recipe: CraftingRecipe | null;
    readonly hoverPosition: [number, number];
    readonly craftingMenuHeight: number;
+}
+
+const CRAFTING_STATION_ICON_TEXTURE_SOURCES: Record<CraftingStation, string> = {
+   [CraftingStation.workbench]: CLIENT_ITEM_INFO_RECORD[ItemType.workbench].textureSource,
+   [CraftingStation.slime]: CLIENT_ITEM_INFO_RECORD[ItemType.slimeball].textureSource,
+   [CraftingStation.water]: "miscellaneous/water-droplet.png",
+   [CraftingStation.frostshaper]: CLIENT_ITEM_INFO_RECORD[ItemType.frostshaper].textureSource,
+   [CraftingStation.stonecarvingTable]: CLIENT_ITEM_INFO_RECORD[ItemType.stonecarvingTable].textureSource
+};
+
+const CRAFTING_RECIPE_RECORD: Record<CraftingStation | "hand", Array<CraftingRecipe>> = {
+   hand: [],
+   [CraftingStation.workbench]: [],
+   [CraftingStation.slime]: [],
+   [CraftingStation.water]: [],
+   [CraftingStation.frostshaper]: [],
+   [CraftingStation.stonecarvingTable]: []
+};
+
+// Categorise the crafting recipes
+for (const craftingRecipe of CRAFTING_RECIPES) {
+   if (typeof craftingRecipe.craftingStation === "undefined") {
+      CRAFTING_RECIPE_RECORD.hand.push(craftingRecipe);
+   } else {
+      CRAFTING_RECIPE_RECORD[craftingRecipe.craftingStation].push(craftingRecipe);
+   }
 }
 
 const RecipeViewer = ({ recipe, hoverPosition, craftingMenuHeight }: RecipeViewerProps) => {
@@ -120,15 +140,16 @@ const MIN_RECIPE_BROWSER_HEIGHT = 9;
 export let setCraftingMenuAvailableRecipes: (craftingRecipes: Array<CraftingRecipe>) => void = () => {};
 export let setCraftingMenuAvailableCraftingStations: (craftingStations: Set<CraftingStation>) => void = () => {};
 export let CraftingMenu_setCraftingMenuOutputItem: (craftingOutputItem: Item | null) => void = () => {};
-export let CraftingMenu_setIsVisible: (newIsVisible: boolean) => void;
+export let CraftingMenu_setCraftingStation: (craftingStation: CraftingStation | null) => void;
 
-export let inventoryIsOpen: () => boolean;
+export let craftingMenuIsOpen: () => boolean;
 
 const CraftingMenu = () => {
-   const [isVisible, setIsVisible] = useState(false);
+   const [craftingStation, setCraftingStation] = useState<CraftingStation | null>(null);
+   // const [isVisible, setIsVisible] = useState(false);
 
-   const [availableRecipes, setAvailableRecipes] = useState(new Array<CraftingRecipe>());
-   const [availableCraftingStations, setAvailableCraftingStations] = useState(new Set<CraftingStation>());
+   // const [availableRecipes, setAvailableRecipes] = useState(new Array<CraftingRecipe>());
+   // const [availableCraftingStations, setAvailableCraftingStations] = useState(new Set<CraftingStation>());
    const [craftingOutputItem, setCraftingOutputItem] = useState<Item | null>(null);
 
    const [selectedRecipe, setSelectedRecipe] = useState<CraftingRecipe | null>(null);
@@ -178,55 +199,57 @@ const CraftingMenu = () => {
       leftClickItemSlot(e, Player.instance!.id, definiteGameState.craftingOutputSlot!, 1);
    }
 
-   // Find which of the available recipes can be crafted
-   useEffect(() => {
-      // Find which item slots are available for use in crafting
-      const availableItemSlots = new Array<ItemSlots>();
-      if (definiteGameState.hotbar !== null) {
-         availableItemSlots.push(definiteGameState.hotbar.itemSlots);
-      }
-      if (definiteGameState.backpack !== null) {
-         availableItemSlots.push(definiteGameState.backpack.itemSlots);
-      }
+   // // Find which of the available recipes can be crafted
+   // useEffect(() => {
+   //    // Find which item slots are available for use in crafting
+   //    const availableItemSlots = new Array<ItemSlots>();
+   //    if (definiteGameState.hotbar !== null) {
+   //       availableItemSlots.push(definiteGameState.hotbar.itemSlots);
+   //    }
+   //    if (definiteGameState.backpack !== null) {
+   //       availableItemSlots.push(definiteGameState.backpack.itemSlots);
+   //    }
       
-      if (availableItemSlots.length === 0) {
-         return;
-      }
+   //    if (availableItemSlots.length === 0) {
+   //       return;
+   //    }
       
-      const craftableRecipesArray = new Array<CraftingRecipe>();
-      for (const recipe of availableRecipes) {
-         if (hasEnoughItems(availableItemSlots, recipe.ingredients)) {
-            craftableRecipesArray.push(recipe);
-         }
-      }
+   //    const craftableRecipesArray = new Array<CraftingRecipe>();
+   //    for (const recipe of availableRecipes) {
+   //       if (hasEnoughItems(availableItemSlots, recipe.ingredients)) {
+   //          craftableRecipesArray.push(recipe);
+   //       }
+   //    }
 
-      craftableRecipes.current = craftableRecipesArray;
-   }, [availableRecipes]);
+   //    craftableRecipes.current = craftableRecipesArray;
+   // }, [availableRecipes]);
+
+   // useEffect(() => {
+   //    if (selectedRecipe !== null && !availableRecipes.includes(selectedRecipe)) {
+   //       setSelectedRecipe(null);
+   //       selectedRecipeIndex.current = -1;
+   //    }
+   // }, [availableRecipes, selectedRecipe]);
 
    useEffect(() => {
-      if (selectedRecipe !== null && !availableRecipes.includes(selectedRecipe)) {
-         setSelectedRecipe(null);
-         selectedRecipeIndex.current = -1;
-      }
-   }, [availableRecipes, selectedRecipe]);
-
-   useEffect(() => {
+      // @Temporary
       setCraftingMenuAvailableRecipes = (recipes: Array<CraftingRecipe>): void => {
-         setAvailableRecipes(recipes);
+         // setAvailableRecipes(recipes);
       }
 
+      // @Temporary
       setCraftingMenuAvailableCraftingStations = (craftingStations: Set<CraftingStation>): void => {
-         setAvailableCraftingStations(craftingStations);
+         // setAvailableCraftingStations(craftingStations);
       }
 
       CraftingMenu_setCraftingMenuOutputItem = (craftingOutputItem: Item | null): void => {
          setCraftingOutputItem(craftingOutputItem);
       }
 
-      CraftingMenu_setIsVisible = (newIsVisible: boolean): void => {
-         setIsVisible(newIsVisible);
+      CraftingMenu_setCraftingStation = (craftingStation: CraftingStation | null): void => {
+         setCraftingStation(craftingStation);
 
-         if (newIsVisible) {
+         if (craftingStation !== null) {
             setHoveredRecipe(null);
             setHoverPosition(null);
          }
@@ -234,18 +257,22 @@ const CraftingMenu = () => {
    }, []);
 
    useEffect(() => {
-      inventoryIsOpen = (): boolean => {
-         return isVisible;
+      craftingMenuIsOpen = (): boolean => {
+         return craftingStation !== null;
       }
-   }, [isVisible]);
+   }, [craftingStation]);
 
-   if (!isVisible) return null;
+   if (craftingStation === null) return null;
 
+   const availableRecipes = CRAFTING_RECIPE_RECORD[craftingStation];
+
+   const browserHeight = Math.max(MIN_RECIPE_BROWSER_HEIGHT, Math.ceil(availableRecipes.length / RECIPE_BROWSER_WIDTH));
+   
    // Create the recipe browser
    const recipeBrowser = new Array<JSX.Element>();
    let currentRow = new Array<JSX.Element>();
    let currentRecipeIndex = 0;
-   for (let i = 0; i < MIN_RECIPE_BROWSER_HEIGHT * RECIPE_BROWSER_WIDTH; i++) {
+   for (let i = 0; i < browserHeight * RECIPE_BROWSER_WIDTH; i++) {
       let slot: JSX.Element;
       if (currentRecipeIndex < availableRecipes.length) {
          let recipe: CraftingRecipe | undefined;
@@ -289,12 +316,15 @@ const CraftingMenu = () => {
    }
    
    return <div id="crafting-menu" className="inventory" ref={onCraftingMenuRefChange}>
+      {/*
+      // @Temporary?
       <div className="available-crafting-stations">
          {Array.from(availableCraftingStations).map((craftingStationType: CraftingStation, i: number) => {
             const image = require("../../../images/" + CRAFTING_STATION_ICON_TEXTURE_SOURCES[craftingStationType]);
             return <img className="crafting-station-image" src={image} key={i} alt="" />
          })}
       </div>
+      */}
       
       <div className="recipe-browser">
          {recipeBrowser}

@@ -1,5 +1,5 @@
 import { addKeyListener, clearPressedKeys, keyIsPressed } from "./keyboard-input";
-import { CraftingMenu_setIsVisible } from "./components/game/menus/CraftingMenu";
+import { CraftingMenu_setCraftingStation, craftingMenuIsOpen } from "./components/game/menus/CraftingMenu";
 import Player from "./entities/Player";
 import Client from "./client/Client";
 import { Hotbar_setHotbarSelectedItemSlot, Hotbar_updateLeftThrownBattleaxeItemID, Hotbar_updateRightThrownBattleaxeItemID } from "./components/game/inventories/Hotbar";
@@ -160,6 +160,18 @@ export const PLACEABLE_ENTITY_INFO_RECORD: Record<PlaceableItemType, PlaceableEn
       entityType: EntityType.fence,
       width: 64,
       height: 16,
+      hitboxType: PlaceableItemHitboxType.rectangular
+   },
+   [ItemType.frostshaper]: {
+      entityType: EntityType.frostshaper,
+      width: 120,
+      height: 80,
+      hitboxType: PlaceableItemHitboxType.rectangular
+   },
+   [ItemType.stonecarvingTable]: {
+      entityType: EntityType.stonecarvingTable,
+      width: 120,
+      height: 80,
       hitboxType: PlaceableItemHitboxType.rectangular
    }
 };
@@ -377,9 +389,17 @@ const createItemUseListeners = (): void => {
             itemRightClickDown(selectedItemInfo.item, selectedItemInfo.isOffhand, selectedItemInfo.itemSlot);
          }
          
-         attemptEntitySelection();
+         const didSelectEntity = attemptEntitySelection();
+         if (didSelectEntity) {
+            e.preventDefault();
+         }
+         
          attemptToCompleteNode();
       }
+   });
+
+   document.addEventListener("contextmenu", e => {
+      console.log("b");
    });
 
    document.addEventListener("mouseup", e => {
@@ -405,7 +425,7 @@ const createItemUseListeners = (): void => {
    // Stop the context menu from appearing
    document.addEventListener("contextmenu", e => {
       for (const element of e.composedPath()) {
-         if ((element as HTMLElement).id === "hotbar") {
+         if ((element as HTMLElement).id === "hotbar" || (element as HTMLElement).id === "crafting-menu") {
             e.preventDefault();
             return;
          }
@@ -440,14 +460,14 @@ const throwHeldItem = (): void => {
    }
 }
 
-export function updateInventoryIsOpen(inventoryIsOpen: boolean): void {
-   _inventoryIsOpen = inventoryIsOpen;
+export function hideInventory(): void {
+   _inventoryIsOpen = false;
    
-   CraftingMenu_setIsVisible(_inventoryIsOpen);
-   BackpackInventoryMenu_setIsVisible(_inventoryIsOpen);
+   CraftingMenu_setCraftingStation(null);
+   BackpackInventoryMenu_setIsVisible(false);
 
    // If the player is holding an item when their inventory is closed, throw the item out
-   if (!_inventoryIsOpen && definiteGameState.heldItemSlot !== null) {
+   if (definiteGameState.heldItemSlot !== null) {
       throwHeldItem();
    }
 }
@@ -470,12 +490,15 @@ const createInventoryToggleListeners = (): void => {
          return;
       }
 
-      updateInventoryIsOpen(!_inventoryIsOpen);
+      // @Temporary?
+      if (craftingMenuIsOpen()) {
+         hideInventory();
+      }
    });
 
    addKeyListener("i", () => {
       if (_inventoryIsOpen) {
-         updateInventoryIsOpen(false);
+         hideInventory();
          return;
       }
    });
@@ -486,7 +509,7 @@ const createInventoryToggleListeners = (): void => {
       }
 
       if (_inventoryIsOpen) {
-         updateInventoryIsOpen(false);
+         hideInventory();
          return;
       }
 
@@ -503,6 +526,19 @@ export function createPlayerInputListeners(): void {
    createInventoryToggleListeners();
 
    document.body.addEventListener("wheel", e => {
+      // Don't scroll hotbar if element is being scrolled instead
+      const elemPath = e.composedPath() as Array<HTMLElement>;
+      for (let i = 0; i < elemPath.length; i++) {
+         const elem = elemPath[i];
+         // @Hack
+         if (typeof elem.style !== "undefined") {
+            const overflowY = getComputedStyle(elem).getPropertyValue("overflow-y");
+            if (overflowY === "scroll") {
+               return;
+            }
+         }
+      }
+      
       const scrollDirection = Math.sign(e.deltaY);
       let newSlot = latencyGameState.selectedHotbarItemSlot + scrollDirection;
       if (newSlot <= 0) {
@@ -886,7 +922,7 @@ const itemRightClickDown = (item: Item, isOffhand: boolean, itemSlot: number): v
          const structureType = ITEM_INFO_RECORD[item.type as PlaceableItemType].entityType;
          const placeInfo = calculateStructurePlaceInfo(Player.instance!.position, Player.instance!.rotation, structureType, Board.getChunks());
          
-         if (placeInfo !== null) {
+         if (canPlaceItem(placeInfo.position, placeInfo.rotation, item, structureType, false)) {
             Client.sendItemUsePacket();
             useInfo.lastAttackTicks = Board.ticks;
          }

@@ -13,6 +13,7 @@ import StructureComponent from "../entity-components/StructureComponent";
 class Fence extends Entity {
    constructor(position: Point, id: number, ageTicks: number, componentsData: EntityComponentsData<EntityType.fence>) {
       super(position, id, EntityType.fence, ageTicks);
+      console.log("a");
 
       this.attachRenderPart(
          new RenderPart(

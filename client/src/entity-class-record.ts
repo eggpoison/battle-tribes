@@ -23,7 +23,7 @@ import Snowball from "./entities/Snowball";
 import Krumblid from "./entities/Krumblid";
 import FrozenYeti from "./entities/FrozenYeti";
 import Fish from "./entities/Fish";
-import ItemEntity from "./items/ItemEntity";
+import ItemEntity from "./entities/ItemEntity";
 import Entity from "./Entity";
 import WoodenArrowProjectile from "./projectiles/WoodenArrowProjectile";
 import IceShardsProjectile from "./projectiles/IceShardsProjectile";
@@ -54,6 +54,8 @@ import Plant from "./entities/Plant";
 import Fence from "./entities/Fence";
 import FenceGate from "./entities/FenceGate";
 import { EntityData } from "webgl-test-shared/dist/client-server-types";
+import Frostshaper from "./entities/Frostshaper";
+import StonecarvingTable from "./entities/StonecarvingTable";
 
 export type EntityClassType<T extends EntityType> = new (position: Point, id: number, ageTicks: number, componentsData: EntityComponentsData<T>) => Entity;
 
@@ -120,6 +122,8 @@ export function createEntity<T extends EntityType>(entityData: EntityData<T>): E
       case EntityType.plant: return new Plant(position, id, ageTicks, componentsData);
       case EntityType.fence: return new Fence(position, id, ageTicks, componentsData);
       case EntityType.fenceGate: return new FenceGate(position, id, ageTicks, componentsData);
+      case EntityType.frostshaper: return new Frostshaper(position, id, ageTicks, componentsData);
+      case EntityType.stonecarvingTable: return new StonecarvingTable(position, id, ageTicks, componentsData);
       default: {
          const unreachable: never = entityType;
          return unreachable;

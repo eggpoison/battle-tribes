@@ -24,8 +24,7 @@ import { attemptToOccupyResearchBench, canResearchAtBench, continueResearching, 
 import { PathfindFailureDefault, PathfindOptions, entityCanBlockPathfinding, entityHasReachedNode, getAngleToNode, getClosestPathfindNode, getDistanceToNode, getEntityFootprint, getEntityPathfindingGroupID, pathIsClear, pathfind, positionIsAccessible, replacePathfindingNodeGroupID, smoothPath } from "../../../pathfinding";
 import { PhysicsComponentArray } from "../../../components/PhysicsComponent";
 import Tribe from "../../../Tribe";
-import { getGatherTarget } from "./tribesman-resource-gathering";
-import { TribesmanGoal, TribesmanGoalType, TribesmanPlaceGoal, TribesmanUpgradeGoal, getTribesmanGoals } from "./tribesman-goals";
+import { TribesmanGoal, TribesmanPlaceGoal, TribesmanUpgradeGoal } from "./tribesman-goals";
 import { createBuildingHitboxes } from "../../../buildings";
 import { CollisionVars, entitiesAreColliding, getHitboxesCollidingEntities } from "../../../collision";
 import { huntEntity } from "./tribesman-combat-ai";
@@ -93,6 +92,7 @@ const getCommunicationTargets = (tribesman: Entity): ReadonlyArray<Entity> => {
    return communcationTargets;
 }
 
+// @Cleanup: unused?
 /** Called while fighting an enemy, it calls other tribesman to move to the position of the fighting */
 const sendCallToArmsMessage = (tribesman: Entity, communicationTargets: ReadonlyArray<Entity>, targetEntity: Entity): void => {
    for (let i = 0; i < communicationTargets.length; i++) {

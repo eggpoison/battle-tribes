@@ -13,10 +13,9 @@ import { TribeType } from "webgl-test-shared/dist/tribes";
 import { Point, dotAngles, lerp } from "webgl-test-shared/dist/utils";
 import Entity, { entityIsStructure } from "../../Entity";
 import Board from "../../Board";
-import { BerryBushComponentArray, BuildingMaterialComponentArray, HealthComponentArray, InventoryUseComponentArray, TribeComponentArray, TribesmanComponentArray } from "../../components/ComponentArray";
 import { InventoryComponentArray, consumeItemFromSlot, consumeItemType, countItemType, getInventory, inventoryIsFull, pickupItemEntity, resizeInventory } from "../../components/InventoryComponent";
 import { getEntitiesInRange } from "../../ai-shared";
-import { addDefence, damageEntity, healEntity, removeDefence } from "../../components/HealthComponent";
+import { HealthComponentArray, addDefence, damageEntity, healEntity, removeDefence } from "../../components/HealthComponent";
 import { createWorkbench } from "../structures/workbench";
 import { createTribeTotem } from "../structures/tribe-totem";
 import { createWorkerHut } from "../structures/worker-hut";
@@ -30,20 +29,20 @@ import { createSpearProjectile } from "../projectiles/spear-projectile";
 import { createResearchBench } from "../structures/research-bench";
 import { createWarriorHut } from "../structures/warrior-hut";
 import { createWall } from "../structures/wall";
-import { InventoryUseInfo, getInventoryUseInfo } from "../../components/InventoryUseComponent";
+import { InventoryUseComponentArray, InventoryUseInfo, getInventoryUseInfo } from "../../components/InventoryUseComponent";
 import { createBattleaxeProjectile } from "../projectiles/battleaxe-projectile";
 import { createPlanterBox } from "../structures/planter-box";
 import { createIceArrow } from "../projectiles/ice-arrow";
 import { createSpikes } from "../structures/spikes";
 import { createPunjiSticks } from "../structures/punji-sticks";
 import { doBlueprintWork } from "../../components/BlueprintComponent";
-import { EntityRelationship, getEntityRelationship } from "../../components/TribeComponent";
+import { EntityRelationship, TribeComponentArray, getEntityRelationship } from "../../components/TribeComponent";
 import { createBlueprintEntity } from "../blueprint-entity";
 import { getItemAttackCooldown } from "../../items";
 import { PhysicsComponent, PhysicsComponentArray, applyKnockback } from "../../components/PhysicsComponent";
 import Tribe from "../../Tribe";
 import { entityIsResource } from "./tribesman-ai/tribesman-resource-gathering";
-import { adjustTribesmanRelationsAfterGift } from "../../components/TribesmanAIComponent";
+import { TribesmanAIComponentArray, adjustTribesmanRelationsAfterGift } from "../../components/TribesmanAIComponent";
 import { TITLE_REWARD_CHANCES } from "../../tribesman-title-generation";
 import { TribeMemberComponentArray, awardTitle, hasTitle } from "../../components/TribeMemberComponent";
 import { createHealingTotem } from "../structures/healing-totem";
@@ -61,6 +60,8 @@ import { StructureComponentArray } from "../../components/StructureComponent";
 import { TreeComponentArray } from "../../components/TreeComponent";
 import { createFrostshaper } from "../structures/frostshaper";
 import { createStonecarvingTable } from "../structures/stonecarving-table";
+import { BerryBushComponentArray } from "../../components/BerryBushComponent";
+import { BuildingMaterialComponentArray } from "../../components/BuildingMaterialComponent";
 
 const enum Vars {
    ITEM_THROW_FORCE = 100,
@@ -866,7 +867,7 @@ const tickInventoryUseInfo = (tribeMember: Entity, inventoryUseInfo: InventoryUs
                   const itemInfo = ITEM_INFO_RECORD[selectedItem.type] as ConsumableItemInfo;
                   inventoryUseInfo.foodEatingTimer = itemInfo.consumeTime;
 
-                  if (TribesmanComponentArray.hasComponent(tribeMember.id) && Math.random() < TITLE_REWARD_CHANCES.BERRYMUNCHER_REWARD_CHANCE) {
+                  if (TribesmanAIComponentArray.hasComponent(tribeMember.id) && Math.random() < TITLE_REWARD_CHANCES.BERRYMUNCHER_REWARD_CHANCE) {
                      awardTitle(tribeMember, TribesmanTitle.berrymuncher);
                   }
                }
@@ -1251,8 +1252,8 @@ export function throwItem(tribesman: Entity, inventoryName: InventoryName, itemS
    physicsComponent.velocity.x += tribesmanPhysicsComponent.velocity.x + Vars.ITEM_THROW_FORCE * Math.sin(throwDirection);
    physicsComponent.velocity.y += tribesmanPhysicsComponent.velocity.y + Vars.ITEM_THROW_FORCE * Math.cos(throwDirection);
 
-   if (TribesmanComponentArray.hasComponent(tribesman.id)) {
-      const tribesmanComponent = TribesmanComponentArray.getComponent(tribesman.id);
+   if (TribesmanAIComponentArray.hasComponent(tribesman.id)) {
+      const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman.id);
       tribesmanComponent.lastItemThrowTicks = Board.ticks;
    }
 }

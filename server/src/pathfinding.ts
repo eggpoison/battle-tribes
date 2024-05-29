@@ -8,9 +8,9 @@ import RectangularHitbox from "./hitboxes/RectangularHitbox";
 import Board from "./Board";
 import PathfindingHeap from "./PathfindingHeap";
 import OPTIONS from "./options";
-import { TribeComponentArray } from "./components/ComponentArray";
 import { PhysicsComponentArray } from "./components/PhysicsComponent";
 import { Hitbox, hitboxIsCircular } from "./hitboxes/hitboxes";
+import { TribeComponentArray } from "./components/TribeComponent";
 
 const enum Vars {
    NODE_ACCESSIBILITY_RESOLUTION = 3,

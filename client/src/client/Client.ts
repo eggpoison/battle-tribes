@@ -3,7 +3,7 @@ import { AttackPacket, ClientToServerEvents, EntityData, GameDataPacket, GameDat
 import { distance, Point } from "webgl-test-shared/dist/utils";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
-import { BlueprintType, EntityComponentsData, LimbData, ServerComponentType } from "webgl-test-shared/dist/components";
+import { BlueprintType, LimbData, ServerComponentType } from "webgl-test-shared/dist/components";
 import { PlayerTribeData, TechID } from "webgl-test-shared/dist/techs";
 import { STRUCTURE_TYPES } from "webgl-test-shared/dist/structures";
 import { Inventory, InventoryName } from "webgl-test-shared/dist/items";
@@ -241,8 +241,8 @@ abstract class Client {
 
    /** Creates the socket used to connect to the server */
    private static createSocket(): ISocket {
-      return io(`ws://172.24.239.73:${Settings.SERVER_PORT}`, {
-      // return io(`ws://localhost:${Settings.SERVER_PORT}`, {
+      // return io(`ws://172.24.239.73:${Settings.SERVER_PORT}`, {
+      return io(`ws://localhost:${Settings.SERVER_PORT}`, {
          transports: ["websocket", "polling", "flashsocket"],
          autoConnect: false,
          reconnection: false
@@ -404,33 +404,50 @@ abstract class Client {
 
       // @Cleanup: This feels wrong to do. This hardcodes which components are updated from server data; is that correct to do?
       // Remove the player so it doesn't get updated from the server data
-      if (Player.instance !== null) {
-         // @Speed
-         for (let i = 0; i < entityDataArray.length; i++) {
-            const data = entityDataArray[i];
-            if (data.id === Player.instance.id) {
-               const componentsData = data.components as EntityComponentsData<EntityType.player>;
-               Player.instance.getServerComponent(ServerComponentType.statusEffect).updateFromData(componentsData[2]);
-               Player.instance.getServerComponent(ServerComponentType.tribeMember).updateFromData(componentsData[4]);
+      // @Speed
+      for (let i = 0; i < entityDataArray.length; i++) {
+         const data = entityDataArray[i];
+         if (data.id === Game.playerID) {
+            if (Player.instance === null) {
+               const player = this.createEntityFromData(data) as Player;
+               Player.createInstancePlayer(player);
+            } else {
                
-               // @Cleanup @Hack
-               const inventoryUseComponentsData = componentsData[6];
-               let hotbarUseInfo: LimbData | undefined;
-               for (let i = 0; i < inventoryUseComponentsData.inventoryUseInfos.length; i++) {
-                  const useInfo = inventoryUseComponentsData.inventoryUseInfos[i];
-                  if (useInfo.inventoryName === InventoryName.hotbar) {
-                     hotbarUseInfo = useInfo;
-                     break;
+               // @Hack @Cleanup
+               for (let i = 0; i < data.components.length; i++) {
+                  const componentData = data.components[i];
+
+                  switch (componentData.componentType) {
+                     case ServerComponentType.statusEffect: {
+                        Player.instance.getServerComponent(ServerComponentType.statusEffect).updateFromData(componentData);
+                        break;
+                     }
+                     case ServerComponentType.tribeMember: {
+                        Player.instance.getServerComponent(ServerComponentType.tribeMember).updateFromData(componentData);
+                        break;
+                     }
+                     case ServerComponentType.inventoryUse: {
+                        let hotbarUseInfo: LimbData | undefined;
+                        for (let i = 0; i < componentData.inventoryUseInfos.length; i++) {
+                           const useInfo = componentData.inventoryUseInfos[i];
+                           if (useInfo.inventoryName === InventoryName.hotbar) {
+                              hotbarUseInfo = useInfo;
+                              break;
+                           }
+                        }
+                        if (typeof hotbarUseInfo === "undefined") {
+                           throw new Error();
+                        }
+         
+                        const inventoryUseComponent = Player.instance.getServerComponent(ServerComponentType.inventoryUse);
+                        inventoryUseComponent.getUseInfo(InventoryName.hotbar).thrownBattleaxeItemID = hotbarUseInfo.thrownBattleaxeItemID;
+                        
+                        Hotbar_updateRightThrownBattleaxeItemID(hotbarUseInfo.thrownBattleaxeItemID);
+                        
+                        break;
+                     }
                   }
                }
-               if (typeof hotbarUseInfo === "undefined") {
-                  throw new Error();
-               }
-
-               const inventoryUseComponent = Player.instance.getServerComponent(ServerComponentType.inventoryUse);
-               inventoryUseComponent.getUseInfo(InventoryName.hotbar).thrownBattleaxeItemID = hotbarUseInfo.thrownBattleaxeItemID;
-               
-               Hotbar_updateRightThrownBattleaxeItemID(hotbarUseInfo.thrownBattleaxeItemID);
 
                // @Incomplete
                // const leftThrownBattleaxeItemID = entityData.clientArgs[14] as number;
@@ -440,8 +457,8 @@ abstract class Client {
                Player.instance.collisionMask = data.collisionMask;
                
                entityDataArray.splice(i, 1);
-               break;
             }
+            break;
          }
       }
 
@@ -582,13 +599,14 @@ abstract class Client {
       return false;
    }
 
-   private static createEntityFromData(entityData: EntityData): void {
+   private static createEntityFromData(entityData: EntityData): Entity {
       // Create the entity
       const entity = createEntity(entityData);
 
       // @Cleanup: initialise the value in the constructor
       entity.renderDepth = calculateEntityRenderDepth(entity.type);
       
+      entity.createComponents(entityData.components);
       entity.callOnLoadFunctions();
       
       entity.rotation = entityData.rotation;
@@ -602,6 +620,8 @@ abstract class Client {
       if (entityData.type === EntityType.player) {
          Board.players.push(entity as Player);
       }
+
+      return entity;
    }
    
    private static registerTileUpdates(tileUpdates: ReadonlyArray<ServerTileUpdateData>): void {
@@ -663,8 +683,8 @@ abstract class Client {
       definiteGameState.setPlayerHealth(maxHealth);
       updateHealthBar(maxHealth);
       
-      const spawnPosition = Point.unpackage(respawnDataPacket.spawnPosition);
-      Player.createInstancePlayer(spawnPosition, respawnDataPacket.playerID);
+      // const spawnPosition = Point.unpackage(respawnDataPacket.spawnPosition);
+      // Player.createInstancePlayer(spawnPosition, respawnDataPacket.playerID);
 
       gameScreenSetIsDead(false);
 

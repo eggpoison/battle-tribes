@@ -1,6 +1,5 @@
-import { SlimeSpitComponentData } from "webgl-test-shared/dist/components";
-import Entity from "../Entity";
-import { SlimeSpitComponentArray } from "./ComponentArray";
+import { ServerComponentType, SlimeSpitComponentData } from "webgl-test-shared/dist/components";
+import { ComponentArray } from "./ComponentArray";
 
 export class SlimeSpitComponent {
    public readonly size: number;
@@ -10,9 +9,14 @@ export class SlimeSpitComponent {
    }
 }
 
-export function serialiseSlimeSpitComponent(slimeSpit: Entity): SlimeSpitComponentData {
-   const slimeSpitComponent = SlimeSpitComponentArray.getComponent(slimeSpit.id);
+export const SlimeSpitComponentArray = new ComponentArray<ServerComponentType.slimeSpit, SlimeSpitComponent>(true, {
+   serialise: serialise
+});
+
+function serialise(entityID: number): SlimeSpitComponentData {
+   const slimeSpitComponent = SlimeSpitComponentArray.getComponent(entityID);
    return {
+      componentType: ServerComponentType.slimeSpit,
       size: slimeSpitComponent.size
    };
 }

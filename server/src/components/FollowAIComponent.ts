@@ -1,10 +1,10 @@
-import { FollowAIComponentData } from "webgl-test-shared/dist/components";
+import { FollowAIComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
 import { Settings } from "webgl-test-shared/dist/settings";
 import Board from "../Board";
 import Entity from "../Entity";
 import { getDistanceFromPointToEntity, moveEntityToPosition, stopEntity, turnToPosition, willStopAtDesiredDistance } from "../ai-shared";
-import { FollowAIComponentArray } from "./ComponentArray";
 import { PhysicsComponentArray } from "./PhysicsComponent";
+import { ComponentArray } from "./ComponentArray";
 
 export class FollowAIComponent {
    /** ID of the followed entity */
@@ -22,6 +22,10 @@ export class FollowAIComponent {
       this.followDistance = followDistance;
    }
 }
+
+export const FollowAIComponentArray = new ComponentArray<ServerComponentType.followAI, FollowAIComponent>(true, {
+   serialise: serialise
+});
 
 export function updateFollowAIComponent(entity: Entity, visibleEntities: ReadonlyArray<Entity>, interestDuration: number): void {
    const followAIComponent = FollowAIComponentArray.getComponent(entity.id);
@@ -76,9 +80,11 @@ export function entityWantsToFollow(followAIComponent: FollowAIComponent): boole
    return followAIComponent.followCooldownTicks === 0 && Math.random() < followAIComponent.followChancePerSecond / Settings.TPS;
 }
 
-export function serialiseFollowAIComponent(entity: Entity): FollowAIComponentData {
-   const followAIComponent = FollowAIComponentArray.getComponent(entity.id);
+function serialise(entityID: number): FollowAIComponentData {
+   const followAIComponent = FollowAIComponentArray.getComponent(entityID);
+
    return {
+      componentType: ServerComponentType.followAI,
       followTargetID: followAIComponent.followTargetID,
       followCooldownTicks: followAIComponent.followCooldownTicks,
       interestTimer: followAIComponent.interestTimer

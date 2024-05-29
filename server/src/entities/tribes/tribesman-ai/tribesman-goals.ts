@@ -7,11 +7,12 @@ import { TechInfo, getTechChain } from "webgl-test-shared/dist/techs";
 import { Point } from "webgl-test-shared/dist/utils";
 import Entity from "../../../Entity";
 import { craftingStationExists, getBestHammerItemSlot } from "./tribesman-ai";
-import { TribeComponentArray, TribesmanComponentArray } from "../../../components/ComponentArray";
 import { InventoryComponentArray, getInventory, getItemTypeSlot, inventoryComponentCanAffordRecipe, inventoryHasItemType, tallyInventoryComponentItems } from "../../../components/InventoryComponent";
 import Tribe, { BuildingPlan, BuildingPlanType, BuildingUpgradePlan, NewBuildingPlan } from "../../../Tribe";
 import { createBuildingHitboxes } from "../../../buildings";
 import { generateBuildingPosition } from "../../../ai-tribe-building/ai-building-plans";
+import { TribeComponentArray } from "../../../components/TribeComponent";
+import { TribesmanAIComponentArray } from "../../../components/TribesmanAIComponent";
 
 // @Cleanup: can this be inferred from stuff like the entity->resource-dropped record?
 const TOOL_TYPE_FOR_MATERIAL_RECORD: Record<ItemType, ToolType | null> = {
@@ -428,7 +429,7 @@ const createBuildingPlaceGoal = (goals: Array<TribesmanGoal>, tribesman: Entity,
       return;
    }
       
-   const tribesmanComponent = TribesmanComponentArray.getComponent(tribesman.id);
+   const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman.id);
 
    let plan: NewBuildingPlan;
 

@@ -116,6 +116,9 @@ abstract class Game {
    private static timeData = new Float32Array(4);
    private static timeBuffer: WebGLBuffer;
 
+   // @Hack @Cleanup
+   public static playerID: number;
+   
    public static setGameObjectDebugData(entityDebugData: EntityDebugData | undefined): void {
       if (typeof entityDebugData === "undefined") {
          this.entityDebugData = null;

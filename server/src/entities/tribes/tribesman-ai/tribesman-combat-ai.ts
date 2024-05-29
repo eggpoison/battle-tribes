@@ -7,15 +7,14 @@ import { Point, distance } from "webgl-test-shared/dist/utils";
 import Board from "../../../Board";
 import Entity from "../../../Entity";
 import { getDistanceFromPointToEntity, stopEntity, entityIsInLineOfSight, willStopAtDesiredDistance } from "../../../ai-shared";
-import { InventoryUseComponentArray, TribesmanComponentArray, TribeComponentArray } from "../../../components/ComponentArray";
 import { InventoryComponentArray, getInventory } from "../../../components/InventoryComponent";
-import { getInventoryUseInfo, setLimbActions } from "../../../components/InventoryUseComponent";
+import { InventoryUseComponentArray, getInventoryUseInfo, setLimbActions } from "../../../components/InventoryUseComponent";
 import { PhysicsComponentArray } from "../../../components/PhysicsComponent";
-import { TribesmanPathType } from "../../../components/TribesmanAIComponent";
+import { TribesmanAIComponentArray, TribesmanPathType } from "../../../components/TribesmanAIComponent";
 import { PathfindFailureDefault } from "../../../pathfinding";
 import { attemptAttack, calculateAttackTarget, calculateItemDamage, calculateRadialAttackTargets, useItem } from "../tribe-member";
 import { TRIBESMAN_TURN_SPEED, attemptToRepairBuildings, clearTribesmanPath, getBestHammerItemSlot, getTribesmanAttackOffset, getTribesmanAttackRadius, getTribesmanDesiredAttackRange, getTribesmanRadius, getTribesmanSlowAcceleration, pathToEntityExists, pathfindToPosition } from "./tribesman-ai";
-import { EntityRelationship } from "../../../components/TribeComponent";
+import { EntityRelationship, TribeComponentArray } from "../../../components/TribeComponent";
 import { getItemAttackCooldown } from "../../../items";
 import { calculateAttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
 
@@ -197,14 +196,14 @@ export function huntEntity(tribesman: Entity, huntedEntity: Entity, isAggressive
             hotbarUseInfo.action = LimbAction.chargeSpear;
          }
 
-         const tribesmanComponent = TribesmanComponentArray.getComponent(tribesman.id);
+         const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman.id);
          tribesmanComponent.currentAIType = TribesmanAIType.attacking;
          return;
       }
       
       // Don't do a melee attack if using a bow, instead charge the bow
       if (weaponCategory === "bow") {
-         const tribesmanComponent = TribesmanComponentArray.getComponent(tribesman.id);
+         const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman.id);
          tribesmanComponent.currentAIType = TribesmanAIType.attacking;
 
          const tribeComponent = TribeComponentArray.getComponent(tribesman.id);
@@ -313,7 +312,7 @@ export function huntEntity(tribesman: Entity, huntedEntity: Entity, isAggressive
                setLimbActions(inventoryUseComponent, LimbAction.chargeBattleaxe);
             }
             
-            const tribesmanComponent = TribesmanComponentArray.getComponent(tribesman.id);
+            const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman.id);
             tribesmanComponent.currentAIType = TribesmanAIType.attacking;
 
             clearTribesmanPath(tribesman);
@@ -340,7 +339,7 @@ export function huntEntity(tribesman: Entity, huntedEntity: Entity, isAggressive
          }
       }
    } else {
-      const tribesmanComponent = TribesmanComponentArray.getComponent(tribesman.id);
+      const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman.id);
       if (tribesmanComponent.currentAIType === TribesmanAIType.repairing) {
          const isRepairing = attemptToRepairBuildings(tribesman);
          if (isRepairing) {
@@ -380,6 +379,6 @@ export function huntEntity(tribesman: Entity, huntedEntity: Entity, isAggressive
 
    setLimbActions(inventoryUseComponent, LimbAction.none);
 
-   const tribesmanComponent = TribesmanComponentArray.getComponent(tribesman.id);
+   const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman.id);
    tribesmanComponent.currentAIType = TribesmanAIType.attacking;
 }

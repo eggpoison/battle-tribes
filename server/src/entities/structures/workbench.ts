@@ -4,14 +4,15 @@ import { EntityType } from "webgl-test-shared/dist/entities";
 import { Point } from "webgl-test-shared/dist/utils";
 import Entity from "../../Entity";
 import RectangularHitbox from "../../hitboxes/RectangularHitbox";
-import { HealthComponentArray, TribeComponentArray } from "../../components/ComponentArray";
-import { HealthComponent } from "../../components/HealthComponent";
+import { HealthComponent, HealthComponentArray } from "../../components/HealthComponent";
 import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
 import Tribe from "../../Tribe";
-import { TribeComponent } from "../../components/TribeComponent";
+import { TribeComponent, TribeComponentArray } from "../../components/TribeComponent";
 import { StructureComponent, StructureComponentArray } from "../../components/StructureComponent";
 import { StructureConnectionInfo } from "webgl-test-shared/dist/structures";
 import { Hitbox } from "../../hitboxes/hitboxes";
+import { CraftingStationComponent, CraftingStationComponentArray } from "../../components/CraftingStationComponent";
+import { CraftingStation } from "webgl-test-shared/dist/crafting-recipes";
 
 export const HITBOX_SIZE = 80;
 
@@ -33,6 +34,7 @@ export function createWorkbench(position: Point, rotation: number, tribe: Tribe,
    StatusEffectComponentArray.addComponent(workbench.id, new StatusEffectComponent(0));
    StructureComponentArray.addComponent(workbench.id, new StructureComponent(connectionInfo));
    TribeComponentArray.addComponent(workbench.id, new TribeComponent(tribe));
+   CraftingStationComponentArray.addComponent(workbench.id, new CraftingStationComponent(CraftingStation.workbench));
 
    return workbench;
 }

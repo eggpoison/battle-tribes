@@ -1,6 +1,6 @@
 import { DeathInfo, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
 import Entity from "./Entity";
-import { PlayerComponentArray } from "./components/ComponentArray";
+import { PlayerComponentArray } from "./components/PlayerComponent";
 
 abstract class TombstoneDeathManager {
    private static readonly MAX_TRACKED_DEATHS = 100;

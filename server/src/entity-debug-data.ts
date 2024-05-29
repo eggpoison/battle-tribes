@@ -4,11 +4,12 @@ import { EntityTypeString } from "webgl-test-shared/dist/entities";
 import { ITEM_INFO_RECORD, PlaceableItemInfo, ItemTypeString } from "webgl-test-shared/dist/items";
 import { getTechByID } from "webgl-test-shared/dist/techs";
 import Entity from "./Entity";
-import { TribeComponentArray, TribesmanComponentArray } from "./components/ComponentArray";
 import { TRIBESMAN_COMMUNICATION_RANGE, getTribesmanVisionRange } from "./entities/tribes/tribesman-ai/tribesman-ai";
 import { TribesmanGoalType } from "./entities/tribes/tribesman-ai/tribesman-goals";
 import Board from "./Board";
 import { StructureComponentArray } from "./components/StructureComponent";
+import { TribeComponentArray } from "./components/TribeComponent";
+import { TribesmanAIComponentArray } from "./components/TribesmanAIComponent";
 
 export function getEntityDebugData(entity: Entity): EntityDebugData {
    const lines = new Array<LineDebugData>();
@@ -17,8 +18,8 @@ export function getEntityDebugData(entity: Entity): EntityDebugData {
    const debugEntries = new Array<string>();
    let pathData: PathData | undefined;
 
-   if (TribesmanComponentArray.hasComponent(entity.id)) {
-      const tribesmanComponent = TribesmanComponentArray.getComponent(entity.id);
+   if (TribesmanAIComponentArray.hasComponent(entity.id)) {
+      const tribesmanComponent = TribesmanAIComponentArray.getComponent(entity.id);
 
       debugEntries.push("Current AI type: " + TribesmanAIType[tribesmanComponent.currentAIType]);
       

@@ -1,28 +1,10 @@
-import { EntityType, EntityTypeString } from "webgl-test-shared/dist/entities";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { rotateXAroundOrigin, rotateXAroundPoint, rotateYAroundOrigin, rotateYAroundPoint } from "webgl-test-shared/dist/utils";
 import Board from "../Board";
-import { getHighlightedEntityID } from "../entity-selection";
-import { createWebGLProgram, gl, CAMERA_UNIFORM_BUFFER_BINDING_INDEX, TIME_UNIFORM_BUFFER_BINDING_INDEX, windowWidth, windowHeight, createTexture } from "../webgl";
+import { getHighlightedEntityID, getSelectedEntityID } from "../entity-selection";
+import { createWebGLProgram, gl, CAMERA_UNIFORM_BUFFER_BINDING_INDEX, windowWidth, windowHeight, createTexture, TIME_UNIFORM_BUFFER_BINDING_INDEX } from "../webgl";
 import Entity from "../Entity";
-import { BALLISTA_AMMO_BOX_OFFSET_X, BALLISTA_AMMO_BOX_OFFSET_Y } from "../utils";
-import { playerIsHoldingHammer } from "../game-state/game-states";
-import { getTunnelDoorInfo } from "../entity-components/TunnelComponent";
-import { getFenceGateDoorInfo } from "../entity-components/FenceGateComponent";
 import { getTextureWidth, getTextureHeight, ENTITY_TEXTURE_ATLAS_LENGTH, ENTITY_TEXTURE_ATLAS_SIZE, ENTITY_TEXTURE_SLOT_INDEXES, ENTITY_TEXTURE_ATLAS } from "../texture-atlases/entity-texture-atlas";
 import { ATLAS_SLOT_SIZE } from "../texture-atlases/texture-atlas-stitching";
-
-interface HighlightInfo {
-   readonly width: number;
-   readonly height: number;
-   readonly isCircle: boolean;
-   readonly xOffset: number;
-   readonly yOffset: number;
-   readonly rotation: number;
-   readonly group: number;
-}
-
-type HighlightInfoGroup = ReadonlyArray<HighlightInfo>;
 
 let framebufferProgram: WebGLProgram;
 let renderProgram: WebGLProgram;
@@ -34,328 +16,6 @@ let lastTextureWidth = 0;
 let lastTextureHeight = 0;
 
 let framebufferVertexData: Float32Array;
-
-const getEntityHighlightInfoArray = (entity: Entity): ReadonlyArray<HighlightInfoGroup> => {
-   switch (entity.type) {
-      case EntityType.wall: return [
-         [{
-            width: 64,
-            height: 64,
-            isCircle: false,
-            xOffset: 0,
-            yOffset: 0,
-            rotation: 0,
-            group: 0
-         }]
-      ];
-      case EntityType.door: return [
-         [{
-            width: 64,
-            height: 24,
-            isCircle: false,
-            xOffset: 0,
-            yOffset: 0,
-            rotation: 0,
-            group: 0
-         }]
-      ];
-      case EntityType.researchBench: return [
-         [{
-            width: 32 * 4,
-            height: 20 * 4,
-            isCircle: false,
-            xOffset: 0,
-            yOffset: 0,
-            rotation: 0,
-            group: 0
-         }]
-      ];
-      case EntityType.barrel: return [
-         [{
-            width: 80,
-            height: 80,
-            isCircle: true,
-            xOffset: 0,
-            yOffset: 0,
-            rotation: 0,
-            group: 0
-         }]
-      ];
-      case EntityType.tribeWorker: return [
-         [{
-            width: 56,
-            height: 56,
-            isCircle: true,
-            xOffset: 0,
-            yOffset: 0,
-            rotation: 0,
-            group: 0
-         }]
-      ];
-      case EntityType.tribeWarrior: return [
-         [{
-            width: 64,
-            height: 64,
-            isCircle: true,
-            xOffset: 0,
-            yOffset: 0,
-            rotation: 0,
-            group: 0
-         }]
-      ];
-      case EntityType.campfire: return [
-         [{
-            width: 90,
-            height: 90,
-            isCircle: true,
-            xOffset: 0,
-            yOffset: 0,
-            rotation: 0,
-            group: 0
-         }]
-      ];
-      case EntityType.furnace: return [
-         [{
-            width: 80,
-            height: 80,
-            isCircle: false,
-            xOffset: 0,
-            yOffset: 0,
-            rotation: 0,
-            group: 0
-         }]
-      ];
-      case EntityType.ballista: return [
-         [{
-            width: 44,
-            height: 36,
-            isCircle: false,
-            xOffset: BALLISTA_AMMO_BOX_OFFSET_X,
-            yOffset: BALLISTA_AMMO_BOX_OFFSET_Y,
-            rotation: Math.PI / 2,
-            group: 0
-         }]
-      ];
-      case EntityType.tunnel: {
-         const highlightInfoArray = new Array<HighlightInfoGroup>();
-         
-         // If holding a hammer, can manipulate the tunne;
-         if (playerIsHoldingHammer()) {
-            highlightInfoArray.push(
-               [{
-                  width: 16,
-                  height: 64,
-                  isCircle: false,
-                  xOffset: -24,
-                  yOffset: 0,
-                  rotation: 0,
-                  group: 0
-               },
-               {
-                  width: 16,
-                  height: 64,
-                  isCircle: false,
-                  xOffset: 24,
-                  yOffset: 0,
-                  rotation: 0,
-                  group: 0
-               }]
-            );
-         }
-
-         // @Incomplete: the positions of these highlights are a bit incorrect
-         const tunnelComponent = entity.getServerComponent(ServerComponentType.tunnel);
-         if (tunnelComponent.hasTopDoor()) {
-            const doorInfo = getTunnelDoorInfo(0b01, tunnelComponent.topDoorOpenProgress);
-            highlightInfoArray.push([{
-               width: 48,
-               height: 16,
-               isCircle: false,
-               xOffset: doorInfo.offsetX - 2 * Math.sin(doorInfo.rotation + entity.rotation),
-               yOffset: doorInfo.offsetY - 2 * Math.sin(doorInfo.rotation + entity.rotation),
-               rotation: doorInfo.rotation,
-               group: 1
-            }]);
-         }
-         if (tunnelComponent.hasBottomDoor()) {
-            const doorInfo = getTunnelDoorInfo(0b10, tunnelComponent.bottomDoorOpenProgress);
-            highlightInfoArray.push([{
-               width: 48,
-               height: 16,
-               isCircle: false,
-               xOffset: doorInfo.offsetX - 2 * Math.sin(doorInfo.rotation + entity.rotation),
-               yOffset: doorInfo.offsetY - 2 * Math.sin(doorInfo.rotation + entity.rotation),
-               rotation: doorInfo.rotation,
-               group: 2
-            }]);
-         }
-            
-         return highlightInfoArray;
-      }
-      case EntityType.embrasure: return [
-         [{
-            width: 64,
-            height: 20,
-            isCircle: false,
-            xOffset: 0,
-            yOffset: 0,
-            rotation: 0,
-            group: 0
-         }],
-      ];
-      case EntityType.floorSpikes: return [
-         [{
-            width: 56,
-            height: 56,
-            isCircle: false,
-            xOffset: 0,
-            yOffset: 0,
-            rotation: 0,
-            group: 0
-         }],
-      ];
-      case EntityType.wallSpikes: return [
-         [{
-            width: 68,
-            height: 28,
-            isCircle: false,
-            xOffset: 0,
-            yOffset: 0,
-            rotation: 0,
-            group: 0
-         }],
-      ];
-      case EntityType.floorPunjiSticks: return [
-         [{
-            width: 56,
-            height: 56,
-            isCircle: false,
-            xOffset: 0,
-            yOffset: 0,
-            rotation: 0,
-            group: 0
-         }],
-      ];
-      case EntityType.wallPunjiSticks: return [
-         [{
-            width: 68,
-            height: 32,
-            isCircle: false,
-            xOffset: 0,
-            yOffset: 0,
-            rotation: 0,
-            group: 0
-         }],
-      ];
-      case EntityType.slingTurret: return [
-         [{
-            width: 64,
-            height: 64,
-            isCircle: true,
-            xOffset: 0,
-            yOffset: 0,
-            rotation: 0,
-            group: 0
-         }],
-      ];
-      case EntityType.workerHut: return [
-         [{
-            width: 88,
-            height: 88,
-            isCircle: false,
-            xOffset: 0,
-            yOffset: 0,
-            rotation: 0,
-            group: 0
-         }]
-      ];
-      case EntityType.warriorHut: return [
-         [{
-            width: 104,
-            height: 104,
-            isCircle: false,
-            xOffset: 0,
-            yOffset: 0,
-            rotation: 0,
-            group: 0
-         }]
-      ];
-      case EntityType.planterBox: return [
-         [{
-            width: 80,
-            height: 80,
-            isCircle: false,
-            xOffset: 0,
-            yOffset: 0,
-            rotation: 0,
-            group: 0
-         }]
-      ];
-      case EntityType.fence: return [
-         [{
-            width: 24,
-            height: 24,
-            isCircle: false,
-            xOffset: 0,
-            yOffset: 0,
-            rotation: 0,
-            group: 0
-         }]
-      ];
-      case EntityType.fenceGate: {
-         const fenceGateComponent = entity.getServerComponent(ServerComponentType.fenceGate);
-         const doorInfo = getFenceGateDoorInfo(fenceGateComponent.openProgress);
-         return [
-            [{
-               width: 52,
-               height: 16,
-               isCircle: false,
-               // @Hack
-               xOffset: doorInfo.offsetX - 2 * Math.sin(doorInfo.rotation + entity.rotation),
-               yOffset: doorInfo.offsetY - 2 * Math.sin(doorInfo.rotation + entity.rotation),
-               rotation: doorInfo.rotation,
-               group: 0
-            }]
-         ];
-      }
-      case EntityType.workbench: return [
-         [{
-            width: 80,
-            height: 80,
-            isCircle: false,
-            xOffset: 0,
-            yOffset: 0,
-            rotation: 0,
-            group: 0
-         }]
-      ];
-      case EntityType.frostshaper: return [
-         [{
-            width: 120,
-            height: 80,
-            isCircle: false,
-            xOffset: 0,
-            yOffset: 0,
-            rotation: 0,
-            group: 0
-         }]
-      ];
-      case EntityType.stonecarvingTable: return [
-         [{
-            width: 120,
-            height: 80,
-            isCircle: false,
-            xOffset: 0,
-            yOffset: 0,
-            rotation: 0,
-            group: 0
-         }]
-      ];
-   }
-
-   console.warn("No highlight info for entity type " + EntityTypeString[entity.type]);
-   return [];
-}
 
 // @Incomplete
 
@@ -442,12 +102,6 @@ export function createStructureHighlightShaders(): void {
    const framebufferFragmentShaderText = `#version 300 es
    precision mediump float;
    
-   layout(std140) uniform Time {
-      uniform float u_time;
-   };
-   
-   #define PI 3.14159265358979323846
-
    // @Cleanup: Copy and paste from game-object-rendering.ts, make into UBO
    uniform sampler2D u_textureAtlas;
    uniform float u_atlasPixelSize;
@@ -462,11 +116,6 @@ export function createStructureHighlightShaders(): void {
    in float v_lightness;
    
    out vec4 outputColour;
-
-   float atan2(in float y, in float x) {
-      bool s = (abs(x) > abs(y));
-      return mix(PI/2.0 - atan(x,y), atan(y,x), s);
-   }
    
    void main() {
 
@@ -527,32 +176,41 @@ export function createStructureHighlightShaders(): void {
       uniform vec2 u_halfWindowSize;
       uniform float u_zoom;
    };
+   
+   layout(std140) uniform Time {
+      uniform float u_time;
+   };
+
+   #define PI 3.14159265358979323846
 
    uniform sampler2D u_framebufferTexure;
    uniform float u_isSelected;
+   uniform vec2 u_originPosition;
 
    in vec2 v_position;
    in vec2 v_texCoord;
 
    out vec4 outputColour;
 
-   void main() {
-      // @Incomplete
-      // if (u_isSelected > 0.5) {
-      //    outputColour = vec4(245.0/255.0, 234.0/255.0, 113.0/255.0, 1.0);
-      // } else {
-      //    float theta = atan2(v_position.y - u_originPosition.y, v_position.x - u_originPosition.x);
-   
-      //    float opacity = sin(theta * 3.0 + u_time * 0.003);
-      //    opacity = mix(0.65, 1.0, opacity);
-   
-      //    outputColour = vec4(245.0/255.0, 234.0/255.0, 113.0/255.0, opacity);
-      // }
+   float atan2(in float y, in float x) {
+      bool s = (abs(x) > abs(y));
+      return mix(PI/2.0 - atan(x,y), atan(y,x), s);
+   }
 
+   void main() {
       vec4 framebufferColour = texture(u_framebufferTexure, v_texCoord);
       
       if (framebufferColour.r > 0.5) {
-         outputColour = vec4(1.0, 1.0, 1.0, 1.0);
+         if (u_isSelected > 0.5) {
+            outputColour = vec4(245.0/255.0, 234.0/255.0, 113.0/255.0, 1.0);
+         } else {
+            float theta = atan2(v_position.y - u_originPosition.y, v_position.x - u_originPosition.x);
+      
+            float opacity = sin(theta * 3.0 + u_time * 0.003);
+            opacity = mix(0.65, 1.0, opacity);
+      
+            outputColour = vec4(245.0/255.0, 234.0/255.0, 113.0/255.0, opacity);
+         }
       } else {
          // Transparent
          outputColour = vec4(0.0, 0.0, 0.0, 0.0);
@@ -564,8 +222,6 @@ export function createStructureHighlightShaders(): void {
 
    const cameraBlockIndex = gl.getUniformBlockIndex(framebufferProgram, "Camera");
    gl.uniformBlockBinding(framebufferProgram, cameraBlockIndex, CAMERA_UNIFORM_BUFFER_BINDING_INDEX);
-
-   originPositionUniformLocation = gl.getUniformLocation(framebufferProgram, "u_originPosition")!;
 
    // @Cleanup: Copy and paste
 
@@ -602,6 +258,9 @@ export function createStructureHighlightShaders(): void {
    {
       const cameraBlockIndex = gl.getUniformBlockIndex(renderProgram, "Camera");
       gl.uniformBlockBinding(renderProgram, cameraBlockIndex, CAMERA_UNIFORM_BUFFER_BINDING_INDEX);
+
+      const timeBlockIndex = gl.getUniformBlockIndex(renderProgram, "Time");
+      gl.uniformBlockBinding(renderProgram, timeBlockIndex, TIME_UNIFORM_BUFFER_BINDING_INDEX);
    }
 
    const framebufferTextureUniformLocation = gl.getUniformLocation(renderProgram, "u_framebufferTexture")!;
@@ -609,7 +268,8 @@ export function createStructureHighlightShaders(): void {
    gl.useProgram(renderProgram);
    gl.uniform1i(framebufferTextureUniformLocation, 0);
    
-   isSelectedUniformLocation = gl.getUniformLocation(framebufferProgram, "u_isSelected")!;
+   isSelectedUniformLocation = gl.getUniformLocation(renderProgram, "u_isSelected")!;
+   originPositionUniformLocation = gl.getUniformLocation(renderProgram, "u_originPosition")!;
 
    // Misc
    
@@ -817,10 +477,6 @@ export function renderEntitySelection(): void {
    gl.enableVertexAttribArray(3);
    gl.enableVertexAttribArray(4);
 
-   // gl.uniform2f(originPositionUniformLocation, highlightedEntity.position.x, highlightedEntity.position.y);
-
-   // gl.uniform1f(isSelectedUniformLocation, highlightedStructureID === getSelectedEntityID() ? 1 : 0);
-
    // Bind texture atlas
    gl.activeTexture(gl.TEXTURE0);
    gl.bindTexture(gl.TEXTURE_2D, ENTITY_TEXTURE_ATLAS);
@@ -847,6 +503,9 @@ export function renderEntitySelection(): void {
    gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 2 * Float32Array.BYTES_PER_ELEMENT, 0);
 
    gl.enableVertexAttribArray(0);
+   
+   gl.uniform1f(isSelectedUniformLocation, highlightedStructureID === getSelectedEntityID() ? 1 : 0);
+   gl.uniform2f(originPositionUniformLocation, highlightedEntity.renderPosition.x, highlightedEntity.renderPosition.y);
 
    gl.activeTexture(gl.TEXTURE0);
    gl.bindTexture(gl.TEXTURE_2D, frameBufferTexture);

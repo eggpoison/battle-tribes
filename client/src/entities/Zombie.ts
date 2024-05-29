@@ -1,4 +1,4 @@
-import { EntityComponentsData, ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { Point, angle, randFloat, randInt } from "webgl-test-shared/dist/utils";
 import { HitData } from "webgl-test-shared/dist/client-server-types";
@@ -7,15 +7,7 @@ import RenderPart from "../render-parts/RenderPart";
 import { BloodParticleSize, createBloodParticle, createBloodParticleFountain, createBloodPoolParticle } from "../particles";
 import { getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
 import { AudioFilePath, playSound } from "../sound";
-import Entity from "../Entity";
-import ZombieComponent from "../entity-components/ZombieComponent";
-import StatusEffectComponent from "../entity-components/StatusEffectComponent";
-import HealthComponent from "../entity-components/HealthComponent";
-import PhysicsComponent from "../entity-components/PhysicsComponent";
-import InventoryUseComponent from "../entity-components/InventoryUseComponent";
-import { ClientComponentType } from "../entity-components/components";
-import FootprintComponent from "../entity-components/FootprintComponent";
-import InventoryComponent from "../entity-components/InventoryComponent";
+import Entity, { ComponentDataRecord } from "../Entity";
 
 const ZOMBIE_TEXTURE_SOURCES: ReadonlyArray<string> = ["entities/zombie/zombie1.png", "entities/zombie/zombie2.png", "entities/zombie/zombie3.png", "entities/zombie/zombie-golden.png"];
 const ZOMBIE_HAND_TEXTURE_SOURCES: ReadonlyArray<string> = ["entities/zombie/fist-1.png", "entities/zombie/fist-2.png", "entities/zombie/fist-3.png", "entities/zombie/fist-4.png"];
@@ -29,10 +21,10 @@ class Zombie extends Entity {
    
    private static readonly BLOOD_FOUNTAIN_INTERVAL = 0.1;
 
-   constructor(position: Point, id: number, ageTicks: number, componentsData: EntityComponentsData<EntityType.zombie>) {
+   constructor(position: Point, id: number, ageTicks: number, componentDataRecord: ComponentDataRecord) {
       super(position, id, EntityType.zombie, ageTicks);
 
-      const zombieComponentData = componentsData[3];
+      const zombieComponentData = componentDataRecord[ServerComponentType.zombie]!;
 
       // Body render part
       this.attachRenderPart(
@@ -57,14 +49,6 @@ class Zombie extends Entity {
          this.attachRenderPart(renderPart);
          handRenderParts.push(renderPart);
       }
-
-      this.addServerComponent(ServerComponentType.physics, new PhysicsComponent(this, componentsData[0]));
-      this.addServerComponent(ServerComponentType.health, new HealthComponent(this, componentsData[1]));
-      this.addServerComponent(ServerComponentType.statusEffect, new StatusEffectComponent(this, componentsData[2]));
-      this.addServerComponent(ServerComponentType.zombie, new ZombieComponent(this, zombieComponentData));
-      this.addServerComponent(ServerComponentType.inventory, new InventoryComponent(this, componentsData[6]));
-      this.addServerComponent(ServerComponentType.inventoryUse, new InventoryUseComponent(this, componentsData[7], handRenderParts));
-      this.addClientComponent(ClientComponentType.footprint, new FootprintComponent(this, 0.3, 20, 64, 4, 45));
    }
 
    public tick(): void {

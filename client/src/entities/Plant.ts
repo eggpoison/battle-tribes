@@ -1,11 +1,8 @@
 import { Point, angle, randFloat, randInt, randItem } from "webgl-test-shared/dist/utils";
-import { EntityComponentsData, PlanterBoxPlant, ServerComponentType } from "webgl-test-shared/dist/components";
+import { PlanterBoxPlant, ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { HitData, HitFlags } from "webgl-test-shared/dist/client-server-types";
-import HealthComponent from "../entity-components/HealthComponent";
-import StatusEffectComponent from "../entity-components/StatusEffectComponent";
 import Entity from "../Entity";
-import PlantComponent from "../entity-components/PlantComponent";
 import { LeafParticleSize, createDirtParticle, createLeafParticle, createLeafSpeckParticle, createWoodSpeckParticle } from "../particles";
 import Tree, { TREE_DESTROY_SOUNDS, TREE_HIT_SOUNDS } from "./Tree";
 import { playSound, AudioFilePath } from "../sound";
@@ -14,12 +11,8 @@ import { ParticleRenderLayer } from "../rendering/particle-rendering";
 class Plant extends Entity {
    public static readonly SIZE = 80;
 
-   constructor(position: Point, id: number, ageTicks: number, componentsData: EntityComponentsData<EntityType.plant>) {
+   constructor(position: Point, id: number, ageTicks: number) {
       super(position, id, EntityType.plant, ageTicks);
-
-      this.addServerComponent(ServerComponentType.health, new HealthComponent(this, componentsData[0]));
-      this.addServerComponent(ServerComponentType.statusEffect, new StatusEffectComponent(this, componentsData[1]));
-      this.addServerComponent(ServerComponentType.plant, new PlantComponent(this, componentsData[2]));
 
       if (this.ageTicks <= 1) {
          // Create dirt particles

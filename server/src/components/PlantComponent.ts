@@ -1,4 +1,4 @@
-import { PlanterBoxPlant, PlantComponentData } from "webgl-test-shared/dist/components";
+import { PlanterBoxPlant, PlantComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
 import { Settings } from "webgl-test-shared/dist/settings";
 import Entity from "../Entity";
 import { ComponentArray } from "./ComponentArray";
@@ -30,9 +30,12 @@ export class PlantComponent {
    }
 }
 
-export const PlantComponentArray = new ComponentArray<PlantComponent>(true, undefined, onPlantRemove);
+export const PlantComponentArray = new ComponentArray<ServerComponentType.plant, PlantComponent>(true, {
+   onRemove: onRemove,
+   serialise: serialise
+});
 
-export function onPlantRemove(entityID: number): void {
+function onRemove(entityID: number): void {
    // Register in the planter box that the plant has been removed
    const plantComponent = PlantComponentArray.getComponent(entityID);
 
@@ -88,8 +91,8 @@ export function plantIsFullyGrown(plantComponent: PlantComponent): boolean {
    return plantComponent.plantGrowthTicks === ticksToGrow;
 }
 
-export function serialisePlantComponent(entity: Entity): PlantComponentData {
-   const plantComponent = PlantComponentArray.getComponent(entity.id);
+function serialise(entityID: number): PlantComponentData {
+   const plantComponent = PlantComponentArray.getComponent(entityID);
 
    let growthProgress: number;
    if (plantComponent.plantType !== null) {
@@ -99,6 +102,7 @@ export function serialisePlantComponent(entity: Entity): PlantComponentData {
    }
    
    return {
+      componentType: ServerComponentType.plant,
       plant: plantComponent.plantType,
       plantGrowthProgress: growthProgress,
       numFruit: plantComponent.numFruit

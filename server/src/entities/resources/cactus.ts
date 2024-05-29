@@ -1,17 +1,14 @@
 import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
-import { CactusComponentData } from "webgl-test-shared/dist/components";
 import { CactusBodyFlowerData, CactusLimbData, CactusLimbFlowerData, EntityType, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
 import { ItemType } from "webgl-test-shared/dist/items";
 import { randInt, lerp, randFloat, Point } from "webgl-test-shared/dist/utils";
 import Entity from "../../Entity";
 import CircularHitbox from "../../hitboxes/CircularHitbox";
-import { CactusComponentArray, HealthComponentArray } from "../../components/ComponentArray";
-import { HealthComponent, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
+import { HealthComponent, HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
 import { createItemsOverEntity } from "../../entity-shared";
-import { CactusComponent } from "../../components/CactusComponent";
+import { CactusComponent, CactusComponentArray } from "../../components/CactusComponent";
 import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
-import { SERVER } from "../../server/server";
 import { applyKnockback } from "../../components/PhysicsComponent";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
 
@@ -122,12 +119,4 @@ export function onCactusCollision(cactus: Entity, collidingEntity: Entity, colli
 
 export function onCactusDeath(cactus: Entity): void {
    createItemsOverEntity(cactus, ItemType.cactus_spine, randInt(2, 5), 40);
-}
-
-export function serialiseCactusComponent(cactus: Entity): CactusComponentData {
-   const cactusComponent = CactusComponentArray.getComponent(cactus.id);
-   return {
-      flowers: cactusComponent.flowers,
-      limbs: cactusComponent.limbs
-   };
 }

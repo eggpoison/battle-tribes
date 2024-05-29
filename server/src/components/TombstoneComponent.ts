@@ -1,8 +1,7 @@
-import { TombstoneComponentData } from "webgl-test-shared/dist/components";
+import { ServerComponentType, TombstoneComponentData } from "webgl-test-shared/dist/components";
 import { DeathInfo } from "webgl-test-shared/dist/entities";
-import Entity from "../Entity";
-import { TombstoneComponentArray } from "./ComponentArray";
 import { getZombieSpawnProgress } from "../entities/tombstone";
+import { ComponentArray } from "./ComponentArray";
 
 export class TombstoneComponent {
    public readonly tombstoneType: number;
@@ -23,9 +22,14 @@ export class TombstoneComponent {
    }
 }
 
-export function serialiseTombstoneComponent(entity: Entity): TombstoneComponentData {
-   const tombstoneComponent = TombstoneComponentArray.getComponent(entity.id);
+export const TombstoneComponentArray = new ComponentArray<ServerComponentType.tombstone, TombstoneComponent>(true, {
+   serialise: serialise
+});
+
+function serialise(entityID: number): TombstoneComponentData {
+   const tombstoneComponent = TombstoneComponentArray.getComponent(entityID);
    return {
+      componentType: ServerComponentType.tombstone,
       tombstoneType: tombstoneComponent.tombstoneType,
       zombieSpawnProgress: getZombieSpawnProgress(tombstoneComponent),
       zombieSpawnX: tombstoneComponent.zombieSpawnPositionX,

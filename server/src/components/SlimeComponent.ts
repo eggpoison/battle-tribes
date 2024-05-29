@@ -1,9 +1,8 @@
-import { SlimeComponentData } from "webgl-test-shared/dist/components";
+import { ServerComponentType, SlimeComponentData } from "webgl-test-shared/dist/components";
 import { SlimeSize } from "webgl-test-shared/dist/entities";
 import { SLIME_MERGE_TIME, SPIT_CHARGE_TIME_TICKS, SPIT_COOLDOWN_TICKS, SlimeEntityAnger } from "../entities/mobs/slime";
 import Board from "../Board";
-import { SlimeComponentArray } from "./ComponentArray";
-import Entity from "../Entity";
+import { ComponentArray } from "./ComponentArray";
 
 export class SlimeComponent {
    public readonly size: SlimeSize;
@@ -29,8 +28,12 @@ export class SlimeComponent {
    }
 }
 
-export function serialiseSlimeComponent(slime: Entity): SlimeComponentData {
-   const slimeComponent = SlimeComponentArray.getComponent(slime.id);
+export const SlimeComponentArray = new ComponentArray<ServerComponentType.slime, SlimeComponent>(true, {
+   serialise: serialise
+});
+
+function serialise(entityID: number): SlimeComponentData {
+   const slimeComponent = SlimeComponentArray.getComponent(entityID);
 
    let anger = -1;
    if (slimeComponent.angeredEntities.length > 0) {
@@ -45,6 +48,7 @@ export function serialiseSlimeComponent(slime: Entity): SlimeComponentData {
    const spitChargeProgress = slimeComponent.spitChargeTicks >= SPIT_COOLDOWN_TICKS ? (slimeComponent.spitChargeTicks - SPIT_COOLDOWN_TICKS) / (SPIT_CHARGE_TIME_TICKS - SPIT_COOLDOWN_TICKS) : -1;
 
    return {
+      componentType: ServerComponentType.slime,
       size: slimeComponent.size,
       eyeRotation: slimeComponent.eyeRotation,
       orbSizes: slimeComponent.orbSizes,

@@ -1581,3 +1581,55 @@ export function createGrowthParticle(x: number, y: number): void {
    );
    Board.highMonocolourParticles.push(particle);
 }
+
+const createFrozenYetiBloodParticle = (size: BloodParticleSize, spawnPositionX: number, spawnPositionY: number, moveDirection: number, moveSpeed: number, hasDrag: boolean, extraVelocityX: number, extraVelocityY: number): void => {
+   const lifetime = randFloat(0.3, 0.4);
+   
+   const pixelSize = size === BloodParticleSize.large ? 8 : 4;
+
+   const velocityX = moveSpeed * Math.sin(moveDirection) + extraVelocityX;
+   const velocityY = moveSpeed * Math.cos(moveDirection) + extraVelocityY;
+
+   const friction = hasDrag ? moveSpeed / lifetime / 1.2 : 0;
+
+   const particle = new Particle(lifetime);
+   particle.getOpacity = (): number => {
+      return 1 - particle.age / lifetime;
+   };
+
+   let r = 90/255;
+   let g = 159/255;
+   let b = 205/255;
+   const darkenFactor = randFloat(-0.3, 0.2);
+   r -= darkenFactor;
+   g -= darkenFactor;
+   b -= darkenFactor;
+
+   addMonocolourParticleToBufferContainer(
+      particle,
+      ParticleRenderLayer.high,
+      pixelSize, pixelSize,
+      spawnPositionX, spawnPositionY,
+      velocityX, velocityY,
+      0, 0,
+      friction,
+      2 * Math.PI * Math.random(),
+      0,
+      0,
+      0,
+      r, g, b
+   );
+   Board.highMonocolourParticles.push(particle);
+}
+
+export function createDeepFrostHeartBloodParticles(originX: number, originY: number, extraVelocityX: number, extraVelocityY: number): void {
+   if (Board.tickIntervalHasPassed(0.4)) {
+      for (let i = 0; i < 6; i++) {
+         const spawnPositionOffsetMagnitude = 13;
+         const spawnPositionOffsetDirection = 2 * Math.PI * Math.random();
+         const spawnPositionX = originX + spawnPositionOffsetMagnitude * Math.sin(spawnPositionOffsetDirection);
+         const spawnPositionY = originY + spawnPositionOffsetMagnitude * Math.cos(spawnPositionOffsetDirection);
+         createFrozenYetiBloodParticle(BloodParticleSize.small, spawnPositionX, spawnPositionY, 2 * Math.PI * Math.random(), randFloat(40, 60), true, extraVelocityX, extraVelocityY);
+      }
+   }
+}

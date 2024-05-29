@@ -1,14 +1,14 @@
 import { PathfindingNodeIndex } from "webgl-test-shared/dist/client-server-types";
-import { TribesmanAIComponentData, TribesmanAIType } from "webgl-test-shared/dist/components";
+import { ServerComponentType, TribesmanAIComponentData, TribesmanAIType } from "webgl-test-shared/dist/components";
 import { CRAFTING_RECIPES } from "webgl-test-shared/dist/crafting-recipes";
 import { ItemType } from "webgl-test-shared/dist/items";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { randInt } from "webgl-test-shared/dist/utils";
 import Entity from "../Entity";
-import { TribeComponentArray, TribesmanComponentArray } from "./ComponentArray";
+import { ComponentArray } from "./ComponentArray";
 import Board from "../Board";
 import Tribe, { BuildingPlan } from "../Tribe";
-import { EntityRelationship } from "./TribeComponent";
+import { EntityRelationship, TribeComponentArray } from "./TribeComponent";
 import { TribesmanGoal } from "../entities/tribes/tribesman-ai/tribesman-goals";
 
 // @Incomplete: periodically remove dead entities from the relations object
@@ -155,8 +155,12 @@ export class TribesmanAIComponent {
    }
 }
 
-export function serialiseTribesmanComponent(entity: Entity, player: Entity | null): TribesmanAIComponentData {
-   const tribesmanComponent = TribesmanComponentArray.getComponent(entity.id);
+export const TribesmanAIComponentArray = new ComponentArray<ServerComponentType.tribesmanAI, TribesmanAIComponent>(true, {
+   serialise: serialise
+});
+
+function serialise(entityID: number, playerID: number | null): TribesmanAIComponentData {
+   const tribesmanComponent = TribesmanAIComponentArray.getComponent(entityID);
 
    let craftingProgress: number;
    let craftingItemType: ItemType;
@@ -171,10 +175,11 @@ export function serialiseTribesmanComponent(entity: Entity, player: Entity | nul
    }
    
    return {
+      componentType: ServerComponentType.tribesmanAI,
       name: tribesmanComponent.name,
       untitledDescriptor: tribesmanComponent.untitledDescriptor,
       currentAIType: tribesmanComponent.currentAIType,
-      relationsWithPlayer: player !== null && typeof tribesmanComponent.tribesmanRelations[player.id] !== "undefined" ? tribesmanComponent.tribesmanRelations[player.id]! : 0,
+      relationsWithPlayer: playerID !== null && typeof tribesmanComponent.tribesmanRelations[playerID] !== "undefined" ? tribesmanComponent.tribesmanRelations[playerID]! : 0,
       craftingItemType: craftingItemType,
       craftingProgress: craftingProgress
    };
@@ -182,11 +187,11 @@ export function serialiseTribesmanComponent(entity: Entity, player: Entity | nul
 
 const adjustTribesmanRelations = (tribesmanID: number, otherTribesmanID: number, adjustment: number): void => {
    // Players don't have relations
-   if (!TribesmanComponentArray.hasComponent(tribesmanID)) {
+   if (!TribesmanAIComponentArray.hasComponent(tribesmanID)) {
       return;
    }
    
-   const tribesmanComponent = TribesmanComponentArray.getComponent(tribesmanID);
+   const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesmanID);
    const relations = tribesmanComponent.tribesmanRelations;
 
    if (typeof relations[otherTribesmanID] === "undefined") {
@@ -256,7 +261,7 @@ export function getTribesmanRelationship(tribesmanID: number, comparingTribesman
       return EntityRelationship.friendly;
    } 
    
-   const tribesmanComponent = TribesmanComponentArray.getComponent(tribesmanID);
+   const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesmanID);
    const relations = tribesmanComponent.tribesmanRelations;
 
    if (typeof relations[comparingTribesmanID] === "undefined") {

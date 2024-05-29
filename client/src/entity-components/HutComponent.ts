@@ -6,10 +6,11 @@ import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import Board from "../Board";
 import RenderPart from "../render-parts/RenderPart";
-import WorkerHut from "../entities/WorkerHut";
-import WarriorHut from "../entities/WarriorHut";
 import { getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
 import { playSound } from "../sound";
+
+export const WORKER_HUT_SIZE = 88;
+export const WARRIOR_HUT_SIZE = 104;
 
 const DOOR_OPEN_TICKS = Math.floor(0.15 * Settings.TPS);
 const DOOR_REMAIN_TICKS = Math.floor(0.175 * Settings.TPS);
@@ -32,8 +33,8 @@ type HutType = EntityType.workerHut | EntityType.warriorHut;
 
 const getHutSize = (hutType: HutType): number => {
    switch (hutType) {
-      case EntityType.workerHut: return WorkerHut.SIZE;
-      case EntityType.warriorHut: return WarriorHut.SIZE;
+      case EntityType.workerHut: return WORKER_HUT_SIZE;
+      case EntityType.warriorHut: return WARRIOR_HUT_SIZE;
    }
 }
 
@@ -61,13 +62,13 @@ class HutComponent extends ServerComponent<ServerComponentType.hut> {
 
    private recallMarker: RenderPart | null = null;
 
-   constructor(entity: Entity, data: HutComponentData, doorRenderParts: ReadonlyArray<RenderPart>) {
+   constructor(entity: Entity, data: HutComponentData) {
       super(entity);
       
       this.isRecalling = data.isRecalling;
       
       this.doorSwingAmount = calculateDoorSwingAmount(data.lastDoorSwingTicks);
-      this.doorRenderParts = doorRenderParts;
+      this.doorRenderParts = this.entity.getRenderParts("hutComponent:door");
 
       this.updateDoors();
    }

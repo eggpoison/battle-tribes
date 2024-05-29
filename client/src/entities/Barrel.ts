@@ -1,20 +1,14 @@
-import { EntityComponentsData, ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { Point } from "webgl-test-shared/dist/utils";
 import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
 import { playBuildingHitSound, playSound } from "../sound";
-import HealthComponent from "../entity-components/HealthComponent";
-import InventoryComponent from "../entity-components/InventoryComponent";
-import TribeComponent from "../entity-components/TribeComponent";
-import StatusEffectComponent from "../entity-components/StatusEffectComponent";
 import Entity from "../Entity";
-import StructureComponent from "../entity-components/StructureComponent";
 
 class Barrel extends Entity {
    public static readonly SIZE = 80;
 
-   constructor(position: Point, id: number, ageTicks: number, componentsData: EntityComponentsData<EntityType.barrel>) {
+   constructor(position: Point, id: number, ageTicks: number) {
       super(position, id, EntityType.barrel, ageTicks);
 
       this.attachRenderPart(
@@ -25,12 +19,6 @@ class Barrel extends Entity {
             0
          )
       );
-
-      this.addServerComponent(ServerComponentType.health, new HealthComponent(this, componentsData[0]));
-      this.addServerComponent(ServerComponentType.statusEffect, new StatusEffectComponent(this, componentsData[1]));
-      this.addServerComponent(ServerComponentType.structure, new StructureComponent(this, componentsData[2]));
-      this.addServerComponent(ServerComponentType.tribe, new TribeComponent(this, componentsData[3]));
-      this.addServerComponent(ServerComponentType.inventory, new InventoryComponent(this, componentsData[4]));
 
       if (ageTicks <= 1) {
          playSound("barrel-place.mp3", 0.4, 1, this.position.x, this.position.y);

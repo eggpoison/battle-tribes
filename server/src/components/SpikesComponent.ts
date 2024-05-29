@@ -1,14 +1,18 @@
-import { SpikesComponentData } from "webgl-test-shared/dist/components";
-import Entity from "../Entity";
-import { SpikesComponentArray } from "./ComponentArray";
+import { ServerComponentType, SpikesComponentData } from "webgl-test-shared/dist/components";
+import { ComponentArray } from "./ComponentArray";
 
 export class SpikesComponent {
    public isCovered = false;
 }
 
-export function serialiseSpikesComponent(spikes: Entity): SpikesComponentData {
-   const spikesComponent = SpikesComponentArray.getComponent(spikes.id);
+export const SpikesComponentArray = new ComponentArray<ServerComponentType.spikes, SpikesComponent>(true, {
+   serialise: serialise
+});
+
+function serialise(entityID: number): SpikesComponentData {
+   const spikesComponent = SpikesComponentArray.getComponent(entityID);
    return {
+      componentType: ServerComponentType.spikes,
       isCovered: spikesComponent.isCovered
    };
 }

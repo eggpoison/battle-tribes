@@ -121,14 +121,14 @@ class TurretComponent extends ServerComponent<ServerComponentType.turret> {
    // @Cleanup: Do we need to store this?
    private chargeProgress: number;
    
-   constructor(entity: Entity, data: TurretComponentData, aimingRenderPart: RenderPart, pivotingRenderPart: RenderPart, gearRenderParts: ReadonlyArray<RenderPart>) {
+   constructor(entity: Entity, data: TurretComponentData) {
       super(entity);
 
       this.chargeProgress = data.chargeProgress;
 
-      this.aimingRenderPart = aimingRenderPart;
-      this.pivotingRenderPart = pivotingRenderPart;
-      this.gearRenderParts = gearRenderParts;
+      this.aimingRenderPart = this.entity.getRenderPart("turretComponent:aiming");
+      this.pivotingRenderPart = this.entity.getRenderPart("turretComponent:pivoting");
+      this.gearRenderParts = this.entity.getRenderParts("turretComponent:gear");
 
       this.updateAimDirection(data.aimDirection, data.chargeProgress);
    }

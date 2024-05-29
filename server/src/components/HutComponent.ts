@@ -1,6 +1,5 @@
-import { HutComponentData } from "webgl-test-shared/dist/components";
-import Entity from "../Entity";
-import { HutComponentArray } from "./ComponentArray";
+import { HutComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
+import { ComponentArray } from "./ComponentArray";
 
 export class HutComponent {
    public lastDoorSwingTicks = 0;
@@ -10,9 +9,14 @@ export class HutComponent {
    public isRecalling = false;
 }
 
-export function serialiseHutComponent(entity: Entity): HutComponentData {
-   const hutComponent = HutComponentArray.getComponent(entity.id);
+export const HutComponentArray = new ComponentArray<ServerComponentType.hut, HutComponent>(true, {
+   serialise: serialise
+});
+
+function serialise(entityID: number): HutComponentData {
+   const hutComponent = HutComponentArray.getComponent(entityID);
    return {
+      componentType: ServerComponentType.hut,
       lastDoorSwingTicks: hutComponent.lastDoorSwingTicks,
       isRecalling: hutComponent.isRecalling
    };

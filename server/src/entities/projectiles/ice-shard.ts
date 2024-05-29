@@ -7,14 +7,13 @@ import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { Point } from "webgl-test-shared/dist/utils";
 import Entity from "../../Entity";
 import RectangularHitbox from "../../hitboxes/RectangularHitbox";
-import { HealthComponentArray, IceShardComponentArray } from "../../components/ComponentArray";
-import { addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
+import { HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
 import { StatusEffectComponentArray, applyStatusEffect } from "../../components/StatusEffectComponent";
-import { SERVER } from "../../server/server";
 import { PhysicsComponent, PhysicsComponentArray, applyKnockback } from "../../components/PhysicsComponent";
 import { EntityCreationInfo } from "../../entity-components";
 import { PlantComponentArray } from "../../components/PlantComponent";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
+import { IceShardComponent, IceShardComponentArray } from "../../components/IceShardComponent";
 
 type ComponentTypes = [ServerComponentType.physics, ServerComponentType.iceShard];
 
@@ -27,11 +26,7 @@ export function createIceShard(position: Point, rotation: number): EntityCreatio
    const physicsComponent = new PhysicsComponent(0, 0, 0, 0, true, false);
    PhysicsComponentArray.addComponent(iceShard.id, physicsComponent);
    
-   const iceShardComponent = {
-      // @Temporary
-      // lifetime: randFloat(0.1, 0.2)
-      lifetime: 0.4
-   };
+   const iceShardComponent = new IceShardComponent();
    IceShardComponentArray.addComponent(iceShard.id, iceShardComponent);
 
    return {

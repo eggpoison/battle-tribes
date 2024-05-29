@@ -1,7 +1,6 @@
 import { SnowballSize } from "webgl-test-shared/dist/entities";
-import { SnowballComponentData } from "webgl-test-shared/dist/components";
-import Entity from "../Entity";
-import { SnowballComponentArray } from "./ComponentArray";
+import { ServerComponentType, SnowballComponentData } from "webgl-test-shared/dist/components";
+import { ComponentArray } from "./ComponentArray";
 
 export class SnowballComponent {
    public readonly yetiID: number;
@@ -15,9 +14,15 @@ export class SnowballComponent {
    }
 }
 
-export function serialiseSnowballComponent(snowball: Entity): SnowballComponentData {
-   const snowballComponent = SnowballComponentArray.getComponent(snowball.id);
+export const SnowballComponentArray = new ComponentArray<ServerComponentType.snowball, SnowballComponent>(true, {
+   serialise: serialise
+});
+
+function serialise(entityID: number): SnowballComponentData {
+   const snowballComponent = SnowballComponentArray.getComponent(entityID);
+
    return {
+      componentType: ServerComponentType.snowball,
       size: snowballComponent.size
    };
 }

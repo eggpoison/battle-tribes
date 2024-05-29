@@ -5,10 +5,8 @@ import { Settings } from "webgl-test-shared/dist/settings";
 import { Point, randFloat } from "webgl-test-shared/dist/utils";
 import Entity from "../../Entity";
 import CircularHitbox from "../../hitboxes/CircularHitbox";
-import { HealthComponentArray, RockSpikeProjectileComponentArray } from "../../components/ComponentArray";
-import { RockSpikeProjectileComponent } from "../../components/RockSpikeProjectileComponent";
-import { addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
-import { SERVER } from "../../server/server";
+import { RockSpikeProjectileComponent, RockSpikeProjectileComponentArray } from "../../components/RockSpikeProjectileComponent";
+import { HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
 import { applyKnockback } from "../../components/PhysicsComponent";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
 

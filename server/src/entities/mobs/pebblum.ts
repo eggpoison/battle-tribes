@@ -4,12 +4,10 @@ import { EntityType, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities"
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { Point } from "webgl-test-shared/dist/utils";
 import Entity from "../../Entity";
-import { HealthComponentArray, PebblumComponentArray } from "../../components/ComponentArray";
-import { HealthComponent, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
-import { PebblumComponent } from "../../components/PebblumComponent";
+import { HealthComponent, HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
+import { PebblumComponent, PebblumComponentArray } from "../../components/PebblumComponent";
 import { moveEntityToPosition, stopEntity } from "../../ai-shared";
 import Board from "../../Board";
-import { SERVER } from "../../server/server";
 import CircularHitbox from "../../hitboxes/CircularHitbox";
 import { PhysicsComponent, PhysicsComponentArray, applyKnockback } from "../../components/PhysicsComponent";
 import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";

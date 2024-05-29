@@ -1,16 +1,14 @@
 import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
-import { TreeComponentData } from "webgl-test-shared/dist/components";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { ItemType } from "webgl-test-shared/dist/items";
 import { Point, randInt } from "webgl-test-shared/dist/utils";
 import Entity from "../../Entity";
 import CircularHitbox from "../../hitboxes/CircularHitbox";
-import { HealthComponentArray } from "../../components/ComponentArray";
-import { HealthComponent } from "../../components/HealthComponent";
+import { HealthComponent, HealthComponentArray } from "../../components/HealthComponent";
 import { createItemsOverEntity } from "../../entity-shared";
 import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
-import { TreeComponentArray } from "../../components/TreeComponent";
+import { TreeComponent, TreeComponentArray } from "../../components/TreeComponent";
 
 const TREE_MAX_HEALTHS = [10, 15];
 export const TREE_RADII: ReadonlyArray<number> = [40, 50];
@@ -32,9 +30,7 @@ export function createTree(position: Point, rotation: number): Entity {
 
    HealthComponentArray.addComponent(tree.id, new HealthComponent(TREE_MAX_HEALTHS[size]));
    StatusEffectComponentArray.addComponent(tree.id, new StatusEffectComponent(0));
-   TreeComponentArray.addComponent(tree.id, {
-      treeSize: size
-   });
+   TreeComponentArray.addComponent(tree.id, new TreeComponent(size));
 
    return tree;
 }
@@ -48,11 +44,4 @@ export function onTreeDeath(tree: Entity): void {
    if (Math.random() < dropChance) {
       createItemsOverEntity(tree, ItemType.seed, 1, TREE_RADII[treeComponent.treeSize])
    }
-}
-
-export function serialiseTreeComponent(tree: Entity): TreeComponentData {
-   const treeComponent = TreeComponentArray.getComponent(tree.id);
-   return {
-      treeSize: treeComponent.treeSize
-   };
 }

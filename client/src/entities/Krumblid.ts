@@ -1,5 +1,4 @@
 import { HitData } from "webgl-test-shared/dist/client-server-types";
-import { EntityComponentsData, ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { Point, angle, randFloat } from "webgl-test-shared/dist/utils";
 import RenderPart from "../render-parts/RenderPart";
@@ -8,14 +7,11 @@ import { getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
 import { ClientComponentType } from "../entity-components/components";
 import FootprintComponent from "../entity-components/FootprintComponent";
 import Entity from "../Entity";
-import StatusEffectComponent from "../entity-components/StatusEffectComponent";
-import HealthComponent from "../entity-components/HealthComponent";
-import PhysicsComponent from "../entity-components/PhysicsComponent";
 
 class Krumblid extends Entity {
    private static readonly BLOOD_FOUNTAIN_INTERVAL = 0.1;
 
-   constructor(position: Point, id: number, ageTicks: number, componentsData: EntityComponentsData<EntityType.krumblid>) {
+   constructor(position: Point, id: number, ageTicks: number) {
       super(position, id, EntityType.krumblid, ageTicks);
 
       this.attachRenderPart(
@@ -27,9 +23,6 @@ class Krumblid extends Entity {
          )
       );
 
-      this.addServerComponent(ServerComponentType.physics, new PhysicsComponent(this, componentsData[0]));
-      this.addServerComponent(ServerComponentType.health, new HealthComponent(this, componentsData[1]));
-      this.addServerComponent(ServerComponentType.statusEffect, new StatusEffectComponent(this, componentsData[2]));
       this.addClientComponent(ClientComponentType.footprint, new FootprintComponent(this, 0.3, 20, 64, 5, 50));
    }
 

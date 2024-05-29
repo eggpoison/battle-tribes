@@ -1,5 +1,5 @@
 import { Settings } from "webgl-test-shared/dist/settings";
-import { PhysicsComponentData } from "webgl-test-shared/dist/components";
+import { PhysicsComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityType, EntityTypeString } from "webgl-test-shared/dist/entities";
 import { TileType, TILE_MOVE_SPEED_MULTIPLIERS, TILE_FRICTIONS } from "webgl-test-shared/dist/tiles";
 import Entity from "../Entity";
@@ -58,7 +58,10 @@ export class PhysicsComponent {
    }
 }
 
-export const PhysicsComponentArray = new ComponentArray<PhysicsComponent>(true, undefined, onRemove);
+export const PhysicsComponentArray = new ComponentArray<ServerComponentType.physics, PhysicsComponent>(true, {
+   onRemove: onRemove,
+   serialise: serialise
+});
 
 function onRemove(entityID: number): void {
    const physicsComponent = PhysicsComponentArray.getComponent(entityID);
@@ -267,10 +270,11 @@ export function applyKnockback(entity: Entity, knockback: number, knockbackDirec
    }
 }
 
-export function serialisePhysicsComponent(entityID: number): PhysicsComponentData {
+function serialise(entityID: number): PhysicsComponentData {
    const physicsComponent = PhysicsComponentArray.getComponent(entityID);
 
    return {
+      componentType: ServerComponentType.physics,
       velocity: physicsComponent.velocity.package(),
       acceleration: physicsComponent.acceleration.package()
    };

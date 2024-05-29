@@ -8,18 +8,17 @@ import { TribesmanTitle } from "webgl-test-shared/dist/titles";
 import { TRIBE_INFO_RECORD } from "webgl-test-shared/dist/tribes";
 import { distance, angle, Point, randInt, getAngleDiff } from "webgl-test-shared/dist/utils";
 import Entity from "../../../Entity";
-import { getEntitiesInRange, willStopAtDesiredDistance, getClosestAccessibleEntity, stopEntity, moveEntityToPosition, getDistanceFromPointToEntity } from "../../../ai-shared";
-import { TribeComponentArray, TribesmanComponentArray, HealthComponentArray, InventoryUseComponentArray, PlayerComponentArray, HutComponentArray, SpikesComponentArray } from "../../../components/ComponentArray";
-import { HealthComponent } from "../../../components/HealthComponent";
+import { getEntitiesInRange, willStopAtDesiredDistance, stopEntity, moveEntityToPosition, getDistanceFromPointToEntity } from "../../../ai-shared";
+import { HealthComponent, HealthComponentArray } from "../../../components/HealthComponent";
 import { getInventory, addItemToInventory, consumeItemFromSlot, craftRecipe, recipeCraftingStationIsAvailable, inventoryComponentCanAffordRecipe, inventoryIsFull, getItemTypeSlot, InventoryComponentArray } from "../../../components/InventoryComponent";
-import { TribesmanPathType, getItemGiftAppreciation, itemThrowIsOnCooldown } from "../../../components/TribesmanAIComponent";
+import { TribesmanAIComponentArray, TribesmanPathType, getItemGiftAppreciation, itemThrowIsOnCooldown } from "../../../components/TribesmanAIComponent";
 import { tickTribeMember, calculateRadialAttackTargets, repairBuilding, calculateRepairTarget, placeBuilding, placeBlueprint, getAvailableCraftingStations, throwItem, } from "../tribe-member";
 import { TRIBE_WORKER_RADIUS, TRIBE_WORKER_VISION_RANGE } from "../tribe-worker";
-import { getInventoryUseInfo, setLimbActions } from "../../../components/InventoryUseComponent";
+import { InventoryUseComponentArray, getInventoryUseInfo, setLimbActions } from "../../../components/InventoryUseComponent";
 import Board from "../../../Board";
 import { TRIBE_WARRIOR_VISION_RANGE } from "../tribe-warrior";
 import { AIHelperComponentArray } from "../../../components/AIHelperComponent";
-import { EntityRelationship, TribeComponent, getEntityRelationship } from "../../../components/TribeComponent";
+import { EntityRelationship, TribeComponent, TribeComponentArray, getEntityRelationship } from "../../../components/TribeComponent";
 import { attemptToOccupyResearchBench, canResearchAtBench, continueResearching, markPreemptiveMoveToBench, shouldMoveToResearchBench } from "../../../components/ResearchBenchComponent";
 import { PathfindFailureDefault, PathfindOptions, entityCanBlockPathfinding, entityHasReachedNode, getAngleToNode, getClosestPathfindNode, getDistanceToNode, getEntityFootprint, getEntityPathfindingGroupID, pathIsClear, pathfind, positionIsAccessible, replacePathfindingNodeGroupID, smoothPath } from "../../../pathfinding";
 import { PhysicsComponentArray } from "../../../components/PhysicsComponent";
@@ -33,6 +32,9 @@ import { TITLE_REWARD_CHANCES } from "../../../tribesman-title-generation";
 import { TribeMemberComponentArray, awardTitle, tribeMemberHasTitle } from "../../../components/TribeMemberComponent";
 import { PlanterBoxComponentArray, placePlantInPlanterBox } from "../../../components/PlanterBoxComponent";
 import { calculateStructureConnectionInfo } from "webgl-test-shared/dist/structures";
+import { HutComponentArray } from "../../../components/HutComponent";
+import { PlayerComponentArray } from "../../../components/PlayerComponent";
+import { SpikesComponentArray } from "../../../components/SpikesComponent";
 
 // @Cleanup: Move all of this to the TribesmanComponent file
 
@@ -76,7 +78,7 @@ const getCommunicationTargets = (tribesman: Entity): ReadonlyArray<Entity> => {
          const chunk = Board.getChunk(chunkX, chunkY);
          for (let i = 0; i < chunk.entities.length; i++) {
             const entity = chunk.entities[i];
-            if (entity === tribesman || !TribesmanComponentArray.hasComponent(entity.id)) {
+            if (entity === tribesman || !TribesmanAIComponentArray.hasComponent(entity.id)) {
                continue;
             }
 
@@ -98,7 +100,7 @@ const sendCallToArmsMessage = (tribesman: Entity, communicationTargets: Readonly
    for (let i = 0; i < communicationTargets.length; i++) {
       const currentTribesman = communicationTargets[i];
 
-      const tribesmanComponent = TribesmanComponentArray.getComponent(currentTribesman.id);
+      const tribesmanComponent = TribesmanAIComponentArray.getComponent(currentTribesman.id);
       tribesmanComponent.helpX = targetEntity.position.x;
       tribesmanComponent.helpY = targetEntity.position.y;
       tribesmanComponent.ticksSinceLastHelpRequest = 0;
@@ -466,7 +468,7 @@ const getAvailableResearchBenchID = (tribesman: Entity, tribeComponent: TribeCom
 }
 
 const shouldRecalculatePath = (tribesman: Entity, goalX: number, goalY: number, goalRadiusNodes: number): boolean => {
-   const tribesmanComponent = TribesmanComponentArray.getComponent(tribesman.id); // @Speed
+   const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman.id); // @Speed
 
    if (tribesmanComponent.path.length === 0) {
       // @Incomplete: Should we do this?
@@ -521,7 +523,7 @@ const openDoors = (tribesman: Entity, tribe: Tribe): void => {
 }
 
 const continueCurrentPath = (tribesman: Entity, goalX: number, goalY: number): boolean => {
-   const tribesmanComponent = TribesmanComponentArray.getComponent(tribesman.id); // @Speed
+   const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman.id); // @Speed
    const tribeComponent = TribeComponentArray.getComponent(tribesman.id); // @Speed
    const path = tribesmanComponent.path;
 
@@ -593,7 +595,7 @@ const continueCurrentPath = (tribesman: Entity, goalX: number, goalY: number): b
 }
 
 export function clearTribesmanPath(tribesman: Entity): void {
-   const tribesmanComponent = TribesmanComponentArray.getComponent(tribesman.id); // @Speed
+   const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman.id); // @Speed
    tribesmanComponent.isPathfinding = false;
 }
 
@@ -667,7 +669,7 @@ const cleanupPathfinding = (targetEntityID: number, tribe: Tribe, blockingTribes
 }
 
 export function pathfindToPosition(tribesman: Entity, goalX: number, goalY: number, targetEntityID: number, pathType: TribesmanPathType, goalRadius: number, failureDefault: PathfindFailureDefault): boolean {
-   const tribesmanComponent = TribesmanComponentArray.getComponent(tribesman.id); // @Speed
+   const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman.id); // @Speed
    
    tribesmanComponent.pathType = pathType;
 
@@ -803,7 +805,7 @@ export function attemptToRepairBuildings(tribesman: Entity): boolean {
       pathfindToPosition(tribesman, closestDamagedBuilding.position.x, closestDamagedBuilding.position.y, closestDamagedBuilding.id, TribesmanPathType.default, Math.floor(desiredAttackRange / PathfindingSettings.NODE_SEPARATION), PathfindFailureDefault.throwError);
    }
 
-   const tribesmanComponent = TribesmanComponentArray.getComponent(tribesman.id);
+   const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman.id);
    tribesmanComponent.currentAIType = TribesmanAIType.repairing;
 
    return true;
@@ -856,7 +858,7 @@ const goCraftItem = (tribesman: Entity, recipe: CraftingRecipe, tribe: Tribe): b
 
       const isPathfinding = pathfindToPosition(tribesman, craftingStation.position.x, craftingStation.position.y, craftingStation.id, TribesmanPathType.default, Math.floor(Settings.MAX_CRAFTING_STATION_USE_DISTANCE / PathfindingSettings.NODE_SEPARATION), PathfindFailureDefault.throwError);
       if (isPathfinding) {
-         const tribesmanComponent = TribesmanComponentArray.getComponent(tribesman.id);
+         const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman.id);
          const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman.id);
 
          setLimbActions(inventoryUseComponent, LimbAction.none);
@@ -879,7 +881,7 @@ const goCraftItem = (tribesman: Entity, recipe: CraftingRecipe, tribe: Tribe): b
          physicsComponent.turnSpeed = TRIBESMAN_TURN_SPEED;
       }
 
-      const tribesmanComponent = TribesmanComponentArray.getComponent(tribesman.id);
+      const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman.id);
       const recipeIdx = CRAFTING_RECIPES.indexOf(recipe);
       
       tribesmanComponent.currentAIType = TribesmanAIType.crafting;
@@ -934,7 +936,7 @@ const goPlaceBuilding = (tribesman: Entity, hotbarInventory: Inventory, tribe: T
       }
    }
    
-   const tribesmanComponent = TribesmanComponentArray.getComponent(tribesman.id);
+   const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman.id);
    
    const distance = getDistanceFromPointToEntity(plan.position, tribesman);
    if (distance < Vars.BUILDING_PLACE_DISTANCE) {
@@ -1051,13 +1053,13 @@ const goUpgradeBuilding = (tribesman: Entity, goal: TribesmanUpgradeGoal): void 
       pathfindToPosition(tribesman, building.position.x, building.position.y, building.id, TribesmanPathType.default, Math.floor(desiredAttackRange / PathfindingSettings.NODE_SEPARATION), PathfindFailureDefault.returnEmpty);
    }
 
-   const tribesmanComponent = TribesmanComponentArray.getComponent(tribesman.id);
+   const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman.id);
    tribesmanComponent.currentAIType = TribesmanAIType.building;
 }
 
 const goResearchTech = (tribesman: Entity, tech: TechInfo): boolean => {
    const tribeComponent = TribeComponentArray.getComponent(tribesman.id);
-   const tribesmanComponent = TribesmanComponentArray.getComponent(tribesman.id);
+   const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman.id);
 
    // @Incomplete: use pathfinding
    
@@ -1224,7 +1226,7 @@ const getGiftableItemSlot = (tribesman: Entity): number => {
 }
 
 const getRecruitTarget = (tribesman: Entity, visibleEntities: ReadonlyArray<Entity>): Entity | null => {
-   const tribesmanComponent = TribesmanComponentArray.getComponent(tribesman.id);
+   const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman.id);
    
    let maxRelationship = -100;
    let closestAcquaintance: Entity | null = null;
@@ -1260,7 +1262,7 @@ export function tickTribesman(tribesman: Entity): void {
    
    tickTribeMember(tribesman);
 
-   const tribesmanComponent = TribesmanComponentArray.getComponent(tribesman.id);
+   const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman.id);
    const tribeComponent = TribeComponentArray.getComponent(tribesman.id);
 
    tribesmanComponent.targetResearchBenchID = 0;
@@ -1605,7 +1607,7 @@ export function tickTribesman(tribesman: Entity): void {
    // Try to recuit other tribesmen
    const recruitTarget = getRecruitTarget(tribesman, aiHelperComponent.visibleEntities);
    if (recruitTarget !== null) {
-      const targetTribesmanComponent = TribesmanComponentArray.getComponent(recruitTarget.id);
+      const targetTribesmanComponent = TribesmanAIComponentArray.getComponent(recruitTarget.id);
       const relation = targetTribesmanComponent.tribesmanRelations[tribesman.id];
       
       // @Cleanup: hardcoded val '50'

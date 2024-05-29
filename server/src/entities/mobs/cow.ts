@@ -1,26 +1,24 @@
 import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
-import { CowComponentData } from "webgl-test-shared/dist/components";
 import { CowSpecies, EntityType } from "webgl-test-shared/dist/entities";
 import { ItemType } from "webgl-test-shared/dist/items";
 import { Settings } from "webgl-test-shared/dist/settings";
-import { Biome, TileInfo, TileType } from "webgl-test-shared/dist/tiles";
+import { Biome, TileType } from "webgl-test-shared/dist/tiles";
 import { Point, randFloat, randInt } from "webgl-test-shared/dist/utils";
 import Entity from "../../Entity";
 import RectangularHitbox from "../../hitboxes/RectangularHitbox";
-import { BerryBushComponentArray, CowComponentArray, EscapeAIComponentArray, FollowAIComponentArray, HealthComponentArray, InventoryUseComponentArray, WanderAIComponentArray } from "../../components/ComponentArray";
-import { HealthComponent, getEntityHealth, healEntity } from "../../components/HealthComponent";
+import { HealthComponent, HealthComponentArray, getEntityHealth, healEntity } from "../../components/HealthComponent";
 import { createItemsOverEntity } from "../../entity-shared";
-import { WanderAIComponent } from "../../components/WanderAIComponent";
+import { WanderAIComponent, WanderAIComponentArray } from "../../components/WanderAIComponent";
 import { entityHasReachedPosition, moveEntityToPosition, runHerdAI, stopEntity } from "../../ai-shared";
 import { getWanderTargetTile, shouldWander, wander } from "../../ai/wander-ai";
 import Tile from "../../Tile";
 import { chooseEscapeEntity, registerAttackingEntity, runFromAttackingEntity } from "../../ai/escape-ai";
-import { EscapeAIComponent, updateEscapeAIComponent } from "../../components/EscapeAIComponent";
+import { EscapeAIComponent, EscapeAIComponentArray, updateEscapeAIComponent } from "../../components/EscapeAIComponent";
 import Board from "../../Board";
 import { AIHelperComponent, AIHelperComponentArray } from "../../components/AIHelperComponent";
-import { FollowAIComponent, continueFollowingEntity, entityWantsToFollow, startFollowingEntity, updateFollowAIComponent } from "../../components/FollowAIComponent";
-import { CowComponent, eatBerry, updateCowComponent, wantsToEatBerries } from "../../components/CowComponent";
+import { FollowAIComponent, FollowAIComponentArray, continueFollowingEntity, entityWantsToFollow, startFollowingEntity, updateFollowAIComponent } from "../../components/FollowAIComponent";
+import { CowComponent, CowComponentArray, eatBerry, updateCowComponent, wantsToEatBerries } from "../../components/CowComponent";
 import { dropBerry } from "../resources/berry-bush";
 import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
 import { PhysicsComponent, PhysicsComponentArray } from "../../components/PhysicsComponent";
@@ -28,6 +26,8 @@ import { CollisionVars, entitiesAreColliding } from "../../collision";
 import { ItemComponentArray } from "../../components/ItemComponent";
 import { GrassBlockerCircle } from "webgl-test-shared/dist/grass-blockers";
 import { addGrassBlocker } from "../../grass-blockers";
+import { BerryBushComponentArray } from "../../components/BerryBushComponent";
+import { InventoryUseComponentArray } from "../../components/InventoryUseComponent";
 
 const MAX_HEALTH = 10;
 const VISION_RANGE = 256;
@@ -327,12 +327,4 @@ export function onCowHurt(cow: Entity, attackingEntity: Entity): void {
 export function onCowDeath(cow: Entity): void {
    createItemsOverEntity(cow, ItemType.raw_beef, randInt(2, 3), 40);
    createItemsOverEntity(cow, ItemType.leather, randInt(1, 2), 40);
-}
-
-export function serialiseCowComponent(cow: Entity): CowComponentData {
-   const cowComponent = CowComponentArray.getComponent(cow.id);
-   return {
-      species: cowComponent.species,
-      grazeProgress: cowComponent.grazeProgressTicks > 0 ? cowComponent.grazeProgressTicks / COW_GRAZE_TIME_TICKS : -1
-   };
 }

@@ -1,8 +1,8 @@
-import { YetiComponentData } from "webgl-test-shared/dist/components";
+import { ServerComponentType, YetiComponentData } from "webgl-test-shared/dist/components";
 import Entity from "../Entity";
 import Tile from "../Tile";
 import { SnowThrowStage, YETI_SNOW_THROW_COOLDOWN } from "../entities/mobs/yeti";
-import { YetiComponentArray } from "./ComponentArray";
+import { ComponentArray } from "./ComponentArray";
 
 export interface YetiTargetInfo {
    remainingPursueTicks: number;
@@ -26,10 +26,14 @@ export class YetiComponent {
       this.territory = territory;
    }
 }
+export const YetiComponentArray = new ComponentArray<ServerComponentType.yeti, YetiComponent>(true, {
+   serialise: serialise
+});
 
-export function serialiseYetiComponent(yeti: Entity): YetiComponentData {
-   const yetiComponent = YetiComponentArray.getComponent(yeti.id);
+function serialise(entityID: number): YetiComponentData {
+   const yetiComponent = YetiComponentArray.getComponent(entityID);
    return {
+      componentType: ServerComponentType.yeti,
       attackProgress: yetiComponent.snowThrowAttackProgress
    };
 }

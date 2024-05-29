@@ -6,8 +6,6 @@ import { gl, createWebGLProgram, CAMERA_UNIFORM_BUFFER_BINDING_INDEX } from "../
 import { ENTITY_TEXTURE_ATLAS, ENTITY_TEXTURE_ATLAS_SIZE, ENTITY_TEXTURE_SLOT_INDEXES, getTextureArrayIndex, getTextureHeight, getTextureWidth } from "../texture-atlases/entity-texture-atlas";
 import { ATLAS_SLOT_SIZE } from "../texture-atlases/texture-atlas-stitching";
 import { BALLISTA_AMMO_BOX_OFFSET_X, BALLISTA_AMMO_BOX_OFFSET_Y, BALLISTA_GEAR_X, BALLISTA_GEAR_Y } from "../utils";
-import WorkerHut from "../entities/WorkerHut";
-import WarriorHut from "../entities/WarriorHut";
 import OPTIONS from "../options";
 import { calculatePotentialPlanIdealness, getHoveredBuildingPlan, getPotentialPlanStats, getVisibleBuildingPlans } from "../client/Client";
 import { NUM_LARGE_COVER_LEAVES, NUM_SMALL_COVER_LEAVES } from "../entity-components/SpikesComponent";
@@ -319,7 +317,7 @@ const getGhostTextureInfoArray = (ghostInfo: GhostInfo): ReadonlyArray<TextureIn
          {
             textureSource: "entities/worker-hut/worker-hut-door.png",
             offsetX: 0,
-            offsetY: WorkerHut.SIZE / 2,
+            offsetY: 88 / 2,
             rotation: Math.PI/2
          },
          {
@@ -333,13 +331,13 @@ const getGhostTextureInfoArray = (ghostInfo: GhostInfo): ReadonlyArray<TextureIn
          {
             textureSource: "entities/warrior-hut/warrior-hut-door.png",
             offsetX: -20,
-            offsetY: WarriorHut.SIZE / 2,
+            offsetY: 104 / 2,
             rotation: Math.PI/2
          },
          {
             textureSource: "entities/warrior-hut/warrior-hut-door.png",
             offsetX: 20,
-            offsetY: WarriorHut.SIZE / 2,
+            offsetY: 104 / 2,
             rotation: Math.PI * 3/2
          },
          {

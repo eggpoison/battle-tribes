@@ -1,9 +1,9 @@
-import { InventoryUseComponentData } from "webgl-test-shared/dist/components";
+import { InventoryUseComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
 import { LimbAction } from "webgl-test-shared/dist/entities";
 import { Inventory, InventoryName } from "webgl-test-shared/dist/items";
 import { Settings } from "webgl-test-shared/dist/settings";
 import Entity from "../Entity";
-import { InventoryUseComponentArray } from "./ComponentArray";
+import { ComponentArray } from "./ComponentArray";
 
 export interface InventoryUseInfo {
    selectedItemSlot: number;
@@ -58,6 +58,10 @@ export class InventoryUseComponent {
    }
 }
 
+export const InventoryUseComponentArray = new ComponentArray<ServerComponentType.inventoryUse, InventoryUseComponent>(true, {
+   serialise: serialise
+});
+
 export function tickInventoryUseComponent(inventoryUseComponent: InventoryUseComponent): void {
    if (inventoryUseComponent.globalAttackCooldown > 0) {
       inventoryUseComponent.globalAttackCooldown--;
@@ -109,9 +113,11 @@ export function hasInventoryUseInfo(inventoryUseComponent: InventoryUseComponent
    return false;
 }
 
-export function serialiseInventoryUseComponent(entity: Entity): InventoryUseComponentData {
-   const inventoryUseComponent = InventoryUseComponentArray.getComponent(entity.id);
+function serialise(entityID: number): InventoryUseComponentData {
+   const inventoryUseComponent = InventoryUseComponentArray.getComponent(entityID);
+
    return {
+      componentType: ServerComponentType.inventoryUse,
       inventoryUseInfos: inventoryUseComponent.inventoryUseInfos.map(limbInfo => {
          return {
             selectedItemSlot: limbInfo.selectedItemSlot,

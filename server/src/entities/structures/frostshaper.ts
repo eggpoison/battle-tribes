@@ -6,15 +6,16 @@ import { StructureConnectionInfo } from "webgl-test-shared/dist/structures";
 import { Point } from "webgl-test-shared/dist/utils";
 import Entity from "../../Entity";
 import Tribe from "../../Tribe";
-import { HealthComponentArray, TribeComponentArray, FenceComponentArray } from "../../components/ComponentArray";
-import { FenceComponent } from "../../components/FenceComponent";
-import { HealthComponent } from "../../components/HealthComponent";
+import { FenceComponent, FenceComponentArray } from "../../components/FenceComponent";
+import { HealthComponent, HealthComponentArray } from "../../components/HealthComponent";
 import { StatusEffectComponentArray, StatusEffectComponent } from "../../components/StatusEffectComponent";
 import { StructureComponentArray, StructureComponent } from "../../components/StructureComponent";
-import { TribeComponent } from "../../components/TribeComponent";
+import { TribeComponent, TribeComponentArray } from "../../components/TribeComponent";
 import RectangularHitbox from "../../hitboxes/RectangularHitbox";
 import { Hitbox } from "../../hitboxes/hitboxes";
 import { HitboxFlags } from "../../hitboxes/BaseHitbox";
+import { CraftingStation } from "webgl-test-shared/dist/crafting-recipes";
+import { CraftingStationComponentArray, CraftingStationComponent } from "../../components/CraftingStationComponent";
 
 const HITBOX_WIDTH = 120 - 0.05;
 const HITBOX_HEIGHT = 80 - 0.05;
@@ -30,18 +31,19 @@ export function createFrostshaperHitboxes(parentPosition: Point, localID: number
 }
 
 export function createFrostshaper(position: Point, rotation: number, tribe: Tribe, connectionInfo: StructureConnectionInfo): Entity {
-   const fence = new Entity(position, rotation, EntityType.frostshaper, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
+   const frostshaper = new Entity(position, rotation, EntityType.frostshaper, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
-   const hitboxes = createFrostshaperHitboxes(position, fence.getNextHitboxLocalID(), rotation);
+   const hitboxes = createFrostshaperHitboxes(position, frostshaper.getNextHitboxLocalID(), rotation);
    for (let i = 0; i < hitboxes.length; i++) {
-      fence.addHitbox(hitboxes[i]);
+      frostshaper.addHitbox(hitboxes[i]);
    }
 
-   HealthComponentArray.addComponent(fence.id, new HealthComponent(20));
-   StatusEffectComponentArray.addComponent(fence.id, new StatusEffectComponent(StatusEffect.freezing | StatusEffect.poisoned));
-   StructureComponentArray.addComponent(fence.id, new StructureComponent(connectionInfo));
-   TribeComponentArray.addComponent(fence.id, new TribeComponent(tribe));
-   FenceComponentArray.addComponent(fence.id, new FenceComponent());
+   HealthComponentArray.addComponent(frostshaper.id, new HealthComponent(20));
+   StatusEffectComponentArray.addComponent(frostshaper.id, new StatusEffectComponent(StatusEffect.freezing | StatusEffect.poisoned));
+   StructureComponentArray.addComponent(frostshaper.id, new StructureComponent(connectionInfo));
+   TribeComponentArray.addComponent(frostshaper.id, new TribeComponent(tribe));
+   FenceComponentArray.addComponent(frostshaper.id, new FenceComponent());
+   CraftingStationComponentArray.addComponent(frostshaper.id, new CraftingStationComponent(CraftingStation.frostshaper));
    
-   return fence;
+   return frostshaper;
 }

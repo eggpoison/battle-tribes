@@ -1,6 +1,5 @@
-import { WanderAIComponentData } from "webgl-test-shared/dist/components";
-import Entity from "../Entity";
-import { WanderAIComponentArray } from "./ComponentArray";
+import { ServerComponentType, WanderAIComponentData } from "webgl-test-shared/dist/components";
+import { ComponentArray } from "./ComponentArray";
 
 export class WanderAIComponent {
    /** If set to -1, the wander AI has no current target position */
@@ -8,9 +7,15 @@ export class WanderAIComponent {
    targetPositionY = -1;
 }
 
-export function serialiseWanderAIComponent(entity: Entity): WanderAIComponentData {
-   const wanderAIComponent = WanderAIComponentArray.getComponent(entity.id);
+export const WanderAIComponentArray = new ComponentArray<ServerComponentType.wanderAI, WanderAIComponent>(true, {
+   serialise: serialise
+});
+
+function serialise(entityID: number): WanderAIComponentData {
+   const wanderAIComponent = WanderAIComponentArray.getComponent(entityID);
+
    return {
+      componentType: ServerComponentType.wanderAI,
       targetPositionX: wanderAIComponent.targetPositionX,
       targetPositionY: wanderAIComponent.targetPositionY
    };

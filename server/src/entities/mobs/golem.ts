@@ -1,24 +1,22 @@
 import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
-import { GolemComponentData } from "webgl-test-shared/dist/components";
 import { EntityType, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
 import { ItemType } from "webgl-test-shared/dist/items";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { distance, lerp, Point, randFloat, randInt } from "webgl-test-shared/dist/utils";
 import Entity from "../../Entity";
-import { GolemComponentArray, HealthComponentArray, PebblumComponentArray } from "../../components/ComponentArray";
-import { HealthComponent, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
+import { HealthComponent, HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
 import CircularHitbox from "../../hitboxes/CircularHitbox";
 import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
-import { GolemComponent } from "../../components/GolemComponent";
+import { GolemComponent, GolemComponentArray } from "../../components/GolemComponent";
 import Board from "../../Board";
 import { stopEntity } from "../../ai-shared";
 import { createPebblum } from "./pebblum";
-import { SERVER } from "../../server/server";
 import { createItemsOverEntity } from "../../entity-shared";
 import { PhysicsComponent, PhysicsComponentArray, applyKnockback } from "../../components/PhysicsComponent";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
+import { PebblumComponentArray } from "../../components/PebblumComponent";
 
 export const BODY_GENERATION_RADIUS = 55;
 
@@ -352,13 +350,4 @@ export function onGolemCollision(golem: Entity, collidingEntity: Entity, collisi
 
 export function onGolemDeath(golem: Entity): void {
    createItemsOverEntity(golem, ItemType.living_rock, randInt(10, 20), 60);
-}
-
-export function serialiseGolemComponent(golem: Entity): GolemComponentData {
-   const golemComponent = GolemComponentArray.getComponent(golem.id);
-   return {
-      wakeProgress: golemComponent.wakeTimerTicks / GOLEM_WAKE_TIME_TICKS,
-      ticksAwake: Board.ticks - golemComponent.lastWakeTicks,
-      isAwake: golemComponent.wakeTimerTicks === GOLEM_WAKE_TIME_TICKS
-   };
 }

@@ -6,14 +6,15 @@ import { StructureConnectionInfo } from "webgl-test-shared/dist/structures";
 import { Point } from "webgl-test-shared/dist/utils";
 import Entity from "../../Entity";
 import Tribe from "../../Tribe";
-import { HealthComponentArray, TribeComponentArray, FenceComponentArray } from "../../components/ComponentArray";
-import { FenceComponent } from "../../components/FenceComponent";
-import { HealthComponent } from "../../components/HealthComponent";
+import { FenceComponent, FenceComponentArray } from "../../components/FenceComponent";
+import { HealthComponent, HealthComponentArray } from "../../components/HealthComponent";
 import { StatusEffectComponentArray, StatusEffectComponent } from "../../components/StatusEffectComponent";
 import { StructureComponentArray, StructureComponent } from "../../components/StructureComponent";
-import { TribeComponent } from "../../components/TribeComponent";
+import { TribeComponent, TribeComponentArray } from "../../components/TribeComponent";
 import RectangularHitbox from "../../hitboxes/RectangularHitbox";
 import { Hitbox } from "../../hitboxes/hitboxes";
+import { CraftingStation } from "webgl-test-shared/dist/crafting-recipes";
+import { CraftingStationComponentArray, CraftingStationComponent } from "../../components/CraftingStationComponent";
 
 const HITBOX_WIDTH = 120 - 0.05;
 const HITBOX_HEIGHT = 80 - 0.05;
@@ -28,18 +29,19 @@ export function createStonecarvingTableHitboxes(parentPosition: Point, localID: 
 }
 
 export function createStonecarvingTable(position: Point, rotation: number, tribe: Tribe, connectionInfo: StructureConnectionInfo): Entity {
-   const fence = new Entity(position, rotation, EntityType.stonecarvingTable, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
+   const stonecarvingTable = new Entity(position, rotation, EntityType.stonecarvingTable, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
-   const hitboxes = createStonecarvingTableHitboxes(position, fence.getNextHitboxLocalID(), rotation);
+   const hitboxes = createStonecarvingTableHitboxes(position, stonecarvingTable.getNextHitboxLocalID(), rotation);
    for (let i = 0; i < hitboxes.length; i++) {
-      fence.addHitbox(hitboxes[i]);
+      stonecarvingTable.addHitbox(hitboxes[i]);
    }
 
-   HealthComponentArray.addComponent(fence.id, new HealthComponent(40));
-   StatusEffectComponentArray.addComponent(fence.id, new StatusEffectComponent(StatusEffect.freezing | StatusEffect.poisoned));
-   StructureComponentArray.addComponent(fence.id, new StructureComponent(connectionInfo));
-   TribeComponentArray.addComponent(fence.id, new TribeComponent(tribe));
-   FenceComponentArray.addComponent(fence.id, new FenceComponent());
+   HealthComponentArray.addComponent(stonecarvingTable.id, new HealthComponent(40));
+   StatusEffectComponentArray.addComponent(stonecarvingTable.id, new StatusEffectComponent(StatusEffect.freezing | StatusEffect.poisoned));
+   StructureComponentArray.addComponent(stonecarvingTable.id, new StructureComponent(connectionInfo));
+   TribeComponentArray.addComponent(stonecarvingTable.id, new TribeComponent(tribe));
+   FenceComponentArray.addComponent(stonecarvingTable.id, new FenceComponent());
+   CraftingStationComponentArray.addComponent(stonecarvingTable.id, new CraftingStationComponent(CraftingStation.stonecarvingTable));
    
-   return fence;
+   return stonecarvingTable;
 }

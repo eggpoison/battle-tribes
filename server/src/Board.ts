@@ -1,19 +1,19 @@
 import { WaterRockData, RiverSteppingStoneData, GrassTileInfo, DecorationInfo, RIVER_STEPPING_STONE_SIZES, ServerTileUpdateData, RiverFlowDirections } from "webgl-test-shared/dist/client-server-types";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
-import { TileType, Biome } from "webgl-test-shared/dist/tiles";
-import { randItem, Point } from "webgl-test-shared/dist/utils";
+import { TileType } from "webgl-test-shared/dist/tiles";
+import { Point } from "webgl-test-shared/dist/utils";
 import { circlesDoIntersect, circleAndRectangleDoIntersect } from "webgl-test-shared/dist/collision";
 import Chunk from "./Chunk";
 import Tile from "./Tile";
-import { addTileToCensus, getTilesOfType, removeEntityFromCensus, removeTileFromCensus } from "./census";
+import { removeEntityFromCensus } from "./census";
 import Tribe from "./Tribe";
 import generateTerrain from "./world-generation/terrain-generation";
-import { HealthComponentArray, InventoryUseComponentArray, DoorComponentArray, ResearchBenchComponentArray, TunnelComponentArray, HealingTotemComponentArray, FenceGateComponentArray, ComponentArrays } from "./components/ComponentArray";
-import { tickInventoryUseComponent } from "./components/InventoryUseComponent";
+import { ComponentArrays } from "./components/ComponentArray";
+import { InventoryUseComponentArray, tickInventoryUseComponent } from "./components/InventoryUseComponent";
 import { tickPlayer } from "./entities/tribes/player";
 import Entity from "./Entity";
-import { tickHealthComponent } from "./components/HealthComponent";
+import { HealthComponentArray, tickHealthComponent } from "./components/HealthComponent";
 import { tickBerryBush } from "./entities/resources/berry-bush";
 import { tickIceShard } from "./entities/projectiles/ice-shard";
 import { tickCow } from "./entities/mobs/cow";
@@ -40,7 +40,7 @@ import { tickSpearProjectile } from "./entities/projectiles/spear-projectile";
 import { tickTribeWarrior } from "./entities/tribes/tribe-warrior";
 import { tickSlimeSpit } from "./entities/projectiles/slime-spit";
 import { tickSpitPoison } from "./entities/projectiles/spit-poison";
-import { tickDoorComponent } from "./components/DoorComponent";
+import { DoorComponentArray, tickDoorComponent } from "./components/DoorComponent";
 import { onBattleaxeProjectileRemove, tickBattleaxeProjectile } from "./entities/projectiles/battleaxe-projectile";
 import { tickGolem } from "./entities/mobs/golem";
 import { tickIceArrow } from "./entities/projectiles/ice-arrow";
@@ -48,30 +48,19 @@ import { tickPebblum } from "./entities/mobs/pebblum";
 import { tickPhysicsComponents } from "./components/PhysicsComponent";
 import { tickBallista } from "./entities/structures/ballista";
 import { tickSlingTurret } from "./entities/structures/sling-turret";
-import { tickResearchBenchComponent } from "./components/ResearchBenchComponent";
+import { ResearchBenchComponentArray, tickResearchBenchComponent } from "./components/ResearchBenchComponent";
 import { clearEntityPathfindingNodes, entityCanBlockPathfinding, markWallTileInPathfinding, updateEntityPathfindingNodeOccupance } from "./pathfinding";
 import OPTIONS from "./options";
 import { CollisionVars, collide, entitiesAreColliding } from "./collision";
-import { tickTunnelComponent } from "./components/TunnelComponent";
+import { TunnelComponentArray, tickTunnelComponent } from "./components/TunnelComponent";
 import { tickTribes } from "./ai-tribe-building/ai-building";
-import { tickHealingTotemComponent } from "./components/HealingTotemComponent";
+import { HealingTotemComponentArray, tickHealingTotemComponent } from "./components/HealingTotemComponent";
 import { PlantComponentArray, tickPlantComponent } from "./components/PlantComponent";
-import { tickFenceGateComponent } from "./components/FenceGateComponent";
+import { FenceGateComponentArray, tickFenceGateComponent } from "./components/FenceGateComponent";
 import { Hitbox, hitboxIsCircular } from "./hitboxes/hitboxes";
 import { PlanterBoxComponentArray, tickPlanterBoxComponent } from "./components/PlanterBoxComponent";
 
 const START_TIME = 6;
-
-const OFFSETS: ReadonlyArray<[xOffest: number, yOffset: number]> = [
-   [-1, -1],
-   [0, -1],
-   [1, -1],
-   [-1, 0],
-   [1, 0],
-   [-1, 1],
-   [0, 1],
-   [1, 1],
-];
 
 interface CollisionPair {
    readonly entity1: Entity;

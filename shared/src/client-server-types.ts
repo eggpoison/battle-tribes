@@ -1,5 +1,5 @@
 import { BuildingPlanData, BuildingSafetyData, SafetyNodeData, TribeWallData, WallConnectionData } from "./ai-building-types";
-import { BlueprintType, EntityComponentsData } from "./components";
+import { BlueprintType, ComponentData } from "./components";
 import { EntityType, LimbAction } from "./entities";
 import { AttackEffectiveness } from "./entity-damage-types";
 import { EntityEvent } from "./entity-events";
@@ -113,7 +113,7 @@ export interface EntityData<T extends EntityType = EntityType> {
    readonly type: T;
    readonly collisionBit: number;
    readonly collisionMask: number;
-   readonly components: EntityComponentsData<T>;
+   readonly components: ReadonlyArray<ComponentData>;
    readonly tickEvents: ReadonlyArray<EntityEvent>;
 }
 

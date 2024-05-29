@@ -3,17 +3,25 @@ import { ComponentArray } from "./ComponentArray";
 import { GrassBlockerCircle } from "webgl-test-shared/dist/grass-blockers";
 import Board from "../Board";
 import { addGrassBlocker } from "../grass-blockers";
+import { ServerComponentType, TreeComponentData } from "webgl-test-shared/dist/components";
 
 const TREE_TRUNK_RADII: Record<TreeSize, number> = {
    [TreeSize.small]: 15,
    [TreeSize.large]: 22
 };
 
-export interface TreeComponent {
+export class TreeComponent {
    readonly treeSize: TreeSize;
+
+   constructor(treeSize: TreeSize) {
+      this.treeSize = treeSize;
+   }
 }
 
-export const TreeComponentArray = new ComponentArray<TreeComponent>(true, onJoin);
+export const TreeComponentArray = new ComponentArray<ServerComponentType.tree, TreeComponent>(true, {
+   onJoin: onJoin,
+   serialise: serialise
+});
 
 function onJoin(entityID: number): void {
    const treeComponent = TreeComponentArray.getComponent(entityID);
@@ -28,4 +36,13 @@ function onJoin(entityID: number): void {
       maxBlockAmount: 0.9
    };
    addGrassBlocker(blocker, entityID);
+}
+
+function serialise(entityID: number): TreeComponentData {
+   const treeComponent = TreeComponentArray.getComponent(entityID);
+
+   return {
+      componentType: ServerComponentType.tree,
+      treeSize: treeComponent.treeSize
+   };
 }

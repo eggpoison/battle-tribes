@@ -1,64 +1,14 @@
-import { RectangularHitboxData, CircularHitboxData, EntityData, VisibleChunkBounds, GameDataPacket, GameDataPacketOptions, PlayerInventoryData, EntityDebugData, InitialGameDataPacket, ServerTileData, GameDataSyncPacket } from "webgl-test-shared/dist/client-server-types";
-import { ServerComponentType, ComponentData, EntityComponents, EntityComponentsData } from "webgl-test-shared/dist/components";
+import { RectangularHitboxData, CircularHitboxData, EntityData, VisibleChunkBounds, GameDataPacket, GameDataPacketOptions, PlayerInventoryData, InitialGameDataPacket, ServerTileData, GameDataSyncPacket } from "webgl-test-shared/dist/client-server-types";
+import { ServerComponentType, ComponentData } from "webgl-test-shared/dist/components";
 import { EntityType } from "webgl-test-shared/dist/entities";
-import { Point, assertUnreachable } from "webgl-test-shared/dist/utils";
 import Board from "../Board";
 import Entity from "../Entity";
 import Tribe from "../Tribe";
-import { serialiseAIHelperComponent } from "../components/AIHelperComponent";
-import { serialiseAmmoBoxComponent } from "../components/AmmoBoxComponent";
-import { serialiseArrowComponent } from "../components/ArrowComponent";
-import { serialiseBlueprintComponent } from "../components/BlueprintComponent";
-import { serialiseBuildingMaterialComponent } from "../components/BuildingMaterialComponent";
-import { HealthComponentArray, InventoryUseComponentArray, PlayerComponentArray, SpikesComponentArray, TribeComponentArray } from "../components/ComponentArray";
-import { serialiseCookingComponent } from "../components/CookingComponent";
-import { serialiseDoorComponent } from "../components/DoorComponent";
-import { serialiseEscapeAIComponent } from "../components/EscapeAIComponent";
-import { serialiseFenceComponent } from "../components/FenceComponent";
-import { serialiseFenceGateComponent } from "../components/FenceGateComponent";
-import { serialiseFollowAIComponent } from "../components/FollowAIComponent";
-import { serialiseFrozenYetiComponent } from "../components/FrozenYetiComponent";
-import { serialiseHealingTotemComponent } from "../components/HealingTotemComponent";
-import { serialiseHealthComponent } from "../components/HealthComponent";
-import { serialiseHutComponent } from "../components/HutComponent";
-import { serialiseIceShardComponent } from "../components/IceShardComponent";
-import { InventoryComponentArray, getInventory, serialiseInventoryComponent } from "../components/InventoryComponent";
-import { getInventoryUseInfo, serialiseInventoryUseComponent } from "../components/InventoryUseComponent";
-import { serialiseItemComponent } from "../components/ItemComponent";
-import { serialisePebblumComponent } from "../components/PebblumComponent";
-import { PhysicsComponentArray, serialisePhysicsComponent } from "../components/PhysicsComponent";
-import { serialisePlantComponent } from "../components/PlantComponent";
-import { serialisePlanterBoxComponent } from "../components/PlanterBoxComponent";
-import { serialisePlayerComponent } from "../components/PlayerComponent";
-import { serialiseResearchBenchComponent } from "../components/ResearchBenchComponent";
-import { serialiseRockSpikeComponent } from "../components/RockSpikeProjectileComponent";
-import { serialiseSlimeComponent } from "../components/SlimeComponent";
-import { serialiseSlimeSpitComponent } from "../components/SlimeSpitComponent";
-import { serialiseSlimewispComponent } from "../components/SlimewispComponent";
-import { serialiseSnowballComponent } from "../components/SnowballComponent";
-import { serialiseSpikesComponent } from "../components/SpikesComponent";
-import { serialiseStatusEffectComponent } from "../components/StatusEffectComponent";
-import { serialiseStructureComponent } from "../components/StructureComponent";
-import { serialiseThrowingProjectileComponent } from "../components/ThrowingProjectileComponent";
-import { serialiseTombstoneComponent } from "../components/TombstoneComponent";
-import { serialiseTotemBannerComponent } from "../components/TotemBannerComponent";
-import { serialiseTribeComponent } from "../components/TribeComponent";
-import { serialiseTribeMemberComponent } from "../components/TribeMemberComponent";
-import { serialiseTribeWarriorComponent } from "../components/TribeWarriorComponent";
-import { serialiseTribesmanComponent } from "../components/TribesmanAIComponent";
-import { serialiseTunnelComponent } from "../components/TunnelComponent";
-import { serialiseTurretComponent } from "../components/TurretComponent";
-import { serialiseWanderAIComponent } from "../components/WanderAIComponent";
-import { serialiseYetiComponent } from "../components/YetiComponent";
-import { serialiseZombieComponent } from "../components/ZombieComponent";
-import { serialiseCowComponent } from "../entities/mobs/cow";
-import { serialiseFishComponent } from "../entities/mobs/fish";
-import { serialiseGolemComponent } from "../entities/mobs/golem";
-import { serialiseBerryBushComponent } from "../entities/resources/berry-bush";
-import { serialiseBoulderComponent } from "../entities/resources/boulder";
-import { serialiseCactusComponent } from "../entities/resources/cactus";
-import { serialiseIceSpikesComponent } from "../entities/resources/ice-spikes";
-import { serialiseTreeComponent } from "../entities/resources/tree";
+import { ComponentArrays } from "../components/ComponentArray";
+import { HealthComponentArray, serialiseHealthComponent } from "../components/HealthComponent";
+import { InventoryComponentArray, getInventory } from "../components/InventoryComponent";
+import { InventoryUseComponentArray, getInventoryUseInfo } from "../components/InventoryUseComponent";
+import { PhysicsComponentArray } from "../components/PhysicsComponent";
 import CircularHitbox from "../hitboxes/CircularHitbox";
 import RectangularHitbox from "../hitboxes/RectangularHitbox";
 import { hitboxIsCircular } from "../hitboxes/hitboxes";
@@ -71,6 +21,9 @@ import { EnemyTribeData, PlayerTribeData } from "webgl-test-shared/dist/techs";
 import { GrassBlocker } from "webgl-test-shared/dist/grass-blockers";
 import { getEntityDebugData } from "../entity-debug-data";
 import PlayerClient from "./PlayerClient";
+import { TribeComponentArray } from "../components/TribeComponent";
+import { SpikesComponentArray } from "../components/SpikesComponent";
+import { PlayerComponentArray } from "../components/PlayerComponent";
 
 const bundleRectangularHitboxData = (hitbox: RectangularHitbox): RectangularHitboxData => {
    return {
@@ -96,67 +49,6 @@ const bundleCircularHitboxData = (hitbox: CircularHitbox): CircularHitboxData =>
    };
 }
 
-const serialiseComponent = <T extends ServerComponentType>(entity: Entity, componentType: T, player: Entity | null): ComponentData => {
-   switch (componentType) {
-      case ServerComponentType.aiHelper: return serialiseAIHelperComponent(entity);
-      case ServerComponentType.arrow: return serialiseArrowComponent(entity);
-      case ServerComponentType.ammoBox: return serialiseAmmoBoxComponent(entity);
-      case ServerComponentType.berryBush: return serialiseBerryBushComponent(entity);
-      case ServerComponentType.blueprint: return serialiseBlueprintComponent(entity);
-      case ServerComponentType.boulder: return serialiseBoulderComponent(entity);
-      case ServerComponentType.cactus: return serialiseCactusComponent(entity);
-      case ServerComponentType.cooking: return serialiseCookingComponent(entity);
-      case ServerComponentType.cow: return serialiseCowComponent(entity);
-      case ServerComponentType.door: return serialiseDoorComponent(entity);
-      case ServerComponentType.escapeAI: return serialiseEscapeAIComponent(entity);
-      case ServerComponentType.fish: return serialiseFishComponent(entity);
-      case ServerComponentType.followAI: return serialiseFollowAIComponent(entity);
-      case ServerComponentType.frozenYeti: return serialiseFrozenYetiComponent(entity);
-      case ServerComponentType.golem: return serialiseGolemComponent(entity);
-      case ServerComponentType.health: return serialiseHealthComponent(entity);
-      case ServerComponentType.hut: return serialiseHutComponent(entity);
-      case ServerComponentType.iceShard: return serialiseIceShardComponent();
-      case ServerComponentType.iceSpikes: return serialiseIceSpikesComponent(entity);
-      case ServerComponentType.inventory: return serialiseInventoryComponent(entity);
-      case ServerComponentType.inventoryUse: return serialiseInventoryUseComponent(entity);
-      case ServerComponentType.item: return serialiseItemComponent(entity);
-      case ServerComponentType.pebblum: return serialisePebblumComponent(entity);
-      case ServerComponentType.physics: return serialisePhysicsComponent(entity.id);
-      case ServerComponentType.player: return serialisePlayerComponent(entity);
-      case ServerComponentType.researchBench: return serialiseResearchBenchComponent(entity);
-      case ServerComponentType.rockSpike: return serialiseRockSpikeComponent(entity);
-      case ServerComponentType.slime: return serialiseSlimeComponent(entity);
-      case ServerComponentType.slimeSpit: return serialiseSlimeSpitComponent(entity);
-      case ServerComponentType.slimewisp: return serialiseSlimewispComponent();
-      case ServerComponentType.snowball: return serialiseSnowballComponent(entity);
-      case ServerComponentType.statusEffect: return serialiseStatusEffectComponent(entity);
-      case ServerComponentType.throwingProjectile: return serialiseThrowingProjectileComponent(entity);
-      case ServerComponentType.tombstone: return serialiseTombstoneComponent(entity);
-      case ServerComponentType.totemBanner: return serialiseTotemBannerComponent(entity);
-      case ServerComponentType.tree: return serialiseTreeComponent(entity);
-      case ServerComponentType.tribe: return serialiseTribeComponent(entity);
-      case ServerComponentType.tribeMember: return serialiseTribeMemberComponent(entity);
-      case ServerComponentType.tribesman: return serialiseTribesmanComponent(entity, player);
-      case ServerComponentType.turret: return serialiseTurretComponent(entity);
-      case ServerComponentType.wanderAI: return serialiseWanderAIComponent(entity);
-      case ServerComponentType.yeti: return serialiseYetiComponent(entity);
-      case ServerComponentType.zombie: return serialiseZombieComponent(entity.id);
-      case ServerComponentType.tunnel: return serialiseTunnelComponent(entity);
-      case ServerComponentType.buildingMaterial: return serialiseBuildingMaterialComponent(entity);
-      case ServerComponentType.spikes: return serialiseSpikesComponent(entity);
-      case ServerComponentType.tribeWarrior: return serialiseTribeWarriorComponent(entity);
-      case ServerComponentType.healingTotem: return serialiseHealingTotemComponent(entity);
-      case ServerComponentType.planterBox: return serialisePlanterBoxComponent(entity.id);
-      case ServerComponentType.plant: return serialisePlantComponent(entity);
-      case ServerComponentType.structure: return serialiseStructureComponent(entity.id);
-      case ServerComponentType.fence: return serialiseFenceComponent();
-      case ServerComponentType.fenceGate: return serialiseFenceGateComponent(entity.id);
-      default: {
-         assertUnreachable(componentType);
-      }
-   }
-}
-
 const serialiseEntityData = (entity: Entity, player: Entity | null): EntityData<EntityType> => {
    const circularHitboxes = new Array<CircularHitboxData>();
    const rectangularHitboxes = new Array<RectangularHitboxData>();
@@ -172,11 +64,13 @@ const serialiseEntityData = (entity: Entity, player: Entity | null): EntityData<
    }
 
    const components = new Array<ComponentData>();
+   for (let i = 0; i < ComponentArrays.length; i++) {
+      const componentArray = ComponentArrays[i];
 
-   const componentTypes = EntityComponents[entity.type];
-   for (let i = 0; i < componentTypes.length; i++) {
-      const componentType = componentTypes[i];
-      components.push(serialiseComponent(entity, componentType, player));
+      if (componentArray.hasComponent(entity.id)) {
+         const componentData = componentArray.serialise(entity.id, player !== null ? player.id : null);
+         components.push(componentData);
+      }
    }
 
    return {
@@ -189,8 +83,7 @@ const serialiseEntityData = (entity: Entity, player: Entity | null): EntityData<
       type: entity.type,
       collisionBit: entity.collisionBit,
       collisionMask: entity.collisionMask,
-      // @Cleanup: Is there some typescript magic we can do to avoid this evil cast
-      components: components as unknown as EntityComponentsData<EntityType>,
+      components: components,
       tickEvents: entity.tickEvents
    };
 }

@@ -1,4 +1,4 @@
-import { BlueprintType, EntityComponentsData, ServerComponentType } from "webgl-test-shared/dist/components";
+import { BlueprintType, ServerComponentType } from "webgl-test-shared/dist/components";
 import { Point, assertUnreachable, randFloat } from "webgl-test-shared/dist/utils";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { EntityData } from "webgl-test-shared/dist/client-server-types";
@@ -7,11 +7,9 @@ import { getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
 import { playSound } from "../sound";
 import { BALLISTA_AMMO_BOX_OFFSET_X, BALLISTA_AMMO_BOX_OFFSET_Y, BALLISTA_GEAR_X, BALLISTA_GEAR_Y } from "../utils";
 import { createDustCloud, createLightWoodSpeckParticle, createRockParticle, createRockSpeckParticle, createSawdustCloud } from "../particles";
-import BlueprintComponent from "../entity-components/BlueprintComponent";
-import Entity from "../Entity";
-import HealthComponent from "../entity-components/HealthComponent";
+import Entity, { ComponentDataRecord } from "../Entity";
 import { ParticleRenderLayer } from "../rendering/particle-rendering";
-import WarriorHut from "./WarriorHut";
+import { WARRIOR_HUT_SIZE } from "../entity-components/HutComponent";
 
 // @Cleanup: Move all this logic to the blueprint component file
 
@@ -259,7 +257,7 @@ export const BLUEPRINT_PROGRESS_TEXTURE_SOURCES: Record<BlueprintType, ReadonlyA
          progressTextureSources: ["entities/warrior-hut/warrior-hut-door.png"],
          completedTextureSource: "entities/warrior-hut/warrior-hut-door.png",
          offsetX: -20,
-         offsetY: WarriorHut.SIZE / 2,
+         offsetY: WARRIOR_HUT_SIZE / 2,
          rotation: Math.PI/2,
          zIndex: 1
       },
@@ -268,7 +266,7 @@ export const BLUEPRINT_PROGRESS_TEXTURE_SOURCES: Record<BlueprintType, ReadonlyA
          progressTextureSources: ["entities/warrior-hut/warrior-hut-door.png"],
          completedTextureSource: "entities/warrior-hut/warrior-hut-door.png",
          offsetX: 20,
-         offsetY: WarriorHut.SIZE / 2,
+         offsetY: WARRIOR_HUT_SIZE / 2,
          rotation: Math.PI*3/2,
          zIndex: 2
       }
@@ -326,10 +324,10 @@ export function getCurrentBlueprintProgressTexture(blueprintType: BlueprintType,
 }
 
 class BlueprintEntity extends Entity {
-   constructor(position: Point, id: number, ageTicks: number, componentsData: EntityComponentsData<EntityType.blueprintEntity>) {
+   constructor(position: Point, id: number, ageTicks: number, componentDataRecord: ComponentDataRecord) {
       super(position, id, EntityType.blueprintEntity, ageTicks);
 
-      const blueprintComponentData = componentsData[1];
+      const blueprintComponentData = componentDataRecord[ServerComponentType.blueprint]!;
       
       // Create completed render parts
       const progressTextureInfoArray = BLUEPRINT_PROGRESS_TEXTURE_SOURCES[blueprintComponentData.blueprintType];
@@ -350,9 +348,6 @@ class BlueprintEntity extends Entity {
          renderPart.tintB = 0.8;
          this.attachRenderPart(renderPart);
       }
-
-      this.addServerComponent(ServerComponentType.health, new HealthComponent(this, componentsData[0]));
-      this.addServerComponent(ServerComponentType.blueprint, new BlueprintComponent(this, blueprintComponentData));
 
       this.updatePartialTexture();
 

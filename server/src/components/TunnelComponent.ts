@@ -1,12 +1,12 @@
 import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
-import { TunnelComponentData } from "webgl-test-shared/dist/components";
+import { ServerComponentType, TunnelComponentData } from "webgl-test-shared/dist/components";
 import { DoorToggleType } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { angle, lerp } from "webgl-test-shared/dist/utils";
 import Entity from "../Entity";
-import { TunnelComponentArray } from "./ComponentArray";
 import RectangularHitbox from "../hitboxes/RectangularHitbox";
 import { HitboxCollisionBit, DEFAULT_HITBOX_COLLISION_MASK } from "webgl-test-shared/dist/collision";
+import { ComponentArray } from "./ComponentArray";
 
 const DOOR_HITBOX_MASS = 1;
 const DOOR_HITBOX_WIDTH = 48;
@@ -34,6 +34,10 @@ export class TunnelComponent {
    public bottomDoorToggleType = DoorToggleType.none;
    public bottomDoorOpenProgress = 0;
 }
+
+export const TunnelComponentArray = new ComponentArray<ServerComponentType.tunnel, TunnelComponent>(true, {
+   serialise: serialise
+});
 
 const doorHalfDiagonalLength = Math.sqrt(16 * 16 + 48 * 48) / 2;
 const angleToCenter = angle(16, 48);
@@ -174,9 +178,11 @@ export function toggleTunnelDoor(tunnel: Entity, doorBit: number): void {
    }
 }
 
-export function serialiseTunnelComponent(tunnel: Entity): TunnelComponentData {
-   const tunnelComponent = TunnelComponentArray.getComponent(tunnel.id);
+function serialise(entityID: number): TunnelComponentData {
+   const tunnelComponent = TunnelComponentArray.getComponent(entityID);
+   
    return {
+      componentType: ServerComponentType.tunnel,
       doorBitset: tunnelComponent.doorBitset,
       topDoorOpenProgress: tunnelComponent.topDoorOpenProgress,
       bottomDoorOpenProgress: tunnelComponent.bottomDoorOpenProgress

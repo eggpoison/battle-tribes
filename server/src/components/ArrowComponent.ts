@@ -1,7 +1,6 @@
-import { ArrowStatusEffectInfo, ArrowComponentData } from "webgl-test-shared/dist/components";
+import { ArrowStatusEffectInfo, ArrowComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
 import { GenericArrowType } from "webgl-test-shared/dist/entities";
-import Entity from "../Entity";
-import { ArrowComponentArray } from "./ComponentArray";
+import { ComponentArray } from "./ComponentArray";
 
 export class ArrowComponent {
    public readonly type: GenericArrowType;
@@ -22,9 +21,14 @@ export class ArrowComponent {
    }
 }
 
-export function serialiseArrowComponent(entity: Entity): ArrowComponentData {
-   const arrowComponent = ArrowComponentArray.getComponent(entity.id);
+export const ArrowComponentArray = new ComponentArray<ServerComponentType.arrow, ArrowComponent>(true, {
+   serialise: serialise
+});
+
+function serialise(entityID: number): ArrowComponentData {
+   const arrowComponent = ArrowComponentArray.getComponent(entityID);
    return {
+      componentType: ServerComponentType.arrow,
       arrowType: arrowComponent.type
    };
 }

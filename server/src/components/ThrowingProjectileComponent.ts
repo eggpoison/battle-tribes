@@ -1,6 +1,6 @@
-import { ThrowingProjectileComponentData } from "webgl-test-shared/dist/components";
+import { ServerComponentType, ThrowingProjectileComponentData } from "webgl-test-shared/dist/components";
 import { Item } from "webgl-test-shared/dist/items";
-import Entity from "../Entity";
+import { ComponentArray } from "./ComponentArray";
 
 export class ThrowingProjectileComponent {
    readonly tribeMemberID: number;
@@ -12,6 +12,12 @@ export class ThrowingProjectileComponent {
    }
 }
 
-export function serialiseThrowingProjectileComponent(_entity: Entity): ThrowingProjectileComponentData {
-   return {};
+export const ThrowingProjectileComponentArray = new ComponentArray<ServerComponentType.throwingProjectile, ThrowingProjectileComponent>(true, {
+   serialise: serialise
+});
+
+function serialise(): ThrowingProjectileComponentData {
+   return {
+      componentType: ServerComponentType.throwingProjectile
+   };
 }

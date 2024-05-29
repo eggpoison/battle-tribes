@@ -16,7 +16,7 @@ const doorHeight = 16;
 const doorHalfDiagonalLength = Math.sqrt(doorHeight * doorHeight + doorWidth * doorWidth) / 2;
 const angleToCenter = angle(doorHeight, doorWidth);
 
-export function getFenceGateDoorInfo(openProgress: number): DoorInfo {
+const getFenceGateDoorInfo = (openProgress: number): DoorInfo => {
    const baseRotation = Math.PI/2;
    const rotation = baseRotation - lerp(0, Math.PI/2 - 0.1, openProgress);
    
@@ -37,12 +37,12 @@ class FenceGateComponent extends ServerComponent<ServerComponentType.fenceGate> 
 
    public openProgress: number;
    
-   constructor(entity: Entity, data: FenceGateComponentData, doorRenderPart: RenderPart) {
+   constructor(entity: Entity, data: FenceGateComponentData) {
       super(entity);
 
       this.openProgress = data.openProgress;
 
-      this.doorRenderPart = doorRenderPart;
+      this.doorRenderPart = this.entity.getRenderPart("fenceGateComponent:door");
       this.updateDoor(data.openProgress);
    }
 

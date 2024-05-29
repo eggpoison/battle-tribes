@@ -15,7 +15,7 @@ export interface TunnelDoorInfo {
    readonly rotation: number;
 }
 
-export function getTunnelDoorInfo(doorBit: number, openProgress: number): TunnelDoorInfo {
+const getTunnelDoorInfo = (doorBit: number, openProgress: number): TunnelDoorInfo => {
    const isTopDoor = doorBit === 0b01;
 
    const baseRotation = isTopDoor ? -Math.PI/2 : Math.PI/2;

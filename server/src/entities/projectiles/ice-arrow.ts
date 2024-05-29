@@ -6,13 +6,13 @@ import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { Point } from "webgl-test-shared/dist/utils";
 import RectangularHitbox from "../../hitboxes/RectangularHitbox";
 import Entity from "../../Entity";
-import { HealthComponentArray, TribeComponentArray } from "../../components/ComponentArray";
 import { StatusEffectComponentArray, applyStatusEffect } from "../../components/StatusEffectComponent";
 import { PhysicsComponent, PhysicsComponentArray } from "../../components/PhysicsComponent";
-import { EntityRelationship, TribeComponent, getEntityRelationship } from "../../components/TribeComponent";
+import { EntityRelationship, TribeComponent, TribeComponentArray, getEntityRelationship } from "../../components/TribeComponent";
 import Tribe from "../../Tribe";
 import { EntityCreationInfo } from "../../entity-components";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { HealthComponentArray } from "../../components/HealthComponent";
 
 type ComponentTypes = [ServerComponentType.physics, ServerComponentType.tribe];
 

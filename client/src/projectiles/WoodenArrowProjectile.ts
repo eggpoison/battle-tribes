@@ -1,14 +1,11 @@
 import { EntityType, GenericArrowType } from "webgl-test-shared/dist/entities";
 import { Point, randFloat } from "webgl-test-shared/dist/utils";
-import { EntityComponentsData, ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
-import Entity from "../Entity";
+import Entity, { ComponentDataRecord } from "../Entity";
 import { playSound } from "../sound";
 import { createArrowDestroyParticle, createRockParticle, createRockSpeckParticle } from "../particles";
-import ArrowComponent from "../entity-components/ArrowComponent";
-import PhysicsComponent from "../entity-components/PhysicsComponent";
-import TribeComponent from "../entity-components/TribeComponent";
 import { ParticleRenderLayer } from "../rendering/particle-rendering";
 
 const ARROW_TEXTURE_SOURCES: Record<GenericArrowType, string> = {
@@ -22,10 +19,10 @@ const ARROW_TEXTURE_SOURCES: Record<GenericArrowType, string> = {
 
 class WoodenArrowProjectile extends Entity {
 
-   constructor(position: Point, id: number, ageTicks: number, componentsData: EntityComponentsData<EntityType.woodenArrowProjectile>) {
+   constructor(position: Point, id: number, ageTicks: number, componentDataRecord: ComponentDataRecord) {
       super(position, id, EntityType.woodenArrowProjectile, ageTicks);
 
-      const arrowComponentData = componentsData[2];
+      const arrowComponentData = componentDataRecord[ServerComponentType.arrow]!;
       
       const textureArrayIndex = getTextureArrayIndex(ARROW_TEXTURE_SOURCES[arrowComponentData.arrowType]);
       this.attachRenderPart(
@@ -36,10 +33,6 @@ class WoodenArrowProjectile extends Entity {
             0
          )
       );
-
-      this.addServerComponent(ServerComponentType.physics, new PhysicsComponent(this, componentsData[0]));
-      this.addServerComponent(ServerComponentType.tribe, new TribeComponent(this, componentsData[1]));
-      this.addServerComponent(ServerComponentType.arrow, new ArrowComponent(this, arrowComponentData));
    }
 
    public onRemove(): void {

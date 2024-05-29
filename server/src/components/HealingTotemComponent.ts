@@ -1,10 +1,10 @@
 import { Settings } from "webgl-test-shared/dist/settings";
-import { HealingTotemComponentData, HealingTotemTargetData } from "webgl-test-shared/dist/components";
+import { HealingTotemComponentData, HealingTotemTargetData, ServerComponentType } from "webgl-test-shared/dist/components";
 import Entity from "../Entity";
 import Board from "../Board";
-import { HealingTotemComponentArray, HealthComponentArray } from "./ComponentArray";
 import { EntityRelationship, getEntityRelationship } from "./TribeComponent";
-import { healEntity } from "./HealthComponent";
+import { HealthComponentArray, healEntity } from "./HealthComponent";
+import { ComponentArray } from "./ComponentArray";
 
 const enum Vars {
    HEALING_RANGE = 270,
@@ -15,6 +15,10 @@ export class HealingTotemComponent {
    public readonly healTargetIDs = new Array<number>();
    public readonly healTargetsTicksHealed = new Array<number>();
 }
+
+export const HealingTotemComponentArray = new ComponentArray<ServerComponentType.healingTotem, HealingTotemComponent>(true, {
+   serialise: serialise
+});
 
 const getHealingTargets = (healingTotem: Entity): ReadonlyArray<Entity> => {
    const minChunkX = Math.max(Math.floor((healingTotem.position.x - Vars.HEALING_RANGE) / Settings.CHUNK_UNITS), 0);
@@ -113,8 +117,8 @@ export function tickHealingTotemComponent(healingTotem: Entity, healingTotemComp
    }
 }
 
-export function serialiseHealingTotemComponent(healingTotem: Entity): HealingTotemComponentData {
-   const healingTotemComponent = HealingTotemComponentArray.getComponent(healingTotem.id);
+function serialise(entityID: number): HealingTotemComponentData {
+   const healingTotemComponent = HealingTotemComponentArray.getComponent(entityID);
 
    const healingData = new Array<HealingTotemTargetData>();
    for (let i = 0; i < healingTotemComponent.healTargetIDs.length; i++) {
@@ -132,6 +136,7 @@ export function serialiseHealingTotemComponent(healingTotem: Entity): HealingTot
    }
    
    return {
+      componentType: ServerComponentType.healingTotem,
       healingTargetsData: healingData
    };
 }

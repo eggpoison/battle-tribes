@@ -36,6 +36,7 @@ import InventoryComponent from "./entity-components/InventoryComponent";
 import { ENTITY_TYPE_TO_GHOST_TYPE_MAP, GhostInfo, setGhostInfo } from "./rendering/entity-ghost-rendering";
 import Camera from "./Camera";
 import { Hitbox } from "./hitboxes/hitboxes";
+import { WORKER_HUT_SIZE } from "./entity-components/HutComponent";
 
 /** Acceleration of the player while moving without any modifiers. */
 const PLAYER_ACCELERATION = 700;
@@ -83,8 +84,8 @@ export const PLACEABLE_ENTITY_INFO_RECORD: Record<PlaceableItemType, PlaceableEn
    },
    [ItemType.worker_hut]: {
       entityType: EntityType.workerHut,
-      width: WorkerHut.SIZE,
-      height: WorkerHut.SIZE,
+      width: WORKER_HUT_SIZE,
+      height: WORKER_HUT_SIZE,
       canPlace: (): boolean => {
          return Game.tribe.hasTotem && Game.tribe.numHuts < Game.tribe.tribesmanCap;
       },

@@ -29,11 +29,11 @@ class BuildingMaterialComponent extends ServerComponent<ServerComponentType.buil
    private readonly materialRenderPart: RenderPart;
    public material: BuildingMaterial;
    
-   constructor(entity: Entity, data: BuildingMaterialComponentData, materialRenderPart: RenderPart) {
+   constructor(entity: Entity, data: BuildingMaterialComponentData) {
       super(entity);
 
       this.material = data.material;
-      this.materialRenderPart = materialRenderPart;
+      this.materialRenderPart = this.entity.getRenderPart("buildingMaterialComponent:material");
    }
 
    public updateFromData(data: BuildingMaterialComponentData): void {

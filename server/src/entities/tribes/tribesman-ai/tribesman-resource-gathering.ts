@@ -1,13 +1,13 @@
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { InventoryName, ItemType } from "webgl-test-shared/dist/items";
 import Entity from "../../../Entity";
-import { HealthComponentArray, TribeComponentArray } from "../../../components/ComponentArray";
 import { positionIsSafeForTribesman, tribesmanShouldEscape } from "./tribesman-ai";
-import { HealthComponent } from "../../../components/HealthComponent";
+import { HealthComponent, HealthComponentArray } from "../../../components/HealthComponent";
 import { tribeMemberCanPickUpItem } from "../tribe-member";
 import { InventoryComponentArray, getInventory, inventoryIsFull } from "../../../components/InventoryComponent";
 import { PlanterBoxPlant } from "webgl-test-shared/dist/components";
 import { PlantComponentArray, plantIsFullyGrown } from "../../../components/PlantComponent";
+import { TribeComponentArray } from "../../../components/TribeComponent";
 
 // Goal: find which items should be used to gather a resource
 

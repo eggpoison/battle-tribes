@@ -5,10 +5,9 @@ import { getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
 import Entity from "../Entity";
 import Board from "../Board";
 import { attachSoundToEntity, playSound } from "../sound";
-import { EntityComponentsData } from "webgl-test-shared/dist/components";
 
 class BattleaxeProjectile extends Entity {
-   constructor(position: Point, id: number, ageTicks: number, componentsData: EntityComponentsData<EntityType.battleaxeProjectile>) {
+   constructor(position: Point, id: number, ageTicks: number) {
       super(position, id, EntityType.battleaxeProjectile, ageTicks);
 
       this.attachRenderPart(

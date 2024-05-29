@@ -1,11 +1,11 @@
 import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
-import { DoorComponentData } from "webgl-test-shared/dist/components";
+import { DoorComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
 import { DoorToggleType } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { angle, lerp } from "webgl-test-shared/dist/utils";
 import Entity from "../Entity";
-import { DoorComponentArray } from "./ComponentArray";
 import { PhysicsComponentArray } from "./PhysicsComponent";
+import { ComponentArray } from "./ComponentArray";
 
 const DOOR_SWING_SPEED = 5 / Settings.TPS;
 
@@ -23,6 +23,10 @@ export class DoorComponent {
       this.closedRotation = closedRotation;
    }
 }
+
+export const DoorComponentArray = new ComponentArray<ServerComponentType.door, DoorComponent>(true, {
+   serialise: serialise
+});
 
 const doorHalfDiagonalLength = Math.sqrt(16 * 16 + 64 * 64) / 2;
 const angleToCenter = angle(16, 64);
@@ -89,9 +93,10 @@ export function toggleDoor(door: Entity): void {
    }
 }
 
-export function serialiseDoorComponent(door: Entity): DoorComponentData {
-   const doorComponent = DoorComponentArray.getComponent(door.id);
+function serialise(entityID: number): DoorComponentData {
+   const doorComponent = DoorComponentArray.getComponent(entityID);
    return {
+      componentType: ServerComponentType.door,
       toggleType: doorComponent.toggleType,
       openProgress: doorComponent.openProgress
    }

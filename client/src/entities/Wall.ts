@@ -1,28 +1,24 @@
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { Point, angle } from "webgl-test-shared/dist/utils";
-import { EntityComponentsData, ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityData, HitData } from "webgl-test-shared/dist/client-server-types";
 import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
 import { playSound } from "../sound";
-import HealthComponent from "../entity-components/HealthComponent";
-import Entity from "../Entity";
+import Entity, { ComponentDataRecord } from "../Entity";
 import { createLightWoodSpeckParticle, createWoodShardParticle } from "../particles";
-import BuildingMaterialComponent, { WALL_TEXTURE_SOURCES } from "../entity-components/BuildingMaterialComponent";
-import TribeComponent from "../entity-components/TribeComponent";
-import StatusEffectComponent from "../entity-components/StatusEffectComponent";
-import StructureComponent from "../entity-components/StructureComponent";
-
+import { WALL_TEXTURE_SOURCES } from "../entity-components/BuildingMaterialComponent";
 
 class Wall extends Entity {
    private static readonly NUM_DAMAGE_STAGES = 6;
 
    private damageRenderPart: RenderPart | null = null;
 
-   constructor(position: Point, id: number, ageTicks: number, componentsData: EntityComponentsData<EntityType.wall>) {
+   constructor(position: Point, id: number, ageTicks: number, componentDataRecord: ComponentDataRecord) {
       super(position, id, EntityType.wall, ageTicks);
 
-      const buildingMaterialComponentData = componentsData[4];
+      const buildingMaterialComponentData = componentDataRecord[ServerComponentType.buildingMaterial]!;
+      const healthComponentData = componentDataRecord[ServerComponentType.health]!;
       
       const mainRenderPart = new RenderPart(
          this,
@@ -32,15 +28,7 @@ class Wall extends Entity {
       );
       this.attachRenderPart(mainRenderPart);
 
-      const healthComponentData = componentsData[0];
-
       this.updateDamageRenderPart(healthComponentData.health, healthComponentData.maxHealth);
-
-      this.addServerComponent(ServerComponentType.health, new HealthComponent(this, healthComponentData));
-      this.addServerComponent(ServerComponentType.statusEffect, new StatusEffectComponent(this, componentsData[1]));
-      this.addServerComponent(ServerComponentType.structure, new StructureComponent(this, componentsData[2]));
-      this.addServerComponent(ServerComponentType.tribe, new TribeComponent(this, componentsData[3]));
-      this.addServerComponent(ServerComponentType.buildingMaterial, new BuildingMaterialComponent(this, buildingMaterialComponentData, mainRenderPart));
 
       if (this.ageTicks <= 1) {
          playSound("wooden-wall-place.mp3", 0.3, 1, this.position.x, this.position.y);

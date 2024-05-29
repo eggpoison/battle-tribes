@@ -1,4 +1,4 @@
-import { InventoryComponentData } from "webgl-test-shared/dist/components";
+import { InventoryComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
 import { ItemTally, CraftingRecipe, CraftingStation } from "webgl-test-shared/dist/crafting-recipes";
 import { Inventory, Item, ItemType, itemIsStackable, ITEM_INFO_RECORD, StackableItemInfo, getItemStackSize, InventoryName } from "webgl-test-shared/dist/items";
 import Entity from "../Entity";
@@ -24,7 +24,10 @@ export class InventoryComponent {
    public readonly droppableInventories = new Array<Inventory>();
 }
 
-export const InventoryComponentArray = new ComponentArray<InventoryComponent>(true, undefined, onRemove);
+export const InventoryComponentArray = new ComponentArray<ServerComponentType.inventory, InventoryComponent>(true, {
+   onRemove: onRemove,
+   serialise: serialise
+});
 
 const dropInventory = (entity: Entity, inventory: Inventory, dropRange: number): void => {
    for (let i = 0; i < inventory.items.length; i++) {
@@ -443,9 +446,10 @@ export function craftRecipe(inventoryComponent: InventoryComponent, recipe: Craf
    addItemToInventory(inventoryComponent, outputInventoryName, recipe.product, recipe.yield);
 }
 
-export function serialiseInventoryComponent(entity: Entity): InventoryComponentData {
-   const inventoryComponent = InventoryComponentArray.getComponent(entity.id);
+function serialise(entityID: number): InventoryComponentData {
+   const inventoryComponent = InventoryComponentArray.getComponent(entityID);
    return {
+      componentType: ServerComponentType.inventory,
       inventories: inventoryComponent.inventoryRecord
    };
 }

@@ -4,13 +4,12 @@ import { EntityType } from "webgl-test-shared/dist/entities";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { Point } from "webgl-test-shared/dist/utils";
 import Entity from "../../Entity";
-import { HealthComponentArray, TotemBannerComponentArray, TribeComponentArray } from "../../components/ComponentArray";
-import { TotemBannerPosition } from "../../components/TotemBannerComponent";
+import { TotemBannerComponent, TotemBannerComponentArray, TotemBannerPosition } from "../../components/TotemBannerComponent";
 import CircularHitbox from "../../hitboxes/CircularHitbox";
-import { HealthComponent } from "../../components/HealthComponent";
+import { HealthComponent, HealthComponentArray } from "../../components/HealthComponent";
 import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
 import Tribe from "../../Tribe";
-import { TribeComponent } from "../../components/TribeComponent";
+import { TribeComponent, TribeComponentArray } from "../../components/TribeComponent";
 import { StructureComponent, StructureComponentArray } from "../../components/StructureComponent";
 import { StructureConnectionInfo } from "webgl-test-shared/dist/structures";
 import { Hitbox } from "../../hitboxes/hitboxes";
@@ -19,7 +18,7 @@ const HITBOX_SIZE = 120;
 
 const NUM_TOTEM_POSITIONS = [4, 6, 8];
 
-const TRIBE_TOTEM_POSITIONS = new Array<TotemBannerPosition>();
+export const TRIBE_TOTEM_POSITIONS = new Array<TotemBannerPosition>();
 for (let layerIdx = 0; layerIdx < 3; layerIdx++) {
    const numPositions = NUM_TOTEM_POSITIONS[layerIdx];
    for (let j = 0; j < numPositions; j++) {
@@ -49,11 +48,7 @@ export function createTribeTotem(position: Point, rotation: number, tribe: Tribe
    StatusEffectComponentArray.addComponent(totem.id, new StatusEffectComponent(StatusEffect.poisoned));
    StructureComponentArray.addComponent(totem.id, new StructureComponent(connectionInfo));
    TribeComponentArray.addComponent(totem.id, new TribeComponent(tribe));
-   TotemBannerComponentArray.addComponent(totem.id, {
-      banners: {},
-      // @Speed: Garbage collection
-      availableBannerPositions: Array.from(new Set(TRIBE_TOTEM_POSITIONS))
-   });
+   TotemBannerComponentArray.addComponent(totem.id, new TotemBannerComponent());
 
    return totem;
 }

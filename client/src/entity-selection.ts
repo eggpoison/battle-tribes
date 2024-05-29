@@ -15,7 +15,7 @@ import { SEED_TO_PLANT_RECORD } from "./entity-components/PlantComponent";
 import { hitboxIsWithinRange } from "./hitboxes/hitboxes";
 import { GhostInfo, GhostType, PARTIAL_OPACITY, setGhostInfo } from "./rendering/entity-ghost-rendering";
 import { getClosestGroupNum } from "./rendering/entity-selection-rendering";
-import { CraftingStation, ENTITY_CRAFTING_STATION_RECORD } from "webgl-test-shared/dist/crafting-recipes";
+import { CraftingStation } from "webgl-test-shared/dist/crafting-recipes";
 import { CraftingMenu_setCraftingStation } from "./components/game/menus/CraftingMenu";
 
 const enum InteractActionType {
@@ -164,11 +164,11 @@ const getEntityInteractAction = (entity: Entity): InteractAction | null => {
    }
 
    // Crafting stations
-   const craftingStation = ENTITY_CRAFTING_STATION_RECORD[entity.type];
-   if (typeof craftingStation !== "undefined") {
+   if (entity.hasServerComponent(ServerComponentType.craftingStation)) {
+      const craftingStationComponent = entity.getServerComponent(ServerComponentType.craftingStation);
       return {
          type: InteractActionType.openCraftingStation,
-         craftingStation: craftingStation
+         craftingStation: craftingStationComponent.craftingStation
       };
    }
 

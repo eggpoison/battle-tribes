@@ -1,11 +1,12 @@
 import { EntityType } from "webgl-test-shared/dist/entities";
-import { TribeComponentData } from "webgl-test-shared/dist/components";
+import { ServerComponentType, TribeComponentData } from "webgl-test-shared/dist/components";
 import Tribe from "../Tribe";
-import { GolemComponentArray, TribeComponentArray, TribesmanComponentArray } from "./ComponentArray";
+import { ComponentArray } from "./ComponentArray";
 import Entity from "../Entity";
-import { getTribesmanRelationship } from "./TribesmanAIComponent";
+import { TribesmanAIComponentArray, getTribesmanRelationship } from "./TribesmanAIComponent";
 import { TribeMemberComponentArray } from "./TribeMemberComponent";
 import { PlantComponentArray } from "./PlantComponent";
+import { GolemComponentArray } from "./GolemComponent";
 
 // /** Relationships a tribe member can have, in increasing order of threat */
 export const enum EntityRelationship {
@@ -26,9 +27,13 @@ export class TribeComponent {
    }
 }
 
+export const TribeComponentArray = new ComponentArray<ServerComponentType.tribe, TribeComponent>(true, {
+   serialise: serialiseTribeComponent
+});
+
 export function getEntityRelationship(entityID: number, comparingEntity: Entity): EntityRelationship {
    // More complex if the entity is an AI tribesman: take into account the personal relationship between the entities
-   if (TribesmanComponentArray.hasComponent(entityID) && TribeMemberComponentArray.hasComponent(comparingEntity.id)) {
+   if (TribesmanAIComponentArray.hasComponent(entityID) && TribeMemberComponentArray.hasComponent(comparingEntity.id)) {
       return getTribesmanRelationship(entityID, comparingEntity.id);
    }
 
@@ -139,9 +144,10 @@ export function getEntityRelationship(entityID: number, comparingEntity: Entity)
    }
 }
 
-export function serialiseTribeComponent(entity: Entity): TribeComponentData {
-   const tribeComponent = TribeComponentArray.getComponent(entity.id);
+function serialiseTribeComponent(entityID: number): TribeComponentData {
+   const tribeComponent = TribeComponentArray.getComponent(entityID);
    return {
+      componentType: ServerComponentType.tribe,
       tribeID: tribeComponent.tribe.id
    };
 }

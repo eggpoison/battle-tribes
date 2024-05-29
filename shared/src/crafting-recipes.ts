@@ -1,4 +1,3 @@
-import { EntityType } from "./entities";
 import { ItemSlots, ItemType, ItemTypeString, PlaceableItemType } from "./items";
 import { Settings } from "./settings";
 
@@ -15,13 +14,6 @@ export enum CraftingStation {
    frostshaper,
    stonecarvingTable
 }
-
-export const ENTITY_CRAFTING_STATION_RECORD: Partial<Record<EntityType, CraftingStation>> = {
-   [EntityType.slime]: CraftingStation.slime,
-   [EntityType.workbench]: CraftingStation.workbench,
-   [EntityType.frostshaper]: CraftingStation.frostshaper,
-   [EntityType.stonecarvingTable]: CraftingStation.stonecarvingTable
-};
 
 export const CRAFTING_STATION_ITEM_TYPE_RECORD: Partial<Record<CraftingStation, PlaceableItemType>> = {
    [CraftingStation.workbench]: ItemType.workbench

@@ -8,23 +8,23 @@ import { Biome, TileType } from "webgl-test-shared/dist/tiles";
 import { Point, lerp, randInt } from "webgl-test-shared/dist/utils";
 import Entity from "../../Entity";
 import CircularHitbox from "../../hitboxes/CircularHitbox";
-import { HealthComponentArray, SlimeComponentArray, WanderAIComponentArray } from "../../components/ComponentArray";
-import { HealthComponent, addLocalInvulnerabilityHash, canDamageEntity, damageEntity, getEntityHealth, healEntity } from "../../components/HealthComponent";
-import { SlimeComponent } from "../../components/SlimeComponent";
+import { HealthComponent, HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity, getEntityHealth, healEntity } from "../../components/HealthComponent";
+import { SlimeComponent, SlimeComponentArray } from "../../components/SlimeComponent";
 import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
 import { entityHasReachedPosition, getEntitiesInRange, stopEntity, turnAngle } from "../../ai-shared";
 import { shouldWander, getWanderTargetTile, wander } from "../../ai/wander-ai";
 import Tile from "../../Tile";
-import { WanderAIComponent } from "../../components/WanderAIComponent";
+import { WanderAIComponent, WanderAIComponentArray } from "../../components/WanderAIComponent";
 import { createItemsOverEntity } from "../../entity-shared";
 import Board from "../../Board";
 import { AIHelperComponent, AIHelperComponentArray } from "../../components/AIHelperComponent";
 import { createSlimeSpit } from "../projectiles/slime-spit";
-import { SERVER } from "../../server/server";
 import { PhysicsComponent, PhysicsComponentArray } from "../../components/PhysicsComponent";
 import { wasTribeMemberKill } from "../tribes/tribe-member";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
+import { CraftingStation } from "webgl-test-shared/dist/crafting-recipes";
+import { CraftingStationComponentArray, CraftingStationComponent } from "../../components/CraftingStationComponent";
 
 const TURN_SPEED = 2 * Math.PI;
 
@@ -81,6 +81,7 @@ export function createSlime(position: Point, size: SlimeSize, orbSizes: Array<Sl
    SlimeComponentArray.addComponent(slime.id, new SlimeComponent(size, MERGE_WEIGHTS[size], orbSizes));
    WanderAIComponentArray.addComponent(slime.id, new WanderAIComponent());
    AIHelperComponentArray.addComponent(slime.id, new AIHelperComponent(VISION_RANGES[size]));
+   CraftingStationComponentArray.addComponent(slime.id, new CraftingStationComponent(CraftingStation.slime));
 
    return slime;
 }

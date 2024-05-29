@@ -1,7 +1,6 @@
 import { RockSpikeProjectileSize } from "webgl-test-shared/dist/entities";
-import { RockSpikeProjectileComponentData } from "webgl-test-shared/dist/components";
-import Entity from "../Entity";
-import { RockSpikeProjectileComponentArray } from "./ComponentArray";
+import { RockSpikeProjectileComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
+import { ComponentArray } from "./ComponentArray";
 
 export class RockSpikeProjectileComponent {
    public readonly size: RockSpikeProjectileSize;
@@ -15,9 +14,15 @@ export class RockSpikeProjectileComponent {
    }
 }
 
-export function serialiseRockSpikeComponent(rockSpike: Entity): RockSpikeProjectileComponentData {
-   const rockSpikeComponent = RockSpikeProjectileComponentArray.getComponent(rockSpike.id);
+export const RockSpikeProjectileComponentArray = new ComponentArray<ServerComponentType.rockSpike, RockSpikeProjectileComponent>(true, {
+   serialise: serialise
+});
+
+function serialise(entityID: number): RockSpikeProjectileComponentData {
+   const rockSpikeComponent = RockSpikeProjectileComponentArray.getComponent(entityID);
+
    return {
+      componentType: ServerComponentType.rockSpike,
       size: rockSpikeComponent.size,
       lifetime: rockSpikeComponent.lifetimeTicks
    };

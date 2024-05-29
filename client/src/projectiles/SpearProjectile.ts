@@ -4,10 +4,9 @@ import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
 import Entity from "../Entity";
 import { playSound } from "../sound";
-import { EntityComponentsData } from "webgl-test-shared/dist/components";
 
 class SpearProjectile extends Entity {
-   constructor(position: Point, id: number, ageTicks: number, componentsData: EntityComponentsData<EntityType.spearProjectile>) {
+   constructor(position: Point, id: number, ageTicks: number) {
       super(position, id, EntityType.spearProjectile, ageTicks);
 
       this.attachRenderPart(

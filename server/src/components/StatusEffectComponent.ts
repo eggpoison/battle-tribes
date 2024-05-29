@@ -1,12 +1,11 @@
 import { StatusEffectData } from "webgl-test-shared/dist/client-server-types";
-import { StatusEffectComponentData } from "webgl-test-shared/dist/components";
+import { ServerComponentType, StatusEffectComponentData } from "webgl-test-shared/dist/components";
 import { PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
 import { StatusEffect, STATUS_EFFECT_MODIFIERS } from "webgl-test-shared/dist/status-effects";
 import { customTickIntervalHasPassed } from "webgl-test-shared/dist/utils";
 import { ComponentArray } from "./ComponentArray";
 import Entity, { getRandomPositionInEntity } from "../Entity";
 import { damageEntity } from "./HealthComponent";
-import { SERVER } from "../server/server";
 import { PhysicsComponentArray } from "./PhysicsComponent";
 import Board from "../Board";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
@@ -23,7 +22,9 @@ export class StatusEffectComponent {
    }
 }
 
-export const StatusEffectComponentArray = new ComponentArray<StatusEffectComponent>(false);
+export const StatusEffectComponentArray = new ComponentArray<ServerComponentType.statusEffect, StatusEffectComponent>(false, {
+   serialise: serialise
+});
 
 const entityIsImmuneToStatusEffect = (statusEffectComponent: StatusEffectComponent, statusEffect: StatusEffect): boolean => {
    return (statusEffectComponent.statusEffectImmunityBitset & statusEffect) !== 0;
@@ -163,9 +164,9 @@ export function tickStatusEffectComponents(): void {
    StatusEffectComponentArray.deactivateQueue();
 }
 
-export function serialiseStatusEffectComponent(entity: Entity): StatusEffectComponentData {
+function serialise(entityID: number): StatusEffectComponentData {
    const statusEffects = new Array<StatusEffectData>();
-   const statusEffectComponent = StatusEffectComponentArray.getComponent(entity.id);
+   const statusEffectComponent = StatusEffectComponentArray.getComponent(entityID);
    for (let i = 0; i < statusEffectComponent.activeStatusEffectTypes.length; i++) {
       statusEffects.push({
          type: statusEffectComponent.activeStatusEffectTypes[i] as unknown as StatusEffect,
@@ -174,6 +175,7 @@ export function serialiseStatusEffectComponent(entity: Entity): StatusEffectComp
    }
 
    return {
+      componentType: ServerComponentType.statusEffect,
       statusEffects: statusEffects
    };
 }

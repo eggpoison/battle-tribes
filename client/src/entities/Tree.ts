@@ -1,20 +1,17 @@
 import { EntityType, TreeSize } from "webgl-test-shared/dist/entities";
 import { Point, angle, randFloat, randInt, randItem } from "webgl-test-shared/dist/utils";
-import { EntityComponentsData, ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { HitData, HitFlags } from "webgl-test-shared/dist/client-server-types";
 import RenderPart from "../render-parts/RenderPart";
 import { LeafParticleSize, createLeafParticle, createLeafSpeckParticle, createWoodSpeckParticle } from "../particles";
 import { getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
 import { AudioFilePath, playSound } from "../sound";
-import TreeComponent from "../entity-components/TreeComponent";
-import HealthComponent from "../entity-components/HealthComponent";
-import StatusEffectComponent from "../entity-components/StatusEffectComponent";
-import Entity from "../Entity";
+import Entity, { ComponentDataRecord } from "../Entity";
 
 const treeTextures: { [T in TreeSize]: string } = {
    [TreeSize.small]: "entities/tree/tree-small.png",
    [TreeSize.large]: "entities/tree/tree-large.png"
-}
+};
 
 export const TREE_HIT_SOUNDS: ReadonlyArray<AudioFilePath> = ["tree-hit-1.mp3", "tree-hit-2.mp3", "tree-hit-3.mp3", "tree-hit-4.mp3"];
 export const TREE_DESTROY_SOUNDS: ReadonlyArray<AudioFilePath> = ["tree-destroy-1.mp3", "tree-destroy-2.mp3", "tree-destroy-3.mp3", "tree-destroy-4.mp3"];
@@ -27,10 +24,10 @@ class Tree extends Entity {
    public static readonly LEAF_SPECK_COLOUR_LOW = [63/255, 204/255, 91/255] as const;
    public static readonly LEAF_SPECK_COLOUR_HIGH = [35/255, 158/255, 88/255] as const;
    
-   constructor(position: Point, id: number, ageTicks: number, componentsData: EntityComponentsData<EntityType.tree>) {
+   constructor(position: Point, id: number, ageTicks: number, componentDataRecord: ComponentDataRecord) {
       super(position, id, EntityType.tree, ageTicks);
 
-      const treeComponentData = componentsData[2];
+      const treeComponentData = componentDataRecord[ServerComponentType.tree]!;
       
       this.attachRenderPart(
          new RenderPart(
@@ -40,10 +37,6 @@ class Tree extends Entity {
             0
          )
       );
-
-      this.addServerComponent(ServerComponentType.health, new HealthComponent(this, componentsData[0]));
-      this.addServerComponent(ServerComponentType.statusEffect, new StatusEffectComponent(this, componentsData[1]));
-      this.addServerComponent(ServerComponentType.tree, new TreeComponent(this, treeComponentData));
    }
 
    protected onHit(hitData: HitData): void {

@@ -13,11 +13,11 @@ import Board from "./Board";
 import { createHealingParticle, createSlimePoolParticle, createSparkParticle, createWaterSplashParticle } from "./particles";
 import { playSound } from "./sound";
 import ServerComponent from "./entity-components/ServerComponent";
-import { ClientComponentClass, ClientComponentType, ClientComponents, ServerComponentClass, ServerComponents, createComponent } from "./entity-components/components";
+import { ClientComponentClass, ClientComponentType, ClientComponents, ServerComponentClass, createComponent } from "./entity-components/components";
 import Component from "./entity-components/Component";
 import { removeLightsAttachedToEntity, removeLightsAttachedToRenderPart } from "./lights";
 import { EntityEvent } from "webgl-test-shared/dist/entity-events";
-import { Hitbox } from "./hitboxes/hitboxes";
+import { Hitbox, hitboxIsCircular } from "./hitboxes/hitboxes";
 
 // Use prime numbers / 100 to ensure a decent distribution of different types of particles
 const HEALING_PARTICLE_AMOUNTS = [0.05, 0.37, 1.01];
@@ -37,18 +37,18 @@ export function getFrameProgress(): number {
 export function getRandomPointInEntity(entity: Entity): Point {
    const hitbox = entity.hitboxes[randInt(0, entity.hitboxes.length - 1)];
 
-   if (hitbox.hasOwnProperty("radius")) {
-      const offsetMagnitude = (hitbox as CircularHitbox).radius * Math.random();
+   if (hitboxIsCircular(hitbox)) {
+      const offsetMagnitude = hitbox.radius * Math.random();
       const offsetDirection = 2 * Math.PI * Math.random();
       return new Point(entity.position.x + offsetMagnitude * Math.sin(offsetDirection), entity.position.y + offsetMagnitude * Math.cos(offsetDirection));
    } else {
-      const halfWidth = (hitbox as RectangularHitbox).width / 2;
-      const halfHeight = (hitbox as RectangularHitbox).height / 2;
+      const halfWidth = hitbox.width / 2;
+      const halfHeight = hitbox.height / 2;
       
       const xOffset = randFloat(-halfWidth, halfWidth);
       const yOffset = randFloat(-halfHeight, halfHeight);
 
-      const hitboxRotation = (hitbox as RectangularHitbox).rotation;
+      const hitboxRotation = hitbox.rotation;
       const x = entity.position.x + rotateXAroundOrigin(xOffset, yOffset, entity.rotation + hitboxRotation);
       const y = entity.position.y + rotateYAroundOrigin(xOffset, yOffset, entity.rotation + hitboxRotation);
       return new Point(x, y);
@@ -217,7 +217,7 @@ abstract class Entity<T extends EntityType = EntityType> extends RenderObject {
       return this.clientComponents[componentType]!;
    }
 
-   public hasServerComponent(componentType: keyof typeof ServerComponents): boolean {
+   public hasServerComponent(componentType: ServerComponentType): boolean {
       return this.serverComponents.hasOwnProperty(componentType);
    }
    
@@ -555,7 +555,7 @@ abstract class Entity<T extends EntityType = EntityType> extends RenderObject {
             hitbox.rotation = hitboxData.rotation;
             hitbox.offset.x = hitboxData.offsetX;
             hitbox.offset.y = hitboxData.offsetY;
-            hitbox.collisionType = hitboxData.collisionType as unknown as HitboxCollisionType;
+            hitbox.collisionType = hitboxData.collisionType;
             hitbox.updateFromEntity(this);
             hitbox.updateHitboxBounds(this.rotation);
          } else {

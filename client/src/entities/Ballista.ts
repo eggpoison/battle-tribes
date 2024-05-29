@@ -38,6 +38,7 @@ class Ballista extends Entity {
          2,
          0
       );
+      plateRenderPart.addTag("turretComponent:pivoting");
       this.attachRenderPart(plateRenderPart);
 
       // Shaft
@@ -58,6 +59,7 @@ class Ballista extends Entity {
             2.5 + i * 0.1,
             0
          );
+         renderPart.addTag("turretComponent:gear");
          // @Speed: Garbage collection
          renderPart.offset.x = i === 0 ? BALLISTA_GEAR_X : -BALLISTA_GEAR_X;
          renderPart.offset.y = BALLISTA_GEAR_Y;
@@ -72,6 +74,7 @@ class Ballista extends Entity {
          5,
          0
       );
+      crossbowRenderPart.addTag("turretComponent:aiming");
       this.attachRenderPart(crossbowRenderPart);
    }
 

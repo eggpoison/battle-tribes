@@ -54,15 +54,6 @@ const getFistTextureSource = (tribesman: Entity, tribeType: TribeType): string =
    }
 }
 
-const createHandRenderPart = (entity: Entity, tribeType: TribeType): RenderPart => {
-   return new RenderPart(
-      entity,
-      getTextureArrayIndex(getFistTextureSource(entity, tribeType)),
-      1,
-      0
-   );
-}
-
 const getBodyTextureSource = (entity: Entity, tribeType: TribeType): string => {
    switch (tribeType) {
       case TribeType.plainspeople: {
@@ -107,11 +98,25 @@ const getBodyTextureSource = (entity: Entity, tribeType: TribeType): string => {
 // @Cleanup: sucks
 // @Incomplete: NOT CALLED
 export function addTribeMemberRenderParts(tribesman: Entity, componentDataRecord: ComponentDataRecord): void {
-   const tribeComponentData = componentDataRecord[ServerComponentType.tribe]!;
-   const tribeMemberComponentData = componentDataRecord[ServerComponentType.tribeMember]!;
+   let warPaintType: number;
+   let tribeType: TribeType;
+   
+   // @Hack
+   if (Object.keys(componentDataRecord).length === 0) {
+      const tribeComponent = tribesman.getServerComponent(ServerComponentType.tribe);
+      const tribeMemberComponent = tribesman.getServerComponent(ServerComponentType.tribeMember);
+
+      tribeType = tribeComponent.tribeType;
+      warPaintType = tribeMemberComponent.warPaintType;
+   } else {
+      const tribeComponentData = componentDataRecord[ServerComponentType.tribe]!;
+      const tribeMemberComponentData = componentDataRecord[ServerComponentType.tribeMember]!;
+   
+      tribeType = getTribeType(tribeComponentData.tribeID);
+      warPaintType = tribeMemberComponentData.warPaintType;
+   }
 
    const radius = tribesman.type === EntityType.player || tribesman.type === EntityType.tribeWarrior ? 32 : 28;
-   const tribeType = getTribeType(tribeComponentData.tribeID);
 
    // 
    // Body render part
@@ -123,14 +128,15 @@ export function addTribeMemberRenderParts(tribesman: Entity, componentDataRecord
       2,
       0
    );
+   bodyRenderPart.addTag("tribeMemberComponent:body");
    tribesman.attachRenderPart(bodyRenderPart);
 
    if (tribeType === TribeType.goblins) {
       let textureSource: string;
       if (tribesman.type === EntityType.tribeWarrior) {
-         textureSource = `entities/goblins/warrior-warpaint-${tribeMemberComponentData.warPaintType}.png`;
+         textureSource = `entities/goblins/warrior-warpaint-${warPaintType}.png`;
       } else {
-         textureSource = `entities/goblins/goblin-warpaint-${tribeMemberComponentData.warPaintType}.png`;
+         textureSource = `entities/goblins/goblin-warpaint-${warPaintType}.png`;
       }
       
       // Goblin warpaint
@@ -169,23 +175,26 @@ export function addTribeMemberRenderParts(tribesman: Entity, componentDataRecord
 
    // Hands
    for (let i = 0; i < 2; i++) {
-      const handRenderPart = createHandRenderPart(tribesman, tribeType);
+      const handRenderPart = new RenderPart(
+         tribesman,
+         getTextureArrayIndex(getFistTextureSource(tribesman, tribeType)),
+         1,
+         0
+      );
+      handRenderPart.addTag("tribeMemberComponent:hand")
       handRenderPart.addTag("inventoryUseComponent:hand");
       tribesman.attachRenderPart(handRenderPart);
    }
 }
 
 const switchTribeMemberRenderParts = (tribesman: Entity): void => {
-   const tribeComponent = tribesman.getServerComponent(ServerComponentType.tribe);
-   const tribeMemberComponent = tribesman.getServerComponent(ServerComponentType.tribeMember);
-
-   const handTextureSource = getFistTextureSource(tribesman, tribeComponent.tribeType);
-   for (let i = 0; i < 2; i++) {
-      const handRenderPart = tribeMemberComponent.handRenderParts[i];
-      handRenderPart.switchTextureSource(handTextureSource);
+   // Remove all previous render parts
+   while (tribesman.allRenderParts.length > 0) {
+      const renderPart = tribesman.allRenderParts[0];
+      tribesman.removeRenderPart(renderPart);
    }
 
-   tribeMemberComponent.bodyRenderPart.switchTextureSource(getBodyTextureSource(tribesman, tribeComponent.tribeType));
+   addTribeMemberRenderParts(tribesman, {});
 }
 
 abstract class TribeMember extends Entity {

@@ -26,6 +26,7 @@ class WorkerHut extends Entity {
          1,
          0
       );
+      doorRenderPart.addTag("hutComponent:door");
       this.attachRenderPart(doorRenderPart);
    }
 

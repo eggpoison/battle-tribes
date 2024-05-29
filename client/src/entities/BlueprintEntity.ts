@@ -349,12 +349,17 @@ class BlueprintEntity extends Entity {
          this.attachRenderPart(renderPart);
       }
 
-      this.updatePartialTexture();
-
       // @Hack: Should be 1
       if (ageTicks <= 1) {
          playSound("blueprint-place.mp3", 0.4, 1, this.position.x, this.position.y);
       }
+   }
+
+   // @Hack
+   public callOnLoadFunctions(): void {
+      super.callOnLoadFunctions();
+
+      this.updatePartialTexture();
    }
 
    public onRemove(): void {

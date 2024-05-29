@@ -20,13 +20,14 @@ class Wall extends Entity {
       const buildingMaterialComponentData = componentDataRecord[ServerComponentType.buildingMaterial]!;
       const healthComponentData = componentDataRecord[ServerComponentType.health]!;
       
-      const mainRenderPart = new RenderPart(
+      const renderPart = new RenderPart(
          this,
          getTextureArrayIndex(WALL_TEXTURE_SOURCES[buildingMaterialComponentData.material]),
          0,
          0
       );
-      this.attachRenderPart(mainRenderPart);
+      renderPart.addTag("buildingMaterialComponent:material");
+      this.attachRenderPart(renderPart);
 
       this.updateDamageRenderPart(healthComponentData.health, healthComponentData.maxHealth);
 
@@ -86,8 +87,8 @@ class Wall extends Entity {
       }
    }
    
-   // onRemove so that the effects also play when the wall is removed by deconstruction
-   public onRemove(): void {
+   // @Incomplete: doesn't play when removed by deconstruction
+   public onDie(): void {
       // @Speed @Hack
       // Don't play death effects if the wall was replaced by a blueprint
       for (const chunk of this.chunks) {

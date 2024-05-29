@@ -64,7 +64,7 @@ export enum ClientComponentType {
    footprint
 }
 
-export const ServerComponents = {
+const ServerComponents = {
    [ServerComponentType.cow]: (): CowComponent => 0 as any,
    [ServerComponentType.turret]: (): TurretComponent => 0 as any,
    [ServerComponentType.tribe]: (): TribeComponent => 0 as any,

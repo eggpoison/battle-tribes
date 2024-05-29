@@ -56,7 +56,7 @@ import { EntityData } from "webgl-test-shared/dist/client-server-types";
 import Frostshaper from "./entities/Frostshaper";
 import StonecarvingTable from "./entities/StonecarvingTable";
 
-export type EntityClassType<T extends EntityType> = new (position: Point, id: number, ageTicks: number, componentDataRecord: ComponentDataRecord) => Entity;
+export type EntityClassType = new (position: Point, id: number, ageTicks: number, componentDataRecord: ComponentDataRecord) => Entity;
 
 const createComponentDataRecord = (entityData: EntityData): ComponentDataRecord => {
    const componentDataRecord: ComponentDataRecord = {};

@@ -43,8 +43,8 @@ const getSecondsSinceLastAttack = (entity: Entity): number => {
 }
 
 class TribeMemberComponent extends ServerComponent<ServerComponentType.tribeMember> {
-   public bodyRenderPart!: RenderPart;
-   public handRenderParts!: Array<RenderPart>;
+   public readonly bodyRenderPart: RenderPart;
+   public readonly handRenderParts: ReadonlyArray<RenderPart>;
    
    public warPaintType: number;
    
@@ -57,12 +57,12 @@ class TribeMemberComponent extends ServerComponent<ServerComponentType.tribeMemb
 
       this.warPaintType = data.warPaintType;
       this.updateTitles(data.titles);
+
+      this.bodyRenderPart = this.entity.getRenderPart("tribeMemberComponent:body");
+      this.handRenderParts = this.entity.getRenderParts("tribeMemberComponent:hand", 2);
    }
 
    private registerNewTitle(title: TribesmanTitle): void {
-      // @Temporary
-      // return;
-      
       // Particle effects
       for (let i = 0; i < 25; i++) {
          const offsetMagnitude = randFloat(12, 34);

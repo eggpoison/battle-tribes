@@ -25,6 +25,7 @@ class SlingTurret extends Entity {
          1,
          0
       );
+      plateRenderPart.addTag("turretComponent:pivoting");
       this.attachRenderPart(plateRenderPart);
 
       // Sling
@@ -34,6 +35,7 @@ class SlingTurret extends Entity {
          2,
          0
       );
+      slingRenderPart.addTag("turretComponent:aiming");
       this.attachRenderPart(slingRenderPart);
    }
 }

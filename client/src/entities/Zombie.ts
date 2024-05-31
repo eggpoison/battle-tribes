@@ -12,10 +12,6 @@ import Entity, { ComponentDataRecord } from "../Entity";
 const ZOMBIE_TEXTURE_SOURCES: ReadonlyArray<string> = ["entities/zombie/zombie1.png", "entities/zombie/zombie2.png", "entities/zombie/zombie3.png", "entities/zombie/zombie-golden.png"];
 const ZOMBIE_HAND_TEXTURE_SOURCES: ReadonlyArray<string> = ["entities/zombie/fist-1.png", "entities/zombie/fist-2.png", "entities/zombie/fist-3.png", "entities/zombie/fist-4.png"];
 
-// @Cleanup: So much copy and paste from TribeMember
-// @Cleanup: So much copy and paste from TribeMember
-// @Cleanup: So much copy and paste from TribeMember
-
 class Zombie extends Entity {
    private static readonly RADIUS = 32;
    
@@ -46,6 +42,7 @@ class Zombie extends Entity {
             1,
             0
          );
+         renderPart.addTag("inventoryUseComponent:hand");
          this.attachRenderPart(renderPart);
          handRenderParts.push(renderPart);
       }

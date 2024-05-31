@@ -1,11 +1,11 @@
 import { RectangularHitboxData, CircularHitboxData, EntityData, VisibleChunkBounds, GameDataPacket, GameDataPacketOptions, PlayerInventoryData, InitialGameDataPacket, ServerTileData, GameDataSyncPacket } from "webgl-test-shared/dist/client-server-types";
-import { ServerComponentType, ComponentData } from "webgl-test-shared/dist/components";
+import { ComponentData } from "webgl-test-shared/dist/components";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import Board from "../Board";
 import Entity from "../Entity";
 import Tribe from "../Tribe";
 import { ComponentArrays } from "../components/ComponentArray";
-import { HealthComponentArray, serialiseHealthComponent } from "../components/HealthComponent";
+import { HealthComponentArray } from "../components/HealthComponent";
 import { InventoryComponentArray, getInventory } from "../components/InventoryComponent";
 import { InventoryUseComponentArray, getInventoryUseInfo } from "../components/InventoryUseComponent";
 import { PhysicsComponentArray } from "../components/PhysicsComponent";

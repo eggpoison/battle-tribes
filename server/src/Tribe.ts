@@ -661,10 +661,6 @@ class Tribe {
       }
    }
 
-   public hasHut(hut: Entity): boolean {
-      return this.huts.includes(hut);
-   }
-
    public hasTotem(): boolean {
       return this.totem !== null;
    }

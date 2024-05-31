@@ -11,7 +11,7 @@ import { createSpitPoison } from "./spit-poison";
 import { HealthComponentArray, damageEntity } from "../../components/HealthComponent";
 import { StatusEffectComponentArray, applyStatusEffect } from "../../components/StatusEffectComponent";
 import { PhysicsComponent, PhysicsComponentArray, applyKnockback } from "../../components/PhysicsComponent";
-import { EntityCreationInfo } from "../../entity-components";
+import { EntityCreationInfo } from "../../components";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
 

@@ -6,6 +6,7 @@ import TribesmanInteractMenu from "./TribesmanInteractMenu";
 import AmmoBoxInventory from "./AmmoBoxInventory";
 import { deselectSelectedEntity, getSelectedEntityID } from "../../../entity-selection";
 import Board from "../../../Board";
+import { setMenuCloseFunction } from "../../../player-input";
 
 export enum InventoryMenuType {
    none,
@@ -33,6 +34,12 @@ const InventorySelector = () => {
    }, []);
 
    useEffect(() => {
+      if (inventoryMenuType !== InventoryMenuType.none) {
+         setMenuCloseFunction(() => {
+            setInventoryMenuType(InventoryMenuType.none);
+         });
+      }
+      
       InventorySelector_inventoryIsOpen = () => {
          return inventoryMenuType !== InventoryMenuType.none;
       }

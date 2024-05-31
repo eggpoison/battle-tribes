@@ -4,7 +4,7 @@ import { PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
 import { StatusEffect, STATUS_EFFECT_MODIFIERS } from "webgl-test-shared/dist/status-effects";
 import { customTickIntervalHasPassed } from "webgl-test-shared/dist/utils";
 import { ComponentArray } from "./ComponentArray";
-import Entity, { getRandomPositionInEntity } from "../Entity";
+import { getRandomPositionInEntity } from "../Entity";
 import { damageEntity } from "./HealthComponent";
 import { PhysicsComponentArray } from "./PhysicsComponent";
 import Board from "../Board";

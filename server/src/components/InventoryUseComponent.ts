@@ -2,7 +2,6 @@ import { InventoryUseComponentData, ServerComponentType } from "webgl-test-share
 import { LimbAction } from "webgl-test-shared/dist/entities";
 import { Inventory, InventoryName } from "webgl-test-shared/dist/items";
 import { Settings } from "webgl-test-shared/dist/settings";
-import Entity from "../Entity";
 import { ComponentArray } from "./ComponentArray";
 
 export interface InventoryUseInfo {

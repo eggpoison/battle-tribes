@@ -13,7 +13,7 @@ import Board from "../../Board";
 import { HealthComponent, HealthComponentArray } from "../../components/HealthComponent";
 import CircularHitbox from "../../hitboxes/CircularHitbox";
 import { InventoryUseComponent, InventoryUseComponentArray, getInventoryUseInfo, setLimbActions } from "../../components/InventoryUseComponent";
-import { TribeMemberComponent, TribeMemberComponentArray } from "../../components/TribeMemberComponent";
+import { TribeMemberComponent, TribeMemberComponentArray, awardTitle } from "../../components/TribeMemberComponent";
 import { PlayerComponent, PlayerComponentArray } from "../../components/PlayerComponent";
 import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
 import { PhysicsComponent, PhysicsComponentArray } from "../../components/PhysicsComponent";
@@ -25,6 +25,7 @@ import { StructureComponentArray, isAttachedToWall } from "../../components/Stru
 import { registerPlayerDroppedItemPickup } from "../../server/player-clients";
 import { HutComponentArray } from "../../components/HutComponent";
 import { SpikesComponentArray } from "../../components/SpikesComponent";
+import { TribesmanTitle } from "webgl-test-shared/dist/titles";
 
 export function createPlayer(position: Point, tribe: Tribe, username: string): Entity {
    const player = new Entity(position, 0, EntityType.player, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
@@ -60,10 +61,10 @@ export function createPlayer(position: Point, tribe: Tribe, username: string): E
    // addItem(inventoryComponent, createItem(ItemType.seed, 10));
    // addItem(inventoryComponent, createItem(ItemType.frostcicle, 10));
 
-   setTimeout(() => {
-      addItem(inventoryComponent, createItem(ItemType.frostshaper, 99));
-      addItem(inventoryComponent, createItem(ItemType.stonecarvingTable, 5));
-   }, 50);
+   // setTimeout(() => {
+   //    addItem(inventoryComponent, createItem(ItemType.frostshaper, 99));
+   //    addItem(inventoryComponent, createItem(ItemType.stonecarvingTable, 5));
+   // }, 50);
    // addItem(inventoryComponent, createItem(ItemType.wood, 10));
    // addItem(inventoryComponent, createItem(ItemType.wooden_wall, 50));
    

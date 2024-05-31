@@ -710,7 +710,8 @@ export const enum InventoryName {
    outputInventory,
    inventory,
    handSlot,
-   ammoBoxInventory
+   ammoBoxInventory,
+   devInventory
 }
 
 /** Inventory data sent between client and server */

@@ -12,7 +12,7 @@ import Board from "../../Board";
 import { PhysicsComponent, PhysicsComponentArray, applyKnockback } from "../../components/PhysicsComponent";
 import { EntityRelationship, getEntityRelationship } from "../../components/TribeComponent";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { EntityCreationInfo } from "../../entity-components";
+import { EntityCreationInfo } from "../../components";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
 
 type ComponentTypes = [ServerComponentType.physics, ServerComponentType.throwingProjectile];

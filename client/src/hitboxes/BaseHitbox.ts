@@ -39,5 +39,5 @@ abstract class BaseHitbox {
 
    public abstract isColliding(otherHitbox: CircularHitbox | RectangularHitbox): boolean;
 }
-
+ 
 export default BaseHitbox;

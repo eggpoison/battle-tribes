@@ -1,4 +1,4 @@
-import { VisibleChunkBounds, HitData, PlayerKnockbackData, HealData, ResearchOrbCompleteData, AttackPacket, PlayerDataPacket } from "webgl-test-shared/dist/client-server-types";
+import { VisibleChunkBounds, HitData, PlayerKnockbackData, HealData, ResearchOrbCompleteData } from "webgl-test-shared/dist/client-server-types";
 import Tribe from "../Tribe";
 import { ISocket } from "./server";
 

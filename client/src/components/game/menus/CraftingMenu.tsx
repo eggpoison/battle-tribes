@@ -11,6 +11,7 @@ import Player from "../../../entities/Player";
 import { definiteGameState } from "../../../game-state/game-states";
 import Game from "../../../Game";
 import { playSound } from "../../../sound";
+import { setMenuCloseFunction } from "../../../player-input";
 
 interface RecipeViewerProps {
    readonly recipe: CraftingRecipe | null;
@@ -18,6 +19,7 @@ interface RecipeViewerProps {
    readonly craftingMenuHeight: number;
 }
 
+// @Temporary?
 const CRAFTING_STATION_ICON_TEXTURE_SOURCES: Record<CraftingStation, string> = {
    [CraftingStation.workbench]: CLIENT_ITEM_INFO_RECORD[ItemType.workbench].textureSource,
    [CraftingStation.slime]: CLIENT_ITEM_INFO_RECORD[ItemType.slimeball].textureSource,
@@ -141,12 +143,13 @@ export let setCraftingMenuAvailableRecipes: (craftingRecipes: Array<CraftingReci
 export let setCraftingMenuAvailableCraftingStations: (craftingStations: Set<CraftingStation>) => void = () => {};
 export let CraftingMenu_setCraftingMenuOutputItem: (craftingOutputItem: Item | null) => void = () => {};
 export let CraftingMenu_setCraftingStation: (craftingStation: CraftingStation | null) => void;
+export let CraftingMenu_setIsVisible: (isVisible: boolean) => void;
 
 export let craftingMenuIsOpen: () => boolean;
 
 const CraftingMenu = () => {
+   const [isVisible, setIsVisible] = useState(false);
    const [craftingStation, setCraftingStation] = useState<CraftingStation | null>(null);
-   // const [isVisible, setIsVisible] = useState(false);
 
    // const [availableRecipes, setAvailableRecipes] = useState(new Array<CraftingRecipe>());
    // const [availableCraftingStations, setAvailableCraftingStations] = useState(new Set<CraftingStation>());
@@ -254,17 +257,32 @@ const CraftingMenu = () => {
             setHoverPosition(null);
          }
       }
+
+      CraftingMenu_setIsVisible = (isVisible: boolean): void => {
+         setIsVisible(isVisible);
+      }
    }, []);
 
    useEffect(() => {
-      craftingMenuIsOpen = (): boolean => {
-         return craftingStation !== null;
+      if (isVisible) {
+         setMenuCloseFunction(() => {
+            setIsVisible(false);
+         });
       }
-   }, [craftingStation]);
+      
+      craftingMenuIsOpen = (): boolean => {
+         return isVisible;
+      }
+   }, [isVisible]);
 
-   if (craftingStation === null) return null;
+   if (!isVisible) return null;
 
-   const availableRecipes = CRAFTING_RECIPE_RECORD[craftingStation];
+   let availableRecipes: ReadonlyArray<CraftingRecipe>;
+   if (craftingStation === null) {
+      availableRecipes = CRAFTING_RECIPE_RECORD.hand;
+   } else {
+      availableRecipes = CRAFTING_RECIPE_RECORD[craftingStation];
+   }
 
    const browserHeight = Math.max(MIN_RECIPE_BROWSER_HEIGHT, Math.ceil(availableRecipes.length / RECIPE_BROWSER_WIDTH));
    

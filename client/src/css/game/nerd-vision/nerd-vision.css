@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Inconsolata:wght@400;700;900&display=swap');
+
 #nerd-vision-wrapper {
    position: absolute;
    top: 0;
@@ -9,4 +11,61 @@
 
 #nerd-vision-wrapper * {
    pointer-events: all;
+}
+
+.devmode-container {
+   font-family: "Inconsolata";
+   background-color: rgba(0.3, 0.3, 0.3, 0.6);
+   padding: 0.3rem;
+   border: 2px solid #666;
+}
+
+.devmode-tab {
+   padding: 0.5rem;
+   position: absolute;
+   top: 50%;
+   left: 50%;
+   transform: translate(-50%, -50%) scale(var(--zoom));
+   z-index: 2;
+}
+
+#tab-selection {
+   position: absolute;
+   top: 0;
+   left: 50%;
+   transform: translateX(-50%);
+   z-index: 2;
+   display: flex;
+}
+
+.tab-selector {
+   border-top: none;
+   cursor: pointer;
+}
+
+.tab-selector img {
+   width: 32px;
+   height: 32px;
+   image-rendering: pixelated;
+   margin-left: 50%;
+   transform: translateX(-50%);
+}
+
+.tab-selector span {
+   color: #ccc;
+   text-align: center;
+   font-size: 1rem;
+   display: block;
+}
+.tab-selector.selected span {
+   color: #fff;
+}
+
+/* ---------------------- */
+/*       ITEMS TAB        */
+/* ---------------------- */
+
+#items-tab {
+   max-height: calc(60% / var(--zoom));
+   overflow-y: scroll;
 }

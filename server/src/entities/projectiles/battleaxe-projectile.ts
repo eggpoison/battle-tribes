@@ -16,7 +16,7 @@ import { CollisionVars, entitiesAreColliding } from "../../collision";
 import Tribe from "../../Tribe";
 import { EntityRelationship, TribeComponent, TribeComponentArray, getEntityRelationship } from "../../components/TribeComponent";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { EntityCreationInfo } from "../../entity-components";
+import { EntityCreationInfo } from "../../components";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
 
 type ComponentTypes = [ServerComponentType.physics, ServerComponentType.tribe, ServerComponentType.throwingProjectile];

@@ -156,7 +156,7 @@ class GolemComponent extends ServerComponent<ServerComponentType.golem> {
    
                // Create eye light
                const light: Light = {
-                  position: new Point(0, 0),
+                  offset: new Point(0, 0),
                   intensity: 0,
                   strength: 0.5,
                   radius: 0.15,

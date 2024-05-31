@@ -54,8 +54,7 @@ import { TribeWarriorComponent } from "./components/TribeWarriorComponent";
 import { StructureComponent } from "./components/StructureComponent";
 import { CraftingStationComponent } from "./components/CraftingStationComponent";
 
-// @Cleanup: File name
-
+// @Cleanup: find better way to do this
 const Components = {
    [ServerComponentType.aiHelper]: (): AIHelperComponent => 0 as any,
    [ServerComponentType.cow]: (): CowComponent => 0 as any,

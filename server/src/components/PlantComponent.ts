@@ -1,6 +1,5 @@
 import { PlanterBoxPlant, PlantComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
 import { Settings } from "webgl-test-shared/dist/settings";
-import Entity from "../Entity";
 import { ComponentArray } from "./ComponentArray";
 import { PlanterBoxComponentArray } from "./PlanterBoxComponent";
 

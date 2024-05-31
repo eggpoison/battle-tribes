@@ -16,7 +16,7 @@ import { hitboxIsWithinRange } from "./hitboxes/hitboxes";
 import { GhostInfo, GhostType, PARTIAL_OPACITY, setGhostInfo } from "./rendering/entity-ghost-rendering";
 import { getClosestGroupNum } from "./rendering/entity-selection-rendering";
 import { CraftingStation } from "webgl-test-shared/dist/crafting-recipes";
-import { CraftingMenu_setCraftingStation } from "./components/game/menus/CraftingMenu";
+import { CraftingMenu_setCraftingStation, CraftingMenu_setIsVisible } from "./components/game/menus/CraftingMenu";
 
 const enum InteractActionType {
    openBuildMenu,
@@ -247,6 +247,7 @@ const interactWithEntity = (entity: Entity, action: InteractAction): void => {
       case InteractActionType.openCraftingStation: {
          selectedEntityID = entity.id;
          CraftingMenu_setCraftingStation(action.craftingStation);
+         CraftingMenu_setIsVisible(true);
          break;
       }
       default: {

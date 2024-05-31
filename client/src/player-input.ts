@@ -1,5 +1,5 @@
 import { addKeyListener, clearPressedKeys, keyIsPressed } from "./keyboard-input";
-import { CraftingMenu_setCraftingStation, craftingMenuIsOpen } from "./components/game/menus/CraftingMenu";
+import { CraftingMenu_setCraftingStation, CraftingMenu_setIsVisible } from "./components/game/menus/CraftingMenu";
 import Player from "./entities/Player";
 import Client from "./client/Client";
 import { Hotbar_setHotbarSelectedItemSlot, Hotbar_updateLeftThrownBattleaxeItemID, Hotbar_updateRightThrownBattleaxeItemID } from "./components/game/inventories/Hotbar";
@@ -7,22 +7,13 @@ import { BackpackInventoryMenu_setIsVisible } from "./components/game/inventorie
 import Board from "./Board";
 import { definiteGameState, latencyGameState } from "./game-state/game-states";
 import Game from "./Game";
-import Barrel from "./entities/Barrel";
-import Campfire from "./entities/Campfire";
-import Furnace from "./entities/Furnace";
-import WorkerHut from "./entities/WorkerHut";
-import TribeTotem from "./entities/TribeTotem";
-import Workbench from "./entities/Workbench";
 import CircularHitbox from "./hitboxes/CircularHitbox";
 import RectangularHitbox from "./hitboxes/RectangularHitbox";
-import { closeTechTree, techTreeIsOpen } from "./components/game/TechTree";
-import { attemptEntitySelection, deselectSelectedEntity, getSelectedEntityID } from "./entity-selection";
+import { attemptEntitySelection } from "./entity-selection";
 import { playSound } from "./sound";
-import { InventoryMenuType, InventorySelector_inventoryIsOpen, InventorySelector_setInventoryMenuType } from "./components/game/inventories/InventorySelector";
 import { attemptToCompleteNode } from "./research";
-import { BuildMenu_isOpen, BuildMenu_hide } from "./components/game/BuildMenu";
 import { StructureType, calculateStructurePlaceInfo } from "webgl-test-shared/dist/structures";
-import { ConsumableItemCategory, ConsumableItemInfo, ITEM_INFO_RECORD, ITEM_TYPE_RECORD, Inventory, InventoryName, Item, ItemType, PlaceableItemType, ToolItemInfo, itemInfoIsTool } from "webgl-test-shared/dist/items";
+import { ConsumableItemCategory, ConsumableItemInfo, ITEM_INFO_RECORD, ITEM_TYPE_RECORD, Inventory, InventoryName, Item, ItemType, PlaceableItemType, itemInfoIsTool } from "webgl-test-shared/dist/items";
 import { EntityType, LimbAction } from "webgl-test-shared/dist/entities";
 import { AttackPacket, HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
 import { Settings } from "webgl-test-shared/dist/settings";
@@ -38,19 +29,6 @@ import Camera from "./Camera";
 import { Hitbox } from "./hitboxes/hitboxes";
 import { WORKER_HUT_SIZE } from "./entity-components/HutComponent";
 
-/** Acceleration of the player while moving without any modifiers. */
-const PLAYER_ACCELERATION = 700;
-
-const PLAYER_LIGHTSPEED_ACCELERATION = 15000;
-
-/** Acceleration of the player while slowed. */
-const PLAYER_SLOW_ACCELERATION = 400;
-
-export let rightMouseButtonIsPressed = false;
-export let leftMouseButtonIsPressed = false;
-
-// Cleanup: All this item placing logic should be moved to another file
-
 enum PlaceableItemHitboxType {
    circular,
    rectangular
@@ -65,17 +43,32 @@ export interface PlaceableEntityInfo {
    canPlace?(): boolean;
 }
 
+let currentMenuCloseFunction: (() => void) | undefined;
+
+/** Acceleration of the player while moving without any modifiers. */
+const PLAYER_ACCELERATION = 700;
+
+const PLAYER_LIGHTSPEED_ACCELERATION = 15000;
+
+/** Acceleration of the player while slowed. */
+const PLAYER_SLOW_ACCELERATION = 400;
+
+export let rightMouseButtonIsPressed = false;
+export let leftMouseButtonIsPressed = false;
+
+// Cleanup: All this item placing logic should be moved to another file
+
 export const PLACEABLE_ENTITY_INFO_RECORD: Record<PlaceableItemType, PlaceableEntityInfo> = {
    [ItemType.workbench]: {
       entityType: EntityType.workbench,
-      width: Workbench.SIZE,
-      height: Workbench.SIZE,
+      width: 80,
+      height: 80,
       hitboxType: PlaceableItemHitboxType.rectangular
    },
    [ItemType.tribe_totem]: {
       entityType: EntityType.tribeTotem,
-      width: TribeTotem.SIZE,
-      height: TribeTotem.SIZE,
+      width: 120,
+      height: 120,
       canPlace: (): boolean => {
          // The player can only place one tribe totem
          return !Game.tribe.hasTotem;
@@ -93,20 +86,20 @@ export const PLACEABLE_ENTITY_INFO_RECORD: Record<PlaceableItemType, PlaceableEn
    },
    [ItemType.barrel]: {
       entityType: EntityType.barrel,
-      width: Barrel.SIZE,
-      height: Barrel.SIZE,
+      width: 80,
+      height: 80,
       hitboxType: PlaceableItemHitboxType.circular
    },
    [ItemType.campfire]: {
       entityType: EntityType.campfire,
-      width: Campfire.SIZE,
-      height: Campfire.SIZE,
+      width: 104,
+      height: 104,
       hitboxType: PlaceableItemHitboxType.circular
    },
    [ItemType.furnace]: {
       entityType: EntityType.furnace,
-      width: Furnace.SIZE,
-      height: Furnace.SIZE,
+      width: 80,
+      height: 80,
       hitboxType: PlaceableItemHitboxType.rectangular
    },
    [ItemType.research_bench]: {
@@ -204,6 +197,10 @@ const offhandItemAttackCooldowns: Record<number, number> = {};
 
 /** Whether the inventory is open or not. */
 let _inventoryIsOpen = false;
+
+export function setMenuCloseFunction(callback: () => void): void {
+   currentMenuCloseFunction = callback;
+}
 
 const updateAttackCooldowns = (inventory: Inventory, attackCooldowns: Record<number, number>): void => {
    for (let itemSlot = 1; itemSlot <= inventory.width; itemSlot++) {
@@ -399,10 +396,6 @@ const createItemUseListeners = (): void => {
       }
    });
 
-   document.addEventListener("contextmenu", e => {
-      console.log("b");
-   });
-
    document.addEventListener("mouseup", e => {
       if (Player.instance === null || definiteGameState.hotbar === null || definiteGameState.playerIsDead()) return;
 
@@ -465,6 +458,7 @@ export function hideInventory(): void {
    _inventoryIsOpen = false;
    
    CraftingMenu_setCraftingStation(null);
+   CraftingMenu_setIsVisible(false);
    BackpackInventoryMenu_setIsVisible(false);
 
    // If the player is holding an item when their inventory is closed, throw the item out
@@ -473,28 +467,44 @@ export function hideInventory(): void {
    }
 }
 
+const closeCurrentMenu = (): boolean => {
+   if (typeof currentMenuCloseFunction !== "undefined") {
+      currentMenuCloseFunction();
+      currentMenuCloseFunction = undefined;
+
+      return true;
+   }
+   
+   return false;
+}
+ 
 /** Creates the key listener to toggle the inventory on and off. */
 const createInventoryToggleListeners = (): void => {
    addKeyListener("e", () => {
-      if (!Game.isRunning) {
-         return;
+      const didCloseMenu = closeCurrentMenu();
+      if (!didCloseMenu) {
+         CraftingMenu_setCraftingStation(null);
+         CraftingMenu_setIsVisible(true);
       }
+      // if (!Game.isRunning) {
+      //    return;
+      // }
 
-      if (BuildMenu_isOpen()) {
-         BuildMenu_hide();
-         deselectSelectedEntity();
-         return;
-      }
+      // if (BuildMenu_isOpen()) {
+      //    BuildMenu_hide();
+      //    deselectSelectedEntity();
+      //    return;
+      // }
 
-      if (InventorySelector_inventoryIsOpen()) {
-         InventorySelector_setInventoryMenuType(InventoryMenuType.none);
-         return;
-      }
+      // if (InventorySelector_inventoryIsOpen()) {
+      //    InventorySelector_setInventoryMenuType(InventoryMenuType.none);
+      //    return;
+      // }
 
-      // @Temporary?
-      if (craftingMenuIsOpen()) {
-         hideInventory();
-      }
+      // // @Temporary?
+      // if (craftingMenuIsOpen()) {
+      //    hideInventory();
+      // }
    });
 
    addKeyListener("i", () => {
@@ -504,19 +514,20 @@ const createInventoryToggleListeners = (): void => {
       }
    });
    addKeyListener("escape", () => {
-      if (techTreeIsOpen()) {
-         closeTechTree();
-         return;
-      }
+      closeCurrentMenu();
+      // if (techTreeIsOpen()) {
+      //    closeTechTree();
+      //    return;
+      // }
 
-      if (_inventoryIsOpen) {
-         hideInventory();
-         return;
-      }
+      // if (_inventoryIsOpen) {
+      //    hideInventory();
+      //    return;
+      // }
 
-      if (getSelectedEntityID() !== -1) {
-         deselectSelectedEntity();
-      }
+      // if (getSelectedEntityID() !== -1) {
+      //    deselectSelectedEntity();
+      // }
    });
 }
 

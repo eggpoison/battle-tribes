@@ -85,7 +85,7 @@ class TribeMemberComponent extends ServerComponent<ServerComponentType.tribeMemb
                const offsetY = 20;
                
                const light: Light = {
-                  position: new Point(offsetX, offsetY),
+                  offset: new Point(offsetX, offsetY),
                   intensity: 0.4,
                   strength: 0.4,
                   radius: 0,

@@ -5,8 +5,8 @@ import { getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
 import Entity from "../Entity";
 
 class ResearchBench extends Entity {
-   public static readonly WIDTH = 32 * 4;
-   public static readonly HEIGHT = 20 * 4;
+   private static readonly WIDTH = 32 * 4;
+   private static readonly HEIGHT = 20 * 4;
 
    constructor(position: Point, id: number, ageTicks: number) {
       super(position, id, EntityType.researchBench, ageTicks);

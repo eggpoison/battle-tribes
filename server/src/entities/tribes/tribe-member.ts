@@ -74,10 +74,6 @@ export type ConnectedEntityIDs = [number, number, number, number];
 
 const DEFAULT_ATTACK_KNOCKBACK = 125;
 
-const SWORD_DAMAGEABLE_ENTITIES: ReadonlyArray<EntityType> = [EntityType.zombie, EntityType.krumblid, EntityType.cactus, EntityType.tribeWorker, EntityType.tribeWarrior, EntityType.player, EntityType.yeti, EntityType.frozenYeti, EntityType.berryBush, EntityType.fish, EntityType.tribeTotem, EntityType.workerHut, EntityType.warriorHut, EntityType.cow, EntityType.golem, EntityType.slime, EntityType.slimewisp];
-const PICKAXE_DAMAGEABLE_ENTITIES: ReadonlyArray<EntityType> = [EntityType.boulder, EntityType.tombstone, EntityType.iceSpikes, EntityType.furnace, EntityType.golem];
-const AXE_DAMAGEABLE_ENTITIES: ReadonlyArray<EntityType> = [EntityType.tree, EntityType.wall, EntityType.door, EntityType.embrasure, EntityType.researchBench, EntityType.workbench, EntityType.floorSpikes, EntityType.wallSpikes, EntityType.floorPunjiSticks, EntityType.wallPunjiSticks, EntityType.tribeTotem, EntityType.workerHut, EntityType.warriorHut, EntityType.barrel, EntityType.healingTotem];
-
 export const VACUUM_RANGE = 85;
 const VACUUM_STRENGTH = 25;
 

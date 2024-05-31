@@ -1,5 +1,5 @@
 import { CookingComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
-import { randFloat } from "webgl-test-shared/dist/utils";
+import { Point, randFloat } from "webgl-test-shared/dist/utils";
 import ServerComponent from "./ServerComponent";
 import Board from "../Board";
 import Entity from "../Entity";
@@ -18,7 +18,7 @@ class CookingComponent extends ServerComponent<ServerComponentType.cooking> {
       this.isCooking = data.isCooking;
 
       this.light = {
-         position: this.entity.position,
+         offset: new Point(0, 0),
          intensity: 1,
          strength: 3.5,
          radius: 40,

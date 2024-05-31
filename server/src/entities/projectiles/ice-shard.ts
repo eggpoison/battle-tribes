@@ -10,7 +10,7 @@ import RectangularHitbox from "../../hitboxes/RectangularHitbox";
 import { HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
 import { StatusEffectComponentArray, applyStatusEffect } from "../../components/StatusEffectComponent";
 import { PhysicsComponent, PhysicsComponentArray, applyKnockback } from "../../components/PhysicsComponent";
-import { EntityCreationInfo } from "../../entity-components";
+import { EntityCreationInfo } from "../../components";
 import { PlantComponentArray } from "../../components/PlantComponent";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
 import { IceShardComponent, IceShardComponentArray } from "../../components/IceShardComponent";

@@ -10,7 +10,7 @@ import { StatusEffectComponentArray, applyStatusEffect } from "../../components/
 import { PhysicsComponent, PhysicsComponentArray } from "../../components/PhysicsComponent";
 import { EntityRelationship, TribeComponent, TribeComponentArray, getEntityRelationship } from "../../components/TribeComponent";
 import Tribe from "../../Tribe";
-import { EntityCreationInfo } from "../../entity-components";
+import { EntityCreationInfo } from "../../components";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { HealthComponentArray } from "../../components/HealthComponent";
 

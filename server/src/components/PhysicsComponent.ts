@@ -7,7 +7,6 @@ import { ComponentArray } from "./ComponentArray";
 import { addDirtyPathfindingEntity, entityCanBlockPathfinding, removeDirtyPathfindingEntity } from "../pathfinding";
 import { Point } from "webgl-test-shared/dist/utils";
 import Board from "../Board";
-import { SERVER } from "../server/server";
 import { registerPlayerKnockback } from "../server/player-clients";
 
 // @Cleanup: Variable names

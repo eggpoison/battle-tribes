@@ -4,6 +4,7 @@ import Board from "../Board";
 import { ATLAS_SLOT_SIZE } from "../texture-atlases/texture-atlas-stitching";
 import { ENTITY_TEXTURE_ATLAS, ENTITY_TEXTURE_ATLAS_LENGTH, ENTITY_TEXTURE_ATLAS_SIZE, ENTITY_TEXTURE_SLOT_INDEXES, getTextureHeight, getTextureWidth } from "../texture-atlases/entity-texture-atlas";
 import RenderPart from "../render-parts/RenderPart";
+import { EntityType } from "webgl-test-shared/dist/entities";
 
 let program: WebGLProgram;
 let vao: WebGLVertexArrayObject;
@@ -184,6 +185,7 @@ export function renderGameObjects(): void {
 
       for (const renderPart of entity.allRenderParts) {
          const depth = -renderPart.zIndex * 0.0001 + entity.renderDepth;
+
    
          const u0 = renderPart.flipX ? 1 : 0;
          const u1 = 1 - u0;

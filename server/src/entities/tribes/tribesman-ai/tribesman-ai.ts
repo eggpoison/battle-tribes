@@ -8,11 +8,11 @@ import { TribesmanTitle } from "webgl-test-shared/dist/titles";
 import { TRIBE_INFO_RECORD } from "webgl-test-shared/dist/tribes";
 import { distance, angle, Point, randInt, getAngleDiff } from "webgl-test-shared/dist/utils";
 import Entity from "../../../Entity";
-import { getEntitiesInRange, willStopAtDesiredDistance, stopEntity, moveEntityToPosition, getDistanceFromPointToEntity } from "../../../ai-shared";
+import { getEntitiesInRange, willStopAtDesiredDistance, stopEntity, moveEntityToPosition, getDistanceFromPointToEntity, getClosestAccessibleEntity } from "../../../ai-shared";
 import { HealthComponent, HealthComponentArray } from "../../../components/HealthComponent";
 import { getInventory, addItemToInventory, consumeItemFromSlot, craftRecipe, recipeCraftingStationIsAvailable, inventoryComponentCanAffordRecipe, inventoryIsFull, getItemTypeSlot, InventoryComponentArray } from "../../../components/InventoryComponent";
 import { TribesmanAIComponentArray, TribesmanPathType, getItemGiftAppreciation, itemThrowIsOnCooldown } from "../../../components/TribesmanAIComponent";
-import { tickTribeMember, calculateRadialAttackTargets, repairBuilding, calculateRepairTarget, placeBuilding, placeBlueprint, getAvailableCraftingStations, throwItem, } from "../tribe-member";
+import { tickTribeMember, calculateRadialAttackTargets, repairBuilding, calculateRepairTarget, placeBuilding, placeBlueprint, getAvailableCraftingStations, throwItem, VACUUM_RANGE, tribeMemberCanPickUpItem, } from "../tribe-member";
 import { TRIBE_WORKER_RADIUS, TRIBE_WORKER_VISION_RANGE } from "../tribe-worker";
 import { InventoryUseComponentArray, getInventoryUseInfo, setLimbActions } from "../../../components/InventoryUseComponent";
 import Board from "../../../Board";
@@ -23,7 +23,7 @@ import { attemptToOccupyResearchBench, canResearchAtBench, continueResearching, 
 import { PathfindFailureDefault, PathfindOptions, entityCanBlockPathfinding, entityHasReachedNode, getAngleToNode, getClosestPathfindNode, getDistanceToNode, getEntityFootprint, getEntityPathfindingGroupID, pathIsClear, pathfind, positionIsAccessible, replacePathfindingNodeGroupID, smoothPath } from "../../../pathfinding";
 import { PhysicsComponentArray } from "../../../components/PhysicsComponent";
 import Tribe from "../../../Tribe";
-import { TribesmanGoal, TribesmanPlaceGoal, TribesmanUpgradeGoal } from "./tribesman-goals";
+import { TribesmanGoal, TribesmanGoalType, TribesmanPlaceGoal, TribesmanUpgradeGoal, getTribesmanGoals } from "./tribesman-goals";
 import { createBuildingHitboxes } from "../../../buildings";
 import { CollisionVars, entitiesAreColliding, getHitboxesCollidingEntities } from "../../../collision";
 import { huntEntity } from "./tribesman-combat-ai";
@@ -35,6 +35,8 @@ import { calculateStructureConnectionInfo } from "webgl-test-shared/dist/structu
 import { HutComponentArray } from "../../../components/HutComponent";
 import { PlayerComponentArray } from "../../../components/PlayerComponent";
 import { SpikesComponentArray } from "../../../components/SpikesComponent";
+import { ItemComponentArray } from "../../../components/ItemComponent";
+import { getGatherTarget } from "./tribesman-resource-gathering";
 
 // @Cleanup: Move all of this to the TribesmanComponent file
 
@@ -1436,24 +1438,25 @@ export function tickTribesman(tribesman: Entity): void {
       }
    }
       
-   // // Attack enemies
-   // if (visibleEnemies.length > 0) {
-   //    const target = getClosestAccessibleEntity(tribesman, visibleEnemies);
-   //    tribesmanComponent.huntedEntityID = target.id;
-   //    huntEntity(tribesman, target, true);
+   // Attack enemies
+   if (visibleEnemies.length > 0) {
+      const target = getClosestAccessibleEntity(tribesman, visibleEnemies);
+      tribesmanComponent.huntedEntityID = target.id;
+      huntEntity(tribesman, target, true);
+      
+      if (tribesman.ageTicks % MESSAGE_INTERVAL_TICKS === 0) {
+         const communcationTargets = getCommunicationTargets(tribesman);
+         sendCallToArmsMessage(tribesman, communcationTargets, target);
+      }
+      return;
+   }
 
-   //    if (tribesman.ageTicks % MESSAGE_INTERVAL_TICKS === 0) {
-   //       const communcationTargets = getCommunicationTargets(tribesman);
-   //       sendCallToArmsMessage(tribesman, communcationTargets, target);
-   //    }
-   //    return;
-   // }
-
-   // @Temporary? Do we keep?
+   // // @Temporary? Do we keep?
    // // Continue hunting existing entity
-   // if (shouldEscape(tribesman.type, healthComponent) || (tribesmanComponent.huntedEntityID !== 0 && !Board.entityRecord.hasOwnProperty(tribesmanComponent.huntedEntityID))) {
+   // if (tribesmanShouldEscape(tribesman.type, healthComponent) || (tribesmanComponent.huntedEntityID !== 0 && !Board.entityRecord.hasOwnProperty(tribesmanComponent.huntedEntityID))) {
    //    tribesmanComponent.huntedEntityID = 0;
    // }
+
    // if (tribesmanComponent.huntedEntityID !== 0) {
    //    const huntedEntity = Board.entityRecord[tribesmanComponent.huntedEntityID];
       
@@ -1466,18 +1469,18 @@ export function tickTribesman(tribesman: Entity): void {
    //    return;
    // }
    
-   // // Attack hostile mobs
-   // if (visibleHostileMobs.length > 0) {
-   //    const target = getClosestAccessibleEntity(tribesman, visibleHostileMobs);
-   //    huntEntity(tribesman, target, true);
+   // Attack hostile mobs
+   if (visibleHostileMobs.length > 0) {
+      const target = getClosestAccessibleEntity(tribesman, visibleHostileMobs);
+      huntEntity(tribesman, target, true);
 
-   //    // @Cleanup: Copy and paste from hunting enemies section
-   //    if (tribesman.ageTicks % MESSAGE_INTERVAL_TICKS === 0) {
-   //       const communcationTargets = getCommunicationTargets(tribesman);
-   //       sendCallToArmsMessage(tribesman, communcationTargets, target);
-   //    }
-   //    return;
-   // }
+      // @Cleanup: Copy and paste from hunting enemies section
+      if (tribesman.ageTicks % MESSAGE_INTERVAL_TICKS === 0) {
+         const communcationTargets = getCommunicationTargets(tribesman);
+         sendCallToArmsMessage(tribesman, communcationTargets, target);
+      }
+      return;
+   }
 
    // Help other tribesmen
    if (tribesmanComponent.ticksSinceLastHelpRequest <= Vars.HELP_TIME) {
@@ -1493,10 +1496,10 @@ export function tickTribesman(tribesman: Entity): void {
    }
    
    // // Attack enemy buildings
-   // if (visibleEnemyBuildings.length > 0) {
-   //    huntEntity(tribesman, getClosestAccessibleEntity(tribesman, visibleEnemyBuildings), true);
-   //    return;
-   // }
+   if (visibleEnemyBuildings.length > 0) {
+      huntEntity(tribesman, getClosestAccessibleEntity(tribesman, visibleEnemyBuildings), true);
+      return;
+   }
 
    // Heal when missing health
    if (healthComponent.health < healthComponent.maxHealth) {
@@ -1697,75 +1700,75 @@ export function tickTribesman(tribesman: Entity): void {
    //    }
    // }
 
-   // const goals = getTribesmanGoals(tribesman, hotbarInventory);
+   const goals = getTribesmanGoals(tribesman, hotbarInventory);
 
-   // // @Cleanup: don't use null
-   // const goal = goals.length > 0 ? goals[0] : null;
-   // tribesmanComponent.goals = goals;
+   // @Cleanup: don't use null
+   const goal = goals.length > 0 ? goals[0] : null;
+   tribesmanComponent.goals = goals;
    
-   // if (goal !== null) {
-   //    // @Cleanup: messy
-   //    if (goal.type === TribesmanGoalType.craftRecipe || goal.type === TribesmanGoalType.placeBuilding || goal.type === TribesmanGoalType.upgradeBuilding) {
-   //       if (goal.isPersonalPlan && goal.plan !== null) {
-   //          // @Cleanup: copy and paste
-   //          if (tribesmanComponent.personalBuildingPlan !== null) {
-   //             const idx = tribeComponent.tribe.personalBuildingPlans.indexOf(tribesmanComponent.personalBuildingPlan);
-   //             if (idx !== -1) {
-   //                tribeComponent.tribe.personalBuildingPlans.splice(idx, 1);
-   //             }
-   //          }
+   if (goal !== null) {
+      // @Cleanup: messy
+      if (goal.type === TribesmanGoalType.craftRecipe || goal.type === TribesmanGoalType.placeBuilding || goal.type === TribesmanGoalType.upgradeBuilding) {
+         if (goal.isPersonalPlan && goal.plan !== null) {
+            // @Cleanup: copy and paste
+            if (tribesmanComponent.personalBuildingPlan !== null) {
+               const idx = tribeComponent.tribe.personalBuildingPlans.indexOf(tribesmanComponent.personalBuildingPlan);
+               if (idx !== -1) {
+                  tribeComponent.tribe.personalBuildingPlans.splice(idx, 1);
+               }
+            }
    
-   //          tribesmanComponent.personalBuildingPlan = goal.plan;
-   //          tribeComponent.tribe.personalBuildingPlans.push(goal.plan);
-   //       } else {
-   //          // @Cleanup: copy and paste
-   //          if (tribesmanComponent.personalBuildingPlan !== null) {
-   //             const idx = tribeComponent.tribe.personalBuildingPlans.indexOf(tribesmanComponent.personalBuildingPlan);
-   //             if (idx !== -1) {
-   //                tribeComponent.tribe.personalBuildingPlans.splice(idx, 1);
-   //             }
-   //          }
+            tribesmanComponent.personalBuildingPlan = goal.plan;
+            tribeComponent.tribe.personalBuildingPlans.push(goal.plan);
+         } else {
+            // @Cleanup: copy and paste
+            if (tribesmanComponent.personalBuildingPlan !== null) {
+               const idx = tribeComponent.tribe.personalBuildingPlans.indexOf(tribesmanComponent.personalBuildingPlan);
+               if (idx !== -1) {
+                  tribeComponent.tribe.personalBuildingPlans.splice(idx, 1);
+               }
+            }
             
-   //          tribesmanComponent.personalBuildingPlan = null;
-   //       }
+            tribesmanComponent.personalBuildingPlan = null;
+         }
          
-   //       if (goal.plan !== null) {
-   //          goal.plan.assignedTribesmanID = tribesman.id;
-   //       }
-   //    }
+         if (goal.plan !== null) {
+            goal.plan.assignedTribesmanID = tribesman.id;
+         }
+      }
       
-   //    switch (goal.type) {
-   //       case TribesmanGoalType.craftRecipe: {
-   //          if (inventoryComponentCanAffordRecipe(inventoryComponent, goal.recipe, InventoryName.hotbar)) {
-   //             const isGoing = goCraftItem(tribesman, goal.recipe, tribeComponent.tribe);
-   //             if (isGoing) {
-   //                return;
-   //             }
-   //          }
-   //          break;
-   //       }
-   //       case TribesmanGoalType.placeBuilding: {
-   //          const isGoing = goPlaceBuilding(tribesman, hotbarInventory, tribeComponent.tribe, goal);
-   //          if (isGoing) {
-   //             return;
-   //          }
-   //          break;
-   //       }
-   //       case TribesmanGoalType.upgradeBuilding: {
-   //          goUpgradeBuilding(tribesman, goal);
-   //          return;
-   //       }
-   //       case TribesmanGoalType.researchTech: {
-   //          if (tribeComponent.tribe.techRequiresResearching(goal.tech)) {
-   //             const isGoing = goResearchTech(tribesman, goal.tech);
-   //             if (isGoing) {
-   //                return;
-   //             }
-   //          }
-   //          break;
-   //       }
-   //    }
-   // }
+      switch (goal.type) {
+         case TribesmanGoalType.craftRecipe: {
+            if (inventoryComponentCanAffordRecipe(inventoryComponent, goal.recipe, InventoryName.hotbar)) {
+               const isGoing = goCraftItem(tribesman, goal.recipe, tribeComponent.tribe);
+               if (isGoing) {
+                  return;
+               }
+            }
+            break;
+         }
+         case TribesmanGoalType.placeBuilding: {
+            const isGoing = goPlaceBuilding(tribesman, hotbarInventory, tribeComponent.tribe, goal);
+            if (isGoing) {
+               return;
+            }
+            break;
+         }
+         case TribesmanGoalType.upgradeBuilding: {
+            goUpgradeBuilding(tribesman, goal);
+            return;
+         }
+         case TribesmanGoalType.researchTech: {
+            if (tribeComponent.tribe.techRequiresResearching(goal.tech)) {
+               const isGoing = goResearchTech(tribesman, goal.tech);
+               if (isGoing) {
+                  return;
+               }
+            }
+            break;
+         }
+      }
+   }
 
    // @Speed: shouldn't have to run for tribesmen which can't research
    // Research
@@ -1776,83 +1779,83 @@ export function tickTribesman(tribesman: Entity): void {
       }
    }
 
-   // const prioritisedItemTypes = goal !== null && goal.type === TribesmanGoalType.gatherItems ? goal.itemTypesToGather : [];
-   // const gatherTargetInfo = getGatherTarget(tribesman, aiHelperComponent.visibleEntities, prioritisedItemTypes);
+   const prioritisedItemTypes = goal !== null && goal.type === TribesmanGoalType.gatherItems ? goal.itemTypesToGather : [];
+   const gatherTargetInfo = getGatherTarget(tribesman, aiHelperComponent.visibleEntities, prioritisedItemTypes);
 
    // Pick up dropped items
    // @Temporary
-   // if (visibleItemEntities.length > 0) {
-   //    const goalRadius = getTribesmanRadius(tribesman);
+   if (visibleItemEntities.length > 0) {
+      const goalRadius = getTribesmanRadius(tribesman);
       
-   //    let closestDroppedItem: Entity | undefined;
-   //    let minDistance = Number.MAX_SAFE_INTEGER;
-   //    for (const itemEntity of visibleItemEntities) {
-   //       // If the tribesman is within the escape health threshold, make sure there wouldn't be any enemies visible while picking up the dropped item
-   //       if (tribesmanShouldEscape(tribesman.type, healthComponent) && !positionIsSafeForTribesman(tribesman, itemEntity.position.x, itemEntity.position.y)) {
-   //          continue;
-   //       }
+      let closestDroppedItem: Entity | undefined;
+      let minDistance = Number.MAX_SAFE_INTEGER;
+      for (const itemEntity of visibleItemEntities) {
+         // If the tribesman is within the escape health threshold, make sure there wouldn't be any enemies visible while picking up the dropped item
+         if (tribesmanShouldEscape(tribesman.type, healthComponent) && !positionIsSafeForTribesman(tribesman, itemEntity.position.x, itemEntity.position.y)) {
+            continue;
+         }
 
-   //       // @Temporary @Bug @Incomplete: Will cause the tribesman to incorrectly skip items which are JUST inside a hitbox, but are still accessible via vacuum.
-   //       // if (!entityIsAccessible(tribesman, itemEntity, tribeComponent.tribe, goalRadius)) {
-   //       //    console.log("b");
-   //       //    continue;
-   //       // }
+         // @Temporary @Bug @Incomplete: Will cause the tribesman to incorrectly skip items which are JUST inside a hitbox, but are still accessible via vacuum.
+         // if (!entityIsAccessible(tribesman, itemEntity, tribeComponent.tribe, goalRadius)) {
+         //    console.log("b");
+         //    continue;
+         // }
 
-   //       const itemComponent = ItemComponentArray.getComponent(itemEntity.id);
-   //       if (!tribeMemberCanPickUpItem(tribesman, itemComponent.itemType)) {
-   //          continue;
-   //       }
+         const itemComponent = ItemComponentArray.getComponent(itemEntity.id);
+         if (!tribeMemberCanPickUpItem(tribesman, itemComponent.itemType)) {
+            continue;
+         }
          
-   //       // If gathering is prioritised, make sure the dropped item is useful for gathering
-   //       if (gatherTargetInfo.isPrioritised) {
-   //          if (prioritisedItemTypes.indexOf(itemComponent.itemType) === -1) {
-   //             continue;
-   //          }
-   //       }
+         // If gathering is prioritised, make sure the dropped item is useful for gathering
+         if (gatherTargetInfo.isPrioritised) {
+            if (prioritisedItemTypes.indexOf(itemComponent.itemType) === -1) {
+               continue;
+            }
+         }
 
-   //       const distance = tribesman.position.calculateDistanceBetween(itemEntity.position);
-   //       if (distance < minDistance) {
-   //          closestDroppedItem = itemEntity;
-   //          minDistance = distance;
-   //       }
-   //    }
+         const distance = tribesman.position.calculateDistanceBetween(itemEntity.position);
+         if (distance < minDistance) {
+            closestDroppedItem = itemEntity;
+            minDistance = distance;
+         }
+      }
 
-   //    if (typeof closestDroppedItem !== "undefined") {
-   //       // @Temporary
-   //       // pathfindToPosition(tribesman, closestDroppedItem.position.x, closestDroppedItem.position.y, closestDroppedItem.id, TribesmanPathType.default, Math.floor(32 / PathfindingSettings.NODE_SEPARATION), PathfindFailureDefault.throwError);
-   //       pathfindToPosition(tribesman, closestDroppedItem.position.x, closestDroppedItem.position.y, closestDroppedItem.id, TribesmanPathType.default, Math.floor((32 + VACUUM_RANGE) / PathfindingSettings.NODE_SEPARATION), PathfindFailureDefault.returnClosest);
+      if (typeof closestDroppedItem !== "undefined") {
+         // @Temporary
+         // pathfindToPosition(tribesman, closestDroppedItem.position.x, closestDroppedItem.position.y, closestDroppedItem.id, TribesmanPathType.default, Math.floor(32 / PathfindingSettings.NODE_SEPARATION), PathfindFailureDefault.throwError);
+         pathfindToPosition(tribesman, closestDroppedItem.position.x, closestDroppedItem.position.y, closestDroppedItem.id, TribesmanPathType.default, Math.floor((32 + VACUUM_RANGE) / PathfindingSettings.NODE_SEPARATION), PathfindFailureDefault.returnClosest);
 
-   //       const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman.id);
-   //       setLimbActions(inventoryUseComponent, LimbAction.none);
+         const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman.id);
+         setLimbActions(inventoryUseComponent, LimbAction.none);
          
-   //       tribesmanComponent.currentAIType = TribesmanAIType.pickingUpDroppedItems;
-   //       return;
-   //    }
-   // }
+         tribesmanComponent.currentAIType = TribesmanAIType.pickingUpDroppedItems;
+         return;
+      }
+   }
 
-   // // Use items in research
-   // // @Hack
-   // if (goals.length >= 2 && goal!.type === TribesmanGoalType.gatherItems && goals[1].type === TribesmanGoalType.researchTech) {
-   //    const researchGoal = goals[1];
+   // Use items in research
+   // @Hack
+   if (goals.length >= 2 && goal!.type === TribesmanGoalType.gatherItems && goals[1].type === TribesmanGoalType.researchTech) {
+      const researchGoal = goals[1];
       
-   //    // @Incomplete: take into account backpack
-   //    for (let itemSlot = 1; itemSlot <= hotbarInventory.width * hotbarInventory.height; itemSlot++) {
-   //       const item = hotbarInventory.itemSlots[itemSlot];
-   //       if (typeof item === "undefined") {
-   //          continue;
-   //       }
+      // @Incomplete: take into account backpack
+      for (let itemSlot = 1; itemSlot <= hotbarInventory.width * hotbarInventory.height; itemSlot++) {
+         const item = hotbarInventory.itemSlots[itemSlot];
+         if (typeof item === "undefined") {
+            continue;
+         }
 
 
-   //       const amountUsed = tribeComponent.tribe.useItemInTechResearch(researchGoal.tech, item.type, item.count);
-   //       if (amountUsed > 0) {
-   //          consumeItemFromSlot(hotbarInventory, itemSlot, amountUsed);
-   //       }
-   //    }
+         const amountUsed = tribeComponent.tribe.useItemInTechResearch(researchGoal.tech, item.type, item.count);
+         if (amountUsed > 0) {
+            consumeItemFromSlot(hotbarInventory, itemSlot, amountUsed);
+         }
+      }
 
-   //    if (tribeComponent.tribe.techIsComplete(researchGoal.tech)) {
-   //       tribeComponent.tribe.unlockTech(researchGoal.tech.id);
-   //    }
-   // }
+      if (tribeComponent.tribe.techIsComplete(researchGoal.tech)) {
+         tribeComponent.tribe.unlockTech(researchGoal.tech.id);
+      }
+   }
 
    // Replace plants in planter boxes
    // @Speed
@@ -1932,10 +1935,10 @@ export function tickTribesman(tribesman: Entity): void {
    }
 
    // Gather resources
-   // if (gatherTargetInfo.target !== null) {
-   //    huntEntity(tribesman, gatherTargetInfo.target, false);
-   //    return;
-   // }
+   if (gatherTargetInfo.target !== null) {
+      huntEntity(tribesman, gatherTargetInfo.target, false);
+      return;
+   }
 
    // @Cleanup: Remove once all paths set their limb actions
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman.id);

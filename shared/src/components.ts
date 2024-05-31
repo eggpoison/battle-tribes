@@ -1,6 +1,6 @@
 import { StatusEffectData } from "./client-server-types";
 import { CraftingStation } from "./crafting-recipes";
-import { CactusBodyFlowerData, CactusLimbData, CowSpecies, DeathInfo, DoorToggleType, FishColour, FrozenYetiAttackType, GenericArrowType, EntityType, RockSpikeProjectileSize, SlimeSize, SnowballSize, TreeSize, LimbAction, TribeTotemBanner } from "./entities";
+import { CactusBodyFlowerData, CactusLimbData, CowSpecies, DeathInfo, DoorToggleType, FishColour, FrozenYetiAttackType, GenericArrowType, RockSpikeProjectileSize, SlimeSize, SnowballSize, TreeSize, LimbAction, TribeTotemBanner } from "./entities";
 import { BallistaAmmoType, Inventory, InventoryName, ItemType } from "./items";
 import { Settings } from "./settings";
 import { StatusEffect } from "./status-effects";

@@ -80,7 +80,7 @@ export function getEntityRelationship(entityID: number, comparingEntity: Entity)
          const tribeComponent = TribeComponentArray.getComponent(entityID);
          const planterBoxTribeComponent = TribeComponentArray.getComponent(plantComponent.planterBoxID);
 
-         return planterBoxTribeComponent.tribe === tribeComponent.tribe ? EntityRelationship.friendlyBuilding : EntityRelationship.enemyBuilding;
+         return planterBoxTribeComponent.tribe === tribeComponent.tribe ? EntityRelationship.neutral : EntityRelationship.enemyBuilding;
       }
       // Friendlies
       case EntityType.player:

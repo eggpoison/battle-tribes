@@ -10,7 +10,7 @@ import { HealthComponent, HealthComponentArray, addLocalInvulnerabilityHash, can
 import { StatusEffectComponent, StatusEffectComponentArray } from "../components/StatusEffectComponent";
 import { SnowballComponent, SnowballComponentArray } from "../components/SnowballComponent";
 import { PhysicsComponent, PhysicsComponentArray, applyKnockback } from "../components/PhysicsComponent";
-import { EntityCreationInfo } from "../entity-components";
+import { EntityCreationInfo } from "../components";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
    

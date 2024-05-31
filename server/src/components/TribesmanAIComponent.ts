@@ -10,6 +10,7 @@ import Board from "../Board";
 import Tribe, { BuildingPlan } from "../Tribe";
 import { EntityRelationship, TribeComponentArray } from "./TribeComponent";
 import { TribesmanGoal } from "../entities/tribes/tribesman-ai/tribesman-goals";
+import { EntityType } from "webgl-test-shared/dist/entities";
 
 // @Incomplete: periodically remove dead entities from the relations object
 // @Incomplete: only keep track of tribesman relations

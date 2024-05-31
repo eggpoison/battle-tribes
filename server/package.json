@@ -1,7 +1,7 @@
 {
    "license": "UNLICENSED",
    "scripts": {
-      "start": "nodemon",
+      "start": "nodemon --legacy-watch",
       "perf": "node -r ts-node/register -r tsconfig-paths/register --inspect src/server.ts",
       "gigaperf": "node -r ts-node/register --log-deopt --redirect-code-traces --redirect-code-traces-to=./NUL --log-ic --log-maps --log-maps-details --log-code --log-source-code --prof --log-internal-timer-events --detailed-line-info --logfile=v8.log --no-logfile-per-isolate src/server.ts",
       "debug": "nodemon --inspect",

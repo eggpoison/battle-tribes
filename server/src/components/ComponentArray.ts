@@ -1,42 +1,5 @@
 import Entity from "../Entity";
-import { InventoryUseComponent } from "./InventoryUseComponent";
-import { BoulderComponent } from "./BoulderComponent";
-import { IceShardComponent } from "./IceShardComponent";
-import { CowComponent } from "./CowComponent";
-import { WanderAIComponent } from "./WanderAIComponent";
-import { EscapeAIComponent } from "./EscapeAIComponent";
-import { FollowAIComponent } from "./FollowAIComponent";
-import { CactusComponent } from "./CactusComponent";
-import { PlayerComponent } from "./PlayerComponent";
-import { TribesmanAIComponent } from "./TribesmanAIComponent";
-import { TombstoneComponent } from "./TombstoneComponent";
-import { ZombieComponent } from "./ZombieComponent";
-import { SlimewispComponent } from "./SlimewispComponent";
-import { SlimeComponent } from "./SlimeComponent";
-import { ArrowComponent } from "./ArrowComponent";
-import { YetiComponent } from "./YetiComponent";
-import { SnowballComponent } from "./SnowballComponent";
 import Board from "../Board";
-import { FrozenYetiComponent } from "./FrozenYetiComponent";
-import { RockSpikeProjectileComponent } from "./RockSpikeProjectileComponent";
-import { CookingComponent } from "./CookingComponent";
-import { ThrowingProjectileComponent } from "./ThrowingProjectileComponent";
-import { HutComponent } from "./HutComponent";
-import { SlimeSpitComponent } from "./SlimeSpitComponent";
-import { DoorComponent } from "./DoorComponent";
-import { GolemComponent } from "./GolemComponent";
-import { IceSpikesComponent } from "./IceSpikesComponent";
-import { PebblumComponent } from "./PebblumComponent";
-import { TurretComponent } from "./TurretComponent";
-import { AmmoBoxComponent } from "./AmmoBoxComponent";
-import { ResearchBenchComponent } from "./ResearchBenchComponent";
-import { SpikesComponent } from "./SpikesComponent";
-import { TunnelComponent } from "./TunnelComponent";
-import { BuildingMaterialComponent } from "./BuildingMaterialComponent";
-import { TribeWarriorComponent } from "./TribeWarriorComponent";
-import { HealingTotemComponent } from "./HealingTotemComponent";
-import { FenceComponent } from "./FenceComponent";
-import { FenceGateComponent } from "./FenceGateComponent";
 import { ComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
 
 export const ComponentArrays = new Array<ComponentArray>();
@@ -47,7 +10,7 @@ interface ComponentArrayFunctions<C extends ServerComponentType> {
    serialise(entityID: number, playerID: number | null): ComponentData<C>;
 }
 
-export class ComponentArray<C extends ServerComponentType = ServerComponentType, T = object> {
+export class ComponentArray<C extends ServerComponentType = ServerComponentType, T extends object = object> {
    private readonly isActiveByDefault: boolean;
    
    public components = new Array<T>();
@@ -82,8 +45,7 @@ export class ComponentArray<C extends ServerComponentType = ServerComponentType,
       this.onRemove = functions.onRemove;
       this.serialise = functions.serialise;
 
-      // @Cleanup
-      ComponentArrays.push(this as unknown as ComponentArray);
+      ComponentArrays.push(this);
    }
    
    public addComponent(entityID: number, component: T): void {

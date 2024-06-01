@@ -396,7 +396,8 @@ const grabBarrelFood = (tribesman: Entity, barrel: Entity): void => {
    }
 
    const tribesmanInventoryComponent = InventoryComponentArray.getComponent(tribesman.id);
-   addItemToInventory(tribesmanInventoryComponent, InventoryName.hotbar, food.type, food.count);
+   const hotbarInventory = getInventory(tribesmanInventoryComponent, InventoryName.hotbar);
+   addItemToInventory(hotbarInventory, food.type, food.count);
    consumeItemFromSlot(barrelInventory, foodItemSlot, 999);
 }
 

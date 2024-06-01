@@ -17,7 +17,7 @@ import { TRIBE_INFO_RECORD, TribeType } from "webgl-test-shared/dist/tribes";
 import { InventoryUseComponentArray, getInventoryUseInfo } from "../components/InventoryUseComponent";
 import { PhysicsComponentArray } from "../components/PhysicsComponent";
 import Entity from "../Entity";
-import { InventoryComponentArray, addItemToSlot, consumeItemFromSlot, consumeItemTypeFromInventory, craftRecipe, getInventory, inventoryComponentCanAffordRecipe, recipeCraftingStationIsAvailable } from "../components/InventoryComponent";
+import { InventoryComponentArray, addItemToInventory, addItemToSlot, consumeItemFromSlot, consumeItemTypeFromInventory, craftRecipe, getInventory, inventoryComponentCanAffordRecipe, recipeCraftingStationIsAvailable } from "../components/InventoryComponent";
 import { EntityRelationship, TribeComponentArray } from "../components/TribeComponent";
 import { CRAFTING_RECIPES, ItemRequirements } from "webgl-test-shared/dist/crafting-recipes";
 import { createItem } from "../items";
@@ -623,6 +623,17 @@ const processRespondToTitleOfferPacket = (playerClient: PlayerClient, title: Tri
    }
 }
 
+const devGiveItem = (playerClient: PlayerClient, itemType: ItemType, amount: number): void => {
+   const player = Board.entityRecord[playerClient.instanceID];
+   if (typeof player === "undefined") {
+      return;
+   }
+
+   const inventoryComponent = InventoryComponentArray.getComponent(player.id);
+   const inventory = getInventory(inventoryComponent, InventoryName.hotbar);
+   addItemToInventory(inventory, itemType, amount);
+}
+
 export function addPlayerClient(playerClient: PlayerClient, player: Entity): void {
    playerClients.push(playerClient);
 
@@ -732,6 +743,14 @@ export function addPlayerClient(playerClient: PlayerClient, player: Entity): voi
 
    socket.on("respond_to_title_offer", (title: TribesmanTitle, isAccepted: boolean): void => {
       processRespondToTitleOfferPacket(playerClient, title, isAccepted);
+   });
+
+   // -------------------------- //
+   //       DEV-ONLY EVENTS      //
+   // -------------------------- //
+
+   socket.on("dev_give_item", (itemType: ItemType, amount: number): void => {
+      devGiveItem(playerClient, itemType, amount);
    });
 }
 

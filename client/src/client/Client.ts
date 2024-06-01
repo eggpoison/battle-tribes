@@ -6,7 +6,7 @@ import { Settings } from "webgl-test-shared/dist/settings";
 import { BlueprintType, LimbData, ServerComponentType } from "webgl-test-shared/dist/components";
 import { PlayerTribeData, TechID } from "webgl-test-shared/dist/techs";
 import { STRUCTURE_TYPES } from "webgl-test-shared/dist/structures";
-import { Inventory, InventoryName } from "webgl-test-shared/dist/items";
+import { Inventory, InventoryName, ItemType } from "webgl-test-shared/dist/items";
 import { TRIBE_INFO_RECORD, TribeType } from "webgl-test-shared/dist/tribes";
 import { TribesmanTitle } from "webgl-test-shared/dist/titles";
 import { io, Socket } from "socket.io-client";
@@ -879,6 +879,8 @@ abstract class Client {
       }
    }
 
+   // @Cleanup: either make this.socket always not null or use a decorator.
+
    public static sendPlaceBlueprint(structureID: number, blueprintType: BlueprintType): void {
       if (Game.isRunning && this.socket !== null) {
          this.socket.emit("place_blueprint", structureID, blueprintType);
@@ -918,6 +920,12 @@ abstract class Client {
    public static respondToTitleOffer(title: TribesmanTitle, isAccepted: boolean): void {
       if (Game.isRunning && this.socket !== null) {
          this.socket.emit("respond_to_title_offer", title, isAccepted);
+      }
+   }
+
+   public static sendDevGiveItemPacket(itemType: ItemType, amount: number): void {
+      if (Game.isRunning && this.socket !== null) {
+         this.socket.emit("dev_give_item", itemType, amount);
       }
    }
 }

@@ -14,6 +14,7 @@ import { countItemTypesInInventory } from "../../inventory-manipulation";
 import { playSound } from "../../sound";
 import Player from "../../entities/Player";
 import Game from "../../Game";
+import { setMenuCloseFunction } from "../../player-input";
 
 /*
 // @Incomplete
@@ -426,6 +427,12 @@ const BuildMenu = () => {
          setGhostInfo(null);
          return;
       }
+      setMenuCloseFunction(() => {
+         setBuildingID(0);
+
+         // Deselect structure
+         deselectSelectedEntity();
+      });
       
       BuildMenu_isOpen = () => typeof Board.entityRecord[buildingID] !== "undefined";
 

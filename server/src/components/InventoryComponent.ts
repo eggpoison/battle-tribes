@@ -132,7 +132,7 @@ export function pickupItemEntity(pickingUpEntityID: number, itemEntity: Entity):
    const itemComponent = ItemComponentArray.getComponent(itemEntity.id);
 
    for (const inventory of inventoryComponent.accessibleInventories) {
-      const amountPickedUp = addItemToInventory(inventoryComponent, inventory.name, itemComponent.itemType, itemComponent.amount);
+      const amountPickedUp = addItemToInventory(inventory, itemComponent.itemType, itemComponent.amount);
       itemComponent.amount -= amountPickedUp;
 
       // When all of the item stack is picked up, don't attempt to add to any other inventories.
@@ -158,7 +158,7 @@ export function addItem(inventoryComponent: InventoryComponent, item: Item): num
    let amountAdded = 0;
 
    for (const inventory of inventoryComponent.accessibleInventories) {
-      amountAdded += addItemToInventory(inventoryComponent, inventory.name, item.type, item.count);
+      amountAdded += addItemToInventory(inventory, item.type, item.count);
 
       if (amountAdded === item.count) {
          break;
@@ -172,12 +172,11 @@ export function addItem(inventoryComponent: InventoryComponent, item: Item): num
  * Adds as much of an item as possible to a specific inventory.
  * @returns The number of items added to the inventory
  */
-export function addItemToInventory(inventoryComponent: InventoryComponent, inventoryName: InventoryName, itemType: ItemType, itemAmount: number): number {
+export function addItemToInventory(inventory: Inventory, itemType: ItemType, itemAmount: number): number {
    let remainingAmountToAdd = itemAmount;
    let amountAdded = 0;
 
    const isStackable = itemIsStackable(itemType);
-   const inventory = getInventory(inventoryComponent, inventoryName);
 
    if (isStackable) {
       const stackSize = (ITEM_INFO_RECORD[itemType] as StackableItemInfo).stackSize;
@@ -442,8 +441,9 @@ export function craftRecipe(inventoryComponent: InventoryComponent, recipe: Craf
       }
    }
 
-   // Add product to held item
-   addItemToInventory(inventoryComponent, outputInventoryName, recipe.product, recipe.yield);
+   // Add product to output inventory
+   const outputInventory = getInventory(inventoryComponent, outputInventoryName);
+   addItemToInventory(outputInventory, recipe.product, recipe.yield);
 }
 
 function serialise(entityID: number): InventoryComponentData {

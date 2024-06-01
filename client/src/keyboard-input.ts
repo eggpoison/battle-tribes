@@ -63,10 +63,10 @@ const onKeyDown = (e: KeyboardEvent): void => {
    // If the player is using a text input field, don't register key presses
    const tagName = document.activeElement?.tagName;
    if (tagName === "INPUT") {
-      return;
+      return; 
    }
 
-   const key = getKey(e);
+   const key = getKey(e); 
 
    callKeyListeners(key, e);
 

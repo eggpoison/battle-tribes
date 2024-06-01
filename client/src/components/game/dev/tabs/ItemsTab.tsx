@@ -1,7 +1,9 @@
 import { ITEM_INFO_RECORD, Inventory, InventoryName, Item, ItemType } from "webgl-test-shared/dist/items";
-import InventoryContainer from "../../inventories/InventoryContainer";
+import InventoryContainer, { ItemSlotLeftClickCallbackInfo } from "../../inventories/InventoryContainer";
 import { useEffect, useRef, useState } from "react";
 import CLIENT_ITEM_INFO_RECORD from "../../../../client-item-info";
+import { closeCurrentMenu } from "../../../../player-input";
+import Client from "../../../../client/Client";
 
 const enum Vars {
    INVENTORY_WIDTH = 6
@@ -31,15 +33,31 @@ const ItemsTab = () => {
          filterInputRef.current.focus();
       }
    }, []);
+
+   const onLeftClickItemSlot = (e: MouseEvent, callbackInfo: ItemSlotLeftClickCallbackInfo): void => {
+      console.log("a");
+      if (callbackInfo.itemType === null) {
+         return;
+      }
+      
+      const amount = e.shiftKey ? 99 : 1;
+      Client.sendDevGiveItemPacket(callbackInfo.itemType, amount);
+   }
    
    const onFilterTextboxChange = (newFilter: string): void => {
       setFilter(newFilter);
    }
+
+   const onFilterKeyDown = (e: React.KeyboardEvent<HTMLInputElement>): void => {
+      if (e.key === "Escape") {
+         closeCurrentMenu();
+      }
+   }
    
    const itemTypes = getFilteredItemTypes(filter);
    
+   // Create inventory
    const inventory = new Inventory(Vars.INVENTORY_WIDTH, Math.ceil(itemTypes.length / Vars.INVENTORY_WIDTH), InventoryName.devInventory);
-   
    for (let i = 0; i < itemTypes.length; i++) {
       const itemType = itemTypes[i];
       const itemSlot = i + 1;
@@ -49,9 +67,9 @@ const ItemsTab = () => {
    }
    
    return <div id="items-tab" className="devmode-tab devmode-container">
-      <input ref={filterInputRef} type="text" placeholder="Search for items" onChange={e => onFilterTextboxChange(e.target.value)} />
+      <input ref={filterInputRef} type="text" placeholder="Search for items" onKeyDown={e => onFilterKeyDown(e)} onChange={e => onFilterTextboxChange(e.target.value)} />
       
-      <InventoryContainer entityID={0} inventory={inventory} />
+      <InventoryContainer onLeftClick={onLeftClickItemSlot} entityID={0} inventory={inventory} />
    </div>;
 }
 

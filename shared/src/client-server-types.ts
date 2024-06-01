@@ -4,7 +4,7 @@ import { EntityType, LimbAction } from "./entities";
 import { AttackEffectiveness } from "./entity-damage-types";
 import { EntityEvent } from "./entity-events";
 import { GrassBlocker } from "./grass-blockers";
-import { Inventory, InventoryName } from "./items";
+import { Inventory, InventoryName, ItemType } from "./items";
 import { StatusEffect } from "./status-effects";
 import { EnemyTribeData, PlayerTribeData, TechID } from "./techs";
 import { Biome, TileType } from "./tiles";
@@ -379,6 +379,11 @@ export interface ClientToServerEvents {
    structure_uninteract: (structureID: number) => void;
    recruit_tribesman: (tribesmanID: number) => void;
    respond_to_title_offer: (title: TribesmanTitle, isAccepted: boolean) => void;
+
+   // -------------------------- //
+   //       DEV-ONLY EVENTS      //
+   // -------------------------- //
+   dev_give_item: (itemType: ItemType, amount: number) => void;
 }
 
 export interface InterServerEvents {}

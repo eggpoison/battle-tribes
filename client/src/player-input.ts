@@ -467,7 +467,7 @@ export function hideInventory(): void {
    }
 }
 
-const closeCurrentMenu = (): boolean => {
+export function closeCurrentMenu(): boolean {
    if (typeof currentMenuCloseFunction !== "undefined") {
       currentMenuCloseFunction();
       currentMenuCloseFunction = undefined;
@@ -483,28 +483,10 @@ const createInventoryToggleListeners = (): void => {
    addKeyListener("e", () => {
       const didCloseMenu = closeCurrentMenu();
       if (!didCloseMenu) {
+         // Open the crafting menu
          CraftingMenu_setCraftingStation(null);
          CraftingMenu_setIsVisible(true);
       }
-      // if (!Game.isRunning) {
-      //    return;
-      // }
-
-      // if (BuildMenu_isOpen()) {
-      //    BuildMenu_hide();
-      //    deselectSelectedEntity();
-      //    return;
-      // }
-
-      // if (InventorySelector_inventoryIsOpen()) {
-      //    InventorySelector_setInventoryMenuType(InventoryMenuType.none);
-      //    return;
-      // }
-
-      // // @Temporary?
-      // if (craftingMenuIsOpen()) {
-      //    hideInventory();
-      // }
    });
 
    addKeyListener("i", () => {
@@ -515,19 +497,6 @@ const createInventoryToggleListeners = (): void => {
    });
    addKeyListener("escape", () => {
       closeCurrentMenu();
-      // if (techTreeIsOpen()) {
-      //    closeTechTree();
-      //    return;
-      // }
-
-      // if (_inventoryIsOpen) {
-      //    hideInventory();
-      //    return;
-      // }
-
-      // if (getSelectedEntityID() !== -1) {
-      //    deselectSelectedEntity();
-      // }
    });
 }
 

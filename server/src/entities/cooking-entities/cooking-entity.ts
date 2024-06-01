@@ -97,8 +97,11 @@ export function tickCookingEntity(entity: Entity): void {
          cookingEntityComponent.heatingTimer += Settings.I_TPS;
          if (cookingEntityComponent.heatingTimer >= cookingEntityComponent.currentRecipe.cookTime) {
             // Remove from ingredient inventory and add to output inventory
+
             consumeItemTypeFromInventory(inventoryComponent, InventoryName.ingredientInventory, cookingEntityComponent.currentRecipe.ingredientType, cookingEntityComponent.currentRecipe.ingredientAmount);
-            addItemToInventory(inventoryComponent, InventoryName.outputInventory, cookingEntityComponent.currentRecipe.productType, cookingEntityComponent.currentRecipe.productAmount);
+
+            const outputInventory = getInventory(inventoryComponent, InventoryName.outputInventory);
+            addItemToInventory(outputInventory, cookingEntityComponent.currentRecipe.productType, cookingEntityComponent.currentRecipe.productAmount);
 
             cookingEntityComponent.heatingTimer = 0;
             cookingEntityComponent.currentRecipe = null;

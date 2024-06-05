@@ -151,3 +151,8 @@ function serialiseTribeComponent(entityID: number): TribeComponentData {
       tribeID: tribeComponent.tribe.id
    };
 }
+
+export function recruitTribesman(tribesman: Entity, newTribe: Tribe): void {
+   const tribeComponent = TribeComponentArray.getComponent(tribesman.id);
+   tribeComponent.tribe = newTribe;
+}

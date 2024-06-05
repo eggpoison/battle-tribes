@@ -36,10 +36,7 @@
 
 #tech-tree .tech {
    --border-thickness: 5px;
-   --locked-base-colour: rgb(138, 138, 138);
-   --selected-base-colour: rgb(178, 0, 223);
-   --unlocked-base-colour: rgb(219, 219, 219);
-   background-color: var(--locked-base-colour);
+   background-color: rgb(138, 138, 138);
    border: var(--border-thickness) solid #000;
    border-radius: 100%;
    position: absolute;
@@ -50,12 +47,15 @@
    box-shadow: 0 0 5px 2px #000;
    cursor: pointer;
 }
+#tech-tree .tech:hover:not(:active):not(.unlocked):not(.selected) {
+   background-color: rgb(155, 155, 155);
+}
 #tech-tree .tech.unlocked {
-   background-color: var(--unlocked-base-colour);
+   background-color: rgb(219, 219, 219);
    cursor: default;
 }
 #tech-tree .tech.selected {
-   background-color: var(--selected-base-colour);
+   background-color: rgb(178, 0, 223);
    cursor: pointer;
 }
 
@@ -95,7 +95,11 @@
    border: 3px solid #000;
    padding: 5px;
    position: relative;
-   box-shadow: 0 0 11px 0 rgba(255, 255, 255, 0.5), 0 0 15px 3px rgba(0, 0, 0, 0.3) inset;
+   box-shadow: 0 0 15px 0 rgba(255, 255, 255, 0.5), 0 0 15px 3px rgba(0, 0, 0, 0.3) inset;
+}
+
+#tech-tooltip .container + .container {
+   margin-top: 4px;
 }
 
 #tech-tooltip h2 {
@@ -104,17 +108,26 @@
 }
 
 #tech-tooltip p {
-   margin: 0 0 0.5rem;
+   margin: 0;
 }
 
 #tech-tooltip .description {
    font-size: 1.05rem;
    font-style: italic;
-   margin-bottom: 1rem;
+   margin: 0 0 0.5rem;
+}
+
+#tech-tooltip .bar {
+   height: 2px;
+   width: 80%;
+   background-color: #666;
+   margin: 0.5rem 0 0.75rem 50%;
+   transform: translateX(-50%);
 }
 
 #tech-tooltip .unlocks {
    color: #333;
+   margin-bottom: 0.3rem;
 }
 #tech-tooltip .unlocks img {
    width: 20px;
@@ -130,40 +143,80 @@
 }
 
 #tech-tooltip ul {
-   background-color: #888;
-   margin: 0.4rem 0 0.4rem 1rem;
-   padding: 0.2rem 0.4rem 0.2rem 0.2rem;
-   display: inline-block;
+   margin: 0;
+   padding: 0;
 }
 
 #tech-tooltip li {
+   background-color: #8a8a8a;
    height: 1.4rem;
    list-style-type: none;
+   margin: 0.2rem;
+   padding: 0.2rem 0.5rem 0.2rem 0.35rem;
+   display: flex;
+   align-items: center;
+   justify-content: space-between;
+   position: relative;
+}
+#tech-tooltip li.completed {
+   background-color: rgb(147, 204, 121);
+   box-shadow: 2px 2px 8px 0 rgb(164, 214, 140) inset;
 }
 
-#tech-tooltip li span {
-   margin-left: 27px;
-}
-
-#tech-tooltip ul img {
-   width: 24px;
-   height: 24px;
+#tech-tooltip ul img.item-image {
+   width: 32px;
+   height: 32px;
    image-rendering: pixelated;
-   position: absolute;
-   transform: translateY(-3px);
+   margin-right: 5px;
 }
 
-#tech-tooltip .study-progress-bar-bg {
+#tech-tooltip li > div {
+   display: inline-flex;
+   align-items: center;
+}
+
+#tech-tooltip li .item-research-star-container {
+   position: absolute;
+   top: 2px;
+   right: 2px;
+   transform: translate(50%, -50%);
+   animation: StarSpin 5s infinite linear;
+}
+
+@keyframes StarSpin {
+   0% {
+      transform: translate(50%, -50%) rotate(0deg);
+   }
+   100% {
+      transform: translate(50%, -50%) rotate(360deg);
+   }
+}
+
+#tech-tooltip li .item-research-star-container img {
+   width: 20px;
+   height: 20px;
+   image-rendering: pixelated;
+}
+
+#tech-tooltip .item-research-count {
+   font-weight: bold;
+}
+
+/* TechTreeProgressBar */
+div.study-progress-bar-bg {
+   min-width: 10rem;
    border: 3px solid #000;
    background-color: #333;
    padding: 0.1rem;
+   position: relative;
 }
-
-#tech-tooltip .research-progress {
+.study-progress-bar-bg .research-progress {
+   font-family: "Cormorant";
    color: #fff;
    text-align: center;
    text-shadow: 2px 2px #000, -2px 2px #000, -2px -2px #000, 2px -2px #000;
    font-weight: bold;
+   font-size: 1.1rem;
    margin: 0;
    position: absolute;
    top: 50%;
@@ -171,8 +224,7 @@
    transform: translate(-50%, -50%);
    white-space: pre;
 }
-
-#tech-tooltip .study-progress-bar {
+.study-progress-bar-bg .study-progress-bar {
    width: calc(100% * var(--study-progress));
    height: 1rem;
    background-color: rgb(67, 238, 33);

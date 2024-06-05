@@ -5,6 +5,7 @@ import { getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
 import Board from "../Board";
 import { createEmberParticle, createSmokeParticle } from "../particles";
 import Entity from "../Entity";
+import { playSound } from "../sound";
 
 class Campfire extends Entity {
    public static readonly SIZE = 104;
@@ -20,6 +21,11 @@ class Campfire extends Entity {
             0
          )
       );
+
+      // @Cleanup: why <= 1?
+      if (this.ageTicks <= 1) {
+         playSound("wooden-wall-place.mp3", 0.3, 1, this.position.x, this.position.y);
+      }
    }
 
    public tick(): void {

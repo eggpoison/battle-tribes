@@ -13,6 +13,7 @@ import Particle from "../Particle";
 import { ParticleColour, ParticleRenderLayer, addMonocolourParticleToBufferContainer } from "../rendering/particle-rendering";
 import { animateLimb, createCraftingAnimationParticles, createMedicineAnimationParticles, generateRandomLimbPosition, updateBandageRenderPart, updateCustomItemRenderPart } from "../limb-animations";
 import { createDeepFrostHeartBloodParticles } from "../particles";
+import { definiteGameState } from "../game-state/game-states";
 
 export interface LimbInfo {
    selectedItemSlot: number;
@@ -384,8 +385,9 @@ class InventoryUseComponent extends ServerComponent<ServerComponentType.inventor
          
          const itemInfo = ITEM_INFO_RECORD[activeItem.type];
          if (itemInfoIsUtility(activeItem.type, itemInfo)) {
+            // @Hack: only works for player
             // Change the bow charging texture based on the charge progress
-            if (useInfo.action === LimbAction.chargeBow || useInfo.action === LimbAction.loadCrossbow && itemInfoIsBow(activeItem.type, itemInfo)) {
+            if ((useInfo.action === LimbAction.chargeBow || useInfo.action === LimbAction.loadCrossbow || typeof definiteGameState.hotbarCrossbowLoadProgressRecord[useInfo.selectedItemSlot] !== "undefined") && itemInfoIsBow(activeItem.type, itemInfo)) {
                const lastActionTicks = useInfo.action === LimbAction.chargeBow ? useInfo.lastBowChargeTicks : useInfo.lastCrossbowLoadTicks;
                const secondsSinceLastAction = getSecondsSinceLastAction(lastActionTicks);
                // @Hack: why does itemInfoIsBow not narrow this fully??
@@ -514,7 +516,7 @@ class InventoryUseComponent extends ServerComponent<ServerComponentType.inventor
       const inventory = inventoryComponent.getInventory(limbInfo.inventoryName);
       
       let item: Item | null | undefined = inventory.itemSlots[limbInfo.selectedItemSlot];
-
+      
       if (typeof item === "undefined" || limbInfo.thrownBattleaxeItemID === item.id) {
          item = null;
       }
@@ -527,6 +529,7 @@ class InventoryUseComponent extends ServerComponent<ServerComponentType.inventor
       
       let shouldShowActiveItemRenderPart = true;
 
+      // @Hack
       // Zombie lunge attack
       if (this.entity.type === EntityType.zombie) {
          const inventoryComponent = this.entity.getServerComponent(ServerComponentType.inventory);

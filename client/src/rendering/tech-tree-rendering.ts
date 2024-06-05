@@ -2,7 +2,7 @@ import { TECHS, TechID, TechInfo, getTechByID } from "webgl-test-shared/dist/tec
 import { angle } from "webgl-test-shared/dist/utils";
 import Game from "../Game";
 import { createWebGLProgram, halfWindowHeight, halfWindowWidth, windowHeight, windowWidth } from "../webgl";
-import { techIsHovered } from "../components/game/TechTree";
+import { techIsHovered } from "../components/game/tech-tree/TechTree";
 
 const ConnectorType = {
    unlocked: 0,
@@ -18,9 +18,14 @@ let gl: WebGL2RenderingContext;
 let backgroundProgram: WebGLProgram;
 let connectorProgram: WebGLProgram;
 
-let techTreeX = 0;
-let techTreeY = 0;
-let techTreeZoom = 1;
+// @Cleanup: Weird to export like this
+export let techTreeX = 0;
+export let techTreeY = 0;
+export let techTreeZoom = 1;
+
+export function getTechTreeGL(): WebGL2RenderingContext {
+   return gl;
+}
 
 export function updateTechTreeCanvasSize(): void {
    gl.viewport(0, 0, windowWidth, windowHeight);
@@ -38,9 +43,10 @@ export function setTechTreeZoom(zoom: number): void {
    techTreeZoom = zoom;
 }
 
-const createGLContext = (): void => {
+// @Cleanup: Copy and paste
+export function createTechTreeGLContext(): void {
    const canvas = document.getElementById("tech-tree-canvas") as HTMLCanvasElement;
-   const glAttempt = canvas.getContext("webgl2");
+   const glAttempt = canvas.getContext("webgl2", { alpha: false });
 
    if (glAttempt === null) {
       alert("Your browser does not support WebGL.");
@@ -247,7 +253,7 @@ const createConnectorShaders = (): void => {
       vec2 position = v_position * u_screenSize / 1000.0;
       position = (position * 500.0 / u_zoom - u_scrollPos) / 16.0;
 
-      float dist = minimum_distance(v_startPos, v_endPos, position);
+      float dist = minimum_distance(v_startPos, v_endPos, position); 
       
       if (v_type == ${ConnectorType.unlocked.toFixed(1)}) {
          outputColour = vec4(UNLOCKED_COLOUR, 1.0);
@@ -269,7 +275,6 @@ const createConnectorShaders = (): void => {
 }
 
 export function createTechTreeShaders(): void {
-   createGLContext();
    createBackgroundShaders();
    createConnectorShaders();
 }
@@ -340,7 +345,7 @@ const addConnectorVertices = (vertices: Array<number>, startTech: TechInfo, endT
    const perpendicularDirection1 = direction + Math.PI / 2;
    const perpendicularDirection2 = direction - Math.PI / 2;
 
-   const a = 16; // @Cleanup
+   const a = 16; // @Cleanup @Hack: what is this?
 
    let connectorWidth: number;
    if (type === ConnectorType.conflicting) {
@@ -474,6 +479,9 @@ const renderConnectors = (): void => {
 }
 
 export function renderTechTree(): void {
+   gl.clearColor(0, 0,0, 1);
+   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
    renderBackground();
    renderConnectors();
 }

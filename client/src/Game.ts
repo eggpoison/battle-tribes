@@ -36,13 +36,13 @@ import { registerFrame, updateFrameGraph } from "./components/game/dev/FrameGrap
 import { createNightShaders, renderNight } from "./rendering/light-rendering";
 import { createPlaceableItemProgram, renderGhostEntities } from "./rendering/entity-ghost-rendering";
 import { setupFrameGraph } from "./rendering/frame-graph-rendering";
-import { createEntityTextureAtlas } from "./texture-atlases/entity-texture-atlas";
+import { createTextureAtlases } from "./texture-atlases/entity-texture-atlas";
 import { createFishShaders } from "./rendering/fish-rendering";
 import { Tile } from "./Tile";
 import { createForcefieldShaders, renderForcefield } from "./rendering/world-border-forcefield-rendering";
 import { createDecorationShaders, renderDecorations } from "./rendering/decoration-rendering";
 import { playRiverSounds, setupAudio, updateSoundEffectVolumes } from "./sound";
-import { createTechTreeShaders, renderTechTree } from "./rendering/tech-tree-rendering";
+import { createTechTreeGLContext, createTechTreeShaders, getTechTreeGL, renderTechTree } from "./rendering/tech-tree-rendering";
 import { createResearchOrbShaders, renderResearchOrb } from "./rendering/research-orb-rendering";
 import { attemptToResearch, updateActiveResearchBench, updateResearchOrb } from "./research";
 import { resetInteractableEntityIDs, updateHighlightedAndHoveredEntities, updateSelectedStructure } from "./entity-selection";
@@ -57,6 +57,7 @@ import { createWallConnectionShaders, renderWallConnections } from "./rendering/
 import { createHealingBeamShaders, renderHealingBeams } from "./rendering/healing-beam-rendering";
 import { BuildMenu_refreshBuildingID, BuildMenu_updateBuilding } from "./components/game/BuildMenu";
 import { createGrassBlockerShaders, renderGrassBlockers } from "./rendering/grass-blocker-rendering";
+import { createTechTreeItemShaders, renderTechTreeItems, updateTechTreeItems } from "./rendering/tech-tree-item-rendering";
 
 let listenersHaveBeenCreated = false;
 
@@ -112,6 +113,10 @@ abstract class Game {
    
    private static cameraData = new Float32Array(8);
    private static cameraBuffer: WebGLBuffer;
+   
+   // @Cleanup: Copy and paste
+   private static cameraDataTechTree = new Float32Array(8);
+   private static cameraBufferTechTree: WebGLBuffer;
 
    private static timeData = new Float32Array(4);
    private static timeBuffer: WebGLBuffer;
@@ -196,6 +201,7 @@ abstract class Game {
       if (!Game.hasInitialised) {
          return new Promise(async resolve => {
             createWebGLContext();
+            createTechTreeGLContext();
             createTextCanvasContext();
 
             Board.initialise(tiles, riverFlowDirections, edgeTiles, edgeRiverFlowDirections, grassInfo);
@@ -212,10 +218,19 @@ abstract class Game {
             this.timeBuffer = gl.createBuffer()!;
             gl.bindBufferBase(gl.UNIFORM_BUFFER, TIME_UNIFORM_BUFFER_BINDING_INDEX, this.timeBuffer);
             gl.bufferData(gl.UNIFORM_BUFFER, this.timeData.byteLength, gl.DYNAMIC_DRAW);
+
+            // @Cleanup: Copy and paste
+            // Create the camera uniform buffer (for the tech tree)
+            {
+               const gl = getTechTreeGL();
+               this.cameraBufferTechTree = gl.createBuffer()!;
+               gl.bindBufferBase(gl.UNIFORM_BUFFER, CAMERA_UNIFORM_BUFFER_BINDING_INDEX, this.cameraBufferTechTree);
+               gl.bufferData(gl.UNIFORM_BUFFER, this.cameraDataTechTree.byteLength, gl.DYNAMIC_DRAW);
+            }
             
             // We load the textures before we create the shaders because some shader initialisations stitch textures together
             await loadTextures();
-            await createEntityTextureAtlas();
+            await createTextureAtlases();
             
             // Create shaders
             createSolidTileShaders();
@@ -234,6 +249,7 @@ abstract class Game {
             createForcefieldShaders();
             createDecorationShaders();
             createTechTreeShaders();
+            createTechTreeItemShaders();
             createResearchOrbShaders();
             createStructureHighlightShaders();
             createTurretRangeShaders();
@@ -348,6 +364,8 @@ abstract class Game {
       // updateInspectHealthBar();
       InventorySelector_forceUpdate();
 
+      updateTechTreeItems();
+      
       updateSoundEffectVolumes();
       playRiverSounds();
 
@@ -410,6 +428,18 @@ abstract class Game {
       gl.bindBuffer(gl.UNIFORM_BUFFER, this.timeBuffer);
       this.timeData[0] = performance.now();
       gl.bufferSubData(gl.UNIFORM_BUFFER, 0, this.timeData);
+
+      // @Cleanup: Copy and paste
+      {
+         const gl = getTechTreeGL();
+         gl.bindBuffer(gl.UNIFORM_BUFFER, this.cameraBufferTechTree);
+         this.cameraDataTechTree[0] = Camera.position.x;
+         this.cameraDataTechTree[1] = Camera.position.y;
+         this.cameraDataTechTree[2] = halfWindowWidth;
+         this.cameraDataTechTree[3] = halfWindowHeight;
+         this.cameraDataTechTree[4] = Camera.zoom;
+         gl.bufferSubData(gl.UNIFORM_BUFFER, 0, this.cameraDataTechTree);
+      }
 
       renderText();
 
@@ -483,6 +513,7 @@ abstract class Game {
       updateInspectHealthBar();
       
       renderTechTree();
+      renderTechTreeItems();
    }
 
    public static getEnemyTribeData(tribeID: number): EnemyTribeData {

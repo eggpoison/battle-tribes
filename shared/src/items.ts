@@ -799,6 +799,8 @@ export function getItemStackSize(item: Item): number {
    return (ITEM_INFO_RECORD[item.type] as StackableItemInfo).stackSize;
 }
 
+// @Cleanup: combine the two parameters to make calling it easier
+
 export function itemInfoIsTool(itemType: ItemType, itemInfo: unknown): itemInfo is ToolItemInfo {
    const itemTypeInfo = ITEM_TYPE_RECORD[itemType];
    return itemTypeInfo === "axe" || itemTypeInfo === "sword" || itemTypeInfo === "pickaxe" || itemTypeInfo === "spear" || itemTypeInfo === "hammer" || itemTypeInfo === "battleaxe";
@@ -811,7 +813,7 @@ export function itemInfoIsUtility(itemType: ItemType, itemInfo: unknown): itemIn
 
 export function itemInfoIsBow(itemType: ItemType, itemInfo: unknown): itemInfo is BowItemInfo {
    const itemTypeInfo = ITEM_TYPE_RECORD[itemType];
-   return itemTypeInfo === "bow";
+   return itemTypeInfo === "bow" || itemTypeInfo === "crossbow";
 }
 
 // @Cleanup: move elsewhere

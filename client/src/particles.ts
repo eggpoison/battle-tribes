@@ -1510,7 +1510,7 @@ export function createConversionParticle(x: number, y: number, vx: number, vy: n
 }
 
 export function createSparkParticle(x: number, y: number): void {
-   const lifetime = randFloat(0.15, 0.2);
+   const lifetime = randFloat(0.2, 0.25);
    const opacityMult = randFloat(0.5, 0.75);
 
    const particle = new Particle(lifetime);
@@ -1519,7 +1519,7 @@ export function createSparkParticle(x: number, y: number): void {
       return (1 - progress * progress) * opacityMult;
    };
 
-   const velocityMagnitude = randFloat(70, 110);
+   const velocityMagnitude = randFloat(130, 180);
    const velocityDirection = 2 * Math.PI * Math.random();
    const vx = velocityMagnitude * Math.sin(velocityDirection);
    const vy = velocityMagnitude * Math.cos(velocityDirection);
@@ -1527,13 +1527,13 @@ export function createSparkParticle(x: number, y: number): void {
    addMonocolourParticleToBufferContainer(
       particle,
       ParticleRenderLayer.high,
-      4, 4,
+      4, 12,
       x, y,
       vx, vy,
       0, 0,
+      velocityMagnitude / lifetime / 1.3,
+      velocityDirection,
       0,
-      2 * Math.PI * Math.random(),
-      randFloat(2, 5) * randSign(),
       3,
       0,
       1, 1, 1

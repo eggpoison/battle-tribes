@@ -6,13 +6,14 @@ import { StructureType } from "webgl-test-shared/dist/structures";
 import { TechInfo, getTechChain } from "webgl-test-shared/dist/techs";
 import { Point } from "webgl-test-shared/dist/utils";
 import Entity from "../../../Entity";
-import { craftingStationExists, getBestHammerItemSlot } from "./tribesman-ai";
 import { InventoryComponentArray, getInventory, getItemTypeSlot, inventoryComponentCanAffordRecipe, inventoryHasItemType, tallyInventoryComponentItems } from "../../../components/InventoryComponent";
 import Tribe, { BuildingPlan, BuildingPlanType, BuildingUpgradePlan, NewBuildingPlan } from "../../../Tribe";
 import { createBuildingHitboxes } from "../../../buildings";
 import { generateBuildingPosition } from "../../../ai-tribe-building/ai-building-plans";
 import { TribeComponentArray } from "../../../components/TribeComponent";
 import { TribesmanAIComponentArray } from "../../../components/TribesmanAIComponent";
+import { craftingStationExists } from "./tribesman-crafting";
+import { getBestToolItemSlot } from "./tribesman-ai-utils";
 
 // @Cleanup: can this be inferred from stuff like the entity->resource-dropped record?
 const TOOL_TYPE_FOR_MATERIAL_RECORD: Record<ItemType, ToolType | null> = {
@@ -540,7 +541,7 @@ export function getTribesmanGoals(tribesman: Entity, hotbarInventory: Inventory)
             return goals;
          }
          case BuildingPlanType.upgrade: {
-            if (getBestHammerItemSlot(hotbarInventory) !== 0) {
+            if (getBestToolItemSlot(hotbarInventory, "hammer") !== null) {
                return [{
                   type: TribesmanGoalType.upgradeBuilding,
                   plan: plan,

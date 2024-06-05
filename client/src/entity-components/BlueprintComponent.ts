@@ -6,7 +6,7 @@ import Entity from "../Entity";
 import { playSound } from "../sound";
 import { createDustCloud, createLightWoodSpeckParticle, createRockParticle, createRockSpeckParticle, createSawdustCloud, createWoodShardParticle } from "../particles";
 import { getCurrentBlueprintProgressTexture } from "../entities/BlueprintEntity";
-import { getTextureArrayIndex, getTextureHeight, getTextureWidth } from "../texture-atlases/entity-texture-atlas";
+import { getEntityTextureAtlas, getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
 import { ParticleRenderLayer } from "../rendering/particle-rendering";
 
 const createWoodenBlueprintWorkParticleEffects = (entity: Entity): void => {
@@ -74,9 +74,11 @@ class BlueprintComponent extends ServerComponent<ServerComponentType.blueprint> 
 
          const progressTexture = getCurrentBlueprintProgressTexture(data.blueprintType, data.buildProgress);
          
+         // @Cleanup
+         const textureAtlas = getEntityTextureAtlas();
          const textureArrayIndex = getTextureArrayIndex(progressTexture.completedTextureSource);
-         const xShift = getTextureWidth(textureArrayIndex) * 4 * 0.5 * randFloat(-0.75, 0.75);
-         const yShift = getTextureHeight(textureArrayIndex) * 4 * 0.5 * randFloat(-0.75, 0.75);
+         const xShift = textureAtlas.textureWidths[textureArrayIndex] * 4 * 0.5 * randFloat(-0.75, 0.75);
+         const yShift = textureAtlas.textureHeights[textureArrayIndex] * 4 * 0.5 * randFloat(-0.75, 0.75);
          const particleOriginX = this.entity.position.x + rotateXAroundOrigin(progressTexture.offsetX + xShift, progressTexture.offsetY + yShift, progressTexture.rotation);
          const particleOriginY = this.entity.position.y + rotateYAroundOrigin(progressTexture.offsetX + xShift, progressTexture.offsetY + yShift, progressTexture.rotation);
          

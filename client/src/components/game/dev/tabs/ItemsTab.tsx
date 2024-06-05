@@ -35,7 +35,6 @@ const ItemsTab = () => {
    }, []);
 
    const onLeftClickItemSlot = (e: MouseEvent, callbackInfo: ItemSlotLeftClickCallbackInfo): void => {
-      console.log("a");
       if (callbackInfo.itemType === null) {
          return;
       }
@@ -67,7 +66,9 @@ const ItemsTab = () => {
    }
    
    return <div id="items-tab" className="devmode-tab devmode-container">
-      <input ref={filterInputRef} type="text" placeholder="Search for items" onKeyDown={e => onFilterKeyDown(e)} onChange={e => onFilterTextboxChange(e.target.value)} />
+      <div>
+         <input ref={filterInputRef} type="text" placeholder="Search for items" onKeyDown={e => onFilterKeyDown(e)} onChange={e => onFilterTextboxChange(e.target.value)} />
+      </div>
       
       <InventoryContainer onLeftClick={onLeftClickItemSlot} entityID={0} inventory={inventory} />
    </div>;

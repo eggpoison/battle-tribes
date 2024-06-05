@@ -5,6 +5,7 @@ import Camera from "./Camera";
 import Board from "./Board";
 import Entity from "./Entity";
 
+// @Robustness: automatically detect from folder
 const AUDIO_FILE_PATHS = [
    "item-pickup.mp3",
    "rock-hit-1.mp3",
@@ -160,7 +161,10 @@ const AUDIO_FILE_PATHS = [
    "fart.mp3",
    "trap-spring.mp3",
    "trap-cover.mp3",
-   "fertiliser.mp3"
+   "fertiliser.mp3",
+   "item-research.mp3",
+   "research.mp3",
+   "research-forbidden.mp3"
 ] as const;
 
 export type AudioFilePath = typeof AUDIO_FILE_PATHS[number];

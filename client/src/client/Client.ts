@@ -17,10 +17,10 @@ import CircularHitbox from "../hitboxes/CircularHitbox";
 import RectangularHitbox from "../hitboxes/RectangularHitbox";
 import { Tile } from "../Tile";
 import { gameScreenSetIsDead } from "../components/game/GameScreen";
-import { removeSelectedItem, selectItem, hideInventory } from "../player-input";
+import { removeSelectedItem, selectItem, closeCurrentMenu } from "../player-input";
 import { Hotbar_setHotbarSelectedItemSlot, Hotbar_update, Hotbar_updateRightThrownBattleaxeItemID } from "../components/game/inventories/Hotbar";
 import { setHeldItemVisual } from "../components/game/HeldItem";
-import { CraftingMenu_setCraftingMenuOutputItem } from "../components/game/menus/CraftingMenu";
+import { CraftingMenu_setCraftingMenuOutputItem, CraftingMenu_updateRecipes } from "../components/game/menus/CraftingMenu";
 import { HealthBar_setHasFrostShield, updateHealthBar } from "../components/game/HealthBar";
 import { registerServerTick, updateDebugScreenCurrentTime, updateDebugScreenTicks } from "../components/game/dev/GameInfoDisplay";
 import Camera from "../Camera";
@@ -33,7 +33,7 @@ import { createInventoryFromData, updateInventoryFromData } from "../inventory-m
 import Entity from "../Entity";
 import { createDamageNumber, createHealNumber, createResearchNumber, setVisibleBuildingSafetys } from "../text-canvas";
 import { playSound } from "../sound";
-import { closeTechTree, updateTechTree } from "../components/game/TechTree";
+import { updateTechTree } from "../components/game/tech-tree/TechTree";
 import { TechInfocard_setSelectedTech } from "../components/game/TechInfocard";
 import { getSelectedEntityID } from "../entity-selection";
 import { setVisiblePathfindingNodeOccupances } from "../rendering/pathfinding-node-rendering";
@@ -241,8 +241,8 @@ abstract class Client {
 
    /** Creates the socket used to connect to the server */
    private static createSocket(): ISocket {
-      // return io(`ws://172.24.239.73:${Settings.SERVER_PORT}`, {
-      return io(`ws://localhost:${Settings.SERVER_PORT}`, {
+      return io(`ws://10.0.0.9:${Settings.SERVER_PORT}`, {
+      // return io(`ws://localhost:${Settings.SERVER_PORT}`, {
          transports: ["websocket", "polling", "flashsocket"],
          autoConnect: false,
          reconnection: false
@@ -380,6 +380,11 @@ abstract class Client {
    }
 
    private static updateTribe(tribeData: PlayerTribeData): void {
+      if (tribeData.unlockedTechs.length > Game.tribe.unlockedTechs.length) {
+         // @Incomplete: attach to camera so it doesn't decrease in loudness
+         playSound("research.mp3", 0.4, 1, Camera.position.x, Camera.position.y);
+      }
+      
       Game.tribe.hasTotem = tribeData.hasTotem;
       Game.tribe.numHuts = tribeData.numHuts;
       Game.tribe.selectedTechID = tribeData.selectedTechID;
@@ -554,6 +559,9 @@ abstract class Client {
       }
       if (backpackHasChanged || backpackSlotHasChanged) {
          BackpackInventoryMenu_update();
+      }
+      if (hotbarHasChanged || backpackHasChanged) {
+         CraftingMenu_updateRecipes();
       }
    }
 
@@ -851,8 +859,7 @@ abstract class Client {
       definiteGameState.resetFlags();
 
       gameScreenSetIsDead(true);
-      hideInventory();
-      closeTechTree();
+      closeCurrentMenu();
    }
 
    public static sendSelectTech(techID: TechID): void {

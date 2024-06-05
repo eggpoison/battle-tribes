@@ -454,7 +454,7 @@ const throwHeldItem = (): void => {
    }
 }
 
-export function hideInventory(): void {
+const hideInventory = (): void => {
    _inventoryIsOpen = false;
    
    CraftingMenu_setCraftingStation(null);

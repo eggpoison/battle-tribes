@@ -31,6 +31,7 @@ class Wall extends Entity {
 
       this.updateDamageRenderPart(healthComponentData.health, healthComponentData.maxHealth);
 
+      // @Cleanup: why <= 1?
       if (this.ageTicks <= 1) {
          playSound("wooden-wall-place.mp3", 0.3, 1, this.position.x, this.position.y);
       }

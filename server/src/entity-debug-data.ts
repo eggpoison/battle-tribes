@@ -4,12 +4,13 @@ import { EntityTypeString } from "webgl-test-shared/dist/entities";
 import { ITEM_INFO_RECORD, PlaceableItemInfo, ItemTypeString } from "webgl-test-shared/dist/items";
 import { getTechByID } from "webgl-test-shared/dist/techs";
 import Entity from "./Entity";
-import { TRIBESMAN_COMMUNICATION_RANGE, getTribesmanVisionRange } from "./entities/tribes/tribesman-ai/tribesman-ai";
+import { TRIBESMAN_COMMUNICATION_RANGE } from "./entities/tribes/tribesman-ai/tribesman-ai";
 import { TribesmanGoalType } from "./entities/tribes/tribesman-ai/tribesman-goals";
 import Board from "./Board";
 import { StructureComponentArray } from "./components/StructureComponent";
 import { TribeComponentArray } from "./components/TribeComponent";
 import { TribesmanAIComponentArray } from "./components/TribesmanAIComponent";
+import { getTribesmanVisionRange } from "./entities/tribes/tribesman-ai/tribesman-ai-utils";
 
 export function getEntityDebugData(entity: Entity): EntityDebugData {
    const lines = new Array<LineDebugData>();

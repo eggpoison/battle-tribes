@@ -39,11 +39,11 @@ const InventoryContainer = ({ entityID, inventory, className, selectedItemSlot, 
          const isSelected = typeof selectedItemSlot !== "undefined" && itemSlot=== selectedItemSlot;
          if (typeof item !== "undefined") {
             rowItemSlots.push(
-               <ItemSlot key={x} onClick={e => leftClickFunc(e)} onContextMenu={e => rightClickItemSlot(e, entityID, inventory, itemSlot)} picturedItemImageSrc={getItemTypeImage(item.type)} itemCount={item.count} isSelected={isSelected} />
+               <ItemSlot key={x} onClick={leftClickFunc} onContextMenu={e => rightClickItemSlot(e, entityID, inventory, itemSlot)} picturedItemImageSrc={getItemTypeImage(item.type)} itemCount={item.count} isSelected={isSelected} />
             );
          } else {
             rowItemSlots.push(
-               <ItemSlot key={x} onClick={e => leftClickFunc(e)} onContextMenu={e => rightClickItemSlot(e, entityID, inventory, itemSlot)} isSelected={isSelected} />
+               <ItemSlot key={x} onClick={leftClickFunc} onContextMenu={e => rightClickItemSlot(e, entityID, inventory, itemSlot)} isSelected={isSelected} />
             );
          }
       }

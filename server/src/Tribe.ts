@@ -875,24 +875,30 @@ class Tribe {
       return this.unlockedTechs.indexOf(techID) !== -1;
    }
 
+   public forceUnlockTech(techID: TechID): void {
+      const techInfo = getTechByID(techID);
+      if (this.hasUnlockedTech(techID) || techInfo.blacklistedTribes.includes(this.type)) {
+         return;
+      }
+
+      if (!this.techTreeUnlockProgress.hasOwnProperty(techInfo.id)) {
+         this.techTreeUnlockProgress[techInfo.id] = {
+            itemProgress: {},
+            studyProgress: 0
+         }
+      }
+      this.techTreeUnlockProgress[techInfo.id]!.studyProgress = techInfo.researchStudyRequirements;
+      for (const [itemTypeString, itemAmount] of Object.entries(techInfo.researchItemRequirements)) {
+         const itemType = Number(itemTypeString) as ItemType;
+         this.techTreeUnlockProgress[techInfo.id]!.itemProgress[itemType] = itemAmount;
+      }
+      
+      this.unlockTech(techInfo.id);
+   }
+
    public unlockAllTechs(): void {
       for (const techInfo of TECHS) {
-         if (this.hasUnlockedTech(techInfo.id) || techInfo.blacklistedTribes.includes(this.type)) {
-            continue;
-         }
-
-         if (!this.techTreeUnlockProgress.hasOwnProperty(techInfo.id)) {
-            this.techTreeUnlockProgress[techInfo.id] = {
-               itemProgress: {},
-               studyProgress: 0
-            }
-         }
-         this.techTreeUnlockProgress[techInfo.id]!.studyProgress = techInfo.researchStudyRequirements;
-         for (const [itemType, itemAmount] of Object.entries(techInfo.researchItemRequirements)) {
-            this.techTreeUnlockProgress[techInfo.id]!.itemProgress[itemType as unknown as ItemType] = itemAmount;
-         }
-         
-         this.unlockTech(techInfo.id);
+         this.forceUnlockTech(techInfo.id);
       }
    }
 

@@ -1,60 +1,47 @@
 import { PlanterBoxPlant, TribesmanAIType } from "webgl-test-shared/dist/components";
-import { CraftingStation, CraftingRecipe, CRAFTING_RECIPES } from "webgl-test-shared/dist/crafting-recipes";
-import { EntityType, EntityTypeString, LimbAction } from "webgl-test-shared/dist/entities";
-import { ITEM_TYPE_RECORD, ITEM_INFO_RECORD, Item, ConsumableItemInfo, Inventory, ItemType, HammerItemInfo, PlaceableItemInfo, ConsumableItemCategory, InventoryName } from "webgl-test-shared/dist/items";
+import { EntityType, LimbAction } from "webgl-test-shared/dist/entities";
+import { ITEM_TYPE_RECORD, ITEM_INFO_RECORD, Item, ConsumableItemInfo, Inventory, ItemType, InventoryName } from "webgl-test-shared/dist/items";
 import { Settings, PathfindingSettings } from "webgl-test-shared/dist/settings";
-import { TechInfo, getTechByID } from "webgl-test-shared/dist/techs";
-import { TribesmanTitle } from "webgl-test-shared/dist/titles";
-import { TRIBE_INFO_RECORD } from "webgl-test-shared/dist/tribes";
-import { distance, angle, Point, randInt, getAngleDiff } from "webgl-test-shared/dist/utils";
+import { getTechByID } from "webgl-test-shared/dist/techs";
+import { getAngleDiff } from "webgl-test-shared/dist/utils";
 import Entity from "../../../Entity";
-import { getEntitiesInRange, willStopAtDesiredDistance, stopEntity, moveEntityToPosition, getDistanceFromPointToEntity, getClosestAccessibleEntity } from "../../../ai-shared";
-import { HealthComponent, HealthComponentArray } from "../../../components/HealthComponent";
-import { getInventory, addItemToInventory, consumeItemFromSlot, craftRecipe, recipeCraftingStationIsAvailable, inventoryComponentCanAffordRecipe, inventoryIsFull, getItemTypeSlot, InventoryComponentArray } from "../../../components/InventoryComponent";
-import { TribesmanAIComponentArray, TribesmanPathType, getItemGiftAppreciation, itemThrowIsOnCooldown } from "../../../components/TribesmanAIComponent";
-import { tickTribeMember, calculateRadialAttackTargets, repairBuilding, calculateRepairTarget, placeBuilding, placeBlueprint, getAvailableCraftingStations, throwItem, VACUUM_RANGE, tribeMemberCanPickUpItem, } from "../tribe-member";
-import { TRIBE_WORKER_RADIUS, TRIBE_WORKER_VISION_RANGE } from "../tribe-worker";
+import { willStopAtDesiredDistance, stopEntity, getDistanceFromPointToEntity, getClosestAccessibleEntity } from "../../../ai-shared";
+import { HealthComponentArray } from "../../../components/HealthComponent";
+import { getInventory, addItemToInventory, consumeItemFromSlot, inventoryComponentCanAffordRecipe, inventoryIsFull, getItemTypeSlot, InventoryComponentArray } from "../../../components/InventoryComponent";
+import { TribesmanAIComponentArray, TribesmanPathType, itemThrowIsOnCooldown } from "../../../components/TribesmanAIComponent";
+import { tickTribeMember, calculateRadialAttackTargets, repairBuilding, throwItem, } from "../tribe-member";
 import { InventoryUseComponentArray, getInventoryUseInfo, setLimbActions } from "../../../components/InventoryUseComponent";
 import Board from "../../../Board";
-import { TRIBE_WARRIOR_VISION_RANGE } from "../tribe-warrior";
 import { AIHelperComponentArray } from "../../../components/AIHelperComponent";
-import { EntityRelationship, TribeComponent, TribeComponentArray, getEntityRelationship } from "../../../components/TribeComponent";
-import { attemptToOccupyResearchBench, canResearchAtBench, continueResearching, markPreemptiveMoveToBench, shouldMoveToResearchBench } from "../../../components/ResearchBenchComponent";
-import { PathfindFailureDefault, PathfindOptions, entityCanBlockPathfinding, entityHasReachedNode, getAngleToNode, getClosestPathfindNode, getDistanceToNode, getEntityFootprint, getEntityPathfindingGroupID, pathIsClear, pathfind, positionIsAccessible, replacePathfindingNodeGroupID, smoothPath } from "../../../pathfinding";
+import { EntityRelationship, TribeComponentArray, getEntityRelationship, recruitTribesman } from "../../../components/TribeComponent";
+import { PathfindFailureDefault } from "../../../pathfinding";
 import { PhysicsComponentArray } from "../../../components/PhysicsComponent";
 import Tribe from "../../../Tribe";
-import { TribesmanGoal, TribesmanGoalType, TribesmanPlaceGoal, TribesmanUpgradeGoal, getTribesmanGoals } from "./tribesman-goals";
-import { createBuildingHitboxes } from "../../../buildings";
-import { CollisionVars, entitiesAreColliding, getHitboxesCollidingEntities } from "../../../collision";
+import { TribesmanGoalType, getTribesmanGoals } from "./tribesman-goals";
+import { CollisionVars, entitiesAreColliding } from "../../../collision";
 import { huntEntity } from "./tribesman-combat-ai";
-import { doorIsClosed, toggleDoor } from "../../../components/DoorComponent";
-import { TITLE_REWARD_CHANCES } from "../../../tribesman-title-generation";
-import { TribeMemberComponentArray, awardTitle, tribeMemberHasTitle } from "../../../components/TribeMemberComponent";
 import { PlanterBoxComponentArray, placePlantInPlanterBox } from "../../../components/PlanterBoxComponent";
-import { calculateStructureConnectionInfo } from "webgl-test-shared/dist/structures";
 import { HutComponentArray } from "../../../components/HutComponent";
 import { PlayerComponentArray } from "../../../components/PlayerComponent";
-import { SpikesComponentArray } from "../../../components/SpikesComponent";
-import { ItemComponentArray } from "../../../components/ItemComponent";
-import { getGatherTarget } from "./tribesman-resource-gathering";
+import { getGatherTarget, tribesmanGetItemPickupTarget, tribesmanGoPickupItemEntity } from "./tribesman-resource-gathering";
+import { goResearchTech } from "./tribesman-researching";
+import { clearTribesmanPath, getBestToolItemSlot, getTribesmanAcceleration, getTribesmanAttackOffset, getTribesmanAttackRadius, getTribesmanDesiredAttackRange, getTribesmanRadius, getTribesmanSlowAcceleration, pathfindToPosition } from "./tribesman-ai-utils";
+import { attemptToRepairBuildings, goPlaceBuilding, goUpgradeBuilding } from "./tribesman-structures";
+import { goCraftItem } from "./tribesman-crafting";
+import { getGiftableItemSlot, getRecruitTarget } from "./tribesman-recruiting";
+import { escapeFromEnemies, tribesmanShouldEscape } from "./tribesman-escaping";
+import { continueTribesmanHealing, getHealingItemUseInfo } from "./tribesman-healing";
+import { tribesmanDoPatrol } from "./tribesman-patrolling";
 
 // @Cleanup: Move all of this to the TribesmanComponent file
 
 const enum Vars {
-   HELP_TIME = 10 * Settings.TPS,
-   BUILDING_PLACE_DISTANCE = 80,
-   BLOCKING_TRIBESMAN_DISTANCE = 80
+   HELP_TIME = 10 * Settings.TPS
 }
-
-const SLOW_ACCELERATION = 200;
-const ACCELERATION = 400;
 
 const BARREL_INTERACT_DISTANCE = 80;
 
 export const TRIBESMAN_TURN_SPEED = 2 * Math.PI;
-
-/** How far off the target the pathfinding can be before recalculating */
-const PATH_RECALCULATE_DIST = 32;
 
 export const TRIBESMAN_COMMUNICATION_RANGE = 1000;
 
@@ -119,136 +106,6 @@ const sendHelpMessage = (communicatingTribesman: Entity, communicationTargets: R
          pathfindToPosition(currentTribesman, communicatingTribesman.position.x, communicatingTribesman.position.y, communicatingTribesman.id, TribesmanPathType.tribesmanRequest, Math.floor(64 / PathfindingSettings.NODE_SEPARATION), PathfindFailureDefault.returnEmpty);
       }
    }
-}
-
-export function getTribesmanVisionRange(tribesman: Entity): number {
-   if (tribesman.type === EntityType.tribeWorker) {
-      return TRIBE_WORKER_VISION_RANGE;
-   } else {
-      return TRIBE_WARRIOR_VISION_RANGE;
-   }
-}
-
-/** How far away from the entity the attack is done */
-export function getTribesmanAttackOffset(tribesman: Entity): number {
-   if (tribesman.type === EntityType.tribeWorker) {
-      return 40;
-   } else {
-      return 50;
-   }
-}
-
-/** Max distance from the attack position that the attack will be registered from */
-export function getTribesmanAttackRadius(tribesman: Entity): number {
-   if (tribesman.type === EntityType.tribeWorker) {
-      return 40;
-   } else {
-      return 50;
-   }
-}
-
-/** How far the tribesman wants to be away from their target when attacking */
-export function getTribesmanDesiredAttackRange(tribesman: Entity): number {
-   if (tribesman.type === EntityType.tribeWorker) {
-      return 45;
-   } else {
-      return 55;
-   }
-}
-
-export function getTribesmanRadius(tribesman: Entity): number {
-   if (tribesman.type === EntityType.tribeWorker) {
-      return TRIBE_WORKER_RADIUS;
-   } else {
-      return 32;
-   }
-}
-
-const isCollidingWithCoveredSpikes = (tribesmanID: number): boolean => {
-   const collidingEntityIDs = Board.getEntityCollisions(tribesmanID);
-
-   for (let i = 0; i < collidingEntityIDs.length; i++) {
-      const entityID = collidingEntityIDs[i];
-
-      if (SpikesComponentArray.hasComponent(entityID)) {
-         const spikesComponent = SpikesComponentArray.getComponent(entityID);
-         if (spikesComponent.isCovered) {
-            return true;
-         }
-      }
-   }
-
-   return false;
-}
-
-const getAccelerationMultiplier = (tribesmanID: number): number => {
-   const tribeComponent = TribeComponentArray.getComponent(tribesmanID);
-   const tribeMemberComponent = TribeMemberComponentArray.getComponent(tribesmanID);
-   
-   let multiplier = TRIBE_INFO_RECORD[tribeComponent.tribe.type].moveSpeedMultiplier;
-
-   // @Incomplete: only do when wearing the bush suit
-   if (tribeMemberComponent.lastPlantCollisionTicks >= Board.ticks - 1) {
-      multiplier *= 0.5;
-   }
-   
-   if (tribeMemberHasTitle(tribeMemberComponent, TribesmanTitle.sprinter)) {
-      multiplier *= 1.2;
-   }
-
-   if (isCollidingWithCoveredSpikes(tribesmanID)) {
-      multiplier *= 0.5;
-   }
-
-   return multiplier;
-}
-
-export function getTribesmanSlowAcceleration(tribesmanID: number): number {
-   return SLOW_ACCELERATION * getAccelerationMultiplier(tribesmanID);
-}
-
-const getAcceleration = (tribesmanID: number): number => {
-   return ACCELERATION * getAccelerationMultiplier(tribesmanID);
-}
-
-const getFoodItemSlot = (tribesman: Entity): number => {
-   const inventoryComponent = InventoryComponentArray.getComponent(tribesman.id);
-   const hotbarInventory = getInventory(inventoryComponent, InventoryName.hotbar);
-
-   for (let i = 0; i < hotbarInventory.items.length; i++) {
-      const item = hotbarInventory.items[i];
-
-      const itemCategory = ITEM_TYPE_RECORD[item.type];
-      if (itemCategory === "healing") {
-         return hotbarInventory.getItemSlot(item);
-      }
-   }
-
-   return -1;
-}
-
-export function tribesmanShouldEscape(entityType: EntityType, healthComponent: HealthComponent): boolean {
-   const remainingHealthRatio = healthComponent.health / healthComponent.maxHealth;
-   
-   switch (entityType) {
-      case EntityType.tribeWorker: return remainingHealthRatio <= 0.5;
-      case EntityType.tribeWarrior: return remainingHealthRatio <= 0.4;
-      default: {
-         throw new Error("Unknown tribesman type " + EntityTypeString[entityType]);
-      }
-   }
-}
-
-export function positionIsSafeForTribesman(tribesman: Entity, x: number, y: number): boolean {
-   const visibleEntitiesFromItem = getEntitiesInRange(x, y, getTribesmanVisionRange(tribesman));
-   for (const entity of visibleEntitiesFromItem) {
-      const relationship = getEntityRelationship(tribesman.id, entity);
-      if (relationship >= EntityRelationship.hostileMob) {
-         return false;
-      }
-   }
-
-   return true;
 }
 
 // @Cleanup: unused?
@@ -417,777 +274,6 @@ const barrelHasFood = (barrel: Entity): boolean => {
    return false;
 }
 
-// @Cleanup: move to inventory component file
-/** Returns 0 if no hammer is in the inventory */
-export function getBestHammerItemSlot(inventory: Inventory): number {
-   let bestLevel = 0;
-   let bestItemSlot = 0;
-
-   for (let i = 0; i < inventory.items.length; i++) {
-      const item = inventory.items[i];
-
-      if (item.type === ItemType.wooden_hammer || item.type === ItemType.stone_hammer) {
-         const itemInfo = ITEM_INFO_RECORD[item.type] as HammerItemInfo;
-         if (itemInfo.level > bestLevel) {
-            bestLevel = itemInfo.level;
-            bestItemSlot = inventory.getItemSlot(item);
-         }
-      }
-   }
-
-   return bestItemSlot;
-}
-
-const getOccupiedResearchBenchID = (tribesman: Entity, tribeComponent: TribeComponent): number => {
-   for (let i = 0; i < tribeComponent.tribe.researchBenches.length; i++) {
-      const bench = tribeComponent.tribe.researchBenches[i];
-      if (canResearchAtBench(bench, tribesman)) {
-         return bench.id;
-      }
-   }
-
-   return 0;
-}
-
-const getAvailableResearchBenchID = (tribesman: Entity, tribeComponent: TribeComponent): number => {
-   let id = 0;
-   let minDist = Number.MAX_SAFE_INTEGER;
-
-   for (let i = 0; i < tribeComponent.tribe.researchBenches.length; i++) {
-      const bench = tribeComponent.tribe.researchBenches[i];
-
-      if (!shouldMoveToResearchBench(bench, tribesman)) {
-         continue;
-      }
-
-      const dist = tribesman.position.calculateDistanceBetween(bench.position);
-      if (dist < minDist) {
-         minDist = dist;
-         id = bench.id;
-      }
-   }
-
-   return id;
-}
-
-const shouldRecalculatePath = (tribesman: Entity, goalX: number, goalY: number, goalRadiusNodes: number): boolean => {
-   const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman.id); // @Speed
-
-   if (tribesmanComponent.path.length === 0) {
-      // @Incomplete: Should we do this?
-      // Recalculate the path if the path's final node was reached but it wasn't at the goal
-      const targetNode = getClosestPathfindNode(goalX, goalY);
-      
-      return tribesmanComponent.pathfindingTargetNode !== targetNode;
-   } else {
-      // @Speed
-      // Recalculate if the tribesman isn't making any progress
-      const physicsComponent = PhysicsComponentArray.getComponent(tribesman.id);
-      if (tribesmanComponent.rawPath.length > 2 && tribesman.ageTicks % Settings.TPS === 0 && physicsComponent.velocity.lengthSquared() < 10 * 10) {
-         return true;
-      }
-
-      // Recalculate if the goal has moved too far away from the path's final node
-      
-      const pathTargetNode = tribesmanComponent.path[tribesmanComponent.path.length - 1];
-      
-      const pathTargetX = (pathTargetNode % PathfindingSettings.NODES_IN_WORLD_WIDTH - 1) * PathfindingSettings.NODE_SEPARATION;
-      const pathTargetY = (Math.floor(pathTargetNode / PathfindingSettings.NODES_IN_WORLD_WIDTH) - 1) * PathfindingSettings.NODE_SEPARATION;
-
-      return distance(goalX, goalY, pathTargetX, pathTargetY) >= goalRadiusNodes * PathfindingSettings.NODE_SEPARATION + PATH_RECALCULATE_DIST;
-   }
-}
-
-const openDoors = (tribesman: Entity, tribe: Tribe): void => {
-   const offsetMagnitude = getTribesmanRadius(tribesman) + 20;
-   const checkX = tribesman.position.x + offsetMagnitude * Math.sin(tribesman.rotation);
-   const checkY = tribesman.position.y + offsetMagnitude * Math.cos(tribesman.rotation);
-   const entitiesInFront = getEntitiesInRange(checkX, checkY, 40);
-   for (let i = 0; i < entitiesInFront.length; i++) {
-      const entity = entitiesInFront[i];
-      if (entity.type !== EntityType.door) {
-         continue;
-      }
-
-      // Only open friendly doors
-      const tribeComponent = TribeComponentArray.getComponent(entity.id);
-      if (tribeComponent.tribe !== tribe) {
-         continue;
-      }
-
-      if (doorIsClosed(entity)) {
-         toggleDoor(entity);
-
-         const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman.id);
-         const useInfo = getInventoryUseInfo(inventoryUseComponent, InventoryName.hotbar);
-         useInfo.lastAttackTicks = Board.ticks;
-      }
-   }
-}
-
-const continueCurrentPath = (tribesman: Entity, goalX: number, goalY: number): boolean => {
-   const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman.id); // @Speed
-   const tribeComponent = TribeComponentArray.getComponent(tribesman.id); // @Speed
-   const path = tribesmanComponent.path;
-
-   if (entityHasReachedNode(tribesman, path[0])) {
-      // If passed the next node, remove it
-      path.shift();
-   }
-
-   if (path.length > 0) {
-      const footprint = getEntityFootprint(getTribesmanRadius(tribesman));
-
-      // If the path is clear, just move in a direct line to the goal
-      if (pathIsClear(tribesman.position.x, tribesman.position.y, goalX, goalY, tribeComponent.tribe.pathfindingGroupID, footprint)) {
-         const targetDirection = angle(goalX - tribesman.position.x, goalY - tribesman.position.y);
-
-         const physicsComponent = PhysicsComponentArray.getComponent(tribesman.id);
-         
-         const acceleration = getAcceleration(tribesman.id);
-         physicsComponent.acceleration.x = acceleration * Math.sin(targetDirection);
-         physicsComponent.acceleration.y = acceleration * Math.cos(targetDirection);
-
-         physicsComponent.targetRotation = targetDirection;
-         physicsComponent.turnSpeed = TRIBESMAN_TURN_SPEED;
-
-         // Remove all nodes except the goal node
-         while (path.length > 1) {
-            path.shift();
-         }
-      } else {
-         // Otherwise, move to the next node
-
-         const nextNode = path[0];
-         const targetDirection = getAngleToNode(tribesman, nextNode);
-
-         const physicsComponent = PhysicsComponentArray.getComponent(tribesman.id);
-         physicsComponent.targetRotation = targetDirection;
-         physicsComponent.turnSpeed = TRIBESMAN_TURN_SPEED;
-
-         // If the tribesman is close to the next node, slow down as to not overshoot it
-         const distFromNode = getDistanceToNode(tribesman, nextNode);
-         if (willStopAtDesiredDistance(physicsComponent, -2, distFromNode)) {
-            stopEntity(physicsComponent);
-         } else {
-            const acceleration = getAcceleration(tribesman.id);
-            physicsComponent.acceleration.x = acceleration * Math.sin(tribesman.rotation);
-            physicsComponent.acceleration.y = acceleration * Math.cos(tribesman.rotation);
-         }
-      }
-
-      // @Speed: only do this if we know the path has a door in it
-      // Open any doors in their way
-      if (tribesman.ageTicks % ((Settings.TPS / 6) | 0) === 0) {
-         openDoors(tribesman, tribeComponent.tribe);
-      }
-
-      tribesmanComponent.isPathfinding = true;
-
-      return true;
-   } else {
-      // Reached path!
-      const physicsComponent = PhysicsComponentArray.getComponent(tribesman.id);
-      stopEntity(physicsComponent);
-
-      tribesmanComponent.rawPath = [];
-      tribesmanComponent.pathType = TribesmanPathType.default;
-      tribesmanComponent.isPathfinding = false;
-      return false;
-   }
-}
-
-export function clearTribesmanPath(tribesman: Entity): void {
-   const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman.id); // @Speed
-   tribesmanComponent.isPathfinding = false;
-}
-
-const convertEntityPathfindingGroupID = (entity: Entity, oldGroupID: number, newGroupID: number): void => {
-   for (const node of entity.occupiedPathfindingNodes) {
-      replacePathfindingNodeGroupID(node, oldGroupID, newGroupID);
-   }
-}
-
-const getPotentialBlockingTribesmen = (tribesman: Entity): ReadonlyArray<Entity> => {
-   const minChunkX = Math.max(Math.min(Math.floor((tribesman.position.x - Vars.BLOCKING_TRIBESMAN_DISTANCE/2) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
-   const maxChunkX = Math.max(Math.min(Math.floor((tribesman.position.x + Vars.BLOCKING_TRIBESMAN_DISTANCE/2) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
-   const minChunkY = Math.max(Math.min(Math.floor((tribesman.position.y - Vars.BLOCKING_TRIBESMAN_DISTANCE/2) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
-   const maxChunkY = Math.max(Math.min(Math.floor((tribesman.position.y + Vars.BLOCKING_TRIBESMAN_DISTANCE/2) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
-   
-   const blockingTribesmen = new Array<Entity>();
-   for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
-      for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
-         const chunk = Board.getChunk(chunkX, chunkY);
-
-         for (let i = 0; i < chunk.entities.length; i++) {
-            const entity = chunk.entities[i];
-            if (blockingTribesmen.indexOf(entity) !== -1 || entity === tribesman) {
-               continue;
-            }
-
-            const relationship = getEntityRelationship(tribesman.id, entity);
-            if (relationship === EntityRelationship.friendly) {
-               blockingTribesmen.push(entity);
-            }
-         }
-      }
-   }
-   return blockingTribesmen;
-}
-
-const preparePathfinding = (targetEntityID: number, tribe: Tribe, blockingTribesman: ReadonlyArray<Entity>): void => {
-   // Ignore the target
-   if (targetEntityID !== 0) {
-      // @Speed: Some places which call this have access to the entity already
-      const targetEntity = Board.entityRecord[targetEntityID]!;
-      if (entityCanBlockPathfinding(targetEntity.type)) {
-         const oldGroupID = getEntityPathfindingGroupID(targetEntity);
-         convertEntityPathfindingGroupID(targetEntity, oldGroupID, tribe.pathfindingGroupID);
-      }
-   }
-
-   // Take into account all blocking tribesmen
-   for (let i = 0; i < blockingTribesman.length; i++) {
-      const tribesman = blockingTribesman[i];
-      convertEntityPathfindingGroupID(tribesman, tribe.pathfindingGroupID, 0);
-   }
-}
-
-const cleanupPathfinding = (targetEntityID: number, tribe: Tribe, blockingTribesman: ReadonlyArray<Entity>): void => {
-   // Reset the target
-   if (targetEntityID !== 0) {
-      // @Speed: Some places which call this have access to the entity already
-      const targetEntity = Board.entityRecord[targetEntityID]!;
-      if (entityCanBlockPathfinding(targetEntity.type)) {
-         const oldGroupID = getEntityPathfindingGroupID(targetEntity);
-         convertEntityPathfindingGroupID(targetEntity, tribe.pathfindingGroupID, oldGroupID);
-      }
-   }
-
-   // Re-ignore all blocking tribesmen
-   for (let i = 0; i < blockingTribesman.length; i++) {
-      const tribesman = blockingTribesman[i];
-      convertEntityPathfindingGroupID(tribesman, 0, tribe.pathfindingGroupID);
-   }
-}
-
-export function pathfindToPosition(tribesman: Entity, goalX: number, goalY: number, targetEntityID: number, pathType: TribesmanPathType, goalRadius: number, failureDefault: PathfindFailureDefault): boolean {
-   const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman.id); // @Speed
-   
-   tribesmanComponent.pathType = pathType;
-
-   // If moving to a new target node, recalculate path
-   if (shouldRecalculatePath(tribesman, goalX, goalY, goalRadius)) {
-      const tribeComponent = TribeComponentArray.getComponent(tribesman.id); // @Speed
-      
-      const footprint = getEntityFootprint(getTribesmanRadius(tribesman));
-      const tribe = tribeComponent.tribe;
-   
-      const options: PathfindOptions = {
-         goalRadius: goalRadius,
-         failureDefault: failureDefault
-      };
-
-      const blockingTribesmen = getPotentialBlockingTribesmen(tribesman);
-      preparePathfinding(targetEntityID, tribe, blockingTribesmen);
-      
-      const rawPath = pathfind(tribesman.position.x, tribesman.position.y, goalX, goalY, tribe.pathfindingGroupID, footprint, options);
-
-      // @Incomplete: figure out why this happens
-      // If the pathfinding failed, don't do anything
-      if (rawPath.length === 0) {
-         const physicsComponent = PhysicsComponentArray.getComponent(tribesman.id);
-         stopEntity(physicsComponent);
-         
-         cleanupPathfinding(targetEntityID, tribe, blockingTribesmen);
-         return false;
-      }
-      
-      tribesmanComponent.rawPath = rawPath;
-      tribesmanComponent.path = smoothPath(rawPath, tribe.pathfindingGroupID, footprint);
-      
-      cleanupPathfinding(targetEntityID, tribe, blockingTribesmen);
-   }
-
-   return continueCurrentPath(tribesman, goalX, goalY);
-}
-
-// @Cleanup: these two functions do much the same thing. which one to keep?
-
-export function entityIsAccessible(tribesman: Entity, entity: Entity, tribe: Tribe, goalRadius: number): boolean {
-   const blockingTribesmen = getPotentialBlockingTribesmen(tribesman);
-   preparePathfinding(entity.id, tribe, blockingTribesmen);
-
-   const isAccessible = positionIsAccessible(entity.position.x, entity.position.y, tribe.pathfindingGroupID, getEntityFootprint(goalRadius));
-
-   cleanupPathfinding(entity.id, tribe, blockingTribesmen);
-
-   return isAccessible;
-}
-
-export function pathToEntityExists(tribesman: Entity, huntedEntity: Entity, tribe: Tribe, goalRadius: number): boolean {
-   const blockingTribesmen = getPotentialBlockingTribesmen(tribesman);
-   preparePathfinding(huntedEntity.id, tribe, blockingTribesmen);
-   
-   const options: PathfindOptions = {
-      goalRadius: Math.floor(goalRadius / PathfindingSettings.NODE_SEPARATION),
-      failureDefault: PathfindFailureDefault.returnEmpty
-   };
-   const path = pathfind(tribesman.position.x, tribesman.position.y, huntedEntity.position.x, huntedEntity.position.y, tribe.pathfindingGroupID, getEntityFootprint(getTribesmanRadius(tribesman)), options);
-
-   cleanupPathfinding(huntedEntity.id, tribe, blockingTribesmen);
-
-   return path.length > 0;
-}
-
-export function attemptToRepairBuildings(tribesman: Entity): boolean {
-   const inventoryComponent = InventoryComponentArray.getComponent(tribesman.id);
-   const hotbarInventory = getInventory(inventoryComponent, InventoryName.hotbar);
-   const hammerItemSlot = getBestHammerItemSlot(hotbarInventory);
-   
-   const aiHelperComponent = AIHelperComponentArray.getComponent(tribesman.id);
-   
-   let closestDamagedBuilding: Entity | undefined;
-   let minDistance = Number.MAX_SAFE_INTEGER;
-   for (const entity of aiHelperComponent.visibleEntities) {
-      const relationship = getEntityRelationship(tribesman.id, entity);
-      if (relationship !== EntityRelationship.friendlyBuilding) {
-         continue;
-      }
-
-      const healthComponent = HealthComponentArray.getComponent(entity.id);
-      if (healthComponent.health === healthComponent.maxHealth) {
-         continue;
-      }
-
-      // @Incomplete: Skip buildings which there isn't a path to
-
-      const distance = tribesman.position.calculateDistanceBetween(entity.position);
-      if (distance < minDistance) {
-         closestDamagedBuilding = entity;
-         minDistance = distance;
-      }
-   }
-
-   if (typeof closestDamagedBuilding === "undefined") {
-      return false;
-   }
-
-   // Select the hammer item slot
-   const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman.id);
-   const useInfo = getInventoryUseInfo(inventoryUseComponent, InventoryName.hotbar);
-   useInfo.selectedItemSlot = hammerItemSlot;
-   setLimbActions(inventoryUseComponent, LimbAction.none);
-
-   const desiredAttackRange = getTribesmanDesiredAttackRange(tribesman);
-   const physicsComponent = PhysicsComponentArray.getComponent(tribesman.id);
-
-   const distance = getDistanceFromPointToEntity(tribesman.position, closestDamagedBuilding) - getTribesmanRadius(tribesman);
-   if (willStopAtDesiredDistance(physicsComponent, desiredAttackRange, distance)) {
-      // If the tribesman will stop too close to the target, move back a bit
-      if (willStopAtDesiredDistance(physicsComponent, desiredAttackRange - 20, distance)) {
-         physicsComponent.acceleration.x = getTribesmanSlowAcceleration(tribesman.id) * Math.sin(tribesman.rotation + Math.PI);
-         physicsComponent.acceleration.y = getTribesmanSlowAcceleration(tribesman.id) * Math.cos(tribesman.rotation + Math.PI);
-      } else {
-         stopEntity(physicsComponent);
-      }
-
-      const targetRotation = tribesman.position.calculateAngleBetween(closestDamagedBuilding.position);
-      physicsComponent.targetRotation = targetRotation;
-      physicsComponent.turnSpeed = TRIBESMAN_TURN_SPEED;
-
-      if (Math.abs(getAngleDiff(tribesman.rotation, targetRotation)) < 0.1) {
-         // If in melee range, try to repair the building
-         const targets = calculateRadialAttackTargets(tribesman, getTribesmanAttackOffset(tribesman), getTribesmanAttackRadius(tribesman));
-         const repairTarget = calculateRepairTarget(tribesman, targets);
-         if (repairTarget !== null) {
-            repairBuilding(tribesman, repairTarget, hammerItemSlot, InventoryName.hotbar);
-         }
-      }
-   } else {
-      pathfindToPosition(tribesman, closestDamagedBuilding.position.x, closestDamagedBuilding.position.y, closestDamagedBuilding.id, TribesmanPathType.default, Math.floor(desiredAttackRange / PathfindingSettings.NODE_SEPARATION), PathfindFailureDefault.throwError);
-   }
-
-   const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman.id);
-   tribesmanComponent.currentAIType = TribesmanAIType.repairing;
-
-   return true;
-}
-
-const buildingMatchesCraftingStation = (building: Entity, craftingStation: CraftingStation): boolean => {
-   return building.type === EntityType.workbench && craftingStation === CraftingStation.workbench;
-}
-
-// @Cleanup: move to different file
-export function craftingStationExists(tribe: Tribe, craftingStation: CraftingStation): boolean {
-   for (let i = 0; i < tribe.buildings.length; i++) {
-      const building = tribe.buildings[i];
-      if (buildingMatchesCraftingStation(building, craftingStation)) {
-         return true;
-      }
-   }
-   return false;
-}
-
-const getClosestCraftingStation = (tribesman: Entity, tribe: Tribe, craftingStation: CraftingStation): Entity => {
-   // @Incomplete: slime
-   
-   // @Speed
-   let closestStation: Entity | undefined;
-   let minDist = Number.MAX_SAFE_INTEGER;
-   for (let i = 0; i < tribe.buildings.length; i++) {
-      const building = tribe.buildings[i];
-
-      if (buildingMatchesCraftingStation(building, craftingStation)) {
-         const dist = tribesman.position.calculateDistanceBetween(building.position);
-         if (dist < minDist) {
-            minDist = dist;
-            closestStation = building;
-         }
-      }
-   }
-
-   if (typeof closestStation !== "undefined") {
-      return closestStation;
-   }
-   throw new Error();
-}
-
-const goCraftItem = (tribesman: Entity, recipe: CraftingRecipe, tribe: Tribe): boolean => {
-   const availableCraftingStations = getAvailableCraftingStations(tribesman);
-   if (!recipeCraftingStationIsAvailable(availableCraftingStations, recipe)) {
-      // Move to the crafting station
-      const craftingStation = getClosestCraftingStation(tribesman, tribe, recipe.craftingStation!);
-
-      const isPathfinding = pathfindToPosition(tribesman, craftingStation.position.x, craftingStation.position.y, craftingStation.id, TribesmanPathType.default, Math.floor(Settings.MAX_CRAFTING_STATION_USE_DISTANCE / PathfindingSettings.NODE_SEPARATION), PathfindFailureDefault.throwError);
-      if (isPathfinding) {
-         const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman.id);
-         const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman.id);
-
-         setLimbActions(inventoryUseComponent, LimbAction.none);
-         tribesmanComponent.currentAIType = TribesmanAIType.crafting;
-         return true;
-      } else {
-         return false;
-      }
-   } else {
-      // Continue crafting the item
-
-      const physicsComponent = PhysicsComponentArray.getComponent(tribesman.id);
-      stopEntity(physicsComponent);
-      
-      if (typeof recipe.craftingStation !== "undefined") {
-         const craftingStation = getClosestCraftingStation(tribesman, tribe, recipe.craftingStation);
-         const targetDirection = tribesman.position.calculateAngleBetween(craftingStation.position);
-
-         physicsComponent.targetRotation = targetDirection;
-         physicsComponent.turnSpeed = TRIBESMAN_TURN_SPEED;
-      }
-
-      const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman.id);
-      const recipeIdx = CRAFTING_RECIPES.indexOf(recipe);
-      
-      tribesmanComponent.currentAIType = TribesmanAIType.crafting;
-      if (tribesmanComponent.currentCraftingRecipeIdx !== recipeIdx) {
-         tribesmanComponent.currentCraftingRecipeIdx = recipeIdx;
-         tribesmanComponent.currentCraftingTicks = 1;
-      } else {
-         tribesmanComponent.currentCraftingTicks++;
-      }
-      
-      const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman.id);
-      for (let i = 0; i < inventoryUseComponent.inventoryUseInfos.length; i++) {
-         const limbInfo = inventoryUseComponent.inventoryUseInfos[i];
-         if (limbInfo.action !== LimbAction.craft) {
-            limbInfo.lastCraftTicks = Board.ticks;
-         }
-         limbInfo.action = LimbAction.craft;
-      }
-      
-      if (tribesmanComponent.currentCraftingTicks >= recipe.aiCraftTimeTicks) {
-         // Craft the item
-         const inventoryComponent = InventoryComponentArray.getComponent(tribesman.id);
-         craftRecipe(inventoryComponent, recipe, InventoryName.hotbar);
-
-         tribesmanComponent.currentCraftingTicks = 0;
-      }
-
-      clearTribesmanPath(tribesman);
-      return true;
-   }
-}
-
-const goPlaceBuilding = (tribesman: Entity, hotbarInventory: Inventory, tribe: Tribe, goal: TribesmanPlaceGoal): boolean => {
-   const plan = goal.plan;
-   
-   const entityType = (ITEM_INFO_RECORD[plan.buildingRecipe.product] as PlaceableItemInfo).entityType;
-   const hitboxes = createBuildingHitboxes(entityType, plan.position, 1, plan.rotation);
-   
-   const blockingEntities = getHitboxesCollidingEntities(hitboxes);
-   for (let i = 0; i < blockingEntities.length; i++) {
-      const blockingEntity = blockingEntities[i];
-      if (!HealthComponentArray.hasComponent(blockingEntity.id)) {
-         continue;
-      }
-      
-      const relationship = getEntityRelationship(tribesman.id, blockingEntity);
-      if (relationship !== EntityRelationship.friendly) {
-         // @Bug: sometimes the blocking entity is inaccessible, causing the pathfinding to the entity to break. Fix
-         
-         huntEntity(tribesman, blockingEntity, false);
-         return true;
-      }
-   }
-   
-   const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman.id);
-   
-   const distance = getDistanceFromPointToEntity(plan.position, tribesman);
-   if (distance < Vars.BUILDING_PLACE_DISTANCE) {
-      // Equip the item
-      const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman.id);
-      const useInfo = getInventoryUseInfo(inventoryUseComponent, InventoryName.hotbar);
-      useInfo.selectedItemSlot = goal.placeableItemSlot;
-      
-      const targetDirection = angle(plan.position.x - tribesman.position.x, plan.position.y - tribesman.position.y);
-      if (distance < getTribesmanAttackRadius(tribesman)) {
-         // @Incomplete: Shouldn't move backwards from the target position, should instead pathfind to the closest position
-         // which is far enough away, as currently it will try to back into buildings and get stuck like this.
-         
-         // 
-         // If too close to the plan position, move back a bit
-         // 
-
-         const physicsComponent = PhysicsComponentArray.getComponent(tribesman.id);
-
-         const acceleration = getTribesmanSlowAcceleration(tribesman.id);
-         physicsComponent.acceleration.x = acceleration * Math.sin(targetDirection + Math.PI);
-         physicsComponent.acceleration.y = acceleration * Math.cos(targetDirection + Math.PI);
-
-         physicsComponent.targetRotation = targetDirection;
-         physicsComponent.turnSpeed = TRIBESMAN_TURN_SPEED;
-         
-         setLimbActions(inventoryUseComponent, LimbAction.none);
-         tribesmanComponent.currentAIType = TribesmanAIType.building;
-         return true;
-      } else if (Math.abs(getAngleDiff(tribesman.rotation, targetDirection)) < 0.02) {
-         // @Cleanup: copy and paste. use the function from item-use.ts
-         
-         // 
-         // Place the item
-         // 
-         
-         const item = hotbarInventory.itemSlots[goal.placeableItemSlot]!;
-         const placingEntityType = (ITEM_INFO_RECORD[item.type] as PlaceableItemInfo).entityType;
-         
-         const connectionInfo = calculateStructureConnectionInfo(plan.position, plan.rotation, placingEntityType, Board.chunks);
-         placeBuilding(tribe, plan.position, plan.rotation, placingEntityType, connectionInfo);
-
-         if (Math.random() < TITLE_REWARD_CHANCES.ARCHITECT_REWARD_CHANCE) {
-            awardTitle(tribesman, TribesmanTitle.architect);
-         }
-
-         consumeItemFromSlot(hotbarInventory, goal.placeableItemSlot, 1);
-         
-         useInfo.lastAttackTicks = Board.ticks;
-      } else {
-         const physicsComponent = PhysicsComponentArray.getComponent(tribesman.id);
-         
-         stopEntity(physicsComponent);
-         physicsComponent.targetRotation = targetDirection;
-         physicsComponent.turnSpeed = TRIBESMAN_TURN_SPEED;
-
-         setLimbActions(inventoryUseComponent, LimbAction.none);
-         tribesmanComponent.currentAIType = TribesmanAIType.building;
-         return true;
-      }
-   } else {
-      // Move to the building plan
-      const isPathfinding = pathfindToPosition(tribesman, plan.position.x, plan.position.y, 0, TribesmanPathType.default, Math.floor(Vars.BUILDING_PLACE_DISTANCE / PathfindingSettings.NODE_SEPARATION), PathfindFailureDefault.returnEmpty);
-      if (isPathfinding) {
-         const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman.id);
-         
-         setLimbActions(inventoryUseComponent, LimbAction.none);
-         tribesmanComponent.currentAIType = TribesmanAIType.building;
-         return true;
-      }
-   }
-
-   return false;
-}
-
-const goUpgradeBuilding = (tribesman: Entity, goal: TribesmanUpgradeGoal): void => {
-   const plan = goal.plan;
-   const building = Board.entityRecord[plan.baseBuildingID]!;
-   
-   // @Cleanup: Copy and paste from attemptToRepairBuildings
-   
-   const inventoryComponent = InventoryComponentArray.getComponent(tribesman.id);
-   const hotbarInventory = getInventory(inventoryComponent, InventoryName.hotbar);
-   const hammerItemSlot = getBestHammerItemSlot(hotbarInventory);
-
-   // Select the hammer item slot
-   const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman.id);
-   const useInfo = getInventoryUseInfo(inventoryUseComponent, InventoryName.hotbar);
-   useInfo.selectedItemSlot = hammerItemSlot;
-   setLimbActions(inventoryUseComponent, LimbAction.none);
-
-   const desiredAttackRange = getTribesmanDesiredAttackRange(tribesman);
-   const physicsComponent = PhysicsComponentArray.getComponent(tribesman.id);
-   
-   const distance = getDistanceFromPointToEntity(tribesman.position, building) - getTribesmanRadius(tribesman);
-   if (willStopAtDesiredDistance(physicsComponent, desiredAttackRange, distance)) {
-      // If the tribesman will stop too close to the target, move back a bit
-      if (willStopAtDesiredDistance(physicsComponent, desiredAttackRange - 20, distance)) {
-         physicsComponent.acceleration.x = getTribesmanSlowAcceleration(tribesman.id) * Math.sin(tribesman.rotation + Math.PI);
-         physicsComponent.acceleration.y = getTribesmanSlowAcceleration(tribesman.id) * Math.cos(tribesman.rotation + Math.PI);
-      } else {
-         stopEntity(physicsComponent);
-      }
-
-      const targetRotation = tribesman.position.calculateAngleBetween(building.position);
-
-      physicsComponent.targetRotation = targetRotation;
-      physicsComponent.turnSpeed = TRIBESMAN_TURN_SPEED;
-
-      if (Math.abs(getAngleDiff(tribesman.rotation, targetRotation)) < 0.1) {
-         placeBlueprint(tribesman, building.id, plan.blueprintType, plan.rotation);
-      }
-   } else {
-      pathfindToPosition(tribesman, building.position.x, building.position.y, building.id, TribesmanPathType.default, Math.floor(desiredAttackRange / PathfindingSettings.NODE_SEPARATION), PathfindFailureDefault.returnEmpty);
-   }
-
-   const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman.id);
-   tribesmanComponent.currentAIType = TribesmanAIType.building;
-}
-
-const goResearchTech = (tribesman: Entity, tech: TechInfo): boolean => {
-   const tribeComponent = TribeComponentArray.getComponent(tribesman.id);
-   const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman.id);
-
-   // @Incomplete: use pathfinding
-   
-   // Continue researching at an occupied bench
-   const occupiedBenchID = getOccupiedResearchBenchID(tribesman, tribeComponent);
-   if (occupiedBenchID !== 0) {
-      const bench = Board.entityRecord[occupiedBenchID]!;
-      
-      const targetDirection = tribesman.position.calculateAngleBetween(bench.position);
-      const physicsComponent = PhysicsComponentArray.getComponent(tribesman.id);
-
-      const slowAcceleration = getTribesmanSlowAcceleration(tribesman.id);
-      physicsComponent.acceleration.x = slowAcceleration * Math.sin(targetDirection);
-      physicsComponent.acceleration.y = slowAcceleration * Math.cos(targetDirection);
-
-      physicsComponent.targetRotation = targetDirection;
-      physicsComponent.turnSpeed = TRIBESMAN_TURN_SPEED;
-      
-      continueResearching(bench, tribesman, tech);
-      
-      tribesmanComponent.targetResearchBenchID = occupiedBenchID;
-      tribesmanComponent.currentAIType = TribesmanAIType.researching;
-
-      const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman.id);
-      setLimbActions(inventoryUseComponent, LimbAction.researching);
-      
-      return true;
-   }
-   
-   const benchID = getAvailableResearchBenchID(tribesman, tribeComponent);
-   if (benchID !== 0) {
-      const bench = Board.entityRecord[benchID]!;
-      
-      markPreemptiveMoveToBench(bench, tribesman);
-      moveEntityToPosition(tribesman, bench.position.x, bench.position.y, getAcceleration(tribesman.id), TRIBESMAN_TURN_SPEED);
-      
-      tribesmanComponent.targetResearchBenchID = benchID;
-      tribesmanComponent.currentAIType = TribesmanAIType.researching;
-
-      // If close enough, switch to doing research
-      const dist = getDistanceFromPointToEntity(tribesman.position, bench) - getTribesmanRadius(tribesman);
-      if (dist < 50) {
-         attemptToOccupyResearchBench(bench, tribesman);
-      }
-
-      const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman.id);
-      setLimbActions(inventoryUseComponent, LimbAction.none);
-
-      return true;
-   }
-
-   return false;
-}
-
-const generateTribeAreaPatrolPosition = (tribesman: Entity, tribe: Tribe): Point | null => {
-   // Filter tiles in tribe area
-   const potentialTiles = tribe.getArea();
-
-   // Randomly look for a place to patrol to
-   while (potentialTiles.length > 0) {
-      const idx = randInt(0, potentialTiles.length - 1);
-      const tile = potentialTiles[idx];
-      
-      const x = (tile.x + Math.random()) * Settings.TILE_SIZE;
-      const y = (tile.y + Math.random()) * Settings.TILE_SIZE;
-
-      if (positionIsAccessible(x, y, tribe.pathfindingGroupID, getEntityFootprint(getTribesmanRadius(tribesman)))) {
-         return new Point(x, y);
-      }
-
-      potentialTiles.splice(idx, 1);
-   }
-
-   return null;
-}
-
-const generateRandomExplorePosition = (tribesman: Entity, tribe: Tribe): Point | null => {
-   const visionRange = getTribesmanVisionRange(tribesman);
-   const footprint = getEntityFootprint(getTribesmanRadius(tribesman));
-   
-   const distToTotem = tribe.totem !== null ? tribesman.position.calculateDistanceBetween(tribe.totem.position) : 0;
-   
-   for (let attempts = 0; attempts < 100; attempts++) {
-      const offsetMagnitude = visionRange * Math.random();
-      const offsetDirection = 2 * Math.PI * Math.random();
-
-      const x = tribesman.position.x + offsetMagnitude * Math.sin(offsetDirection);
-      const y = tribesman.position.y + offsetMagnitude * Math.cos(offsetDirection);
-
-      // Always explore further away from the totem
-      const currentDistToTotem = tribe.totem !== null ? distance(x, y, tribe.totem.position.x, tribe.totem.position.y) : 0;
-      if (currentDistToTotem < distToTotem) {
-         continue;
-      }
-
-      if (!positionIsAccessible(x, y, tribe.pathfindingGroupID, footprint)) {
-         continue;
-      }
-      
-      const nearbyEntities = getEntitiesInRange(x, y, 20);
-      if (nearbyEntities.length === 0) {
-         return new Point(x, y);
-      }
-   }
-
-   return null;
-}
-
-const generatePatrolPosition = (tribesman: Entity, tribe: Tribe, goal: TribesmanGoal | null): Point | null => {
-   switch (tribesman.type) {
-      case EntityType.tribeWorker: {
-         if (goal === null || Board.isNight()) {
-            return generateTribeAreaPatrolPosition(tribesman, tribe);
-         } else {
-            return generateRandomExplorePosition(tribesman, tribe);
-         }
-      }
-      case EntityType.tribeWarrior: {
-         return generateTribeAreaPatrolPosition(tribesman, tribe);
-      }
-   }
-
-   throw new Error();
-}
-
 const getAvailableHut = (tribe: Tribe): Entity | null => {
    for (let i = 0; i < tribe.buildings.length; i++) {
       const building = tribe.buildings[i];
@@ -1202,57 +288,6 @@ const getAvailableHut = (tribe: Tribe): Entity | null => {
    }
 
    return null;
-}
-
-const getGiftableItemSlot = (tribesman: Entity): number => {
-   // @Incomplete: don't gift items useful to the tribesman
-   
-   const inventoryComponent = InventoryComponentArray.getComponent(tribesman.id);
-   const hotbarInventory = getInventory(inventoryComponent, InventoryName.hotbar);
-
-   let maxGiftWeight = 0;
-   let bestItemSlot = 0;
-   for (let itemSlot = 1; itemSlot <= hotbarInventory.width * hotbarInventory.height; itemSlot++) {
-      const item = hotbarInventory.itemSlots[itemSlot];
-      if (typeof item === "undefined") {
-         continue;
-      }
-
-      const giftWeight = getItemGiftAppreciation(item.type);
-      if (giftWeight > maxGiftWeight) {
-         maxGiftWeight = giftWeight;
-         bestItemSlot = itemSlot;
-      }
-   }
-
-   return bestItemSlot;
-}
-
-const getRecruitTarget = (tribesman: Entity, visibleEntities: ReadonlyArray<Entity>): Entity | null => {
-   const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman.id);
-   
-   let maxRelationship = -100;
-   let closestAcquaintance: Entity | null = null;
-   for (let i = 0; i < visibleEntities.length; i++) {
-      const entity = visibleEntities[i];
-      if (entity.type === EntityType.player || !TribeMemberComponentArray.hasComponent(entity.id) || getEntityRelationship(tribesman.id, entity) === EntityRelationship.enemy) {
-         continue;
-      }
-
-      // Don't try to gift items to tribesman who are already in an established tribe
-      const tribeComponent = TribeComponentArray.getComponent(entity.id);
-      if (tribeComponent.tribe.hasTotem()) {
-         continue;
-      }
-      
-      const relationship = tribesmanComponent.tribesmanRelations[entity.id] || 0;
-      if (relationship > maxRelationship) {
-         maxRelationship = relationship;
-         closestAcquaintance = entity;
-      }
-   }
-   
-   return closestAcquaintance;
 }
 
 const getSeedItemSlot = (hotbarInventory: Inventory, plantType: PlanterBoxPlant): number | null => {
@@ -1373,7 +408,7 @@ export function tickTribesman(tribesman: Entity): void {
    // Escape from enemies when low on health
    const healthComponent = HealthComponentArray.getComponent(tribesman.id);
    if (tribesmanShouldEscape(tribesman.type, healthComponent) && (visibleEnemies.length > 0 || visibleHostileMobs.length > 0)) {
-      escape(tribesman, visibleEnemies, visibleHostileMobs);
+      escapeFromEnemies(tribesman, visibleEnemies, visibleHostileMobs);
 
       if (tribesman.ageTicks % MESSAGE_INTERVAL_TICKS === 0) {
          const communicationTargets = getCommunicationTargets(tribesman);
@@ -1403,8 +438,8 @@ export function tickTribesman(tribesman: Entity): void {
             physicsComponent.acceleration.x = 0;
             physicsComponent.acceleration.y = 0;
          } else {
-            physicsComponent.acceleration.x = getAcceleration(tribesman.id) * Math.sin(tribesman.rotation);
-            physicsComponent.acceleration.y = getAcceleration(tribesman.id) * Math.cos(tribesman.rotation);
+            physicsComponent.acceleration.x = getTribesmanAcceleration(tribesman.id) * Math.sin(tribesman.rotation);
+            physicsComponent.acceleration.y = getTribesmanAcceleration(tribesman.id) * Math.cos(tribesman.rotation);
          }
 
          physicsComponent.targetRotation = tribesman.position.calculateAngleBetween(entity.position);
@@ -1442,7 +477,6 @@ export function tickTribesman(tribesman: Entity): void {
    // Attack enemies
    if (visibleEnemies.length > 0) {
       const target = getClosestAccessibleEntity(tribesman, visibleEnemies);
-      tribesmanComponent.huntedEntityID = target.id;
       huntEntity(tribesman, target, true);
       
       if (tribesman.ageTicks % MESSAGE_INTERVAL_TICKS === 0) {
@@ -1451,24 +485,6 @@ export function tickTribesman(tribesman: Entity): void {
       }
       return;
    }
-
-   // // @Temporary? Do we keep?
-   // // Continue hunting existing entity
-   // if (tribesmanShouldEscape(tribesman.type, healthComponent) || (tribesmanComponent.huntedEntityID !== 0 && !Board.entityRecord.hasOwnProperty(tribesmanComponent.huntedEntityID))) {
-   //    tribesmanComponent.huntedEntityID = 0;
-   // }
-
-   // if (tribesmanComponent.huntedEntityID !== 0) {
-   //    const huntedEntity = Board.entityRecord[tribesmanComponent.huntedEntityID];
-      
-   //    const distance = getDistanceFromPointToEntity(tribesman.position.x, tribesman.position.y, huntedEntity) - getRadius(tribesman);
-   //    if (distance > getHuntingVisionRange(tribesman)) {
-   //       tribesmanComponent.huntedEntityID = 0;
-   //    } else {
-   //       huntEntity(tribesman, huntedEntity, true);
-   //    }
-   //    return;
-   // }
    
    // Attack hostile mobs
    if (visibleHostileMobs.length > 0) {
@@ -1504,45 +520,17 @@ export function tickTribesman(tribesman: Entity): void {
 
    // Heal when missing health
    if (healthComponent.health < healthComponent.maxHealth) {
-      const foodItemSlot = getFoodItemSlot(tribesman);
-      if (foodItemSlot !== -1) {
-         const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman.id);
-         const useInfo = getInventoryUseInfo(inventoryUseComponent, InventoryName.hotbar);
-         useInfo.selectedItemSlot = foodItemSlot;
-
-         const foodItem = hotbarInventory.itemSlots[foodItemSlot]!;
-         const itemInfo = ITEM_INFO_RECORD[foodItem.type] as ConsumableItemInfo;
-
-         let action: LimbAction;
-         switch (itemInfo.consumableItemCategory) {
-            case ConsumableItemCategory.food: {
-               action = LimbAction.eat;
-               break;
-            }
-            case ConsumableItemCategory.medicine: {
-               action = LimbAction.useMedicine;
-               break;
-            }
-         }
-         
-         // If the food is only just being eaten, reset the food timer so that the food isn't immediately eaten
-         if (useInfo.action !== action) {
-            useInfo.foodEatingTimer = itemInfo.consumeTime;
-         }
-         
-         const physicsComponent = PhysicsComponentArray.getComponent(tribesman.id);
-         stopEntity(physicsComponent);
-         
-         useInfo.action = action;
-         tribesmanComponent.currentAIType = TribesmanAIType.eating;
+      const useInfo = getHealingItemUseInfo(tribesman.id);
+      if (useInfo !== null) {
+         continueTribesmanHealing(tribesman.id, useInfo);
          return;
       }
    }
 
    // @Incomplete: Doesn't work if hammer is in offhand
-   const hammerItemSlot = getBestHammerItemSlot(hotbarInventory);
-   if (hammerItemSlot !== 0) {
-      const isRepairing = attemptToRepairBuildings(tribesman);
+   const hammerItemSlot = getBestToolItemSlot(hotbarInventory, "hammer");
+   if (hammerItemSlot !== null) {
+      const isRepairing = attemptToRepairBuildings(tribesman, hammerItemSlot);
       if (isRepairing) {
          return;
       }
@@ -1584,8 +572,8 @@ export function tickTribesman(tribesman: Entity): void {
             stopEntity(physicsComponent);
          } else {
             // Too far away; move closer
-            physicsComponent.acceleration.x = getAcceleration(tribesman.id) * Math.sin(targetDirection);
-            physicsComponent.acceleration.y = getAcceleration(tribesman.id) * Math.cos(targetDirection);
+            physicsComponent.acceleration.x = getTribesmanAcceleration(tribesman.id) * Math.sin(targetDirection);
+            physicsComponent.acceleration.y = getTribesmanAcceleration(tribesman.id) * Math.cos(targetDirection);
          }
 
          physicsComponent.targetRotation = targetDirection;
@@ -1784,54 +772,10 @@ export function tickTribesman(tribesman: Entity): void {
    const gatherTargetInfo = getGatherTarget(tribesman, aiHelperComponent.visibleEntities, prioritisedItemTypes);
 
    // Pick up dropped items
-   // @Temporary
-   if (visibleItemEntities.length > 0) {
-      const goalRadius = getTribesmanRadius(tribesman);
-      
-      let closestDroppedItem: Entity | undefined;
-      let minDistance = Number.MAX_SAFE_INTEGER;
-      for (const itemEntity of visibleItemEntities) {
-         // If the tribesman is within the escape health threshold, make sure there wouldn't be any enemies visible while picking up the dropped item
-         if (tribesmanShouldEscape(tribesman.type, healthComponent) && !positionIsSafeForTribesman(tribesman, itemEntity.position.x, itemEntity.position.y)) {
-            continue;
-         }
-
-         // @Temporary @Bug @Incomplete: Will cause the tribesman to incorrectly skip items which are JUST inside a hitbox, but are still accessible via vacuum.
-         // if (!entityIsAccessible(tribesman, itemEntity, tribeComponent.tribe, goalRadius)) {
-         //    console.log("b");
-         //    continue;
-         // }
-
-         const itemComponent = ItemComponentArray.getComponent(itemEntity.id);
-         if (!tribeMemberCanPickUpItem(tribesman, itemComponent.itemType)) {
-            continue;
-         }
-         
-         // If gathering is prioritised, make sure the dropped item is useful for gathering
-         if (gatherTargetInfo.isPrioritised) {
-            if (prioritisedItemTypes.indexOf(itemComponent.itemType) === -1) {
-               continue;
-            }
-         }
-
-         const distance = tribesman.position.calculateDistanceBetween(itemEntity.position);
-         if (distance < minDistance) {
-            closestDroppedItem = itemEntity;
-            minDistance = distance;
-         }
-      }
-
-      if (typeof closestDroppedItem !== "undefined") {
-         // @Temporary
-         // pathfindToPosition(tribesman, closestDroppedItem.position.x, closestDroppedItem.position.y, closestDroppedItem.id, TribesmanPathType.default, Math.floor(32 / PathfindingSettings.NODE_SEPARATION), PathfindFailureDefault.throwError);
-         pathfindToPosition(tribesman, closestDroppedItem.position.x, closestDroppedItem.position.y, closestDroppedItem.id, TribesmanPathType.default, Math.floor((32 + VACUUM_RANGE) / PathfindingSettings.NODE_SEPARATION), PathfindFailureDefault.returnClosest);
-
-         const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman.id);
-         setLimbActions(inventoryUseComponent, LimbAction.none);
-         
-         tribesmanComponent.currentAIType = TribesmanAIType.pickingUpDroppedItems;
-         return;
-      }
+   const pickupTarget = tribesmanGetItemPickupTarget(tribesman, visibleItemEntities, prioritisedItemTypes, gatherTargetInfo);
+   if (pickupTarget !== null) {
+      tribesmanGoPickupItemEntity(tribesman, pickupTarget);
+      return;
    }
 
    // Use items in research
@@ -1946,7 +890,7 @@ export function tickTribesman(tribesman: Entity): void {
    setLimbActions(inventoryUseComponent, LimbAction.none);
 
    // Grab food from barrel
-   if (getFoodItemSlot(tribesman) === -1 && !inventoryIsFull(hotbarInventory)) {
+   if (getHealingItemUseInfo(tribesman.id) === null && !inventoryIsFull(hotbarInventory)) {
       let closestBarrelWithFood: Entity | undefined;
       let minDist = Number.MAX_SAFE_INTEGER;
       for (const entity of aiHelperComponent.visibleEntities) {
@@ -1973,36 +917,9 @@ export function tickTribesman(tribesman: Entity): void {
       }
    }
 
-   // If nothing else to do, patrol tribe area
-   if (tribesmanComponent.targetPatrolPositionX === -1 && Math.random() < 0.3 / Settings.TPS) {
-      // const patrolPosition = generatePatrolPosition(tribesman, tribeComponent.tribe, goal);
-      const patrolPosition = generatePatrolPosition(tribesman, tribeComponent.tribe, null);
-      if (patrolPosition !== null) {
-         const didPathfind = pathfindToPosition(tribesman, patrolPosition.x, patrolPosition.y, 0, TribesmanPathType.default, 0, PathfindFailureDefault.returnEmpty);
-         if (didPathfind) {
-            // Patrol to that position
-            tribesmanComponent.targetPatrolPositionX = patrolPosition.x;
-            tribesmanComponent.targetPatrolPositionY = patrolPosition.y;
-            tribesmanComponent.currentAIType = TribesmanAIType.patrolling;
-            return;
-         }
-      }
-   } else if (tribesmanComponent.targetPatrolPositionX !== -1) {
-      const isPathfinding = continueCurrentPath(tribesman, tribesmanComponent.targetPatrolPositionX, tribesmanComponent.targetPatrolPositionY);
-
-      // reset target patrol position when not patrolling
-      
-      if (!isPathfinding) {
-         const physicsComponent = PhysicsComponentArray.getComponent(tribesman.id);
-         stopEntity(physicsComponent);
-
-         tribesmanComponent.currentAIType = TribesmanAIType.idle;
-         tribesmanComponent.targetPatrolPositionX = -1
-         clearTribesmanPath(tribesman);
-         return;
-      }
-      
-      tribesmanComponent.currentAIType = TribesmanAIType.patrolling;
+   // Patrol tribe area
+   const isPatrolling = tribesmanDoPatrol(tribesman, goal);
+   if (isPatrolling) {
       return;
    }
 
@@ -2012,73 +929,4 @@ export function tickTribesman(tribesman: Entity): void {
 
    tribesmanComponent.currentAIType = TribesmanAIType.idle;
    clearTribesmanPath(tribesman);
-}
-
-const escape = (tribesman: Entity, visibleEnemies: ReadonlyArray<Entity>, visibleHostileMobs: ReadonlyArray<Entity>): void => {
-   // Calculate the escape position based on the position of all visible enemies
-   let averageEnemyX = 0;
-   let averageEnemyY = 0;
-   for (let i = 0; i < visibleEnemies.length; i++) {
-      const enemy = visibleEnemies[i];
-
-      let distance = tribesman.position.calculateDistanceBetween(enemy.position);
-      if (distance > getTribesmanVisionRange(tribesman)) {
-         distance = getTribesmanVisionRange(tribesman);
-      }
-      const weight = Math.pow(1 - distance / getTribesmanVisionRange(tribesman) / 1.25, 0.5);
-
-      const relativeX = (enemy.position.x - tribesman.position.x) * weight;
-      const relativeY = (enemy.position.y - tribesman.position.y) * weight;
-
-      averageEnemyX += relativeX + tribesman.position.x;
-      averageEnemyY += relativeY + tribesman.position.y;
-      // @Temporary: shouldn't occur, fix root cause
-      if (isNaN(averageEnemyX) || isNaN(averageEnemyY)) {
-         console.warn("NaN!");
-         return;
-      }
-   }
-   // @Cleanup: Copy and paste
-   for (let i = 0; i < visibleHostileMobs.length; i++) {
-      const enemy = visibleHostileMobs[i];
-
-      let distance = tribesman.position.calculateDistanceBetween(enemy.position);
-      if (distance > getTribesmanVisionRange(tribesman)) {
-         distance = getTribesmanVisionRange(tribesman);
-      }
-      const weight = Math.pow(1 - distance / getTribesmanVisionRange(tribesman) / 1.25, 0.5);
-
-      const relativeX = (enemy.position.x - tribesman.position.x) * weight;
-      const relativeY = (enemy.position.y - tribesman.position.y) * weight;
-
-      averageEnemyX += relativeX + tribesman.position.x;
-      averageEnemyY += relativeY + tribesman.position.y;
-      // @Temporary: shouldn't occur, fix root cause
-      if (isNaN(averageEnemyX) || isNaN(averageEnemyY)) {
-         console.warn("NaN!");
-         return;
-      }
-   }
-   averageEnemyX /= visibleEnemies.length + visibleHostileMobs.length;
-   averageEnemyY /= visibleEnemies.length + visibleHostileMobs.length;
-
-   // 
-   // Run away from that position
-   // 
-
-   const runDirection = angle(averageEnemyX - tribesman.position.x, averageEnemyY - tribesman.position.y) + Math.PI;
-   const physicsComponent = PhysicsComponentArray.getComponent(tribesman.id);
-
-   physicsComponent.acceleration.x = getAcceleration(tribesman.id) * Math.sin(runDirection);
-   physicsComponent.acceleration.y = getAcceleration(tribesman.id) * Math.cos(runDirection);
-   physicsComponent.targetRotation = runDirection;
-   physicsComponent.turnSpeed = TRIBESMAN_TURN_SPEED;
-
-   clearTribesmanPath(tribesman);
-}
-
-// @Cleanup: wrong file?
-export function recruitTribesman(tribesman: Entity, newTribe: Tribe): void {
-   const tribeComponent = TribeComponentArray.getComponent(tribesman.id);
-   tribeComponent.tribe = newTribe;
 }

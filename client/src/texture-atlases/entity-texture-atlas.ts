@@ -1,6 +1,8 @@
 import CLIENT_ITEM_INFO_RECORD from "../client-item-info";
 import { BLUEPRINT_PROGRESS_TEXTURE_SOURCES } from "../entities/BlueprintEntity";
-import { ATLAS_SLOT_SIZE, stitchTextureAtlas } from "./texture-atlas-stitching";
+import { getTechTreeGL } from "../rendering/tech-tree-rendering";
+import { gl } from "../webgl";
+import { ATLAS_SLOT_SIZE, TextureAtlasInfo, stitchTextureAtlas } from "./texture-atlas-stitching";
 
 const TEXTURE_SOURCES: Array<string> = [
    "entities/cow/cow-body-1.png",
@@ -341,19 +343,25 @@ for (const progressTextureInfoArray of Object.values(BLUEPRINT_PROGRESS_TEXTURE_
 
 export const ENTITY_TEXTURE_ATLAS_LENGTH = TEXTURE_SOURCES.length;
 
-export let ENTITY_TEXTURE_ATLAS: WebGLTexture;
-let ENTITY_TEXTURE_WIDTHS: ReadonlyArray<number>;
-let ENTITY_TEXTURE_HEIGHTS: ReadonlyArray<number>;
-export let ENTITY_TEXTURE_SLOT_INDEXES: ReadonlyArray<number>;
-export let ENTITY_TEXTURE_ATLAS_SIZE: number;
+let ENTITY_TEXTURE_ATLAS: TextureAtlasInfo;
+let TECH_TREE_ENTITY_TEXTURE_ATLAS: TextureAtlasInfo;
 
-export async function createEntityTextureAtlas(): Promise<void> {
-   const atlasInfo = await stitchTextureAtlas(TEXTURE_SOURCES)
-   ENTITY_TEXTURE_ATLAS = atlasInfo.texture;
-   ENTITY_TEXTURE_WIDTHS = atlasInfo.textureWidths;
-   ENTITY_TEXTURE_HEIGHTS = atlasInfo.textureHeights;
-   ENTITY_TEXTURE_ATLAS_SIZE = atlasInfo.atlasSize * ATLAS_SLOT_SIZE;
-   ENTITY_TEXTURE_SLOT_INDEXES = atlasInfo.textureSlotIndexes;
+// export let ENTITY_TEXTURE_ATLAS: WebGLTexture;
+// let ENTITY_TEXTURE_WIDTHS: ReadonlyArray<number>;
+// let ENTITY_TEXTURE_HEIGHTS: ReadonlyArray<number>;
+// export let ENTITY_TEXTURE_SLOT_INDEXES: ReadonlyArray<number>;
+// export let ENTITY_TEXTURE_ATLAS_SIZE: number;
+
+export async function createTextureAtlases(): Promise<void> {
+   ENTITY_TEXTURE_ATLAS = await stitchTextureAtlas(TEXTURE_SOURCES, gl)
+   TECH_TREE_ENTITY_TEXTURE_ATLAS = await stitchTextureAtlas(TEXTURE_SOURCES, getTechTreeGL());
+
+   // const atlasInfo = await stitchTextureAtlas(TEXTURE_SOURCES, gl)
+   // ENTITY_TEXTURE_ATLAS = atlasInfo.texture;
+   // ENTITY_TEXTURE_WIDTHS = atlasInfo.textureWidths;
+   // ENTITY_TEXTURE_HEIGHTS = atlasInfo.textureHeights;
+   // ENTITY_TEXTURE_ATLAS_SIZE = atlasInfo.atlasSize * ATLAS_SLOT_SIZE;
+   // ENTITY_TEXTURE_SLOT_INDEXES = atlasInfo.textureSlotIndexes;
 }
 
 export function getTextureArrayIndex(textureSource: string): number {
@@ -364,9 +372,17 @@ export function getTextureArrayIndex(textureSource: string): number {
    return textureIndex;
 }
 
-export function getTextureWidth(textureArrayIndex: number): number {
-   return ENTITY_TEXTURE_WIDTHS[textureArrayIndex];
+// export function getTextureWidth(textureArrayIndex: number): number {
+//    return ENTITY_TEXTURE_WIDTHS[textureArrayIndex];
+// }
+// export function getTextureHeight(textureArrayIndex: number): number {
+//    return ENTITY_TEXTURE_HEIGHTS[textureArrayIndex];
+// }
+
+export function getEntityTextureAtlas(): TextureAtlasInfo {
+   return ENTITY_TEXTURE_ATLAS;
 }
-export function getTextureHeight(textureArrayIndex: number): number {
-   return ENTITY_TEXTURE_HEIGHTS[textureArrayIndex];
+
+export function getTechTreeEntityTextureAtlas(): TextureAtlasInfo {
+   return TECH_TREE_ENTITY_TEXTURE_ATLAS;
 }

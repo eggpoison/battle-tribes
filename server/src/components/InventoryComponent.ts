@@ -1,6 +1,6 @@
 import { InventoryComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
 import { ItemTally, CraftingRecipe, CraftingStation } from "webgl-test-shared/dist/crafting-recipes";
-import { Inventory, Item, ItemType, itemIsStackable, ITEM_INFO_RECORD, StackableItemInfo, getItemStackSize, InventoryName } from "webgl-test-shared/dist/items";
+import { Inventory, Item, ItemType, itemIsStackable, ITEM_INFO_RECORD, StackableItemInfo, getItemStackSize, InventoryName, ItemInfoRecord, ITEM_TYPE_RECORD, ToolItemInfo } from "webgl-test-shared/dist/items";
 import Entity from "../Entity";
 import { createItemEntity, itemEntityCanBePickedUp } from "../entities/item-entity";
 import { ComponentArray } from "./ComponentArray";

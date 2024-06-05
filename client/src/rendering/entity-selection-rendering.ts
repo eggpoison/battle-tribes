@@ -3,7 +3,7 @@ import Board from "../Board";
 import { getHighlightedEntityID, getSelectedEntityID } from "../entity-selection";
 import { createWebGLProgram, gl, CAMERA_UNIFORM_BUFFER_BINDING_INDEX, windowWidth, windowHeight, createTexture, TIME_UNIFORM_BUFFER_BINDING_INDEX } from "../webgl";
 import Entity from "../Entity";
-import { getTextureWidth, getTextureHeight, ENTITY_TEXTURE_ATLAS_LENGTH, ENTITY_TEXTURE_ATLAS_SIZE, ENTITY_TEXTURE_SLOT_INDEXES, ENTITY_TEXTURE_ATLAS } from "../texture-atlases/entity-texture-atlas";
+import { ENTITY_TEXTURE_ATLAS_LENGTH, getEntityTextureAtlas } from "../texture-atlases/entity-texture-atlas";
 import { ATLAS_SLOT_SIZE } from "../texture-atlases/texture-atlas-stitching";
 
 let framebufferProgram: WebGLProgram;
@@ -231,20 +231,22 @@ export function createStructureHighlightShaders(): void {
    const textureSlotIndexesUniformLocation = gl.getUniformLocation(framebufferProgram, "u_textureSlotIndexes")!;
    const textureSizesUniformLocation = gl.getUniformLocation(framebufferProgram, "u_textureSizes")!;
 
+   const textureAtlas = getEntityTextureAtlas();
+   
    const textureSlotIndexes = new Float32Array(ENTITY_TEXTURE_ATLAS_LENGTH);
    for (let textureArrayIndex = 0; textureArrayIndex < ENTITY_TEXTURE_ATLAS_LENGTH; textureArrayIndex++) {
-      textureSlotIndexes[textureArrayIndex] = ENTITY_TEXTURE_SLOT_INDEXES[textureArrayIndex];
+      textureSlotIndexes[textureArrayIndex] = textureAtlas.textureSlotIndexes[textureArrayIndex];
    }
 
    const textureSizes = new Float32Array(ENTITY_TEXTURE_ATLAS_LENGTH * 2);
    for (let textureArrayIndex = 0; textureArrayIndex < ENTITY_TEXTURE_ATLAS_LENGTH; textureArrayIndex++) {
-      textureSizes[textureArrayIndex * 2] = getTextureWidth(textureArrayIndex);
-      textureSizes[textureArrayIndex * 2 + 1] = getTextureHeight(textureArrayIndex);
+      textureSizes[textureArrayIndex * 2] = textureAtlas.textureWidths[textureArrayIndex];
+      textureSizes[textureArrayIndex * 2 + 1] = textureAtlas.textureHeights[textureArrayIndex];
    }
 
    gl.useProgram(framebufferProgram);
    gl.uniform1i(textureUniformLocation, 0);
-   gl.uniform1f(atlasPixelSizeUniformLocation, ENTITY_TEXTURE_ATLAS_SIZE);
+   gl.uniform1f(atlasPixelSizeUniformLocation, textureAtlas.atlasSize * ATLAS_SLOT_SIZE);
    gl.uniform1f(atlasSlotSizeUniformLocation, ATLAS_SLOT_SIZE);
    gl.uniform1fv(textureSlotIndexesUniformLocation, textureSlotIndexes);
    gl.uniform2fv(textureSizesUniformLocation, textureSizes);
@@ -287,11 +289,13 @@ export function createStructureHighlightShaders(): void {
 }
 
 const addVertices = (vertices: Array<number>, entity: Entity, offsetX: number, offsetY: number, lightness: number): void => {
+   const textureAtlas = getEntityTextureAtlas();
+   
    for (let i = 0; i < entity.allRenderParts.length; i++) {
       const renderPart = entity.allRenderParts[i];
 
-      const width = getTextureWidth(renderPart.textureArrayIndex) * 4;
-      const height = getTextureHeight(renderPart.textureArrayIndex) * 4;
+      const width = textureAtlas.textureWidths[renderPart.textureArrayIndex] * 4;
+      const height = textureAtlas.textureHeights[renderPart.textureArrayIndex] * 4;
 
       // @Cleanup: renderPart.totalParentRotation + renderPart.rotation
       const x = renderPart.renderPosition.x + rotateXAroundOrigin(offsetX, offsetY, renderPart.totalParentRotation + renderPart.rotation);
@@ -478,8 +482,9 @@ export function renderEntitySelection(): void {
    gl.enableVertexAttribArray(4);
 
    // Bind texture atlas
+   const textureAtlas = getEntityTextureAtlas();
    gl.activeTexture(gl.TEXTURE0);
-   gl.bindTexture(gl.TEXTURE_2D, ENTITY_TEXTURE_ATLAS);
+   gl.bindTexture(gl.TEXTURE_2D, textureAtlas.texture);
 
    gl.drawArrays(gl.TRIANGLES, 0, vertices.length / 8);
 

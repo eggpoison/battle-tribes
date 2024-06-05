@@ -141,11 +141,13 @@ const MIN_RECIPE_BROWSER_HEIGHT = 9;
 
 export let setCraftingMenuAvailableRecipes: (craftingRecipes: Array<CraftingRecipe>) => void = () => {};
 export let setCraftingMenuAvailableCraftingStations: (craftingStations: Set<CraftingStation>) => void = () => {};
-export let CraftingMenu_setCraftingMenuOutputItem: (craftingOutputItem: Item | null) => void = () => {};
+export let CraftingMenu_setCraftingMenuOutputItem: (item: Item | null) => void = () => {};
 export let CraftingMenu_setCraftingStation: (craftingStation: CraftingStation | null) => void;
 export let CraftingMenu_setIsVisible: (isVisible: boolean) => void;
 
 export let craftingMenuIsOpen: () => boolean;
+
+export let CraftingMenu_updateRecipes: () => void = () => {};
 
 const CraftingMenu = () => {
    const [isVisible, setIsVisible] = useState(false);
@@ -153,7 +155,8 @@ const CraftingMenu = () => {
 
    // const [availableRecipes, setAvailableRecipes] = useState(new Array<CraftingRecipe>());
    // const [availableCraftingStations, setAvailableCraftingStations] = useState(new Set<CraftingStation>());
-   const [craftingOutputItem, setCraftingOutputItem] = useState<Item | null>(null);
+   const [craftingOutputItemType, setCraftingOutputItemType] = useState<ItemType | null>(null);
+   const [craftingOutputItemAmount, setCraftingOutputItemAmount] = useState<number>(0);
 
    const [selectedRecipe, setSelectedRecipe] = useState<CraftingRecipe | null>(null);
    const selectedRecipeIndex = useRef(-1);
@@ -202,6 +205,36 @@ const CraftingMenu = () => {
       leftClickItemSlot(e, Player.instance!.id, definiteGameState.craftingOutputSlot!, 1);
    }
 
+   CraftingMenu_updateRecipes = useCallback((): void => {
+      // Find which item slots are available for use in crafting
+      const availableItemSlots = new Array<ItemSlots>();
+      if (definiteGameState.hotbar !== null) {
+         availableItemSlots.push(definiteGameState.hotbar.itemSlots);
+      }
+      if (definiteGameState.backpack !== null) {
+         availableItemSlots.push(definiteGameState.backpack.itemSlots);
+      }
+      
+      if (availableItemSlots.length === 0) {
+         return;
+      }
+      
+      const craftableRecipesArray = new Array<CraftingRecipe>();
+      for (const recipe of CRAFTING_RECIPES) {
+         // @Cleanup: negate
+         // Make sure the recipe is craftable by the current station
+         if (!((typeof recipe.craftingStation === "undefined" && craftingStation === null) || (recipe.craftingStation === craftingStation))) {
+            continue;
+         }
+         
+         if (hasEnoughItems(availableItemSlots, recipe.ingredients)) {
+            craftableRecipesArray.push(recipe);
+         }
+      }
+
+      craftableRecipes.current = craftableRecipesArray;
+   }, [craftingStation]);
+
    // // Find which of the available recipes can be crafted
    // useEffect(() => {
    //    // Find which item slots are available for use in crafting
@@ -245,8 +278,14 @@ const CraftingMenu = () => {
          // setAvailableCraftingStations(craftingStations);
       }
 
-      CraftingMenu_setCraftingMenuOutputItem = (craftingOutputItem: Item | null): void => {
-         setCraftingOutputItem(craftingOutputItem);
+      CraftingMenu_setCraftingMenuOutputItem = (item: Item | null): void => {
+         if (item !== null) {
+            setCraftingOutputItemType(item.type);
+            setCraftingOutputItemAmount(item.count);
+         } else {
+            setCraftingOutputItemType(null);
+            setCraftingOutputItemAmount(0);
+         }
       }
 
       CraftingMenu_setCraftingStation = (craftingStation: CraftingStation | null): void => {
@@ -364,9 +403,9 @@ const CraftingMenu = () => {
             </div>
 
             <div className="bottom">
-               <button onClick={() => craftRecipe()} className={`craft-button${craftableRecipes.current.includes(selectedRecipe) ? " craftable" : ""}`}>CRAFT</button>
-               {craftingOutputItem !== null ? (
-                  <ItemSlot onMouseDown={e => pickUpCraftingOutputItem(e)} picturedItemImageSrc={getItemTypeImage(craftingOutputItem.type)} itemCount={craftingOutputItem.count} className="crafting-output" isSelected={false} />
+               <button onClick={craftRecipe} className={`craft-button${craftableRecipes.current.includes(selectedRecipe) ? " craftable" : ""}`}>CRAFT</button>
+               {craftingOutputItemType !== null ? (
+                  <ItemSlot onMouseDown={e => pickUpCraftingOutputItem(e)} picturedItemImageSrc={getItemTypeImage(craftingOutputItemType)} itemCount={craftingOutputItemAmount} className="crafting-output" isSelected={false} />
                ) : (
                   <ItemSlot className="crafting-output" isSelected={false} />
                )}

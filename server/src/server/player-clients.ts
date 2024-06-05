@@ -8,7 +8,6 @@ import { registerCommand } from "../commands";
 import { acceptTitleOffer, rejectTitleOffer } from "../components/TribeMemberComponent";
 import { modifyBuilding, startChargingBattleaxe, startChargingBow, startChargingSpear, startEating, createPlayer } from "../entities/tribes/player";
 import { throwItem, placeBlueprint, attemptAttack, calculateAttackTarget, calculateBlueprintWorkTarget, calculateRadialAttackTargets, calculateRepairTarget, repairBuilding, getAvailableCraftingStations, useItem } from "../entities/tribes/tribe-member";
-import { recruitTribesman } from "../entities/tribes/tribesman-ai/tribesman-ai";
 import PlayerClient from "./PlayerClient";
 import { SERVER } from "./server";
 import { createGameDataSyncPacket, createInitialGameDataPacket } from "./game-data-packets";
@@ -18,7 +17,7 @@ import { InventoryUseComponentArray, getInventoryUseInfo } from "../components/I
 import { PhysicsComponentArray } from "../components/PhysicsComponent";
 import Entity from "../Entity";
 import { InventoryComponentArray, addItemToInventory, addItemToSlot, consumeItemFromSlot, consumeItemTypeFromInventory, craftRecipe, getInventory, inventoryComponentCanAffordRecipe, recipeCraftingStationIsAvailable } from "../components/InventoryComponent";
-import { EntityRelationship, TribeComponentArray } from "../components/TribeComponent";
+import { EntityRelationship, TribeComponentArray, recruitTribesman } from "../components/TribeComponent";
 import { CRAFTING_RECIPES, ItemRequirements } from "webgl-test-shared/dist/crafting-recipes";
 import { createItem } from "../items";
 import { Point, randInt, randItem } from "webgl-test-shared/dist/utils";
@@ -467,7 +466,7 @@ const processTechForceUnlock = (playerClient: PlayerClient, techID: TechID): voi
       return;
    }
 
-   playerClient.tribe.unlockTech(techID);
+   playerClient.tribe.forceUnlockTech(techID);
 }
 
 const processStudyPacket = (playerClient: PlayerClient, studyAmount: number): void => {

@@ -169,7 +169,9 @@ export const TECHS: ReadonlyArray<TechInfo> = [
          [ItemType.campfire]: 2,
          [ItemType.rock]: 20
       },
-      researchStudyRequirements: 10,
+      // @Temporary
+      // researchStudyRequirements: 10,
+      researchStudyRequirements: 10000,
       blacklistedTribes: [],
       conflictingTechs: []
    },

@@ -13,10 +13,12 @@ import { PhysicsComponentArray } from "../../../components/PhysicsComponent";
 import { TribesmanAIComponentArray, TribesmanPathType } from "../../../components/TribesmanAIComponent";
 import { PathfindFailureDefault } from "../../../pathfinding";
 import { attemptAttack, calculateAttackTarget, calculateItemDamage, calculateRadialAttackTargets, useItem } from "../tribe-member";
-import { TRIBESMAN_TURN_SPEED, attemptToRepairBuildings, clearTribesmanPath, getBestHammerItemSlot, getTribesmanAttackOffset, getTribesmanAttackRadius, getTribesmanDesiredAttackRange, getTribesmanRadius, getTribesmanSlowAcceleration, pathToEntityExists, pathfindToPosition } from "./tribesman-ai";
+import { TRIBESMAN_TURN_SPEED } from "./tribesman-ai";
 import { EntityRelationship, TribeComponentArray } from "../../../components/TribeComponent";
 import { getItemAttackCooldown } from "../../../items";
 import { calculateAttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
+import { clearTribesmanPath, getBestToolItemSlot, getTribesmanAttackOffset, getTribesmanAttackRadius, getTribesmanDesiredAttackRange, getTribesmanRadius, getTribesmanSlowAcceleration, pathfindToPosition, pathToEntityExists } from "./tribesman-ai-utils";
+import { attemptToRepairBuildings } from "./tribesman-structures";
 
 const enum Vars {
    BOW_LINE_OF_SIGHT_WAIT_TIME = 0.5 * Settings.TPS,
@@ -322,28 +324,27 @@ export function huntEntity(tribesman: Entity, huntedEntity: Entity, isAggressive
    }
 
    // @Cleanup: Shouldn't be done here. Just skip out of this function and let the main path do the repairing.
-
-   // If there isn't a path to the entity, try to repair buildings
-   // @Incomplete: This will cause a delay after the tribesman finishes repairing the building.
-   if (tribesman.ageTicks % (Settings.TPS / 2) === 0) {
-      const hotbarInventory = getInventory(inventoryComponent, InventoryName.hotbar);
-      const hammerItemSlot = getBestHammerItemSlot(hotbarInventory);
-      if (hammerItemSlot !== 0) {
+   const hotbarInventory = getInventory(inventoryComponent, InventoryName.hotbar);
+   const hammerItemSlot = getBestToolItemSlot(hotbarInventory, "hammer");
+   if (hammerItemSlot !== null) {
+      // If there isn't a path to the entity, try to repair buildings
+      // @Incomplete: This will cause a delay after the tribesman finishes repairing the building.
+      if (tribesman.ageTicks % (Settings.TPS / 2) === 0) {
          const tribeComponent = TribeComponentArray.getComponent(tribesman.id);
          const pathExists = pathToEntityExists(tribesman, huntedEntity, tribeComponent.tribe, getTribesmanRadius(tribesman));
          if (!pathExists) {
-            const isRepairing = attemptToRepairBuildings(tribesman);
+            const isRepairing = attemptToRepairBuildings(tribesman, hammerItemSlot);
             if (isRepairing) {
                return;
             }
          }
-      }
-   } else {
-      const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman.id);
-      if (tribesmanComponent.currentAIType === TribesmanAIType.repairing) {
-         const isRepairing = attemptToRepairBuildings(tribesman);
-         if (isRepairing) {
-            return;
+      } else {
+         const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman.id);
+         if (tribesmanComponent.currentAIType === TribesmanAIType.repairing) {
+            const isRepairing = attemptToRepairBuildings(tribesman, hammerItemSlot);
+            if (isRepairing) {
+               return;
+            }
          }
       }
    }

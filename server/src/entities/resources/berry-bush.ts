@@ -1,17 +1,17 @@
 import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
-import { BerryBushComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { ItemType } from "webgl-test-shared/dist/items";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { Point } from "webgl-test-shared/dist/utils";
 import Entity from "../../Entity";
 import CircularHitbox from "../../hitboxes/CircularHitbox";
-import { BerryBushComponentArray, HealthComponentArray } from "../../components/ComponentArray";
-import { HealthComponent } from "../../components/HealthComponent";
+import { HealthComponent, HealthComponentArray } from "../../components/HealthComponent";
 import { createItemEntity } from "../item-entity";
 import Board from "../../Board";
 import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
+import { BerryBushComponent, BerryBushComponentArray } from "../../components/BerryBushComponent";
 
 export const BERRY_BUSH_RADIUS = 40;
 
@@ -26,10 +26,7 @@ export function createBerryBush(position: Point, rotation: number): Entity {
 
    HealthComponentArray.addComponent(berryBush.id, new HealthComponent(10));
    StatusEffectComponentArray.addComponent(berryBush.id, new StatusEffectComponent(0));
-   BerryBushComponentArray.addComponent(berryBush.id, {
-      numBerries: 5,
-      berryGrowTimer: 0
-   });
+   BerryBushComponentArray.addComponent(berryBush.id, new BerryBushComponent());
 
    return berryBush;
 }
@@ -85,11 +82,4 @@ export function dropBerry(berryBush: Entity, multiplier: number): void {
 
 export function onBerryBushHurt(berryBush: Entity): void {
    dropBerry(berryBush, 1);
-}
-
-export function serialiseBerryBushComponent(berryBush: Entity): BerryBushComponentData {
-   const berryComponent = BerryBushComponentArray.getComponent(berryBush.id);
-   return {
-      numBerries: berryComponent.numBerries
-   };
 }

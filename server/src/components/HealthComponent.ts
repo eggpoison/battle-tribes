@@ -1,10 +1,9 @@
-import { HealthComponentData } from "webgl-test-shared/dist/components";
+import { HealthComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
 import { PlayerCauseOfDeath, EntityType } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { TribesmanTitle } from "webgl-test-shared/dist/titles";
 import { Point, clamp } from "webgl-test-shared/dist/utils";
 import Entity from "../Entity";
-import { HealthComponentArray } from "./ComponentArray";
 import TombstoneDeathManager from "../tombstone-deaths";
 import { onBerryBushHurt } from "../entities/resources/berry-bush";
 import { onCowHurt } from "../entities/mobs/cow";
@@ -26,6 +25,7 @@ import { TribeMemberComponentArray, awardTitle } from "./TribeMemberComponent";
 import { onPlantDeath, onPlantHit } from "../entities/plant";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
 import { registerEntityDeath, registerEntityHeal, registerEntityHit } from "../server/player-clients";
+import { ComponentArray } from "./ComponentArray";
 
 export class HealthComponent {
    public maxHealth: number;
@@ -43,6 +43,10 @@ export class HealthComponent {
       this.health = maxHealth;
    }
 }
+
+export const HealthComponentArray = new ComponentArray<ServerComponentType.health, HealthComponent>(true, {
+   serialise: serialiseHealthComponent
+});
 
 export function tickHealthComponent(healthComponent: HealthComponent): void {
    // Update local invulnerability hashes
@@ -306,9 +310,10 @@ export function removeDefence(healthComponent: HealthComponent, name: string): v
    delete healthComponent.defenceFactors[name];
 }
 
-export function serialiseHealthComponent(entity: Entity): HealthComponentData {
-   const healthComponent = HealthComponentArray.getComponent(entity.id);
+export function serialiseHealthComponent(entityID: number): HealthComponentData {
+   const healthComponent = HealthComponentArray.getComponent(entityID);
    return {
+      componentType: ServerComponentType.health,
       health: healthComponent.health,
       maxHealth: healthComponent.maxHealth
    };

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { toggleTerminalVisiblity } from "./Terminal";
 
-export let setTerminalButtonOpened: (isOpened: boolean) => void;
+export let setTerminalButtonOpened: (isOpened: boolean) => void = () => {};
 
 interface TerminalButtonProps {
    readonly startingIsOpened: boolean;

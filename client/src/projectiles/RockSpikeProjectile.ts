@@ -4,12 +4,11 @@ import Particle from "../Particle";
 import { ParticleRenderLayer, addMonocolourParticleToBufferContainer } from "../rendering/particle-rendering";
 import Board from "../Board";
 import { createRockParticle } from "../particles";
-import Entity from "../Entity";
+import Entity, { ComponentDataRecord } from "../Entity";
 import { Point, lerp, randFloat, randInt } from "webgl-test-shared/dist/utils";
-import { EntityComponentsData, ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { EntityType } from "webgl-test-shared/dist/entities";
-import RockSpikeComponent from "../entity-components/RockSpikeComponent";
 
 class RockSpikeProjectile extends Entity {
    private static readonly SIZES = [12 * 4, 16 * 4, 20 * 4];
@@ -28,10 +27,10 @@ class RockSpikeProjectile extends Entity {
 
    private readonly renderPart: RenderPart;
    
-   constructor(position: Point, id: number, ageTicks: number, componentsData: EntityComponentsData<EntityType.rockSpikeProjectile>) {
+   constructor(position: Point, id: number, ageTicks: number, componentDataRecord: ComponentDataRecord) {
       super(position, id, EntityType.rockSpikeProjectile, ageTicks);
 
-      const rockSpikeComponentData = componentsData[0];
+      const rockSpikeComponentData = componentDataRecord[ServerComponentType.rockSpike]!;
       
       this.shakeAmount = RockSpikeProjectile.ENTRANCE_SHAKE_AMOUNTS[rockSpikeComponentData.size];
       
@@ -43,8 +42,6 @@ class RockSpikeProjectile extends Entity {
       );
       this.renderPart.scale = RockSpikeProjectile.ENTRANCE_SCALE;
       this.attachRenderPart(this.renderPart);
-
-      this.addServerComponent(ServerComponentType.rockSpike, new RockSpikeComponent(this, rockSpikeComponentData));
 
       // 
       // Create debris particles

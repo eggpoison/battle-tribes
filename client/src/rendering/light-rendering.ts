@@ -5,8 +5,6 @@ import Board from "../Board";
 import OPTIONS from "../options";
 import { getLightPosition, getLights } from "../lights";
 
-// @Cleanup: Rename file to something more fitting like light-rendering
-
 const NIGHT_LIGHT = 0.4;
 
 let darknessProgram: WebGLProgram;
@@ -226,7 +224,7 @@ export function renderNight(): void {
       gl.bindVertexArray(vao);
    
       gl.uniform1f(darkenFactorUniformLocation, ambientLight);
-   
+
       const darknessNumLightsLocation = gl.getUniformLocation(darknessProgram, "u_numLights")!;
       gl.uniform1i(darknessNumLightsLocation, lights.length);
       if (lights.length > 0) {

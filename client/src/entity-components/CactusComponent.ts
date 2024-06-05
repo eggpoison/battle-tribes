@@ -4,8 +4,9 @@ import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
-import Cactus from "../entities/Cactus";
 import { createFlowerParticle } from "../particles";
+
+export const CACTUS_RADIUS = 40;
 
 const getFlowerTextureSource = (type: number, size: CactusFlowerSize): string => {
    if (type === 4) {
@@ -51,8 +52,8 @@ class CactusComponent extends ServerComponent<ServerComponentType.cactus> {
             Math.random(),
             2 * Math.PI * Math.random()
          )
-         limbRenderPart.offset.x = Cactus.RADIUS * Math.sin(limbInfo.direction);
-         limbRenderPart.offset.y = Cactus.RADIUS * Math.cos(limbInfo.direction);
+         limbRenderPart.offset.x = CACTUS_RADIUS * Math.sin(limbInfo.direction);
+         limbRenderPart.offset.y = CACTUS_RADIUS * Math.cos(limbInfo.direction);
          this.entity.attachRenderPart(limbRenderPart);
          
          if (typeof limbInfo.flower !== "undefined") {
@@ -84,8 +85,8 @@ class CactusComponent extends ServerComponent<ServerComponentType.cactus> {
 
       for (const limb of this.limbData) {
          if (typeof limb.flower !== "undefined") {
-            const spawnPositionX = this.entity.position.x + Cactus.RADIUS * Math.sin(limb.direction) + limb.flower.height * Math.sin(limb.flower.direction);
-            const spawnPositionY = this.entity.position.y + Cactus.RADIUS * Math.cos(limb.direction) + limb.flower.height * Math.cos(limb.flower.direction);
+            const spawnPositionX = this.entity.position.x + CACTUS_RADIUS * Math.sin(limb.direction) + limb.flower.height * Math.sin(limb.flower.direction);
+            const spawnPositionY = this.entity.position.y + CACTUS_RADIUS * Math.cos(limb.direction) + limb.flower.height * Math.cos(limb.flower.direction);
 
             createFlowerParticle(spawnPositionX, spawnPositionY, limb.flower.type, CactusFlowerSize.small, limb.flower.rotation);
          }

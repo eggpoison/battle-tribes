@@ -1,5 +1,5 @@
 import { circlesDoIntersect, circleAndRectangleDoIntersect } from "webgl-test-shared/dist/collision";
-import { AIHelperComponentData } from "webgl-test-shared/dist/components";
+import { AIHelperComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
 import { Settings } from "webgl-test-shared/dist/settings";
 import Chunk from "../Chunk";
 import Entity from "../Entity";
@@ -23,7 +23,10 @@ export class AIHelperComponent {
    }
 }
 
-export const AIHelperComponentArray = new ComponentArray<AIHelperComponent>(true, undefined, onRemove);
+export const AIHelperComponentArray = new ComponentArray<ServerComponentType.aiHelper, AIHelperComponent>(true, {
+   onRemove: onRemove,
+   serialise: serialise
+});
 
 function onRemove(entityID: number): void {
    const aiHelperComponent = AIHelperComponentArray.getComponent(entityID);
@@ -158,10 +161,11 @@ export function tickAIHelperComponent(entity: Entity): void {
    aiHelperComponent.visibleEntities = calculateVisibleEntities(entity, aiHelperComponent);
 }
 
-export function serialiseAIHelperComponent(entity: Entity): AIHelperComponentData {
-   const aiHelperComponent = AIHelperComponentArray.getComponent(entity.id);
+function serialise(entityID: number): AIHelperComponentData {
+   const aiHelperComponent = AIHelperComponentArray.getComponent(entityID);
    
    return {
+      componentType: ServerComponentType.aiHelper,
       visionRange: aiHelperComponent.visionRange
    };
 }

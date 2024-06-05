@@ -129,7 +129,7 @@ interface TribesmanInfocardProps {
 const TribesmanInfocard = ({ tribesman }: TribesmanInfocardProps) => {
    const tribeComponent = tribesman.getServerComponent(ServerComponentType.tribe);
    const tribeMemberComponent = tribesman.getServerComponent(ServerComponentType.tribeMember);
-   const tribesmanComponent = tribesman.getServerComponent(ServerComponentType.tribesman);
+   const tribesmanComponent = tribesman.getServerComponent(ServerComponentType.tribesmanAI);
    
    let nameArray: ReadonlyArray<string>;
    switch (tribeComponent.tribeType) {

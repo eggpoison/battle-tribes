@@ -3,9 +3,9 @@ import { randInt } from "webgl-test-shared/dist/utils";
 import Entity from "../Entity";
 import Tile from "../Tile";
 import Board from "../Board";
-import { WanderAIComponentArray } from "../components/ComponentArray";
 import { moveEntityToPosition } from "../ai-shared";
 import { PhysicsComponent } from "../components/PhysicsComponent";
+import { WanderAIComponentArray } from "../components/WanderAIComponent";
 
 export function shouldWander(physicsComponent: PhysicsComponent, wanderRate: number) {
    return physicsComponent.velocity.x === 0 && physicsComponent.velocity.y === 0 && Math.random() < wanderRate / Settings.TPS;

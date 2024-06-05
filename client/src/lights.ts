@@ -4,7 +4,7 @@ import Board from "./Board";
 type LightID = number;
 
 export interface Light {
-   readonly position: Point;
+   readonly offset: Point;
    intensity: number;
    /** Number of tiles which the light extends from */
    strength: number;
@@ -129,7 +129,7 @@ export function getLightPosition(lightIdx: number): Point {
    const attachedRenderPartID = lightToRenderPartRecord[lightID];
    if (typeof attachedRenderPartID !== "undefined") {
       const renderPart = Board.renderPartRecord[attachedRenderPartID];
-      const offset = light.position;
+      const offset = light.offset;
 
       const x = renderPart.renderPosition.x + rotateXAroundOrigin(offset.x, offset.y, renderPart.rotation + renderPart.totalParentRotation);
       const y = renderPart.renderPosition.y + rotateYAroundOrigin(offset.x, offset.y, renderPart.rotation + renderPart.totalParentRotation);
@@ -140,7 +140,7 @@ export function getLightPosition(lightIdx: number): Point {
    if (typeof attachedEntityID !== "undefined") {
       const attachedEntity = Board.entityRecord[attachedEntityID];
       if (typeof attachedEntity !== "undefined") {
-         const offset = light.position;
+         const offset = light.offset;
          
          const x = attachedEntity.renderPosition.x + rotateXAroundOrigin(offset.x, offset.y, attachedEntity.rotation);
          const y = attachedEntity.renderPosition.y + rotateYAroundOrigin(offset.x, offset.y, attachedEntity.rotation);
@@ -148,5 +148,5 @@ export function getLightPosition(lightIdx: number): Point {
       }
    }
 
-   return light.position;
+   return light.offset;
 }

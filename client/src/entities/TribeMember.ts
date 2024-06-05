@@ -7,13 +7,13 @@ import { angle, lerp, randFloat, randInt, randItem } from "webgl-test-shared/dis
 import { InventoryName, ItemType } from "webgl-test-shared/dist/items";
 import { TileType } from "webgl-test-shared/dist/tiles";
 import RenderPart from "../render-parts/RenderPart";
-import Entity, { getFrameProgress } from "../Entity";
+import Entity, { ComponentDataRecord } from "../Entity";
 import { BloodParticleSize, LeafParticleSize, createBloodParticle, createBloodParticleFountain, createBloodPoolParticle, createLeafParticle } from "../particles";
-import Board from "../Board";
 import { getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
 import { AudioFilePath, playSound } from "../sound";
 import Game from "../Game";
 import { getTribesmanRadius } from "../entity-components/TribeMemberComponent";
+import { getTribeType } from "../entity-components/TribeComponent";
 
 export const TRIBE_MEMBER_Z_INDEXES: Record<string, number> = {
    hand: 1,
@@ -26,23 +26,12 @@ const GOBLIN_EAR_ANGLE = Math.PI / 3;
 const GOBLIN_HURT_SOUNDS: ReadonlyArray<AudioFilePath> = ["goblin-hurt-1.mp3", "goblin-hurt-2.mp3", "goblin-hurt-3.mp3", "goblin-hurt-4.mp3", "goblin-hurt-5.mp3"];
 const GOBLIN_DIE_SOUNDS: ReadonlyArray<AudioFilePath> = ["goblin-die-1.mp3", "goblin-die-2.mp3", "goblin-die-3.mp3", "goblin-die-4.mp3"];
 
-export function getSecondsSinceLastAction(lastActionTicks: number): number {
-   const ticksSinceLastAction = Board.ticks - lastActionTicks;
-   let secondsSinceLastAction = ticksSinceLastAction / Settings.TPS;
-
-   // Account for frame progress
-   secondsSinceLastAction += getFrameProgress() / Settings.TPS;
-
-   return secondsSinceLastAction;
-}
-
-const getFistTextureSource = (tribesman: Entity): string => {
+const getFistTextureSource = (tribesman: Entity, tribeType: TribeType): string => {
    switch (tribesman.type) {
       case EntityType.player:
       case EntityType.tribeWorker:
       case EntityType.tribeWarrior: {
-         const tribeComponent = tribesman.getServerComponent(ServerComponentType.tribe);
-         switch (tribeComponent.tribeType) {
+         switch (tribeType) {
             case TribeType.plainspeople: {
                return "entities/plainspeople/fist.png";
             }
@@ -56,8 +45,8 @@ const getFistTextureSource = (tribesman: Entity): string => {
                return "entities/barbarians/fist.png";
             }
             default: {
-               const _unreachable: never = tribeComponent.tribeType;
-               return _unreachable;
+               const unreachable: never = tribeType;
+               return unreachable;
             }
          }
       }
@@ -65,19 +54,8 @@ const getFistTextureSource = (tribesman: Entity): string => {
    }
 }
 
-const createHandRenderPart = (entity: Entity): RenderPart => {
-   return new RenderPart(
-      entity,
-      getTextureArrayIndex(getFistTextureSource(entity)),
-      1,
-      0
-   );
-}
-
-const getBodyTextureSource = (entity: Entity): string => {
-   const tribeComponent = entity.getServerComponent(ServerComponentType.tribe);
-
-   switch (tribeComponent.tribeType) {
+const getBodyTextureSource = (entity: Entity, tribeType: TribeType): string => {
+   switch (tribeType) {
       case TribeType.plainspeople: {
          if (entity.type === EntityType.tribeWarrior) {
             return "entities/plainspeople/warrior.png";
@@ -117,9 +95,26 @@ const getBodyTextureSource = (entity: Entity): string => {
    }
 }
 
-export function addTribeMemberRenderParts(tribesman: Entity): void {
-   const tribeComponent = tribesman.getServerComponent(ServerComponentType.tribe);
-   const tribeMemberComponent = tribesman.getServerComponent(ServerComponentType.tribeMember);
+// @Cleanup: sucks
+// @Incomplete: NOT CALLED
+export function addTribeMemberRenderParts(tribesman: Entity, componentDataRecord: ComponentDataRecord): void {
+   let warPaintType: number;
+   let tribeType: TribeType;
+   
+   // @Hack
+   if (Object.keys(componentDataRecord).length === 0) {
+      const tribeComponent = tribesman.getServerComponent(ServerComponentType.tribe);
+      const tribeMemberComponent = tribesman.getServerComponent(ServerComponentType.tribeMember);
+
+      tribeType = tribeComponent.tribeType;
+      warPaintType = tribeMemberComponent.warPaintType;
+   } else {
+      const tribeComponentData = componentDataRecord[ServerComponentType.tribe]!;
+      const tribeMemberComponentData = componentDataRecord[ServerComponentType.tribeMember]!;
+   
+      tribeType = getTribeType(tribeComponentData.tribeID);
+      warPaintType = tribeMemberComponentData.warPaintType;
+   }
 
    const radius = tribesman.type === EntityType.player || tribesman.type === EntityType.tribeWarrior ? 32 : 28;
 
@@ -129,19 +124,19 @@ export function addTribeMemberRenderParts(tribesman: Entity): void {
    
    const bodyRenderPart = new RenderPart(
       tribesman,
-      getTextureArrayIndex(getBodyTextureSource(tribesman)),
+      getTextureArrayIndex(getBodyTextureSource(tribesman, tribeType)),
       2,
       0
    );
+   bodyRenderPart.addTag("tribeMemberComponent:body");
    tribesman.attachRenderPart(bodyRenderPart);
-   tribeMemberComponent.bodyRenderPart = bodyRenderPart;
 
-   if (tribeComponent.tribeType === TribeType.goblins) {
+   if (tribeType === TribeType.goblins) {
       let textureSource: string;
       if (tribesman.type === EntityType.tribeWarrior) {
-         textureSource = `entities/goblins/warrior-warpaint-${tribeMemberComponent.warPaintType}.png`;
+         textureSource = `entities/goblins/warrior-warpaint-${warPaintType}.png`;
       } else {
-         textureSource = `entities/goblins/goblin-warpaint-${tribeMemberComponent.warPaintType}.png`;
+         textureSource = `entities/goblins/goblin-warpaint-${warPaintType}.png`;
       }
       
       // Goblin warpaint
@@ -179,25 +174,27 @@ export function addTribeMemberRenderParts(tribesman: Entity): void {
    }
 
    // Hands
-   const handRenderParts = new Array<RenderPart>();
    for (let i = 0; i < 2; i++) {
-      const handRenderPart = createHandRenderPart(tribesman);
+      const handRenderPart = new RenderPart(
+         tribesman,
+         getTextureArrayIndex(getFistTextureSource(tribesman, tribeType)),
+         1,
+         0
+      );
+      handRenderPart.addTag("tribeMemberComponent:hand")
+      handRenderPart.addTag("inventoryUseComponent:hand");
       tribesman.attachRenderPart(handRenderPart);
-      handRenderParts.push(handRenderPart);
    }
-   tribeMemberComponent.handRenderParts = handRenderParts;
 }
 
 const switchTribeMemberRenderParts = (tribesman: Entity): void => {
-   const tribeMemberComponent = tribesman.getServerComponent(ServerComponentType.tribeMember);
-
-   const handTextureSource = getFistTextureSource(tribesman);
-   for (let i = 0; i < 2; i++) {
-      const handRenderPart = tribeMemberComponent.handRenderParts[i];
-      handRenderPart.switchTextureSource(handTextureSource);
+   // Remove all previous render parts
+   while (tribesman.allRenderParts.length > 0) {
+      const renderPart = tribesman.allRenderParts[0];
+      tribesman.removeRenderPart(renderPart);
    }
 
-   tribeMemberComponent.bodyRenderPart.switchTextureSource(getBodyTextureSource(tribesman));
+   addTribeMemberRenderParts(tribesman, {});
 }
 
 abstract class TribeMember extends Entity {

@@ -10,7 +10,7 @@ import { ItemComponent, ItemComponentArray } from "../components/ItemComponent";
 import { PhysicsComponent, PhysicsComponentArray } from "../components/PhysicsComponent";
 import { addFleshSword } from "../flesh-sword-ai";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { EntityCreationInfo } from "../entity-components";
+import { EntityCreationInfo } from "../components";
 
 type ComponentTypes = [ServerComponentType.physics, ServerComponentType.item];
 

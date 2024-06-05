@@ -87,7 +87,7 @@ class GameServer {
       if (SERVER.io === null) {
          // Start the server
          // SERVER.io = new Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>(Settings.SERVER_PORT);
-         SERVER.io = new Server(Settings.SERVER_PORT);
+         SERVER.io = new Server(Settings.SERVER_PORT, { transports: ["websocket"], allowUpgrades: false });
          SERVER.handlePlayerConnections();
          console.log("Server started on port " + Settings.SERVER_PORT);
       }
@@ -166,8 +166,6 @@ class GameServer {
       Board.destroyFlaggedEntities();
       Board.updateTribes();
       
-      // @Temporary: remove once blockers are done
-      Board.spreadGrass();
       updateGrassBlockers();
 
       Board.updateEntities();

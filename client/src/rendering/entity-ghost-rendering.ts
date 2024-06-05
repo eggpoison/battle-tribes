@@ -3,11 +3,9 @@ import { EntityType } from "webgl-test-shared/dist/entities";
 import { StructureType } from "webgl-test-shared/dist/structures";
 import Player from "../entities/Player";
 import { gl, createWebGLProgram, CAMERA_UNIFORM_BUFFER_BINDING_INDEX } from "../webgl";
-import { ENTITY_TEXTURE_ATLAS, ENTITY_TEXTURE_ATLAS_SIZE, ENTITY_TEXTURE_SLOT_INDEXES, getTextureArrayIndex, getTextureHeight, getTextureWidth } from "../texture-atlases/entity-texture-atlas";
+import { getEntityTextureAtlas, getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
 import { ATLAS_SLOT_SIZE } from "../texture-atlases/texture-atlas-stitching";
 import { BALLISTA_AMMO_BOX_OFFSET_X, BALLISTA_AMMO_BOX_OFFSET_Y, BALLISTA_GEAR_X, BALLISTA_GEAR_Y } from "../utils";
-import WorkerHut from "../entities/WorkerHut";
-import WarriorHut from "../entities/WarriorHut";
 import OPTIONS from "../options";
 import { calculatePotentialPlanIdealness, getHoveredBuildingPlan, getPotentialPlanStats, getVisibleBuildingPlans } from "../client/Client";
 import { NUM_LARGE_COVER_LEAVES, NUM_SMALL_COVER_LEAVES } from "../entity-components/SpikesComponent";
@@ -62,7 +60,9 @@ export enum GhostType {
    stoneWallSpikes,
    healingTotem,
    fence,
-   fenceGate
+   fenceGate,
+   frostshaper,
+   stonecarvingTable
 }
 
 export interface GhostInfo {
@@ -82,7 +82,6 @@ interface TextureInfo {
 
 export const PARTIAL_OPACITY = 0.5;
 
-// @Robustness: Should automatically detect which entity types to have an entry for
 export const ENTITY_TYPE_TO_GHOST_TYPE_MAP: Record<StructureType, GhostType> = {
    [EntityType.campfire]: GhostType.campfire,
    [EntityType.furnace]: GhostType.furnace,
@@ -105,7 +104,9 @@ export const ENTITY_TYPE_TO_GHOST_TYPE_MAP: Record<StructureType, GhostType> = {
    [EntityType.slingTurret]: GhostType.slingTurret,
    [EntityType.healingTotem]: GhostType.healingTotem,
    [EntityType.fence]: GhostType.fence,
-   [EntityType.fenceGate]: GhostType.fenceGate
+   [EntityType.fenceGate]: GhostType.fenceGate,
+   [EntityType.frostshaper]: GhostType.frostshaper,
+   [EntityType.stonecarvingTable]: GhostType.stonecarvingTable
 };
 
 let ghostInfo: GhostInfo | null = null;
@@ -216,8 +217,10 @@ export function createPlaceableItemProgram(): void {
    const atlasPixelSizeUniformLocation = gl.getUniformLocation(program, "u_atlasPixelSize")!;
    const atlasSlotSizeUniformLocation = gl.getUniformLocation(program, "u_atlasSlotSize")!;
 
+   const textureAtlas = getEntityTextureAtlas();
+
    gl.uniform1i(programTextureUniformLocation, 0);
-   gl.uniform1f(atlasPixelSizeUniformLocation, ENTITY_TEXTURE_ATLAS_SIZE);
+   gl.uniform1f(atlasPixelSizeUniformLocation, textureAtlas.atlasSize * ATLAS_SLOT_SIZE);
    gl.uniform1f(atlasSlotSizeUniformLocation, ATLAS_SLOT_SIZE);
 }
 
@@ -316,7 +319,7 @@ const getGhostTextureInfoArray = (ghostInfo: GhostInfo): ReadonlyArray<TextureIn
          {
             textureSource: "entities/worker-hut/worker-hut-door.png",
             offsetX: 0,
-            offsetY: WorkerHut.SIZE / 2,
+            offsetY: 88 / 2,
             rotation: Math.PI/2
          },
          {
@@ -330,13 +333,13 @@ const getGhostTextureInfoArray = (ghostInfo: GhostInfo): ReadonlyArray<TextureIn
          {
             textureSource: "entities/warrior-hut/warrior-hut-door.png",
             offsetX: -20,
-            offsetY: WarriorHut.SIZE / 2,
+            offsetY: 104 / 2,
             rotation: Math.PI/2
          },
          {
             textureSource: "entities/warrior-hut/warrior-hut-door.png",
             offsetX: 20,
-            offsetY: WarriorHut.SIZE / 2,
+            offsetY: 104 / 2,
             rotation: Math.PI * 3/2
          },
          {
@@ -603,10 +606,27 @@ const getGhostTextureInfoArray = (ghostInfo: GhostInfo): ReadonlyArray<TextureIn
             rotation: 0
          }
       ];
+      case GhostType.frostshaper: return [
+         {
+            textureSource: "entities/frostshaper/frostshaper.png",
+            offsetX: 0,
+            offsetY: 0,
+            rotation: 0
+         }
+      ];
+      case GhostType.stonecarvingTable: return [
+         {
+            textureSource: "entities/stonecarving-table/stonecarving-table.png",
+            offsetX: 0,
+            offsetY: 0,
+            rotation: 0
+         }
+      ];
    }
 }
 
 const calculateVertices = (ghostInfos: ReadonlyArray<GhostInfo>): ReadonlyArray<number> => {
+   const textureAtlas = getEntityTextureAtlas();
    const vertices = new Array<number>();
    
    for (let i = 0; i < ghostInfos.length; i++) {
@@ -619,11 +639,11 @@ const calculateVertices = (ghostInfos: ReadonlyArray<GhostInfo>): ReadonlyArray<
       
          // Find texture size
          const textureArrayIndex = getTextureArrayIndex(textureInfo.textureSource);
-         const textureWidth = getTextureWidth(textureArrayIndex);
-         const textureHeight = getTextureHeight(textureArrayIndex);
+         const textureWidth = textureAtlas.textureWidths[textureArrayIndex];
+         const textureHeight = textureAtlas.textureHeights[textureArrayIndex];
          const width = textureWidth * 4;
          const height = textureHeight * 4;
-         const slotIndex = ENTITY_TEXTURE_SLOT_INDEXES[textureArrayIndex];
+         const slotIndex = textureAtlas.textureSlotIndexes[textureArrayIndex];
          
          const x = ghostInfo.position.x + rotateXAroundOrigin(textureInfo.offsetX, textureInfo.offsetY, ghostInfo.rotation);
          const y = ghostInfo.position.y + rotateYAroundOrigin(textureInfo.offsetX, textureInfo.offsetY, ghostInfo.rotation);
@@ -748,8 +768,9 @@ export function renderGhostEntities(): void {
    gl.enableVertexAttribArray(4);
    gl.enableVertexAttribArray(4);
 
+   const textureAtlas = getEntityTextureAtlas();
    gl.activeTexture(gl.TEXTURE0);
-   gl.bindTexture(gl.TEXTURE_2D, ENTITY_TEXTURE_ATLAS);
+   gl.bindTexture(gl.TEXTURE_2D, textureAtlas.texture);
 
    gl.drawArrays(gl.TRIANGLES, 0, vertices.length / 11);
 

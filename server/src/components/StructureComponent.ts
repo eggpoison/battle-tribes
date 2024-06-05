@@ -1,13 +1,14 @@
-import { StructureConnectionInfo, StructureType, getSnapDirection } from "webgl-test-shared/dist/structures";
+import { StructureConnectionInfo, StructureType, getSnapDirection, getStructureSnapOrigin } from "webgl-test-shared/dist/structures";
 import Board from "../Board";
 import Entity from "../Entity";
 import { createStructureGrassBlockers } from "../grass-blockers";
 import { BlueprintComponentArray } from "./BlueprintComponent";
-import { ComponentArray, TribeComponentArray } from "./ComponentArray";
+import { ComponentArray } from "./ComponentArray";
 import { ConnectedEntityIDs } from "../entities/tribes/tribe-member";
 import { Mutable } from "webgl-test-shared/dist/utils";
-import { StructureComponentData } from "webgl-test-shared/dist/components";
+import { ServerComponentType, StructureComponentData } from "webgl-test-shared/dist/components";
 import { EntityType } from "webgl-test-shared/dist/entities";
+import { TribeComponentArray } from "./TribeComponent";
 
 export class StructureComponent implements Mutable<StructureConnectionInfo> {
    /** The ID of any blueprint currently placed on the structure */
@@ -22,7 +23,11 @@ export class StructureComponent implements Mutable<StructureConnectionInfo> {
    }
 }
 
-export const StructureComponentArray = new ComponentArray<StructureComponent>(true, onJoin, onRemove);
+export const StructureComponentArray = new ComponentArray<ServerComponentType.structure, StructureComponent>(true, {
+   onJoin: onJoin,
+   onRemove: onRemove,
+   serialise: serialise
+});
 
 const addConnection = (structureComponent: StructureComponent, connectionIdx: number, connectedEntityID: number): void => {
    structureComponent.connectedEntityIDs[connectionIdx] = connectedEntityID;
@@ -65,10 +70,13 @@ function onJoin(entityID: number): void {
          const otherStructureComponent = StructureComponentArray.getComponent(connectedEntityID);
 
          // @Cleanup
-         const entity = Board.entityRecord[entityID]!;
-         const connectedEntity = Board.entityRecord[connectedEntityID]!;
+         const entity = Board.entityRecord[entityID]! as Entity<StructureType>;
+         const connectedEntity = Board.entityRecord[connectedEntityID]! as Entity<StructureType>;
          
-         const connectionDirection = getSnapDirection(connectedEntity.position.calculateAngleBetween(entity.position), connectedEntity.rotation);
+         const snapOrigin = getStructureSnapOrigin(entity);
+         const connectedSnapOrigin = getStructureSnapOrigin(connectedEntity);
+         const connectionDirection = getSnapDirection(connectedSnapOrigin.calculateAngleBetween(snapOrigin), connectedEntity.rotation);
+
          addConnection(otherStructureComponent, connectionDirection, entityID);
       }
    }
@@ -96,9 +104,12 @@ function onRemove(entityID: number): void {
    }
 }
 
-export function serialiseStructureComponent(entityID: number): StructureComponentData {
+function serialise(entityID: number): StructureComponentData {
    const structureComponent = StructureComponentArray.getComponent(entityID);
+   
    return {
+      componentType: ServerComponentType.structure,
+      hasActiveBlueprint: BlueprintComponentArray.hasComponent(structureComponent.activeBlueprintID),
       connectedSidesBitset: structureComponent.connectedSidesBitset
    };
 }

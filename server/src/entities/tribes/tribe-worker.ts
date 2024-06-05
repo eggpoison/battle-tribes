@@ -7,19 +7,19 @@ import { TribeType, TRIBE_INFO_RECORD } from "webgl-test-shared/dist/tribes";
 import { Point, randInt } from "webgl-test-shared/dist/utils";
 import Entity from "../../Entity";
 import Tribe from "../../Tribe";
-import { HealthComponentArray, HutComponentArray, InventoryUseComponentArray, TribeComponentArray, TribesmanComponentArray } from "../../components/ComponentArray";
 import CircularHitbox from "../../hitboxes/CircularHitbox";
-import { HealthComponent } from "../../components/HealthComponent";
+import { HealthComponent, HealthComponentArray } from "../../components/HealthComponent";
 import { InventoryComponent, InventoryComponentArray } from "../../components/InventoryComponent";
-import { InventoryUseComponent } from "../../components/InventoryUseComponent";
+import { InventoryUseComponent, InventoryUseComponentArray } from "../../components/InventoryUseComponent";
 import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
 import { TribeMemberComponent, TribeMemberComponentArray } from "../../components/TribeMemberComponent";
-import { TribesmanAIComponent } from "../../components/TribesmanAIComponent";
+import { TribesmanAIComponent, TribesmanAIComponentArray } from "../../components/TribesmanAIComponent";
 import Board from "../../Board";
 import { AIHelperComponent, AIHelperComponentArray } from "../../components/AIHelperComponent";
 import { tickTribesman } from "./tribesman-ai/tribesman-ai";
 import { PhysicsComponent, PhysicsComponentArray } from "../../components/PhysicsComponent";
-import { TribeComponent } from "../../components/TribeComponent";
+import { TribeComponent, TribeComponentArray } from "../../components/TribeComponent";
+import { HutComponentArray } from "../../components/HutComponent";
 
 export const TRIBE_WORKER_RADIUS = 28;
 export const TRIBE_WORKER_VISION_RANGE = 500;
@@ -76,7 +76,7 @@ export function createTribeWorker(position: Point, rotation: number, tribeID: nu
    StatusEffectComponentArray.addComponent(worker.id, new StatusEffectComponent(0));
    TribeComponentArray.addComponent(worker.id, new TribeComponent(tribe));
    TribeMemberComponentArray.addComponent(worker.id, new TribeMemberComponent(tribe.type, EntityType.tribeWorker));
-   TribesmanComponentArray.addComponent(worker.id, new TribesmanAIComponent(hutID));
+   TribesmanAIComponentArray.addComponent(worker.id, new TribesmanAIComponent(hutID));
    AIHelperComponentArray.addComponent(worker.id, new AIHelperComponent(TRIBE_WORKER_VISION_RANGE));
 
    const inventoryUseComponent = new InventoryUseComponent();
@@ -98,7 +98,7 @@ export function onTribeWorkerDeath(worker: Entity): void {
    // Attempt to respawn the tribesman when it is killed
    // 
    
-   const tribesmanComponent = TribesmanComponentArray.getComponent(worker.id);
+   const tribesmanComponent = TribesmanAIComponentArray.getComponent(worker.id);
 
    // Only respawn the tribesman if their hut is alive
    if (typeof Board.entityRecord[tribesmanComponent.hutID] === "undefined") {

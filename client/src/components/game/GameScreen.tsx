@@ -8,7 +8,7 @@ import CraftingMenu from "./menus/CraftingMenu";
 import HeldItem from "./HeldItem";
 import DeathScreen from "./DeathScreen";
 import BackpackInventoryMenu from "./inventories/BackpackInventory";
-import TechTree from "./TechTree";
+import TechTree from "./tech-tree/TechTree";
 import BuildMenu from "./BuildMenu";
 import TechInfocard from "./TechInfocard";
 import InventorySelector from "./inventories/InventorySelector";

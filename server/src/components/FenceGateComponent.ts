@@ -1,9 +1,9 @@
 import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
-import { FenceGateComponentData } from "webgl-test-shared/dist/components";
+import { FenceGateComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
 import { DoorToggleType } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { angle, lerp } from "webgl-test-shared/dist/utils";
-import { FenceGateComponentArray } from "./ComponentArray";
+import { ComponentArray } from "./ComponentArray";
 import Entity from "../Entity";
 import RectangularHitbox from "../hitboxes/RectangularHitbox";
 
@@ -17,6 +17,10 @@ export class FenceGateComponent {
    public toggleType = DoorToggleType.none;
    public openProgress = 0;
 }
+
+export const FenceGateComponentArray = new ComponentArray<ServerComponentType.fenceGate, FenceGateComponent>(true, {
+   serialise: serialise
+});
 
 const doorWidth = 52;
 const doorHeight = 16;
@@ -85,9 +89,10 @@ export function toggleFenceGateDoor(fenceGate: Entity): void {
    }
 }
 
-export function serialiseFenceGateComponent(entityID: number): FenceGateComponentData {
+function serialise(entityID: number): FenceGateComponentData {
    const fenceGateComponent = FenceGateComponentArray.getComponent(entityID);
    return {
+      componentType: ServerComponentType.fenceGate,
       toggleType: fenceGateComponent.toggleType,
       openProgress: fenceGateComponent.openProgress
    };

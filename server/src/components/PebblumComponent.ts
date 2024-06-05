@@ -1,5 +1,5 @@
-import { PebblumComponentData } from "webgl-test-shared/dist/components";
-import Entity from "../Entity";
+import { PebblumComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
+import { ComponentArray } from "./ComponentArray";
 
 export class PebblumComponent {
    public targetEntityID: number;
@@ -9,6 +9,12 @@ export class PebblumComponent {
    }
 }
 
-export function serialisePebblumComponent(_entity: Entity): PebblumComponentData {
-   return {};
+export const PebblumComponentArray = new ComponentArray<ServerComponentType.pebblum, PebblumComponent>(true, {
+   serialise: serialise
+});
+
+function serialise(): PebblumComponentData {
+   return {
+      componentType: ServerComponentType.pebblum
+   };
 }

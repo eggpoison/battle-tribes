@@ -1,6 +1,5 @@
-import { BuildingMaterial, BuildingMaterialComponentData } from "webgl-test-shared/dist/components";
-import Entity from "../Entity";
-import { BuildingMaterialComponentArray } from "./ComponentArray";
+import { BuildingMaterial, BuildingMaterialComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
+import { ComponentArray } from "./ComponentArray";
 
 export class BuildingMaterialComponent {
    public material: BuildingMaterial;
@@ -10,10 +9,15 @@ export class BuildingMaterialComponent {
    }
 }
 
-export function serialiseBuildingMaterialComponent(entity: Entity): BuildingMaterialComponentData {
-   const buildingMaterialComponent = BuildingMaterialComponentArray.getComponent(entity.id);
+export const BuildingMaterialComponentArray = new ComponentArray<ServerComponentType.buildingMaterial, BuildingMaterialComponent>(true, {
+   serialise: serialise
+});
+
+function serialise(entityID: number): BuildingMaterialComponentData {
+   const buildingMaterialComponent = BuildingMaterialComponentArray.getComponent(entityID);
 
    return {
+      componentType: ServerComponentType.buildingMaterial,
       material: buildingMaterialComponent.material
    };
 }

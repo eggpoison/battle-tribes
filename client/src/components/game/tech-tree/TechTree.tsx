@@ -1,13 +1,22 @@
 import { TECHS, TechID, TechInfo, getTechByID, getTechRequiredForItem } from "webgl-test-shared/dist/techs";
-import { ItemType } from "webgl-test-shared/dist/items";
+import { ItemType, ItemTypeString } from "webgl-test-shared/dist/items";
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
-import { addKeyListener } from "../../keyboard-input";
-import CLIENT_ITEM_INFO_RECORD, { getItemTypeImage } from "../../client-item-info";
-import Game from "../../Game";
-import Client from "../../client/Client";
-import { setTechTreeX, setTechTreeY, setTechTreeZoom, techIsDirectlyAccessible } from "../../rendering/tech-tree-rendering";
-import OPTIONS from "../../options";
-import Player from "../../entities/Player";
+import { addKeyListener } from "../../../keyboard-input";
+import CLIENT_ITEM_INFO_RECORD, { getItemTypeImage } from "../../../client-item-info";
+import Game from "../../../Game";
+import Client from "../../../client/Client";
+import { setTechTreeX, setTechTreeY, setTechTreeZoom, techIsDirectlyAccessible } from "../../../rendering/tech-tree-rendering";
+import OPTIONS from "../../../options";
+import Player from "../../../entities/Player";
+import { countItemTypesInInventory, tallyInventoryItems } from "../../../inventory-manipulation";
+import { definiteGameState } from "../../../game-state/game-states";
+import { setMenuCloseFunction } from "../../../player-input";
+import { ItemTally } from "webgl-test-shared/dist/crafting-recipes";
+import { createTechTreeItem } from "../../../rendering/tech-tree-item-rendering";
+import { Point, randFloat } from "webgl-test-shared/dist/utils";
+import Camera from "../../../Camera";
+import { playSound } from "../../../sound";
+import TechTreeProgressBar from "./TechTreeProgressBar";
 
 const boundsScale = 16;
 
@@ -70,7 +79,6 @@ const TechTooltip = ({ techInfo, techPositionX, techPositionY, zoom }: TechToolt
       }
    }, [techInfo.positionX, techInfo.positionY, techPositionX, techPositionY, zoom]);
 
-   const studyProgress = Game.tribe.techTreeUnlockProgress[techInfo.id]?.studyProgress || 0;
    const isUnlocked = Game.tribe.hasUnlockedTech(techInfo.id);
    
    return <div ref={tooltipRef} id="tech-tooltip">
@@ -78,6 +86,8 @@ const TechTooltip = ({ techInfo, techPositionX, techPositionY, zoom }: TechToolt
          
          <h2 className="name">{techInfo.name}</h2>
          <p className="description">{techInfo.description}</p>
+
+         <div className="bar"></div>
 
          <p className="unlocks">Unlocks {techInfo.unlockedItems.map((itemType, i) => {
             const techRequired = getTechRequiredForItem(itemType);
@@ -92,29 +102,86 @@ const TechTooltip = ({ techInfo, techPositionX, techPositionY, zoom }: TechToolt
             }
          })}</p>
 
-         <ul>
-            {Object.entries(techInfo.researchItemRequirements).map(([itemType, itemAmount], i) => {
-               const itemProgress = (Game.tribe.techTreeUnlockProgress[techInfo.id]?.itemProgress.hasOwnProperty(itemType)) ? Game.tribe.techTreeUnlockProgress[techInfo.id]!.itemProgress[itemType as unknown as ItemType] : 0;
-               return <li key={i}>
-                  <img src={getItemTypeImage(itemType as unknown as ItemType)} alt="" />
-                  <span>{CLIENT_ITEM_INFO_RECORD[itemType as unknown as ItemType].name} {itemProgress}/{itemAmount}</span>
-               </li>
-            })}
-         </ul>
-
-         {!isUnlocked && techInfo.conflictingTechs.length > 0 ? (
+         {techInfo.conflictingTechs.length > 0 ? (
             <p className="conflict">Conflicts with {getTechByID(techInfo.conflictingTechs[0]).name}</p>
          ) : null}
       </div>
-      {techInfo.researchStudyRequirements > 0 && !isUnlocked ? (
-         <div className="container research-container">
-            <div className="study-progress-bar-bg">
-               <p className="research-progress">{studyProgress}/{techInfo.researchStudyRequirements}</p>
-               <div style={{"--study-progress": studyProgress / techInfo.researchStudyRequirements} as React.CSSProperties} className="study-progress-bar"></div>
-            </div>
+      {!isUnlocked ? <>
+         <div className="container">
+            <ul>
+               {Object.entries(techInfo.researchItemRequirements).map(([itemTypeString, itemAmount], i) => {
+                  const itemType = Number(itemTypeString) as ItemType;
+                  const itemProgress = (Game.tribe.techTreeUnlockProgress[techInfo.id]?.itemProgress.hasOwnProperty(itemType)) ? Game.tribe.techTreeUnlockProgress[techInfo.id]!.itemProgress[itemType] : 0;
+
+                  const hasFinished = typeof itemProgress !== "undefined" ? itemProgress >= itemAmount : false;
+                  const canContributeItems = countItemTypesInInventory(definiteGameState.hotbar, itemType) > 0;
+                  
+                  return <li key={i} className={hasFinished ? "completed" : undefined}>
+                     <div>
+                        <img className="item-image" src={getItemTypeImage(itemType)} alt="" />
+                        <span>{CLIENT_ITEM_INFO_RECORD[itemType].name}</span>
+                     </div>
+                     <div>
+                        <span className="item-research-count">{itemProgress}/{itemAmount}</span>
+                     </div>
+
+                     {!hasFinished && canContributeItems ? (
+                        <div className="item-research-star-container">
+                           <img src={require("../../../images/ui/research-star.png")} alt="" />
+                        </div>
+                     ) : null}
+                  </li>
+               })}
+            </ul>
          </div>
-      ) : null}
+         {techInfo.researchStudyRequirements > 0 ? (
+            <div className="container research-container">
+               <TechTreeProgressBar techInfo={techInfo} />
+            </div>
+         ) : null}
+      </> : null}
    </div>;
+}
+
+const getResearchedItems = (techInfo: TechInfo): ItemTally => {
+   // Tally items
+   const tally: ItemTally = {};
+   tallyInventoryItems(tally, definiteGameState.hotbar);
+   
+   const researchTally: ItemTally = {};
+   for (const [itemTypeString, amount] of Object.entries(techInfo.researchItemRequirements)) {
+      const itemType = Number(itemTypeString) as ItemType;
+
+      const availableItemCount = tally[itemType];
+
+      if (typeof availableItemCount !== "undefined") {
+         if (typeof researchTally[itemType] === "undefined") {
+            researchTally[itemType] = availableItemCount;
+         } else {
+            researchTally[itemType]! += availableItemCount;
+         }
+
+         const itemProgress = Game.tribe.techTreeUnlockProgress[techInfo.id]?.itemProgress[itemType] || 0;
+         const maxResearchableCount = amount - itemProgress;
+         if (researchTally[itemType]! > maxResearchableCount) {
+            researchTally[itemType] = maxResearchableCount;
+         }
+      }
+   }
+
+   return researchTally;
+}
+
+const addResearchedItems = (techInfo: TechInfo, researchTally: ItemTally): void => {
+   for (const [itemTypeString, amount] of Object.entries(researchTally)) {
+      const itemType = Number(itemTypeString) as ItemType;
+
+      for (let i = 0; i < amount; i++) {
+         // @Speed
+         const position = new Point(techInfo.positionX, techInfo.positionY).offset(randFloat(0, 3.5), 2 * Math.PI * Math.random());
+         createTechTreeItem(itemType, position);
+      }
+   }
 }
 
 interface TechProps {
@@ -153,6 +220,12 @@ const Tech = ({ techInfo, positionX, positionY, zoom }: TechProps) => {
          Client.sendForceUnlockTech(techInfo.id);
       } else if (!isUnlocked) {
          researchTech(techInfo.id);
+
+         const itemTally = getResearchedItems(techInfo);
+         addResearchedItems(techInfo, itemTally);
+         
+         // @Incomplete: attach to camera so it doesn't decrease in loudness
+         playSound("item-research.mp3", 0.4, 1, Camera.position.x, Camera.position.y);
       }
    }
 
@@ -170,7 +243,7 @@ const Tech = ({ techInfo, positionX, positionY, zoom }: TechProps) => {
    return <>
       <div ref={elementRef} onClick={e => onClick(e.nativeEvent)} onContextMenu={e => onRightClick(e.nativeEvent)} className={`tech${isUnlocked ? " unlocked" : ""}${isSelected ? " selected" : ""}`} onMouseEnter={() => onMouseEnter()} onMouseLeave={() => onMouseLeave()}>
          <div className="icon-wrapper">
-            <img src={require("../../images/tech-tree/" + techInfo.iconSrc)} alt="" className="icon" draggable={false} />
+            <img src={require("../../../images/tech-tree/" + techInfo.iconSrc)} alt="" className="icon" draggable={false} />
          </div>
       </div>
       {isHovered ? (
@@ -182,7 +255,7 @@ const Tech = ({ techInfo, positionX, positionY, zoom }: TechProps) => {
 export let updateTechTree: () => void = () => {};
 
 export let techTreeIsOpen: () => boolean = () => false;
-export let closeTechTree: () => void;
+let closeTechTree: () => void;
 
 const TechTree = () => {
    const [isVisible, setIsVisible] = useState(false);
@@ -216,6 +289,12 @@ const TechTree = () => {
    }, []);
 
    useEffect(() => {
+      if (isVisible) {
+         setMenuCloseFunction(() => {
+            closeTechTree();
+         });
+      }
+      
       closeTechTree = () => {
          if (isVisible) {
             changeVisibility.current!();

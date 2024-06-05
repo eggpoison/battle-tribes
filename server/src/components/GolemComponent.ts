@@ -1,6 +1,9 @@
-import { BODY_GENERATION_RADIUS } from "../entities/mobs/golem";
+import { GolemComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
+import Board from "../Board";
+import { BODY_GENERATION_RADIUS, GOLEM_WAKE_TIME_TICKS } from "../entities/mobs/golem";
 import CircularHitbox from "../hitboxes/CircularHitbox";
 import { Hitbox } from "../hitboxes/hitboxes";
+import { ComponentArray } from "./ComponentArray";
 
 export interface RockInfo {
    /** The hitbox corresponding to the rock info */
@@ -60,4 +63,19 @@ export class GolemComponent {
       this.rockInfoArray = generateRockInfoArray(hitboxes);
       this.pebblumSummonCooldownTicks = pebblumSummonCooldownTicks;
    }
+}
+
+export const GolemComponentArray = new ComponentArray<ServerComponentType.golem, GolemComponent>(true, {
+   serialise: serialise
+});
+
+function serialise(entityID: number): GolemComponentData {
+   const golemComponent = GolemComponentArray.getComponent(entityID);
+
+   return {
+      componentType: ServerComponentType.golem,
+      wakeProgress: golemComponent.wakeTimerTicks / GOLEM_WAKE_TIME_TICKS,
+      ticksAwake: Board.ticks - golemComponent.lastWakeTicks,
+      isAwake: golemComponent.wakeTimerTicks === GOLEM_WAKE_TIME_TICKS
+   };
 }

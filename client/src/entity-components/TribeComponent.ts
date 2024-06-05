@@ -9,7 +9,7 @@ import { playSound } from "../sound";
 import { getTribesmanRadius } from "./TribeMemberComponent";
 import { createConversionParticle } from "../particles";
 
-const getTribeType = (tribeID: number): TribeType => {
+export function getTribeType(tribeID: number): TribeType {
    if (tribeID === Game.tribe.id) {
       return Game.tribe.tribeType;
    } else {

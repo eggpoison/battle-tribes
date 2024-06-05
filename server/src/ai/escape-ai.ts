@@ -1,6 +1,6 @@
 import Board from "../Board";
 import Entity from "../Entity";
-import { EscapeAIComponentArray } from "../components/ComponentArray";
+import { EscapeAIComponentArray } from "../components/EscapeAIComponent";
 import { PhysicsComponentArray } from "../components/PhysicsComponent";
 
 export function registerAttackingEntity(entity: Entity, attackingEntity: Entity): void {

@@ -5,11 +5,9 @@ import { Settings } from "webgl-test-shared/dist/settings";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { Point } from "webgl-test-shared/dist/utils";
 import Entity from "../../Entity";
-import { HealthComponentArray } from "../../components/ComponentArray";
-import { addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
+import { HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
 import CircularHitbox from "../../hitboxes/CircularHitbox";
 import { StatusEffectComponentArray, applyStatusEffect } from "../../components/StatusEffectComponent";
-import { SERVER } from "../../server/server";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
 
 const RADIUS = 55;

@@ -2,23 +2,20 @@ import RenderPart from "../render-parts/RenderPart";
 import { createRockParticle, createRockSpeckParticle } from "../particles";
 import { getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
 import { playSound, ROCK_DESTROY_SOUNDS, ROCK_HIT_SOUNDS } from "../sound";
-import TombstoneComponent from "../entity-components/TombstoneComponent";
-import Entity from "../Entity";
-import StatusEffectComponent from "../entity-components/StatusEffectComponent";
-import HealthComponent from "../entity-components/HealthComponent";
+import Entity, { ComponentDataRecord } from "../Entity";
 import { ParticleRenderLayer } from "../rendering/particle-rendering";
 import { Point, randFloat, randItem } from "webgl-test-shared/dist/utils";
-import { EntityComponentsData, ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityType } from "webgl-test-shared/dist/entities";
 
 class Tombstone extends Entity {
    private static readonly HITBOX_WIDTH = 48;
    private static readonly HITBOX_HEIGHT = 88;
    
-   constructor(position: Point, id: number, ageTicks: number, componentsData: EntityComponentsData<EntityType.tombstone>) {
+   constructor(position: Point, id: number, ageTicks: number, componentDataRecord: ComponentDataRecord) {
       super(position, id, EntityType.tombstone, ageTicks);
 
-      const tombstoneComponentData = componentsData[2];
+      const tombstoneComponentData = componentDataRecord[ServerComponentType.tombstone]!;
 
       this.attachRenderPart(
          new RenderPart(
@@ -28,10 +25,6 @@ class Tombstone extends Entity {
             0
          )
       );
-
-      this.addServerComponent(ServerComponentType.health, new HealthComponent(this, componentsData[0]));
-      this.addServerComponent(ServerComponentType.statusEffect, new StatusEffectComponent(this, componentsData[1]));
-      this.addServerComponent(ServerComponentType.tombstone, new TombstoneComponent(this, tombstoneComponentData));
    }
 
    protected onHit(): void {

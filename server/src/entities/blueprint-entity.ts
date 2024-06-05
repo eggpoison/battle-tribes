@@ -4,10 +4,9 @@ import { EntityType } from "webgl-test-shared/dist/entities";
 import { StructureType } from "webgl-test-shared/dist/structures";
 import { Point } from "webgl-test-shared/dist/utils";
 import Entity from "../Entity";
-import { HealthComponentArray, TribeComponentArray } from "../components/ComponentArray";
-import { HealthComponent } from "../components/HealthComponent";
+import { HealthComponent, HealthComponentArray } from "../components/HealthComponent";
 import { BlueprintComponent, BlueprintComponentArray } from "../components/BlueprintComponent";
-import { TribeComponent } from "../components/TribeComponent";
+import { TribeComponent, TribeComponentArray } from "../components/TribeComponent";
 import Tribe from "../Tribe";
 import { createBuildingHitboxes } from "../buildings";
 

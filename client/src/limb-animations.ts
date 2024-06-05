@@ -46,7 +46,7 @@ export function generateRandomLimbPosition(limbIdx: number): Point {
 }
 
 export function createCraftingAnimationParticles(entity: Entity, limbIdx: number): void {
-   const tribesmanComponent = entity.getServerComponent(ServerComponentType.tribesman);
+   const tribesmanComponent = entity.getServerComponent(ServerComponentType.tribesmanAI);
    
    const recipe = getItemRecipe(tribesmanComponent.craftingItemType);
    if (recipe === null) {
@@ -142,7 +142,7 @@ const getCustomItemRenderPartTextureSource = (entity: Entity, state: CustomItemS
          return CLIENT_ITEM_INFO_RECORD[ItemType.herbal_medicine].entityTextureSource;
       }
       case CustomItemState.crafting: {
-         const tribesmanComponent = entity.getServerComponent(ServerComponentType.tribesman);
+         const tribesmanComponent = entity.getServerComponent(ServerComponentType.tribesmanAI);
          return CLIENT_ITEM_INFO_RECORD[tribesmanComponent.craftingItemType].entityTextureSource;
       }
    }
@@ -173,7 +173,7 @@ const getCustomItemRenderPartOpacity = (entity: Entity, state: CustomItemState):
          return 1 - useProgress;
       }
       case CustomItemState.crafting: {
-         const tribesmanComponent = entity.getServerComponent(ServerComponentType.tribesman);
+         const tribesmanComponent = entity.getServerComponent(ServerComponentType.tribesmanAI);
          return tribesmanComponent.craftingProgress * 0.8;
       }
    }

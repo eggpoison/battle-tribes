@@ -2,7 +2,7 @@ import { DecorationInfo, DecorationType } from "webgl-test-shared/dist/client-se
 import { rotateXAroundPoint, rotateYAroundPoint } from "webgl-test-shared/dist/utils";
 import Camera from "../Camera";
 import { CAMERA_UNIFORM_BUFFER_BINDING_INDEX, createWebGLProgram, gl } from "../webgl";
-import { ENTITY_TEXTURE_ATLAS, ENTITY_TEXTURE_ATLAS_SIZE, ENTITY_TEXTURE_SLOT_INDEXES, getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
+import { getEntityTextureAtlas, getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
 import { ATLAS_SLOT_SIZE } from "../texture-atlases/texture-atlas-stitching";
 import { getRenderChunkDecorationInfo } from "./render-chunks";
 
@@ -139,9 +139,11 @@ export function createDecorationShaders(): void {
    const atlasPixelSizeUniformLocation = gl.getUniformLocation(program, "u_atlasPixelSize")!;
    const atlasSlotSizeUniformLocation = gl.getUniformLocation(program, "u_atlasSlotSize")!;
 
+   const textureAtlas = getEntityTextureAtlas();
+   
    gl.useProgram(program);
    gl.uniform1i(textureUniformLocation, 0);
-   gl.uniform1f(atlasPixelSizeUniformLocation, ENTITY_TEXTURE_ATLAS_SIZE);
+   gl.uniform1f(atlasPixelSizeUniformLocation, textureAtlas.atlasSize * ATLAS_SLOT_SIZE);
    gl.uniform1f(atlasSlotSizeUniformLocation, ATLAS_SLOT_SIZE);
 }
 
@@ -163,6 +165,8 @@ export function renderDecorations(): void {
       return;
    }
 
+   const textureAtlas = getEntityTextureAtlas();
+   
    // Create vertex data
    const vertexData = new Float32Array(visibleDecorations.length * 6 * 7);
    for (let i = 0; i < visibleDecorations.length; i++) {
@@ -184,7 +188,7 @@ export function renderDecorations(): void {
       const bottomRightX = rotateXAroundPoint(x2, y1, decoration.positionX, decoration.positionY, decoration.rotation);
       const bottomRightY = rotateYAroundPoint(x2, y1, decoration.positionX, decoration.positionY, decoration.rotation);
 
-      const textureSlotIndex = ENTITY_TEXTURE_SLOT_INDEXES[getTextureArrayIndex(renderInfo.textureSources[decoration.variant])];
+      const textureSlotIndex = textureAtlas.textureSlotIndexes[getTextureArrayIndex(renderInfo.textureSources[decoration.variant])];
 
       const dataOffset = i * 42;
 
@@ -244,7 +248,7 @@ export function renderDecorations(): void {
 
    // Bind texture atlas
    gl.activeTexture(gl.TEXTURE0);
-   gl.bindTexture(gl.TEXTURE_2D, ENTITY_TEXTURE_ATLAS);
+   gl.bindTexture(gl.TEXTURE_2D, textureAtlas.texture);
 
    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
    gl.bufferData(gl.ARRAY_BUFFER, vertexData, gl.STATIC_DRAW);

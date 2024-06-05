@@ -455,13 +455,26 @@ const CLIENT_ITEM_INFO_RECORD: Record<ItemType, ClientItemInfo> = {
       name: "Wooden Fence",
       description: "Good for keeping cows in, not so good for defending your valuables."
    },
-   // @Incomplete
    [ItemType.fertiliser]: {
       entityTextureSource: "items/small/fertiliser.png",
       textureSource: "items/large/fertiliser.png",
       toolTextureSource: "",
       name: "Fertiliser",
       description: "Speeds up plant growth when used on planter boxes."
+   },
+   [ItemType.frostshaper]: {
+      entityTextureSource: "items/small/frostshaper.png",
+      textureSource: "items/large/frostshaper.png",
+      toolTextureSource: "",
+      name: "Frostshaper",
+      description: "Carves ice into complex shapes."
+   },
+   [ItemType.stonecarvingTable]: {
+      entityTextureSource: "items/small/stonecarving-table.png",
+      textureSource: "items/large/stonecarving-table.png",
+      toolTextureSource: "",
+      name: "Stonecarving Table",
+      description: "Carves stone into complex shapes."
    }
 };
 

@@ -6,15 +6,15 @@ import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { Point } from "webgl-test-shared/dist/utils";
 import Tribe from "../../Tribe";
 import Entity from "../../Entity";
-import { ArrowComponentArray, BuildingMaterialComponentArray, HealthComponentArray, TribeComponentArray } from "../../components/ComponentArray";
-import { HealthComponent } from "../../components/HealthComponent";
+import { HealthComponent, HealthComponentArray } from "../../components/HealthComponent";
 import RectangularHitbox from "../../hitboxes/RectangularHitbox";
-import { TribeComponent } from "../../components/TribeComponent";
+import { TribeComponent, TribeComponentArray } from "../../components/TribeComponent";
 import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
-import { BuildingMaterialComponent } from "../../components/BuildingMaterialComponent";
+import { BuildingMaterialComponent, BuildingMaterialComponentArray } from "../../components/BuildingMaterialComponent";
 import { StructureComponentArray, StructureComponent } from "../../components/StructureComponent";
 import { StructureConnectionInfo } from "webgl-test-shared/dist/structures";
 import { Hitbox } from "../../hitboxes/hitboxes";
+import { ArrowComponentArray } from "../../components/ArrowComponent";
 
 const VERTICAL_HITBOX_WIDTH = 12 - 0.05;
 const VERTICAL_HITBOX_HEIGHT = 20 - 0.05;
@@ -41,7 +41,7 @@ export function createEmbrasureHitboxes(parentPosition: Point, localID: number, 
 export function createEmbrasure(position: Point, rotation: number, tribe: Tribe, connectionInfo: StructureConnectionInfo, material: BuildingMaterial): Entity {
    const embrasure = new Entity(position, rotation, EntityType.embrasure, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
-   const hitboxes = createEmbrasureHitboxes(position, embrasure.getNextHitboxLocalID(), embrasure.rotation);
+   const hitboxes = createEmbrasureHitboxes(position, embrasure.getNextHitboxLocalID(), rotation);
    for (let i = 0; i < hitboxes.length; i++) {
       embrasure.addHitbox(hitboxes[i]);
    }

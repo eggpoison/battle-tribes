@@ -9,13 +9,13 @@ import Board from "./Board";
 import Tile from "./Tile";
 import { damageEntity, healEntity } from "./components/HealthComponent";
 import Entity, { getRandomPositionInEntity } from "./Entity";
-import { TribeComponentArray } from "./components/ComponentArray";
 import { InventoryComponentArray, addItem } from "./components/InventoryComponent";
 import { createEntity } from "./entity-creation";
 import { createItem } from "./items";
 import { forceBuildPlans } from "./ai-tribe-building/ai-building-plans";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
 import { forcePlayerTeleport, getPlayerFromUsername } from "./server/player-clients";
+import { TribeComponentArray } from "./components/TribeComponent";
 
 const ENTITY_SPAWN_RANGE = 200;
 

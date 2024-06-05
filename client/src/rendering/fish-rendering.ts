@@ -4,7 +4,7 @@ import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { CAMERA_UNIFORM_BUFFER_BINDING_INDEX, createWebGLProgram, gl } from "../webgl";
 import Board from "../Board";
 import { ATLAS_SLOT_SIZE } from "../texture-atlases/texture-atlas-stitching";
-import { ENTITY_TEXTURE_ATLAS, ENTITY_TEXTURE_ATLAS_LENGTH, ENTITY_TEXTURE_ATLAS_SIZE, ENTITY_TEXTURE_SLOT_INDEXES, getTextureHeight, getTextureWidth } from "../texture-atlases/entity-texture-atlas";
+import { ENTITY_TEXTURE_ATLAS_LENGTH, getEntityTextureAtlas } from "../texture-atlases/entity-texture-atlas";
 
 // @Cleanup: This all sucks. should really be combined with game-object-rendering, as apart from the blur this is just a 1-1 copy of it
 
@@ -153,20 +153,22 @@ export function createFishShaders(): void {
    const textureSlotIndexesUniformLocation = gl.getUniformLocation(program, "u_textureSlotIndexes")!;
    const textureSizesUniformLocation = gl.getUniformLocation(program, "u_textureSizes")!;
 
+   const textureAtlas = getEntityTextureAtlas();
+   
    const textureSlotIndexes = new Float32Array(ENTITY_TEXTURE_ATLAS_LENGTH);
    for (let textureArrayIndex = 0; textureArrayIndex < ENTITY_TEXTURE_ATLAS_LENGTH; textureArrayIndex++) {
-      textureSlotIndexes[textureArrayIndex] = ENTITY_TEXTURE_SLOT_INDEXES[textureArrayIndex];
+      textureSlotIndexes[textureArrayIndex] = textureAtlas.textureSlotIndexes[textureArrayIndex];
    }
 
    const textureSizes = new Float32Array(ENTITY_TEXTURE_ATLAS_LENGTH * 2);
    for (let textureArrayIndex = 0; textureArrayIndex < ENTITY_TEXTURE_ATLAS_LENGTH; textureArrayIndex++) {
-      textureSizes[textureArrayIndex * 2] = getTextureWidth(textureArrayIndex);
-      textureSizes[textureArrayIndex * 2 + 1] = getTextureHeight(textureArrayIndex);
+      textureSizes[textureArrayIndex * 2] = textureAtlas.textureWidths[textureArrayIndex];
+      textureSizes[textureArrayIndex * 2 + 1] = textureAtlas.textureHeights[textureArrayIndex];
    }
 
    gl.useProgram(program);
    gl.uniform1i(textureUniformLocation, 0);
-   gl.uniform1f(atlasPixelSizeUniformLocation, ENTITY_TEXTURE_ATLAS_SIZE);
+   gl.uniform1f(atlasPixelSizeUniformLocation, textureAtlas.atlasSize * ATLAS_SLOT_SIZE);
    gl.uniform1f(atlasSlotSizeUniformLocation, ATLAS_SLOT_SIZE);
    gl.uniform1fv(textureSlotIndexesUniformLocation, textureSlotIndexes);
    gl.uniform2fv(textureSizesUniformLocation, textureSizes);
@@ -206,8 +208,9 @@ export function createFishShaders(): void {
 export function renderFish(): void {
    if (Board.fish.length === 0) return;
    
+   const textureAtlas = getEntityTextureAtlas();
+   
    const vertexData = new Float32Array(Board.fish.length * 4 * 11);
-
    const indicesData = new Uint16Array(Board.fish.length * 6);
 
    let i = 0;
@@ -222,8 +225,8 @@ export function renderFish(): void {
          const u0 = renderPart.flipX ? 1 : 0;
          const u1 = 1 - u0;
 
-         const width = getTextureWidth(renderPart.textureArrayIndex) * 4;
-         const height = getTextureHeight(renderPart.textureArrayIndex) * 4;
+         const width = textureAtlas.textureWidths[renderPart.textureArrayIndex] * 4;
+         const height = textureAtlas.textureHeights[renderPart.textureArrayIndex] * 4;
 
          const x1 = renderPart.renderPosition.x - width / 2 * renderPart.scale;
          const x2 = renderPart.renderPosition.x + width / 2 * renderPart.scale;
@@ -320,7 +323,7 @@ export function renderFish(): void {
 
    // Bind texture atlas
    gl.activeTexture(gl.TEXTURE0);
-   gl.bindTexture(gl.TEXTURE_2D, ENTITY_TEXTURE_ATLAS);
+   gl.bindTexture(gl.TEXTURE_2D, textureAtlas.texture);
 
    gl.bindVertexArray(vao);
 

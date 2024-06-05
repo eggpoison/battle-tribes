@@ -1,15 +1,18 @@
-import { TribeMemberComponentData } from "webgl-test-shared/dist/components";
+import { ServerComponentType, TribeMemberComponentData } from "webgl-test-shared/dist/components";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { TitleGenerationInfo, TribesmanTitle, TRIBESMAN_TITLE_RECORD } from "webgl-test-shared/dist/titles";
 import { TribeType } from "webgl-test-shared/dist/tribes";
 import { randInt } from "webgl-test-shared/dist/utils";
 import Entity from "../Entity";
-import { ComponentArray, InventoryUseComponentArray, PlayerComponentArray, TribeComponentArray } from "./ComponentArray";
+import { ComponentArray } from "./ComponentArray";
 import { generateTitle } from "../tribesman-title-generation";
 import Board from "../Board";
 import { InventoryComponentArray, createNewInventory } from "./InventoryComponent";
 import { InventoryName } from "webgl-test-shared/dist/items";
 import { Settings } from "webgl-test-shared/dist/settings";
+import { TribeComponentArray } from "./TribeComponent";
+import { PlayerComponentArray } from "./PlayerComponent";
+import { InventoryUseComponentArray } from "./InventoryUseComponent";
 
 type TribesmanEntityType = EntityType.player | EntityType.tribeWorker | EntityType.tribeWarrior;
 
@@ -38,7 +41,11 @@ export class TribeMemberComponent {
    }
 }
 
-export const TribeMemberComponentArray = new ComponentArray<TribeMemberComponent>(true, onJoin, onRemove);
+export const TribeMemberComponentArray = new ComponentArray<ServerComponentType.tribeMember, TribeMemberComponent>(true, {
+   onJoin: onJoin,
+   onRemove: onRemove,
+   serialise: serialise
+});
 
 const getHotbarSize = (entityType: TribesmanEntityType): number => {
    switch (entityType) {
@@ -82,9 +89,10 @@ function onRemove(entityID: number): void {
    tribeComponent.tribe.registerTribeMemberDeath(entityID);
 }
 
-export function serialiseTribeMemberComponent(entity: Entity): TribeMemberComponentData {
-   const tribeMemberComponent = TribeMemberComponentArray.getComponent(entity.id);
+function serialise(entityID: number): TribeMemberComponentData {
+   const tribeMemberComponent = TribeMemberComponentArray.getComponent(entityID);
    return {
+      componentType: ServerComponentType.tribeMember,
       warPaintType: tribeMemberComponent.warPaintType,
       titles: tribeMemberComponent.titles
    };

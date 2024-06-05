@@ -1,4 +1,3 @@
-import { InitialGameDataPacket } from "webgl-test-shared/dist/client-server-types";
 import { TribeType } from "webgl-test-shared/dist/tribes";
 import { Point } from "webgl-test-shared/dist/utils";
 import { useEffect, useRef, useState } from "react";
@@ -6,7 +5,6 @@ import Client from "../client/Client";
 import Player from "../entities/Player";
 import Game from "../Game";
 import { setGameState, setLoadingScreenInitialStatus } from "./App";
-import Camera from "../Camera";
 import { definiteGameState } from "../game-state/game-states";
 import Tribe from "../Tribe";
 
@@ -62,6 +60,8 @@ const LoadingScreen = ({ username, tribeType, initialStatus }: LoadingScreenProp
          const initialGameDataPacket = await Client.getInitialGameDataPacket();
          setStatus("initialising_game");
                
+         Game.playerID = initialGameDataPacket.playerID;
+         
          const tiles = Client.parseServerTileDataArray(initialGameDataPacket.tiles);
          await Game.initialise(tiles, initialGameDataPacket.waterRocks, initialGameDataPacket.riverSteppingStones, initialGameDataPacket.riverFlowDirections, initialGameDataPacket.edgeTiles, initialGameDataPacket.edgeRiverFlowDirections, initialGameDataPacket.edgeRiverSteppingStones, initialGameDataPacket.grassInfo, initialGameDataPacket.decorations);
          
@@ -71,8 +71,9 @@ const LoadingScreen = ({ username, tribeType, initialStatus }: LoadingScreenProp
 
          Game.tribe = new Tribe(gameDataPacket.playerTribeData.name, gameDataPacket.playerTribeData.id, tribeType, gameDataPacket.playerTribeData.numHuts);
          
-         const spawnPosition = Point.unpackage(initialGameDataPacket.spawnPosition);
-         Player.createInstancePlayer(spawnPosition, initialGameDataPacket.playerID);
+         // @Incomplete
+         // const spawnPosition = Point.unpackage(initialGameDataPacket.spawnPosition);
+         // Player.createInstancePlayer(spawnPosition, initialGameDataPacket.playerID);
          
          Client.processGameDataPacket(gameDataPacket);
 

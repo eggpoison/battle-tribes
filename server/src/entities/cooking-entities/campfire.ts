@@ -5,18 +5,18 @@ import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { Point } from "webgl-test-shared/dist/utils";
 import Entity from "../../Entity";
 import CircularHitbox from "../../hitboxes/CircularHitbox";
-import { CookingComponentArray, HealthComponentArray, TribeComponentArray } from "../../components/ComponentArray";
-import { HealthComponent } from "../../components/HealthComponent";
+import { HealthComponent, HealthComponentArray } from "../../components/HealthComponent";
 import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
 import { InventoryComponent, InventoryComponentArray, createNewInventory } from "../../components/InventoryComponent";
 import { tickCookingEntity } from "./cooking-entity";
-import { CookingComponent } from "../../components/CookingComponent";
+import { CookingComponent, CookingComponentArray } from "../../components/CookingComponent";
 import Tribe from "../../Tribe";
-import { TribeComponent } from "../../components/TribeComponent";
+import { TribeComponent, TribeComponentArray } from "../../components/TribeComponent";
 import { InventoryName } from "webgl-test-shared/dist/items";
 import { StructureComponent, StructureComponentArray } from "../../components/StructureComponent";
 import { StructureConnectionInfo } from "webgl-test-shared/dist/structures";
 import { Hitbox } from "../../hitboxes/hitboxes";
+import { HitboxFlags } from "../../hitboxes/BaseHitbox";
 
 export const CAMPFIRE_SIZE = 104;
 
@@ -24,7 +24,11 @@ const LIFETIME_SECONDS = 30;
 
 export function createCampfireHitboxes(parentPosition: Point, localID: number, parentRotation: number): ReadonlyArray<Hitbox> {
    const hitboxes = new Array<Hitbox>();
-   hitboxes.push(new CircularHitbox(parentPosition, 2, 0, 0, HitboxCollisionType.soft, CAMPFIRE_SIZE / 2, localID, parentRotation, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK));
+   
+   const hitbox = new CircularHitbox(parentPosition, 2, 0, 0, HitboxCollisionType.soft, CAMPFIRE_SIZE / 2, localID, parentRotation, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK);
+   hitbox.flags |= HitboxFlags.NON_GRASS_BLOCKING;
+   hitboxes.push(hitbox);
+
    return hitboxes;
 }
 

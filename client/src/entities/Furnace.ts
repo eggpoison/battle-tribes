@@ -1,4 +1,4 @@
-import { EntityComponentsData, ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { Point, angle, randFloat } from "webgl-test-shared/dist/utils";
 import RenderPart from "../render-parts/RenderPart";
@@ -6,18 +6,12 @@ import { getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
 import { createEmberParticle, createRockParticle, createRockSpeckParticle, createSmokeParticle } from "../particles";
 import Board from "../Board";
 import Entity from "../Entity";
-import CookingComponent from "../entity-components/CookingComponent";
 import { ParticleRenderLayer } from "../rendering/particle-rendering";
-import HealthComponent from "../entity-components/HealthComponent";
-import StructureComponent from "../entity-components/StructureComponent";
-import TribeComponent from "../entity-components/TribeComponent";
-import StatusEffectComponent from "../entity-components/StatusEffectComponent";
-import InventoryComponent from "../entity-components/InventoryComponent";
 
 class Furnace extends Entity {
    public static readonly SIZE = 80;
 
-   constructor(position: Point, id: number, ageTicks: number, componentsData: EntityComponentsData<EntityType.furnace>) {
+   constructor(position: Point, id: number, ageTicks: number) {
       super(position, id, EntityType.furnace, ageTicks);
 
       this.attachRenderPart(
@@ -28,13 +22,6 @@ class Furnace extends Entity {
             0
          )
       );
-
-      this.addServerComponent(ServerComponentType.health, new HealthComponent(this, componentsData[0]));
-      this.addServerComponent(ServerComponentType.statusEffect, new StatusEffectComponent(this, componentsData[1]));
-      this.addServerComponent(ServerComponentType.structure, new StructureComponent(this, componentsData[2]));
-      this.addServerComponent(ServerComponentType.tribe, new TribeComponent(this, componentsData[3]));
-      this.addServerComponent(ServerComponentType.inventory, new InventoryComponent(this, componentsData[4]));
-      this.addServerComponent(ServerComponentType.cooking, new CookingComponent(this, componentsData[5]));
    }
 
    public tick(): void {

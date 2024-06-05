@@ -1,9 +1,9 @@
-import { Point, distance, lerp, randFloat, randInt, rotateXAroundOrigin, rotateYAroundOrigin } from "webgl-test-shared/dist/utils";
-import { EntityType } from "webgl-test-shared/dist/entities";
+import { Point, distance, randFloat, randInt, rotateXAroundOrigin, rotateYAroundOrigin } from "webgl-test-shared/dist/utils";
+import { EntityType, EntityTypeString } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { TileType } from "webgl-test-shared/dist/tiles";
 import { EntityData, HitData, HitFlags, HitboxCollisionType, RIVER_STEPPING_STONE_SIZES } from "webgl-test-shared/dist/client-server-types";
-import { EntityComponents, ServerComponentType } from "webgl-test-shared/dist/components";
+import { ComponentData, ServerComponentType, ServerComponentTypeString } from "webgl-test-shared/dist/components";
 import RenderPart, { RenderObject } from "./render-parts/RenderPart";
 import Chunk from "./Chunk";
 import RectangularHitbox from "./hitboxes/RectangularHitbox";
@@ -11,15 +11,13 @@ import { Tile } from "./Tile";
 import CircularHitbox from "./hitboxes/CircularHitbox";
 import Board from "./Board";
 import { createHealingParticle, createSlimePoolParticle, createSparkParticle, createWaterSplashParticle } from "./particles";
-import { AudioFilePath, playSound } from "./sound";
+import { playSound } from "./sound";
 import ServerComponent from "./entity-components/ServerComponent";
-import { ClientComponentClass, ClientComponentType, ClientComponents, ServerComponentClass, ServerComponents } from "./entity-components/components";
+import { ClientComponentClass, ClientComponentType, ClientComponents, ServerComponentClass, createComponent } from "./entity-components/components";
 import Component from "./entity-components/Component";
-import Particle from "./Particle";
-import { addTexturedParticleToBufferContainer, ParticleRenderLayer } from "./rendering/particle-rendering";
 import { removeLightsAttachedToEntity, removeLightsAttachedToRenderPart } from "./lights";
 import { EntityEvent } from "webgl-test-shared/dist/entity-events";
-import { Hitbox } from "./hitboxes/hitboxes";
+import { Hitbox, hitboxIsCircular } from "./hitboxes/hitboxes";
 
 // Use prime numbers / 100 to ensure a decent distribution of different types of particles
 const HEALING_PARTICLE_AMOUNTS = [0.05, 0.37, 1.01];
@@ -39,32 +37,36 @@ export function getFrameProgress(): number {
 export function getRandomPointInEntity(entity: Entity): Point {
    const hitbox = entity.hitboxes[randInt(0, entity.hitboxes.length - 1)];
 
-   if (hitbox.hasOwnProperty("radius")) {
-      const offsetMagnitude = (hitbox as CircularHitbox).radius * Math.random();
+   if (hitboxIsCircular(hitbox)) {
+      const offsetMagnitude = hitbox.radius * Math.random();
       const offsetDirection = 2 * Math.PI * Math.random();
       return new Point(entity.position.x + offsetMagnitude * Math.sin(offsetDirection), entity.position.y + offsetMagnitude * Math.cos(offsetDirection));
    } else {
-      const halfWidth = (hitbox as RectangularHitbox).width / 2;
-      const halfHeight = (hitbox as RectangularHitbox).height / 2;
+      const halfWidth = hitbox.width / 2;
+      const halfHeight = hitbox.height / 2;
       
       const xOffset = randFloat(-halfWidth, halfWidth);
       const yOffset = randFloat(-halfHeight, halfHeight);
 
-      const hitboxRotation = (hitbox as RectangularHitbox).rotation;
+      const hitboxRotation = hitbox.rotation;
       const x = entity.position.x + rotateXAroundOrigin(xOffset, yOffset, entity.rotation + hitboxRotation);
       const y = entity.position.y + rotateYAroundOrigin(xOffset, yOffset, entity.rotation + hitboxRotation);
       return new Point(x, y);
    }
 }
 
+export type ComponentDataRecord = Partial<{
+   [T in ServerComponentType]: ComponentData<T>;
+}>;
+
 type ServerComponentsType = Partial<{
-   [T in keyof typeof ServerComponents]: ServerComponentClass<T>;
+   [T in ServerComponentType]: ServerComponentClass<T>;
 }>;
 type ClientComponentsType = Partial<{
    [T in keyof typeof ClientComponents]: ClientComponentClass<T>;
 }>;
 
-abstract class Entity extends RenderObject {
+abstract class Entity<T extends EntityType = EntityType> extends RenderObject {
    public readonly id: number;
 
    public readonly type: EntityType;
@@ -103,20 +105,58 @@ abstract class Entity extends RenderObject {
    private readonly tickableComponents = new Array<Component>();
    private readonly updateableComponents = new Array<Component>();
 
-   constructor(position: Point, id: number, type: EntityType, ageTicks: number) {
+   constructor(position: Point, id: number, entityType: T, ageTicks: number) {
       super();
       
       this.position = position;
       this.renderPosition.x = position.x;
       this.renderPosition.y = position.y;
       this.id = id;
-      this.type = type;
+      this.type = entityType;
       this.ageTicks = ageTicks;
 
       this.updateCurrentTile();
 
       // Note: The chunks are calculated outside of the constructor immediately after the game object is created
       // so that all constructors have time to run
+   }
+
+   public createComponents(componentsData: ReadonlyArray<ComponentData>): void {
+      for (let i = 0; i < componentsData.length; i++) {
+         const componentData = componentsData[i];
+
+         const component = createComponent(this, componentData);
+         this.addServerComponent(componentData.componentType, component);
+      }
+   }
+
+   public getRenderPart(tag: string): RenderPart {
+      for (let i = 0; i < this.allRenderParts.length; i++) {
+         const renderPart = this.allRenderParts[i];
+
+         if (renderPart.tags.includes(tag)) {
+            return renderPart;
+         }
+      }
+
+      throw new Error("No render part with tag '" + tag + "' could be found on entity type " + EntityTypeString[this.type]);
+   }
+
+   public getRenderParts(tag: string, expectedAmount?: number): ReadonlyArray<RenderPart> {
+      const renderParts = new Array<RenderPart>();
+      for (let i = 0; i < this.allRenderParts.length; i++) {
+         const renderPart = this.allRenderParts[i];
+
+         if (renderPart.tags.includes(tag)) {
+            renderParts.push(renderPart);
+         }
+      }
+
+      if (typeof expectedAmount !== "undefined" && renderParts.length !== expectedAmount) {
+         throw new Error("Expected " + expectedAmount + " render parts with tag '" + tag + "' on " + EntityTypeString[this.type] + " but got " + renderParts.length);
+      }
+      
+      return renderParts;
    }
 
    public callOnLoadFunctions(): void {
@@ -139,37 +179,45 @@ abstract class Entity extends RenderObject {
       }
    }
 
-   protected addServerComponent<T extends keyof typeof ServerComponents>(componentType: T, component: ServerComponentClass<T>): void {
+   protected addServerComponent<T extends ServerComponentType>(componentType: T, component: ServerComponentClass<T>): void {
       // @Cleanup: Remove cast
       this.serverComponents[componentType] = component as any;
-      if (typeof (component as ServerComponent).tick !== "undefined") {
-         this.tickableComponents.push(component as ServerComponent);
+
+      if (typeof component.tick !== "undefined") {
+         this.tickableComponents.push(component);
       }
-      if (typeof (component as ServerComponent).update !== "undefined") {
-         this.updateableComponents.push(component as ServerComponent);
+      if (typeof component.update !== "undefined") {
+         this.updateableComponents.push(component);
       }
    }
 
    protected addClientComponent<T extends ClientComponentType>(componentType: T, component: ClientComponentClass<T>): void {
       // @Cleanup: Remove cast
       this.clientComponents[componentType] = component as any;
-      if (typeof (component as Component).tick !== "undefined") {
-         this.tickableComponents.push(component as Component);
+      if (typeof component.tick !== "undefined") {
+         this.tickableComponents.push(component);
       }
-      if (typeof (component as Component).update !== "undefined") {
-         this.updateableComponents.push(component as Component);
+      if (typeof component.update !== "undefined") {
+         this.updateableComponents.push(component);
       }
    }
 
-   public getServerComponent<T extends keyof typeof ServerComponents>(componentType: T): ServerComponentClass<T> {
-      return this.serverComponents[componentType]!;
+   public getServerComponent<T extends ServerComponentType>(componentType: T): ServerComponentClass<T> {
+      const component = this.serverComponents[componentType];
+
+      if (typeof component === "undefined") {
+         throw new Error("Entity type '" + EntityTypeString[this.type] + "' does not have component of type '" + ServerComponentTypeString[componentType] + "'");
+      }
+      
+      // @Cleanup: why is exclamation mark required?
+      return component!;
    }
 
    public getClientComponent<T extends ClientComponentType>(componentType: T): ClientComponentClass<T> {
       return this.clientComponents[componentType]!;
    }
 
-   public hasServerComponent(componentType: keyof typeof ServerComponents): boolean {
+   public hasServerComponent(componentType: ServerComponentType): boolean {
       return this.serverComponents.hasOwnProperty(componentType);
    }
    
@@ -263,40 +311,6 @@ abstract class Entity extends RenderObject {
       // @Cleanup: Don't hardcode fish condition
       if (this.isInRiver() && Board.tickIntervalHasPassed(0.05) && (this.type !== EntityType.fish)) {
          createWaterSplashParticle(this.position.x, this.position.y);
-      }
-
-      // Water splash particles
-      // @Cleanup: Move to particles file
-      const physicsComponent = this.getServerComponent(ServerComponentType.physics);
-      if (this.isInRiver() && Board.tickIntervalHasPassed(0.15) && physicsComponent.acceleration !== null && this.type !== EntityType.fish) {
-         const lifetime = 2.5;
-
-         const particle = new Particle(lifetime);
-         particle.getOpacity = (): number => {
-            return lerp(0.75, 0, Math.sqrt(particle.age / lifetime));
-         }
-         particle.getScale = (): number => {
-            return 1 + particle.age / lifetime * 1.4;
-         }
-
-         addTexturedParticleToBufferContainer(
-            particle,
-            ParticleRenderLayer.low,
-            64, 64,
-            this.position.x, this.position.y,
-            0, 0,
-            0, 0,
-            0,
-            2 * Math.PI * Math.random(),
-            0,
-            0,
-            0,
-            8 * 1 + 5,
-            0, 0, 0
-         );
-         Board.lowTexturedParticles.push(particle);
-
-         playSound(("water-splash-" + randInt(1, 3) + ".mp3") as AudioFilePath, 0.25, 1, this.position.x, this.position.y);
       }
 
       for (let i = 0; i < this.tickableComponents.length; i++) {
@@ -541,7 +555,7 @@ abstract class Entity extends RenderObject {
             hitbox.rotation = hitboxData.rotation;
             hitbox.offset.x = hitboxData.offsetX;
             hitbox.offset.y = hitboxData.offsetY;
-            hitbox.collisionType = hitboxData.collisionType as unknown as HitboxCollisionType;
+            hitbox.collisionType = hitboxData.collisionType;
             hitbox.updateFromEntity(this);
             hitbox.updateHitboxBounds(this.rotation);
          } else {
@@ -590,15 +604,13 @@ abstract class Entity extends RenderObject {
          }
       }
 
-      // @Speed @Cleanup
-      const entityComponents = EntityComponents[this.type];
+      // Update components from data
       for (let i = 0; i < data.components.length; i++) {
-         const componentType = entityComponents[i];
-         if (this.serverComponents.hasOwnProperty(componentType)) {
-            const componentData = data.components[i];
-            const component = this.getServerComponent(componentType as keyof typeof ServerComponents);
-            component.updateFromData(componentData as any);
-         }
+         const componentData = data.components[i];
+         const component = this.getServerComponent(componentData.componentType);
+
+         // @Cleanup: nasty cast
+         component.updateFromData(componentData as any);
       }
    }
 

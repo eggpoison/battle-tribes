@@ -1,4 +1,4 @@
-import { PlanterBoxComponentData, PlanterBoxPlant } from "webgl-test-shared/dist/components";
+import { PlanterBoxComponentData, PlanterBoxPlant, ServerComponentType } from "webgl-test-shared/dist/components";
 import { ComponentArray } from "./ComponentArray";
 import Entity from "../Entity";
 import { createPlant } from "../entities/plant";
@@ -18,7 +18,10 @@ export class PlanterBoxComponent {
    public replantType: PlanterBoxPlant | null = null;
 }
 
-export const PlanterBoxComponentArray = new ComponentArray<PlanterBoxComponent>(true, undefined, onRemove);
+export const PlanterBoxComponentArray = new ComponentArray<ServerComponentType.planterBox, PlanterBoxComponent>(true, {
+   onRemove: onRemove,
+   serialise: serialise
+});
 
 function onRemove(entityID: number): void {
    // When a planter box is destroyed, destroy the plant that was in it
@@ -37,7 +40,7 @@ export function tickPlanterBoxComponent(planterBoxComponent: PlanterBoxComponent
    }
 }
 
-export function serialisePlanterBoxComponent(entityID: number): PlanterBoxComponentData {
+function serialise(entityID: number): PlanterBoxComponentData {
    const planterBoxComponent = PlanterBoxComponentArray.getComponent(entityID);
    
    let plantType: PlanterBoxPlant | null = null;
@@ -50,6 +53,7 @@ export function serialisePlanterBoxComponent(entityID: number): PlanterBoxCompon
    }
    
    return {
+      componentType: ServerComponentType.planterBox,
       plantType: plantType,
       isFertilised: planterBoxComponent.remainingFertiliserTicks > 0
    };

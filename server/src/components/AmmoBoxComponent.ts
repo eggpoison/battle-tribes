@@ -1,15 +1,20 @@
 import { BallistaAmmoType, ItemType } from "webgl-test-shared/dist/items";
-import { AmmoBoxComponentArray } from "./ComponentArray";
-import Entity from "../Entity";
+import { AmmoBoxComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
+import { ComponentArray } from "./ComponentArray";
 
 export class AmmoBoxComponent {
    public ammoType: BallistaAmmoType = ItemType.wood;
    public ammoRemaining = 0;
 }
 
-export function serialiseAmmoBoxComponent(ballista: Entity): AmmoBoxComponent {
-   const ballistaComponent = AmmoBoxComponentArray.getComponent(ballista.id);
+export const AmmoBoxComponentArray = new ComponentArray<ServerComponentType.ammoBox, AmmoBoxComponent>(true, {
+   serialise: serialise
+});
+
+function serialise(entityID: number): AmmoBoxComponentData {
+   const ballistaComponent = AmmoBoxComponentArray.getComponent(entityID);
    return {
+      componentType: ServerComponentType.ammoBox,
       ammoType: ballistaComponent.ammoType,
       ammoRemaining: ballistaComponent.ammoRemaining
    };

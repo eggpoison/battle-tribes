@@ -1,14 +1,12 @@
-import { EntityComponentsData, ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { Point, randFloat, randInt } from "webgl-test-shared/dist/utils";
-import RenderPart from "../render-parts/RenderPart";
 import { LeafParticleSize, createLeafParticle, createLeafSpeckParticle } from "../particles";
-import { getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
 import { AudioFilePath, playSound } from "../sound";
-import BerryBushComponent from "../entity-components/BerryBushComponent";
-import HealthComponent from "../entity-components/HealthComponent";
-import StatusEffectComponent from "../entity-components/StatusEffectComponent";
-import Entity from "../Entity";
+import Entity, { ComponentDataRecord } from "../Entity";
+import RenderPart from "../render-parts/RenderPart";
+import { getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
+import { BERRY_BUSH_TEXTURE_SOURCES } from "../entity-components/BerryBushComponent";
 
 class BerryBush extends Entity {
    private static readonly RADIUS = 40;
@@ -16,31 +14,19 @@ class BerryBush extends Entity {
    private static readonly LEAF_SPECK_COLOUR_LOW = [63/255, 204/255, 91/255] as const;
    private static readonly LEAF_SPECK_COLOUR_HIGH = [35/255, 158/255, 88/255] as const;
 
-   public static readonly TEXTURE_SOURCES = [
-      "entities/berry-bush1.png",
-      "entities/berry-bush2.png",
-      "entities/berry-bush3.png",
-      "entities/berry-bush4.png",
-      "entities/berry-bush5.png",
-      "entities/berry-bush6.png"
-   ];
-
-   constructor(position: Point, id: number, ageTicks: number, componentsData: EntityComponentsData<EntityType.berryBush>) {
+   constructor(position: Point, id: number, ageTicks: number, componentDataRecord: ComponentDataRecord) {
       super(position, id, EntityType.berryBush, ageTicks);
-
-      const berryBushComponentData = componentsData[2];
+      
+      const berryBushComponentData = componentDataRecord[ServerComponentType.berryBush]!;
       
       const renderPart = new RenderPart(
          this,
-         getTextureArrayIndex(BerryBush.TEXTURE_SOURCES[berryBushComponentData.numBerries]),
+         getTextureArrayIndex(BERRY_BUSH_TEXTURE_SOURCES[berryBushComponentData.numBerries]),
          0,
          0
       );
+      renderPart.addTag("berryBushComponent:renderPart");
       this.attachRenderPart(renderPart);
-
-      this.addServerComponent(ServerComponentType.health, new HealthComponent(this, componentsData[0]));
-      this.addServerComponent(ServerComponentType.statusEffect, new StatusEffectComponent(this, componentsData[1]));
-      this.addServerComponent(ServerComponentType.berryBush, new BerryBushComponent(this, berryBushComponentData, renderPart));
    }
 
    protected onHit(): void {

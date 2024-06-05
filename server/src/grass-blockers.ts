@@ -13,7 +13,7 @@ const blockerAssociatedEntityIDs = new Array<number>();
 const enum Vars {
    GRASS_FULL_REGROW_TICKS = Settings.TPS * 60,
    GRASS_FULL_DIE_TICKS = Settings.TPS * 20,
-   BLOCKER_PADDING = 0
+   BLOCKER_PADDING = -4
 }
 
 const getBlockerChunks = (blocker: GrassBlocker): ReadonlyArray<Chunk> => {

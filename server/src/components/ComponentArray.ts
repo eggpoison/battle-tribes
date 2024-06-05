@@ -1,51 +1,16 @@
 import Entity from "../Entity";
-import { HealthComponent } from "./HealthComponent";
-import { TribeComponent } from "./TribeComponent";
-import { TotemBannerComponent } from "./TotemBannerComponent";
-import { TreeComponent } from "./TreeComponent";
-import { BerryBushComponent } from "./BerryBushComponent";
-import { InventoryUseComponent } from "./InventoryUseComponent";
-import { BoulderComponent } from "./BoulderComponent";
-import { IceShardComponent } from "./IceShardComponent";
-import { CowComponent } from "./CowComponent";
-import { WanderAIComponent } from "./WanderAIComponent";
-import { EscapeAIComponent } from "./EscapeAIComponent";
-import { FollowAIComponent } from "./FollowAIComponent";
-import { CactusComponent } from "./CactusComponent";
-import { PlayerComponent } from "./PlayerComponent";
-import { TribesmanAIComponent } from "./TribesmanAIComponent";
-import { TombstoneComponent } from "./TombstoneComponent";
-import { ZombieComponent } from "./ZombieComponent";
-import { SlimewispComponent } from "./SlimewispComponent";
-import { SlimeComponent } from "./SlimeComponent";
-import { ArrowComponent } from "./ArrowComponent";
-import { YetiComponent } from "./YetiComponent";
-import { SnowballComponent } from "./SnowballComponent";
 import Board from "../Board";
-import { FrozenYetiComponent } from "./FrozenYetiComponent";
-import { RockSpikeProjectileComponent } from "./RockSpikeProjectileComponent";
-import { CookingComponent } from "./CookingComponent";
-import { ThrowingProjectileComponent } from "./ThrowingProjectileComponent";
-import { HutComponent } from "./HutComponent";
-import { SlimeSpitComponent } from "./SlimeSpitComponent";
-import { DoorComponent } from "./DoorComponent";
-import { GolemComponent } from "./GolemComponent";
-import { IceSpikesComponent } from "./IceSpikesComponent";
-import { PebblumComponent } from "./PebblumComponent";
-import { TurretComponent } from "./TurretComponent";
-import { AmmoBoxComponent } from "./AmmoBoxComponent";
-import { ResearchBenchComponent } from "./ResearchBenchComponent";
-import { SpikesComponent } from "./SpikesComponent";
-import { TunnelComponent } from "./TunnelComponent";
-import { BuildingMaterialComponent } from "./BuildingMaterialComponent";
-import { TribeWarriorComponent } from "./TribeWarriorComponent";
-import { HealingTotemComponent } from "./HealingTotemComponent";
-import { FenceComponent } from "./FenceComponent";
-import { FenceGateComponent } from "./FenceGateComponent";
+import { ComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
 
 export const ComponentArrays = new Array<ComponentArray>();
 
-export class ComponentArray<T = object> {
+interface ComponentArrayFunctions<C extends ServerComponentType> {
+   onJoin?(entityID: number): void;
+   onRemove?(entityID: number): void;
+   serialise(entityID: number, playerID: number | null): ComponentData<C>;
+}
+
+export class ComponentArray<C extends ServerComponentType = ServerComponentType, T extends object = object> {
    private readonly isActiveByDefault: boolean;
    
    public components = new Array<T>();
@@ -69,16 +34,18 @@ export class ComponentArray<T = object> {
    private deactivateBuffer = new Array<number>();
 
    // @Bug: This function shouldn't create an entity, as that will cause a crash. (Can't add components to the join buffer while iterating it)
-   public onJoin: ((entityID: number) => void) | undefined;
-   public onRemove: ((entityID: number) => void) | undefined;
+   public onJoin?: (entityID: number) => void;
+   public onRemove?: (entityID: number) => void;
+   public serialise: (entityID: number, playerID: number | null) => ComponentData<C>;
    
-   constructor(isActiveByDefault: boolean, onJoin?: (entityID: number) => void, onRemove?: (entityID: number) => void) {
+   constructor(isActiveByDefault: boolean, functions: ComponentArrayFunctions<C>) {
       this.isActiveByDefault = isActiveByDefault;
-      this.onJoin = onJoin;
-      this.onRemove = onRemove;
 
-      // @Cleanup
-      ComponentArrays.push(this as unknown as ComponentArray);
+      this.onJoin = functions.onJoin;
+      this.onRemove = functions.onRemove;
+      this.serialise = functions.serialise;
+
+      ComponentArrays.push(this);
    }
    
    public addComponent(entityID: number, component: T): void {
@@ -220,45 +187,3 @@ export function resetComponents(): void {
       componentArray.reset();
    }
 }
-
-export const TribeComponentArray = new ComponentArray<TribeComponent>(true);
-export const HealthComponentArray = new ComponentArray<HealthComponent>(true);
-export const TotemBannerComponentArray = new ComponentArray<TotemBannerComponent>(true);
-export const BerryBushComponentArray = new ComponentArray<BerryBushComponent>(true);
-export const InventoryUseComponentArray = new ComponentArray<InventoryUseComponent>(true);
-export const BoulderComponentArray = new ComponentArray<BoulderComponent>(true);
-export const IceShardComponentArray = new ComponentArray<IceShardComponent>(true);
-export const CowComponentArray = new ComponentArray<CowComponent>(true);
-export const WanderAIComponentArray = new ComponentArray<WanderAIComponent>(true);
-export const EscapeAIComponentArray = new ComponentArray<EscapeAIComponent>(true);
-export const FollowAIComponentArray = new ComponentArray<FollowAIComponent>(true);
-export const CactusComponentArray = new ComponentArray<CactusComponent>(true);
-export const PlayerComponentArray = new ComponentArray<PlayerComponent>(true);
-export const TribesmanComponentArray = new ComponentArray<TribesmanAIComponent>(true);
-export const TombstoneComponentArray = new ComponentArray<TombstoneComponent>(true);
-export const ZombieComponentArray = new ComponentArray<ZombieComponent>(true);
-export const SlimewispComponentArray = new ComponentArray<SlimewispComponent>(true);
-export const SlimeComponentArray = new ComponentArray<SlimeComponent>(true);
-export const ArrowComponentArray = new ComponentArray<ArrowComponent>(true);
-export const YetiComponentArray = new ComponentArray<YetiComponent>(true);
-export const SnowballComponentArray = new ComponentArray<SnowballComponent>(true);
-export const FrozenYetiComponentArray = new ComponentArray<FrozenYetiComponent>(true);
-export const RockSpikeProjectileComponentArray = new ComponentArray<RockSpikeProjectileComponent>(true);
-export const CookingComponentArray = new ComponentArray<CookingComponent>(true);
-export const ThrowingProjectileComponentArray = new ComponentArray<ThrowingProjectileComponent>(true);
-export const HutComponentArray = new ComponentArray<HutComponent>(true);
-export const SlimeSpitComponentArray = new ComponentArray<SlimeSpitComponent>(true);
-export const DoorComponentArray = new ComponentArray<DoorComponent>(true);
-export const GolemComponentArray = new ComponentArray<GolemComponent>(true);
-export const IceSpikesComponentArray = new ComponentArray<IceSpikesComponent>(true);
-export const PebblumComponentArray = new ComponentArray<PebblumComponent>(true);
-export const TurretComponentArray = new ComponentArray<TurretComponent>(true);
-export const AmmoBoxComponentArray = new ComponentArray<AmmoBoxComponent>(true);
-export const ResearchBenchComponentArray = new ComponentArray<ResearchBenchComponent>(true);
-export const SpikesComponentArray = new ComponentArray<SpikesComponent>(true);
-export const TunnelComponentArray = new ComponentArray<TunnelComponent>(true);
-export const BuildingMaterialComponentArray = new ComponentArray<BuildingMaterialComponent>(true);
-export const TribeWarriorComponentArray = new ComponentArray<TribeWarriorComponent>(true);
-export const HealingTotemComponentArray = new ComponentArray<HealingTotemComponent>(true);
-export const FenceComponentArray = new ComponentArray<FenceComponent>(true);
-export const FenceGateComponentArray = new ComponentArray<FenceGateComponent>(true);

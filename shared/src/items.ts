@@ -66,7 +66,9 @@ export const enum ItemType {
    seed,
    gardening_gloves,
    wooden_fence,
-   fertiliser
+   fertiliser,
+   frostshaper,
+   stonecarvingTable
 }
 
 export const ItemTypeString: Record<ItemType, string> = {
@@ -133,7 +135,9 @@ export const ItemTypeString: Record<ItemType, string> = {
    [ItemType.seed]: "seed",
    [ItemType.gardening_gloves]: "gardening_gloves",
    [ItemType.wooden_fence]: "wooden_fence",
-   [ItemType.fertiliser]: "fertiliser"
+   [ItemType.fertiliser]: "fertiliser",
+   [ItemType.frostshaper]: "frostshaper",
+   [ItemType.stonecarvingTable]: "stonecarving_table"
 };
 
 const numItemTypes = Object.keys(ItemTypeString).length;
@@ -319,7 +323,9 @@ export const ITEM_TYPE_RECORD = {
    [ItemType.seed]: "material",
    [ItemType.gardening_gloves]: "glove",
    [ItemType.wooden_fence]: "placeable",
-   [ItemType.fertiliser]: "material"
+   [ItemType.fertiliser]: "material",
+   [ItemType.frostshaper]: "placeable",
+   [ItemType.stonecarvingTable]: "placeable"
 } satisfies Record<ItemType, keyof ItemInfoRecord>;
 
 export type ItemInfo<T extends ItemType> = ItemInfoRecord[typeof ITEM_TYPE_RECORD[T]];
@@ -658,6 +664,14 @@ export const ITEM_INFO_RECORD = {
    },
    [ItemType.fertiliser]: {
       stackSize: 99
+   },
+   [ItemType.frostshaper]: {
+      stackSize: 99,
+      entityType: EntityType.frostshaper
+   },
+   [ItemType.stonecarvingTable]: {
+      stackSize: 99,
+      entityType: EntityType.stonecarvingTable
    }
 } satisfies { [T in ItemType]: ItemInfo<T> };
 
@@ -696,7 +710,8 @@ export const enum InventoryName {
    outputInventory,
    inventory,
    handSlot,
-   ammoBoxInventory
+   ammoBoxInventory,
+   devInventory
 }
 
 /** Inventory data sent between client and server */
@@ -784,6 +799,8 @@ export function getItemStackSize(item: Item): number {
    return (ITEM_INFO_RECORD[item.type] as StackableItemInfo).stackSize;
 }
 
+// @Cleanup: combine the two parameters to make calling it easier
+
 export function itemInfoIsTool(itemType: ItemType, itemInfo: unknown): itemInfo is ToolItemInfo {
    const itemTypeInfo = ITEM_TYPE_RECORD[itemType];
    return itemTypeInfo === "axe" || itemTypeInfo === "sword" || itemTypeInfo === "pickaxe" || itemTypeInfo === "spear" || itemTypeInfo === "hammer" || itemTypeInfo === "battleaxe";
@@ -796,7 +813,7 @@ export function itemInfoIsUtility(itemType: ItemType, itemInfo: unknown): itemIn
 
 export function itemInfoIsBow(itemType: ItemType, itemInfo: unknown): itemInfo is BowItemInfo {
    const itemTypeInfo = ITEM_TYPE_RECORD[itemType];
-   return itemTypeInfo === "bow";
+   return itemTypeInfo === "bow" || itemTypeInfo === "crossbow";
 }
 
 // @Cleanup: move elsewhere

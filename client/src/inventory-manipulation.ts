@@ -1,12 +1,13 @@
 import { Inventory, Item, ItemType } from "webgl-test-shared/dist/items";
 import Client from "./client/Client";
-import { inventoryIsOpen } from "./components/game/menus/CraftingMenu";
+import { craftingMenuIsOpen } from "./components/game/menus/CraftingMenu";
 import { setHeldItemVisualPosition } from "./components/game/HeldItem";
 import { definiteGameState } from "./game-state/game-states";
 import { InventorySelector_inventoryIsOpen } from "./components/game/inventories/InventorySelector";
+import { ItemTally } from "webgl-test-shared/dist/crafting-recipes";
 
 const canInteractWithItemSlots = (): boolean => {
-   return inventoryIsOpen() || InventorySelector_inventoryIsOpen();
+   return craftingMenuIsOpen() || InventorySelector_inventoryIsOpen();
 }
 
 export function leftClickItemSlot(e: MouseEvent, entityID: number, inventory: Inventory, itemSlot: number): void {
@@ -143,4 +144,17 @@ export function countItemTypesInInventory(inventory: Inventory, itemType: ItemTy
    }
    
    return count;
+}
+
+// @Cleanup: copy and paste from server
+export function tallyInventoryItems(tally: ItemTally, inventory: Inventory): void {
+   for (let i = 0; i < inventory.items.length; i++) {
+      const item = inventory.items[i];
+      
+      if (typeof tally[item.type] === "undefined") {
+         tally[item.type] = item.count;
+      } else {
+         tally[item.type]! += item.count;
+      }
+   }
 }

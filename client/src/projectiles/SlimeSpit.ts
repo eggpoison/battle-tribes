@@ -1,4 +1,3 @@
-import { EntityComponentsData } from "webgl-test-shared/dist/components";
 import { Point, lerp, randFloat } from "webgl-test-shared/dist/utils";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
@@ -15,7 +14,7 @@ const POISON_COLOUR_HIGH = [77/255, 173/255, 38/255];
 
 class SlimeSpit extends Entity {
    private readonly renderParts: ReadonlyArray<RenderPart>;
-   constructor(position: Point, id: number, ageTicks: number, componentsData: EntityComponentsData<EntityType.slimeSpit>) {
+   constructor(position: Point, id: number, ageTicks: number) {
       super(position, id, EntityType.slimeSpit, ageTicks);
 
       const renderParts = new Array<RenderPart>();

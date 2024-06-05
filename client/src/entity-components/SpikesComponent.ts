@@ -16,16 +16,13 @@ class SpikesComponent extends ServerComponent<ServerComponentType.spikes> {
    public static readonly LEAF_SPECK_COLOUR_LOW = [63/255, 204/255, 91/255] as const;
    public static readonly LEAF_SPECK_COLOUR_HIGH = [35/255, 158/255, 88/255] as const;
    
-   private readonly renderPart: RenderPart;
    private readonly leafRenderParts: ReadonlyArray<RenderPart>;
 
    public isCovered: boolean;
 
-   constructor(entity: Entity, data: SpikesComponentData, renderPart: RenderPart) {
+   constructor(entity: Entity, data: SpikesComponentData) {
       super(entity);
 
-      this.renderPart = renderPart;
-      
       this.isCovered = data.isCovered;
 
       const leafRenderParts = new Array<RenderPart>();
@@ -66,36 +63,15 @@ class SpikesComponent extends ServerComponent<ServerComponentType.spikes> {
    }
 
    public onLoad(): void {
-      this.updateRenderPart();
+      this.updateLeafRenderParts();
    }
 
-   private updateLeafRenderParts(shouldShow: boolean): void {
-      const opacity = shouldShow ? 0.8 : 0;
+   private updateLeafRenderParts(): void {
+      const opacity = this.isCovered ? 0.8 : 0;
       for (let i = 0; i < this.leafRenderParts.length; i++) {
          const renderPart = this.leafRenderParts[i];
          renderPart.opacity = opacity;
       }
-   }
-
-   private updateRenderPart(): void {
-      let shouldShowRenderPart: boolean;
-      
-      const tribeComponent = this.entity.getServerComponent(ServerComponentType.tribe);
-      if (tribeComponent.tribeID !== Game.tribe.id) {
-         if (this.isCovered) {
-            shouldShowRenderPart = false;
-         } else {
-            shouldShowRenderPart = true;
-         }
-
-         this.updateLeafRenderParts(false);
-      } else {
-         shouldShowRenderPart = true;
-
-         this.updateLeafRenderParts(this.isCovered);
-      }
-
-      this.renderPart.opacity = shouldShowRenderPart ? 1 : 0;
    }
 
    public updateFromData(data: SpikesComponentData): void {
@@ -123,7 +99,7 @@ class SpikesComponent extends ServerComponent<ServerComponentType.spikes> {
             }
          }
          
-         this.updateRenderPart();
+         this.updateLeafRenderParts();
       }
    }
 }

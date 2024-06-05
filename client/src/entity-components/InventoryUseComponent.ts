@@ -4,16 +4,16 @@ import { Point, lerp, randFloat, randItem } from "webgl-test-shared/dist/utils";
 import { InventoryUseComponentData, LimbData, ServerComponentType } from "webgl-test-shared/dist/components";
 import { Settings } from "webgl-test-shared/dist/settings";
 import ServerComponent from "./ServerComponent";
-import Entity from "../Entity";
+import Entity, { getFrameProgress } from "../Entity";
 import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
 import Board from "../Board";
-import { getSecondsSinceLastAction } from "../entities/TribeMember";
 import CLIENT_ITEM_INFO_RECORD from "../client-item-info";
 import Particle from "../Particle";
 import { ParticleColour, ParticleRenderLayer, addMonocolourParticleToBufferContainer } from "../rendering/particle-rendering";
-import { createDeepFrostHeartBloodParticles } from "../items/ItemEntity";
 import { animateLimb, createCraftingAnimationParticles, createMedicineAnimationParticles, generateRandomLimbPosition, updateBandageRenderPart, updateCustomItemRenderPart } from "../limb-animations";
+import { createDeepFrostHeartBloodParticles } from "../particles";
+import { definiteGameState } from "../game-state/game-states";
 
 export interface LimbInfo {
    selectedItemSlot: number;
@@ -151,6 +151,16 @@ const FOOD_EATING_COLOURS: { [T in ItemType as Exclude<T, FilterHealingItemTypes
 
 type InventoryUseEntityType = EntityType.player | EntityType.tribeWorker | EntityType.tribeWarrior | EntityType.zombie;
 
+const getSecondsSinceLastAction = (lastActionTicks: number): number => {
+   const ticksSinceLastAction = Board.ticks - lastActionTicks;
+   let secondsSinceLastAction = ticksSinceLastAction / Settings.TPS;
+
+   // Account for frame progress
+   secondsSinceLastAction += getFrameProgress() / Settings.TPS;
+
+   return secondsSinceLastAction;
+}
+
 const getLastActionTicks = (useInfo: LimbData): number => {
    switch (useInfo.action) {
       case LimbAction.chargeBow: {
@@ -214,7 +224,7 @@ class InventoryUseComponent extends ServerComponent<ServerComponentType.inventor
    public customItemRenderPart: RenderPart | null = null;
    public readonly bandageRenderParts = new Array<RenderPart>();
    
-   constructor(entity: Entity, data: InventoryUseComponentData, handRenderParts: ReadonlyArray<RenderPart>) {
+   constructor(entity: Entity, data: InventoryUseComponentData) {
       super(entity);
       
       const useInfos = new Array<LimbInfo>();
@@ -249,6 +259,7 @@ class InventoryUseComponent extends ServerComponent<ServerComponentType.inventor
       this.useInfos = useInfos;
       
       // @Cleanup
+      const handRenderParts = this.entity.getRenderParts("inventoryUseComponent:hand", 2);
       for (let limbIdx = 0; limbIdx < data.inventoryUseInfos.length; limbIdx++) {
          this.limbRenderParts.push(handRenderParts[limbIdx]);
       }
@@ -374,8 +385,9 @@ class InventoryUseComponent extends ServerComponent<ServerComponentType.inventor
          
          const itemInfo = ITEM_INFO_RECORD[activeItem.type];
          if (itemInfoIsUtility(activeItem.type, itemInfo)) {
+            // @Hack: only works for player
             // Change the bow charging texture based on the charge progress
-            if (useInfo.action === LimbAction.chargeBow || useInfo.action === LimbAction.loadCrossbow && itemInfoIsBow(activeItem.type, itemInfo)) {
+            if ((useInfo.action === LimbAction.chargeBow || useInfo.action === LimbAction.loadCrossbow || typeof definiteGameState.hotbarCrossbowLoadProgressRecord[useInfo.selectedItemSlot] !== "undefined") && itemInfoIsBow(activeItem.type, itemInfo)) {
                const lastActionTicks = useInfo.action === LimbAction.chargeBow ? useInfo.lastBowChargeTicks : useInfo.lastCrossbowLoadTicks;
                const secondsSinceLastAction = getSecondsSinceLastAction(lastActionTicks);
                // @Hack: why does itemInfoIsBow not narrow this fully??
@@ -405,7 +417,7 @@ class InventoryUseComponent extends ServerComponent<ServerComponentType.inventor
                      break;
                   }
                   default: {
-                     const tribesmanComponent = this.entity.getServerComponent(ServerComponentType.tribesman);
+                     const tribesmanComponent = this.entity.getServerComponent(ServerComponentType.tribesmanAI);
                      console.log(tribesmanComponent.aiType);
                      console.log(limbIdx);
                      console.log(activeItem);
@@ -504,7 +516,7 @@ class InventoryUseComponent extends ServerComponent<ServerComponentType.inventor
       const inventory = inventoryComponent.getInventory(limbInfo.inventoryName);
       
       let item: Item | null | undefined = inventory.itemSlots[limbInfo.selectedItemSlot];
-
+      
       if (typeof item === "undefined" || limbInfo.thrownBattleaxeItemID === item.id) {
          item = null;
       }
@@ -517,6 +529,7 @@ class InventoryUseComponent extends ServerComponent<ServerComponentType.inventor
       
       let shouldShowActiveItemRenderPart = true;
 
+      // @Hack
       // Zombie lunge attack
       if (this.entity.type === EntityType.zombie) {
          const inventoryComponent = this.entity.getServerComponent(ServerComponentType.inventory);

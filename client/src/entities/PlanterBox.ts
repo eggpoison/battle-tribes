@@ -1,18 +1,12 @@
 import { Point } from "webgl-test-shared/dist/utils";
 import { EntityType } from "webgl-test-shared/dist/entities";
-import { EntityComponentsData, ServerComponentType } from "webgl-test-shared/dist/components";
 import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
 import Entity from "../Entity";
-import HealthComponent from "../entity-components/HealthComponent";
-import StatusEffectComponent from "../entity-components/StatusEffectComponent";
-import TribeComponent from "../entity-components/TribeComponent";
-import PlanterBoxComponent from "../entity-components/PlanterBoxComponent";
 import { playSound } from "../sound";
-import StructureComponent from "../entity-components/StructureComponent";
 
 class PlanterBox extends Entity {
-   constructor(position: Point, id: number, ageTicks: number, componentsData: EntityComponentsData<EntityType.planterBox>) {
+   constructor(position: Point, id: number, ageTicks: number) {
       super(position, id, EntityType.planterBox, ageTicks);
 
       this.attachRenderPart(
@@ -24,12 +18,6 @@ class PlanterBox extends Entity {
          )
       );
 
-      this.addServerComponent(ServerComponentType.health, new HealthComponent(this, componentsData[0]));
-      this.addServerComponent(ServerComponentType.statusEffect, new StatusEffectComponent(this, componentsData[1]));
-      this.addServerComponent(ServerComponentType.structure, new StructureComponent(this, componentsData[2]));
-      this.addServerComponent(ServerComponentType.tribe, new TribeComponent(this, componentsData[3]));
-      this.addServerComponent(ServerComponentType.planterBox, new PlanterBoxComponent(this, componentsData[4]));
-      
       if (this.ageTicks <= 1) {
          playSound("wooden-wall-place.mp3", 0.3, 1, this.position.x, this.position.y);
       }

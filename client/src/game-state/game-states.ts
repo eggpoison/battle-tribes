@@ -6,6 +6,7 @@ import LatencyGameState from "./LatencyGameState";
 export const definiteGameState = new DefiniteGameState();
 export const latencyGameState = new LatencyGameState();
 
+// @Cleanup: only used in one file
 export function playerIsHoldingHammer(): boolean {
    if (Player.instance === null || definiteGameState.hotbar === null) return false;
 

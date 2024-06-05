@@ -32,7 +32,7 @@ class HealingTotemComponent extends ServerComponent<ServerComponentType.healingT
                const offsetY = 8;
 
                const light: Light = {
-                  position: new Point(offsetX, offsetY),
+                  offset: new Point(offsetX, offsetY),
                   intensity: 0,
                   strength: 0.6,
                   radius: 0.1,

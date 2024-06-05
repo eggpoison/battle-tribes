@@ -231,6 +231,14 @@ const ENTITY_DAMAGE_INFO_RECORD: Record<EntityType, EntityDamageInfo> = {
    [EntityType.fenceGate]: {
       effectiveDamageTypes: [DamageType.axe],
       stoppedDamageTypes: []
+   },
+   [EntityType.frostshaper]: {
+      effectiveDamageTypes: [DamageType.weapon],
+      stoppedDamageTypes: []
+   },
+   [EntityType.stonecarvingTable]: {
+      effectiveDamageTypes: [DamageType.pickaxe],
+      stoppedDamageTypes: []
    }
 };
 

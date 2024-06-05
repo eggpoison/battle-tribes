@@ -1,22 +1,16 @@
 import { Point, randFloat } from "webgl-test-shared/dist/utils";
 import { EntityType } from "webgl-test-shared/dist/entities";
-import { EntityComponentsData, ServerComponentType } from "webgl-test-shared/dist/components";
 import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
 import Board from "../Board";
 import { createEmberParticle, createSmokeParticle } from "../particles";
 import Entity from "../Entity";
-import CookingComponent from "../entity-components/CookingComponent";
-import HealthComponent from "../entity-components/HealthComponent";
-import StatusEffectComponent from "../entity-components/StatusEffectComponent";
-import InventoryComponent from "../entity-components/InventoryComponent";
-import StructureComponent from "../entity-components/StructureComponent";
-import TribeComponent from "../entity-components/TribeComponent";
+import { playSound } from "../sound";
 
 class Campfire extends Entity {
    public static readonly SIZE = 104;
 
-   constructor(position: Point, id: number, ageTicks: number, componentsData: EntityComponentsData<EntityType.campfire>) {
+   constructor(position: Point, id: number, ageTicks: number) {
       super(position, id, EntityType.campfire, ageTicks);
 
       this.attachRenderPart(
@@ -28,12 +22,10 @@ class Campfire extends Entity {
          )
       );
 
-      this.addServerComponent(ServerComponentType.health, new HealthComponent(this, componentsData[0]));
-      this.addServerComponent(ServerComponentType.statusEffect, new StatusEffectComponent(this, componentsData[1]));
-      this.addServerComponent(ServerComponentType.structure, new StructureComponent(this, componentsData[2]));
-      this.addServerComponent(ServerComponentType.tribe, new TribeComponent(this, componentsData[3]));
-      this.addServerComponent(ServerComponentType.inventory, new InventoryComponent(this, componentsData[4]));
-      this.addServerComponent(ServerComponentType.cooking, new CookingComponent(this, componentsData[5]));
+      // @Cleanup: why <= 1?
+      if (this.ageTicks <= 1) {
+         playSound("wooden-wall-place.mp3", 0.3, 1, this.position.x, this.position.y);
+      }
    }
 
    public tick(): void {

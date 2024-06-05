@@ -6,10 +6,11 @@ import { Settings } from "webgl-test-shared/dist/settings";
 import { Point } from "webgl-test-shared/dist/utils";
 import Board from "../Board";
 import Tribe, { BuildingPlan, BuildingPlanType } from "../Tribe";
-import { TribeComponentArray } from "../components/ComponentArray";
 import { SafetyNode, getSafetyNode } from "./ai-building";
 import { buildingIsInfrastructure, getBuildingSafety } from "./ai-building-heuristics";
+import { TribeComponentArray } from "../components/TribeComponent";
 
+// @Cleanup: should this be here?
 export function getVisibleTribes(chunkBounds: VisibleChunkBounds): ReadonlyArray<Tribe> {
    // Calculate visible tribes
    const visibleTribes = new Array<Tribe>();

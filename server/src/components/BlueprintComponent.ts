@@ -1,8 +1,8 @@
-import { BlueprintType, BuildingMaterial, BlueprintComponentData } from "webgl-test-shared/dist/components";
+import { BlueprintType, BuildingMaterial, BlueprintComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityType, EntityTypeString } from "webgl-test-shared/dist/entities";
 import { Item, ITEM_INFO_RECORD, HammerItemInfo } from "webgl-test-shared/dist/items";
 import Entity from "../Entity";
-import { BuildingMaterialComponentArray, ComponentArray, HealthComponentArray, HutComponentArray, TribeComponentArray } from "./ComponentArray";
+import { ComponentArray } from "./ComponentArray";
 import { DOOR_HEALTHS, createDoor } from "../entities/structures/door";
 import { EMBRASURE_HEALTHS, createEmbrasure } from "../entities/structures/embrasure";
 import { createBallista } from "../entities/structures/ballista";
@@ -17,6 +17,10 @@ import { placeVirtualBuilding } from "../ai-tribe-building/ai-building";
 import { getBlueprintEntityType } from "../entities/blueprint-entity";
 import { StructureComponentArray } from "./StructureComponent";
 import { calculateStructureConnectionInfo } from "webgl-test-shared/dist/structures";
+import { HealthComponentArray } from "./HealthComponent";
+import { TribeComponentArray } from "./TribeComponent";
+import { BuildingMaterialComponentArray } from "./BuildingMaterialComponent";
+import { HutComponentArray } from "./HutComponent";
 
 const STRUCTURE_WORK_REQUIRED: Record<BlueprintType, number> = {
    [BlueprintType.woodenDoor]: 3,
@@ -50,7 +54,11 @@ export class BlueprintComponent {
    }
 }
 
-export const BlueprintComponentArray = new ComponentArray<BlueprintComponent>(true, onJoin, onRemove);
+export const BlueprintComponentArray = new ComponentArray<ServerComponentType.blueprint, BlueprintComponent>(true, {
+   onJoin: onJoin,
+   onRemove: onRemove,
+   serialise: serialise
+});
 
 function onJoin(entityID: number): void {
    const tribeComponent = TribeComponentArray.getComponent(entityID);
@@ -208,9 +216,11 @@ export function doBlueprintWork(blueprintEntity: Entity, hammerItem: Item): void
    }
 }
 
-export function serialiseBlueprintComponent(blueprintEntity: Entity): BlueprintComponentData {
-   const blueprintComponent = BlueprintComponentArray.getComponent(blueprintEntity.id);
+function serialise(entityID: number): BlueprintComponentData {
+   const blueprintComponent = BlueprintComponentArray.getComponent(entityID);
+
    return {
+      componentType: ServerComponentType.blueprint,
       blueprintType: blueprintComponent.blueprintType,
       buildProgress: blueprintComponent.workProgress / STRUCTURE_WORK_REQUIRED[blueprintComponent.blueprintType],
       associatedEntityID: blueprintComponent.associatedEntityID

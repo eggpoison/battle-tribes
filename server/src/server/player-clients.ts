@@ -5,21 +5,19 @@ import { TechID, TechInfo, getTechByID } from "webgl-test-shared/dist/techs";
 import { TribesmanTitle } from "webgl-test-shared/dist/titles";
 import Board from "../Board";
 import { registerCommand } from "../commands";
-import { BuildingMaterialComponentArray, InventoryUseComponentArray, PlayerComponentArray, TribeComponentArray, TribesmanComponentArray, TurretComponentArray } from "../components/ComponentArray";
 import { acceptTitleOffer, rejectTitleOffer } from "../components/TribeMemberComponent";
 import { modifyBuilding, startChargingBattleaxe, startChargingBow, startChargingSpear, startEating, createPlayer } from "../entities/tribes/player";
 import { throwItem, placeBlueprint, attemptAttack, calculateAttackTarget, calculateBlueprintWorkTarget, calculateRadialAttackTargets, calculateRepairTarget, repairBuilding, getAvailableCraftingStations, useItem } from "../entities/tribes/tribe-member";
-import { recruitTribesman } from "../entities/tribes/tribesman-ai/tribesman-ai";
 import PlayerClient from "./PlayerClient";
 import { SERVER } from "./server";
 import { createGameDataSyncPacket, createInitialGameDataPacket } from "./game-data-packets";
 import { EntityType, LimbAction } from "webgl-test-shared/dist/entities";
 import { TRIBE_INFO_RECORD, TribeType } from "webgl-test-shared/dist/tribes";
-import { getInventoryUseInfo } from "../components/InventoryUseComponent";
+import { InventoryUseComponentArray, getInventoryUseInfo } from "../components/InventoryUseComponent";
 import { PhysicsComponentArray } from "../components/PhysicsComponent";
 import Entity from "../Entity";
-import { InventoryComponentArray, addItemToSlot, consumeItemFromSlot, consumeItemTypeFromInventory, craftRecipe, getInventory, inventoryComponentCanAffordRecipe, recipeCraftingStationIsAvailable } from "../components/InventoryComponent";
-import { EntityRelationship } from "../components/TribeComponent";
+import { InventoryComponentArray, addItemToInventory, addItemToSlot, consumeItemFromSlot, consumeItemTypeFromInventory, craftRecipe, getInventory, inventoryComponentCanAffordRecipe, recipeCraftingStationIsAvailable } from "../components/InventoryComponent";
+import { EntityRelationship, TribeComponentArray, recruitTribesman } from "../components/TribeComponent";
 import { CRAFTING_RECIPES, ItemRequirements } from "webgl-test-shared/dist/crafting-recipes";
 import { createItem } from "../items";
 import { Point, randInt, randItem } from "webgl-test-shared/dist/utils";
@@ -31,6 +29,10 @@ import { toggleDoor } from "../components/DoorComponent";
 import { toggleFenceGateDoor } from "../components/FenceGateComponent";
 import { toggleTunnelDoor } from "../components/TunnelComponent";
 import { createItemsOverEntity } from "../entity-shared";
+import { BuildingMaterialComponentArray } from "../components/BuildingMaterialComponent";
+import { PlayerComponentArray } from "../components/PlayerComponent";
+import { TurretComponentArray } from "../components/TurretComponent";
+import { TribesmanAIComponentArray } from "../components/TribesmanAIComponent";
 
 // @Cleanup: see if a decorator can be used to cut down on the player entity check copy-n-paste
 
@@ -464,7 +466,7 @@ const processTechForceUnlock = (playerClient: PlayerClient, techID: TechID): voi
       return;
    }
 
-   playerClient.tribe.unlockTech(techID);
+   playerClient.tribe.forceUnlockTech(techID);
 }
 
 const processStudyPacket = (playerClient: PlayerClient, studyAmount: number): void => {
@@ -599,7 +601,7 @@ const processRecruitTribesmanPacket = (playerClient: PlayerClient, tribesmanID: 
       return;
    }
 
-   const tribesmanComponent = TribesmanComponentArray.getComponent(tribesmanID);
+   const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesmanID);
    const relation = tribesmanComponent.tribesmanRelations[player.id];
    if (typeof relation !== "undefined" && relation >= 50) {
       const tribeComponent = TribeComponentArray.getComponent(player.id);
@@ -618,6 +620,17 @@ const processRespondToTitleOfferPacket = (playerClient: PlayerClient, title: Tri
    } else {
       rejectTitleOffer(player, title);
    }
+}
+
+const devGiveItem = (playerClient: PlayerClient, itemType: ItemType, amount: number): void => {
+   const player = Board.entityRecord[playerClient.instanceID];
+   if (typeof player === "undefined") {
+      return;
+   }
+
+   const inventoryComponent = InventoryComponentArray.getComponent(player.id);
+   const inventory = getInventory(inventoryComponent, InventoryName.hotbar);
+   addItemToInventory(inventory, itemType, amount);
 }
 
 export function addPlayerClient(playerClient: PlayerClient, player: Entity): void {
@@ -729,6 +742,14 @@ export function addPlayerClient(playerClient: PlayerClient, player: Entity): voi
 
    socket.on("respond_to_title_offer", (title: TribesmanTitle, isAccepted: boolean): void => {
       processRespondToTitleOfferPacket(playerClient, title, isAccepted);
+   });
+
+   // -------------------------- //
+   //       DEV-ONLY EVENTS      //
+   // -------------------------- //
+
+   socket.on("dev_give_item", (itemType: ItemType, amount: number): void => {
+      devGiveItem(playerClient, itemType, amount);
    });
 }
 

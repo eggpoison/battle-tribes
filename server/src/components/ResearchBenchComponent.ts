@@ -1,16 +1,18 @@
-import { ResearchBenchComponentData } from "webgl-test-shared/dist/components";
+import { ResearchBenchComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { TechInfo } from "webgl-test-shared/dist/techs";
 import { TribesmanTitle } from "webgl-test-shared/dist/titles";
 import { RESEARCH_ORB_AMOUNTS, RESEARCH_ORB_COMPLETE_TIME, getRandomResearchOrbSize } from "webgl-test-shared/dist/research";
 import Entity from "../Entity";
-import { InventoryUseComponentArray, ResearchBenchComponentArray, TribeComponentArray, TribesmanComponentArray } from "./ComponentArray";
+import { ComponentArray } from "./ComponentArray";
 import Board from "../Board";
-import { getInventoryUseInfo } from "./InventoryUseComponent";
+import { InventoryUseComponentArray, getInventoryUseInfo } from "./InventoryUseComponent";
 import { TITLE_REWARD_CHANCES } from "../tribesman-title-generation";
 import { TribeMemberComponentArray, awardTitle, hasTitle } from "./TribeMemberComponent";
 import { InventoryName } from "webgl-test-shared/dist/items";
+import { TribeComponentArray } from "./TribeComponent";
+import { TribesmanAIComponentArray } from "./TribesmanAIComponent";
 
 const ORB_COMPLETE_TICKS = Math.floor(RESEARCH_ORB_COMPLETE_TIME * Settings.TPS);
 
@@ -25,14 +27,18 @@ export class ResearchBenchComponent {
    public orbCompleteProgressTicks = 0;
 }
 
+export const ResearchBenchComponentArray = new ComponentArray<ServerComponentType.researchBench, ResearchBenchComponent>(true, {
+   serialise: serialise
+});
+
 export function tickResearchBenchComponent(researchBench: Entity): void {
    const researchBenchComponent = ResearchBenchComponentArray.getComponent(researchBench.id);
    
    // @Speed: This runs every tick, but this condition only activates rarely when the bench is being used.
    if (researchBenchComponent.isOccupied) {
       // @Incomplete?
-      if (TribesmanComponentArray.hasComponent(researchBenchComponent.occupeeID)) {
-         const tribesmanComponent = TribesmanComponentArray.getComponent(researchBenchComponent.occupeeID);
+      if (TribesmanAIComponentArray.hasComponent(researchBenchComponent.occupeeID)) {
+         const tribesmanComponent = TribesmanAIComponentArray.getComponent(researchBenchComponent.occupeeID);
          if (tribesmanComponent.targetResearchBenchID !== researchBench.id) {
             researchBenchComponent.occupeeID = 0;
             researchBenchComponent.isOccupied = false;
@@ -125,9 +131,11 @@ export function continueResearching(researchBench: Entity, researcher: Entity, t
    }
 }
 
-export function serialiseResearchBenchComponent(researchBench: Entity): ResearchBenchComponentData {
-   const researchBenchComponent = ResearchBenchComponentArray.getComponent(researchBench.id);
+function serialise(entityID: number): ResearchBenchComponentData {
+   const researchBenchComponent = ResearchBenchComponentArray.getComponent(entityID);
+   
    return {
+      componentType: ServerComponentType.researchBench,
       isOccupied: researchBenchComponent.isOccupied
    };
 }

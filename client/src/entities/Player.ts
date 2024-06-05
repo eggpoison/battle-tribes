@@ -1,53 +1,22 @@
-import { CRAFTING_RECIPES, CraftingRecipe, CraftingStation } from "webgl-test-shared/dist/crafting-recipes";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { EntityType, LimbAction } from "webgl-test-shared/dist/entities";
-import { TileType } from "webgl-test-shared/dist/tiles";
 import { Inventory, InventoryName, Item } from "webgl-test-shared/dist/items";
-import { EntityComponentsData, LimbData, ServerComponentType } from "webgl-test-shared/dist/components";
+import { LimbData, ServerComponentType } from "webgl-test-shared/dist/components";
 import { Point } from "webgl-test-shared/dist/utils";
 import Camera from "../Camera";
-import { setCraftingMenuAvailableRecipes, setCraftingMenuAvailableCraftingStations } from "../components/game/menus/CraftingMenu";
-import CircularHitbox from "../hitboxes/CircularHitbox";
 import { halfWindowHeight, halfWindowWidth } from "../webgl";
-import Entity from "../Entity";
-import ItemEntity from "../items/ItemEntity";
+import Entity, { ComponentDataRecord } from "../Entity";
 import TribeMember, { addTribeMemberRenderParts } from "./TribeMember";
 import Board from "../Board";
 import { definiteGameState, latencyGameState } from "../game-state/game-states";
 import { keyIsPressed } from "../keyboard-input";
-import PlayerComponent from "../entity-components/PlayerComponent";
 import Game from "../Game";
 import { ClientComponentType } from "../entity-components/components";
 import FootprintComponent from "../entity-components/FootprintComponent";
-import InventoryComponent from "../entity-components/InventoryComponent";
-import InventoryUseComponent from "../entity-components/InventoryUseComponent";
-import HealthComponent from "../entity-components/HealthComponent";
-import StatusEffectComponent from "../entity-components/StatusEffectComponent";
-import TribeComponent from "../entity-components/TribeComponent";
 import EquipmentComponent from "../entity-components/EquipmentComponent";
 import { collide, resolveWallTileCollisions } from "../collision";
-import TribeMemberComponent from "../entity-components/TribeMemberComponent";
 import { TRIBE_INFO_RECORD } from "webgl-test-shared/dist/tribes";
-import { randInt } from "webgl-test-shared/dist/utils";
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision";
-import { HitData, HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
-import PhysicsComponent from "../entity-components/PhysicsComponent";
-
-const CRAFTING_RECIPE_RECORD: Record<CraftingStation | "hand", Array<CraftingRecipe>> = {
-   hand: [],
-   [CraftingStation.workbench]: [],
-   [CraftingStation.slime]: [],
-   [CraftingStation.water]: []
-};
-
-// Categorise the crafting recipes
-for (const craftingRecipe of CRAFTING_RECIPES) {
-   if (typeof craftingRecipe.craftingStation === "undefined") {
-      CRAFTING_RECIPE_RECORD.hand.push(craftingRecipe);
-   } else {
-      CRAFTING_RECIPE_RECORD[craftingRecipe.craftingStation].push(craftingRecipe);
-   }
-}
+import { COLLISION_BITS } from "webgl-test-shared/dist/collision";
 
 /** Updates the rotation of the player to match the cursor position */
 export function updatePlayerRotation(cursorX: number, cursorY: number): void {
@@ -61,57 +30,72 @@ export function updatePlayerRotation(cursorX: number, cursorY: number): void {
    Player.instance.rotation = cursorDirection;
 }
 
-export function updateAvailableCraftingRecipes(): void {
-   if (Player.instance === null) return;
+// export function updateAvailableCraftingRecipes(): void {
+//    if (Player.instance === null) return;
    
-   // 
-   // Find which crafting recipes are available to the player
-   // 
+//    // 
+//    // Find which crafting recipes are available to the player
+//    // 
 
-   let availableCraftingRecipes: Array<CraftingRecipe> = CRAFTING_RECIPE_RECORD.hand.slice();
-   let availableCraftingStations = new Set<CraftingStation>();
+//    let availableCraftingRecipes: Array<CraftingRecipe> = CRAFTING_RECIPE_RECORD.hand.slice();
+//    let availableCraftingStations = new Set<CraftingStation>();
 
-   if (Player.instance.tile.type === TileType.water) {
-      availableCraftingRecipes = availableCraftingRecipes.concat(CRAFTING_RECIPE_RECORD[CraftingStation.water].slice());
-      availableCraftingStations.add(CraftingStation.water);
-   }
+//    if (Player.instance.tile.type === TileType.water) {
+//       availableCraftingRecipes = availableCraftingRecipes.concat(CRAFTING_RECIPE_RECORD[CraftingStation.water].slice());
+//       availableCraftingStations.add(CraftingStation.water);
+//    }
    
-   const minChunkX = Math.max(Math.min(Math.floor((Player.instance!.position.x - Settings.MAX_CRAFTING_STATION_USE_DISTANCE) / Settings.CHUNK_SIZE / Settings.TILE_SIZE), Settings.BOARD_SIZE - 1), 0);
-   const maxChunkX = Math.max(Math.min(Math.floor((Player.instance!.position.x + Settings.MAX_CRAFTING_STATION_USE_DISTANCE) / Settings.CHUNK_SIZE / Settings.TILE_SIZE), Settings.BOARD_SIZE - 1), 0);
-   const minChunkY = Math.max(Math.min(Math.floor((Player.instance!.position.y - Settings.MAX_CRAFTING_STATION_USE_DISTANCE) / Settings.CHUNK_SIZE / Settings.TILE_SIZE), Settings.BOARD_SIZE - 1), 0);
-   const maxChunkY = Math.max(Math.min(Math.floor((Player.instance!.position.y + Settings.MAX_CRAFTING_STATION_USE_DISTANCE) / Settings.CHUNK_SIZE / Settings.TILE_SIZE), Settings.BOARD_SIZE - 1), 0);
+//    const minChunkX = Math.max(Math.min(Math.floor((Player.instance!.position.x - Settings.MAX_CRAFTING_STATION_USE_DISTANCE) / Settings.CHUNK_SIZE / Settings.TILE_SIZE), Settings.BOARD_SIZE - 1), 0);
+//    const maxChunkX = Math.max(Math.min(Math.floor((Player.instance!.position.x + Settings.MAX_CRAFTING_STATION_USE_DISTANCE) / Settings.CHUNK_SIZE / Settings.TILE_SIZE), Settings.BOARD_SIZE - 1), 0);
+//    const minChunkY = Math.max(Math.min(Math.floor((Player.instance!.position.y - Settings.MAX_CRAFTING_STATION_USE_DISTANCE) / Settings.CHUNK_SIZE / Settings.TILE_SIZE), Settings.BOARD_SIZE - 1), 0);
+//    const maxChunkY = Math.max(Math.min(Math.floor((Player.instance!.position.y + Settings.MAX_CRAFTING_STATION_USE_DISTANCE) / Settings.CHUNK_SIZE / Settings.TILE_SIZE), Settings.BOARD_SIZE - 1), 0);
 
-   for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
-      for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
-         const chunk = Board.getChunk(chunkX, chunkY);
-         for (const entity of chunk.entities) {
-            const distance = Player.instance!.position.calculateDistanceBetween(entity.position);
-            if (distance <= Settings.MAX_CRAFTING_STATION_USE_DISTANCE) {
-               switch (entity.type) {
-                  case EntityType.workbench: {
-                     if (!availableCraftingStations.has(CraftingStation.workbench)) {
-                        availableCraftingRecipes = availableCraftingRecipes.concat(CRAFTING_RECIPE_RECORD[CraftingStation.workbench].slice());
-                        availableCraftingStations.add(CraftingStation.workbench);
-                     }
-                     break;
-                  }
-                  case EntityType.slime: {
-                     if (!availableCraftingStations.has(CraftingStation.slime)) {
-                        availableCraftingRecipes = availableCraftingRecipes.concat(CRAFTING_RECIPE_RECORD[CraftingStation.slime].slice());
-                        availableCraftingStations.add(CraftingStation.slime);
-                     }
-                     break;
-                  }
-               }
-            }
-         }
-      }
-   }
+//    // @Cleanup: can be better
+//    for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
+//       for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
+//          const chunk = Board.getChunk(chunkX, chunkY);
+//          for (const entity of chunk.entities) {
+//             const distance = Player.instance!.position.calculateDistanceBetween(entity.position);
+//             if (distance <= Settings.MAX_CRAFTING_STATION_USE_DISTANCE) {
+//                switch (entity.type) {
+//                   case EntityType.workbench: {
+//                      if (!availableCraftingStations.has(CraftingStation.workbench)) {
+//                         availableCraftingRecipes = availableCraftingRecipes.concat(CRAFTING_RECIPE_RECORD[CraftingStation.workbench].slice());
+//                         availableCraftingStations.add(CraftingStation.workbench);
+//                      }
+//                      break;
+//                   }
+//                   case EntityType.slime: {
+//                      if (!availableCraftingStations.has(CraftingStation.slime)) {
+//                         availableCraftingRecipes = availableCraftingRecipes.concat(CRAFTING_RECIPE_RECORD[CraftingStation.slime].slice());
+//                         availableCraftingStations.add(CraftingStation.slime);
+//                      }
+//                      break;
+//                   }
+//                   case EntityType.frostshaper: {
+//                      if (!availableCraftingStations.has(CraftingStation.frostshaper)) {
+//                         availableCraftingRecipes = availableCraftingRecipes.concat(CRAFTING_RECIPE_RECORD[CraftingStation.frostshaper].slice());
+//                         availableCraftingStations.add(CraftingStation.frostshaper);
+//                      }
+//                      break;
+//                   }
+//                   case EntityType.stonecarvingTable: {
+//                      if (!availableCraftingStations.has(CraftingStation.stonecarvingTable)) {
+//                         availableCraftingRecipes = availableCraftingRecipes.concat(CRAFTING_RECIPE_RECORD[CraftingStation.stonecarvingTable].slice());
+//                         availableCraftingStations.add(CraftingStation.stonecarvingTable);
+//                      }
+//                      break;
+//                   }
+//                }
+//             }
+//          }
+//       }
+//    }
 
-   // Send that information to the crafting menu
-   setCraftingMenuAvailableRecipes(availableCraftingRecipes);
-   setCraftingMenuAvailableCraftingStations(availableCraftingStations);
-}
+//    // Send that information to the crafting menu
+//    setCraftingMenuAvailableRecipes(availableCraftingRecipes);
+//    setCraftingMenuAvailableCraftingStations(availableCraftingStations);
+// }
 
 export function getPlayerSelectedItem(): Item | null {
    if (Player.instance === null || definiteGameState.hotbar === null) return null;
@@ -146,87 +130,98 @@ class Player extends TribeMember {
    /** The player entity associated with the current player. */
    public static instance: Player | null = null;
    
-   constructor(position: Point, id: number, ageTicks: number, componentsData: EntityComponentsData<EntityType.player>) {
+   constructor(position: Point, id: number, ageTicks: number, componentDataRecord: ComponentDataRecord) {
       super(position, id, EntityType.player, ageTicks);
-
-      this.addServerComponent(ServerComponentType.physics, new PhysicsComponent(this, componentsData[0]));
-      this.addServerComponent(ServerComponentType.health, new HealthComponent(this, componentsData[1]));
-      this.addServerComponent(ServerComponentType.statusEffect, new StatusEffectComponent(this, componentsData[2]));
-      this.addServerComponent(ServerComponentType.tribe, new TribeComponent(this, componentsData[3]));
-      this.addServerComponent(ServerComponentType.tribeMember, new TribeMemberComponent(this, componentsData[4]));
-      addTribeMemberRenderParts(this);
-      this.addServerComponent(ServerComponentType.inventory, new InventoryComponent(this, componentsData[5]));
-      this.addServerComponent(ServerComponentType.inventoryUse, new InventoryUseComponent(this, componentsData[6], this.getServerComponent(ServerComponentType.tribeMember).handRenderParts));
-      this.addServerComponent(ServerComponentType.player, new PlayerComponent(this, componentsData[7]));
       
+      addTribeMemberRenderParts(this, componentDataRecord);
+
       this.addClientComponent(ClientComponentType.footprint, new FootprintComponent(this, 0.2, 20, 64, 4, 64));
       this.addClientComponent(ClientComponentType.equipment, new EquipmentComponent(this));
    }
 
-   public static createInstancePlayer(position: Point, playerID: number): void {
-      if (Player.instance !== null) {
-         throw new Error("Tried to create a new player main instance when one already existed!");
-      }
+   // public static createInstancePlayer(position: Point, playerID: number): void {
+   //    if (Player.instance !== null) {
+   //       throw new Error("Tried to create a new player main instance when one already existed!");
+   //    }
 
-      const maxHealth = TRIBE_INFO_RECORD[Game.tribe.tribeType].maxHealthPlayer;
+   //    const maxHealth = TRIBE_INFO_RECORD[Game.tribe.tribeType].maxHealthPlayer;
 
-      // @Cleanup: is there a better way to do this? maybe wait for the first packet to then set this?
-      const componentsData: EntityComponentsData<EntityType.player> = [
-         {
-            velocity: [0, 0],
-            acceleration: [0, 0]
-         },
-         {
-            health: maxHealth,
-            maxHealth: maxHealth
-         },
-         {
-            statusEffects: []
-         },
-         {
-            tribeID: Game.tribe.id
-         },
-         {
-            // @Incomplete: Shouldn't be random, should be sent by the server
-            warPaintType: randInt(1, 5),
-            titles: []
-         },
-         {
-            inventories: {
-               [InventoryName.hotbar]: new Inventory(Settings.INITIAL_PLAYER_HOTBAR_SIZE, 1, InventoryName.hotbar),
-               [InventoryName.armourSlot]: new Inventory(1, 1, InventoryName.armourSlot),
-               [InventoryName.gloveSlot]: new Inventory(1, 1, InventoryName.gloveSlot),
-               [InventoryName.backpackSlot]: new Inventory(1, 1, InventoryName.backpackSlot),
-               [InventoryName.backpack]: new Inventory(1, 1, InventoryName.backpack),
-               [InventoryName.offhand]: new Inventory(1, 1, InventoryName.offhand),
-            }
-         },
-         {
-            inventoryUseInfos: [
-               createInitialInventoryUseInfo(InventoryName.hotbar),
-               createInitialInventoryUseInfo(InventoryName.offhand)
-            ]
-         },
-         {
-            username: definiteGameState.playerUsername
-         }
-      ];
+   //    // @Cleanup: is there a better way to do this? maybe wait for the first packet to then set this?
+   //    const componentsData: EntityComponentsData<EntityType.player> = [
+   //       {
+   //          componentType: ServerComponentType.physics,
+   //          velocity: [0, 0],
+   //          acceleration: [0, 0]
+   //       },
+   //       {
+   //          componentType: ServerComponentType.health,
+   //          health: maxHealth,
+   //          maxHealth: maxHealth
+   //       },
+   //       {
+   //          componentType: ServerComponentType.statusEffect,
+   //          statusEffects: []
+   //       },
+   //       {
+   //          componentType: ServerComponentType.tribe,
+   //          tribeID: Game.tribe.id
+   //       },
+   //       {
+   //          componentType: ServerComponentType.tribeMember,
+   //          // @Incomplete: Shouldn't be random, should be sent by the server
+   //          warPaintType: randInt(1, 5),
+   //          titles: []
+   //       },
+   //       {
+   //          componentType: ServerComponentType.inventory,
+   //          inventories: {
+   //             [InventoryName.hotbar]: new Inventory(Settings.INITIAL_PLAYER_HOTBAR_SIZE, 1, InventoryName.hotbar),
+   //             [InventoryName.armourSlot]: new Inventory(1, 1, InventoryName.armourSlot),
+   //             [InventoryName.gloveSlot]: new Inventory(1, 1, InventoryName.gloveSlot),
+   //             [InventoryName.backpackSlot]: new Inventory(1, 1, InventoryName.backpackSlot),
+   //             [InventoryName.backpack]: new Inventory(1, 1, InventoryName.backpack),
+   //             [InventoryName.offhand]: new Inventory(1, 1, InventoryName.offhand),
+   //          }
+   //       },
+   //       {
+   //          componentType: ServerComponentType.inventoryUse,
+   //          inventoryUseInfos: [
+   //             createInitialInventoryUseInfo(InventoryName.hotbar),
+   //             createInitialInventoryUseInfo(InventoryName.offhand)
+   //          ]
+   //       },
+   //       {
+   //          componentType: ServerComponentType.player,
+   //          username: definiteGameState.playerUsername
+   //       }
+   //    ];
       
-      const player = new Player(position, playerID, 0, componentsData);
-      player.addCircularHitbox(new CircularHitbox(1, 0, 0, HitboxCollisionType.soft, 1, 32));
-      player.collisionBit = COLLISION_BITS.default;
-      player.collisionMask = DEFAULT_COLLISION_MASK;
-      Board.addEntity(player);
+   //    const player = new Player(position, playerID, 0, componentsData);
+   //    player.addCircularHitbox(new CircularHitbox(1, 0, 0, HitboxCollisionType.soft, 1, 32));
+   //    player.collisionBit = COLLISION_BITS.default;
+   //    player.collisionMask = DEFAULT_COLLISION_MASK;
+   //    Board.addEntity(player);
 
+   //    Player.instance = player;
+
+   //    Camera.setTrackedEntityID(player.id);
+
+   //    // @Cleanup: Shouldn't be in this function
+   //    definiteGameState.setPlayerHealth(maxHealth);
+   //    definiteGameState.hotbar = new Inventory(Settings.INITIAL_PLAYER_HOTBAR_SIZE, 1, InventoryName.hotbar);
+   // }
+
+   public static createInstancePlayer(player: Player): void {
       Player.instance = player;
 
       Camera.setTrackedEntityID(player.id);
 
       // @Cleanup: Shouldn't be in this function
+      const maxHealth = TRIBE_INFO_RECORD[Game.tribe.tribeType].maxHealthPlayer;
       definiteGameState.setPlayerHealth(maxHealth);
       definiteGameState.hotbar = new Inventory(Settings.INITIAL_PLAYER_HOTBAR_SIZE, 1, InventoryName.hotbar);
    }
-
+   
    public static resolveCollisions(): void {
       // Don't resolve wall tile collisions in lightspeed mode
       if (!keyIsPressed("l")) {

@@ -1,6 +1,6 @@
 import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
-import { IceSpikesComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityType, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
 import { ItemType } from "webgl-test-shared/dist/items";
 import { Settings } from "webgl-test-shared/dist/settings";
@@ -8,12 +8,10 @@ import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { Point, randInt } from "webgl-test-shared/dist/utils";
 import Entity from "../../Entity";
 import CircularHitbox from "../../hitboxes/CircularHitbox";
-import { HealthComponentArray, IceSpikesComponentArray } from "../../components/ComponentArray";
-import { HealthComponent, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
+import { HealthComponent, HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
 import { StatusEffectComponent, StatusEffectComponentArray, applyStatusEffect } from "../../components/StatusEffectComponent";
 import { createIceShard } from "../projectiles/ice-shard";
-import { SERVER } from "../../server/server";
-import { IceSpikesComponent } from "../../components/IceSpikesComponent";
+import { IceSpikesComponent, IceSpikesComponentArray } from "../../components/IceSpikesComponent";
 import Board from "../../Board";
 import { createItemsOverEntity } from "../../entity-shared";
 import { applyKnockback } from "../../components/PhysicsComponent";
@@ -154,8 +152,4 @@ export function forceMaxGrowAllIceSpikes(): void {
          forceMaxGrowIceSpike(entity);
       }
    }
-}
-
-export function serialiseIceSpikesComponent(_entity: Entity): IceSpikesComponentData {
-   return {};
 }

@@ -84,7 +84,7 @@ class StatusEffectComponent extends ServerComponent<ServerComponentType.statusEf
       if (fireStatusEffect !== null) {
          if (this.burningLight === null) {
             this.burningLight = {
-               position: new Point(0, 0),
+               offset: new Point(0, 0),
                intensity: 1,
                strength: 2.5,
                radius: 0.3,

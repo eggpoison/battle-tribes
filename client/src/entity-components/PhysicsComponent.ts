@@ -1,10 +1,14 @@
 import { PhysicsComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
-import { Point } from "webgl-test-shared/dist/utils";
+import { Point, lerp, randInt } from "webgl-test-shared/dist/utils";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { TILE_MOVE_SPEED_MULTIPLIERS, TileType, TILE_FRICTIONS } from "webgl-test-shared/dist/tiles";
 import Board from "../Board";
+import { EntityType } from "webgl-test-shared/dist/entities";
+import Particle from "../Particle";
+import { addTexturedParticleToBufferContainer, ParticleRenderLayer } from "../rendering/particle-rendering";
+import { playSound, AudioFilePath } from "../sound";
 
 class PhysicsComponent extends ServerComponent<ServerComponentType.physics> {
    public readonly velocity: Point;
@@ -15,6 +19,41 @@ class PhysicsComponent extends ServerComponent<ServerComponentType.physics> {
 
       this.velocity = new Point(data.velocity[0], data.velocity[1]);
       this.acceleration = new Point(data.acceleration[0], data.acceleration[1]);
+   }
+
+   public tick(): void {
+      // Water splash particles
+      // @Cleanup: Move to particles file
+      if (this.entity.isInRiver() && Board.tickIntervalHasPassed(0.15) && (this.acceleration.x !== 0 || this.acceleration.y !== 0) && this.entity.type !== EntityType.fish) {
+         const lifetime = 2.5;
+
+         const particle = new Particle(lifetime);
+         particle.getOpacity = (): number => {
+            return lerp(0.75, 0, Math.sqrt(particle.age / lifetime));
+         }
+         particle.getScale = (): number => {
+            return 1 + particle.age / lifetime * 1.4;
+         }
+
+         addTexturedParticleToBufferContainer(
+            particle,
+            ParticleRenderLayer.low,
+            64, 64,
+            this.entity.position.x, this.entity.position.y,
+            0, 0,
+            0, 0,
+            0,
+            2 * Math.PI * Math.random(),
+            0,
+            0,
+            0,
+            8 * 1 + 5,
+            0, 0, 0
+         );
+         Board.lowTexturedParticles.push(particle);
+
+         playSound(("water-splash-" + randInt(1, 3) + ".mp3") as AudioFilePath, 0.25, 1, this.entity.position.x, this.entity.position.y);
+      }
    }
 
    public update(): void {

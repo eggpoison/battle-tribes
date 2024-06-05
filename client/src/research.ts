@@ -1,4 +1,4 @@
-import { distance, randFloat, rotateXAroundOrigin, rotateYAroundOrigin } from "webgl-test-shared/dist/utils";
+import { distance } from "webgl-test-shared/dist/utils";
 import { RESEARCH_ORB_AMOUNTS, RESEARCH_ORB_COMPLETE_TIME, getRandomResearchOrbSize } from "webgl-test-shared/dist/research";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
@@ -11,8 +11,7 @@ import Client from "./client/Client";
 import { getSelectedEntityID } from "./entity-selection";
 import { playSound } from "./sound";
 import { createMagicParticle, createStarParticle } from "./particles";
-import ResearchBench from "./entities/ResearchBench";
-import Entity from "./Entity";
+import Entity, { getRandomPointInEntity } from "./Entity";
 
 export interface ResearchOrb {
    /* X position of the node in the world */
@@ -33,15 +32,15 @@ const ORB_COMPLETE_SOUND_PITCHES = [1, 0.85, 0.7];
 const ORB_PARTICLES_PER_SECOND = [2, 3.5, 6];
 
 const generateResearchOrb = (researchBench: Entity): ResearchOrb => {
-   const xInBench = randFloat(-ResearchBench.WIDTH * 0.5, ResearchBench.WIDTH * 0.5) * 0.8;
-   const yInBench = randFloat(-ResearchBench.HEIGHT * 0.5, ResearchBench.HEIGHT * 0.5) * 0.8;
+   const position = getRandomPointInEntity(researchBench);
+   position.subtract(researchBench.position);
+   position.x *= 0.8;
+   position.y *= 0.8;
+   position.add(researchBench.position);
    
-   const x = researchBench.position.x + rotateXAroundOrigin(xInBench, yInBench, researchBench.rotation);
-   const y = researchBench.position.y + rotateYAroundOrigin(xInBench, yInBench, researchBench.rotation);
-
    return {
-      positionX: x,
-      positionY: y,
+      positionX: position.x,
+      positionY: position.y,
       rotation: 2 * Math.PI * Math.random(),
       size: getRandomResearchOrbSize()
    };

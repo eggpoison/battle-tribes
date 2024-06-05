@@ -1,19 +1,23 @@
-import { TotemBannerComponentData } from "webgl-test-shared/dist/components";
+import { ServerComponentType, TotemBannerComponentData } from "webgl-test-shared/dist/components";
 import { TribeTotemBanner } from "webgl-test-shared/dist/entities";
 import { randInt } from "webgl-test-shared/dist/utils";
-import Entity from "../Entity";
-import { TotemBannerComponentArray } from "./ComponentArray";
+import { ComponentArray } from "./ComponentArray";
+import { TRIBE_TOTEM_POSITIONS } from "../entities/structures/tribe-totem";
 
 export interface TotemBannerPosition {
    readonly layer: number;
    readonly direction: number;   
 }
 
-export interface TotemBannerComponent {
-   readonly banners: Record<number, TribeTotemBanner>;
+export class TotemBannerComponent {
+   readonly banners: Record<number, TribeTotemBanner> = {};
    // @Cleanup @Memory: We don't need this, just deduce from the banners record
-   readonly availableBannerPositions: Array<TotemBannerPosition>;
+   readonly availableBannerPositions: Array<TotemBannerPosition> = Array.from(new Set(TRIBE_TOTEM_POSITIONS));
 }
+
+export const TotemBannerComponentArray = new ComponentArray<ServerComponentType.totemBanner, TotemBannerComponent>(true, {
+   serialise: serialise
+});
 
 export function addBannerToTotem(bannerComponent: TotemBannerComponent, hutNum: number): void {
    if (bannerComponent.availableBannerPositions.length === 0) {
@@ -36,9 +40,10 @@ export function removeBannerFromTotem(bannerComponent: TotemBannerComponent, hut
    delete bannerComponent.banners[hutNum];
 }
 
-export function serialiseTotemBannerComponent(entity: Entity): TotemBannerComponentData {
-   const totemBannerComponent = TotemBannerComponentArray.getComponent(entity.id);
+function serialise(entityID: number): TotemBannerComponentData {
+   const totemBannerComponent = TotemBannerComponentArray.getComponent(entityID);
    return {
+      componentType: ServerComponentType.totemBanner,
       // @Speed
       banners: Object.values(totemBannerComponent.banners)
    };

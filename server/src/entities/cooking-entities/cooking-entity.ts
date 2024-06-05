@@ -3,8 +3,8 @@ import { InventoryName, ItemType, ItemTypeString } from "webgl-test-shared/dist/
 import { Settings } from "webgl-test-shared/dist/settings";
 import { CookingIngredientItemType, FuelSourceItemType } from "webgl-test-shared/dist/cooking-info";
 import Entity from "../../Entity";
-import { CookingComponentArray } from "../../components/ComponentArray";
 import { InventoryComponentArray, addItemToInventory, consumeItemTypeFromInventory, getInventory } from "../../components/InventoryComponent";
+import { CookingComponentArray } from "../../components/CookingComponent";
 
 export interface HeatingRecipe {
    readonly ingredientType: CookingIngredientItemType;
@@ -97,8 +97,11 @@ export function tickCookingEntity(entity: Entity): void {
          cookingEntityComponent.heatingTimer += Settings.I_TPS;
          if (cookingEntityComponent.heatingTimer >= cookingEntityComponent.currentRecipe.cookTime) {
             // Remove from ingredient inventory and add to output inventory
+
             consumeItemTypeFromInventory(inventoryComponent, InventoryName.ingredientInventory, cookingEntityComponent.currentRecipe.ingredientType, cookingEntityComponent.currentRecipe.ingredientAmount);
-            addItemToInventory(inventoryComponent, InventoryName.outputInventory, cookingEntityComponent.currentRecipe.productType, cookingEntityComponent.currentRecipe.productAmount);
+
+            const outputInventory = getInventory(inventoryComponent, InventoryName.outputInventory);
+            addItemToInventory(outputInventory, cookingEntityComponent.currentRecipe.productType, cookingEntityComponent.currentRecipe.productAmount);
 
             cookingEntityComponent.heatingTimer = 0;
             cookingEntityComponent.currentRecipe = null;

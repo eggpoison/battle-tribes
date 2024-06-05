@@ -1,8 +1,10 @@
-import { AMMO_INFO_RECORD, TurretComponentData } from "webgl-test-shared/dist/components";
+import { AMMO_INFO_RECORD, ServerComponentType, TurretComponentData } from "webgl-test-shared/dist/components";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import Entity from "../Entity";
-import { AmmoBoxComponentArray, TurretComponentArray } from "./ComponentArray";
+import { ComponentArray } from "./ComponentArray";
 import { SLING_TURRET_RELOAD_TIME_TICKS, SLING_TURRET_SHOT_COOLDOWN_TICKS } from "../entities/structures/sling-turret";
+import Board from "../Board";
+import { AmmoBoxComponentArray } from "./AmmoBoxComponent";
 
 export class TurretComponent {
    public aimDirection = 0;
@@ -13,6 +15,10 @@ export class TurretComponent {
       this.fireCooldownTicks = fireCooldownTicks;
    }
 }
+
+export const TurretComponentArray = new ComponentArray<ServerComponentType.turret, TurretComponent>(true, {
+   serialise: serialise
+});
 
 const getShotCooldownTicks = (turret: Entity): number => {
    switch (turret.type) {
@@ -78,9 +84,14 @@ const getReloadProgress = (turret: Entity): number => {
    return 1 - (turretComponent.fireCooldownTicks - shotCooldownTicks) / reloadTimeTicks;
 }
 
-export function serialiseTurretComponent(turret: Entity): TurretComponentData {
-   const turretComponent = TurretComponentArray.getComponent(turret.id);
+function serialise(entityID: number): TurretComponentData {
+   const turretComponent = TurretComponentArray.getComponent(entityID);
+
+   // @Hack
+   const turret = Board.entityRecord[entityID]!;
+   
    return {
+      componentType: ServerComponentType.turret,
       aimDirection: turretComponent.aimDirection,
       // @Speed: Both these functions call getComponent for turretComponent when we already get it in this function
       chargeProgress: getChargeProgress(turret),

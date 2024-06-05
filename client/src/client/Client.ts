@@ -3,10 +3,10 @@ import { AttackPacket, ClientToServerEvents, EntityData, GameDataPacket, GameDat
 import { distance, Point } from "webgl-test-shared/dist/utils";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
-import { BlueprintType, EntityComponentsData, LimbData, ServerComponentType } from "webgl-test-shared/dist/components";
+import { BlueprintType, LimbData, ServerComponentType } from "webgl-test-shared/dist/components";
 import { PlayerTribeData, TechID } from "webgl-test-shared/dist/techs";
 import { STRUCTURE_TYPES } from "webgl-test-shared/dist/structures";
-import { Inventory, InventoryName } from "webgl-test-shared/dist/items";
+import { Inventory, InventoryName, ItemType } from "webgl-test-shared/dist/items";
 import { TRIBE_INFO_RECORD, TribeType } from "webgl-test-shared/dist/tribes";
 import { TribesmanTitle } from "webgl-test-shared/dist/titles";
 import { io, Socket } from "socket.io-client";
@@ -17,10 +17,10 @@ import CircularHitbox from "../hitboxes/CircularHitbox";
 import RectangularHitbox from "../hitboxes/RectangularHitbox";
 import { Tile } from "../Tile";
 import { gameScreenSetIsDead } from "../components/game/GameScreen";
-import { removeSelectedItem, selectItem, updateInventoryIsOpen } from "../player-input";
+import { removeSelectedItem, selectItem, closeCurrentMenu } from "../player-input";
 import { Hotbar_setHotbarSelectedItemSlot, Hotbar_update, Hotbar_updateRightThrownBattleaxeItemID } from "../components/game/inventories/Hotbar";
 import { setHeldItemVisual } from "../components/game/HeldItem";
-import { CraftingMenu_setCraftingMenuOutputItem } from "../components/game/menus/CraftingMenu";
+import { CraftingMenu_setCraftingMenuOutputItem, CraftingMenu_updateRecipes } from "../components/game/menus/CraftingMenu";
 import { HealthBar_setHasFrostShield, updateHealthBar } from "../components/game/HealthBar";
 import { registerServerTick, updateDebugScreenCurrentTime, updateDebugScreenTicks } from "../components/game/dev/GameInfoDisplay";
 import Camera from "../Camera";
@@ -33,7 +33,7 @@ import { createInventoryFromData, updateInventoryFromData } from "../inventory-m
 import Entity from "../Entity";
 import { createDamageNumber, createHealNumber, createResearchNumber, setVisibleBuildingSafetys } from "../text-canvas";
 import { playSound } from "../sound";
-import { closeTechTree, updateTechTree } from "../components/game/TechTree";
+import { updateTechTree } from "../components/game/tech-tree/TechTree";
 import { TechInfocard_setSelectedTech } from "../components/game/TechInfocard";
 import { getSelectedEntityID } from "../entity-selection";
 import { setVisiblePathfindingNodeOccupances } from "../rendering/pathfinding-node-rendering";
@@ -380,6 +380,11 @@ abstract class Client {
    }
 
    private static updateTribe(tribeData: PlayerTribeData): void {
+      if (tribeData.unlockedTechs.length > Game.tribe.unlockedTechs.length) {
+         // @Incomplete: attach to camera so it doesn't decrease in loudness
+         playSound("research.mp3", 0.4, 1, Camera.position.x, Camera.position.y);
+      }
+      
       Game.tribe.hasTotem = tribeData.hasTotem;
       Game.tribe.numHuts = tribeData.numHuts;
       Game.tribe.selectedTechID = tribeData.selectedTechID;
@@ -404,33 +409,50 @@ abstract class Client {
 
       // @Cleanup: This feels wrong to do. This hardcodes which components are updated from server data; is that correct to do?
       // Remove the player so it doesn't get updated from the server data
-      if (Player.instance !== null) {
-         // @Speed
-         for (let i = 0; i < entityDataArray.length; i++) {
-            const data = entityDataArray[i];
-            if (data.id === Player.instance.id) {
-               const componentsData = data.components as EntityComponentsData<EntityType.player>;
-               Player.instance.getServerComponent(ServerComponentType.statusEffect).updateFromData(componentsData[2]);
-               Player.instance.getServerComponent(ServerComponentType.tribeMember).updateFromData(componentsData[4]);
+      // @Speed
+      for (let i = 0; i < entityDataArray.length; i++) {
+         const data = entityDataArray[i];
+         if (data.id === Game.playerID) {
+            if (Player.instance === null) {
+               const player = this.createEntityFromData(data) as Player;
+               Player.createInstancePlayer(player);
+            } else {
                
-               // @Cleanup @Hack
-               const inventoryUseComponentsData = componentsData[6];
-               let hotbarUseInfo: LimbData | undefined;
-               for (let i = 0; i < inventoryUseComponentsData.inventoryUseInfos.length; i++) {
-                  const useInfo = inventoryUseComponentsData.inventoryUseInfos[i];
-                  if (useInfo.inventoryName === InventoryName.hotbar) {
-                     hotbarUseInfo = useInfo;
-                     break;
+               // @Hack @Cleanup
+               for (let i = 0; i < data.components.length; i++) {
+                  const componentData = data.components[i];
+
+                  switch (componentData.componentType) {
+                     case ServerComponentType.statusEffect: {
+                        Player.instance.getServerComponent(ServerComponentType.statusEffect).updateFromData(componentData);
+                        break;
+                     }
+                     case ServerComponentType.tribeMember: {
+                        Player.instance.getServerComponent(ServerComponentType.tribeMember).updateFromData(componentData);
+                        break;
+                     }
+                     case ServerComponentType.inventoryUse: {
+                        let hotbarUseInfo: LimbData | undefined;
+                        for (let i = 0; i < componentData.inventoryUseInfos.length; i++) {
+                           const useInfo = componentData.inventoryUseInfos[i];
+                           if (useInfo.inventoryName === InventoryName.hotbar) {
+                              hotbarUseInfo = useInfo;
+                              break;
+                           }
+                        }
+                        if (typeof hotbarUseInfo === "undefined") {
+                           throw new Error();
+                        }
+         
+                        const inventoryUseComponent = Player.instance.getServerComponent(ServerComponentType.inventoryUse);
+                        inventoryUseComponent.getUseInfo(InventoryName.hotbar).thrownBattleaxeItemID = hotbarUseInfo.thrownBattleaxeItemID;
+                        
+                        Hotbar_updateRightThrownBattleaxeItemID(hotbarUseInfo.thrownBattleaxeItemID);
+                        
+                        break;
+                     }
                   }
                }
-               if (typeof hotbarUseInfo === "undefined") {
-                  throw new Error();
-               }
-
-               const inventoryUseComponent = Player.instance.getServerComponent(ServerComponentType.inventoryUse);
-               inventoryUseComponent.getUseInfo(InventoryName.hotbar).thrownBattleaxeItemID = hotbarUseInfo.thrownBattleaxeItemID;
-               
-               Hotbar_updateRightThrownBattleaxeItemID(hotbarUseInfo.thrownBattleaxeItemID);
 
                // @Incomplete
                // const leftThrownBattleaxeItemID = entityData.clientArgs[14] as number;
@@ -440,8 +462,8 @@ abstract class Client {
                Player.instance.collisionMask = data.collisionMask;
                
                entityDataArray.splice(i, 1);
-               break;
             }
+            break;
          }
       }
 
@@ -538,6 +560,9 @@ abstract class Client {
       if (backpackHasChanged || backpackSlotHasChanged) {
          BackpackInventoryMenu_update();
       }
+      if (hotbarHasChanged || backpackHasChanged) {
+         CraftingMenu_updateRecipes();
+      }
    }
 
    private static inventoryHasChanged(previousInventory: Inventory | null, newInventoryData: Inventory): boolean {
@@ -582,13 +607,14 @@ abstract class Client {
       return false;
    }
 
-   private static createEntityFromData(entityData: EntityData): void {
+   private static createEntityFromData(entityData: EntityData): Entity {
       // Create the entity
       const entity = createEntity(entityData);
 
       // @Cleanup: initialise the value in the constructor
       entity.renderDepth = calculateEntityRenderDepth(entity.type);
       
+      entity.createComponents(entityData.components);
       entity.callOnLoadFunctions();
       
       entity.rotation = entityData.rotation;
@@ -602,6 +628,8 @@ abstract class Client {
       if (entityData.type === EntityType.player) {
          Board.players.push(entity as Player);
       }
+
+      return entity;
    }
    
    private static registerTileUpdates(tileUpdates: ReadonlyArray<ServerTileUpdateData>): void {
@@ -663,8 +691,8 @@ abstract class Client {
       definiteGameState.setPlayerHealth(maxHealth);
       updateHealthBar(maxHealth);
       
-      const spawnPosition = Point.unpackage(respawnDataPacket.spawnPosition);
-      Player.createInstancePlayer(spawnPosition, respawnDataPacket.playerID);
+      // const spawnPosition = Point.unpackage(respawnDataPacket.spawnPosition);
+      // Player.createInstancePlayer(spawnPosition, respawnDataPacket.playerID);
 
       gameScreenSetIsDead(false);
 
@@ -831,8 +859,7 @@ abstract class Client {
       definiteGameState.resetFlags();
 
       gameScreenSetIsDead(true);
-      updateInventoryIsOpen(false);
-      closeTechTree();
+      closeCurrentMenu();
    }
 
    public static sendSelectTech(techID: TechID): void {
@@ -858,6 +885,8 @@ abstract class Client {
          this.socket.emit("study_tech", studyAmount);
       }
    }
+
+   // @Cleanup: either make this.socket always not null or use a decorator.
 
    public static sendPlaceBlueprint(structureID: number, blueprintType: BlueprintType): void {
       if (Game.isRunning && this.socket !== null) {
@@ -898,6 +927,12 @@ abstract class Client {
    public static respondToTitleOffer(title: TribesmanTitle, isAccepted: boolean): void {
       if (Game.isRunning && this.socket !== null) {
          this.socket.emit("respond_to_title_offer", title, isAccepted);
+      }
+   }
+
+   public static sendDevGiveItemPacket(itemType: ItemType, amount: number): void {
+      if (Game.isRunning && this.socket !== null) {
+         this.socket.emit("dev_give_item", itemType, amount);
       }
    }
 }

@@ -5,6 +5,9 @@ import { randFloat, randInt } from "webgl-test-shared/dist/utils";
 import { createItemEntity } from "../entities/item-entity";
 import { ItemType } from "webgl-test-shared/dist/items";
 import { EntityEvent } from "webgl-test-shared/dist/entity-events";
+import { CowComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
+import { COW_GRAZE_TIME_TICKS } from "../entities/mobs/cow";
+import { ComponentArray } from "./ComponentArray";
 
 const enum Vars {
    MIN_POOP_PRODUCTION_COOLDOWN = 5 * Settings.TPS,
@@ -33,6 +36,10 @@ export class CowComponent {
       this.grazeCooldownTicks = grazeCooldownTicks;
    }
 }
+
+export const CowComponentArray = new ComponentArray<ServerComponentType.cow, CowComponent>(true, {
+   serialise: serialise
+});
 
 const poop = (cow: Entity, cowComponent: CowComponent): void => {
    cowComponent.poopProductionCooldownTicks = randInt(Vars.MIN_POOP_PRODUCTION_COOLDOWN, Vars.MAX_POOP_PRODUCTION_COOLDOWN);
@@ -70,4 +77,14 @@ export function eatBerry(berryItemEntity: Entity, cowComponent: CowComponent): v
 
 export function wantsToEatBerries(cowComponent: CowComponent): boolean {
    return cowComponent.bowelFullness <= Vars.MAX_BERRY_CHASE_FULLNESS;
+}
+
+function serialise(entityID: number): CowComponentData {
+   const cowComponent = CowComponentArray.getComponent(entityID);
+   
+   return {
+      componentType: ServerComponentType.cow,
+      species: cowComponent.species,
+      grazeProgress: cowComponent.grazeProgressTicks > 0 ? cowComponent.grazeProgressTicks / COW_GRAZE_TIME_TICKS : -1
+   };
 }

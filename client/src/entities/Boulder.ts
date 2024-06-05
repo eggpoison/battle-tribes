@@ -2,11 +2,9 @@ import RenderPart from "../render-parts/RenderPart";
 import { createRockParticle, createRockSpeckParticle } from "../particles";
 import { getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
 import { ROCK_DESTROY_SOUNDS, ROCK_HIT_SOUNDS, playSound } from "../sound";
-import Entity from "../Entity";
-import HealthComponent from "../entity-components/HealthComponent";
-import StatusEffectComponent from "../entity-components/StatusEffectComponent";
+import Entity, { ComponentDataRecord } from "../Entity";
 import { ParticleRenderLayer } from "../rendering/particle-rendering";
-import { EntityComponentsData, ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { Point, randFloat, randItem } from "webgl-test-shared/dist/utils";
 
@@ -18,10 +16,10 @@ class Boulder extends Entity {
       "entities/boulder/boulder2.png"
    ];
 
-   constructor(position: Point, id: number, ageTicks: number, componentsData: EntityComponentsData<EntityType.boulder>) {
+   constructor(position: Point, id: number, ageTicks: number, componentDataRecord: ComponentDataRecord) {
       super(position, id, EntityType.boulder, ageTicks);
 
-      const boulderComponentData = componentsData[2];
+      const boulderComponentData = componentDataRecord[ServerComponentType.boulder]!;
 
       this.attachRenderPart(
          new RenderPart(
@@ -31,9 +29,6 @@ class Boulder extends Entity {
             0
          )
       );
-
-      this.addServerComponent(ServerComponentType.health, new HealthComponent(this, componentsData[0]));
-      this.addServerComponent(ServerComponentType.statusEffect, new StatusEffectComponent(this, componentsData[1]));
    }
 
    protected onHit(): void {

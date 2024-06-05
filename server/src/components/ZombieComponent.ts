@@ -1,5 +1,5 @@
-import { ZombieComponentData } from "webgl-test-shared/dist/components";
-import { ZombieComponentArray } from "./ComponentArray";
+import { ServerComponentType, ZombieComponentData } from "webgl-test-shared/dist/components";
+import { ComponentArray } from "./ComponentArray";
 
 export class ZombieComponent {
    /** The type of the zombie, 0-3 */
@@ -22,9 +22,15 @@ export class ZombieComponent {
    }
 }
 
-export function serialiseZombieComponent(entityID: number): ZombieComponentData {
+export const ZombieComponentArray = new ComponentArray<ServerComponentType.zombie, ZombieComponent>(true, {
+   serialise: serialise
+});
+
+function serialise(entityID: number): ZombieComponentData {
    const zombieComponent = ZombieComponentArray.getComponent(entityID);
+   
    return {
+      componentType: ServerComponentType.zombie,
       zombieType: zombieComponent.zombieType
    };
 }

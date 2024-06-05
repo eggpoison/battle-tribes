@@ -1,5 +1,18 @@
 import { imageIsLoaded } from "../utils";
-import { gl } from "../webgl";
+
+export interface TextureAtlasInfo {
+   /** The texture atlas */
+   readonly texture: WebGLTexture;
+   readonly atlasSize: number;
+   /** The widths of all inputted textures, in the original order */
+   readonly textureWidths: Array<number>;
+   /** The heights of all inputted textures, in the original order */
+   readonly textureHeights: Array<number>;
+   /** The indexes of all inputted textures in the texture atlas */
+   readonly textureSlotIndexes: Array<number>;
+   /** Number of textures inside the atlas */
+   readonly numTextures: number;
+}
 
 export const ATLAS_SLOT_SIZE = 16;
 
@@ -53,19 +66,7 @@ const expand = (atlasSize: number): void => {
    textureSlotIndexes = newIndexes;
 }
 
-export interface TextureAtlasInfo {
-   /** The texture atlas */
-   readonly texture: WebGLTexture;
-   readonly atlasSize: number;
-   /** The widths of all inputted textures, in the original order */
-   readonly textureWidths: Array<number>;
-   /** The heights of all inputted textures, in the original order */
-   readonly textureHeights: Array<number>;
-   /** The indexes of all inputted textures in the texture atlas */
-   readonly textureSlotIndexes: Array<number>;
-}
-
-export async function stitchTextureAtlas(textureSources: ReadonlyArray<string>): Promise<TextureAtlasInfo> {
+export async function stitchTextureAtlas(textureSources: ReadonlyArray<string>, gl: WebGL2RenderingContext): Promise<TextureAtlasInfo> {
    return new Promise(async (resolve) => {
       unavailableSlots = [];
       textureSlotIndexes = [];
@@ -148,7 +149,8 @@ export async function stitchTextureAtlas(textureSources: ReadonlyArray<string>):
          atlasSize: atlasSize,
          textureWidths: textureWidths,
          textureHeights: textureHeights,
-         textureSlotIndexes: textureSlotIndexes
+         textureSlotIndexes: textureSlotIndexes,
+         numTextures: textureSources.length
       });
    });
 }

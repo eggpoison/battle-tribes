@@ -60,11 +60,13 @@ const getKey = (e: KeyboardEvent): string => {
 }
 
 const onKeyDown = (e: KeyboardEvent): void => {
-   if (chatboxIsFocused || playerIsUsingTerminal) {
-      return;
+   // If the player is using a text input field, don't register key presses
+   const tagName = document.activeElement?.tagName;
+   if (tagName === "INPUT") {
+      return; 
    }
 
-   const key = getKey(e);
+   const key = getKey(e); 
 
    callKeyListeners(key, e);
 

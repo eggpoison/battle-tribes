@@ -7,6 +7,7 @@ import Camera from "./Camera";
 import { halfWindowHeight, halfWindowWidth, windowHeight, windowWidth } from "./webgl";
 import OPTIONS from "./options";
 import { calculatePotentialPlanIdealness, getHoveredBuildingPlan, getPotentialPlanStats, getVisibleBuildingPlans } from "./client/Client";
+import Player from "./entities/Player";
 
 // @Cleanup: The logic for damage, research and heal numbers is extremely similar, can probably be combined
 
@@ -270,6 +271,10 @@ const renderHealNumbers = (): void => {
 
 const renderPlayerNames = (): void => {
    for (const player of Board.players) {
+      if (player === Player.instance) {
+         continue;
+      }
+      
       // Calculate position in camera
       const cameraX = getXPosInCamera(player.renderPosition.x);
       const cameraY = getYPosInCamera(player.renderPosition.y + 21);

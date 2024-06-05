@@ -1,4 +1,3 @@
-import { EntityComponentsData, ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { Point, randFloat } from "webgl-test-shared/dist/utils";
 import { Settings } from "webgl-test-shared/dist/settings";
@@ -8,17 +7,12 @@ import { playSound } from "../sound";
 import { createFlyParticle } from "../particles";
 import Entity from "../Entity";
 import RectangularHitbox from "../hitboxes/RectangularHitbox";
-import HealthComponent from "../entity-components/HealthComponent";
-import SpikesComponent from "../entity-components/SpikesComponent";
-import StatusEffectComponent from "../entity-components/StatusEffectComponent";
-import TribeComponent from "../entity-components/TribeComponent";
-import StructureComponent from "../entity-components/StructureComponent";
 
 class PunjiSticks extends Entity {
    private ticksSinceLastFly = 0;
    private ticksSinceLastFlySound = 0;
 
-   constructor(position: Point, id: number, ageTicks: number, entityType: EntityType, componentsData: EntityComponentsData<EntityType.floorPunjiSticks>) {
+   constructor(position: Point, id: number, ageTicks: number, entityType: EntityType) {
       super(position, id, entityType, ageTicks);
 
       const isAttachedToWall = entityType === EntityType.wallPunjiSticks;
@@ -36,12 +30,6 @@ class PunjiSticks extends Entity {
          0
       )
       this.attachRenderPart(renderPart);
-
-      this.addServerComponent(ServerComponentType.health, new HealthComponent(this, componentsData[0]));
-      this.addServerComponent(ServerComponentType.statusEffect, new StatusEffectComponent(this, componentsData[1]));
-      this.addServerComponent(ServerComponentType.structure, new StructureComponent(this, componentsData[2]));
-      this.addServerComponent(ServerComponentType.tribe, new TribeComponent(this, componentsData[3]));
-      this.addServerComponent(ServerComponentType.spikes, new SpikesComponent(this, componentsData[4], renderPart));
 
       if (ageTicks <= 1) {
          playSound("spike-place.mp3", 0.5, 1, this.position.x, this.position.y);

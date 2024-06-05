@@ -74,7 +74,9 @@ class EquipmentComponent extends Component {
       super(entity);
 
       this.hasFrostShield = false;
+   }
 
+   public onLoad(): void {
       this.updateArmourRenderPart();
       this.updateGloveRenderParts();
    }

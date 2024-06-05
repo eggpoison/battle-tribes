@@ -40,6 +40,8 @@ class RenderPart extends RenderObject {
    public inheritParentRotation = true;
    public flipX = false;
    
+   public readonly tags = new Array<string>();
+   
    constructor(parent: RenderObject, textureArrayIndex: number, zIndex: number, rotation: number) {
       super();
 
@@ -49,6 +51,10 @@ class RenderPart extends RenderObject {
       this.textureArrayIndex = textureArrayIndex;
       this.zIndex = zIndex;
       this.rotation = rotation;
+   }
+
+   public addTag(tag: string): void {
+      this.tags.push(tag);
    }
 
    /** Updates the render part based on its parent */

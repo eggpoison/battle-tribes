@@ -1,6 +1,5 @@
 import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
-import { FishComponentData } from "webgl-test-shared/dist/components";
 import { EntityType, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
 import { InventoryName, ItemType } from "webgl-test-shared/dist/items";
 import { Settings } from "webgl-test-shared/dist/settings";
@@ -8,21 +7,19 @@ import { Biome, TileType } from "webgl-test-shared/dist/tiles";
 import { Point, randInt, customTickIntervalHasPassed, randFloat } from "webgl-test-shared/dist/utils";
 import Entity, { getRandomPositionInEntity } from "../../Entity";
 import RectangularHitbox from "../../hitboxes/RectangularHitbox";
-import { EscapeAIComponentArray, HealthComponentArray, WanderAIComponentArray } from "../../components/ComponentArray";
-import { HealthComponent, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
+import { HealthComponent, HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
 import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
-import { WanderAIComponent } from "../../components/WanderAIComponent";
+import { WanderAIComponent, WanderAIComponentArray } from "../../components/WanderAIComponent";
 import { entityHasReachedPosition, runHerdAI, stopEntity } from "../../ai-shared";
 import { shouldWander, getWanderTargetTile, wander } from "../../ai/wander-ai";
 import Tile from "../../Tile";
 import Board, { tileRaytraceMatchesTileTypes } from "../../Board";
 import { FishComponent, FishComponentArray } from "../../components/FishComponent";
 import { createItemsOverEntity } from "../../entity-shared";
-import { EscapeAIComponent, updateEscapeAIComponent } from "../../components/EscapeAIComponent";
+import { EscapeAIComponent, EscapeAIComponentArray, updateEscapeAIComponent } from "../../components/EscapeAIComponent";
 import { chooseEscapeEntity, registerAttackingEntity, runFromAttackingEntity } from "../../ai/escape-ai";
 import { InventoryComponentArray, getInventory, hasInventory } from "../../components/InventoryComponent";
 import { AIHelperComponent, AIHelperComponentArray } from "../../components/AIHelperComponent";
-import { SERVER } from "../../server/server";
 import { PhysicsComponent, PhysicsComponentArray, applyKnockback } from "../../components/PhysicsComponent";
 import { CollisionVars, entitiesAreColliding } from "../../collision";
 import { TribeMemberComponentArray } from "../../components/TribeMemberComponent";
@@ -315,11 +312,4 @@ export function onFishHurt(fish: Entity, attackingEntity: Entity): void {
 
 export function onFishDeath(fish: Entity): void {
    createItemsOverEntity(fish, ItemType.raw_fish, 1, 40);
-}
-
-export function serialiseFishComponent(fish: Entity): FishComponentData {
-   const fishComponent = FishComponentArray.getComponent(fish.id);
-   return {
-      colour: fishComponent.colour
-   };
 }

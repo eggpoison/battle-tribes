@@ -14,6 +14,7 @@ import { countItemTypesInInventory } from "../../inventory-manipulation";
 import { playSound } from "../../sound";
 import Player from "../../entities/Player";
 import Game from "../../Game";
+import { setMenuCloseFunction } from "../../player-input";
 
 /*
 // @Incomplete
@@ -120,6 +121,12 @@ const getMenuOptions = (entity: Entity): ReadonlyArray<MenuOption> => {
    // Enemy buildings can't be selected
    const tribeComponent = entity.getServerComponent(ServerComponentType.tribe);
    if (tribeComponent.tribeID !== Game.tribe.id) {
+      return [];
+   }
+
+   // Buildings with active blueprints can't access the build menu
+   const structureComponent = entity.getServerComponent(ServerComponentType.structure);
+   if (structureComponent.hasActiveBlueprint) {
       return [];
    }
    
@@ -420,6 +427,12 @@ const BuildMenu = () => {
          setGhostInfo(null);
          return;
       }
+      setMenuCloseFunction(() => {
+         setBuildingID(0);
+
+         // Deselect structure
+         deselectSelectedEntity();
+      });
       
       BuildMenu_isOpen = () => typeof Board.entityRecord[buildingID] !== "undefined";
 

@@ -1,6 +1,6 @@
 import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
-import { PlanterBoxPlant, BuildingMaterial, MATERIAL_TO_ITEM_MAP } from "webgl-test-shared/dist/components";
+import { PlanterBoxPlant } from "webgl-test-shared/dist/components";
 import { EntityType, EntityTypeString, LimbAction } from "webgl-test-shared/dist/entities";
 import { ItemType, ITEM_INFO_RECORD, ConsumableItemInfo, ConsumableItemCategory, BowItemInfo, InventoryName } from "webgl-test-shared/dist/items";
 import { TRIBE_INFO_RECORD } from "webgl-test-shared/dist/tribes";
@@ -8,26 +8,24 @@ import { Point } from "webgl-test-shared/dist/utils";
 import Entity from "../../Entity";
 import { onTribeMemberHurt, tickTribeMember } from "./tribe-member";
 import Tribe from "../../Tribe";
-import { BuildingMaterialComponentArray, HealthComponentArray, HutComponentArray, InventoryUseComponentArray, PlayerComponentArray, SpikesComponentArray, TribeComponentArray, TunnelComponentArray } from "../../components/ComponentArray";
 import { InventoryComponent, consumeItemFromSlot, consumeItemType, countItemType, getInventory, pickupItemEntity, addItem, InventoryComponentArray } from "../../components/InventoryComponent";
 import Board from "../../Board";
-import { HealthComponent } from "../../components/HealthComponent";
+import { HealthComponent, HealthComponentArray } from "../../components/HealthComponent";
 import CircularHitbox from "../../hitboxes/CircularHitbox";
-import { InventoryUseComponent, getInventoryUseInfo, setLimbActions } from "../../components/InventoryUseComponent";
-import { TribeMemberComponent, TribeMemberComponentArray } from "../../components/TribeMemberComponent";
-import { PlayerComponent } from "../../components/PlayerComponent";
+import { InventoryUseComponent, InventoryUseComponentArray, getInventoryUseInfo, setLimbActions } from "../../components/InventoryUseComponent";
+import { TribeMemberComponent, TribeMemberComponentArray, awardTitle } from "../../components/TribeMemberComponent";
+import { PlayerComponent, PlayerComponentArray } from "../../components/PlayerComponent";
 import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
-import { toggleDoor } from "../../components/DoorComponent";
 import { PhysicsComponent, PhysicsComponentArray } from "../../components/PhysicsComponent";
-import { TribeComponent } from "../../components/TribeComponent";
-import { deoccupyResearchBench, attemptToOccupyResearchBench } from "../../components/ResearchBenchComponent";
-import { createItemsOverEntity } from "../../entity-shared";
-import { toggleTunnelDoor, updateTunnelDoorBitset } from "../../components/TunnelComponent";
+import { TribeComponent, TribeComponentArray } from "../../components/TribeComponent";
+import { TunnelComponentArray, updateTunnelDoorBitset } from "../../components/TunnelComponent";
 import { PlanterBoxComponentArray, fertilisePlanterBox, placePlantInPlanterBox } from "../../components/PlanterBoxComponent";
 import { createItem } from "../../items";
-import { toggleFenceGateDoor } from "../../components/FenceGateComponent";
 import { StructureComponentArray, isAttachedToWall } from "../../components/StructureComponent";
 import { registerPlayerDroppedItemPickup } from "../../server/player-clients";
+import { HutComponentArray } from "../../components/HutComponent";
+import { SpikesComponentArray } from "../../components/SpikesComponent";
+import { TribesmanTitle } from "webgl-test-shared/dist/titles";
 
 export function createPlayer(position: Point, tribe: Tribe, username: string): Entity {
    const player = new Entity(position, 0, EntityType.player, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
@@ -55,16 +53,18 @@ export function createPlayer(position: Point, tribe: Tribe, username: string): E
    // addItem(inventoryComponent, createItem(ItemType.wooden_spikes, 5));
    // addItem(inventoryComponent, createItem(ItemType.leaf, 10));
 
-   setTimeout(() => {
-      addItem(inventoryComponent, createItem(ItemType.planter_box, 5));
-      addItem(inventoryComponent, createItem(ItemType.berry, 10));
-      addItem(inventoryComponent, createItem(ItemType.fertiliser, 10));
-   }, 200);
+   // setTimeout (() => {
+   //    addItem(inventoryComponent, createItem(ItemType.planter_box, 5));
+   //    addItem(inventoryComponent, createItem(ItemType.berry, 10));
+   //    addItem(inventoryComponent, createItem(ItemType.fertiliser, 10));
+   // }, 200);
    // addItem(inventoryComponent, createItem(ItemType.seed, 10));
    // addItem(inventoryComponent, createItem(ItemType.frostcicle, 10));
 
-   // addItem(inventoryComponent, createItem(ItemType.wooden_fence, 99));
-   // addItem(inventoryComponent, createItem(ItemType.wooden_hammer, 1));
+   // setTimeout(() => {
+   //    addItem(inventoryComponent, createItem(ItemType.frostshaper, 99));
+   //    addItem(inventoryComponent, createItem(ItemType.stonecarvingTable, 5));
+   // }, 50);
    // addItem(inventoryComponent, createItem(ItemType.wood, 10));
    // addItem(inventoryComponent, createItem(ItemType.wooden_wall, 50));
    

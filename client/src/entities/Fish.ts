@@ -1,6 +1,6 @@
 import { Point, randFloat, randInt } from "webgl-test-shared/dist/utils";
 import { EntityType, FishColour } from "webgl-test-shared/dist/entities";
-import { EntityComponentsData, ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { HitData } from "webgl-test-shared/dist/client-server-types";
 import { TileType } from "webgl-test-shared/dist/tiles";
 import RenderPart from "../render-parts/RenderPart";
@@ -8,11 +8,7 @@ import { getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
 import Board from "../Board";
 import { BloodParticleSize, createBloodParticle, createBloodParticleFountain, createWaterSplashParticle } from "../particles";
 import { AudioFilePath, playSound } from "../sound";
-import FishComponent from "../entity-components/FishComponent";
-import Entity from "../Entity";
-import HealthComponent from "../entity-components/HealthComponent";
-import StatusEffectComponent from "../entity-components/StatusEffectComponent";
-import PhysicsComponent from "../entity-components/PhysicsComponent";
+import Entity, { ComponentDataRecord } from "../Entity";
 
 const TEXTURE_SOURCES: Record<FishColour, string> = {
    [FishColour.blue]: "entities/fish/fish-blue.png",
@@ -22,10 +18,10 @@ const TEXTURE_SOURCES: Record<FishColour, string> = {
 };
 
 class Fish extends Entity {
-   constructor(position: Point, id: number, ageTicks: number, componentsData: EntityComponentsData<EntityType.fish>) {
+   constructor(position: Point, id: number, ageTicks: number, componentDataRecord: ComponentDataRecord) {
       super(position, id, EntityType.fish, ageTicks);
 
-      const fishComponentData = componentsData[6];
+      const fishComponentData = componentDataRecord[ServerComponentType.fish]!;
 
       this.attachRenderPart(
          new RenderPart(
@@ -35,11 +31,6 @@ class Fish extends Entity {
             0
          )
       );
-
-      this.addServerComponent(ServerComponentType.physics, new PhysicsComponent(this, componentsData[0]))
-      this.addServerComponent(ServerComponentType.health, new HealthComponent(this, componentsData[1]))
-      this.addServerComponent(ServerComponentType.statusEffect, new StatusEffectComponent(this, componentsData[2]))
-      this.addServerComponent(ServerComponentType.fish, new FishComponent(this, randFloat(0.6, 1)))
    }
 
    public tick(): void {

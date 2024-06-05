@@ -5,8 +5,13 @@ import { Settings } from "webgl-test-shared/dist/settings";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import RenderPart from "../render-parts/RenderPart";
-import Slime from "../entities/Slime";
 import { getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
+
+export const SLIME_SIZES: ReadonlyArray<number> = [
+   64, // small
+   88, // medium
+   120 // large
+];
 
 /** Information about an orb inside a slime */
 interface SlimeOrbInfo {
@@ -16,6 +21,8 @@ interface SlimeOrbInfo {
    rotation: number;
    angularVelocity: number;
 }
+
+const SIZE_STRINGS: ReadonlyArray<string> = ["small", "medium", "large"];
 
 const getBodyShakeAmount = (spitProgress: number): number => {
    return lerp(0, 5, spitProgress);
@@ -43,7 +50,7 @@ class SlimeComponent extends ServerComponent<ServerComponentType.slime> {
 
       this.size = data.size;
       
-      const sizeString = Slime.SIZE_STRINGS[data.size];
+      const sizeString = SIZE_STRINGS[data.size];
 
       // Body
       this.bodyRenderPart = new RenderPart(
@@ -100,7 +107,7 @@ class SlimeComponent extends ServerComponent<ServerComponentType.slime> {
 
          // Update the orb's rotation
          if (orb.angularVelocity !== 0) {
-            const spriteSize = Slime.SIZES[this.size];
+            const spriteSize = SLIME_SIZES[this.size];
             const offsetMagnitude = spriteSize / 2 * lerp(0.3, 0.7, orb.offset);
             this.orbRenderParts[i].offset.x = offsetMagnitude * Math.sin(orb.rotation);
             this.orbRenderParts[i].offset.y = offsetMagnitude * Math.cos(orb.rotation);
@@ -122,10 +129,10 @@ class SlimeComponent extends ServerComponent<ServerComponentType.slime> {
       };
       this.orbs.push(orbInfo);
 
-      const sizeString = Slime.SIZE_STRINGS[size];
+      const sizeString = SIZE_STRINGS[size];
       
       // Calculate the orb's offset from the center of the slime
-      const spriteSize = Slime.SIZES[this.size];
+      const spriteSize = SLIME_SIZES[this.size];
       const offsetMagnitude = spriteSize / 2 * lerp(0.3, 0.7, orbInfo.offset);
 
       const renderPart = new RenderPart(
@@ -152,7 +159,7 @@ class SlimeComponent extends ServerComponent<ServerComponentType.slime> {
          this.internalTickCounter += frequency;
 
          let amplitude = lerp(SlimeComponent.EYE_SHAKE_START_AMPLITUDE, SlimeComponent.EYE_SHAKE_END_AMPLITUDE, anger) * 100;
-         amplitude /= Math.PI * Slime.SIZES[this.size];
+         amplitude /= Math.PI * SLIME_SIZES[this.size];
          this.eyeRenderPart.rotation += amplitude * Math.sin(this.internalTickCounter * 3);
       } else {
          this.internalTickCounter = 0;

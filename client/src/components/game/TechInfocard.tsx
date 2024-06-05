@@ -1,6 +1,7 @@
 import { TechID, getTechByID } from "webgl-test-shared/dist/techs";
 import { useEffect, useState } from "react";
 import Game from "../../Game";
+import TechTreeProgressBar from "./tech-tree/TechTreeProgressBar";
 
 export let TechInfocard_setSelectedTech: (techID: TechID | null) => void = () => {};
 
@@ -26,13 +27,17 @@ const TechInfocard = () => {
    const techInfo = getTechByID(selectedTech);
 
    return <div id="tech-infocard" className="infocard">
-      <img src={require("../../images/tech-tree/" + techInfo.iconSrc)} alt="" />
       {studyProgress < techInfo.researchStudyRequirements ? <>
-         <h2>{techInfo.name}</h2>
-         <p>{studyProgress}/{techInfo.researchStudyRequirements}</p>
+         <div className="flex">
+            <h2>{techInfo.name}</h2>
+            <img src={require("../../images/tech-tree/" + techInfo.iconSrc)} alt="" />
+         </div>
+         <TechTreeProgressBar techInfo={techInfo} />
       </> : <>
-         <h2>Research Complete!</h2>
-         <p>{techInfo.name}</p>
+         <div className="flex">
+            <h2>Research Complete!</h2>
+            <img src={require("../../images/tech-tree/" + techInfo.iconSrc)} alt="" />
+         </div>
       </>}
    </div>;
 }

@@ -1,10 +1,11 @@
 import { rotateXAroundOrigin, rotateYAroundOrigin } from "webgl-test-shared/dist/utils";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { SafetyNodeData, WallSideNodeData } from "webgl-test-shared/dist/ai-building-types";
-import { CAMERA_UNIFORM_BUFFER_BINDING_INDEX, createWebGLProgram, gl } from "../webgl";
-import OPTIONS from "../options";
-import { getVisibleWalls } from "../client/Client";
-import { getHoveredEntityID } from "../entity-selection";
+import { createWebGLProgram, gl } from "../../webgl";
+import OPTIONS from "../../options";
+import { getVisibleWalls } from "../../client/Client";
+import { getHoveredEntityID } from "../../entity-selection";
+import { bindUBOToProgram, UBOBindingIndexes } from "../ubos";
 
 const OCCUPIED_NODE_THICKNESS = 3;
 const OCCUPIED_NODE_FREE_THICKNESS = 4.5;
@@ -67,9 +68,7 @@ export function createSafetyNodeShaders(): void {
    `;
    
    program = createWebGLProgram(gl, vertexShaderText, fragmentShaderText);
-
-   const lineCameraBlockIndex = gl.getUniformBlockIndex(program, "Camera");
-   gl.uniformBlockBinding(program, lineCameraBlockIndex, CAMERA_UNIFORM_BUFFER_BINDING_INDEX);
+   bindUBOToProgram(gl, program, UBOBindingIndexes.CAMERA);
 }
 
 const getHighlightedNodes = (): ReadonlyArray<WallSideNodeData> => {

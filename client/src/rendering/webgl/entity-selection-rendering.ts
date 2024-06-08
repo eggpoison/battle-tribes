@@ -1,10 +1,11 @@
 import { rotateXAroundOrigin, rotateXAroundPoint, rotateYAroundOrigin, rotateYAroundPoint } from "webgl-test-shared/dist/utils";
-import Board from "../Board";
-import { getHighlightedEntityID, getSelectedEntityID } from "../entity-selection";
-import { createWebGLProgram, gl, CAMERA_UNIFORM_BUFFER_BINDING_INDEX, windowWidth, windowHeight, createTexture, TIME_UNIFORM_BUFFER_BINDING_INDEX } from "../webgl";
-import Entity from "../Entity";
-import { ENTITY_TEXTURE_ATLAS_LENGTH, getEntityTextureAtlas } from "../texture-atlases/entity-texture-atlas";
-import { ATLAS_SLOT_SIZE } from "../texture-atlases/texture-atlas-stitching";
+import Board from "../../Board";
+import { getHighlightedEntityID, getSelectedEntityID } from "../../entity-selection";
+import { createWebGLProgram, gl, windowWidth, windowHeight, createTexture } from "../../webgl";
+import Entity from "../../Entity";
+import { ENTITY_TEXTURE_ATLAS_LENGTH, getEntityTextureAtlas } from "../../texture-atlases/entity-texture-atlas";
+import { ATLAS_SLOT_SIZE } from "../../texture-atlases/texture-atlas-stitching";
+import { bindUBOToProgram, UBOBindingIndexes } from "../ubos";
 
 let framebufferProgram: WebGLProgram;
 let renderProgram: WebGLProgram;
@@ -219,9 +220,7 @@ export function createStructureHighlightShaders(): void {
    `;
 
    framebufferProgram = createWebGLProgram(gl, framebufferVertexShaderText, framebufferFragmentShaderText);
-
-   const cameraBlockIndex = gl.getUniformBlockIndex(framebufferProgram, "Camera");
-   gl.uniformBlockBinding(framebufferProgram, cameraBlockIndex, CAMERA_UNIFORM_BUFFER_BINDING_INDEX);
+   bindUBOToProgram(gl, framebufferProgram, UBOBindingIndexes.CAMERA);
 
    // @Cleanup: Copy and paste
 
@@ -256,14 +255,8 @@ export function createStructureHighlightShaders(): void {
    // 
 
    renderProgram = createWebGLProgram(gl, renderVertexShaderText, renderFragmentShaderText);
-
-   {
-      const cameraBlockIndex = gl.getUniformBlockIndex(renderProgram, "Camera");
-      gl.uniformBlockBinding(renderProgram, cameraBlockIndex, CAMERA_UNIFORM_BUFFER_BINDING_INDEX);
-
-      const timeBlockIndex = gl.getUniformBlockIndex(renderProgram, "Time");
-      gl.uniformBlockBinding(renderProgram, timeBlockIndex, TIME_UNIFORM_BUFFER_BINDING_INDEX);
-   }
+   bindUBOToProgram(gl, renderProgram, UBOBindingIndexes.CAMERA);
+   bindUBOToProgram(gl, renderProgram, UBOBindingIndexes.TIME);
 
    const framebufferTextureUniformLocation = gl.getUniformLocation(renderProgram, "u_framebufferTexture")!;
 

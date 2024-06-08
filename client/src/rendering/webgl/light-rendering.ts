@@ -1,9 +1,10 @@
 import { Settings } from "webgl-test-shared/dist/settings";
 import { lerp } from "webgl-test-shared/dist/utils";
-import { CAMERA_UNIFORM_BUFFER_BINDING_INDEX, createWebGLProgram, gl } from "../webgl";
-import Board from "../Board";
-import OPTIONS from "../options";
-import { getLightPosition, getLights } from "../lights";
+import { createWebGLProgram, gl } from "../../webgl";
+import Board from "../../Board";
+import OPTIONS from "../../options";
+import { getLightPosition, getLights } from "../../lights";
+import { bindUBOToProgram, UBOBindingIndexes } from "../ubos";
 
 const NIGHT_LIGHT = 0.4;
 
@@ -148,13 +149,10 @@ export function createNightShaders(): void {
    `;
 
    darknessProgram = createWebGLProgram(gl, colourVertexShaderText, colourFragmentShaderText);
+   bindUBOToProgram(gl, darknessProgram, UBOBindingIndexes.CAMERA);
+
    colourProgram = createWebGLProgram(gl, darknessVertexShaderText, darknessFragmentShaderText);
-
-   const colourCameraBlockIndex = gl.getUniformBlockIndex(darknessProgram, "Camera");
-   gl.uniformBlockBinding(darknessProgram, colourCameraBlockIndex, CAMERA_UNIFORM_BUFFER_BINDING_INDEX);
-
-   const darknessCameraBlockIndex = gl.getUniformBlockIndex(darknessProgram, "Camera");
-   gl.uniformBlockBinding(colourProgram, darknessCameraBlockIndex, CAMERA_UNIFORM_BUFFER_BINDING_INDEX);
+   bindUBOToProgram(gl, colourProgram, UBOBindingIndexes.CAMERA);
 
    darkenFactorUniformLocation = gl.getUniformLocation(darknessProgram, "u_darkenFactor")!;
 

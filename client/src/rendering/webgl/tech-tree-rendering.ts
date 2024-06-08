@@ -1,8 +1,8 @@
 import { TECHS, TechID, TechInfo, getTechByID } from "webgl-test-shared/dist/techs";
 import { angle } from "webgl-test-shared/dist/utils";
-import Game from "../Game";
-import { createWebGLProgram, halfWindowHeight, halfWindowWidth, windowHeight, windowWidth } from "../webgl";
-import { techIsHovered } from "../components/game/tech-tree/TechTree";
+import Game from "../../Game";
+import { createWebGLProgram, halfWindowHeight, halfWindowWidth, windowHeight, windowWidth } from "../../webgl";
+import { techIsHovered } from "../../components/game/tech-tree/TechTree";
 
 const ConnectorType = {
    unlocked: 0,

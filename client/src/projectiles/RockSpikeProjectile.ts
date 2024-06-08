@@ -1,7 +1,7 @@
 import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
 import Particle from "../Particle";
-import { ParticleRenderLayer, addMonocolourParticleToBufferContainer } from "../rendering/particle-rendering";
+import { ParticleRenderLayer, addMonocolourParticleToBufferContainer } from "../rendering/webgl/particle-rendering";
 import Board from "../Board";
 import { createRockParticle } from "../particles";
 import Entity, { ComponentDataRecord } from "../Entity";

@@ -7,57 +7,58 @@ import { isDev } from "./utils";
 import { createTextCanvasContext, updateTextNumbers, renderText } from "./text-canvas";
 import Camera from "./Camera";
 import { updateSpamFilter } from "./components/game/ChatBox";
-import { createEntityShaders, renderGameObjects } from "./rendering/game-object-rendering";
+import { createEntityShaders, renderGameObjects } from "./rendering/webgl/game-object-rendering";
 import Client from "./client/Client";
 import { calculateCursorWorldPositionX, calculateCursorWorldPositionY, cursorX, cursorY, getMouseTargetEntity, handleMouseMovement, renderCursorTooltip } from "./mouse";
 import { refreshDebugInfo, setDebugInfoDebugData } from "./components/game/dev/DebugInfo";
-import { CAMERA_UNIFORM_BUFFER_BINDING_INDEX, TIME_UNIFORM_BUFFER_BINDING_INDEX, createWebGLContext, gl, halfWindowHeight, halfWindowWidth, resizeCanvas } from "./webgl";
+import { createWebGLContext, gl, halfWindowHeight, halfWindowWidth, resizeCanvas } from "./webgl";
 import { loadTextures } from "./textures";
 import { hidePauseScreen, showPauseScreen, toggleSettingsMenu } from "./components/game/GameScreen";
 import { getGameState } from "./components/App";
 import { clearPressedKeys } from "./keyboard-input";
-import { createHitboxShaders, renderEntityHitboxes } from "./rendering/hitbox-rendering";
+import { createHitboxShaders, renderEntityHitboxes } from "./rendering/webgl/hitbox-rendering";
 import { updatePlayerItems, updatePlayerMovement } from "./player-input";
 import { clearServerTicks, updateDebugScreenFPS, updateDebugScreenRenderTime } from "./components/game/dev/GameInfoDisplay";
-import { createWorldBorderShaders, renderWorldBorder } from "./rendering/world-border-rendering";
-import { createSolidTileShaders, renderSolidTiles } from "./rendering/solid-tile-rendering";
-import { createRiverShaders, createRiverSteppingStoneData, renderRivers } from "./rendering/river-rendering";
-import { createChunkBorderShaders, renderChunkBorders } from "./rendering/chunk-border-rendering";
+import { createWorldBorderShaders, renderWorldBorder } from "./rendering/webgl/world-border-rendering";
+import { createSolidTileShaders, renderSolidTiles } from "./rendering/webgl/solid-tile-rendering";
+import { createRiverShaders, createRiverSteppingStoneData, renderRivers } from "./rendering/webgl/river-rendering";
+import { createChunkBorderShaders, renderChunkBorders } from "./rendering/webgl/chunk-border-rendering";
 import { nerdVisionIsVisible } from "./components/game/dev/NerdVision";
 import { setFrameProgress } from "./Entity";
-import { createDebugDataShaders, renderLineDebugData, renderTriangleDebugData } from "./rendering/debug-data-rendering";
-import { createAmbientOcclusionShaders, renderAmbientOcclusion } from "./rendering/ambient-occlusion-rendering";
-import { createWallBorderShaders, renderWallBorders } from "./rendering/wall-border-rendering";
-import { ParticleRenderLayer, createParticleShaders, renderMonocolourParticles, renderTexturedParticles } from "./rendering/particle-rendering";
+import { createDebugDataShaders, renderLineDebugData, renderTriangleDebugData } from "./rendering/webgl/debug-data-rendering";
+import { createAmbientOcclusionShaders, renderAmbientOcclusion } from "./rendering/webgl/ambient-occlusion-rendering";
+import { createWallBorderShaders, renderWallBorders } from "./rendering/webgl/wall-border-rendering";
+import { ParticleRenderLayer, createParticleShaders, renderMonocolourParticles, renderTexturedParticles } from "./rendering/webgl/particle-rendering";
 import Tribe from "./Tribe";
 import OPTIONS from "./options";
 import { RENDER_CHUNK_SIZE, createRenderChunks } from "./rendering/render-chunks";
 import { registerFrame, updateFrameGraph } from "./components/game/dev/FrameGraph";
-import { createNightShaders, renderNight } from "./rendering/light-rendering";
-import { createPlaceableItemProgram, renderGhostEntities } from "./rendering/entity-ghost-rendering";
-import { setupFrameGraph } from "./rendering/frame-graph-rendering";
+import { createNightShaders, renderNight } from "./rendering/webgl/light-rendering";
+import { createPlaceableItemProgram, renderGhostEntities } from "./rendering/webgl/entity-ghost-rendering";
+import { setupFrameGraph } from "./rendering/webgl/frame-graph-rendering";
 import { createTextureAtlases } from "./texture-atlases/entity-texture-atlas";
-import { createFishShaders } from "./rendering/fish-rendering";
+import { createFishShaders } from "./rendering/webgl/fish-rendering";
 import { Tile } from "./Tile";
-import { createForcefieldShaders, renderForcefield } from "./rendering/world-border-forcefield-rendering";
-import { createDecorationShaders, renderDecorations } from "./rendering/decoration-rendering";
+import { createForcefieldShaders, renderForcefield } from "./rendering/webgl/world-border-forcefield-rendering";
+import { createDecorationShaders, renderDecorations } from "./rendering/webgl/decoration-rendering";
 import { playRiverSounds, setupAudio, updateSoundEffectVolumes } from "./sound";
-import { createTechTreeGLContext, createTechTreeShaders, getTechTreeGL, renderTechTree } from "./rendering/tech-tree-rendering";
-import { createResearchOrbShaders, renderResearchOrb } from "./rendering/research-orb-rendering";
+import { createTechTreeGLContext, createTechTreeShaders, getTechTreeGL, renderTechTree } from "./rendering/webgl/tech-tree-rendering";
+import { createResearchOrbShaders, renderResearchOrb } from "./rendering/webgl/research-orb-rendering";
 import { attemptToResearch, updateActiveResearchBench, updateResearchOrb } from "./research";
 import { resetInteractableEntityIDs, updateHighlightedAndHoveredEntities, updateSelectedStructure } from "./entity-selection";
-import { createStructureHighlightShaders, renderEntitySelection } from "./rendering/entity-selection-rendering";
+import { createStructureHighlightShaders, renderEntitySelection } from "./rendering/webgl/entity-selection-rendering";
 import { InventorySelector_forceUpdate } from "./components/game/inventories/InventorySelector";
-import { createTurretRangeShaders, renderTurretRange } from "./rendering/turret-range-rendering";
-import { createPathfindNodeShaders, renderPathfindingNodes } from "./rendering/pathfinding-node-rendering";
+import { createTurretRangeShaders, renderTurretRange } from "./rendering/webgl/turret-range-rendering";
+import { createPathfindNodeShaders, renderPathfindingNodes } from "./rendering/webgl/pathfinding-node-rendering";
 import { updateInspectHealthBar } from "./components/game/InspectHealthBar";
-import { createSafetyNodeShaders, renderSafetyNodes } from "./rendering/safety-node-rendering";
-import { createRestrictedBuildingAreaShaders, renderRestrictedBuildingAreas } from "./rendering/restricted-building-areas-rendering";
-import { createWallConnectionShaders, renderWallConnections } from "./rendering/wall-connection-rendering";
-import { createHealingBeamShaders, renderHealingBeams } from "./rendering/healing-beam-rendering";
+import { createSafetyNodeShaders, renderSafetyNodes } from "./rendering/webgl/safety-node-rendering";
+import { createRestrictedBuildingAreaShaders, renderRestrictedBuildingAreas } from "./rendering/webgl/restricted-building-areas-rendering";
+import { createWallConnectionShaders, renderWallConnections } from "./rendering/webgl/wall-connection-rendering";
+import { createHealingBeamShaders, renderHealingBeams } from "./rendering/webgl/healing-beam-rendering";
 import { BuildMenu_refreshBuildingID, BuildMenu_updateBuilding } from "./components/game/BuildMenu";
-import { createGrassBlockerShaders, renderGrassBlockers } from "./rendering/grass-blocker-rendering";
-import { createTechTreeItemShaders, renderTechTreeItems, updateTechTreeItems } from "./rendering/tech-tree-item-rendering";
+import { createGrassBlockerShaders, renderGrassBlockers } from "./rendering/webgl/grass-blocker-rendering";
+import { createTechTreeItemShaders, renderTechTreeItems, updateTechTreeItems } from "./rendering/webgl/tech-tree-item-rendering";
+import { createUBOs, updateUBOs } from "./rendering/ubos";
 
 let listenersHaveBeenCreated = false;
 
@@ -110,16 +111,6 @@ abstract class Game {
 
    public static tribe: Tribe;
    public static enemyTribes: ReadonlyArray<EnemyTribeData>;
-   
-   private static cameraData = new Float32Array(8);
-   private static cameraBuffer: WebGLBuffer;
-   
-   // @Cleanup: Copy and paste
-   private static cameraDataTechTree = new Float32Array(8);
-   private static cameraBufferTechTree: WebGLBuffer;
-
-   private static timeData = new Float32Array(4);
-   private static timeBuffer: WebGLBuffer;
 
    // @Hack @Cleanup
    public static playerID: number;
@@ -209,24 +200,7 @@ abstract class Game {
          
             createRiverSteppingStoneData(riverSteppingStones);
 
-            // Create the camera uniform buffer
-            this.cameraBuffer = gl.createBuffer()!;
-            gl.bindBufferBase(gl.UNIFORM_BUFFER, CAMERA_UNIFORM_BUFFER_BINDING_INDEX, this.cameraBuffer);
-            gl.bufferData(gl.UNIFORM_BUFFER, this.cameraData.byteLength, gl.DYNAMIC_DRAW);
-
-            // Create the time uniform buffer
-            this.timeBuffer = gl.createBuffer()!;
-            gl.bindBufferBase(gl.UNIFORM_BUFFER, TIME_UNIFORM_BUFFER_BINDING_INDEX, this.timeBuffer);
-            gl.bufferData(gl.UNIFORM_BUFFER, this.timeData.byteLength, gl.DYNAMIC_DRAW);
-
-            // @Cleanup: Copy and paste
-            // Create the camera uniform buffer (for the tech tree)
-            {
-               const gl = getTechTreeGL();
-               this.cameraBufferTechTree = gl.createBuffer()!;
-               gl.bindBufferBase(gl.UNIFORM_BUFFER, CAMERA_UNIFORM_BUFFER_BINDING_INDEX, this.cameraBufferTechTree);
-               gl.bufferData(gl.UNIFORM_BUFFER, this.cameraDataTechTree.byteLength, gl.DYNAMIC_DRAW);
-            }
+            createUBOs();
             
             // We load the textures before we create the shaders because some shader initialisations stitch textures together
             await loadTextures();
@@ -407,6 +381,7 @@ abstract class Game {
 
       setFrameProgress(frameProgress);
 
+      // @Cleanup: move to update function in camera
       // Update the camera
       if (Player.instance !== null) {
          Player.instance.updateRenderPosition();
@@ -415,31 +390,7 @@ abstract class Game {
          Camera.updateVisibleRenderChunkBounds();
       }
 
-      // Update the camera buffer
-      gl.bindBuffer(gl.UNIFORM_BUFFER, this.cameraBuffer);
-      this.cameraData[0] = Camera.position.x;
-      this.cameraData[1] = Camera.position.y;
-      this.cameraData[2] = halfWindowWidth;
-      this.cameraData[3] = halfWindowHeight;
-      this.cameraData[4] = Camera.zoom;
-      gl.bufferSubData(gl.UNIFORM_BUFFER, 0, this.cameraData);
-
-      // Update the time buffer
-      gl.bindBuffer(gl.UNIFORM_BUFFER, this.timeBuffer);
-      this.timeData[0] = performance.now();
-      gl.bufferSubData(gl.UNIFORM_BUFFER, 0, this.timeData);
-
-      // @Cleanup: Copy and paste
-      {
-         const gl = getTechTreeGL();
-         gl.bindBuffer(gl.UNIFORM_BUFFER, this.cameraBufferTechTree);
-         this.cameraDataTechTree[0] = Camera.position.x;
-         this.cameraDataTechTree[1] = Camera.position.y;
-         this.cameraDataTechTree[2] = halfWindowWidth;
-         this.cameraDataTechTree[3] = halfWindowHeight;
-         this.cameraDataTechTree[4] = Camera.zoom;
-         gl.bufferSubData(gl.UNIFORM_BUFFER, 0, this.cameraDataTechTree);
-      }
+      updateUBOs();
 
       renderText();
 

@@ -1,6 +1,6 @@
 import { lerp } from "webgl-test-shared/dist/utils";
-import { FrameInfo } from "../components/game/dev/FrameGraph";
-import { createWebGLProgram } from "../webgl";
+import { FrameInfo } from "../../components/game/dev/FrameGraph";
+import { createWebGLProgram } from "../../webgl";
 
 const TARGET_FRAME_RENDER_TIME = 16 / 1000; // 16 milliseconds
 const MAX_FRAME_RENDER_TIME = 24 / 1000; // 24 milliseconds

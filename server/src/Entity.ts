@@ -26,7 +26,7 @@ import { Hitbox, hitboxIsCircular } from "./hitboxes/hitboxes";
 let idCounter = 1;
 
 /** Finds a unique available ID for an entity */
-export function findAvailableEntityID(): number {
+const findAvailableEntityID = (): number => {
    return idCounter++;
 }
 

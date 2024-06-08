@@ -1,6 +1,7 @@
 import { Settings } from "webgl-test-shared/dist/settings";
-import Camera from "../Camera";
-import { CAMERA_UNIFORM_BUFFER_BINDING_INDEX, createWebGLProgram, gl } from "../webgl";
+import Camera from "../../Camera";
+import { createWebGLProgram, gl } from "../../webgl";
+import { bindUBOToProgram, UBOBindingIndexes } from "../ubos";
 
 let program: WebGLProgram;
 let buffer: WebGLBuffer;
@@ -68,9 +69,7 @@ export function createWorldBorderShaders(): void {
    `;
 
    program = createWebGLProgram(gl, vertexShaderText, fragmentShaderText);
-
-   const cameraBlockIndex = gl.getUniformBlockIndex(program, "Camera");
-   gl.uniformBlockBinding(program, cameraBlockIndex, CAMERA_UNIFORM_BUFFER_BINDING_INDEX);
+   bindUBOToProgram(gl, program, UBOBindingIndexes.CAMERA);
 
    buffer = gl.createBuffer()!;
 }

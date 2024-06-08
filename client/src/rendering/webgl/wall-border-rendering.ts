@@ -1,9 +1,10 @@
 import { Settings } from "webgl-test-shared/dist/settings";
-import Camera from "../Camera";
-import { Tile } from "../Tile";
-import { CAMERA_UNIFORM_BUFFER_BINDING_INDEX, createWebGLProgram, gl } from "../webgl";
-import Board from "../Board";
-import { RenderChunkWallBorderInfo, getRenderChunkMaxTileX, getRenderChunkMaxTileY, getRenderChunkMinTileX, getRenderChunkMinTileY, getRenderChunkWallBorderInfo } from "./render-chunks";
+import Camera from "../../Camera";
+import { Tile } from "../../Tile";
+import { createWebGLProgram, gl } from "../../webgl";
+import Board from "../../Board";
+import { RenderChunkWallBorderInfo, getRenderChunkMaxTileX, getRenderChunkMaxTileY, getRenderChunkMinTileX, getRenderChunkMinTileY, getRenderChunkWallBorderInfo } from "../render-chunks";
+import { bindUBOToProgram, UBOBindingIndexes } from "../ubos";
 
 const BORDER_THICKNESS = 5;
 
@@ -39,9 +40,7 @@ export function createWallBorderShaders(): void {
    `;
 
    program = createWebGLProgram(gl, vertexShaderText, fragmentShaderText);
-
-   const cameraBlockIndex = gl.getUniformBlockIndex(program, "Camera");
-   gl.uniformBlockBinding(program, cameraBlockIndex, CAMERA_UNIFORM_BUFFER_BINDING_INDEX);
+   bindUBOToProgram(gl, program, UBOBindingIndexes.CAMERA);
 }
 
 export function calculateWallBorderInfo(renderChunkX: number, renderChunkY: number): RenderChunkWallBorderInfo {

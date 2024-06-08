@@ -1,7 +1,8 @@
 import { rotateXAroundOrigin, rotateYAroundOrigin } from "webgl-test-shared/dist/utils";
 import { WallConnectionData } from "webgl-test-shared/dist/ai-building-types";
-import { CAMERA_UNIFORM_BUFFER_BINDING_INDEX, createWebGLProgram, gl } from "../webgl";
-import OPTIONS from "../options";
+import { createWebGLProgram, gl } from "../../webgl";
+import OPTIONS from "../../options";
+import { UBOBindingIndexes, bindUBOToProgram } from "../ubos";
 
 const CONNECTION_WIDTH = 4;
 const CONNECTION_HEIGHT = 8;
@@ -45,9 +46,7 @@ export function createWallConnectionShaders(): void {
    `;
    
    program = createWebGLProgram(gl, vertexShaderText, fragmentShaderText);
-
-   const lineCameraBlockIndex = gl.getUniformBlockIndex(program, "Camera");
-   gl.uniformBlockBinding(program, lineCameraBlockIndex, CAMERA_UNIFORM_BUFFER_BINDING_INDEX);
+   bindUBOToProgram(gl, program, UBOBindingIndexes.CAMERA);
 }
 
 export function renderWallConnections(): void {

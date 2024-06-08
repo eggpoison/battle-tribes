@@ -2,7 +2,7 @@ export enum TribesmanTitle {
    gardener,
    berrymuncher,
    sprinter,
-   architect,
+   builder,
    packrat,
    wellful,
    yetisbane,
@@ -35,9 +35,9 @@ export const TRIBESMAN_TITLE_RECORD: Record<TribesmanTitle, TribesmanTitleInfo> 
       tier: 1,
       name: "Sprinter"
    },
-   [TribesmanTitle.architect]: {
+   [TribesmanTitle.builder]: {
       tier: 1,
-      name: "Architect"
+      name: "Builder"
    },
    [TribesmanTitle.packrat]: {
       tier: 1,

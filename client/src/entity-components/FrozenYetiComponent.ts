@@ -8,7 +8,7 @@ import Entity from "../Entity";
 import { createBiteParticle, createRockParticle, createSnowParticle, createWhiteSmokeParticle } from "../particles";
 import Board from "../Board";
 import Particle from "../Particle";
-import { addMonocolourParticleToBufferContainer, addTexturedParticleToBufferContainer, ParticleRenderLayer } from "../rendering/particle-rendering";
+import { addMonocolourParticleToBufferContainer, addTexturedParticleToBufferContainer, ParticleRenderLayer } from "../rendering/webgl/particle-rendering";
 import Player from "../entities/Player";
 
 const HEAD_SIZE = 80;

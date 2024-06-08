@@ -1,8 +1,9 @@
 import { lerp } from "webgl-test-shared/dist/utils";
-import { CAMERA_UNIFORM_BUFFER_BINDING_INDEX, TIME_UNIFORM_BUFFER_BINDING_INDEX, createWebGLProgram, gl, tempFloat32ArrayLength1, tempFloat32ArrayLength2, tempFloat32ArrayLength3 } from "../webgl";
-import ObjectBufferContainer from "./ObjectBufferContainer";
-import { getTexture } from "../textures";
-import Particle from "../Particle";
+import { createWebGLProgram, gl, tempFloat32ArrayLength1, tempFloat32ArrayLength2, tempFloat32ArrayLength3 } from "../../webgl";
+import ObjectBufferContainer from "../ObjectBufferContainer";
+import { getTexture } from "../../textures";
+import Particle from "../../Particle";
+import { UBOBindingIndexes, bindUBOToProgram } from "../ubos";
 
 const OBJECT_BUFFER_CONTAINER_SIZE = 8192;
 
@@ -354,24 +355,16 @@ export function createParticleShaders(): void {
    // 
    
    monocolourProgram = createWebGLProgram(gl, monocolourVertexShaderText, monocolourFragmentShaderText);
-
-   const monocolourCameraBlockIndex = gl.getUniformBlockIndex(monocolourProgram, "Camera");
-   gl.uniformBlockBinding(monocolourProgram, monocolourCameraBlockIndex, CAMERA_UNIFORM_BUFFER_BINDING_INDEX);
-
-   const monocolourTimeBlockIndex = gl.getUniformBlockIndex(monocolourProgram, "Time");
-   gl.uniformBlockBinding(monocolourProgram, monocolourTimeBlockIndex, TIME_UNIFORM_BUFFER_BINDING_INDEX);
+   bindUBOToProgram(gl, monocolourProgram, UBOBindingIndexes.CAMERA);
+   bindUBOToProgram(gl, monocolourProgram, UBOBindingIndexes.TIME);
 
    // 
    // Textured program
    // 
    
    texturedProgram = createWebGLProgram(gl, texturedVertexShaderText, texturedFragmentShaderText);
-
-   const texturedCameraBlockIndex = gl.getUniformBlockIndex(texturedProgram, "Camera");
-   gl.uniformBlockBinding(texturedProgram, texturedCameraBlockIndex, CAMERA_UNIFORM_BUFFER_BINDING_INDEX);
-
-   const texturedTimeBlockIndex = gl.getUniformBlockIndex(texturedProgram, "Time");
-   gl.uniformBlockBinding(texturedProgram, texturedTimeBlockIndex, TIME_UNIFORM_BUFFER_BINDING_INDEX);
+   bindUBOToProgram(gl, texturedProgram, UBOBindingIndexes.CAMERA);
+   bindUBOToProgram(gl, texturedProgram, UBOBindingIndexes.TIME);
    
    const texturedTextureUniformLocation = gl.getUniformLocation(texturedProgram, "u_texture")!;
 

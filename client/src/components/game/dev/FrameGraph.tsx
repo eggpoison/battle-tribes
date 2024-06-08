@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { FRAME_GRAPH_RECORD_TIME, renderFrameGraph } from "../../../rendering/frame-graph-rendering";
+import { FRAME_GRAPH_RECORD_TIME, renderFrameGraph } from "../../../rendering/webgl/frame-graph-rendering";
 
 export interface FrameInfo {
    readonly startTime: number;

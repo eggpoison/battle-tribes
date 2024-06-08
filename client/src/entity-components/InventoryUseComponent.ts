@@ -10,7 +10,7 @@ import { getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
 import Board from "../Board";
 import CLIENT_ITEM_INFO_RECORD from "../client-item-info";
 import Particle from "../Particle";
-import { ParticleColour, ParticleRenderLayer, addMonocolourParticleToBufferContainer } from "../rendering/particle-rendering";
+import { ParticleColour, ParticleRenderLayer, addMonocolourParticleToBufferContainer } from "../rendering/webgl/particle-rendering";
 import { animateLimb, createCraftingAnimationParticles, createMedicineAnimationParticles, generateRandomLimbPosition, updateBandageRenderPart, updateCustomItemRenderPart } from "../limb-animations";
 import { createDeepFrostHeartBloodParticles } from "../particles";
 import { definiteGameState } from "../game-state/game-states";

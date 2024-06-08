@@ -96,8 +96,8 @@ export function goPlaceBuilding(tribesman: Entity, hotbarInventory: Inventory, t
          const connectionInfo = calculateStructureConnectionInfo(plan.position, plan.rotation, placingEntityType, Board.chunks);
          placeBuilding(tribe, plan.position, plan.rotation, placingEntityType, connectionInfo);
 
-         if (Math.random() < TITLE_REWARD_CHANCES.ARCHITECT_REWARD_CHANCE) {
-            awardTitle(tribesman, TribesmanTitle.architect);
+         if (Math.random() < TITLE_REWARD_CHANCES.BUILDER_REWARD_CHANCE) {
+            awardTitle(tribesman, TribesmanTitle.builder);
          }
 
          consumeItemFromSlot(hotbarInventory, goal.placeableItemSlot, 1);

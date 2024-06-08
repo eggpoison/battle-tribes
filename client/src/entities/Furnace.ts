@@ -6,7 +6,7 @@ import { getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
 import { createEmberParticle, createRockParticle, createRockSpeckParticle, createSmokeParticle } from "../particles";
 import Board from "../Board";
 import Entity from "../Entity";
-import { ParticleRenderLayer } from "../rendering/particle-rendering";
+import { ParticleRenderLayer } from "../rendering/webgl/particle-rendering";
 
 class Furnace extends Entity {
    public static readonly SIZE = 80;

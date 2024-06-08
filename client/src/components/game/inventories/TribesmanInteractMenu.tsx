@@ -49,7 +49,7 @@ const GOBLIN_NAMES: ReadonlyArray<string> = [
 ];
 
 const TITLE_DISPLAY_OPTIONS: Record<TribesmanTitle, ReadonlyArray<string>> = {
-   [TribesmanTitle.architect]: ["Architect", "Manipulator of Materials"],
+   [TribesmanTitle.builder]: ["Builder", "Object Constructor", "Manipulator of Materials"],
    [TribesmanTitle.berrymuncher]: ["Berry-muncher", "Muncher of Berries"],
    [TribesmanTitle.bloodaxe]: ["Bloodaxe", "Shedder of Blood"],
    [TribesmanTitle.deathbringer]: ["Deathbringer", "Precursor of Doom", "Enemy of Life"],

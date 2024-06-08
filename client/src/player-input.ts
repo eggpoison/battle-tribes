@@ -24,7 +24,7 @@ import { TribesmanTitle } from "webgl-test-shared/dist/titles";
 import { Point } from "webgl-test-shared/dist/utils";
 import { LimbInfo } from "./entity-components/InventoryUseComponent";
 import InventoryComponent from "./entity-components/InventoryComponent";
-import { ENTITY_TYPE_TO_GHOST_TYPE_MAP, GhostInfo, setGhostInfo } from "./rendering/entity-ghost-rendering";
+import { ENTITY_TYPE_TO_GHOST_TYPE_MAP, GhostInfo, setGhostInfo } from "./rendering/webgl/entity-ghost-rendering";
 import Camera from "./Camera";
 import { Hitbox } from "./hitboxes/hitboxes";
 import { WORKER_HUT_SIZE } from "./entity-components/HutComponent";
@@ -267,12 +267,18 @@ const attack = (isOffhand: boolean, attackCooldown: number): void => {
    }
 }
 
-const getSwingTimeMultiplier = (): number => {
+const getSwingTimeMultiplier = (item: Item | undefined): number => {
    let swingTimeMultiplier = 1;
 
    if (Game.tribe.tribeType === TribeType.barbarians) {
       // 30% slower
       swingTimeMultiplier /= 0.7;
+   }
+
+   // Builders swing hammers 30% faster
+   const tribeMemberComponent = Player.instance!.getServerComponent(ServerComponentType.tribeMember);
+   if (tribeMemberComponent.hasTitle(TribesmanTitle.builder) && typeof item !== "undefined" && ITEM_TYPE_RECORD[item.type] === "hammer") {
+      swingTimeMultiplier /= 1.3;
    }
 
    return swingTimeMultiplier;
@@ -320,7 +326,7 @@ const attemptInventoryAttack = (inventory: Inventory): boolean => {
    const selectedItem = inventory.itemSlots[selectedItemSlot];
 
    let attackCooldown = getBaseAttackCooldown(selectedItem, useInfo, inventoryComponent);
-   attackCooldown *= getSwingTimeMultiplier();
+   attackCooldown *= getSwingTimeMultiplier(selectedItem);
       
    // @Cleanup: Should be done in attack function
    attackCooldowns[selectedItemSlot] = attackCooldown;

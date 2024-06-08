@@ -19,18 +19,31 @@ import { removeLightsAttachedToEntity, removeLightsAttachedToRenderPart } from "
 import { EntityEvent } from "webgl-test-shared/dist/entity-events";
 import { Hitbox, hitboxIsCircular } from "./hitboxes/hitboxes";
 
-// Use prime numbers / 100 to ensure a decent distribution of different types of particles
-const HEALING_PARTICLE_AMOUNTS = [0.05, 0.37, 1.01];
+export interface RenderPartOverlayGroup {
+   readonly textureSource: string;
+   readonly renderParts: Array<RenderPart>;
+}
 
 // @Cleanup: Move frame progress stuff to a different file
 
 let frameProgress = Number.EPSILON;
+
+// Use prime numbers / 100 to ensure a decent distribution of different types of particles
+const HEALING_PARTICLE_AMOUNTS = [0.05, 0.37, 1.01];
+
 export function setFrameProgress(newFrameProgress: number): void {
    frameProgress = newFrameProgress;
 }
 
 export function getFrameProgress(): number {
    return frameProgress;
+}
+
+export function createRenderPartOverlayGroup(textureSource: string, renderParts: Array<RenderPart>): RenderPartOverlayGroup {
+   return {
+      textureSource: textureSource,
+      renderParts: renderParts
+   };
 }
 
 // @Cleanup: copy and paste from server
@@ -105,6 +118,8 @@ abstract class Entity<T extends EntityType = EntityType> extends RenderObject {
    private readonly tickableComponents = new Array<Component>();
    private readonly updateableComponents = new Array<Component>();
 
+   public readonly renderPartOverlayGroups = new Array<RenderPartOverlayGroup>();
+
    constructor(position: Point, id: number, entityType: T, ageTicks: number) {
       super();
       
@@ -142,7 +157,7 @@ abstract class Entity<T extends EntityType = EntityType> extends RenderObject {
       throw new Error("No render part with tag '" + tag + "' could be found on entity type " + EntityTypeString[this.type]);
    }
 
-   public getRenderParts(tag: string, expectedAmount?: number): ReadonlyArray<RenderPart> {
+   public getRenderParts(tag: string, expectedAmount?: number): Array<RenderPart> {
       const renderParts = new Array<RenderPart>();
       for (let i = 0; i < this.allRenderParts.length; i++) {
          const renderPart = this.allRenderParts[i];

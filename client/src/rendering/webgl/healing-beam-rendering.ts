@@ -1,9 +1,10 @@
-import { CAMERA_UNIFORM_BUFFER_BINDING_INDEX, createWebGLProgram, gl } from "../webgl";
-import Board from "../Board";
+import { createWebGLProgram, gl } from "../../webgl";
+import Board from "../../Board";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { angle, distance, rotateXAroundPoint, rotateYAroundPoint } from "webgl-test-shared/dist/utils";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { bindUBOToProgram, UBOBindingIndexes } from "../ubos";
 
 export const HEALING_BEAM_THICKNESS = 32;
 
@@ -94,9 +95,7 @@ export function createHealingBeamShaders(): void {
    `;
 
    program = createWebGLProgram(gl, vertexShaderText, fragmentShaderText);
-
-   const cameraBlockIndex = gl.getUniformBlockIndex(program, "Camera");
-   gl.uniformBlockBinding(program, cameraBlockIndex, CAMERA_UNIFORM_BUFFER_BINDING_INDEX);
+   bindUBOToProgram(gl, program, UBOBindingIndexes.CAMERA);
 }
 
 interface HealingBeam {

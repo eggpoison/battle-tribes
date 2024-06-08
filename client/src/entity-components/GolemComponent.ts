@@ -7,7 +7,7 @@ import CircularHitbox from "../hitboxes/CircularHitbox";
 import { createRockSpeckParticle } from "../particles";
 import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
-import { ParticleRenderLayer } from "../rendering/particle-rendering";
+import { ParticleRenderLayer } from "../rendering/webgl/particle-rendering";
 import { Light, addLight, attachLightToRenderPart } from "../lights";
 import { playSound } from "../sound";
 

@@ -1,9 +1,9 @@
 import { DecorationInfo, RIVER_STEPPING_STONE_SIZES, RiverSteppingStoneData, ServerTileUpdateData, WaterRockData } from "webgl-test-shared/dist/client-server-types";
 import { Settings } from "webgl-test-shared/dist/settings";
-import { createTileRenderChunks, recalculateSolidTileRenderChunkData } from "./solid-tile-rendering";
-import { calculateRiverRenderChunkData } from "./river-rendering";
-import { calculateAmbientOcclusionInfo } from "./ambient-occlusion-rendering";
-import { calculateWallBorderInfo } from "./wall-border-rendering";
+import { createTileRenderChunks, recalculateSolidTileRenderChunkData } from "./webgl/solid-tile-rendering";
+import { calculateRiverRenderChunkData } from "./webgl/river-rendering";
+import { calculateAmbientOcclusionInfo } from "./webgl/ambient-occlusion-rendering";
+import { calculateWallBorderInfo } from "./webgl/wall-border-rendering";
 
 /** Width and height of a render chunk in tiles */
 export const RENDER_CHUNK_SIZE = 8;

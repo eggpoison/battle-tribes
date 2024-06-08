@@ -1,14 +1,15 @@
 import { Point, lerp, randFloat, rotateXAroundOrigin, rotateXAroundPoint, rotateYAroundOrigin, rotateYAroundPoint } from "webgl-test-shared/dist/utils";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { StructureType } from "webgl-test-shared/dist/structures";
-import Player from "../entities/Player";
-import { gl, createWebGLProgram, CAMERA_UNIFORM_BUFFER_BINDING_INDEX } from "../webgl";
-import { getEntityTextureAtlas, getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
-import { ATLAS_SLOT_SIZE } from "../texture-atlases/texture-atlas-stitching";
-import { BALLISTA_AMMO_BOX_OFFSET_X, BALLISTA_AMMO_BOX_OFFSET_Y, BALLISTA_GEAR_X, BALLISTA_GEAR_Y } from "../utils";
-import OPTIONS from "../options";
-import { calculatePotentialPlanIdealness, getHoveredBuildingPlan, getPotentialPlanStats, getVisibleBuildingPlans } from "../client/Client";
-import { NUM_LARGE_COVER_LEAVES, NUM_SMALL_COVER_LEAVES } from "../entity-components/SpikesComponent";
+import Player from "../../entities/Player";
+import { gl, createWebGLProgram } from "../../webgl";
+import { getEntityTextureAtlas, getTextureArrayIndex } from "../../texture-atlases/entity-texture-atlas";
+import { ATLAS_SLOT_SIZE } from "../../texture-atlases/texture-atlas-stitching";
+import { BALLISTA_AMMO_BOX_OFFSET_X, BALLISTA_AMMO_BOX_OFFSET_Y, BALLISTA_GEAR_X, BALLISTA_GEAR_Y } from "../../utils";
+import OPTIONS from "../../options";
+import { calculatePotentialPlanIdealness, getHoveredBuildingPlan, getPotentialPlanStats, getVisibleBuildingPlans } from "../../client/Client";
+import { NUM_LARGE_COVER_LEAVES, NUM_SMALL_COVER_LEAVES } from "../../entity-components/SpikesComponent";
+import { bindUBOToProgram, UBOBindingIndexes } from "../ubos";
 
 // @Temporary: might be useful later
 // // Detect the entity types which need ghosts
@@ -207,9 +208,7 @@ export function createPlaceableItemProgram(): void {
    `;
 
    program = createWebGLProgram(gl, vertexShaderText, fragmentShaderText);
-
-   const cameraBlockIndex = gl.getUniformBlockIndex(program, "Camera");
-   gl.uniformBlockBinding(program, cameraBlockIndex, CAMERA_UNIFORM_BUFFER_BINDING_INDEX);
+   bindUBOToProgram(gl, program, UBOBindingIndexes.CAMERA);
    
    gl.useProgram(program);
 

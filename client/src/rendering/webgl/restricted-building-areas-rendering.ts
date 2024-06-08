@@ -1,7 +1,8 @@
 import { rotateXAroundOrigin, rotateYAroundOrigin } from "webgl-test-shared/dist/utils";
 import { RestrictedBuildingAreaData } from "webgl-test-shared/dist/client-server-types";
-import { CAMERA_UNIFORM_BUFFER_BINDING_INDEX, createWebGLProgram, gl } from "../webgl";
-import OPTIONS from "../options";
+import { createWebGLProgram, gl } from "../../webgl";
+import OPTIONS from "../../options";
+import { UBOBindingIndexes, bindUBOToProgram } from "../ubos";
 
 const BORDER_WIDTH = 5;
 
@@ -55,9 +56,7 @@ export function createRestrictedBuildingAreaShaders(): void {
    `;
    
    program = createWebGLProgram(gl, vertexShaderText, fragmentShaderText);
-
-   const lineCameraBlockIndex = gl.getUniformBlockIndex(program, "Camera");
-   gl.uniformBlockBinding(program, lineCameraBlockIndex, CAMERA_UNIFORM_BUFFER_BINDING_INDEX);
+   bindUBOToProgram(gl, program, UBOBindingIndexes.CAMERA);
 }
 
 export function renderRestrictedBuildingAreas(): void {

@@ -5,7 +5,7 @@ export interface ClientTitleInfo {
 }
 
 export const CLIENT_TITLE_INFO_RECORD: Record<TribesmanTitle, ClientTitleInfo> = {
-   [TribesmanTitle.architect]: {
+   [TribesmanTitle.builder]: {
       effects: [
          "30% faster hammer swing speed",
          "Repair 25% more health each swing"

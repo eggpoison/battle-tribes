@@ -1,9 +1,10 @@
 import { rotateXAroundPoint, rotateYAroundPoint } from "webgl-test-shared/dist/utils";
-import { CAMERA_UNIFORM_BUFFER_BINDING_INDEX, createWebGLProgram, gl } from "../webgl";
-import Board from "../Board";
-import { ATLAS_SLOT_SIZE } from "../texture-atlases/texture-atlas-stitching";
-import RenderPart from "../render-parts/RenderPart";
-import { ENTITY_TEXTURE_ATLAS_LENGTH, getEntityTextureAtlas } from "../texture-atlases/entity-texture-atlas";
+import { createWebGLProgram, gl } from "../../webgl";
+import Board from "../../Board";
+import { ATLAS_SLOT_SIZE } from "../../texture-atlases/texture-atlas-stitching";
+import RenderPart from "../../render-parts/RenderPart";
+import { ENTITY_TEXTURE_ATLAS_LENGTH, getEntityTextureAtlas } from "../../texture-atlases/entity-texture-atlas";
+import { bindUBOToProgram, UBOBindingIndexes } from "../ubos";
 
 let program: WebGLProgram;
 let vao: WebGLVertexArrayObject;
@@ -95,9 +96,7 @@ export function createEntityShaders(): void {
    `;
 
    program = createWebGLProgram(gl, vertexShaderText, fragmentShaderText);
-
-   const cameraBlockIndex = gl.getUniformBlockIndex(program, "Camera");
-   gl.uniformBlockBinding(program, cameraBlockIndex, CAMERA_UNIFORM_BUFFER_BINDING_INDEX);
+   bindUBOToProgram(gl, program, UBOBindingIndexes.CAMERA);
 
    const textureUniformLocation = gl.getUniformLocation(program, "u_textureAtlas")!;
    const atlasPixelSizeUniformLocation = gl.getUniformLocation(program, "u_atlasPixelSize")!;

@@ -7,7 +7,7 @@ import { TILE_MOVE_SPEED_MULTIPLIERS, TileType, TILE_FRICTIONS } from "webgl-tes
 import Board from "../Board";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import Particle from "../Particle";
-import { addTexturedParticleToBufferContainer, ParticleRenderLayer } from "../rendering/particle-rendering";
+import { addTexturedParticleToBufferContainer, ParticleRenderLayer } from "../rendering/webgl/particle-rendering";
 import { playSound, AudioFilePath } from "../sound";
 
 class PhysicsComponent extends ServerComponent<ServerComponentType.physics> {

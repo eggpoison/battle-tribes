@@ -1,7 +1,8 @@
 import { Settings } from "webgl-test-shared/dist/settings";
-import Camera from "../Camera";
-import { CAMERA_UNIFORM_BUFFER_BINDING_INDEX, TIME_UNIFORM_BUFFER_BINDING_INDEX, createWebGLProgram, gl } from "../webgl";
-import { WORLD_RENDER_CHUNK_SIZE } from "./render-chunks";
+import Camera from "../../Camera";
+import { createWebGLProgram, gl } from "../../webgl";
+import { WORLD_RENDER_CHUNK_SIZE } from "../render-chunks";
+import { bindUBOToProgram, UBOBindingIndexes } from "../ubos";
 
 let program: WebGLProgram;
 
@@ -64,12 +65,8 @@ export function createForcefieldShaders(): void {
    `;
 
    program = createWebGLProgram(gl, vertexShaderText, fragmentShaderText);
-
-   const cameraBlockIndex = gl.getUniformBlockIndex(program, "Camera");
-   gl.uniformBlockBinding(program, cameraBlockIndex, CAMERA_UNIFORM_BUFFER_BINDING_INDEX);
-
-   const texturedTimeBlockIndex = gl.getUniformBlockIndex(program, "Time");
-   gl.uniformBlockBinding(program, texturedTimeBlockIndex, TIME_UNIFORM_BUFFER_BINDING_INDEX);
+   bindUBOToProgram(gl, program, UBOBindingIndexes.CAMERA);
+   bindUBOToProgram(gl, program, UBOBindingIndexes.TIME);
 }
 
 export function renderForcefield(): void {

@@ -2,13 +2,14 @@ import { TileType } from "webgl-test-shared/dist/tiles";
 import { Point, lerp, randFloat, rotatePoint, rotateXAroundPoint, rotateYAroundPoint } from "webgl-test-shared/dist/utils";
 import { RIVER_STEPPING_STONE_SIZES, RiverSteppingStoneData, RiverSteppingStoneSize, WaterRockData, WaterRockSize } from "webgl-test-shared/dist/client-server-types";
 import { Settings } from "webgl-test-shared/dist/settings";
-import { CAMERA_UNIFORM_BUFFER_BINDING_INDEX, TIME_UNIFORM_BUFFER_BINDING_INDEX, createWebGLProgram, gl } from "../webgl";
-import { getTexture } from "../textures";
-import Camera from "../Camera";
-import Board from "../Board";
-import { RenderChunkRiverInfo, WORLD_RENDER_CHUNK_SIZE, getRenderChunkMaxTileX, getRenderChunkMaxTileY, getRenderChunkMinTileX, getRenderChunkMinTileY, getRenderChunkRiverInfo } from "./render-chunks";
-import { Tile } from "../Tile";
+import { createWebGLProgram, gl } from "../../webgl";
+import { getTexture } from "../../textures";
+import Camera from "../../Camera";
+import Board from "../../Board";
+import { RenderChunkRiverInfo, WORLD_RENDER_CHUNK_SIZE, getRenderChunkMaxTileX, getRenderChunkMaxTileY, getRenderChunkMinTileX, getRenderChunkMinTileY, getRenderChunkRiverInfo } from "../render-chunks";
+import { Tile } from "../../Tile";
 import { renderFish } from "./fish-rendering";
+import { UBOBindingIndexes, bindUBOToProgram } from "../ubos";
 
 const SHALLOW_WATER_COLOUR = [118/255, 185/255, 242/255] as const;
 const DEEP_WATER_COLOUR = [86/255, 141/255, 184/255] as const;
@@ -605,9 +606,7 @@ export function createRiverShaders(): void {
    // 
 
    baseProgram = createWebGLProgram(gl, baseVertexShaderText, baseFragmentShaderText);
-
-   const baseCameraBlockIndex = gl.getUniformBlockIndex(baseProgram, "Camera");
-   gl.uniformBlockBinding(baseProgram, baseCameraBlockIndex, CAMERA_UNIFORM_BUFFER_BINDING_INDEX);
+   bindUBOToProgram(gl, baseProgram, UBOBindingIndexes.CAMERA);
 
    const baseTextureUniformLocation = gl.getUniformLocation(baseProgram, "u_baseTexture")!;
 
@@ -619,9 +618,7 @@ export function createRiverShaders(): void {
    // 
 
    rockProgram = createWebGLProgram(gl, rockVertexShaderText, rockFragmentShaderText);
-
-   const rockCameraBlockIndex = gl.getUniformBlockIndex(rockProgram, "Camera");
-   gl.uniformBlockBinding(rockProgram, rockCameraBlockIndex, CAMERA_UNIFORM_BUFFER_BINDING_INDEX);
+   bindUBOToProgram(gl, rockProgram, UBOBindingIndexes.CAMERA);
 
    const rockProgramTexture1UniformLocation = gl.getUniformLocation(rockProgram, "u_texture1")!;
    const rockProgramTexture2UniformLocation = gl.getUniformLocation(rockProgram, "u_texture2")!;
@@ -635,12 +632,8 @@ export function createRiverShaders(): void {
    // 
 
    highlightsProgram = createWebGLProgram(gl, highlightsVertexShaderText, highlightsFragmentShaderText);
-
-   const highlightsCameraBlockIndex = gl.getUniformBlockIndex(highlightsProgram, "Camera");
-   gl.uniformBlockBinding(highlightsProgram, highlightsCameraBlockIndex, CAMERA_UNIFORM_BUFFER_BINDING_INDEX);
-
-   const highlightsTimeBlockIndex = gl.getUniformBlockIndex(highlightsProgram, "Time");
-   gl.uniformBlockBinding(highlightsProgram, highlightsTimeBlockIndex, TIME_UNIFORM_BUFFER_BINDING_INDEX);
+   bindUBOToProgram(gl, highlightsProgram, UBOBindingIndexes.CAMERA);
+   bindUBOToProgram(gl, highlightsProgram, UBOBindingIndexes.TIME);
 
    const highlightsProgramTexture1UniformLocation = gl.getUniformLocation(highlightsProgram, "u_texture1")!;
    const highlightsProgramTexture2UniformLocation = gl.getUniformLocation(highlightsProgram, "u_texture2")!;
@@ -656,12 +649,8 @@ export function createRiverShaders(): void {
    // 
 
    noiseProgram = createWebGLProgram(gl, noiseVertexShaderText, noiseFragmentShaderText);
-
-   const noiseCameraBlockIndex = gl.getUniformBlockIndex(noiseProgram, "Camera");
-   gl.uniformBlockBinding(noiseProgram, noiseCameraBlockIndex, CAMERA_UNIFORM_BUFFER_BINDING_INDEX);
-
-   const noiseTimeBlockIndex = gl.getUniformBlockIndex(noiseProgram, "Time");
-   gl.uniformBlockBinding(noiseProgram, noiseTimeBlockIndex, TIME_UNIFORM_BUFFER_BINDING_INDEX);
+   bindUBOToProgram(gl, noiseProgram, UBOBindingIndexes.CAMERA);
+   bindUBOToProgram(gl, noiseProgram, UBOBindingIndexes.TIME);
 
    const noiseTextureUniformLocation = gl.getUniformLocation(noiseProgram, "u_noiseTexture")!;
 
@@ -673,9 +662,7 @@ export function createRiverShaders(): void {
    // 
 
    transitionProgram = createWebGLProgram(gl, transitionVertexShaderText, transitionFragmentShaderText);
-
-   const transitionCameraBlockIndex = gl.getUniformBlockIndex(transitionProgram, "Camera");
-   gl.uniformBlockBinding(transitionProgram, transitionCameraBlockIndex, CAMERA_UNIFORM_BUFFER_BINDING_INDEX);
+   bindUBOToProgram(gl, transitionProgram, UBOBindingIndexes.CAMERA);
 
    gl.useProgram(transitionProgram);
    
@@ -690,12 +677,8 @@ export function createRiverShaders(): void {
    // 
 
    foamProgram = createWebGLProgram(gl, foamVertexShaderText, foamFragmentShaderText);
-
-   const foamCameraBlockIndex = gl.getUniformBlockIndex(foamProgram, "Camera");
-   gl.uniformBlockBinding(foamProgram, foamCameraBlockIndex, CAMERA_UNIFORM_BUFFER_BINDING_INDEX);
-
-   const foamTimeBlockIndex = gl.getUniformBlockIndex(foamProgram, "Time");
-   gl.uniformBlockBinding(foamProgram, foamTimeBlockIndex, TIME_UNIFORM_BUFFER_BINDING_INDEX);
+   bindUBOToProgram(gl, foamProgram, UBOBindingIndexes.CAMERA);
+   bindUBOToProgram(gl, foamProgram, UBOBindingIndexes.TIME);
 
    const foamProgramFoamTextureUniformLocation = gl.getUniformLocation(foamProgram, "u_foamTexture")!;
 
@@ -707,9 +690,7 @@ export function createRiverShaders(): void {
    // 
 
    steppingStoneProgram = createWebGLProgram(gl, steppingStoneVertexShaderText, steppingStoneFragmentShaderText);
-
-   const steppingStoneCameraBlockIndex = gl.getUniformBlockIndex(steppingStoneProgram, "Camera");
-   gl.uniformBlockBinding(steppingStoneProgram, steppingStoneCameraBlockIndex, CAMERA_UNIFORM_BUFFER_BINDING_INDEX);
+   bindUBOToProgram(gl, steppingStoneProgram, UBOBindingIndexes.CAMERA);
 
    const steppingStoneTexture1UniformLocation = gl.getUniformLocation(steppingStoneProgram, "u_texture1")!;
    const steppingStoneTexture2UniformLocation = gl.getUniformLocation(steppingStoneProgram, "u_texture2")!;

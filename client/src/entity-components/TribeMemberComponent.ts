@@ -4,7 +4,7 @@ import { Settings } from "webgl-test-shared/dist/settings";
 import { TitleGenerationInfo, TribesmanTitle } from "webgl-test-shared/dist/titles";
 import { Point, lerp, randFloat, veryBadHash } from "webgl-test-shared/dist/utils";
 import ServerComponent from "./ServerComponent";
-import Entity from "../Entity";
+import Entity, { createRenderPartOverlayGroup } from "../Entity";
 import { Light, addLight, attachLightToEntity } from "../lights";
 import Board from "../Board";
 import RenderPart from "../render-parts/RenderPart";
@@ -181,6 +181,21 @@ class TribeMemberComponent extends ServerComponent<ServerComponentType.tribeMemb
             renderPart.offset.y = radius - 2;
 
             this.entity.attachRenderPart(renderPart);
+            break;
+         }
+         case TribesmanTitle.builder: {
+            // 
+            // Create a dirty shine on body render parts
+            // 
+            
+            const bodyRenderPart = this.entity.getRenderPart("tribeMemberComponent:body");
+            const bodyOverlayGroup = createRenderPartOverlayGroup("overlays/dirt.png", [bodyRenderPart]);
+            this.entity.renderPartOverlayGroups.push(bodyOverlayGroup);
+
+            const handRenderParts = this.entity.getRenderParts("tribeMemberComponent:hand", 2);
+            const handOverlayGroup = createRenderPartOverlayGroup("overlays/dirt.png", handRenderParts);
+            this.entity.renderPartOverlayGroups.push(handOverlayGroup);
+            
             break;
          }
       }

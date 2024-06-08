@@ -8,7 +8,7 @@ import { playSound } from "../sound";
 import Board from "../Board";
 import Particle from "../Particle";
 import { createPoisonBubble, createBloodParticle, BloodParticleSize } from "../particles";
-import { addTexturedParticleToBufferContainer, ParticleRenderLayer, addMonocolourParticleToBufferContainer, ParticleColour } from "../rendering/particle-rendering";
+import { addTexturedParticleToBufferContainer, ParticleRenderLayer, addMonocolourParticleToBufferContainer, ParticleColour } from "../rendering/webgl/particle-rendering";
 import { Light, addLight, attachLightToEntity, removeLight } from "../lights";
 
 const BURNING_PARTICLE_COLOURS: ReadonlyArray<ParticleColour> = [

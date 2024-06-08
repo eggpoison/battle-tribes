@@ -1,12 +1,13 @@
 import { ITEM_INFO_RECORD, ItemType, PlaceableItemType } from "webgl-test-shared/dist/items";
 import { EntityType } from "webgl-test-shared/dist/entities";
-import Player, { getPlayerSelectedItem } from "../entities/Player";
-import { CAMERA_UNIFORM_BUFFER_BINDING_INDEX, TIME_UNIFORM_BUFFER_BINDING_INDEX, createWebGLProgram, gl } from "../webgl";
-import Board from "../Board";
-import Entity from "../Entity";
-import { getHoveredEntityID } from "../entity-selection";
+import Player, { getPlayerSelectedItem } from "../../entities/Player";
+import { createWebGLProgram, gl } from "../../webgl";
+import Board from "../../Board";
+import Entity from "../../Entity";
+import { getHoveredEntityID } from "../../entity-selection";
 import { calculateStructurePlaceInfo } from "webgl-test-shared/dist/structures";
-import Camera from "../Camera";
+import Camera from "../../Camera";
+import { bindUBOToProgram, UBOBindingIndexes } from "../ubos";
 
 const CIRCLE_DETAIL = 300;
 
@@ -101,12 +102,8 @@ export function createTurretRangeShaders(): void {
    `;
 
    program = createWebGLProgram(gl, vertexShaderText, fragmentShaderText);
-
-   const cameraBlockIndex = gl.getUniformBlockIndex(program, "Camera");
-   gl.uniformBlockBinding(program, cameraBlockIndex, CAMERA_UNIFORM_BUFFER_BINDING_INDEX);
-
-   const texturedTimeBlockIndex = gl.getUniformBlockIndex(program, "Time");
-   gl.uniformBlockBinding(program, texturedTimeBlockIndex, TIME_UNIFORM_BUFFER_BINDING_INDEX);
+   bindUBOToProgram(gl, program, UBOBindingIndexes.CAMERA);
+   bindUBOToProgram(gl, program, UBOBindingIndexes.TIME);
 }
 
 const calculateVertices = (renderingInfo: TurretRangeRenderingInfo): ReadonlyArray<number> => {

@@ -7,7 +7,7 @@ import Chunk from "./Chunk";
 import { Tile } from "./Tile";
 import Entity from "./Entity";
 import Particle from "./Particle";
-import { highMonocolourBufferContainer, highTexturedBufferContainer, lowMonocolourBufferContainer, lowTexturedBufferContainer } from "./rendering/particle-rendering";
+import { highMonocolourBufferContainer, highTexturedBufferContainer, lowMonocolourBufferContainer, lowTexturedBufferContainer } from "./rendering/webgl/particle-rendering";
 import ObjectBufferContainer from "./rendering/ObjectBufferContainer";
 import { tempFloat32ArrayLength1 } from "./webgl";
 import Player from "./entities/Player";

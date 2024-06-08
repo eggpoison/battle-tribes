@@ -1,7 +1,7 @@
 import Entity from "../Entity";
 import CircularHitbox from "../hitboxes/CircularHitbox";
 import Board from "../Board";
-import { ParticleRenderLayer, addTexturedParticleToBufferContainer } from "../rendering/particle-rendering";
+import { ParticleRenderLayer, addTexturedParticleToBufferContainer } from "../rendering/webgl/particle-rendering";
 import Particle from "../Particle";
 import { createPoisonBubble } from "../particles";
 import { Sound, playSound } from "../sound";

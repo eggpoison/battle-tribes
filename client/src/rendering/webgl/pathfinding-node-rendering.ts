@@ -1,11 +1,12 @@
-import { CAMERA_UNIFORM_BUFFER_BINDING_INDEX, createWebGLProgram, gl } from "../webgl";
-import Board from "../Board";
-import Game from "../Game";
-import OPTIONS from "../options";
-import Camera from "../Camera";
+import { createWebGLProgram, gl } from "../../webgl";
+import Board from "../../Board";
+import Game from "../../Game";
+import OPTIONS from "../../options";
+import Camera from "../../Camera";
 import { PathfindingSettings, Settings } from "webgl-test-shared/dist/settings";
 import { angle } from "webgl-test-shared/dist/utils";
 import { PathfindingNodeIndex } from "webgl-test-shared/dist/client-server-types";
+import { bindUBOToProgram, UBOBindingIndexes } from "../ubos";
 
 enum NodeType {
    occupied,
@@ -109,14 +110,10 @@ export function createPathfindNodeShaders(): void {
    `;
 
    nodeProgram = createWebGLProgram(gl, nodeVertexShaderText, nodeFragmentShaderText);
-
-   const lineCameraBlockIndex = gl.getUniformBlockIndex(nodeProgram, "Camera");
-   gl.uniformBlockBinding(nodeProgram, lineCameraBlockIndex, CAMERA_UNIFORM_BUFFER_BINDING_INDEX);
+   bindUBOToProgram(gl, nodeProgram, UBOBindingIndexes.CAMERA);
 
    connectorProgram = createWebGLProgram(gl, connectorVertexShaderText, connectorFragmentShaderText);
-
-   const triangleCameraBlockIndex = gl.getUniformBlockIndex(connectorProgram, "Camera");
-   gl.uniformBlockBinding(connectorProgram, triangleCameraBlockIndex, CAMERA_UNIFORM_BUFFER_BINDING_INDEX);
+   bindUBOToProgram(gl, connectorProgram, UBOBindingIndexes.CAMERA);
 }
 
 const renderConnectors = (mainPathNodes: ReadonlyArray<PathfindingNodeIndex>): void => {

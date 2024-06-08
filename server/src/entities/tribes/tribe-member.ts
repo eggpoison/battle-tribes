@@ -170,12 +170,27 @@ const calculateItemKnockback = (item: Item | null): number => {
 }
 
 const getRepairTimeMultiplier = (tribeMember: Entity): number => {
+   let multiplier = 1;
+   
    if (tribeMember.type === EntityType.tribeWarrior) {
-      return 2;
+      multiplier *= 2;
    }
-   return 1;
+
+   return multiplier;
 }
 
+const getRepairAmount = (tribeMember: Entity, hammerItem: Item): number => {
+   const itemInfo = ITEM_INFO_RECORD[hammerItem.type] as HammerItemInfo;
+   let repairAmount = itemInfo.repairAmount;
+
+   if (hasTitle(tribeMember.id, TribesmanTitle.builder)) {
+      repairAmount *= 1.5;
+   }
+   
+   return Math.round(repairAmount);
+}
+
+// @Cleanup: lot of copy and paste from attemptAttack
 // @Cleanup: Maybe split this up into repair and work functions
 export function repairBuilding(tribeMember: Entity, targetEntity: Entity, itemSlot: number, inventoryName: InventoryName): boolean {
    const inventoryComponent = InventoryComponentArray.getComponent(tribeMember.id);
@@ -198,7 +213,7 @@ export function repairBuilding(tribeMember: Entity, targetEntity: Entity, itemSl
 
    // Reset attack cooldown
    const baseAttackCooldown = item !== null ? getItemAttackCooldown(item) : Settings.DEFAULT_ATTACK_COOLDOWN;
-   const attackCooldown = baseAttackCooldown * getRepairTimeMultiplier(tribeMember);
+   const attackCooldown = baseAttackCooldown * getSwingTimeMultiplier(tribeMember, targetEntity, item) * getRepairTimeMultiplier(tribeMember);
    useInfo.itemAttackCooldowns[itemSlot] = attackCooldown;
    useInfo.lastAttackCooldown = attackCooldown;
 
@@ -218,8 +233,8 @@ export function repairBuilding(tribeMember: Entity, targetEntity: Entity, itemSl
       const tribeComponent = TribeComponentArray.getComponent(tribeMember.id);
       const buildingTribeComponent = TribeComponentArray.getComponent(targetEntity.id);
       if (buildingTribeComponent.tribe === tribeComponent.tribe) {
-         const itemInfo = ITEM_INFO_RECORD[item.type] as HammerItemInfo;
-         healEntity(targetEntity, itemInfo.repairAmount, tribeMember.id);
+         const repairAmount = getRepairAmount(tribeMember, item);
+         healEntity(targetEntity, repairAmount, tribeMember.id);
          return true;
       }
    }
@@ -228,7 +243,7 @@ export function repairBuilding(tribeMember: Entity, targetEntity: Entity, itemSl
    return false;
 }
 
-const getSwingTimeMultiplier = (entity: Entity, targetEntity: Entity): number => {
+export function getSwingTimeMultiplier(entity: Entity, targetEntity: Entity, item: Item | null): number {
    let swingTimeMultiplier = 1;
 
    if (TribeComponentArray.hasComponent(entity.id)) {
@@ -244,8 +259,12 @@ const getSwingTimeMultiplier = (entity: Entity, targetEntity: Entity): number =>
       }
    }
 
+   // Builers swing hammers 30% faster
+   if (hasTitle(entity.id, TribesmanTitle.builder) && item !== null && ITEM_TYPE_RECORD[item.type] === "hammer") {
+      swingTimeMultiplier /= 1.3;
+   }
+
    return swingTimeMultiplier;
-   
 }
 
 const isBerryBushWithBerries = (entity: Entity): boolean => {
@@ -359,7 +378,7 @@ export function attemptAttack(attacker: Entity, targetEntity: Entity, itemSlot: 
    // @Hack
    // const baseAttackCooldown = item !== null ? getItemAttackCooldown(item) : Settings.DEFAULT_ATTACK_COOLDOWN;
    const baseAttackCooldown = item !== null ? (item.type === ItemType.gardening_gloves ? 1 : getItemAttackCooldown(item)) : Settings.DEFAULT_ATTACK_COOLDOWN;
-   const attackCooldown = baseAttackCooldown * getSwingTimeMultiplier(attacker, targetEntity);
+   const attackCooldown = baseAttackCooldown * getSwingTimeMultiplier(attacker, targetEntity, item);
    useInfo.itemAttackCooldowns[itemSlot] = attackCooldown;
    useInfo.lastAttackCooldown = attackCooldown;
    useInfo.lastAttackTicks = Board.ticks;

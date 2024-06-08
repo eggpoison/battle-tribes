@@ -1,10 +1,11 @@
 import { DecorationInfo, DecorationType } from "webgl-test-shared/dist/client-server-types";
 import { rotateXAroundPoint, rotateYAroundPoint } from "webgl-test-shared/dist/utils";
-import Camera from "../Camera";
-import { CAMERA_UNIFORM_BUFFER_BINDING_INDEX, createWebGLProgram, gl } from "../webgl";
-import { getEntityTextureAtlas, getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
-import { ATLAS_SLOT_SIZE } from "../texture-atlases/texture-atlas-stitching";
-import { getRenderChunkDecorationInfo } from "./render-chunks";
+import Camera from "../../Camera";
+import { createWebGLProgram, gl } from "../../webgl";
+import { getEntityTextureAtlas, getTextureArrayIndex } from "../../texture-atlases/entity-texture-atlas";
+import { ATLAS_SLOT_SIZE } from "../../texture-atlases/texture-atlas-stitching";
+import { getRenderChunkDecorationInfo } from "../render-chunks";
+import { bindUBOToProgram, UBOBindingIndexes } from "../ubos";
 
 interface DecorationRenderInfo {
    readonly textureSources: ReadonlyArray<string>;
@@ -129,9 +130,7 @@ export function createDecorationShaders(): void {
    `;
 
    program = createWebGLProgram(gl, vertexShaderText, fragmentShaderText);
-
-   const cameraBlockIndex = gl.getUniformBlockIndex(program, "Camera");
-   gl.uniformBlockBinding(program, cameraBlockIndex, CAMERA_UNIFORM_BUFFER_BINDING_INDEX);
+   bindUBOToProgram(gl, program, UBOBindingIndexes.CAMERA);
 
    buffer = gl.createBuffer()!;
 

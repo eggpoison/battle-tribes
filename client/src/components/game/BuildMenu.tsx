@@ -6,7 +6,7 @@ import { deselectSelectedEntity, getSelectedEntityID } from "../../entity-select
 import Board from "../../Board";
 import Camera from "../../Camera";
 import Client from "../../client/Client";
-import { GhostInfo, GhostType, PARTIAL_OPACITY, setGhostInfo } from "../../rendering/entity-ghost-rendering";
+import { GhostInfo, GhostType, PARTIAL_OPACITY, setGhostInfo } from "../../rendering/webgl/entity-ghost-rendering";
 import { getItemTypeImage } from "../../client-item-info";
 import Entity from "../../Entity";
 import { definiteGameState, playerIsHoldingHammer } from "../../game-state/game-states";

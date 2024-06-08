@@ -1,11 +1,12 @@
 import { Settings } from "webgl-test-shared/dist/settings";
 import { TileType } from "webgl-test-shared/dist/tiles";
-import Camera from "../Camera";
-import { TEXTURE_IMAGE_RECORD } from "../textures";
-import { gl, createWebGLProgram, CAMERA_UNIFORM_BUFFER_BINDING_INDEX } from "../webgl";
-import { RENDER_CHUNK_EDGE_GENERATION, RenderChunkSolidTileInfo, WORLD_RENDER_CHUNK_SIZE, getRenderChunkIndex, getRenderChunkMaxTileX, getRenderChunkMaxTileY, getRenderChunkMinTileX, getRenderChunkMinTileY } from "./render-chunks";
-import Board from "../Board";
-import { TILE_TYPE_TEXTURE_SOURCES } from "../tile-type-texture-sources";
+import Camera from "../../Camera";
+import { TEXTURE_IMAGE_RECORD } from "../../textures";
+import { gl, createWebGLProgram } from "../../webgl";
+import { RENDER_CHUNK_EDGE_GENERATION, RenderChunkSolidTileInfo, WORLD_RENDER_CHUNK_SIZE, getRenderChunkIndex, getRenderChunkMaxTileX, getRenderChunkMaxTileY, getRenderChunkMinTileX, getRenderChunkMinTileY } from "../render-chunks";
+import Board from "../../Board";
+import { TILE_TYPE_TEXTURE_SOURCES } from "../../tile-type-texture-sources";
+import { bindUBOToProgram, UBOBindingIndexes } from "../ubos";
 
 let groundTileInfoArray: Array<RenderChunkSolidTileInfo>;
 let wallTileInfoArray: Array<RenderChunkSolidTileInfo>;
@@ -124,9 +125,7 @@ export function createSolidTileShaders(): void {
    `;
 
    program = createWebGLProgram(gl, vertexShaderText, fragmentShaderText);
-
-   const cameraBlockIndex = gl.getUniformBlockIndex(program, "Camera");
-   gl.uniformBlockBinding(program, cameraBlockIndex, CAMERA_UNIFORM_BUFFER_BINDING_INDEX);
+   bindUBOToProgram(gl, program, UBOBindingIndexes.CAMERA);
 
    gl.useProgram(program);
    

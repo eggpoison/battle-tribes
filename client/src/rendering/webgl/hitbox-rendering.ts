@@ -1,10 +1,11 @@
 import { Point, rotateXAroundOrigin, rotateYAroundOrigin } from "webgl-test-shared/dist/utils";
 import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
-import { CAMERA_UNIFORM_BUFFER_BINDING_INDEX, createWebGLProgram, gl } from "../webgl";
-import RectangularHitbox from "../hitboxes/RectangularHitbox";
-import CircularHitbox from "../hitboxes/CircularHitbox";
-import Entity from "../Entity";
-import Board from "../Board";
+import { createWebGLProgram, gl } from "../../webgl";
+import RectangularHitbox from "../../hitboxes/RectangularHitbox";
+import CircularHitbox from "../../hitboxes/CircularHitbox";
+import Entity from "../../Entity";
+import Board from "../../Board";
+import { bindUBOToProgram, UBOBindingIndexes } from "../ubos";
 
 const BORDER_THICKNESS = 3;
 const HALF_BORDER_THICKNESS = BORDER_THICKNESS / 2;
@@ -56,9 +57,7 @@ export function createHitboxShaders(): void {
    `;
 
    program = createWebGLProgram(gl, vertexShaderText, fragmentShaderText);
-
-   const cameraBlockIndex = gl.getUniformBlockIndex(program, "Camera");
-   gl.uniformBlockBinding(program, cameraBlockIndex, CAMERA_UNIFORM_BUFFER_BINDING_INDEX);
+   bindUBOToProgram(gl, program, UBOBindingIndexes.CAMERA);
 
    buffer = gl.createBuffer()!;
 }

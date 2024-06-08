@@ -6,7 +6,7 @@ import ServerComponent from "./ServerComponent";
 import Board from "../Board";
 import { createDirtParticle } from "../particles";
 import { AudioFilePath, playSound } from "../sound";
-import { ParticleRenderLayer } from "../rendering/particle-rendering";
+import { ParticleRenderLayer } from "../rendering/webgl/particle-rendering";
 
 class CowComponent extends ServerComponent<ServerComponentType.cow> {
    private grazeProgress: number;

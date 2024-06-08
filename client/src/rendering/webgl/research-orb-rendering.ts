@@ -1,6 +1,7 @@
 import { rotateXAroundPoint, rotateYAroundPoint } from "webgl-test-shared/dist/utils";
-import { RESEARCH_ORB_SIZES, ResearchOrb, getResearchOrb, getResearchOrbCompleteProgress } from "../research";
-import { CAMERA_UNIFORM_BUFFER_BINDING_INDEX, createWebGLProgram, gl } from "../webgl";
+import { RESEARCH_ORB_SIZES, ResearchOrb, getResearchOrb, getResearchOrbCompleteProgress } from "../../research";
+import { createWebGLProgram, gl } from "../../webgl";
+import { UBOBindingIndexes, bindUBOToProgram } from "../ubos";
 
 let program: WebGLProgram;
 
@@ -74,9 +75,7 @@ export function createResearchOrbShaders(): void {
    `;
 
    program = createWebGLProgram(gl, vertexShaderText, fragmentShaderText);
-
-   const cameraBlockIndex = gl.getUniformBlockIndex(program, "Camera");
-   gl.uniformBlockBinding(program, cameraBlockIndex, CAMERA_UNIFORM_BUFFER_BINDING_INDEX);
+   bindUBOToProgram(gl, program, UBOBindingIndexes.CAMERA);
 }
 
 const calculateOrbVertices = (orb: ResearchOrb): ReadonlyArray<number> => {

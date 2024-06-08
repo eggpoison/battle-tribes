@@ -1,7 +1,7 @@
 import { Point, angle, lerp, randFloat, randInt, randItem, randSign } from "webgl-test-shared/dist/utils";
 import { CactusFlowerSize } from "webgl-test-shared/dist/entities";
 import Particle from "./Particle";
-import { ParticleColour, ParticleRenderLayer, addMonocolourParticleToBufferContainer, addTexturedParticleToBufferContainer } from "./rendering/particle-rendering";
+import { ParticleColour, ParticleRenderLayer, addMonocolourParticleToBufferContainer, addTexturedParticleToBufferContainer } from "./rendering/webgl/particle-rendering";
 import Board from "./Board";
 import Entity from "./Entity";
 import { ServerComponentType } from "webgl-test-shared/dist/components";

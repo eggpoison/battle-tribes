@@ -1,9 +1,10 @@
 import { Settings } from "webgl-test-shared/dist/settings";
-import { Tile } from "../Tile";
-import Camera from "../Camera";
-import { CAMERA_UNIFORM_BUFFER_BINDING_INDEX, createWebGLProgram, gl } from "../webgl";
-import Board from "../Board";
-import { RenderChunkAmbientOcclusionInfo, getRenderChunkAmbientOcclusionInfo, getRenderChunkMaxTileX, getRenderChunkMaxTileY, getRenderChunkMinTileX, getRenderChunkMinTileY } from "./render-chunks";
+import { Tile } from "../../Tile";
+import Camera from "../../Camera";
+import { createWebGLProgram, gl } from "../../webgl";
+import Board from "../../Board";
+import { RenderChunkAmbientOcclusionInfo, getRenderChunkAmbientOcclusionInfo, getRenderChunkMaxTileX, getRenderChunkMaxTileY, getRenderChunkMinTileX, getRenderChunkMinTileY } from "../render-chunks";
+import { UBOBindingIndexes, bindUBOToProgram } from "../ubos";
 
 let program: WebGLProgram;
 
@@ -113,9 +114,7 @@ export function createAmbientOcclusionShaders(): void {
    `;
 
    program = createWebGLProgram(gl, vertexShaderText, fragmentShaderText);
-
-   const cameraBlockIndex = gl.getUniformBlockIndex(program, "Camera");
-   gl.uniformBlockBinding(program, cameraBlockIndex, CAMERA_UNIFORM_BUFFER_BINDING_INDEX);
+   bindUBOToProgram(gl, program, UBOBindingIndexes.CAMERA);
 }
 
 const tileIsWallInt = (tileX: number, tileY: number): number => {

@@ -1,8 +1,9 @@
 import { GrassBlocker, blockerIsCircluar } from "webgl-test-shared/dist/grass-blockers";
-import { getGrassBlockers } from "../client/Client";
-import { CAMERA_UNIFORM_BUFFER_BINDING_INDEX, createTexture, createWebGLProgram, getCirclePoint, gl, windowHeight, windowWidth } from "../webgl";
+import { getGrassBlockers } from "../../client/Client";
+import { createTexture, createWebGLProgram, getCirclePoint, gl, windowHeight, windowWidth } from "../../webgl";
 import { rotateXAroundOrigin, rotateYAroundOrigin } from "webgl-test-shared/dist/utils";
-import { getTexture } from "../textures";
+import { getTexture } from "../../textures";
+import { bindUBOToProgram, UBOBindingIndexes } from "../ubos";
 
 const NUM_CIRCLE_POINTS = 20;
 
@@ -215,9 +216,7 @@ export function createGrassBlockerShaders(): void {
    `;
 
    framebufferProgram = createWebGLProgram(gl, framebufferVertexShaderText, framebufferFragmentShaderText);
-
-   const cameraBlockIndex = gl.getUniformBlockIndex(framebufferProgram, "Camera");
-   gl.uniformBlockBinding(framebufferProgram, cameraBlockIndex, CAMERA_UNIFORM_BUFFER_BINDING_INDEX);
+   bindUBOToProgram(gl, framebufferProgram, UBOBindingIndexes.CAMERA);
 
    renderProgram = createWebGLProgram(gl, renderVertexShaderText, renderFragmentShaderText);
 

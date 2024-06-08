@@ -6,7 +6,7 @@ import { getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
 import Entity, { ComponentDataRecord } from "../Entity";
 import { playSound } from "../sound";
 import { createArrowDestroyParticle, createRockParticle, createRockSpeckParticle } from "../particles";
-import { ParticleRenderLayer } from "../rendering/particle-rendering";
+import { ParticleRenderLayer } from "../rendering/webgl/particle-rendering";
 
 const ARROW_TEXTURE_SOURCES: Record<GenericArrowType, string> = {
    [GenericArrowType.woodenArrow]: "projectiles/wooden-arrow.png",

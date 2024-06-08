@@ -4,7 +4,7 @@ import { EntityType } from "webgl-test-shared/dist/entities";
 import RenderPart from "../render-parts/RenderPart";
 import Board from "../Board";
 import Particle from "../Particle";
-import { ParticleRenderLayer, addMonocolourParticleToBufferContainer } from "../rendering/particle-rendering";
+import { ParticleRenderLayer, addMonocolourParticleToBufferContainer } from "../rendering/webgl/particle-rendering";
 import { getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
 import Entity from "../Entity";
 import { playSound } from "../sound";

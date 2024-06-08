@@ -1,9 +1,10 @@
 import { Settings } from "webgl-test-shared/dist/settings";
 import { EntityDebugData } from "webgl-test-shared/dist/client-server-types";
 import { Point } from "webgl-test-shared/dist/utils";
-import { CAMERA_UNIFORM_BUFFER_BINDING_INDEX, createWebGLProgram, generateLine, generateThickCircleWireframeVertices, gl } from "../webgl";
-import Entity from "../Entity";
-import Board from "../Board";
+import { createWebGLProgram, generateLine, generateThickCircleWireframeVertices, gl } from "../../webgl";
+import Entity from "../../Entity";
+import Board from "../../Board";
+import { bindUBOToProgram, UBOBindingIndexes } from "../ubos";
 
 let lineProgram: WebGLProgram;
 
@@ -79,14 +80,10 @@ export function createDebugDataShaders(): void {
    `;
 
    lineProgram = createWebGLProgram(gl, lineVertexShaderText, lineFragmentShaderText);
-
-   const lineCameraBlockIndex = gl.getUniformBlockIndex(lineProgram, "Camera");
-   gl.uniformBlockBinding(lineProgram, lineCameraBlockIndex, CAMERA_UNIFORM_BUFFER_BINDING_INDEX);
+   bindUBOToProgram(gl, lineProgram, UBOBindingIndexes.CAMERA);
 
    triangleProgram = createWebGLProgram(gl, triangleVertexShaderText, triangleFragmentShaderText);
-
-   const triangleCameraBlockIndex = gl.getUniformBlockIndex(triangleProgram, "Camera");
-   gl.uniformBlockBinding(triangleProgram, triangleCameraBlockIndex, CAMERA_UNIFORM_BUFFER_BINDING_INDEX);
+   bindUBOToProgram(gl, triangleProgram, UBOBindingIndexes.CAMERA);
 }
 
 const addCircleVertices = (vertices: Array<number>, debugData: EntityDebugData, gameObject: Entity): void => {

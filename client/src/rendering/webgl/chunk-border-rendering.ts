@@ -1,5 +1,6 @@
 import { Settings } from "webgl-test-shared/dist/settings";
-import { CAMERA_UNIFORM_BUFFER_BINDING_INDEX, createWebGLProgram, gl } from "../webgl";
+import { createWebGLProgram, gl } from "../../webgl";
+import { bindUBOToProgram, UBOBindingIndexes } from "../ubos";
 
 const top = Settings.BOARD_DIMENSIONS * Settings.TILE_SIZE;
 const bottom = 0;
@@ -38,9 +39,7 @@ export function createChunkBorderShaders(): void {
    `;
 
    program = createWebGLProgram(gl, vertexShaderText, fragmentShaderText);
-
-   const cameraBlockIndex = gl.getUniformBlockIndex(program, "Camera");
-   gl.uniformBlockBinding(program, cameraBlockIndex, CAMERA_UNIFORM_BUFFER_BINDING_INDEX);
+   bindUBOToProgram(gl, program, UBOBindingIndexes.CAMERA);
 
    buffer = gl.createBuffer()!;
 }

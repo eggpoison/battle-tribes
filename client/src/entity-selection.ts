@@ -13,8 +13,8 @@ import { BuildMenu_hide, BuildMenu_setBuildingID, BuildMenu_updateBuilding, enti
 import { InventoryMenuType, InventorySelector_inventoryIsOpen, InventorySelector_setInventoryMenuType } from "./components/game/inventories/InventorySelector";
 import { SEED_TO_PLANT_RECORD } from "./entity-components/PlantComponent";
 import { hitboxIsWithinRange } from "./hitboxes/hitboxes";
-import { GhostInfo, GhostType, PARTIAL_OPACITY, setGhostInfo } from "./rendering/entity-ghost-rendering";
-import { getClosestGroupNum } from "./rendering/entity-selection-rendering";
+import { GhostInfo, GhostType, PARTIAL_OPACITY, setGhostInfo } from "./rendering/webgl/entity-ghost-rendering";
+import { getClosestGroupNum } from "./rendering/webgl/entity-selection-rendering";
 import { CraftingStation } from "webgl-test-shared/dist/crafting-recipes";
 import { CraftingMenu_setCraftingStation, CraftingMenu_setIsVisible } from "./components/game/menus/CraftingMenu";
 

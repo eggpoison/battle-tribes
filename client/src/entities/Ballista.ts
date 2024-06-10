@@ -1,7 +1,7 @@
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { Point, randItem } from "webgl-test-shared/dist/utils";
 import RenderPart from "../render-parts/RenderPart";
-import { getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
+import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { ROCK_DESTROY_SOUNDS, ROCK_HIT_SOUNDS, playSound } from "../sound";
 import Entity from "../Entity";
 import { BALLISTA_AMMO_BOX_OFFSET_X, BALLISTA_AMMO_BOX_OFFSET_Y, BALLISTA_GEAR_X, BALLISTA_GEAR_Y } from "../utils";

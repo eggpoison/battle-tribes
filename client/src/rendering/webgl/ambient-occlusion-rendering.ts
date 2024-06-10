@@ -4,7 +4,7 @@ import Camera from "../../Camera";
 import { createWebGLProgram, gl } from "../../webgl";
 import Board from "../../Board";
 import { RenderChunkAmbientOcclusionInfo, getRenderChunkAmbientOcclusionInfo, getRenderChunkMaxTileX, getRenderChunkMaxTileY, getRenderChunkMinTileX, getRenderChunkMinTileY } from "../render-chunks";
-import { UBOBindingIndexes, bindUBOToProgram } from "../ubos";
+import { UBOBindingIndex, bindUBOToProgram } from "../ubos";
 
 let program: WebGLProgram;
 
@@ -114,7 +114,7 @@ export function createAmbientOcclusionShaders(): void {
    `;
 
    program = createWebGLProgram(gl, vertexShaderText, fragmentShaderText);
-   bindUBOToProgram(gl, program, UBOBindingIndexes.CAMERA);
+   bindUBOToProgram(gl, program, UBOBindingIndex.CAMERA);
 }
 
 const tileIsWallInt = (tileX: number, tileY: number): number => {

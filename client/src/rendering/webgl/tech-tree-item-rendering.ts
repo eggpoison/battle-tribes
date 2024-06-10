@@ -1,12 +1,12 @@
 import { Point, randFloat, randSign, rotateXAroundPoint, rotateYAroundPoint } from "webgl-test-shared/dist/utils";
 import { createWebGLProgram, halfWindowHeight, halfWindowWidth } from "../../webgl";
 import { ATLAS_SLOT_SIZE } from "../../texture-atlases/texture-atlas-stitching";
-import { ENTITY_TEXTURE_ATLAS_LENGTH, getTechTreeEntityTextureAtlas, getTextureArrayIndex } from "../../texture-atlases/entity-texture-atlas";
+import { ENTITY_TEXTURE_ATLAS_LENGTH, getTechTreeEntityTextureAtlas, getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { ItemType } from "webgl-test-shared/dist/items";
 import CLIENT_ITEM_INFO_RECORD from "../../client-item-info";
 import { getTechTreeGL, techTreeX, techTreeY, techTreeZoom } from "./tech-tree-rendering";
 import { Settings } from "webgl-test-shared/dist/settings";
-import { UBOBindingIndexes, bindUBOToProgram } from "../ubos";
+import { UBOBindingIndex, bindUBOToProgram } from "../ubos";
 
 interface TechTreeItem {
    readonly itemType: ItemType;
@@ -105,7 +105,7 @@ export function createTechTreeItemShaders(): void {
    const gl = getTechTreeGL();
 
    program = createWebGLProgram(gl, vertexShaderText, fragmentShaderText);
-   bindUBOToProgram(gl, program, UBOBindingIndexes.CAMERA);
+   bindUBOToProgram(gl, program, UBOBindingIndex.CAMERA);
 
    const textureUniformLocation = gl.getUniformLocation(program, "u_textureAtlas")!;
    const atlasPixelSizeUniformLocation = gl.getUniformLocation(program, "u_atlasPixelSize")!;

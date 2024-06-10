@@ -4,7 +4,7 @@ import { Tile } from "../../Tile";
 import { createWebGLProgram, gl } from "../../webgl";
 import Board from "../../Board";
 import { RenderChunkWallBorderInfo, getRenderChunkMaxTileX, getRenderChunkMaxTileY, getRenderChunkMinTileX, getRenderChunkMinTileY, getRenderChunkWallBorderInfo } from "../render-chunks";
-import { bindUBOToProgram, UBOBindingIndexes } from "../ubos";
+import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 
 const BORDER_THICKNESS = 5;
 
@@ -40,7 +40,7 @@ export function createWallBorderShaders(): void {
    `;
 
    program = createWebGLProgram(gl, vertexShaderText, fragmentShaderText);
-   bindUBOToProgram(gl, program, UBOBindingIndexes.CAMERA);
+   bindUBOToProgram(gl, program, UBOBindingIndex.CAMERA);
 }
 
 export function calculateWallBorderInfo(renderChunkX: number, renderChunkY: number): RenderChunkWallBorderInfo {

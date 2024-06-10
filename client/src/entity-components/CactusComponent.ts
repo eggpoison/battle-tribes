@@ -3,7 +3,7 @@ import { CactusComponentData, ServerComponentType } from "webgl-test-shared/dist
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import RenderPart from "../render-parts/RenderPart";
-import { getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
+import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { createFlowerParticle } from "../particles";
 
 export const CACTUS_RADIUS = 40;

@@ -4,7 +4,7 @@ import { Point } from "webgl-test-shared/dist/utils";
 import { createWebGLProgram, generateLine, generateThickCircleWireframeVertices, gl } from "../../webgl";
 import Entity from "../../Entity";
 import Board from "../../Board";
-import { bindUBOToProgram, UBOBindingIndexes } from "../ubos";
+import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 
 let lineProgram: WebGLProgram;
 
@@ -80,10 +80,10 @@ export function createDebugDataShaders(): void {
    `;
 
    lineProgram = createWebGLProgram(gl, lineVertexShaderText, lineFragmentShaderText);
-   bindUBOToProgram(gl, lineProgram, UBOBindingIndexes.CAMERA);
+   bindUBOToProgram(gl, lineProgram, UBOBindingIndex.CAMERA);
 
    triangleProgram = createWebGLProgram(gl, triangleVertexShaderText, triangleFragmentShaderText);
-   bindUBOToProgram(gl, triangleProgram, UBOBindingIndexes.CAMERA);
+   bindUBOToProgram(gl, triangleProgram, UBOBindingIndex.CAMERA);
 }
 
 const addCircleVertices = (vertices: Array<number>, debugData: EntityDebugData, gameObject: Entity): void => {

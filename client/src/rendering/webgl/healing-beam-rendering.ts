@@ -4,7 +4,7 @@ import { Settings } from "webgl-test-shared/dist/settings";
 import { angle, distance, rotateXAroundPoint, rotateYAroundPoint } from "webgl-test-shared/dist/utils";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { bindUBOToProgram, UBOBindingIndexes } from "../ubos";
+import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 
 export const HEALING_BEAM_THICKNESS = 32;
 
@@ -95,7 +95,7 @@ export function createHealingBeamShaders(): void {
    `;
 
    program = createWebGLProgram(gl, vertexShaderText, fragmentShaderText);
-   bindUBOToProgram(gl, program, UBOBindingIndexes.CAMERA);
+   bindUBOToProgram(gl, program, UBOBindingIndex.CAMERA);
 }
 
 interface HealingBeam {

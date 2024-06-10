@@ -6,7 +6,7 @@ import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import Board from "../Board";
 import RenderPart from "../render-parts/RenderPart";
-import { getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
+import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { playSound } from "../sound";
 
 export const WORKER_HUT_SIZE = 88;

@@ -9,7 +9,7 @@ import Board from "../../Board";
 import { RenderChunkRiverInfo, WORLD_RENDER_CHUNK_SIZE, getRenderChunkMaxTileX, getRenderChunkMaxTileY, getRenderChunkMinTileX, getRenderChunkMinTileY, getRenderChunkRiverInfo } from "../render-chunks";
 import { Tile } from "../../Tile";
 import { renderFish } from "./fish-rendering";
-import { UBOBindingIndexes, bindUBOToProgram } from "../ubos";
+import { UBOBindingIndex, bindUBOToProgram } from "../ubos";
 
 const SHALLOW_WATER_COLOUR = [118/255, 185/255, 242/255] as const;
 const DEEP_WATER_COLOUR = [86/255, 141/255, 184/255] as const;
@@ -606,7 +606,7 @@ export function createRiverShaders(): void {
    // 
 
    baseProgram = createWebGLProgram(gl, baseVertexShaderText, baseFragmentShaderText);
-   bindUBOToProgram(gl, baseProgram, UBOBindingIndexes.CAMERA);
+   bindUBOToProgram(gl, baseProgram, UBOBindingIndex.CAMERA);
 
    const baseTextureUniformLocation = gl.getUniformLocation(baseProgram, "u_baseTexture")!;
 
@@ -618,7 +618,7 @@ export function createRiverShaders(): void {
    // 
 
    rockProgram = createWebGLProgram(gl, rockVertexShaderText, rockFragmentShaderText);
-   bindUBOToProgram(gl, rockProgram, UBOBindingIndexes.CAMERA);
+   bindUBOToProgram(gl, rockProgram, UBOBindingIndex.CAMERA);
 
    const rockProgramTexture1UniformLocation = gl.getUniformLocation(rockProgram, "u_texture1")!;
    const rockProgramTexture2UniformLocation = gl.getUniformLocation(rockProgram, "u_texture2")!;
@@ -632,8 +632,8 @@ export function createRiverShaders(): void {
    // 
 
    highlightsProgram = createWebGLProgram(gl, highlightsVertexShaderText, highlightsFragmentShaderText);
-   bindUBOToProgram(gl, highlightsProgram, UBOBindingIndexes.CAMERA);
-   bindUBOToProgram(gl, highlightsProgram, UBOBindingIndexes.TIME);
+   bindUBOToProgram(gl, highlightsProgram, UBOBindingIndex.CAMERA);
+   bindUBOToProgram(gl, highlightsProgram, UBOBindingIndex.TIME);
 
    const highlightsProgramTexture1UniformLocation = gl.getUniformLocation(highlightsProgram, "u_texture1")!;
    const highlightsProgramTexture2UniformLocation = gl.getUniformLocation(highlightsProgram, "u_texture2")!;
@@ -649,8 +649,8 @@ export function createRiverShaders(): void {
    // 
 
    noiseProgram = createWebGLProgram(gl, noiseVertexShaderText, noiseFragmentShaderText);
-   bindUBOToProgram(gl, noiseProgram, UBOBindingIndexes.CAMERA);
-   bindUBOToProgram(gl, noiseProgram, UBOBindingIndexes.TIME);
+   bindUBOToProgram(gl, noiseProgram, UBOBindingIndex.CAMERA);
+   bindUBOToProgram(gl, noiseProgram, UBOBindingIndex.TIME);
 
    const noiseTextureUniformLocation = gl.getUniformLocation(noiseProgram, "u_noiseTexture")!;
 
@@ -662,7 +662,7 @@ export function createRiverShaders(): void {
    // 
 
    transitionProgram = createWebGLProgram(gl, transitionVertexShaderText, transitionFragmentShaderText);
-   bindUBOToProgram(gl, transitionProgram, UBOBindingIndexes.CAMERA);
+   bindUBOToProgram(gl, transitionProgram, UBOBindingIndex.CAMERA);
 
    gl.useProgram(transitionProgram);
    
@@ -677,8 +677,8 @@ export function createRiverShaders(): void {
    // 
 
    foamProgram = createWebGLProgram(gl, foamVertexShaderText, foamFragmentShaderText);
-   bindUBOToProgram(gl, foamProgram, UBOBindingIndexes.CAMERA);
-   bindUBOToProgram(gl, foamProgram, UBOBindingIndexes.TIME);
+   bindUBOToProgram(gl, foamProgram, UBOBindingIndex.CAMERA);
+   bindUBOToProgram(gl, foamProgram, UBOBindingIndex.TIME);
 
    const foamProgramFoamTextureUniformLocation = gl.getUniformLocation(foamProgram, "u_foamTexture")!;
 
@@ -690,7 +690,7 @@ export function createRiverShaders(): void {
    // 
 
    steppingStoneProgram = createWebGLProgram(gl, steppingStoneVertexShaderText, steppingStoneFragmentShaderText);
-   bindUBOToProgram(gl, steppingStoneProgram, UBOBindingIndexes.CAMERA);
+   bindUBOToProgram(gl, steppingStoneProgram, UBOBindingIndex.CAMERA);
 
    const steppingStoneTexture1UniformLocation = gl.getUniformLocation(steppingStoneProgram, "u_texture1")!;
    const steppingStoneTexture2UniformLocation = gl.getUniformLocation(steppingStoneProgram, "u_texture2")!;
@@ -1608,7 +1608,7 @@ const calculateVisibleRiverInfo = (): ReadonlyArray<RenderChunkRiverInfo> => {
    return riverInfoArray;
 }
 
-export function renderRivers(): void {
+export function renderRivers(frameProgress: number): void {
    const visibleRenderChunks = calculateVisibleRiverInfo();
 
    // Calculate visible stepping stone groups
@@ -1683,7 +1683,7 @@ export function renderRivers(): void {
    // FISH
    // 
 
-   renderFish();
+   renderFish(frameProgress);
 
    // 
    // Highlights program

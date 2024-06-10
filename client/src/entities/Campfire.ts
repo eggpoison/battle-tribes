@@ -1,7 +1,7 @@
 import { Point, randFloat } from "webgl-test-shared/dist/utils";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import RenderPart from "../render-parts/RenderPart";
-import { getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
+import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import Board from "../Board";
 import { createEmberParticle, createSmokeParticle } from "../particles";
 import Entity from "../Entity";

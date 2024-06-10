@@ -1,7 +1,7 @@
 import { Settings } from "webgl-test-shared/dist/settings";
 import Camera from "../../Camera";
 import { createWebGLProgram, gl } from "../../webgl";
-import { bindUBOToProgram, UBOBindingIndexes } from "../ubos";
+import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 
 let program: WebGLProgram;
 let buffer: WebGLBuffer;
@@ -69,7 +69,7 @@ export function createWorldBorderShaders(): void {
    `;
 
    program = createWebGLProgram(gl, vertexShaderText, fragmentShaderText);
-   bindUBOToProgram(gl, program, UBOBindingIndexes.CAMERA);
+   bindUBOToProgram(gl, program, UBOBindingIndex.CAMERA);
 
    buffer = gl.createBuffer()!;
 }

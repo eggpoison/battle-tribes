@@ -1,5 +1,5 @@
 import RenderPart from "../render-parts/RenderPart";
-import { getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
+import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import Particle from "../Particle";
 import { ParticleRenderLayer, addMonocolourParticleToBufferContainer } from "../rendering/webgl/particle-rendering";
 import Board from "../Board";

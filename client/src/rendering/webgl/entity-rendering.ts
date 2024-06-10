@@ -1,10 +1,10 @@
 import { rotateXAroundPoint, rotateYAroundPoint } from "webgl-test-shared/dist/utils";
 import { createWebGLProgram, gl } from "../../webgl";
 import Board from "../../Board";
-import { ATLAS_SLOT_SIZE } from "../../texture-atlases/texture-atlas-stitching";
 import RenderPart from "../../render-parts/RenderPart";
-import { ENTITY_TEXTURE_ATLAS_LENGTH, getEntityTextureAtlas } from "../../texture-atlases/entity-texture-atlas";
-import { bindUBOToProgram, UBOBindingIndexes } from "../ubos";
+import { getEntityTextureAtlas } from "../../texture-atlases/texture-atlases";
+import { bindUBOToProgram, ENTITY_TEXTURE_ATLAS_UBO, UBOBindingIndex } from "../ubos";
+import Entity from "../../Entity";
 
 let program: WebGLProgram;
 let vao: WebGLVertexArrayObject;
@@ -49,10 +49,7 @@ export function createEntityShaders(): void {
    precision highp float;
 
    uniform sampler2D u_textureAtlas;
-   uniform float u_atlasPixelSize;
-   uniform float u_atlasSlotSize;
-   uniform float u_textureSlotIndexes[${ENTITY_TEXTURE_ATLAS_LENGTH}];
-   uniform vec2 u_textureSizes[${ENTITY_TEXTURE_ATLAS_LENGTH}];
+   ${ENTITY_TEXTURE_ATLAS_UBO}
    
    in vec2 v_texCoord;
    in float v_textureArrayIndex;
@@ -66,13 +63,16 @@ export function createEntityShaders(): void {
       float textureIndex = u_textureSlotIndexes[textureArrayIndex];
       vec2 textureSize = u_textureSizes[textureArrayIndex];
       
+      float atlasPixelSize = u_atlasSize * ATLAS_SLOT_SIZE;
+      
       // Calculate the coordinates of the top left corner of the texture
-      float textureX = mod(textureIndex * u_atlasSlotSize, u_atlasPixelSize);
-      float textureY = floor(textureIndex * u_atlasSlotSize / u_atlasPixelSize) * u_atlasSlotSize;
+      float textureX = mod(textureIndex * ATLAS_SLOT_SIZE, atlasPixelSize);
+      float textureY = floor(textureIndex * ATLAS_SLOT_SIZE / atlasPixelSize) * ATLAS_SLOT_SIZE;
       
       // @Incomplete: This is very hacky, the - 0.2 and + 0.1 shenanigans are to prevent texture bleeding but it causes tiny bits of the edge of the textures to get cut off.
-      float u = (textureX + v_texCoord.x * (textureSize.x - 0.2) + 0.1) / u_atlasPixelSize;
-      float v = 1.0 - ((textureY + (1.0 - v_texCoord.y) * (textureSize.y - 0.2) + 0.1) / u_atlasPixelSize);
+      // Idea: a texture array would solve this
+      float u = (textureX + v_texCoord.x * (textureSize.x - 0.2) + 0.1) / atlasPixelSize;
+      float v = 1.0 - ((textureY + (1.0 - v_texCoord.y) * (textureSize.y - 0.2) + 0.1) / atlasPixelSize);
       outputColour = texture(u_textureAtlas, vec2(u, v));
       
       if (v_tint.r > 0.0) {
@@ -96,33 +96,13 @@ export function createEntityShaders(): void {
    `;
 
    program = createWebGLProgram(gl, vertexShaderText, fragmentShaderText);
-   bindUBOToProgram(gl, program, UBOBindingIndexes.CAMERA);
+   bindUBOToProgram(gl, program, UBOBindingIndex.CAMERA);
+   bindUBOToProgram(gl, program, UBOBindingIndex.ENTITY_TEXTURE_ATLAS);
 
    const textureUniformLocation = gl.getUniformLocation(program, "u_textureAtlas")!;
-   const atlasPixelSizeUniformLocation = gl.getUniformLocation(program, "u_atlasPixelSize")!;
-   const atlasSlotSizeUniformLocation = gl.getUniformLocation(program, "u_atlasSlotSize")!;
-   const textureSlotIndexesUniformLocation = gl.getUniformLocation(program, "u_textureSlotIndexes")!;
-   const textureSizesUniformLocation = gl.getUniformLocation(program, "u_textureSizes")!;
-
-   const textureAtlas = getEntityTextureAtlas();
-   
-   const textureSlotIndexes = new Float32Array(ENTITY_TEXTURE_ATLAS_LENGTH);
-   for (let textureArrayIndex = 0; textureArrayIndex < ENTITY_TEXTURE_ATLAS_LENGTH; textureArrayIndex++) {
-      textureSlotIndexes[textureArrayIndex] = textureAtlas.textureSlotIndexes[textureArrayIndex];
-   }
-
-   const textureSizes = new Float32Array(ENTITY_TEXTURE_ATLAS_LENGTH * 2);
-   for (let textureArrayIndex = 0; textureArrayIndex < ENTITY_TEXTURE_ATLAS_LENGTH; textureArrayIndex++) {
-      textureSizes[textureArrayIndex * 2] = textureAtlas.textureWidths[textureArrayIndex];
-      textureSizes[textureArrayIndex * 2 + 1] = textureAtlas.textureHeights[textureArrayIndex];
-   }
 
    gl.useProgram(program);
    gl.uniform1i(textureUniformLocation, 0);
-   gl.uniform1f(atlasPixelSizeUniformLocation, textureAtlas.atlasSize * ATLAS_SLOT_SIZE);
-   gl.uniform1f(atlasSlotSizeUniformLocation, ATLAS_SLOT_SIZE);
-   gl.uniform1fv(textureSlotIndexesUniformLocation, textureSlotIndexes);
-   gl.uniform2fv(textureSizesUniformLocation, textureSizes);
 
    // 
    // Create VAO
@@ -154,7 +134,11 @@ export function createEntityShaders(): void {
    gl.bindVertexArray(null);
 }
 
-export function renderGameObjects(): void {
+export function calculateRenderPartDepth(renderPart: RenderPart, entity: Entity): number {
+   return entity.renderDepth - renderPart.zIndex * 0.0001;
+}
+
+export function renderGameObjects(frameProgress: number): void {
    if (Board.sortedEntities.length === 0) return;
 
    const numRenderParts = Board.numVisibleRenderParts - Board.fish.length;
@@ -165,7 +149,8 @@ export function renderGameObjects(): void {
    
    let i = 0;
    for (const entity of Board.sortedEntities) {
-      entity.updateRenderPosition();
+      // @Hack: shouldn't be done here
+      entity.updateRenderPosition(frameProgress);
 
       // Calculate render info for all render parts
       // Update render parts from parent -> child
@@ -185,13 +170,15 @@ export function renderGameObjects(): void {
       }
 
       for (const renderPart of entity.allRenderParts) {
-         const depth = -renderPart.zIndex * 0.0001 + entity.renderDepth;
+         const depth = calculateRenderPartDepth(renderPart, entity);
    
          const u0 = renderPart.flipX ? 1 : 0;
          const u1 = 1 - u0;
 
          const width = textureAtlas.textureWidths[renderPart.textureArrayIndex] * 4;
          const height = textureAtlas.textureHeights[renderPart.textureArrayIndex] * 4;
+
+         // @Speed: don't do this here, do it in the GPU using matrices
 
          const x1 = renderPart.renderPosition.x - width / 2 * renderPart.scale;
          const x2 = renderPart.renderPosition.x + width / 2 * renderPart.scale;

@@ -8,7 +8,7 @@ import Entity, { createRenderPartOverlayGroup } from "../Entity";
 import { Light, addLight, attachLightToEntity } from "../lights";
 import Board from "../Board";
 import RenderPart from "../render-parts/RenderPart";
-import { getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
+import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { createSprintParticle, createTitleObtainParticle } from "../particles";
 
 export function getTribesmanRadius(tribesman: Entity): number {
@@ -193,9 +193,12 @@ class TribeMemberComponent extends ServerComponent<ServerComponentType.tribeMemb
             this.entity.renderPartOverlayGroups.push(bodyOverlayGroup);
 
             const handRenderParts = this.entity.getRenderParts("tribeMemberComponent:hand", 2);
-            const handOverlayGroup = createRenderPartOverlayGroup("overlays/dirt.png", handRenderParts);
-            this.entity.renderPartOverlayGroups.push(handOverlayGroup);
-            
+            for (let i = 0; i < handRenderParts.length; i++) {
+               const renderPart = handRenderParts[i];
+               const handOverlayGroup = createRenderPartOverlayGroup("overlays/dirt.png", [renderPart]);
+               this.entity.renderPartOverlayGroups.push(handOverlayGroup);
+            }
+
             break;
          }
       }

@@ -2,7 +2,7 @@ import { PlanterBoxComponentData, PlanterBoxPlant, ServerComponentType } from "w
 import ServerComponent from "./ServerComponent";
 import Entity, { getRandomPointInEntity } from "../Entity";
 import RenderPart from "../render-parts/RenderPart";
-import { getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
+import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { playSound } from "../sound";
 import { customTickIntervalHasPassed, randInt } from "webgl-test-shared/dist/utils";
 import { createGrowthParticle } from "../particles";

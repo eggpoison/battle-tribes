@@ -24,20 +24,8 @@ export interface RenderPartOverlayGroup {
    readonly renderParts: Array<RenderPart>;
 }
 
-// @Cleanup: Move frame progress stuff to a different file
-
-let frameProgress = Number.EPSILON;
-
 // Use prime numbers / 100 to ensure a decent distribution of different types of particles
 const HEALING_PARTICLE_AMOUNTS = [0.05, 0.37, 1.01];
-
-export function setFrameProgress(newFrameProgress: number): void {
-   frameProgress = newFrameProgress;
-}
-
-export function getFrameProgress(): number {
-   return frameProgress;
-}
 
 export function createRenderPartOverlayGroup(textureSource: string, renderParts: Array<RenderPart>): RenderPartOverlayGroup {
    return {
@@ -434,7 +422,7 @@ abstract class Entity<T extends EntityType = EntityType> extends RenderObject {
       }
    }
 
-   public updateRenderPosition(): void {
+   public updateRenderPosition(frameProgress: number): void {
       this.renderPosition.x = this.position.x;
       this.renderPosition.y = this.position.y;
 

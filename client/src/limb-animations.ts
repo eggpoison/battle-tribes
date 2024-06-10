@@ -6,7 +6,7 @@ import { getItemRecipe } from "webgl-test-shared/dist/crafting-recipes";
 import { LimbAction } from "webgl-test-shared/dist/entities";
 import RenderPart from "./render-parts/RenderPart";
 import { LimbInfo } from "./entity-components/InventoryUseComponent";
-import { getTextureArrayIndex } from "./texture-atlases/entity-texture-atlas";
+import { getTextureArrayIndex } from "./texture-atlases/texture-atlases";
 import CLIENT_ITEM_INFO_RECORD from "./client-item-info";
 import { ParticleColour } from "./rendering/webgl/particle-rendering";
 import { createColouredParticle, createSawdustCloud } from "./particles";

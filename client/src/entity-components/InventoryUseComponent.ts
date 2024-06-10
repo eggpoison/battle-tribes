@@ -4,9 +4,9 @@ import { Point, lerp, randFloat, randItem } from "webgl-test-shared/dist/utils";
 import { InventoryUseComponentData, LimbData, ServerComponentType } from "webgl-test-shared/dist/components";
 import { Settings } from "webgl-test-shared/dist/settings";
 import ServerComponent from "./ServerComponent";
-import Entity, { getFrameProgress } from "../Entity";
+import Entity from "../Entity";
 import RenderPart from "../render-parts/RenderPart";
-import { getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
+import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import Board from "../Board";
 import CLIENT_ITEM_INFO_RECORD from "../client-item-info";
 import Particle from "../Particle";
@@ -14,6 +14,7 @@ import { ParticleColour, ParticleRenderLayer, addMonocolourParticleToBufferConta
 import { animateLimb, createCraftingAnimationParticles, createMedicineAnimationParticles, generateRandomLimbPosition, updateBandageRenderPart, updateCustomItemRenderPart } from "../limb-animations";
 import { createDeepFrostHeartBloodParticles } from "../particles";
 import { definiteGameState } from "../game-state/game-states";
+import { getFrameProgress } from "../Game";
 
 export interface LimbInfo {
    selectedItemSlot: number;

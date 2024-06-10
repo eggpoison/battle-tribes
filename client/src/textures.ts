@@ -23,7 +23,19 @@ const TEXTURE_SOURCES: Array<string> = [
    "tiles/dirt2.png"
 ];
 
+// @Hack. remove
 export const TEXTURE_IMAGE_RECORD: Record<string, HTMLImageElement> = {};
+
+export function createImage(imageSrc: string): Promise<HTMLImageElement> {
+   return new Promise(async resolve => {
+      const image = new Image();
+      image.src = require("./images/" + imageSrc);
+      
+      await imageIsLoaded(image).then(() => {
+         resolve(image);
+      });
+   })
+}
 
 export function loadTextures(): Promise<void> {
    return new Promise(async resolve => {
@@ -33,29 +45,25 @@ export function loadTextures(): Promise<void> {
             TEXTURE_SOURCES.push(textureSource);
          }
       }
-
+      
       for (const textureSource of TEXTURE_SOURCES) {
-         // Load the image
-         const image = new Image();
-         image.src = require("./images/" + textureSource);
+         const image = await createImage(textureSource);
 
          // Create texture from the image once it is loaded
-         await imageIsLoaded(image).then(() => {
-            const texture = gl.createTexture()!;
-            gl.bindTexture(gl.TEXTURE_2D, texture);
-            // Set parameters
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-      
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
-      
-            gl.bindTexture(gl.TEXTURE_2D, null);
-            
-            TEXTURES[textureSource] = texture;
-         });
 
+         const texture = gl.createTexture()!;
+         gl.bindTexture(gl.TEXTURE_2D, texture);
+         // Set parameters
+         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+   
+         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+   
+         gl.bindTexture(gl.TEXTURE_2D, null);
+         
+         TEXTURES[textureSource] = texture;
          TEXTURE_IMAGE_RECORD[textureSource] = image;
       }
       

@@ -6,7 +6,7 @@ import { gl, createWebGLProgram } from "../../webgl";
 import { RENDER_CHUNK_EDGE_GENERATION, RenderChunkSolidTileInfo, WORLD_RENDER_CHUNK_SIZE, getRenderChunkIndex, getRenderChunkMaxTileX, getRenderChunkMaxTileY, getRenderChunkMinTileX, getRenderChunkMinTileY } from "../render-chunks";
 import Board from "../../Board";
 import { TILE_TYPE_TEXTURE_SOURCES } from "../../tile-type-texture-sources";
-import { bindUBOToProgram, UBOBindingIndexes } from "../ubos";
+import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 
 let groundTileInfoArray: Array<RenderChunkSolidTileInfo>;
 let wallTileInfoArray: Array<RenderChunkSolidTileInfo>;
@@ -125,7 +125,7 @@ export function createSolidTileShaders(): void {
    `;
 
    program = createWebGLProgram(gl, vertexShaderText, fragmentShaderText);
-   bindUBOToProgram(gl, program, UBOBindingIndexes.CAMERA);
+   bindUBOToProgram(gl, program, UBOBindingIndex.CAMERA);
 
    gl.useProgram(program);
    
@@ -150,6 +150,7 @@ export function createSolidTileShaders(): void {
       gl.texSubImage3D(gl.TEXTURE_2D_ARRAY, 0, 0, 0, i, 16, 16, 1, gl.RGBA, gl.UNSIGNED_BYTE, image);
    }
 
+   // @Cleanup: why do we do this? shouldn't we not need mipmaps?
    gl.generateMipmap(gl.TEXTURE_2D_ARRAY);
 }
 

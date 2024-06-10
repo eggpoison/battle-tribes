@@ -4,7 +4,7 @@ import { ServerComponentType } from "webgl-test-shared/dist/components";
 import Entity, { ComponentDataRecord } from "../Entity";
 import RenderPart from "../render-parts/RenderPart";
 import CLIENT_ITEM_INFO_RECORD from "../client-item-info";
-import { getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
+import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 
 class ItemEntity extends Entity {
    constructor(position: Point, id: number, ageTicks: number, componentDataRecord: ComponentDataRecord) {

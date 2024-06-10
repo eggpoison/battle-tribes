@@ -12,7 +12,7 @@ import { HealthComponent, HealthComponentArray } from "../../components/HealthCo
 import { InventoryComponent, InventoryComponentArray } from "../../components/InventoryComponent";
 import { InventoryUseComponent, InventoryUseComponentArray } from "../../components/InventoryUseComponent";
 import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
-import { TribeMemberComponent, TribeMemberComponentArray } from "../../components/TribeMemberComponent";
+import { TribeMemberComponent, TribeMemberComponentArray, awardTitle } from "../../components/TribeMemberComponent";
 import { TribesmanAIComponent, TribesmanAIComponentArray } from "../../components/TribesmanAIComponent";
 import Board from "../../Board";
 import { AIHelperComponent, AIHelperComponentArray } from "../../components/AIHelperComponent";
@@ -20,6 +20,7 @@ import { tickTribesman } from "./tribesman-ai/tribesman-ai";
 import { PhysicsComponent, PhysicsComponentArray } from "../../components/PhysicsComponent";
 import { TribeComponent, TribeComponentArray } from "../../components/TribeComponent";
 import { HutComponentArray } from "../../components/HutComponent";
+import { TribesmanTitle } from "webgl-test-shared/dist/titles";
 
 export const TRIBE_WORKER_RADIUS = 28;
 export const TRIBE_WORKER_VISION_RANGE = 500;
@@ -84,6 +85,11 @@ export function createTribeWorker(position: Point, rotation: number, tribeID: nu
 
    const inventoryComponent = new InventoryComponent();
    InventoryComponentArray.addComponent(worker.id, inventoryComponent);
+
+   // @Temporary
+   setTimeout(() => {
+      awardTitle(worker, TribesmanTitle.builder);
+   }, 100);
 
    return worker;
 }

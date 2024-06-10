@@ -3,7 +3,7 @@ import { Point, angle } from "webgl-test-shared/dist/utils";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityData, HitData } from "webgl-test-shared/dist/client-server-types";
 import RenderPart from "../render-parts/RenderPart";
-import { getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
+import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { playSound } from "../sound";
 import Entity, { ComponentDataRecord } from "../Entity";
 import { createLightWoodSpeckParticle, createWoodShardParticle } from "../particles";

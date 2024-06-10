@@ -2,7 +2,7 @@ import { EntityType, GenericArrowType } from "webgl-test-shared/dist/entities";
 import { Point, randFloat } from "webgl-test-shared/dist/utils";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import RenderPart from "../render-parts/RenderPart";
-import { getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
+import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import Entity, { ComponentDataRecord } from "../Entity";
 import { playSound } from "../sound";
 import { createArrowDestroyParticle, createRockParticle, createRockSpeckParticle } from "../particles";

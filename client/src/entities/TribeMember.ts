@@ -9,7 +9,7 @@ import { TileType } from "webgl-test-shared/dist/tiles";
 import RenderPart from "../render-parts/RenderPart";
 import Entity, { ComponentDataRecord } from "../Entity";
 import { BloodParticleSize, LeafParticleSize, createBloodParticle, createBloodParticleFountain, createBloodPoolParticle, createLeafParticle } from "../particles";
-import { getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
+import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { AudioFilePath, playSound } from "../sound";
 import Game from "../Game";
 import { getTribesmanRadius } from "../entity-components/TribeMemberComponent";

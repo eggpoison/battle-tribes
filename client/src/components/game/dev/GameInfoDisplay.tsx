@@ -141,7 +141,7 @@ const GameInfoDisplay = () => {
       setMaxGreenSafety(value);
    }
    
-   return <div id="game-info-display">
+   return <div id="game-info-display" className="devmode-container">
       <p>Time: {currentTime.toFixed(2)}</p>
       <p>Ticks: {roundNum(ticks, 2)}</p>
       <p>Server TPS: {tps}</p>

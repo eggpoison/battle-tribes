@@ -3,7 +3,7 @@ import { ServerComponentType } from "webgl-test-shared/dist/components";
 import Entity from "../Entity";
 import RenderPart from "../render-parts/RenderPart";
 import Component from "./Component";
-import { getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
+import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { createFrostShieldBreakParticle } from "../particles";
 
 // @Incomplete

@@ -2,7 +2,7 @@ import { EntityType } from "webgl-test-shared/dist/entities";
 import { Point } from "webgl-test-shared/dist/utils";
 import RenderPart from "../render-parts/RenderPart";
 import { createSlimePoolParticle, createSlimeSpeckParticle } from "../particles";
-import { getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
+import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import Entity from "../Entity";
 import { TileType } from "webgl-test-shared/dist/tiles";
 

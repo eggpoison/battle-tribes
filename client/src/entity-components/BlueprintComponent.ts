@@ -6,7 +6,7 @@ import Entity from "../Entity";
 import { playSound } from "../sound";
 import { createDustCloud, createLightWoodSpeckParticle, createRockParticle, createRockSpeckParticle, createSawdustCloud, createWoodShardParticle } from "../particles";
 import { getCurrentBlueprintProgressTexture } from "../entities/BlueprintEntity";
-import { getEntityTextureAtlas, getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
+import { getEntityTextureAtlas, getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { ParticleRenderLayer } from "../rendering/webgl/particle-rendering";
 
 const createWoodenBlueprintWorkParticleEffects = (entity: Entity): void => {

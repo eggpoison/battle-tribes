@@ -1,6 +1,6 @@
 import RenderPart from "../render-parts/RenderPart";
 import { createRockParticle, createRockSpeckParticle } from "../particles";
-import { getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
+import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { playSound, ROCK_DESTROY_SOUNDS, ROCK_HIT_SOUNDS } from "../sound";
 import Entity, { ComponentDataRecord } from "../Entity";
 import { ParticleRenderLayer } from "../rendering/webgl/particle-rendering";

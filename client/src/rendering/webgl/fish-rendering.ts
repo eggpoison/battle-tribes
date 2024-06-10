@@ -4,8 +4,8 @@ import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { createWebGLProgram, gl } from "../../webgl";
 import Board from "../../Board";
 import { ATLAS_SLOT_SIZE } from "../../texture-atlases/texture-atlas-stitching";
-import { ENTITY_TEXTURE_ATLAS_LENGTH, getEntityTextureAtlas } from "../../texture-atlases/entity-texture-atlas";
-import { bindUBOToProgram, UBOBindingIndexes } from "../ubos";
+import { ENTITY_TEXTURE_ATLAS_LENGTH, getEntityTextureAtlas } from "../../texture-atlases/texture-atlases";
+import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 
 // @Cleanup: This all sucks. should really be combined with game-object-rendering, as apart from the blur this is just a 1-1 copy of it
 
@@ -144,7 +144,7 @@ export function createFishShaders(): void {
    `;
 
    program = createWebGLProgram(gl, vertexShaderText, fragmentShaderText);
-   bindUBOToProgram(gl, program, UBOBindingIndexes.CAMERA);
+   bindUBOToProgram(gl, program, UBOBindingIndex.CAMERA);
 
    const textureUniformLocation = gl.getUniformLocation(program, "u_textureAtlas")!;
    const atlasPixelSizeUniformLocation = gl.getUniformLocation(program, "u_atlasPixelSize")!;
@@ -204,7 +204,7 @@ export function createFishShaders(): void {
    gl.bindVertexArray(null);
 }
 
-export function renderFish(): void {
+export function renderFish(frameProgress: number): void {
    if (Board.fish.length === 0) return;
    
    const textureAtlas = getEntityTextureAtlas();
@@ -214,7 +214,7 @@ export function renderFish(): void {
 
    let i = 0;
    for (const fish of Board.fish) {
-      fish.updateRenderPosition();
+      fish.updateRenderPosition(frameProgress);
 
       for (const renderPart of fish.allRenderParts) {
          renderPart.update();

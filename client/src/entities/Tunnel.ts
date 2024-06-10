@@ -2,7 +2,7 @@ import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { Point } from "webgl-test-shared/dist/utils";
 import RenderPart from "../render-parts/RenderPart";
-import { getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
+import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import Entity, { ComponentDataRecord } from "../Entity";
 import { TUNNEL_TEXTURE_SOURCES } from "../entity-components/BuildingMaterialComponent";
 

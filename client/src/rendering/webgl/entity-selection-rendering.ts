@@ -3,9 +3,9 @@ import Board from "../../Board";
 import { getHighlightedEntityID, getSelectedEntityID } from "../../entity-selection";
 import { createWebGLProgram, gl, windowWidth, windowHeight, createTexture } from "../../webgl";
 import Entity from "../../Entity";
-import { ENTITY_TEXTURE_ATLAS_LENGTH, getEntityTextureAtlas } from "../../texture-atlases/entity-texture-atlas";
+import { ENTITY_TEXTURE_ATLAS_LENGTH, getEntityTextureAtlas } from "../../texture-atlases/texture-atlases";
 import { ATLAS_SLOT_SIZE } from "../../texture-atlases/texture-atlas-stitching";
-import { bindUBOToProgram, UBOBindingIndexes } from "../ubos";
+import { bindUBOToProgram, ENTITY_TEXTURE_ATLAS_UBO, UBOBindingIndex } from "../ubos";
 
 let framebufferProgram: WebGLProgram;
 let renderProgram: WebGLProgram;
@@ -102,13 +102,9 @@ export function createStructureHighlightShaders(): void {
    `;
    const framebufferFragmentShaderText = `#version 300 es
    precision mediump float;
-   
-   // @Cleanup: Copy and paste from game-object-rendering.ts, make into UBO
+
    uniform sampler2D u_textureAtlas;
-   uniform float u_atlasPixelSize;
-   uniform float u_atlasSlotSize;
-   uniform float u_textureSlotIndexes[${ENTITY_TEXTURE_ATLAS_LENGTH}];
-   uniform vec2 u_textureSizes[${ENTITY_TEXTURE_ATLAS_LENGTH}];
+   ${ENTITY_TEXTURE_ATLAS_UBO}
 
    in vec2 v_position;
    in vec2 v_origin;
@@ -119,18 +115,19 @@ export function createStructureHighlightShaders(): void {
    out vec4 outputColour;
    
    void main() {
-
       int textureArrayIndex = int(v_textureArrayIndex);
       float textureIndex = u_textureSlotIndexes[textureArrayIndex];
       vec2 textureSize = u_textureSizes[textureArrayIndex];
       
+      float atlasPixelSize = u_atlasSize * ATLAS_SLOT_SIZE;
+      
       // Calculate the coordinates of the top left corner of the texture
-      float textureX = mod(textureIndex * u_atlasSlotSize, u_atlasPixelSize);
-      float textureY = floor(textureIndex * u_atlasSlotSize / u_atlasPixelSize) * u_atlasSlotSize;
+      float textureX = mod(textureIndex * ATLAS_SLOT_SIZE, atlasPixelSize);
+      float textureY = floor(textureIndex * ATLAS_SLOT_SIZE / atlasPixelSize) * ATLAS_SLOT_SIZE;
       
       // @Incomplete: This is very hacky, the - 0.2 and + 0.1 shenanigans are to prevent texture bleeding but it causes tiny bits of the edge of the textures to get cut off.
-      float u = (textureX + v_texCoord.x * (textureSize.x - 0.2) + 0.1) / u_atlasPixelSize;
-      float v = 1.0 - ((textureY + (1.0 - v_texCoord.y) * (textureSize.y - 0.2) + 0.1) / u_atlasPixelSize);
+      float u = (textureX + v_texCoord.x * (textureSize.x - 0.2) + 0.1) / atlasPixelSize;
+      float v = 1.0 - ((textureY + (1.0 - v_texCoord.y) * (textureSize.y - 0.2) + 0.1) / atlasPixelSize);
 
       vec4 textureColour = texture(u_textureAtlas, vec2(u, v));
 
@@ -220,43 +217,21 @@ export function createStructureHighlightShaders(): void {
    `;
 
    framebufferProgram = createWebGLProgram(gl, framebufferVertexShaderText, framebufferFragmentShaderText);
-   bindUBOToProgram(gl, framebufferProgram, UBOBindingIndexes.CAMERA);
-
-   // @Cleanup: Copy and paste
+   bindUBOToProgram(gl, framebufferProgram, UBOBindingIndex.CAMERA);
+   bindUBOToProgram(gl, framebufferProgram, UBOBindingIndex.ENTITY_TEXTURE_ATLAS);
 
    const textureUniformLocation = gl.getUniformLocation(framebufferProgram, "u_textureAtlas")!;
-   const atlasPixelSizeUniformLocation = gl.getUniformLocation(framebufferProgram, "u_atlasPixelSize")!;
-   const atlasSlotSizeUniformLocation = gl.getUniformLocation(framebufferProgram, "u_atlasSlotSize")!;
-   const textureSlotIndexesUniformLocation = gl.getUniformLocation(framebufferProgram, "u_textureSlotIndexes")!;
-   const textureSizesUniformLocation = gl.getUniformLocation(framebufferProgram, "u_textureSizes")!;
-
-   const textureAtlas = getEntityTextureAtlas();
-   
-   const textureSlotIndexes = new Float32Array(ENTITY_TEXTURE_ATLAS_LENGTH);
-   for (let textureArrayIndex = 0; textureArrayIndex < ENTITY_TEXTURE_ATLAS_LENGTH; textureArrayIndex++) {
-      textureSlotIndexes[textureArrayIndex] = textureAtlas.textureSlotIndexes[textureArrayIndex];
-   }
-
-   const textureSizes = new Float32Array(ENTITY_TEXTURE_ATLAS_LENGTH * 2);
-   for (let textureArrayIndex = 0; textureArrayIndex < ENTITY_TEXTURE_ATLAS_LENGTH; textureArrayIndex++) {
-      textureSizes[textureArrayIndex * 2] = textureAtlas.textureWidths[textureArrayIndex];
-      textureSizes[textureArrayIndex * 2 + 1] = textureAtlas.textureHeights[textureArrayIndex];
-   }
 
    gl.useProgram(framebufferProgram);
    gl.uniform1i(textureUniformLocation, 0);
-   gl.uniform1f(atlasPixelSizeUniformLocation, textureAtlas.atlasSize * ATLAS_SLOT_SIZE);
-   gl.uniform1f(atlasSlotSizeUniformLocation, ATLAS_SLOT_SIZE);
-   gl.uniform1fv(textureSlotIndexesUniformLocation, textureSlotIndexes);
-   gl.uniform2fv(textureSizesUniformLocation, textureSizes);
 
    // 
    // Render program
    // 
 
    renderProgram = createWebGLProgram(gl, renderVertexShaderText, renderFragmentShaderText);
-   bindUBOToProgram(gl, renderProgram, UBOBindingIndexes.CAMERA);
-   bindUBOToProgram(gl, renderProgram, UBOBindingIndexes.TIME);
+   bindUBOToProgram(gl, renderProgram, UBOBindingIndex.CAMERA);
+   bindUBOToProgram(gl, renderProgram, UBOBindingIndex.TIME);
 
    const framebufferTextureUniformLocation = gl.getUniformLocation(renderProgram, "u_framebufferTexture")!;
 

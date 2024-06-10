@@ -6,7 +6,7 @@ import Entity from "../Entity";
 import ServerComponent from "./ServerComponent";
 import { playSound } from "../sound";
 import RenderPart from "../render-parts/RenderPart";
-import { getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
+import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 
 type TurretType = EntityType.slingTurret | EntityType.ballista;
 

@@ -6,7 +6,7 @@ import Camera from "../../Camera";
 import { PathfindingSettings, Settings } from "webgl-test-shared/dist/settings";
 import { angle } from "webgl-test-shared/dist/utils";
 import { PathfindingNodeIndex } from "webgl-test-shared/dist/client-server-types";
-import { bindUBOToProgram, UBOBindingIndexes } from "../ubos";
+import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 
 enum NodeType {
    occupied,
@@ -110,10 +110,10 @@ export function createPathfindNodeShaders(): void {
    `;
 
    nodeProgram = createWebGLProgram(gl, nodeVertexShaderText, nodeFragmentShaderText);
-   bindUBOToProgram(gl, nodeProgram, UBOBindingIndexes.CAMERA);
+   bindUBOToProgram(gl, nodeProgram, UBOBindingIndex.CAMERA);
 
    connectorProgram = createWebGLProgram(gl, connectorVertexShaderText, connectorFragmentShaderText);
-   bindUBOToProgram(gl, connectorProgram, UBOBindingIndexes.CAMERA);
+   bindUBOToProgram(gl, connectorProgram, UBOBindingIndex.CAMERA);
 }
 
 const renderConnectors = (mainPathNodes: ReadonlyArray<PathfindingNodeIndex>): void => {

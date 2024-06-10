@@ -4,7 +4,7 @@ import { createWebGLProgram, gl } from "../../webgl";
 import Board from "../../Board";
 import OPTIONS from "../../options";
 import { getLightPosition, getLights } from "../../lights";
-import { bindUBOToProgram, UBOBindingIndexes } from "../ubos";
+import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 
 const NIGHT_LIGHT = 0.4;
 
@@ -41,6 +41,8 @@ export function createNightShaders(): void {
    
    #define MAX_LIGHTS 128
    #define TILE_SIZE ${Settings.TILE_SIZE.toFixed(1)}
+   
+   // @Cleanup: UBO
    
    uniform int u_numLights;
    uniform vec2 u_lightPositions[MAX_LIGHTS];
@@ -107,6 +109,9 @@ export function createNightShaders(): void {
    #define MAX_LIGHTS 128
    #define TILE_SIZE ${Settings.TILE_SIZE.toFixed(1)}
    
+   // @Cleanup: Use a struct
+   // @Cleanup: UBO
+   
    uniform int u_numLights;
    uniform vec2 u_lightPositions[MAX_LIGHTS];
    uniform float u_lightIntensities[MAX_LIGHTS];
@@ -149,10 +154,10 @@ export function createNightShaders(): void {
    `;
 
    darknessProgram = createWebGLProgram(gl, colourVertexShaderText, colourFragmentShaderText);
-   bindUBOToProgram(gl, darknessProgram, UBOBindingIndexes.CAMERA);
+   bindUBOToProgram(gl, darknessProgram, UBOBindingIndex.CAMERA);
 
    colourProgram = createWebGLProgram(gl, darknessVertexShaderText, darknessFragmentShaderText);
-   bindUBOToProgram(gl, colourProgram, UBOBindingIndexes.CAMERA);
+   bindUBOToProgram(gl, colourProgram, UBOBindingIndex.CAMERA);
 
    darkenFactorUniformLocation = gl.getUniformLocation(darknessProgram, "u_darkenFactor")!;
 

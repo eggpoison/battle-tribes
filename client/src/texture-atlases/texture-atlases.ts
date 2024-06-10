@@ -322,7 +322,7 @@ const addTextureSource = (textureSource: string): void => {
    }
 }
 
-// Add item textures
+// Add item textures to entity textures
 for (const clientItemInfo of Object.values(CLIENT_ITEM_INFO_RECORD)) {
    addTextureSource(clientItemInfo.entityTextureSource);
 
@@ -346,22 +346,9 @@ export const ENTITY_TEXTURE_ATLAS_LENGTH = TEXTURE_SOURCES.length;
 let ENTITY_TEXTURE_ATLAS: TextureAtlasInfo;
 let TECH_TREE_ENTITY_TEXTURE_ATLAS: TextureAtlasInfo;
 
-// export let ENTITY_TEXTURE_ATLAS: WebGLTexture;
-// let ENTITY_TEXTURE_WIDTHS: ReadonlyArray<number>;
-// let ENTITY_TEXTURE_HEIGHTS: ReadonlyArray<number>;
-// export let ENTITY_TEXTURE_SLOT_INDEXES: ReadonlyArray<number>;
-// export let ENTITY_TEXTURE_ATLAS_SIZE: number;
-
 export async function createTextureAtlases(): Promise<void> {
    ENTITY_TEXTURE_ATLAS = await stitchTextureAtlas(TEXTURE_SOURCES, gl)
    TECH_TREE_ENTITY_TEXTURE_ATLAS = await stitchTextureAtlas(TEXTURE_SOURCES, getTechTreeGL());
-
-   // const atlasInfo = await stitchTextureAtlas(TEXTURE_SOURCES, gl)
-   // ENTITY_TEXTURE_ATLAS = atlasInfo.texture;
-   // ENTITY_TEXTURE_WIDTHS = atlasInfo.textureWidths;
-   // ENTITY_TEXTURE_HEIGHTS = atlasInfo.textureHeights;
-   // ENTITY_TEXTURE_ATLAS_SIZE = atlasInfo.atlasSize * ATLAS_SLOT_SIZE;
-   // ENTITY_TEXTURE_SLOT_INDEXES = atlasInfo.textureSlotIndexes;
 }
 
 export function getTextureArrayIndex(textureSource: string): number {
@@ -371,13 +358,6 @@ export function getTextureArrayIndex(textureSource: string): number {
    }
    return textureIndex;
 }
-
-// export function getTextureWidth(textureArrayIndex: number): number {
-//    return ENTITY_TEXTURE_WIDTHS[textureArrayIndex];
-// }
-// export function getTextureHeight(textureArrayIndex: number): number {
-//    return ENTITY_TEXTURE_HEIGHTS[textureArrayIndex];
-// }
 
 export function getEntityTextureAtlas(): TextureAtlasInfo {
    return ENTITY_TEXTURE_ATLAS;

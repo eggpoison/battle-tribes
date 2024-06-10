@@ -2,7 +2,7 @@ import { Settings } from "webgl-test-shared/dist/settings";
 import Camera from "../../Camera";
 import { createWebGLProgram, gl } from "../../webgl";
 import { WORLD_RENDER_CHUNK_SIZE } from "../render-chunks";
-import { bindUBOToProgram, UBOBindingIndexes } from "../ubos";
+import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 
 let program: WebGLProgram;
 
@@ -65,8 +65,8 @@ export function createForcefieldShaders(): void {
    `;
 
    program = createWebGLProgram(gl, vertexShaderText, fragmentShaderText);
-   bindUBOToProgram(gl, program, UBOBindingIndexes.CAMERA);
-   bindUBOToProgram(gl, program, UBOBindingIndexes.TIME);
+   bindUBOToProgram(gl, program, UBOBindingIndex.CAMERA);
+   bindUBOToProgram(gl, program, UBOBindingIndex.TIME);
 }
 
 export function renderForcefield(): void {

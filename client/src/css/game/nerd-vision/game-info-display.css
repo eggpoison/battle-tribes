@@ -37,15 +37,14 @@
    float: right;
 }
 
-/* #game-info-display label:is(.enabled, .title) { */
 #game-info-display label.enabled{
    color: #eee;
    font-weight: bold;
 }
-#game-info-display label {
+/* #game-info-display label {
    color: #ccc;
    cursor: pointer;
-}
+} */
 #game-info-display label.title {
    font-weight: bold;
    text-decoration: underline;

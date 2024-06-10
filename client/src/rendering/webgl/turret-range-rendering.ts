@@ -7,7 +7,7 @@ import Entity from "../../Entity";
 import { getHoveredEntityID } from "../../entity-selection";
 import { calculateStructurePlaceInfo } from "webgl-test-shared/dist/structures";
 import Camera from "../../Camera";
-import { bindUBOToProgram, UBOBindingIndexes } from "../ubos";
+import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 
 const CIRCLE_DETAIL = 300;
 
@@ -102,8 +102,8 @@ export function createTurretRangeShaders(): void {
    `;
 
    program = createWebGLProgram(gl, vertexShaderText, fragmentShaderText);
-   bindUBOToProgram(gl, program, UBOBindingIndexes.CAMERA);
-   bindUBOToProgram(gl, program, UBOBindingIndexes.TIME);
+   bindUBOToProgram(gl, program, UBOBindingIndex.CAMERA);
+   bindUBOToProgram(gl, program, UBOBindingIndex.TIME);
 }
 
 const calculateVertices = (renderingInfo: TurretRangeRenderingInfo): ReadonlyArray<number> => {

@@ -5,7 +5,7 @@ import { createWebGLProgram, gl } from "../../webgl";
 import OPTIONS from "../../options";
 import { getVisibleWalls } from "../../client/Client";
 import { getHoveredEntityID } from "../../entity-selection";
-import { bindUBOToProgram, UBOBindingIndexes } from "../ubos";
+import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 
 const OCCUPIED_NODE_THICKNESS = 3;
 const OCCUPIED_NODE_FREE_THICKNESS = 4.5;
@@ -68,7 +68,7 @@ export function createSafetyNodeShaders(): void {
    `;
    
    program = createWebGLProgram(gl, vertexShaderText, fragmentShaderText);
-   bindUBOToProgram(gl, program, UBOBindingIndexes.CAMERA);
+   bindUBOToProgram(gl, program, UBOBindingIndex.CAMERA);
 }
 
 const getHighlightedNodes = (): ReadonlyArray<WallSideNodeData> => {

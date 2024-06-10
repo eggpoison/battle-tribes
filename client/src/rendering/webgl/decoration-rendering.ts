@@ -2,10 +2,12 @@ import { DecorationInfo, DecorationType } from "webgl-test-shared/dist/client-se
 import { rotateXAroundPoint, rotateYAroundPoint } from "webgl-test-shared/dist/utils";
 import Camera from "../../Camera";
 import { createWebGLProgram, gl } from "../../webgl";
-import { getEntityTextureAtlas, getTextureArrayIndex } from "../../texture-atlases/entity-texture-atlas";
+import { getEntityTextureAtlas, getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
 import { ATLAS_SLOT_SIZE } from "../../texture-atlases/texture-atlas-stitching";
 import { getRenderChunkDecorationInfo } from "../render-chunks";
-import { bindUBOToProgram, UBOBindingIndexes } from "../ubos";
+import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
+
+// @Cleanup: combine this with the entity rendering
 
 interface DecorationRenderInfo {
    readonly textureSources: ReadonlyArray<string>;
@@ -87,11 +89,11 @@ export function createDecorationShaders(): void {
    
    layout(location = 0) in vec2 a_position;
    layout(location = 1) in vec2 a_texCoord;
-   layout(location = 2) in float a_textureIndex;
+   layout(location = 2) in float a_textureArrayIndex;
    layout(location = 3) in vec2 a_textureSize;
    
    out vec2 v_texCoord;
-   out float v_textureIndex;
+   out float v_textureArrayIndex;
    out vec2 v_textureSize;
    
    void main() {
@@ -100,7 +102,7 @@ export function createDecorationShaders(): void {
       gl_Position = vec4(clipSpacePos, 0.0, 1.0);
    
       v_texCoord = a_texCoord;
-      v_textureIndex = a_textureIndex;
+      v_textureArrayIndex = a_textureArrayIndex;
       v_textureSize = a_textureSize;
    }`;
    
@@ -112,15 +114,15 @@ export function createDecorationShaders(): void {
    uniform float u_atlasSlotSize;
    
    in vec2 v_texCoord;
-   in float v_textureIndex;
+   in float v_textureArrayIndex;
    in vec2 v_textureSize;
    
    out vec4 outputColour;
    
    void main() {
       // Calculate the coordinates of the top left corner of the texture
-      float textureX = mod(v_textureIndex * u_atlasSlotSize, u_atlasPixelSize);
-      float textureY = floor(v_textureIndex * u_atlasSlotSize / u_atlasPixelSize) * u_atlasSlotSize;
+      float textureX = mod(v_textureArrayIndex * u_atlasSlotSize, u_atlasPixelSize);
+      float textureY = floor(v_textureArrayIndex * u_atlasSlotSize / u_atlasPixelSize) * u_atlasSlotSize;
       
       // @Incomplete: This is very hacky, the - 0.2 and + 0.1 shenanigans are to prevent texture bleeding but it causes tiny bits of the edge of the textures to get cut off.
       float u = (textureX + v_texCoord.x * (v_textureSize.x - 0.2) + 0.1) / u_atlasPixelSize;
@@ -130,7 +132,7 @@ export function createDecorationShaders(): void {
    `;
 
    program = createWebGLProgram(gl, vertexShaderText, fragmentShaderText);
-   bindUBOToProgram(gl, program, UBOBindingIndexes.CAMERA);
+   bindUBOToProgram(gl, program, UBOBindingIndex.CAMERA);
 
    buffer = gl.createBuffer()!;
 

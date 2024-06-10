@@ -2,7 +2,7 @@ import { rotateXAroundOrigin, rotateYAroundOrigin } from "webgl-test-shared/dist
 import { WallConnectionData } from "webgl-test-shared/dist/ai-building-types";
 import { createWebGLProgram, gl } from "../../webgl";
 import OPTIONS from "../../options";
-import { UBOBindingIndexes, bindUBOToProgram } from "../ubos";
+import { UBOBindingIndex, bindUBOToProgram } from "../ubos";
 
 const CONNECTION_WIDTH = 4;
 const CONNECTION_HEIGHT = 8;
@@ -46,7 +46,7 @@ export function createWallConnectionShaders(): void {
    `;
    
    program = createWebGLProgram(gl, vertexShaderText, fragmentShaderText);
-   bindUBOToProgram(gl, program, UBOBindingIndexes.CAMERA);
+   bindUBOToProgram(gl, program, UBOBindingIndex.CAMERA);
 }
 
 export function renderWallConnections(): void {

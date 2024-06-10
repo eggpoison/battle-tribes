@@ -2,7 +2,7 @@ import { EntityType } from "webgl-test-shared/dist/entities";
 import { Point, randFloat } from "webgl-test-shared/dist/utils";
 import { Settings } from "webgl-test-shared/dist/settings";
 import RenderPart from "../render-parts/RenderPart";
-import { getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
+import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { playSound } from "../sound";
 import { createFlyParticle } from "../particles";
 import Entity from "../Entity";

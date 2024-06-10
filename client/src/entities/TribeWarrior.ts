@@ -5,7 +5,7 @@ import Tribesman from "./Tribesman";
 import FootprintComponent from "../entity-components/FootprintComponent";
 import { ClientComponentType } from "../entity-components/components";
 import RenderPart from "../render-parts/RenderPart";
-import { getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
+import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import EquipmentComponent from "../entity-components/EquipmentComponent";
 import { addTribeMemberRenderParts } from "./TribeMember";
 import { ComponentDataRecord } from "../Entity";

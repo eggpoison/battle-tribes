@@ -16,17 +16,56 @@
 .devmode-container {
    font-family: "Inconsolata";
    background-color: rgba(0.3, 0.3, 0.3, 0.6);
-   padding: 0.3rem;
+   padding: 0.1rem;
    border: 2px solid #666;
 }
 
 .devmode-tab {
-   padding: 0.5rem;
+   height: calc(60% / var(--zoom));
    position: absolute;
    top: 50%;
    left: 50%;
    transform: translate(-50%, -50%) scale(var(--zoom));
    z-index: 2;
+}
+
+.devmode-menu-section {
+   background-color: #000;
+   margin: 0.2rem;
+   border: 1px solid #999;
+}
+
+.devmode-menu-section h2.devmode-menu-section-title {
+   color: #fff;
+   text-align: center;
+   margin: 0.2rem 0;
+}
+
+.devmode-container label {
+   margin: 0.2rem;
+   color: #ccc;
+   cursor: pointer;
+}
+.devmode-container label input {
+   outline: none;
+}
+.devmode-container span.weighted {
+   color: #fff;
+   font-weight: bold;
+}
+
+.devmode-container label.range-input-label {
+   display: flex;
+   align-items: center;
+}
+.devmode-container label.range-input-label input {
+   margin: 0 0 0 10px;
+}
+
+.devmode-container button {
+   margin-left: 50%;
+   transform: translateX(-50%);
+   cursor: pointer;
 }
 
 #tab-selection {
@@ -66,6 +105,67 @@
 /* ---------------------- */
 
 #items-tab {
-   max-height: calc(60% / var(--zoom));
    overflow-y: scroll;
+}
+
+/* ---------------------- */
+/*      SUMMON TAB        */
+/* ---------------------- */
+
+#summon-tab .flex-container {
+   max-height: 100%;
+}
+
+#summon-tab ul {
+   margin: 0;
+   padding: 0;
+   overflow-y: scroll;
+   max-height: 100%;
+}
+
+#summon-tab li.entity-selector {
+   color: #ccc;
+   text-align: center;
+   list-style-type: none;
+   padding: 0.3rem 0;
+   cursor: pointer;
+   white-space: pre;
+   position: relative;
+}
+#summon-tab li.entity-selector.selected {
+   color: #fff;
+   background-image: linear-gradient(to right, transparent 0%, #3a3a3a 25%, #3a3a3a 75%, transparent 100%);
+}
+#summon-tab li.entity-selector .selection-marker {
+   width: 10px;
+   height: 10px;
+   background-image: radial-gradient(#fff 0%, #888 100%);
+   border-radius: 100%;
+   position: absolute;
+   top: 50%;
+   left: 10px;
+   transform: translate(-50%, -50%);
+}
+
+#summon-tab ul div.separator {
+   width: 90%;
+   height: 1px;
+   background-color: #eee;
+   margin-left: 5%;
+}
+
+#summon-tab div.spawn-options {
+   min-width: 400px;
+}
+
+#summon-tab .bar {
+   width: 90%;
+   height: 2px;
+   background-color: #aaa;
+   margin-left: 5%;
+   margin-bottom: 0.5rem;
+}
+
+#summon-tab button {
+   margin-top: 1rem;
 }

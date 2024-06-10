@@ -3,7 +3,7 @@ import { createWebGLProgram, gl, tempFloat32ArrayLength1, tempFloat32ArrayLength
 import ObjectBufferContainer from "../ObjectBufferContainer";
 import { getTexture } from "../../textures";
 import Particle from "../../Particle";
-import { UBOBindingIndexes, bindUBOToProgram } from "../ubos";
+import { UBOBindingIndex, bindUBOToProgram } from "../ubos";
 
 const OBJECT_BUFFER_CONTAINER_SIZE = 8192;
 
@@ -355,16 +355,16 @@ export function createParticleShaders(): void {
    // 
    
    monocolourProgram = createWebGLProgram(gl, monocolourVertexShaderText, monocolourFragmentShaderText);
-   bindUBOToProgram(gl, monocolourProgram, UBOBindingIndexes.CAMERA);
-   bindUBOToProgram(gl, monocolourProgram, UBOBindingIndexes.TIME);
+   bindUBOToProgram(gl, monocolourProgram, UBOBindingIndex.CAMERA);
+   bindUBOToProgram(gl, monocolourProgram, UBOBindingIndex.TIME);
 
    // 
    // Textured program
    // 
    
    texturedProgram = createWebGLProgram(gl, texturedVertexShaderText, texturedFragmentShaderText);
-   bindUBOToProgram(gl, texturedProgram, UBOBindingIndexes.CAMERA);
-   bindUBOToProgram(gl, texturedProgram, UBOBindingIndexes.TIME);
+   bindUBOToProgram(gl, texturedProgram, UBOBindingIndex.CAMERA);
+   bindUBOToProgram(gl, texturedProgram, UBOBindingIndex.TIME);
    
    const texturedTextureUniformLocation = gl.getUniformLocation(texturedProgram, "u_texture")!;
 

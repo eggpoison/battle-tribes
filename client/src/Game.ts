@@ -7,11 +7,11 @@ import { isDev } from "./utils";
 import { createTextCanvasContext, updateTextNumbers, renderText } from "./text-canvas";
 import Camera from "./Camera";
 import { updateSpamFilter } from "./components/game/ChatBox";
-import { createEntityShaders, renderGameObjects } from "./rendering/webgl/game-object-rendering";
+import { createEntityShaders, renderGameObjects } from "./rendering/webgl/entity-rendering";
 import Client from "./client/Client";
 import { calculateCursorWorldPositionX, calculateCursorWorldPositionY, cursorX, cursorY, getMouseTargetEntity, handleMouseMovement, renderCursorTooltip } from "./mouse";
 import { refreshDebugInfo, setDebugInfoDebugData } from "./components/game/dev/DebugInfo";
-import { createWebGLContext, gl, halfWindowHeight, halfWindowWidth, resizeCanvas } from "./webgl";
+import { createWebGLContext, gl, resizeCanvas } from "./webgl";
 import { loadTextures } from "./textures";
 import { hidePauseScreen, showPauseScreen, toggleSettingsMenu } from "./components/game/GameScreen";
 import { getGameState } from "./components/App";
@@ -24,7 +24,6 @@ import { createSolidTileShaders, renderSolidTiles } from "./rendering/webgl/soli
 import { createRiverShaders, createRiverSteppingStoneData, renderRivers } from "./rendering/webgl/river-rendering";
 import { createChunkBorderShaders, renderChunkBorders } from "./rendering/webgl/chunk-border-rendering";
 import { nerdVisionIsVisible } from "./components/game/dev/NerdVision";
-import { setFrameProgress } from "./Entity";
 import { createDebugDataShaders, renderLineDebugData, renderTriangleDebugData } from "./rendering/webgl/debug-data-rendering";
 import { createAmbientOcclusionShaders, renderAmbientOcclusion } from "./rendering/webgl/ambient-occlusion-rendering";
 import { createWallBorderShaders, renderWallBorders } from "./rendering/webgl/wall-border-rendering";
@@ -36,13 +35,13 @@ import { registerFrame, updateFrameGraph } from "./components/game/dev/FrameGrap
 import { createNightShaders, renderNight } from "./rendering/webgl/light-rendering";
 import { createPlaceableItemProgram, renderGhostEntities } from "./rendering/webgl/entity-ghost-rendering";
 import { setupFrameGraph } from "./rendering/webgl/frame-graph-rendering";
-import { createTextureAtlases } from "./texture-atlases/entity-texture-atlas";
+import { createTextureAtlases } from "./texture-atlases/texture-atlases";
 import { createFishShaders } from "./rendering/webgl/fish-rendering";
 import { Tile } from "./Tile";
 import { createForcefieldShaders, renderForcefield } from "./rendering/webgl/world-border-forcefield-rendering";
 import { createDecorationShaders, renderDecorations } from "./rendering/webgl/decoration-rendering";
 import { playRiverSounds, setupAudio, updateSoundEffectVolumes } from "./sound";
-import { createTechTreeGLContext, createTechTreeShaders, getTechTreeGL, renderTechTree } from "./rendering/webgl/tech-tree-rendering";
+import { createTechTreeGLContext, createTechTreeShaders, renderTechTree } from "./rendering/webgl/tech-tree-rendering";
 import { createResearchOrbShaders, renderResearchOrb } from "./rendering/webgl/research-orb-rendering";
 import { attemptToResearch, updateActiveResearchBench, updateResearchOrb } from "./research";
 import { resetInteractableEntityIDs, updateHighlightedAndHoveredEntities, updateSelectedStructure } from "./entity-selection";
@@ -59,8 +58,16 @@ import { BuildMenu_refreshBuildingID, BuildMenu_updateBuilding } from "./compone
 import { createGrassBlockerShaders, renderGrassBlockers } from "./rendering/webgl/grass-blocker-rendering";
 import { createTechTreeItemShaders, renderTechTreeItems, updateTechTreeItems } from "./rendering/webgl/tech-tree-item-rendering";
 import { createUBOs, updateUBOs } from "./rendering/ubos";
+import { createEntityOverlayShaders, renderEntityOverlays } from "./rendering/webgl/overlay-rendering";
+
+// @Cleanup: remove underscore
+let _frameProgress = Number.EPSILON;
 
 let listenersHaveBeenCreated = false;
+
+export function getFrameProgress(): number {
+   return _frameProgress;
+}
 
 const createEventListeners = (): void => {
    if (listenersHaveBeenCreated) return;
@@ -211,6 +218,7 @@ abstract class Game {
             createRiverShaders();
             createFishShaders();
             createEntityShaders();
+            await createEntityOverlayShaders();
             createWorldBorderShaders();
             createPlaceableItemProgram();
             createChunkBorderShaders();
@@ -379,12 +387,14 @@ abstract class Game {
       gl.clearColor(1, 1, 1, 1);
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-      setFrameProgress(frameProgress);
+      // @Cleanup: weird. shouldn't be global anyway
+      _frameProgress = frameProgress;
 
       // @Cleanup: move to update function in camera
       // Update the camera
       if (Player.instance !== null) {
-         Player.instance.updateRenderPosition();
+         const frameProgress = getFrameProgress();
+         Player.instance.updateRenderPosition(frameProgress);
          Camera.updatePosition();
          Camera.updateVisibleChunkBounds();
          Camera.updateVisibleRenderChunkBounds();
@@ -396,7 +406,7 @@ abstract class Game {
 
       renderSolidTiles(false);
       renderGrassBlockers();
-      renderRivers();
+      renderRivers(frameProgress);
       renderDecorations();
       renderTurretRange();
       renderAmbientOcclusion();
@@ -420,7 +430,8 @@ abstract class Game {
 
       renderHealingBeams();
 
-      renderGameObjects();
+      renderGameObjects(frameProgress);
+      renderEntityOverlays();
 
       renderSolidTiles(true);
       renderWallBorders();

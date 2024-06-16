@@ -1,5 +1,6 @@
 import { Point, rotateXAroundPoint, rotateYAroundPoint } from "webgl-test-shared/dist/utils";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
+import { createIdentityMatrix } from "../rendering/matrices";
 
 let idCounter = 0;
 
@@ -17,6 +18,8 @@ export abstract class RenderObject {
    public tintR = 0;
    public tintG = 0;
    public tintB = 0;
+
+   public modelMatrix = createIdentityMatrix();
 }
 
 class RenderPart extends RenderObject {
@@ -79,7 +82,6 @@ class RenderPart extends RenderObject {
       }
 
       // Recalculate rotation
-      // @Incomplete: Will this work for deeply nested render parts?
       if (this.inheritParentRotation) {
          this.totalParentRotation = this.parent.rotation + this.parent.totalParentRotation;
       } else {

@@ -33,6 +33,11 @@ import { BuildingMaterialComponentArray } from "../components/BuildingMaterialCo
 import { PlayerComponentArray } from "../components/PlayerComponent";
 import { TurretComponentArray } from "../components/TurretComponent";
 import { TribesmanAIComponentArray } from "../components/TribesmanAIComponent";
+import { EntitySummonPacket } from "webgl-test-shared/dist/dev-packets";
+import { createBallista } from "../entities/structures/ballista";
+import { createEmptyStructureConnectionInfo } from "webgl-test-shared/dist/structures";
+import { createZombie } from "../entities/mobs/zombie";
+import { createTribeWarrior } from "../entities/tribes/tribe-warrior";
 
 // @Cleanup: see if a decorator can be used to cut down on the player entity check copy-n-paste
 
@@ -633,6 +638,91 @@ const devGiveItem = (playerClient: PlayerClient, itemType: ItemType, amount: num
    addItemToInventory(inventory, itemType, amount);
 }
 
+const devSummonEntity = (playerClient: PlayerClient, summonPacket: EntitySummonPacket): void => {
+   const player = Board.entityRecord[playerClient.instanceID];
+   if (typeof player === "undefined") {
+      return;
+   }
+
+   const position = Point.unpackage(summonPacket.position);
+   const rotation = summonPacket.rotation;
+
+   switch (summonPacket.entityType) {
+      case EntityType.ballista: {
+         const tribeComponent = TribeComponentArray.getComponent(player.id);
+         const connectionInfo = createEmptyStructureConnectionInfo();
+         createBallista(position, rotation, tribeComponent.tribe, connectionInfo);
+         break;
+      }
+      case EntityType.barrel: {};
+      case EntityType.battleaxeProjectile: {};
+      case EntityType.berryBush: {};
+      case EntityType.blueprintEntity: {};
+      case EntityType.boulder: {};
+      case EntityType.cactus: {};
+      case EntityType.campfire: {};
+      case EntityType.cow: {};
+      case EntityType.door: {};
+      case EntityType.embrasure: {};
+      case EntityType.fence: {};
+      case EntityType.fenceGate: {};
+      case EntityType.fish: {};
+      case EntityType.floorPunjiSticks: {};
+      case EntityType.floorSpikes: {};
+      case EntityType.frostshaper: {};
+      case EntityType.frozenYeti: {};
+      case EntityType.furnace: {};
+      case EntityType.golem: {};
+      case EntityType.healingTotem: {};
+      case EntityType.iceArrow: {};
+      case EntityType.iceShardProjectile: {};
+      case EntityType.iceSpikes: {};
+      case EntityType.itemEntity: {};
+      case EntityType.krumblid: {};
+      case EntityType.pebblum: {};
+      case EntityType.plant: {};
+      case EntityType.planterBox: {};
+      case EntityType.player: {};
+      case EntityType.researchBench: {};
+      case EntityType.rockSpikeProjectile: {};
+      case EntityType.slime: {};
+      case EntityType.slimeSpit: {};
+      case EntityType.slimewisp: {};
+      case EntityType.slingTurret: {};
+      case EntityType.snowball: {};
+      case EntityType.spearProjectile: {};
+      case EntityType.spitPoison: {};
+      case EntityType.stonecarvingTable: {};
+      case EntityType.tombstone: {};
+      case EntityType.tree: {};
+      case EntityType.tribeTotem: {};
+      case EntityType.tribeWarrior: {
+         const tribeComponent = TribeComponentArray.getComponent(player.id);
+         createTribeWarrior(position, rotation, tribeComponent.tribe, 0);
+         break;
+      };
+      case EntityType.tribeWorker: {};
+      case EntityType.tunnel: {};
+      case EntityType.wall: {};
+      case EntityType.wallPunjiSticks: {};
+      case EntityType.wallSpikes: {};
+      case EntityType.warriorHut: {};
+      case EntityType.woodenArrowProjectile: {};
+      case EntityType.workbench: {};
+      case EntityType.workerHut: {};
+      case EntityType.yeti: {};
+      case EntityType.zombie: {
+         // @Temporary: isGolden
+         createZombie(position, rotation, false, 0)
+         break;
+      };
+      default: {
+         const unreachable: never = summonPacket.entityType;
+         return unreachable;
+      }
+   }
+}
+
 export function addPlayerClient(playerClient: PlayerClient, player: Entity): void {
    playerClients.push(playerClient);
 
@@ -750,6 +840,10 @@ export function addPlayerClient(playerClient: PlayerClient, player: Entity): voi
 
    socket.on("dev_give_item", (itemType: ItemType, amount: number): void => {
       devGiveItem(playerClient, itemType, amount);
+   });
+
+   socket.on("dev_summon_entity", (summonPacket: EntitySummonPacket): void => {
+      devSummonEntity(playerClient, summonPacket);
    });
 }
 

@@ -5,7 +5,7 @@ import Chunk from "../Chunk";
 import Entity from "../Entity";
 import Board from "../Board";
 import { ComponentArray } from "./ComponentArray";
-import { Hitbox, hitboxIsCircular } from "../hitboxes/hitboxes";
+import { Hitbox, hitboxIsCircular } from "webgl-test-shared/dist/hitboxes/hitboxes";
 
 export class AIHelperComponent {
    public visibleChunkBounds = [999, 999, 999, 999];

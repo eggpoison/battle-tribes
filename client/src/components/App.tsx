@@ -4,17 +4,22 @@ import GameScreen from "./game/GameScreen";
 import LoadingScreen, { LoadingScreenStatus } from "./LoadingScreen";
 import MainMenu from "./MainMenu";
 import FrameGraph from "./game/dev/FrameGraph";
+import { GameInteractState } from "../Game";
 
 type GameState = "main_menu" | "loading" | "game";
 
 export let setGameState: (gameState: GameState) => Promise<void>;
 export let getGameState: () => GameState;
 
+export let App_setGameInteractState: (interactState: GameInteractState) => void;
+
 export let setLoadingScreenInitialStatus: (newStatus: LoadingScreenStatus) => void;
 
 export let resetUsername: () => void;
 
 function App() {
+   const [interactState, setInteractState] = useState(GameInteractState.none);
+   
    const [gameSection, setGameSection] = useState<GameState>("main_menu");
    const gameStateUpdateCallbacks = useRef(new Array<() => void>());
    const usernameRef = useRef<string | null>(null);
@@ -36,6 +41,10 @@ function App() {
 
             setGameSection(gameState);
          });
+      }
+
+      App_setGameInteractState = (interactState: GameInteractState): void => {
+         setInteractState(interactState);
       }
    }, []);
 
@@ -72,11 +81,12 @@ function App() {
       </> : gameSection === "loading" ? <>
          <LoadingScreen username={usernameRef.current!} tribeType={tribeTypeRef.current!} initialStatus={initialLoadingScreenStatus.current} />
       </> : gameSection === "game" ? <>
-         <GameScreen />
+         <GameScreen interactState={interactState} />
       </> : null}
 
       <div id="canvas-wrapper" className={!canvasIsVisible ? "hidden" : undefined}>
-         <canvas id="game-canvas"></canvas>
+         <canvas id="game-canvas" className={interactState === GameInteractState.summonEntity ? "summoning-entity" : undefined}></canvas>
+         <div id="game-canvas-vignette" className={interactState === GameInteractState.summonEntity ? "summoning-entity" : undefined}></div>
          <canvas id="text-canvas"></canvas>
          <canvas id="tech-tree-canvas" className="hidden"></canvas>
          <FrameGraph />

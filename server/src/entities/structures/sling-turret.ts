@@ -1,4 +1,3 @@
-import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { EntityType, GenericArrowType } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
@@ -7,7 +6,6 @@ import { Point, getAngleDiff } from "webgl-test-shared/dist/utils";
 import Entity from "../../Entity";
 import { HealthComponent, HealthComponentArray } from "../../components/HealthComponent";
 import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
-import CircularHitbox from "../../hitboxes/CircularHitbox";
 import { AIHelperComponent, AIHelperComponentArray } from "../../components/AIHelperComponent";
 import Tribe from "../../Tribe";
 import { EntityRelationship, TribeComponent, TribeComponentArray, getEntityRelationship } from "../../components/TribeComponent";
@@ -16,7 +14,7 @@ import { GenericArrowInfo, createWoodenArrow } from "../projectiles/wooden-arrow
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { StructureComponentArray, StructureComponent } from "../../components/StructureComponent";
 import { StructureConnectionInfo } from "webgl-test-shared/dist/structures";
-import { Hitbox } from "../../hitboxes/hitboxes";
+import { Hitbox, CircularHitbox, HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
 
 // @Cleanup: A lot of copy and paste from ballista.ts
 
@@ -24,16 +22,16 @@ export const SLING_TURRET_SHOT_COOLDOWN_TICKS = 1.5 * Settings.TPS;
 export const SLING_TURRET_RELOAD_TIME_TICKS = Math.floor(0.4 * Settings.TPS);
 const VISION_RANGE = 400;
 
-export function createSlingTurretHitboxes(parentPosition: Point, localID: number, parentRotation: number): ReadonlyArray<Hitbox> {
+export function createSlingTurretHitboxes(localID: number): ReadonlyArray<Hitbox> {
    const hitboxes = new Array<Hitbox>();
-   hitboxes.push(new CircularHitbox(parentPosition, 1.5, 0, 0, HitboxCollisionType.hard, 40 - 0.05, localID, parentRotation, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK));
+   hitboxes.push(new CircularHitbox(1.5, new Point(0, 0), HitboxCollisionType.hard, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, localID, 0, 40 - 0.05));
    return hitboxes;
 }
 
 export function createSlingTurret(position: Point, rotation: number, tribe: Tribe, connectionInfo: StructureConnectionInfo): Entity {
    const slingTurret = new Entity(position, rotation, EntityType.slingTurret, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
-   const hitboxes = createSlingTurretHitboxes(position, slingTurret.getNextHitboxLocalID(), slingTurret.rotation);
+   const hitboxes = createSlingTurretHitboxes(slingTurret.getNextHitboxLocalID());
    for (let i = 0; i < hitboxes.length; i++) {
       slingTurret.addHitbox(hitboxes[i]);
    }

@@ -20,38 +20,37 @@ import { createHealingTotemHitboxes } from "./entities/structures/healing-totem"
 import { createPlanterBoxHitboxes } from "./entities/structures/planter-box";
 import { createFurnaceHitboxes } from "./entities/cooking-entities/furnace";
 import { createCampfireHitboxes } from "./entities/cooking-entities/campfire";
-import { Point } from "webgl-test-shared/dist/utils";
-import { Hitbox } from "./hitboxes/hitboxes";
 import { createFrostshaperHitboxes } from "./entities/structures/frostshaper";
 import { createStonecarvingTableHitboxes } from "./entities/structures/stonecarving-table";
+import { Hitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
 
 // @Cleanup: If it's only the add hitboxes function in this file, move it to a different file and remove this file
-export function createBuildingHitboxes(entityType: StructureType, parentPosition: Readonly<Point>, localID: number, parentRotation: number): ReadonlyArray<Hitbox> {
+export function createBuildingHitboxes(entityType: StructureType, localID: number): ReadonlyArray<Hitbox> {
    switch (entityType) {
-      case EntityType.wall:              return createWallHitboxes(parentPosition, localID, parentRotation);
-      case EntityType.workbench:         return createWorbenchHitboxes(parentPosition, localID, parentRotation);
-      case EntityType.door:              return createDoorHitboxes(parentPosition, localID, parentRotation);
-      case EntityType.tunnel:            return createTunnelHitboxes(parentPosition, localID, parentRotation);
-      case EntityType.embrasure:         return createEmbrasureHitboxes(parentPosition, localID, parentRotation);
-      case EntityType.barrel:            return createBarrelHitboxes(parentPosition, localID, parentRotation);
-      case EntityType.workerHut:         return createWorkerHutHitboxes(parentPosition, localID, parentRotation);
-      case EntityType.warriorHut:        return createWarriorHutHitboxes(parentPosition, localID, parentRotation);
-      case EntityType.tribeTotem:        return createTribeTotemHitboxes(parentPosition, localID, parentRotation);
-      case EntityType.researchBench:     return createResearchBenchHitboxes(parentPosition, localID, parentRotation);
-      case EntityType.ballista:          return createBallistaHitboxes(parentPosition, localID, parentRotation);
-      case EntityType.slingTurret:       return createSlingTurretHitboxes(parentPosition, localID, parentRotation);
-      case EntityType.fence:             return createFenceHitboxes(parentPosition, localID, parentRotation);
-      case EntityType.fenceGate:         return createFenceGateHitboxes(parentPosition, localID, parentRotation);
-      case EntityType.floorSpikes:       return createFloorSpikesHitboxes(parentPosition, localID, parentRotation);
-      case EntityType.wallSpikes:        return createWallSpikesHitboxes(parentPosition, localID, parentRotation);
-      case EntityType.floorPunjiSticks:  return createFloorPunjiSticksHitboxes(parentPosition, localID, parentRotation);
-      case EntityType.wallPunjiSticks:   return createWallPunjiSticksHitboxes(parentPosition, localID, parentRotation);
-      case EntityType.healingTotem:      return createHealingTotemHitboxes(parentPosition, localID, parentRotation);
-      case EntityType.planterBox:        return createPlanterBoxHitboxes(parentPosition, localID, parentRotation);
-      case EntityType.furnace:           return createFurnaceHitboxes(parentPosition, localID, parentRotation);
-      case EntityType.campfire:          return createCampfireHitboxes(parentPosition, localID, parentRotation);
-      case EntityType.frostshaper:       return createFrostshaperHitboxes(parentPosition, localID, parentRotation);
-      case EntityType.stonecarvingTable: return createStonecarvingTableHitboxes(parentPosition, localID, parentRotation);
+      case EntityType.wall:              return createWallHitboxes(localID);
+      case EntityType.workbench:         return createWorbenchHitboxes(localID);
+      case EntityType.door:              return createDoorHitboxes(localID);
+      case EntityType.tunnel:            return createTunnelHitboxes(localID);
+      case EntityType.embrasure:         return createEmbrasureHitboxes(localID);
+      case EntityType.barrel:            return createBarrelHitboxes(localID);
+      case EntityType.workerHut:         return createWorkerHutHitboxes(localID);
+      case EntityType.warriorHut:        return createWarriorHutHitboxes(localID);
+      case EntityType.tribeTotem:        return createTribeTotemHitboxes(localID);
+      case EntityType.researchBench:     return createResearchBenchHitboxes(localID);
+      case EntityType.ballista:          return createBallistaHitboxes(localID);
+      case EntityType.slingTurret:       return createSlingTurretHitboxes(localID);
+      case EntityType.fence:             return createFenceHitboxes(localID);
+      case EntityType.fenceGate:         return createFenceGateHitboxes(localID);
+      case EntityType.floorSpikes:       return createFloorSpikesHitboxes(localID);
+      case EntityType.wallSpikes:        return createWallSpikesHitboxes(localID);
+      case EntityType.floorPunjiSticks:  return createFloorPunjiSticksHitboxes(localID);
+      case EntityType.wallPunjiSticks:   return createWallPunjiSticksHitboxes(localID);
+      case EntityType.healingTotem:      return createHealingTotemHitboxes(localID);
+      case EntityType.planterBox:        return createPlanterBoxHitboxes(localID);
+      case EntityType.furnace:           return createFurnaceHitboxes(localID);
+      case EntityType.campfire:          return createCampfireHitboxes(localID);
+      case EntityType.frostshaper:       return createFrostshaperHitboxes(localID);
+      case EntityType.stonecarvingTable: return createStonecarvingTableHitboxes(localID);
       default: {
          const unreachable: never = entityType;
          return unreachable;

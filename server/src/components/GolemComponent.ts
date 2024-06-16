@@ -1,9 +1,8 @@
 import { GolemComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
 import Board from "../Board";
 import { BODY_GENERATION_RADIUS, GOLEM_WAKE_TIME_TICKS } from "../entities/mobs/golem";
-import CircularHitbox from "../hitboxes/CircularHitbox";
-import { Hitbox } from "../hitboxes/hitboxes";
 import { ComponentArray } from "./ComponentArray";
+import { Hitbox, CircularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
 
 export interface RockInfo {
    /** The hitbox corresponding to the rock info */
@@ -32,12 +31,12 @@ const generateRockInfoArray = (hitboxes: ReadonlyArray<Hitbox>): Array<RockInfo>
          hitbox: hitbox,
          sleepOffsetX: offsetMagnitude * Math.sin(offsetDirection),
          sleepOffsetY: offsetMagnitude * Math.cos(offsetDirection),
-         awakeOffsetX: hitbox.offsetX,
-         awakeOffsetY: hitbox.offsetY,
-         lastOffsetX: hitbox.offsetX,
-         lastOffsetY: hitbox.offsetY,
-         targetOffsetX: hitbox.offsetX,
-         targetOffsetY: hitbox.offsetY,
+         awakeOffsetX: hitbox.offset.x,
+         awakeOffsetY: hitbox.offset.y,
+         lastOffsetX: hitbox.offset.x,
+         lastOffsetY: hitbox.offset.y,
+         targetOffsetX: hitbox.offset.x,
+         targetOffsetY: hitbox.offset.y,
          currentShiftTimerTicks: 0
       });
    }

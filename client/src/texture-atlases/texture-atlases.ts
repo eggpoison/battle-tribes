@@ -2,7 +2,7 @@ import CLIENT_ITEM_INFO_RECORD from "../client-item-info";
 import { BLUEPRINT_PROGRESS_TEXTURE_SOURCES } from "../entities/BlueprintEntity";
 import { getTechTreeGL } from "../rendering/webgl/tech-tree-rendering";
 import { gl } from "../webgl";
-import { ATLAS_SLOT_SIZE, TextureAtlasInfo, stitchTextureAtlas } from "./texture-atlas-stitching";
+import { TextureAtlasInfo, stitchTextureAtlas } from "./texture-atlas-stitching";
 
 const TEXTURE_SOURCES: Array<string> = [
    "entities/cow/cow-body-1.png",

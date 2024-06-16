@@ -6,7 +6,6 @@ import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { playSound } from "../sound";
 import { createFlyParticle } from "../particles";
 import Entity from "../Entity";
-import RectangularHitbox from "../hitboxes/RectangularHitbox";
 
 class PunjiSticks extends Entity {
    private ticksSinceLastFly = 0;
@@ -34,11 +33,6 @@ class PunjiSticks extends Entity {
       if (ageTicks <= 1) {
          playSound("spike-place.mp3", 0.5, 1, this.position.x, this.position.y);
       }
-   }
-
-   // @Hack
-   public addRectangularHitbox(hitbox: RectangularHitbox): void {
-      super.addRectangularHitbox(hitbox);
    }
 
    public tick(): void {

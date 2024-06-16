@@ -1,4 +1,3 @@
-import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { EntityType, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
@@ -6,9 +5,9 @@ import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { Point } from "webgl-test-shared/dist/utils";
 import Entity from "../../Entity";
 import { HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
-import CircularHitbox from "../../hitboxes/CircularHitbox";
 import { StatusEffectComponentArray, applyStatusEffect } from "../../components/StatusEffectComponent";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
+import { CircularHitbox, HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
 
 const RADIUS = 55;
 
@@ -16,7 +15,7 @@ export function createSpitPoison(position: Point, rotation: number): Entity {
    const poison = new Entity(position, rotation, EntityType.spitPoison, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
    
    // @Hack mass
-   const hitbox = new CircularHitbox(position, Number.EPSILON, 0, 0, HitboxCollisionType.soft, RADIUS, poison.getNextHitboxLocalID(), poison.rotation, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK);
+   const hitbox = new CircularHitbox(Number.EPSILON, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, poison.getNextHitboxLocalID(), 0, RADIUS);
    poison.addHitbox(hitbox);
    
    return poison;

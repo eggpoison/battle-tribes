@@ -14,7 +14,7 @@ import { refreshDebugInfo, setDebugInfoDebugData } from "./components/game/dev/D
 import { createWebGLContext, gl, resizeCanvas } from "./webgl";
 import { loadTextures } from "./textures";
 import { hidePauseScreen, showPauseScreen, toggleSettingsMenu } from "./components/game/GameScreen";
-import { getGameState } from "./components/App";
+import { App_setGameInteractState, getGameState } from "./components/App";
 import { clearPressedKeys } from "./keyboard-input";
 import { createHitboxShaders, renderEntityHitboxes } from "./rendering/webgl/hitbox-rendering";
 import { updatePlayerItems, updatePlayerMovement } from "./player-input";
@@ -59,12 +59,22 @@ import { createGrassBlockerShaders, renderGrassBlockers } from "./rendering/webg
 import { createTechTreeItemShaders, renderTechTreeItems, updateTechTreeItems } from "./rendering/webgl/tech-tree-item-rendering";
 import { createUBOs, updateUBOs } from "./rendering/ubos";
 import { createEntityOverlayShaders, renderEntityOverlays } from "./rendering/webgl/overlay-rendering";
+import { updateRenderPartMatrices } from "./rendering/render-part-matrices";
+import { EntitySummonPacket } from "webgl-test-shared/dist/dev-packets";
+import { Mutable } from "webgl-test-shared/dist/utils";
+import { renderRenderables } from "./rendering/render-loop";
 
-// @Cleanup: remove underscore
+export const enum GameInteractState {
+   none,
+   summonEntity
+}
+
+// @Cleanup: remove.
 let _frameProgress = Number.EPSILON;
 
 let listenersHaveBeenCreated = false;
 
+// @Cleanup: remove.
 export function getFrameProgress(): number {
    return _frameProgress;
 }
@@ -92,6 +102,9 @@ const createEventListeners = (): void => {
 let lastRenderTime = Math.floor(new Date().getTime() / 1000);
 
 abstract class Game {
+   private static interactState = GameInteractState.none;
+   public static summonPacket: Mutable<EntitySummonPacket> | null = null;
+   
    private static lastTime = 0;
 
    private static numSkippablePackets = 0;
@@ -121,6 +134,15 @@ abstract class Game {
 
    // @Hack @Cleanup
    public static playerID: number;
+
+   public static setInteractState(interactState: GameInteractState): void {
+      App_setGameInteractState(interactState);
+      this.interactState = interactState;
+   }
+
+   public static getInteractState(): GameInteractState {
+      return this.interactState;
+   }
    
    public static setGameObjectDebugData(entityDebugData: EntityDebugData | undefined): void {
       if (typeof entityDebugData === "undefined") {
@@ -351,8 +373,8 @@ abstract class Game {
       updateSoundEffectVolumes();
       playRiverSounds();
 
-      this.cursorPositionX = calculateCursorWorldPositionX();
-      this.cursorPositionY = calculateCursorWorldPositionY();
+      this.cursorPositionX = calculateCursorWorldPositionX(cursorX!);
+      this.cursorPositionY = calculateCursorWorldPositionY(cursorY!);
       renderCursorTooltip();
 
       if (isDev()) refreshDebugInfo();
@@ -430,8 +452,12 @@ abstract class Game {
 
       renderHealingBeams();
 
-      renderGameObjects(frameProgress);
-      renderEntityOverlays();
+      updateRenderPartMatrices(frameProgress);
+
+      renderRenderables(frameProgress);
+
+      // renderGameObjects(frameProgress);
+      // renderEntityOverlays();
 
       renderSolidTiles(true);
       renderWallBorders();

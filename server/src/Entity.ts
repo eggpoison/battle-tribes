@@ -21,7 +21,7 @@ import { onCactusDeath } from "./entities/resources/cactus";
 import { resolveEntityTileCollision } from "./collision";
 import { STRUCTURE_TYPES, StructureType } from "webgl-test-shared/dist/structures";
 import { EntityEvent } from "webgl-test-shared/dist/entity-events";
-import { Hitbox, hitboxIsCircular } from "./hitboxes/hitboxes";
+import { Hitbox, updateHitbox, hitboxIsCircular } from "webgl-test-shared/dist/hitboxes/hitboxes";
 
 let idCounter = 1;
 
@@ -105,6 +105,8 @@ class Entity<T extends EntityType = EntityType> {
    }
 
    public addHitbox(hitbox: Hitbox): void {
+      updateHitbox(hitbox, this.position.x, this.position.y, this.rotation);
+      
       this.hitboxes.push(hitbox);
       this.totalMass += hitbox.mass;
 
@@ -127,11 +129,6 @@ class Entity<T extends EntityType = EntityType> {
          this.boundingAreaMaxY = boundsMaxY;
       }
 
-      hitbox.chunkBounds[0] = Math.floor(boundsMinX / Settings.CHUNK_UNITS);
-      hitbox.chunkBounds[1] = Math.floor(boundsMaxX / Settings.CHUNK_UNITS);
-      hitbox.chunkBounds[2] = Math.floor(boundsMinY / Settings.CHUNK_UNITS);
-      hitbox.chunkBounds[3] = Math.floor(boundsMaxY / Settings.CHUNK_UNITS);
-
       // If the hitbox is clipping into a border, clean the entities' position so that it doesn't clip
       if (boundsMinX < 0 || boundsMaxX >= Settings.BOARD_UNITS || boundsMinY < 0 || boundsMaxY >= Settings.BOARD_UNITS) {
          this.cleanHitboxes();
@@ -151,10 +148,12 @@ class Entity<T extends EntityType = EntityType> {
       for (let i = 0; i < numHitboxes; i++) {
          const hitbox = this.hitboxes[i];
 
-         hitbox.updatePosition(this.position.x, this.position.y, this.rotation);
-         if (!hitboxIsCircular(hitbox)) {
-            hitbox.updateRotationAndVertexPositionsAndSideAxes(this.rotation);
-         }
+         const previousBoundsMinX = hitbox.calculateHitboxBoundsMinX();
+         const previousBoundsMaxX = hitbox.calculateHitboxBoundsMaxX();
+         const previousBoundsMinY = hitbox.calculateHitboxBoundsMinY();
+         const previousBoundsMaxY = hitbox.calculateHitboxBoundsMaxY();
+
+         updateHitbox(hitbox, this.position.x, this.position.y, this.rotation);
 
          const boundsMinX = hitbox.calculateHitboxBoundsMinX();
          const boundsMaxX = hitbox.calculateHitboxBoundsMaxX();
@@ -180,21 +179,11 @@ class Entity<T extends EntityType = EntityType> {
          // @Speed
          // @Speed
          if (!hitboxChunkBoundsHaveChanged) {
-            const minChunkX = Math.floor(boundsMinX / Settings.CHUNK_UNITS);
-            const maxChunkX = Math.floor(boundsMaxX / Settings.CHUNK_UNITS);
-            const minChunkY = Math.floor(boundsMinY / Settings.CHUNK_UNITS);
-            const maxChunkY = Math.floor(boundsMaxY / Settings.CHUNK_UNITS);
-
-            if (minChunkX !== hitbox.chunkBounds[0] ||
-                maxChunkX !== hitbox.chunkBounds[1] ||
-                minChunkY !== hitbox.chunkBounds[2] ||
-                maxChunkY !== hitbox.chunkBounds[3]) {
+            if (Math.floor(boundsMinX / Settings.CHUNK_UNITS) !== Math.floor(previousBoundsMinX / Settings.CHUNK_UNITS) ||
+                Math.floor(boundsMaxX / Settings.CHUNK_UNITS) !== Math.floor(previousBoundsMaxX / Settings.CHUNK_UNITS) ||
+                Math.floor(boundsMinY / Settings.CHUNK_UNITS) !== Math.floor(previousBoundsMinY / Settings.CHUNK_UNITS) ||
+                Math.floor(boundsMaxY / Settings.CHUNK_UNITS) !== Math.floor(previousBoundsMaxY / Settings.CHUNK_UNITS)) {
                hitboxChunkBoundsHaveChanged = true;
-
-               hitbox.chunkBounds[0] = minChunkX;
-               hitbox.chunkBounds[1] = maxChunkX;
-               hitbox.chunkBounds[2] = minChunkY;
-               hitbox.chunkBounds[3] = maxChunkY;
             }
          }
       }
@@ -228,7 +217,12 @@ class Entity<T extends EntityType = EntityType> {
       for (let i = 0; i < numHitboxes; i++) {
          const hitbox = this.hitboxes[i];
 
-         hitbox.updatePosition(this.position.x, this.position.y, this.rotation);
+         const previousBoundsMinX = hitbox.calculateHitboxBoundsMinX();
+         const previousBoundsMaxX = hitbox.calculateHitboxBoundsMaxX();
+         const previousBoundsMinY = hitbox.calculateHitboxBoundsMinY();
+         const previousBoundsMaxY = hitbox.calculateHitboxBoundsMaxY();
+
+         updateHitbox(hitbox, this.position.x, this.position.y, this.rotation);
 
          const boundsMinX = hitbox.calculateHitboxBoundsMinX();
          const boundsMaxX = hitbox.calculateHitboxBoundsMaxX();
@@ -237,21 +231,11 @@ class Entity<T extends EntityType = EntityType> {
 
          // Check if the hitboxes' chunk bounds have changed
          if (!hitboxChunkBoundsHaveChanged) {
-            const minChunkX = Math.floor(boundsMinX / Settings.CHUNK_UNITS);
-            const maxChunkX = Math.floor(boundsMaxX / Settings.CHUNK_UNITS);
-            const minChunkY = Math.floor(boundsMinY / Settings.CHUNK_UNITS);
-            const maxChunkY = Math.floor(boundsMaxY / Settings.CHUNK_UNITS);
-
-            if (minChunkX !== hitbox.chunkBounds[0] ||
-                maxChunkX !== hitbox.chunkBounds[1] ||
-                minChunkY !== hitbox.chunkBounds[2] ||
-                maxChunkY !== hitbox.chunkBounds[3]) {
+            if (Math.floor(boundsMinX / Settings.CHUNK_UNITS) !== Math.floor(previousBoundsMinX / Settings.CHUNK_UNITS) ||
+                Math.floor(boundsMaxX / Settings.CHUNK_UNITS) !== Math.floor(previousBoundsMaxX / Settings.CHUNK_UNITS) ||
+                Math.floor(boundsMinY / Settings.CHUNK_UNITS) !== Math.floor(previousBoundsMinY / Settings.CHUNK_UNITS) ||
+                Math.floor(boundsMaxY / Settings.CHUNK_UNITS) !== Math.floor(previousBoundsMaxY / Settings.CHUNK_UNITS)) {
                hitboxChunkBoundsHaveChanged = true;
-
-               hitbox.chunkBounds[0] = minChunkX;
-               hitbox.chunkBounds[1] = maxChunkX;
-               hitbox.chunkBounds[2] = minChunkY;
-               hitbox.chunkBounds[3] = maxChunkY;
             }
          }
       }

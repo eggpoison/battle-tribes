@@ -1,10 +1,8 @@
-import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { Point } from "webgl-test-shared/dist/utils";
 import Entity from "../../Entity";
-import RectangularHitbox from "../../hitboxes/RectangularHitbox";
 import { CookingComponent, CookingComponentArray } from "../../components/CookingComponent";
 import { HealthComponent, HealthComponentArray } from "../../components/HealthComponent";
 import { InventoryComponent, InventoryComponentArray, createNewInventory } from "../../components/InventoryComponent";
@@ -15,20 +13,20 @@ import { TribeComponent, TribeComponentArray } from "../../components/TribeCompo
 import { InventoryName } from "webgl-test-shared/dist/items";
 import { StructureComponent, StructureComponentArray } from "../../components/StructureComponent";
 import { StructureConnectionInfo } from "webgl-test-shared/dist/structures";
-import { Hitbox } from "../../hitboxes/hitboxes";
+import { Hitbox, RectangularHitbox, HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
 
 const HITBOX_SIZE = 80;
 
-export function createFurnaceHitboxes(parentPosition: Point, localID: number, parentRotation: number): ReadonlyArray<Hitbox> {
+export function createFurnaceHitboxes(localID: number): ReadonlyArray<Hitbox> {
    const hitboxes = new Array<Hitbox>();
-   hitboxes.push(new RectangularHitbox(parentPosition, 2, 0, 0, HitboxCollisionType.hard, localID, parentRotation, HITBOX_SIZE, HITBOX_SIZE, 0, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK));
+   hitboxes.push(new RectangularHitbox(2, new Point(0, 0), HitboxCollisionType.hard, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, localID, 0, HITBOX_SIZE, HITBOX_SIZE, 0));
    return hitboxes;
 }
 
 export function createFurnace(position: Point, rotation: number, tribe: Tribe, connectionInfo: StructureConnectionInfo): Entity {
    const furnace = new Entity(position, rotation, EntityType.furnace, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
-   const hitboxes = createFurnaceHitboxes(position, furnace.getNextHitboxLocalID(), rotation);
+   const hitboxes = createFurnaceHitboxes(furnace.getNextHitboxLocalID());
    for (let i = 0; i < hitboxes.length; i++) {
       furnace.addHitbox(hitboxes[i]);
    }

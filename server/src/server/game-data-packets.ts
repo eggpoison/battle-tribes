@@ -9,9 +9,6 @@ import { HealthComponentArray } from "../components/HealthComponent";
 import { InventoryComponentArray, getInventory } from "../components/InventoryComponent";
 import { InventoryUseComponentArray, getInventoryUseInfo } from "../components/InventoryUseComponent";
 import { PhysicsComponentArray } from "../components/PhysicsComponent";
-import CircularHitbox from "../hitboxes/CircularHitbox";
-import RectangularHitbox from "../hitboxes/RectangularHitbox";
-import { hitboxIsCircular } from "../hitboxes/hitboxes";
 import { SERVER } from "./server";
 import { Inventory, InventoryName } from "webgl-test-shared/dist/items";
 import { Settings } from "webgl-test-shared/dist/settings";
@@ -24,14 +21,18 @@ import PlayerClient from "./PlayerClient";
 import { TribeComponentArray } from "../components/TribeComponent";
 import { SpikesComponentArray } from "../components/SpikesComponent";
 import { PlayerComponentArray } from "../components/PlayerComponent";
+import { RectangularHitbox, CircularHitbox, hitboxIsCircular } from "webgl-test-shared/dist/hitboxes/hitboxes";
 
 const bundleRectangularHitboxData = (hitbox: RectangularHitbox): RectangularHitboxData => {
    return {
       mass: hitbox.mass,
-      offsetX: hitbox.offsetX,
-      offsetY: hitbox.offsetY,
+      offsetX: hitbox.offset.x,
+      offsetY: hitbox.offset.y,
       collisionType: hitbox.collisionType,
+      collisionBit: hitbox.collisionBit,
+      collisionMask: hitbox.collisionMask,
       localID: hitbox.localID,
+      flags: hitbox.flags,
       width: hitbox.width,
       height: hitbox.height,
       rotation: hitbox.relativeRotation
@@ -41,10 +42,13 @@ const bundleRectangularHitboxData = (hitbox: RectangularHitbox): RectangularHitb
 const bundleCircularHitboxData = (hitbox: CircularHitbox): CircularHitboxData => {
    return {
       mass: hitbox.mass,
-      offsetX: hitbox.offsetX,
-      offsetY: hitbox.offsetY,
+      offsetX: hitbox.offset.x,
+      offsetY: hitbox.offset.y,
       collisionType: hitbox.collisionType,
+      collisionBit: hitbox.collisionBit,
+      collisionMask: hitbox.collisionMask,
       localID: hitbox.localID,
+      flags: hitbox.flags,
       radius: hitbox.radius
    };
 }

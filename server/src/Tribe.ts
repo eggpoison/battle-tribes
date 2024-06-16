@@ -1,5 +1,4 @@
 import { PotentialBuildingPlanData } from "webgl-test-shared/dist/ai-building-types";
-import { HitboxVertexPositions } from "webgl-test-shared/dist/collision";
 import { BlueprintType } from "webgl-test-shared/dist/components";
 import { CraftingRecipe } from "webgl-test-shared/dist/crafting-recipes";
 import { EntityType } from "webgl-test-shared/dist/entities";
@@ -23,6 +22,7 @@ import { cleanAngle } from "./ai-shared";
 import { getPathfindingGroupID } from "./pathfinding";
 import { registerResearchOrbComplete } from "./server/player-clients";
 import { HutComponentArray } from "./components/HutComponent";
+import { HitboxVertexPositions } from "webgl-test-shared/dist/hitboxes/hitboxes";
 
 const ENEMY_ATTACK_REMEMBER_TIME_TICKS = 30 * Settings.TPS;
 const RESPAWN_TIME_TICKS = 5 * Settings.TPS;

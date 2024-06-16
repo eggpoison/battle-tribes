@@ -46,7 +46,7 @@ class TribeMemberComponent extends ServerComponent<ServerComponentType.tribeMemb
    public readonly bodyRenderPart: RenderPart;
    public readonly handRenderParts: ReadonlyArray<RenderPart>;
    
-   public warPaintType: number;
+   public warPaintType: number | null;
    
    public titles = new Array<TitleGenerationInfo>();
 

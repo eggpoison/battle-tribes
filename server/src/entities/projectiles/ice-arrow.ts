@@ -1,10 +1,8 @@
-import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { Point } from "webgl-test-shared/dist/utils";
-import RectangularHitbox from "../../hitboxes/RectangularHitbox";
 import Entity from "../../Entity";
 import { StatusEffectComponentArray, applyStatusEffect } from "../../components/StatusEffectComponent";
 import { PhysicsComponent, PhysicsComponentArray } from "../../components/PhysicsComponent";
@@ -13,6 +11,7 @@ import Tribe from "../../Tribe";
 import { EntityCreationInfo } from "../../components";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { HealthComponentArray } from "../../components/HealthComponent";
+import { HitboxCollisionType, RectangularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
 
 type ComponentTypes = [ServerComponentType.physics, ServerComponentType.tribe];
 
@@ -23,7 +22,7 @@ const ARROW_DESTROY_DISTANCE = Math.sqrt(Math.pow(ARROW_WIDTH / 2, 2) + Math.pow
 export function createIceArrow(position: Point, rotation: number, tribe: Tribe): EntityCreationInfo<ComponentTypes> {
    const iceArrow = new Entity(position, rotation, EntityType.iceArrow, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
    
-   const hitbox = new RectangularHitbox(position, 0.4, 0, 0, HitboxCollisionType.soft, iceArrow.getNextHitboxLocalID(), iceArrow.rotation, ARROW_WIDTH, ARROW_HEIGHT, 0, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK);
+   const hitbox = new RectangularHitbox(0.4, new Point(0, 0), HitboxCollisionType.soft, 0, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, iceArrow.getNextHitboxLocalID(), 0, ARROW_WIDTH, ARROW_HEIGHT);
    iceArrow.addHitbox(hitbox);
    
    const physicsComponent = new PhysicsComponent(0, 0, 0, 0, false, true);

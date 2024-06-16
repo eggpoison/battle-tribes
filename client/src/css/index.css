@@ -20,13 +20,21 @@ body {
 }
 
 /* Vignette */
-#game-canvas::after {
+#game-canvas-vignette {
+   pointer-events: none;
+}
+#game-canvas-vignette.summoning-entity {
    position: absolute;
    top: 0;
    right: 0;
    bottom: 0;
    left: 0;
-   box-shadow: 0 0 15px 5px #000 inset;
+   box-shadow: 0 0 80px 10px rgba(0, 0, 0, 0.7) inset;
+   z-index: 1;
+}
+
+#game-canvas.summoning-entity {
+   cursor: pointer;
 }
 
 #text-canvas {
@@ -73,3 +81,45 @@ body {
    z-index: 1;
 }
 /* NOTE: The held item count style is defined in inventory.css file. */
+
+#summon-prompt {
+   position: absolute;
+   top: 3rem;
+   left: 50%;
+   transform: translate(-50%) scale(var(--zoom));
+   z-index: 2;
+   display: flex;
+   align-items: center;
+}
+#summon-prompt h2 {
+   font-size: 1.7rem;
+   font-family: "Inconsolata";
+   color: #fff;
+   text-shadow: 3px 3px 0 #000;
+   margin: 0 0.5rem;
+   white-space: pre;
+}
+#summon-prompt .line {
+   width: 7rem;
+   height: 3px;
+}
+#summon-prompt .line.left {
+   background-image: linear-gradient(to right, transparent 0%, #fff 60%);
+}
+#summon-prompt .line.right {
+   background-image: linear-gradient(to left, transparent 0%, #fff 60%);
+}
+
+#summon-crosshair {
+   position: absolute;
+   transform: translate(-50%, -50%) scale(var(--zoom));
+   z-index: 2;
+   user-select: none;
+   pointer-events: none;
+}
+
+#summon-crosshair img {
+   width: 32px;
+   height: 32px;
+   image-rendering: pixelated;
+}

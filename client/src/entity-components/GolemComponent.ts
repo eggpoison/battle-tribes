@@ -3,13 +3,13 @@ import { Settings } from "webgl-test-shared/dist/settings";
 import { Point } from "webgl-test-shared/dist/utils";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
-import CircularHitbox from "../hitboxes/CircularHitbox";
 import { createRockSpeckParticle } from "../particles";
 import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { ParticleRenderLayer } from "../rendering/webgl/particle-rendering";
 import { Light, addLight, attachLightToRenderPart } from "../lights";
 import { playSound } from "../sound";
+import { CircularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
 
 const ANGRY_SOUND_INTERVAL_TICKS = Settings.TPS * 3;
 

@@ -1,5 +1,5 @@
 import { BuildingPlanData, PotentialBuildingPlanData, TribeWallData } from "webgl-test-shared/dist/ai-building-types";
-import { AttackPacket, ClientToServerEvents, EntityData, GameDataPacket, GameDataPacketOptions, GameDataSyncPacket, HitboxCollisionType, InitialGameDataPacket, PlayerDataPacket, PlayerInventoryData, RespawnDataPacket, ServerTileData, ServerTileUpdateData, ServerToClientEvents, VisibleChunkBounds } from "webgl-test-shared/dist/client-server-types";
+import { AttackPacket, CircularHitboxData, ClientToServerEvents, EntityData, GameDataPacket, GameDataPacketOptions, GameDataSyncPacket, InitialGameDataPacket, PlayerDataPacket, PlayerInventoryData, RectangularHitboxData, RespawnDataPacket, ServerTileData, ServerTileUpdateData, ServerToClientEvents, VisibleChunkBounds } from "webgl-test-shared/dist/client-server-types";
 import { distance, Point } from "webgl-test-shared/dist/utils";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
@@ -13,8 +13,6 @@ import { io, Socket } from "socket.io-client";
 import { setGameState, setLoadingScreenInitialStatus } from "../components/App";
 import Player from "../entities/Player";
 import Game from "../Game";
-import CircularHitbox from "../hitboxes/CircularHitbox";
-import RectangularHitbox from "../hitboxes/RectangularHitbox";
 import { Tile } from "../Tile";
 import { gameScreenSetIsDead } from "../components/game/GameScreen";
 import { removeSelectedItem, selectItem, closeCurrentMenu } from "../player-input";
@@ -47,6 +45,8 @@ import { GrassBlocker } from "webgl-test-shared/dist/grass-blockers";
 import { createEntity } from "../entity-class-record";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
 import { windowHeight, windowWidth } from "../webgl";
+import { EntitySummonPacket } from "webgl-test-shared/dist/dev-packets";
+import { CircularHitbox, RectangularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
 
 type ISocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 
@@ -123,6 +123,18 @@ export function calculatePotentialPlanIdealness(potentialPlan: PotentialBuilding
 let grassBlockers: ReadonlyArray<GrassBlocker>;
 export function getGrassBlockers(): ReadonlyArray<GrassBlocker> {
    return grassBlockers;
+}
+
+// @Cleanup: put these 2 in a more appropriate file
+
+export function createCircularHitboxFromData(data: CircularHitboxData): CircularHitbox {
+   const offset = new Point(data.offsetX, data.offsetY);
+   return new CircularHitbox(data.mass, offset, data.collisionType, data.collisionBit, data.collisionMask, data.localID, data.flags, data.radius);
+}
+
+export function createRectangularHitboxFromData(data: RectangularHitboxData): RectangularHitbox {
+   const offset = new Point(data.offsetX, data.offsetY);
+   return new RectangularHitbox(data.mass, offset, data.collisionType, data.collisionBit, data.collisionMask, data.localID, data.flags, data.width, data.height, data.rotation);
 }
 
 abstract class Client {
@@ -241,8 +253,7 @@ abstract class Client {
 
    /** Creates the socket used to connect to the server */
    private static createSocket(): ISocket {
-      return io(`ws://10.0.0.9:${Settings.SERVER_PORT}`, {
-      // return io(`ws://localhost:${Settings.SERVER_PORT}`, {
+      return io(`ws://localhost:${Settings.SERVER_PORT}`, {
          transports: ["websocket", "polling", "flashsocket"],
          autoConnect: false,
          reconnection: false
@@ -648,15 +659,15 @@ abstract class Client {
       for (let i = 0; i < data.circularHitboxes.length; i++) {
          const hitboxData = data.circularHitboxes[i];
 
-         const hitbox = new CircularHitbox(hitboxData.mass, hitboxData.offsetX, hitboxData.offsetY, hitboxData.collisionType as unknown as HitboxCollisionType, hitboxData.localID, hitboxData.radius);
-         entity.addCircularHitbox(hitbox);
+         const hitbox = createCircularHitboxFromData(hitboxData);
+         entity.addHitbox(hitbox);
       }
 
       for (let i = 0; i < data.rectangularHitboxes.length; i++) {
          const hitboxData = data.rectangularHitboxes[i];
 
-         const hitbox = new RectangularHitbox(hitboxData.mass, hitboxData.offsetX, hitboxData.offsetY, hitboxData.collisionType as unknown as HitboxCollisionType, hitboxData.localID, hitboxData.width, hitboxData.height, hitboxData.rotation);
-         entity.addRectangularHitbox(hitbox);
+         const hitbox = createRectangularHitboxFromData(hitboxData);
+         entity.addHitbox(hitbox);
       }
    }
 
@@ -933,6 +944,12 @@ abstract class Client {
    public static sendDevGiveItemPacket(itemType: ItemType, amount: number): void {
       if (Game.isRunning && this.socket !== null) {
          this.socket.emit("dev_give_item", itemType, amount);
+      }
+   }
+
+   public static sendEntitySummonPacket(summonPacket: EntitySummonPacket): void {
+      if (Game.isRunning && this.socket !== null) {
+         this.socket.emit("dev_summon_entity", summonPacket);
       }
    }
 }

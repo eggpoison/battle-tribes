@@ -1,4 +1,3 @@
-import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { SlimeSize, EntityType, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
 import { ItemType } from "webgl-test-shared/dist/items";
@@ -7,7 +6,6 @@ import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { Biome, TileType } from "webgl-test-shared/dist/tiles";
 import { Point, lerp, randInt } from "webgl-test-shared/dist/utils";
 import Entity from "../../Entity";
-import CircularHitbox from "../../hitboxes/CircularHitbox";
 import { HealthComponent, HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity, getEntityHealth, healEntity } from "../../components/HealthComponent";
 import { SlimeComponent, SlimeComponentArray } from "../../components/SlimeComponent";
 import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
@@ -25,6 +23,7 @@ import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
 import { CraftingStation } from "webgl-test-shared/dist/crafting-recipes";
 import { CraftingStationComponentArray, CraftingStationComponent } from "../../components/CraftingStationComponent";
+import { CircularHitbox, HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
 
 const TURN_SPEED = 2 * Math.PI;
 
@@ -72,7 +71,7 @@ export function createSlime(position: Point, size: SlimeSize, orbSizes: Array<Sl
    slime.collisionPushForceMultiplier = 0.5;
 
    const mass = 1 + size * 0.5;
-   const hitbox = new CircularHitbox(position, mass, 0, 0, HitboxCollisionType.soft, RADII[size], slime.getNextHitboxLocalID(), slime.rotation, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK);
+   const hitbox = new CircularHitbox(mass, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, slime.getNextHitboxLocalID(), 0, RADII[size]);
    slime.addHitbox(hitbox);
 
    PhysicsComponentArray.addComponent(slime.id, new PhysicsComponent(0, 0, 0, 0, true, false));

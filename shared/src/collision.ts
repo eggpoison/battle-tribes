@@ -1,3 +1,4 @@
+import { HitboxVertexPositions } from "./hitboxes/hitboxes";
 import { Mutable, Point, distance, rotateXAroundPoint, rotateYAroundPoint } from "./utils";
 
 // @Speed: Maybe make into const enum?
@@ -18,8 +19,6 @@ export const enum HitboxCollisionBit {
 }
 
 export const DEFAULT_HITBOX_COLLISION_MASK = HitboxCollisionBit.DEFAULT | HitboxCollisionBit.ARROW_PASSABLE;
-
-export type HitboxVertexPositions = [tl: Point, tr: Point, bl: Point, br: Point];
 
 export interface CollisionData {
    readonly isColliding: boolean;

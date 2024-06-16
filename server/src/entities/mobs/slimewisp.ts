@@ -1,4 +1,3 @@
-import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { EntityType, SlimeSize } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
@@ -6,7 +5,6 @@ import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { Biome, TileType } from "webgl-test-shared/dist/tiles";
 import { Point } from "webgl-test-shared/dist/utils";
 import Entity from "../../Entity";
-import CircularHitbox from "../../hitboxes/CircularHitbox";
 import { HealthComponent, HealthComponentArray } from "../../components/HealthComponent";
 import { WanderAIComponent, WanderAIComponentArray } from "../../components/WanderAIComponent";
 import { entityHasReachedPosition, moveEntityToPosition, stopEntity } from "../../ai-shared";
@@ -19,6 +17,7 @@ import { AIHelperComponent, AIHelperComponentArray } from "../../components/AIHe
 import { PhysicsComponent, PhysicsComponentArray } from "../../components/PhysicsComponent";
 import Board from "../../Board";
 import { CollisionVars, entitiesAreColliding } from "../../collision";
+import { CircularHitbox, HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
 
 const MAX_HEALTH = 3;
 const RADIUS = 16;
@@ -35,7 +34,7 @@ export function createSlimewisp(position: Point): Entity {
    const slimewisp = new Entity(position, 2 * Math.PI * Math.random(), EntityType.slimewisp, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
    slimewisp.collisionPushForceMultiplier = 0.3;
 
-   const hitbox = new CircularHitbox(position, 0.5, 0, 0, HitboxCollisionType.soft, RADIUS, slimewisp.getNextHitboxLocalID(), slimewisp.rotation, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK);
+   const hitbox = new CircularHitbox(0.5, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, slimewisp.getNextHitboxLocalID(), 0, RADIUS);
    slimewisp.addHitbox(hitbox);
 
    PhysicsComponentArray.addComponent(slimewisp.id, new PhysicsComponent(0, 0, 0, 0, true, false));

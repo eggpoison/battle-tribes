@@ -1,5 +1,5 @@
 import { PotentialBuildingPlanData } from "webgl-test-shared/dist/ai-building-types";
-import { HitboxVertexPositions, circleAndRectangleDoIntersect, rectanglesAreColliding } from "webgl-test-shared/dist/collision";
+import { circleAndRectangleDoIntersect, rectanglesAreColliding } from "webgl-test-shared/dist/collision";
 import { getItemRecipe } from "webgl-test-shared/dist/crafting-recipes";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { ItemType, ITEM_INFO_RECORD, PlaceableItemInfo } from "webgl-test-shared/dist/items";
@@ -14,14 +14,16 @@ import { SafetyNode, addHitboxesOccupiedNodes, addRectangularSafetyNodePositions
 import { buildingIsInfrastructure, getTribeSafety, tribeIsVulnerable } from "./ai-building-heuristics";
 import { TribeArea, areaHasOutsideDoor, getOutsideDoorPlacePlan } from "./ai-building-areas";
 import { getHitboxesCollidingEntities } from "../collision";
-import { hitboxIsCircular } from "../hitboxes/hitboxes";
+import { HitboxVertexPositions, updateHitbox, hitboxIsCircular } from "webgl-test-shared/dist/hitboxes/hitboxes";
 
 const virtualBuildingTakesUpWallSpace = (wallPosition: Point, wallRotation: number, virtualBuilding: VirtualBuilding, wallVertexOffsets: HitboxVertexPositions): boolean => {
    // @Speed: cache when virutal entity is first created
-   const hitboxes = createBuildingHitboxes(virtualBuilding.entityType, virtualBuilding.position, 1, virtualBuilding.rotation);
+   const hitboxes = createBuildingHitboxes(virtualBuilding.entityType, 1);
    
    for (let i = 0; i < hitboxes.length; i++) {
       const hitbox = hitboxes[i];
+      updateHitbox(hitbox, virtualBuilding.position.x, virtualBuilding.position.y, virtualBuilding.rotation);
+      
       // @Cleanup: copy and paste
       if (hitboxIsCircular(hitbox)) {
          if (circleAndRectangleDoIntersect(hitbox.position, hitbox.radius, wallPosition, Settings.TILE_SIZE, Settings.TILE_SIZE, wallRotation)) {
@@ -480,7 +482,12 @@ const tribeHasWorkbench = (tribe: Tribe): boolean => {
 }
 
 const buildingPositionIsValid = (tribe: Tribe, x: number, y: number, rotation: number, entityType: StructureType): boolean => {
-   const hitboxes = createBuildingHitboxes(entityType, new Point(x, y), 1, rotation);
+   const hitboxes = createBuildingHitboxes(entityType, 1);
+   for (let i = 0; i < hitboxes.length; i++) {
+      const hitbox = hitboxes[i];
+      updateHitbox(hitbox, x, y, rotation);
+   }
+   
    const collidingEntities = getHitboxesCollidingEntities(hitboxes);
    
    for (let i = 0; i < collidingEntities.length; i++) {
@@ -537,12 +544,12 @@ export function generateBuildingPosition(tribe: Tribe, entityType: StructureType
       const y = randFloat(minY, maxY);
       const rotation = 2 * Math.PI * Math.random();
       
-      const hitboxes = createBuildingHitboxes(entityType, new Point(x, y), 1, rotation);
-
-      // Make sure the hitboxes don't go outside the world
+      const hitboxes = createBuildingHitboxes(entityType, 1);
       for (let i = 0; i < hitboxes.length; i++) {
          const hitbox = hitboxes[i];
-
+         updateHitbox(hitbox, x, y, rotation);
+         
+         // Make sure the hitboxes don't go outside the world
          const minX = hitbox.calculateHitboxBoundsMinX();
          const maxX = hitbox.calculateHitboxBoundsMaxX();
          const minY = hitbox.calculateHitboxBoundsMinY();

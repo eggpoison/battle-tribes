@@ -1,10 +1,8 @@
-import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { ArrowStatusEffectInfo, ServerComponentType } from "webgl-test-shared/dist/components";
 import { GenericArrowType, EntityType, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { Point } from "webgl-test-shared/dist/utils";
-import RectangularHitbox from "../../hitboxes/RectangularHitbox";
 import Entity from "../../Entity";
 import { HealthComponentArray, damageEntity } from "../../components/HealthComponent";
 import { ArrowComponent, ArrowComponentArray } from "../../components/ArrowComponent";
@@ -14,6 +12,7 @@ import { EntityRelationship, TribeComponent, TribeComponentArray, getEntityRelat
 import { StatusEffectComponentArray, applyStatusEffect } from "../../components/StatusEffectComponent";
 import { EntityCreationInfo } from "../../components";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
+import { HitboxCollisionType, RectangularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
 
 // @Cleanup: Rename file to something more generic
 
@@ -37,7 +36,7 @@ export interface GenericArrowInfo {
 export function createWoodenArrow(position: Point, rotation: number, throwerID: number, arrowInfo: GenericArrowInfo): EntityCreationInfo<ComponentTypes> {
    const arrow = new Entity(position, rotation, EntityType.woodenArrowProjectile, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
    
-   const hitbox = new RectangularHitbox(position, 0.5, 0, 0, HitboxCollisionType.soft, arrow.getNextHitboxLocalID(), arrow.rotation, arrowInfo.hitboxWidth, arrowInfo.hitboxHeight, 0, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK & ~HitboxCollisionBit.ARROW_PASSABLE);
+   const hitbox = new RectangularHitbox(0.5, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK & ~HitboxCollisionBit.ARROW_PASSABLE, arrow.getNextHitboxLocalID(), 0, arrowInfo.hitboxWidth, arrowInfo.hitboxHeight, 0);
    arrow.addHitbox(hitbox);
 
    const physicsComponent = new PhysicsComponent(0, 0, 0, 0, false, true);

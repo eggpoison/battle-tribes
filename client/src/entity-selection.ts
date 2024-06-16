@@ -12,11 +12,11 @@ import { latencyGameState } from "./game-state/game-states";
 import { BuildMenu_hide, BuildMenu_setBuildingID, BuildMenu_updateBuilding, entityCanOpenBuildMenu, isHoveringInBlueprintMenu } from "./components/game/BuildMenu";
 import { InventoryMenuType, InventorySelector_inventoryIsOpen, InventorySelector_setInventoryMenuType } from "./components/game/inventories/InventorySelector";
 import { SEED_TO_PLANT_RECORD } from "./entity-components/PlantComponent";
-import { hitboxIsWithinRange } from "./hitboxes/hitboxes";
 import { GhostInfo, GhostType, PARTIAL_OPACITY, setGhostInfo } from "./rendering/webgl/entity-ghost-rendering";
 import { getClosestGroupNum } from "./rendering/webgl/entity-selection-rendering";
 import { CraftingStation } from "webgl-test-shared/dist/crafting-recipes";
 import { CraftingMenu_setCraftingStation, CraftingMenu_setIsVisible } from "./components/game/menus/CraftingMenu";
+import { hitboxIsWithinRange } from "webgl-test-shared/dist/hitboxes/hitboxes";
 
 const enum InteractActionType {
    openBuildMenu,
@@ -336,7 +336,7 @@ const getEntityID = (doPlayerProximityCheck: boolean, doCanSelectCheck: boolean)
             
             // Distance from cursor
             for (const hitbox of entity.hitboxes) {
-               if (hitboxIsWithinRange(origin, hitbox, HIGHLIGHT_RANGE)) {
+               if (hitboxIsWithinRange(hitbox, origin, HIGHLIGHT_RANGE)) {
                   const distance = origin.calculateDistanceBetween(entity.position);
                   if (distance < minDist) {
                      minDist = distance;

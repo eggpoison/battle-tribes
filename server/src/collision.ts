@@ -1,10 +1,7 @@
-import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { Point, angle, rotateXAroundPoint, rotateYAroundPoint } from "webgl-test-shared/dist/utils";
 import Entity from "./Entity";
-import CircularHitbox from "./hitboxes/CircularHitbox";
-import RectangularHitbox, { assertIsRectangular } from "./hitboxes/RectangularHitbox";
 import { PhysicsComponentArray } from "./components/PhysicsComponent";
 import { onFrozenYetiCollision } from "./entities/mobs/frozen-yeti";
 import { onGolemCollision } from "./entities/mobs/golem";
@@ -30,7 +27,7 @@ import { onEmbrasureCollision } from "./entities/structures/embrasure";
 import Board from "./Board";
 import { onTribesmanCollision } from "./entities/tribes/tribe-member";
 import { DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit, rectanglesAreColliding } from "webgl-test-shared/dist/collision";
-import { Hitbox, hitboxIsCircular } from "./hitboxes/hitboxes";
+import { CircularHitbox, RectangularHitbox, Hitbox, hitboxIsCircular, HitboxCollisionType, updateHitbox, assertHitboxIsRectangular } from "webgl-test-shared/dist/hitboxes/hitboxes";
 
 interface CollisionPushInfo {
    direction: number;
@@ -117,13 +114,16 @@ const getCircleRectCollisionPushInfo = (pushedHitbox: CircularHitbox, pushingHit
 }
 
 const getCollisionPushInfo = (pushedHitbox: Hitbox, pushingHitbox: Hitbox): CollisionPushInfo => {
-   if (hitboxIsCircular(pushedHitbox) && hitboxIsCircular(pushingHitbox)) {
+   const pushedHitboxIsCircular = hitboxIsCircular(pushedHitbox);
+   const pushingHitboxIsCircular = hitboxIsCircular(pushingHitbox);
+   
+   if (pushedHitboxIsCircular && pushingHitboxIsCircular) {
       // Circle + Circle
       return getCircleCircleCollisionPushInfo(pushedHitbox, pushingHitbox);
-   } else if (hitboxIsCircular(pushedHitbox) && !hitboxIsCircular(pushingHitbox)) {
+   } else if (pushedHitboxIsCircular && !pushingHitboxIsCircular) {
       // Circle + Rectangle
       return getCircleRectCollisionPushInfo(pushedHitbox, pushingHitbox);
-   } else if (!hitboxIsCircular(pushedHitbox) && hitboxIsCircular(pushingHitbox)) {
+   } else if (!pushedHitboxIsCircular && pushingHitboxIsCircular) {
       // Rectangle + Circle
       const pushInfo = getCircleRectCollisionPushInfo(pushingHitbox, pushedHitbox);
       pushInfo.direction += Math.PI;
@@ -131,8 +131,8 @@ const getCollisionPushInfo = (pushedHitbox: Hitbox, pushingHitbox: Hitbox): Coll
    } else {
       // Rectangle + Rectangle
       
-      assertIsRectangular(pushedHitbox);
-      assertIsRectangular(pushingHitbox);
+      assertHitboxIsRectangular(pushedHitbox);
+      assertHitboxIsRectangular(pushingHitbox);
       
       // @Cleanup: copy and paste
       const collisionData = rectanglesAreColliding(pushedHitbox.vertexOffsets, pushingHitbox.vertexOffsets, pushedHitbox.position, pushingHitbox.position, pushedHitbox.axisX, pushedHitbox.axisY, pushingHitbox.axisX, pushingHitbox.axisY);
@@ -333,8 +333,8 @@ export function getHitboxesCollidingEntities(hitboxes: ReadonlyArray<Hitbox>): R
 /** If no collision is found, does nothing. */
 export function resolveEntityTileCollision(entity: Entity, hitbox: Hitbox, tileX: number, tileY: number): void {
    // @Speed
-   const tilePos = new Point((tileX + 0.5) * Settings.TILE_SIZE, (tileY + 0.5) * Settings.TILE_SIZE);
-   const tileHitbox = new RectangularHitbox(tilePos, 1, 0, 0, HitboxCollisionType.hard, 1, 0, Settings.TILE_SIZE, Settings.TILE_SIZE, 0, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK);
+   const tileHitbox = new RectangularHitbox(1, new Point(0, 0), HitboxCollisionType.hard, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 1, 0, Settings.TILE_SIZE, Settings.TILE_SIZE, 0);
+   updateHitbox(tileHitbox, (tileX + 0.5) * Settings.TILE_SIZE, (tileY + 0.5) * Settings.TILE_SIZE, 0);
    
    if (hitbox.isColliding(tileHitbox)) {
       const pushInfo = getCollisionPushInfo(hitbox, tileHitbox);

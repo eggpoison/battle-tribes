@@ -1,4 +1,3 @@
-import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { EntityType, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
 import { InventoryName, ItemType } from "webgl-test-shared/dist/items";
@@ -6,7 +5,6 @@ import { Settings } from "webgl-test-shared/dist/settings";
 import { Biome, TileType } from "webgl-test-shared/dist/tiles";
 import { Point, randInt, customTickIntervalHasPassed, randFloat } from "webgl-test-shared/dist/utils";
 import Entity, { getRandomPositionInEntity } from "../../Entity";
-import RectangularHitbox from "../../hitboxes/RectangularHitbox";
 import { HealthComponent, HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
 import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
 import { WanderAIComponent, WanderAIComponentArray } from "../../components/WanderAIComponent";
@@ -24,6 +22,7 @@ import { PhysicsComponent, PhysicsComponentArray, applyKnockback } from "../../c
 import { CollisionVars, entitiesAreColliding } from "../../collision";
 import { TribeMemberComponentArray } from "../../components/TribeMemberComponent";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
+import { HitboxCollisionType, RectangularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
 
 const TURN_SPEED = Math.PI / 1.5;
 
@@ -50,7 +49,7 @@ const LUNGE_INTERVAL = 1;
 export function createFish(position: Point): Entity {
    const fish = new Entity(position, 2 * Math.PI * Math.random(), EntityType.fish, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
-   const hitbox = new RectangularHitbox(fish.position, 0.5, 0, 0, HitboxCollisionType.soft, fish.getNextHitboxLocalID(), fish.rotation, FISH_WIDTH, FISH_HEIGHT, 0, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK);
+   const hitbox = new RectangularHitbox(0.5, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, fish.getNextHitboxLocalID(), 0, FISH_WIDTH, FISH_HEIGHT, 0);
    fish.addHitbox(hitbox);
 
    PhysicsComponentArray.addComponent(fish.id, new PhysicsComponent(0, 0, 0, 0, true, false));

@@ -1,11 +1,9 @@
-import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { SnowballSize, EntityType, SNOWBALL_SIZES, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { Point, randFloat, randSign } from "webgl-test-shared/dist/utils";
 import Entity from "../Entity";
-import CircularHitbox from "../hitboxes/CircularHitbox";
 import { HealthComponent, HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../components/HealthComponent";
 import { StatusEffectComponent, StatusEffectComponentArray } from "../components/StatusEffectComponent";
 import { SnowballComponent, SnowballComponentArray } from "../components/SnowballComponent";
@@ -13,6 +11,7 @@ import { PhysicsComponent, PhysicsComponentArray, applyKnockback } from "../comp
 import { EntityCreationInfo } from "../components";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
+import { CircularHitbox, HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
    
 type ComponentTypes = [ServerComponentType.physics, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.snowball];
 
@@ -24,7 +23,7 @@ export function createSnowball(position: Point, size: SnowballSize = SnowballSiz
    const snowball = new Entity(position, 2 * Math.PI * Math.random(), EntityType.snowball, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
    const mass = size === SnowballSize.small ? 1 : 1.5;
-   const hitbox = new CircularHitbox(position, mass, 0, 0, HitboxCollisionType.soft, SNOWBALL_SIZES[size] / 2, snowball.getNextHitboxLocalID(), snowball.rotation, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK);
+   const hitbox = new CircularHitbox(mass, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, snowball.getNextHitboxLocalID(), 0, SNOWBALL_SIZES[size] / 2);
    snowball.addHitbox(hitbox);
 
    const physicsComponent = new PhysicsComponent(0, 0, 0, 0, true, false);

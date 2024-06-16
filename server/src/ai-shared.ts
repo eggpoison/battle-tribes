@@ -1,23 +1,20 @@
-import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { TileType } from "webgl-test-shared/dist/tiles";
 import { angle, curveWeight, Point, lerp, rotateXAroundPoint, rotateYAroundPoint, distance, distBetweenPointAndRectangle } from "webgl-test-shared/dist/utils";
 import Board, { raytraceHasWallTile } from "./Board";
 import Tile from "./Tile";
-import CircularHitbox from "./hitboxes/CircularHitbox";
 import Entity from "./Entity";
-import RectangularHitbox from "./hitboxes/RectangularHitbox";
 import { PhysicsComponent, PhysicsComponentArray } from "./components/PhysicsComponent";
 import { getEntityPathfindingGroupID } from "./pathfinding";
 import { DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
-import { hitboxIsCircular } from "./hitboxes/hitboxes";
+import { CircularHitbox, HitboxCollisionType, RectangularHitbox, hitboxIsCircular } from "webgl-test-shared/dist/hitboxes/hitboxes";
 
 const TURN_CONSTANT = Math.PI / Settings.TPS;
 const WALL_AVOIDANCE_MULTIPLIER = 1.5;
    
 // @Cleanup: remove
-const testCircularHitbox = new CircularHitbox(new Point(0, 0), 1, 0, 0, HitboxCollisionType.soft, -1, 1, 0, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK);
+const testCircularHitbox = new CircularHitbox(1, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 1, 0, -1);
 
 // @Cleanup: Only used in tribesman.ts, so move there.
 export function getClosestAccessibleEntity(entity: Entity, entities: ReadonlyArray<Entity>): Entity {

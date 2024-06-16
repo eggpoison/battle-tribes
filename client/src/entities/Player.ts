@@ -127,89 +127,29 @@ const createInitialInventoryUseInfo = (inventoryName: InventoryName): LimbData =
 }
 
 class Player extends TribeMember {
+   private health: number;
+   private maxHealth: number;
+   private attackRange: number;
+   private attackRadius: number;
+   private speed: number;
+   
    /** The player entity associated with the current player. */
    public static instance: Player | null = null;
    
    constructor(position: Point, id: number, ageTicks: number, componentDataRecord: ComponentDataRecord) {
       super(position, id, EntityType.player, ageTicks);
+
+      this.health = 15;
+      this.maxHealth = 15;
+      this.attackRange = 40;
+      this.attackRadius = 25;
+      this.speed = 400;
       
       addTribeMemberRenderParts(this, componentDataRecord);
 
       this.addClientComponent(ClientComponentType.footprint, new FootprintComponent(this, 0.2, 20, 64, 4, 64));
       this.addClientComponent(ClientComponentType.equipment, new EquipmentComponent(this));
    }
-
-   // public static createInstancePlayer(position: Point, playerID: number): void {
-   //    if (Player.instance !== null) {
-   //       throw new Error("Tried to create a new player main instance when one already existed!");
-   //    }
-
-   //    const maxHealth = TRIBE_INFO_RECORD[Game.tribe.tribeType].maxHealthPlayer;
-
-   //    // @Cleanup: is there a better way to do this? maybe wait for the first packet to then set this?
-   //    const componentsData: EntityComponentsData<EntityType.player> = [
-   //       {
-   //          componentType: ServerComponentType.physics,
-   //          velocity: [0, 0],
-   //          acceleration: [0, 0]
-   //       },
-   //       {
-   //          componentType: ServerComponentType.health,
-   //          health: maxHealth,
-   //          maxHealth: maxHealth
-   //       },
-   //       {
-   //          componentType: ServerComponentType.statusEffect,
-   //          statusEffects: []
-   //       },
-   //       {
-   //          componentType: ServerComponentType.tribe,
-   //          tribeID: Game.tribe.id
-   //       },
-   //       {
-   //          componentType: ServerComponentType.tribeMember,
-   //          // @Incomplete: Shouldn't be random, should be sent by the server
-   //          warPaintType: randInt(1, 5),
-   //          titles: []
-   //       },
-   //       {
-   //          componentType: ServerComponentType.inventory,
-   //          inventories: {
-   //             [InventoryName.hotbar]: new Inventory(Settings.INITIAL_PLAYER_HOTBAR_SIZE, 1, InventoryName.hotbar),
-   //             [InventoryName.armourSlot]: new Inventory(1, 1, InventoryName.armourSlot),
-   //             [InventoryName.gloveSlot]: new Inventory(1, 1, InventoryName.gloveSlot),
-   //             [InventoryName.backpackSlot]: new Inventory(1, 1, InventoryName.backpackSlot),
-   //             [InventoryName.backpack]: new Inventory(1, 1, InventoryName.backpack),
-   //             [InventoryName.offhand]: new Inventory(1, 1, InventoryName.offhand),
-   //          }
-   //       },
-   //       {
-   //          componentType: ServerComponentType.inventoryUse,
-   //          inventoryUseInfos: [
-   //             createInitialInventoryUseInfo(InventoryName.hotbar),
-   //             createInitialInventoryUseInfo(InventoryName.offhand)
-   //          ]
-   //       },
-   //       {
-   //          componentType: ServerComponentType.player,
-   //          username: definiteGameState.playerUsername
-   //       }
-   //    ];
-      
-   //    const player = new Player(position, playerID, 0, componentsData);
-   //    player.addCircularHitbox(new CircularHitbox(1, 0, 0, HitboxCollisionType.soft, 1, 32));
-   //    player.collisionBit = COLLISION_BITS.default;
-   //    player.collisionMask = DEFAULT_COLLISION_MASK;
-   //    Board.addEntity(player);
-
-   //    Player.instance = player;
-
-   //    Camera.setTrackedEntityID(player.id);
-
-   //    // @Cleanup: Shouldn't be in this function
-   //    definiteGameState.setPlayerHealth(maxHealth);
-   //    definiteGameState.hotbar = new Inventory(Settings.INITIAL_PLAYER_HOTBAR_SIZE, 1, InventoryName.hotbar);
-   // }
 
    public static createInstancePlayer(player: Player): void {
       Player.instance = player;
@@ -239,23 +179,28 @@ class Player extends TribeMember {
       const physicsComponent = Player.instance!.getServerComponent(ServerComponentType.physics);
 
       for (const hitbox of Player.instance!.hitboxes) {
+         const minX = hitbox.calculateHitboxBoundsMinX();
+         const maxX = hitbox.calculateHitboxBoundsMaxX();
+         const minY = hitbox.calculateHitboxBoundsMinY();
+         const maxY = hitbox.calculateHitboxBoundsMaxY();
+
          // Left wall
-         if (hitbox.bounds[0] < 0) {
-            Player.instance!.position.x -= hitbox.bounds[0];
+         if (minX < 0) {
+            Player.instance!.position.x -= minX;
             physicsComponent.velocity.x = 0;
             // Right wall
-         } else if (hitbox.bounds[1] > Settings.BOARD_UNITS) {
-            Player.instance!.position.x -= hitbox.bounds[1] - Settings.BOARD_UNITS;
+         } else if (maxX > Settings.BOARD_UNITS) {
+            Player.instance!.position.x -= maxX - Settings.BOARD_UNITS;
             physicsComponent.velocity.x = 0;
          }
          
          // Bottom wall
-         if (hitbox.bounds[2] < 0) {
-            Player.instance!.position.y -= hitbox.bounds[2];
+         if (minY < 0) {
+            Player.instance!.position.y -= minY;
             physicsComponent.velocity.y = 0;
             // Top wall
-         } else if (hitbox.bounds[3] > Settings.BOARD_UNITS) {
-            Player.instance!.position.y -= hitbox.bounds[3] - Settings.BOARD_UNITS;
+         } else if (maxY > Settings.BOARD_UNITS) {
+            Player.instance!.position.y -= maxY - Settings.BOARD_UNITS;
             physicsComponent.velocity.y = 0;
          }
       }

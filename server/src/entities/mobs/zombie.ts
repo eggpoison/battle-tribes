@@ -1,4 +1,3 @@
-import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { EntityType, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
 import { InventoryName, ItemType } from "webgl-test-shared/dist/items";
@@ -8,7 +7,6 @@ import { Point, randInt, randFloat } from "webgl-test-shared/dist/utils";
 import Entity, { entityIsStructure } from "../../Entity";
 import { HealthComponent, HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity, healEntity } from "../../components/HealthComponent";
 import { ZombieComponent, ZombieComponentArray } from "../../components/ZombieComponent";
-import CircularHitbox from "../../hitboxes/CircularHitbox";
 import { InventoryComponent, InventoryComponentArray, createNewInventory, getInventory, pickupItemEntity } from "../../components/InventoryComponent";
 import Board from "../../Board";
 import { StatusEffectComponent, StatusEffectComponentArray, applyStatusEffect, hasStatusEffect } from "../../components/StatusEffectComponent";
@@ -27,6 +25,7 @@ import { TribeMemberComponentArray } from "../../components/TribeMemberComponent
 import { ItemComponentArray } from "../../components/ItemComponent";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
 import { TombstoneComponentArray } from "../../components/TombstoneComponent";
+import { CircularHitbox, HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
 
 const TURN_SPEED = 3 * Math.PI;
 
@@ -61,7 +60,7 @@ const HURT_ENTITY_INVESTIGATE_TICKS = Math.floor(1 * Settings.TPS);
 export function createZombie(position: Point, rotation: number, isGolden: boolean, tombstoneID: number): Entity {
    const zombie = new Entity(position, rotation, EntityType.zombie, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
-   const hitbox = new CircularHitbox(position, 1, 0, 0, HitboxCollisionType.soft, 32, zombie.getNextHitboxLocalID(), zombie.rotation, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK);
+   const hitbox = new CircularHitbox(1, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, zombie.getNextHitboxLocalID(), 0, 32);
    zombie.addHitbox(hitbox);
    
    PhysicsComponentArray.addComponent(zombie.id, new PhysicsComponent(0, 0, 0, 0, true, false));

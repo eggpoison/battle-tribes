@@ -57,8 +57,8 @@ import { tickTribes } from "./ai-tribe-building/ai-building";
 import { HealingTotemComponentArray, tickHealingTotemComponent } from "./components/HealingTotemComponent";
 import { PlantComponentArray, tickPlantComponent } from "./components/PlantComponent";
 import { FenceGateComponentArray, tickFenceGateComponent } from "./components/FenceGateComponent";
-import { Hitbox, hitboxIsCircular } from "./hitboxes/hitboxes";
 import { PlanterBoxComponentArray, tickPlanterBoxComponent } from "./components/PlanterBoxComponent";
+import { Hitbox, hitboxIsCircular } from "webgl-test-shared/dist/hitboxes/hitboxes";
 
 const START_TIME = 6;
 

@@ -1,5 +1,4 @@
 import Entity from "../Entity";
-import CircularHitbox from "../hitboxes/CircularHitbox";
 import Board from "../Board";
 import { ParticleRenderLayer, addTexturedParticleToBufferContainer } from "../rendering/webgl/particle-rendering";
 import Particle from "../Particle";
@@ -8,6 +7,7 @@ import { Sound, playSound } from "../sound";
 import { Point, lerp, randFloat } from "webgl-test-shared/dist/utils";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
+import { CircularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
 
 // @Cleanup: move to particles file
 const createParticle = (spawnPositionX: number, spawnPositionY: number): void => {

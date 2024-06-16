@@ -14,7 +14,7 @@ class Particle {
       this.lifetime = lifetime;
    }
 
-   // @Speed: Polymorphism
+   // @Speed: Polymorphism. have a particle type and switch based on that
    public getOpacity?(): number;
    public getScale?(): number;
 }

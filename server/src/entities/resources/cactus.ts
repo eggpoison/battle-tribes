@@ -1,16 +1,15 @@
-import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { CactusBodyFlowerData, CactusLimbData, CactusLimbFlowerData, EntityType, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
 import { ItemType } from "webgl-test-shared/dist/items";
 import { randInt, lerp, randFloat, Point } from "webgl-test-shared/dist/utils";
 import Entity from "../../Entity";
-import CircularHitbox from "../../hitboxes/CircularHitbox";
 import { HealthComponent, HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
 import { createItemsOverEntity } from "../../entity-shared";
 import { CactusComponent, CactusComponentArray } from "../../components/CactusComponent";
 import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
 import { applyKnockback } from "../../components/PhysicsComponent";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
+import { CircularHitbox, HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
 
 const RADIUS = 40;
 /** Amount the hitbox is brought in. */
@@ -75,7 +74,7 @@ const generateRandomLimbs = (): ReadonlyArray<CactusLimbData> => {
 export function createCactus(position: Point, rotation: number): Entity {
    const cactus = new Entity(position, rotation, EntityType.cactus, COLLISION_BITS.cactus, DEFAULT_COLLISION_MASK);
 
-   const hitbox = new CircularHitbox(position, 1, 0, 0, HitboxCollisionType.soft, RADIUS - HITBOX_PADDING, cactus.getNextHitboxLocalID(), cactus.rotation, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK);
+   const hitbox = new CircularHitbox(1, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, cactus.getNextHitboxLocalID(), 0, RADIUS - HITBOX_PADDING);
    cactus.addHitbox(hitbox);
 
    const flowers = generateRandomFlowers();
@@ -84,7 +83,7 @@ export function createCactus(position: Point, rotation: number): Entity {
    // Create hitboxes for all the cactus limbs
    for (let i = 0; i < limbs.length; i++) {
       const limb = limbs[i]
-      const hitbox = new CircularHitbox(position, 0.4, 37 * Math.sin(limb.direction), 37 * Math.cos(limb.direction), HitboxCollisionType.soft, 18, cactus.getNextHitboxLocalID(), cactus.rotation, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK);
+      const hitbox = new CircularHitbox(0.4, Point.fromVectorForm(37, limb.direction), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, cactus.getNextHitboxLocalID(), 0, 18);
       cactus.addHitbox(hitbox);
    }
 

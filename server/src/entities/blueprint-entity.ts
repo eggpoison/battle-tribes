@@ -37,7 +37,7 @@ export function createBlueprintEntity(position: Point, rotation: number, bluepri
    const blueprintEntity = new Entity(position, rotation, EntityType.blueprintEntity, COLLISION_BITS.none, 0);
 
    const entityType = getBlueprintEntityType(blueprintType);
-   const hitboxes = createBuildingHitboxes(entityType, position, blueprintEntity.getNextHitboxLocalID(), rotation);
+   const hitboxes = createBuildingHitboxes(entityType, blueprintEntity.getNextHitboxLocalID());
    for (let i = 0; i < hitboxes.length; i++) {
       blueprintEntity.addHitbox(hitboxes[i]);
    }

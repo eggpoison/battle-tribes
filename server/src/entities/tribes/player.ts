@@ -1,17 +1,16 @@
-import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { PlanterBoxPlant } from "webgl-test-shared/dist/components";
 import { EntityType, EntityTypeString, LimbAction } from "webgl-test-shared/dist/entities";
 import { ItemType, ITEM_INFO_RECORD, ConsumableItemInfo, ConsumableItemCategory, BowItemInfo, InventoryName } from "webgl-test-shared/dist/items";
 import { TRIBE_INFO_RECORD } from "webgl-test-shared/dist/tribes";
 import { Point } from "webgl-test-shared/dist/utils";
+import { CircularHitbox, HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import Entity from "../../Entity";
 import { onTribeMemberHurt, tickTribeMember } from "./tribe-member";
 import Tribe from "../../Tribe";
 import { InventoryComponent, consumeItemFromSlot, consumeItemType, countItemType, getInventory, pickupItemEntity, addItem, InventoryComponentArray } from "../../components/InventoryComponent";
 import Board from "../../Board";
 import { HealthComponent, HealthComponentArray } from "../../components/HealthComponent";
-import CircularHitbox from "../../hitboxes/CircularHitbox";
 import { InventoryUseComponent, InventoryUseComponentArray, getInventoryUseInfo, setLimbActions } from "../../components/InventoryUseComponent";
 import { TribeMemberComponent, TribeMemberComponentArray, awardTitle } from "../../components/TribeMemberComponent";
 import { PlayerComponent, PlayerComponentArray } from "../../components/PlayerComponent";
@@ -20,7 +19,6 @@ import { PhysicsComponent, PhysicsComponentArray } from "../../components/Physic
 import { TribeComponent, TribeComponentArray } from "../../components/TribeComponent";
 import { TunnelComponentArray, updateTunnelDoorBitset } from "../../components/TunnelComponent";
 import { PlanterBoxComponentArray, fertilisePlanterBox, placePlantInPlanterBox } from "../../components/PlanterBoxComponent";
-import { createItem } from "../../items";
 import { StructureComponentArray, isAttachedToWall } from "../../components/StructureComponent";
 import { registerPlayerDroppedItemPickup } from "../../server/player-clients";
 import { HutComponentArray } from "../../components/HutComponent";
@@ -30,7 +28,7 @@ import { TribesmanTitle } from "webgl-test-shared/dist/titles";
 export function createPlayer(position: Point, tribe: Tribe, username: string): Entity {
    const player = new Entity(position, 0, EntityType.player, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
-   const hitbox = new CircularHitbox(position, 1.25, 0, 0, HitboxCollisionType.soft, 32, player.getNextHitboxLocalID(), player.rotation, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK);
+   const hitbox = new CircularHitbox(1.25, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, player.getNextHitboxLocalID(), 0, 32);
    player.addHitbox(hitbox);
 
    const tribeInfo = TRIBE_INFO_RECORD[tribe.type];

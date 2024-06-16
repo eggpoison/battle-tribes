@@ -1,11 +1,9 @@
-import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { EntityType, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { Point } from "webgl-test-shared/dist/utils";
 import Entity from "../../Entity";
-import RectangularHitbox from "../../hitboxes/RectangularHitbox";
 import { SlimeSpitComponent, SlimeSpitComponentArray } from "../../components/SlimeSpitComponent";
 import { createSpitPoison } from "./spit-poison";
 import { HealthComponentArray, damageEntity } from "../../components/HealthComponent";
@@ -14,6 +12,7 @@ import { PhysicsComponent, PhysicsComponentArray, applyKnockback } from "../../c
 import { EntityCreationInfo } from "../../components";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
+import { HitboxCollisionType, RectangularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
 
 type ComponentTypes = [ServerComponentType.physics, ServerComponentType.slimeSpit];
 
@@ -25,7 +24,7 @@ export function createSlimeSpit(position: Point, rotation: number, size: number)
    const spit = new Entity(position, rotation, EntityType.slimeSpit, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
    const hitboxSize = SIZES[size];
-   const hitbox = new RectangularHitbox(position, 0.2, 0, 0, HitboxCollisionType.soft, spit.getNextHitboxLocalID(), spit.rotation, hitboxSize, hitboxSize, 0, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK);
+   const hitbox = new RectangularHitbox(0.2, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, spit.getNextHitboxLocalID(), 0, hitboxSize, hitboxSize, 0);
    spit.addHitbox(hitbox);
 
    const physicsComponent = new PhysicsComponent(0, 0, 0, 0, true, false);

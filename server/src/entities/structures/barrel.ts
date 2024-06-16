@@ -1,10 +1,8 @@
-import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { Point } from "webgl-test-shared/dist/utils";
 import Entity from "../../Entity";
-import CircularHitbox from "../../hitboxes/CircularHitbox";
 import { HealthComponent, HealthComponentArray } from "../../components/HealthComponent";
 import { InventoryComponent, InventoryComponentArray, createNewInventory } from "../../components/InventoryComponent";
 import Tribe from "../../Tribe";
@@ -13,20 +11,20 @@ import { TribeComponent, TribeComponentArray } from "../../components/TribeCompo
 import { InventoryName } from "webgl-test-shared/dist/items";
 import { StructureComponent, StructureComponentArray } from "../../components/StructureComponent";
 import { StructureConnectionInfo } from "webgl-test-shared/dist/structures";
-import { Hitbox } from "../../hitboxes/hitboxes";
+import { Hitbox, CircularHitbox, HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
 
 const HITBOX_SIZE = 80 - 0.05;
 
-export function createBarrelHitboxes(parentPosition: Point, localID: number, parentRotation: number): ReadonlyArray<Hitbox> {
+export function createBarrelHitboxes(localID: number): ReadonlyArray<Hitbox> {
    const hitboxes = new Array<Hitbox>();
-   hitboxes.push(new CircularHitbox(parentPosition, 1.5, 0, 0, HitboxCollisionType.hard, HITBOX_SIZE / 2, localID, parentRotation, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK));
+   hitboxes.push(new CircularHitbox(1.5, new Point(0, 0), HitboxCollisionType.hard, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, localID, 0, HITBOX_SIZE / 2));
    return hitboxes;
 }
 
 export function createBarrel(position: Point, rotation: number, tribe: Tribe, connectionInfo: StructureConnectionInfo): Entity {
    const barrel = new Entity(position, rotation, EntityType.barrel, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
-   const hitboxes = createBarrelHitboxes(position, barrel.getNextHitboxLocalID(), barrel.rotation);
+   const hitboxes = createBarrelHitboxes(barrel.getNextHitboxLocalID());
    for (let i = 0; i < hitboxes.length; i++) {
       barrel.addHitbox(hitboxes[i]);
    }

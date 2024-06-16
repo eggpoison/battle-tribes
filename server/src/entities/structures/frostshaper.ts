@@ -1,4 +1,3 @@
-import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
 import { HitboxCollisionBit, DEFAULT_HITBOX_COLLISION_MASK, COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
@@ -11,20 +10,17 @@ import { HealthComponent, HealthComponentArray } from "../../components/HealthCo
 import { StatusEffectComponentArray, StatusEffectComponent } from "../../components/StatusEffectComponent";
 import { StructureComponentArray, StructureComponent } from "../../components/StructureComponent";
 import { TribeComponent, TribeComponentArray } from "../../components/TribeComponent";
-import RectangularHitbox from "../../hitboxes/RectangularHitbox";
-import { Hitbox } from "../../hitboxes/hitboxes";
-import { HitboxFlags } from "../../hitboxes/BaseHitbox";
 import { CraftingStation } from "webgl-test-shared/dist/crafting-recipes";
 import { CraftingStationComponentArray, CraftingStationComponent } from "../../components/CraftingStationComponent";
+import { Hitbox, RectangularHitbox, HitboxCollisionType, HitboxFlags } from "webgl-test-shared/dist/hitboxes/hitboxes";
 
 const HITBOX_WIDTH = 120 - 0.05;
 const HITBOX_HEIGHT = 80 - 0.05;
 
-export function createFrostshaperHitboxes(parentPosition: Point, localID: number, parentRotation: number): ReadonlyArray<Hitbox> {
+export function createFrostshaperHitboxes(localID: number): ReadonlyArray<Hitbox> {
    const hitboxes = new Array<Hitbox>();
 
-   const hitbox = new RectangularHitbox(parentPosition, 1, 0, 0, HitboxCollisionType.hard, localID, parentRotation, HITBOX_WIDTH, HITBOX_HEIGHT, 0, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK);
-   hitbox.flags |= HitboxFlags.NON_GRASS_BLOCKING;
+   const hitbox = new RectangularHitbox(1, new Point(0, 0), HitboxCollisionType.hard, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, localID, HitboxFlags.NON_GRASS_BLOCKING, HITBOX_WIDTH, HITBOX_HEIGHT, 0);
    hitboxes.push(hitbox);
 
    return hitboxes;
@@ -33,7 +29,7 @@ export function createFrostshaperHitboxes(parentPosition: Point, localID: number
 export function createFrostshaper(position: Point, rotation: number, tribe: Tribe, connectionInfo: StructureConnectionInfo): Entity {
    const frostshaper = new Entity(position, rotation, EntityType.frostshaper, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
-   const hitboxes = createFrostshaperHitboxes(position, frostshaper.getNextHitboxLocalID(), rotation);
+   const hitboxes = createFrostshaperHitboxes(frostshaper.getNextHitboxLocalID());
    for (let i = 0; i < hitboxes.length; i++) {
       frostshaper.addHitbox(hitboxes[i]);
    }

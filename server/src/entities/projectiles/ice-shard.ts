@@ -1,4 +1,3 @@
-import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { PlanterBoxPlant, ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityType, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
@@ -6,7 +5,6 @@ import { Settings } from "webgl-test-shared/dist/settings";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { Point } from "webgl-test-shared/dist/utils";
 import Entity from "../../Entity";
-import RectangularHitbox from "../../hitboxes/RectangularHitbox";
 import { HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
 import { StatusEffectComponentArray, applyStatusEffect } from "../../components/StatusEffectComponent";
 import { PhysicsComponent, PhysicsComponentArray, applyKnockback } from "../../components/PhysicsComponent";
@@ -14,13 +12,14 @@ import { EntityCreationInfo } from "../../components";
 import { PlantComponentArray } from "../../components/PlantComponent";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
 import { IceShardComponent, IceShardComponentArray } from "../../components/IceShardComponent";
+import { HitboxCollisionType, RectangularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
 
 type ComponentTypes = [ServerComponentType.physics, ServerComponentType.iceShard];
 
 export function createIceShard(position: Point, rotation: number): EntityCreationInfo<ComponentTypes> {
    const iceShard = new Entity(position, rotation, EntityType.iceShardProjectile, COLLISION_BITS.default, DEFAULT_COLLISION_MASK & ~COLLISION_BITS.planterBox);
 
-   const hitbox = new RectangularHitbox(iceShard.position, 0.4, 0, 0, HitboxCollisionType.soft, iceShard.getNextHitboxLocalID(), iceShard.rotation, 24, 24, 0, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK);
+   const hitbox = new RectangularHitbox(0.4, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, iceShard.getNextHitboxLocalID(), 0, 24, 24, 0);
    iceShard.addHitbox(hitbox);
    
    const physicsComponent = new PhysicsComponent(0, 0, 0, 0, true, false);

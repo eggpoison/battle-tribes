@@ -1,4 +1,3 @@
-import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { EntityType, FrozenYetiAttackType, SnowballSize, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
 import { ItemType } from "webgl-test-shared/dist/items";
@@ -7,7 +6,6 @@ import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { Biome, TileType } from "webgl-test-shared/dist/tiles";
 import { Point, randInt, randFloat } from "webgl-test-shared/dist/utils";
 import Entity from "../../Entity";
-import CircularHitbox from "../../hitboxes/CircularHitbox";
 import { HealthComponent, HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
 import { StatusEffectComponent, StatusEffectComponentArray, applyStatusEffect } from "../../components/StatusEffectComponent";
 import { AIHelperComponent, AIHelperComponentArray } from "../../components/AIHelperComponent";
@@ -24,6 +22,7 @@ import { PhysicsComponent, PhysicsComponentArray, applyKnockback } from "../../c
 import { wasTribeMemberKill } from "../tribes/tribe-member";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
+import { CircularHitbox, HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
 
 const FROZEN_YETI_SIZE = 144;
 const HEAD_HITBOX_SIZE = 72;
@@ -69,16 +68,16 @@ export interface FrozenYetiRockSpikeInfo {
 export function createFrozenYeti(position: Point): Entity {
    const frozenYeti = new Entity(position, 2 * Math.PI * Math.random(), EntityType.frozenYeti, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
-   const bodyHitbox = new CircularHitbox(frozenYeti.position, 4, 0, 0, HitboxCollisionType.soft, FROZEN_YETI_SIZE / 2, frozenYeti.getNextHitboxLocalID(), frozenYeti.rotation, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK);
+   const bodyHitbox = new CircularHitbox(4, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, frozenYeti.getNextHitboxLocalID(), 0, FROZEN_YETI_SIZE / 2);
    frozenYeti.addHitbox(bodyHitbox);
 
-   const headHitbox = new CircularHitbox(frozenYeti.position, 0.8, 0, HEAD_DISTANCE, HitboxCollisionType.soft, HEAD_HITBOX_SIZE / 2, frozenYeti.getNextHitboxLocalID(), frozenYeti.rotation, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK);
+   const headHitbox = new CircularHitbox(0.8, new Point(0, HEAD_DISTANCE), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, frozenYeti.getNextHitboxLocalID(), 0, HEAD_HITBOX_SIZE / 2);
    frozenYeti.addHitbox(headHitbox);
 
    // Paw hitboxes
    for (let i = 0; i < 2; i++) {
       const pawDirection = PAW_RESTING_ANGLE * (i === 0 ? -1 : 1);
-      const hitbox = new CircularHitbox(frozenYeti.position, 0.6, PAW_OFFSET * Math.sin(pawDirection), PAW_OFFSET * Math.cos(pawDirection), HitboxCollisionType.soft, PAW_SIZE / 2, frozenYeti.getNextHitboxLocalID(), frozenYeti.rotation, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK);
+      const hitbox = new CircularHitbox(0.6, Point.fromVectorForm(PAW_OFFSET, pawDirection), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, frozenYeti.getNextHitboxLocalID(), 0, PAW_SIZE / 2);
       frozenYeti.addHitbox(hitbox);
    }
 

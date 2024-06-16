@@ -62,6 +62,7 @@ import { createFrostshaper } from "../structures/frostshaper";
 import { createStonecarvingTable } from "../structures/stonecarving-table";
 import { BerryBushComponentArray } from "../../components/BerryBushComponent";
 import { BuildingMaterialComponentArray } from "../../components/BuildingMaterialComponent";
+import { updateHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
 
 const enum Vars {
    ITEM_THROW_FORCE = 100,
@@ -551,8 +552,12 @@ export function calculateRadialAttackTargets(entity: Entity, attackOffset: numbe
 }
 
 const buildingCanBePlaced = (placePosition: Point, rotation: number, entityType: StructureType): boolean => {
-   // @Incomplete: doesn't account for wall/floor spikes
-   const testHitboxes = createBuildingHitboxes(entityType, placePosition, 1, rotation);
+   const testHitboxes = createBuildingHitboxes(entityType, 1);
+   for (let i = 0; i < testHitboxes.length; i++) {
+      const hitbox = testHitboxes[i];
+      updateHitbox(hitbox, placePosition.x, placePosition.y, rotation);
+   }
+   
    const collidingEntities = getHitboxesCollidingEntities(testHitboxes);
 
    for (let i = 0; i < collidingEntities.length; i++) {

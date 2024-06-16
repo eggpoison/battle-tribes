@@ -1,4 +1,3 @@
-import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { EntityType, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
 import { Item } from "webgl-test-shared/dist/items";
@@ -10,7 +9,6 @@ import { ThrowingProjectileComponent, ThrowingProjectileComponentArray } from ".
 import Board from "../../Board";
 import { InventoryComponentArray, findInventoryContainingItem } from "../../components/InventoryComponent";
 import { InventoryUseComponentArray, getInventoryUseInfo } from "../../components/InventoryUseComponent";
-import CircularHitbox from "../../hitboxes/CircularHitbox";
 import { PhysicsComponent, PhysicsComponentArray, applyKnockback } from "../../components/PhysicsComponent";
 import { CollisionVars, entitiesAreColliding } from "../../collision";
 import Tribe from "../../Tribe";
@@ -18,6 +16,7 @@ import { EntityRelationship, TribeComponent, TribeComponentArray, getEntityRelat
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityCreationInfo } from "../../components";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
+import { CircularHitbox, HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
 
 type ComponentTypes = [ServerComponentType.physics, ServerComponentType.tribe, ServerComponentType.throwingProjectile];
 
@@ -26,7 +25,7 @@ const RETURN_TIME_TICKS = 1 * Settings.TPS;
 export function createBattleaxeProjectile(position: Point, rotation: number, tribeMemberID: number, item: Item, tribe: Tribe): EntityCreationInfo<ComponentTypes> {
    const battleaxe = new Entity(position, rotation, EntityType.battleaxeProjectile, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
    
-   const hitbox = new CircularHitbox(position, 0.6, 0, 0, HitboxCollisionType.soft, 32, battleaxe.getNextHitboxLocalID(), battleaxe.rotation, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK);
+   const hitbox = new CircularHitbox(0.6, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, battleaxe.getNextHitboxLocalID(), 0, 32);
    battleaxe.addHitbox(hitbox);
    
    const physicsComponent = new PhysicsComponent(0, 0, 0, 0, true, true);

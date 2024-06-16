@@ -1,9 +1,12 @@
 import { BuildingPlanData, BuildingSafetyData, SafetyNodeData, TribeWallData, WallConnectionData } from "./ai-building-types";
+import { HitboxCollisionBit } from "./collision";
 import { BlueprintType, ComponentData } from "./components";
+import { EntitySummonPacket } from "./dev-packets";
 import { EntityType, LimbAction } from "./entities";
 import { AttackEffectiveness } from "./entity-damage-types";
 import { EntityEvent } from "./entity-events";
 import { GrassBlocker } from "./grass-blockers";
+import { HitboxCollisionType } from "./hitboxes/hitboxes";
 import { Inventory, InventoryName, ItemType } from "./items";
 import { StatusEffect } from "./status-effects";
 import { EnemyTribeData, PlayerTribeData, TechID } from "./techs";
@@ -39,17 +42,15 @@ export type ServerTileUpdateData = {
    readonly isWall: boolean;
 }
 
-export const enum HitboxCollisionType {
-   soft,
-   hard
-}
-
 export interface BaseHitboxData {
    readonly mass: number;
    readonly offsetX: number;
    readonly offsetY: number;
    readonly collisionType: HitboxCollisionType;
+   readonly collisionBit: HitboxCollisionBit;
+   readonly collisionMask: number;
    readonly localID: number;
+   readonly flags: number;
 }
 
 export interface CircularHitboxData extends BaseHitboxData {
@@ -384,6 +385,7 @@ export interface ClientToServerEvents {
    //       DEV-ONLY EVENTS      //
    // -------------------------- //
    dev_give_item: (itemType: ItemType, amount: number) => void;
+   dev_summon_entity: (summonPacket: EntitySummonPacket) => void;
 }
 
 export interface InterServerEvents {}

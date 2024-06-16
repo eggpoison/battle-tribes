@@ -1,16 +1,15 @@
-import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { ItemType } from "webgl-test-shared/dist/items";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { Point } from "webgl-test-shared/dist/utils";
 import Entity from "../Entity";
-import RectangularHitbox from "../hitboxes/RectangularHitbox";
 import { ItemComponent, ItemComponentArray } from "../components/ItemComponent";
 import { PhysicsComponent, PhysicsComponentArray } from "../components/PhysicsComponent";
 import { addFleshSword } from "../flesh-sword-ai";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityCreationInfo } from "../components";
+import { HitboxCollisionType, RectangularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
 
 type ComponentTypes = [ServerComponentType.physics, ServerComponentType.item];
 
@@ -19,7 +18,7 @@ const TICKS_TO_DESPAWN = 300 * Settings.TPS;
 export function createItemEntity(position: Point, rotation: number, itemType: ItemType, amount: number, throwingEntityID: number): EntityCreationInfo<ComponentTypes> {
    const itemEntity = new Entity(position, rotation, EntityType.itemEntity, COLLISION_BITS.default, DEFAULT_COLLISION_MASK & ~COLLISION_BITS.planterBox);
 
-   const hitbox = new RectangularHitbox(position, 0.2, 0, 0, HitboxCollisionType.soft, itemEntity.getNextHitboxLocalID(), itemEntity.rotation, Settings.ITEM_SIZE, Settings.ITEM_SIZE, 0, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK);
+   const hitbox = new RectangularHitbox(0.2, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, itemEntity.getNextHitboxLocalID(), 0, Settings.ITEM_SIZE, Settings.ITEM_SIZE, 0);
    itemEntity.addHitbox(hitbox);
 
    const physicsComponent = new PhysicsComponent(0, 0, 0, 0, true, false);

@@ -1,11 +1,9 @@
 import { Point, rotateXAroundOrigin, rotateYAroundOrigin } from "webgl-test-shared/dist/utils";
-import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
 import { createWebGLProgram, gl } from "../../webgl";
-import RectangularHitbox from "../../hitboxes/RectangularHitbox";
-import CircularHitbox from "../../hitboxes/CircularHitbox";
 import Entity from "../../Entity";
 import Board from "../../Board";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
+import { HitboxCollisionType, hitboxIsCircular } from "webgl-test-shared/dist/hitboxes/hitboxes";
 
 const BORDER_THICKNESS = 3;
 const HALF_BORDER_THICKNESS = BORDER_THICKNESS / 2;
@@ -93,12 +91,12 @@ export function renderEntityHitboxes(): void {
 
          const hasHardCollision = hitbox.collisionType === HitboxCollisionType.hard ? 1 : 0;
          
-         if (hitbox.hasOwnProperty("width")) {
+         if (!hitboxIsCircular(hitbox)) {
             // Rectangular
             
-            const rotation = (hitbox as RectangularHitbox).rotation + entity.rotation;
-            const halfWidth = (hitbox as RectangularHitbox).width / 2;
-            const halfHeight = (hitbox as RectangularHitbox).height / 2;
+            const rotation = hitbox.rotation;
+            const halfWidth = hitbox.width / 2;
+            const halfHeight = hitbox.height / 2;
             
             // Top
             {
@@ -192,7 +190,7 @@ export function renderEntityHitboxes(): void {
                const radians = i * 2 * Math.PI / CIRCLE_VERTEX_COUNT;
                // @Speed: Garbage collection
                
-               const radius = (hitbox as CircularHitbox).radius;
+               const radius = hitbox.radius;
                const bl = Point.fromVectorForm(radius, radians);
                const br = Point.fromVectorForm(radius, radians + step);
                const tl = Point.fromVectorForm(radius + BORDER_THICKNESS, radians);

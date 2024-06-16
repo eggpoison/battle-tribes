@@ -4,8 +4,7 @@ import { GrassBlocker, GrassBlockerCircle, GrassBlockerRectangle, blockerIsCircl
 import Chunk from "./Chunk";
 import { StructureType } from "webgl-test-shared/dist/structures";
 import Entity from "./Entity";
-import { hitboxIsCircular } from "./hitboxes/hitboxes";
-import { HitboxFlags } from "./hitboxes/BaseHitbox";
+import { HitboxFlags, hitboxIsCircular } from "webgl-test-shared/dist/hitboxes/hitboxes";
 
 const blockers = new Array<GrassBlocker>();
 const blockerAssociatedEntityIDs = new Array<number>();
@@ -92,8 +91,8 @@ export function createStructureGrassBlockers(structure: Entity<StructureType>): 
       }
 
       const position = structure.position.copy();
-      position.x += hitbox.offsetX;
-      position.y += hitbox.offsetY;
+      position.x += hitbox.offset.x;
+      position.y += hitbox.offset.y;
 
       if (hitboxIsCircular(hitbox)) {
          const blocker: GrassBlockerCircle = {

@@ -13,9 +13,14 @@ export function createRotationMatrix(rotation: number): Matrix3x3 {
    const sin = Math.sin(rotation);
    const cos = Math.cos(rotation);
 
+   // return [
+   //    sin, -cos, 0,
+   //    cos, sin, 0,
+   //    0, 0, 1
+   // ];
    return [
-      sin, -cos, 0,
-      cos, sin, 0,
+      cos, -sin, 0,
+      sin, cos, 0,
       0, 0, 1
    ];
 }
@@ -25,6 +30,14 @@ export function createTranslationMatrix(tx: number, ty: number): Matrix3x3 {
       1, 0, 0,
       0, 1, 0,
       tx, ty, 1
+   ];
+}
+
+export function createScaleMatrix(sx: number, sy: number): Matrix3x3 {
+   return [
+      sx, 0, 0,
+      0, sy, 0,
+      0, 0, 1
    ];
 }
 
@@ -48,7 +61,7 @@ export function matrixMultiply(matrixA: Matrix3x3, matrixB: Matrix3x3): Matrix3x
    var b20 = matrixB[2 * 3 + 0];
    var b21 = matrixB[2 * 3 + 1];
    var b22 = matrixB[2 * 3 + 2];
-   
+
    return [
      b00 * a00 + b01 * a10 + b02 * a20,
      b00 * a01 + b01 * a11 + b02 * a21,

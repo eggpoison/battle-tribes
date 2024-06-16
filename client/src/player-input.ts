@@ -6,16 +6,14 @@ import { Hotbar_setHotbarSelectedItemSlot, Hotbar_updateLeftThrownBattleaxeItemI
 import { BackpackInventoryMenu_setIsVisible } from "./components/game/inventories/BackpackInventory";
 import Board from "./Board";
 import { definiteGameState, latencyGameState } from "./game-state/game-states";
-import Game from "./Game";
-import CircularHitbox from "./hitboxes/CircularHitbox";
-import RectangularHitbox from "./hitboxes/RectangularHitbox";
+import Game, { GameInteractState } from "./Game";
 import { attemptEntitySelection } from "./entity-selection";
 import { playSound } from "./sound";
 import { attemptToCompleteNode } from "./research";
 import { StructureType, calculateStructurePlaceInfo } from "webgl-test-shared/dist/structures";
 import { ConsumableItemCategory, ConsumableItemInfo, ITEM_INFO_RECORD, ITEM_TYPE_RECORD, Inventory, InventoryName, Item, ItemType, PlaceableItemType, itemInfoIsTool } from "webgl-test-shared/dist/items";
 import { EntityType, LimbAction } from "webgl-test-shared/dist/entities";
-import { AttackPacket, HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
+import { AttackPacket } from "webgl-test-shared/dist/client-server-types";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { TRIBE_INFO_RECORD, TribeType } from "webgl-test-shared/dist/tribes";
@@ -26,8 +24,9 @@ import { LimbInfo } from "./entity-components/InventoryUseComponent";
 import InventoryComponent from "./entity-components/InventoryComponent";
 import { ENTITY_TYPE_TO_GHOST_TYPE_MAP, GhostInfo, setGhostInfo } from "./rendering/webgl/entity-ghost-rendering";
 import Camera from "./Camera";
-import { Hitbox } from "./hitboxes/hitboxes";
 import { WORKER_HUT_SIZE } from "./entity-components/HutComponent";
+import { calculateCursorWorldPositionX, calculateCursorWorldPositionY } from "./mouse";
+import { RectangularHitbox, CircularHitbox, Hitbox, HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
 
 enum PlaceableItemHitboxType {
    circular,
@@ -189,8 +188,8 @@ const getPlaceableEntityHeight = (entityType: EntityType, isPlacedOnWall: boolea
 }
 
 // @Cleanup: Remove these
-const testRectangularHitbox = new RectangularHitbox(1, 0, 0, HitboxCollisionType.soft, 1, -1, -1, 0);
-const testCircularHitbox = new CircularHitbox(1, 0, 0, HitboxCollisionType.soft, 1, -1);
+const testRectangularHitbox = new RectangularHitbox(1, new Point(0, 0), HitboxCollisionType.soft, 0, 0, 1, 0, -1, -1, 0);
+const testCircularHitbox = new CircularHitbox(1, new Point(0, 0), HitboxCollisionType.soft, 0, 0, 1, 0, -1);
 
 const hotbarItemAttackCooldowns: Record<number, number> = {};
 const offhandItemAttackCooldowns: Record<number, number> = {};
@@ -379,6 +378,25 @@ const createItemUseListeners = (): void => {
 
       // Only attempt to use an item if the game canvas was clicked
       if ((e.target as HTMLElement).id !== "game-canvas") {
+         return;
+      }
+
+      if (Game.getInteractState() === GameInteractState.summonEntity) {
+         if (Game.summonPacket === null) {
+            console.warn("summon packet is null");
+            return;
+         }
+         
+         if (e.button === 0) {
+            Game.summonPacket.position[0] = calculateCursorWorldPositionX(e.clientX)!;
+            Game.summonPacket.position[1] = calculateCursorWorldPositionY(e.clientY)!;
+            Game.summonPacket.rotation = 2 * Math.PI * Math.random();
+            
+            Client.sendEntitySummonPacket(Game.summonPacket);
+         } else if (e.button === 2) {
+            // Get out of summon entity mode
+            Game.setInteractState(GameInteractState.none);
+         }
          return;
       }
 
@@ -699,104 +717,104 @@ const unuseItem = (item: Item): void => {
 }
 
 // @Cleanup: sucks.
-export function canPlaceItem(placePosition: Point, placeRotation: number, item: Item, placingEntityType: EntityType, isPlacedOnWall: boolean): boolean {
-   if (!PLACEABLE_ENTITY_INFO_RECORD.hasOwnProperty(item.type)) {
-      throw new Error(`Item type '${item.type}' is not placeable.`);
-   }
+// export function canPlaceItem(placePosition: Point, placeRotation: number, item: Item, placingEntityType: EntityType, isPlacedOnWall: boolean): boolean {
+//    if (!PLACEABLE_ENTITY_INFO_RECORD.hasOwnProperty(item.type)) {
+//       throw new Error(`Item type '${item.type}' is not placeable.`);
+//    }
    
-   // Check for any special conditions
-   const placeableInfo = PLACEABLE_ENTITY_INFO_RECORD[item.type as PlaceableItemType];
-   if (typeof placeableInfo.canPlace !== "undefined" && !placeableInfo.canPlace()) {
-      return false;
-   }
+//    // Check for any special conditions
+//    const placeableInfo = PLACEABLE_ENTITY_INFO_RECORD[item.type as PlaceableItemType];
+//    if (typeof placeableInfo.canPlace !== "undefined" && !placeableInfo.canPlace()) {
+//       return false;
+//    }
 
-   let width = getPlaceableEntityWidth(placingEntityType, isPlacedOnWall);
-   let height = getPlaceableEntityHeight(placingEntityType, isPlacedOnWall);
-   if (width === null) {
-      width = placeableInfo.width;
-   }
-   if (height === null) {
-      height = placeableInfo.height;
-   }
+//    let width = getPlaceableEntityWidth(placingEntityType, isPlacedOnWall);
+//    let height = getPlaceableEntityHeight(placingEntityType, isPlacedOnWall);
+//    if (width === null) {
+//       width = placeableInfo.width;
+//    }
+//    if (height === null) {
+//       height = placeableInfo.height;
+//    }
 
-   let placeTestHitbox: Hitbox;
-   if (placeableInfo.hitboxType === PlaceableItemHitboxType.circular) {
-      testCircularHitbox.radius = width / 2; // For a circular hitbox, width and height will be the same
-      placeTestHitbox = testCircularHitbox;
-   } else {
-      testRectangularHitbox.width = width;
-      testRectangularHitbox.height = height;
-      testRectangularHitbox.recalculateHalfDiagonalLength();
-      testRectangularHitbox.rotation = placeRotation;
-      testRectangularHitbox.externalRotation = 0;
-      placeTestHitbox = testRectangularHitbox;
-   }
+//    let placeTestHitbox: Hitbox;
+//    if (placeableInfo.hitboxType === PlaceableItemHitboxType.circular) {
+//       testCircularHitbox.radius = width / 2; // For a circular hitbox, width and height will be the same
+//       placeTestHitbox = testCircularHitbox;
+//    } else {
+//       testRectangularHitbox.width = width;
+//       testRectangularHitbox.height = height;
+//       testRectangularHitbox.recalculateHalfDiagonalLength();
+//       testRectangularHitbox.rotation = placeRotation;
+//       testRectangularHitbox.externalRotation = 0;
+//       placeTestHitbox = testRectangularHitbox;
+//    }
    
-   placeTestHitbox.offset.x = 0;
-   placeTestHitbox.offset.y = 0;
-   placeTestHitbox.position.x = placePosition.x;
-   placeTestHitbox.position.y = placePosition.y;
-   placeTestHitbox.updateHitboxBounds(0);
+//    placeTestHitbox.offset.x = 0;
+//    placeTestHitbox.offset.y = 0;
+//    placeTestHitbox.position.x = placePosition.x;
+//    placeTestHitbox.position.y = placePosition.y;
+//    placeTestHitbox.updateHitboxBounds(0);
 
-   // Don't allow placing buildings in borders
-   if (placeTestHitbox.bounds[0] < 0 || placeTestHitbox.bounds[1] >= Settings.BOARD_UNITS || placeTestHitbox.bounds[2] < 0 || placeTestHitbox.bounds[3] >= Settings.BOARD_UNITS) {
-      return false;
-   }
+//    // Don't allow placing buildings in borders
+//    if (placeTestHitbox.bounds[0] < 0 || placeTestHitbox.bounds[1] >= Settings.BOARD_UNITS || placeTestHitbox.bounds[2] < 0 || placeTestHitbox.bounds[3] >= Settings.BOARD_UNITS) {
+//       return false;
+//    }
 
-   // 
-   // Check for entity collisions
-   // 
+//    // 
+//    // Check for entity collisions
+//    // 
 
-   const minChunkX = Math.floor(placeTestHitbox.bounds[0] / Settings.CHUNK_UNITS);
-   const maxChunkX = Math.floor(placeTestHitbox.bounds[1] / Settings.CHUNK_UNITS);
-   const minChunkY = Math.floor(placeTestHitbox.bounds[2] / Settings.CHUNK_UNITS);
-   const maxChunkY = Math.floor(placeTestHitbox.bounds[3] / Settings.CHUNK_UNITS);
+//    const minChunkX = Math.floor(placeTestHitbox.bounds[0] / Settings.CHUNK_UNITS);
+//    const maxChunkX = Math.floor(placeTestHitbox.bounds[1] / Settings.CHUNK_UNITS);
+//    const minChunkY = Math.floor(placeTestHitbox.bounds[2] / Settings.CHUNK_UNITS);
+//    const maxChunkY = Math.floor(placeTestHitbox.bounds[3] / Settings.CHUNK_UNITS);
    
-   for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
-      for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
-         const chunk = Board.getChunk(chunkX, chunkY);
-         for (const entity of chunk.entities) {
-            for (const hitbox of entity.hitboxes) {   
-               if (placeTestHitbox.isColliding(hitbox)) {
-                  return false;
-               }
-            }
-         }
-      }
-   }
+//    for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
+//       for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
+//          const chunk = Board.getChunk(chunkX, chunkY);
+//          for (const entity of chunk.entities) {
+//             for (const hitbox of entity.hitboxes) {   
+//                if (placeTestHitbox.isColliding(hitbox)) {
+//                   return false;
+//                }
+//             }
+//          }
+//       }
+//    }
 
-   // 
-   // Check for wall tile collisions
-   // 
+//    // 
+//    // Check for wall tile collisions
+//    // 
 
-   // @Cleanup: Use collision file, remove test hitbox
-   // @Speed: Garbage collection
-   const tileHitbox = new RectangularHitbox(1, 0, 0, HitboxCollisionType.soft, 1, Settings.TILE_SIZE, Settings.TILE_SIZE, 0);
+//    // @Cleanup: Use collision file, remove test hitbox
+//    // @Speed: Garbage collection
+//    const tileHitbox = new RectangularHitbox(1, new Point(0, 0), HitboxCollisionType.soft, 0, 0, 1, Settings.TILE_SIZE, Settings.TILE_SIZE, 0);
 
-   const minTileX = Math.floor(placeTestHitbox.bounds[0] / Settings.TILE_SIZE);
-   const maxTileX = Math.floor(placeTestHitbox.bounds[1] / Settings.TILE_SIZE);
-   const minTileY = Math.floor(placeTestHitbox.bounds[2] / Settings.TILE_SIZE);
-   const maxTileY = Math.floor(placeTestHitbox.bounds[3] / Settings.TILE_SIZE);
+//    const minTileX = Math.floor(placeTestHitbox.bounds[0] / Settings.TILE_SIZE);
+//    const maxTileX = Math.floor(placeTestHitbox.bounds[1] / Settings.TILE_SIZE);
+//    const minTileY = Math.floor(placeTestHitbox.bounds[2] / Settings.TILE_SIZE);
+//    const maxTileY = Math.floor(placeTestHitbox.bounds[3] / Settings.TILE_SIZE);
 
-   for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
-      for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
-         const tile = Board.getTile(tileX, tileY);
-         if (!tile.isWall) {
-            continue;
-         }
+//    for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
+//       for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
+//          const tile = Board.getTile(tileX, tileY);
+//          if (!tile.isWall) {
+//             continue;
+//          }
 
-         tileHitbox.position.x = (tileX + 0.5) * Settings.TILE_SIZE;
-         tileHitbox.position.y = (tileY + 0.5) * Settings.TILE_SIZE;
-         tileHitbox.updateHitboxBounds(0);
+//          tileHitbox.position.x = (tileX + 0.5) * Settings.TILE_SIZE;
+//          tileHitbox.position.y = (tileY + 0.5) * Settings.TILE_SIZE;
+//          tileHitbox.updateHitboxBounds(0);
 
-         if (placeTestHitbox.isColliding(tileHitbox)) {
-            return false;
-         }
-      }
-   }
+//          if (placeTestHitbox.isColliding(tileHitbox)) {
+//             return false;
+//          }
+//       }
+//    }
 
-   return true;
-}
+//    return true;
+// }
 
 const itemRightClickDown = (item: Item, isOffhand: boolean, itemSlot: number): void => {
    const inventoryUseComponent = Player.instance!.getServerComponent(ServerComponentType.inventoryUse);
@@ -909,7 +927,7 @@ const itemRightClickDown = (item: Item, isOffhand: boolean, itemSlot: number): v
          const structureType = ITEM_INFO_RECORD[item.type as PlaceableItemType].entityType;
          const placeInfo = calculateStructurePlaceInfo(Player.instance!.position, Player.instance!.rotation, structureType, Board.getChunks());
          
-         if (canPlaceItem(placeInfo.position, placeInfo.rotation, item, structureType, false)) {
+         if (placeInfo.isValid) {
             Client.sendItemUsePacket();
             useInfo.lastAttackTicks = Board.ticks;
          }
@@ -1060,7 +1078,7 @@ const tickItem = (item: Item, itemSlot: number): void => {
             position: placeInfo.position,
             rotation: placeInfo.rotation,
             ghostType: ENTITY_TYPE_TO_GHOST_TYPE_MAP[placeInfo.entityType],
-            tint: canPlaceItem(placeInfo.position, placeInfo.rotation, item, structureType, false) ? [1, 1, 1] : [1.5, 0.5, 0.5],
+            tint: placeInfo.isValid ? [1, 1, 1] : [1.5, 0.5, 0.5],
             opacity: 0.5
          };
          setGhostInfo(ghostInfo);

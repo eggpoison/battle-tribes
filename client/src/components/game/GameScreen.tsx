@@ -14,6 +14,8 @@ import TechInfocard from "./TechInfocard";
 import InventorySelector from "./inventories/InventorySelector";
 import InspectHealthBar from "./InspectHealthBar";
 import Infocards from "./infocards/Infocards";
+import { GameInteractState } from "../../Game";
+import SummonCrosshair from "./SummonCrosshair";
 
 export let showPauseScreen: () => void = () => {};
 export let hidePauseScreen: () => void = () => {};
@@ -26,27 +28,24 @@ export let toggleCinematicMode: () => void;
 
 export let gameScreenSetIsDead: (isDead: boolean) => void;
 
-const GameScreen = () => {
-   const hasLoaded = useRef<boolean>(false);
+interface GameScreenProps {
+   readonly interactState: GameInteractState;
+}
+
+const GameScreen = (props: GameScreenProps) => {
    const [isPaused, setIsPaused] = useState(false);
    const [settingsIsOpen, setSettingsIsOpen] = useState(false);
    const [isDead, setIsDead] = useState(false);
    const [cinematicModeIsEnabled, setCinematicModeIsEnabled] = useState(false);
 
    useEffect(() => {
-      if (!hasLoaded.current) {
-         hasLoaded.current = true;
+      showPauseScreen = (): void => setIsPaused(true);
+      hidePauseScreen = (): void => setIsPaused(false);
+      
+      openSettingsMenu = (): void => setSettingsIsOpen(true);
+      closeSettingsMenu = (): void => setSettingsIsOpen(false);
 
-         showPauseScreen = (): void => setIsPaused(true);
-         hidePauseScreen = (): void => setIsPaused(false);
-         
-         openSettingsMenu = (): void => setSettingsIsOpen(true);
-         closeSettingsMenu = (): void => setSettingsIsOpen(false);
-
-         gameScreenSetIsDead = (isDead: boolean): void => {
-            setIsDead(isDead);
-         }
-      }
+      gameScreenSetIsDead = setIsDead;
    }, []);
 
    useEffect(() => {
@@ -83,7 +82,9 @@ const GameScreen = () => {
          <DeathScreen />
       ) : undefined}
 
-      <NerdVision />
+      {props.interactState !== GameInteractState.summonEntity ? (
+         <NerdVision />
+      ) : null}
 
       {isPaused && !isDead ? <PauseScreen /> : null}
 
@@ -99,6 +100,17 @@ const GameScreen = () => {
       <InventorySelector />
 
       <InspectHealthBar />
+
+      {props.interactState === GameInteractState.summonEntity ? <>
+         <div id="summon-prompt">
+            <div className="line left"></div>
+            <h2>Click to spawn</h2>
+            <div className="line right"></div>
+         </div>
+
+         <SummonCrosshair />
+      </> : null}
+
    </>;
 }
 

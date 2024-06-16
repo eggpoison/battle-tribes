@@ -1,4 +1,3 @@
-import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { ScarInfo } from "webgl-test-shared/dist/components";
 import { EntityType } from "webgl-test-shared/dist/entities";
@@ -6,7 +5,6 @@ import { TRIBE_INFO_RECORD } from "webgl-test-shared/dist/tribes";
 import { randInt, Point } from "webgl-test-shared/dist/utils";
 import Entity from "../../Entity";
 import Tribe from "../../Tribe";
-import CircularHitbox from "../../hitboxes/CircularHitbox";
 import { HealthComponent, HealthComponentArray } from "../../components/HealthComponent";
 import { InventoryComponent, InventoryComponentArray } from "../../components/InventoryComponent";
 import { InventoryUseComponent, InventoryUseComponentArray } from "../../components/InventoryUseComponent";
@@ -19,6 +17,7 @@ import { tickTribesman } from "./tribesman-ai/tribesman-ai";
 import { PhysicsComponent, PhysicsComponentArray } from "../../components/PhysicsComponent";
 import { TribeComponent, TribeComponentArray } from "../../components/TribeComponent";
 import { TribeWarriorComponent, TribeWarriorComponentArray } from "../../components/TribeWarriorComponent";
+import { CircularHitbox, HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
 
 export const TRIBE_WARRIOR_RADIUS = 32;
 export const TRIBE_WARRIOR_VISION_RANGE = 560;
@@ -46,7 +45,7 @@ const generateScars = (): ReadonlyArray<ScarInfo> => {
 export function createTribeWarrior(position: Point, rotation: number, tribe: Tribe, hutID: number): Entity {
    const warrior = new Entity(position, rotation, EntityType.tribeWarrior, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
-   const hitbox = new CircularHitbox(position, 1.5, 0, 0, HitboxCollisionType.soft, TRIBE_WARRIOR_RADIUS, warrior.getNextHitboxLocalID(), warrior.rotation, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK);
+   const hitbox = new CircularHitbox(1.5, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, warrior.getNextHitboxLocalID(), 0, TRIBE_WARRIOR_RADIUS);
    warrior.addHitbox(hitbox);
    
    const tribeInfo = TRIBE_INFO_RECORD[tribe.type];

@@ -1,11 +1,10 @@
-import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
 import { FenceGateComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
 import { DoorToggleType } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { angle, lerp } from "webgl-test-shared/dist/utils";
 import { ComponentArray } from "./ComponentArray";
 import Entity from "../Entity";
-import RectangularHitbox from "../hitboxes/RectangularHitbox";
+import { RectangularHitbox, HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
 
 // @Cleanup: All the door toggling logic is stolen from DoorComponent.ts
 
@@ -38,8 +37,8 @@ const updateDoorOpenProgress = (fenceGate: Entity, fenceGateComponent: FenceGate
    const yOffset = doorHalfDiagonalLength * Math.cos(offsetDirection) - doorHalfDiagonalLength * Math.cos(baseRotation + angleToCenter);
 
    const hitbox = fenceGate.hitboxes[0] as RectangularHitbox;
-   hitbox.offsetX = xOffset;
-   hitbox.offsetY = yOffset;
+   hitbox.offset.x = xOffset;
+   hitbox.offset.y = yOffset;
    hitbox.relativeRotation = rotation - Math.PI/2;
 }
 

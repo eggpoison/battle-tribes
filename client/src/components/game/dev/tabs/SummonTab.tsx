@@ -1,7 +1,10 @@
 import { EntityType, NUM_ENTITY_TYPES } from "webgl-test-shared/dist/entities";
 import CLIENT_ENTITY_INFO_RECORD from "../../../../client-entity-info";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import DevmodeRangeInput from "../DevmodeRangeInput";
+import { closeCurrentMenu, setMenuCloseFunction } from "../../../../player-input";
+import Game, { GameInteractState } from "../../../../Game";
+import { EntitySummonPacket } from "webgl-test-shared/dist/dev-packets";
 
 type EntityTypeTuple = [EntityType, string];
 
@@ -52,8 +55,21 @@ const SummonTab = () => {
    const [spawnRange, setSpawnRange] = useState(0);
 
    const beginSummon = (): void => {
-
+      // Close the tab
+      closeCurrentMenu();
+      Game.setInteractState(GameInteractState.summonEntity);
    }
+
+   useEffect(() => {
+      const packet: EntitySummonPacket = {
+         // The position and rotation values are overriden with the actual values when the packet is sent
+         position: [0, 0],
+         rotation: 0,
+         entityType: selectedEntityType,
+         summonData: {}
+      };
+      Game.summonPacket = packet;
+   }, [selectedEntityType, spawnRange]);
 
    const entitySelectorElems = new Array<JSX.Element>();
    for (let i = 0; i < NUM_ENTITY_TYPES; i++) {

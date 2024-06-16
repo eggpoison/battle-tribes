@@ -1,4 +1,3 @@
-import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { EntityType, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
 import { ItemType } from "webgl-test-shared/dist/items";
@@ -7,7 +6,6 @@ import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { distance, lerp, Point, randFloat, randInt } from "webgl-test-shared/dist/utils";
 import Entity from "../../Entity";
 import { HealthComponent, HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
-import CircularHitbox from "../../hitboxes/CircularHitbox";
 import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
 import { GolemComponent, GolemComponentArray } from "../../components/GolemComponent";
 import Board from "../../Board";
@@ -17,6 +15,7 @@ import { createItemsOverEntity } from "../../entity-shared";
 import { PhysicsComponent, PhysicsComponentArray, applyKnockback } from "../../components/PhysicsComponent";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
 import { PebblumComponentArray } from "../../components/PebblumComponent";
+import { CircularHitbox, HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
 
 export const BODY_GENERATION_RADIUS = 55;
 
@@ -38,7 +37,7 @@ const hitboxIsTooClose = (golem: Entity, hitboxX: number, hitboxY: number): bool
    for (let j = 0; j < golem.hitboxes.length; j++) {
       const otherHitbox = golem.hitboxes[j];
 
-      const dist = distance(hitboxX, hitboxY, golem.position.x + otherHitbox.offsetX, golem.position.y + otherHitbox.offsetY);
+      const dist = distance(hitboxX, hitboxY, golem.position.x + otherHitbox.offset.x, golem.position.y + otherHitbox.offset.y);
       if (dist <= (otherHitbox as CircularHitbox).radius + 1) {
          return true;
       }
@@ -52,7 +51,7 @@ const getMinSeparationFromOtherHitboxes = (golem: Entity, hitboxX: number, hitbo
    for (let i = 0; i < golem.hitboxes.length; i++) {
       const otherHitbox = golem.hitboxes[i] as CircularHitbox;
 
-      const dist = distance(hitboxX, hitboxY, golem.position.x + otherHitbox.offsetX, golem.position.y + otherHitbox.offsetY);
+      const dist = distance(hitboxX, hitboxY, golem.position.x + otherHitbox.offset.x, golem.position.y + otherHitbox.offset.y);
       const separation = dist - otherHitbox.radius - hitboxRadius;
       if (separation < minSeparation) {
          minSeparation = separation;
@@ -65,8 +64,8 @@ const updateGolemHitboxPositions = (golem: Entity, golemComponent: GolemComponen
    for (let i = 0; i < golemComponent.rockInfoArray.length; i++) {
       const rockInfo = golemComponent.rockInfoArray[i];
 
-      rockInfo.hitbox.offsetX = lerp(rockInfo.sleepOffsetX, rockInfo.awakeOffsetX, wakeProgress);
-      rockInfo.hitbox.offsetY = lerp(rockInfo.sleepOffsetY, rockInfo.awakeOffsetY, wakeProgress);
+      rockInfo.hitbox.offset.x = lerp(rockInfo.sleepOffsetX, rockInfo.awakeOffsetX, wakeProgress);
+      rockInfo.hitbox.offset.y = lerp(rockInfo.sleepOffsetY, rockInfo.awakeOffsetY, wakeProgress);
    }
 
    const physicsComponent = PhysicsComponentArray.getComponent(golem.id);
@@ -77,11 +76,11 @@ export function createGolem(position: Point): Entity {
    const golem = new Entity(position, 2 * Math.PI * Math.random(), EntityType.golem, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
    // Create core hitbox
-   const hitbox = new CircularHitbox(golem.position, ROCK_MASSIVE_MASS, 0, 0, HitboxCollisionType.soft, 36, golem.getNextHitboxLocalID(), golem.rotation, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK);
+   const hitbox = new CircularHitbox(ROCK_MASSIVE_MASS, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, golem.getNextHitboxLocalID(), 0, 36);
    golem.addHitbox(hitbox);
 
    // Create head hitbox
-   golem.addHitbox(new CircularHitbox(golem.position, ROCK_LARGE_MASS, 0, 45, HitboxCollisionType.soft, 32, golem.getNextHitboxLocalID(), golem.rotation, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK));
+   golem.addHitbox(new CircularHitbox(ROCK_LARGE_MASS, new Point(0, 45), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, golem.getNextHitboxLocalID(), 0, 32));
    
    // Create body hitboxes
    let i = 0;
@@ -109,7 +108,7 @@ export function createGolem(position: Point): Entity {
       }
 
       const mass = size === 0 ? ROCK_SMALL_MASS : ROCK_MEDIUM_MASS;
-      const hitbox = new CircularHitbox(golem.position, mass, offsetX, offsetY, HitboxCollisionType.soft, radius, golem.getNextHitboxLocalID(), golem.rotation, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK);
+      const hitbox = new CircularHitbox(mass, new Point(offsetX, offsetY), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, golem.getNextHitboxLocalID(), 0, radius);
       golem.addHitbox(hitbox);
 
       i++;
@@ -118,12 +117,12 @@ export function createGolem(position: Point): Entity {
    // Create hand hitboxes
    for (let j = 0; j < 2; j++) {
       const offsetX = 60 * (j === 0 ? -1 : 1);
-      const hitbox = new CircularHitbox(golem.position, ROCK_MEDIUM_MASS, offsetX, 50, HitboxCollisionType.soft, 20, golem.getNextHitboxLocalID(), golem.rotation, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK);
+      const hitbox = new CircularHitbox(ROCK_MEDIUM_MASS, new Point(offsetX, 50), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, golem.getNextHitboxLocalID(), 0, 20);
       golem.addHitbox(hitbox);
 
       // Wrist
       const inFactor = 0.75;
-      golem.addHitbox(new CircularHitbox(golem.position, ROCK_TINY_MASS, offsetX * inFactor, 50 * inFactor, HitboxCollisionType.soft, 12, golem.getNextHitboxLocalID(), golem.rotation, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK));
+      golem.addHitbox(new CircularHitbox(ROCK_TINY_MASS, new Point(offsetX * inFactor, 50 * inFactor), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, golem.getNextHitboxLocalID(), 0, 12));
    }
 
    PhysicsComponentArray.addComponent(golem.id, new PhysicsComponent(0, 0, 0, 0, true, false));
@@ -135,8 +134,8 @@ export function createGolem(position: Point): Entity {
    // Set initial hitbox positions (sleeping)
    for (let i = 0; i < golemComponent.rockInfoArray.length; i++) {
       const rockInfo = golemComponent.rockInfoArray[i];
-      rockInfo.hitbox.offsetX = rockInfo.sleepOffsetX;
-      rockInfo.hitbox.offsetY = rockInfo.sleepOffsetY;
+      rockInfo.hitbox.offset.x = rockInfo.sleepOffsetX;
+      rockInfo.hitbox.offset.y = rockInfo.sleepOffsetY;
    }
 
    return golem;
@@ -179,8 +178,8 @@ const shiftRocks = (golem: Entity, golemComponent: GolemComponent): void => {
       }
 
       const shiftProgress = rockInfo.currentShiftTimerTicks / ROCK_SHIFT_INTERVAL;
-      rockInfo.hitbox.offsetX = lerp(rockInfo.lastOffsetX, rockInfo.targetOffsetX, shiftProgress);
-      rockInfo.hitbox.offsetY = lerp(rockInfo.lastOffsetY, rockInfo.targetOffsetY, shiftProgress);
+      rockInfo.hitbox.offset.x = lerp(rockInfo.lastOffsetX, rockInfo.targetOffsetX, shiftProgress);
+      rockInfo.hitbox.offset.y = lerp(rockInfo.lastOffsetY, rockInfo.targetOffsetY, shiftProgress);
    }
 
    const physicsComponent = PhysicsComponentArray.getComponent(golem.id);

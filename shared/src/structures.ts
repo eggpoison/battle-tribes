@@ -59,11 +59,19 @@ export interface StructurePlaceInfo {
    readonly entityType: StructureType;
    readonly connectedSidesBitset: number;
    readonly connectedEntityIDs: ConnectedEntityIDs;
+   readonly isValid: boolean;
 }
 
 export interface StructureConnectionInfo {
    readonly connectedSidesBitset: number;
    readonly connectedEntityIDs: ConnectedEntityIDs;
+}
+
+export function createEmptyStructureConnectionInfo(): StructureConnectionInfo {
+   return {
+      connectedSidesBitset: 0,
+      connectedEntityIDs: [0, 0, 0, 0]
+   };
 }
 
 const getSnapOffset = (structureType: StructureType, snapType: SnapType): number => {
@@ -297,7 +305,9 @@ const groupTransforms = (transforms: ReadonlyArray<StructureTransformInfo>, stru
          rotation: firstTransform.rotation,
          connectedSidesBitset: snappedSidesBitset,
          connectedEntityIDs: snappedEntityIDs,
-         entityType: structureType
+         entityType: structureType,
+         // @Temporary
+         isValid: true
       };
       placeInfos.push(placeInfo);
    }
@@ -326,12 +336,15 @@ export function calculateStructurePlaceInfo(placeOrigin: Point, placingEntityRot
    const placeInfos = groupTransforms(candidatePositions, structureType);
 
    if (placeInfos.length === 0) {
+      // If no connections are found, use the regular place position
       return {
          position: regularPlacePosition,
          rotation: placingEntityRotation,
          connectedSidesBitset: 0,
          connectedEntityIDs: [0, 0, 0, 0],
          entityType: structureType,
+         // @Temporary
+         isValid: true
       };
    } else {
       // @Incomplete:

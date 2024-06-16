@@ -1,11 +1,9 @@
-import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { EntityType, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { Point } from "webgl-test-shared/dist/utils";
 import Entity from "../../Entity";
-import RectangularHitbox from "../../hitboxes/RectangularHitbox";
 import { HealthComponent, HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
 import { StatusEffectComponent, StatusEffectComponentArray, applyStatusEffect } from "../../components/StatusEffectComponent";
 import { EntityRelationship, TribeComponent, TribeComponentArray, getEntityRelationship } from "../../components/TribeComponent";
@@ -13,32 +11,29 @@ import Tribe from "../../Tribe";
 import { SpikesComponent, SpikesComponentArray } from "../../components/SpikesComponent";
 import { StructureComponentArray, StructureComponent, isAttachedToWall } from "../../components/StructureComponent";
 import { StructureConnectionInfo } from "webgl-test-shared/dist/structures";
-import { Hitbox } from "../../hitboxes/hitboxes";
-import { HitboxFlags } from "../../hitboxes/BaseHitbox";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
+import { Hitbox, RectangularHitbox, HitboxCollisionType, HitboxFlags } from "webgl-test-shared/dist/hitboxes/hitboxes";
 
 const FLOOR_HITBOX_SIZE = 48 - 0.05;
 
 const WALL_HITBOX_WIDTH = 56 - 0.05;
 const WALL_HITBOX_HEIGHT = 32 - 0.05;
 
-export function createFloorPunjiSticksHitboxes(parentPosition: Point, localID: number, parentRotation: number): ReadonlyArray<Hitbox> {
+export function createFloorPunjiSticksHitboxes(localID: number): ReadonlyArray<Hitbox> {
    const hitboxes = new Array<Hitbox>();
    
    // @Hack mass
-   const hitbox = new RectangularHitbox(parentPosition, Number.EPSILON, 0, 0, HitboxCollisionType.soft, localID, parentRotation, FLOOR_HITBOX_SIZE, FLOOR_HITBOX_SIZE, 0, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK);
-   hitbox.flags |= HitboxFlags.NON_GRASS_BLOCKING;
+   const hitbox = new RectangularHitbox(Number.EPSILON, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, localID, HitboxFlags.NON_GRASS_BLOCKING, FLOOR_HITBOX_SIZE, FLOOR_HITBOX_SIZE, 0);
    hitboxes.push(hitbox);
    
    return hitboxes;
 }
 
-export function createWallPunjiSticksHitboxes(parentPosition: Point, localID: number, parentRotation: number): ReadonlyArray<Hitbox> {
+export function createWallPunjiSticksHitboxes(localID: number): ReadonlyArray<Hitbox> {
    const hitboxes = new Array<Hitbox>();
 
    // @Hack mass
-   const hitbox = new RectangularHitbox(parentPosition, Number.EPSILON, 0, 0, HitboxCollisionType.soft, localID, parentRotation, WALL_HITBOX_WIDTH, WALL_HITBOX_HEIGHT, 0, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK);
-   hitbox.flags |= HitboxFlags.NON_GRASS_BLOCKING;
+   const hitbox = new RectangularHitbox(Number.EPSILON, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, localID, HitboxFlags.NON_GRASS_BLOCKING, WALL_HITBOX_WIDTH, WALL_HITBOX_HEIGHT, 0);
    hitboxes.push(hitbox);
    
    return hitboxes;
@@ -50,7 +45,7 @@ export function createPunjiSticks(position: Point, rotation: number, tribe: Trib
    
    const punjiSticks = new Entity(position, rotation, entityType, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
-   const hitboxes = isAttached ? createWallPunjiSticksHitboxes(position, punjiSticks.getNextHitboxLocalID(), rotation) : createFloorPunjiSticksHitboxes(position, punjiSticks.getNextHitboxLocalID(), rotation);
+   const hitboxes = isAttached ? createWallPunjiSticksHitboxes(punjiSticks.getNextHitboxLocalID()) : createFloorPunjiSticksHitboxes(punjiSticks.getNextHitboxLocalID());
    for (let i = 0; i < hitboxes.length; i++) {
       punjiSticks.addHitbox(hitboxes[i]);
    }

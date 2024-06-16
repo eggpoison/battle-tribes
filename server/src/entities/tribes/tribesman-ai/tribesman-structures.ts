@@ -5,6 +5,7 @@ import { PathfindingSettings } from "webgl-test-shared/dist/settings";
 import { calculateStructureConnectionInfo } from "webgl-test-shared/dist/structures";
 import { TribesmanTitle } from "webgl-test-shared/dist/titles";
 import { angle, getAngleDiff } from "webgl-test-shared/dist/utils";
+import { updateHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes"
 import Board from "../../../Board";
 import Entity from "../../../Entity";
 import Tribe from "../../../Tribe";
@@ -35,7 +36,11 @@ export function goPlaceBuilding(tribesman: Entity, hotbarInventory: Inventory, t
    const plan = goal.plan;
    
    const entityType = (ITEM_INFO_RECORD[plan.buildingRecipe.product] as PlaceableItemInfo).entityType;
-   const hitboxes = createBuildingHitboxes(entityType, plan.position, 1, plan.rotation);
+   const hitboxes = createBuildingHitboxes(entityType, 1);
+   for (let i = 0; i < hitboxes.length; i++) {
+      const hitbox = hitboxes[i];
+      updateHitbox(hitbox, plan.position.x, plan.position.y, plan.rotation);
+   }
    
    const blockingEntities = getHitboxesCollidingEntities(hitboxes);
    for (let i = 0; i < blockingEntities.length; i++) {

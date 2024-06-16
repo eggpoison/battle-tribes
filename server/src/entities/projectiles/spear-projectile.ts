@@ -1,10 +1,8 @@
-import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { EntityType, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
 import { Item, ItemType } from "webgl-test-shared/dist/items";
 import { Point } from "webgl-test-shared/dist/utils";
 import Entity from "../../Entity";
-import RectangularHitbox from "../../hitboxes/RectangularHitbox";
 import { createItemEntity } from "../item-entity";
 import { HealthComponentArray, damageEntity } from "../../components/HealthComponent";
 import { ThrowingProjectileComponent, ThrowingProjectileComponentArray } from "../../components/ThrowingProjectileComponent";
@@ -14,6 +12,7 @@ import { EntityRelationship, getEntityRelationship } from "../../components/Trib
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityCreationInfo } from "../../components";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
+import { HitboxCollisionType, RectangularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
 
 type ComponentTypes = [ServerComponentType.physics, ServerComponentType.throwingProjectile];
 
@@ -22,7 +21,7 @@ const DROP_VELOCITY = 400;
 export function createSpearProjectile(position: Point, rotation: number, tribeMemberID: number, item: Item): EntityCreationInfo<ComponentTypes> {
    const spear = new Entity(position, rotation, EntityType.spearProjectile, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
-   const hitbox = new RectangularHitbox(position, 0.5, 0, 0, HitboxCollisionType.soft, spear.getNextHitboxLocalID(), spear.rotation, 12, 60, 0, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK);
+   const hitbox = new RectangularHitbox(0.5, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, spear.getNextHitboxLocalID(), 0, 12, 60, 0);
    spear.addHitbox(hitbox);
 
    const physicsComponent = new PhysicsComponent(0, 0, 0, 0, true, false);

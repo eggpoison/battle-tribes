@@ -14,6 +14,7 @@ import { TribeComponentArray } from "../../../components/TribeComponent";
 import { TribesmanAIComponentArray } from "../../../components/TribesmanAIComponent";
 import { craftingStationExists } from "./tribesman-crafting";
 import { getBestToolItemSlot } from "./tribesman-ai-utils";
+import { updateHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
 
 // @Cleanup: can this be inferred from stuff like the entity->resource-dropped record?
 const TOOL_TYPE_FOR_MATERIAL_RECORD: Record<ItemType, ToolType | null> = {
@@ -217,14 +218,15 @@ const generateRandomNearbyPosition = (tribesman: Entity, entityType: StructureTy
       
       const rotation = 2 * Math.PI * Math.random();
 
-      const hitboxes = createBuildingHitboxes(entityType, position, 1, rotation);
-
-      // @Incomplete: Make sure hitboxes aren't colliding with an entity
-
-      // Make sure the hitboxes don't go outside the world
+      // Make sure the hitboxes would be in a valid position
+      const hitboxes = createBuildingHitboxes(entityType, 1);
       for (let i = 0; i < hitboxes.length; i++) {
          const hitbox = hitboxes[i];
-
+         updateHitbox(hitbox, position.x, position.y, rotation);
+         
+         // @Incomplete: Make sure hitboxes aren't colliding with an entity
+         
+         // Make sure the hitboxes don't go outside the world
          const minX = hitbox.calculateHitboxBoundsMinX();
          const maxX = hitbox.calculateHitboxBoundsMaxX();
          const minY = hitbox.calculateHitboxBoundsMinY();
@@ -329,6 +331,7 @@ const createGoalForRecipe = (goals: Array<TribesmanGoal>, tribesman: Entity, tri
       const inventoryComponent = InventoryComponentArray.getComponent(tribesman.id);
       const hotbarInventory = getInventory(inventoryComponent, InventoryName.hotbar);
       
+      // @Bug: shouldn't gather all required items, should only gather items which there aren't enough of.
       const requiredItems = Object.keys(recipe.ingredients).map(ingredientTypeString => Number(ingredientTypeString));
       createItemGatherGoal(goals, tribesman, hotbarInventory, requiredItems);
       return;
@@ -349,6 +352,7 @@ const createCraftGoal = (goals: Array<TribesmanGoal>, tribesman: Entity, itemTyp
    for (let i = 0; i < productChain.length; i++) {
       const currentProductInfo = productChain[i];
 
+      // @Incomplete
       // Don't add items which we already have enough of.
 
       // If the item can be crafted, go craft it

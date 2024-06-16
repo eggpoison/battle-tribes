@@ -2,13 +2,11 @@ import { Point, distance, randFloat, randInt, rotateXAroundOrigin, rotateYAround
 import { EntityType, EntityTypeString } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { TileType } from "webgl-test-shared/dist/tiles";
-import { EntityData, HitData, HitFlags, HitboxCollisionType, RIVER_STEPPING_STONE_SIZES } from "webgl-test-shared/dist/client-server-types";
+import { EntityData, HitData, HitFlags, RIVER_STEPPING_STONE_SIZES } from "webgl-test-shared/dist/client-server-types";
 import { ComponentData, ServerComponentType, ServerComponentTypeString } from "webgl-test-shared/dist/components";
 import RenderPart, { RenderObject } from "./render-parts/RenderPart";
 import Chunk from "./Chunk";
-import RectangularHitbox from "./hitboxes/RectangularHitbox";
 import { Tile } from "./Tile";
-import CircularHitbox from "./hitboxes/CircularHitbox";
 import Board from "./Board";
 import { createHealingParticle, createSlimePoolParticle, createSparkParticle, createWaterSplashParticle } from "./particles";
 import { playSound } from "./sound";
@@ -17,7 +15,8 @@ import { ClientComponentClass, ClientComponentType, ClientComponents, ServerComp
 import Component from "./entity-components/Component";
 import { removeLightsAttachedToEntity, removeLightsAttachedToRenderPart } from "./lights";
 import { EntityEvent } from "webgl-test-shared/dist/entity-events";
-import { Hitbox, hitboxIsCircular } from "./hitboxes/hitboxes";
+import { hitboxIsCircular, Hitbox, CircularHitbox, RectangularHitbox, updateHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
+import { createCircularHitboxFromData, createRectangularHitboxFromData } from "./client/Client";
 
 export interface RenderPartOverlayGroup {
    readonly textureSource: string;
@@ -49,9 +48,8 @@ export function getRandomPointInEntity(entity: Entity): Point {
       const xOffset = randFloat(-halfWidth, halfWidth);
       const yOffset = randFloat(-halfHeight, halfHeight);
 
-      const hitboxRotation = hitbox.rotation;
-      const x = entity.position.x + rotateXAroundOrigin(xOffset, yOffset, entity.rotation + hitboxRotation);
-      const y = entity.position.y + rotateYAroundOrigin(xOffset, yOffset, entity.rotation + hitboxRotation);
+      const x = entity.position.x + rotateXAroundOrigin(xOffset, yOffset, hitbox.rotation);
+      const y = entity.position.y + rotateYAroundOrigin(xOffset, yOffset, hitbox.rotation);
       return new Point(x, y);
    }
 }
@@ -264,16 +262,9 @@ abstract class Entity<T extends EntityType = EntityType> extends RenderObject {
       this.allRenderParts.splice(this.allRenderParts.indexOf(renderPart), 1);
    }
 
-   public addCircularHitbox(hitbox: CircularHitbox): void {
+   public addHitbox(hitbox: Hitbox): void {
+      updateHitbox(hitbox, this.position.x, this.position.y, this.rotation);
       this.hitboxes.push(hitbox);
-      hitbox.updateFromEntity(this);
-      hitbox.updateHitboxBounds();
-   }
-
-   public addRectangularHitbox(hitbox: RectangularHitbox): void {
-      this.hitboxes.push(hitbox);
-      hitbox.updateFromEntity(this);
-      hitbox.updateHitboxBounds(this.rotation);
    }
 
    public remove(): void {
@@ -392,10 +383,15 @@ abstract class Entity<T extends EntityType = EntityType> extends RenderObject {
       
       // Find containing chunks
       for (const hitbox of this.hitboxes) {
-         const minChunkX = Math.max(Math.min(Math.floor(hitbox.bounds[0] / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
-         const maxChunkX = Math.max(Math.min(Math.floor(hitbox.bounds[1] / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
-         const minChunkY = Math.max(Math.min(Math.floor(hitbox.bounds[2] / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
-         const maxChunkY = Math.max(Math.min(Math.floor(hitbox.bounds[3] / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
+         const minX = hitbox.calculateHitboxBoundsMinX();
+         const maxX = hitbox.calculateHitboxBoundsMaxX();
+         const minY = hitbox.calculateHitboxBoundsMinY();
+         const maxY = hitbox.calculateHitboxBoundsMaxY();
+
+         const minChunkX = Math.max(Math.min(Math.floor(minX / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
+         const maxChunkX = Math.max(Math.min(Math.floor(maxX / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
+         const minChunkY = Math.max(Math.min(Math.floor(minY / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
+         const maxChunkY = Math.max(Math.min(Math.floor(maxY / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
          
          for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
             for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
@@ -422,6 +418,7 @@ abstract class Entity<T extends EntityType = EntityType> extends RenderObject {
       }
    }
 
+   // @Cleanup: remove
    public updateRenderPosition(frameProgress: number): void {
       this.renderPosition.x = this.position.x;
       this.renderPosition.y = this.position.y;
@@ -443,8 +440,7 @@ abstract class Entity<T extends EntityType = EntityType> extends RenderObject {
 
    private updateHitboxes(): void {
       for (const hitbox of this.hitboxes) {
-         hitbox.updateFromEntity(this);
-         hitbox.updateHitboxBounds(this.rotation);
+         updateHitbox(hitbox, this.position.x, this.position.y, this.rotation);
       }
    }
 
@@ -523,13 +519,12 @@ abstract class Entity<T extends EntityType = EntityType> extends RenderObject {
             hitbox.radius = hitboxData.radius;
             hitbox.offset.x = hitboxData.offsetX;
             hitbox.offset.y = hitboxData.offsetY;
-            hitbox.collisionType = hitboxData.collisionType as unknown as HitboxCollisionType;
-            hitbox.updateFromEntity(this);
-            hitbox.updateHitboxBounds();
+            hitbox.collisionType = hitboxData.collisionType;
+            updateHitbox(hitbox, this.position.x, this.position.y, this.rotation);
          } else {
             // Create new hitbox
-            hitbox = new CircularHitbox(hitboxData.mass, hitboxData.offsetX, hitboxData.offsetY, hitboxData.collisionType as unknown as HitboxCollisionType, hitboxData.localID, hitboxData.radius);
-            this.addCircularHitbox(hitbox);
+            hitbox = createCircularHitboxFromData(hitboxData);
+            this.addHitbox(hitbox);
          }
       }
       for (let i = 0; i < data.rectangularHitboxes.length; i++) {
@@ -555,16 +550,15 @@ abstract class Entity<T extends EntityType = EntityType> extends RenderObject {
             hitbox = this.hitboxes[existingHitboxIdx] as RectangularHitbox;
             hitbox.width = hitboxData.width;
             hitbox.height = hitboxData.height;
-            hitbox.rotation = hitboxData.rotation;
+            hitbox.relativeRotation = hitboxData.rotation;
             hitbox.offset.x = hitboxData.offsetX;
             hitbox.offset.y = hitboxData.offsetY;
             hitbox.collisionType = hitboxData.collisionType;
-            hitbox.updateFromEntity(this);
-            hitbox.updateHitboxBounds(this.rotation);
+            updateHitbox(hitbox, this.position.x, this.position.y, this.rotation);
          } else {
             // Create new hitbox
-            hitbox = new RectangularHitbox(hitboxData.mass, hitboxData.offsetX, hitboxData.offsetY, hitboxData.collisionType as unknown as HitboxCollisionType, hitboxData.localID, hitboxData.width, hitboxData.height, hitboxData.rotation);
-            this.addRectangularHitbox(hitbox);
+            hitbox = createRectangularHitboxFromData(hitboxData);
+            this.addHitbox(hitbox);
          }
       }
 
@@ -577,11 +571,16 @@ abstract class Entity<T extends EntityType = EntityType> extends RenderObject {
       const containingChunks = new Set<Chunk>();
 
       for (const hitbox of this.hitboxes) {
+         const minX = hitbox.calculateHitboxBoundsMinX();
+         const maxX = hitbox.calculateHitboxBoundsMaxX();
+         const minY = hitbox.calculateHitboxBoundsMinY();
+         const maxY = hitbox.calculateHitboxBoundsMaxY();
+
          // Recalculate the game object's containing chunks based on the new hitbox bounds
-         const minChunkX = Math.max(Math.min(Math.floor(hitbox.bounds[0] / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
-         const maxChunkX = Math.max(Math.min(Math.floor(hitbox.bounds[1] / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
-         const minChunkY = Math.max(Math.min(Math.floor(hitbox.bounds[2] / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
-         const maxChunkY = Math.max(Math.min(Math.floor(hitbox.bounds[3] / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
+         const minChunkX = Math.max(Math.min(Math.floor(minX / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
+         const maxChunkX = Math.max(Math.min(Math.floor(maxX / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
+         const minChunkY = Math.max(Math.min(Math.floor(minY / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
+         const maxChunkY = Math.max(Math.min(Math.floor(maxY / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
          
          for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
             for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {

@@ -1,15 +1,13 @@
-import { HitboxVertexPositions } from "webgl-test-shared/dist/collision";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { StructureType } from "webgl-test-shared/dist/structures";
 import { Point, distBetweenPointAndRectangle } from "webgl-test-shared/dist/utils";
 import Tribe, { RestrictedBuildingArea, VirtualBuilding, getNumWallConnections, updateTribeWalls } from "../Tribe";
-import CircularHitbox from "../hitboxes/CircularHitbox";
 import Board from "../Board";
 import { createBuildingHitboxes } from "../buildings";
 import { TribeArea, createTribeArea, updateTribeAreaDoors } from "./ai-building-areas";
 import { updateTribePlans } from "./ai-building-plans";
-import { Hitbox, hitboxIsCircular } from "../hitboxes/hitboxes";
+import { HitboxVertexPositions, CircularHitbox, Hitbox, hitboxIsCircular, updateHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
 
 const enum Vars {
    /** How much safety increases when moving in a node */
@@ -656,7 +654,11 @@ export function tickTribes(): void {
 }
 
 export function placeVirtualBuilding(tribe: Tribe, position: Readonly<Point>, rotation: number, entityType: StructureType, virtualEntityID: number): VirtualBuilding {
-   const hitboxes = createBuildingHitboxes(entityType, position, 1, rotation);
+   const hitboxes = createBuildingHitboxes(entityType, 1);
+   for (let i = 0; i < hitboxes.length; i++) {
+      const hitbox = hitboxes[i];
+      updateHitbox(hitbox, position.x, position.y, rotation);
+   }
    
    const occupiedNodes = new Set<SafetyNode>();
    addHitboxesOccupiedNodes(hitboxes, occupiedNodes);

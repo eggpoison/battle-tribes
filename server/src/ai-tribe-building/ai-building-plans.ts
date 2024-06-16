@@ -8,17 +8,17 @@ import { StructureType, calculateStructureConnectionInfo } from "webgl-test-shar
 import { Point, getAngleDiff, randFloat } from "webgl-test-shared/dist/utils";
 import Board from "../Board";
 import Tribe, { BuildingPlan, NewBuildingPlan, BuildingPlanType, VirtualBuilding } from "../Tribe";
-import { createBuildingHitboxes } from "../buildings";
 import { placeBuilding } from "../entities/tribes/tribe-member";
 import { SafetyNode, addHitboxesOccupiedNodes, addRectangularSafetyNodePositions, placeVirtualBuilding, updateTribeBuildingInfo } from "./ai-building";
 import { buildingIsInfrastructure, getTribeSafety, tribeIsVulnerable } from "./ai-building-heuristics";
 import { TribeArea, areaHasOutsideDoor, getOutsideDoorPlacePlan } from "./ai-building-areas";
 import { getHitboxesCollidingEntities } from "../collision";
 import { HitboxVertexPositions, updateHitbox, hitboxIsCircular } from "webgl-test-shared/dist/hitboxes/hitboxes";
+import { createEntityHitboxes } from "webgl-test-shared/dist/hitboxes/entity-hitbox-creation";
 
 const virtualBuildingTakesUpWallSpace = (wallPosition: Point, wallRotation: number, virtualBuilding: VirtualBuilding, wallVertexOffsets: HitboxVertexPositions): boolean => {
    // @Speed: cache when virutal entity is first created
-   const hitboxes = createBuildingHitboxes(virtualBuilding.entityType, 1);
+   const hitboxes = createEntityHitboxes(virtualBuilding.entityType, 1);
    
    for (let i = 0; i < hitboxes.length; i++) {
       const hitbox = hitboxes[i];
@@ -482,7 +482,7 @@ const tribeHasWorkbench = (tribe: Tribe): boolean => {
 }
 
 const buildingPositionIsValid = (tribe: Tribe, x: number, y: number, rotation: number, entityType: StructureType): boolean => {
-   const hitboxes = createBuildingHitboxes(entityType, 1);
+   const hitboxes = createEntityHitboxes(entityType, 1);
    for (let i = 0; i < hitboxes.length; i++) {
       const hitbox = hitboxes[i];
       updateHitbox(hitbox, x, y, rotation);
@@ -544,7 +544,7 @@ export function generateBuildingPosition(tribe: Tribe, entityType: StructureType
       const y = randFloat(minY, maxY);
       const rotation = 2 * Math.PI * Math.random();
       
-      const hitboxes = createBuildingHitboxes(entityType, 1);
+      const hitboxes = createEntityHitboxes(entityType, 1);
       for (let i = 0; i < hitboxes.length; i++) {
          const hitbox = hitboxes[i];
          updateHitbox(hitbox, x, y, rotation);

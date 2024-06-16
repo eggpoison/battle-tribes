@@ -1,4 +1,4 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
+import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { Point } from "webgl-test-shared/dist/utils";
@@ -10,16 +10,7 @@ import { TribeComponent, TribeComponentArray } from "../../components/TribeCompo
 import { FenceComponent, FenceComponentArray } from "../../components/FenceComponent";
 import { StructureComponent, StructureComponentArray } from "../../components/StructureComponent";
 import { StructureConnectionInfo } from "webgl-test-shared/dist/structures";
-import { Hitbox, HitboxCollisionType, RectangularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
-
-const NODE_HITBOX_WIDTH = 20 - 0.05;
-const NODE_HITBOX_HEIGHT = 20 - 0.05;
-
-export function createFenceHitboxes(localID: number): ReadonlyArray<Hitbox> {
-   const hitboxes = new Array<Hitbox>();
-   hitboxes.push(new RectangularHitbox(1, new Point(0, 0), HitboxCollisionType.hard, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, localID, 0, NODE_HITBOX_WIDTH, NODE_HITBOX_HEIGHT, 0));
-   return hitboxes;
-}
+import { createFenceHitboxes } from "webgl-test-shared/dist/hitboxes/entity-hitbox-creation";
 
 export function createFence(position: Point, rotation: number, tribe: Tribe, connectionInfo: StructureConnectionInfo): Entity {
    const fence = new Entity(position, rotation, EntityType.fence, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);

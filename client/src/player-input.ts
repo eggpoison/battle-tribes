@@ -28,46 +28,9 @@ import { WORKER_HUT_SIZE } from "./entity-components/HutComponent";
 import { calculateCursorWorldPositionX, calculateCursorWorldPositionY } from "./mouse";
 import { RectangularHitbox, CircularHitbox, Hitbox, HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
 
-enum PlaceableItemHitboxType {
-   circular,
-   rectangular
-}
+/*
+// @Temporary
 
-export interface PlaceableEntityInfo {
-   readonly entityType: StructureType;
-   readonly width: number;
-   readonly height: number;
-   readonly hitboxType: PlaceableItemHitboxType;
-   /** Optionally defines extra criteria for being placed */
-   canPlace?(): boolean;
-}
-
-let currentMenuCloseFunction: (() => void) | undefined;
-
-/** Acceleration of the player while moving without any modifiers. */
-const PLAYER_ACCELERATION = 700;
-
-const PLAYER_LIGHTSPEED_ACCELERATION = 15000;
-
-/** Acceleration of the player while slowed. */
-const PLAYER_SLOW_ACCELERATION = 400;
-
-export let rightMouseButtonIsPressed = false;
-export let leftMouseButtonIsPressed = false;
-
-// Cleanup: All this item placing logic should be moved to another file
-
-export const PLACEABLE_ENTITY_INFO_RECORD: Record<PlaceableItemType, PlaceableEntityInfo> = {
-   [ItemType.workbench]: {
-      entityType: EntityType.workbench,
-      width: 80,
-      height: 80,
-      hitboxType: PlaceableItemHitboxType.rectangular
-   },
-   [ItemType.tribe_totem]: {
-      entityType: EntityType.tribeTotem,
-      width: 120,
-      height: 120,
       canPlace: (): boolean => {
          // The player can only place one tribe totem
          return !Game.tribe.hasTotem;
@@ -81,115 +44,20 @@ export const PLACEABLE_ENTITY_INFO_RECORD: Record<PlaceableItemType, PlaceableEn
       canPlace: (): boolean => {
          return Game.tribe.hasTotem && Game.tribe.numHuts < Game.tribe.tribesmanCap;
       },
-      hitboxType: PlaceableItemHitboxType.rectangular
-   },
-   [ItemType.barrel]: {
-      entityType: EntityType.barrel,
-      width: 80,
-      height: 80,
-      hitboxType: PlaceableItemHitboxType.circular
-   },
-   [ItemType.campfire]: {
-      entityType: EntityType.campfire,
-      width: 104,
-      height: 104,
-      hitboxType: PlaceableItemHitboxType.circular
-   },
-   [ItemType.furnace]: {
-      entityType: EntityType.furnace,
-      width: 80,
-      height: 80,
-      hitboxType: PlaceableItemHitboxType.rectangular
-   },
-   [ItemType.research_bench]: {
-      entityType: EntityType.researchBench,
-      width: 32 * 4,
-      height: 20 * 4,
-      hitboxType: PlaceableItemHitboxType.rectangular
-   },
-   [ItemType.wooden_wall]: {
-      entityType: EntityType.wall,
-      width: 64,
-      height: 64,
-      hitboxType: PlaceableItemHitboxType.rectangular
-   },
-   [ItemType.planter_box]: {
-      entityType: EntityType.planterBox,
-      width: 80,
-      height: 80,
-      hitboxType: PlaceableItemHitboxType.rectangular
-   },
-   [ItemType.wooden_spikes]: {
-      entityType: EntityType.floorSpikes,
-      width: 40,
-      height: 40,
-      hitboxType: PlaceableItemHitboxType.rectangular
-   },
-   [ItemType.punji_sticks]: {
-      entityType: EntityType.floorPunjiSticks,
-      width: 40,
-      height: 40,
-      hitboxType: PlaceableItemHitboxType.rectangular
-   },
-   [ItemType.ballista]: {
-      entityType: EntityType.ballista,
-      width: 100,
-      height: 100,
-      hitboxType: PlaceableItemHitboxType.rectangular
-   },
-   [ItemType.sling_turret]: {
-      entityType: EntityType.slingTurret,
-      width: 72,
-      height: 72,
-      hitboxType: PlaceableItemHitboxType.circular
-   },
-   [ItemType.healing_totem]: {
-      entityType: EntityType.healingTotem,
-      width: 96,
-      height: 96,
-      hitboxType: PlaceableItemHitboxType.circular
-   },
-   [ItemType.wooden_fence]: {
-      entityType: EntityType.fence,
-      width: 64,
-      height: 16,
-      hitboxType: PlaceableItemHitboxType.rectangular
-   },
-   [ItemType.frostshaper]: {
-      entityType: EntityType.frostshaper,
-      width: 120,
-      height: 80,
-      hitboxType: PlaceableItemHitboxType.rectangular
-   },
-   [ItemType.stonecarvingTable]: {
-      entityType: EntityType.stonecarvingTable,
-      width: 120,
-      height: 80,
-      hitboxType: PlaceableItemHitboxType.rectangular
-   }
-};
+*/
 
-const getPlaceableEntityWidth = (entityType: EntityType, isPlacedOnWall: boolean): number | null => {
-   if (entityType === EntityType.floorSpikes) {
-      return isPlacedOnWall ? 56 : 48;
-   } else if (entityType === EntityType.floorPunjiSticks) {
-      return isPlacedOnWall ? 56 : 48;
-   }
-   return null;
-}
+let currentMenuCloseFunction: (() => void) | undefined;
 
-const getPlaceableEntityHeight = (entityType: EntityType, isPlacedOnWall: boolean): number | null => {
-   if (entityType === EntityType.floorSpikes) {
-      return isPlacedOnWall ? 28 : 48;
-   } else if (entityType === EntityType.floorPunjiSticks) {
-      return isPlacedOnWall ? 32 : 48;
-   }
-   return null;
-}
+/** Acceleration of the player while moving without any modifiers. */
+const PLAYER_ACCELERATION = 700;
 
-// @Cleanup: Remove these
-const testRectangularHitbox = new RectangularHitbox(1, new Point(0, 0), HitboxCollisionType.soft, 0, 0, 1, 0, -1, -1, 0);
-const testCircularHitbox = new CircularHitbox(1, new Point(0, 0), HitboxCollisionType.soft, 0, 0, 1, 0, -1);
+const PLAYER_LIGHTSPEED_ACCELERATION = 15000;
+
+/** Acceleration of the player while slowed. */
+const PLAYER_SLOW_ACCELERATION = 400;
+
+export let rightMouseButtonIsPressed = false;
+export let leftMouseButtonIsPressed = false;
 
 const hotbarItemAttackCooldowns: Record<number, number> = {};
 const offhandItemAttackCooldowns: Record<number, number> = {};
@@ -715,106 +583,6 @@ const unuseItem = (item: Item): void => {
       }
    }
 }
-
-// @Cleanup: sucks.
-// export function canPlaceItem(placePosition: Point, placeRotation: number, item: Item, placingEntityType: EntityType, isPlacedOnWall: boolean): boolean {
-//    if (!PLACEABLE_ENTITY_INFO_RECORD.hasOwnProperty(item.type)) {
-//       throw new Error(`Item type '${item.type}' is not placeable.`);
-//    }
-   
-//    // Check for any special conditions
-//    const placeableInfo = PLACEABLE_ENTITY_INFO_RECORD[item.type as PlaceableItemType];
-//    if (typeof placeableInfo.canPlace !== "undefined" && !placeableInfo.canPlace()) {
-//       return false;
-//    }
-
-//    let width = getPlaceableEntityWidth(placingEntityType, isPlacedOnWall);
-//    let height = getPlaceableEntityHeight(placingEntityType, isPlacedOnWall);
-//    if (width === null) {
-//       width = placeableInfo.width;
-//    }
-//    if (height === null) {
-//       height = placeableInfo.height;
-//    }
-
-//    let placeTestHitbox: Hitbox;
-//    if (placeableInfo.hitboxType === PlaceableItemHitboxType.circular) {
-//       testCircularHitbox.radius = width / 2; // For a circular hitbox, width and height will be the same
-//       placeTestHitbox = testCircularHitbox;
-//    } else {
-//       testRectangularHitbox.width = width;
-//       testRectangularHitbox.height = height;
-//       testRectangularHitbox.recalculateHalfDiagonalLength();
-//       testRectangularHitbox.rotation = placeRotation;
-//       testRectangularHitbox.externalRotation = 0;
-//       placeTestHitbox = testRectangularHitbox;
-//    }
-   
-//    placeTestHitbox.offset.x = 0;
-//    placeTestHitbox.offset.y = 0;
-//    placeTestHitbox.position.x = placePosition.x;
-//    placeTestHitbox.position.y = placePosition.y;
-//    placeTestHitbox.updateHitboxBounds(0);
-
-//    // Don't allow placing buildings in borders
-//    if (placeTestHitbox.bounds[0] < 0 || placeTestHitbox.bounds[1] >= Settings.BOARD_UNITS || placeTestHitbox.bounds[2] < 0 || placeTestHitbox.bounds[3] >= Settings.BOARD_UNITS) {
-//       return false;
-//    }
-
-//    // 
-//    // Check for entity collisions
-//    // 
-
-//    const minChunkX = Math.floor(placeTestHitbox.bounds[0] / Settings.CHUNK_UNITS);
-//    const maxChunkX = Math.floor(placeTestHitbox.bounds[1] / Settings.CHUNK_UNITS);
-//    const minChunkY = Math.floor(placeTestHitbox.bounds[2] / Settings.CHUNK_UNITS);
-//    const maxChunkY = Math.floor(placeTestHitbox.bounds[3] / Settings.CHUNK_UNITS);
-   
-//    for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
-//       for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
-//          const chunk = Board.getChunk(chunkX, chunkY);
-//          for (const entity of chunk.entities) {
-//             for (const hitbox of entity.hitboxes) {   
-//                if (placeTestHitbox.isColliding(hitbox)) {
-//                   return false;
-//                }
-//             }
-//          }
-//       }
-//    }
-
-//    // 
-//    // Check for wall tile collisions
-//    // 
-
-//    // @Cleanup: Use collision file, remove test hitbox
-//    // @Speed: Garbage collection
-//    const tileHitbox = new RectangularHitbox(1, new Point(0, 0), HitboxCollisionType.soft, 0, 0, 1, Settings.TILE_SIZE, Settings.TILE_SIZE, 0);
-
-//    const minTileX = Math.floor(placeTestHitbox.bounds[0] / Settings.TILE_SIZE);
-//    const maxTileX = Math.floor(placeTestHitbox.bounds[1] / Settings.TILE_SIZE);
-//    const minTileY = Math.floor(placeTestHitbox.bounds[2] / Settings.TILE_SIZE);
-//    const maxTileY = Math.floor(placeTestHitbox.bounds[3] / Settings.TILE_SIZE);
-
-//    for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
-//       for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
-//          const tile = Board.getTile(tileX, tileY);
-//          if (!tile.isWall) {
-//             continue;
-//          }
-
-//          tileHitbox.position.x = (tileX + 0.5) * Settings.TILE_SIZE;
-//          tileHitbox.position.y = (tileY + 0.5) * Settings.TILE_SIZE;
-//          tileHitbox.updateHitboxBounds(0);
-
-//          if (placeTestHitbox.isColliding(tileHitbox)) {
-//             return false;
-//          }
-//       }
-//    }
-
-//    return true;
-// }
 
 const itemRightClickDown = (item: Item, isOffhand: boolean, itemSlot: number): void => {
    const inventoryUseComponent = Player.instance!.getServerComponent(ServerComponentType.inventoryUse);

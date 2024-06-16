@@ -8,7 +8,7 @@ import { HealthComponent, HealthComponentArray } from "../components/HealthCompo
 import { BlueprintComponent, BlueprintComponentArray } from "../components/BlueprintComponent";
 import { TribeComponent, TribeComponentArray } from "../components/TribeComponent";
 import Tribe from "../Tribe";
-import { createBuildingHitboxes } from "../buildings";
+import { createEntityHitboxes } from "webgl-test-shared/dist/hitboxes/entity-hitbox-creation";
 
 // @Incomplete: Remove if the associated entity is removed
 
@@ -37,7 +37,7 @@ export function createBlueprintEntity(position: Point, rotation: number, bluepri
    const blueprintEntity = new Entity(position, rotation, EntityType.blueprintEntity, COLLISION_BITS.none, 0);
 
    const entityType = getBlueprintEntityType(blueprintType);
-   const hitboxes = createBuildingHitboxes(entityType, blueprintEntity.getNextHitboxLocalID());
+   const hitboxes = createEntityHitboxes(entityType, blueprintEntity.getNextHitboxLocalID());
    for (let i = 0; i < hitboxes.length; i++) {
       blueprintEntity.addHitbox(hitboxes[i]);
    }

@@ -2,9 +2,9 @@ import { EntityType } from "webgl-test-shared/dist/entities";
 import { InventoryName, ItemType, ItemTypeString } from "webgl-test-shared/dist/items";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { CookingIngredientItemType, FuelSourceItemType } from "webgl-test-shared/dist/cooking-info";
-import Entity from "../../Entity";
-import { InventoryComponentArray, addItemToInventory, consumeItemTypeFromInventory, getInventory } from "../../components/InventoryComponent";
-import { CookingComponentArray } from "../../components/CookingComponent";
+import Entity from "../../../Entity";
+import { InventoryComponentArray, addItemToInventory, consumeItemTypeFromInventory, getInventory } from "../../../components/InventoryComponent";
+import { CookingComponentArray } from "../../../components/CookingComponent";
 
 export interface HeatingRecipe {
    readonly ingredientType: CookingIngredientItemType;

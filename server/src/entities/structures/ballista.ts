@@ -1,4 +1,4 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
+import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision";
 import { AMMO_INFO_RECORD, ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { BallistaAmmoType, BALLISTA_AMMO_TYPES, ItemType, InventoryName } from "webgl-test-shared/dist/items";
@@ -19,17 +19,11 @@ import { angleIsInRange, getClockwiseAngleDistance, getMaxAngleToCircularHitbox,
 import Board from "../../Board";
 import { StructureComponentArray, StructureComponent } from "../../components/StructureComponent";
 import { StructureConnectionInfo } from "webgl-test-shared/dist/structures";
-import { Hitbox, RectangularHitbox, HitboxCollisionType, hitboxIsCircular } from "webgl-test-shared/dist/hitboxes/hitboxes";
+import { hitboxIsCircular } from "webgl-test-shared/dist/hitboxes/hitboxes";
+import { createBallistaHitboxes } from "webgl-test-shared/dist/hitboxes/entity-hitbox-creation";
 
 const VISION_RANGE = 550;
-const HITBOX_SIZE = 100 - 0.05;
 const AIM_ARC_SIZE = Math.PI / 2;
-
-export function createBallistaHitboxes(localID: number): ReadonlyArray<Hitbox> {
-   const hitboxes = new Array<Hitbox>();
-   hitboxes.push(new RectangularHitbox(2, new Point(0, 0), HitboxCollisionType.hard, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, localID, 0, HITBOX_SIZE, HITBOX_SIZE, 0));
-   return hitboxes;
-}
 
 export function createBallista(position: Point, rotation: number, tribe: Tribe, connectionInfo: StructureConnectionInfo): Entity {
    const ballista = new Entity(position, rotation, EntityType.ballista, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);

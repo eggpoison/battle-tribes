@@ -1,4 +1,4 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
+import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision";
 import { BuildingMaterial } from "webgl-test-shared/dist/components";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { Point } from "webgl-test-shared/dist/utils";
@@ -12,18 +12,9 @@ import { PhysicsComponent, PhysicsComponentArray } from "../../components/Physic
 import { BuildingMaterialComponent, BuildingMaterialComponentArray } from "../../components/BuildingMaterialComponent";
 import { StructureComponentArray, StructureComponent } from "../../components/StructureComponent";
 import { StructureConnectionInfo } from "webgl-test-shared/dist/structures";
-import { Hitbox, RectangularHitbox, HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
-
-const HITBOX_WIDTH = 64 - 0.05;
-const HITBOX_HEIGHT = 16 - 0.05;
+import { createDoorHitboxes } from "webgl-test-shared/dist/hitboxes/entity-hitbox-creation";
 
 export const DOOR_HEALTHS = [15, 45];
-
-export function createDoorHitboxes(localID: number): ReadonlyArray<Hitbox> {
-   const hitboxes = new Array<Hitbox>();
-   hitboxes.push(new RectangularHitbox(0.5, new Point(0, 0), HitboxCollisionType.hard, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, localID, 0, HITBOX_WIDTH, HITBOX_HEIGHT, 0));
-   return hitboxes;
-}
 
 export function createDoor(position: Point, rotation: number, tribe: Tribe, connectionInfo: StructureConnectionInfo, material: BuildingMaterial): Entity {
    const door = new Entity(position, rotation, EntityType.door, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);

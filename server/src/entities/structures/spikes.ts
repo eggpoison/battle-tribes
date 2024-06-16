@@ -1,4 +1,4 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
+import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision";
 import { BuildingMaterial } from "webgl-test-shared/dist/components";
 import { EntityType, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
@@ -13,34 +13,9 @@ import { BuildingMaterialComponent, BuildingMaterialComponentArray } from "../..
 import { StructureComponentArray, StructureComponent, isAttachedToWall } from "../../components/StructureComponent";
 import { StructureConnectionInfo } from "webgl-test-shared/dist/structures";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
-import { Hitbox, RectangularHitbox, HitboxCollisionType, HitboxFlags } from "webgl-test-shared/dist/hitboxes/hitboxes";
-
-const FLOOR_HITBOX_SIZE = 48 - 0.05;
-
-const WALL_HITBOX_WIDTH = 56 - 0.05;
-const WALL_HITBOX_HEIGHT = 28 - 0.05;
+import { createWallSpikesHitboxes, createFloorSpikesHitboxes } from "webgl-test-shared/dist/hitboxes/entity-hitbox-creation";
 
 export const SPIKE_HEALTHS = [15, 45];
-
-export function createFloorSpikesHitboxes(localID: number): ReadonlyArray<Hitbox> {
-   const hitboxes = new Array<Hitbox>();
-   
-   // @Hack mass
-   const hitbox = new RectangularHitbox(Number.EPSILON, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, localID, HitboxFlags.NON_GRASS_BLOCKING, FLOOR_HITBOX_SIZE, FLOOR_HITBOX_SIZE, 0);
-   hitboxes.push(hitbox);
-   
-   return hitboxes;
-}
-
-export function createWallSpikesHitboxes(localID: number): ReadonlyArray<Hitbox> {
-   const hitboxes = new Array<Hitbox>();
-
-   // @Hack mass
-   const hitbox = new RectangularHitbox(Number.EPSILON, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, localID, HitboxFlags.NON_GRASS_BLOCKING, WALL_HITBOX_WIDTH, WALL_HITBOX_HEIGHT, 0);
-   hitboxes.push(hitbox);
-   
-   return hitboxes;
-}
 
 export function createSpikes(position: Point, rotation: number, tribe: Tribe, connectionInfo: StructureConnectionInfo): Entity {
    const isAttached = isAttachedToWall(connectionInfo);

@@ -8,13 +8,13 @@ import { Point } from "webgl-test-shared/dist/utils";
 import Entity from "../../../Entity";
 import { InventoryComponentArray, getInventory, getItemTypeSlot, inventoryComponentCanAffordRecipe, inventoryHasItemType, tallyInventoryComponentItems } from "../../../components/InventoryComponent";
 import Tribe, { BuildingPlan, BuildingPlanType, BuildingUpgradePlan, NewBuildingPlan } from "../../../Tribe";
-import { createBuildingHitboxes } from "../../../buildings";
 import { generateBuildingPosition } from "../../../ai-tribe-building/ai-building-plans";
 import { TribeComponentArray } from "../../../components/TribeComponent";
 import { TribesmanAIComponentArray } from "../../../components/TribesmanAIComponent";
 import { craftingStationExists } from "./tribesman-crafting";
 import { getBestToolItemSlot } from "./tribesman-ai-utils";
 import { updateHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
+import { createEntityHitboxes } from "webgl-test-shared/dist/hitboxes/entity-hitbox-creation";
 
 // @Cleanup: can this be inferred from stuff like the entity->resource-dropped record?
 const TOOL_TYPE_FOR_MATERIAL_RECORD: Record<ItemType, ToolType | null> = {
@@ -219,7 +219,7 @@ const generateRandomNearbyPosition = (tribesman: Entity, entityType: StructureTy
       const rotation = 2 * Math.PI * Math.random();
 
       // Make sure the hitboxes would be in a valid position
-      const hitboxes = createBuildingHitboxes(entityType, 1);
+      const hitboxes = createEntityHitboxes(entityType, 1);
       for (let i = 0; i < hitboxes.length; i++) {
          const hitbox = hitboxes[i];
          updateHitbox(hitbox, position.x, position.y, rotation);

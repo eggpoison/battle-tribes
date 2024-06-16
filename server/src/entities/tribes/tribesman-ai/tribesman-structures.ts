@@ -10,7 +10,6 @@ import Board from "../../../Board";
 import Entity from "../../../Entity";
 import Tribe from "../../../Tribe";
 import { getDistanceFromPointToEntity, stopEntity, willStopAtDesiredDistance } from "../../../ai-shared";
-import { createBuildingHitboxes } from "../../../buildings";
 import { getHitboxesCollidingEntities } from "../../../collision";
 import { HealthComponentArray } from "../../../components/HealthComponent";
 import { consumeItemFromSlot, InventoryComponentArray, getInventory } from "../../../components/InventoryComponent";
@@ -27,6 +26,7 @@ import { getBestToolItemSlot, getTribesmanAttackOffset, getTribesmanAttackRadius
 import { huntEntity } from "./tribesman-combat-ai";
 import { TribesmanPlaceGoal, TribesmanUpgradeGoal } from "./tribesman-goals";
 import { AIHelperComponentArray } from "../../../components/AIHelperComponent";
+import { createEntityHitboxes } from "webgl-test-shared/dist/hitboxes/entity-hitbox-creation";
 
 const enum Vars {
    BUILDING_PLACE_DISTANCE = 80
@@ -36,7 +36,7 @@ export function goPlaceBuilding(tribesman: Entity, hotbarInventory: Inventory, t
    const plan = goal.plan;
    
    const entityType = (ITEM_INFO_RECORD[plan.buildingRecipe.product] as PlaceableItemInfo).entityType;
-   const hitboxes = createBuildingHitboxes(entityType, 1);
+   const hitboxes = createEntityHitboxes(entityType, 1);
    for (let i = 0; i < hitboxes.length; i++) {
       const hitbox = hitboxes[i];
       updateHitbox(hitbox, plan.position.x, plan.position.y, plan.rotation);

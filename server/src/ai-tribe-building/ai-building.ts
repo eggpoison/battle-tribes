@@ -4,10 +4,10 @@ import { StructureType } from "webgl-test-shared/dist/structures";
 import { Point, distBetweenPointAndRectangle } from "webgl-test-shared/dist/utils";
 import Tribe, { RestrictedBuildingArea, VirtualBuilding, getNumWallConnections, updateTribeWalls } from "../Tribe";
 import Board from "../Board";
-import { createBuildingHitboxes } from "../buildings";
 import { TribeArea, createTribeArea, updateTribeAreaDoors } from "./ai-building-areas";
 import { updateTribePlans } from "./ai-building-plans";
 import { HitboxVertexPositions, CircularHitbox, Hitbox, hitboxIsCircular, updateHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
+import { createEntityHitboxes } from "webgl-test-shared/dist/hitboxes/entity-hitbox-creation";
 
 const enum Vars {
    /** How much safety increases when moving in a node */
@@ -654,7 +654,7 @@ export function tickTribes(): void {
 }
 
 export function placeVirtualBuilding(tribe: Tribe, position: Readonly<Point>, rotation: number, entityType: StructureType, virtualEntityID: number): VirtualBuilding {
-   const hitboxes = createBuildingHitboxes(entityType, 1);
+   const hitboxes = createEntityHitboxes(entityType, 1);
    for (let i = 0; i < hitboxes.length; i++) {
       const hitbox = hitboxes[i];
       updateHitbox(hitbox, position.x, position.y, rotation);

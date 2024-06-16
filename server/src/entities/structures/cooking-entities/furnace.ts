@@ -1,27 +1,19 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
+import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { Point } from "webgl-test-shared/dist/utils";
-import Entity from "../../Entity";
-import { CookingComponent, CookingComponentArray } from "../../components/CookingComponent";
-import { HealthComponent, HealthComponentArray } from "../../components/HealthComponent";
-import { InventoryComponent, InventoryComponentArray, createNewInventory } from "../../components/InventoryComponent";
-import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
+import Entity from "../../../Entity";
+import { CookingComponent, CookingComponentArray } from "../../../components/CookingComponent";
+import { HealthComponent, HealthComponentArray } from "../../../components/HealthComponent";
+import { InventoryComponent, InventoryComponentArray, createNewInventory } from "../../../components/InventoryComponent";
+import { StatusEffectComponent, StatusEffectComponentArray } from "../../../components/StatusEffectComponent";
 import { tickCookingEntity } from "./cooking-entity";
-import Tribe from "../../Tribe";
-import { TribeComponent, TribeComponentArray } from "../../components/TribeComponent";
+import Tribe from "../../../Tribe";
+import { TribeComponent, TribeComponentArray } from "../../../components/TribeComponent";
 import { InventoryName } from "webgl-test-shared/dist/items";
-import { StructureComponent, StructureComponentArray } from "../../components/StructureComponent";
+import { StructureComponent, StructureComponentArray } from "../../../components/StructureComponent";
 import { StructureConnectionInfo } from "webgl-test-shared/dist/structures";
-import { Hitbox, RectangularHitbox, HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
-
-const HITBOX_SIZE = 80;
-
-export function createFurnaceHitboxes(localID: number): ReadonlyArray<Hitbox> {
-   const hitboxes = new Array<Hitbox>();
-   hitboxes.push(new RectangularHitbox(2, new Point(0, 0), HitboxCollisionType.hard, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, localID, 0, HITBOX_SIZE, HITBOX_SIZE, 0));
-   return hitboxes;
-}
+import { createFurnaceHitboxes } from "webgl-test-shared/dist/hitboxes/entity-hitbox-creation";
 
 export function createFurnace(position: Point, rotation: number, tribe: Tribe, connectionInfo: StructureConnectionInfo): Entity {
    const furnace = new Entity(position, rotation, EntityType.furnace, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);

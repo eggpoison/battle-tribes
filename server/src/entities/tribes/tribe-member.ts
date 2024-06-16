@@ -21,8 +21,8 @@ import { createTribeTotem } from "../structures/tribe-totem";
 import { createWorkerHut } from "../structures/worker-hut";
 import { applyStatusEffect, clearStatusEffects } from "../../components/StatusEffectComponent";
 import { createBarrel } from "../structures/barrel";
-import { createCampfire } from "../cooking-entities/campfire";
-import { createFurnace } from "../cooking-entities/furnace";
+import { createCampfire } from "../structures/cooking-entities/campfire";
+import { createFurnace } from "../structures/cooking-entities/furnace";
 import { GenericArrowInfo, createWoodenArrow } from "../projectiles/wooden-arrow";
 import { onFishLeaderHurt } from "../mobs/fish";
 import { createSpearProjectile } from "../projectiles/spear-projectile";
@@ -52,7 +52,6 @@ import { createItemEntity, itemEntityCanBePickedUp } from "../item-entity";
 import { dropBerryBushCropBerries } from "../plant";
 import { createFence } from "../structures/fence";
 import { createFenceGate } from "../structures/fence-gate";
-import { createBuildingHitboxes } from "../../buildings";
 import { getHitboxesCollidingEntities } from "../../collision";
 import { PlantComponentArray, plantIsFullyGrown } from "../../components/PlantComponent";
 import { ItemComponentArray } from "../../components/ItemComponent";
@@ -63,6 +62,7 @@ import { createStonecarvingTable } from "../structures/stonecarving-table";
 import { BerryBushComponentArray } from "../../components/BerryBushComponent";
 import { BuildingMaterialComponentArray } from "../../components/BuildingMaterialComponent";
 import { updateHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
+import { createEntityHitboxes } from "webgl-test-shared/dist/hitboxes/entity-hitbox-creation";
 
 const enum Vars {
    ITEM_THROW_FORCE = 100,
@@ -551,25 +551,6 @@ export function calculateRadialAttackTargets(entity: Entity, attackOffset: numbe
    return attackedEntities;
 }
 
-const buildingCanBePlaced = (placePosition: Point, rotation: number, entityType: StructureType): boolean => {
-   const testHitboxes = createBuildingHitboxes(entityType, 1);
-   for (let i = 0; i < testHitboxes.length; i++) {
-      const hitbox = testHitboxes[i];
-      updateHitbox(hitbox, placePosition.x, placePosition.y, rotation);
-   }
-   
-   const collidingEntities = getHitboxesCollidingEntities(testHitboxes);
-
-   for (let i = 0; i < collidingEntities.length; i++) {
-      const entity = collidingEntities[i];
-
-      if (entity.type !== EntityType.itemEntity) {
-         return false;
-      }
-   }
-   return true;
-}
-
 export function placeBuilding(tribe: Tribe, position: Point, rotation: number, entityType: StructureType, connectionInfo: StructureConnectionInfo): void {
    // Spawn the placeable entity
    switch (entityType) {
@@ -686,7 +667,7 @@ export function useItem(tribeMember: Entity, item: Item, inventoryName: Inventor
          const placeInfo = calculateStructurePlaceInfo(tribeMember.position, tribeMember.rotation, structureType, Board.chunks);
 
          // Make sure the placeable item can be placed
-         if (!buildingCanBePlaced(placeInfo.position, placeInfo.rotation, placeInfo.entityType)) return;
+         if (!placeInfo.isValid) return;
          
          const structureInfo: StructureConnectionInfo = {
             connectedEntityIDs: placeInfo.connectedEntityIDs,

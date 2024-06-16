@@ -11,16 +11,16 @@ export interface EntityInfo<T extends EntityType = EntityType> {
    readonly hitboxes: ReadonlyArray<Hitbox>;
 }
 
-export interface ChunkInfo {
-   readonly entities: Array<EntityInfo>;
+export interface ChunkInfo<Entity extends EntityInfo> {
+   readonly entities: Array<Entity>;
 }
 
 // @Cleanup: don't expose to outside packages
-export type Chunks = ReadonlyArray<Readonly<ChunkInfo>>
+export type Chunks<Entity extends EntityInfo = EntityInfo> = ReadonlyArray<Readonly<ChunkInfo<Entity>>>
 
 // @Cleanup: don't expose to outside packages
 /** @internal */
-export function getChunk(chunks: Chunks, chunkX: number, chunkY: number): Readonly<ChunkInfo> {
+export function getChunk<Entity extends EntityInfo = EntityInfo>(chunks: Chunks<Entity>, chunkX: number, chunkY: number): Readonly<ChunkInfo<Entity>> {
    const chunkIndex = chunkY * Settings.BOARD_SIZE + chunkX;
    return chunks[chunkIndex];
 }

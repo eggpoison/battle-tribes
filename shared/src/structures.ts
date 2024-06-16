@@ -1,6 +1,8 @@
-import { ChunkInfo, Chunks, EntityInfo, getChunk } from "./board-interface";
+import { Chunks, EntityInfo, getChunk } from "./board-interface";
 import { EntityType } from "./entities";
 import { estimateCollidingEntities } from "./hitbox-collision";
+import { createEntityHitboxes } from "./hitboxes/entity-hitbox-creation";
+import { hitboxIsCircular } from "./hitboxes/hitboxes";
 import { Settings } from "./settings";
 import { Point, distance, getAbsAngleDiff } from "./utils";
 
@@ -8,14 +10,15 @@ import { Point, distance, getAbsAngleDiff } from "./utils";
 When snapping:
 - By default, use the snap rotation rounded closest to the place direction.
    - e.g. walls
-- Except when placing something which attaches directly onto a structure, use the direction off that structure.
-   - e.g. spikes
+- Except when placing something which attaches onto the side of a structure, use the direction off that structure.
+   - e.g. wall spikes
 */
 
 const enum Vars {
    STRUCTURE_PLACE_DISTANCE = 60,
    MULTI_SNAP_POSITION_TOLERANCE = 0.1,
-   MULTI_SNAP_ROTATION_TOLERANCE = 0.02
+   MULTI_SNAP_ROTATION_TOLERANCE = 0.02,
+   COLLISION_EPSILON = 0.01
 }
 
 export const STRUCTURE_TYPES = [EntityType.wall, EntityType.door, EntityType.embrasure, EntityType.floorSpikes, EntityType.wallSpikes, EntityType.floorPunjiSticks, EntityType.wallPunjiSticks, EntityType.ballista, EntityType.slingTurret, EntityType.tunnel, EntityType.tribeTotem, EntityType.workerHut, EntityType.warriorHut, EntityType.barrel, EntityType.workbench, EntityType.researchBench, EntityType.healingTotem, EntityType.planterBox, EntityType.furnace, EntityType.campfire, EntityType.fence, EntityType.fenceGate, EntityType.frostshaper, EntityType.stonecarvingTable] as const;
@@ -29,11 +32,6 @@ export const enum SnapDirection {
 }
 
 export type ConnectedEntityIDs = [number, number, number, number];
-
-const enum SnapType {
-   horizontal,
-   vertical
-}
 
 interface StructureTransformInfo {
    readonly position: Point;
@@ -64,37 +62,8 @@ export function createEmptyStructureConnectionInfo(): StructureConnectionInfo {
    };
 }
 
-const getSnapOffset = (structureType: StructureType, snapType: SnapType): number => {
-   switch (structureType) {
-      case EntityType.tunnel:
-      case EntityType.wall:
-      case EntityType.door:
-      case EntityType.embrasure: return 32;
-      case EntityType.floorSpikes: return 28;
-      case EntityType.wallSpikes: return snapType === SnapType.horizontal ? 28 : 14;
-      case EntityType.floorPunjiSticks: return 28;
-      case EntityType.wallPunjiSticks: return snapType === SnapType.horizontal ? 28 : 16;
-      case EntityType.slingTurret: { return 40; }
-      case EntityType.ballista: { return 50; }
-      case EntityType.tribeTotem: return 60;
-      case EntityType.workerHut: return 44;
-      case EntityType.warriorHut: return 52;
-      case EntityType.barrel: return 40;
-      case EntityType.workbench: return 40;
-      case EntityType.researchBench: return snapType === SnapType.horizontal ? 62 : 40;
-      case EntityType.healingTotem: return 48;
-      case EntityType.planterBox: return 40;
-      case EntityType.furnace: return 40;
-      case EntityType.campfire: return 52;
-      case EntityType.fence: return 32;
-      case EntityType.fenceGate: return 32;
-      case EntityType.frostshaper: return snapType === SnapType.horizontal ? 60 : 40;
-      case EntityType.stonecarvingTable: return snapType === SnapType.horizontal ? 60 : 40;
-   }
-}
-
 const structurePlaceIsValid = (entityType: StructureType, x: number, y: number, rotation: number, chunks: Chunks): boolean => {
-   const collidingEntities = estimateCollidingEntities(chunks, entityType, x, y, rotation);
+   const collidingEntities = estimateCollidingEntities(chunks, entityType, x, y, rotation, Vars.COLLISION_EPSILON);
 
    for (let i = 0; i < collidingEntities.length; i++) {
       const entity = collidingEntities[i];
@@ -107,11 +76,41 @@ const structurePlaceIsValid = (entityType: StructureType, x: number, y: number, 
 }
 
 const calculateRegularPlacePosition = (placeOrigin: Point, placingEntityRotation: number, structureType: StructureType): Point => {
-   const placeOffsetY = getSnapOffset(structureType, SnapType.vertical);
+   const hitboxes = createEntityHitboxes(structureType, 1);
+
+   let entityMinX = Number.MAX_SAFE_INTEGER;
+   let entityMaxX = Number.MIN_SAFE_INTEGER;
+   let entityMinY = Number.MAX_SAFE_INTEGER;
+   let entityMaxY = Number.MIN_SAFE_INTEGER;
    
-   const placePositionX = placeOrigin.x + (Vars.STRUCTURE_PLACE_DISTANCE + placeOffsetY) * Math.sin(placingEntityRotation);
-   const placePositionY = placeOrigin.y + (Vars.STRUCTURE_PLACE_DISTANCE + placeOffsetY) * Math.cos(placingEntityRotation);
-   return new Point(placePositionX, placePositionY);
+   for (let i = 0; i < hitboxes.length; i++) {
+      const hitbox = hitboxes[i];
+
+      const minX = hitbox.calculateHitboxBoundsMinX();
+      const maxX = hitbox.calculateHitboxBoundsMaxX();
+      const minY = hitbox.calculateHitboxBoundsMinY();
+      const maxY = hitbox.calculateHitboxBoundsMaxY();
+      
+      if (minX < entityMinX) {
+         entityMinX = minX;
+      }
+      if (maxX > entityMaxX) {
+         entityMaxX = maxX;
+      }
+      if (minY < entityMinY) {
+         entityMinY = minY;
+      }
+      if (maxY > entityMaxY) {
+         entityMaxY = maxY;
+      }
+   }
+
+   const boundingAreaHeight = entityMaxY - entityMinY;
+   const placeOffsetY = boundingAreaHeight * 0.5;
+   
+   const placePosition = Point.fromVectorForm(Vars.STRUCTURE_PLACE_DISTANCE + placeOffsetY, placingEntityRotation);
+   placePosition.add(placeOrigin);
+   return placePosition;
 }
 
 const getNearbyStructures = (regularPlacePosition: Point, chunks: Chunks): ReadonlyArray<EntityInfo<StructureType>> => {
@@ -176,38 +175,79 @@ export function getSnapDirection(directionToSnappingEntity: number, structureRot
    throw new Error("Misaligned directions!");
 }
 
-const getPositionsOffEntity = (snapOrigin: Readonly<Point>, snapEntity: EntityInfo<StructureType>, placeRotation: number, structureType: StructureType): ReadonlyArray<StructureTransformInfo> => {
+const getPositionsOffEntity = (snapOrigin: Readonly<Point>, connectingEntity: EntityInfo<StructureType>, placeRotation: number, structureType: StructureType, chunks: Chunks): ReadonlyArray<StructureTransformInfo> => {
+   const placingEntityHitboxes = createEntityHitboxes(structureType, 1);
+   
    const snapPositions = new Array<StructureTransformInfo>();
 
-   for (let i = 0; i < 4; i++) {
-      const offsetDirection = i * Math.PI / 2 + snapEntity.rotation;
+   for (let i = 0; i < connectingEntity.hitboxes.length; i++) {
+      const hitbox = connectingEntity.hitboxes[i];
+   
+      let hitboxHalfWidth: number;
+      let hitboxHalfHeight: number;
+      if (hitboxIsCircular(hitbox)) {
+         hitboxHalfWidth = hitbox.radius;
+         hitboxHalfHeight = hitbox.radius;
+      } else {
+         hitboxHalfWidth = hitbox.width * 0.5;
+         hitboxHalfHeight = hitbox.height * 0.5;
+      }
 
-      const snapType = i % 2 === 0 ? SnapType.vertical : SnapType.horizontal;
-      const snapEntityOffset = getSnapOffset(snapEntity.type, snapType);
+      for (let j = 0; j < placingEntityHitboxes.length; j++) {
+         const placingEntityHitbox = placingEntityHitboxes[j];
+   
+         // @Cleanup: copy and paste
+         let placingEntityHitboxHalfWidth: number;
+         let placingEntityHitboxHalfHeight: number;
+         if (hitboxIsCircular(placingEntityHitbox)) {
+            placingEntityHitboxHalfWidth = placingEntityHitbox.radius;
+            placingEntityHitboxHalfHeight = placingEntityHitbox.radius;
+         } else {
+            placingEntityHitboxHalfWidth = placingEntityHitbox.width * 0.5;
+            placingEntityHitboxHalfHeight = placingEntityHitbox.height * 0.5;
+         }
+
+         // Add snap positions for each direction off the connecting entity hitbox
+         for (let k = 0; k < 4; k++) {
+            const offsetDirection = k * Math.PI / 2 + connectingEntity.rotation;
       
-      // direction to the snapping entity is opposite of the offset from the snapping entity
-      const snapDirection = getSnapDirection(offsetDirection + Math.PI, placeRotation);
+            const connectingEntityOffset = k % 2 === 0 ? hitboxHalfHeight : hitboxHalfWidth;
+   
+            // Direction to the snapping entity is opposite of the offset from the snapping entity
+            const snapDirection = getSnapDirection(offsetDirection + Math.PI, placeRotation);
+      
+            const placingEntityOffset = snapDirection % 2 === 0 ? placingEntityHitboxHalfHeight : placingEntityHitboxHalfWidth;
+      
+            const position = Point.fromVectorForm(connectingEntityOffset + placingEntityOffset, offsetDirection);
+            position.add(snapOrigin);
 
-      const placingSnapType = snapDirection % 2 === 0 ? SnapType.vertical : SnapType.horizontal;
-      const placingEntityOffset = getSnapOffset(structureType, placingSnapType);
-
-      const offset = snapEntityOffset + placingEntityOffset;
-      const positionX = snapOrigin.x + offset * Math.sin(offsetDirection);
-      const positionY = snapOrigin.y + offset * Math.cos(offsetDirection);
-      const position = new Point(positionX, positionY);
-
-      snapPositions.push({
-         position: position,
-         rotation: placeRotation,
-         snapDirection: snapDirection,
-         connectedEntityID: snapEntity.id
-      });
+            // Don't add the position if it would be colliding with the connecting entity
+            let isValid = true;
+            const collidingEntities = estimateCollidingEntities(chunks, structureType, position.x, position.y, placeRotation, Vars.COLLISION_EPSILON);
+            for (let l = 0; l < collidingEntities.length; l++) {
+               const collidingEntity = collidingEntities[l];
+               if (collidingEntity.id === connectingEntity.id) {
+                  isValid = false;
+                  break;
+               }
+            }
+      
+            if (isValid) {
+               snapPositions.push({
+                  position: position,
+                  rotation: placeRotation,
+                  snapDirection: snapDirection,
+                  connectedEntityID: connectingEntity.id
+               });
+            }
+         }
+      }
    }
 
    return snapPositions;
 }
 
-const findCandidatePlacePositions = (nearbyStructures: ReadonlyArray<EntityInfo<StructureType>>, structureType: StructureType, placingEntityRotation: number): Array<StructureTransformInfo> => {
+const findCandidatePlacePositions = (nearbyStructures: ReadonlyArray<EntityInfo<StructureType>>, structureType: StructureType, placingEntityRotation: number, chunks: Chunks): Array<StructureTransformInfo> => {
    const candidatePositions = new Array<StructureTransformInfo>();
    
    for (let i = 0; i < nearbyStructures.length; i++) {
@@ -224,7 +264,7 @@ const findCandidatePlacePositions = (nearbyStructures: ReadonlyArray<EntityInfo<
       const placeRotation = Math.round(placingEntityRotation / (Math.PI * 0.5)) * Math.PI * 0.5 + clampedSnapRotation;
 
       const snapOrigin = getStructureSnapOrigin(entity);
-      const positionsOffEntity = getPositionsOffEntity(snapOrigin, entity, placeRotation, structureType);
+      const positionsOffEntity = getPositionsOffEntity(snapOrigin, entity, placeRotation, structureType, chunks);
 
       for (let i = 0; i < positionsOffEntity.length; i++) {
          const position = positionsOffEntity[i];
@@ -283,26 +323,26 @@ const groupTransforms = (transforms: ReadonlyArray<StructureTransformInfo>, stru
       const group = groups[i];
       const firstTransform = group[0];
       
-      let snappedSidesBitset = 0;
-      const snappedEntityIDs: ConnectedEntityIDs = [0, 0, 0, 0];
+      let connectedSidesBitset = 0;
+      const connectedEntityIDs: ConnectedEntityIDs = [0, 0, 0, 0];
       for (let j = 0; j < group.length; j++) {
          const transform = group[j];
 
          const bit = 1 << transform.snapDirection;
-         if ((snappedSidesBitset & bit)) {
+         if ((connectedSidesBitset & bit)) {
             console.warn("Found multiple snaps to the same side of the structure being placed!");
          } else {
-            snappedSidesBitset |= bit;
+            connectedSidesBitset |= bit;
 
-            snappedEntityIDs[transform.snapDirection] = transform.connectedEntityID;
+            connectedEntityIDs[transform.snapDirection] = transform.connectedEntityID;
          }
       }
 
       const placeInfo: StructurePlaceInfo = {
          position: firstTransform.position,
          rotation: firstTransform.rotation,
-         connectedSidesBitset: snappedSidesBitset,
-         connectedEntityIDs: snappedEntityIDs,
+         connectedSidesBitset: connectedSidesBitset,
+         connectedEntityIDs: connectedEntityIDs,
          entityType: structureType,
          isValid: structurePlaceIsValid(structureType, firstTransform.position.x, firstTransform.position.y, firstTransform.rotation, chunks)
       };
@@ -323,24 +363,22 @@ const filterCandidatePositions = (candidates: Array<StructureTransformInfo>, reg
    }
 }
 
-export function calculateStructurePlaceInfo(placeOrigin: Point, placingEntityRotation: number, structureType: StructureType, chunks: Chunks): StructurePlaceInfo {
-   const regularPlacePosition = calculateRegularPlacePosition(placeOrigin, placingEntityRotation, structureType);
-   const nearbyStructures = getNearbyStructures(regularPlacePosition, chunks);
+const calculatePlaceInfo = (position: Point, rotation: number, structureType: StructureType, chunks: Chunks): StructurePlaceInfo => {
+   const nearbyStructures = getNearbyStructures(position, chunks);
    
-   const candidatePositions = findCandidatePlacePositions(nearbyStructures, structureType, placingEntityRotation);
-   filterCandidatePositions(candidatePositions, regularPlacePosition);
+   const candidatePositions = findCandidatePlacePositions(nearbyStructures, structureType, rotation, chunks);
+   filterCandidatePositions(candidatePositions, position);
    
    const placeInfos = groupTransforms(candidatePositions, structureType, chunks);
-
    if (placeInfos.length === 0) {
       // If no connections are found, use the regular place position
       return {
-         position: regularPlacePosition,
-         rotation: placingEntityRotation,
+         position: position,
+         rotation: rotation,
          connectedSidesBitset: 0,
          connectedEntityIDs: [0, 0, 0, 0],
          entityType: structureType,
-         isValid: structurePlaceIsValid(structureType, regularPlacePosition.x, regularPlacePosition.y, placingEntityRotation, chunks)
+         isValid: structurePlaceIsValid(structureType, position.x, position.y, rotation, chunks)
       };
    } else {
       // @Incomplete:
@@ -352,24 +390,14 @@ export function calculateStructurePlaceInfo(placeOrigin: Point, placingEntityRot
 }
 
 export function calculateStructureConnectionInfo(position: Point, rotation: number, structureType: StructureType, chunks: Chunks): StructureConnectionInfo {
-   // @Cleanup: copy and paste
-   
-   const nearbyStructures = getNearbyStructures(position, chunks);
-   
-   const candidatePositions = findCandidatePlacePositions(nearbyStructures, structureType, rotation);
-   filterCandidatePositions(candidatePositions, position);
-   
-   const placeInfos = groupTransforms(candidatePositions, structureType, chunks);
-   if (placeInfos.length === 0) {
-      return {
-         connectedSidesBitset: 0,
-         connectedEntityIDs: [0, 0, 0, 0]
-      };
-   } else {
-      // @Incomplete:
-      // - First filter by num snaps
-      // - Then filter by proximity to regular place position
+   const placeInfo = calculatePlaceInfo(position, rotation, structureType, chunks);
+   return {
+      connectedSidesBitset: placeInfo.connectedSidesBitset,
+      connectedEntityIDs: placeInfo.connectedEntityIDs
+   };
+}
 
-      return placeInfos[0];
-   }
+export function calculateStructurePlaceInfo(placeOrigin: Point, placingEntityRotation: number, structureType: StructureType, chunks: Chunks): StructurePlaceInfo {
+   const regularPlacePosition = calculateRegularPlacePosition(placeOrigin, placingEntityRotation, structureType);
+   return calculatePlaceInfo(regularPlacePosition, placingEntityRotation, structureType, chunks);
 }

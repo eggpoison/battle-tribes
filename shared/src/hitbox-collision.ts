@@ -126,12 +126,12 @@ export function getCollisionPushInfo(pushedHitbox: Hitbox, pushingHitbox: Hitbox
    }
 }
 
-export function hitboxesAreColliding(hitbox: Hitbox, hitboxes: ReadonlyArray<Hitbox>): boolean {
+export function hitboxesAreColliding(hitbox: Hitbox, hitboxes: ReadonlyArray<Hitbox>, epsilon: number = 0): boolean {
    for (let j = 0; j < hitboxes.length; j++) {
       const otherHitbox = hitboxes[j];
 
       // If the objects are colliding, add the colliding object and this object
-      if (hitbox.isColliding(otherHitbox)) {
+      if (hitbox.isColliding(otherHitbox, epsilon)) {
          return true;
       }
    }
@@ -144,8 +144,8 @@ export function collisionBitsAreCompatible(collisionMask1: number, collisionBit1
    return (collisionMask1 & collisionBit2) !== 0 && (collisionMask2 & collisionBit1) !== 0;
 }
 
-export function getHitboxesCollidingEntities(chunks: Chunks, hitboxes: ReadonlyArray<Hitbox>): Array<EntityInfo> {
-   const collidingEntities = new Array<EntityInfo>();
+export function getHitboxesCollidingEntities<Entity extends EntityInfo>(chunks: Chunks<Entity>, hitboxes: ReadonlyArray<Hitbox>, epsilon: number = 0): Array<Entity> {
+   const collidingEntities = new Array<Entity>();
    const seenEntityIDs = new Set<number>();
    
    for (let i = 0; i < hitboxes.length; i++) {
@@ -183,7 +183,7 @@ export function getHitboxesCollidingEntities(chunks: Chunks, hitboxes: ReadonlyA
                }
                seenEntityIDs.add(entity.id);
                
-               if (hitboxesAreColliding(hitbox, entity.hitboxes)) {
+               if (hitboxesAreColliding(hitbox, entity.hitboxes, epsilon)) {
                   collidingEntities.push(entity);
                }
             }
@@ -195,12 +195,12 @@ export function getHitboxesCollidingEntities(chunks: Chunks, hitboxes: ReadonlyA
 }
 
 // @Cleanup: broaden to EntityType instead of StructureType
-export function estimateCollidingEntities(chunks: Chunks, entityType: StructureType, x: number, y: number, rotation: number): Array<EntityInfo> {
+export function estimateCollidingEntities(chunks: Chunks, entityType: StructureType, x: number, y: number, rotation: number, epsilon: number): Array<EntityInfo> {
    const testHitboxes = createEntityHitboxes(entityType, 1);
    for (let i = 0; i < testHitboxes.length; i++) {
       const hitbox = testHitboxes[i];
       updateHitbox(hitbox, x, y, rotation);
    }
    
-   return getHitboxesCollidingEntities(chunks, testHitboxes);
+   return getHitboxesCollidingEntities(chunks, testHitboxes, epsilon);
 }

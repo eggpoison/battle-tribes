@@ -148,56 +148,6 @@ export function collide(entity: Entity, pushingEntity: Entity, pushedHitboxIdx: 
    }
 }
 
-export function getHitboxesCollidingEntities(hitboxes: ReadonlyArray<Hitbox>): ReadonlyArray<Entity> {
-   const collidingEntities = new Array<Entity>();
-   const seenEntityIDs = new Set<number>();
-   
-   for (let i = 0; i < hitboxes.length; i++) {
-      const hitbox = hitboxes[i];
-
-      let minX = hitbox.calculateHitboxBoundsMinX();
-      let maxX = hitbox.calculateHitboxBoundsMaxX();
-      let minY = hitbox.calculateHitboxBoundsMinY();
-      let maxY = hitbox.calculateHitboxBoundsMaxY();
-      if (minX < 0) {
-         minX = 0;
-      }
-      if (maxX >= Settings.BOARD_UNITS) {
-         maxX = Settings.BOARD_UNITS - 1;
-      }
-      if (minY < 0) {
-         minY = 0;
-      }
-      if (maxY >= Settings.BOARD_UNITS) {
-         maxY = Settings.BOARD_UNITS - 1;
-      }
-      
-      const minChunkX = Math.max(Math.floor(minX / Settings.CHUNK_UNITS), 0);
-      const maxChunkX = Math.min(Math.floor(maxX / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1);
-      const minChunkY = Math.max(Math.floor(minY / Settings.CHUNK_UNITS), 0);
-      const maxChunkY = Math.min(Math.floor(maxY / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1);
-      
-      for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
-         for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
-            const chunk = Board.getChunk(chunkX, chunkY);
-            for (let j = 0; j < chunk.entities.length; j++) {
-               const entity = chunk.entities[j];
-               if (seenEntityIDs.has(entity.id)) {
-                  continue;
-               }
-               seenEntityIDs.add(entity.id);
-               
-               if (hitboxesAreColliding(hitbox, entity.hitboxes)) {
-                  collidingEntities.push(entity);
-               }
-            }
-         }
-      }
-   }
-
-   return collidingEntities;
-}
-
 /** If no collision is found, does nothing. */
 export function resolveEntityTileCollision(entity: Entity, hitbox: Hitbox, tileX: number, tileY: number): void {
    // @Speed

@@ -10,7 +10,6 @@ import Board from "../../../Board";
 import Entity from "../../../Entity";
 import Tribe from "../../../Tribe";
 import { getDistanceFromPointToEntity, stopEntity, willStopAtDesiredDistance } from "../../../ai-shared";
-import { getHitboxesCollidingEntities } from "../../../collision";
 import { HealthComponentArray } from "../../../components/HealthComponent";
 import { consumeItemFromSlot, InventoryComponentArray, getInventory } from "../../../components/InventoryComponent";
 import { InventoryUseComponentArray, getInventoryUseInfo, setLimbActions } from "../../../components/InventoryUseComponent";
@@ -27,6 +26,7 @@ import { huntEntity } from "./tribesman-combat-ai";
 import { TribesmanPlaceGoal, TribesmanUpgradeGoal } from "./tribesman-goals";
 import { AIHelperComponentArray } from "../../../components/AIHelperComponent";
 import { createEntityHitboxes } from "webgl-test-shared/dist/hitboxes/entity-hitbox-creation";
+import { getHitboxesCollidingEntities } from "webgl-test-shared/dist/hitbox-collision";
 
 const enum Vars {
    BUILDING_PLACE_DISTANCE = 80
@@ -42,7 +42,7 @@ export function goPlaceBuilding(tribesman: Entity, hotbarInventory: Inventory, t
       updateHitbox(hitbox, plan.position.x, plan.position.y, plan.rotation);
    }
    
-   const blockingEntities = getHitboxesCollidingEntities(hitboxes);
+   const blockingEntities = getHitboxesCollidingEntities(Board.chunks, hitboxes);
    for (let i = 0; i < blockingEntities.length; i++) {
       const blockingEntity = blockingEntities[i];
       if (!HealthComponentArray.hasComponent(blockingEntity.id)) {

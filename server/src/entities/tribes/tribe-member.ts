@@ -52,7 +52,6 @@ import { createItemEntity, itemEntityCanBePickedUp } from "../item-entity";
 import { dropBerryBushCropBerries } from "../plant";
 import { createFence } from "../structures/fence";
 import { createFenceGate } from "../structures/fence-gate";
-import { getHitboxesCollidingEntities } from "../../collision";
 import { PlantComponentArray, plantIsFullyGrown } from "../../components/PlantComponent";
 import { ItemComponentArray } from "../../components/ItemComponent";
 import { StructureComponentArray } from "../../components/StructureComponent";
@@ -61,8 +60,6 @@ import { createFrostshaper } from "../structures/frostshaper";
 import { createStonecarvingTable } from "../structures/stonecarving-table";
 import { BerryBushComponentArray } from "../../components/BerryBushComponent";
 import { BuildingMaterialComponentArray } from "../../components/BuildingMaterialComponent";
-import { updateHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
-import { createEntityHitboxes } from "webgl-test-shared/dist/hitboxes/entity-hitbox-creation";
 
 const enum Vars {
    ITEM_THROW_FORCE = 100,

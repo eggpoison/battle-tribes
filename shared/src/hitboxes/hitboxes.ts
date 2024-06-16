@@ -34,6 +34,8 @@ export class RectangularHitbox extends BaseHitbox {
       this.height = height;
       this.relativeRotation = rotation;
       this.rotation = rotation;
+
+      updateRotationAndVertexPositionsAndSideAxes(this, 0);
    }
 
    public calculateHitboxBoundsMinX(): number {
@@ -49,10 +51,10 @@ export class RectangularHitbox extends BaseHitbox {
       return this.position.y + Math.max(this.vertexOffsets[0].y, this.vertexOffsets[1].y, this.vertexOffsets[2].y, this.vertexOffsets[3].y);
    }
 
-   public isColliding(otherHitbox: Hitbox): boolean {
+   public isColliding(otherHitbox: Hitbox, epsilon: number = 0): boolean {
       if (hitboxIsCircular(otherHitbox)) {
          // Circular hitbox
-         return circleAndRectangleDoIntersect(otherHitbox.position, otherHitbox.radius, this.position, this.width, this.height, this.rotation);
+         return circleAndRectangleDoIntersect(otherHitbox.position, otherHitbox.radius - epsilon, this.position, this.width - epsilon * 0.5, this.height - epsilon * 0.5, this.rotation);
       } else {
          // Rectangular hitbox
 
@@ -68,8 +70,28 @@ export class RectangularHitbox extends BaseHitbox {
          if (diffX * diffX + diffY * diffY > (width1Squared + height1Squared + width2Squared + height2Squared + 2 * Math.sqrt((width1Squared + height1Squared) * (width2Squared + height2Squared))) * 0.25) {
             return false;
          }
+
+         const thisWidthBefore = this.width;
+         const thisHeightBefore = this.height;
+         
+         if (epsilon > 0) {
+            this.width -= epsilon * 0.5;
+            this.height -= epsilon * 0.5;
+
+            const parentRotation = this.rotation - this.relativeRotation;
+            updateRotationAndVertexPositionsAndSideAxes(this, parentRotation);
+         }
          
          const collisionData = rectanglesAreColliding(this.vertexOffsets, otherHitbox.vertexOffsets, this.position, otherHitbox.position, this.axisX, this.axisY, otherHitbox.axisX, otherHitbox.axisY);
+
+         if (epsilon > 0) {
+            this.width = thisWidthBefore;
+            this.height = thisHeightBefore;
+
+            const parentRotation = this.rotation - this.relativeRotation;
+            updateRotationAndVertexPositionsAndSideAxes(this, parentRotation);
+         }
+         
          return collisionData.isColliding;
       }
    }
@@ -97,13 +119,13 @@ export class CircularHitbox extends BaseHitbox {
       return this.position.y + this.radius;
    }
 
-   public isColliding(otherHitbox: Hitbox): boolean {
+   public isColliding(otherHitbox: Hitbox, epsilon: number = 0): boolean {
       if (hitboxIsCircular(otherHitbox)) {
          // Circular hitbox
-         return circlesDoIntersect(this.position, this.radius, otherHitbox.position, otherHitbox.radius);
+         return circlesDoIntersect(this.position, this.radius - epsilon, otherHitbox.position, otherHitbox.radius - epsilon);
       } else {
          // Rectangular hitbox
-         return circleAndRectangleDoIntersect(this.position, this.radius, otherHitbox.position, otherHitbox.width, otherHitbox.height, otherHitbox.rotation);
+         return circleAndRectangleDoIntersect(this.position, this.radius - epsilon, otherHitbox.position, otherHitbox.width - epsilon * 0.5, otherHitbox.height - epsilon * 0.5, otherHitbox.rotation);
       }
    }
 }

@@ -193,15 +193,13 @@ const getLastActionTicks = (useInfo: LimbData): number => {
 
 const getHandRestingOffset = (entityType: InventoryUseEntityType): number => {
    switch (entityType) {
-      // @Temporary
-      case EntityType.tribeWorker:
       case EntityType.player:
       case EntityType.tribeWarrior: {
          return 34;
       }
-      // case EntityType.tribeWorker: {
-      //    return 30;
-      // }
+      case EntityType.tribeWorker: {
+         return 30;
+      }
       case EntityType.zombie: {
          return 32;
       }
@@ -379,7 +377,6 @@ class InventoryUseComponent extends ServerComponent<ServerComponentType.inventor
                limbIdx === 0 ? 0.5 : 0,
                0
             );
-            renderPart.scale = 8 / 380;
             this.entity.attachRenderPart(renderPart);
             this.activeItemRenderParts[limbIdx] = renderPart;
          }

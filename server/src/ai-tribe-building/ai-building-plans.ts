@@ -12,9 +12,9 @@ import { placeBuilding } from "../entities/tribes/tribe-member";
 import { SafetyNode, addHitboxesOccupiedNodes, addRectangularSafetyNodePositions, placeVirtualBuilding, updateTribeBuildingInfo } from "./ai-building";
 import { buildingIsInfrastructure, getTribeSafety, tribeIsVulnerable } from "./ai-building-heuristics";
 import { TribeArea, areaHasOutsideDoor, getOutsideDoorPlacePlan } from "./ai-building-areas";
-import { getHitboxesCollidingEntities } from "../collision";
 import { HitboxVertexPositions, updateHitbox, hitboxIsCircular } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { createEntityHitboxes } from "webgl-test-shared/dist/hitboxes/entity-hitbox-creation";
+import { getHitboxesCollidingEntities } from "webgl-test-shared/dist/hitbox-collision";
 
 const virtualBuildingTakesUpWallSpace = (wallPosition: Point, wallRotation: number, virtualBuilding: VirtualBuilding, wallVertexOffsets: HitboxVertexPositions): boolean => {
    // @Speed: cache when virutal entity is first created
@@ -488,7 +488,7 @@ const buildingPositionIsValid = (tribe: Tribe, x: number, y: number, rotation: n
       updateHitbox(hitbox, x, y, rotation);
    }
    
-   const collidingEntities = getHitboxesCollidingEntities(hitboxes);
+   const collidingEntities = getHitboxesCollidingEntities(Board.chunks, hitboxes);
    
    for (let i = 0; i < collidingEntities.length; i++) {
       const collidingEntity = collidingEntities[i];

@@ -10,12 +10,12 @@ import { StructureComponent, StructureComponentArray } from "../../components/St
 import { StructureConnectionInfo } from "webgl-test-shared/dist/structures";
 import { CraftingStationComponent, CraftingStationComponentArray } from "../../components/CraftingStationComponent";
 import { CraftingStation } from "webgl-test-shared/dist/crafting-recipes";
-import { createWorbenchHitboxes } from "webgl-test-shared/dist/hitboxes/entity-hitbox-creation";
+import { createWorkbenchHitboxes } from "webgl-test-shared/dist/hitboxes/entity-hitbox-creation";
 
 export function createWorkbench(position: Point, rotation: number, tribe: Tribe, connectionInfo: StructureConnectionInfo): Entity {
    const workbench = new Entity(position, rotation, EntityType.workbench, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
-   const hitboxes = createWorbenchHitboxes(workbench.getNextHitboxLocalID());
+   const hitboxes = createWorkbenchHitboxes(workbench.getNextHitboxLocalID());
    for (let i = 0; i < hitboxes.length; i++) {
       workbench.addHitbox(hitboxes[i]);
    }

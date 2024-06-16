@@ -32,7 +32,7 @@ abstract class BaseHitbox {
    public abstract calculateHitboxBoundsMinY(): number;
    public abstract calculateHitboxBoundsMaxY(): number;
 
-   public abstract isColliding(otherHitbox: Hitbox): boolean;
+   public abstract isColliding(otherHitbox: Hitbox, epsilon?: number): boolean;
 }
 
 export default BaseHitbox;

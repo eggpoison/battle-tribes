@@ -38,6 +38,7 @@ import { createBallista } from "../entities/structures/ballista";
 import { createEmptyStructureConnectionInfo } from "webgl-test-shared/dist/structures";
 import { createZombie } from "../entities/mobs/zombie";
 import { createTribeWarrior } from "../entities/tribes/tribe-warrior";
+import { createTribeWorker } from "../entities/tribes/tribe-worker";
 
 // @Cleanup: see if a decorator can be used to cut down on the player entity check copy-n-paste
 
@@ -701,7 +702,11 @@ const devSummonEntity = (playerClient: PlayerClient, summonPacket: EntitySummonP
          createTribeWarrior(position, rotation, tribeComponent.tribe, 0);
          break;
       };
-      case EntityType.tribeWorker: {};
+      case EntityType.tribeWorker: {
+         const tribeComponent = TribeComponentArray.getComponent(player.id);
+         createTribeWorker(position, rotation, tribeComponent.tribe.id, 0);
+         break;
+      };
       case EntityType.tunnel: {};
       case EntityType.wall: {};
       case EntityType.wallPunjiSticks: {};

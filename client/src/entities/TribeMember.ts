@@ -57,9 +57,6 @@ const getFistTextureSource = (tribesman: Entity, tribeType: TribeType): string =
 const getBodyTextureSource = (entity: Entity, tribeType: TribeType): string => {
    switch (tribeType) {
       case TribeType.plainspeople: {
-         // @Temporary
-         return "entities/plainspeople/player.png";
-
          if (entity.type === EntityType.tribeWarrior) {
             return "entities/plainspeople/warrior.png";
          } else if (entity.type === EntityType.player) {
@@ -69,9 +66,6 @@ const getBodyTextureSource = (entity: Entity, tribeType: TribeType): string => {
          }
       }
       case TribeType.goblins: {
-         // @Temporary
-         return "entities/goblins/player.png";
-         
          if (entity.type === EntityType.tribeWarrior) {
             return "entities/goblins/warrior.png";
          } else if (entity.type === EntityType.player) {
@@ -81,9 +75,6 @@ const getBodyTextureSource = (entity: Entity, tribeType: TribeType): string => {
          }
       }
       case TribeType.frostlings: {
-         // @Temporary
-         return "entities/frostlings/player.png";
-         
          if (entity.type === EntityType.tribeWarrior) {
             return "entities/frostlings/warrior.png";
          } else if (entity.type === EntityType.player) {
@@ -93,9 +84,6 @@ const getBodyTextureSource = (entity: Entity, tribeType: TribeType): string => {
          }
       }
       case TribeType.barbarians: {
-         // @Temporary
-         return "entities/barbarians/player.png";
-         
          if (entity.type === EntityType.tribeWarrior) {
             return "entities/barbarians/warrior.png";
          } else if (entity.type === EntityType.player) {

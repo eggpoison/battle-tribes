@@ -5,7 +5,7 @@ import { Point } from "../utils";
 import { Hitbox, RectangularHitbox, HitboxCollisionType, CircularHitbox, HitboxFlags } from "./hitboxes";
 
 export function createWallHitboxes(localID: number): ReadonlyArray<Hitbox> {
-   const WALL_SIZE = 64 - 0.05;
+   const WALL_SIZE = 64;
 
    const hitboxes = new Array<Hitbox>();
    hitboxes.push(new RectangularHitbox(1, new Point(0, 0), HitboxCollisionType.hard, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, localID, 0, WALL_SIZE, WALL_SIZE, 0));
@@ -13,7 +13,7 @@ export function createWallHitboxes(localID: number): ReadonlyArray<Hitbox> {
 }
 
 export function createWarriorHutHitboxes(localID: number): ReadonlyArray<Hitbox> {
-   const WARRIOR_HUT_SIZE = 104 - 0.05;
+   const WARRIOR_HUT_SIZE = 104;
 
    const hitboxes = new Array<Hitbox>();
    hitboxes.push(new RectangularHitbox(2, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, localID, 0, WARRIOR_HUT_SIZE, WARRIOR_HUT_SIZE, 0));
@@ -22,8 +22,8 @@ export function createWarriorHutHitboxes(localID: number): ReadonlyArray<Hitbox>
 
 // @Incomplete: local id
 export function createTunnelHitboxes(localID: number): ReadonlyArray<Hitbox> {
-   const HITBOX_WIDTH = 8 - 0.05;
-   const HITBOX_HEIGHT = 64 - 0.05;
+   const HITBOX_WIDTH = 8;
+   const HITBOX_HEIGHT = 64;
    const THIN_HITBOX_WIDTH = 0.1;
 
    const hitboxes = new Array<Hitbox>();
@@ -33,11 +33,8 @@ export function createTunnelHitboxes(localID: number): ReadonlyArray<Hitbox> {
    hitboxes.push(new RectangularHitbox(1, new Point(32 - HITBOX_WIDTH / 2, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, localID, 0, HITBOX_WIDTH, HITBOX_HEIGHT, 0));
 
    // Hard hitboxes
-   // entity.addHitbox(new RectangularHitbox(entity, 1, -32 + THIN_HITBOX_WIDTH, 0, HitboxCollisionType.hard, THIN_HITBOX_WIDTH, HITBOX_HEIGHT));
-   // entity.addHitbox(new RectangularHitbox(entity, 1, 32 - THIN_HITBOX_WIDTH, 0, HitboxCollisionType.hard, THIN_HITBOX_WIDTH, HITBOX_HEIGHT));
-   // @Temporary
-   hitboxes.push(new RectangularHitbox(1, new Point(-32.5, 0), HitboxCollisionType.hard, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, localID, 0, THIN_HITBOX_WIDTH, HITBOX_HEIGHT, 0));
-   hitboxes.push(new RectangularHitbox(1, new Point(32.5, 0), HitboxCollisionType.hard, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, localID, 0, THIN_HITBOX_WIDTH, HITBOX_HEIGHT, 0));
+   hitboxes.push(new RectangularHitbox(1, new Point(-32.5 + THIN_HITBOX_WIDTH, 0), HitboxCollisionType.hard, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, localID, 0, THIN_HITBOX_WIDTH, HITBOX_HEIGHT, 0));
+   hitboxes.push(new RectangularHitbox(1, new Point(32.5 - THIN_HITBOX_WIDTH, 0), HitboxCollisionType.hard, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, localID, 0, THIN_HITBOX_WIDTH, HITBOX_HEIGHT, 0));
 
    return hitboxes;
 }
@@ -51,8 +48,8 @@ export function createTribeTotemHitboxes(localID: number): ReadonlyArray<Hitbox>
 }
 
 export function createStonecarvingTableHitboxes(localID: number): ReadonlyArray<Hitbox> {
-   const HITBOX_WIDTH = 120 - 0.05;
-   const HITBOX_HEIGHT = 80 - 0.05;
+   const HITBOX_WIDTH = 120;
+   const HITBOX_HEIGHT = 80;
 
    const hitboxes = new Array<Hitbox>();
 
@@ -63,7 +60,7 @@ export function createStonecarvingTableHitboxes(localID: number): ReadonlyArray<
 }
 
 export function createFloorSpikesHitboxes(localID: number): ReadonlyArray<Hitbox> {
-   const FLOOR_HITBOX_SIZE = 48 - 0.05;
+   const FLOOR_HITBOX_SIZE = 48;
    const hitboxes = new Array<Hitbox>();
    
    // @Hack mass
@@ -74,8 +71,8 @@ export function createFloorSpikesHitboxes(localID: number): ReadonlyArray<Hitbox
 }
 
 export function createWallSpikesHitboxes(localID: number): ReadonlyArray<Hitbox> {
-   const WALL_HITBOX_WIDTH = 56 - 0.05;
-   const WALL_HITBOX_HEIGHT = 28 - 0.05;
+   const WALL_HITBOX_WIDTH = 56;
+   const WALL_HITBOX_HEIGHT = 28;
 
    const hitboxes = new Array<Hitbox>();
 
@@ -88,7 +85,7 @@ export function createWallSpikesHitboxes(localID: number): ReadonlyArray<Hitbox>
 
 export function createSlingTurretHitboxes(localID: number): ReadonlyArray<Hitbox> {
    const hitboxes = new Array<Hitbox>();
-   hitboxes.push(new CircularHitbox(1.5, new Point(0, 0), HitboxCollisionType.hard, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, localID, 0, 40 - 0.05));
+   hitboxes.push(new CircularHitbox(1.5, new Point(0, 0), HitboxCollisionType.hard, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, localID, 0, 40));
    return hitboxes;
 }
 
@@ -99,7 +96,7 @@ export function createResearchBenchHitboxes(localID: number): ReadonlyArray<Hitb
 }
 
 export function createFloorPunjiSticksHitboxes(localID: number): ReadonlyArray<Hitbox> {
-   const FLOOR_HITBOX_SIZE = 48 - 0.05;
+   const FLOOR_HITBOX_SIZE = 48;
 
    const hitboxes = new Array<Hitbox>();
    
@@ -111,8 +108,8 @@ export function createFloorPunjiSticksHitboxes(localID: number): ReadonlyArray<H
 }
 
 export function createWallPunjiSticksHitboxes(localID: number): ReadonlyArray<Hitbox> {
-   const WALL_HITBOX_WIDTH = 56 - 0.05;
-   const WALL_HITBOX_HEIGHT = 32 - 0.05;
+   const WALL_HITBOX_WIDTH = 56;
+   const WALL_HITBOX_HEIGHT = 32;
 
    const hitboxes = new Array<Hitbox>();
 
@@ -124,7 +121,7 @@ export function createWallPunjiSticksHitboxes(localID: number): ReadonlyArray<Hi
 }
 
 export function createPlanterBoxHitboxes(localID: number): ReadonlyArray<Hitbox> {
-   const HITBOX_SIZE = 80 - 0.05;
+   const HITBOX_SIZE = 80;
 
    const hitboxes = new Array<Hitbox>();
    hitboxes.push(new RectangularHitbox(1.5, new Point(0, 0), HitboxCollisionType.hard, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, localID, 0, HITBOX_SIZE, HITBOX_SIZE, 0));
@@ -132,7 +129,7 @@ export function createPlanterBoxHitboxes(localID: number): ReadonlyArray<Hitbox>
 }
 
 export function createHealingTotemHitboxes(localID: number): ReadonlyArray<Hitbox> {
-   const SIZE = 96 - 0.05;
+   const SIZE = 96;
 
    const hitboxes = new Array<Hitbox>();
    hitboxes.push(new CircularHitbox(1, new Point(0, 0), HitboxCollisionType.hard, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, localID, 0, SIZE / 2));
@@ -140,8 +137,8 @@ export function createHealingTotemHitboxes(localID: number): ReadonlyArray<Hitbo
 }
 
 export function createFrostshaperHitboxes(localID: number): ReadonlyArray<Hitbox> {
-   const HITBOX_WIDTH = 120 - 0.05;
-   const HITBOX_HEIGHT = 80 - 0.05;
+   const HITBOX_WIDTH = 120;
+   const HITBOX_HEIGHT = 80;
 
    const hitboxes = new Array<Hitbox>();
 
@@ -152,8 +149,8 @@ export function createFrostshaperHitboxes(localID: number): ReadonlyArray<Hitbox
 }
 
 export function createFenceHitboxes(localID: number): ReadonlyArray<Hitbox> {
-   const NODE_HITBOX_WIDTH = 20 - 0.05;
-   const NODE_HITBOX_HEIGHT = 20 - 0.05;
+   const NODE_HITBOX_WIDTH = 20;
+   const NODE_HITBOX_HEIGHT = 20;
    
    const hitboxes = new Array<Hitbox>();
    hitboxes.push(new RectangularHitbox(1, new Point(0, 0), HitboxCollisionType.hard, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, localID, 0, NODE_HITBOX_WIDTH, NODE_HITBOX_HEIGHT, 0));
@@ -161,8 +158,8 @@ export function createFenceHitboxes(localID: number): ReadonlyArray<Hitbox> {
 }
 
 export function createFenceGateHitboxes(localID: number): ReadonlyArray<Hitbox> {
-   const HITBOX_WIDTH = 56 - 0.05;
-   const HITBOX_HEIGHT = 16 - 0.05;
+   const HITBOX_WIDTH = 56;
+   const HITBOX_HEIGHT = 16;
 
    const hitboxes = new Array<Hitbox>();
 
@@ -173,11 +170,11 @@ export function createFenceGateHitboxes(localID: number): ReadonlyArray<Hitbox> 
 }
 
 export function createEmbrasureHitboxes(localID: number): ReadonlyArray<Hitbox> {
-   const VERTICAL_HITBOX_WIDTH = 12 - 0.05;
-   const VERTICAL_HITBOX_HEIGHT = 20 - 0.05;
+   const VERTICAL_HITBOX_WIDTH = 12;
+   const VERTICAL_HITBOX_HEIGHT = 20;
    
-   const HORIZONTAL_HITBOX_WIDTH = 24 - 0.05;
-   const HORIZONTAL_HITBOX_HEIGHT = 16 - 0.05;
+   const HORIZONTAL_HITBOX_WIDTH = 24;
+   const HORIZONTAL_HITBOX_HEIGHT = 16;
 
    const hitboxes = new Array<Hitbox>();
    
@@ -193,8 +190,8 @@ export function createEmbrasureHitboxes(localID: number): ReadonlyArray<Hitbox> 
 }
 
 export function createDoorHitboxes(localID: number): ReadonlyArray<Hitbox> {
-   const HITBOX_WIDTH = 64 - 0.05;
-   const HITBOX_HEIGHT = 16 - 0.05;
+   const HITBOX_WIDTH = 64;
+   const HITBOX_HEIGHT = 16;
 
    const hitboxes = new Array<Hitbox>();
    hitboxes.push(new RectangularHitbox(0.5, new Point(0, 0), HitboxCollisionType.hard, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, localID, 0, HITBOX_WIDTH, HITBOX_HEIGHT, 0));
@@ -202,7 +199,7 @@ export function createDoorHitboxes(localID: number): ReadonlyArray<Hitbox> {
 }
 
 export function createBarrelHitboxes(localID: number): ReadonlyArray<Hitbox> {
-   const HITBOX_SIZE = 80 - 0.05;
+   const HITBOX_SIZE = 80;
 
    const hitboxes = new Array<Hitbox>();
    hitboxes.push(new CircularHitbox(1.5, new Point(0, 0), HitboxCollisionType.hard, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, localID, 0, HITBOX_SIZE / 2));
@@ -210,18 +207,17 @@ export function createBarrelHitboxes(localID: number): ReadonlyArray<Hitbox> {
 }
 
 export function createBallistaHitboxes(localID: number): ReadonlyArray<Hitbox> {
-   const HITBOX_SIZE = 100 - 0.05;
+   const HITBOX_SIZE = 100;
 
    const hitboxes = new Array<Hitbox>();
    hitboxes.push(new RectangularHitbox(2, new Point(0, 0), HitboxCollisionType.hard, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, localID, 0, HITBOX_SIZE, HITBOX_SIZE, 0));
    return hitboxes;
 }
 
-export function createWorbenchHitboxes(localID: number): ReadonlyArray<Hitbox> {
-   const HITBOX_SIZE = 80;
-
+export function createWorkbenchHitboxes(localID: number): ReadonlyArray<Hitbox> {
    const hitboxes = new Array<Hitbox>();
-   hitboxes.push(new RectangularHitbox(1.6, new Point(0, 0), HitboxCollisionType.hard, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, localID, 0, HITBOX_SIZE, HITBOX_SIZE, 0));
+   hitboxes.push(new RectangularHitbox(1.6, new Point(0, 0), HitboxCollisionType.hard, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, localID,     0, 72, 80, 0));
+   hitboxes.push(new RectangularHitbox(1.6, new Point(0, 0), HitboxCollisionType.hard, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, localID + 1, 0, 80, 72, 0));
    return hitboxes;
 }
 
@@ -261,7 +257,7 @@ Generic creation functions
 export function createEntityHitboxes(entityType: StructureType, localID: number): ReadonlyArray<Hitbox> {
    switch (entityType) {
       case EntityType.wall:              return createWallHitboxes(localID);
-      case EntityType.workbench:         return createWorbenchHitboxes(localID);
+      case EntityType.workbench:         return createWorkbenchHitboxes(localID);
       case EntityType.door:              return createDoorHitboxes(localID);
       case EntityType.tunnel:            return createTunnelHitboxes(localID);
       case EntityType.embrasure:         return createEmbrasureHitboxes(localID);

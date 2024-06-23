@@ -15,7 +15,7 @@ import { createResearchBenchHitboxes } from "webgl-test-shared/dist/hitboxes/ent
 export function createResearchBench(position: Point, rotation: number, tribe: Tribe, connectionInfo: StructureConnectionInfo): Entity {
    const bench = new Entity(position, rotation, EntityType.researchBench, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
-   const hitboxes = createResearchBenchHitboxes(bench.getNextHitboxLocalID());
+   const hitboxes = createResearchBenchHitboxes();
    for (let i = 0; i < hitboxes.length; i++) {
       bench.addHitbox(hitboxes[i]);
    }

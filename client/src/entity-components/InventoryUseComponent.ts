@@ -1,4 +1,3 @@
-import { BowItemInfo, ITEM_INFO_RECORD, ITEM_TYPE_RECORD, InventoryName, Item, ItemType, itemInfoIsBow, itemInfoIsTool, itemInfoIsUtility } from "webgl-test-shared/dist/items";
 import { EntityType, LimbAction } from "webgl-test-shared/dist/entities";
 import { Point, lerp, randFloat, randItem } from "webgl-test-shared/dist/utils";
 import { InventoryUseComponentData, LimbData, ServerComponentType } from "webgl-test-shared/dist/components";
@@ -15,6 +14,7 @@ import { animateLimb, createCraftingAnimationParticles, createMedicineAnimationP
 import { createDeepFrostHeartBloodParticles } from "../particles";
 import { definiteGameState } from "../game-state/game-states";
 import { getFrameProgress } from "../Game";
+import { InventoryName, ItemType, ITEM_TYPE_RECORD, Item, ITEM_INFO_RECORD, itemInfoIsUtility, itemInfoIsBow, BowItemInfo, itemInfoIsTool } from "webgl-test-shared/dist/items/items";
 
 export interface LimbInfo {
    selectedItemSlot: number;

@@ -25,7 +25,7 @@ const VISION_RANGE = 400;
 export function createSlingTurret(position: Point, rotation: number, tribe: Tribe, connectionInfo: StructureConnectionInfo): Entity {
    const slingTurret = new Entity(position, rotation, EntityType.slingTurret, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
-   const hitboxes = createSlingTurretHitboxes(slingTurret.getNextHitboxLocalID());
+   const hitboxes = createSlingTurretHitboxes();
    for (let i = 0; i < hitboxes.length; i++) {
       slingTurret.addHitbox(hitboxes[i]);
    }

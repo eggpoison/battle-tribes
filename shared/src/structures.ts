@@ -76,7 +76,7 @@ const structurePlaceIsValid = (entityType: StructureType, x: number, y: number, 
 }
 
 const calculateRegularPlacePosition = (placeOrigin: Point, placingEntityRotation: number, structureType: StructureType): Point => {
-   const hitboxes = createEntityHitboxes(structureType, 1);
+   const hitboxes = createEntityHitboxes(structureType);
 
    let entityMinX = Number.MAX_SAFE_INTEGER;
    let entityMaxX = Number.MIN_SAFE_INTEGER;
@@ -176,7 +176,7 @@ export function getSnapDirection(directionToSnappingEntity: number, structureRot
 }
 
 const getPositionsOffEntity = (snapOrigin: Readonly<Point>, connectingEntity: EntityInfo<StructureType>, placeRotation: number, structureType: StructureType, chunks: Chunks): ReadonlyArray<StructureTransformInfo> => {
-   const placingEntityHitboxes = createEntityHitboxes(structureType, 1);
+   const placingEntityHitboxes = createEntityHitboxes(structureType);
    
    const snapPositions = new Array<StructureTransformInfo>();
 

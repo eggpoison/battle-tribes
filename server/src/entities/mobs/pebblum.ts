@@ -18,9 +18,9 @@ export function createPebblum(position: Point, rotation: number, targetID: numbe
    const pebblum = new Entity(position, rotation, EntityType.pebblum, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
    // Body
-   pebblum.addHitbox(new CircularHitbox(0.4, new Point(0, -4), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, pebblum.getNextHitboxLocalID(), 0, 10 * 2));
+   pebblum.addHitbox(new CircularHitbox(0.4, new Point(0, -4), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, 10 * 2));
    // Nose
-   pebblum.addHitbox(new CircularHitbox(0.3, new Point(0, 6), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, pebblum.getNextHitboxLocalID(), 0, 8 * 2));
+   pebblum.addHitbox(new CircularHitbox(0.3, new Point(0, 6), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, 8 * 2));
    
    PhysicsComponentArray.addComponent(pebblum.id, new PhysicsComponent(0, 0, 0, 0, true, false));
    HealthComponentArray.addComponent(pebblum.id, new HealthComponent(20));

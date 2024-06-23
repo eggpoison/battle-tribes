@@ -1,12 +1,13 @@
 import { InventoryComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
-import { ItemTally, CraftingRecipe, CraftingStation } from "webgl-test-shared/dist/crafting-recipes";
-import { Inventory, Item, ItemType, itemIsStackable, ITEM_INFO_RECORD, StackableItemInfo, getItemStackSize, InventoryName, ItemInfoRecord, ITEM_TYPE_RECORD, ToolItemInfo } from "webgl-test-shared/dist/items";
 import Entity from "../Entity";
 import { createItemEntity, itemEntityCanBePickedUp } from "../entities/item-entity";
 import { ComponentArray } from "./ComponentArray";
 import { createItem } from "../items";
 import Board from "../Board";
 import { ItemComponentArray } from "./ItemComponent";
+import { ItemTally, CraftingRecipe, CraftingStation } from "webgl-test-shared/dist/items/crafting-recipes";
+import { ItemTally2, tallyInventoryItems } from "webgl-test-shared/dist/items/ItemTally";
+import { InventoryName, Inventory, ItemType, Item, itemIsStackable, ITEM_INFO_RECORD, StackableItemInfo, getItemStackSize } from "webgl-test-shared/dist/items/items";
 
 export interface InventoryOptions {
    readonly acceptsPickedUpItems: boolean;
@@ -372,56 +373,41 @@ export function countItemType(inventoryComponent: InventoryComponent, itemType: 
    return count;
 }
 
-export function tallyInventoryItems(tally: ItemTally, inventory: Inventory): void {
-   for (let i = 0; i < inventory.items.length; i++) {
-      const item = inventory.items[i];
-      
-      if (typeof tally[item.type] === "undefined") {
-         tally[item.type] = item.count;
-      } else {
-         tally[item.type]! += item.count;
-      }
-   }
-}
-
-export function tallyInventoryComponentItems(tally: ItemTally, inventoryComponent: InventoryComponent): void {
+export function createInventoryComponentTally(inventoryComponent: InventoryComponent): ItemTally2 {
+   const tally = new ItemTally2();
+   
    for (let i = 0; i < inventoryComponent.inventories.length; i++) {
       const inventory = inventoryComponent.inventories[i];
       tallyInventoryItems(tally, inventory);
    }
+
+   return tally;
 }
 
-export function inventoryComponentCanAffordRecipe(inventoryComponent: InventoryComponent, recipe: CraftingRecipe, outputInventoryName: InventoryName): boolean {
+export function hasSpaceForRecipe(inventoryComponent: InventoryComponent, recipe: CraftingRecipe, outputInventoryName: InventoryName): boolean {
    // Don't craft if there isn't space
-   let hasSpace = false;
    const outputInventory = getInventory(inventoryComponent, outputInventoryName);
    for (let itemSlot = 1; itemSlot <= outputInventory.width * outputInventory.height; itemSlot++) {
       const item = outputInventory.itemSlots[itemSlot];
       if (typeof item === "undefined") {
-         hasSpace = true;
-         break;
+         return true;
       }
 
       if (item.type === recipe.product && itemIsStackable(recipe.product) && item.count + recipe.yield <= getItemStackSize(item)) {
-         hasSpace = true;
-         break;
+         return true;
       }
    }
-   if (!hasSpace) {
+
+   return false;
+}
+
+export function inventoryComponentCanAffordRecipe(inventoryComponent: InventoryComponent, recipe: CraftingRecipe, outputInventoryName: InventoryName): boolean {
+   if (!hasSpaceForRecipe(inventoryComponent, recipe, outputInventoryName)) {
       return false;
    }
-   
-   const tally: ItemTally = {};
-   tallyInventoryComponentItems(tally, inventoryComponent);
 
-   // @Speed
-   for (const [ingredientType, ingredientCount] of Object.entries(recipe.ingredients).map(entry => [Number(entry[0]), entry[1]]) as ReadonlyArray<[ItemType, number]>) {
-      if (!tally.hasOwnProperty(ingredientType) || tally[ingredientType]! < ingredientCount) {
-         return false;
-      }
-   }
-
-   return true;
+   const inventoryComponentTally = createInventoryComponentTally(inventoryComponent);
+   return inventoryComponentTally.fullyCoversOtherTally(recipe.ingredients);
 }
 
 export function recipeCraftingStationIsAvailable(availableCraftingStations: ReadonlyArray<CraftingStation>, recipe: CraftingRecipe): boolean {

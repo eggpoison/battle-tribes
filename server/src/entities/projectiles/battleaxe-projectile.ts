@@ -1,6 +1,5 @@
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { EntityType, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
-import { Item } from "webgl-test-shared/dist/items";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { Point, lerp } from "webgl-test-shared/dist/utils";
 import Entity from "../../Entity";
@@ -17,6 +16,7 @@ import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityCreationInfo } from "../../components";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
 import { CircularHitbox, HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
+import { Item } from "webgl-test-shared/dist/items/items";
 
 type ComponentTypes = [ServerComponentType.physics, ServerComponentType.tribe, ServerComponentType.throwingProjectile];
 
@@ -25,7 +25,7 @@ const RETURN_TIME_TICKS = 1 * Settings.TPS;
 export function createBattleaxeProjectile(position: Point, rotation: number, tribeMemberID: number, item: Item, tribe: Tribe): EntityCreationInfo<ComponentTypes> {
    const battleaxe = new Entity(position, rotation, EntityType.battleaxeProjectile, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
    
-   const hitbox = new CircularHitbox(0.6, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, battleaxe.getNextHitboxLocalID(), 0, 32);
+   const hitbox = new CircularHitbox(0.6, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, 32);
    battleaxe.addHitbox(hitbox);
    
    const physicsComponent = new PhysicsComponent(0, 0, 0, 0, true, true);

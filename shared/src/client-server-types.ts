@@ -7,7 +7,7 @@ import { AttackEffectiveness } from "./entity-damage-types";
 import { EntityEvent } from "./entity-events";
 import { GrassBlocker } from "./grass-blockers";
 import { HitboxCollisionType } from "./hitboxes/hitboxes";
-import { Inventory, InventoryName, ItemType } from "./items";
+import { Inventory, InventoryName, ItemType } from "./items/items";
 import { StatusEffect } from "./status-effects";
 import { EnemyTribeData, PlayerTribeData, TechID } from "./techs";
 import { Biome, TileType } from "./tiles";
@@ -386,6 +386,8 @@ export interface ClientToServerEvents {
    // -------------------------- //
    dev_give_item: (itemType: ItemType, amount: number) => void;
    dev_summon_entity: (summonPacket: EntitySummonPacket) => void;
+   dev_give_title: (title: TribesmanTitle) => void;
+   dev_remove_title: (title: TribesmanTitle) => void;
 }
 
 export interface InterServerEvents {}

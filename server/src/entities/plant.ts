@@ -1,7 +1,6 @@
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { PlanterBoxPlant } from "webgl-test-shared/dist/components";
 import { EntityType } from "webgl-test-shared/dist/entities";
-import { ItemType } from "webgl-test-shared/dist/items";
 import { Point, randInt } from "webgl-test-shared/dist/utils";
 import Entity from "../Entity";
 import { HealthComponent, HealthComponentArray } from "../components/HealthComponent";
@@ -11,6 +10,7 @@ import { dropBerryOverEntity } from "./resources/berry-bush";
 import { createItemsOverEntity } from "../entity-shared";
 import { createIceShardExplosion } from "./resources/ice-spikes";
 import { CircularHitbox, HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
+import { ItemType } from "webgl-test-shared/dist/items/items";
 
 const PLANT_HEALTHS: Record<PlanterBoxPlant, number> = {
    [PlanterBoxPlant.tree]: 10,
@@ -21,7 +21,7 @@ const PLANT_HEALTHS: Record<PlanterBoxPlant, number> = {
 export function createPlant(position: Point, rotation: number, planterBoxID: number, plantType: PlanterBoxPlant): Entity {
    const plantEntity = new Entity(position, rotation, EntityType.plant, COLLISION_BITS.plants, DEFAULT_COLLISION_MASK);
 
-   plantEntity.addHitbox(new CircularHitbox(0.3, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, plantEntity.getNextHitboxLocalID(), 0, 28))
+   plantEntity.addHitbox(new CircularHitbox(0.3, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, 28))
 
    HealthComponentArray.addComponent(plantEntity.id, new HealthComponent(PLANT_HEALTHS[plantType]));
    StatusEffectComponentArray.addComponent(plantEntity.id, new StatusEffectComponent(0));

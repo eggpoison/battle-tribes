@@ -1,6 +1,4 @@
-import { Inventory, ItemType } from "webgl-test-shared/dist/items";
-import { getItemTypeImage } from "../../../client-item-info";
-import { leftClickItemSlot, rightClickItemSlot } from "../../../inventory-manipulation";
+import { ItemType, Inventory } from "webgl-test-shared/dist/items/items";
 import ItemSlot from "./ItemSlot";
 
 export interface ItemSlotLeftClickCallbackInfo {
@@ -13,11 +11,12 @@ interface InventoryProps {
    readonly className?: string;
    readonly selectedItemSlot?: number;
    readonly isBordered?: boolean;
+   readonly isManipulable?: boolean;
    /** If defined, calls this function instead of the leftClickItemSlot function */
    onLeftClick?(e: MouseEvent, callbackInfo: ItemSlotLeftClickCallbackInfo): void;
 }
 
-const InventoryContainer = ({ entityID, inventory, className, selectedItemSlot, isBordered, onLeftClick }: InventoryProps) => {
+const InventoryContainer = ({ entityID, inventory, className, selectedItemSlot, isBordered, isManipulable = true, onLeftClick }: InventoryProps) => {
    const itemSlots = new Array<JSX.Element>();
 
    for (let y = 0; y < inventory.height; y++) {
@@ -26,26 +25,18 @@ const InventoryContainer = ({ entityID, inventory, className, selectedItemSlot, 
          const itemSlot = y * inventory.width + x + 1;
          const item = inventory.itemSlots[itemSlot];
 
-         let leftClickFunc: (e: MouseEvent) => void;
+         let leftClickFunc: ((e: MouseEvent) => void) | undefined;
          if (typeof onLeftClick !== "undefined") {
             const callbackInfo: ItemSlotLeftClickCallbackInfo = {
                itemType: typeof item !== "undefined" ? item.type : null
             };
             leftClickFunc = (e: MouseEvent) => onLeftClick(e, callbackInfo);
-         } else {
-            leftClickFunc = (e: MouseEvent) => leftClickItemSlot(e, entityID, inventory, itemSlot);
          }
 
-         const isSelected = typeof selectedItemSlot !== "undefined" && itemSlot=== selectedItemSlot;
-         if (typeof item !== "undefined") {
-            rowItemSlots.push(
-               <ItemSlot key={x} onClick={leftClickFunc} onContextMenu={e => rightClickItemSlot(e, entityID, inventory, itemSlot)} picturedItemImageSrc={getItemTypeImage(item.type)} itemCount={item.count} isSelected={isSelected} />
-            );
-         } else {
-            rowItemSlots.push(
-               <ItemSlot key={x} onClick={leftClickFunc} onContextMenu={e => rightClickItemSlot(e, entityID, inventory, itemSlot)} isSelected={isSelected} />
-            );
-         }
+         const isSelected = typeof selectedItemSlot !== "undefined" && itemSlot === selectedItemSlot;
+         rowItemSlots.push(
+            <ItemSlot key={x} entityID={entityID} inventory={inventory} itemSlot={itemSlot} isManipulable={isManipulable} isSelected={isSelected} onMouseDown={leftClickFunc} />
+         )
       }
       
       itemSlots.push(

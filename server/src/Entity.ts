@@ -63,6 +63,7 @@ class Entity<T extends EntityType = EntityType> {
 
    /** All hitboxes attached to the entity */
    public hitboxes = new Array<Hitbox>();
+   public hitboxLocalIDs = new Array<number>();
    
    public boundingAreaMinX = Number.MAX_SAFE_INTEGER;
    public boundingAreaMaxX = Number.MIN_SAFE_INTEGER;
@@ -100,12 +101,11 @@ class Entity<T extends EntityType = EntityType> {
       Board.addEntityToJoinBuffer(this);
    }
 
-   public getNextHitboxLocalID(): number {
-      return this.nextHitboxLocalID++;
-   }
-
    public addHitbox(hitbox: Hitbox): void {
       updateHitbox(hitbox, this.position.x, this.position.y, this.rotation);
+
+      const localID = this.nextHitboxLocalID++;
+      this.hitboxLocalIDs.push(localID);
       
       this.hitboxes.push(hitbox);
       this.totalMass += hitbox.mass;

@@ -3,9 +3,6 @@ import { Point } from "../utils";
 import { HitboxCollisionType, Hitbox } from "./hitboxes";
 
 abstract class BaseHitbox {
-   /** Unique identifier in its entities' hitboxes */
-   public readonly localID: number;
-
    public readonly position = new Point(0, 0);
    
    public readonly mass: number;
@@ -17,11 +14,10 @@ abstract class BaseHitbox {
 
    public readonly flags: number;
 
-   constructor(mass: number, offset: Point, collisionType: HitboxCollisionType, collisionBit: number, collisionMask: number, localID: number, flags: number) {
+   constructor(mass: number, offset: Point, collisionType: HitboxCollisionType, collisionBit: number, collisionMask: number, flags: number) {
       this.mass = mass;
       this.offset = offset;
       this.collisionType = collisionType;
-      this.localID = localID;
       this.collisionBit = collisionBit;
       this.collisionMask = collisionMask;
       this.flags = flags;

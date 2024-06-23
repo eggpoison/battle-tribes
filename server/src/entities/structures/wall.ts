@@ -18,7 +18,7 @@ export const WALL_HEALTHS = [25, 75];
 export function createWall(position: Point, rotation: number, tribe: Tribe, connectionInfo: StructureConnectionInfo): Entity {
    const wall = new Entity(position, rotation, EntityType.wall, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
-   const hitboxes = createWallHitboxes(wall.getNextHitboxLocalID());
+   const hitboxes = createWallHitboxes();
    for (let i = 0; i < hitboxes.length; i++) {
       wall.addHitbox(hitboxes[i]);
    }

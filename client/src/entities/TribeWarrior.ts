@@ -19,6 +19,7 @@ class TribeWarrior extends Tribesman {
       this.addClientComponent(ClientComponentType.footprint, new FootprintComponent(this, 0.15, 20, 64, 4, 64));
       this.addClientComponent(ClientComponentType.equipment, new EquipmentComponent(this));
 
+      // @Cleanup: Do in warrior component
       const tribeWarriorComponentData = componentDataRecord[ServerComponentType.tribeWarrior]!;
       for (let i = 0; i < tribeWarriorComponentData.scars.length; i++) {
          const scarInfo = tribeWarriorComponentData.scars[i];
@@ -26,7 +27,7 @@ class TribeWarrior extends Tribesman {
          const renderPart = new RenderPart(
             this,
             getTextureArrayIndex("scars/scar-" + (scarInfo.type + 1) + ".png"),
-            3,
+            2.5,
             scarInfo.rotation
          );
          renderPart.offset.x = scarInfo.offsetX;

@@ -1,5 +1,5 @@
 import { EntityType } from "./entities";
-import { ITEM_TYPE_RECORD as ITEM_CATEGORY_RECORD, Item } from "./items";
+import { ITEM_TYPE_RECORD as ITEM_CATEGORY_RECORD, Item } from "./items/items";
 
 const enum DamageType {
    basic,

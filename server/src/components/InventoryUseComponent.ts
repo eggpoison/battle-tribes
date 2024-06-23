@@ -1,8 +1,8 @@
 import { InventoryUseComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
 import { LimbAction } from "webgl-test-shared/dist/entities";
-import { Inventory, InventoryName } from "webgl-test-shared/dist/items";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { ComponentArray } from "./ComponentArray";
+import { Inventory, InventoryName } from "webgl-test-shared/dist/items/items";
 
 export interface InventoryUseInfo {
    selectedItemSlot: number;

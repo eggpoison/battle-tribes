@@ -1,6 +1,5 @@
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { SlimeSize, EntityType, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
-import { ItemType } from "webgl-test-shared/dist/items";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { Biome, TileType } from "webgl-test-shared/dist/tiles";
@@ -21,9 +20,10 @@ import { PhysicsComponent, PhysicsComponentArray } from "../../components/Physic
 import { wasTribeMemberKill } from "../tribes/tribe-member";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
-import { CraftingStation } from "webgl-test-shared/dist/crafting-recipes";
 import { CraftingStationComponentArray, CraftingStationComponent } from "../../components/CraftingStationComponent";
 import { CircularHitbox, HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
+import { CraftingStation } from "webgl-test-shared/dist/items/crafting-recipes";
+import { ItemType } from "webgl-test-shared/dist/items/items";
 
 const TURN_SPEED = 2 * Math.PI;
 
@@ -71,7 +71,7 @@ export function createSlime(position: Point, size: SlimeSize, orbSizes: Array<Sl
    slime.collisionPushForceMultiplier = 0.5;
 
    const mass = 1 + size * 0.5;
-   const hitbox = new CircularHitbox(mass, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, slime.getNextHitboxLocalID(), 0, RADII[size]);
+   const hitbox = new CircularHitbox(mass, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, RADII[size]);
    slime.addHitbox(hitbox);
 
    PhysicsComponentArray.addComponent(slime.id, new PhysicsComponent(0, 0, 0, 0, true, false));

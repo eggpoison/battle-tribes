@@ -1,4 +1,4 @@
-import { CraftingStation } from "webgl-test-shared/dist/crafting-recipes";
+import { CraftingStation } from "webgl-test-shared/dist/items/crafting-recipes";
 import { ComponentArray } from "./ComponentArray";
 import { CraftingStationComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
 

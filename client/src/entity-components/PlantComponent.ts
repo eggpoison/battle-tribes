@@ -1,9 +1,9 @@
 import { PlantComponentData, PlanterBoxPlant, ServerComponentType } from "webgl-test-shared/dist/components";
-import { ItemType } from "webgl-test-shared/dist/items";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
+import { ItemType } from "webgl-test-shared/dist/items/items";
 
 const TEXTURE_SOURCES: Record<PlanterBoxPlant, ReadonlyArray<string>> = {
    [PlanterBoxPlant.tree]: ["entities/plant/tree-sapling-1.png", "entities/plant/tree-sapling-2.png", "entities/plant/tree-sapling-3.png", "entities/plant/tree-sapling-4.png", "entities/plant/tree-sapling-5.png", "entities/plant/tree-sapling-6.png", "entities/plant/tree-sapling-7.png", "entities/plant/tree-sapling-8.png", "entities/plant/tree-sapling-9.png", "entities/plant/tree-sapling-10.png", "entities/plant/tree-sapling-11.png"],

@@ -15,7 +15,7 @@ import { StructureConnectionInfo } from "webgl-test-shared/dist/structures";
 export function createWarriorHut(position: Point, rotation: number, tribe: Tribe, connectionInfo: StructureConnectionInfo): Entity {
    const hut = new Entity(position, rotation, EntityType.warriorHut, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
-   const hitboxes = createWarriorHutHitboxes(hut.getNextHitboxLocalID());
+   const hitboxes = createWarriorHutHitboxes();
    for (let i = 0; i < hitboxes.length; i++) {
       hut.addHitbox(hitboxes[i]);
    }

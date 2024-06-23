@@ -151,7 +151,7 @@ export function collide(entity: Entity, pushingEntity: Entity, pushedHitboxIdx: 
 /** If no collision is found, does nothing. */
 export function resolveEntityTileCollision(entity: Entity, hitbox: Hitbox, tileX: number, tileY: number): void {
    // @Speed
-   const tileHitbox = new RectangularHitbox(1, new Point(0, 0), HitboxCollisionType.hard, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 1, 0, Settings.TILE_SIZE, Settings.TILE_SIZE, 0);
+   const tileHitbox = new RectangularHitbox(1, new Point(0, 0), HitboxCollisionType.hard, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, Settings.TILE_SIZE, Settings.TILE_SIZE, 0);
    updateHitbox(tileHitbox, (tileX + 0.5) * Settings.TILE_SIZE, (tileY + 0.5) * Settings.TILE_SIZE, 0);
    
    if (hitbox.isColliding(tileHitbox)) {

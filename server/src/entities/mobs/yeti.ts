@@ -1,6 +1,5 @@
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { EntityType, SnowballSize, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
-import { ItemType } from "webgl-test-shared/dist/items";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { TribeType } from "webgl-test-shared/dist/tribes";
 import { randItem, Point, randFloat, randInt } from "webgl-test-shared/dist/utils";
@@ -26,6 +25,7 @@ import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types"
 import { SnowballComponentArray } from "../../components/SnowballComponent";
 import { TribeComponentArray } from "../../components/TribeComponent";
 import { CircularHitbox, HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
+import { ItemType } from "webgl-test-shared/dist/items/items";
 
 const MIN_TERRITORY_SIZE = 50;
 const MAX_TERRITORY_SIZE = 100;
@@ -157,7 +157,7 @@ export function yetiSpawnPositionIsValid(positionX: number, positionY: number): 
 export function createYeti(position: Point): Entity {
    const yeti = new Entity(position, 2 * Math.PI * Math.random(), EntityType.yeti, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
-   const hitbox = new CircularHitbox(3, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, yeti.getNextHitboxLocalID(), 0, YETI_SIZE / 2);
+   const hitbox = new CircularHitbox(3, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, YETI_SIZE / 2);
    yeti.addHitbox(hitbox);
 
    PhysicsComponentArray.addComponent(yeti.id, new PhysicsComponent(0, 0, 0, 0, true, false));

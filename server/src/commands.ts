@@ -1,5 +1,4 @@
 import { PlayerCauseOfDeath, EntityType, getEntityTypeFromString } from "webgl-test-shared/dist/entities";
-import { ItemType, getItemTypeFromString } from "webgl-test-shared/dist/items";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { Biome } from "webgl-test-shared/dist/tiles";
 import { Point, randItem } from "webgl-test-shared/dist/utils";
@@ -16,6 +15,7 @@ import { forceBuildPlans } from "./ai-tribe-building/ai-building-plans";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
 import { forcePlayerTeleport, getPlayerFromUsername } from "./server/player-clients";
 import { TribeComponentArray } from "./components/TribeComponent";
+import { ItemType, getItemTypeFromString } from "webgl-test-shared/dist/items/items";
 
 const ENTITY_SPAWN_RANGE = 200;
 

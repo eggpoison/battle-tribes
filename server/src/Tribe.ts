@@ -1,8 +1,6 @@
 import { PotentialBuildingPlanData } from "webgl-test-shared/dist/ai-building-types";
 import { BlueprintType } from "webgl-test-shared/dist/components";
-import { CraftingRecipe } from "webgl-test-shared/dist/crafting-recipes";
 import { EntityType } from "webgl-test-shared/dist/entities";
-import { InventoryName, ItemType } from "webgl-test-shared/dist/items";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { StructureType } from "webgl-test-shared/dist/structures";
 import { TechID, TechTreeUnlockProgress, TechInfo, getTechByID, TECHS } from "webgl-test-shared/dist/techs";
@@ -23,6 +21,8 @@ import { getPathfindingGroupID } from "./pathfinding";
 import { registerResearchOrbComplete } from "./server/player-clients";
 import { HutComponentArray } from "./components/HutComponent";
 import { HitboxVertexPositions } from "webgl-test-shared/dist/hitboxes/hitboxes";
+import { CraftingRecipe } from "webgl-test-shared/dist/items/crafting-recipes";
+import { ItemType, InventoryName } from "webgl-test-shared/dist/items/items";
 
 const ENEMY_ATTACK_REMEMBER_TIME_TICKS = 30 * Settings.TPS;
 const RESPAWN_TIME_TICKS = 5 * Settings.TPS;

@@ -1,4 +1,4 @@
-export enum TribesmanTitle {
+export const enum TribesmanTitle {
    gardener,
    berrymuncher,
    sprinter,
@@ -68,3 +68,5 @@ export const TRIBESMAN_TITLE_RECORD: Record<TribesmanTitle, TribesmanTitleInfo> 
       name: "Winterswrath"
    }
 };
+
+export const NUM_TRIBESMAN_TITLES = Object.keys(TRIBESMAN_TITLE_RECORD).length;

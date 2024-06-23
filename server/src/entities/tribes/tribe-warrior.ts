@@ -6,10 +6,10 @@ import { randInt, Point } from "webgl-test-shared/dist/utils";
 import Entity from "../../Entity";
 import Tribe from "../../Tribe";
 import { HealthComponent, HealthComponentArray } from "../../components/HealthComponent";
-import { InventoryComponent, InventoryComponentArray } from "../../components/InventoryComponent";
+import { InventoryComponent, InventoryComponentArray, addItemToInventory, getInventory } from "../../components/InventoryComponent";
 import { InventoryUseComponent, InventoryUseComponentArray } from "../../components/InventoryUseComponent";
 import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
-import { TribeMemberComponent, TribeMemberComponentArray } from "../../components/TribeMemberComponent";
+import { TribeMemberComponent, TribeMemberComponentArray, awardTitle } from "../../components/TribeMemberComponent";
 import { TribesmanAIComponent, TribesmanAIComponentArray } from "../../components/TribesmanAIComponent";
 import Board from "../../Board";
 import { AIHelperComponent, AIHelperComponentArray } from "../../components/AIHelperComponent";
@@ -18,6 +18,8 @@ import { PhysicsComponent, PhysicsComponentArray } from "../../components/Physic
 import { TribeComponent, TribeComponentArray } from "../../components/TribeComponent";
 import { TribeWarriorComponent, TribeWarriorComponentArray } from "../../components/TribeWarriorComponent";
 import { CircularHitbox, HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
+import { InventoryName, ItemType } from "webgl-test-shared/dist/items/items";
+import { TribesmanTitle } from "webgl-test-shared/dist/titles";
 
 export const TRIBE_WARRIOR_RADIUS = 32;
 export const TRIBE_WARRIOR_VISION_RANGE = 560;
@@ -45,12 +47,13 @@ const generateScars = (): ReadonlyArray<ScarInfo> => {
 export function createTribeWarrior(position: Point, rotation: number, tribe: Tribe, hutID: number): Entity {
    const warrior = new Entity(position, rotation, EntityType.tribeWarrior, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
-   const hitbox = new CircularHitbox(1.5, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, warrior.getNextHitboxLocalID(), 0, TRIBE_WARRIOR_RADIUS);
+   const hitbox = new CircularHitbox(1.5, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, TRIBE_WARRIOR_RADIUS);
    warrior.addHitbox(hitbox);
    
    const tribeInfo = TRIBE_INFO_RECORD[tribe.type];
    PhysicsComponentArray.addComponent(warrior.id, new PhysicsComponent(0, 0, 0, 0, true, false));
-   HealthComponentArray.addComponent(warrior.id, new HealthComponent(tribeInfo.maxHealthPlayer));
+   // @Temporary
+   HealthComponentArray.addComponent(warrior.id, new HealthComponent(tribeInfo.maxHealthPlayer * 100));
    StatusEffectComponentArray.addComponent(warrior.id, new StatusEffectComponent(0));
    TribeComponentArray.addComponent(warrior.id, new TribeComponent(tribe));
    TribeMemberComponentArray.addComponent(warrior.id, new TribeMemberComponent(tribe.type, EntityType.tribeWarrior));
@@ -63,6 +66,22 @@ export function createTribeWarrior(position: Point, rotation: number, tribe: Tri
 
    const inventoryComponent = new InventoryComponent();
    InventoryComponentArray.addComponent(warrior.id, inventoryComponent);
+
+   // @Temporary
+   setTimeout(() => {
+      const hotbar = getInventory(inventoryComponent, InventoryName.hotbar);
+      addItemToInventory(hotbar, ItemType.stone_sword, 1);
+
+      const offhand = getInventory(inventoryComponent, InventoryName.offhand);
+      addItemToInventory(offhand, ItemType.stone_battleaxe, 1);
+
+      const armour = getInventory(inventoryComponent, InventoryName.armourSlot);
+      addItemToInventory(armour, ItemType.leather_armour, 1);
+
+      awardTitle(warrior, TribesmanTitle.sprinter);
+      awardTitle(warrior, TribesmanTitle.bloodaxe);
+      awardTitle(warrior, TribesmanTitle.deathbringer);
+   }, 100);
 
    return warrior;
 }

@@ -23,7 +23,7 @@ export function createSnowball(position: Point, size: SnowballSize = SnowballSiz
    const snowball = new Entity(position, 2 * Math.PI * Math.random(), EntityType.snowball, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
    const mass = size === SnowballSize.small ? 1 : 1.5;
-   const hitbox = new CircularHitbox(mass, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, snowball.getNextHitboxLocalID(), 0, SNOWBALL_SIZES[size] / 2);
+   const hitbox = new CircularHitbox(mass, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, SNOWBALL_SIZES[size] / 2);
    snowball.addHitbox(hitbox);
 
    const physicsComponent = new PhysicsComponent(0, 0, 0, 0, true, false);

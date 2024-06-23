@@ -3,11 +3,11 @@ import { Settings } from "webgl-test-shared/dist/settings";
 import Entity from "../Entity";
 import { randFloat, randInt } from "webgl-test-shared/dist/utils";
 import { createItemEntity } from "../entities/item-entity";
-import { ItemType } from "webgl-test-shared/dist/items";
 import { EntityEvent } from "webgl-test-shared/dist/entity-events";
 import { CowComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
 import { COW_GRAZE_TIME_TICKS } from "../entities/mobs/cow";
 import { ComponentArray } from "./ComponentArray";
+import { ItemType } from "webgl-test-shared/dist/items/items";
 
 const enum Vars {
    MIN_POOP_PRODUCTION_COOLDOWN = 5 * Settings.TPS,

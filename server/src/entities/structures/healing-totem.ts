@@ -15,7 +15,7 @@ import { createHealingTotemHitboxes } from "webgl-test-shared/dist/hitboxes/enti
 export function createHealingTotem(position: Point, rotation: number, tribe: Tribe, connectionInfo: StructureConnectionInfo): Entity {
    const healingTotem = new Entity(position, rotation, EntityType.healingTotem, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
-   const hitboxes = createHealingTotemHitboxes(healingTotem.getNextHitboxLocalID());
+   const hitboxes = createHealingTotemHitboxes();
    for (let i = 0; i < hitboxes.length; i++) {
       healingTotem.addHitbox(hitboxes[i]);
    }

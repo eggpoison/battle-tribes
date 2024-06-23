@@ -1,6 +1,5 @@
 import { TribesmanAIType } from "webgl-test-shared/dist/components";
 import { LimbAction } from "webgl-test-shared/dist/entities";
-import { Inventory, ITEM_INFO_RECORD, PlaceableItemInfo, InventoryName } from "webgl-test-shared/dist/items";
 import { PathfindingSettings } from "webgl-test-shared/dist/settings";
 import { calculateStructureConnectionInfo } from "webgl-test-shared/dist/structures";
 import { TribesmanTitle } from "webgl-test-shared/dist/titles";
@@ -27,6 +26,7 @@ import { TribesmanPlaceGoal, TribesmanUpgradeGoal } from "./tribesman-goals";
 import { AIHelperComponentArray } from "../../../components/AIHelperComponent";
 import { createEntityHitboxes } from "webgl-test-shared/dist/hitboxes/entity-hitbox-creation";
 import { getHitboxesCollidingEntities } from "webgl-test-shared/dist/hitbox-collision";
+import { Inventory, ITEM_INFO_RECORD, PlaceableItemInfo, InventoryName } from "webgl-test-shared/dist/items/items";
 
 const enum Vars {
    BUILDING_PLACE_DISTANCE = 80
@@ -36,7 +36,7 @@ export function goPlaceBuilding(tribesman: Entity, hotbarInventory: Inventory, t
    const plan = goal.plan;
    
    const entityType = (ITEM_INFO_RECORD[plan.buildingRecipe.product] as PlaceableItemInfo).entityType;
-   const hitboxes = createEntityHitboxes(entityType, 1);
+   const hitboxes = createEntityHitboxes(entityType);
    for (let i = 0; i < hitboxes.length; i++) {
       const hitbox = hitboxes[i];
       updateHitbox(hitbox, plan.position.x, plan.position.y, plan.rotation);

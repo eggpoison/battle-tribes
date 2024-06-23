@@ -42,13 +42,40 @@ const getSecondsSinceLastAttack = (entity: Entity): number => {
    return ticksSinceLastAttack / Settings.TPS;
 }
 
+const titlesArrayHasExtra = (extraCheckArray: ReadonlyArray<TitleGenerationInfo>, sourceArray: ReadonlyArray<TitleGenerationInfo>): boolean => {
+   // Check for extra in titles1
+   for (let i = 0; i < extraCheckArray.length; i++) {
+      const titleGenerationInfo1 = extraCheckArray[i];
+
+      let hasFound = false;
+      for (let j = 0; j < sourceArray.length; j++) {
+         const titleGenerationInfo2 = sourceArray[j];
+
+         if (titleGenerationInfo2.title === titleGenerationInfo1.title) {
+            hasFound = true;
+            break;
+         }
+      }
+
+      if (!hasFound) {
+         return true;
+      }
+   }
+
+   return false;
+}
+
+const titlesAreDifferent = (titles1: ReadonlyArray<TitleGenerationInfo>, titles2: ReadonlyArray<TitleGenerationInfo>): boolean => {
+   return titlesArrayHasExtra(titles1, titles2) || titlesArrayHasExtra(titles2, titles1);
+}
+
 class TribeMemberComponent extends ServerComponent<ServerComponentType.tribeMember> {
    public readonly bodyRenderPart: RenderPart;
    public readonly handRenderParts: ReadonlyArray<RenderPart>;
    
    public warPaintType: number | null;
    
-   public titles = new Array<TitleGenerationInfo>();
+   public titles: ReadonlyArray<TitleGenerationInfo> = [];
 
    private deathbringerEyeLights = new Array<Light>();
    
@@ -62,144 +89,156 @@ class TribeMemberComponent extends ServerComponent<ServerComponentType.tribeMemb
       this.handRenderParts = this.entity.getRenderParts("tribeMemberComponent:hand", 2);
    }
 
-   private registerNewTitle(title: TribesmanTitle): void {
-      // Particle effects
-      for (let i = 0; i < 25; i++) {
-         const offsetMagnitude = randFloat(12, 34);
-         const offsetDirection = 2 * Math.PI * Math.random();
-         const spawnPositionX = this.entity.position.x + offsetMagnitude * Math.sin(offsetDirection);
-         const spawnPositionY = this.entity.position.y + offsetMagnitude * Math.cos(offsetDirection);
+   public getTitles(): Array<TribesmanTitle> {
+      const titles = new Array<TribesmanTitle>();
+      for (let i = 0; i < this.titles.length; i++) {
+         const titleGenerationInfo = this.titles[i];
+         titles.push(titleGenerationInfo.title);
+      }
+      return titles;
+   }
 
-         const velocityMagnitude = randFloat(80, 120);
-         const vx = velocityMagnitude * Math.sin(offsetDirection);
-         const vy = velocityMagnitude * Math.cos(offsetDirection);
-         
-         createTitleObtainParticle(spawnPositionX, spawnPositionY, vx, vy, offsetDirection + Math.PI*3/4)
+   private regenerateTitleEffects(): void {
+      // Remove previous effects
+      const previousRenderParts = this.entity.getRenderParts("tribeMemberComponent:fromTitle");
+      for (let i = 0; i < previousRenderParts.length; i++) {
+         const renderPart = previousRenderParts[i];
+         this.entity.removeRenderPart(renderPart);
       }
       
-      switch (title) {
-         // Create 2 glowing red eyes
-         case TribesmanTitle.deathbringer: {
-            for (let i = 0; i < 2; i++) {
-               const offsetX = 16 * (i === 0 ? -1 : 1);
-               const offsetY = 20;
+      // Add for all titles
+      for (let i = 0; i < this.titles.length; i++) {
+         const titleGenerationInfo = this.titles[i];
+         const title = titleGenerationInfo.title;
+
+         switch (title) {
+            // Create 2 glowing red eyes
+            case TribesmanTitle.deathbringer: {
+               for (let i = 0; i < 2; i++) {
+                  const offsetX = 16 * (i === 0 ? -1 : 1);
+                  const offsetY = 20;
+                  
+                  const light: Light = {
+                     offset: new Point(offsetX, offsetY),
+                     intensity: 0.4,
+                     strength: 0.4,
+                     radius: 0,
+                     r: 1.75,
+                     g: 0,
+                     b: 0
+                  };
+                  this.deathbringerEyeLights.push(light);
+                  const lightID = addLight(light);
+                  attachLightToEntity(lightID, this.entity.id);
+               }
                
-               const light: Light = {
-                  offset: new Point(offsetX, offsetY),
-                  intensity: 0.4,
-                  strength: 0.4,
-                  radius: 0,
-                  r: 1.75,
-                  g: 0,
-                  b: 0
-               };
-               this.deathbringerEyeLights.push(light);
-               const lightID = addLight(light);
-               attachLightToEntity(lightID, this.entity.id);
+               break;
             }
-            
-            break;
-         }
-         // Create an eye scar
-         case TribesmanTitle.bloodaxe: {
-            const hash = veryBadHash(this.entity.id.toString());
-            const isFlipped = hash % 2 === 0;
+            // Create an eye scar
+            case TribesmanTitle.bloodaxe: {
+               const hash = veryBadHash(this.entity.id.toString());
+               const isFlipped = hash % 2 === 0;
 
-            const offsetX = (20 - 5 * 4 / 2) * (isFlipped ? 1 : -1);
-            const offsetY = 24 - 6 * 4 / 2;
+               const offsetX = (20 - 5 * 4 / 2) * (isFlipped ? 1 : -1);
+               const offsetY = 24 - 6 * 4 / 2;
 
-            const renderPart = new RenderPart(
-               this.entity,
-               getTextureArrayIndex("entities/miscellaneous/eye-scar.png"),
-               2.2,
-               0
-            );
-            renderPart.flipX = isFlipped;
-
-            renderPart.offset.x = offsetX;
-            renderPart.offset.y = offsetY;
-
-            this.entity.attachRenderPart(renderPart);
-            break;
-         }
-         // Create shrewd eyes
-         case TribesmanTitle.shrewd: {
-            for (let i = 0; i < 2; i++) {
                const renderPart = new RenderPart(
                   this.entity,
-                  // @Incomplete
-                  getTextureArrayIndex("entities/plainspeople/shrewd-eye.png"),
-                  2.1,
+                  getTextureArrayIndex("entities/miscellaneous/eye-scar.png"),
+                  2.2,
                   0
                );
+               renderPart.addTag("tribeMemberComponent:fromTitle");
+               renderPart.flipX = isFlipped;
 
-               if (i === 1) {
-                  renderPart.flipX = true;
-               }
-
-               renderPart.offset.x = (28 - 5 * 4 / 2) * (i === 1 ? 1 : -1);
-               renderPart.offset.y = 28 - 5 * 4 / 2;
+               renderPart.offset.x = offsetX;
+               renderPart.offset.y = offsetY;
 
                this.entity.attachRenderPart(renderPart);
+               break;
             }
-            
-            break;
-         }
-         // Create 3/5 (berrymuncher/gardener title) leaves on back
-         case TribesmanTitle.berrymuncher:
-         case TribesmanTitle.gardener: {
-            const numLeaves = title === TribesmanTitle.berrymuncher ? 3 : 5;
-            for (let i = 0; i < numLeaves; i++) {
-               const angle = ((i - (numLeaves - 1) / 2) * Math.PI * 0.2) + Math.PI;
+            // Create shrewd eyes
+            case TribesmanTitle.shrewd: {
+               for (let i = 0; i < 2; i++) {
+                  const renderPart = new RenderPart(
+                     this.entity,
+                     // @Incomplete
+                     getTextureArrayIndex("entities/plainspeople/shrewd-eye.png"),
+                     2.1,
+                     0
+                  );
+                  renderPart.addTag("tribeMemberComponent:fromTitle");
+
+                  if (i === 1) {
+                     renderPart.flipX = true;
+                  }
+
+                  renderPart.offset.x = (28 - 5 * 4 / 2) * (i === 1 ? 1 : -1);
+                  renderPart.offset.y = 28 - 5 * 4 / 2;
+
+                  this.entity.attachRenderPart(renderPart);
+               }
                
+               break;
+            }
+            // Create 3/5 (berrymuncher/gardener title) leaves on back
+            case TribesmanTitle.berrymuncher:
+            case TribesmanTitle.gardener: {
+               const numLeaves = title === TribesmanTitle.berrymuncher ? 3 : 5;
+               for (let i = 0; i < numLeaves; i++) {
+                  const angle = ((i - (numLeaves - 1) / 2) * Math.PI * 0.2) + Math.PI;
+                  
+                  const renderPart = new RenderPart(
+                     this.entity,
+                     getTextureArrayIndex("entities/miscellaneous/tribesman-leaf.png"),
+                     0,
+                     angle + Math.PI/2 + randFloat(-0.5, 0.5)
+                  );
+                  renderPart.addTag("tribeMemberComponent:fromTitle");
+
+                  const radiusAdd = lerp(-3, -6, Math.abs(i - (numLeaves - 1) / 2) / ((numLeaves - 1) / 2));
+
+                  const radius = getTribesmanRadius(this.entity);
+                  renderPart.offset.x = (radius + radiusAdd) * Math.sin(angle);
+                  renderPart.offset.y = (radius + radiusAdd) * Math.cos(angle);
+
+                  this.entity.attachRenderPart(renderPart);
+               }
+               break;
+            }
+            case TribesmanTitle.yetisbane: {
                const renderPart = new RenderPart(
                   this.entity,
-                  getTextureArrayIndex("entities/miscellaneous/tribesman-leaf.png"),
+                  getTextureArrayIndex("entities/miscellaneous/tribesman-fangs.png"),
                   0,
-                  angle + Math.PI/2 + randFloat(-0.5, 0.5)
+                  0
                );
-
-               const radiusAdd = lerp(-3, -6, Math.abs(i - (numLeaves - 1) / 2) / ((numLeaves - 1) / 2));
+               renderPart.addTag("tribeMemberComponent:fromTitle");
 
                const radius = getTribesmanRadius(this.entity);
-               renderPart.offset.x = (radius + radiusAdd) * Math.sin(angle);
-               renderPart.offset.y = (radius + radiusAdd) * Math.cos(angle);
+               renderPart.offset.y = radius - 2;
 
                this.entity.attachRenderPart(renderPart);
+               break;
             }
-            break;
-         }
-         case TribesmanTitle.yetisbane: {
-            const renderPart = new RenderPart(
-               this.entity,
-               getTextureArrayIndex("entities/miscellaneous/tribesman-fangs.png"),
-               0,
-               0
-            );
+            case TribesmanTitle.builder: {
+               // 
+               // Create a dirty shine on body render parts
+               // 
+               
+               const bodyRenderPart = this.entity.getRenderPart("tribeMemberComponent:body");
+               const bodyOverlayGroup = createRenderPartOverlayGroup("overlays/dirt.png", [bodyRenderPart]);
+               this.entity.renderPartOverlayGroups.push(bodyOverlayGroup);
 
-            const radius = getTribesmanRadius(this.entity);
-            renderPart.offset.y = radius - 2;
+               const handRenderParts = this.entity.getRenderParts("tribeMemberComponent:hand", 2);
+               for (let i = 0; i < handRenderParts.length; i++) {
+                  const renderPart = handRenderParts[i];
+                  const handOverlayGroup = createRenderPartOverlayGroup("overlays/dirt.png", [renderPart]);
+                  this.entity.renderPartOverlayGroups.push(handOverlayGroup);
+               }
 
-            this.entity.attachRenderPart(renderPart);
-            break;
-         }
-         case TribesmanTitle.builder: {
-            // 
-            // Create a dirty shine on body render parts
-            // 
-            
-            const bodyRenderPart = this.entity.getRenderPart("tribeMemberComponent:body");
-            const bodyOverlayGroup = createRenderPartOverlayGroup("overlays/dirt.png", [bodyRenderPart]);
-            this.entity.renderPartOverlayGroups.push(bodyOverlayGroup);
-
-            const handRenderParts = this.entity.getRenderParts("tribeMemberComponent:hand", 2);
-            for (let i = 0; i < handRenderParts.length; i++) {
-               const renderPart = handRenderParts[i];
-               const handOverlayGroup = createRenderPartOverlayGroup("overlays/dirt.png", [renderPart]);
-               this.entity.renderPartOverlayGroups.push(handOverlayGroup);
+               break;
             }
-
-            break;
          }
       }
    }
@@ -216,13 +255,25 @@ class TribeMemberComponent extends ServerComponent<ServerComponentType.tribeMemb
    }
 
    private updateTitles(newTitles: ReadonlyArray<TitleGenerationInfo>): void {
-      for (let i = 0; i < newTitles.length; i++) {
-         const titleGenerationInfo = newTitles[i];
+      if (titlesAreDifferent(this.titles, newTitles)) {
+         // If at least 1 title is added, do particle effects
+         if (titlesArrayHasExtra(newTitles, this.titles)) {
+            for (let i = 0; i < 25; i++) {
+               const offsetMagnitude = randFloat(12, 34);
+               const offsetDirection = 2 * Math.PI * Math.random();
+               const spawnPositionX = this.entity.position.x + offsetMagnitude * Math.sin(offsetDirection);
+               const spawnPositionY = this.entity.position.y + offsetMagnitude * Math.cos(offsetDirection);
 
-         if (!this.hasTitle(titleGenerationInfo.title)) {
-            this.registerNewTitle(titleGenerationInfo.title);
-            this.titles.push(titleGenerationInfo);
+               const velocityMagnitude = randFloat(80, 120);
+               const vx = velocityMagnitude * Math.sin(offsetDirection);
+               const vy = velocityMagnitude * Math.cos(offsetDirection);
+               
+               createTitleObtainParticle(spawnPositionX, spawnPositionY, vx, vy, offsetDirection + Math.PI*3/4)
+            }
          }
+
+         this.titles = newTitles;
+         this.regenerateTitleEffects();
       }
    }
 

@@ -43,7 +43,7 @@ class Ballista extends Entity {
 
       // Shaft
       const shaftRenderPart = new RenderPart(
-         this,
+         plateRenderPart,
          getTextureArrayIndex("entities/ballista/shaft.png"),
          3,
          0

@@ -2,9 +2,7 @@ import { AttackEffectiveness, calculateAttackEffectiveness } from "webgl-test-sh
 import { HitFlags } from "webgl-test-shared/dist/client-server-types";
 import { COLLISION_BITS } from "webgl-test-shared/dist/collision";
 import { PlanterBoxPlant, BlueprintType, BuildingMaterial, MATERIAL_TO_ITEM_MAP, ServerComponentType } from "webgl-test-shared/dist/components";
-import { CraftingStation } from "webgl-test-shared/dist/crafting-recipes";
 import { EntityType, LimbAction, PlayerCauseOfDeath, GenericArrowType, EntityTypeString } from "webgl-test-shared/dist/entities";
-import { PlaceableItemType, ItemType, Item, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, BattleaxeItemInfo, SwordItemInfo, AxeItemInfo, HammerItemInfo, ConsumableItemInfo, BowItemInfo, itemIsStackable, getItemStackSize, BackpackItemInfo, ArmourItemInfo, InventoryName, ConsumableItemCategory, itemInfoIsTool } from "webgl-test-shared/dist/items";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { StructureConnectionInfo, StructureType, calculateStructurePlaceInfo } from "webgl-test-shared/dist/structures";
@@ -60,6 +58,8 @@ import { createFrostshaper } from "../structures/frostshaper";
 import { createStonecarvingTable } from "../structures/stonecarving-table";
 import { BerryBushComponentArray } from "../../components/BerryBushComponent";
 import { BuildingMaterialComponentArray } from "../../components/BuildingMaterialComponent";
+import { CraftingStation } from "webgl-test-shared/dist/items/crafting-recipes";
+import { Item, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, BattleaxeItemInfo, SwordItemInfo, AxeItemInfo, itemInfoIsTool, HammerItemInfo, InventoryName, ItemType, ConsumableItemInfo, ConsumableItemCategory, PlaceableItemType, BowItemInfo, itemIsStackable, getItemStackSize, BackpackItemInfo, ArmourItemInfo } from "webgl-test-shared/dist/items/items";
 
 const enum Vars {
    ITEM_THROW_FORCE = 100,
@@ -281,27 +281,33 @@ const isBerryBushWithBerries = (entity: Entity): boolean => {
    }
 }
 
-const getEntityPlantGatherMultiplier = (tribeman: Entity, plant: Entity, gloves: Item | null): number => {
-   let multiplier = 1;
+const getPlantGatherAmount = (tribeman: Entity, plant: Entity, gloves: Item | null): number => {
+   let amount = 1;
 
    if (hasTitle(tribeman.id, TribesmanTitle.berrymuncher) && isBerryBush(plant)) {
-      multiplier++;
+      if (Math.random() < 0.3) {
+         amount++;
+      }
    }
 
    if (hasTitle(tribeman.id, TribesmanTitle.gardener)) {
-      multiplier++;
+      if (Math.random() < 0.3) {
+         amount++;
+      }
    }
 
    if (gloves !== null && gloves.type === ItemType.gardening_gloves) {
-      multiplier++;
+      if (Math.random() < 0.2) {
+         amount++;
+      }
    }
 
-   return multiplier;
+   return amount;
 }
 
 const gatherPlant = (plant: Entity, attacker: Entity, gloves: Item | null): void => {
    if (isBerryBushWithBerries(plant)) {
-      const gatherMultiplier = getEntityPlantGatherMultiplier(attacker, plant, gloves);
+      const gatherMultiplier = getPlantGatherAmount(attacker, plant, gloves);
 
       if (plant.type === EntityType.berryBush) {
          dropBerry(plant, gatherMultiplier);

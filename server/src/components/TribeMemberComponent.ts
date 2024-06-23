@@ -8,16 +8,16 @@ import { ComponentArray } from "./ComponentArray";
 import { generateTitle } from "../tribesman-title-generation";
 import Board from "../Board";
 import { InventoryComponentArray, createNewInventory } from "./InventoryComponent";
-import { InventoryName } from "webgl-test-shared/dist/items";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { TribeComponentArray } from "./TribeComponent";
 import { PlayerComponentArray } from "./PlayerComponent";
 import { InventoryUseComponentArray } from "./InventoryUseComponent";
+import { InventoryName } from "webgl-test-shared/dist/items/items";
 
 type TribesmanEntityType = EntityType.player | EntityType.tribeWorker | EntityType.tribeWarrior;
 
 export class TribeMemberComponent {
-   public readonly warPaintType: number;
+   public readonly warPaintType: number | null;
 
    public readonly fishFollowerIDs = new Array<number>();
 
@@ -36,7 +36,7 @@ export class TribeMemberComponent {
             this.warPaintType = randInt(1, 5);
          }
       } else {
-         this.warPaintType = -1;
+         this.warPaintType = null;
       }
    }
 }
@@ -175,4 +175,33 @@ export function hasTitle(entityID: number, title: TribesmanTitle): boolean {
    }
 
    return false;
+}
+
+export function forceAddTitle(entityID: number, title: TribesmanTitle): void {
+   const tribeMemberComponent = TribeMemberComponentArray.getComponent(entityID);
+   
+   // Make sure they don't already have the title
+   for (let i = 0; i < tribeMemberComponent.titles.length; i++) {
+      const titleGenerationInfo = tribeMemberComponent.titles[i];
+
+      if (titleGenerationInfo.title === title) {
+         return;
+      }
+   }
+
+   const titleGenerationInfo = generateTitle(title);
+   tribeMemberComponent.titles.push(titleGenerationInfo);
+}
+
+export function removeTitle(entityID: number, title: TribesmanTitle): void {
+   const tribeMemberComponent = TribeMemberComponentArray.getComponent(entityID);
+
+   for (let i = 0; i < tribeMemberComponent.titles.length; i++) {
+      const titleGenerationInfo = tribeMemberComponent.titles[i];
+
+      if (titleGenerationInfo.title === title) {
+         tribeMemberComponent.titles.splice(i, 1);
+         break;
+      }
+   }
 }

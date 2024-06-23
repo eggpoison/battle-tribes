@@ -10,7 +10,6 @@ import { InventoryComponentArray, getInventory } from "../components/InventoryCo
 import { InventoryUseComponentArray, getInventoryUseInfo } from "../components/InventoryUseComponent";
 import { PhysicsComponentArray } from "../components/PhysicsComponent";
 import { SERVER } from "./server";
-import { Inventory, InventoryName } from "webgl-test-shared/dist/items";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { getVisibleSafetyNodesData, getVisibleBuildingPlans, getVisibleBuildingSafetys, getVisibleRestrictedBuildingAreas, getVisibleWallsData, getVisibleWallConnections, getVisibleTribes } from "../ai-tribe-building/ai-building-client-data";
 import { getVisiblePathfindingNodeOccupances } from "../pathfinding";
@@ -22,8 +21,9 @@ import { TribeComponentArray } from "../components/TribeComponent";
 import { SpikesComponentArray } from "../components/SpikesComponent";
 import { PlayerComponentArray } from "../components/PlayerComponent";
 import { RectangularHitbox, CircularHitbox, hitboxIsCircular } from "webgl-test-shared/dist/hitboxes/hitboxes";
+import { Inventory, InventoryName } from "webgl-test-shared/dist/items/items";
 
-const bundleRectangularHitboxData = (hitbox: RectangularHitbox): RectangularHitboxData => {
+const bundleRectangularHitboxData = (hitbox: RectangularHitbox, localID: number): RectangularHitboxData => {
    return {
       mass: hitbox.mass,
       offsetX: hitbox.offset.x,
@@ -31,7 +31,7 @@ const bundleRectangularHitboxData = (hitbox: RectangularHitbox): RectangularHitb
       collisionType: hitbox.collisionType,
       collisionBit: hitbox.collisionBit,
       collisionMask: hitbox.collisionMask,
-      localID: hitbox.localID,
+      localID: localID,
       flags: hitbox.flags,
       width: hitbox.width,
       height: hitbox.height,
@@ -39,7 +39,7 @@ const bundleRectangularHitboxData = (hitbox: RectangularHitbox): RectangularHitb
    };
 }
 
-const bundleCircularHitboxData = (hitbox: CircularHitbox): CircularHitboxData => {
+const bundleCircularHitboxData = (hitbox: CircularHitbox, localID: number): CircularHitboxData => {
    return {
       mass: hitbox.mass,
       offsetX: hitbox.offset.x,
@@ -47,7 +47,7 @@ const bundleCircularHitboxData = (hitbox: CircularHitbox): CircularHitboxData =>
       collisionType: hitbox.collisionType,
       collisionBit: hitbox.collisionBit,
       collisionMask: hitbox.collisionMask,
-      localID: hitbox.localID,
+      localID: localID,
       flags: hitbox.flags,
       radius: hitbox.radius
    };
@@ -59,11 +59,12 @@ const serialiseEntityData = (entity: Entity, player: Entity | null): EntityData<
 
    for (let i = 0; i < entity.hitboxes.length; i++) {
       const hitbox = entity.hitboxes[i];
+      const localID = entity.hitboxLocalIDs[i];
       
       if (hitboxIsCircular(hitbox)) {
-         circularHitboxes.push(bundleCircularHitboxData(hitbox));
+         circularHitboxes.push(bundleCircularHitboxData(hitbox, localID));
       } else {
-         rectangularHitboxes.push(bundleRectangularHitboxData(hitbox));
+         rectangularHitboxes.push(bundleRectangularHitboxData(hitbox, localID));
       }
    }
 

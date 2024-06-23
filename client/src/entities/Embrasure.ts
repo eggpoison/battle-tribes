@@ -21,6 +21,7 @@ class Embrasure extends Entity {
          0,
          0
       );
+      renderPart.addTag("buildingMaterialComponent:material");
       this.attachRenderPart(renderPart);
    }
 

@@ -83,7 +83,7 @@ abstract class Entity<T extends EntityType = EntityType> extends RenderObject {
    public readonly allRenderParts = new Array<RenderPart>();
 
    public hitboxes = new Array<Hitbox>();
-   public readonly hitboxHalfDiagonalLength?: number;
+   public readonly hitboxLocalIDs = new Array<number>();
    
    public chunks = new Set<Chunk>();
 
@@ -262,9 +262,10 @@ abstract class Entity<T extends EntityType = EntityType> extends RenderObject {
       this.allRenderParts.splice(this.allRenderParts.indexOf(renderPart), 1);
    }
 
-   public addHitbox(hitbox: Hitbox): void {
+   public addHitbox(hitbox: Hitbox, localID: number): void {
       updateHitbox(hitbox, this.position.x, this.position.y, this.rotation);
       this.hitboxes.push(hitbox);
+      this.hitboxLocalIDs.push(localID);
    }
 
    public remove(): void {
@@ -471,19 +472,20 @@ abstract class Entity<T extends EntityType = EntityType> extends RenderObject {
       // Remove hitboxes which are no longer exist
       for (let i = 0; i < this.hitboxes.length; i++) {
          const hitbox = this.hitboxes[i];
+         const localID = this.hitboxLocalIDs[i];
 
          // @Speed
          let localIDExists = false;
          for (let j = 0; j < data.circularHitboxes.length; j++) {
             const hitboxData = data.circularHitboxes[j];
-            if (hitboxData.localID === hitbox.localID) {
+            if (hitboxData.localID === localID) {
                localIDExists = true;
                break;
             }
          }
          for (let j = 0; j < data.rectangularHitboxes.length; j++) {
             const hitboxData = data.rectangularHitboxes[j];
-            if (hitboxData.localID === hitbox.localID) {
+            if (hitboxData.localID === localID) {
                localIDExists = true;
                break;
             }
@@ -491,6 +493,7 @@ abstract class Entity<T extends EntityType = EntityType> extends RenderObject {
 
          if (!localIDExists) {
             this.hitboxes.splice(i, 1);
+            this.hitboxLocalIDs.splice(i, 1);
             i--;
          }
       }
@@ -498,6 +501,7 @@ abstract class Entity<T extends EntityType = EntityType> extends RenderObject {
       for (let i = 0; i < data.circularHitboxes.length; i++) {
          const hitboxData = data.circularHitboxes[i];
 
+         // Check for an existing hitbox
          // @Speed
          let existingHitboxIdx = 99999;
          for (let j = 0; j < this.hitboxes.length; j++) {
@@ -505,8 +509,9 @@ abstract class Entity<T extends EntityType = EntityType> extends RenderObject {
             if (!hitbox.hasOwnProperty("radius")) {
                continue;
             }
-            
-            if (hitbox.localID === hitboxData.localID) {
+
+            const localID = this.hitboxLocalIDs[j];
+            if (localID === hitboxData.localID) {
                existingHitboxIdx = j;
                break;
             }
@@ -524,12 +529,14 @@ abstract class Entity<T extends EntityType = EntityType> extends RenderObject {
          } else {
             // Create new hitbox
             hitbox = createCircularHitboxFromData(hitboxData);
-            this.addHitbox(hitbox);
+            this.addHitbox(hitbox, hitboxData.localID);
          }
       }
+      // @Cleanup: Copy and paste
       for (let i = 0; i < data.rectangularHitboxes.length; i++) {
          const hitboxData = data.rectangularHitboxes[i];
 
+         // Check for an existing hitbox
          // @Speed
          let existingHitboxIdx = 99999;
          for (let j = 0; j < this.hitboxes.length; j++) {
@@ -538,7 +545,8 @@ abstract class Entity<T extends EntityType = EntityType> extends RenderObject {
                continue;
             }
             
-            if (hitbox.localID === hitboxData.localID) {
+            const localID = this.hitboxLocalIDs[j];
+            if (localID === hitboxData.localID) {
                existingHitboxIdx = j;
                break;
             }
@@ -558,7 +566,7 @@ abstract class Entity<T extends EntityType = EntityType> extends RenderObject {
          } else {
             // Create new hitbox
             hitbox = createRectangularHitboxFromData(hitboxData);
-            this.addHitbox(hitbox);
+            this.addHitbox(hitbox, hitboxData.localID);
          }
       }
 

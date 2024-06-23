@@ -1,6 +1,5 @@
 import { TribesmanAIType } from "webgl-test-shared/dist/components";
 import { EntityType, LimbAction } from "webgl-test-shared/dist/entities";
-import { ITEM_TYPE_RECORD, ITEM_INFO_RECORD, BowItemInfo, InventoryName } from "webgl-test-shared/dist/items";
 import { Settings, PathfindingSettings } from "webgl-test-shared/dist/settings";
 import { TribeType } from "webgl-test-shared/dist/tribes";
 import { Point, distance } from "webgl-test-shared/dist/utils";
@@ -19,6 +18,7 @@ import { getItemAttackCooldown } from "../../../items";
 import { calculateAttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
 import { clearTribesmanPath, getBestToolItemSlot, getTribesmanAttackOffset, getTribesmanAttackRadius, getTribesmanDesiredAttackRange, getTribesmanRadius, getTribesmanSlowAcceleration, pathfindToPosition, pathToEntityExists } from "./tribesman-ai-utils";
 import { attemptToRepairBuildings } from "./tribesman-structures";
+import { InventoryName, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, BowItemInfo } from "webgl-test-shared/dist/items/items";
 
 const enum Vars {
    BOW_LINE_OF_SIGHT_WAIT_TIME = 0.5 * Settings.TPS,

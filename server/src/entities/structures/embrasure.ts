@@ -19,7 +19,7 @@ export const EMBRASURE_HEALTHS = [15, 45];
 export function createEmbrasure(position: Point, rotation: number, tribe: Tribe, connectionInfo: StructureConnectionInfo, material: BuildingMaterial): Entity {
    const embrasure = new Entity(position, rotation, EntityType.embrasure, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
-   const hitboxes = createEmbrasureHitboxes(embrasure.getNextHitboxLocalID());
+   const hitboxes = createEmbrasureHitboxes();
    for (let i = 0; i < hitboxes.length; i++) {
       embrasure.addHitbox(hitboxes[i]);
    }

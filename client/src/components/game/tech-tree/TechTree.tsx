@@ -1,5 +1,4 @@
 import { TECHS, TechID, TechInfo, getTechByID, getTechRequiredForItem } from "webgl-test-shared/dist/techs";
-import { ItemType, ItemTypeString } from "webgl-test-shared/dist/items";
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { addKeyListener } from "../../../keyboard-input";
 import CLIENT_ITEM_INFO_RECORD, { getItemTypeImage } from "../../../client-item-info";
@@ -8,15 +7,17 @@ import Client from "../../../client/Client";
 import { setTechTreeX, setTechTreeY, setTechTreeZoom, techIsDirectlyAccessible } from "../../../rendering/webgl/tech-tree-rendering";
 import OPTIONS from "../../../options";
 import Player from "../../../entities/Player";
-import { countItemTypesInInventory, tallyInventoryItems } from "../../../inventory-manipulation";
+import { countItemTypesInInventory } from "../../../inventory-manipulation";
 import { definiteGameState } from "../../../game-state/game-states";
 import { setMenuCloseFunction } from "../../../player-input";
-import { ItemTally } from "webgl-test-shared/dist/crafting-recipes";
 import { createTechTreeItem } from "../../../rendering/webgl/tech-tree-item-rendering";
 import { Point, randFloat } from "webgl-test-shared/dist/utils";
 import Camera from "../../../Camera";
 import { playSound } from "../../../sound";
 import TechTreeProgressBar from "./TechTreeProgressBar";
+import { ItemTally2, tallyInventoryItems } from "webgl-test-shared/dist/items/ItemTally";
+import { ItemTally } from "webgl-test-shared/dist/items/crafting-recipes";
+import { ItemType } from "webgl-test-shared/dist/items/items";
 
 const boundsScale = 16;
 
@@ -143,43 +144,34 @@ const TechTooltip = ({ techInfo, techPositionX, techPositionY, zoom }: TechToolt
    </div>;
 }
 
-const getResearchedItems = (techInfo: TechInfo): ItemTally => {
-   // Tally items
-   const tally: ItemTally = {};
-   tallyInventoryItems(tally, definiteGameState.hotbar);
+/** Gets a tally of all the items which we predict will be researched when clicking */
+const getResearchedItems = (techInfo: TechInfo): ItemTally2 => {
+   const availableItemsTally = new ItemTally2();
+   tallyInventoryItems(availableItemsTally, definiteGameState.hotbar);
    
-   const researchTally: ItemTally = {};
-   for (const [itemTypeString, amount] of Object.entries(techInfo.researchItemRequirements)) {
-      const itemType = Number(itemTypeString) as ItemType;
+   const researchTally = new ItemTally2();
+   for (const [itemTypeString, count] of Object.entries(techInfo.researchItemRequirements)) {
+      const researchItemType = Number(itemTypeString) as ItemType;
 
-      const availableItemCount = tally[itemType];
-
-      if (typeof availableItemCount !== "undefined") {
-         if (typeof researchTally[itemType] === "undefined") {
-            researchTally[itemType] = availableItemCount;
-         } else {
-            researchTally[itemType]! += availableItemCount;
-         }
-
-         const itemProgress = Game.tribe.techTreeUnlockProgress[techInfo.id]?.itemProgress[itemType] || 0;
-         const maxResearchableCount = amount - itemProgress;
-         if (researchTally[itemType]! > maxResearchableCount) {
-            researchTally[itemType] = maxResearchableCount;
-         }
-      }
+      const availableCount = availableItemsTally.getItemCount(researchItemType);
+      researchTally.addItem(researchItemType, availableCount);
+      
+      const itemProgress = Game.tribe.techTreeUnlockProgress[techInfo.id]?.itemProgress[researchItemType] || 0;
+      researchTally.restrictItemCount(researchItemType, count - itemProgress);
    }
 
    return researchTally;
 }
 
-const addResearchedItems = (techInfo: TechInfo, researchTally: ItemTally): void => {
-   for (const [itemTypeString, amount] of Object.entries(researchTally)) {
-      const itemType = Number(itemTypeString) as ItemType;
+const addResearchedItems = (techInfo: TechInfo, researchTally: ItemTally2): void => {
+   const entries = researchTally.getEntries();
+   for (let i = 0; i < entries.length; i++) {
+      const entry = entries[i];
 
-      for (let i = 0; i < amount; i++) {
+      for (let i = 0; i < entry.count; i++) {
          // @Speed
          const position = new Point(techInfo.positionX, techInfo.positionY).offset(randFloat(0, 3.5), 2 * Math.PI * Math.random());
-         createTechTreeItem(itemType, position);
+         createTechTreeItem(entry.itemType, position);
       }
    }
 }

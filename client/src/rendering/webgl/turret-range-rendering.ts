@@ -1,4 +1,3 @@
-import { ITEM_INFO_RECORD, ItemType, PlaceableItemType } from "webgl-test-shared/dist/items";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import Player, { getPlayerSelectedItem } from "../../entities/Player";
 import { createWebGLProgram, gl } from "../../webgl";
@@ -8,6 +7,7 @@ import { getHoveredEntityID } from "../../entity-selection";
 import { calculateStructurePlaceInfo } from "webgl-test-shared/dist/structures";
 import Camera from "../../Camera";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
+import { ItemType, ITEM_INFO_RECORD, PlaceableItemType } from "webgl-test-shared/dist/items/items";
 
 const CIRCLE_DETAIL = 300;
 

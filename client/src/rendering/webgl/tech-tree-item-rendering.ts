@@ -2,11 +2,11 @@ import { Point, randFloat, randSign, rotateXAroundPoint, rotateYAroundPoint } fr
 import { createWebGLProgram, halfWindowHeight, halfWindowWidth } from "../../webgl";
 import { ATLAS_SLOT_SIZE } from "../../texture-atlases/texture-atlas-stitching";
 import { ENTITY_TEXTURE_ATLAS_LENGTH, getTechTreeEntityTextureAtlas, getTextureArrayIndex } from "../../texture-atlases/texture-atlases";
-import { ItemType } from "webgl-test-shared/dist/items";
 import CLIENT_ITEM_INFO_RECORD from "../../client-item-info";
 import { getTechTreeGL, techTreeX, techTreeY, techTreeZoom } from "./tech-tree-rendering";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { UBOBindingIndex, bindUBOToProgram } from "../ubos";
+import { ItemType } from "webgl-test-shared/dist/items/items";
 
 interface TechTreeItem {
    readonly itemType: ItemType;

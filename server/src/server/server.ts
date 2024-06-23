@@ -19,7 +19,9 @@ import { updateResourceDistributions } from "../resource-distributions";
 import { updateGrassBlockers } from "../grass-blockers";
 import { createGameDataPacket } from "./game-data-packets";
 import PlayerClient from "./PlayerClient";
-import { addPlayerClient, generatePlayerSpawnPosition, getPlayerClients } from "./player-clients";
+import { addPlayerClient, generatePlayerSpawnPosition, getPlayerClients, getPlayerFromUsername } from "./player-clients";
+import { TribeComponentArray } from "../components/TribeComponent";
+import { createTribeWarrior } from "../entities/tribes/tribe-warrior";
 
 const isTimed = process.argv[2] === "timed";
 const averageTickTimes = new Array<number>();
@@ -199,15 +201,6 @@ class GameServer {
       if (SERVER.io === null) return;
 
       SERVER.io.on("connection", (socket: ISocket) => {
-         // @Temporary
-         // setTimeout(() => {
-         //    if(1+1===2)return;
-         //    const p = this.getPlayerFromUsername(username)!;
-         //    const tc = TribeComponentArray.getComponent(p.id);
-         //    const tribe = tc.tribe;
-
-         //    createTribeWarrior(new Point(spawnPosition.x - 100, spawnPosition.y), tribe, 0);
-         // }, 3000);
          
          // @Temporary
          
@@ -291,6 +284,18 @@ class GameServer {
          socket.on("initial_player_data", (username: string, tribeType: TribeType, screenWidth: number, screenHeight: number) => {
             const spawnPosition = generatePlayerSpawnPosition(tribeType);
             const visibleChunkBounds = estimateVisibleChunkBounds(spawnPosition, screenWidth, screenHeight);
+
+            // @Temporary
+            // setTimeout(() => {
+            //    const p = getPlayerFromUsername(username)!;
+            //    const tc = TribeComponentArray.getComponent(p.id);
+            //    const tribe = tc.tribe;
+
+            //    createTribeWarrior(new Point(spawnPosition.x - 800, spawnPosition.y - 100), Math.PI * 0.45, tribe, 0);
+            //    createTribeWarrior(new Point(spawnPosition.x - 900, spawnPosition.y - 170), Math.PI * 0.5, tribe, 0);
+            //    createTribeWarrior(new Point(spawnPosition.x - 950, spawnPosition.y - 80), Math.PI * 0.5, tribe, 0);
+            //    createTribeWarrior(new Point(spawnPosition.x - 1050, spawnPosition.y + 105), Math.PI * 0.45, tribe, 0);
+            // }, 2000);
 
             const tribe = new Tribe(tribeType, false);
             const player = createPlayer(spawnPosition, tribe, username);

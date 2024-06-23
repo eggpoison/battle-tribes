@@ -16,7 +16,7 @@ export const ROCK_SPIKE_MASSES = [1, 1.75, 2.5];
 export function createRockSpikeProjectile(position: Point, rotation: number, size: number, frozenYetiID: number): Entity {
    const rockSpikeProjectile = new Entity(position, rotation, EntityType.rockSpikeProjectile, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
-   const hitbox = new CircularHitbox(ROCK_SPIKE_MASSES[size], new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, rockSpikeProjectile.getNextHitboxLocalID(), 0, ROCK_SPIKE_HITBOX_SIZES[size]);
+   const hitbox = new CircularHitbox(ROCK_SPIKE_MASSES[size], new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, ROCK_SPIKE_HITBOX_SIZES[size]);
    rockSpikeProjectile.addHitbox(hitbox);
 
    const lifetimeTicks = Math.floor(randFloat(3.5, 4.5) * Settings.TPS);

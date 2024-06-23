@@ -1,7 +1,6 @@
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityType, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
-import { ItemType } from "webgl-test-shared/dist/items";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { Point, randInt } from "webgl-test-shared/dist/utils";
@@ -16,6 +15,7 @@ import { applyKnockback } from "../../components/PhysicsComponent";
 import { Biome } from "webgl-test-shared/dist/tiles";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
 import { CircularHitbox, HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
+import { ItemType } from "webgl-test-shared/dist/items/items";
 
 const ICE_SPIKE_RADIUS = 40;
 
@@ -26,7 +26,7 @@ const GROWTH_OFFSET = 60;
 export function createIceSpikes(position: Point, rotation: number, rootIceSpike?: Entity): Entity {
    const iceSpikes = new Entity(position, rotation, EntityType.iceSpikes, COLLISION_BITS.iceSpikes, DEFAULT_COLLISION_MASK & ~COLLISION_BITS.iceSpikes);
 
-   const hitbox = new CircularHitbox(1, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, iceSpikes.getNextHitboxLocalID(), 0, ICE_SPIKE_RADIUS);
+   const hitbox = new CircularHitbox(1, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, ICE_SPIKE_RADIUS);
    iceSpikes.addHitbox(hitbox);
 
    HealthComponentArray.addComponent(iceSpikes.id, new HealthComponent(5));

@@ -1,7 +1,5 @@
 import { TribesmanAIType } from "webgl-test-shared/dist/components";
-import { CraftingStation, CraftingRecipe, CRAFTING_RECIPES } from "webgl-test-shared/dist/crafting-recipes";
 import { EntityType, LimbAction } from "webgl-test-shared/dist/entities";
-import { InventoryName } from "webgl-test-shared/dist/items";
 import { Settings, PathfindingSettings } from "webgl-test-shared/dist/settings";
 import Board from "../../../Board";
 import Entity from "../../../Entity";
@@ -15,6 +13,8 @@ import { PathfindFailureDefault } from "../../../pathfinding";
 import { getAvailableCraftingStations } from "../tribe-member";
 import { TRIBESMAN_TURN_SPEED } from "./tribesman-ai";
 import { pathfindToPosition, clearTribesmanPath } from "./tribesman-ai-utils";
+import { CraftingStation, CraftingRecipe, CRAFTING_RECIPES } from "webgl-test-shared/dist/items/crafting-recipes";
+import { InventoryName } from "webgl-test-shared/dist/items/items";
 
 const buildingMatchesCraftingStation = (building: Entity, craftingStation: CraftingStation): boolean => {
    return building.type === EntityType.workbench && craftingStation === CraftingStation.workbench;

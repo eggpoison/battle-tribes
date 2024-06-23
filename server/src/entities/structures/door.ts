@@ -19,7 +19,7 @@ export const DOOR_HEALTHS = [15, 45];
 export function createDoor(position: Point, rotation: number, tribe: Tribe, connectionInfo: StructureConnectionInfo, material: BuildingMaterial): Entity {
    const door = new Entity(position, rotation, EntityType.door, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
-   const hitboxes = createDoorHitboxes(door.getNextHitboxLocalID());
+   const hitboxes = createDoorHitboxes();
    for (let i = 0; i < hitboxes.length; i++) {
       door.addHitbox(hitboxes[i]);
    }

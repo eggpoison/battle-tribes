@@ -15,7 +15,7 @@ import { createPlanterBoxHitboxes } from "webgl-test-shared/dist/hitboxes/entity
 export function createPlanterBox(position: Point, rotation: number, tribe: Tribe, connectionInfo: StructureConnectionInfo): Entity {
    const planterBox = new Entity(position, rotation, EntityType.planterBox, COLLISION_BITS.planterBox, DEFAULT_COLLISION_MASK);
 
-   const hitboxes = createPlanterBoxHitboxes(planterBox.getNextHitboxLocalID());
+   const hitboxes = createPlanterBoxHitboxes();
    for (let i = 0; i < hitboxes.length; i++) {
       planterBox.addHitbox(hitboxes[i]);
    }

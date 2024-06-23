@@ -14,10 +14,13 @@
 }
 
 .devmode-container {
-   font-family: "Inconsolata";
    background-color: rgba(0.3, 0.3, 0.3, 0.6);
    padding: 0.1rem;
    border: 2px solid #666;
+}
+
+.devmode-container * {
+   font-family: "Inconsolata";
 }
 
 .devmode-tab {
@@ -63,8 +66,6 @@
 }
 
 .devmode-container button {
-   margin-left: 50%;
-   transform: translateX(-50%);
    cursor: pointer;
 }
 
@@ -168,4 +169,20 @@
 
 #summon-tab button {
    margin-top: 1rem;
+   margin-left: 50%;
+   transform: translateX(-50%);
+}
+
+#titles-tab .titles-list {
+   width: 8rem;
+   display: flex;
+   flex-direction: column;
+}
+#titles-tab .titles-list > div {
+   display: flex;
+   justify-content: center;
+}
+#titles-tab .titles-list button {
+   display: flex;
+   justify-content: center;
 }

@@ -1,7 +1,6 @@
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision";
 import { AMMO_INFO_RECORD, ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityType } from "webgl-test-shared/dist/entities";
-import { BallistaAmmoType, BALLISTA_AMMO_TYPES, ItemType, InventoryName } from "webgl-test-shared/dist/items";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { Point } from "webgl-test-shared/dist/utils";
@@ -21,6 +20,7 @@ import { StructureComponentArray, StructureComponent } from "../../components/St
 import { StructureConnectionInfo } from "webgl-test-shared/dist/structures";
 import { hitboxIsCircular } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { createBallistaHitboxes } from "webgl-test-shared/dist/hitboxes/entity-hitbox-creation";
+import { InventoryName, BallistaAmmoType, BALLISTA_AMMO_TYPES, ItemType } from "webgl-test-shared/dist/items/items";
 
 const VISION_RANGE = 550;
 const AIM_ARC_SIZE = Math.PI / 2;
@@ -28,7 +28,7 @@ const AIM_ARC_SIZE = Math.PI / 2;
 export function createBallista(position: Point, rotation: number, tribe: Tribe, connectionInfo: StructureConnectionInfo): Entity {
    const ballista = new Entity(position, rotation, EntityType.ballista, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
-   const hitboxes = createBallistaHitboxes(ballista.getNextHitboxLocalID());
+   const hitboxes = createBallistaHitboxes();
    for (let i = 0; i < hitboxes.length; i++) {
       ballista.addHitbox(hitboxes[i]);
    }
@@ -204,20 +204,20 @@ const fire = (ballista: Entity, ammoType: BallistaAmmoType): void => {
 export function tickBallista(ballista: Entity): void {
    const aiHelperComponent = AIHelperComponentArray.getComponent(ballista.id);
    const turretComponent = TurretComponentArray.getComponent(ballista.id);
-   const ballistaComponent = AmmoBoxComponentArray.getComponent(ballista.id);
+   const ammoBoxComponent = AmmoBoxComponentArray.getComponent(ballista.id);
 
    // Attempt to load ammo if there is none loaded
    // @Speed: ideally shouldn't be done every tick, just when the inventory is changed (ammo is added to the inventory)
-   if (ballistaComponent.ammoRemaining === 0) {
+   if (ammoBoxComponent.ammoRemaining === 0) {
       attemptAmmoLoad(ballista);
    }
 
-   if (aiHelperComponent.visibleEntities.length > 0 && ballistaComponent.ammoRemaining > 0) {
+   if (aiHelperComponent.visibleEntities.length > 0 && ammoBoxComponent.ammoRemaining > 0) {
       const target = getTarget(ballista, aiHelperComponent.visibleEntities);
       if (target !== null) {
          // If the ballista has just acquired a target, reset the shot cooldown
          if (!turretComponent.hasTarget) {
-            const ammoInfo = AMMO_INFO_RECORD[ballistaComponent.ammoType];
+            const ammoInfo = AMMO_INFO_RECORD[ammoBoxComponent.ammoType];
             turretComponent.fireCooldownTicks = ammoInfo.shotCooldownTicks;
          }
          turretComponent.hasTarget = true;
@@ -250,10 +250,10 @@ export function tickBallista(ballista: Entity): void {
                angleDiff -= 2 * Math.PI;
             }
             if (Math.abs(angleDiff) < 0.01) {
-               fire(ballista, ballistaComponent.ammoType);
+               fire(ballista, ammoBoxComponent.ammoType);
    
                // Reset firing cooldown
-               const ammoInfo = AMMO_INFO_RECORD[ballistaComponent.ammoType];
+               const ammoInfo = AMMO_INFO_RECORD[ammoBoxComponent.ammoType];
                turretComponent.fireCooldownTicks = ammoInfo.shotCooldownTicks + ammoInfo.reloadTimeTicks;
             }
          }
@@ -262,10 +262,10 @@ export function tickBallista(ballista: Entity): void {
    }
 
    turretComponent.hasTarget = false;
-   if (ballistaComponent.ammoType === null) {
+   if (ammoBoxComponent.ammoType === null) {
       turretComponent.fireCooldownTicks = 0;
    } else {
-      const ammoInfo = AMMO_INFO_RECORD[ballistaComponent.ammoType];
+      const ammoInfo = AMMO_INFO_RECORD[ammoBoxComponent.ammoType];
       if (turretComponent.fireCooldownTicks <= ammoInfo.shotCooldownTicks) {
          turretComponent.fireCooldownTicks = ammoInfo.shotCooldownTicks;
       } else {

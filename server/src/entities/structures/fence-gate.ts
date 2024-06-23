@@ -15,7 +15,7 @@ import { createFenceGateHitboxes } from "webgl-test-shared/dist/hitboxes/entity-
 export function createFenceGate(position: Point, rotation: number, tribe: Tribe, connectionInfo: StructureConnectionInfo): Entity {
    const fenceGate = new Entity(position, rotation, EntityType.fenceGate, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
-   const hitboxes = createFenceGateHitboxes(fenceGate.getNextHitboxLocalID());
+   const hitboxes = createFenceGateHitboxes();
    for (let i = 0; i < hitboxes.length; i++) {
       fenceGate.addHitbox(hitboxes[i]);
    }

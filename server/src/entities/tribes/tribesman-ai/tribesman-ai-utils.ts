@@ -9,7 +9,6 @@ import { TribesmanPathType, TribesmanAIComponentArray } from "../../../component
 import { entityCanBlockPathfinding, getEntityPathfindingGroupID, PathfindFailureDefault, getEntityFootprint, PathfindOptions, pathfind, smoothPath, positionIsAccessible, replacePathfindingNodeGroupID, entityHasReachedNode, getAngleToNode, getClosestPathfindNode, getDistanceToNode, pathIsClear } from "../../../pathfinding";
 import { TRIBESMAN_TURN_SPEED } from "./tribesman-ai";
 import { EntityType } from "webgl-test-shared/dist/entities";
-import { ITEM_INFO_RECORD, ITEM_TYPE_RECORD, Inventory, InventoryName, ItemInfoRecord, ToolItemInfo } from "webgl-test-shared/dist/items";
 import { distance, angle } from "webgl-test-shared/dist/utils";
 import { doorIsClosed, toggleDoor } from "../../../components/DoorComponent";
 import { InventoryUseComponentArray, getInventoryUseInfo } from "../../../components/InventoryUseComponent";
@@ -19,6 +18,7 @@ import { TribeMemberComponentArray, tribeMemberHasTitle } from "../../../compone
 import { SpikesComponentArray } from "../../../components/SpikesComponent";
 import { TRIBE_WARRIOR_VISION_RANGE } from "../tribe-warrior";
 import { TRIBE_WORKER_VISION_RANGE, TRIBE_WORKER_RADIUS } from "../tribe-worker";
+import { InventoryName, Inventory, ItemInfoRecord, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, ToolItemInfo } from "webgl-test-shared/dist/items/items";
 
 const enum Vars {
    BLOCKING_TRIBESMAN_DISTANCE = 80,

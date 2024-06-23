@@ -23,7 +23,7 @@ export function createSpikes(position: Point, rotation: number, tribe: Tribe, co
 
    const spikes = new Entity(position, rotation, entityType, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
-   const hitboxes = isAttached ? createWallSpikesHitboxes(spikes.getNextHitboxLocalID()) : createFloorSpikesHitboxes(spikes.getNextHitboxLocalID());
+   const hitboxes = isAttached ? createWallSpikesHitboxes() : createFloorSpikesHitboxes();
    for (let i = 0; i < hitboxes.length; i++) {
       spikes.addHitbox(hitboxes[i]);
    }

@@ -1,6 +1,5 @@
 import { BlueprintType, BuildingMaterial, ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityType, EntityTypeString } from "webgl-test-shared/dist/entities";
-import { ItemType } from "webgl-test-shared/dist/items";
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { deselectSelectedEntity, getSelectedEntityID } from "../../entity-selection";
 import Board from "../../Board";
@@ -15,6 +14,7 @@ import { playSound } from "../../sound";
 import Player from "../../entities/Player";
 import Game from "../../Game";
 import { setMenuCloseFunction } from "../../player-input";
+import { ItemType } from "webgl-test-shared/dist/items/items";
 
 /*
 // @Incomplete

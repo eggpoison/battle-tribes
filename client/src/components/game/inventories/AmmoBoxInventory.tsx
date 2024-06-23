@@ -1,4 +1,3 @@
-import { BallistaAmmoType, Inventory, InventoryName, ItemType } from "webgl-test-shared/dist/items";
 import { AMMO_INFO_RECORD, ServerComponentType } from "webgl-test-shared/dist/components";
 import { Settings } from "webgl-test-shared/dist/settings";
 import Ballista from "../../../entities/Ballista";
@@ -6,6 +5,7 @@ import { getSelectedEntity } from "../../../entity-selection";
 import InventoryContainer from "./InventoryContainer";
 import CLIENT_ITEM_INFO_RECORD, { getItemTypeImage } from "../../../client-item-info";
 import { CLIENT_STATUS_EFFECT_INFO_RECORD } from "../../../status-effects";
+import { Inventory, BallistaAmmoType, ItemType, InventoryName } from "webgl-test-shared/dist/items/items";
 
 const getAmmoSlot = (ammoBoxInventory: Inventory): number => {
    for (let itemSlot = 1; itemSlot <= ammoBoxInventory.width * ammoBoxInventory.height; itemSlot++) {

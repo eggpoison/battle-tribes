@@ -10,17 +10,17 @@ import { tickCookingEntity } from "./cooking-entity";
 import { CookingComponent, CookingComponentArray } from "../../../components/CookingComponent";
 import Tribe from "../../../Tribe";
 import { TribeComponent, TribeComponentArray } from "../../../components/TribeComponent";
-import { InventoryName } from "webgl-test-shared/dist/items";
 import { StructureComponent, StructureComponentArray } from "../../../components/StructureComponent";
 import { StructureConnectionInfo } from "webgl-test-shared/dist/structures";
 import { createCampfireHitboxes } from "webgl-test-shared/dist/hitboxes/entity-hitbox-creation";
+import { InventoryName } from "webgl-test-shared/dist/items/items";
 
 const LIFETIME_SECONDS = 30;
 
 export function createCampfire(position: Point, rotation: number, tribe: Tribe, connectionInfo: StructureConnectionInfo): Entity {
    const campfire = new Entity(position, rotation, EntityType.campfire, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
-   const hitboxes = createCampfireHitboxes(campfire.getNextHitboxLocalID());
+   const hitboxes = createCampfireHitboxes();
    for (let i = 0; i < hitboxes.length; i++) {
       campfire.addHitbox(hitboxes[i]);
    }

@@ -2,18 +2,14 @@ import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { TRIBESMAN_TITLE_RECORD, TitleGenerationInfo, TribesmanTitle } from "webgl-test-shared/dist/titles";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { TribeType } from "webgl-test-shared/dist/tribes";
-import { ITEM_TYPE_RECORD, InventoryName } from "webgl-test-shared/dist/items";
-import { useCallback } from "react";
-import { getItemTypeImage } from "../../../client-item-info";
 import Tribesman from "../../../entities/Tribesman";
-import { definiteGameState } from "../../../game-state/game-states";
-import { leftClickItemSlot } from "../../../inventory-manipulation";
 import InventoryContainer from "./InventoryContainer";
 import ItemSlot from "./ItemSlot";
-import { backpackItemTypes } from "./Hotbar";
 import { getSelectedEntity } from "../../../entity-selection";
 import Game from "../../../Game";
 import Client from "../../../client/Client";
+import { InventoryName, itemTypeIsArmour, itemTypeIsBackpack } from "webgl-test-shared/dist/items/items";
+import Player from "../../../entities/Player";
 
 const PLAINSPEOPLE_NAMES: ReadonlyArray<string> = [
    "Oda",
@@ -235,46 +231,12 @@ const TribesmanInteractMenu = () => {
    const backpackSlotInventory = inventoryComponent.getInventory(InventoryName.backpackSlot);
    const armourSlotInventory = inventoryComponent.getInventory(InventoryName.armourSlot);
 
-   // @Cleanup: Copy-pasted from hotbar
-
-   const clickBackpackSlot = useCallback((e: MouseEvent): void => {
-      // Stop the player placing a non-backpack item in the backpack slot
-      const heldItem = definiteGameState.heldItemSlot.itemSlots[1];
-      if (typeof heldItem !== "undefined" && !backpackItemTypes.includes(heldItem.type)) {
-         return;
-      }
-      leftClickItemSlot(e, tribesman.id, backpackSlotInventory, 1);
-   }, [backpackSlotInventory, tribesman.id]);
-
-   const clickArmourItemSlot = useCallback((e: MouseEvent): void => {
-      const heldItem = definiteGameState.heldItemSlot.itemSlots[1];
-      if (typeof heldItem !== "undefined" && ITEM_TYPE_RECORD[heldItem.type] !== "armour") {
-         return;
-      }
-      leftClickItemSlot(e, tribesman.id, armourSlotInventory, 1);
-   }, [armourSlotInventory, tribesman.id]);
-
    // @Copy and paste from hotbar
 
-   let backpackSlotElement: JSX.Element;
-   const backpackItem = backpackSlotInventory.itemSlots[1];
-   if (typeof backpackItem !== "undefined") {
-      const image = getItemTypeImage(backpackItem.type);
-      backpackSlotElement = <ItemSlot className="armour-slot" onClick={clickBackpackSlot} isSelected={false} picturedItemImageSrc={image} />
-   } else {
-      const imageSrc = require("../../../images/miscellaneous/backpack-wireframe.png");
-      backpackSlotElement = <ItemSlot className="armour-slot" onClick={clickBackpackSlot} isSelected={false} picturedItemImageSrc={imageSrc} />
-   }
+   const playerID = Player.instance !== null ? Player.instance.id : 0;
 
-   let armourItemSlotElement: JSX.Element;
-   const armourItem = backpackSlotInventory.itemSlots[1];
-   if (typeof armourItem !== "undefined") {
-      const image = getItemTypeImage(armourItem.type);
-      armourItemSlotElement = <ItemSlot className="backpack-slot" onClick={clickArmourItemSlot} isSelected={false} picturedItemImageSrc={image} />
-   } else {
-      const imageSrc = require("../../../images/miscellaneous/armour-wireframe.png");
-      armourItemSlotElement = <ItemSlot className="backpack-slot" onClick={clickArmourItemSlot} isSelected={false} picturedItemImageSrc={imageSrc} />
-   }
+   const backpackSlotElement = <ItemSlot className="armour-slot" entityID={playerID} inventory={backpackSlotInventory} itemSlot={1} placeholderImg={require("../../../images/miscellaneous/backpack-wireframe.png")} validItemSpecifier={itemTypeIsBackpack} />
+   const armourItemSlotElement = <ItemSlot className="backpack-slot" entityID={playerID} inventory={armourSlotInventory} itemSlot={1} placeholderImg={require("../../../images/miscellaneous/armour-wireframe.png")} validItemSpecifier={itemTypeIsArmour} />
    
    return <div id="tribesman-inventory" className="menu" onContextMenu={e => e.preventDefault()}>
       <div className="flex-container space-around">

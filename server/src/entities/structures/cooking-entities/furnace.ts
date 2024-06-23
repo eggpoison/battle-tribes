@@ -10,15 +10,15 @@ import { StatusEffectComponent, StatusEffectComponentArray } from "../../../comp
 import { tickCookingEntity } from "./cooking-entity";
 import Tribe from "../../../Tribe";
 import { TribeComponent, TribeComponentArray } from "../../../components/TribeComponent";
-import { InventoryName } from "webgl-test-shared/dist/items";
 import { StructureComponent, StructureComponentArray } from "../../../components/StructureComponent";
 import { StructureConnectionInfo } from "webgl-test-shared/dist/structures";
 import { createFurnaceHitboxes } from "webgl-test-shared/dist/hitboxes/entity-hitbox-creation";
+import { InventoryName } from "webgl-test-shared/dist/items/items";
 
 export function createFurnace(position: Point, rotation: number, tribe: Tribe, connectionInfo: StructureConnectionInfo): Entity {
    const furnace = new Entity(position, rotation, EntityType.furnace, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
-   const hitboxes = createFurnaceHitboxes(furnace.getNextHitboxLocalID());
+   const hitboxes = createFurnaceHitboxes();
    for (let i = 0; i < hitboxes.length; i++) {
       furnace.addHitbox(hitboxes[i]);
    }

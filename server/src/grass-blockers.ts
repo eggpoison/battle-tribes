@@ -83,6 +83,9 @@ export function updateGrassBlockers(): void {
 }
 
 export function createStructureGrassBlockers(structure: Entity<StructureType>): void {
+   // @Temporary
+   if(1+1===2)return;
+   
    for (let i = 0; i < structure.hitboxes.length; i++) {
       const hitbox = structure.hitboxes[i];
 

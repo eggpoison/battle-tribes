@@ -10,14 +10,14 @@ import { HealthComponent, HealthComponentArray } from "../../components/HealthCo
 import { StatusEffectComponentArray, StatusEffectComponent } from "../../components/StatusEffectComponent";
 import { StructureComponentArray, StructureComponent } from "../../components/StructureComponent";
 import { TribeComponent, TribeComponentArray } from "../../components/TribeComponent";
-import { CraftingStation } from "webgl-test-shared/dist/crafting-recipes";
 import { CraftingStationComponentArray, CraftingStationComponent } from "../../components/CraftingStationComponent";
 import { createStonecarvingTableHitboxes } from "webgl-test-shared/dist/hitboxes/entity-hitbox-creation";
+import { CraftingStation } from "webgl-test-shared/dist/items/crafting-recipes";
 
 export function createStonecarvingTable(position: Point, rotation: number, tribe: Tribe, connectionInfo: StructureConnectionInfo): Entity {
    const stonecarvingTable = new Entity(position, rotation, EntityType.stonecarvingTable, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
-   const hitboxes = createStonecarvingTableHitboxes(stonecarvingTable.getNextHitboxLocalID());
+   const hitboxes = createStonecarvingTableHitboxes();
    for (let i = 0; i < hitboxes.length; i++) {
       stonecarvingTable.addHitbox(hitboxes[i]);
    }

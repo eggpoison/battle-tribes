@@ -1,13 +1,14 @@
 import Entity from "../Entity";
 import Board from "../Board";
 import { ComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
+import { EntityID } from "webgl-test-shared/dist/entities";
 
 export const ComponentArrays = new Array<ComponentArray>();
 
 interface ComponentArrayFunctions<C extends ServerComponentType> {
-   onJoin?(entityID: number): void;
-   onRemove?(entityID: number): void;
-   serialise(entityID: number, playerID: number | null): ComponentData<C>;
+   onJoin?(entityID: EntityID): void;
+   onRemove?(entityID: EntityID): void;
+   serialise(entityID: EntityID, playerID: EntityID | null): ComponentData<C>;
 }
 
 export class ComponentArray<C extends ServerComponentType = ServerComponentType, T extends object = object> {
@@ -17,26 +18,26 @@ export class ComponentArray<C extends ServerComponentType = ServerComponentType,
    private componentBuffer = new Array<T>();
 
    /** Maps entity IDs to component indexes */
-   private entityToIndexMap: Partial<Record<number, number>> = {};
+   private entityToIndexMap: Partial<Record<EntityID, number>> = {};
    /** Maps component indexes to entity IDs */
-   private indexToEntityMap: Partial<Record<number, number>> = {};
+   private indexToEntityMap: Partial<Record<number, EntityID>> = {};
    
    public activeComponents = new Array<T>();
-   public activeEntityIDs = new Array<number>();
+   public activeEntityIDs = new Array<EntityID>();
 
    /** Maps entity IDs to component indexes */
-   public activeEntityToIndexMap: Record<number, number> = {};
+   public activeEntityToIndexMap: Record<EntityID, number> = {};
    /** Maps component indexes to entity IDs */
-   private activeIndexToEntityMap: Record<number, number> = {};
+   private activeIndexToEntityMap: Record<number, EntityID> = {};
 
    private componentBufferIDs = new Array<number>();
 
    private deactivateBuffer = new Array<number>();
 
    // @Bug: This function shouldn't create an entity, as that will cause a crash. (Can't add components to the join buffer while iterating it)
-   public onJoin?: (entityID: number) => void;
-   public onRemove?: (entityID: number) => void;
-   public serialise: (entityID: number, playerID: number | null) => ComponentData<C>;
+   public onJoin?: (entityID: EntityID) => void;
+   public onRemove?: (entityID: EntityID) => void;
+   public serialise: (entityID: EntityID, playerID: EntityID | null) => ComponentData<C>;
    
    constructor(isActiveByDefault: boolean, functions: ComponentArrayFunctions<C>) {
       this.isActiveByDefault = isActiveByDefault;

@@ -1,7 +1,5 @@
 import { PathfindingNodeIndex } from "webgl-test-shared/dist/client-server-types";
 import { ServerComponentType, TribesmanAIComponentData, TribesmanAIType } from "webgl-test-shared/dist/components";
-import { CRAFTING_RECIPES } from "webgl-test-shared/dist/crafting-recipes";
-import { ItemType } from "webgl-test-shared/dist/items";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { randInt } from "webgl-test-shared/dist/utils";
 import Entity from "../Entity";
@@ -10,6 +8,8 @@ import Board from "../Board";
 import Tribe, { BuildingPlan } from "../Tribe";
 import { EntityRelationship, TribeComponentArray } from "./TribeComponent";
 import { TribesmanGoal } from "../entities/tribes/tribesman-ai/tribesman-goals";
+import { CRAFTING_RECIPES } from "webgl-test-shared/dist/items/crafting-recipes";
+import { ItemType } from "webgl-test-shared/dist/items/items";
 
 // @Incomplete: periodically remove dead entities from the relations object
 // @Incomplete: only keep track of tribesman relations

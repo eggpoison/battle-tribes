@@ -1,11 +1,11 @@
 import { ServerComponentType, TribesmanAIType, TribesmanAIComponentData } from "webgl-test-shared/dist/components";
 import { Settings } from "webgl-test-shared/dist/settings";
-import { ItemType } from "webgl-test-shared/dist/items";
 import { TribeType } from "webgl-test-shared/dist/tribes";
 import { randInt, randItem } from "webgl-test-shared/dist/utils";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import { AudioFilePath, playSound } from "../sound";
+import { ItemType } from "webgl-test-shared/dist/items/items";
 
 const GOBLIN_ANGRY_SOUNDS: ReadonlyArray<AudioFilePath> = ["goblin-angry-1.mp3", "goblin-angry-2.mp3", "goblin-angry-3.mp3", "goblin-angry-4.mp3"];
 const GOBLIN_ESCAPE_SOUNDS: ReadonlyArray<AudioFilePath> = ["goblin-escape-1.mp3", "goblin-escape-2.mp3", "goblin-escape-3.mp3"];

@@ -1,6 +1,5 @@
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { EntityType } from "webgl-test-shared/dist/entities";
-import { ItemType } from "webgl-test-shared/dist/items";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { Point, randInt } from "webgl-test-shared/dist/utils";
@@ -13,6 +12,7 @@ import { createZombie } from "./mobs/zombie";
 import TombstoneDeathManager from "../tombstone-deaths";
 import { StatusEffectComponent, StatusEffectComponentArray } from "../components/StatusEffectComponent";
 import { HitboxCollisionType, RectangularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
+import { ItemType } from "webgl-test-shared/dist/items/items";
 
 const WIDTH = 48;
 const HEIGHT = 88;
@@ -31,7 +31,7 @@ const ZOMBIE_SPAWN_TIME = 3;
 export function createTombstone(position: Point, rotation: number): Entity {
    const tombstone = new Entity(position, rotation, EntityType.tombstone, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
-   const hitbox = new RectangularHitbox(1.25, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, tombstone.getNextHitboxLocalID(), 0, WIDTH, HEIGHT, 0);
+   const hitbox = new RectangularHitbox(1.25, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, WIDTH, HEIGHT, 0);
    tombstone.addHitbox(hitbox);
 
    HealthComponentArray.addComponent(tombstone.id, new HealthComponent(MAX_HEALTH));

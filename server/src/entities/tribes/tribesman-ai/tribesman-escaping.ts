@@ -7,6 +7,9 @@ import { EntityType, EntityTypeString } from "webgl-test-shared/dist/entities";
 import { HealthComponent } from "../../../components/HealthComponent";
 
 export function tribesmanShouldEscape(entityType: EntityType, healthComponent: HealthComponent): boolean {
+   // @Temporary
+   return false;
+   
    const remainingHealthRatio = healthComponent.health / healthComponent.maxHealth;
    
    switch (entityType) {

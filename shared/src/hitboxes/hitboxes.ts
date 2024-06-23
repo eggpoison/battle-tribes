@@ -27,8 +27,8 @@ export class RectangularHitbox extends BaseHitbox {
    public axisX = 0;
    public axisY = 0;
 
-   constructor(mass: number, offset: Point, collisionType: HitboxCollisionType, collisionBit: number, collisionMask: number, localID: number, flags: number, width: number, height: number, rotation: number) {
-      super(mass, offset, collisionType, collisionBit, collisionMask, localID, flags);
+   constructor(mass: number, offset: Point, collisionType: HitboxCollisionType, collisionBit: number, collisionMask: number, flags: number, width: number, height: number, rotation: number) {
+      super(mass, offset, collisionType, collisionBit, collisionMask, flags);
 
       this.width = width;
       this.height = height;
@@ -100,8 +100,8 @@ export class RectangularHitbox extends BaseHitbox {
 export class CircularHitbox extends BaseHitbox {
    public radius: number;
 
-   constructor(mass: number, offset: Point, collisionType: HitboxCollisionType, collisionBit: number, collisionMask: number, localID: number, flags: number, radius: number) {
-      super(mass, offset, collisionType, collisionBit, collisionMask, localID, flags);
+   constructor(mass: number, offset: Point, collisionType: HitboxCollisionType, collisionBit: number, collisionMask: number, flags: number, radius: number) {
+      super(mass, offset, collisionType, collisionBit, collisionMask, flags);
 
       this.radius = radius;
    }

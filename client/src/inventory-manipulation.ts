@@ -1,10 +1,9 @@
-import { Inventory, Item, ItemType } from "webgl-test-shared/dist/items";
 import Client from "./client/Client";
 import { craftingMenuIsOpen } from "./components/game/menus/CraftingMenu";
 import { setHeldItemVisualPosition } from "./components/game/HeldItem";
 import { definiteGameState } from "./game-state/game-states";
 import { InventorySelector_inventoryIsOpen } from "./components/game/inventories/InventorySelector";
-import { ItemTally } from "webgl-test-shared/dist/crafting-recipes";
+import { Inventory, Item, ItemType } from "webgl-test-shared/dist/items/items";
 
 const canInteractWithItemSlots = (): boolean => {
    return craftingMenuIsOpen() || InventorySelector_inventoryIsOpen();
@@ -48,7 +47,7 @@ export function rightClickItemSlot(e: MouseEvent, entityID: number, inventory: I
    const clickedItem = inventory.itemSlots[itemSlot];
    if (typeof clickedItem !== "undefined") {
       const heldItem = definiteGameState.heldItemSlot.itemSlots[1];
-      if (definiteGameState.heldItemSlot === null || typeof heldItem === "undefined") {
+      if (typeof heldItem === "undefined") {
          const numItemsInSlot = clickedItem.count;
          const pickupCount = Math.ceil(numItemsInSlot / 2);
 
@@ -71,6 +70,14 @@ export function rightClickItemSlot(e: MouseEvent, entityID: number, inventory: I
    }
 }
 
+export function onItemSlotMouseDown(e: MouseEvent, entityID: number, inventory: Inventory, itemSlot: number): void {
+   if (e.button === 0) {
+      leftClickItemSlot(e, entityID, inventory, itemSlot);
+   } else if (e.button === 2) {
+      rightClickItemSlot(e, entityID, inventory, itemSlot);
+   }
+}
+
 export function createInventoryFromData(inventoryData: Inventory): Inventory {
    const inventory = new Inventory(inventoryData.width, inventoryData.height, inventoryData.name);
    for (let itemSlot = 1; itemSlot <= inventoryData.width * inventoryData.height; itemSlot++) {
@@ -88,8 +95,6 @@ export function createInventoryFromData(inventoryData: Inventory): Inventory {
 export function updateInventoryFromData(inventory: Inventory, inventoryData: Inventory): void {
    inventory.width = inventoryData.width;
    inventory.height = inventoryData.height;
-
-   // @Speed: As inventories and items are the same now, this can be way faster
 
    // Remove any items which have been removed from the inventory
    for (let itemSlot = 1; itemSlot <= inventory.width * inventory.height; itemSlot++) {
@@ -144,17 +149,4 @@ export function countItemTypesInInventory(inventory: Inventory, itemType: ItemTy
    }
    
    return count;
-}
-
-// @Cleanup: copy and paste from server
-export function tallyInventoryItems(tally: ItemTally, inventory: Inventory): void {
-   for (let i = 0; i < inventory.items.length; i++) {
-      const item = inventory.items[i];
-      
-      if (typeof tally[item.type] === "undefined") {
-         tally[item.type] = item.count;
-      } else {
-         tally[item.type]! += item.count;
-      }
-   }
 }

@@ -19,7 +19,7 @@ type ComponentTypes = [ServerComponentType.physics, ServerComponentType.iceShard
 export function createIceShard(position: Point, rotation: number): EntityCreationInfo<ComponentTypes> {
    const iceShard = new Entity(position, rotation, EntityType.iceShardProjectile, COLLISION_BITS.default, DEFAULT_COLLISION_MASK & ~COLLISION_BITS.planterBox);
 
-   const hitbox = new RectangularHitbox(0.4, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, iceShard.getNextHitboxLocalID(), 0, 24, 24, 0);
+   const hitbox = new RectangularHitbox(0.4, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, 24, 24, 0);
    iceShard.addHitbox(hitbox);
    
    const physicsComponent = new PhysicsComponent(0, 0, 0, 0, true, false);

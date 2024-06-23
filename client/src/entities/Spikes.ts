@@ -27,6 +27,7 @@ class Spikes extends Entity {
          0,
          0
       )
+      mainRenderPart.addTag("buildingMaterialComponent:material");
       this.attachRenderPart(mainRenderPart);
       
       if (ageTicks <= 1) {

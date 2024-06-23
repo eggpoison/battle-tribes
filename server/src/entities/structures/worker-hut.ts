@@ -15,7 +15,7 @@ import { createWorkerHutHitboxes } from "webgl-test-shared/dist/hitboxes/entity-
 export function createWorkerHut(position: Point, rotation: number, tribe: Tribe, connectionInfo: StructureConnectionInfo): Entity {
    const hut = new Entity(position, rotation, EntityType.workerHut, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
-   const hitboxes = createWorkerHutHitboxes(hut.getNextHitboxLocalID());
+   const hitboxes = createWorkerHutHitboxes();
    for (let i = 0; i < hitboxes.length; i++) {
       hut.addHitbox(hitboxes[i]);
    }

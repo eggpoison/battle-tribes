@@ -22,7 +22,7 @@ const ARROW_DESTROY_DISTANCE = Math.sqrt(Math.pow(ARROW_WIDTH / 2, 2) + Math.pow
 export function createIceArrow(position: Point, rotation: number, tribe: Tribe): EntityCreationInfo<ComponentTypes> {
    const iceArrow = new Entity(position, rotation, EntityType.iceArrow, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
    
-   const hitbox = new RectangularHitbox(0.4, new Point(0, 0), HitboxCollisionType.soft, 0, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, iceArrow.getNextHitboxLocalID(), 0, ARROW_WIDTH, ARROW_HEIGHT);
+   const hitbox = new RectangularHitbox(0.4, new Point(0, 0), HitboxCollisionType.soft, 0, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, ARROW_WIDTH, ARROW_HEIGHT);
    iceArrow.addHitbox(hitbox);
    
    const physicsComponent = new PhysicsComponent(0, 0, 0, 0, false, true);

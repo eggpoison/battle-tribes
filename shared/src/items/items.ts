@@ -1,6 +1,6 @@
-import { EntityType } from "./entities";
-import { Settings } from "./settings";
-import { StructureType } from "./structures";
+import { EntityType } from "../entities";
+import { Settings } from "../settings";
+import { StructureType } from "../structures";
 
 export const enum ItemType {
    wood,
@@ -814,6 +814,18 @@ export function itemInfoIsUtility(itemType: ItemType, itemInfo: unknown): itemIn
 export function itemInfoIsBow(itemType: ItemType, itemInfo: unknown): itemInfo is BowItemInfo {
    const itemTypeInfo = ITEM_TYPE_RECORD[itemType];
    return itemTypeInfo === "bow" || itemTypeInfo === "crossbow";
+}
+
+export function itemTypeIsArmour(itemType: ItemType): boolean {
+   return ITEM_TYPE_RECORD[itemType] === "armour";
+}
+
+export function itemTypeIsBackpack(itemType: ItemType): boolean {
+   return ITEM_TYPE_RECORD[itemType] === "backpack";
+}
+
+export function itemTypeIsGlove(itemType: ItemType): boolean {
+   return ITEM_TYPE_RECORD[itemType] === "glove";
 }
 
 // @Cleanup: move elsewhere

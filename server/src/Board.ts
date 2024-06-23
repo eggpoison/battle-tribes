@@ -1,5 +1,5 @@
 import { WaterRockData, RiverSteppingStoneData, GrassTileInfo, DecorationInfo, RIVER_STEPPING_STONE_SIZES, ServerTileUpdateData, RiverFlowDirections } from "webgl-test-shared/dist/client-server-types";
-import { EntityType } from "webgl-test-shared/dist/entities";
+import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { TileType } from "webgl-test-shared/dist/tiles";
 import { Point } from "webgl-test-shared/dist/utils";
@@ -153,7 +153,7 @@ abstract class Board {
       }
    }
 
-   public static tentativelyGetEntity(entityID: number): Entity | null {
+   public static tentativelyGetEntity(entityID: EntityID): Entity | null {
       let entity: Entity | null | undefined = this.entityRecord[entityID];
       if (typeof entity === "undefined") {
          entity = null;

@@ -19,7 +19,7 @@ export const TUNNEL_HEALTHS = [25, 75];
 export function createTunnel(position: Point, rotation: number, tribe: Tribe, connectionInfo: StructureConnectionInfo, material: BuildingMaterial): Entity {
    const tunnel = new Entity(position, rotation, EntityType.tunnel, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
-   const hitboxes = createTunnelHitboxes(tunnel.getNextHitboxLocalID());
+   const hitboxes = createTunnelHitboxes();
    for (let i = 0; i < hitboxes.length; i++) {
       tunnel.addHitbox(hitboxes[i]);
    }

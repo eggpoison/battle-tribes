@@ -11,7 +11,6 @@ import { attemptEntitySelection } from "./entity-selection";
 import { playSound } from "./sound";
 import { attemptToCompleteNode } from "./research";
 import { StructureType, calculateStructurePlaceInfo } from "webgl-test-shared/dist/structures";
-import { ConsumableItemCategory, ConsumableItemInfo, ITEM_INFO_RECORD, ITEM_TYPE_RECORD, Inventory, InventoryName, Item, ItemType, PlaceableItemType, itemInfoIsTool } from "webgl-test-shared/dist/items";
 import { EntityType, LimbAction } from "webgl-test-shared/dist/entities";
 import { AttackPacket } from "webgl-test-shared/dist/client-server-types";
 import { Settings } from "webgl-test-shared/dist/settings";
@@ -27,6 +26,7 @@ import Camera from "./Camera";
 import { WORKER_HUT_SIZE } from "./entity-components/HutComponent";
 import { calculateCursorWorldPositionX, calculateCursorWorldPositionY } from "./mouse";
 import { RectangularHitbox, CircularHitbox, Hitbox, HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
+import { Inventory, Item, ITEM_TYPE_RECORD, ItemType, InventoryName, ITEM_INFO_RECORD, itemInfoIsTool, ConsumableItemInfo, ConsumableItemCategory, PlaceableItemType } from "webgl-test-shared/dist/items/items";
 
 /*
 // @Temporary
@@ -64,6 +64,8 @@ const offhandItemAttackCooldowns: Record<number, number> = {};
 
 /** Whether the inventory is open or not. */
 let _inventoryIsOpen = false;
+
+let currentRightClickEvent: MouseEvent | null = null;
 
 export function setMenuCloseFunction(callback: () => void): void {
    currentMenuCloseFunction = callback;
@@ -240,6 +242,20 @@ const getSelectedItemInfo = (): SelectedItemInfo | null => {
    return null;
 }
 
+const clickShouldPreventDefault = (e: MouseEvent): boolean => {
+   for (const element of e.composedPath()) {
+      if ((element as HTMLElement).id === "hotbar" || (element as HTMLElement).id === "crafting-menu") {
+         return true;
+      }
+   }
+   
+   if ((e.target as HTMLElement).id === "game-canvas") {
+      return true;
+   }
+
+   return false;
+}
+
 const createItemUseListeners = (): void => {
    document.addEventListener("mousedown", e => {
       if (Player.instance === null || definiteGameState.hotbar === null || definiteGameState.playerIsDead()) return;
@@ -272,6 +288,7 @@ const createItemUseListeners = (): void => {
          leftMouseButtonIsPressed = true;
          attemptAttack();
       } else if (e.button === 2) { // Right click
+         currentRightClickEvent = e;
          rightMouseButtonIsPressed = true;
 
          const selectedItemInfo = getSelectedItemInfo();
@@ -310,20 +327,14 @@ const createItemUseListeners = (): void => {
 
    // Stop the context menu from appearing
    document.addEventListener("contextmenu", e => {
-      for (const element of e.composedPath()) {
-         if ((element as HTMLElement).id === "hotbar" || (element as HTMLElement).id === "crafting-menu") {
-            e.preventDefault();
-            return;
-         }
-      }
-      
-      if ((e.target as HTMLElement).id === "game-canvas") {
+      if (clickShouldPreventDefault(e) || (currentRightClickEvent !== null && clickShouldPreventDefault(currentRightClickEvent))) {
          e.preventDefault();
-         return;
+      } else {
+         // When the context menu is opened, stop player movement
+         clearPressedKeys();
       }
 
-      // When the context menu is opened, stop player movement
-      clearPressedKeys();
+      currentRightClickEvent = null;
    });
 }
 

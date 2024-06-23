@@ -1,6 +1,6 @@
-import { BallistaAmmoType, ItemType } from "webgl-test-shared/dist/items";
 import { AmmoBoxComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
 import { ComponentArray } from "./ComponentArray";
+import { BallistaAmmoType, ItemType } from "webgl-test-shared/dist/items/items";
 
 export class AmmoBoxComponent {
    public ammoType: BallistaAmmoType = ItemType.wood;

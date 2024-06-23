@@ -1,12 +1,12 @@
 import { AmmoBoxComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
 import { rotateXAroundOrigin, rotateYAroundOrigin } from "webgl-test-shared/dist/utils";
-import { BallistaAmmoType } from "webgl-test-shared/dist/items";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { BALLISTA_AMMO_BOX_OFFSET_X, BALLISTA_AMMO_BOX_OFFSET_Y } from "../utils";
 import Board from "../Board";
+import { BallistaAmmoType } from "webgl-test-shared/dist/items/items";
 
 class AmmoBoxComponent extends ServerComponent<ServerComponentType.ammoBox> {
    public ammoType: BallistaAmmoType | null;

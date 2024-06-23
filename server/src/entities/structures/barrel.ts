@@ -8,15 +8,15 @@ import { InventoryComponent, InventoryComponentArray, createNewInventory } from 
 import Tribe from "../../Tribe";
 import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
 import { TribeComponent, TribeComponentArray } from "../../components/TribeComponent";
-import { InventoryName } from "webgl-test-shared/dist/items";
 import { StructureComponent, StructureComponentArray } from "../../components/StructureComponent";
 import { StructureConnectionInfo } from "webgl-test-shared/dist/structures";
 import { createBarrelHitboxes } from "webgl-test-shared/dist/hitboxes/entity-hitbox-creation";
+import { InventoryName } from "webgl-test-shared/dist/items/items";
 
 export function createBarrel(position: Point, rotation: number, tribe: Tribe, connectionInfo: StructureConnectionInfo): Entity {
    const barrel = new Entity(position, rotation, EntityType.barrel, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
-   const hitboxes = createBarrelHitboxes(barrel.getNextHitboxLocalID());
+   const hitboxes = createBarrelHitboxes();
    for (let i = 0; i < hitboxes.length; i++) {
       barrel.addHitbox(hitboxes[i]);
    }

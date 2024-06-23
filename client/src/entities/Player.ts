@@ -1,6 +1,5 @@
 import { Settings } from "webgl-test-shared/dist/settings";
 import { EntityType, LimbAction } from "webgl-test-shared/dist/entities";
-import { Inventory, InventoryName, Item } from "webgl-test-shared/dist/items";
 import { LimbData, ServerComponentType } from "webgl-test-shared/dist/components";
 import { Point } from "webgl-test-shared/dist/utils";
 import Camera from "../Camera";
@@ -17,6 +16,7 @@ import EquipmentComponent from "../entity-components/EquipmentComponent";
 import { collide, resolveWallTileCollisions } from "../collision";
 import { TRIBE_INFO_RECORD } from "webgl-test-shared/dist/tribes";
 import { COLLISION_BITS } from "webgl-test-shared/dist/collision";
+import { Item, InventoryName, Inventory } from "webgl-test-shared/dist/items/items";
 
 /** Updates the rotation of the player to match the cursor position */
 export function updatePlayerRotation(cursorX: number, cursorY: number): void {
@@ -159,7 +159,9 @@ class Player extends TribeMember {
       // @Cleanup: Shouldn't be in this function
       const maxHealth = TRIBE_INFO_RECORD[Game.tribe.tribeType].maxHealthPlayer;
       definiteGameState.setPlayerHealth(maxHealth);
-      definiteGameState.hotbar = new Inventory(Settings.INITIAL_PLAYER_HOTBAR_SIZE, 1, InventoryName.hotbar);
+
+      // @Cleanup @Temproary?: do we actually need this?
+      // definiteGameState.hotbar = new Inventory(Settings.INITIAL_PLAYER_HOTBAR_SIZE, 1, InventoryName.hotbar);
    }
    
    public static resolveCollisions(): void {

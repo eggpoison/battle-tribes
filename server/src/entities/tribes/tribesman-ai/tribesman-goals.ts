@@ -1,12 +1,10 @@
-import { CraftingRecipe, CRAFTING_STATION_ITEM_TYPE_RECORD, ItemTally, getRecipeProductChain, forceGetItemRecipe } from "webgl-test-shared/dist/crafting-recipes";
 import { EntityType } from "webgl-test-shared/dist/entities";
-import { ItemType, ToolType, Inventory, PlaceableItemType, ITEM_INFO_RECORD, PlaceableItemInfo, InventoryName } from "webgl-test-shared/dist/items";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { StructureType } from "webgl-test-shared/dist/structures";
 import { TechInfo, getTechChain } from "webgl-test-shared/dist/techs";
 import { Point } from "webgl-test-shared/dist/utils";
 import Entity from "../../../Entity";
-import { InventoryComponentArray, getInventory, getItemTypeSlot, inventoryComponentCanAffordRecipe, inventoryHasItemType, tallyInventoryComponentItems } from "../../../components/InventoryComponent";
+import { InventoryComponentArray, getInventory, getItemTypeSlot, inventoryComponentCanAffordRecipe, inventoryHasItemType, createInventoryComponentTally } from "../../../components/InventoryComponent";
 import Tribe, { BuildingPlan, BuildingPlanType, BuildingUpgradePlan, NewBuildingPlan } from "../../../Tribe";
 import { generateBuildingPosition } from "../../../ai-tribe-building/ai-building-plans";
 import { TribeComponentArray } from "../../../components/TribeComponent";
@@ -15,6 +13,9 @@ import { craftingStationExists } from "./tribesman-crafting";
 import { getBestToolItemSlot } from "./tribesman-ai-utils";
 import { updateHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { createEntityHitboxes } from "webgl-test-shared/dist/hitboxes/entity-hitbox-creation";
+import { ItemTally2 } from "webgl-test-shared/dist/items/ItemTally";
+import { CraftingRecipe, CRAFTING_STATION_ITEM_TYPE_RECORD, getRecipeProductChain, forceGetItemRecipe } from "webgl-test-shared/dist/items/crafting-recipes";
+import { ItemType, ToolType, Inventory, InventoryName, PlaceableItemType, ITEM_INFO_RECORD, PlaceableItemInfo, ItemTypeString } from "webgl-test-shared/dist/items/items";
 
 // @Cleanup: can this be inferred from stuff like the entity->resource-dropped record?
 const TOOL_TYPE_FOR_MATERIAL_RECORD: Record<ItemType, ToolType | null> = {
@@ -219,7 +220,7 @@ const generateRandomNearbyPosition = (tribesman: Entity, entityType: StructureTy
       const rotation = 2 * Math.PI * Math.random();
 
       // Make sure the hitboxes would be in a valid position
-      const hitboxes = createEntityHitboxes(entityType, 1);
+      const hitboxes = createEntityHitboxes(entityType);
       for (let i = 0; i < hitboxes.length; i++) {
          const hitbox = hitboxes[i];
          updateHitbox(hitbox, position.x, position.y, rotation);
@@ -306,7 +307,7 @@ const createItemGatherGoal = (goals: Array<TribesmanGoal>, tribesman: Entity, ho
    });
 }
 
-const createGoalForRecipe = (goals: Array<TribesmanGoal>, tribesman: Entity, tribe: Tribe, recipe: CraftingRecipe, hasNecessaryIngredients: boolean): void => {
+const createGoalForRecipe = (goals: Array<TribesmanGoal>, tribesman: Entity, tribe: Tribe, recipe: CraftingRecipe, itemTypesToGather: ReadonlyArray<ItemType>): void => {
    goals.unshift({
       type: TribesmanGoalType.craftRecipe,
       recipe: recipe,
@@ -314,7 +315,7 @@ const createGoalForRecipe = (goals: Array<TribesmanGoal>, tribesman: Entity, tri
       isPersonalPlan: false
    });
 
-   // If there is no crafting station which can craft the recipe, place that workbench type.
+   // If there is no crafting station which can craft the recipe, first place that crafting station.
    if (typeof recipe.craftingStation !== "undefined" && !craftingStationExists(tribe, recipe.craftingStation)) {
       // @Cleanup: Copy and paste
       const inventoryComponent = InventoryComponentArray.getComponent(tribesman.id);
@@ -326,14 +327,11 @@ const createGoalForRecipe = (goals: Array<TribesmanGoal>, tribesman: Entity, tri
    }
    
    // Items are still being gathered for the recipe
-   if (!hasNecessaryIngredients) {
-      // @Cleanup: Copy and paste
+   if (itemTypesToGather.length > 0) {
       const inventoryComponent = InventoryComponentArray.getComponent(tribesman.id);
       const hotbarInventory = getInventory(inventoryComponent, InventoryName.hotbar);
       
-      // @Bug: shouldn't gather all required items, should only gather items which there aren't enough of.
-      const requiredItems = Object.keys(recipe.ingredients).map(ingredientTypeString => Number(ingredientTypeString));
-      createItemGatherGoal(goals, tribesman, hotbarInventory, requiredItems);
+      createItemGatherGoal(goals, tribesman, hotbarInventory, itemTypesToGather);
       return;
    }
 }
@@ -344,9 +342,8 @@ const createCraftGoal = (goals: Array<TribesmanGoal>, tribesman: Entity, itemTyp
    const inventoryComponent = InventoryComponentArray.getComponent(tribesman.id);
    const tribeComponent = TribeComponentArray.getComponent(tribesman.id);
 
-   const tally: ItemTally = {};
-   tallyInventoryComponentItems(tally, inventoryComponent);
-   const productChain = getRecipeProductChain(itemType, tally);
+   const availableItemsTally = createInventoryComponentTally(inventoryComponent);
+   const productChain = getRecipeProductChain(itemType, availableItemsTally);
    
    // Try to craft any products in the chain
    for (let i = 0; i < productChain.length; i++) {
@@ -355,14 +352,11 @@ const createCraftGoal = (goals: Array<TribesmanGoal>, tribesman: Entity, itemTyp
       // @Incomplete
       // Don't add items which we already have enough of.
 
-      // If the item can be crafted, go craft it
       const recipe = forceGetItemRecipe(currentProductInfo.type);
-      if (inventoryComponentCanAffordRecipe(inventoryComponent, recipe, InventoryName.hotbar)) {
-         createGoalForRecipe(goals, tribesman, tribeComponent.tribe, recipe, true);
-         return;
-      } else {
-         createGoalForRecipe(goals, tribesman, tribeComponent.tribe, recipe, false);
-      }
+
+      // Create a goal to gather every ingredient which still needs gathering
+      const missingIngredientTypes = availableItemsTally.getInsufficient(recipe.ingredients);
+      createGoalForRecipe(goals, tribesman, tribeComponent.tribe, recipe, missingIngredientTypes);
    }
 }
 

@@ -1,7 +1,6 @@
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { Point } from "webgl-test-shared/dist/utils";
 import { PlanterBoxPlant, ServerComponentType, TunnelDoorSide } from "webgl-test-shared/dist/components";
-import { InventoryName, ItemType } from "webgl-test-shared/dist/items";
 import { Settings } from "webgl-test-shared/dist/settings";
 import Player, { getPlayerSelectedItem } from "./entities/Player";
 import Game from "./Game";
@@ -14,9 +13,10 @@ import { InventoryMenuType, InventorySelector_inventoryIsOpen, InventorySelector
 import { SEED_TO_PLANT_RECORD } from "./entity-components/PlantComponent";
 import { GhostInfo, GhostType, PARTIAL_OPACITY, setGhostInfo } from "./rendering/webgl/entity-ghost-rendering";
 import { getClosestGroupNum } from "./rendering/webgl/entity-selection-rendering";
-import { CraftingStation } from "webgl-test-shared/dist/crafting-recipes";
 import { CraftingMenu_setCraftingStation, CraftingMenu_setIsVisible } from "./components/game/menus/CraftingMenu";
 import { hitboxIsWithinRange } from "webgl-test-shared/dist/hitboxes/hitboxes";
+import { CraftingStation } from "webgl-test-shared/dist/items/crafting-recipes";
+import { ItemType, InventoryName } from "webgl-test-shared/dist/items/items";
 
 const enum InteractActionType {
    openBuildMenu,

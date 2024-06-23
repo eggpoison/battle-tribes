@@ -4,7 +4,6 @@ import { TribeType } from "webgl-test-shared/dist/tribes";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { EntityData, HitData } from "webgl-test-shared/dist/client-server-types";
 import { angle, lerp, randFloat, randInt, randItem } from "webgl-test-shared/dist/utils";
-import { InventoryName, ItemType } from "webgl-test-shared/dist/items";
 import { TileType } from "webgl-test-shared/dist/tiles";
 import RenderPart from "../render-parts/RenderPart";
 import Entity, { ComponentDataRecord } from "../Entity";
@@ -14,6 +13,7 @@ import { AudioFilePath, playSound } from "../sound";
 import Game from "../Game";
 import { getTribesmanRadius } from "../entity-components/TribeMemberComponent";
 import { getTribeType } from "../entity-components/TribeComponent";
+import { InventoryName, ItemType } from "webgl-test-shared/dist/items/items";
 
 export const TRIBE_MEMBER_Z_INDEXES: Record<string, number> = {
    hand: 1,
@@ -133,22 +133,26 @@ export function addTribeMemberRenderParts(tribesman: Entity, componentDataRecord
    tribesman.attachRenderPart(bodyRenderPart);
 
    if (tribeType === TribeType.goblins) {
-      let textureSource: string;
-      if (tribesman.type === EntityType.tribeWarrior) {
-         textureSource = `entities/goblins/warrior-warpaint-${warPaintType}.png`;
+      if (warPaintType !== null) {
+         let textureSource: string;
+         if (tribesman.type === EntityType.tribeWarrior) {
+            textureSource = `entities/goblins/warrior-warpaint-${warPaintType}.png`;
+         } else {
+            textureSource = `entities/goblins/goblin-warpaint-${warPaintType}.png`;
+         }
+         
+         // Goblin warpaint
+         const warpaintRenderPart = new RenderPart(
+            tribesman,
+            getTextureArrayIndex(textureSource),
+            4,
+            0
+         );
+         warpaintRenderPart.addTag("tribeMemberComponent:warpaint");
+         tribesman.attachRenderPart(warpaintRenderPart);
       } else {
-         textureSource = `entities/goblins/goblin-warpaint-${warPaintType}.png`;
+         console.warn("bad");
       }
-      
-      // Goblin warpaint
-      const warpaintRenderPart = new RenderPart(
-         tribesman,
-         getTextureArrayIndex(textureSource),
-         4,
-         0
-      );
-      warpaintRenderPart.addTag("tribeMemberComponent:warpaint");
-      tribesman.attachRenderPart(warpaintRenderPart);
 
       // Left ear
       const leftEarRenderPart = new RenderPart(
@@ -263,6 +267,10 @@ abstract class TribeMember extends Entity {
             playSound(("barbarian-hurt-" + randInt(1, 3) + ".mp3") as AudioFilePath, 0.4, 1, this.position.x, this.position.y);
             break;
          }
+         case TribeType.frostlings: {
+            playSound(("frostling-hurt-" + randInt(1, 4) + ".mp3") as AudioFilePath, 0.4, 1, this.position.x, this.position.y);
+            break;
+         }
       }
 
       // If the tribesman is wearing a leaf suit, create leaf particles
@@ -298,6 +306,10 @@ abstract class TribeMember extends Entity {
          }
          case TribeType.barbarians: {
             playSound("barbarian-die-1.mp3", 0.4, 1, this.position.x, this.position.y);
+            break;
+         }
+         case TribeType.frostlings: {
+            playSound("frostling-die.mp3", 0.4, 1, this.position.x, this.position.y);
             break;
          }
       }

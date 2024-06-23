@@ -1,8 +1,8 @@
 import { ItemComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
-import { ItemType } from "webgl-test-shared/dist/items";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { ComponentArray } from "./ComponentArray";
 import { removeFleshSword } from "../flesh-sword-ai";
+import { ItemType } from "webgl-test-shared/dist/items/items";
 
 export class ItemComponent {
    readonly itemType: ItemType;

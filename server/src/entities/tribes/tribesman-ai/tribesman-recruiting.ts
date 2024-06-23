@@ -1,10 +1,10 @@
 import { EntityType } from "webgl-test-shared/dist/entities";
-import { InventoryName } from "webgl-test-shared/dist/items";
 import Entity from "../../../Entity";
 import { InventoryComponentArray, getInventory } from "../../../components/InventoryComponent";
 import { getEntityRelationship, EntityRelationship, TribeComponentArray } from "../../../components/TribeComponent";
 import { TribeMemberComponentArray } from "../../../components/TribeMemberComponent";
 import { getItemGiftAppreciation, TribesmanAIComponentArray } from "../../../components/TribesmanAIComponent";
+import { InventoryName } from "webgl-test-shared/dist/items/items";
 
 export function getGiftableItemSlot(tribesman: Entity): number {
    // @Incomplete: don't gift items useful to the tribesman

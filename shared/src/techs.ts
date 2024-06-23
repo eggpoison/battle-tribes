@@ -1,7 +1,7 @@
 // @Cleanup: Move server-only stuff to the server and client-only stuff to the client
 
-import { ItemRequirements } from "./crafting-recipes";
-import { ItemType } from "./items";
+import { ItemRequirements } from "./items/crafting-recipes";
+import { ItemType } from "./items/items";
 import { TribeType } from "./tribes";
 
 export enum TechID {

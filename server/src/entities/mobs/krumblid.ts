@@ -1,6 +1,5 @@
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { EntityType } from "webgl-test-shared/dist/entities";
-import { ItemType } from "webgl-test-shared/dist/items";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { Point, randInt } from "webgl-test-shared/dist/utils";
 import Entity from "../../Entity";
@@ -19,6 +18,7 @@ import { AIHelperComponent, AIHelperComponentArray } from "../../components/AIHe
 import { PhysicsComponent, PhysicsComponentArray } from "../../components/PhysicsComponent";
 import { Biome } from "webgl-test-shared/dist/tiles";
 import { CircularHitbox, HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
+import { ItemType } from "webgl-test-shared/dist/items/items";
 
 const MAX_HEALTH = 15;
 const KRUMBLID_SIZE = 48;
@@ -33,7 +33,7 @@ const TURN_SPEED = Math.PI * 2;
 export function createKrumblid(position: Point): Entity {
    const krumblid = new Entity(position, 2 * Math.PI * Math.random(), EntityType.krumblid, COLLISION_BITS.default, DEFAULT_COLLISION_MASK & ~COLLISION_BITS.cactus);
 
-   const hitbox = new CircularHitbox(0.75, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, krumblid.getNextHitboxLocalID(), 0, KRUMBLID_SIZE / 2);
+   const hitbox = new CircularHitbox(0.75, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, KRUMBLID_SIZE / 2);
    krumblid.addHitbox(hitbox);
 
    PhysicsComponentArray.addComponent(krumblid.id, new PhysicsComponent(0, 0, 0, 0, true, false));

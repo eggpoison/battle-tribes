@@ -7,6 +7,7 @@ import { PathfindingSettings, Settings } from "webgl-test-shared/dist/settings";
 import { angle } from "webgl-test-shared/dist/utils";
 import { PathfindingNodeIndex } from "webgl-test-shared/dist/client-server-types";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
+import { nerdVisionIsVisible } from "../../components/game/dev/NerdVision";
 
 enum NodeType {
    occupied,
@@ -270,7 +271,7 @@ export function renderPathfindingNodes(): void {
       }
    }
 
-   if (Game.entityDebugData !== null && typeof Board.entityRecord[Game.entityDebugData.entityID] !== "undefined" && Game.entityDebugData.hasOwnProperty("pathData")) {
+   if (nerdVisionIsVisible() && Game.entityDebugData !== null && typeof Board.entityRecord[Game.entityDebugData.entityID] !== "undefined" && Game.entityDebugData.hasOwnProperty("pathData")) {
       for (const node of Game.entityDebugData.pathData!.rawPathNodes) {
          nodeInfoArray.push({
             node: node,
@@ -286,7 +287,7 @@ export function renderPathfindingNodes(): void {
       }
    }
 
-   if (Game.entityDebugData !== null && typeof Game.entityDebugData.pathData !== "undefined") {
+   if (nerdVisionIsVisible() && Game.entityDebugData !== null && typeof Game.entityDebugData.pathData !== "undefined") {
       renderConnectors(Game.entityDebugData.pathData.pathNodes);
    }
    if (nodeInfoArray.length > 0) {

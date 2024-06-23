@@ -51,7 +51,7 @@ const updateDoorOpenProgress = (tunnel: Entity, tunnelComponent: TunnelComponent
       // Create hard hitbox
       const alreadyExists = doorBit === tunnelComponent.firstHitboxDoorBit ? (tunnel.hitboxes.length > 5 && tunnel.hitboxes[5].collisionType === HitboxCollisionType.hard) : tunnel.hitboxes[tunnel.hitboxes.length - 1].collisionType === HitboxCollisionType.hard;
       if (!alreadyExists) {
-         const hitbox = new RectangularHitbox(0.5, new Point(0, 0), HitboxCollisionType.hard, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, tunnel.getNextHitboxLocalID(), 0, DOOR_HITBOX_WIDTH, THIN_HITBOX_HEIGHT, 0);
+         const hitbox = new RectangularHitbox(0.5, new Point(0, 0), HitboxCollisionType.hard, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, DOOR_HITBOX_WIDTH, THIN_HITBOX_HEIGHT, 0);
          tunnel.addHitbox(hitbox);
          
          // @Hack!!! Wouldn't be needed if we had a hitbox awake/asleep system
@@ -193,7 +193,7 @@ export function updateTunnelDoorBitset(tunnel: Entity, doorBitset: number): void
 
    if ((tunnelComponent.doorBitset & 0b01) !== (doorBitset & 0b01)) {
       // Add top door hitbox
-      tunnel.addHitbox(new RectangularHitbox(DOOR_HITBOX_MASS, new Point(0, DOOR_HITBOX_OFFSET), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, tunnel.getNextHitboxLocalID(), 0, DOOR_HITBOX_WIDTH, DOOR_HITBOX_HEIGHT, 0));
+      tunnel.addHitbox(new RectangularHitbox(DOOR_HITBOX_MASS, new Point(0, DOOR_HITBOX_OFFSET), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, DOOR_HITBOX_WIDTH, DOOR_HITBOX_HEIGHT, 0));
       if (tunnel.hitboxes.length === 5) {
          tunnelComponent.firstHitboxDoorBit = 0b01;
       }
@@ -201,7 +201,7 @@ export function updateTunnelDoorBitset(tunnel: Entity, doorBitset: number): void
    }
    if ((tunnelComponent.doorBitset & 0b10) !== (doorBitset & 0b10)) {
       // Add bottom door hitbox
-      tunnel.addHitbox(new RectangularHitbox(DOOR_HITBOX_MASS, new Point(0, -DOOR_HITBOX_OFFSET), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, tunnel.getNextHitboxLocalID(), 0, DOOR_HITBOX_WIDTH, DOOR_HITBOX_HEIGHT, 0));
+      tunnel.addHitbox(new RectangularHitbox(DOOR_HITBOX_MASS, new Point(0, -DOOR_HITBOX_OFFSET), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, DOOR_HITBOX_WIDTH, DOOR_HITBOX_HEIGHT, 0));
       if (tunnel.hitboxes.length === 5) {
          tunnelComponent.firstHitboxDoorBit = 0b10;
       }

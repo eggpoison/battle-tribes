@@ -29,7 +29,7 @@ for (let layerIdx = 0; layerIdx < 3; layerIdx++) {
 export function createTribeTotem(position: Point, rotation: number, tribe: Tribe, connectionInfo: StructureConnectionInfo): Entity {
    const totem = new Entity(position, rotation, EntityType.tribeTotem, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
    
-   const hitboxes = createTribeTotemHitboxes(totem.getNextHitboxLocalID());
+   const hitboxes = createTribeTotemHitboxes();
    for (let i = 0; i < hitboxes.length; i++) {
       totem.addHitbox(hitboxes[i]);
    }

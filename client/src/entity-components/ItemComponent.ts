@@ -1,8 +1,8 @@
 import { ItemComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
-import { ItemType } from "webgl-test-shared/dist/items";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import { createDeepFrostHeartBloodParticles } from "../particles";
+import { ItemType } from "webgl-test-shared/dist/items/items";
 
 class ItemComponent extends ServerComponent<ServerComponentType.item> {
    public readonly itemType: ItemType;

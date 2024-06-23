@@ -1,6 +1,5 @@
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { CowSpecies, EntityType } from "webgl-test-shared/dist/entities";
-import { ItemType } from "webgl-test-shared/dist/items";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { Biome, TileType } from "webgl-test-shared/dist/tiles";
 import { Point, randFloat, randInt } from "webgl-test-shared/dist/utils";
@@ -27,6 +26,7 @@ import { addGrassBlocker } from "../../grass-blockers";
 import { BerryBushComponentArray } from "../../components/BerryBushComponent";
 import { InventoryUseComponentArray } from "../../components/InventoryUseComponent";
 import { HitboxCollisionType, RectangularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
+import { ItemType } from "webgl-test-shared/dist/items/items";
 
 const MAX_HEALTH = 10;
 const VISION_RANGE = 256;
@@ -54,7 +54,7 @@ export function createCow(position: Point, rotation: number): Entity {
    
    const cow = new Entity(position, rotation, EntityType.cow, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
-   const hitbox = new RectangularHitbox(1.2, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, cow.getNextHitboxLocalID(), 0, 50, 100, 0);
+   const hitbox = new RectangularHitbox(1.2, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, 50, 100, 0);
    cow.addHitbox(hitbox);
 
    PhysicsComponentArray.addComponent(cow.id, new PhysicsComponent(0, 0, 0, 0, true, false));

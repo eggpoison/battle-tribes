@@ -20,7 +20,7 @@ export function createPunjiSticks(position: Point, rotation: number, tribe: Trib
    
    const punjiSticks = new Entity(position, rotation, entityType, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
-   const hitboxes = isAttached ? createWallPunjiSticksHitboxes(punjiSticks.getNextHitboxLocalID()) : createFloorPunjiSticksHitboxes(punjiSticks.getNextHitboxLocalID());
+   const hitboxes = isAttached ? createWallPunjiSticksHitboxes() : createFloorPunjiSticksHitboxes();
    for (let i = 0; i < hitboxes.length; i++) {
       punjiSticks.addHitbox(hitboxes[i]);
    }

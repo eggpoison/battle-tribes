@@ -1,13 +1,9 @@
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityType } from "webgl-test-shared/dist/entities";
-import { COOKING_INGREDIENT_ITEM_TYPES, CookingIngredientItemType, FUEL_SOURCE_ITEM_TYPES, FuelSourceItemType } from "webgl-test-shared/dist/cooking-info";
-import { useCallback } from "react";
-import { getItemTypeImage } from "../../../client-item-info";
+import { COOKING_INGREDIENT_ITEM_TYPES, FUEL_SOURCE_ITEM_TYPES } from "webgl-test-shared/dist/cooking-info";
 import ItemSlot from "./ItemSlot";
-import { leftClickItemSlot } from "../../../inventory-manipulation";
-import { definiteGameState } from "../../../game-state/game-states";
 import { getSelectedEntity } from "../../../entity-selection";
-import { InventoryName } from "webgl-test-shared/dist/items";
+import { InventoryName } from "webgl-test-shared/dist/items/items";
 
 const CookingInventory = () => {
    const cookingEntity = getSelectedEntity();
@@ -18,67 +14,14 @@ const CookingInventory = () => {
    const ingredientInventory = inventoryComponent.getInventory(InventoryName.ingredientInventory);
    const outputInventory = inventoryComponent.getInventory(InventoryName.outputInventory);
 
-   let fuelPicturedItemImageSrc: string | undefined = undefined;
-   let fuelItemCount: number | undefined;
-
-   const fuel = fuelInventory.itemSlots[1];
-   if (typeof fuel !== "undefined") {
-      fuelPicturedItemImageSrc = getItemTypeImage(fuel.type);
-      fuelItemCount = fuel.count;
-   }
-
-   let ingredientPicturedItemImageSrc: string | undefined = undefined;
-   let ingredientItemCount: number | undefined;
-
-   const ingredient = ingredientInventory.itemSlots[1];
-   if (typeof ingredient !== "undefined") {
-      ingredientPicturedItemImageSrc = getItemTypeImage(ingredient.type);
-      ingredientItemCount = ingredient.count;
-   }
-
-   let outputPicturedItemImageSrc: string | undefined = undefined;
-   let outputItemCount: number | undefined;
-
-   const output = outputInventory.itemSlots[1];
-   if (typeof output !== "undefined") {
-      outputPicturedItemImageSrc = getItemTypeImage(output.type);
-      outputItemCount = output.count;
-   }
-
-   const clickIngredientItemSlot = useCallback((e: MouseEvent): void => {
-      // Stop the player placing a non-backpack item in the backpack slot
-      const heldItem = definiteGameState.heldItemSlot.itemSlots[1];
-      if (typeof heldItem !== "undefined" && !COOKING_INGREDIENT_ITEM_TYPES.includes(heldItem.type as CookingIngredientItemType)) {
-         return;
-      }
-      leftClickItemSlot(e, cookingEntity.id, ingredientInventory, 1);
-   }, [cookingEntity.id, ingredientInventory]);
-
-   const clickFuelItemSlot = useCallback((e: MouseEvent): void => {
-      // Stop the player placing a non-backpack item in the backpack slot
-      const heldItem = definiteGameState.heldItemSlot.itemSlots[1];
-      if (typeof heldItem !== "undefined" && !FUEL_SOURCE_ITEM_TYPES.includes(heldItem.type as FuelSourceItemType)) {
-         return;
-      }
-      leftClickItemSlot(e, cookingEntity.id, fuelInventory, 1);
-   }, [cookingEntity, fuelInventory]);
-
-   const clickOutputItemSlot = useCallback((e: MouseEvent): void => {
-      // Don't let the player place items into the slot
-      if (definiteGameState.heldItemSlot.itemSlots.hasOwnProperty(1)) {
-         return;
-      }
-      leftClickItemSlot(e, cookingEntity.id, outputInventory, 1);
-   }, [cookingEntity, outputInventory]);
-
    const heatingBarProgress = cookingComponent.heatingProgress !== -1 ? cookingComponent.heatingProgress : 0;
 
    return <div id="cooking-inventory" className={`heating-inventory inventory${cookingEntity.type !== EntityType.campfire ? " with-fuel" : ""}`}>
-      <ItemSlot onClick={clickIngredientItemSlot} className="ingredient-inventory" isSelected={false} picturedItemImageSrc={ingredientPicturedItemImageSrc} itemCount={ingredientItemCount} />
+      <ItemSlot validItemSpecifier={COOKING_INGREDIENT_ITEM_TYPES.includes} className="ingredient-inventory" entityID={cookingEntity.id} inventory={ingredientInventory} itemSlot={1} />
       {cookingEntity.type !== EntityType.campfire ? (
-         <ItemSlot onClick={clickFuelItemSlot} className="fuel-inventory" isSelected={false} picturedItemImageSrc={fuelPicturedItemImageSrc} itemCount={fuelItemCount} />
+         <ItemSlot validItemSpecifier={FUEL_SOURCE_ITEM_TYPES.includes} className="fuel-inventory" entityID={cookingEntity.id} inventory={fuelInventory} itemSlot={1} />
       ) : undefined}
-      <ItemSlot onClick={clickOutputItemSlot} className="output-inventory" isSelected={false} picturedItemImageSrc={outputPicturedItemImageSrc} itemCount={outputItemCount} />
+      <ItemSlot validItemSpecifier={() => false} className="output-inventory" entityID={cookingEntity.id} inventory={outputInventory} itemSlot={1} />
 
       <div className="heating-progress-bar">
          {/* @Cleanup: Hardcoded */}

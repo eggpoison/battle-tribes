@@ -9,13 +9,13 @@ import { TribeComponent, TribeComponentArray } from "../../components/TribeCompo
 import { StructureComponent, StructureComponentArray } from "../../components/StructureComponent";
 import { StructureConnectionInfo } from "webgl-test-shared/dist/structures";
 import { CraftingStationComponent, CraftingStationComponentArray } from "../../components/CraftingStationComponent";
-import { CraftingStation } from "webgl-test-shared/dist/crafting-recipes";
 import { createWorkbenchHitboxes } from "webgl-test-shared/dist/hitboxes/entity-hitbox-creation";
+import { CraftingStation } from "webgl-test-shared/dist/items/crafting-recipes";
 
 export function createWorkbench(position: Point, rotation: number, tribe: Tribe, connectionInfo: StructureConnectionInfo): Entity {
    const workbench = new Entity(position, rotation, EntityType.workbench, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
-   const hitboxes = createWorkbenchHitboxes(workbench.getNextHitboxLocalID());
+   const hitboxes = createWorkbenchHitboxes();
    for (let i = 0; i < hitboxes.length; i++) {
       workbench.addHitbox(hitboxes[i]);
    }

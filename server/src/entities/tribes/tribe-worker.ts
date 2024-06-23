@@ -7,7 +7,7 @@ import { Point, randInt } from "webgl-test-shared/dist/utils";
 import Entity from "../../Entity";
 import Tribe from "../../Tribe";
 import { HealthComponent, HealthComponentArray } from "../../components/HealthComponent";
-import { InventoryComponent, InventoryComponentArray } from "../../components/InventoryComponent";
+import { InventoryComponent, InventoryComponentArray, addItemToInventory, getInventory } from "../../components/InventoryComponent";
 import { InventoryUseComponent, InventoryUseComponentArray } from "../../components/InventoryUseComponent";
 import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
 import { TribeMemberComponent, TribeMemberComponentArray } from "../../components/TribeMemberComponent";
@@ -19,6 +19,7 @@ import { PhysicsComponent, PhysicsComponentArray } from "../../components/Physic
 import { TribeComponent, TribeComponentArray } from "../../components/TribeComponent";
 import { HutComponentArray } from "../../components/HutComponent";
 import { CircularHitbox, HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
+import { InventoryName, ItemType } from "webgl-test-shared/dist/items/items";
 
 export const TRIBE_WORKER_RADIUS = 28;
 export const TRIBE_WORKER_VISION_RANGE = 500;
@@ -55,7 +56,7 @@ const getTribeType = (workerPosition: Point): TribeType => {
 export function createTribeWorker(position: Point, rotation: number, tribeID: number, hutID: number): Entity {
    const worker = new Entity(position, rotation, EntityType.tribeWorker, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
-   const hitbox = new CircularHitbox(1, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, worker.getNextHitboxLocalID(), 0, TRIBE_WORKER_RADIUS);
+   const hitbox = new CircularHitbox(1, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, TRIBE_WORKER_RADIUS);
    worker.addHitbox(hitbox);
    
    let tribe: Tribe;
@@ -85,7 +86,7 @@ export function createTribeWorker(position: Point, rotation: number, tribeID: nu
    // @Temporary
    // setTimeout(() => {
    //    const hotbar = getInventory(inventoryComponent, InventoryName.hotbar);
-   //    addItemToInventory(hotbar, ItemType.berry, 99);
+   //    addItemToInventory(hotbar, ItemType.wooden_sword, 1);
    // }, 100);
 
    return worker;

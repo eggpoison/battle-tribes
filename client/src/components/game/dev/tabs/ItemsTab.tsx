@@ -1,9 +1,9 @@
-import { ITEM_INFO_RECORD, Inventory, InventoryName, Item, ItemType } from "webgl-test-shared/dist/items";
 import InventoryContainer, { ItemSlotLeftClickCallbackInfo } from "../../inventories/InventoryContainer";
 import { useEffect, useRef, useState } from "react";
 import CLIENT_ITEM_INFO_RECORD from "../../../../client-item-info";
 import { closeCurrentMenu } from "../../../../player-input";
 import Client from "../../../../client/Client";
+import { ItemType, ITEM_INFO_RECORD, Inventory, InventoryName, Item } from "webgl-test-shared/dist/items/items";
 
 const enum Vars {
    INVENTORY_WIDTH = 6

@@ -196,7 +196,7 @@ export function getHitboxesCollidingEntities<Entity extends EntityInfo>(chunks: 
 
 // @Cleanup: broaden to EntityType instead of StructureType
 export function estimateCollidingEntities(chunks: Chunks, entityType: StructureType, x: number, y: number, rotation: number, epsilon: number): Array<EntityInfo> {
-   const testHitboxes = createEntityHitboxes(entityType, 1);
+   const testHitboxes = createEntityHitboxes(entityType);
    for (let i = 0; i < testHitboxes.length; i++) {
       const hitbox = testHitboxes[i];
       updateHitbox(hitbox, x, y, rotation);

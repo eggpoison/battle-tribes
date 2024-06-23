@@ -1,10 +1,10 @@
-import { ArmourItemType, GloveItemType, InventoryName, ItemType, ItemTypeString } from "webgl-test-shared/dist/items";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import Entity from "../Entity";
 import RenderPart from "../render-parts/RenderPart";
 import Component from "./Component";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { createFrostShieldBreakParticle } from "../particles";
+import { ArmourItemType, ItemType, GloveItemType, ItemTypeString, InventoryName } from "webgl-test-shared/dist/items/items";
 
 // @Incomplete
 // public genericUpdateFromData(entityData: EntityData<EntityType.player> | EntityData<EntityType.tribeWorker> | EntityData<EntityType.tribeWarrior>): void {

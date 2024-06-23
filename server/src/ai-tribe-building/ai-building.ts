@@ -654,7 +654,7 @@ export function tickTribes(): void {
 }
 
 export function placeVirtualBuilding(tribe: Tribe, position: Readonly<Point>, rotation: number, entityType: StructureType, virtualEntityID: number): VirtualBuilding {
-   const hitboxes = createEntityHitboxes(entityType, 1);
+   const hitboxes = createEntityHitboxes(entityType);
    for (let i = 0; i < hitboxes.length; i++) {
       const hitbox = hitboxes[i];
       updateHitbox(hitbox, position.x, position.y, rotation);

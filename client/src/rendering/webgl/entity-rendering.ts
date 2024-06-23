@@ -449,10 +449,8 @@ export function renderEntity(vertexData: Float32Array): void {
 
    gl.useProgram(program);
 
-   gl.enable(gl.DEPTH_TEST);
    gl.enable(gl.BLEND);
    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-   gl.depthMask(true);
 
    // Bind texture atlas
    gl.activeTexture(gl.TEXTURE0);
@@ -465,10 +463,8 @@ export function renderEntity(vertexData: Float32Array): void {
    
    gl.drawArrays(gl.TRIANGLES, 0, vertexData.length / Vars.ATTRIBUTES_PER_VERTEX);
 
-   gl.disable(gl.DEPTH_TEST);
    gl.disable(gl.BLEND);
    gl.blendFunc(gl.ONE, gl.ZERO);
-   gl.depthMask(false);
 
    gl.bindVertexArray(null);
 }

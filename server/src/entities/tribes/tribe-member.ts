@@ -45,9 +45,8 @@ import { TITLE_REWARD_CHANCES } from "../../tribesman-title-generation";
 import { TribeMemberComponentArray, awardTitle, hasTitle } from "../../components/TribeMemberComponent";
 import { createHealingTotem } from "../structures/healing-totem";
 import { TREE_RADII } from "../resources/tree";
-import { BERRY_BUSH_RADIUS, dropBerry } from "../resources/berry-bush";
+import { BERRY_BUSH_RADIUS, dropBerryOverEntity } from "../resources/berry-bush";
 import { createItemEntity, itemEntityCanBePickedUp } from "../item-entity";
-import { dropBerryBushCropBerries } from "../plant";
 import { createFence } from "../structures/fence";
 import { createFenceGate } from "../structures/fence-gate";
 import { PlantComponentArray, plantIsFullyGrown } from "../../components/PlantComponent";
@@ -309,10 +308,9 @@ const gatherPlant = (plant: Entity, attacker: Entity, gloves: Item | null): void
    if (isBerryBushWithBerries(plant)) {
       const gatherMultiplier = getPlantGatherAmount(attacker, plant, gloves);
 
-      if (plant.type === EntityType.berryBush) {
-         dropBerry(plant, gatherMultiplier);
-      } else {
-         dropBerryBushCropBerries(plant, gatherMultiplier);
+      // As hitting the bush will drop a berry regardless, only drop extra ones here
+      for (let i = 0; i < gatherMultiplier - 1; i++) {
+         dropBerryOverEntity(plant);
       }
    } else {
       let plantRadius: number;
@@ -334,7 +332,7 @@ const gatherPlant = (plant: Entity, attacker: Entity, gloves: Item | null): void
             throw new Error();
          }
       }
-   
+
       const offsetDirection = 2 * Math.PI * Math.random();
       const x = plant.position.x + (plantRadius - 7) * Math.sin(offsetDirection);
       const y = plant.position.y + (plantRadius - 7) * Math.cos(offsetDirection);

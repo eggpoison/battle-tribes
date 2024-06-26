@@ -4,12 +4,13 @@ import { Settings } from "webgl-test-shared/dist/settings";
 import { TitleGenerationInfo, TribesmanTitle } from "webgl-test-shared/dist/titles";
 import { Point, lerp, randFloat, veryBadHash } from "webgl-test-shared/dist/utils";
 import ServerComponent from "./ServerComponent";
-import Entity, { createRenderPartOverlayGroup } from "../Entity";
-import { Light, addLight, attachLightToEntity } from "../lights";
+import Entity from "../Entity";
+import { Light, addLight, attachLightToEntity, removeLightsAttachedToEntity } from "../lights";
 import Board from "../Board";
 import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { createSprintParticle, createTitleObtainParticle } from "../particles";
+import { createRenderPartOverlayGroup } from "../rendering/webgl/overlay-rendering";
 
 export function getTribesmanRadius(tribesman: Entity): number {
    switch (tribesman.type) {
@@ -105,6 +106,12 @@ class TribeMemberComponent extends ServerComponent<ServerComponentType.tribeMemb
          const renderPart = previousRenderParts[i];
          this.entity.removeRenderPart(renderPart);
       }
+      for (let i = this.entity.renderPartOverlayGroups.length - 1; i >= 0; i--) {
+         const overlayGroup = this.entity.renderPartOverlayGroups[i];
+         this.entity.removeOverlayGroup(overlayGroup);
+      }
+      // @Hack @Incomplete: only remove lights added by titles
+      removeLightsAttachedToEntity(this.entity.id);
       
       // Add for all titles
       for (let i = 0; i < this.titles.length; i++) {
@@ -173,8 +180,19 @@ class TribeMemberComponent extends ServerComponent<ServerComponentType.tribeMemb
                      renderPart.flipX = true;
                   }
 
-                  renderPart.offset.x = (28 - 5 * 4 / 2) * (i === 1 ? 1 : -1);
-                  renderPart.offset.y = 28 - 5 * 4 / 2;
+                  // @Hack
+                  let xo: number;
+                  let yo: number;
+                  if (this.entity.type === EntityType.tribeWorker) {
+                     xo = 28;
+                     yo = 24;
+                  } else {
+                     xo = 28;
+                     yo = 28;
+                  }
+                  
+                  renderPart.offset.x = (xo - 5 * 4 / 2) * (i === 1 ? 1 : -1);
+                  renderPart.offset.y = yo - 5 * 4 / 2;
 
                   this.entity.attachRenderPart(renderPart);
                }
@@ -227,17 +245,27 @@ class TribeMemberComponent extends ServerComponent<ServerComponentType.tribeMemb
                // 
                
                const bodyRenderPart = this.entity.getRenderPart("tribeMemberComponent:body");
-               const bodyOverlayGroup = createRenderPartOverlayGroup("overlays/dirt.png", [bodyRenderPart]);
+               const bodyOverlayGroup = createRenderPartOverlayGroup(this.entity, "overlays/dirt.png", [bodyRenderPart]);
                this.entity.renderPartOverlayGroups.push(bodyOverlayGroup);
 
                const handRenderParts = this.entity.getRenderParts("tribeMemberComponent:hand", 2);
                for (let i = 0; i < handRenderParts.length; i++) {
                   const renderPart = handRenderParts[i];
-                  const handOverlayGroup = createRenderPartOverlayGroup("overlays/dirt.png", [renderPart]);
+                  const handOverlayGroup = createRenderPartOverlayGroup(this.entity, "overlays/dirt.png", [renderPart]);
                   this.entity.renderPartOverlayGroups.push(handOverlayGroup);
                }
 
                break;
+            }
+            case TribesmanTitle.wellful: {
+               const renderPart = new RenderPart(
+                  this.entity,
+                  getTextureArrayIndex("entities/miscellaneous/tribesman-health-patch.png"),
+                  2.1,
+                  0
+               );
+               renderPart.addTag("tribeMemberComponent:fromTitle");
+               this.entity.attachRenderPart(renderPart);
             }
          }
       }
@@ -290,6 +318,8 @@ class TribeMemberComponent extends ServerComponent<ServerComponentType.tribeMemb
       }
 
       const physicsComponent = this.entity.getServerComponent(ServerComponentType.physics);
+
+      // Sprinter particles
       if (this.hasTitle(TribesmanTitle.sprinter) && physicsComponent.velocity.length() > 100) {
          const sprintParticleSpawnRate = Math.sqrt(physicsComponent.velocity.length() * 0.8);
          if (Math.random() < sprintParticleSpawnRate / Settings.TPS) {
@@ -304,6 +334,21 @@ class TribeMemberComponent extends ServerComponent<ServerComponentType.tribeMemb
             const vy = velocityMagnitude * Math.cos(offsetDirection);
             createSprintParticle(x, y, vx, vy);
          }
+      }
+
+      // Winterswrath particles
+      if (this.hasTitle(TribesmanTitle.winterswrath) && Math.random() < 18 * Settings.I_TPS) {
+         const offsetMagnitude = randFloat(36, 50);
+         const offsetDirection = 2 * Math.PI * Math.random();
+         const x = this.entity.position.x + offsetMagnitude * Math.sin(offsetDirection);
+         const y = this.entity.position.y + offsetMagnitude * Math.cos(offsetDirection);
+         
+         const velocityMagnitude = randFloat(45, 75);
+         const velocityDirection = offsetDirection + Math.PI * 0.5;
+         const vx = physicsComponent.velocity.x + velocityMagnitude * Math.sin(velocityDirection);
+         const vy = physicsComponent.velocity.y + velocityMagnitude * Math.cos(velocityDirection);
+         
+         createSprintParticle(x, y, vx, vy);
       }
    }
 

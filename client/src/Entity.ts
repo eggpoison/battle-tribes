@@ -17,21 +17,16 @@ import { removeLightsAttachedToEntity, removeLightsAttachedToRenderPart } from "
 import { EntityEvent } from "webgl-test-shared/dist/entity-events";
 import { hitboxIsCircular, Hitbox, CircularHitbox, RectangularHitbox, updateHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { createCircularHitboxFromData, createRectangularHitboxFromData } from "./client/Client";
-
-export interface RenderPartOverlayGroup {
-   readonly textureSource: string;
-   readonly renderParts: Array<RenderPart>;
-}
+import { RenderPartOverlayGroup } from "./rendering/webgl/overlay-rendering";
+import { removeRenderable } from "./rendering/render-loop";
+import { collide, resolveWallTileCollisions } from "./collision";
+import { COLLISION_BITS } from "webgl-test-shared/dist/collision";
+import { latencyGameState } from "./game-state/game-states";
+import Player from "./entities/Player";
+import { keyIsPressed } from "./keyboard-input";
 
 // Use prime numbers / 100 to ensure a decent distribution of different types of particles
 const HEALING_PARTICLE_AMOUNTS = [0.05, 0.37, 1.01];
-
-export function createRenderPartOverlayGroup(textureSource: string, renderParts: Array<RenderPart>): RenderPartOverlayGroup {
-   return {
-      textureSource: textureSource,
-      renderParts: renderParts
-   };
-}
 
 // @Cleanup: copy and paste from server
 export function getRandomPointInEntity(entity: Entity): Point {
@@ -158,6 +153,15 @@ abstract class Entity<T extends EntityType = EntityType> extends RenderObject {
       }
       
       return renderParts;
+   }
+
+   public removeOverlayGroup(overlayGroup: RenderPartOverlayGroup): void {
+      const idx = this.renderPartOverlayGroups.indexOf(overlayGroup);
+      if (idx !== -1) {
+         this.renderPartOverlayGroups.splice(idx, 1);
+      }
+      
+      removeRenderable(overlayGroup);
    }
 
    public callOnLoadFunctions(): void {
@@ -322,7 +326,15 @@ abstract class Entity<T extends EntityType = EntityType> extends RenderObject {
    public update(): void {
       this.ageTicks++;
       
-      this.resolveBorderCollisions();
+      if (this.hasServerComponent(ServerComponentType.physics)) {
+         // Don't resolve wall tile collisions in lightspeed mode
+         if (Player.instance === null || this.id !== Player.instance.id || !keyIsPressed("l")) { 
+            resolveWallTileCollisions(this);
+         }
+
+         this.resolveGameObjectCollisions();
+         this.resolveBorderCollisions();
+      }
       this.updateCurrentTile();
       this.updateHitboxes();
       this.updateContainingChunks();
@@ -353,18 +365,89 @@ abstract class Entity<T extends EntityType = EntityType> extends RenderObject {
       return true;
    }
 
-   // @Cleanup: Should this be protected?
-   protected resolveBorderCollisions(): void {
-      if (this.position.x < 0) {
-         this.position.x = 0;
-      } else if (this.position.x >= Settings.BOARD_DIMENSIONS * Settings.TILE_SIZE) {
-         this.position.x = Settings.BOARD_DIMENSIONS * Settings.TILE_SIZE - 1;
+   private resolveBorderCollisions(): void {
+      // @Hack
+      if (!this.hasServerComponent(ServerComponentType.physics)) {
+         return;
       }
-      if (this.position.y < 0) {
-         this.position.y = 0;
-      } else if (this.position.y >= Settings.BOARD_DIMENSIONS * Settings.TILE_SIZE) {
-         this.position.y = Settings.BOARD_DIMENSIONS * Settings.TILE_SIZE - 1;
+      
+      const physicsComponent = this.getServerComponent(ServerComponentType.physics);
+
+      for (const hitbox of this.hitboxes) {
+         const minX = hitbox.calculateHitboxBoundsMinX();
+         const maxX = hitbox.calculateHitboxBoundsMaxX();
+         const minY = hitbox.calculateHitboxBoundsMinY();
+         const maxY = hitbox.calculateHitboxBoundsMaxY();
+
+         // Left wall
+         if (minX < 0) {
+            this.position.x -= minX;
+            physicsComponent.velocity.x = 0;
+            // Right wall
+         } else if (maxX > Settings.BOARD_UNITS) {
+            this.position.x -= maxX - Settings.BOARD_UNITS;
+            physicsComponent.velocity.x = 0;
+         }
+         
+         // Bottom wall
+         if (minY < 0) {
+            this.position.y -= minY;
+            physicsComponent.velocity.y = 0;
+            // Top wall
+         } else if (maxY > Settings.BOARD_UNITS) {
+            this.position.y -= maxY - Settings.BOARD_UNITS;
+            physicsComponent.velocity.y = 0;
+         }
       }
+   }
+   
+   private resolveGameObjectCollisions(): void {
+      const potentialCollidingEntities = this.getPotentialCollidingEntities();
+
+      this.collidingEntities = [];
+
+      for (let i = 0; i < potentialCollidingEntities.length; i++) {
+         const entity = potentialCollidingEntities[i];
+
+         // If the two entities are exactly on top of each other, don't do anything
+         if (entity.position.x === this.position.x && entity.position.y === this.position.y) {
+            continue;
+         }
+
+         for (const hitbox of this.hitboxes) {
+            for (const otherHitbox of entity.hitboxes) {
+               if (hitbox.isColliding(otherHitbox)) {
+                  if (!this.collidingEntities.includes(entity)) {
+                     this.collidingEntities.push(entity);
+                  }
+                  
+                  if ((entity.collisionMask & this.collisionBit) !== 0 && (this.collisionMask & entity.collisionBit) !== 0) {
+                     collide(this, hitbox, otherHitbox);
+                  } else {
+                     // @Hack
+                     if (entity.collisionBit === COLLISION_BITS.plants) {
+                        latencyGameState.lastPlantCollisionTicks = Board.ticks;
+                     }
+                     break;
+                  }
+               }
+            }
+         }
+      }
+   }
+
+   private getPotentialCollidingEntities(): ReadonlyArray<Entity> {
+      const entities = new Array<Entity>();
+
+      for (const chunk of this.chunks) {
+         for (const entity of chunk.entities) {
+            if (entity !== this) {
+               entities.push(entity);
+            }
+         }
+      }
+
+      return entities;
    }
 
    private updateCurrentTile(): void {

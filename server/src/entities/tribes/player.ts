@@ -66,11 +66,6 @@ export function createPlayer(position: Point, tribe: Tribe, username: string): E
    // addItem(inventoryComponent, createItem(ItemType.wood, 10));
    // addItem(inventoryComponent, createItem(ItemType.wooden_wall, 50));
    
-   // @Temporary
-   setTimeout(() => {
-      awardTitle(player, TribesmanTitle.builder);
-   }, 300);
-
    return player;
 }
 

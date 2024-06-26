@@ -1,5 +1,5 @@
 import { ServerComponentType, TribeMemberComponentData } from "webgl-test-shared/dist/components";
-import { EntityType } from "webgl-test-shared/dist/entities";
+import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
 import { TitleGenerationInfo, TribesmanTitle, TRIBESMAN_TITLE_RECORD } from "webgl-test-shared/dist/titles";
 import { TribeType } from "webgl-test-shared/dist/tribes";
 import { randInt } from "webgl-test-shared/dist/utils";
@@ -177,7 +177,7 @@ export function hasTitle(entityID: number, title: TribesmanTitle): boolean {
    return false;
 }
 
-export function forceAddTitle(entityID: number, title: TribesmanTitle): void {
+export function forceAddTitle(entityID: EntityID, title: TribesmanTitle): void {
    const tribeMemberComponent = TribeMemberComponentArray.getComponent(entityID);
    
    // Make sure they don't already have the title
@@ -193,7 +193,7 @@ export function forceAddTitle(entityID: number, title: TribesmanTitle): void {
    tribeMemberComponent.titles.push(titleGenerationInfo);
 }
 
-export function removeTitle(entityID: number, title: TribesmanTitle): void {
+export function removeTitle(entityID: EntityID, title: TribesmanTitle): void {
    const tribeMemberComponent = TribeMemberComponentArray.getComponent(entityID);
 
    for (let i = 0; i < tribeMemberComponent.titles.length; i++) {

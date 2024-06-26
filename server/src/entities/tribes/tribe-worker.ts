@@ -10,7 +10,7 @@ import { HealthComponent, HealthComponentArray } from "../../components/HealthCo
 import { InventoryComponent, InventoryComponentArray, addItemToInventory, getInventory } from "../../components/InventoryComponent";
 import { InventoryUseComponent, InventoryUseComponentArray } from "../../components/InventoryUseComponent";
 import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
-import { TribeMemberComponent, TribeMemberComponentArray } from "../../components/TribeMemberComponent";
+import { TribeMemberComponent, TribeMemberComponentArray, awardTitle, forceAddTitle } from "../../components/TribeMemberComponent";
 import { TribesmanAIComponent, TribesmanAIComponentArray } from "../../components/TribesmanAIComponent";
 import Board from "../../Board";
 import { AIHelperComponent, AIHelperComponentArray } from "../../components/AIHelperComponent";
@@ -20,6 +20,7 @@ import { TribeComponent, TribeComponentArray } from "../../components/TribeCompo
 import { HutComponentArray } from "../../components/HutComponent";
 import { CircularHitbox, HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { InventoryName, ItemType } from "webgl-test-shared/dist/items/items";
+import { NUM_TRIBESMAN_TITLES } from "webgl-test-shared/dist/titles";
 
 export const TRIBE_WORKER_RADIUS = 28;
 export const TRIBE_WORKER_VISION_RANGE = 500;
@@ -84,10 +85,14 @@ export function createTribeWorker(position: Point, rotation: number, tribeID: nu
    InventoryComponentArray.addComponent(worker.id, inventoryComponent);
 
    // @Temporary
-   // setTimeout(() => {
-   //    const hotbar = getInventory(inventoryComponent, InventoryName.hotbar);
-   //    addItemToInventory(hotbar, ItemType.wooden_sword, 1);
-   // }, 100);
+   setTimeout(() => {
+      // const hotbar = getInventory(inventoryComponent, InventoryName.hotbar);
+      // addItemToInventory(hotbar, ItemType.wooden_sword, 1);
+
+      for (let i = 0; i < NUM_TRIBESMAN_TITLES; i++) {
+         forceAddTitle(worker.id, i);
+      }
+   }, 100);
 
    return worker;
 }

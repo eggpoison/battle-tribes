@@ -58,7 +58,7 @@ import { BuildMenu_refreshBuildingID, BuildMenu_updateBuilding } from "./compone
 import { createGrassBlockerShaders, renderGrassBlockers } from "./rendering/webgl/grass-blocker-rendering";
 import { createTechTreeItemShaders, renderTechTreeItems, updateTechTreeItems } from "./rendering/webgl/tech-tree-item-rendering";
 import { createUBOs, updateUBOs } from "./rendering/ubos";
-import { createEntityOverlayShaders, renderEntityOverlays } from "./rendering/webgl/overlay-rendering";
+import { createEntityOverlayShaders } from "./rendering/webgl/overlay-rendering";
 import { updateRenderPartMatrices } from "./rendering/render-part-matrices";
 import { EntitySummonPacket } from "webgl-test-shared/dist/dev-packets";
 import { Mutable } from "webgl-test-shared/dist/utils";
@@ -316,7 +316,10 @@ abstract class Game {
                Board.updateTickCallbacks();
                Board.tickEntities();
                this.update();
-               this.updatePlayer();
+
+               if (Player.instance !== null) {
+                  Player.instance.update();
+               }
             } else {
                this.numSkippablePackets++;
                
@@ -378,15 +381,6 @@ abstract class Game {
       renderCursorTooltip();
 
       if (isDev()) refreshDebugInfo();
-   }
-
-   private static updatePlayer(): void {
-      if (Player.instance !== null) {
-         Player.instance.update();
-
-         // @Cleanup: Should be done in the game object update function
-         Player.resolveCollisions();
-      }
    }
 
    /**

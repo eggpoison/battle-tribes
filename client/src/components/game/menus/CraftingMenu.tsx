@@ -312,12 +312,20 @@ const CraftingMenu = () => {
    if (!isVisible) return null;
 
    let availableRecipes: ReadonlyArray<CraftingRecipe>;
-   if (craftingStation === null) {
-      availableRecipes = CRAFTING_RECIPE_RECORD.hand;
-   } else {
-      availableRecipes = CRAFTING_RECIPE_RECORD[craftingStation];
-   }
+   // @Temporary
+   availableRecipes = CRAFTING_RECIPE_RECORD.hand;
+   availableRecipes = availableRecipes.concat(CRAFTING_RECIPE_RECORD[0]);
+   availableRecipes = availableRecipes.concat(CRAFTING_RECIPE_RECORD[1]);
+   availableRecipes = availableRecipes.concat(CRAFTING_RECIPE_RECORD[2]);
+   availableRecipes = availableRecipes.concat(CRAFTING_RECIPE_RECORD[3]);
+   availableRecipes = availableRecipes.concat(CRAFTING_RECIPE_RECORD[4]);
+   // if (craftingStation === null) {
+   //    availableRecipes = CRAFTING_RECIPE_RECORD.hand;
+   // } else {
+   //    availableRecipes = CRAFTING_RECIPE_RECORD[craftingStation];
+   // }
 
+   // @Incomplete: height doesn't match with actual #
    const browserHeight = Math.max(MIN_RECIPE_BROWSER_HEIGHT, Math.ceil(availableRecipes.length / RECIPE_BROWSER_WIDTH));
    
    // Create the recipe browser inventory

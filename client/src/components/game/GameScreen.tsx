@@ -70,6 +70,7 @@ const GameScreen = (props: GameScreenProps) => {
       {!cinematicModeIsEnabled ? <>
          <HealthBar />
          <Hotbar />
+         <Infocards />
       </> : undefined}
 
       {/* Note: BackpackInventoryMenu must be exactly before CraftingMenu because of CSS hijinks */}
@@ -84,24 +85,7 @@ const GameScreen = (props: GameScreenProps) => {
 
       {props.interactState !== GameInteractState.summonEntity ? (
          <NerdVision />
-      ) : null}
-
-      {isPaused && !isDead ? <PauseScreen /> : null}
-
-      <TechTree />
-      <TechInfocard />
-
-      {!cinematicModeIsEnabled ? (
-         <Infocards />
-      ) : undefined}
-
-      <BuildMenu />
-
-      <InventorySelector />
-
-      <InspectHealthBar />
-
-      {props.interactState === GameInteractState.summonEntity ? <>
+      ) : <>
          <div id="summon-prompt">
             <div className="line left"></div>
             <h2>Click to spawn</h2>
@@ -109,8 +93,18 @@ const GameScreen = (props: GameScreenProps) => {
          </div>
 
          <SummonCrosshair />
-      </> : null}
+      </>}
 
+      {isPaused && !isDead ? <PauseScreen /> : null}
+
+      <TechTree />
+      <TechInfocard />
+
+      <BuildMenu />
+
+      <InventorySelector />
+
+      <InspectHealthBar />
    </>;
 }
 

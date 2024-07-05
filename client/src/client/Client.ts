@@ -14,12 +14,12 @@ import Player from "../entities/Player";
 import Game from "../Game";
 import { Tile } from "../Tile";
 import { gameScreenSetIsDead } from "../components/game/GameScreen";
-import { removeSelectedItem, selectItem, closeCurrentMenu } from "../player-input";
+import { removeSelectedItem, selectItem } from "../player-input";
 import { Hotbar_setHotbarSelectedItemSlot, Hotbar_update, Hotbar_updateRightThrownBattleaxeItemID } from "../components/game/inventories/Hotbar";
 import { HeldItem_setHeldItemCount, HeldItem_setHeldItemType } from "../components/game/HeldItem";
 import { CraftingMenu_setCraftingMenuOutputItem, CraftingMenu_updateRecipes } from "../components/game/menus/CraftingMenu";
 import { HealthBar_setHasFrostShield, updateHealthBar } from "../components/game/HealthBar";
-import { registerServerTick, updateDebugScreenCurrentTime, updateDebugScreenTicks } from "../components/game/dev/GameInfoDisplay";
+import { registerServerTick, updateDebugScreenCurrentTime, updateDebugScreenIsPaused, updateDebugScreenTicks } from "../components/game/dev/GameInfoDisplay";
 import Camera from "../Camera";
 import { isDev } from "../utils";
 import { updateRenderChunkFromTileUpdate } from "../rendering/render-chunks";
@@ -48,6 +48,9 @@ import { EntitySummonPacket } from "webgl-test-shared/dist/dev-packets";
 import { CircularHitbox, RectangularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { InventoryName, Inventory, ItemType } from "webgl-test-shared/dist/items/items";
 import { TitlesTab_setTitles } from "../components/game/dev/tabs/TitlesTab";
+import { closeCurrentMenu } from "../menus";
+import { TribesTab_refresh } from "../components/game/dev/tabs/TribesTab";
+import { processTickEvents } from "../entity-tick-events";
 
 type ISocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 
@@ -295,6 +298,7 @@ abstract class Client {
       updateDebugScreenTicks(gameDataPacket.serverTicks);
       Board.time = gameDataPacket.serverTime;
       updateDebugScreenCurrentTime(gameDataPacket.serverTime);
+      updateDebugScreenIsPaused(gameDataPacket.simulationIsPaused);
 
       if (isDev()) {
          Game.setGameObjectDebugData(gameDataPacket.entityDebugData);
@@ -302,8 +306,12 @@ abstract class Client {
 
       this.updateTribe(gameDataPacket.playerTribeData);
       Game.enemyTribes = gameDataPacket.enemyTribesData;
+      // @Hack: shouldn't do always
+      TribesTab_refresh();
 
       Infocards_setTitleOffer(gameDataPacket.titleOffer);
+
+      processTickEvents(gameDataPacket.tickEvents);
 
       this.updateEntities(gameDataPacket.entityDataArray, gameDataPacket.visibleEntityDeathIDs);
       
@@ -968,6 +976,30 @@ abstract class Client {
    public static sendDevRemoveTitlePacket(title: TribesmanTitle): void {
       if (Game.isRunning && this.socket !== null) {
          this.socket.emit("dev_remove_title", title);
+      }
+   }
+
+   public static sendDevPauseSimulation(): void {
+      if (Game.isRunning && this.socket !== null) {
+         this.socket.emit("dev_pause_simulation");
+      }
+   }
+
+   public static sendDevUnpauseSimulation(): void {
+      if (Game.isRunning && this.socket !== null) {
+         this.socket.emit("dev_unpause_simulation");
+      }
+   }
+
+   public static sendDevCreateTribe(): void {
+      if (Game.isRunning && this.socket !== null) {
+         this.socket.emit("dev_create_tribe");
+      }
+   }
+
+   public static sendDevChangeTribeType(tribeID: number, newTribeType: TribeType): void {
+      if (Game.isRunning && this.socket !== null) {
+         this.socket.emit("dev_change_tribe_type", tribeID, newTribeType);
       }
    }
 }

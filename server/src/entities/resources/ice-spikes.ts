@@ -116,7 +116,7 @@ export function createIceShardExplosion(originX: number, originY: number, numPro
 
       const iceShardCreationInfo = createIceShard(position, moveDirection);
 
-      const physicsComponent = iceShardCreationInfo.components[ServerComponentType.physics];
+      const physicsComponent = iceShardCreationInfo.components[ServerComponentType.physics]!;
       physicsComponent.velocity.x = 700 * Math.sin(moveDirection);
       physicsComponent.velocity.y = 700 * Math.cos(moveDirection);
    }

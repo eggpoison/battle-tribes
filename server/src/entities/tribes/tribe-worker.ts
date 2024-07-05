@@ -7,10 +7,10 @@ import { Point, randInt } from "webgl-test-shared/dist/utils";
 import Entity from "../../Entity";
 import Tribe from "../../Tribe";
 import { HealthComponent, HealthComponentArray } from "../../components/HealthComponent";
-import { InventoryComponent, InventoryComponentArray, addItemToInventory, getInventory } from "../../components/InventoryComponent";
+import { InventoryComponent, InventoryComponentArray } from "../../components/InventoryComponent";
 import { InventoryUseComponent, InventoryUseComponentArray } from "../../components/InventoryUseComponent";
 import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
-import { TribeMemberComponent, TribeMemberComponentArray, awardTitle, forceAddTitle } from "../../components/TribeMemberComponent";
+import { TribeMemberComponent, TribeMemberComponentArray } from "../../components/TribeMemberComponent";
 import { TribesmanAIComponent, TribesmanAIComponentArray } from "../../components/TribesmanAIComponent";
 import Board from "../../Board";
 import { AIHelperComponent, AIHelperComponentArray } from "../../components/AIHelperComponent";
@@ -19,8 +19,10 @@ import { PhysicsComponent, PhysicsComponentArray } from "../../components/Physic
 import { TribeComponent, TribeComponentArray } from "../../components/TribeComponent";
 import { HutComponentArray } from "../../components/HutComponent";
 import { CircularHitbox, HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
-import { InventoryName, ItemType } from "webgl-test-shared/dist/items/items";
-import { NUM_TRIBESMAN_TITLES } from "webgl-test-shared/dist/titles";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ComponentRecord, EntityCreationInfo } from "../../components";
+
+type ComponentTypes = [ServerComponentType.physics, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.tribe, ServerComponentType.tribeMember, ServerComponentType.tribesmanAI, ServerComponentType.aiHelper, ServerComponentType.inventoryUse, ServerComponentType.inventory];
 
 export const TRIBE_WORKER_RADIUS = 28;
 export const TRIBE_WORKER_VISION_RANGE = 500;
@@ -54,29 +56,49 @@ const getTribeType = (workerPosition: Point): TribeType => {
    }
 }
 
-export function createTribeWorker(position: Point, rotation: number, tribeID: number, hutID: number): Entity {
+const findTribe = (tribeID: number, position: Point): Tribe => {
+   if (tribeID !== -1) {
+      const tribe = Board.getTribeExpected(tribeID);
+      if (tribe !== null) {
+         return tribe;
+      }
+   }
+
+   // Fallback: establish its own tribe
+   const tribeType = getTribeType(position);
+   return new Tribe(tribeType, true);
+}
+
+export function createTribeWorker(position: Point, rotation: number, tribeID: number, hutID: number): EntityCreationInfo<ComponentTypes> {
    const worker = new Entity(position, rotation, EntityType.tribeWorker, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
    const hitbox = new CircularHitbox(1, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, TRIBE_WORKER_RADIUS);
    worker.addHitbox(hitbox);
    
-   let tribe: Tribe;
-   if (tribeID !== -1) {
-      tribe = Board.getTribe(tribeID);
-   } else {
-      // Establish its own tribe
-      const tribeType = getTribeType(position);
-      tribe = new Tribe(tribeType, true);
-   }
+   const tribe = findTribe(tribeID, position);
    
-   const tribeInfo = TRIBE_INFO_RECORD[tribe.type];
-   PhysicsComponentArray.addComponent(worker.id, new PhysicsComponent(0, 0, 0, 0, true, false));
-   HealthComponentArray.addComponent(worker.id, new HealthComponent(tribeInfo.maxHealthWorker));
-   StatusEffectComponentArray.addComponent(worker.id, new StatusEffectComponent(0));
-   TribeComponentArray.addComponent(worker.id, new TribeComponent(tribe));
-   TribeMemberComponentArray.addComponent(worker.id, new TribeMemberComponent(tribe.type, EntityType.tribeWorker));
-   TribesmanAIComponentArray.addComponent(worker.id, new TribesmanAIComponent(hutID));
-   AIHelperComponentArray.addComponent(worker.id, new AIHelperComponent(TRIBE_WORKER_VISION_RANGE));
+   const tribeInfo = TRIBE_INFO_RECORD[tribe.tribeType];
+
+   const physicsComponent = new PhysicsComponent(0, 0, 0, 0, true, false);
+   PhysicsComponentArray.addComponent(worker.id, physicsComponent);
+
+   const healthComponent = new HealthComponent(tribeInfo.maxHealthWorker);
+   HealthComponentArray.addComponent(worker.id, healthComponent);
+
+   const statusEffectComponent = new StatusEffectComponent(0);
+   StatusEffectComponentArray.addComponent(worker.id, statusEffectComponent);
+
+   const tribeComponent = new TribeComponent(tribe);
+   TribeComponentArray.addComponent(worker.id, tribeComponent);
+
+   const tribeMemberComponent = new TribeMemberComponent(tribe.tribeType, EntityType.tribeWorker);
+   TribeMemberComponentArray.addComponent(worker.id, tribeMemberComponent);
+
+   const tribesmanAIComponent = new TribesmanAIComponent(hutID);
+   TribesmanAIComponentArray.addComponent(worker.id, tribesmanAIComponent);
+
+   const aiHelperComponent = new AIHelperComponent(TRIBE_WORKER_VISION_RANGE);
+   AIHelperComponentArray.addComponent(worker.id, aiHelperComponent);
 
    const inventoryUseComponent = new InventoryUseComponent();
    InventoryUseComponentArray.addComponent(worker.id, inventoryUseComponent);
@@ -84,17 +106,25 @@ export function createTribeWorker(position: Point, rotation: number, tribeID: nu
    const inventoryComponent = new InventoryComponent();
    InventoryComponentArray.addComponent(worker.id, inventoryComponent);
 
-   // @Temporary
-   setTimeout(() => {
-      // const hotbar = getInventory(inventoryComponent, InventoryName.hotbar);
-      // addItemToInventory(hotbar, ItemType.wooden_sword, 1);
+   const componentRecord: ComponentRecord = {
+      [ServerComponentType.physics]: physicsComponent,
+      [ServerComponentType.health]: healthComponent,
+      [ServerComponentType.statusEffect]: statusEffectComponent,
+      [ServerComponentType.tribe]: tribeComponent,
+      [ServerComponentType.tribeMember]: tribeMemberComponent,
+      [ServerComponentType.tribesmanAI]: tribesmanAIComponent,
+      [ServerComponentType.aiHelper]: aiHelperComponent,
+      [ServerComponentType.inventoryUse]: inventoryUseComponent,
+      [ServerComponentType.inventory]: inventoryComponent
+   };
 
-      for (let i = 0; i < NUM_TRIBESMAN_TITLES; i++) {
-         forceAddTitle(worker.id, i);
-      }
-   }, 100);
+   // @Hack @Copynpaste
+   TribeMemberComponentArray.onInitialise!(worker, componentRecord);
 
-   return worker;
+   return {
+      entity: worker,
+      components: componentRecord
+   };
 }
 
 export function tickTribeWorker(worker: Entity): void {

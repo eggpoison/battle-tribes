@@ -156,16 +156,16 @@ const SPAWN_INFOS: ReadonlyArray<EntitySpawnInfo> = [
       usesSpawnDistribution: false
    },
    // @Temporary
-   // {
-   //    entityType: EntityType.frozenYeti,
-   //    spawnRate: 0.004,
-   //    maxDensity: 0.008,
-   //    minPackSize: 1,
-   //    maxPackSize: 1,
-   //    onlySpawnsInNight: false,
-   //    minSpawnDistance: 150,
-   //    usesSpawnDistribution: false
-   // },
+   {
+      entityType: EntityType.frozenYeti,
+      spawnRate: 0.004,
+      maxDensity: 0.008,
+      minPackSize: 1,
+      maxPackSize: 1,
+      onlySpawnsInNight: false,
+      minSpawnDistance: 150,
+      usesSpawnDistribution: false
+   },
    {
       entityType: EntityType.fish,
       spawnRate: 0.015,
@@ -177,16 +177,16 @@ const SPAWN_INFOS: ReadonlyArray<EntitySpawnInfo> = [
       usesSpawnDistribution: false
    },
    // @Temporary
-   // {
-   //    entityType: EntityType.golem,
-   //    spawnRate: 0.002,
-   //    maxDensity: 0.004,
-   //    minPackSize: 1,
-   //    maxPackSize: 1,
-   //    onlySpawnsInNight: false,
-   //    minSpawnDistance: 150,
-   //    usesSpawnDistribution: true
-   // },
+   {
+      entityType: EntityType.golem,
+      spawnRate: 0.002,
+      maxDensity: 0.004,
+      minPackSize: 1,
+      maxPackSize: 1,
+      onlySpawnsInNight: false,
+      minSpawnDistance: 150,
+      usesSpawnDistribution: true
+   },
    {
       entityType: EntityType.tribeWorker,
       spawnRate: 0.002,

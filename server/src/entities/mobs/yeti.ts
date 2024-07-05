@@ -189,7 +189,7 @@ const throwSnowball = (yeti: Entity, size: SnowballSize, throwAngle: number): vo
       velocityMagnitude = randFloat(...LARGE_SNOWBALL_THROW_SPEED);
    }
 
-   const physicsComponent = snowballCreationInfo.components[ServerComponentType.physics];
+   const physicsComponent = snowballCreationInfo.components[ServerComponentType.physics]!;
    physicsComponent.velocity.x += velocityMagnitude * Math.sin(angle);
    physicsComponent.velocity.y += velocityMagnitude * Math.cos(angle);
 }
@@ -239,7 +239,7 @@ const getYetiTarget = (yeti: Entity, visibleEntities: ReadonlyArray<Entity>): En
       // Don't chase frostlings which aren't attacking the yeti
       if ((entity.type === EntityType.tribeWorker || entity.type === EntityType.tribeWarrior || entity.type === EntityType.player) && !yetiComponent.attackingEntities.hasOwnProperty(entity.id)) {
          const tribeComponent = TribeComponentArray.getComponent(entity.id);
-         if (tribeComponent.tribe.type === TribeType.frostlings) {
+         if (tribeComponent.tribe.tribeType === TribeType.frostlings) {
             continue;
          }
       }

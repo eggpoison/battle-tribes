@@ -1,5 +1,5 @@
 import { PlayerDataPacket, AttackPacket, RespawnDataPacket, HitData, PlayerKnockbackData, HealData, ResearchOrbCompleteData } from "webgl-test-shared/dist/client-server-types";
-import { BlueprintType, BuildingMaterial, MATERIAL_TO_ITEM_MAP } from "webgl-test-shared/dist/components";
+import { BlueprintType, BuildingMaterial, MATERIAL_TO_ITEM_MAP, ServerComponentType } from "webgl-test-shared/dist/components";
 import { TechID, TechInfo, getTechByID } from "webgl-test-shared/dist/techs";
 import { TribesmanTitle } from "webgl-test-shared/dist/titles";
 import Board from "../Board";
@@ -38,8 +38,10 @@ import { createZombie } from "../entities/mobs/zombie";
 import { createTribeWarrior } from "../entities/tribes/tribe-warrior";
 import { createTribeWorker } from "../entities/tribes/tribe-worker";
 import { CRAFTING_RECIPES, ItemRequirements } from "webgl-test-shared/dist/items/crafting-recipes";
-import { InventoryName, ITEM_TYPE_RECORD, ItemType } from "webgl-test-shared/dist/items/items";
+import { InventoryName, Item, ITEM_TYPE_RECORD, ItemType } from "webgl-test-shared/dist/items/items";
 import { createFrozenYeti } from "../entities/mobs/frozen-yeti";
+import Tribe from "../Tribe";
+import { EntityTickEvent } from "webgl-test-shared/dist/entity-events";
 
 // @Cleanup: see if a decorator can be used to cut down on the player entity check copy-n-paste
 
@@ -153,7 +155,7 @@ const processPlayerDataPacket = (playerClient: PlayerClient, playerDataPacket: P
 
    if (!overrideOffhand) {
       const tribeComponent = TribeComponentArray.getComponent(player.id);
-      if (tribeComponent.tribe.type === TribeType.barbarians) {
+      if (tribeComponent.tribe.tribeType === TribeType.barbarians) {
          const offhandUseInfo = getInventoryUseInfo(inventoryUseComponent, InventoryName.offhand);
 
          if ((playerDataPacket.offhandAction === LimbAction.eat || playerDataPacket.offhandAction === LimbAction.useMedicine) && (offhandUseInfo.action !== LimbAction.eat && offhandUseInfo.action !== LimbAction.useMedicine)) {
@@ -207,7 +209,7 @@ const respawnPlayer = (playerClient: PlayerClient): void => {
       spawnPosition.x += 100 * Math.sin(offsetDirection);
       spawnPosition.y += 100 * Math.cos(offsetDirection);
    } else {
-      spawnPosition = generatePlayerSpawnPosition(playerClient.tribe.type);
+      spawnPosition = generatePlayerSpawnPosition(playerClient.tribe.tribeType);
    }
 
    const player = createPlayer(spawnPosition, playerClient.tribe, playerClient.username);
@@ -274,7 +276,7 @@ const processPlayerAttackPacket = (playerClient: PlayerClient, attackPacket: Att
 
    // If a barbarian, attack with offhand
    const tribeComponent = TribeComponentArray.getComponent(player.id);
-   if (tribeComponent.tribe.type === TribeType.barbarians) {
+   if (tribeComponent.tribe.tribeType === TribeType.barbarians) {
       attemptSwing(player, targets, 1, InventoryName.offhand);
    }
 }
@@ -703,12 +705,48 @@ const devSummonEntity = (playerClient: PlayerClient, summonPacket: EntitySummonP
       case EntityType.tribeTotem: {};
       case EntityType.tribeWarrior: {
          const tribeComponent = TribeComponentArray.getComponent(player.id);
-         createTribeWarrior(position, rotation, tribeComponent.tribe, 0);
+         const inventoryComponentSummonData = summonPacket.summonData[ServerComponentType.inventory]!;
+
+         const entityCreationInfo = createTribeWarrior(position, rotation, tribeComponent.tribe, 0);
+
+         // @Temporary @Hack @Copynpaste
+         const inventoryComponent = entityCreationInfo.components[ServerComponentType.inventory]!;
+         const inventoryNames = Object.keys(inventoryComponentSummonData.itemSlots).map(Number) as Array<InventoryName>;
+         for (let i = 0; i < inventoryNames.length; i++) {
+            const inventoryName = inventoryNames[i];
+            
+            const itemSlots = inventoryComponentSummonData.itemSlots[inventoryName]!;
+            for (const [itemSlotString, itemData] of Object.entries(itemSlots) as Array<[string, Item]>) {
+               const itemSlot = Number(itemSlotString);
+               
+               const item = createItem(itemData.type, itemData.count);
+               inventoryComponent.inventoryRecord[inventoryName]!.addItem(item, itemSlot);
+            }
+         }
+
          break;
       };
       case EntityType.tribeWorker: {
-         const tribeComponent = TribeComponentArray.getComponent(player.id);
-         createTribeWorker(position, rotation, tribeComponent.tribe.id, 0);
+         const tribeComponentSummonData = summonPacket.summonData[ServerComponentType.tribe]!;
+         const inventoryComponentSummonData = summonPacket.summonData[ServerComponentType.inventory]!;
+         
+         const entityCreationInfo = createTribeWorker(position, rotation, tribeComponentSummonData.tribeID, 0);
+
+         // @Temporary @Hack @Copynpaste
+         const inventoryComponent = entityCreationInfo.components[ServerComponentType.inventory]!;
+         const inventoryNames = Object.keys(inventoryComponentSummonData.itemSlots).map(Number) as Array<InventoryName>;
+         for (let i = 0; i < inventoryNames.length; i++) {
+            const inventoryName = inventoryNames[i];
+            
+            const itemSlots = inventoryComponentSummonData.itemSlots[inventoryName]!;
+            for (const [itemSlotString, itemData] of Object.entries(itemSlots) as Array<[string, Item]>) {
+               const itemSlot = Number(itemSlotString);
+               
+               const item = createItem(itemData.type, itemData.count);
+               inventoryComponent.inventoryRecord[inventoryName]!.addItem(item, itemSlot);
+            }
+         }
+         
          break;
       };
       case EntityType.tunnel: {};
@@ -861,6 +899,14 @@ export function addPlayerClient(playerClient: PlayerClient, player: Entity): voi
       processRespondToTitleOfferPacket(playerClient, title, isAccepted);
    });
 
+   socket.on("dev_pause_simulation", (): void => {
+      SERVER.isSimulating = false;
+   });
+
+   socket.on("dev_unpause_simulation", (): void => {
+      SERVER.isSimulating = true;
+   });
+
    // -------------------------- //
    //       DEV-ONLY EVENTS      //
    // -------------------------- //
@@ -879,6 +925,17 @@ export function addPlayerClient(playerClient: PlayerClient, player: Entity): voi
 
    socket.on("dev_remove_title", (title: TribesmanTitle): void => {
       devRemoveTitle(playerClient, title);
+   });
+
+   socket.on("dev_create_tribe", (): void => {
+      new Tribe(TribeType.plainspeople, true);
+   });
+
+   socket.on("dev_change_tribe_type", (tribeID: number, newTribeType: TribeType): void => {
+      const tribe = Board.getTribeExpected(tribeID);
+      if (tribe !== null) {
+         tribe.tribeType = newTribeType;
+      }
    });
 }
 
@@ -1006,6 +1063,18 @@ export function registerResearchOrbComplete(orbCompleteData: ResearchOrbComplete
    for (let i = 0; i < viewingPlayers.length; i++) {
       const playerClient = viewingPlayers[i];
       playerClient.orbCompletes.push(orbCompleteData);
+   }
+}
+
+export function registerEntityTickEvent(entity: Entity, tickEvent: EntityTickEvent): void {
+   const viewingPlayers = getPlayersViewingPosition(entity.boundingAreaMinX, entity.boundingAreaMaxX, entity.boundingAreaMinY, entity.boundingAreaMaxY);
+   if (viewingPlayers.length === 0) {
+      return;
+   }
+
+   for (let i = 0; i < viewingPlayers.length; i++) {
+      const playerClient = viewingPlayers[i];
+      playerClient.entityTickEvents.push(tickEvent);
    }
 }
 

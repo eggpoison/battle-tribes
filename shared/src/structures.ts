@@ -172,7 +172,8 @@ export function getSnapDirection(directionToSnappingEntity: number, structureRot
    }
 
    console.log(directionToSnappingEntity, structureRotation);
-   throw new Error("Misaligned directions!");
+   console.warn("Misaligned directions!");
+   return SnapDirection.top;
 }
 
 const getPositionsOffEntity = (snapOrigin: Readonly<Point>, connectingEntity: EntityInfo<StructureType>, placeRotation: number, structureType: StructureType, chunks: Chunks): ReadonlyArray<StructureTransformInfo> => {

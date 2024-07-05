@@ -20,7 +20,7 @@ const DevmodeRangeInput = forwardRef<HTMLInputElement | null, DevmodeRangeInputP
       props.onChange(value);
    }
    
-   return <label className="range-input-label">
+   return <label className="devmode-input range-input-label">
       <span>{props.text} <span className="weighted">{value}</span></span>
       <input ref={ref} type="range" name="zoom-input" defaultValue={value} min={0} max={250} step={25} onChange={onChange} />
    </label>;

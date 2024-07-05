@@ -14,7 +14,6 @@ import ServerComponent from "./entity-components/ServerComponent";
 import { ClientComponentClass, ClientComponentType, ClientComponents, ServerComponentClass, createComponent } from "./entity-components/components";
 import Component from "./entity-components/Component";
 import { removeLightsAttachedToEntity, removeLightsAttachedToRenderPart } from "./lights";
-import { EntityEvent } from "webgl-test-shared/dist/entity-events";
 import { hitboxIsCircular, Hitbox, CircularHitbox, RectangularHitbox, updateHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { createCircularHitboxFromData, createRectangularHitboxFromData } from "./client/Client";
 import { RenderPartOverlayGroup } from "./rendering/webgl/overlay-rendering";
@@ -24,6 +23,7 @@ import { COLLISION_BITS } from "webgl-test-shared/dist/collision";
 import { latencyGameState } from "./game-state/game-states";
 import Player from "./entities/Player";
 import { keyIsPressed } from "./keyboard-input";
+import { processTickEvents } from "./entity-tick-events";
 
 // Use prime numbers / 100 to ensure a decent distribution of different types of particles
 const HEALING_PARTICLE_AMOUNTS = [0.05, 0.37, 1.01];
@@ -536,17 +536,6 @@ abstract class Entity<T extends EntityType = EntityType> extends RenderObject {
 
       this.rotation = data.rotation;
       this.ageTicks = data.ageTicks;
-
-      for (let i = 0; i < data.tickEvents.length; i++) {
-         const event = data.tickEvents[i];
-
-         switch (event) {
-            case EntityEvent.cowFart: {
-               playSound("fart.mp3", 0.3, randFloat(0.9, 1.2), this.position.x, this.position.y);
-               break;
-            }
-         }
-      }
 
       // 
       // Update hitboxes

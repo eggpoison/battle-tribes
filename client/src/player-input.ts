@@ -23,13 +23,13 @@ import { LimbInfo } from "./entity-components/InventoryUseComponent";
 import InventoryComponent from "./entity-components/InventoryComponent";
 import { ENTITY_TYPE_TO_GHOST_TYPE_MAP, GhostInfo, setGhostInfo } from "./rendering/webgl/entity-ghost-rendering";
 import Camera from "./Camera";
-import { WORKER_HUT_SIZE } from "./entity-components/HutComponent";
 import { calculateCursorWorldPositionX, calculateCursorWorldPositionY } from "./mouse";
-import { RectangularHitbox, CircularHitbox, Hitbox, HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { Inventory, Item, ITEM_TYPE_RECORD, ItemType, InventoryName, ITEM_INFO_RECORD, itemInfoIsTool, ConsumableItemInfo, ConsumableItemCategory, PlaceableItemType } from "webgl-test-shared/dist/items/items";
+import { playBowFireSound } from "./entity-tick-events";
+import { closeCurrentMenu } from "./menus";
 
 /*
-// @Temporary
+// @Temporary @Incomplete
 
       canPlace: (): boolean => {
          // The player can only place one tribe totem
@@ -45,8 +45,6 @@ import { Inventory, Item, ITEM_TYPE_RECORD, ItemType, InventoryName, ITEM_INFO_R
          return Game.tribe.hasTotem && Game.tribe.numHuts < Game.tribe.tribesmanCap;
       },
 */
-
-let currentMenuCloseFunction: (() => void) | undefined;
 
 /** Acceleration of the player while moving without any modifiers. */
 const PLAYER_ACCELERATION = 700;
@@ -66,10 +64,6 @@ const offhandItemAttackCooldowns: Record<number, number> = {};
 let _inventoryIsOpen = false;
 
 let currentRightClickEvent: MouseEvent | null = null;
-
-export function setMenuCloseFunction(callback: () => void): void {
-   currentMenuCloseFunction = callback;
-}
 
 const updateAttackCooldowns = (inventory: Inventory, attackCooldowns: Record<number, number>): void => {
    for (let itemSlot = 1; itemSlot <= inventory.width; itemSlot++) {
@@ -244,7 +238,7 @@ const getSelectedItemInfo = (): SelectedItemInfo | null => {
 
 const clickShouldPreventDefault = (e: MouseEvent): boolean => {
    for (const element of e.composedPath()) {
-      if ((element as HTMLElement).id === "hotbar" || (element as HTMLElement).id === "crafting-menu") {
+      if (element instanceof Element && (element.id === "hotbar" || element.id === "crafting-menu" || element.classList.contains("inventory-container"))) {
          return true;
       }
    }
@@ -368,17 +362,6 @@ const hideInventory = (): void => {
    if (definiteGameState.heldItemSlot !== null) {
       throwHeldItem();
    }
-}
-
-export function closeCurrentMenu(): boolean {
-   if (typeof currentMenuCloseFunction !== "undefined") {
-      currentMenuCloseFunction();
-      currentMenuCloseFunction = undefined;
-
-      return true;
-   }
-   
-   return false;
 }
  
 /** Creates the key listener to toggle the inventory on and off. */
@@ -754,20 +737,7 @@ const itemRightClickUp = (item: Item, isOffhand: boolean): void => {
          }
 
          // @Incomplete: Don't play if bow didn't actually fire an arrow
-         switch (item.type) {
-            case ItemType.wooden_bow: {
-               playSound("bow-fire.mp3", 0.4, 1, Player.instance!.position.x, Player.instance!.position.y);
-               break;
-            }
-            case ItemType.reinforced_bow: {
-               playSound("reinforced-bow-fire.mp3", 0.2, 1, Player.instance!.position.x, Player.instance!.position.y);
-               break;
-            }
-            case ItemType.ice_bow: {
-               playSound("ice-bow-fire.mp3", 0.4, 1, Player.instance!.position.x, Player.instance!.position.y);
-               break;
-            }
-         }
+         playBowFireSound(Player.instance!, item.type);
 
          break;
       }

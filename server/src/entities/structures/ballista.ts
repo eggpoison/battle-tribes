@@ -175,7 +175,7 @@ const fire = (ballista: Entity, ammoType: BallistaAmmoType): void => {
          const arrowCreationInfo = createWoodenArrow(ballista.position.copy(), fireDirection, ballista.id, arrowInfo);
 
          // @Cleanup: copy and paste
-         const physicsComponent = arrowCreationInfo.components[ServerComponentType.physics];
+         const physicsComponent = arrowCreationInfo.components[ServerComponentType.physics]!;
          physicsComponent.velocity.x = ammoInfo.projectileSpeed * Math.sin(fireDirection);
          physicsComponent.velocity.y = ammoInfo.projectileSpeed * Math.cos(fireDirection);
       }
@@ -187,7 +187,7 @@ const fire = (ballista: Entity, ammoType: BallistaAmmoType): void => {
       const arrowCreationInfo = createWoodenArrow(ballista.position.copy(), rotation, ballista.id, arrowInfo);
 
       // @Cleanup: copy and paste
-      const physicsComponent = arrowCreationInfo.components[ServerComponentType.physics];
+      const physicsComponent = arrowCreationInfo.components[ServerComponentType.physics]!;
       physicsComponent.velocity.x = ammoInfo.projectileSpeed * Math.sin(fireDirection);
       physicsComponent.velocity.y = ammoInfo.projectileSpeed * Math.cos(fireDirection);
    }

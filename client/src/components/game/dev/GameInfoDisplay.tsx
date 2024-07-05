@@ -3,6 +3,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import OPTIONS from "../../../options";
 import Board from "../../../Board";
 import Camera from "../../../Camera";
+import Client from "../../../client/Client";
+
+// @Cleanup: shouldn't be able to interact with the info display, all the interactable stuff should be in tabs
 
 let serverTicks = 0;
 
@@ -12,6 +15,7 @@ export let updateDebugScreenCurrentTime: (time: number) => void = () => {};
 export let updateDebugScreenTicks: (time: number) => void = () => {};
 export let updateDebugScreenFPS: () => void = () => {};
 export let updateDebugScreenRenderTime: (renderTime: number) => void = () => {};
+export let updateDebugScreenIsPaused: (isPaused: boolean) => void = () => {};
 
 export function registerServerTick(): void {
    serverTicks++;
@@ -29,6 +33,7 @@ const GameInfoDisplay = () => {
    const [currentTime, setCurrentTime] = useState(0);
    const [ticks, setTicks] = useState(Board.ticks);
    const [zoom, setZoom] = useState(Camera.zoom);
+   const [isPaused, setIsPaused] = useState(false);
 
    const [nightVisionIsEnabled, setNightvisionIsEnabled] = useState(OPTIONS.nightVisionIsEnabled);
    const [showHitboxes, setShowEntityHitboxes] = useState(OPTIONS.showHitboxes);
@@ -53,6 +58,8 @@ const GameInfoDisplay = () => {
       updateDebugScreenTicks = (ticks: number): void => {
          setTicks(ticks);
       }
+
+      updateDebugScreenIsPaused = setIsPaused;
    }, []);
 
    const toggleNightvision = useCallback(() => {
@@ -140,11 +147,21 @@ const GameInfoDisplay = () => {
       OPTIONS.maxGreenSafety = value;
       setMaxGreenSafety(value);
    }
+
+   const toggleSimulation = useCallback((): void => {
+      if (isPaused) {
+         Client.sendDevUnpauseSimulation();
+      } else {
+         Client.sendDevPauseSimulation();
+      }
+   }, [isPaused]);
    
    return <div id="game-info-display" className="devmode-container">
       <p>Time: {currentTime.toFixed(2)}</p>
       <p>Ticks: {roundNum(ticks, 2)}</p>
       <p>Server TPS: {tps}</p>
+
+      <button onClick={toggleSimulation}>{isPaused ? "Resume" : "Pause"} Simulation</button>
 
       <ul className="area options">
          <li>

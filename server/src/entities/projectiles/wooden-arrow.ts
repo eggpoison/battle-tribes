@@ -14,6 +14,7 @@ import { EntityCreationInfo } from "../../components";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
 import { HitboxCollisionType, RectangularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
 
+// @Cleanup: should we break this up into many projectile entities?
 // @Cleanup: Rename file to something more generic
 
 type ComponentTypes = [ServerComponentType.physics, ServerComponentType.tribe, ServerComponentType.arrow];

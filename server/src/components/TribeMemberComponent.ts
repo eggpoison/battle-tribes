@@ -13,6 +13,7 @@ import { TribeComponentArray } from "./TribeComponent";
 import { PlayerComponentArray } from "./PlayerComponent";
 import { InventoryUseComponentArray } from "./InventoryUseComponent";
 import { InventoryName } from "webgl-test-shared/dist/items/items";
+import { ComponentRecord } from "../components";
 
 type TribesmanEntityType = EntityType.player | EntityType.tribeWorker | EntityType.tribeWarrior;
 
@@ -44,6 +45,7 @@ export class TribeMemberComponent {
 export const TribeMemberComponentArray = new ComponentArray<ServerComponentType.tribeMember, TribeMemberComponent>(true, {
    onJoin: onJoin,
    onRemove: onRemove,
+   onInitialise: onInitialise,
    serialise: serialise
 });
 
@@ -56,15 +58,22 @@ const getHotbarSize = (entityType: TribesmanEntityType): number => {
 }
 
 function onJoin(entityID: number): void {
+   const tribeComponent = TribeComponentArray.getComponent(entityID);
+   tribeComponent.tribe.registerNewTribeMember(entityID);
+}
+
+function onRemove(entityID: number): void {
+   const tribeComponent = TribeComponentArray.getComponent(entityID);
+   tribeComponent.tribe.registerTribeMemberDeath(entityID);
+}
+
+function onInitialise(entity: Entity, componentRecord: ComponentRecord): void {
    // 
    // Create inventories
    // 
 
-   const inventoryComponent = InventoryComponentArray.getComponent(entityID);
-   const inventoryUseComponent = InventoryUseComponentArray.getComponent(entityID);
-   
-   // @Hack
-   const entity = Board.entityRecord[entityID]!;
+   const inventoryComponent = componentRecord[ServerComponentType.inventory]!;
+   const inventoryUseComponent = componentRecord[ServerComponentType.inventoryUse]!;
    
    const hotbarSize = getHotbarSize(entity.type as TribesmanEntityType);
    const hotbarInventory = createNewInventory(inventoryComponent, InventoryName.hotbar, hotbarSize, 1, { acceptsPickedUpItems: true, isDroppedOnDeath: true });
@@ -79,14 +88,6 @@ function onJoin(entityID: number): void {
    createNewInventory(inventoryComponent, InventoryName.backpackSlot, 1, 1, { acceptsPickedUpItems: false, isDroppedOnDeath: true });
    createNewInventory(inventoryComponent, InventoryName.gloveSlot, 1, 1, { acceptsPickedUpItems: false, isDroppedOnDeath: true });
    createNewInventory(inventoryComponent, InventoryName.backpack, 0, 0, { acceptsPickedUpItems: false, isDroppedOnDeath: true });
-
-   const tribeComponent = TribeComponentArray.getComponent(entityID);
-   tribeComponent.tribe.registerNewTribeMember(entityID);
-}
-
-function onRemove(entityID: number): void {
-   const tribeComponent = TribeComponentArray.getComponent(entityID);
-   tribeComponent.tribe.registerTribeMemberDeath(entityID);
 }
 
 function serialise(entityID: number): TribeMemberComponentData {

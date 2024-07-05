@@ -13,8 +13,8 @@ import { countItemTypesInInventory } from "../../inventory-manipulation";
 import { playSound } from "../../sound";
 import Player from "../../entities/Player";
 import Game from "../../Game";
-import { setMenuCloseFunction } from "../../player-input";
 import { ItemType } from "webgl-test-shared/dist/items/items";
+import { addMenuCloseFunction } from "../../menus";
 
 /*
 // @Incomplete
@@ -427,7 +427,7 @@ const BuildMenu = () => {
          setGhostInfo(null);
          return;
       }
-      setMenuCloseFunction(() => {
+      addMenuCloseFunction(() => {
          setBuildingID(0);
 
          // Deselect structure

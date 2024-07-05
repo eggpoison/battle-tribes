@@ -46,3 +46,5 @@ export const TRIBE_INFO_RECORD: Record<TribeType, TribeInfo> = {
       moveSpeedMultiplier: 1.1
    }
 };
+
+export const NUM_TRIBE_TYPES = Object.keys(TRIBE_INFO_RECORD).length;

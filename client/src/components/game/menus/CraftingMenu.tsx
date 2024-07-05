@@ -3,20 +3,21 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import CLIENT_ITEM_INFO_RECORD, { getItemTypeImage } from "../../../client-item-info";
 import Client from "../../../client/Client";
 import { windowHeight } from "../../../webgl";
-import ItemSlot from "../inventories/ItemSlot";
+import ItemSlot, { ItemSlotCallbackInfo } from "../inventories/ItemSlot";
 import { countItemTypesInInventory, leftClickItemSlot } from "../../../inventory-manipulation";
 import Player from "../../../entities/Player";
 import { definiteGameState } from "../../../game-state/game-states";
 import Game from "../../../Game";
 import { playSound } from "../../../sound";
-import { setMenuCloseFunction } from "../../../player-input";
-import { CraftingRecipe, CraftingStation, CRAFTING_RECIPES, hasEnoughItems } from "webgl-test-shared/dist/items/crafting-recipes";
-import { ItemType, Item, ItemSlots, Inventory } from "webgl-test-shared/dist/items/items";
+import { CraftingRecipe, CraftingStation, CRAFTING_RECIPES, forceGetItemRecipe } from "webgl-test-shared/dist/items/crafting-recipes";
+import { ItemType, Item, Inventory } from "webgl-test-shared/dist/items/items";
 import { ItemTally2, tallyInventoryItems } from "webgl-test-shared/dist/items/ItemTally";
 import InventoryContainer from "../inventories/InventoryContainer";
+import { deselectHighlightedEntity } from "../../../entity-selection";
+import { addMenuCloseFunction } from "../../../menus";
 
 interface RecipeViewerProps {
-   readonly recipe: CraftingRecipe | null;
+   readonly recipe: CraftingRecipe;
    readonly hoverPosition: [number, number];
    readonly craftingMenuHeight: number;
 }
@@ -57,8 +58,6 @@ const RecipeViewer = ({ recipe, hoverPosition, craftingMenuHeight }: RecipeViewe
          recipeViewerRef.current.style.top = (hoverPosition[1] - top) + "px";
       }
    }, [hoverPosition, craftingMenuHeight]);
-
-   if (recipe === null) return null;
    
    return <div className="recipe-viewer" ref={recipeViewerRef}>
       <div className="header">
@@ -67,10 +66,10 @@ const RecipeViewer = ({ recipe, hoverPosition, craftingMenuHeight }: RecipeViewe
       </div>
 
       <ul className="ingredients">
-         {(Object.entries(recipe.ingredients) as unknown as ReadonlyArray<[ItemType, number]>).map(([ingredientType, ingredientCount]: [ItemType, number], i: number) => {
+         {recipe.ingredients.getEntries().map((entry, i: number) => {
             return <li className="ingredient" key={i}>
-               <img className="ingredient-icon" src={getItemTypeImage(ingredientType)} alt="" />
-               <span className="ingredient-count">x{ingredientCount}</span>
+               <img className="ingredient-icon" src={getItemTypeImage(entry.itemType)} alt="" />
+               <span className="ingredient-count">x{entry.count}</span>
             </li>;
          })}
       </ul>
@@ -126,12 +125,9 @@ interface IngredientsProps {
  * The list of ingredients in a recipe required to craft it.
  */
 const Ingredients = ({ recipe }: IngredientsProps) => {
-   const ingredientElements = new Array<JSX.Element>();
-   for (let i = 0; i < Object.keys(recipe.ingredients).length; i++) {
-      const [ingredientType, ingredientCount] = (Object.entries(recipe.ingredients).map(entry => [Number(entry[0]), entry[1]]) as ReadonlyArray<[ItemType, number]>)[i];
-
-      ingredientElements[i] = <Ingredient ingredientType={ingredientType} amountRequiredForRecipe={ingredientCount} key={i} />
-   }
+   const ingredientElements = recipe.ingredients.getEntries().map((entry, i) => {
+      return <Ingredient ingredientType={entry.itemType} amountRequiredForRecipe={entry.count} key={i} />
+   });
 
    return <ul className="ingredients">
       {ingredientElements}
@@ -176,7 +172,12 @@ const CraftingMenu = () => {
       }
    }, []);
 
-   const selectRecipe = (recipe: CraftingRecipe): void => {
+   const selectRecipe = (_: MouseEvent, callbackInfo: ItemSlotCallbackInfo): void => {
+      if (callbackInfo.itemType === null) {
+         return;
+      }
+      
+      const recipe = forceGetItemRecipe(callbackInfo.itemType);
       setSelectedRecipe(recipe);
       selectedRecipeIndex.current = CRAFTING_RECIPES.indexOf(recipe);
    }
@@ -190,7 +191,12 @@ const CraftingMenu = () => {
       Client.sendCraftingPacket(selectedRecipeIndex.current);
    }, [selectedRecipe, craftableRecipes]);
 
-   const hoverRecipe = (recipe: CraftingRecipe, e: MouseEvent): void => {
+   const hoverRecipe = (e: MouseEvent, callbackInfo: ItemSlotCallbackInfo): void => {
+      if (callbackInfo.itemType === null) {
+         return;
+      }
+      
+      const recipe = forceGetItemRecipe(callbackInfo.itemType);
       setHoveredRecipe(recipe);
       setHoverPosition([e.clientX, e.clientY]);
    }
@@ -299,7 +305,11 @@ const CraftingMenu = () => {
 
    useEffect(() => {
       if (isVisible) {
-         setMenuCloseFunction(() => {
+         addMenuCloseFunction(() => {
+            if (craftingStation !== null) {
+               deselectHighlightedEntity();
+            }
+            
             setIsVisible(false);
          });
       }
@@ -311,83 +321,52 @@ const CraftingMenu = () => {
 
    if (!isVisible) return null;
 
-   let availableRecipes: ReadonlyArray<CraftingRecipe>;
-   // @Temporary
-   availableRecipes = CRAFTING_RECIPE_RECORD.hand;
-   availableRecipes = availableRecipes.concat(CRAFTING_RECIPE_RECORD[0]);
-   availableRecipes = availableRecipes.concat(CRAFTING_RECIPE_RECORD[1]);
-   availableRecipes = availableRecipes.concat(CRAFTING_RECIPE_RECORD[2]);
-   availableRecipes = availableRecipes.concat(CRAFTING_RECIPE_RECORD[3]);
-   availableRecipes = availableRecipes.concat(CRAFTING_RECIPE_RECORD[4]);
-   // if (craftingStation === null) {
-   //    availableRecipes = CRAFTING_RECIPE_RECORD.hand;
-   // } else {
-   //    availableRecipes = CRAFTING_RECIPE_RECORD[craftingStation];
-   // }
+   let availableRecipes: Array<CraftingRecipe>;
+   if (craftingStation === null) {
+      availableRecipes = CRAFTING_RECIPE_RECORD.hand.slice();
+   } else {
+      availableRecipes = CRAFTING_RECIPE_RECORD[craftingStation].slice();
+   }
+
+   // Filter out recipes which the player doesn't have the tech for
+   for (let i = 0; i < availableRecipes.length; i++) {
+      const recipe = availableRecipes[i];
+
+      const techRequired = getTechRequiredForItem(recipe.product);
+      if (techRequired !== null && !Game.tribe.hasUnlockedTech(techRequired)) {
+         availableRecipes.splice(i, 1);
+         i--;
+      }
+   }
 
    // @Incomplete: height doesn't match with actual #
    const browserHeight = Math.max(MIN_RECIPE_BROWSER_HEIGHT, Math.ceil(availableRecipes.length / RECIPE_BROWSER_WIDTH));
    
    // Create the recipe browser inventory
+   let selectedRecipeItemSlot: number | undefined;
    const recipeBrowserInventory = new Inventory(RECIPE_BROWSER_WIDTH, browserHeight, 0);
-   for (let i = 0, itemSlot = 1; i < availableRecipes.length; i++) {
+   for (let i = 0; i < availableRecipes.length; i++) {
       const recipe = availableRecipes[i];
+      const itemSlot = i + 1;
 
-      const techRequired = getTechRequiredForItem(recipe.product);
-      if (techRequired === null || Game.tribe.hasUnlockedTech(techRequired)) {
-         const item = new Item(recipe.product, recipe.yield, 0);
-         recipeBrowserInventory.addItem(item, itemSlot);
-         
-         itemSlot++;
+      const item = new Item(recipe.product, recipe.yield, 0);
+      recipeBrowserInventory.addItem(item, itemSlot);
+
+      if (recipe === selectedRecipe) {
+         selectedRecipeItemSlot = itemSlot;
       }
    }
-   
-   // const recipeBrowser = new Array<JSX.Element>();
-   // let currentRow = new Array<JSX.Element>();
-   // let currentRecipeIndex = 0;
-   // for (let i = 0; i < browserHeight * RECIPE_BROWSER_WIDTH; i++) {
-   //    let slot: JSX.Element;
-   //    if (currentRecipeIndex < availableRecipes.length) {
-   //       let recipe: CraftingRecipe | undefined;
-   //       do {
-   //          const currentRecipe = availableRecipes[currentRecipeIndex];
-   
-   //          const techRequired = getTechRequiredForItem(currentRecipe.product);
-   //          if (techRequired === null || Game.tribe.hasUnlockedTech(techRequired)) {
-   //             recipe = currentRecipe;
-   //          }
 
-   //          currentRecipeIndex++;
-   //       } while (typeof recipe === "undefined" && currentRecipeIndex < availableRecipes.length);
+   const getItemSlotClassName = (callbackInfo: ItemSlotCallbackInfo): string | undefined => {
+      if (callbackInfo.itemType === null) {
+         return undefined;
+      }
 
-   //       if (typeof recipe !== "undefined") {
-   //          const isCraftable = craftableRecipes.current.includes(recipe);
-   //          slot = (
-   //             <ItemSlot onMouseOver={(e) => hoverRecipe(recipe!, e)} onMouseOut={() => unhoverRecipe()} onMouseMove={e => mouseMove(e)} className={isCraftable ? "craftable" : undefined} isSelected={recipe === selectedRecipe} onMouseDown={() => selectRecipe(recipe!)} picturedItemImageSrc={getItemTypeImage(recipe.product)} itemCount={recipe.yield !== 1 ? recipe.yield : undefined} key={i} />
-   //          );
-   //       } else {
-   //          slot = (
-   //             <ItemSlot isSelected={false} key={i} />
-   //          );
-   //       }
-   //    } else {
-   //       slot = (
-   //          <ItemSlot isSelected={false} key={i} />
-   //       );
-   //    }
-      
-   //    currentRow.push(slot);
-   //    if (currentRow.length === RECIPE_BROWSER_WIDTH) {
-   //       // Add the row
-   //       recipeBrowser.push(
-   //          <div className="item-row" key={i}>
-   //             {currentRow}
-   //          </div>
-   //       );
-   //       currentRow = [];
-   //    }
-   // }
-   
+      const recipe = forceGetItemRecipe(callbackInfo.itemType);
+      const isCraftable = craftableRecipes.current.includes(recipe);
+      return isCraftable ? "craftable" : undefined;
+   }
+
    return <div id="crafting-menu" className="inventory" ref={onCraftingMenuRefChange}>
       {/*
       // @Temporary?
@@ -398,10 +377,9 @@ const CraftingMenu = () => {
          })}
       </div>
       */}
-      
+
       <div className="recipe-browser">
-         <InventoryContainer entityID={0} inventory={recipeBrowserInventory} isManipulable={false} />
-         {/* {recipeBrowser} */}
+         <InventoryContainer entityID={0} inventory={recipeBrowserInventory} isManipulable={false} selectedItemSlot={selectedRecipeItemSlot} onMouseOver={hoverRecipe} onMouseOut={unhoverRecipe} onMouseMove={mouseMove} itemSlotClassNameCallback={getItemSlotClassName} onMouseDown={selectRecipe} />
       </div>
 
       <div className="crafting-area">
@@ -428,7 +406,9 @@ const CraftingMenu = () => {
          </>}
       </div>
 
-      <RecipeViewer recipe={hoveredRecipe} hoverPosition={hoverPosition!} craftingMenuHeight={craftingMenuHeightRef.current!} />
+      {hoveredRecipe !== null ? (
+         <RecipeViewer recipe={hoveredRecipe} hoverPosition={hoverPosition!} craftingMenuHeight={craftingMenuHeightRef.current!} />
+      ) : null}
    </div>;
 }
 

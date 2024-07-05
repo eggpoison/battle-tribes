@@ -82,7 +82,9 @@ export function createFrozenYeti(position: Point, rotation: number): Entity {
    }
 
    PhysicsComponentArray.addComponent(frozenYeti.id, new PhysicsComponent(0, 0, 0, 0, true, false));
-   HealthComponentArray.addComponent(frozenYeti.id, new HealthComponent(250));
+   // @Temporary
+   // HealthComponentArray.addComponent(frozenYeti.id, new HealthComponent(250));
+   HealthComponentArray.addComponent(frozenYeti.id, new HealthComponent(250 * 100));
    StatusEffectComponentArray.addComponent(frozenYeti.id, new StatusEffectComponent(StatusEffect.freezing));
    AIHelperComponentArray.addComponent(frozenYeti.id, new AIHelperComponent(VISION_RANGE));
    FrozenYetiComponentArray.addComponent(frozenYeti.id, new FrozenYetiComponent());
@@ -303,7 +305,7 @@ const spawnSnowball = (frozenYeti: Entity, size: SnowballSize): void => {
    const snowballCreationInfo = createSnowball(position, size, frozenYeti.id)
 
    const velocityMagnitude = randFloat(SNOWBALL_THROW_SPEED[0], SNOWBALL_THROW_SPEED[1]);
-   const physicsComponent = snowballCreationInfo.components[ServerComponentType.physics];
+   const physicsComponent = snowballCreationInfo.components[ServerComponentType.physics]!;
    physicsComponent.velocity.x = velocityMagnitude * Math.sin(angle);
    physicsComponent.velocity.y = velocityMagnitude * Math.cos(angle);
 }
@@ -371,6 +373,11 @@ const doBiteAttack = (frozenYeti: Entity, angleToTarget: number): void => {
 }
 
 export function tickFrozenYeti(frozenYeti: Entity): void {
+   // @Temporary
+   if (1+1===2) {
+      return;
+   }
+   
    const frozenYetiComponent = FrozenYetiComponentArray.getComponent(frozenYeti.id);
    
    // Remove targets which are dead or have been out of aggro long enough

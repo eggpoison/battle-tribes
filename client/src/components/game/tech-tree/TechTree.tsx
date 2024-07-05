@@ -9,15 +9,14 @@ import OPTIONS from "../../../options";
 import Player from "../../../entities/Player";
 import { countItemTypesInInventory } from "../../../inventory-manipulation";
 import { definiteGameState } from "../../../game-state/game-states";
-import { setMenuCloseFunction } from "../../../player-input";
 import { createTechTreeItem } from "../../../rendering/webgl/tech-tree-item-rendering";
 import { Point, randFloat } from "webgl-test-shared/dist/utils";
 import Camera from "../../../Camera";
 import { playSound } from "../../../sound";
 import TechTreeProgressBar from "./TechTreeProgressBar";
 import { ItemTally2, tallyInventoryItems } from "webgl-test-shared/dist/items/ItemTally";
-import { ItemTally } from "webgl-test-shared/dist/items/crafting-recipes";
 import { ItemType } from "webgl-test-shared/dist/items/items";
+import { addMenuCloseFunction } from "../../../menus";
 
 const boundsScale = 16;
 
@@ -282,7 +281,7 @@ const TechTree = () => {
 
    useEffect(() => {
       if (isVisible) {
-         setMenuCloseFunction(() => {
+         addMenuCloseFunction(() => {
             closeTechTree();
          });
       }

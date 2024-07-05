@@ -1,18 +1,30 @@
 import { useState, useEffect, useCallback } from "react";
-import { setMenuCloseFunction } from "../../../player-input";
 import ItemsTab from "./tabs/ItemsTab";
 import SummonTab from "./tabs/SummonTab";
 import TitlesTab from "./tabs/TitlesTab";
+import TribesTab from "./tabs/TribesTab";
+import { addMenuCloseFunction } from "../../../menus";
 
 const enum TabType {
    items,
    summon,
-   titles
+   titles,
+   tribes
 }
 
 interface TabInfo {
    readonly text: string;
    readonly image: string;
+}
+
+interface TabProps {
+   readonly tabType: TabType;
+   readonly selectedTabType: TabType | null;
+   onClick(e: React.MouseEvent, tabType: TabType): void;
+}
+
+interface TabSelectorProps {
+   setMenu(element: JSX.Element): void;
 }
 
 const TAB_INFO_RECORD: Record<TabType, TabInfo> = {
@@ -27,14 +39,12 @@ const TAB_INFO_RECORD: Record<TabType, TabInfo> = {
    [TabType.titles]: {
       text: "Titles",
       image: require("../../../images/ui/titles-tab.png")
+   },
+   [TabType.tribes]: {
+      text: "Tribes",
+      image: require("../../../images/ui/tribes-tab.png")
    }
 };
-
-interface TabProps {
-   readonly tabType: TabType;
-   readonly selectedTabType: TabType | null;
-   onClick(e: React.MouseEvent, tabType: TabType): void;
-}
 
 const Tab = (props: TabProps) => {
    const tabInfo = TAB_INFO_RECORD[props.tabType];
@@ -51,12 +61,12 @@ const Tab = (props: TabProps) => {
    </div>;
 }
 
-const TabSelector = () => {
+const TabSelector = (props: TabSelectorProps) => {
    const [selectedTab, setSelectedTab] = useState<TabType | null>(null);
 
    useEffect(() => {
       if (selectedTab !== null) {
-         setMenuCloseFunction(() => {
+         addMenuCloseFunction(() => {
             setSelectedTab(null);
          });
       }
@@ -76,18 +86,23 @@ const TabSelector = () => {
    }, [selectedTab]);
 
    return <>
+      {/* @Cleanup: robustness */}
       {selectedTab === TabType.items ? (
-         <ItemsTab />
+         <ItemsTab/>
       ) : selectedTab === TabType.summon ? (
-         <SummonTab />
+         <SummonTab setMenu={props.setMenu} />
       ) : selectedTab === TabType.titles ? (
          <TitlesTab />
+      ) : selectedTab === TabType.tribes ? (
+         <TribesTab />
       ) : undefined }
    
       <div id="tab-selection">
+         {/* @Cleanup: copy and paste */}
          <Tab tabType={TabType.items}  selectedTabType={selectedTab} onClick={updateSelectedTab} />
          <Tab tabType={TabType.summon} selectedTabType={selectedTab} onClick={updateSelectedTab} />
          <Tab tabType={TabType.titles} selectedTabType={selectedTab} onClick={updateSelectedTab} />
+         <Tab tabType={TabType.tribes} selectedTabType={selectedTab} onClick={updateSelectedTab} />
       </div>
    </>;
 }

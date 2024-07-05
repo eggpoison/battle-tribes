@@ -61,7 +61,7 @@ export function dropBerryOverEntity(entity: Entity): void {
    const itemEntityCreationInfo = createItemEntity(position, 2 * Math.PI * Math.random(), ItemType.berry, 1, 0);
    
    const velocityDirectionOffset = (Math.random() - 0.5) * Math.PI * 0.15
-   const physicsComponent = itemEntityCreationInfo.components[ServerComponentType.physics];
+   const physicsComponent = itemEntityCreationInfo.components[ServerComponentType.physics]!;
    physicsComponent.velocity.x = 40 * Math.sin(spawnDirection + velocityDirectionOffset);
    physicsComponent.velocity.y = 40 * Math.cos(spawnDirection + velocityDirectionOffset);
 }

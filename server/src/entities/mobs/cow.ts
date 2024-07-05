@@ -89,13 +89,6 @@ const graze = (cow: Entity, cowComponent: CowComponent): void => {
          };
          addGrassBlocker(grassBlocker, 0);
       }
-      // const previousTile = cow.tile;
-      // const newTileInfo: TileInfo = {
-      //    type: TileType.dirt,
-      //    biome: previousTile.biome,
-      //    isWall: false
-      // };
-      // Board.replaceTile(previousTile.x, previousTile.y, newTileInfo.type, newTileInfo.biome, newTileInfo.isWall, 0);
 
       healEntity(cow, 3, cow.id);
       cowComponent.grazeCooldownTicks = randInt(MIN_GRAZE_COOLDOWN, MAX_GRAZE_COOLDOWN);

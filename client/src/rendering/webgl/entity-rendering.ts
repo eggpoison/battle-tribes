@@ -79,15 +79,24 @@ export function createEntityShaders(): void {
       float atlasPixelSize = u_atlasSize * ATLAS_SLOT_SIZE;
       
       // Calculate the coordinates of the top left corner of the texture
-      float textureX = mod(textureIndex * ATLAS_SLOT_SIZE, atlasPixelSize);
-      float textureY = floor(textureIndex * ATLAS_SLOT_SIZE / atlasPixelSize) * ATLAS_SLOT_SIZE;
+      float textureX = mod(textureIndex, u_atlasSize) * ATLAS_SLOT_SIZE;
+      // float textureX = mod(textureIndex * ATLAS_SLOT_SIZE, atlasPixelSize);
+      float textureY = floor(textureIndex / u_atlasSize) * ATLAS_SLOT_SIZE;
       
       // @Incomplete: This is very hacky, the - 0.2 and + 0.1 shenanigans are to prevent texture bleeding but it causes tiny bits of the edge of the textures to get cut off.
 
       // float u = (textureX + v_texCoord.x * (textureSize.x - 0.2) + 0.1) / atlasPixelSize;
       // float v = 1.0 - ((textureY + (1.0 - v_texCoord.y) * (textureSize.y - 0.2) + 0.1) / atlasPixelSize);
-      float u = (textureX + v_texCoord.x * textureSize.x) / atlasPixelSize;
-      float v = 1.0 - ((textureY + (1.0 - v_texCoord.y) * textureSize.y) / atlasPixelSize);
+
+      // We add 0.5 for half-pixel correction
+      // float u = (textureX + v_texCoord.x * textureSize.x / ATLAS_SLOT_SIZE + 0.5 / ATLAS_SLOT_SIZE) / u_atlasSize;
+      // float u = (textureX + v_texCoord.x * textureSize.x + 0.5) / atlasPixelSize;
+      float x = floor(textureX + v_texCoord.x * textureSize.x);
+      float y = floor(textureY + (1.0 - v_texCoord.y) * textureSize.y);
+      float u = (x + 0.5) / atlasPixelSize;
+      float v = 1.0 - (y + 0.5) / atlasPixelSize;
+      // float v = 1.0 - ((textureY + (1.0 - v_texCoord.y) * textureSize.y) / atlasPixelSize);
+
       outputColour = texture(u_textureAtlas, vec2(u, v));
       
       if (v_tint.r > 0.0) {

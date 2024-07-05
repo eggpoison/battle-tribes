@@ -140,7 +140,7 @@ const createSpit = (slime: Entity, slimeComponent: SlimeComponent): void => {
    const y = slime.position.y + RADII[slimeComponent.size] * Math.cos(slime.rotation);
    const spitCreationInfo = createSlimeSpit(new Point(x, y), 2 * Math.PI * Math.random(), slimeComponent.size === SlimeSize.medium ? 0 : 1);
 
-   const physicsComponent = spitCreationInfo.components[ServerComponentType.physics];
+   const physicsComponent = spitCreationInfo.components[ServerComponentType.physics]!;
    physicsComponent.velocity.x = 500 * Math.sin(slime.rotation);
    physicsComponent.velocity.y = 500 * Math.cos(slime.rotation);
 }

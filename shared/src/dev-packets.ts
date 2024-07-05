@@ -1,5 +1,6 @@
 import { ServerComponentType } from "./components";
 import { EntityType } from "./entities";
+import { InventoryName, ItemSlots } from "./items/items";
 
 const SUMMON_DATA_RECORD = {
    [ServerComponentType.aiHelper]: {},
@@ -18,7 +19,9 @@ const SUMMON_DATA_RECORD = {
    [ServerComponentType.hut]: {},
    [ServerComponentType.iceShard]: {},
    [ServerComponentType.iceSpikes]: {},
-   [ServerComponentType.inventory]: {},
+   [ServerComponentType.inventory]: {
+      itemSlots: 0 as Partial<Record<InventoryName, ItemSlots>>
+   },
    [ServerComponentType.inventoryUse]: {},
    [ServerComponentType.item]: {},
    [ServerComponentType.pebblum]: {},
@@ -34,7 +37,9 @@ const SUMMON_DATA_RECORD = {
    [ServerComponentType.tombstone]: {},
    [ServerComponentType.totemBanner]: {},
    [ServerComponentType.tree]: {},
-   [ServerComponentType.tribe]: {},
+   [ServerComponentType.tribe]: {
+      tribeID: 0 as number
+   },
    [ServerComponentType.tribeMember]: {},
    [ServerComponentType.tribesmanAI]: {},
    [ServerComponentType.turret]: {},
@@ -58,12 +63,16 @@ const SUMMON_DATA_RECORD = {
    [ServerComponentType.craftingStation]: {},
 } satisfies Record<ServerComponentType, object>;
 
+export type ComponentSummonData<T extends ServerComponentType> = typeof SUMMON_DATA_RECORD[T];
+
+export type EntitySummonData = Partial<{
+   // @Temporary: make more specific
+   [K in ServerComponentType]: ComponentSummonData<K>;
+}>;
+
 export interface EntitySummonPacket<T extends EntityType = EntityType> {
    readonly position: [number, number];
    readonly rotation: number;
    readonly entityType: T;
-   readonly summonData: Partial<{
-      // @Temporary: make more specific
-      [K in ServerComponentType]: typeof SUMMON_DATA_RECORD[K];
-   }>;
+   readonly summonData: EntitySummonData;
 }

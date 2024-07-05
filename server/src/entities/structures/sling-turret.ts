@@ -86,7 +86,7 @@ const fire = (turret: Entity, slingTurretComponent: TurretComponent): void => {
    const arrowCreationInfo = createWoodenArrow(turret.position.copy(), fireDirection, turret.id, arrowInfo);
 
    // @Cleanup: copy and paste
-   const physicsComponent = arrowCreationInfo.components[ServerComponentType.physics];
+   const physicsComponent = arrowCreationInfo.components[ServerComponentType.physics]!;
    physicsComponent.velocity.x = 550 * Math.sin(fireDirection);
    physicsComponent.velocity.y = 550 * Math.cos(fireDirection);
 }

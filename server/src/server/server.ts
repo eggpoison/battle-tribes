@@ -59,6 +59,7 @@ class GameServer {
    public trackedEntityID = 0;
 
    public isRunning = false;
+   public isSimulating = true;
 
    private nextTickTime = 0;
    
@@ -166,19 +167,23 @@ class GameServer {
       // These are done before each tick to account for player packets causing entities to be removed/added between ticks.
       Board.pushJoinBuffer();
       Board.destroyFlaggedEntities();
-      Board.updateTribes();
-      
-      updateGrassBlockers();
 
-      Board.updateEntities();
-      updateDynamicPathfindingNodes();
-      Board.resolveEntityCollisions();
-
-      runSpawnAttempt();
-      
-      Board.pushJoinBuffer();
-      Board.destroyFlaggedEntities();
-      Board.updateTribes();
+      if (this.isSimulating) {
+         Board.updateTribes();
+         
+         updateGrassBlockers();
+         
+         Board.updateEntities();
+         updateDynamicPathfindingNodes();
+         Board.resolveEntityCollisions();
+         
+         runSpawnAttempt();
+         
+         Board.pushJoinBuffer();
+         Board.destroyFlaggedEntities();
+         // @Bug @Incomplete: Called twice!!!!
+         Board.updateTribes();
+      }
 
       if (!isTimed) {
          await SERVER.sendGameDataPackets();
@@ -339,11 +344,13 @@ class GameServer {
                const gameDataPacket = createGameDataPacket(playerClient);
                playerClient.socket.emit("game_data_packet", gameDataPacket);
    
+               // @Cleanup: should these be here?
                playerClient.visibleHits = [];
                playerClient.playerKnockbacks = [];
                playerClient.heals = [];
                playerClient.orbCompletes = [];
                playerClient.pickedUpItem = false;
+               playerClient.entityTickEvents = [];
             }
 
             // console.log(performance.now());

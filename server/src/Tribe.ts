@@ -322,8 +322,10 @@ class Tribe {
    public readonly name: string;
    public readonly id: number;
    
-   public readonly type: TribeType;
+   public tribeType: TribeType;
    public readonly isAIControlled: boolean;
+
+   public isRemoveable = false;
 
    public totem: Entity | null = null;
    
@@ -384,7 +386,7 @@ class Tribe {
    constructor(tribeType: TribeType, isAIControlled: boolean) {
       this.name = generateTribeName(tribeType);
       this.id = getAvailableID();
-      this.type = tribeType;
+      this.tribeType = tribeType;
       this.isAIControlled = isAIControlled;
 
       this.tribesmanCap = TRIBE_INFO_RECORD[tribeType].baseTribesmanCap;
@@ -408,6 +410,7 @@ class Tribe {
       });
 
       this.buildingsAreDirty = true;
+      this.isRemoveable = true;
 
       switch (building.type) {
          case EntityType.tribeTotem: {
@@ -630,7 +633,7 @@ class Tribe {
    public tick(): void {
       // @Incomplete: automatically detect if there are no entities left which have a tribe component with this tribe
       // Destroy tribe if it has no entities left
-      if (this.totem === null && this.tribesmanIDs.length === 0 && this.buildings.length === 0) {
+      if (this.isRemoveable && this.totem === null && this.tribesmanIDs.length === 0 && this.buildings.length === 0) {
          this.destroy();
          return;
       }
@@ -681,7 +684,7 @@ class Tribe {
       if (hutComponent.hasSpawnedTribesman || this.respawnHutIDs.indexOf(hut.id) !== -1) {
          return;
       }
-      
+
       hutComponent.lastDoorSwingTicks = Board.ticks;
       hutComponent.hasSpawnedTribesman = true;
       hutComponent.hasTribesman = true;
@@ -699,6 +702,7 @@ class Tribe {
    // @Cleanup
    
    public registerNewTribeMember(tribesmanID: number): void {
+      this.isRemoveable = true;
       // this.friendlyTribesmenIDs.push(tribeMember.id);
       this.tribesmanIDs.push(tribesmanID);
    }
@@ -877,7 +881,7 @@ class Tribe {
 
    public forceUnlockTech(techID: TechID): void {
       const techInfo = getTechByID(techID);
-      if (this.hasUnlockedTech(techID) || techInfo.blacklistedTribes.includes(this.type)) {
+      if (this.hasUnlockedTech(techID) || techInfo.blacklistedTribes.includes(this.tribeType)) {
          return;
       }
 

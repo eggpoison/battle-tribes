@@ -92,7 +92,7 @@ const getAccelerationMultiplier = (tribesmanID: number): number => {
    const tribeComponent = TribeComponentArray.getComponent(tribesmanID);
    const tribeMemberComponent = TribeMemberComponentArray.getComponent(tribesmanID);
    
-   let multiplier = TRIBE_INFO_RECORD[tribeComponent.tribe.type].moveSpeedMultiplier;
+   let multiplier = TRIBE_INFO_RECORD[tribeComponent.tribe.tribeType].moveSpeedMultiplier;
 
    // @Incomplete: only do when wearing the bush suit
    if (tribeMemberComponent.lastPlantCollisionTicks >= Board.ticks - 1) {

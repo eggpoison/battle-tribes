@@ -504,7 +504,7 @@ abstract class Game {
             return tribeData;
          }
       }
-      throw new Error();
+      throw new Error("No tribe data for tribe with ID " + tribeID);
    }
 }
 

@@ -41,7 +41,7 @@ export function createEntity(position: Point, entityType: EntityType): Entity {
       case EntityType.spitPoison: return createSpitPoison(position, 2 * Math.PI * Math.random());
       case EntityType.golem: return createGolem(position);
       case EntityType.pebblum: return createPebblum(position, 2 * Math.PI * Math.random(), 0);
-      case EntityType.tribeWorker: return createTribeWorker(position, 2 * Math.PI * Math.random(), -1, 0);
+      case EntityType.tribeWorker: return createTribeWorker(position, 2 * Math.PI * Math.random(), -1, 0).entity;
       case EntityType.fence:
       case EntityType.fenceGate:
       case EntityType.plant:

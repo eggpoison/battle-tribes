@@ -50,7 +50,7 @@ const doMeleeAttack = (tribesman: Entity): void => {
       if (!didSucceed) {
          // Use offhand
          const tribeComponent = TribeComponentArray.getComponent(tribesman.id);
-         if (tribeComponent.tribe.type === TribeType.barbarians) {
+         if (tribeComponent.tribe.tribeType === TribeType.barbarians) {
             const offhandUseInfo = getInventoryUseInfo(inventoryUseComponent, InventoryName.offhand);
             attemptAttack(tribesman, target, offhandUseInfo.selectedItemSlot, InventoryName.offhand);
          }

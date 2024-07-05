@@ -3,11 +3,12 @@ import { Settings } from "webgl-test-shared/dist/settings";
 import Entity from "../Entity";
 import { randFloat, randInt } from "webgl-test-shared/dist/utils";
 import { createItemEntity } from "../entities/item-entity";
-import { EntityEvent } from "webgl-test-shared/dist/entity-events";
+import { EntityTickEvent, EntityTickEventType } from "webgl-test-shared/dist/entity-events";
 import { CowComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
 import { COW_GRAZE_TIME_TICKS } from "../entities/mobs/cow";
 import { ComponentArray } from "./ComponentArray";
 import { ItemType } from "webgl-test-shared/dist/items/items";
+import { registerEntityTickEvent } from "../server/player-clients";
 
 const enum Vars {
    MIN_POOP_PRODUCTION_COOLDOWN = 5 * Settings.TPS,
@@ -49,7 +50,12 @@ const poop = (cow: Entity, cowComponent: CowComponent): void => {
    createItemEntity(poopPosition, 2 * Math.PI * Math.random(), ItemType.poop, 1, 0);
 
    // Let it out
-   cow.tickEvents.push(EntityEvent.cowFart);
+   const event: EntityTickEvent<EntityTickEventType.cowFart> = {
+      entityID: cow.id,
+      type: EntityTickEventType.cowFart,
+      data: 0
+   };
+   registerEntityTickEvent(cow, event);
 }
 
 export function updateCowComponent(cow: Entity, cowComponent: CowComponent): void {

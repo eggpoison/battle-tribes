@@ -177,14 +177,16 @@ abstract class Board {
       return Board.time < 6 || Board.time >= 18;
    }
 
-   public static getTribe(tribeID: number): Tribe {
+   public static getTribeExpected(tribeID: number): Tribe | null {
       for (let i = 0; i < this.tribes.length; i++) {
          const tribe = this.tribes[i];
          if (tribe.id === tribeID) {
             return tribe;
          }
       }
-      throw new Error();
+
+      console.warn("No tribe with id " + tribeID);
+      return null;
    }
 
    private static initialiseChunks(): void {
@@ -303,10 +305,6 @@ abstract class Board {
       // @Speed: Ideally we should remove this as there are many entities which the switch won't fire for at all
       for (let i = 0; i < this.entities.length; i++) {
          const entity = this.entities[i];
-
-         // @Speed
-         // @Cleanup: awkward to do it here
-         entity.tickEvents = [];
 
          switch (entity.type) {
             case EntityType.player: tickPlayer(entity); break;

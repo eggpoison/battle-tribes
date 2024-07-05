@@ -88,8 +88,7 @@ const serialiseEntityData = (entity: Entity, player: Entity | null): EntityData<
       type: entity.type,
       collisionBit: entity.collisionBit,
       collisionMask: entity.collisionMask,
-      components: components,
-      tickEvents: entity.tickEvents
+      components: components
    };
 }
 
@@ -177,7 +176,7 @@ const bundlePlayerTribeData = (playerClient: PlayerClient): PlayerTribeData => {
    return {
       name: playerClient.tribe.name,
       id: playerClient.tribe.id,
-      tribeType: playerClient.tribe.type,
+      tribeType: playerClient.tribe.tribeType,
       hasTotem: playerClient.tribe.totem !== null,
       numHuts: playerClient.tribe.getNumHuts(),
       tribesmanCap: playerClient.tribe.tribesmanCap,
@@ -198,7 +197,7 @@ const bundleEnemyTribesData = (playerClient: PlayerClient): ReadonlyArray<EnemyT
       enemyTribesData.push({
          name: tribe.name,
          id: tribe.id,
-         tribeType: tribe.type
+         tribeType: tribe.tribeType
       });
    }
    return enemyTribesData;
@@ -259,6 +258,7 @@ export function createGameDataPacket(playerClient: PlayerClient): GameDataPacket
    const visibleTribes = getVisibleTribes(extendedVisibleChunkBounds);
    
    const gameDataPacket: GameDataPacket = {
+      simulationIsPaused: !SERVER.isSimulating,
       entityDataArray: bundleEntityDataArray(player, playerClient.tribe, extendedVisibleChunkBounds),
       inventory: bundlePlayerInventoryData(player),
       visibleHits: playerClient.visibleHits,
@@ -279,6 +279,7 @@ export function createGameDataPacket(playerClient: PlayerClient): GameDataPacket
       pickedUpItem: playerClient.pickedUpItem,
       hotbarCrossbowLoadProgressRecord: bundleHotbarCrossbowLoadProgressRecord(player),
       titleOffer: player !== null ? PlayerComponentArray.getComponent(player.id).titleOffer : null,
+      tickEvents: playerClient.entityTickEvents,
       // @Cleanup: Copy and paste
       visiblePathfindingNodeOccupances: (playerClient.gameDataOptions & GameDataPacketOptions.sendVisiblePathfindingNodeOccupances) ? getVisiblePathfindingNodeOccupances(extendedVisibleChunkBounds) : [],
       visibleSafetyNodes: (playerClient.gameDataOptions & GameDataPacketOptions.sendVisibleSafetyNodes) ? getVisibleSafetyNodesData(visibleTribes, extendedVisibleChunkBounds) : [],

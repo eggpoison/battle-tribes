@@ -1,6 +1,8 @@
 import { ServerComponentType, SpikesComponentData } from "webgl-test-shared/dist/components";
 import { ComponentArray } from "./ComponentArray";
 
+export interface SpikesComponentParams {}
+
 export class SpikesComponent {
    public isCovered = false;
 }

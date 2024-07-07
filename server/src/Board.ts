@@ -12,24 +12,22 @@ import generateTerrain from "./world-generation/terrain-generation";
 import { ComponentArrays } from "./components/ComponentArray";
 import { InventoryUseComponentArray, tickInventoryUseComponent } from "./components/InventoryUseComponent";
 import { tickPlayer } from "./entities/tribes/player";
-import Entity from "./Entity";
 import { HealthComponentArray, tickHealthComponent } from "./components/HealthComponent";
 import { tickBerryBush } from "./entities/resources/berry-bush";
 import { tickIceShard } from "./entities/projectiles/ice-shard";
-import { tickCow } from "./entities/mobs/cow";
-import { tickKrumblid } from "./entities/mobs/krumblid";
+import { onCowDeath, tickCow } from "./entities/mobs/cow";
+import { onKrumblidDeath, tickKrumblid } from "./entities/mobs/krumblid";
 import { ItemComponentArray, tickItemComponent } from "./components/ItemComponent";
-import { tickTribeWorker } from "./entities/tribes/tribe-worker";
+import { onTribeWorkerDeath, tickTribeWorker } from "./entities/tribes/tribe-worker";
 import { tickTombstone } from "./entities/tombstone";
 import { tickZombie } from "./entities/mobs/zombie";
 import { tickSlimewisp } from "./entities/mobs/slimewisp";
 import { tickSlime } from "./entities/mobs/slime";
-import { tickArrowProjectile } from "./entities/projectiles/wooden-arrow";
-import { tickYeti } from "./entities/mobs/yeti";
+import { onYetiDeath, tickYeti } from "./entities/mobs/yeti";
 import { tickSnowball } from "./entities/snowball";
-import { tickFish } from "./entities/mobs/fish";
+import { onFishDeath, tickFish } from "./entities/mobs/fish";
 import { tickStatusEffectComponents } from "./components/StatusEffectComponent";
-import { tickIceSpikes } from "./entities/resources/ice-spikes";
+import { onIceSpikesDeath, tickIceSpikes } from "./entities/resources/ice-spikes";
 import { tickItemEntity } from "./entities/item-entity";
 import { tickFrozenYeti } from "./entities/mobs/frozen-yeti";
 import { tickRockSpikeProjectile } from "./entities/projectiles/rock-spike";
@@ -37,8 +35,8 @@ import { AIHelperComponentArray, tickAIHelperComponent } from "./components/AIHe
 import {  tickCampfire } from "./entities/structures/cooking-entities/campfire";
 import {  tickFurnace } from "./entities/structures/cooking-entities/furnace";
 import { tickSpearProjectile } from "./entities/projectiles/spear-projectile";
-import { tickTribeWarrior } from "./entities/tribes/tribe-warrior";
-import { tickSlimeSpit } from "./entities/projectiles/slime-spit";
+import { onTribeWarriorDeath, tickTribeWarrior } from "./entities/tribes/tribe-warrior";
+import { onSlimeSpitDeath, tickSlimeSpit } from "./entities/projectiles/slime-spit";
 import { tickSpitPoison } from "./entities/projectiles/spit-poison";
 import { DoorComponentArray, tickDoorComponent } from "./components/DoorComponent";
 import { onBattleaxeProjectileRemove, tickBattleaxeProjectile } from "./entities/projectiles/battleaxe-projectile";
@@ -59,13 +57,21 @@ import { PlantComponentArray, tickPlantComponent } from "./components/PlantCompo
 import { FenceGateComponentArray, tickFenceGateComponent } from "./components/FenceGateComponent";
 import { PlanterBoxComponentArray, tickPlanterBoxComponent } from "./components/PlanterBoxComponent";
 import { Hitbox, hitboxIsCircular } from "webgl-test-shared/dist/hitboxes/hitboxes";
+import { TransformComponentArray } from "./components/TransformComponent";
+import { onCactusDeath } from "./entities/resources/cactus";
+import { onTreeDeath } from "./entities/resources/tree";
 
 const START_TIME = 6;
 
 interface CollisionPair {
-   readonly entity1: Entity;
-   readonly entity2: Entity;
+   readonly entity1: EntityID;
+   readonly entity2: EntityID;
    readonly collisionNum: number;
+}
+
+interface EntityJoinInfo {
+   readonly id: number;
+   readonly entityType: EntityType;
 }
 
 abstract class Board {
@@ -74,9 +80,8 @@ abstract class Board {
    /** The time of day the server is currently in (from 0 to 23) */
    public static time = START_TIME;
 
-   public static entities = new Array<Entity>();
-
-   public static entityRecord: Partial<Record<number, Entity>> = {};
+   public static entities = new Array<EntityID>();
+   public static entityTypes: Partial<Record<EntityID, EntityType>> = {};
 
    public static tiles: Array<Tile>;
    public static chunks = new Array<Chunk>();
@@ -87,8 +92,8 @@ abstract class Board {
 
    private static tileUpdateCoordinates: Set<number>;
 
-   private static entityJoinBuffer = new Array<Entity>();
-   private static entityRemoveBuffer = new Array<Entity>();
+   private static entityJoinBuffer = new Array<EntityJoinInfo>();
+   private static entityRemoveBuffer = new Array<EntityID>();
 
    public static tribes = new Array<Tribe>();
 
@@ -153,20 +158,25 @@ abstract class Board {
       }
    }
 
-   public static tentativelyGetEntity(entityID: EntityID): Entity | null {
-      let entity: Entity | null | undefined = this.entityRecord[entityID];
-      if (typeof entity === "undefined") {
-         entity = null;
-      }
-      return entity;
+   public static getEntityType(entityID: EntityID): EntityType | undefined {
+      return this.entityTypes[entityID];
    }
 
+   public static validateEntity(entityID: EntityID): EntityID | 0 {
+      return typeof this.entityTypes[entityID] !== "undefined" ? entityID : 0;
+   }
+
+   public static hasEntity(entityID: EntityID): boolean {
+      return typeof this.entityTypes[entityID] !== "undefined";
+   }
+
+   // @Cleanup: remove
    public static reset(): void {
       this.time = START_TIME;
       this.ticks = 0;
       this.chunks = [];
       this.entities = [];
-      this.entityRecord = {};
+      this.entityTypes = {};
       this.entityJoinBuffer = [];
       this.entityRemoveBuffer = [];
       this.tribes = [];
@@ -239,8 +249,38 @@ abstract class Board {
       tickTribes();
    }
 
-   public static entityIsFlaggedForDestruction(entity: Entity): boolean {
+   public static entityIsFlaggedForDestruction(entity: EntityID): boolean {
       return this.entityRemoveBuffer.indexOf(entity) !== -1;
+   }
+
+   public static destroyEntity(entity: EntityID): void {
+      // @Temporary
+      const entityType = this.getEntityType(entity);
+      if (typeof entityType === "undefined") {
+         throw new Error("Tried to remove an entity before it was added to the board.");
+      }
+      
+      // Don't try to remove if already being removed
+      if (Board.entityIsFlaggedForDestruction(entity)) {
+         return;
+      }
+
+      Board.addEntityToRemoveBuffer(entity);
+      Board.removeEntityFromJoinBuffer(entity);
+
+      // @Cleanup: do these functions actually need to be called here? why not in the proper remove flagged function?
+      switch (entityType) {
+         case EntityType.cow: onCowDeath(entity); break;
+         case EntityType.tree: onTreeDeath(entity); break;
+         case EntityType.krumblid: onKrumblidDeath(entity); break;
+         case EntityType.iceSpikes: onIceSpikesDeath(entity); break;
+         case EntityType.cactus: onCactusDeath(entity); break;
+         case EntityType.tribeWorker: onTribeWorkerDeath(entity); break;
+         case EntityType.tribeWarrior: onTribeWarriorDeath(entity); break;
+         case EntityType.yeti: onYetiDeath(entity); break;
+         case EntityType.fish: onFishDeath(entity); break;
+         case EntityType.slimeSpit: onSlimeSpitDeath(entity); break;
+      }
    }
 
    /** Removes game objects flagged for deletion */
@@ -291,13 +331,13 @@ abstract class Board {
          }
       }
 
-      this.entityRemoveBuffer = new Array<Entity>();
+      this.entityRemoveBuffer = [];
    }
 
    public static updateEntities(): void {
       if (Board.ticks % 3 === 0) {
          for (let i = 0; i < AIHelperComponentArray.components.length; i++) {
-            const entity = AIHelperComponentArray.getEntity(i);
+            const entity = AIHelperComponentArray.getEntityFromArrayIdx(i);
             tickAIHelperComponent(entity);
          }
       }
@@ -306,7 +346,8 @@ abstract class Board {
       for (let i = 0; i < this.entities.length; i++) {
          const entity = this.entities[i];
 
-         switch (entity.type) {
+         // @Hack
+         switch (Board.getEntityType(entity)) {
             case EntityType.player: tickPlayer(entity); break;
             case EntityType.tribeWorker: tickTribeWorker(entity); break;
             case EntityType.tribeWarrior: tickTribeWarrior(entity); break;
@@ -318,7 +359,6 @@ abstract class Board {
             case EntityType.zombie: tickZombie(entity); break;
             case EntityType.slimewisp: tickSlimewisp(entity); break;
             case EntityType.slime: tickSlime(entity); break;
-            case EntityType.woodenArrowProjectile: tickArrowProjectile(entity); break;
             case EntityType.yeti: tickYeti(entity); break;
             case EntityType.snowball: tickSnowball(entity); break;
             case EntityType.fish: tickFish(entity); break;
@@ -339,7 +379,9 @@ abstract class Board {
             case EntityType.slingTurret: tickSlingTurret(entity); break;
          }
 
-         entity.ageTicks++;
+         // @Hack: should be in tick transform component
+         const transformComponent = TransformComponentArray.getComponent(entity);
+         transformComponent.ageTicks++;
       }
 
       for (let i = 0; i < InventoryUseComponentArray.components.length; i++) {
@@ -363,7 +405,7 @@ abstract class Board {
       }
 
       for (let i = 0; i < FenceGateComponentArray.components.length; i++) {
-         const entity = FenceGateComponentArray.getEntity(i);
+         const entity = FenceGateComponentArray.getEntityFromArrayIdx(i);
          tickFenceGateComponent(entity);
       }
 
@@ -375,22 +417,22 @@ abstract class Board {
       tickStatusEffectComponents();
 
       for (let i = 0; i < DoorComponentArray.components.length; i++) {
-         const door = DoorComponentArray.getEntity(i);
+         const door = DoorComponentArray.getEntityFromArrayIdx(i);
          tickDoorComponent(door);
       }
 
       for (let i = 0; i < TunnelComponentArray.components.length; i++) {
-         const tunnel = TunnelComponentArray.getEntity(i);
+         const tunnel = TunnelComponentArray.getEntityFromArrayIdx(i);
          tickTunnelComponent(tunnel);
       }
 
       for (let i = 0; i < ResearchBenchComponentArray.components.length; i++) {
-         const entity = ResearchBenchComponentArray.getEntity(i);
+         const entity = ResearchBenchComponentArray.getEntityFromArrayIdx(i);
          tickResearchBenchComponent(entity);
       }
 
       for (let i = 0; i < HealingTotemComponentArray.components.length; i++) {
-         const entity = HealingTotemComponentArray.getEntity(i);
+         const entity = HealingTotemComponentArray.getEntityFromArrayIdx(i);
          const healingTotemComponent = HealingTotemComponentArray.components[i];
          tickHealingTotemComponent(entity, healingTotemComponent);
       }
@@ -438,7 +480,7 @@ abstract class Board {
          let isDupe = false;
          for (let j = 0; j < i; j++) {
             const test2 = collisionPairs[j];
-            if (test.entity1.id === test2.entity1.id && test.entity2.id === test2.entity2.id && test.collisionNum === test2.collisionNum) {
+            if (test.entity1 === test2.entity1 && test.entity2 === test2.entity2 && test.collisionNum === test2.collisionNum) {
                isDupe = true;
                break;
             }
@@ -447,18 +489,18 @@ abstract class Board {
             continue;
          }
          
-         const entity1Collisions = globalCollisionData[test.entity1.id];
+         const entity1Collisions = globalCollisionData[test.entity1];
          if (typeof entity1Collisions !== "undefined") {
-            entity1Collisions.push(test.entity2.id);
+            entity1Collisions.push(test.entity2);
          } else {
-            globalCollisionData[test.entity1.id] = [test.entity2.id];
+            globalCollisionData[test.entity1] = [test.entity2];
          }
          
-         const entity2Collisions = globalCollisionData[test.entity2.id];
+         const entity2Collisions = globalCollisionData[test.entity2];
          if (typeof entity2Collisions !== "undefined") {
-            entity2Collisions.push(test.entity1.id);
+            entity2Collisions.push(test.entity1);
          } else {
-            globalCollisionData[test.entity2.id] = [test.entity1.id];
+            globalCollisionData[test.entity2] = [test.entity1];
          }
          
          const entity1HitboxIndex = test.collisionNum & 0xFF;
@@ -499,18 +541,25 @@ abstract class Board {
       return tileUpdates;
    }
 
-   public static addEntityToJoinBuffer(entity: Entity): void {
-      this.entityJoinBuffer.push(entity);
+   public static addEntityToJoinBuffer(entity: EntityID, entityType: EntityType): void {
+      this.entityJoinBuffer.push({
+         id: entity,
+         entityType: entityType
+      });
    }
 
-   public static removeEntityFromJoinBuffer(entity: Entity): void {
-      const idx = this.entityJoinBuffer.indexOf(entity);
-      if (idx !== -1) {
-         this.entityJoinBuffer.splice(idx, 1);
+   public static removeEntityFromJoinBuffer(entity: EntityID): void {
+      for (let i = 0; i < this.entityJoinBuffer.length; i++) {
+         const joinInfo = this.entityJoinBuffer[i];
+
+         if (joinInfo.id === entity) {
+            this.entityJoinBuffer.splice(i, 1);
+            break;
+         }
       }
    }
 
-   public static addEntityToRemoveBuffer(entity: Entity): void {
+   public static addEntityToRemoveBuffer(entity: EntityID): void {
       this.entityRemoveBuffer.push(entity);
    }
 
@@ -522,18 +571,9 @@ abstract class Board {
       }
 
       // Push entities
-      for (const entity of this.entityJoinBuffer) {
-         // Only now add the entity to chunks, as if they are added when the entity is created then the entity will be
-         // accessible but its components won't.
-         entity.updateContainingChunks();
-
-         // @Cleanup
-         if (entityCanBlockPathfinding(entity.type)) {
-            updateEntityPathfindingNodeOccupance(entity);
-         }
-
-         this.entities.push(entity);
-         this.entityRecord[entity.id] = entity;
+      for (const joinInfo of this.entityJoinBuffer) {
+         this.entities.push(joinInfo.id);
+         this.entityTypes[joinInfo.id] = joinInfo.entityType;
       }
 
       // Call on join functions and clear buffers
@@ -553,7 +593,7 @@ abstract class Board {
          componentArray.clearBuffer();
       }
 
-      this.entityJoinBuffer = new Array<Entity>();
+      this.entityJoinBuffer = [];
    }
 
    public static isInBoard(position: Point): boolean {
@@ -568,7 +608,7 @@ abstract class Board {
       const minChunkY = Math.max(Math.min(Math.floor((position.y - 2000) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
       const maxChunkY = Math.max(Math.min(Math.floor((position.y + 2000) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
 
-      const checkedEntities = new Set<Entity>();
+      const checkedEntities = new Set<EntityID>();
       
       for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
          for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
@@ -576,7 +616,8 @@ abstract class Board {
             for (const entity of chunk.entities) {
                if (checkedEntities.has(entity)) continue;
                
-               const distance = position.calculateDistanceBetween(entity.position);
+               const transformComponent = TransformComponentArray.getComponent(entity);
+               const distance = position.calculateDistanceBetween(transformComponent.position);
                if (distance <= minDistance) {
                   minDistance = distance;
                }
@@ -590,7 +631,7 @@ abstract class Board {
    }
 
    // @Cleanup: Shouldn't be in the Board file
-   public static getEntitiesAtPosition(x: number, y: number): Array<Entity> {
+   public static getEntitiesAtPosition(x: number, y: number): Array<EntityID> {
       if (!this.positionIsInBoard(x, y)) {
          throw new Error("Position isn't in the board");
       }
@@ -601,11 +642,12 @@ abstract class Board {
       const chunkX = Math.floor(x / Settings.CHUNK_UNITS);
       const chunkY = Math.floor(y / Settings.CHUNK_UNITS);
 
-      const entities = new Array<Entity>();
+      const entities = new Array<EntityID>();
       
       const chunk = this.getChunk(chunkX, chunkY);
       for (const entity of chunk.entities) {
-         for (const hitbox of entity.hitboxes) {
+         const transformComponent = TransformComponentArray.getComponent(entity);
+         for (const hitbox of transformComponent.hitboxes) {
             if (this.hitboxIsInRange(testPosition, hitbox, 1)) {
                entities.push(entity);
                break;
@@ -641,14 +683,14 @@ abstract class Board {
       return this.getTile(tileX, tileY);
    }
 
-   public static getEntitiesInRange(position: Point, range: number): Array<Entity> {
+   public static getEntitiesInRange(position: Point, range: number): Array<EntityID> {
       const minChunkX = Math.max(Math.min(Math.floor((position.x - range) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
       const maxChunkX = Math.max(Math.min(Math.floor((position.x + range) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
       const minChunkY = Math.max(Math.min(Math.floor((position.y - range) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
       const maxChunkY = Math.max(Math.min(Math.floor((position.y + range) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
 
-      const checkedEntities = new Set<Entity>();
-      const entities = new Array<Entity>();
+      const checkedEntities = new Set<EntityID>();
+      const entities = new Array<EntityID>();
       
       for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
          for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
@@ -656,7 +698,8 @@ abstract class Board {
             for (const entity of chunk.entities) {
                if (checkedEntities.has(entity)) continue;
                
-               const distance = position.calculateDistanceBetween(entity.position);
+               const transformComponent = TransformComponentArray.getComponent(entity);
+               const distance = position.calculateDistanceBetween(transformComponent.position);
                if (distance <= range) {
                   entities.push(entity);
                }

@@ -1,8 +1,18 @@
 import { ServerComponentType, SlimeComponentData } from "webgl-test-shared/dist/components";
-import { SlimeSize } from "webgl-test-shared/dist/entities";
-import { SLIME_MERGE_TIME, SPIT_CHARGE_TIME_TICKS, SPIT_COOLDOWN_TICKS, SlimeEntityAnger } from "../entities/mobs/slime";
+import { EntityID, SlimeSize } from "webgl-test-shared/dist/entities";
+import { SLIME_MERGE_TIME, SLIME_MERGE_WEIGHTS, SLIME_RADII, SLIME_VISION_RANGES, SPIT_CHARGE_TIME_TICKS, SPIT_COOLDOWN_TICKS, SlimeEntityAnger } from "../entities/mobs/slime";
 import Board from "../Board";
 import { ComponentArray } from "./ComponentArray";
+import { CircularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
+import { ComponentConfig } from "../components";
+
+export interface SlimeComponentParams {
+   size: SlimeSize;
+   mergeWeight: number;
+   orbSizes: Array<SlimeSize>;
+}
+
+const MAX_HEALTH: ReadonlyArray<number> = [10, 20, 35];
 
 export class SlimeComponent {
    public readonly size: SlimeSize;
@@ -20,20 +30,33 @@ export class SlimeComponent {
 
    public orbSizes: Array<SlimeSize>;
 
-   constructor(size: SlimeSize, mergeWeight: number, orbSizes: Array<SlimeSize>) {
-      this.size = size;
-      this.mergeWeight = mergeWeight;
-      this.orbSizes = orbSizes;
+   constructor(params: SlimeComponentParams) {
+      this.size = params.size;
+      this.mergeWeight = params.mergeWeight;
+      this.orbSizes = params.orbSizes;
       this.lastMergeTicks = Board.ticks;
    }
 }
 
 export const SlimeComponentArray = new ComponentArray<ServerComponentType.slime, SlimeComponent>(true, {
+   onInitialise: onInitialise,
    serialise: serialise
 });
 
-function serialise(entityID: number): SlimeComponentData {
-   const slimeComponent = SlimeComponentArray.getComponent(entityID);
+function onInitialise(config: ComponentConfig<ServerComponentType.transform | ServerComponentType.health | ServerComponentType.aiHelper | ServerComponentType.slime>): void {
+   const size = config[ServerComponentType.slime].size;
+
+   const hitbox = config[ServerComponentType.transform].hitboxes[0] as CircularHitbox;
+   hitbox.mass = 1 + size * 0.5;
+   hitbox.radius = SLIME_RADII[size];
+
+   config[ServerComponentType.health].maxHealth = MAX_HEALTH[size];
+   config[ServerComponentType.aiHelper].visionRange = SLIME_VISION_RANGES[size];
+   config[ServerComponentType.slime].mergeWeight = SLIME_MERGE_WEIGHTS[size];
+}
+
+function serialise(entity: EntityID): SlimeComponentData {
+   const slimeComponent = SlimeComponentArray.getComponent(entity);
 
    let anger = -1;
    if (slimeComponent.angeredEntities.length > 0) {

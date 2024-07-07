@@ -1,5 +1,5 @@
 import { TribesmanAIType } from "webgl-test-shared/dist/components";
-import { EntityType, LimbAction } from "webgl-test-shared/dist/entities";
+import { EntityID, EntityType, LimbAction } from "webgl-test-shared/dist/entities";
 import { Settings, PathfindingSettings } from "webgl-test-shared/dist/settings";
 import { TribeType } from "webgl-test-shared/dist/tribes";
 import { Point, distance } from "webgl-test-shared/dist/utils";
@@ -19,6 +19,7 @@ import { calculateAttackEffectiveness } from "webgl-test-shared/dist/entity-dama
 import { clearTribesmanPath, getBestToolItemSlot, getTribesmanAttackOffset, getTribesmanAttackRadius, getTribesmanDesiredAttackRange, getTribesmanRadius, getTribesmanSlowAcceleration, pathfindToPosition, pathToEntityExists } from "./tribesman-ai-utils";
 import { attemptToRepairBuildings } from "./tribesman-structures";
 import { InventoryName, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, BowItemInfo } from "webgl-test-shared/dist/items/items";
+import { TransformComponentArray } from "../../../components/TransformComponent";
 
 const enum Vars {
    BOW_LINE_OF_SIGHT_WAIT_TIME = 0.5 * Settings.TPS,
@@ -34,7 +35,7 @@ const EXTRA_BOW_COOLDOWNS: Partial<Record<EntityType, number>> = {
    [EntityType.tribeWarrior]: Math.floor(0.1 * Settings.TPS)
 };
 
-const doMeleeAttack = (tribesman: Entity): void => {
+const doMeleeAttack = (tribesman: EntityID): void => {
    // @Speed: Do the check for if the item is on cooldown before doing the expensive radial attack calculations
 
    // Find the attack target
@@ -43,13 +44,13 @@ const doMeleeAttack = (tribesman: Entity): void => {
 
    // Register the hit
    if (target !== null) {
-      const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman.id);
+      const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman);
       const hotbarUseInfo = getInventoryUseInfo(inventoryUseComponent, InventoryName.hotbar);
       const didSucceed = attemptAttack(tribesman, target, hotbarUseInfo.selectedItemSlot, InventoryName.hotbar);
 
       if (!didSucceed) {
          // Use offhand
-         const tribeComponent = TribeComponentArray.getComponent(tribesman.id);
+         const tribeComponent = TribeComponentArray.getComponent(tribesman);
          if (tribeComponent.tribe.tribeType === TribeType.barbarians) {
             const offhandUseInfo = getInventoryUseInfo(inventoryUseComponent, InventoryName.offhand);
             attemptAttack(tribesman, target, offhandUseInfo.selectedItemSlot, InventoryName.offhand);
@@ -58,8 +59,8 @@ const doMeleeAttack = (tribesman: Entity): void => {
    }
 }
 
-const getMostDamagingItemSlot = (tribesman: Entity, huntedEntity: Entity): number => {
-   const inventoryComponent = InventoryComponentArray.getComponent(tribesman.id);
+const getMostDamagingItemSlot = (tribesman: EntityID, huntedEntity: EntityID): number => {
+   const inventoryComponent = InventoryComponentArray.getComponent(tribesman);
    const hotbarInventory = getInventory(inventoryComponent, InventoryName.hotbar);
 
    // @Incomplete: Account for status effects
@@ -76,7 +77,7 @@ const getMostDamagingItemSlot = (tribesman: Entity, huntedEntity: Entity): numbe
          continue;
       }
 
-      const attackEffectiveness = calculateAttackEffectiveness(item, huntedEntity.type);
+      const attackEffectiveness = calculateAttackEffectiveness(item, Board.getEntityType(huntedEntity)!);
       
       const attackCooldown = getItemAttackCooldown(item);
       const damage = calculateItemDamage(tribesman, item, attackEffectiveness);
@@ -91,12 +92,14 @@ const getMostDamagingItemSlot = (tribesman: Entity, huntedEntity: Entity): numbe
    return bestItemSlot;
 }
 
-const getNearbyEmbrasureUsePoints = (tribesman: Entity): ReadonlyArray<Point> => {
+const getNearbyEmbrasureUsePoints = (tribesman: EntityID): ReadonlyArray<Point> => {
+   const transformComponent = TransformComponentArray.getComponent(tribesman);
+   
    // Add 30 to the range to account for the fact that use points are disconnected from the embrasure positions
-   const minChunkX = Math.max(Math.floor((tribesman.position.x - (Vars.EMBRASURE_USE_RADIUS + 30)) / Settings.CHUNK_UNITS), 0);
-   const maxChunkX = Math.min(Math.floor((tribesman.position.x + (Vars.EMBRASURE_USE_RADIUS + 30)) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1);
-   const minChunkY = Math.max(Math.floor((tribesman.position.y - (Vars.EMBRASURE_USE_RADIUS + 30)) / Settings.CHUNK_UNITS), 0);
-   const maxChunkY = Math.min(Math.floor((tribesman.position.y + (Vars.EMBRASURE_USE_RADIUS + 30)) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1);
+   const minChunkX = Math.max(Math.floor((transformComponent.position.x - (Vars.EMBRASURE_USE_RADIUS + 30)) / Settings.CHUNK_UNITS), 0);
+   const maxChunkX = Math.min(Math.floor((transformComponent.position.x + (Vars.EMBRASURE_USE_RADIUS + 30)) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1);
+   const minChunkY = Math.max(Math.floor((transformComponent.position.y - (Vars.EMBRASURE_USE_RADIUS + 30)) / Settings.CHUNK_UNITS), 0);
+   const maxChunkY = Math.min(Math.floor((transformComponent.position.y + (Vars.EMBRASURE_USE_RADIUS + 30)) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1);
 
    const usePoints = new Array<Point>();
    for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
@@ -104,18 +107,18 @@ const getNearbyEmbrasureUsePoints = (tribesman: Entity): ReadonlyArray<Point> =>
          const chunk = Board.getChunk(chunkX, chunkY);
          for (let i = 0; i < chunk.entities.length; i++) {
             const entity = chunk.entities[i];
-            if (entity.type !== EntityType.embrasure) {
+            if (Board.getEntityType(entity) !== EntityType.embrasure) {
                continue;
             }
 
-            const usePointX = entity.position.x - 22 * Math.sin(entity.rotation);
-            const usePointY = entity.position.y - 22 * Math.cos(entity.rotation);
+            const entityTransformComponent = TransformComponentArray.getComponent(entity);
 
-            if (distance(tribesman.position.x, tribesman.position.y, usePointX, usePointY) > Vars.EMBRASURE_USE_RADIUS) {
-               continue;
+            const usePointX = entityTransformComponent.position.x - 22 * Math.sin(entityTransformComponent.rotation);
+            const usePointY = entityTransformComponent.position.y - 22 * Math.cos(entityTransformComponent.rotation);
+
+            if (distance(transformComponent.position.x, transformComponent.position.y, usePointX, usePointY) <= Vars.EMBRASURE_USE_RADIUS) {
+               usePoints.push(new Point(usePointX, usePointY));
             }
-
-            usePoints.push(new Point(usePointX, usePointY));
          }
       }
    }
@@ -123,13 +126,15 @@ const getNearbyEmbrasureUsePoints = (tribesman: Entity): ReadonlyArray<Point> =>
    return usePoints;
 }
 
-const getClosestEmbrasureUsePoint = (tribesman: Entity, usePoints: ReadonlyArray<Point>): Point => {
+const getClosestEmbrasureUsePoint = (tribesman: EntityID, usePoints: ReadonlyArray<Point>): Point => {
+   const transformComponent = TransformComponentArray.getComponent(tribesman);
+
    let minDist = Number.MAX_SAFE_INTEGER;
    let closestPoint!: Point;
    for (let i = 0; i < usePoints.length; i++) {
       const point = usePoints[i];
 
-      const dist = tribesman.position.calculateDistanceBetween(point);
+      const dist = transformComponent.position.calculateDistanceBetween(point);
       if (dist < minDist) {
          minDist = dist;
          closestPoint = point;
@@ -139,16 +144,19 @@ const getClosestEmbrasureUsePoint = (tribesman: Entity, usePoints: ReadonlyArray
    return closestPoint;
 }
 
-export function huntEntity(tribesman: Entity, huntedEntity: Entity, isAggressive: boolean): void {
+export function huntEntity(tribesman: EntityID, huntedEntity: EntityID, isAggressive: boolean): void {
    // @Cleanup: Refactor to not be so big
    
    // @Incomplete: Only accounts for hotbar
 
-   const inventoryComponent = InventoryComponentArray.getComponent(tribesman.id);
+   const transformComponent = TransformComponentArray.getComponent(tribesman);
+   const inventoryComponent = InventoryComponentArray.getComponent(tribesman);
+
+   const huntedEntityTransformComponent = TransformComponentArray.getComponent(huntedEntity);
    
    const mostDamagingItemSlot = getMostDamagingItemSlot(tribesman, huntedEntity);
 
-   const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman.id);
+   const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman);
    const hotbarUseInfo = getInventoryUseInfo(inventoryUseComponent, InventoryName.hotbar);
    
    // Select the item slot
@@ -161,27 +169,27 @@ export function huntEntity(tribesman: Entity, huntedEntity: Entity, isAggressive
 
       // Throw spears if there is multiple
       if (weaponCategory === "spear" && selectedItem.count > 1) {
-         const physicsComponent = PhysicsComponentArray.getComponent(tribesman.id);
+         const physicsComponent = PhysicsComponentArray.getComponent(tribesman);
 
          // Rotate to face the target
-         const direction = tribesman.position.calculateAngleBetween(huntedEntity.position);
-         if (direction !== tribesman.rotation) {
+         const direction = transformComponent.position.calculateAngleBetween(huntedEntityTransformComponent.position);
+         if (direction !== transformComponent.rotation) {
             physicsComponent.turnSpeed = TRIBESMAN_TURN_SPEED;
             physicsComponent.targetRotation = direction;
          }
 
-         const distance = getDistanceFromPointToEntity(tribesman.position, huntedEntity) - getTribesmanRadius(tribesman);
+         const distance = getDistanceFromPointToEntity(transformComponent.position, huntedEntity) - getTribesmanRadius(tribesman);
          if (distance > 250) {
             // Move closer
-            physicsComponent.acceleration.x = getTribesmanSlowAcceleration(tribesman.id) * Math.sin(direction);
-            physicsComponent.acceleration.y = getTribesmanSlowAcceleration(tribesman.id) * Math.cos(direction);
+            physicsComponent.acceleration.x = getTribesmanSlowAcceleration(tribesman) * Math.sin(direction);
+            physicsComponent.acceleration.y = getTribesmanSlowAcceleration(tribesman) * Math.cos(direction);
          } else if (distance > 150) {
             stopEntity(physicsComponent);
          } else {
             // Backpedal away from the entity if too close
             const backwards = direction + Math.PI;
-            physicsComponent.acceleration.x = getTribesmanSlowAcceleration(tribesman.id) * Math.sin(backwards);
-            physicsComponent.acceleration.y = getTribesmanSlowAcceleration(tribesman.id) * Math.cos(backwards);
+            physicsComponent.acceleration.x = getTribesmanSlowAcceleration(tribesman) * Math.sin(backwards);
+            physicsComponent.acceleration.y = getTribesmanSlowAcceleration(tribesman) * Math.cos(backwards);
          }
 
          if (hotbarUseInfo.action !== LimbAction.chargeSpear) {
@@ -198,17 +206,17 @@ export function huntEntity(tribesman: Entity, huntedEntity: Entity, isAggressive
             hotbarUseInfo.action = LimbAction.chargeSpear;
          }
 
-         const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman.id);
+         const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman);
          tribesmanComponent.currentAIType = TribesmanAIType.attacking;
          return;
       }
       
       // Don't do a melee attack if using a bow, instead charge the bow
       if (weaponCategory === "bow") {
-         const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman.id);
+         const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman);
          tribesmanComponent.currentAIType = TribesmanAIType.attacking;
 
-         const tribeComponent = TribeComponentArray.getComponent(tribesman.id);
+         const tribeComponent = TribeComponentArray.getComponent(tribesman);
          
          const isInLineOfSight = entityIsInLineOfSight(tribesman, huntedEntity, tribeComponent.tribe.pathfindingGroupID);
          if (isInLineOfSight) {
@@ -216,8 +224,9 @@ export function huntEntity(tribesman: Entity, huntedEntity: Entity, isAggressive
          }
          
          if (isInLineOfSight || (Board.ticks - tribesmanComponent.lastEnemyLineOfSightTicks) <= Vars.BOW_LINE_OF_SIGHT_WAIT_TIME) {
-            const physicsComponent = PhysicsComponentArray.getComponent(tribesman.id);
-            const distance = getDistanceFromPointToEntity(tribesman.position, huntedEntity) - getTribesmanRadius(tribesman);
+            const physicsComponent = PhysicsComponentArray.getComponent(tribesman);
+
+            const distance = getDistanceFromPointToEntity(transformComponent.position, huntedEntity) - getTribesmanRadius(tribesman);
             
             // If there are any nearby embrasure use points, move to them
             const nearbyEmbrasureUsePoints = getNearbyEmbrasureUsePoints(tribesman);
@@ -225,18 +234,18 @@ export function huntEntity(tribesman: Entity, huntedEntity: Entity, isAggressive
                // Move to the closest one
                const targetUsePoint = getClosestEmbrasureUsePoint(tribesman, nearbyEmbrasureUsePoints);
                
-               const moveDirection = tribesman.position.calculateAngleBetween(targetUsePoint);
-               physicsComponent.acceleration.x = getTribesmanSlowAcceleration(tribesman.id) * Math.sin(moveDirection);
-               physicsComponent.acceleration.y = getTribesmanSlowAcceleration(tribesman.id) * Math.cos(moveDirection);
+               const moveDirection = transformComponent.position.calculateAngleBetween(targetUsePoint);
+               physicsComponent.acceleration.x = getTribesmanSlowAcceleration(tribesman) * Math.sin(moveDirection);
+               physicsComponent.acceleration.y = getTribesmanSlowAcceleration(tribesman) * Math.cos(moveDirection);
             } else if (willStopAtDesiredDistance(physicsComponent, Vars.DESIRED_RANGED_ATTACK_DISTANCE - 20, distance)) {
                // If the tribesman will stop too close to the target, move back a bit
-               physicsComponent.acceleration.x = getTribesmanSlowAcceleration(tribesman.id) * Math.sin(tribesman.rotation + Math.PI);
-               physicsComponent.acceleration.y = getTribesmanSlowAcceleration(tribesman.id) * Math.cos(tribesman.rotation + Math.PI);
+               physicsComponent.acceleration.x = getTribesmanSlowAcceleration(tribesman) * Math.sin(transformComponent.rotation + Math.PI);
+               physicsComponent.acceleration.y = getTribesmanSlowAcceleration(tribesman) * Math.cos(transformComponent.rotation + Math.PI);
             } else {
                stopEntity(physicsComponent);
             }
 
-            const targetRotation = tribesman.position.calculateAngleBetween(huntedEntity.position);
+            const targetRotation = transformComponent.position.calculateAngleBetween(huntedEntityTransformComponent.position);
 
             physicsComponent.targetRotation = targetRotation;
             physicsComponent.turnSpeed = TRIBESMAN_TURN_SPEED;
@@ -246,25 +255,25 @@ export function huntEntity(tribesman: Entity, huntedEntity: Entity, isAggressive
                const itemInfo = ITEM_INFO_RECORD[selectedItem.type] as BowItemInfo;
                hotbarUseInfo.lastBowChargeTicks = Board.ticks;
                hotbarUseInfo.bowCooldownTicks = itemInfo.shotCooldownTicks;
-               tribesmanComponent.extraBowCooldownTicks = EXTRA_BOW_COOLDOWNS[tribesman.type]!;
+               tribesmanComponent.extraBowCooldownTicks = EXTRA_BOW_COOLDOWNS[Board.getEntityType(tribesman)!]!;
             } else if (hotbarUseInfo.bowCooldownTicks === 0 && tribesmanComponent.extraBowCooldownTicks > 0) {
                tribesmanComponent.extraBowCooldownTicks--;
             } else {
                // If the bow is fully charged, fire it
                useItem(tribesman, selectedItem, InventoryName.hotbar, hotbarUseInfo.selectedItemSlot);
-               tribesmanComponent.extraBowCooldownTicks = EXTRA_BOW_COOLDOWNS[tribesman.type]!;
+               tribesmanComponent.extraBowCooldownTicks = EXTRA_BOW_COOLDOWNS[Board.getEntityType(tribesman)!]!;
             }
             hotbarUseInfo.action = LimbAction.chargeBow;
 
             clearTribesmanPath(tribesman);
          } else {
-            pathfindToPosition(tribesman, huntedEntity.position.x, huntedEntity.position.y, huntedEntity.id, TribesmanPathType.default, Math.floor(100 / PathfindingSettings.NODE_SEPARATION), PathfindFailureDefault.returnClosest);
+            pathfindToPosition(tribesman, huntedEntityTransformComponent.position.x, huntedEntityTransformComponent.position.y, huntedEntity, TribesmanPathType.default, Math.floor(100 / PathfindingSettings.NODE_SEPARATION), PathfindFailureDefault.returnClosest);
 
             // If reached goal, turn towards the enemy
             if (tribesmanComponent.path.length === 0) {
-               const targetRotation = tribesman.position.calculateAngleBetween(huntedEntity.position);
+               const targetRotation = transformComponent.position.calculateAngleBetween(huntedEntityTransformComponent.position);
 
-               const physicsComponent = PhysicsComponentArray.getComponent(tribesman.id);
+               const physicsComponent = PhysicsComponentArray.getComponent(tribesman);
                physicsComponent.targetRotation = targetRotation;
                physicsComponent.turnSpeed = TRIBESMAN_TURN_SPEED;
             }
@@ -277,26 +286,26 @@ export function huntEntity(tribesman: Entity, huntedEntity: Entity, isAggressive
 
       if (isAggressive && weaponCategory === "battleaxe") {
          // Use the battleaxe if the entity is in the use range
-         const distance = getDistanceFromPointToEntity(tribesman.position, huntedEntity) - getTribesmanRadius(tribesman);
+         const distance = getDistanceFromPointToEntity(transformComponent.position, huntedEntity) - getTribesmanRadius(tribesman);
          if (distance >= Vars.BATTLEAXE_MIN_USE_RANGE && distance <= Vars.BATTLEAXE_MAX_USE_RANGE && selectedItem.id !== hotbarUseInfo.thrownBattleaxeItemID) {
             if (hotbarUseInfo.action !== LimbAction.chargeBattleaxe) {
                hotbarUseInfo.lastBattleaxeChargeTicks = Board.ticks;
             }
 
-            const targetDirection = tribesman.position.calculateAngleBetween(huntedEntity.position);
+            const targetDirection = transformComponent.position.calculateAngleBetween(huntedEntityTransformComponent.position);
 
-            const physicsComponent = PhysicsComponentArray.getComponent(tribesman.id);
+            const physicsComponent = PhysicsComponentArray.getComponent(tribesman);
             physicsComponent.targetRotation = targetDirection;
             physicsComponent.turnSpeed = TRIBESMAN_TURN_SPEED;
 
             if (distance > Vars.BATTLEAXE_IDEAL_USE_RANGE + 10) {
                // Move closer
-               const acceleration = getTribesmanSlowAcceleration(tribesman.id);
+               const acceleration = getTribesmanSlowAcceleration(tribesman);
                physicsComponent.acceleration.x = acceleration * Math.sin(targetDirection);
                physicsComponent.acceleration.y = acceleration * Math.cos(targetDirection);
             } else if (distance < Vars.BATTLEAXE_IDEAL_USE_RANGE - 10) {
                // Move futher away
-               const acceleration = getTribesmanSlowAcceleration(tribesman.id);
+               const acceleration = getTribesmanSlowAcceleration(tribesman);
                const moveDirection = targetDirection + Math.PI;
                physicsComponent.acceleration.x = acceleration * Math.sin(moveDirection);
                physicsComponent.acceleration.y = acceleration * Math.cos(moveDirection);
@@ -314,7 +323,7 @@ export function huntEntity(tribesman: Entity, huntedEntity: Entity, isAggressive
                setLimbActions(inventoryUseComponent, LimbAction.chargeBattleaxe);
             }
             
-            const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman.id);
+            const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman);
             tribesmanComponent.currentAIType = TribesmanAIType.attacking;
 
             clearTribesmanPath(tribesman);
@@ -329,8 +338,8 @@ export function huntEntity(tribesman: Entity, huntedEntity: Entity, isAggressive
    if (hammerItemSlot !== null) {
       // If there isn't a path to the entity, try to repair buildings
       // @Incomplete: This will cause a delay after the tribesman finishes repairing the building.
-      if (tribesman.ageTicks % (Settings.TPS / 2) === 0) {
-         const tribeComponent = TribeComponentArray.getComponent(tribesman.id);
+      if (transformComponent.ageTicks % (Settings.TPS / 2) === 0) {
+         const tribeComponent = TribeComponentArray.getComponent(tribesman);
          const pathExists = pathToEntityExists(tribesman, huntedEntity, tribeComponent.tribe, getTribesmanRadius(tribesman));
          if (!pathExists) {
             const isRepairing = attemptToRepairBuildings(tribesman, hammerItemSlot);
@@ -339,7 +348,7 @@ export function huntEntity(tribesman: Entity, huntedEntity: Entity, isAggressive
             }
          }
       } else {
-         const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman.id);
+         const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman);
          if (tribesmanComponent.currentAIType === TribesmanAIType.repairing) {
             const isRepairing = attemptToRepairBuildings(tribesman, hammerItemSlot);
             if (isRepairing) {

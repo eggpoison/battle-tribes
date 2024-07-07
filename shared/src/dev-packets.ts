@@ -4,7 +4,6 @@ import { InventoryName, ItemSlots } from "./items/items";
 
 const SUMMON_DATA_RECORD = {
    [ServerComponentType.aiHelper]: {},
-   [ServerComponentType.arrow]: {},
    [ServerComponentType.berryBush]: {},
    [ServerComponentType.blueprint]: {},
    [ServerComponentType.boulder]: {},
@@ -61,6 +60,8 @@ const SUMMON_DATA_RECORD = {
    [ServerComponentType.fence]: {},
    [ServerComponentType.fenceGate]: {},
    [ServerComponentType.craftingStation]: {},
+   [ServerComponentType.transform]: {},
+   [ServerComponentType.projectile]: {}
 } satisfies Record<ServerComponentType, object>;
 
 export type ComponentSummonData<T extends ServerComponentType> = typeof SUMMON_DATA_RECORD[T];

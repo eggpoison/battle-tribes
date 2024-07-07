@@ -4,6 +4,8 @@ import { FrozenYetiComponentData, ServerComponentType } from "webgl-test-shared/
 import { FROZEN_YETI_STOMP_COOLDOWN, FrozenYetiRockSpikeInfo, FrozenYetiTargetInfo } from "../entities/mobs/frozen-yeti";
 import { ComponentArray } from "./ComponentArray";
 
+export interface FrozenYetiComponentParams {}
+
 export class FrozenYetiComponent {
    public readonly attackingEntities: Partial<Record<number, FrozenYetiTargetInfo>> = {};
 

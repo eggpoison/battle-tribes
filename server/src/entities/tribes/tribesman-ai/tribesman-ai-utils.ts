@@ -1,6 +1,5 @@
 import { PathfindingSettings, Settings } from "webgl-test-shared/dist/settings";
 import Board from "../../../Board";
-import Entity from "../../../Entity";
 import Tribe from "../../../Tribe";
 import { getEntitiesInRange, stopEntity, willStopAtDesiredDistance } from "../../../ai-shared";
 import { PhysicsComponentArray } from "../../../components/PhysicsComponent";
@@ -8,7 +7,7 @@ import { EntityRelationship, TribeComponentArray, getEntityRelationship } from "
 import { TribesmanPathType, TribesmanAIComponentArray } from "../../../components/TribesmanAIComponent";
 import { entityCanBlockPathfinding, getEntityPathfindingGroupID, PathfindFailureDefault, getEntityFootprint, PathfindOptions, pathfind, smoothPath, positionIsAccessible, replacePathfindingNodeGroupID, entityHasReachedNode, getAngleToNode, getClosestPathfindNode, getDistanceToNode, pathIsClear } from "../../../pathfinding";
 import { TRIBESMAN_TURN_SPEED } from "./tribesman-ai";
-import { EntityType } from "webgl-test-shared/dist/entities";
+import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
 import { distance, angle } from "webgl-test-shared/dist/utils";
 import { doorIsClosed, toggleDoor } from "../../../components/DoorComponent";
 import { InventoryUseComponentArray, getInventoryUseInfo } from "../../../components/InventoryUseComponent";
@@ -19,6 +18,7 @@ import { SpikesComponentArray } from "../../../components/SpikesComponent";
 import { TRIBE_WARRIOR_VISION_RANGE } from "../tribe-warrior";
 import { TRIBE_WORKER_VISION_RANGE, TRIBE_WORKER_RADIUS } from "../tribe-worker";
 import { InventoryName, Inventory, ItemInfoRecord, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, ToolItemInfo } from "webgl-test-shared/dist/items/items";
+import { TransformComponentArray } from "../../../components/TransformComponent";
 
 const enum Vars {
    BLOCKING_TRIBESMAN_DISTANCE = 80,
@@ -28,8 +28,8 @@ const enum Vars {
    SLOW_ACCELERATION = 200
 }
 
-export function getTribesmanVisionRange(tribesman: Entity): number {
-   if (tribesman.type === EntityType.tribeWorker) {
+export function getTribesmanVisionRange(tribesman: EntityID): number {
+   if (Board.getEntityType(tribesman)! === EntityType.tribeWorker) {
       return TRIBE_WORKER_VISION_RANGE;
    } else {
       return TRIBE_WARRIOR_VISION_RANGE;
@@ -37,8 +37,8 @@ export function getTribesmanVisionRange(tribesman: Entity): number {
 }
 
 /** How far away from the entity the attack is done */
-export function getTribesmanAttackOffset(tribesman: Entity): number {
-   if (tribesman.type === EntityType.tribeWorker) {
+export function getTribesmanAttackOffset(tribesman: EntityID): number {
+   if (Board.getEntityType(tribesman)! === EntityType.tribeWorker) {
       return 40;
    } else {
       return 50;
@@ -46,8 +46,8 @@ export function getTribesmanAttackOffset(tribesman: Entity): number {
 }
 
 /** Max distance from the attack position that the attack will be registered from */
-export function getTribesmanAttackRadius(tribesman: Entity): number {
-   if (tribesman.type === EntityType.tribeWorker) {
+export function getTribesmanAttackRadius(tribesman: EntityID): number {
+   if (Board.getEntityType(tribesman)! === EntityType.tribeWorker) {
       return 40;
    } else {
       return 50;
@@ -55,16 +55,16 @@ export function getTribesmanAttackRadius(tribesman: Entity): number {
 }
 
 /** How far the tribesman wants to be away from their target when attacking */
-export function getTribesmanDesiredAttackRange(tribesman: Entity): number {
-   if (tribesman.type === EntityType.tribeWorker) {
+export function getTribesmanDesiredAttackRange(tribesman: EntityID): number {
+   if (Board.getEntityType(tribesman)! === EntityType.tribeWorker) {
       return 45;
    } else {
       return 55;
    }
 }
 
-export function getTribesmanRadius(tribesman: Entity): number {
-   if (tribesman.type === EntityType.tribeWorker) {
+export function getTribesmanRadius(tribesman: EntityID): number {
+   if (Board.getEntityType(tribesman)! === EntityType.tribeWorker) {
       return TRIBE_WORKER_RADIUS;
    } else {
       return 32;
@@ -118,10 +118,11 @@ export function getTribesmanAcceleration(tribesmanID: number): number {
    return Vars.ACCELERATION * getAccelerationMultiplier(tribesmanID);
 }
 
-export function positionIsSafeForTribesman(tribesman: Entity, x: number, y: number): boolean {
+export function positionIsSafeForTribesman(tribesman: EntityID, x: number, y: number): boolean {
    const visibleEntitiesFromItem = getEntitiesInRange(x, y, getTribesmanVisionRange(tribesman));
+
    for (const entity of visibleEntitiesFromItem) {
-      const relationship = getEntityRelationship(tribesman.id, entity);
+      const relationship = getEntityRelationship(tribesman, entity);
       if (relationship >= EntityRelationship.hostileMob) {
          return false;
       }
@@ -130,8 +131,8 @@ export function positionIsSafeForTribesman(tribesman: Entity, x: number, y: numb
    return true;
 }
 
-const shouldRecalculatePath = (tribesman: Entity, goalX: number, goalY: number, goalRadiusNodes: number): boolean => {
-   const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman.id); // @Speed
+const shouldRecalculatePath = (tribesman: EntityID, goalX: number, goalY: number, goalRadiusNodes: number): boolean => {
+   const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman); // @Speed
 
    if (tribesmanComponent.path.length === 0) {
       // @Incomplete: Should we do this?
@@ -142,8 +143,9 @@ const shouldRecalculatePath = (tribesman: Entity, goalX: number, goalY: number, 
    } else {
       // @Speed
       // Recalculate if the tribesman isn't making any progress
-      const physicsComponent = PhysicsComponentArray.getComponent(tribesman.id);
-      if (tribesmanComponent.rawPath.length > 2 && tribesman.ageTicks % Settings.TPS === 0 && physicsComponent.velocity.lengthSquared() < 10 * 10) {
+      const transformComponent = TransformComponentArray.getComponent(tribesman);
+      const physicsComponent = PhysicsComponentArray.getComponent(tribesman);
+      if (tribesmanComponent.rawPath.length > 2 && transformComponent.ageTicks % Settings.TPS === 0 && physicsComponent.velocity.lengthSquared() < 10 * 10) {
          return true;
       }
 
@@ -158,19 +160,21 @@ const shouldRecalculatePath = (tribesman: Entity, goalX: number, goalY: number, 
    }
 }
 
-const openDoors = (tribesman: Entity, tribe: Tribe): void => {
+const openDoors = (tribesman: EntityID, tribe: Tribe): void => {
+   const transformComponent = TransformComponentArray.getComponent(tribesman);
+   
    const offsetMagnitude = getTribesmanRadius(tribesman) + 20;
-   const checkX = tribesman.position.x + offsetMagnitude * Math.sin(tribesman.rotation);
-   const checkY = tribesman.position.y + offsetMagnitude * Math.cos(tribesman.rotation);
+   const checkX = transformComponent.position.x + offsetMagnitude * Math.sin(transformComponent.rotation);
+   const checkY = transformComponent.position.y + offsetMagnitude * Math.cos(transformComponent.rotation);
    const entitiesInFront = getEntitiesInRange(checkX, checkY, 40);
    for (let i = 0; i < entitiesInFront.length; i++) {
       const entity = entitiesInFront[i];
-      if (entity.type !== EntityType.door) {
+      if (Board.getEntityType(entity) !== EntityType.door) {
          continue;
       }
 
       // Only open friendly doors
-      const tribeComponent = TribeComponentArray.getComponent(entity.id);
+      const tribeComponent = TribeComponentArray.getComponent(entity);
       if (tribeComponent.tribe !== tribe) {
          continue;
       }
@@ -178,19 +182,20 @@ const openDoors = (tribesman: Entity, tribe: Tribe): void => {
       if (doorIsClosed(entity)) {
          toggleDoor(entity);
 
-         const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman.id);
+         const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman);
          const useInfo = getInventoryUseInfo(inventoryUseComponent, InventoryName.hotbar);
          useInfo.lastAttackTicks = Board.ticks;
       }
    }
 }
 
-const continueCurrentPath = (tribesman: Entity, goalX: number, goalY: number): boolean => {
-   const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman.id); // @Speed
-   const tribeComponent = TribeComponentArray.getComponent(tribesman.id); // @Speed
+const continueCurrentPath = (tribesman: EntityID, goalX: number, goalY: number): boolean => {
+   const transformComponent = TransformComponentArray.getComponent(tribesman);
+   const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman); // @Speed
+   const tribeComponent = TribeComponentArray.getComponent(tribesman); // @Speed
    const path = tribesmanComponent.path;
 
-   if (entityHasReachedNode(tribesman, path[0])) {
+   if (entityHasReachedNode(transformComponent, path[0])) {
       // If passed the next node, remove it
       path.shift();
    }
@@ -199,12 +204,12 @@ const continueCurrentPath = (tribesman: Entity, goalX: number, goalY: number): b
       const footprint = getEntityFootprint(getTribesmanRadius(tribesman));
 
       // If the path is clear, just move in a direct line to the goal
-      if (pathIsClear(tribesman.position.x, tribesman.position.y, goalX, goalY, tribeComponent.tribe.pathfindingGroupID, footprint)) {
-         const targetDirection = angle(goalX - tribesman.position.x, goalY - tribesman.position.y);
+      if (pathIsClear(transformComponent.position.x, transformComponent.position.y, goalX, goalY, tribeComponent.tribe.pathfindingGroupID, footprint)) {
+         const targetDirection = angle(goalX - transformComponent.position.x, goalY - transformComponent.position.y);
 
-         const physicsComponent = PhysicsComponentArray.getComponent(tribesman.id);
+         const physicsComponent = PhysicsComponentArray.getComponent(tribesman);
          
-         const acceleration = getTribesmanAcceleration(tribesman.id);
+         const acceleration = getTribesmanAcceleration(tribesman);
          physicsComponent.acceleration.x = acceleration * Math.sin(targetDirection);
          physicsComponent.acceleration.y = acceleration * Math.cos(targetDirection);
 
@@ -219,26 +224,26 @@ const continueCurrentPath = (tribesman: Entity, goalX: number, goalY: number): b
          // Otherwise, move to the next node
 
          const nextNode = path[0];
-         const targetDirection = getAngleToNode(tribesman, nextNode);
+         const targetDirection = getAngleToNode(transformComponent, nextNode);
 
-         const physicsComponent = PhysicsComponentArray.getComponent(tribesman.id);
+         const physicsComponent = PhysicsComponentArray.getComponent(tribesman);
          physicsComponent.targetRotation = targetDirection;
          physicsComponent.turnSpeed = TRIBESMAN_TURN_SPEED;
 
          // If the tribesman is close to the next node, slow down as to not overshoot it
-         const distFromNode = getDistanceToNode(tribesman, nextNode);
+         const distFromNode = getDistanceToNode(transformComponent, nextNode);
          if (willStopAtDesiredDistance(physicsComponent, -2, distFromNode)) {
             stopEntity(physicsComponent);
          } else {
-            const acceleration = getTribesmanAcceleration(tribesman.id);
-            physicsComponent.acceleration.x = acceleration * Math.sin(tribesman.rotation);
-            physicsComponent.acceleration.y = acceleration * Math.cos(tribesman.rotation);
+            const acceleration = getTribesmanAcceleration(tribesman);
+            physicsComponent.acceleration.x = acceleration * Math.sin(transformComponent.rotation);
+            physicsComponent.acceleration.y = acceleration * Math.cos(transformComponent.rotation);
          }
       }
 
       // @Speed: only do this if we know the path has a door in it
       // Open any doors in their way
-      if (tribesman.ageTicks % ((Settings.TPS / 6) | 0) === 0) {
+      if (transformComponent.ageTicks % ((Settings.TPS / 6) | 0) === 0) {
          openDoors(tribesman, tribeComponent.tribe);
       }
 
@@ -247,7 +252,7 @@ const continueCurrentPath = (tribesman: Entity, goalX: number, goalY: number): b
       return true;
    } else {
       // Reached path!
-      const physicsComponent = PhysicsComponentArray.getComponent(tribesman.id);
+      const physicsComponent = PhysicsComponentArray.getComponent(tribesman);
       stopEntity(physicsComponent);
 
       tribesmanComponent.rawPath = [];
@@ -257,18 +262,20 @@ const continueCurrentPath = (tribesman: Entity, goalX: number, goalY: number): b
    }
 }
 
-export function clearTribesmanPath(tribesman: Entity): void {
-   const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman.id); // @Speed
+export function clearTribesmanPath(tribesman: EntityID): void {
+   const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman); // @Speed
    tribesmanComponent.isPathfinding = false;
 }
 
-const getPotentialBlockingTribesmen = (tribesman: Entity): ReadonlyArray<Entity> => {
-   const minChunkX = Math.max(Math.min(Math.floor((tribesman.position.x - Vars.BLOCKING_TRIBESMAN_DISTANCE/2) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
-   const maxChunkX = Math.max(Math.min(Math.floor((tribesman.position.x + Vars.BLOCKING_TRIBESMAN_DISTANCE/2) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
-   const minChunkY = Math.max(Math.min(Math.floor((tribesman.position.y - Vars.BLOCKING_TRIBESMAN_DISTANCE/2) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
-   const maxChunkY = Math.max(Math.min(Math.floor((tribesman.position.y + Vars.BLOCKING_TRIBESMAN_DISTANCE/2) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
+const getPotentialBlockingTribesmen = (tribesman: EntityID): ReadonlyArray<EntityID> => {
+   const transformComponent = TransformComponentArray.getComponent(tribesman);
    
-   const blockingTribesmen = new Array<Entity>();
+   const minChunkX = Math.max(Math.min(Math.floor((transformComponent.position.x - Vars.BLOCKING_TRIBESMAN_DISTANCE/2) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
+   const maxChunkX = Math.max(Math.min(Math.floor((transformComponent.position.x + Vars.BLOCKING_TRIBESMAN_DISTANCE/2) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
+   const minChunkY = Math.max(Math.min(Math.floor((transformComponent.position.y - Vars.BLOCKING_TRIBESMAN_DISTANCE/2) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
+   const maxChunkY = Math.max(Math.min(Math.floor((transformComponent.position.y + Vars.BLOCKING_TRIBESMAN_DISTANCE/2) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
+   
+   const blockingTribesmen = new Array<EntityID>();
    for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
       for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
          const chunk = Board.getChunk(chunkX, chunkY);
@@ -279,7 +286,7 @@ const getPotentialBlockingTribesmen = (tribesman: Entity): ReadonlyArray<Entity>
                continue;
             }
 
-            const relationship = getEntityRelationship(tribesman.id, entity);
+            const relationship = getEntityRelationship(tribesman, entity);
             if (relationship === EntityRelationship.friendly) {
                blockingTribesmen.push(entity);
             }
@@ -289,18 +296,17 @@ const getPotentialBlockingTribesmen = (tribesman: Entity): ReadonlyArray<Entity>
    return blockingTribesmen;
 }
 
-const convertEntityPathfindingGroupID = (entity: Entity, oldGroupID: number, newGroupID: number): void => {
-   for (const node of entity.occupiedPathfindingNodes) {
+const convertEntityPathfindingGroupID = (entity: EntityID, oldGroupID: number, newGroupID: number): void => {
+   const transformComponent = TransformComponentArray.getComponent(entity);
+   for (const node of transformComponent.occupiedPathfindingNodes) {
       replacePathfindingNodeGroupID(node, oldGroupID, newGroupID);
    }
 }
 
-const preparePathfinding = (targetEntityID: number, tribe: Tribe, blockingTribesman: ReadonlyArray<Entity>): void => {
+const preparePathfinding = (targetEntity: EntityID, tribe: Tribe, blockingTribesman: ReadonlyArray<EntityID>): void => {
    // Ignore the target
-   if (targetEntityID !== 0) {
-      // @Speed: Some places which call this have access to the entity already
-      const targetEntity = Board.entityRecord[targetEntityID]!;
-      if (entityCanBlockPathfinding(targetEntity.type)) {
+   if (targetEntity !== 0) {
+      if (entityCanBlockPathfinding(Board.getEntityType(targetEntity)!)) {
          const oldGroupID = getEntityPathfindingGroupID(targetEntity);
          convertEntityPathfindingGroupID(targetEntity, oldGroupID, tribe.pathfindingGroupID);
       }
@@ -313,12 +319,11 @@ const preparePathfinding = (targetEntityID: number, tribe: Tribe, blockingTribes
    }
 }
 
-const cleanupPathfinding = (targetEntityID: number, tribe: Tribe, blockingTribesman: ReadonlyArray<Entity>): void => {
+const cleanupPathfinding = (targetEntity: EntityID | 0, tribe: Tribe, blockingTribesman: ReadonlyArray<EntityID>): void => {
    // Reset the target
-   if (targetEntityID !== 0) {
+   if (targetEntity !== 0) {
       // @Speed: Some places which call this have access to the entity already
-      const targetEntity = Board.entityRecord[targetEntityID]!;
-      if (entityCanBlockPathfinding(targetEntity.type)) {
+      if (entityCanBlockPathfinding(Board.getEntityType(targetEntity)!)) {
          const oldGroupID = getEntityPathfindingGroupID(targetEntity);
          convertEntityPathfindingGroupID(targetEntity, tribe.pathfindingGroupID, oldGroupID);
       }
@@ -331,14 +336,15 @@ const cleanupPathfinding = (targetEntityID: number, tribe: Tribe, blockingTribes
    }
 }
 
-export function pathfindToPosition(tribesman: Entity, goalX: number, goalY: number, targetEntityID: number, pathType: TribesmanPathType, goalRadius: number, failureDefault: PathfindFailureDefault): boolean {
-   const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman.id); // @Speed
+export function pathfindToPosition(tribesman: EntityID, goalX: number, goalY: number, targetEntityID: number, pathType: TribesmanPathType, goalRadius: number, failureDefault: PathfindFailureDefault): boolean {
+   const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman); // @Speed
    
    tribesmanComponent.pathType = pathType;
 
    // If moving to a new target node, recalculate path
    if (shouldRecalculatePath(tribesman, goalX, goalY, goalRadius)) {
-      const tribeComponent = TribeComponentArray.getComponent(tribesman.id); // @Speed
+      const transformComponent = TransformComponentArray.getComponent(tribesman); // @Speed
+      const tribeComponent = TribeComponentArray.getComponent(tribesman); // @Speed
       
       const footprint = getEntityFootprint(getTribesmanRadius(tribesman));
       const tribe = tribeComponent.tribe;
@@ -351,12 +357,12 @@ export function pathfindToPosition(tribesman: Entity, goalX: number, goalY: numb
       const blockingTribesmen = getPotentialBlockingTribesmen(tribesman);
       preparePathfinding(targetEntityID, tribe, blockingTribesmen);
       
-      const rawPath = pathfind(tribesman.position.x, tribesman.position.y, goalX, goalY, tribe.pathfindingGroupID, footprint, options);
+      const rawPath = pathfind(transformComponent.position.x, transformComponent.position.y, goalX, goalY, tribe.pathfindingGroupID, footprint, options);
 
       // @Incomplete: figure out why this happens
       // If the pathfinding failed, don't do anything
       if (rawPath.length === 0) {
-         const physicsComponent = PhysicsComponentArray.getComponent(tribesman.id);
+         const physicsComponent = PhysicsComponentArray.getComponent(tribesman);
          stopEntity(physicsComponent);
          
          cleanupPathfinding(targetEntityID, tribe, blockingTribesmen);
@@ -374,28 +380,32 @@ export function pathfindToPosition(tribesman: Entity, goalX: number, goalY: numb
 
 // @Cleanup: these two functions do much the same thing. which one to keep?
 
-export function entityIsAccessible(tribesman: Entity, entity: Entity, tribe: Tribe, goalRadius: number): boolean {
+export function entityIsAccessible(tribesman: EntityID, entity: EntityID, tribe: Tribe, goalRadius: number): boolean {
    const blockingTribesmen = getPotentialBlockingTribesmen(tribesman);
-   preparePathfinding(entity.id, tribe, blockingTribesmen);
+   preparePathfinding(entity, tribe, blockingTribesmen);
 
-   const isAccessible = positionIsAccessible(entity.position.x, entity.position.y, tribe.pathfindingGroupID, getEntityFootprint(goalRadius));
+   const transformComponent = TransformComponentArray.getComponent(entity);
+   const isAccessible = positionIsAccessible(transformComponent.position.x, transformComponent.position.y, tribe.pathfindingGroupID, getEntityFootprint(goalRadius));
 
-   cleanupPathfinding(entity.id, tribe, blockingTribesmen);
+   cleanupPathfinding(entity, tribe, blockingTribesmen);
 
    return isAccessible;
 }
 
-export function pathToEntityExists(tribesman: Entity, huntedEntity: Entity, tribe: Tribe, goalRadius: number): boolean {
+export function pathToEntityExists(tribesman: EntityID, huntedEntity: EntityID, tribe: Tribe, goalRadius: number): boolean {
+   const transformComponent = TransformComponentArray.getComponent(tribesman);
+   const huntedEntityTransformComponent = TransformComponentArray.getComponent(huntedEntity);
+   
    const blockingTribesmen = getPotentialBlockingTribesmen(tribesman);
-   preparePathfinding(huntedEntity.id, tribe, blockingTribesmen);
+   preparePathfinding(huntedEntity, tribe, blockingTribesmen);
    
    const options: PathfindOptions = {
       goalRadius: Math.floor(goalRadius / PathfindingSettings.NODE_SEPARATION),
       failureDefault: PathfindFailureDefault.returnEmpty
    };
-   const path = pathfind(tribesman.position.x, tribesman.position.y, huntedEntity.position.x, huntedEntity.position.y, tribe.pathfindingGroupID, getEntityFootprint(getTribesmanRadius(tribesman)), options);
+   const path = pathfind(transformComponent.position.x, transformComponent.position.y, huntedEntityTransformComponent.position.x, huntedEntityTransformComponent.position.y, tribe.pathfindingGroupID, getEntityFootprint(getTribesmanRadius(tribesman)), options);
 
-   cleanupPathfinding(huntedEntity.id, tribe, blockingTribesmen);
+   cleanupPathfinding(huntedEntity, tribe, blockingTribesmen);
 
    return path.length > 0;
 }

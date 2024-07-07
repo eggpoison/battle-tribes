@@ -1,12 +1,12 @@
 import { PlanterBoxPlant, TribesmanAIType } from "webgl-test-shared/dist/components";
-import { EntityType, LimbAction } from "webgl-test-shared/dist/entities";
+import { EntityID, EntityType, LimbAction } from "webgl-test-shared/dist/entities";
 import { Settings, PathfindingSettings } from "webgl-test-shared/dist/settings";
 import { getTechByID } from "webgl-test-shared/dist/techs";
 import { getAngleDiff } from "webgl-test-shared/dist/utils";
 import Entity from "../../../Entity";
 import { willStopAtDesiredDistance, stopEntity, getDistanceFromPointToEntity, getClosestAccessibleEntity } from "../../../ai-shared";
 import { HealthComponentArray } from "../../../components/HealthComponent";
-import { getInventory, addItemToInventory, consumeItemFromSlot, inventoryComponentCanAffordRecipe, inventoryIsFull, getItemTypeSlot, InventoryComponentArray, hasSpaceForRecipe } from "../../../components/InventoryComponent";
+import { getInventory, addItemToInventory, consumeItemFromSlot, inventoryIsFull, getItemTypeSlot, InventoryComponentArray, hasSpaceForRecipe } from "../../../components/InventoryComponent";
 import { TribesmanAIComponentArray, TribesmanPathType, itemThrowIsOnCooldown } from "../../../components/TribesmanAIComponent";
 import { tickTribeMember, calculateRadialAttackTargets, repairBuilding, throwItem, } from "../tribe-member";
 import { InventoryUseComponentArray, getInventoryUseInfo, setLimbActions } from "../../../components/InventoryUseComponent";
@@ -22,7 +22,7 @@ import { huntEntity } from "./tribesman-combat-ai";
 import { PlanterBoxComponentArray, placePlantInPlanterBox } from "../../../components/PlanterBoxComponent";
 import { HutComponentArray } from "../../../components/HutComponent";
 import { PlayerComponentArray } from "../../../components/PlayerComponent";
-import { gatherResources, getGatherTarget, tribesmanGetItemPickupTarget, tribesmanGoPickupItemEntity } from "./tribesman-resource-gathering";
+import { gatherResources } from "./tribesman-resource-gathering";
 import { goResearchTech } from "./tribesman-researching";
 import { clearTribesmanPath, getBestToolItemSlot, getTribesmanAcceleration, getTribesmanAttackOffset, getTribesmanAttackRadius, getTribesmanDesiredAttackRange, getTribesmanRadius, getTribesmanSlowAcceleration, pathfindToPosition } from "./tribesman-ai-utils";
 import { attemptToRepairBuildings, goPlaceBuilding, goUpgradeBuilding } from "./tribesman-structures";
@@ -31,7 +31,7 @@ import { getGiftableItemSlot, getRecruitTarget } from "./tribesman-recruiting";
 import { escapeFromEnemies, tribesmanShouldEscape } from "./tribesman-escaping";
 import { continueTribesmanHealing, getHealingItemUseInfo } from "./tribesman-healing";
 import { tribesmanDoPatrol } from "./tribesman-patrolling";
-import { ItemType, InventoryName, Item, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, ConsumableItemInfo, Inventory, ItemTypeString } from "webgl-test-shared/dist/items/items";
+import { ItemType, InventoryName, Item, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, ConsumableItemInfo, Inventory } from "webgl-test-shared/dist/items/items";
 
 // @Cleanup: Move all of this to the TribesmanComponent file
 
@@ -53,13 +53,13 @@ export const PLANT_TO_SEED_RECORD: Record<PlanterBoxPlant, ItemType> = {
    [PlanterBoxPlant.iceSpikes]: ItemType.frostcicle
 };
 
-const getCommunicationTargets = (tribesman: Entity): ReadonlyArray<Entity> => {
+const getCommunicationTargets = (tribesman: EntityID): ReadonlyArray<Entity> => {
    const minChunkX = Math.max(Math.floor((tribesman.position.x - TRIBESMAN_COMMUNICATION_RANGE) / Settings.CHUNK_UNITS), 0);
    const maxChunkX = Math.min(Math.floor((tribesman.position.x + TRIBESMAN_COMMUNICATION_RANGE) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1);
    const minChunkY = Math.max(Math.floor((tribesman.position.y - TRIBESMAN_COMMUNICATION_RANGE) / Settings.CHUNK_UNITS), 0);
    const maxChunkY = Math.min(Math.floor((tribesman.position.y + TRIBESMAN_COMMUNICATION_RANGE) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1);
 
-   const tribeComponent = TribeComponentArray.getComponent(tribesman.id);
+   const tribeComponent = TribeComponentArray.getComponent(tribesman);
    
    const communcationTargets = new Array<Entity>();
    for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
@@ -295,13 +295,13 @@ const getSeedItemSlot = (hotbarInventory: Inventory, plantType: PlanterBoxPlant)
    return getItemTypeSlot(hotbarInventory, searchItemType);
 }
 
-export function tickTribesman(tribesman: Entity): void {
+export function tickTribesman(tribesman: EntityID): void {
    // @Cleanup: This is an absolutely massive function
    
    tickTribeMember(tribesman);
 
-   const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman.id);
-   const tribeComponent = TribeComponentArray.getComponent(tribesman.id);
+   const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman);
+   const tribeComponent = TribeComponentArray.getComponent(tribesman);
 
    tribesmanComponent.targetResearchBenchID = 0;
    tribesmanComponent.ticksSinceLastHelpRequest++;
@@ -842,7 +842,7 @@ export function tickTribesman(tribesman: Entity): void {
             continue;
          }
 
-         const plant = Board.entityRecord[planterBoxComponent.plantEntityID];
+         const plant = Board.entityRecord[planterBoxComponent.plantEntity];
          if (typeof plant !== "undefined") {
             continue;
          }

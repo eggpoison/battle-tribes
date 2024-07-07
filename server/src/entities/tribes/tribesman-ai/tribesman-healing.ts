@@ -1,5 +1,5 @@
 import { TribesmanAIType } from "webgl-test-shared/dist/components";
-import { LimbAction } from "webgl-test-shared/dist/entities";
+import { EntityID, LimbAction } from "webgl-test-shared/dist/entities";
 import { stopEntity } from "../../../ai-shared";
 import { InventoryUseComponentArray, getInventoryUseInfo } from "../../../components/InventoryUseComponent";
 import { PhysicsComponentArray } from "../../../components/PhysicsComponent";
@@ -31,7 +31,7 @@ export function getHealingItemUseInfo(tribesmanID: number): HealingItemUseInfo |
    return null;
 }
 
-export function continueTribesmanHealing(tribesmanID: number, healingItemUseInfo: HealingItemUseInfo): void {
+export function continueTribesmanHealing(tribesmanID: EntityID, healingItemUseInfo: HealingItemUseInfo): void {
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesmanID);
    const limbInfo = getInventoryUseInfo(inventoryUseComponent, InventoryName.hotbar);
    limbInfo.selectedItemSlot = healingItemUseInfo.itemSlot;

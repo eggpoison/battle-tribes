@@ -1,4 +1,4 @@
-import { CowSpecies } from "webgl-test-shared/dist/entities";
+import { CowSpecies, EntityID } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import Entity from "../Entity";
 import { randFloat, randInt } from "webgl-test-shared/dist/utils";
@@ -9,6 +9,8 @@ import { COW_GRAZE_TIME_TICKS } from "../entities/mobs/cow";
 import { ComponentArray } from "./ComponentArray";
 import { ItemType } from "webgl-test-shared/dist/items/items";
 import { registerEntityTickEvent } from "../server/player-clients";
+import { TransformComponentArray } from "./TransformComponent";
+import Board from "../Board";
 
 const enum Vars {
    MIN_POOP_PRODUCTION_COOLDOWN = 5 * Settings.TPS,
@@ -17,6 +19,11 @@ const enum Vars {
    MIN_POOP_PRODUCTION_FULLNESS = 0.4,
    BOWEL_EMPTY_TIME_TICKS = 55 * Settings.TPS,
    MAX_BERRY_CHASE_FULLNESS = 0.8
+}
+
+export interface CowComponentParams {
+   readonly species: CowSpecies;
+   readonly grazeCooldownTicks: number;
 }
 
 export class CowComponent {
@@ -32,9 +39,9 @@ export class CowComponent {
    public bowelFullness = 0;
    public poopProductionCooldownTicks = 0;
 
-   constructor(species: CowSpecies, grazeCooldownTicks: number) {
-      this.species = species;
-      this.grazeCooldownTicks = grazeCooldownTicks;
+   constructor(params: CowComponentParams) {
+      this.species = params.species;
+      this.grazeCooldownTicks = params.grazeCooldownTicks;
    }
 }
 
@@ -42,23 +49,24 @@ export const CowComponentArray = new ComponentArray<ServerComponentType.cow, Cow
    serialise: serialise
 });
 
-const poop = (cow: Entity, cowComponent: CowComponent): void => {
+const poop = (cow: EntityID, cowComponent: CowComponent): void => {
    cowComponent.poopProductionCooldownTicks = randInt(Vars.MIN_POOP_PRODUCTION_COOLDOWN, Vars.MAX_POOP_PRODUCTION_COOLDOWN);
    
    // Shit it out
-   const poopPosition = cow.position.offset(randFloat(0, 16), 2 * Math.PI * Math.random());
+   const transformComponent = TransformComponentArray.getComponent(cow);
+   const poopPosition = transformComponent.position.offset(randFloat(0, 16), 2 * Math.PI * Math.random());
    createItemEntity(poopPosition, 2 * Math.PI * Math.random(), ItemType.poop, 1, 0);
 
    // Let it out
    const event: EntityTickEvent<EntityTickEventType.cowFart> = {
-      entityID: cow.id,
+      entityID: cow,
       type: EntityTickEventType.cowFart,
       data: 0
    };
    registerEntityTickEvent(cow, event);
 }
 
-export function updateCowComponent(cow: Entity, cowComponent: CowComponent): void {
+export function updateCowComponent(cow: EntityID, cowComponent: CowComponent): void {
    if (cowComponent.poopProductionCooldownTicks > 0) {
       cowComponent.poopProductionCooldownTicks--;
    } else if (cowComponent.bowelFullness >= Vars.MIN_POOP_PRODUCTION_FULLNESS) {
@@ -75,10 +83,10 @@ export function updateCowComponent(cow: Entity, cowComponent: CowComponent): voi
    }
 }
 
-export function eatBerry(berryItemEntity: Entity, cowComponent: CowComponent): void {
+export function eatBerry(berryItemEntity: EntityID, cowComponent: CowComponent): void {
    cowComponent.bowelFullness += Vars.BERRY_FULLNESS_VALUE;
    
-   berryItemEntity.destroy();
+   Board.destroyEntity(berryItemEntity);
 }
 
 export function wantsToEatBerries(cowComponent: CowComponent): boolean {

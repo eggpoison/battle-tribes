@@ -5,6 +5,14 @@ import Entity from "../Entity";
 import { getDistanceFromPointToEntity, moveEntityToPosition, stopEntity, turnToPosition, willStopAtDesiredDistance } from "../ai-shared";
 import { PhysicsComponentArray } from "./PhysicsComponent";
 import { ComponentArray } from "./ComponentArray";
+import { EntityID } from "webgl-test-shared/dist/entities";
+import { TransformComponentArray } from "./TransformComponent";
+
+export interface FollowAIComponentParams {
+   readonly followCooldownTicks: number;
+   readonly followChancePerSecond: number;
+   readonly followDistance: number;
+}
 
 export class FollowAIComponent {
    /** ID of the followed entity */
@@ -16,10 +24,10 @@ export class FollowAIComponent {
    public readonly followChancePerSecond: number;
    public readonly followDistance: number;
 
-   constructor(followCooldownTicks: number, followChancePerSecond: number, followDistance: number) {
-      this.followCooldownTicks = followCooldownTicks;
-      this.followChancePerSecond = followChancePerSecond;
-      this.followDistance = followDistance;
+   constructor(params: FollowAIComponentParams) {
+      this.followCooldownTicks = params.followCooldownTicks;
+      this.followChancePerSecond = params.followChancePerSecond;
+      this.followDistance = params.followDistance;
    }
 }
 
@@ -27,20 +35,19 @@ export const FollowAIComponentArray = new ComponentArray<ServerComponentType.fol
    serialise: serialise
 });
 
-export function updateFollowAIComponent(entity: Entity, visibleEntities: ReadonlyArray<Entity>, interestDuration: number): void {
-   const followAIComponent = FollowAIComponentArray.getComponent(entity.id);
+export function updateFollowAIComponent(entity: EntityID, visibleEntities: ReadonlyArray<EntityID>, interestDuration: number): void {
+   const followAIComponent = FollowAIComponentArray.getComponent(entity);
 
    if (followAIComponent.followCooldownTicks > 0) {
       followAIComponent.followCooldownTicks--;
    }
 
-   const followTarget = Board.entityRecord[followAIComponent.followTargetID];
-   if (typeof followTarget === "undefined") {
+   if (!Board.hasEntity(followAIComponent.followTargetID)) {
       return;
    }
    
    // Make sure the follow target is still within the vision range
-   if (!visibleEntities.includes(followTarget)) {
+   if (!visibleEntities.includes(followAIComponent.followTargetID)) {
       followAIComponent.followTargetID = 0;
       followAIComponent.interestTimer = 0;
       return;
@@ -52,27 +59,30 @@ export function updateFollowAIComponent(entity: Entity, visibleEntities: Readonl
    }
 }
 
-export function startFollowingEntity(entity: Entity, followedEntity: Entity, acceleration: number, turnSpeed: number, newFollowCooldownTicks: number): void {
-   const followAIComponent = FollowAIComponentArray.getComponent(entity.id);
-   followAIComponent.followTargetID = followedEntity.id;
+export function startFollowingEntity(entity: EntityID, followedEntity: EntityID, acceleration: number, turnSpeed: number, newFollowCooldownTicks: number): void {
+   const followAIComponent = FollowAIComponentArray.getComponent(entity);
+   followAIComponent.followTargetID = followedEntity;
    followAIComponent.followCooldownTicks = newFollowCooldownTicks;
    followAIComponent.interestTimer = 0;
 
-   moveEntityToPosition(entity, followedEntity.position.x, followedEntity.position.y, acceleration, turnSpeed);
+   const followedEntityTransformComponent = TransformComponentArray.getComponent(followedEntity);
+   moveEntityToPosition(entity, followedEntityTransformComponent.position.x, followedEntityTransformComponent.position.y, acceleration, turnSpeed);
 };
 
-export function continueFollowingEntity(entity: Entity, followTarget: Entity, acceleration: number, turnSpeed: number): void {
-   const followAIComponent = FollowAIComponentArray.getComponent(entity.id);
-   const physicsComponent = PhysicsComponentArray.getComponent(entity.id);
+export function continueFollowingEntity(entity: EntityID, followTarget: EntityID, acceleration: number, turnSpeed: number): void {
+   const followAIComponent = FollowAIComponentArray.getComponent(entity);
+   const physicsComponent = PhysicsComponentArray.getComponent(entity);
 
+   const followTargetTransformComponent = TransformComponentArray.getComponent(followTarget);
+   
    // @Incomplete: do getDistanceBetweenEntities
    // @Hack
-   const distance = getDistanceFromPointToEntity(followTarget.position, entity) - 32;
+   const distance = getDistanceFromPointToEntity(followTargetTransformComponent.position, entity) - 32;
    if (willStopAtDesiredDistance(physicsComponent, followAIComponent.followDistance, distance)) {
       stopEntity(physicsComponent);
-      turnToPosition(entity, followTarget.position, turnSpeed);
+      turnToPosition(entity, followTargetTransformComponent.position, turnSpeed);
    } else {
-      moveEntityToPosition(entity, followTarget.position.x, followTarget.position.y, acceleration, turnSpeed);
+      moveEntityToPosition(entity, followTargetTransformComponent.position.x, followTargetTransformComponent.position.y, acceleration, turnSpeed);
    }
 }
 

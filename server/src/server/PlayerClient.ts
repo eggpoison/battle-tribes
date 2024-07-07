@@ -2,6 +2,7 @@ import { VisibleChunkBounds, HitData, PlayerKnockbackData, HealData, ResearchOrb
 import Tribe from "../Tribe";
 import { ISocket } from "./server";
 import { EntityTickEvent } from "webgl-test-shared/dist/entity-events";
+import { EntityID } from "webgl-test-shared/dist/entities";
 
 class PlayerClient {
    public readonly username: string;
@@ -9,7 +10,7 @@ class PlayerClient {
    public readonly tribe: Tribe;
 
    /** ID of the player's entity */
-   public instanceID: number;
+   public instanceID: EntityID;
    public clientIsActive = true;
 
    public visibleChunkBounds: VisibleChunkBounds;

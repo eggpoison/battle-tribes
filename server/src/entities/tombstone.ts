@@ -1,24 +1,27 @@
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
-import { EntityType } from "webgl-test-shared/dist/entities";
+import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { Point, randInt } from "webgl-test-shared/dist/utils";
-import Entity from "../Entity";
-import { HealthComponent, HealthComponentArray } from "../components/HealthComponent";
 import { createItemsOverEntity } from "../entity-shared";
 import Board from "../Board";
 import { TombstoneComponent, TombstoneComponentArray } from "../components/TombstoneComponent";
 import { createZombie } from "./mobs/zombie";
 import TombstoneDeathManager from "../tombstone-deaths";
-import { StatusEffectComponent, StatusEffectComponentArray } from "../components/StatusEffectComponent";
 import { HitboxCollisionType, RectangularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { ItemType } from "webgl-test-shared/dist/items/items";
+import { TransformComponentArray } from "../components/TransformComponent";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ComponentConfig } from "../components";
 
+type ComponentTypes = ServerComponentType.transform
+   | ServerComponentType.health
+   | ServerComponentType.statusEffect
+   | ServerComponentType.tombstone;
+   
 const WIDTH = 48;
 const HEIGHT = 88;
 
-const MAX_HEALTH = 50;
-   
 /** Average number of zombies that are created by the tombstone in a second */
 const ZOMBIE_SPAWN_RATE = 0.05;
 /** Distance the zombies spawn from the tombstone */
@@ -28,20 +31,32 @@ const MAX_SPAWNED_ZOMBIES = 4;
 /** Seconds it takes for a tombstone to spawn a zombie */
 const ZOMBIE_SPAWN_TIME = 3;
 
-export function createTombstone(position: Point, rotation: number): Entity {
-   const tombstone = new Entity(position, rotation, EntityType.tombstone, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
-
-   const hitbox = new RectangularHitbox(1.25, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, WIDTH, HEIGHT, 0);
-   tombstone.addHitbox(hitbox);
-
-   HealthComponentArray.addComponent(tombstone.id, new HealthComponent(MAX_HEALTH));
-   StatusEffectComponentArray.addComponent(tombstone.id, new StatusEffectComponent(StatusEffect.poisoned));
-   TombstoneComponentArray.addComponent(tombstone.id, new TombstoneComponent(randInt(0, 2), TombstoneDeathManager.popDeath()));
-   
-   return tombstone;
+export function createTombstoneConfig(): ComponentConfig<ComponentTypes> {
+   return {
+      [ServerComponentType.transform]: {
+         position: new Point(0, 0),
+         rotation: 0,
+         type: EntityType.tombstone,
+         collisionBit: COLLISION_BITS.default,
+         collisionMask: DEFAULT_COLLISION_MASK,
+         hitboxes: [new RectangularHitbox(1.25, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, WIDTH, HEIGHT, 0)]
+      },
+      [ServerComponentType.health]: {
+         maxHealth: 50
+      },
+      [ServerComponentType.statusEffect]: {
+         statusEffectImmunityBitset: StatusEffect.poisoned
+      },
+      [ServerComponentType.tombstone]: {
+         tombstoneType: randInt(0, 2),
+         deathInfo: TombstoneDeathManager.popDeath()
+      }
+   };
 }
 
-const generateZombieSpawnPosition = (tombstone: Entity): Point => {
+const generateZombieSpawnPosition = (tombstone: EntityID): Point => {
+   const transformComponent = TransformComponentArray.getComponent(tombstone);
+   
    const seenIs = new Array<number>();
    for (;;) {
       let i: number;
@@ -52,8 +67,8 @@ const generateZombieSpawnPosition = (tombstone: Entity): Point => {
       const angleFromTombstone = i * Math.PI / 2;
 
       const offsetMagnitude = ZOMBIE_SPAWN_DISTANCE + (i % 2 === 0 ? 15 : 0);
-      const x = tombstone.position.x + offsetMagnitude * Math.sin(angleFromTombstone);
-      const y = tombstone.position.y + offsetMagnitude * Math.cos(angleFromTombstone);
+      const x = transformComponent.position.x + offsetMagnitude * Math.sin(angleFromTombstone);
+      const y = transformComponent.position.y + offsetMagnitude * Math.cos(angleFromTombstone);
    
       // Make sure the spawn position is valid
       if (x < 0 || x >= Settings.BOARD_UNITS || y < 0 || y >= Settings.BOARD_UNITS) {
@@ -67,31 +82,31 @@ const generateZombieSpawnPosition = (tombstone: Entity): Point => {
    }
 }
 
-const spawnZombie = (tombstone: Entity, tombstoneComponent: TombstoneComponent): void => {
+const spawnZombie = (tombstone: EntityID, tombstoneComponent: TombstoneComponent): void => {
    // Note: tombstone type 0 is the golden tombstone
    const isGolden = tombstoneComponent.tombstoneType === 0 && Math.random() < 0.005;
    
    // Spawn zombie
    const spawnPosition = new Point(tombstoneComponent.zombieSpawnPositionX, tombstoneComponent.zombieSpawnPositionY);
-   createZombie(spawnPosition, 2 * Math.PI * Math.random(), isGolden, tombstone.id);
+   createZombie(spawnPosition, 2 * Math.PI * Math.random(), isGolden, tombstone);
 
    tombstoneComponent.numZombies++;
    tombstoneComponent.isSpawningZombie = false;
 }
 
-export function tickTombstone(tombstone: Entity): void {
+export function tickTombstone(tombstone: EntityID): void {
    // If in the daytime, chance to crumble
    if (Board.time > 6 && Board.time < 18) {
       const dayProgress = (Board.time - 6) / 12;
       const crumbleChance = Math.exp(dayProgress * 12 - 6);
       if (Math.random() < crumbleChance * Settings.I_TPS) {
          // Crumble
-         tombstone.destroy();
+         Board.destroyEntity(tombstone);
          return;
       }
    }
 
-   const tombstoneComponent = TombstoneComponentArray.getComponent(tombstone.id);
+   const tombstoneComponent = TombstoneComponentArray.getComponent(tombstone);
 
    // Start zombie spawn
    if (tombstoneComponent.numZombies < MAX_SPAWNED_ZOMBIES && !tombstoneComponent.isSpawningZombie) {
@@ -115,11 +130,12 @@ export function tickTombstone(tombstone: Entity): void {
    }
 }
 
-export function onTombstoneDeath(tombstone: Entity, attackingEntity: Entity | null): void {
+export function onTombstoneDeath(tombstone: EntityID, attackingEntity: EntityID | null): void {
    if (attackingEntity !== null) {
       createItemsOverEntity(tombstone, ItemType.rock, randInt(2, 3), 40);
 
-      createZombie(tombstone.position.copy(), 2 * Math.PI * Math.random(), false, tombstone.id);
+      const tombstoneTransformComponent = TransformComponentArray.getComponent(tombstone);
+      createZombie(tombstoneTransformComponent.position.copy(), 2 * Math.PI * Math.random(), false, tombstone);
    }
 }
 

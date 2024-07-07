@@ -3,6 +3,13 @@ import { Settings } from "webgl-test-shared/dist/settings";
 import { ComponentArray } from "./ComponentArray";
 import { removeFleshSword } from "../flesh-sword-ai";
 import { ItemType } from "webgl-test-shared/dist/items/items";
+import { EntityID } from "webgl-test-shared/dist/entities";
+
+export interface ItemComponentParams {
+   itemType: ItemType;
+   amount: number;
+   throwingEntity: EntityID | null;
+}
 
 export class ItemComponent {
    readonly itemType: ItemType;
@@ -11,13 +18,17 @@ export class ItemComponent {
    /** Stores which entities are on cooldown to pick up the item, and their remaining cooldowns */
    readonly entityPickupCooldowns: Partial<Record<number, number>> = {};
 
-   /** The ID of the entity which threw the item. 0 if was not thrown by an entity */
-   public readonly throwingEntityID: number;
+   public readonly throwingEntity: EntityID | null;
 
-   constructor(itemType: ItemType, amount: number, throwingEntityID: number) {
-      this.itemType = itemType;
-      this.amount = amount;
-      this.throwingEntityID = throwingEntityID;
+   constructor(params: ItemComponentParams) {
+      this.itemType = params.itemType;
+      this.amount = params.amount;
+      this.throwingEntity = params.throwingEntity;
+
+      if (params.throwingEntity !== null) {
+         // Add a pickup cooldown so the item isn't picked up immediately
+         this.entityPickupCooldowns[params.throwingEntity] = 1;
+      }
    }
 }
 
@@ -26,11 +37,11 @@ export const ItemComponentArray = new ComponentArray<ServerComponentType.item, I
    serialise: serialise
 });
 
-function onRemove(entityID: number): void {
+function onRemove(entity: EntityID): void {
    // Remove flesh sword item entities
-   const itemComponent = ItemComponentArray.getComponent(entityID);
+   const itemComponent = ItemComponentArray.getComponent(entity);
    if (itemComponent.itemType === ItemType.flesh_sword) {
-      removeFleshSword(entityID);
+      removeFleshSword(entity);
    }
 }
 
@@ -44,8 +55,8 @@ export function tickItemComponent(itemComponent: ItemComponent): void {
    }
 }
 
-function serialise(entityID: number): ItemComponentData {
-   const itemComponent = ItemComponentArray.getComponent(entityID);
+function serialise(entity: EntityID): ItemComponentData {
+   const itemComponent = ItemComponentArray.getComponent(entity);
    return {
       componentType: ServerComponentType.item,
       itemType: itemComponent.itemType

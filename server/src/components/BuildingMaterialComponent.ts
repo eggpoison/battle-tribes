@@ -1,11 +1,15 @@
 import { BuildingMaterial, BuildingMaterialComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
 import { ComponentArray } from "./ComponentArray";
 
+export interface BuildingMaterialComponentParams {
+   readonly material: BuildingMaterial;
+}
+
 export class BuildingMaterialComponent {
    public material: BuildingMaterial;
 
-   constructor(material: BuildingMaterial) {
-      this.material = material;
+   constructor(params: BuildingMaterialComponentParams) {
+      this.material = params.material;
    }
 }
 

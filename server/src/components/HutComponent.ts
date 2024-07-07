@@ -1,6 +1,8 @@
 import { HutComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
 import { ComponentArray } from "./ComponentArray";
 
+export interface HutComponentParams {}
+
 export class HutComponent {
    public lastDoorSwingTicks = 0;
 

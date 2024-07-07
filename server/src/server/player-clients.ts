@@ -4,13 +4,13 @@ import { TechID, TechInfo, getTechByID } from "webgl-test-shared/dist/techs";
 import { TribesmanTitle } from "webgl-test-shared/dist/titles";
 import Board from "../Board";
 import { registerCommand } from "../commands";
-import { TribeMemberComponentArray, acceptTitleOffer, forceAddTitle, rejectTitleOffer, removeTitle } from "../components/TribeMemberComponent";
+import { acceptTitleOffer, forceAddTitle, rejectTitleOffer, removeTitle } from "../components/TribeMemberComponent";
 import { modifyBuilding, startChargingBattleaxe, startChargingBow, startChargingSpear, startEating, createPlayer } from "../entities/tribes/player";
 import { throwItem, placeBlueprint, attemptAttack, calculateAttackTarget, calculateBlueprintWorkTarget, calculateRadialAttackTargets, calculateRepairTarget, repairBuilding, getAvailableCraftingStations, useItem } from "../entities/tribes/tribe-member";
 import PlayerClient from "./PlayerClient";
 import { SERVER } from "./server";
 import { createGameDataSyncPacket, createInitialGameDataPacket } from "./game-data-packets";
-import { EntityType, LimbAction } from "webgl-test-shared/dist/entities";
+import { EntityID, EntityType, LimbAction } from "webgl-test-shared/dist/entities";
 import { TRIBE_INFO_RECORD, TribeType } from "webgl-test-shared/dist/tribes";
 import { InventoryUseComponentArray, getInventoryUseInfo } from "../components/InventoryUseComponent";
 import { PhysicsComponentArray } from "../components/PhysicsComponent";
@@ -42,6 +42,7 @@ import { InventoryName, Item, ITEM_TYPE_RECORD, ItemType } from "webgl-test-shar
 import { createFrozenYeti } from "../entities/mobs/frozen-yeti";
 import Tribe from "../Tribe";
 import { EntityTickEvent } from "webgl-test-shared/dist/entity-events";
+import { TransformComponentArray } from "../components/TransformComponent";
 
 // @Cleanup: see if a decorator can be used to cut down on the player entity check copy-n-paste
 
@@ -72,15 +73,12 @@ const getPlayerClientFromInstanceID = (instanceID: number): PlayerClient | null 
 }
 
 // @Cleanup: better to be done by the player component array
-export function getPlayerFromUsername(username: string): Entity | null {
+export function getPlayerFromUsername(username: string): EntityID | null {
    for (let i = 0; i < playerClients.length; i++) {
       const playerClient = playerClients[i];
 
-      if (playerClient.username === username) {
-         const instance = Board.entityRecord[playerClient.instanceID];
-         if (typeof instance !== "undefined") {
-            return instance;
-         }
+      if (playerClient.username === username && Board.hasEntity(playerClient.instanceID)) {
+         return playerClient.instanceID;
       }
    }
 
@@ -97,9 +95,8 @@ const handlePlayerDisconnect = (playerClient: PlayerClient): void => {
    }
 
    // Kill the player
-   const player = Board.entityRecord[playerClient.instanceID];
-   if (typeof player !== "undefined") {
-      player.destroy();
+   if (Board.hasEntity(playerClient.instanceID)) {
+      Board.destroyEntity(playerClient.instanceID);
    }
 }
 
@@ -110,22 +107,22 @@ const sendGameDataSyncPacket = (playerClient: PlayerClient): void => {
 
 // @Cleanup: Messy as fuck
 const processPlayerDataPacket = (playerClient: PlayerClient, playerDataPacket: PlayerDataPacket): void => {
-   const player = Board.entityRecord[playerClient.instanceID];
-   if (typeof player === "undefined") {
+   if (!Board.hasEntity(playerClient.instanceID)) {
       return;
    }
 
-   const inventoryUseComponent = InventoryUseComponentArray.getComponent(player.id);
+   const inventoryUseComponent = InventoryUseComponentArray.getComponent(playerClient.instanceID);
    const hotbarUseInfo = getInventoryUseInfo(inventoryUseComponent, InventoryName.hotbar);
 
-   player.position.x = playerDataPacket.position[0];
-   player.position.y = playerDataPacket.position[1];
-   player.rotation = playerDataPacket.rotation;
+   const transformComponent = TransformComponentArray.getComponent(playerClient.instanceID);
+   transformComponent.position.x = playerDataPacket.position[0];
+   transformComponent.position.y = playerDataPacket.position[1];
+   transformComponent.rotation = playerDataPacket.rotation;
 
    playerClient.visibleChunkBounds = playerDataPacket.visibleChunkBounds;
    playerClient.gameDataOptions = playerDataPacket.gameDataOptions;
    
-   const physicsComponent = PhysicsComponentArray.getComponent(player.id);
+   const physicsComponent = PhysicsComponentArray.getComponent(playerClient.instanceID);
    physicsComponent.hitboxesAreDirty = true;
    
    physicsComponent.velocity.x = playerDataPacket.velocity[0];
@@ -135,37 +132,37 @@ const processPlayerDataPacket = (playerClient: PlayerClient, playerDataPacket: P
    
    hotbarUseInfo.selectedItemSlot = playerDataPacket.selectedItemSlot;
 
-   const playerComponent = PlayerComponentArray.getComponent(player.id);
+   const playerComponent = PlayerComponentArray.getComponent(playerClient.instanceID);
    playerComponent.interactingEntityID = playerDataPacket.interactingEntityID !== null ? playerDataPacket.interactingEntityID : 0;
 
    // @Bug: won't work for using medicine in offhand
    let overrideOffhand = false;
    
    if ((playerDataPacket.mainAction === LimbAction.eat || playerDataPacket.mainAction === LimbAction.useMedicine) && (hotbarUseInfo.action !== LimbAction.eat && hotbarUseInfo.action !== LimbAction.useMedicine)) {
-      overrideOffhand = startEating(player, InventoryName.hotbar);
+      overrideOffhand = startEating(playerClient.instanceID, InventoryName.hotbar);
    } else if (playerDataPacket.mainAction === LimbAction.chargeBow && hotbarUseInfo.action !== LimbAction.chargeBow) {
-      startChargingBow(player, InventoryName.hotbar);
+      startChargingBow(playerClient.instanceID, InventoryName.hotbar);
    } else if (playerDataPacket.mainAction === LimbAction.chargeSpear && hotbarUseInfo.action !== LimbAction.chargeSpear) {
-      startChargingSpear(player, InventoryName.hotbar);
+      startChargingSpear(playerClient.instanceID, InventoryName.hotbar);
    } else if (playerDataPacket.mainAction === LimbAction.chargeBattleaxe && hotbarUseInfo.action !== LimbAction.chargeBattleaxe) {
-      startChargingBattleaxe(player, InventoryName.hotbar);
+      startChargingBattleaxe(playerClient.instanceID, InventoryName.hotbar);
    } else {
       hotbarUseInfo.action = playerDataPacket.mainAction;
    }
 
    if (!overrideOffhand) {
-      const tribeComponent = TribeComponentArray.getComponent(player.id);
+      const tribeComponent = TribeComponentArray.getComponent(playerClient.instanceID);
       if (tribeComponent.tribe.tribeType === TribeType.barbarians) {
          const offhandUseInfo = getInventoryUseInfo(inventoryUseComponent, InventoryName.offhand);
 
          if ((playerDataPacket.offhandAction === LimbAction.eat || playerDataPacket.offhandAction === LimbAction.useMedicine) && (offhandUseInfo.action !== LimbAction.eat && offhandUseInfo.action !== LimbAction.useMedicine)) {
-            startEating(player, InventoryName.offhand);
+            startEating(playerClient.instanceID, InventoryName.offhand);
          } else if (playerDataPacket.offhandAction === LimbAction.chargeBow && offhandUseInfo.action !== LimbAction.chargeBow) {
-            startChargingBow(player, InventoryName.offhand);
+            startChargingBow(playerClient.instanceID, InventoryName.offhand);
          } else if (playerDataPacket.offhandAction === LimbAction.chargeSpear && offhandUseInfo.action !== LimbAction.chargeSpear) {
-            startChargingSpear(player, InventoryName.offhand);
+            startChargingSpear(playerClient.instanceID, InventoryName.offhand);
          } else if (playerDataPacket.offhandAction === LimbAction.chargeBattleaxe && offhandUseInfo.action !== LimbAction.chargeBattleaxe) {
-            startChargingBattleaxe(player, InventoryName.offhand);
+            startChargingBattleaxe(playerClient.instanceID, InventoryName.offhand);
          } else {
             offhandUseInfo.action = playerDataPacket.offhandAction;
          }
@@ -204,7 +201,8 @@ const respawnPlayer = (playerClient: PlayerClient): void => {
    // Calculate spawn position
    let spawnPosition: Point;
    if (playerClient.tribe.totem !== null) {
-      spawnPosition = playerClient.tribe.totem.position.copy();
+      const totemTransformComponent = TransformComponentArray.getComponent(playerClient.tribe.totem);
+      spawnPosition = totemTransformComponent.position.copy();
       const offsetDirection = 2 * Math.PI * Math.random();
       spawnPosition.x += 100 * Math.sin(offsetDirection);
       spawnPosition.y += 100 * Math.cos(offsetDirection);
@@ -339,17 +337,12 @@ const processItemPickupPacket = (playerClient: PlayerClient, entityID: number, i
    heldItemInventory.addItem(heldItem, 1);
 }
 
-const processItemReleasePacket = (playerClient: PlayerClient, entityID: number, inventoryName: InventoryName, itemSlot: number, amount: number): void => {
-   const player = Board.entityRecord[playerClient.instanceID];
-   if (typeof player === "undefined") {
+const processItemReleasePacket = (playerClient: PlayerClient, entity: EntityID, inventoryName: InventoryName, itemSlot: number, amount: number): void => {
+   if (!Board.hasEntity(playerClient.instanceID) || !Board.hasEntity(entity)) {
       return;
    }
 
-   if (typeof Board.entityRecord[entityID] === "undefined") {
-      return;
-   }
-
-   const inventoryComponent = InventoryComponentArray.getComponent(player.id);
+   const inventoryComponent = InventoryComponentArray.getComponent(playerClient.instanceID);
    
    // Don't release an item if there is no held item
    const heldItemInventory = getInventory(inventoryComponent, InventoryName.heldItemSlot);
@@ -358,7 +351,7 @@ const processItemReleasePacket = (playerClient: PlayerClient, entityID: number, 
       return;
    }
 
-   const targetInventoryComponent = InventoryComponentArray.getComponent(entityID);
+   const targetInventoryComponent = InventoryComponentArray.getComponent(entity);
 
    // Add the item to the inventory
    const amountAdded = addItemToSlot(targetInventoryComponent, inventoryName, itemSlot, heldItem.type, amount);
@@ -368,12 +361,11 @@ const processItemReleasePacket = (playerClient: PlayerClient, entityID: number, 
 }
 
 const processItemUsePacket = (playerClient: PlayerClient, itemSlot: number): void => {
-   const player = Board.entityRecord[playerClient.instanceID];
-   if (typeof player === "undefined") {
+   if (!Board.hasEntity(playerClient.instanceID)) {
       return;
    }
 
-   const inventoryComponent = InventoryComponentArray.getComponent(player.id);
+   const inventoryComponent = InventoryComponentArray.getComponent(playerClient.instanceID);
    const hotbarInventory = getInventory(inventoryComponent, InventoryName.hotbar);
 
    const item = hotbarInventory.itemSlots[itemSlot];
@@ -383,26 +375,23 @@ const processItemUsePacket = (playerClient: PlayerClient, itemSlot: number): voi
 }
 
 const processItemDropPacket = (playerClient: PlayerClient, inventoryName: InventoryName, itemSlot: number, dropAmount: number, throwDirection: number): void => {
-   const player = Board.entityRecord[playerClient.instanceID];
-   if (typeof player === "undefined") {
+   if (!Board.hasEntity(playerClient.instanceID)) {
       return;
    }
 
-   throwItem(player, inventoryName, itemSlot, dropAmount, throwDirection);
+   throwItem(playerClient.instanceID, inventoryName, itemSlot, dropAmount, throwDirection);
 }
 
 const processCommandPacket = (playerClient: PlayerClient, command: string): void => {
-   const player = Board.entityRecord[playerClient.instanceID];
-   if (typeof player === "undefined") {
+   if (!Board.hasEntity(playerClient.instanceID)) {
       return;
    }
    
-   registerCommand(command, player);
+   registerCommand(command, playerClient.instanceID);
 }
 
 const processSelectTechPacket = (playerClient: PlayerClient, techID: TechID): void => {
-   const player = Board.entityRecord[playerClient.instanceID];
-   if (typeof player === "undefined") {
+   if (!Board.hasEntity(playerClient.instanceID)) {
       return;
    }
 
@@ -421,15 +410,14 @@ const itemIsNeededInTech = (tech: TechInfo, itemRequirements: ItemRequirements, 
 }
 
 const processTechUnlock = (playerClient: PlayerClient, techID: TechID): void => {
-   const player = Board.entityRecord[playerClient.instanceID];
-   if (typeof player === "undefined") {
+   if (!Board.hasEntity(playerClient.instanceID)) {
       return;
    }
 
    const tech = getTechByID(techID);
    
-   const tribeComponent = TribeComponentArray.getComponent(player.id);
-   const inventoryComponent = InventoryComponentArray.getComponent(player.id);
+   const tribeComponent = TribeComponentArray.getComponent(playerClient.instanceID);
+   const inventoryComponent = InventoryComponentArray.getComponent(playerClient.instanceID);
 
    const hotbarInventory = getInventory(inventoryComponent, InventoryName.hotbar);
    
@@ -470,8 +458,7 @@ const processTechUnlock = (playerClient: PlayerClient, techID: TechID): void => 
 }
 
 const processTechForceUnlock = (playerClient: PlayerClient, techID: TechID): void => {
-   const player = Board.entityRecord[playerClient.instanceID];
-   if (typeof player === "undefined") {
+   if (!Board.hasEntity(playerClient.instanceID)) {
       return;
    }
 
@@ -479,22 +466,23 @@ const processTechForceUnlock = (playerClient: PlayerClient, techID: TechID): voi
 }
 
 const processStudyPacket = (playerClient: PlayerClient, studyAmount: number): void => {
-   const player = Board.entityRecord[playerClient.instanceID];
-   if (typeof player === "undefined") {
+   if (!Board.hasEntity(playerClient.instanceID)) {
       return;
    }
 
-   const tribeComponent = TribeComponentArray.getComponent(player.id);
+   const tribeComponent = TribeComponentArray.getComponent(playerClient.instanceID);
    
    if (tribeComponent.tribe.selectedTechID !== null) {
+      const transformComponent = TransformComponentArray.getComponent(playerClient.instanceID);
       const selectedTech = getTechByID(tribeComponent.tribe.selectedTechID);
-      playerClient.tribe.studyTech(selectedTech, player.position.x, player.position.y, studyAmount);
+      playerClient.tribe.studyTech(selectedTech, transformComponent.position.x, transformComponent.position.y, studyAmount);
    }
 }
 
 // @Cleanup: name, and there is already a shared definition
-const snapRotationToPlayer = (player: Entity, placePosition: Point, rotation: number): number => {
-   const playerDirection = player.position.calculateAngleBetween(placePosition);
+const snapRotationToPlayer = (player: EntityID, placePosition: Point, rotation: number): number => {
+   const transformComponent = TransformComponentArray.getComponent(player);
+   const playerDirection = transformComponent.position.calculateAngleBetween(placePosition);
    let snapRotation = playerDirection - rotation;
 
    // Snap to nearest PI/2 interval
@@ -504,68 +492,58 @@ const snapRotationToPlayer = (player: Entity, placePosition: Point, rotation: nu
    return snapRotation;
 }
 
-const processPlaceBlueprintPacket = (playerClient: PlayerClient, structureID: number, buildingType: BlueprintType): void => {
-   const player = Board.entityRecord[playerClient.instanceID];
-   if (typeof player === "undefined") {
+const processPlaceBlueprintPacket = (playerClient: PlayerClient, structure: EntityID, buildingType: BlueprintType): void => {
+   if (!Board.hasEntity(playerClient.instanceID) || !Board.hasEntity(structure)) {
       return;
    }
-   
-   const building = Board.entityRecord[structureID]!;
 
    // @Cleanup: should not do this logic here.
-   const rotation = snapRotationToPlayer(player, building.position, building.rotation);
-   placeBlueprint(player, structureID, buildingType, rotation);
+   const structureTransformComponent = TransformComponentArray.getComponent(structure);
+   const rotation = snapRotationToPlayer(playerClient.instanceID, structureTransformComponent.position, structureTransformComponent.rotation);
+   placeBlueprint(playerClient.instanceID, structure, buildingType, rotation);
 }
 
-const processModifyBuildingPacket = (playerClient: PlayerClient, structureID: number, data: number): void => {
-   const player = Board.entityRecord[playerClient.instanceID];
-   if (typeof player === "undefined") {
+const processModifyBuildingPacket = (playerClient: PlayerClient, structure: EntityID, data: number): void => {
+   if (!Board.hasEntity(playerClient.instanceID)) {
       return;
    }
    
-   modifyBuilding(player, structureID, data);
+   modifyBuilding(playerClient.instanceID, structure, data);
 }
 
-const processDeconstructPacket = (playerClient: PlayerClient, structureID: number): void => {
-   const building = Board.entityRecord[structureID];
-   if (typeof building === "undefined") {
+const processDeconstructPacket = (playerClient: PlayerClient, structure: EntityID): void => {
+   if (!Board.hasEntity(structure)) {
       return;
    }
 
    // Deconstruct
-   building.destroy();
+   Board.destroyEntity(structure);
 
-   if (BuildingMaterialComponentArray.hasComponent(structureID)) {
-      const materialComponent = BuildingMaterialComponentArray.getComponent(building.id);
+   if (BuildingMaterialComponentArray.hasComponent(structure)) {
+      const materialComponent = BuildingMaterialComponentArray.getComponent(structure);
       
-      if (building.type === EntityType.wall && materialComponent.material === BuildingMaterial.wood) {
-         createItemsOverEntity(building, ItemType.wooden_wall, 1, 40);
+      if (Board.getEntityType(structure) === EntityType.wall && materialComponent.material === BuildingMaterial.wood) {
+         createItemsOverEntity(structure, ItemType.wooden_wall, 1, 40);
          return;
       }
       
       const materialItemType = MATERIAL_TO_ITEM_MAP[materialComponent.material];
-      createItemsOverEntity(building, materialItemType, 5, 40);
+      createItemsOverEntity(structure, materialItemType, 5, 40);
    }
 }
 
-const processStructureInteractPacket = (playerClient: PlayerClient, structureID: number, interactData: number): void => {
-   const player = Board.entityRecord[playerClient.instanceID];
-   if (typeof player === "undefined") {
-      return;
-   }
-   
-   const structure = Board.entityRecord[structureID];
-   if (typeof structure === "undefined") {
+const processStructureInteractPacket = (playerClient: PlayerClient, structure: EntityID, interactData: number): void => {
+   if (!Board.hasEntity(playerClient.instanceID) || !Board.hasEntity(structure)) {
       return;
    }
 
-   switch (structure.type) {
+   switch (Board.getEntityType(structure)) {
       case EntityType.door: {
          toggleDoor(structure);
          break;
       }
       case EntityType.researchBench: {
-         attemptToOccupyResearchBench(structure, player);
+         attemptToOccupyResearchBench(structure, playerClient.instanceID);
          break;
       }
       case EntityType.tunnel: {
@@ -580,71 +558,56 @@ const processStructureInteractPacket = (playerClient: PlayerClient, structureID:
    }
 }
 
-const processStructureUninteractPacket = (playerClient: PlayerClient, structureID: number): void => {
-   const player = Board.entityRecord[playerClient.instanceID];
-   if (typeof player === "undefined") {
-      return;
-   }
-   
-   const structure = Board.entityRecord[structureID];
-   if (typeof structure === "undefined") {
+const processStructureUninteractPacket = (playerClient: PlayerClient, structure: EntityID): void => {
+   if (!Board.hasEntity(playerClient.instanceID) || !Board.hasEntity(playerClient.instanceID)) {
       return;
    }
 
-   switch (structure.type) {
+   switch (Board.getEntityType(structure)) {
       case EntityType.researchBench: {
-         deoccupyResearchBench(structure, player);
+         deoccupyResearchBench(structure, playerClient.instanceID);
          break;
       }
    }
 }
 
-const processRecruitTribesmanPacket = (playerClient: PlayerClient, tribesmanID: number): void => {
-   const player = Board.entityRecord[playerClient.instanceID];
-   if (typeof player === "undefined") {
-      return;
-   }
-   
-   const tribesman = Board.entityRecord[tribesmanID];
-   if (typeof tribesman === "undefined") {
+const processRecruitTribesmanPacket = (playerClient: PlayerClient, tribesman: EntityID): void => {
+   if (!Board.hasEntity(playerClient.instanceID) || !Board.hasEntity(tribesman)) {
       return;
    }
 
-   const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesmanID);
-   const relation = tribesmanComponent.tribesmanRelations[player.id];
+   const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman);
+   const relation = tribesmanComponent.tribesmanRelations[playerClient.instanceID];
    if (typeof relation !== "undefined" && relation >= 50) {
-      const tribeComponent = TribeComponentArray.getComponent(player.id);
+      const tribeComponent = TribeComponentArray.getComponent(playerClient.instanceID);
       
       recruitTribesman(tribesman, tribeComponent.tribe);
    }
 }
 const processRespondToTitleOfferPacket = (playerClient: PlayerClient, title: TribesmanTitle, isAccepted: boolean): void => {
-   const player = Board.entityRecord[playerClient.instanceID];
-   if (typeof player === "undefined") {
+   if (!Board.hasEntity(playerClient.instanceID)) {
       return;
    }
    
    if (isAccepted) {
-      acceptTitleOffer(player, title);
+      acceptTitleOffer(playerClient.instanceID, title);
    } else {
-      rejectTitleOffer(player, title);
+      rejectTitleOffer(playerClient.instanceID, title);
    }
 }
 
 const devGiveItem = (playerClient: PlayerClient, itemType: ItemType, amount: number): void => {
-   const player = Board.entityRecord[playerClient.instanceID];
-   if (typeof player === "undefined") {
+   if (!Board.hasEntity(playerClient.instanceID)) {
       return;
    }
 
-   const inventoryComponent = InventoryComponentArray.getComponent(player.id);
+   const inventoryComponent = InventoryComponentArray.getComponent(playerClient.instanceID);
    const inventory = getInventory(inventoryComponent, InventoryName.hotbar);
    addItemToInventory(inventory, itemType, amount);
 }
 
 const devSummonEntity = (playerClient: PlayerClient, summonPacket: EntitySummonPacket): void => {
-   const player = Board.entityRecord[playerClient.instanceID];
-   if (typeof player === "undefined") {
+   if (!Board.hasEntity(playerClient.instanceID)) {
       return;
    }
 
@@ -653,7 +616,7 @@ const devSummonEntity = (playerClient: PlayerClient, summonPacket: EntitySummonP
 
    switch (summonPacket.entityType) {
       case EntityType.ballista: {
-         const tribeComponent = TribeComponentArray.getComponent(player.id);
+         const tribeComponent = TribeComponentArray.getComponent(playerClient.instanceID);
          const connectionInfo = createEmptyStructureConnectionInfo();
          createBallista(position, rotation, tribeComponent.tribe, connectionInfo);
          break;
@@ -704,7 +667,7 @@ const devSummonEntity = (playerClient: PlayerClient, summonPacket: EntitySummonP
       case EntityType.tree: {};
       case EntityType.tribeTotem: {};
       case EntityType.tribeWarrior: {
-         const tribeComponent = TribeComponentArray.getComponent(player.id);
+         const tribeComponent = TribeComponentArray.getComponent(playerClient.instanceID);
          const inventoryComponentSummonData = summonPacket.summonData[ServerComponentType.inventory]!;
 
          const entityCreationInfo = createTribeWarrior(position, rotation, tribeComponent.tribe, 0);
@@ -942,20 +905,19 @@ export function addPlayerClient(playerClient: PlayerClient, player: Entity): voi
 
 
 
-const shouldShowDamageNumber = (playerClient: PlayerClient, attackingEntity: Entity | null): boolean => {
+const shouldShowDamageNumber = (playerClient: PlayerClient, attackingEntity: EntityID | null): boolean => {
    if (attackingEntity === null) {
       return false;
    }
    
    // Show damage from the player
-   const player = Board.entityRecord[playerClient.instanceID];
-   if (typeof player !== "undefined" && attackingEntity === player) {
+   if (attackingEntity === playerClient.instanceID) {
       return true;
    }
 
    // Show damage from friendly turrets
-   if (TurretComponentArray.hasComponent(attackingEntity.id)) {
-      const tribeComponent = TribeComponentArray.getComponent(attackingEntity.id);
+   if (TurretComponentArray.hasComponent(attackingEntity)) {
+      const tribeComponent = TribeComponentArray.getComponent(attackingEntity);
       if (tribeComponent.tribe === playerClient.tribe) {
          return true;
       }
@@ -986,11 +948,9 @@ const getPlayersViewingPosition = (minX: number, maxX: number, minY: number, max
    return viewingPlayerClients;
 }
 
-export function registerEntityHit(hitEntityID: number, attackingEntity: Entity | null, hitPosition: Point, attackEffectiveness: AttackEffectiveness, damage: number, flags: number): void {
-   // @Temporary
-   const hitEntity = Board.entityRecord[hitEntityID]!;
-   
-   const viewingPlayers = getPlayersViewingPosition(hitEntity.boundingAreaMinX, hitEntity.boundingAreaMaxX, hitEntity.boundingAreaMinY, hitEntity.boundingAreaMaxY);
+export function registerEntityHit(hitEntity: EntityID, attackingEntity: EntityID | null, hitPosition: Point, attackEffectiveness: AttackEffectiveness, damage: number, flags: number): void {
+   const hitEntityTransformComponent = TransformComponentArray.getComponent(hitEntity);
+   const viewingPlayers = getPlayersViewingPosition(hitEntityTransformComponent.boundingAreaMinX, hitEntityTransformComponent.boundingAreaMaxX, hitEntityTransformComponent.boundingAreaMinY, hitEntityTransformComponent.boundingAreaMaxY);
    if (viewingPlayers.length === 0) {
       return;
    }
@@ -999,7 +959,7 @@ export function registerEntityHit(hitEntityID: number, attackingEntity: Entity |
       const playerClient = viewingPlayers[i];
 
       const hitData: HitData = {
-         hitEntityID: hitEntityID,
+         hitEntityID: hitEntity,
          hitPosition: hitPosition.package(),
          attackEffectiveness: attackEffectiveness,
          damage: damage,
@@ -1022,17 +982,18 @@ export function registerPlayerKnockback(playerID: number, knockback: number, kno
    }
 }
 
-export function registerEntityHeal(healedEntity: Entity, healerID: number, healAmount: number): void {
-   const viewingPlayers = getPlayersViewingPosition(healedEntity.boundingAreaMinX, healedEntity.boundingAreaMaxX, healedEntity.boundingAreaMinY, healedEntity.boundingAreaMaxY);
+export function registerEntityHeal(healedEntity: EntityID, healer: EntityID, healAmount: number): void {
+   const transformComponent = TransformComponentArray.getComponent(healedEntity);
+   const viewingPlayers = getPlayersViewingPosition(transformComponent.boundingAreaMinX, transformComponent.boundingAreaMaxX, transformComponent.boundingAreaMinY, transformComponent.boundingAreaMaxY);
    if (viewingPlayers.length === 0) {
       return;
    }
 
    const healData: HealData = {
-      entityPositionX: healedEntity.position.x,
-      entityPositionY: healedEntity.position.y,
-      healedID: healedEntity.id,
-      healerID: healerID,
+      entityPositionX: transformComponent.position.x,
+      entityPositionY: transformComponent.position.y,
+      healedID: healedEntity,
+      healerID: healer,
       healAmount: healAmount
    };
    
@@ -1042,15 +1003,16 @@ export function registerEntityHeal(healedEntity: Entity, healerID: number, healA
    }
 }
 
-export function registerEntityDeath(entity: Entity): void {
-   const viewingPlayers = getPlayersViewingPosition(entity.boundingAreaMinX, entity.boundingAreaMaxX, entity.boundingAreaMinY, entity.boundingAreaMaxY);
+export function registerEntityDeath(entity: EntityID): void {
+   const transformComponent = TransformComponentArray.getComponent(entity);
+   const viewingPlayers = getPlayersViewingPosition(transformComponent.boundingAreaMinX, transformComponent.boundingAreaMaxX, transformComponent.boundingAreaMinY, transformComponent.boundingAreaMaxY);
    if (viewingPlayers.length === 0) {
       return;
    }
 
    for (let i = 0; i < viewingPlayers.length; i++) {
       const playerClient = viewingPlayers[i];
-      playerClient.visibleEntityDeathIDs.push(entity.id);
+      playerClient.visibleEntityDeathIDs.push(entity);
    }
 }
 
@@ -1066,8 +1028,9 @@ export function registerResearchOrbComplete(orbCompleteData: ResearchOrbComplete
    }
 }
 
-export function registerEntityTickEvent(entity: Entity, tickEvent: EntityTickEvent): void {
-   const viewingPlayers = getPlayersViewingPosition(entity.boundingAreaMinX, entity.boundingAreaMaxX, entity.boundingAreaMinY, entity.boundingAreaMaxY);
+export function registerEntityTickEvent(entity: EntityID, tickEvent: EntityTickEvent): void {
+   const transformComponent = TransformComponentArray.getComponent(entity);
+   const viewingPlayers = getPlayersViewingPosition(transformComponent.boundingAreaMinX, transformComponent.boundingAreaMaxX, transformComponent.boundingAreaMinY, transformComponent.boundingAreaMaxY);
    if (viewingPlayers.length === 0) {
       return;
    }
@@ -1078,8 +1041,8 @@ export function registerEntityTickEvent(entity: Entity, tickEvent: EntityTickEve
    }
 }
 
-export function registerPlayerDroppedItemPickup(player: Entity): void {
-   const playerClient = getPlayerClientFromInstanceID(player.id);
+export function registerPlayerDroppedItemPickup(player: EntityID): void {
+   const playerClient = getPlayerClientFromInstanceID(player);
    if (playerClient !== null) {
       playerClient.pickedUpItem = true;
    } else {
@@ -1087,8 +1050,8 @@ export function registerPlayerDroppedItemPickup(player: Entity): void {
    }
 }
 
-export function forcePlayerTeleport(player: Entity, position: Point): void {
-   const playerClient = getPlayerClientFromInstanceID(player.id);
+export function forcePlayerTeleport(player: EntityID, position: Point): void {
+   const playerClient = getPlayerClientFromInstanceID(player);
    if (playerClient !== null) {
       playerClient.socket.emit("force_position_update", position.package());
    }

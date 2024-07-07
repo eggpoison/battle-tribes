@@ -3,17 +3,20 @@ import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
 import { TitleGenerationInfo, TribesmanTitle, TRIBESMAN_TITLE_RECORD } from "webgl-test-shared/dist/titles";
 import { TribeType } from "webgl-test-shared/dist/tribes";
 import { randInt } from "webgl-test-shared/dist/utils";
-import Entity from "../Entity";
 import { ComponentArray } from "./ComponentArray";
 import { generateTitle } from "../tribesman-title-generation";
 import Board from "../Board";
-import { InventoryComponentArray, createNewInventory } from "./InventoryComponent";
+import { createNewInventory } from "./InventoryComponent";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { TribeComponentArray } from "./TribeComponent";
 import { PlayerComponentArray } from "./PlayerComponent";
-import { InventoryUseComponentArray } from "./InventoryUseComponent";
 import { InventoryName } from "webgl-test-shared/dist/items/items";
 import { ComponentRecord } from "../components";
+
+export interface TribeMemberComponentParams {
+   readonly tribeType: TribeType;
+   readonly entityType: EntityType;
+}
 
 type TribesmanEntityType = EntityType.player | EntityType.tribeWorker | EntityType.tribeWarrior;
 
@@ -29,9 +32,9 @@ export class TribeMemberComponent {
    // @Cleanup: would be great to not store a variable to do this.
    public lastPlantCollisionTicks = Board.ticks;
 
-   constructor(tribeType: TribeType, entityType: EntityType) {
-      if (tribeType === TribeType.goblins) {
-         if (entityType === EntityType.tribeWarrior) {
+   constructor(params: TribeMemberComponentParams) {
+      if (params.tribeType === TribeType.goblins) {
+         if (params.entityType === EntityType.tribeWarrior) {
             this.warPaintType = randInt(1, 1);
          } else {
             this.warPaintType = randInt(1, 5);
@@ -67,7 +70,7 @@ function onRemove(entityID: number): void {
    tribeComponent.tribe.registerTribeMemberDeath(entityID);
 }
 
-function onInitialise(entity: Entity, componentRecord: ComponentRecord): void {
+function onInitialise(entity: EntityID, componentRecord: ComponentRecord): void {
    // 
    // Create inventories
    // 
@@ -75,7 +78,7 @@ function onInitialise(entity: Entity, componentRecord: ComponentRecord): void {
    const inventoryComponent = componentRecord[ServerComponentType.inventory]!;
    const inventoryUseComponent = componentRecord[ServerComponentType.inventoryUse]!;
    
-   const hotbarSize = getHotbarSize(entity.type as TribesmanEntityType);
+   const hotbarSize = getHotbarSize(Board.getEntityType(entity) as TribesmanEntityType);
    const hotbarInventory = createNewInventory(inventoryComponent, InventoryName.hotbar, hotbarSize, 1, { acceptsPickedUpItems: true, isDroppedOnDeath: true });
    inventoryUseComponent.addInventoryUseInfo(hotbarInventory);
 
@@ -99,8 +102,8 @@ function serialise(entityID: number): TribeMemberComponentData {
    };
 }
 
-export function awardTitle(tribesman: Entity, title: TribesmanTitle): void {
-   const tribeMemberComponent = TribeMemberComponentArray.getComponent(tribesman.id);
+export function awardTitle(tribesman: EntityID, title: TribesmanTitle): void {
+   const tribeMemberComponent = TribeMemberComponentArray.getComponent(tribesman);
    
    const titleTier = TRIBESMAN_TITLE_RECORD[title].tier;
    
@@ -115,8 +118,8 @@ export function awardTitle(tribesman: Entity, title: TribesmanTitle): void {
    }
    
    // If they are a player, buffer the title for the player to accept. AI tribesmen accept all titles immediately
-   if (tribesman.type === EntityType.player) {
-      const playerComponent = PlayerComponentArray.getComponent(tribesman.id);
+   if (Board.getEntityType(tribesman) === EntityType.player) {
+      const playerComponent = PlayerComponentArray.getComponent(tribesman);
       if (playerComponent.titleOffer === null) {
          playerComponent.titleOffer = title;
       }
@@ -126,22 +129,22 @@ export function awardTitle(tribesman: Entity, title: TribesmanTitle): void {
    }
 }
 
-export function acceptTitleOffer(player: Entity, title: TribesmanTitle): void {
-   const playerComponent = PlayerComponentArray.getComponent(player.id);
+export function acceptTitleOffer(player: EntityID, title: TribesmanTitle): void {
+   const playerComponent = PlayerComponentArray.getComponent(player);
    if (playerComponent.titleOffer === null || playerComponent.titleOffer !== title) {
       return;
    }
 
    // Give the title
-   const tribeMemberComponent = TribeMemberComponentArray.getComponent(player.id);
+   const tribeMemberComponent = TribeMemberComponentArray.getComponent(player);
    const titleGenerationInfo = generateTitle(title);
    tribeMemberComponent.titles.push(titleGenerationInfo);
    
    playerComponent.titleOffer = null;
 }
 
-export function rejectTitleOffer(player: Entity, title: TribesmanTitle): void {
-   const playerComponent = PlayerComponentArray.getComponent(player.id);
+export function rejectTitleOffer(player: EntityID, title: TribesmanTitle): void {
+   const playerComponent = PlayerComponentArray.getComponent(player);
    if (playerComponent.titleOffer === null || playerComponent.titleOffer === title) {
       playerComponent.titleOffer = null;
    }

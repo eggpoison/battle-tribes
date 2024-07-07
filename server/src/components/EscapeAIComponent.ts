@@ -1,11 +1,14 @@
 import { EscapeAIComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
 import { ComponentArray } from "./ComponentArray";
 
+export interface EscapeAIComponentParams {}
+
 export class EscapeAIComponent {
    /** IDs of all entities attacking the entity */
    public readonly attackingEntityIDs = new Array<number>();
    public readonly attackEntityTicksSinceLastAttack = new Array<number>();
 }
+
 export const EscapeAIComponentArray = new ComponentArray<ServerComponentType.escapeAI, EscapeAIComponent>(true, {
    serialise: serialise
 });

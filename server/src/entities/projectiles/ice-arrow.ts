@@ -1,85 +1,63 @@
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
-import { EntityType } from "webgl-test-shared/dist/entities";
+import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { Point } from "webgl-test-shared/dist/utils";
-import Entity from "../../Entity";
 import { StatusEffectComponentArray, applyStatusEffect } from "../../components/StatusEffectComponent";
-import { PhysicsComponent, PhysicsComponentArray } from "../../components/PhysicsComponent";
-import { EntityRelationship, TribeComponent, TribeComponentArray, getEntityRelationship } from "../../components/TribeComponent";
-import Tribe from "../../Tribe";
-import { EntityCreationInfo } from "../../components";
+import { EntityRelationship, getEntityRelationship } from "../../components/TribeComponent";
+import { ComponentConfig } from "../../components";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { HealthComponentArray } from "../../components/HealthComponent";
 import { HitboxCollisionType, RectangularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
+import Board from "../../Board";
 
-type ComponentTypes = [ServerComponentType.physics, ServerComponentType.tribe];
+type ComponentTypes = ServerComponentType.transform
+   | ServerComponentType.physics
+   | ServerComponentType.tribe
+   | ServerComponentType.projectile;
 
 const ARROW_WIDTH = 5 * 4;
 const ARROW_HEIGHT = 14 * 4;
 const ARROW_DESTROY_DISTANCE = Math.sqrt(Math.pow(ARROW_WIDTH / 2, 2) + Math.pow(ARROW_HEIGHT, 2));
 
-export function createIceArrow(position: Point, rotation: number, tribe: Tribe): EntityCreationInfo<ComponentTypes> {
-   const iceArrow = new Entity(position, rotation, EntityType.iceArrow, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
-   
-   const hitbox = new RectangularHitbox(0.4, new Point(0, 0), HitboxCollisionType.soft, 0, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, ARROW_WIDTH, ARROW_HEIGHT);
-   iceArrow.addHitbox(hitbox);
-   
-   const physicsComponent = new PhysicsComponent(0, 0, 0, 0, false, true);
-   PhysicsComponentArray.addComponent(iceArrow.id, physicsComponent);
-
-   const tribeComponent = new TribeComponent(tribe);
-   TribeComponentArray.addComponent(iceArrow.id, tribeComponent);
-
+export function createIceArrowConfig(): ComponentConfig<ComponentTypes> {
    return {
-      entity: iceArrow,
-      components: {
-         [ServerComponentType.physics]: physicsComponent,
-         [ServerComponentType.tribe]: tribeComponent
+      [ServerComponentType.transform]: {
+         position: new Point(0, 0),
+         rotation: 0,
+         type: EntityType.iceArrow,
+         collisionBit: COLLISION_BITS.default,
+         collisionMask: DEFAULT_COLLISION_MASK,
+         hitboxes: [new RectangularHitbox(0.4, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, ARROW_WIDTH, ARROW_HEIGHT, 0)]
+      },
+      [ServerComponentType.physics]: {
+         velocityX: 0,
+         velocityY: 0,
+         accelerationX: 0,
+         accelerationY: 0,
+         isAffectedByFriction: false,
+         isImmovable: true
+      },
+      [ServerComponentType.tribe]: {
+         tribeID: null
+      },
+      [ServerComponentType.projectile]: {
+         owner: 0
       }
    };
 }
 
-export function tickIceArrow(iceArrow: Entity): void {
-   if (iceArrow.ageTicks >= 1.5 * Settings.TPS) {
-      iceArrow.destroy();
-      return;
-   }
-   
-   // 
-   // Air resistance
-   // 
-
-   const physicsComponent = PhysicsComponentArray.getComponent(iceArrow.id);
-   
-   const xSignBefore = Math.sign(physicsComponent.velocity.x);
-   
-   const velocityLength = physicsComponent.velocity.length();
-   physicsComponent.velocity.x = (velocityLength - 3) * physicsComponent.velocity.x / velocityLength;
-   physicsComponent.velocity.y = (velocityLength - 3) * physicsComponent.velocity.y / velocityLength;
-   if (Math.sign(physicsComponent.velocity.x) !== xSignBefore) {
-      physicsComponent.velocity.x = 0;
-      physicsComponent.velocity.y = 0;
-   }
-   
-   // Destroy the arrow if it reaches the border
-   if (iceArrow.position.x <= ARROW_DESTROY_DISTANCE || iceArrow.position.x >= Settings.BOARD_DIMENSIONS * Settings.TILE_SIZE - ARROW_DESTROY_DISTANCE || iceArrow.position.y <= ARROW_DESTROY_DISTANCE || iceArrow.position.y >= Settings.BOARD_DIMENSIONS * Settings.TILE_SIZE - ARROW_DESTROY_DISTANCE) {
-      iceArrow.destroy();
-      return;
-   }
-}
-
-export function onIceArrowCollision(arrow: Entity, collidingEntity: Entity): void {
+export function onIceArrowCollision(arrow: EntityID, collidingEntity: EntityID): void {
    // Don't damage any friendly entities
-   if (getEntityRelationship(arrow.id, collidingEntity) === EntityRelationship.friendly) {
+   if (getEntityRelationship(arrow, collidingEntity) === EntityRelationship.friendly) {
       return;
    }
    
-   if (HealthComponentArray.hasComponent(collidingEntity.id)) {
-      if (StatusEffectComponentArray.hasComponent(collidingEntity.id)) {
-         applyStatusEffect(collidingEntity.id, StatusEffect.freezing, 3 * Settings.TPS);
+   if (HealthComponentArray.hasComponent(collidingEntity)) {
+      if (StatusEffectComponentArray.hasComponent(collidingEntity)) {
+         applyStatusEffect(collidingEntity, StatusEffect.freezing, 3 * Settings.TPS);
       }
       
-      arrow.destroy();
+      Board.destroyEntity(arrow);
    }
 }

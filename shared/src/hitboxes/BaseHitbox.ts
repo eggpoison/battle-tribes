@@ -5,7 +5,7 @@ import { HitboxCollisionType, Hitbox } from "./hitboxes";
 abstract class BaseHitbox {
    public readonly position = new Point(0, 0);
    
-   public readonly mass: number;
+   public mass: number;
    public readonly offset: Point;
 
    public collisionType: HitboxCollisionType;

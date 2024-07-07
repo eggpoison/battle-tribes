@@ -4,6 +4,8 @@ import { Settings } from "webgl-test-shared/dist/settings";
 import { ComponentArray } from "./ComponentArray";
 import { Inventory, InventoryName } from "webgl-test-shared/dist/items/items";
 
+export interface InventoryUseComponentParams {}
+
 export interface InventoryUseInfo {
    selectedItemSlot: number;
    readonly inventory: Inventory;

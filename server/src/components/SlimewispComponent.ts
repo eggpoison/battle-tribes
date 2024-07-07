@@ -2,6 +2,8 @@ import { ServerComponentType, SlimewispComponentData } from "webgl-test-shared/d
 import { SLIMEWISP_MERGE_TIME } from "../entities/mobs/slimewisp";
 import { ComponentArray } from "./ComponentArray";
 
+export interface SlimewispComponentParams {}
+
 export class SlimewispComponent {
    public mergeTimer = SLIMEWISP_MERGE_TIME;
 }

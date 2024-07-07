@@ -4,6 +4,11 @@ import { BODY_GENERATION_RADIUS, GOLEM_WAKE_TIME_TICKS } from "../entities/mobs/
 import { ComponentArray } from "./ComponentArray";
 import { Hitbox, CircularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
 
+export interface GolemComponentParams {
+   readonly hitboxes: ReadonlyArray<Hitbox>;
+   readonly pebblumSummonCooldownTicks: number;
+}
+
 export interface RockInfo {
    /** The hitbox corresponding to the rock info */
    readonly hitbox: Hitbox;
@@ -16,6 +21,11 @@ export interface RockInfo {
    targetOffsetX: number;
    targetOffsetY: number;
    currentShiftTimerTicks: number;
+}
+
+export interface GolemTargetInfo {
+   damageDealtToSelf: number;
+   timeSinceLastAggro: number;
 }
 
 const generateRockInfoArray = (hitboxes: ReadonlyArray<Hitbox>): Array<RockInfo> => {
@@ -44,11 +54,6 @@ const generateRockInfoArray = (hitboxes: ReadonlyArray<Hitbox>): Array<RockInfo>
    return rockInfoArray;
 }
 
-export interface GolemTargetInfo {
-   damageDealtToSelf: number;
-   timeSinceLastAggro: number;
-}
-
 export class GolemComponent {
    public readonly rockInfoArray: Array<RockInfo>;
    public readonly attackingEntities: Record<number, GolemTargetInfo> = {};
@@ -58,9 +63,9 @@ export class GolemComponent {
    public summonedPebblumIDs = new Array<number>();
    public pebblumSummonCooldownTicks: number;
    
-   constructor(hitboxes: ReadonlyArray<Hitbox>, pebblumSummonCooldownTicks: number) {
-      this.rockInfoArray = generateRockInfoArray(hitboxes);
-      this.pebblumSummonCooldownTicks = pebblumSummonCooldownTicks;
+   constructor(params: GolemComponentParams) {
+      this.rockInfoArray = generateRockInfoArray(params.hitboxes);
+      this.pebblumSummonCooldownTicks = params.pebblumSummonCooldownTicks;
    }
 }
 

@@ -1,37 +1,50 @@
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { EntityType } from "webgl-test-shared/dist/entities";
+import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { Point } from "webgl-test-shared/dist/utils";
-import Entity from "../../Entity";
-import { HealthComponent, HealthComponentArray } from "../../components/HealthComponent";
-import { createItemEntity } from "../item-entity";
+import { createEntityFromConfig } from "../../Entity";
 import Board from "../../Board";
-import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
-import { BerryBushComponent, BerryBushComponentArray } from "../../components/BerryBushComponent";
+import { BerryBushComponentArray } from "../../components/BerryBushComponent";
 import { CircularHitbox, HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { ItemType } from "webgl-test-shared/dist/items/items";
+import { TransformComponentArray } from "../../components/TransformComponent";
+import { createItemEntityConfig } from "../item-entity";
+import { ComponentConfig } from "../../components";
+import { StatusEffect } from "webgl-test-shared/dist/status-effects";
+
+type ComponentTypes = ServerComponentType.transform
+   | ServerComponentType.health
+   | ServerComponentType.statusEffect
+   | ServerComponentType.berryBush;
 
 export const BERRY_BUSH_RADIUS = 40;
 
 /** Number of seconds it takes for a berry bush to regrow one of its berries */
 const BERRY_GROW_TIME = 30;
 
-export function createBerryBush(position: Point, rotation: number): Entity {
-   const berryBush = new Entity(position, rotation, EntityType.berryBush, COLLISION_BITS.plants, DEFAULT_COLLISION_MASK);
-
-   const hitbox = new CircularHitbox(1, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, BERRY_BUSH_RADIUS);
-   berryBush.addHitbox(hitbox);
-
-   HealthComponentArray.addComponent(berryBush.id, new HealthComponent(10));
-   StatusEffectComponentArray.addComponent(berryBush.id, new StatusEffectComponent(0));
-   BerryBushComponentArray.addComponent(berryBush.id, new BerryBushComponent());
-
-   return berryBush;
+export function createBerryBushConfig(): ComponentConfig<ComponentTypes> {
+   return {
+      [ServerComponentType.transform]: {
+         position: new Point(0, 0),
+         rotation: 0,
+         type: EntityType.berryBush,
+         collisionBit: COLLISION_BITS.plants,
+         collisionMask: DEFAULT_COLLISION_MASK,
+         hitboxes: [new CircularHitbox(1, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, BERRY_BUSH_RADIUS)]
+      },
+      [ServerComponentType.health]: {
+         maxHealth: 10
+      },
+      [ServerComponentType.statusEffect]: {
+         statusEffectImmunityBitset: StatusEffect.bleeding
+      },
+      [ServerComponentType.berryBush]: {}
+   }
 }
 
-export function tickBerryBush(berryBush: Entity): void {
-   const berryBushComponent = BerryBushComponentArray.getComponent(berryBush.id);
+export function tickBerryBush(berryBush: EntityID): void {
+   const berryBushComponent = BerryBushComponentArray.getComponent(berryBush);
    if (berryBushComponent.numBerries >= 5) {
       return;
    }
@@ -44,13 +57,15 @@ export function tickBerryBush(berryBush: Entity): void {
    }
 }
 
-export function dropBerryOverEntity(entity: Entity): void {
+export function dropBerryOverEntity(entity: EntityID): void {
+   const transformComponent = TransformComponentArray.getComponent(entity);
+   
    // Generate new spawn positions until we find one inside the board
    let position: Point;
    let spawnDirection: number;
    do {
       // @Speed: Garbage collection
-      position = entity.position.copy();
+      position = transformComponent.position.copy();
 
       spawnDirection = 2 * Math.PI * Math.random();
       const spawnOffset = Point.fromVectorForm(40, spawnDirection);
@@ -58,16 +73,21 @@ export function dropBerryOverEntity(entity: Entity): void {
       position.add(spawnOffset);
    } while (!Board.isInBoard(position));
 
-   const itemEntityCreationInfo = createItemEntity(position, 2 * Math.PI * Math.random(), ItemType.berry, 1, 0);
-   
-   const velocityDirectionOffset = (Math.random() - 0.5) * Math.PI * 0.15
-   const physicsComponent = itemEntityCreationInfo.components[ServerComponentType.physics]!;
-   physicsComponent.velocity.x = 40 * Math.sin(spawnDirection + velocityDirectionOffset);
-   physicsComponent.velocity.y = 40 * Math.cos(spawnDirection + velocityDirectionOffset);
+   const velocityDirectionOffset = (Math.random() - 0.5) * Math.PI * 0.15;
+
+   const config = createItemEntityConfig();
+   config[ServerComponentType.transform].position.x = position.x;
+   config[ServerComponentType.transform].position.y = position.y;
+   config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
+   config[ServerComponentType.physics].velocityX = 40 * Math.sin(spawnDirection + velocityDirectionOffset);
+   config[ServerComponentType.physics].velocityY = 40 * Math.cos(spawnDirection + velocityDirectionOffset);
+   config[ServerComponentType.item].itemType = ItemType.berry;
+   config[ServerComponentType.item].amount = 1;
+   createEntityFromConfig(config);
 }
 
-export function dropBerry(berryBush: Entity, multiplier: number): void {
-   const berryBushComponent = BerryBushComponentArray.getComponent(berryBush.id);
+export function dropBerry(berryBush: EntityID, multiplier: number): void {
+   const berryBushComponent = BerryBushComponentArray.getComponent(berryBush);
    if (berryBushComponent.numBerries === 0) {
       return;
    }
@@ -79,6 +99,6 @@ export function dropBerry(berryBush: Entity, multiplier: number): void {
    berryBushComponent.numBerries--;
 }
 
-export function onBerryBushHurt(berryBush: Entity): void {
+export function onBerryBushHurt(berryBush: EntityID): void {
    dropBerry(berryBush, 1);
 }

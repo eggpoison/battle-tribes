@@ -1,6 +1,6 @@
-import { StatusEffectData } from "./client-server-types";
+import { CircularHitboxData, RectangularHitboxData, StatusEffectData } from "./client-server-types";
 import { CraftingStation } from "./items/crafting-recipes";
-import { CactusBodyFlowerData, CactusLimbData, CowSpecies, DeathInfo, DoorToggleType, FishColour, FrozenYetiAttackType, GenericArrowType, RockSpikeProjectileSize, SlimeSize, SnowballSize, TreeSize, LimbAction, TribeTotemBanner, EntityType } from "./entities";
+import { CactusBodyFlowerData, CactusLimbData, CowSpecies, DeathInfo, DoorToggleType, FishColour, FrozenYetiAttackType, RockSpikeProjectileSize, SlimeSize, SnowballSize, TreeSize, LimbAction, TribeTotemBanner, EntityType } from "./entities";
 import { BallistaAmmoType, Inventory, InventoryName, ItemType } from "./items/items";
 import { Settings } from "./settings";
 import { StatusEffect } from "./status-effects";
@@ -16,7 +16,6 @@ in server:
 
 export enum ServerComponentType {
    aiHelper,
-   arrow,
    berryBush,
    blueprint,
    boulder,
@@ -68,12 +67,13 @@ export enum ServerComponentType {
    structure,
    fence,
    fenceGate,
-   craftingStation
+   craftingStation,
+   transform,
+   projectile
 }
 
 export const ServerComponentTypeString: Record<ServerComponentType, string> = {
    [ServerComponentType.aiHelper]: "ai_helper",
-   [ServerComponentType.arrow]: "arrow",
    [ServerComponentType.berryBush]: "berry_bush",
    [ServerComponentType.blueprint]: "blueprint",
    [ServerComponentType.boulder]: "boulder",
@@ -126,11 +126,12 @@ export const ServerComponentTypeString: Record<ServerComponentType, string> = {
    [ServerComponentType.fence]: "fence",
    [ServerComponentType.fenceGate]: "fence_gate",
    [ServerComponentType.craftingStation]: "crafting_station",
+   [ServerComponentType.transform]: "transform",
+   [ServerComponentType.projectile]: "projectile"
 }
 
 const _ComponentData = {
    [ServerComponentType.aiHelper]: (): AIHelperComponentData => 0 as any,
-   [ServerComponentType.arrow]: (): ArrowComponentData => 0 as any,
    [ServerComponentType.ammoBox]: (): AmmoBoxComponentData => 0 as any,
    [ServerComponentType.berryBush]: (): BerryBushComponentData => 0 as any,
    [ServerComponentType.blueprint]: (): BlueprintComponentData => 0 as any,
@@ -182,7 +183,9 @@ const _ComponentData = {
    [ServerComponentType.structure]: (): StructureComponentData => 0 as any,
    [ServerComponentType.fence]: (): FenceComponentData => 0 as any,
    [ServerComponentType.fenceGate]: (): FenceGateComponentData => 0 as any,
-   [ServerComponentType.craftingStation]: (): CraftingStationComponentData => 0 as any
+   [ServerComponentType.craftingStation]: (): CraftingStationComponentData => 0 as any,
+   [ServerComponentType.transform]: (): TransformComponentData => 0 as any,
+   [ServerComponentType.projectile]: (): ProjectileComponentData => 0 as any
 } satisfies Record<ServerComponentType, () => unknown>;
 
 export const EntityComponents = {
@@ -212,7 +215,12 @@ export const EntityComponents = {
    [EntityType.frozenYeti]: [ServerComponentType.physics, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.wanderAI, ServerComponentType.frozenYeti, ServerComponentType.aiHelper] as const,
    [EntityType.fish]: [ServerComponentType.physics, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.wanderAI, ServerComponentType.escapeAI, ServerComponentType.aiHelper, ServerComponentType.fish] as const,
    [EntityType.itemEntity]: [ServerComponentType.physics, ServerComponentType.item] as const,
-   [EntityType.woodenArrowProjectile]: [ServerComponentType.physics, ServerComponentType.tribe, ServerComponentType.arrow] as const,
+   [EntityType.woodenArrow]: [ServerComponentType.physics, ServerComponentType.tribe] as const,
+   [EntityType.ballistaWoodenBolt]: [ServerComponentType.physics, ServerComponentType.tribe] as const,
+   [EntityType.ballistaRock]: [ServerComponentType.physics, ServerComponentType.tribe] as const,
+   [EntityType.ballistaSlimeball]: [ServerComponentType.physics, ServerComponentType.tribe] as const,
+   [EntityType.ballistaFrostcicle]: [ServerComponentType.physics, ServerComponentType.tribe] as const,
+   [EntityType.slingTurretRock]: [ServerComponentType.physics, ServerComponentType.tribe] as const,
    [EntityType.iceShardProjectile]: [ServerComponentType.physics, ServerComponentType.iceShard] as const,
    [EntityType.rockSpikeProjectile]: [ServerComponentType.rockSpike] as const,
    [EntityType.spearProjectile]: [ServerComponentType.physics, ServerComponentType.throwingProjectile] as const,
@@ -255,18 +263,6 @@ interface BaseComponentData {
 export interface AIHelperComponentData extends BaseComponentData {
    readonly componentType: ServerComponentType.aiHelper;
    readonly visionRange: number;
-}
-
-/* Arrow Component */
-
-export interface ArrowStatusEffectInfo {
-   readonly type: StatusEffect;
-   readonly durationTicks: number;
-}
-
-export interface ArrowComponentData extends BaseComponentData {
-   readonly componentType: ServerComponentType.arrow;
-   readonly arrowType: GenericArrowType;
 }
 
 /* Berry Bush Component */
@@ -777,10 +773,41 @@ export interface CraftingStationComponentData extends BaseComponentData {
    readonly craftingStation: CraftingStation;
 }
 
+/* Transform Component Data */
+
+export interface TransformComponentData extends BaseComponentData {
+   readonly componentType: ServerComponentType.transform;
+   readonly position: [number, number];
+   readonly rotation: number;
+   readonly rectangularHitboxes: ReadonlyArray<RectangularHitboxData>;
+   readonly circularHitboxes: ReadonlyArray<CircularHitboxData>;
+   readonly ageTicks: number;
+   readonly collisionBit: number;
+   readonly collisionMask: number;
+}
+
+/* Projectile Component Data */
+
+export interface ProjectileComponentData {
+   
+}
+
 // @Cleanup: Should these be here?
 
+// export const enum BallistaProjectileType {
+//    woodenBolt,
+//    rock,
+//    slimeball,
+//    frostcicle
+// }
+
+export interface ArrowStatusEffectInfo {
+   readonly type: StatusEffect;
+   readonly durationTicks: number;
+}
+
 export interface GenericAmmoInfo {
-   readonly type: GenericArrowType;
+   // readonly projectileType: BallistaProjectileType;
    readonly damage: number;
    readonly knockback: number;
    readonly shotCooldownTicks: number;
@@ -794,7 +821,7 @@ export interface GenericAmmoInfo {
 
 export const AMMO_INFO_RECORD: Record<BallistaAmmoType, GenericAmmoInfo> = {
    [ItemType.wood]: {
-      type: GenericArrowType.woodenBolt,
+      // projectileType: BallistaProjectileType.woodenBolt,
       damage: 5,
       knockback: 150,
       shotCooldownTicks: 2.5 * Settings.TPS,
@@ -806,7 +833,7 @@ export const AMMO_INFO_RECORD: Record<BallistaAmmoType, GenericAmmoInfo> = {
       statusEffect: null
    },
    [ItemType.rock]: {
-      type: GenericArrowType.ballistaRock,
+      // projectileType: GenericArrowType.ballistaRock,
       damage: 8,
       knockback: 350,
       shotCooldownTicks: 3 * Settings.TPS,
@@ -818,7 +845,7 @@ export const AMMO_INFO_RECORD: Record<BallistaAmmoType, GenericAmmoInfo> = {
       statusEffect: null
    },
    [ItemType.slimeball]: {
-      type: GenericArrowType.ballistaSlimeball,
+      // projectileType: GenericArrowType.ballistaSlimeball,
       damage: 3,
       knockback: 0,
       shotCooldownTicks: 2 * Settings.TPS,
@@ -833,7 +860,7 @@ export const AMMO_INFO_RECORD: Record<BallistaAmmoType, GenericAmmoInfo> = {
       }
    },
    [ItemType.frostcicle]: {
-      type: GenericArrowType.ballistaFrostcicle,
+      // projectileType: GenericArrowType.ballistaFrostcicle,
       damage: 1,
       knockback: 50,
       shotCooldownTicks: 0.5 * Settings.TPS,

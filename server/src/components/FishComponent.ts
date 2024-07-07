@@ -1,8 +1,11 @@
-import { FishColour } from "webgl-test-shared/dist/entities";
-import Entity from "../Entity";
+import { EntityID, FishColour } from "webgl-test-shared/dist/entities";
 import { ComponentArray } from "./ComponentArray";
 import { unfollowLeader } from "../entities/mobs/fish";
 import { FishComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
+
+export interface FishComponentParams {
+   readonly colour: FishColour;
+}
 
 export class FishComponent {
    public readonly colour: FishColour;
@@ -10,11 +13,11 @@ export class FishComponent {
    public flailTimer = 0;
    public secondsOutOfWater = 0;
 
-   public leader: Entity | null = null;
+   public leader: EntityID | null = null;
    public attackTargetID = 0;
 
-   constructor(colour: FishColour) {
-      this.colour = colour;
+   constructor(params: FishComponentParams) {
+      this.colour = params.colour;
    }
 }
 
@@ -23,16 +26,16 @@ export const FishComponentArray = new ComponentArray<ServerComponentType.fish, F
    serialise: serialise
 });
 
-function onRemove(entityID: number): void {
+function onRemove(entity: EntityID): void {
    // Remove the fish from its leaders' follower array
-   const fishComponent = FishComponentArray.getComponent(entityID);
+   const fishComponent = FishComponentArray.getComponent(entity);
    if (fishComponent.leader !== null) {
-      unfollowLeader(entityID, fishComponent.leader);
+      unfollowLeader(entity, fishComponent.leader);
    }
 }
 
-function serialise(entityID: number): FishComponentData {
-   const fishComponent = FishComponentArray.getComponent(entityID);
+function serialise(entity: EntityID): FishComponentData {
+   const fishComponent = FishComponentArray.getComponent(entity);
    return {
       componentType: ServerComponentType.fish,
       colour: fishComponent.colour

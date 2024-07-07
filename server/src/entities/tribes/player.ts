@@ -1,6 +1,6 @@
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { PlanterBoxPlant, ServerComponentType } from "webgl-test-shared/dist/components";
-import { EntityType, EntityTypeString, LimbAction } from "webgl-test-shared/dist/entities";
+import { EntityID, EntityType, EntityTypeString, LimbAction } from "webgl-test-shared/dist/entities";
 import { TRIBE_INFO_RECORD } from "webgl-test-shared/dist/tribes";
 import { Point } from "webgl-test-shared/dist/utils";
 import { CircularHitbox, HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
@@ -95,13 +95,13 @@ export function createPlayer(position: Point, tribe: Tribe, username: string): E
    return player;
 }
 
-export function tickPlayer(player: Entity): void {
+export function tickPlayer(player: EntityID): void {
    tickTribeMember(player);
 }
 
-export function onPlayerCollision(player: Entity, collidingEntity: Entity): void {
-   if (collidingEntity.type === EntityType.itemEntity) {
-      const wasPickedUp = pickupItemEntity(player.id, collidingEntity);
+export function onPlayerCollision(player: EntityID, collidingEntity: EntityID): void {
+   if (Board.getEntityType(collidingEntity) === EntityType.itemEntity) {
+      const wasPickedUp = pickupItemEntity(player, collidingEntity);
       if (wasPickedUp) {
          registerPlayerDroppedItemPickup(player);
       }
@@ -114,9 +114,9 @@ export function onPlayerHurt(player: Entity, attackingEntityID: number): void {
 
 // @Cleanup: ton of copy and paste between these functions
 
-export function startEating(player: Entity, inventoryName: InventoryName): boolean {
-   const inventoryComponent = InventoryComponentArray.getComponent(player.id);
-   const inventoryUseComponent = InventoryUseComponentArray.getComponent(player.id);
+export function startEating(player: EntityID, inventoryName: InventoryName): boolean {
+   const inventoryComponent = InventoryComponentArray.getComponent(player);
+   const inventoryUseComponent = InventoryUseComponentArray.getComponent(player);
 
    const useInfo = getInventoryUseInfo(inventoryUseComponent, inventoryName);
    
@@ -138,9 +138,9 @@ export function startEating(player: Entity, inventoryName: InventoryName): boole
    return false;
 }
 
-export function startChargingBow(player: Entity, inventoryName: InventoryName): void {
-   const inventoryComponent = InventoryComponentArray.getComponent(player.id);
-   const inventoryUseComponent = InventoryUseComponentArray.getComponent(player.id);
+export function startChargingBow(player: EntityID, inventoryName: InventoryName): void {
+   const inventoryComponent = InventoryComponentArray.getComponent(player);
+   const inventoryUseComponent = InventoryUseComponentArray.getComponent(player);
 
    const useInfo = getInventoryUseInfo(inventoryUseComponent, inventoryName);
 
@@ -157,9 +157,9 @@ export function startChargingBow(player: Entity, inventoryName: InventoryName): 
    useInfo.action = LimbAction.chargeBow;
 }
 
-export function startChargingSpear(player: Entity, inventoryName: InventoryName): void {
-   const inventoryComponent = InventoryComponentArray.getComponent(player.id);
-   const inventoryUseComponent = InventoryUseComponentArray.getComponent(player.id);
+export function startChargingSpear(player: EntityID, inventoryName: InventoryName): void {
+   const inventoryComponent = InventoryComponentArray.getComponent(player);
+   const inventoryUseComponent = InventoryUseComponentArray.getComponent(player);
 
    const useInfo = getInventoryUseInfo(inventoryUseComponent, inventoryName);
 
@@ -174,9 +174,9 @@ export function startChargingSpear(player: Entity, inventoryName: InventoryName)
    useInfo.action = LimbAction.chargeSpear;
 }
 
-export function startChargingBattleaxe(player: Entity, inventoryName: InventoryName): void {
-   const inventoryComponent = InventoryComponentArray.getComponent(player.id);
-   const inventoryUseComponent = InventoryUseComponentArray.getComponent(player.id);
+export function startChargingBattleaxe(player: EntityID, inventoryName: InventoryName): void {
+   const inventoryComponent = InventoryComponentArray.getComponent(player);
+   const inventoryUseComponent = InventoryUseComponentArray.getComponent(player);
 
    const useInfo = getInventoryUseInfo(inventoryUseComponent, inventoryName);
 
@@ -191,13 +191,13 @@ export function startChargingBattleaxe(player: Entity, inventoryName: InventoryN
    useInfo.action = LimbAction.chargeBattleaxe;
 }
 
-const modifyTunnel = (player: Entity, tunnel: Entity): void => {
-   const tunnelComponent = TunnelComponentArray.getComponent(tunnel.id);
+const modifyTunnel = (player: EntityID, tunnel: EntityID): void => {
+   const tunnelComponent = TunnelComponentArray.getComponent(tunnel);
    if (tunnelComponent.doorBitset !== 0b00 && tunnelComponent.doorBitset !== 0b01 && tunnelComponent.doorBitset !== 0b10) {
       return;
    }
    
-   const inventoryComponent = InventoryComponentArray.getComponent(player.id);
+   const inventoryComponent = InventoryComponentArray.getComponent(player);
    if (countItemType(inventoryComponent, ItemType.wood) < 2) {
       return;
    }
@@ -228,8 +228,8 @@ const modifyTunnel = (player: Entity, tunnel: Entity): void => {
    }
 }
 
-const modifyHut = (hut: Entity): void => {
-   const hutComponent = HutComponentArray.getComponent(hut.id);
+const modifyHut = (hut: EntityID): void => {
+   const hutComponent = HutComponentArray.getComponent(hut);
 
    if (!hutComponent.isRecalling) {
       // Start recall
@@ -239,7 +239,7 @@ const modifyHut = (hut: Entity): void => {
 
       // If the tribesman is already recalled into the hut, spawn a new one
       if (!hutComponent.hasSpawnedTribesman && hutComponent.hasTribesman) {
-         const tribeComponent = TribeComponentArray.getComponent(hut.id);
+         const tribeComponent = TribeComponentArray.getComponent(hut);
          tribeComponent.tribe.createNewTribesman(hut);
       }
          
@@ -247,16 +247,16 @@ const modifyHut = (hut: Entity): void => {
    }
 }
 
-const modifySpikes = (player: Entity, spikes: Entity): void => {
-   const spikesComponent = SpikesComponentArray.getComponent(spikes.id);
-   const structureComponent = StructureComponentArray.getComponent(spikes.id);
+const modifySpikes = (player: EntityID, spikes: EntityID): void => {
+   const spikesComponent = SpikesComponentArray.getComponent(spikes);
+   const structureComponent = StructureComponentArray.getComponent(spikes);
    
    // Can only cover non-covered floor spikes
    if (spikesComponent.isCovered || isAttachedToWall(structureComponent)) {
       return;
    }
    
-   const inventoryComponent = InventoryComponentArray.getComponent(player.id);
+   const inventoryComponent = InventoryComponentArray.getComponent(player);
    if (countItemType(inventoryComponent, ItemType.leaf) < 5) {
       return;
    }
@@ -266,64 +266,60 @@ const modifySpikes = (player: Entity, spikes: Entity): void => {
    spikesComponent.isCovered = true;
 }
 
-const modifyPlanterBox = (player: Entity, planterBox: Entity, plantType: PlanterBoxPlant): void => {
+const modifyPlanterBox = (player: EntityID, planterBox: EntityID, plantType: PlanterBoxPlant): void => {
    // Don't place plant if there's already a plant
-   const planterBoxComponent = PlanterBoxComponentArray.getComponent(planterBox.id);
-   if (typeof Board.entityRecord[planterBoxComponent.plantEntityID] !== "undefined") {
+   const planterBoxComponent = PlanterBoxComponentArray.getComponent(planterBox);
+   if (Board.hasEntity(planterBoxComponent.plantEntity)) {
       return;
    }
    
    placePlantInPlanterBox(planterBox, plantType);
 
    // Consume the item
-   const inventoryUseComponent = InventoryUseComponentArray.getComponent(player.id);
+   const inventoryUseComponent = InventoryUseComponentArray.getComponent(player);
    const hotbarUseInfo = getInventoryUseInfo(inventoryUseComponent, InventoryName.hotbar);
    const hotbarInventory = hotbarUseInfo.inventory;
 
    consumeItemFromSlot(hotbarInventory, hotbarUseInfo.selectedItemSlot, 1);
 }
 
-export function modifyBuilding(player: Entity, buildingID: number, data: number): void {
-   const building = Board.entityRecord[buildingID];
-   if (typeof building === "undefined") {
-      return;
-   }
-
-   switch (building.type) {
+export function modifyBuilding(player: EntityID, structure: EntityID, data: number): void {
+   const structureEntityType = Board.getEntityType(structure)!;
+   switch (structureEntityType) {
       case EntityType.tunnel: {
-         modifyTunnel(player, building);
+         modifyTunnel(player, structure);
          break;
       }
       case EntityType.workerHut:
       case EntityType.warriorHut: {
-         modifyHut(building);
+         modifyHut(structure);
          break;
       }
       case EntityType.floorSpikes:
       case EntityType.wallSpikes:
       case EntityType.floorPunjiSticks:
       case EntityType.wallPunjiSticks: {
-         modifySpikes(player, building);
+         modifySpikes(player, structure);
          break;
       }
       case EntityType.planterBox: {
          if (data === -1) {
-            const planterBoxComponent = PlanterBoxComponentArray.getComponent(buildingID);
+            const planterBoxComponent = PlanterBoxComponentArray.getComponent(structure);
             fertilisePlanterBox(planterBoxComponent);
 
             // Consume the item
             // @Cleanup: copy and paste
-            const inventoryUseComponent = InventoryUseComponentArray.getComponent(player.id);
+            const inventoryUseComponent = InventoryUseComponentArray.getComponent(player);
             const hotbarUseInfo = getInventoryUseInfo(inventoryUseComponent, InventoryName.hotbar);
             const hotbarInventory = hotbarUseInfo.inventory;
             consumeItemFromSlot(hotbarInventory, hotbarUseInfo.selectedItemSlot, 1);
          } else {
-            modifyPlanterBox(player, building, data);
+            modifyPlanterBox(player, structure, data);
          }
          break;
       }
       default: {
-         console.warn("Don't know how to modify building of type " + EntityTypeString[building.type]);
+         console.warn("Don't know how to modify building of type " + EntityTypeString[structureEntityType]);
          break;
       }
    }

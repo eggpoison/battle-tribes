@@ -11,20 +11,20 @@ import { ComponentConfig } from "../../components";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
 import { TransformComponentArray } from "../../components/TransformComponent";
 import { HitboxCollisionType, RectangularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
-import { ProjectileComponentArray } from "../../components/ProjectileComponent";
 import { ItemType } from "webgl-test-shared/dist/items/items";
+import { ProjectileComponentArray } from "../../components/ProjectileComponent";
 
 type ComponentTypes = ServerComponentType.transform | ServerComponentType.physics | ServerComponentType.tribe | ServerComponentType.projectile;
 
-export function createWoodenArrowConfig(): ComponentConfig<ComponentTypes> {
+export function createBallistaSlimeballConfig(): ComponentConfig<ComponentTypes> {
    return {
       [ServerComponentType.transform]: {
          position: new Point(0, 0),
          rotation: 0,
-         type: EntityType.woodenArrow,
+         type: EntityType.ballistaWoodenBolt,
          collisionBit: COLLISION_BITS.default,
          collisionMask: DEFAULT_COLLISION_MASK,
-         hitboxes: [new RectangularHitbox(0.5, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK & ~HitboxCollisionBit.ARROW_PASSABLE, 0, 12, 64, 0)]
+         hitboxes: [new RectangularHitbox(0.5, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK & ~HitboxCollisionBit.ARROW_PASSABLE, 0, 12, 80, 0)]
       },
       [ServerComponentType.physics]: {
          velocityX: 0,
@@ -44,10 +44,10 @@ export function createWoodenArrowConfig(): ComponentConfig<ComponentTypes> {
 }
 
 // @Cleanup: Copy and paste
-export function onWoodenArrowCollision(arrow: EntityID, collidingEntity: EntityID, collisionPoint: Point): void {
+export function onBallistaSlimeballCollision(arrow: EntityID, collidingEntity: EntityID, collisionPoint: Point): void {
    // Ignore friendlies, and friendly buildings if the ignoreFriendlyBuildings flag is set
    const relationship = getEntityRelationship(arrow, collidingEntity);
-   if (relationship === EntityRelationship.friendly) {
+   if (relationship === EntityRelationship.friendly || relationship === EntityRelationship.friendlyBuilding) {
       return;
    }
    
@@ -77,7 +77,7 @@ export function onWoodenArrowCollision(arrow: EntityID, collidingEntity: EntityI
 
       const collidingEntityTransformComponent = TransformComponentArray.getComponent(collidingEntity);
 
-      const ammoInfo = AMMO_INFO_RECORD[ItemType.wood];
+      const ammoInfo = AMMO_INFO_RECORD[ItemType.slimeball];
 
       const owner = Board.validateEntity(projectileComponent.owner);
       const hitDirection = transformComponent.position.calculateAngleBetween(collidingEntityTransformComponent.position);

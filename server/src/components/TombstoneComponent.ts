@@ -3,6 +3,11 @@ import { DeathInfo } from "webgl-test-shared/dist/entities";
 import { getZombieSpawnProgress } from "../entities/tombstone";
 import { ComponentArray } from "./ComponentArray";
 
+export interface TombstoneComponentParams {
+   readonly tombstoneType: number;
+   readonly deathInfo: DeathInfo | null;
+}
+
 export class TombstoneComponent {
    public readonly tombstoneType: number;
 
@@ -16,9 +21,9 @@ export class TombstoneComponent {
    // @Speed: Polymorphism
    public readonly deathInfo: DeathInfo | null;
 
-   constructor(tombstoneType: number, deathInfo: DeathInfo | null) {
-      this.tombstoneType = tombstoneType;
-      this.deathInfo = deathInfo;
+   constructor(params: TombstoneComponentParams) {
+      this.tombstoneType = params.tombstoneType;
+      this.deathInfo = params.deathInfo;
    }
 }
 

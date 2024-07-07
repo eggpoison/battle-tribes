@@ -104,16 +104,9 @@ export interface ResearchOrbCompleteData {
    readonly amount: number;
 }
 
-export interface EntityData<T extends EntityType = EntityType> {
+export interface EntityData {
    readonly id: number;
-   readonly position: [number, number];
-   readonly rotation: number;
-   readonly rectangularHitboxes: ReadonlyArray<RectangularHitboxData>;
-   readonly circularHitboxes: ReadonlyArray<CircularHitboxData>;
-   readonly ageTicks: number;
-   readonly type: T;
-   readonly collisionBit: number;
-   readonly collisionMask: number;
+   readonly type: EntityType;
    readonly components: ReadonlyArray<ComponentData>;
 }
 
@@ -131,7 +124,7 @@ export enum GameDataPacketOptions {
 /** Data about the game state sent to the client each tick */
 export interface GameDataPacket {
    readonly simulationIsPaused: boolean;
-   readonly entityDataArray: Array<EntityData<EntityType>>;
+   readonly entityDataArray: Array<EntityData>;
    readonly tileUpdates: ReadonlyArray<ServerTileUpdateData>;
    /** All hits taken by visible entities server-side */
    readonly visibleHits: ReadonlyArray<HitData>;

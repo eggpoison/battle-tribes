@@ -1,11 +1,17 @@
 import { DoorComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
-import { DoorToggleType } from "webgl-test-shared/dist/entities";
+import { DoorToggleType, EntityID } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { angle, lerp } from "webgl-test-shared/dist/utils";
 import Entity from "../Entity";
 import { PhysicsComponentArray } from "./PhysicsComponent";
 import { ComponentArray } from "./ComponentArray";
 import { HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
+
+export interface DoorComponentParams {
+   readonly originX: number;
+   readonly originY: number;
+   readonly closedRotation: number;
+}
 
 const DOOR_SWING_SPEED = 5 / Settings.TPS;
 
@@ -17,10 +23,10 @@ export class DoorComponent {
    public toggleType = DoorToggleType.none;
    public openProgress = 0;
 
-   constructor(originX: number, originY: number, closedRotation: number) {
-      this.originX = originX;
-      this.originY = originY;
-      this.closedRotation = closedRotation;
+   constructor(params: DoorComponentParams) {
+      this.originX = params.originX;
+      this.originY = params.originY;
+      this.closedRotation = params.closedRotation;
    }
 }
 
@@ -76,8 +82,8 @@ export function tickDoorComponent(door: Entity): void {
    }
 }
 
-export function toggleDoor(door: Entity): void {
-   const doorComponent = DoorComponentArray.getComponent(door.id);
+export function toggleDoor(door: EntityID): void {
+   const doorComponent = DoorComponentArray.getComponent(door);
 
    // Don't toggle if already in the middle of opening/closing
    if (doorComponent.toggleType !== DoorToggleType.none) {
@@ -102,7 +108,7 @@ function serialise(entityID: number): DoorComponentData {
    }
 }
 
-export function doorIsClosed(door: Entity): boolean {
-   const doorComponent = DoorComponentArray.getComponent(door.id);
+export function doorIsClosed(door: EntityID): boolean {
+   const doorComponent = DoorComponentArray.getComponent(door);
    return doorComponent.openProgress === 0;
 }

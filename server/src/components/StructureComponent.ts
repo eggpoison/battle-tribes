@@ -7,8 +7,12 @@ import { ComponentArray } from "./ComponentArray";
 import { ConnectedEntityIDs } from "../entities/tribes/tribe-member";
 import { Mutable } from "webgl-test-shared/dist/utils";
 import { ServerComponentType, StructureComponentData } from "webgl-test-shared/dist/components";
-import { EntityType } from "webgl-test-shared/dist/entities";
+import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
 import { TribeComponentArray } from "./TribeComponent";
+
+export interface StructureComponentParams {
+   readonly structureInfo: StructureConnectionInfo;
+}
 
 export class StructureComponent implements Mutable<StructureConnectionInfo> {
    /** The ID of any blueprint currently placed on the structure */
@@ -17,9 +21,9 @@ export class StructureComponent implements Mutable<StructureConnectionInfo> {
    public connectedSidesBitset: number;
    public connectedEntityIDs: ConnectedEntityIDs;
 
-   constructor(structureInfo: StructureConnectionInfo) {
-      this.connectedSidesBitset = structureInfo.connectedSidesBitset;
-      this.connectedEntityIDs = structureInfo.connectedEntityIDs;
+   constructor(params: StructureComponentParams) {
+      this.connectedSidesBitset = params.structureInfo.connectedSidesBitset;
+      this.connectedEntityIDs = params.structureInfo.connectedEntityIDs;
    }
 }
 
@@ -51,16 +55,13 @@ const removeConnectionWithStructure = (structureID: number, connectedStructureID
    }
 }
 
-function onJoin(entityID: number): void {
-   // @Hack
-   const entity = Board.entityRecord[entityID]! as Entity<StructureType>;
-
-   const tribeComponent = TribeComponentArray.getComponent(entityID);
+function onJoin(entity: EntityID): void {
+   const tribeComponent = TribeComponentArray.getComponent(entity);
    tribeComponent.tribe.addBuilding(entity);
 
    createStructureGrassBlockers(entity);
 
-   const structureComponent = StructureComponentArray.getComponent(entityID);
+   const structureComponent = StructureComponentArray.getComponent(entity);
    
    // Mark opposite connections
    for (let i = 0; i < 4; i++) {
@@ -70,26 +71,23 @@ function onJoin(entityID: number): void {
          const otherStructureComponent = StructureComponentArray.getComponent(connectedEntityID);
 
          // @Cleanup
-         const entity = Board.entityRecord[entityID]! as Entity<StructureType>;
+         const entity = Board.entityRecord[entity]! as Entity<StructureType>;
          const connectedEntity = Board.entityRecord[connectedEntityID]! as Entity<StructureType>;
          
          const snapOrigin = getStructureSnapOrigin(entity);
          const connectedSnapOrigin = getStructureSnapOrigin(connectedEntity);
          const connectionDirection = getSnapDirection(connectedSnapOrigin.calculateAngleBetween(snapOrigin), connectedEntity.rotation);
 
-         addConnection(otherStructureComponent, connectionDirection, entityID);
+         addConnection(otherStructureComponent, connectionDirection, entity);
       }
    }
 }
 
-function onRemove(entityID: number): void {
-   // @Hack
-   const entity = Board.entityRecord[entityID]! as Entity<StructureType>;
-
-   const tribeComponent = TribeComponentArray.getComponent(entityID);
+function onRemove(entity: EntityID): void {
+   const tribeComponent = TribeComponentArray.getComponent(entity);
    tribeComponent.tribe.removeBuilding(entity);
 
-   const structureComponent = StructureComponentArray.getComponent(entityID);
+   const structureComponent = StructureComponentArray.getComponent(entity);
 
    for (let i = 0; i < 4; i++) {
       const currentConnectedEntityID = structureComponent.connectedEntityIDs[i];

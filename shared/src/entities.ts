@@ -1,3 +1,4 @@
+/** Unique identifier for each entity */
 export type EntityID = number;
 
 export const enum EntityType {
@@ -27,7 +28,12 @@ export const enum EntityType {
    frozenYeti,
    fish,
    itemEntity,
-   woodenArrowProjectile,
+   woodenArrow,
+   ballistaWoodenBolt,
+   ballistaRock,
+   ballistaSlimeball,
+   ballistaFrostcicle,
+   slingTurretRock,
    iceShardProjectile,
    rockSpikeProjectile,
    spearProjectile,
@@ -85,7 +91,12 @@ export const EntityTypeString: Record<EntityType, string> = {
    [EntityType.frozenYeti]: "frozen_yeti",
    [EntityType.fish]: "fish",
    [EntityType.itemEntity]: "item_entity",
-   [EntityType.woodenArrowProjectile]: "wooden_arrow_projectile",
+   [EntityType.woodenArrow]: "wooden_arrow",
+   [EntityType.ballistaWoodenBolt]: "ballista_wooden_bolt",
+   [EntityType.ballistaRock]: "ballista_rock",
+   [EntityType.ballistaSlimeball]: "ballista_slimeball",
+   [EntityType.ballistaFrostcicle]: "ballista_frostcicle",
+   [EntityType.slingTurretRock]: "sling_turret_rock",
    [EntityType.iceShardProjectile]: "ice_shard_projectile",
    [EntityType.rockSpikeProjectile]: "rock_spike_projectile",
    [EntityType.spearProjectile]: "spear_projectile",
@@ -256,13 +267,4 @@ export enum DoorToggleType {
    none,
    close,
    open
-}
-
-export enum GenericArrowType {
-   woodenArrow,
-   woodenBolt,
-   ballistaRock,
-   ballistaSlimeball,
-   ballistaFrostcicle,
-   slingRock
 }

@@ -1,5 +1,5 @@
 import { PathfindingNodeIndex, VisibleChunkBounds } from "webgl-test-shared/dist/client-server-types";
-import { EntityType } from "webgl-test-shared/dist/entities";
+import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
 import { PathfindingSettings, Settings } from "webgl-test-shared/dist/settings";
 import { distBetweenPointAndRectangle, angle, calculateDistanceSquared, Point } from "webgl-test-shared/dist/utils";
 import Entity from "./Entity";
@@ -9,6 +9,7 @@ import OPTIONS from "./options";
 import { PhysicsComponentArray } from "./components/PhysicsComponent";
 import { TribeComponentArray } from "./components/TribeComponent";
 import { CircularHitbox, HitboxCollisionType, RectangularHitbox, Hitbox, hitboxIsCircular } from "webgl-test-shared/dist/hitboxes/hitboxes";
+import { TransformComponent, TransformComponentArray } from "./components/TransformComponent";
 
 const enum Vars {
    NODE_ACCESSIBILITY_RESOLUTION = 3,
@@ -17,13 +18,13 @@ const enum Vars {
 
 const activeGroupIDs = new Array<number>();
 
-let dirtyPathfindingEntities = new Array<Entity>();
+let dirtyPathfindingEntities = new Array<EntityID>();
 
-export function addDirtyPathfindingEntity(entity: Entity): void {
+export function addDirtyPathfindingEntity(entity: EntityID): void {
    dirtyPathfindingEntities.push(entity);
 }
 
-export function removeDirtyPathfindingEntity(entity: Entity): void {
+export function removeDirtyPathfindingEntity(entity: EntityID): void {
    for (let i = 0 ; i < dirtyPathfindingEntities.length; i++) {
       const currentEntity = dirtyPathfindingEntities[i];
       if (currentEntity === entity) {
@@ -354,26 +355,26 @@ export function positionIsAccessible(x: number, y: number, ignoredGroupID: numbe
    return nodeIsAccessibleForEntity(node, ignoredGroupID, pathfindingEntityFootprint);
 }
 
-export function getAngleToNode(entity: Entity, node: PathfindingNodeIndex): number {
+export function getAngleToNode(transformComponent: TransformComponent, node: PathfindingNodeIndex): number {
    const x = (node % PathfindingSettings.NODES_IN_WORLD_WIDTH - 1) * PathfindingSettings.NODE_SEPARATION;
    const y = (Math.floor(node / PathfindingSettings.NODES_IN_WORLD_WIDTH) - 1) * PathfindingSettings.NODE_SEPARATION;
-   return angle(x - entity.position.x, y - entity.position.y);
+   return angle(x - transformComponent.position.x, y - transformComponent.position.y);
 }
 
-export function getDistanceToNode(entity: Entity, node: PathfindingNodeIndex): number {
+export function getDistanceToNode(transformComponent: TransformComponent, node: PathfindingNodeIndex): number {
    const x = (node % PathfindingSettings.NODES_IN_WORLD_WIDTH - 1) * PathfindingSettings.NODE_SEPARATION;
    const y = (Math.floor(node / PathfindingSettings.NODES_IN_WORLD_WIDTH) - 1) * PathfindingSettings.NODE_SEPARATION;
 
-   const diffX = entity.position.x - x;
-   const diffY = entity.position.y - y;
+   const diffX = transformComponent.position.x - x;
+   const diffY = transformComponent.position.y - y;
    return Math.sqrt(diffX * diffX + diffY * diffY);
 }
 
-export function getDistFromNode(entity: Entity, node: PathfindingNodeIndex): number {
+export function getDistFromNode(transformComponent: TransformComponent, node: PathfindingNodeIndex): number {
    const x = (node % PathfindingSettings.NODES_IN_WORLD_WIDTH - 1) * PathfindingSettings.NODE_SEPARATION;
    const y = (Math.floor(node / PathfindingSettings.NODES_IN_WORLD_WIDTH) - 1) * PathfindingSettings.NODE_SEPARATION;
 
-   return Math.sqrt(Math.pow(x - entity.position.x, 2) + Math.pow(y - entity.position.y, 2));
+   return Math.sqrt(Math.pow(x - transformComponent.position.x, 2) + Math.pow(y - transformComponent.position.y, 2));
 }
 
 export function getDistBetweenNodes(node1: PathfindingNodeIndex, node2: PathfindingNodeIndex): number {
@@ -388,10 +389,11 @@ export function getDistBetweenNodes(node1: PathfindingNodeIndex, node2: Pathfind
    return Math.sqrt(diffX * diffX + diffY * diffY);
 }
 
-export function entityHasReachedNode(entity: Entity, node: PathfindingNodeIndex): boolean {
+export function entityHasReachedNode(transformComponent: TransformComponent, node: PathfindingNodeIndex): boolean {
    const x = (node % PathfindingSettings.NODES_IN_WORLD_WIDTH - 1) * PathfindingSettings.NODE_SEPARATION;
    const y = (Math.floor(node / PathfindingSettings.NODES_IN_WORLD_WIDTH) - 1) * PathfindingSettings.NODE_SEPARATION;
-   const distSquared = calculateDistanceSquared(entity.position.x, entity.position.y, x, y);
+
+   const distSquared = calculateDistanceSquared(transformComponent.position.x, transformComponent.position.y, x, y);
    return distSquared <= PathfindingSettings.NODE_REACH_DIST * PathfindingSettings.NODE_SEPARATION;
 }
 
@@ -763,13 +765,13 @@ export function entityCanBlockPathfinding(entityType: EntityType): boolean {
       && entityType !== EntityType.blueprintEntity;
 }
 
-export function getEntityPathfindingGroupID(entity: Entity): number {
-   switch (entity.type) {
+export function getEntityPathfindingGroupID(entity: EntityID): number {
+   switch (Board.getEntityType(entity)!) {
       case EntityType.door:
       case EntityType.player:
       case EntityType.tribeWorker:
       case EntityType.tribeWarrior: {
-         const tribeComponent = TribeComponentArray.getComponent(entity.id);
+         const tribeComponent = TribeComponentArray.getComponent(entity);
          return tribeComponent.tribe.pathfindingGroupID;
       }
       default: {
@@ -778,35 +780,28 @@ export function getEntityPathfindingGroupID(entity: Entity): number {
    }
 }
 
-const thingA = (entity: Entity, pathfindingGroupID: number): void => {
-   for (const node of entity.occupiedPathfindingNodes) {
+export function updateEntityPathfindingNodeOccupance(entity: EntityID): void {
+   const pathfindingGroupID = getEntityPathfindingGroupID(entity);
+   const transformComponent = TransformComponentArray.getComponent(entity);
+
+   for (const node of transformComponent.occupiedPathfindingNodes) {
       markPathfindingNodeClearance(node, pathfindingGroupID);
    }
-   entity.occupiedPathfindingNodes = new Set();
-}
+   transformComponent.occupiedPathfindingNodes = new Set();
 
-const thingB = (entity: Entity, pathfindingGroupID: number): void => {
-   for (let i = 0; i < entity.hitboxes.length; i++) {
-      const hitbox = entity.hitboxes[i];
+   for (let i = 0; i < transformComponent.hitboxes.length; i++) {
+      const hitbox = transformComponent.hitboxes[i];
    
       // Add to occupied pathfinding nodes
       const occupiedNodes = getHitboxOccupiedNodes(hitbox);
       for (let i = 0; i < occupiedNodes.length; i++) {
          const node = occupiedNodes[i];
-         if (!entity.occupiedPathfindingNodes.has(node)) {
+         if (!transformComponent.occupiedPathfindingNodes.has(node)) {
             markPathfindingNodeOccupance(node, pathfindingGroupID);
-            entity.occupiedPathfindingNodes.add(node);
+            transformComponent.occupiedPathfindingNodes.add(node);
          }
       }
    }
-}
-
-export function updateEntityPathfindingNodeOccupance(entity: Entity): void {
-   const pathfindingGroupID = getEntityPathfindingGroupID(entity);
-
-   // @Temporary: to see performance
-   thingA(entity, pathfindingGroupID);
-   thingB(entity, pathfindingGroupID);
 }
 
 export function updateDynamicPathfindingNodes(): void {
@@ -818,18 +813,19 @@ export function updateDynamicPathfindingNodes(): void {
       const entity = dirtyPathfindingEntities[i];
       updateEntityPathfindingNodeOccupance(entity);
 
-      const physicsComponent = PhysicsComponentArray.getComponent(entity.id);
+      const physicsComponent = PhysicsComponentArray.getComponent(entity);
       physicsComponent.pathfindingNodesAreDirty = false;
    }
 
    dirtyPathfindingEntities = [];
 }
 
-export function clearEntityPathfindingNodes(entity: Entity): void {
+export function clearEntityPathfindingNodes(entity: EntityID): void {
    const groupID = getEntityPathfindingGroupID(entity);
+   const transformComponent = TransformComponentArray.getComponent(entity);
    
    // Remove occupied pathfinding nodes
-   for (const node of entity.occupiedPathfindingNodes) {
+   for (const node of transformComponent.occupiedPathfindingNodes) {
       markPathfindingNodeClearance(node, groupID);
    }
 }

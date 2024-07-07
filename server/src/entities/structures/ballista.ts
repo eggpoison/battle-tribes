@@ -1,55 +1,86 @@
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision";
 import { AMMO_INFO_RECORD, ServerComponentType } from "webgl-test-shared/dist/components";
-import { EntityType } from "webgl-test-shared/dist/entities";
+import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { Point } from "webgl-test-shared/dist/utils";
-import Entity from "../../Entity";
-import Tribe from "../../Tribe";
-import { EntityRelationship, TribeComponent, TribeComponentArray, getEntityRelationship } from "../../components/TribeComponent";
-import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
-import { TurretComponent, TurretComponentArray } from "../../components/TurretComponent";
-import { HealthComponent, HealthComponentArray } from "../../components/HealthComponent";
-import { AIHelperComponent, AIHelperComponentArray } from "../../components/AIHelperComponent";
-import { AmmoBoxComponent, AmmoBoxComponentArray } from "../../components/AmmoBoxComponent";
-import { GenericArrowInfo, createWoodenArrow } from "../projectiles/wooden-arrow";
-import { InventoryComponent, InventoryComponentArray, consumeItemTypeFromInventory, createNewInventory, getFirstOccupiedItemSlotInInventory, getInventory } from "../../components/InventoryComponent";
+import { EntityRelationship, getEntityRelationship } from "../../components/TribeComponent";
+import { TurretComponentArray } from "../../components/TurretComponent";
+import { AIHelperComponentArray } from "../../components/AIHelperComponent";
+import { AmmoBoxComponentArray } from "../../components/AmmoBoxComponent";
+import { InventoryComponentArray, consumeItemTypeFromInventory, getFirstOccupiedItemSlotInInventory, getInventory } from "../../components/InventoryComponent";
 import { angleIsInRange, getClockwiseAngleDistance, getMaxAngleToCircularHitbox, getMaxAngleToRectangularHitbox, getMinAngleToCircularHitbox, getMinAngleToRectangularHitbox } from "../../ai-shared";
 import Board from "../../Board";
-import { StructureComponentArray, StructureComponent } from "../../components/StructureComponent";
-import { StructureConnectionInfo } from "webgl-test-shared/dist/structures";
 import { hitboxIsCircular } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { createBallistaHitboxes } from "webgl-test-shared/dist/hitboxes/entity-hitbox-creation";
 import { InventoryName, BallistaAmmoType, BALLISTA_AMMO_TYPES, ItemType } from "webgl-test-shared/dist/items/items";
+import { TransformComponent, TransformComponentArray } from "../../components/TransformComponent";
+import { ComponentConfig } from "../../components";
+import { createBallistaWoodenBoltConfig } from "../projectiles/ballista-wooden-bolt";
+import { createBallistaRockConfig } from "../projectiles/ballista-rock";
+import { createBallistaSlimeballConfig } from "../projectiles/ballista-slimeball";
+import { createBallistaFrostcicleConfig } from "../projectiles/ballista-frostcicle";
+
+type ComponentTypes = ServerComponentType.transform
+   | ServerComponentType.health
+   | ServerComponentType.statusEffect
+   | ServerComponentType.structure
+   | ServerComponentType.tribe
+   | ServerComponentType.turret
+   | ServerComponentType.aiHelper
+   | ServerComponentType.ammoBox
+   | ServerComponentType.inventory;
 
 const VISION_RANGE = 550;
 const AIM_ARC_SIZE = Math.PI / 2;
 
-export function createBallista(position: Point, rotation: number, tribe: Tribe, connectionInfo: StructureConnectionInfo): Entity {
-   const ballista = new Entity(position, rotation, EntityType.ballista, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
-
-   const hitboxes = createBallistaHitboxes();
-   for (let i = 0; i < hitboxes.length; i++) {
-      ballista.addHitbox(hitboxes[i]);
-   }
-   
-   HealthComponentArray.addComponent(ballista.id, new HealthComponent(100));
-   StatusEffectComponentArray.addComponent(ballista.id, new StatusEffectComponent(StatusEffect.poisoned | StatusEffect.bleeding));
-   StructureComponentArray.addComponent(ballista.id, new StructureComponent(connectionInfo));
-   TribeComponentArray.addComponent(ballista.id, new TribeComponent(tribe));
-   TurretComponentArray.addComponent(ballista.id, new TurretComponent(0));
-   AIHelperComponentArray.addComponent(ballista.id, new AIHelperComponent(VISION_RANGE));
-   AmmoBoxComponentArray.addComponent(ballista.id, new AmmoBoxComponent());
-
-   const inventoryComponent = new InventoryComponent();
-   InventoryComponentArray.addComponent(ballista.id, inventoryComponent);
-   createNewInventory(inventoryComponent, InventoryName.ammoBoxInventory, 3, 1, { acceptsPickedUpItems: false, isDroppedOnDeath: true });
-
-   return ballista;
+export function createBallistaConfig(): ComponentConfig<ComponentTypes> {
+   return {
+      [ServerComponentType.transform]: {
+         position: new Point(0, 0),
+         rotation: 0,
+         type: EntityType.ballista,
+         collisionBit: COLLISION_BITS.default,
+         collisionMask: DEFAULT_COLLISION_MASK,
+         hitboxes: createBallistaHitboxes()
+      },
+      [ServerComponentType.health]: {
+         maxHealth: 100
+      },
+      [ServerComponentType.statusEffect]: {
+         statusEffectImmunityBitset: StatusEffect.poisoned | StatusEffect.bleeding
+      },
+      [ServerComponentType.structure]: {
+         structureInfo: {
+            connectedSidesBitset: 0,
+            connectedEntityIDs: [0, 0, 0, 0]
+         }
+      },
+      [ServerComponentType.tribe]: {
+         tribeID: null
+      },
+      [ServerComponentType.turret]: {
+         fireCooldownTicks: 0
+      },
+      [ServerComponentType.aiHelper]: {
+         visionRange: VISION_RANGE
+      },
+      [ServerComponentType.ammoBox]: {},
+      [ServerComponentType.inventory]: {
+         inventories: [
+            {
+               inventoryName: InventoryName.ammoBoxInventory,
+               width: 3,
+               height: 1,
+               options: { acceptsPickedUpItems: false, isDroppedOnDeath: true }
+            }
+         ]
+      }
+   };
 }
 
-const getAmmoType = (turret: Entity): BallistaAmmoType | null => {
-   const inventoryComponent = InventoryComponentArray.getComponent(turret.id);
+const getAmmoType = (turret: EntityID): BallistaAmmoType | null => {
+   const inventoryComponent = InventoryComponentArray.getComponent(turret);
    const ammoBoxInventory = getInventory(inventoryComponent, InventoryName.ammoBoxInventory);
 
    const firstOccupiedSlot = getFirstOccupiedItemSlotInInventory(ammoBoxInventory);
@@ -66,20 +97,22 @@ const getAmmoType = (turret: Entity): BallistaAmmoType | null => {
    return item.type as BallistaAmmoType;
 }
 
-const entityIsTargetted = (turret: Entity, entity: Entity): boolean => {
-   if (entity.type === EntityType.itemEntity) {
+const entityIsTargetted = (turret: EntityID, entity: EntityID): boolean => {
+   if (Board.getEntityType(entity) === EntityType.itemEntity) {
       return false;
    }
 
-   if (getEntityRelationship(turret.id, entity) <= EntityRelationship.friendlyBuilding) {
+   if (getEntityRelationship(turret, entity) <= EntityRelationship.friendlyBuilding) {
       return false;
    }
 
+   const entityTransformComponent = TransformComponentArray.getComponent(entity);
+   
    // Make sure the entity is within the vision range
    let hasHitboxInRange = false;
-   for (let i = 0; i < entity.hitboxes.length; i++) {
-      const hitbox = entity.hitboxes[i];
-      if (Board.hitboxIsInRange(turret.position, hitbox, VISION_RANGE)) {
+   for (let i = 0; i < entityTransformComponent.hitboxes.length; i++) {
+      const hitbox = entityTransformComponent.hitboxes[i];
+      if (Board.hitboxIsInRange(entityTransformComponent.position, hitbox, VISION_RANGE)) {
          hasHitboxInRange = true;
          break;
       }
@@ -88,23 +121,25 @@ const entityIsTargetted = (turret: Entity, entity: Entity): boolean => {
       return false;
    }
 
-   const minAngle = turret.rotation - AIM_ARC_SIZE / 2;
-   const maxAngle = turret.rotation + AIM_ARC_SIZE / 2;
+   const turretTransformComponent = TransformComponentArray.getComponent(turret);
+
+   const minAngle = turretTransformComponent.rotation - AIM_ARC_SIZE / 2;
+   const maxAngle = turretTransformComponent.rotation + AIM_ARC_SIZE / 2;
 
    // Make sure at least 1 of the entities' hitboxes is within the arc
-   for (let i = 0; i < entity.hitboxes.length; i++) {
+   for (let i = 0; i < entityTransformComponent.hitboxes.length; i++) {
       let minAngleToHitbox: number;
       let maxAngleToHitbox: number;
       
-      const hitbox = entity.hitboxes[i];
+      const hitbox = entityTransformComponent.hitboxes[i];
       if (hitboxIsCircular(hitbox)) {
          // Circular hitbox
-         minAngleToHitbox = getMinAngleToCircularHitbox(turret.position.x, turret.position.y, hitbox);
-         maxAngleToHitbox = getMaxAngleToCircularHitbox(turret.position.x, turret.position.y, hitbox);
+         minAngleToHitbox = getMinAngleToCircularHitbox(turretTransformComponent.position.x, turretTransformComponent.position.y, hitbox);
+         maxAngleToHitbox = getMaxAngleToCircularHitbox(turretTransformComponent.position.x, turretTransformComponent.position.y, hitbox);
       } else {
          // Rectangular hitbox
-         minAngleToHitbox = getMinAngleToRectangularHitbox(turret.position.x, turret.position.y, hitbox);
-         maxAngleToHitbox = getMaxAngleToRectangularHitbox(turret.position.x, turret.position.y, hitbox);
+         minAngleToHitbox = getMinAngleToRectangularHitbox(turretTransformComponent.position.x, turretTransformComponent.position.y, hitbox);
+         maxAngleToHitbox = getMaxAngleToRectangularHitbox(turretTransformComponent.position.x, turretTransformComponent.position.y, hitbox);
       }
 
       if (angleIsInRange(minAngleToHitbox, minAngle, maxAngle) || angleIsInRange(maxAngleToHitbox, minAngle, maxAngle)) {
@@ -115,8 +150,10 @@ const entityIsTargetted = (turret: Entity, entity: Entity): boolean => {
    return false;
 }
 
-const getTarget = (turret: Entity, visibleEntities: ReadonlyArray<Entity>): Entity | null => {
-   let closestValidTarget: Entity;
+const getTarget = (turret: EntityID, visibleEntities: ReadonlyArray<EntityID>): EntityID | null => {
+   const turretTransformComponent = TransformComponentArray.getComponent(turret);
+   
+   let closestValidTarget: EntityID;
    let minDist = 9999999.9;
    for (let i = 0; i < visibleEntities.length; i++) {
       const entity = visibleEntities[i];
@@ -124,7 +161,9 @@ const getTarget = (turret: Entity, visibleEntities: ReadonlyArray<Entity>): Enti
          continue;
       }
 
-      const dist = entity.position.calculateDistanceSquaredBetween(turret.position);
+      const entityTransformComponent = TransformComponentArray.getComponent(entity);
+
+      const dist = entityTransformComponent.position.calculateDistanceSquaredBetween(turretTransformComponent.position);
       if (dist < minDist) {
          minDist = dist;
          closestValidTarget = entity;
@@ -137,8 +176,8 @@ const getTarget = (turret: Entity, visibleEntities: ReadonlyArray<Entity>): Enti
    return null;
 }
 
-const attemptAmmoLoad = (ballista: Entity): void => {
-   const ballistaComponent = AmmoBoxComponentArray.getComponent(ballista.id);
+const attemptAmmoLoad = (ballista: EntityID): void => {
+   const ballistaComponent = AmmoBoxComponentArray.getComponent(ballista);
    
    const ammoType = getAmmoType(ballista);
    if (ammoType !== null) {
@@ -146,54 +185,60 @@ const attemptAmmoLoad = (ballista: Entity): void => {
       ballistaComponent.ammoType = ammoType;
       ballistaComponent.ammoRemaining = AMMO_INFO_RECORD[ammoType].ammoMultiplier;
 
-      const inventoryComponent = InventoryComponentArray.getComponent(ballista.id);
+      const inventoryComponent = InventoryComponentArray.getComponent(ballista);
       consumeItemTypeFromInventory(inventoryComponent, InventoryName.ammoBoxInventory, ammoType, 1);
    }
 }
 
-const fire = (ballista: Entity, ammoType: BallistaAmmoType): void => {
-   const turretComponent = TurretComponentArray.getComponent(ballista.id);
+const createProjectile = (transformComponent: TransformComponent, fireDirection: number, ammoType: BallistaAmmoType): void => {
+   const ammoInfo = AMMO_INFO_RECORD[ammoType];
+
+   let config: ComponentConfig<ServerComponentType.transform | ServerComponentType.physics>;
+   
+   switch (ammoType) {
+      case ItemType.wood: {
+         config = createBallistaWoodenBoltConfig();
+         break;
+      }
+      case ItemType.rock: {
+         config = createBallistaRockConfig();
+         break;
+      }
+      case ItemType.slimeball: {
+         config = createBallistaSlimeballConfig();
+         break;
+      }
+      case ItemType.frostcicle: {
+         config = createBallistaFrostcicleConfig();
+         break;
+      }
+   }
+
+   const rotation = ammoType === ItemType.rock || ammoType === ItemType.slimeball ? 2 * Math.PI * Math.random() : fireDirection;
+
+   config[ServerComponentType.transform].position.x = transformComponent.position.x;
+   config[ServerComponentType.transform].position.y = transformComponent.position.y;
+   config[ServerComponentType.transform].rotation = rotation;
+   config[ServerComponentType.physics].velocityX = ammoInfo.projectileSpeed * Math.sin(fireDirection);
+   config[ServerComponentType.physics].velocityY = ammoInfo.projectileSpeed * Math.cos(fireDirection);
+}
+
+const fire = (ballista: EntityID, ammoType: BallistaAmmoType): void => {
+   const transformComponent = TransformComponentArray.getComponent(ballista);
+   const turretComponent = TurretComponentArray.getComponent(ballista);
 
    const ammoInfo = AMMO_INFO_RECORD[ammoType];
-   
-   const arrowInfo: GenericArrowInfo = {
-      type: ammoInfo.type,
-      damage: ammoInfo.damage,
-      knockback: ammoInfo.knockback,
-      hitboxWidth: ammoInfo.hitboxWidth,
-      hitboxHeight: ammoInfo.hitboxHeight,
-      ignoreFriendlyBuildings: true,
-      statusEffect: ammoInfo.statusEffect
-   };
 
-   // @Incomplete: Spawn slightly offset from the turret's position
-   if (ammoType === ItemType.frostcicle) {
-      // Frostcicles shoot twin bolts
-      for (let i = 0; i < 2; i++) {
-         const fireDirection = turretComponent.aimDirection + ballista.rotation + (i === 0 ? 1 : -1) * 0.02;
-         
-         const arrowCreationInfo = createWoodenArrow(ballista.position.copy(), fireDirection, ballista.id, arrowInfo);
+   const projectileCount = ammoType === ItemType.frostcicle ? 2 : 1;
+   for (let i = 0; i < ammoInfo.ammoMultiplier; i++) {
+      let fireDirection = turretComponent.aimDirection + transformComponent.rotation;
+      fireDirection += projectileCount > 1 ? (i / (ammoInfo.ammoMultiplier - 1) - 0.5) * Math.PI * 0.5 : 0;
 
-         // @Cleanup: copy and paste
-         const physicsComponent = arrowCreationInfo.components[ServerComponentType.physics]!;
-         physicsComponent.velocity.x = ammoInfo.projectileSpeed * Math.sin(fireDirection);
-         physicsComponent.velocity.y = ammoInfo.projectileSpeed * Math.cos(fireDirection);
-      }
-   } else {
-      const fireDirection = turretComponent.aimDirection + ballista.rotation;
-      
-      const rotation = ammoType === ItemType.rock || ammoType === ItemType.slimeball ? 2 * Math.PI * Math.random() : fireDirection;
-      
-      const arrowCreationInfo = createWoodenArrow(ballista.position.copy(), rotation, ballista.id, arrowInfo);
-
-      // @Cleanup: copy and paste
-      const physicsComponent = arrowCreationInfo.components[ServerComponentType.physics]!;
-      physicsComponent.velocity.x = ammoInfo.projectileSpeed * Math.sin(fireDirection);
-      physicsComponent.velocity.y = ammoInfo.projectileSpeed * Math.cos(fireDirection);
+      createProjectile(transformComponent, fireDirection, ammoType);
    }
 
    // Consume ammo
-   const ballistaComponent = AmmoBoxComponentArray.getComponent(ballista.id);
+   const ballistaComponent = AmmoBoxComponentArray.getComponent(ballista);
    ballistaComponent.ammoRemaining--;
 
    if (ballistaComponent.ammoRemaining === 0) {
@@ -201,10 +246,10 @@ const fire = (ballista: Entity, ammoType: BallistaAmmoType): void => {
    }
 }
 
-export function tickBallista(ballista: Entity): void {
-   const aiHelperComponent = AIHelperComponentArray.getComponent(ballista.id);
-   const turretComponent = TurretComponentArray.getComponent(ballista.id);
-   const ammoBoxComponent = AmmoBoxComponentArray.getComponent(ballista.id);
+export function tickBallista(ballista: EntityID): void {
+   const aiHelperComponent = AIHelperComponentArray.getComponent(ballista);
+   const turretComponent = TurretComponentArray.getComponent(ballista);
+   const ammoBoxComponent = AmmoBoxComponentArray.getComponent(ballista);
 
    // Attempt to load ammo if there is none loaded
    // @Speed: ideally shouldn't be done every tick, just when the inventory is changed (ammo is added to the inventory)
@@ -222,9 +267,12 @@ export function tickBallista(ballista: Entity): void {
          }
          turretComponent.hasTarget = true;
 
-         const targetDirection = ballista.position.calculateAngleBetween(target.position);
+         const transformComponent = TransformComponentArray.getComponent(ballista);
+         const targetTransformComponent = TransformComponentArray.getComponent(target);
+         
+         const targetDirection = transformComponent.position.calculateAngleBetween(targetTransformComponent.position);
 
-         const turretAimDirection = turretComponent.aimDirection + ballista.rotation;
+         const turretAimDirection = turretComponent.aimDirection + transformComponent.rotation;
 
          // Turn to face the target
          const clockwiseDist = getClockwiseAngleDistance(turretAimDirection, targetDirection);
@@ -232,20 +280,20 @@ export function tickBallista(ballista: Entity): void {
             // Turn counterclockwise
             turretComponent.aimDirection -= Math.PI / 3 * Settings.I_TPS;
             // @Incomplete: Will this sometimes cause snapping?
-            if (turretComponent.aimDirection + ballista.rotation < targetDirection) {
-               turretComponent.aimDirection = targetDirection - ballista.rotation;
+            if (turretComponent.aimDirection + transformComponent.rotation < targetDirection) {
+               turretComponent.aimDirection = targetDirection - transformComponent.rotation;
             }
          } else {
             // Turn clockwise
             turretComponent.aimDirection += Math.PI / 3 * Settings.I_TPS;
-            if (turretComponent.aimDirection + ballista.rotation > targetDirection) {
-               turretComponent.aimDirection = targetDirection - ballista.rotation;
+            if (turretComponent.aimDirection + transformComponent.rotation > targetDirection) {
+               turretComponent.aimDirection = targetDirection - transformComponent.rotation;
             }
          }
          if (turretComponent.fireCooldownTicks > 0) {
             turretComponent.fireCooldownTicks--;
          } else {
-            let angleDiff = targetDirection - (turretComponent.aimDirection + ballista.rotation);
+            let angleDiff = targetDirection - (turretComponent.aimDirection + transformComponent.rotation);
             while (angleDiff >= Math.PI) {
                angleDiff -= 2 * Math.PI;
             }

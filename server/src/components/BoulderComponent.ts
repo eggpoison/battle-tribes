@@ -3,6 +3,8 @@ import { randInt } from "webgl-test-shared/dist/utils";
 import { ComponentArray } from "./ComponentArray";
 import { EntityID } from "webgl-test-shared/dist/entities";
 
+export interface BoulderComponentParams {}
+
 export class BoulderComponent {
    public readonly boulderType = randInt(0, 1);
 }

@@ -2,13 +2,18 @@ import { CactusComponentData, ServerComponentType } from "webgl-test-shared/dist
 import { CactusBodyFlowerData, CactusLimbData } from "webgl-test-shared/dist/entities";
 import { ComponentArray } from "./ComponentArray";
 
+export interface CactusComponentParams {
+   readonly flowers: ReadonlyArray<CactusBodyFlowerData>;
+   readonly limbs: ReadonlyArray<CactusLimbData>;
+}
+
 export class CactusComponent {
    public readonly flowers: ReadonlyArray<CactusBodyFlowerData>;
    public readonly limbs: ReadonlyArray<CactusLimbData>;
 
-   constructor(flowers: ReadonlyArray<CactusBodyFlowerData>, limbs: ReadonlyArray<CactusLimbData>) {
-      this.flowers = flowers;
-      this.limbs = limbs;
+   constructor(params: CactusComponentParams) {
+      this.flowers = params.flowers;
+      this.limbs = params.limbs;
    }
 }
 

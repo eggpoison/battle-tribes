@@ -1,5 +1,5 @@
 import { ServerComponentType, TunnelComponentData } from "webgl-test-shared/dist/components";
-import { DoorToggleType } from "webgl-test-shared/dist/entities";
+import { DoorToggleType, EntityID } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { Point, angle, lerp } from "webgl-test-shared/dist/utils";
 import Entity from "../Entity";
@@ -7,18 +7,20 @@ import { HitboxCollisionBit, DEFAULT_HITBOX_COLLISION_MASK } from "webgl-test-sh
 import { ComponentArray } from "./ComponentArray";
 import { HitboxCollisionType, RectangularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
 
-const DOOR_HITBOX_MASS = 1;
-const DOOR_HITBOX_WIDTH = 48;
-const DOOR_HITBOX_HEIGHT = 16;
-const DOOR_HITBOX_OFFSET = 30;
-const THIN_HITBOX_HEIGHT = 0.1;
-
-// @Cleanup: All the door toggling logic is stolen from DoorComponent.ts
+// @Cleanup: All the door toggling logic is stolen from DoorComponent.ts}
 
 const enum DoorType {
    top,
    bottom
 }
+
+export interface TunnelComponentParams {}
+
+const DOOR_HITBOX_MASS = 1;
+const DOOR_HITBOX_WIDTH = 48;
+const DOOR_HITBOX_HEIGHT = 16;
+const DOOR_HITBOX_OFFSET = 30;
+const THIN_HITBOX_HEIGHT = 0.1;
 
 const DOOR_SWING_SPEED = 5 / Settings.TPS;
 
@@ -94,8 +96,8 @@ const updateDoorOpenProgress = (tunnel: Entity, tunnelComponent: TunnelComponent
    }
 }
 
-export function tickTunnelComponent(tunnel: Entity): void {
-   const tunnelComponent = TunnelComponentArray.getComponent(tunnel.id);
+export function tickTunnelComponent(tunnel: EntityID): void {
+   const tunnelComponent = TunnelComponentArray.getComponent(tunnel);
 
    // @Incomplete: Hard hitboxes
    
@@ -143,8 +145,8 @@ export function tickTunnelComponent(tunnel: Entity): void {
    }
 }
 
-export function toggleTunnelDoor(tunnel: Entity, doorBit: number): void {
-   const tunnelComponent = TunnelComponentArray.getComponent(tunnel.id);
+export function toggleTunnelDoor(tunnel: EntityID, doorBit: number): void {
+   const tunnelComponent = TunnelComponentArray.getComponent(tunnel);
    if ((tunnelComponent.doorBitset & doorBit) === 0) {
       return;
    }

@@ -2,6 +2,8 @@ import { CookingComponentData, ServerComponentType } from "webgl-test-shared/dis
 import { HeatingRecipe } from "../entities/structures/cooking-entities/cooking-entity";
 import { ComponentArray } from "./ComponentArray";
 
+export interface CookingComponentParams {}
+
 export class CookingComponent {
    public heatingTimer = 0;
    public currentRecipe: HeatingRecipe | null = null;

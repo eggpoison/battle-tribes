@@ -1,11 +1,15 @@
 import { PebblumComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
 import { ComponentArray } from "./ComponentArray";
 
+export interface PebblumComponentParams {
+   readonly targetEntityID: number;
+}
+
 export class PebblumComponent {
    public targetEntityID: number;
    
-   constructor(targetEntityID: number) {
-      this.targetEntityID = targetEntityID
+   constructor(params: PebblumComponentParams) {
+      this.targetEntityID = params.targetEntityID
    }
 }
 

@@ -1,13 +1,25 @@
 import { InventoryComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
-import Entity from "../Entity";
 import { createItemEntity, itemEntityCanBePickedUp } from "../entities/item-entity";
 import { ComponentArray } from "./ComponentArray";
 import { createItem } from "../items";
 import Board from "../Board";
 import { ItemComponentArray } from "./ItemComponent";
-import { ItemTally, CraftingRecipe, CraftingStation } from "webgl-test-shared/dist/items/crafting-recipes";
+import { CraftingRecipe, CraftingStation } from "webgl-test-shared/dist/items/crafting-recipes";
 import { ItemTally2, tallyInventoryItems } from "webgl-test-shared/dist/items/ItemTally";
 import { InventoryName, Inventory, ItemType, Item, itemIsStackable, ITEM_INFO_RECORD, StackableItemInfo, getItemStackSize } from "webgl-test-shared/dist/items/items";
+import { EntityID } from "webgl-test-shared/dist/entities";
+import { TransformComponentArray } from "./TransformComponent";
+
+export interface InventoryCreationInfo {
+   readonly inventoryName: InventoryName
+   readonly width: number;
+   readonly height: number;
+   readonly options: InventoryOptions;
+}
+
+export interface InventoryComponentParams {
+   inventories: ReadonlyArray<InventoryCreationInfo>;
+}
 
 export interface InventoryOptions {
    readonly acceptsPickedUpItems: boolean;
@@ -23,6 +35,8 @@ export class InventoryComponent {
    public readonly accessibleInventories = new Array<Inventory>();
    /** Inventories which are dropped on death */
    public readonly droppableInventories = new Array<Inventory>();
+
+   public readonly absentItemIDs = new Array<number>();
 }
 
 export const InventoryComponentArray = new ComponentArray<ServerComponentType.inventory, InventoryComponent>(true, {
@@ -30,11 +44,12 @@ export const InventoryComponentArray = new ComponentArray<ServerComponentType.in
    serialise: serialise
 });
 
-const dropInventory = (entity: Entity, inventory: Inventory, dropRange: number): void => {
+const dropInventory = (entity: EntityID, inventory: Inventory, dropRange: number): void => {
+   const transformComponent = TransformComponentArray.getComponent(entity);
    for (let i = 0; i < inventory.items.length; i++) {
       const item = inventory.items[i];
 
-      const position = entity.position.copy();
+      const position = transformComponent.position.copy();
 
       const spawnOffsetMagnitude = dropRange * Math.random();
       const spawnOffsetDirection = 2 * Math.PI * Math.random();
@@ -45,11 +60,8 @@ const dropInventory = (entity: Entity, inventory: Inventory, dropRange: number):
    }
 }
 
-function onRemove(entityID: number): void {
-   const inventoryComponent = InventoryComponentArray.getComponent(entityID);
-   
-   // @Hack
-   const entity = Board.entityRecord[entityID]!;
+function onRemove(entity: EntityID): void {
+   const inventoryComponent = InventoryComponentArray.getComponent(entity);
    
    for (let i = 0; i < inventoryComponent.droppableInventories.length; i++) {
       const inventory = inventoryComponent.droppableInventories[i];
@@ -126,11 +138,11 @@ export function getItemTypeSlot(inventory: Inventory, itemType: ItemType): numbe
  * @param itemEntity The dropped item to attempt to pick up
  * @returns Whether some non-zero amount of the item was picked up or not
  */
-export function pickupItemEntity(pickingUpEntityID: number, itemEntity: Entity): boolean {
+export function pickupItemEntity(pickingUpEntityID: number, itemEntity: EntityID): boolean {
    if (!itemEntityCanBePickedUp(itemEntity, pickingUpEntityID)) return false;
    
    const inventoryComponent = InventoryComponentArray.getComponent(pickingUpEntityID);
-   const itemComponent = ItemComponentArray.getComponent(itemEntity.id);
+   const itemComponent = ItemComponentArray.getComponent(itemEntity);
 
    for (const inventory of inventoryComponent.accessibleInventories) {
       const amountPickedUp = addItemToInventory(inventory, itemComponent.itemType, itemComponent.amount);
@@ -144,7 +156,7 @@ export function pickupItemEntity(pickingUpEntityID: number, itemEntity: Entity):
 
    // If all of the item was added, destroy it
    if (itemComponent.amount === 0) {
-      itemEntity.destroy();
+      Board.destroyEntity(itemEntity);
       return true;
    }
 

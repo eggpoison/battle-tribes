@@ -1,6 +1,11 @@
 import { ServerComponentType, ZombieComponentData } from "webgl-test-shared/dist/components";
 import { ComponentArray } from "./ComponentArray";
 
+export interface ZombieComponentParams {
+   readonly zombieType: number;
+   readonly tombstoneID: number;
+}
+
 export class ZombieComponent {
    /** The type of the zombie, 0-3 */
    public readonly zombieType: number;
@@ -16,9 +21,9 @@ export class ZombieComponent {
    /** Ticks since the visible hurt entity was last hit */
    public visibleHurtEntityTicks = 0;
    
-   constructor(zombieType: number, tombstoneID: number) {
-      this.zombieType = zombieType;
-      this.tombstoneID = tombstoneID;
+   constructor(params: ZombieComponentParams) {
+      this.zombieType = params.zombieType;
+      this.tombstoneID = params.tombstoneID;
    }
 }
 

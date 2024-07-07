@@ -10,6 +10,10 @@ import { PhysicsComponentArray } from "./PhysicsComponent";
 import Board from "../Board";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
 
+export interface StatusEffectComponentParams {
+   readonly statusEffectImmunityBitset: number;
+}
+
 export class StatusEffectComponent {
    public readonly activeStatusEffectTypes = new Array<StatusEffect>();
    public readonly activeStatusEffectTicksRemaining = new Array<number>();
@@ -17,8 +21,8 @@ export class StatusEffectComponent {
 
    public readonly statusEffectImmunityBitset: number;
 
-   constructor(statusEffectImmunityBitset: number) {
-      this.statusEffectImmunityBitset = statusEffectImmunityBitset;
+   constructor(params: StatusEffectComponentParams) {
+      this.statusEffectImmunityBitset = params.statusEffectImmunityBitset;
    }
 }
 

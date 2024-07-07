@@ -1,17 +1,16 @@
-import Entity from "../Entity";
-import Board from "../Board";
 import { ComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityID } from "webgl-test-shared/dist/entities";
-import { ComponentRecord } from "../components";
+import { ComponentConfig, ComponentRecord } from "../components";
 
 export const ComponentArrays = new Array<ComponentArray>();
+export const ComponentArrayRecord = {} as { [T in ServerComponentType]: ComponentArray<T> };
 
 interface ComponentArrayFunctions<C extends ServerComponentType> {
-   onJoin?(entityID: EntityID): void;
-   onRemove?(entityID: EntityID): void;
+   onJoin?(entity: EntityID): void;
+   onRemove?(entity: EntityID): void;
    /** Called after all the components for an entity are created, before the entity has joined the world. */
-   onInitialise?(entity: Entity, componentRecord: ComponentRecord): void;
-   serialise(entityID: EntityID, playerID: EntityID | null): ComponentData<C>;
+   onInitialise?(config: ComponentConfig<ServerComponentType>): void;
+   serialise(entity: EntityID, player: EntityID | 0): ComponentData<C>;
 }
 
 export class ComponentArray<C extends ServerComponentType = ServerComponentType, T extends object = object> {
@@ -38,10 +37,10 @@ export class ComponentArray<C extends ServerComponentType = ServerComponentType,
    private deactivateBuffer = new Array<number>();
 
    // @Bug @Incomplete: This function shouldn't create an entity, as that will cause a crash. (Can't add components to the join buffer while iterating it). solution: make it not crash
-   public onJoin?: (entityID: EntityID) => void;
-   public onRemove?: (entityID: EntityID) => void;
-   public onInitialise?: (entity: Entity, componentRecord: ComponentRecord) => void;
-   public serialise: (entityID: EntityID, playerID: EntityID | null) => ComponentData<C>;
+   public onJoin?: (entity: EntityID) => void;
+   public onRemove?: (entity: EntityID) => void;
+   public onInitialise?: (config: ComponentConfig<ServerComponentType>) => void;
+   public serialise: (entity: EntityID, player: EntityID | 0) => ComponentData<C>;
    
    constructor(isActiveByDefault: boolean, functions: ComponentArrayFunctions<C>) {
       this.isActiveByDefault = isActiveByDefault;
@@ -95,17 +94,6 @@ export class ComponentArray<C extends ServerComponentType = ServerComponentType,
 
    public getComponent(entityID: number): T {
       return this.components[this.entityToIndexMap[entityID]!];
-   }
-
-   // Much slower than the regular getComponent array, and only able to be done when the entity hasn't been added to the board yet
-   public getComponentFromBuffer(entity: Entity): T {
-      for (let i = 0; i < this.componentBuffer.length; i++) {
-         const entityID = this.componentBufferIDs[i];
-         if (entityID === entity.id) {
-            return this.componentBuffer[i];
-         }
-      }
-      throw new Error("Component wasn't in buffer");
    }
 
    public removeComponent(entityID: number): void {
@@ -173,9 +161,8 @@ export class ComponentArray<C extends ServerComponentType = ServerComponentType,
    }
 
    // @Hack: should never be allowed.
-   public getEntity(index: number): Entity {
-      const id = this.indexToEntityMap[index]!;
-      return Board.entityRecord[id]!;
+   public getEntityFromArrayIdx(index: number): EntityID {
+      return this.indexToEntityMap[index]!;
    }
 
    public reset(): void {

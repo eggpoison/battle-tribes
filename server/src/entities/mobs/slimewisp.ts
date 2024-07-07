@@ -1,23 +1,32 @@
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
-import { EntityType, SlimeSize } from "webgl-test-shared/dist/entities";
+import { EntityID, EntityType, SlimeSize } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { Biome, TileType } from "webgl-test-shared/dist/tiles";
 import { Point } from "webgl-test-shared/dist/utils";
-import Entity from "../../Entity";
-import { HealthComponent, HealthComponentArray } from "../../components/HealthComponent";
-import { WanderAIComponent, WanderAIComponentArray } from "../../components/WanderAIComponent";
+import { createEntityFromConfig } from "../../Entity";
+import { WanderAIComponentArray } from "../../components/WanderAIComponent";
 import { entityHasReachedPosition, moveEntityToPosition, stopEntity } from "../../ai-shared";
 import { shouldWander, getWanderTargetTile, wander } from "../../ai/wander-ai";
 import Tile from "../../Tile";
-import { SlimewispComponent, SlimewispComponentArray } from "../../components/SlimewispComponent";
-import { createSlime } from "./slime";
-import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
-import { AIHelperComponent, AIHelperComponentArray } from "../../components/AIHelperComponent";
-import { PhysicsComponent, PhysicsComponentArray } from "../../components/PhysicsComponent";
+import { SlimewispComponentArray } from "../../components/SlimewispComponent";
+import { AIHelperComponentArray } from "../../components/AIHelperComponent";
+import { PhysicsComponentArray } from "../../components/PhysicsComponent";
 import Board from "../../Board";
 import { CollisionVars, entitiesAreColliding } from "../../collision";
 import { CircularHitbox, HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ComponentConfig } from "../../components";
+import { TransformComponentArray } from "../../components/TransformComponent";
+import { createSlimeConfig } from "./slime";
+
+type ComponentTypes = ServerComponentType.transform
+   | ServerComponentType.physics
+   | ServerComponentType.health
+   | ServerComponentType.statusEffect
+   | ServerComponentType.wanderAI
+   | ServerComponentType.aiHelper
+   | ServerComponentType.slimewisp;
 
 const MAX_HEALTH = 3;
 const RADIUS = 16;
@@ -30,47 +39,70 @@ const TURN_SPEED = Math.PI;
 
 export const SLIMEWISP_MERGE_TIME = 2;
 
-export function createSlimewisp(position: Point): Entity {
-   const slimewisp = new Entity(position, 2 * Math.PI * Math.random(), EntityType.slimewisp, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
-   slimewisp.collisionPushForceMultiplier = 0.3;
-
-   const hitbox = new CircularHitbox(0.5, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, RADIUS);
-   slimewisp.addHitbox(hitbox);
-
-   PhysicsComponentArray.addComponent(slimewisp.id, new PhysicsComponent(0, 0, 0, 0, true, false));
-   HealthComponentArray.addComponent(slimewisp.id, new HealthComponent(MAX_HEALTH));
-   StatusEffectComponentArray.addComponent(slimewisp.id, new StatusEffectComponent(StatusEffect.poisoned));
-   SlimewispComponentArray.addComponent(slimewisp.id, new SlimewispComponent());
-   WanderAIComponentArray.addComponent(slimewisp.id, new WanderAIComponent());
-   AIHelperComponentArray.addComponent(slimewisp.id, new AIHelperComponent(VISION_RANGE));
-
-   return slimewisp;
+export function createSlimewispConfig(): ComponentConfig<ComponentTypes> {
+   return {
+      [ServerComponentType.transform]: {
+         position: new Point(0, 0),
+         rotation: 0,
+         type: EntityType.slimewisp,
+         collisionBit: COLLISION_BITS.default,
+         collisionMask: DEFAULT_COLLISION_MASK,
+         hitboxes: [new CircularHitbox(0.5, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, RADIUS)]
+      },
+      [ServerComponentType.physics]: {
+         velocityX: 0,
+         velocityY: 0,
+         accelerationX: 0,
+         accelerationY: 0,
+         isAffectedByFriction: true,
+         isImmovable: false
+      },
+      [ServerComponentType.health]: {
+         maxHealth: 0
+      },
+      [ServerComponentType.statusEffect]: {
+         statusEffectImmunityBitset: 0
+      },
+      [ServerComponentType.wanderAI]: {},
+      [ServerComponentType.aiHelper]: {
+         visionRange: StatusEffect.poisoned
+      },
+      [ServerComponentType.slimewisp]: {}
+   };
 }
 
-export function tickSlimewisp(slimewisp: Entity): void {
+export function tickSlimewisp(slimewisp: EntityID): void {
+   const transformComponent = TransformComponentArray.getComponent(slimewisp);
+   
    // Slimewisps move at normal speed on slime blocks
-   const physicsComponent = PhysicsComponentArray.getComponent(slimewisp.id);
-   physicsComponent.overrideMoveSpeedMultiplier = slimewisp.tile.type === TileType.slime || slimewisp.tile.type === TileType.sludge;
+   const physicsComponent = PhysicsComponentArray.getComponent(slimewisp);
+   physicsComponent.overrideMoveSpeedMultiplier = transformComponent.tile.type === TileType.slime || transformComponent.tile.type === TileType.sludge;
 
-   const aiHelperComponent = AIHelperComponentArray.getComponent(slimewisp.id);
+   const aiHelperComponent = AIHelperComponentArray.getComponent(slimewisp);
    
    // Merge with other slimewisps
    for (let i = 0; i < aiHelperComponent.visibleEntities.length; i++) {
       const mergingSlimewisp = aiHelperComponent.visibleEntities[i];
-      if (mergingSlimewisp.type === EntityType.slimewisp) {
-         moveEntityToPosition(slimewisp, mergingSlimewisp.position.x, mergingSlimewisp.position.y, ACCELERATION, TURN_SPEED);
+      if (Board.getEntityType(mergingSlimewisp) === EntityType.slimewisp) {
+         const mergingSlimewispTransformComponent = TransformComponentArray.getComponent(mergingSlimewisp);
+         
+         moveEntityToPosition(slimewisp, mergingSlimewispTransformComponent.position.x, mergingSlimewispTransformComponent.position.y, ACCELERATION, TURN_SPEED);
    
          // Continue merge
          if (entitiesAreColliding(slimewisp, mergingSlimewisp) !== CollisionVars.NO_COLLISION) {
-            const slimewispComponent = SlimewispComponentArray.getComponent(slimewisp.id);
+            const slimewispComponent = SlimewispComponentArray.getComponent(slimewisp);
             slimewispComponent.mergeTimer -= Settings.I_TPS;
             if (slimewispComponent.mergeTimer <= 0 && !Board.entityIsFlaggedForDestruction(mergingSlimewisp)) {
                // Create a slime between the two wisps
-               const slimeSpawnPosition = new Point((slimewisp.position.x + mergingSlimewisp.position.x) / 2, (slimewisp.position.y + mergingSlimewisp.position.y) / 2);
-               createSlime(slimeSpawnPosition, SlimeSize.small, []);
+               const config = createSlimeConfig();
+               config[ServerComponentType.transform].position.x = (transformComponent.position.x + mergingSlimewispTransformComponent.position.x) / 2;
+               config[ServerComponentType.transform].position.y = (transformComponent.position.y + mergingSlimewispTransformComponent.position.y) / 2;
+               config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
+               config[ServerComponentType.slime].size = SlimeSize.small;
+               createEntityFromConfig(config);
             
-               slimewisp.destroy();
-               mergingSlimewisp.destroy();
+               Board.destroyEntity(slimewisp);
+               Board.destroyEntity(mergingSlimewisp);
             }
          }
          return;
@@ -78,7 +110,7 @@ export function tickSlimewisp(slimewisp: Entity): void {
    }
    
    // Wander AI
-   const wanderAIComponent = WanderAIComponentArray.getComponent(slimewisp.id);
+   const wanderAIComponent = WanderAIComponentArray.getComponent(slimewisp);
    if (wanderAIComponent.targetPositionX !== -1) {
       if (entityHasReachedPosition(slimewisp, wanderAIComponent.targetPositionX, wanderAIComponent.targetPositionY)) {
          wanderAIComponent.targetPositionX = -1;

@@ -5,13 +5,17 @@ import { createPlant } from "../entities/plant";
 import Board from "../Board";
 import { PlantComponentArray } from "./PlantComponent";
 import { Settings } from "webgl-test-shared/dist/settings";
+import { EntityID } from "webgl-test-shared/dist/entities";
+import { TransformComponentArray } from "./TransformComponent";
 
 const enum Vars {
    FERTILISER_DURATION_TICKS = 300 * Settings.TPS
 }
 
+export interface PlanterBoxComponentParams {}
+
 export class PlanterBoxComponent {
-   public plantEntityID = 0;
+   public plantEntity: EntityID = 0;
    public remainingFertiliserTicks = 0;
 
    /** Plant type that AI tribesman will attempt to place in the planter box */
@@ -28,7 +32,7 @@ function onRemove(entityID: number): void {
    
    const planterBoxComponent = PlanterBoxComponentArray.getComponent(entityID);
 
-   const plant = Board.entityRecord[planterBoxComponent.plantEntityID];
+   const plant = Board.entityRecord[planterBoxComponent.plantEntity];
    if (typeof plant !== "undefined") {
       plant.destroy();
    }
@@ -44,8 +48,8 @@ function serialise(entityID: number): PlanterBoxComponentData {
    const planterBoxComponent = PlanterBoxComponentArray.getComponent(entityID);
    
    let plantType: PlanterBoxPlant | null = null;
-   if (planterBoxComponent.plantEntityID !== null) {
-      const plant = Board.entityRecord[planterBoxComponent.plantEntityID];
+   if (planterBoxComponent.plantEntity !== null) {
+      const plant = Board.entityRecord[planterBoxComponent.plantEntity];
       if (typeof plant !== "undefined") {
          const plantComponent = PlantComponentArray.getComponent(plant.id);
          plantType = plantComponent.plantType;
@@ -59,11 +63,12 @@ function serialise(entityID: number): PlanterBoxComponentData {
    };
 }
 
-export function placePlantInPlanterBox(planterBox: Entity, plantType: PlanterBoxPlant): void {
-   const planterBoxComponent = PlanterBoxComponentArray.getComponent(planterBox.id);
+export function placePlantInPlanterBox(planterBox: EntityID, plantType: PlanterBoxPlant): void {
+   const planterBoxComponent = PlanterBoxComponentArray.getComponent(planterBox);
+   const transformComponent = TransformComponentArray.getComponent(planterBox);
 
-   const plantEntity = createPlant(planterBox.position.copy(), 2 * Math.PI * Math.random(), planterBox.id, plantType);
-   planterBoxComponent.plantEntityID = plantEntity.id;
+   const plantEntity = createPlant(transformComponent.position.copy(), 2 * Math.PI * Math.random(), planterBox, plantType);
+   planterBoxComponent.plantEntity = plantEntity;
    planterBoxComponent.replantType = plantType;
 }
 

@@ -1,6 +1,6 @@
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { PlanterBoxPlant, ServerComponentType } from "webgl-test-shared/dist/components";
-import { EntityType, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
+import { EntityID, EntityType, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { Point } from "webgl-test-shared/dist/utils";
@@ -13,6 +13,8 @@ import { PlantComponentArray } from "../../components/PlantComponent";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
 import { IceShardComponent, IceShardComponentArray } from "../../components/IceShardComponent";
 import { HitboxCollisionType, RectangularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
+import { TransformComponentArray } from "../../components/TransformComponent";
+import Board from "../../Board";
 
 type ComponentTypes = [ServerComponentType.physics, ServerComponentType.iceShard];
 
@@ -37,11 +39,12 @@ export function createIceShard(position: Point, rotation: number): EntityCreatio
    };
 }
 
-export function tickIceShard(iceShard: Entity): void {
+export function tickIceShard(iceShard: EntityID): void {
    // @Cleanup @Speed: Don't even need a component for this, just do it based on age with a random chance
-   const iceShardComponent = IceShardComponentArray.getComponent(iceShard.id);
-   if (iceShard.ageTicks / Settings.TPS >= iceShardComponent.lifetime) {
-      iceShard.destroy();
+   const iceShardComponent = IceShardComponentArray.getComponent(iceShard);
+   const transformComponent = TransformComponentArray.getComponent(iceShard);
+   if (transformComponent.ageTicks / Settings.TPS >= iceShardComponent.lifetime) {
+      Board.destroyEntity(iceShard);
    }
 }
 

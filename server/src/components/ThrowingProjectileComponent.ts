@@ -1,20 +1,42 @@
 import { ServerComponentType, ThrowingProjectileComponentData } from "webgl-test-shared/dist/components";
 import { ComponentArray } from "./ComponentArray";
-import { Item } from "webgl-test-shared/dist/items/items";
+import { EntityID } from "webgl-test-shared/dist/entities";
+import { InventoryComponentArray } from "./InventoryComponent";
+import Board from "../Board";
+
+export interface ThrowingProjectileComponentParams {
+   tribeMemberID: number;
+   itemID: number | null;
+}
 
 export class ThrowingProjectileComponent {
    readonly tribeMemberID: number;
-   readonly item: Item;
+   readonly itemID: number | null;
 
-   constructor(tribeMemberID: number, item: Item) {
-      this.tribeMemberID = tribeMemberID;
-      this.item = item;
+   constructor(params: ThrowingProjectileComponentParams) {
+      this.tribeMemberID = params.tribeMemberID;
+      this.itemID = params.itemID;
    }
 }
 
 export const ThrowingProjectileComponentArray = new ComponentArray<ServerComponentType.throwingProjectile, ThrowingProjectileComponent>(true, {
+   onJoin: onRemove,
    serialise: serialise
 });
+
+function onRemove(entity: EntityID): void {
+   const throwingProjectileComponent = ThrowingProjectileComponentArray.getComponent(entity);
+   if (!Board.hasEntity(throwingProjectileComponent.tribeMemberID) || throwingProjectileComponent.itemID === null) {
+      return;
+   }
+
+   const ownerInventoryComponent = InventoryComponentArray.getComponent(throwingProjectileComponent.tribeMemberID);
+   
+   const idx = ownerInventoryComponent.absentItemIDs.indexOf(throwingProjectileComponent.itemID);
+   if (idx !== -1) {
+      ownerInventoryComponent.absentItemIDs.splice(idx, 1);
+   }
+}
 
 function serialise(): ThrowingProjectileComponentData {
    return {

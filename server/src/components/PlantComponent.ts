@@ -3,6 +3,11 @@ import { Settings } from "webgl-test-shared/dist/settings";
 import { ComponentArray } from "./ComponentArray";
 import { PlanterBoxComponentArray } from "./PlanterBoxComponent";
 
+export interface PlantComponentParams {
+   readonly planterBoxID: number;
+   readonly plant: PlanterBoxPlant;
+}
+
 export const PLANT_GROWTH_TICKS: Record<PlanterBoxPlant, number> = {
    // @Temporary
    [PlanterBoxPlant.tree]: 90 * Settings.TPS,
@@ -23,9 +28,9 @@ export class PlantComponent {
    public numFruit = 0;
    public fruitRandomGrowthTicks = 0;
 
-   constructor(planterBoxID: number, plant: PlanterBoxPlant) {
-      this.planterBoxID = planterBoxID;
-      this.plantType = plant;
+   constructor(params: PlantComponentParams) {
+      this.planterBoxID = params.planterBoxID;
+      this.plantType = params.plant;
    }
 }
 
@@ -41,7 +46,7 @@ function onRemove(entityID: number): void {
    const planterBoxID = plantComponent.planterBoxID;
    if (PlanterBoxComponentArray.hasComponent(planterBoxID)) {
       const planterBoxComponent = PlanterBoxComponentArray.getComponent(planterBoxID);
-      planterBoxComponent.plantEntityID = 0;
+      planterBoxComponent.plantEntity = 0;
    }
 }
 

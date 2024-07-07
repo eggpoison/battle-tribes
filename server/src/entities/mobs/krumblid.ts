@@ -1,5 +1,5 @@
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
-import { EntityType } from "webgl-test-shared/dist/entities";
+import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { Point, randInt } from "webgl-test-shared/dist/utils";
 import Entity from "../../Entity";
@@ -19,6 +19,18 @@ import { PhysicsComponent, PhysicsComponentArray } from "../../components/Physic
 import { Biome } from "webgl-test-shared/dist/tiles";
 import { CircularHitbox, HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { ItemType } from "webgl-test-shared/dist/items/items";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ComponentConfig } from "../../components";
+import { TransformComponentArray } from "../../components/TransformComponent";
+
+type ComponentTypes = ServerComponentType.transform
+   | ServerComponentType.physics
+   | ServerComponentType.health
+   | ServerComponentType.statusEffect
+   | ServerComponentType.aiHelper
+   | ServerComponentType.wanderAI
+   | ServerComponentType.escapeAI
+   | ServerComponentType.followAI;
 
 const MAX_HEALTH = 15;
 const KRUMBLID_SIZE = 48;
@@ -30,28 +42,48 @@ const FOLLOW_CHANCE_PER_SECOND = 0.3;
 
 const TURN_SPEED = Math.PI * 2;
 
-export function createKrumblid(position: Point): Entity {
-   const krumblid = new Entity(position, 2 * Math.PI * Math.random(), EntityType.krumblid, COLLISION_BITS.default, DEFAULT_COLLISION_MASK & ~COLLISION_BITS.cactus);
-
-   const hitbox = new CircularHitbox(0.75, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, KRUMBLID_SIZE / 2);
-   krumblid.addHitbox(hitbox);
-
-   PhysicsComponentArray.addComponent(krumblid.id, new PhysicsComponent(0, 0, 0, 0, true, false));
-   HealthComponentArray.addComponent(krumblid.id, new HealthComponent(MAX_HEALTH));
-   StatusEffectComponentArray.addComponent(krumblid.id, new StatusEffectComponent(0));
-   WanderAIComponentArray.addComponent(krumblid.id, new WanderAIComponent());
-   FollowAIComponentArray.addComponent(krumblid.id, new FollowAIComponent(randInt(MIN_FOLLOW_COOLDOWN, MAX_FOLLOW_COOLDOWN), FOLLOW_CHANCE_PER_SECOND, 20));
-   EscapeAIComponentArray.addComponent(krumblid.id, new EscapeAIComponent());
-   AIHelperComponentArray.addComponent(krumblid.id, new AIHelperComponent(VISION_RANGE));
-
-   return krumblid;
+export function createKrumblidConfig(): ComponentConfig<ComponentTypes> {
+   return {
+      [ServerComponentType.transform]: {
+         position: new Point(0, 0),
+         rotation: 0,
+         type: EntityType.krumblid,
+         collisionBit: COLLISION_BITS.default,
+         collisionMask: DEFAULT_COLLISION_MASK,
+         hitboxes: [new CircularHitbox(0.75, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, KRUMBLID_SIZE / 2)]
+      },
+      [ServerComponentType.physics]: {
+         velocityX: 0,
+         velocityY: 0,
+         accelerationX: 0,
+         accelerationY: 0,
+         isAffectedByFriction: true,
+         isImmovable: false
+      },
+      [ServerComponentType.health]: {
+         maxHealth: MAX_HEALTH
+      },
+      [ServerComponentType.statusEffect]: {
+         statusEffectImmunityBitset: 0
+      },
+      [ServerComponentType.aiHelper]: {
+         visionRange: VISION_RANGE
+      },
+      [ServerComponentType.wanderAI]: {},
+      [ServerComponentType.escapeAI]: {},
+      [ServerComponentType.followAI]: {
+         followCooldownTicks: randInt(MIN_FOLLOW_COOLDOWN, MAX_FOLLOW_COOLDOWN),
+         followChancePerSecond: FOLLOW_CHANCE_PER_SECOND,
+         followDistance: 50
+      }
+   };
 }
 
-export function tickKrumblid(krumblid: Entity): void {
-   const aiHelperComponent = AIHelperComponentArray.getComponent(krumblid.id);
+export function tickKrumblid(krumblid: EntityID): void {
+   const aiHelperComponent = AIHelperComponentArray.getComponent(krumblid);
    
    // Escape AI
-   const escapeAIComponent = EscapeAIComponentArray.getComponent(krumblid.id);
+   const escapeAIComponent = EscapeAIComponentArray.getComponent(krumblid);
    updateEscapeAIComponent(escapeAIComponent, 5 * Settings.TPS);
    if (escapeAIComponent.attackingEntityIDs.length > 0) {
       const escapeEntity = chooseEscapeEntity(krumblid, aiHelperComponent.visibleEntities);
@@ -62,17 +94,19 @@ export function tickKrumblid(krumblid: Entity): void {
    }
    
    // Follow AI: Make the krumblid like to hide in cacti
-   const followAIComponent = FollowAIComponentArray.getComponent(krumblid.id);
+   const followAIComponent = FollowAIComponentArray.getComponent(krumblid);
    updateFollowAIComponent(krumblid, aiHelperComponent.visibleEntities, 5);
-   const followedEntity = Board.entityRecord[followAIComponent.followTargetID];
-   if (typeof followedEntity !== "undefined") {
+
+   const followedEntity = followAIComponent.followTargetID;
+   if (Board.hasEntity(followedEntity)) {
+      const followedEntityTransformComponent = TransformComponentArray.getComponent(followedEntity);
       // Continue following the entity
-      moveEntityToPosition(krumblid, followedEntity.position.x, followedEntity.position.y, 200, TURN_SPEED);
+      moveEntityToPosition(krumblid, followedEntityTransformComponent.position.x, followedEntityTransformComponent.position.y, 200, TURN_SPEED);
       return;
    } else if (entityWantsToFollow(followAIComponent)) {
       for (let i = 0; i < aiHelperComponent.visibleEntities.length; i++) {
          const entity = aiHelperComponent.visibleEntities[i];
-         if (entity.type === EntityType.player) {
+         if (Board.getEntityType(entity) === EntityType.player) {
             // Follow the entity
             startFollowingEntity(krumblid, entity, 200, TURN_SPEED, randInt(MIN_FOLLOW_COOLDOWN, MAX_FOLLOW_COOLDOWN));
             return;
@@ -80,10 +114,10 @@ export function tickKrumblid(krumblid: Entity): void {
       }
    }
 
-   const physicsComponent = PhysicsComponentArray.getComponent(krumblid.id);
+   const physicsComponent = PhysicsComponentArray.getComponent(krumblid);
 
    // Wander AI
-   const wanderAIComponent = WanderAIComponentArray.getComponent(krumblid.id);
+   const wanderAIComponent = WanderAIComponentArray.getComponent(krumblid);
    if (wanderAIComponent.targetPositionX !== -1) {
       if (entityHasReachedPosition(krumblid, wanderAIComponent.targetPositionX, wanderAIComponent.targetPositionY)) {
          wanderAIComponent.targetPositionX = -1;
@@ -104,10 +138,10 @@ export function tickKrumblid(krumblid: Entity): void {
    }
 }
 
-export function onKrumblidHurt(cow: Entity, attackingEntity: Entity): void {
+export function onKrumblidHurt(cow: EntityID, attackingEntity: EntityID): void {
    registerAttackingEntity(cow, attackingEntity);
 }
 
-export function onKrumblidDeath(krumblid: Entity): void {
+export function onKrumblidDeath(krumblid: EntityID): void {
    createItemsOverEntity(krumblid, ItemType.leather, randInt(2, 3), 30);
 }

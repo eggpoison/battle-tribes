@@ -3,14 +3,18 @@ import Entity from "../Entity";
 import { IceSpikesComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
 import { ComponentArray } from "./ComponentArray";
 
+export interface IceSpikesComponentParams {
+   readonly rootIceSpike: Entity;
+}
+
 export class IceSpikesComponent {
    public readonly maxChildren = randInt(0, 3);
    public numChildrenIceSpikes = 0;
    public iceSpikeGrowProgressTicks = 0;
    public readonly rootIceSpike: Entity;
 
-   constructor(rootIceSpike: Entity) {
-      this.rootIceSpike = rootIceSpike;
+   constructor(params: IceSpikesComponentParams) {
+      this.rootIceSpike = params.rootIceSpike;
    }
 }
 

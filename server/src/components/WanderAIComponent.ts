@@ -1,6 +1,8 @@
 import { ServerComponentType, WanderAIComponentData } from "webgl-test-shared/dist/components";
 import { ComponentArray } from "./ComponentArray";
 
+export interface WanderAIComponentParams {}
+
 export class WanderAIComponent {
    /** If set to -1, the wander AI has no current target position */
    targetPositionX = -1;

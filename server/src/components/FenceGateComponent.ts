@@ -1,5 +1,5 @@
 import { FenceGateComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
-import { DoorToggleType } from "webgl-test-shared/dist/entities";
+import { DoorToggleType, EntityID } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { angle, lerp } from "webgl-test-shared/dist/utils";
 import { ComponentArray } from "./ComponentArray";
@@ -11,6 +11,8 @@ import { RectangularHitbox, HitboxCollisionType } from "webgl-test-shared/dist/h
 const enum Vars {
    DOOR_SWING_SPEED = 5 / Settings.TPS
 }
+
+export interface FenceGateComponentParams {}
 
 export class FenceGateComponent {
    public toggleType = DoorToggleType.none;
@@ -70,8 +72,8 @@ export function tickFenceGateComponent(fenceGate: Entity): void {
    }
 }
 
-export function toggleFenceGateDoor(fenceGate: Entity): void {
-   const fenceGateComponent = FenceGateComponentArray.getComponent(fenceGate.id);
+export function toggleFenceGateDoor(fenceGate: EntityID): void {
+   const fenceGateComponent = FenceGateComponentArray.getComponent(fenceGate);
    if (fenceGateComponent.toggleType !== DoorToggleType.none) {
       return;
    }

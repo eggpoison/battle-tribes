@@ -1,9 +1,8 @@
 import { HealthComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
-import { PlayerCauseOfDeath, EntityType } from "webgl-test-shared/dist/entities";
+import { PlayerCauseOfDeath, EntityType, EntityID } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { TribesmanTitle } from "webgl-test-shared/dist/titles";
 import { Point, clamp } from "webgl-test-shared/dist/utils";
-import Entity from "../Entity";
 import TombstoneDeathManager from "../tombstone-deaths";
 import { onBerryBushHurt } from "../entities/resources/berry-bush";
 import { onCowHurt } from "../entities/mobs/cow";
@@ -26,6 +25,11 @@ import { onPlantDeath, onPlantHit } from "../entities/plant";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
 import { registerEntityDeath, registerEntityHeal, registerEntityHit } from "../server/player-clients";
 import { ComponentArray } from "./ComponentArray";
+import Board from "../Board";
+
+export interface HealthComponentParams {
+   maxHealth: number;
+}
 
 export class HealthComponent {
    public maxHealth: number;
@@ -38,9 +42,9 @@ export class HealthComponent {
    public readonly localIframeHashes = new Array<string>();
    public readonly localIframeDurations = new Array<number>();
 
-   constructor(maxHealth: number) {
-      this.maxHealth = maxHealth;
-      this.health = maxHealth;
+   constructor(params: HealthComponentParams) {
+      this.maxHealth = params.maxHealth;
+      this.health = params.maxHealth;
    }
 }
 
@@ -74,22 +78,24 @@ export function canDamageEntity(healthComponent: HealthComponent, attackHash: st
  * @param damage The amount of damage given
  * @returns Whether the damage was received
  */
-export function damageEntity(entity: Entity, attackingEntity: Entity | null, damage: number, causeOfDeath: PlayerCauseOfDeath, attackEffectiveness: AttackEffectiveness, hitPosition: Point, hitFlags: number): boolean {
-   const healthComponent = HealthComponentArray.getComponent(entity.id);
+export function damageEntity(entity: EntityID, attackingEntity: EntityID | null, damage: number, causeOfDeath: PlayerCauseOfDeath, attackEffectiveness: AttackEffectiveness, hitPosition: Point, hitFlags: number): boolean {
+   const healthComponent = HealthComponentArray.getComponent(entity);
 
    const absorbedDamage = damage * clamp(healthComponent.defence, 0, 1);
    const actualDamage = damage - absorbedDamage;
    
    healthComponent.health -= actualDamage;
 
-   registerEntityHit(entity.id, attackingEntity, hitPosition, attackEffectiveness, damage, hitFlags);
+   registerEntityHit(entity, attackingEntity, hitPosition, attackEffectiveness, damage, hitFlags);
 
    // If the entity was killed by the attack, destroy the entity
    if (healthComponent.health <= 0) {
-      entity.destroy();
+      Board.destroyEntity(entity);
       registerEntityDeath(entity);
 
-      switch (entity.type) {
+      // @Hack? @Cleanup?
+      const entityType = Board.getEntityType(entity)!;
+      switch (entityType) {
          case EntityType.tombstone: {
             onTombstoneDeath(entity, attackingEntity);
             break;
@@ -258,23 +264,23 @@ export function damageEntity(entity: Entity, attackingEntity: Entity | null, dam
    return true;
 }
 
-export function healEntity(entity: Entity, healAmount: number, healerID: number): void {
+export function healEntity(entity: EntityID, healAmount: number, healer: EntityID): void {
    if (healAmount <= 0) {
       return;
    }
    
-   const healthComponent = HealthComponentArray.getComponent(entity.id);
+   const healthComponent = HealthComponentArray.getComponent(entity);
 
    healthComponent.health += healAmount;
 
    // @Speed: Is there a smart way to remove this branch?
    if (healthComponent.health > healthComponent.maxHealth) {
       const amountHealed = healAmount - (healthComponent.health - healthComponent.maxHealth); // Calculate by removing excess healing from amount healed
-      registerEntityHeal(entity, healerID, amountHealed);
+      registerEntityHeal(entity, healer, amountHealed);
 
       healthComponent.health = healthComponent.maxHealth;
    } else {
-      registerEntityHeal(entity, healerID, healAmount);
+      registerEntityHeal(entity, healer, healAmount);
    }
 }
 
@@ -287,8 +293,8 @@ export function addLocalInvulnerabilityHash(healthComponent: HealthComponent, ha
    }
 }
 
-export function getEntityHealth(entity: Entity): number {
-   const healthComponent = HealthComponentArray.getComponent(entity.id);
+export function getEntityHealth(entity: EntityID): number {
+   const healthComponent = HealthComponentArray.getComponent(entity);
    return healthComponent.health;
 }
 

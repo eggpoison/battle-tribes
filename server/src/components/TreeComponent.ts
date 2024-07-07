@@ -2,8 +2,11 @@ import { TreeSize } from "webgl-test-shared/dist/entities";
 import { ComponentArray } from "./ComponentArray";
 import { GrassBlockerCircle } from "webgl-test-shared/dist/grass-blockers";
 import Board from "../Board";
-import { addGrassBlocker } from "../grass-blockers";
 import { ServerComponentType, TreeComponentData } from "webgl-test-shared/dist/components";
+
+export interface TreeComponentParams {
+   readonly treeSize: TreeSize;
+}
 
 const TREE_TRUNK_RADII: Record<TreeSize, number> = {
    [TreeSize.small]: 15,
@@ -13,8 +16,8 @@ const TREE_TRUNK_RADII: Record<TreeSize, number> = {
 export class TreeComponent {
    readonly treeSize: TreeSize;
 
-   constructor(treeSize: TreeSize) {
-      this.treeSize = treeSize;
+   constructor(params: TreeComponentParams) {
+      this.treeSize = params.treeSize;
    }
 }
 

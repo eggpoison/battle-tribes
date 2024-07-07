@@ -4,6 +4,7 @@ import { TileType } from "webgl-test-shared/dist/tiles";
 import { Point } from "webgl-test-shared/dist/utils";
 import Board from "./Board";
 import { SPAWNABLE_TILE_RECORD } from "./entity-spawning";
+import { TransformComponentArray } from "./components/TransformComponent";
 
 const enum Vars {
    /** Size of each sample in tiles */
@@ -62,11 +63,12 @@ export function updateResourceDistributions(): void {
    for (let i = 0; i < Board.entities.length; i++) {
       const entity = Board.entities[i];
 
-      const sampleX = Math.floor(entity.position.x / Vars.SAMPLE_UNITS);
-      const sampleY = Math.floor(entity.position.y / Vars.SAMPLE_UNITS);
+      const transformComponent = TransformComponentArray.getComponent(entity);
+      const sampleX = Math.floor(transformComponent.position.x / Vars.SAMPLE_UNITS);
+      const sampleY = Math.floor(transformComponent.position.y / Vars.SAMPLE_UNITS);
 
       const sampleIdx = sampleY * Vars.SAMPLES_IN_WORLD_SIZE + sampleX;
-      distributions[entity.type][sampleIdx]++;
+      distributions[Board.getEntityType(entity)!][sampleIdx]++;
    }
 
    // Weight the distributions to the amount of tiles

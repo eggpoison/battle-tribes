@@ -1,11 +1,15 @@
 import { ScarInfo, ServerComponentType, TribeWarriorComponentData } from "webgl-test-shared/dist/components";
 import { ComponentArray } from "./ComponentArray";
 
+export interface TribeWarriorComponentParams {
+   readonly scars: ReadonlyArray<ScarInfo>;
+}
+
 export class TribeWarriorComponent {
    public readonly scars: ReadonlyArray<ScarInfo>;
 
-   constructor(scars: ReadonlyArray<ScarInfo>) {
-      this.scars = scars;
+   constructor(params: TribeWarriorComponentParams) {
+      this.scars = params.scars;
    }
 }
 

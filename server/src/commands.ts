@@ -1,4 +1,4 @@
-import { PlayerCauseOfDeath, EntityType, getEntityTypeFromString } from "webgl-test-shared/dist/entities";
+import { PlayerCauseOfDeath, EntityType, getEntityTypeFromString, EntityID } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { Biome } from "webgl-test-shared/dist/tiles";
 import { Point, randItem } from "webgl-test-shared/dist/utils";
@@ -19,12 +19,12 @@ import { ItemType, getItemTypeFromString } from "webgl-test-shared/dist/items/it
 
 const ENTITY_SPAWN_RANGE = 200;
 
-const killPlayer = (player: Entity): void => {
+const killPlayer = (player: EntityID): void => {
    const hitPosition = getRandomPositionInEntity(player);
    damageEntity(player, null, 999999, PlayerCauseOfDeath.god, AttackEffectiveness.effective, hitPosition, 0);
 }
 
-const damagePlayer = (player: Entity, damage: number): void => {
+const damagePlayer = (player: EntityID, damage: number): void => {
    const hitPosition = getRandomPositionInEntity(player);
    damageEntity(player, null, damage, PlayerCauseOfDeath.god, AttackEffectiveness.effective, hitPosition, 0);
 }
@@ -83,7 +83,7 @@ const summonEntities = (player: Entity, entityType: EntityType, amount: number):
    }
 }
 
-export function registerCommand(command: string, player: Entity): void {
+export function registerCommand(command: string, player: EntityID): void {
    const commandComponents = parseCommand(command);
    const numParameters = commandComponents.length - 1;
 
@@ -191,13 +191,13 @@ export function registerCommand(command: string, player: Entity): void {
          break;
       }
       case "unlockall": {
-         const tribeComponent = TribeComponentArray.getComponent(player.id);
+         const tribeComponent = TribeComponentArray.getComponent(player);
          tribeComponent.tribe.unlockAllTechs();
          
          break;
       }
       case "build": {
-         const tribeComponent = TribeComponentArray.getComponent(player.id);
+         const tribeComponent = TribeComponentArray.getComponent(player);
          forceBuildPlans(tribeComponent.tribe);
       }
    }

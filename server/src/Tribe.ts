@@ -1,6 +1,6 @@
 import { PotentialBuildingPlanData } from "webgl-test-shared/dist/ai-building-types";
 import { BlueprintType } from "webgl-test-shared/dist/components";
-import { EntityType } from "webgl-test-shared/dist/entities";
+import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { StructureType } from "webgl-test-shared/dist/structures";
 import { TechID, TechTreeUnlockProgress, TechInfo, getTechByID, TECHS } from "webgl-test-shared/dist/techs";
@@ -9,9 +9,8 @@ import { Point, angle, randItem, clampToBoardDimensions } from "webgl-test-share
 import Board from "./Board";
 import Tile from "./Tile";
 import Chunk from "./Chunk";
-import Entity from "./Entity";
 import { createTribeWorker } from "./entities/tribes/tribe-worker";
-import { TotemBannerComponent, TotemBannerComponentArray, addBannerToTotem, removeBannerFromTotem } from "./components/TotemBannerComponent";
+import { TotemBannerComponentArray, addBannerToTotem, removeBannerFromTotem } from "./components/TotemBannerComponent";
 import { createTribeWarrior } from "./entities/tribes/tribe-warrior";
 import { SafetyNode, addHitboxesOccupiedNodes, createRestrictedBuildingArea, getSafetyNode } from "./ai-tribe-building/ai-building";
 import { InventoryComponentArray, getInventory } from "./components/InventoryComponent";
@@ -23,6 +22,7 @@ import { HutComponentArray } from "./components/HutComponent";
 import { HitboxVertexPositions } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { CraftingRecipe } from "webgl-test-shared/dist/items/crafting-recipes";
 import { ItemType, InventoryName } from "webgl-test-shared/dist/items/items";
+import { TransformComponentArray } from "./components/TransformComponent";
 
 const ENEMY_ATTACK_REMEMBER_TIME_TICKS = 30 * Settings.TPS;
 const RESPAWN_TIME_TICKS = 5 * Settings.TPS;
@@ -327,16 +327,16 @@ class Tribe {
 
    public isRemoveable = false;
 
-   public totem: Entity | null = null;
+   public totem: EntityID | null = null;
    
    // /** Stores all tribe huts belonging to the tribe */
-   private readonly huts = new Array<Entity>();
+   private readonly huts = new Array<EntityID>();
 
-   public barrels = new Array<Entity>();
+   public barrels = new Array<EntityID>();
 
-   public readonly researchBenches = new Array<Entity>();
+   public readonly researchBenches = new Array<EntityID>();
 
-   public readonly buildings = new Array<Entity>();
+   public readonly buildings = new Array<EntityID>();
    public buildingsAreDirty = true;
 
    // @Cleanup: unify these two
@@ -395,24 +395,28 @@ class Tribe {
       Board.addTribe(this);
    }
 
-   public addBuilding(building: Entity<StructureType>): void {
+   public addBuilding(building: EntityID): void {
+      const transformComponent = TransformComponentArray.getComponent(building);
+      
       const occupiedSafetyNodes = new Set<SafetyNode>();
-      addHitboxesOccupiedNodes(building.hitboxes, occupiedSafetyNodes);
+      addHitboxesOccupiedNodes(transformComponent.hitboxes, occupiedSafetyNodes);
       
       this.buildings.push(building);
 
+      const entityType = Board.getEntityType(building)! as StructureType;
+      
       this.addVirtualBuilding({
-         id: building.id,
-         position: building.position.copy(),
-         rotation: building.rotation,
-         entityType: building.type,
+         id: building,
+         position: transformComponent.position.copy(),
+         rotation: transformComponent.rotation,
+         entityType: entityType,
          occupiedNodes: occupiedSafetyNodes
       });
 
       this.buildingsAreDirty = true;
       this.isRemoveable = true;
 
-      switch (building.type) {
+      switch (entityType) {
          case EntityType.tribeTotem: {
             if (this.totem !== null) {
                console.warn("Tribe already has a totem.");
@@ -421,7 +425,7 @@ class Tribe {
 
             this.totem = building;
 
-            this.createTribeAreaAroundBuilding(building.position, TRIBE_BUILDING_AREA_INFLUENCES[EntityType.tribeTotem]);
+            this.createTribeAreaAroundBuilding(transformComponent.position, TRIBE_BUILDING_AREA_INFLUENCES[EntityType.tribeTotem]);
             break;
          }
          case EntityType.researchBench: {
@@ -437,17 +441,11 @@ class Tribe {
 
             this.huts.push(building);
 
-            this.createTribeAreaAroundBuilding(building.position, TRIBE_BUILDING_AREA_INFLUENCES[building.type]);
+            this.createTribeAreaAroundBuilding(transformComponent.position, TRIBE_BUILDING_AREA_INFLUENCES[entityType]);
             
-            // @Hack
-            let bannerComponent: TotemBannerComponent;
-            if (TotemBannerComponentArray.hasComponent(this.totem.id)) {
-               bannerComponent = TotemBannerComponentArray.getComponent(this.totem.id);
-            } else {
-               bannerComponent = TotemBannerComponentArray.getComponentFromBuffer(this.totem);
-            }
-
+            const bannerComponent = TotemBannerComponentArray.getComponent(this.totem);
             addBannerToTotem(bannerComponent, this.huts.length - 1);
+
             break;
          }
          case EntityType.barrel: {
@@ -457,15 +455,15 @@ class Tribe {
       }
    }
 
-   public removeBuilding(building: Entity): void {
+   public removeBuilding(building: EntityID): void {
       this.buildings.splice(this.buildings.indexOf(building), 1);
 
-      const virtualBuilding = this.virtualBuildingRecord[building.id];
+      const virtualBuilding = this.virtualBuildingRecord[building];
       this.removeVirtualBuilding(virtualBuilding.id);
       
       this.buildingsAreDirty = true;
 
-      switch (building.type) {
+      switch (Board.getEntityType(building)) {
          case EntityType.tribeTotem: {
             this.totem = null;
             break;
@@ -484,11 +482,12 @@ class Tribe {
             }
 
             if (this.totem !== null) {
-               const bannerComponent = TotemBannerComponentArray.getComponent(this.totem.id);
+               const bannerComponent = TotemBannerComponentArray.getComponent(this.totem);
                removeBannerFromTotem(bannerComponent, idx);
             }
 
-            this.removeBuildingFromTiles(building.position, TRIBE_BUILDING_AREA_INFLUENCES[EntityType.workerHut]);
+            const transformComponent = TransformComponentArray.getComponent(building);
+            this.removeBuildingFromTiles(transformComponent.position, TRIBE_BUILDING_AREA_INFLUENCES[EntityType.workerHut]);
             break;
          }
          case EntityType.warriorHut: {
@@ -498,11 +497,12 @@ class Tribe {
             }
 
             if (this.totem !== null) {
-               const bannerComponent = TotemBannerComponentArray.getComponent(this.totem.id);
+               const bannerComponent = TotemBannerComponentArray.getComponent(this.totem);
                removeBannerFromTotem(bannerComponent, idx);
             }
 
-            this.removeBuildingFromTiles(building.position, TRIBE_BUILDING_AREA_INFLUENCES[EntityType.warriorHut]);
+            const transformComponent = TransformComponentArray.getComponent(building);
+            this.removeBuildingFromTiles(transformComponent.position, TRIBE_BUILDING_AREA_INFLUENCES[EntityType.warriorHut]);
             break;
          }
          case EntityType.barrel: {
@@ -649,13 +649,12 @@ class Tribe {
 
       for (let i = 0; i < this.respawnTimesRemaining.length; i++) {
          if (--this.respawnTimesRemaining[i] <= 0) {
-            const hutID = this.respawnHutIDs[i];
+            const hut = this.respawnHutIDs[i];
 
             this.respawnTimesRemaining.splice(i, 1);
             this.respawnHutIDs.splice(i, 1);
 
-            const hut = Board.entityRecord[hutID];
-            if (typeof hut !== "undefined") {
+            if (Board.hasEntity(hut)) {
                this.createNewTribesman(hut);
             }
 
@@ -668,20 +667,20 @@ class Tribe {
       return this.totem !== null;
    }
 
-   public respawnTribesman(hut: Entity): void {
+   public respawnTribesman(hut: EntityID): void {
       this.respawnTimesRemaining.push(RESPAWN_TIME_TICKS);
-      this.respawnHutIDs.push(hut.id);
+      this.respawnHutIDs.push(hut);
    }
 
-   public instantRespawnTribesman(hut: Entity): void {
+   public instantRespawnTribesman(hut: EntityID): void {
       this.respawnTimesRemaining.push(1);
-      this.respawnHutIDs.push(hut.id);
+      this.respawnHutIDs.push(hut);
    }
 
-   public createNewTribesman(hut: Entity): void {
+   public createNewTribesman(hut: EntityID): void {
       // Make sure the hut doesn't already have a tribesman or is in the process of respawning one
-      const hutComponent = HutComponentArray.getComponent(hut.id);
-      if (hutComponent.hasSpawnedTribesman || this.respawnHutIDs.indexOf(hut.id) !== -1) {
+      const hutComponent = HutComponentArray.getComponent(hut);
+      if (hutComponent.hasSpawnedTribesman || this.respawnHutIDs.indexOf(hut) !== -1) {
          return;
       }
 
@@ -689,13 +688,15 @@ class Tribe {
       hutComponent.hasSpawnedTribesman = true;
       hutComponent.hasTribesman = true;
       
-      // Offset the spawn position so the tribesman comes out of the correct side of the hut
-      const position = new Point(hut.position.x + 10 * Math.sin(hut.rotation), hut.position.y + 10 * Math.cos(hut.rotation));
+      const transformComponent = TransformComponentArray.getComponent(hut);
       
-      if (hut.type === EntityType.workerHut) {
-         createTribeWorker(position, hut.rotation, this.id, hut.id);
+      // Offset the spawn position so the tribesman comes out of the correct side of the hut
+      const position = new Point(transformComponent.position.x + 10 * Math.sin(transformComponent.rotation), transformComponent.position.y + 10 * Math.cos(transformComponent.rotation));
+      
+      if (Board.getEntityType(hut) === EntityType.workerHut) {
+         createTribeWorker(position, transformComponent.rotation, this.id, hut);
       } else {
-         createTribeWarrior(position, hut.rotation, this, hut.id);
+         createTribeWarrior(position, transformComponent.rotation, this, hut);
       }
    }
 
@@ -725,7 +726,7 @@ class Tribe {
    private destroy(): void {
       // Remove huts
       for (const hut of this.huts) {
-         hut.destroy();
+         Board.destroyEntity(hut);
       }
 
       Board.removeTribe(this);
@@ -819,7 +820,7 @@ class Tribe {
       return Object.keys(this.area).length;
    }
 
-   public hasBarrel(barrel: Entity): boolean {
+   public hasBarrel(barrel: EntityID): boolean {
       return this.barrels.includes(barrel);
    }
 
@@ -921,7 +922,7 @@ class Tribe {
       for (let i = 0; i < this.barrels.length; i++) {
          const barrel = this.barrels[i];
 
-         const inventoryComponent = InventoryComponentArray.getComponent(barrel.id);
+         const inventoryComponent = InventoryComponentArray.getComponent(barrel);
          const inventory = getInventory(inventoryComponent, InventoryName.inventory);
 
          for (let i = 0; i < inventory.items.length; i++) {

@@ -1,5 +1,5 @@
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
-import { EntityType } from "webgl-test-shared/dist/entities";
+import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { TileType } from "webgl-test-shared/dist/tiles";
 import { TribeType, TRIBE_INFO_RECORD } from "webgl-test-shared/dist/tribes";
@@ -127,7 +127,7 @@ export function createTribeWorker(position: Point, rotation: number, tribeID: nu
    };
 }
 
-export function tickTribeWorker(worker: Entity): void {
+export function tickTribeWorker(worker: EntityID): void {
    tickTribesman(worker);
 }
 

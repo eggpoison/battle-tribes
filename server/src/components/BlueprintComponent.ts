@@ -1,6 +1,5 @@
 import { BlueprintType, BuildingMaterial, BlueprintComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityID, EntityType, EntityTypeString } from "webgl-test-shared/dist/entities";
-import Entity from "../Entity";
 import { ComponentArray } from "./ComponentArray";
 import { DOOR_HEALTHS, createDoor } from "../entities/structures/door";
 import { EMBRASURE_HEALTHS, createEmbrasure } from "../entities/structures/embrasure";
@@ -21,6 +20,13 @@ import { TribeComponentArray } from "./TribeComponent";
 import { BuildingMaterialComponentArray } from "./BuildingMaterialComponent";
 import { HutComponentArray } from "./HutComponent";
 import { Item, ITEM_INFO_RECORD, HammerItemInfo } from "webgl-test-shared/dist/items/items";
+import { TransformComponentArray } from "./TransformComponent";
+
+export interface BlueprintComponentParams {
+   readonly shapeType: BlueprintType;
+   readonly associatedEntityID: EntityID;
+   readonly virtualEntityID: EntityID;
+}
 
 const STRUCTURE_WORK_REQUIRED: Record<BlueprintType, number> = {
    [BlueprintType.woodenDoor]: 3,
@@ -47,10 +53,10 @@ export class BlueprintComponent {
    public associatedEntityID: EntityID;
    public readonly virtualEntityID: EntityID;
 
-   constructor(shapeType: BlueprintType, associatedEntityID: EntityID, virtualEntityID: EntityID) {
-      this.blueprintType = shapeType;
-      this.associatedEntityID = associatedEntityID;
-      this.virtualEntityID = virtualEntityID;
+   constructor(params: BlueprintComponentParams) {
+      this.blueprintType = params.shapeType;
+      this.associatedEntityID = params.associatedEntityID;
+      this.virtualEntityID = params.virtualEntityID;
    }
 }
 
@@ -61,14 +67,12 @@ export const BlueprintComponentArray = new ComponentArray<ServerComponentType.bl
 });
 
 function onJoin(entityID: EntityID): void {
+   const transformComponent = TransformComponentArray.getComponent(entityID);
    const tribeComponent = TribeComponentArray.getComponent(entityID);
    const blueprintComponent = BlueprintComponentArray.getComponent(entityID);
 
-   // @Hack
-   const blueprintEntity = Board.entityRecord[entityID]!;
-   
    const entityType = getBlueprintEntityType(blueprintComponent.blueprintType);
-   placeVirtualBuilding(tribeComponent.tribe, blueprintEntity.position, blueprintEntity.rotation, entityType, blueprintComponent.virtualEntityID);
+   placeVirtualBuilding(tribeComponent.tribe, transformComponent.position, transformComponent.rotation, entityType, blueprintComponent.virtualEntityID);
    tribeComponent.tribe.buildingsAreDirty = true;
 
    if (StructureComponentArray.hasComponent(blueprintComponent.associatedEntityID)) {
@@ -83,13 +87,14 @@ function onRemove(entityID: EntityID): void {
    tribeComponent.tribe.removeVirtualBuilding(blueprintComponent.virtualEntityID);
 }
 
-const upgradeBuilding = (building: Entity): void => {
-   const materialComponent = BuildingMaterialComponentArray.getComponent(building.id);
+const upgradeBuilding = (building: EntityID): void => {
+   const materialComponent = BuildingMaterialComponentArray.getComponent(building);
    if (materialComponent.material < BuildingMaterial.stone) {
       materialComponent.material++;
 
       let maxHealthArray!: ReadonlyArray<number>;
-      switch (building.type) {
+      const entityType = Board.getEntityType(building)!;
+      switch (entityType) {
          case EntityType.wall: {
             maxHealthArray = WALL_HEALTHS;
             break;
@@ -112,80 +117,80 @@ const upgradeBuilding = (building: Entity): void => {
             break;
          }
          default: {
-            throw new Error("Don't know how to upgrade building of type " + EntityTypeString[building.type]);
+            throw new Error("Don't know how to upgrade building of type " + EntityTypeString[entityType]);
          }
       }
       
-      const healthComponent = HealthComponentArray.getComponent(building.id);
+      const healthComponent = HealthComponentArray.getComponent(building);
       healthComponent.maxHealth = maxHealthArray[materialComponent.material];
       healthComponent.health = healthComponent.maxHealth;
    }
 }
 
-const completeBlueprint = (blueprintEntity: Entity, blueprintComponent: BlueprintComponent): void => {
-   const tribeComponent = TribeComponentArray.getComponent(blueprintEntity.id);
+const completeBlueprint = (blueprintEntity: EntityID, blueprintComponent: BlueprintComponent): void => {
+   const transformComponent = TransformComponentArray.getComponent(blueprintEntity);
+   const tribeComponent = TribeComponentArray.getComponent(blueprintEntity);
    
-   blueprintEntity.destroy();
+   Board.destroyEntity(blueprintEntity);
 
    const entityType = getBlueprintEntityType(blueprintComponent.blueprintType);
-   const position = blueprintEntity.position.copy();
-   const connectionInfo = calculateStructureConnectionInfo(position, blueprintEntity.rotation, entityType, Board.chunks);
+   const position = transformComponent.position.copy();
+   const connectionInfo = calculateStructureConnectionInfo(position, transformComponent.rotation, entityType, Board.chunks);
    
    // @Cleanup: a lot of copy and paste
    switch (blueprintComponent.blueprintType) {
       case BlueprintType.woodenDoor: {
-         createDoor(blueprintEntity.position.copy(), blueprintEntity.rotation, tribeComponent.tribe, connectionInfo, BuildingMaterial.wood);
+         createDoor(transformComponent.position.copy(), transformComponent.rotation, tribeComponent.tribe, connectionInfo, BuildingMaterial.wood);
          return;
       }
       case BlueprintType.stoneDoor: {
-         createDoor(blueprintEntity.position.copy(), blueprintEntity.rotation, tribeComponent.tribe, connectionInfo, BuildingMaterial.stone);
+         createDoor(transformComponent.position.copy(), transformComponent.rotation, tribeComponent.tribe, connectionInfo, BuildingMaterial.stone);
          return;
       }
       case BlueprintType.woodenEmbrasure: {
-         createEmbrasure(blueprintEntity.position.copy(), blueprintEntity.rotation, tribeComponent.tribe, connectionInfo, BuildingMaterial.wood);
+         createEmbrasure(transformComponent.position.copy(), transformComponent.rotation, tribeComponent.tribe, connectionInfo, BuildingMaterial.wood);
          return;
       }
       case BlueprintType.stoneEmbrasure: {
-         createEmbrasure(blueprintEntity.position.copy(), blueprintEntity.rotation, tribeComponent.tribe, connectionInfo, BuildingMaterial.stone);
+         createEmbrasure(transformComponent.position.copy(), transformComponent.rotation, tribeComponent.tribe, connectionInfo, BuildingMaterial.stone);
          return;
       }
       case BlueprintType.ballista: {
-         createBallista(blueprintEntity.position.copy(), blueprintEntity.rotation, tribeComponent.tribe, connectionInfo);
+         createBallista(transformComponent.position.copy(), transformComponent.rotation, tribeComponent.tribe, connectionInfo);
          return;
       }
       case BlueprintType.slingTurret: {
-         createSlingTurret(blueprintEntity.position.copy(), blueprintEntity.rotation, tribeComponent.tribe, connectionInfo);
+         createSlingTurret(transformComponent.position.copy(), transformComponent.rotation, tribeComponent.tribe, connectionInfo);
          return;
       }
       case BlueprintType.woodenTunnel: {
-         createTunnel(blueprintEntity.position.copy(), blueprintEntity.rotation, tribeComponent.tribe, connectionInfo, BuildingMaterial.wood);
+         createTunnel(transformComponent.position.copy(), transformComponent.rotation, tribeComponent.tribe, connectionInfo, BuildingMaterial.wood);
          return;
       }
       case BlueprintType.stoneTunnel: {
-         createTunnel(blueprintEntity.position.copy(), blueprintEntity.rotation, tribeComponent.tribe, connectionInfo, BuildingMaterial.stone);
+         createTunnel(transformComponent.position.copy(), transformComponent.rotation, tribeComponent.tribe, connectionInfo, BuildingMaterial.stone);
          return;
       }
       case BlueprintType.fenceGate: {
-         createFenceGate(blueprintEntity.position.copy(), blueprintEntity.rotation, tribeComponent.tribe, connectionInfo);
+         createFenceGate(transformComponent.position.copy(), transformComponent.rotation, tribeComponent.tribe, connectionInfo);
          
-         const fence = Board.entityRecord[blueprintComponent.associatedEntityID]!;
-         fence.destroy();
+         Board.destroyEntity(blueprintComponent.associatedEntityID);
          
          return;
       }
       case BlueprintType.warriorHutUpgrade: {
-         const hut = createWarriorHut(blueprintEntity.position.copy(), blueprintEntity.rotation, tribeComponent.tribe, connectionInfo)
+         const hut = createWarriorHut(transformComponent.position.copy(), transformComponent.rotation, tribeComponent.tribe, connectionInfo);
 
          // Remove the previous hut
-         const previousHut = Board.entityRecord[blueprintComponent.associatedEntityID]!;
-         previousHut.destroy();
+         Board.destroyEntity(blueprintComponent.associatedEntityID);
 
-         // @Cleanup: should this be done here?
+         // @Cleanup @Incomplete: should this be done here? Probably should be done on join.
          // Transfer the worker to the warrior hut
-         const hutComponent = HutComponentArray.getComponent(previousHut.id);
+         const hutComponent = HutComponentArray.getComponent(blueprintComponent.associatedEntityID);
          if (hutComponent.hasTribesman) {
             tribeComponent.tribe.instantRespawnTribesman(hut);
          }
+
          return;
       }
       case BlueprintType.stoneWall:
@@ -194,8 +199,7 @@ const completeBlueprint = (blueprintEntity: Entity, blueprintComponent: Blueprin
       case BlueprintType.stoneTunnelUpgrade:
       case BlueprintType.stoneFloorSpikes:
       case BlueprintType.stoneWallSpikes: {
-         const building = Board.entityRecord[blueprintComponent.associatedEntityID]!;
-         upgradeBuilding(building);
+         upgradeBuilding(blueprintComponent.associatedEntityID);
          return;
       }
       default: {
@@ -205,8 +209,8 @@ const completeBlueprint = (blueprintEntity: Entity, blueprintComponent: Blueprin
    }
 }
 
-export function doBlueprintWork(blueprintEntity: Entity, hammerItem: Item): void {
-   const blueprintComponent = BlueprintComponentArray.getComponent(blueprintEntity.id);
+export function doBlueprintWork(blueprintEntity: EntityID, hammerItem: Item): void {
+   const blueprintComponent = BlueprintComponentArray.getComponent(blueprintEntity);
    
    const hammerItemInfo = ITEM_INFO_RECORD[hammerItem.type] as HammerItemInfo;
    blueprintComponent.workProgress += hammerItemInfo.workAmount;

@@ -1,6 +1,6 @@
 import { RectangularHitboxData, CircularHitboxData, EntityData, VisibleChunkBounds, GameDataPacket, GameDataPacketOptions, PlayerInventoryData, InitialGameDataPacket, ServerTileData, GameDataSyncPacket } from "webgl-test-shared/dist/client-server-types";
 import { ComponentData } from "webgl-test-shared/dist/components";
-import { EntityType } from "webgl-test-shared/dist/entities";
+import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
 import Board from "../Board";
 import Entity from "../Entity";
 import Tribe from "../Tribe";
@@ -20,74 +20,21 @@ import PlayerClient from "./PlayerClient";
 import { TribeComponentArray } from "../components/TribeComponent";
 import { SpikesComponentArray } from "../components/SpikesComponent";
 import { PlayerComponentArray } from "../components/PlayerComponent";
-import { RectangularHitbox, CircularHitbox, hitboxIsCircular } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { Inventory, InventoryName } from "webgl-test-shared/dist/items/items";
 
-const bundleRectangularHitboxData = (hitbox: RectangularHitbox, localID: number): RectangularHitboxData => {
-   return {
-      mass: hitbox.mass,
-      offsetX: hitbox.offset.x,
-      offsetY: hitbox.offset.y,
-      collisionType: hitbox.collisionType,
-      collisionBit: hitbox.collisionBit,
-      collisionMask: hitbox.collisionMask,
-      localID: localID,
-      flags: hitbox.flags,
-      width: hitbox.width,
-      height: hitbox.height,
-      rotation: hitbox.relativeRotation
-   };
-}
-
-const bundleCircularHitboxData = (hitbox: CircularHitbox, localID: number): CircularHitboxData => {
-   return {
-      mass: hitbox.mass,
-      offsetX: hitbox.offset.x,
-      offsetY: hitbox.offset.y,
-      collisionType: hitbox.collisionType,
-      collisionBit: hitbox.collisionBit,
-      collisionMask: hitbox.collisionMask,
-      localID: localID,
-      flags: hitbox.flags,
-      radius: hitbox.radius
-   };
-}
-
-const serialiseEntityData = (entity: Entity, player: Entity | null): EntityData<EntityType> => {
-   const circularHitboxes = new Array<CircularHitboxData>();
-   const rectangularHitboxes = new Array<RectangularHitboxData>();
-
-   for (let i = 0; i < entity.hitboxes.length; i++) {
-      const hitbox = entity.hitboxes[i];
-      const localID = entity.hitboxLocalIDs[i];
-      
-      if (hitboxIsCircular(hitbox)) {
-         circularHitboxes.push(bundleCircularHitboxData(hitbox, localID));
-      } else {
-         rectangularHitboxes.push(bundleRectangularHitboxData(hitbox, localID));
-      }
-   }
-
+const serialiseEntityData = (entity: EntityID, player: EntityID | 0): EntityData => {
    const components = new Array<ComponentData>();
    for (let i = 0; i < ComponentArrays.length; i++) {
       const componentArray = ComponentArrays[i];
 
-      if (componentArray.hasComponent(entity.id)) {
-         const componentData = componentArray.serialise(entity.id, player !== null ? player.id : null);
+      if (componentArray.hasComponent(entity)) {
+         const componentData = componentArray.serialise(entity, player);
          components.push(componentData);
       }
    }
 
    return {
       id: entity.id,
-      position: entity.position.package(),
-      rotation: entity.rotation,
-      circularHitboxes: circularHitboxes,
-      rectangularHitboxes: rectangularHitboxes,
-      ageTicks: entity.ageTicks,
-      type: entity.type,
-      collisionBit: entity.collisionBit,
-      collisionMask: entity.collisionMask,
       components: components
    };
 }

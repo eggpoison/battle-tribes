@@ -124,7 +124,27 @@ const ENTITY_DAMAGE_INFO_RECORD: Record<EntityType, EntityDamageInfo> = {
       effectiveDamageTypes: [],
       stoppedDamageTypes: []
    },
-   [EntityType.woodenArrowProjectile]: {
+   [EntityType.woodenArrow]: {
+      effectiveDamageTypes: [],
+      stoppedDamageTypes: []
+   },
+   [EntityType.ballistaWoodenBolt]: {
+      effectiveDamageTypes: [],
+      stoppedDamageTypes: []
+   },
+   [EntityType.ballistaRock]: {
+      effectiveDamageTypes: [],
+      stoppedDamageTypes: []
+   },
+   [EntityType.ballistaSlimeball]: {
+      effectiveDamageTypes: [],
+      stoppedDamageTypes: []
+   },
+   [EntityType.ballistaFrostcicle]: {
+      effectiveDamageTypes: [],
+      stoppedDamageTypes: []
+   },
+   [EntityType.slingTurretRock]: {
       effectiveDamageTypes: [],
       stoppedDamageTypes: []
    },

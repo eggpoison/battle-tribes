@@ -1,12 +1,12 @@
-import { EntityType } from "webgl-test-shared/dist/entities";
+import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
 import { ServerComponentType, TribeComponentData } from "webgl-test-shared/dist/components";
 import Tribe from "../Tribe";
 import { ComponentArray } from "./ComponentArray";
-import Entity from "../Entity";
 import { TribesmanAIComponentArray, getTribesmanRelationship } from "./TribesmanAIComponent";
 import { TribeMemberComponentArray } from "./TribeMemberComponent";
 import { PlantComponentArray } from "./PlantComponent";
 import { GolemComponentArray } from "./GolemComponent";
+import Board from "../Board";
 
 // /** Relationships a tribe member can have, in increasing order of threat */
 export const enum EntityRelationship {
@@ -19,10 +19,16 @@ export const enum EntityRelationship {
    enemy = 1 << 6
 }
 
+export interface TribeComponentParams {
+   tribeID: number | null;
+}
+
 export class TribeComponent {
    public tribe: Tribe;
 
-   constructor(tribe: Tribe) {
+   constructor(params: TribeComponentParams) {
+      // @Temporary
+      const tribe = Board.getTribeExpected(params.tribeID!)!;
       this.tribe = tribe;
    }
 }
@@ -31,15 +37,16 @@ export const TribeComponentArray = new ComponentArray<ServerComponentType.tribe,
    serialise: serialiseTribeComponent
 });
 
-export function getEntityRelationship(entityID: number, comparingEntity: Entity): EntityRelationship {
+export function getEntityRelationship(entity: EntityID, comparingEntity: EntityID): EntityRelationship {
    // More complex if the entity is an AI tribesman: take into account the personal relationship between the entities
-   if (TribesmanAIComponentArray.hasComponent(entityID) && TribeMemberComponentArray.hasComponent(comparingEntity.id)) {
-      return getTribesmanRelationship(entityID, comparingEntity.id);
+   if (TribesmanAIComponentArray.hasComponent(entity) && TribeMemberComponentArray.hasComponent(comparingEntity)) {
+      return getTribesmanRelationship(entity, comparingEntity);
    }
 
    // @Cleanup: do this based on which components they have
    
-   switch (comparingEntity.type) {
+   const entityType = Board.getEntityType(comparingEntity)!;
+   switch (entityType) {
       // Buildings
       case EntityType.wall:
       case EntityType.fence:
@@ -66,8 +73,8 @@ export function getEntityRelationship(entityID: number, comparingEntity: Entity)
       case EntityType.campfire:
       case EntityType.frostshaper:
       case EntityType.stonecarvingTable: {
-         const tribeComponent = TribeComponentArray.getComponent(entityID);
-         const comparingEntityTribeComponent = TribeComponentArray.getComponent(comparingEntity.id);
+         const tribeComponent = TribeComponentArray.getComponent(entity);
+         const comparingEntityTribeComponent = TribeComponentArray.getComponent(comparingEntity);
 
          if (comparingEntityTribeComponent.tribe === tribeComponent.tribe) {
             return EntityRelationship.friendlyBuilding;
@@ -75,9 +82,9 @@ export function getEntityRelationship(entityID: number, comparingEntity: Entity)
          return EntityRelationship.enemyBuilding;
       }
       case EntityType.plant: {
-         const plantComponent = PlantComponentArray.getComponent(comparingEntity.id);
+         const plantComponent = PlantComponentArray.getComponent(comparingEntity);
          
-         const tribeComponent = TribeComponentArray.getComponent(entityID);
+         const tribeComponent = TribeComponentArray.getComponent(entity);
          const planterBoxTribeComponent = TribeComponentArray.getComponent(plantComponent.planterBoxID);
 
          return planterBoxTribeComponent.tribe === tribeComponent.tribe ? EntityRelationship.neutral : EntityRelationship.enemyBuilding;
@@ -86,10 +93,15 @@ export function getEntityRelationship(entityID: number, comparingEntity: Entity)
       case EntityType.player:
       case EntityType.tribeWorker:
       case EntityType.tribeWarrior:
-      case EntityType.woodenArrowProjectile:
+      case EntityType.woodenArrow:
+      case EntityType.ballistaWoodenBolt:
+      case EntityType.ballistaRock:
+      case EntityType.ballistaFrostcicle:
+      case EntityType.ballistaSlimeball:
+      case EntityType.slingTurretRock:
       case EntityType.iceArrow: {
-         const tribeComponent = TribeComponentArray.getComponent(entityID);
-         const comparingEntityTribeComponent = TribeComponentArray.getComponent(comparingEntity.id);
+         const tribeComponent = TribeComponentArray.getComponent(entity);
+         const comparingEntityTribeComponent = TribeComponentArray.getComponent(comparingEntity);
 
          if (comparingEntityTribeComponent.tribe === tribeComponent.tribe) {
             return EntityRelationship.friendly;
@@ -104,7 +116,7 @@ export function getEntityRelationship(entityID: number, comparingEntity: Entity)
       }
       // Golem (hostile mob / neutral)
       case EntityType.golem: {
-         const golemComponent = GolemComponentArray.getComponent(comparingEntity.id);
+         const golemComponent = GolemComponentArray.getComponent(comparingEntity);
          return Object.keys(golemComponent.attackingEntities).length > 0 ? EntityRelationship.hostileMob : EntityRelationship.neutral;
       }
       // @Temporary
@@ -114,8 +126,8 @@ export function getEntityRelationship(entityID: number, comparingEntity: Entity)
       case EntityType.frozenYeti:
       case EntityType.yeti:
       case EntityType.slime: {
-         const tribeComponent = TribeComponentArray.getComponent(entityID);
-         return tribeComponent.tribe.attackingEntities[comparingEntity.id] !== undefined ? EntityRelationship.hostileMob : EntityRelationship.neutral;
+         const tribeComponent = TribeComponentArray.getComponent(entity);
+         return tribeComponent.tribe.attackingEntities[comparingEntity] !== undefined ? EntityRelationship.hostileMob : EntityRelationship.neutral;
       }
       // Neutrals
       case EntityType.boulder:
@@ -138,21 +150,21 @@ export function getEntityRelationship(entityID: number, comparingEntity: Entity)
          return EntityRelationship.neutral;
       }
       default: {
-         const unreachable: never = comparingEntity.type;
+         const unreachable: never = entityType;
          return unreachable;
       }
    }
 }
 
-function serialiseTribeComponent(entityID: number): TribeComponentData {
-   const tribeComponent = TribeComponentArray.getComponent(entityID);
+function serialiseTribeComponent(entity: EntityID): TribeComponentData {
+   const tribeComponent = TribeComponentArray.getComponent(entity);
    return {
       componentType: ServerComponentType.tribe,
       tribeID: tribeComponent.tribe.id
    };
 }
 
-export function recruitTribesman(tribesman: Entity, newTribe: Tribe): void {
-   const tribeComponent = TribeComponentArray.getComponent(tribesman.id);
+export function recruitTribesman(tribesman: EntityID, newTribe: Tribe): void {
+   const tribeComponent = TribeComponentArray.getComponent(tribesman);
    tribeComponent.tribe = newTribe;
 }

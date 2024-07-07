@@ -1,76 +1,86 @@
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
-import { EntityType, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
+import { EntityID, EntityType, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { Point } from "webgl-test-shared/dist/utils";
-import Entity from "../../Entity";
-import { SlimeSpitComponent, SlimeSpitComponentArray } from "../../components/SlimeSpitComponent";
+import { SlimeSpitComponentArray } from "../../components/SlimeSpitComponent";
 import { createSpitPoison } from "./spit-poison";
 import { HealthComponentArray, damageEntity } from "../../components/HealthComponent";
 import { StatusEffectComponentArray, applyStatusEffect } from "../../components/StatusEffectComponent";
-import { PhysicsComponent, PhysicsComponentArray, applyKnockback } from "../../components/PhysicsComponent";
-import { EntityCreationInfo } from "../../components";
+import { PhysicsComponentArray, applyKnockback } from "../../components/PhysicsComponent";
+import { ComponentConfig } from "../../components";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
 import { HitboxCollisionType, RectangularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
+import Board from "../../Board";
+import { TransformComponentArray } from "../../components/TransformComponent";
 
-type ComponentTypes = [ServerComponentType.physics, ServerComponentType.slimeSpit];
+type ComponentTypes = ServerComponentType.transform
+   | ServerComponentType.physics
+   | ServerComponentType.slimeSpit;
 
 const BREAK_VELOCITY = 100;
 
-const SIZES = [20, 30];
 
-export function createSlimeSpit(position: Point, rotation: number, size: number): EntityCreationInfo<ComponentTypes> {
-   const spit = new Entity(position, rotation, EntityType.slimeSpit, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
-
-   const hitboxSize = SIZES[size];
-   const hitbox = new RectangularHitbox(0.2, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, hitboxSize, hitboxSize, 0);
-   spit.addHitbox(hitbox);
-
-   const physicsComponent = new PhysicsComponent(0, 0, 0, 0, true, false);
-   PhysicsComponentArray.addComponent(spit.id, physicsComponent);
-
-   const slimeSpitComponent = new SlimeSpitComponent(size);
-   SlimeSpitComponentArray.addComponent(spit.id, slimeSpitComponent);
-
+export function createSlimeSpitConfig(): ComponentConfig<ComponentTypes> {
    return {
-      entity: spit,
-      components: {
-         [ServerComponentType.physics]: physicsComponent,
-         [ServerComponentType.slimeSpit]: slimeSpitComponent
+      [ServerComponentType.transform]: {
+         position: new Point(0, 0),
+         rotation: 0,
+         type: EntityType.slimeSpit,
+         collisionBit: COLLISION_BITS.default,
+         collisionMask: DEFAULT_COLLISION_MASK,
+         hitboxes: [new RectangularHitbox(0.2, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, 0, 0, 0)]
+      },
+      [ServerComponentType.physics]: {
+         velocityX: 0,
+         velocityY: 0,
+         accelerationX: 0,
+         accelerationY: 0,
+         isAffectedByFriction: true,
+         isImmovable: false
+      },
+      [ServerComponentType.slimeSpit]: {
+         size: 0
       }
    };
 }
 
-export function tickSlimeSpit(spit: Entity): void {
-   const physicsComponent = PhysicsComponentArray.getComponent(spit.id);
+export function tickSlimeSpit(spit: EntityID): void {
+   const physicsComponent = PhysicsComponentArray.getComponent(spit);
    if (physicsComponent.velocity.lengthSquared() <= BREAK_VELOCITY * BREAK_VELOCITY) {
-      spit.destroy();
+      Board.destroyEntity(spit);
    }
 }
 
-export function onSlimeSpitCollision(spit: Entity, collidingEntity: Entity, collisionPoint: Point): void {
-   if (collidingEntity.type === EntityType.slime || collidingEntity.type === EntityType.slimewisp || !HealthComponentArray.hasComponent(collidingEntity.id)) {
+export function onSlimeSpitCollision(spit: EntityID, collidingEntity: EntityID, collisionPoint: Point): void {
+   const collidingEntityType = Board.getEntityType(collidingEntity);
+   if (collidingEntityType === EntityType.slime || collidingEntityType === EntityType.slimewisp || !HealthComponentArray.hasComponent(collidingEntity)) {
       return;
    }
 
-   const spitComponent = SlimeSpitComponentArray.getComponent(spit.id);
+   const transformComponent = TransformComponentArray.getComponent(spit);
+   const spitComponent = SlimeSpitComponentArray.getComponent(spit);
+
+   const collidingEntityTransformComponent = TransformComponentArray.getComponent(collidingEntity);
+
    const damage = spitComponent.size === 0 ? 2 : 3;
-   const hitDirection = spit.position.calculateAngleBetween(collidingEntity.position);
+   const hitDirection = transformComponent.position.calculateAngleBetween(collidingEntityTransformComponent.position);
 
    damageEntity(collidingEntity, spit, damage, PlayerCauseOfDeath.poison, AttackEffectiveness.effective, collisionPoint, 0);
    applyKnockback(collidingEntity, 150, hitDirection);
    
-   if (StatusEffectComponentArray.hasComponent(collidingEntity.id)) {
-      applyStatusEffect(collidingEntity.id, StatusEffect.poisoned, 2 * Settings.TPS);
+   if (StatusEffectComponentArray.hasComponent(collidingEntity)) {
+      applyStatusEffect(collidingEntity, StatusEffect.poisoned, 2 * Settings.TPS);
    }
 
-   spit.destroy();
+   Board.destroyEntity(spit);
 }
 
-export function onSlimeSpitDeath(spit: Entity): void {
-   const spitComponent = SlimeSpitComponentArray.getComponent(spit.id);
+export function onSlimeSpitDeath(spit: EntityID): void {
+   const spitComponent = SlimeSpitComponentArray.getComponent(spit);
    if (spitComponent.size === 1) {
-      createSpitPoison(spit.position.copy(), 2 * Math.PI * Math.random());
+      const transformComponent = TransformComponentArray.getComponent(spit);
+      createSpitPoison(transformComponent.position.copy(), 2 * Math.PI * Math.random());
    }
 }

@@ -2,6 +2,10 @@ import { TribesmanTitle } from "webgl-test-shared/dist/titles";
 import { PlayerComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
 import { ComponentArray } from "./ComponentArray";
 
+export interface PlayerComponentParams {
+   readonly username: string;
+}
+
 export class PlayerComponent {
    public readonly username: string;
    
@@ -10,8 +14,8 @@ export class PlayerComponent {
 
    public titleOffer: TribesmanTitle | null = null;
 
-   constructor(username: string) {
-      this.username = username;
+   constructor(params: PlayerComponentParams) {
+      this.username = params.username;
    }
 }
 

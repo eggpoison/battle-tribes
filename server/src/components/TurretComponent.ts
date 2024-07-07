@@ -6,13 +6,17 @@ import { SLING_TURRET_RELOAD_TIME_TICKS, SLING_TURRET_SHOT_COOLDOWN_TICKS } from
 import Board from "../Board";
 import { AmmoBoxComponentArray } from "./AmmoBoxComponent";
 
+export interface TurretComponentParams {
+   readonly fireCooldownTicks: number;
+}
+
 export class TurretComponent {
    public aimDirection = 0;
    public fireCooldownTicks: number;
    public hasTarget = false;
 
-   constructor(fireCooldownTicks: number) {
-      this.fireCooldownTicks = fireCooldownTicks;
+   constructor(params: TurretComponentParams) {
+      this.fireCooldownTicks = params.fireCooldownTicks;
    }
 }
 

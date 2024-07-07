@@ -2,6 +2,8 @@ import { IceShardComponentData, ServerComponentType } from "webgl-test-shared/di
 import { ComponentArray } from "./ComponentArray";
 import { randFloat } from "webgl-test-shared/dist/utils";
 
+export interface IceShardComponentParams {}
+
 export class IceShardComponent {
    public readonly lifetime = randFloat(0.1, 0.2);
 }

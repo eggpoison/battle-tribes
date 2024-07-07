@@ -2,14 +2,14 @@ import { AttackEffectiveness, calculateAttackEffectiveness } from "webgl-test-sh
 import { HitFlags } from "webgl-test-shared/dist/client-server-types";
 import { COLLISION_BITS } from "webgl-test-shared/dist/collision";
 import { PlanterBoxPlant, BlueprintType, BuildingMaterial, MATERIAL_TO_ITEM_MAP, ServerComponentType } from "webgl-test-shared/dist/components";
-import { EntityType, LimbAction, PlayerCauseOfDeath, GenericArrowType, EntityTypeString } from "webgl-test-shared/dist/entities";
+import { EntityType, LimbAction, PlayerCauseOfDeath, EntityTypeString, EntityID } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { StructureConnectionInfo, StructureType, calculateStructurePlaceInfo } from "webgl-test-shared/dist/structures";
 import { TribesmanTitle } from "webgl-test-shared/dist/titles";
 import { TribeType } from "webgl-test-shared/dist/tribes";
 import { Point, dotAngles, lerp } from "webgl-test-shared/dist/utils";
-import Entity, { entityIsStructure } from "../../Entity";
+import { createEntityFromConfig, entityIsStructure } from "../../Entity";
 import Board from "../../Board";
 import { InventoryComponentArray, consumeItemFromSlot, consumeItemType, countItemType, getInventory, inventoryIsFull, pickupItemEntity, resizeInventory } from "../../components/InventoryComponent";
 import { getEntitiesInRange } from "../../ai-shared";
@@ -21,23 +21,21 @@ import { applyStatusEffect, clearStatusEffects } from "../../components/StatusEf
 import { createBarrel } from "../structures/barrel";
 import { createCampfire } from "../structures/cooking-entities/campfire";
 import { createFurnace } from "../structures/cooking-entities/furnace";
-import { GenericArrowInfo, createWoodenArrow } from "../projectiles/wooden-arrow";
 import { onFishLeaderHurt } from "../mobs/fish";
-import { createSpearProjectile } from "../projectiles/spear-projectile";
 import { createResearchBench } from "../structures/research-bench";
 import { createWarriorHut } from "../structures/warrior-hut";
 import { createWall } from "../structures/wall";
 import { InventoryUseComponentArray, InventoryUseInfo, getInventoryUseInfo } from "../../components/InventoryUseComponent";
-import { createBattleaxeProjectile } from "../projectiles/battleaxe-projectile";
+import { createBattleaxeProjectileConfig } from "../projectiles/battleaxe-projectile";
 import { createPlanterBox } from "../structures/planter-box";
-import { createIceArrow } from "../projectiles/ice-arrow";
+import { createIceArrowConfig } from "../projectiles/ice-arrow";
 import { createSpikes } from "../structures/spikes";
 import { createPunjiSticks } from "../structures/punji-sticks";
 import { doBlueprintWork } from "../../components/BlueprintComponent";
 import { EntityRelationship, TribeComponentArray, getEntityRelationship } from "../../components/TribeComponent";
 import { createBlueprintEntity } from "../blueprint-entity";
 import { getItemAttackCooldown } from "../../items";
-import { PhysicsComponent, PhysicsComponentArray, applyKnockback } from "../../components/PhysicsComponent";
+import { PhysicsComponentArray, applyKnockback } from "../../components/PhysicsComponent";
 import Tribe from "../../Tribe";
 import { entityIsResource } from "./tribesman-ai/tribesman-resource-gathering";
 import { TribesmanAIComponentArray, adjustTribesmanRelationsAfterGift } from "../../components/TribesmanAIComponent";
@@ -46,7 +44,7 @@ import { TribeMemberComponentArray, awardTitle, hasTitle } from "../../component
 import { createHealingTotem } from "../structures/healing-totem";
 import { TREE_RADII } from "../resources/tree";
 import { BERRY_BUSH_RADIUS, dropBerryOverEntity } from "../resources/berry-bush";
-import { createItemEntity, itemEntityCanBePickedUp } from "../item-entity";
+import { createItemEntityConfig, itemEntityCanBePickedUp } from "../item-entity";
 import { createFence } from "../structures/fence";
 import { createFenceGate } from "../structures/fence-gate";
 import { PlantComponentArray, plantIsFullyGrown } from "../../components/PlantComponent";
@@ -61,6 +59,10 @@ import { CraftingStation } from "webgl-test-shared/dist/items/crafting-recipes";
 import { Item, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, BattleaxeItemInfo, SwordItemInfo, AxeItemInfo, itemInfoIsTool, HammerItemInfo, InventoryName, ItemType, ConsumableItemInfo, ConsumableItemCategory, PlaceableItemType, BowItemInfo, itemIsStackable, getItemStackSize, BackpackItemInfo, ArmourItemInfo } from "webgl-test-shared/dist/items/items";
 import { EntityTickEvent, EntityTickEventType } from "webgl-test-shared/dist/entity-events";
 import { registerEntityTickEvent } from "../../server/player-clients";
+import { TransformComponentArray } from "../../components/TransformComponent";
+import { createWoodenArrowConfig } from "../projectiles/wooden-arrow";
+import { ComponentConfig } from "../../components";
+import { createSpearProjectileConfig } from "../projectiles/spear-projectile";
 
 const enum Vars {
    ITEM_THROW_FORCE = 100,
@@ -76,11 +78,11 @@ const DEFAULT_ATTACK_KNOCKBACK = 125;
 export const VACUUM_RANGE = 85;
 const VACUUM_STRENGTH = 25;
 
-const getDamageMultiplier = (entity: Entity): number => {
+const getDamageMultiplier = (entity: EntityID): number => {
    let multiplier = 1;
 
-   if (TribeMemberComponentArray.hasComponent(entity.id)) {
-      const tribeMemberComponent = TribeMemberComponentArray.getComponent(entity.id);
+   if (TribeMemberComponentArray.hasComponent(entity)) {
+      const tribeMemberComponent = TribeMemberComponentArray.getComponent(entity);
 
       for (let i = 0; i < tribeMemberComponent.titles.length; i++) {
          const title = tribeMemberComponent.titles[i].title;
@@ -97,7 +99,7 @@ const getDamageMultiplier = (entity: Entity): number => {
    return multiplier;
 }
 
-export function calculateItemDamage(entity: Entity, item: Item | null, attackEffectiveness: AttackEffectiveness): number {
+export function calculateItemDamage(entity: EntityID, item: Item | null, attackEffectiveness: AttackEffectiveness): number {
    if (attackEffectiveness === AttackEffectiveness.stopped) {
       return 0;
    }
@@ -168,21 +170,21 @@ const calculateItemKnockback = (item: Item | null): number => {
    return DEFAULT_ATTACK_KNOCKBACK;
 }
 
-const getRepairTimeMultiplier = (tribeMember: Entity): number => {
+const getRepairTimeMultiplier = (tribeMember: EntityID): number => {
    let multiplier = 1;
    
-   if (tribeMember.type === EntityType.tribeWarrior) {
+   if (Board.getEntityType(tribeMember) === EntityType.tribeWarrior) {
       multiplier *= 2;
    }
 
    return multiplier;
 }
 
-const getRepairAmount = (tribeMember: Entity, hammerItem: Item): number => {
+const getRepairAmount = (tribeMember: EntityID, hammerItem: Item): number => {
    const itemInfo = ITEM_INFO_RECORD[hammerItem.type] as HammerItemInfo;
    let repairAmount = itemInfo.repairAmount;
 
-   if (hasTitle(tribeMember.id, TribesmanTitle.builder)) {
+   if (hasTitle(tribeMember, TribesmanTitle.builder)) {
       repairAmount *= 1.5;
    }
    
@@ -191,9 +193,9 @@ const getRepairAmount = (tribeMember: Entity, hammerItem: Item): number => {
 
 // @Cleanup: lot of copy and paste from attemptAttack
 // @Cleanup: Maybe split this up into repair and work functions
-export function repairBuilding(tribeMember: Entity, targetEntity: Entity, itemSlot: number, inventoryName: InventoryName): boolean {
-   const inventoryComponent = InventoryComponentArray.getComponent(tribeMember.id);
-   const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribeMember.id);
+export function repairBuilding(tribeMember: EntityID, targetEntity: EntityID, itemSlot: number, inventoryName: InventoryName): boolean {
+   const inventoryComponent = InventoryComponentArray.getComponent(tribeMember);
+   const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribeMember);
 
    const useInfo = getInventoryUseInfo(inventoryUseComponent, inventoryName);
 
@@ -219,21 +221,21 @@ export function repairBuilding(tribeMember: Entity, targetEntity: Entity, itemSl
    // @Incomplete: Should this instead be its own lastConstructTicks?
    useInfo.lastAttackTicks = Board.ticks;
 
-   if (targetEntity.type === EntityType.blueprintEntity) {
+   if (Board.getEntityType(targetEntity) === EntityType.blueprintEntity) {
       // If holding a hammer and attacking a friendly blueprint, work on the blueprint instead of damaging it
-      const tribeComponent = TribeComponentArray.getComponent(tribeMember.id);
-      const blueprintTribeComponent = TribeComponentArray.getComponent(targetEntity.id);
+      const tribeComponent = TribeComponentArray.getComponent(tribeMember);
+      const blueprintTribeComponent = TribeComponentArray.getComponent(targetEntity);
       if (blueprintTribeComponent.tribe === tribeComponent.tribe) {
          doBlueprintWork(targetEntity, item);
          return true;
       }
    } else if (entityIsStructure(targetEntity)) {
       // Heal friendly structures
-      const tribeComponent = TribeComponentArray.getComponent(tribeMember.id);
-      const buildingTribeComponent = TribeComponentArray.getComponent(targetEntity.id);
+      const tribeComponent = TribeComponentArray.getComponent(tribeMember);
+      const buildingTribeComponent = TribeComponentArray.getComponent(targetEntity);
       if (buildingTribeComponent.tribe === tribeComponent.tribe) {
          const repairAmount = getRepairAmount(tribeMember, item);
-         healEntity(targetEntity, repairAmount, tribeMember.id);
+         healEntity(targetEntity, repairAmount, tribeMember);
          return true;
       }
    }
@@ -242,38 +244,38 @@ export function repairBuilding(tribeMember: Entity, targetEntity: Entity, itemSl
    return false;
 }
 
-export function getSwingTimeMultiplier(entity: Entity, targetEntity: Entity, item: Item | null): number {
+export function getSwingTimeMultiplier(entity: EntityID, targetEntity: EntityID, item: Item | null): number {
    let swingTimeMultiplier = 1;
 
-   if (TribeComponentArray.hasComponent(entity.id)) {
+   if (TribeComponentArray.hasComponent(entity)) {
       // Barbarians swing 30% slower
-      const tribeComponent = TribeComponentArray.getComponent(entity.id);
+      const tribeComponent = TribeComponentArray.getComponent(entity);
       if (tribeComponent.tribe.tribeType === TribeType.barbarians) {
          swingTimeMultiplier /= 0.7;
       }
    
       // Warriors attack resources slower
-      if (entity.type === EntityType.tribeWarrior && entityIsResource(targetEntity)) {
+      if (Board.getEntityType(entity) === EntityType.tribeWarrior && entityIsResource(targetEntity)) {
          swingTimeMultiplier *= 2.5;
       }
    }
 
    // Builers swing hammers 30% faster
-   if (hasTitle(entity.id, TribesmanTitle.builder) && item !== null && ITEM_TYPE_RECORD[item.type] === "hammer") {
+   if (hasTitle(entity, TribesmanTitle.builder) && item !== null && ITEM_TYPE_RECORD[item.type] === "hammer") {
       swingTimeMultiplier /= 1.3;
    }
 
    return swingTimeMultiplier;
 }
 
-const isBerryBushWithBerries = (entity: Entity): boolean => {
-   switch (entity.type) {
+const isBerryBushWithBerries = (entity: EntityID): boolean => {
+   switch (Board.getEntityType(entity)) {
       case EntityType.berryBush: {
-         const berryBushComponent = BerryBushComponentArray.getComponent(entity.id);
+         const berryBushComponent = BerryBushComponentArray.getComponent(entity);
          return berryBushComponent.numBerries > 0;
       }
       case EntityType.plant: {
-         const plantComponent = PlantComponentArray.getComponent(entity.id);
+         const plantComponent = PlantComponentArray.getComponent(entity);
          return plantComponent.plantType === PlanterBoxPlant.berryBush && plantComponent.numFruit > 0;
       }
       default: {
@@ -282,16 +284,16 @@ const isBerryBushWithBerries = (entity: Entity): boolean => {
    }
 }
 
-const getPlantGatherAmount = (tribeman: Entity, plant: Entity, gloves: Item | null): number => {
+const getPlantGatherAmount = (tribeman: EntityID, plant: EntityID, gloves: Item | null): number => {
    let amount = 1;
 
-   if (hasTitle(tribeman.id, TribesmanTitle.berrymuncher) && isBerryBush(plant)) {
+   if (hasTitle(tribeman, TribesmanTitle.berrymuncher) && isBerryBush(plant)) {
       if (Math.random() < 0.3) {
          amount++;
       }
    }
 
-   if (hasTitle(tribeman.id, TribesmanTitle.gardener)) {
+   if (hasTitle(tribeman, TribesmanTitle.gardener)) {
       if (Math.random() < 0.3) {
          amount++;
       }
@@ -306,7 +308,9 @@ const getPlantGatherAmount = (tribeman: Entity, plant: Entity, gloves: Item | nu
    return amount;
 }
 
-const gatherPlant = (plant: Entity, attacker: Entity, gloves: Item | null): void => {
+const gatherPlant = (plant: EntityID, attacker: EntityID, gloves: Item | null): void => {
+   const plantTransformComponent = TransformComponentArray.getComponent(plant);
+   
    if (isBerryBushWithBerries(plant)) {
       const gatherMultiplier = getPlantGatherAmount(attacker, plant, gloves);
 
@@ -316,9 +320,9 @@ const gatherPlant = (plant: Entity, attacker: Entity, gloves: Item | null): void
       }
    } else {
       let plantRadius: number;
-      switch (plant.type) {
+      switch (Board.getEntityType(plant)) {
          case EntityType.tree: {
-            const treeComponent = TreeComponentArray.getComponent(plant.id);
+            const treeComponent = TreeComponentArray.getComponent(plant);
             plantRadius = TREE_RADII[treeComponent.treeSize];
             break;
          }
@@ -336,14 +340,21 @@ const gatherPlant = (plant: Entity, attacker: Entity, gloves: Item | null): void
       }
 
       const offsetDirection = 2 * Math.PI * Math.random();
-      const x = plant.position.x + (plantRadius - 7) * Math.sin(offsetDirection);
-      const y = plant.position.y + (plantRadius - 7) * Math.cos(offsetDirection);
+      const x = plantTransformComponent.position.x + (plantRadius - 7) * Math.sin(offsetDirection);
+      const y = plantTransformComponent.position.y + (plantRadius - 7) * Math.cos(offsetDirection);
    
-      createItemEntity(new Point(x, y), 2 * Math.PI * Math.random(), ItemType.leaf, 1, 0);
+      const config = createItemEntityConfig();
+      config[ServerComponentType.transform].position.x = x;
+      config[ServerComponentType.transform].position.y = y;
+      config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
+      config[ServerComponentType.item].itemType = ItemType.leaf;
+      config[ServerComponentType.item].amount = 1;
+      createEntityFromConfig(config);
    }
 
    // @Hack
-   const collisionPoint = new Point((plant.position.x + attacker.position.x) / 2, (plant.position.y + attacker.position.y) / 2);
+   const attackerTransformComponent = TransformComponentArray.getComponent(attacker);
+   const collisionPoint = new Point((plantTransformComponent.position.x + attackerTransformComponent.position.x) / 2, (plantTransformComponent.position.y + attackerTransformComponent.position.y) / 2);
 
    damageEntity(plant, attacker, 0, 0, AttackEffectiveness.ineffective, collisionPoint, HitFlags.NON_DAMAGING_HIT);
 }
@@ -355,8 +366,8 @@ const gatherPlant = (plant: Entity, attacker: Entity, gloves: Item | null): void
  */
 // @Cleanup: (?) Pass in the item to use directly instead of passing in the item slot and inventory name
 // @Cleanup: Not just for tribe members, move to different file
-export function attemptAttack(attacker: Entity, targetEntity: Entity, itemSlot: number, inventoryName: InventoryName): boolean {
-   const inventoryUseComponent = InventoryUseComponentArray.getComponent(attacker.id);
+export function attemptAttack(attacker: EntityID, targetEntity: EntityID, itemSlot: number, inventoryName: InventoryName): boolean {
+   const inventoryUseComponent = InventoryUseComponentArray.getComponent(attacker);
    if (inventoryUseComponent.globalAttackCooldown > 0) {
       return false;
    }
@@ -369,14 +380,17 @@ export function attemptAttack(attacker: Entity, targetEntity: Entity, itemSlot: 
    }
    
    // Find the selected item
-   const inventoryComponent = InventoryComponentArray.getComponent(attacker.id);
+   const inventoryComponent = InventoryComponentArray.getComponent(attacker);
    const inventory = getInventory(inventoryComponent, inventoryName);
    let item: Item | null | undefined = inventory.itemSlots[itemSlot];
    if (typeof item === "undefined" || useInfo.thrownBattleaxeItemID === item.id) {
       item = null;
    }
 
-   const attackEffectiveness = calculateAttackEffectiveness(item, targetEntity.type);
+   const attackerEntityType = Board.getEntityType(targetEntity)!;
+   const targetEntityType = Board.getEntityType(targetEntity)!;
+
+   const attackEffectiveness = calculateAttackEffectiveness(item, targetEntityType);
 
    // Reset attack cooldown
    // @Hack
@@ -386,17 +400,17 @@ export function attemptAttack(attacker: Entity, targetEntity: Entity, itemSlot: 
    useInfo.itemAttackCooldowns[itemSlot] = attackCooldown;
    useInfo.lastAttackCooldown = attackCooldown;
    useInfo.lastAttackTicks = Board.ticks;
-   if (attacker.type !== EntityType.player) {
+   if (attackerEntityType !== EntityType.player) {
       inventoryUseComponent.globalAttackCooldown = Settings.GLOBAL_ATTACK_COOLDOWN;
    }
 
    // @Cleanup @Speed: Make a function (e.g. attemptTribesmanAttack) which does this check using the return val of attemptTack
-   if (attacker.type === EntityType.tribeWorker) {
+   if (attackerEntityType === EntityType.tribeWorker) {
       useInfo.extraAttackCooldownTicks = Math.floor(0.1 * Settings.TPS);
    }
 
    // Harvest leaves from trees and berries when wearing the gathering or gardening gloves
-   if ((item === null || item.type === ItemType.leaf) && (targetEntity.type === EntityType.tree || targetEntity.type === EntityType.berryBush || targetEntity.type === EntityType.plant)) {
+   if ((item === null || item.type === ItemType.leaf) && (targetEntityType === EntityType.tree || targetEntityType === EntityType.berryBush || targetEntityType === EntityType.plant)) {
       const gloveInventory = getInventory(inventoryComponent, InventoryName.gloveSlot);
       const gloves = gloveInventory.itemSlots[1];
       if (typeof gloves !== "undefined" && (gloves.type === ItemType.gathering_gloves || gloves.type === ItemType.gardening_gloves)) {
@@ -408,10 +422,13 @@ export function attemptAttack(attacker: Entity, targetEntity: Entity, itemSlot: 
    const attackDamage = calculateItemDamage(attacker, item, attackEffectiveness);
    const attackKnockback = calculateItemKnockback(item);
 
-   const hitDirection = attacker.position.calculateAngleBetween(targetEntity.position);
+   const targetEntityTransformComponent = TransformComponentArray.getComponent(targetEntity);
+   const attackerTransformComponent = TransformComponentArray.getComponent(attacker);
+
+   const hitDirection = attackerTransformComponent.position.calculateAngleBetween(targetEntityTransformComponent.position);
 
    // @Hack
-   const collisionPoint = new Point((targetEntity.position.x + attacker.position.x) / 2, (targetEntity.position.y + attacker.position.y) / 2);
+   const collisionPoint = new Point((targetEntityTransformComponent.position.x + attackerTransformComponent.position.x) / 2, (targetEntityTransformComponent.position.y + attackerTransformComponent.position.y) / 2);
 
    // Register the hit
    const hitFlags = item !== null && item.type === ItemType.flesh_sword ? HitFlags.HIT_BY_FLESH_SWORD : 0;
@@ -419,12 +436,12 @@ export function attemptAttack(attacker: Entity, targetEntity: Entity, itemSlot: 
    applyKnockback(targetEntity, attackKnockback, hitDirection);
 
    if (item !== null && item.type === ItemType.flesh_sword) {
-      applyStatusEffect(targetEntity.id, StatusEffect.poisoned, 3 * Settings.TPS);
+      applyStatusEffect(targetEntity, StatusEffect.poisoned, 3 * Settings.TPS);
    }
 
    // Bloodaxes have a 20% chance to inflict bleeding on hit
-   if (hasTitle(attacker.id, TribesmanTitle.bloodaxe) && Math.random() < 0.2) {
-      applyStatusEffect(targetEntity.id, StatusEffect.bleeding, 2 * Settings.TPS);
+   if (hasTitle(attacker, TribesmanTitle.bloodaxe) && Math.random() < 0.2) {
+      applyStatusEffect(targetEntity, StatusEffect.bleeding, 2 * Settings.TPS);
    }
 
    return true;
@@ -438,31 +455,36 @@ const getEntityAttackPriority = (entityType: EntityType): number => {
 }
 
 // @Cleanup: Not just for tribe members, move to different file
-export function calculateAttackTarget(tribeMember: Entity, targetEntities: ReadonlyArray<Entity>, attackableEntityRelationshipMask: number): Entity | null {
-   let closestEntity: Entity | null = null;
+export function calculateAttackTarget(tribeMember: EntityID, targetEntities: ReadonlyArray<EntityID>, attackableEntityRelationshipMask: number): EntityID | null {
+   const transformComponent = TransformComponentArray.getComponent(tribeMember);
+   
+   let closestEntity: EntityID | null = null;
    let minDistance = Number.MAX_SAFE_INTEGER;
    let maxAttackPriority = 0;
    for (const targetEntity of targetEntities) {
       // Don't attack entities without health components
-      if (!HealthComponentArray.hasComponent(targetEntity.id)) {
+      if (!HealthComponentArray.hasComponent(targetEntity)) {
          continue;
       }
 
       // @Temporary
-      if (targetEntity.type === EntityType.plant) {
-         const plantComponent = PlantComponentArray.getComponent(targetEntity.id);
+      const targetEntityType = Board.getEntityType(targetEntity)!;
+      if (targetEntityType === EntityType.plant) {
+         const plantComponent = PlantComponentArray.getComponent(targetEntity);
          if (!plantIsFullyGrown(plantComponent)) {
             continue;
          }
       }
 
-      const relationship = getEntityRelationship(tribeMember.id, targetEntity);
+      const relationship = getEntityRelationship(tribeMember, targetEntity);
       if ((relationship & attackableEntityRelationshipMask) === 0) {
          continue;
       }
 
-      const attackPriority = getEntityAttackPriority(targetEntity.type);
-      const dist = tribeMember.position.calculateDistanceBetween(targetEntity.position);
+      const targetEntityTransformComponent = TransformComponentArray.getComponent(targetEntity);
+
+      const attackPriority = getEntityAttackPriority(targetEntityType);
+      const dist = transformComponent.position.calculateDistanceBetween(targetEntityTransformComponent.position);
 
       if (attackPriority > maxAttackPriority) {
          minDistance = dist;
@@ -480,27 +502,31 @@ export function calculateAttackTarget(tribeMember: Entity, targetEntities: Reado
 }
 
 
-export function calculateRepairTarget(tribeMember: Entity, targetEntities: ReadonlyArray<Entity>): Entity | null {
-   let closestEntity: Entity | null = null;
+export function calculateRepairTarget(tribeMember: EntityID, targetEntities: ReadonlyArray<EntityID>): EntityID | null {
+   const transformComponent = TransformComponentArray.getComponent(tribeMember);
+
+   let closestEntity: EntityID | null = null;
    let minDistance = Number.MAX_SAFE_INTEGER;
    for (const targetEntity of targetEntities) {
       // Don't attack entities without health components
-      if (!HealthComponentArray.hasComponent(targetEntity.id)) {
+      if (!HealthComponentArray.hasComponent(targetEntity)) {
          continue;
       }
 
       // Only repair damaged buildings
-      const healthComponent = HealthComponentArray.getComponent(targetEntity.id);
+      const healthComponent = HealthComponentArray.getComponent(targetEntity);
       if (healthComponent.health === healthComponent.maxHealth) {
          continue;
       }
 
-      const relationship = getEntityRelationship(tribeMember.id, targetEntity);
+      const relationship = getEntityRelationship(tribeMember, targetEntity);
       if (relationship !== EntityRelationship.friendlyBuilding) {
          continue;
       }
 
-      const dist = tribeMember.position.calculateDistanceBetween(targetEntity.position);
+      const targetEntityTransformComponent = TransformComponentArray.getComponent(targetEntity);
+
+      const dist = transformComponent.position.calculateDistanceBetween(targetEntityTransformComponent.position);
       if (dist < minDistance) {
          closestEntity = targetEntity;
          minDistance = dist;
@@ -513,16 +539,20 @@ export function calculateRepairTarget(tribeMember: Entity, targetEntities: Reado
 }
 
 
-export function calculateBlueprintWorkTarget(tribeMember: Entity, targetEntities: ReadonlyArray<Entity>): Entity | null {
-   let closestEntity: Entity | null = null;
+export function calculateBlueprintWorkTarget(tribeMember: EntityID, targetEntities: ReadonlyArray<EntityID>): EntityID | null {
+   const transformComponent = TransformComponentArray.getComponent(tribeMember);
+
+   let closestEntity: EntityID | null = null;
    let minDistance = Number.MAX_SAFE_INTEGER;
    for (const targetEntity of targetEntities) {
       // Don't attack entities without health components
-      if (targetEntity.type !== EntityType.blueprintEntity) {
+      if (Board.getEntityType(targetEntity) !== EntityType.blueprintEntity) {
          continue;
       }
 
-      const dist = tribeMember.position.calculateDistanceBetween(targetEntity.position);
+      const targetEntityTransformComponent = TransformComponentArray.getComponent(targetEntity);
+
+      const dist = transformComponent.position.calculateDistanceBetween(targetEntityTransformComponent.position);
       if (dist < minDistance) {
          closestEntity = targetEntity;
          minDistance = dist;
@@ -536,9 +566,11 @@ export function calculateBlueprintWorkTarget(tribeMember: Entity, targetEntities
 
 // @Cleanup: Rename function. shouldn't be 'attack'
 // @Cleanup: Not just for tribe members, move to different file
-export function calculateRadialAttackTargets(entity: Entity, attackOffset: number, attackRadius: number): ReadonlyArray<Entity> {
-   const attackPositionX = entity.position.x + attackOffset * Math.sin(entity.rotation);
-   const attackPositionY = entity.position.y + attackOffset * Math.cos(entity.rotation);
+export function calculateRadialAttackTargets(entity: EntityID, attackOffset: number, attackRadius: number): ReadonlyArray<EntityID> {
+   const transformComponent = TransformComponentArray.getComponent(entity);
+   
+   const attackPositionX = transformComponent.position.x + attackOffset * Math.sin(transformComponent.rotation);
+   const attackPositionY = transformComponent.position.y + attackOffset * Math.cos(transformComponent.rotation);
    const attackedEntities = getEntitiesInRange(attackPositionX, attackPositionY, attackRadius);
    
    // Don't attack yourself
@@ -591,10 +623,10 @@ export function placeBuilding(tribe: Tribe, position: Point, rotation: number, e
    }
 }
 
-export function useItem(tribeMember: Entity, item: Item, inventoryName: InventoryName, itemSlot: number): void {
+export function useItem(tribeMember: EntityID, item: Item, inventoryName: InventoryName, itemSlot: number): void {
    const itemCategory = ITEM_TYPE_RECORD[item.type];
 
-   const inventoryComponent = InventoryComponentArray.getComponent(tribeMember.id);
+   const inventoryComponent = InventoryComponentArray.getComponent(tribeMember);
 
    // @Cleanup: Extract each one of these cases into their own function
 
@@ -638,18 +670,18 @@ export function useItem(tribeMember: Entity, item: Item, inventoryName: Inventor
          break;
       }
       case "healing": {
-         const healthComponent = HealthComponentArray.getComponent(tribeMember.id);
+         const healthComponent = HealthComponentArray.getComponent(tribeMember);
 
          // Don't use food if already at maximum health
          if (healthComponent.health >= healthComponent.maxHealth) return;
 
          const itemInfo = ITEM_INFO_RECORD[item.type] as ConsumableItemInfo;
          
-         const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribeMember.id);
+         const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribeMember);
          const useInfo = getInventoryUseInfo(inventoryUseComponent, inventoryName)
          const inventory = useInfo.inventory;
          
-         healEntity(tribeMember, itemInfo.healAmount, tribeMember.id);
+         healEntity(tribeMember, itemInfo.healAmount, tribeMember);
          consumeItemFromSlot(inventory, itemSlot, 1);
 
          useInfo.lastEatTicks = Board.ticks;
@@ -660,14 +692,16 @@ export function useItem(tribeMember: Entity, item: Item, inventoryName: Inventor
 
          if (itemInfo.consumableItemCategory === ConsumableItemCategory.medicine) {
             // Remove all debuffs
-            clearStatusEffects(tribeMember.id);
+            clearStatusEffects(tribeMember);
          }
 
          break;
       }
       case "placeable": {
+         const transformComponent = TransformComponentArray.getComponent(tribeMember);
+         
          const structureType = ITEM_INFO_RECORD[item.type as PlaceableItemType].entityType;
-         const placeInfo = calculateStructurePlaceInfo(tribeMember.position, tribeMember.rotation, structureType, Board.chunks);
+         const placeInfo = calculateStructurePlaceInfo(transformComponent.position, transformComponent.rotation, structureType, Board.chunks);
 
          // Make sure the placeable item can be placed
          if (!placeInfo.isValid) return;
@@ -677,7 +711,7 @@ export function useItem(tribeMember: Entity, item: Item, inventoryName: Inventor
             connectedSidesBitset: placeInfo.connectedSidesBitset
          };
          
-         const tribeComponent = TribeComponentArray.getComponent(tribeMember.id);
+         const tribeComponent = TribeComponentArray.getComponent(tribeMember);
          placeBuilding(tribeComponent.tribe, placeInfo.position, placeInfo.rotation, placeInfo.entityType, structureInfo);
 
          const inventory = getInventory(inventoryComponent, InventoryName.hotbar);
@@ -686,14 +720,16 @@ export function useItem(tribeMember: Entity, item: Item, inventoryName: Inventor
          break;
       }
       case "bow": {
-         const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribeMember.id);
+         const transformComponent = TransformComponentArray.getComponent(tribeMember);
+
+         const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribeMember);
          const useInfo = getInventoryUseInfo(inventoryUseComponent, inventoryName);
          if (useInfo.bowCooldownTicks !== 0) {
             return;
          }
 
          const event: EntityTickEvent<EntityTickEventType.fireBow> = {
-            entityID: tribeMember.id,
+            entityID: tribeMember,
             type: EntityTickEventType.fireBow,
             data: item.type
          };
@@ -706,48 +742,40 @@ export function useItem(tribeMember: Entity, item: Item, inventoryName: Inventor
 
          // Offset the arrow's spawn to be just outside of the tribe member's hitbox
          // @Speed: Garbage collection
-         const spawnPosition = tribeMember.position.copy();
-         const offset = Point.fromVectorForm(35, tribeMember.rotation);
+         const spawnPosition = transformComponent.position.copy();
+         const offset = Point.fromVectorForm(35, transformComponent.rotation);
          spawnPosition.add(offset);
 
-         let arrowPhysicsComponent: PhysicsComponent;
+         let config: ComponentConfig<ServerComponentType.transform | ServerComponentType.physics>;
          switch (item.type) {
             case ItemType.wooden_bow:
             case ItemType.reinforced_bow: {
-               const arrowInfo: GenericArrowInfo = {
-                  type: GenericArrowType.woodenArrow,
-                  damage: itemInfo.projectileDamage,
-                  knockback: itemInfo.projectileKnockback,
-                  hitboxWidth: 12,
-                  hitboxHeight: 64,
-                  ignoreFriendlyBuildings: false,
-                  statusEffect: null
-               };
-
-               const arrow = createWoodenArrow(spawnPosition, tribeMember.rotation, tribeMember.id, arrowInfo);
-               arrowPhysicsComponent = arrow.components[ServerComponentType.physics]!;
+               config = createWoodenArrowConfig();
                break;
             }
             case ItemType.ice_bow: {
-               const tribeComponent = TribeComponentArray.getComponent(tribeMember.id);
-               
-               const arrow = createIceArrow(spawnPosition, tribeMember.rotation, tribeComponent.tribe);
-               arrowPhysicsComponent = arrow.components[ServerComponentType.physics]!;
+               config = createIceArrowConfig();
                break;
             }
+            // @Robustness
             default: {
                throw new Error("No case for bow type " + item.type);
             }
          }
-
-         arrowPhysicsComponent.velocity.x = itemInfo.projectileSpeed * Math.sin(tribeMember.rotation);
-         arrowPhysicsComponent.velocity.y = itemInfo.projectileSpeed * Math.cos(tribeMember.rotation);
+         config[ServerComponentType.transform].position.x = spawnPosition.x;
+         config[ServerComponentType.transform].position.y = spawnPosition.y;
+         config[ServerComponentType.transform].rotation = transformComponent.rotation;
+         config[ServerComponentType.physics].velocityX = itemInfo.projectileSpeed * Math.sin(transformComponent.rotation);
+         config[ServerComponentType.physics].velocityY = itemInfo.projectileSpeed * Math.cos(transformComponent.rotation);
+         createEntityFromConfig(config);
          
          break;
       }
       case "crossbow": {
+         const transformComponent = TransformComponentArray.getComponent(tribeMember);
+
          // Don't fire if not loaded
-         const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribeMember.id);
+         const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribeMember);
          const useInfo = getInventoryUseInfo(inventoryUseComponent, inventoryName);
 
          const loadProgress = useInfo.crossbowLoadProgressRecord[itemSlot];
@@ -757,7 +785,7 @@ export function useItem(tribeMember: Entity, item: Item, inventoryName: Inventor
 
          // @Cleanup: Copy and paste
          const event: EntityTickEvent<EntityTickEventType.fireBow> = {
-            entityID: tribeMember.id,
+            entityID: tribeMember,
             type: EntityTickEventType.fireBow,
             data: item.type
          };
@@ -765,27 +793,20 @@ export function useItem(tribeMember: Entity, item: Item, inventoryName: Inventor
 
          // Offset the arrow's spawn to be just outside of the tribe member's hitbox
          // @Speed: Garbage collection
-         const spawnPosition = tribeMember.position.copy();
-         const offset = Point.fromVectorForm(35, tribeMember.rotation);
+         const spawnPosition = transformComponent.position.copy();
+         const offset = Point.fromVectorForm(35, transformComponent.rotation);
          spawnPosition.add(offset);
          
          const itemInfo = ITEM_INFO_RECORD[item.type] as BowItemInfo;
-         // @Copynpaste from bow above
-         const arrowInfo: GenericArrowInfo = {
-            type: GenericArrowType.woodenArrow,
-            damage: itemInfo.projectileDamage,
-            knockback: itemInfo.projectileKnockback,
-            hitboxWidth: 12,
-            hitboxHeight: 64,
-            ignoreFriendlyBuildings: false,
-            statusEffect: null
-         };
 
-         const arrowCreationInfo = createWoodenArrow(spawnPosition, tribeMember.rotation, tribeMember.id, arrowInfo);
-         
-         const physicsComponent = arrowCreationInfo.components[ServerComponentType.physics]!;
-         physicsComponent.velocity.x = itemInfo.projectileSpeed * Math.sin(tribeMember.rotation);
-         physicsComponent.velocity.y = itemInfo.projectileSpeed * Math.cos(tribeMember.rotation);
+         // @Copynpaste from bow above
+         const config = createWoodenArrowConfig();
+         config[ServerComponentType.transform].position.x = spawnPosition.x;
+         config[ServerComponentType.transform].position.y = spawnPosition.y;
+         config[ServerComponentType.transform].rotation = transformComponent.rotation;
+         config[ServerComponentType.physics].velocityX = itemInfo.projectileSpeed * Math.sin(transformComponent.rotation);
+         config[ServerComponentType.physics].velocityY = itemInfo.projectileSpeed * Math.cos(transformComponent.rotation);
+         createEntityFromConfig(config);
 
          delete useInfo.crossbowLoadProgressRecord[itemSlot];
          
@@ -796,22 +817,27 @@ export function useItem(tribeMember: Entity, item: Item, inventoryName: Inventor
          // Throw the spear
          // 
 
-         const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribeMember.id);
+         const transformComponent = TransformComponentArray.getComponent(tribeMember);
+         const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribeMember);
          const useInfo = getInventoryUseInfo(inventoryUseComponent, inventoryName);
          const inventory = useInfo.inventory;
 
-         const offsetDirection = tribeMember.rotation + Math.PI / 1.5 - Math.PI / 14;
-         const x = tribeMember.position.x + 35 * Math.sin(offsetDirection);
-         const y = tribeMember.position.y + 35 * Math.cos(offsetDirection);
-         const spearCreationInfo = createSpearProjectile(new Point(x, y), tribeMember.rotation, tribeMember.id, item);
+         const offsetDirection = transformComponent.rotation + Math.PI / 1.5 - Math.PI / 14;
+         const x = transformComponent.position.x + 35 * Math.sin(offsetDirection);
+         const y = transformComponent.position.y + 35 * Math.cos(offsetDirection);
 
          const ticksSinceLastAction = Board.ticks - useInfo.lastSpearChargeTicks;
          const secondsSinceLastAction = ticksSinceLastAction / Settings.TPS;
          const velocityMagnitude = lerp(1000, 1700, Math.min(secondsSinceLastAction / 3, 1));
 
-         const physicsComponent = spearCreationInfo.components[ServerComponentType.physics]!;
-         physicsComponent.velocity.x = velocityMagnitude * Math.sin(tribeMember.rotation);
-         physicsComponent.velocity.y = velocityMagnitude * Math.cos(tribeMember.rotation);
+         const config = createSpearProjectileConfig();
+         config[ServerComponentType.transform].position.x = x;
+         config[ServerComponentType.transform].position.y = y;
+         config[ServerComponentType.transform].rotation = transformComponent.rotation;
+         config[ServerComponentType.physics].velocityX = velocityMagnitude * Math.sin(transformComponent.rotation);
+         config[ServerComponentType.physics].velocityY = velocityMagnitude * Math.cos(transformComponent.rotation);
+         config[ServerComponentType.throwingProjectile].tribeMemberID = tribeMember;
+         createEntityFromConfig(config);
 
          consumeItemFromSlot(inventory, itemSlot, 1);
 
@@ -824,24 +850,30 @@ export function useItem(tribeMember: Entity, item: Item, inventoryName: Inventor
          // Throw the battleaxe
          // 
 
-         const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribeMember.id);
-         const tribeComponent = TribeComponentArray.getComponent(tribeMember.id);
+         const transformComponent = TransformComponentArray.getComponent(tribeMember);
+         const physicsComponent = PhysicsComponentArray.getComponent(tribeMember);
+         const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribeMember);
+         const tribeComponent = TribeComponentArray.getComponent(tribeMember);
 
          const useInfo = getInventoryUseInfo(inventoryUseComponent, inventoryName);
 
-         const offsetDirection = tribeMember.rotation + Math.PI / 1.5 - Math.PI / 14;
-         const x = tribeMember.position.x + 35 * Math.sin(offsetDirection);
-         const y = tribeMember.position.y + 35 * Math.cos(offsetDirection);
-         const battleaxeCreationInfo = createBattleaxeProjectile(new Point(x, y), tribeMember.rotation, tribeMember.id, item, tribeComponent.tribe);
+         const offsetDirection = transformComponent.rotation + Math.PI / 1.5 - Math.PI / 14;
+         const x = transformComponent.position.x + 35 * Math.sin(offsetDirection);
+         const y = transformComponent.position.y + 35 * Math.cos(offsetDirection);
 
          const ticksSinceLastAction = Board.ticks - useInfo.lastBattleaxeChargeTicks;
          const secondsSinceLastAction = ticksSinceLastAction / Settings.TPS;
          const velocityMagnitude = lerp(600, 1100, Math.min(secondsSinceLastAction / 3, 1));
 
-         const battleaxePhysicsComponent = battleaxeCreationInfo.components[ServerComponentType.physics]!;
-         const tribesmanPhysicsComponent = PhysicsComponentArray.getComponent(tribeMember.id);
-         battleaxePhysicsComponent.velocity.x = tribesmanPhysicsComponent.velocity.x + velocityMagnitude * Math.sin(tribeMember.rotation);
-         battleaxePhysicsComponent.velocity.y = tribesmanPhysicsComponent.velocity.y + velocityMagnitude * Math.cos(tribeMember.rotation);
+         const config = createBattleaxeProjectileConfig();
+         config[ServerComponentType.transform].position.x = x;
+         config[ServerComponentType.transform].position.y = y;
+         config[ServerComponentType.transform].rotation = transformComponent.rotation;
+         config[ServerComponentType.physics].velocityX = physicsComponent.velocity.x + velocityMagnitude * Math.sin(transformComponent.rotation)
+         config[ServerComponentType.physics].velocityY = physicsComponent.velocity.y + velocityMagnitude * Math.cos(transformComponent.rotation)
+         config[ServerComponentType.tribe].tribeID = tribeComponent.tribe.id;
+         config[ServerComponentType.throwingProjectile].tribeMemberID = tribeMember;
+         config[ServerComponentType.throwingProjectile].itemID = item.id;
 
          useInfo.lastBattleaxeChargeTicks = Board.ticks;
          useInfo.thrownBattleaxeItemID = item.id;
@@ -851,8 +883,8 @@ export function useItem(tribeMember: Entity, item: Item, inventoryName: Inventor
    }
 }
 
-export function tribeMemberCanPickUpItem(tribeMember: Entity, itemType: ItemType): boolean {
-   const inventoryComponent = InventoryComponentArray.getComponent(tribeMember.id);
+export function tribeMemberCanPickUpItem(tribeMember: EntityID, itemType: ItemType): boolean {
+   const inventoryComponent = InventoryComponentArray.getComponent(tribeMember);
    const inventory = getInventory(inventoryComponent, InventoryName.hotbar);
 
    if (!inventoryIsFull(inventory)) {
@@ -870,7 +902,7 @@ export function tribeMemberCanPickUpItem(tribeMember: Entity, itemType: ItemType
    return false;
 }
 
-const tickInventoryUseInfo = (tribeMember: Entity, inventoryUseInfo: InventoryUseInfo): void => {
+const tickInventoryUseInfo = (tribeMember: EntityID, inventoryUseInfo: InventoryUseInfo): void => {
    switch (inventoryUseInfo.action) {
       case LimbAction.eat:
       case LimbAction.useMedicine: {
@@ -886,7 +918,7 @@ const tickInventoryUseInfo = (tribeMember: Entity, inventoryUseInfo: InventoryUs
                   const itemInfo = ITEM_INFO_RECORD[selectedItem.type] as ConsumableItemInfo;
                   inventoryUseInfo.foodEatingTimer = itemInfo.consumeTime;
 
-                  if (TribesmanAIComponentArray.hasComponent(tribeMember.id) && Math.random() < TITLE_REWARD_CHANCES.BERRYMUNCHER_REWARD_CHANCE) {
+                  if (TribesmanAIComponentArray.hasComponent(tribeMember) && Math.random() < TITLE_REWARD_CHANCES.BERRYMUNCHER_REWARD_CHANCE) {
                      awardTitle(tribeMember, TribesmanTitle.berrymuncher);
                   }
                }
@@ -912,35 +944,39 @@ const tickInventoryUseInfo = (tribeMember: Entity, inventoryUseInfo: InventoryUs
    }
 }
 
-export function tickTribeMember(tribeMember: Entity): void {
+export function tickTribeMember(tribeMember: EntityID): void {
+   const transformComponent = TransformComponentArray.getComponent(tribeMember);
+   
    // Vacuum nearby items to the tribesman
    // @Incomplete: Don't vacuum items which the player doesn't have the inventory space for
    // @Bug: permits vacuuming the same item entity twice
-   const minChunkX = Math.max(Math.floor((tribeMember.position.x - VACUUM_RANGE) / Settings.CHUNK_UNITS), 0);
-   const maxChunkX = Math.min(Math.floor((tribeMember.position.x + VACUUM_RANGE) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1);
-   const minChunkY = Math.max(Math.floor((tribeMember.position.y - VACUUM_RANGE) / Settings.CHUNK_UNITS), 0);
-   const maxChunkY = Math.min(Math.floor((tribeMember.position.y + VACUUM_RANGE) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1);
+   const minChunkX = Math.max(Math.floor((transformComponent.position.x - VACUUM_RANGE) / Settings.CHUNK_UNITS), 0);
+   const maxChunkX = Math.min(Math.floor((transformComponent.position.x + VACUUM_RANGE) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1);
+   const minChunkY = Math.max(Math.floor((transformComponent.position.y - VACUUM_RANGE) / Settings.CHUNK_UNITS), 0);
+   const maxChunkY = Math.min(Math.floor((transformComponent.position.y + VACUUM_RANGE) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1);
    for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
       for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
          const chunk = Board.getChunk(chunkX, chunkY);
          for (const itemEntity of chunk.entities) {
-            if (itemEntity.type !== EntityType.itemEntity || !itemEntityCanBePickedUp(itemEntity, tribeMember.id)) {
+            if (Board.getEntityType(itemEntity) !== EntityType.itemEntity || !itemEntityCanBePickedUp(itemEntity, tribeMember)) {
                continue;
             }
 
-            const itemComponent = ItemComponentArray.getComponent(itemEntity.id);
+            const itemComponent = ItemComponentArray.getComponent(itemEntity);
             if (!tribeMemberCanPickUpItem(tribeMember, itemComponent.itemType)) {
                continue;
             }
+
+            const itemEntityTransformComponent = TransformComponentArray.getComponent(itemEntity);
             
-            const distance = tribeMember.position.calculateDistanceBetween(itemEntity.position);
+            const distance = transformComponent.position.calculateDistanceBetween(itemEntityTransformComponent.position);
             if (distance <= VACUUM_RANGE) {
                // @Temporary
                let forceMult = 1 - distance / VACUUM_RANGE;
                forceMult = lerp(0.5, 1, forceMult);
 
-               const vacuumDirection = itemEntity.position.calculateAngleBetween(tribeMember.position);
-               const physicsComponent = PhysicsComponentArray.getComponent(itemEntity.id);
+               const vacuumDirection = itemEntityTransformComponent.position.calculateAngleBetween(transformComponent.position);
+               const physicsComponent = PhysicsComponentArray.getComponent(itemEntity);
                physicsComponent.velocity.x += VACUUM_STRENGTH * forceMult * Math.sin(vacuumDirection);
                physicsComponent.velocity.y += VACUUM_STRENGTH * forceMult * Math.cos(vacuumDirection);
             }
@@ -948,7 +984,7 @@ export function tickTribeMember(tribeMember: Entity): void {
       }
    }
 
-   const physicsComponent = PhysicsComponentArray.getComponent(tribeMember.id);
+   const physicsComponent = PhysicsComponentArray.getComponent(tribeMember);
    if (physicsComponent.velocity.x !== 0 || physicsComponent.velocity.y !== 0) {
       const chance = TITLE_REWARD_CHANCES.SPRINTER_REWARD_CHANCE_PER_SPEED * physicsComponent.velocity.length();
       if (Math.random() < chance / Settings.TPS) {
@@ -956,14 +992,14 @@ export function tickTribeMember(tribeMember: Entity): void {
       }
    }
 
-   const inventoryComponent = InventoryComponentArray.getComponent(tribeMember.id);
-   const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribeMember.id);
+   const inventoryComponent = InventoryComponentArray.getComponent(tribeMember);
+   const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribeMember);
 
    const useInfo = getInventoryUseInfo(inventoryUseComponent, InventoryName.hotbar);
    tickInventoryUseInfo(tribeMember, useInfo);
 
-   const tribeComponent = TribeComponentArray.getComponent(tribeMember.id);
-   if (tribeComponent.tribe.tribeType === TribeType.barbarians && tribeMember.type !== EntityType.tribeWorker) {
+   const tribeComponent = TribeComponentArray.getComponent(tribeMember);
+   if (tribeComponent.tribe.tribeType === TribeType.barbarians && Board.getEntityType(tribeMember) !== EntityType.tribeWorker) {
       const useInfo = getInventoryUseInfo(inventoryUseComponent, InventoryName.offhand);
       tickInventoryUseInfo(tribeMember, useInfo);
    }
@@ -979,7 +1015,7 @@ export function tickTribeMember(tribeMember: Entity): void {
       resizeInventory(inventoryComponent, InventoryName.backpack, 0, 0);
    }
       
-   const healthComponent = HealthComponentArray.getComponent(tribeMember.id);
+   const healthComponent = HealthComponentArray.getComponent(tribeMember);
 
    // @Speed: Shouldn't be done every tick, only do when the armour changes
    // Armour defence
@@ -990,24 +1026,23 @@ export function tickTribeMember(tribeMember: Entity): void {
       addDefence(healthComponent, itemInfo.defence, "armour");
 
       if (armour.type === ItemType.leaf_suit) {
-         tribeMember.collisionMask &= ~COLLISION_BITS.plants;
+         transformComponent.collisionMask &= ~COLLISION_BITS.plants;
       } else {
-         tribeMember.collisionMask |= COLLISION_BITS.plants;
+         transformComponent.collisionMask |= COLLISION_BITS.plants;
       }
    } else {
       removeDefence(healthComponent, "armour");
    }
 }
 
-export function onTribeMemberHurt(tribeMember: Entity, attackingEntityID: number): void {
-   const tribeComponent = TribeComponentArray.getComponent(tribeMember.id);
-   tribeComponent.tribe.addAttackingEntity(attackingEntityID);
+export function onTribeMemberHurt(tribeMember: EntityID, attackingEntity: EntityID): void {
+   const tribeComponent = TribeComponentArray.getComponent(tribeMember);
+   tribeComponent.tribe.addAttackingEntity(attackingEntity);
    
-   const tribeMemberComponent = TribeMemberComponentArray.getComponent(tribeMember.id);
+   const tribeMemberComponent = TribeMemberComponentArray.getComponent(tribeMember);
    for (let i = 0; i < tribeMemberComponent.fishFollowerIDs.length; i++) {
-      const fishID = tribeMemberComponent.fishFollowerIDs[i];
-      const fish = Board.entityRecord[fishID]!;
-      onFishLeaderHurt(fish, attackingEntityID);
+      const fish = tribeMemberComponent.fishFollowerIDs[i];
+      onFishLeaderHurt(fish, attackingEntity);
    }
 }
 
@@ -1015,60 +1050,62 @@ export function entityIsTribesman(entityType: EntityType): boolean {
    return entityType === EntityType.player || entityType === EntityType.tribeWorker || entityType === EntityType.tribeWarrior;
 }
 
-export function wasTribeMemberKill(attackingEntity: Entity | null): boolean {
-   return attackingEntity !== null && (attackingEntity.type === EntityType.player || attackingEntity.type === EntityType.tribeWorker || attackingEntity.type === EntityType.tribeWarrior || attackingEntity.type === EntityType.floorSpikes || attackingEntity.type === EntityType.wallSpikes || attackingEntity.type === EntityType.floorPunjiSticks || attackingEntity.type === EntityType.wallPunjiSticks || attackingEntity.type === EntityType.ballista || attackingEntity.type === EntityType.slingTurret);
+export function wasTribeMemberKill(attackingEntity: EntityID | null): boolean {
+   return attackingEntity !== null && TribeComponentArray.hasComponent(attackingEntity);
 }
 
-const blueprintTypeMatchesBuilding = (building: Entity, blueprintType: BlueprintType): boolean => {
-   const materialComponent = BuildingMaterialComponentArray.getComponent(building.id);
+const blueprintTypeMatchesBuilding = (structure: EntityID, blueprintType: BlueprintType): boolean => {
+   const materialComponent = BuildingMaterialComponentArray.getComponent(structure);
 
-   if (building.type === EntityType.wall) {
+   const entityType = Board.getEntityType(structure)!;
+   
+   if (entityType === EntityType.wall) {
       switch (materialComponent.material) {
          case BuildingMaterial.wood: return blueprintType === BlueprintType.stoneWall || blueprintType === BlueprintType.woodenDoor || blueprintType === BlueprintType.woodenEmbrasure || blueprintType === BlueprintType.woodenTunnel;
          case BuildingMaterial.stone: return blueprintType === BlueprintType.stoneDoor || blueprintType === BlueprintType.stoneEmbrasure || blueprintType === BlueprintType.stoneTunnel;
       }
    }
 
-   if (building.type === EntityType.door) {
+   if (entityType === EntityType.door) {
       switch (materialComponent.material) {
          case BuildingMaterial.wood: return blueprintType === BlueprintType.stoneDoorUpgrade;
          case BuildingMaterial.stone: return false;
       }
    }
 
-   if (building.type === EntityType.embrasure) {
+   if (entityType === EntityType.embrasure) {
       switch (materialComponent.material) {
          case BuildingMaterial.wood: return blueprintType === BlueprintType.stoneEmbrasureUpgrade;
          case BuildingMaterial.stone: return false;
       }
    }
 
-   if (building.type === EntityType.tunnel) {
+   if (entityType === EntityType.tunnel) {
       switch (materialComponent.material) {
          case BuildingMaterial.wood: return blueprintType === BlueprintType.stoneTunnelUpgrade;
          case BuildingMaterial.stone: return false;
       }
    }
 
-   if (building.type === EntityType.floorSpikes) {
+   if (entityType === EntityType.floorSpikes) {
       switch (materialComponent.material) {
          case BuildingMaterial.wood: return blueprintType === BlueprintType.stoneFloorSpikes;
          case BuildingMaterial.stone: return false;
       }
    }
 
-   if (building.type === EntityType.wallSpikes) {
+   if (entityType === EntityType.wallSpikes) {
       switch (materialComponent.material) {
          case BuildingMaterial.wood: return blueprintType === BlueprintType.stoneWallSpikes;
          case BuildingMaterial.stone: return false;
       }
    }
 
-   if (building.type === EntityType.workerHut) {
+   if (entityType === EntityType.workerHut) {
       return blueprintType === BlueprintType.warriorHutUpgrade;
    }
 
-   if (building.type === EntityType.fence) {
+   if (entityType === EntityType.fence) {
       return blueprintType === BlueprintType.fenceGate;
    }
 
@@ -1076,8 +1113,8 @@ const blueprintTypeMatchesBuilding = (building: Entity, blueprintType: Blueprint
 }
 
 // @Hack
-const getFenceGatePlaceDirection = (fence: Entity): number | null => {
-   const structureComponent = StructureComponentArray.getComponent(fence.id);
+const getFenceGatePlaceDirection = (fence: EntityID): number | null => {
+   const structureComponent = StructureComponentArray.getComponent(fence);
 
    // Top and bottom fence connections
    let normalDirectionOffset: number;
@@ -1089,19 +1126,17 @@ const getFenceGatePlaceDirection = (fence: Entity): number | null => {
       return null;
    }
 
-   return fence.rotation + normalDirectionOffset;
+   const transformComponent = TransformComponentArray.getComponent(fence);
+   return transformComponent.rotation + normalDirectionOffset;
 }
 
-export function placeBlueprint(tribeMember: Entity, buildingID: number, blueprintType: BlueprintType, dynamicRotation: number): void {
-   const building = Board.entityRecord[buildingID];
-   if (typeof building === "undefined") {
+export function placeBlueprint(tribeMember: EntityID, structure: EntityID, blueprintType: BlueprintType, dynamicRotation: number): void {
+   if (!blueprintTypeMatchesBuilding(structure, blueprintType)) {
       return;
    }
 
-   if (!blueprintTypeMatchesBuilding(building, blueprintType)) {
-      return;
-   }
-
+   const structureTransformComponent = TransformComponentArray.getComponent(structure);
+   
    switch (blueprintType) {
       case BlueprintType.woodenEmbrasure:
       case BlueprintType.woodenDoor:
@@ -1109,16 +1144,16 @@ export function placeBlueprint(tribeMember: Entity, buildingID: number, blueprin
       case BlueprintType.stoneDoor:
       case BlueprintType.stoneEmbrasure:
       case BlueprintType.stoneTunnel: {
-         const position = building.position.copy();
+         const position = structureTransformComponent.position.copy();
          if (blueprintType === BlueprintType.woodenEmbrasure || blueprintType === BlueprintType.stoneEmbrasure) {
             position.x += 22 * Math.sin(dynamicRotation);
             position.y += 22 * Math.cos(dynamicRotation);
          }
          
-         const tribeComponent = TribeComponentArray.getComponent(tribeMember.id);
+         const tribeComponent = TribeComponentArray.getComponent(tribeMember);
          createBlueprintEntity(position, dynamicRotation, blueprintType, 0, tribeComponent.tribe);
          
-         building.destroy();
+         Board.destroyEntity(structure);
          break;
       }
       case BlueprintType.stoneDoorUpgrade:
@@ -1127,17 +1162,17 @@ export function placeBlueprint(tribeMember: Entity, buildingID: number, blueprin
       case BlueprintType.stoneFloorSpikes:
       case BlueprintType.stoneWallSpikes:
       case BlueprintType.stoneWall: {
-         const materialComponent = BuildingMaterialComponentArray.getComponent(building.id);
+         const materialComponent = BuildingMaterialComponentArray.getComponent(structure);
          const upgradeMaterialItemType = MATERIAL_TO_ITEM_MAP[(materialComponent.material + 1) as BuildingMaterial];
          
-         const inventoryComponent = InventoryComponentArray.getComponent(tribeMember.id);
+         const inventoryComponent = InventoryComponentArray.getComponent(tribeMember);
          if (countItemType(inventoryComponent, upgradeMaterialItemType) < 5) {
             return;
          }
 
          // Upgrade
-         const tribeComponent = TribeComponentArray.getComponent(tribeMember.id);
-         createBlueprintEntity(building.position.copy(), building.rotation, blueprintType, building.id, tribeComponent.tribe);
+         const tribeComponent = TribeComponentArray.getComponent(tribeMember);
+         createBlueprintEntity(structureTransformComponent.position.copy(), structureTransformComponent.rotation, blueprintType, structure, tribeComponent.tribe);
          
          consumeItemType(inventoryComponent, upgradeMaterialItemType, 5);
          break;
@@ -1145,14 +1180,14 @@ export function placeBlueprint(tribeMember: Entity, buildingID: number, blueprin
       case BlueprintType.warriorHutUpgrade: {
          // @Cleanup: copy and paste
 
-         const inventoryComponent = InventoryComponentArray.getComponent(tribeMember.id);
+         const inventoryComponent = InventoryComponentArray.getComponent(tribeMember);
          if (countItemType(inventoryComponent, ItemType.rock) < 25 || countItemType(inventoryComponent, ItemType.wood) < 15) {
             return;
          }
 
          // Upgrade
-         const tribeComponent = TribeComponentArray.getComponent(tribeMember.id);
-         createBlueprintEntity(building.position.copy(), building.rotation, blueprintType, building.id, tribeComponent.tribe);
+         const tribeComponent = TribeComponentArray.getComponent(tribeMember);
+         createBlueprintEntity(structureTransformComponent.position.copy(), structureTransformComponent.rotation, blueprintType, structure, tribeComponent.tribe);
 
          consumeItemType(inventoryComponent, ItemType.rock, 25);
          consumeItemType(inventoryComponent, ItemType.wood, 15);
@@ -1160,35 +1195,39 @@ export function placeBlueprint(tribeMember: Entity, buildingID: number, blueprin
          break;
       }
       case BlueprintType.fenceGate: {
-         const inventoryComponent = InventoryComponentArray.getComponent(tribeMember.id);
+         const inventoryComponent = InventoryComponentArray.getComponent(tribeMember);
          if (countItemType(inventoryComponent, ItemType.wood) < 5) {
             return;
          }
 
-         let rotation = getFenceGatePlaceDirection(building);
+         let rotation = getFenceGatePlaceDirection(structure);
          if (rotation === null) {
             console.warn("Tried to place a blueprint for a fence gate which had no valid direction!");
             return;
          }
 
+         const transformComponent = TransformComponentArray.getComponent(tribeMember);
+
          // Make rotation face away from player
-         if (dotAngles(rotation, tribeMember.rotation) < 0) {
+         if (dotAngles(rotation, transformComponent.rotation) < 0) {
             rotation = rotation + Math.PI;
          }
          
-         const tribeComponent = TribeComponentArray.getComponent(tribeMember.id);
-         createBlueprintEntity(building.position.copy(), rotation, blueprintType, building.id, tribeComponent.tribe);
+         const tribeComponent = TribeComponentArray.getComponent(tribeMember);
+         createBlueprintEntity(structureTransformComponent.position.copy(), rotation, blueprintType, structure, tribeComponent.tribe);
 
          consumeItemType(inventoryComponent, ItemType.wood, 5);
       }
    }
 }
 
-export function getAvailableCraftingStations(tribeMember: Entity): ReadonlyArray<CraftingStation> {
-   const minChunkX = Math.max(Math.floor((tribeMember.position.x - Settings.MAX_CRAFTING_STATION_USE_DISTANCE) / Settings.CHUNK_UNITS), 0);
-   const maxChunkX = Math.min(Math.floor((tribeMember.position.x + Settings.MAX_CRAFTING_STATION_USE_DISTANCE) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1);
-   const minChunkY = Math.max(Math.floor((tribeMember.position.y - Settings.MAX_CRAFTING_STATION_USE_DISTANCE) / Settings.CHUNK_UNITS), 0);
-   const maxChunkY = Math.min(Math.floor((tribeMember.position.y + Settings.MAX_CRAFTING_STATION_USE_DISTANCE) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1);
+export function getAvailableCraftingStations(tribeMember: EntityID): ReadonlyArray<CraftingStation> {
+   const transformComponent = TransformComponentArray.getComponent(tribeMember);
+   
+   const minChunkX = Math.max(Math.floor((transformComponent.position.x - Settings.MAX_CRAFTING_STATION_USE_DISTANCE) / Settings.CHUNK_UNITS), 0);
+   const maxChunkX = Math.min(Math.floor((transformComponent.position.x + Settings.MAX_CRAFTING_STATION_USE_DISTANCE) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1);
+   const minChunkY = Math.max(Math.floor((transformComponent.position.y - Settings.MAX_CRAFTING_STATION_USE_DISTANCE) / Settings.CHUNK_UNITS), 0);
+   const maxChunkY = Math.min(Math.floor((transformComponent.position.y + Settings.MAX_CRAFTING_STATION_USE_DISTANCE) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1);
 
    const availableCraftingStations = new Array<CraftingStation>();
 
@@ -1196,12 +1235,14 @@ export function getAvailableCraftingStations(tribeMember: Entity): ReadonlyArray
       for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
          const chunk = Board.getChunk(chunkX, chunkY);
          for (const entity of chunk.entities) {
-            const distance = tribeMember.position.calculateDistanceBetween(entity.position);
+            const entityTransformComponent = TransformComponentArray.getComponent(entity);
+            
+            const distance = transformComponent.position.calculateDistanceBetween(entityTransformComponent.position);
             if (distance > Settings.MAX_CRAFTING_STATION_USE_DISTANCE) {
                continue;
             }
 
-            switch (entity.type) {
+            switch (Board.getEntityType(entity)) {
                case EntityType.workbench: {
                   if (!availableCraftingStations.includes(CraftingStation.workbench)) {
                      availableCraftingStations.push(CraftingStation.workbench);
@@ -1224,66 +1265,75 @@ export function getAvailableCraftingStations(tribeMember: Entity): ReadonlyArray
 
 // @Cleanup: why need 2?
 
-export function onTribeMemberCollision(tribesman: Entity, collidingEntity: Entity): void {
-   if (collidingEntity.type === EntityType.berryBush || collidingEntity.type === EntityType.tree) {
-      const tribeMemberComponent = TribeMemberComponentArray.getComponent(tribesman.id);
+export function onTribeMemberCollision(tribesman: EntityID, collidingEntity: EntityID): void {
+   const collidingEntityType = Board.getEntityType(collidingEntity);
+   if (collidingEntityType === EntityType.berryBush || collidingEntityType === EntityType.tree) {
+      const tribeMemberComponent = TribeMemberComponentArray.getComponent(tribesman);
       tribeMemberComponent.lastPlantCollisionTicks = Board.ticks;
    }
 }
 
 // @Cleanup: not for player. reflect in function name
-export function onTribesmanCollision(tribesmanID: number, collidingEntity: Entity): void {
-   if (collidingEntity.type === EntityType.itemEntity) {
-      const itemComponent = ItemComponentArray.getComponent(collidingEntity.id);
+export function onTribesmanCollision(tribesman: EntityID, collidingEntity: EntityID): void {
+   if (Board.getEntityType(collidingEntity) === EntityType.itemEntity) {
+      const itemComponent = ItemComponentArray.getComponent(collidingEntity);
+
       // Keep track of it beforehand as the amount variable gets changed when being picked up
       const itemAmount = itemComponent.amount;
 
-      const wasPickedUp = pickupItemEntity(tribesmanID, collidingEntity);
+      const wasPickedUp = pickupItemEntity(tribesman, collidingEntity);
 
-      if (wasPickedUp && itemComponent.throwingEntityID !== 0 && itemComponent.throwingEntityID !== tribesmanID) {
-         adjustTribesmanRelationsAfterGift(tribesmanID, itemComponent.throwingEntityID, itemComponent.itemType, itemAmount);
+      if (wasPickedUp && itemComponent.throwingEntity !== null && itemComponent.throwingEntity !== tribesman) {
+         adjustTribesmanRelationsAfterGift(tribesman, itemComponent.throwingEntity, itemComponent.itemType, itemAmount);
       }
    }
 }
 
-export function throwItem(tribesman: Entity, inventoryName: InventoryName, itemSlot: number, dropAmount: number, throwDirection: number): void {
-   const inventoryComponent = InventoryComponentArray.getComponent(tribesman.id);
+export function throwItem(tribesman: EntityID, inventoryName: InventoryName, itemSlot: number, dropAmount: number, throwDirection: number): void {
+   const inventoryComponent = InventoryComponentArray.getComponent(tribesman);
    const inventory = getInventory(inventoryComponent, inventoryName);
 
    const item = inventory.itemSlots[itemSlot];
    if (typeof item === "undefined") {
       return;
    }
+
+   const transformComponent = TransformComponentArray.getComponent(tribesman);
+   const tribesmanPhysicsComponent = PhysicsComponentArray.getComponent(tribesman);
    
    const itemType = item.type;
    const amountRemoved = consumeItemFromSlot(inventory, itemSlot, dropAmount);
 
-   const dropPosition = tribesman.position.copy();
+   const dropPosition = transformComponent.position.copy();
    dropPosition.x += Vars.ITEM_THROW_OFFSET * Math.sin(throwDirection);
    dropPosition.y += Vars.ITEM_THROW_OFFSET * Math.cos(throwDirection);
 
    // Create the item entity
-   const itemEntityCreationInfo = createItemEntity(dropPosition, 2 * Math.PI * Math.random(), itemType, amountRemoved, tribesman.id);
-
+   const config = createItemEntityConfig();
+   config[ServerComponentType.transform].position.x = dropPosition.x;
+   config[ServerComponentType.transform].position.y = dropPosition.y;
+   config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
    // Throw the dropped item away from the player
-   const physicsComponent = itemEntityCreationInfo.components[ServerComponentType.physics]!;
-   const tribesmanPhysicsComponent = PhysicsComponentArray.getComponent(tribesman.id);
-   physicsComponent.velocity.x += tribesmanPhysicsComponent.velocity.x + Vars.ITEM_THROW_FORCE * Math.sin(throwDirection);
-   physicsComponent.velocity.y += tribesmanPhysicsComponent.velocity.y + Vars.ITEM_THROW_FORCE * Math.cos(throwDirection);
+   config[ServerComponentType.physics].velocityX = tribesmanPhysicsComponent.velocity.x + Vars.ITEM_THROW_FORCE * Math.sin(throwDirection);
+   config[ServerComponentType.physics].velocityY = tribesmanPhysicsComponent.velocity.y + Vars.ITEM_THROW_FORCE * Math.cos(throwDirection);
+   config[ServerComponentType.item].itemType = itemType;
+   config[ServerComponentType.item].amount = amountRemoved;
+   config[ServerComponentType.item].throwingEntity = tribesman;
+   createEntityFromConfig(config);
 
-   if (TribesmanAIComponentArray.hasComponent(tribesman.id)) {
-      const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman.id);
+   if (TribesmanAIComponentArray.hasComponent(tribesman)) {
+      const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman);
       tribesmanComponent.lastItemThrowTicks = Board.ticks;
    }
 }
 
-const isBerryBush = (entity: Entity): boolean => {
-   switch (entity.type) {
+const isBerryBush = (entity: EntityID): boolean => {
+   switch (Board.getEntityType(entity)) {
       case EntityType.berryBush: {
          return true;
       }
       case EntityType.plant: {
-         const plantComponent = PlantComponentArray.getComponent(entity.id);
+         const plantComponent = PlantComponentArray.getComponent(entity);
          return plantComponent.plantType === PlanterBoxPlant.berryBush;
       }
       default: {

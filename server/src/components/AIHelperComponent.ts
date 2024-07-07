@@ -2,24 +2,29 @@ import { circlesDoIntersect, circleAndRectangleDoIntersect } from "webgl-test-sh
 import { AIHelperComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
 import { Settings } from "webgl-test-shared/dist/settings";
 import Chunk from "../Chunk";
-import Entity from "../Entity";
 import Board from "../Board";
 import { ComponentArray } from "./ComponentArray";
 import { Hitbox, hitboxIsCircular } from "webgl-test-shared/dist/hitboxes/hitboxes";
+import { EntityID } from "webgl-test-shared/dist/entities";
+import { TransformComponent, TransformComponentArray } from "./TransformComponent";
+
+export interface AIHelperComponentParams {
+   visionRange: number;
+}
 
 export class AIHelperComponent {
    public visibleChunkBounds = [999, 999, 999, 999];
    public visibleChunks = new Array<Chunk>();
 
-   public readonly potentialVisibleEntities = new Array<Entity>();
+   public readonly potentialVisibleEntities = new Array<EntityID>();
    /** The number of times each potential visible game object appears in the mob's visible chunks */
    public readonly potentialVisibleEntityAppearances = new Array<number>();
 
    public readonly visionRange: number;
-   public visibleEntities = new Array<Entity>();
+   public visibleEntities = new Array<EntityID>();
 
-   constructor(visionRange: number) {
-      this.visionRange = visionRange;
+   constructor(params: AIHelperComponentParams) {
+      this.visionRange = params.visionRange;
    }
 }
 
@@ -28,38 +33,37 @@ export const AIHelperComponentArray = new ComponentArray<ServerComponentType.aiH
    serialise: serialise
 });
 
-function onRemove(entityID: number): void {
-   const aiHelperComponent = AIHelperComponentArray.getComponent(entityID);
+function onRemove(entity: EntityID): void {
+   const aiHelperComponent = AIHelperComponentArray.getComponent(entity);
    for (let i = 0; i < aiHelperComponent.visibleChunks.length; i++) {
-      // @Hack
-      const entity = Board.entityRecord[entityID]!;
-      
       const chunk = aiHelperComponent.visibleChunks[i];
       chunk.viewingEntities.splice(chunk.viewingEntities.indexOf(entity), 1);
    }
 }
 
-const hitboxIsVisible = (entity: Entity, hitbox: Hitbox, visionRange: number): boolean => {
+const hitboxIsVisible = (transformComponent: TransformComponent, hitbox: Hitbox, visionRange: number): boolean => {
    if (hitboxIsCircular(hitbox)) {
       // Circular hitbox
-      return circlesDoIntersect(entity.position, visionRange, hitbox.position, hitbox.radius);
+      return circlesDoIntersect(transformComponent.position, visionRange, hitbox.position, hitbox.radius);
    } else {
       // Rectangular hitbox
-      return circleAndRectangleDoIntersect(entity.position, visionRange, hitbox.position, hitbox.width, hitbox.height, hitbox.relativeRotation);
+      return circleAndRectangleDoIntersect(transformComponent.position, visionRange, hitbox.position, hitbox.width, hitbox.height, hitbox.relativeRotation);
    }
 }
 
-const entityIsVisible = (entity: Entity, checkEntity: Entity, visionRange: number): boolean => {
-   const xDiff = entity.position.x - checkEntity.position.x;
-   const yDiff = entity.position.y - checkEntity.position.y;
+const entityIsVisible = (transformComponent: TransformComponent, checkEntity: EntityID, visionRange: number): boolean => {
+   const checkEntityTransformComponent = TransformComponentArray.getComponent(checkEntity);
+
+   const xDiff = transformComponent.position.x - checkEntityTransformComponent.position.x;
+   const yDiff = transformComponent.position.y - checkEntityTransformComponent.position.y;
    if (xDiff * xDiff + yDiff * yDiff <= visionRange * visionRange) {
       return true;
    }
 
    // If the mob can see any of the game object's hitboxes, it is visible
-   for (let j = 0; j < checkEntity.hitboxes.length; j++) {
-      const hitbox = checkEntity.hitboxes[j];
-      if (hitboxIsVisible(entity, hitbox, visionRange)) {
+   for (let j = 0; j < checkEntityTransformComponent.hitboxes.length; j++) {
+      const hitbox = checkEntityTransformComponent.hitboxes[j];
+      if (hitboxIsVisible(transformComponent, hitbox, visionRange)) {
          return true;
       }
    }
@@ -67,15 +71,17 @@ const entityIsVisible = (entity: Entity, checkEntity: Entity, visionRange: numbe
    return false;
 }
 
-const calculateVisibleEntities = (entity: Entity, aiHelperComponent: AIHelperComponent): Array<Entity> => {
-   const visibleEntities = new Array<Entity>();
+const calculateVisibleEntities = (entity: EntityID, aiHelperComponent: AIHelperComponent): Array<EntityID> => {
+   const transformComponent = TransformComponentArray.getComponent(entity);
+   
+   const visibleEntities = new Array<EntityID>();
 
    const potentialVisibleEntities = aiHelperComponent.potentialVisibleEntities;
    const visionRange = aiHelperComponent.visionRange;
 
    for (let i = 0; i < potentialVisibleEntities.length; i++) {
       const currentEntity = potentialVisibleEntities[i];
-      if (entityIsVisible(entity, currentEntity, visionRange)) {
+      if (entityIsVisible(transformComponent, currentEntity, visionRange)) {
          visibleEntities.push(currentEntity);
       }
    }
@@ -83,17 +89,18 @@ const calculateVisibleEntities = (entity: Entity, aiHelperComponent: AIHelperCom
    return visibleEntities;
 }
 
-export function tickAIHelperComponent(entity: Entity): void {
+export function tickAIHelperComponent(entity: EntityID): void {
    // @Speed: Not all entities with this component need this always.
    // Krumblid: probably can pass with 
    // Slimewisp: can pass with once per second
    
-   const aiHelperComponent = AIHelperComponentArray.getComponent(entity.id);
+   const transformComponent = TransformComponentArray.getComponent(entity);
+   const aiHelperComponent = AIHelperComponentArray.getComponent(entity);
    
-   const minChunkX = Math.max(Math.floor((entity.position.x - aiHelperComponent.visionRange) / Settings.CHUNK_UNITS), 0);
-   const maxChunkX = Math.min(Math.floor((entity.position.x + aiHelperComponent.visionRange) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1);
-   const minChunkY = Math.max(Math.floor((entity.position.y - aiHelperComponent.visionRange) / Settings.CHUNK_UNITS), 0);
-   const maxChunkY = Math.min(Math.floor((entity.position.y + aiHelperComponent.visionRange) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1);
+   const minChunkX = Math.max(Math.floor((transformComponent.position.x - aiHelperComponent.visionRange) / Settings.CHUNK_UNITS), 0);
+   const maxChunkX = Math.min(Math.floor((transformComponent.position.x + aiHelperComponent.visionRange) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1);
+   const minChunkY = Math.max(Math.floor((transformComponent.position.y - aiHelperComponent.visionRange) / Settings.CHUNK_UNITS), 0);
+   const maxChunkY = Math.min(Math.floor((transformComponent.position.y + aiHelperComponent.visionRange) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1);
    
    // If the entity hasn't changed visible chunk bounds, then the potential visible entities will be the same
    // and only the visible entities need to updated
@@ -148,7 +155,7 @@ export function tickAIHelperComponent(entity: Entity): void {
          for (let i = 0; i < numEntities; i++) {
             const currentEntity = chunk.entities[i];
             const idx = aiHelperComponent.potentialVisibleEntities.indexOf(currentEntity);
-            if (idx === -1 && currentEntity.id !== entity.id) {
+            if (idx === -1 && currentEntity !== entity) {
                aiHelperComponent.potentialVisibleEntities.push(currentEntity);
                aiHelperComponent.potentialVisibleEntityAppearances.push(1);
             } else {

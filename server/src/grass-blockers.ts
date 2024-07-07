@@ -5,9 +5,11 @@ import Chunk from "./Chunk";
 import { StructureType } from "webgl-test-shared/dist/structures";
 import Entity from "./Entity";
 import { HitboxFlags, hitboxIsCircular } from "webgl-test-shared/dist/hitboxes/hitboxes";
+import { EntityID } from "webgl-test-shared/dist/entities";
+import { TransformComponentArray } from "./components/TransformComponent";
 
 const blockers = new Array<GrassBlocker>();
-const blockerAssociatedEntityIDs = new Array<number>();
+const blockerAssociatedEntities = new Array<EntityID>();
 
 const enum Vars {
    GRASS_FULL_REGROW_TICKS = Settings.TPS * 60,
@@ -43,7 +45,7 @@ export function addGrassBlocker(blocker: GrassBlocker, associatedEntityID: numbe
    }
 
    blockers.push(blocker);
-   blockerAssociatedEntityIDs.push(associatedEntityID);
+   blockerAssociatedEntities.push(associatedEntityID);
 }
 
 const removeGrassBlocker = (blocker: GrassBlocker, i: number): void => {
@@ -59,15 +61,15 @@ const removeGrassBlocker = (blocker: GrassBlocker, i: number): void => {
 
    // @Speed: swap with last instead
    blockers.splice(i, 1);
-   blockerAssociatedEntityIDs.splice(i, 1);
+   blockerAssociatedEntities.splice(i, 1);
 }
 
 export function updateGrassBlockers(): void {
    for (let i = 0; i < blockers.length; i++) {
       const blocker = blockers[i];
       
-      const associatedEntityID = blockerAssociatedEntityIDs[i];
-      if (typeof Board.entityRecord[associatedEntityID] !== "undefined") {
+      const associatedEntity = blockerAssociatedEntities[i];
+      if (Board.hasEntity(associatedEntity)) {
          blocker.blockAmount += 1 / Vars.GRASS_FULL_DIE_TICKS;
          if (blocker.blockAmount > blocker.maxBlockAmount) {
             blocker.blockAmount = blocker.maxBlockAmount;
@@ -82,18 +84,17 @@ export function updateGrassBlockers(): void {
    }
 }
 
-export function createStructureGrassBlockers(structure: Entity<StructureType>): void {
-   // @Temporary
-   if(1+1===2)return;
+export function createStructureGrassBlockers(structure: EntityID): void {
+   const transformComponent = TransformComponentArray.getComponent(structure);
    
-   for (let i = 0; i < structure.hitboxes.length; i++) {
-      const hitbox = structure.hitboxes[i];
+   for (let i = 0; i < transformComponent.hitboxes.length; i++) {
+      const hitbox = transformComponent.hitboxes[i];
 
       if ((hitbox.flags & HitboxFlags.NON_GRASS_BLOCKING) !== 0) {
          continue;
       }
 
-      const position = structure.position.copy();
+      const position = transformComponent.position.copy();
       position.x += hitbox.offset.x;
       position.y += hitbox.offset.y;
 
@@ -104,17 +105,17 @@ export function createStructureGrassBlockers(structure: Entity<StructureType>): 
             radius: hitbox.radius + Vars.BLOCKER_PADDING,
             maxBlockAmount: 1
          };
-         addGrassBlocker(blocker, structure.id);
+         addGrassBlocker(blocker, structure);
       } else {
          const blocker: GrassBlockerRectangle = {
             position: position,
             blockAmount: 0,
             width: hitbox.width + Vars.BLOCKER_PADDING * 2,
             height: hitbox.height + Vars.BLOCKER_PADDING * 2,
-            rotation: structure.rotation + hitbox.relativeRotation,
+            rotation: transformComponent.rotation + hitbox.relativeRotation,
             maxBlockAmount: 1
          };
-         addGrassBlocker(blocker, structure.id);
+         addGrassBlocker(blocker, structure);
       }
    }
 }

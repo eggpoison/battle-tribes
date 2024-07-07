@@ -2,7 +2,6 @@ import { PathfindingNodeIndex } from "webgl-test-shared/dist/client-server-types
 import { ServerComponentType, TribesmanAIComponentData, TribesmanAIType } from "webgl-test-shared/dist/components";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { randInt } from "webgl-test-shared/dist/utils";
-import Entity from "../Entity";
 import { ComponentArray } from "./ComponentArray";
 import Board from "../Board";
 import Tribe, { BuildingPlan } from "../Tribe";
@@ -10,6 +9,7 @@ import { EntityRelationship, TribeComponentArray } from "./TribeComponent";
 import { TribesmanGoal } from "../entities/tribes/tribesman-ai/tribesman-goals";
 import { CRAFTING_RECIPES } from "webgl-test-shared/dist/items/crafting-recipes";
 import { ItemType } from "webgl-test-shared/dist/items/items";
+import { EntityID } from "webgl-test-shared/dist/entities";
 
 // @Incomplete: periodically remove dead entities from the relations object
 // @Incomplete: only keep track of tribesman relations
@@ -18,6 +18,10 @@ const enum Vars {
    MAX_ENEMY_RELATION_THRESHOLD = -30,
    MIN_ACQUAINTANCE_RELATION_THRESOLD = 50,
    ITEM_THROW_COOLDOWN_TICKS = (0.2 * Settings.TPS) | 0
+}
+
+export interface TribesmanAIComponentParams {
+   readonly hutID: number;
 }
 
 /** Stores how much gifting an item to a tribesman increases your relations with them */
@@ -144,8 +148,8 @@ export class TribesmanAIComponent {
 
    public lastItemThrowTicks = 0;
 
-   constructor(hutID: number) {
-      this.hutID = hutID;
+   constructor(params: TribesmanAIComponentParams) {
+      this.hutID = params.hutID;
       this.lastEnemyLineOfSightTicks = Board.ticks;
       // @Bug: will favour certain names more.
       this.name = randInt(0, 99);
@@ -222,49 +226,49 @@ export function adjustTribeRelations(attackedTribe: Tribe, attackingTribe: Tribe
    }
 }
 
-export function adjustTribesmanRelationsAfterHurt(tribesman: Entity, attackingTribesmanID: number): void {
-   if (!TribeComponentArray.hasComponent(attackingTribesmanID)) {
+export function adjustTribesmanRelationsAfterHurt(tribesman: EntityID, attackingTribesman: EntityID): void {
+   if (!TribeComponentArray.hasComponent(attackingTribesman)) {
       return;
    }
    
-   const tribeComponent = TribeComponentArray.getComponent(tribesman.id);
-   const otherTribeComponent = TribeComponentArray.getComponent(attackingTribesmanID);
+   const tribeComponent = TribeComponentArray.getComponent(tribesman);
+   const otherTribeComponent = TribeComponentArray.getComponent(attackingTribesman);
 
-   adjustTribeRelations(tribeComponent.tribe, otherTribeComponent.tribe, tribesman.id, -30, -15);
+   adjustTribeRelations(tribeComponent.tribe, otherTribeComponent.tribe, tribesman, -30, -15);
 }
 
 // @Incomplete @Bug: this doesn't do anything rn as the data is lost when the tribesman is removed. need to keep track of it across tribesman lives.
-export function adjustTribesmanRelationsAfterKill(tribesman: Entity, attackingTribesmanID: number): void {
-   if (!TribeComponentArray.hasComponent(attackingTribesmanID)) {
+export function adjustTribesmanRelationsAfterKill(tribesman: EntityID, attackingTribesman: EntityID): void {
+   if (!TribeComponentArray.hasComponent(attackingTribesman)) {
       return;
    }
    
-   const tribeComponent = TribeComponentArray.getComponent(tribesman.id);
-   const otherTribeComponent = TribeComponentArray.getComponent(attackingTribesmanID);
+   const tribeComponent = TribeComponentArray.getComponent(tribesman);
+   const otherTribeComponent = TribeComponentArray.getComponent(attackingTribesman);
 
-   adjustTribeRelations(tribeComponent.tribe, otherTribeComponent.tribe, tribesman.id, -200, -200);
+   adjustTribeRelations(tribeComponent.tribe, otherTribeComponent.tribe, tribesman, -200, -200);
 }
 
-export function adjustTribesmanRelationsAfterGift(tribesmanID: number, giftingTribesmanID: number, giftItemType: ItemType, giftItemAmount: number): void {
+export function adjustTribesmanRelationsAfterGift(tribesman: EntityID, giftingTribesman: EntityID, giftItemType: ItemType, giftItemAmount: number): void {
    const adjustment = GIFT_APPRECIATION_WEIGHTS[giftItemType] * giftItemAmount;
-   adjustTribesmanRelations(tribesmanID, giftingTribesmanID, adjustment);
+   adjustTribesmanRelations(tribesman, giftingTribesman, adjustment);
 }
 
-export function getTribesmanRelationship(tribesmanID: number, comparingTribesmanID: number): EntityRelationship {
+export function getTribesmanRelationship(tribesman: EntityID, comparingTribesman: EntityID): EntityRelationship {
    // If the two tribesman are of the same tribe, they are friendly
-   const tribeComponent = TribeComponentArray.getComponent(tribesmanID);
-   const otherTribeComponent = TribeComponentArray.getComponent(comparingTribesmanID);
+   const tribeComponent = TribeComponentArray.getComponent(tribesman);
+   const otherTribeComponent = TribeComponentArray.getComponent(comparingTribesman);
    if (tribeComponent.tribe === otherTribeComponent.tribe) {
       return EntityRelationship.friendly;
    } 
    
-   const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesmanID);
+   const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman);
    const relations = tribesmanComponent.tribesmanRelations;
 
-   if (typeof relations[comparingTribesmanID] === "undefined") {
+   if (typeof relations[comparingTribesman] === "undefined") {
       return EntityRelationship.neutral;
    } else {
-      const relation = relations[comparingTribesmanID]!;
+      const relation = relations[comparingTribesman]!;
       if (relation <= Vars.MAX_ENEMY_RELATION_THRESHOLD) {
          return EntityRelationship.enemy;
       } else if (relation >= Vars.MIN_ACQUAINTANCE_RELATION_THRESOLD) {

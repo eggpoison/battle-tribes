@@ -1,6 +1,8 @@
 import { FenceComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
 import { ComponentArray } from "./ComponentArray";
 
+export interface FenceComponentParams {}
+
 export class FenceComponent {}
 
 export const FenceComponentArray = new ComponentArray<ServerComponentType.fence, FenceComponent>(true, {

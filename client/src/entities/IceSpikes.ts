@@ -3,8 +3,8 @@ import { Point, randFloat, randInt } from "webgl-test-shared/dist/utils";
 import RenderPart from "../render-parts/RenderPart";
 import Particle from "../Particle";
 import Board from "../Board";
-import { ParticleColour, ParticleRenderLayer, addMonocolourParticleToBufferContainer } from "../rendering/particle-rendering";
-import { getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
+import { ParticleColour, ParticleRenderLayer, addMonocolourParticleToBufferContainer } from "../rendering/webgl/particle-rendering";
+import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { AudioFilePath, playSound } from "../sound";
 import Entity from "../Entity";
 

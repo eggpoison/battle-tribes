@@ -2,11 +2,10 @@ import { EntityType } from "webgl-test-shared/dist/entities";
 import { Point, randFloat } from "webgl-test-shared/dist/utils";
 import { Settings } from "webgl-test-shared/dist/settings";
 import RenderPart from "../render-parts/RenderPart";
-import { getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
+import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { playSound } from "../sound";
 import { createFlyParticle } from "../particles";
 import Entity from "../Entity";
-import RectangularHitbox from "../hitboxes/RectangularHitbox";
 
 class PunjiSticks extends Entity {
    private ticksSinceLastFly = 0;
@@ -34,11 +33,6 @@ class PunjiSticks extends Entity {
       if (ageTicks <= 1) {
          playSound("spike-place.mp3", 0.5, 1, this.position.x, this.position.y);
       }
-   }
-
-   // @Hack
-   public addRectangularHitbox(hitbox: RectangularHitbox): void {
-      super.addRectangularHitbox(hitbox);
    }
 
    public tick(): void {

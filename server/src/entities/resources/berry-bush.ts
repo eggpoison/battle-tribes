@@ -1,17 +1,16 @@
-import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityType } from "webgl-test-shared/dist/entities";
-import { ItemType } from "webgl-test-shared/dist/items";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { Point } from "webgl-test-shared/dist/utils";
 import Entity from "../../Entity";
-import CircularHitbox from "../../hitboxes/CircularHitbox";
 import { HealthComponent, HealthComponentArray } from "../../components/HealthComponent";
 import { createItemEntity } from "../item-entity";
 import Board from "../../Board";
 import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
 import { BerryBushComponent, BerryBushComponentArray } from "../../components/BerryBushComponent";
+import { CircularHitbox, HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
+import { ItemType } from "webgl-test-shared/dist/items/items";
 
 export const BERRY_BUSH_RADIUS = 40;
 
@@ -21,7 +20,7 @@ const BERRY_GROW_TIME = 30;
 export function createBerryBush(position: Point, rotation: number): Entity {
    const berryBush = new Entity(position, rotation, EntityType.berryBush, COLLISION_BITS.plants, DEFAULT_COLLISION_MASK);
 
-   const hitbox = new CircularHitbox(position, 1, 0, 0, HitboxCollisionType.soft, BERRY_BUSH_RADIUS, berryBush.getNextHitboxLocalID(), berryBush.rotation, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK);
+   const hitbox = new CircularHitbox(1, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, BERRY_BUSH_RADIUS);
    berryBush.addHitbox(hitbox);
 
    HealthComponentArray.addComponent(berryBush.id, new HealthComponent(10));
@@ -62,7 +61,7 @@ export function dropBerryOverEntity(entity: Entity): void {
    const itemEntityCreationInfo = createItemEntity(position, 2 * Math.PI * Math.random(), ItemType.berry, 1, 0);
    
    const velocityDirectionOffset = (Math.random() - 0.5) * Math.PI * 0.15
-   const physicsComponent = itemEntityCreationInfo.components[ServerComponentType.physics];
+   const physicsComponent = itemEntityCreationInfo.components[ServerComponentType.physics]!;
    physicsComponent.velocity.x = 40 * Math.sin(spawnDirection + velocityDirectionOffset);
    physicsComponent.velocity.y = 40 * Math.cos(spawnDirection + velocityDirectionOffset);
 }

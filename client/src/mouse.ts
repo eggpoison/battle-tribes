@@ -13,7 +13,7 @@ import { updateCursorTooltip } from "./components/game/dev/CursorTooltip";
 export let cursorX: number | null = null;
 export let cursorY: number | null = null;
 
-export function calculateCursorWorldPositionX(): number | null {
+export function calculateCursorWorldPositionX(cursorX: number): number | null {
    if (Game.getIsPaused() || cursorX === null) return null;
    
    const worldX = (cursorX - halfWindowWidth) / Camera.zoom + Camera.position.x;
@@ -23,7 +23,7 @@ export function calculateCursorWorldPositionX(): number | null {
    return worldX;
 }
 
-export function calculateCursorWorldPositionY(): number | null {
+export function calculateCursorWorldPositionY(cursorY: number): number | null {
    if (Game.getIsPaused() || cursorY === null) return null;
    
    const worldY = (-cursorY + halfWindowHeight) / Camera.zoom + Camera.position.y;

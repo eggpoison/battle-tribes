@@ -1,13 +1,16 @@
-import { Item } from "webgl-test-shared/dist/items";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getItemTypeImage } from "../../client-item-info";
+import { ItemType } from "webgl-test-shared/dist/items/items";
 
-export let setHeldItemVisual: (heldItem: Item | null) => void = () => {};
+export let HeldItem_setHeldItemCount: (count: number) => void = () => {};
+export let HeldItem_setHeldItemType: (itemType: ItemType | null) => void = () => {};
 
 export let setHeldItemVisualPosition: (xPixels: number, yPixels: number) => void;
 
 const HeldItem = () => {
-   const [heldItem, setHeldItem] = useState<Item | null>(null);
+   const [heldItemCount, setHeldItemCount] = useState(0);
+   const [heldItemType, setHeldItemType] = useState<ItemType | null>(null);
+   
    const [mousePosition, setMousePosition] = useState<[number, number] | null>(null);
    const heldItemElementRef = useRef<HTMLDivElement | null>(null);
    const hasLoaded = useRef(false);
@@ -35,9 +38,8 @@ const HeldItem = () => {
          hasLoaded.current = true;
       }
       
-      setHeldItemVisual = (heldItem: Item | null): void => {
-         setHeldItem(heldItem);
-      }
+      HeldItem_setHeldItemCount = setHeldItemCount;
+      HeldItem_setHeldItemType = setHeldItemType;
 
       setHeldItemVisualPosition = (xPixels: number, yPixels: number): void => {
          setMousePosition([xPixels, yPixels]);
@@ -51,12 +53,12 @@ const HeldItem = () => {
       }
    }, [mousePosition]);
 
-   if (heldItem === null) return null;
+   if (heldItemType === null) return null;
 
-   const heldItemDisplayCount = heldItem.count > 1 ? heldItem.count : "";
+   const heldItemDisplayCount = heldItemCount > 1 ? heldItemCount : "";
    
    return <div id="held-item" ref={onRefChange}>
-      <img className="held-item-icon" src={getItemTypeImage(heldItem.type)} alt="" />
+      <img className="held-item-icon" src={getItemTypeImage(heldItemType)} alt="" />
       <div className="held-item-count">{heldItemDisplayCount}</div>
    </div>;
 }

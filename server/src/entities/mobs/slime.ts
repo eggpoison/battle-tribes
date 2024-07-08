@@ -1,13 +1,10 @@
-import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { SlimeSize, EntityType, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
-import { ItemType } from "webgl-test-shared/dist/items";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { Biome, TileType } from "webgl-test-shared/dist/tiles";
 import { Point, lerp, randInt } from "webgl-test-shared/dist/utils";
 import Entity from "../../Entity";
-import CircularHitbox from "../../hitboxes/CircularHitbox";
 import { HealthComponent, HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity, getEntityHealth, healEntity } from "../../components/HealthComponent";
 import { SlimeComponent, SlimeComponentArray } from "../../components/SlimeComponent";
 import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
@@ -23,8 +20,10 @@ import { PhysicsComponent, PhysicsComponentArray } from "../../components/Physic
 import { wasTribeMemberKill } from "../tribes/tribe-member";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
-import { CraftingStation } from "webgl-test-shared/dist/crafting-recipes";
 import { CraftingStationComponentArray, CraftingStationComponent } from "../../components/CraftingStationComponent";
+import { CircularHitbox, HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
+import { CraftingStation } from "webgl-test-shared/dist/items/crafting-recipes";
+import { ItemType } from "webgl-test-shared/dist/items/items";
 
 const TURN_SPEED = 2 * Math.PI;
 
@@ -72,7 +71,7 @@ export function createSlime(position: Point, size: SlimeSize, orbSizes: Array<Sl
    slime.collisionPushForceMultiplier = 0.5;
 
    const mass = 1 + size * 0.5;
-   const hitbox = new CircularHitbox(position, mass, 0, 0, HitboxCollisionType.soft, RADII[size], slime.getNextHitboxLocalID(), slime.rotation, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK);
+   const hitbox = new CircularHitbox(mass, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, RADII[size]);
    slime.addHitbox(hitbox);
 
    PhysicsComponentArray.addComponent(slime.id, new PhysicsComponent(0, 0, 0, 0, true, false));
@@ -141,7 +140,7 @@ const createSpit = (slime: Entity, slimeComponent: SlimeComponent): void => {
    const y = slime.position.y + RADII[slimeComponent.size] * Math.cos(slime.rotation);
    const spitCreationInfo = createSlimeSpit(new Point(x, y), 2 * Math.PI * Math.random(), slimeComponent.size === SlimeSize.medium ? 0 : 1);
 
-   const physicsComponent = spitCreationInfo.components[ServerComponentType.physics];
+   const physicsComponent = spitCreationInfo.components[ServerComponentType.physics]!;
    physicsComponent.velocity.x = 500 * Math.sin(slime.rotation);
    physicsComponent.velocity.y = 500 * Math.cos(slime.rotation);
 }

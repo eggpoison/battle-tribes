@@ -6,7 +6,7 @@ import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import { createDirtParticle } from "../particles";
 import { playSound, AudioFilePath } from "../sound";
-import { ParticleRenderLayer } from "../rendering/particle-rendering";
+import { ParticleRenderLayer } from "../rendering/webgl/particle-rendering";
 
 class TombstoneComponent extends ServerComponent<ServerComponentType.tombstone> {
    private zombieSpawnProgress: number;

@@ -19,7 +19,9 @@ import { updateResourceDistributions } from "../resource-distributions";
 import { updateGrassBlockers } from "../grass-blockers";
 import { createGameDataPacket } from "./game-data-packets";
 import PlayerClient from "./PlayerClient";
-import { addPlayerClient, generatePlayerSpawnPosition, getPlayerClients } from "./player-clients";
+import { addPlayerClient, generatePlayerSpawnPosition, getPlayerClients, getPlayerFromUsername } from "./player-clients";
+import { TribeComponentArray } from "../components/TribeComponent";
+import { createTribeWarrior } from "../entities/tribes/tribe-warrior";
 
 const isTimed = process.argv[2] === "timed";
 const averageTickTimes = new Array<number>();
@@ -57,6 +59,7 @@ class GameServer {
    public trackedEntityID = 0;
 
    public isRunning = false;
+   public isSimulating = true;
 
    private nextTickTime = 0;
    
@@ -164,19 +167,23 @@ class GameServer {
       // These are done before each tick to account for player packets causing entities to be removed/added between ticks.
       Board.pushJoinBuffer();
       Board.destroyFlaggedEntities();
-      Board.updateTribes();
-      
-      updateGrassBlockers();
 
-      Board.updateEntities();
-      updateDynamicPathfindingNodes();
-      Board.resolveEntityCollisions();
-
-      runSpawnAttempt();
-      
-      Board.pushJoinBuffer();
-      Board.destroyFlaggedEntities();
-      Board.updateTribes();
+      if (this.isSimulating) {
+         Board.updateTribes();
+         
+         updateGrassBlockers();
+         
+         Board.updateEntities();
+         updateDynamicPathfindingNodes();
+         Board.resolveEntityCollisions();
+         
+         runSpawnAttempt();
+         
+         Board.pushJoinBuffer();
+         Board.destroyFlaggedEntities();
+         // @Bug @Incomplete: Called twice!!!!
+         Board.updateTribes();
+      }
 
       if (!isTimed) {
          await SERVER.sendGameDataPackets();
@@ -199,15 +206,6 @@ class GameServer {
       if (SERVER.io === null) return;
 
       SERVER.io.on("connection", (socket: ISocket) => {
-         // @Temporary
-         // setTimeout(() => {
-         //    if(1+1===2)return;
-         //    const p = this.getPlayerFromUsername(username)!;
-         //    const tc = TribeComponentArray.getComponent(p.id);
-         //    const tribe = tc.tribe;
-
-         //    createTribeWarrior(new Point(spawnPosition.x - 100, spawnPosition.y), tribe, 0);
-         // }, 3000);
          
          // @Temporary
          
@@ -292,6 +290,18 @@ class GameServer {
             const spawnPosition = generatePlayerSpawnPosition(tribeType);
             const visibleChunkBounds = estimateVisibleChunkBounds(spawnPosition, screenWidth, screenHeight);
 
+            // @Temporary
+            // setTimeout(() => {
+            //    const p = getPlayerFromUsername(username)!;
+            //    const tc = TribeComponentArray.getComponent(p.id);
+            //    const tribe = tc.tribe;
+
+            //    createTribeWarrior(new Point(spawnPosition.x - 800, spawnPosition.y - 100), Math.PI * 0.45, tribe, 0);
+            //    createTribeWarrior(new Point(spawnPosition.x - 900, spawnPosition.y - 170), Math.PI * 0.5, tribe, 0);
+            //    createTribeWarrior(new Point(spawnPosition.x - 950, spawnPosition.y - 80), Math.PI * 0.5, tribe, 0);
+            //    createTribeWarrior(new Point(spawnPosition.x - 1050, spawnPosition.y + 105), Math.PI * 0.45, tribe, 0);
+            // }, 2000);
+
             const tribe = new Tribe(tribeType, false);
             const player = createPlayer(spawnPosition, tribe, username);
 
@@ -334,11 +344,13 @@ class GameServer {
                const gameDataPacket = createGameDataPacket(playerClient);
                playerClient.socket.emit("game_data_packet", gameDataPacket);
    
+               // @Cleanup: should these be here?
                playerClient.visibleHits = [];
                playerClient.playerKnockbacks = [];
                playerClient.heals = [];
                playerClient.orbCompletes = [];
                playerClient.pickedUpItem = false;
+               playerClient.entityTickEvents = [];
             }
 
             // console.log(performance.now());

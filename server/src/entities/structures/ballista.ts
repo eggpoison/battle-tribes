@@ -1,8 +1,6 @@
-import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
+import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision";
 import { AMMO_INFO_RECORD, ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityType } from "webgl-test-shared/dist/entities";
-import { BallistaAmmoType, BALLISTA_AMMO_TYPES, ItemType, InventoryName } from "webgl-test-shared/dist/items";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { Point } from "webgl-test-shared/dist/utils";
@@ -10,7 +8,6 @@ import Entity from "../../Entity";
 import Tribe from "../../Tribe";
 import { EntityRelationship, TribeComponent, TribeComponentArray, getEntityRelationship } from "../../components/TribeComponent";
 import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
-import RectangularHitbox from "../../hitboxes/RectangularHitbox";
 import { TurretComponent, TurretComponentArray } from "../../components/TurretComponent";
 import { HealthComponent, HealthComponentArray } from "../../components/HealthComponent";
 import { AIHelperComponent, AIHelperComponentArray } from "../../components/AIHelperComponent";
@@ -21,22 +18,17 @@ import { angleIsInRange, getClockwiseAngleDistance, getMaxAngleToCircularHitbox,
 import Board from "../../Board";
 import { StructureComponentArray, StructureComponent } from "../../components/StructureComponent";
 import { StructureConnectionInfo } from "webgl-test-shared/dist/structures";
-import { Hitbox, hitboxIsCircular } from "../../hitboxes/hitboxes";
+import { hitboxIsCircular } from "webgl-test-shared/dist/hitboxes/hitboxes";
+import { createBallistaHitboxes } from "webgl-test-shared/dist/hitboxes/entity-hitbox-creation";
+import { InventoryName, BallistaAmmoType, BALLISTA_AMMO_TYPES, ItemType } from "webgl-test-shared/dist/items/items";
 
 const VISION_RANGE = 550;
-const HITBOX_SIZE = 100 - 0.05;
 const AIM_ARC_SIZE = Math.PI / 2;
-
-export function createBallistaHitboxes(parentPosition: Point, localID: number, parentRotation: number): ReadonlyArray<Hitbox> {
-   const hitboxes = new Array<Hitbox>();
-   hitboxes.push(new RectangularHitbox(parentPosition, 2, 0, 0, HitboxCollisionType.hard, localID, parentRotation, HITBOX_SIZE, HITBOX_SIZE, 0, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK));
-   return hitboxes;
-}
 
 export function createBallista(position: Point, rotation: number, tribe: Tribe, connectionInfo: StructureConnectionInfo): Entity {
    const ballista = new Entity(position, rotation, EntityType.ballista, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
-   const hitboxes = createBallistaHitboxes(position, ballista.getNextHitboxLocalID(), ballista.rotation);
+   const hitboxes = createBallistaHitboxes();
    for (let i = 0; i < hitboxes.length; i++) {
       ballista.addHitbox(hitboxes[i]);
    }
@@ -183,7 +175,7 @@ const fire = (ballista: Entity, ammoType: BallistaAmmoType): void => {
          const arrowCreationInfo = createWoodenArrow(ballista.position.copy(), fireDirection, ballista.id, arrowInfo);
 
          // @Cleanup: copy and paste
-         const physicsComponent = arrowCreationInfo.components[ServerComponentType.physics];
+         const physicsComponent = arrowCreationInfo.components[ServerComponentType.physics]!;
          physicsComponent.velocity.x = ammoInfo.projectileSpeed * Math.sin(fireDirection);
          physicsComponent.velocity.y = ammoInfo.projectileSpeed * Math.cos(fireDirection);
       }
@@ -195,7 +187,7 @@ const fire = (ballista: Entity, ammoType: BallistaAmmoType): void => {
       const arrowCreationInfo = createWoodenArrow(ballista.position.copy(), rotation, ballista.id, arrowInfo);
 
       // @Cleanup: copy and paste
-      const physicsComponent = arrowCreationInfo.components[ServerComponentType.physics];
+      const physicsComponent = arrowCreationInfo.components[ServerComponentType.physics]!;
       physicsComponent.velocity.x = ammoInfo.projectileSpeed * Math.sin(fireDirection);
       physicsComponent.velocity.y = ammoInfo.projectileSpeed * Math.cos(fireDirection);
    }
@@ -212,20 +204,20 @@ const fire = (ballista: Entity, ammoType: BallistaAmmoType): void => {
 export function tickBallista(ballista: Entity): void {
    const aiHelperComponent = AIHelperComponentArray.getComponent(ballista.id);
    const turretComponent = TurretComponentArray.getComponent(ballista.id);
-   const ballistaComponent = AmmoBoxComponentArray.getComponent(ballista.id);
+   const ammoBoxComponent = AmmoBoxComponentArray.getComponent(ballista.id);
 
    // Attempt to load ammo if there is none loaded
    // @Speed: ideally shouldn't be done every tick, just when the inventory is changed (ammo is added to the inventory)
-   if (ballistaComponent.ammoRemaining === 0) {
+   if (ammoBoxComponent.ammoRemaining === 0) {
       attemptAmmoLoad(ballista);
    }
 
-   if (aiHelperComponent.visibleEntities.length > 0 && ballistaComponent.ammoRemaining > 0) {
+   if (aiHelperComponent.visibleEntities.length > 0 && ammoBoxComponent.ammoRemaining > 0) {
       const target = getTarget(ballista, aiHelperComponent.visibleEntities);
       if (target !== null) {
          // If the ballista has just acquired a target, reset the shot cooldown
          if (!turretComponent.hasTarget) {
-            const ammoInfo = AMMO_INFO_RECORD[ballistaComponent.ammoType];
+            const ammoInfo = AMMO_INFO_RECORD[ammoBoxComponent.ammoType];
             turretComponent.fireCooldownTicks = ammoInfo.shotCooldownTicks;
          }
          turretComponent.hasTarget = true;
@@ -258,10 +250,10 @@ export function tickBallista(ballista: Entity): void {
                angleDiff -= 2 * Math.PI;
             }
             if (Math.abs(angleDiff) < 0.01) {
-               fire(ballista, ballistaComponent.ammoType);
+               fire(ballista, ammoBoxComponent.ammoType);
    
                // Reset firing cooldown
-               const ammoInfo = AMMO_INFO_RECORD[ballistaComponent.ammoType];
+               const ammoInfo = AMMO_INFO_RECORD[ammoBoxComponent.ammoType];
                turretComponent.fireCooldownTicks = ammoInfo.shotCooldownTicks + ammoInfo.reloadTimeTicks;
             }
          }
@@ -270,10 +262,10 @@ export function tickBallista(ballista: Entity): void {
    }
 
    turretComponent.hasTarget = false;
-   if (ballistaComponent.ammoType === null) {
+   if (ammoBoxComponent.ammoType === null) {
       turretComponent.fireCooldownTicks = 0;
    } else {
-      const ammoInfo = AMMO_INFO_RECORD[ballistaComponent.ammoType];
+      const ammoInfo = AMMO_INFO_RECORD[ammoBoxComponent.ammoType];
       if (turretComponent.fireCooldownTicks <= ammoInfo.shotCooldownTicks) {
          turretComponent.fireCooldownTicks = ammoInfo.shotCooldownTicks;
       } else {

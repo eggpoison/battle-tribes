@@ -1,7 +1,6 @@
 import { CircleDebugData, EntityDebugData, LineDebugData, PathData, TileHighlightData } from "webgl-test-shared/dist/client-server-types";
 import { TribesmanAIType } from "webgl-test-shared/dist/components";
 import { EntityTypeString } from "webgl-test-shared/dist/entities";
-import { ITEM_INFO_RECORD, PlaceableItemInfo, ItemTypeString } from "webgl-test-shared/dist/items";
 import { getTechByID } from "webgl-test-shared/dist/techs";
 import Entity from "./Entity";
 import { TRIBESMAN_COMMUNICATION_RANGE } from "./entities/tribes/tribesman-ai/tribesman-ai";
@@ -11,6 +10,7 @@ import { StructureComponentArray } from "./components/StructureComponent";
 import { TribeComponentArray } from "./components/TribeComponent";
 import { TribesmanAIComponentArray } from "./components/TribesmanAIComponent";
 import { getTribesmanVisionRange } from "./entities/tribes/tribesman-ai/tribesman-ai-utils";
+import { ItemTypeString, ITEM_INFO_RECORD, PlaceableItemInfo } from "webgl-test-shared/dist/items/items";
 
 export function getEntityDebugData(entity: Entity): EntityDebugData {
    const lines = new Array<LineDebugData>();

@@ -6,7 +6,7 @@ import Entity from "../Entity";
 import { LeafParticleSize, createDirtParticle, createLeafParticle, createLeafSpeckParticle, createWoodSpeckParticle } from "../particles";
 import Tree, { TREE_DESTROY_SOUNDS, TREE_HIT_SOUNDS } from "./Tree";
 import { playSound, AudioFilePath } from "../sound";
-import { ParticleRenderLayer } from "../rendering/particle-rendering";
+import { ParticleRenderLayer } from "../rendering/webgl/particle-rendering";
 
 class Plant extends Entity {
    public static readonly SIZE = 80;

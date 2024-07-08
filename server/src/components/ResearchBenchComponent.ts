@@ -10,9 +10,9 @@ import Board from "../Board";
 import { InventoryUseComponentArray, getInventoryUseInfo } from "./InventoryUseComponent";
 import { TITLE_REWARD_CHANCES } from "../tribesman-title-generation";
 import { TribeMemberComponentArray, awardTitle, hasTitle } from "./TribeMemberComponent";
-import { InventoryName } from "webgl-test-shared/dist/items";
 import { TribeComponentArray } from "./TribeComponent";
 import { TribesmanAIComponentArray } from "./TribesmanAIComponent";
+import { InventoryName } from "webgl-test-shared/dist/items/items";
 
 const ORB_COMPLETE_TICKS = Math.floor(RESEARCH_ORB_COMPLETE_TIME * Settings.TPS);
 

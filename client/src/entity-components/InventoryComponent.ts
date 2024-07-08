@@ -1,8 +1,8 @@
 import { InventoryComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
-import { Inventory, InventoryName } from "webgl-test-shared/dist/items";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import { createInventoryFromData, updateInventoryFromData } from "../inventory-manipulation";
+import { InventoryName, Inventory } from "webgl-test-shared/dist/items/items";
 
 class InventoryComponent extends ServerComponent<ServerComponentType.inventory> {
    private readonly inventories: Partial<Record<InventoryName, Inventory>> = {};

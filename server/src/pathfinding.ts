@@ -1,16 +1,14 @@
-import { PathfindingNodeIndex, HitboxCollisionType, VisibleChunkBounds } from "webgl-test-shared/dist/client-server-types";
+import { PathfindingNodeIndex, VisibleChunkBounds } from "webgl-test-shared/dist/client-server-types";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { PathfindingSettings, Settings } from "webgl-test-shared/dist/settings";
 import { distBetweenPointAndRectangle, angle, calculateDistanceSquared, Point } from "webgl-test-shared/dist/utils";
 import Entity from "./Entity";
-import CircularHitbox from "./hitboxes/CircularHitbox";
-import RectangularHitbox from "./hitboxes/RectangularHitbox";
 import Board from "./Board";
 import PathfindingHeap from "./PathfindingHeap";
 import OPTIONS from "./options";
 import { PhysicsComponentArray } from "./components/PhysicsComponent";
-import { Hitbox, hitboxIsCircular } from "./hitboxes/hitboxes";
 import { TribeComponentArray } from "./components/TribeComponent";
+import { CircularHitbox, HitboxCollisionType, RectangularHitbox, Hitbox, hitboxIsCircular } from "webgl-test-shared/dist/hitboxes/hitboxes";
 
 const enum Vars {
    NODE_ACCESSIBILITY_RESOLUTION = 3,

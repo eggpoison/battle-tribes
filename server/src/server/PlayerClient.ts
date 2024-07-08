@@ -1,6 +1,7 @@
 import { VisibleChunkBounds, HitData, PlayerKnockbackData, HealData, ResearchOrbCompleteData } from "webgl-test-shared/dist/client-server-types";
 import Tribe from "../Tribe";
 import { ISocket } from "./server";
+import { EntityTickEvent } from "webgl-test-shared/dist/entity-events";
 
 class PlayerClient {
    public readonly username: string;
@@ -19,6 +20,8 @@ class PlayerClient {
    public playerKnockbacks = new Array<PlayerKnockbackData>();
    /** All healing done to any entity visible to the player */
    public heals = new Array<HealData>();
+   /** All entity tick events visible to the player */
+   public entityTickEvents = new Array<EntityTickEvent>();
    
    public visibleEntityDeathIDs = new Array<number>();
    public orbCompletes = new Array<ResearchOrbCompleteData>();

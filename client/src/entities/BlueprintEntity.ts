@@ -3,12 +3,12 @@ import { Point, assertUnreachable, randFloat } from "webgl-test-shared/dist/util
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { EntityData } from "webgl-test-shared/dist/client-server-types";
 import RenderPart from "../render-parts/RenderPart";
-import { getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
+import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { playSound } from "../sound";
 import { BALLISTA_AMMO_BOX_OFFSET_X, BALLISTA_AMMO_BOX_OFFSET_Y, BALLISTA_GEAR_X, BALLISTA_GEAR_Y } from "../utils";
 import { createDustCloud, createLightWoodSpeckParticle, createRockParticle, createRockSpeckParticle, createSawdustCloud } from "../particles";
 import Entity, { ComponentDataRecord } from "../Entity";
-import { ParticleRenderLayer } from "../rendering/particle-rendering";
+import { ParticleRenderLayer } from "../rendering/webgl/particle-rendering";
 import { WARRIOR_HUT_SIZE } from "../entity-components/HutComponent";
 
 // @Cleanup: Move all this logic to the blueprint component file

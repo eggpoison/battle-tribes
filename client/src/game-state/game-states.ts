@@ -1,4 +1,4 @@
-import { ITEM_TYPE_RECORD } from "webgl-test-shared/dist/items";
+import { ITEM_TYPE_RECORD } from "webgl-test-shared/dist/items/items";
 import Player from "../entities/Player";
 import DefiniteGameState from "./DefiniteGameState";
 import LatencyGameState from "./LatencyGameState";

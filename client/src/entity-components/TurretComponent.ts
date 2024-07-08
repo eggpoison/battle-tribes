@@ -1,4 +1,3 @@
-import { BallistaAmmoType, ItemType } from "webgl-test-shared/dist/items";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { ServerComponentType, TurretComponentData } from "webgl-test-shared/dist/components";
 import { lerp } from "webgl-test-shared/dist/utils";
@@ -6,7 +5,8 @@ import Entity from "../Entity";
 import ServerComponent from "./ServerComponent";
 import { playSound } from "../sound";
 import RenderPart from "../render-parts/RenderPart";
-import { getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
+import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
+import { BallistaAmmoType, ItemType } from "webgl-test-shared/dist/items/items";
 
 type TurretType = EntityType.slingTurret | EntityType.ballista;
 

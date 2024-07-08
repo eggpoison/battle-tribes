@@ -1,11 +1,11 @@
 import { TribesmanAIType } from "webgl-test-shared/dist/components";
 import { LimbAction } from "webgl-test-shared/dist/entities";
-import { InventoryName, ITEM_INFO_RECORD, ConsumableItemInfo, ConsumableItemCategory, ITEM_TYPE_RECORD, Inventory } from "webgl-test-shared/dist/items";
 import { stopEntity } from "../../../ai-shared";
 import { InventoryUseComponentArray, getInventoryUseInfo } from "../../../components/InventoryUseComponent";
 import { PhysicsComponentArray } from "../../../components/PhysicsComponent";
 import { TribesmanAIComponentArray } from "../../../components/TribesmanAIComponent";
 import { InventoryComponentArray, getInventory } from "../../../components/InventoryComponent";
+import { Inventory, InventoryName, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, ConsumableItemInfo, ConsumableItemCategory } from "webgl-test-shared/dist/items/items";
 
 export interface HealingItemUseInfo {
    readonly itemSlot: number;

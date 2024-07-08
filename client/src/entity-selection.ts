@@ -1,7 +1,6 @@
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { Point } from "webgl-test-shared/dist/utils";
 import { PlanterBoxPlant, ServerComponentType, TunnelDoorSide } from "webgl-test-shared/dist/components";
-import { InventoryName, ItemType } from "webgl-test-shared/dist/items";
 import { Settings } from "webgl-test-shared/dist/settings";
 import Player, { getPlayerSelectedItem } from "./entities/Player";
 import Game from "./Game";
@@ -12,11 +11,12 @@ import { latencyGameState } from "./game-state/game-states";
 import { BuildMenu_hide, BuildMenu_setBuildingID, BuildMenu_updateBuilding, entityCanOpenBuildMenu, isHoveringInBlueprintMenu } from "./components/game/BuildMenu";
 import { InventoryMenuType, InventorySelector_inventoryIsOpen, InventorySelector_setInventoryMenuType } from "./components/game/inventories/InventorySelector";
 import { SEED_TO_PLANT_RECORD } from "./entity-components/PlantComponent";
-import { hitboxIsWithinRange } from "./hitboxes/hitboxes";
-import { GhostInfo, GhostType, PARTIAL_OPACITY, setGhostInfo } from "./rendering/entity-ghost-rendering";
-import { getClosestGroupNum } from "./rendering/entity-selection-rendering";
-import { CraftingStation } from "webgl-test-shared/dist/crafting-recipes";
+import { GhostInfo, GhostType, PARTIAL_OPACITY, setGhostInfo } from "./rendering/webgl/entity-ghost-rendering";
+import { getClosestGroupNum } from "./rendering/webgl/entity-selection-rendering";
 import { CraftingMenu_setCraftingStation, CraftingMenu_setIsVisible } from "./components/game/menus/CraftingMenu";
+import { hitboxIsWithinRange } from "webgl-test-shared/dist/hitboxes/hitboxes";
+import { CraftingStation } from "webgl-test-shared/dist/items/crafting-recipes";
+import { ItemType, InventoryName } from "webgl-test-shared/dist/items/items";
 
 const enum InteractActionType {
    openBuildMenu,
@@ -336,7 +336,7 @@ const getEntityID = (doPlayerProximityCheck: boolean, doCanSelectCheck: boolean)
             
             // Distance from cursor
             for (const hitbox of entity.hitboxes) {
-               if (hitboxIsWithinRange(origin, hitbox, HIGHLIGHT_RANGE)) {
+               if (hitboxIsWithinRange(hitbox, origin, HIGHLIGHT_RANGE)) {
                   const distance = origin.calculateDistanceBetween(entity.position);
                   if (distance < minDist) {
                      minDist = distance;

@@ -3,7 +3,7 @@ import { randInt } from "webgl-test-shared/dist/utils";
 
 // @Incomplete: no way to get packrat
 export const enum TITLE_REWARD_CHANCES {
-   ARCHITECT_REWARD_CHANCE = 0.1,
+   BUILDER_REWARD_CHANCE = 0.1,
    BERRYMUNCHER_REWARD_CHANCE = 0.04,
    BLOODAXE_REWARD_CHANCE = 0.01,
    DEATHBRINGER_REWARD_CHANCE = 0.005,
@@ -17,7 +17,7 @@ export const enum TITLE_REWARD_CHANCES {
 }
 
 const TITLE_NUM_DISPLAY_OPTIONS_RECORD: Record<TribesmanTitle, number> = {
-   [TribesmanTitle.architect]: 2,
+   [TribesmanTitle.builder]: 2,
    [TribesmanTitle.berrymuncher]: 2,
    [TribesmanTitle.bloodaxe]: 1,
    [TribesmanTitle.deathbringer]: 3,

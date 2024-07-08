@@ -6,16 +6,13 @@ import { Hotbar_setHotbarSelectedItemSlot, Hotbar_updateLeftThrownBattleaxeItemI
 import { BackpackInventoryMenu_setIsVisible } from "./components/game/inventories/BackpackInventory";
 import Board from "./Board";
 import { definiteGameState, latencyGameState } from "./game-state/game-states";
-import Game from "./Game";
-import CircularHitbox from "./hitboxes/CircularHitbox";
-import RectangularHitbox from "./hitboxes/RectangularHitbox";
+import Game, { GameInteractState } from "./Game";
 import { attemptEntitySelection } from "./entity-selection";
 import { playSound } from "./sound";
 import { attemptToCompleteNode } from "./research";
 import { StructureType, calculateStructurePlaceInfo } from "webgl-test-shared/dist/structures";
-import { ConsumableItemCategory, ConsumableItemInfo, ITEM_INFO_RECORD, ITEM_TYPE_RECORD, Inventory, InventoryName, Item, ItemType, PlaceableItemType, itemInfoIsTool } from "webgl-test-shared/dist/items";
 import { EntityType, LimbAction } from "webgl-test-shared/dist/entities";
-import { AttackPacket, HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
+import { AttackPacket } from "webgl-test-shared/dist/client-server-types";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { TRIBE_INFO_RECORD, TribeType } from "webgl-test-shared/dist/tribes";
@@ -24,51 +21,16 @@ import { TribesmanTitle } from "webgl-test-shared/dist/titles";
 import { Point } from "webgl-test-shared/dist/utils";
 import { LimbInfo } from "./entity-components/InventoryUseComponent";
 import InventoryComponent from "./entity-components/InventoryComponent";
-import { ENTITY_TYPE_TO_GHOST_TYPE_MAP, GhostInfo, setGhostInfo } from "./rendering/entity-ghost-rendering";
+import { ENTITY_TYPE_TO_GHOST_TYPE_MAP, GhostInfo, setGhostInfo } from "./rendering/webgl/entity-ghost-rendering";
 import Camera from "./Camera";
-import { Hitbox } from "./hitboxes/hitboxes";
-import { WORKER_HUT_SIZE } from "./entity-components/HutComponent";
+import { calculateCursorWorldPositionX, calculateCursorWorldPositionY } from "./mouse";
+import { Inventory, Item, ITEM_TYPE_RECORD, ItemType, InventoryName, ITEM_INFO_RECORD, itemInfoIsTool, ConsumableItemInfo, ConsumableItemCategory, PlaceableItemType } from "webgl-test-shared/dist/items/items";
+import { playBowFireSound } from "./entity-tick-events";
+import { closeCurrentMenu } from "./menus";
 
-enum PlaceableItemHitboxType {
-   circular,
-   rectangular
-}
+/*
+// @Temporary @Incomplete
 
-export interface PlaceableEntityInfo {
-   readonly entityType: StructureType;
-   readonly width: number;
-   readonly height: number;
-   readonly hitboxType: PlaceableItemHitboxType;
-   /** Optionally defines extra criteria for being placed */
-   canPlace?(): boolean;
-}
-
-let currentMenuCloseFunction: (() => void) | undefined;
-
-/** Acceleration of the player while moving without any modifiers. */
-const PLAYER_ACCELERATION = 700;
-
-const PLAYER_LIGHTSPEED_ACCELERATION = 15000;
-
-/** Acceleration of the player while slowed. */
-const PLAYER_SLOW_ACCELERATION = 400;
-
-export let rightMouseButtonIsPressed = false;
-export let leftMouseButtonIsPressed = false;
-
-// Cleanup: All this item placing logic should be moved to another file
-
-export const PLACEABLE_ENTITY_INFO_RECORD: Record<PlaceableItemType, PlaceableEntityInfo> = {
-   [ItemType.workbench]: {
-      entityType: EntityType.workbench,
-      width: 80,
-      height: 80,
-      hitboxType: PlaceableItemHitboxType.rectangular
-   },
-   [ItemType.tribe_totem]: {
-      entityType: EntityType.tribeTotem,
-      width: 120,
-      height: 120,
       canPlace: (): boolean => {
          // The player can only place one tribe totem
          return !Game.tribe.hasTotem;
@@ -82,115 +44,18 @@ export const PLACEABLE_ENTITY_INFO_RECORD: Record<PlaceableItemType, PlaceableEn
       canPlace: (): boolean => {
          return Game.tribe.hasTotem && Game.tribe.numHuts < Game.tribe.tribesmanCap;
       },
-      hitboxType: PlaceableItemHitboxType.rectangular
-   },
-   [ItemType.barrel]: {
-      entityType: EntityType.barrel,
-      width: 80,
-      height: 80,
-      hitboxType: PlaceableItemHitboxType.circular
-   },
-   [ItemType.campfire]: {
-      entityType: EntityType.campfire,
-      width: 104,
-      height: 104,
-      hitboxType: PlaceableItemHitboxType.circular
-   },
-   [ItemType.furnace]: {
-      entityType: EntityType.furnace,
-      width: 80,
-      height: 80,
-      hitboxType: PlaceableItemHitboxType.rectangular
-   },
-   [ItemType.research_bench]: {
-      entityType: EntityType.researchBench,
-      width: 32 * 4,
-      height: 20 * 4,
-      hitboxType: PlaceableItemHitboxType.rectangular
-   },
-   [ItemType.wooden_wall]: {
-      entityType: EntityType.wall,
-      width: 64,
-      height: 64,
-      hitboxType: PlaceableItemHitboxType.rectangular
-   },
-   [ItemType.planter_box]: {
-      entityType: EntityType.planterBox,
-      width: 80,
-      height: 80,
-      hitboxType: PlaceableItemHitboxType.rectangular
-   },
-   [ItemType.wooden_spikes]: {
-      entityType: EntityType.floorSpikes,
-      width: 40,
-      height: 40,
-      hitboxType: PlaceableItemHitboxType.rectangular
-   },
-   [ItemType.punji_sticks]: {
-      entityType: EntityType.floorPunjiSticks,
-      width: 40,
-      height: 40,
-      hitboxType: PlaceableItemHitboxType.rectangular
-   },
-   [ItemType.ballista]: {
-      entityType: EntityType.ballista,
-      width: 100,
-      height: 100,
-      hitboxType: PlaceableItemHitboxType.rectangular
-   },
-   [ItemType.sling_turret]: {
-      entityType: EntityType.slingTurret,
-      width: 72,
-      height: 72,
-      hitboxType: PlaceableItemHitboxType.circular
-   },
-   [ItemType.healing_totem]: {
-      entityType: EntityType.healingTotem,
-      width: 96,
-      height: 96,
-      hitboxType: PlaceableItemHitboxType.circular
-   },
-   [ItemType.wooden_fence]: {
-      entityType: EntityType.fence,
-      width: 64,
-      height: 16,
-      hitboxType: PlaceableItemHitboxType.rectangular
-   },
-   [ItemType.frostshaper]: {
-      entityType: EntityType.frostshaper,
-      width: 120,
-      height: 80,
-      hitboxType: PlaceableItemHitboxType.rectangular
-   },
-   [ItemType.stonecarvingTable]: {
-      entityType: EntityType.stonecarvingTable,
-      width: 120,
-      height: 80,
-      hitboxType: PlaceableItemHitboxType.rectangular
-   }
-};
+*/
 
-const getPlaceableEntityWidth = (entityType: EntityType, isPlacedOnWall: boolean): number | null => {
-   if (entityType === EntityType.floorSpikes) {
-      return isPlacedOnWall ? 56 : 48;
-   } else if (entityType === EntityType.floorPunjiSticks) {
-      return isPlacedOnWall ? 56 : 48;
-   }
-   return null;
-}
+/** Acceleration of the player while moving without any modifiers. */
+const PLAYER_ACCELERATION = 700;
 
-const getPlaceableEntityHeight = (entityType: EntityType, isPlacedOnWall: boolean): number | null => {
-   if (entityType === EntityType.floorSpikes) {
-      return isPlacedOnWall ? 28 : 48;
-   } else if (entityType === EntityType.floorPunjiSticks) {
-      return isPlacedOnWall ? 32 : 48;
-   }
-   return null;
-}
+const PLAYER_LIGHTSPEED_ACCELERATION = 15000;
 
-// @Cleanup: Remove these
-const testRectangularHitbox = new RectangularHitbox(1, 0, 0, HitboxCollisionType.soft, 1, -1, -1, 0);
-const testCircularHitbox = new CircularHitbox(1, 0, 0, HitboxCollisionType.soft, 1, -1);
+/** Acceleration of the player while slowed. */
+const PLAYER_SLOW_ACCELERATION = 400;
+
+export let rightMouseButtonIsPressed = false;
+export let leftMouseButtonIsPressed = false;
 
 const hotbarItemAttackCooldowns: Record<number, number> = {};
 const offhandItemAttackCooldowns: Record<number, number> = {};
@@ -198,9 +63,7 @@ const offhandItemAttackCooldowns: Record<number, number> = {};
 /** Whether the inventory is open or not. */
 let _inventoryIsOpen = false;
 
-export function setMenuCloseFunction(callback: () => void): void {
-   currentMenuCloseFunction = callback;
-}
+let currentRightClickEvent: MouseEvent | null = null;
 
 const updateAttackCooldowns = (inventory: Inventory, attackCooldowns: Record<number, number>): void => {
    for (let itemSlot = 1; itemSlot <= inventory.width; itemSlot++) {
@@ -267,12 +130,18 @@ const attack = (isOffhand: boolean, attackCooldown: number): void => {
    }
 }
 
-const getSwingTimeMultiplier = (): number => {
+const getSwingTimeMultiplier = (item: Item | undefined): number => {
    let swingTimeMultiplier = 1;
 
    if (Game.tribe.tribeType === TribeType.barbarians) {
       // 30% slower
       swingTimeMultiplier /= 0.7;
+   }
+
+   // Builders swing hammers 30% faster
+   const tribeMemberComponent = Player.instance!.getServerComponent(ServerComponentType.tribeMember);
+   if (tribeMemberComponent.hasTitle(TribesmanTitle.builder) && typeof item !== "undefined" && ITEM_TYPE_RECORD[item.type] === "hammer") {
+      swingTimeMultiplier /= 1.3;
    }
 
    return swingTimeMultiplier;
@@ -320,7 +189,7 @@ const attemptInventoryAttack = (inventory: Inventory): boolean => {
    const selectedItem = inventory.itemSlots[selectedItemSlot];
 
    let attackCooldown = getBaseAttackCooldown(selectedItem, useInfo, inventoryComponent);
-   attackCooldown *= getSwingTimeMultiplier();
+   attackCooldown *= getSwingTimeMultiplier(selectedItem);
       
    // @Cleanup: Should be done in attack function
    attackCooldowns[selectedItemSlot] = attackCooldown;
@@ -367,6 +236,20 @@ const getSelectedItemInfo = (): SelectedItemInfo | null => {
    return null;
 }
 
+const clickShouldPreventDefault = (e: MouseEvent): boolean => {
+   for (const element of e.composedPath()) {
+      if (element instanceof Element && (element.id === "hotbar" || element.id === "crafting-menu" || element.classList.contains("inventory-container"))) {
+         return true;
+      }
+   }
+   
+   if ((e.target as HTMLElement).id === "game-canvas") {
+      return true;
+   }
+
+   return false;
+}
+
 const createItemUseListeners = (): void => {
    document.addEventListener("mousedown", e => {
       if (Player.instance === null || definiteGameState.hotbar === null || definiteGameState.playerIsDead()) return;
@@ -376,10 +259,30 @@ const createItemUseListeners = (): void => {
          return;
       }
 
+      if (Game.getInteractState() === GameInteractState.summonEntity) {
+         if (Game.summonPacket === null) {
+            console.warn("summon packet is null");
+            return;
+         }
+         
+         if (e.button === 0) {
+            Game.summonPacket.position[0] = calculateCursorWorldPositionX(e.clientX)!;
+            Game.summonPacket.position[1] = calculateCursorWorldPositionY(e.clientY)!;
+            Game.summonPacket.rotation = 2 * Math.PI * Math.random();
+            
+            Client.sendEntitySummonPacket(Game.summonPacket);
+         } else if (e.button === 2) {
+            // Get out of summon entity mode
+            Game.setInteractState(GameInteractState.none);
+         }
+         return;
+      }
+
       if (e.button === 0) { // Left click
          leftMouseButtonIsPressed = true;
          attemptAttack();
       } else if (e.button === 2) { // Right click
+         currentRightClickEvent = e;
          rightMouseButtonIsPressed = true;
 
          const selectedItemInfo = getSelectedItemInfo();
@@ -418,20 +321,14 @@ const createItemUseListeners = (): void => {
 
    // Stop the context menu from appearing
    document.addEventListener("contextmenu", e => {
-      for (const element of e.composedPath()) {
-         if ((element as HTMLElement).id === "hotbar" || (element as HTMLElement).id === "crafting-menu") {
-            e.preventDefault();
-            return;
-         }
-      }
-      
-      if ((e.target as HTMLElement).id === "game-canvas") {
+      if (clickShouldPreventDefault(e) || (currentRightClickEvent !== null && clickShouldPreventDefault(currentRightClickEvent))) {
          e.preventDefault();
-         return;
+      } else {
+         // When the context menu is opened, stop player movement
+         clearPressedKeys();
       }
 
-      // When the context menu is opened, stop player movement
-      clearPressedKeys();
+      currentRightClickEvent = null;
    });
 }
 
@@ -465,17 +362,6 @@ const hideInventory = (): void => {
    if (definiteGameState.heldItemSlot !== null) {
       throwHeldItem();
    }
-}
-
-export function closeCurrentMenu(): boolean {
-   if (typeof currentMenuCloseFunction !== "undefined") {
-      currentMenuCloseFunction();
-      currentMenuCloseFunction = undefined;
-
-      return true;
-   }
-   
-   return false;
 }
  
 /** Creates the key listener to toggle the inventory on and off. */
@@ -692,106 +578,6 @@ const unuseItem = (item: Item): void => {
    }
 }
 
-// @Cleanup: sucks.
-export function canPlaceItem(placePosition: Point, placeRotation: number, item: Item, placingEntityType: EntityType, isPlacedOnWall: boolean): boolean {
-   if (!PLACEABLE_ENTITY_INFO_RECORD.hasOwnProperty(item.type)) {
-      throw new Error(`Item type '${item.type}' is not placeable.`);
-   }
-   
-   // Check for any special conditions
-   const placeableInfo = PLACEABLE_ENTITY_INFO_RECORD[item.type as PlaceableItemType];
-   if (typeof placeableInfo.canPlace !== "undefined" && !placeableInfo.canPlace()) {
-      return false;
-   }
-
-   let width = getPlaceableEntityWidth(placingEntityType, isPlacedOnWall);
-   let height = getPlaceableEntityHeight(placingEntityType, isPlacedOnWall);
-   if (width === null) {
-      width = placeableInfo.width;
-   }
-   if (height === null) {
-      height = placeableInfo.height;
-   }
-
-   let placeTestHitbox: Hitbox;
-   if (placeableInfo.hitboxType === PlaceableItemHitboxType.circular) {
-      testCircularHitbox.radius = width / 2; // For a circular hitbox, width and height will be the same
-      placeTestHitbox = testCircularHitbox;
-   } else {
-      testRectangularHitbox.width = width;
-      testRectangularHitbox.height = height;
-      testRectangularHitbox.recalculateHalfDiagonalLength();
-      testRectangularHitbox.rotation = placeRotation;
-      testRectangularHitbox.externalRotation = 0;
-      placeTestHitbox = testRectangularHitbox;
-   }
-   
-   placeTestHitbox.offset.x = 0;
-   placeTestHitbox.offset.y = 0;
-   placeTestHitbox.position.x = placePosition.x;
-   placeTestHitbox.position.y = placePosition.y;
-   placeTestHitbox.updateHitboxBounds(0);
-
-   // Don't allow placing buildings in borders
-   if (placeTestHitbox.bounds[0] < 0 || placeTestHitbox.bounds[1] >= Settings.BOARD_UNITS || placeTestHitbox.bounds[2] < 0 || placeTestHitbox.bounds[3] >= Settings.BOARD_UNITS) {
-      return false;
-   }
-
-   // 
-   // Check for entity collisions
-   // 
-
-   const minChunkX = Math.floor(placeTestHitbox.bounds[0] / Settings.CHUNK_UNITS);
-   const maxChunkX = Math.floor(placeTestHitbox.bounds[1] / Settings.CHUNK_UNITS);
-   const minChunkY = Math.floor(placeTestHitbox.bounds[2] / Settings.CHUNK_UNITS);
-   const maxChunkY = Math.floor(placeTestHitbox.bounds[3] / Settings.CHUNK_UNITS);
-   
-   for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
-      for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
-         const chunk = Board.getChunk(chunkX, chunkY);
-         for (const entity of chunk.entities) {
-            for (const hitbox of entity.hitboxes) {   
-               if (placeTestHitbox.isColliding(hitbox)) {
-                  return false;
-               }
-            }
-         }
-      }
-   }
-
-   // 
-   // Check for wall tile collisions
-   // 
-
-   // @Cleanup: Use collision file, remove test hitbox
-   // @Speed: Garbage collection
-   const tileHitbox = new RectangularHitbox(1, 0, 0, HitboxCollisionType.soft, 1, Settings.TILE_SIZE, Settings.TILE_SIZE, 0);
-
-   const minTileX = Math.floor(placeTestHitbox.bounds[0] / Settings.TILE_SIZE);
-   const maxTileX = Math.floor(placeTestHitbox.bounds[1] / Settings.TILE_SIZE);
-   const minTileY = Math.floor(placeTestHitbox.bounds[2] / Settings.TILE_SIZE);
-   const maxTileY = Math.floor(placeTestHitbox.bounds[3] / Settings.TILE_SIZE);
-
-   for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
-      for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
-         const tile = Board.getTile(tileX, tileY);
-         if (!tile.isWall) {
-            continue;
-         }
-
-         tileHitbox.position.x = (tileX + 0.5) * Settings.TILE_SIZE;
-         tileHitbox.position.y = (tileY + 0.5) * Settings.TILE_SIZE;
-         tileHitbox.updateHitboxBounds(0);
-
-         if (placeTestHitbox.isColliding(tileHitbox)) {
-            return false;
-         }
-      }
-   }
-
-   return true;
-}
-
 const itemRightClickDown = (item: Item, isOffhand: boolean, itemSlot: number): void => {
    const inventoryUseComponent = Player.instance!.getServerComponent(ServerComponentType.inventoryUse);
    const useInfo = inventoryUseComponent.useInfos[isOffhand ? 1 : 0];
@@ -903,7 +689,7 @@ const itemRightClickDown = (item: Item, isOffhand: boolean, itemSlot: number): v
          const structureType = ITEM_INFO_RECORD[item.type as PlaceableItemType].entityType;
          const placeInfo = calculateStructurePlaceInfo(Player.instance!.position, Player.instance!.rotation, structureType, Board.getChunks());
          
-         if (canPlaceItem(placeInfo.position, placeInfo.rotation, item, structureType, false)) {
+         if (placeInfo.isValid) {
             Client.sendItemUsePacket();
             useInfo.lastAttackTicks = Board.ticks;
          }
@@ -951,20 +737,7 @@ const itemRightClickUp = (item: Item, isOffhand: boolean): void => {
          }
 
          // @Incomplete: Don't play if bow didn't actually fire an arrow
-         switch (item.type) {
-            case ItemType.wooden_bow: {
-               playSound("bow-fire.mp3", 0.4, 1, Player.instance!.position.x, Player.instance!.position.y);
-               break;
-            }
-            case ItemType.reinforced_bow: {
-               playSound("reinforced-bow-fire.mp3", 0.2, 1, Player.instance!.position.x, Player.instance!.position.y);
-               break;
-            }
-            case ItemType.ice_bow: {
-               playSound("ice-bow-fire.mp3", 0.4, 1, Player.instance!.position.x, Player.instance!.position.y);
-               break;
-            }
-         }
+         playBowFireSound(Player.instance!, item.type);
 
          break;
       }
@@ -1054,7 +827,7 @@ const tickItem = (item: Item, itemSlot: number): void => {
             position: placeInfo.position,
             rotation: placeInfo.rotation,
             ghostType: ENTITY_TYPE_TO_GHOST_TYPE_MAP[placeInfo.entityType],
-            tint: canPlaceItem(placeInfo.position, placeInfo.rotation, item, structureType, false) ? [1, 1, 1] : [1.5, 0.5, 0.5],
+            tint: placeInfo.isValid ? [1, 1, 1] : [1.5, 0.5, 0.5],
             opacity: 0.5
          };
          setGhostInfo(ghostInfo);

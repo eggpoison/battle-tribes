@@ -1,4 +1,4 @@
-import { ItemType, Item, ITEM_INFO_RECORD, itemInfoIsTool } from "webgl-test-shared/dist/items";
+import { ItemType, Item, ITEM_INFO_RECORD, itemInfoIsTool } from "webgl-test-shared/dist/items/items";
 import { Settings } from "webgl-test-shared/dist/settings";
 
 let nextAvailableID = 0;

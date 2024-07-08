@@ -1,23 +1,21 @@
-import { Inventory, ItemType } from "webgl-test-shared/dist/items";
-import { getItemTypeImage } from "../../../client-item-info";
-import { leftClickItemSlot, rightClickItemSlot } from "../../../inventory-manipulation";
-import ItemSlot from "./ItemSlot";
-
-export interface ItemSlotLeftClickCallbackInfo {
-   readonly itemType: ItemType | null;
-}
+import { Inventory } from "webgl-test-shared/dist/items/items";
+import ItemSlot, { ItemSlotCallbackInfo } from "./ItemSlot";
 
 interface InventoryProps {
    readonly entityID: number;
    readonly inventory: Inventory;
    readonly className?: string;
+   itemSlotClassNameCallback?(callbackInfo: ItemSlotCallbackInfo): string | undefined;
    readonly selectedItemSlot?: number;
    readonly isBordered?: boolean;
-   /** If defined, calls this function instead of the leftClickItemSlot function */
-   onLeftClick?(e: MouseEvent, callbackInfo: ItemSlotLeftClickCallbackInfo): void;
+   readonly isManipulable?: boolean;
+   onMouseDown?(e: MouseEvent, callbackInfo: ItemSlotCallbackInfo): void;
+   onMouseOver?(e: MouseEvent, callbackInfo: ItemSlotCallbackInfo): void;
+   onMouseMove?: (e: MouseEvent) => void;
+   onMouseOut?(): void;
 }
 
-const InventoryContainer = ({ entityID, inventory, className, selectedItemSlot, isBordered, onLeftClick }: InventoryProps) => {
+const InventoryContainer = ({ entityID, inventory, className, itemSlotClassNameCallback, selectedItemSlot, isBordered, isManipulable = true, onMouseDown, onMouseOver, onMouseOut, onMouseMove }: InventoryProps) => {
    const itemSlots = new Array<JSX.Element>();
 
    for (let y = 0; y < inventory.height; y++) {
@@ -26,26 +24,25 @@ const InventoryContainer = ({ entityID, inventory, className, selectedItemSlot, 
          const itemSlot = y * inventory.width + x + 1;
          const item = inventory.itemSlots[itemSlot];
 
-         let leftClickFunc: (e: MouseEvent) => void;
-         if (typeof onLeftClick !== "undefined") {
-            const callbackInfo: ItemSlotLeftClickCallbackInfo = {
-               itemType: typeof item !== "undefined" ? item.type : null
-            };
-            leftClickFunc = (e: MouseEvent) => onLeftClick(e, callbackInfo);
-         } else {
-            leftClickFunc = (e: MouseEvent) => leftClickItemSlot(e, entityID, inventory, itemSlot);
+         const callbackInfo: ItemSlotCallbackInfo = {
+            itemType: typeof item !== "undefined" ? item.type : null,
+            itemSlot: itemSlot
+         };
+
+         let leftClickFunc: ((e: MouseEvent) => void) | undefined;
+         if (typeof onMouseDown !== "undefined") {
+            leftClickFunc = (e: MouseEvent) => onMouseDown(e, callbackInfo);
          }
 
-         const isSelected = typeof selectedItemSlot !== "undefined" && itemSlot=== selectedItemSlot;
-         if (typeof item !== "undefined") {
-            rowItemSlots.push(
-               <ItemSlot key={x} onClick={leftClickFunc} onContextMenu={e => rightClickItemSlot(e, entityID, inventory, itemSlot)} picturedItemImageSrc={getItemTypeImage(item.type)} itemCount={item.count} isSelected={isSelected} />
-            );
-         } else {
-            rowItemSlots.push(
-               <ItemSlot key={x} onClick={leftClickFunc} onContextMenu={e => rightClickItemSlot(e, entityID, inventory, itemSlot)} isSelected={isSelected} />
-            );
+         let className: string | undefined;
+         if (typeof itemSlotClassNameCallback !== "undefined") {
+            className = itemSlotClassNameCallback(callbackInfo);
          }
+
+         const isSelected = typeof selectedItemSlot !== "undefined" && itemSlot === selectedItemSlot;
+         rowItemSlots.push(
+            <ItemSlot key={x} className={className} entityID={entityID} inventory={inventory} itemSlot={itemSlot} isManipulable={isManipulable} isSelected={isSelected} onMouseDown={leftClickFunc} onMouseOver={onMouseOver} onMouseOut={onMouseOut} onMouseMove={onMouseMove} />
+         );
       }
       
       itemSlots.push(
@@ -59,6 +56,7 @@ const InventoryContainer = ({ entityID, inventory, className, selectedItemSlot, 
    if (typeof className !== "undefined") {
       resultingClassName += " " + className;
    }
+   // @Cleanup: Is this used?
    if (isBordered) {
       resultingClassName += " bordered";
    }

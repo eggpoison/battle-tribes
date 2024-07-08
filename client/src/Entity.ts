@@ -2,13 +2,11 @@ import { Point, distance, randFloat, randInt, rotateXAroundOrigin, rotateYAround
 import { EntityType, EntityTypeString } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { TileType } from "webgl-test-shared/dist/tiles";
-import { EntityData, HitData, HitFlags, HitboxCollisionType, RIVER_STEPPING_STONE_SIZES } from "webgl-test-shared/dist/client-server-types";
+import { EntityData, HitData, HitFlags, RIVER_STEPPING_STONE_SIZES } from "webgl-test-shared/dist/client-server-types";
 import { ComponentData, ServerComponentType, ServerComponentTypeString } from "webgl-test-shared/dist/components";
 import RenderPart, { RenderObject } from "./render-parts/RenderPart";
 import Chunk from "./Chunk";
-import RectangularHitbox from "./hitboxes/RectangularHitbox";
 import { Tile } from "./Tile";
-import CircularHitbox from "./hitboxes/CircularHitbox";
 import Board from "./Board";
 import { createHealingParticle, createSlimePoolParticle, createSparkParticle, createWaterSplashParticle } from "./particles";
 import { playSound } from "./sound";
@@ -16,22 +14,19 @@ import ServerComponent from "./entity-components/ServerComponent";
 import { ClientComponentClass, ClientComponentType, ClientComponents, ServerComponentClass, createComponent } from "./entity-components/components";
 import Component from "./entity-components/Component";
 import { removeLightsAttachedToEntity, removeLightsAttachedToRenderPart } from "./lights";
-import { EntityEvent } from "webgl-test-shared/dist/entity-events";
-import { Hitbox, hitboxIsCircular } from "./hitboxes/hitboxes";
+import { hitboxIsCircular, Hitbox, CircularHitbox, RectangularHitbox, updateHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
+import { createCircularHitboxFromData, createRectangularHitboxFromData } from "./client/Client";
+import { RenderPartOverlayGroup } from "./rendering/webgl/overlay-rendering";
+import { removeRenderable } from "./rendering/render-loop";
+import { collide, resolveWallTileCollisions } from "./collision";
+import { COLLISION_BITS } from "webgl-test-shared/dist/collision";
+import { latencyGameState } from "./game-state/game-states";
+import Player from "./entities/Player";
+import { keyIsPressed } from "./keyboard-input";
+import { processTickEvents } from "./entity-tick-events";
 
 // Use prime numbers / 100 to ensure a decent distribution of different types of particles
 const HEALING_PARTICLE_AMOUNTS = [0.05, 0.37, 1.01];
-
-// @Cleanup: Move frame progress stuff to a different file
-
-let frameProgress = Number.EPSILON;
-export function setFrameProgress(newFrameProgress: number): void {
-   frameProgress = newFrameProgress;
-}
-
-export function getFrameProgress(): number {
-   return frameProgress;
-}
 
 // @Cleanup: copy and paste from server
 export function getRandomPointInEntity(entity: Entity): Point {
@@ -48,9 +43,8 @@ export function getRandomPointInEntity(entity: Entity): Point {
       const xOffset = randFloat(-halfWidth, halfWidth);
       const yOffset = randFloat(-halfHeight, halfHeight);
 
-      const hitboxRotation = hitbox.rotation;
-      const x = entity.position.x + rotateXAroundOrigin(xOffset, yOffset, entity.rotation + hitboxRotation);
-      const y = entity.position.y + rotateYAroundOrigin(xOffset, yOffset, entity.rotation + hitboxRotation);
+      const x = entity.position.x + rotateXAroundOrigin(xOffset, yOffset, hitbox.rotation);
+      const y = entity.position.y + rotateYAroundOrigin(xOffset, yOffset, hitbox.rotation);
       return new Point(x, y);
    }
 }
@@ -84,7 +78,7 @@ abstract class Entity<T extends EntityType = EntityType> extends RenderObject {
    public readonly allRenderParts = new Array<RenderPart>();
 
    public hitboxes = new Array<Hitbox>();
-   public readonly hitboxHalfDiagonalLength?: number;
+   public readonly hitboxLocalIDs = new Array<number>();
    
    public chunks = new Set<Chunk>();
 
@@ -104,6 +98,8 @@ abstract class Entity<T extends EntityType = EntityType> extends RenderObject {
    private readonly clientComponents: ClientComponentsType = {};
    private readonly tickableComponents = new Array<Component>();
    private readonly updateableComponents = new Array<Component>();
+
+   public readonly renderPartOverlayGroups = new Array<RenderPartOverlayGroup>();
 
    constructor(position: Point, id: number, entityType: T, ageTicks: number) {
       super();
@@ -142,7 +138,7 @@ abstract class Entity<T extends EntityType = EntityType> extends RenderObject {
       throw new Error("No render part with tag '" + tag + "' could be found on entity type " + EntityTypeString[this.type]);
    }
 
-   public getRenderParts(tag: string, expectedAmount?: number): ReadonlyArray<RenderPart> {
+   public getRenderParts(tag: string, expectedAmount?: number): Array<RenderPart> {
       const renderParts = new Array<RenderPart>();
       for (let i = 0; i < this.allRenderParts.length; i++) {
          const renderPart = this.allRenderParts[i];
@@ -157,6 +153,15 @@ abstract class Entity<T extends EntityType = EntityType> extends RenderObject {
       }
       
       return renderParts;
+   }
+
+   public removeOverlayGroup(overlayGroup: RenderPartOverlayGroup): void {
+      const idx = this.renderPartOverlayGroups.indexOf(overlayGroup);
+      if (idx !== -1) {
+         this.renderPartOverlayGroups.splice(idx, 1);
+      }
+      
+      removeRenderable(overlayGroup);
    }
 
    public callOnLoadFunctions(): void {
@@ -261,16 +266,10 @@ abstract class Entity<T extends EntityType = EntityType> extends RenderObject {
       this.allRenderParts.splice(this.allRenderParts.indexOf(renderPart), 1);
    }
 
-   public addCircularHitbox(hitbox: CircularHitbox): void {
+   public addHitbox(hitbox: Hitbox, localID: number): void {
+      updateHitbox(hitbox, this.position.x, this.position.y, this.rotation);
       this.hitboxes.push(hitbox);
-      hitbox.updateFromEntity(this);
-      hitbox.updateHitboxBounds();
-   }
-
-   public addRectangularHitbox(hitbox: RectangularHitbox): void {
-      this.hitboxes.push(hitbox);
-      hitbox.updateFromEntity(this);
-      hitbox.updateHitboxBounds(this.rotation);
+      this.hitboxLocalIDs.push(localID);
    }
 
    public remove(): void {
@@ -327,7 +326,15 @@ abstract class Entity<T extends EntityType = EntityType> extends RenderObject {
    public update(): void {
       this.ageTicks++;
       
-      this.resolveBorderCollisions();
+      if (this.hasServerComponent(ServerComponentType.physics)) {
+         // Don't resolve wall tile collisions in lightspeed mode
+         if (Player.instance === null || this.id !== Player.instance.id || !keyIsPressed("l")) { 
+            resolveWallTileCollisions(this);
+         }
+
+         this.resolveGameObjectCollisions();
+         this.resolveBorderCollisions();
+      }
       this.updateCurrentTile();
       this.updateHitboxes();
       this.updateContainingChunks();
@@ -358,18 +365,89 @@ abstract class Entity<T extends EntityType = EntityType> extends RenderObject {
       return true;
    }
 
-   // @Cleanup: Should this be protected?
-   protected resolveBorderCollisions(): void {
-      if (this.position.x < 0) {
-         this.position.x = 0;
-      } else if (this.position.x >= Settings.BOARD_DIMENSIONS * Settings.TILE_SIZE) {
-         this.position.x = Settings.BOARD_DIMENSIONS * Settings.TILE_SIZE - 1;
+   private resolveBorderCollisions(): void {
+      // @Hack
+      if (!this.hasServerComponent(ServerComponentType.physics)) {
+         return;
       }
-      if (this.position.y < 0) {
-         this.position.y = 0;
-      } else if (this.position.y >= Settings.BOARD_DIMENSIONS * Settings.TILE_SIZE) {
-         this.position.y = Settings.BOARD_DIMENSIONS * Settings.TILE_SIZE - 1;
+      
+      const physicsComponent = this.getServerComponent(ServerComponentType.physics);
+
+      for (const hitbox of this.hitboxes) {
+         const minX = hitbox.calculateHitboxBoundsMinX();
+         const maxX = hitbox.calculateHitboxBoundsMaxX();
+         const minY = hitbox.calculateHitboxBoundsMinY();
+         const maxY = hitbox.calculateHitboxBoundsMaxY();
+
+         // Left wall
+         if (minX < 0) {
+            this.position.x -= minX;
+            physicsComponent.velocity.x = 0;
+            // Right wall
+         } else if (maxX > Settings.BOARD_UNITS) {
+            this.position.x -= maxX - Settings.BOARD_UNITS;
+            physicsComponent.velocity.x = 0;
+         }
+         
+         // Bottom wall
+         if (minY < 0) {
+            this.position.y -= minY;
+            physicsComponent.velocity.y = 0;
+            // Top wall
+         } else if (maxY > Settings.BOARD_UNITS) {
+            this.position.y -= maxY - Settings.BOARD_UNITS;
+            physicsComponent.velocity.y = 0;
+         }
       }
+   }
+   
+   private resolveGameObjectCollisions(): void {
+      const potentialCollidingEntities = this.getPotentialCollidingEntities();
+
+      this.collidingEntities = [];
+
+      for (let i = 0; i < potentialCollidingEntities.length; i++) {
+         const entity = potentialCollidingEntities[i];
+
+         // If the two entities are exactly on top of each other, don't do anything
+         if (entity.position.x === this.position.x && entity.position.y === this.position.y) {
+            continue;
+         }
+
+         for (const hitbox of this.hitboxes) {
+            for (const otherHitbox of entity.hitboxes) {
+               if (hitbox.isColliding(otherHitbox)) {
+                  if (!this.collidingEntities.includes(entity)) {
+                     this.collidingEntities.push(entity);
+                  }
+                  
+                  if ((entity.collisionMask & this.collisionBit) !== 0 && (this.collisionMask & entity.collisionBit) !== 0) {
+                     collide(this, hitbox, otherHitbox);
+                  } else {
+                     // @Hack
+                     if (entity.collisionBit === COLLISION_BITS.plants) {
+                        latencyGameState.lastPlantCollisionTicks = Board.ticks;
+                     }
+                     break;
+                  }
+               }
+            }
+         }
+      }
+   }
+
+   private getPotentialCollidingEntities(): ReadonlyArray<Entity> {
+      const entities = new Array<Entity>();
+
+      for (const chunk of this.chunks) {
+         for (const entity of chunk.entities) {
+            if (entity !== this) {
+               entities.push(entity);
+            }
+         }
+      }
+
+      return entities;
    }
 
    private updateCurrentTile(): void {
@@ -389,10 +467,15 @@ abstract class Entity<T extends EntityType = EntityType> extends RenderObject {
       
       // Find containing chunks
       for (const hitbox of this.hitboxes) {
-         const minChunkX = Math.max(Math.min(Math.floor(hitbox.bounds[0] / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
-         const maxChunkX = Math.max(Math.min(Math.floor(hitbox.bounds[1] / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
-         const minChunkY = Math.max(Math.min(Math.floor(hitbox.bounds[2] / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
-         const maxChunkY = Math.max(Math.min(Math.floor(hitbox.bounds[3] / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
+         const minX = hitbox.calculateHitboxBoundsMinX();
+         const maxX = hitbox.calculateHitboxBoundsMaxX();
+         const minY = hitbox.calculateHitboxBoundsMinY();
+         const maxY = hitbox.calculateHitboxBoundsMaxY();
+
+         const minChunkX = Math.max(Math.min(Math.floor(minX / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
+         const maxChunkX = Math.max(Math.min(Math.floor(maxX / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
+         const minChunkY = Math.max(Math.min(Math.floor(minY / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
+         const maxChunkY = Math.max(Math.min(Math.floor(maxY / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
          
          for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
             for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
@@ -419,7 +502,8 @@ abstract class Entity<T extends EntityType = EntityType> extends RenderObject {
       }
    }
 
-   public updateRenderPosition(): void {
+   // @Cleanup: remove
+   public updateRenderPosition(frameProgress: number): void {
       this.renderPosition.x = this.position.x;
       this.renderPosition.y = this.position.y;
 
@@ -440,8 +524,7 @@ abstract class Entity<T extends EntityType = EntityType> extends RenderObject {
 
    private updateHitboxes(): void {
       for (const hitbox of this.hitboxes) {
-         hitbox.updateFromEntity(this);
-         hitbox.updateHitboxBounds(this.rotation);
+         updateHitbox(hitbox, this.position.x, this.position.y, this.rotation);
       }
    }
 
@@ -454,17 +537,6 @@ abstract class Entity<T extends EntityType = EntityType> extends RenderObject {
       this.rotation = data.rotation;
       this.ageTicks = data.ageTicks;
 
-      for (let i = 0; i < data.tickEvents.length; i++) {
-         const event = data.tickEvents[i];
-
-         switch (event) {
-            case EntityEvent.cowFart: {
-               playSound("fart.mp3", 0.3, randFloat(0.9, 1.2), this.position.x, this.position.y);
-               break;
-            }
-         }
-      }
-
       // 
       // Update hitboxes
       // 
@@ -472,19 +544,20 @@ abstract class Entity<T extends EntityType = EntityType> extends RenderObject {
       // Remove hitboxes which are no longer exist
       for (let i = 0; i < this.hitboxes.length; i++) {
          const hitbox = this.hitboxes[i];
+         const localID = this.hitboxLocalIDs[i];
 
          // @Speed
          let localIDExists = false;
          for (let j = 0; j < data.circularHitboxes.length; j++) {
             const hitboxData = data.circularHitboxes[j];
-            if (hitboxData.localID === hitbox.localID) {
+            if (hitboxData.localID === localID) {
                localIDExists = true;
                break;
             }
          }
          for (let j = 0; j < data.rectangularHitboxes.length; j++) {
             const hitboxData = data.rectangularHitboxes[j];
-            if (hitboxData.localID === hitbox.localID) {
+            if (hitboxData.localID === localID) {
                localIDExists = true;
                break;
             }
@@ -492,6 +565,7 @@ abstract class Entity<T extends EntityType = EntityType> extends RenderObject {
 
          if (!localIDExists) {
             this.hitboxes.splice(i, 1);
+            this.hitboxLocalIDs.splice(i, 1);
             i--;
          }
       }
@@ -499,6 +573,7 @@ abstract class Entity<T extends EntityType = EntityType> extends RenderObject {
       for (let i = 0; i < data.circularHitboxes.length; i++) {
          const hitboxData = data.circularHitboxes[i];
 
+         // Check for an existing hitbox
          // @Speed
          let existingHitboxIdx = 99999;
          for (let j = 0; j < this.hitboxes.length; j++) {
@@ -506,8 +581,9 @@ abstract class Entity<T extends EntityType = EntityType> extends RenderObject {
             if (!hitbox.hasOwnProperty("radius")) {
                continue;
             }
-            
-            if (hitbox.localID === hitboxData.localID) {
+
+            const localID = this.hitboxLocalIDs[j];
+            if (localID === hitboxData.localID) {
                existingHitboxIdx = j;
                break;
             }
@@ -520,18 +596,19 @@ abstract class Entity<T extends EntityType = EntityType> extends RenderObject {
             hitbox.radius = hitboxData.radius;
             hitbox.offset.x = hitboxData.offsetX;
             hitbox.offset.y = hitboxData.offsetY;
-            hitbox.collisionType = hitboxData.collisionType as unknown as HitboxCollisionType;
-            hitbox.updateFromEntity(this);
-            hitbox.updateHitboxBounds();
+            hitbox.collisionType = hitboxData.collisionType;
+            updateHitbox(hitbox, this.position.x, this.position.y, this.rotation);
          } else {
             // Create new hitbox
-            hitbox = new CircularHitbox(hitboxData.mass, hitboxData.offsetX, hitboxData.offsetY, hitboxData.collisionType as unknown as HitboxCollisionType, hitboxData.localID, hitboxData.radius);
-            this.addCircularHitbox(hitbox);
+            hitbox = createCircularHitboxFromData(hitboxData);
+            this.addHitbox(hitbox, hitboxData.localID);
          }
       }
+      // @Cleanup: Copy and paste
       for (let i = 0; i < data.rectangularHitboxes.length; i++) {
          const hitboxData = data.rectangularHitboxes[i];
 
+         // Check for an existing hitbox
          // @Speed
          let existingHitboxIdx = 99999;
          for (let j = 0; j < this.hitboxes.length; j++) {
@@ -540,7 +617,8 @@ abstract class Entity<T extends EntityType = EntityType> extends RenderObject {
                continue;
             }
             
-            if (hitbox.localID === hitboxData.localID) {
+            const localID = this.hitboxLocalIDs[j];
+            if (localID === hitboxData.localID) {
                existingHitboxIdx = j;
                break;
             }
@@ -552,16 +630,15 @@ abstract class Entity<T extends EntityType = EntityType> extends RenderObject {
             hitbox = this.hitboxes[existingHitboxIdx] as RectangularHitbox;
             hitbox.width = hitboxData.width;
             hitbox.height = hitboxData.height;
-            hitbox.rotation = hitboxData.rotation;
+            hitbox.relativeRotation = hitboxData.rotation;
             hitbox.offset.x = hitboxData.offsetX;
             hitbox.offset.y = hitboxData.offsetY;
             hitbox.collisionType = hitboxData.collisionType;
-            hitbox.updateFromEntity(this);
-            hitbox.updateHitboxBounds(this.rotation);
+            updateHitbox(hitbox, this.position.x, this.position.y, this.rotation);
          } else {
             // Create new hitbox
-            hitbox = new RectangularHitbox(hitboxData.mass, hitboxData.offsetX, hitboxData.offsetY, hitboxData.collisionType as unknown as HitboxCollisionType, hitboxData.localID, hitboxData.width, hitboxData.height, hitboxData.rotation);
-            this.addRectangularHitbox(hitbox);
+            hitbox = createRectangularHitboxFromData(hitboxData);
+            this.addHitbox(hitbox, hitboxData.localID);
          }
       }
 
@@ -574,11 +651,16 @@ abstract class Entity<T extends EntityType = EntityType> extends RenderObject {
       const containingChunks = new Set<Chunk>();
 
       for (const hitbox of this.hitboxes) {
+         const minX = hitbox.calculateHitboxBoundsMinX();
+         const maxX = hitbox.calculateHitboxBoundsMaxX();
+         const minY = hitbox.calculateHitboxBoundsMinY();
+         const maxY = hitbox.calculateHitboxBoundsMaxY();
+
          // Recalculate the game object's containing chunks based on the new hitbox bounds
-         const minChunkX = Math.max(Math.min(Math.floor(hitbox.bounds[0] / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
-         const maxChunkX = Math.max(Math.min(Math.floor(hitbox.bounds[1] / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
-         const minChunkY = Math.max(Math.min(Math.floor(hitbox.bounds[2] / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
-         const maxChunkY = Math.max(Math.min(Math.floor(hitbox.bounds[3] / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
+         const minChunkX = Math.max(Math.min(Math.floor(minX / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
+         const maxChunkX = Math.max(Math.min(Math.floor(maxX / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
+         const minChunkY = Math.max(Math.min(Math.floor(minY / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
+         const maxChunkY = Math.max(Math.min(Math.floor(maxY / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
          
          for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
             for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {

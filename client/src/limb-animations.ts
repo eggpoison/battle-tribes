@@ -1,17 +1,17 @@
-import { ConsumableItemInfo, ITEM_INFO_RECORD, ItemType } from "webgl-test-shared/dist/items";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { Point, customTickIntervalHasPassed, lerp, randFloat, randInt, randItem, rotateXAroundOrigin, rotateYAroundOrigin } from "webgl-test-shared/dist/utils";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { getItemRecipe } from "webgl-test-shared/dist/crafting-recipes";
 import { LimbAction } from "webgl-test-shared/dist/entities";
 import RenderPart from "./render-parts/RenderPart";
 import { LimbInfo } from "./entity-components/InventoryUseComponent";
-import { getTextureArrayIndex } from "./texture-atlases/entity-texture-atlas";
+import { getTextureArrayIndex } from "./texture-atlases/texture-atlases";
 import CLIENT_ITEM_INFO_RECORD from "./client-item-info";
-import { ParticleColour } from "./rendering/particle-rendering";
+import { ParticleColour } from "./rendering/webgl/particle-rendering";
 import { createColouredParticle, createSawdustCloud } from "./particles";
 import Entity from "./Entity";
 import Board from "./Board";
+import { getItemRecipe } from "webgl-test-shared/dist/items/crafting-recipes";
+import { ItemType, ITEM_INFO_RECORD, ConsumableItemInfo } from "webgl-test-shared/dist/items/items";
 
 enum CustomItemState {
    usingMedicine,

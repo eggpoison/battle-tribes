@@ -1,12 +1,11 @@
 import { BlueprintType, BuildingMaterial, ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityType, EntityTypeString } from "webgl-test-shared/dist/entities";
-import { ItemType } from "webgl-test-shared/dist/items";
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { deselectSelectedEntity, getSelectedEntityID } from "../../entity-selection";
 import Board from "../../Board";
 import Camera from "../../Camera";
 import Client from "../../client/Client";
-import { GhostInfo, GhostType, PARTIAL_OPACITY, setGhostInfo } from "../../rendering/entity-ghost-rendering";
+import { GhostInfo, GhostType, PARTIAL_OPACITY, setGhostInfo } from "../../rendering/webgl/entity-ghost-rendering";
 import { getItemTypeImage } from "../../client-item-info";
 import Entity from "../../Entity";
 import { definiteGameState, playerIsHoldingHammer } from "../../game-state/game-states";
@@ -14,7 +13,8 @@ import { countItemTypesInInventory } from "../../inventory-manipulation";
 import { playSound } from "../../sound";
 import Player from "../../entities/Player";
 import Game from "../../Game";
-import { setMenuCloseFunction } from "../../player-input";
+import { ItemType } from "webgl-test-shared/dist/items/items";
+import { addMenuCloseFunction } from "../../menus";
 
 /*
 // @Incomplete
@@ -427,7 +427,7 @@ const BuildMenu = () => {
          setGhostInfo(null);
          return;
       }
-      setMenuCloseFunction(() => {
+      addMenuCloseFunction(() => {
          setBuildingID(0);
 
          // Deselect structure

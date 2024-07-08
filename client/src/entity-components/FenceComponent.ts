@@ -2,7 +2,7 @@ import { FenceComponentData, ServerComponentType } from "webgl-test-shared/dist/
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import RenderPart from "../render-parts/RenderPart";
-import { getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
+import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 
 type RailBit = 0b0001 | 0b0010 | 0b0100 | 0b1000;
 

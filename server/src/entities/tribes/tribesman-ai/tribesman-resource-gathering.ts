@@ -1,5 +1,4 @@
 import { EntityType, LimbAction } from "webgl-test-shared/dist/entities";
-import { InventoryName, ItemType } from "webgl-test-shared/dist/items";
 import Entity from "../../../Entity";
 import { HealthComponent, HealthComponentArray } from "../../../components/HealthComponent";
 import { VACUUM_RANGE, tribeMemberCanPickUpItem } from "../tribe-member";
@@ -8,26 +7,15 @@ import { PlanterBoxPlant, TribesmanAIType } from "webgl-test-shared/dist/compone
 import { PlantComponentArray, plantIsFullyGrown } from "../../../components/PlantComponent";
 import { TribeComponentArray } from "../../../components/TribeComponent";
 import { tribesmanShouldEscape } from "./tribesman-escaping";
-import { getTribesmanRadius, pathfindToPosition, positionIsSafeForTribesman } from "./tribesman-ai-utils";
+import { clearTribesmanPath, getTribesmanRadius, pathfindToPosition, positionIsSafeForTribesman } from "./tribesman-ai-utils";
 import { ItemComponentArray } from "../../../components/ItemComponent";
 import { PathfindingSettings } from "webgl-test-shared/dist/settings";
 import { InventoryUseComponentArray, setLimbActions } from "../../../components/InventoryUseComponent";
 import { TribesmanAIComponentArray, TribesmanPathType } from "../../../components/TribesmanAIComponent";
 import { PathfindFailureDefault } from "../../../pathfinding";
-
-// Goal: find which items should be used to gather a resource
-
-const RESOURCE_PRODUCT_TO_ENTITY_RECORD: Partial<Record<ItemType, ReadonlyArray<EntityType>>> = {
-   [ItemType.leather]: [EntityType.cow, EntityType.krumblid],
-   [ItemType.raw_beef]: [EntityType.cow, EntityType.yeti],
-   [ItemType.berry]: [EntityType.berryBush],
-   [ItemType.wood]: [EntityType.tree],
-   [ItemType.seed]: [EntityType.tree],
-   [ItemType.frostcicle]: [EntityType.iceSpikes],
-   [ItemType.cactus_spine]: [EntityType.cactus],
-   [ItemType.rock]: [EntityType.boulder],
-   [ItemType.yeti_hide]: [EntityType.yeti]
-};
+import { ItemType, InventoryName } from "webgl-test-shared/dist/items/items";
+import { AIHelperComponentArray } from "../../../components/AIHelperComponent";
+import { huntEntity } from "./tribesman-combat-ai";
 
 const getResourceProducts = (entity: Entity): ReadonlyArray<ItemType> => {
    switch (entity.type) {
@@ -51,6 +39,7 @@ const getResourceProducts = (entity: Entity): ReadonlyArray<ItemType> => {
             }
          }
       }
+      case EntityType.slime: return [ItemType.slimeball];
       default: return [];
    }
 }
@@ -88,6 +77,8 @@ const shouldGatherPlant = (plantID: number): boolean => {
    }
 }
 
+// @Incomplete: when the tribesman wants to gather a resource but there isn't enough space, should make space
+
 const shouldGatherResource = (tribesman: Entity, healthComponent: HealthComponent, inventoryIsFull: boolean, resource: Entity, resourceProducts: ReadonlyArray<ItemType>): boolean => {
    if (resourceProducts.length === 0) {
       return false;
@@ -105,15 +96,15 @@ const shouldGatherResource = (tribesman: Entity, healthComponent: HealthComponen
       return false;
    }
 
-   // If the tribesman's inventory is full, make sure the tribesman would be able to pick up the product the resource would produce
+   // If the tribesman's inventory is full, make sure the tribesman would be able to pick up the products the resource would produce
    if (inventoryIsFull) {
+      // If any of the resource products can't be picked up, don't try to gather.
+      // This is so the tribesmen don't leave un-picked-up items laying around.
       for (const itemType of resourceProducts) {
-         if (tribeMemberCanPickUpItem(tribesman, itemType)) {
-            return true;
+         if (!tribeMemberCanPickUpItem(tribesman, itemType)) {
+            return false;
          }
       }
-
-      return false;
    }
 
    return true;
@@ -224,9 +215,33 @@ export function tribesmanGoPickupItemEntity(tribesman: Entity, pickupTarget: Ent
    // pathfindToPosition(tribesman, closestDroppedItem.position.x, closestDroppedItem.position.y, closestDroppedItem.id, TribesmanPathType.default, Math.floor(32 / PathfindingSettings.NODE_SEPARATION), PathfindFailureDefault.throwError);
    pathfindToPosition(tribesman, pickupTarget.position.x, pickupTarget.position.y, pickupTarget.id, TribesmanPathType.default, Math.floor((32 + VACUUM_RANGE) / PathfindingSettings.NODE_SEPARATION), PathfindFailureDefault.returnClosest);
 
+   clearTribesmanPath(tribesman);
+   
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman.id);
    setLimbActions(inventoryUseComponent, LimbAction.none);
    
    const tribesmanAIComponent = TribesmanAIComponentArray.getComponent(tribesman.id);
    tribesmanAIComponent.currentAIType = TribesmanAIType.pickingUpDroppedItems;
+}
+
+/** Gathers the specified item types. If the array is empty, gathers everything possible. */
+export function gatherResources(tribesman: Entity, gatheredItemTypes: ReadonlyArray<ItemType>, visibleItemEntities: ReadonlyArray<Entity>): boolean {
+   const aiHelperComponent = AIHelperComponentArray.getComponent(tribesman.id);
+   
+   const gatherTargetInfo = getGatherTarget(tribesman, aiHelperComponent.visibleEntities, gatheredItemTypes);
+   
+   // Pick up dropped items
+   const pickupTarget = tribesmanGetItemPickupTarget(tribesman, visibleItemEntities, gatheredItemTypes, gatherTargetInfo);
+   if (pickupTarget !== null) {
+      tribesmanGoPickupItemEntity(tribesman, pickupTarget);
+      return true;
+   }
+
+   // Gather resources
+   if (gatherTargetInfo.target !== null) {
+      huntEntity(tribesman, gatherTargetInfo.target, false);
+      return true;
+   }
+
+   return false;
 }

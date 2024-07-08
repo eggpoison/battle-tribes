@@ -1,6 +1,5 @@
 import { BlueprintType, BuildingMaterial, BlueprintComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
-import { EntityType, EntityTypeString } from "webgl-test-shared/dist/entities";
-import { Item, ITEM_INFO_RECORD, HammerItemInfo } from "webgl-test-shared/dist/items";
+import { EntityID, EntityType, EntityTypeString } from "webgl-test-shared/dist/entities";
 import Entity from "../Entity";
 import { ComponentArray } from "./ComponentArray";
 import { DOOR_HEALTHS, createDoor } from "../entities/structures/door";
@@ -21,6 +20,7 @@ import { HealthComponentArray } from "./HealthComponent";
 import { TribeComponentArray } from "./TribeComponent";
 import { BuildingMaterialComponentArray } from "./BuildingMaterialComponent";
 import { HutComponentArray } from "./HutComponent";
+import { Item, ITEM_INFO_RECORD, HammerItemInfo } from "webgl-test-shared/dist/items/items";
 
 const STRUCTURE_WORK_REQUIRED: Record<BlueprintType, number> = {
    [BlueprintType.woodenDoor]: 3,
@@ -44,10 +44,10 @@ const STRUCTURE_WORK_REQUIRED: Record<BlueprintType, number> = {
 export class BlueprintComponent {
    public readonly blueprintType: BlueprintType;
    public workProgress = 0;
-   public associatedEntityID: number;
-   public readonly virtualEntityID: number;
+   public associatedEntityID: EntityID;
+   public readonly virtualEntityID: EntityID;
 
-   constructor(shapeType: BlueprintType, associatedEntityID: number, virtualEntityID: number) {
+   constructor(shapeType: BlueprintType, associatedEntityID: EntityID, virtualEntityID: EntityID) {
       this.blueprintType = shapeType;
       this.associatedEntityID = associatedEntityID;
       this.virtualEntityID = virtualEntityID;
@@ -60,7 +60,7 @@ export const BlueprintComponentArray = new ComponentArray<ServerComponentType.bl
    serialise: serialise
 });
 
-function onJoin(entityID: number): void {
+function onJoin(entityID: EntityID): void {
    const tribeComponent = TribeComponentArray.getComponent(entityID);
    const blueprintComponent = BlueprintComponentArray.getComponent(entityID);
 
@@ -77,7 +77,7 @@ function onJoin(entityID: number): void {
    }
 }
 
-function onRemove(entityID: number): void {
+function onRemove(entityID: EntityID): void {
    const tribeComponent = TribeComponentArray.getComponent(entityID);
    const blueprintComponent = BlueprintComponentArray.getComponent(entityID);
    tribeComponent.tribe.removeVirtualBuilding(blueprintComponent.virtualEntityID);

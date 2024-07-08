@@ -7,13 +7,14 @@ import Chunk from "./Chunk";
 import { Tile } from "./Tile";
 import Entity from "./Entity";
 import Particle from "./Particle";
-import { highMonocolourBufferContainer, highTexturedBufferContainer, lowMonocolourBufferContainer, lowTexturedBufferContainer } from "./rendering/particle-rendering";
+import { highMonocolourBufferContainer, highTexturedBufferContainer, lowMonocolourBufferContainer, lowTexturedBufferContainer } from "./rendering/webgl/particle-rendering";
 import ObjectBufferContainer from "./rendering/ObjectBufferContainer";
 import { tempFloat32ArrayLength1 } from "./webgl";
 import Player from "./entities/Player";
 import Fish from "./entities/Fish";
 import { NEIGHBOUR_OFFSETS } from "./utils";
 import RenderPart from "./render-parts/RenderPart";
+import { RenderableType, addRenderable, removeRenderable } from "./rendering/render-loop";
 
 export interface EntityHitboxInfo {
    readonly vertexPositions: readonly [Point, Point, Point, Point];
@@ -194,6 +195,8 @@ abstract class Board {
             }
          }
          this.sortedEntities.splice(idx, 0, entity);
+
+         addRenderable(RenderableType.entity, entity);
       }
    }
 
@@ -201,7 +204,7 @@ abstract class Board {
       if (typeof entity === "undefined") {
          throw new Error("Tried to remove an undefined entity.");
       }
-
+ 
       delete Board.entityRecord[entity.id];
 
       if (isDeath) {
@@ -229,6 +232,8 @@ abstract class Board {
       } else {
          this.sortedEntities.splice(this.sortedEntities.indexOf(entity), 1);
       }
+
+      removeRenderable(entity);
    
       this.numVisibleRenderParts -= entity.allRenderParts.length;
    }

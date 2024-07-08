@@ -1,19 +1,20 @@
-import { BowItemInfo, ITEM_INFO_RECORD, ITEM_TYPE_RECORD, InventoryName, Item, ItemType, itemInfoIsBow, itemInfoIsTool, itemInfoIsUtility } from "webgl-test-shared/dist/items";
 import { EntityType, LimbAction } from "webgl-test-shared/dist/entities";
 import { Point, lerp, randFloat, randItem } from "webgl-test-shared/dist/utils";
 import { InventoryUseComponentData, LimbData, ServerComponentType } from "webgl-test-shared/dist/components";
 import { Settings } from "webgl-test-shared/dist/settings";
 import ServerComponent from "./ServerComponent";
-import Entity, { getFrameProgress } from "../Entity";
+import Entity from "../Entity";
 import RenderPart from "../render-parts/RenderPart";
-import { getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
+import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import Board from "../Board";
 import CLIENT_ITEM_INFO_RECORD from "../client-item-info";
 import Particle from "../Particle";
-import { ParticleColour, ParticleRenderLayer, addMonocolourParticleToBufferContainer } from "../rendering/particle-rendering";
+import { ParticleColour, ParticleRenderLayer, addMonocolourParticleToBufferContainer } from "../rendering/webgl/particle-rendering";
 import { animateLimb, createCraftingAnimationParticles, createMedicineAnimationParticles, generateRandomLimbPosition, updateBandageRenderPart, updateCustomItemRenderPart } from "../limb-animations";
 import { createDeepFrostHeartBloodParticles } from "../particles";
 import { definiteGameState } from "../game-state/game-states";
+import { getFrameProgress } from "../Game";
+import { InventoryName, ItemType, ITEM_TYPE_RECORD, Item, ITEM_INFO_RECORD, itemInfoIsUtility, itemInfoIsBow, BowItemInfo, itemInfoIsTool } from "webgl-test-shared/dist/items/items";
 
 export interface LimbInfo {
    selectedItemSlot: number;

@@ -6,8 +6,8 @@ import RenderPart from "../render-parts/RenderPart";
 import Board from "../Board";
 import { createSnowParticle } from "../particles";
 import Particle from "../Particle";
-import { ParticleRenderLayer, addMonocolourParticleToBufferContainer } from "../rendering/particle-rendering";
-import { getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
+import { ParticleRenderLayer, addMonocolourParticleToBufferContainer } from "../rendering/webgl/particle-rendering";
+import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import Entity, { ComponentDataRecord } from "../Entity";
 
 const getTextureSource = (size: SnowballSize): string => {

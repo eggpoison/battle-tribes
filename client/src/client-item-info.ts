@@ -1,4 +1,4 @@
-import { ItemType } from "webgl-test-shared/dist/items";
+import { ItemType } from "webgl-test-shared/dist/items/items";
 
 export type ClientItemInfo = {
    readonly entityTextureSource: string;

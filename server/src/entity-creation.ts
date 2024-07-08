@@ -28,7 +28,7 @@ export function createEntity(position: Point, entityType: EntityType): Entity {
       case EntityType.cactus: return createCactus(position, 2 * Math.PI * Math.random());
       case EntityType.cow: return createCow(position, 2 * Math.PI * Math.random());
       case EntityType.fish: return createFish(position);
-      case EntityType.frozenYeti: return createFrozenYeti(position);
+      case EntityType.frozenYeti: return createFrozenYeti(position, 2 * Math.PI * Math.random());
       case EntityType.iceSpikes: return createIceSpikes(position, 2 * Math.PI * Math.random());
       case EntityType.krumblid: return createKrumblid(position);
       case EntityType.slime: return createSlime(position, SlimeSize.small, []);
@@ -41,7 +41,7 @@ export function createEntity(position: Point, entityType: EntityType): Entity {
       case EntityType.spitPoison: return createSpitPoison(position, 2 * Math.PI * Math.random());
       case EntityType.golem: return createGolem(position);
       case EntityType.pebblum: return createPebblum(position, 2 * Math.PI * Math.random(), 0);
-      case EntityType.tribeWorker: return createTribeWorker(position, 2 * Math.PI * Math.random(), -1, 0);
+      case EntityType.tribeWorker: return createTribeWorker(position, 2 * Math.PI * Math.random(), -1, 0).entity;
       case EntityType.fence:
       case EntityType.fenceGate:
       case EntityType.plant:

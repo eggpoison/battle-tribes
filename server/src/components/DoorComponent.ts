@@ -1,4 +1,3 @@
-import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
 import { DoorComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
 import { DoorToggleType } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
@@ -6,6 +5,7 @@ import { angle, lerp } from "webgl-test-shared/dist/utils";
 import Entity from "../Entity";
 import { PhysicsComponentArray } from "./PhysicsComponent";
 import { ComponentArray } from "./ComponentArray";
+import { HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
 
 const DOOR_SWING_SPEED = 5 / Settings.TPS;
 

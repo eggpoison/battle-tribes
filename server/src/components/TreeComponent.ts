@@ -35,7 +35,8 @@ function onJoin(entityID: number): void {
       radius: TREE_TRUNK_RADII[treeComponent.treeSize],
       maxBlockAmount: 0.9
    };
-   addGrassBlocker(blocker, entityID);
+   // @Temporary
+   // addGrassBlocker(blocker, entityID);
 }
 
 function serialise(entityID: number): TreeComponentData {

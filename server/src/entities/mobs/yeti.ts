@@ -1,14 +1,11 @@
-import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { EntityType, SnowballSize, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
-import { ItemType } from "webgl-test-shared/dist/items";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { TribeType } from "webgl-test-shared/dist/tribes";
 import { randItem, Point, randFloat, randInt } from "webgl-test-shared/dist/utils";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { Biome } from "webgl-test-shared/dist/tiles";
 import Entity from "../../Entity";
-import CircularHitbox from "../../hitboxes/CircularHitbox";
 import { HealthComponent, HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity, healEntity } from "../../components/HealthComponent";
 import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
 import { WanderAIComponent, WanderAIComponentArray } from "../../components/WanderAIComponent";
@@ -27,6 +24,8 @@ import { ItemComponentArray } from "../../components/ItemComponent";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
 import { SnowballComponentArray } from "../../components/SnowballComponent";
 import { TribeComponentArray } from "../../components/TribeComponent";
+import { CircularHitbox, HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
+import { ItemType } from "webgl-test-shared/dist/items/items";
 
 const MIN_TERRITORY_SIZE = 50;
 const MAX_TERRITORY_SIZE = 100;
@@ -158,7 +157,7 @@ export function yetiSpawnPositionIsValid(positionX: number, positionY: number): 
 export function createYeti(position: Point): Entity {
    const yeti = new Entity(position, 2 * Math.PI * Math.random(), EntityType.yeti, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
-   const hitbox = new CircularHitbox(position, 3, 0, 0, HitboxCollisionType.soft, YETI_SIZE / 2, yeti.getNextHitboxLocalID(), yeti.rotation, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK);
+   const hitbox = new CircularHitbox(3, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, YETI_SIZE / 2);
    yeti.addHitbox(hitbox);
 
    PhysicsComponentArray.addComponent(yeti.id, new PhysicsComponent(0, 0, 0, 0, true, false));
@@ -190,7 +189,7 @@ const throwSnowball = (yeti: Entity, size: SnowballSize, throwAngle: number): vo
       velocityMagnitude = randFloat(...LARGE_SNOWBALL_THROW_SPEED);
    }
 
-   const physicsComponent = snowballCreationInfo.components[ServerComponentType.physics];
+   const physicsComponent = snowballCreationInfo.components[ServerComponentType.physics]!;
    physicsComponent.velocity.x += velocityMagnitude * Math.sin(angle);
    physicsComponent.velocity.y += velocityMagnitude * Math.cos(angle);
 }
@@ -240,7 +239,7 @@ const getYetiTarget = (yeti: Entity, visibleEntities: ReadonlyArray<Entity>): En
       // Don't chase frostlings which aren't attacking the yeti
       if ((entity.type === EntityType.tribeWorker || entity.type === EntityType.tribeWarrior || entity.type === EntityType.player) && !yetiComponent.attackingEntities.hasOwnProperty(entity.id)) {
          const tribeComponent = TribeComponentArray.getComponent(entity.id);
-         if (tribeComponent.tribe.type === TribeType.frostlings) {
+         if (tribeComponent.tribe.tribeType === TribeType.frostlings) {
             continue;
          }
       }

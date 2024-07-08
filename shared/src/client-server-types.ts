@@ -1,10 +1,13 @@
 import { BuildingPlanData, BuildingSafetyData, SafetyNodeData, TribeWallData, WallConnectionData } from "./ai-building-types";
+import { HitboxCollisionBit } from "./collision";
 import { BlueprintType, ComponentData } from "./components";
+import { EntitySummonPacket } from "./dev-packets";
 import { EntityType, LimbAction } from "./entities";
 import { AttackEffectiveness } from "./entity-damage-types";
-import { EntityEvent } from "./entity-events";
+import { EntityTickEvent } from "./entity-events";
 import { GrassBlocker } from "./grass-blockers";
-import { Inventory, InventoryName, ItemType } from "./items";
+import { HitboxCollisionType } from "./hitboxes/hitboxes";
+import { Inventory, InventoryName, ItemType } from "./items/items";
 import { StatusEffect } from "./status-effects";
 import { EnemyTribeData, PlayerTribeData, TechID } from "./techs";
 import { Biome, TileType } from "./tiles";
@@ -39,17 +42,15 @@ export type ServerTileUpdateData = {
    readonly isWall: boolean;
 }
 
-export const enum HitboxCollisionType {
-   soft,
-   hard
-}
-
 export interface BaseHitboxData {
    readonly mass: number;
    readonly offsetX: number;
    readonly offsetY: number;
    readonly collisionType: HitboxCollisionType;
+   readonly collisionBit: HitboxCollisionBit;
+   readonly collisionMask: number;
    readonly localID: number;
+   readonly flags: number;
 }
 
 export interface CircularHitboxData extends BaseHitboxData {
@@ -114,7 +115,6 @@ export interface EntityData<T extends EntityType = EntityType> {
    readonly collisionBit: number;
    readonly collisionMask: number;
    readonly components: ReadonlyArray<ComponentData>;
-   readonly tickEvents: ReadonlyArray<EntityEvent>;
 }
 
 export enum GameDataPacketOptions {
@@ -130,6 +130,7 @@ export enum GameDataPacketOptions {
 // @Cleanup: A whole bunch of the data in this for the player can be deduced from the entity data array
 /** Data about the game state sent to the client each tick */
 export interface GameDataPacket {
+   readonly simulationIsPaused: boolean;
    readonly entityDataArray: Array<EntityData<EntityType>>;
    readonly tileUpdates: ReadonlyArray<ServerTileUpdateData>;
    /** All hits taken by visible entities server-side */
@@ -152,6 +153,7 @@ export interface GameDataPacket {
    readonly pickedUpItem: boolean;
    readonly hotbarCrossbowLoadProgressRecord: Partial<Record<number, number>>;
    readonly titleOffer: TribesmanTitle | null;
+   readonly tickEvents: ReadonlyArray<EntityTickEvent>;
    // @Cleanup @Bandwidth: move these all to a special dev info packet
    readonly visiblePathfindingNodeOccupances: ReadonlyArray<PathfindingNodeIndex>;
    readonly visibleSafetyNodes: ReadonlyArray<SafetyNodeData>;
@@ -384,6 +386,13 @@ export interface ClientToServerEvents {
    //       DEV-ONLY EVENTS      //
    // -------------------------- //
    dev_give_item: (itemType: ItemType, amount: number) => void;
+   dev_summon_entity: (summonPacket: EntitySummonPacket) => void;
+   dev_give_title: (title: TribesmanTitle) => void;
+   dev_remove_title: (title: TribesmanTitle) => void;
+   dev_pause_simulation: () => void;
+   dev_unpause_simulation: () => void;
+   dev_create_tribe: () => void;
+   dev_change_tribe_type: (tribeID: number, newTribeType: TribeType) => void;
 }
 
 export interface InterServerEvents {}

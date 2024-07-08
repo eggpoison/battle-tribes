@@ -4,7 +4,7 @@ import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import RenderPart from "../render-parts/RenderPart";
 import Game from "../Game";
-import { getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
+import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { playSound } from "../sound";
 import { LeafParticleSize, createLeafParticle, createLeafSpeckParticle } from "../particles";
 

@@ -1,11 +1,10 @@
 import { PlayerDataPacket, AttackPacket, RespawnDataPacket, HitData, PlayerKnockbackData, HealData, ResearchOrbCompleteData } from "webgl-test-shared/dist/client-server-types";
-import { BlueprintType, BuildingMaterial, MATERIAL_TO_ITEM_MAP } from "webgl-test-shared/dist/components";
-import { ITEM_TYPE_RECORD, InventoryName, ItemType } from "webgl-test-shared/dist/items";
+import { BlueprintType, BuildingMaterial, MATERIAL_TO_ITEM_MAP, ServerComponentType } from "webgl-test-shared/dist/components";
 import { TechID, TechInfo, getTechByID } from "webgl-test-shared/dist/techs";
 import { TribesmanTitle } from "webgl-test-shared/dist/titles";
 import Board from "../Board";
 import { registerCommand } from "../commands";
-import { acceptTitleOffer, rejectTitleOffer } from "../components/TribeMemberComponent";
+import { TribeMemberComponentArray, acceptTitleOffer, forceAddTitle, rejectTitleOffer, removeTitle } from "../components/TribeMemberComponent";
 import { modifyBuilding, startChargingBattleaxe, startChargingBow, startChargingSpear, startEating, createPlayer } from "../entities/tribes/player";
 import { throwItem, placeBlueprint, attemptAttack, calculateAttackTarget, calculateBlueprintWorkTarget, calculateRadialAttackTargets, calculateRepairTarget, repairBuilding, getAvailableCraftingStations, useItem } from "../entities/tribes/tribe-member";
 import PlayerClient from "./PlayerClient";
@@ -18,7 +17,6 @@ import { PhysicsComponentArray } from "../components/PhysicsComponent";
 import Entity from "../Entity";
 import { InventoryComponentArray, addItemToInventory, addItemToSlot, consumeItemFromSlot, consumeItemTypeFromInventory, craftRecipe, getInventory, inventoryComponentCanAffordRecipe, recipeCraftingStationIsAvailable } from "../components/InventoryComponent";
 import { EntityRelationship, TribeComponentArray, recruitTribesman } from "../components/TribeComponent";
-import { CRAFTING_RECIPES, ItemRequirements } from "webgl-test-shared/dist/crafting-recipes";
 import { createItem } from "../items";
 import { Point, randInt, randItem } from "webgl-test-shared/dist/utils";
 import { Settings } from "webgl-test-shared/dist/settings";
@@ -33,6 +31,17 @@ import { BuildingMaterialComponentArray } from "../components/BuildingMaterialCo
 import { PlayerComponentArray } from "../components/PlayerComponent";
 import { TurretComponentArray } from "../components/TurretComponent";
 import { TribesmanAIComponentArray } from "../components/TribesmanAIComponent";
+import { EntitySummonPacket } from "webgl-test-shared/dist/dev-packets";
+import { createBallista } from "../entities/structures/ballista";
+import { createEmptyStructureConnectionInfo } from "webgl-test-shared/dist/structures";
+import { createZombie } from "../entities/mobs/zombie";
+import { createTribeWarrior } from "../entities/tribes/tribe-warrior";
+import { createTribeWorker } from "../entities/tribes/tribe-worker";
+import { CRAFTING_RECIPES, ItemRequirements } from "webgl-test-shared/dist/items/crafting-recipes";
+import { InventoryName, Item, ITEM_TYPE_RECORD, ItemType } from "webgl-test-shared/dist/items/items";
+import { createFrozenYeti } from "../entities/mobs/frozen-yeti";
+import Tribe from "../Tribe";
+import { EntityTickEvent } from "webgl-test-shared/dist/entity-events";
 
 // @Cleanup: see if a decorator can be used to cut down on the player entity check copy-n-paste
 
@@ -146,7 +155,7 @@ const processPlayerDataPacket = (playerClient: PlayerClient, playerDataPacket: P
 
    if (!overrideOffhand) {
       const tribeComponent = TribeComponentArray.getComponent(player.id);
-      if (tribeComponent.tribe.type === TribeType.barbarians) {
+      if (tribeComponent.tribe.tribeType === TribeType.barbarians) {
          const offhandUseInfo = getInventoryUseInfo(inventoryUseComponent, InventoryName.offhand);
 
          if ((playerDataPacket.offhandAction === LimbAction.eat || playerDataPacket.offhandAction === LimbAction.useMedicine) && (offhandUseInfo.action !== LimbAction.eat && offhandUseInfo.action !== LimbAction.useMedicine)) {
@@ -200,7 +209,7 @@ const respawnPlayer = (playerClient: PlayerClient): void => {
       spawnPosition.x += 100 * Math.sin(offsetDirection);
       spawnPosition.y += 100 * Math.cos(offsetDirection);
    } else {
-      spawnPosition = generatePlayerSpawnPosition(playerClient.tribe.type);
+      spawnPosition = generatePlayerSpawnPosition(playerClient.tribe.tribeType);
    }
 
    const player = createPlayer(spawnPosition, playerClient.tribe, playerClient.username);
@@ -267,7 +276,7 @@ const processPlayerAttackPacket = (playerClient: PlayerClient, attackPacket: Att
 
    // If a barbarian, attack with offhand
    const tribeComponent = TribeComponentArray.getComponent(player.id);
-   if (tribeComponent.tribe.type === TribeType.barbarians) {
+   if (tribeComponent.tribe.tribeType === TribeType.barbarians) {
       attemptSwing(player, targets, 1, InventoryName.offhand);
    }
 }
@@ -321,13 +330,13 @@ const processItemPickupPacket = (playerClient: PlayerClient, entityID: number, i
       return;
    }
 
+   // Remove the item from its previous inventory
+   const amountConsumed = consumeItemFromSlot(targetInventory, itemSlot, amount);
+
    // Hold the item
    // Copy it as the consumeItemFromSlot function modifies the original item's count
-   const heldItem = createItem(pickedUpItem.type, pickedUpItem.count);
+   const heldItem = createItem(pickedUpItem.type, amountConsumed);
    heldItemInventory.addItem(heldItem, 1);
-
-   // Remove the item from its previous inventory
-   consumeItemFromSlot(targetInventory, itemSlot, amount);
 }
 
 const processItemReleasePacket = (playerClient: PlayerClient, entityID: number, inventoryName: InventoryName, itemSlot: number, amount: number): void => {
@@ -633,6 +642,152 @@ const devGiveItem = (playerClient: PlayerClient, itemType: ItemType, amount: num
    addItemToInventory(inventory, itemType, amount);
 }
 
+const devSummonEntity = (playerClient: PlayerClient, summonPacket: EntitySummonPacket): void => {
+   const player = Board.entityRecord[playerClient.instanceID];
+   if (typeof player === "undefined") {
+      return;
+   }
+
+   const position = Point.unpackage(summonPacket.position);
+   const rotation = summonPacket.rotation;
+
+   switch (summonPacket.entityType) {
+      case EntityType.ballista: {
+         const tribeComponent = TribeComponentArray.getComponent(player.id);
+         const connectionInfo = createEmptyStructureConnectionInfo();
+         createBallista(position, rotation, tribeComponent.tribe, connectionInfo);
+         break;
+      }
+      case EntityType.barrel: {};
+      case EntityType.battleaxeProjectile: {};
+      case EntityType.berryBush: {};
+      case EntityType.blueprintEntity: {};
+      case EntityType.boulder: {};
+      case EntityType.cactus: {};
+      case EntityType.campfire: {};
+      case EntityType.cow: {};
+      case EntityType.door: {};
+      case EntityType.embrasure: {};
+      case EntityType.fence: {};
+      case EntityType.fenceGate: {};
+      case EntityType.fish: {};
+      case EntityType.floorPunjiSticks: {};
+      case EntityType.floorSpikes: {};
+      case EntityType.frostshaper: {};
+      case EntityType.frozenYeti: {
+         createFrozenYeti(position, 2 * Math.PI * Math.random());
+         break;
+      };
+      case EntityType.furnace: {};
+      case EntityType.golem: {};
+      case EntityType.healingTotem: {};
+      case EntityType.iceArrow: {};
+      case EntityType.iceShardProjectile: {};
+      case EntityType.iceSpikes: {};
+      case EntityType.itemEntity: {};
+      case EntityType.krumblid: {};
+      case EntityType.pebblum: {};
+      case EntityType.plant: {};
+      case EntityType.planterBox: {};
+      case EntityType.player: {};
+      case EntityType.researchBench: {};
+      case EntityType.rockSpikeProjectile: {};
+      case EntityType.slime: {};
+      case EntityType.slimeSpit: {};
+      case EntityType.slimewisp: {};
+      case EntityType.slingTurret: {};
+      case EntityType.snowball: {};
+      case EntityType.spearProjectile: {};
+      case EntityType.spitPoison: {};
+      case EntityType.stonecarvingTable: {};
+      case EntityType.tombstone: {};
+      case EntityType.tree: {};
+      case EntityType.tribeTotem: {};
+      case EntityType.tribeWarrior: {
+         const tribeComponent = TribeComponentArray.getComponent(player.id);
+         const inventoryComponentSummonData = summonPacket.summonData[ServerComponentType.inventory]!;
+
+         const entityCreationInfo = createTribeWarrior(position, rotation, tribeComponent.tribe, 0);
+
+         // @Temporary @Hack @Copynpaste
+         const inventoryComponent = entityCreationInfo.components[ServerComponentType.inventory]!;
+         const inventoryNames = Object.keys(inventoryComponentSummonData.itemSlots).map(Number) as Array<InventoryName>;
+         for (let i = 0; i < inventoryNames.length; i++) {
+            const inventoryName = inventoryNames[i];
+            
+            const itemSlots = inventoryComponentSummonData.itemSlots[inventoryName]!;
+            for (const [itemSlotString, itemData] of Object.entries(itemSlots) as Array<[string, Item]>) {
+               const itemSlot = Number(itemSlotString);
+               
+               const item = createItem(itemData.type, itemData.count);
+               inventoryComponent.inventoryRecord[inventoryName]!.addItem(item, itemSlot);
+            }
+         }
+
+         break;
+      };
+      case EntityType.tribeWorker: {
+         const tribeComponentSummonData = summonPacket.summonData[ServerComponentType.tribe]!;
+         const inventoryComponentSummonData = summonPacket.summonData[ServerComponentType.inventory]!;
+         
+         const entityCreationInfo = createTribeWorker(position, rotation, tribeComponentSummonData.tribeID, 0);
+
+         // @Temporary @Hack @Copynpaste
+         const inventoryComponent = entityCreationInfo.components[ServerComponentType.inventory]!;
+         const inventoryNames = Object.keys(inventoryComponentSummonData.itemSlots).map(Number) as Array<InventoryName>;
+         for (let i = 0; i < inventoryNames.length; i++) {
+            const inventoryName = inventoryNames[i];
+            
+            const itemSlots = inventoryComponentSummonData.itemSlots[inventoryName]!;
+            for (const [itemSlotString, itemData] of Object.entries(itemSlots) as Array<[string, Item]>) {
+               const itemSlot = Number(itemSlotString);
+               
+               const item = createItem(itemData.type, itemData.count);
+               inventoryComponent.inventoryRecord[inventoryName]!.addItem(item, itemSlot);
+            }
+         }
+         
+         break;
+      };
+      case EntityType.tunnel: {};
+      case EntityType.wall: {};
+      case EntityType.wallPunjiSticks: {};
+      case EntityType.wallSpikes: {};
+      case EntityType.warriorHut: {};
+      case EntityType.woodenArrowProjectile: {};
+      case EntityType.workbench: {};
+      case EntityType.workerHut: {};
+      case EntityType.yeti: {};
+      case EntityType.zombie: {
+         // @Temporary: isGolden
+         createZombie(position, rotation, false, 0)
+         break;
+      };
+      default: {
+         const unreachable: never = summonPacket.entityType;
+         return unreachable;
+      }
+   }
+}
+
+const devGiveTitle = (playerClient: PlayerClient, title: TribesmanTitle): void => {
+   const player = Board.entityRecord[playerClient.instanceID];
+   if (typeof player === "undefined") {
+      return;
+   }
+
+   forceAddTitle(player.id, title);
+}
+
+const devRemoveTitle = (playerClient: PlayerClient, title: TribesmanTitle): void => {
+   const player = Board.entityRecord[playerClient.instanceID];
+   if (typeof player === "undefined") {
+      return;
+   }
+
+   removeTitle(player.id, title);
+}
+
 export function addPlayerClient(playerClient: PlayerClient, player: Entity): void {
    playerClients.push(playerClient);
 
@@ -744,12 +899,43 @@ export function addPlayerClient(playerClient: PlayerClient, player: Entity): voi
       processRespondToTitleOfferPacket(playerClient, title, isAccepted);
    });
 
+   socket.on("dev_pause_simulation", (): void => {
+      SERVER.isSimulating = false;
+   });
+
+   socket.on("dev_unpause_simulation", (): void => {
+      SERVER.isSimulating = true;
+   });
+
    // -------------------------- //
    //       DEV-ONLY EVENTS      //
    // -------------------------- //
 
    socket.on("dev_give_item", (itemType: ItemType, amount: number): void => {
       devGiveItem(playerClient, itemType, amount);
+   });
+
+   socket.on("dev_summon_entity", (summonPacket: EntitySummonPacket): void => {
+      devSummonEntity(playerClient, summonPacket);
+   });
+
+   socket.on("dev_give_title", (title: TribesmanTitle): void => {
+      devGiveTitle(playerClient, title);
+   });
+
+   socket.on("dev_remove_title", (title: TribesmanTitle): void => {
+      devRemoveTitle(playerClient, title);
+   });
+
+   socket.on("dev_create_tribe", (): void => {
+      new Tribe(TribeType.plainspeople, true);
+   });
+
+   socket.on("dev_change_tribe_type", (tribeID: number, newTribeType: TribeType): void => {
+      const tribe = Board.getTribeExpected(tribeID);
+      if (tribe !== null) {
+         tribe.tribeType = newTribeType;
+      }
    });
 }
 
@@ -877,6 +1063,18 @@ export function registerResearchOrbComplete(orbCompleteData: ResearchOrbComplete
    for (let i = 0; i < viewingPlayers.length; i++) {
       const playerClient = viewingPlayers[i];
       playerClient.orbCompletes.push(orbCompleteData);
+   }
+}
+
+export function registerEntityTickEvent(entity: Entity, tickEvent: EntityTickEvent): void {
+   const viewingPlayers = getPlayersViewingPosition(entity.boundingAreaMinX, entity.boundingAreaMaxX, entity.boundingAreaMinY, entity.boundingAreaMaxY);
+   if (viewingPlayers.length === 0) {
+      return;
+   }
+
+   for (let i = 0; i < viewingPlayers.length; i++) {
+      const playerClient = viewingPlayers[i];
+      playerClient.entityTickEvents.push(tickEvent);
    }
 }
 

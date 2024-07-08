@@ -8,6 +8,7 @@ import Game from "../Game";
 import { playSound } from "../sound";
 import { getTribesmanRadius } from "./TribeMemberComponent";
 import { createConversionParticle } from "../particles";
+import { ComponentSummonData } from "webgl-test-shared/dist/dev-packets";
 
 export function getTribeType(tribeID: number): TribeType {
    if (tribeID === Game.tribe.id) {

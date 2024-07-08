@@ -1,17 +1,15 @@
-import { HitboxCollisionType } from "webgl-test-shared/dist/client-server-types";
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
-import { PlanterBoxPlant } from "webgl-test-shared/dist/components";
+import { PlanterBoxPlant, ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityType, EntityTypeString, LimbAction } from "webgl-test-shared/dist/entities";
-import { ItemType, ITEM_INFO_RECORD, ConsumableItemInfo, ConsumableItemCategory, BowItemInfo, InventoryName } from "webgl-test-shared/dist/items";
 import { TRIBE_INFO_RECORD } from "webgl-test-shared/dist/tribes";
 import { Point } from "webgl-test-shared/dist/utils";
+import { CircularHitbox, HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import Entity from "../../Entity";
 import { onTribeMemberHurt, tickTribeMember } from "./tribe-member";
 import Tribe from "../../Tribe";
-import { InventoryComponent, consumeItemFromSlot, consumeItemType, countItemType, getInventory, pickupItemEntity, addItem, InventoryComponentArray } from "../../components/InventoryComponent";
+import { InventoryComponent, consumeItemFromSlot, consumeItemType, countItemType, getInventory, pickupItemEntity, InventoryComponentArray } from "../../components/InventoryComponent";
 import Board from "../../Board";
 import { HealthComponent, HealthComponentArray } from "../../components/HealthComponent";
-import CircularHitbox from "../../hitboxes/CircularHitbox";
 import { InventoryUseComponent, InventoryUseComponentArray, getInventoryUseInfo, setLimbActions } from "../../components/InventoryUseComponent";
 import { TribeMemberComponent, TribeMemberComponentArray, awardTitle } from "../../components/TribeMemberComponent";
 import { PlayerComponent, PlayerComponentArray } from "../../components/PlayerComponent";
@@ -20,26 +18,38 @@ import { PhysicsComponent, PhysicsComponentArray } from "../../components/Physic
 import { TribeComponent, TribeComponentArray } from "../../components/TribeComponent";
 import { TunnelComponentArray, updateTunnelDoorBitset } from "../../components/TunnelComponent";
 import { PlanterBoxComponentArray, fertilisePlanterBox, placePlantInPlanterBox } from "../../components/PlanterBoxComponent";
-import { createItem } from "../../items";
 import { StructureComponentArray, isAttachedToWall } from "../../components/StructureComponent";
 import { registerPlayerDroppedItemPickup } from "../../server/player-clients";
 import { HutComponentArray } from "../../components/HutComponent";
 import { SpikesComponentArray } from "../../components/SpikesComponent";
-import { TribesmanTitle } from "webgl-test-shared/dist/titles";
+import { InventoryName, ITEM_INFO_RECORD, ConsumableItemInfo, ConsumableItemCategory, BowItemInfo, ItemType } from "webgl-test-shared/dist/items/items";
+import { ComponentRecord } from "../../components";
 
 export function createPlayer(position: Point, tribe: Tribe, username: string): Entity {
    const player = new Entity(position, 0, EntityType.player, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
 
-   const hitbox = new CircularHitbox(position, 1.25, 0, 0, HitboxCollisionType.soft, 32, player.getNextHitboxLocalID(), player.rotation, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK);
+   const hitbox = new CircularHitbox(1.25, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, 32);
    player.addHitbox(hitbox);
 
-   const tribeInfo = TRIBE_INFO_RECORD[tribe.type];
-   PhysicsComponentArray.addComponent(player.id, new PhysicsComponent(0, 0, 0, 0, true, false));
-   HealthComponentArray.addComponent(player.id, new HealthComponent(tribeInfo.maxHealthPlayer));
-   StatusEffectComponentArray.addComponent(player.id, new StatusEffectComponent(0));
-   TribeComponentArray.addComponent(player.id, new TribeComponent(tribe));
-   TribeMemberComponentArray.addComponent(player.id, new TribeMemberComponent(tribe.type, EntityType.player));
-   PlayerComponentArray.addComponent(player.id, new PlayerComponent(username));
+   const tribeInfo = TRIBE_INFO_RECORD[tribe.tribeType];
+
+   const physicsComponent = new PhysicsComponent(0, 0, 0, 0, true, false);
+   PhysicsComponentArray.addComponent(player.id, physicsComponent);
+
+   const healthComponent = new HealthComponent(tribeInfo.maxHealthPlayer);
+   HealthComponentArray.addComponent(player.id, healthComponent);
+
+   const statusEffectComponent = new StatusEffectComponent(0);
+   StatusEffectComponentArray.addComponent(player.id, statusEffectComponent);
+
+   const tribeComponent = new TribeComponent(tribe);
+   TribeComponentArray.addComponent(player.id, tribeComponent);
+
+   const tribeMemberComponent = new TribeMemberComponent(tribe.tribeType, EntityType.player);
+   TribeMemberComponentArray.addComponent(player.id, tribeMemberComponent);
+
+   const playerComponent = new PlayerComponent(username);
+   PlayerComponentArray.addComponent(player.id, playerComponent);
 
    const inventoryUseComponent = new InventoryUseComponent();
    InventoryUseComponentArray.addComponent(player.id, inventoryUseComponent);
@@ -67,12 +77,21 @@ export function createPlayer(position: Point, tribe: Tribe, username: string): E
    // }, 50);
    // addItem(inventoryComponent, createItem(ItemType.wood, 10));
    // addItem(inventoryComponent, createItem(ItemType.wooden_wall, 50));
-   
-   // @Temporary
-   // setTimeout(() => {
-   //    awardTitle(player, TribesmanTitle.gardener);
-   // }, 300);
 
+   const componentRecord: ComponentRecord = {
+      [ServerComponentType.physics]: physicsComponent,
+      [ServerComponentType.health]: healthComponent,
+      [ServerComponentType.statusEffect]: statusEffectComponent,
+      [ServerComponentType.tribe]: tribeComponent,
+      [ServerComponentType.tribeMember]: tribeMemberComponent,
+      [ServerComponentType.player]: playerComponent,
+      [ServerComponentType.inventoryUse]: inventoryUseComponent,
+      [ServerComponentType.inventory]: inventoryComponent
+   };
+
+   // @Hack @Copynpaste
+   TribeMemberComponentArray.onInitialise!(player, componentRecord);
+   
    return player;
 }
 

@@ -4,7 +4,7 @@ import { TotemBannerComponentData } from "webgl-test-shared/dist/components";
 import { TribeType } from "webgl-test-shared/dist/tribes";
 import ServerComponent from "./ServerComponent";
 import RenderPart from "../render-parts/RenderPart";
-import { getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
+import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import Entity from "../Entity";
 
 const BANNER_LAYER_DISTANCES = [34, 52, 65];

@@ -1,5 +1,5 @@
 import { CookingComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
-import { HeatingRecipe } from "../entities/cooking-entities/cooking-entity";
+import { HeatingRecipe } from "../entities/structures/cooking-entities/cooking-entity";
 import { ComponentArray } from "./ComponentArray";
 
 export class CookingComponent {

@@ -1,5 +1,5 @@
 import { WaterRockData, RiverSteppingStoneData, GrassTileInfo, DecorationInfo, RIVER_STEPPING_STONE_SIZES, ServerTileUpdateData, RiverFlowDirections } from "webgl-test-shared/dist/client-server-types";
-import { EntityType } from "webgl-test-shared/dist/entities";
+import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { TileType } from "webgl-test-shared/dist/tiles";
 import { Point } from "webgl-test-shared/dist/utils";
@@ -34,8 +34,8 @@ import { tickItemEntity } from "./entities/item-entity";
 import { tickFrozenYeti } from "./entities/mobs/frozen-yeti";
 import { tickRockSpikeProjectile } from "./entities/projectiles/rock-spike";
 import { AIHelperComponentArray, tickAIHelperComponent } from "./components/AIHelperComponent";
-import {  tickCampfire } from "./entities/cooking-entities/campfire";
-import {  tickFurnace } from "./entities/cooking-entities/furnace";
+import {  tickCampfire } from "./entities/structures/cooking-entities/campfire";
+import {  tickFurnace } from "./entities/structures/cooking-entities/furnace";
 import { tickSpearProjectile } from "./entities/projectiles/spear-projectile";
 import { tickTribeWarrior } from "./entities/tribes/tribe-warrior";
 import { tickSlimeSpit } from "./entities/projectiles/slime-spit";
@@ -57,8 +57,8 @@ import { tickTribes } from "./ai-tribe-building/ai-building";
 import { HealingTotemComponentArray, tickHealingTotemComponent } from "./components/HealingTotemComponent";
 import { PlantComponentArray, tickPlantComponent } from "./components/PlantComponent";
 import { FenceGateComponentArray, tickFenceGateComponent } from "./components/FenceGateComponent";
-import { Hitbox, hitboxIsCircular } from "./hitboxes/hitboxes";
 import { PlanterBoxComponentArray, tickPlanterBoxComponent } from "./components/PlanterBoxComponent";
+import { Hitbox, hitboxIsCircular } from "webgl-test-shared/dist/hitboxes/hitboxes";
 
 const START_TIME = 6;
 
@@ -153,7 +153,7 @@ abstract class Board {
       }
    }
 
-   public static tentativelyGetEntity(entityID: number): Entity | null {
+   public static tentativelyGetEntity(entityID: EntityID): Entity | null {
       let entity: Entity | null | undefined = this.entityRecord[entityID];
       if (typeof entity === "undefined") {
          entity = null;
@@ -177,14 +177,16 @@ abstract class Board {
       return Board.time < 6 || Board.time >= 18;
    }
 
-   public static getTribe(tribeID: number): Tribe {
+   public static getTribeExpected(tribeID: number): Tribe | null {
       for (let i = 0; i < this.tribes.length; i++) {
          const tribe = this.tribes[i];
          if (tribe.id === tribeID) {
             return tribe;
          }
       }
-      throw new Error();
+
+      console.warn("No tribe with id " + tribeID);
+      return null;
    }
 
    private static initialiseChunks(): void {
@@ -303,10 +305,6 @@ abstract class Board {
       // @Speed: Ideally we should remove this as there are many entities which the switch won't fire for at all
       for (let i = 0; i < this.entities.length; i++) {
          const entity = this.entities[i];
-
-         // @Speed
-         // @Cleanup: awkward to do it here
-         entity.tickEvents = [];
 
          switch (entity.type) {
             case EntityType.player: tickPlayer(entity); break;

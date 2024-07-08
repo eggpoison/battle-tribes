@@ -1,5 +1,5 @@
 import { ArrowStatusEffectInfo, ArrowComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
-import { GenericArrowType } from "webgl-test-shared/dist/entities";
+import { EntityID, GenericArrowType } from "webgl-test-shared/dist/entities";
 import { ComponentArray } from "./ComponentArray";
 
 export class ArrowComponent {
@@ -25,7 +25,7 @@ export const ArrowComponentArray = new ComponentArray<ServerComponentType.arrow,
    serialise: serialise
 });
 
-function serialise(entityID: number): ArrowComponentData {
+function serialise(entityID: EntityID): ArrowComponentData {
    const arrowComponent = ArrowComponentArray.getComponent(entityID);
    return {
       componentType: ServerComponentType.arrow,

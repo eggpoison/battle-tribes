@@ -1,16 +1,14 @@
 import { TribesmanAIType } from "webgl-test-shared/dist/components";
 import { LimbAction } from "webgl-test-shared/dist/entities";
-import { Inventory, ITEM_INFO_RECORD, PlaceableItemInfo, InventoryName } from "webgl-test-shared/dist/items";
 import { PathfindingSettings } from "webgl-test-shared/dist/settings";
 import { calculateStructureConnectionInfo } from "webgl-test-shared/dist/structures";
 import { TribesmanTitle } from "webgl-test-shared/dist/titles";
 import { angle, getAngleDiff } from "webgl-test-shared/dist/utils";
+import { updateHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes"
 import Board from "../../../Board";
 import Entity from "../../../Entity";
 import Tribe from "../../../Tribe";
 import { getDistanceFromPointToEntity, stopEntity, willStopAtDesiredDistance } from "../../../ai-shared";
-import { createBuildingHitboxes } from "../../../buildings";
-import { getHitboxesCollidingEntities } from "../../../collision";
 import { HealthComponentArray } from "../../../components/HealthComponent";
 import { consumeItemFromSlot, InventoryComponentArray, getInventory } from "../../../components/InventoryComponent";
 import { InventoryUseComponentArray, getInventoryUseInfo, setLimbActions } from "../../../components/InventoryUseComponent";
@@ -26,6 +24,9 @@ import { getBestToolItemSlot, getTribesmanAttackOffset, getTribesmanAttackRadius
 import { huntEntity } from "./tribesman-combat-ai";
 import { TribesmanPlaceGoal, TribesmanUpgradeGoal } from "./tribesman-goals";
 import { AIHelperComponentArray } from "../../../components/AIHelperComponent";
+import { createEntityHitboxes } from "webgl-test-shared/dist/hitboxes/entity-hitbox-creation";
+import { getHitboxesCollidingEntities } from "webgl-test-shared/dist/hitbox-collision";
+import { Inventory, ITEM_INFO_RECORD, PlaceableItemInfo, InventoryName } from "webgl-test-shared/dist/items/items";
 
 const enum Vars {
    BUILDING_PLACE_DISTANCE = 80
@@ -35,9 +36,13 @@ export function goPlaceBuilding(tribesman: Entity, hotbarInventory: Inventory, t
    const plan = goal.plan;
    
    const entityType = (ITEM_INFO_RECORD[plan.buildingRecipe.product] as PlaceableItemInfo).entityType;
-   const hitboxes = createBuildingHitboxes(entityType, plan.position, 1, plan.rotation);
+   const hitboxes = createEntityHitboxes(entityType);
+   for (let i = 0; i < hitboxes.length; i++) {
+      const hitbox = hitboxes[i];
+      updateHitbox(hitbox, plan.position.x, plan.position.y, plan.rotation);
+   }
    
-   const blockingEntities = getHitboxesCollidingEntities(hitboxes);
+   const blockingEntities = getHitboxesCollidingEntities(Board.chunks, hitboxes);
    for (let i = 0; i < blockingEntities.length; i++) {
       const blockingEntity = blockingEntities[i];
       if (!HealthComponentArray.hasComponent(blockingEntity.id)) {
@@ -96,8 +101,8 @@ export function goPlaceBuilding(tribesman: Entity, hotbarInventory: Inventory, t
          const connectionInfo = calculateStructureConnectionInfo(plan.position, plan.rotation, placingEntityType, Board.chunks);
          placeBuilding(tribe, plan.position, plan.rotation, placingEntityType, connectionInfo);
 
-         if (Math.random() < TITLE_REWARD_CHANCES.ARCHITECT_REWARD_CHANCE) {
-            awardTitle(tribesman, TribesmanTitle.architect);
+         if (Math.random() < TITLE_REWARD_CHANCES.BUILDER_REWARD_CHANCE) {
+            awardTitle(tribesman, TribesmanTitle.builder);
          }
 
          consumeItemFromSlot(hotbarInventory, goal.placeableItemSlot, 1);

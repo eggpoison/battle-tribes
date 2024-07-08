@@ -1,28 +1,25 @@
 import { BuildingPlanData, PotentialBuildingPlanData, TribeWallData } from "webgl-test-shared/dist/ai-building-types";
-import { AttackPacket, ClientToServerEvents, EntityData, GameDataPacket, GameDataPacketOptions, GameDataSyncPacket, HitboxCollisionType, InitialGameDataPacket, PlayerDataPacket, PlayerInventoryData, RespawnDataPacket, ServerTileData, ServerTileUpdateData, ServerToClientEvents, VisibleChunkBounds } from "webgl-test-shared/dist/client-server-types";
+import { AttackPacket, CircularHitboxData, ClientToServerEvents, EntityData, GameDataPacket, GameDataPacketOptions, GameDataSyncPacket, InitialGameDataPacket, PlayerDataPacket, PlayerInventoryData, RectangularHitboxData, RespawnDataPacket, ServerTileData, ServerTileUpdateData, ServerToClientEvents, VisibleChunkBounds } from "webgl-test-shared/dist/client-server-types";
 import { distance, Point } from "webgl-test-shared/dist/utils";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { BlueprintType, LimbData, ServerComponentType } from "webgl-test-shared/dist/components";
 import { PlayerTribeData, TechID } from "webgl-test-shared/dist/techs";
 import { STRUCTURE_TYPES } from "webgl-test-shared/dist/structures";
-import { Inventory, InventoryName, ItemType } from "webgl-test-shared/dist/items";
 import { TRIBE_INFO_RECORD, TribeType } from "webgl-test-shared/dist/tribes";
 import { TribesmanTitle } from "webgl-test-shared/dist/titles";
 import { io, Socket } from "socket.io-client";
 import { setGameState, setLoadingScreenInitialStatus } from "../components/App";
 import Player from "../entities/Player";
 import Game from "../Game";
-import CircularHitbox from "../hitboxes/CircularHitbox";
-import RectangularHitbox from "../hitboxes/RectangularHitbox";
 import { Tile } from "../Tile";
 import { gameScreenSetIsDead } from "../components/game/GameScreen";
-import { removeSelectedItem, selectItem, closeCurrentMenu } from "../player-input";
+import { removeSelectedItem, selectItem } from "../player-input";
 import { Hotbar_setHotbarSelectedItemSlot, Hotbar_update, Hotbar_updateRightThrownBattleaxeItemID } from "../components/game/inventories/Hotbar";
-import { setHeldItemVisual } from "../components/game/HeldItem";
+import { HeldItem_setHeldItemCount, HeldItem_setHeldItemType } from "../components/game/HeldItem";
 import { CraftingMenu_setCraftingMenuOutputItem, CraftingMenu_updateRecipes } from "../components/game/menus/CraftingMenu";
 import { HealthBar_setHasFrostShield, updateHealthBar } from "../components/game/HealthBar";
-import { registerServerTick, updateDebugScreenCurrentTime, updateDebugScreenTicks } from "../components/game/dev/GameInfoDisplay";
+import { registerServerTick, updateDebugScreenCurrentTime, updateDebugScreenIsPaused, updateDebugScreenTicks } from "../components/game/dev/GameInfoDisplay";
 import Camera from "../Camera";
 import { isDev } from "../utils";
 import { updateRenderChunkFromTileUpdate } from "../rendering/render-chunks";
@@ -36,10 +33,10 @@ import { playSound } from "../sound";
 import { updateTechTree } from "../components/game/tech-tree/TechTree";
 import { TechInfocard_setSelectedTech } from "../components/game/TechInfocard";
 import { getSelectedEntityID } from "../entity-selection";
-import { setVisiblePathfindingNodeOccupances } from "../rendering/pathfinding-node-rendering";
-import { setVisibleSafetyNodes } from "../rendering/safety-node-rendering";
-import { setVisibleRestrictedBuildingAreas } from "../rendering/restricted-building-areas-rendering";
-import { setVisibleWallConnections } from "../rendering/wall-connection-rendering";
+import { setVisiblePathfindingNodeOccupances } from "../rendering/webgl/pathfinding-node-rendering";
+import { setVisibleSafetyNodes } from "../rendering/webgl/safety-node-rendering";
+import { setVisibleRestrictedBuildingAreas } from "../rendering/webgl/restricted-building-areas-rendering";
+import { setVisibleWallConnections } from "../rendering/webgl/wall-connection-rendering";
 import OPTIONS from "../options";
 import { Infocards_setTitleOffer } from "../components/game/infocards/Infocards";
 import { calculateEntityRenderDepth } from "../render-layers";
@@ -47,6 +44,13 @@ import { GrassBlocker } from "webgl-test-shared/dist/grass-blockers";
 import { createEntity } from "../entity-class-record";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
 import { windowHeight, windowWidth } from "../webgl";
+import { EntitySummonPacket } from "webgl-test-shared/dist/dev-packets";
+import { CircularHitbox, RectangularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
+import { InventoryName, Inventory, ItemType } from "webgl-test-shared/dist/items/items";
+import { TitlesTab_setTitles } from "../components/game/dev/tabs/TitlesTab";
+import { closeCurrentMenu } from "../menus";
+import { TribesTab_refresh } from "../components/game/dev/tabs/TribesTab";
+import { processTickEvents } from "../entity-tick-events";
 
 type ISocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 
@@ -123,6 +127,18 @@ export function calculatePotentialPlanIdealness(potentialPlan: PotentialBuilding
 let grassBlockers: ReadonlyArray<GrassBlocker>;
 export function getGrassBlockers(): ReadonlyArray<GrassBlocker> {
    return grassBlockers;
+}
+
+// @Cleanup: put these 2 in a more appropriate file
+
+export function createCircularHitboxFromData(data: CircularHitboxData): CircularHitbox {
+   const offset = new Point(data.offsetX, data.offsetY);
+   return new CircularHitbox(data.mass, offset, data.collisionType, data.collisionBit, data.collisionMask, data.flags, data.radius);
+}
+
+export function createRectangularHitboxFromData(data: RectangularHitboxData): RectangularHitbox {
+   const offset = new Point(data.offsetX, data.offsetY);
+   return new RectangularHitbox(data.mass, offset, data.collisionType, data.collisionBit, data.collisionMask, data.flags, data.width, data.height, data.rotation);
 }
 
 abstract class Client {
@@ -241,8 +257,7 @@ abstract class Client {
 
    /** Creates the socket used to connect to the server */
    private static createSocket(): ISocket {
-      return io(`ws://10.0.0.9:${Settings.SERVER_PORT}`, {
-      // return io(`ws://localhost:${Settings.SERVER_PORT}`, {
+      return io(`ws://localhost:${Settings.SERVER_PORT}`, {
          transports: ["websocket", "polling", "flashsocket"],
          autoConnect: false,
          reconnection: false
@@ -283,6 +298,7 @@ abstract class Client {
       updateDebugScreenTicks(gameDataPacket.serverTicks);
       Board.time = gameDataPacket.serverTime;
       updateDebugScreenCurrentTime(gameDataPacket.serverTime);
+      updateDebugScreenIsPaused(gameDataPacket.simulationIsPaused);
 
       if (isDev()) {
          Game.setGameObjectDebugData(gameDataPacket.entityDebugData);
@@ -290,8 +306,12 @@ abstract class Client {
 
       this.updateTribe(gameDataPacket.playerTribeData);
       Game.enemyTribes = gameDataPacket.enemyTribesData;
+      // @Hack: shouldn't do always
+      TribesTab_refresh();
 
       Infocards_setTitleOffer(gameDataPacket.titleOffer);
+
+      processTickEvents(gameDataPacket.tickEvents);
 
       this.updateEntities(gameDataPacket.entityDataArray, gameDataPacket.visibleEntityDeathIDs);
       
@@ -428,7 +448,10 @@ abstract class Client {
                         break;
                      }
                      case ServerComponentType.tribeMember: {
-                        Player.instance.getServerComponent(ServerComponentType.tribeMember).updateFromData(componentData);
+                        const tribeMemberComponent = Player.instance.getServerComponent(ServerComponentType.tribeMember);
+                        tribeMemberComponent.updateFromData(componentData);
+
+                        TitlesTab_setTitles(tribeMemberComponent.getTitles());
                         break;
                      }
                      case ServerComponentType.inventoryUse: {
@@ -511,11 +534,7 @@ abstract class Client {
       }
 
       // Crafting output item
-      if (definiteGameState.craftingOutputSlot !== null) {
-         updateInventoryFromData(definiteGameState.craftingOutputSlot, playerInventoryData.craftingOutputItemSlot);
-      } else {
-         definiteGameState.craftingOutputSlot = createInventoryFromData(playerInventoryData.craftingOutputItemSlot);
-      }
+      updateInventoryFromData(definiteGameState.craftingOutputSlot, playerInventoryData.craftingOutputItemSlot);
       CraftingMenu_setCraftingMenuOutputItem(definiteGameState.craftingOutputSlot?.itemSlots[1] || null);
 
       // Backpack slot
@@ -524,7 +543,13 @@ abstract class Client {
 
       // Held item
       updateInventoryFromData(definiteGameState.heldItemSlot, playerInventoryData.heldItemSlot);
-      setHeldItemVisual(definiteGameState.heldItemSlot.itemSlots[1] || null);
+      const heldItem = definiteGameState.heldItemSlot.itemSlots[1];
+      if (typeof heldItem !== "undefined") {
+         HeldItem_setHeldItemCount(heldItem.count);
+         HeldItem_setHeldItemType(heldItem.type);
+      } else {
+         HeldItem_setHeldItemType(null);
+      }
 
       // Armour slot
       const armourSlotHasChanged = this.inventoryHasChanged(definiteGameState.armourSlot, playerInventoryData.armourSlot);
@@ -648,15 +673,15 @@ abstract class Client {
       for (let i = 0; i < data.circularHitboxes.length; i++) {
          const hitboxData = data.circularHitboxes[i];
 
-         const hitbox = new CircularHitbox(hitboxData.mass, hitboxData.offsetX, hitboxData.offsetY, hitboxData.collisionType as unknown as HitboxCollisionType, hitboxData.localID, hitboxData.radius);
-         entity.addCircularHitbox(hitbox);
+         const hitbox = createCircularHitboxFromData(hitboxData);
+         entity.addHitbox(hitbox, hitboxData.localID);
       }
 
       for (let i = 0; i < data.rectangularHitboxes.length; i++) {
          const hitboxData = data.rectangularHitboxes[i];
 
-         const hitbox = new RectangularHitbox(hitboxData.mass, hitboxData.offsetX, hitboxData.offsetY, hitboxData.collisionType as unknown as HitboxCollisionType, hitboxData.localID, hitboxData.width, hitboxData.height, hitboxData.rotation);
-         entity.addRectangularHitbox(hitbox);
+         const hitbox = createRectangularHitboxFromData(hitboxData);
+         entity.addHitbox(hitbox, hitboxData.localID);
       }
    }
 
@@ -930,9 +955,51 @@ abstract class Client {
       }
    }
 
+   public static sendEntitySummonPacket(summonPacket: EntitySummonPacket): void {
+      if (Game.isRunning && this.socket !== null) {
+         this.socket.emit("dev_summon_entity", summonPacket);
+      }
+   }
+
    public static sendDevGiveItemPacket(itemType: ItemType, amount: number): void {
       if (Game.isRunning && this.socket !== null) {
          this.socket.emit("dev_give_item", itemType, amount);
+      }
+   }
+
+   public static sendDevGiveTitlePacket(title: TribesmanTitle): void {
+      if (Game.isRunning && this.socket !== null) {
+         this.socket.emit("dev_give_title", title);
+      }
+   }
+
+   public static sendDevRemoveTitlePacket(title: TribesmanTitle): void {
+      if (Game.isRunning && this.socket !== null) {
+         this.socket.emit("dev_remove_title", title);
+      }
+   }
+
+   public static sendDevPauseSimulation(): void {
+      if (Game.isRunning && this.socket !== null) {
+         this.socket.emit("dev_pause_simulation");
+      }
+   }
+
+   public static sendDevUnpauseSimulation(): void {
+      if (Game.isRunning && this.socket !== null) {
+         this.socket.emit("dev_unpause_simulation");
+      }
+   }
+
+   public static sendDevCreateTribe(): void {
+      if (Game.isRunning && this.socket !== null) {
+         this.socket.emit("dev_create_tribe");
+      }
+   }
+
+   public static sendDevChangeTribeType(tribeID: number, newTribeType: TribeType): void {
+      if (Game.isRunning && this.socket !== null) {
+         this.socket.emit("dev_change_tribe_type", tribeID, newTribeType);
       }
    }
 }

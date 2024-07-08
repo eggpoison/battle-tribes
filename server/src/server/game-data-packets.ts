@@ -9,11 +9,7 @@ import { HealthComponentArray } from "../components/HealthComponent";
 import { InventoryComponentArray, getInventory } from "../components/InventoryComponent";
 import { InventoryUseComponentArray, getInventoryUseInfo } from "../components/InventoryUseComponent";
 import { PhysicsComponentArray } from "../components/PhysicsComponent";
-import CircularHitbox from "../hitboxes/CircularHitbox";
-import RectangularHitbox from "../hitboxes/RectangularHitbox";
-import { hitboxIsCircular } from "../hitboxes/hitboxes";
 import { SERVER } from "./server";
-import { Inventory, InventoryName } from "webgl-test-shared/dist/items";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { getVisibleSafetyNodesData, getVisibleBuildingPlans, getVisibleBuildingSafetys, getVisibleRestrictedBuildingAreas, getVisibleWallsData, getVisibleWallConnections, getVisibleTribes } from "../ai-tribe-building/ai-building-client-data";
 import { getVisiblePathfindingNodeOccupances } from "../pathfinding";
@@ -24,27 +20,35 @@ import PlayerClient from "./PlayerClient";
 import { TribeComponentArray } from "../components/TribeComponent";
 import { SpikesComponentArray } from "../components/SpikesComponent";
 import { PlayerComponentArray } from "../components/PlayerComponent";
+import { RectangularHitbox, CircularHitbox, hitboxIsCircular } from "webgl-test-shared/dist/hitboxes/hitboxes";
+import { Inventory, InventoryName } from "webgl-test-shared/dist/items/items";
 
-const bundleRectangularHitboxData = (hitbox: RectangularHitbox): RectangularHitboxData => {
+const bundleRectangularHitboxData = (hitbox: RectangularHitbox, localID: number): RectangularHitboxData => {
    return {
       mass: hitbox.mass,
-      offsetX: hitbox.offsetX,
-      offsetY: hitbox.offsetY,
+      offsetX: hitbox.offset.x,
+      offsetY: hitbox.offset.y,
       collisionType: hitbox.collisionType,
-      localID: hitbox.localID,
+      collisionBit: hitbox.collisionBit,
+      collisionMask: hitbox.collisionMask,
+      localID: localID,
+      flags: hitbox.flags,
       width: hitbox.width,
       height: hitbox.height,
       rotation: hitbox.relativeRotation
    };
 }
 
-const bundleCircularHitboxData = (hitbox: CircularHitbox): CircularHitboxData => {
+const bundleCircularHitboxData = (hitbox: CircularHitbox, localID: number): CircularHitboxData => {
    return {
       mass: hitbox.mass,
-      offsetX: hitbox.offsetX,
-      offsetY: hitbox.offsetY,
+      offsetX: hitbox.offset.x,
+      offsetY: hitbox.offset.y,
       collisionType: hitbox.collisionType,
-      localID: hitbox.localID,
+      collisionBit: hitbox.collisionBit,
+      collisionMask: hitbox.collisionMask,
+      localID: localID,
+      flags: hitbox.flags,
       radius: hitbox.radius
    };
 }
@@ -55,11 +59,12 @@ const serialiseEntityData = (entity: Entity, player: Entity | null): EntityData<
 
    for (let i = 0; i < entity.hitboxes.length; i++) {
       const hitbox = entity.hitboxes[i];
+      const localID = entity.hitboxLocalIDs[i];
       
       if (hitboxIsCircular(hitbox)) {
-         circularHitboxes.push(bundleCircularHitboxData(hitbox));
+         circularHitboxes.push(bundleCircularHitboxData(hitbox, localID));
       } else {
-         rectangularHitboxes.push(bundleRectangularHitboxData(hitbox));
+         rectangularHitboxes.push(bundleRectangularHitboxData(hitbox, localID));
       }
    }
 
@@ -83,8 +88,7 @@ const serialiseEntityData = (entity: Entity, player: Entity | null): EntityData<
       type: entity.type,
       collisionBit: entity.collisionBit,
       collisionMask: entity.collisionMask,
-      components: components,
-      tickEvents: entity.tickEvents
+      components: components
    };
 }
 
@@ -172,7 +176,7 @@ const bundlePlayerTribeData = (playerClient: PlayerClient): PlayerTribeData => {
    return {
       name: playerClient.tribe.name,
       id: playerClient.tribe.id,
-      tribeType: playerClient.tribe.type,
+      tribeType: playerClient.tribe.tribeType,
       hasTotem: playerClient.tribe.totem !== null,
       numHuts: playerClient.tribe.getNumHuts(),
       tribesmanCap: playerClient.tribe.tribesmanCap,
@@ -193,7 +197,7 @@ const bundleEnemyTribesData = (playerClient: PlayerClient): ReadonlyArray<EnemyT
       enemyTribesData.push({
          name: tribe.name,
          id: tribe.id,
-         tribeType: tribe.type
+         tribeType: tribe.tribeType
       });
    }
    return enemyTribesData;
@@ -254,6 +258,7 @@ export function createGameDataPacket(playerClient: PlayerClient): GameDataPacket
    const visibleTribes = getVisibleTribes(extendedVisibleChunkBounds);
    
    const gameDataPacket: GameDataPacket = {
+      simulationIsPaused: !SERVER.isSimulating,
       entityDataArray: bundleEntityDataArray(player, playerClient.tribe, extendedVisibleChunkBounds),
       inventory: bundlePlayerInventoryData(player),
       visibleHits: playerClient.visibleHits,
@@ -274,6 +279,7 @@ export function createGameDataPacket(playerClient: PlayerClient): GameDataPacket
       pickedUpItem: playerClient.pickedUpItem,
       hotbarCrossbowLoadProgressRecord: bundleHotbarCrossbowLoadProgressRecord(player),
       titleOffer: player !== null ? PlayerComponentArray.getComponent(player.id).titleOffer : null,
+      tickEvents: playerClient.entityTickEvents,
       // @Cleanup: Copy and paste
       visiblePathfindingNodeOccupances: (playerClient.gameDataOptions & GameDataPacketOptions.sendVisiblePathfindingNodeOccupances) ? getVisiblePathfindingNodeOccupances(extendedVisibleChunkBounds) : [],
       visibleSafetyNodes: (playerClient.gameDataOptions & GameDataPacketOptions.sendVisibleSafetyNodes) ? getVisibleSafetyNodesData(visibleTribes, extendedVisibleChunkBounds) : [],

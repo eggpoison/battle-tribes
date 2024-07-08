@@ -1,4 +1,4 @@
-import { ItemType } from "webgl-test-shared/dist/items";
+import { ItemType } from "webgl-test-shared/dist/items/items";
 import Entity from "./Entity";
 import { createItemEntity } from "./entities/item-entity";
 

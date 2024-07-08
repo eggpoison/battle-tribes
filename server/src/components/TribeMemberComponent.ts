@@ -1,5 +1,5 @@
 import { ServerComponentType, TribeMemberComponentData } from "webgl-test-shared/dist/components";
-import { EntityType } from "webgl-test-shared/dist/entities";
+import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
 import { TitleGenerationInfo, TribesmanTitle, TRIBESMAN_TITLE_RECORD } from "webgl-test-shared/dist/titles";
 import { TribeType } from "webgl-test-shared/dist/tribes";
 import { randInt } from "webgl-test-shared/dist/utils";
@@ -8,16 +8,17 @@ import { ComponentArray } from "./ComponentArray";
 import { generateTitle } from "../tribesman-title-generation";
 import Board from "../Board";
 import { InventoryComponentArray, createNewInventory } from "./InventoryComponent";
-import { InventoryName } from "webgl-test-shared/dist/items";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { TribeComponentArray } from "./TribeComponent";
 import { PlayerComponentArray } from "./PlayerComponent";
 import { InventoryUseComponentArray } from "./InventoryUseComponent";
+import { InventoryName } from "webgl-test-shared/dist/items/items";
+import { ComponentRecord } from "../components";
 
 type TribesmanEntityType = EntityType.player | EntityType.tribeWorker | EntityType.tribeWarrior;
 
 export class TribeMemberComponent {
-   public readonly warPaintType: number;
+   public readonly warPaintType: number | null;
 
    public readonly fishFollowerIDs = new Array<number>();
 
@@ -36,7 +37,7 @@ export class TribeMemberComponent {
             this.warPaintType = randInt(1, 5);
          }
       } else {
-         this.warPaintType = -1;
+         this.warPaintType = null;
       }
    }
 }
@@ -44,6 +45,7 @@ export class TribeMemberComponent {
 export const TribeMemberComponentArray = new ComponentArray<ServerComponentType.tribeMember, TribeMemberComponent>(true, {
    onJoin: onJoin,
    onRemove: onRemove,
+   onInitialise: onInitialise,
    serialise: serialise
 });
 
@@ -56,15 +58,22 @@ const getHotbarSize = (entityType: TribesmanEntityType): number => {
 }
 
 function onJoin(entityID: number): void {
+   const tribeComponent = TribeComponentArray.getComponent(entityID);
+   tribeComponent.tribe.registerNewTribeMember(entityID);
+}
+
+function onRemove(entityID: number): void {
+   const tribeComponent = TribeComponentArray.getComponent(entityID);
+   tribeComponent.tribe.registerTribeMemberDeath(entityID);
+}
+
+function onInitialise(entity: Entity, componentRecord: ComponentRecord): void {
    // 
    // Create inventories
    // 
 
-   const inventoryComponent = InventoryComponentArray.getComponent(entityID);
-   const inventoryUseComponent = InventoryUseComponentArray.getComponent(entityID);
-   
-   // @Hack
-   const entity = Board.entityRecord[entityID]!;
+   const inventoryComponent = componentRecord[ServerComponentType.inventory]!;
+   const inventoryUseComponent = componentRecord[ServerComponentType.inventoryUse]!;
    
    const hotbarSize = getHotbarSize(entity.type as TribesmanEntityType);
    const hotbarInventory = createNewInventory(inventoryComponent, InventoryName.hotbar, hotbarSize, 1, { acceptsPickedUpItems: true, isDroppedOnDeath: true });
@@ -79,14 +88,6 @@ function onJoin(entityID: number): void {
    createNewInventory(inventoryComponent, InventoryName.backpackSlot, 1, 1, { acceptsPickedUpItems: false, isDroppedOnDeath: true });
    createNewInventory(inventoryComponent, InventoryName.gloveSlot, 1, 1, { acceptsPickedUpItems: false, isDroppedOnDeath: true });
    createNewInventory(inventoryComponent, InventoryName.backpack, 0, 0, { acceptsPickedUpItems: false, isDroppedOnDeath: true });
-
-   const tribeComponent = TribeComponentArray.getComponent(entityID);
-   tribeComponent.tribe.registerNewTribeMember(entityID);
-}
-
-function onRemove(entityID: number): void {
-   const tribeComponent = TribeComponentArray.getComponent(entityID);
-   tribeComponent.tribe.registerTribeMemberDeath(entityID);
 }
 
 function serialise(entityID: number): TribeMemberComponentData {
@@ -175,4 +176,33 @@ export function hasTitle(entityID: number, title: TribesmanTitle): boolean {
    }
 
    return false;
+}
+
+export function forceAddTitle(entityID: EntityID, title: TribesmanTitle): void {
+   const tribeMemberComponent = TribeMemberComponentArray.getComponent(entityID);
+   
+   // Make sure they don't already have the title
+   for (let i = 0; i < tribeMemberComponent.titles.length; i++) {
+      const titleGenerationInfo = tribeMemberComponent.titles[i];
+
+      if (titleGenerationInfo.title === title) {
+         return;
+      }
+   }
+
+   const titleGenerationInfo = generateTitle(title);
+   tribeMemberComponent.titles.push(titleGenerationInfo);
+}
+
+export function removeTitle(entityID: EntityID, title: TribesmanTitle): void {
+   const tribeMemberComponent = TribeMemberComponentArray.getComponent(entityID);
+
+   for (let i = 0; i < tribeMemberComponent.titles.length; i++) {
+      const titleGenerationInfo = tribeMemberComponent.titles[i];
+
+      if (titleGenerationInfo.title === title) {
+         tribeMemberComponent.titles.splice(i, 1);
+         break;
+      }
+   }
 }

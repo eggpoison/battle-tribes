@@ -1,6 +1,6 @@
 import { ServerComponentType, ThrowingProjectileComponentData } from "webgl-test-shared/dist/components";
-import { Item } from "webgl-test-shared/dist/items";
 import { ComponentArray } from "./ComponentArray";
+import { Item } from "webgl-test-shared/dist/items/items";
 
 export class ThrowingProjectileComponent {
    readonly tribeMemberID: number;

@@ -114,11 +114,19 @@ const Components = {
 
 type Component<T extends ServerComponentType> = ReturnType<typeof Components[T]>;
 
+// @Cleanup
+
 type EntityCreationComponentsInfo<ComponentTypes extends ServerComponentType[]> = {
    [T in ComponentTypes[number]]: Component<T>;
 };
 
+export type ComponentRecord = Partial<{
+   [T in ServerComponentType]: Component<T>;
+}>;
+
 export interface EntityCreationInfo<ComponentTypes extends ServerComponentType[]> {
    readonly entity: Entity;
-   readonly components: EntityCreationComponentsInfo<ComponentTypes>;
+   // @Temporary?
+   // readonly components: EntityCreationComponentsInfo<ComponentTypes>;
+   readonly components: ComponentRecord;
 }

@@ -5,7 +5,7 @@ import { LeafParticleSize, createLeafParticle, createLeafSpeckParticle } from ".
 import { AudioFilePath, playSound } from "../sound";
 import Entity, { ComponentDataRecord } from "../Entity";
 import RenderPart from "../render-parts/RenderPart";
-import { getTextureArrayIndex } from "../texture-atlases/entity-texture-atlas";
+import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { BERRY_BUSH_TEXTURE_SOURCES } from "../entity-components/BerryBushComponent";
 
 class BerryBush extends Entity {

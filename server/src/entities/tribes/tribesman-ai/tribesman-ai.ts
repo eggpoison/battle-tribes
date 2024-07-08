@@ -1,13 +1,12 @@
 import { PlanterBoxPlant, TribesmanAIType } from "webgl-test-shared/dist/components";
 import { EntityType, LimbAction } from "webgl-test-shared/dist/entities";
-import { ITEM_TYPE_RECORD, ITEM_INFO_RECORD, Item, ConsumableItemInfo, Inventory, ItemType, InventoryName } from "webgl-test-shared/dist/items";
 import { Settings, PathfindingSettings } from "webgl-test-shared/dist/settings";
 import { getTechByID } from "webgl-test-shared/dist/techs";
 import { getAngleDiff } from "webgl-test-shared/dist/utils";
 import Entity from "../../../Entity";
 import { willStopAtDesiredDistance, stopEntity, getDistanceFromPointToEntity, getClosestAccessibleEntity } from "../../../ai-shared";
 import { HealthComponentArray } from "../../../components/HealthComponent";
-import { getInventory, addItemToInventory, consumeItemFromSlot, inventoryComponentCanAffordRecipe, inventoryIsFull, getItemTypeSlot, InventoryComponentArray } from "../../../components/InventoryComponent";
+import { getInventory, addItemToInventory, consumeItemFromSlot, inventoryComponentCanAffordRecipe, inventoryIsFull, getItemTypeSlot, InventoryComponentArray, hasSpaceForRecipe } from "../../../components/InventoryComponent";
 import { TribesmanAIComponentArray, TribesmanPathType, itemThrowIsOnCooldown } from "../../../components/TribesmanAIComponent";
 import { tickTribeMember, calculateRadialAttackTargets, repairBuilding, throwItem, } from "../tribe-member";
 import { InventoryUseComponentArray, getInventoryUseInfo, setLimbActions } from "../../../components/InventoryUseComponent";
@@ -23,7 +22,7 @@ import { huntEntity } from "./tribesman-combat-ai";
 import { PlanterBoxComponentArray, placePlantInPlanterBox } from "../../../components/PlanterBoxComponent";
 import { HutComponentArray } from "../../../components/HutComponent";
 import { PlayerComponentArray } from "../../../components/PlayerComponent";
-import { getGatherTarget, tribesmanGetItemPickupTarget, tribesmanGoPickupItemEntity } from "./tribesman-resource-gathering";
+import { gatherResources, getGatherTarget, tribesmanGetItemPickupTarget, tribesmanGoPickupItemEntity } from "./tribesman-resource-gathering";
 import { goResearchTech } from "./tribesman-researching";
 import { clearTribesmanPath, getBestToolItemSlot, getTribesmanAcceleration, getTribesmanAttackOffset, getTribesmanAttackRadius, getTribesmanDesiredAttackRange, getTribesmanRadius, getTribesmanSlowAcceleration, pathfindToPosition } from "./tribesman-ai-utils";
 import { attemptToRepairBuildings, goPlaceBuilding, goUpgradeBuilding } from "./tribesman-structures";
@@ -32,6 +31,7 @@ import { getGiftableItemSlot, getRecruitTarget } from "./tribesman-recruiting";
 import { escapeFromEnemies, tribesmanShouldEscape } from "./tribesman-escaping";
 import { continueTribesmanHealing, getHealingItemUseInfo } from "./tribesman-healing";
 import { tribesmanDoPatrol } from "./tribesman-patrolling";
+import { ItemType, InventoryName, Item, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, ConsumableItemInfo, Inventory, ItemTypeString } from "webgl-test-shared/dist/items/items";
 
 // @Cleanup: Move all of this to the TribesmanComponent file
 
@@ -512,7 +512,7 @@ export function tickTribesman(tribesman: Entity): void {
       }
    }
    
-   // // Attack enemy buildings
+   // Attack enemy buildings
    if (visibleEnemyBuildings.length > 0) {
       huntEntity(tribesman, getClosestAccessibleEntity(tribesman, visibleEnemyBuildings), true);
       return;
@@ -596,6 +596,7 @@ export function tickTribesman(tribesman: Entity): void {
       }
    }
 
+   // @Cleanup
    // Try to recuit other tribesmen
    const recruitTarget = getRecruitTarget(tribesman, aiHelperComponent.visibleEntities);
    if (recruitTarget !== null) {
@@ -696,7 +697,7 @@ export function tickTribesman(tribesman: Entity): void {
    tribesmanComponent.goals = goals;
    
    if (goal !== null) {
-      // @Cleanup: messy
+      // @Cleanup: messy. this whole system kinda sucks
       if (goal.type === TribesmanGoalType.craftRecipe || goal.type === TribesmanGoalType.placeBuilding || goal.type === TribesmanGoalType.upgradeBuilding) {
          if (goal.isPersonalPlan && goal.plan !== null) {
             // @Cleanup: copy and paste
@@ -728,12 +729,34 @@ export function tickTribesman(tribesman: Entity): void {
       
       switch (goal.type) {
          case TribesmanGoalType.craftRecipe: {
-            if (inventoryComponentCanAffordRecipe(inventoryComponent, goal.recipe, InventoryName.hotbar)) {
-               const isGoing = goCraftItem(tribesman, goal.recipe, tribeComponent.tribe);
-               if (isGoing) {
+            // If not enough space, try to make space
+            if (!hasSpaceForRecipe(inventoryComponent, goal.recipe, InventoryName.hotbar)) {
+               // Just throw out any item which isn't used in the recipe
+               let hasThrown = false;
+               for (let i = 0; i < hotbarInventory.items.length; i++) {
+                  const item = hotbarInventory.items[i];
+
+                  if (goal.recipe.ingredients.getItemCount(item.type) === 0) {
+                     const itemSlot = hotbarInventory.getItemSlot(item);
+                     throwItem(tribesman, InventoryName.hotbar, itemSlot, item.count, tribesman.rotation);
+                     hasThrown = true;
+                     break;
+                  }
+               }
+
+               if (!hasThrown) {
+                  console.warn("couldn't throw");
+                  console.log(hotbarInventory.itemSlots);
+                  console.log(goal.recipe);
                   return;
                }
             }
+            
+            const isGoing = goCraftItem(tribesman, goal.recipe, tribeComponent.tribe);
+            if (isGoing) {
+               return;
+            }
+
             break;
          }
          case TribesmanGoalType.placeBuilding: {
@@ -756,6 +779,16 @@ export function tickTribesman(tribesman: Entity): void {
             }
             break;
          }
+         case TribesmanGoalType.gatherItems: {
+            const isGathering = gatherResources(tribesman, goal.itemTypesToGather, visibleItemEntities);
+            if (isGathering) {
+               return;
+            }
+            // @Incomplete:
+            // level 1) explore randomly if not gathering
+            // level 2) remember which places the tribesman has been to and go there to get more of those resources
+            break;
+         }
       }
    }
 
@@ -768,18 +801,9 @@ export function tickTribesman(tribesman: Entity): void {
       }
    }
 
-   const prioritisedItemTypes = goal !== null && goal.type === TribesmanGoalType.gatherItems ? goal.itemTypesToGather : [];
-   const gatherTargetInfo = getGatherTarget(tribesman, aiHelperComponent.visibleEntities, prioritisedItemTypes);
-
-   // Pick up dropped items
-   const pickupTarget = tribesmanGetItemPickupTarget(tribesman, visibleItemEntities, prioritisedItemTypes, gatherTargetInfo);
-   if (pickupTarget !== null) {
-      tribesmanGoPickupItemEntity(tribesman, pickupTarget);
-      return;
-   }
-
    // Use items in research
    // @Hack
+   // instead make the research tech goal have 
    if (goals.length >= 2 && goal!.type === TribesmanGoalType.gatherItems && goals[1].type === TribesmanGoalType.researchTech) {
       const researchGoal = goals[1];
       
@@ -789,7 +813,6 @@ export function tickTribesman(tribesman: Entity): void {
          if (typeof item === "undefined") {
             continue;
          }
-
 
          const amountUsed = tribeComponent.tribe.useItemInTechResearch(researchGoal.tech, item.type, item.count);
          if (amountUsed > 0) {
@@ -879,10 +902,12 @@ export function tickTribesman(tribesman: Entity): void {
       }
    }
 
-   // Gather resources
-   if (gatherTargetInfo.target !== null) {
-      huntEntity(tribesman, gatherTargetInfo.target, false);
-      return;
+   // If not in an AI tribe, try to gather any resources you can indiscriminantly
+   if (!tribeComponent.tribe.isAIControlled) {
+      const isGathering = gatherResources(tribesman, [], visibleItemEntities);
+      if (isGathering) {
+         return;
+      }
    }
 
    // @Cleanup: Remove once all paths set their limb actions

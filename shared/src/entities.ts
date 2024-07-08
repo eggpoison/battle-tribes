@@ -1,4 +1,4 @@
-export type EntityBehaviour = "passive" | "neutral" | "hostile";
+export type EntityID = number;
 
 export const enum EntityType {
    cow,

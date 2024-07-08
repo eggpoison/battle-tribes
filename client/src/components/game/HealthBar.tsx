@@ -16,7 +16,11 @@ const HealthBar = () => {
 
    useEffect(() => {
       if (healthBarRef.current !== null) {
-         healthBarRef.current.style.setProperty("--max-health", Player.instance !== null ? TRIBE_INFO_RECORD[Game.tribe.tribeType].maxHealthPlayer.toString() : "0");
+         const maxHealth = Player.instance !== null ? TRIBE_INFO_RECORD[Game.tribe.tribeType].maxHealthPlayer : 0;
+
+         healthBarRef.current.style.setProperty("--max-health", maxHealth.toString());
+         healthBarRef.current.style.setProperty("--current-health", maxHealth.toString());
+         healthBarRef.current.style.setProperty("--previous-health", maxHealth.toString());
       }
    }, []);
    

@@ -3,7 +3,6 @@ import { EntityID, EntityType, EntityTypeString } from "webgl-test-shared/dist/e
 import { ComponentArray } from "./ComponentArray";
 import { DOOR_HEALTHS, createDoor } from "../entities/structures/door";
 import { EMBRASURE_HEALTHS, createEmbrasure } from "../entities/structures/embrasure";
-import { createBallista } from "../entities/structures/ballista";
 import { createSlingTurret } from "../entities/structures/sling-turret";
 import { TUNNEL_HEALTHS, createTunnel } from "../entities/structures/tunnel";
 import Board from "../Board";
@@ -21,11 +20,12 @@ import { BuildingMaterialComponentArray } from "./BuildingMaterialComponent";
 import { HutComponentArray } from "./HutComponent";
 import { Item, ITEM_INFO_RECORD, HammerItemInfo } from "webgl-test-shared/dist/items/items";
 import { TransformComponentArray } from "./TransformComponent";
+import { ComponentConfig } from "../components";
+import { createEntityHitboxes } from "webgl-test-shared/dist/hitboxes/entity-hitbox-creation";
 
 export interface BlueprintComponentParams {
-   readonly shapeType: BlueprintType;
+   blueprintType: BlueprintType;
    readonly associatedEntityID: EntityID;
-   readonly virtualEntityID: EntityID;
 }
 
 const STRUCTURE_WORK_REQUIRED: Record<BlueprintType, number> = {
@@ -51,28 +51,37 @@ export class BlueprintComponent {
    public readonly blueprintType: BlueprintType;
    public workProgress = 0;
    public associatedEntityID: EntityID;
-   public readonly virtualEntityID: EntityID;
+   public readonly virtualEntityID: EntityID = 0;
 
    constructor(params: BlueprintComponentParams) {
-      this.blueprintType = params.shapeType;
+      this.blueprintType = params.blueprintType;
       this.associatedEntityID = params.associatedEntityID;
-      this.virtualEntityID = params.virtualEntityID;
    }
 }
 
 export const BlueprintComponentArray = new ComponentArray<ServerComponentType.blueprint, BlueprintComponent>(true, {
+   onInitialise: onInitialise,
    onJoin: onJoin,
    onRemove: onRemove,
    serialise: serialise
 });
+
+function onInitialise(config: ComponentConfig<ServerComponentType.transform | ServerComponentType.blueprint>): void {
+   const blueprintType = config[ServerComponentType.blueprint].blueprintType;
+
+   const entityType = getBlueprintEntityType(blueprintType);
+   config[ServerComponentType.transform].hitboxes = createEntityHitboxes(entityType);
+}
 
 function onJoin(entityID: EntityID): void {
    const transformComponent = TransformComponentArray.getComponent(entityID);
    const tribeComponent = TribeComponentArray.getComponent(entityID);
    const blueprintComponent = BlueprintComponentArray.getComponent(entityID);
 
+   const virtualEntityID = tribeComponent.tribe.virtualEntityIDCounter++;
+
    const entityType = getBlueprintEntityType(blueprintComponent.blueprintType);
-   placeVirtualBuilding(tribeComponent.tribe, transformComponent.position, transformComponent.rotation, entityType, blueprintComponent.virtualEntityID);
+   placeVirtualBuilding(tribeComponent.tribe, transformComponent.position, transformComponent.rotation, entityType, virtualEntityID);
    tribeComponent.tribe.buildingsAreDirty = true;
 
    if (StructureComponentArray.hasComponent(blueprintComponent.associatedEntityID)) {

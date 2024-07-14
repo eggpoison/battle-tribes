@@ -53,13 +53,13 @@ export class ComponentArray<C extends ServerComponentType = ServerComponentType,
       ComponentArrays.push(this);
    }
    
-   public addComponent(entityID: number, component: T): void {
-      if (typeof this.entityToIndexMap[entityID] !== "undefined") {
+   public addComponent(entity: EntityID, component: T): void {
+      if (typeof this.entityToIndexMap[entity] !== "undefined") {
          throw new Error("Component added to same entity twice.");
       }
 
       this.componentBuffer.push(component);
-      this.componentBufferIDs.push(entityID);
+      this.componentBufferIDs.push(entity);
    }
 
    public pushComponentsFromBuffer(): void {
@@ -92,13 +92,13 @@ export class ComponentArray<C extends ServerComponentType = ServerComponentType,
       this.componentBufferIDs = [];
    }
 
-   public getComponent(entityID: number): T {
-      return this.components[this.entityToIndexMap[entityID]!];
+   public getComponent(entity: EntityID): T {
+      return this.components[this.entityToIndexMap[entity]!];
    }
 
-   public removeComponent(entityID: number): void {
+   public removeComponent(entity: EntityID): void {
 		// Copy element at end into deleted element's place to maintain density
-      const indexOfRemovedEntity = this.entityToIndexMap[entityID]!;
+      const indexOfRemovedEntity = this.entityToIndexMap[entity]!;
       this.components[indexOfRemovedEntity] = this.components[this.components.length - 1];
 
 		// Update map to point to moved spot
@@ -106,33 +106,33 @@ export class ComponentArray<C extends ServerComponentType = ServerComponentType,
       this.entityToIndexMap[entityOfLastElement] = indexOfRemovedEntity;
       this.indexToEntityMap[indexOfRemovedEntity] = entityOfLastElement;
 
-      delete this.entityToIndexMap[entityID];
+      delete this.entityToIndexMap[entity];
       delete this.indexToEntityMap[this.components.length - 1];
 
       this.components.pop();
 
-      if (typeof this.activeEntityToIndexMap[entityID] !== "undefined") {
-         this.deactivateComponent(entityID);
+      if (typeof this.activeEntityToIndexMap[entity] !== "undefined") {
+         this.deactivateComponent(entity);
       }
    }
 
-   public hasComponent(entityID: number): boolean {
-      return typeof this.entityToIndexMap[entityID] !== "undefined";
+   public hasComponent(entity: EntityID): boolean {
+      return typeof this.entityToIndexMap[entity] !== "undefined";
    }
 
-   public activateComponent(component: T, entityID: number): void {
+   public activateComponent(component: T, entity: EntityID): void {
       // Put new entry at end and update the maps
       const newIndex = this.activeComponents.length;
-      this.activeEntityToIndexMap[entityID] = newIndex;
-      this.activeIndexToEntityMap[newIndex] = entityID;
+      this.activeEntityToIndexMap[entity] = newIndex;
+      this.activeIndexToEntityMap[newIndex] = entity;
       this.activeComponents.push(component);
 
-      this.activeEntityIDs.push(entityID);
+      this.activeEntityIDs.push(entity);
    }
 
-   private deactivateComponent(entityID: number): void {
+   private deactivateComponent(entity: EntityID): void {
       // Copy element at end into deleted element's place to maintain density
-      const indexOfRemovedEntity = this.activeEntityToIndexMap[entityID];
+      const indexOfRemovedEntity = this.activeEntityToIndexMap[entity];
       this.activeComponents[indexOfRemovedEntity] = this.activeComponents[this.activeComponents.length - 1];
       this.activeEntityIDs[indexOfRemovedEntity] = this.activeEntityIDs[this.activeComponents.length - 1];
 
@@ -141,15 +141,15 @@ export class ComponentArray<C extends ServerComponentType = ServerComponentType,
       this.activeEntityToIndexMap[entityOfLastElement] = indexOfRemovedEntity;
       this.activeIndexToEntityMap[indexOfRemovedEntity] = entityOfLastElement;
 
-      delete this.activeEntityToIndexMap[entityID];
+      delete this.activeEntityToIndexMap[entity];
       delete this.activeIndexToEntityMap[this.activeComponents.length - 1];
 
       this.activeComponents.pop();
       this.activeEntityIDs.pop();
    }
 
-   public queueComponentDeactivate(entityID: number): void {
-      this.deactivateBuffer.push(entityID);
+   public queueComponentDeactivate(entity: EntityID): void {
+      this.deactivateBuffer.push(entity);
    }
 
    public deactivateQueue(): void {

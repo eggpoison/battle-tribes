@@ -1,37 +1,47 @@
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
-import { PlanterBoxPlant } from "webgl-test-shared/dist/components";
-import { EntityType } from "webgl-test-shared/dist/entities";
+import { PlanterBoxPlant, ServerComponentType } from "webgl-test-shared/dist/components";
+import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
 import { Point, randInt } from "webgl-test-shared/dist/utils";
-import Entity from "../Entity";
-import { HealthComponent, HealthComponentArray } from "../components/HealthComponent";
-import { StatusEffectComponent, StatusEffectComponentArray } from "../components/StatusEffectComponent";
-import { PLANT_GROWTH_TICKS, PlantComponent, PlantComponentArray } from "../components/PlantComponent";
+import { PLANT_GROWTH_TICKS, PlantComponentArray } from "../components/PlantComponent";
 import { dropBerryOverEntity } from "./resources/berry-bush";
 import { createItemsOverEntity } from "../entity-shared";
 import { createIceShardExplosion } from "./resources/ice-spikes";
 import { CircularHitbox, HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { ItemType } from "webgl-test-shared/dist/items/items";
+import { ComponentConfig } from "../components";
+import { StatusEffect } from "webgl-test-shared/dist/status-effects";
+import { TransformComponentArray } from "../components/TransformComponent";
+   
+type ComponentTypes = ServerComponentType.transform
+   | ServerComponentType.health
+   | ServerComponentType.statusEffect
+   | ServerComponentType.plant;
 
-const PLANT_HEALTHS: Record<PlanterBoxPlant, number> = {
-   [PlanterBoxPlant.tree]: 10,
-   [PlanterBoxPlant.berryBush]: 10,
-   [PlanterBoxPlant.iceSpikes]: 5,
-};
-
-export function createPlant(position: Point, rotation: number, planterBoxID: number, plantType: PlanterBoxPlant): Entity {
-   const plantEntity = new Entity(position, rotation, EntityType.plant, COLLISION_BITS.plants, DEFAULT_COLLISION_MASK);
-
-   plantEntity.addHitbox(new CircularHitbox(0.3, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, 28))
-
-   HealthComponentArray.addComponent(plantEntity.id, new HealthComponent(PLANT_HEALTHS[plantType]));
-   StatusEffectComponentArray.addComponent(plantEntity.id, new StatusEffectComponent(0));
-   PlantComponentArray.addComponent(plantEntity.id, new PlantComponent(planterBoxID, plantType));
-
-   return plantEntity;
+export function createPlantConfig(): ComponentConfig<ComponentTypes> {
+   return {
+      [ServerComponentType.transform]: {
+         position: new Point(0, 0),
+         rotation: 0,
+         type: EntityType.plant,
+         collisionBit: COLLISION_BITS.plants,
+         collisionMask: DEFAULT_COLLISION_MASK,
+         hitboxes: [new CircularHitbox(0.3, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, 28)]
+      },
+      [ServerComponentType.health]: {
+         maxHealth: 0
+      },
+      [ServerComponentType.statusEffect]: {
+         statusEffectImmunityBitset: StatusEffect.bleeding
+      },
+      [ServerComponentType.plant]: {
+         planterBoxID: 0,
+         plantType: PlanterBoxPlant.tree
+      }
+   };
 }
 
-export function dropBerryBushCropBerries(plant: Entity, multiplier: number): void {
-   const plantComponent = PlantComponentArray.getComponent(plant.id);
+export function dropBerryBushCropBerries(plant: EntityID, multiplier: number): void {
+   const plantComponent = PlantComponentArray.getComponent(plant);
    if (plantComponent.numFruit === 0) {
       return;
    }
@@ -43,8 +53,8 @@ export function dropBerryBushCropBerries(plant: Entity, multiplier: number): voi
    plantComponent.numFruit--;
 }
 
-export function onPlantHit(plant: Entity): void {
-   const plantComponent = PlantComponentArray.getComponent(plant.id);
+export function onPlantHit(plant: EntityID): void {
+   const plantComponent = PlantComponentArray.getComponent(plant);
 
    plantComponent.fruitRandomGrowthTicks = 0;
 
@@ -58,8 +68,8 @@ export function onPlantHit(plant: Entity): void {
    }
 }
 
-export function onPlantDeath(plant: Entity): void {
-   const plantComponent = PlantComponentArray.getComponent(plant.id);
+export function onPlantDeath(plant: EntityID): void {
+   const plantComponent = PlantComponentArray.getComponent(plant);
 
    switch (plantComponent.plantType) {
       case PlanterBoxPlant.tree: {
@@ -71,13 +81,15 @@ export function onPlantDeath(plant: Entity): void {
          break;
       }
       case PlanterBoxPlant.iceSpikes: {
+         const transformComponent = TransformComponentArray.getComponent(plant);
+         
          const ticksToGrow = PLANT_GROWTH_TICKS[PlanterBoxPlant.iceSpikes];
          if (plantComponent.plantGrowthTicks === ticksToGrow) {
             createItemsOverEntity(plant, ItemType.frostcicle, randInt(1, 2), 40);
             
-            createIceShardExplosion(plant.position.x, plant.position.y, randInt(2, 3));
+            createIceShardExplosion(transformComponent.position.x, transformComponent.position.y, randInt(2, 3));
          } else if (plantComponent.plantGrowthTicks >= ticksToGrow * 0.5) {
-            createIceShardExplosion(plant.position.x, plant.position.y, randInt(1, 2));
+            createIceShardExplosion(transformComponent.position.x, transformComponent.position.y, randInt(1, 2));
          }
          break;
       }

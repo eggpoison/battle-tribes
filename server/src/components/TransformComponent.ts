@@ -19,7 +19,7 @@ export interface TransformComponentParams {
    readonly collisionBit: number;
    readonly collisionMask: number;
    // @Cleanup: should this instead be hitbox info?
-   readonly hitboxes: ReadonlyArray<Hitbox>;
+   hitboxes: ReadonlyArray<Hitbox>;
 }
 
 export class TransformComponent {

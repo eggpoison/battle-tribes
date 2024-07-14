@@ -1,14 +1,14 @@
 import { COLLISION_BITS } from "webgl-test-shared/dist/collision";
-import { BlueprintType } from "webgl-test-shared/dist/components";
+import { BlueprintType, ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { StructureType } from "webgl-test-shared/dist/structures";
 import { Point } from "webgl-test-shared/dist/utils";
-import Entity from "../Entity";
-import { HealthComponent, HealthComponentArray } from "../components/HealthComponent";
-import { BlueprintComponent, BlueprintComponentArray } from "../components/BlueprintComponent";
-import { TribeComponent, TribeComponentArray } from "../components/TribeComponent";
-import Tribe from "../Tribe";
-import { createEntityHitboxes } from "webgl-test-shared/dist/hitboxes/entity-hitbox-creation";
+import { ComponentConfig } from "../components";
+   
+type ComponentTypes = ServerComponentType.transform
+   | ServerComponentType.health
+   | ServerComponentType.blueprint
+   | ServerComponentType.tribe;
 
 // @Incomplete: Remove if the associated entity is removed
 
@@ -33,20 +33,25 @@ export function getBlueprintEntityType(blueprintType: BlueprintType): StructureT
    }
 }
 
-export function createBlueprintEntity(position: Point, rotation: number, blueprintType: BlueprintType, associatedEntityID: number, tribe: Tribe): Entity {
-   const blueprintEntity = new Entity(position, rotation, EntityType.blueprintEntity, COLLISION_BITS.none, 0);
-
-   const entityType = getBlueprintEntityType(blueprintType);
-   const hitboxes = createEntityHitboxes(entityType);
-   for (let i = 0; i < hitboxes.length; i++) {
-      blueprintEntity.addHitbox(hitboxes[i]);
-   }
-
-   HealthComponentArray.addComponent(blueprintEntity.id, new HealthComponent(5));
-   BlueprintComponentArray.addComponent(blueprintEntity.id, new BlueprintComponent(blueprintType, associatedEntityID, tribe.virtualEntityIDCounter));
-   TribeComponentArray.addComponent(blueprintEntity.id, new TribeComponent(tribe));
-
-   tribe.virtualEntityIDCounter++;
-   
-   return blueprintEntity;
+export function createBlueprintEntityConfig(): ComponentConfig<ComponentTypes> {
+   return {
+      [ServerComponentType.transform]: {
+         position: new Point(0, 0),
+         rotation: 0,
+         type: EntityType.plant,
+         collisionBit: COLLISION_BITS.none,
+         collisionMask: 0,
+         hitboxes: []
+      },
+      [ServerComponentType.health]: {
+         maxHealth: 5
+      },
+      [ServerComponentType.blueprint]: {
+         blueprintType: BlueprintType.stoneDoor,
+         associatedEntityID: 0,
+      },
+      [ServerComponentType.tribe]: {
+         tribeID: null
+      }
+   };
 }

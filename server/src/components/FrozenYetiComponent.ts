@@ -1,5 +1,5 @@
 import { Point } from "webgl-test-shared/dist/utils";
-import { FrozenYetiAttackType } from "webgl-test-shared/dist/entities";
+import { EntityID, FrozenYetiAttackType } from "webgl-test-shared/dist/entities";
 import { FrozenYetiComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
 import { FROZEN_YETI_STOMP_COOLDOWN, FrozenYetiRockSpikeInfo, FrozenYetiTargetInfo } from "../entities/mobs/frozen-yeti";
 import { ComponentArray } from "./ComponentArray";
@@ -30,8 +30,8 @@ export const FrozenYetiComponentArray = new ComponentArray<ServerComponentType.f
    serialise: serialise
 });
 
-function serialise(entityID: number): FrozenYetiComponentData {
-   const frozenYetiComponent = FrozenYetiComponentArray.getComponent(entityID);
+function serialise(entity: EntityID): FrozenYetiComponentData {
+   const frozenYetiComponent = FrozenYetiComponentArray.getComponent(entity);
    return {
       componentType: ServerComponentType.frozenYeti,
       attackType: frozenYetiComponent.attackType,

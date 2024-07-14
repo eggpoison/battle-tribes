@@ -8,10 +8,11 @@ import OPTIONS from "./options";
 import SRandom from "./SRandom";
 import { entityIsStructure } from "./Entity";
 import { createEntity } from "./entity-creation";
-import { yetiSpawnPositionIsValid } from "./entities/mobs/yeti";
 import { SERVER } from "./server/server";
 import { getDistributionWeightedSpawnPosition } from "./resource-distributions";
 import { entityIsTribesman } from "./entities/tribes/tribe-member";
+import { TransformComponentArray } from "./components/TransformComponent";
+import { yetiSpawnPositionIsValid } from "./components/YetiComponent";
 
 const PACK_SPAWN_RANGE = 200;
 
@@ -215,11 +216,13 @@ const tribesmanSpawnPositionIsValid = (x: number, y: number): boolean => {
       for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
          const chunk = Board.getChunk(chunkX, chunkY);
          for (const entity of chunk.entities) {
-            if (!entityIsStructure(entity) && !entityIsTribesman(entity.type)) {
+            if (!entityIsStructure(entity) && !entityIsTribesman(Board.getEntityType(entity)!)) {
                continue;
             }
+
+            const transformComponent = TransformComponentArray.getComponent(entity);
             
-            const distanceSquared = Math.pow(x - entity.position.x, 2) + Math.pow(y - entity.position.y, 2);
+            const distanceSquared = Math.pow(x - transformComponent.position.x, 2) + Math.pow(y - transformComponent.position.y, 2);
             if (distanceSquared <= Vars.TRIBESMAN_SPAWN_EXCLUSION_RANGE * Vars.TRIBESMAN_SPAWN_EXCLUSION_RANGE) {
                return false;
             }
@@ -340,7 +343,9 @@ export function spawnPositionIsValid(spawnInfo: EntitySpawnInfo, positionX: numb
       for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
          const chunk = Board.getChunk(chunkX, chunkY);
          for (const entity of chunk.entities) {
-            const distanceSquared = Math.pow(positionX - entity.position.x, 2) + Math.pow(positionY - entity.position.y, 2);
+            const transformComponent = TransformComponentArray.getComponent(entity);
+            
+            const distanceSquared = Math.pow(positionX - transformComponent.position.x, 2) + Math.pow(positionY - transformComponent.position.y, 2);
             if (distanceSquared <= spawnInfo.minSpawnDistance * spawnInfo.minSpawnDistance) {
                return false;
             }

@@ -2,11 +2,19 @@ import { PlanterBoxPlant, PlantComponentData, ServerComponentType } from "webgl-
 import { Settings } from "webgl-test-shared/dist/settings";
 import { ComponentArray } from "./ComponentArray";
 import { PlanterBoxComponentArray } from "./PlanterBoxComponent";
+import { ComponentConfig } from "../components";
+import { EntityID } from "webgl-test-shared/dist/entities";
 
 export interface PlantComponentParams {
    readonly planterBoxID: number;
-   readonly plant: PlanterBoxPlant;
+   readonly plantType: PlanterBoxPlant;
 }
+
+const PLANT_HEALTHS: Record<PlanterBoxPlant, number> = {
+   [PlanterBoxPlant.tree]: 10,
+   [PlanterBoxPlant.berryBush]: 10,
+   [PlanterBoxPlant.iceSpikes]: 5,
+};
 
 export const PLANT_GROWTH_TICKS: Record<PlanterBoxPlant, number> = {
    // @Temporary
@@ -30,18 +38,25 @@ export class PlantComponent {
 
    constructor(params: PlantComponentParams) {
       this.planterBoxID = params.planterBoxID;
-      this.plantType = params.plant;
+      this.plantType = params.plantType;
    }
 }
 
 export const PlantComponentArray = new ComponentArray<ServerComponentType.plant, PlantComponent>(true, {
+   onInitialise: onInitialise,
    onRemove: onRemove,
    serialise: serialise
 });
 
-function onRemove(entityID: number): void {
+function onInitialise(config: ComponentConfig<ServerComponentType.health | ServerComponentType.plant>): void {
+   const plantType = config[ServerComponentType.plant].plantType;
+
+   config[ServerComponentType.health].maxHealth = PLANT_HEALTHS[plantType];
+}
+
+function onRemove(entity: EntityID): void {
    // Register in the planter box that the plant has been removed
-   const plantComponent = PlantComponentArray.getComponent(entityID);
+   const plantComponent = PlantComponentArray.getComponent(entity);
 
    const planterBoxID = plantComponent.planterBoxID;
    if (PlanterBoxComponentArray.hasComponent(planterBoxID)) {
@@ -95,8 +110,8 @@ export function plantIsFullyGrown(plantComponent: PlantComponent): boolean {
    return plantComponent.plantGrowthTicks === ticksToGrow;
 }
 
-function serialise(entityID: number): PlantComponentData {
-   const plantComponent = PlantComponentArray.getComponent(entityID);
+function serialise(entity: EntityID): PlantComponentData {
+   const plantComponent = PlantComponentArray.getComponent(entity);
 
    let growthProgress: number;
    if (plantComponent.plantType !== null) {

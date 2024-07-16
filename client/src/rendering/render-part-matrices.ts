@@ -57,10 +57,12 @@ const calculateRenderPartMatrix = (renderPart: RenderPart): Matrix3x3 => {
    const scaleY = renderPart.scale;
    let model = createScaleMatrix(scaleX, scaleY);
    
+   // @Speed: Garbage collection
    // Rotation
    const rotationMatrix = createRotationMatrix(renderPart.rotation);
    model = matrixMultiply(rotationMatrix, model);
 
+   // @Speed: Garbage collection
    // Translation
    const translation = createTranslationMatrix(renderPart.offset.x, renderPart.offset.y);
    model = matrixMultiply(translation, model);

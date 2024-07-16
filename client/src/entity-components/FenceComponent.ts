@@ -1,8 +1,9 @@
 import { FenceComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
-import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
+import { RenderPart } from "../render-parts/render-parts";
+import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 type RailBit = 0b0001 | 0b0010 | 0b0100 | 0b1000;
 
@@ -57,11 +58,11 @@ class FenceComponent extends ServerComponent<ServerComponentType.fence> {
          }
       }
       
-      const renderPart = new RenderPart(
+      const renderPart = new TexturedRenderPart(
          this.entity,
-         getTextureArrayIndex(textureSource),
          0,
-         0
+         0,
+         getTextureArrayIndex(textureSource)
       );
       renderPart.offset.x = offsetX;
       renderPart.offset.y = offsetY;

@@ -1,4 +1,3 @@
-import RenderPart from "../render-parts/RenderPart";
 import { createRockParticle, createRockSpeckParticle } from "../particles";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { ROCK_DESTROY_SOUNDS, ROCK_HIT_SOUNDS, playSound } from "../sound";
@@ -6,7 +5,8 @@ import Entity, { ComponentDataRecord } from "../Entity";
 import { ParticleRenderLayer } from "../rendering/webgl/particle-rendering";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityType } from "webgl-test-shared/dist/entities";
-import { Point, randFloat, randItem } from "webgl-test-shared/dist/utils";
+import { randFloat, randItem } from "webgl-test-shared/dist/utils";
+import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 class Boulder extends Entity {
    private static readonly RADIUS = 40;
@@ -22,11 +22,11 @@ class Boulder extends Entity {
       const boulderComponentData = componentDataRecord[ServerComponentType.boulder]!;
 
       this.attachRenderPart(
-         new RenderPart(
+         new TexturedRenderPart(
             this,
-            getTextureArrayIndex(Boulder.TEXTURE_SOURCES[boulderComponentData.boulderType]),
             0,
-            0
+            0,
+            getTextureArrayIndex(Boulder.TEXTURE_SOURCES[boulderComponentData.boulderType])
          )
       );
    }

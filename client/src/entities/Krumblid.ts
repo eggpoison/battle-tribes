@@ -1,13 +1,13 @@
 import { HitData } from "webgl-test-shared/dist/client-server-types";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { angle, randFloat } from "webgl-test-shared/dist/utils";
-import RenderPart from "../render-parts/RenderPart";
 import { BloodParticleSize, createBloodParticle, createBloodParticleFountain, createBloodPoolParticle } from "../particles";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { ClientComponentType } from "../entity-components/components";
 import FootprintComponent from "../entity-components/FootprintComponent";
 import Entity from "../Entity";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
+import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 class Krumblid extends Entity {
    private static readonly BLOOD_FOUNTAIN_INTERVAL = 0.1;
@@ -16,11 +16,11 @@ class Krumblid extends Entity {
       super(id, EntityType.krumblid);
 
       this.attachRenderPart(
-         new RenderPart(
+         new TexturedRenderPart(
             this,
-            getTextureArrayIndex("entities/krumblid/krumblid.png"),
             0,
-            0
+            0,
+            getTextureArrayIndex("entities/krumblid/krumblid.png")
          )
       );
 

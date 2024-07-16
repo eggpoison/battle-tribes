@@ -1,5 +1,5 @@
 import { Settings } from "webgl-test-shared/dist/settings";
-import { GrassTileInfo, RIVER_STEPPING_STONE_SIZES, RiverFlowDirections, RiverSteppingStoneData, ServerTileData, ServerTileUpdateData } from "webgl-test-shared/dist/client-server-types";
+import { GrassTileInfo, InitialGameDataPacket, RIVER_STEPPING_STONE_SIZES, RiverFlowDirections, RiverSteppingStoneData, ServerTileData, ServerTileUpdateData } from "webgl-test-shared/dist/client-server-types";
 import { TileType } from "webgl-test-shared/dist/tiles";
 import { Point, Vector } from "webgl-test-shared/dist/utils";
 import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
@@ -13,11 +13,12 @@ import { tempFloat32ArrayLength1 } from "./webgl";
 import Player from "./entities/Player";
 import Fish from "./entities/Fish";
 import { NEIGHBOUR_OFFSETS } from "./utils";
-import RenderPart from "./render-parts/RenderPart";
 import { RenderableType, addRenderable, removeRenderable } from "./rendering/render-loop";
 import { WorldInfo } from "webgl-test-shared/dist/structures";
 import { EntityInfo } from "webgl-test-shared/dist/board-interface";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
+import Client from "./client/Client";
+import { RenderPart } from "./render-parts/render-parts";
 
 export interface EntityHitboxInfo {
    readonly vertexPositions: readonly [Point, Point, Point, Point];
@@ -66,15 +67,17 @@ abstract class Board {
    private static tickCallbacks = new Array<TickCallback>();
 
    // @Cleanup: This function gets called by Game.ts, which gets called by LoadingScreen.tsx, with these same parameters. This feels unnecessary.
-   public static initialise(tiles: Array<Array<Tile>>, riverFlowDirections: RiverFlowDirections, edgeTiles: Array<ServerTileData>, edgeRiverFlowDirections: RiverFlowDirections, grassInfo: Record<number, Record<number, GrassTileInfo>>): void {
+   public static initialise(initialGameDataPacket: InitialGameDataPacket): void {
       const edgeTilesRecord: Record<number, Record<number, Tile>> = {};
-      for (const tileData of edgeTiles) {
+      for (const tileData of initialGameDataPacket.edgeTiles) {
          if (!edgeTilesRecord.hasOwnProperty(tileData.x)) {
             edgeTilesRecord[tileData.x] = {};
          }
          edgeTilesRecord[tileData.x][tileData.y] = new Tile(tileData.x, tileData.y, tileData.type, tileData.biome, tileData.isWall);
       }
 
+      const tiles = Client.parseServerTileDataArray(initialGameDataPacket.tiles);
+      
       // Combine the tiles and edge tiles
       this.tiles = [];
       for (let tileY = -Settings.EDGE_GENERATION_DISTANCE; tileY < Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE; tileY++) {
@@ -131,10 +134,10 @@ abstract class Board {
          }
       }
 
-      this.riverFlowDirections = riverFlowDirections;
-      this.edgeRiverFlowDirections = edgeRiverFlowDirections;
+      this.riverFlowDirections = initialGameDataPacket.riverFlowDirections;
+      this.edgeRiverFlowDirections = initialGameDataPacket.edgeRiverFlowDirections;
 
-      this.grassInfo = grassInfo;
+      this.grassInfo = initialGameDataPacket.grassInfo;
    }
 
    public static addRiverSteppingStonesToChunks(steppingStones: ReadonlyArray<RiverSteppingStoneData>): void {
@@ -182,8 +185,14 @@ abstract class Board {
    }
 
    public static addEntity(entity: Entity): void {
+      entity.callOnLoadFunctions();
+
       this.entityRecord[entity.id] = entity;
       this.entities.add(entity);
+
+      if (entity.type === EntityType.player) {
+         this.players.push(entity as Player);
+      }
 
       if (entity.type === EntityType.fish) {
          this.fish.push(entity as Fish);

@@ -72,10 +72,6 @@ export function createPlayerConfig(): ComponentConfig<ComponentTypes> {
    };
 }
 
-export function tickPlayer(player: EntityID): void {
-   tickTribeMember(player);
-}
-
 export function onPlayerCollision(player: EntityID, collidingEntity: EntityID): void {
    if (Board.getEntityType(collidingEntity) === EntityType.itemEntity) {
       const wasPickedUp = pickupItemEntity(player, collidingEntity);

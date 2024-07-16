@@ -5,7 +5,6 @@ import { EntityType } from "webgl-test-shared/dist/entities";
 import { EntityData, HitData } from "webgl-test-shared/dist/client-server-types";
 import { angle, lerp, randFloat, randInt, randItem } from "webgl-test-shared/dist/utils";
 import { TileType } from "webgl-test-shared/dist/tiles";
-import RenderPart from "../render-parts/RenderPart";
 import Entity, { ComponentDataRecord } from "../Entity";
 import { BloodParticleSize, LeafParticleSize, createBloodParticle, createBloodParticleFountain, createBloodPoolParticle, createLeafParticle } from "../particles";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
@@ -14,6 +13,8 @@ import Game from "../Game";
 import { getTribesmanRadius } from "../entity-components/TribeMemberComponent";
 import { getTribeType } from "../entity-components/TribeComponent";
 import { InventoryName, ItemType } from "webgl-test-shared/dist/items/items";
+import TexturedRenderPart from "../render-parts/TexturedRenderPart";
+import { RenderPart } from "../render-parts/render-parts";
 
 export const TRIBE_MEMBER_Z_INDEXES: Record<string, number> = {
    hand: 1,
@@ -123,11 +124,11 @@ export function addTribeMemberRenderParts(tribesman: Entity, componentDataRecord
    // Body render part
    // 
    
-   const bodyRenderPart = new RenderPart(
+   const bodyRenderPart = new TexturedRenderPart(
       tribesman,
-      getTextureArrayIndex(getBodyTextureSource(tribesman, tribeType)),
       2,
-      0
+      0,
+      getTextureArrayIndex(getBodyTextureSource(tribesman, tribeType))
    );
    bodyRenderPart.addTag("tribeMemberComponent:body");
    tribesman.attachRenderPart(bodyRenderPart);
@@ -142,11 +143,11 @@ export function addTribeMemberRenderParts(tribesman: Entity, componentDataRecord
          }
          
          // Goblin warpaint
-         const warpaintRenderPart = new RenderPart(
+         const warpaintRenderPart = new TexturedRenderPart(
             tribesman,
-            getTextureArrayIndex(textureSource),
             4,
-            0
+            0,
+            getTextureArrayIndex(textureSource)
          );
          warpaintRenderPart.addTag("tribeMemberComponent:warpaint");
          tribesman.attachRenderPart(warpaintRenderPart);
@@ -155,11 +156,11 @@ export function addTribeMemberRenderParts(tribesman: Entity, componentDataRecord
       }
 
       // Left ear
-      const leftEarRenderPart = new RenderPart(
+      const leftEarRenderPart = new TexturedRenderPart(
          tribesman,
-         getTextureArrayIndex("entities/goblins/goblin-ear.png"),
          3,
          Math.PI/2 - GOBLIN_EAR_ANGLE,
+         getTextureArrayIndex("entities/goblins/goblin-ear.png")
       );
       leftEarRenderPart.addTag("tribeMemberComponent:ear");
       leftEarRenderPart.offset.x = (radius + GOBLIN_EAR_OFFSET) * Math.sin(-GOBLIN_EAR_ANGLE);
@@ -168,11 +169,11 @@ export function addTribeMemberRenderParts(tribesman: Entity, componentDataRecord
       tribesman.attachRenderPart(leftEarRenderPart);
 
       // Right ear
-      const rightEarRenderPart = new RenderPart(
+      const rightEarRenderPart = new TexturedRenderPart(
          tribesman,
-         getTextureArrayIndex("entities/goblins/goblin-ear.png"),
          3,
          -Math.PI/2 + GOBLIN_EAR_ANGLE,
+         getTextureArrayIndex("entities/goblins/goblin-ear.png")
       );
       rightEarRenderPart.addTag("tribeMemberComponent:ear");
       rightEarRenderPart.offset.x = (radius + GOBLIN_EAR_OFFSET) * Math.sin(GOBLIN_EAR_ANGLE);
@@ -182,11 +183,11 @@ export function addTribeMemberRenderParts(tribesman: Entity, componentDataRecord
 
    // Hands
    for (let i = 0; i < 2; i++) {
-      const handRenderPart = new RenderPart(
+      const handRenderPart = new TexturedRenderPart(
          tribesman,
-         getTextureArrayIndex(getFistTextureSource(tribesman, tribeType)),
          1,
-         0
+         0,
+         getTextureArrayIndex(getFistTextureSource(tribesman, tribeType))
       );
       handRenderPart.addTag("tribeMemberComponent:hand")
       handRenderPart.addTag("inventoryUseComponent:hand");
@@ -202,7 +203,7 @@ const switchTribeMemberRenderParts = (tribesman: Entity): void => {
    
    // Switch hand texture sources
    const handTextureSource = getFistTextureSource(tribesman, tribeType);
-   const handRenderParts = tribesman.getRenderParts("tribeMemberComponent:hand", 2);
+   const handRenderParts = tribesman.getRenderParts("tribeMemberComponent:hand", 2) as Array<TexturedRenderPart>;
    for (let i = 0; i < handRenderParts.length; i++) {
       const renderPart = handRenderParts[i];
       renderPart.switchTextureSource(handTextureSource);
@@ -210,7 +211,7 @@ const switchTribeMemberRenderParts = (tribesman: Entity): void => {
 
    // Switch body texture source
    const bodyTextureSource = getBodyTextureSource(tribesman, tribeType);
-   const handRenderPart = tribesman.getRenderPart("tribeMemberComponent:body");
+   const handRenderPart = tribesman.getRenderPart("tribeMemberComponent:body") as TexturedRenderPart;
    handRenderPart.switchTextureSource(bodyTextureSource);
 
    // Remove any goblin ears
@@ -343,11 +344,11 @@ abstract class TribeMember extends Entity {
    private updateLowHealthMarker(shouldShow: boolean): void {
       if (shouldShow) {
          if (this.lowHealthMarker === null) {
-            this.lowHealthMarker = new RenderPart(
+            this.lowHealthMarker = new TexturedRenderPart(
                this,
-               getTextureArrayIndex("entities/low-health-marker.png"),
                9,
-               0
+               0,
+               getTextureArrayIndex("entities/low-health-marker.png")
             );
             this.lowHealthMarker.inheritParentRotation = false;
             this.lowHealthMarker.offset.x = 20;

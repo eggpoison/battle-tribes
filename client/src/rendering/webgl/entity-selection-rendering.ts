@@ -3,9 +3,9 @@ import Board from "../../Board";
 import { getHighlightedEntityID, getSelectedEntityID } from "../../entity-selection";
 import { createWebGLProgram, gl, windowWidth, windowHeight, createTexture } from "../../webgl";
 import Entity from "../../Entity";
-import { ENTITY_TEXTURE_ATLAS_LENGTH, getEntityTextureAtlas } from "../../texture-atlases/texture-atlases";
-import { ATLAS_SLOT_SIZE } from "../../texture-atlases/texture-atlas-stitching";
+import { getEntityTextureAtlas } from "../../texture-atlases/texture-atlases";
 import { bindUBOToProgram, ENTITY_TEXTURE_ATLAS_UBO, UBOBindingIndex } from "../ubos";
+import { renderPartIsTextured } from "../../render-parts/render-parts";
 
 let framebufferProgram: WebGLProgram;
 let renderProgram: WebGLProgram;
@@ -261,6 +261,11 @@ const addVertices = (vertices: Array<number>, entity: Entity, offsetX: number, o
    
    for (let i = 0; i < entity.allRenderParts.length; i++) {
       const renderPart = entity.allRenderParts[i];
+
+      // @Hack
+      if (!renderPartIsTextured(renderPart)) {
+         continue;
+      }
 
       const width = textureAtlas.textureWidths[renderPart.textureArrayIndex] * 4;
       const height = textureAtlas.textureHeights[renderPart.textureArrayIndex] * 4;

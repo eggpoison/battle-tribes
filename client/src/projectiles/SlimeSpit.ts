@@ -1,7 +1,6 @@
 import { lerp, Point, randFloat } from "webgl-test-shared/dist/utils";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
-import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import Entity, { ComponentDataRecord } from "../Entity";
 import Board from "../Board";
@@ -9,6 +8,8 @@ import { ParticleRenderLayer, addMonocolourParticleToBufferContainer } from "../
 import Particle from "../Particle";
 import { playSound } from "../sound";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
+import TexturedRenderPart from "../render-parts/TexturedRenderPart";
+import { RenderPart } from "../render-parts/render-parts";
 
 const POISON_COLOUR_LOW = [34/255, 12/255, 0];
 const POISON_COLOUR_HIGH = [77/255, 173/255, 38/255];
@@ -22,21 +23,21 @@ class SlimeSpit extends Entity {
 
       // @Incomplete: SIZE DOESN'T ACTUALLY AFFECT ANYTHING
 
-      const renderPart1 = new RenderPart(
+      const renderPart1 = new TexturedRenderPart(
          this,
-         getTextureArrayIndex("projectiles/slime-spit-medium.png"),
          1,
-         0
+         0,
+         getTextureArrayIndex("projectiles/slime-spit-medium.png")
       );
       renderPart1.opacity = 0.75;
       this.attachRenderPart(renderPart1);
       renderParts.push(renderPart1);
 
-      const renderPart2 = new RenderPart(
+      const renderPart2 = new TexturedRenderPart(
          this,
-         getTextureArrayIndex("projectiles/slime-spit-medium.png"),
          0,
-         Math.PI/4
+         Math.PI/4,
+         getTextureArrayIndex("projectiles/slime-spit-medium.png")
       );
       renderPart2.opacity = 0.75;
       this.attachRenderPart(renderPart2);

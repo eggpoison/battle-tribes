@@ -5,9 +5,10 @@ import { HutComponentData, ServerComponentType } from "webgl-test-shared/dist/co
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import Board from "../Board";
-import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { playSound } from "../sound";
+import { RenderPart } from "../render-parts/render-parts";
+import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 export const WORKER_HUT_SIZE = 88;
 export const WARRIOR_HUT_SIZE = 104;
@@ -112,11 +113,11 @@ class HutComponent extends ServerComponent<ServerComponentType.hut> {
 
       if (this.isRecalling) {
          if (this.recallMarker === null) {
-            this.recallMarker = new RenderPart(
+            this.recallMarker = new TexturedRenderPart(
                this.entity,
-               getTextureArrayIndex("entities/recall-marker.png"),
                9,
-               0
+               0,
+               getTextureArrayIndex("entities/recall-marker.png")
             );
             this.recallMarker.inheritParentRotation = false;
             this.entity.attachRenderPart(this.recallMarker);

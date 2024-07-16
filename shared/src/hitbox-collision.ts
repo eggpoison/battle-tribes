@@ -113,7 +113,7 @@ export function getCollisionPushInfo(pushedHitbox: Hitbox, pushingHitbox: Hitbox
       assertHitboxIsRectangular(pushingHitbox);
       
       // @Cleanup: copy and paste
-      const collisionData = rectanglesAreColliding(pushedHitbox.vertexOffsets, pushingHitbox.vertexOffsets, pushedHitbox.position, pushingHitbox.position, pushedHitbox.axisX, pushedHitbox.axisY, pushingHitbox.axisX, pushingHitbox.axisY);
+      const collisionData = rectanglesAreColliding(pushedHitbox, pushingHitbox, pushedHitbox.position, pushingHitbox.position, pushedHitbox.axisX, pushedHitbox.axisY, pushingHitbox.axisX, pushingHitbox.axisY);
       if (!collisionData.isColliding) {
          throw new Error();
       }

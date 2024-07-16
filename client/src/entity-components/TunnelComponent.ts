@@ -2,9 +2,10 @@ import { angle, lerp } from "webgl-test-shared/dist/utils";
 import { ServerComponentType, TunnelComponentData } from "webgl-test-shared/dist/components";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
-import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { playSound } from "../sound";
+import { RenderPart } from "../render-parts/render-parts";
+import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 const doorHalfDiagonalLength = Math.sqrt(16 * 16 + 48 * 48) / 2;
 const angleToCenter = angle(16, 48);
@@ -52,11 +53,11 @@ class TunnelComponent extends ServerComponent<ServerComponentType.tunnel> {
    private addDoor(doorBit: number): void {
       const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
       
-      const renderPart = new RenderPart(
+      const renderPart = new TexturedRenderPart(
          this.entity,
-         getTextureArrayIndex("entities/tunnel/tunnel-door.png"),
          0,
-         doorBit === 0b10 ? Math.PI : 0
+         doorBit === 0b10 ? Math.PI : 0,
+         getTextureArrayIndex("entities/tunnel/tunnel-door.png")
       );
       renderPart.offset.y = doorBit === 0b10 ? -32 : 32;
       

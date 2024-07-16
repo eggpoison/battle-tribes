@@ -1,11 +1,11 @@
 import { Point, rotateXAroundPoint, rotateYAroundPoint } from "webgl-test-shared/dist/utils";
-import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { createIdentityMatrix } from "../rendering/matrices";
+import { RenderObject, RenderPart } from "./render-parts";
 
 let idCounter = 0;
 
 /** A thing which is able to hold render parts */
-export abstract class RenderObject {
+export abstract class BaseRenderObject {
    public readonly children = new Array<RenderPart>();
    
    /** Estimated position of the object during the current frame */
@@ -20,11 +20,21 @@ export abstract class RenderObject {
    public tintB = 0;
 
    public modelMatrix = createIdentityMatrix();
+
+   public modelMatrixIsDirty = true;
+
+   public dirty(): void {
+      this.modelMatrixIsDirty = true;
+   }
 }
 
-class RenderPart extends RenderObject {
+const isRenderPart = (renderObject: RenderObject): renderObject is BaseRenderPart => {
+   return typeof (renderObject as BaseRenderPart).tags !== "undefined";
+}
+
+abstract class BaseRenderPart extends BaseRenderObject {
    public readonly id: number;
-   public readonly parent: RenderObject;
+   public readonly parent: BaseRenderObject;
 
    /** Age of the render part in ticks */
    public age = 0;
@@ -37,23 +47,28 @@ class RenderPart extends RenderObject {
    public scale = 1;
    public shakeAmount = 0;
    
-   public textureArrayIndex: number;
-
    /** Whether or not the render part will inherit its parents' rotation */
    public inheritParentRotation = true;
-   public flipX = false;
    
    public readonly tags = new Array<string>();
    
-   constructor(parent: RenderObject, textureArrayIndex: number, zIndex: number, rotation: number) {
+   constructor(parent: BaseRenderObject, zIndex: number, rotation: number) {
       super();
 
       this.id = idCounter++;
 
       this.parent = parent;
-      this.textureArrayIndex = textureArrayIndex;
       this.zIndex = zIndex;
       this.rotation = rotation;
+   }
+
+   public dirty(): void {
+      super.dirty();
+
+      // Propagate to parent
+      if (isRenderPart(this.parent)) {
+         this.parent.dirty();
+      }
    }
 
    public addTag(tag: string): void {
@@ -88,10 +103,6 @@ class RenderPart extends RenderObject {
          this.totalParentRotation = this.parent.totalParentRotation;
       }
    }
-
-   public switchTextureSource(newTextureSource: string): void {
-      this.textureArrayIndex = getTextureArrayIndex(newTextureSource);
-   }
 }
 
-export default RenderPart;
+export default BaseRenderPart;

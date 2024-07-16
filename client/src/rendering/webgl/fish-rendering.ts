@@ -6,6 +6,7 @@ import Board from "../../Board";
 import { ATLAS_SLOT_SIZE } from "../../texture-atlases/texture-atlas-stitching";
 import { ENTITY_TEXTURE_ATLAS_LENGTH, getEntityTextureAtlas } from "../../texture-atlases/texture-atlases";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
+import { renderPartIsTextured } from "../../render-parts/render-parts";
 
 // @Cleanup: This all sucks. should really be combined with game-object-rendering, as apart from the blur this is just a 1-1 copy of it
 
@@ -218,6 +219,11 @@ export function renderFish(frameProgress: number): void {
 
       for (const renderPart of fish.allRenderParts) {
          renderPart.update();
+
+         // @Hack
+         if (!renderPartIsTextured(renderPart)) {
+            continue;
+         }
          
          const depth = -renderPart.zIndex * 0.0001 + fish.renderDepth;
    

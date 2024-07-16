@@ -6,7 +6,7 @@ import Tribe, { RestrictedBuildingArea, VirtualBuilding, getNumWallConnections, 
 import Board from "../Board";
 import { TribeArea, createTribeArea, updateTribeAreaDoors } from "./ai-building-areas";
 import { updateTribePlans } from "./ai-building-plans";
-import { HitboxVertexPositions, CircularHitbox, Hitbox, hitboxIsCircular, updateHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
+import { HitboxVertexPositions, CircularHitbox, Hitbox, hitboxIsCircular, updateHitbox, RectangularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { createEntityHitboxes } from "webgl-test-shared/dist/hitboxes/entity-hitbox-creation";
 
 const enum Vars {
@@ -50,24 +50,9 @@ const BUILDING_SAFETY: Record<StructureType, number> = {
 };
 
 export function createRestrictedBuildingArea(position: Point, width: number, height: number, rotation: number, associatedBuildingID: number): RestrictedBuildingArea {
-   const sinRotation = Math.sin(rotation);
-   const cosRotation = Math.cos(rotation);
-
-   const x1 = width * -0.5;
-   const x2 = width * 0.5;
-   const y2 = height * 0.5;
-   
-   const topLeftX = cosRotation * x1 + sinRotation * y2;
-   const topLeftY = cosRotation * y2 - sinRotation * x1;
-   const topRightX = cosRotation * x2 + sinRotation * y2;
-   const topRightY = cosRotation * y2 - sinRotation * x2;
-
-   const vertexOffsets: HitboxVertexPositions = [
-      new Point(topLeftX, topLeftY),
-      new Point(topRightX, topRightY),
-      new Point(-topLeftX, -topLeftY),
-      new Point(-topRightX, -topRightY)
-   ];
+   const hitbox = new RectangularHitbox(0, new Point(0, 0), 0, 0, 0, 0, width, height, rotation);
+   hitbox.position.x = position.x;
+   hitbox.position.y = position.y;
    
    return {
       position: position,
@@ -75,7 +60,7 @@ export function createRestrictedBuildingArea(position: Point, width: number, hei
       height: height,
       rotation: rotation,
       associatedBuildingID: associatedBuildingID,
-      vertexOffsets: vertexOffsets
+      hitbox: hitbox
    };
 }
 

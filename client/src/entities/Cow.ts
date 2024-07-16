@@ -1,14 +1,14 @@
 import { CowSpecies, EntityType } from "webgl-test-shared/dist/entities";
-import { Point, angle, randFloat, randInt } from "webgl-test-shared/dist/utils";
+import { angle, randFloat, randInt } from "webgl-test-shared/dist/utils";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { HitData } from "webgl-test-shared/dist/client-server-types";
-import RenderPart from "../render-parts/RenderPart";
 import { BloodParticleSize, createBloodParticle, createBloodParticleFountain, createBloodPoolParticle } from "../particles";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { AudioFilePath, playSound } from "../sound";
 import Entity, { ComponentDataRecord } from "../Entity";
 import { ClientComponentType } from "../entity-components/components";
 import FootprintComponent from "../entity-components/FootprintComponent";
+import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 class Cow extends Entity {
    private static readonly HEAD_SIZE = 64;
@@ -25,21 +25,21 @@ class Cow extends Entity {
       const cowNum = cowComponentData.species === CowSpecies.brown ? 1 : 2;
 
       // Body
-      const bodyRenderPart = new RenderPart(
+      const bodyRenderPart = new TexturedRenderPart(
          this,
-         getTextureArrayIndex(`entities/cow/cow-body-${cowNum}.png`),
          0,
-         0
+         0,
+         getTextureArrayIndex(`entities/cow/cow-body-${cowNum}.png`)
       );
       bodyRenderPart.offset.y = -(Cow.HEAD_SIZE - Cow.HEAD_OVERLAP) / 2;
       this.attachRenderPart(bodyRenderPart);
 
       // Head
-      const headRenderPart = new RenderPart(
+      const headRenderPart = new TexturedRenderPart(
          this,
-         getTextureArrayIndex(`entities/cow/cow-head-${cowNum}.png`),
          1,
-         0
+         0,
+         getTextureArrayIndex(`entities/cow/cow-head-${cowNum}.png`)
       );
       headRenderPart.offset.y = (Cow.BODY_HEIGHT - Cow.HEAD_OVERLAP) / 2;
       this.attachRenderPart(headRenderPart);

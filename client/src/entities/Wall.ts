@@ -2,18 +2,18 @@ import { EntityType } from "webgl-test-shared/dist/entities";
 import { Point, angle } from "webgl-test-shared/dist/utils";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityData, HitData } from "webgl-test-shared/dist/client-server-types";
-import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { playSound } from "../sound";
 import Entity, { ComponentDataRecord } from "../Entity";
 import { createLightWoodSpeckParticle, createWoodShardParticle } from "../particles";
 import { WALL_TEXTURE_SOURCES } from "../entity-components/BuildingMaterialComponent";
 import Board from "../Board";
+import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 class Wall extends Entity {
    private static readonly NUM_DAMAGE_STAGES = 6;
 
-   private damageRenderPart: RenderPart | null = null;
+   private damageRenderPart: TexturedRenderPart | null = null;
 
    constructor(id: number, componentDataRecord: ComponentDataRecord) {
       super(id, EntityType.wall);
@@ -21,11 +21,11 @@ class Wall extends Entity {
       const buildingMaterialComponentData = componentDataRecord[ServerComponentType.buildingMaterial]!;
       const healthComponentData = componentDataRecord[ServerComponentType.health]!;
       
-      const renderPart = new RenderPart(
+      const renderPart = new TexturedRenderPart(
          this,
-         getTextureArrayIndex(WALL_TEXTURE_SOURCES[buildingMaterialComponentData.material]),
          0,
-         0
+         0,
+         getTextureArrayIndex(WALL_TEXTURE_SOURCES[buildingMaterialComponentData.material])
       );
       renderPart.addTag("buildingMaterialComponent:material");
       this.attachRenderPart(renderPart);
@@ -55,11 +55,11 @@ class Wall extends Entity {
       
       const textureSource = "entities/wall/wooden-wall-damage-" + damageStage + ".png";
       if (this.damageRenderPart === null) {
-         this.damageRenderPart = new RenderPart(
+         this.damageRenderPart = new TexturedRenderPart(
             this,
-            getTextureArrayIndex(textureSource),
             1,
-            0
+            0,
+            getTextureArrayIndex(textureSource)
          );
          this.attachRenderPart(this.damageRenderPart);
       } else {

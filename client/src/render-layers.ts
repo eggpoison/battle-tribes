@@ -5,6 +5,7 @@ const MIN_RENDER_DEPTH = -0.95;
 const MAX_RENDER_DEPTH = 0.95;
 
 enum RenderLayer {
+   grass,
    // @Temporary?
    lowestEntities,
    droppedItems,
@@ -37,6 +38,10 @@ const getEntityRenderLayer = (entityType: EntityType): RenderLayer => {
    // @Incomplete: Make 
    
    switch (entityType) {
+      // Grass
+      case EntityType.grassStrand: {
+         return RenderLayer.grass;
+      }
       // Item entities
       case EntityType.itemEntity: {
          return RenderLayer.droppedItems;

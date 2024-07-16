@@ -2,7 +2,6 @@ import { Settings } from "webgl-test-shared/dist/settings";
 import { Point, customTickIntervalHasPassed, lerp, randFloat, randInt, randItem, rotateXAroundOrigin, rotateYAroundOrigin } from "webgl-test-shared/dist/utils";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { LimbAction } from "webgl-test-shared/dist/entities";
-import RenderPart from "./render-parts/RenderPart";
 import { LimbInfo } from "./entity-components/InventoryUseComponent";
 import { getTextureArrayIndex } from "./texture-atlases/texture-atlases";
 import CLIENT_ITEM_INFO_RECORD from "./client-item-info";
@@ -12,6 +11,8 @@ import Entity from "./Entity";
 import Board from "./Board";
 import { getItemRecipe } from "webgl-test-shared/dist/items/crafting-recipes";
 import { ItemType, ITEM_INFO_RECORD, ConsumableItemInfo } from "webgl-test-shared/dist/items/items";
+import TexturedRenderPart from "./render-parts/TexturedRenderPart";
+import { RenderPart } from "./render-parts/render-parts";
 
 enum CustomItemState {
    usingMedicine,
@@ -86,11 +87,11 @@ export function createCraftingAnimationParticles(entity: Entity, limbIdx: number
 }
 
 const createBandageRenderPart = (entity: Entity): void => {
-   const renderPart = new RenderPart(
+   const renderPart = new TexturedRenderPart(
       entity,
-      getTextureArrayIndex("entities/miscellaneous/bandage.png"),
       6,
-      2 * Math.PI * Math.random()
+      2 * Math.PI * Math.random(),
+      getTextureArrayIndex("entities/miscellaneous/bandage.png")
    );
 
    const offsetMagnitude = 32 * Math.random();
@@ -205,7 +206,7 @@ export function updateCustomItemRenderPart(entity: Entity): void {
    const inventoryUseComponent = entity.getServerComponent(ServerComponentType.inventoryUse);
    if (customItemState !== null) {
       if (inventoryUseComponent.customItemRenderPart === null) {
-         inventoryUseComponent.customItemRenderPart = new RenderPart(
+         inventoryUseComponent.customItemRenderPart = new TexturedRenderPart(
             inventoryUseComponent.entity,
             getTextureArrayIndex(getCustomItemRenderPartTextureSource(entity, customItemState)),
             9,

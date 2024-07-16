@@ -1,18 +1,18 @@
 import { EntityType } from "webgl-test-shared/dist/entities";
 import Entity from "../Entity";
-import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
+import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 class StonecarvingTable extends Entity {
    constructor(id: number) {
       super(id, EntityType.stonecarvingTable);
 
       this.attachRenderPart(
-         new RenderPart(
+         new TexturedRenderPart(
             this,
-            getTextureArrayIndex("entities/stonecarving-table/stonecarving-table.png"),
             1,
-            0
+            0,
+            getTextureArrayIndex("entities/stonecarving-table/stonecarving-table.png")
          )
       );
    }

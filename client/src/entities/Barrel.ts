@@ -1,10 +1,10 @@
 import { EntityType } from "webgl-test-shared/dist/entities";
-import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { playBuildingHitSound, playSound } from "../sound";
 import Entity, { ComponentDataRecord } from "../Entity";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { Point } from "webgl-test-shared/dist/utils";
+import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 class Barrel extends Entity {
    public static readonly SIZE = 80;
@@ -13,11 +13,11 @@ class Barrel extends Entity {
       super(id, EntityType.barrel);
 
       this.attachRenderPart(
-         new RenderPart(
+         new TexturedRenderPart(
             this,
-            getTextureArrayIndex("entities/barrel/barrel.png"),
             0,
-            0
+            0,
+            getTextureArrayIndex("entities/barrel/barrel.png")
          )
       );
 

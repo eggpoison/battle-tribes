@@ -37,10 +37,6 @@ export class TransformComponent {
    /** Position of the entity in the world */
    public position: Point;
 
-   // @Cleanup @Memory: Do we really need this??
-   /** Last position when the entities' hitboxes were clean */
-   public lastCleanedPosition: Point;
-
    /** Direction the entity is facing in radians */
    public rotation: number;
 
@@ -73,7 +69,6 @@ export class TransformComponent {
    constructor(params: TransformComponentParams) {
       this.position = params.position;
       this.rotation = params.rotation;
-      this.lastCleanedPosition = new Point(params.position.x, params.position.y);
       this.collisionBit = params.collisionBit;
       this.collisionMask = params.collisionMask;
 
@@ -250,59 +245,7 @@ export class TransformComponent {
          }
       }
 
-      this.lastCleanedPosition.x = this.position.x;
-      this.lastCleanedPosition.y = this.position.y;
-
       if (entity !== null && hitboxChunkBoundsHaveChanged) {
-         this.updateContainingChunks(entity);
-      }
-   }
-
-   public updateHitboxes(entity: EntityID): void {
-      const shiftX = this.position.x - this.lastCleanedPosition.x;
-      const shiftY = this.position.y - this.lastCleanedPosition.y;
-      
-      this.boundingAreaMinX += shiftX;
-      this.boundingAreaMaxX += shiftX;
-      this.boundingAreaMinY += shiftY;
-      this.boundingAreaMaxY += shiftY;
-
-      this.lastCleanedPosition.x = this.position.x;
-      this.lastCleanedPosition.y = this.position.y;
-
-      // @Speed
-      // @Speed
-      // @Speed
-
-      let hitboxChunkBoundsHaveChanged = false;
-      const numHitboxes = this.hitboxes.length;
-      for (let i = 0; i < numHitboxes; i++) {
-         const hitbox = this.hitboxes[i];
-
-         const previousBoundsMinX = hitbox.calculateHitboxBoundsMinX();
-         const previousBoundsMaxX = hitbox.calculateHitboxBoundsMaxX();
-         const previousBoundsMinY = hitbox.calculateHitboxBoundsMinY();
-         const previousBoundsMaxY = hitbox.calculateHitboxBoundsMaxY();
-
-         updateHitbox(hitbox, this.position.x, this.position.y, this.rotation);
-
-         const boundsMinX = hitbox.calculateHitboxBoundsMinX();
-         const boundsMaxX = hitbox.calculateHitboxBoundsMaxX();
-         const boundsMinY = hitbox.calculateHitboxBoundsMinY();
-         const boundsMaxY = hitbox.calculateHitboxBoundsMaxY();
-
-         // Check if the hitboxes' chunk bounds have changed
-         if (!hitboxChunkBoundsHaveChanged) {
-            if (Math.floor(boundsMinX / Settings.CHUNK_UNITS) !== Math.floor(previousBoundsMinX / Settings.CHUNK_UNITS) ||
-                Math.floor(boundsMaxX / Settings.CHUNK_UNITS) !== Math.floor(previousBoundsMaxX / Settings.CHUNK_UNITS) ||
-                Math.floor(boundsMinY / Settings.CHUNK_UNITS) !== Math.floor(previousBoundsMinY / Settings.CHUNK_UNITS) ||
-                Math.floor(boundsMaxY / Settings.CHUNK_UNITS) !== Math.floor(previousBoundsMaxY / Settings.CHUNK_UNITS)) {
-               hitboxChunkBoundsHaveChanged = true;
-            }
-         }
-      }
-
-      if (hitboxChunkBoundsHaveChanged) {
          this.updateContainingChunks(entity);
       }
    }
@@ -355,6 +298,9 @@ export class TransformComponent {
 
    private addToChunk(entity: EntityID, chunk: Chunk): void {
       chunk.entities.push(entity);
+      if (PhysicsComponentArray.hasComponent(entity)) {
+         chunk.physicsEntities.push(entity);
+      }
    
       const numViewingMobs = chunk.viewingEntities.length;
       for (let i = 0; i < numViewingMobs; i++) {
@@ -375,6 +321,12 @@ export class TransformComponent {
       const idx = chunk.entities.indexOf(entity);
       if (idx !== -1) {
          chunk.entities.splice(idx, 1);
+      }
+      if (PhysicsComponentArray.hasComponent(entity)) {
+         const idx = chunk.physicsEntities.indexOf(entity);
+         if (idx !== -1) {
+            chunk.physicsEntities.splice(idx, 1);
+         }
       }
    
       // @Incomplete
@@ -551,6 +503,7 @@ const bundleCircularHitboxData = (hitbox: CircularHitbox, localID: number): Circ
 function serialise(entityID: EntityID): TransformComponentData {
    const transformComponent = TransformComponentArray.getComponent(entityID);
    
+   // @Speed: Garbage collection
    const circularHitboxes = new Array<CircularHitboxData>();
    const rectangularHitboxes = new Array<RectangularHitboxData>();
 

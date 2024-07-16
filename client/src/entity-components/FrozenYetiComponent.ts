@@ -3,13 +3,13 @@ import { FrozenYetiAttackType } from "webgl-test-shared/dist/entities";
 import { lerp, randFloat, randInt } from "webgl-test-shared/dist/utils";
 import { Settings } from "webgl-test-shared/dist/settings";
 import ServerComponent from "./ServerComponent";
-import RenderPart from "../render-parts/RenderPart";
 import Entity from "../Entity";
 import { createBiteParticle, createRockParticle, createSnowParticle, createWhiteSmokeParticle } from "../particles";
 import Board from "../Board";
 import Particle from "../Particle";
 import { addMonocolourParticleToBufferContainer, addTexturedParticleToBufferContainer, ParticleRenderLayer } from "../rendering/webgl/particle-rendering";
 import Player from "../entities/Player";
+import { RenderPart } from "../render-parts/render-parts";
 
 const HEAD_SIZE = 80;
 export const FROZEN_YETI_HEAD_DISTANCE = 60;

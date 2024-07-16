@@ -1,9 +1,9 @@
 import { EntityType } from "webgl-test-shared/dist/entities";
-import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { playBuildingHitSound, playSound } from "../sound";
 import Entity from "../Entity";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
+import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 class TribeTotem extends Entity {
    public static readonly SIZE = 120;
@@ -11,11 +11,11 @@ class TribeTotem extends Entity {
    constructor(id: number) {
       super(id, EntityType.tribeTotem);
 
-      const renderPart = new RenderPart(
+      const renderPart = new TexturedRenderPart(
          this,
-         getTextureArrayIndex(`entities/tribe-totem/tribe-totem.png`),
          1,
-         0
+         0,
+         getTextureArrayIndex(`entities/tribe-totem/tribe-totem.png`)
       );
       this.attachRenderPart(renderPart);
    }

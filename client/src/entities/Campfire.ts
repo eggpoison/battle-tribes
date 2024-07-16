@@ -1,12 +1,12 @@
 import { Point, randFloat } from "webgl-test-shared/dist/utils";
 import { EntityType } from "webgl-test-shared/dist/entities";
-import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import Board from "../Board";
 import { createEmberParticle, createSmokeParticle } from "../particles";
 import Entity, { ComponentDataRecord } from "../Entity";
 import { playSound } from "../sound";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
+import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 class Campfire extends Entity {
    public static readonly SIZE = 104;
@@ -15,11 +15,11 @@ class Campfire extends Entity {
       super(id, EntityType.campfire);
 
       this.attachRenderPart(
-         new RenderPart(
+         new TexturedRenderPart(
             this,
-            getTextureArrayIndex("entities/campfire/campfire.png"),
             0,
-            0
+            0,
+            getTextureArrayIndex("entities/campfire/campfire.png")
          )
       );
 

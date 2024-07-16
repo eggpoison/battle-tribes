@@ -1,12 +1,12 @@
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { HitData } from "webgl-test-shared/dist/client-server-types";
-import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { playSound } from "../sound";
 import Entity, { ComponentDataRecord } from "../Entity";
 import { createLightWoodSpeckParticle, createWoodShardParticle } from "../particles";
 import { DOOR_TEXTURE_SOURCES } from "../entity-components/BuildingMaterialComponent";
+import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 class Door extends Entity {
    constructor(id: number, componentDataRecord: ComponentDataRecord) {
@@ -14,11 +14,11 @@ class Door extends Entity {
 
       const buildingMaterialComponentData = componentDataRecord[ServerComponentType.buildingMaterial]!;
 
-      const renderPart = new RenderPart(
+      const renderPart = new TexturedRenderPart(
          this,
-         getTextureArrayIndex(DOOR_TEXTURE_SOURCES[buildingMaterialComponentData.material]),
          0,
-         0
+         0,
+         getTextureArrayIndex(DOOR_TEXTURE_SOURCES[buildingMaterialComponentData.material])
       );
       renderPart.addTag("buildingMaterialComponent:material");
       this.attachRenderPart(renderPart);

@@ -1,12 +1,13 @@
 import { angle, randFloat } from "webgl-test-shared/dist/utils";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { HitData } from "webgl-test-shared/dist/client-server-types";
-import RenderPart from "../render-parts/RenderPart";
 import { BloodParticleSize, createBlueBloodParticle, createBlueBloodParticleFountain, createBlueBloodPoolParticle } from "../particles";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import Entity from "../Entity";
 import { FROZEN_YETI_HEAD_DISTANCE } from "../entity-components/FrozenYetiComponent";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
+import TexturedRenderPart from "../render-parts/TexturedRenderPart";
+import { RenderPart } from "../render-parts/render-parts";
 
 class FrozenYeti extends Entity {
    private static readonly SIZE = 152;
@@ -14,18 +15,18 @@ class FrozenYeti extends Entity {
    constructor(id: number) {
       super(id, EntityType.frozenYeti);
 
-      this.attachRenderPart(new RenderPart(
+      this.attachRenderPart(new TexturedRenderPart(
          this,
-         getTextureArrayIndex("entities/frozen-yeti/frozen-yeti.png"),
          1,
-         0
+         0,
+         getTextureArrayIndex("entities/frozen-yeti/frozen-yeti.png")
       ));
 
-      const headRenderPart = new RenderPart(
+      const headRenderPart = new TexturedRenderPart(
          this,
-         getTextureArrayIndex("entities/frozen-yeti/frozen-yeti-head.png"),
          2,
-         0
+         0,
+         getTextureArrayIndex("entities/frozen-yeti/frozen-yeti-head.png")
       );
       headRenderPart.addTag("frozenYetiComponent:head");
       headRenderPart.offset.y = FROZEN_YETI_HEAD_DISTANCE;
@@ -34,11 +35,11 @@ class FrozenYeti extends Entity {
       // Create paw render parts
       const pawRenderParts = new Array<RenderPart>();
       for (let i = 0; i < 2; i++) {
-         const paw = new RenderPart(
+         const paw = new TexturedRenderPart(
             this,
-            getTextureArrayIndex("entities/frozen-yeti/frozen-yeti-paw.png"),
             0,
-            0
+            0,
+            getTextureArrayIndex("entities/frozen-yeti/frozen-yeti-paw.png")
          );
          paw.addTag("frozenYetiComponent:paw");
 

@@ -1,13 +1,14 @@
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { Settings } from "webgl-test-shared/dist/settings";
-import { Point, angle, randFloat, randInt } from "webgl-test-shared/dist/utils";
+import { angle, randFloat, randInt } from "webgl-test-shared/dist/utils";
 import { HitData } from "webgl-test-shared/dist/client-server-types";
 import { EntityType } from "webgl-test-shared/dist/entities";
-import RenderPart from "../render-parts/RenderPart";
 import { BloodParticleSize, createBloodParticle, createBloodParticleFountain, createBloodPoolParticle } from "../particles";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { AudioFilePath, playSound } from "../sound";
 import Entity, { ComponentDataRecord } from "../Entity";
+import TexturedRenderPart from "../render-parts/TexturedRenderPart";
+import { RenderPart } from "../render-parts/render-parts";
 
 const ZOMBIE_TEXTURE_SOURCES: ReadonlyArray<string> = ["entities/zombie/zombie1.png", "entities/zombie/zombie2.png", "entities/zombie/zombie3.png", "entities/zombie/zombie-golden.png"];
 const ZOMBIE_HAND_TEXTURE_SOURCES: ReadonlyArray<string> = ["entities/zombie/fist-1.png", "entities/zombie/fist-2.png", "entities/zombie/fist-3.png", "entities/zombie/fist-4.png"];
@@ -24,11 +25,11 @@ class Zombie extends Entity {
 
       // Body render part
       this.attachRenderPart(
-         new RenderPart(
+         new TexturedRenderPart(
             this,
-            getTextureArrayIndex(ZOMBIE_TEXTURE_SOURCES[zombieComponentData.zombieType]),
             2,
-            0
+            0,
+            getTextureArrayIndex(ZOMBIE_TEXTURE_SOURCES[zombieComponentData.zombieType])
          )
       );
 
@@ -36,11 +37,11 @@ class Zombie extends Entity {
       const handTextureSource = ZOMBIE_HAND_TEXTURE_SOURCES[zombieComponentData.zombieType];
       const handRenderParts = new Array<RenderPart>();
       for (let i = 0; i < 2; i++) {
-         const renderPart = new RenderPart(
+         const renderPart = new TexturedRenderPart(
             this,
-            getTextureArrayIndex(handTextureSource),
             1,
-            0
+            0,
+            getTextureArrayIndex(handTextureSource)
          );
          renderPart.addTag("inventoryUseComponent:hand");
          this.attachRenderPart(renderPart);

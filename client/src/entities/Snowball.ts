@@ -1,14 +1,14 @@
 import { EntityType, SNOWBALL_SIZES, SnowballSize } from "webgl-test-shared/dist/entities";
-import { Point, randFloat, randInt } from "webgl-test-shared/dist/utils";
+import { randFloat, randInt } from "webgl-test-shared/dist/utils";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { HitData } from "webgl-test-shared/dist/client-server-types";
-import RenderPart from "../render-parts/RenderPart";
 import Board from "../Board";
 import { createSnowParticle } from "../particles";
 import Particle from "../Particle";
 import { ParticleRenderLayer, addMonocolourParticleToBufferContainer } from "../rendering/webgl/particle-rendering";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import Entity, { ComponentDataRecord } from "../Entity";
+import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 const getTextureSource = (size: SnowballSize): string => {
    switch (size) {
@@ -28,11 +28,11 @@ class Snowball extends Entity {
       const snowballComponentData = componentDataRecord[ServerComponentType.snowball]!;
 
       this.attachRenderPart(
-         new RenderPart(
+         new TexturedRenderPart(
             this,
-            getTextureArrayIndex(getTextureSource(snowballComponentData.size)),
             0,
-            0
+            0,
+            getTextureArrayIndex(getTextureSource(snowballComponentData.size))
          )
       );
    }

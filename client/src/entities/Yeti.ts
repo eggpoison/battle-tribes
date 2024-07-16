@@ -1,12 +1,12 @@
 import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { Point, angle, randFloat } from "webgl-test-shared/dist/utils";
+import { angle, randFloat } from "webgl-test-shared/dist/utils";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { HitData } from "webgl-test-shared/dist/client-server-types";
-import RenderPart from "../render-parts/RenderPart";
 import { BloodParticleSize, createBloodParticle, createBloodParticleFountain, createBloodPoolParticle, createSnowParticle, createWhiteSmokeParticle } from "../particles";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import Entity from "../Entity";
 import { YETI_SIZE } from "../entity-components/YetiComponent";
+import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 class Yeti extends Entity {
    private static readonly SNOW_THROW_OFFSET = 64;
@@ -18,20 +18,20 @@ class Yeti extends Entity {
       super(id, EntityType.yeti);
 
       this.attachRenderPart(
-         new RenderPart(
+         new TexturedRenderPart(
             this,
-            getTextureArrayIndex("entities/yeti/yeti.png"),
             1,
-            0
+            0,
+            getTextureArrayIndex("entities/yeti/yeti.png")
          )
       );
 
       for (let i = 0; i < 2; i++) {
-         const paw = new RenderPart(
+         const paw = new TexturedRenderPart(
             this,
-            getTextureArrayIndex("entities/yeti/yeti-paw.png"),
             0,
-            0
+            0,
+            getTextureArrayIndex("entities/yeti/yeti-paw.png")
          );
          paw.addTag("yetiComponent:paw");
          this.attachRenderPart(paw);

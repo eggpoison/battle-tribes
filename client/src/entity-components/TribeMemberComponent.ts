@@ -7,10 +7,11 @@ import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import { Light, addLight, attachLightToEntity, removeLightsAttachedToEntity } from "../lights";
 import Board from "../Board";
-import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { createSprintParticle, createTitleObtainParticle } from "../particles";
 import { createRenderPartOverlayGroup } from "../rendering/webgl/overlay-rendering";
+import { RenderPart } from "../render-parts/render-parts";
+import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 export function getTribesmanRadius(tribesman: Entity): number {
    switch (tribesman.type) {
@@ -149,11 +150,11 @@ class TribeMemberComponent extends ServerComponent<ServerComponentType.tribeMemb
                const offsetX = (20 - 5 * 4 / 2) * (isFlipped ? 1 : -1);
                const offsetY = 24 - 6 * 4 / 2;
 
-               const renderPart = new RenderPart(
+               const renderPart = new TexturedRenderPart(
                   this.entity,
-                  getTextureArrayIndex("entities/miscellaneous/eye-scar.png"),
                   2.2,
-                  0
+                  0,
+                  getTextureArrayIndex("entities/miscellaneous/eye-scar.png")
                );
                renderPart.addTag("tribeMemberComponent:fromTitle");
                renderPart.flipX = isFlipped;
@@ -167,12 +168,12 @@ class TribeMemberComponent extends ServerComponent<ServerComponentType.tribeMemb
             // Create shrewd eyes
             case TribesmanTitle.shrewd: {
                for (let i = 0; i < 2; i++) {
-                  const renderPart = new RenderPart(
+                  const renderPart = new TexturedRenderPart(
                      this.entity,
-                     // @Incomplete
-                     getTextureArrayIndex("entities/plainspeople/shrewd-eye.png"),
                      2.1,
-                     0
+                     0,
+                     // @Incomplete
+                     getTextureArrayIndex("entities/plainspeople/shrewd-eye.png")
                   );
                   renderPart.addTag("tribeMemberComponent:fromTitle");
 
@@ -206,11 +207,11 @@ class TribeMemberComponent extends ServerComponent<ServerComponentType.tribeMemb
                for (let i = 0; i < numLeaves; i++) {
                   const angle = ((i - (numLeaves - 1) / 2) * Math.PI * 0.2) + Math.PI;
                   
-                  const renderPart = new RenderPart(
+                  const renderPart = new TexturedRenderPart(
                      this.entity,
-                     getTextureArrayIndex("entities/miscellaneous/tribesman-leaf.png"),
                      0,
-                     angle + Math.PI/2 + randFloat(-0.5, 0.5)
+                     angle + Math.PI/2 + randFloat(-0.5, 0.5),
+                     getTextureArrayIndex("entities/miscellaneous/tribesman-leaf.png")
                   );
                   renderPart.addTag("tribeMemberComponent:fromTitle");
 
@@ -225,11 +226,11 @@ class TribeMemberComponent extends ServerComponent<ServerComponentType.tribeMemb
                break;
             }
             case TribesmanTitle.yetisbane: {
-               const renderPart = new RenderPart(
+               const renderPart = new TexturedRenderPart(
                   this.entity,
-                  getTextureArrayIndex("entities/miscellaneous/tribesman-fangs.png"),
                   0,
-                  0
+                  0,
+                  getTextureArrayIndex("entities/miscellaneous/tribesman-fangs.png")
                );
                renderPart.addTag("tribeMemberComponent:fromTitle");
 
@@ -258,11 +259,11 @@ class TribeMemberComponent extends ServerComponent<ServerComponentType.tribeMemb
                break;
             }
             case TribesmanTitle.wellful: {
-               const renderPart = new RenderPart(
+               const renderPart = new TexturedRenderPart(
                   this.entity,
-                  getTextureArrayIndex("entities/miscellaneous/tribesman-health-patch.png"),
                   2.1,
-                  0
+                  0,
+                  getTextureArrayIndex("entities/miscellaneous/tribesman-health-patch.png")
                );
                renderPart.addTag("tribeMemberComponent:fromTitle");
                this.entity.attachRenderPart(renderPart);

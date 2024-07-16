@@ -8,6 +8,7 @@ import { PlantComponentArray } from "./PlantComponent";
 import { GolemComponentArray } from "./GolemComponent";
 import Board from "../Board";
 import { TribeType } from "webgl-test-shared/dist/tribes";
+import { StructureComponentArray } from "./StructureComponent";
 
 // /** Relationships a tribe member can have, in increasing order of threat */
 export const enum EntityRelationship {
@@ -49,44 +50,21 @@ export function getEntityRelationship(entity: EntityID, comparingEntity: EntityI
       return getTribesmanRelationship(entity, comparingEntity);
    }
 
-   // @Cleanup: do this based on which components they have
+   // @Cleanup @Robustness: do this based on which components they have
+
+   // Structures
+   if (StructureComponentArray.hasComponent(comparingEntity)) {
+      const tribeComponent = TribeComponentArray.getComponent(entity);
+      const comparingEntityTribeComponent = TribeComponentArray.getComponent(comparingEntity);
+
+      if (comparingEntityTribeComponent.tribe === tribeComponent.tribe) {
+         return EntityRelationship.friendlyBuilding;
+      }
+      return EntityRelationship.enemyBuilding;
+   }
    
    const entityType = Board.getEntityType(comparingEntity)!;
    switch (entityType) {
-      // Buildings
-      case EntityType.wall:
-      case EntityType.fence:
-      case EntityType.fenceGate:
-      case EntityType.door:
-      case EntityType.floorSpikes:
-      case EntityType.wallSpikes:
-      case EntityType.floorPunjiSticks:
-      case EntityType.wallPunjiSticks:
-      case EntityType.embrasure:
-      case EntityType.ballista:
-      case EntityType.slingTurret:
-      case EntityType.blueprintEntity:
-      case EntityType.tunnel:
-      case EntityType.workerHut:
-      case EntityType.warriorHut:
-      case EntityType.tribeTotem:
-      case EntityType.furnace:
-      case EntityType.barrel:
-      case EntityType.workbench:
-      case EntityType.planterBox:
-      case EntityType.researchBench:
-      case EntityType.healingTotem:
-      case EntityType.campfire:
-      case EntityType.frostshaper:
-      case EntityType.stonecarvingTable: {
-         const tribeComponent = TribeComponentArray.getComponent(entity);
-         const comparingEntityTribeComponent = TribeComponentArray.getComponent(comparingEntity);
-
-         if (comparingEntityTribeComponent.tribe === tribeComponent.tribe) {
-            return EntityRelationship.friendlyBuilding;
-         }
-         return EntityRelationship.enemyBuilding;
-      }
       case EntityType.plant: {
          const plantComponent = PlantComponentArray.getComponent(comparingEntity);
          
@@ -152,12 +130,13 @@ export function getEntityRelationship(entity: EntityID, comparingEntity: EntityI
       case EntityType.snowball:
       case EntityType.spearProjectile:
       case EntityType.spitPoison:
-      case EntityType.battleaxeProjectile:{
+      case EntityType.battleaxeProjectile:
+      case EntityType.grassStrand: {
          return EntityRelationship.neutral;
       }
+      // @Hack @Temporary
       default: {
-         const unreachable: never = entityType;
-         return unreachable;
+         return EntityRelationship.neutral
       }
    }
 }

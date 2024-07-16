@@ -2,11 +2,12 @@ import { AmmoBoxComponentData, ServerComponentType } from "webgl-test-shared/dis
 import { rotateXAroundOrigin, rotateYAroundOrigin } from "webgl-test-shared/dist/utils";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
-import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { BALLISTA_AMMO_BOX_OFFSET_X, BALLISTA_AMMO_BOX_OFFSET_Y } from "../utils";
 import Board from "../Board";
 import { BallistaAmmoType } from "webgl-test-shared/dist/items/items";
+import { RenderPart } from "../render-parts/render-parts";
+import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 class AmmoBoxComponent extends ServerComponent<ServerComponentType.ammoBox> {
    public ammoType: BallistaAmmoType | null;
@@ -28,11 +29,11 @@ class AmmoBoxComponent extends ServerComponent<ServerComponentType.ammoBox> {
          if (this.ammoWarningRenderPart === null) {
             const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
             
-            this.ammoWarningRenderPart = new RenderPart(
+            this.ammoWarningRenderPart = new TexturedRenderPart(
                this.entity,
-               getTextureArrayIndex("entities/ballista/ammo-warning.png"),
                999,
-               0
+               0,
+               getTextureArrayIndex("entities/ballista/ammo-warning.png")
             );
             this.ammoWarningRenderPart.offset.x = rotateXAroundOrigin(BALLISTA_AMMO_BOX_OFFSET_X, BALLISTA_AMMO_BOX_OFFSET_Y, transformComponent.rotation);
             this.ammoWarningRenderPart.offset.y = rotateYAroundOrigin(BALLISTA_AMMO_BOX_OFFSET_X, BALLISTA_AMMO_BOX_OFFSET_Y, transformComponent.rotation);

@@ -1,26 +1,26 @@
 import { EntityType } from "webgl-test-shared/dist/entities";
 import Entity from "../Entity";
-import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
+import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 class FenceGate extends Entity {
    constructor(id: number) {
       super(id, EntityType.fenceGate);
 
       this.attachRenderPart(
-         new RenderPart(
+         new TexturedRenderPart(
             this,
-            getTextureArrayIndex("entities/fence-gate/fence-gate-sides.png"),
             1,
-            0
+            0,
+            getTextureArrayIndex("entities/fence-gate/fence-gate-sides.png")
          )
       );
 
-      const doorRenderPart = new RenderPart(
+      const doorRenderPart = new TexturedRenderPart(
          this,
-         getTextureArrayIndex("entities/fence-gate/fence-gate-door.png"),
          0,
-         0
+         0,
+         getTextureArrayIndex("entities/fence-gate/fence-gate-door.png")
       );
       this.attachRenderPart(doorRenderPart);
    }

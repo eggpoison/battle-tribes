@@ -462,38 +462,26 @@ export function getMaxAngleToCircularHitbox(x: number, y: number, hitbox: Circul
    return angle(rightXDiff, rightYDiff);
 }
 
+const getAngleToVertexOffset = (x: number, y: number, hitboxX: number, hitboxY: number, vertexOffsetX: number, vertexOffsetY: number): number => {
+   return angle(hitboxX + vertexOffsetX - x, hitboxY + vertexOffsetY - y);
+}
+
 export function getMinAngleToRectangularHitbox(x: number, y: number, hitbox: RectangularHitbox): number {
-   let minAngle = 99999.9;
-   for (let i = 0; i < 4; i++) {
-      const vertexOffset = hitbox.vertexOffsets[i];
-
-      const vertexX = hitbox.position.x + vertexOffset.x;
-      const vertexY = hitbox.position.y + vertexOffset.y;
-
-      const angleToVertex = angle(vertexX - x, vertexY - y);
-      if (angleToVertex < minAngle) {
-         minAngle = angleToVertex;
-      }
-   }
-
-   return minAngle;
+   const tl = getAngleToVertexOffset(x, y, hitbox.position.x, hitbox.position.y, hitbox.topLeftVertexOffset.x, hitbox.topLeftVertexOffset.y);
+   const tr = getAngleToVertexOffset(x, y, hitbox.position.x, hitbox.position.y, hitbox.topRightVertexOffset.x, hitbox.topRightVertexOffset.y);
+   const bl = getAngleToVertexOffset(x, y, hitbox.position.x, hitbox.position.y, -hitbox.topLeftVertexOffset.x, -hitbox.topLeftVertexOffset.y);
+   const br = getAngleToVertexOffset(x, y, hitbox.position.x, hitbox.position.y, -hitbox.topRightVertexOffset.x, -hitbox.topRightVertexOffset.y);
+   
+   return Math.min(tl, tr, bl, br);
 }
 
 export function getMaxAngleToRectangularHitbox(x: number, y: number, hitbox: RectangularHitbox): number {
-   let maxAngle = -99999.9;
-   for (let i = 0; i < 4; i++) {
-      const vertexOffset = hitbox.vertexOffsets[i];
-
-      const vertexX = hitbox.position.x + vertexOffset.x;
-      const vertexY = hitbox.position.y + vertexOffset.y;
-
-      const angleToVertex = angle(vertexX - x, vertexY - y);
-      if (angleToVertex > maxAngle) {
-         maxAngle = angleToVertex;
-      }
-   }
-
-   return maxAngle;
+   const tl = getAngleToVertexOffset(x, y, hitbox.position.x, hitbox.position.y, hitbox.topLeftVertexOffset.x, hitbox.topLeftVertexOffset.y);
+   const tr = getAngleToVertexOffset(x, y, hitbox.position.x, hitbox.position.y, hitbox.topRightVertexOffset.x, hitbox.topRightVertexOffset.y);
+   const bl = getAngleToVertexOffset(x, y, hitbox.position.x, hitbox.position.y, -hitbox.topLeftVertexOffset.x, -hitbox.topLeftVertexOffset.y);
+   const br = getAngleToVertexOffset(x, y, hitbox.position.x, hitbox.position.y, -hitbox.topRightVertexOffset.x, -hitbox.topRightVertexOffset.y);
+   
+   return Math.max(tl, tr, bl, br);
 }
 
 /** Calculates the minimum angle startAngle would need to turn to reach endAngle */

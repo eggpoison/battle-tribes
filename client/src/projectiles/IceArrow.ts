@@ -1,7 +1,6 @@
 import { Settings } from "webgl-test-shared/dist/settings";
-import { Point, randFloat } from "webgl-test-shared/dist/utils";
+import { randFloat } from "webgl-test-shared/dist/utils";
 import { EntityType } from "webgl-test-shared/dist/entities";
-import RenderPart from "../render-parts/RenderPart";
 import Board from "../Board";
 import Particle from "../Particle";
 import { ParticleRenderLayer, addMonocolourParticleToBufferContainer } from "../rendering/webgl/particle-rendering";
@@ -10,17 +9,18 @@ import Entity from "../Entity";
 import { playSound } from "../sound";
 import { createSnowflakeParticle } from "../particles";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
+import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 class IceArrow extends Entity {
    constructor(id: number) {
       super(id, EntityType.iceArrow);
 
       this.attachRenderPart(
-         new RenderPart(
+         new TexturedRenderPart(
             this,
-            getTextureArrayIndex("projectiles/ice-arrow.png"),
             0,
-            0
+            0,
+            getTextureArrayIndex("projectiles/ice-arrow.png")
          )
       );
    }

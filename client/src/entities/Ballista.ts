@@ -1,11 +1,12 @@
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { randItem } from "webgl-test-shared/dist/utils";
-import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { ROCK_DESTROY_SOUNDS, ROCK_HIT_SOUNDS, playSound } from "../sound";
 import Entity from "../Entity";
 import { BALLISTA_AMMO_BOX_OFFSET_X, BALLISTA_AMMO_BOX_OFFSET_Y, BALLISTA_GEAR_X, BALLISTA_GEAR_Y } from "../utils";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
+import TexturedRenderPart from "../render-parts/TexturedRenderPart";
+import { RenderPart } from "../render-parts/render-parts";
 
 class Ballista extends Entity {
    constructor(id: number) {
@@ -13,52 +14,52 @@ class Ballista extends Entity {
 
       // Base
       this.attachRenderPart(
-         new RenderPart(
+         new TexturedRenderPart(
             this,
-            getTextureArrayIndex("entities/ballista/base.png"),
             0,
-            0
+            0,
+            getTextureArrayIndex("entities/ballista/base.png")
          )
       );
 
       // Ammo box
-      const ammoBoxRenderPart = new RenderPart(
+      const ammoBoxRenderPart = new TexturedRenderPart(
          this,
-         getTextureArrayIndex("entities/ballista/ammo-box.png"),
          1,
-         Math.PI / 2
+         Math.PI / 2,
+         getTextureArrayIndex("entities/ballista/ammo-box.png")
       );
       ammoBoxRenderPart.offset.x = BALLISTA_AMMO_BOX_OFFSET_X;
       ammoBoxRenderPart.offset.y = BALLISTA_AMMO_BOX_OFFSET_Y;
       this.attachRenderPart(ammoBoxRenderPart);
 
       // Plate
-      const plateRenderPart = new RenderPart(
+      const plateRenderPart = new TexturedRenderPart(
          this,
-         getTextureArrayIndex("entities/ballista/plate.png"),
          2,
-         0
+         0,
+         getTextureArrayIndex("entities/ballista/plate.png")
       );
       plateRenderPart.addTag("turretComponent:pivoting");
       this.attachRenderPart(plateRenderPart);
 
       // Shaft
-      const shaftRenderPart = new RenderPart(
+      const shaftRenderPart = new TexturedRenderPart(
          plateRenderPart,
-         getTextureArrayIndex("entities/ballista/shaft.png"),
          3,
-         0
+         0,
+         getTextureArrayIndex("entities/ballista/shaft.png")
       );
       this.attachRenderPart(shaftRenderPart);
 
       // Gears
       const gearRenderParts = new Array<RenderPart>();
       for (let i = 0; i < 2; i++) {
-         const renderPart = new RenderPart(
+         const renderPart = new TexturedRenderPart(
             shaftRenderPart,
-            getTextureArrayIndex("entities/ballista/gear.png"),
             2.5 + i * 0.1,
-            0
+            0,
+            getTextureArrayIndex("entities/ballista/gear.png")
          );
          renderPart.addTag("turretComponent:gear");
          // @Speed: Garbage collection
@@ -69,11 +70,11 @@ class Ballista extends Entity {
       }
 
       // Crossbow
-      const crossbowRenderPart = new RenderPart(
+      const crossbowRenderPart = new TexturedRenderPart(
          shaftRenderPart,
-         getTextureArrayIndex("entities/ballista/crossbow-1.png"),
          5,
-         0
+         0,
+         getTextureArrayIndex("entities/ballista/crossbow-1.png")
       );
       crossbowRenderPart.addTag("turretComponent:aiming");
       this.attachRenderPart(crossbowRenderPart);

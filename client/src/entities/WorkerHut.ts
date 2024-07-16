@@ -1,30 +1,29 @@
 import { EntityType } from "webgl-test-shared/dist/entities";
-import { EntityData } from "webgl-test-shared/dist/client-server-types";
-import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { playBuildingHitSound, playSound } from "../sound";
 import Entity from "../Entity";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
+import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 class WorkerHut extends Entity {
    constructor(id: number) {
       super(id, EntityType.workerHut);
 
       // Hut
-      const hutRenderPart = new RenderPart(
+      const hutRenderPart = new TexturedRenderPart(
          this,
-         getTextureArrayIndex("entities/worker-hut/worker-hut.png"),
          2,
-         0
+         0,
+         getTextureArrayIndex("entities/worker-hut/worker-hut.png")
       );
       this.attachRenderPart(hutRenderPart);
 
       // Door
-      const doorRenderPart = new RenderPart(
+      const doorRenderPart = new TexturedRenderPart(
          this,
-         getTextureArrayIndex("entities/worker-hut/worker-hut-door.png"),
          1,
-         0
+         0,
+         getTextureArrayIndex("entities/worker-hut/worker-hut-door.png")
       );
       doorRenderPart.addTag("hutComponent:door");
       this.attachRenderPart(doorRenderPart);

@@ -3,12 +3,12 @@ import { EntityType, FishColour } from "webgl-test-shared/dist/entities";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { HitData } from "webgl-test-shared/dist/client-server-types";
 import { TileType } from "webgl-test-shared/dist/tiles";
-import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import Board from "../Board";
 import { BloodParticleSize, createBloodParticle, createBloodParticleFountain, createWaterSplashParticle } from "../particles";
 import { AudioFilePath, playSound } from "../sound";
 import Entity, { ComponentDataRecord } from "../Entity";
+import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 const TEXTURE_SOURCES: Record<FishColour, string> = {
    [FishColour.blue]: "entities/fish/fish-blue.png",
@@ -24,11 +24,11 @@ class Fish extends Entity {
       const fishComponentData = componentDataRecord[ServerComponentType.fish]!;
 
       this.attachRenderPart(
-         new RenderPart(
+         new TexturedRenderPart(
             this,
-            getTextureArrayIndex(TEXTURE_SOURCES[fishComponentData.colour]),
             0,
-            0
+            0,
+            getTextureArrayIndex(TEXTURE_SOURCES[fishComponentData.colour])
          )
       );
    }

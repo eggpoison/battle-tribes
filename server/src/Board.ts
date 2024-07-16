@@ -11,14 +11,12 @@ import Tribe from "./Tribe";
 import generateTerrain from "./world-generation/terrain-generation";
 import { ComponentArrays } from "./components/ComponentArray";
 import { InventoryUseComponentArray, tickInventoryUseComponent } from "./components/InventoryUseComponent";
-import { tickPlayer } from "./entities/tribes/player";
 import { HealthComponentArray, tickHealthComponent } from "./components/HealthComponent";
-import { tickBerryBush } from "./entities/resources/berry-bush";
 import { tickIceShard } from "./entities/projectiles/ice-shard";
 import { onCowDeath, tickCow } from "./entities/mobs/cow";
 import { onKrumblidDeath, tickKrumblid } from "./entities/mobs/krumblid";
 import { ItemComponentArray, tickItemComponent } from "./components/ItemComponent";
-import { onTribeWorkerDeath, tickTribeWorker } from "./entities/tribes/tribe-worker";
+import { onTribeWorkerDeath } from "./entities/tribes/tribe-worker";
 import { tickTombstone } from "./entities/tombstone";
 import { tickZombie } from "./entities/mobs/zombie";
 import { tickSlimewisp } from "./entities/mobs/slimewisp";
@@ -35,7 +33,7 @@ import { AIHelperComponentArray, tickAIHelperComponent } from "./components/AIHe
 import {  tickCampfire } from "./entities/structures/cooking-entities/campfire";
 import {  tickFurnace } from "./entities/structures/cooking-entities/furnace";
 import { tickSpearProjectile } from "./entities/projectiles/spear-projectile";
-import { onTribeWarriorDeath, tickTribeWarrior } from "./entities/tribes/tribe-warrior";
+import { onTribeWarriorDeath } from "./entities/tribes/tribe-warrior";
 import { onSlimeSpitDeath, tickSlimeSpit } from "./entities/projectiles/slime-spit";
 import { tickSpitPoison } from "./entities/projectiles/spit-poison";
 import { DoorComponentArray, tickDoorComponent } from "./components/DoorComponent";
@@ -106,7 +104,7 @@ abstract class Board {
    public static grassInfo: Record<number, Record<number, GrassTileInfo>>;
 
    public static decorations: ReadonlyArray<DecorationInfo>;
-
+   
    public static globalCollisionData: Partial<Record<number, ReadonlyArray<number>>> = {}
 
    public static setup(): void {
@@ -332,10 +330,6 @@ abstract class Board {
 
          // @Hack
          switch (Board.getEntityType(entity)) {
-            case EntityType.player: tickPlayer(entity); break;
-            case EntityType.tribeWorker: tickTribeWorker(entity); break;
-            case EntityType.tribeWarrior: tickTribeWarrior(entity); break;
-            case EntityType.berryBush: tickBerryBush(entity); break;
             case EntityType.iceShardProjectile: tickIceShard(entity); break;
             case EntityType.cow: tickCow(entity); break;
             case EntityType.krumblid: tickKrumblid(entity); break;
@@ -439,8 +433,12 @@ abstract class Board {
       const numChunks = Settings.BOARD_SIZE * Settings.BOARD_SIZE;
       for (let i = 0; i < numChunks; i++) {
          const chunk = this.chunks[i];
-         for (let j = 0; j <= chunk.entities.length - 2; j++) {
-            const entity1 = chunk.entities[j];
+
+         // @Speed: physics-physics comparisons happen twice
+         // For all physics entities, check for collisions with all other entities in the chunk
+         for (let j = 0; j <= chunk.physicsEntities.length - 2; j++) {
+            const entity1 = chunk.physicsEntities[j];
+            
             for (let k = j + 1; k <= chunk.entities.length - 1; k++) {
                const entity2 = chunk.entities[k];
 

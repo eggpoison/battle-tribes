@@ -1,6 +1,5 @@
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { randFloat, randInt } from "webgl-test-shared/dist/utils";
-import RenderPart from "../render-parts/RenderPart";
 import Particle from "../Particle";
 import Board from "../Board";
 import { ParticleColour, ParticleRenderLayer, addMonocolourParticleToBufferContainer } from "../rendering/webgl/particle-rendering";
@@ -8,6 +7,7 @@ import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { AudioFilePath, playSound } from "../sound";
 import Entity from "../Entity";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
+import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 class IceSpikes extends Entity {
    private static readonly ICE_SPECK_COLOUR: ParticleColour = [140/255, 143/255, 207/255];
@@ -18,11 +18,11 @@ class IceSpikes extends Entity {
       super(id, EntityType.iceSpikes);
 
       this.attachRenderPart(
-         new RenderPart(
+         new TexturedRenderPart(
             this,
-            getTextureArrayIndex(`entities/ice-spikes/ice-spikes.png`),
             0,
-            0
+            0,
+            getTextureArrayIndex(`entities/ice-spikes/ice-spikes.png`)
          )
       );
    }

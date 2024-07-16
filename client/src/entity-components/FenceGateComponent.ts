@@ -2,7 +2,7 @@ import { angle, lerp } from "webgl-test-shared/dist/utils";
 import { FenceGateComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
-import RenderPart from "../render-parts/RenderPart";
+import { RenderPart } from "../render-parts/render-parts";
 
 interface DoorInfo {
    readonly offsetX: number;

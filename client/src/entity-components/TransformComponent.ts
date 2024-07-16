@@ -167,6 +167,10 @@ class TransformComponent extends ServerComponent<ServerComponentType.transform> 
    public updateFromData(data: TransformComponentData): void {
       this.ageTicks = data.ageTicks;
       
+      if (data.position[0] !== this.position.x || data.position[1] !== this.position.y || data.rotation !== this.rotation) {
+         this.entity.dirty();
+      }
+      
       this.position.x = data.position[0];
       this.position.y = data.position[1];
       this.rotation = data.rotation;

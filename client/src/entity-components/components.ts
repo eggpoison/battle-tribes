@@ -59,6 +59,7 @@ import SlimewispComponent from "./SlimewispComponent";
 import ThrowingProjectileComponent from "./ThrowingProjectileComponent";
 import TribeWarriorComponent from "./TribeWarriorComponent";
 import TransformComponent from "./TransformComponent";
+import LayeredRodComponent from "./LayeredRodComponent";
 
 export enum ClientComponentType {
    equipment,
@@ -120,7 +121,8 @@ const ServerComponents = {
    [ServerComponentType.wanderAI]: (): WanderAIComponent => 0 as any,
    [ServerComponentType.escapeAI]: (): EscapeAIComponent => 0 as any,
    [ServerComponentType.followAI]: (): FollowAIComponent => 0 as any,
-   [ServerComponentType.tribeWarrior]: (): TribeWarriorComponent => 0 as any
+   [ServerComponentType.tribeWarrior]: (): TribeWarriorComponent => 0 as any,
+   [ServerComponentType.layeredRod]: (): LayeredRodComponent => 0 as any
 } satisfies Record<ServerComponentType, () => ServerComponent>;
 
 export const ClientComponents = {
@@ -188,6 +190,7 @@ export function createComponent<T extends ServerComponentType>(entity: Entity, d
       case ServerComponentType.slimewisp: return new SlimewispComponent(entity, data);
       case ServerComponentType.throwingProjectile: return new ThrowingProjectileComponent(entity, data);
       case ServerComponentType.tribeWarrior: return new TribeWarriorComponent(entity, data);
+      case ServerComponentType.layeredRod: return new LayeredRodComponent(entity, data);
       default: {
          const unreachable: never = data;
          return unreachable;

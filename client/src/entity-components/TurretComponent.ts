@@ -4,9 +4,10 @@ import { lerp } from "webgl-test-shared/dist/utils";
 import Entity from "../Entity";
 import ServerComponent from "./ServerComponent";
 import { playSound } from "../sound";
-import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { BallistaAmmoType, ItemType } from "webgl-test-shared/dist/items/items";
+import { RenderPart } from "../render-parts/render-parts";
+import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 type TurretType = EntityType.slingTurret | EntityType.ballista;
 
@@ -114,11 +115,11 @@ const getProjectileZIndex = (entityType: TurretType): number => {
 
 class TurretComponent extends ServerComponent<ServerComponentType.turret> {
    /** The render part which changes texture as the turret charges */
-   private readonly aimingRenderPart: RenderPart;
+   private readonly aimingRenderPart: TexturedRenderPart;
    /** The render part which pivots as the turret aims */
    private readonly pivotingRenderPart: RenderPart;
    private readonly gearRenderParts: ReadonlyArray<RenderPart>;
-   private projectileRenderPart: RenderPart | null = null;
+   private projectileRenderPart: TexturedRenderPart | null = null;
    
    // @Cleanup: Do we need to store this?
    private chargeProgress: number;
@@ -128,7 +129,7 @@ class TurretComponent extends ServerComponent<ServerComponentType.turret> {
 
       this.chargeProgress = data.chargeProgress;
 
-      this.aimingRenderPart = this.entity.getRenderPart("turretComponent:aiming");
+      this.aimingRenderPart = this.entity.getRenderPart("turretComponent:aiming") as TexturedRenderPart;
       this.pivotingRenderPart = this.entity.getRenderPart("turretComponent:pivoting");
       this.gearRenderParts = this.entity.getRenderParts("turretComponent:gear");
 
@@ -174,11 +175,11 @@ class TurretComponent extends ServerComponent<ServerComponentType.turret> {
       if (this.shouldShowProjectile(chargeProgress, reloadProgress)) {
          const textureSource = getProjectileTextureSource(this.entity);
          if (this.projectileRenderPart === null) {
-            this.projectileRenderPart = new RenderPart(
+            this.projectileRenderPart = new TexturedRenderPart(
                this.pivotingRenderPart,
-               getTextureArrayIndex(textureSource),
                getProjectileZIndex(this.entity.type as TurretType),
-               0
+               0,
+               getTextureArrayIndex(textureSource)
             );
 
             if (this.projectileHasRandomRotation()) {

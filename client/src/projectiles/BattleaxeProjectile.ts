@@ -1,21 +1,21 @@
 import { EntityType } from "webgl-test-shared/dist/entities";
-import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import Entity from "../Entity";
 import Board from "../Board";
 import { attachSoundToEntity, playSound } from "../sound";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
+import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 class BattleaxeProjectile extends Entity {
    constructor(id: number) {
       super(id, EntityType.battleaxeProjectile);
 
       this.attachRenderPart(
-         new RenderPart(
+         new TexturedRenderPart(
             this,
-            getTextureArrayIndex("items/large/stone-battleaxe.png"),
             0,
-            0
+            0,
+            getTextureArrayIndex("items/large/stone-battleaxe.png")
          )
       );
 

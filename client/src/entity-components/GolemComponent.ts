@@ -4,12 +4,13 @@ import { Point } from "webgl-test-shared/dist/utils";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import { createRockSpeckParticle } from "../particles";
-import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { ParticleRenderLayer } from "../rendering/webgl/particle-rendering";
 import { Light, addLight, attachLightToRenderPart } from "../lights";
 import { playSound } from "../sound";
 import { CircularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
+import { RenderPart } from "../render-parts/render-parts";
+import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 const ANGRY_SOUND_INTERVAL_TICKS = Settings.TPS * 3;
 
@@ -131,11 +132,11 @@ class GolemComponent extends ServerComponent<ServerComponentType.golem> {
          const hitbox = transformComponent.hitboxes[i] as CircularHitbox;
          const size = getHitboxSize(hitbox);
    
-         const renderPart = new RenderPart(
+         const renderPart = new TexturedRenderPart(
             this.entity,
-            getTextureArrayIndex(getTextureSource(size)),
             getZIndex(size),
-            2 * Math.PI * Math.random()
+            2 * Math.PI * Math.random(),
+            getTextureArrayIndex(getTextureSource(size))
          );
          renderPart.offset.x = hitbox.offset.x;
          renderPart.offset.y = hitbox.offset.y;
@@ -144,11 +145,11 @@ class GolemComponent extends ServerComponent<ServerComponentType.golem> {
    
          if (size === GolemRockSize.large) {
             for (let i = 0; i < 2; i++) {
-               const eyeRenderPart = new RenderPart(
+               const eyeRenderPart = new TexturedRenderPart(
                   renderPart,
-                  getTextureArrayIndex("entities/golem/eye.png"),
                   6,
-                  0
+                  0,
+                  getTextureArrayIndex("entities/golem/eye.png")
                );
                eyeRenderPart.opacity = 0;
                eyeRenderPart.offset.x = 20 * (i === 0 ? -1 : 1);

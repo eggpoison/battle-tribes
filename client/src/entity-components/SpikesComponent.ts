@@ -2,10 +2,11 @@ import { randFloat } from "webgl-test-shared/dist/utils";
 import { ServerComponentType, SpikesComponentData } from "webgl-test-shared/dist/components";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
-import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { playSound } from "../sound";
 import { LeafParticleSize, createLeafParticle, createLeafSpeckParticle } from "../particles";
+import { RenderPart } from "../render-parts/render-parts";
+import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 export const NUM_SMALL_COVER_LEAVES = 8;
 export const NUM_LARGE_COVER_LEAVES = 3;
@@ -44,11 +45,11 @@ class SpikesComponent extends ServerComponent<ServerComponentType.spikes> {
          textureSource = "entities/miscellaneous/cover-leaf-large.png";
       }
       
-      const renderPart = new RenderPart(
+      const renderPart = new TexturedRenderPart(
          this.entity,
-         getTextureArrayIndex(textureSource),
          1 + Math.random() * 0.5,
-         2 * Math.PI * Math.random()
+         2 * Math.PI * Math.random(),
+         getTextureArrayIndex(textureSource)
       );
 
       const spawnRange = isSmall ? 24 : 18;

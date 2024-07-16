@@ -3,11 +3,11 @@ import { EntityType } from "webgl-test-shared/dist/entities";
 import Tribesman from "./Tribesman";
 import FootprintComponent from "../entity-components/FootprintComponent";
 import { ClientComponentType } from "../entity-components/components";
-import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import EquipmentComponent from "../entity-components/EquipmentComponent";
 import { addTribeMemberRenderParts } from "./TribeMember";
 import { ComponentDataRecord } from "../Entity";
+import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 class TribeWarrior extends Tribesman {
    constructor(id: number, componentDataRecord: ComponentDataRecord) {
@@ -23,11 +23,11 @@ class TribeWarrior extends Tribesman {
       for (let i = 0; i < tribeWarriorComponentData.scars.length; i++) {
          const scarInfo = tribeWarriorComponentData.scars[i];
 
-         const renderPart = new RenderPart(
+         const renderPart = new TexturedRenderPart(
             this,
-            getTextureArrayIndex("scars/scar-" + (scarInfo.type + 1) + ".png"),
             2.5,
-            scarInfo.rotation
+            scarInfo.rotation,
+            getTextureArrayIndex("scars/scar-" + (scarInfo.type + 1) + ".png")
          );
          renderPart.offset.x = scarInfo.offsetX;
          renderPart.offset.y = scarInfo.offsetY;

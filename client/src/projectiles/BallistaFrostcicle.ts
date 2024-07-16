@@ -1,21 +1,21 @@
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
-import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import Entity from "../Entity";
 import { playSound } from "../sound";
 import { createArrowDestroyParticle } from "../particles";
+import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 class BallistaFrostcicle extends Entity {
    constructor(id: number) {
       super(id, EntityType.ballistaFrostcicle);
 
       this.attachRenderPart(
-         new RenderPart(
+         new TexturedRenderPart(
             this,
-            getTextureArrayIndex("projectiles/ballista-frostcicle.png"),
             0,
-            0
+            0,
+            getTextureArrayIndex("projectiles/ballista-frostcicle.png")
          )
       );
    }

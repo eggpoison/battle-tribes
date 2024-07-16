@@ -1,12 +1,12 @@
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { angle, randFloat } from "webgl-test-shared/dist/utils";
-import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { createEmberParticle, createRockParticle, createRockSpeckParticle, createSmokeParticle } from "../particles";
 import Board from "../Board";
 import Entity from "../Entity";
 import { ParticleRenderLayer } from "../rendering/webgl/particle-rendering";
+import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 class Furnace extends Entity {
    public static readonly SIZE = 80;
@@ -15,11 +15,11 @@ class Furnace extends Entity {
       super(id, EntityType.furnace);
 
       this.attachRenderPart(
-         new RenderPart(
+         new TexturedRenderPart(
             this,
-            getTextureArrayIndex("entities/furnace/furnace.png"),
             0,
-            0
+            0,
+            getTextureArrayIndex("entities/furnace/furnace.png")
          )
       );
    }

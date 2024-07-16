@@ -1,10 +1,15 @@
 import { Point } from "webgl-test-shared/dist/utils";
-import Board from "../Board";
 import Entity from "../Entity";
-import RenderPart from "../render-parts/RenderPart";
 import { Matrix3x3, createRotationMatrix, createScaleMatrix, createTranslationMatrix, matrixMultiply } from "./matrices";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { Settings } from "webgl-test-shared/dist/settings";
+import { RenderPart, renderPartIsTextured } from "../render-parts/render-parts";
+
+let dirtyEntities = new Array<Entity>();
+
+export function registerDirtyEntity(entity: Entity): void {
+   dirtyEntities.push(entity);
+}
 
 const calculateEntityRenderPosition = (entity: Entity, frameProgress: number): Point => {
    const transformComponent = entity.getServerComponent(ServerComponentType.transform);
@@ -48,7 +53,7 @@ const calculateEntityTranslationMatrix = (entity: Entity, frameProgress: number)
 // @Cleanup: Copy and paste. combine with entity function.
 const calculateRenderPartMatrix = (renderPart: RenderPart): Matrix3x3 => {
    // Scale
-   const scaleX = renderPart.scale * (renderPart.flipX ? -1 : 1);
+   const scaleX = renderPart.scale * (renderPartIsTextured(renderPart) && renderPart.flipX ? -1 : 1);
    const scaleY = renderPart.scale;
    let model = createScaleMatrix(scaleX, scaleY);
    
@@ -64,19 +69,14 @@ const calculateRenderPartMatrix = (renderPart: RenderPart): Matrix3x3 => {
 }
 
 export function updateRenderPartMatrices(frameProgress: number): void {
-   for (let i = 0; i < Board.sortedEntities.length; i++) {
-      const entity = Board.sortedEntities[i];
+   for (let i = 0; i < dirtyEntities.length; i++) {
+      const entity = dirtyEntities[i];
       
       const entityModelMatrix = calculateEntityModelMatrix(entity, frameProgress);
       entity.modelMatrix = entityModelMatrix;
 
-      // Update render parts from parent -> child
-      const remainingRenderParts: Array<RenderPart> = [];
-      for (const child of entity.children) {
-         remainingRenderParts.push(child);
-      }
-      while (remainingRenderParts.length > 0) {
-         const renderPart = remainingRenderParts[0];
+      for (let j = 0; j < entity.renderPartsHierarchicalArray.length; j++) {
+         const renderPart = entity.renderPartsHierarchicalArray[j];
 
          const modelMatrix = calculateRenderPartMatrix(renderPart);
 
@@ -87,12 +87,14 @@ export function updateRenderPartMatrices(frameProgress: number): void {
             // Base the matrix on the entity's model matrix without rotation
             renderPart.modelMatrix = matrixMultiply(entityModelMatrix, modelMatrix);
          }
-
-         for (const child of renderPart.children) {
-            remainingRenderParts.push(child);
-         }
-
-         remainingRenderParts.splice(0, 1);
       }
+   }
+
+   // Reset dirty entities
+   // @Speed: Garbage collection. An individual entity rarely switches between dirty/undirty
+   while (dirtyEntities.length > 0) {
+      const entity = dirtyEntities[0];
+      entity.modelMatrixIsDirty = false;
+      dirtyEntities.splice(0, 1);
    }
 }

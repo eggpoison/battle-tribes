@@ -1,4 +1,4 @@
-import { EntityType, EntityTypeString } from "webgl-test-shared/dist/entities";
+import { EntityType } from "webgl-test-shared/dist/entities";
 import { ComponentConfig } from "./components";
 import { createBerryBushConfig } from "./entities/resources/berry-bush";
 import { createBoulderConfig } from "./entities/resources/boulder";
@@ -59,10 +59,12 @@ import { createBallistaSlimeballConfig } from "./entities/projectiles/ballista-s
 import { createBallistaFrostcicleConfig } from "./entities/projectiles/ballista-frostcicle";
 import { createSlingTurretRockConfig } from "./entities/projectiles/sling-turret-rock";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { createGrassStrandConfig } from "./entities/grass-strand";
 
 // @Robustness: from the given entity type, deduce which component params will be returned.
 // - Will require defining the component configs in a variable to be analysed at compile-time, not in functions
 export function createEntityConfig(entityType: EntityType): ComponentConfig<ServerComponentType> {
+   // @Cleanup: so many stupid casts!
    switch (entityType) {
       case EntityType.berryBush: return createBerryBushConfig() as any;
       case EntityType.boulder: return createBoulderConfig() as any;
@@ -124,5 +126,6 @@ export function createEntityConfig(entityType: EntityType): ComponentConfig<Serv
       case EntityType.frostshaper: return createFrostshaperConfig() as any;
       case EntityType.stonecarvingTable: return createStonecarvingTableConfig() as any;
       case EntityType.itemEntity: return createItemEntityConfig() as any;
+      case EntityType.grassStrand: return createGrassStrandConfig() as any;
    }
 }

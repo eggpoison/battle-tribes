@@ -222,7 +222,7 @@ const updatePosition = (entity: EntityID, physicsComponent: PhysicsComponent): v
       
       dirtifyPathfindingNodes(entity, physicsComponent);
    } else if (physicsComponent.positionIsDirty) {
-      transformComponent.updateHitboxes(entity);
+      transformComponent.cleanHitboxes(entity);
       transformComponent.updateContainingChunks(entity);
 
       dirtifyPathfindingNodes(entity, physicsComponent);
@@ -235,14 +235,14 @@ const updatePosition = (entity: EntityID, physicsComponent: PhysicsComponent): v
 
       // If the object moved due to resolving wall tile collisions, recalculate
       if (physicsComponent.positionIsDirty) {
-         transformComponent.updateHitboxes(entity);
+         transformComponent.cleanHitboxes(entity);
       }
 
       transformComponent.resolveBorderCollisions(entity);
    
       // If the object moved due to resolving border collisions, recalculate
       if (physicsComponent.positionIsDirty) {
-         transformComponent.updateHitboxes(entity);
+         transformComponent.cleanHitboxes(entity);
       }
 
       transformComponent.updateTile();

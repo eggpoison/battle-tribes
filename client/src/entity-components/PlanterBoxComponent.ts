@@ -1,12 +1,13 @@
 import { PlanterBoxComponentData, PlanterBoxPlant, ServerComponentType } from "webgl-test-shared/dist/components";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
-import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { playSound } from "../sound";
 import { customTickIntervalHasPassed, randInt } from "webgl-test-shared/dist/utils";
 import { createGrowthParticle } from "../particles";
 import { getRandomPointInEntity } from "./TransformComponent";
+import { RenderPart } from "../render-parts/render-parts";
+import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 class PlanterBoxComponent extends ServerComponent<ServerComponentType.planterBox> {
    private moundRenderPart: RenderPart | null = null;
@@ -42,11 +43,11 @@ class PlanterBoxComponent extends ServerComponent<ServerComponentType.planterBox
             // @Temporary
             const textureSource = plantType === PlanterBoxPlant.iceSpikes ? "entities/plant/snow-clump.png" : "entities/plant/dirt-clump.png";
             
-            this.moundRenderPart = new RenderPart(
+            this.moundRenderPart = new TexturedRenderPart(
                this.entity,
-               getTextureArrayIndex(textureSource),
                1,
-               Math.PI / 2 * randInt(0, 3)
+               Math.PI / 2 * randInt(0, 3),
+               getTextureArrayIndex(textureSource)
             );
             this.entity.attachRenderPart(this.moundRenderPart);
          }

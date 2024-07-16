@@ -18,6 +18,7 @@ import { addPlayerClient, generatePlayerSpawnPosition, getPlayerClients } from "
 import { createPlayerConfig } from "../entities/tribes/player";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { createEntityFromConfig } from "../Entity";
+import { createGrassStrands } from "../world-generation/grass-generation";
 
 /*
 
@@ -56,13 +57,6 @@ class GameServer {
 
    private nextTickTime = 0;
    
-   /** Sets up the various stuff */
-   public setup() {
-      updateResourceDistributions();
-      spawnInitialEntities();
-      forceMaxGrowAllIceSpikes();
-   }
-
    public setTrackedGameObject(id: number): void {
       SERVER.trackedEntityID = id;
    }
@@ -75,8 +69,12 @@ class GameServer {
          SRandom.seed(randInt(0, 9999999999));
       }
 
+      // Setup
       Board.setup();
-      SERVER.setup();
+      updateResourceDistributions();
+      spawnInitialEntities();
+      forceMaxGrowAllIceSpikes();
+      createGrassStrands();
       
       if (SERVER.io === null) {
          // Start the server

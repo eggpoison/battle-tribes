@@ -184,6 +184,9 @@ const CLIENT_ENTITY_INFO_RECORD: Record<EntityType, ClientEntityInfo> = {
    },
    [EntityType.stonecarvingTable]: {
       name: "Stonecarving Table"
+   },
+   [EntityType.grassStrand]: {
+      name: "Grass Strand"
    }
 };
 

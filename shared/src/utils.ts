@@ -4,6 +4,12 @@ export type Mutable<T> = {
    -readonly [P in keyof T]: T[P];
 };
 
+export interface Colour {
+   r: number;
+   g: number;
+   b: number;
+}
+
 /**
  * Returns a random integer inclusively.
  * @param min The minimum value of the random number.

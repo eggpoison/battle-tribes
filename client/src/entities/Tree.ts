@@ -1,12 +1,12 @@
 import { EntityType, TreeSize } from "webgl-test-shared/dist/entities";
-import { Point, angle, randFloat, randInt, randItem } from "webgl-test-shared/dist/utils";
+import { angle, randFloat, randInt, randItem } from "webgl-test-shared/dist/utils";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { HitData, HitFlags } from "webgl-test-shared/dist/client-server-types";
-import RenderPart from "../render-parts/RenderPart";
 import { LeafParticleSize, createLeafParticle, createLeafSpeckParticle, createWoodSpeckParticle } from "../particles";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { AudioFilePath, playSound } from "../sound";
 import Entity, { ComponentDataRecord } from "../Entity";
+import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 const treeTextures: { [T in TreeSize]: string } = {
    [TreeSize.small]: "entities/tree/tree-small.png",
@@ -30,11 +30,11 @@ class Tree extends Entity {
       const treeComponentData = componentDataRecord[ServerComponentType.tree]!;
       
       this.attachRenderPart(
-         new RenderPart(
+         new TexturedRenderPart(
             this,
-            getTextureArrayIndex(treeTextures[treeComponentData.treeSize]),
             0,
-            0
+            0,
+            getTextureArrayIndex(treeTextures[treeComponentData.treeSize])
          )
       );
    }

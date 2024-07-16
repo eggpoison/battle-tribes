@@ -17,7 +17,7 @@ import { cleanAngle } from "./ai-shared";
 import { getPathfindingGroupID } from "./pathfinding";
 import { registerResearchOrbComplete } from "./server/player-clients";
 import { HutComponentArray } from "./components/HutComponent";
-import { HitboxVertexPositions } from "webgl-test-shared/dist/hitboxes/hitboxes";
+import { HitboxVertexPositions, RectangularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { CraftingRecipe } from "webgl-test-shared/dist/items/crafting-recipes";
 import { ItemType, InventoryName } from "webgl-test-shared/dist/items/items";
 import { TransformComponentArray } from "./components/TransformComponent";
@@ -85,7 +85,7 @@ export interface RestrictedBuildingArea {
    readonly rotation: number;
    /** The ID of the building responsible for the restricted area */
    readonly associatedBuildingID: number;
-   readonly vertexOffsets: HitboxVertexPositions;
+   readonly hitbox: RectangularHitbox;
 }
 
 export interface VirtualBuilding {

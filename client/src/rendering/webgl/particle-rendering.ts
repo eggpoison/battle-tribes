@@ -372,7 +372,7 @@ export function createParticleShaders(): void {
    gl.uniform1i(texturedTextureUniformLocation, 0);
 }
 
-// @Cleanup a bunch of the code in these functions are the same
+// @Cleanup: a bunch of the code in these functions are the same
 
 export function addMonocolourParticleToBufferContainer(particle: Particle, renderLayer: ParticleRenderLayer, width: number, height: number, positionX: number, positionY: number, velocityX: number, velocityY: number, accelerationX: number, accelerationY: number, friction: number, rotation: number, angularVelocity: number, angularAcceleration: number, angularFriction: number, colourR: number, colourG: number, colourB: number): void {
    // Acceleration and friction can't be both defined at once

@@ -1,10 +1,10 @@
 import { EntityType } from "webgl-test-shared/dist/entities";
-import RenderPart from "../render-parts/RenderPart";
 import { createSlimePoolParticle, createSlimeSpeckParticle } from "../particles";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import Entity from "../Entity";
 import { TileType } from "webgl-test-shared/dist/tiles";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
+import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 class Slimewisp extends Entity {
    private static readonly RADIUS = 16;
@@ -12,11 +12,11 @@ class Slimewisp extends Entity {
    constructor(id: number) {
       super(id, EntityType.slimewisp);
 
-      const renderPart = new RenderPart(
+      const renderPart = new TexturedRenderPart(
          this,
-         getTextureArrayIndex(`entities/slimewisp/slimewisp.png`),
          0,
-         0
+         0,
+         getTextureArrayIndex(`entities/slimewisp/slimewisp.png`)
       );
       renderPart.opacity = 0.8;
       this.attachRenderPart(renderPart);

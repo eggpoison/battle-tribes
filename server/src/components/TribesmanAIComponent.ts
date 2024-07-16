@@ -10,6 +10,7 @@ import { TribesmanGoal } from "../entities/tribes/tribesman-ai/tribesman-goals";
 import { CRAFTING_RECIPES } from "webgl-test-shared/dist/items/crafting-recipes";
 import { ItemType } from "webgl-test-shared/dist/items/items";
 import { EntityID } from "webgl-test-shared/dist/entities";
+import { tickTribesman } from "../entities/tribes/tribesman-ai/tribesman-ai";
 
 // @Incomplete: periodically remove dead entities from the relations object
 // @Incomplete: only keep track of tribesman relations
@@ -157,6 +158,7 @@ export class TribesmanAIComponent {
 }
 
 export const TribesmanAIComponentArray = new ComponentArray<TribesmanAIComponent>(ServerComponentType.tribesmanAI, true, {
+   onTick: tickTribesman,
    serialise: serialise
 });
 

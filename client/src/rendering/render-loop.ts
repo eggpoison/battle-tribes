@@ -1,8 +1,8 @@
 import Board from "../Board";
 import Entity from "../Entity";
 import Particle from "../Particle";
-import RenderPart from "../render-parts/RenderPart";
-import { calculateEntityVertices, calculateRenderPartDepth, renderEntity } from "./webgl/entity-rendering";
+import { RenderPart } from "../render-parts/render-parts";
+import { calculateRenderPartDepth, renderEntities } from "./webgl/entity-rendering";
 import { RenderPartOverlayGroup, renderEntityOverlay } from "./webgl/overlay-rendering";
 
 export const enum RenderableType {
@@ -86,57 +86,68 @@ export function removeRenderable(renderable: Renderable): void {
    }
 }
 
-export function renderRenderables(frameProgress: number): void {
-   // @Hack: shouldn't be done here
-   for (const entity of Board.sortedEntities) {
-      entity.updateRenderPosition(frameProgress);
-
-      // Calculate render info for all render parts
-      // Update render parts from parent -> child
-      const remainingRenderParts: Array<RenderPart> = [];
-      for (const child of entity.children) {
-         remainingRenderParts.push(child);
+const renderRenderablesBatch = (renderableType: RenderableType, renderables: ReadonlyArray<Renderable>): void => {
+   switch (renderableType) {
+      case RenderableType.entity: {
+         // @Cleanup: remove need for cast
+         renderEntities(renderables as Array<Entity>);
+         break;
       }
-      while (remainingRenderParts.length > 0) {
-         const renderObject = remainingRenderParts[0];
-         renderObject.update();
-
-         for (const child of renderObject.children) {
-            remainingRenderParts.push(child);
+      case RenderableType.particle: {
+         // @Incomplete
+         break;
+      }
+      case RenderableType.overlay: {
+         // @Cleanup: remove need for cast
+         for (const overlay of renderables as Array<RenderPartOverlayGroup>) {
+            renderEntityOverlay(overlay);
          }
-
-         remainingRenderParts.splice(0, 1);
+         break;
       }
    }
+}
 
-   // for (let i = 0; i < Board.sortedEntities.length; i++) {
-   //    const entity = Board.sortedEntities[i];
-   //    const vertexData = calculateEntityVertices(entity);
-   //    renderEntity(vertexData);
+export function renderRenderables(frameProgress: number): void {
+   if (renderables.length === 0) {
+      return;
+   }
+   
+   // @Hack: shouldn't be done here
+   // for (const entity of Board.sortedEntities) {
+   //    entity.updateRenderPosition(frameProgress);
+
+   //    // Calculate render info for all render parts
+   //    // Update render parts from parent -> child
+   //    const remainingRenderParts: Array<RenderPart> = [];
+   //    for (const child of entity.children) {
+   //       remainingRenderParts.push(child);
+   //    }
+   //    while (remainingRenderParts.length > 0) {
+   //       const renderObject = remainingRenderParts[0];
+   //       renderObject.update();
+
+   //       for (const child of renderObject.children) {
+   //          remainingRenderParts.push(child);
+   //       }
+
+   //       remainingRenderParts.splice(0, 1);
+   //    }
    // }
    
+   let currentRenderableType = RenderableType.entity;
+   let currentRenderables = new Array<Renderable>();
    for (let i = 0; i < renderables.length; i++) {
       const renderableInfo = renderables[i];
 
-      // @Speed: batch
-      switch (renderableInfo.type) {
-         case RenderableType.entity: {
-            // @Cleanup: remove need for cast
-            const entity = renderableInfo.renderable as Entity;
-            const vertexData = calculateEntityVertices(entity);
-            renderEntity(vertexData);
-            break;
-         }
-         case RenderableType.particle: {
-            // @Incomplete
-            break;
-         }
-         case RenderableType.overlay: {
-            // @Cleanup: remove need for cast
-            const overlay = renderableInfo.renderable as RenderPartOverlayGroup;
-            renderEntityOverlay(overlay);
-            break;
-         }
+      if (renderableInfo.type === currentRenderableType) {
+         currentRenderables.push(renderableInfo.renderable);
+      } else {
+         renderRenderablesBatch(currentRenderableType, currentRenderables);
+         
+         currentRenderableType = renderableInfo.type;
+         currentRenderables = [renderableInfo.renderable];
       }
    }
+
+   renderRenderablesBatch(currentRenderableType, currentRenderables);
 }

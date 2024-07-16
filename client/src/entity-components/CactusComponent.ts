@@ -2,9 +2,9 @@ import { CactusBodyFlowerData, CactusFlowerSize, CactusLimbData } from "webgl-te
 import { CactusComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
-import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { createFlowerParticle } from "../particles";
+import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 export const CACTUS_RADIUS = 40;
 
@@ -30,11 +30,11 @@ class CactusComponent extends ServerComponent<ServerComponentType.cactus> {
       for (let i = 0; i < data.flowers.length; i++) {
          const flowerInfo = data.flowers[i];
 
-         const renderPart = new RenderPart(
+         const renderPart = new TexturedRenderPart(
             this.entity,
-            getTextureArrayIndex(getFlowerTextureSource(flowerInfo.type, flowerInfo.size)),
             3 + Math.random(),
-            flowerInfo.rotation
+            flowerInfo.rotation,
+            getTextureArrayIndex(getFlowerTextureSource(flowerInfo.type, flowerInfo.size))
          );
          const offsetDirection = flowerInfo.column * Math.PI / 4;
          renderPart.offset.x = flowerInfo.height * Math.sin(offsetDirection);
@@ -46,11 +46,11 @@ class CactusComponent extends ServerComponent<ServerComponentType.cactus> {
       for (let i = 0; i < data.limbs.length; i++) {
          const limbInfo = data.limbs[i];
 
-         const limbRenderPart = new RenderPart(
+         const limbRenderPart = new TexturedRenderPart(
             this.entity,
-            getTextureArrayIndex("entities/cactus/cactus-limb.png"),
             Math.random(),
-            2 * Math.PI * Math.random()
+            2 * Math.PI * Math.random(),
+            getTextureArrayIndex("entities/cactus/cactus-limb.png")
          )
          limbRenderPart.offset.x = CACTUS_RADIUS * Math.sin(limbInfo.direction);
          limbRenderPart.offset.y = CACTUS_RADIUS * Math.cos(limbInfo.direction);
@@ -59,11 +59,11 @@ class CactusComponent extends ServerComponent<ServerComponentType.cactus> {
          if (typeof limbInfo.flower !== "undefined") {
             const flowerInfo = limbInfo.flower;
 
-            const flowerRenderPart = new RenderPart(
+            const flowerRenderPart = new TexturedRenderPart(
                limbRenderPart,
-               getTextureArrayIndex(getFlowerTextureSource(flowerInfo.type, CactusFlowerSize.small)),
                1 + Math.random(),
-               flowerInfo.rotation
+               flowerInfo.rotation,
+               getTextureArrayIndex(getFlowerTextureSource(flowerInfo.type, CactusFlowerSize.small))
             )
             flowerRenderPart.offset.x = flowerInfo.height * Math.sin(flowerInfo.direction);
             flowerRenderPart.offset.y = flowerInfo.height * Math.cos(flowerInfo.direction);

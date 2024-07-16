@@ -95,10 +95,6 @@ export function createTribeWarriorConfig(): ComponentConfig<ComponentTypes> {
    };
 }
 
-export function tickTribeWarrior(warrior: EntityID): void {
-   tickTribesman(warrior);
-}
-
 export function onTribeWarriorDeath(warrior: EntityID): void {
    // Attempt to respawn the tribesman when it is killed
    // Only respawn the tribesman if their hut is alive

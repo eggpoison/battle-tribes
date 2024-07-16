@@ -10,14 +10,14 @@ import { placeBuilding } from "../entities/tribes/tribe-member";
 import { SafetyNode, addHitboxesOccupiedNodes, addRectangularSafetyNodePositions, placeVirtualBuilding, updateTribeBuildingInfo } from "./ai-building";
 import { buildingIsInfrastructure, getTribeSafety, tribeIsVulnerable } from "./ai-building-heuristics";
 import { TribeArea, areaHasOutsideDoor, getOutsideDoorPlacePlan } from "./ai-building-areas";
-import { HitboxVertexPositions, updateHitbox, hitboxIsCircular } from "webgl-test-shared/dist/hitboxes/hitboxes";
+import { HitboxVertexPositions, updateHitbox, hitboxIsCircular, RectangularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { createEntityHitboxes } from "webgl-test-shared/dist/hitboxes/entity-hitbox-creation";
 import { getHitboxesCollidingEntities } from "webgl-test-shared/dist/hitbox-collision";
 import { getItemRecipe } from "webgl-test-shared/dist/items/crafting-recipes";
 import { ItemType, ITEM_INFO_RECORD, PlaceableItemInfo } from "webgl-test-shared/dist/items/items";
 import { TransformComponentArray } from "../components/TransformComponent";
 
-const virtualBuildingTakesUpWallSpace = (wallPosition: Point, wallRotation: number, virtualBuilding: VirtualBuilding, wallVertexOffsets: HitboxVertexPositions): boolean => {
+const virtualBuildingTakesUpWallSpace = (wallPosition: Point, wallRotation: number, virtualBuilding: VirtualBuilding, wallHitbox: RectangularHitbox): boolean => {
    // @Speed: cache when virutal entity is first created
    const hitboxes = createEntityHitboxes(virtualBuilding.entityType);
    
@@ -34,7 +34,7 @@ const virtualBuildingTakesUpWallSpace = (wallPosition: Point, wallRotation: numb
          const sinRotation = Math.sin(wallRotation);
          const cosRotation = Math.cos(wallRotation);
 
-         const collisionData = rectanglesAreColliding(wallVertexOffsets, hitbox.vertexOffsets, wallPosition, hitbox.position, cosRotation, -sinRotation, hitbox.axisX, hitbox.axisY);
+         const collisionData = rectanglesAreColliding(wallHitbox, hitbox, wallPosition, hitbox.position, cosRotation, -sinRotation, hitbox.axisX, hitbox.axisY);
          if (collisionData.isColliding) {
             return true;
          }
@@ -44,7 +44,6 @@ const virtualBuildingTakesUpWallSpace = (wallPosition: Point, wallRotation: numb
    return false;
 }
 
-
 const wallSpaceIsFree = (wallPosition: Point, wallRotation: number, tribe: Tribe): boolean => {
    // @Cleanup
    // @Speed: Can do a constant smaller than tile size
@@ -53,31 +52,17 @@ const wallSpaceIsFree = (wallPosition: Point, wallRotation: number, tribe: Tribe
    // const minChunkY = Math.max(Math.floor((y - Settings.TILE_SIZE) / Settings.CHUNK_UNITS), 0);
    // const maxChunkY = Math.min(Math.floor((y + Settings.TILE_SIZE) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1);
 
-   const sinRotation = Math.sin(wallRotation);
-   const cosRotation = Math.cos(wallRotation);
-
-   const x2 = Settings.TILE_SIZE * 0.499;
-   const x1 = -x2;
-   const y2 = Settings.TILE_SIZE * 0.499;
-   
-   const topLeftX = cosRotation * x1 + sinRotation * y2;
-   const topLeftY = cosRotation * y2 - sinRotation * x1;
-   const topRightX = cosRotation * x2 + sinRotation * y2;
-   const topRightY = cosRotation * y2 - sinRotation * x2;
-
-   const wallVertexOffsets: HitboxVertexPositions = [
-      new Point(topLeftX, topLeftY),
-      new Point(topRightX, topRightY),
-      new Point(-topLeftX, -topLeftY),
-      new Point(-topRightX, -topRightY)
-   ];
+   // @Speed
+   const tempWallHitbox = new RectangularHitbox(0, new Point(0, 0), 0, 0, 0, 0, Settings.TILE_SIZE * 0.499, Settings.TILE_SIZE * 0.499, wallRotation);
+   tempWallHitbox.position.x = wallPosition.x;
+   tempWallHitbox.position.y = wallPosition.y;
    
    // Check for existing walls
    // @Speed!!
    for (let i = 0; i < tribe.virtualBuildings.length; i++) {
       const virtualBuilding = tribe.virtualBuildings[i];
 
-      if (virtualBuildingTakesUpWallSpace(wallPosition, wallRotation, virtualBuilding, wallVertexOffsets)) {
+      if (virtualBuildingTakesUpWallSpace(wallPosition, wallRotation, virtualBuilding, tempWallHitbox)) {
          return false;
       }
    }
@@ -100,11 +85,14 @@ const wallSpaceIsFree = (wallPosition: Point, wallRotation: number, tribe: Tribe
    //    }
    // }
 
+   const sinRotation = Math.sin(wallRotation);
+   const cosRotation = Math.cos(wallRotation);
+
    // Check for restricted areas
    for (let i = 0; i < tribe.restrictedBuildingAreas.length; i++) {
       const restrictedArea = tribe.restrictedBuildingAreas[i];
 
-      const collisionData = rectanglesAreColliding(wallVertexOffsets, restrictedArea.vertexOffsets, wallPosition, restrictedArea.position, cosRotation, -sinRotation, Math.sin(restrictedArea.rotation), Math.cos(restrictedArea.rotation));
+      const collisionData = rectanglesAreColliding(tempWallHitbox, restrictedArea.hitbox, wallPosition, restrictedArea.position, cosRotation, -sinRotation, Math.sin(restrictedArea.rotation), Math.cos(restrictedArea.rotation));
       if (collisionData.isColliding) {
          return false;
       }
@@ -140,7 +128,9 @@ const wallSpaceIsFree = (wallPosition: Point, wallRotation: number, tribe: Tribe
          const tileYUnits = (tile.y + 0.5) * Settings.TILE_SIZE;
          const tilePos = new Point(tileXUnits, tileYUnits);
 
-         const collisionData = rectanglesAreColliding(wallVertexOffsets, tileVertexOffsets, wallPosition, tilePos, cosRotation, -sinRotation, 1, 0);
+         const tempTileHitbox = new RectangularHitbox(0, new Point(tileXUnits, tileYUnits), 0, 0, 0, 0, Settings.TILE_SIZE * 0.499, Settings.TILE_SIZE * 0.499, 0);
+
+         const collisionData = rectanglesAreColliding(tempWallHitbox, tempTileHitbox, wallPosition, tilePos, cosRotation, -sinRotation, 1, 0);
          if (collisionData.isColliding) {
             return false;
          }
@@ -224,28 +214,10 @@ const addGridAlignedWallCandidates = (tribe: Tribe, placeCandidates: Array<WallP
    for (let i = 0; i < tribe.restrictedBuildingAreas.length; i++) {
       const restrictedArea = tribe.restrictedBuildingAreas[i];
 
-      let minX = Number.MAX_SAFE_INTEGER;
-      let maxX = Number.MIN_SAFE_INTEGER;
-      let minY = Number.MAX_SAFE_INTEGER;
-      let maxY = Number.MIN_SAFE_INTEGER;
-      for (let i = 0; i < 4; i++) {
-         const offset = restrictedArea.vertexOffsets[i];
-         const x = restrictedArea.position.x + offset.x;
-         const y = restrictedArea.position.y + offset.y;
-
-         if (x < minX) {
-            minX = x;
-         }
-         if (x > maxX) {
-            maxX = x;
-         }
-         if (y < minY) {
-            minY = y;
-         }
-         if (y > maxY) {
-            maxY = y;
-         }
-      }
+      const minX = restrictedArea.hitbox.calculateHitboxBoundsMinX();
+      const maxX = restrictedArea.hitbox.calculateHitboxBoundsMaxX();
+      const minY = restrictedArea.hitbox.calculateHitboxBoundsMinY();
+      const maxY = restrictedArea.hitbox.calculateHitboxBoundsMaxY();
       
       addRectangularSafetyNodePositions(restrictedArea.position, restrictedArea.width, restrictedArea.height, restrictedArea.rotation, minX, maxX, minY, maxY, occupiedNodes);
    }

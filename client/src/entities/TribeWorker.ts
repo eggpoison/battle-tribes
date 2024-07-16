@@ -1,5 +1,4 @@
 import { EntityType } from "webgl-test-shared/dist/entities";
-import { Point } from "webgl-test-shared/dist/utils";
 import Tribesman from "./Tribesman";
 import EquipmentComponent from "../entity-components/EquipmentComponent";
 import FootprintComponent from "../entity-components/FootprintComponent";

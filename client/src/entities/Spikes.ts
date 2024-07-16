@@ -1,11 +1,11 @@
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityType } from "webgl-test-shared/dist/entities";
-import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { playSound } from "../sound";
 import Entity, { ComponentDataRecord } from "../Entity";
 import { FLOOR_SPIKE_TEXTURE_SOURCES, WALL_SPIKE_TEXTURE_SOURCES } from "../entity-components/BuildingMaterialComponent";
 import { Point } from "webgl-test-shared/dist/utils";
+import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 class Spikes extends Entity {
    constructor(id: number, entityType: EntityType, componentDataRecord: ComponentDataRecord) {
@@ -21,11 +21,11 @@ class Spikes extends Entity {
          textureArrayIndex = getTextureArrayIndex(FLOOR_SPIKE_TEXTURE_SOURCES[materialComponentData.material]);
       }
 
-      const mainRenderPart = new RenderPart(
+      const mainRenderPart = new TexturedRenderPart(
          this,
-         textureArrayIndex,
          0,
-         0
+         0,
+         textureArrayIndex
       )
       mainRenderPart.addTag("buildingMaterialComponent:material");
       this.attachRenderPart(mainRenderPart);

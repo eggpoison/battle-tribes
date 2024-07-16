@@ -1,12 +1,12 @@
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { Point, randFloat } from "webgl-test-shared/dist/utils";
 import { Settings } from "webgl-test-shared/dist/settings";
-import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { playSound } from "../sound";
 import { createFlyParticle } from "../particles";
 import Entity, { ComponentDataRecord } from "../Entity";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
+import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 class PunjiSticks extends Entity {
    private ticksSinceLastFly = 0;
@@ -23,11 +23,11 @@ class PunjiSticks extends Entity {
          textureArrayIndex = getTextureArrayIndex("entities/floor-punji-sticks/floor-punji-sticks.png");
       }
 
-      const renderPart = new RenderPart(
+      const renderPart = new TexturedRenderPart(
          this,
-         textureArrayIndex,
          0,
-         0
+         0,
+         textureArrayIndex
       )
       this.attachRenderPart(renderPart);
 

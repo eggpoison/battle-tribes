@@ -1,4 +1,3 @@
-import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import Particle from "../Particle";
 import { ParticleRenderLayer, addMonocolourParticleToBufferContainer } from "../rendering/webgl/particle-rendering";
@@ -9,6 +8,8 @@ import { lerp, randFloat, randInt } from "webgl-test-shared/dist/utils";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { EntityType } from "webgl-test-shared/dist/entities";
+import TexturedRenderPart from "../render-parts/TexturedRenderPart";
+import { RenderPart } from "../render-parts/render-parts";
 
 class RockSpikeProjectile extends Entity {
    private static readonly SIZES = [12 * 4, 16 * 4, 20 * 4];
@@ -34,11 +35,11 @@ class RockSpikeProjectile extends Entity {
       
       this.shakeAmount = RockSpikeProjectile.ENTRANCE_SHAKE_AMOUNTS[rockSpikeComponentData.size];
       
-      this.renderPart = new RenderPart(
+      this.renderPart = new TexturedRenderPart(
          this,
-         getTextureArrayIndex(RockSpikeProjectile.SPRITE_TEXTURE_SOURCES[rockSpikeComponentData.size]),
          0,
-         0
+         0,
+         getTextureArrayIndex(RockSpikeProjectile.SPRITE_TEXTURE_SOURCES[rockSpikeComponentData.size])
       );
       this.renderPart.scale = RockSpikeProjectile.ENTRANCE_SCALE;
       this.attachRenderPart(this.renderPart);

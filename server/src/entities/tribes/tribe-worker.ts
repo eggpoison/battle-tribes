@@ -118,10 +118,6 @@ export function createTribeWorkerConfig(): ComponentConfig<ComponentTypes> {
    };
 }
 
-export function tickTribeWorker(worker: EntityID): void {
-   tickTribesman(worker);
-}
-
 // @Cleanup: copy and paste
 export function onTribeWorkerDeath(worker: EntityID): void {
    // 

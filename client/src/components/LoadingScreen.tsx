@@ -62,8 +62,7 @@ const LoadingScreen = ({ username, tribeType, initialStatus }: LoadingScreenProp
                
          Game.playerID = initialGameDataPacket.playerID;
          
-         const tiles = Client.parseServerTileDataArray(initialGameDataPacket.tiles);
-         await Game.initialise(tiles, initialGameDataPacket.waterRocks, initialGameDataPacket.riverSteppingStones, initialGameDataPacket.riverFlowDirections, initialGameDataPacket.edgeTiles, initialGameDataPacket.edgeRiverFlowDirections, initialGameDataPacket.edgeRiverSteppingStones, initialGameDataPacket.grassInfo, initialGameDataPacket.decorations);
+         await Game.initialise(initialGameDataPacket);
          
          definiteGameState.playerUsername = username;
          

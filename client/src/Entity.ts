@@ -3,20 +3,19 @@ import { EntityType, EntityTypeString } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { EntityData, HitData, HitFlags } from "webgl-test-shared/dist/client-server-types";
 import { ComponentData, ServerComponentType, ServerComponentTypeString } from "webgl-test-shared/dist/components";
-import RenderPart, { RenderObject } from "./render-parts/RenderPart";
-import Chunk from "./Chunk";
+import { BaseRenderObject } from "./render-parts/RenderPart";
 import Board from "./Board";
 import { createHealingParticle, createSlimePoolParticle, createSparkParticle } from "./particles";
 import { playSound } from "./sound";
-import ServerComponent from "./entity-components/ServerComponent";
 import { ClientComponentClass, ClientComponentType, ClientComponents, ServerComponentClass, createComponent } from "./entity-components/components";
 import Component from "./entity-components/Component";
 import { removeLightsAttachedToEntity, removeLightsAttachedToRenderPart } from "./lights";
-import { CircularHitbox, RectangularHitbox, updateHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
-import { createCircularHitboxFromData, createRectangularHitboxFromData } from "./client/Client";
 import { RenderPartOverlayGroup } from "./rendering/webgl/overlay-rendering";
 import { removeRenderable } from "./rendering/render-loop";
 import { getRandomPointInEntity } from "./entity-components/TransformComponent";
+import { RenderPart } from "./render-parts/render-parts";
+import { calculateEntityRenderDepth } from "./render-layers";
+import { registerDirtyEntity } from "./rendering/render-part-matrices";
 
 // Use prime numbers / 100 to ensure a decent distribution of different types of particles
 const HEALING_PARTICLE_AMOUNTS = [0.05, 0.37, 1.01];
@@ -32,7 +31,7 @@ type ClientComponentsType = Partial<{
    [T in keyof typeof ClientComponents]: ClientComponentClass<T>;
 }>;
 
-abstract class Entity<T extends EntityType = EntityType> extends RenderObject {
+abstract class Entity<T extends EntityType = EntityType> extends BaseRenderObject {
    public readonly id: number;
 
    public readonly type: EntityType;
@@ -40,9 +39,11 @@ abstract class Entity<T extends EntityType = EntityType> extends RenderObject {
    /** Stores all render parts attached to the object, sorted ascending based on zIndex. (So that render part with smallest zIndex is rendered first) */
    public readonly allRenderParts = new Array<RenderPart>();
 
-   // @Cleanup: initialise the value in the constructor
+   /** Render parts sorted in a way that all render parts are after their parent */
+   public readonly renderPartsHierarchicalArray = new Array<RenderPart>();
+
    /** Visual depth of the game object while being rendered */
-   public renderDepth = 0;
+   public renderDepth: number;
 
    /** Amount the game object's render parts will shake */
    public shakeAmount = 0;
@@ -64,9 +65,23 @@ abstract class Entity<T extends EntityType = EntityType> extends RenderObject {
       // this.renderPosition.y = position.y;
       this.id = id;
       this.type = entityType;
+      
+      // @Cleanup: initialise the value in the constructor
+      this.renderDepth = calculateEntityRenderDepth(entityType);
+
+      // @Temporary? @Cleanup: should be done using the dirty function probs
+      registerDirtyEntity(this);
 
       // Note: The chunks are calculated outside of the constructor immediately after the game object is created
       // so that all constructors have time to run
+   }
+
+   public dirty(): void {
+      if (!this.modelMatrixIsDirty) {
+         registerDirtyEntity(this);
+      }
+      
+      super.dirty();
    }
 
    public createComponents(componentsData: ReadonlyArray<ComponentData>): void {
@@ -198,6 +213,17 @@ abstract class Entity<T extends EntityType = EntityType> extends RenderObject {
       }
       this.allRenderParts.splice(idx, 0, renderPart);
 
+      // Insert into hierarchical array directly after parent
+      let insertIdx = 0;
+      for (let i = 0; i < this.renderPartsHierarchicalArray.length; i++) {
+         const currentRenderPart = this.renderPartsHierarchicalArray[i];
+
+         if (currentRenderPart === renderPart.parent) {
+            insertIdx = i + 1;
+         }
+      }
+      this.renderPartsHierarchicalArray.splice(insertIdx, 0, renderPart);
+
       renderPart.parent.children.push(renderPart);
       
       Board.numVisibleRenderParts++;
@@ -219,6 +245,8 @@ abstract class Entity<T extends EntityType = EntityType> extends RenderObject {
       
       // Remove from the root array
       this.allRenderParts.splice(this.allRenderParts.indexOf(renderPart), 1);
+
+      this.renderPartsHierarchicalArray.splice(this.renderPartsHierarchicalArray.indexOf(renderPart), 1);
    }
 
    public remove(): void {

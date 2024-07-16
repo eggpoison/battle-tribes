@@ -1,7 +1,7 @@
 import { EntityType } from "webgl-test-shared/dist/entities";
-import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import Entity from "../Entity";
+import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 class Workbench extends Entity {
    public static readonly SIZE = 80;
@@ -10,11 +10,11 @@ class Workbench extends Entity {
       super(id, EntityType.workbench);
 
       this.attachRenderPart(
-         new RenderPart(
+         new TexturedRenderPart(
             this,
-            getTextureArrayIndex("entities/workbench/workbench.png"),
             0,
-            0
+            0,
+            getTextureArrayIndex("entities/workbench/workbench.png")
          )
       );
    }

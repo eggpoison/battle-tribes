@@ -5,6 +5,7 @@ import { BallistaAmmoType, Inventory, InventoryName, ItemType } from "./items/it
 import { Settings } from "./settings";
 import { StatusEffect } from "./status-effects";
 import { TitleGenerationInfo } from "./titles";
+import { Colour } from "./utils";
 
 /*
 data sent:
@@ -69,12 +70,13 @@ export enum ServerComponentType {
    fenceGate,
    craftingStation,
    transform,
-   projectile
+   projectile,
+   layeredRod
 }
 
 export const ServerComponentTypeString: Record<ServerComponentType, string> = {
-   [ServerComponentType.aiHelper]: "ai_helper",
-   [ServerComponentType.berryBush]: "berry_bush",
+   [ServerComponentType.aiHelper]: "ai helper",
+   [ServerComponentType.berryBush]: "berry bush",
    [ServerComponentType.blueprint]: "blueprint",
    [ServerComponentType.boulder]: "boulder",
    [ServerComponentType.cactus]: "cactus",
@@ -82,53 +84,54 @@ export const ServerComponentTypeString: Record<ServerComponentType, string> = {
    [ServerComponentType.cow]: "cow",
    [ServerComponentType.door]: "door",
    [ServerComponentType.fish]: "fish",
-   [ServerComponentType.frozenYeti]: "frozen_yeti",
+   [ServerComponentType.frozenYeti]: "frozen yeti",
    [ServerComponentType.golem]: "golem",
    [ServerComponentType.health]: "health",
    [ServerComponentType.hut]: "hut",
-   [ServerComponentType.iceShard]: "ice_shard",
-   [ServerComponentType.iceSpikes]: "ice_spikes",
+   [ServerComponentType.iceShard]: "ice shard",
+   [ServerComponentType.iceSpikes]: "ice spikes",
    [ServerComponentType.inventory]: "inventory",
-   [ServerComponentType.inventoryUse]: "inventory_use",
+   [ServerComponentType.inventoryUse]: "inventory use",
    [ServerComponentType.item]: "item",
    [ServerComponentType.pebblum]: "pebblum",
    [ServerComponentType.physics]: "physics",
    [ServerComponentType.player]: "player",
-   [ServerComponentType.rockSpike]: "rock_spike",
+   [ServerComponentType.rockSpike]: "rock spike",
    [ServerComponentType.slime]: "slime",
-   [ServerComponentType.slimeSpit]: "slime_spit",
+   [ServerComponentType.slimeSpit]: "slime spit",
    [ServerComponentType.slimewisp]: "slimewisp",
    [ServerComponentType.snowball]: "snowball",
-   [ServerComponentType.statusEffect]: "status_effect",
-   [ServerComponentType.throwingProjectile]: "throwing_projectile",
+   [ServerComponentType.statusEffect]: "status effect",
+   [ServerComponentType.throwingProjectile]: "throwing projectile",
    [ServerComponentType.tombstone]: "tombstone",
-   [ServerComponentType.totemBanner]: "totem_banner",
+   [ServerComponentType.totemBanner]: "totem banner",
    [ServerComponentType.tree]: "tree",
    [ServerComponentType.tribe]: "tribe",
-   [ServerComponentType.tribeMember]: "tribe_member",
-   [ServerComponentType.tribesmanAI]: "tribesman_ai",
+   [ServerComponentType.tribeMember]: "tribe member",
+   [ServerComponentType.tribesmanAI]: "tribesman ai",
    [ServerComponentType.turret]: "turret",
    [ServerComponentType.yeti]: "yeti",
    [ServerComponentType.zombie]: "zombie",
-   [ServerComponentType.ammoBox]: "ammo_box",
-   [ServerComponentType.wanderAI]: "wander_ai",
-   [ServerComponentType.escapeAI]: "escape_ai",
-   [ServerComponentType.followAI]: "follow_ai",
-   [ServerComponentType.researchBench]: "research_bench",
+   [ServerComponentType.ammoBox]: "ammo box",
+   [ServerComponentType.wanderAI]: "wander ai",
+   [ServerComponentType.escapeAI]: "escape ai",
+   [ServerComponentType.followAI]: "follow ai",
+   [ServerComponentType.researchBench]: "research bench",
    [ServerComponentType.tunnel]: "tunnel",
-   [ServerComponentType.buildingMaterial]: "building_material",
+   [ServerComponentType.buildingMaterial]: "building material",
    [ServerComponentType.spikes]: "spikes",
-   [ServerComponentType.tribeWarrior]: "tribe_warrior",
-   [ServerComponentType.healingTotem]: "healing_totem",
-   [ServerComponentType.planterBox]: "planter_box",
+   [ServerComponentType.tribeWarrior]: "tribe warrior",
+   [ServerComponentType.healingTotem]: "healing totem",
+   [ServerComponentType.planterBox]: "planter box",
    [ServerComponentType.plant]: "plant",
    [ServerComponentType.structure]: "structure",
    [ServerComponentType.fence]: "fence",
-   [ServerComponentType.fenceGate]: "fence_gate",
-   [ServerComponentType.craftingStation]: "crafting_station",
+   [ServerComponentType.fenceGate]: "fence gate",
+   [ServerComponentType.craftingStation]: "crafting station",
    [ServerComponentType.transform]: "transform",
-   [ServerComponentType.projectile]: "projectile"
-}
+   [ServerComponentType.projectile]: "projectile",
+   [ServerComponentType.layeredRod]: "layered rod"
+};
 
 const _ComponentData = {
    [ServerComponentType.aiHelper]: (): AIHelperComponentData => 0 as any,
@@ -185,7 +188,8 @@ const _ComponentData = {
    [ServerComponentType.fenceGate]: (): FenceGateComponentData => 0 as any,
    [ServerComponentType.craftingStation]: (): CraftingStationComponentData => 0 as any,
    [ServerComponentType.transform]: (): TransformComponentData => 0 as any,
-   [ServerComponentType.projectile]: (): ProjectileComponentData => 0 as any
+   [ServerComponentType.projectile]: (): ProjectileComponentData => 0 as any,
+   [ServerComponentType.layeredRod]: (): LayeredRodComponentData => 0 as any
 } satisfies Record<ServerComponentType, () => unknown>;
 
 export const EntityComponents = {
@@ -248,7 +252,8 @@ export const EntityComponents = {
    [EntityType.fence]: [ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.tribe, ServerComponentType.fence] as const,
    [EntityType.fenceGate]: [ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.tribe, ServerComponentType.fenceGate] as const,
    [EntityType.frostshaper]: [ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.structure, ServerComponentType.craftingStation] as const,
-   [EntityType.stonecarvingTable]: [ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.structure, ServerComponentType.craftingStation] as const
+   [EntityType.stonecarvingTable]: [ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.structure, ServerComponentType.craftingStation] as const,
+   [EntityType.grassStrand]: [ServerComponentType.transform] as const
 } satisfies Record<EntityType, ReadonlyArray<ServerComponentType>>;
 
 export type EntityComponentTypes<T extends EntityType> = typeof EntityComponents[T];
@@ -790,6 +795,15 @@ export interface TransformComponentData extends BaseComponentData {
 
 export interface ProjectileComponentData extends BaseComponentData {
    readonly componentType: ServerComponentType.projectile;
+}
+
+/* Layered Rod Component Data */
+
+export interface LayeredRodComponentData extends BaseComponentData {
+   readonly componentType: ServerComponentType.layeredRod;
+   readonly numLayers: number;
+   readonly naturalBend: [number, number];
+   readonly colour: Colour;
 }
 
 // @Cleanup: Should these be here?

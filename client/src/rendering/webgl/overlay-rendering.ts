@@ -1,12 +1,11 @@
 import { rotateXAroundPoint, rotateYAroundPoint } from "webgl-test-shared/dist/utils";
 import { createWebGLProgram, gl } from "../../webgl";
-import Board from "../../Board";
 import { getEntityTextureAtlas } from "../../texture-atlases/texture-atlases";
 import { bindUBOToProgram, ENTITY_TEXTURE_ATLAS_UBO, UBOBindingIndex } from "../ubos";
 import Entity from "../../Entity";
 import { createImage } from "../../textures";
-import RenderPart from "../../render-parts/RenderPart";
 import { RenderableType, addRenderable } from "../render-loop";
+import { RenderPart, renderPartIsTextured } from "../../render-parts/render-parts";
 
 const enum Vars {
    ATTRIBUTES_PER_VERTEX = 8
@@ -191,6 +190,12 @@ export function renderEntityOverlay(overlay: RenderPartOverlayGroup): void {
 
    for (let i = 0; i < overlay.renderParts.length; i++) {
       const renderPart = overlay.renderParts[i];
+
+      // @Hack
+      if (!renderPartIsTextured(renderPart)) {
+         return;
+      }
+
       const entityTextureArrayIndex = renderPart.textureArrayIndex;
 
       const width = entityTextureAtlas.textureWidths[entityTextureArrayIndex] * 4;

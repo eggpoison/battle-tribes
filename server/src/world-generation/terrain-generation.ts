@@ -9,6 +9,18 @@ import { WaterTileGenerationInfo, generateRiverFeatures, generateRiverTiles } fr
 import OPTIONS from "../options";
 import { generateDecorations } from "./decoration-generation";
 
+export interface TerrainGenerationInfo {
+   readonly tiles: Array<Tile>;
+   readonly riverFlowDirections: RiverFlowDirections;
+   readonly waterRocks: ReadonlyArray<WaterRockData>;
+   readonly riverSteppingStones: ReadonlyArray<RiverSteppingStoneData>;
+   readonly edgeTiles: Array<Tile>;
+   readonly edgeRiverFlowDirections: RiverFlowDirections;
+   readonly edgeRiverSteppingStones: ReadonlyArray<RiverSteppingStoneData>;
+   readonly grassInfo: Record<number, Record<number, GrassTileInfo>>;
+   readonly decorations: ReadonlyArray<DecorationInfo>;
+}
+
 const HEIGHT_NOISE_SCALE = 50;
 const TEMPERATURE_NOISE_SCALE = 120;
 const HUMIDITY_NOISE_SCALE = 30;
@@ -133,18 +145,6 @@ export function generateTileInfo(biomeNames: Array<Array<Biome>>, tileTypeArray:
          tileIsWallArray[tileX + Settings.EDGE_GENERATION_DISTANCE][tileY + Settings.EDGE_GENERATION_DISTANCE] = tileInfo.isWall;
       }
    }
-}
-
-export interface TerrainGenerationInfo {
-   readonly tiles: Array<Tile>;
-   readonly riverFlowDirections: RiverFlowDirections;
-   readonly waterRocks: ReadonlyArray<WaterRockData>;
-   readonly riverSteppingStones: ReadonlyArray<RiverSteppingStoneData>;
-   readonly edgeTiles: Array<Tile>;
-   readonly edgeRiverFlowDirections: RiverFlowDirections;
-   readonly edgeRiverSteppingStones: ReadonlyArray<RiverSteppingStoneData>;
-   readonly grassInfo: Record<number, Record<number, GrassTileInfo>>;
-   readonly decorations: ReadonlyArray<DecorationInfo>;
 }
 
 function generateTerrain(): TerrainGenerationInfo {

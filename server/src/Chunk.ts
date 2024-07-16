@@ -2,11 +2,11 @@ import { RiverSteppingStoneData } from "webgl-test-shared/dist/client-server-typ
 import { GrassBlocker } from "webgl-test-shared/dist/grass-blockers";
 import { EntityID } from "webgl-test-shared/dist/entities";
 
-// @Speed: Change from array-of-objects to object-of-arrays
-
 class Chunk {
-   /** Stores all game objects inside the chunk */
+   /** Stores all entities inside the chunk */
    public readonly entities = new Array<EntityID>();
+   /** All entities in the chunk with a physics component */
+   public readonly physicsEntities = new Array<EntityID>();
 
    /** Stores all mobs which have the chunk in their vision range */
    public readonly viewingEntities = new Array<EntityID>();

@@ -259,6 +259,10 @@ const ENTITY_DAMAGE_INFO_RECORD: Record<EntityType, EntityDamageInfo> = {
    [EntityType.stonecarvingTable]: {
       effectiveDamageTypes: [DamageType.pickaxe],
       stoppedDamageTypes: []
+   },
+   [EntityType.grassStrand]: {
+      effectiveDamageTypes: [],
+      stoppedDamageTypes: []
    }
 };
 

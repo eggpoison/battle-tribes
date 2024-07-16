@@ -20,9 +20,6 @@ type ComponentTypes = ServerComponentType.transform
 
 export const BERRY_BUSH_RADIUS = 40;
 
-/** Number of seconds it takes for a berry bush to regrow one of its berries */
-const BERRY_GROW_TIME = 30;
-
 export function createBerryBushConfig(): ComponentConfig<ComponentTypes> {
    return {
       [ServerComponentType.transform]: {
@@ -40,20 +37,6 @@ export function createBerryBushConfig(): ComponentConfig<ComponentTypes> {
          statusEffectImmunityBitset: StatusEffect.bleeding
       },
       [ServerComponentType.berryBush]: {}
-   }
-}
-
-export function tickBerryBush(berryBush: EntityID): void {
-   const berryBushComponent = BerryBushComponentArray.getComponent(berryBush);
-   if (berryBushComponent.numBerries >= 5) {
-      return;
-   }
-
-   berryBushComponent.berryGrowTimer += Settings.I_TPS;
-   if (berryBushComponent.berryGrowTimer >= BERRY_GROW_TIME) {
-      // Grow a new berry
-      berryBushComponent.berryGrowTimer = 0;
-      berryBushComponent.numBerries++;
    }
 }
 

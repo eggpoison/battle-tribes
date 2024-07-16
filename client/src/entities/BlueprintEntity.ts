@@ -2,7 +2,6 @@ import { BlueprintType, ServerComponentType } from "webgl-test-shared/dist/compo
 import { Point, assertUnreachable, randFloat } from "webgl-test-shared/dist/utils";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { EntityData } from "webgl-test-shared/dist/client-server-types";
-import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { playSound } from "../sound";
 import { BALLISTA_AMMO_BOX_OFFSET_X, BALLISTA_AMMO_BOX_OFFSET_Y, BALLISTA_GEAR_X, BALLISTA_GEAR_Y } from "../utils";
@@ -10,6 +9,7 @@ import { createDustCloud, createLightWoodSpeckParticle, createRockParticle, crea
 import Entity, { ComponentDataRecord } from "../Entity";
 import { ParticleRenderLayer } from "../rendering/webgl/particle-rendering";
 import { WARRIOR_HUT_SIZE } from "../entity-components/HutComponent";
+import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 // @Cleanup: Move all this logic to the blueprint component file
 
@@ -334,11 +334,11 @@ class BlueprintEntity extends Entity {
       for (let i = 0; i < progressTextureInfoArray.length; i++) {
          const progressTextureInfo = progressTextureInfoArray[i];
 
-         const renderPart = new RenderPart(
+         const renderPart = new TexturedRenderPart(
             this,
-            getTextureArrayIndex(progressTextureInfo.completedTextureSource),
             progressTextureInfo.zIndex,
-            progressTextureInfo.rotation
+            progressTextureInfo.rotation,
+            getTextureArrayIndex(progressTextureInfo.completedTextureSource)
          );
          renderPart.offset.x = progressTextureInfo.offsetX;
          renderPart.offset.y = progressTextureInfo.offsetY;
@@ -453,11 +453,11 @@ class BlueprintEntity extends Entity {
          const textureSource = progressTextureInfo.progressTextureSources[localTextureIndex];
          if (blueprintComponent.partialRenderParts.length <= i) {
             // New render part
-            const renderPart = new RenderPart(
+            const renderPart = new TexturedRenderPart(
                this,
-               getTextureArrayIndex(textureSource),
                progressTextureInfo.zIndex + 0.01,
-               progressTextureInfo.rotation
+               progressTextureInfo.rotation,
+               getTextureArrayIndex(textureSource)
             );
             renderPart.offset.x = progressTextureInfo.offsetX
             renderPart.offset.y = progressTextureInfo.offsetY;

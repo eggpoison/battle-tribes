@@ -4,9 +4,9 @@ import { randFloat, randInt } from "webgl-test-shared/dist/utils";
 import { LeafParticleSize, createLeafParticle, createLeafSpeckParticle } from "../particles";
 import { AudioFilePath, playSound } from "../sound";
 import Entity, { ComponentDataRecord } from "../Entity";
-import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { BERRY_BUSH_TEXTURE_SOURCES } from "../entity-components/BerryBushComponent";
+import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 class BerryBush extends Entity {
    private static readonly RADIUS = 40;
@@ -19,11 +19,11 @@ class BerryBush extends Entity {
       
       const berryBushComponentData = componentDataRecord[ServerComponentType.berryBush]!;
       
-      const renderPart = new RenderPart(
+      const renderPart = new TexturedRenderPart(
          this,
-         getTextureArrayIndex(BERRY_BUSH_TEXTURE_SOURCES[berryBushComponentData.numBerries]),
          0,
-         0
+         0,
+         getTextureArrayIndex(BERRY_BUSH_TEXTURE_SOURCES[berryBushComponentData.numBerries])
       );
       renderPart.addTag("berryBushComponent:renderPart");
       this.attachRenderPart(renderPart);

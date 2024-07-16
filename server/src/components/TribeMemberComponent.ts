@@ -12,6 +12,7 @@ import { PlayerComponentArray } from "./PlayerComponent";
 import { InventoryName } from "webgl-test-shared/dist/items/items";
 import { ComponentConfig } from "../components";
 import { HealthComponentArray } from "./HealthComponent";
+import { tickTribeMember } from "../entities/tribes/tribe-member";
 
 export interface TribeMemberComponentParams {
    // @Cleanup: this all sucks
@@ -50,6 +51,7 @@ export const TribeMemberComponentArray = new ComponentArray<TribeMemberComponent
    onJoin: onJoin,
    onRemove: onRemove,
    onInitialise: onInitialise,
+   onTick: tickTribeMember,
    serialise: serialise
 });
 

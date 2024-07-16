@@ -1,9 +1,9 @@
 import { PlantComponentData, PlanterBoxPlant, ServerComponentType } from "webgl-test-shared/dist/components";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
-import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { ItemType } from "webgl-test-shared/dist/items/items";
+import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 const TEXTURE_SOURCES: Record<PlanterBoxPlant, ReadonlyArray<string>> = {
    [PlanterBoxPlant.tree]: ["entities/plant/tree-sapling-1.png", "entities/plant/tree-sapling-2.png", "entities/plant/tree-sapling-3.png", "entities/plant/tree-sapling-4.png", "entities/plant/tree-sapling-5.png", "entities/plant/tree-sapling-6.png", "entities/plant/tree-sapling-7.png", "entities/plant/tree-sapling-8.png", "entities/plant/tree-sapling-9.png", "entities/plant/tree-sapling-10.png", "entities/plant/tree-sapling-11.png"],
@@ -29,7 +29,7 @@ class PlantComponent extends ServerComponent<ServerComponentType.plant> {
    public readonly plant: PlanterBoxPlant;
    public growthProgress: number;
    
-   private plantRenderPart: RenderPart | null = null;
+   private plantRenderPart: TexturedRenderPart | null = null;
    
    constructor(entity: Entity, data: PlantComponentData) {
       super(entity);
@@ -58,11 +58,11 @@ class PlantComponent extends ServerComponent<ServerComponentType.plant> {
          }
          
          if (this.plantRenderPart === null) {
-            this.plantRenderPart = new RenderPart(
+            this.plantRenderPart = new TexturedRenderPart(
                this.entity,
-               getTextureArrayIndex(textureSource),
                9,
-               0
+               0,
+               getTextureArrayIndex(textureSource)
             );
             this.entity.attachRenderPart(this.plantRenderPart);
          } else {

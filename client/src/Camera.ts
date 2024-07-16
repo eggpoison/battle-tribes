@@ -4,8 +4,46 @@ import { Settings } from "webgl-test-shared/dist/settings";
 import { halfWindowHeight, halfWindowWidth } from "./webgl";
 import { RENDER_CHUNK_EDGE_GENERATION, RENDER_CHUNK_SIZE, WORLD_RENDER_CHUNK_SIZE } from "./rendering/render-chunks";
 import Board from "./Board";
+import Chunk from "./Chunk";
 
 export type VisiblePositionBounds = [minX: number, maxX: number, minY: number, maxY: number];
+
+const registerVisibleChunk = (chunk: Chunk): void => {
+   // for (let i = 0; i < chunk.grassStrands.length; i++) {
+   //    const grassStrandData = chunk.grassStrands[i];
+      
+   //    const entity = new GrassStrand(grassStrandData);
+   //    Board.addEntity(entity);
+   // }
+}
+
+const deregisterVisibleChunk = (chunk: Chunk): void => {
+
+}
+
+const getChunksFromRange = (minChunkX: number, maxChunkX: number, minChunkY: number, maxChunkY: number): ReadonlyArray<Chunk> => {
+   const chunks = new Array<Chunk>();
+   
+   for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
+      for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
+         const chunk = Board.getChunk(chunkX, chunkY);
+         chunks.push(chunk);
+      }
+   }
+
+   return chunks;
+}
+
+/** Gets all the chunks in chunks B missing from chunks A */
+const getMissingChunks = (chunksA: ReadonlyArray<Chunk>, chunksB: ReadonlyArray<Chunk>): ReadonlyArray<Chunk> => {
+   const missing = new Array<Chunk>();
+   for (const chunk of chunksB) {
+      if (!chunksA.includes(chunk)) {
+         missing.push(chunk);
+      }
+   }
+   return missing;
+}
 
 abstract class Camera {
    /** Larger = zoomed in, smaller = zoomed out */
@@ -31,10 +69,24 @@ abstract class Camera {
    public static maxVisibleRenderChunkY = -1;
 
    public static updateVisibleChunkBounds(): void {
+      const previousChunks = getChunksFromRange(this.minVisibleChunkX, this.maxVisibleChunkX, this.minVisibleChunkY, this.maxVisibleChunkY);
+      
       this.minVisibleChunkX = Math.max(Math.floor((this.position.x - halfWindowWidth / this.zoom) / Settings.CHUNK_UNITS), 0);
       this.maxVisibleChunkX = Math.min(Math.floor((this.position.x + halfWindowWidth / this.zoom) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1);
       this.minVisibleChunkY = Math.max(Math.floor((this.position.y - halfWindowHeight / this.zoom) / Settings.CHUNK_UNITS), 0);
       this.maxVisibleChunkY = Math.min(Math.floor((this.position.y + halfWindowHeight / this.zoom) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1);
+
+      const newChunks = getChunksFromRange(this.minVisibleChunkX, this.maxVisibleChunkX, this.minVisibleChunkY, this.maxVisibleChunkY);
+
+      const removedChunks = getMissingChunks(newChunks, previousChunks);
+      for (const chunk of removedChunks) {
+         deregisterVisibleChunk(chunk);
+      }
+
+      const addedChunks = getMissingChunks(previousChunks, newChunks);
+      for (const chunk of addedChunks) {
+         registerVisibleChunk(chunk);
+      }
    }
 
    public static getVisibleChunkBounds(): VisibleChunkBounds {

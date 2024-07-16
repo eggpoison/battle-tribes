@@ -4,8 +4,9 @@ import { SlimeSize } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
-import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
+import { RenderPart } from "../render-parts/render-parts";
+import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 export const SLIME_SIZES: ReadonlyArray<number> = [
    64, // small
@@ -53,29 +54,29 @@ class SlimeComponent extends ServerComponent<ServerComponentType.slime> {
       const sizeString = SIZE_STRINGS[data.size];
 
       // Body
-      this.bodyRenderPart = new RenderPart(
+      this.bodyRenderPart = new TexturedRenderPart(
          this.entity,
-         getTextureArrayIndex(`entities/slime/slime-${sizeString}-body.png`),
          2,
-         0
+         0,
+         getTextureArrayIndex(`entities/slime/slime-${sizeString}-body.png`)
       );
       this.bodyRenderPart.shakeAmount = getBodyShakeAmount(data.spitChargeProgress);
       this.entity.attachRenderPart(this.bodyRenderPart);
 
       // Shading
-      this.entity.attachRenderPart(new RenderPart(
+      this.entity.attachRenderPart(new TexturedRenderPart(
          this.entity,
-         getTextureArrayIndex(`entities/slime/slime-${sizeString}-shading.png`),
          0,
-         0
+         0,
+         getTextureArrayIndex(`entities/slime/slime-${sizeString}-shading.png`)
       ));
 
       // Eye
-      const eyeRenderPart = new RenderPart(
+      const eyeRenderPart = new TexturedRenderPart(
          this.entity,
-         getTextureArrayIndex(`entities/slime/slime-${sizeString}-eye.png`),
          3,
-         data.eyeRotation
+         data.eyeRotation,
+         getTextureArrayIndex(`entities/slime/slime-${sizeString}-eye.png`)
       );
 
       const eyeOffsetAmount = SlimeComponent.EYE_OFFSETS[this.size];
@@ -135,11 +136,11 @@ class SlimeComponent extends ServerComponent<ServerComponentType.slime> {
       const spriteSize = SLIME_SIZES[this.size];
       const offsetMagnitude = spriteSize / 2 * lerp(0.3, 0.7, orbInfo.offset);
 
-      const renderPart = new RenderPart(
+      const renderPart = new TexturedRenderPart(
          this.entity,
-         getTextureArrayIndex(`entities/slime/slime-orb-${sizeString}.png`),
          1,
-         orbInfo.rotation
+         orbInfo.rotation,
+         getTextureArrayIndex(`entities/slime/slime-orb-${sizeString}.png`)
       );
       renderPart.offset.x = offsetMagnitude * Math.sin(orbInfo.rotation);
       renderPart.offset.y = offsetMagnitude * Math.cos(orbInfo.rotation);

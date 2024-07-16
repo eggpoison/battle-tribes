@@ -4,7 +4,6 @@ import { InventoryUseComponentData, LimbData, ServerComponentType } from "webgl-
 import { Settings } from "webgl-test-shared/dist/settings";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
-import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import Board from "../Board";
 import CLIENT_ITEM_INFO_RECORD from "../client-item-info";
@@ -15,6 +14,8 @@ import { createDeepFrostHeartBloodParticles } from "../particles";
 import { definiteGameState } from "../game-state/game-states";
 import { getFrameProgress } from "../Game";
 import { InventoryName, ItemType, ITEM_TYPE_RECORD, Item, ITEM_INFO_RECORD, itemInfoIsUtility, itemInfoIsBow, BowItemInfo, itemInfoIsTool } from "webgl-test-shared/dist/items/items";
+import { RenderPart } from "../render-parts/render-parts";
+import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 export interface LimbInfo {
    selectedItemSlot: number;
@@ -218,7 +219,7 @@ const getLimbRestingDirection = (entityType: InventoryUseEntityType): number => 
 class InventoryUseComponent extends ServerComponent<ServerComponentType.inventoryUse> {
    public readonly useInfos: ReadonlyArray<LimbInfo>;
    public readonly limbRenderParts = new Array<RenderPart>();
-   private readonly activeItemRenderParts: Record<number, RenderPart> = {};
+   private readonly activeItemRenderParts: Record<number, TexturedRenderPart> = {};
    private readonly inactiveCrossbowArrowRenderParts: Record<number, RenderPart> = {};
    private readonly arrowRenderParts: Record<number, RenderPart> = {};
 
@@ -373,11 +374,11 @@ class InventoryUseComponent extends ServerComponent<ServerComponentType.inventor
          }
       } else {
          if (!this.activeItemRenderParts.hasOwnProperty(limbIdx)) {
-            const renderPart = new RenderPart(
+            const renderPart = new TexturedRenderPart(
                this.limbRenderParts[limbIdx],
-               activeItem !== null ? getTextureArrayIndex(CLIENT_ITEM_INFO_RECORD[activeItem.type].entityTextureSource) : -1,
                limbIdx === 0 ? 0.5 : 0,
-               0
+               0,
+               activeItem !== null ? getTextureArrayIndex(CLIENT_ITEM_INFO_RECORD[activeItem.type].entityTextureSource) : -1
             );
             this.entity.attachRenderPart(renderPart);
             this.activeItemRenderParts[limbIdx] = renderPart;
@@ -429,11 +430,11 @@ class InventoryUseComponent extends ServerComponent<ServerComponentType.inventor
                }
 
                if (!this.arrowRenderParts.hasOwnProperty(limbIdx)) {
-                  this.arrowRenderParts[limbIdx] = new RenderPart(
+                  this.arrowRenderParts[limbIdx] = new TexturedRenderPart(
                      this.activeItemRenderParts[limbIdx],
-                     getTextureArrayIndex(arrowTextureSource),
                      this.activeItemRenderParts[limbIdx].zIndex + 0.1,
-                     Math.PI/4
+                     Math.PI/4,
+                     getTextureArrayIndex(arrowTextureSource)
                   );
                   this.entity.attachRenderPart(this.arrowRenderParts[limbIdx]);
                }

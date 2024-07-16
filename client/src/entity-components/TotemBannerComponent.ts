@@ -3,9 +3,10 @@ import { TribeTotemBanner } from "webgl-test-shared/dist/entities";
 import { TotemBannerComponentData } from "webgl-test-shared/dist/components";
 import { TribeType } from "webgl-test-shared/dist/tribes";
 import ServerComponent from "./ServerComponent";
-import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import Entity from "../Entity";
+import { RenderPart } from "../render-parts/render-parts";
+import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 const BANNER_LAYER_DISTANCES = [34, 52, 65];
 
@@ -70,11 +71,11 @@ class TotemBannerComponent extends ServerComponent<ServerComponentType.totemBann
          }
       }
 
-      const renderPart = new RenderPart(
+      const renderPart = new TexturedRenderPart(
          this.entity,
-         getTextureArrayIndex(`entities/tribe-totem/${totemTextureSourceID}`),
          2,
-         banner.direction
+         banner.direction,
+         getTextureArrayIndex(`entities/tribe-ttem/${totemTextureSourceID}`)
       );
       const bannerOffsetAmount = BANNER_LAYER_DISTANCES[banner.layer];
       renderPart.offset.x = bannerOffsetAmount * Math.sin(banner.direction);

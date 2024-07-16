@@ -60,6 +60,7 @@ import BallistaSlimeball from "./projectiles/BallistaSlimeball";
 import BallistaRock from "./projectiles/BallistaRock";
 import SlingTurretRock from "./projectiles/SlingTurretRock";
 import BallistaWoodenBolt from "./projectiles/BallistaWoodenBolt";
+import GrassStrand from "./client-entities/GrassStrand";
 
 export type EntityClassType = new (position: Point, id: number, ageTicks: number, componentDataRecord: ComponentDataRecord) => Entity;
 
@@ -144,6 +145,7 @@ export function createEntity(entityData: EntityData): Entity {
       case EntityType.fenceGate: return new FenceGate(id);
       case EntityType.frostshaper: return new Frostshaper(id);
       case EntityType.stonecarvingTable: return new StonecarvingTable(id);
+      case EntityType.grassStrand: return new GrassStrand(id);
       default: {
          const unreachable: never = entityType;
          return unreachable;

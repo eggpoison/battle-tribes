@@ -2,7 +2,7 @@ import { BuildingMaterial, BuildingMaterialComponentData, ServerComponentType } 
 import { EntityType } from "webgl-test-shared/dist/entities";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
-import RenderPart from "../render-parts/RenderPart";
+import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 export const WALL_TEXTURE_SOURCES = ["entities/wall/wooden-wall.png", "entities/wall/stone-wall.png"];
 export const DOOR_TEXTURE_SOURCES = ["entities/door/wooden-door.png", "entities/door/stone-door.png"];
@@ -26,14 +26,14 @@ const getMaterialTextureSources = (entity: Entity): ReadonlyArray<string> => {
 }
 
 class BuildingMaterialComponent extends ServerComponent<ServerComponentType.buildingMaterial> {
-   private readonly materialRenderPart: RenderPart;
+   private readonly materialRenderPart: TexturedRenderPart;
    public material: BuildingMaterial;
    
    constructor(entity: Entity, data: BuildingMaterialComponentData) {
       super(entity);
 
       this.material = data.material;
-      this.materialRenderPart = this.entity.getRenderPart("buildingMaterialComponent:material");
+      this.materialRenderPart = this.entity.getRenderPart("buildingMaterialComponent:material") as TexturedRenderPart;
    }
 
    public updateFromData(data: BuildingMaterialComponentData): void {

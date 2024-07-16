@@ -54,6 +54,7 @@ import { CraftingStationComponent, CraftingStationComponentParams } from "./comp
 import { TransformComponent, TransformComponentParams } from "./components/TransformComponent";
 import { BoulderComponent, BoulderComponentParams } from "./components/BoulderComponent";
 import { ProjectileComponent, ProjectileComponentParams } from "./components/ProjectileComponent";
+import { LayeredRodComponent, LayeredRodComponentParams } from "./components/LayeredRodComponent";
 
 const ComponentParamsRecord = {
    [ServerComponentType.aiHelper]: (): AIHelperComponentParams => 0 as any,
@@ -110,7 +111,8 @@ const ComponentParamsRecord = {
    [ServerComponentType.tribeWarrior]: (): TribeWarriorComponentParams => 0 as any,
    [ServerComponentType.craftingStation]: (): CraftingStationComponentParams => 0 as any,
    [ServerComponentType.transform]: (): TransformComponentParams => 0 as any,
-   [ServerComponentType.projectile]: (): ProjectileComponentParams => 0 as any
+   [ServerComponentType.projectile]: (): ProjectileComponentParams => 0 as any,
+   [ServerComponentType.layeredRod]: (): LayeredRodComponentParams => 0 as any
 } satisfies Record<ServerComponentType, object>;
 
 export type ComponentParams<T extends ServerComponentType> = ReturnType<typeof ComponentParamsRecord[T]>;
@@ -173,6 +175,7 @@ export const ComponentClassRecord = {
    [ServerComponentType.craftingStation]: () => CraftingStationComponent,
    [ServerComponentType.transform]: () => TransformComponent,
    [ServerComponentType.projectile]: () => ProjectileComponent,
+   [ServerComponentType.layeredRod]: () => LayeredRodComponent
 } satisfies {
    [T in ServerComponentType]: () => {
       new (args: ComponentParams<T>): unknown;

@@ -1,8 +1,8 @@
 import { ServerComponentType, YetiComponentData } from "webgl-test-shared/dist/components";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
-import RenderPart from "../render-parts/RenderPart";
 import { lerp } from "webgl-test-shared/dist/utils";
+import { RenderPart } from "../render-parts/render-parts";
 
 export const YETI_SIZE = 128;
 

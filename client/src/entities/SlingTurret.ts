@@ -1,7 +1,7 @@
 import { EntityType } from "webgl-test-shared/dist/entities";
-import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import Entity from "../Entity";
+import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 class SlingTurret extends Entity {
    constructor(id: number) {
@@ -9,30 +9,30 @@ class SlingTurret extends Entity {
 
       // Base
       this.attachRenderPart(
-         new RenderPart(
+         new TexturedRenderPart(
             this,
-            getTextureArrayIndex("entities/sling-turret/sling-turret-base.png"),
             0,
-            0
+            0,
+            getTextureArrayIndex("entities/sling-turret/sling-turret-base.png")
          )
       );
 
       // Plate
-      const plateRenderPart = new RenderPart(
+      const plateRenderPart = new TexturedRenderPart(
          this,
-         getTextureArrayIndex("entities/sling-turret/sling-turret-plate.png"),
          1,
-         0
+         0,
+         getTextureArrayIndex("entities/sling-turret/sling-turret-plate.png")
       );
       plateRenderPart.addTag("turretComponent:pivoting");
       this.attachRenderPart(plateRenderPart);
 
       // Sling
-      const slingRenderPart = new RenderPart(
+      const slingRenderPart = new TexturedRenderPart(
          plateRenderPart,
-         getTextureArrayIndex("entities/sling-turret/sling-turret-sling.png"),
          2,
-         0
+         0,
+         getTextureArrayIndex("entities/sling-turret/sling-turret-sling.png")
       );
       slingRenderPart.addTag("turretComponent:aiming");
       this.attachRenderPart(slingRenderPart);

@@ -1,10 +1,10 @@
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import Entity from "../Entity";
-import RenderPart from "../render-parts/RenderPart";
 import Component from "./Component";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { createFrostShieldBreakParticle } from "../particles";
 import { ArmourItemType, ItemType, GloveItemType, ItemTypeString, InventoryName } from "webgl-test-shared/dist/items/items";
+import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 // @Incomplete
 // public genericUpdateFromData(entityData: EntityData<EntityType.player> | EntityData<EntityType.tribeWorker> | EntityData<EntityType.tribeWarrior>): void {
@@ -64,8 +64,8 @@ const getGloveTextureSource = (gloveType: ItemType): string => {
 }
 
 class EquipmentComponent extends Component {
-   private armourRenderPart: RenderPart | null = null;
-   private gloveRenderParts = new Array<RenderPart>();
+   private armourRenderPart: TexturedRenderPart | null = null;
+   private gloveRenderParts = new Array<TexturedRenderPart>();
    
    // @Incomplete
    public hasFrostShield: boolean;
@@ -95,11 +95,11 @@ class EquipmentComponent extends Component {
       if (typeof armour !== "undefined") {
          
          if (this.armourRenderPart === null) {
-            this.armourRenderPart = new RenderPart(
+            this.armourRenderPart = new TexturedRenderPart(
                this.entity,
-               getTextureArrayIndex(getArmourTextureSource(armour.type)),
                3,
-               0
+               0,
+               getTextureArrayIndex(getArmourTextureSource(armour.type))
             );
             this.entity.attachRenderPart(this.armourRenderPart);
          } else {
@@ -123,11 +123,11 @@ class EquipmentComponent extends Component {
 
          if (this.gloveRenderParts.length === 0) {
             for (let limbIdx = 0; limbIdx < inventoryUseComponent.useInfos.length; limbIdx++) {
-               const gloveRenderPart = new RenderPart(
+               const gloveRenderPart = new TexturedRenderPart(
                   inventoryUseComponent.limbRenderParts[limbIdx],
-                  getTextureArrayIndex(getGloveTextureSource(glove.type)),
                   1.1,
-                  0
+                  0,
+                  getTextureArrayIndex(getGloveTextureSource(glove.type))
                );
                this.entity.attachRenderPart(gloveRenderPart);
                this.gloveRenderParts.push(gloveRenderPart);

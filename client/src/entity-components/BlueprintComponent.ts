@@ -1,13 +1,13 @@
 import { BlueprintComponentData, BlueprintType, ServerComponentType } from "webgl-test-shared/dist/components";
 import { assertUnreachable, randFloat, rotateXAroundOrigin, rotateYAroundOrigin } from "webgl-test-shared/dist/utils";
 import ServerComponent from "./ServerComponent";
-import RenderPart from "../render-parts/RenderPart";
 import Entity from "../Entity";
 import { playSound } from "../sound";
 import { createDustCloud, createLightWoodSpeckParticle, createRockParticle, createRockSpeckParticle, createSawdustCloud, createWoodShardParticle } from "../particles";
 import { getCurrentBlueprintProgressTexture } from "../entities/BlueprintEntity";
 import { getEntityTextureAtlas, getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { ParticleRenderLayer } from "../rendering/webgl/particle-rendering";
+import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 const createWoodenBlueprintWorkParticleEffects = (entity: Entity): void => {
    const transformComponent = entity.getServerComponent(ServerComponentType.transform);
@@ -54,7 +54,7 @@ const createStoneBlueprintWorkParticleEffects = (originX: number, originY: numbe
 }
 
 class BlueprintComponent extends ServerComponent<ServerComponentType.blueprint> {
-   public readonly partialRenderParts = new Array<RenderPart>();
+   public readonly partialRenderParts = new Array<TexturedRenderPart>();
    
    public readonly blueprintType: BlueprintType;
    public lastBlueprintProgress: number;

@@ -275,7 +275,7 @@ export function createInitialGameDataPacket(player: EntityID, playerConfig: Comp
       edgeRiverFlowDirections: Board.edgeRiverFlowDirections,
       edgeRiverSteppingStones: Board.edgeRiverSteppingStones,
       grassInfo: Board.grassInfo,
-      decorations: Board.decorations,
+      decorations: Board.decorations
    };
    return initialGameDataPacket;
 }
@@ -284,7 +284,7 @@ export function createGameDataSyncPacket(playerClient: PlayerClient): GameDataSy
    const player = playerClient.instance;
    
    // If the player is dead, send a default packet
-   if (Board.hasEntity(player)) {
+   if (!Board.hasEntity(player)) {
       return {
          position: [0, 0],
          velocity: [0, 0],

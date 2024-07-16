@@ -1,22 +1,22 @@
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
-import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import Entity from "../Entity";
 import { createArrowDestroyParticle, createRockParticle, createRockSpeckParticle } from "../particles";
 import { randFloat } from "webgl-test-shared/dist/utils";
 import { ParticleRenderLayer } from "../rendering/webgl/particle-rendering";
+import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 class SlingTurretRock extends Entity {
    constructor(id: number) {
       super(id, EntityType.slingTurretRock);
 
       this.attachRenderPart(
-         new RenderPart(
+         new TexturedRenderPart(
             this,
-            getTextureArrayIndex("projectiles/sling-rock.png"),
             0,
-            0
+            0,
+            getTextureArrayIndex("projectiles/sling-rock.png")
          )
       );
    }

@@ -1,4 +1,4 @@
-import { DecorationInfo, EntityDebugData, GameDataPacket, GrassTileInfo, RiverFlowDirections, RiverSteppingStoneData, ServerTileData, WaterRockData } from "webgl-test-shared/dist/client-server-types";
+import { EntityDebugData, GameDataPacket, InitialGameDataPacket } from "webgl-test-shared/dist/client-server-types";
 import { EnemyTribeData } from "webgl-test-shared/dist/techs";
 import { Settings } from "webgl-test-shared/dist/settings";
 import Board from "./Board";
@@ -7,7 +7,7 @@ import { isDev } from "./utils";
 import { createTextCanvasContext, updateTextNumbers, renderText } from "./text-canvas";
 import Camera from "./Camera";
 import { updateSpamFilter } from "./components/game/ChatBox";
-import { createEntityShaders, renderGameObjects } from "./rendering/webgl/entity-rendering";
+import { createEntityShaders } from "./rendering/webgl/entity-rendering";
 import Client from "./client/Client";
 import { calculateCursorWorldPositionX, calculateCursorWorldPositionY, cursorX, cursorY, getMouseTargetEntity, handleMouseMovement, renderCursorTooltip } from "./mouse";
 import { refreshDebugInfo, setDebugInfoDebugData } from "./components/game/dev/DebugInfo";
@@ -37,7 +37,6 @@ import { createPlaceableItemProgram, renderGhostEntities } from "./rendering/web
 import { setupFrameGraph } from "./rendering/webgl/frame-graph-rendering";
 import { createTextureAtlases } from "./texture-atlases/texture-atlases";
 import { createFishShaders } from "./rendering/webgl/fish-rendering";
-import { Tile } from "./Tile";
 import { createForcefieldShaders, renderForcefield } from "./rendering/webgl/world-border-forcefield-rendering";
 import { createDecorationShaders, renderDecorations } from "./rendering/webgl/decoration-rendering";
 import { playRiverSounds, setupAudio, updateSoundEffectVolumes } from "./sound";
@@ -206,11 +205,10 @@ abstract class Game {
       this.isSynced = true;
    }
    
-   // @Cleanup: too many parameters!
    /**
     * Prepares the game to be played. Called once just before the game starts.
     */
-   public static async initialise(tiles: Array<Array<Tile>>, waterRocks: ReadonlyArray<WaterRockData>, riverSteppingStones: ReadonlyArray<RiverSteppingStoneData>, riverFlowDirections: RiverFlowDirections, edgeTiles: Array<ServerTileData>, edgeRiverFlowDirections: RiverFlowDirections, edgeRiverSteppingStones: ReadonlyArray<RiverSteppingStoneData>, grassInfo: Record<number, Record<number, GrassTileInfo>>, decorations: ReadonlyArray<DecorationInfo>): Promise<void> {
+   public static async initialise(initialGameDataPacket: InitialGameDataPacket): Promise<void> {
       Game.enemyTribes = [];
 
       // Clear any queued packets from previous games
@@ -224,10 +222,10 @@ abstract class Game {
             createTechTreeGLContext();
             createTextCanvasContext();
 
-            Board.initialise(tiles, riverFlowDirections, edgeTiles, edgeRiverFlowDirections, grassInfo);
-            Board.addRiverSteppingStonesToChunks(riverSteppingStones);
+            Board.initialise(initialGameDataPacket);
+            Board.addRiverSteppingStonesToChunks(initialGameDataPacket.riverSteppingStones);
          
-            createRiverSteppingStoneData(riverSteppingStones);
+            createRiverSteppingStoneData(initialGameDataPacket.riverSteppingStones);
 
             createUBOs();
             
@@ -270,17 +268,17 @@ abstract class Game {
                setupFrameGraph();
             }
 
-            createRenderChunks(decorations, waterRocks, edgeRiverSteppingStones);
+            createRenderChunks(initialGameDataPacket.decorations, initialGameDataPacket.waterRocks, initialGameDataPacket.edgeRiverSteppingStones);
 
             this.hasInitialised = true;
    
             resolve();
          });
       } else {
-         Board.initialise(tiles, riverFlowDirections, edgeTiles, edgeRiverFlowDirections, grassInfo);
-         Board.addRiverSteppingStonesToChunks(riverSteppingStones);
+         Board.initialise(initialGameDataPacket);
+         Board.addRiverSteppingStonesToChunks(initialGameDataPacket.riverSteppingStones);
 
-         createRenderChunks(decorations, waterRocks, edgeRiverSteppingStones);
+         createRenderChunks(initialGameDataPacket.decorations, initialGameDataPacket.waterRocks, initialGameDataPacket.edgeRiverSteppingStones);
       }
    }
 

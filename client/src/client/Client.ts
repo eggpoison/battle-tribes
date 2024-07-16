@@ -39,7 +39,6 @@ import { setVisibleRestrictedBuildingAreas } from "../rendering/webgl/restricted
 import { setVisibleWallConnections } from "../rendering/webgl/wall-connection-rendering";
 import OPTIONS from "../options";
 import { Infocards_setTitleOffer } from "../components/game/infocards/Infocards";
-import { calculateEntityRenderDepth } from "../render-layers";
 import { GrassBlocker } from "webgl-test-shared/dist/grass-blockers";
 import { createEntity } from "../entity-class-record";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
@@ -508,6 +507,9 @@ abstract class Client {
       for (const id of knownEntityIDs) {
          const isDeath = entityDeathIDs.indexOf(id) !== -1;
          const entity = Board.entityRecord[id]!;
+         // @Hack
+         if (entity.type === EntityType.cow)continue;
+         
          Board.removeEntity(entity, isDeath);
       }
    }
@@ -636,18 +638,8 @@ abstract class Client {
    private static createEntityFromData(entityData: EntityData): Entity {
       // Create the entity
       const entity = createEntity(entityData);
-
-      // @Cleanup: initialise the value in the constructor
-      entity.renderDepth = calculateEntityRenderDepth(entity.type);
-      
       entity.createComponents(entityData.components);
-      entity.callOnLoadFunctions();
-
       Board.addEntity(entity);
-
-      if (entityData.type === EntityType.player) {
-         Board.players.push(entity as Player);
-      }
 
       return entity;
    }

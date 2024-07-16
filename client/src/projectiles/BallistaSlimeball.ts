@@ -1,20 +1,20 @@
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
-import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import Entity from "../Entity";
 import { createArrowDestroyParticle } from "../particles";
+import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 class BallistaSlimeball extends Entity {
    constructor(id: number) {
       super(id, EntityType.ballistaSlimeball);
 
       this.attachRenderPart(
-         new RenderPart(
+         new TexturedRenderPart(
             this,
-            getTextureArrayIndex("projectiles/ballista-slimeball.png"),
             0,
-            0
+            0,
+            getTextureArrayIndex("projectiles/ballista-slimeball.png")
          )
       );
    }

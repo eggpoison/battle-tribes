@@ -1,21 +1,21 @@
 import { EntityType } from "webgl-test-shared/dist/entities";
-import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import Entity, { ComponentDataRecord } from "../Entity";
 import { playSound } from "../sound";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { Point } from "webgl-test-shared/dist/utils";
+import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 class ResearchBench extends Entity {
    constructor(id: number, componentDataRecord: ComponentDataRecord) {
       super(id, EntityType.researchBench);
 
       this.attachRenderPart(
-         new RenderPart(
+         new TexturedRenderPart(
             this,
-            getTextureArrayIndex("entities/research-bench/research-bench.png"),
             0,
-            0
+            0,
+            getTextureArrayIndex("entities/research-bench/research-bench.png")
          )
       );
 

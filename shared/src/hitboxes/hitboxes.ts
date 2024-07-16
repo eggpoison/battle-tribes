@@ -21,8 +21,8 @@ export class RectangularHitbox extends BaseHitbox {
    public relativeRotation: number;
    public rotation: number;
 
-   // @Memory: Only need to calculate the top left and top right ones
-   public vertexOffsets: HitboxVertexPositions = [new Point(0, 0), new Point(0, 0), new Point(0, 0), new Point(0, 0)];
+   public topLeftVertexOffset = new Point(0, 0);
+   public topRightVertexOffset = new Point(0, 0);
 
    public axisX = 0;
    public axisY = 0;
@@ -39,16 +39,16 @@ export class RectangularHitbox extends BaseHitbox {
    }
 
    public calculateHitboxBoundsMinX(): number {
-      return this.position.x + Math.min(this.vertexOffsets[0].x, this.vertexOffsets[1].x, this.vertexOffsets[2].x, this.vertexOffsets[3].x);
+      return this.position.x + Math.min(this.topLeftVertexOffset.x, this.topRightVertexOffset.x, -this.topLeftVertexOffset.x, -this.topRightVertexOffset.x);
    }
    public calculateHitboxBoundsMaxX(): number {
-      return this.position.x + Math.max(this.vertexOffsets[0].x, this.vertexOffsets[1].x, this.vertexOffsets[2].x, this.vertexOffsets[3].x);
+      return this.position.x + Math.max(this.topLeftVertexOffset.x, this.topRightVertexOffset.x, -this.topLeftVertexOffset.x, -this.topRightVertexOffset.x);
    }
    public calculateHitboxBoundsMinY(): number {
-      return this.position.y + Math.min(this.vertexOffsets[0].y, this.vertexOffsets[1].y, this.vertexOffsets[2].y, this.vertexOffsets[3].y);
+      return this.position.y + Math.min(this.topLeftVertexOffset.y, this.topRightVertexOffset.y, -this.topLeftVertexOffset.y, -this.topRightVertexOffset.y);
    }
    public calculateHitboxBoundsMaxY(): number {
-      return this.position.y + Math.max(this.vertexOffsets[0].y, this.vertexOffsets[1].y, this.vertexOffsets[2].y, this.vertexOffsets[3].y);
+      return this.position.y + Math.max(this.topLeftVertexOffset.y, this.topRightVertexOffset.y, -this.topLeftVertexOffset.y, -this.topRightVertexOffset.y);
    }
 
    public isColliding(otherHitbox: Hitbox, epsilon: number = 0): boolean {
@@ -82,7 +82,7 @@ export class RectangularHitbox extends BaseHitbox {
             updateRotationAndVertexPositionsAndSideAxes(this, parentRotation);
          }
          
-         const collisionData = rectanglesAreColliding(this.vertexOffsets, otherHitbox.vertexOffsets, this.position, otherHitbox.position, this.axisX, this.axisY, otherHitbox.axisX, otherHitbox.axisY);
+         const collisionData = rectanglesAreColliding(this, otherHitbox, this.position, otherHitbox.position, this.axisX, this.axisY, otherHitbox.axisX, otherHitbox.axisY);
 
          if (epsilon > 0) {
             this.width = thisWidthBefore;
@@ -154,19 +154,10 @@ const updateRotationAndVertexPositionsAndSideAxes = (hitbox: RectangularHitbox, 
    const cosRotation = Math.cos(rotation);
 
    // Rotate vertices
-
-   // Top left vertex
-   hitbox.vertexOffsets[0].x = cosRotation * x1 + sinRotation * y2;
-   hitbox.vertexOffsets[0].y = cosRotation * y2 - sinRotation * x1;
-   // Top right vertex
-   hitbox.vertexOffsets[1].x = cosRotation * x2 + sinRotation * y2;
-   hitbox.vertexOffsets[1].y = cosRotation * y2 - sinRotation * x2;
-   // Bottom right vertex
-   hitbox.vertexOffsets[2].x = -hitbox.vertexOffsets[0].x;
-   hitbox.vertexOffsets[2].y = -hitbox.vertexOffsets[0].y;
-   // Bottom left vertex
-   hitbox.vertexOffsets[3].x = -hitbox.vertexOffsets[1].x;
-   hitbox.vertexOffsets[3].y = -hitbox.vertexOffsets[1].y;
+   hitbox.topLeftVertexOffset.x = cosRotation * x1 + sinRotation * y2;
+   hitbox.topLeftVertexOffset.y = cosRotation * y2 - sinRotation * x1;
+   hitbox.topRightVertexOffset.x = cosRotation * x2 + sinRotation * y2;
+   hitbox.topRightVertexOffset.y = cosRotation * y2 - sinRotation * x2;
 
    // Angle between vertex 0 (top left) and vertex 1 (top right)
    // @Speed: If we do a different axis, can we get rid of the minus?

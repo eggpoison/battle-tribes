@@ -1,7 +1,7 @@
 import { BerryBushComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
-import RenderPart from "../render-parts/RenderPart";
+import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 export const BERRY_BUSH_TEXTURE_SOURCES = [
    "entities/berry-bush1.png",
@@ -13,12 +13,12 @@ export const BERRY_BUSH_TEXTURE_SOURCES = [
 ];
 
 class BerryBushComponent extends ServerComponent<ServerComponentType.berryBush> {
-   private renderPart: RenderPart;
+   private renderPart: TexturedRenderPart;
    
    constructor(entity: Entity, data: BerryBushComponentData) {
       super(entity);
       
-      this.renderPart = this.entity.getRenderPart("berryBushComponent:renderPart");
+      this.renderPart = this.entity.getRenderPart("berryBushComponent:renderPart") as TexturedRenderPart;
       this.updateFromData(data);
    }
 

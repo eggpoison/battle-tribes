@@ -1,13 +1,12 @@
-import { RectangularHitboxData, CircularHitboxData, EntityData, VisibleChunkBounds, GameDataPacket, GameDataPacketOptions, PlayerInventoryData, InitialGameDataPacket, ServerTileData, GameDataSyncPacket } from "webgl-test-shared/dist/client-server-types";
-import { ComponentData } from "webgl-test-shared/dist/components";
+import { EntityData, VisibleChunkBounds, GameDataPacket, GameDataPacketOptions, PlayerInventoryData, InitialGameDataPacket, ServerTileData, GameDataSyncPacket } from "webgl-test-shared/dist/client-server-types";
+import { ComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
 import Board from "../Board";
-import Entity from "../Entity";
 import Tribe from "../Tribe";
 import { ComponentArrays } from "../components/ComponentArray";
 import { HealthComponentArray } from "../components/HealthComponent";
 import { InventoryComponentArray, getInventory } from "../components/InventoryComponent";
-import { InventoryUseComponentArray, getInventoryUseInfo } from "../components/InventoryUseComponent";
+import { InventoryUseComponentArray } from "../components/InventoryUseComponent";
 import { PhysicsComponentArray } from "../components/PhysicsComponent";
 import { SERVER } from "./server";
 import { Settings } from "webgl-test-shared/dist/settings";
@@ -21,8 +20,10 @@ import { TribeComponentArray } from "../components/TribeComponent";
 import { SpikesComponentArray } from "../components/SpikesComponent";
 import { PlayerComponentArray } from "../components/PlayerComponent";
 import { Inventory, InventoryName } from "webgl-test-shared/dist/items/items";
+import { TransformComponentArray } from "../components/TransformComponent";
+import { ComponentConfig } from "../components";
 
-const serialiseEntityData = (entity: EntityID, player: EntityID | 0): EntityData => {
+const serialiseEntityData = (entity: EntityID, player: EntityID | null): EntityData => {
    const components = new Array<ComponentData>();
    for (let i = 0; i < ComponentArrays.length; i++) {
       const componentArray = ComponentArrays[i];
@@ -34,12 +35,13 @@ const serialiseEntityData = (entity: EntityID, player: EntityID | 0): EntityData
    }
 
    return {
-      id: entity.id,
+      id: entity,
+      type: Board.getEntityType(entity)!,
       components: components
    };
 }
 
-const bundleEntityDataArray = (player: Entity | null, playerTribe: Tribe, visibleChunkBounds: VisibleChunkBounds): Array<EntityData<EntityType>> => {
+const bundleEntityDataArray = (player: EntityID | null, playerTribe: Tribe, visibleChunkBounds: VisibleChunkBounds): Array<EntityData> => {
    const visibleEntities = getPlayerVisibleEntities(visibleChunkBounds, playerTribe);
 
    const entityDataArray = new Array<EntityData>();
@@ -51,10 +53,10 @@ const bundleEntityDataArray = (player: Entity | null, playerTribe: Tribe, visibl
    return entityDataArray;
 }
 
-const entityIsHiddenFromPlayer = (entityID: number, playerTribe: Tribe): boolean => {
-   if (SpikesComponentArray.hasComponent(entityID) && TribeComponentArray.hasComponent(entityID)) {
-      const tribeComponent = TribeComponentArray.getComponent(entityID);
-      const spikesComponent = SpikesComponentArray.getComponent(entityID);
+const entityIsHiddenFromPlayer = (entity: EntityID, playerTribe: Tribe): boolean => {
+   if (SpikesComponentArray.hasComponent(entity) && TribeComponentArray.hasComponent(entity)) {
+      const tribeComponent = TribeComponentArray.getComponent(entity);
+      const spikesComponent = SpikesComponentArray.getComponent(entity);
       
       if (spikesComponent.isCovered && tribeComponent.tribe !== playerTribe) {
          return true;
@@ -64,21 +66,21 @@ const entityIsHiddenFromPlayer = (entityID: number, playerTribe: Tribe): boolean
    return false;
 }
 
-const getPlayerVisibleEntities = (chunkBounds: VisibleChunkBounds, playerTribe: Tribe): ReadonlyArray<Entity> => {
-   const entities = new Array<Entity>();
+const getPlayerVisibleEntities = (chunkBounds: VisibleChunkBounds, playerTribe: Tribe): ReadonlyArray<EntityID> => {
+   const entities = new Array<EntityID>();
    const seenIDs = new Set<number>();
    
    for (let chunkX = chunkBounds[0]; chunkX <= chunkBounds[1]; chunkX++) {
       for (let chunkY = chunkBounds[2]; chunkY <= chunkBounds[3]; chunkY++) {
          const chunk = Board.getChunk(chunkX, chunkY);
          for (const entity of chunk.entities) {
-            if (entityIsHiddenFromPlayer(entity.id, playerTribe)) {
+            if (entityIsHiddenFromPlayer(entity, playerTribe)) {
                continue;
             }
 
-            if (!seenIDs.has(entity.id)) {
+            if (!seenIDs.has(entity)) {
                entities.push(entity);
-               seenIDs.add(entity.id);
+               seenIDs.add(entity);
             }
          }
       }
@@ -100,12 +102,12 @@ const createNewPlayerInventories = (): PlayerInventoryData => {
    }
 }
 
-const bundlePlayerInventoryData = (player: Entity | null): PlayerInventoryData => {
+const bundlePlayerInventoryData = (player: EntityID | null): PlayerInventoryData => {
    if (player === null) {
       return createNewPlayerInventories();
    }
 
-   const inventoryComponent = InventoryComponentArray.getComponent(player.id);
+   const inventoryComponent = InventoryComponentArray.getComponent(player);
 
    return {
       hotbar: getInventory(inventoryComponent, InventoryName.hotbar),
@@ -150,13 +152,13 @@ const bundleEnemyTribesData = (playerClient: PlayerClient): ReadonlyArray<EnemyT
    return enemyTribesData;
 }
 
-const bundleHotbarCrossbowLoadProgressRecord = (player: Entity | null): Partial<Record<number, number>> => {
+const bundleHotbarCrossbowLoadProgressRecord = (player: EntityID | null): Partial<Record<number, number>> => {
    if (player === null) {
       return {};
    }
    
-   const inventoryUseComponent = InventoryUseComponentArray.getComponent(player.id);
-   const useInfo = getInventoryUseInfo(inventoryUseComponent, InventoryName.hotbar);
+   const inventoryUseComponent = InventoryUseComponentArray.getComponent(player);
+   const useInfo = inventoryUseComponent.getUseInfo(InventoryName.hotbar);
 
    return useInfo.crossbowLoadProgressRecord;
 }
@@ -183,15 +185,11 @@ const getVisibleGrassBlockers = (visibleChunkBounds: VisibleChunkBounds): Readon
 }
 
 export function createGameDataPacket(playerClient: PlayerClient): GameDataPacket {
-   // @Cleanup
-   let player: Entity | undefined | null = Board.entityRecord[playerClient.instanceID];
-   if (typeof player === "undefined") {
-      player = null;
-   }
+   const player = Board.validateEntity(playerClient.instance);
    
    // @Cleanup: Shared for all players
-   const entity = Board.entityRecord[SERVER.trackedEntityID];
-   const entityDebugData = typeof entity !== "undefined" ? getEntityDebugData(entity) : undefined;
+   const trackedEntity = SERVER.trackedEntityID;
+   const entityDebugData = typeof trackedEntity !== "undefined" ? getEntityDebugData(trackedEntity) : undefined;
    
    const tileUpdates = Board.popTileUpdates();
                
@@ -216,7 +214,7 @@ export function createGameDataPacket(playerClient: PlayerClient): GameDataPacket
       tileUpdates: tileUpdates,
       serverTicks: Board.ticks,
       serverTime: Board.time,
-      playerHealth: player !== null ? HealthComponentArray.getComponent(player.id).health : 0,
+      playerHealth: player !== null ? HealthComponentArray.getComponent(player).health : 0,
       entityDebugData: entityDebugData,
       playerTribeData: bundlePlayerTribeData(playerClient),
       enemyTribesData: bundleEnemyTribesData(playerClient),
@@ -225,7 +223,7 @@ export function createGameDataPacket(playerClient: PlayerClient): GameDataPacket
       hasFrostShield: false,
       pickedUpItem: playerClient.pickedUpItem,
       hotbarCrossbowLoadProgressRecord: bundleHotbarCrossbowLoadProgressRecord(player),
-      titleOffer: player !== null ? PlayerComponentArray.getComponent(player.id).titleOffer : null,
+      titleOffer: player !== null ? PlayerComponentArray.getComponent(player).titleOffer : null,
       tickEvents: playerClient.entityTickEvents,
       // @Cleanup: Copy and paste
       visiblePathfindingNodeOccupances: (playerClient.gameDataOptions & GameDataPacketOptions.sendVisiblePathfindingNodeOccupances) ? getVisiblePathfindingNodeOccupances(extendedVisibleChunkBounds) : [],
@@ -241,7 +239,7 @@ export function createGameDataPacket(playerClient: PlayerClient): GameDataPacket
    return gameDataPacket;
 }
 
-export function createInitialGameDataPacket(player: Entity): InitialGameDataPacket {
+export function createInitialGameDataPacket(player: EntityID, playerConfig: ComponentConfig<ServerComponentType.transform>): InitialGameDataPacket {
    const serverTileData = new Array<ServerTileData>();
    for (let tileIndex = 0; tileIndex < Settings.BOARD_DIMENSIONS * Settings.BOARD_DIMENSIONS; tileIndex++) {
       const tile = Board.tiles[tileIndex];
@@ -265,10 +263,10 @@ export function createInitialGameDataPacket(player: Entity): InitialGameDataPack
          isWall: tile.isWall
       });
    }
-   
+
    const initialGameDataPacket: InitialGameDataPacket = {
-      playerID: player.id,
-      spawnPosition: player.position.package(),
+      playerID: player,
+      spawnPosition: playerConfig[ServerComponentType.transform].position.package(),
       tiles: serverTileData,
       waterRocks: Board.waterRocks,
       riverSteppingStones: Board.riverSteppingStones,
@@ -283,10 +281,10 @@ export function createInitialGameDataPacket(player: Entity): InitialGameDataPack
 }
 
 export function createGameDataSyncPacket(playerClient: PlayerClient): GameDataSyncPacket {
-   const player = Board.entityRecord[playerClient.instanceID];
-
+   const player = playerClient.instance;
+   
    // If the player is dead, send a default packet
-   if (typeof player === "undefined") {
+   if (Board.hasEntity(player)) {
       return {
          position: [0, 0],
          velocity: [0, 0],
@@ -297,14 +295,15 @@ export function createGameDataSyncPacket(playerClient: PlayerClient): GameDataSy
       };
    }
 
-   const physicsComponent = PhysicsComponentArray.getComponent(player.id);
+   const transformComponent = TransformComponentArray.getComponent(player);
+   const physicsComponent = PhysicsComponentArray.getComponent(player);
 
    return {
-      position: player.position.package(),
+      position: transformComponent.position.package(),
       velocity: physicsComponent.velocity.package(),
       acceleration: physicsComponent.acceleration.package(),
-      rotation: player.rotation,
-      health: HealthComponentArray.getComponent(player.id).health,
+      rotation: transformComponent.rotation,
+      health: HealthComponentArray.getComponent(player).health,
       inventory: bundlePlayerInventoryData(player)
    };
 }

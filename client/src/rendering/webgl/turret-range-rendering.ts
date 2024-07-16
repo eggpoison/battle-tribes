@@ -8,6 +8,7 @@ import { calculateStructurePlaceInfo } from "webgl-test-shared/dist/structures";
 import Camera from "../../Camera";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 import { ItemType, ITEM_INFO_RECORD, PlaceableItemType } from "webgl-test-shared/dist/items/items";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 
 const CIRCLE_DETAIL = 300;
 
@@ -141,8 +142,10 @@ const getRenderingInfo = (): TurretRangeRenderingInfo | null => {
    // @Cleanup: shouldn't call structure place info func. should have it passed in probably
    const playerSelectedItem = getPlayerSelectedItem();
    if (playerSelectedItem !== null && (playerSelectedItem.type === ItemType.ballista || playerSelectedItem.type === ItemType.sling_turret)) {
+      const playerTransformComponent = Player.instance!.getServerComponent(ServerComponentType.transform);
+
       const structureType = ITEM_INFO_RECORD[playerSelectedItem.type as PlaceableItemType].entityType;
-      const placeInfo = calculateStructurePlaceInfo(Camera.position, Player.instance!.rotation, structureType, Board.getChunks());
+      const placeInfo = calculateStructurePlaceInfo(Camera.position, playerTransformComponent.rotation, structureType, Board.getWorldInfo());
 
       return {
          x: placeInfo.position.x,
@@ -163,11 +166,13 @@ const getRenderingInfo = (): TurretRangeRenderingInfo | null => {
       }
 
       if (hoveredEntity.type === EntityType.ballista || hoveredEntity.type === EntityType.slingTurret) {
+         const hoveredEntityTransformComponent = hoveredEntity.getServerComponent(ServerComponentType.transform);
+         
          const itemType = getTurretItemType(hoveredEntity);
          return {
-            x: hoveredEntity.position.x,
-            y: hoveredEntity.position.y,
-            rotation: hoveredEntity.rotation,
+            x: hoveredEntityTransformComponent.position.x,
+            y: hoveredEntityTransformComponent.position.y,
+            rotation: hoveredEntityTransformComponent.rotation,
             itemType: itemType,
             rangeInfo: TURRET_RANGE_INFO_RECORD[itemType]!
          }

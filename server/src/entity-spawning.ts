@@ -6,13 +6,14 @@ import Board from "./Board";
 import { addEntityToCensus, getEntityCount, getTileTypeCount } from "./census";
 import OPTIONS from "./options";
 import SRandom from "./SRandom";
-import { entityIsStructure } from "./Entity";
-import { createEntity } from "./entity-creation";
+import { createEntityFromConfig, entityIsStructure } from "./Entity";
 import { SERVER } from "./server/server";
 import { getDistributionWeightedSpawnPosition } from "./resource-distributions";
 import { entityIsTribesman } from "./entities/tribes/tribe-member";
 import { TransformComponentArray } from "./components/TransformComponent";
 import { yetiSpawnPositionIsValid } from "./components/YetiComponent";
+import { createEntityConfig } from "./entity-creation";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 
 const PACK_SPAWN_RANGE = 200;
 
@@ -276,8 +277,13 @@ const spawnEntities = (spawnInfo: EntitySpawnInfo, spawnOriginX: number, spawnOr
    
    // const cowSpecies = randInt(0, 1);
    
-   const entity = createEntity(new Point(spawnOriginX, spawnOriginY), spawnInfo.entityType);
-   addEntityToCensus(entity);
+   const config = createEntityConfig(spawnInfo.entityType);
+   config[ServerComponentType.transform].position.x = spawnOriginX;
+   config[ServerComponentType.transform].position.y = spawnOriginY;
+   config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
+   const entity = createEntityFromConfig(config);
+   
+   addEntityToCensus(entity, spawnInfo.entityType);
    if (!SERVER.isRunning) {
       Board.pushJoinBuffer();
    }
@@ -323,8 +329,15 @@ const spawnEntities = (spawnInfo: EntitySpawnInfo, spawnOriginX: number, spawnOr
 
       if (spawnPositionIsValid(spawnInfo, spawnPositionX, spawnPositionY)) {
          const spawnPosition = new Point(randInt(minX, maxX), randInt(minY, maxY));
-         const entity = createEntity(spawnPosition, spawnInfo.entityType);
-         addEntityToCensus(entity);
+
+         // @Copynpaste
+         const config = createEntityConfig(spawnInfo.entityType);
+         config[ServerComponentType.transform].position.x = spawnPosition.x;
+         config[ServerComponentType.transform].position.y = spawnPosition.y;
+         config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
+         const entity = createEntityFromConfig(config);
+
+         addEntityToCensus(entity, spawnInfo.entityType);
          if (!SERVER.isRunning) {
             Board.pushJoinBuffer();
          }

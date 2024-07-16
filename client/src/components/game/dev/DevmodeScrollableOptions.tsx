@@ -18,7 +18,7 @@ const Option = (props: OptionProps) => {
    }
    
    return <li className={className} onClick={props.onClick}>
-      {props.text}
+      <span className="text">{props.text}</span>
       {props.isSelected ? (
          <div className="selection-marker"></div>
       ) : null}

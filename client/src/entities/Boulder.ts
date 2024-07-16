@@ -16,8 +16,8 @@ class Boulder extends Entity {
       "entities/boulder/boulder2.png"
    ];
 
-   constructor(position: Point, id: number, ageTicks: number, componentDataRecord: ComponentDataRecord) {
-      super(position, id, EntityType.boulder, ageTicks);
+   constructor(id: number, componentDataRecord: ComponentDataRecord) {
+      super(id, EntityType.boulder);
 
       const boulderComponentData = componentDataRecord[ServerComponentType.boulder]!;
 
@@ -32,11 +32,13 @@ class Boulder extends Entity {
    }
 
    protected onHit(): void {
+      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+
       for (let i = 0; i < 2; i++) {
          let moveDirection = 2 * Math.PI * Math.random();
 
-         const spawnPositionX = this.position.x + Boulder.RADIUS * Math.sin(moveDirection);
-         const spawnPositionY = this.position.y + Boulder.RADIUS * Math.cos(moveDirection);
+         const spawnPositionX = transformComponent.position.x + Boulder.RADIUS * Math.sin(moveDirection);
+         const spawnPositionY = transformComponent.position.y + Boulder.RADIUS * Math.cos(moveDirection);
 
          moveDirection += randFloat(-1, 1);
 
@@ -44,27 +46,29 @@ class Boulder extends Entity {
       }
 
       for (let i = 0; i < 5; i++) {
-         createRockSpeckParticle(this.position.x, this.position.y, Boulder.RADIUS, 0, 0, ParticleRenderLayer.low);
+         createRockSpeckParticle(transformComponent.position.x, transformComponent.position.y, Boulder.RADIUS, 0, 0, ParticleRenderLayer.low);
       }
 
-      playSound(randItem(ROCK_HIT_SOUNDS), 0.3, 1, this.position.x, this.position.y);
+      playSound(randItem(ROCK_HIT_SOUNDS), 0.3, 1, transformComponent.position);
    }
 
    public onDie(): void {
+      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+
       for (let i = 0; i < 5; i++) {
          const spawnOffsetMagnitude = Boulder.RADIUS * Math.random();
          const spawnOffsetDirection = 2 * Math.PI * Math.random();
-         const spawnPositionX = this.position.x + spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
-         const spawnPositionY = this.position.y + spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
+         const spawnPositionX = transformComponent.position.x + spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
+         const spawnPositionY = transformComponent.position.y + spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
 
          createRockParticle(spawnPositionX, spawnPositionY, 2 * Math.PI * Math.random(), randFloat(80, 125), ParticleRenderLayer.low);
       }
 
       for (let i = 0; i < 5; i++) {
-         createRockSpeckParticle(this.position.x, this.position.y, Boulder.RADIUS, 0, 0, ParticleRenderLayer.low);
+         createRockSpeckParticle(transformComponent.position.x, transformComponent.position.y, Boulder.RADIUS, 0, 0, ParticleRenderLayer.low);
       }
 
-      playSound(randItem(ROCK_DESTROY_SOUNDS), 0.4, 1, this.position.x, this.position.y);
+      playSound(randItem(ROCK_DESTROY_SOUNDS), 0.4, 1, transformComponent.position);
    }
 }
 

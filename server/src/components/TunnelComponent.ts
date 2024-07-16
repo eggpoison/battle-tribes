@@ -2,10 +2,10 @@ import { ServerComponentType, TunnelComponentData } from "webgl-test-shared/dist
 import { DoorToggleType, EntityID } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { Point, angle, lerp } from "webgl-test-shared/dist/utils";
-import Entity from "../Entity";
 import { HitboxCollisionBit, DEFAULT_HITBOX_COLLISION_MASK } from "webgl-test-shared/dist/collision";
 import { ComponentArray } from "./ComponentArray";
 import { HitboxCollisionType, RectangularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
+import { TransformComponentArray } from "./TransformComponent";
 
 // @Cleanup: All the door toggling logic is stolen from DoorComponent.ts}
 
@@ -36,41 +36,44 @@ export class TunnelComponent {
    public bottomDoorOpenProgress = 0;
 }
 
-export const TunnelComponentArray = new ComponentArray<ServerComponentType.tunnel, TunnelComponent>(true, {
+export const TunnelComponentArray = new ComponentArray<TunnelComponent>(ServerComponentType.tunnel, true, {
    serialise: serialise
 });
 
 const doorHalfDiagonalLength = Math.sqrt(16 * 16 + 48 * 48) / 2;
 const angleToCenter = angle(16, 48);
 
-const updateDoorOpenProgress = (tunnel: Entity, tunnelComponent: TunnelComponent, doorType: DoorType): void => {
+// @Hack @Hack @HACK
+const updateDoorOpenProgress = (tunnel: EntityID, tunnelComponent: TunnelComponent, doorType: DoorType): void => {
    const openProgress = doorType === DoorType.top ? tunnelComponent.topDoorOpenProgress : tunnelComponent.bottomDoorOpenProgress;
    const toggleType = doorType === DoorType.top ? tunnelComponent.topDoorToggleType : tunnelComponent.bottomDoorToggleType;
    const doorBit = doorType === DoorType.top ? 0b01 : 0b10;
 
+   const transformComponent = TransformComponentArray.getComponent(tunnel);
+   
    let hasHardHitbox = true;
    if (toggleType === DoorToggleType.close || openProgress === 0) {
       // Create hard hitbox
-      const alreadyExists = doorBit === tunnelComponent.firstHitboxDoorBit ? (tunnel.hitboxes.length > 5 && tunnel.hitboxes[5].collisionType === HitboxCollisionType.hard) : tunnel.hitboxes[tunnel.hitboxes.length - 1].collisionType === HitboxCollisionType.hard;
+      const alreadyExists = doorBit === tunnelComponent.firstHitboxDoorBit ? (transformComponent.hitboxes.length > 5 && transformComponent.hitboxes[5].collisionType === HitboxCollisionType.hard) : transformComponent.hitboxes[transformComponent.hitboxes.length - 1].collisionType === HitboxCollisionType.hard;
       if (!alreadyExists) {
          const hitbox = new RectangularHitbox(0.5, new Point(0, 0), HitboxCollisionType.hard, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, DOOR_HITBOX_WIDTH, THIN_HITBOX_HEIGHT, 0);
-         tunnel.addHitbox(hitbox);
+         transformComponent.addHitbox(hitbox, tunnel);
          
          // @Hack!!! Wouldn't be needed if we had a hitbox awake/asleep system
          if (doorBit === tunnelComponent.firstHitboxDoorBit) {
-            tunnel.hitboxes.pop();
-            tunnel.hitboxes.splice(5, 0, hitbox);
+            transformComponent.hitboxes.pop();
+            transformComponent.hitboxes.splice(5, 0, hitbox);
          }
       }
    } else if (toggleType === DoorToggleType.open || openProgress === 1) {
       hasHardHitbox = false;
       if (doorBit === tunnelComponent.firstHitboxDoorBit) {
-         if (tunnel.hitboxes.length > 5 && tunnel.hitboxes[5].collisionType === HitboxCollisionType.hard) {
-            tunnel.hitboxes.splice(5, 1);
+         if (transformComponent.hitboxes.length > 5 && transformComponent.hitboxes[5].collisionType === HitboxCollisionType.hard) {
+            transformComponent.hitboxes.splice(5, 1);
          }
       } else {
-         if (tunnel.hitboxes[tunnel.hitboxes.length - 1].collisionType === HitboxCollisionType.hard) {
-            tunnel.hitboxes.pop();
+         if (transformComponent.hitboxes[transformComponent.hitboxes.length - 1].collisionType === HitboxCollisionType.hard) {
+            transformComponent.hitboxes.pop();
          }
       }
    }
@@ -83,13 +86,13 @@ const updateDoorOpenProgress = (tunnel: Entity, tunnelComponent: TunnelComponent
    const xOffset = doorHalfDiagonalLength * Math.sin(offsetDirection) - doorHalfDiagonalLength * Math.sin(baseRotation + angleToCenter);
    const yOffset = doorHalfDiagonalLength * Math.cos(offsetDirection) - doorHalfDiagonalLength * Math.cos(baseRotation + angleToCenter);
 
-   const softDoorHitbox = tunnel.hitboxes[doorBit === tunnelComponent.firstHitboxDoorBit ? 4 : (tunnel.hitboxes[5].collisionType === HitboxCollisionType.hard ? 6 : 5)] as RectangularHitbox;
+   const softDoorHitbox = transformComponent.hitboxes[doorBit === tunnelComponent.firstHitboxDoorBit ? 4 : (transformComponent.hitboxes[5].collisionType === HitboxCollisionType.hard ? 6 : 5)] as RectangularHitbox;
    softDoorHitbox.offset.x = xOffset;
    softDoorHitbox.offset.y = yOffset + (doorType === DoorType.top ? DOOR_HITBOX_OFFSET : -DOOR_HITBOX_OFFSET);
    softDoorHitbox.relativeRotation = rotation + Math.PI/2;
 
    if (hasHardHitbox) {
-      const hardDoorHitbox = tunnel.hitboxes[doorBit === tunnelComponent.firstHitboxDoorBit ? 5 : (tunnel.hitboxes[5].collisionType === HitboxCollisionType.hard ? 7 : 6)] as RectangularHitbox;
+      const hardDoorHitbox = transformComponent.hitboxes[doorBit === tunnelComponent.firstHitboxDoorBit ? 5 : (transformComponent.hitboxes[5].collisionType === HitboxCollisionType.hard ? 7 : 6)] as RectangularHitbox;
       hardDoorHitbox.offset.x = xOffset + DOOR_HITBOX_HEIGHT * 0.5 * Math.sin(rotation + Math.PI/2);
       hardDoorHitbox.offset.y = yOffset + DOOR_HITBOX_HEIGHT * 0.5 * Math.cos(rotation + Math.PI/2) + (doorType === DoorType.top ? DOOR_HITBOX_OFFSET : -DOOR_HITBOX_OFFSET);
       hardDoorHitbox.relativeRotation = rotation + Math.PI/2;
@@ -190,21 +193,22 @@ function serialise(entityID: number): TunnelComponentData {
    };
 }
 
-export function updateTunnelDoorBitset(tunnel: Entity, doorBitset: number): void {
-   const tunnelComponent = TunnelComponentArray.getComponent(tunnel.id);
+export function updateTunnelDoorBitset(tunnel: EntityID, doorBitset: number): void {
+   const transformComponent = TransformComponentArray.getComponent(tunnel);
+   const tunnelComponent = TunnelComponentArray.getComponent(tunnel);
 
    if ((tunnelComponent.doorBitset & 0b01) !== (doorBitset & 0b01)) {
       // Add top door hitbox
-      tunnel.addHitbox(new RectangularHitbox(DOOR_HITBOX_MASS, new Point(0, DOOR_HITBOX_OFFSET), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, DOOR_HITBOX_WIDTH, DOOR_HITBOX_HEIGHT, 0));
-      if (tunnel.hitboxes.length === 5) {
+      transformComponent.addHitbox(new RectangularHitbox(DOOR_HITBOX_MASS, new Point(0, DOOR_HITBOX_OFFSET), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, DOOR_HITBOX_WIDTH, DOOR_HITBOX_HEIGHT, 0), tunnel);
+      if (transformComponent.hitboxes.length === 5) {
          tunnelComponent.firstHitboxDoorBit = 0b01;
       }
       updateDoorOpenProgress(tunnel, tunnelComponent, DoorType.top);
    }
    if ((tunnelComponent.doorBitset & 0b10) !== (doorBitset & 0b10)) {
       // Add bottom door hitbox
-      tunnel.addHitbox(new RectangularHitbox(DOOR_HITBOX_MASS, new Point(0, -DOOR_HITBOX_OFFSET), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, DOOR_HITBOX_WIDTH, DOOR_HITBOX_HEIGHT, 0));
-      if (tunnel.hitboxes.length === 5) {
+      transformComponent.addHitbox(new RectangularHitbox(DOOR_HITBOX_MASS, new Point(0, -DOOR_HITBOX_OFFSET), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, DOOR_HITBOX_WIDTH, DOOR_HITBOX_HEIGHT, 0), tunnel);
+      if (transformComponent.hitboxes.length === 5) {
          tunnelComponent.firstHitboxDoorBit = 0b10;
       }
       updateDoorOpenProgress(tunnel, tunnelComponent, DoorType.bottom);

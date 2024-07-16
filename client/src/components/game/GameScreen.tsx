@@ -26,7 +26,7 @@ export let toggleSettingsMenu: () => void;
 
 export let toggleCinematicMode: () => void;
 
-export let gameScreenSetIsDead: (isDead: boolean) => void;
+export let gameScreenSetIsDead: (isDead: boolean) => void = () => {};
 
 interface GameScreenProps {
    readonly interactState: GameInteractState;

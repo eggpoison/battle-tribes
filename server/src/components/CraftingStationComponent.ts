@@ -14,7 +14,7 @@ export class CraftingStationComponent {
    }
 }
 
-export const CraftingStationComponentArray = new ComponentArray<ServerComponentType.craftingStation, CraftingStationComponent>(true, {
+export const CraftingStationComponentArray = new ComponentArray<CraftingStationComponent>(ServerComponentType.craftingStation, true, {
    serialise: serialise
 });
 

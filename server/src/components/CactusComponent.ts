@@ -17,7 +17,7 @@ export class CactusComponent {
    }
 }
 
-export const CactusComponentArray = new ComponentArray<ServerComponentType.cactus, CactusComponent>(true, {
+export const CactusComponentArray = new ComponentArray<CactusComponent>(ServerComponentType.cactus, true, {
    serialise: serialise
 });
 

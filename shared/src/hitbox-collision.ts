@@ -4,7 +4,7 @@ import { EntityID } from "./entities";
 import { createEntityHitboxes } from "./hitboxes/entity-hitbox-creation";
 import { CircularHitbox, RectangularHitbox, Hitbox, hitboxIsCircular, assertHitboxIsRectangular, updateHitbox } from "./hitboxes/hitboxes";
 import { Settings } from "./settings";
-import { StructureType } from "./structures";
+import { StructureType, WorldInfo } from "./structures";
 import { angle, rotateXAroundPoint, rotateYAroundPoint } from "./utils";
 
 export interface CollisionPushInfo {
@@ -144,8 +144,8 @@ export function collisionBitsAreCompatible(collisionMask1: number, collisionBit1
    return (collisionMask1 & collisionBit2) !== 0 && (collisionMask2 & collisionBit1) !== 0;
 }
 
-export function getHitboxesCollidingEntities<Entity extends EntityInfo>(chunks: Chunks<Entity>, hitboxes: ReadonlyArray<Hitbox>, epsilon: number = 0): Array<Entity> {
-   const collidingEntities = new Array<Entity>();
+export function getHitboxesCollidingEntities(worldInfo: WorldInfo, hitboxes: ReadonlyArray<Hitbox>, epsilon: number = 0): Array<EntityID> {
+   const collidingEntities = new Array<EntityID>();
    const seenEntityIDs = new Set<number>();
    
    for (let i = 0; i < hitboxes.length; i++) {
@@ -175,16 +175,18 @@ export function getHitboxesCollidingEntities<Entity extends EntityInfo>(chunks: 
       
       for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
          for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
-            const chunk = getChunk(chunks, chunkX, chunkY);
+            const chunk = getChunk(worldInfo.chunks, chunkX, chunkY);
             for (let j = 0; j < chunk.entities.length; j++) {
-               const entity = chunk.entities[j];
-               if (seenEntityIDs.has(entity.id)) {
+               const entityID = chunk.entities[j];
+               if (seenEntityIDs.has(entityID)) {
                   continue;
                }
-               seenEntityIDs.add(entity.id);
+
+               seenEntityIDs.add(entityID);
                
+               const entity = worldInfo.getEntityCallback(entityID);
                if (hitboxesAreColliding(hitbox, entity.hitboxes, epsilon)) {
-                  collidingEntities.push(entity);
+                  collidingEntities.push(entityID);
                }
             }
          }
@@ -195,12 +197,12 @@ export function getHitboxesCollidingEntities<Entity extends EntityInfo>(chunks: 
 }
 
 // @Cleanup: broaden to EntityType instead of StructureType
-export function estimateCollidingEntities(chunks: Chunks, entityType: StructureType, x: number, y: number, rotation: number, epsilon: number): Array<EntityInfo> {
+export function estimateCollidingEntities(worldInfo: WorldInfo, entityType: StructureType, x: number, y: number, rotation: number, epsilon: number): Array<EntityID> {
    const testHitboxes = createEntityHitboxes(entityType);
    for (let i = 0; i < testHitboxes.length; i++) {
       const hitbox = testHitboxes[i];
       updateHitbox(hitbox, x, y, rotation);
    }
    
-   return getHitboxesCollidingEntities(chunks, testHitboxes, epsilon);
+   return getHitboxesCollidingEntities(worldInfo, testHitboxes, epsilon);
 }

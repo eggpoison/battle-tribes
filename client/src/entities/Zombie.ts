@@ -17,8 +17,8 @@ class Zombie extends Entity {
    
    private static readonly BLOOD_FOUNTAIN_INTERVAL = 0.1;
 
-   constructor(position: Point, id: number, ageTicks: number, componentDataRecord: ComponentDataRecord) {
-      super(position, id, EntityType.zombie, ageTicks);
+   constructor(id: number, componentDataRecord: ComponentDataRecord) {
+      super(id, EntityType.zombie);
 
       const zombieComponentData = componentDataRecord[ServerComponentType.zombie]!;
 
@@ -52,33 +52,38 @@ class Zombie extends Entity {
       super.tick();
 
       if (Math.random() < 0.1 / Settings.TPS) {
-         playSound(("zombie-ambient-" + randInt(1, 3) + ".mp3") as AudioFilePath, 0.4, 1, this.position.x, this.position.y);
+         const transformComponent = this.getServerComponent(ServerComponentType.transform);
+         playSound(("zombie-ambient-" + randInt(1, 3) + ".mp3") as AudioFilePath, 0.4, 1, transformComponent.position);
       }
    }
 
    protected onHit(hitData: HitData): void {
+      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+
       // Blood pool particle
-      createBloodPoolParticle(this.position.x, this.position.y, 20);
+      createBloodPoolParticle(transformComponent.position.x, transformComponent.position.y, 20);
       
       // Blood particles
       for (let i = 0; i < 10; i++) {
-         let offsetDirection = angle(hitData.hitPosition[0] - this.position.x, hitData.hitPosition[1] - this.position.y);
+         let offsetDirection = angle(hitData.hitPosition[0] - transformComponent.position.x, hitData.hitPosition[1] - transformComponent.position.y);
          offsetDirection += 0.2 * Math.PI * (Math.random() - 0.5);
 
-         const spawnPositionX = this.position.x + Zombie.RADIUS * Math.sin(offsetDirection);
-         const spawnPositionY = this.position.y + Zombie.RADIUS * Math.cos(offsetDirection);
+         const spawnPositionX = transformComponent.position.x + Zombie.RADIUS * Math.sin(offsetDirection);
+         const spawnPositionY = transformComponent.position.y + Zombie.RADIUS * Math.cos(offsetDirection);
       
          createBloodParticle(Math.random() < 0.6 ? BloodParticleSize.small : BloodParticleSize.large, spawnPositionX, spawnPositionY, 2 * Math.PI * Math.random(), randFloat(150, 250), true);
       }
 
-      playSound(("zombie-hurt-" + randInt(1, 3) + ".mp3") as AudioFilePath, 0.4, 1, this.position.x, this.position.y);
+      playSound(("zombie-hurt-" + randInt(1, 3) + ".mp3") as AudioFilePath, 0.4, 1, transformComponent.position);
    }
 
    public onDie(): void {
-      createBloodPoolParticle(this.position.x, this.position.y, 20);
+      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+
+      createBloodPoolParticle(transformComponent.position.x, transformComponent.position.y, 20);
       createBloodParticleFountain(this, Zombie.BLOOD_FOUNTAIN_INTERVAL, 1);
 
-      playSound("zombie-die-1.mp3", 0.4, 1, this.position.x, this.position.y);
+      playSound("zombie-die-1.mp3", 0.4, 1, transformComponent.position);
    }
 }
 

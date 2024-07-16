@@ -1,5 +1,4 @@
 import { EntityType } from "webgl-test-shared/dist/entities";
-import { Point } from "webgl-test-shared/dist/utils";
 import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import Entity from "../Entity";
@@ -7,8 +6,8 @@ import Entity from "../Entity";
 class Workbench extends Entity {
    public static readonly SIZE = 80;
    
-   constructor(position: Point, id: number, ageTicks: number) {
-      super(position, id, EntityType.workbench, ageTicks);
+   constructor(id: number) {
+      super(id, EntityType.workbench);
 
       this.attachRenderPart(
          new RenderPart(

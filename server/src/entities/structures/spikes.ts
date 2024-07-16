@@ -1,65 +1,107 @@
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision";
-import { BuildingMaterial } from "webgl-test-shared/dist/components";
-import { EntityType, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
+import { BuildingMaterial, ServerComponentType } from "webgl-test-shared/dist/components";
+import { EntityID, EntityType, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { Point } from "webgl-test-shared/dist/utils";
-import Entity from "../../Entity";
-import { HealthComponent, HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
-import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
-import Tribe from "../../Tribe";
-import { EntityRelationship, TribeComponent, TribeComponentArray, getEntityRelationship } from "../../components/TribeComponent";
-import { SpikesComponent, SpikesComponentArray } from "../../components/SpikesComponent";
-import { BuildingMaterialComponent, BuildingMaterialComponentArray } from "../../components/BuildingMaterialComponent";
-import { StructureComponentArray, StructureComponent, isAttachedToWall } from "../../components/StructureComponent";
-import { StructureConnectionInfo } from "webgl-test-shared/dist/structures";
+import { HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
+import { EntityRelationship, getEntityRelationship } from "../../components/TribeComponent";
+import { SpikesComponentArray } from "../../components/SpikesComponent";
+import { createEmptyStructureConnectionInfo } from "webgl-test-shared/dist/structures";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
 import { createWallSpikesHitboxes, createFloorSpikesHitboxes } from "webgl-test-shared/dist/hitboxes/entity-hitbox-creation";
+import { ComponentConfig } from "../../components";
+import Board from "../../Board";
 
-export const SPIKE_HEALTHS = [15, 45];
+type ComponentTypes = ServerComponentType.transform
+   | ServerComponentType.health
+   | ServerComponentType.statusEffect
+   | ServerComponentType.structure
+   | ServerComponentType.tribe
+   | ServerComponentType.buildingMaterial
+   | ServerComponentType.spikes;
 
-export function createSpikes(position: Point, rotation: number, tribe: Tribe, connectionInfo: StructureConnectionInfo): Entity {
-   const isAttached = isAttachedToWall(connectionInfo);
-   const entityType = isAttached ? EntityType.wallSpikes : EntityType.floorSpikes;
-
-   const spikes = new Entity(position, rotation, entityType, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
-
-   const hitboxes = isAttached ? createWallSpikesHitboxes() : createFloorSpikesHitboxes();
-   for (let i = 0; i < hitboxes.length; i++) {
-      spikes.addHitbox(hitboxes[i]);
-   }
-
-   const material = BuildingMaterial.wood;
-   
-   HealthComponentArray.addComponent(spikes.id, new HealthComponent(SPIKE_HEALTHS[material]));
-   StatusEffectComponentArray.addComponent(spikes.id, new StatusEffectComponent(StatusEffect.bleeding | StatusEffect.poisoned));
-   StructureComponentArray.addComponent(spikes.id, new StructureComponent(connectionInfo));
-   TribeComponentArray.addComponent(spikes.id, new TribeComponent(tribe));
-   SpikesComponentArray.addComponent(spikes.id, new SpikesComponent());
-   BuildingMaterialComponentArray.addComponent(spikes.id, new BuildingMaterialComponent(material));
-
-   return spikes;
+export function createFloorSpikesConfig(): ComponentConfig<ComponentTypes> {
+   return {
+      [ServerComponentType.transform]: {
+         position: new Point(0, 0),
+         rotation: 0,
+         type: EntityType.floorSpikes,
+         collisionBit: COLLISION_BITS.default,
+         collisionMask: DEFAULT_COLLISION_MASK,
+         hitboxes: createFloorSpikesHitboxes()
+      },
+      [ServerComponentType.health]: {
+         maxHealth: 0
+      },
+      [ServerComponentType.statusEffect]: {
+         statusEffectImmunityBitset: StatusEffect.bleeding | StatusEffect.poisoned
+      },
+      [ServerComponentType.structure]: {
+         connectionInfo: createEmptyStructureConnectionInfo()
+      },
+      [ServerComponentType.tribe]: {
+         tribe: null,
+         tribeType: 0
+      },
+      [ServerComponentType.buildingMaterial]: {
+         material: BuildingMaterial.wood
+      },
+      [ServerComponentType.spikes]: {}
+   };
 }
 
-export function onSpikesCollision(spikes: Entity, collidingEntity: Entity, collisionPoint: Point): void {
+export function createWallSpikesConfig(): ComponentConfig<ComponentTypes> {
+   return {
+      [ServerComponentType.transform]: {
+         position: new Point(0, 0),
+         rotation: 0,
+         type: EntityType.wallSpikes,
+         collisionBit: COLLISION_BITS.default,
+         collisionMask: DEFAULT_COLLISION_MASK,
+         hitboxes: createWallSpikesHitboxes()
+      },
+      [ServerComponentType.health]: {
+         maxHealth: 0
+      },
+      [ServerComponentType.statusEffect]: {
+         statusEffectImmunityBitset: StatusEffect.bleeding | StatusEffect.poisoned
+      },
+      [ServerComponentType.structure]: {
+         connectionInfo: createEmptyStructureConnectionInfo()
+      },
+      [ServerComponentType.tribe]: {
+         tribe: null,
+         tribeType: 0
+      },
+      [ServerComponentType.buildingMaterial]: {
+         material: BuildingMaterial.wood
+      },
+      [ServerComponentType.spikes]: {}
+   };
+}
+
+// @Cleanup: Copy and paste
+export function onSpikesCollision(spikes: EntityID, collidingEntity: EntityID, collisionPoint: Point): void {
    // @Incomplete: Why is this condition neeeded? Shouldn't be able to be placed colliding with other structures anyway.
-   if (collidingEntity.type === EntityType.floorSpikes || collidingEntity.type === EntityType.wallSpikes || collidingEntity.type === EntityType.door || collidingEntity.type === EntityType.wall) {
+   const collidingEntityType = Board.getEntityType(collidingEntity);
+   if (collidingEntityType === EntityType.floorSpikes || collidingEntityType === EntityType.wallSpikes || collidingEntityType === EntityType.door || collidingEntityType === EntityType.wall) {
       return;
    }
    
-   if (!HealthComponentArray.hasComponent(collidingEntity.id)) {
+   if (!HealthComponentArray.hasComponent(collidingEntity)) {
       return;
    }
 
    // Don't collide with friendly entities if the spikes are covered
-   const spikesComponent = SpikesComponentArray.getComponent(spikes.id);
-   if (spikesComponent.isCovered && getEntityRelationship(spikes.id, collidingEntity) === EntityRelationship.friendly) {
+   const spikesComponent = SpikesComponentArray.getComponent(spikes);
+   if (spikesComponent.isCovered && getEntityRelationship(spikes, collidingEntity) === EntityRelationship.friendly) {
       return;
    }
 
    // Reveal
    spikesComponent.isCovered = false;
 
-   const healthComponent = HealthComponentArray.getComponent(collidingEntity.id);
+   const healthComponent = HealthComponentArray.getComponent(collidingEntity);
    if (!canDamageEntity(healthComponent, "woodenSpikes")) {
       return;
    }

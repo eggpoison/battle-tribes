@@ -5,16 +5,16 @@ import { PhysicsComponentArray } from "../../../components/PhysicsComponent";
 import { TribesmanAIComponentArray, TribesmanPathType } from "../../../components/TribesmanAIComponent";
 import { PathfindFailureDefault, getEntityFootprint, positionIsAccessible } from "../../../pathfinding";
 import { pathfindToPosition, clearTribesmanPath, getTribesmanRadius, getTribesmanVisionRange } from "./tribesman-ai-utils";
-import { EntityType } from "webgl-test-shared/dist/entities";
+import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
 import { Point, randInt, distance } from "webgl-test-shared/dist/utils";
 import Board from "../../../Board";
-import Entity from "../../../Entity";
 import Tribe from "../../../Tribe";
 import { TribesmanGoal } from "./tribesman-goals";
 import { TribeComponentArray } from "../../../components/TribeComponent";
+import { TransformComponentArray } from "../../../components/TransformComponent";
 
 
-const generateTribeAreaPatrolPosition = (tribesman: Entity, tribe: Tribe): Point | null => {
+const generateTribeAreaPatrolPosition = (tribesman: EntityID, tribe: Tribe): Point | null => {
    // Filter tiles in tribe area
    const potentialTiles = tribe.getArea();
 
@@ -36,21 +36,36 @@ const generateTribeAreaPatrolPosition = (tribesman: Entity, tribe: Tribe): Point
    return null;
 }
 
-const generateRandomExplorePosition = (tribesman: Entity, tribe: Tribe): Point | null => {
+const generateRandomExplorePosition = (tribesman: EntityID, tribe: Tribe): Point | null => {
+   const transformComponent = TransformComponentArray.getComponent(tribesman);
+   
    const visionRange = getTribesmanVisionRange(tribesman);
    const footprint = getEntityFootprint(getTribesmanRadius(tribesman));
    
-   const distToTotem = tribe.totem !== null ? tribesman.position.calculateDistanceBetween(tribe.totem.position) : 0;
+   let distToTotem: number;
+   if (tribe.totem !== null) {
+      const totemTransformComponent = TransformComponentArray.getComponent(tribe.totem);
+      distToTotem = transformComponent.position.calculateDistanceBetween(totemTransformComponent.position);
+   } else {
+      distToTotem = 0;
+   }
    
    for (let attempts = 0; attempts < 100; attempts++) {
       const offsetMagnitude = visionRange * Math.random();
       const offsetDirection = 2 * Math.PI * Math.random();
 
-      const x = tribesman.position.x + offsetMagnitude * Math.sin(offsetDirection);
-      const y = tribesman.position.y + offsetMagnitude * Math.cos(offsetDirection);
+      const x = transformComponent.position.x + offsetMagnitude * Math.sin(offsetDirection);
+      const y = transformComponent.position.y + offsetMagnitude * Math.cos(offsetDirection);
 
       // Always explore further away from the totem
-      const currentDistToTotem = tribe.totem !== null ? distance(x, y, tribe.totem.position.x, tribe.totem.position.y) : 0;
+      // @Copynpaste
+      let currentDistToTotem: number;
+      if (tribe.totem !== null) {
+         const totemTransformComponent = TransformComponentArray.getComponent(tribe.totem);
+         currentDistToTotem = distance(x, y, totemTransformComponent.position.x, totemTransformComponent.position.y);
+      } else {
+         currentDistToTotem = 0;
+      }
       if (currentDistToTotem < distToTotem) {
          continue;
       }
@@ -68,8 +83,8 @@ const generateRandomExplorePosition = (tribesman: Entity, tribe: Tribe): Point |
    return null;
 }
 
-const generatePatrolPosition = (tribesman: Entity, tribe: Tribe, goal: TribesmanGoal | null): Point | null => {
-   switch (tribesman.type) {
+const generatePatrolPosition = (tribesman: EntityID, tribe: Tribe, goal: TribesmanGoal | null): Point | null => {
+   switch (Board.getEntityType(tribesman)) {
       case EntityType.tribeWorker: {
          if (goal === null || Board.isNight()) {
             return generateTribeAreaPatrolPosition(tribesman, tribe);
@@ -85,11 +100,11 @@ const generatePatrolPosition = (tribesman: Entity, tribe: Tribe, goal: Tribesman
    throw new Error();
 }
 
-export function tribesmanDoPatrol(tribesman: Entity, goal: TribesmanGoal | null): boolean {
-   const tribesmanAIComponent = TribesmanAIComponentArray.getComponent(tribesman.id);
+export function tribesmanDoPatrol(tribesman: EntityID, goal: TribesmanGoal | null): boolean {
+   const tribesmanAIComponent = TribesmanAIComponentArray.getComponent(tribesman);
    
    if (tribesmanAIComponent.targetPatrolPositionX === -1 && Math.random() < 0.3 / Settings.TPS) {
-      const tribeComponent = TribeComponentArray.getComponent(tribesman.id);
+      const tribeComponent = TribeComponentArray.getComponent(tribesman);
       const patrolPosition = generatePatrolPosition(tribesman, tribeComponent.tribe, goal);
       
       if (patrolPosition !== null) {
@@ -107,7 +122,7 @@ export function tribesmanDoPatrol(tribesman: Entity, goal: TribesmanGoal | null)
 
       // Reset target patrol position when not patrolling
       if (!isPathfinding) {
-         const physicsComponent = PhysicsComponentArray.getComponent(tribesman.id);
+         const physicsComponent = PhysicsComponentArray.getComponent(tribesman);
          stopEntity(physicsComponent);
 
          tribesmanAIComponent.currentAIType = TribesmanAIType.idle;

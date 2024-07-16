@@ -9,6 +9,7 @@ import { SafetyNode, getSafetyNode } from "./ai-building";
 import { buildingIsInfrastructure, getBuildingSafety } from "./ai-building-heuristics";
 import { TribeComponentArray } from "../components/TribeComponent";
 import { ITEM_INFO_RECORD, PlaceableItemInfo } from "webgl-test-shared/dist/items/items";
+import { TransformComponentArray } from "../components/TransformComponent";
 
 // @Cleanup: should this be here?
 export function getVisibleTribes(chunkBounds: VisibleChunkBounds): ReadonlyArray<Tribe> {
@@ -19,8 +20,8 @@ export function getVisibleTribes(chunkBounds: VisibleChunkBounds): ReadonlyArray
          const chunk = Board.getChunk(chunkX, chunkY);
          for (let i = 0; i < chunk.entities.length; i++) {
             const entity = chunk.entities[i];
-            if (TribeComponentArray.hasComponent(entity.id)) {
-               const tribeComponent = TribeComponentArray.getComponent(entity.id);
+            if (TribeComponentArray.hasComponent(entity)) {
+               const tribeComponent = TribeComponentArray.getComponent(entity);
                if (visibleTribes.indexOf(tribeComponent.tribe) === -1) {
                   visibleTribes.push(tribeComponent.tribe);
                }
@@ -104,12 +105,14 @@ export function getVisibleBuildingPlans(visibleTribes: ReadonlyArray<Tribe>, chu
                break;
             }
             case BuildingPlanType.upgrade: {
-               const building = Board.entityRecord[plan.baseBuildingID];
-               if (typeof building === "undefined") {
+               const building = plan.baseBuildingID;
+               if (!Board.hasEntity(building)) {
                   continue;
                }
                
-               planPosition = building.position;
+               const buildingTransformComponent = TransformComponentArray.getComponent(building);
+               
+               planPosition = buildingTransformComponent.position;
                planRotation = plan.rotation;
                entityType = plan.entityType;
                break;
@@ -146,7 +149,7 @@ export function getVisibleBuildingSafetys(visibleTribes: ReadonlyArray<Tribe>, c
 
       for (let i = 0; i < tribe.buildings.length; i++) {
          const building = tribe.buildings[i];
-         if (!buildingIsInfrastructure(building.type)) {
+         if (!buildingIsInfrastructure(building)) {
             continue;
          }
          // @Incomplete: filter out nodes which aren't in the chunk bounds
@@ -162,9 +165,11 @@ export function getVisibleBuildingSafetys(visibleTribes: ReadonlyArray<Tribe>, c
          };
          getBuildingSafety(tribe, building, safetyInfo);
 
+         const buildingTransformComponent = TransformComponentArray.getComponent(building);
+
          buildingSafetysData.push({
-            x: building.position.x,
-            y: building.position.y,
+            x: buildingTransformComponent.position.x,
+            y: buildingTransformComponent.position.y,
             minSafety: safetyInfo.buildingMinSafetys[0],
             averageSafety: safetyInfo.buildingAverageSafetys[0],
             extendedAverageSafety: safetyInfo.buildingExtendedAverageSafetys[0],

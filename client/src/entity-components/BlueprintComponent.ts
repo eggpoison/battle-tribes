@@ -10,17 +10,19 @@ import { getEntityTextureAtlas, getTextureArrayIndex } from "../texture-atlases/
 import { ParticleRenderLayer } from "../rendering/webgl/particle-rendering";
 
 const createWoodenBlueprintWorkParticleEffects = (entity: Entity): void => {
+   const transformComponent = entity.getServerComponent(ServerComponentType.transform);
+   
    for (let i = 0; i < 2; i++) {
-      createWoodShardParticle(entity.position.x, entity.position.y, 24);
+      createWoodShardParticle(transformComponent.position.x, transformComponent.position.y, 24);
    }
 
    for (let i = 0; i < 3; i++) {
-      createLightWoodSpeckParticle(entity.position.x, entity.position.y, 24 * Math.random());
+      createLightWoodSpeckParticle(transformComponent.position.x, transformComponent.position.y, 24 * Math.random());
    }
 
    for (let i = 0; i < 2; i++) {
-      const x = entity.position.x + randFloat(-24, 24);
-      const y = entity.position.y + randFloat(-24, 24);
+      const x = transformComponent.position.x + randFloat(-24, 24);
+      const y = transformComponent.position.y + randFloat(-24, 24);
       createSawdustCloud(x, y);
    }
 }
@@ -70,7 +72,9 @@ class BlueprintComponent extends ServerComponent<ServerComponentType.blueprint> 
       const blueprintProgress = data.buildProgress;
 
       if (blueprintProgress !== this.lastBlueprintProgress) {
-         playSound("blueprint-work.mp3", 0.4, randFloat(0.9, 1.1), this.entity.position.x, this.entity.position.y);
+         const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
+
+         playSound("blueprint-work.mp3", 0.4, randFloat(0.9, 1.1), transformComponent.position);
 
          const progressTexture = getCurrentBlueprintProgressTexture(data.blueprintType, data.buildProgress);
          
@@ -79,8 +83,8 @@ class BlueprintComponent extends ServerComponent<ServerComponentType.blueprint> 
          const textureArrayIndex = getTextureArrayIndex(progressTexture.completedTextureSource);
          const xShift = textureAtlas.textureWidths[textureArrayIndex] * 4 * 0.5 * randFloat(-0.75, 0.75);
          const yShift = textureAtlas.textureHeights[textureArrayIndex] * 4 * 0.5 * randFloat(-0.75, 0.75);
-         const particleOriginX = this.entity.position.x + rotateXAroundOrigin(progressTexture.offsetX + xShift, progressTexture.offsetY + yShift, progressTexture.rotation);
-         const particleOriginY = this.entity.position.y + rotateYAroundOrigin(progressTexture.offsetX + xShift, progressTexture.offsetY + yShift, progressTexture.rotation);
+         const particleOriginX = transformComponent.position.x + rotateXAroundOrigin(progressTexture.offsetX + xShift, progressTexture.offsetY + yShift, progressTexture.rotation);
+         const particleOriginY = transformComponent.position.y + rotateYAroundOrigin(progressTexture.offsetX + xShift, progressTexture.offsetY + yShift, progressTexture.rotation);
          
          // @Incomplete: Change the particle effect type depending on the material of the worked-on partial texture
          // Create particle effects

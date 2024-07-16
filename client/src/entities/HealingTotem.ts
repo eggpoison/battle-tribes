@@ -1,12 +1,11 @@
 import { EntityType } from "webgl-test-shared/dist/entities";
-import { Point } from "webgl-test-shared/dist/utils";
 import Entity from "../Entity";
 import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 
 class HealingTotem extends Entity {
-   constructor(position: Point, id: number, ageTicks: number) {
-      super(position, id, EntityType.healingTotem, ageTicks);
+   constructor(id: number) {
+      super(id, EntityType.healingTotem);
 
       this.attachRenderPart(
          new RenderPart(

@@ -1,98 +1,75 @@
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { PlanterBoxPlant, ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityID, EntityType, EntityTypeString, LimbAction } from "webgl-test-shared/dist/entities";
-import { TRIBE_INFO_RECORD } from "webgl-test-shared/dist/tribes";
+import { TribeType } from "webgl-test-shared/dist/tribes";
 import { Point } from "webgl-test-shared/dist/utils";
 import { CircularHitbox, HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
-import Entity from "../../Entity";
 import { onTribeMemberHurt, tickTribeMember } from "./tribe-member";
-import Tribe from "../../Tribe";
-import { InventoryComponent, consumeItemFromSlot, consumeItemType, countItemType, getInventory, pickupItemEntity, InventoryComponentArray } from "../../components/InventoryComponent";
+import { consumeItemFromSlot, consumeItemType, countItemType, getInventory, pickupItemEntity, InventoryComponentArray } from "../../components/InventoryComponent";
 import Board from "../../Board";
-import { HealthComponent, HealthComponentArray } from "../../components/HealthComponent";
-import { InventoryUseComponent, InventoryUseComponentArray, getInventoryUseInfo, setLimbActions } from "../../components/InventoryUseComponent";
-import { TribeMemberComponent, TribeMemberComponentArray, awardTitle } from "../../components/TribeMemberComponent";
-import { PlayerComponent, PlayerComponentArray } from "../../components/PlayerComponent";
-import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
-import { PhysicsComponent, PhysicsComponentArray } from "../../components/PhysicsComponent";
-import { TribeComponent, TribeComponentArray } from "../../components/TribeComponent";
+import { InventoryUseComponentArray, setLimbActions } from "../../components/InventoryUseComponent";
+import { TribeComponentArray } from "../../components/TribeComponent";
 import { TunnelComponentArray, updateTunnelDoorBitset } from "../../components/TunnelComponent";
 import { PlanterBoxComponentArray, fertilisePlanterBox, placePlantInPlanterBox } from "../../components/PlanterBoxComponent";
-import { StructureComponentArray, isAttachedToWall } from "../../components/StructureComponent";
 import { registerPlayerDroppedItemPickup } from "../../server/player-clients";
 import { HutComponentArray } from "../../components/HutComponent";
 import { SpikesComponentArray } from "../../components/SpikesComponent";
 import { InventoryName, ITEM_INFO_RECORD, ConsumableItemInfo, ConsumableItemCategory, BowItemInfo, ItemType } from "webgl-test-shared/dist/items/items";
-import { ComponentRecord } from "../../components";
+import { ComponentConfig } from "../../components";
+import { TransformComponentArray } from "../../components/TransformComponent";
 
-export function createPlayer(position: Point, tribe: Tribe, username: string): Entity {
-   const player = new Entity(position, 0, EntityType.player, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
+type ComponentTypes = ServerComponentType.transform
+   | ServerComponentType.physics
+   | ServerComponentType.health
+   | ServerComponentType.statusEffect
+   | ServerComponentType.tribe
+   | ServerComponentType.tribeMember
+   | ServerComponentType.player
+   | ServerComponentType.inventory
+   | ServerComponentType.inventoryUse;
 
-   const hitbox = new CircularHitbox(1.25, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, 32);
-   player.addHitbox(hitbox);
-
-   const tribeInfo = TRIBE_INFO_RECORD[tribe.tribeType];
-
-   const physicsComponent = new PhysicsComponent(0, 0, 0, 0, true, false);
-   PhysicsComponentArray.addComponent(player.id, physicsComponent);
-
-   const healthComponent = new HealthComponent(tribeInfo.maxHealthPlayer);
-   HealthComponentArray.addComponent(player.id, healthComponent);
-
-   const statusEffectComponent = new StatusEffectComponent(0);
-   StatusEffectComponentArray.addComponent(player.id, statusEffectComponent);
-
-   const tribeComponent = new TribeComponent(tribe);
-   TribeComponentArray.addComponent(player.id, tribeComponent);
-
-   const tribeMemberComponent = new TribeMemberComponent(tribe.tribeType, EntityType.player);
-   TribeMemberComponentArray.addComponent(player.id, tribeMemberComponent);
-
-   const playerComponent = new PlayerComponent(username);
-   PlayerComponentArray.addComponent(player.id, playerComponent);
-
-   const inventoryUseComponent = new InventoryUseComponent();
-   InventoryUseComponentArray.addComponent(player.id, inventoryUseComponent);
-
-   const inventoryComponent = new InventoryComponent();
-   InventoryComponentArray.addComponent(player.id, inventoryComponent);
-
-   // @Temporary
-   // addItem(inventoryComponent, createItem(ItemType.gardening_gloves, 1));
-   // addItem(inventoryComponent, createItem(ItemType.gathering_gloves, 1));
-   // addItem(inventoryComponent, createItem(ItemType.wooden_spikes, 5));
-   // addItem(inventoryComponent, createItem(ItemType.leaf, 10));
-
-   // setTimeout (() => {
-   //    addItem(inventoryComponent, createItem(ItemType.planter_box, 5));
-   //    addItem(inventoryComponent, createItem(ItemType.berry, 10));
-   //    addItem(inventoryComponent, createItem(ItemType.fertiliser, 10));
-   // }, 200);
-   // addItem(inventoryComponent, createItem(ItemType.seed, 10));
-   // addItem(inventoryComponent, createItem(ItemType.frostcicle, 10));
-
-   // setTimeout(() => {
-   //    addItem(inventoryComponent, createItem(ItemType.frostshaper, 99));
-   //    addItem(inventoryComponent, createItem(ItemType.stonecarvingTable, 5));
-   // }, 50);
-   // addItem(inventoryComponent, createItem(ItemType.wood, 10));
-   // addItem(inventoryComponent, createItem(ItemType.wooden_wall, 50));
-
-   const componentRecord: ComponentRecord = {
-      [ServerComponentType.physics]: physicsComponent,
-      [ServerComponentType.health]: healthComponent,
-      [ServerComponentType.statusEffect]: statusEffectComponent,
-      [ServerComponentType.tribe]: tribeComponent,
-      [ServerComponentType.tribeMember]: tribeMemberComponent,
-      [ServerComponentType.player]: playerComponent,
-      [ServerComponentType.inventoryUse]: inventoryUseComponent,
-      [ServerComponentType.inventory]: inventoryComponent
+export function createPlayerConfig(): ComponentConfig<ComponentTypes> {
+   return {
+      [ServerComponentType.transform]: {
+         position: new Point(0, 0),
+         rotation: 0,
+         type: EntityType.player,
+         collisionBit: COLLISION_BITS.default,
+         collisionMask: DEFAULT_COLLISION_MASK,
+         hitboxes: [new CircularHitbox(1.25, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, 32)]
+      },
+      [ServerComponentType.physics]: {
+         velocityX: 0,
+         velocityY: 0,
+         accelerationX: 0,
+         accelerationY: 0,
+         isAffectedByFriction: true,
+         isImmovable: false
+      },
+      [ServerComponentType.health]: {
+         maxHealth: 0
+      },
+      [ServerComponentType.statusEffect]: {
+         statusEffectImmunityBitset: 0
+      },
+      [ServerComponentType.tribe]: {
+         tribe: null,
+         tribeType: 0
+      },
+      [ServerComponentType.tribeMember]: {
+         tribeType: TribeType.plainspeople,
+         entityType: EntityType.player
+      },
+      [ServerComponentType.player]: {
+         username: ""
+      },
+      [ServerComponentType.inventory]: {
+         inventories: []
+      },
+      [ServerComponentType.inventoryUse]: {
+         usedInventoryNames: []
+      }
    };
-
-   // @Hack @Copynpaste
-   TribeMemberComponentArray.onInitialise!(player, componentRecord);
-   
-   return player;
 }
 
 export function tickPlayer(player: EntityID): void {
@@ -108,8 +85,8 @@ export function onPlayerCollision(player: EntityID, collidingEntity: EntityID): 
    }
 }
 
-export function onPlayerHurt(player: Entity, attackingEntityID: number): void {
-   onTribeMemberHurt(player, attackingEntityID);
+export function onPlayerHurt(player: EntityID, attackingEntity: EntityID): void {
+   onTribeMemberHurt(player, attackingEntity);
 }
 
 // @Cleanup: ton of copy and paste between these functions
@@ -118,9 +95,9 @@ export function startEating(player: EntityID, inventoryName: InventoryName): boo
    const inventoryComponent = InventoryComponentArray.getComponent(player);
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(player);
 
-   const useInfo = getInventoryUseInfo(inventoryUseComponent, inventoryName);
-   
+   const useInfo = inventoryUseComponent.getUseInfo(inventoryName);
    const inventory = getInventory(inventoryComponent, inventoryName);
+   
    const foodItem = inventory.itemSlots[useInfo.selectedItemSlot];
    
    // Reset the food timer so that the food isn't immediately eaten
@@ -142,7 +119,7 @@ export function startChargingBow(player: EntityID, inventoryName: InventoryName)
    const inventoryComponent = InventoryComponentArray.getComponent(player);
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(player);
 
-   const useInfo = getInventoryUseInfo(inventoryUseComponent, inventoryName);
+   const useInfo = inventoryUseComponent.getUseInfo(inventoryName);
 
    const inventory = getInventory(inventoryComponent, inventoryName);
    const bow = inventory.itemSlots[useInfo.selectedItemSlot];
@@ -161,7 +138,7 @@ export function startChargingSpear(player: EntityID, inventoryName: InventoryNam
    const inventoryComponent = InventoryComponentArray.getComponent(player);
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(player);
 
-   const useInfo = getInventoryUseInfo(inventoryUseComponent, inventoryName);
+   const useInfo = inventoryUseComponent.getUseInfo(inventoryName);
 
    const inventory = getInventory(inventoryComponent, inventoryName);
    const spear = inventory.itemSlots[useInfo.selectedItemSlot];
@@ -178,7 +155,7 @@ export function startChargingBattleaxe(player: EntityID, inventoryName: Inventor
    const inventoryComponent = InventoryComponentArray.getComponent(player);
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(player);
 
-   const useInfo = getInventoryUseInfo(inventoryUseComponent, inventoryName);
+   const useInfo = inventoryUseComponent.getUseInfo(inventoryName);
 
    const inventory = getInventory(inventoryComponent, inventoryName);
    const battleaxe = inventory.itemSlots[useInfo.selectedItemSlot];
@@ -206,9 +183,12 @@ const modifyTunnel = (player: EntityID, tunnel: EntityID): void => {
    
    switch (tunnelComponent.doorBitset) {
       case 0b00: {
+         const playerTransformComponent = TransformComponentArray.getComponent(player);
+         const tunnelTransformComponent = TransformComponentArray.getComponent(tunnel);
+         
          // Place the door blueprint on whichever side is closest to the player
-         const dirToPlayer = tunnel.position.calculateAngleBetween(player.position);
-         const dot = Math.sin(tunnel.rotation) * Math.sin(dirToPlayer) + Math.cos(tunnel.rotation) * Math.cos(dirToPlayer);
+         const dirToPlayer = tunnelTransformComponent.position.calculateAngleBetween(playerTransformComponent.position);
+         const dot = Math.sin(tunnelTransformComponent.rotation) * Math.sin(dirToPlayer) + Math.cos(tunnelTransformComponent.rotation) * Math.cos(dirToPlayer);
 
          if (dot > 0) {
             // Top door
@@ -249,10 +229,10 @@ const modifyHut = (hut: EntityID): void => {
 
 const modifySpikes = (player: EntityID, spikes: EntityID): void => {
    const spikesComponent = SpikesComponentArray.getComponent(spikes);
-   const structureComponent = StructureComponentArray.getComponent(spikes);
    
    // Can only cover non-covered floor spikes
-   if (spikesComponent.isCovered || isAttachedToWall(structureComponent)) {
+   const entityType = Board.getEntityType(spikes);
+   if (spikesComponent.isCovered || entityType === EntityType.wallSpikes || entityType === EntityType.wallPunjiSticks) {
       return;
    }
    
@@ -276,9 +256,12 @@ const modifyPlanterBox = (player: EntityID, planterBox: EntityID, plantType: Pla
    placePlantInPlanterBox(planterBox, plantType);
 
    // Consume the item
+
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(player);
-   const hotbarUseInfo = getInventoryUseInfo(inventoryUseComponent, InventoryName.hotbar);
-   const hotbarInventory = hotbarUseInfo.inventory;
+   const inventoryComponent = InventoryComponentArray.getComponent(player);
+
+   const hotbarUseInfo = inventoryUseComponent.getUseInfo(InventoryName.hotbar);
+   const hotbarInventory = getInventory(inventoryComponent, InventoryName.hotbar);
 
    consumeItemFromSlot(hotbarInventory, hotbarUseInfo.selectedItemSlot, 1);
 }
@@ -310,8 +293,11 @@ export function modifyBuilding(player: EntityID, structure: EntityID, data: numb
             // Consume the item
             // @Cleanup: copy and paste
             const inventoryUseComponent = InventoryUseComponentArray.getComponent(player);
-            const hotbarUseInfo = getInventoryUseInfo(inventoryUseComponent, InventoryName.hotbar);
-            const hotbarInventory = hotbarUseInfo.inventory;
+            const inventoryComponent = InventoryComponentArray.getComponent(player);
+
+            const hotbarUseInfo = inventoryUseComponent.getUseInfo(InventoryName.hotbar);
+            const hotbarInventory = getInventory(inventoryComponent, InventoryName.hotbar);
+
             consumeItemFromSlot(hotbarInventory, hotbarUseInfo.selectedItemSlot, 1);
          } else {
             modifyPlanterBox(player, structure, data);

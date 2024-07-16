@@ -4,6 +4,7 @@ import Entity from "../../Entity";
 import Board from "../../Board";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 import { HitboxCollisionType, hitboxIsCircular } from "webgl-test-shared/dist/hitboxes/hitboxes";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 
 const BORDER_THICKNESS = 3;
 const HALF_BORDER_THICKNESS = BORDER_THICKNESS / 2;
@@ -82,12 +83,14 @@ export function renderEntityHitboxes(): void {
    // Calculate vertices
    const vertices = new Array<number>();
    for (const entity of entities) {
-      for (const hitbox of entity.hitboxes) {
+      const transformComponent = entity.getServerComponent(ServerComponentType.transform);
+      
+      for (const hitbox of transformComponent.hitboxes) {
          // Interpolate the hitbox render position
          let hitboxRenderPositionX = hitbox.position.x;
          let hitboxRenderPositionY = hitbox.position.y;
-         hitboxRenderPositionX += entity.renderPosition.x - entity.position.x;
-         hitboxRenderPositionY += entity.renderPosition.y - entity.position.y;
+         hitboxRenderPositionX += entity.renderPosition.x - transformComponent.position.x;
+         hitboxRenderPositionY += entity.renderPosition.y - transformComponent.position.y;
 
          const hasHardCollision = hitbox.collisionType === HitboxCollisionType.hard ? 1 : 0;
          

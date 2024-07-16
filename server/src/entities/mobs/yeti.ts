@@ -60,15 +60,6 @@ export enum SnowThrowStage {
    return
 }
 
-const removeYetiTerritory = (tileX: number, tileY: number): void => {
-   const tileIndex = tileY * Settings.BOARD_DIMENSIONS + tileX;
-   delete yetiTerritoryTiles[tileIndex];
-}
-
-export function resetYetiTerritoryTiles(): void {
-   yetiTerritoryTiles = {};
-}
-
 export function createYetiConfig(): ComponentConfig<ComponentTypes> {
    return {
       [ServerComponentType.transform]: {
@@ -209,17 +200,20 @@ const getYetiTarget = (yeti: EntityID, visibleEntities: ReadonlyArray<EntityID>)
    return target;
 }
 
-export function tickYeti(yeti: Entity): void {
-   const aiHelperComponent = AIHelperComponentArray.getComponent(yeti.id);
-   const yetiComponent = YetiComponentArray.getComponent(yeti.id);
+export function tickYeti(yeti: EntityID): void {
+   const aiHelperComponent = AIHelperComponentArray.getComponent(yeti);
+   const yetiComponent = YetiComponentArray.getComponent(yeti);
+   const transformComponent = TransformComponentArray.getComponent(yeti);
 
    if (yetiComponent.isThrowingSnow) {
       // If the target has run outside the yeti's vision range, cancel the attack
-      if (yetiComponent.attackTarget !== null && yeti.position.calculateDistanceBetween(yetiComponent.attackTarget.position) > VISION_RANGE) {
+      if (yetiComponent.attackTarget !== null && transformComponent.position.calculateDistanceBetween(TransformComponentArray.getComponent(yetiComponent.attackTarget).position) > VISION_RANGE) {
          yetiComponent.snowThrowAttackProgress = 1;
          yetiComponent.attackTarget = null;
          yetiComponent.isThrowingSnow = false;
       } else {
+         const targetTransformComponent = TransformComponentArray.getComponent(yetiComponent.attackTarget!);
+         
          switch (yetiComponent.snowThrowStage) {
             case SnowThrowStage.windup: {
                yetiComponent.snowThrowAttackProgress -= Settings.I_TPS / SNOW_THROW_WINDUP_TIME;
@@ -231,8 +225,8 @@ export function tickYeti(yeti: Entity): void {
                   yetiComponent.snowThrowHoldTimer = 0;
                }
 
-               const physicsComponent = PhysicsComponentArray.getComponent(yeti.id);
-               physicsComponent.targetRotation = yeti.position.calculateAngleBetween(yetiComponent.attackTarget!.position);;
+               const physicsComponent = PhysicsComponentArray.getComponent(yeti);
+               physicsComponent.targetRotation = transformComponent.position.calculateAngleBetween(targetTransformComponent.position);;
                physicsComponent.turnSpeed = TURN_SPEED;
 
                stopEntity(physicsComponent);
@@ -244,8 +238,8 @@ export function tickYeti(yeti: Entity): void {
                   yetiComponent.snowThrowStage = SnowThrowStage.return;
                }
 
-               const physicsComponent = PhysicsComponentArray.getComponent(yeti.id);
-               physicsComponent.targetRotation = yeti.position.calculateAngleBetween(yetiComponent.attackTarget!.position);;
+               const physicsComponent = PhysicsComponentArray.getComponent(yeti);
+               physicsComponent.targetRotation = transformComponent.position.calculateAngleBetween(targetTransformComponent.position);;
                physicsComponent.turnSpeed = TURN_SPEED;
 
                stopEntity(physicsComponent);
@@ -279,23 +273,26 @@ export function tickYeti(yeti: Entity): void {
    // Chase AI
    const chaseTarget = getYetiTarget(yeti, aiHelperComponent.visibleEntities);
    if (chaseTarget !== null) {
-      moveEntityToPosition(yeti, chaseTarget.position.x, chaseTarget.position.y, 375, TURN_SPEED);
+      const targetTransformComponent = TransformComponentArray.getComponent(chaseTarget);
+      moveEntityToPosition(yeti, targetTransformComponent.position.x, targetTransformComponent.position.y, 375, TURN_SPEED);
       return;
    }
 
    // Eat raw beef and leather
    {
       let minDist = Number.MAX_SAFE_INTEGER;
-      let closestFoodItem: Entity | null = null;
+      let closestFoodItem: EntityID | null = null;
       for (let i = 0; i < aiHelperComponent.visibleEntities.length; i++) {
          const entity = aiHelperComponent.visibleEntities[i];
-         if (entity.type !== EntityType.itemEntity) {
+         if (Board.getEntityType(entity) !== EntityType.itemEntity) {
             continue;
          }
 
-         const itemComponent = ItemComponentArray.getComponent(entity.id);
+         const itemComponent = ItemComponentArray.getComponent(entity);
          if (itemComponent.itemType === ItemType.raw_beef || itemComponent.itemType === ItemType.raw_fish) {
-            const distance = yeti.position.calculateDistanceBetween(entity.position);
+            const entityTransformComponent = TransformComponentArray.getComponent(entity);
+            
+            const distance = transformComponent.position.calculateDistanceBetween(entityTransformComponent.position);
             if (distance < minDist) {
                minDist = distance;
                closestFoodItem = entity;
@@ -303,20 +300,22 @@ export function tickYeti(yeti: Entity): void {
          }
       }
       if (closestFoodItem !== null) {
-         moveEntityToPosition(yeti, closestFoodItem.position.x, closestFoodItem.position.y, 100, TURN_SPEED);
+         const foodTransformComponent = TransformComponentArray.getComponent(closestFoodItem);
+         
+         moveEntityToPosition(yeti, foodTransformComponent.position.x, foodTransformComponent.position.y, 100, TURN_SPEED);
 
          if (entitiesAreColliding(yeti, closestFoodItem) !== CollisionVars.NO_COLLISION) {
-            healEntity(yeti, 3, yeti.id);
-            closestFoodItem.destroy();
+            healEntity(yeti, 3, yeti);
+            Board.destroyEntity(closestFoodItem);
          }
          return;
       }
    }
    
-   const physicsComponent = PhysicsComponentArray.getComponent(yeti.id);
+   const physicsComponent = PhysicsComponentArray.getComponent(yeti);
 
    // Wander AI
-   const wanderAIComponent = WanderAIComponentArray.getComponent(yeti.id);
+   const wanderAIComponent = WanderAIComponentArray.getComponent(yeti);
    if (wanderAIComponent.targetPositionX !== -1) {
       if (entityHasReachedPosition(yeti, wanderAIComponent.targetPositionX, wanderAIComponent.targetPositionY)) {
          wanderAIComponent.targetPositionX = -1;
@@ -338,11 +337,13 @@ export function tickYeti(yeti: Entity): void {
 }
 
 export function onYetiCollision(yeti: EntityID, collidingEntity: EntityID, collisionPoint: Point): void {
+   const collidingEntityType = Board.getEntityType(collidingEntity);
+   
    // Don't damage ice spikes
-   if (collidingEntity.type === EntityType.iceSpikes) return;
+   if (collidingEntityType === EntityType.iceSpikes) return;
 
    // Don't damage snowballs thrown by the yeti
-   if (collidingEntity.type === EntityType.snowball) {
+   if (collidingEntityType === EntityType.snowball) {
       const snowballComponent = SnowballComponentArray.getComponent(collidingEntity);
       if (snowballComponent.yetiID === yeti) {
          return;
@@ -351,7 +352,7 @@ export function onYetiCollision(yeti: EntityID, collidingEntity: EntityID, colli
    
    // Don't damage yetis which haven't damaged it
    const yetiComponent = YetiComponentArray.getComponent(yeti);
-   if ((collidingEntity.type === EntityType.yeti || collidingEntity.type === EntityType.frozenYeti) && !yetiComponent.attackingEntities.hasOwnProperty(collidingEntity.id)) {
+   if ((collidingEntityType === EntityType.yeti || collidingEntityType === EntityType.frozenYeti) && !yetiComponent.attackingEntities.hasOwnProperty(collidingEntity)) {
       return;
    }
    
@@ -360,8 +361,11 @@ export function onYetiCollision(yeti: EntityID, collidingEntity: EntityID, colli
       if (!canDamageEntity(healthComponent, "yeti")) {
          return;
       }
+
+      const transformComponent = TransformComponentArray.getComponent(yeti);
+      const collidingEntityTransformComponent = TransformComponentArray.getComponent(collidingEntity);
       
-      const hitDirection = yeti.position.calculateAngleBetween(collidingEntity.position);
+      const hitDirection = transformComponent.position.calculateAngleBetween(collidingEntityTransformComponent.position);
       
       damageEntity(collidingEntity, yeti, 2, PlayerCauseOfDeath.yeti, AttackEffectiveness.effective, collisionPoint, 0);
       applyKnockback(collidingEntity, 200, hitDirection);
@@ -387,11 +391,4 @@ export function onYetiHurt(yeti: EntityID, attackingEntity: EntityID, damage: nu
 export function onYetiDeath(yeti: EntityID): void {
    createItemsOverEntity(yeti, ItemType.raw_beef, randInt(4, 7), 80);
    createItemsOverEntity(yeti, ItemType.yeti_hide, randInt(2, 3), 80);
-
-   // Remove territory
-   const yetiComponent = YetiComponentArray.getComponent(yeti);
-   for (let i = 0; i < yetiComponent.territory.length; i++) {
-      const territoryTile = yetiComponent.territory[i];
-      removeYetiTerritory(territoryTile.x, territoryTile.y);
-   }
 }

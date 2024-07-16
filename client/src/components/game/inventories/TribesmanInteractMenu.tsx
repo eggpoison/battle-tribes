@@ -179,7 +179,8 @@ const TribesmanInfocard = ({ tribesman }: TribesmanInfocardProps) => {
       }
    }
 
-   const ageDays = tribesman.ageTicks / Settings.TIME_PASS_RATE * Settings.TPS / 3600;
+   const transformComponent = tribesman.getServerComponent(ServerComponentType.transform);
+   const ageDays = transformComponent.ageTicks / Settings.TIME_PASS_RATE * Settings.TPS / 3600;
 
    let tribeName: string;
    if (tribeComponent.tribeID === Game.tribe.id) {

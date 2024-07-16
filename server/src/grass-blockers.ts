@@ -2,8 +2,6 @@ import { Settings } from "webgl-test-shared/dist/settings";
 import Board, { getChunksInBounds } from "./Board";
 import { GrassBlocker, GrassBlockerCircle, GrassBlockerRectangle, blockerIsCircluar } from "webgl-test-shared/dist/grass-blockers";
 import Chunk from "./Chunk";
-import { StructureType } from "webgl-test-shared/dist/structures";
-import Entity from "./Entity";
 import { HitboxFlags, hitboxIsCircular } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { EntityID } from "webgl-test-shared/dist/entities";
 import { TransformComponentArray } from "./components/TransformComponent";

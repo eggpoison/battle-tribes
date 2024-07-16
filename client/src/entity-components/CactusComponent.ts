@@ -75,18 +75,20 @@ class CactusComponent extends ServerComponent<ServerComponentType.cactus> {
    public updateFromData(_data: CactusComponentData): void {}
 
    onDie(): void {
+      const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
+      
       for (const flower of this.flowerData) {
          const offsetDirection = flower.column * Math.PI / 4;
-         const spawnPositionX = this.entity.position.x + flower.height * Math.sin(offsetDirection);
-         const spawnPositionY = this.entity.position.y + flower.height * Math.cos(offsetDirection);
+         const spawnPositionX = transformComponent.position.x + flower.height * Math.sin(offsetDirection);
+         const spawnPositionY = transformComponent.position.y + flower.height * Math.cos(offsetDirection);
 
          createFlowerParticle(spawnPositionX, spawnPositionY, flower.type, flower.size, flower.rotation);
       }
 
       for (const limb of this.limbData) {
          if (typeof limb.flower !== "undefined") {
-            const spawnPositionX = this.entity.position.x + CACTUS_RADIUS * Math.sin(limb.direction) + limb.flower.height * Math.sin(limb.flower.direction);
-            const spawnPositionY = this.entity.position.y + CACTUS_RADIUS * Math.cos(limb.direction) + limb.flower.height * Math.cos(limb.flower.direction);
+            const spawnPositionX = transformComponent.position.x + CACTUS_RADIUS * Math.sin(limb.direction) + limb.flower.height * Math.sin(limb.flower.direction);
+            const spawnPositionY = transformComponent.position.y + CACTUS_RADIUS * Math.cos(limb.direction) + limb.flower.height * Math.cos(limb.flower.direction);
 
             createFlowerParticle(spawnPositionX, spawnPositionY, limb.flower.type, CactusFlowerSize.small, limb.flower.rotation);
          }

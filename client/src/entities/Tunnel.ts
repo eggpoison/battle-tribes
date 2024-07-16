@@ -1,14 +1,13 @@
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityType } from "webgl-test-shared/dist/entities";
-import { Point } from "webgl-test-shared/dist/utils";
 import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import Entity, { ComponentDataRecord } from "../Entity";
 import { TUNNEL_TEXTURE_SOURCES } from "../entity-components/BuildingMaterialComponent";
 
 class Tunnel extends Entity {
-   constructor(position: Point, id: number, ageTicks: number, componentDataRecord: ComponentDataRecord) {
-      super(position, id, EntityType.tunnel, ageTicks);
+   constructor(id: number, componentDataRecord: ComponentDataRecord) {
+      super(id, EntityType.tunnel);
 
       const buildingMaterialComponentData = componentDataRecord[ServerComponentType.buildingMaterial]!;
 

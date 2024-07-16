@@ -78,13 +78,15 @@ const getProjectilePullbackAmount = (entity: Entity, chargeProgress: number): nu
 }
 
 const playFireSound = (entity: Entity): void => {
+   const transformComponent = entity.getServerComponent(ServerComponentType.transform);
+   
    switch (entity.type as TurretType) {
       case EntityType.slingTurret: {
-         playSound("sling-turret-fire.mp3", 0.2, 1, entity.position.x, entity.position.y);
+         playSound("sling-turret-fire.mp3", 0.2, 1, transformComponent.position);
          break;
       }
       case EntityType.ballista: {
-         playSound("sling-turret-fire.mp3", 0.25, 0.7, entity.position.x, entity.position.y);
+         playSound("sling-turret-fire.mp3", 0.25, 0.7, transformComponent.position);
          break;
       }
    }

@@ -2,15 +2,16 @@ import { DoorComponentData, ServerComponentType } from "webgl-test-shared/dist/c
 import { DoorToggleType, EntityID } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { angle, lerp } from "webgl-test-shared/dist/utils";
-import Entity from "../Entity";
 import { PhysicsComponentArray } from "./PhysicsComponent";
 import { ComponentArray } from "./ComponentArray";
 import { HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
+import { ComponentConfig } from "../components";
+import { TransformComponentArray } from "./TransformComponent";
 
 export interface DoorComponentParams {
-   readonly originX: number;
-   readonly originY: number;
-   readonly closedRotation: number;
+   originX: number;
+   originY: number;
+   closedRotation: number;
 }
 
 const DOOR_SWING_SPEED = 5 / Settings.TPS;
@@ -30,14 +31,17 @@ export class DoorComponent {
    }
 }
 
-export const DoorComponentArray = new ComponentArray<ServerComponentType.door, DoorComponent>(true, {
+export const DoorComponentArray = new ComponentArray<DoorComponent>(ServerComponentType.door, true, {
+   onInitialise: onInitialise,
    serialise: serialise
 });
 
 const doorHalfDiagonalLength = Math.sqrt(16 * 16 + 64 * 64) / 2;
 const angleToCenter = angle(16, 64);
 
-const updateDoorOpenProgress = (door: Entity, doorComponent: DoorComponent): void => {
+const updateDoorOpenProgress = (door: EntityID, doorComponent: DoorComponent): void => {
+   const transformComponent = TransformComponentArray.getComponent(door);
+   
    const rotation = doorComponent.closedRotation + lerp(0, -Math.PI/2 + 0.1, doorComponent.openProgress);
    
    // Rotate around the top left corner of the door
@@ -45,16 +49,17 @@ const updateDoorOpenProgress = (door: Entity, doorComponent: DoorComponent): voi
    const xOffset = doorHalfDiagonalLength * Math.sin(offsetDirection) - doorHalfDiagonalLength * Math.sin(doorComponent.closedRotation + Math.PI/2 + angleToCenter);
    const yOffset = doorHalfDiagonalLength * Math.cos(offsetDirection) - doorHalfDiagonalLength * Math.cos(doorComponent.closedRotation + Math.PI/2 + angleToCenter);
 
-   door.position.x = doorComponent.originX + xOffset;
-   door.position.y = doorComponent.originY + yOffset;
-   door.rotation = rotation;
+   transformComponent.position.x = doorComponent.originX + xOffset;
+   transformComponent.position.y = doorComponent.originY + yOffset;
+   transformComponent.rotation = rotation;
 
-   const physicsComponent = PhysicsComponentArray.getComponent(door.id);
+   const physicsComponent = PhysicsComponentArray.getComponent(door);
    physicsComponent.hitboxesAreDirty = true;
 }
 
-export function tickDoorComponent(door: Entity): void {
-   const doorComponent = DoorComponentArray.getComponent(door.id);
+export function tickDoorComponent(door: EntityID): void {
+   const transformComponent = TransformComponentArray.getComponent(door);
+   const doorComponent = DoorComponentArray.getComponent(door);
    
    switch (doorComponent.toggleType) {
       case DoorToggleType.open: {
@@ -65,7 +70,7 @@ export function tickDoorComponent(door: Entity): void {
          }
          updateDoorOpenProgress(door, doorComponent);
 
-         door.hitboxes[0].collisionType = HitboxCollisionType.soft;
+         transformComponent.hitboxes[0].collisionType = HitboxCollisionType.soft;
          break;
       }
       case DoorToggleType.close: {
@@ -76,7 +81,7 @@ export function tickDoorComponent(door: Entity): void {
          }
          updateDoorOpenProgress(door, doorComponent);
 
-         door.hitboxes[0].collisionType = HitboxCollisionType.hard;
+         transformComponent.hitboxes[0].collisionType = HitboxCollisionType.hard;
          break;
       }
    }
@@ -97,6 +102,13 @@ export function toggleDoor(door: EntityID): void {
       // Close the door
       doorComponent.toggleType = DoorToggleType.close;
    }
+}
+
+// @Hack
+function onInitialise(config: ComponentConfig<ServerComponentType.transform | ServerComponentType.door>): void {
+   config[ServerComponentType.door].originX = config[ServerComponentType.transform].position.x;
+   config[ServerComponentType.door].originY = config[ServerComponentType.transform].position.y;
+   config[ServerComponentType.door].closedRotation = config[ServerComponentType.transform].rotation;
 }
 
 function serialise(entityID: number): DoorComponentData {

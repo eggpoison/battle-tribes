@@ -5,7 +5,7 @@ import { ParticleRenderLayer, addMonocolourParticleToBufferContainer } from "../
 import Board from "../Board";
 import { createRockParticle } from "../particles";
 import Entity, { ComponentDataRecord } from "../Entity";
-import { Point, lerp, randFloat, randInt } from "webgl-test-shared/dist/utils";
+import { lerp, randFloat, randInt } from "webgl-test-shared/dist/utils";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { EntityType } from "webgl-test-shared/dist/entities";
@@ -27,8 +27,8 @@ class RockSpikeProjectile extends Entity {
 
    private readonly renderPart: RenderPart;
    
-   constructor(position: Point, id: number, ageTicks: number, componentDataRecord: ComponentDataRecord) {
-      super(position, id, EntityType.rockSpikeProjectile, ageTicks);
+   constructor(id: number, componentDataRecord: ComponentDataRecord) {
+      super(id, EntityType.rockSpikeProjectile);
 
       const rockSpikeComponentData = componentDataRecord[ServerComponentType.rockSpike]!;
       
@@ -67,11 +67,12 @@ class RockSpikeProjectile extends Entity {
          }
       }
 
+      const transformComponent = this.getServerComponent(ServerComponentType.transform);
       for (let i = 0; i < numSpeckParticles; i++) {
          // @Cleanup: Move to particles file
          const spawnOffsetDirection = 2 * Math.PI * Math.random();
-         const spawnPositionX = this.position.x + RockSpikeProjectile.SIZES[rockSpikeComponentData.size] / 2 * Math.sin(spawnOffsetDirection);
-         const spawnPositionY = this.position.y + RockSpikeProjectile.SIZES[rockSpikeComponentData.size] / 2 * Math.cos(spawnOffsetDirection);
+         const spawnPositionX = transformComponent.position.x + RockSpikeProjectile.SIZES[rockSpikeComponentData.size] / 2 * Math.sin(spawnOffsetDirection);
+         const spawnPositionY = transformComponent.position.y + RockSpikeProjectile.SIZES[rockSpikeComponentData.size] / 2 * Math.cos(spawnOffsetDirection);
          
          const lifetime = randFloat(1, 1.2);
       
@@ -108,8 +109,8 @@ class RockSpikeProjectile extends Entity {
 
       for (let i = 0; i < numTexturedParticles; i++) {
          const spawnOffsetDirection = 2 * Math.PI * Math.random();
-         const spawnPositionX = this.position.x + RockSpikeProjectile.SIZES[rockSpikeComponentData.size] / 2 * Math.sin(spawnOffsetDirection);
-         const spawnPositionY = this.position.y + RockSpikeProjectile.SIZES[rockSpikeComponentData.size] / 2 * Math.cos(spawnOffsetDirection);
+         const spawnPositionX = transformComponent.position.x + RockSpikeProjectile.SIZES[rockSpikeComponentData.size] / 2 * Math.sin(spawnOffsetDirection);
+         const spawnPositionY = transformComponent.position.y + RockSpikeProjectile.SIZES[rockSpikeComponentData.size] / 2 * Math.cos(spawnOffsetDirection);
 
          createRockParticle(spawnPositionX, spawnPositionY, spawnOffsetDirection + randFloat(-0.5, 0.5), randFloat(80, 125), ParticleRenderLayer.low);
       }
@@ -118,9 +119,10 @@ class RockSpikeProjectile extends Entity {
    public tick(): void {
       super.tick();
       
+      const transformComponent = this.getServerComponent(ServerComponentType.transform);
       const rockSpikeComponent = this.getServerComponent(ServerComponentType.rockSpike);
 
-      const ageSeconds = this.ageTicks / Settings.TPS;
+      const ageSeconds = transformComponent.ageTicks / Settings.TPS;
       if (ageSeconds < RockSpikeProjectile.ENTRANCE_SHAKE_DURATION) {
          // Entrance
          const entranceProgress = ageSeconds / RockSpikeProjectile.ENTRANCE_SHAKE_DURATION;

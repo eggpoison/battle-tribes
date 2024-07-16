@@ -51,6 +51,7 @@ import { TitlesTab_setTitles } from "../components/game/dev/tabs/TitlesTab";
 import { closeCurrentMenu } from "../menus";
 import { TribesTab_refresh } from "../components/game/dev/tabs/TribesTab";
 import { processTickEvents } from "../entity-tick-events";
+import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision";
 
 type ISocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 
@@ -210,8 +211,9 @@ abstract class Client {
 
             this.socket.on("force_position_update", (position: [number, number]): void => {
                if (Player.instance !== null) {
-                  Player.instance.position.x = position[0];
-                  Player.instance.position.y = position[1];
+                  const transformComponent = Player.instance.getServerComponent(ServerComponentType.transform);
+                  transformComponent.position.x = position[0];
+                  transformComponent.position.y = position[1];
                }
             })
          }
@@ -372,7 +374,7 @@ abstract class Client {
 
             // @Hack @Incomplete: This will trigger the repair sound effect even if a hammer isn't the one healing the structure
             if (STRUCTURE_TYPES.includes(healedEntity.type as any)) { // @Cleanup
-               playSound("repair.mp3", 0.4, 1, healData.entityPositionX, healData.entityPositionY);
+               playSound("repair.mp3", 0.4, 1, new Point(healData.entityPositionX, healData.entityPositionY));
             }
          }
       }
@@ -383,7 +385,7 @@ abstract class Client {
       }
 
       if (gameDataPacket.pickedUpItem) {
-         playSound("item-pickup.mp3", 0.3, 1, Camera.position.x, Camera.position.y);
+         playSound("item-pickup.mp3", 0.3, 1, Camera.position);
       }
 
       definiteGameState.hotbarCrossbowLoadProgressRecord = gameDataPacket.hotbarCrossbowLoadProgressRecord;
@@ -401,8 +403,8 @@ abstract class Client {
 
    private static updateTribe(tribeData: PlayerTribeData): void {
       if (tribeData.unlockedTechs.length > Game.tribe.unlockedTechs.length) {
-         // @Incomplete: attach to camera so it doesn't decrease in loudness
-         playSound("research.mp3", 0.4, 1, Camera.position.x, Camera.position.y);
+         // @Incomplete: attach to camera so it doesn't decrease in loudness. Or make 'global sounds'
+         playSound("research.mp3", 0.4, 1, Camera.position);
       }
       
       Game.tribe.hasTotem = tribeData.hasTotem;
@@ -418,7 +420,7 @@ abstract class Client {
    /**
     * Updates the client's entities to match those in the server
     */
-   private static updateEntities(entityDataArray: Array<EntityData<EntityType>>, entityDeathIDs: ReadonlyArray<number>): void {
+   private static updateEntities(entityDataArray: Array<EntityData>, entityDeathIDs: ReadonlyArray<number>): void {
       // @Speed
       const knownEntityIDs = new Set(Object.keys(Board.entityRecord).map(idString => Number(idString)));
       
@@ -482,7 +484,6 @@ abstract class Client {
                // player.leftThrownBattleaxeItemID = leftThrownBattleaxeItemID;
                // Hotbar_updateLeftThrownBattleaxeItemID(leftThrownBattleaxeItemID);
 
-               Player.instance.collisionMask = data.collisionMask;
                
                entityDataArray.splice(i, 1);
             }
@@ -641,12 +642,6 @@ abstract class Client {
       
       entity.createComponents(entityData.components);
       entity.callOnLoadFunctions();
-      
-      entity.rotation = entityData.rotation;
-      entity.collisionBit = entityData.collisionBit;
-      entity.collisionMask = entityData.collisionMask;
-
-      this.addHitboxesToEntity(entity, entityData);
 
       Board.addEntity(entity);
 
@@ -669,28 +664,15 @@ abstract class Client {
       }
    }
 
-   private static addHitboxesToEntity(entity: Entity, data: EntityData): void {
-      for (let i = 0; i < data.circularHitboxes.length; i++) {
-         const hitboxData = data.circularHitboxes[i];
-
-         const hitbox = createCircularHitboxFromData(hitboxData);
-         entity.addHitbox(hitbox, hitboxData.localID);
-      }
-
-      for (let i = 0; i < data.rectangularHitboxes.length; i++) {
-         const hitboxData = data.rectangularHitboxes[i];
-
-         const hitbox = createRectangularHitboxFromData(hitboxData);
-         entity.addHitbox(hitbox, hitboxData.localID);
-      }
-   }
-
    private static registerGameDataSyncPacket(gameDataSyncPacket: GameDataSyncPacket): void {
       if (!Game.isRunning) return;
 
       if (Player.instance !== null) {
-         Player.instance.position = Point.unpackage(gameDataSyncPacket.position);
-         Player.instance.rotation = gameDataSyncPacket.rotation;
+         const transformComponent = Player.instance.getServerComponent(ServerComponentType.transform);
+         
+         transformComponent.position.x = gameDataSyncPacket.position[0];
+         transformComponent.position.y = gameDataSyncPacket.position[1];
+         transformComponent.rotation = gameDataSyncPacket.rotation;
          this.updatePlayerInventory(gameDataSyncPacket.inventory);
 
          const physicsComponent = Player.instance.getServerComponent(ServerComponentType.physics);
@@ -783,13 +765,14 @@ abstract class Client {
          }
          // @Incomplete: do option for walls
 
+         const transformComponent = Player.instance.getServerComponent(ServerComponentType.transform);
          const physicsComponent = Player.instance.getServerComponent(ServerComponentType.physics);
          
          const packet: PlayerDataPacket = {
-            position: Player.instance.position.package(),
+            position: transformComponent.position.package(),
             velocity: physicsComponent.velocity.package() || null,
             acceleration: physicsComponent.acceleration.package() || null,
-            rotation: Player.instance.rotation,
+            rotation: transformComponent.rotation,
             visibleChunkBounds: Camera.getVisibleChunkBounds(),
             selectedItemSlot: latencyGameState.selectedHotbarItemSlot,
             mainAction: latencyGameState.mainAction,

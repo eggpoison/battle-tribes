@@ -1,10 +1,9 @@
 import { TribesmanAIType } from "webgl-test-shared/dist/components";
-import { EntityType, LimbAction } from "webgl-test-shared/dist/entities";
+import { EntityID, EntityType, LimbAction } from "webgl-test-shared/dist/entities";
 import { Settings, PathfindingSettings } from "webgl-test-shared/dist/settings";
 import Board from "../../../Board";
-import Entity from "../../../Entity";
 import Tribe from "../../../Tribe";
-import { stopEntity } from "../../../ai-shared";
+import { moveEntityToEntity, moveEntityToPosition, stopEntity, turnEntityToEntity } from "../../../ai-shared";
 import { recipeCraftingStationIsAvailable, InventoryComponentArray, craftRecipe } from "../../../components/InventoryComponent";
 import { InventoryUseComponentArray, setLimbActions } from "../../../components/InventoryUseComponent";
 import { PhysicsComponentArray } from "../../../components/PhysicsComponent";
@@ -15,9 +14,10 @@ import { TRIBESMAN_TURN_SPEED } from "./tribesman-ai";
 import { pathfindToPosition, clearTribesmanPath } from "./tribesman-ai-utils";
 import { CraftingStation, CraftingRecipe, CRAFTING_RECIPES } from "webgl-test-shared/dist/items/crafting-recipes";
 import { InventoryName } from "webgl-test-shared/dist/items/items";
+import { TransformComponentArray } from "../../../components/TransformComponent";
 
-const buildingMatchesCraftingStation = (building: Entity, craftingStation: CraftingStation): boolean => {
-   return building.type === EntityType.workbench && craftingStation === CraftingStation.workbench;
+const buildingMatchesCraftingStation = (building: EntityID, craftingStation: CraftingStation): boolean => {
+   return Board.getEntityType(building) === EntityType.workbench && craftingStation === CraftingStation.workbench;
 }
 
 // @Cleanup: move to different file
@@ -31,17 +31,21 @@ export function craftingStationExists(tribe: Tribe, craftingStation: CraftingSta
    return false;
 }
 
-const getClosestCraftingStation = (tribesman: Entity, tribe: Tribe, craftingStation: CraftingStation): Entity => {
+const getClosestCraftingStation = (tribesman: EntityID, tribe: Tribe, craftingStation: CraftingStation): EntityID => {
    // @Incomplete: slime
+
+   const transformComponent = TransformComponentArray.getComponent(tribesman);
    
    // @Speed
-   let closestStation: Entity | undefined;
+   let closestStation: EntityID | undefined;
    let minDist = Number.MAX_SAFE_INTEGER;
    for (let i = 0; i < tribe.buildings.length; i++) {
       const building = tribe.buildings[i];
 
       if (buildingMatchesCraftingStation(building, craftingStation)) {
-         const dist = tribesman.position.calculateDistanceBetween(building.position);
+         const buildingTransformComponent = TransformComponentArray.getComponent(building);
+         
+         const dist = transformComponent.position.calculateDistanceBetween(buildingTransformComponent.position);
          if (dist < minDist) {
             minDist = dist;
             closestStation = building;
@@ -55,16 +59,18 @@ const getClosestCraftingStation = (tribesman: Entity, tribe: Tribe, craftingStat
    throw new Error();
 }
 
-export function goCraftItem(tribesman: Entity, recipe: CraftingRecipe, tribe: Tribe): boolean {
+export function goCraftItem(tribesman: EntityID, recipe: CraftingRecipe, tribe: Tribe): boolean {
    const availableCraftingStations = getAvailableCraftingStations(tribesman);
    if (!recipeCraftingStationIsAvailable(availableCraftingStations, recipe)) {
       // Move to the crafting station
       const craftingStation = getClosestCraftingStation(tribesman, tribe, recipe.craftingStation!);
 
-      const isPathfinding = pathfindToPosition(tribesman, craftingStation.position.x, craftingStation.position.y, craftingStation.id, TribesmanPathType.default, Math.floor(Settings.MAX_CRAFTING_STATION_USE_DISTANCE / PathfindingSettings.NODE_SEPARATION), PathfindFailureDefault.throwError);
+      const craftingStationTransformComponent = TransformComponentArray.getComponent(craftingStation);
+      
+      const isPathfinding = pathfindToPosition(tribesman, craftingStationTransformComponent.position.x, craftingStationTransformComponent.position.y, craftingStation, TribesmanPathType.default, Math.floor(Settings.MAX_CRAFTING_STATION_USE_DISTANCE / PathfindingSettings.NODE_SEPARATION), PathfindFailureDefault.throwError);
       if (isPathfinding) {
-         const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman.id);
-         const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman.id);
+         const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman);
+         const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman);
 
          setLimbActions(inventoryUseComponent, LimbAction.none);
          tribesmanComponent.currentAIType = TribesmanAIType.crafting;
@@ -75,18 +81,15 @@ export function goCraftItem(tribesman: Entity, recipe: CraftingRecipe, tribe: Tr
    } else {
       // Continue crafting the item
 
-      const physicsComponent = PhysicsComponentArray.getComponent(tribesman.id);
+      const physicsComponent = PhysicsComponentArray.getComponent(tribesman);
       stopEntity(physicsComponent);
       
       if (typeof recipe.craftingStation !== "undefined") {
          const craftingStation = getClosestCraftingStation(tribesman, tribe, recipe.craftingStation);
-         const targetDirection = tribesman.position.calculateAngleBetween(craftingStation.position);
-
-         physicsComponent.targetRotation = targetDirection;
-         physicsComponent.turnSpeed = TRIBESMAN_TURN_SPEED;
+         turnEntityToEntity(tribesman, craftingStation, TRIBESMAN_TURN_SPEED);
       }
 
-      const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman.id);
+      const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman);
       const recipeIdx = CRAFTING_RECIPES.indexOf(recipe);
       
       tribesmanComponent.currentAIType = TribesmanAIType.crafting;
@@ -97,7 +100,7 @@ export function goCraftItem(tribesman: Entity, recipe: CraftingRecipe, tribe: Tr
          tribesmanComponent.currentCraftingTicks++;
       }
       
-      const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman.id);
+      const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman);
       for (let i = 0; i < inventoryUseComponent.inventoryUseInfos.length; i++) {
          const limbInfo = inventoryUseComponent.inventoryUseInfos[i];
          if (limbInfo.action !== LimbAction.craft) {
@@ -108,7 +111,7 @@ export function goCraftItem(tribesman: Entity, recipe: CraftingRecipe, tribe: Tr
       
       if (tribesmanComponent.currentCraftingTicks >= recipe.aiCraftTimeTicks) {
          // Craft the item
-         const inventoryComponent = InventoryComponentArray.getComponent(tribesman.id);
+         const inventoryComponent = InventoryComponentArray.getComponent(tribesman);
          craftRecipe(inventoryComponent, recipe, InventoryName.hotbar);
 
          tribesmanComponent.currentCraftingTicks = 0;

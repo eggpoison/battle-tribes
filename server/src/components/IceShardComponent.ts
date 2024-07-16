@@ -8,7 +8,7 @@ export class IceShardComponent {
    public readonly lifetime = randFloat(0.1, 0.2);
 }
 
-export const IceShardComponentArray = new ComponentArray<ServerComponentType.iceShard, IceShardComponent>(true, {
+export const IceShardComponentArray = new ComponentArray<IceShardComponent>(ServerComponentType.iceShard, true, {
    serialise: serialise
 });
 

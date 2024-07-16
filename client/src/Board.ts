@@ -2,7 +2,7 @@ import { Settings } from "webgl-test-shared/dist/settings";
 import { GrassTileInfo, RIVER_STEPPING_STONE_SIZES, RiverFlowDirections, RiverSteppingStoneData, ServerTileData, ServerTileUpdateData } from "webgl-test-shared/dist/client-server-types";
 import { TileType } from "webgl-test-shared/dist/tiles";
 import { Point, Vector } from "webgl-test-shared/dist/utils";
-import { EntityType } from "webgl-test-shared/dist/entities";
+import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
 import Chunk from "./Chunk";
 import { Tile } from "./Tile";
 import Entity from "./Entity";
@@ -15,6 +15,9 @@ import Fish from "./entities/Fish";
 import { NEIGHBOUR_OFFSETS } from "./utils";
 import RenderPart from "./render-parts/RenderPart";
 import { RenderableType, addRenderable, removeRenderable } from "./rendering/render-loop";
+import { WorldInfo } from "webgl-test-shared/dist/structures";
+import { EntityInfo } from "webgl-test-shared/dist/board-interface";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 
 export interface EntityHitboxInfo {
    readonly vertexPositions: readonly [Point, Point, Point, Point];
@@ -219,8 +222,11 @@ abstract class Board {
          }
       }
 
-      for (const chunk of entity.chunks) {
-         chunk.removeEntity(entity);
+      for (let i = 0; i < entity.components.length; i++) {
+         const component = entity.components[i];
+         if (typeof component.onRemove !== "undefined") {
+            component.onRemove();
+         }
       }
    
       this.entities.delete(entity);
@@ -359,6 +365,24 @@ abstract class Board {
 
    public static tileIsInBoard(tileX: number, tileY: number): boolean {
       return tileX >= 0 && tileX < Settings.BOARD_DIMENSIONS && tileY >= 0 && tileY < Settings.BOARD_DIMENSIONS;
+   }
+
+   public static getWorldInfo(): WorldInfo {
+      return {
+         chunks: Board.chunks,
+         getEntityCallback: (entityID: EntityID): EntityInfo => {
+            const entity = Board.entityRecord[entityID]!;
+            const transformComponent = entity.getServerComponent(ServerComponentType.transform);
+
+            return {
+               type: entity.type,
+               position: transformComponent.position,
+               rotation: transformComponent.rotation,
+               id: entityID,
+               hitboxes: transformComponent.hitboxes
+            };
+         }
+      }
    }
 }
 

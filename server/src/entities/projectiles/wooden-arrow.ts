@@ -35,7 +35,8 @@ export function createWoodenArrowConfig(): ComponentConfig<ComponentTypes> {
          isImmovable: true
       },
       [ServerComponentType.tribe]: {
-         tribeID: null
+         tribe: null,
+         tribeType: 0
       },
       [ServerComponentType.projectile]: {
          owner: 0

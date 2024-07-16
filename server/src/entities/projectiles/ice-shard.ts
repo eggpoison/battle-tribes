@@ -4,38 +4,40 @@ import { EntityID, EntityType, PlayerCauseOfDeath } from "webgl-test-shared/dist
 import { Settings } from "webgl-test-shared/dist/settings";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { Point } from "webgl-test-shared/dist/utils";
-import Entity from "../../Entity";
 import { HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
 import { StatusEffectComponentArray, applyStatusEffect } from "../../components/StatusEffectComponent";
-import { PhysicsComponent, PhysicsComponentArray, applyKnockback } from "../../components/PhysicsComponent";
-import { EntityCreationInfo } from "../../components";
+import { applyKnockback } from "../../components/PhysicsComponent";
+import { ComponentConfig } from "../../components";
 import { PlantComponentArray } from "../../components/PlantComponent";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
-import { IceShardComponent, IceShardComponentArray } from "../../components/IceShardComponent";
+import { IceShardComponentArray } from "../../components/IceShardComponent";
 import { HitboxCollisionType, RectangularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { TransformComponentArray } from "../../components/TransformComponent";
 import Board from "../../Board";
 
-type ComponentTypes = [ServerComponentType.physics, ServerComponentType.iceShard];
+type ComponentTypes = ServerComponentType.transform
+   | ServerComponentType.physics
+   | ServerComponentType.iceShard;
 
-export function createIceShard(position: Point, rotation: number): EntityCreationInfo<ComponentTypes> {
-   const iceShard = new Entity(position, rotation, EntityType.iceShardProjectile, COLLISION_BITS.default, DEFAULT_COLLISION_MASK & ~COLLISION_BITS.planterBox);
-
-   const hitbox = new RectangularHitbox(0.4, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, 24, 24, 0);
-   iceShard.addHitbox(hitbox);
-   
-   const physicsComponent = new PhysicsComponent(0, 0, 0, 0, true, false);
-   PhysicsComponentArray.addComponent(iceShard.id, physicsComponent);
-   
-   const iceShardComponent = new IceShardComponent();
-   IceShardComponentArray.addComponent(iceShard.id, iceShardComponent);
-
+export function createIceShardConfig(): ComponentConfig<ComponentTypes> {
    return {
-      entity: iceShard,
-      components: {
-         [ServerComponentType.physics]: physicsComponent,
-         [ServerComponentType.iceShard]: iceShardComponent
-      }
+      [ServerComponentType.transform]: {
+         position: new Point(0, 0),
+         rotation: 0,
+         type: EntityType.iceShardProjectile,
+         collisionBit: COLLISION_BITS.default,
+         collisionMask: DEFAULT_COLLISION_MASK & ~COLLISION_BITS.planterBox,
+         hitboxes: [new RectangularHitbox(0.4, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, 24, 24, 0)]
+      },
+      [ServerComponentType.physics]: {
+         velocityX: 0,
+         velocityY: 0,
+         accelerationX: 0,
+         accelerationY: 0,
+         isAffectedByFriction: true,
+         isImmovable: false
+      },
+      [ServerComponentType.iceShard]: {}
    };
 }
 
@@ -48,13 +50,13 @@ export function tickIceShard(iceShard: EntityID): void {
    }
 }
 
-const entityIsIceSpikes = (entity: Entity): boolean => {
-   switch (entity.type) {
+const entityIsIceSpikes = (entity: EntityID): boolean => {
+   switch (Board.getEntityType(entity)) {
       case EntityType.iceSpikes: {
          return true;
       }
       case EntityType.plant: {
-         const plantComponent = PlantComponentArray.getComponent(entity.id);
+         const plantComponent = PlantComponentArray.getComponent(entity);
          return plantComponent.plantType === PlanterBoxPlant.iceSpikes;
       }
       default: {
@@ -63,31 +65,34 @@ const entityIsIceSpikes = (entity: Entity): boolean => {
    }
 }
 
-export function onIceShardCollision(iceShard: Entity, collidingEntity: Entity, collisionPoint: Point): void {
-   if (!HealthComponentArray.hasComponent(collidingEntity.id)) {
+export function onIceShardCollision(iceShard: EntityID, collidingEntity: EntityID, collisionPoint: Point): void {
+   if (!HealthComponentArray.hasComponent(collidingEntity)) {
       return;
    }
 
    // Shatter the ice spike
-   iceShard.destroy();
+   Board.destroyEntity(iceShard);
 
    if (entityIsIceSpikes(collidingEntity)) {
       // Instantly destroy ice spikes
       damageEntity(collidingEntity, null, 99999, PlayerCauseOfDeath.ice_spikes, AttackEffectiveness.effective, collisionPoint, 0);
    } else {
-      const healthComponent = HealthComponentArray.getComponent(collidingEntity.id);
+      const healthComponent = HealthComponentArray.getComponent(collidingEntity);
       if (!canDamageEntity(healthComponent, "ice_shards")) {
          return;
       }
+
+      const transformComponent = TransformComponentArray.getComponent(iceShard);
+      const collidingEntityTransformComponent = TransformComponentArray.getComponent(collidingEntity);
       
-      const hitDirection = iceShard.position.calculateAngleBetween(collidingEntity.position);
+      const hitDirection = transformComponent.position.calculateAngleBetween(collidingEntityTransformComponent.position);
 
       damageEntity(collidingEntity, null, 2, PlayerCauseOfDeath.ice_shards, AttackEffectiveness.effective, collisionPoint, 0);
       applyKnockback(collidingEntity, 150, hitDirection);
       addLocalInvulnerabilityHash(healthComponent, "ice_shards", 0.3);
 
-      if (StatusEffectComponentArray.hasComponent(collidingEntity.id)) {
-         applyStatusEffect(collidingEntity.id, StatusEffect.freezing, 3 * Settings.TPS);
+      if (StatusEffectComponentArray.hasComponent(collidingEntity)) {
+         applyStatusEffect(collidingEntity, StatusEffect.freezing, 3 * Settings.TPS);
       }
    }
 }

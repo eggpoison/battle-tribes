@@ -7,7 +7,7 @@ import Board from "../Board";
 import { PhysicsComponentArray } from "./PhysicsComponent";
 
 export interface ProjectileComponentParams {
-   readonly owner: EntityID;
+   owner: EntityID;
 }
 
 const ARROW_WIDTH = 12;
@@ -23,7 +23,7 @@ export class ProjectileComponent {
    }
 }
 
-export const ProjectileComponentArray = new ComponentArray<ServerComponentType.projectile, ProjectileComponent>(true, {
+export const ProjectileComponentArray = new ComponentArray<ProjectileComponent>(ServerComponentType.projectile, true, {
    serialise: serialise
 });
 
@@ -69,5 +69,7 @@ export function tickProjectileComponents(): void {
 }
 
 function serialise(entity: EntityID): ProjectileComponentData {
-   return {};
+   return {
+      componentType: ServerComponentType.projectile
+   };
 }

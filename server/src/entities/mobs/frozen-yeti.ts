@@ -15,7 +15,6 @@ import { entityHasReachedPosition, entityIsInVisionRange, getAngleDifference, ge
 import { shouldWander, getWanderTargetTile, wander } from "../../ai/wander-ai";
 import Tile from "../../Tile";
 import { WanderAIComponentArray } from "../../components/WanderAIComponent";
-import { ROCK_SPIKE_HITBOX_SIZES, createRockSpikeProjectile } from "../projectiles/rock-spike";
 import { PhysicsComponentArray, applyKnockback } from "../../components/PhysicsComponent";
 import { wasTribeMemberKill } from "../tribes/tribe-member";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
@@ -25,6 +24,8 @@ import { ItemType } from "webgl-test-shared/dist/items/items";
 import { ComponentConfig } from "../../components";
 import { TransformComponentArray } from "../../components/TransformComponent";
 import { createSnowballConfig } from "../snowball";
+import { ROCK_SPIKE_HITBOX_SIZES } from "../../components/RockSpikeProjectileComponent";
+import { createRockSpikeConfig } from "../projectiles/rock-spike";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics
@@ -327,7 +328,14 @@ const generateRockSpikeAttackInfo = (frozenYeti: EntityID, targets: ReadonlyArra
 const createRockSpikes = (frozenYeti: EntityID, frozenYetiComponent: FrozenYetiComponent): void => {
    for (const info of frozenYetiComponent.rockSpikeInfoArray) {
       const position = new Point(info.positionX, info.positionY);
-      createRockSpikeProjectile(position, 2 * Math.PI * Math.random(), info.size, frozenYeti);
+
+      const config = createRockSpikeConfig();
+      config[ServerComponentType.transform].position.x = position.x;
+      config[ServerComponentType.transform].position.y = position.y;
+      config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
+      config[ServerComponentType.rockSpike].size = info.size;
+      config[ServerComponentType.rockSpike].frozenYetiID = frozenYeti;
+      createEntityFromConfig(config);
    }
    frozenYetiComponent.rockSpikeInfoArray = [];
 }

@@ -11,7 +11,7 @@ export class HutComponent {
    public isRecalling = false;
 }
 
-export const HutComponentArray = new ComponentArray<ServerComponentType.hut, HutComponent>(true, {
+export const HutComponentArray = new ComponentArray<HutComponent>(ServerComponentType.hut, true, {
    serialise: serialise
 });
 

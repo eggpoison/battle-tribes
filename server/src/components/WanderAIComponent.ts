@@ -9,7 +9,7 @@ export class WanderAIComponent {
    targetPositionY = -1;
 }
 
-export const WanderAIComponentArray = new ComponentArray<ServerComponentType.wanderAI, WanderAIComponent>(true, {
+export const WanderAIComponentArray = new ComponentArray<WanderAIComponent>(ServerComponentType.wanderAI, true, {
    serialise: serialise
 });
 

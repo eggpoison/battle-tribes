@@ -38,7 +38,7 @@ export class SlimeComponent {
    }
 }
 
-export const SlimeComponentArray = new ComponentArray<ServerComponentType.slime, SlimeComponent>(true, {
+export const SlimeComponentArray = new ComponentArray<SlimeComponent>(ServerComponentType.slime, true, {
    onInitialise: onInitialise,
    serialise: serialise
 });

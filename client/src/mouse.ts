@@ -70,10 +70,12 @@ export function getMouseTargetEntity(): Entity | null {
    for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
       for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
          const chunk = Board.getChunk(chunkX, chunkY);
-         for (const gameObject of chunk.entities) {
-            const distance = Math.sqrt(Math.pow(Game.cursorPositionX - gameObject.renderPosition.x, 2) + Math.pow(Game.cursorPositionY - gameObject.renderPosition.y, 2))
+         for (const entityID of chunk.entities) {
+            const entity = Board.entityRecord[entityID]!;
+            
+            const distance = Math.sqrt(Math.pow(Game.cursorPositionX - entity.renderPosition.x, 2) + Math.pow(Game.cursorPositionY - entity.renderPosition.y, 2))
             if (distance <= CLIENT_SETTINGS.CURSOR_TOOLTIP_HOVER_RANGE && distance < minDistance) {
-               closestEntity = gameObject;
+               closestEntity = entity;
                minDistance = distance;
             }
          }

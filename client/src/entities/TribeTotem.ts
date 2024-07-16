@@ -1,15 +1,15 @@
-import { Point } from "webgl-test-shared/dist/utils";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { playBuildingHitSound, playSound } from "../sound";
 import Entity from "../Entity";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 
 class TribeTotem extends Entity {
    public static readonly SIZE = 120;
 
-   constructor(position: Point, id: number, ageTicks: number) {
-      super(position, id, EntityType.tribeTotem, ageTicks);
+   constructor(id: number) {
+      super(id, EntityType.tribeTotem);
 
       const renderPart = new RenderPart(
          this,
@@ -21,11 +21,13 @@ class TribeTotem extends Entity {
    }
 
    protected onHit(): void {
-      playBuildingHitSound(this.position.x, this.position.y);
+      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      playBuildingHitSound(transformComponent.position);
    }
 
    public onDie(): void {
-      playSound("building-destroy-1.mp3", 0.4, 1, this.position.x, this.position.y);
+      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      playSound("building-destroy-1.mp3", 0.4, 1, transformComponent.position);
    }
 }
 

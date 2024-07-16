@@ -1,5 +1,4 @@
-import { DeathInfo, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
-import Entity from "./Entity";
+import { DeathInfo, EntityID, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
 import { PlayerComponentArray } from "./components/PlayerComponent";
 
 abstract class TombstoneDeathManager {
@@ -7,13 +6,13 @@ abstract class TombstoneDeathManager {
 
    private static readonly deathInfos = new Array<DeathInfo>();
    
-   public static registerNewDeath(player: Entity, causeOfDeath: PlayerCauseOfDeath): void {
+   public static registerNewDeath(player: EntityID, causeOfDeath: PlayerCauseOfDeath): void {
       // If the max number of deaths has been exceeded, remove the first one
       if (this.deathInfos.length === this.MAX_TRACKED_DEATHS) {
          this.deathInfos.shift();
       }
 
-      const playerComponent = PlayerComponentArray.getComponent(player.id);
+      const playerComponent = PlayerComponentArray.getComponent(player);
       
       this.deathInfos.push({
          username: playerComponent.username,

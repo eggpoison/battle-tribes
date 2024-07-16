@@ -2,15 +2,18 @@ import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/c
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { Point } from "webgl-test-shared/dist/utils";
-import Entity from "../../Entity";
-import { TotemBannerComponent, TotemBannerComponentArray, TotemBannerPosition } from "../../components/TotemBannerComponent";
-import { HealthComponent, HealthComponentArray } from "../../components/HealthComponent";
-import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
-import Tribe from "../../Tribe";
-import { TribeComponent, TribeComponentArray } from "../../components/TribeComponent";
-import { StructureComponent, StructureComponentArray } from "../../components/StructureComponent";
-import { StructureConnectionInfo } from "webgl-test-shared/dist/structures";
+import { TotemBannerPosition } from "../../components/TotemBannerComponent";
+import { createEmptyStructureConnectionInfo } from "webgl-test-shared/dist/structures";
 import { createTribeTotemHitboxes } from "webgl-test-shared/dist/hitboxes/entity-hitbox-creation";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ComponentConfig } from "../../components";
+
+type ComponentTypes = ServerComponentType.transform
+   | ServerComponentType.health
+   | ServerComponentType.statusEffect
+   | ServerComponentType.structure
+   | ServerComponentType.tribe
+   | ServerComponentType.totemBanner;
 
 const NUM_TOTEM_POSITIONS = [4, 6, 8];
 
@@ -26,19 +29,29 @@ for (let layerIdx = 0; layerIdx < 3; layerIdx++) {
    }
 }
 
-export function createTribeTotem(position: Point, rotation: number, tribe: Tribe, connectionInfo: StructureConnectionInfo): Entity {
-   const totem = new Entity(position, rotation, EntityType.tribeTotem, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
-   
-   const hitboxes = createTribeTotemHitboxes();
-   for (let i = 0; i < hitboxes.length; i++) {
-      totem.addHitbox(hitboxes[i]);
-   }
-
-   HealthComponentArray.addComponent(totem.id, new HealthComponent(50));
-   StatusEffectComponentArray.addComponent(totem.id, new StatusEffectComponent(StatusEffect.poisoned));
-   StructureComponentArray.addComponent(totem.id, new StructureComponent(connectionInfo));
-   TribeComponentArray.addComponent(totem.id, new TribeComponent(tribe));
-   TotemBannerComponentArray.addComponent(totem.id, new TotemBannerComponent());
-
-   return totem;
+export function createTribeTotemConfig(): ComponentConfig<ComponentTypes> {
+   return {
+      [ServerComponentType.transform]: {
+         position: new Point(0, 0),
+         rotation: 0,
+         type: EntityType.tribeTotem,
+         collisionBit: COLLISION_BITS.default,
+         collisionMask: DEFAULT_COLLISION_MASK,
+         hitboxes: createTribeTotemHitboxes()
+      },
+      [ServerComponentType.health]: {
+         maxHealth: 50
+      },
+      [ServerComponentType.statusEffect]: {
+         statusEffectImmunityBitset: StatusEffect.bleeding | StatusEffect.poisoned
+      },
+      [ServerComponentType.structure]: {
+         connectionInfo: createEmptyStructureConnectionInfo()
+      },
+      [ServerComponentType.tribe]: {
+         tribe: null,
+         tribeType: 0
+      },
+      [ServerComponentType.totemBanner]: {}
+   };
 }

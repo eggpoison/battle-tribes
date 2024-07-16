@@ -27,7 +27,7 @@ export class TombstoneComponent {
    }
 }
 
-export const TombstoneComponentArray = new ComponentArray<ServerComponentType.tombstone, TombstoneComponent>(true, {
+export const TombstoneComponentArray = new ComponentArray<TombstoneComponent>(ServerComponentType.tombstone, true, {
    serialise: serialise
 });
 

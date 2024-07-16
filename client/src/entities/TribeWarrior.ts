@@ -1,6 +1,5 @@
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityType } from "webgl-test-shared/dist/entities";
-import { Point } from "webgl-test-shared/dist/utils";
 import Tribesman from "./Tribesman";
 import FootprintComponent from "../entity-components/FootprintComponent";
 import { ClientComponentType } from "../entity-components/components";
@@ -11,8 +10,8 @@ import { addTribeMemberRenderParts } from "./TribeMember";
 import { ComponentDataRecord } from "../Entity";
 
 class TribeWarrior extends Tribesman {
-   constructor(position: Point, id: number, ageTicks: number, componentDataRecord: ComponentDataRecord) {
-      super(position, id, EntityType.tribeWarrior, ageTicks);
+   constructor(id: number, componentDataRecord: ComponentDataRecord) {
+      super(id, EntityType.tribeWarrior);
 
       addTribeMemberRenderParts(this, componentDataRecord);
       

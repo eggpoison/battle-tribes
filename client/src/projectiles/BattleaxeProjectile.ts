@@ -1,14 +1,14 @@
-import { Point } from "webgl-test-shared/dist/utils";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import Entity from "../Entity";
 import Board from "../Board";
 import { attachSoundToEntity, playSound } from "../sound";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 
 class BattleaxeProjectile extends Entity {
-   constructor(position: Point, id: number, ageTicks: number) {
-      super(position, id, EntityType.battleaxeProjectile, ageTicks);
+   constructor(id: number) {
+      super(id, EntityType.battleaxeProjectile);
 
       this.attachRenderPart(
          new RenderPart(
@@ -31,7 +31,9 @@ class BattleaxeProjectile extends Entity {
    }
 
    private playWhoosh(): void {
-      const soundInfo = playSound("air-whoosh.mp3", 0.25, 1, this.position.x, this.position.y);
+      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      
+      const soundInfo = playSound("air-whoosh.mp3", 0.25, 1, transformComponent.position);
       attachSoundToEntity(soundInfo.sound, this);
    }
 }

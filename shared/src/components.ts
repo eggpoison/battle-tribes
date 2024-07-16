@@ -788,8 +788,8 @@ export interface TransformComponentData extends BaseComponentData {
 
 /* Projectile Component Data */
 
-export interface ProjectileComponentData {
-   
+export interface ProjectileComponentData extends BaseComponentData {
+   readonly componentType: ServerComponentType.projectile;
 }
 
 // @Cleanup: Should these be here?

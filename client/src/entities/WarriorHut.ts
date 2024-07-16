@@ -1,13 +1,13 @@
-import { Point } from "webgl-test-shared/dist/utils";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { playBuildingHitSound, playSound } from "../sound";
 import Entity from "../Entity";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 
 class WarriorHut extends Entity {
-   constructor(position: Point, id: number, ageTicks: number) {
-      super(position, id, EntityType.warriorHut, ageTicks);
+   constructor(id: number) {
+      super(id, EntityType.warriorHut);
       
       // Hut
       const hutRenderPart = new RenderPart(
@@ -34,11 +34,13 @@ class WarriorHut extends Entity {
    }
 
    protected onHit(): void {
-      playBuildingHitSound(this.position.x, this.position.y);
+      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      playBuildingHitSound(transformComponent.position);
    }
 
    public onDie(): void {
-      playSound("building-destroy-1.mp3", 0.4, 1, this.position.x, this.position.y);
+      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      playSound("building-destroy-1.mp3", 0.4, 1, transformComponent.position);
    }
 }
 

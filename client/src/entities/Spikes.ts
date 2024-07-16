@@ -1,15 +1,15 @@
 import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { Point } from "webgl-test-shared/dist/utils";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { playSound } from "../sound";
 import Entity, { ComponentDataRecord } from "../Entity";
 import { FLOOR_SPIKE_TEXTURE_SOURCES, WALL_SPIKE_TEXTURE_SOURCES } from "../entity-components/BuildingMaterialComponent";
+import { Point } from "webgl-test-shared/dist/utils";
 
 class Spikes extends Entity {
-   constructor(position: Point, id: number, ageTicks: number, entityType: EntityType, componentDataRecord: ComponentDataRecord) {
-      super(position, id, entityType, ageTicks);
+   constructor(id: number, entityType: EntityType, componentDataRecord: ComponentDataRecord) {
+      super(id, entityType);
 
       const materialComponentData = componentDataRecord[ServerComponentType.buildingMaterial]!;
 
@@ -30,17 +30,20 @@ class Spikes extends Entity {
       mainRenderPart.addTag("buildingMaterialComponent:material");
       this.attachRenderPart(mainRenderPart);
       
-      if (ageTicks <= 1) {
-         playSound("spike-place.mp3", 0.5, 1, this.position.x, this.position.y);
+      const transformComponentData = componentDataRecord[ServerComponentType.transform]!;
+      if (transformComponentData.ageTicks <= 0) {
+         playSound("spike-place.mp3", 0.5, 1, Point.unpackage(transformComponentData.position));
       }
    }
 
    protected onHit(): void {
-      playSound("wooden-spikes-hit.mp3", 0.2, 1, this.position.x, this.position.y);
+      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      playSound("wooden-spikes-hit.mp3", 0.2, 1, transformComponent.position);
    }
 
    public onDie(): void {
-      playSound("wooden-spikes-destroy.mp3", 0.4, 1, this.position.x, this.position.y);
+      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      playSound("wooden-spikes-destroy.mp3", 0.4, 1, transformComponent.position);
    }
 }
 

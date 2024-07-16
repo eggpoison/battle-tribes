@@ -10,7 +10,7 @@ import { TRIBESMAN_TURN_SPEED } from "./tribesman-ai";
 import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
 import { distance, angle } from "webgl-test-shared/dist/utils";
 import { doorIsClosed, toggleDoor } from "../../../components/DoorComponent";
-import { InventoryUseComponentArray, getInventoryUseInfo } from "../../../components/InventoryUseComponent";
+import { InventoryUseComponentArray } from "../../../components/InventoryUseComponent";
 import { TribesmanTitle } from "webgl-test-shared/dist/titles";
 import { TRIBE_INFO_RECORD } from "webgl-test-shared/dist/tribes";
 import { TribeMemberComponentArray, tribeMemberHasTitle } from "../../../components/TribeMemberComponent";
@@ -183,7 +183,7 @@ const openDoors = (tribesman: EntityID, tribe: Tribe): void => {
          toggleDoor(entity);
 
          const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman);
-         const useInfo = getInventoryUseInfo(inventoryUseComponent, InventoryName.hotbar);
+         const useInfo = inventoryUseComponent.getUseInfo(InventoryName.hotbar);
          useInfo.lastAttackTicks = Board.ticks;
       }
    }
@@ -306,7 +306,7 @@ const convertEntityPathfindingGroupID = (entity: EntityID, oldGroupID: number, n
 const preparePathfinding = (targetEntity: EntityID, tribe: Tribe, blockingTribesman: ReadonlyArray<EntityID>): void => {
    // Ignore the target
    if (targetEntity !== 0) {
-      if (entityCanBlockPathfinding(Board.getEntityType(targetEntity)!)) {
+      if (entityCanBlockPathfinding(targetEntity)) {
          const oldGroupID = getEntityPathfindingGroupID(targetEntity);
          convertEntityPathfindingGroupID(targetEntity, oldGroupID, tribe.pathfindingGroupID);
       }
@@ -323,7 +323,7 @@ const cleanupPathfinding = (targetEntity: EntityID | 0, tribe: Tribe, blockingTr
    // Reset the target
    if (targetEntity !== 0) {
       // @Speed: Some places which call this have access to the entity already
-      if (entityCanBlockPathfinding(Board.getEntityType(targetEntity)!)) {
+      if (entityCanBlockPathfinding(targetEntity)) {
          const oldGroupID = getEntityPathfindingGroupID(targetEntity);
          convertEntityPathfindingGroupID(targetEntity, tribe.pathfindingGroupID, oldGroupID);
       }

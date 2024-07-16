@@ -14,13 +14,15 @@ class Slime extends Entity {
    private static readonly NUM_SPECK_PARTICLES_ON_HIT: ReadonlyArray<number> = [3, 5, 7];
    private static readonly NUM_SPECK_PARTICLES_ON_DEATH: ReadonlyArray<number> = [6, 10, 15];
 
-   constructor(position: Point, id: number, ageTicks: number) {
-      super(position, id, EntityType.slime, ageTicks);
+   constructor(id: number) {
+      super(id, EntityType.slime);
    }
 
    public overrideTileMoveSpeedMultiplier(): number | null {
+      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+
       // Slimes move at normal speed on slime blocks
-      if (this.tile.type === TileType.slime) {
+      if (transformComponent.tile.type === TileType.slime) {
          return 1;
       }
       return null;
@@ -28,38 +30,43 @@ class Slime extends Entity {
 
    public tick(): void {
       if (Math.random() < 0.2 / Settings.TPS) {
-         playSound(("slime-ambient-" + randInt(1, 4) + ".mp3") as AudioFilePath, 0.4, 1, this.position.x, this.position.y);
+         const transformComponent = this.getServerComponent(ServerComponentType.transform);
+         playSound(("slime-ambient-" + randInt(1, 4) + ".mp3") as AudioFilePath, 0.4, 1, transformComponent.position);
       }
    }
 
    protected onHit(): void {
+      const transformComponent = this.getServerComponent(ServerComponentType.transform);
       const slimeComponent = this.getServerComponent(ServerComponentType.slime);
+
       const radius = SLIME_SIZES[slimeComponent.size] / 2;
       
       for (let i = 0; i < Slime.NUM_PUDDLE_PARTICLES_ON_HIT[slimeComponent.size]; i++) {
-         createSlimePoolParticle(this.position.x, this.position.y, radius);
+         createSlimePoolParticle(transformComponent.position.x, transformComponent.position.y, radius);
       }
 
       for (let i = 0; i < Slime.NUM_SPECK_PARTICLES_ON_HIT[slimeComponent.size]; i++) {
-         createSlimeSpeckParticle(this.position.x, this.position.y, radius * Math.random());
+         createSlimeSpeckParticle(transformComponent.position.x, transformComponent.position.y, radius * Math.random());
       }
 
-      playSound(("slime-hit-" + randInt(1, 2) + ".mp3") as AudioFilePath, 0.4, 1, this.position.x, this.position.y);
+      playSound(("slime-hit-" + randInt(1, 2) + ".mp3") as AudioFilePath, 0.4, 1, transformComponent.position);
    }
 
    public onDie(): void {
+      const transformComponent = this.getServerComponent(ServerComponentType.transform);
       const slimeComponent = this.getServerComponent(ServerComponentType.slime);
+
       const radius = SLIME_SIZES[slimeComponent.size] / 2;
 
       for (let i = 0; i < Slime.NUM_PUDDLE_PARTICLES_ON_DEATH[slimeComponent.size]; i++) {
-         createSlimePoolParticle(this.position.x, this.position.y, radius);
+         createSlimePoolParticle(transformComponent.position.x, transformComponent.position.y, radius);
       }
 
       for (let i = 0; i < Slime.NUM_SPECK_PARTICLES_ON_DEATH[slimeComponent.size]; i++) {
-         createSlimeSpeckParticle(this.position.x, this.position.y, radius * Math.random());
+         createSlimeSpeckParticle(transformComponent.position.x, transformComponent.position.y, radius * Math.random());
       }
 
-      playSound("slime-death.mp3", 0.4, 1, this.position.x, this.position.y);
+      playSound("slime-death.mp3", 0.4, 1, transformComponent.position);
    }
 }
 

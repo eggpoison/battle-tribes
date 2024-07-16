@@ -1,11 +1,12 @@
 import { PlanterBoxComponentData, PlanterBoxPlant, ServerComponentType } from "webgl-test-shared/dist/components";
 import ServerComponent from "./ServerComponent";
-import Entity, { getRandomPointInEntity } from "../Entity";
+import Entity from "../Entity";
 import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { playSound } from "../sound";
 import { customTickIntervalHasPassed, randInt } from "webgl-test-shared/dist/utils";
 import { createGrowthParticle } from "../particles";
+import { getRandomPointInEntity } from "./TransformComponent";
 
 class PlanterBoxComponent extends ServerComponent<ServerComponentType.planterBox> {
    private moundRenderPart: RenderPart | null = null;
@@ -22,12 +23,15 @@ class PlanterBoxComponent extends ServerComponent<ServerComponentType.planterBox
    }
 
    private createGrowthParticle(): void {
-      const pos = getRandomPointInEntity(this.entity);
+      const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
+
+      const pos = getRandomPointInEntity(transformComponent);
       createGrowthParticle(pos.x, pos.y);
    }
    
    public tick(): void {
-      if (this.isFertilised && customTickIntervalHasPassed(this.entity.ageTicks, 0.35)) {
+      const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
+      if (this.isFertilised && customTickIntervalHasPassed(transformComponent.ageTicks, 0.35)) {
          this.createGrowthParticle();
       }
    }
@@ -58,14 +62,16 @@ class PlanterBoxComponent extends ServerComponent<ServerComponentType.planterBox
             this.createGrowthParticle();
          }
 
-         playSound("fertiliser.mp3", 0.6, 1, this.entity.position.x, this.entity.position.y);
+         const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
+         playSound("fertiliser.mp3", 0.6, 1, transformComponent.position);
       }
       this.isFertilised = data.isFertilised;
       
       const hasPlant = data.plantType !== null;
       if (hasPlant && this.hasPlant !== hasPlant) {
          // Plant sound effect
-         playSound("plant.mp3", 0.4, 1, this.entity.position.x, this.entity.position.y);
+         const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
+         playSound("plant.mp3", 0.4, 1, transformComponent.position);
       }
       this.hasPlant = hasPlant;
 

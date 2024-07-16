@@ -99,9 +99,11 @@ class HutComponent extends ServerComponent<ServerComponentType.hut> {
    }
 
    public updateFromData(data: HutComponentData): void {
+      const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
+      
       // @Incomplete: What if this packet is skipped?
       if (data.lastDoorSwingTicks === Board.ticks) {
-         playSound("door-open.mp3", 0.4, 1, this.entity.position.x, this.entity.position.y);
+         playSound("door-open.mp3", 0.4, 1, transformComponent.position);
       }
       
       this.isRecalling = data.isRecalling;
@@ -120,7 +122,7 @@ class HutComponent extends ServerComponent<ServerComponentType.hut> {
             this.entity.attachRenderPart(this.recallMarker);
          }
 
-         let opacity = Math.sin(this.entity.ageTicks / Settings.TPS * 5) * 0.5 + 0.5;
+         let opacity = Math.sin(transformComponent.ageTicks / Settings.TPS * 5) * 0.5 + 0.5;
          opacity = lerp(0.3, 1, opacity);
          this.recallMarker.opacity = lerp(0.3, 0.8, opacity);
       } else {

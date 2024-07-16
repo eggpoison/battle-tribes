@@ -69,7 +69,7 @@ export class GolemComponent {
    }
 }
 
-export const GolemComponentArray = new ComponentArray<ServerComponentType.golem, GolemComponent>(true, {
+export const GolemComponentArray = new ComponentArray<GolemComponent>(ServerComponentType.golem, true, {
    serialise: serialise
 });
 

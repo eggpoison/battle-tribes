@@ -34,7 +34,7 @@ export function createPlantConfig(): ComponentConfig<ComponentTypes> {
          statusEffectImmunityBitset: StatusEffect.bleeding
       },
       [ServerComponentType.plant]: {
-         planterBoxID: 0,
+         planterBox: 0,
          plantType: PlanterBoxPlant.tree
       }
    };

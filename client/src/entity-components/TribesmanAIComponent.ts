@@ -32,6 +32,7 @@ class TribesmanAIComponent extends ServerComponent<ServerComponentType.tribesman
    }
 
    public tick(): void {
+      const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
       const tribeComponent = this.entity.getServerComponent(ServerComponentType.tribe);
 
       // Sounds
@@ -40,11 +41,11 @@ class TribesmanAIComponent extends ServerComponent<ServerComponentType.tribesman
             if (Math.random() < 0.2 / Settings.TPS) {
                switch (tribeComponent.tribeType) {
                   case TribeType.goblins: {
-                     playSound(randItem(GOBLIN_ANGRY_SOUNDS), 0.4, 1, this.entity.position.x, this.entity.position.y);
+                     playSound(randItem(GOBLIN_ANGRY_SOUNDS), 0.4, 1, transformComponent.position);
                      break;
                   }
                   case TribeType.barbarians: {
-                     playSound("barbarian-angry-1.mp3", 0.4, 1, this.entity.position.x, this.entity.position.y);
+                     playSound("barbarian-angry-1.mp3", 0.4, 1, transformComponent.position);
                      break;
                   }
                }
@@ -55,7 +56,7 @@ class TribesmanAIComponent extends ServerComponent<ServerComponentType.tribesman
             if (Math.random() < 0.2 / Settings.TPS) {
                switch (tribeComponent.tribeType) {
                   case TribeType.goblins: {
-                     playSound(randItem(GOBLIN_ESCAPE_SOUNDS), 0.4, 1, this.entity.position.x, this.entity.position.y);
+                     playSound(randItem(GOBLIN_ESCAPE_SOUNDS), 0.4, 1, transformComponent.position);
                      break;
                   }
                }
@@ -66,11 +67,11 @@ class TribesmanAIComponent extends ServerComponent<ServerComponentType.tribesman
             if (Math.random() < 0.2 / Settings.TPS) {
                switch (tribeComponent.tribeType) {
                   case TribeType.goblins: {
-                     playSound(randItem(GOBLIN_AMBIENT_SOUNDS), 0.4, 1, this.entity.position.x, this.entity.position.y);
+                     playSound(randItem(GOBLIN_AMBIENT_SOUNDS), 0.4, 1, transformComponent.position);
                      break;
                   }
                   case TribeType.barbarians: {
-                     playSound(("barbarian-ambient-" + randInt(1, 2) + ".mp3") as AudioFilePath, 0.4, 1, this.entity.position.x, this.entity.position.y);
+                     playSound(("barbarian-ambient-" + randInt(1, 2) + ".mp3") as AudioFilePath, 0.4, 1, transformComponent.position);
                      break;
                   }
                }

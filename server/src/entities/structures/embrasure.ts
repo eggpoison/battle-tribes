@@ -1,47 +1,59 @@
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision";
-import { BuildingMaterial } from "webgl-test-shared/dist/components";
-import { EntityType } from "webgl-test-shared/dist/entities";
+import { BuildingMaterial, ServerComponentType } from "webgl-test-shared/dist/components";
+import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { Point } from "webgl-test-shared/dist/utils";
-import Tribe from "../../Tribe";
-import Entity from "../../Entity";
-import { HealthComponent, HealthComponentArray } from "../../components/HealthComponent";
-import { TribeComponent, TribeComponentArray } from "../../components/TribeComponent";
-import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
-import { BuildingMaterialComponent, BuildingMaterialComponentArray } from "../../components/BuildingMaterialComponent";
-import { StructureComponentArray, StructureComponent } from "../../components/StructureComponent";
-import { StructureConnectionInfo } from "webgl-test-shared/dist/structures";
-import { ArrowComponentArray } from "../../components/ArrowComponent";
+import { createEmptyStructureConnectionInfo } from "webgl-test-shared/dist/structures";
 import { createEmbrasureHitboxes } from "webgl-test-shared/dist/hitboxes/entity-hitbox-creation";
+import { ComponentConfig } from "../../components";
+import Board from "../../Board";
 
-export const EMBRASURE_HEALTHS = [15, 45];
+type ComponentTypes = ServerComponentType.transform
+   | ServerComponentType.health
+   | ServerComponentType.statusEffect
+   | ServerComponentType.structure
+   | ServerComponentType.tribe
+   | ServerComponentType.buildingMaterial;
 
-export function createEmbrasure(position: Point, rotation: number, tribe: Tribe, connectionInfo: StructureConnectionInfo, material: BuildingMaterial): Entity {
-   const embrasure = new Entity(position, rotation, EntityType.embrasure, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
-
-   const hitboxes = createEmbrasureHitboxes();
-   for (let i = 0; i < hitboxes.length; i++) {
-      embrasure.addHitbox(hitboxes[i]);
+export function createEmbrasureConfig(): ComponentConfig<ComponentTypes> {
+   return {
+      [ServerComponentType.transform]: {
+         position: new Point(0, 0),
+         rotation: 0,
+         type: EntityType.embrasure,
+         collisionBit: COLLISION_BITS.default,
+         collisionMask: DEFAULT_COLLISION_MASK,
+         hitboxes: createEmbrasureHitboxes()
+      },
+      [ServerComponentType.health]: {
+         maxHealth: 0
+      },
+      [ServerComponentType.statusEffect]: {
+         statusEffectImmunityBitset: StatusEffect.bleeding | StatusEffect.poisoned
+      },
+      [ServerComponentType.structure]: {
+         connectionInfo: createEmptyStructureConnectionInfo()
+      },
+      [ServerComponentType.tribe]: {
+         tribe: null,
+         tribeType: 0
+      },
+      [ServerComponentType.buildingMaterial]: {
+         material: BuildingMaterial.wood
+      }
    }
-   
-   HealthComponentArray.addComponent(embrasure.id, new HealthComponent(EMBRASURE_HEALTHS[material]));
-   StatusEffectComponentArray.addComponent(embrasure.id, new StatusEffectComponent(StatusEffect.bleeding));
-   StructureComponentArray.addComponent(embrasure.id, new StructureComponent(connectionInfo));
-   TribeComponentArray.addComponent(embrasure.id, new TribeComponent(tribe));
-   BuildingMaterialComponentArray.addComponent(embrasure.id, new BuildingMaterialComponent(material));
-
-   return embrasure;
 }
 
-export function onEmbrasureCollision(collidingEntity: Entity, pushedHitboxIdx: number): void {
-   if (collidingEntity.type === EntityType.woodenArrowProjectile) {
-      const arrowComponent = ArrowComponentArray.getComponent(collidingEntity.id);
-      if (arrowComponent.ignoreFriendlyBuildings) {
-         return;
-      }
+export function onEmbrasureCollision(collidingEntity: EntityID, pushedHitboxIdx: number): void {
+   if (Board.getEntityType(collidingEntity) === EntityType.woodenArrow) {
+      // @Incomplete?
+      // const arrowComponent = ProjectileComponentArray.getComponent(collidingEntity.id);
+      // if (arrowComponent.ignoreFriendlyBuildings) {
+      //    return;
+      // }
 
       if (pushedHitboxIdx <= 1) {
-         collidingEntity.destroy();
+         Board.destroyEntity(collidingEntity);
       }
    }
 }

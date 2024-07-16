@@ -20,6 +20,7 @@ import { createBallistaWoodenBoltConfig } from "../projectiles/ballista-wooden-b
 import { createBallistaRockConfig } from "../projectiles/ballista-rock";
 import { createBallistaSlimeballConfig } from "../projectiles/ballista-slimeball";
 import { createBallistaFrostcicleConfig } from "../projectiles/ballista-frostcicle";
+import { createEmptyStructureConnectionInfo } from "webgl-test-shared/dist/structures";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.health
@@ -51,13 +52,11 @@ export function createBallistaConfig(): ComponentConfig<ComponentTypes> {
          statusEffectImmunityBitset: StatusEffect.poisoned | StatusEffect.bleeding
       },
       [ServerComponentType.structure]: {
-         structureInfo: {
-            connectedSidesBitset: 0,
-            connectedEntityIDs: [0, 0, 0, 0]
-         }
+         connectionInfo: createEmptyStructureConnectionInfo()
       },
       [ServerComponentType.tribe]: {
-         tribeID: null
+         tribe: null,
+         tribeType: 0
       },
       [ServerComponentType.turret]: {
          fireCooldownTicks: 0
@@ -72,7 +71,8 @@ export function createBallistaConfig(): ComponentConfig<ComponentTypes> {
                inventoryName: InventoryName.ammoBoxInventory,
                width: 3,
                height: 1,
-               options: { acceptsPickedUpItems: false, isDroppedOnDeath: true }
+               options: { acceptsPickedUpItems: false, isDroppedOnDeath: true },
+               items: []
             }
          ]
       }

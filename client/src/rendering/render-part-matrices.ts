@@ -7,7 +7,8 @@ import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { Settings } from "webgl-test-shared/dist/settings";
 
 const calculateEntityRenderPosition = (entity: Entity, frameProgress: number): Point => {
-   const renderPosition = entity.position.copy();
+   const transformComponent = entity.getServerComponent(ServerComponentType.transform);
+   const renderPosition = transformComponent.position.copy();
 
    if (entity.hasServerComponent(ServerComponentType.physics)) {
       const physicsComponent = entity.getServerComponent(ServerComponentType.physics);
@@ -28,7 +29,8 @@ const calculateEntityRenderPosition = (entity: Entity, frameProgress: number): P
 
 const calculateEntityModelMatrix = (entity: Entity, frameProgress: number): Matrix3x3 => {
    // Rotate
-   let model = createRotationMatrix(entity.rotation);
+   const transformComponent = entity.getServerComponent(ServerComponentType.transform);
+   let model = createRotationMatrix(transformComponent.rotation);
 
    // Translate
    const renderPosition = calculateEntityRenderPosition(entity, frameProgress);

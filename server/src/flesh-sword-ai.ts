@@ -3,7 +3,6 @@ import { Settings } from "webgl-test-shared/dist/settings";
 import { Point, lerp, randItem, angle } from "webgl-test-shared/dist/utils";
 import Board from "./Board";
 import Tile from "./Tile";
-import Entity from "./Entity";
 import { PhysicsComponentArray } from "./components/PhysicsComponent";
 import { Biome } from "webgl-test-shared/dist/tiles";
 import { TransformComponentArray } from "./components/TransformComponent";

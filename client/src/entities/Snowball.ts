@@ -22,8 +22,8 @@ const getTextureSource = (size: SnowballSize): string => {
 }
 
 class Snowball extends Entity {
-   constructor(position: Point, id: number, ageTicks: number, componentDataRecord: ComponentDataRecord) {
-      super(position, id, EntityType.snowball, ageTicks);
+   constructor(id: number, componentDataRecord: ComponentDataRecord) {
+      super(id, EntityType.snowball);
 
       const snowballComponentData = componentDataRecord[ServerComponentType.snowball]!;
 
@@ -39,16 +39,18 @@ class Snowball extends Entity {
 
    public tick(): void {
       super.tick();
-
+      
+      const transformComponent = this.getServerComponent(ServerComponentType.transform);
       const physicsComponent = this.getServerComponent(ServerComponentType.physics);
       if ((physicsComponent.velocity.x !== 0 || physicsComponent.velocity.y !== 0) && physicsComponent.velocity.lengthSquared() > 2500) {
          if (Board.tickIntervalHasPassed(0.05)) {
-            createSnowParticle(this.position.x, this.position.y, randFloat(40, 60));
+            createSnowParticle(transformComponent.position.x, transformComponent.position.y, randFloat(40, 60));
          }
       }
    }
 
    protected onHit(hitData: HitData): void {
+      const transformComponent = this.getServerComponent(ServerComponentType.transform);
       const snowballComponent = this.getServerComponent(ServerComponentType.snowball);
       
       // Create a bunch of snow particles at the point of hit
@@ -56,12 +58,13 @@ class Snowball extends Entity {
       for (let i = 0; i < numParticles; i++) {
          const pixelSize = SNOWBALL_SIZES[snowballComponent.size];
          
-         const position = this.position.offset(pixelSize / 2, 2 * Math.PI * Math.random());
+         const position = transformComponent.position.offset(pixelSize / 2, 2 * Math.PI * Math.random());
          this.createSnowSpeckParticle(position.x, position.y);
       }
    }
 
    public onDie(): void {
+      const transformComponent = this.getServerComponent(ServerComponentType.transform);
       const snowballComponent = this.getServerComponent(ServerComponentType.snowball);
 
       // Create a bunch of snow particles throughout the snowball
@@ -70,8 +73,8 @@ class Snowball extends Entity {
          const pixelSize = SNOWBALL_SIZES[snowballComponent.size];
          
          const offsetDirection = 2 * Math.PI * Math.random();
-         const spawnPositionX = this.position.x + pixelSize / 2 * Math.sin(offsetDirection);
-         const spawnPositionY = this.position.y + pixelSize / 2 * Math.cos(offsetDirection);
+         const spawnPositionX = transformComponent.position.x + pixelSize / 2 * Math.sin(offsetDirection);
+         const spawnPositionY = transformComponent.position.y + pixelSize / 2 * Math.cos(offsetDirection);
          this.createSnowSpeckParticle(spawnPositionX, spawnPositionY);
       }
    }

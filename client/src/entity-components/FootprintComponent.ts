@@ -29,10 +29,11 @@ export class FootprintComponent extends Component {
    private distanceTracker = 0;
 
    public tick(): void {
+      const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
       const physicsComponent = this.entity.getServerComponent(ServerComponentType.physics);
 
       // Footsteps
-      if (physicsComponent.velocity.lengthSquared() >= 2500 && !this.entity.isInRiver() && Board.tickIntervalHasPassed(this.footstepParticleIntervalSeconds)) {
+      if (physicsComponent.velocity.lengthSquared() >= 2500 && !transformComponent.isInRiver() && Board.tickIntervalHasPassed(this.footstepParticleIntervalSeconds)) {
          createFootprintParticle(this.entity, this.numFootstepsTaken, this.footstepOffset, this.footstepSize, this.footstepLifetime);
          this.numFootstepsTaken++;
       }
@@ -44,26 +45,28 @@ export class FootprintComponent extends Component {
    }
 
    private createFootstepSound(): void {
-      switch (this.entity.tile.type) {
+      const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
+      
+      switch (transformComponent.tile.type) {
          case TileType.grass: {
-            playSound(("grass-walk-" + randInt(1, 4) + ".mp3") as AudioFilePath, 0.04, 1, this.entity.position.x, this.entity.position.y);
+            playSound(("grass-walk-" + randInt(1, 4) + ".mp3") as AudioFilePath, 0.04, 1, transformComponent.position);
             break;
          }
          case TileType.sand: {
-            playSound(("sand-walk-" + randInt(1, 4) + ".mp3") as AudioFilePath, 0.02, 1, this.entity.position.x, this.entity.position.y);
+            playSound(("sand-walk-" + randInt(1, 4) + ".mp3") as AudioFilePath, 0.02, 1, transformComponent.position);
             break;
          }
          case TileType.snow: {
-            playSound(("snow-walk-" + randInt(1, 3) + ".mp3") as AudioFilePath, 0.07, 1, this.entity.position.x, this.entity.position.y);
+            playSound(("snow-walk-" + randInt(1, 3) + ".mp3") as AudioFilePath, 0.07, 1, transformComponent.position);
             break;
          }
          case TileType.rock: {
-            playSound(("rock-walk-" + randInt(1, 4) + ".mp3") as AudioFilePath, 0.08, 1, this.entity.position.x, this.entity.position.y);
+            playSound(("rock-walk-" + randInt(1, 4) + ".mp3") as AudioFilePath, 0.08, 1, transformComponent.position);
             break;
          }
          case TileType.water: {
-            if (!this.entity.isInRiver()) {
-               playSound(("rock-walk-" + randInt(1, 4) + ".mp3") as AudioFilePath, 0.08, 1, this.entity.position.x, this.entity.position.y);
+            if (!transformComponent.isInRiver()) {
+               playSound(("rock-walk-" + randInt(1, 4) + ".mp3") as AudioFilePath, 0.08, 1, transformComponent.position);
             }
             break;
          }

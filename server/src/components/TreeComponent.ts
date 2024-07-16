@@ -1,12 +1,18 @@
-import { TreeSize } from "webgl-test-shared/dist/entities";
+import { EntityID, TreeSize } from "webgl-test-shared/dist/entities";
 import { ComponentArray } from "./ComponentArray";
 import { GrassBlockerCircle } from "webgl-test-shared/dist/grass-blockers";
-import Board from "../Board";
 import { ServerComponentType, TreeComponentData } from "webgl-test-shared/dist/components";
+import { ComponentConfig } from "../components";
+import { TransformComponentArray } from "./TransformComponent";
+import { CircularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
+import { addGrassBlocker } from "../grass-blockers";
 
 export interface TreeComponentParams {
    readonly treeSize: TreeSize;
 }
+
+export const TREE_RADII: ReadonlyArray<number> = [40, 50];
+const TREE_MAX_HEALTHS = [10, 15];
 
 const TREE_TRUNK_RADII: Record<TreeSize, number> = {
    [TreeSize.small]: 15,
@@ -21,29 +27,38 @@ export class TreeComponent {
    }
 }
 
-export const TreeComponentArray = new ComponentArray<ServerComponentType.tree, TreeComponent>(true, {
+export const TreeComponentArray = new ComponentArray<TreeComponent>(ServerComponentType.tree, true, {
+   onInitialise: onInitialise,
    onJoin: onJoin,
    serialise: serialise
 });
 
-function onJoin(entityID: number): void {
-   const treeComponent = TreeComponentArray.getComponent(entityID);
+function onInitialise(config: ComponentConfig<ServerComponentType.transform | ServerComponentType.health | ServerComponentType.tree>): void {
+   const treeSize = config[ServerComponentType.tree].treeSize;
 
-   // @Hack
-   const tree = Board.entityRecord[entityID]!;
+   config[ServerComponentType.health].maxHealth = TREE_MAX_HEALTHS[treeSize];
 
+   const mass = 1.25 + treeSize * 0.25;
+   const hitbox = config[ServerComponentType.transform].hitboxes[0] as CircularHitbox;
+   hitbox.mass = mass;
+   hitbox.radius = TREE_RADII[treeSize];
+}
+
+function onJoin(entity: EntityID): void {
+   const treeComponent = TreeComponentArray.getComponent(entity);
+   const transformComponent = TransformComponentArray.getComponent(entity);
+   
    const blocker: GrassBlockerCircle = {
-      position: tree.position.copy(),
+      position: transformComponent.position.copy(),
       blockAmount: 0,
       radius: TREE_TRUNK_RADII[treeComponent.treeSize],
       maxBlockAmount: 0.9
    };
-   // @Temporary
-   // addGrassBlocker(blocker, entityID);
+   addGrassBlocker(blocker, entity);
 }
 
-function serialise(entityID: number): TreeComponentData {
-   const treeComponent = TreeComponentArray.getComponent(entityID);
+function serialise(entity: EntityID): TreeComponentData {
+   const treeComponent = TreeComponentArray.getComponent(entity);
 
    return {
       componentType: ServerComponentType.tree,

@@ -9,6 +9,146 @@ import { EntityType } from "webgl-test-shared/dist/entities";
 import Particle from "../Particle";
 import { addTexturedParticleToBufferContainer, ParticleRenderLayer } from "../rendering/webgl/particle-rendering";
 import { playSound, AudioFilePath } from "../sound";
+import Player from "../entities/Player";
+import { keyIsPressed } from "../keyboard-input";
+import { collide, resolveWallTileCollisions } from "../collision";
+import TransformComponent from "./TransformComponent";
+import { COLLISION_BITS } from "webgl-test-shared/dist/collision";
+import { latencyGameState } from "../game-state/game-states";
+
+const applyPhysics = (physicsComponent: PhysicsComponent): void => {
+   const transformComponent = physicsComponent.entity.getServerComponent(ServerComponentType.transform);
+   
+   // Apply acceleration
+   if (physicsComponent.acceleration.x !== 0 || physicsComponent.acceleration.y !== 0) {
+      let tileMoveSpeedMultiplier = TILE_MOVE_SPEED_MULTIPLIERS[transformComponent.tile.type];
+      if (transformComponent.tile.type === TileType.water && !transformComponent.isInRiver()) {
+         tileMoveSpeedMultiplier = 1;
+      }
+
+      const friction = TILE_FRICTIONS[transformComponent.tile.type];
+      
+      physicsComponent.velocity.x += physicsComponent.acceleration.x * friction * tileMoveSpeedMultiplier * Settings.I_TPS;
+      physicsComponent.velocity.y += physicsComponent.acceleration.y * friction * tileMoveSpeedMultiplier * Settings.I_TPS;
+   }
+
+   // If the game object is in a river, push them in the flow direction of the river
+   const moveSpeedIsOverridden = typeof physicsComponent.entity.overrideTileMoveSpeedMultiplier !== "undefined" && physicsComponent.entity.overrideTileMoveSpeedMultiplier() !== null;
+   if (transformComponent.isInRiver() && !moveSpeedIsOverridden) {
+      const flowDirection = Board.getRiverFlowDirection(transformComponent.tile.x, transformComponent.tile.y);
+      physicsComponent.velocity.x += 240 / Settings.TPS * Math.sin(flowDirection);
+      physicsComponent.velocity.y += 240 / Settings.TPS * Math.cos(flowDirection);
+   }
+
+   // Apply velocity
+   if (physicsComponent.velocity.x !== 0 || physicsComponent.velocity.y !== 0) {
+      const friction = TILE_FRICTIONS[transformComponent.tile.type];
+
+      // Apply a friction based on the tile type to simulate air resistance (???)
+      physicsComponent.velocity.x *= 1 - friction * Settings.I_TPS * 2;
+      physicsComponent.velocity.y *= 1 - friction * Settings.I_TPS * 2;
+
+      // Apply a constant friction based on the tile type to simulate ground friction
+      const velocityMagnitude = physicsComponent.velocity.length();
+      if (velocityMagnitude > 0) {
+         const groundFriction = Math.min(friction, velocityMagnitude);
+         physicsComponent.velocity.x -= groundFriction * physicsComponent.velocity.x / velocityMagnitude;
+         physicsComponent.velocity.y -= groundFriction * physicsComponent.velocity.y / velocityMagnitude;
+      }
+      
+      transformComponent.position.x += physicsComponent.velocity.x * Settings.I_TPS;
+      transformComponent.position.y += physicsComponent.velocity.y * Settings.I_TPS;
+   }
+
+   if (isNaN(transformComponent.position.x)) {
+      throw new Error("Position was NaN.");
+   }
+}
+
+const resolveBorderCollisions = (physicsComponent: PhysicsComponent): void => {
+   const transformComponent = physicsComponent.entity.getServerComponent(ServerComponentType.transform);
+   
+   for (const hitbox of transformComponent.hitboxes) {
+      const minX = hitbox.calculateHitboxBoundsMinX();
+      const maxX = hitbox.calculateHitboxBoundsMaxX();
+      const minY = hitbox.calculateHitboxBoundsMinY();
+      const maxY = hitbox.calculateHitboxBoundsMaxY();
+
+      // Left wall
+      if (minX < 0) {
+         transformComponent.position.x -= minX;
+         physicsComponent.velocity.x = 0;
+         // Right wall
+      } else if (maxX > Settings.BOARD_UNITS) {
+         transformComponent.position.x -= maxX - Settings.BOARD_UNITS;
+         physicsComponent.velocity.x = 0;
+      }
+      
+      // Bottom wall
+      if (minY < 0) {
+         transformComponent.position.y -= minY;
+         physicsComponent.velocity.y = 0;
+         // Top wall
+      } else if (maxY > Settings.BOARD_UNITS) {
+         transformComponent.position.y -= maxY - Settings.BOARD_UNITS;
+         physicsComponent.velocity.y = 0;
+      }
+   }
+}
+
+
+const getPotentialCollidingEntities = (transformComponent: TransformComponent): ReadonlyArray<Entity> => {
+   const entities = new Array<Entity>();
+
+   for (const chunk of transformComponent.chunks) {
+      for (const entityID of chunk.entities) {
+         if (entityID !== transformComponent.entity.id) {
+            const entity = Board.entityRecord[entityID]!;
+            entities.push(entity);
+         }
+      }
+   }
+
+   return entities;
+}
+const resolveGameObjectCollisions = (physicsComponent: PhysicsComponent): void => {
+   const transformComponent = physicsComponent.entity.getServerComponent(ServerComponentType.transform);
+   
+   const potentialCollidingEntities = getPotentialCollidingEntities(transformComponent);
+
+   transformComponent.collidingEntities = [];
+
+   for (let i = 0; i < potentialCollidingEntities.length; i++) {
+      const entity = potentialCollidingEntities[i];
+
+      const entityTransformComponent = entity.getServerComponent(ServerComponentType.transform);
+      
+      // If the two entities are exactly on top of each other, don't do anything
+      if (entityTransformComponent.position.x === transformComponent.position.x && entityTransformComponent.position.y === transformComponent.position.y) {
+         continue;
+      }
+
+      for (const hitbox of transformComponent.hitboxes) {
+         for (const otherHitbox of entityTransformComponent.hitboxes) {
+            if (hitbox.isColliding(otherHitbox)) {
+               if (!transformComponent.collidingEntities.includes(entity)) {
+                  transformComponent.collidingEntities.push(entity);
+               }
+               
+               if ((entityTransformComponent.collisionMask & transformComponent.collisionBit) !== 0 && (transformComponent.collisionMask & entityTransformComponent.collisionBit) !== 0) {
+                  collide(physicsComponent.entity, hitbox, otherHitbox);
+               } else {
+                  // @Hack
+                  if (entityTransformComponent.collisionBit === COLLISION_BITS.plants) {
+                     latencyGameState.lastPlantCollisionTicks = Board.ticks;
+                  }
+                  break;
+               }
+            }
+         }
+      }
+   }
+}
 
 class PhysicsComponent extends ServerComponent<ServerComponentType.physics> {
    public readonly velocity: Point;
@@ -22,9 +162,11 @@ class PhysicsComponent extends ServerComponent<ServerComponentType.physics> {
    }
 
    public tick(): void {
+      const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
+      
       // Water splash particles
       // @Cleanup: Move to particles file
-      if (this.entity.isInRiver() && Board.tickIntervalHasPassed(0.15) && (this.acceleration.x !== 0 || this.acceleration.y !== 0) && this.entity.type !== EntityType.fish) {
+      if (transformComponent.isInRiver() && Board.tickIntervalHasPassed(0.15) && (this.acceleration.x !== 0 || this.acceleration.y !== 0) && this.entity.type !== EntityType.fish) {
          const lifetime = 2.5;
 
          const particle = new Particle(lifetime);
@@ -39,7 +181,7 @@ class PhysicsComponent extends ServerComponent<ServerComponentType.physics> {
             particle,
             ParticleRenderLayer.low,
             64, 64,
-            this.entity.position.x, this.entity.position.y,
+            transformComponent.position.x, transformComponent.position.y,
             0, 0,
             0, 0,
             0,
@@ -52,59 +194,20 @@ class PhysicsComponent extends ServerComponent<ServerComponentType.physics> {
          );
          Board.lowTexturedParticles.push(particle);
 
-         playSound(("water-splash-" + randInt(1, 3) + ".mp3") as AudioFilePath, 0.25, 1, this.entity.position.x, this.entity.position.y);
+         playSound(("water-splash-" + randInt(1, 3) + ".mp3") as AudioFilePath, 0.25, 1, transformComponent.position);
       }
    }
 
    public update(): void {
-      // 
-      // Apply physics
-      // 
+      applyPhysics(this);
       
-      // Apply acceleration
-      if (this.acceleration.x !== 0 || this.acceleration.y !== 0) {
-         let tileMoveSpeedMultiplier = TILE_MOVE_SPEED_MULTIPLIERS[this.entity.tile.type];
-         if (this.entity.tile.type === TileType.water && !this.entity.isInRiver()) {
-            tileMoveSpeedMultiplier = 1;
-         }
-
-         const friction = TILE_FRICTIONS[this.entity.tile.type];
-         
-         this.velocity.x += this.acceleration.x * friction * tileMoveSpeedMultiplier * Settings.I_TPS;
-         this.velocity.y += this.acceleration.y * friction * tileMoveSpeedMultiplier * Settings.I_TPS;
+      // Don't resolve wall tile collisions in lightspeed mode
+      if (Player.instance === null || this.entity.id !== Player.instance.id || !keyIsPressed("l")) { 
+         resolveWallTileCollisions(this.entity);
       }
 
-      // If the game object is in a river, push them in the flow direction of the river
-      const moveSpeedIsOverridden = typeof this.entity.overrideTileMoveSpeedMultiplier !== "undefined" && this.entity.overrideTileMoveSpeedMultiplier() !== null;
-      if (this.entity.isInRiver() && !moveSpeedIsOverridden) {
-         const flowDirection = Board.getRiverFlowDirection(this.entity.tile.x, this.entity.tile.y);
-         this.velocity.x += 240 / Settings.TPS * Math.sin(flowDirection);
-         this.velocity.y += 240 / Settings.TPS * Math.cos(flowDirection);
-      }
-
-      // Apply velocity
-      if (this.velocity.x !== 0 || this.velocity.y !== 0) {
-         const friction = TILE_FRICTIONS[this.entity.tile.type];
-
-         // Apply a friction based on the tile type to simulate air resistance (???)
-         this.velocity.x *= 1 - friction * Settings.I_TPS * 2;
-         this.velocity.y *= 1 - friction * Settings.I_TPS * 2;
-
-         // Apply a constant friction based on the tile type to simulate ground friction
-         const velocityMagnitude = this.velocity.length();
-         if (velocityMagnitude > 0) {
-            const groundFriction = Math.min(friction, velocityMagnitude);
-            this.velocity.x -= groundFriction * this.velocity.x / velocityMagnitude;
-            this.velocity.y -= groundFriction * this.velocity.y / velocityMagnitude;
-         }
-         
-         this.entity.position.x += this.velocity.x * Settings.I_TPS;
-         this.entity.position.y += this.velocity.y * Settings.I_TPS;
-      }
-
-      if (isNaN(this.entity.position.x)) {
-         throw new Error("Position was NaN.");
-      }
+      resolveGameObjectCollisions(this);
+      resolveBorderCollisions(this);
    }
 
    public updateFromData(data: PhysicsComponentData): void {

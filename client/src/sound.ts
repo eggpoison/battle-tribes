@@ -1,9 +1,10 @@
 import { Settings } from "webgl-test-shared/dist/settings";
-import { distance, randInt } from "webgl-test-shared/dist/utils";
+import { distance, Point, randInt } from "webgl-test-shared/dist/utils";
 import { TileType } from "webgl-test-shared/dist/tiles";
 import Camera from "./Camera";
 import Board from "./Board";
 import Entity from "./Entity";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 
 // @Robustness: automatically detect from folder
 const AUDIO_FILE_PATHS = [
@@ -183,8 +184,7 @@ let audioBuffers: Record<AudioFilePath, AudioBuffer>;
 
 export interface Sound {
    volume: number;
-   x: number;
-   y: number;
+   readonly position: Point;
    readonly gainNode: GainNode;
 }
 
@@ -212,9 +212,9 @@ export async function setupAudio(): Promise<void> {
    audioBuffers = tempAudioBuffers as Record<AudioFilePath, AudioBuffer>;
 }
 
-const calculateSoundVolume = (volume: number, x: number, y: number): number => {
+const calculateSoundVolume = (volume: number, position: Point): number => {
    // Calculate final volume accounting for distance
-   let distanceFromPlayer = distance(Camera.position.x, Camera.position.y, x, y);
+   let distanceFromPlayer = Camera.position.calculateDistanceBetween(position);
    distanceFromPlayer /= 150;
    if (distanceFromPlayer < 1) {
       distanceFromPlayer = 1;
@@ -230,11 +230,11 @@ export interface SoundInfo {
    readonly trackSource: AudioBufferSourceNode;
    readonly sound: Sound;
 }
-export function playSound(filePath: AudioFilePath, volume: number, pitchMultiplier: number, sourceX: number, sourceY: number): SoundInfo {
+export function playSound(filePath: AudioFilePath, volume: number, pitchMultiplier: number, source: Point): SoundInfo {
    const audioBuffer = audioBuffers[filePath];
 
    const gainNode = audioContext.createGain();
-   gainNode.gain.value = calculateSoundVolume(volume, sourceX, sourceY);
+   gainNode.gain.value = calculateSoundVolume(volume, source);
    gainNode.connect(audioContext.destination);
    
    const trackSource = audioContext.createBufferSource();
@@ -244,10 +244,9 @@ export function playSound(filePath: AudioFilePath, volume: number, pitchMultipli
 
    trackSource.start();
 
-   const soundInfo = {
+   const soundInfo: Sound = {
       volume: volume,
-      x: sourceX,
-      y: sourceY,
+      position: source,
       gainNode: gainNode
    };
    activeSounds.push(soundInfo);
@@ -284,18 +283,20 @@ export function updateSoundEffectVolumes(): void {
    for (let i = 0; i < entityAttachedSounds.length; i++) {
       const attachedSoundInfo = entityAttachedSounds[i];
 
-      attachedSoundInfo.sound.x = attachedSoundInfo.entity.position.x;
-      attachedSoundInfo.sound.y = attachedSoundInfo.entity.position.y;
+      const transformComponent = attachedSoundInfo.entity.getServerComponent(ServerComponentType.transform);
+
+      attachedSoundInfo.sound.position.x = transformComponent.position.x;
+      attachedSoundInfo.sound.position.y = transformComponent.position.y;
    }
    
    for (let i = 0; i < activeSounds.length; i++) {
       const sound = activeSounds[i];
-      sound.gainNode.gain.value = calculateSoundVolume(sound.volume, sound.x, sound.y);
+      sound.gainNode.gain.value = calculateSoundVolume(sound.volume, sound.position);
    }
 }
 
-export function playBuildingHitSound(sourceX: number, sourceY: number): void {
-   playSound(("building-hit-" + randInt(1, 2) + ".mp3") as AudioFilePath, 0.2, 1, sourceX, sourceY);
+export function playBuildingHitSound(source: Point): void {
+   playSound(("building-hit-" + randInt(1, 2) + ".mp3") as AudioFilePath, 0.2, 1, source);
 }
 
 export function playRiverSounds(): void {
@@ -314,7 +315,7 @@ export function playRiverSounds(): void {
          if (tile.type === TileType.water && Math.random() < 0.1 / Settings.TPS) {
             const x = (tileX + Math.random()) * Settings.TILE_SIZE;
             const y = (tileY + Math.random()) * Settings.TILE_SIZE;
-            playSound(("water-flowing-" + randInt(1, 4) + ".mp3") as AudioFilePath, 0.2, 1, x, y);
+            playSound(("water-flowing-" + randInt(1, 4) + ".mp3") as AudioFilePath, 0.2, 1, new Point(x, y));
          }
       }
    }

@@ -1,33 +1,45 @@
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
-import { StructureConnectionInfo } from "webgl-test-shared/dist/structures";
+import { createEmptyStructureConnectionInfo } from "webgl-test-shared/dist/structures";
 import { Point } from "webgl-test-shared/dist/utils";
-import Entity from "../../Entity";
-import Tribe from "../../Tribe";
-import { FenceComponent, FenceComponentArray } from "../../components/FenceComponent";
-import { HealthComponent, HealthComponentArray } from "../../components/HealthComponent";
-import { StatusEffectComponentArray, StatusEffectComponent } from "../../components/StatusEffectComponent";
-import { StructureComponentArray, StructureComponent } from "../../components/StructureComponent";
-import { TribeComponent, TribeComponentArray } from "../../components/TribeComponent";
-import { CraftingStationComponentArray, CraftingStationComponent } from "../../components/CraftingStationComponent";
 import { createStonecarvingTableHitboxes } from "webgl-test-shared/dist/hitboxes/entity-hitbox-creation";
 import { CraftingStation } from "webgl-test-shared/dist/items/crafting-recipes";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ComponentConfig } from "../../components";
 
-export function createStonecarvingTable(position: Point, rotation: number, tribe: Tribe, connectionInfo: StructureConnectionInfo): Entity {
-   const stonecarvingTable = new Entity(position, rotation, EntityType.stonecarvingTable, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
+type ComponentTypes = ServerComponentType.transform
+   | ServerComponentType.health
+   | ServerComponentType.statusEffect
+   | ServerComponentType.structure
+   | ServerComponentType.tribe
+   | ServerComponentType.craftingStation;
 
-   const hitboxes = createStonecarvingTableHitboxes();
-   for (let i = 0; i < hitboxes.length; i++) {
-      stonecarvingTable.addHitbox(hitboxes[i]);
-   }
-
-   HealthComponentArray.addComponent(stonecarvingTable.id, new HealthComponent(40));
-   StatusEffectComponentArray.addComponent(stonecarvingTable.id, new StatusEffectComponent(StatusEffect.freezing | StatusEffect.poisoned));
-   StructureComponentArray.addComponent(stonecarvingTable.id, new StructureComponent(connectionInfo));
-   TribeComponentArray.addComponent(stonecarvingTable.id, new TribeComponent(tribe));
-   FenceComponentArray.addComponent(stonecarvingTable.id, new FenceComponent());
-   CraftingStationComponentArray.addComponent(stonecarvingTable.id, new CraftingStationComponent(CraftingStation.stonecarvingTable));
-   
-   return stonecarvingTable;
+export function createStonecarvingTableConfig(): ComponentConfig<ComponentTypes> {
+   return {
+      [ServerComponentType.transform]: {
+         position: new Point(0, 0),
+         rotation: 0,
+         type: EntityType.stonecarvingTable,
+         collisionBit: COLLISION_BITS.default,
+         collisionMask: DEFAULT_COLLISION_MASK,
+         hitboxes: createStonecarvingTableHitboxes()
+      },
+      [ServerComponentType.health]: {
+         maxHealth: 40
+      },
+      [ServerComponentType.statusEffect]: {
+         statusEffectImmunityBitset: StatusEffect.bleeding | StatusEffect.poisoned
+      },
+      [ServerComponentType.structure]: {
+         connectionInfo: createEmptyStructureConnectionInfo()
+      },
+      [ServerComponentType.tribe]: {
+         tribe: null,
+         tribeType: 0
+      },
+      [ServerComponentType.craftingStation]: {
+         craftingStation: CraftingStation.stonecarvingTable
+      }
+   };
 }

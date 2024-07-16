@@ -21,7 +21,7 @@ export class FishComponent {
    }
 }
 
-export const FishComponentArray = new ComponentArray<ServerComponentType.fish, FishComponent>(true, {
+export const FishComponentArray = new ComponentArray<FishComponent>(ServerComponentType.fish, true, {
    onRemove: onRemove,
    serialise: serialise
 });

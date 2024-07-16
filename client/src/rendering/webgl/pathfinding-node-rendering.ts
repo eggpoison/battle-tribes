@@ -8,6 +8,7 @@ import { angle } from "webgl-test-shared/dist/utils";
 import { PathfindingNodeIndex } from "webgl-test-shared/dist/client-server-types";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 import { nerdVisionIsVisible } from "../../components/game/dev/NerdVision";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 
 enum NodeType {
    occupied,
@@ -122,10 +123,12 @@ const renderConnectors = (mainPathNodes: ReadonlyArray<PathfindingNodeIndex>): v
    if (typeof debugEntity === "undefined") {
       return;
    }
+
+   const transformComponent = debugEntity.getServerComponent(ServerComponentType.transform);
    
    const vertices = new Array<number>();
-   let lastNodeX = debugEntity.position.x;
-   let lastNodeY = debugEntity.position.y;
+   let lastNodeX = transformComponent.position.x;
+   let lastNodeY = transformComponent.position.y;
    for (let i = 0; i < mainPathNodes.length; i++) {
       const node = mainPathNodes[i];
 

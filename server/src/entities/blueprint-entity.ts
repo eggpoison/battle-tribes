@@ -51,7 +51,8 @@ export function createBlueprintEntityConfig(): ComponentConfig<ComponentTypes> {
          associatedEntityID: 0,
       },
       [ServerComponentType.tribe]: {
-         tribeID: null
+         tribe: null,
+         tribeType: 0
       }
    };
 }

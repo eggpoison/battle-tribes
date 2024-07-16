@@ -1,5 +1,4 @@
 import { EntityType } from "webgl-test-shared/dist/entities";
-import { Point } from "webgl-test-shared/dist/utils";
 import Camera from "../Camera";
 import { halfWindowHeight, halfWindowWidth } from "../webgl";
 import { ComponentDataRecord } from "../Entity";
@@ -11,6 +10,7 @@ import FootprintComponent from "../entity-components/FootprintComponent";
 import EquipmentComponent from "../entity-components/EquipmentComponent";
 import { TRIBE_INFO_RECORD } from "webgl-test-shared/dist/tribes";
 import { Item } from "webgl-test-shared/dist/items/items";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 
 /** Updates the rotation of the player to match the cursor position */
 export function updatePlayerRotation(cursorX: number, cursorY: number): void {
@@ -21,7 +21,9 @@ export function updatePlayerRotation(cursorX: number, cursorY: number): void {
 
    let cursorDirection = Math.atan2(relativeCursorY, relativeCursorX);
    cursorDirection = Math.PI/2 - cursorDirection;
-   Player.instance.rotation = cursorDirection;
+
+   const transformComponent = Player.instance.getServerComponent(ServerComponentType.transform);
+   transformComponent.rotation = cursorDirection;
 }
 
 // export function updateAvailableCraftingRecipes(): void {
@@ -102,8 +104,8 @@ class Player extends TribeMember {
    /** The player entity associated with the current player. */
    public static instance: Player | null = null;
    
-   constructor(position: Point, id: number, ageTicks: number, componentDataRecord: ComponentDataRecord) {
-      super(position, id, EntityType.player, ageTicks);
+   constructor(id: number, componentDataRecord: ComponentDataRecord) {
+      super(id, EntityType.player);
       
       addTribeMemberRenderParts(this, componentDataRecord);
 

@@ -83,18 +83,20 @@ class HealingTotemComponent extends ServerComponent<ServerComponentType.healingT
          }
       }
       
+      const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
+      
       for (let i = 0; i < this.healingTargetsData.length; i++) {    
          const targetData = this.healingTargetsData[i];
-         const beamLength = distance(this.entity.position.x, this.entity.position.y, targetData.x, targetData.y);
+         const beamLength = distance(transformComponent.position.x, transformComponent.position.y, targetData.x, targetData.y);
          if (Math.random() > 0.02 * beamLength / Settings.TPS) {
             continue;
          }
 
-         const beamDirection = angle(targetData.x - this.entity.position.x, targetData.y - this.entity.position.y);
+         const beamDirection = angle(targetData.x - transformComponent.position.x, targetData.y - transformComponent.position.y);
          
          const progress = Math.random();
-         const startX = lerp(this.entity.position.x + 48 * Math.sin(beamDirection), targetData.x - 30 * Math.sin(beamDirection), progress);
-         const startY = lerp(this.entity.position.y + 48 * Math.cos(beamDirection), targetData.y - 30 * Math.cos(beamDirection), progress);
+         const startX = lerp(transformComponent.position.x + 48 * Math.sin(beamDirection), targetData.x - 30 * Math.sin(beamDirection), progress);
+         const startY = lerp(transformComponent.position.y + 48 * Math.cos(beamDirection), targetData.y - 30 * Math.cos(beamDirection), progress);
 
          // @Speed: garbage collection
          createHealingParticle(new Point(startX, startY), randInt(0, 2));

@@ -27,7 +27,7 @@ import { onYetiDeath, tickYeti } from "./entities/mobs/yeti";
 import { tickSnowball } from "./entities/snowball";
 import { onFishDeath, tickFish } from "./entities/mobs/fish";
 import { tickStatusEffectComponents } from "./components/StatusEffectComponent";
-import { onIceSpikesDeath, tickIceSpikes } from "./entities/resources/ice-spikes";
+import { tickIceSpikes } from "./entities/resources/ice-spikes";
 import { tickItemEntity } from "./entities/item-entity";
 import { tickFrozenYeti } from "./entities/mobs/frozen-yeti";
 import { tickRockSpikeProjectile } from "./entities/projectiles/rock-spike";
@@ -39,15 +39,13 @@ import { onTribeWarriorDeath, tickTribeWarrior } from "./entities/tribes/tribe-w
 import { onSlimeSpitDeath, tickSlimeSpit } from "./entities/projectiles/slime-spit";
 import { tickSpitPoison } from "./entities/projectiles/spit-poison";
 import { DoorComponentArray, tickDoorComponent } from "./components/DoorComponent";
-import { onBattleaxeProjectileRemove, tickBattleaxeProjectile } from "./entities/projectiles/battleaxe-projectile";
 import { tickGolem } from "./entities/mobs/golem";
-import { tickIceArrow } from "./entities/projectiles/ice-arrow";
 import { tickPebblum } from "./entities/mobs/pebblum";
 import { tickPhysicsComponents } from "./components/PhysicsComponent";
 import { tickBallista } from "./entities/structures/ballista";
 import { tickSlingTurret } from "./entities/structures/sling-turret";
 import { ResearchBenchComponentArray, tickResearchBenchComponent } from "./components/ResearchBenchComponent";
-import { clearEntityPathfindingNodes, entityCanBlockPathfinding, markWallTileInPathfinding, updateEntityPathfindingNodeOccupance } from "./pathfinding";
+import { markWallTileInPathfinding } from "./pathfinding";
 import OPTIONS from "./options";
 import { CollisionVars, collide, entitiesAreColliding } from "./collision";
 import { TunnelComponentArray, tickTunnelComponent } from "./components/TunnelComponent";
@@ -60,6 +58,9 @@ import { Hitbox, hitboxIsCircular } from "webgl-test-shared/dist/hitboxes/hitbox
 import { TransformComponentArray } from "./components/TransformComponent";
 import { onCactusDeath } from "./entities/resources/cactus";
 import { onTreeDeath } from "./entities/resources/tree";
+import { tickBattleaxeProjectile } from "./entities/projectiles/battleaxe-projectile";
+import { WorldInfo } from "webgl-test-shared/dist/structures";
+import { EntityInfo } from "webgl-test-shared/dist/board-interface";
 
 const START_TIME = 6;
 
@@ -158,6 +159,7 @@ abstract class Board {
       }
    }
 
+   // @Cleanup: why does this have to be called from the board? And is kind of weird
    public static getEntityType(entityID: EntityID): EntityType | undefined {
       return this.entityTypes[entityID];
    }
@@ -273,7 +275,6 @@ abstract class Board {
          case EntityType.cow: onCowDeath(entity); break;
          case EntityType.tree: onTreeDeath(entity); break;
          case EntityType.krumblid: onKrumblidDeath(entity); break;
-         case EntityType.iceSpikes: onIceSpikesDeath(entity); break;
          case EntityType.cactus: onCactusDeath(entity); break;
          case EntityType.tribeWorker: onTribeWorkerDeath(entity); break;
          case EntityType.tribeWarrior: onTribeWarriorDeath(entity); break;
@@ -291,44 +292,27 @@ abstract class Board {
             throw new Error("Tried to remove a game object which doesn't exist or was already removed.");
          }
    
-         const entityID = entity.id;
-
          // @Speed: don't do per entity, do per component array
          // Call remove functions
          for (let i = 0; i < ComponentArrays.length; i++) {
             const componentArray = ComponentArrays[i];
-            if (componentArray.hasComponent(entityID) && typeof componentArray.onRemove !== "undefined") {
-               componentArray.onRemove(entityID);
+            if (componentArray.hasComponent(entity) && typeof componentArray.onRemove !== "undefined") {
+               componentArray.onRemove(entity);
             }
-         }
-
-         // @Cleanup: remove
-         switch (entity.type) {
-            case EntityType.battleaxeProjectile: onBattleaxeProjectileRemove(entity); break;
-         }
-
-         // @Cleanup
-         if (entityCanBlockPathfinding(entity.type)) {
-            clearEntityPathfindingNodes(entity);
          }
 
          // @Speed: don't do per entity, do per component array
          // Remove components
          for (let i = 0; i < ComponentArrays.length; i++) {
             const componentArray = ComponentArrays[i];
-            if (componentArray.hasComponent(entityID)) {
-               componentArray.removeComponent(entityID);
+            if (componentArray.hasComponent(entity)) {
+               componentArray.removeComponent(entity);
             }
          }
 
-         this.entities.splice(idx, 1);
-         delete this.entityRecord[entityID];
          removeEntityFromCensus(entity);
-   
-         for (let i = 0; i < entity.chunks.length; i++) {
-            const chunk = entity.chunks[i];
-            entity.removeFromChunk(chunk);
-         }
+         this.entities.splice(idx, 1);
+         delete this.entityTypes[entity];
       }
 
       this.entityRemoveBuffer = [];
@@ -373,7 +357,6 @@ abstract class Board {
             case EntityType.battleaxeProjectile: tickBattleaxeProjectile(entity); break;
             case EntityType.golem: tickGolem(entity); break;
             case EntityType.iceSpikes: tickIceSpikes(entity); break;
-            case EntityType.iceArrow: tickIceArrow(entity); break;
             case EntityType.pebblum: tickPebblum(entity); break;
             case EntityType.ballista: tickBallista(entity); break;
             case EntityType.slingTurret: tickSlingTurret(entity); break;
@@ -386,7 +369,8 @@ abstract class Board {
 
       for (let i = 0; i < InventoryUseComponentArray.components.length; i++) {
          const inventoryUseComponent = InventoryUseComponentArray.components[i];
-         tickInventoryUseComponent(inventoryUseComponent);
+         const entity = InventoryUseComponentArray.getEntityFromArrayIdx(i);
+         tickInventoryUseComponent(entity, inventoryUseComponent);
       }
 
       for (let i = 0; i < HealthComponentArray.components.length; i++) {
@@ -710,6 +694,23 @@ abstract class Board {
       }
 
       return entities;
+   }
+
+   public static getWorldInfo(): WorldInfo {
+      return {
+         chunks: Board.chunks,
+         getEntityCallback: (entity: EntityID): EntityInfo => {
+            const transformComponent = TransformComponentArray.getComponent(entity);
+
+            return {
+               type: Board.getEntityType(entity)!,
+               position: transformComponent.position,
+               rotation: transformComponent.rotation,
+               id: entity,
+               hitboxes: transformComponent.hitboxes
+            };
+         }
+      }
    }
 }
 

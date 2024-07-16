@@ -1,13 +1,14 @@
 import { EntityType } from "webgl-test-shared/dist/entities";
-import { Point } from "webgl-test-shared/dist/utils";
 import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
-import Entity from "../Entity";
+import Entity, { ComponentDataRecord } from "../Entity";
 import { playSound } from "../sound";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { Point } from "webgl-test-shared/dist/utils";
 
 class SpearProjectile extends Entity {
-   constructor(position: Point, id: number, ageTicks: number) {
-      super(position, id, EntityType.spearProjectile, ageTicks);
+   constructor(id: number, componentDataRecord: ComponentDataRecord) {
+      super(id, EntityType.spearProjectile);
 
       this.attachRenderPart(
          new RenderPart(
@@ -18,11 +19,15 @@ class SpearProjectile extends Entity {
          )
       );
 
-      playSound("spear-throw.mp3", 0.4, 1, this.position.x, this.position.y);
+      const transformComponentData = componentDataRecord[ServerComponentType.transform]!;
+      if (transformComponentData.ageTicks <= 0) {
+         playSound("spear-throw.mp3", 0.4, 1, Point.unpackage(transformComponentData.position));
+      }
    }
 
    public onDie(): void {
-      playSound("spear-hit.mp3", 0.4, 1, this.position.x, this.position.y);
+      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      playSound("spear-hit.mp3", 0.4, 1, transformComponent.position);
    }
 }
 

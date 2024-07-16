@@ -9,7 +9,7 @@ export class AmmoBoxComponent {
    public ammoRemaining = 0;
 }
 
-export const AmmoBoxComponentArray = new ComponentArray<ServerComponentType.ammoBox, AmmoBoxComponent>(true, {
+export const AmmoBoxComponentArray = new ComponentArray<AmmoBoxComponent>(ServerComponentType.ammoBox, true, {
    serialise: serialise
 });
 

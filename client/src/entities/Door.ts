@@ -1,6 +1,5 @@
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityType } from "webgl-test-shared/dist/entities";
-import { Point } from "webgl-test-shared/dist/utils";
 import { HitData } from "webgl-test-shared/dist/client-server-types";
 import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
@@ -10,8 +9,8 @@ import { createLightWoodSpeckParticle, createWoodShardParticle } from "../partic
 import { DOOR_TEXTURE_SOURCES } from "../entity-components/BuildingMaterialComponent";
 
 class Door extends Entity {
-   constructor(position: Point, id: number, ageTicks: number, componentDataRecord: ComponentDataRecord) {
-      super(position, id, EntityType.door, ageTicks);
+   constructor(id: number, componentDataRecord: ComponentDataRecord) {
+      super(id, EntityType.door);
 
       const buildingMaterialComponentData = componentDataRecord[ServerComponentType.buildingMaterial]!;
 
@@ -26,27 +25,31 @@ class Door extends Entity {
    }
 
    protected onHit(hitData: HitData): void {
-      playSound("wooden-wall-hit.mp3", 0.3, 1, this.position.x, this.position.y);
+      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+
+      playSound("wooden-wall-hit.mp3", 0.3, 1, transformComponent.position);
 
       for (let i = 0; i < 4; i++) {
-         createLightWoodSpeckParticle(this.position.x, this.position.y, 20);
+         createLightWoodSpeckParticle(transformComponent.position.x, transformComponent.position.y, 20);
       }
 
       for (let i = 0; i < 7; i++) {
-         const position = this.position.offset(20, 2 * Math.PI * Math.random());
+         const position = transformComponent.position.offset(20, 2 * Math.PI * Math.random());
          createLightWoodSpeckParticle(position.x, position.y, 5);
       }
    }
    
    public onDie(): void {
-      playSound("wooden-wall-break.mp3", 0.4, 1, this.position.x, this.position.y);
+      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+
+      playSound("wooden-wall-break.mp3", 0.4, 1, transformComponent.position);
 
       for (let i = 0; i < 7; i++) {
-         createLightWoodSpeckParticle(this.position.x, this.position.y, 32 * Math.random());
+         createLightWoodSpeckParticle(transformComponent.position.x, transformComponent.position.y, 32 * Math.random());
       }
 
       for (let i = 0; i < 3; i++) {
-         createWoodShardParticle(this.position.x, this.position.y, 32);
+         createWoodShardParticle(transformComponent.position.x, transformComponent.position.y, 32);
       }
    }
 }

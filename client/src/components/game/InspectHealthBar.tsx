@@ -95,7 +95,9 @@ export function updateInspectHealthBar(): void {
    const barY = hoveredEntity.renderPosition.y + Y_OFFSET;
    InspectHealthBar_setPos(Camera.calculateXScreenPos(barX), Camera.calculateYScreenPos(barY));
 
-   const dist = distance(barX, barY, Player.instance.position.x, Player.instance.position.y);
+   const transformComponent = Player.instance.getServerComponent(ServerComponentType.transform);
+   
+   const dist = distance(barX, barY, transformComponent.position.x, transformComponent.position.y);
    const opacity = lerp(0.4, 1, clamp((dist - 80) / 80, 0, 1));
    InspectHealthBar_setOpacity(opacity);
 }

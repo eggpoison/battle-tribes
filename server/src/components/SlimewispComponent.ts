@@ -8,7 +8,7 @@ export class SlimewispComponent {
    public mergeTimer = SLIMEWISP_MERGE_TIME;
 }
 
-export const SlimewispComponentArray = new ComponentArray<ServerComponentType.slimewisp, SlimewispComponent>(true, {
+export const SlimewispComponentArray = new ComponentArray<SlimewispComponent>(ServerComponentType.slimewisp, true, {
    serialise: serialise
 });
 

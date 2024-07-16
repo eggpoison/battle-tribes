@@ -1,19 +1,20 @@
 import { ComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
-import { EntityID } from "webgl-test-shared/dist/entities";
-import { ComponentConfig, ComponentRecord } from "../components";
+import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
+import { ComponentConfig } from "../components";
 
 export const ComponentArrays = new Array<ComponentArray>();
-export const ComponentArrayRecord = {} as { [T in ServerComponentType]: ComponentArray<T> };
+export const ComponentArrayRecord = {} as { [T in ServerComponentType]: ComponentArray<object, T> };
 
-interface ComponentArrayFunctions<C extends ServerComponentType> {
-   onJoin?(entity: EntityID): void;
-   onRemove?(entity: EntityID): void;
+interface ComponentArrayFunctions<C extends ServerComponentType, T extends object> {
    /** Called after all the components for an entity are created, before the entity has joined the world. */
-   onInitialise?(config: ComponentConfig<ServerComponentType>): void;
-   serialise(entity: EntityID, player: EntityID | 0): ComponentData<C>;
+   onInitialise?(config: ComponentConfig<ServerComponentType>, entity: EntityID, entityType: EntityType): void;
+   onJoin?(entity: EntityID): void;
+   onTick?(entity: EntityID, component: T): void;
+   onRemove?(entity: EntityID): void;
+   serialise(entity: EntityID, player: EntityID | null): ComponentData<C>;
 }
 
-export class ComponentArray<C extends ServerComponentType = ServerComponentType, T extends object = object> {
+export class ComponentArray<T extends object = object, C extends ServerComponentType = ServerComponentType> {
    private readonly isActiveByDefault: boolean;
    
    public components = new Array<T>();
@@ -39,10 +40,10 @@ export class ComponentArray<C extends ServerComponentType = ServerComponentType,
    // @Bug @Incomplete: This function shouldn't create an entity, as that will cause a crash. (Can't add components to the join buffer while iterating it). solution: make it not crash
    public onJoin?: (entity: EntityID) => void;
    public onRemove?: (entity: EntityID) => void;
-   public onInitialise?: (config: ComponentConfig<ServerComponentType>) => void;
-   public serialise: (entity: EntityID, player: EntityID | 0) => ComponentData<C>;
+   public onInitialise?: (config: ComponentConfig<ServerComponentType>, entity: EntityID, entityType: EntityType) => void;
+   public serialise: (entity: EntityID, player: EntityID | null) => ComponentData<C>;
    
-   constructor(isActiveByDefault: boolean, functions: ComponentArrayFunctions<C>) {
+   constructor(componentType: C, isActiveByDefault: boolean, functions: ComponentArrayFunctions<C, T>) {
       this.isActiveByDefault = isActiveByDefault;
 
       this.onJoin = functions.onJoin;
@@ -51,6 +52,8 @@ export class ComponentArray<C extends ServerComponentType = ServerComponentType,
       this.serialise = functions.serialise;
 
       ComponentArrays.push(this);
+      // @Cleanup: cast
+      ComponentArrayRecord[componentType] = this as any;
    }
    
    public addComponent(entity: EntityID, component: T): void {

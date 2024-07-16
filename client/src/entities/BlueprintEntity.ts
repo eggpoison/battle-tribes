@@ -324,8 +324,8 @@ export function getCurrentBlueprintProgressTexture(blueprintType: BlueprintType,
 }
 
 class BlueprintEntity extends Entity {
-   constructor(position: Point, id: number, ageTicks: number, componentDataRecord: ComponentDataRecord) {
-      super(position, id, EntityType.blueprintEntity, ageTicks);
+   constructor(id: number, componentDataRecord: ComponentDataRecord) {
+      super(id, EntityType.blueprintEntity);
 
       const blueprintComponentData = componentDataRecord[ServerComponentType.blueprint]!;
       
@@ -349,9 +349,9 @@ class BlueprintEntity extends Entity {
          this.attachRenderPart(renderPart);
       }
 
-      // @Hack: Should be 1
-      if (ageTicks <= 1) {
-         playSound("blueprint-place.mp3", 0.4, 1, this.position.x, this.position.y);
+      const transformComponentData = componentDataRecord[ServerComponentType.transform]!;
+      if (transformComponentData.ageTicks <= 0) {
+         playSound("blueprint-place.mp3", 0.4, 1, Point.unpackage(transformComponentData.position));
       }
    }
 
@@ -363,8 +363,10 @@ class BlueprintEntity extends Entity {
    }
 
    public onRemove(): void {
-      playSound("blueprint-work.mp3", 0.4, 1, this.position.x, this.position.y);
-      playSound("structure-shaping.mp3", 0.4, 1, this.position.x, this.position.y);
+      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+
+      playSound("blueprint-work.mp3", 0.4, 1, transformComponent.position);
+      playSound("structure-shaping.mp3", 0.4, 1, transformComponent.position);
 
       // @Cleanup: Copy and pasted from blueprint component
       const blueprintComponent = this.getServerComponent(ServerComponentType.blueprint);
@@ -377,13 +379,13 @@ class BlueprintEntity extends Entity {
          case BlueprintType.warriorHutUpgrade:
          case BlueprintType.fenceGate: {
             for (let i = 0; i < 5; i++) {
-               const x = this.position.x + randFloat(-32, 32);
-               const y = this.position.y + randFloat(-32, 32);
+               const x = transformComponent.position.x + randFloat(-32, 32);
+               const y = transformComponent.position.y + randFloat(-32, 32);
                createSawdustCloud(x, y);
             }
       
             for (let i = 0; i < 8; i++) {
-               createLightWoodSpeckParticle(this.position.x, this.position.y, 32);
+               createLightWoodSpeckParticle(transformComponent.position.x, transformComponent.position.y, 32);
             }
             break;
          }
@@ -399,16 +401,16 @@ class BlueprintEntity extends Entity {
             for (let i = 0; i < 5; i++) {
                const offsetDirection = 2 * Math.PI * Math.random();
                const offsetAmount = 32 * Math.random();
-               createRockParticle(this.position.x + offsetAmount * Math.sin(offsetDirection), this.position.y + offsetAmount * Math.cos(offsetDirection), 2 * Math.PI * Math.random(), randFloat(50, 70), ParticleRenderLayer.high);
+               createRockParticle(transformComponent.position.x + offsetAmount * Math.sin(offsetDirection), transformComponent.position.y + offsetAmount * Math.cos(offsetDirection), 2 * Math.PI * Math.random(), randFloat(50, 70), ParticleRenderLayer.high);
             }
          
             for (let i = 0; i < 10; i++) {
-               createRockSpeckParticle(this.position.x, this.position.y, 32 * Math.random(), 0, 0, ParticleRenderLayer.high);
+               createRockSpeckParticle(transformComponent.position.x, transformComponent.position.y, 32 * Math.random(), 0, 0, ParticleRenderLayer.high);
             }
          
             for (let i = 0; i < 3; i++) {
-               const x = this.position.x + randFloat(-32, 32);
-               const y = this.position.y + randFloat(-32, 32);
+               const x = transformComponent.position.x + randFloat(-32, 32);
+               const y = transformComponent.position.y + randFloat(-32, 32);
                createDustCloud(x, y);
             }
             break;
@@ -419,7 +421,7 @@ class BlueprintEntity extends Entity {
       }
    }
 
-   public updateFromData(data: EntityData<EntityType.blueprintEntity>): void {
+   public updateFromData(data: EntityData): void {
       super.updateFromData(data);
 
       this.updatePartialTexture();

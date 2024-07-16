@@ -15,6 +15,7 @@ import { ItemTally2, tallyInventoryItems } from "webgl-test-shared/dist/items/It
 import InventoryContainer from "../inventories/InventoryContainer";
 import { deselectHighlightedEntity } from "../../../entity-selection";
 import { addMenuCloseFunction } from "../../../menus";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 
 interface RecipeViewerProps {
    readonly recipe: CraftingRecipe;
@@ -187,7 +188,9 @@ const CraftingMenu = () => {
          return;
       }
 
-      playSound("craft.mp3", 0.25, 1, Player.instance!.position.x, Player.instance!.position.y);
+      const playerTransformComponent = Player.instance!.getServerComponent(ServerComponentType.transform);
+
+      playSound("craft.mp3", 0.25, 1, playerTransformComponent.position);
       Client.sendCraftingPacket(selectedRecipeIndex.current);
    }, [selectedRecipe, craftableRecipes]);
 

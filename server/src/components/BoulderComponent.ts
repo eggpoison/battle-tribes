@@ -9,7 +9,7 @@ export class BoulderComponent {
    public readonly boulderType = randInt(0, 1);
 }
 
-export const BoulderComponentArray = new ComponentArray<ServerComponentType.boulder, BoulderComponent>(true, {
+export const BoulderComponentArray = new ComponentArray<BoulderComponent>(ServerComponentType.boulder, true, {
    serialise: serialise
 });
 

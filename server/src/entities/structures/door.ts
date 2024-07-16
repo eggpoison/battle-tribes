@@ -1,36 +1,59 @@
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision";
-import { BuildingMaterial } from "webgl-test-shared/dist/components";
+import { BuildingMaterial, ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { Point } from "webgl-test-shared/dist/utils";
-import Entity from "../../Entity";
-import { HealthComponent, HealthComponentArray } from "../../components/HealthComponent";
-import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
-import Tribe from "../../Tribe";
-import { DoorComponent, DoorComponentArray } from "../../components/DoorComponent";
-import { TribeComponent, TribeComponentArray } from "../../components/TribeComponent";
-import { PhysicsComponent, PhysicsComponentArray } from "../../components/PhysicsComponent";
-import { BuildingMaterialComponent, BuildingMaterialComponentArray } from "../../components/BuildingMaterialComponent";
-import { StructureComponentArray, StructureComponent } from "../../components/StructureComponent";
-import { StructureConnectionInfo } from "webgl-test-shared/dist/structures";
+import { createEmptyStructureConnectionInfo } from "webgl-test-shared/dist/structures";
 import { createDoorHitboxes } from "webgl-test-shared/dist/hitboxes/entity-hitbox-creation";
+import { ComponentConfig } from "../../components";
+import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 
-export const DOOR_HEALTHS = [15, 45];
+type ComponentTypes = ServerComponentType.transform
+   | ServerComponentType.physics
+   | ServerComponentType.health
+   | ServerComponentType.statusEffect
+   | ServerComponentType.structure
+   | ServerComponentType.tribe
+   | ServerComponentType.buildingMaterial
+   | ServerComponentType.door;
 
-export function createDoor(position: Point, rotation: number, tribe: Tribe, connectionInfo: StructureConnectionInfo, material: BuildingMaterial): Entity {
-   const door = new Entity(position, rotation, EntityType.door, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
-
-   const hitboxes = createDoorHitboxes();
-   for (let i = 0; i < hitboxes.length; i++) {
-      door.addHitbox(hitboxes[i]);
-   }
-   
-   PhysicsComponentArray.addComponent(door.id, new PhysicsComponent(0, 0, 0, 0, false, true));
-   HealthComponentArray.addComponent(door.id, new HealthComponent(DOOR_HEALTHS[material]));
-   StatusEffectComponentArray.addComponent(door.id, new StatusEffectComponent(0));
-   DoorComponentArray.addComponent(door.id, new DoorComponent(position.x, position.y, rotation));
-   StructureComponentArray.addComponent(door.id, new StructureComponent(connectionInfo));
-   TribeComponentArray.addComponent(door.id, new TribeComponent(tribe)); 
-   BuildingMaterialComponentArray.addComponent(door.id, new BuildingMaterialComponent(material));
-
-   return door;
+export function createDoorConfig(): ComponentConfig<ComponentTypes> {
+   return {
+      [ServerComponentType.transform]: {
+         position: new Point(0, 0),
+         rotation: 0,
+         type: EntityType.door,
+         collisionBit: COLLISION_BITS.default,
+         collisionMask: DEFAULT_COLLISION_MASK,
+         hitboxes: createDoorHitboxes()
+      },
+      [ServerComponentType.physics]: {
+         velocityX: 0,
+         velocityY: 0,
+         accelerationX: 0,
+         accelerationY: 0,
+         isAffectedByFriction: false,
+         isImmovable: true
+      },
+      [ServerComponentType.health]: {
+         maxHealth: 0
+      },
+      [ServerComponentType.statusEffect]: {
+         statusEffectImmunityBitset: StatusEffect.bleeding | StatusEffect.poisoned
+      },
+      [ServerComponentType.structure]: {
+         connectionInfo: createEmptyStructureConnectionInfo()
+      },
+      [ServerComponentType.tribe]: {
+         tribe: null,
+         tribeType: 0
+      },
+      [ServerComponentType.buildingMaterial]: {
+         material: BuildingMaterial.wood
+      },
+      [ServerComponentType.door]: {
+         originX: 0,
+         originY: 0,
+         closedRotation: 0
+      }
+   };
 }

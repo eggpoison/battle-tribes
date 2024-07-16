@@ -3,8 +3,8 @@ import { DoorToggleType, EntityID } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { angle, lerp } from "webgl-test-shared/dist/utils";
 import { ComponentArray } from "./ComponentArray";
-import Entity from "../Entity";
 import { RectangularHitbox, HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
+import { TransformComponentArray } from "./TransformComponent";
 
 // @Cleanup: All the door toggling logic is stolen from DoorComponent.ts
 
@@ -19,7 +19,7 @@ export class FenceGateComponent {
    public openProgress = 0;
 }
 
-export const FenceGateComponentArray = new ComponentArray<ServerComponentType.fenceGate, FenceGateComponent>(true, {
+export const FenceGateComponentArray = new ComponentArray<FenceGateComponent>(ServerComponentType.fenceGate, true, {
    serialise: serialise
 });
 
@@ -29,7 +29,7 @@ const doorHeight = 16;
 const doorHalfDiagonalLength = Math.sqrt(doorHeight * doorHeight + doorWidth * doorWidth) / 2;
 const angleToCenter = angle(doorHeight, doorWidth);
 
-const updateDoorOpenProgress = (fenceGate: Entity, fenceGateComponent: FenceGateComponent): void => {
+const updateDoorOpenProgress = (fenceGate: EntityID, fenceGateComponent: FenceGateComponent): void => {
    const baseRotation = Math.PI/2;
    const rotation = baseRotation - lerp(0, Math.PI/2 - 0.1, fenceGateComponent.openProgress);
    
@@ -38,14 +38,16 @@ const updateDoorOpenProgress = (fenceGate: Entity, fenceGateComponent: FenceGate
    const xOffset = doorHalfDiagonalLength * Math.sin(offsetDirection) - doorHalfDiagonalLength * Math.sin(baseRotation + angleToCenter);
    const yOffset = doorHalfDiagonalLength * Math.cos(offsetDirection) - doorHalfDiagonalLength * Math.cos(baseRotation + angleToCenter);
 
-   const hitbox = fenceGate.hitboxes[0] as RectangularHitbox;
+   const transformComponent = TransformComponentArray.getComponent(fenceGate);
+   
+   const hitbox = transformComponent.hitboxes[0] as RectangularHitbox;
    hitbox.offset.x = xOffset;
    hitbox.offset.y = yOffset;
    hitbox.relativeRotation = rotation - Math.PI/2;
 }
 
-export function tickFenceGateComponent(fenceGate: Entity): void {
-   const fenceGateComponent = FenceGateComponentArray.getComponent(fenceGate.id);
+export function tickFenceGateComponent(fenceGate: EntityID): void {
+   const fenceGateComponent = FenceGateComponentArray.getComponent(fenceGate);
 
    // @Incomplete: Hard hitboxes
    
@@ -77,8 +79,10 @@ export function toggleFenceGateDoor(fenceGate: EntityID): void {
    if (fenceGateComponent.toggleType !== DoorToggleType.none) {
       return;
    }
+
+   const transformComponent = TransformComponentArray.getComponent(fenceGate);
    
-   const hitbox = fenceGate.hitboxes[0];
+   const hitbox = transformComponent.hitboxes[0];
    if (fenceGateComponent.openProgress === 0) {
       // Open the door
       fenceGateComponent.toggleType = DoorToggleType.open;

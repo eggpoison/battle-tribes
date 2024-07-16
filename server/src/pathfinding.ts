@@ -2,7 +2,6 @@ import { PathfindingNodeIndex, VisibleChunkBounds } from "webgl-test-shared/dist
 import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
 import { PathfindingSettings, Settings } from "webgl-test-shared/dist/settings";
 import { distBetweenPointAndRectangle, angle, calculateDistanceSquared, Point } from "webgl-test-shared/dist/utils";
-import Entity from "./Entity";
 import Board from "./Board";
 import PathfindingHeap from "./PathfindingHeap";
 import OPTIONS from "./options";
@@ -10,6 +9,7 @@ import { PhysicsComponentArray } from "./components/PhysicsComponent";
 import { TribeComponentArray } from "./components/TribeComponent";
 import { CircularHitbox, HitboxCollisionType, RectangularHitbox, Hitbox, hitboxIsCircular } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { TransformComponent, TransformComponentArray } from "./components/TransformComponent";
+import { ProjectileComponentArray } from "./components/ProjectileComponent";
 
 const enum Vars {
    NODE_ACCESSIBILITY_RESOLUTION = 3,
@@ -757,10 +757,11 @@ export function getVisiblePathfindingNodeOccupances(visibleChunkBounds: VisibleC
    return occupances;
 }
 
-export function entityCanBlockPathfinding(entityType: EntityType): boolean {
+export function entityCanBlockPathfinding(entity: EntityID): boolean {
+   const entityType = Board.getEntityType(entity);
    return entityType !== EntityType.itemEntity
       && entityType !== EntityType.slimeSpit
-      && entityType !== EntityType.woodenArrowProjectile
+      && !ProjectileComponentArray.hasComponent(entity)
       && entityType !== EntityType.slimewisp
       && entityType !== EntityType.blueprintEntity;
 }

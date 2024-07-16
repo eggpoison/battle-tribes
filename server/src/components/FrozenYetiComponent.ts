@@ -26,7 +26,7 @@ export class FrozenYetiComponent {
    public rockSpikeInfoArray = new Array<FrozenYetiRockSpikeInfo>();
 }
 
-export const FrozenYetiComponentArray = new ComponentArray<ServerComponentType.frozenYeti, FrozenYetiComponent>(true, {
+export const FrozenYetiComponentArray = new ComponentArray<FrozenYetiComponent>(ServerComponentType.frozenYeti, true, {
    serialise: serialise
 });
 

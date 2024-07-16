@@ -80,6 +80,16 @@ export function moveEntityToPosition(entity: EntityID, positionX: number, positi
    physicsComponent.targetRotation = targetDirection;
    physicsComponent.turnSpeed = turnSpeed;
 }
+export function turnEntityToEntity(entity: EntityID, targetEntity: EntityID, turnSpeed: number): void {
+   const targetTransformComponent = TransformComponentArray.getComponent(targetEntity);
+   turnToPosition(entity, targetTransformComponent.position, turnSpeed);
+}
+
+// @Cleanup: unused?
+export function moveEntityToEntity(entity: EntityID, targetEntity: EntityID, acceleration: number, turnSpeed: number): void {
+   const targetTransformComponent = TransformComponentArray.getComponent(targetEntity);
+   moveEntityToPosition(entity, targetTransformComponent.position.x, targetTransformComponent.position.y, acceleration, turnSpeed);
+}
 
 export function entityHasReachedPosition(entity: EntityID, positionX: number, positionY: number): boolean {
    const transformComponent = TransformComponentArray.getComponent(entity);

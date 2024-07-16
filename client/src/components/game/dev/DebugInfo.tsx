@@ -50,8 +50,10 @@ interface EntityDebugInfoProps {
    readonly debugData: EntityDebugData | null;
 }
 const EntityDebugInfo = ({ entity, debugData }: EntityDebugInfoProps) => {
-   const displayX = roundNum(entity.position.x, 0);
-   const displayY = roundNum(entity.position.y, 0);
+   const transformComponent = entity.getServerComponent(ServerComponentType.transform);
+
+   const displayX = roundNum(transformComponent.position.x, 0);
+   const displayY = roundNum(transformComponent.position.y, 0);
 
    let displayVelocityMagnitude: number | undefined;
    let displayAccelerationMagnitude: number | undefined;
@@ -62,7 +64,7 @@ const EntityDebugInfo = ({ entity, debugData }: EntityDebugInfoProps) => {
       displayAccelerationMagnitude = roundNum(physicsComponent.acceleration.length(), 0);
    }
 
-   const chunks = Array.from(entity.chunks).map(chunk => `${chunk.x}-${chunk.y}`);
+   const chunks = Array.from(transformComponent.chunks).map(chunk => `${chunk.x}-${chunk.y}`);
    const chunkDisplayText = chunks.reduce((previousValue, chunk, idx) => {
       const newItems = previousValue.slice();
       newItems.push(
@@ -91,7 +93,7 @@ const EntityDebugInfo = ({ entity, debugData }: EntityDebugInfoProps) => {
       ) : null }
       
 
-      <p>Rotation: <span className="highlight">{entity.rotation.toFixed(2)}</span></p>
+      <p>Rotation: <span className="highlight">{transformComponent.rotation.toFixed(2)}</span></p>
 
       <p>Chunks: {chunkDisplayText}</p>
 

@@ -1,7 +1,7 @@
 import { ServerComponentType, TombstoneComponentData } from "webgl-test-shared/dist/components";
 import { DeathInfo } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
-import { randInt } from "webgl-test-shared/dist/utils";
+import { Point, randInt } from "webgl-test-shared/dist/utils";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import { createDirtParticle } from "../particles";
@@ -35,8 +35,10 @@ class TombstoneComponent extends ServerComponent<ServerComponentType.tombstone> 
                createDirtParticle(this.zombieSpawnX, this.zombieSpawnY, ParticleRenderLayer.low);
             }
          }
-         if (this.entity.ageTicks % 6 === 0) {
-            playSound(("zombie-dig-" + randInt(1, 5) + ".mp3") as AudioFilePath, 0.15, 1, this.zombieSpawnX, this.zombieSpawnY);
+
+         const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
+         if (transformComponent.ageTicks % 6 === 0) {
+            playSound(("zombie-dig-" + randInt(1, 5) + ".mp3") as AudioFilePath, 0.15, 1, new Point(this.zombieSpawnX, this.zombieSpawnY));
          }
       }
    }

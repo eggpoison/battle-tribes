@@ -146,8 +146,9 @@ class EquipmentComponent extends Component {
    }
 
    public createFrostShieldBreakParticles(): void {
+      const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
       for (let i = 0; i < 17; i++) {
-         createFrostShieldBreakParticle(this.entity.position.x, this.entity.position.y);
+         createFrostShieldBreakParticle(transformComponent.position.x, transformComponent.position.y);
       }
    }
 }

@@ -1,6 +1,6 @@
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityType } from "webgl-test-shared/dist/entities";
-import { Point, angle } from "webgl-test-shared/dist/utils";
+import { angle } from "webgl-test-shared/dist/utils";
 import { HitData } from "webgl-test-shared/dist/client-server-types";
 import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
@@ -10,8 +10,8 @@ import { createLightWoodSpeckParticle, createWoodShardParticle } from "../partic
 import { EMBRASURE_TEXTURE_SOURCES } from "../entity-components/BuildingMaterialComponent";
 
 class Embrasure extends Entity {
-   constructor(position: Point, id: number, ageTicks: number, componentDataRecord: ComponentDataRecord) {
-      super(position, id, EntityType.embrasure, ageTicks);
+   constructor(id: number, componentDataRecord: ComponentDataRecord) {
+      super(id, EntityType.embrasure);
 
       const buildingMaterialComponentData = componentDataRecord[ServerComponentType.buildingMaterial]!;
 
@@ -26,31 +26,35 @@ class Embrasure extends Entity {
    }
 
    protected onHit(hitData: HitData): void {
-      playSound("wooden-wall-hit.mp3", 0.3, 1, this.position.x, this.position.y);
+      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+
+      playSound("wooden-wall-hit.mp3", 0.3, 1, transformComponent.position);
 
       for (let i = 0; i < 4; i++) {
-         createLightWoodSpeckParticle(this.position.x, this.position.y, 20);
+         createLightWoodSpeckParticle(transformComponent.position.x, transformComponent.position.y, 20);
       }
 
       for (let i = 0; i < 7; i++) {
-         let offsetDirection = angle(hitData.hitPosition[0] - this.position.x, hitData.hitPosition[1] - this.position.y);
+         let offsetDirection = angle(hitData.hitPosition[0] - transformComponent.position.x, hitData.hitPosition[1] - transformComponent.position.y);
          offsetDirection += 0.2 * Math.PI * (Math.random() - 0.5);
 
-         const spawnPositionX = this.position.x + 20 * Math.sin(offsetDirection);
-         const spawnPositionY = this.position.y + 20 * Math.cos(offsetDirection);
+         const spawnPositionX = transformComponent.position.x + 20 * Math.sin(offsetDirection);
+         const spawnPositionY = transformComponent.position.y + 20 * Math.cos(offsetDirection);
          createLightWoodSpeckParticle(spawnPositionX, spawnPositionY, 5);
       }
    }
    
    public onDie(): void {
-      playSound("wooden-wall-break.mp3", 0.4, 1, this.position.x, this.position.y);
+      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+
+      playSound("wooden-wall-break.mp3", 0.4, 1, transformComponent.position);
 
       for (let i = 0; i < 7; i++) {
-         createLightWoodSpeckParticle(this.position.x, this.position.y, 32 * Math.random());
+         createLightWoodSpeckParticle(transformComponent.position.x, transformComponent.position.y, 32 * Math.random());
       }
 
       for (let i = 0; i < 3; i++) {
-         createWoodShardParticle(this.position.x, this.position.y, 32);
+         createWoodShardParticle(transformComponent.position.x, transformComponent.position.y, 32);
       }
    }
 }

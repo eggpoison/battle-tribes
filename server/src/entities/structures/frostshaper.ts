@@ -1,33 +1,45 @@
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
-import { StructureConnectionInfo } from "webgl-test-shared/dist/structures";
+import { createEmptyStructureConnectionInfo } from "webgl-test-shared/dist/structures";
 import { Point } from "webgl-test-shared/dist/utils";
-import Entity from "../../Entity";
-import Tribe from "../../Tribe";
-import { FenceComponent, FenceComponentArray } from "../../components/FenceComponent";
-import { HealthComponent, HealthComponentArray } from "../../components/HealthComponent";
-import { StatusEffectComponentArray, StatusEffectComponent } from "../../components/StatusEffectComponent";
-import { StructureComponentArray, StructureComponent } from "../../components/StructureComponent";
-import { TribeComponent, TribeComponentArray } from "../../components/TribeComponent";
-import { CraftingStationComponentArray, CraftingStationComponent } from "../../components/CraftingStationComponent";
 import { createFrostshaperHitboxes } from "webgl-test-shared/dist/hitboxes/entity-hitbox-creation";
 import { CraftingStation } from "webgl-test-shared/dist/items/crafting-recipes";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ComponentConfig } from "../../components";
 
-export function createFrostshaper(position: Point, rotation: number, tribe: Tribe, connectionInfo: StructureConnectionInfo): Entity {
-   const frostshaper = new Entity(position, rotation, EntityType.frostshaper, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
+type ComponentTypes = ServerComponentType.transform
+   | ServerComponentType.health
+   | ServerComponentType.statusEffect
+   | ServerComponentType.structure
+   | ServerComponentType.tribe
+   | ServerComponentType.craftingStation;
 
-   const hitboxes = createFrostshaperHitboxes();
-   for (let i = 0; i < hitboxes.length; i++) {
-      frostshaper.addHitbox(hitboxes[i]);
-   }
-
-   HealthComponentArray.addComponent(frostshaper.id, new HealthComponent(20));
-   StatusEffectComponentArray.addComponent(frostshaper.id, new StatusEffectComponent(StatusEffect.freezing | StatusEffect.poisoned));
-   StructureComponentArray.addComponent(frostshaper.id, new StructureComponent(connectionInfo));
-   TribeComponentArray.addComponent(frostshaper.id, new TribeComponent(tribe));
-   FenceComponentArray.addComponent(frostshaper.id, new FenceComponent());
-   CraftingStationComponentArray.addComponent(frostshaper.id, new CraftingStationComponent(CraftingStation.frostshaper));
-   
-   return frostshaper;
+export function createFrostshaperConfig(): ComponentConfig<ComponentTypes> {
+   return {
+      [ServerComponentType.transform]: {
+         position: new Point(0, 0),
+         rotation: 0,
+         type: EntityType.frostshaper,
+         collisionBit: COLLISION_BITS.default,
+         collisionMask: DEFAULT_COLLISION_MASK,
+         hitboxes: createFrostshaperHitboxes()
+      },
+      [ServerComponentType.health]: {
+         maxHealth: 20
+      },
+      [ServerComponentType.statusEffect]: {
+         statusEffectImmunityBitset: StatusEffect.bleeding | StatusEffect.poisoned | StatusEffect.freezing
+      },
+      [ServerComponentType.structure]: {
+         connectionInfo: createEmptyStructureConnectionInfo()
+      },
+      [ServerComponentType.tribe]: {
+         tribe: null,
+         tribeType: 0
+      },
+      [ServerComponentType.craftingStation]: {
+         craftingStation: CraftingStation.frostshaper
+      }
+   };
 }

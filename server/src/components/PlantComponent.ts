@@ -6,8 +6,8 @@ import { ComponentConfig } from "../components";
 import { EntityID } from "webgl-test-shared/dist/entities";
 
 export interface PlantComponentParams {
-   readonly planterBoxID: number;
-   readonly plantType: PlanterBoxPlant;
+   planterBox: EntityID;
+   plantType: PlanterBoxPlant;
 }
 
 const PLANT_HEALTHS: Record<PlanterBoxPlant, number> = {
@@ -28,7 +28,7 @@ export const PLANT_GROWTH_TICKS: Record<PlanterBoxPlant, number> = {
 };
 
 export class PlantComponent {
-   public readonly planterBoxID: number;
+   public readonly planterBox: EntityID;
 
    public readonly plantType: PlanterBoxPlant;
    public plantGrowthTicks = 0;
@@ -37,12 +37,12 @@ export class PlantComponent {
    public fruitRandomGrowthTicks = 0;
 
    constructor(params: PlantComponentParams) {
-      this.planterBoxID = params.planterBoxID;
+      this.planterBox = params.planterBox;
       this.plantType = params.plantType;
    }
 }
 
-export const PlantComponentArray = new ComponentArray<ServerComponentType.plant, PlantComponent>(true, {
+export const PlantComponentArray = new ComponentArray<PlantComponent>(ServerComponentType.plant, true, {
    onInitialise: onInitialise,
    onRemove: onRemove,
    serialise: serialise
@@ -58,7 +58,7 @@ function onRemove(entity: EntityID): void {
    // Register in the planter box that the plant has been removed
    const plantComponent = PlantComponentArray.getComponent(entity);
 
-   const planterBoxID = plantComponent.planterBoxID;
+   const planterBoxID = plantComponent.planterBox;
    if (PlanterBoxComponentArray.hasComponent(planterBoxID)) {
       const planterBoxComponent = PlanterBoxComponentArray.getComponent(planterBoxID);
       planterBoxComponent.plantEntity = 0;
@@ -74,7 +74,7 @@ const plantCanGrowFruit = (plantComponent: PlantComponent): boolean => {
 }
 
 const plantIsFertilised = (plantComponent: PlantComponent): boolean => {
-   const planterBoxComponent = PlanterBoxComponentArray.getComponent(plantComponent.planterBoxID);
+   const planterBoxComponent = PlanterBoxComponentArray.getComponent(plantComponent.planterBox);
    return planterBoxComponent.remainingFertiliserTicks > 0;
 }
 

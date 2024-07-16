@@ -7,7 +7,7 @@ export class SpikesComponent {
    public isCovered = false;
 }
 
-export const SpikesComponentArray = new ComponentArray<ServerComponentType.spikes, SpikesComponent>(true, {
+export const SpikesComponentArray = new ComponentArray<SpikesComponent>(ServerComponentType.spikes, true, {
    serialise: serialise
 });
 

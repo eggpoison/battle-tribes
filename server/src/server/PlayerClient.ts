@@ -10,7 +10,7 @@ class PlayerClient {
    public readonly tribe: Tribe;
 
    /** ID of the player's entity */
-   public instanceID: EntityID;
+   public instance: EntityID;
    public clientIsActive = true;
 
    public visibleChunkBounds: VisibleChunkBounds;
@@ -33,7 +33,7 @@ class PlayerClient {
       this.socket = socket;
       this.tribe = tribe;
       this.visibleChunkBounds = visibleChunkBounds;
-      this.instanceID = instanceID;
+      this.instance = instanceID;
       this.username = username;
    }
 }

@@ -9,10 +9,11 @@ import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import Entity from "../Entity";
 import { playSound } from "../sound";
 import { createSnowflakeParticle } from "../particles";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 
 class IceArrow extends Entity {
-   constructor(position: Point, id: number, ageTicks: number) {
-      super(position, id, EntityType.iceArrow, ageTicks);
+   constructor(id: number) {
+      super(id, EntityType.iceArrow);
 
       this.attachRenderPart(
          new RenderPart(
@@ -28,7 +29,8 @@ class IceArrow extends Entity {
       super.tick();
 
       if (Math.random() < 30 / Settings.TPS) {
-         createSnowflakeParticle(this.position.x, this.position.y);
+         const transformComponent = this.getServerComponent(ServerComponentType.transform);
+         createSnowflakeParticle(transformComponent.position.x, transformComponent.position.y);
       }
 
       if (Math.random() < 30 / Settings.TPS) {
@@ -46,9 +48,11 @@ class IceArrow extends Entity {
    }
 
    private createIceSpeckProjectile(): void {
+      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      
       const spawnOffsetDirection = 2 * Math.PI * Math.random();
-      const spawnPositionX = this.position.x + 4 * Math.sin(spawnOffsetDirection);
-      const spawnPositionY = this.position.y + 4 * Math.cos(spawnOffsetDirection);
+      const spawnPositionX = transformComponent.position.x + 4 * Math.sin(spawnOffsetDirection);
+      const spawnPositionY = transformComponent.position.y + 4 * Math.cos(spawnOffsetDirection);
 
       const velocityMagnitude = randFloat(150, 300);
       const velocityDirection = spawnOffsetDirection + randFloat(-0.8, 0.8);
@@ -83,7 +87,8 @@ class IceArrow extends Entity {
    }
 
    public onDie(): void {
-      playSound("arrow-hit.mp3", 0.4, 1, this.position.x, this.position.y);
+      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      playSound("arrow-hit.mp3", 0.4, 1, transformComponent.position);
    }
 }
 

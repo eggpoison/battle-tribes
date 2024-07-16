@@ -32,7 +32,7 @@ export class ItemComponent {
    }
 }
 
-export const ItemComponentArray = new ComponentArray<ServerComponentType.item, ItemComponent>(true, {
+export const ItemComponentArray = new ComponentArray<ItemComponent>(ServerComponentType.item, true, {
    onRemove: onRemove,
    serialise: serialise
 });

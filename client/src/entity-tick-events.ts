@@ -4,28 +4,33 @@ import { randFloat } from "webgl-test-shared/dist/utils";
 import { playSound } from "./sound";
 import { ItemType } from "webgl-test-shared/dist/items/items";
 import Board from "./Board";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 
 export function playBowFireSound(sourceEntity: Entity, bowItemType: ItemType): void {
+   const transformComponent = sourceEntity.getServerComponent(ServerComponentType.transform);
+   
    switch (bowItemType) {
       case ItemType.wooden_bow: {
-         playSound("bow-fire.mp3", 0.4, 1, sourceEntity.position.x, sourceEntity.position.y);
+         playSound("bow-fire.mp3", 0.4, 1, transformComponent.position);
          break;
       }
       case ItemType.reinforced_bow: {
-         playSound("reinforced-bow-fire.mp3", 0.2, 1, sourceEntity.position.x, sourceEntity.position.y);
+         playSound("reinforced-bow-fire.mp3", 0.2, 1, transformComponent.position);
          break;
       }
       case ItemType.ice_bow: {
-         playSound("ice-bow-fire.mp3", 0.4, 1, sourceEntity.position.x, sourceEntity.position.y);
+         playSound("ice-bow-fire.mp3", 0.4, 1, transformComponent.position);
          break;
       }
    }
 }
 
 const processTickEvent = (entity: Entity, tickEvent: EntityTickEvent): void => {
+   const transformComponent = entity.getServerComponent(ServerComponentType.transform);
+
    switch (tickEvent.type) {
       case EntityTickEventType.cowFart: {
-         playSound("fart.mp3", 0.3, randFloat(0.9, 1.2), entity.position.x, entity.position.y);
+         playSound("fart.mp3", 0.3, randFloat(0.9, 1.2), transformComponent.position);
          break;
       }
       case EntityTickEventType.fireBow: {

@@ -1,8 +1,6 @@
 import { CowSpecies, EntityID } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
-import Entity from "../Entity";
 import { randFloat, randInt } from "webgl-test-shared/dist/utils";
-import { createItemEntity } from "../entities/item-entity";
 import { EntityTickEvent, EntityTickEventType } from "webgl-test-shared/dist/entity-events";
 import { CowComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
 import { COW_GRAZE_TIME_TICKS } from "../entities/mobs/cow";
@@ -11,6 +9,8 @@ import { ItemType } from "webgl-test-shared/dist/items/items";
 import { registerEntityTickEvent } from "../server/player-clients";
 import { TransformComponentArray } from "./TransformComponent";
 import Board from "../Board";
+import { createItemEntityConfig } from "../entities/item-entity";
+import { createEntityFromConfig } from "../Entity";
 
 const enum Vars {
    MIN_POOP_PRODUCTION_COOLDOWN = 5 * Settings.TPS,
@@ -45,7 +45,7 @@ export class CowComponent {
    }
 }
 
-export const CowComponentArray = new ComponentArray<ServerComponentType.cow, CowComponent>(true, {
+export const CowComponentArray = new ComponentArray<CowComponent>(ServerComponentType.cow, true, {
    serialise: serialise
 });
 
@@ -55,7 +55,13 @@ const poop = (cow: EntityID, cowComponent: CowComponent): void => {
    // Shit it out
    const transformComponent = TransformComponentArray.getComponent(cow);
    const poopPosition = transformComponent.position.offset(randFloat(0, 16), 2 * Math.PI * Math.random());
-   createItemEntity(poopPosition, 2 * Math.PI * Math.random(), ItemType.poop, 1, 0);
+   const config = createItemEntityConfig();
+   config[ServerComponentType.transform].position.x = poopPosition.x;
+   config[ServerComponentType.transform].position.y = poopPosition.y;
+   config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
+   config[ServerComponentType.item].itemType = ItemType.poop;
+   config[ServerComponentType.item].amount = 1;
+   createEntityFromConfig(config);
 
    // Let it out
    const event: EntityTickEvent<EntityTickEventType.cowFart> = {

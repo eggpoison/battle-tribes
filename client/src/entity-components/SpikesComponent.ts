@@ -3,7 +3,6 @@ import { ServerComponentType, SpikesComponentData } from "webgl-test-shared/dist
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import RenderPart from "../render-parts/RenderPart";
-import Game from "../Game";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { playSound } from "../sound";
 import { LeafParticleSize, createLeafParticle, createLeafSpeckParticle } from "../particles";
@@ -80,22 +79,24 @@ class SpikesComponent extends ServerComponent<ServerComponentType.spikes> {
       this.isCovered = data.isCovered;
       
       if (isCoveredBefore !== this.isCovered) {
+         const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
+
          if (this.isCovered) {
             // When covering trap
-            playSound("trap-cover.mp3", 0.4, 1, this.entity.position.x, this.entity.position.y);
+            playSound("trap-cover.mp3", 0.4, 1, transformComponent.position);
          } else {
             // When trap is sprung
-            playSound("trap-spring.mp3", 0.4, 1, this.entity.position.x, this.entity.position.y);
+            playSound("trap-spring.mp3", 0.4, 1, transformComponent.position);
       
             // Create leaf particles
             for (let i = 0; i < 4; i++) {
-               const position = this.entity.position.offset(randFloat(0, 22), 2 * Math.PI * Math.random())
+               const position = transformComponent.position.offset(randFloat(0, 22), 2 * Math.PI * Math.random())
                createLeafParticle(position.x, position.y, 2 * Math.PI * Math.random() + randFloat(-1, 1), Math.random() < 0.5 ? LeafParticleSize.large : LeafParticleSize.small);
             }
             
             // Create leaf specks
             for (let i = 0; i < 7; i++) {
-               createLeafSpeckParticle(this.entity.position.x, this.entity.position.y, randFloat(0, 16), SpikesComponent.LEAF_SPECK_COLOUR_LOW, SpikesComponent.LEAF_SPECK_COLOUR_HIGH);
+               createLeafSpeckParticle(transformComponent.position.x, transformComponent.position.y, randFloat(0, 16), SpikesComponent.LEAF_SPECK_COLOUR_LOW, SpikesComponent.LEAF_SPECK_COLOUR_HIGH);
             }
          }
          

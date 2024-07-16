@@ -2,29 +2,41 @@ import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/c
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { Point } from "webgl-test-shared/dist/utils";
-import Tribe from "../../Tribe";
-import Entity from "../../Entity";
-import { HealthComponent, HealthComponentArray } from "../../components/HealthComponent";
-import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
-import { HutComponent, HutComponentArray } from "../../components/HutComponent";
-import { TribeComponent, TribeComponentArray } from "../../components/TribeComponent";
-import { StructureComponent, StructureComponentArray } from "../../components/StructureComponent";
-import { StructureConnectionInfo } from "webgl-test-shared/dist/structures";
+import { createEmptyStructureConnectionInfo } from "webgl-test-shared/dist/structures";
 import { createWorkerHutHitboxes } from "webgl-test-shared/dist/hitboxes/entity-hitbox-creation";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ComponentConfig } from "../../components";
 
-export function createWorkerHut(position: Point, rotation: number, tribe: Tribe, connectionInfo: StructureConnectionInfo): Entity {
-   const hut = new Entity(position, rotation, EntityType.workerHut, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
+type ComponentTypes = ServerComponentType.transform
+   | ServerComponentType.health
+   | ServerComponentType.statusEffect
+   | ServerComponentType.structure
+   | ServerComponentType.tribe
+   | ServerComponentType.hut;
 
-   const hitboxes = createWorkerHutHitboxes();
-   for (let i = 0; i < hitboxes.length; i++) {
-      hut.addHitbox(hitboxes[i]);
-   }
-
-   HealthComponentArray.addComponent(hut.id, new HealthComponent(50));
-   StatusEffectComponentArray.addComponent(hut.id, new StatusEffectComponent(StatusEffect.poisoned));
-   StructureComponentArray.addComponent(hut.id, new StructureComponent(connectionInfo));
-   TribeComponentArray.addComponent(hut.id, new TribeComponent(tribe));
-   HutComponentArray.addComponent(hut.id, new HutComponent());
-
-   return hut;
+export function createWorkerHutConfig(): ComponentConfig<ComponentTypes> {
+   return {
+      [ServerComponentType.transform]: {
+         position: new Point(0, 0),
+         rotation: 0,
+         type: EntityType.workerHut,
+         collisionBit: COLLISION_BITS.default,
+         collisionMask: DEFAULT_COLLISION_MASK,
+         hitboxes: createWorkerHutHitboxes()
+      },
+      [ServerComponentType.health]: {
+         maxHealth: 50
+      },
+      [ServerComponentType.statusEffect]: {
+         statusEffectImmunityBitset: StatusEffect.bleeding | StatusEffect.poisoned
+      },
+      [ServerComponentType.structure]: {
+         connectionInfo: createEmptyStructureConnectionInfo()
+      },
+      [ServerComponentType.tribe]: {
+         tribe: null,
+         tribeType: 0
+      },
+      [ServerComponentType.hut]: {}
+   };
 }

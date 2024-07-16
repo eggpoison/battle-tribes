@@ -10,15 +10,14 @@ import Game, { GameInteractState } from "./Game";
 import { attemptEntitySelection } from "./entity-selection";
 import { playSound } from "./sound";
 import { attemptToCompleteNode } from "./research";
-import { StructureType, calculateStructurePlaceInfo } from "webgl-test-shared/dist/structures";
-import { EntityType, LimbAction } from "webgl-test-shared/dist/entities";
+import { calculateStructurePlaceInfo } from "webgl-test-shared/dist/structures";
+import { LimbAction } from "webgl-test-shared/dist/entities";
 import { AttackPacket } from "webgl-test-shared/dist/client-server-types";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { TRIBE_INFO_RECORD, TribeType } from "webgl-test-shared/dist/tribes";
 import { STATUS_EFFECT_MODIFIERS } from "webgl-test-shared/dist/status-effects";
 import { TribesmanTitle } from "webgl-test-shared/dist/titles";
-import { Point } from "webgl-test-shared/dist/utils";
 import { LimbInfo } from "./entity-components/InventoryUseComponent";
 import InventoryComponent from "./entity-components/InventoryComponent";
 import { ENTITY_TYPE_TO_GHOST_TYPE_MAP, GhostInfo, setGhostInfo } from "./rendering/webgl/entity-ghost-rendering";
@@ -113,9 +112,11 @@ export function updatePlayerItems(): void {
 }
 
 const attack = (isOffhand: boolean, attackCooldown: number): void => {
+   const transformComponent = Player.instance!.getServerComponent(ServerComponentType.transform);
+   
    const attackPacket: AttackPacket = {
       itemSlot: latencyGameState.selectedHotbarItemSlot,
-      attackDirection: Player.instance!.rotation
+      attackDirection: transformComponent.rotation
    };
    Client.sendAttackPacket(attackPacket);
 
@@ -347,7 +348,8 @@ const createHotbarKeyListeners = (): void => {
 
 const throwHeldItem = (): void => {
    if (Player.instance !== null) {
-      Client.sendHeldItemDropPacket(99999, Player.instance.rotation);
+      const transformComponent = Player.instance.getServerComponent(ServerComponentType.transform);
+      Client.sendHeldItemDropPacket(99999, transformComponent.rotation);
    }
 }
 
@@ -418,15 +420,18 @@ export function createPlayerInputListeners(): void {
 
    addKeyListener("q", () => {
       if (Player.instance !== null) {
+         const playerTransformComponent = Player.instance.getServerComponent(ServerComponentType.transform);
          const dropAmount = keyIsPressed("shift") ? 99999 : 1;
-         Client.sendItemDropPacket(latencyGameState.selectedHotbarItemSlot, dropAmount, Player.instance.rotation);
+         Client.sendItemDropPacket(latencyGameState.selectedHotbarItemSlot, dropAmount, playerTransformComponent.rotation);
       }
    });
 }
 
 const isCollidingWithCoveredSpikes = (): boolean => {
-   for (let i = 0; i < Player.instance!.collidingEntities.length; i++) {
-      const entity = Player.instance!.collidingEntities[i];
+   const transformComponent = Player.instance!.getServerComponent(ServerComponentType.transform);
+   
+   for (let i = 0; i < transformComponent.collidingEntities.length; i++) {
+      const entity = transformComponent.collidingEntities[i];
 
       if (entity.hasServerComponent(ServerComponentType.spikes)) {
          const spikesComponent = entity.getServerComponent(ServerComponentType.spikes);
@@ -579,7 +584,9 @@ const unuseItem = (item: Item): void => {
 }
 
 const itemRightClickDown = (item: Item, isOffhand: boolean, itemSlot: number): void => {
+   const transformComponent = Player.instance!.getServerComponent(ServerComponentType.transform);
    const inventoryUseComponent = Player.instance!.getServerComponent(ServerComponentType.inventoryUse);
+
    const useInfo = inventoryUseComponent.useInfos[isOffhand ? 1 : 0];
 
    const itemCategory = ITEM_TYPE_RECORD[item.type];
@@ -634,11 +641,11 @@ const itemRightClickDown = (item: Item, isOffhand: boolean, itemSlot: number): v
             } else {
                latencyGameState.mainAction = LimbAction.loadCrossbow;
             }
-            playSound("crossbow-load.mp3", 0.4, 1, Player.instance!.position.x, Player.instance!.position.y);
+            playSound("crossbow-load.mp3", 0.4, 1, transformComponent.position);
          } else {
             // Fire crossbow
             Client.sendItemUsePacket();
-            playSound("crossbow-fire.mp3", 0.4, 1, Player.instance!.position.x, Player.instance!.position.y);
+            playSound("crossbow-fire.mp3", 0.4, 1, transformComponent.position);
          }
          break;
       }
@@ -651,7 +658,7 @@ const itemRightClickDown = (item: Item, isOffhand: boolean, itemSlot: number): v
             latencyGameState.mainAction = LimbAction.chargeBow;
          }
          
-         playSound("bow-charge.mp3", 0.4, 1, Player.instance!.position.x, Player.instance!.position.y);
+         playSound("bow-charge.mp3", 0.4, 1, transformComponent.position);
 
          break;
       }
@@ -687,7 +694,7 @@ const itemRightClickDown = (item: Item, isOffhand: boolean, itemSlot: number): v
       }
       case "placeable": {
          const structureType = ITEM_INFO_RECORD[item.type as PlaceableItemType].entityType;
-         const placeInfo = calculateStructurePlaceInfo(Player.instance!.position, Player.instance!.rotation, structureType, Board.getChunks());
+         const placeInfo = calculateStructurePlaceInfo(transformComponent.position, transformComponent.rotation, structureType, Board.getWorldInfo());
          
          if (placeInfo.isValid) {
             Client.sendItemUsePacket();
@@ -820,8 +827,9 @@ const tickItem = (item: Item, itemSlot: number): void => {
             break;
          }
 
+         const playerTransformComponent = Player.instance!.getServerComponent(ServerComponentType.transform);
          const structureType = ITEM_INFO_RECORD[item.type as PlaceableItemType].entityType;
-         const placeInfo = calculateStructurePlaceInfo(Camera.position, Player.instance!.rotation, structureType, Board.getChunks());
+         const placeInfo = calculateStructurePlaceInfo(Camera.position, playerTransformComponent.rotation, structureType, Board.getWorldInfo());
          
          const ghostInfo: GhostInfo = {
             position: placeInfo.position,

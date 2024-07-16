@@ -15,6 +15,7 @@ import { createEntityHitboxes } from "webgl-test-shared/dist/hitboxes/entity-hit
 import { getHitboxesCollidingEntities } from "webgl-test-shared/dist/hitbox-collision";
 import { getItemRecipe } from "webgl-test-shared/dist/items/crafting-recipes";
 import { ItemType, ITEM_INFO_RECORD, PlaceableItemInfo } from "webgl-test-shared/dist/items/items";
+import { TransformComponentArray } from "../components/TransformComponent";
 
 const virtualBuildingTakesUpWallSpace = (wallPosition: Point, wallRotation: number, virtualBuilding: VirtualBuilding, wallVertexOffsets: HitboxVertexPositions): boolean => {
    // @Speed: cache when virutal entity is first created
@@ -488,7 +489,7 @@ const buildingPositionIsValid = (tribe: Tribe, x: number, y: number, rotation: n
       updateHitbox(hitbox, x, y, rotation);
    }
    
-   const collidingEntities = getHitboxesCollidingEntities(Board.chunks, hitboxes);
+   const collidingEntities = getHitboxesCollidingEntities(Board.getWorldInfo(), hitboxes);
    
    for (let i = 0; i < collidingEntities.length; i++) {
       const collidingEntity = collidingEntities[i];
@@ -704,8 +705,8 @@ export function updateTribePlans(tribe: Tribe): void {
          }
          case BuildingPlanType.upgrade: {
             // @Bug: Get from virtual buildings not actual entities
-            const baseBuilding = Board.entityRecord[plan.baseBuildingID]!;
-            virtualBuilding = placeVirtualBuilding(tribe, baseBuilding.position, plan.rotation, plan.entityType, virtualEntityID);
+            const baseBuildingTransformComponent = TransformComponentArray.getComponent(plan.baseBuildingID);
+            virtualBuilding = placeVirtualBuilding(tribe, baseBuildingTransformComponent.position, plan.rotation, plan.entityType, virtualEntityID);
             break;
          }
       }
@@ -725,7 +726,7 @@ export function forceBuildPlans(tribe: Tribe): void {
       switch (plan.type) {
          case BuildingPlanType.newBuilding: {
             const entityType = (ITEM_INFO_RECORD[plan.buildingRecipe.product] as PlaceableItemInfo).entityType;
-            const connectionInfo = calculateStructureConnectionInfo(plan.position, plan.rotation, entityType, Board.chunks);
+            const connectionInfo = calculateStructureConnectionInfo(plan.position, plan.rotation, entityType, Board.getWorldInfo());
 
             placeBuilding(tribe, plan.position, plan.rotation, entityType, connectionInfo);
             break;

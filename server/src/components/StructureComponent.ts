@@ -1,33 +1,33 @@
-import { StructureConnectionInfo, StructureType, getSnapDirection, getStructureSnapOrigin } from "webgl-test-shared/dist/structures";
+import { StructureConnectionInfo, getSnapDirection, getStructureSnapOrigin } from "webgl-test-shared/dist/structures";
 import Board from "../Board";
-import Entity from "../Entity";
 import { createStructureGrassBlockers } from "../grass-blockers";
 import { BlueprintComponentArray } from "./BlueprintComponent";
 import { ComponentArray } from "./ComponentArray";
 import { ConnectedEntityIDs } from "../entities/tribes/tribe-member";
 import { Mutable } from "webgl-test-shared/dist/utils";
 import { ServerComponentType, StructureComponentData } from "webgl-test-shared/dist/components";
-import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
+import { EntityID } from "webgl-test-shared/dist/entities";
 import { TribeComponentArray } from "./TribeComponent";
+import { TransformComponentArray } from "./TransformComponent";
 
 export interface StructureComponentParams {
-   readonly structureInfo: StructureConnectionInfo;
+   connectionInfo: StructureConnectionInfo;
 }
 
 export class StructureComponent implements Mutable<StructureConnectionInfo> {
-   /** The ID of any blueprint currently placed on the structure */
-   public activeBlueprintID = 0;
+   /** The blueprint currently placed on the structure. 0 if none is present */
+   public activeBlueprint = 0;
    
    public connectedSidesBitset: number;
    public connectedEntityIDs: ConnectedEntityIDs;
 
    constructor(params: StructureComponentParams) {
-      this.connectedSidesBitset = params.structureInfo.connectedSidesBitset;
-      this.connectedEntityIDs = params.structureInfo.connectedEntityIDs;
+      this.connectedSidesBitset = params.connectionInfo.connectedSidesBitset;
+      this.connectedEntityIDs = params.connectionInfo.connectedEntityIDs;
    }
 }
 
-export const StructureComponentArray = new ComponentArray<ServerComponentType.structure, StructureComponent>(true, {
+export const StructureComponentArray = new ComponentArray<StructureComponent>(ServerComponentType.structure, true, {
    onJoin: onJoin,
    onRemove: onRemove,
    serialise: serialise
@@ -65,18 +65,16 @@ function onJoin(entity: EntityID): void {
    
    // Mark opposite connections
    for (let i = 0; i < 4; i++) {
-      const connectedEntityID = structureComponent.connectedEntityIDs[i];
+      const connectedEntity = structureComponent.connectedEntityIDs[i];
 
-      if (connectedEntityID !== 0 && StructureComponentArray.hasComponent(connectedEntityID)) {
-         const otherStructureComponent = StructureComponentArray.getComponent(connectedEntityID);
+      if (connectedEntity !== 0 && StructureComponentArray.hasComponent(connectedEntity)) {
+         const otherStructureComponent = StructureComponentArray.getComponent(connectedEntity);
+         const connectedEntityTransformComponent = TransformComponentArray.getComponent(connectedEntity);
 
-         // @Cleanup
-         const entity = Board.entityRecord[entity]! as Entity<StructureType>;
-         const connectedEntity = Board.entityRecord[connectedEntityID]! as Entity<StructureType>;
-         
-         const snapOrigin = getStructureSnapOrigin(entity);
-         const connectedSnapOrigin = getStructureSnapOrigin(connectedEntity);
-         const connectionDirection = getSnapDirection(connectedSnapOrigin.calculateAngleBetween(snapOrigin), connectedEntity.rotation);
+         const worldInfo = Board.getWorldInfo();
+         const snapOrigin = getStructureSnapOrigin(worldInfo.getEntityCallback(entity));
+         const connectedSnapOrigin = getStructureSnapOrigin(worldInfo.getEntityCallback(connectedEntity));
+         const connectionDirection = getSnapDirection(connectedSnapOrigin.calculateAngleBetween(snapOrigin), connectedEntityTransformComponent.rotation);
 
          addConnection(otherStructureComponent, connectionDirection, entity);
       }
@@ -92,13 +90,12 @@ function onRemove(entity: EntityID): void {
    for (let i = 0; i < 4; i++) {
       const currentConnectedEntityID = structureComponent.connectedEntityIDs[i];
       if (StructureComponentArray.hasComponent(currentConnectedEntityID)) {
-         removeConnectionWithStructure(currentConnectedEntityID, entityID);
+         removeConnectionWithStructure(currentConnectedEntityID, entity);
       }
    }
 
-   if (BlueprintComponentArray.hasComponent(structureComponent.activeBlueprintID)) {
-      const blueprintEntity = Board.entityRecord[structureComponent.activeBlueprintID]!;
-      blueprintEntity.destroy();
+   if (BlueprintComponentArray.hasComponent(structureComponent.activeBlueprint)) {
+      Board.destroyEntity(structureComponent.activeBlueprint);
    }
 }
 
@@ -107,20 +104,7 @@ function serialise(entityID: number): StructureComponentData {
    
    return {
       componentType: ServerComponentType.structure,
-      hasActiveBlueprint: BlueprintComponentArray.hasComponent(structureComponent.activeBlueprintID),
+      hasActiveBlueprint: BlueprintComponentArray.hasComponent(structureComponent.activeBlueprint),
       connectedSidesBitset: structureComponent.connectedSidesBitset
    };
-}
-
-export function isAttachedToWall(connectionInfo: StructureConnectionInfo): boolean {
-   for (let i = 0; i < connectionInfo.connectedEntityIDs.length; i++) {
-      const entityID = connectionInfo.connectedEntityIDs[i];
-
-      const entity = Board.entityRecord[entityID];
-      if (typeof entity !== "undefined" && entity.type === EntityType.wall) {
-         return true;
-      }
-   }
-
-   return false;
 }

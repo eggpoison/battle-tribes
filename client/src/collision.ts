@@ -8,9 +8,11 @@ import { clampToBoardDimensions, Point } from "webgl-test-shared/dist/utils";
 import Board from "./Board";
 
 const resolveHardCollision = (entity: Entity, pushInfo: CollisionPushInfo): void => {
+   const transformComponent = entity.getServerComponent(ServerComponentType.transform);
+   
    // Transform the entity out of the hitbox
-   entity.position.x += pushInfo.amountIn * Math.sin(pushInfo.direction);
-   entity.position.y += pushInfo.amountIn * Math.cos(pushInfo.direction);
+   transformComponent.position.x += pushInfo.amountIn * Math.sin(pushInfo.direction);
+   transformComponent.position.y += pushInfo.amountIn * Math.cos(pushInfo.direction);
 
    const physicsComponent = entity.getServerComponent(ServerComponentType.physics);
 
@@ -44,14 +46,15 @@ export function collide(entity: Entity, pushedHitbox: Hitbox, pushingHitbox: Hit
 }
 
 export function resolveWallTileCollisions(entity: Entity): void {
-   for (let i = 0; i < entity.hitboxes.length; i++) {
-      const hitbox = entity.hitboxes[i];
+   const transformComponent = entity.getServerComponent(ServerComponentType.transform);
+   for (let i = 0; i < transformComponent.hitboxes.length; i++) {
+      const hitbox = transformComponent.hitboxes[i];
       
       // @Hack: use actual bounding area
-      const minTileX = clampToBoardDimensions(Math.floor((entity.position.x - 32) / Settings.TILE_SIZE));
-      const maxTileX = clampToBoardDimensions(Math.floor((entity.position.x + 32) / Settings.TILE_SIZE));
-      const minTileY = clampToBoardDimensions(Math.floor((entity.position.y - 32) / Settings.TILE_SIZE));
-      const maxTileY = clampToBoardDimensions(Math.floor((entity.position.y + 32) / Settings.TILE_SIZE));
+      const minTileX = clampToBoardDimensions(Math.floor((transformComponent.position.x - 32) / Settings.TILE_SIZE));
+      const maxTileX = clampToBoardDimensions(Math.floor((transformComponent.position.x + 32) / Settings.TILE_SIZE));
+      const minTileY = clampToBoardDimensions(Math.floor((transformComponent.position.y - 32) / Settings.TILE_SIZE));
+      const maxTileY = clampToBoardDimensions(Math.floor((transformComponent.position.y + 32) / Settings.TILE_SIZE));
    
       // @Incomplete
       for (let tileX = minTileX; tileX <= maxTileX; tileX++) {

@@ -65,11 +65,13 @@ export function createBloodParticleFountain(entity: Entity, interval: number, sp
 
    for (let i = 0; i < 4; i++) {
       Board.addTickCallback(interval * (i + 1), () => {
+         const transformComponent = entity.getServerComponent(ServerComponentType.transform);
+
          for (let j = 0; j < BLOOD_FOUNTAIN_RAY_COUNT; j++) {
             let moveDirection = 2 * Math.PI / BLOOD_FOUNTAIN_RAY_COUNT * j + offset;
             moveDirection += randFloat(-0.3, 0.3);
 
-            createBloodParticle(BloodParticleSize.large, entity.position.x, entity.position.y, moveDirection, randFloat(100, 200) * speedMultiplier, false);
+            createBloodParticle(BloodParticleSize.large, transformComponent.position.x, transformComponent.position.y, moveDirection, randFloat(100, 200) * speedMultiplier, false);
          }
       });
    }
@@ -120,13 +122,14 @@ export function createLeafParticle(spawnPositionX: number, spawnPositionY: numbe
 export function createFootprintParticle(entity: Entity, numFootstepsTaken: number, footstepOffset: number, size: number, lifetime: number): void {
    const footstepAngleOffset = numFootstepsTaken % 2 === 0 ? Math.PI : 0;
 
+   const transformComponent = entity.getServerComponent(ServerComponentType.transform);
    const physicsComponent = entity.getServerComponent(ServerComponentType.physics);
    const velocityDirection = angle(physicsComponent.velocity.x, physicsComponent.velocity.y);
 
    const offsetMagnitude = footstepOffset / 2;
    const offsetDirection = velocityDirection + footstepAngleOffset + Math.PI/2;
-   const spawnPositionX = entity.position.x + offsetMagnitude * Math.sin(offsetDirection);
-   const spawnPositionY = entity.position.y + offsetMagnitude * Math.cos(offsetDirection);
+   const spawnPositionX = transformComponent.position.x + offsetMagnitude * Math.sin(offsetDirection);
+   const spawnPositionY = transformComponent.position.y + offsetMagnitude * Math.cos(offsetDirection);
 
    const particle = new Particle(lifetime);
    particle.getOpacity = (): number => {
@@ -985,9 +988,11 @@ export function createFlowerParticle(spawnPositionX: number, spawnPositionY: num
 }
 
 export function createCactusSpineParticle(cactus: Entity, offset: number, flyDirection: number): void {
+   const transformComponent = cactus.getServerComponent(ServerComponentType.transform);
+
    // @Speed: Garbage collection
    const spawnPosition = Point.fromVectorForm(offset, flyDirection);
-   spawnPosition.add(cactus.position);
+   spawnPosition.add(transformComponent.position);
    
    const lifetime = randFloat(0.2, 0.3);
 
@@ -1289,11 +1294,12 @@ export function createBlueBloodParticleFountain(entity: Entity, interval: number
 
    for (let i = 0; i < 6; i++) {
       Board.addTickCallback(interval * (i + 1), () => {
+         const transformComponent = entity.getServerComponent(ServerComponentType.transform);
          for (let j = 0; j < BLUE_BLOOD_FOUNTAIN_RAY_COUNT; j++) {
             let moveDirection = 2 * Math.PI / BLOOD_FOUNTAIN_RAY_COUNT * j + offset;
             moveDirection += randFloat(-0.3, 0.3);
 
-            createBlueBloodParticle(BloodParticleSize.large, entity.position.x, entity.position.y, moveDirection, randFloat(100, 200) * speedMultiplier, false);
+            createBlueBloodParticle(BloodParticleSize.large, transformComponent.position.x, transformComponent.position.y, moveDirection, randFloat(100, 200) * speedMultiplier, false);
          }
       });
    }

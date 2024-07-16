@@ -16,7 +16,8 @@ class ItemComponent extends ServerComponent<ServerComponentType.item> {
    public tick(): void {
       // Make the deep frost heart item spew blue blood particles
       if (this.itemType === ItemType.deepfrost_heart) {
-         createDeepFrostHeartBloodParticles(this.entity.position.x, this.entity.position.y, 0, 0);
+         const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
+         createDeepFrostHeartBloodParticles(transformComponent.position.x, transformComponent.position.y, 0, 0);
       }
    }
    

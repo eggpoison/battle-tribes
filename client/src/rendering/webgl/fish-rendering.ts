@@ -245,13 +245,15 @@ export function renderFish(frameProgress: number): void {
 
          const vertexDataOffset = i * 4 * 11;
 
+         const transformComponent = fish.getServerComponent(ServerComponentType.transform);
+
          let opacity = renderPart.opacity;
-         if (fish.tile.type === TileType.water) {
+         if (transformComponent.tile.type === TileType.water) {
             const fishComponent = fish.getServerComponent(ServerComponentType.fish);
             opacity *= 0.75 * fishComponent.waterOpacityMultiplier;
          }
 
-         const isInWater = fish.tile.type === TileType.water ? 1 : 0;
+         const isInWater = transformComponent.tile.type === TileType.water ? 1 : 0;
 
          vertexData[vertexDataOffset] = bottomLeftX;
          vertexData[vertexDataOffset + 1] = bottomLeftY;

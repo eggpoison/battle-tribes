@@ -9,7 +9,7 @@ export class EscapeAIComponent {
    public readonly attackEntityTicksSinceLastAttack = new Array<number>();
 }
 
-export const EscapeAIComponentArray = new ComponentArray<ServerComponentType.escapeAI, EscapeAIComponent>(true, {
+export const EscapeAIComponentArray = new ComponentArray<EscapeAIComponent>(ServerComponentType.escapeAI, true, {
    serialise: serialise
 });
 

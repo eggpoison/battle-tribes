@@ -7,6 +7,7 @@ import { TribeMemberComponentArray } from "./TribeMemberComponent";
 import { PlantComponentArray } from "./PlantComponent";
 import { GolemComponentArray } from "./GolemComponent";
 import Board from "../Board";
+import { TribeType } from "webgl-test-shared/dist/tribes";
 
 // /** Relationships a tribe member can have, in increasing order of threat */
 export const enum EntityRelationship {
@@ -20,20 +21,25 @@ export const enum EntityRelationship {
 }
 
 export interface TribeComponentParams {
-   tribeID: number | null;
+   tribe: Tribe | null;
+   /** Tribe type of the new tribe in case a tribe isn't specified */
+   tribeType: TribeType;
 }
 
 export class TribeComponent {
    public tribe: Tribe;
 
    constructor(params: TribeComponentParams) {
-      // @Temporary
-      const tribe = Board.getTribeExpected(params.tribeID!)!;
-      this.tribe = tribe;
+      if (params.tribe === null) {
+         // Default to creating a new tribe
+         this.tribe = new Tribe(params.tribeType, true);
+      } else {
+         this.tribe = params.tribe;
+      }
    }
 }
 
-export const TribeComponentArray = new ComponentArray<ServerComponentType.tribe, TribeComponent>(true, {
+export const TribeComponentArray = new ComponentArray<TribeComponent>(ServerComponentType.tribe, true, {
    serialise: serialiseTribeComponent
 });
 
@@ -85,7 +91,7 @@ export function getEntityRelationship(entity: EntityID, comparingEntity: EntityI
          const plantComponent = PlantComponentArray.getComponent(comparingEntity);
          
          const tribeComponent = TribeComponentArray.getComponent(entity);
-         const planterBoxTribeComponent = TribeComponentArray.getComponent(plantComponent.planterBoxID);
+         const planterBoxTribeComponent = TribeComponentArray.getComponent(plantComponent.planterBox);
 
          return planterBoxTribeComponent.tribe === tribeComponent.tribe ? EntityRelationship.neutral : EntityRelationship.enemyBuilding;
       }

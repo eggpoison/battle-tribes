@@ -1,6 +1,5 @@
 import { AMMO_INFO_RECORD, ServerComponentType, TurretComponentData } from "webgl-test-shared/dist/components";
-import { EntityType } from "webgl-test-shared/dist/entities";
-import Entity from "../Entity";
+import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
 import { ComponentArray } from "./ComponentArray";
 import { SLING_TURRET_RELOAD_TIME_TICKS, SLING_TURRET_SHOT_COOLDOWN_TICKS } from "../entities/structures/sling-turret";
 import Board from "../Board";
@@ -20,14 +19,15 @@ export class TurretComponent {
    }
 }
 
-export const TurretComponentArray = new ComponentArray<ServerComponentType.turret, TurretComponent>(true, {
+export const TurretComponentArray = new ComponentArray<TurretComponent>(ServerComponentType.turret, true, {
    serialise: serialise
 });
 
-const getShotCooldownTicks = (turret: Entity): number => {
-   switch (turret.type) {
+const getShotCooldownTicks = (turret: EntityID): number => {
+   const entityType = Board.getEntityType(turret);
+   switch (entityType) {
       case EntityType.ballista: {
-         const ballistaComponent = AmmoBoxComponentArray.getComponent(turret.id);
+         const ballistaComponent = AmmoBoxComponentArray.getComponent(turret);
          return AMMO_INFO_RECORD[ballistaComponent.ammoType].shotCooldownTicks;
       }
       case EntityType.slingTurret: {
@@ -35,13 +35,15 @@ const getShotCooldownTicks = (turret: Entity): number => {
       }
    }
 
-   throw new Error("Unknown turret type " + turret.type);
+   // @Robustness
+   throw new Error("Unknown turret type " + entityType);
 }
 
-const getReloadTimeTicks = (turret: Entity): number => {
-   switch (turret.type) {
+const getReloadTimeTicks = (turret: EntityID): number => {
+   const entityType = Board.getEntityType(turret);
+   switch (entityType) {
       case EntityType.ballista: {
-         const ballistaComponent = AmmoBoxComponentArray.getComponent(turret.id);
+         const ballistaComponent = AmmoBoxComponentArray.getComponent(turret);
          return AMMO_INFO_RECORD[ballistaComponent.ammoType].reloadTimeTicks;
       }
       case EntityType.slingTurret: {
@@ -49,10 +51,11 @@ const getReloadTimeTicks = (turret: Entity): number => {
       }
    }
 
-   throw new Error("Unknown turret type " + turret.type);
+   // @Robustness
+   throw new Error("Unknown turret type " + entityType);
 }
 
-const getChargeProgress = (turret: Entity): number => {
+const getChargeProgress = (turret: EntityID): number => {
    // @Incomplete?
    // const ballistaComponent = BallistaComponentArray.getComponent(ballista.id);
    // if (ballistaComponent.ammoRemaining === 0) {
@@ -60,7 +63,7 @@ const getChargeProgress = (turret: Entity): number => {
    // }
 
    const shotCooldownTicks = getShotCooldownTicks(turret);
-   const turretComponent = TurretComponentArray.getComponent(turret.id);
+   const turretComponent = TurretComponentArray.getComponent(turret);
    
    if (turretComponent.fireCooldownTicks > shotCooldownTicks) {
       return 0;
@@ -69,7 +72,7 @@ const getChargeProgress = (turret: Entity): number => {
    return 1 - turretComponent.fireCooldownTicks / shotCooldownTicks;
 }
 
-const getReloadProgress = (turret: Entity): number => {
+const getReloadProgress = (turret: EntityID): number => {
    // @Incomplete?
    // const ballistaComponent = BallistaComponentArray.getComponent(ballista.id);
    // if (ballistaComponent.ammoRemaining === 0) {
@@ -77,7 +80,7 @@ const getReloadProgress = (turret: Entity): number => {
    // }
 
    const shotCooldownTicks = getShotCooldownTicks(turret);
-   const turretComponent = TurretComponentArray.getComponent(turret.id);
+   const turretComponent = TurretComponentArray.getComponent(turret);
 
    // If the shot is charging, the turret has already reloaded
    if (turretComponent.fireCooldownTicks < shotCooldownTicks) {
@@ -88,17 +91,14 @@ const getReloadProgress = (turret: Entity): number => {
    return 1 - (turretComponent.fireCooldownTicks - shotCooldownTicks) / reloadTimeTicks;
 }
 
-function serialise(entityID: number): TurretComponentData {
-   const turretComponent = TurretComponentArray.getComponent(entityID);
+function serialise(entity: EntityID): TurretComponentData {
+   const turretComponent = TurretComponentArray.getComponent(entity);
 
-   // @Hack
-   const turret = Board.entityRecord[entityID]!;
-   
    return {
       componentType: ServerComponentType.turret,
       aimDirection: turretComponent.aimDirection,
       // @Speed: Both these functions call getComponent for turretComponent when we already get it in this function
-      chargeProgress: getChargeProgress(turret),
-      reloadProgress: getReloadProgress(turret)
+      chargeProgress: getChargeProgress(entity),
+      reloadProgress: getReloadProgress(entity)
    }
 }

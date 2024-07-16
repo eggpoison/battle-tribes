@@ -1,14 +1,14 @@
 import { StatusEffectData } from "webgl-test-shared/dist/client-server-types";
 import { ServerComponentType, StatusEffectComponentData } from "webgl-test-shared/dist/components";
-import { PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
+import { EntityID, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
 import { StatusEffect, STATUS_EFFECT_MODIFIERS } from "webgl-test-shared/dist/status-effects";
 import { customTickIntervalHasPassed } from "webgl-test-shared/dist/utils";
 import { ComponentArray } from "./ComponentArray";
 import { getRandomPositionInEntity } from "../Entity";
 import { damageEntity } from "./HealthComponent";
 import { PhysicsComponentArray } from "./PhysicsComponent";
-import Board from "../Board";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
+import { TransformComponentArray } from "./TransformComponent";
 
 export interface StatusEffectComponentParams {
    readonly statusEffectImmunityBitset: number;
@@ -26,7 +26,7 @@ export class StatusEffectComponent {
    }
 }
 
-export const StatusEffectComponentArray = new ComponentArray<ServerComponentType.statusEffect, StatusEffectComponent>(false, {
+export const StatusEffectComponentArray = new ComponentArray<StatusEffectComponent>(ServerComponentType.statusEffect, false, {
    serialise: serialise
 });
 
@@ -104,9 +104,7 @@ export function clearStatusEffects(entityID: number): void {
    }
 }
 
-export function tickStatusEffectComponent(statusEffectComponent: StatusEffectComponent, entityID: number): void {
-   const entity = Board.entityRecord[entityID]!;
-
+export function tickStatusEffectComponent(statusEffectComponent: StatusEffectComponent, entity: EntityID): void {
    for (let i = 0; i < statusEffectComponent.activeStatusEffectTypes.length; i++) {
       const statusEffect = statusEffectComponent.activeStatusEffectTypes[i];
 
@@ -114,9 +112,10 @@ export function tickStatusEffectComponent(statusEffectComponent: StatusEffectCom
 
       switch (statusEffect) {
          case StatusEffect.burning: {
+            const transformComponent = TransformComponentArray.getComponent(entity);
             // If the entity is in a river, clear the fire effect
-            if (entity.isInRiver) {
-               clearStatusEffect(entity.id, i);
+            if (transformComponent.isInRiver) {
+               clearStatusEffect(entity, i);
             } else {
                // Fire tick
                const ticksElapsed = statusEffectComponent.activeStatusEffectTicksElapsed[i];
@@ -147,14 +146,14 @@ export function tickStatusEffectComponent(statusEffectComponent: StatusEffectCom
 
       statusEffectComponent.activeStatusEffectTicksRemaining[i]--;
       if (statusEffectComponent.activeStatusEffectTicksRemaining[i] === 0) {
-         clearStatusEffect(entity.id, i);
+         clearStatusEffect(entity, i);
          i--;
          continue;
       }
    }
 
    if (statusEffectComponent.activeStatusEffectTypes.length === 0) {
-      StatusEffectComponentArray.queueComponentDeactivate(entityID);
+      StatusEffectComponentArray.queueComponentDeactivate(entity);
    }
 }
 
@@ -168,9 +167,9 @@ export function tickStatusEffectComponents(): void {
    StatusEffectComponentArray.deactivateQueue();
 }
 
-function serialise(entityID: number): StatusEffectComponentData {
+function serialise(entity: EntityID): StatusEffectComponentData {
    const statusEffects = new Array<StatusEffectData>();
-   const statusEffectComponent = StatusEffectComponentArray.getComponent(entityID);
+   const statusEffectComponent = StatusEffectComponentArray.getComponent(entity);
    for (let i = 0; i < statusEffectComponent.activeStatusEffectTypes.length; i++) {
       statusEffects.push({
          type: statusEffectComponent.activeStatusEffectTypes[i] as unknown as StatusEffect,

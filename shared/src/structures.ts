@@ -1,5 +1,5 @@
 import { Chunks, EntityInfo, getChunk } from "./board-interface";
-import { EntityType } from "./entities";
+import { EntityID, EntityType } from "./entities";
 import { estimateCollidingEntities } from "./hitbox-collision";
 import { createEntityHitboxes } from "./hitboxes/entity-hitbox-creation";
 import { hitboxIsCircular } from "./hitboxes/hitboxes";
@@ -55,6 +55,11 @@ export interface StructureConnectionInfo {
    readonly connectedEntityIDs: ConnectedEntityIDs;
 }
 
+export interface WorldInfo {
+   readonly chunks: Chunks;
+   getEntityCallback(entity: EntityID): EntityInfo;
+}
+
 export function createEmptyStructureConnectionInfo(): StructureConnectionInfo {
    return {
       connectedSidesBitset: 0,
@@ -62,11 +67,12 @@ export function createEmptyStructureConnectionInfo(): StructureConnectionInfo {
    };
 }
 
-const structurePlaceIsValid = (entityType: StructureType, x: number, y: number, rotation: number, chunks: Chunks): boolean => {
-   const collidingEntities = estimateCollidingEntities(chunks, entityType, x, y, rotation, Vars.COLLISION_EPSILON);
+const structurePlaceIsValid = (entityType: StructureType, x: number, y: number, rotation: number, worldInfo: WorldInfo): boolean => {
+   const collidingEntities = estimateCollidingEntities(worldInfo, entityType, x, y, rotation, Vars.COLLISION_EPSILON);
 
    for (let i = 0; i < collidingEntities.length; i++) {
-      const entity = collidingEntities[i];
+      const entityID = collidingEntities[i];
+      const entity = worldInfo.getEntityCallback(entityID);
       if (entity.type !== EntityType.itemEntity) {
          return false;
       }
@@ -113,7 +119,7 @@ const calculateRegularPlacePosition = (placeOrigin: Point, placingEntityRotation
    return placePosition;
 }
 
-const getNearbyStructures = (regularPlacePosition: Point, chunks: Chunks): ReadonlyArray<EntityInfo<StructureType>> => {
+const getNearbyStructures = (regularPlacePosition: Point, worldInfo: WorldInfo): ReadonlyArray<EntityInfo<StructureType>> => {
    const minChunkX = Math.max(Math.floor((regularPlacePosition.x - Settings.STRUCTURE_SNAP_RANGE) / Settings.CHUNK_UNITS), 0);
    const maxChunkX = Math.min(Math.floor((regularPlacePosition.x + Settings.STRUCTURE_SNAP_RANGE) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1);
    const minChunkY = Math.max(Math.floor((regularPlacePosition.y - Settings.STRUCTURE_SNAP_RANGE) / Settings.CHUNK_UNITS), 0);
@@ -124,12 +130,14 @@ const getNearbyStructures = (regularPlacePosition: Point, chunks: Chunks): Reado
    const nearbyStructures = new Array<EntityInfo<StructureType>>();
    for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
       for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
-         const chunk = getChunk(chunks, chunkX, chunkY);
-         for (const entity of chunk.entities) {
-            if (seenEntityIDs.has(entity.id)) {
+         const chunk = getChunk(worldInfo.chunks, chunkX, chunkY);
+         for (const entityID of chunk.entities) {
+            const entity = worldInfo.getEntityCallback(entityID);
+            
+            if (seenEntityIDs.has(entityID)) {
                continue;
             }
-            seenEntityIDs.add(entity.id);
+            seenEntityIDs.add(entityID);
             
             const distance = regularPlacePosition.calculateDistanceBetween(entity.position);
             if (distance > Settings.STRUCTURE_SNAP_RANGE) {
@@ -147,7 +155,7 @@ const getNearbyStructures = (regularPlacePosition: Point, chunks: Chunks): Reado
    return nearbyStructures;
 }
 
-export function getStructureSnapOrigin(structure: EntityInfo<StructureType>): Point {
+export function getStructureSnapOrigin(structure: EntityInfo): Point {
    const snapOrigin = structure.position.copy();
    if (structure.type === EntityType.embrasure) {
       snapOrigin.x -= 22 * Math.sin(structure.rotation);
@@ -176,7 +184,7 @@ export function getSnapDirection(directionToSnappingEntity: number, structureRot
    return SnapDirection.top;
 }
 
-const getPositionsOffEntity = (snapOrigin: Readonly<Point>, connectingEntity: EntityInfo<StructureType>, placeRotation: number, structureType: StructureType, chunks: Chunks): ReadonlyArray<StructureTransformInfo> => {
+const getPositionsOffEntity = (snapOrigin: Readonly<Point>, connectingEntity: EntityInfo<StructureType>, placeRotation: number, structureType: StructureType, worldInfo: WorldInfo): ReadonlyArray<StructureTransformInfo> => {
    const placingEntityHitboxes = createEntityHitboxes(structureType);
    
    const snapPositions = new Array<StructureTransformInfo>();
@@ -224,10 +232,10 @@ const getPositionsOffEntity = (snapOrigin: Readonly<Point>, connectingEntity: En
 
             // Don't add the position if it would be colliding with the connecting entity
             let isValid = true;
-            const collidingEntities = estimateCollidingEntities(chunks, structureType, position.x, position.y, placeRotation, Vars.COLLISION_EPSILON);
+            const collidingEntities = estimateCollidingEntities(worldInfo, structureType, position.x, position.y, placeRotation, Vars.COLLISION_EPSILON);
             for (let l = 0; l < collidingEntities.length; l++) {
-               const collidingEntity = collidingEntities[l];
-               if (collidingEntity.id === connectingEntity.id) {
+               const collidingEntityID = collidingEntities[l];
+               if (collidingEntityID === connectingEntity.id) {
                   isValid = false;
                   break;
                }
@@ -248,7 +256,7 @@ const getPositionsOffEntity = (snapOrigin: Readonly<Point>, connectingEntity: En
    return snapPositions;
 }
 
-const findCandidatePlacePositions = (nearbyStructures: ReadonlyArray<EntityInfo<StructureType>>, structureType: StructureType, placingEntityRotation: number, chunks: Chunks): Array<StructureTransformInfo> => {
+const findCandidatePlacePositions = (nearbyStructures: ReadonlyArray<EntityInfo<StructureType>>, structureType: StructureType, placingEntityRotation: number, worldInfo: WorldInfo): Array<StructureTransformInfo> => {
    const candidatePositions = new Array<StructureTransformInfo>();
    
    for (let i = 0; i < nearbyStructures.length; i++) {
@@ -265,7 +273,7 @@ const findCandidatePlacePositions = (nearbyStructures: ReadonlyArray<EntityInfo<
       const placeRotation = Math.round(placingEntityRotation / (Math.PI * 0.5)) * Math.PI * 0.5 + clampedSnapRotation;
 
       const snapOrigin = getStructureSnapOrigin(entity);
-      const positionsOffEntity = getPositionsOffEntity(snapOrigin, entity, placeRotation, structureType, chunks);
+      const positionsOffEntity = getPositionsOffEntity(snapOrigin, entity, placeRotation, structureType, worldInfo);
 
       for (let i = 0; i < positionsOffEntity.length; i++) {
          const position = positionsOffEntity[i];
@@ -304,7 +312,7 @@ const getExistingGroup = (transform: StructureTransformInfo, groups: ReadonlyArr
    return null;
 }
 
-const groupTransforms = (transforms: ReadonlyArray<StructureTransformInfo>, structureType: StructureType, chunks: Chunks): ReadonlyArray<StructurePlaceInfo> => {
+const groupTransforms = (transforms: ReadonlyArray<StructureTransformInfo>, structureType: StructureType, worldInfo: WorldInfo): ReadonlyArray<StructurePlaceInfo> => {
    const groups = new Array<Array<StructureTransformInfo>>();
    
    for (let i = 0; i < transforms.length; i++) {
@@ -345,7 +353,7 @@ const groupTransforms = (transforms: ReadonlyArray<StructureTransformInfo>, stru
          connectedSidesBitset: connectedSidesBitset,
          connectedEntityIDs: connectedEntityIDs,
          entityType: structureType,
-         isValid: structurePlaceIsValid(structureType, firstTransform.position.x, firstTransform.position.y, firstTransform.rotation, chunks)
+         isValid: structurePlaceIsValid(structureType, firstTransform.position.x, firstTransform.position.y, firstTransform.rotation, worldInfo)
       };
       placeInfos.push(placeInfo);
    }
@@ -364,13 +372,13 @@ const filterCandidatePositions = (candidates: Array<StructureTransformInfo>, reg
    }
 }
 
-const calculatePlaceInfo = (position: Point, rotation: number, structureType: StructureType, chunks: Chunks): StructurePlaceInfo => {
-   const nearbyStructures = getNearbyStructures(position, chunks);
+const calculatePlaceInfo = (position: Point, rotation: number, structureType: StructureType, worldInfo: WorldInfo): StructurePlaceInfo => {
+   const nearbyStructures = getNearbyStructures(position, worldInfo);
    
-   const candidatePositions = findCandidatePlacePositions(nearbyStructures, structureType, rotation, chunks);
+   const candidatePositions = findCandidatePlacePositions(nearbyStructures, structureType, rotation, worldInfo);
    filterCandidatePositions(candidatePositions, position);
    
-   const placeInfos = groupTransforms(candidatePositions, structureType, chunks);
+   const placeInfos = groupTransforms(candidatePositions, structureType, worldInfo);
    if (placeInfos.length === 0) {
       // If no connections are found, use the regular place position
       return {
@@ -379,7 +387,7 @@ const calculatePlaceInfo = (position: Point, rotation: number, structureType: St
          connectedSidesBitset: 0,
          connectedEntityIDs: [0, 0, 0, 0],
          entityType: structureType,
-         isValid: structurePlaceIsValid(structureType, position.x, position.y, rotation, chunks)
+         isValid: structurePlaceIsValid(structureType, position.x, position.y, rotation, worldInfo)
       };
    } else {
       // @Incomplete:
@@ -390,15 +398,15 @@ const calculatePlaceInfo = (position: Point, rotation: number, structureType: St
    }
 }
 
-export function calculateStructureConnectionInfo(position: Point, rotation: number, structureType: StructureType, chunks: Chunks): StructureConnectionInfo {
-   const placeInfo = calculatePlaceInfo(position, rotation, structureType, chunks);
+export function calculateStructureConnectionInfo(position: Point, rotation: number, structureType: StructureType, worldInfo: WorldInfo): StructureConnectionInfo {
+   const placeInfo = calculatePlaceInfo(position, rotation, structureType, worldInfo);
    return {
       connectedSidesBitset: placeInfo.connectedSidesBitset,
       connectedEntityIDs: placeInfo.connectedEntityIDs
    };
 }
 
-export function calculateStructurePlaceInfo(placeOrigin: Point, placingEntityRotation: number, structureType: StructureType, chunks: Chunks): StructurePlaceInfo {
+export function calculateStructurePlaceInfo(placeOrigin: Point, placingEntityRotation: number, structureType: StructureType, worldInfo: WorldInfo): StructurePlaceInfo {
    const regularPlacePosition = calculateRegularPlacePosition(placeOrigin, placingEntityRotation, structureType);
-   return calculatePlaceInfo(regularPlacePosition, placingEntityRotation, structureType, chunks);
+   return calculatePlaceInfo(regularPlacePosition, placingEntityRotation, structureType, worldInfo);
 }

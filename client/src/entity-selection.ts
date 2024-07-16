@@ -310,6 +310,8 @@ export function deselectHighlightedEntity(): void {
 
 // @Cleanup: name
 const getEntityID = (doPlayerProximityCheck: boolean, doCanSelectCheck: boolean): number => {
+   const playerTransformComponent = Player.instance!.getServerComponent(ServerComponentType.transform);
+   
    const minChunkX = Math.max(Math.floor((Game.cursorPositionX! - HIGHLIGHT_RANGE) / Settings.CHUNK_UNITS), 0);
    const maxChunkX = Math.min(Math.floor((Game.cursorPositionX! + HIGHLIGHT_RANGE) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1);
    const minChunkY = Math.max(Math.floor((Game.cursorPositionY! - HIGHLIGHT_RANGE) / Settings.CHUNK_UNITS), 0);
@@ -322,22 +324,25 @@ const getEntityID = (doPlayerProximityCheck: boolean, doCanSelectCheck: boolean)
    for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
       for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
          const chunk = Board.getChunk(chunkX, chunkY);
-         for (const entity of chunk.entities) {
+         for (const currentEntityID of chunk.entities) {
+            const entity = Board.entityRecord[currentEntityID]!;
             if (doCanSelectCheck && getEntityInteractAction(entity) === null) {
                continue;
             }
 
+            const entityTransformComponent = entity.getServerComponent(ServerComponentType.transform);
+
             if (doPlayerProximityCheck) {
                // @Incomplete: Should do it based on the distance from the closest hitbox rather than distance from center
-               if (Player.instance!.position.calculateDistanceBetween(entity.position) > HIGHLIGHT_DISTANCE) {
+               if (playerTransformComponent.position.calculateDistanceBetween(entityTransformComponent.position) > HIGHLIGHT_DISTANCE) {
                   continue;
                }
             }
             
             // Distance from cursor
-            for (const hitbox of entity.hitboxes) {
+            for (const hitbox of entityTransformComponent.hitboxes) {
                if (hitboxIsWithinRange(hitbox, origin, HIGHLIGHT_RANGE)) {
-                  const distance = origin.calculateDistanceBetween(entity.position);
+                  const distance = origin.calculateDistanceBetween(entityTransformComponent.position);
                   if (distance < minDist) {
                      minDist = distance;
                      entityID = entity.id;
@@ -379,11 +384,13 @@ const updateHighlightedEntity = (entity: Entity | null): void => {
       return;
    }
    
+   const entityTransformComponent = entity.getServerComponent(ServerComponentType.transform);
+   
    switch (interactAction.type) {
       case InteractActionType.plantSeed: {
          const ghostInfo: GhostInfo = {
-            position: entity.position,
-            rotation: entity.rotation,
+            position: entityTransformComponent.position,
+            rotation: entityTransformComponent.rotation,
             ghostType: getPlantGhostType(interactAction.plantType),
             tint: [1, 1, 1],
             opacity: PARTIAL_OPACITY
@@ -393,8 +400,8 @@ const updateHighlightedEntity = (entity: Entity | null): void => {
       }
       case InteractActionType.useFertiliser: {
          const ghostInfo: GhostInfo = {
-            position: entity.position,
-            rotation: entity.rotation,
+            position: entityTransformComponent.position,
+            rotation: entityTransformComponent.rotation,
             ghostType: GhostType.fertiliser,
             tint: [1, 1, 1],
             opacity: PARTIAL_OPACITY
@@ -427,7 +434,11 @@ export function updateHighlightedAndHoveredEntities(): void {
    // If the player is interacting with an inventory, only consider the distance from the player not the cursor
    if (Board.entityRecord.hasOwnProperty(selectedEntityID) && (isHoveringInBlueprintMenu() || InventorySelector_inventoryIsOpen())) {
       const selectedEntity = getSelectedEntity();
-      const distance = Player.instance.position.calculateDistanceBetween(selectedEntity.position);
+
+      const playerTransformComponent = Player.instance.getServerComponent(ServerComponentType.transform);
+      const entityTransformComponent = selectedEntity.getServerComponent(ServerComponentType.transform);
+      
+      const distance = playerTransformComponent.position.calculateDistanceBetween(entityTransformComponent.position);
       if (distance <= HIGHLIGHT_DISTANCE) {
          hoveredEntityID = getEntityID(false, false);
          return;

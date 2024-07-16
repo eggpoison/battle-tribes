@@ -16,11 +16,13 @@ class DoorComponent extends ServerComponent<ServerComponentType.door> {
    }
 
    public updateFromData(data: DoorComponentData): void {
+      const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
+
       const toggleType = data.toggleType;
       if (toggleType === DoorToggleType.open && this.toggleType === DoorToggleType.none) {
-         playSound("door-open.mp3", 0.4, 1, this.entity.position.x, this.entity.position.y);
+         playSound("door-open.mp3", 0.4, 1, transformComponent.position);
       } else if (toggleType === DoorToggleType.close && this.toggleType === DoorToggleType.none) {
-         playSound("door-close.mp3", 0.4, 1, this.entity.position.x, this.entity.position.y);
+         playSound("door-close.mp3", 0.4, 1, transformComponent.position);
       }
       this.toggleType = toggleType;
 

@@ -1,5 +1,5 @@
 import { EntityType } from "webgl-test-shared/dist/entities";
-import { Point, randFloat, randInt } from "webgl-test-shared/dist/utils";
+import { randFloat, randInt } from "webgl-test-shared/dist/utils";
 import RenderPart from "../render-parts/RenderPart";
 import Particle from "../Particle";
 import Board from "../Board";
@@ -7,14 +7,15 @@ import { ParticleColour, ParticleRenderLayer, addMonocolourParticleToBufferConta
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { AudioFilePath, playSound } from "../sound";
 import Entity from "../Entity";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 
 class IceSpikes extends Entity {
    private static readonly ICE_SPECK_COLOUR: ParticleColour = [140/255, 143/255, 207/255];
 
    private static readonly SIZE = 80;
 
-   constructor(position: Point, id: number, ageTicks: number) {
-      super(position, id, EntityType.iceSpikes, ageTicks);
+   constructor(id: number) {
+      super(id, EntityType.iceSpikes);
 
       this.attachRenderPart(
          new RenderPart(
@@ -32,21 +33,25 @@ class IceSpikes extends Entity {
          this.createIceSpeckProjectile();
       }
       
-      playSound(("ice-spikes-hit-" + randInt(1, 3) + ".mp3") as AudioFilePath, 0.4, 1, this.position.x, this.position.y);
+      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      playSound(("ice-spikes-hit-" + randInt(1, 3) + ".mp3") as AudioFilePath, 0.4, 1, transformComponent.position);
    }
 
    public onDie(): void {
       for (let i = 0; i < 15; i++) {
          this.createIceSpeckProjectile();
       }
-
-      playSound("ice-spikes-destroy.mp3", 0.4, 1, this.position.x, this.position.y);
+      
+      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      playSound("ice-spikes-destroy.mp3", 0.4, 1, transformComponent.position);
    }
 
    private createIceSpeckProjectile(): void {
+      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+
       const spawnOffsetDirection = 2 * Math.PI * Math.random();
-      const spawnPositionX = this.position.x + IceSpikes.SIZE / 2 * Math.sin(spawnOffsetDirection);
-      const spawnPositionY = this.position.y + IceSpikes.SIZE / 2 * Math.cos(spawnOffsetDirection);
+      const spawnPositionX = transformComponent.position.x + IceSpikes.SIZE / 2 * Math.sin(spawnOffsetDirection);
+      const spawnPositionY = transformComponent.position.y + IceSpikes.SIZE / 2 * Math.cos(spawnOffsetDirection);
 
       const velocityMagnitude = randFloat(150, 300);
       const velocityDirection = spawnOffsetDirection + randFloat(-0.8, 0.8);

@@ -1,15 +1,16 @@
 import { ServerComponentType, ZombieComponentData } from "webgl-test-shared/dist/components";
 import { ComponentArray } from "./ComponentArray";
+import { EntityID } from "webgl-test-shared/dist/entities";
 
 export interface ZombieComponentParams {
-   readonly zombieType: number;
-   readonly tombstoneID: number;
+   zombieType: number;
+   tombstone: EntityID;
 }
 
 export class ZombieComponent {
    /** The type of the zombie, 0-3 */
    public readonly zombieType: number;
-   public readonly tombstoneID: number;
+   public readonly tombstone: EntityID;
 
    /** Maps the IDs of entities which have attacked the zombie to the number of ticks that they should remain in the object for */
    public readonly attackingEntityIDs: Partial<Record<number, number>> = {};
@@ -23,11 +24,11 @@ export class ZombieComponent {
    
    constructor(params: ZombieComponentParams) {
       this.zombieType = params.zombieType;
-      this.tombstoneID = params.tombstoneID;
+      this.tombstone = params.tombstone;
    }
 }
 
-export const ZombieComponentArray = new ComponentArray<ServerComponentType.zombie, ZombieComponent>(true, {
+export const ZombieComponentArray = new ComponentArray<ZombieComponent>(ServerComponentType.zombie, true, {
    serialise: serialise
 });
 

@@ -1,31 +1,31 @@
 import { BlueprintType, BuildingMaterial, BlueprintComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
-import { EntityID, EntityType, EntityTypeString } from "webgl-test-shared/dist/entities";
+import { EntityID } from "webgl-test-shared/dist/entities";
 import { ComponentArray } from "./ComponentArray";
-import { DOOR_HEALTHS, createDoor } from "../entities/structures/door";
-import { EMBRASURE_HEALTHS, createEmbrasure } from "../entities/structures/embrasure";
-import { createSlingTurret } from "../entities/structures/sling-turret";
-import { TUNNEL_HEALTHS, createTunnel } from "../entities/structures/tunnel";
 import Board from "../Board";
-import { WALL_HEALTHS } from "../entities/structures/wall";
-import { SPIKE_HEALTHS } from "../entities/structures/spikes";
-import { createWarriorHut } from "../entities/structures/warrior-hut";
-import { createFenceGate } from "../entities/structures/fence-gate";
 import { placeVirtualBuilding } from "../ai-tribe-building/ai-building";
 import { getBlueprintEntityType } from "../entities/blueprint-entity";
 import { StructureComponentArray } from "./StructureComponent";
 import { calculateStructureConnectionInfo } from "webgl-test-shared/dist/structures";
 import { HealthComponentArray } from "./HealthComponent";
 import { TribeComponentArray } from "./TribeComponent";
-import { BuildingMaterialComponentArray } from "./BuildingMaterialComponent";
+import { BuildingMaterialComponentArray, getStructureHealth } from "./BuildingMaterialComponent";
 import { HutComponentArray } from "./HutComponent";
 import { Item, ITEM_INFO_RECORD, HammerItemInfo } from "webgl-test-shared/dist/items/items";
 import { TransformComponentArray } from "./TransformComponent";
 import { ComponentConfig } from "../components";
 import { createEntityHitboxes } from "webgl-test-shared/dist/hitboxes/entity-hitbox-creation";
+import { createDoorConfig } from "../entities/structures/door";
+import { createEntityFromConfig } from "../Entity";
+import { createEmbrasureConfig } from "../entities/structures/embrasure";
+import { createBallistaConfig } from "../entities/structures/ballista";
+import { createSlingTurretConfig } from "../entities/structures/sling-turret";
+import { createTunnelConfig } from "../entities/structures/tunnel";
+import { createFenceGateConfig } from "../entities/structures/fence-gate";
+import { createWarriorHutConfig } from "../entities/structures/warrior-hut";
 
 export interface BlueprintComponentParams {
    blueprintType: BlueprintType;
-   readonly associatedEntityID: EntityID;
+   associatedEntityID: EntityID;
 }
 
 const STRUCTURE_WORK_REQUIRED: Record<BlueprintType, number> = {
@@ -59,7 +59,7 @@ export class BlueprintComponent {
    }
 }
 
-export const BlueprintComponentArray = new ComponentArray<ServerComponentType.blueprint, BlueprintComponent>(true, {
+export const BlueprintComponentArray = new ComponentArray<BlueprintComponent>(ServerComponentType.blueprint, true, {
    onInitialise: onInitialise,
    onJoin: onJoin,
    onRemove: onRemove,
@@ -86,7 +86,7 @@ function onJoin(entityID: EntityID): void {
 
    if (StructureComponentArray.hasComponent(blueprintComponent.associatedEntityID)) {
       const structureComponent = StructureComponentArray.getComponent(blueprintComponent.associatedEntityID);
-      structureComponent.activeBlueprintID = entityID;
+      structureComponent.activeBlueprint = entityID;
    }
 }
 
@@ -101,38 +101,11 @@ const upgradeBuilding = (building: EntityID): void => {
    if (materialComponent.material < BuildingMaterial.stone) {
       materialComponent.material++;
 
-      let maxHealthArray!: ReadonlyArray<number>;
-      const entityType = Board.getEntityType(building)!;
-      switch (entityType) {
-         case EntityType.wall: {
-            maxHealthArray = WALL_HEALTHS;
-            break;
-         }
-         case EntityType.embrasure: {
-            maxHealthArray = EMBRASURE_HEALTHS;
-            break;
-         }
-         case EntityType.tunnel: {
-            maxHealthArray = TUNNEL_HEALTHS;
-            break;
-         }
-         case EntityType.door: {
-            maxHealthArray = DOOR_HEALTHS;
-            break;
-         }
-         case EntityType.floorSpikes:
-         case EntityType.wallSpikes: {
-            maxHealthArray = SPIKE_HEALTHS;
-            break;
-         }
-         default: {
-            throw new Error("Don't know how to upgrade building of type " + EntityTypeString[entityType]);
-         }
-      }
+      const health = getStructureHealth(Board.getEntityType(building)!, materialComponent.material);
       
       const healthComponent = HealthComponentArray.getComponent(building);
-      healthComponent.maxHealth = maxHealthArray[materialComponent.material];
-      healthComponent.health = healthComponent.maxHealth;
+      healthComponent.maxHealth = health;
+      healthComponent.health = health;
    }
 }
 
@@ -144,51 +117,119 @@ const completeBlueprint = (blueprintEntity: EntityID, blueprintComponent: Bluepr
 
    const entityType = getBlueprintEntityType(blueprintComponent.blueprintType);
    const position = transformComponent.position.copy();
-   const connectionInfo = calculateStructureConnectionInfo(position, transformComponent.rotation, entityType, Board.chunks);
+   const connectionInfo = calculateStructureConnectionInfo(position, transformComponent.rotation, entityType, Board.getWorldInfo());
    
-   // @Cleanup: a lot of copy and paste
+   // @Copynpaste
    switch (blueprintComponent.blueprintType) {
       case BlueprintType.woodenDoor: {
-         createDoor(transformComponent.position.copy(), transformComponent.rotation, tribeComponent.tribe, connectionInfo, BuildingMaterial.wood);
+         const config = createDoorConfig();
+         config[ServerComponentType.transform].position.x = transformComponent.position.x;
+         config[ServerComponentType.transform].position.y = transformComponent.position.y;
+         config[ServerComponentType.transform].rotation = transformComponent.rotation;
+         config[ServerComponentType.tribe].tribe = tribeComponent.tribe;
+         config[ServerComponentType.structure].connectionInfo = connectionInfo;
+         config[ServerComponentType.buildingMaterial].material = BuildingMaterial.wood;
+         createEntityFromConfig(config);
          return;
       }
       case BlueprintType.stoneDoor: {
-         createDoor(transformComponent.position.copy(), transformComponent.rotation, tribeComponent.tribe, connectionInfo, BuildingMaterial.stone);
+         const config = createDoorConfig();
+         config[ServerComponentType.transform].position.x = transformComponent.position.x;
+         config[ServerComponentType.transform].position.y = transformComponent.position.y;
+         config[ServerComponentType.transform].rotation = transformComponent.rotation;
+         config[ServerComponentType.tribe].tribe = tribeComponent.tribe;
+         config[ServerComponentType.structure].connectionInfo = connectionInfo;
+         config[ServerComponentType.buildingMaterial].material = BuildingMaterial.stone;
+         createEntityFromConfig(config);
          return;
       }
       case BlueprintType.woodenEmbrasure: {
-         createEmbrasure(transformComponent.position.copy(), transformComponent.rotation, tribeComponent.tribe, connectionInfo, BuildingMaterial.wood);
+         const config = createEmbrasureConfig();
+         config[ServerComponentType.transform].position.x = transformComponent.position.x;
+         config[ServerComponentType.transform].position.y = transformComponent.position.y;
+         config[ServerComponentType.transform].rotation = transformComponent.rotation;
+         config[ServerComponentType.tribe].tribe = tribeComponent.tribe;
+         config[ServerComponentType.structure].connectionInfo = connectionInfo;
+         config[ServerComponentType.buildingMaterial].material = BuildingMaterial.wood;
+         createEntityFromConfig(config);
          return;
       }
       case BlueprintType.stoneEmbrasure: {
-         createEmbrasure(transformComponent.position.copy(), transformComponent.rotation, tribeComponent.tribe, connectionInfo, BuildingMaterial.stone);
+         const config = createEmbrasureConfig();
+         config[ServerComponentType.transform].position.x = transformComponent.position.x;
+         config[ServerComponentType.transform].position.y = transformComponent.position.y;
+         config[ServerComponentType.transform].rotation = transformComponent.rotation;
+         config[ServerComponentType.tribe].tribe = tribeComponent.tribe;
+         config[ServerComponentType.structure].connectionInfo = connectionInfo;
+         config[ServerComponentType.buildingMaterial].material = BuildingMaterial.stone;
+         createEntityFromConfig(config);
          return;
       }
       case BlueprintType.ballista: {
-         createBallista(transformComponent.position.copy(), transformComponent.rotation, tribeComponent.tribe, connectionInfo);
+         const config = createBallistaConfig();
+         config[ServerComponentType.transform].position.x = transformComponent.position.x;
+         config[ServerComponentType.transform].position.y = transformComponent.position.y;
+         config[ServerComponentType.transform].rotation = transformComponent.rotation;
+         config[ServerComponentType.tribe].tribe = tribeComponent.tribe;
+         config[ServerComponentType.structure].connectionInfo = connectionInfo;
+         createEntityFromConfig(config);
          return;
       }
       case BlueprintType.slingTurret: {
-         createSlingTurret(transformComponent.position.copy(), transformComponent.rotation, tribeComponent.tribe, connectionInfo);
+         const config = createSlingTurretConfig();
+         config[ServerComponentType.transform].position.x = transformComponent.position.x;
+         config[ServerComponentType.transform].position.y = transformComponent.position.y;
+         config[ServerComponentType.transform].rotation = transformComponent.rotation;
+         config[ServerComponentType.tribe].tribe = tribeComponent.tribe;
+         config[ServerComponentType.structure].connectionInfo = connectionInfo;
+         createEntityFromConfig(config);
          return;
       }
       case BlueprintType.woodenTunnel: {
-         createTunnel(transformComponent.position.copy(), transformComponent.rotation, tribeComponent.tribe, connectionInfo, BuildingMaterial.wood);
+         const config = createTunnelConfig();
+         config[ServerComponentType.transform].position.x = transformComponent.position.x;
+         config[ServerComponentType.transform].position.y = transformComponent.position.y;
+         config[ServerComponentType.transform].rotation = transformComponent.rotation;
+         config[ServerComponentType.tribe].tribe = tribeComponent.tribe;
+         config[ServerComponentType.structure].connectionInfo = connectionInfo;
+         config[ServerComponentType.buildingMaterial].material = BuildingMaterial.wood;
+         createEntityFromConfig(config);
          return;
       }
       case BlueprintType.stoneTunnel: {
-         createTunnel(transformComponent.position.copy(), transformComponent.rotation, tribeComponent.tribe, connectionInfo, BuildingMaterial.stone);
+         const config = createTunnelConfig();
+         config[ServerComponentType.transform].position.x = transformComponent.position.x;
+         config[ServerComponentType.transform].position.y = transformComponent.position.y;
+         config[ServerComponentType.transform].rotation = transformComponent.rotation;
+         config[ServerComponentType.tribe].tribe = tribeComponent.tribe;
+         config[ServerComponentType.structure].connectionInfo = connectionInfo;
+         config[ServerComponentType.buildingMaterial].material = BuildingMaterial.stone;
+         createEntityFromConfig(config);
          return;
       }
       case BlueprintType.fenceGate: {
-         createFenceGate(transformComponent.position.copy(), transformComponent.rotation, tribeComponent.tribe, connectionInfo);
-         
+         const config = createFenceGateConfig();
+         config[ServerComponentType.transform].position.x = transformComponent.position.x;
+         config[ServerComponentType.transform].position.y = transformComponent.position.y;
+         config[ServerComponentType.transform].rotation = transformComponent.rotation;
+         config[ServerComponentType.tribe].tribe = tribeComponent.tribe;
+         config[ServerComponentType.structure].connectionInfo = connectionInfo;
+         // @Incomplete
+         // config[ServerComponentType.buildingMaterial].material = BuildingMaterial.stone;
+         createEntityFromConfig(config);
+
          Board.destroyEntity(blueprintComponent.associatedEntityID);
          
          return;
       }
       case BlueprintType.warriorHutUpgrade: {
-         const hut = createWarriorHut(transformComponent.position.copy(), transformComponent.rotation, tribeComponent.tribe, connectionInfo);
+         const config = createWarriorHutConfig();
+         config[ServerComponentType.transform].position.x = transformComponent.position.x;
+         config[ServerComponentType.transform].position.y = transformComponent.position.y;
+         config[ServerComponentType.transform].rotation = transformComponent.rotation;
+         config[ServerComponentType.tribe].tribe = tribeComponent.tribe;
+         config[ServerComponentType.structure].connectionInfo = connectionInfo;
+         const hut = createEntityFromConfig(config);
 
          // Remove the previous hut
          Board.destroyEntity(blueprintComponent.associatedEntityID);

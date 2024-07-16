@@ -67,7 +67,7 @@ export class PhysicsComponent {
    }
 }
 
-export const PhysicsComponentArray = new ComponentArray<ServerComponentType.physics, PhysicsComponent>(true, {
+export const PhysicsComponentArray = new ComponentArray<PhysicsComponent>(ServerComponentType.physics, true, {
    onRemove: onRemove,
    serialise: serialise
 });
@@ -104,7 +104,7 @@ const turnEntity = (transformComponent: TransformComponent, physicsComponent: Ph
 
       // @Temporary?
       if (clockwiseDist < 0 || clockwiseDist > 2 * Math.PI) {
-         console.warn("BAD ROTATION!!!", physicsComponent.targetRotation, transformComponent.rotation, physicsComponent.targetRotation - entity.rotation, clockwiseDist, 2 * Math.PI);
+         console.warn("BAD ROTATION!!!", physicsComponent.targetRotation, transformComponent.rotation, physicsComponent.targetRotation - transformComponent.rotation, clockwiseDist, 2 * Math.PI);
       }
       
       if (clockwiseDist <= Math.PI) {  
@@ -205,7 +205,7 @@ const applyPhysics = (entity: EntityID, physicsComponent: PhysicsComponent): voi
 }
 
 const dirtifyPathfindingNodes = (entity: EntityID, physicsComponent: PhysicsComponent): void => {
-   if (!physicsComponent.pathfindingNodesAreDirty && entityCanBlockPathfinding(Board.getEntityType(entity)!)) {
+   if (!physicsComponent.pathfindingNodesAreDirty && entityCanBlockPathfinding(entity)) {
       addDirtyPathfindingEntity(entity);
       physicsComponent.pathfindingNodesAreDirty = true;
    }
@@ -216,14 +216,14 @@ const updatePosition = (entity: EntityID, physicsComponent: PhysicsComponent): v
    
    if (physicsComponent.hitboxesAreDirty) {
       // @Incomplete: if hitboxes are dirty, should still resolve wall tile collisions, etc.
-      entity.cleanHitboxes();
-      updateContainingChunks(transformComponent);
+      transformComponent.cleanHitboxes(entity);
+      transformComponent.updateContainingChunks(entity);
       physicsComponent.hitboxesAreDirty = false;
       
       dirtifyPathfindingNodes(entity, physicsComponent);
    } else if (physicsComponent.positionIsDirty) {
-      entity.updateHitboxes();
-      updateContainingChunks(transformComponent);
+      transformComponent.updateHitboxes(entity);
+      transformComponent.updateContainingChunks(entity);
 
       dirtifyPathfindingNodes(entity, physicsComponent);
    }
@@ -231,22 +231,22 @@ const updatePosition = (entity: EntityID, physicsComponent: PhysicsComponent): v
    if (physicsComponent.positionIsDirty) {
       physicsComponent.positionIsDirty = false;
 
-      entity.resolveWallTileCollisions();
+      transformComponent.resolveWallTileCollisions(entity);
 
       // If the object moved due to resolving wall tile collisions, recalculate
       if (physicsComponent.positionIsDirty) {
-         entity.updateHitboxes();
+         transformComponent.updateHitboxes(entity);
       }
 
-      entity.resolveBorderCollisions();
+      transformComponent.resolveBorderCollisions(entity);
    
       // If the object moved due to resolving border collisions, recalculate
       if (physicsComponent.positionIsDirty) {
-         entity.updateHitboxes();
+         transformComponent.updateHitboxes(entity);
       }
 
-      entity.updateTile();
-      entity.checkIsInRiver();
+      transformComponent.updateTile();
+      transformComponent.checkIsInRiver(entity);
    }
 }
 
@@ -254,8 +254,9 @@ export function tickPhysicsComponents(): void {
    for (let i = 0; i < PhysicsComponentArray.components.length; i++) {
       const entity = PhysicsComponentArray.getEntityFromArrayIdx(i);
       const physicsComponent = PhysicsComponentArray.components[i];
+      const transformComponent = TransformComponentArray.getComponent(entity);
 
-      turnEntity(entity, physicsComponent);
+      turnEntity(transformComponent, physicsComponent);
       applyPhysics(entity, physicsComponent);
       updatePosition(entity, physicsComponent);
    }

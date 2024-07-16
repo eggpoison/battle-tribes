@@ -8,8 +8,8 @@ import { addTribeMemberRenderParts } from "./TribeMember";
 import { ComponentDataRecord } from "../Entity";
 
 class TribeWorker extends Tribesman {
-   constructor(position: Point, id: number, ageTicks: number, componentDataRecord: ComponentDataRecord) {
-      super(position, id, EntityType.tribeWorker, ageTicks);
+   constructor(id: number, componentDataRecord: ComponentDataRecord) {
+      super(id, EntityType.tribeWorker);
 
       addTribeMemberRenderParts(this, componentDataRecord);
       

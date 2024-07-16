@@ -1,6 +1,6 @@
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityType } from "webgl-test-shared/dist/entities";
-import { Point, angle, randFloat } from "webgl-test-shared/dist/utils";
+import { angle, randFloat } from "webgl-test-shared/dist/utils";
 import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { createEmberParticle, createRockParticle, createRockSpeckParticle, createSmokeParticle } from "../particles";
@@ -11,8 +11,8 @@ import { ParticleRenderLayer } from "../rendering/webgl/particle-rendering";
 class Furnace extends Entity {
    public static readonly SIZE = 80;
 
-   constructor(position: Point, id: number, ageTicks: number) {
-      super(position, id, EntityType.furnace, ageTicks);
+   constructor(id: number) {
+      super(id, EntityType.furnace);
 
       this.attachRenderPart(
          new RenderPart(
@@ -29,43 +29,47 @@ class Furnace extends Entity {
 
       const cookingComponent = this.getServerComponent(ServerComponentType.cooking);
       if (cookingComponent.isCooking) {
+         const transformComponent = this.getServerComponent(ServerComponentType.transform);
+
          // Smoke particles
          if (Board.tickIntervalHasPassed(0.1)) {
             const spawnOffsetMagnitude = 20 * Math.random();
             const spawnOffsetDirection = 2 * Math.PI * Math.random();
-            const spawnPositionX = this.position.x + spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
-            const spawnPositionY = this.position.y + spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
+            const spawnPositionX = transformComponent.position.x + spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
+            const spawnPositionY = transformComponent.position.y + spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
             createSmokeParticle(spawnPositionX, spawnPositionY);
          }
 
          // Ember particles
          if (Board.tickIntervalHasPassed(0.05)) {
-            let spawnPositionX = this.position.x - 30 * Math.sin(this.rotation);
-            let spawnPositionY = this.position.y - 30 * Math.cos(this.rotation);
+            let spawnPositionX = transformComponent.position.x - 30 * Math.sin(transformComponent.rotation);
+            let spawnPositionY = transformComponent.position.y - 30 * Math.cos(transformComponent.rotation);
 
             const spawnOffsetMagnitude = 11 * Math.random();
             const spawnOffsetDirection = 2 * Math.PI * Math.random();
             spawnPositionX += spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
             spawnPositionY += spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
 
-            createEmberParticle(spawnPositionX, spawnPositionY, this.rotation + Math.PI + randFloat(-0.8, 0.8), randFloat(80, 120));
+            createEmberParticle(spawnPositionX, spawnPositionY, transformComponent.rotation + Math.PI + randFloat(-0.8, 0.8), randFloat(80, 120));
          }
       }
    }
 
    protected onHit(): void {
+      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+
       for (let i = 0; i < 2; i++) {
          let spawnPositionX: number;
          let spawnPositionY: number;
          if (Math.random() < 0.5) {
-            spawnPositionX = this.position.x + (Math.random() < 0.5 ? -0.5 : 0.5) * Furnace.SIZE;
-            spawnPositionY = this.position.y + randFloat(-0.5, 0.5) * Furnace.SIZE;
+            spawnPositionX = transformComponent.position.x + (Math.random() < 0.5 ? -0.5 : 0.5) * Furnace.SIZE;
+            spawnPositionY = transformComponent.position.y + randFloat(-0.5, 0.5) * Furnace.SIZE;
          } else {
-            spawnPositionX = this.position.x + randFloat(-0.5, 0.5) * Furnace.SIZE;
-            spawnPositionY = this.position.y + (Math.random() < 0.5 ? -0.5 : 0.5) * Furnace.SIZE;
+            spawnPositionX = transformComponent.position.x + randFloat(-0.5, 0.5) * Furnace.SIZE;
+            spawnPositionY = transformComponent.position.y + (Math.random() < 0.5 ? -0.5 : 0.5) * Furnace.SIZE;
          }
 
-         let moveDirection = angle(spawnPositionX - this.position.x, spawnPositionY - this.position.y)
+         let moveDirection = angle(spawnPositionX - transformComponent.position.x, spawnPositionY - transformComponent.position.y)
          
          moveDirection += randFloat(-1, 1);
 
@@ -73,20 +77,22 @@ class Furnace extends Entity {
       }
 
       for (let i = 0; i < 5; i++) {
-         createRockSpeckParticle(this.position.x, this.position.y, Furnace.SIZE / 2, 0, 0, ParticleRenderLayer.low);
+         createRockSpeckParticle(transformComponent.position.x, transformComponent.position.y, Furnace.SIZE / 2, 0, 0, ParticleRenderLayer.low);
       }
    }
 
    public onDie(): void {
+      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+
       for (let i = 0; i < 5; i++) {
-         const spawnPositionX = this.position.x + randFloat(-0.5, 0.5) * Furnace.SIZE;
-         const spawnPositionY = this.position.y + randFloat(-0.5, 0.5) * Furnace.SIZE;
+         const spawnPositionX = transformComponent.position.x + randFloat(-0.5, 0.5) * Furnace.SIZE;
+         const spawnPositionY = transformComponent.position.y + randFloat(-0.5, 0.5) * Furnace.SIZE;
 
          createRockParticle(spawnPositionX, spawnPositionY, 2 * Math.PI * Math.random(), randFloat(80, 125), ParticleRenderLayer.low);
       }
 
       for (let i = 0; i < 5; i++) {
-         createRockSpeckParticle(this.position.x, this.position.y, Furnace.SIZE / 2, 0, 0, ParticleRenderLayer.low);
+         createRockSpeckParticle(transformComponent.position.x, transformComponent.position.y, Furnace.SIZE / 2, 0, 0, ParticleRenderLayer.low);
       }
    }
 }

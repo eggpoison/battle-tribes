@@ -1,14 +1,15 @@
 import { EntityType } from "webgl-test-shared/dist/entities";
-import { Point, randItem } from "webgl-test-shared/dist/utils";
+import { randItem } from "webgl-test-shared/dist/utils";
 import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { ROCK_DESTROY_SOUNDS, ROCK_HIT_SOUNDS, playSound } from "../sound";
 import Entity from "../Entity";
 import { BALLISTA_AMMO_BOX_OFFSET_X, BALLISTA_AMMO_BOX_OFFSET_Y, BALLISTA_GEAR_X, BALLISTA_GEAR_Y } from "../utils";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 
 class Ballista extends Entity {
-   constructor(position: Point, id: number, ageTicks: number) {
-      super(position, id, EntityType.ballista, ageTicks);
+   constructor(id: number) {
+      super(id, EntityType.ballista);
 
       // Base
       this.attachRenderPart(
@@ -79,13 +80,17 @@ class Ballista extends Entity {
    }
 
    protected onHit(): void {
+      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      
       // @Temporary
-      playSound(randItem(ROCK_HIT_SOUNDS), 0.3, 1, this.position.x, this.position.y);
+      playSound(randItem(ROCK_HIT_SOUNDS), 0.3, 1, transformComponent.position);
    }
 
    public onDie(): void {
+      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      
       // @Temporary
-      playSound(randItem(ROCK_DESTROY_SOUNDS), 0.4, 1, this.position.x, this.position.y);
+      playSound(randItem(ROCK_DESTROY_SOUNDS), 0.4, 1, transformComponent.position);
    }
 }
 

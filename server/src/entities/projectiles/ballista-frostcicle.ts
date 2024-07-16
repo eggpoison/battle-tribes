@@ -14,7 +14,10 @@ import { HitboxCollisionType, RectangularHitbox } from "webgl-test-shared/dist/h
 import { ProjectileComponentArray } from "../../components/ProjectileComponent";
 import { ItemType } from "webgl-test-shared/dist/items/items";
 
-type ComponentTypes = ServerComponentType.transform | ServerComponentType.physics | ServerComponentType.tribe | ServerComponentType.projectile;
+type ComponentTypes = ServerComponentType.transform
+   | ServerComponentType.physics
+   | ServerComponentType.tribe
+   | ServerComponentType.projectile;
 
 export function createBallistaFrostcicleConfig(): ComponentConfig<ComponentTypes> {
    return {
@@ -35,7 +38,8 @@ export function createBallistaFrostcicleConfig(): ComponentConfig<ComponentTypes
          isImmovable: true
       },
       [ServerComponentType.tribe]: {
-         tribeID: null
+         tribe: null,
+         tribeType: 0
       },
       [ServerComponentType.projectile]: {
          owner: 0

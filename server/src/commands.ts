@@ -1,4 +1,4 @@
-import { PlayerCauseOfDeath, EntityType, getEntityTypeFromString, EntityID } from "webgl-test-shared/dist/entities";
+import { PlayerCauseOfDeath, EntityID } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { Biome } from "webgl-test-shared/dist/tiles";
 import { Point, randItem } from "webgl-test-shared/dist/utils";
@@ -7,9 +7,8 @@ import { getTilesOfBiome } from "./census";
 import Board from "./Board";
 import Tile from "./Tile";
 import { damageEntity, healEntity } from "./components/HealthComponent";
-import Entity, { getRandomPositionInEntity } from "./Entity";
+import { getRandomPositionInEntity } from "./Entity";
 import { InventoryComponentArray, addItem } from "./components/InventoryComponent";
-import { createEntity } from "./entity-creation";
 import { createItem } from "./items";
 import { forceBuildPlans } from "./ai-tribe-building/ai-building-plans";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
@@ -33,21 +32,21 @@ const setTime = (time: number): void => {
    Board.time = time;
 }
 
-const giveItem = (player: Entity, itemType: ItemType, amount: number): void => {
+const giveItem = (player: EntityID, itemType: ItemType, amount: number): void => {
    if (amount === 0) {
       return;
    }
 
    const item = createItem(itemType, amount);
-   addItem(InventoryComponentArray.getComponent(player.id), item);
+   addItem(InventoryComponentArray.getComponent(player), item);
 }
 
-const tp = (player: Entity, x: number, y: number): void => {
+const tp = (player: EntityID, x: number, y: number): void => {
    const newPosition = new Point(x, y);
    forcePlayerTeleport(player, newPosition);
 }
 
-const tpBiome = (player: Entity, biomeName: Biome): void => {
+const tpBiome = (player: EntityID, biomeName: Biome): void => {
    const potentialTiles = getTilesOfBiome(biomeName);
    if (potentialTiles.length === 0) {
       console.warn(`No available tiles of biome '${biomeName}' to teleport to.`);
@@ -68,19 +67,6 @@ const tpBiome = (player: Entity, biomeName: Biome): void => {
 
    const newPosition = new Point(x, y);
    forcePlayerTeleport(player, newPosition);
-}
-
-const summonEntities = (player: Entity, entityType: EntityType, amount: number): void => {
-   for (let i = 0; i < amount; i++) {
-      const spawnPosition = player.position.copy();
-
-      const spawnOffsetMagnitude = ENTITY_SPAWN_RANGE * (Math.random() + 1) / 2;
-      const spawnOffsetDirection = 2 * Math.PI * Math.random();
-      spawnPosition.x += spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
-      spawnPosition.y += spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
-
-      createEntity(spawnPosition, entityType);
-   }
 }
 
 export function registerCommand(command: string, player: EntityID): void {
@@ -169,25 +155,6 @@ export function registerCommand(command: string, player: EntityID): void {
       case "tpbiome": {
          const biomeName = commandComponents[1] as Biome;
          tpBiome(player, biomeName);
-         break;
-      }
-      case "summon": {
-         const entityTypeString = commandComponents[1];
-         if (typeof entityTypeString === "number") {
-            break;
-         }
-
-         const entityType = getEntityTypeFromString(entityTypeString);
-         if (entityType === null) {
-            break;
-         }
-         
-         if (numParameters === 1) {
-            summonEntities(player, entityType, 1);
-         } else {
-            const amount = commandComponents[2] as number;
-            summonEntities(player, entityType, amount);
-         }
          break;
       }
       case "unlockall": {

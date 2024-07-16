@@ -28,6 +28,7 @@ import { ItemType } from "webgl-test-shared/dist/items/items";
 import { TransformComponentArray } from "../../components/TransformComponent";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { ComponentConfig } from "../../components";
+import { getInventory, InventoryComponentArray } from "../../components/InventoryComponent";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics
@@ -156,12 +157,14 @@ const chaseAndEatBerry = (cow: EntityID, cowComponent: CowComponent, berryItemEn
 }
 
 const entityIsHoldingBerry = (entity: EntityID): boolean => {
+   const inventoryComponent = InventoryComponentArray.getComponent(entity);
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(entity);
 
    for (let i = 0 ; i < inventoryUseComponent.inventoryUseInfos.length; i++) {
       const useInfo = inventoryUseComponent.inventoryUseInfos[i];
+      const inventory = getInventory(inventoryComponent, useInfo.usedInventoryName);
       
-      const heldItem = useInfo.inventory.itemSlots[useInfo.selectedItemSlot];
+      const heldItem = inventory.itemSlots[useInfo.selectedItemSlot];
       if (typeof heldItem !== "undefined" && heldItem.type === ItemType.berry) {
          return true;
       }

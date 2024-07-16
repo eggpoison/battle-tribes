@@ -1,8 +1,7 @@
 import { CircleDebugData, EntityDebugData, LineDebugData, PathData, TileHighlightData } from "webgl-test-shared/dist/client-server-types";
 import { TribesmanAIType } from "webgl-test-shared/dist/components";
-import { EntityTypeString } from "webgl-test-shared/dist/entities";
+import { EntityID, EntityTypeString } from "webgl-test-shared/dist/entities";
 import { getTechByID } from "webgl-test-shared/dist/techs";
-import Entity from "./Entity";
 import { TRIBESMAN_COMMUNICATION_RANGE } from "./entities/tribes/tribesman-ai/tribesman-ai";
 import { TribesmanGoalType } from "./entities/tribes/tribesman-ai/tribesman-goals";
 import Board from "./Board";
@@ -12,15 +11,15 @@ import { TribesmanAIComponentArray } from "./components/TribesmanAIComponent";
 import { getTribesmanVisionRange } from "./entities/tribes/tribesman-ai/tribesman-ai-utils";
 import { ItemTypeString, ITEM_INFO_RECORD, PlaceableItemInfo } from "webgl-test-shared/dist/items/items";
 
-export function getEntityDebugData(entity: Entity): EntityDebugData {
+export function getEntityDebugData(entity: EntityID): EntityDebugData {
    const lines = new Array<LineDebugData>();
    const circles = new Array<CircleDebugData>();
    const tileHighlights = new Array<TileHighlightData>();
    const debugEntries = new Array<string>();
    let pathData: PathData | undefined;
 
-   if (TribesmanAIComponentArray.hasComponent(entity.id)) {
-      const tribesmanComponent = TribesmanAIComponentArray.getComponent(entity.id);
+   if (TribesmanAIComponentArray.hasComponent(entity)) {
+      const tribesmanComponent = TribesmanAIComponentArray.getComponent(entity);
 
       debugEntries.push("Current AI type: " + TribesmanAIType[tribesmanComponent.currentAIType]);
       
@@ -70,8 +69,7 @@ export function getEntityDebugData(entity: Entity): EntityDebugData {
                break;
             }
             case TribesmanGoalType.upgradeBuilding: {
-               const building = Board.entityRecord[goal.plan.baseBuildingID]!;
-               goalString = "Upgrade " + EntityTypeString[building.type];
+               goalString = "Upgrade " + EntityTypeString[Board.getEntityType(goal.plan.baseBuildingID)!];
                break;
             }
          }
@@ -81,13 +79,13 @@ export function getEntityDebugData(entity: Entity): EntityDebugData {
       debugEntries.push(goalStrings.join(" -> "));
    }
 
-   if (TribeComponentArray.hasComponent(entity.id)) {
-      const tribeComponent = TribeComponentArray.getComponent(entity.id);
+   if (TribeComponentArray.hasComponent(entity)) {
+      const tribeComponent = TribeComponentArray.getComponent(entity);
       debugEntries.push("Researched techs: " + tribeComponent.tribe.unlockedTechs.map(techID => getTechByID(techID).name).join(", "));
    }
 
-   if (StructureComponentArray.hasComponent(entity.id)) {
-      const structureComponent = StructureComponentArray.getComponent(entity.id);
+   if (StructureComponentArray.hasComponent(entity)) {
+      const structureComponent = StructureComponentArray.getComponent(entity);
 
       const hasTopConnection = (structureComponent.connectedSidesBitset & 0b0001) !== 0;
       const hasRightConnection = (structureComponent.connectedSidesBitset & 0b0010) !== 0;
@@ -99,7 +97,7 @@ export function getEntityDebugData(entity: Entity): EntityDebugData {
    }
 
    return {
-      entityID: entity.id,
+      entityID: entity,
       lines: lines,
       circles: circles,
       tileHighlights: tileHighlights,

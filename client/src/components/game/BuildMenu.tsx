@@ -356,7 +356,10 @@ export function entityCanOpenBuildMenu(entity: Entity): boolean {
 
 // @Cleanup: copy paste of shared function
 const snapRotationToPlayer = (structure: Entity, rotation: number): number => {
-   const playerDirection = Player.instance!.position.calculateAngleBetween(structure.position);
+   const playerTransformComponent = Player.instance!.getServerComponent(ServerComponentType.transform);
+   const entityTransformComponent = structure.getServerComponent(ServerComponentType.transform);
+
+   const playerDirection = playerTransformComponent.position.calculateAngleBetween(entityTransformComponent.position);
    let snapRotation = playerDirection - rotation;
 
    // Snap to nearest PI/2 interval
@@ -367,24 +370,27 @@ const snapRotationToPlayer = (structure: Entity, rotation: number): number => {
 }
 
 const getGhostRotation = (building: Entity, ghostType: GhostType): number => {
+   const buildingTransformComponent = building.getServerComponent(ServerComponentType.transform);
    switch (ghostType) {
       case GhostType.tunnelDoor: {
          const tunnelComponent = building.getServerComponent(ServerComponentType.tunnel);
          switch (tunnelComponent.doorBitset) {
             case 0b00: {
-               // Show the door closest to the player
-               const dirToPlayer = building.position.calculateAngleBetween(Player.instance!.position);
-               const dot = Math.sin(building.rotation) * Math.sin(dirToPlayer) + Math.cos(building.rotation) * Math.cos(dirToPlayer);
+               const playerTransformComponent = Player.instance!.getServerComponent(ServerComponentType.transform);
 
-               return dot > 0 ? building.rotation : building.rotation + Math.PI;
+               // Show the door closest to the player
+               const dirToPlayer = buildingTransformComponent.position.calculateAngleBetween(playerTransformComponent.position);
+               const dot = Math.sin(buildingTransformComponent.rotation) * Math.sin(dirToPlayer) + Math.cos(buildingTransformComponent.rotation) * Math.cos(dirToPlayer);
+
+               return dot > 0 ? buildingTransformComponent.rotation : buildingTransformComponent.rotation + Math.PI;
             }
             case 0b01: {
                // Show bottom door
-               return building.rotation + Math.PI;
+               return buildingTransformComponent.rotation + Math.PI;
             }
             case 0b10: {
                // Show top door
-               return building.rotation;
+               return buildingTransformComponent.rotation;
             }
             default: {
                throw new Error("Unknown door bitset " + tunnelComponent.doorBitset);
@@ -398,10 +404,10 @@ const getGhostRotation = (building: Entity, ghostType: GhostType): number => {
       case GhostType.stoneWallSpikes:
       case GhostType.coverLeaves:
       case GhostType.warriorHut: {
-         return building.rotation;
+         return buildingTransformComponent.rotation;
       }
       default: {
-         return snapRotationToPlayer(building, building.rotation);
+         return snapRotationToPlayer(building, buildingTransformComponent.rotation);
       }
    }
 }
@@ -446,8 +452,10 @@ const BuildMenu = () => {
             return;
          }
 
-         const screenX = Camera.calculateXScreenPos(building.position.x);
-         const screenY = Camera.calculateYScreenPos(building.position.y);
+         const transformComponent = building.getServerComponent(ServerComponentType.transform);
+
+         const screenX = Camera.calculateXScreenPos(transformComponent.position.x);
+         const screenY = Camera.calculateYScreenPos(transformComponent.position.y);
          setX(screenX);
          setY(screenY);
       }
@@ -477,8 +485,10 @@ const BuildMenu = () => {
          return;
       }
 
+      const transformComponent = building.getServerComponent(ServerComponentType.transform);
+
       const ghostInfo: GhostInfo = {
-         position: building.position.copy(),
+         position: transformComponent.position.copy(),
          rotation: getGhostRotation(building, option.ghostType),
          ghostType: option.ghostType,
          tint: [1, 1, 1],
@@ -511,7 +521,8 @@ const BuildMenu = () => {
             }
    
             if (count < cost.amount) {
-               playSound("error.mp3", 0.4, 1, Player.instance!.position.x, Player.instance!.position.y);
+               const playerTransformComponent = Player.instance!.getServerComponent(ServerComponentType.transform);
+               playSound("error.mp3", 0.4, 1, playerTransformComponent.position);
                return;
             }
          }

@@ -89,11 +89,12 @@ class GolemComponent extends ServerComponent<ServerComponentType.golem> {
    }
 
    public tick(): void {
+      const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
       const physicsComponent = this.entity.getServerComponent(ServerComponentType.physics);
 
       if (this.wakeProgress > 0 && this.wakeProgress < 1) {
-         for (let i = 0; i < this.entity.hitboxes.length; i++) {
-            const hitbox = this.entity.hitboxes[i] as CircularHitbox;
+         for (let i = 0; i < transformComponent.hitboxes.length; i++) {
+            const hitbox = transformComponent.hitboxes[i] as CircularHitbox;
 
             const offsetDirection = 2 * Math.PI * Math.random();
             const x = hitbox.position.x + hitbox.radius * Math.sin(offsetDirection);
@@ -101,12 +102,12 @@ class GolemComponent extends ServerComponent<ServerComponentType.golem> {
             createRockSpeckParticle(x, y, 0, physicsComponent.velocity.x, physicsComponent.velocity.y, ParticleRenderLayer.low);
          }
       } else if (this.wakeProgress === 1) {
-         for (let i = 0; i < this.entity.hitboxes.length; i++) {
+         for (let i = 0; i < transformComponent.hitboxes.length; i++) {
             if (Math.random() >= 6 / Settings.TPS) {
                continue;
             }
 
-            const hitbox = this.entity.hitboxes[i] as CircularHitbox;
+            const hitbox = transformComponent.hitboxes[i] as CircularHitbox;
 
             const offsetDirection = 2 * Math.PI * Math.random();
             const x = hitbox.position.x + hitbox.radius * Math.sin(offsetDirection);
@@ -117,15 +118,17 @@ class GolemComponent extends ServerComponent<ServerComponentType.golem> {
    }
    
    public updateFromData(data: GolemComponentData): void {
+      const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
+
       if (data.isAwake && data.ticksAwake % ANGRY_SOUND_INTERVAL_TICKS === 0) {
-         playSound("golem-angry.mp3", 0.4, 1, this.entity.position.x, this.entity.position.y);
+         playSound("golem-angry.mp3", 0.4, 1, transformComponent.position);
       }
       
       this.wakeProgress = data.wakeProgress;
 
       // Add new rocks
-      for (let i = this.rockRenderParts.length; i < this.entity.hitboxes.length; i++) {
-         const hitbox = this.entity.hitboxes[i] as CircularHitbox;
+      for (let i = this.rockRenderParts.length; i < transformComponent.hitboxes.length; i++) {
+         const hitbox = transformComponent.hitboxes[i] as CircularHitbox;
          const size = getHitboxSize(hitbox);
    
          const renderPart = new RenderPart(
@@ -172,8 +175,8 @@ class GolemComponent extends ServerComponent<ServerComponentType.golem> {
       }
 
       const shakeAmount = this.wakeProgress > 0 && this.wakeProgress < 1 ? 1 : 0;
-      for (let i = 0; i < this.entity.hitboxes.length; i++) {
-         const hitbox = this.entity.hitboxes[i];
+      for (let i = 0; i < transformComponent.hitboxes.length; i++) {
+         const hitbox = transformComponent.hitboxes[i];
          const renderPart = this.rockRenderParts[i];
 
          renderPart.offset.x = hitbox.offset.x;

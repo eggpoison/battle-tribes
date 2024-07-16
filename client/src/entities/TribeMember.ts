@@ -239,36 +239,39 @@ abstract class TribeMember extends Entity {
    // @Cleanup: Move to TribeMember client component
    private lowHealthMarker: RenderPart | null = null;
    
+   // @Cleanup: Move to TribeMember component
    protected onHit(hitData: HitData): void {
+      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+
       // Blood pool particle
-      createBloodPoolParticle(this.position.x, this.position.y, 20);
+      createBloodPoolParticle(transformComponent.position.x, transformComponent.position.y, 20);
       
       // Blood particles
       for (let i = 0; i < 10; i++) {
-         let offsetDirection = angle(hitData.hitPosition[0] - this.position.x, hitData.hitPosition[1] - this.position.y);
+         let offsetDirection = angle(hitData.hitPosition[0] - transformComponent.position.x, hitData.hitPosition[1] - transformComponent.position.y);
          offsetDirection += 0.2 * Math.PI * (Math.random() - 0.5);
 
-         const spawnPositionX = this.position.x + 32 * Math.sin(offsetDirection);
-         const spawnPositionY = this.position.y + 32 * Math.cos(offsetDirection);
+         const spawnPositionX = transformComponent.position.x + 32 * Math.sin(offsetDirection);
+         const spawnPositionY = transformComponent.position.y + 32 * Math.cos(offsetDirection);
          createBloodParticle(Math.random() < 0.6 ? BloodParticleSize.small : BloodParticleSize.large, spawnPositionX, spawnPositionY, 2 * Math.PI * Math.random(), randFloat(150, 250), true);
       }
 
       const tribeComponent = this.getServerComponent(ServerComponentType.tribe);
       switch (tribeComponent.tribeType) {
          case TribeType.goblins: {
-            playSound(randItem(GOBLIN_HURT_SOUNDS), 0.4, 1, this.position.x, this.position.y);
+            playSound(randItem(GOBLIN_HURT_SOUNDS), 0.4, 1, transformComponent.position);
             break;
          }
          case TribeType.plainspeople: {
-            playSound(("plainsperson-hurt-" + randInt(1, 3) + ".mp3") as AudioFilePath, 0.4, 1, this.position.x, this.position.y);
+            playSound(("plainsperson-hurt-" + randInt(1, 3) + ".mp3") as AudioFilePath, 0.4, 1, transformComponent.position);
             break;
          }
          case TribeType.barbarians: {
-            playSound(("barbarian-hurt-" + randInt(1, 3) + ".mp3") as AudioFilePath, 0.4, 1, this.position.x, this.position.y);
+            playSound(("barbarian-hurt-" + randInt(1, 3) + ".mp3") as AudioFilePath, 0.4, 1, transformComponent.position);
             break;
          }
          case TribeType.frostlings: {
-            playSound(("frostling-hurt-" + randInt(1, 4) + ".mp3") as AudioFilePath, 0.4, 1, this.position.x, this.position.y);
+            playSound(("frostling-hurt-" + randInt(1, 4) + ".mp3") as AudioFilePath, 0.4, 1, transformComponent.position);
             break;
          }
       }
@@ -282,8 +285,8 @@ abstract class TribeMember extends Entity {
             const moveDirection = 2 * Math.PI * Math.random();
    
             const radius = getTribesmanRadius(this);
-            const spawnPositionX = this.position.x + radius * Math.sin(moveDirection);
-            const spawnPositionY = this.position.y + radius * Math.cos(moveDirection);
+            const spawnPositionX = transformComponent.position.x + radius * Math.sin(moveDirection);
+            const spawnPositionY = transformComponent.position.y + radius * Math.cos(moveDirection);
    
             createLeafParticle(spawnPositionX, spawnPositionY, moveDirection + randFloat(-1, 1), Math.random() < 0.5 ? LeafParticleSize.large : LeafParticleSize.small);
          }
@@ -291,25 +294,27 @@ abstract class TribeMember extends Entity {
    }
 
    public onDie(): void {
-      createBloodPoolParticle(this.position.x, this.position.y, 20);
+      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+
+      createBloodPoolParticle(transformComponent.position.x, transformComponent.position.y, 20);
       createBloodParticleFountain(this, TribeMember.BLOOD_FOUNTAIN_INTERVAL, 1);
 
       const tribeComponent = this.getServerComponent(ServerComponentType.tribe);
       switch (tribeComponent.tribeType) {
          case TribeType.goblins: {
-            playSound(randItem(GOBLIN_DIE_SOUNDS), 0.4, 1, this.position.x, this.position.y);
+            playSound(randItem(GOBLIN_DIE_SOUNDS), 0.4, 1, transformComponent.position);
             break;
          }
          case TribeType.plainspeople: {
-            playSound("plainsperson-die-1.mp3", 0.4, 1, this.position.x, this.position.y);
+            playSound("plainsperson-die-1.mp3", 0.4, 1, transformComponent.position);
             break;
          }
          case TribeType.barbarians: {
-            playSound("barbarian-die-1.mp3", 0.4, 1, this.position.x, this.position.y);
+            playSound("barbarian-die-1.mp3", 0.4, 1, transformComponent.position);
             break;
          }
          case TribeType.frostlings: {
-            playSound("frostling-die.mp3", 0.4, 1, this.position.x, this.position.y);
+            playSound("frostling-die.mp3", 0.4, 1, transformComponent.position);
             break;
          }
       }
@@ -321,12 +326,14 @@ abstract class TribeMember extends Entity {
 
       const armour = armourSlotInventory.itemSlots[1];
       if (typeof armour !== "undefined") {
+         const transformComponent = this.getServerComponent(ServerComponentType.transform);
+
          // If snow armour is equipped, move at normal speed on snow tiles
-         if ((armour.type === ItemType.frost_armour || armour.type === ItemType.deepfrost_armour) && this.tile.type === TileType.snow) {
+         if ((armour.type === ItemType.frost_armour || armour.type === ItemType.deepfrost_armour) && transformComponent.tile.type === TileType.snow) {
             return 1;
          }
          // If fishlord suit is equipped, move at normal speed on snow tiles
-         if (armour.type === ItemType.fishlord_suit && this.tile.type === TileType.water) {
+         if (armour.type === ItemType.fishlord_suit && transformComponent.tile.type === TileType.water) {
             return 1;
          }
       }
@@ -348,7 +355,9 @@ abstract class TribeMember extends Entity {
             this.attachRenderPart(this.lowHealthMarker);
          }
 
-         let opacity = Math.sin(this.ageTicks / Settings.TPS * 5) * 0.5 + 0.5;
+         const transformComponent = this.getServerComponent(ServerComponentType.transform);
+
+         let opacity = Math.sin(transformComponent.ageTicks / Settings.TPS * 5) * 0.5 + 0.5;
          this.lowHealthMarker.opacity = lerp(0.3, 0.8, opacity);
       } else {
          if (this.lowHealthMarker !== null) {
@@ -359,7 +368,7 @@ abstract class TribeMember extends Entity {
    }
 
    // @Cleanup: remove. just do in components
-   public updateFromData(data: EntityData<EntityType>): void {
+   public updateFromData(data: EntityData): void {
       const tribeComponent = this.getServerComponent(ServerComponentType.tribe);
       const tribeTypeBeforeUpdate = tribeComponent.tribeType;
 

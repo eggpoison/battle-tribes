@@ -24,8 +24,8 @@ class Tree extends Entity {
    public static readonly LEAF_SPECK_COLOUR_LOW = [63/255, 204/255, 91/255] as const;
    public static readonly LEAF_SPECK_COLOUR_HIGH = [35/255, 158/255, 88/255] as const;
    
-   constructor(position: Point, id: number, ageTicks: number, componentDataRecord: ComponentDataRecord) {
-      super(position, id, EntityType.tree, ageTicks);
+   constructor(id: number, componentDataRecord: ComponentDataRecord) {
+      super(id, EntityType.tree);
 
       const treeComponentData = componentDataRecord[ServerComponentType.tree]!;
       
@@ -40,6 +40,8 @@ class Tree extends Entity {
    }
 
    protected onHit(hitData: HitData): void {
+      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+
       const treeComponent = this.getServerComponent(ServerComponentType.tree);
       const radius = getRadius(treeComponent.treeSize);
 
@@ -50,8 +52,8 @@ class Tree extends Entity {
       {
          const moveDirection = 2 * Math.PI * Math.random();
 
-         const spawnPositionX = this.position.x + radius * Math.sin(moveDirection);
-         const spawnPositionY = this.position.y + radius * Math.cos(moveDirection);
+         const spawnPositionX = transformComponent.position.x + radius * Math.sin(moveDirection);
+         const spawnPositionY = transformComponent.position.y + radius * Math.cos(moveDirection);
 
          createLeafParticle(spawnPositionX, spawnPositionY, moveDirection + randFloat(-1, 1), Math.random() < 0.5 ? LeafParticleSize.large : LeafParticleSize.small);
       }
@@ -59,27 +61,29 @@ class Tree extends Entity {
       // Create leaf specks
       const numSpecks = treeComponent.treeSize === TreeSize.small ? 4 : 7;
       for (let i = 0; i < numSpecks; i++) {
-         createLeafSpeckParticle(this.position.x, this.position.y, radius, Tree.LEAF_SPECK_COLOUR_LOW, Tree.LEAF_SPECK_COLOUR_HIGH);
+         createLeafSpeckParticle(transformComponent.position.x, transformComponent.position.y, radius, Tree.LEAF_SPECK_COLOUR_LOW, Tree.LEAF_SPECK_COLOUR_HIGH);
       }
 
       if (isDamagingHit) {
          // Create wood specks at the point of hit
-         const spawnOffsetDirection = angle(hitData.hitPosition[0] - this.position.x, hitData.hitPosition[1] - this.position.y);
-         const spawnPositionX = this.position.x + (radius + 2) * Math.sin(spawnOffsetDirection);
-         const spawnPositionY = this.position.y + (radius + 2) * Math.cos(spawnOffsetDirection);
+         const spawnOffsetDirection = angle(hitData.hitPosition[0] - transformComponent.position.x, hitData.hitPosition[1] - transformComponent.position.y);
+         const spawnPositionX = transformComponent.position.x + (radius + 2) * Math.sin(spawnOffsetDirection);
+         const spawnPositionY = transformComponent.position.y + (radius + 2) * Math.cos(spawnOffsetDirection);
          for (let i = 0; i < 4; i++) {
             createWoodSpeckParticle(spawnPositionX, spawnPositionY, 3);
          }
          
-         playSound(randItem(TREE_HIT_SOUNDS), 0.4, 1, this.position.x, this.position.y);
+         playSound(randItem(TREE_HIT_SOUNDS), 0.4, 1, transformComponent.position);
       } else {
          // @Temporary
-         playSound(("berry-bush-hit-" + randInt(1, 3) + ".mp3") as AudioFilePath, 0.4, 1, this.position.x, this.position.y);
+         playSound(("berry-bush-hit-" + randInt(1, 3) + ".mp3") as AudioFilePath, 0.4, 1, transformComponent.position);
       }
    }
 
    public onDie(): void {
+      const transformComponent = this.getServerComponent(ServerComponentType.transform);
       const treeComponent = this.getServerComponent(ServerComponentType.tree);
+
       const radius = getRadius(treeComponent.treeSize);
 
       let numLeaves: number;
@@ -91,8 +95,8 @@ class Tree extends Entity {
       for (let i = 0; i < numLeaves; i++) {
          const spawnOffsetMagnitude = radius * Math.random();
          const spawnOffsetDirection = 2 * Math.PI * Math.random();
-         const spawnPositionX = this.position.x + spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
-         const spawnPositionY = this.position.y + spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
+         const spawnPositionX = transformComponent.position.x + spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
+         const spawnPositionY = transformComponent.position.y + spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
 
          createLeafParticle(spawnPositionX, spawnPositionY, Math.random(), Math.random() < 0.5 ? LeafParticleSize.large : LeafParticleSize.small);
       }
@@ -100,14 +104,14 @@ class Tree extends Entity {
       // Create leaf specks
       const numSpecks = treeComponent.treeSize === TreeSize.small ? 4 : 7;
       for (let i = 0; i < numSpecks; i++) {
-         createLeafSpeckParticle(this.position.x, this.position.y, radius, Tree.LEAF_SPECK_COLOUR_LOW, Tree.LEAF_SPECK_COLOUR_HIGH);
+         createLeafSpeckParticle(transformComponent.position.x, transformComponent.position.y, radius, Tree.LEAF_SPECK_COLOUR_LOW, Tree.LEAF_SPECK_COLOUR_HIGH);
       }
 
       for (let i = 0; i < 10; i++) {
-         createWoodSpeckParticle(this.position.x, this.position.y, radius * Math.random());
+         createWoodSpeckParticle(transformComponent.position.x, transformComponent.position.y, radius * Math.random());
       }
 
-      playSound(randItem(TREE_DESTROY_SOUNDS), 0.5, 1, this.position.x, this.position.y);
+      playSound(randItem(TREE_DESTROY_SOUNDS), 0.5, 1, transformComponent.position);
    }
 }
 

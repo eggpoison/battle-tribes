@@ -26,7 +26,7 @@ export class SnowballComponent {
    }
 }
 
-export const SnowballComponentArray = new ComponentArray<ServerComponentType.snowball, SnowballComponent>(true, {
+export const SnowballComponentArray = new ComponentArray<SnowballComponent>(ServerComponentType.snowball, true, {
    onJoin: onJoin,
    onInitialise: onInitialise,
    serialise: serialise

@@ -1,4 +1,4 @@
-import { Point, angle, randFloat } from "webgl-test-shared/dist/utils";
+import { angle, randFloat } from "webgl-test-shared/dist/utils";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { HitData } from "webgl-test-shared/dist/client-server-types";
 import RenderPart from "../render-parts/RenderPart";
@@ -6,12 +6,13 @@ import { BloodParticleSize, createBlueBloodParticle, createBlueBloodParticleFoun
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import Entity from "../Entity";
 import { FROZEN_YETI_HEAD_DISTANCE } from "../entity-components/FrozenYetiComponent";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 
 class FrozenYeti extends Entity {
    private static readonly SIZE = 152;
    
-   constructor(position: Point, id: number, ageTicks: number) {
-      super(position, id, EntityType.frozenYeti, ageTicks);
+   constructor(id: number) {
+      super(id, EntityType.frozenYeti);
 
       this.attachRenderPart(new RenderPart(
          this,
@@ -47,22 +48,26 @@ class FrozenYeti extends Entity {
    }
 
    protected onHit(hitData: HitData): void {
+      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+
       // Blood pool particle
-      createBlueBloodPoolParticle(this.position.x, this.position.y, FrozenYeti.SIZE / 2);
+      createBlueBloodPoolParticle(transformComponent.position.x, transformComponent.position.y, FrozenYeti.SIZE / 2);
       
       for (let i = 0; i < 10; i++) {
-         let offsetDirection = angle(hitData.hitPosition[0] - this.position.x, hitData.hitPosition[1] - this.position.y);
+         let offsetDirection = angle(hitData.hitPosition[0] - transformComponent.position.x, hitData.hitPosition[1] - transformComponent.position.y);
          offsetDirection += 0.2 * Math.PI * (Math.random() - 0.5);
 
-         const spawnPositionX = this.position.x + FrozenYeti.SIZE / 2 * Math.sin(offsetDirection);
-         const spawnPositionY = this.position.y + FrozenYeti.SIZE / 2 * Math.cos(offsetDirection);
+         const spawnPositionX = transformComponent.position.x + FrozenYeti.SIZE / 2 * Math.sin(offsetDirection);
+         const spawnPositionY = transformComponent.position.y + FrozenYeti.SIZE / 2 * Math.cos(offsetDirection);
          createBlueBloodParticle(Math.random() < 0.6 ? BloodParticleSize.small : BloodParticleSize.large, spawnPositionX, spawnPositionY, 2 * Math.PI * Math.random(), randFloat(150, 250), true);
       }
    }
 
    public onDie(): void {
+      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      
       for (let i = 0; i < 4; i++) {
-         createBlueBloodPoolParticle(this.position.x, this.position.y, FrozenYeti.SIZE / 2);
+         createBlueBloodPoolParticle(transformComponent.position.x, transformComponent.position.y, FrozenYeti.SIZE / 2);
       }
 
       createBlueBloodParticleFountain(this, 0.15, 1.4);

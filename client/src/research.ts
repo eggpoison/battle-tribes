@@ -11,7 +11,8 @@ import Client from "./client/Client";
 import { getSelectedEntityID } from "./entity-selection";
 import { playSound } from "./sound";
 import { createMagicParticle, createStarParticle } from "./particles";
-import Entity, { getRandomPointInEntity } from "./Entity";
+import Entity from "./Entity";
+import { getRandomPointInEntity } from "./entity-components/TransformComponent";
 
 export interface ResearchOrb {
    /* X position of the node in the world */
@@ -32,11 +33,13 @@ const ORB_COMPLETE_SOUND_PITCHES = [1, 0.85, 0.7];
 const ORB_PARTICLES_PER_SECOND = [2, 3.5, 6];
 
 const generateResearchOrb = (researchBench: Entity): ResearchOrb => {
-   const position = getRandomPointInEntity(researchBench);
-   position.subtract(researchBench.position);
+   const transformComponent = researchBench.getServerComponent(ServerComponentType.transform);
+
+   const position = getRandomPointInEntity(transformComponent);
+   position.subtract(transformComponent.position);
    position.x *= 0.8;
    position.y *= 0.8;
-   position.add(researchBench.position);
+   position.add(transformComponent.position);
    
    return {
       positionX: position.x,
@@ -99,7 +102,9 @@ const completeOrb = (): void => {
       createStarParticle(x, y);
    }
 
-   playSound("orb-complete.mp3", 0.3, ORB_COMPLETE_SOUND_PITCHES[currentResearchOrb!.size], Player.instance!.position.x, Player.instance!.position.y);
+   const playerTransformComponent = Player.instance!.getServerComponent(ServerComponentType.transform);
+
+   playSound("orb-complete.mp3", 0.3, ORB_COMPLETE_SOUND_PITCHES[currentResearchOrb!.size], playerTransformComponent.position);
 
    // Make the player smack to the bench
    const inventoryUseComponent = Player.instance!.getServerComponent(ServerComponentType.inventoryUse);

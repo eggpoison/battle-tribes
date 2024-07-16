@@ -5,17 +5,16 @@ import { TribesmanTitle } from "webgl-test-shared/dist/titles";
 import Board from "../Board";
 import { registerCommand } from "../commands";
 import { acceptTitleOffer, forceAddTitle, rejectTitleOffer, removeTitle } from "../components/TribeMemberComponent";
-import { modifyBuilding, startChargingBattleaxe, startChargingBow, startChargingSpear, startEating, createPlayer } from "../entities/tribes/player";
+import { createPlayerConfig, modifyBuilding, startChargingBattleaxe, startChargingBow, startChargingSpear, startEating } from "../entities/tribes/player";
 import { throwItem, placeBlueprint, attemptAttack, calculateAttackTarget, calculateBlueprintWorkTarget, calculateRadialAttackTargets, calculateRepairTarget, repairBuilding, getAvailableCraftingStations, useItem } from "../entities/tribes/tribe-member";
 import PlayerClient from "./PlayerClient";
 import { SERVER } from "./server";
 import { createGameDataSyncPacket, createInitialGameDataPacket } from "./game-data-packets";
 import { EntityID, EntityType, LimbAction } from "webgl-test-shared/dist/entities";
 import { TRIBE_INFO_RECORD, TribeType } from "webgl-test-shared/dist/tribes";
-import { InventoryUseComponentArray, getInventoryUseInfo } from "../components/InventoryUseComponent";
+import { InventoryUseComponentArray } from "../components/InventoryUseComponent";
 import { PhysicsComponentArray } from "../components/PhysicsComponent";
-import Entity from "../Entity";
-import { InventoryComponentArray, addItemToInventory, addItemToSlot, consumeItemFromSlot, consumeItemTypeFromInventory, craftRecipe, getInventory, inventoryComponentCanAffordRecipe, recipeCraftingStationIsAvailable } from "../components/InventoryComponent";
+import { InventoryComponentArray, InventoryCreationInfo, addItemToInventory, addItemToSlot, consumeItemFromSlot, consumeItemTypeFromInventory, craftRecipe, getInventory, getInventoryFromCreationInfo, inventoryComponentCanAffordRecipe, recipeCraftingStationIsAvailable } from "../components/InventoryComponent";
 import { EntityRelationship, TribeComponentArray, recruitTribesman } from "../components/TribeComponent";
 import { createItem } from "../items";
 import { Point, randInt, randItem } from "webgl-test-shared/dist/utils";
@@ -32,17 +31,15 @@ import { PlayerComponentArray } from "../components/PlayerComponent";
 import { TurretComponentArray } from "../components/TurretComponent";
 import { TribesmanAIComponentArray } from "../components/TribesmanAIComponent";
 import { EntitySummonPacket } from "webgl-test-shared/dist/dev-packets";
-import { createBallista } from "../entities/structures/ballista";
 import { createEmptyStructureConnectionInfo } from "webgl-test-shared/dist/structures";
-import { createZombie } from "../entities/mobs/zombie";
-import { createTribeWarrior } from "../entities/tribes/tribe-warrior";
-import { createTribeWorker } from "../entities/tribes/tribe-worker";
 import { CRAFTING_RECIPES, ItemRequirements } from "webgl-test-shared/dist/items/crafting-recipes";
 import { InventoryName, Item, ITEM_TYPE_RECORD, ItemType } from "webgl-test-shared/dist/items/items";
-import { createFrozenYeti } from "../entities/mobs/frozen-yeti";
 import Tribe from "../Tribe";
 import { EntityTickEvent } from "webgl-test-shared/dist/entity-events";
 import { TransformComponentArray } from "../components/TransformComponent";
+import { createEntityFromConfig } from "../Entity";
+import { createEntityConfig } from "../entity-creation";
+import { ComponentConfig } from "../components";
 
 // @Cleanup: see if a decorator can be used to cut down on the player entity check copy-n-paste
 
@@ -64,7 +61,7 @@ const getPlayerClientFromInstanceID = (instanceID: number): PlayerClient | null 
    for (let i = 0; i < playerClients.length; i++) {
       const playerClient = playerClients[i];
 
-      if (playerClient.instanceID === instanceID) {
+      if (playerClient.instance === instanceID) {
          return playerClient;
       }
    }
@@ -77,8 +74,8 @@ export function getPlayerFromUsername(username: string): EntityID | null {
    for (let i = 0; i < playerClients.length; i++) {
       const playerClient = playerClients[i];
 
-      if (playerClient.username === username && Board.hasEntity(playerClient.instanceID)) {
-         return playerClient.instanceID;
+      if (playerClient.username === username && Board.hasEntity(playerClient.instance)) {
+         return playerClient.instance;
       }
    }
 
@@ -95,8 +92,8 @@ const handlePlayerDisconnect = (playerClient: PlayerClient): void => {
    }
 
    // Kill the player
-   if (Board.hasEntity(playerClient.instanceID)) {
-      Board.destroyEntity(playerClient.instanceID);
+   if (Board.hasEntity(playerClient.instance)) {
+      Board.destroyEntity(playerClient.instance);
    }
 }
 
@@ -107,14 +104,14 @@ const sendGameDataSyncPacket = (playerClient: PlayerClient): void => {
 
 // @Cleanup: Messy as fuck
 const processPlayerDataPacket = (playerClient: PlayerClient, playerDataPacket: PlayerDataPacket): void => {
-   if (!Board.hasEntity(playerClient.instanceID)) {
+   if (!Board.hasEntity(playerClient.instance)) {
       return;
    }
 
-   const inventoryUseComponent = InventoryUseComponentArray.getComponent(playerClient.instanceID);
-   const hotbarUseInfo = getInventoryUseInfo(inventoryUseComponent, InventoryName.hotbar);
+   const inventoryUseComponent = InventoryUseComponentArray.getComponent(playerClient.instance);
+   const hotbarUseInfo = inventoryUseComponent.getUseInfo(InventoryName.hotbar);
 
-   const transformComponent = TransformComponentArray.getComponent(playerClient.instanceID);
+   const transformComponent = TransformComponentArray.getComponent(playerClient.instance);
    transformComponent.position.x = playerDataPacket.position[0];
    transformComponent.position.y = playerDataPacket.position[1];
    transformComponent.rotation = playerDataPacket.rotation;
@@ -122,7 +119,7 @@ const processPlayerDataPacket = (playerClient: PlayerClient, playerDataPacket: P
    playerClient.visibleChunkBounds = playerDataPacket.visibleChunkBounds;
    playerClient.gameDataOptions = playerDataPacket.gameDataOptions;
    
-   const physicsComponent = PhysicsComponentArray.getComponent(playerClient.instanceID);
+   const physicsComponent = PhysicsComponentArray.getComponent(playerClient.instance);
    physicsComponent.hitboxesAreDirty = true;
    
    physicsComponent.velocity.x = playerDataPacket.velocity[0];
@@ -132,37 +129,37 @@ const processPlayerDataPacket = (playerClient: PlayerClient, playerDataPacket: P
    
    hotbarUseInfo.selectedItemSlot = playerDataPacket.selectedItemSlot;
 
-   const playerComponent = PlayerComponentArray.getComponent(playerClient.instanceID);
+   const playerComponent = PlayerComponentArray.getComponent(playerClient.instance);
    playerComponent.interactingEntityID = playerDataPacket.interactingEntityID !== null ? playerDataPacket.interactingEntityID : 0;
 
    // @Bug: won't work for using medicine in offhand
    let overrideOffhand = false;
    
    if ((playerDataPacket.mainAction === LimbAction.eat || playerDataPacket.mainAction === LimbAction.useMedicine) && (hotbarUseInfo.action !== LimbAction.eat && hotbarUseInfo.action !== LimbAction.useMedicine)) {
-      overrideOffhand = startEating(playerClient.instanceID, InventoryName.hotbar);
+      overrideOffhand = startEating(playerClient.instance, InventoryName.hotbar);
    } else if (playerDataPacket.mainAction === LimbAction.chargeBow && hotbarUseInfo.action !== LimbAction.chargeBow) {
-      startChargingBow(playerClient.instanceID, InventoryName.hotbar);
+      startChargingBow(playerClient.instance, InventoryName.hotbar);
    } else if (playerDataPacket.mainAction === LimbAction.chargeSpear && hotbarUseInfo.action !== LimbAction.chargeSpear) {
-      startChargingSpear(playerClient.instanceID, InventoryName.hotbar);
+      startChargingSpear(playerClient.instance, InventoryName.hotbar);
    } else if (playerDataPacket.mainAction === LimbAction.chargeBattleaxe && hotbarUseInfo.action !== LimbAction.chargeBattleaxe) {
-      startChargingBattleaxe(playerClient.instanceID, InventoryName.hotbar);
+      startChargingBattleaxe(playerClient.instance, InventoryName.hotbar);
    } else {
       hotbarUseInfo.action = playerDataPacket.mainAction;
    }
 
    if (!overrideOffhand) {
-      const tribeComponent = TribeComponentArray.getComponent(playerClient.instanceID);
+      const tribeComponent = TribeComponentArray.getComponent(playerClient.instance);
       if (tribeComponent.tribe.tribeType === TribeType.barbarians) {
-         const offhandUseInfo = getInventoryUseInfo(inventoryUseComponent, InventoryName.offhand);
+         const offhandUseInfo = inventoryUseComponent.getUseInfo(InventoryName.offhand);
 
          if ((playerDataPacket.offhandAction === LimbAction.eat || playerDataPacket.offhandAction === LimbAction.useMedicine) && (offhandUseInfo.action !== LimbAction.eat && offhandUseInfo.action !== LimbAction.useMedicine)) {
-            startEating(playerClient.instanceID, InventoryName.offhand);
+            startEating(playerClient.instance, InventoryName.offhand);
          } else if (playerDataPacket.offhandAction === LimbAction.chargeBow && offhandUseInfo.action !== LimbAction.chargeBow) {
-            startChargingBow(playerClient.instanceID, InventoryName.offhand);
+            startChargingBow(playerClient.instance, InventoryName.offhand);
          } else if (playerDataPacket.offhandAction === LimbAction.chargeSpear && offhandUseInfo.action !== LimbAction.chargeSpear) {
-            startChargingSpear(playerClient.instanceID, InventoryName.offhand);
+            startChargingSpear(playerClient.instance, InventoryName.offhand);
          } else if (playerDataPacket.offhandAction === LimbAction.chargeBattleaxe && offhandUseInfo.action !== LimbAction.chargeBattleaxe) {
-            startChargingBattleaxe(playerClient.instanceID, InventoryName.offhand);
+            startChargingBattleaxe(playerClient.instance, InventoryName.offhand);
          } else {
             offhandUseInfo.action = playerDataPacket.offhandAction;
          }
@@ -210,11 +207,17 @@ const respawnPlayer = (playerClient: PlayerClient): void => {
       spawnPosition = generatePlayerSpawnPosition(playerClient.tribe.tribeType);
    }
 
-   const player = createPlayer(spawnPosition, playerClient.tribe, playerClient.username);
-   playerClient.instanceID = player.id;
+   const config = createPlayerConfig();
+   config[ServerComponentType.transform].position.x = spawnPosition.x;
+   config[ServerComponentType.transform].position.y = spawnPosition.y;
+   config[ServerComponentType.tribe].tribe = playerClient.tribe;
+   config[ServerComponentType.player].username = playerClient.username;
+   const player = createEntityFromConfig(config);
+
+   playerClient.instance = player;
 
    const dataPacket: RespawnDataPacket = {
-      playerID: player.id,
+      playerID: player,
       spawnPosition: spawnPosition.package()
    };
 
@@ -222,8 +225,8 @@ const respawnPlayer = (playerClient: PlayerClient): void => {
 }
 
 /** Returns whether the swing was successfully swang or not */
-const attemptSwing = (player: Entity, attackTargets: ReadonlyArray<Entity>, itemSlot: number, inventoryName: InventoryName): boolean => {
-   const inventoryComponent = InventoryComponentArray.getComponent(player.id);
+const attemptSwing = (player: EntityID, attackTargets: ReadonlyArray<EntityID>, itemSlot: number, inventoryName: InventoryName): boolean => {
+   const inventoryComponent = InventoryComponentArray.getComponent(player);
    const inventory = getInventory(inventoryComponent, inventoryName);
 
    const item = inventory.itemSlots[itemSlot];
@@ -260,8 +263,8 @@ const attemptSwing = (player: Entity, attackTargets: ReadonlyArray<Entity>, item
 
 // @Cleanup: most of this logic and that in attemptSwing should be done in tribe-member.ts
 const processPlayerAttackPacket = (playerClient: PlayerClient, attackPacket: AttackPacket): void => {
-   const player = Board.entityRecord[playerClient.instanceID];
-   if (typeof player === "undefined") {
+   const player = playerClient.instance;
+   if (!Board.hasEntity(player)) {
       return;
    }
    
@@ -273,15 +276,15 @@ const processPlayerAttackPacket = (playerClient: PlayerClient, attackPacket: Att
    }
 
    // If a barbarian, attack with offhand
-   const tribeComponent = TribeComponentArray.getComponent(player.id);
+   const tribeComponent = TribeComponentArray.getComponent(player);
    if (tribeComponent.tribe.tribeType === TribeType.barbarians) {
       attemptSwing(player, targets, 1, InventoryName.offhand);
    }
 }
 
 const processPlayerCraftingPacket = (playerClient: PlayerClient, recipeIndex: number): void => {
-   const player = Board.entityRecord[playerClient.instanceID];
-   if (typeof player === "undefined") {
+   const player = playerClient.instance;
+   if (!Board.hasEntity(player)) {
       return;
    }
    
@@ -289,7 +292,7 @@ const processPlayerCraftingPacket = (playerClient: PlayerClient, recipeIndex: nu
       return;
    }
    
-   const inventoryComponent = InventoryComponentArray.getComponent(player.id);
+   const inventoryComponent = InventoryComponentArray.getComponent(player);
    const craftingRecipe = CRAFTING_RECIPES[recipeIndex];
 
    const availableCraftingStations = getAvailableCraftingStations(player);
@@ -302,17 +305,13 @@ const processPlayerCraftingPacket = (playerClient: PlayerClient, recipeIndex: nu
    }
 }
 
-const processItemPickupPacket = (playerClient: PlayerClient, entityID: number, inventoryName: InventoryName, itemSlot: number, amount: number): void => {
-   const player = Board.entityRecord[playerClient.instanceID];
-   if (typeof player === "undefined") {
+const processItemPickupPacket = (playerClient: PlayerClient, entity: EntityID, inventoryName: InventoryName, itemSlot: number, amount: number): void => {
+   const player = playerClient.instance;
+   if (!Board.hasEntity(player) || !Board.hasEntity(entity)) {
       return;
    }
    
-   if (typeof Board.entityRecord[entityID] === "undefined") {
-      return;
-   }
-
-   const playerInventoryComponent = InventoryComponentArray.getComponent(player.id);
+   const playerInventoryComponent = InventoryComponentArray.getComponent(player);
    const heldItemInventory = getInventory(playerInventoryComponent, InventoryName.heldItemSlot);
    
    // Don't pick up the item if there is already a held item
@@ -320,7 +319,7 @@ const processItemPickupPacket = (playerClient: PlayerClient, entityID: number, i
       return;
    }
 
-   const targetInventoryComponent = InventoryComponentArray.getComponent(entityID);
+   const targetInventoryComponent = InventoryComponentArray.getComponent(entity);
    const targetInventory = getInventory(targetInventoryComponent, inventoryName);
 
    const pickedUpItem = targetInventory.itemSlots[itemSlot];
@@ -338,11 +337,11 @@ const processItemPickupPacket = (playerClient: PlayerClient, entityID: number, i
 }
 
 const processItemReleasePacket = (playerClient: PlayerClient, entity: EntityID, inventoryName: InventoryName, itemSlot: number, amount: number): void => {
-   if (!Board.hasEntity(playerClient.instanceID) || !Board.hasEntity(entity)) {
+   if (!Board.hasEntity(playerClient.instance) || !Board.hasEntity(entity)) {
       return;
    }
 
-   const inventoryComponent = InventoryComponentArray.getComponent(playerClient.instanceID);
+   const inventoryComponent = InventoryComponentArray.getComponent(playerClient.instance);
    
    // Don't release an item if there is no held item
    const heldItemInventory = getInventory(inventoryComponent, InventoryName.heldItemSlot);
@@ -361,37 +360,37 @@ const processItemReleasePacket = (playerClient: PlayerClient, entity: EntityID, 
 }
 
 const processItemUsePacket = (playerClient: PlayerClient, itemSlot: number): void => {
-   if (!Board.hasEntity(playerClient.instanceID)) {
+   if (!Board.hasEntity(playerClient.instance)) {
       return;
    }
 
-   const inventoryComponent = InventoryComponentArray.getComponent(playerClient.instanceID);
+   const inventoryComponent = InventoryComponentArray.getComponent(playerClient.instance);
    const hotbarInventory = getInventory(inventoryComponent, InventoryName.hotbar);
 
    const item = hotbarInventory.itemSlots[itemSlot];
    if (typeof item !== "undefined")  {
-      useItem(player, item, InventoryName.hotbar, itemSlot);
+      useItem(playerClient.instance, item, InventoryName.hotbar, itemSlot);
    }
 }
 
 const processItemDropPacket = (playerClient: PlayerClient, inventoryName: InventoryName, itemSlot: number, dropAmount: number, throwDirection: number): void => {
-   if (!Board.hasEntity(playerClient.instanceID)) {
+   if (!Board.hasEntity(playerClient.instance)) {
       return;
    }
 
-   throwItem(playerClient.instanceID, inventoryName, itemSlot, dropAmount, throwDirection);
+   throwItem(playerClient.instance, inventoryName, itemSlot, dropAmount, throwDirection);
 }
 
 const processCommandPacket = (playerClient: PlayerClient, command: string): void => {
-   if (!Board.hasEntity(playerClient.instanceID)) {
+   if (!Board.hasEntity(playerClient.instance)) {
       return;
    }
    
-   registerCommand(command, playerClient.instanceID);
+   registerCommand(command, playerClient.instance);
 }
 
 const processSelectTechPacket = (playerClient: PlayerClient, techID: TechID): void => {
-   if (!Board.hasEntity(playerClient.instanceID)) {
+   if (!Board.hasEntity(playerClient.instance)) {
       return;
    }
 
@@ -410,14 +409,14 @@ const itemIsNeededInTech = (tech: TechInfo, itemRequirements: ItemRequirements, 
 }
 
 const processTechUnlock = (playerClient: PlayerClient, techID: TechID): void => {
-   if (!Board.hasEntity(playerClient.instanceID)) {
+   if (!Board.hasEntity(playerClient.instance)) {
       return;
    }
 
    const tech = getTechByID(techID);
    
-   const tribeComponent = TribeComponentArray.getComponent(playerClient.instanceID);
-   const inventoryComponent = InventoryComponentArray.getComponent(playerClient.instanceID);
+   const tribeComponent = TribeComponentArray.getComponent(playerClient.instance);
+   const inventoryComponent = InventoryComponentArray.getComponent(playerClient.instance);
 
    const hotbarInventory = getInventory(inventoryComponent, InventoryName.hotbar);
    
@@ -458,7 +457,7 @@ const processTechUnlock = (playerClient: PlayerClient, techID: TechID): void => 
 }
 
 const processTechForceUnlock = (playerClient: PlayerClient, techID: TechID): void => {
-   if (!Board.hasEntity(playerClient.instanceID)) {
+   if (!Board.hasEntity(playerClient.instance)) {
       return;
    }
 
@@ -466,14 +465,14 @@ const processTechForceUnlock = (playerClient: PlayerClient, techID: TechID): voi
 }
 
 const processStudyPacket = (playerClient: PlayerClient, studyAmount: number): void => {
-   if (!Board.hasEntity(playerClient.instanceID)) {
+   if (!Board.hasEntity(playerClient.instance)) {
       return;
    }
 
-   const tribeComponent = TribeComponentArray.getComponent(playerClient.instanceID);
+   const tribeComponent = TribeComponentArray.getComponent(playerClient.instance);
    
    if (tribeComponent.tribe.selectedTechID !== null) {
-      const transformComponent = TransformComponentArray.getComponent(playerClient.instanceID);
+      const transformComponent = TransformComponentArray.getComponent(playerClient.instance);
       const selectedTech = getTechByID(tribeComponent.tribe.selectedTechID);
       playerClient.tribe.studyTech(selectedTech, transformComponent.position.x, transformComponent.position.y, studyAmount);
    }
@@ -493,22 +492,22 @@ const snapRotationToPlayer = (player: EntityID, placePosition: Point, rotation: 
 }
 
 const processPlaceBlueprintPacket = (playerClient: PlayerClient, structure: EntityID, buildingType: BlueprintType): void => {
-   if (!Board.hasEntity(playerClient.instanceID) || !Board.hasEntity(structure)) {
+   if (!Board.hasEntity(playerClient.instance) || !Board.hasEntity(structure)) {
       return;
    }
 
    // @Cleanup: should not do this logic here.
    const structureTransformComponent = TransformComponentArray.getComponent(structure);
-   const rotation = snapRotationToPlayer(playerClient.instanceID, structureTransformComponent.position, structureTransformComponent.rotation);
-   placeBlueprint(playerClient.instanceID, structure, buildingType, rotation);
+   const rotation = snapRotationToPlayer(playerClient.instance, structureTransformComponent.position, structureTransformComponent.rotation);
+   placeBlueprint(playerClient.instance, structure, buildingType, rotation);
 }
 
 const processModifyBuildingPacket = (playerClient: PlayerClient, structure: EntityID, data: number): void => {
-   if (!Board.hasEntity(playerClient.instanceID)) {
+   if (!Board.hasEntity(playerClient.instance)) {
       return;
    }
    
-   modifyBuilding(playerClient.instanceID, structure, data);
+   modifyBuilding(playerClient.instance, structure, data);
 }
 
 const processDeconstructPacket = (playerClient: PlayerClient, structure: EntityID): void => {
@@ -533,7 +532,7 @@ const processDeconstructPacket = (playerClient: PlayerClient, structure: EntityI
 }
 
 const processStructureInteractPacket = (playerClient: PlayerClient, structure: EntityID, interactData: number): void => {
-   if (!Board.hasEntity(playerClient.instanceID) || !Board.hasEntity(structure)) {
+   if (!Board.hasEntity(playerClient.instance) || !Board.hasEntity(structure)) {
       return;
    }
 
@@ -543,7 +542,7 @@ const processStructureInteractPacket = (playerClient: PlayerClient, structure: E
          break;
       }
       case EntityType.researchBench: {
-         attemptToOccupyResearchBench(structure, playerClient.instanceID);
+         attemptToOccupyResearchBench(structure, playerClient.instance);
          break;
       }
       case EntityType.tunnel: {
@@ -559,204 +558,118 @@ const processStructureInteractPacket = (playerClient: PlayerClient, structure: E
 }
 
 const processStructureUninteractPacket = (playerClient: PlayerClient, structure: EntityID): void => {
-   if (!Board.hasEntity(playerClient.instanceID) || !Board.hasEntity(playerClient.instanceID)) {
+   if (!Board.hasEntity(playerClient.instance) || !Board.hasEntity(playerClient.instance)) {
       return;
    }
 
    switch (Board.getEntityType(structure)) {
       case EntityType.researchBench: {
-         deoccupyResearchBench(structure, playerClient.instanceID);
+         deoccupyResearchBench(structure, playerClient.instance);
          break;
       }
    }
 }
 
 const processRecruitTribesmanPacket = (playerClient: PlayerClient, tribesman: EntityID): void => {
-   if (!Board.hasEntity(playerClient.instanceID) || !Board.hasEntity(tribesman)) {
+   if (!Board.hasEntity(playerClient.instance) || !Board.hasEntity(tribesman)) {
       return;
    }
 
    const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman);
-   const relation = tribesmanComponent.tribesmanRelations[playerClient.instanceID];
+   const relation = tribesmanComponent.tribesmanRelations[playerClient.instance];
    if (typeof relation !== "undefined" && relation >= 50) {
-      const tribeComponent = TribeComponentArray.getComponent(playerClient.instanceID);
+      const tribeComponent = TribeComponentArray.getComponent(playerClient.instance);
       
       recruitTribesman(tribesman, tribeComponent.tribe);
    }
 }
 const processRespondToTitleOfferPacket = (playerClient: PlayerClient, title: TribesmanTitle, isAccepted: boolean): void => {
-   if (!Board.hasEntity(playerClient.instanceID)) {
+   if (!Board.hasEntity(playerClient.instance)) {
       return;
    }
    
    if (isAccepted) {
-      acceptTitleOffer(playerClient.instanceID, title);
+      acceptTitleOffer(playerClient.instance, title);
    } else {
-      rejectTitleOffer(playerClient.instanceID, title);
+      rejectTitleOffer(playerClient.instance, title);
    }
 }
 
 const devGiveItem = (playerClient: PlayerClient, itemType: ItemType, amount: number): void => {
-   if (!Board.hasEntity(playerClient.instanceID)) {
+   if (!Board.hasEntity(playerClient.instance)) {
       return;
    }
 
-   const inventoryComponent = InventoryComponentArray.getComponent(playerClient.instanceID);
+   const inventoryComponent = InventoryComponentArray.getComponent(playerClient.instance);
    const inventory = getInventory(inventoryComponent, InventoryName.hotbar);
    addItemToInventory(inventory, itemType, amount);
 }
 
 const devSummonEntity = (playerClient: PlayerClient, summonPacket: EntitySummonPacket): void => {
-   if (!Board.hasEntity(playerClient.instanceID)) {
+   if (!Board.hasEntity(playerClient.instance)) {
       return;
    }
 
-   const position = Point.unpackage(summonPacket.position);
-   const rotation = summonPacket.rotation;
+   const config = createEntityConfig(summonPacket.entityType);
+   config[ServerComponentType.transform].position.x = summonPacket.position[0];
+   config[ServerComponentType.transform].position.y = summonPacket.position[1];
+   config[ServerComponentType.transform].rotation = summonPacket.rotation;
 
-   switch (summonPacket.entityType) {
-      case EntityType.ballista: {
-         const tribeComponent = TribeComponentArray.getComponent(playerClient.instanceID);
-         const connectionInfo = createEmptyStructureConnectionInfo();
-         createBallista(position, rotation, tribeComponent.tribe, connectionInfo);
-         break;
-      }
-      case EntityType.barrel: {};
-      case EntityType.battleaxeProjectile: {};
-      case EntityType.berryBush: {};
-      case EntityType.blueprintEntity: {};
-      case EntityType.boulder: {};
-      case EntityType.cactus: {};
-      case EntityType.campfire: {};
-      case EntityType.cow: {};
-      case EntityType.door: {};
-      case EntityType.embrasure: {};
-      case EntityType.fence: {};
-      case EntityType.fenceGate: {};
-      case EntityType.fish: {};
-      case EntityType.floorPunjiSticks: {};
-      case EntityType.floorSpikes: {};
-      case EntityType.frostshaper: {};
-      case EntityType.frozenYeti: {
-         createFrozenYeti(position, 2 * Math.PI * Math.random());
-         break;
-      };
-      case EntityType.furnace: {};
-      case EntityType.golem: {};
-      case EntityType.healingTotem: {};
-      case EntityType.iceArrow: {};
-      case EntityType.iceShardProjectile: {};
-      case EntityType.iceSpikes: {};
-      case EntityType.itemEntity: {};
-      case EntityType.krumblid: {};
-      case EntityType.pebblum: {};
-      case EntityType.plant: {};
-      case EntityType.planterBox: {};
-      case EntityType.player: {};
-      case EntityType.researchBench: {};
-      case EntityType.rockSpikeProjectile: {};
-      case EntityType.slime: {};
-      case EntityType.slimeSpit: {};
-      case EntityType.slimewisp: {};
-      case EntityType.slingTurret: {};
-      case EntityType.snowball: {};
-      case EntityType.spearProjectile: {};
-      case EntityType.spitPoison: {};
-      case EntityType.stonecarvingTable: {};
-      case EntityType.tombstone: {};
-      case EntityType.tree: {};
-      case EntityType.tribeTotem: {};
-      case EntityType.tribeWarrior: {
-         const tribeComponent = TribeComponentArray.getComponent(playerClient.instanceID);
-         const inventoryComponentSummonData = summonPacket.summonData[ServerComponentType.inventory]!;
+   const inventoryComponentSummonData = summonPacket.summonData[ServerComponentType.inventory];
+   if (typeof inventoryComponentSummonData !== "undefined") {
+      config[ServerComponentType.inventory].inventories
+      
+      const inventoryNames = Object.keys(inventoryComponentSummonData.itemSlots).map(Number) as Array<InventoryName>;
+      for (let i = 0; i < inventoryNames.length; i++) {
+         const inventoryName = inventoryNames[i];
 
-         const entityCreationInfo = createTribeWarrior(position, rotation, tribeComponent.tribe, 0);
-
-         // @Temporary @Hack @Copynpaste
-         const inventoryComponent = entityCreationInfo.components[ServerComponentType.inventory]!;
-         const inventoryNames = Object.keys(inventoryComponentSummonData.itemSlots).map(Number) as Array<InventoryName>;
-         for (let i = 0; i < inventoryNames.length; i++) {
-            const inventoryName = inventoryNames[i];
-            
-            const itemSlots = inventoryComponentSummonData.itemSlots[inventoryName]!;
-            for (const [itemSlotString, itemData] of Object.entries(itemSlots) as Array<[string, Item]>) {
-               const itemSlot = Number(itemSlotString);
-               
-               const item = createItem(itemData.type, itemData.count);
-               inventoryComponent.inventoryRecord[inventoryName]!.addItem(item, itemSlot);
-            }
-         }
-
-         break;
-      };
-      case EntityType.tribeWorker: {
-         const tribeComponentSummonData = summonPacket.summonData[ServerComponentType.tribe]!;
-         const inventoryComponentSummonData = summonPacket.summonData[ServerComponentType.inventory]!;
+         const creationInfo = getInventoryFromCreationInfo(config[ServerComponentType.inventory].inventories, inventoryName);
          
-         const entityCreationInfo = createTribeWorker(position, rotation, tribeComponentSummonData.tribeID, 0);
-
-         // @Temporary @Hack @Copynpaste
-         const inventoryComponent = entityCreationInfo.components[ServerComponentType.inventory]!;
-         const inventoryNames = Object.keys(inventoryComponentSummonData.itemSlots).map(Number) as Array<InventoryName>;
-         for (let i = 0; i < inventoryNames.length; i++) {
-            const inventoryName = inventoryNames[i];
+         const itemSlots = inventoryComponentSummonData.itemSlots[inventoryName]!;
+         for (const [itemSlotString, itemData] of Object.entries(itemSlots) as Array<[string, Item]>) {
+            const itemSlot = Number(itemSlotString);
             
-            const itemSlots = inventoryComponentSummonData.itemSlots[inventoryName]!;
-            for (const [itemSlotString, itemData] of Object.entries(itemSlots) as Array<[string, Item]>) {
-               const itemSlot = Number(itemSlotString);
-               
-               const item = createItem(itemData.type, itemData.count);
-               inventoryComponent.inventoryRecord[inventoryName]!.addItem(item, itemSlot);
-            }
+            const item = createItem(itemData.type, itemData.count);
+            creationInfo.items.push({
+               itemSlot: itemSlot,
+               item: item
+            });
          }
-         
-         break;
-      };
-      case EntityType.tunnel: {};
-      case EntityType.wall: {};
-      case EntityType.wallPunjiSticks: {};
-      case EntityType.wallSpikes: {};
-      case EntityType.warriorHut: {};
-      case EntityType.woodenArrowProjectile: {};
-      case EntityType.workbench: {};
-      case EntityType.workerHut: {};
-      case EntityType.yeti: {};
-      case EntityType.zombie: {
-         // @Temporary: isGolden
-         createZombie(position, rotation, false, 0)
-         break;
-      };
-      default: {
-         const unreachable: never = summonPacket.entityType;
-         return unreachable;
       }
    }
+
+   const tribeComponentSummonData = summonPacket.summonData[ServerComponentType.tribe];
+   if (typeof tribeComponentSummonData !== "undefined") {
+      config[ServerComponentType.tribe].tribe = Board.getTribeExpected(tribeComponentSummonData.tribeID);
+   }
+
+   createEntityFromConfig(config);
 }
 
 const devGiveTitle = (playerClient: PlayerClient, title: TribesmanTitle): void => {
-   const player = Board.entityRecord[playerClient.instanceID];
-   if (typeof player === "undefined") {
+   const player = playerClient.instance;
+   if (!Board.hasEntity(player)) {
       return;
    }
 
-   forceAddTitle(player.id, title);
+   forceAddTitle(player, title);
 }
 
 const devRemoveTitle = (playerClient: PlayerClient, title: TribesmanTitle): void => {
-   const player = Board.entityRecord[playerClient.instanceID];
-   if (typeof player === "undefined") {
+   const player = playerClient.instance;
+   if (!Board.hasEntity(player)) {
       return;
    }
 
-   removeTitle(player.id, title);
+   removeTitle(player, title);
 }
 
-export function addPlayerClient(playerClient: PlayerClient, player: Entity): void {
+export function addPlayerClient(playerClient: PlayerClient, player: EntityID, playerConfig: ComponentConfig<ServerComponentType.transform>): void {
    playerClients.push(playerClient);
 
    const socket = playerClient.socket;
 
-   const initialGameDataPacket = createInitialGameDataPacket(player);
+   const initialGameDataPacket = createInitialGameDataPacket(player, playerConfig);
    socket.emit("initial_game_data_packet", initialGameDataPacket);
    
    socket.on("disconnect", () => {
@@ -784,12 +697,12 @@ export function addPlayerClient(playerClient: PlayerClient, player: Entity): voi
       processPlayerCraftingPacket(playerClient, recipeIndex);
    });
 
-   socket.on("item_pickup", (entityID: number, inventoryName: InventoryName, itemSlot: number, amount: number) => {
-      processItemPickupPacket(playerClient, entityID, inventoryName, itemSlot, amount);
+   socket.on("item_pickup", (entity: EntityID, inventoryName: InventoryName, itemSlot: number, amount: number) => {
+      processItemPickupPacket(playerClient, entity, inventoryName, itemSlot, amount);
    });
 
-   socket.on("item_release", (entityID: number, inventoryName: InventoryName, itemSlot: number, amount: number) => {
-      processItemReleasePacket(playerClient, entityID, inventoryName, itemSlot, amount);
+   socket.on("item_release", (entity: EntityID, inventoryName: InventoryName, itemSlot: number, amount: number) => {
+      processItemReleasePacket(playerClient, entity, inventoryName, itemSlot, amount);
    });
 
    socket.on("item_use_packet", (itemSlot: number) => {
@@ -911,7 +824,7 @@ const shouldShowDamageNumber = (playerClient: PlayerClient, attackingEntity: Ent
    }
    
    // Show damage from the player
-   if (attackingEntity === playerClient.instanceID) {
+   if (attackingEntity === playerClient.instance) {
       return true;
    }
 

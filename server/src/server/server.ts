@@ -7,24 +7,17 @@ import Board from "../Board";
 import { runSpawnAttempt, spawnInitialEntities } from "../entity-spawning";
 import Tribe from "../Tribe";
 import OPTIONS from "../options";
-import { resetComponents } from "../components/ComponentArray";
-import { createPlayer } from "../entities/tribes/player";
-import { resetCensus } from "../census";
 import { forceMaxGrowAllIceSpikes } from "../entities/resources/ice-spikes";
 import SRandom from "../SRandom";
-import { resetYetiTerritoryTiles } from "../entities/mobs/yeti";
-import { resetPerlinNoiseCache } from "../perlin-noise";
 import { updateDynamicPathfindingNodes } from "../pathfinding";
 import { updateResourceDistributions } from "../resource-distributions";
 import { updateGrassBlockers } from "../grass-blockers";
 import { createGameDataPacket } from "./game-data-packets";
 import PlayerClient from "./PlayerClient";
-import { addPlayerClient, generatePlayerSpawnPosition, getPlayerClients, getPlayerFromUsername } from "./player-clients";
-import { TribeComponentArray } from "../components/TribeComponent";
-import { createTribeWarrior } from "../entities/tribes/tribe-warrior";
-
-const isTimed = process.argv[2] === "timed";
-const averageTickTimes = new Array<number>();
+import { addPlayerClient, generatePlayerSpawnPosition, getPlayerClients } from "./player-clients";
+import { createPlayerConfig } from "../entities/tribes/player";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { createEntityFromConfig } from "../Entity";
 
 /*
 
@@ -75,17 +68,15 @@ class GameServer {
    }
 
    public async start(): Promise<void> {
-      if (!isTimed) {
-         // Seed the random number generator
-         if (OPTIONS.inBenchmarkMode) {
-            SRandom.seed(40404040404);
-         } else {
-            SRandom.seed(randInt(0, 9999999999));
-         }
-
-         Board.setup();
-         SERVER.setup();
+      // Seed the random number generator
+      if (OPTIONS.inBenchmarkMode) {
+         SRandom.seed(40404040404);
+      } else {
+         SRandom.seed(randInt(0, 9999999999));
       }
+
+      Board.setup();
+      SERVER.setup();
       
       if (SERVER.io === null) {
          // Start the server
@@ -97,65 +88,6 @@ class GameServer {
 
       SERVER.isRunning = true;
       
-      if (isTimed) {
-         if (typeof global.gc === "undefined") {
-            throw new Error("GC function is undefined! Most likely need to pass in the '--expose-gc' flag.");
-         }
-
-         Math.random = () => SRandom.next();
-
-         let j = 0;
-         for (;;) {
-            // Collect garbage from previous run
-            for (let i = 0; i < 10; i++) {
-               global.gc();
-            }
-            
-            // Reset the board state
-            Board.reset();
-            resetYetiTerritoryTiles();
-            resetCensus();
-            resetComponents();
-            resetPerlinNoiseCache();
-
-            // Seed the random number generator
-            if (OPTIONS.inBenchmarkMode) {
-               SRandom.seed(40404040404);
-            } else {
-               SRandom.seed(randInt(0, 9999999999));
-            }
-            
-            Board.setup();
-            SERVER.setup();
-
-            // Warm up the JIT
-            for (let i = 0; i < 50; i++) {
-               SERVER.tick();
-            }
-            
-            // @Bug: When at 5000, the average tps starts at around 1.8, while at 1000 it starts at .6
-            const numTicks = 1000;
-            
-            const startTime = performance.now();
-
-            const a = [];
-            let l = startTime;
-            for (let i = 0; i < numTicks; i++) {
-               SERVER.tick();
-               const n = performance.now();
-               a.push(n - l);
-               l = n;
-            }
-
-            const timeElapsed = performance.now() - startTime;
-            const averageTickTimeMS = timeElapsed / numTicks;
-            averageTickTimes.push(averageTickTimeMS);
-            console.log("(#" + (j + 1) + ") Average tick MS: " + averageTickTimeMS);
-            console.log(Math.min(...a), Math.max(...a));
-            j++;
-         }
-      }
-
       if (typeof SERVER.tickInterval === "undefined") {
          while (SERVER.isRunning) {
             await SERVER.tick();
@@ -185,9 +117,7 @@ class GameServer {
          Board.updateTribes();
       }
 
-      if (!isTimed) {
-         await SERVER.sendGameDataPackets();
-      }
+      await SERVER.sendGameDataPackets();
 
       // Update server ticks and time
       // This is done at the end of the tick so that information sent by players is associated with the next tick to run
@@ -303,10 +233,16 @@ class GameServer {
             // }, 2000);
 
             const tribe = new Tribe(tribeType, false);
-            const player = createPlayer(spawnPosition, tribe, username);
 
-            const playerClient = new PlayerClient(socket, tribe, visibleChunkBounds, player.id, username);
-            addPlayerClient(playerClient, player);
+            const config = createPlayerConfig();
+            config[ServerComponentType.transform].position.x = spawnPosition.x;
+            config[ServerComponentType.transform].position.y = spawnPosition.y;
+            config[ServerComponentType.tribe].tribe = tribe;
+            config[ServerComponentType.player].username = username;
+            const player = createEntityFromConfig(config);
+
+            const playerClient = new PlayerClient(socket, tribe, visibleChunkBounds, player, username);
+            addPlayerClient(playerClient, player, config);
          });
       });
    }
@@ -336,7 +272,7 @@ class GameServer {
             const playerClients = getPlayerClients();
             for (let i = 0; i < playerClients.length; i++) {
                const playerClient = playerClients[i];
-               if (!playerClient.clientIsActive) {
+               if (!playerClient.clientIsActive || !Board.hasEntity(playerClient.instance)) {
                   continue;
                }
 

@@ -18,25 +18,28 @@ class CowComponent extends ServerComponent<ServerComponentType.cow> {
    }
 
    public tick(): void {
+      const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
+
       if (this.grazeProgress !== -1 && Board.tickIntervalHasPassed(0.1)) {
          const spawnOffsetMagnitude = 30 * Math.random();
          const spawnOffsetDirection = 2 * Math.PI * Math.random();
-         const spawnPositionX = this.entity.position.x + spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
-         const spawnPositionY = this.entity.position.y + spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
+         const spawnPositionX = transformComponent.position.x + spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
+         const spawnPositionY = transformComponent.position.y + spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
          createDirtParticle(spawnPositionX, spawnPositionY, ParticleRenderLayer.low);
       }
 
       if (Math.random() < 0.1 / Settings.TPS) {
-         playSound(("cow-ambient-" + randInt(1, 3) + ".mp3") as AudioFilePath, 0.2, 1, this.entity.position.x, this.entity.position.y);
+         playSound(("cow-ambient-" + randInt(1, 3) + ".mp3") as AudioFilePath, 0.2, 1, transformComponent.position);
       }
    }
 
    public updateFromData(data: CowComponentData): void {
       // When the cow has finished grazing, create a bunch of dirt particles
       if (data.grazeProgress < this.grazeProgress) {
+         const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
          for (let i = 0; i < 15; i++) {
-            const x = (this.entity.tile.x + Math.random()) * Settings.TILE_SIZE;
-            const y = (this.entity.tile.y + Math.random()) * Settings.TILE_SIZE;
+            const x = (transformComponent.tile.x + Math.random()) * Settings.TILE_SIZE;
+            const y = (transformComponent.tile.y + Math.random()) * Settings.TILE_SIZE;
             createDirtParticle(x, y, ParticleRenderLayer.low);
          }
       }

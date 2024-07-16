@@ -13,7 +13,7 @@ export class TribeWarriorComponent {
    }
 }
 
-export const TribeWarriorComponentArray = new ComponentArray<ServerComponentType.tribeWarrior, TribeWarriorComponent>(true, {
+export const TribeWarriorComponentArray = new ComponentArray<TribeWarriorComponent>(ServerComponentType.tribeWarrior, true, {
    serialise: serialise
 });
 

@@ -17,7 +17,7 @@ export class TotemBannerComponent {
    readonly availableBannerPositions: Array<TotemBannerPosition> = Array.from(new Set(TRIBE_TOTEM_POSITIONS));
 }
 
-export const TotemBannerComponentArray = new ComponentArray<ServerComponentType.totemBanner, TotemBannerComponent>(true, {
+export const TotemBannerComponentArray = new ComponentArray<TotemBannerComponent>(ServerComponentType.totemBanner, true, {
    serialise: serialise
 });
 

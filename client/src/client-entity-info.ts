@@ -83,8 +83,23 @@ const CLIENT_ENTITY_INFO_RECORD: Record<EntityType, ClientEntityInfo> = {
    [EntityType.itemEntity]: {
       name: "Item Entity"
    },
-   [EntityType.woodenArrowProjectile]: {
+   [EntityType.woodenArrow]: {
       name: "Wooden Arrow Projectile"
+   },
+   [EntityType.ballistaFrostcicle]: {
+      name: "Ballista Frostcicle Projectile"
+   },
+   [EntityType.ballistaRock]: {
+      name: "Ballista Rock Projectile"
+   },
+   [EntityType.ballistaSlimeball]: {
+      name: "Ballista Slimeball Projectile"
+   },
+   [EntityType.ballistaWoodenBolt]: {
+      name: "Ballista Wooden Bolt Projectile"
+   },
+   [EntityType.slingTurretRock]: {
+      name: "Sling Turret Rock Projectile"
    },
    [EntityType.iceShardProjectile]: {
       name: "Ice Shard Projectile"

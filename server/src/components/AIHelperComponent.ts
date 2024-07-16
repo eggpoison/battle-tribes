@@ -28,7 +28,7 @@ export class AIHelperComponent {
    }
 }
 
-export const AIHelperComponentArray = new ComponentArray<ServerComponentType.aiHelper, AIHelperComponent>(true, {
+export const AIHelperComponentArray = new ComponentArray<AIHelperComponent>(ServerComponentType.aiHelper, true, {
    onRemove: onRemove,
    serialise: serialise
 });

@@ -34,6 +34,8 @@ class StatusEffectComponent extends ServerComponent<ServerComponentType.statusEf
          this.entity.tintB += 0.5;
          this.entity.tintR -= 0.15;
       }
+
+      const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
       
       const poisonStatusEffect = this.getStatusEffect(StatusEffect.poisoned);
       if (poisonStatusEffect !== null) {
@@ -41,8 +43,8 @@ class StatusEffectComponent extends ServerComponent<ServerComponentType.statusEf
          if (customTickIntervalHasPassed(poisonStatusEffect.ticksElapsed, 0.1)) {
             const spawnOffsetMagnitude = 30 * Math.random();
             const spawnOffsetDirection = 2 * Math.PI * Math.random()
-            const spawnPositionX = this.entity.position.x + spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
-            const spawnPositionY = this.entity.position.y + spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
+            const spawnPositionX = transformComponent.position.x + spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
+            const spawnPositionY = transformComponent.position.y + spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
 
             const lifetime = 2;
             
@@ -73,8 +75,8 @@ class StatusEffectComponent extends ServerComponent<ServerComponentType.statusEf
          if (customTickIntervalHasPassed(poisonStatusEffect.ticksElapsed, 0.1)) {
             const spawnOffsetMagnitude = 30 * Math.random();
             const spawnOffsetDirection = 2 * Math.PI * Math.random()
-            const spawnPositionX = this.entity.position.x + spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
-            const spawnPositionY = this.entity.position.y + spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
+            const spawnPositionX = transformComponent.position.x + spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
+            const spawnPositionY = transformComponent.position.y + spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
 
             createPoisonBubble(spawnPositionX, spawnPositionY, randFloat(0.4, 0.6));
          }
@@ -100,8 +102,8 @@ class StatusEffectComponent extends ServerComponent<ServerComponentType.statusEf
          if (customTickIntervalHasPassed(fireStatusEffect.ticksElapsed, 0.1)) {
             const spawnOffsetMagnitude = 30 * Math.random();
             const spawnOffsetDirection = 2 * Math.PI * Math.random();
-            const spawnPositionX = this.entity.position.x + spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
-            const spawnPositionY = this.entity.position.y + spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
+            const spawnPositionX = transformComponent.position.x + spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
+            const spawnPositionY = transformComponent.position.y + spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
 
             const lifetime = randFloat(0.6, 1.2);
 
@@ -144,8 +146,8 @@ class StatusEffectComponent extends ServerComponent<ServerComponentType.statusEf
          if (customTickIntervalHasPassed(fireStatusEffect.ticksElapsed, 3/20)) {
             const spawnOffsetMagnitude = 20 * Math.random();
             const spawnOffsetDirection = 2 * Math.PI * Math.random();
-            const spawnPositionX = this.entity.position.x + spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
-            const spawnPositionY = this.entity.position.y + spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
+            const spawnPositionX = transformComponent.position.x + spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
+            const spawnPositionY = transformComponent.position.y + spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
 
             const accelerationDirection = 2 * Math.PI * Math.random();
             const accelerationX = 40 * Math.sin(accelerationDirection);
@@ -194,8 +196,8 @@ class StatusEffectComponent extends ServerComponent<ServerComponentType.statusEf
       if (bleedingStatusEffect !== null) {
          if (Board.tickIntervalHasPassed(0.15)) {
             const spawnOffsetDirection = 2 * Math.PI * Math.random();
-            const spawnPositionX = this.entity.position.x + 32 * Math.sin(spawnOffsetDirection);
-            const spawnPositionY = this.entity.position.y + 32 * Math.cos(spawnOffsetDirection);
+            const spawnPositionX = transformComponent.position.x + 32 * Math.sin(spawnOffsetDirection);
+            const spawnPositionY = transformComponent.position.y + 32 * Math.cos(spawnOffsetDirection);
             createBloodParticle(Math.random() < 0.5 ? BloodParticleSize.small : BloodParticleSize.large, spawnPositionX, spawnPositionY, 2 * Math.PI * Math.random(), randFloat(40, 60), true);
          }
       }
@@ -206,7 +208,8 @@ class StatusEffectComponent extends ServerComponent<ServerComponentType.statusEf
          if (!this.hasStatusEffect(statusEffectData.type)) {
             switch (statusEffectData.type) {
                case StatusEffect.freezing: {
-                  playSound("freezing.mp3", 0.4, 1, this.entity.position.x, this.entity.position.y)
+                  const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
+                  playSound("freezing.mp3", 0.4, 1, transformComponent.position)
                   break;
                }
             }

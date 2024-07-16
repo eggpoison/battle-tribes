@@ -215,8 +215,8 @@ const Tech = ({ techInfo, positionX, positionY, zoom }: TechProps) => {
          const itemTally = getResearchedItems(techInfo);
          addResearchedItems(techInfo, itemTally);
          
-         // @Incomplete: attach to camera so it doesn't decrease in loudness
-         playSound("item-research.mp3", 0.4, 1, Camera.position.x, Camera.position.y);
+         // @Incomplete: attach to camera so it doesn't decrease in loudness. or make 'global sounds'
+         playSound("item-research.mp3", 0.4, 1, Camera.position);
       }
    }
 

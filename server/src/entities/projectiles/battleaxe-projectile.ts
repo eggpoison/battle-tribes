@@ -40,7 +40,8 @@ export function createBattleaxeProjectileConfig(): ComponentConfig<ComponentType
          isImmovable: true
       },
       [ServerComponentType.tribe]: {
-         tribeID: null
+         tribe: null,
+         tribeType: 0
       },
       [ServerComponentType.throwingProjectile]: {
          tribeMemberID: 0,

@@ -1,5 +1,4 @@
 import { ServerComponentType, YetiComponentData } from "webgl-test-shared/dist/components";
-import Entity from "../Entity";
 import Tile from "../Tile";
 import { SnowThrowStage, YETI_SNOW_THROW_COOLDOWN } from "../entities/mobs/yeti";
 import { ComponentArray } from "./ComponentArray";
@@ -31,7 +30,7 @@ export class YetiComponent {
    // Stores the ids of all entities which have recently attacked the yeti
    public readonly attackingEntities: Partial<Record<number, YetiTargetInfo>> = {};
 
-   public attackTarget: Entity | null = null;
+   public attackTarget: EntityID | null = null;
    public isThrowingSnow = false;
    public snowThrowStage: SnowThrowStage = SnowThrowStage.windup;
    public snowThrowAttackProgress = 1;
@@ -42,8 +41,9 @@ export class YetiComponent {
       this.territory = params.territory;
    }
 }
-export const YetiComponentArray = new ComponentArray<ServerComponentType.yeti, YetiComponent>(true, {
+export const YetiComponentArray = new ComponentArray<YetiComponent>(ServerComponentType.yeti, true, {
    onJoin: onJoin,
+   onRemove: onRemove,
    serialise: serialise
 });
 
@@ -135,11 +135,29 @@ export function yetiSpawnPositionIsValid(positionX: number, positionY: number): 
    return territoryTiles.length >= MIN_TERRITORY_SIZE;
 }
 
+const removeYetiTerritory = (tileX: number, tileY: number): void => {
+   const tileIndex = tileY * Settings.BOARD_DIMENSIONS + tileX;
+   delete yetiTerritoryTiles[tileIndex];
+}
+
+export function resetYetiTerritoryTiles(): void {
+   yetiTerritoryTiles = {};
+}
+
 function onJoin(yeti: EntityID): void {
    const transformComponent = TransformComponentArray.getComponent(yeti);
    
    const territory = generateYetiTerritoryTiles(transformComponent.tile.x, transformComponent.tile.y);
    registerYetiTerritory(yeti, territory);
+}
+
+function onRemove(yeti: EntityID): void {
+   // Remove territory
+   const yetiComponent = YetiComponentArray.getComponent(yeti);
+   for (let i = 0; i < yetiComponent.territory.length; i++) {
+      const territoryTile = yetiComponent.territory[i];
+      removeYetiTerritory(territoryTile.x, territoryTile.y);
+   }
 }
 
 function serialise(entity: EntityID): YetiComponentData {

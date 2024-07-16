@@ -1,30 +1,45 @@
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { Point } from "webgl-test-shared/dist/utils";
-import Entity from "../../Entity";
-import { HealthComponent, HealthComponentArray } from "../../components/HealthComponent";
-import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
-import Tribe from "../../Tribe";
-import { TribeComponent, TribeComponentArray } from "../../components/TribeComponent";
-import { StructureComponent, StructureComponentArray } from "../../components/StructureComponent";
-import { StructureConnectionInfo } from "webgl-test-shared/dist/structures";
-import { CraftingStationComponent, CraftingStationComponentArray } from "../../components/CraftingStationComponent";
+import { createEmptyStructureConnectionInfo } from "webgl-test-shared/dist/structures";
 import { createWorkbenchHitboxes } from "webgl-test-shared/dist/hitboxes/entity-hitbox-creation";
 import { CraftingStation } from "webgl-test-shared/dist/items/crafting-recipes";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ComponentConfig } from "../../components";
+import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 
-export function createWorkbench(position: Point, rotation: number, tribe: Tribe, connectionInfo: StructureConnectionInfo): Entity {
-   const workbench = new Entity(position, rotation, EntityType.workbench, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
+type ComponentTypes = ServerComponentType.transform
+   | ServerComponentType.health
+   | ServerComponentType.statusEffect
+   | ServerComponentType.structure
+   | ServerComponentType.tribe
+   | ServerComponentType.craftingStation;
 
-   const hitboxes = createWorkbenchHitboxes();
-   for (let i = 0; i < hitboxes.length; i++) {
-      workbench.addHitbox(hitboxes[i]);
-   }
-
-   HealthComponentArray.addComponent(workbench.id, new HealthComponent(15));
-   StatusEffectComponentArray.addComponent(workbench.id, new StatusEffectComponent(0));
-   StructureComponentArray.addComponent(workbench.id, new StructureComponent(connectionInfo));
-   TribeComponentArray.addComponent(workbench.id, new TribeComponent(tribe));
-   CraftingStationComponentArray.addComponent(workbench.id, new CraftingStationComponent(CraftingStation.workbench));
-
-   return workbench;
+export function createWorkbenchConfig(): ComponentConfig<ComponentTypes> {
+   return {
+      [ServerComponentType.transform]: {
+         position: new Point(0, 0),
+         rotation: 0,
+         type: EntityType.workbench,
+         collisionBit: COLLISION_BITS.default,
+         collisionMask: DEFAULT_COLLISION_MASK,
+         hitboxes: createWorkbenchHitboxes()
+      },
+      [ServerComponentType.health]: {
+         maxHealth: 15
+      },
+      [ServerComponentType.statusEffect]: {
+         statusEffectImmunityBitset: StatusEffect.bleeding | StatusEffect.poisoned
+      },
+      [ServerComponentType.structure]: {
+         connectionInfo: createEmptyStructureConnectionInfo()
+      },
+      [ServerComponentType.tribe]: {
+         tribe: null,
+         tribeType: 0
+      },
+      [ServerComponentType.craftingStation]: {
+         craftingStation: CraftingStation.workbench
+      }
+   };
 }

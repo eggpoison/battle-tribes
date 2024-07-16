@@ -115,13 +115,14 @@ const getVisibleHealingBeams = (): ReadonlyArray<HealingBeam> => {
          continue;
       }
 
+      const transformComponent = entity.getServerComponent(ServerComponentType.transform);
       const healingTotemComponent = entity.getServerComponent(ServerComponentType.healingTotem);
 
       for (let i = 0; i < healingTotemComponent.healingTargetsData.length; i++) {
          const healingTargetData = healingTotemComponent.healingTargetsData[i];
          beams.push({
-            startX: entity.position.x,
-            startY: entity.position.y,
+            startX: transformComponent.position.x,
+            startY: transformComponent.position.y,
             endX: healingTargetData.x,
             endY: healingTargetData.y,
             entityID: healingTargetData.entityID,

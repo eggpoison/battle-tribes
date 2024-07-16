@@ -8,14 +8,15 @@ import { playSound } from "../sound";
 import Entity, { ComponentDataRecord } from "../Entity";
 import { createLightWoodSpeckParticle, createWoodShardParticle } from "../particles";
 import { WALL_TEXTURE_SOURCES } from "../entity-components/BuildingMaterialComponent";
+import Board from "../Board";
 
 class Wall extends Entity {
    private static readonly NUM_DAMAGE_STAGES = 6;
 
    private damageRenderPart: RenderPart | null = null;
 
-   constructor(position: Point, id: number, ageTicks: number, componentDataRecord: ComponentDataRecord) {
-      super(position, id, EntityType.wall, ageTicks);
+   constructor(id: number, componentDataRecord: ComponentDataRecord) {
+      super(id, EntityType.wall);
 
       const buildingMaterialComponentData = componentDataRecord[ServerComponentType.buildingMaterial]!;
       const healthComponentData = componentDataRecord[ServerComponentType.health]!;
@@ -32,8 +33,9 @@ class Wall extends Entity {
       this.updateDamageRenderPart(healthComponentData.health, healthComponentData.maxHealth);
 
       // @Cleanup: why <= 1?
-      if (this.ageTicks <= 1) {
-         playSound("wooden-wall-place.mp3", 0.3, 1, this.position.x, this.position.y);
+      const transformComponentData = componentDataRecord[ServerComponentType.transform]!;
+      if (transformComponentData.ageTicks <= 0) {
+         playSound("wooden-wall-place.mp3", 0.3, 1, Point.unpackage(transformComponentData.position));
       }
    }
 
@@ -64,7 +66,7 @@ class Wall extends Entity {
          this.damageRenderPart.switchTextureSource(textureSource);
       }
    }
-   public updateFromData(data: EntityData<EntityType.wall>): void {
+   public updateFromData(data: EntityData): void {
       super.updateFromData(data);
 
       const healthComponent = this.getServerComponent(ServerComponentType.health);
@@ -72,47 +74,54 @@ class Wall extends Entity {
    }
 
    protected onHit(hitData: HitData): void {
-      playSound("wooden-wall-hit.mp3", 0.3, 1, this.position.x, this.position.y);
+      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+
+      playSound("wooden-wall-hit.mp3", 0.3, 1, transformComponent.position);
 
       for (let i = 0; i < 6; i++) {
-         createLightWoodSpeckParticle(this.position.x, this.position.y, 32);
+         createLightWoodSpeckParticle(transformComponent.position.x, transformComponent.position.y, 32);
       }
 
       for (let i = 0; i < 10; i++) {
-         let offsetDirection = angle(hitData.hitPosition[0] - this.position.x, hitData.hitPosition[1] - this.position.y);
+         let offsetDirection = angle(hitData.hitPosition[0] - transformComponent.position.x, hitData.hitPosition[1] - transformComponent.position.y);
          offsetDirection += 0.2 * Math.PI * (Math.random() - 0.5);
 
-         const spawnPositionX = this.position.x + 32 * Math.sin(offsetDirection);
-         const spawnPositionY = this.position.y + 32 * Math.cos(offsetDirection);
+         const spawnPositionX = transformComponent.position.x + 32 * Math.sin(offsetDirection);
+         const spawnPositionY = transformComponent.position.y + 32 * Math.cos(offsetDirection);
          createLightWoodSpeckParticle(spawnPositionX, spawnPositionY, 5);
       }
    }
    
    // @Incomplete: doesn't play when removed by deconstruction
    public onDie(): void {
+      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+
       // @Speed @Hack
       // Don't play death effects if the wall was replaced by a blueprint
-      for (const chunk of this.chunks) {
-         for (const entity of chunk.entities) {
+      for (const chunk of transformComponent.chunks) {
+         for (const entityID of chunk.entities) {
+            const entity = Board.entityRecord[entityID]!;
             if (entity.type !== EntityType.blueprintEntity) {
                continue;
             }
 
-            const dist = this.position.calculateDistanceBetween(entity.position);
+            const entityTransformComponent = entity.getServerComponent(ServerComponentType.transform);
+
+            const dist = transformComponent.position.calculateDistanceBetween(entityTransformComponent.position);
             if (dist < 1) {
                return;
             }
          }
       }
 
-      playSound("wooden-wall-break.mp3", 0.4, 1, this.position.x, this.position.y);
+      playSound("wooden-wall-break.mp3", 0.4, 1, transformComponent.position);
 
       for (let i = 0; i < 16; i++) {
-         createLightWoodSpeckParticle(this.position.x, this.position.y, 32 * Math.random());
+         createLightWoodSpeckParticle(transformComponent.position.x, transformComponent.position.y, 32 * Math.random());
       }
 
       for (let i = 0; i < 8; i++) {
-         createWoodShardParticle(this.position.x, this.position.y, 32);
+         createWoodShardParticle(transformComponent.position.x, transformComponent.position.y, 32);
       }
    }
 }

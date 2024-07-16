@@ -10,7 +10,7 @@ import Tribe from "../../../Tribe";
 import { getDistanceFromPointToEntity, stopEntity, willStopAtDesiredDistance } from "../../../ai-shared";
 import { HealthComponentArray } from "../../../components/HealthComponent";
 import { consumeItemFromSlot, InventoryComponentArray, getInventory } from "../../../components/InventoryComponent";
-import { InventoryUseComponentArray, getInventoryUseInfo, setLimbActions } from "../../../components/InventoryUseComponent";
+import { InventoryUseComponentArray, setLimbActions } from "../../../components/InventoryUseComponent";
 import { PhysicsComponentArray } from "../../../components/PhysicsComponent";
 import { getEntityRelationship, EntityRelationship } from "../../../components/TribeComponent";
 import { awardTitle } from "../../../components/TribeMemberComponent";
@@ -42,10 +42,10 @@ export function goPlaceBuilding(tribesman: EntityID, hotbarInventory: Inventory,
       updateHitbox(hitbox, plan.position.x, plan.position.y, plan.rotation);
    }
    
-   const blockingEntities = getHitboxesCollidingEntities(Board.chunks, hitboxes);
+   const blockingEntities = getHitboxesCollidingEntities(Board.getWorldInfo(), hitboxes);
    for (let i = 0; i < blockingEntities.length; i++) {
       const blockingEntity = blockingEntities[i];
-      if (!HealthComponentArray.hasComponent(blockingEntity.id)) {
+      if (!HealthComponentArray.hasComponent(blockingEntity)) {
          continue;
       }
       
@@ -64,7 +64,7 @@ export function goPlaceBuilding(tribesman: EntityID, hotbarInventory: Inventory,
    if (distance < Vars.BUILDING_PLACE_DISTANCE) {
       // Equip the item
       const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman);
-      const useInfo = getInventoryUseInfo(inventoryUseComponent, InventoryName.hotbar);
+      const useInfo = inventoryUseComponent.getUseInfo(InventoryName.hotbar);
       useInfo.selectedItemSlot = goal.placeableItemSlot;
       
       const transformComponent = TransformComponentArray.getComponent(tribesman);
@@ -100,7 +100,7 @@ export function goPlaceBuilding(tribesman: EntityID, hotbarInventory: Inventory,
          const item = hotbarInventory.itemSlots[goal.placeableItemSlot]!;
          const placingEntityType = (ITEM_INFO_RECORD[item.type] as PlaceableItemInfo).entityType;
          
-         const connectionInfo = calculateStructureConnectionInfo(plan.position, plan.rotation, placingEntityType, Board.chunks);
+         const connectionInfo = calculateStructureConnectionInfo(plan.position, plan.rotation, placingEntityType, Board.getWorldInfo());
          placeBuilding(tribe, plan.position, plan.rotation, placingEntityType, connectionInfo);
 
          if (Math.random() < TITLE_REWARD_CHANCES.BUILDER_REWARD_CHANCE) {
@@ -152,7 +152,7 @@ export function goUpgradeBuilding(tribesman: EntityID, goal: TribesmanUpgradeGoa
 
    // Select the hammer item slot
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman);
-   const useInfo = getInventoryUseInfo(inventoryUseComponent, InventoryName.hotbar);
+   const useInfo = inventoryUseComponent.getUseInfo(InventoryName.hotbar);
    useInfo.selectedItemSlot = hammerItemSlot;
    setLimbActions(inventoryUseComponent, LimbAction.none);
 
@@ -223,7 +223,7 @@ export function attemptToRepairBuildings(tribesman: EntityID, hammerItemSlot: nu
 
    // Select the hammer item slot
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman);
-   const useInfo = getInventoryUseInfo(inventoryUseComponent, InventoryName.hotbar);
+   const useInfo = inventoryUseComponent.getUseInfo(InventoryName.hotbar);
    useInfo.selectedItemSlot = hammerItemSlot;
    setLimbActions(inventoryUseComponent, LimbAction.none);
 

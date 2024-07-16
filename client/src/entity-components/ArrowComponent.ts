@@ -1,18 +1,13 @@
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
-import { ArrowComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
-import { GenericArrowType } from "webgl-test-shared/dist/entities";
+import { ProjectileComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
 
-class ArrowComponent extends ServerComponent<ServerComponentType.arrow> {
-   public readonly arrowType: GenericArrowType;
-
-   constructor(entity: Entity, data: ArrowComponentData) {
+class ProjectileComponent extends ServerComponent<ServerComponentType.projectile> {
+   constructor(entity: Entity, data: ProjectileComponentData) {
       super(entity);
-
-      this.arrowType = data.arrowType;
    }
 
-   public updateFromData(_data: ArrowComponentData): void {}
+   public updateFromData(_data: ProjectileComponentData): void {}
 }
 
-export default ArrowComponent;
+export default ProjectileComponent;

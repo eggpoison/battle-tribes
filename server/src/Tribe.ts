@@ -1,5 +1,5 @@
 import { PotentialBuildingPlanData } from "webgl-test-shared/dist/ai-building-types";
-import { BlueprintType } from "webgl-test-shared/dist/components";
+import { BlueprintType, ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { StructureType } from "webgl-test-shared/dist/structures";
@@ -9,9 +9,7 @@ import { Point, angle, randItem, clampToBoardDimensions } from "webgl-test-share
 import Board from "./Board";
 import Tile from "./Tile";
 import Chunk from "./Chunk";
-import { createTribeWorker } from "./entities/tribes/tribe-worker";
 import { TotemBannerComponentArray, addBannerToTotem, removeBannerFromTotem } from "./components/TotemBannerComponent";
-import { createTribeWarrior } from "./entities/tribes/tribe-warrior";
 import { SafetyNode, addHitboxesOccupiedNodes, createRestrictedBuildingArea, getSafetyNode } from "./ai-tribe-building/ai-building";
 import { InventoryComponentArray, getInventory } from "./components/InventoryComponent";
 import { TribeArea } from "./ai-tribe-building/ai-building-areas";
@@ -23,6 +21,8 @@ import { HitboxVertexPositions } from "webgl-test-shared/dist/hitboxes/hitboxes"
 import { CraftingRecipe } from "webgl-test-shared/dist/items/crafting-recipes";
 import { ItemType, InventoryName } from "webgl-test-shared/dist/items/items";
 import { TransformComponentArray } from "./components/TransformComponent";
+import { createEntityConfig } from "./entity-creation";
+import { createEntityFromConfig } from "./Entity";
 
 const ENEMY_ATTACK_REMEMBER_TIME_TICKS = 30 * Settings.TPS;
 const RESPAWN_TIME_TICKS = 5 * Settings.TPS;
@@ -693,23 +693,27 @@ class Tribe {
       // Offset the spawn position so the tribesman comes out of the correct side of the hut
       const position = new Point(transformComponent.position.x + 10 * Math.sin(transformComponent.rotation), transformComponent.position.y + 10 * Math.cos(transformComponent.rotation));
       
-      if (Board.getEntityType(hut) === EntityType.workerHut) {
-         createTribeWorker(position, transformComponent.rotation, this.id, hut);
-      } else {
-         createTribeWarrior(position, transformComponent.rotation, this, hut);
-      }
+      const tribesmanEntityType = Board.getEntityType(hut) === EntityType.workerHut ? EntityType.tribeWorker : EntityType.tribeWarrior;
+
+      const config = createEntityConfig(tribesmanEntityType);
+      config[ServerComponentType.transform].position.x = position.x;
+      config[ServerComponentType.transform].position.y = position.y;
+      config[ServerComponentType.transform].rotation = transformComponent.rotation;
+      config[ServerComponentType.tribe].tribe = this;
+      config[ServerComponentType.tribesmanAI].hut = hut;
+      createEntityFromConfig(config);
    }
 
    // @Cleanup
    
-   public registerNewTribeMember(tribesmanID: number): void {
+   public registerNewTribeMember(tribesman: EntityID): void {
       this.isRemoveable = true;
       // this.friendlyTribesmenIDs.push(tribeMember.id);
-      this.tribesmanIDs.push(tribesmanID);
+      this.tribesmanIDs.push(tribesman);
    }
 
-   public registerTribeMemberDeath(tribesmanID: number): void {
-      const idx = this.tribesmanIDs.indexOf(tribesmanID);
+   public registerTribeMemberDeath(tribesman: EntityID): void {
+      const idx = this.tribesmanIDs.indexOf(tribesman);
       if (idx !== -1) {
          this.tribesmanIDs.splice(idx, 1);
       } else {

@@ -14,7 +14,10 @@ import { HitboxCollisionType, RectangularHitbox } from "webgl-test-shared/dist/h
 import { ItemType } from "webgl-test-shared/dist/items/items";
 import { ProjectileComponentArray } from "../../components/ProjectileComponent";
 
-type ComponentTypes = ServerComponentType.transform | ServerComponentType.physics | ServerComponentType.tribe | ServerComponentType.projectile;
+type ComponentTypes = ServerComponentType.transform
+   | ServerComponentType.physics
+   | ServerComponentType.tribe
+   | ServerComponentType.projectile;
 
 export function createBallistaRockConfig(): ComponentConfig<ComponentTypes> {
    return {
@@ -35,7 +38,8 @@ export function createBallistaRockConfig(): ComponentConfig<ComponentTypes> {
          isImmovable: true
       },
       [ServerComponentType.tribe]: {
-         tribeID: null
+         tribe: null,
+         tribeType: 0
       },
       [ServerComponentType.projectile]: {
          owner: 0

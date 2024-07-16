@@ -6,13 +6,14 @@ import { Point, randInt } from "webgl-test-shared/dist/utils";
 import { createItemsOverEntity } from "../entity-shared";
 import Board from "../Board";
 import { TombstoneComponent, TombstoneComponentArray } from "../components/TombstoneComponent";
-import { createZombie } from "./mobs/zombie";
+import { createZombieConfig } from "./mobs/zombie";
 import TombstoneDeathManager from "../tombstone-deaths";
 import { HitboxCollisionType, RectangularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { ItemType } from "webgl-test-shared/dist/items/items";
 import { TransformComponentArray } from "../components/TransformComponent";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { ComponentConfig } from "../components";
+import { createEntityFromConfig } from "../Entity";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.health
@@ -87,8 +88,15 @@ const spawnZombie = (tombstone: EntityID, tombstoneComponent: TombstoneComponent
    const isGolden = tombstoneComponent.tombstoneType === 0 && Math.random() < 0.005;
    
    // Spawn zombie
-   const spawnPosition = new Point(tombstoneComponent.zombieSpawnPositionX, tombstoneComponent.zombieSpawnPositionY);
-   createZombie(spawnPosition, 2 * Math.PI * Math.random(), isGolden, tombstone);
+   const config = createZombieConfig();
+   config[ServerComponentType.transform].position.x = tombstoneComponent.zombieSpawnPositionX;
+   config[ServerComponentType.transform].position.y = tombstoneComponent.zombieSpawnPositionY;
+   config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
+   if (isGolden) {
+      config[ServerComponentType.zombie].zombieType = 3;
+   }
+   config[ServerComponentType.zombie].tombstone = tombstone;
+   createEntityFromConfig(config);
 
    tombstoneComponent.numZombies++;
    tombstoneComponent.isSpawningZombie = false;
@@ -131,11 +139,17 @@ export function tickTombstone(tombstone: EntityID): void {
 }
 
 export function onTombstoneDeath(tombstone: EntityID, attackingEntity: EntityID | null): void {
-   if (attackingEntity !== null) {
+   if (attackingEntity !== null && Math.random() < 0.6) {
       createItemsOverEntity(tombstone, ItemType.rock, randInt(2, 3), 40);
 
       const tombstoneTransformComponent = TransformComponentArray.getComponent(tombstone);
-      createZombie(tombstoneTransformComponent.position.copy(), 2 * Math.PI * Math.random(), false, tombstone);
+
+      const config = createZombieConfig();
+      config[ServerComponentType.transform].position.x = tombstoneTransformComponent.position.x;
+      config[ServerComponentType.transform].position.y = tombstoneTransformComponent.position.y;
+      config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
+      config[ServerComponentType.zombie].tombstone = tombstone;
+      createEntityFromConfig(config);
    }
 }
 

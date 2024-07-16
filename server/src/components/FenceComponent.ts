@@ -5,7 +5,7 @@ export interface FenceComponentParams {}
 
 export class FenceComponent {}
 
-export const FenceComponentArray = new ComponentArray<ServerComponentType.fence, FenceComponent>(true, {
+export const FenceComponentArray = new ComponentArray<FenceComponent>(ServerComponentType.fence, true, {
    serialise: serialise
 });
 

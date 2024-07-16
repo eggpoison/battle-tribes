@@ -1,10 +1,10 @@
 import { PotentialPlanSafetyData } from "webgl-test-shared/dist/ai-building-types";
-import { EntityType, EntityTypeString } from "webgl-test-shared/dist/entities";
+import { EntityID, EntityType, EntityTypeString } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
-import { StructureType } from "webgl-test-shared/dist/structures";
 import Tribe from "../Tribe";
-import Entity from "../Entity";
 import { SafetyNode, addHitboxesOccupiedNodes, getSafetyNode, safetyNodeIsInWall } from "./ai-building";
+import Board from "../Board";
+import { TransformComponentArray } from "../components/TransformComponent";
 
 const enum Vars {
    /** Minimum safety that buildings should have */
@@ -26,7 +26,8 @@ const BASE_BUILDING_WEIGHTS: Record<InfrastructureBuildingType, number> = {
    [EntityType.workbench]: 2
 };
 
-export function buildingIsInfrastructure(entityType: EntityType): boolean {
+export function buildingIsInfrastructure(entity: EntityID): boolean {
+   const entityType = Board.getEntityType(entity);
    return entityType !== EntityType.wall && entityType !== EntityType.embrasure && entityType !== EntityType.door && entityType !== EntityType.tunnel;
 }
 
@@ -171,13 +172,16 @@ const getAverageBuildingNodeSafety = (tribe: Tribe, occupiedIndexes: Set<SafetyN
    return averageSafety / occupiedIndexes.size;
 }
 
-export function getBuildingSafety(tribe: Tribe, building: Entity, safetyInfo: PotentialPlanSafetyData | null): number {
-   if (BASE_BUILDING_WEIGHTS[building.type as InfrastructureBuildingType] === undefined) {
-      throw new Error("Base buliding weight not defined for entity type " + EntityTypeString[building.type]);
+export function getBuildingSafety(tribe: Tribe, building: EntityID, safetyInfo: PotentialPlanSafetyData | null): number {
+   const entityType = Board.getEntityType(building) as InfrastructureBuildingType;
+   if (BASE_BUILDING_WEIGHTS[entityType] === undefined) {
+      throw new Error("Base buliding weight not defined for entity type " + EntityTypeString[entityType]);
    }
    
+   const transformComponent = TransformComponentArray.getComponent(building);
+   
    const occupiedIndexes = new Set<SafetyNode>();
-   addHitboxesOccupiedNodes(building.hitboxes, occupiedIndexes);
+   addHitboxesOccupiedNodes(transformComponent.hitboxes, occupiedIndexes);
 
    let safety = 0;
    if (isNaN(safety)) {
@@ -210,11 +214,11 @@ export function getBuildingSafety(tribe: Tribe, building: Entity, safetyInfo: Po
       throw new Error();
    }
    
-   safety *= BASE_BUILDING_WEIGHTS[building.type as InfrastructureBuildingType];
+   safety *= BASE_BUILDING_WEIGHTS[entityType];
 
    if (safetyInfo !== null) {
-      safetyInfo.buildingTypes.push(building.type as StructureType);
-      safetyInfo.buildingIDs.push(building.id);
+      safetyInfo.buildingTypes.push(entityType);
+      safetyInfo.buildingIDs.push(building);
       safetyInfo.buildingMinSafetys.push(minSafety);
       safetyInfo.buildingAverageSafetys.push(averageSafety);
       safetyInfo.buildingExtendedAverageSafetys.push(extendedAverageSafety);
@@ -243,7 +247,7 @@ export function getTribeSafety(tribe: Tribe): SafetyQuery {
    
    for (let i = 0; i < tribe.buildings.length; i++) {
       const building = tribe.buildings[i];
-      if (!buildingIsInfrastructure(building.type)) {
+      if (!buildingIsInfrastructure(building)) {
          continue;
       }
 
@@ -260,12 +264,14 @@ export function getTribeSafety(tribe: Tribe): SafetyQuery {
 export function tribeIsVulnerable(tribe: Tribe): boolean {
    for (let i = 0; i < tribe.buildings.length; i++) {
       const building = tribe.buildings[i];
-      if (!buildingIsInfrastructure(building.type)) {
+      if (!buildingIsInfrastructure(building)) {
          continue;
       }
 
+      const transformComponent = TransformComponentArray.getComponent(building);
+      
       const occupiedIndexes = new Set<SafetyNode>();
-      addHitboxesOccupiedNodes(building.hitboxes, occupiedIndexes);
+      addHitboxesOccupiedNodes(transformComponent.hitboxes, occupiedIndexes);
 
       const minSafety = getMinBuildingNodeSafety(tribe, occupiedIndexes);
       if (minSafety < Vars.DESIRED_SAFETY) {

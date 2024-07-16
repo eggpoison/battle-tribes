@@ -1,5 +1,4 @@
 import { EntityType } from "webgl-test-shared/dist/entities";
-import { Point } from "webgl-test-shared/dist/utils";
 import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { ClientComponentType } from "../entity-components/components";
@@ -7,8 +6,8 @@ import FootprintComponent from "../entity-components/FootprintComponent";
 import Entity from "../Entity";
 
 class Pebblum extends Entity {
-   constructor(position: Point, id: number, ageTicks: number) {
-      super(position, id, EntityType.pebblum, ageTicks);
+   constructor(id: number) {
+      super(id, EntityType.pebblum);
 
       // Nose
       const nose = new RenderPart(

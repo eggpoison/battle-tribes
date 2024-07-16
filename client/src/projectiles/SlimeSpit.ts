@@ -1,21 +1,22 @@
-import { Point, lerp, randFloat } from "webgl-test-shared/dist/utils";
+import { lerp, Point, randFloat } from "webgl-test-shared/dist/utils";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
-import Entity from "../Entity";
+import Entity, { ComponentDataRecord } from "../Entity";
 import Board from "../Board";
 import { ParticleRenderLayer, addMonocolourParticleToBufferContainer } from "../rendering/webgl/particle-rendering";
 import Particle from "../Particle";
 import { playSound } from "../sound";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 
 const POISON_COLOUR_LOW = [34/255, 12/255, 0];
 const POISON_COLOUR_HIGH = [77/255, 173/255, 38/255];
 
 class SlimeSpit extends Entity {
    private readonly renderParts: ReadonlyArray<RenderPart>;
-   constructor(position: Point, id: number, ageTicks: number) {
-      super(position, id, EntityType.slimeSpit, ageTicks);
+   constructor(id: number, componentDataRecord: ComponentDataRecord) {
+      super(id, EntityType.slimeSpit);
 
       const renderParts = new Array<RenderPart>();
 
@@ -43,7 +44,10 @@ class SlimeSpit extends Entity {
 
       this.renderParts = renderParts;
 
-      playSound("slime-spit.mp3", 0.5, 1, this.position.x, this.position.y);
+      const transformComponentData = componentDataRecord[ServerComponentType.transform]!;
+      if (transformComponentData.ageTicks <= 0) {
+         playSound("slime-spit.mp3", 0.5, 1, Point.unpackage(transformComponentData.position));
+      }
    }
 
    public tick(): void {
@@ -66,11 +70,13 @@ class SlimeSpit extends Entity {
    }
 
    private createPoisonParticle(): void {
+      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+
       // Calculate spawn position
       const offsetMagnitude = 20 * Math.random();
       const moveDirection = 2 * Math.PI * Math.random();
-      const spawnPositionX = this.position.x + offsetMagnitude * Math.sin(moveDirection);
-      const spawnPositionY = this.position.y + offsetMagnitude * Math.cos(moveDirection);
+      const spawnPositionX = transformComponent.position.x + offsetMagnitude * Math.sin(moveDirection);
+      const spawnPositionY = transformComponent.position.y + offsetMagnitude * Math.cos(moveDirection);
 
       const lifetime = randFloat(0.2, 0.3);
       

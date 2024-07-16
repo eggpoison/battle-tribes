@@ -1,13 +1,14 @@
-import Entity from "../Entity";
+import Entity, { ComponentDataRecord } from "../Entity";
 import Board from "../Board";
 import { ParticleRenderLayer, addTexturedParticleToBufferContainer } from "../rendering/webgl/particle-rendering";
 import Particle from "../Particle";
 import { createPoisonBubble } from "../particles";
 import { Sound, playSound } from "../sound";
-import { Point, lerp, randFloat } from "webgl-test-shared/dist/utils";
+import { lerp, Point, randFloat } from "webgl-test-shared/dist/utils";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { CircularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 
 // @Cleanup: move to particles file
 const createParticle = (spawnPositionX: number, spawnPositionY: number): void => {
@@ -45,10 +46,11 @@ class SpitPoison extends Entity {
    private readonly trackSource: AudioBufferSourceNode;
    private readonly sound: Sound;
    
-   constructor(position: Point, id: number, ageTicks: number) {
-      super(position, id, EntityType.spitPoison, ageTicks);
+   constructor(id: number, componentDataRecord: ComponentDataRecord) {
+      super(id, EntityType.spitPoison);
 
-      const audioInfo = playSound("acid-burn.mp3", 0.25, 1, this.position.x, this.position.y);
+      const transformComponentData = componentDataRecord[ServerComponentType.transform]!;
+      const audioInfo = playSound("acid-burn.mp3", 0.25, 1, Point.unpackage(transformComponentData.position));
       this.trackSource = audioInfo.trackSource;
       this.sound = audioInfo.sound;
 
@@ -56,7 +58,9 @@ class SpitPoison extends Entity {
    }
 
    public tick(): void {
-      const hitbox = this.hitboxes[0] as CircularHitbox;
+      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+
+      const hitbox = transformComponent.hitboxes[0] as CircularHitbox;
       const range = hitbox.radius;
 
       this.sound.volume = lerp(0.25, 0, 1 - range / SpitPoison.MAX_RANGE);
@@ -65,8 +69,8 @@ class SpitPoison extends Entity {
          // Calculate spawn position
          const offsetMagnitude = range * Math.random();
          const moveDirection = 2 * Math.PI * Math.random();
-         const spawnPositionX = this.position.x + offsetMagnitude * Math.sin(moveDirection);
-         const spawnPositionY = this.position.y + offsetMagnitude * Math.cos(moveDirection);
+         const spawnPositionX = transformComponent.position.x + offsetMagnitude * Math.sin(moveDirection);
+         const spawnPositionY = transformComponent.position.y + offsetMagnitude * Math.cos(moveDirection);
 
          createPoisonBubble(spawnPositionX, spawnPositionY, 1);
       }
@@ -77,8 +81,8 @@ class SpitPoison extends Entity {
 
       const offsetMagnitude = range * Math.random();
       const offsetDirection = 2 * Math.PI * Math.random();
-      const x = this.position.x + offsetMagnitude * Math.sin(offsetDirection);
-      const y = this.position.y + offsetMagnitude * Math.cos(offsetDirection);
+      const x = transformComponent.position.x + offsetMagnitude * Math.sin(offsetDirection);
+      const y = transformComponent.position.y + offsetMagnitude * Math.cos(offsetDirection);
 
       createParticle(x, y);
    }

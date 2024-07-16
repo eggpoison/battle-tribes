@@ -4,7 +4,6 @@ import { Settings } from "webgl-test-shared/dist/settings";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { Point } from "webgl-test-shared/dist/utils";
 import { SlimeSpitComponentArray } from "../../components/SlimeSpitComponent";
-import { createSpitPoison } from "./spit-poison";
 import { HealthComponentArray, damageEntity } from "../../components/HealthComponent";
 import { StatusEffectComponentArray, applyStatusEffect } from "../../components/StatusEffectComponent";
 import { PhysicsComponentArray, applyKnockback } from "../../components/PhysicsComponent";
@@ -14,6 +13,8 @@ import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types"
 import { HitboxCollisionType, RectangularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import Board from "../../Board";
 import { TransformComponentArray } from "../../components/TransformComponent";
+import { createSpitPoisonConfig } from "./spit-poison";
+import { createEntityFromConfig } from "../../Entity";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics
@@ -81,6 +82,11 @@ export function onSlimeSpitDeath(spit: EntityID): void {
    const spitComponent = SlimeSpitComponentArray.getComponent(spit);
    if (spitComponent.size === 1) {
       const transformComponent = TransformComponentArray.getComponent(spit);
-      createSpitPoison(transformComponent.position.copy(), 2 * Math.PI * Math.random());
+
+      const config = createSpitPoisonConfig();
+      config[ServerComponentType.transform].position.x = transformComponent.position.x;
+      config[ServerComponentType.transform].position.y = transformComponent.position.y;
+      config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
+      createEntityFromConfig(config);
    }
 }

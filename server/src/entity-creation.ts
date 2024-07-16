@@ -1,82 +1,128 @@
-import { EntityType, EntityTypeString, SlimeSize } from "webgl-test-shared/dist/entities";
-import { Point } from "webgl-test-shared/dist/utils";
-import Entity from "./Entity";
-import { createBerryBush } from "./entities/resources/berry-bush";
-import { createBoulder } from "./entities/resources/boulder";
-import { createCactus } from "./entities/resources/cactus";
-import { createCow } from "./entities/mobs/cow";
-import { createFish } from "./entities/mobs/fish";
-import { createFrozenYeti } from "./entities/mobs/frozen-yeti";
-import { createIceSpikes } from "./entities/resources/ice-spikes";
-import { createKrumblid } from "./entities/mobs/krumblid";
-import { createSlime } from "./entities/mobs/slime";
-import { createSlimewisp } from "./entities/mobs/slimewisp";
-import { createSnowball } from "./entities/snowball";
-import { createTombstone } from "./entities/tombstone";
-import { createTree } from "./entities/resources/tree";
-import { createYeti } from "./entities/mobs/yeti";
-import { createZombie } from "./entities/mobs/zombie";
-import { createSpitPoison } from "./entities/projectiles/spit-poison";
-import { createGolem } from "./entities/mobs/golem";
-import { createPebblum } from "./entities/mobs/pebblum";
-import { createTribeWorker } from "./entities/tribes/tribe-worker";
+import { EntityType, EntityTypeString } from "webgl-test-shared/dist/entities";
+import { ComponentConfig } from "./components";
+import { createBerryBushConfig } from "./entities/resources/berry-bush";
+import { createBoulderConfig } from "./entities/resources/boulder";
+import { createCactusConfig } from "./entities/resources/cactus";
+import { createCowConfig } from "./entities/mobs/cow";
+import { createFishConfig } from "./entities/mobs/fish";
+import { createFrozenYetiConfig } from "./entities/mobs/frozen-yeti";
+import { createIceSpikesConfig } from "./entities/resources/ice-spikes";
+import { createKrumblidConfig } from "./entities/mobs/krumblid";
+import { createSlimeConfig } from "./entities/mobs/slime";
+import { createSlimewispConfig } from "./entities/mobs/slimewisp";
+import { createSnowballConfig } from "./entities/snowball";
+import { createTombstoneConfig } from "./entities/tombstone";
+import { createTreeConfig } from "./entities/resources/tree";
+import { createYetiConfig } from "./entities/mobs/yeti";
+import { createZombieConfig } from "./entities/mobs/zombie";
+import { createSpitPoisonConfig } from "./entities/projectiles/spit-poison";
+import { createGolemConfig } from "./entities/mobs/golem";
+import { createPebblumConfig } from "./entities/mobs/pebblum";
+import { createTribeWorkerConfig } from "./entities/tribes/tribe-worker";
+import { createFenceConfig } from "./entities/structures/fence";
+import { createFenceGateConfig } from "./entities/structures/fence-gate";
+import { createPlantConfig } from "./entities/plant";
+import { createPlanterBoxConfig } from "./entities/structures/planter-box";
+import { createFurnaceConfig } from "./entities/structures/cooking-entities/furnace";
+import { createCampfireConfig } from "./entities/structures/cooking-entities/campfire";
+import { createWorkbenchConfig } from "./entities/structures/workbench";
+import { createFloorSpikesConfig, createWallSpikesConfig } from "./entities/structures/spikes";
+import { createFloorPunjiSticksConfig, createWallPunjiSticksConfig } from "./entities/structures/punji-sticks";
+import { createBallistaConfig } from "./entities/structures/ballista";
+import { createSlingTurretConfig } from "./entities/structures/sling-turret";
+import { createWallConfig } from "./entities/structures/wall";
+import { createDoorConfig } from "./entities/structures/door";
+import { createEmbrasureConfig } from "./entities/structures/embrasure";
+import { createTunnelConfig } from "./entities/structures/tunnel";
+import { createSlimeSpitConfig } from "./entities/projectiles/slime-spit";
+import { createWoodenArrowConfig } from "./entities/projectiles/wooden-arrow";
+import { createIceArrowConfig } from "./entities/projectiles/ice-arrow";
+import { createPlayerConfig } from "./entities/tribes/player";
+import { createIceShardConfig } from "./entities/projectiles/ice-shard";
+import { createRockSpikeConfig } from "./entities/projectiles/rock-spike";
+import { createSpearProjectileConfig } from "./entities/projectiles/spear-projectile";
+import { createBattleaxeProjectileConfig } from "./entities/projectiles/battleaxe-projectile";
+import { createBarrelConfig } from "./entities/structures/barrel";
+import { createTribeWarriorConfig } from "./entities/tribes/tribe-warrior";
+import { createTribeTotemConfig } from "./entities/structures/tribe-totem";
+import { createWorkerHutConfig } from "./entities/structures/worker-hut";
+import { createWarriorHutConfig } from "./entities/structures/warrior-hut";
+import { createBlueprintEntityConfig } from "./entities/blueprint-entity";
+import { createResearchBenchConfig } from "./entities/structures/research-bench";
+import { createHealingTotemConfig } from "./entities/structures/healing-totem";
+import { createFrostshaperConfig } from "./entities/structures/frostshaper";
+import { createStonecarvingTableConfig } from "./entities/structures/stonecarving-table";
+import { createItemEntityConfig } from "./entities/item-entity";
+import { createBallistaWoodenBoltConfig } from "./entities/projectiles/ballista-wooden-bolt";
+import { createBallistaRockConfig } from "./entities/projectiles/ballista-rock";
+import { createBallistaSlimeballConfig } from "./entities/projectiles/ballista-slimeball";
+import { createBallistaFrostcicleConfig } from "./entities/projectiles/ballista-frostcicle";
+import { createSlingTurretRockConfig } from "./entities/projectiles/sling-turret-rock";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 
-export function createEntity(position: Point, entityType: EntityType): Entity {
+// @Robustness: from the given entity type, deduce which component params will be returned.
+// - Will require defining the component configs in a variable to be analysed at compile-time, not in functions
+export function createEntityConfig(entityType: EntityType): ComponentConfig<ServerComponentType> {
    switch (entityType) {
-      case EntityType.berryBush: return createBerryBush(position, 2 * Math.PI * Math.random());
-      case EntityType.boulder: return createBoulder(position, 2 * Math.PI * Math.random());
-      case EntityType.cactus: return createCactus(position, 2 * Math.PI * Math.random());
-      case EntityType.cow: return createCow(position, 2 * Math.PI * Math.random());
-      case EntityType.fish: return createFish(position);
-      case EntityType.frozenYeti: return createFrozenYeti(position, 2 * Math.PI * Math.random());
-      case EntityType.iceSpikes: return createIceSpikes(position, 2 * Math.PI * Math.random());
-      case EntityType.krumblid: return createKrumblid(position);
-      case EntityType.slime: return createSlime(position, SlimeSize.small, []);
-      case EntityType.slimewisp: return createSlimewisp(position);
-      case EntityType.snowball: return createSnowball(position).entity;
-      case EntityType.tombstone: return createTombstone(position, 2 * Math.PI * Math.random());
-      case EntityType.tree: return createTree(position, 2 * Math.PI * Math.random());
-      case EntityType.yeti: return createYeti(position);
-      case EntityType.zombie: return createZombie(position, 2 * Math.PI * Math.random(), false, 0);
-      case EntityType.spitPoison: return createSpitPoison(position, 2 * Math.PI * Math.random());
-      case EntityType.golem: return createGolem(position);
-      case EntityType.pebblum: return createPebblum(position, 2 * Math.PI * Math.random(), 0);
-      case EntityType.tribeWorker: return createTribeWorker(position, 2 * Math.PI * Math.random(), -1, 0).entity;
-      case EntityType.fence:
-      case EntityType.fenceGate:
-      case EntityType.plant:
-      case EntityType.planterBox:
-      case EntityType.furnace:
-      case EntityType.campfire:
-      case EntityType.workbench:
-      case EntityType.floorSpikes:
-      case EntityType.wallSpikes:
-      case EntityType.floorPunjiSticks:
-      case EntityType.wallPunjiSticks:
-      case EntityType.ballista:
-      case EntityType.slingTurret:
-      case EntityType.wall:
-      case EntityType.door:
-      case EntityType.embrasure:
-      case EntityType.tunnel:
-      case EntityType.slimeSpit:
-      case EntityType.woodenArrowProjectile:
-      case EntityType.iceArrow:
-      case EntityType.player:
-      case EntityType.iceShardProjectile:
-      case EntityType.rockSpikeProjectile:
-      case EntityType.spearProjectile:
-      case EntityType.battleaxeProjectile:
-      case EntityType.barrel:
-      case EntityType.tribeWarrior:
-      case EntityType.tribeTotem:
-      case EntityType.workerHut:
-      case EntityType.warriorHut:
-      case EntityType.blueprintEntity:
-      case EntityType.researchBench:
-      case EntityType.healingTotem:
-      case EntityType.frostshaper:
-      case EntityType.stonecarvingTable:
-      case EntityType.itemEntity: throw new Error("Can't dynamically create entity of type '" + EntityTypeString[entityType] + "'.");
+      case EntityType.berryBush: return createBerryBushConfig() as any;
+      case EntityType.boulder: return createBoulderConfig() as any;
+      case EntityType.cactus: return createCactusConfig() as any;
+      case EntityType.cow: return createCowConfig() as any;
+      case EntityType.fish: return createFishConfig() as any;
+      case EntityType.frozenYeti: return createFrozenYetiConfig() as any;
+      case EntityType.iceSpikes: return createIceSpikesConfig() as any;
+      case EntityType.krumblid: return createKrumblidConfig() as any;
+      case EntityType.slime: return createSlimeConfig() as any;
+      case EntityType.slimewisp: return createSlimewispConfig() as any;
+      case EntityType.snowball: return createSnowballConfig() as any;
+      case EntityType.tombstone: return createTombstoneConfig() as any;
+      case EntityType.tree: return createTreeConfig() as any;
+      case EntityType.yeti: return createYetiConfig() as any;
+      case EntityType.zombie: return createZombieConfig() as any;
+      case EntityType.spitPoison: return createSpitPoisonConfig() as any;
+      case EntityType.golem: return createGolemConfig() as any;
+      case EntityType.pebblum: return createPebblumConfig() as any;
+      case EntityType.tribeWorker: return createTribeWorkerConfig() as any;
+      case EntityType.fence: return createFenceConfig() as any;
+      case EntityType.fenceGate: return createFenceGateConfig() as any;
+      case EntityType.plant: return createPlantConfig() as any;
+      case EntityType.planterBox: return createPlanterBoxConfig() as any;
+      case EntityType.furnace: return createFurnaceConfig() as any;
+      case EntityType.campfire: return createCampfireConfig() as any;
+      case EntityType.workbench: return createWorkbenchConfig() as any;
+      case EntityType.floorSpikes: return createFloorSpikesConfig() as any;
+      case EntityType.wallSpikes: return createWallSpikesConfig() as any;
+      case EntityType.floorPunjiSticks: return createFloorPunjiSticksConfig() as any;
+      case EntityType.wallPunjiSticks: return createWallPunjiSticksConfig() as any;
+      case EntityType.ballista: return createBallistaConfig() as any;
+      case EntityType.slingTurret: return createSlingTurretConfig() as any;
+      case EntityType.wall: return createWallConfig() as any;
+      case EntityType.door: return createDoorConfig() as any;
+      case EntityType.embrasure: return createEmbrasureConfig() as any;
+      case EntityType.tunnel: return createTunnelConfig() as any;
+      case EntityType.slimeSpit: return createSlimeSpitConfig() as any;
+      case EntityType.woodenArrow: return createWoodenArrowConfig() as any;
+      case EntityType.ballistaWoodenBolt: return createBallistaWoodenBoltConfig() as any;
+      case EntityType.ballistaRock: return createBallistaRockConfig() as any;
+      case EntityType.ballistaSlimeball: return createBallistaSlimeballConfig() as any;
+      case EntityType.ballistaFrostcicle: return createBallistaFrostcicleConfig() as any;
+      case EntityType.slingTurretRock: return createSlingTurretRockConfig() as any;
+      case EntityType.iceArrow: return createIceArrowConfig() as any;
+      case EntityType.player: return createPlayerConfig() as any;
+      case EntityType.iceShardProjectile: return createIceShardConfig() as any;
+      case EntityType.rockSpikeProjectile: return createRockSpikeConfig() as any;
+      case EntityType.spearProjectile: return createSpearProjectileConfig() as any;
+      case EntityType.battleaxeProjectile: return createBattleaxeProjectileConfig() as any;
+      case EntityType.barrel: return createBarrelConfig() as any;
+      case EntityType.tribeWarrior: return createTribeWarriorConfig() as any;
+      case EntityType.tribeTotem: return createTribeTotemConfig() as any;
+      case EntityType.workerHut: return createWorkerHutConfig() as any;
+      case EntityType.warriorHut: return createWarriorHutConfig() as any;
+      case EntityType.blueprintEntity: return createBlueprintEntityConfig() as any;
+      case EntityType.researchBench: return createResearchBenchConfig() as any;
+      case EntityType.healingTotem: return createHealingTotemConfig() as any;
+      case EntityType.frostshaper: return createFrostshaperConfig() as any;
+      case EntityType.stonecarvingTable: return createStonecarvingTableConfig() as any;
+      case EntityType.itemEntity: return createItemEntityConfig() as any;
    }
 }

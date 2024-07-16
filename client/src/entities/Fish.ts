@@ -1,4 +1,4 @@
-import { Point, randFloat, randInt } from "webgl-test-shared/dist/utils";
+import { randFloat, randInt } from "webgl-test-shared/dist/utils";
 import { EntityType, FishColour } from "webgl-test-shared/dist/entities";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { HitData } from "webgl-test-shared/dist/client-server-types";
@@ -18,8 +18,8 @@ const TEXTURE_SOURCES: Record<FishColour, string> = {
 };
 
 class Fish extends Entity {
-   constructor(position: Point, id: number, ageTicks: number, componentDataRecord: ComponentDataRecord) {
-      super(position, id, EntityType.fish, ageTicks);
+   constructor(id: number, componentDataRecord: ComponentDataRecord) {
+      super(id, EntityType.fish);
 
       const fishComponentData = componentDataRecord[ServerComponentType.fish]!;
 
@@ -36,11 +36,12 @@ class Fish extends Entity {
    public tick(): void {
       super.tick();
 
-      if (this.tile.type !== TileType.water && Board.tickIntervalHasPassed(0.4)) {
+      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      if (transformComponent.tile.type !== TileType.water && Board.tickIntervalHasPassed(0.4)) {
          for (let i = 0; i < 8; i++) {
             const spawnOffsetDirection = 2 * Math.PI * Math.random();
-            const spawnPositionX = this.position.x + 8 * Math.sin(spawnOffsetDirection);
-            const spawnPositionY = this.position.y + 8 * Math.cos(spawnOffsetDirection);
+            const spawnPositionX = transformComponent.position.x + 8 * Math.sin(spawnOffsetDirection);
+            const spawnPositionY = transformComponent.position.y + 8 * Math.cos(spawnOffsetDirection);
 
             createWaterSplashParticle(spawnPositionX, spawnPositionY);
          }
@@ -48,19 +49,23 @@ class Fish extends Entity {
    }
 
    protected onHit(hitData: HitData): void {
+      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+
       // Blood particles
       for (let i = 0; i < 5; i++) {
-         const position = this.position.offset(16, 2 * Math.PI * Math.random());
+         const position = transformComponent.position.offset(16, 2 * Math.PI * Math.random());
          createBloodParticle(Math.random() < 0.6 ? BloodParticleSize.small : BloodParticleSize.large, position.x, position.y, 2 * Math.PI * Math.random(), randFloat(150, 250), true);
       }
 
-      playSound(("fish-hurt-" + randInt(1, 4) + ".mp3") as AudioFilePath, 0.4, 1, this.position.x, this.position.y);
+      playSound(("fish-hurt-" + randInt(1, 4) + ".mp3") as AudioFilePath, 0.4, 1, transformComponent.position);
    }
 
    public onDie(): void {
+      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+
       createBloodParticleFountain(this, 0.1, 0.8);
       
-      playSound("fish-die-1.mp3", 0.4, 1, this.position.x, this.position.y);
+      playSound("fish-die-1.mp3", 0.4, 1, transformComponent.position);
    }
 }
 

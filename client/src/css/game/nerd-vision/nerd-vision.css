@@ -119,12 +119,14 @@
 .devmode-scrollable-options .option {
    min-width: 5rem;
    color: #ccc;
-   text-align: center;
    list-style-type: none;
    padding: 0.3rem 0;
    cursor: pointer;
    white-space: pre;
    position: relative;
+}
+.devmode-scrollable-options .option span.text {
+   margin-left: 0.5rem;
 }
 .devmode-scrollable-options .option.selected {
    color: #fff;
@@ -137,7 +139,7 @@
    border-radius: 100%;
    position: absolute;
    top: 50%;
-   left: 10px;
+   left: 0;
    transform: translate(-50%, -50%);
 }
 

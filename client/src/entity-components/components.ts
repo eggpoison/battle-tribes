@@ -21,7 +21,7 @@ import ItemComponent from "./ItemComponent";
 import TombstoneComponent from "./TombstoneComponent";
 import TreeComponent from "./TreeComponent";
 import BlueprintComponent from "./BlueprintComponent";
-import ArrowComponent from "./ArrowComponent";
+import ProjectileComponent from "./ArrowComponent";
 import YetiComponent from "./YetiComponent";
 import FrozenYetiComponent from "./FrozenYetiComponent";
 import FootprintComponent from "./FootprintComponent";
@@ -58,6 +58,7 @@ import PebblumComponent from "./PebblumComponent";
 import SlimewispComponent from "./SlimewispComponent";
 import ThrowingProjectileComponent from "./ThrowingProjectileComponent";
 import TribeWarriorComponent from "./TribeWarriorComponent";
+import TransformComponent from "./TransformComponent";
 
 export enum ClientComponentType {
    equipment,
@@ -65,6 +66,7 @@ export enum ClientComponentType {
 }
 
 const ServerComponents = {
+   [ServerComponentType.transform]: (): TransformComponent => 0 as any,
    [ServerComponentType.cow]: (): CowComponent => 0 as any,
    [ServerComponentType.turret]: (): TurretComponent => 0 as any,
    [ServerComponentType.tribe]: (): TribeComponent => 0 as any,
@@ -85,7 +87,7 @@ const ServerComponents = {
    [ServerComponentType.tombstone]: (): TombstoneComponent => 0 as any,
    [ServerComponentType.tree]: (): TreeComponent => 0 as any,
    [ServerComponentType.blueprint]: (): BlueprintComponent => 0 as any,
-   [ServerComponentType.arrow]: (): ArrowComponent => 0 as any,
+   [ServerComponentType.projectile]: (): ProjectileComponent => 0 as any,
    [ServerComponentType.yeti]: (): YetiComponent => 0 as any,
    [ServerComponentType.frozenYeti]: (): FrozenYetiComponent => 0 as any,
    [ServerComponentType.totemBanner]: (): TotemBannerComponent => 0 as any,
@@ -131,6 +133,7 @@ export type ClientComponentClass<T extends ClientComponentType> = ReturnType<typ
 
 export function createComponent<T extends ServerComponentType>(entity: Entity, data: ComponentData<T>): ServerComponent {
    switch (data.componentType) {
+      case ServerComponentType.transform: return new TransformComponent(entity, data);
       case ServerComponentType.cow: return new CowComponent(entity, data);
       case ServerComponentType.turret: return new TurretComponent(entity, data);
       case ServerComponentType.tribe: return new TribeComponent(entity, data);
@@ -151,7 +154,7 @@ export function createComponent<T extends ServerComponentType>(entity: Entity, d
       case ServerComponentType.tombstone: return new TombstoneComponent(entity, data);
       case ServerComponentType.tree: return new TreeComponent(entity, data);
       case ServerComponentType.blueprint: return new BlueprintComponent(entity, data);
-      case ServerComponentType.arrow: return new ArrowComponent(entity, data);
+      case ServerComponentType.projectile: return new ProjectileComponent(entity, data);
       case ServerComponentType.yeti: return new YetiComponent(entity, data);
       case ServerComponentType.frozenYeti: return new FrozenYetiComponent(entity, data);
       case ServerComponentType.totemBanner: return new TotemBannerComponent(entity, data);

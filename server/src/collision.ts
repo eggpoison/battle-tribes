@@ -1,7 +1,6 @@
 import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { Point } from "webgl-test-shared/dist/utils";
-import Entity from "./Entity";
 import { PhysicsComponent, PhysicsComponentArray } from "./components/PhysicsComponent";
 import { onFrozenYetiCollision } from "./entities/mobs/frozen-yeti";
 import { onGolemCollision } from "./entities/mobs/golem";
@@ -98,7 +97,7 @@ const resolveSoftCollision = (transformComponent: TransformComponent, physicsCom
 
 export function collide(entity: EntityID, pushingEntity: EntityID, pushedHitboxIdx: number, pushingHitboxIdx: number): void {
    const pushedEntityTransformComponent = TransformComponentArray.getComponent(entity);
-   const pushingEntityTransformComponent = TransformComponentArray.getComponent(entity);
+   const pushingEntityTransformComponent = TransformComponentArray.getComponent(pushingEntity);
    
    const pushedHitbox = pushedEntityTransformComponent.hitboxes[pushedHitboxIdx];
    const pushingHitbox = pushingEntityTransformComponent.hitboxes[pushingHitboxIdx];
@@ -131,7 +130,7 @@ export function collide(entity: EntityID, pushingEntity: EntityID, pushedHitboxI
    switch (entityType) {
       case EntityType.player: onPlayerCollision(entity, pushingEntity); break;
       case EntityType.tribeWorker:
-      case EntityType.tribeWarrior: onTribesmanCollision(entity.id, pushingEntity); break;
+      case EntityType.tribeWarrior: onTribesmanCollision(entity, pushingEntity); break;
       case EntityType.iceSpikes: onIceSpikesCollision(entity, pushingEntity, collisionPoint); break;
       case EntityType.cactus: onCactusCollision(entity, pushingEntity, collisionPoint); break;
       case EntityType.zombie: onZombieCollision(entity, pushingEntity, collisionPoint); break;
@@ -162,13 +161,16 @@ export function collide(entity: EntityID, pushingEntity: EntityID, pushedHitboxI
 }
 
 /** If no collision is found, does nothing. */
-export function resolveEntityTileCollision(entity: Entity, hitbox: Hitbox, tileX: number, tileY: number): void {
+export function resolveEntityTileCollision(entity: EntityID, hitbox: Hitbox, tileX: number, tileY: number): void {
    // @Speed
    const tileHitbox = new RectangularHitbox(1, new Point(0, 0), HitboxCollisionType.hard, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, Settings.TILE_SIZE, Settings.TILE_SIZE, 0);
    updateHitbox(tileHitbox, (tileX + 0.5) * Settings.TILE_SIZE, (tileY + 0.5) * Settings.TILE_SIZE, 0);
    
    if (hitbox.isColliding(tileHitbox)) {
+      const transformComponent = TransformComponentArray.getComponent(entity);
+      const physicsComponent = PhysicsComponentArray.getComponent(entity);
+      
       const pushInfo = getCollisionPushInfo(hitbox, tileHitbox);
-      resolveHardCollision(entity, pushInfo);
+      resolveHardCollision(transformComponent, physicsComponent, pushInfo);
    }
 }

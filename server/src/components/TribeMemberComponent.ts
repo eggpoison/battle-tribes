@@ -1,19 +1,20 @@
 import { ServerComponentType, TribeMemberComponentData } from "webgl-test-shared/dist/components";
 import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
 import { TitleGenerationInfo, TribesmanTitle, TRIBESMAN_TITLE_RECORD } from "webgl-test-shared/dist/titles";
-import { TribeType } from "webgl-test-shared/dist/tribes";
+import { TRIBE_INFO_RECORD, TribeType } from "webgl-test-shared/dist/tribes";
 import { randInt } from "webgl-test-shared/dist/utils";
 import { ComponentArray } from "./ComponentArray";
 import { generateTitle } from "../tribesman-title-generation";
 import Board from "../Board";
-import { createNewInventory } from "./InventoryComponent";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { TribeComponentArray } from "./TribeComponent";
 import { PlayerComponentArray } from "./PlayerComponent";
 import { InventoryName } from "webgl-test-shared/dist/items/items";
-import { ComponentRecord } from "../components";
+import { ComponentConfig } from "../components";
+import { HealthComponentArray } from "./HealthComponent";
 
 export interface TribeMemberComponentParams {
+   // @Cleanup: this all sucks
    readonly tribeType: TribeType;
    readonly entityType: EntityType;
 }
@@ -45,7 +46,7 @@ export class TribeMemberComponent {
    }
 }
 
-export const TribeMemberComponentArray = new ComponentArray<ServerComponentType.tribeMember, TribeMemberComponent>(true, {
+export const TribeMemberComponentArray = new ComponentArray<TribeMemberComponent>(ServerComponentType.tribeMember, true, {
    onJoin: onJoin,
    onRemove: onRemove,
    onInitialise: onInitialise,
@@ -60,37 +61,110 @@ const getHotbarSize = (entityType: TribesmanEntityType): number => {
    }
 }
 
-function onJoin(entityID: number): void {
-   const tribeComponent = TribeComponentArray.getComponent(entityID);
-   tribeComponent.tribe.registerNewTribeMember(entityID);
+function onInitialise(config: ComponentConfig<ServerComponentType.health | ServerComponentType.tribe | ServerComponentType.inventory | ServerComponentType.inventoryUse>, _: unknown, entityType: EntityType): void {
+   // 
+   // Create inventories
+   // 
+
+   // Hotbar
+   config[ServerComponentType.inventory].inventories.push({
+      inventoryName: InventoryName.hotbar,
+      width: getHotbarSize(entityType as TribesmanEntityType),
+      height: 1,
+      options: { acceptsPickedUpItems: true, isDroppedOnDeath: true },
+      items: []
+   });
+   
+   // Offhand
+   config[ServerComponentType.inventory].inventories.push({
+      inventoryName: InventoryName.offhand,
+      width: 1,
+      height: 1,
+      options: { acceptsPickedUpItems: false, isDroppedOnDeath: true },
+      items: []
+   });
+   
+   // Crafting output slot
+   config[ServerComponentType.inventory].inventories.push({
+      inventoryName: InventoryName.craftingOutputSlot,
+      width: 1,
+      height: 1,
+      options: { acceptsPickedUpItems: false, isDroppedOnDeath: true },
+      items: []
+   });
+   
+   // Held item slot
+   config[ServerComponentType.inventory].inventories.push({
+      inventoryName: InventoryName.heldItemSlot,
+      width: 1,
+      height: 1,
+      options: { acceptsPickedUpItems: false, isDroppedOnDeath: true },
+      items: []
+   });
+   
+   // Armour slot
+   config[ServerComponentType.inventory].inventories.push({
+      inventoryName: InventoryName.armourSlot,
+      width: 1,
+      height: 1,
+      options: { acceptsPickedUpItems: false, isDroppedOnDeath: true },
+      items: []
+   });
+   
+   // Backpack slot
+   config[ServerComponentType.inventory].inventories.push({
+      inventoryName: InventoryName.backpackSlot,
+      width: 1,
+      height: 1,
+      options: { acceptsPickedUpItems: false, isDroppedOnDeath: true },
+      items: []
+   });
+   
+   // Glove slot
+   config[ServerComponentType.inventory].inventories.push({
+      inventoryName: InventoryName.gloveSlot,
+      width: 1,
+      height: 1,
+      options: { acceptsPickedUpItems: false, isDroppedOnDeath: true },
+      items: []
+   });
+   
+   // Backpack
+   config[ServerComponentType.inventory].inventories.push({
+      inventoryName: InventoryName.backpack,
+      width: 0,
+      height: 0,
+      options: { acceptsPickedUpItems: false, isDroppedOnDeath: true },
+      items: []
+   });
+
+   config[ServerComponentType.inventoryUse].usedInventoryNames.push(InventoryName.hotbar);
+   config[ServerComponentType.inventoryUse].usedInventoryNames.push(InventoryName.offhand);
+
+   // @Hack
+   const tribe = config[ServerComponentType.tribe].tribe!;
+   const tribeInfo = TRIBE_INFO_RECORD[tribe.tribeType];
+   switch (entityType) {
+      case EntityType.player:
+      case EntityType.tribeWarrior: {
+         config[ServerComponentType.health].maxHealth = tribeInfo.maxHealthPlayer;
+         break;
+      }
+      case EntityType.tribeWorker: {
+         config[ServerComponentType.health].maxHealth = tribeInfo.maxHealthWorker;
+         break;
+      }
+   }
+}
+
+function onJoin(entity: EntityID): void {
+   const tribeComponent = TribeComponentArray.getComponent(entity);
+   tribeComponent.tribe.registerNewTribeMember(entity);
 }
 
 function onRemove(entityID: number): void {
    const tribeComponent = TribeComponentArray.getComponent(entityID);
    tribeComponent.tribe.registerTribeMemberDeath(entityID);
-}
-
-function onInitialise(entity: EntityID, componentRecord: ComponentRecord): void {
-   // 
-   // Create inventories
-   // 
-
-   const inventoryComponent = componentRecord[ServerComponentType.inventory]!;
-   const inventoryUseComponent = componentRecord[ServerComponentType.inventoryUse]!;
-   
-   const hotbarSize = getHotbarSize(Board.getEntityType(entity) as TribesmanEntityType);
-   const hotbarInventory = createNewInventory(inventoryComponent, InventoryName.hotbar, hotbarSize, 1, { acceptsPickedUpItems: true, isDroppedOnDeath: true });
-   inventoryUseComponent.addInventoryUseInfo(hotbarInventory);
-
-   const offhandInventory = createNewInventory(inventoryComponent, InventoryName.offhand, 1, 1, { acceptsPickedUpItems: false, isDroppedOnDeath: true });
-   inventoryUseComponent.addInventoryUseInfo(offhandInventory);
-
-   createNewInventory(inventoryComponent, InventoryName.craftingOutputSlot, 1, 1, { acceptsPickedUpItems: false, isDroppedOnDeath: true });
-   createNewInventory(inventoryComponent, InventoryName.heldItemSlot, 1, 1, { acceptsPickedUpItems: false, isDroppedOnDeath: true });
-   createNewInventory(inventoryComponent, InventoryName.armourSlot, 1, 1, { acceptsPickedUpItems: false, isDroppedOnDeath: true });
-   createNewInventory(inventoryComponent, InventoryName.backpackSlot, 1, 1, { acceptsPickedUpItems: false, isDroppedOnDeath: true });
-   createNewInventory(inventoryComponent, InventoryName.gloveSlot, 1, 1, { acceptsPickedUpItems: false, isDroppedOnDeath: true });
-   createNewInventory(inventoryComponent, InventoryName.backpack, 0, 0, { acceptsPickedUpItems: false, isDroppedOnDeath: true });
 }
 
 function serialise(entityID: number): TribeMemberComponentData {

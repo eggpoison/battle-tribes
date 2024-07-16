@@ -1,15 +1,22 @@
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
-import { CactusBodyFlowerData, CactusLimbData, CactusLimbFlowerData, EntityType, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
+import { CactusBodyFlowerData, CactusLimbData, CactusLimbFlowerData, EntityID, EntityType, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
 import { randInt, lerp, randFloat, Point } from "webgl-test-shared/dist/utils";
-import Entity from "../../Entity";
-import { HealthComponent, HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
+import { HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
 import { createItemsOverEntity } from "../../entity-shared";
-import { CactusComponent, CactusComponentArray } from "../../components/CactusComponent";
-import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
 import { applyKnockback } from "../../components/PhysicsComponent";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
-import { CircularHitbox, HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
+import { CircularHitbox, Hitbox, HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { ItemType } from "webgl-test-shared/dist/items/items";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ComponentConfig } from "../../components";
+import { StatusEffect } from "webgl-test-shared/dist/status-effects";
+import Board from "../../Board";
+import { TransformComponentArray } from "../../components/TransformComponent";
+
+type ComponentTypes = ServerComponentType.transform
+   | ServerComponentType.health
+   | ServerComponentType.statusEffect
+   | ServerComponentType.cactus;
 
 const RADIUS = 40;
 /** Amount the hitbox is brought in. */
@@ -71,11 +78,10 @@ const generateRandomLimbs = (): ReadonlyArray<CactusLimbData> => {
    return limbs;
 }
 
-export function createCactus(position: Point, rotation: number): Entity {
-   const cactus = new Entity(position, rotation, EntityType.cactus, COLLISION_BITS.cactus, DEFAULT_COLLISION_MASK);
+export function createCactusConfig(): ComponentConfig<ComponentTypes> {
+   const hitboxes = new Array<Hitbox>();
 
-   const hitbox = new CircularHitbox(1, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, RADIUS - HITBOX_PADDING);
-   cactus.addHitbox(hitbox);
+   hitboxes.push(new CircularHitbox(1, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, RADIUS - HITBOX_PADDING));
 
    const flowers = generateRandomFlowers();
    const limbs = generateRandomLimbs();
@@ -84,38 +90,56 @@ export function createCactus(position: Point, rotation: number): Entity {
    for (let i = 0; i < limbs.length; i++) {
       const limb = limbs[i]
       const hitbox = new CircularHitbox(0.4, Point.fromVectorForm(37, limb.direction), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, 18);
-      cactus.addHitbox(hitbox);
+      hitboxes.push(hitbox);
    }
 
-   HealthComponentArray.addComponent(cactus.id, new HealthComponent(15));
-   StatusEffectComponentArray.addComponent(cactus.id, new StatusEffectComponent(0));
-   CactusComponentArray.addComponent(cactus.id, new CactusComponent(flowers, limbs));
-   
-   return cactus;
+   return {
+      [ServerComponentType.transform]: {
+         position: new Point(0, 0),
+         rotation: 0,
+         type: EntityType.cactus,
+         collisionBit: COLLISION_BITS.cactus,
+         collisionMask: DEFAULT_COLLISION_MASK,
+         hitboxes: hitboxes
+      },
+      [ServerComponentType.health]: {
+         maxHealth: 15
+      },
+      [ServerComponentType.statusEffect]: {
+         statusEffectImmunityBitset: StatusEffect.bleeding
+      },
+      [ServerComponentType.cactus]: {
+         flowers: flowers,
+         limbs: limbs
+      }
+   };
 }
 
-export function onCactusCollision(cactus: Entity, collidingEntity: Entity, collisionPoint: Point): void {
-   if (collidingEntity.type === EntityType.itemEntity) {
-      collidingEntity.destroy();
+export function onCactusCollision(cactus: EntityID, collidingEntity: EntityID, collisionPoint: Point): void {
+   if (Board.getEntityType(collidingEntity) === EntityType.itemEntity) {
+      Board.destroyEntity(collidingEntity);
       return;
    }
    
-   if (!HealthComponentArray.hasComponent(collidingEntity.id)) {
+   if (!HealthComponentArray.hasComponent(collidingEntity)) {
       return;
    }
 
-   const healthComponent = HealthComponentArray.getComponent(collidingEntity.id);
+   const healthComponent = HealthComponentArray.getComponent(collidingEntity);
    if (!canDamageEntity(healthComponent, "cactus")) {
       return;
    }
 
-   const hitDirection = cactus.position.calculateAngleBetween(collidingEntity.position);
+   const transformComponent = TransformComponentArray.getComponent(cactus);
+   const collidingEntityTransformComponent = TransformComponentArray.getComponent(collidingEntity);
+
+   const hitDirection = transformComponent.position.calculateAngleBetween(collidingEntityTransformComponent.position);
 
    damageEntity(collidingEntity, cactus, 1, PlayerCauseOfDeath.cactus, AttackEffectiveness.effective, collisionPoint, 0);
    applyKnockback(collidingEntity, 200, hitDirection);
    addLocalInvulnerabilityHash(healthComponent, "cactus", 0.3);
 }
 
-export function onCactusDeath(cactus: Entity): void {
+export function onCactusDeath(cactus: EntityID): void {
    createItemsOverEntity(cactus, ItemType.cactus_spine, randInt(2, 5), 40);
 }

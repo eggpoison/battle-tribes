@@ -1,10 +1,10 @@
-import { EntityType } from "webgl-test-shared/dist/entities";
+import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { CookingIngredientItemType, FuelSourceItemType } from "webgl-test-shared/dist/cooking-info";
-import Entity from "../../../Entity";
 import { InventoryComponentArray, addItemToInventory, consumeItemTypeFromInventory, getInventory } from "../../../components/InventoryComponent";
 import { CookingComponentArray } from "../../../components/CookingComponent";
 import { ItemType, InventoryName, ItemTypeString } from "webgl-test-shared/dist/items/items";
+import Board from "../../../Board";
 
 export interface HeatingRecipe {
    readonly ingredientType: CookingIngredientItemType;
@@ -66,21 +66,21 @@ const getHeatingRecipeByIngredientType = (heatingEntityType: EntityType, ingredi
    return null;
 }
 
-export function tickCookingEntity(entity: Entity): void {
-   const cookingEntityComponent = CookingComponentArray.getComponent(entity.id);
-   const inventoryComponent = InventoryComponentArray.getComponent(entity.id);
+export function tickCookingEntity(entity: EntityID): void {
+   const cookingComponent = CookingComponentArray.getComponent(entity);
+   const inventoryComponent = InventoryComponentArray.getComponent(entity);
 
    const fuelInventory = getInventory(inventoryComponent, InventoryName.fuelInventory);
    const ingredientInventory = getInventory(inventoryComponent, InventoryName.ingredientInventory);
    
    const ingredient = ingredientInventory.itemSlots[1];
    if (typeof ingredient !== "undefined") {
-      cookingEntityComponent.currentRecipe = getHeatingRecipeByIngredientType(entity.type, ingredient.type);
+      cookingComponent.currentRecipe = getHeatingRecipeByIngredientType(Board.getEntityType(entity)!, ingredient.type);
    }
    
-   if (cookingEntityComponent.currentRecipe !== null) {
+   if (cookingComponent.currentRecipe !== null) {
       // If the heating entity needs more heat, attempt to use a fuel item
-      if (cookingEntityComponent.remainingHeatSeconds <= 0) {
+      if (cookingComponent.remainingHeatSeconds <= 0) {
          const fuel = fuelInventory.itemSlots[1];
          if (typeof fuel !== "undefined") {
             if (!FUEL_SOURCES.hasOwnProperty(fuel.type)) {
@@ -88,26 +88,26 @@ export function tickCookingEntity(entity: Entity): void {
                return;
             }
    
-            cookingEntityComponent.remainingHeatSeconds += FUEL_SOURCES[fuel.type as keyof typeof FUEL_SOURCES];
+            cookingComponent.remainingHeatSeconds += FUEL_SOURCES[fuel.type as keyof typeof FUEL_SOURCES];
             consumeItemTypeFromInventory(inventoryComponent, InventoryName.fuelInventory, fuel.type, 1);
          }
       }
 
-      if (cookingEntityComponent.remainingHeatSeconds > 0) {
-         cookingEntityComponent.heatingTimer += Settings.I_TPS;
-         if (cookingEntityComponent.heatingTimer >= cookingEntityComponent.currentRecipe.cookTime) {
+      if (cookingComponent.remainingHeatSeconds > 0) {
+         cookingComponent.heatingTimer += Settings.I_TPS;
+         if (cookingComponent.heatingTimer >= cookingComponent.currentRecipe.cookTime) {
             // Remove from ingredient inventory and add to output inventory
 
-            consumeItemTypeFromInventory(inventoryComponent, InventoryName.ingredientInventory, cookingEntityComponent.currentRecipe.ingredientType, cookingEntityComponent.currentRecipe.ingredientAmount);
+            consumeItemTypeFromInventory(inventoryComponent, InventoryName.ingredientInventory, cookingComponent.currentRecipe.ingredientType, cookingComponent.currentRecipe.ingredientAmount);
 
             const outputInventory = getInventory(inventoryComponent, InventoryName.outputInventory);
-            addItemToInventory(outputInventory, cookingEntityComponent.currentRecipe.productType, cookingEntityComponent.currentRecipe.productAmount);
+            addItemToInventory(outputInventory, cookingComponent.currentRecipe.productType, cookingComponent.currentRecipe.productAmount);
 
-            cookingEntityComponent.heatingTimer = 0;
-            cookingEntityComponent.currentRecipe = null;
+            cookingComponent.heatingTimer = 0;
+            cookingComponent.currentRecipe = null;
          }
 
-         cookingEntityComponent.remainingHeatSeconds -= Settings.I_TPS;
+         cookingComponent.remainingHeatSeconds -= Settings.I_TPS;
       }
    }
 }

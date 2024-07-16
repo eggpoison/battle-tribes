@@ -18,7 +18,6 @@ type ComponentTypes = ServerComponentType.transform
 
 const ARROW_WIDTH = 5 * 4;
 const ARROW_HEIGHT = 14 * 4;
-const ARROW_DESTROY_DISTANCE = Math.sqrt(Math.pow(ARROW_WIDTH / 2, 2) + Math.pow(ARROW_HEIGHT, 2));
 
 export function createIceArrowConfig(): ComponentConfig<ComponentTypes> {
    return {
@@ -39,7 +38,8 @@ export function createIceArrowConfig(): ComponentConfig<ComponentTypes> {
          isImmovable: true
       },
       [ServerComponentType.tribe]: {
-         tribeID: null
+         tribe: null,
+         tribeType: 0
       },
       [ServerComponentType.projectile]: {
          owner: 0

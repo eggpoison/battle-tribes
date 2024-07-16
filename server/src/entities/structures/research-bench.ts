@@ -2,29 +2,41 @@ import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/c
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { Point } from "webgl-test-shared/dist/utils";
-import Entity from "../../Entity";
-import { HealthComponent, HealthComponentArray } from "../../components/HealthComponent";
-import { StatusEffectComponent, StatusEffectComponentArray } from "../../components/StatusEffectComponent";
-import Tribe from "../../Tribe";
-import { TribeComponent, TribeComponentArray } from "../../components/TribeComponent";
-import { ResearchBenchComponent, ResearchBenchComponentArray } from "../../components/ResearchBenchComponent";
-import { StructureComponent, StructureComponentArray } from "../../components/StructureComponent";
-import { StructureConnectionInfo } from "webgl-test-shared/dist/structures";
+import { createEmptyStructureConnectionInfo } from "webgl-test-shared/dist/structures";
 import { createResearchBenchHitboxes } from "webgl-test-shared/dist/hitboxes/entity-hitbox-creation";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ComponentConfig } from "../../components";
 
-export function createResearchBench(position: Point, rotation: number, tribe: Tribe, connectionInfo: StructureConnectionInfo): Entity {
-   const bench = new Entity(position, rotation, EntityType.researchBench, COLLISION_BITS.default, DEFAULT_COLLISION_MASK);
+type ComponentTypes = ServerComponentType.transform
+   | ServerComponentType.health
+   | ServerComponentType.statusEffect
+   | ServerComponentType.structure
+   | ServerComponentType.tribe
+   | ServerComponentType.researchBench;
 
-   const hitboxes = createResearchBenchHitboxes();
-   for (let i = 0; i < hitboxes.length; i++) {
-      bench.addHitbox(hitboxes[i]);
-   }
-   
-   HealthComponentArray.addComponent(bench.id, new HealthComponent(40));
-   StatusEffectComponentArray.addComponent(bench.id, new StatusEffectComponent(StatusEffect.poisoned));
-   StructureComponentArray.addComponent(bench.id, new StructureComponent(connectionInfo));
-   TribeComponentArray.addComponent(bench.id, new TribeComponent(tribe));
-   ResearchBenchComponentArray.addComponent(bench.id, new ResearchBenchComponent());
-
-   return bench;
+export function createResearchBenchConfig(): ComponentConfig<ComponentTypes> {
+   return {
+      [ServerComponentType.transform]: {
+         position: new Point(0, 0),
+         rotation: 0,
+         type: EntityType.researchBench,
+         collisionBit: COLLISION_BITS.default,
+         collisionMask: DEFAULT_COLLISION_MASK,
+         hitboxes: createResearchBenchHitboxes()
+      },
+      [ServerComponentType.health]: {
+         maxHealth: 40
+      },
+      [ServerComponentType.statusEffect]: {
+         statusEffectImmunityBitset: StatusEffect.bleeding | StatusEffect.poisoned
+      },
+      [ServerComponentType.structure]: {
+         connectionInfo: createEmptyStructureConnectionInfo()
+      },
+      [ServerComponentType.tribe]: {
+         tribe: null,
+         tribeType: 0
+      },
+      [ServerComponentType.researchBench]: {}
+   };
 }

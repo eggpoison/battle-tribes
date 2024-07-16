@@ -2,16 +2,22 @@ import { CookingComponentData, ServerComponentType } from "webgl-test-shared/dis
 import { HeatingRecipe } from "../entities/structures/cooking-entities/cooking-entity";
 import { ComponentArray } from "./ComponentArray";
 
-export interface CookingComponentParams {}
+export interface CookingComponentParams {
+   readonly remainingHeatSeconds: number;
+}
 
 export class CookingComponent {
    public heatingTimer = 0;
    public currentRecipe: HeatingRecipe | null = null;
 
    public remainingHeatSeconds = 0;
+
+   constructor(params: CookingComponentParams) {
+      this.remainingHeatSeconds = params.remainingHeatSeconds;
+   }
 }
 
-export const CookingComponentArray = new ComponentArray<ServerComponentType.cooking, CookingComponent>(true, {
+export const CookingComponentArray = new ComponentArray<CookingComponent>(ServerComponentType.cooking, true, {
    serialise: serialise
 });
 

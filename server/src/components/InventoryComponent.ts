@@ -1,5 +1,5 @@
 import { InventoryComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
-import { createItemEntity, itemEntityCanBePickedUp } from "../entities/item-entity";
+import { createItemEntityConfig, itemEntityCanBePickedUp } from "../entities/item-entity";
 import { ComponentArray } from "./ComponentArray";
 import { createItem } from "../items";
 import Board from "../Board";
@@ -9,16 +9,23 @@ import { ItemTally2, tallyInventoryItems } from "webgl-test-shared/dist/items/It
 import { InventoryName, Inventory, ItemType, Item, itemIsStackable, ITEM_INFO_RECORD, StackableItemInfo, getItemStackSize } from "webgl-test-shared/dist/items/items";
 import { EntityID } from "webgl-test-shared/dist/entities";
 import { TransformComponentArray } from "./TransformComponent";
+import { createEntityFromConfig } from "../Entity";
+
+export interface ItemCreationInfo {
+   readonly itemSlot: number;
+   readonly item: Item;
+}
 
 export interface InventoryCreationInfo {
-   readonly inventoryName: InventoryName
+   readonly inventoryName: InventoryName;
    readonly width: number;
    readonly height: number;
    readonly options: InventoryOptions;
+   readonly items: Array<ItemCreationInfo>;
 }
 
 export interface InventoryComponentParams {
-   inventories: ReadonlyArray<InventoryCreationInfo>;
+   inventories: Array<InventoryCreationInfo>;
 }
 
 export interface InventoryOptions {
@@ -37,12 +44,37 @@ export class InventoryComponent {
    public readonly droppableInventories = new Array<Inventory>();
 
    public readonly absentItemIDs = new Array<number>();
+
+   constructor(params: InventoryComponentParams) {
+      for (let i = 0; i < params.inventories.length; i++) {
+         const inventoryCreationInfo = params.inventories[i];
+
+         const inventory = createNewInventory(this, inventoryCreationInfo.inventoryName, inventoryCreationInfo.width, inventoryCreationInfo.height, inventoryCreationInfo.options);
+
+         // @Cleanup: do in create inventory function
+         for (let j = 0; j < inventoryCreationInfo.items.length; j++) {
+            const itemCreationInfo = inventoryCreationInfo.items[j];
+            inventory.addItem(itemCreationInfo.item, itemCreationInfo.itemSlot);
+         }
+      }
+   }
 }
 
-export const InventoryComponentArray = new ComponentArray<ServerComponentType.inventory, InventoryComponent>(true, {
+export const InventoryComponentArray = new ComponentArray<InventoryComponent>(ServerComponentType.inventory, true, {
    onRemove: onRemove,
    serialise: serialise
 });
+
+export function getInventoryFromCreationInfo(inventories: ReadonlyArray<InventoryCreationInfo>, inventoryName: InventoryName): InventoryCreationInfo {
+   for (let i = 0; i < inventories.length; i++) {
+      const inventory = inventories[i];
+      if (inventory.inventoryName === inventoryName) {
+         return inventory;
+      }
+   }
+
+   throw new Error();
+}
 
 const dropInventory = (entity: EntityID, inventory: Inventory, dropRange: number): void => {
    const transformComponent = TransformComponentArray.getComponent(entity);
@@ -56,7 +88,13 @@ const dropInventory = (entity: EntityID, inventory: Inventory, dropRange: number
       position.x += spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
       position.y += spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
       
-      createItemEntity(position, 2 * Math.PI * Math.random(), item.type, item.count, 0);
+      const config = createItemEntityConfig();
+      config[ServerComponentType.transform].position.x = position.x;
+      config[ServerComponentType.transform].position.y = position.y;
+      config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
+      config[ServerComponentType.item].itemType = item.type;
+      config[ServerComponentType.item].amount = item.count;
+      createEntityFromConfig(config);
    }
 }
 

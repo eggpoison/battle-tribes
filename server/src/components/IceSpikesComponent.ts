@@ -1,26 +1,40 @@
 import { randInt } from "webgl-test-shared/dist/utils";
-import Entity from "../Entity";
 import { IceSpikesComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
 import { ComponentArray } from "./ComponentArray";
+import { EntityID } from "webgl-test-shared/dist/entities";
+import { ComponentConfig } from "../components";
 
 export interface IceSpikesComponentParams {
-   readonly rootIceSpike: Entity;
+   /** Root ice spike. If null, defaults to the ice spike itself. */
+   rootIceSpike: EntityID | null;
 }
 
 export class IceSpikesComponent {
    public readonly maxChildren = randInt(0, 3);
    public numChildrenIceSpikes = 0;
    public iceSpikeGrowProgressTicks = 0;
-   public readonly rootIceSpike: Entity;
+   public readonly rootIceSpike: EntityID;
 
    constructor(params: IceSpikesComponentParams) {
-      this.rootIceSpike = params.rootIceSpike;
+      if (params.rootIceSpike === null) {
+         console.warn("Root ice spike was null! Defaulting to 0");
+         this.rootIceSpike = 0;
+      } else {
+         this.rootIceSpike = params.rootIceSpike;
+      }
    }
 }
 
-export const IceSpikesComponentArray = new ComponentArray<ServerComponentType.iceSpikes, IceSpikesComponent>(true, {
+export const IceSpikesComponentArray = new ComponentArray<IceSpikesComponent>(ServerComponentType.iceSpikes, true, {
+   onInitialise: onInitialise,
    serialise: serialise
 });
+
+function onInitialise(config: ComponentConfig<ServerComponentType.iceSpikes>, entity: EntityID): void {
+   if (config[ServerComponentType.iceSpikes].rootIceSpike === null) {
+      config[ServerComponentType.iceSpikes].rootIceSpike = entity;
+   }
+}
 
 function serialise(): IceSpikesComponentData {
    return {

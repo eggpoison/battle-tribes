@@ -1,4 +1,3 @@
-import Entity from "./Entity";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { AmmoBoxComponent, AmmoBoxComponentParams } from "./components/AmmoBoxComponent";
 import { BerryBushComponent, BerryBushComponentParams } from "./components/BerryBushComponent";
@@ -119,87 +118,88 @@ export type ComponentParams<T extends ServerComponentType> = ReturnType<typeof C
 // @Cleanup: find better way to do this
 export const ComponentClassRecord = {
    // [ServerComponentType.aiHelper]: (): AIHelperComponent => { return 0 as any },
-   [ServerComponentType.aiHelper]: AIHelperComponent,
-   [ServerComponentType.cow]: CowComponent,
-   [ServerComponentType.turret]: TurretComponent,
-   [ServerComponentType.tribe]: TribeComponent,
-   [ServerComponentType.inventory]: InventoryComponent,
-   [ServerComponentType.ammoBox]: AmmoBoxComponent,
-   [ServerComponentType.slime]: SlimeComponent,
-   [ServerComponentType.golem]: GolemComponent,
-   [ServerComponentType.statusEffect]: StatusEffectComponent,
-   [ServerComponentType.cactus]: CactusComponent,
-   [ServerComponentType.health]: HealthComponent,
-   [ServerComponentType.physics]: PhysicsComponent,
-   [ServerComponentType.researchBench]: ResearchBenchComponent,
-   [ServerComponentType.berryBush]: BerryBushComponent,
-   [ServerComponentType.inventoryUse]: InventoryUseComponent,
-   [ServerComponentType.zombie]: ZombieComponent,
-   [ServerComponentType.player]: PlayerComponent,
-   [ServerComponentType.item]: ItemComponent,
-   [ServerComponentType.tombstone]: TombstoneComponent,
-   [ServerComponentType.tree]: TreeComponent,
-   [ServerComponentType.blueprint]: BlueprintComponent,
-   [ServerComponentType.boulder]: BoulderComponent,
-   [ServerComponentType.yeti]: YetiComponent,
-   [ServerComponentType.frozenYeti]: FrozenYetiComponent,
-   [ServerComponentType.totemBanner]: TotemBannerComponent,
-   [ServerComponentType.cooking]: CookingComponent,
-   [ServerComponentType.hut]: HutComponent,
-   [ServerComponentType.snowball]: SnowballComponent,
-   [ServerComponentType.fish]: FishComponent,
-   [ServerComponentType.rockSpike]: RockSpikeProjectileComponent,
-   [ServerComponentType.slimeSpit]: SlimeSpitComponent,
-   [ServerComponentType.door]: DoorComponent,
-   [ServerComponentType.tribesmanAI]: TribesmanAIComponent,
-   [ServerComponentType.tunnel]: TunnelComponent,
-   [ServerComponentType.buildingMaterial]: BuildingMaterialComponent,
-   [ServerComponentType.spikes]: SpikesComponent,
-   [ServerComponentType.tribeMember]: TribeMemberComponent,
-   [ServerComponentType.healingTotem]: HealingTotemComponent,
-   [ServerComponentType.planterBox]: PlanterBoxComponent,
-   [ServerComponentType.plant]: PlantComponent,
-   [ServerComponentType.structure]: StructureComponent,
-   [ServerComponentType.fence]: FenceComponent,
-   [ServerComponentType.fenceGate]: FenceGateComponent,
-   [ServerComponentType.iceShard]: IceShardComponent,
-   [ServerComponentType.iceSpikes]: IceSpikesComponent,
-   [ServerComponentType.pebblum]: PebblumComponent,
-   [ServerComponentType.slimewisp]: SlimewispComponent,
-   [ServerComponentType.throwingProjectile]: ThrowingProjectileComponent,
-   [ServerComponentType.wanderAI]: WanderAIComponent,
-   [ServerComponentType.escapeAI]: EscapeAIComponent,
-   [ServerComponentType.followAI]: FollowAIComponent,
-   [ServerComponentType.tribeWarrior]: TribeWarriorComponent,
-   [ServerComponentType.craftingStation]: CraftingStationComponent,
-   [ServerComponentType.transform]: TransformComponent,
-   [ServerComponentType.projectile]: ProjectileComponent
+   [ServerComponentType.aiHelper]: () => AIHelperComponent,
+   [ServerComponentType.cow]: () => CowComponent,
+   [ServerComponentType.turret]: () => TurretComponent,
+   [ServerComponentType.tribe]: () => TribeComponent,
+   [ServerComponentType.inventory]: () => InventoryComponent,
+   [ServerComponentType.ammoBox]: () => AmmoBoxComponent,
+   [ServerComponentType.slime]: () => SlimeComponent,
+   [ServerComponentType.golem]: () => GolemComponent,
+   [ServerComponentType.statusEffect]: () => StatusEffectComponent,
+   [ServerComponentType.cactus]: () => CactusComponent,
+   [ServerComponentType.health]: () => HealthComponent,
+   [ServerComponentType.physics]: () => PhysicsComponent,
+   [ServerComponentType.researchBench]: () => ResearchBenchComponent,
+   [ServerComponentType.berryBush]: () => BerryBushComponent,
+   [ServerComponentType.inventoryUse]: () => InventoryUseComponent,
+   [ServerComponentType.zombie]: () => ZombieComponent,
+   [ServerComponentType.player]: () => PlayerComponent,
+   [ServerComponentType.item]: () => ItemComponent,
+   [ServerComponentType.tombstone]: () => TombstoneComponent,
+   [ServerComponentType.tree]: () => TreeComponent,
+   [ServerComponentType.blueprint]: () => BlueprintComponent,
+   [ServerComponentType.boulder]: () => BoulderComponent,
+   [ServerComponentType.yeti]: () => YetiComponent,
+   [ServerComponentType.frozenYeti]: () => FrozenYetiComponent,
+   [ServerComponentType.totemBanner]: () => TotemBannerComponent,
+   [ServerComponentType.cooking]: () => CookingComponent,
+   [ServerComponentType.hut]: () => HutComponent,
+   [ServerComponentType.snowball]: () => SnowballComponent,
+   [ServerComponentType.fish]: () => FishComponent,
+   [ServerComponentType.rockSpike]: () => RockSpikeProjectileComponent,
+   [ServerComponentType.slimeSpit]: () => SlimeSpitComponent,
+   [ServerComponentType.door]: () => DoorComponent,
+   [ServerComponentType.tribesmanAI]: () => TribesmanAIComponent,
+   [ServerComponentType.tunnel]: () => TunnelComponent,
+   [ServerComponentType.buildingMaterial]: () => BuildingMaterialComponent,
+   [ServerComponentType.spikes]: () => SpikesComponent,
+   [ServerComponentType.tribeMember]: () => TribeMemberComponent,
+   [ServerComponentType.healingTotem]: () => HealingTotemComponent,
+   [ServerComponentType.planterBox]: () => PlanterBoxComponent,
+   [ServerComponentType.plant]: () => PlantComponent,
+   [ServerComponentType.structure]: () => StructureComponent,
+   [ServerComponentType.fence]: () => FenceComponent,
+   [ServerComponentType.fenceGate]: () => FenceGateComponent,
+   [ServerComponentType.iceShard]: () => IceShardComponent,
+   [ServerComponentType.iceSpikes]: () => IceSpikesComponent,
+   [ServerComponentType.pebblum]: () => PebblumComponent,
+   [ServerComponentType.slimewisp]: () => SlimewispComponent,
+   [ServerComponentType.throwingProjectile]: () => ThrowingProjectileComponent,
+   [ServerComponentType.wanderAI]: () => WanderAIComponent,
+   [ServerComponentType.escapeAI]: () => EscapeAIComponent,
+   [ServerComponentType.followAI]: () => FollowAIComponent,
+   [ServerComponentType.tribeWarrior]: () => TribeWarriorComponent,
+   [ServerComponentType.craftingStation]: () => CraftingStationComponent,
+   [ServerComponentType.transform]: () => TransformComponent,
+   [ServerComponentType.projectile]: () => ProjectileComponent,
 } satisfies {
-   [T in ServerComponentType]: {
+   [T in ServerComponentType]: () => {
       new (args: ComponentParams<T>): unknown;
    };
 };
 
-type Component<T extends ServerComponentType> = typeof ComponentClassRecord[T];
+// type Component<T extends ServerComponentType> = typeof ComponentClassRecord[T];
 
 // const a: Component<ServerComponentType.cow> = 1;
 // const b = new a();
 // @Cleanup
 
-type EntityCreationComponentsInfo<ComponentTypes extends ServerComponentType[]> = {
-   [T in ComponentTypes[number]]: Component<T>;
-};
+// type EntityCreationComponentsInfo<ComponentTypes extends ServerComponentType[]> = {
+//    [T in ComponentTypes[number]]: Component<T>;
+// };
 
-export type ComponentRecord = Partial<{
-   [T in ServerComponentType]: Component<T>;
-}>;
+// @Temporary?
+// export type ComponentRecord = Partial<{
+//    [T in ServerComponentType]: Component<T>;
+// }>;
 
-export interface EntityCreationInfo<ComponentTypes extends ServerComponentType[]> {
-   readonly entity: Entity;
-   // @Temporary?
-   // readonly components: EntityCreationComponentsInfo<ComponentTypes>;
-   readonly components: ComponentRecord;
-}
+// export interface EntityCreationInfo<ComponentTypes extends ServerComponentType[]> {
+//    readonly entity: Entity;
+//    // @Temporary?
+//    // readonly components: EntityCreationComponentsInfo<ComponentTypes>;
+//    readonly components: ComponentRecord;
+// }
 
 export type ComponentConfig<ComponentTypes extends ServerComponentType> = {
    [T in ComponentTypes]: ComponentParams<T>;

@@ -50,6 +50,8 @@ class TunnelComponent extends ServerComponent<ServerComponentType.tunnel> {
    }
 
    private addDoor(doorBit: number): void {
+      const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
+      
       const renderPart = new RenderPart(
          this.entity,
          getTextureArrayIndex("entities/tunnel/tunnel-door.png"),
@@ -62,7 +64,7 @@ class TunnelComponent extends ServerComponent<ServerComponentType.tunnel> {
       this.entity.attachRenderPart(renderPart);
 
       // @Temporary
-      playSound("spike-place.mp3", 0.5, 1, this.entity.position.x, this.entity.position.y);
+      playSound("spike-place.mp3", 0.5, 1, transformComponent.position);
    }
 
    private updateDoor(doorBit: number, openProgress: number): void {
@@ -75,6 +77,8 @@ class TunnelComponent extends ServerComponent<ServerComponentType.tunnel> {
    }
 
    public updateFromData(data: TunnelComponentData): void {
+      const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
+
       if ((data.doorBitset & 0b01) !== (this.doorBitset & 0b01)) {
          this.addDoor(0b01);
       }
@@ -84,10 +88,10 @@ class TunnelComponent extends ServerComponent<ServerComponentType.tunnel> {
 
       // Play open/close sounds
       if ((data.topDoorOpenProgress > 0 && this.topDoorOpenProgress === 0) || (data.bottomDoorOpenProgress > 0 && this.bottomDoorOpenProgress === 0)) {
-         playSound("door-open.mp3", 0.4, 1, this.entity.position.x, this.entity.position.y);
+         playSound("door-open.mp3", 0.4, 1, transformComponent.position);
       }
       if ((data.topDoorOpenProgress < 1 && this.topDoorOpenProgress === 1) || (data.bottomDoorOpenProgress < 1 && this.bottomDoorOpenProgress === 1)) {
-         playSound("door-close.mp3", 0.4, 1, this.entity.position.x, this.entity.position.y);
+         playSound("door-close.mp3", 0.4, 1, transformComponent.position);
       }
       
       this.doorBitset = data.doorBitset;

@@ -1,4 +1,4 @@
-import { Point, randInt } from "webgl-test-shared/dist/utils";
+import { randInt } from "webgl-test-shared/dist/utils";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
@@ -6,10 +6,11 @@ import { playSound } from "../sound";
 import { createCactusSpineParticle } from "../particles";
 import Entity from "../Entity";
 import { CACTUS_RADIUS } from "../entity-components/CactusComponent";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 
 class Cactus extends Entity {
-   constructor(position: Point, id: number, ageTicks: number) {
-      super(position, id, EntityType.cactus, ageTicks);
+   constructor(id: number) {
+      super(id, EntityType.cactus);
 
       const baseRenderPart = new RenderPart(
          this,
@@ -27,11 +28,13 @@ class Cactus extends Entity {
          createCactusSpineParticle(this, CACTUS_RADIUS - 5, 2 * Math.PI * Math.random());
       }
 
-      playSound("cactus-hit.mp3", 0.4, 1, this.position.x, this.position.y);
+      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      playSound("cactus-hit.mp3", 0.4, 1, transformComponent.position);
    }
 
    public onDie(): void {
-      playSound("cactus-destroy.mp3", 0.4, 1, this.position.x, this.position.y);
+      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      playSound("cactus-destroy.mp3", 0.4, 1, transformComponent.position);
    }
 }
 

@@ -1,7 +1,6 @@
 import { FollowAIComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
 import { Settings } from "webgl-test-shared/dist/settings";
 import Board from "../Board";
-import Entity from "../Entity";
 import { getDistanceFromPointToEntity, moveEntityToPosition, stopEntity, turnToPosition, willStopAtDesiredDistance } from "../ai-shared";
 import { PhysicsComponentArray } from "./PhysicsComponent";
 import { ComponentArray } from "./ComponentArray";
@@ -31,7 +30,7 @@ export class FollowAIComponent {
    }
 }
 
-export const FollowAIComponentArray = new ComponentArray<ServerComponentType.followAI, FollowAIComponent>(true, {
+export const FollowAIComponentArray = new ComponentArray<FollowAIComponent>(ServerComponentType.followAI, true, {
    serialise: serialise
 });
 

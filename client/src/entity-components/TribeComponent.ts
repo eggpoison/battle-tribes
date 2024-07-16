@@ -8,7 +8,6 @@ import Game from "../Game";
 import { playSound } from "../sound";
 import { getTribesmanRadius } from "./TribeMemberComponent";
 import { createConversionParticle } from "../particles";
-import { ComponentSummonData } from "webgl-test-shared/dist/dev-packets";
 
 export function getTribeType(tribeID: number): TribeType {
    if (tribeID === Game.tribe.id) {
@@ -44,14 +43,16 @@ class TribeComponent extends ServerComponent<ServerComponentType.tribe> {
    public updateFromData(data: TribeComponentData): void {
       // Tribesman conversion
       if (data.tribeID !== this.tribeID && this.entity.hasServerComponent(ServerComponentType.tribeMember)) {
-         playSound("conversion.mp3", 0.4, 1, this.entity.position.x, this.entity.position.y);
+         const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
+
+         playSound("conversion.mp3", 0.4, 1, transformComponent.position);
 
          const radius = getTribesmanRadius(this.entity);
          for (let i = 0; i < 10; i++) {
             const offsetDirection = 2 * Math.PI * Math.random();
             const offsetMagnitude = radius + randFloat(0, 4);
-            const x = this.entity.position.x + offsetMagnitude * Math.sin(offsetDirection);
-            const y = this.entity.position.y + offsetMagnitude * Math.cos(offsetDirection);
+            const x = transformComponent.position.x + offsetMagnitude * Math.sin(offsetDirection);
+            const y = transformComponent.position.y + offsetMagnitude * Math.cos(offsetDirection);
 
             const velocityDirection = offsetDirection + randFloat(-0.5, 0.5);
             const velocityMagnitude = randFloat(55, 110);

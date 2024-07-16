@@ -31,7 +31,7 @@ const matchesBiomeRequirements = (generationInfo: BiomeSpawnRequirements, height
 
 const getBiome = (height: number, temperature: number, humidity: number): Biome => {
    // @Temporary
-   // if(1+1===2)return Biome.grasslands;
+   if(1+1===2)return Biome.grasslands;
    // @Speed
    const numBiomes = Object.keys(BIOME_GENERATION_INFO).length;
 

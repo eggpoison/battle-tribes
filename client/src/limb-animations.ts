@@ -54,14 +54,16 @@ export function createCraftingAnimationParticles(entity: Entity, limbIdx: number
       return;
    }
    
+   const transformComponent = entity.getServerComponent(ServerComponentType.transform);
+
    for (const itemTypeString of Object.keys(recipe.ingredients)) {
       const ingredientType = Number(itemTypeString) as ItemType;
 
       if (ingredientType === ItemType.wood && Math.random() < 1 / Settings.TPS) {
          const pos = generateRandomLimbPosition(limbIdx);
 
-         const x = entity.position.x + rotateXAroundOrigin(pos.x, pos.y, entity.rotation);
-         const y = entity.position.y + rotateYAroundOrigin(pos.x, pos.y, entity.rotation);
+         const x = transformComponent.position.x + rotateXAroundOrigin(pos.x, pos.y, transformComponent.rotation);
+         const y = transformComponent.position.y + rotateYAroundOrigin(pos.x, pos.y, transformComponent.rotation);
 
          createSawdustCloud(x, y);
       }
@@ -75,8 +77,8 @@ export function createCraftingAnimationParticles(entity: Entity, limbIdx: number
          const colour = randItem(particleColours);
          const pos = generateRandomLimbPosition(limbIdx);
 
-         const x = entity.position.x + rotateXAroundOrigin(pos.x, pos.y, entity.rotation);
-         const y = entity.position.y + rotateYAroundOrigin(pos.x, pos.y, entity.rotation);
+         const x = transformComponent.position.x + rotateXAroundOrigin(pos.x, pos.y, transformComponent.rotation);
+         const y = transformComponent.position.y + rotateYAroundOrigin(pos.x, pos.y, transformComponent.rotation);
 
          createColouredParticle(x, y, randFloat(30, 50), colour[0], colour[1], colour[2]);
       }
@@ -119,19 +121,21 @@ export function updateBandageRenderPart(entity: Entity, renderPart: RenderPart):
 }
 
 export function createMedicineAnimationParticles(entity: Entity, limbIdx: number): void {
+   const transformComponent = entity.getServerComponent(ServerComponentType.transform);
+
    if (Math.random() < 5 / Settings.TPS) {
       const colour = randItem(MEDICINE_PARTICLE_COLOURS);
       const pos = generateRandomLimbPosition(limbIdx);
       
-      const x = entity.position.x + rotateXAroundOrigin(pos.x, pos.y, entity.rotation);
-      const y = entity.position.y + rotateYAroundOrigin(pos.x, pos.y, entity.rotation);
+      const x = transformComponent.position.x + rotateXAroundOrigin(pos.x, pos.y, transformComponent.rotation);
+      const y = transformComponent.position.y + rotateYAroundOrigin(pos.x, pos.y, transformComponent.rotation);
       
       createColouredParticle(x, y, randFloat(20, 35), colour[0], colour[1], colour[2]);
    }
 
    // @Hack: limbIdx
    // Bandages
-   if (limbIdx === 0 && customTickIntervalHasPassed(entity.ageTicks, 0.4)) {
+   if (limbIdx === 0 && customTickIntervalHasPassed(transformComponent.ageTicks, 0.4)) {
       createBandageRenderPart(entity);
    }
 }

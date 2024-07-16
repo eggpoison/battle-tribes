@@ -2,7 +2,7 @@ import { PebblumComponentData, ServerComponentType } from "webgl-test-shared/dis
 import { ComponentArray } from "./ComponentArray";
 
 export interface PebblumComponentParams {
-   readonly targetEntityID: number;
+   targetEntityID: number;
 }
 
 export class PebblumComponent {
@@ -13,7 +13,7 @@ export class PebblumComponent {
    }
 }
 
-export const PebblumComponentArray = new ComponentArray<ServerComponentType.pebblum, PebblumComponent>(true, {
+export const PebblumComponentArray = new ComponentArray<PebblumComponent>(ServerComponentType.pebblum, true, {
    serialise: serialise
 });
 

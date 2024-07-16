@@ -69,7 +69,12 @@ const getEntityRenderLayer = (entityType: EntityType): RenderLayer => {
          return RenderLayer.highEntities;
       }
       // Projectiles
-      case EntityType.woodenArrowProjectile:{  
+      case EntityType.woodenArrow:
+      case EntityType.ballistaFrostcicle:
+      case EntityType.ballistaRock:
+      case EntityType.ballistaSlimeball:
+      case EntityType.ballistaWoodenBolt:
+      case EntityType.slingTurretRock: {  
          return RenderLayer.projectiles;
       }
       // Low entities

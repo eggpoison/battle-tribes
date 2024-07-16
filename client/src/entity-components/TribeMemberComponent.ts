@@ -286,11 +286,12 @@ class TribeMemberComponent extends ServerComponent<ServerComponentType.tribeMemb
       if (titlesAreDifferent(this.titles, newTitles)) {
          // If at least 1 title is added, do particle effects
          if (titlesArrayHasExtra(newTitles, this.titles)) {
+            const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
             for (let i = 0; i < 25; i++) {
                const offsetMagnitude = randFloat(12, 34);
                const offsetDirection = 2 * Math.PI * Math.random();
-               const spawnPositionX = this.entity.position.x + offsetMagnitude * Math.sin(offsetDirection);
-               const spawnPositionY = this.entity.position.y + offsetMagnitude * Math.cos(offsetDirection);
+               const spawnPositionX = transformComponent.position.x + offsetMagnitude * Math.sin(offsetDirection);
+               const spawnPositionY = transformComponent.position.y + offsetMagnitude * Math.cos(offsetDirection);
 
                const velocityMagnitude = randFloat(80, 120);
                const vx = velocityMagnitude * Math.sin(offsetDirection);
@@ -317,6 +318,7 @@ class TribeMemberComponent extends ServerComponent<ServerComponentType.tribeMemb
          }
       }
 
+      const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
       const physicsComponent = this.entity.getServerComponent(ServerComponentType.physics);
 
       // Sprinter particles
@@ -325,8 +327,8 @@ class TribeMemberComponent extends ServerComponent<ServerComponentType.tribeMemb
          if (Math.random() < sprintParticleSpawnRate / Settings.TPS) {
             const offsetMagnitude = 32 * Math.random();
             const offsetDirection = 2 * Math.PI * Math.random();
-            const x = this.entity.position.x + offsetMagnitude * Math.sin(offsetDirection);
-            const y = this.entity.position.y + offsetMagnitude * Math.cos(offsetDirection);
+            const x = transformComponent.position.x + offsetMagnitude * Math.sin(offsetDirection);
+            const y = transformComponent.position.y + offsetMagnitude * Math.cos(offsetDirection);
             
             const velocityMagnitude = 32 * Math.random();
             const velocityDirection = 2 * Math.PI * Math.random();
@@ -340,8 +342,8 @@ class TribeMemberComponent extends ServerComponent<ServerComponentType.tribeMemb
       if (this.hasTitle(TribesmanTitle.winterswrath) && Math.random() < 18 * Settings.I_TPS) {
          const offsetMagnitude = randFloat(36, 50);
          const offsetDirection = 2 * Math.PI * Math.random();
-         const x = this.entity.position.x + offsetMagnitude * Math.sin(offsetDirection);
-         const y = this.entity.position.y + offsetMagnitude * Math.cos(offsetDirection);
+         const x = transformComponent.position.x + offsetMagnitude * Math.sin(offsetDirection);
+         const y = transformComponent.position.y + offsetMagnitude * Math.cos(offsetDirection);
          
          const velocityMagnitude = randFloat(45, 75);
          const velocityDirection = offsetDirection + Math.PI * 0.5;

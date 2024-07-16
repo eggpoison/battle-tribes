@@ -3,7 +3,7 @@ import { PlayerComponentData, ServerComponentType } from "webgl-test-shared/dist
 import { ComponentArray } from "./ComponentArray";
 
 export interface PlayerComponentParams {
-   readonly username: string;
+   username: string;
 }
 
 export class PlayerComponent {
@@ -19,7 +19,7 @@ export class PlayerComponent {
    }
 }
 
-export const PlayerComponentArray = new ComponentArray<ServerComponentType.player, PlayerComponent>(true, {
+export const PlayerComponentArray = new ComponentArray<PlayerComponent>(ServerComponentType.player, true, {
    serialise: serialise
 });
 

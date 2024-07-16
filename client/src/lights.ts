@@ -1,5 +1,6 @@
 import { Point, rotateXAroundOrigin, rotateYAroundOrigin } from "webgl-test-shared/dist/utils";
 import Board from "./Board";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 
 type LightID = number;
 
@@ -141,9 +142,11 @@ export function getLightPosition(lightIdx: number): Point {
       const attachedEntity = Board.entityRecord[attachedEntityID];
       if (typeof attachedEntity !== "undefined") {
          const offset = light.offset;
+
+         const transformComponent = attachedEntity.getServerComponent(ServerComponentType.transform);
          
-         const x = attachedEntity.renderPosition.x + rotateXAroundOrigin(offset.x, offset.y, attachedEntity.rotation);
-         const y = attachedEntity.renderPosition.y + rotateYAroundOrigin(offset.x, offset.y, attachedEntity.rotation);
+         const x = attachedEntity.renderPosition.x + rotateXAroundOrigin(offset.x, offset.y, transformComponent.rotation);
+         const y = attachedEntity.renderPosition.y + rotateYAroundOrigin(offset.x, offset.y, transformComponent.rotation);
          return new Point(x, y);
       }
    }

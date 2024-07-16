@@ -111,15 +111,15 @@ const BIOME_GENERATION_INFO: Record<Biome, BiomeGenerationInfo> = {
          maxHumidity: 0.4
       },
       tiles: [
-         {
-            tileType: TileType.sandstone,
-            isWall: true,
-            noiseRequirements: {
-               scale: 7,
-               minWeight: 0.7
-            },
-            minDist: 2
-         },
+         // {
+         //    tileType: TileType.sandstone,
+         //    isWall: true,
+         //    noiseRequirements: {
+         //       scale: 7,
+         //       minWeight: 0.7
+         //    },
+         //    minDist: 2
+         // },
          {
             tileType: TileType.sand,
             isWall: false

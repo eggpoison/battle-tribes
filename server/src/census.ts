@@ -1,7 +1,7 @@
-import { EntityType, NUM_ENTITY_TYPES } from "webgl-test-shared/dist/entities";
+import { EntityID, EntityType, NUM_ENTITY_TYPES } from "webgl-test-shared/dist/entities";
 import { TileType, Biome } from "webgl-test-shared/dist/tiles";
 import Tile from "./Tile";
-import Entity from "./Entity";
+import Board from "./Board";
 
 const entityCounts = new Array<EntityType>();
 for (let i = 0; i < NUM_ENTITY_TYPES; i++) {
@@ -22,23 +22,25 @@ const tileCensus: TileCensus = {
 /** Stores the IDs of all entities that are being tracked in the census */
 const trackedEntityIDs = new Set<number>();
 
-export function addEntityToCensus(entity: Entity): void {
-   entityCounts[entity.type]++;
-   trackedEntityIDs.add(entity.id);
+export function addEntityToCensus(entity: EntityID, entityType: EntityType): void {
+   entityCounts[entityType]++;
+   trackedEntityIDs.add(entity);
 }
 
-export function removeEntityFromCensus(entity: Entity): void {
-   if (!trackedEntityIDs.has(entity.id)) return;
+export function removeEntityFromCensus(entity: EntityID): void {
+   if (!trackedEntityIDs.has(entity)) return;
    
-   if (entityCounts[entity.type] <= 0) {
+   const entityType = Board.getEntityType(entity)!;
+   
+   if (entityCounts[entityType] <= 0) {
       console.log(entityCounts);
-      console.warn(`Entity type "${entity.type}" is not in the census.`);
+      console.warn(`Entity type "${entityType}" is not in the census.`);
       console.trace();
       throw new Error();
    }
 
-   entityCounts[entity.type]--;
-   trackedEntityIDs.delete(entity.id);
+   entityCounts[entityType]--;
+   trackedEntityIDs.delete(entity);
 }
 
 export function getEntityCount(entityType: EntityType): number {

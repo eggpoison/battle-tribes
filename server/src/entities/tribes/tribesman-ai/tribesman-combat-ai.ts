@@ -4,10 +4,9 @@ import { Settings, PathfindingSettings } from "webgl-test-shared/dist/settings";
 import { TribeType } from "webgl-test-shared/dist/tribes";
 import { Point, distance } from "webgl-test-shared/dist/utils";
 import Board from "../../../Board";
-import Entity from "../../../Entity";
 import { getDistanceFromPointToEntity, stopEntity, entityIsInLineOfSight, willStopAtDesiredDistance } from "../../../ai-shared";
 import { InventoryComponentArray, getInventory } from "../../../components/InventoryComponent";
-import { InventoryUseComponentArray, getInventoryUseInfo, setLimbActions } from "../../../components/InventoryUseComponent";
+import { InventoryUseComponentArray, setLimbActions } from "../../../components/InventoryUseComponent";
 import { PhysicsComponentArray } from "../../../components/PhysicsComponent";
 import { TribesmanAIComponentArray, TribesmanPathType } from "../../../components/TribesmanAIComponent";
 import { PathfindFailureDefault } from "../../../pathfinding";
@@ -45,14 +44,14 @@ const doMeleeAttack = (tribesman: EntityID): void => {
    // Register the hit
    if (target !== null) {
       const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman);
-      const hotbarUseInfo = getInventoryUseInfo(inventoryUseComponent, InventoryName.hotbar);
+      const hotbarUseInfo = inventoryUseComponent.getUseInfo(InventoryName.hotbar);
       const didSucceed = attemptAttack(tribesman, target, hotbarUseInfo.selectedItemSlot, InventoryName.hotbar);
 
       if (!didSucceed) {
          // Use offhand
          const tribeComponent = TribeComponentArray.getComponent(tribesman);
          if (tribeComponent.tribe.tribeType === TribeType.barbarians) {
-            const offhandUseInfo = getInventoryUseInfo(inventoryUseComponent, InventoryName.offhand);
+            const offhandUseInfo = inventoryUseComponent.getUseInfo(InventoryName.offhand);
             attemptAttack(tribesman, target, offhandUseInfo.selectedItemSlot, InventoryName.offhand);
          }
       }
@@ -157,14 +156,16 @@ export function huntEntity(tribesman: EntityID, huntedEntity: EntityID, isAggres
    const mostDamagingItemSlot = getMostDamagingItemSlot(tribesman, huntedEntity);
 
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman);
-   const hotbarUseInfo = getInventoryUseInfo(inventoryUseComponent, InventoryName.hotbar);
+   const hotbarUseInfo = inventoryUseComponent.getUseInfo(InventoryName.hotbar);
    
    // Select the item slot
    hotbarUseInfo.selectedItemSlot = mostDamagingItemSlot;
    
    const inventory = getInventory(inventoryComponent, InventoryName.hotbar);
    if (inventory.hasItem(mostDamagingItemSlot)) {
-      const selectedItem = hotbarUseInfo.inventory.itemSlots[hotbarUseInfo.selectedItemSlot]!;
+      const hotbar = getInventory(inventoryComponent, InventoryName.hotbar);
+      
+      const selectedItem = hotbar.itemSlots[hotbarUseInfo.selectedItemSlot]!;
       const weaponCategory = ITEM_TYPE_RECORD[selectedItem.type];
 
       // Throw spears if there is multiple
@@ -358,20 +359,20 @@ export function huntEntity(tribesman: EntityID, huntedEntity: EntityID, isAggres
       }
    }
 
-   const physicsComponent = PhysicsComponentArray.getComponent(tribesman.id);
+   const physicsComponent = PhysicsComponentArray.getComponent(tribesman);
    const desiredAttackRange = getTribesmanDesiredAttackRange(tribesman);
 
-   const distance = getDistanceFromPointToEntity(tribesman.position, huntedEntity) - getTribesmanRadius(tribesman);
+   const distance = getDistanceFromPointToEntity(transformComponent.position, huntedEntity) - getTribesmanRadius(tribesman);
    if (willStopAtDesiredDistance(physicsComponent, desiredAttackRange, distance)) {
       // If the tribesman will stop too close to the target, move back a bit
       if (willStopAtDesiredDistance(physicsComponent, desiredAttackRange - 20, distance)) {
-         physicsComponent.acceleration.x = getTribesmanSlowAcceleration(tribesman.id) * Math.sin(tribesman.rotation + Math.PI);
-         physicsComponent.acceleration.y = getTribesmanSlowAcceleration(tribesman.id) * Math.cos(tribesman.rotation + Math.PI);
+         physicsComponent.acceleration.x = getTribesmanSlowAcceleration(tribesman) * Math.sin(transformComponent.rotation + Math.PI);
+         physicsComponent.acceleration.y = getTribesmanSlowAcceleration(tribesman) * Math.cos(transformComponent.rotation + Math.PI);
       } else {
          stopEntity(physicsComponent);
       }
 
-      physicsComponent.targetRotation = tribesman.position.calculateAngleBetween(huntedEntity.position);
+      physicsComponent.targetRotation = transformComponent.position.calculateAngleBetween(huntedEntityTransformComponent.position);
       physicsComponent.turnSpeed = TRIBESMAN_TURN_SPEED;
    
       // If in melee range, try to do a melee attack
@@ -379,16 +380,16 @@ export function huntEntity(tribesman: EntityID, huntedEntity: EntityID, isAggres
 
       clearTribesmanPath(tribesman);
    } else {
-      const pointDistance = tribesman.position.calculateDistanceBetween(huntedEntity.position);
+      const pointDistance = transformComponent.position.calculateDistanceBetween(huntedEntityTransformComponent.position);
       const targetDirectRadius = pointDistance - distance;
 
       const goalRadius = Math.floor((desiredAttackRange + targetDirectRadius) / PathfindingSettings.NODE_SEPARATION);
       const failureDefault = isAggressive ? PathfindFailureDefault.returnClosest : PathfindFailureDefault.throwError;
-      pathfindToPosition(tribesman, huntedEntity.position.x, huntedEntity.position.y, huntedEntity.id, TribesmanPathType.default, goalRadius, failureDefault);
+      pathfindToPosition(tribesman, huntedEntityTransformComponent.position.x, huntedEntityTransformComponent.position.y, huntedEntity, TribesmanPathType.default, goalRadius, failureDefault);
    }
 
    setLimbActions(inventoryUseComponent, LimbAction.none);
 
-   const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman.id);
+   const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman);
    tribesmanComponent.currentAIType = TribesmanAIType.attacking;
 }

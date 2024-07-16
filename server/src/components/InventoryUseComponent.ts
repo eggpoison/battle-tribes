@@ -1,14 +1,17 @@
 import { InventoryUseComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
-import { LimbAction } from "webgl-test-shared/dist/entities";
+import { EntityID, LimbAction } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { ComponentArray } from "./ComponentArray";
-import { Inventory, InventoryName } from "webgl-test-shared/dist/items/items";
+import { InventoryName } from "webgl-test-shared/dist/items/items";
+import { getInventory, InventoryComponentArray } from "./InventoryComponent";
 
-export interface InventoryUseComponentParams {}
+export interface InventoryUseComponentParams {
+   usedInventoryNames: Array<InventoryName>;
+}
 
 export interface InventoryUseInfo {
+   readonly usedInventoryName: InventoryName;
    selectedItemSlot: number;
-   readonly inventory: Inventory;
    bowCooldownTicks: number;
    readonly itemAttackCooldowns: Partial<Record<number, number>>;
    readonly spearWindupCooldowns: Partial<Record<number, number>>;
@@ -32,13 +35,14 @@ export interface InventoryUseInfo {
 
 export class InventoryUseComponent {
    public readonly inventoryUseInfos = new Array<InventoryUseInfo>();
+   private readonly inventoryUseInfoRecord: Partial<Record<InventoryName, InventoryUseInfo>> = {};
 
    public globalAttackCooldown = 0;
 
-   public addInventoryUseInfo(inventory: Inventory): void {
-      this.inventoryUseInfos.push({
+   public addInventoryUseInfo(inventoryName: InventoryName): void {
+      const useInfo: InventoryUseInfo = {
+         usedInventoryName: inventoryName,
          selectedItemSlot: 1,
-         inventory: inventory,
          bowCooldownTicks: 0,
          itemAttackCooldowns: {},
          spearWindupCooldowns: {},
@@ -55,24 +59,52 @@ export class InventoryUseComponent {
          lastAttackCooldown: Settings.DEFAULT_ATTACK_COOLDOWN,
          lastCraftTicks: 0,
          extraAttackCooldownTicks: 0
-      });
+      };
+      
+      this.inventoryUseInfos.push(useInfo);
+      this.inventoryUseInfoRecord[inventoryName] = useInfo;
+   }
+
+   public getUseInfo(inventoryName: InventoryName): InventoryUseInfo {
+      const useInfo = this.inventoryUseInfoRecord[inventoryName];
+
+      if (typeof useInfo === "undefined") {
+         throw new Error("Use info doesn't exist");
+      }
+
+      return useInfo;
+   }
+
+   public hasUseInfo(inventoryName: InventoryName): boolean {
+      return typeof this.inventoryUseInfoRecord[inventoryName] !== "undefined";
+   }
+
+   constructor(params: InventoryUseComponentParams) {
+      for (let i = 0; i < params.usedInventoryNames.length; i++) {
+         const inventoryName = params.usedInventoryNames[i];
+         this.addInventoryUseInfo(inventoryName);
+      }
    }
 }
 
-export const InventoryUseComponentArray = new ComponentArray<ServerComponentType.inventoryUse, InventoryUseComponent>(true, {
+export const InventoryUseComponentArray = new ComponentArray<InventoryUseComponent>(ServerComponentType.inventoryUse, true, {
    serialise: serialise
 });
 
-export function tickInventoryUseComponent(inventoryUseComponent: InventoryUseComponent): void {
+export function tickInventoryUseComponent(entity: EntityID, inventoryUseComponent: InventoryUseComponent): void {
    if (inventoryUseComponent.globalAttackCooldown > 0) {
       inventoryUseComponent.globalAttackCooldown--;
    }
+
+   const inventoryComponent = InventoryComponentArray.getComponent(entity);
    
    for (let i = 0; i < inventoryUseComponent.inventoryUseInfos.length; i++) {
       const useInfo = inventoryUseComponent.inventoryUseInfos[i];
 
+      const inventory = getInventory(inventoryComponent, useInfo.usedInventoryName);
+
       // Update attack cooldowns
-      for (let itemSlot = 1; itemSlot <= useInfo.inventory.width * useInfo.inventory.height; itemSlot++) {
+      for (let itemSlot = 1; itemSlot <= inventory.width * inventory.height; itemSlot++) {
          if (typeof useInfo.itemAttackCooldowns[itemSlot] !== "undefined") {
             useInfo.itemAttackCooldowns[itemSlot]! -= Settings.I_TPS;
             if (useInfo.itemAttackCooldowns[itemSlot]! < 0) {
@@ -92,28 +124,6 @@ export function tickInventoryUseComponent(inventoryUseComponent: InventoryUseCom
    }
 }
 
-export function getInventoryUseInfo(inventoryUseComponent: InventoryUseComponent, inventoryName: InventoryName): InventoryUseInfo {
-   for (let i = 0; i < inventoryUseComponent.inventoryUseInfos.length; i++) {
-      const useInfo = inventoryUseComponent.inventoryUseInfos[i];
-      if (useInfo.inventory.name === inventoryName) {
-         return useInfo;
-      }
-   }
-
-   throw new Error("Can't find inventory use info for inventory name " + inventoryName);
-}
-
-export function hasInventoryUseInfo(inventoryUseComponent: InventoryUseComponent, inventoryName: InventoryName): boolean {
-   for (let i = 0; i < inventoryUseComponent.inventoryUseInfos.length; i++) {
-      const useInfo = inventoryUseComponent.inventoryUseInfos[i];
-      if (useInfo.inventory.name === inventoryName) {
-         return true;
-      }
-   }
-
-   return false;
-}
-
 function serialise(entityID: number): InventoryUseComponentData {
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(entityID);
 
@@ -122,7 +132,7 @@ function serialise(entityID: number): InventoryUseComponentData {
       inventoryUseInfos: inventoryUseComponent.inventoryUseInfos.map(limbInfo => {
          return {
             selectedItemSlot: limbInfo.selectedItemSlot,
-            inventoryName: limbInfo.inventory.name,
+            inventoryName: limbInfo.usedInventoryName,
             bowCooldownTicks: limbInfo.bowCooldownTicks,
             itemAttackCooldowns: limbInfo.itemAttackCooldowns,
             spearWindupCooldowns: limbInfo.spearWindupCooldowns,

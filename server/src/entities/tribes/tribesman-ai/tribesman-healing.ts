@@ -1,7 +1,7 @@
 import { TribesmanAIType } from "webgl-test-shared/dist/components";
 import { EntityID, LimbAction } from "webgl-test-shared/dist/entities";
 import { stopEntity } from "../../../ai-shared";
-import { InventoryUseComponentArray, getInventoryUseInfo } from "../../../components/InventoryUseComponent";
+import { InventoryUseComponentArray } from "../../../components/InventoryUseComponent";
 import { PhysicsComponentArray } from "../../../components/PhysicsComponent";
 import { TribesmanAIComponentArray } from "../../../components/TribesmanAIComponent";
 import { InventoryComponentArray, getInventory } from "../../../components/InventoryComponent";
@@ -33,7 +33,7 @@ export function getHealingItemUseInfo(tribesmanID: number): HealingItemUseInfo |
 
 export function continueTribesmanHealing(tribesmanID: EntityID, healingItemUseInfo: HealingItemUseInfo): void {
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesmanID);
-   const limbInfo = getInventoryUseInfo(inventoryUseComponent, InventoryName.hotbar);
+   const limbInfo = inventoryUseComponent.getUseInfo(InventoryName.hotbar);
    limbInfo.selectedItemSlot = healingItemUseInfo.itemSlot;
 
    const foodItem = healingItemUseInfo.inventory.itemSlots[healingItemUseInfo.itemSlot]!;

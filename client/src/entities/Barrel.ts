@@ -1,15 +1,16 @@
 import { EntityType } from "webgl-test-shared/dist/entities";
-import { Point } from "webgl-test-shared/dist/utils";
 import RenderPart from "../render-parts/RenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { playBuildingHitSound, playSound } from "../sound";
-import Entity from "../Entity";
+import Entity, { ComponentDataRecord } from "../Entity";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { Point } from "webgl-test-shared/dist/utils";
 
 class Barrel extends Entity {
    public static readonly SIZE = 80;
 
-   constructor(position: Point, id: number, ageTicks: number) {
-      super(position, id, EntityType.barrel, ageTicks);
+   constructor(id: number, componentDataRecord: ComponentDataRecord) {
+      super(id, EntityType.barrel);
 
       this.attachRenderPart(
          new RenderPart(
@@ -20,17 +21,20 @@ class Barrel extends Entity {
          )
       );
 
-      if (ageTicks <= 1) {
-         playSound("barrel-place.mp3", 0.4, 1, this.position.x, this.position.y);
+      const transformComponentData = componentDataRecord[ServerComponentType.transform]!;
+      if (transformComponentData.ageTicks <= 0) {
+         playSound("barrel-place.mp3", 0.4, 1, Point.unpackage(transformComponentData.position));
       }
    }
 
    protected onHit(): void {
-      playBuildingHitSound(this.position.x, this.position.y);
+      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      playBuildingHitSound(transformComponent.position);
    }
 
    public onDie(): void {
-      playSound("building-destroy-1.mp3", 0.4, 1, this.position.x, this.position.y);
+      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      playSound("building-destroy-1.mp3", 0.4, 1, transformComponent.position);
    }
 }
 

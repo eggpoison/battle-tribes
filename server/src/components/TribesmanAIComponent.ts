@@ -21,7 +21,7 @@ const enum Vars {
 }
 
 export interface TribesmanAIComponentParams {
-   readonly hutID: number;
+   hut: EntityID;
 }
 
 /** Stores how much gifting an item to a tribesman increases your relations with them */
@@ -149,14 +149,14 @@ export class TribesmanAIComponent {
    public lastItemThrowTicks = 0;
 
    constructor(params: TribesmanAIComponentParams) {
-      this.hutID = params.hutID;
+      this.hutID = params.hut;
       this.lastEnemyLineOfSightTicks = Board.ticks;
       // @Bug: will favour certain names more.
       this.name = randInt(0, 99);
    }
 }
 
-export const TribesmanAIComponentArray = new ComponentArray<ServerComponentType.tribesmanAI, TribesmanAIComponent>(true, {
+export const TribesmanAIComponentArray = new ComponentArray<TribesmanAIComponent>(ServerComponentType.tribesmanAI, true, {
    serialise: serialise
 });
 

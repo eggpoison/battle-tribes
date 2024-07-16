@@ -19,7 +19,7 @@ export class ThrowingProjectileComponent {
    }
 }
 
-export const ThrowingProjectileComponentArray = new ComponentArray<ServerComponentType.throwingProjectile, ThrowingProjectileComponent>(true, {
+export const ThrowingProjectileComponentArray = new ComponentArray<ThrowingProjectileComponent>(ServerComponentType.throwingProjectile, true, {
    onJoin: onRemove,
    serialise: serialise
 });

@@ -1,6 +1,6 @@
 import { FrozenYetiComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
 import { FrozenYetiAttackType } from "webgl-test-shared/dist/entities";
-import { Point, lerp, randFloat, randInt } from "webgl-test-shared/dist/utils";
+import { lerp, randFloat, randInt } from "webgl-test-shared/dist/utils";
 import { Settings } from "webgl-test-shared/dist/settings";
 import ServerComponent from "./ServerComponent";
 import RenderPart from "../render-parts/RenderPart";
@@ -55,12 +55,14 @@ class FrozenYetiComponent extends ServerComponent<ServerComponentType.frozenYeti
    }
 
    private createRoarParticles(): void {
+      const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
+
       for (let i = 0; i < 2; i++) {
-         const direction = randFloat(this.entity.rotation - ROAR_ARC / 2, this.entity.rotation + ROAR_ARC / 2);
+         const direction = randFloat(transformComponent.rotation - ROAR_ARC / 2, transformComponent.rotation + ROAR_ARC / 2);
 
          const spawnOffsetDirection = direction + randFloat(-0.1, 0.1);
-         const spawnPositionX = this.entity.position.x + (FROZEN_YETI_HEAD_DISTANCE + HEAD_SIZE / 2) * Math.sin(spawnOffsetDirection);
-         const spawnPositionY = this.entity.position.y + (FROZEN_YETI_HEAD_DISTANCE + HEAD_SIZE / 2) * Math.cos(spawnOffsetDirection);
+         const spawnPositionX = transformComponent.position.x + (FROZEN_YETI_HEAD_DISTANCE + HEAD_SIZE / 2) * Math.sin(spawnOffsetDirection);
+         const spawnPositionY = transformComponent.position.y + (FROZEN_YETI_HEAD_DISTANCE + HEAD_SIZE / 2) * Math.cos(spawnOffsetDirection);
 
          // const velocityMagnitude = randFloat(200, 300);
          const velocityMagnitude = randFloat(500, 700);
@@ -96,11 +98,11 @@ class FrozenYetiComponent extends ServerComponent<ServerComponentType.frozenYeti
       }
 
       {
-         const direction = randFloat(this.entity.rotation - ROAR_ARC / 2, this.entity.rotation + ROAR_ARC / 2);
+         const direction = randFloat(transformComponent.rotation - ROAR_ARC / 2, transformComponent.rotation + ROAR_ARC / 2);
 
          const spawnOffsetDirection = direction + randFloat(-0.1, 0.1);
-         const spawnPositionX = this.entity.position.x + (FROZEN_YETI_HEAD_DISTANCE + HEAD_SIZE / 2) * Math.sin(spawnOffsetDirection);
-         const spawnPositionY = this.entity.position.y + (FROZEN_YETI_HEAD_DISTANCE + HEAD_SIZE / 2) * Math.cos(spawnOffsetDirection);
+         const spawnPositionX = transformComponent.position.x + (FROZEN_YETI_HEAD_DISTANCE + HEAD_SIZE / 2) * Math.sin(spawnOffsetDirection);
+         const spawnPositionY = transformComponent.position.y + (FROZEN_YETI_HEAD_DISTANCE + HEAD_SIZE / 2) * Math.cos(spawnOffsetDirection);
 
          // const velocityMagnitude = randFloat(200, 300);
          const velocityMagnitude = randFloat(500, 700);
@@ -141,6 +143,8 @@ class FrozenYetiComponent extends ServerComponent<ServerComponentType.frozenYeti
       if (Player.instance === null) {
          return;
       }
+
+      const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
       
       switch (this.attackType) {
          case FrozenYetiAttackType.stomp: {
@@ -178,9 +182,9 @@ class FrozenYetiComponent extends ServerComponent<ServerComponentType.frozenYeti
                      paw.offset.y = pawOffsetMagnitude * Math.cos(direction);
 
                      // Create snow particles near the paws
-                     const offsetDirection = (pawOffsetDirection - 0.3) * (i === 0 ? -1 : 1) + this.entity.rotation;
-                     let spawnPositionX = this.entity.position.x + pawOffsetMagnitude * Math.sin(offsetDirection);
-                     let spawnPositionY = this.entity.position.y + pawOffsetMagnitude * Math.cos(offsetDirection);
+                     const offsetDirection = (pawOffsetDirection - 0.3) * (i === 0 ? -1 : 1) + transformComponent.rotation;
+                     let spawnPositionX = transformComponent.position.x + pawOffsetMagnitude * Math.sin(offsetDirection);
+                     let spawnPositionY = transformComponent.position.y + pawOffsetMagnitude * Math.cos(offsetDirection);
 
                      createSnowParticle(spawnPositionX, spawnPositionY, randFloat(40, 70));
                   }
@@ -229,11 +233,13 @@ class FrozenYetiComponent extends ServerComponent<ServerComponentType.frozenYeti
                   
                   this.createRoarParticles();
 
-                  const distanceToPlayer = this.entity.position.calculateDistanceBetween(Player.instance.position);
+                  const playerTransformComponent = Player.instance.getServerComponent(ServerComponentType.transform);
+
+                  const distanceToPlayer = transformComponent.position.calculateDistanceBetween(playerTransformComponent.position);
 
                   // Check if the player is within the arc range of the attack
-                  const angleToPlayer = this.entity.position.calculateAngleBetween(Player.instance.position);
-                  let angleDifference = this.entity.rotation - angleToPlayer;
+                  const angleToPlayer = transformComponent.position.calculateAngleBetween(playerTransformComponent.position);
+                  let angleDifference = transformComponent.rotation - angleToPlayer;
                   if (angleDifference >= Math.PI) {
                      angleDifference -= Math.PI * 2;
                   } else if (angleDifference < -Math.PI) {
@@ -313,10 +319,12 @@ class FrozenYetiComponent extends ServerComponent<ServerComponentType.frozenYeti
    }
 
    public updateFromData(data: FrozenYetiComponentData): void {
+      const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
+      
       // If the yeti did a bite attack, create a bite particle
       if (this.attackType === FrozenYetiAttackType.bite && data.attackStage === 2 && this.attackStage === 1) {
-         const spawnPositionX = this.entity.position.x + 140 * Math.sin(this.entity.rotation);
-         const spawnPositionY = this.entity.position.y + 140 * Math.cos(this.entity.rotation);
+         const spawnPositionX = transformComponent.position.x + 140 * Math.sin(transformComponent.rotation);
+         const spawnPositionY = transformComponent.position.y + 140 * Math.cos(transformComponent.rotation);
          
          createBiteParticle(spawnPositionX, spawnPositionY);
       }
@@ -324,8 +332,8 @@ class FrozenYetiComponent extends ServerComponent<ServerComponentType.frozenYeti
       // If the yeti did a snow throw attack, create impact particles
       if (this.attackType === FrozenYetiAttackType.snowThrow && data.attackStage === 2 && this.attackStage === 1) {
          const offsetMagnitude = SNOWBALL_THROW_OFFSET + 20;
-         const impactPositionX = this.entity.position.x + offsetMagnitude * Math.sin(this.entity.rotation);
-         const impactPositionY = this.entity.position.y + offsetMagnitude * Math.cos(this.entity.rotation);
+         const impactPositionX = transformComponent.position.x + offsetMagnitude * Math.sin(transformComponent.rotation);
+         const impactPositionY = transformComponent.position.y + offsetMagnitude * Math.cos(transformComponent.rotation);
          
          for (let i = 0; i < 30; i++) {
             const offsetMagnitude = randFloat(0, 20);

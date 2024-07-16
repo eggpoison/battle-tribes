@@ -300,10 +300,12 @@ class InventoryUseComponent extends ServerComponent<ServerComponentType.inventor
          }
 
          if (useInfo.action === LimbAction.eat && ITEM_TYPE_RECORD[item.type] === "healing") {
+            const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
+
             // Create food eating particles
             for (let i = 0; i < 3; i++) {
-               let spawnPositionX = this.entity.position.x + 37 * Math.sin(this.entity.rotation);
-               let spawnPositionY = this.entity.position.y + 37 * Math.cos(this.entity.rotation);
+               let spawnPositionX = transformComponent.position.x + 37 * Math.sin(transformComponent.rotation);
+               let spawnPositionY = transformComponent.position.y + 37 * Math.cos(transformComponent.rotation);
    
                const spawnOffsetMagnitude = randFloat(0, 6);
                const spawnOffsetDirection = 2 * Math.PI * Math.random();

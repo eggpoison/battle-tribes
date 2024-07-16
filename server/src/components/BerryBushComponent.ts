@@ -8,7 +8,7 @@ export class BerryBushComponent {
    public berryGrowTimer = 0;
 }
 
-export const BerryBushComponentArray = new ComponentArray<ServerComponentType.berryBush, BerryBushComponent>(true, {
+export const BerryBushComponentArray = new ComponentArray<BerryBushComponent>(ServerComponentType.berryBush, true, {
    serialise: serialise
 });
 

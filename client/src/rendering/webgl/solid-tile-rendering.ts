@@ -181,10 +181,6 @@ const updateVertexData = (data: Float32Array, renderChunkX: number, renderChunkY
             const grassInfo = Board.grassInfo[tileX][tileY];
             temperature = grassInfo.temperature;
             humidity = grassInfo.humidity;
-
-            // @Temporary @Hack
-            temperature = 0.5;
-            humidity = 0.5;
          }
 
          data[i * 42] = x1;

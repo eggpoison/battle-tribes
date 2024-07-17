@@ -4,6 +4,7 @@ import { Matrix3x3, createRotationMatrix, createScaleMatrix, createTranslationMa
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { RenderPart, renderPartIsTextured } from "../render-parts/render-parts";
+import Board from "../Board";
 
 let dirtyEntities = new Array<Entity>();
 
@@ -71,8 +72,10 @@ const calculateRenderPartMatrix = (renderPart: RenderPart): Matrix3x3 => {
 }
 
 export function updateRenderPartMatrices(frameProgress: number): void {
-   for (let i = 0; i < dirtyEntities.length; i++) {
-      const entity = dirtyEntities[i];
+   for (let i = 0; i < Board.sortedEntities.length; i++) {
+      const entity = Board.sortedEntities[i];
+   // for (let i = 0; i < dirtyEntities.length; i++) {
+   //    const entity = dirtyEntities[i];
       
       const entityModelMatrix = calculateEntityModelMatrix(entity, frameProgress);
       entity.modelMatrix = entityModelMatrix;

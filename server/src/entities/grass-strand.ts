@@ -16,7 +16,7 @@ export function createGrassStrandConfig(): ComponentConfig<ComponentTypes> {
          type: EntityType.grassStrand,
          collisionBit: COLLISION_BITS.default,
          collisionMask: DEFAULT_COLLISION_MASK,
-         hitboxes: [new RectangularHitbox(0.1, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, 4, 4, 0)]
+         hitboxes: [new RectangularHitbox(0, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, 4, 4, 0)]
       },
       [ServerComponentType.layeredRod]: {}
    };

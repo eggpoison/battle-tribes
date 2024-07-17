@@ -106,22 +106,22 @@ export function createEntityShaders(): void {
          // float v = 1.0 - ((textureY + (1.0 - v_texCoord.y) * textureSize.y) / atlasPixelSize);
 
          outputColour = texture(u_textureAtlas, vec2(u, v));
-      }
       
-      if (v_tint.r > 0.0) {
-         outputColour.r = mix(outputColour.r, 1.0, v_tint.r);
-      } else {
-         outputColour.r = mix(outputColour.r, 0.0, -v_tint.r);
-      }
-      if (v_tint.g > 0.0) {
-         outputColour.g = mix(outputColour.g, 1.0, v_tint.g);
-      } else {
-         outputColour.g = mix(outputColour.g, 0.0, -v_tint.g);
-      }
-      if (v_tint.b > 0.0) {
-         outputColour.b = mix(outputColour.b, 1.0, v_tint.b);
-      } else {
-         outputColour.b = mix(outputColour.b, 0.0, -v_tint.b);
+         if (v_tint.r > 0.0) {
+            outputColour.r = mix(outputColour.r, 1.0, v_tint.r);
+         } else {
+            outputColour.r = mix(outputColour.r, 0.0, -v_tint.r);
+         }
+         if (v_tint.g > 0.0) {
+            outputColour.g = mix(outputColour.g, 1.0, v_tint.g);
+         } else {
+            outputColour.g = mix(outputColour.g, 0.0, -v_tint.g);
+         }
+         if (v_tint.b > 0.0) {
+            outputColour.b = mix(outputColour.b, 1.0, v_tint.b);
+         } else {
+            outputColour.b = mix(outputColour.b, 0.0, -v_tint.b);
+         }
       }
    
       outputColour.a *= v_opacity;

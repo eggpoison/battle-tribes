@@ -33,6 +33,7 @@ import { onBallistaRockCollision } from "./entities/projectiles/ballista-rock";
 import { onBallistaSlimeballCollision } from "./entities/projectiles/ballista-slimeball";
 import { onBallistaFrostcicleCollision } from "./entities/projectiles/ballista-frostcicle";
 import { onWoodenArrowCollision } from "./entities/projectiles/wooden-arrow";
+import { ComponentArrays } from "./components/ComponentArray";
 
 export const enum CollisionVars {
    NO_COLLISION = 0xFFFF
@@ -121,9 +122,15 @@ export function collide(entity: EntityID, pushingEntity: EntityID, pushedHitboxI
          physicsComponent.positionIsDirty = true;
       }
 
-      // @Hack
+      // @Hack: should be down there!
       switch (entityType) {
          case EntityType.iceShardProjectile: onIceShardCollision(entity, pushingEntity, collisionPoint); break;
+      }
+   }
+
+   for (const componentArray of ComponentArrays) {
+      if (componentArray.hasComponent(entity) && typeof componentArray.onCollision !== "undefined") {
+         componentArray.onCollision(entity, pushingEntity, pushedHitbox, pushingHitbox);
       }
    }
 

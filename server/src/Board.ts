@@ -361,6 +361,16 @@ abstract class Board {
          transformComponent.ageTicks++;
       }
 
+      for (const componentArray of ComponentArrays) {
+         if (typeof componentArray.onTick !== "undefined") {
+            for (let i = 0; i < componentArray.components.length; i++) {
+               const entity = componentArray.getEntityFromArrayIdx(i);
+               const component = componentArray.components[i];
+               componentArray.onTick(entity, component);
+            }
+         }
+      }
+
       for (let i = 0; i < InventoryUseComponentArray.components.length; i++) {
          const inventoryUseComponent = InventoryUseComponentArray.components[i];
          const entity = InventoryUseComponentArray.getEntityFromArrayIdx(i);
@@ -436,11 +446,16 @@ abstract class Board {
 
          // @Speed: physics-physics comparisons happen twice
          // For all physics entities, check for collisions with all other entities in the chunk
-         for (let j = 0; j <= chunk.physicsEntities.length - 2; j++) {
+         for (let j = 0; j < chunk.physicsEntities.length; j++) {
             const entity1 = chunk.physicsEntities[j];
             
-            for (let k = j + 1; k <= chunk.entities.length - 1; k++) {
+            for (let k = 0; k < chunk.entities.length; k++) {
                const entity2 = chunk.entities[k];
+
+               // @Speed
+               if (entity1 === entity2) {
+                  continue;
+               }
 
                const collisionNum = entitiesAreColliding(entity1, entity2);
                if (collisionNum !== CollisionVars.NO_COLLISION) {

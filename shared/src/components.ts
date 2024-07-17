@@ -802,7 +802,7 @@ export interface ProjectileComponentData extends BaseComponentData {
 export interface LayeredRodComponentData extends BaseComponentData {
    readonly componentType: ServerComponentType.layeredRod;
    readonly numLayers: number;
-   readonly naturalBend: [number, number];
+   readonly bend: [number, number];
    readonly colour: Colour;
 }
 

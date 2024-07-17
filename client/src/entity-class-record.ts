@@ -145,7 +145,7 @@ export function createEntity(entityData: EntityData): Entity {
       case EntityType.fenceGate: return new FenceGate(id);
       case EntityType.frostshaper: return new Frostshaper(id);
       case EntityType.stonecarvingTable: return new StonecarvingTable(id);
-      case EntityType.grassStrand: return new GrassStrand(id);
+      case EntityType.grassStrand: return new GrassStrand(id, componentDataRecord);
       default: {
          const unreachable: never = entityType;
          return unreachable;

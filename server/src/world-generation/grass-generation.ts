@@ -6,8 +6,10 @@ import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { createEntityFromConfig } from "../Entity";
 
 const enum Vars {
+   NUM_STRANDS = 2000
    // NUM_STRANDS = 250000
-   NUM_STRANDS = 750000
+   // @Temporary: return to once optimised
+   // NUM_STRANDS = 750000
 }
 
 export function createGrassStrands(): void {

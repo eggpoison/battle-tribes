@@ -1,6 +1,7 @@
 import { ComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
 import { ComponentConfig } from "../components";
+import { Hitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
 
 export const ComponentArrays = new Array<ComponentArray>();
 export const ComponentArrayRecord = {} as { [T in ServerComponentType]: ComponentArray<object, T> };
@@ -10,6 +11,7 @@ interface ComponentArrayFunctions<C extends ServerComponentType, T extends objec
    onInitialise?(config: ComponentConfig<ServerComponentType>, entity: EntityID, entityType: EntityType): void;
    onJoin?(entity: EntityID): void;
    onTick?(entity: EntityID, component: T): void;
+   onCollision?(entity: EntityID, collidingEntity: EntityID, pushedHitbox: Hitbox, pushingHitbox: Hitbox): void;
    onRemove?(entity: EntityID): void;
    serialise(entity: EntityID, player: EntityID | null): ComponentData<C>;
 }
@@ -38,17 +40,21 @@ export class ComponentArray<T extends object = object, C extends ServerComponent
    private deactivateBuffer = new Array<number>();
 
    // @Bug @Incomplete: This function shouldn't create an entity, as that will cause a crash. (Can't add components to the join buffer while iterating it). solution: make it not crash
-   public onJoin?: (entity: EntityID) => void;
-   public onRemove?: (entity: EntityID) => void;
    public onInitialise?: (config: ComponentConfig<ServerComponentType>, entity: EntityID, entityType: EntityType) => void;
+   public onJoin?: (entity: EntityID) => void;
+   public onTick?(entity: EntityID, component: T): void;
+   public onCollision?(entity: EntityID, collidingEntity: EntityID, pushedHitbox: Hitbox, pushingHitbox: Hitbox): void;
+   public onRemove?: (entity: EntityID) => void;
    public serialise: (entity: EntityID, player: EntityID | null) => ComponentData<C>;
    
    constructor(componentType: C, isActiveByDefault: boolean, functions: ComponentArrayFunctions<C, T>) {
       this.isActiveByDefault = isActiveByDefault;
 
-      this.onJoin = functions.onJoin;
-      this.onRemove = functions.onRemove;
       this.onInitialise = functions.onInitialise;
+      this.onJoin = functions.onJoin;
+      this.onTick = functions.onTick;
+      this.onCollision = functions.onCollision;
+      this.onRemove = functions.onRemove;
       this.serialise = functions.serialise;
 
       ComponentArrays.push(this);

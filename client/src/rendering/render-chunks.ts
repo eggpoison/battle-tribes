@@ -4,6 +4,7 @@ import { createTileRenderChunks, recalculateSolidTileRenderChunkData } from "./w
 import { calculateRiverRenderChunkData } from "./webgl/river-rendering";
 import { calculateAmbientOcclusionInfo } from "./webgl/ambient-occlusion-rendering";
 import { calculateWallBorderInfo } from "./webgl/wall-border-rendering";
+import Board from "../Board";
 
 /** Width and height of a render chunk in tiles */
 export const RENDER_CHUNK_SIZE = 8;
@@ -78,7 +79,7 @@ export function getRenderChunkAmbientOcclusionInfo(renderChunkX: number, renderC
    return ambientOcclusionInfoArray[getRenderChunkIndex(renderChunkX, renderChunkY)];
 }
 
-export function createRenderChunks(decorations: ReadonlyArray<DecorationInfo>, waterRocks: ReadonlyArray<WaterRockData>, edgeRiverSteppingStones: ReadonlyArray<RiverSteppingStoneData>): void {
+export function createRenderChunks(decorations: ReadonlyArray<DecorationInfo>, waterRocks: ReadonlyArray<WaterRockData>, riverSteppingStones: ReadonlyArray<RiverSteppingStoneData>): void {
    // Group water rocks
    // @Speed: Garbage collection
    let waterRocksChunked: Record<number, Record<number, Array<WaterRockData>>> = {};
@@ -96,7 +97,11 @@ export function createRenderChunks(decorations: ReadonlyArray<DecorationInfo>, w
 
    // Group edge stepping stones
    let edgeSteppingStonesChunked: Record<number, Record<number, Array<RiverSteppingStoneData>>> = {};
-   for (const steppingStone of edgeRiverSteppingStones) {
+   for (const steppingStone of riverSteppingStones) {
+      if (Board.positionIsInBoard(steppingStone.positionX, steppingStone.positionY)) {
+         continue;
+      }
+      
       const size = RIVER_STEPPING_STONE_SIZES[steppingStone.size];
       
       const minRenderChunkX = Math.max(Math.min(Math.floor((steppingStone.positionX - size/2) / RENDER_CHUNK_UNITS), WORLD_RENDER_CHUNK_SIZE - 1), 0);

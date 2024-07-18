@@ -1,5 +1,5 @@
 import { randInt } from "webgl-test-shared/dist/utils";
-import { IceSpikesComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { ComponentArray } from "./ComponentArray";
 import { EntityID } from "webgl-test-shared/dist/entities";
 import { ComponentConfig } from "../components";
@@ -27,7 +27,8 @@ export class IceSpikesComponent {
 
 export const IceSpikesComponentArray = new ComponentArray<IceSpikesComponent>(ServerComponentType.iceSpikes, true, {
    onInitialise: onInitialise,
-   serialise: serialise
+   getDataLength: getDataLength,
+   addDataToPacket: addDataToPacket
 });
 
 function onInitialise(config: ComponentConfig<ServerComponentType.iceSpikes>, entity: EntityID): void {
@@ -36,8 +37,8 @@ function onInitialise(config: ComponentConfig<ServerComponentType.iceSpikes>, en
    }
 }
 
-function serialise(): IceSpikesComponentData {
-   return {
-      componentType: ServerComponentType.iceSpikes
-   };
+function getDataLength(): number {
+   return Float32Array.BYTES_PER_ELEMENT;
 }
+
+function addDataToPacket(): void {}

@@ -1,4 +1,4 @@
-import { ProjectileComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { ComponentArray } from "./ComponentArray";
 import { EntityID } from "webgl-test-shared/dist/entities";
 import { TransformComponentArray } from "./TransformComponent";
@@ -24,7 +24,8 @@ export class ProjectileComponent {
 }
 
 export const ProjectileComponentArray = new ComponentArray<ProjectileComponent>(ServerComponentType.projectile, true, {
-   serialise: serialise
+   getDataLength: getDataLength,
+   addDataToPacket: addDataToPacket
 });
 
 const tickProjectileComponent = (projectile: EntityID, projectileComponent: ProjectileComponent): void => {
@@ -68,8 +69,8 @@ export function tickProjectileComponents(): void {
    }
 }
 
-function serialise(entity: EntityID): ProjectileComponentData {
-   return {
-      componentType: ServerComponentType.projectile
-   };
+function getDataLength(): number {
+   return Float32Array.BYTES_PER_ELEMENT;
 }
+
+function addDataToPacket(): void {}

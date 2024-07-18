@@ -1,5 +1,5 @@
 import { Settings } from "webgl-test-shared/dist/settings";
-import { PhysicsComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityID, EntityType, EntityTypeString } from "webgl-test-shared/dist/entities";
 import { TileType, TILE_MOVE_SPEED_MULTIPLIERS, TILE_FRICTIONS } from "webgl-test-shared/dist/tiles";
 import { ComponentArray } from "./ComponentArray";
@@ -8,6 +8,7 @@ import { Point } from "webgl-test-shared/dist/utils";
 import Board from "../Board";
 import { registerPlayerKnockback } from "../server/player-clients";
 import { TransformComponent, TransformComponentArray } from "./TransformComponent";
+import { Packet } from "webgl-test-shared/dist/packets";
 
 export interface PhysicsComponentParams {
    velocityX: number;
@@ -69,7 +70,8 @@ export class PhysicsComponent {
 
 export const PhysicsComponentArray = new ComponentArray<PhysicsComponent>(ServerComponentType.physics, true, {
    onRemove: onRemove,
-   serialise: serialise
+   getDataLength: getDataLength,
+   addDataToPacket: addDataToPacket
 });
 
 function onRemove(entity: EntityID): void {
@@ -282,12 +284,15 @@ export function applyKnockback(entity: EntityID, knockback: number, knockbackDir
    }
 }
 
-function serialise(entityID: number): PhysicsComponentData {
-   const physicsComponent = PhysicsComponentArray.getComponent(entityID);
+function getDataLength(): number {
+   return 5 * Float32Array.BYTES_PER_ELEMENT;
+}
 
-   return {
-      componentType: ServerComponentType.physics,
-      velocity: physicsComponent.velocity.package(),
-      acceleration: physicsComponent.acceleration.package()
-   };
+function addDataToPacket(packet: Packet, entity: EntityID): void {
+   const physicsComponent = PhysicsComponentArray.getComponent(entity);
+
+   packet.addNumber(physicsComponent.velocity.x);
+   packet.addNumber(physicsComponent.velocity.y);
+   packet.addNumber(physicsComponent.acceleration.x);
+   packet.addNumber(physicsComponent.acceleration.y);
 }

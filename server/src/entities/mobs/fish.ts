@@ -263,7 +263,7 @@ export function tickFish(fish: EntityID): void {
    // Escape AI
    const escapeAIComponent = EscapeAIComponentArray.getComponent(fish);
    updateEscapeAIComponent(escapeAIComponent, 3 * Settings.TPS);
-   if (escapeAIComponent.attackingEntityIDs.length > 0) {
+   if (escapeAIComponent.attackingEntities.length > 0) {
       const escapeEntity = chooseEscapeEntity(fish, aiHelperComponent.visibleEntities);
       if (escapeEntity !== null) {
          runFromAttackingEntity(fish, escapeEntity, 200, TURN_SPEED);

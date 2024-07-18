@@ -1,6 +1,8 @@
 import { TribesmanTitle } from "webgl-test-shared/dist/titles";
-import { PlayerComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { ComponentArray } from "./ComponentArray";
+import { EntityID } from "webgl-test-shared/dist/entities";
+import { Packet } from "webgl-test-shared/dist/packets";
 
 export interface PlayerComponentParams {
    username: string;
@@ -20,14 +22,17 @@ export class PlayerComponent {
 }
 
 export const PlayerComponentArray = new ComponentArray<PlayerComponent>(ServerComponentType.player, true, {
-   serialise: serialise
+   getDataLength: getDataLength,
+   addDataToPacket: addDataToPacket
 });
 
-function serialise(entityID: number): PlayerComponentData {
-   const playerComponent = PlayerComponentArray.getComponent(entityID);
+function getDataLength(): number {
+   return Float32Array.BYTES_PER_ELEMENT + 100;
+}
 
-   return {
-      componentType: ServerComponentType.player,
-      username: playerComponent.username
-   };
+function addDataToPacket(packet: Packet, entity: EntityID): void {
+   const playerComponent = PlayerComponentArray.getComponent(entity);
+
+   // @Hack: hardcoded
+   packet.addString(playerComponent.username, 100);
 }

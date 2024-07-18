@@ -41,8 +41,6 @@
     "resolve-cwd": "^3.0.0",
     "resolve-url-loader": "^4.0.0",
     "semver": "^7.3.5",
-    "socket.io": "^4.5.1",
-    "socket.io-client": "^4.5.1",
     "source-map-loader": "^3.0.0",
     "style-loader": "^3.3.1",
     "terser-webpack-plugin": "^5.2.5",

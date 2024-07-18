@@ -1,4 +1,4 @@
-import { ServerComponentType, ThrowingProjectileComponentData } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { ComponentArray } from "./ComponentArray";
 import { EntityID } from "webgl-test-shared/dist/entities";
 import { InventoryComponentArray } from "./InventoryComponent";
@@ -21,7 +21,8 @@ export class ThrowingProjectileComponent {
 
 export const ThrowingProjectileComponentArray = new ComponentArray<ThrowingProjectileComponent>(ServerComponentType.throwingProjectile, true, {
    onJoin: onRemove,
-   serialise: serialise
+   getDataLength: getDataLength,
+   addDataToPacket: addDataToPacket
 });
 
 function onRemove(entity: EntityID): void {
@@ -38,8 +39,8 @@ function onRemove(entity: EntityID): void {
    }
 }
 
-function serialise(): ThrowingProjectileComponentData {
-   return {
-      componentType: ServerComponentType.throwingProjectile
-   };
+function getDataLength(): number {
+   return Float32Array.BYTES_PER_ELEMENT;
 }
+
+function addDataToPacket(): void {}

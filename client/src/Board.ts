@@ -1,5 +1,5 @@
 import { Settings } from "webgl-test-shared/dist/settings";
-import { GrassTileInfo, InitialGameDataPacket, RIVER_STEPPING_STONE_SIZES, RiverFlowDirections, RiverSteppingStoneData, ServerTileData, ServerTileUpdateData } from "webgl-test-shared/dist/client-server-types";
+import { GrassTileInfo, RIVER_STEPPING_STONE_SIZES, RiverFlowDirectionsRecord, RiverSteppingStoneData, ServerTileUpdateData } from "webgl-test-shared/dist/client-server-types";
 import { TileType } from "webgl-test-shared/dist/tiles";
 import { Point, Vector } from "webgl-test-shared/dist/utils";
 import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
@@ -19,6 +19,7 @@ import { EntityInfo } from "webgl-test-shared/dist/board-interface";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import Client from "./client/Client";
 import { RenderPart } from "./render-parts/render-parts";
+import { InitialGameDataPacket } from "./client/packet-processing";
 
 export interface EntityHitboxInfo {
    readonly vertexPositions: readonly [Point, Point, Point, Point];
@@ -36,10 +37,9 @@ abstract class Board {
 
    private static tiles = new Array<Tile>();
    private static chunks: Array<Chunk>;
-
-   public static edgeRiverFlowDirections: RiverFlowDirections; 
-
+   
    public static grassInfo: Record<number, Record<number, GrassTileInfo>>;
+   private static riverFlowDirections: RiverFlowDirectionsRecord;
 
    public static numVisibleRenderParts = 0;
    /** Game objects sorted in descending render weight */
@@ -61,8 +61,6 @@ abstract class Board {
    public static readonly lowTexturedParticles = new Array<Particle>();
    public static readonly highMonocolourParticles = new Array<Particle>();
    public static readonly highTexturedParticles = new Array<Particle>();
-
-   private static riverFlowDirections: RiverFlowDirections;
 
    private static tickCallbacks = new Array<TickCallback>();
 
@@ -135,7 +133,6 @@ abstract class Board {
       }
 
       this.riverFlowDirections = initialGameDataPacket.riverFlowDirections;
-      this.edgeRiverFlowDirections = initialGameDataPacket.edgeRiverFlowDirections;
 
       this.grassInfo = initialGameDataPacket.grassInfo;
    }
@@ -267,25 +264,6 @@ abstract class Board {
       return direction;
    }
 
-   public static getEdgeRiverFlowDirection(tileX: number, tileY: number): number {
-      const rowDirections = this.riverFlowDirections[tileX];
-      if (typeof rowDirections !== "undefined") {
-         const direction = rowDirections[tileY];
-         if (typeof direction !== "undefined") {
-            return direction;
-         }
-      }
-      const edgeRowDirections = this.edgeRiverFlowDirections[tileX];
-      if (typeof edgeRowDirections !== "undefined") {
-         const direction = edgeRowDirections[tileY];
-         if (typeof direction !== "undefined") {
-            return direction;
-         }
-      }
-
-      throw new Error("Tried to get the river flow direction of a non-water tile.");
-   }
-
    public static getTile(tileX: number, tileY: number): Tile {
       const x = tileX + Settings.EDGE_GENERATION_DISTANCE;
       const y = tileY + Settings.EDGE_GENERATION_DISTANCE;
@@ -370,6 +348,10 @@ abstract class Board {
          tile.type = update.type;
          tile.isWall = update.isWall;
       }
+   }
+
+   public static positionIsInBoard(x: number, y: number): boolean {
+      return x >= 0 && x < Settings.BOARD_UNITS && y >= 0 && y < Settings.BOARD_UNITS;
    }
 
    public static tileIsInBoard(tileX: number, tileY: number): boolean {

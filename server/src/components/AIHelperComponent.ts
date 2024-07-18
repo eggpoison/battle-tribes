@@ -7,6 +7,7 @@ import { ComponentArray } from "./ComponentArray";
 import { Hitbox, hitboxIsCircular } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { EntityID } from "webgl-test-shared/dist/entities";
 import { TransformComponent, TransformComponentArray } from "./TransformComponent";
+import { Packet } from "webgl-test-shared/dist/packets";
 
 export interface AIHelperComponentParams {
    visionRange: number;
@@ -30,7 +31,8 @@ export class AIHelperComponent {
 
 export const AIHelperComponentArray = new ComponentArray<AIHelperComponent>(ServerComponentType.aiHelper, true, {
    onRemove: onRemove,
-   serialise: serialise
+   getDataLength: getDataLength,
+   addDataToPacket: addDataToPacket
 });
 
 function onRemove(entity: EntityID): void {
@@ -168,11 +170,12 @@ export function tickAIHelperComponent(entity: EntityID): void {
    aiHelperComponent.visibleEntities = calculateVisibleEntities(entity, aiHelperComponent);
 }
 
-function serialise(entityID: number): AIHelperComponentData {
+function getDataLength(): number {
+   return 2 * Float32Array.BYTES_PER_ELEMENT;
+}
+
+function addDataToPacket(packet: Packet, entityID: number): void {
    const aiHelperComponent = AIHelperComponentArray.getComponent(entityID);
    
-   return {
-      componentType: ServerComponentType.aiHelper,
-      visionRange: aiHelperComponent.visionRange
-   };
+   packet.addNumber(aiHelperComponent.visionRange);
 }

@@ -1,10 +1,11 @@
-import { ServerComponentType, SlimeComponentData } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityID, SlimeSize } from "webgl-test-shared/dist/entities";
 import { SLIME_MERGE_TIME, SLIME_MERGE_WEIGHTS, SLIME_RADII, SLIME_VISION_RANGES, SPIT_CHARGE_TIME_TICKS, SPIT_COOLDOWN_TICKS, SlimeEntityAnger } from "../entities/mobs/slime";
 import Board from "../Board";
 import { ComponentArray } from "./ComponentArray";
 import { CircularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { ComponentConfig } from "../components";
+import { Packet } from "webgl-test-shared/dist/packets";
 
 export interface SlimeComponentParams {
    size: SlimeSize;
@@ -40,7 +41,8 @@ export class SlimeComponent {
 
 export const SlimeComponentArray = new ComponentArray<SlimeComponent>(ServerComponentType.slime, true, {
    onInitialise: onInitialise,
-   serialise: serialise
+   getDataLength: getDataLength,
+   addDataToPacket: addDataToPacket
 });
 
 function onInitialise(config: ComponentConfig<ServerComponentType.transform | ServerComponentType.health | ServerComponentType.aiHelper | ServerComponentType.slime>): void {
@@ -55,9 +57,28 @@ function onInitialise(config: ComponentConfig<ServerComponentType.transform | Se
    config[ServerComponentType.slime].mergeWeight = SLIME_MERGE_WEIGHTS[size];
 }
 
-function serialise(entity: EntityID): SlimeComponentData {
+function getDataLength(entity: EntityID): number {
    const slimeComponent = SlimeComponentArray.getComponent(entity);
 
+   let lengthBytes = 4 * Float32Array.BYTES_PER_ELEMENT;
+   lengthBytes += Float32Array.BYTES_PER_ELEMENT * slimeComponent.orbSizes.length;
+   lengthBytes += 2 * Float32Array.BYTES_PER_ELEMENT;
+
+   return lengthBytes;
+}
+
+function addDataToPacket(packet: Packet, entity: EntityID): void {
+   const slimeComponent = SlimeComponentArray.getComponent(entity);
+
+   packet.addNumber(slimeComponent.size);
+   packet.addNumber(slimeComponent.eyeRotation);
+
+   packet.addNumber(slimeComponent.orbSizes.length);
+   for (let i = 0; i < slimeComponent.orbSizes.length; i++) {
+      const orbSize = slimeComponent.orbSizes[i];
+      packet.addNumber(orbSize);
+   }
+   
    let anger = -1;
    if (slimeComponent.angeredEntities.length > 0) {
       // Find maximum anger
@@ -68,14 +89,8 @@ function serialise(entity: EntityID): SlimeComponentData {
       }
    }
 
-   const spitChargeProgress = slimeComponent.spitChargeTicks >= SPIT_COOLDOWN_TICKS ? (slimeComponent.spitChargeTicks - SPIT_COOLDOWN_TICKS) / (SPIT_CHARGE_TIME_TICKS - SPIT_COOLDOWN_TICKS) : -1;
+   packet.addNumber(anger);
 
-   return {
-      componentType: ServerComponentType.slime,
-      size: slimeComponent.size,
-      eyeRotation: slimeComponent.eyeRotation,
-      orbSizes: slimeComponent.orbSizes,
-      anger: anger,
-      spitChargeProgress: spitChargeProgress
-   };
+   const spitChargeProgress = slimeComponent.spitChargeTicks >= SPIT_COOLDOWN_TICKS ? (slimeComponent.spitChargeTicks - SPIT_COOLDOWN_TICKS) / (SPIT_CHARGE_TIME_TICKS - SPIT_COOLDOWN_TICKS) : -1;
+   packet.addNumber(spitChargeProgress);
 }

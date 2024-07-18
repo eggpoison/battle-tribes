@@ -9,7 +9,7 @@ import { createPlayerConfig, modifyBuilding, startChargingBattleaxe, startChargi
 import { throwItem, placeBlueprint, attemptAttack, calculateAttackTarget, calculateBlueprintWorkTarget, calculateRadialAttackTargets, calculateRepairTarget, repairBuilding, getAvailableCraftingStations, useItem } from "../entities/tribes/tribe-member";
 import PlayerClient from "./PlayerClient";
 import { SERVER } from "./server";
-import { createGameDataSyncPacket, createInitialGameDataPacket } from "./game-data-packets";
+import { createSyncDataPacket, createInitialGameDataPacket } from "./game-data-packets";
 import { EntityID, EntityType, LimbAction } from "webgl-test-shared/dist/entities";
 import { TRIBE_INFO_RECORD, TribeType } from "webgl-test-shared/dist/tribes";
 import { InventoryUseComponentArray } from "../components/InventoryUseComponent";
@@ -97,12 +97,6 @@ const handlePlayerDisconnect = (playerClient: PlayerClient): void => {
    }
 }
 
-const sendGameDataSyncPacket = (playerClient: PlayerClient): void => {
-   const packet = createGameDataSyncPacket(playerClient);
-   playerClient.socket.emit("game_data_sync_packet", packet);
-}
-
-// @Cleanup: Messy as fuck
 const processPlayerDataPacket = (playerClient: PlayerClient, playerDataPacket: PlayerDataPacket): void => {
    if (!Board.hasEntity(playerClient.instance)) {
       return;
@@ -670,7 +664,7 @@ export function addPlayerClient(playerClient: PlayerClient, player: EntityID, pl
    const socket = playerClient.socket;
 
    const initialGameDataPacket = createInitialGameDataPacket(player, playerConfig);
-   socket.emit("initial_game_data_packet", initialGameDataPacket);
+   socket.send(initialGameDataPacket);
    
    socket.on("disconnect", () => {
       handlePlayerDisconnect(playerClient);
@@ -678,11 +672,6 @@ export function addPlayerClient(playerClient: PlayerClient, player: EntityID, pl
 
    socket.on("deactivate", () => {
       playerClient.clientIsActive = false;
-   });
-
-   socket.on("activate", () => {
-      playerClient.clientIsActive = true;
-      sendGameDataSyncPacket(playerClient);
    });
 
    socket.on("player_data_packet", (playerDataPacket: PlayerDataPacket) => {
@@ -957,7 +946,7 @@ export function registerEntityTickEvent(entity: EntityID, tickEvent: EntityTickE
 export function registerPlayerDroppedItemPickup(player: EntityID): void {
    const playerClient = getPlayerClientFromInstanceID(player);
    if (playerClient !== null) {
-      playerClient.pickedUpItem = true;
+      playerClient.hasPickedUpItem = true;
    } else {
       console.warn("Couldn't find player to pickup item!");
    }

@@ -5,10 +5,11 @@ import { BlueprintComponentArray } from "./BlueprintComponent";
 import { ComponentArray } from "./ComponentArray";
 import { ConnectedEntityIDs } from "../entities/tribes/tribe-member";
 import { Mutable } from "webgl-test-shared/dist/utils";
-import { ServerComponentType, StructureComponentData } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityID } from "webgl-test-shared/dist/entities";
 import { TribeComponentArray } from "./TribeComponent";
 import { TransformComponentArray } from "./TransformComponent";
+import { Packet } from "webgl-test-shared/dist/packets";
 
 export interface StructureComponentParams {
    connectionInfo: StructureConnectionInfo;
@@ -30,7 +31,8 @@ export class StructureComponent implements Mutable<StructureConnectionInfo> {
 export const StructureComponentArray = new ComponentArray<StructureComponent>(ServerComponentType.structure, true, {
    onJoin: onJoin,
    onRemove: onRemove,
-   serialise: serialise
+   getDataLength: getDataLength,
+   addDataToPacket: addDataToPacket
 });
 
 const addConnection = (structureComponent: StructureComponent, connectionIdx: number, connectedEntityID: number): void => {
@@ -99,12 +101,13 @@ function onRemove(entity: EntityID): void {
    }
 }
 
-function serialise(entityID: number): StructureComponentData {
-   const structureComponent = StructureComponentArray.getComponent(entityID);
-   
-   return {
-      componentType: ServerComponentType.structure,
-      hasActiveBlueprint: BlueprintComponentArray.hasComponent(structureComponent.activeBlueprint),
-      connectedSidesBitset: structureComponent.connectedSidesBitset
-   };
+function getDataLength(): number {
+   return 3 * Float32Array.BYTES_PER_ELEMENT;
+}
+
+function addDataToPacket(packet: Packet, entity: EntityID): void {
+   const structureComponent = StructureComponentArray.getComponent(entity);
+   packet.addBoolean(BlueprintComponentArray.hasComponent(structureComponent.activeBlueprint));
+   packet.padOffset(3);
+   packet.addNumber(structureComponent.connectedSidesBitset);
 }

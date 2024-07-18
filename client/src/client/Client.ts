@@ -1,5 +1,5 @@
 import { BuildingPlanData, PotentialBuildingPlanData, TribeWallData } from "webgl-test-shared/dist/ai-building-types";
-import { AttackPacket, CircularHitboxData, ClientToServerEvents, EntityData, GameDataPacket, GameDataPacketOptions, GameDataSyncPacket, InitialGameDataPacket, PlayerDataPacket, PlayerInventoryData, RectangularHitboxData, RespawnDataPacket, ServerTileData, ServerTileUpdateData, ServerToClientEvents, VisibleChunkBounds } from "webgl-test-shared/dist/client-server-types";
+import { AttackPacket, CircularHitboxData, EntityData, GameDataPacket, GameDataPacketOptions, GameDataSyncPacket, PlayerDataPacket, PlayerInventoryData, RectangularHitboxData, RespawnDataPacket, ServerTileData, ServerTileUpdateData, ServerToClientEvents, VisibleChunkBounds } from "webgl-test-shared/dist/client-server-types";
 import { distance, Point } from "webgl-test-shared/dist/utils";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
@@ -8,8 +8,6 @@ import { PlayerTribeData, TechID } from "webgl-test-shared/dist/techs";
 import { STRUCTURE_TYPES } from "webgl-test-shared/dist/structures";
 import { TRIBE_INFO_RECORD, TribeType } from "webgl-test-shared/dist/tribes";
 import { TribesmanTitle } from "webgl-test-shared/dist/titles";
-import { io, Socket } from "socket.io-client";
-import { setGameState, setLoadingScreenInitialStatus } from "../components/App";
 import Player from "../entities/Player";
 import Game from "../Game";
 import { Tile } from "../Tile";
@@ -50,9 +48,9 @@ import { TitlesTab_setTitles } from "../components/game/dev/tabs/TitlesTab";
 import { closeCurrentMenu } from "../menus";
 import { TribesTab_refresh } from "../components/game/dev/tabs/TribesTab";
 import { processTickEvents } from "../entity-tick-events";
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision";
-
-type ISocket = Socket<ServerToClientEvents, ClientToServerEvents>;
+import { Packet, PacketReader, PacketType } from "webgl-test-shared/dist/packets";
+import { InitialGameDataPacket, processGameDataPacket, processInitialGameDataPacket, processSyncDataPacket } from "./packet-processing";
+import { createActivatePacket, createPlayerDataPacket } from "./packet-creation";
 
 export type GameData = {
    readonly gameTicks: number;
@@ -142,80 +140,134 @@ export function createRectangularHitboxFromData(data: RectangularHitboxData): Re
 }
 
 abstract class Client {
-   private static socket: ISocket | null = null;
+   private static socket: WebSocket | null = null;
+
+   public static initialGameDataResolve: ((value: InitialGameDataPacket) => void) | null = null;
+   public static nextGameDataResolve: ((value: GameDataPacket) => void) | null = null;
 
    public static connectToServer(): Promise<boolean> {
       return new Promise(resolve => {
-         let socketAlreadyExists = false;
+         this.socket = new WebSocket(`ws://localhost:${Settings.SERVER_PORT}`);
+         this.socket.binaryType = "arraybuffer";
 
-         // Don't add events if the socket already exists
-         if (this.socket !== null) {
-            socketAlreadyExists = true;
-            
-            // Reconnect
-            if (!this.socket.connected) {
-               this.socket.connect();
-            }
-
-            this.socket.off("connect");
-            this.socket.off("connect_error");
-         } else {
-            // Create the socket
-            this.socket = this.createSocket();
-            this.socket.connect();
-         }
-
-         // If connection was successful, return true
-         this.socket.on("connect", () => {
+         this.socket.onopen = () => {
             resolve(true);
-         });
-         // If couldn't connect to server, return false
-         this.socket.on("connect_error", (err) => {
-            console.log(err);
-            resolve(false);
-         });
-         
-         if (!socketAlreadyExists) {
-            this.socket.on("game_data_packet", gameDataPacket => {
-               // Only unload game packets when the game is running
-               if (Game.getIsPaused() || !Game.isRunning || !Game.isSynced || document.visibilityState === "hidden") return;
-
-               registerServerTick();
-
-               Game.queuedPackets.push(gameDataPacket);
-            });
-   
-            // When the connection to the server fails
-            this.socket.on("disconnect", disconnectReason => {
-               // Don't show a connection error if the socket was disconnected manually
-               if (disconnectReason === "io client disconnect") return;
-
-               console.warn(disconnectReason);
-
-               Game.isRunning = false;
-               
-               setLoadingScreenInitialStatus("connection_error");
-               setGameState("loading");
-
-               Player.instance = null;
-            });
-
-            this.socket.on("game_data_sync_packet", (gameDataSyncPacket: GameDataSyncPacket) => {
-               this.registerGameDataSyncPacket(gameDataSyncPacket);
-            });
-
-            this.socket.on("respawn_data_packet", (respawnDataPacket: RespawnDataPacket): void => {
-               this.respawnPlayer(respawnDataPacket);
-            });
-
-            this.socket.on("force_position_update", (position: [number, number]): void => {
-               if (Player.instance !== null) {
-                  const transformComponent = Player.instance.getServerComponent(ServerComponentType.transform);
-                  transformComponent.position.x = position[0];
-                  transformComponent.position.y = position[1];
-               }
-            })
          }
+
+         this.socket.onmessage = (message): void => {
+            const packetReader = new PacketReader(message.data, 0);
+            
+            const packetType = packetReader.readNumber() as PacketType;
+            switch (packetType) {
+               case PacketType.initialGameData: {
+                  if (this.initialGameDataResolve !== null) {
+                     const initialGameDataPacket = processInitialGameDataPacket(packetReader);
+                     this.initialGameDataResolve(initialGameDataPacket);
+                     this.initialGameDataResolve = null;
+                  }
+                  break;
+               }
+               case PacketType.gameData: {
+                  if (this.nextGameDataResolve !== null) {
+                     const gameDataPacket = processGameDataPacket(packetReader);
+                     this.nextGameDataResolve(gameDataPacket);
+                     this.nextGameDataResolve = null;
+                     return;
+                  }
+
+                  // Only unload game packets when the game is running
+                  if (Game.getIsPaused() || !Game.isRunning || !Game.isSynced || document.visibilityState === "hidden") {
+                     return;
+                  }
+
+                  const gameDataPacket = processGameDataPacket(packetReader);
+
+                  registerServerTick();
+                  Game.queuedPackets.push(gameDataPacket);
+
+                  break;
+               }
+               case PacketType.syncData: {
+                  processSyncDataPacket(packetReader);
+                  break;
+               }
+               case PacketType.sync: {
+                  Game.sync();
+                  break;
+               }
+            }
+         }
+
+         // let socketAlreadyExists = false;
+
+         // // Don't add events if the socket already exists
+         // if (this.socket !== null) {
+         //    socketAlreadyExists = true;
+            
+         //    // Reconnect
+         //    if (!this.socket.connected) {
+         //       this.socket.connect();
+         //    }
+
+         //    this.socket.off("connect");
+         //    this.socket.off("connect_error");
+         // } else {
+         //    // Create the socket
+         //    this.socket = this.createSocket();
+         //    this.socket.connect();
+         // }
+
+         // // If connection was successful, return true
+         // this.socket.on("connect", () => {
+         //    resolve(true);
+         // });
+         // // If couldn't connect to server, return false
+         // this.socket.on("connect_error", (err) => {
+         //    console.log(err);
+         //    resolve(false);
+         // });
+         
+         // if (!socketAlreadyExists) {
+         //    this.socket.on("game_data_packet", gameDataPacket => {
+         //       // Only unload game packets when the game is running
+         //       if (Game.getIsPaused() || !Game.isRunning || !Game.isSynced || document.visibilityState === "hidden") return;
+
+         //       registerServerTick();
+
+         //       Game.queuedPackets.push(gameDataPacket);
+         //    });
+   
+         //    // When the connection to the server fails
+         //    this.socket.on("disconnect", disconnectReason => {
+         //       // Don't show a connection error if the socket was disconnected manually
+         //       if (disconnectReason === "io client disconnect") return;
+
+         //       console.warn(disconnectReason);
+
+         //       Game.isRunning = false;
+               
+         //       setLoadingScreenInitialStatus("connection_error");
+         //       setGameState("loading");
+
+         //       Player.instance = null;
+         //    });
+
+         //    this.socket.on("game_data_sync_packet", (gameDataSyncPacket: GameDataSyncPacket) => {
+         //       this.registerGameDataSyncPacket(gameDataSyncPacket);
+         //    });
+
+         //    this.socket.on("respawn_data_packet", (respawnDataPacket: RespawnDataPacket): void => {
+         //       this.respawnPlayer(respawnDataPacket);
+         //    });
+
+         //    this.socket.on("force_position_update", (position: [number, number]): void => {
+         //       if (Player.instance !== null) {
+         //          const transformComponent = Player.instance.getServerComponent(ServerComponentType.transform);
+         //          transformComponent.position.x = position[0];
+         //          transformComponent.position.y = position[1];
+         //       }
+         //    })
+         // }
       });
    }
 
@@ -234,35 +286,24 @@ abstract class Client {
 
    public static getInitialGameDataPacket(): Promise<InitialGameDataPacket> {
       return new Promise(resolve => {
-         if (this.socket === null) {
-            throw new Error();
-         }
+         Client.initialGameDataResolve = resolve;
+      });
+      
+      // return new Promise(resolve => {
+      //    if (this.socket === null) {
+      //       throw new Error();
+      //    }
 
-         this.socket.once("initial_game_data_packet", initialGameDataPacket => {
-            resolve(initialGameDataPacket);
-         });
-      })
+      //    this.socket.once("initial_game_data_packet", initialGameDataPacket => {
+      //       resolve(initialGameDataPacket);
+      //    });
+      // })
    }
 
    public static getNextGameDataPacket(): Promise<GameDataPacket> {
       return new Promise(resolve => {
-         if (this.socket === null) {
-            throw new Error();
-         }
-
-         this.socket.once("game_data_packet", gameDataPacket => {
-            resolve(gameDataPacket);
-         });
+         Client.nextGameDataResolve = resolve;
       })
-   }
-
-   /** Creates the socket used to connect to the server */
-   private static createSocket(): ISocket {
-      return io(`ws://localhost:${Settings.SERVER_PORT}`, {
-         transports: ["websocket", "polling", "flashsocket"],
-         autoConnect: false,
-         reconnection: false
-      });
    }
 
    public static disconnect(): void {
@@ -270,7 +311,7 @@ abstract class Client {
          throw new Error("Tried to disconnect a socket which doesn't exist");
       }
 
-      this.socket.disconnect();
+      this.socket.close();
       this.socket = null;
    }
 
@@ -514,7 +555,7 @@ abstract class Client {
       }
    }
 
-   private static updatePlayerInventory(playerInventoryData: PlayerInventoryData) {
+   public static updatePlayerInventory(playerInventoryData: PlayerInventoryData) {
       // Call the remove function if the selected item has been removed, and the select function for new selected item slots
       const previouslySelectedItem = definiteGameState.hotbar.itemSlots[latencyGameState.selectedHotbarItemSlot];
       if (typeof previouslySelectedItem !== "undefined" && !playerInventoryData.hotbar.itemSlots.hasOwnProperty(latencyGameState.selectedHotbarItemSlot)) {
@@ -656,32 +697,6 @@ abstract class Client {
       }
    }
 
-   private static registerGameDataSyncPacket(gameDataSyncPacket: GameDataSyncPacket): void {
-      if (!Game.isRunning) return;
-
-      if (Player.instance !== null) {
-         const transformComponent = Player.instance.getServerComponent(ServerComponentType.transform);
-         
-         transformComponent.position.x = gameDataSyncPacket.position[0];
-         transformComponent.position.y = gameDataSyncPacket.position[1];
-         transformComponent.rotation = gameDataSyncPacket.rotation;
-         this.updatePlayerInventory(gameDataSyncPacket.inventory);
-
-         const physicsComponent = Player.instance.getServerComponent(ServerComponentType.physics);
-         physicsComponent.velocity.x = gameDataSyncPacket.velocity[0];
-         physicsComponent.velocity.y = gameDataSyncPacket.velocity[1];
-         physicsComponent.acceleration.x = gameDataSyncPacket.acceleration[0];
-         physicsComponent.acceleration.y = gameDataSyncPacket.acceleration[1];
-         
-         definiteGameState.setPlayerHealth(gameDataSyncPacket.health);
-         if (definiteGameState.playerIsDead()) {
-            this.killPlayer();
-         }
-      }
-
-      Game.sync();
-   }
-
    private static respawnPlayer(respawnDataPacket: RespawnDataPacket): void {
       latencyGameState.selectedHotbarItemSlot = 1;
       Hotbar_setHotbarSelectedItemSlot(1);
@@ -706,151 +721,107 @@ abstract class Client {
    public static sendChatMessage(message: string): void {
       // Send the chat message to the server
       if (this.socket !== null) {
-         this.socket.emit("chat_message", message);
+         // this.socket.emit("chat_message", message);
       }
    }
 
    public static sendInitialPlayerData(username: string, tribeType: TribeType): void {
       // Send player data to the server
       if (this.socket !== null) {
-         this.socket.emit("initial_player_data", username, tribeType, windowWidth, windowHeight);
-      }
-   }
+         const maxUsernameUInt8Length = 24;
+         
+         const packet = new Packet(PacketType.initialPlayerData, Float32Array.BYTES_PER_ELEMENT * 4 + maxUsernameUInt8Length);
+         packet.addString(username, maxUsernameUInt8Length);
+         packet.addNumber(tribeType);
+         packet.addNumber(windowWidth);
+         packet.addNumber(windowHeight);
 
-   public static sendVisibleChunkBounds(visibleChunks: VisibleChunkBounds): void {
-      // Send player data to the server
-      if (this.socket !== null) {
-         this.socket.emit("visible_chunk_bounds", visibleChunks);
+         this.socket.send(packet.buffer);
       }
    }
 
    public static sendPlayerDataPacket(): void {
       if (Game.isRunning && this.socket !== null && Player.instance !== null) {
-         let interactingEntityID = -1;
-         const selectedEntityID = getSelectedEntityID();
-
-         const selectedEntity = Board.entityRecord[selectedEntityID];
-         if (typeof selectedEntity !== "undefined") {
-            if (selectedEntity.type === EntityType.tribeWorker || selectedEntity.type === EntityType.tribeWarrior) {
-               interactingEntityID = selectedEntity.id;
-            }
-         }
-
-         let gameDataOptions = 0;
-         if (OPTIONS.showPathfindingNodes) {
-            gameDataOptions |= GameDataPacketOptions.sendVisiblePathfindingNodeOccupances;
-         }
-         if (OPTIONS.showSafetyNodes) {
-            gameDataOptions |= GameDataPacketOptions.sendVisibleSafetyNodes;
-         }
-         if (OPTIONS.showBuildingPlans) {
-            gameDataOptions |= GameDataPacketOptions.sendVisibleBuildingPlans;
-         }
-         if (OPTIONS.showBuildingSafetys) {
-            gameDataOptions |= GameDataPacketOptions.sendVisibleBuildingSafetys;
-         }
-         if (OPTIONS.showRestrictedAreas) {
-            gameDataOptions |= GameDataPacketOptions.sendVisibleRestrictedBuildingAreas;
-         }
-         if (OPTIONS.showWallConnections) {
-            gameDataOptions |= GameDataPacketOptions.sendVisibleWallConnections;
-         }
-         // @Incomplete: do option for walls
-
-         const transformComponent = Player.instance.getServerComponent(ServerComponentType.transform);
-         const physicsComponent = Player.instance.getServerComponent(ServerComponentType.physics);
-         
-         const packet: PlayerDataPacket = {
-            position: transformComponent.position.package(),
-            velocity: physicsComponent.velocity.package() || null,
-            acceleration: physicsComponent.acceleration.package() || null,
-            rotation: transformComponent.rotation,
-            visibleChunkBounds: Camera.getVisibleChunkBounds(),
-            selectedItemSlot: latencyGameState.selectedHotbarItemSlot,
-            mainAction: latencyGameState.mainAction,
-            offhandAction: latencyGameState.offhandAction,
-            interactingEntityID: interactingEntityID,
-            gameDataOptions: gameDataOptions
-         };
-
-         this.socket.emit("player_data_packet", packet);
+         const buffer = createPlayerDataPacket();
+         this.socket.send(buffer);
       }
    }
 
    public static sendCraftingPacket(recipeIndex: number): void {
       if (Game.isRunning && this.socket !== null) {
-         this.socket.emit("crafting_packet", recipeIndex);
+         // this.socket.emit("crafting_packet", recipeIndex);
       }
    }
 
    public static sendItemPickupPacket(entityID: number, inventoryName: InventoryName, itemSlot: number, amount: number): void {
       if (Game.isRunning && this.socket !== null) {
-         this.socket.emit("item_pickup", entityID, inventoryName, itemSlot, amount);
+         // this.socket.emit("item_pickup", entityID, inventoryName, itemSlot, amount);
       }
    }
 
    public static sendItemReleasePacket(entityID: number, inventoryName: InventoryName, itemSlot: number, amount: number): void {
       if (Game.isRunning && this.socket !== null) {
-         this.socket.emit("item_release", entityID, inventoryName, itemSlot, amount);
+         // this.socket.emit("item_release", entityID, inventoryName, itemSlot, amount);
       }
    }
 
    public static sendAttackPacket(attackPacket: AttackPacket): void {
       if (Game.isRunning && this.socket !== null) {
-         this.socket.emit("attack_packet", attackPacket);
+         // this.socket.emit("attack_packet", attackPacket);
       }
    }
 
    public static sendItemUsePacket(): void {
       if (Game.isRunning && this.socket !== null) {
          const itemSlot = latencyGameState.selectedHotbarItemSlot;
-         this.socket.emit("item_use_packet", itemSlot);
+         // this.socket.emit("item_use_packet", itemSlot);
       }
    }
 
    public static sendHeldItemDropPacket(dropAmount: number, dropDirection: number): void {
       if (Game.isRunning && this.socket !== null) {
-         this.socket.emit("held_item_drop", dropAmount, dropDirection);
+         // this.socket.emit("held_item_drop", dropAmount, dropDirection);
       }
    }
 
    public static sendItemDropPacket(itemSlot: number, dropAmount: number, dropDirection: number): void {
       if (Game.isRunning && this.socket !== null) {
-         this.socket.emit("item_drop", itemSlot, dropAmount, dropDirection);
+         // this.socket.emit("item_drop", itemSlot, dropAmount, dropDirection);
       }
    }
 
    public static sendDeactivatePacket(): void {
       if (Game.isRunning && this.socket !== null) {
-         this.socket.emit("deactivate");
+         // this.socket.emit("deactivate");
       }
    }
 
    public static sendActivatePacket(): void {
       if (Game.isRunning && this.socket !== null) {
-         this.socket.emit("activate");
+         const buffer = createActivatePacket();
+         this.socket.send(buffer);
       }
    }
 
    public static sendRespawnRequest(): void {
       if (Game.isRunning && Client.socket !== null) {
-         Client.socket.emit("respawn");
+         // Client.socket.emit("respawn");
       }
    }
 
    public static sendCommand(command: string): void {
       if (Game.isRunning && this.socket !== null) {
-         this.socket.emit("command", command);
+         // this.socket.emit("command", command);
       }
    }
 
    public static sendTrackEntity(id: number): void {
       if (Game.isRunning && this.socket !== null) {
-         this.socket.emit("track_game_object", id);
+         // this.socket.emit("track_game_object", id);
       }
    }
 
-   private static killPlayer(): void {
+   public static killPlayer(): void {
       // Remove the player from the game
       Board.removeEntity(Player.instance!, true);
       Player.instance = null;
@@ -864,25 +835,25 @@ abstract class Client {
 
    public static sendSelectTech(techID: TechID): void {
       if (Game.isRunning && this.socket !== null) {
-         this.socket.emit("select_tech", techID);
+         // this.socket.emit("select_tech", techID);
       }
    }
 
    public static sendUnlockTech(techID: TechID): void {
       if (Game.isRunning && this.socket !== null) {
-         this.socket.emit("unlock_tech", techID);
+         // this.socket.emit("unlock_tech", techID);
       }
    }
 
    public static sendForceUnlockTech(techID: TechID): void {
       if (Game.isRunning && this.socket !== null) {
-         this.socket.emit("force_unlock_tech", techID);
+         // this.socket.emit("force_unlock_tech", techID);
       }
    }
 
    public static sendStudyTech(studyAmount: number): void {
       if (Game.isRunning && this.socket !== null) {
-         this.socket.emit("study_tech", studyAmount);
+         // this.socket.emit("study_tech", studyAmount);
       }
    }
 
@@ -890,91 +861,91 @@ abstract class Client {
 
    public static sendPlaceBlueprint(structureID: number, blueprintType: BlueprintType): void {
       if (Game.isRunning && this.socket !== null) {
-         this.socket.emit("place_blueprint", structureID, blueprintType);
+         // this.socket.emit("place_blueprint", structureID, blueprintType);
       }
    }
 
    public static sendModifyBuilding(structureID: number, data: number): void {
       if (Game.isRunning && this.socket !== null) {
-         this.socket.emit("modify_building", structureID, data);
+         // this.socket.emit("modify_building", structureID, data);
       }
    }
 
    public static sendDeconstructBuilding(structureID: number): void {
       if (Game.isRunning && this.socket !== null) {
-         this.socket.emit("deconstruct_building", structureID);
+         // this.socket.emit("deconstruct_building", structureID);
       }
    }
 
    public static sendStructureInteract(structureID: number, interactData: number): void {
       if (Game.isRunning && this.socket !== null) {
-         this.socket.emit("structure_interact", structureID, interactData);
+         // this.socket.emit("structure_interact", structureID, interactData);
       }
    }
 
    public static sendStructureUninteract(structureID: number): void {
       if (Game.isRunning && this.socket !== null) {
-         this.socket.emit("structure_uninteract", structureID);
+         // this.socket.emit("structure_uninteract", structureID);
       }
    }
 
    public static sendRecruitTribesman(tribesmanID: number): void {
       if (Game.isRunning && this.socket !== null) {
-         this.socket.emit("recruit_tribesman", tribesmanID);
+         // this.socket.emit("recruit_tribesman", tribesmanID);
       }
    }
 
    public static respondToTitleOffer(title: TribesmanTitle, isAccepted: boolean): void {
       if (Game.isRunning && this.socket !== null) {
-         this.socket.emit("respond_to_title_offer", title, isAccepted);
+         // this.socket.emit("respond_to_title_offer", title, isAccepted);
       }
    }
 
    public static sendEntitySummonPacket(summonPacket: EntitySummonPacket): void {
       if (Game.isRunning && this.socket !== null) {
-         this.socket.emit("dev_summon_entity", summonPacket);
+         // this.socket.emit("dev_summon_entity", summonPacket);
       }
    }
 
    public static sendDevGiveItemPacket(itemType: ItemType, amount: number): void {
       if (Game.isRunning && this.socket !== null) {
-         this.socket.emit("dev_give_item", itemType, amount);
+         // this.socket.emit("dev_give_item", itemType, amount);
       }
    }
 
    public static sendDevGiveTitlePacket(title: TribesmanTitle): void {
       if (Game.isRunning && this.socket !== null) {
-         this.socket.emit("dev_give_title", title);
+         // this.socket.emit("dev_give_title", title);
       }
    }
 
    public static sendDevRemoveTitlePacket(title: TribesmanTitle): void {
       if (Game.isRunning && this.socket !== null) {
-         this.socket.emit("dev_remove_title", title);
+         // this.socket.emit("dev_remove_title", title);
       }
    }
 
    public static sendDevPauseSimulation(): void {
       if (Game.isRunning && this.socket !== null) {
-         this.socket.emit("dev_pause_simulation");
+         // this.socket.emit("dev_pause_simulation");
       }
    }
 
    public static sendDevUnpauseSimulation(): void {
       if (Game.isRunning && this.socket !== null) {
-         this.socket.emit("dev_unpause_simulation");
+         // this.socket.emit("dev_unpause_simulation");
       }
    }
 
    public static sendDevCreateTribe(): void {
       if (Game.isRunning && this.socket !== null) {
-         this.socket.emit("dev_create_tribe");
+         // this.socket.emit("dev_create_tribe");
       }
    }
 
    public static sendDevChangeTribeType(tribeID: number, newTribeType: TribeType): void {
       if (Game.isRunning && this.socket !== null) {
-         this.socket.emit("dev_change_tribe_type", tribeID, newTribeType);
+         // this.socket.emit("dev_change_tribe_type", tribeID, newTribeType);
       }
    }
 }

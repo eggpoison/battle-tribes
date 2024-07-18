@@ -1,7 +1,8 @@
 import { BuildingMaterial, BuildingMaterialComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
 import { ComponentArray } from "./ComponentArray";
-import { EntityType, EntityTypeString } from "webgl-test-shared/dist/entities";
+import { EntityID, EntityType, EntityTypeString } from "webgl-test-shared/dist/entities";
 import { ComponentConfig } from "../components";
+import { Packet } from "webgl-test-shared/dist/packets";
 
 export interface BuildingMaterialComponentParams {
    material: BuildingMaterial;
@@ -23,7 +24,8 @@ export class BuildingMaterialComponent {
 
 export const BuildingMaterialComponentArray = new ComponentArray<BuildingMaterialComponent>(ServerComponentType.buildingMaterial, true, {
    onInitialise: onInitialise,
-   serialise: serialise
+   getDataLength: getDataLength,
+   addDataToPacket: addDataToPacket
 });
 
 function onInitialise(config: ComponentConfig<ServerComponentType.health | ServerComponentType.buildingMaterial>, _: unknown, entityType: EntityType): void {
@@ -32,13 +34,14 @@ function onInitialise(config: ComponentConfig<ServerComponentType.health | Serve
    config[ServerComponentType.health].maxHealth = getStructureHealth(entityType, material);
 }
 
-function serialise(entityID: number): BuildingMaterialComponentData {
-   const buildingMaterialComponent = BuildingMaterialComponentArray.getComponent(entityID);
+function getDataLength(): number {
+   return 2 * Float32Array.BYTES_PER_ELEMENT;
+}
 
-   return {
-      componentType: ServerComponentType.buildingMaterial,
-      material: buildingMaterialComponent.material
-   };
+function addDataToPacket(packet: Packet, entity: EntityID): void {
+   const buildingMaterialComponent = BuildingMaterialComponentArray.getComponent(entity);
+
+   packet.addNumber(buildingMaterialComponent.material);
 }
 
 export function getStructureHealth(entityType: EntityType, material: BuildingMaterial): number {

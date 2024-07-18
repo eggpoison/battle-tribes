@@ -1,5 +1,5 @@
 import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
-import { ServerComponentType, TribeComponentData } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 import Tribe from "../Tribe";
 import { ComponentArray } from "./ComponentArray";
 import { TribesmanAIComponentArray, getTribesmanRelationship } from "./TribesmanAIComponent";
@@ -9,6 +9,7 @@ import { GolemComponentArray } from "./GolemComponent";
 import Board from "../Board";
 import { TribeType } from "webgl-test-shared/dist/tribes";
 import { StructureComponentArray } from "./StructureComponent";
+import { Packet } from "webgl-test-shared/dist/packets";
 
 // /** Relationships a tribe member can have, in increasing order of threat */
 export const enum EntityRelationship {
@@ -41,7 +42,8 @@ export class TribeComponent {
 }
 
 export const TribeComponentArray = new ComponentArray<TribeComponent>(ServerComponentType.tribe, true, {
-   serialise: serialiseTribeComponent
+   getDataLength: getDataLength,
+   addDataToPacket: addDataToPacket
 });
 
 export function getEntityRelationship(entity: EntityID, comparingEntity: EntityID): EntityRelationship {
@@ -141,12 +143,13 @@ export function getEntityRelationship(entity: EntityID, comparingEntity: EntityI
    }
 }
 
-function serialiseTribeComponent(entity: EntityID): TribeComponentData {
+function getDataLength(): number {
+   return 2 * Float32Array.BYTES_PER_ELEMENT;
+}
+
+function addDataToPacket(packet: Packet, entity: EntityID): void {
    const tribeComponent = TribeComponentArray.getComponent(entity);
-   return {
-      componentType: ServerComponentType.tribe,
-      tribeID: tribeComponent.tribe.id
-   };
+   packet.addNumber(tribeComponent.tribe.id);
 }
 
 export function recruitTribesman(tribesman: EntityID, newTribe: Tribe): void {

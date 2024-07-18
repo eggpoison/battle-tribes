@@ -1,8 +1,10 @@
-import { GolemComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 import Board from "../Board";
 import { BODY_GENERATION_RADIUS, GOLEM_WAKE_TIME_TICKS } from "../entities/mobs/golem";
 import { ComponentArray } from "./ComponentArray";
 import { Hitbox, CircularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
+import { EntityID } from "webgl-test-shared/dist/entities";
+import { Packet } from "webgl-test-shared/dist/packets";
 
 export interface GolemComponentParams {
    readonly hitboxes: ReadonlyArray<Hitbox>;
@@ -70,16 +72,19 @@ export class GolemComponent {
 }
 
 export const GolemComponentArray = new ComponentArray<GolemComponent>(ServerComponentType.golem, true, {
-   serialise: serialise
+   getDataLength: getDataLength,
+   addDataToPacket: addDataToPacket
 });
 
-function serialise(entityID: number): GolemComponentData {
-   const golemComponent = GolemComponentArray.getComponent(entityID);
+function getDataLength(): number {
+   return 4 * Float32Array.BYTES_PER_ELEMENT;
+}
 
-   return {
-      componentType: ServerComponentType.golem,
-      wakeProgress: golemComponent.wakeTimerTicks / GOLEM_WAKE_TIME_TICKS,
-      ticksAwake: Board.ticks - golemComponent.lastWakeTicks,
-      isAwake: golemComponent.wakeTimerTicks === GOLEM_WAKE_TIME_TICKS
-   };
+function addDataToPacket(packet: Packet, entity: EntityID): void {
+   const golemComponent = GolemComponentArray.getComponent(entity);
+
+   packet.addNumber(golemComponent.wakeTimerTicks / GOLEM_WAKE_TIME_TICKS);
+   packet.addNumber(Board.ticks - golemComponent.lastWakeTicks);
+   packet.addBoolean(golemComponent.wakeTimerTicks === GOLEM_WAKE_TIME_TICKS);
+   packet.padOffset(3);
 }

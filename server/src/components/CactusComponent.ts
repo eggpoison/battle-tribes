@@ -1,6 +1,7 @@
 import { CactusComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
-import { CactusBodyFlowerData, CactusLimbData } from "webgl-test-shared/dist/entities";
+import { CactusBodyFlowerData, CactusLimbData, EntityID } from "webgl-test-shared/dist/entities";
 import { ComponentArray } from "./ComponentArray";
+import { Packet } from "webgl-test-shared/dist/packets";
 
 export interface CactusComponentParams {
    readonly flowers: ReadonlyArray<CactusBodyFlowerData>;
@@ -18,15 +19,51 @@ export class CactusComponent {
 }
 
 export const CactusComponentArray = new ComponentArray<CactusComponent>(ServerComponentType.cactus, true, {
-   serialise: serialise
+   getDataLength: getDataLength,
+   addDataToPacket: addDataToPacket
 });
 
-function serialise(entityID: number): CactusComponentData {
-   const cactusComponent = CactusComponentArray.getComponent(entityID);
+function getDataLength(entity: EntityID): number {
+   const cactusComponent = CactusComponentArray.getComponent(entity);
 
-   return {
-      componentType: ServerComponentType.cactus,
-      flowers: cactusComponent.flowers,
-      limbs: cactusComponent.limbs
-   };
+   let lengthBytes = 2 * Float32Array.BYTES_PER_ELEMENT;
+   lengthBytes += 5 * Float32Array.BYTES_PER_ELEMENT * cactusComponent.flowers.length;
+   lengthBytes += Float32Array.BYTES_PER_ELEMENT;
+   for (const limb of cactusComponent.limbs) {
+      if (typeof limb.flower !== "undefined") {
+         lengthBytes += 6 * Float32Array.BYTES_PER_ELEMENT;
+      } else {
+         lengthBytes += 2 * Float32Array.BYTES_PER_ELEMENT;
+      }
+   }
+
+   return lengthBytes;
+}
+
+function addDataToPacket(packet: Packet, entity: EntityID): void {
+   const cactusComponent = CactusComponentArray.getComponent(entity);
+
+   packet.addNumber(cactusComponent.flowers.length);
+   for (let i = 0; i < cactusComponent.flowers.length; i++) {
+      const flower = cactusComponent.flowers[i];
+      packet.addNumber(flower.type);
+      packet.addNumber(flower.height);
+      packet.addNumber(flower.rotation);
+      packet.addNumber(flower.size);
+      packet.addNumber(flower.column);
+   }
+
+   packet.addNumber(cactusComponent.limbs.length);
+   for (let i = 0; i < cactusComponent.limbs.length; i++) {
+      const limbData = cactusComponent.limbs[i];
+      packet.addNumber(limbData.direction);
+      packet.addBoolean(typeof limbData.flower !== "undefined");
+      packet.padOffset(3);
+      if (typeof limbData.flower !== "undefined") {
+         packet.addNumber(limbData.flower.type);
+         packet.addNumber(limbData.flower.height);
+         packet.addNumber(limbData.flower.rotation);
+         packet.addNumber(limbData.flower.direction);
+      }
+   }
 }

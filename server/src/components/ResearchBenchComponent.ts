@@ -1,4 +1,4 @@
-import { ResearchBenchComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { TechInfo } from "webgl-test-shared/dist/techs";
@@ -13,6 +13,7 @@ import { TribeComponentArray } from "./TribeComponent";
 import { TribesmanAIComponentArray } from "./TribesmanAIComponent";
 import { InventoryName } from "webgl-test-shared/dist/items/items";
 import { TransformComponentArray } from "./TransformComponent";
+import { Packet } from "webgl-test-shared/dist/packets";
 
 export interface ResearchBenchComponentParams {}
 
@@ -30,7 +31,8 @@ export class ResearchBenchComponent {
 }
 
 export const ResearchBenchComponentArray = new ComponentArray<ResearchBenchComponent>(ServerComponentType.researchBench, true, {
-   serialise: serialise
+   getDataLength: getDataLength,
+   addDataToPacket: addDataToPacket
 });
 
 export function tickResearchBenchComponent(researchBench: EntityID): void {
@@ -135,11 +137,13 @@ export function continueResearching(researchBench: EntityID, researcher: EntityI
    }
 }
 
-function serialise(entityID: number): ResearchBenchComponentData {
-   const researchBenchComponent = ResearchBenchComponentArray.getComponent(entityID);
+function getDataLength(): number {
+   return 2 * Float32Array.BYTES_PER_ELEMENT;
+}
+
+function addDataToPacket(packet: Packet, entity: EntityID): void {
+   const researchBenchComponent = ResearchBenchComponentArray.getComponent(entity);
    
-   return {
-      componentType: ServerComponentType.researchBench,
-      isOccupied: researchBenchComponent.isOccupied
-   };
+   packet.addBoolean(researchBenchComponent.isOccupied);
+   packet.padOffset(3);
 }

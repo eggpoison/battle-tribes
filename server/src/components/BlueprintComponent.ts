@@ -22,6 +22,7 @@ import { createSlingTurretConfig } from "../entities/structures/sling-turret";
 import { createTunnelConfig } from "../entities/structures/tunnel";
 import { createFenceGateConfig } from "../entities/structures/fence-gate";
 import { createWarriorHutConfig } from "../entities/structures/warrior-hut";
+import { Packet } from "webgl-test-shared/dist/packets";
 
 export interface BlueprintComponentParams {
    blueprintType: BlueprintType;
@@ -63,7 +64,8 @@ export const BlueprintComponentArray = new ComponentArray<BlueprintComponent>(Se
    onInitialise: onInitialise,
    onJoin: onJoin,
    onRemove: onRemove,
-   serialise: serialise
+   getDataLength: getDataLength,
+   addDataToPacket: addDataToPacket
 });
 
 function onInitialise(config: ComponentConfig<ServerComponentType.transform | ServerComponentType.blueprint>): void {
@@ -270,13 +272,14 @@ export function doBlueprintWork(blueprintEntity: EntityID, hammerItem: Item): vo
    }
 }
 
-function serialise(entityID: number): BlueprintComponentData {
-   const blueprintComponent = BlueprintComponentArray.getComponent(entityID);
+function getDataLength(): number {
+   return 4 * Float32Array.BYTES_PER_ELEMENT;
+}
 
-   return {
-      componentType: ServerComponentType.blueprint,
-      blueprintType: blueprintComponent.blueprintType,
-      buildProgress: blueprintComponent.workProgress / STRUCTURE_WORK_REQUIRED[blueprintComponent.blueprintType],
-      associatedEntityID: blueprintComponent.associatedEntityID
-   };
+function addDataToPacket(packet: Packet, entity: EntityID): void {
+   const blueprintComponent = BlueprintComponentArray.getComponent(entity);
+
+   packet.addNumber(blueprintComponent.blueprintType);
+   packet.addNumber(blueprintComponent.workProgress / STRUCTURE_WORK_REQUIRED[blueprintComponent.blueprintType]);
+   packet.addNumber(blueprintComponent.associatedEntityID);
 }

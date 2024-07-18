@@ -260,7 +260,7 @@ const calculateRiverCrossingPositions = (riverTiles: ReadonlyArray<WaterTileGene
    return riverCrossings;
 }
 
-export function generateRiverFeatures(riverTiles: ReadonlyArray<WaterTileGenerationInfo>, waterRocks: Array<WaterRockData>, riverSteppingStones: Array<RiverSteppingStoneData>, edgeRiverSteppingStones: Array<RiverSteppingStoneData>): void {
+export function generateRiverFeatures(riverTiles: ReadonlyArray<WaterTileGenerationInfo>, waterRocks: Array<WaterRockData>, riverSteppingStones: Array<RiverSteppingStoneData>): void {
    const MIN_CROSSING_DISTANCE = 325;
    /** Minimum distance between crossings */
    const RIVER_CROSSING_WIDTH = 100;
@@ -357,11 +357,7 @@ export function generateRiverFeatures(riverTiles: ReadonlyArray<WaterTileGenerat
          };
          localCrossingStones.push(data);
 
-         if (Board.positionIsInBoard(x, y)) {
-            riverSteppingStones.push(data);
-         } else {
-            edgeRiverSteppingStones.push(data);
-         }
+         riverSteppingStones.push(data);
       }
 
       // Create water rocks

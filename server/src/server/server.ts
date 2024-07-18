@@ -1,8 +1,10 @@
-import { ClientToServerEvents, InterServerEvents, ServerToClientEvents, SocketData, VisibleChunkBounds } from "webgl-test-shared/dist/client-server-types";
+import { VisibleChunkBounds } from "webgl-test-shared/dist/client-server-types";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { TribeType } from "webgl-test-shared/dist/tribes";
 import { Point, randInt } from "webgl-test-shared/dist/utils";
-import { Server, Socket } from "socket.io";
+import { PacketReader, PacketType } from "webgl-test-shared/dist/packets";
+import express from "express";
+import WebSocket, { Server } from "ws";
 import Board from "../Board";
 import { runSpawnAttempt, spawnInitialEntities } from "../entity-spawning";
 import Tribe from "../Tribe";
@@ -12,13 +14,14 @@ import SRandom from "../SRandom";
 import { updateDynamicPathfindingNodes } from "../pathfinding";
 import { updateResourceDistributions } from "../resource-distributions";
 import { updateGrassBlockers } from "../grass-blockers";
-import { createGameDataPacket } from "./game-data-packets";
+import { createGameDataPacket, createSyncDataPacket, createSyncPacket } from "./game-data-packets";
 import PlayerClient from "./PlayerClient";
 import { addPlayerClient, generatePlayerSpawnPosition, getPlayerClients } from "./player-clients";
 import { createPlayerConfig } from "../entities/tribes/player";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { createEntityFromConfig } from "../Entity";
 import { createGrassStrands } from "../world-generation/grass-generation";
+import { processPlayerDataPacket } from "./packet-processing";
 
 /*
 
@@ -26,8 +29,6 @@ Reference for future self:
 node --prof-process isolate-0xnnnnnnnnnnnn-v8.log > processed.txt
 
 */
-
-export type ISocket = Socket<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>;
 
 const estimateVisibleChunkBounds = (spawnPosition: Point, screenWidth: number, screenHeight: number): VisibleChunkBounds => {
    const zoom = 1;
@@ -46,7 +47,7 @@ const estimateVisibleChunkBounds = (spawnPosition: Point, screenWidth: number, s
 // @Cleanup: Remove class, just have functions
 /** Communicates between the server and players */
 class GameServer {
-   private io: Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData> | null = null;
+   private server: Server | null = null;
 
    private tickInterval: NodeJS.Timeout | undefined;
 
@@ -76,13 +77,69 @@ class GameServer {
       forceMaxGrowAllIceSpikes();
       createGrassStrands();
       
-      if (SERVER.io === null) {
-         // Start the server
-         // SERVER.io = new Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>(Settings.SERVER_PORT);
-         SERVER.io = new Server(Settings.SERVER_PORT, { transports: ["websocket"], allowUpgrades: false });
-         SERVER.handlePlayerConnections();
-         console.log("Server started on port " + Settings.SERVER_PORT);
-      }
+      const app = express();
+      this.server = new Server({
+         server: app.listen(Settings.SERVER_PORT)
+      });
+
+      // Handle player connections
+      this.server.on("connection", (socket: WebSocket) => {
+         let playerClient: PlayerClient;
+         
+         socket.on("message", (message: Buffer) => {
+            const reader = new PacketReader(message.buffer, 6);
+            const packetType = reader.readNumber() as PacketType;
+
+            switch (packetType) {
+               case PacketType.initialPlayerData: {
+                  const username = reader.readString(24);
+                  const tribeType = reader.readNumber() as TribeType;
+                  const screenWidth = reader.readNumber();
+                  const screenHeight = reader.readNumber();
+
+                  const spawnPosition = generatePlayerSpawnPosition(tribeType);
+                  const visibleChunkBounds = estimateVisibleChunkBounds(spawnPosition, screenWidth, screenHeight);
+      
+                  const tribe = new Tribe(tribeType, false);
+      
+                  const config = createPlayerConfig();
+                  config[ServerComponentType.transform].position.x = spawnPosition.x;
+                  config[ServerComponentType.transform].position.y = spawnPosition.y;
+                  config[ServerComponentType.tribe].tribe = tribe;
+                  config[ServerComponentType.player].username = username;
+                  const player = createEntityFromConfig(config);
+      
+                  playerClient = new PlayerClient(socket, tribe, visibleChunkBounds, player, username);
+                  addPlayerClient(playerClient, player, config);
+
+                  break;
+               }
+               case PacketType.playerData: {
+                  processPlayerDataPacket(playerClient, reader);
+                  break;
+               }
+               case PacketType.activate: {
+                  playerClient.clientIsActive = true;
+                  if (Board.hasEntity(playerClient.instance)) {
+                     const buffer = createSyncDataPacket(playerClient);
+                     socket.send(buffer);
+                  } else {
+                     const buffer = createSyncPacket();
+                     socket.send(buffer);
+                  }
+                  break;
+               }
+            }
+         });
+      });
+      
+      // if (SERVER.io === null) {
+      //    // Start the server
+      //    // SERVER.io = new Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>(Settings.SERVER_PORT);
+      //    SERVER.io = new Server(Settings.SERVER_PORT, { transports: ["websocket"], allowUpgrades: false });
+      //    SERVER.handlePlayerConnections();
+      //    console.log("Server started on port " + Settings.SERVER_PORT);
+      // }
 
       SERVER.isRunning = true;
       
@@ -115,7 +172,7 @@ class GameServer {
          Board.updateTribes();
       }
 
-      await SERVER.sendGameDataPackets();
+      await this.sendGameDataPackets();
 
       // Update server ticks and time
       // This is done at the end of the tick so that information sent by players is associated with the next tick to run
@@ -130,125 +187,10 @@ class GameServer {
       }
    }
 
-   private handlePlayerConnections(): void {
-      if (SERVER.io === null) return;
-
-      SERVER.io.on("connection", (socket: ISocket) => {
-         
-         // @Temporary
-         
-         // setTimeout(() => {
-         //    createTribeWorker(new Point(spawnPosition.x + 500, spawnPosition.y + 150), -1, 0);
-         // }, 5000);
-         
-         // setTimeout(() => {
-         //    if(1+1===2)return;
-         //    const p = this.getPlayerFromUsername(username)!;
-         //    const tc = TribeComponentArray.getComponent(p.id);
-         //    const tribe = tc.tribe;
-         //    const TRIB = tribe;
-            
-         //    // const TRIB = new Tribe(TribeType.goblins, true);
-
-         //    createTribeTotem(new Point(spawnPosition.x + 500, spawnPosition.y), 0, TRIB);
-
-         //    const h1 = createWorkerHut(new Point(spawnPosition.x + 380, spawnPosition.y + 50), Math.PI * 1.27, TRIB);
-         //    const h2 = createWorkerHut(new Point(spawnPosition.x + 547, spawnPosition.y - 100), Math.PI * 2.87, TRIB);
-         //    const h3 = createWorkerHut(new Point(spawnPosition.x + 600, spawnPosition.y + 65), 0.7, TRIB);
-         //    const h4 = createWorkerHut(new Point(spawnPosition.x + 700, spawnPosition.y - 65), -0.7, TRIB);
-         //    const h5 = createWorkerHut(new Point(spawnPosition.x + 320, spawnPosition.y + 100), -Math.PI*0.4, TRIB);
-
-         //    const w1 = createTribeWorker(h1.position.copy(), 0, TRIB.id, h1.id);
-         //    const w2 = createTribeWorker(h2.position.copy(), 0, TRIB.id, h2.id);
-         //    const w3 = createTribeWorker(h3.position.copy(), 0, TRIB.id, h3.id);
-         //    const w4 = createTribeWorker(h4.position.copy(), 0, TRIB.id, h4.id);
-         //    const w5 = createTribeWorker(h5.position.copy(), 0, TRIB.id, h5.id);
-
-         //    const ps = new Array<Entity>();
-
-         //    for (let y = -2; y <= 1; y++) {
-         //       const yo = randFloat(-3, 3);
-         //       for (let x = 0; x <= 10; x++) {
-         //          const p = createPlanterBox(new Point(spawnPosition.x - 0 - 80 * x, spawnPosition.y + 150 * y + yo), 0, tribe);
-         //          ps.push(p);
-         //       }
-         //    }
-
-         //    // top walls
-         //    for (let x = 0; x <= 14; x++) {
-         //       createWall(new Point(spawnPosition.x - 64 * x, spawnPosition.y + 220), 0, tribe);
-         //    }
-
-         //    // bottom walls
-         //    for (let x = 0; x <= 14; x++) {
-         //       createWall(new Point(spawnPosition.x - 64 * x, spawnPosition.y - 368), 0, tribe);
-         //    }
-
-         //    // left walls
-         //    for (let y = -4; y <= 3; y++) {
-         //       createWall(new Point(spawnPosition.x - 64 * 14, spawnPosition.y + y * 64 - 40), 0, tribe);
-         //    }
-
-         //    // const p1 = createPlanterBox(new Point(spawnPosition.x - 50, spawnPosition.y + 80), 0, tribe);
-         //    // const p2 = createPlanterBox(new Point(spawnPosition.x - 50, spawnPosition.y - 80), 0.1, tribe);
-         //    // const p3 = createPlanterBox(new Point(spawnPosition.x - 210, spawnPosition.y + 80), 0, tribe);
-         //    // const p4 = createPlanterBox(new Point(spawnPosition.x - 210, spawnPosition.y - 80), 0.1, tribe);
-
-         //    setTimeout(() => {
-         //       // placePlantInPlanterBox(p1, PlanterBoxPlant.berryBush);
-         //       // placePlantInPlanterBox(p2, PlanterBoxPlant.berryBush);
-         //       // placePlantInPlanterBox(p3, PlanterBoxPlant.berryBush);
-         //       // placePlantInPlanterBox(p4, PlanterBoxPlant.berryBush);
-         //       for (let i = 0; i < ps.length; i++) {
-         //          const p = ps[i];
-         //          placePlantInPlanterBox(p, PlanterBoxPlant.tree);
-         //       }
-         //    }, 100);
-
-         //    // createWorkbench(new Point(spawnPosition.x + 520, spawnPosition.y + 230), 0.8, TRIB);
-         //    // createTree(new Point(spawnPosition.x, spawnPosition.y + 200), 0, tribe);
-         //    // createWall(new Point(spawnPosition.x + 64, spawnPosition.y + 200), 0, TRIB);
-         //    createBarrel(new Point(spawnPosition.x + 170, spawnPosition.y - 150), Math.PI * 0.38, TRIB);
-         //    createBarrel(new Point(spawnPosition.x + 230, spawnPosition.y - 210), Math.PI * 0.8, TRIB);
-         //    // createDoor(new Point(spawnPosition.x, spawnPosition.y + 200), 0, TRIB, BuildingMaterial.wood);
-         // }, 4000);
-
-
-         socket.on("initial_player_data", (username: string, tribeType: TribeType, screenWidth: number, screenHeight: number) => {
-            const spawnPosition = generatePlayerSpawnPosition(tribeType);
-            const visibleChunkBounds = estimateVisibleChunkBounds(spawnPosition, screenWidth, screenHeight);
-
-            // @Temporary
-            // setTimeout(() => {
-            //    const p = getPlayerFromUsername(username)!;
-            //    const tc = TribeComponentArray.getComponent(p.id);
-            //    const tribe = tc.tribe;
-
-            //    createTribeWarrior(new Point(spawnPosition.x - 800, spawnPosition.y - 100), Math.PI * 0.45, tribe, 0);
-            //    createTribeWarrior(new Point(spawnPosition.x - 900, spawnPosition.y - 170), Math.PI * 0.5, tribe, 0);
-            //    createTribeWarrior(new Point(spawnPosition.x - 950, spawnPosition.y - 80), Math.PI * 0.5, tribe, 0);
-            //    createTribeWarrior(new Point(spawnPosition.x - 1050, spawnPosition.y + 105), Math.PI * 0.45, tribe, 0);
-            // }, 2000);
-
-            const tribe = new Tribe(tribeType, false);
-
-            const config = createPlayerConfig();
-            config[ServerComponentType.transform].position.x = spawnPosition.x;
-            config[ServerComponentType.transform].position.y = spawnPosition.y;
-            config[ServerComponentType.tribe].tribe = tribe;
-            config[ServerComponentType.player].username = username;
-            const player = createEntityFromConfig(config);
-
-            const playerClient = new PlayerClient(socket, tribe, visibleChunkBounds, player, username);
-            addPlayerClient(playerClient, player, config);
-         });
-      });
-   }
-
    // @Cleanup: maybe move this function to player-clients?
    /** Send data about the server to all players */
    public async sendGameDataPackets(): Promise<void> {
-      if (SERVER.io === null) return;
+      if (this.server === null) return;
       
       return new Promise(async resolve => {
          const currentTime = performance.now();
@@ -276,14 +218,14 @@ class GameServer {
 
                // Send the game data to the player
                const gameDataPacket = createGameDataPacket(playerClient);
-               playerClient.socket.emit("game_data_packet", gameDataPacket);
+               playerClient.socket.send(gameDataPacket);
    
                // @Cleanup: should these be here?
                playerClient.visibleHits = [];
                playerClient.playerKnockbacks = [];
                playerClient.heals = [];
                playerClient.orbCompletes = [];
-               playerClient.pickedUpItem = false;
+               playerClient.hasPickedUpItem = false;
                playerClient.entityTickEvents = [];
             }
 

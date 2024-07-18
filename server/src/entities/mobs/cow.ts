@@ -207,7 +207,7 @@ export function tickCow(cow: EntityID): void {
    // Escape AI
    const escapeAIComponent = EscapeAIComponentArray.getComponent(cow);
    updateEscapeAIComponent(escapeAIComponent, 5 * Settings.TPS);
-   if (escapeAIComponent.attackingEntityIDs.length > 0) {
+   if (escapeAIComponent.attackingEntities.length > 0) {
       const escapeEntity = chooseEscapeEntity(cow, aiHelperComponent.visibleEntities);
       if (escapeEntity !== null) {
          runFromAttackingEntity(cow, escapeEntity, 300, TURN_SPEED);

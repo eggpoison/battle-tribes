@@ -1,5 +1,7 @@
-import { ServerComponentType, SpikesComponentData } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { ComponentArray } from "./ComponentArray";
+import { EntityID } from "webgl-test-shared/dist/entities";
+import { Packet } from "webgl-test-shared/dist/packets";
 
 export interface SpikesComponentParams {}
 
@@ -8,13 +10,16 @@ export class SpikesComponent {
 }
 
 export const SpikesComponentArray = new ComponentArray<SpikesComponent>(ServerComponentType.spikes, true, {
-   serialise: serialise
+   getDataLength: getDataLength,
+   addDataToPacket: addDataToPacket
 });
 
-function serialise(entityID: number): SpikesComponentData {
-   const spikesComponent = SpikesComponentArray.getComponent(entityID);
-   return {
-      componentType: ServerComponentType.spikes,
-      isCovered: spikesComponent.isCovered
-   };
+function getDataLength(): number {
+   return 2 * Float32Array.BYTES_PER_ELEMENT;
+}
+
+function addDataToPacket(packet: Packet, entity: EntityID): void {
+   const spikesComponent = SpikesComponentArray.getComponent(entity);
+   packet.addBoolean(spikesComponent.isCovered);
+   packet.padOffset(3);
 }

@@ -2,6 +2,7 @@ import { BoulderComponentData, ServerComponentType } from "webgl-test-shared/dis
 import { randInt } from "webgl-test-shared/dist/utils";
 import { ComponentArray } from "./ComponentArray";
 import { EntityID } from "webgl-test-shared/dist/entities";
+import { Packet } from "webgl-test-shared/dist/packets";
 
 export interface BoulderComponentParams {}
 
@@ -10,14 +11,16 @@ export class BoulderComponent {
 }
 
 export const BoulderComponentArray = new ComponentArray<BoulderComponent>(ServerComponentType.boulder, true, {
-   serialise: serialise
+   getDataLength: getDataLength,
+   addDataToPacket: addDataToPacket
 });
 
-function serialise(entityID: EntityID): BoulderComponentData {
-   const boulderComponent = BoulderComponentArray.getComponent(entityID);
+function getDataLength(): number {
+   return 2 * Float32Array.BYTES_PER_ELEMENT;
+}
 
-   return {
-      componentType: ServerComponentType.boulder,
-      boulderType: boulderComponent.boulderType
-   };
+function addDataToPacket(packet: Packet, entity: EntityID): void {
+   const boulderComponent = BoulderComponentArray.getComponent(entity);
+
+   packet.addNumber(boulderComponent.boulderType);
 }

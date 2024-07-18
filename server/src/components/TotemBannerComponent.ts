@@ -1,8 +1,9 @@
-import { ServerComponentType, TotemBannerComponentData } from "webgl-test-shared/dist/components";
-import { TribeTotemBanner } from "webgl-test-shared/dist/entities";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { EntityID, TribeTotemBanner } from "webgl-test-shared/dist/entities";
 import { randInt } from "webgl-test-shared/dist/utils";
 import { ComponentArray } from "./ComponentArray";
 import { TRIBE_TOTEM_POSITIONS } from "../entities/structures/tribe-totem";
+import { Packet } from "webgl-test-shared/dist/packets";
 
 export interface TotemBannerComponentParams {}
 
@@ -18,7 +19,8 @@ export class TotemBannerComponent {
 }
 
 export const TotemBannerComponentArray = new ComponentArray<TotemBannerComponent>(ServerComponentType.totemBanner, true, {
-   serialise: serialise
+   getDataLength: getDataLength,
+   addDataToPacket: addDataToPacket
 });
 
 export function addBannerToTotem(bannerComponent: TotemBannerComponent, hutNum: number): void {
@@ -42,11 +44,22 @@ export function removeBannerFromTotem(bannerComponent: TotemBannerComponent, hut
    delete bannerComponent.banners[hutNum];
 }
 
-function serialise(entityID: number): TotemBannerComponentData {
-   const totemBannerComponent = TotemBannerComponentArray.getComponent(entityID);
-   return {
-      componentType: ServerComponentType.totemBanner,
-      // @Speed
-      banners: Object.values(totemBannerComponent.banners)
-   };
+function getDataLength(entity: EntityID): number {
+   const totemBannerComponent = TotemBannerComponentArray.getComponent(entity);
+
+   const numBanners = Object.keys(totemBannerComponent.banners).length;
+   return 2 * Float32Array.BYTES_PER_ELEMENT + 3 * Float32Array.BYTES_PER_ELEMENT * numBanners;
+}
+
+function addDataToPacket(packet: Packet, entity: EntityID): void {
+   const totemBannerComponent = TotemBannerComponentArray.getComponent(entity);
+
+   const banners = Object.values(totemBannerComponent.banners);
+   packet.addNumber(banners.length);
+   for (let i = 0; i < banners.length; i++) {
+      const banner = banners[i];
+      packet.addNumber(banner.hutNum);
+      packet.addNumber(banner.layer);
+      packet.addNumber(banner.direction);
+   }
 }

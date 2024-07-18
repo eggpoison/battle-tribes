@@ -1,56 +1,97 @@
-import { EntityData, VisibleChunkBounds, GameDataPacket, GameDataPacketOptions, PlayerInventoryData, InitialGameDataPacket, ServerTileData, GameDataSyncPacket } from "webgl-test-shared/dist/client-server-types";
-import { ComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
-import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
+import { VisibleChunkBounds, GameDataPacket, GameDataPacketOptions, PlayerInventoryData, GameDataSyncPacket } from "webgl-test-shared/dist/client-server-types";
+import { ServerComponentType, ServerComponentTypeString } from "webgl-test-shared/dist/components";
+import { EntityID } from "webgl-test-shared/dist/entities";
+import { TechUnlockProgress } from "webgl-test-shared/dist/techs";
 import Board from "../Board";
 import Tribe from "../Tribe";
 import { ComponentArrays } from "../components/ComponentArray";
 import { HealthComponentArray } from "../components/HealthComponent";
 import { InventoryComponentArray, getInventory } from "../components/InventoryComponent";
-import { InventoryUseComponentArray } from "../components/InventoryUseComponent";
+import { addCrossbowLoadProgressRecordToPacket, getCrossbowLoadProgressRecordLength, InventoryUseComponentArray } from "../components/InventoryUseComponent";
 import { PhysicsComponentArray } from "../components/PhysicsComponent";
 import { SERVER } from "./server";
 import { Settings } from "webgl-test-shared/dist/settings";
-import { getVisibleSafetyNodesData, getVisibleBuildingPlans, getVisibleBuildingSafetys, getVisibleRestrictedBuildingAreas, getVisibleWallsData, getVisibleWallConnections, getVisibleTribes } from "../ai-tribe-building/ai-building-client-data";
-import { getVisiblePathfindingNodeOccupances } from "../pathfinding";
 import { EnemyTribeData, PlayerTribeData } from "webgl-test-shared/dist/techs";
 import { GrassBlocker } from "webgl-test-shared/dist/grass-blockers";
-import { getEntityDebugData } from "../entity-debug-data";
+import { addEntityDebugDataToPacket, createEntityDebugData, getEntityDebugDataLength } from "../entity-debug-data";
 import PlayerClient from "./PlayerClient";
 import { TribeComponentArray } from "../components/TribeComponent";
 import { SpikesComponentArray } from "../components/SpikesComponent";
 import { PlayerComponentArray } from "../components/PlayerComponent";
-import { Inventory, InventoryName } from "webgl-test-shared/dist/items/items";
+import { Inventory, InventoryName, ItemType } from "webgl-test-shared/dist/items/items";
 import { TransformComponentArray } from "../components/TransformComponent";
 import { ComponentConfig } from "../components";
+import { alignLengthBytes, Packet, PacketType } from "webgl-test-shared/dist/packets";
 
-const serialiseEntityData = (entity: EntityID, player: EntityID | null): EntityData => {
-   const components = new Array<ComponentData>();
+export function getInventoryDataLength(inventory: Inventory): number {
+   let lengthBytes = 4 * Float32Array.BYTES_PER_ELEMENT;
+   lengthBytes += 3 * Float32Array.BYTES_PER_ELEMENT * inventory.items.length;
+   return lengthBytes;
+}
+
+export function addInventoryDataToPacket(packet: Packet, inventory: Inventory): void {
+   packet.addNumber(inventory.name);
+   packet.addNumber(inventory.width);
+   packet.addNumber(inventory.height);
+
+   packet.addNumber(inventory.items.length);
+   for (let j = 0; j < inventory.items.length; j++) {
+      const item = inventory.items[j];
+      const itemSlot = inventory.getItemSlot(item);
+      
+      packet.addNumber(itemSlot);
+      packet.addNumber(item.id);
+      packet.addNumber(item.type);
+      packet.addNumber(item.count);
+   }
+}
+
+const getEntityDataLength = (entity: EntityID, player: EntityID | null): number => {
+   let lengthBytes = 3 * Float32Array.BYTES_PER_ELEMENT;
+
    for (let i = 0; i < ComponentArrays.length; i++) {
       const componentArray = ComponentArrays[i];
 
       if (componentArray.hasComponent(entity)) {
-         const componentData = componentArray.serialise(entity, player);
-         components.push(componentData);
+         lengthBytes += componentArray.getDataLength(entity, player);
       }
    }
 
-   return {
-      id: entity,
-      type: Board.getEntityType(entity)!,
-      components: components
-   };
+   return lengthBytes;
 }
 
-const bundleEntityDataArray = (player: EntityID | null, playerTribe: Tribe, visibleChunkBounds: VisibleChunkBounds): Array<EntityData> => {
-   const visibleEntities = getPlayerVisibleEntities(visibleChunkBounds, playerTribe);
+const addEntityDataToPacket = (packet: Packet, entity: EntityID, player: EntityID | null): void => {
+   // Entity ID
+   packet.addNumber(entity);
 
-   const entityDataArray = new Array<EntityData>();
-   for (const entity of visibleEntities) {
-      const entityData = serialiseEntityData(entity, player);
-      entityDataArray.push(entityData);
+   // Entity type
+   packet.addNumber(Board.getEntityType(entity)!);
+
+   let numComponents = 0;
+   for (let i = 0; i < ComponentArrays.length; i++) {
+      const componentArray = ComponentArrays[i];
+      if (componentArray.hasComponent(entity)) {
+         numComponents++;
+      }
    }
 
-   return entityDataArray;
+   // Components
+   packet.addNumber(numComponents);
+   for (let i = 0; i < ComponentArrays.length; i++) {
+      const componentArray = ComponentArrays[i];
+
+      if (componentArray.hasComponent(entity)) {
+         const start = packet.currentByteOffset;
+         
+         packet.addNumber(componentArray.componentType);
+         componentArray.addDataToPacket(packet, entity, player);
+
+         // @Speed
+         if (packet.currentByteOffset - start !== componentArray.getDataLength(entity, player)) {
+            throw new Error(`Component type '${ServerComponentTypeString[componentArray.componentType]}' has wrong data length.`)
+         }
+      }
+   }
 }
 
 const entityIsHiddenFromPlayer = (entity: EntityID, playerTribe: Tribe): boolean => {
@@ -184,15 +225,7 @@ const getVisibleGrassBlockers = (visibleChunkBounds: VisibleChunkBounds): Readon
    return visibleGrassBlockers;
 }
 
-export function createGameDataPacket(playerClient: PlayerClient): GameDataPacket {
-   const player = Board.validateEntity(playerClient.instance);
-   
-   // @Cleanup: Shared for all players
-   const trackedEntity = SERVER.trackedEntityID;
-   const entityDebugData = typeof trackedEntity !== "undefined" ? getEntityDebugData(trackedEntity) : undefined;
-   
-   const tileUpdates = Board.popTileUpdates();
-               
+export function createGameDataPacket(playerClient: PlayerClient): ArrayBuffer {
    // @Speed @Memory
    const extendedVisibleChunkBounds: VisibleChunkBounds = [
       Math.max(playerClient.visibleChunkBounds[0] - 1, 0),
@@ -200,110 +233,476 @@ export function createGameDataPacket(playerClient: PlayerClient): GameDataPacket
       Math.max(playerClient.visibleChunkBounds[2] - 1, 0),
       Math.min(playerClient.visibleChunkBounds[3] + 1, Settings.BOARD_SIZE - 1)
    ];
-   const visibleTribes = getVisibleTribes(extendedVisibleChunkBounds);
+
+   const visibleEntities = getPlayerVisibleEntities(extendedVisibleChunkBounds, playerClient.tribe);
+   const player = Board.validateEntity(playerClient.instance);
+
+   const inventoryComponent = InventoryComponentArray.getComponent(player);
+   // @Copynpaste @Robustness
+   const hotbarInventory = getInventory(inventoryComponent, InventoryName.hotbar);
+   const backpackInventory = getInventory(inventoryComponent, InventoryName.backpack);
+   const backpackSlotInventory = getInventory(inventoryComponent, InventoryName.backpackSlot);
+   const heldItemSlotInventory = getInventory(inventoryComponent, InventoryName.heldItemSlot);
+   const craftingOutputSlotInventory = getInventory(inventoryComponent, InventoryName.craftingOutputSlot);
+   const armourSlotInventory = getInventory(inventoryComponent, InventoryName.armourSlot);
+   const offhandInventory = getInventory(inventoryComponent, InventoryName.offhand);
+   const gloveSlotInventory = getInventory(inventoryComponent, InventoryName.gloveSlot);
    
-   const gameDataPacket: GameDataPacket = {
-      simulationIsPaused: !SERVER.isSimulating,
-      entityDataArray: bundleEntityDataArray(player, playerClient.tribe, extendedVisibleChunkBounds),
-      inventory: bundlePlayerInventoryData(player),
-      visibleHits: playerClient.visibleHits,
-      playerKnockbacks: playerClient.playerKnockbacks,
-      heals: playerClient.heals,
-      visibleEntityDeathIDs: playerClient.visibleEntityDeathIDs,
-      orbCompletes: playerClient.orbCompletes,
-      tileUpdates: tileUpdates,
-      serverTicks: Board.ticks,
-      serverTime: Board.time,
-      playerHealth: player !== null ? HealthComponentArray.getComponent(player).health : 0,
-      entityDebugData: entityDebugData,
-      playerTribeData: bundlePlayerTribeData(playerClient),
-      enemyTribesData: bundleEnemyTribesData(playerClient),
+   const tileUpdates = Board.popTileUpdates();
+
+   const trackedEntity = SERVER.trackedEntityID;
+   const debugData = typeof trackedEntity !== "undefined" ? createEntityDebugData(trackedEntity) : null;
+
+   const area = playerClient.tribe.getArea();
+   const unlockProgressEntries = Object.entries(playerClient.tribe.techTreeUnlockProgress).map(([a, b]) => [Number(a), b]) as Array<[number, TechUnlockProgress]>;
+
+   const numEnemyTribes = Board.tribes.filter(tribe => tribe.id !== playerClient.tribe.id).length;
+
+   const inventoryUseComponent = InventoryUseComponentArray.getComponent(playerClient.instance);
+   const hotbarUseInfo = inventoryUseComponent.getUseInfo(InventoryName.hotbar);
+
+   const titleOffer = player !== null ? PlayerComponentArray.getComponent(player).titleOffer : null;
+   
+   // Packet type
+   let lengthBytes = Float32Array.BYTES_PER_ELEMENT;
+   // Is simulating
+   lengthBytes += Float32Array.BYTES_PER_ELEMENT;
+   // Entities
+   lengthBytes += Float32Array.BYTES_PER_ELEMENT;
+   for (const entity of visibleEntities) {
+      lengthBytes += getEntityDataLength(entity, player);
+   }
+
+   // Player inventories
+   lengthBytes += getInventoryDataLength(hotbarInventory);
+   lengthBytes += getInventoryDataLength(backpackInventory);
+   lengthBytes += getInventoryDataLength(backpackSlotInventory);
+   lengthBytes += getInventoryDataLength(heldItemSlotInventory);
+   lengthBytes += getInventoryDataLength(craftingOutputSlotInventory);
+   lengthBytes += getInventoryDataLength(armourSlotInventory);
+   lengthBytes += getInventoryDataLength(offhandInventory);
+   lengthBytes += getInventoryDataLength(gloveSlotInventory);
+
+   // Visible hits
+   lengthBytes += Float32Array.BYTES_PER_ELEMENT + 7 * Float32Array.BYTES_PER_ELEMENT * playerClient.visibleHits.length;
+   // Player knockback
+   lengthBytes += Float32Array.BYTES_PER_ELEMENT + 2 * Float32Array.BYTES_PER_ELEMENT * playerClient.playerKnockbacks.length;
+   // Player heals
+   lengthBytes += Float32Array.BYTES_PER_ELEMENT + 5 * Float32Array.BYTES_PER_ELEMENT * playerClient.heals.length;
+   // Visible entity deaths
+   lengthBytes += Float32Array.BYTES_PER_ELEMENT + Float32Array.BYTES_PER_ELEMENT * playerClient.visibleEntityDeathIDs.length;
+   // Orb completes
+   lengthBytes += Float32Array.BYTES_PER_ELEMENT + 3 * Float32Array.BYTES_PER_ELEMENT * playerClient.orbCompletes.length;
+   // Tile updates
+   lengthBytes += Float32Array.BYTES_PER_ELEMENT + 3 * Float32Array.BYTES_PER_ELEMENT * tileUpdates.length;
+   lengthBytes += 3 * Float32Array.BYTES_PER_ELEMENT;
+
+   // Has debug data boolean
+   lengthBytes += Float32Array.BYTES_PER_ELEMENT;
+   const debugDataLength = debugData !== null ? getEntityDebugDataLength(debugData) : 0;
+   lengthBytes += debugDataLength;
+
+   // Player tribe data
+   lengthBytes += 100 + 5 * Float32Array.BYTES_PER_ELEMENT;
+   lengthBytes += Float32Array.BYTES_PER_ELEMENT + 2 * Float32Array.BYTES_PER_ELEMENT * area.length;
+   lengthBytes += Float32Array.BYTES_PER_ELEMENT;
+   lengthBytes += Float32Array.BYTES_PER_ELEMENT + Float32Array.BYTES_PER_ELEMENT * playerClient.tribe.unlockedTechs.length;
+   // Tech tree unlock progress
+   lengthBytes += Float32Array.BYTES_PER_ELEMENT;
+   for (const [, unlockProgress] of unlockProgressEntries) {
+      lengthBytes += 3 * Float32Array.BYTES_PER_ELEMENT;
+      
+      const numItemRequirements = Object.keys(unlockProgress.itemProgress).length;
+      lengthBytes += 2 * Float32Array.BYTES_PER_ELEMENT * numItemRequirements;
+   }
+
+   // Enemy tribes data
+   lengthBytes += Float32Array.BYTES_PER_ELEMENT + (100 + 2 * Float32Array.BYTES_PER_ELEMENT) * numEnemyTribes;
+
+   lengthBytes += 2 * Float32Array.BYTES_PER_ELEMENT;
+   lengthBytes += getCrossbowLoadProgressRecordLength(hotbarUseInfo);
+
+   lengthBytes += Float32Array.BYTES_PER_ELEMENT;
+   if (titleOffer !== null) {
+      lengthBytes += Float32Array.BYTES_PER_ELEMENT;
+   }
+
+   lengthBytes += Float32Array.BYTES_PER_ELEMENT + 3 * Float32Array.BYTES_PER_ELEMENT * playerClient.entityTickEvents.length;
+
+   lengthBytes = alignLengthBytes(lengthBytes);
+
+   const packet = new Packet(PacketType.gameData, lengthBytes);
+
+   // Whether or not the simulation is paused
+   packet.addBoolean(!SERVER.isSimulating);
+   packet.padOffset(3);
+
+   // Add entities
+   packet.addNumber(visibleEntities.length);
+   for (const entity of visibleEntities) {
+      addEntityDataToPacket(packet, entity, player);
+   }
+
+   // Add inventory data
+   addInventoryDataToPacket(packet, hotbarInventory);
+   addInventoryDataToPacket(packet, backpackInventory);
+   addInventoryDataToPacket(packet, backpackSlotInventory);
+   addInventoryDataToPacket(packet, heldItemSlotInventory);
+   addInventoryDataToPacket(packet, craftingOutputSlotInventory);
+   addInventoryDataToPacket(packet, armourSlotInventory);
+   addInventoryDataToPacket(packet, offhandInventory);
+   addInventoryDataToPacket(packet, gloveSlotInventory);
+   
+   // Add visible hits
+   packet.addNumber(playerClient.visibleHits.length);
+   for (let i = 0; i < playerClient.visibleHits.length; i++) {
+      const hitData = playerClient.visibleHits[i];
+      packet.addNumber(hitData.hitEntityID);
+      packet.addNumber(hitData.hitPosition[0]);
+      packet.addNumber(hitData.hitPosition[1]);
+      packet.addNumber(hitData.attackEffectiveness);
+      packet.addNumber(hitData.damage);
+      packet.addBoolean(hitData.shouldShowDamageNumber);
+      packet.padOffset(3);
+      packet.addNumber(hitData.flags);
+   }
+
+   // Add player knockbacks
+   packet.addNumber(playerClient.playerKnockbacks.length);
+   for (let i = 0; i < playerClient.playerKnockbacks.length; i++) {
+      const knockbackData = playerClient.playerKnockbacks[i];
+      packet.addNumber(knockbackData.knockback);
+      packet.addNumber(knockbackData.knockbackDirection);
+   }
+
+   // Add player heals
+   packet.addNumber(playerClient.heals.length);
+   for (let i = 0; i < playerClient.heals.length; i++) {
+      const healData = playerClient.heals[i];
+      packet.addNumber(healData.entityPositionX);
+      packet.addNumber(healData.entityPositionY);
+      packet.addNumber(healData.healedID);
+      packet.addNumber(healData.healerID);
+      packet.addNumber(healData.healAmount);
+   }
+
+   // Visible entity deaths
+   packet.addNumber(playerClient.visibleEntityDeathIDs.length);
+   for (let i = 0; i < playerClient.visibleEntityDeathIDs.length; i++) {
+      const entity = playerClient.visibleEntityDeathIDs[i];
+      packet.addNumber(entity);
+   }
+
+   // Orb completes
+   packet.addNumber(playerClient.orbCompletes.length);
+   for (let i = 0; i < playerClient.orbCompletes.length; i++) {
+      const orbCompleteData = playerClient.orbCompletes[i];
+      packet.addNumber(orbCompleteData.x);
+      packet.addNumber(orbCompleteData.y);
+      packet.addNumber(orbCompleteData.amount);
+   }
+   
+   // Tile updates
+   packet.addNumber(tileUpdates.length);
+   for (let i = 0; i < tileUpdates.length; i++) {
+      const tileUpdate = tileUpdates[i];
+      packet.addNumber(tileUpdate.tileIndex);
+      packet.addNumber(tileUpdate.type);
+      packet.addBoolean(tileUpdate.isWall);
+      packet.padOffset(3);
+   }
+
+   packet.addNumber(Board.ticks);
+   packet.addNumber(Board.time);
+   packet.addNumber(player !== null ? HealthComponentArray.getComponent(player).health : 0);
+
+   // @Bug: Shared for all players
+   if (debugData !== null) {
+      packet.addBoolean(true);
+      packet.padOffset(3);
+      
+      const start = packet.currentByteOffset;
+      addEntityDebugDataToPacket(packet, trackedEntity, debugData);
+      if (packet.currentByteOffset - start !== debugDataLength) {
+         throw new Error(`Debug data had unexpected length. Expected: ${debugDataLength}. Got: ${packet.currentByteOffset - start}`);
+      }
+   } else {
+      packet.addBoolean(false);
+      packet.padOffset(3);
+   }
+
+   // 
+   // Player tribe data
+   // 
+   // @Cleanup: move into a separate function
+
+   packet.addString(playerClient.tribe.name, 100);
+   packet.addNumber(playerClient.tribe.id);
+   packet.addNumber(playerClient.tribe.tribeType);
+   packet.addBoolean(playerClient.tribe.totem !== null);
+   packet.padOffset(3);
+   packet.addNumber(playerClient.tribe.getNumHuts());
+   packet.addNumber(playerClient.tribe.tribesmanCap);
+
+   packet.addNumber(area.length);
+   for (const tile of area) {
+      packet.addNumber(tile.x);
+      packet.addNumber(tile.y);
+   }
+
+   packet.addNumber(playerClient.tribe.selectedTechID !== null ? playerClient.tribe.selectedTechID : -1),
+
+   packet.addNumber(playerClient.tribe.unlockedTechs.length);
+   for (const techID of playerClient.tribe.unlockedTechs) {
+      packet.addNumber(techID);
+   }
+
+   // Tech tree unlock progress
+   packet.addNumber(unlockProgressEntries.length);
+   for (const [techID, unlockProgress] of unlockProgressEntries) {
+      packet.addNumber(techID);
+
+      const itemRequirementEntries = Object.entries(unlockProgress.itemProgress).map(([a, b]) => [Number(a), b]) as Array<[ItemType, number]>;
+      packet.addNumber(itemRequirementEntries.length);
+      for (const [itemType, amount] of itemRequirementEntries) {
+         packet.addNumber(itemType);
+         packet.addNumber(amount);
+      }
+      
+      packet.addNumber(unlockProgress.studyProgress);
+   }
+
+   // Enemy tribes data
+   packet.addNumber(numEnemyTribes);
+   for (const tribe of Board.tribes) {
+      if (tribe.id === playerClient.tribe.id) {
+         continue;
+      }
+      
+      packet.addString(tribe.name, 100);
+      packet.addNumber(tribe.id);
+      packet.addNumber(tribe.tribeType);
+   }
+
+   // @Incomplete
+   // hasFrostShield: player.immunityTimer === 0 && playerArmour !== null && playerArmour.type === ItemType.deepfrost_armour,
+
+   packet.addBoolean(false);
+   packet.padOffset(3);
+
+   packet.addBoolean(playerClient.hasPickedUpItem);
+   packet.padOffset(3);
+
+   addCrossbowLoadProgressRecordToPacket(packet, hotbarUseInfo);
+
+   // Title offer
+   packet.addBoolean(titleOffer !== null);
+   packet.padOffset(3);
+   if (titleOffer !== null) {
+      packet.addNumber(titleOffer);
+   }
+   
+   // Tick events
+   packet.addNumber(playerClient.entityTickEvents.length);
+   for (const tickEvent of playerClient.entityTickEvents) {
+      packet.addNumber(tickEvent.entityID);
+      packet.addNumber(tickEvent.type);
+      packet.addNumber(tickEvent.data as number);
+   }
+   
+   // const visibleTribes = getVisibleTribes(extendedVisibleChunkBounds);
+
+   // const gameDataPacket: GameDataPacket = {
+      // simulationIsPaused: !SERVER.isSimulating,
+      // entityDataArray: bundleEntityDataArray(player, playerClient.tribe, extendedVisibleChunkBounds),
+      // inventory: bundlePlayerInventoryData(player),
+      // visibleHits: playerClient.visibleHits,
+      // playerKnockbacks: playerClient.playerKnockbacks,
+      // heals: playerClient.heals,
+      // visibleEntityDeathIDs: playerClient.visibleEntityDeathIDs,
+      // orbCompletes: playerClient.orbCompletes,
+      // tileUpdates: tileUpdates,
+      // serverTicks: Board.ticks,
+      // serverTime: Board.time,
+      // playerHealth: player !== null ? HealthComponentArray.getComponent(player).health : 0,
+      // entityDebugData: entityDebugData,
+      // playerTribeData: bundlePlayerTribeData(playerClient),
+      // enemyTribesData: bundleEnemyTribesData(playerClient),
       // @Incomplete
       // hasFrostShield: player.immunityTimer === 0 && playerArmour !== null && playerArmour.type === ItemType.deepfrost_armour,
-      hasFrostShield: false,
-      pickedUpItem: playerClient.pickedUpItem,
-      hotbarCrossbowLoadProgressRecord: bundleHotbarCrossbowLoadProgressRecord(player),
-      titleOffer: player !== null ? PlayerComponentArray.getComponent(player).titleOffer : null,
-      tickEvents: playerClient.entityTickEvents,
-      // @Cleanup: Copy and paste
-      visiblePathfindingNodeOccupances: (playerClient.gameDataOptions & GameDataPacketOptions.sendVisiblePathfindingNodeOccupances) ? getVisiblePathfindingNodeOccupances(extendedVisibleChunkBounds) : [],
-      visibleSafetyNodes: (playerClient.gameDataOptions & GameDataPacketOptions.sendVisibleSafetyNodes) ? getVisibleSafetyNodesData(visibleTribes, extendedVisibleChunkBounds) : [],
-      visibleBuildingPlans: (playerClient.gameDataOptions & GameDataPacketOptions.sendVisibleBuildingPlans) ? getVisibleBuildingPlans(visibleTribes, extendedVisibleChunkBounds) : [],
-      visibleBuildingSafetys: (playerClient.gameDataOptions & GameDataPacketOptions.sendVisibleBuildingSafetys) ? getVisibleBuildingSafetys(visibleTribes, extendedVisibleChunkBounds) : [],
-      visibleRestrictedBuildingAreas: (playerClient.gameDataOptions & GameDataPacketOptions.sendVisibleRestrictedBuildingAreas) ? getVisibleRestrictedBuildingAreas(visibleTribes, extendedVisibleChunkBounds) : [],
-      visibleWalls: getVisibleWallsData(visibleTribes, extendedVisibleChunkBounds),
-      visibleWallConnections: (playerClient.gameDataOptions & GameDataPacketOptions.sendVisibleWallConnections) ? getVisibleWallConnections(visibleTribes, extendedVisibleChunkBounds) : [],
-      visibleGrassBlockers: getVisibleGrassBlockers(playerClient.visibleChunkBounds)
-   };
+      // hasFrostShield: false,
+      // pickedUpItem: playerClient.hasPickedUpItem,
+      // hotbarCrossbowLoadProgressRecord: bundleHotbarCrossbowLoadProgressRecord(player),
+      // titleOffer: player !== null ? PlayerComponentArray.getComponent(player).titleOffer : null,
+      // tickEvents: playerClient.entityTickEvents,
 
-   return gameDataPacket;
+      // @Incomplete
+      // @Cleanup: Copy and paste
+      // visiblePathfindingNodeOccupances: (playerClient.gameDataOptions & GameDataPacketOptions.sendVisiblePathfindingNodeOccupances) ? getVisiblePathfindingNodeOccupances(extendedVisibleChunkBounds) : [],
+      // visibleSafetyNodes: (playerClient.gameDataOptions & GameDataPacketOptions.sendVisibleSafetyNodes) ? getVisibleSafetyNodesData(visibleTribes, extendedVisibleChunkBounds) : [],
+      // visibleBuildingPlans: (playerClient.gameDataOptions & GameDataPacketOptions.sendVisibleBuildingPlans) ? getVisibleBuildingPlans(visibleTribes, extendedVisibleChunkBounds) : [],
+      // visibleBuildingSafetys: (playerClient.gameDataOptions & GameDataPacketOptions.sendVisibleBuildingSafetys) ? getVisibleBuildingSafetys(visibleTribes, extendedVisibleChunkBounds) : [],
+      // visibleRestrictedBuildingAreas: (playerClient.gameDataOptions & GameDataPacketOptions.sendVisibleRestrictedBuildingAreas) ? getVisibleRestrictedBuildingAreas(visibleTribes, extendedVisibleChunkBounds) : [],
+      // visibleWalls: getVisibleWallsData(visibleTribes, extendedVisibleChunkBounds),
+      // visibleWallConnections: (playerClient.gameDataOptions & GameDataPacketOptions.sendVisibleWallConnections) ? getVisibleWallConnections(visibleTribes, extendedVisibleChunkBounds) : [],
+      // visibleGrassBlockers: getVisibleGrassBlockers(playerClient.visibleChunkBounds)
+   // };
+
+   return packet.buffer;
 }
 
-export function createInitialGameDataPacket(player: EntityID, playerConfig: ComponentConfig<ServerComponentType.transform>): InitialGameDataPacket {
-   const serverTileData = new Array<ServerTileData>();
+export function createInitialGameDataPacket(player: EntityID, playerConfig: ComponentConfig<ServerComponentType.transform>): ArrayBuffer {
+   let lengthBytes = Float32Array.BYTES_PER_ELEMENT * 4;
+   lengthBytes += Settings.BOARD_DIMENSIONS * Settings.BOARD_DIMENSIONS * 5 * Float32Array.BYTES_PER_ELEMENT;
+   lengthBytes += Float32Array.BYTES_PER_ELEMENT + Board.edgeTiles.length * 5 * Float32Array.BYTES_PER_ELEMENT;
+   lengthBytes += Float32Array.BYTES_PER_ELEMENT + Board.waterRocks.length * 5 * Float32Array.BYTES_PER_ELEMENT;
+   lengthBytes += Float32Array.BYTES_PER_ELEMENT + Board.riverSteppingStones.length * 5 * Float32Array.BYTES_PER_ELEMENT;
+   lengthBytes += Float32Array.BYTES_PER_ELEMENT + Board.riverFlowDirectionsArray.length * 3 * Float32Array.BYTES_PER_ELEMENT;
+   lengthBytes += Float32Array.BYTES_PER_ELEMENT + Board.grassInfo.length * 4 * Float32Array.BYTES_PER_ELEMENT;
+   lengthBytes += Float32Array.BYTES_PER_ELEMENT + Board.decorations.length * 5 * Float32Array.BYTES_PER_ELEMENT;
+   lengthBytes = alignLengthBytes(lengthBytes);
+   const packet = new Packet(PacketType.initialGameData, lengthBytes);
+   
+   packet.addNumber(player);
+   
+   const spawnPosition = playerConfig[ServerComponentType.transform].position;
+   packet.addNumber(spawnPosition.x);
+   packet.addNumber(spawnPosition.y);
+   
    for (let tileIndex = 0; tileIndex < Settings.BOARD_DIMENSIONS * Settings.BOARD_DIMENSIONS; tileIndex++) {
       const tile = Board.tiles[tileIndex];
-      serverTileData.push({
-         x: tile.x,
-         y: tile.y,
-         type: tile.type,
-         biome: tile.biome,
-         isWall: tile.isWall
-      });
+
+      packet.addNumber(tile.x);
+      packet.addNumber(tile.y);
+      packet.addNumber(tile.type);
+      packet.addNumber(tile.biome);
+      packet.addBoolean(tile.isWall);
+      packet.padOffset(3);
    }
 
-   const edgeTileData = new Array<ServerTileData>();
+   packet.addNumber(Board.edgeTiles.length);
    for (let i = 0; i < Board.edgeTiles.length; i++) {
       const tile = Board.edgeTiles[i];
-      edgeTileData.push({
-         x: tile.x,
-         y: tile.y,
-         type: tile.type,
-         biome: tile.biome,
-         isWall: tile.isWall
-      });
+
+      packet.addNumber(tile.x);
+      packet.addNumber(tile.y);
+      packet.addNumber(tile.type);
+      packet.addNumber(tile.biome);
+      packet.addBoolean(tile.isWall);
+      packet.padOffset(3);
    }
 
-   const initialGameDataPacket: InitialGameDataPacket = {
-      playerID: player,
-      spawnPosition: playerConfig[ServerComponentType.transform].position.package(),
-      tiles: serverTileData,
-      waterRocks: Board.waterRocks,
-      riverSteppingStones: Board.riverSteppingStones,
-      riverFlowDirections: Board.getRiverFlowDirections(),
-      edgeTiles: edgeTileData,
-      edgeRiverFlowDirections: Board.edgeRiverFlowDirections,
-      edgeRiverSteppingStones: Board.edgeRiverSteppingStones,
-      grassInfo: Board.grassInfo,
-      decorations: Board.decorations
-   };
-   return initialGameDataPacket;
+   packet.addNumber(Board.waterRocks.length);
+   for (let i = 0; i < Board.waterRocks.length; i++) {
+      const waterRock = Board.waterRocks[i];
+
+      packet.addNumber(waterRock.position[0]);
+      packet.addNumber(waterRock.position[1]);
+      packet.addNumber(waterRock.rotation);
+      packet.addNumber(waterRock.size);
+      packet.addNumber(waterRock.opacity);
+   }
+
+   packet.addNumber(Board.riverSteppingStones.length);
+   for (let i = 0; i < Board.riverSteppingStones.length; i++) {
+      const steppingStone = Board.riverSteppingStones[i];
+
+      packet.addNumber(steppingStone.positionX);
+      packet.addNumber(steppingStone.positionY);
+      packet.addNumber(steppingStone.rotation);
+      packet.addNumber(steppingStone.size);
+      packet.addNumber(steppingStone.groupID);
+   }
+
+   packet.addNumber(Board.riverFlowDirectionsArray.length);
+   for (let i = 0; i < Board.riverFlowDirectionsArray.length; i++) {
+      const flowDirectionInfo = Board.riverFlowDirectionsArray[i];
+
+      packet.addNumber(flowDirectionInfo.tileX);
+      packet.addNumber(flowDirectionInfo.tileY);
+      packet.addNumber(flowDirectionInfo.flowDirection);
+   }
+
+   packet.addNumber(Board.grassInfo.length);
+   for (let i = 0; i < Board.grassInfo.length; i++) {
+      const grassInfo = Board.grassInfo[i];
+
+      packet.addNumber(grassInfo.tileX);
+      packet.addNumber(grassInfo.tileY);
+      packet.addNumber(grassInfo.temperature);
+      packet.addNumber(grassInfo.humidity);
+   }
+
+   packet.addNumber(Board.decorations.length);
+   for (let i = 0; i < Board.decorations.length; i++) {
+      const decoration = Board.decorations[i];
+
+      packet.addNumber(decoration.positionX);
+      packet.addNumber(decoration.positionY);
+      packet.addNumber(decoration.rotation);
+      packet.addNumber(decoration.type);
+      packet.addNumber(decoration.variant);
+   }
+
+   return packet.buffer;
 }
 
-export function createGameDataSyncPacket(playerClient: PlayerClient): GameDataSyncPacket {
+export  function createSyncPacket(): ArrayBuffer {
+   const packet = new Packet(PacketType.sync, Float32Array.BYTES_PER_ELEMENT);
+   return packet.buffer;
+}
+
+export function createSyncDataPacket(playerClient: PlayerClient): ArrayBuffer {
    const player = playerClient.instance;
+
+   // @Copynpaste @Robustness
+   const inventoryComponent = InventoryComponentArray.getComponent(player);
+   const hotbarInventory = getInventory(inventoryComponent, InventoryName.hotbar);
+   const backpackInventory = getInventory(inventoryComponent, InventoryName.backpack);
+   const backpackSlotInventory = getInventory(inventoryComponent, InventoryName.backpackSlot);
+   const heldItemSlotInventory = getInventory(inventoryComponent, InventoryName.heldItemSlot);
+   const craftingOutputSlotInventory = getInventory(inventoryComponent, InventoryName.craftingOutputSlot);
+   const armourSlotInventory = getInventory(inventoryComponent, InventoryName.armourSlot);
+   const offhandInventory = getInventory(inventoryComponent, InventoryName.offhand);
+   const gloveSlotInventory = getInventory(inventoryComponent, InventoryName.gloveSlot);
+
+   let lengthBytes = 9 * Float32Array.BYTES_PER_ELEMENT;
    
-   // If the player is dead, send a default packet
-   if (!Board.hasEntity(player)) {
-      return {
-         position: [0, 0],
-         velocity: [0, 0],
-         acceleration: [0, 0],
-         rotation: 0,
-         health: 0,
-         inventory: bundlePlayerInventoryData(null)
-      };
-   }
+   // Player inventories
+   lengthBytes += getInventoryDataLength(hotbarInventory);
+   lengthBytes += getInventoryDataLength(backpackInventory);
+   lengthBytes += getInventoryDataLength(backpackSlotInventory);
+   lengthBytes += getInventoryDataLength(heldItemSlotInventory);
+   lengthBytes += getInventoryDataLength(craftingOutputSlotInventory);
+   lengthBytes += getInventoryDataLength(armourSlotInventory);
+   lengthBytes += getInventoryDataLength(offhandInventory);
+   lengthBytes += getInventoryDataLength(gloveSlotInventory);
 
+   const packet = new Packet(PacketType.syncData, lengthBytes);
+   
    const transformComponent = TransformComponentArray.getComponent(player);
-   const physicsComponent = PhysicsComponentArray.getComponent(player);
+   packet.addNumber(transformComponent.position.x);
+   packet.addNumber(transformComponent.position.y);
+   packet.addNumber(transformComponent.rotation);
 
-   return {
-      position: transformComponent.position.package(),
-      velocity: physicsComponent.velocity.package(),
-      acceleration: physicsComponent.acceleration.package(),
-      rotation: transformComponent.rotation,
-      health: HealthComponentArray.getComponent(player).health,
-      inventory: bundlePlayerInventoryData(player)
-   };
+   const physicsComponent = PhysicsComponentArray.getComponent(player);
+   packet.addNumber(physicsComponent.velocity.x);
+   packet.addNumber(physicsComponent.velocity.y);
+   packet.addNumber(physicsComponent.acceleration.x);
+   packet.addNumber(physicsComponent.acceleration.y);
+
+   const healthComponent = HealthComponentArray.getComponent(player);
+   packet.addNumber(healthComponent.health);
+
+   // Add inventory data
+   addInventoryDataToPacket(packet, hotbarInventory);
+   addInventoryDataToPacket(packet, backpackInventory);
+   addInventoryDataToPacket(packet, backpackSlotInventory);
+   addInventoryDataToPacket(packet, heldItemSlotInventory);
+   addInventoryDataToPacket(packet, craftingOutputSlotInventory);
+   addInventoryDataToPacket(packet, armourSlotInventory);
+   addInventoryDataToPacket(packet, offhandInventory);
+   addInventoryDataToPacket(packet, gloveSlotInventory);
+
+   return packet.buffer;
 }

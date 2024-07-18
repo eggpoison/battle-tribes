@@ -82,7 +82,7 @@ export function tickKrumblid(krumblid: EntityID): void {
    // Escape AI
    const escapeAIComponent = EscapeAIComponentArray.getComponent(krumblid);
    updateEscapeAIComponent(escapeAIComponent, 5 * Settings.TPS);
-   if (escapeAIComponent.attackingEntityIDs.length > 0) {
+   if (escapeAIComponent.attackingEntities.length > 0) {
       const escapeEntity = chooseEscapeEntity(krumblid, aiHelperComponent.visibleEntities);
       if (escapeEntity !== null) {
          runFromAttackingEntity(krumblid, escapeEntity, 500, TURN_SPEED);

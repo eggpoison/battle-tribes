@@ -5,6 +5,7 @@ import { ComponentConfig } from "../components";
 import { CircularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { PhysicsComponentArray } from "./PhysicsComponent";
 import { randFloat, randSign } from "webgl-test-shared/dist/utils";
+import { Packet } from "webgl-test-shared/dist/packets";
 
 export interface SnowballComponentParams {
    yetiID: number;
@@ -29,7 +30,8 @@ export class SnowballComponent {
 export const SnowballComponentArray = new ComponentArray<SnowballComponent>(ServerComponentType.snowball, true, {
    onJoin: onJoin,
    onInitialise: onInitialise,
-   serialise: serialise
+   getDataLength: getDataLength,
+   addDataToPacket: addDataToPacket
 });
 
 function onJoin(entity: EntityID): void {
@@ -48,11 +50,11 @@ function onInitialise(config: ComponentConfig<ServerComponentType.transform | Se
    hitbox.radius = SNOWBALL_SIZES[size] / 2;
 }
 
-function serialise(entity: EntityID): SnowballComponentData {
-   const snowballComponent = SnowballComponentArray.getComponent(entity);
+function getDataLength(): number {
+   return 2 * Float32Array.BYTES_PER_ELEMENT;
+}
 
-   return {
-      componentType: ServerComponentType.snowball,
-      size: snowballComponent.size
-   };
+function addDataToPacket(packet: Packet, entity: EntityID): void {
+   const snowballComponent = SnowballComponentArray.getComponent(entity);
+   packet.addNumber(snowballComponent.size);
 }

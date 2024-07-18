@@ -1,4 +1,4 @@
-import { EntityDebugData, GameDataPacket, InitialGameDataPacket } from "webgl-test-shared/dist/client-server-types";
+import { EntityDebugData, GameDataPacket } from "webgl-test-shared/dist/client-server-types";
 import { EnemyTribeData } from "webgl-test-shared/dist/techs";
 import { Settings } from "webgl-test-shared/dist/settings";
 import Board from "./Board";
@@ -62,6 +62,7 @@ import { updateRenderPartMatrices } from "./rendering/render-part-matrices";
 import { EntitySummonPacket } from "webgl-test-shared/dist/dev-packets";
 import { Mutable } from "webgl-test-shared/dist/utils";
 import { renderRenderables } from "./rendering/render-loop";
+import { InitialGameDataPacket } from "./client/packet-processing";
 
 export const enum GameInteractState {
    none,
@@ -268,7 +269,7 @@ abstract class Game {
                setupFrameGraph();
             }
 
-            createRenderChunks(initialGameDataPacket.decorations, initialGameDataPacket.waterRocks, initialGameDataPacket.edgeRiverSteppingStones);
+            createRenderChunks(initialGameDataPacket.decorations, initialGameDataPacket.waterRocks, initialGameDataPacket.riverSteppingStones);
 
             this.hasInitialised = true;
    
@@ -278,7 +279,7 @@ abstract class Game {
          Board.initialise(initialGameDataPacket);
          Board.addRiverSteppingStonesToChunks(initialGameDataPacket.riverSteppingStones);
 
-         createRenderChunks(initialGameDataPacket.decorations, initialGameDataPacket.waterRocks, initialGameDataPacket.edgeRiverSteppingStones);
+         createRenderChunks(initialGameDataPacket.decorations, initialGameDataPacket.waterRocks, initialGameDataPacket.riverSteppingStones);
       }
    }
 

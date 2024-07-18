@@ -1,9 +1,10 @@
-import { PlanterBoxPlant, PlantComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
+import { PlanterBoxPlant, ServerComponentType } from "webgl-test-shared/dist/components";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { ComponentArray } from "./ComponentArray";
 import { PlanterBoxComponentArray } from "./PlanterBoxComponent";
 import { ComponentConfig } from "../components";
 import { EntityID } from "webgl-test-shared/dist/entities";
+import { Packet } from "webgl-test-shared/dist/packets";
 
 export interface PlantComponentParams {
    planterBox: EntityID;
@@ -45,7 +46,8 @@ export class PlantComponent {
 export const PlantComponentArray = new ComponentArray<PlantComponent>(ServerComponentType.plant, true, {
    onInitialise: onInitialise,
    onRemove: onRemove,
-   serialise: serialise
+   getDataLength: getDataLength,
+   addDataToPacket: addDataToPacket
 });
 
 function onInitialise(config: ComponentConfig<ServerComponentType.health | ServerComponentType.plant>): void {
@@ -110,7 +112,11 @@ export function plantIsFullyGrown(plantComponent: PlantComponent): boolean {
    return plantComponent.plantGrowthTicks === ticksToGrow;
 }
 
-function serialise(entity: EntityID): PlantComponentData {
+function getDataLength(): number {
+   return 4 * Float32Array.BYTES_PER_ELEMENT;
+}
+
+function addDataToPacket(packet: Packet, entity: EntityID): void {
    const plantComponent = PlantComponentArray.getComponent(entity);
 
    let growthProgress: number;
@@ -119,11 +125,8 @@ function serialise(entity: EntityID): PlantComponentData {
    } else {
       growthProgress = 0;
    }
-   
-   return {
-      componentType: ServerComponentType.plant,
-      plant: plantComponent.plantType,
-      plantGrowthProgress: growthProgress,
-      numFruit: plantComponent.numFruit
-   };
+
+   packet.addNumber(plantComponent.plantType);
+   packet.addNumber(growthProgress);
+   packet.addNumber(plantComponent.numFruit);
 }

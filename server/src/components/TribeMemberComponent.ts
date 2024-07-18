@@ -1,4 +1,4 @@
-import { ServerComponentType, TribeMemberComponentData } from "webgl-test-shared/dist/components";
+import { ServerComponentType  } from "webgl-test-shared/dist/components";
 import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
 import { TitleGenerationInfo, TribesmanTitle, TRIBESMAN_TITLE_RECORD } from "webgl-test-shared/dist/titles";
 import { TRIBE_INFO_RECORD, TribeType } from "webgl-test-shared/dist/tribes";
@@ -11,8 +11,8 @@ import { TribeComponentArray } from "./TribeComponent";
 import { PlayerComponentArray } from "./PlayerComponent";
 import { InventoryName } from "webgl-test-shared/dist/items/items";
 import { ComponentConfig } from "../components";
-import { HealthComponentArray } from "./HealthComponent";
 import { tickTribeMember } from "../entities/tribes/tribe-member";
+import { Packet } from "webgl-test-shared/dist/packets";
 
 export interface TribeMemberComponentParams {
    // @Cleanup: this all sucks
@@ -52,7 +52,8 @@ export const TribeMemberComponentArray = new ComponentArray<TribeMemberComponent
    onRemove: onRemove,
    onInitialise: onInitialise,
    onTick: tickTribeMember,
-   serialise: serialise
+   getDataLength: getDataLength,
+   addDataToPacket: addDataToPacket
 });
 
 const getHotbarSize = (entityType: TribesmanEntityType): number => {
@@ -164,18 +165,31 @@ function onJoin(entity: EntityID): void {
    tribeComponent.tribe.registerNewTribeMember(entity);
 }
 
-function onRemove(entityID: number): void {
-   const tribeComponent = TribeComponentArray.getComponent(entityID);
-   tribeComponent.tribe.registerTribeMemberDeath(entityID);
+function onRemove(entity: EntityID): void {
+   const tribeComponent = TribeComponentArray.getComponent(entity);
+   tribeComponent.tribe.registerTribeMemberDeath(entity);
 }
 
-function serialise(entityID: number): TribeMemberComponentData {
-   const tribeMemberComponent = TribeMemberComponentArray.getComponent(entityID);
-   return {
-      componentType: ServerComponentType.tribeMember,
-      warPaintType: tribeMemberComponent.warPaintType,
-      titles: tribeMemberComponent.titles
-   };
+function getDataLength(entity: EntityID): number {
+   const tribeMemberComponent = TribeMemberComponentArray.getComponent(entity);
+
+   let lengthBytes = 3 * Float32Array.BYTES_PER_ELEMENT;
+   lengthBytes += 2 * Float32Array.BYTES_PER_ELEMENT * tribeMemberComponent.titles.length;
+
+   return lengthBytes;
+}
+
+function addDataToPacket(packet: Packet, entity: EntityID): void {
+   const tribeMemberComponent = TribeMemberComponentArray.getComponent(entity);
+
+   packet.addNumber(tribeMemberComponent.warPaintType !== null ? tribeMemberComponent.warPaintType : -1);
+
+   packet.addNumber(tribeMemberComponent.titles.length);
+   for (let i = 0; i < tribeMemberComponent.titles.length; i++) {
+      const title = tribeMemberComponent.titles[i];
+      packet.addNumber(title.title);
+      packet.addNumber(title.displayOption);
+   }
 }
 
 export function awardTitle(tribesman: EntityID, title: TribesmanTitle): void {

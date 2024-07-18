@@ -1,34 +1,52 @@
-import { EscapeAIComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { ComponentArray } from "./ComponentArray";
+import { EntityID } from "webgl-test-shared/dist/entities";
+import { Packet } from "webgl-test-shared/dist/packets";
 
 export interface EscapeAIComponentParams {}
 
 export class EscapeAIComponent {
    /** IDs of all entities attacking the entity */
-   public readonly attackingEntityIDs = new Array<number>();
+   public readonly attackingEntities = new Array<number>();
    public readonly attackEntityTicksSinceLastAttack = new Array<number>();
 }
 
 export const EscapeAIComponentArray = new ComponentArray<EscapeAIComponent>(ServerComponentType.escapeAI, true, {
-   serialise: serialise
+   getDataLength: getDataLength,
+   addDataToPacket: addDataToPacket
 });
 
 export function updateEscapeAIComponent(escapeAIComponent: EscapeAIComponent, attackSubsideTicks: number): void {
-   for (let i = 0; i < escapeAIComponent.attackingEntityIDs.length; i++) {
+   for (let i = 0; i < escapeAIComponent.attackingEntities.length; i++) {
       if (escapeAIComponent.attackEntityTicksSinceLastAttack[i]++ >= attackSubsideTicks) {
-         escapeAIComponent.attackingEntityIDs.splice(i, 1);
+         escapeAIComponent.attackingEntities.splice(i, 1);
          escapeAIComponent.attackEntityTicksSinceLastAttack.splice(i, 1);
          i--;
       }
    }
 }
 
-function serialise(entityID: number): EscapeAIComponentData {
-   const escapeAIComponent = EscapeAIComponentArray.getComponent(entityID);
+function getDataLength(entity: EntityID): number {
+   const escapeAIComponent = EscapeAIComponentArray.getComponent(entity);
 
-   return {
-      componentType: ServerComponentType.escapeAI,
-      attackingEntityIDs: escapeAIComponent.attackingEntityIDs,
-      attackEntityTicksSinceLastAttack: escapeAIComponent.attackEntityTicksSinceLastAttack
-   };
+   let lengthBytes = 2 * Float32Array.BYTES_PER_ELEMENT;
+   lengthBytes += Float32Array.BYTES_PER_ELEMENT * escapeAIComponent.attackingEntities.length;
+   lengthBytes += Float32Array.BYTES_PER_ELEMENT * escapeAIComponent.attackEntityTicksSinceLastAttack.length;
+
+   return lengthBytes;
+}
+
+function addDataToPacket(packet: Packet, entity: EntityID): void {
+   const escapeAIComponent = EscapeAIComponentArray.getComponent(entity);
+
+   packet.addNumber(escapeAIComponent.attackingEntities.length);
+   for (let i = 0; i < escapeAIComponent.attackingEntities.length; i++) {
+      const entity = escapeAIComponent.attackingEntities[i];
+      packet.addNumber(entity);
+   }
+
+   for (let i = 0; i < escapeAIComponent.attackingEntities.length; i++) {
+      const ticks = escapeAIComponent.attackEntityTicksSinceLastAttack[i];
+      packet.addNumber(ticks);
+   }
 }

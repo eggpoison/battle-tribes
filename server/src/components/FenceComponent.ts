@@ -1,4 +1,6 @@
-import { FenceComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
+// @Incomplete: why do we have this packet?
+
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { ComponentArray } from "./ComponentArray";
 
 export interface FenceComponentParams {}
@@ -6,11 +8,12 @@ export interface FenceComponentParams {}
 export class FenceComponent {}
 
 export const FenceComponentArray = new ComponentArray<FenceComponent>(ServerComponentType.fence, true, {
-   serialise: serialise
+   getDataLength: getDataLength,
+   addDataToPacket: addDataToPacket
 });
 
-function serialise(): FenceComponentData {
-   return {
-      componentType: ServerComponentType.fence
-   };
+function getDataLength(): number {
+   return Float32Array.BYTES_PER_ELEMENT;
 }
+
+function addDataToPacket(): void {}

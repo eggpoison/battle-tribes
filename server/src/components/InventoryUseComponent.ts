@@ -1,9 +1,10 @@
-import { InventoryUseComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityID, LimbAction } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { ComponentArray } from "./ComponentArray";
 import { InventoryName } from "webgl-test-shared/dist/items/items";
 import { getInventory, InventoryComponentArray } from "./InventoryComponent";
+import { Packet } from "webgl-test-shared/dist/packets";
 
 export interface InventoryUseComponentParams {
    usedInventoryNames: Array<InventoryName>;
@@ -88,7 +89,8 @@ export class InventoryUseComponent {
 }
 
 export const InventoryUseComponentArray = new ComponentArray<InventoryUseComponent>(ServerComponentType.inventoryUse, true, {
-   serialise: serialise
+   getDataLength: getDataLength,
+   addDataToPacket: addDataToPacket
 });
 
 export function tickInventoryUseComponent(entity: EntityID, inventoryUseComponent: InventoryUseComponent): void {
@@ -124,33 +126,81 @@ export function tickInventoryUseComponent(entity: EntityID, inventoryUseComponen
    }
 }
 
-function serialise(entityID: number): InventoryUseComponentData {
-   const inventoryUseComponent = InventoryUseComponentArray.getComponent(entityID);
+export function getCrossbowLoadProgressRecordLength(useInfo: InventoryUseInfo): number {
+   let lengthBytes = Float32Array.BYTES_PER_ELEMENT;
+   lengthBytes += 2 * Float32Array.BYTES_PER_ELEMENT * Object.keys(useInfo.crossbowLoadProgressRecord).length;
+   return lengthBytes;
+}
 
-   return {
-      componentType: ServerComponentType.inventoryUse,
-      inventoryUseInfos: inventoryUseComponent.inventoryUseInfos.map(limbInfo => {
-         return {
-            selectedItemSlot: limbInfo.selectedItemSlot,
-            inventoryName: limbInfo.usedInventoryName,
-            bowCooldownTicks: limbInfo.bowCooldownTicks,
-            itemAttackCooldowns: limbInfo.itemAttackCooldowns,
-            spearWindupCooldowns: limbInfo.spearWindupCooldowns,
-            crossbowLoadProgressRecord: limbInfo.crossbowLoadProgressRecord,
-            foodEatingTimer: limbInfo.foodEatingTimer,
-            action: limbInfo.action,
-            lastAttackTicks: limbInfo.lastAttackTicks,
-            lastEatTicks: limbInfo.lastEatTicks,
-            lastBowChargeTicks: limbInfo.lastBowChargeTicks,
-            lastSpearChargeTicks: limbInfo.lastSpearChargeTicks,
-            lastBattleaxeChargeTicks: limbInfo.lastBattleaxeChargeTicks,
-            lastCrossbowLoadTicks: limbInfo.lastCrossbowLoadTicks,
-            lastCraftTicks: limbInfo.lastCraftTicks,
-            thrownBattleaxeItemID: limbInfo.thrownBattleaxeItemID,
-            lastAttackCooldown: limbInfo.lastAttackCooldown
-         };
-      })
-   };
+export function addCrossbowLoadProgressRecordToPacket(packet: Packet, useInfo: InventoryUseInfo): void {
+   // @Copynpaste
+   const crossbowLoadProgressEntries = Object.entries(useInfo.crossbowLoadProgressRecord).map(([a, b]) => [Number(a), b]) as Array<[number, number]>;
+   packet.addNumber(crossbowLoadProgressEntries.length);
+   for (let i = 0; i < crossbowLoadProgressEntries.length; i++) {
+      const [itemSlot, cooldown] = crossbowLoadProgressEntries[i];
+      packet.addNumber(itemSlot);
+      packet.addNumber(cooldown);
+   }
+}
+
+function getDataLength(entity: EntityID): number {
+   const inventoryUseComponent = InventoryUseComponentArray.getComponent(entity);
+
+   let lengthBytes = 2 * Float32Array.BYTES_PER_ELEMENT;
+   for (const useInfo of inventoryUseComponent.inventoryUseInfos) {
+      lengthBytes += 4 * Float32Array.BYTES_PER_ELEMENT;
+      lengthBytes += 2 * Float32Array.BYTES_PER_ELEMENT * Object.keys(useInfo.itemAttackCooldowns).length
+      lengthBytes += Float32Array.BYTES_PER_ELEMENT;
+      lengthBytes += 2 * Float32Array.BYTES_PER_ELEMENT * Object.keys(useInfo.spearWindupCooldowns).length;
+      lengthBytes += getCrossbowLoadProgressRecordLength(useInfo);
+      lengthBytes += 11 * Float32Array.BYTES_PER_ELEMENT;
+   }
+
+   return lengthBytes;
+}
+
+function addDataToPacket(packet: Packet, entity: EntityID): void {
+   const inventoryUseComponent = InventoryUseComponentArray.getComponent(entity);
+
+   packet.addNumber(inventoryUseComponent.inventoryUseInfos.length);
+   for (let i = 0; i < inventoryUseComponent.inventoryUseInfos.length; i++) {
+      const limbInfo = inventoryUseComponent.inventoryUseInfos[i];
+
+      packet.addNumber(limbInfo.usedInventoryName);
+      packet.addNumber(limbInfo.selectedItemSlot);
+      packet.addNumber(limbInfo.bowCooldownTicks);
+
+      const attackCooldownEntries = Object.entries(limbInfo.itemAttackCooldowns).map(([a, b]) => [Number(a), b]) as Array<[number, number]>;
+      packet.addNumber(attackCooldownEntries.length);
+      for (let i = 0; i < attackCooldownEntries.length; i++) {
+         const [itemSlot, cooldown] = attackCooldownEntries[i];
+         packet.addNumber(itemSlot);
+         packet.addNumber(cooldown);
+      }
+
+      // @Cleanup: Copy and paste
+      const spearWindupCooldownEntries = Object.entries(limbInfo.spearWindupCooldowns).map(([a, b]) => [Number(a), b]) as Array<[number, number]>;
+      packet.addNumber(spearWindupCooldownEntries.length);
+      for (let i = 0; i < spearWindupCooldownEntries.length; i++) {
+         const [itemSlot, cooldown] = spearWindupCooldownEntries[i];
+         packet.addNumber(itemSlot);
+         packet.addNumber(cooldown);
+      }
+
+      addCrossbowLoadProgressRecordToPacket(packet, limbInfo);
+
+      packet.addNumber(limbInfo.foodEatingTimer);
+      packet.addNumber(limbInfo.action);
+      packet.addNumber(limbInfo.lastAttackTicks);
+      packet.addNumber(limbInfo.lastEatTicks);
+      packet.addNumber(limbInfo.lastBowChargeTicks);
+      packet.addNumber(limbInfo.lastSpearChargeTicks);
+      packet.addNumber(limbInfo.lastBattleaxeChargeTicks);
+      packet.addNumber(limbInfo.lastCrossbowLoadTicks);
+      packet.addNumber(limbInfo.lastCraftTicks);
+      packet.addNumber(limbInfo.thrownBattleaxeItemID);
+      packet.addNumber(limbInfo.lastAttackCooldown);
+   }
 }
 
 export function setLimbActions(inventoryUseComponent: InventoryUseComponent, limbAction: LimbAction): void {

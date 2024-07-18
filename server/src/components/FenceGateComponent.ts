@@ -1,10 +1,11 @@
-import { FenceGateComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { DoorToggleType, EntityID } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { angle, lerp } from "webgl-test-shared/dist/utils";
 import { ComponentArray } from "./ComponentArray";
 import { RectangularHitbox, HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { TransformComponentArray } from "./TransformComponent";
+import { Packet } from "webgl-test-shared/dist/packets";
 
 // @Cleanup: All the door toggling logic is stolen from DoorComponent.ts
 
@@ -20,7 +21,8 @@ export class FenceGateComponent {
 }
 
 export const FenceGateComponentArray = new ComponentArray<FenceGateComponent>(ServerComponentType.fenceGate, true, {
-   serialise: serialise
+   getDataLength: getDataLength,
+   addDataToPacket: addDataToPacket
 });
 
 const doorWidth = 52;
@@ -94,11 +96,13 @@ export function toggleFenceGateDoor(fenceGate: EntityID): void {
    }
 }
 
-function serialise(entityID: number): FenceGateComponentData {
-   const fenceGateComponent = FenceGateComponentArray.getComponent(entityID);
-   return {
-      componentType: ServerComponentType.fenceGate,
-      toggleType: fenceGateComponent.toggleType,
-      openProgress: fenceGateComponent.openProgress
-   };
+function getDataLength(): number {
+   return 3 * Float32Array.BYTES_PER_ELEMENT;
+}
+
+function addDataToPacket(packet: Packet, entity: EntityID): void {
+   const fenceGateComponent = FenceGateComponentArray.getComponent(entity);
+
+   packet.addNumber(fenceGateComponent.toggleType);
+   packet.addNumber(fenceGateComponent.openProgress);
 }

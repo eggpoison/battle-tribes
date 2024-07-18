@@ -1,5 +1,4 @@
-import { StatusEffectData } from "webgl-test-shared/dist/client-server-types";
-import { ServerComponentType, StatusEffectComponentData } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityID, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
 import { StatusEffect, STATUS_EFFECT_MODIFIERS } from "webgl-test-shared/dist/status-effects";
 import { customTickIntervalHasPassed } from "webgl-test-shared/dist/utils";
@@ -9,6 +8,7 @@ import { damageEntity } from "./HealthComponent";
 import { PhysicsComponentArray } from "./PhysicsComponent";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
 import { TransformComponentArray } from "./TransformComponent";
+import { Packet } from "webgl-test-shared/dist/packets";
 
 export interface StatusEffectComponentParams {
    readonly statusEffectImmunityBitset: number;
@@ -27,7 +27,8 @@ export class StatusEffectComponent {
 }
 
 export const StatusEffectComponentArray = new ComponentArray<StatusEffectComponent>(ServerComponentType.statusEffect, false, {
-   serialise: serialise
+   getDataLength: getDataLength,
+   addDataToPacket: addDataToPacket
 });
 
 const entityIsImmuneToStatusEffect = (statusEffectComponent: StatusEffectComponent, statusEffect: StatusEffect): boolean => {
@@ -167,18 +168,17 @@ export function tickStatusEffectComponents(): void {
    StatusEffectComponentArray.deactivateQueue();
 }
 
-function serialise(entity: EntityID): StatusEffectComponentData {
-   const statusEffects = new Array<StatusEffectData>();
+function getDataLength(entity: EntityID): number {
    const statusEffectComponent = StatusEffectComponentArray.getComponent(entity);
-   for (let i = 0; i < statusEffectComponent.activeStatusEffectTypes.length; i++) {
-      statusEffects.push({
-         type: statusEffectComponent.activeStatusEffectTypes[i] as unknown as StatusEffect,
-         ticksElapsed: statusEffectComponent.activeStatusEffectTicksElapsed[i]
-      });
-   }
+   return 2 * Float32Array.BYTES_PER_ELEMENT + 2 * Float32Array.BYTES_PER_ELEMENT * statusEffectComponent.activeStatusEffectTypes.length;
+}
 
-   return {
-      componentType: ServerComponentType.statusEffect,
-      statusEffects: statusEffects
-   };
+function addDataToPacket(packet: Packet, entity: EntityID): void {
+   const statusEffectComponent = StatusEffectComponentArray.getComponent(entity);
+
+   packet.addNumber(statusEffectComponent.activeStatusEffectTypes.length);
+   for (let i = 0; i < statusEffectComponent.activeStatusEffectTypes.length; i++) {
+      packet.addNumber(statusEffectComponent.activeStatusEffectTypes[i]);
+      packet.addNumber(statusEffectComponent.activeStatusEffectTicksElapsed[i]);
+   }
 }

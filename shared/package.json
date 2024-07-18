@@ -14,5 +14,7 @@
    "files": [
       "lib/**"
    ],
-   "dependencies": {}
+   "dependencies": {
+      "@types/node": "^20.14.11"
+   }
 }

@@ -1,4 +1,4 @@
-import { ServerComponentType, YetiComponentData } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 import Tile from "../Tile";
 import { SnowThrowStage, YETI_SNOW_THROW_COOLDOWN } from "../entities/mobs/yeti";
 import { ComponentArray } from "./ComponentArray";
@@ -8,6 +8,7 @@ import { Biome } from "webgl-test-shared/dist/tiles";
 import { randItem } from "webgl-test-shared/dist/utils";
 import Board from "../Board";
 import { TransformComponentArray } from "./TransformComponent";
+import { Packet } from "webgl-test-shared/dist/packets";
 
 export interface YetiComponentParams {
    readonly territory: ReadonlyArray<Tile>;
@@ -44,7 +45,8 @@ export class YetiComponent {
 export const YetiComponentArray = new ComponentArray<YetiComponent>(ServerComponentType.yeti, true, {
    onJoin: onJoin,
    onRemove: onRemove,
-   serialise: serialise
+   getDataLength: getDataLength,
+   addDataToPacket: addDataToPacket
 });
 
 const tileBelongsToYetiTerritory = (tileX: number, tileY: number): boolean => {
@@ -160,10 +162,11 @@ function onRemove(yeti: EntityID): void {
    }
 }
 
-function serialise(entity: EntityID): YetiComponentData {
+function getDataLength(): number {
+   return 2 * Float32Array.BYTES_PER_ELEMENT;
+}
+
+function addDataToPacket(packet: Packet, entity: EntityID): void {
    const yetiComponent = YetiComponentArray.getComponent(entity);
-   return {
-      componentType: ServerComponentType.yeti,
-      attackProgress: yetiComponent.snowThrowAttackProgress
-   };
+   packet.addNumber(yetiComponent.snowThrowAttackProgress);
 }

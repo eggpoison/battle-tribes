@@ -11,6 +11,7 @@ import { TransformComponentArray } from "./TransformComponent";
 import Board from "../Board";
 import { createItemEntityConfig } from "../entities/item-entity";
 import { createEntityFromConfig } from "../Entity";
+import { Packet } from "webgl-test-shared/dist/packets";
 
 const enum Vars {
    MIN_POOP_PRODUCTION_COOLDOWN = 5 * Settings.TPS,
@@ -46,7 +47,8 @@ export class CowComponent {
 }
 
 export const CowComponentArray = new ComponentArray<CowComponent>(ServerComponentType.cow, true, {
-   serialise: serialise
+   getDataLength: getDataLength,
+   addDataToPacket: addDataToPacket
 });
 
 const poop = (cow: EntityID, cowComponent: CowComponent): void => {
@@ -99,12 +101,13 @@ export function wantsToEatBerries(cowComponent: CowComponent): boolean {
    return cowComponent.bowelFullness <= Vars.MAX_BERRY_CHASE_FULLNESS;
 }
 
-function serialise(entityID: number): CowComponentData {
-   const cowComponent = CowComponentArray.getComponent(entityID);
+function getDataLength(): number {
+   return 3 * Float32Array.BYTES_PER_ELEMENT;
+}
+
+function addDataToPacket(packet: Packet, entity: EntityID): void {
+   const cowComponent = CowComponentArray.getComponent(entity);
    
-   return {
-      componentType: ServerComponentType.cow,
-      species: cowComponent.species,
-      grazeProgress: cowComponent.grazeProgressTicks > 0 ? cowComponent.grazeProgressTicks / COW_GRAZE_TIME_TICKS : -1
-   };
+   packet.addNumber(cowComponent.species);
+   packet.addNumber(cowComponent.grazeProgressTicks > 0 ? cowComponent.grazeProgressTicks / COW_GRAZE_TIME_TICKS : -1);
 }

@@ -1,4 +1,4 @@
-import { IceShardComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { ComponentArray } from "./ComponentArray";
 import { randFloat } from "webgl-test-shared/dist/utils";
 
@@ -9,11 +9,12 @@ export class IceShardComponent {
 }
 
 export const IceShardComponentArray = new ComponentArray<IceShardComponent>(ServerComponentType.iceShard, true, {
-   serialise: serialise
+   getDataLength: getDataLength,
+   addDataToPacket: addDataToPacket
 });
 
-function serialise(): IceShardComponentData {
-   return {
-      componentType: ServerComponentType.iceShard
-   };
+function getDataLength(): number {
+   return Float32Array.BYTES_PER_ELEMENT;
 }
+
+function addDataToPacket(): void {}

@@ -1,11 +1,12 @@
 import { EntityID, TreeSize } from "webgl-test-shared/dist/entities";
 import { ComponentArray } from "./ComponentArray";
 import { GrassBlockerCircle } from "webgl-test-shared/dist/grass-blockers";
-import { ServerComponentType, TreeComponentData } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { ComponentConfig } from "../components";
 import { TransformComponentArray } from "./TransformComponent";
 import { CircularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { addGrassBlocker } from "../grass-blockers";
+import { Packet } from "webgl-test-shared/dist/packets";
 
 export interface TreeComponentParams {
    readonly treeSize: TreeSize;
@@ -30,7 +31,8 @@ export class TreeComponent {
 export const TreeComponentArray = new ComponentArray<TreeComponent>(ServerComponentType.tree, true, {
    onInitialise: onInitialise,
    onJoin: onJoin,
-   serialise: serialise
+   getDataLength: getDataLength,
+   addDataToPacket: addDataToPacket
 });
 
 function onInitialise(config: ComponentConfig<ServerComponentType.transform | ServerComponentType.health | ServerComponentType.tree>): void {
@@ -57,11 +59,11 @@ function onJoin(entity: EntityID): void {
    addGrassBlocker(blocker, entity);
 }
 
-function serialise(entity: EntityID): TreeComponentData {
-   const treeComponent = TreeComponentArray.getComponent(entity);
+function getDataLength(): number {
+   return 2 * Float32Array.BYTES_PER_ELEMENT;
+}
 
-   return {
-      componentType: ServerComponentType.tree,
-      treeSize: treeComponent.treeSize
-   };
+function addDataToPacket(packet: Packet, entity: EntityID): void {
+   const treeComponent = TreeComponentArray.getComponent(entity);
+   packet.addNumber(treeComponent.treeSize);
 }

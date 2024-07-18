@@ -1,5 +1,7 @@
-import { ServerComponentType, WanderAIComponentData } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { ComponentArray } from "./ComponentArray";
+import { EntityID } from "webgl-test-shared/dist/entities";
+import { Packet } from "webgl-test-shared/dist/packets";
 
 export interface WanderAIComponentParams {}
 
@@ -10,15 +12,17 @@ export class WanderAIComponent {
 }
 
 export const WanderAIComponentArray = new ComponentArray<WanderAIComponent>(ServerComponentType.wanderAI, true, {
-   serialise: serialise
+   getDataLength: getDataLength,
+   addDataToPacket: addDataToPacket
 });
 
-function serialise(entityID: number): WanderAIComponentData {
-   const wanderAIComponent = WanderAIComponentArray.getComponent(entityID);
+function getDataLength(): number {
+   return 3 * Float32Array.BYTES_PER_ELEMENT;
+}
 
-   return {
-      componentType: ServerComponentType.wanderAI,
-      targetPositionX: wanderAIComponent.targetPositionX,
-      targetPositionY: wanderAIComponent.targetPositionY
-   };
+function addDataToPacket(packet: Packet, entity: EntityID): void {
+   const wanderAIComponent = WanderAIComponentArray.getComponent(entity);
+
+   packet.addNumber(wanderAIComponent.targetPositionX);
+   packet.addNumber(wanderAIComponent.targetPositionY);
 }

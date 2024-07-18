@@ -5,7 +5,7 @@ export const enum Settings {
    TILE_SIZE = 64,
    // @Temporary
    // BOARD_SIZE = 64,
-   BOARD_SIZE = 4,
+   BOARD_SIZE = 8,
    CHUNK_SIZE = 4,
    CHUNK_UNITS = CHUNK_SIZE * TILE_SIZE,
    BOARD_DIMENSIONS = BOARD_SIZE * CHUNK_SIZE,

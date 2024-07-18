@@ -1,22 +1,27 @@
-import { ComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
 import { ComponentConfig } from "../components";
 import { Hitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
+import { Packet } from "webgl-test-shared/dist/packets";
 
 export const ComponentArrays = new Array<ComponentArray>();
 export const ComponentArrayRecord = {} as { [T in ServerComponentType]: ComponentArray<object, T> };
 
-interface ComponentArrayFunctions<C extends ServerComponentType, T extends object> {
+interface ComponentArrayFunctions<T extends object> {
    /** Called after all the components for an entity are created, before the entity has joined the world. */
    onInitialise?(config: ComponentConfig<ServerComponentType>, entity: EntityID, entityType: EntityType): void;
    onJoin?(entity: EntityID): void;
    onTick?(entity: EntityID, component: T): void;
    onCollision?(entity: EntityID, collidingEntity: EntityID, pushedHitbox: Hitbox, pushingHitbox: Hitbox): void;
    onRemove?(entity: EntityID): void;
-   serialise(entity: EntityID, player: EntityID | null): ComponentData<C>;
+   // @Cleanup: make getDataLength not return an extra float length
+   /** Returns the length of the data that would be added to the packet */
+   getDataLength(entity: EntityID, player: EntityID | null): number;
+   addDataToPacket(packet: Packet, entity: EntityID, player: EntityID | null): void;
 }
 
-export class ComponentArray<T extends object = object, C extends ServerComponentType = ServerComponentType> {
+export class ComponentArray<T extends object = object, C extends ServerComponentType = ServerComponentType> implements ComponentArrayFunctions<T> {
+   public readonly componentType: ServerComponentType;
    private readonly isActiveByDefault: boolean;
    
    public components = new Array<T>();
@@ -40,14 +45,16 @@ export class ComponentArray<T extends object = object, C extends ServerComponent
    private deactivateBuffer = new Array<number>();
 
    // @Bug @Incomplete: This function shouldn't create an entity, as that will cause a crash. (Can't add components to the join buffer while iterating it). solution: make it not crash
-   public onInitialise?: (config: ComponentConfig<ServerComponentType>, entity: EntityID, entityType: EntityType) => void;
-   public onJoin?: (entity: EntityID) => void;
+   public onInitialise?(config: ComponentConfig<ServerComponentType>, entity: EntityID, entityType: EntityType): void;
+   public onJoin?(entity: EntityID): void;
    public onTick?(entity: EntityID, component: T): void;
    public onCollision?(entity: EntityID, collidingEntity: EntityID, pushedHitbox: Hitbox, pushingHitbox: Hitbox): void;
-   public onRemove?: (entity: EntityID) => void;
-   public serialise: (entity: EntityID, player: EntityID | null) => ComponentData<C>;
+   public onRemove?(entity: EntityID): void;
+   public getDataLength: (entity: EntityID, player: EntityID | null) => number;
+   public addDataToPacket: (packet: Packet, entity: EntityID, player: EntityID | null) => void;
    
-   constructor(componentType: C, isActiveByDefault: boolean, functions: ComponentArrayFunctions<C, T>) {
+   constructor(componentType: C, isActiveByDefault: boolean, functions: ComponentArrayFunctions<T>) {
+      this.componentType = componentType;
       this.isActiveByDefault = isActiveByDefault;
 
       this.onInitialise = functions.onInitialise;
@@ -55,7 +62,8 @@ export class ComponentArray<T extends object = object, C extends ServerComponent
       this.onTick = functions.onTick;
       this.onCollision = functions.onCollision;
       this.onRemove = functions.onRemove;
-      this.serialise = functions.serialise;
+      this.getDataLength = functions.getDataLength;
+      this.addDataToPacket = functions.addDataToPacket;
 
       ComponentArrays.push(this);
       // @Cleanup: cast

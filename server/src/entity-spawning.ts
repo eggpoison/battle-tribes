@@ -55,16 +55,17 @@ export interface EntitySpawnInfo {
 }
 
 const SPAWN_INFOS: ReadonlyArray<EntitySpawnInfo> = [
-   {
-      entityType: EntityType.cow,
-      spawnRate: 0.01,
-      maxDensity: 0.004,
-      minPackSize: 2,
-      maxPackSize: 5,
-      onlySpawnsInNight: false,
-      minSpawnDistance: 150,
-      usesSpawnDistribution: false
-   },
+   // @Temporary
+   // {
+   //    entityType: EntityType.cow,
+   //    spawnRate: 0.01,
+   //    maxDensity: 0.004,
+   //    minPackSize: 2,
+   //    maxPackSize: 5,
+   //    onlySpawnsInNight: false,
+   //    minSpawnDistance: 150,
+   //    usesSpawnDistribution: false
+   // },
    {
       entityType: EntityType.berryBush,
       spawnRate: 0.001,

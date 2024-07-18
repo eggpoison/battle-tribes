@@ -1,13 +1,15 @@
 import { Point, randFloat, randInt } from "webgl-test-shared/dist/utils";
 import { ComponentArray } from "./ComponentArray";
-import { LayeredRodComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityID } from "webgl-test-shared/dist/entities";
 import { TransformComponentArray } from "./TransformComponent";
 import { Hitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { Settings } from "webgl-test-shared/dist/settings";
+import { Packet } from "webgl-test-shared/dist/packets";
 
 const enum Vars {
-   NATURAL_DRIFT = 0.6 / Settings.TPS
+   // NATURAL_DRIFT = 0.6 / Settings.TPS
+   NATURAL_DRIFT = 37 / Settings.TPS
 }
 
 export interface LayeredRodComponentParams {}
@@ -19,7 +21,7 @@ export class LayeredRodComponent {
    public readonly naturalBend = Point.fromVectorForm(randFloat(2, 4), 2 * Math.PI * Math.random());
    public readonly colour = {
       r: randFloat(0.4, 0.5),
-      g: randFloat(0.9, 1),
+      g: randFloat(0.8, 0.95),
       b: randFloat(0.2, 0.3)
    };
 
@@ -30,7 +32,8 @@ export class LayeredRodComponent {
 export const LayeredRodComponentArray = new ComponentArray<LayeredRodComponent>(ServerComponentType.layeredRod, true, {
    onTick: onTick,
    onCollision: onCollision,
-   serialise: serialise
+   getDataLength: getDataLength,
+   addDataToPacket: addDataToPacket
 });
 
 const bendToPushAmount = (bend: number): number => {
@@ -66,7 +69,8 @@ function onCollision(entity: EntityID, _collidingEntity: EntityID, _pushedHitbox
    let existingPushX = bendToPushAmount(layeredRodComponent.bendX);
    let existingPushY = bendToPushAmount(layeredRodComponent.bendY);
    
-   let pushAmount = 400 / Settings.TPS / (distance + 0.5);
+   // let pushAmount = 400 / Settings.TPS / (distance + 0.5);
+   let pushAmount = 1000 / Settings.TPS / (distance + 0.5);
    pushAmount *= pushingHitbox.mass;
    
    // Restrict the bend from going past the max bend
@@ -88,13 +92,23 @@ function onCollision(entity: EntityID, _collidingEntity: EntityID, _pushedHitbox
    layeredRodComponent.bendY = bendY;
 }
 
-function serialise(entity: EntityID): LayeredRodComponentData {
+function getDataLength(): number {
+   return 7 * Float32Array.BYTES_PER_ELEMENT;
+}
+
+function addDataToPacket(packet: Packet, entity: EntityID): void {
    const layeredRodComponent = LayeredRodComponentArray.getComponent(entity);
    
-   return {
-      componentType: ServerComponentType.layeredRod,
-      numLayers: layeredRodComponent.numLayers,
-      bend: [layeredRodComponent.naturalBend.x + layeredRodComponent.bendX, layeredRodComponent.naturalBend.y + layeredRodComponent.bendY],
-      colour: layeredRodComponent.colour
-   };
+   // Num layers
+   packet.addNumber(layeredRodComponent.numLayers);
+   // BendX
+   packet.addNumber(layeredRodComponent.naturalBend.x + layeredRodComponent.bendX);
+   // BendY
+   packet.addNumber(layeredRodComponent.naturalBend.y + layeredRodComponent.bendY);
+   // Colour R
+   packet.addNumber(layeredRodComponent.colour.r);
+   // Colour G
+   packet.addNumber(layeredRodComponent.colour.g);
+   // Colour B
+   packet.addNumber(layeredRodComponent.colour.b);
 }

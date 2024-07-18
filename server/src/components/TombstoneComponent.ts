@@ -1,7 +1,8 @@
-import { ServerComponentType, TombstoneComponentData } from "webgl-test-shared/dist/components";
-import { DeathInfo } from "webgl-test-shared/dist/entities";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { DeathInfo, EntityID } from "webgl-test-shared/dist/entities";
 import { getZombieSpawnProgress } from "../entities/tombstone";
 import { ComponentArray } from "./ComponentArray";
+import { Packet } from "webgl-test-shared/dist/packets";
 
 export interface TombstoneComponentParams {
    readonly tombstoneType: number;
@@ -28,17 +29,34 @@ export class TombstoneComponent {
 }
 
 export const TombstoneComponentArray = new ComponentArray<TombstoneComponent>(ServerComponentType.tombstone, true, {
-   serialise: serialise
+   getDataLength: getDataLength,
+   addDataToPacket: addDataToPacket
 });
 
-function serialise(entityID: number): TombstoneComponentData {
-   const tombstoneComponent = TombstoneComponentArray.getComponent(entityID);
-   return {
-      componentType: ServerComponentType.tombstone,
-      tombstoneType: tombstoneComponent.tombstoneType,
-      zombieSpawnProgress: getZombieSpawnProgress(tombstoneComponent),
-      zombieSpawnX: tombstoneComponent.zombieSpawnPositionX,
-      zombieSpawnY: tombstoneComponent.zombieSpawnPositionY,
-      deathInfo: tombstoneComponent.deathInfo
-   };
+function getDataLength(entity: EntityID): number {
+   const tombstoneComponent = TombstoneComponentArray.getComponent(entity);
+   
+   let lengthBytes = 6 * Float32Array.BYTES_PER_ELEMENT;
+   if (tombstoneComponent.deathInfo !== null) {
+      lengthBytes += 100 + Float32Array.BYTES_PER_ELEMENT;
+   }
+
+   return lengthBytes;
+}
+
+function addDataToPacket(packet: Packet, entity: EntityID): void {
+   const tombstoneComponent = TombstoneComponentArray.getComponent(entity);
+
+   packet.addNumber(tombstoneComponent.tombstoneType);
+   packet.addNumber(getZombieSpawnProgress(tombstoneComponent));
+   packet.addNumber(tombstoneComponent.zombieSpawnPositionX);
+   packet.addNumber(tombstoneComponent.zombieSpawnPositionY);
+
+   packet.addBoolean(tombstoneComponent.deathInfo !== null);
+   packet.padOffset(3);
+   if (tombstoneComponent.deathInfo !== null) {
+      // @Hack: hardcoded
+      packet.addString(tombstoneComponent.deathInfo.username, 100);
+      packet.addNumber(tombstoneComponent.deathInfo.causeOfDeath);
+   }
 }

@@ -1,6 +1,8 @@
 import { CraftingStation } from "webgl-test-shared/dist/items/crafting-recipes";
 import { ComponentArray } from "./ComponentArray";
-import { CraftingStationComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { Packet } from "webgl-test-shared/dist/packets";
+import { EntityID } from "webgl-test-shared/dist/entities";
 
 export interface CraftingStationComponentParams {
    readonly craftingStation: CraftingStation;
@@ -15,14 +17,16 @@ export class CraftingStationComponent {
 }
 
 export const CraftingStationComponentArray = new ComponentArray<CraftingStationComponent>(ServerComponentType.craftingStation, true, {
-   serialise: serialise
+   getDataLength: getDataLength,
+   addDataToPacket: addDataToPacket
 });
 
-function serialise(entityID: number): CraftingStationComponentData {
-   const craftingStationComponent = CraftingStationComponentArray.getComponent(entityID);
+function getDataLength(): number {
+   return 2 * Float32Array.BYTES_PER_ELEMENT;
+}
 
-   return {
-      componentType: ServerComponentType.craftingStation,
-      craftingStation: craftingStationComponent.craftingStation
-   };
+function addDataToPacket(packet: Packet, entity: EntityID): void {
+   const craftingStationComponent = CraftingStationComponentArray.getComponent(entity);
+
+   packet.addNumber(craftingStationComponent.craftingStation);
 }

@@ -1,4 +1,4 @@
-import { FollowAIComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { Settings } from "webgl-test-shared/dist/settings";
 import Board from "../Board";
 import { getDistanceFromPointToEntity, moveEntityToPosition, stopEntity, turnToPosition, willStopAtDesiredDistance } from "../ai-shared";
@@ -6,6 +6,7 @@ import { PhysicsComponentArray } from "./PhysicsComponent";
 import { ComponentArray } from "./ComponentArray";
 import { EntityID } from "webgl-test-shared/dist/entities";
 import { TransformComponentArray } from "./TransformComponent";
+import { Packet } from "webgl-test-shared/dist/packets";
 
 export interface FollowAIComponentParams {
    readonly followCooldownTicks: number;
@@ -31,7 +32,8 @@ export class FollowAIComponent {
 }
 
 export const FollowAIComponentArray = new ComponentArray<FollowAIComponent>(ServerComponentType.followAI, true, {
-   serialise: serialise
+   getDataLength: getDataLength,
+   addDataToPacket: addDataToPacket
 });
 
 export function updateFollowAIComponent(entity: EntityID, visibleEntities: ReadonlyArray<EntityID>, interestDuration: number): void {
@@ -89,13 +91,14 @@ export function entityWantsToFollow(followAIComponent: FollowAIComponent): boole
    return followAIComponent.followCooldownTicks === 0 && Math.random() < followAIComponent.followChancePerSecond / Settings.TPS;
 }
 
-function serialise(entityID: number): FollowAIComponentData {
-   const followAIComponent = FollowAIComponentArray.getComponent(entityID);
+function getDataLength(): number {
+   return 4 * Float32Array.BYTES_PER_ELEMENT;
+}
 
-   return {
-      componentType: ServerComponentType.followAI,
-      followTargetID: followAIComponent.followTargetID,
-      followCooldownTicks: followAIComponent.followCooldownTicks,
-      interestTimer: followAIComponent.interestTimer
-   };
+function addDataToPacket(packet: Packet, entity: EntityID): void {
+   const followAIComponent = FollowAIComponentArray.getComponent(entity);
+
+   packet.addNumber(followAIComponent.followTargetID);
+   packet.addNumber(followAIComponent.followCooldownTicks);
+   packet.addNumber(followAIComponent.interestTimer);
 }

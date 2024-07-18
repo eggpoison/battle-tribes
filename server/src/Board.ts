@@ -1,4 +1,4 @@
-import { WaterRockData, RiverSteppingStoneData, GrassTileInfo, DecorationInfo, RIVER_STEPPING_STONE_SIZES, ServerTileUpdateData, RiverFlowDirections } from "webgl-test-shared/dist/client-server-types";
+import { WaterRockData, RiverSteppingStoneData, GrassTileInfo, DecorationInfo, RIVER_STEPPING_STONE_SIZES, ServerTileUpdateData } from "webgl-test-shared/dist/client-server-types";
 import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { TileType } from "webgl-test-shared/dist/tiles";
@@ -73,6 +73,13 @@ interface EntityJoinInfo {
    readonly entityType: EntityType;
 }
 
+// @Cleanup: same as WaterTileGenerationInfo
+export interface RiverFlowDirection {
+   readonly tileX: number;
+   readonly tileY: number;
+   readonly flowDirection: number;
+}
+
 abstract class Board {
    public static ticks = 0;
 
@@ -85,7 +92,7 @@ abstract class Board {
    public static tiles: Array<Tile>;
    public static chunks = new Array<Chunk>();
 
-   private static riverFlowDirections: RiverFlowDirections;
+   public static riverFlowDirectionsArray: ReadonlyArray<RiverFlowDirection>;
    public static waterRocks: ReadonlyArray<WaterRockData>;
    public static riverSteppingStones: ReadonlyArray<RiverSteppingStoneData>;
 
@@ -98,10 +105,8 @@ abstract class Board {
 
    // @Incomplete @Bug: These shouldn't be tiles but instead serverdata, so that they aren't counted in the census
    public static edgeTiles = new Array<Tile>();
-   public static edgeRiverFlowDirections: RiverFlowDirections;
-   public static edgeRiverSteppingStones: ReadonlyArray<RiverSteppingStoneData>;
 
-   public static grassInfo: Record<number, Record<number, GrassTileInfo>>;
+   public static grassInfo: ReadonlyArray<GrassTileInfo>;
 
    public static decorations: ReadonlyArray<DecorationInfo>;
    
@@ -112,14 +117,12 @@ abstract class Board {
 
       const generationInfo = generateTerrain();
       this.tiles = generationInfo.tiles;
-      this.riverFlowDirections = generationInfo.riverFlowDirections;
       this.waterRocks = generationInfo.waterRocks;
       this.riverSteppingStones = generationInfo.riverSteppingStones;
       this.edgeTiles = generationInfo.edgeTiles;
-      this.edgeRiverFlowDirections = generationInfo.edgeRiverFlowDirections;
-      this.edgeRiverSteppingStones = generationInfo.edgeRiverSteppingStones;
       this.grassInfo = generationInfo.grassInfo;
       this.decorations = generationInfo.decorations;
+      this.riverFlowDirectionsArray = generationInfo.riverFlowDirectionsArray;
 
       if (OPTIONS.generateWalls) {
          for (let i = 0; i < generationInfo.tiles.length; i++) {
@@ -212,10 +215,6 @@ abstract class Board {
       const previousCheck = (this.ticks - 1) / ticksPerInterval;
       const check = this.ticks / ticksPerInterval;
       return Math.floor(previousCheck) !== Math.floor(check);
-   }
-
-   public static getRiverFlowDirections(): RiverFlowDirections {
-      return this.riverFlowDirections;
    }
 
    public static getTile(tileX: number, tileY: number): Tile {

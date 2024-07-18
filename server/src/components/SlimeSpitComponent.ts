@@ -1,7 +1,9 @@
-import { ServerComponentType, SlimeSpitComponentData } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { ComponentArray } from "./ComponentArray";
 import { ComponentConfig } from "../components";
 import { RectangularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
+import { EntityID } from "webgl-test-shared/dist/entities";
+import { Packet } from "webgl-test-shared/dist/packets";
 
 export interface SlimeSpitComponentParams {
    size: number;
@@ -19,7 +21,8 @@ export class SlimeSpitComponent {
 
 export const SlimeSpitComponentArray = new ComponentArray<SlimeSpitComponent>(ServerComponentType.slimeSpit, true, {
    onInitialise: onInitialise,
-   serialise: serialise
+   getDataLength: getDataLength,
+   addDataToPacket: addDataToPacket
 });
 
 function onInitialise(config: ComponentConfig<ServerComponentType.transform | ServerComponentType.slimeSpit>): void {
@@ -31,10 +34,11 @@ function onInitialise(config: ComponentConfig<ServerComponentType.transform | Se
    hitbox.height = hitboxSize;
 }
 
-function serialise(entityID: number): SlimeSpitComponentData {
-   const slimeSpitComponent = SlimeSpitComponentArray.getComponent(entityID);
-   return {
-      componentType: ServerComponentType.slimeSpit,
-      size: slimeSpitComponent.size
-   };
+function getDataLength(): number {
+   return 2 * Float32Array.BYTES_PER_ELEMENT;
+}
+
+function addDataToPacket(packet: Packet, entity: EntityID): void {
+   const slimeSpitComponent = SlimeSpitComponentArray.getComponent(entity);
+   packet.addNumber(slimeSpitComponent.size);
 }

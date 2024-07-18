@@ -1,9 +1,10 @@
-import { AMMO_INFO_RECORD, ServerComponentType, TurretComponentData } from "webgl-test-shared/dist/components";
+import { AMMO_INFO_RECORD, ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
 import { ComponentArray } from "./ComponentArray";
 import { SLING_TURRET_RELOAD_TIME_TICKS, SLING_TURRET_SHOT_COOLDOWN_TICKS } from "../entities/structures/sling-turret";
 import Board from "../Board";
 import { AmmoBoxComponentArray } from "./AmmoBoxComponent";
+import { Packet } from "webgl-test-shared/dist/packets";
 
 export interface TurretComponentParams {
    readonly fireCooldownTicks: number;
@@ -20,7 +21,8 @@ export class TurretComponent {
 }
 
 export const TurretComponentArray = new ComponentArray<TurretComponent>(ServerComponentType.turret, true, {
-   serialise: serialise
+   getDataLength: getDataLength,
+   addDataToPacket: addDataToPacket
 });
 
 const getShotCooldownTicks = (turret: EntityID): number => {
@@ -91,14 +93,15 @@ const getReloadProgress = (turret: EntityID): number => {
    return 1 - (turretComponent.fireCooldownTicks - shotCooldownTicks) / reloadTimeTicks;
 }
 
-function serialise(entity: EntityID): TurretComponentData {
+function getDataLength(): number {
+   return 4 * Float32Array.BYTES_PER_ELEMENT;
+}
+
+function addDataToPacket(packet: Packet, entity: EntityID): void {
    const turretComponent = TurretComponentArray.getComponent(entity);
 
-   return {
-      componentType: ServerComponentType.turret,
-      aimDirection: turretComponent.aimDirection,
-      // @Speed: Both these functions call getComponent for turretComponent when we already get it in this function
-      chargeProgress: getChargeProgress(entity),
-      reloadProgress: getReloadProgress(entity)
-   }
+   packet.addNumber(turretComponent.aimDirection);
+   // @Speed: Both these functions call getComponent for turretComponent when we already get it in this function
+   packet.addNumber(getChargeProgress(entity));
+   packet.addNumber(getReloadProgress(entity));
 }

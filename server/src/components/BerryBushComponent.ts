@@ -2,6 +2,7 @@ import { BerryBushComponentData, ServerComponentType } from "webgl-test-shared/d
 import { ComponentArray } from "./ComponentArray";
 import { EntityID } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
+import { Packet } from "webgl-test-shared/dist/packets";
 
 const enum Vars {
    /** Number of seconds it takes for a berry bush to regrow one of its berries */
@@ -17,7 +18,8 @@ export class BerryBushComponent {
 
 export const BerryBushComponentArray = new ComponentArray<BerryBushComponent>(ServerComponentType.berryBush, true, {
    onTick: onTick,
-   serialise: serialise
+   getDataLength: getDataLength,
+   addDataToPacket: addDataToPacket
 });
 
 function onTick(_berryBush: EntityID, berryBushComponent: BerryBushComponent): void {
@@ -33,11 +35,12 @@ function onTick(_berryBush: EntityID, berryBushComponent: BerryBushComponent): v
    }
 }
 
-function serialise(entityID: number): BerryBushComponentData {
-   const berryComponent = BerryBushComponentArray.getComponent(entityID);
+function getDataLength(): number {
+   return 2 * Float32Array.BYTES_PER_ELEMENT;
+}
 
-   return {
-      componentType: ServerComponentType.berryBush,
-      numBerries: berryComponent.numBerries
-   };
+function addDataToPacket(packet: Packet, entity: EntityID): void {
+   const berryComponent = BerryBushComponentArray.getComponent(entity);
+
+   packet.addNumber(berryComponent.numBerries);
 }

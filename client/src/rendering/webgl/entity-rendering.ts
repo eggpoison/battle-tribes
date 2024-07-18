@@ -43,7 +43,8 @@ export function createEntityShaders(): void {
       vec2 textureSize;
       if (a_textureArrayIndex == -1.0) {
          // @Temporary
-         textureSize = vec2(2.0, 2.0);
+         // textureSize = vec2(2.0, 2.0);
+         textureSize = vec2(1.5, 1.5);
       } else {
          int textureArrayIndex = int(a_textureArrayIndex);
          float textureIndex = u_textureSlotIndexes[textureArrayIndex];

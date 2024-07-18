@@ -7,6 +7,7 @@ import { ComponentArray } from "./ComponentArray";
 import { HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { ComponentConfig } from "../components";
 import { TransformComponentArray } from "./TransformComponent";
+import { Packet } from "webgl-test-shared/dist/packets";
 
 export interface DoorComponentParams {
    originX: number;
@@ -33,7 +34,8 @@ export class DoorComponent {
 
 export const DoorComponentArray = new ComponentArray<DoorComponent>(ServerComponentType.door, true, {
    onInitialise: onInitialise,
-   serialise: serialise
+   getDataLength: getDataLength,
+   addDataToPacket: addDataToPacket
 });
 
 const doorHalfDiagonalLength = Math.sqrt(16 * 16 + 64 * 64) / 2;
@@ -111,13 +113,15 @@ function onInitialise(config: ComponentConfig<ServerComponentType.transform | Se
    config[ServerComponentType.door].closedRotation = config[ServerComponentType.transform].rotation;
 }
 
-function serialise(entityID: number): DoorComponentData {
-   const doorComponent = DoorComponentArray.getComponent(entityID);
-   return {
-      componentType: ServerComponentType.door,
-      toggleType: doorComponent.toggleType,
-      openProgress: doorComponent.openProgress
-   }
+function getDataLength(): number {
+   return 3 * Float32Array.BYTES_PER_ELEMENT;
+}
+
+function addDataToPacket(packet: Packet, entity: EntityID): void {
+   const doorComponent = DoorComponentArray.getComponent(entity);
+
+   packet.addNumber(doorComponent.toggleType);
+   packet.addNumber(doorComponent.openProgress);
 }
 
 export function doorIsClosed(door: EntityID): boolean {

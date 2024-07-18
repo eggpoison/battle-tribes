@@ -1399,7 +1399,7 @@ const calculateNoiseVertexData = (waterTiles: ReadonlyArray<Tile>): Float32Array
    
    for (let i = 0; i < waterTiles.length; i++) {
       const tile = waterTiles[i];
-      const flowDirection = Board.getEdgeRiverFlowDirection(tile.x, tile.y);
+      const flowDirection = Board.getRiverFlowDirection(tile.x, tile.y);
       
       const x1 = (tile.x - 0.5) * Settings.TILE_SIZE;
       const x2 = (tile.x + 1.5) * Settings.TILE_SIZE;

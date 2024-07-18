@@ -6,7 +6,9 @@ import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { createEntityFromConfig } from "../Entity";
 
 const enum Vars {
-   NUM_STRANDS = 2000
+   // NUM_STRANDS = 2000
+   // NUM_STRANDS = 8000
+   NUM_STRANDS = 16000
    // NUM_STRANDS = 250000
    // @Temporary: return to once optimised
    // NUM_STRANDS = 750000

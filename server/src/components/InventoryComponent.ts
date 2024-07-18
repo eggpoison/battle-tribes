@@ -1,4 +1,4 @@
-import { InventoryComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { createItemEntityConfig, itemEntityCanBePickedUp } from "../entities/item-entity";
 import { ComponentArray } from "./ComponentArray";
 import { createItem } from "../items";
@@ -10,6 +10,8 @@ import { InventoryName, Inventory, ItemType, Item, itemIsStackable, ITEM_INFO_RE
 import { EntityID } from "webgl-test-shared/dist/entities";
 import { TransformComponentArray } from "./TransformComponent";
 import { createEntityFromConfig } from "../Entity";
+import { Packet } from "webgl-test-shared/dist/packets";
+import { addInventoryDataToPacket, getInventoryDataLength } from "../server/game-data-packets";
 
 export interface ItemCreationInfo {
    readonly itemSlot: number;
@@ -62,7 +64,8 @@ export class InventoryComponent {
 
 export const InventoryComponentArray = new ComponentArray<InventoryComponent>(ServerComponentType.inventory, true, {
    onRemove: onRemove,
-   serialise: serialise
+   getDataLength: getDataLength,
+   addDataToPacket: addDataToPacket
 });
 
 export function getInventoryFromCreationInfo(inventories: ReadonlyArray<InventoryCreationInfo>, inventoryName: InventoryName): InventoryCreationInfo {
@@ -482,12 +485,25 @@ export function craftRecipe(inventoryComponent: InventoryComponent, recipe: Craf
    addItemToInventory(outputInventory, recipe.product, recipe.yield);
 }
 
-function serialise(entityID: number): InventoryComponentData {
-   const inventoryComponent = InventoryComponentArray.getComponent(entityID);
-   return {
-      componentType: ServerComponentType.inventory,
-      inventories: inventoryComponent.inventoryRecord
-   };
+function getDataLength(entity: EntityID): number {
+   const inventoryComponent = InventoryComponentArray.getComponent(entity);
+
+   let lengthBytes = 2 * Float32Array.BYTES_PER_ELEMENT;
+   for (const inventory of inventoryComponent.inventories) {
+      lengthBytes += getInventoryDataLength(inventory);
+   }
+
+   return lengthBytes;
+}
+
+function addDataToPacket(packet: Packet, entity: EntityID): void {
+   const inventoryComponent = InventoryComponentArray.getComponent(entity);
+
+   packet.addNumber(inventoryComponent.inventories.length);
+   for (let i = 0; i < inventoryComponent.inventories.length; i++) {
+      const inventory = inventoryComponent.inventories[i];
+      addInventoryDataToPacket(packet, inventory);
+   }
 }
 
 export function hasInventory(inventoryComponent: InventoryComponent, inventoryName: InventoryName): boolean {

@@ -193,6 +193,8 @@ export interface RiverSteppingStoneData {
 }
 
 export interface GrassTileInfo {
+   readonly tileX: number;
+   readonly tileY: number;
    readonly temperature: number;
    readonly humidity: number;
 }
@@ -217,23 +219,6 @@ export interface DecorationInfo {
    readonly rotation: number;
    readonly type: DecorationType;
    readonly variant: number;
-}
-
-export type RiverFlowDirections = Partial<Record<number, Partial<Record<number, number>>>>;
-
-/** Initial data sent to the client */
-export interface InitialGameDataPacket {
-   readonly playerID: number;
-   readonly spawnPosition: [number, number];
-   readonly tiles: Array<ServerTileData>;
-   readonly waterRocks: ReadonlyArray<WaterRockData>;
-   readonly riverSteppingStones: ReadonlyArray<RiverSteppingStoneData>;
-   readonly riverFlowDirections: RiverFlowDirections;
-   readonly edgeTiles: Array<ServerTileData>;
-   readonly edgeRiverFlowDirections: RiverFlowDirections;
-   readonly edgeRiverSteppingStones: ReadonlyArray<RiverSteppingStoneData>;
-   readonly grassInfo: Record<number, Record<number, GrassTileInfo>>;
-   readonly decorations: ReadonlyArray<DecorationInfo>;
 }
 
 export type VisibleChunkBounds = [minChunkX: number, maxChunkX: number, minChunkY: number, maxChunkY: number];
@@ -326,11 +311,12 @@ export interface RestrictedBuildingAreaData {
    readonly rotation: number;
 }
 
+export type RiverFlowDirectionsRecord = Partial<Record<number, Partial<Record<number, number>>>>;
+
 // Note to stupid future self: don't remove this, it's important
 export interface SocketData {}
 
 export interface ServerToClientEvents {
-   initial_game_data_packet: (gameDataPacket: InitialGameDataPacket) => void;
    game_data_packet: (gameDataPacket: GameDataPacket) => void;
    game_data_sync_packet: (gameDataSyncPacket: GameDataSyncPacket) => void;
    chat_message: (senderName: string, message: string) => void;

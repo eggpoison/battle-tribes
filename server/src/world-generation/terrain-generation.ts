@@ -1,4 +1,4 @@
-import { WaterRockData, RiverSteppingStoneData, GrassTileInfo, DecorationInfo, RiverFlowDirections } from "webgl-test-shared/dist/client-server-types";
+import { WaterRockData, RiverSteppingStoneData, GrassTileInfo, DecorationInfo, RiverFlowDirectionsRecord } from "webgl-test-shared/dist/client-server-types";
 import { Biome, TileInfo, TileType } from "webgl-test-shared/dist/tiles";
 import { smoothstep } from "webgl-test-shared/dist/utils";
 import { Settings } from "webgl-test-shared/dist/settings";
@@ -8,16 +8,15 @@ import Tile from "../Tile";
 import { WaterTileGenerationInfo, generateRiverFeatures, generateRiverTiles } from "./river-generation";
 import OPTIONS from "../options";
 import { generateDecorations } from "./decoration-generation";
+import { RiverFlowDirection } from "../Board";
 
 export interface TerrainGenerationInfo {
    readonly tiles: Array<Tile>;
-   readonly riverFlowDirections: RiverFlowDirections;
+   readonly riverFlowDirectionsArray: ReadonlyArray<RiverFlowDirection>;
    readonly waterRocks: ReadonlyArray<WaterRockData>;
    readonly riverSteppingStones: ReadonlyArray<RiverSteppingStoneData>;
    readonly edgeTiles: Array<Tile>;
-   readonly edgeRiverFlowDirections: RiverFlowDirections;
-   readonly edgeRiverSteppingStones: ReadonlyArray<RiverSteppingStoneData>;
-   readonly grassInfo: Record<number, Record<number, GrassTileInfo>>;
+   readonly grassInfo: ReadonlyArray<GrassTileInfo>;
    readonly decorations: ReadonlyArray<DecorationInfo>;
 }
 
@@ -216,8 +215,8 @@ function generateTerrain(): TerrainGenerationInfo {
 
    generateTileInfo(biomeNameArray, tileTypeArray, tileIsWallArray);
 
-   const riverFlowDirections: RiverFlowDirections = {};
-   const edgeRiverFlowDirections: RiverFlowDirections = {};
+   const riverFlowDirectionsArray = new Array<RiverFlowDirection>();
+   const riverFlowDirections: RiverFlowDirectionsRecord = {};
    for (const tileInfo of riverTiles) {
       // @Cleanup @Speed: Do we have to hardcode this here?
       // Make ice rivers
@@ -229,38 +228,27 @@ function generateTerrain(): TerrainGenerationInfo {
       }
       setIsWall(tileInfo.tileX, tileInfo.tileY, false);
 
-      // Set river flow directions
-      if (tileIsInBoard(tileInfo.tileX, tileInfo.tileY)) {
-         const row = riverFlowDirections[tileInfo.tileX];
-         if (typeof row === "undefined") {
-            riverFlowDirections[tileInfo.tileX] = {
-               [tileInfo.tileY]: tileInfo.flowDirection
-            };
-         } else {
-            row[tileInfo.tileY] = tileInfo.flowDirection;
-         }
-      } else {
-         const rowDirections = edgeRiverFlowDirections[tileInfo.tileX];
-         if (typeof rowDirections === "undefined") {
-            edgeRiverFlowDirections[tileInfo.tileX] = {
-               [tileInfo.tileY]: tileInfo.flowDirection
-            };
-         } else {
-            rowDirections[tileInfo.tileY] = tileInfo.flowDirection;
-         }
+      if (typeof riverFlowDirections[tileInfo.tileX] === "undefined") {
+         riverFlowDirections[tileInfo.tileX] = {};
       }
+      riverFlowDirections[tileInfo.tileX]![tileInfo.tileY] = tileInfo.flowDirection;
+
+      riverFlowDirectionsArray.push({
+         tileX: tileInfo.tileX,
+         tileY: tileInfo.tileY,
+         flowDirection: tileInfo.flowDirection
+      });
    }
 
    const waterRocks = new Array<WaterRockData>();
    const riverSteppingStones = new Array<RiverSteppingStoneData>();
-   const edgeRiverSteppingStones = new Array<RiverSteppingStoneData>();
-   generateRiverFeatures(riverTiles, waterRocks, riverSteppingStones, edgeRiverSteppingStones);
+   generateRiverFeatures(riverTiles, waterRocks, riverSteppingStones);
 
    // Make an array of tiles from the tile info array
    // The outer loop has to be tileY so that the tiles array is filled properly
    const tiles = new Array<Tile>();
    const edgeTiles = new Array<Tile>();
-   const grassInfo: Record<number, Record<number, GrassTileInfo>> = {};
+   const grassInfo = new Array<GrassTileInfo>();
    for (let tileY = -Settings.EDGE_GENERATION_DISTANCE; tileY < Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE; tileY++) {
       for (let tileX = -Settings.EDGE_GENERATION_DISTANCE; tileX < Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE; tileX++) {
          const tileType = tileTypeArray[tileX + Settings.EDGE_GENERATION_DISTANCE][tileY + Settings.EDGE_GENERATION_DISTANCE];
@@ -299,17 +287,15 @@ function generateTerrain(): TerrainGenerationInfo {
          }
          
          if (tileType === TileType.grass) {
-            if (typeof grassInfo[tileX] === "undefined") {
-               grassInfo[tileX] = {};
-            }
-            
             // @Cleanup: Repeated code
             const temperature = temperatureMap[tileX + Settings.EDGE_GENERATION_DISTANCE][tileY + Settings.EDGE_GENERATION_DISTANCE];
             const humidity = humidityMap[tileX + Settings.EDGE_GENERATION_DISTANCE][tileY + Settings.EDGE_GENERATION_DISTANCE];
-            grassInfo[tileX][tileY] = {
+            grassInfo.push({
+               tileX: tileX,
+               tileY: tileY,
                temperature: temperature,
                humidity: humidity
-            };
+            });
          }
       }
    }
@@ -318,10 +304,8 @@ function generateTerrain(): TerrainGenerationInfo {
       tiles: tiles,
       waterRocks: waterRocks,
       riverSteppingStones: riverSteppingStones,
-      riverFlowDirections: riverFlowDirections,
+      riverFlowDirectionsArray: riverFlowDirectionsArray,
       edgeTiles: edgeTiles,
-      edgeRiverFlowDirections: edgeRiverFlowDirections,
-      edgeRiverSteppingStones: edgeRiverSteppingStones,
       grassInfo: grassInfo,
       decorations: generateDecorations(tileTypeArray, temperatureMap)
    };

@@ -1,11 +1,12 @@
 import { Settings } from "webgl-test-shared/dist/settings";
-import { HealingTotemComponentData, HealingTotemTargetData, ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 import Board from "../Board";
 import { EntityRelationship, getEntityRelationship } from "./TribeComponent";
 import { HealthComponentArray, healEntity } from "./HealthComponent";
 import { ComponentArray } from "./ComponentArray";
 import { EntityID } from "webgl-test-shared/dist/entities";
 import { TransformComponentArray } from "./TransformComponent";
+import { Packet } from "webgl-test-shared/dist/packets";
 
 const enum Vars {
    HEALING_RANGE = 270,
@@ -20,7 +21,8 @@ export class HealingTotemComponent {
 }
 
 export const HealingTotemComponentArray = new ComponentArray<HealingTotemComponent>(ServerComponentType.healingTotem, true, {
-   serialise: serialise
+   getDataLength: getDataLength,
+   addDataToPacket: addDataToPacket
 });
 
 const getHealingTargets = (healingTotem: EntityID): ReadonlyArray<EntityID> => {
@@ -123,26 +125,28 @@ export function tickHealingTotemComponent(healingTotem: EntityID, healingTotemCo
    }
 }
 
-function serialise(entity: EntityID): HealingTotemComponentData {
+function getDataLength(entity: EntityID): number {
    const healingTotemComponent = HealingTotemComponentArray.getComponent(entity);
 
-   const healingData = new Array<HealingTotemTargetData>();
+   let lengthBytes = 2 * Float32Array.BYTES_PER_ELEMENT;
+   lengthBytes += 3 * Float32Array.BYTES_PER_ELEMENT * healingTotemComponent.healTargetIDs.length;
+
+   return lengthBytes;
+}
+
+function addDataToPacket(packet: Packet, entity: EntityID): void {
+   const healingTotemComponent = HealingTotemComponentArray.getComponent(entity);
+
+   packet.addNumber(healingTotemComponent.healTargetIDs.length);
    for (let i = 0; i < healingTotemComponent.healTargetIDs.length; i++) {
       const healTarget = healingTotemComponent.healTargetIDs[i];
       const ticksHealed = healingTotemComponent.healTargetsTicksHealed[i];
 
       const transformComponent = TransformComponentArray.getComponent(healTarget);
-      
-      healingData.push({
-         entityID: healTarget,
-         x: transformComponent.position.x,
-         y: transformComponent.position.y,
-         ticksHealed: ticksHealed
-      });
+
+      packet.addNumber(healTarget);
+      packet.addNumber(transformComponent.position.x);
+      packet.addNumber(transformComponent.position.y);
+      packet.addNumber(ticksHealed);
    }
-   
-   return {
-      componentType: ServerComponentType.healingTotem,
-      healingTargetsData: healingData
-   };
 }

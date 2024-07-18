@@ -1,6 +1,7 @@
-import { AmmoBoxComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { ComponentArray } from "./ComponentArray";
 import { BallistaAmmoType, ItemType } from "webgl-test-shared/dist/items/items";
+import { Packet } from "webgl-test-shared/dist/packets";
 
 export interface AmmoBoxComponentParams {}
 
@@ -10,14 +11,17 @@ export class AmmoBoxComponent {
 }
 
 export const AmmoBoxComponentArray = new ComponentArray<AmmoBoxComponent>(ServerComponentType.ammoBox, true, {
-   serialise: serialise
+   getDataLength: getDataLength,
+   addDataToPacket: addDataToPacket
 });
 
-function serialise(entityID: number): AmmoBoxComponentData {
+function getDataLength(): number {
+   return 3 * Float32Array.BYTES_PER_ELEMENT;
+}
+
+function addDataToPacket(packet: Packet, entityID: number): void {
    const ballistaComponent = AmmoBoxComponentArray.getComponent(entityID);
-   return {
-      componentType: ServerComponentType.ammoBox,
-      ammoType: ballistaComponent.ammoType,
-      ammoRemaining: ballistaComponent.ammoRemaining
-   };
+
+   packet.addNumber(ballistaComponent.ammoType);
+   packet.addNumber(ballistaComponent.ammoRemaining);
 }

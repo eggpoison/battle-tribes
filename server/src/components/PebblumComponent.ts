@@ -1,4 +1,4 @@
-import { PebblumComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { ComponentArray } from "./ComponentArray";
 
 export interface PebblumComponentParams {
@@ -14,11 +14,12 @@ export class PebblumComponent {
 }
 
 export const PebblumComponentArray = new ComponentArray<PebblumComponent>(ServerComponentType.pebblum, true, {
-   serialise: serialise
+   getDataLength: getDataLength,
+   addDataToPacket: addDataToPacket
 });
 
-function serialise(): PebblumComponentData {
-   return {
-      componentType: ServerComponentType.pebblum
-   };
+function getDataLength(): number {
+   return Float32Array.BYTES_PER_ELEMENT;
 }
+
+function addDataToPacket(): void {}

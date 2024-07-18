@@ -1,12 +1,12 @@
 import { VisibleChunkBounds, HitData, PlayerKnockbackData, HealData, ResearchOrbCompleteData } from "webgl-test-shared/dist/client-server-types";
 import Tribe from "../Tribe";
-import { ISocket } from "./server";
 import { EntityTickEvent } from "webgl-test-shared/dist/entity-events";
 import { EntityID } from "webgl-test-shared/dist/entities";
+import WebSocket from "ws";
 
 class PlayerClient {
    public readonly username: string;
-   public readonly socket: ISocket;
+   public readonly socket: WebSocket;
    public readonly tribe: Tribe;
 
    /** ID of the player's entity */
@@ -26,14 +26,16 @@ class PlayerClient {
    
    public visibleEntityDeathIDs = new Array<number>();
    public orbCompletes = new Array<ResearchOrbCompleteData>();
-   public pickedUpItem = false;
+   public hasPickedUpItem = false;
    public gameDataOptions = 0;
 
-   constructor(socket: ISocket, tribe: Tribe, visibleChunkBounds: VisibleChunkBounds, instanceID: number, username: string) {
+   public visibleEntities = new Array<EntityID>();
+
+   constructor(socket: WebSocket, tribe: Tribe, visibleChunkBounds: VisibleChunkBounds, instance: EntityID, username: string) {
       this.socket = socket;
       this.tribe = tribe;
       this.visibleChunkBounds = visibleChunkBounds;
-      this.instance = instanceID;
+      this.instance = instance;
       this.username = username;
    }
 }

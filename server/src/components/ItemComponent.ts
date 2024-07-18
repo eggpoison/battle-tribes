@@ -1,9 +1,10 @@
-import { ItemComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { ComponentArray } from "./ComponentArray";
 import { removeFleshSword } from "../flesh-sword-ai";
 import { ItemType } from "webgl-test-shared/dist/items/items";
 import { EntityID } from "webgl-test-shared/dist/entities";
+import { Packet } from "webgl-test-shared/dist/packets";
 
 export interface ItemComponentParams {
    itemType: ItemType;
@@ -34,7 +35,8 @@ export class ItemComponent {
 
 export const ItemComponentArray = new ComponentArray<ItemComponent>(ServerComponentType.item, true, {
    onRemove: onRemove,
-   serialise: serialise
+   getDataLength: getDataLength,
+   addDataToPacket: addDataToPacket
 });
 
 function onRemove(entity: EntityID): void {
@@ -55,10 +57,11 @@ export function tickItemComponent(itemComponent: ItemComponent): void {
    }
 }
 
-function serialise(entity: EntityID): ItemComponentData {
+function getDataLength(): number {
+   return 2 * Float32Array.BYTES_PER_ELEMENT;
+}
+
+function addDataToPacket(packet: Packet, entity: EntityID): void {
    const itemComponent = ItemComponentArray.getComponent(entity);
-   return {
-      componentType: ServerComponentType.item,
-      itemType: itemComponent.itemType
-   };
+   packet.addNumber(itemComponent.itemType);
 }

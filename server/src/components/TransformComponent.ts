@@ -7,12 +7,13 @@ import Chunk from "../Chunk";
 import Tile from "../Tile";
 import { EntityID, EntityType, EntityTypeString } from "webgl-test-shared/dist/entities";
 import { ComponentArray } from "./ComponentArray";
-import { ServerComponentType, TransformComponentData } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { AIHelperComponentArray } from "./AIHelperComponent";
 import { TileType } from "webgl-test-shared/dist/tiles";
 import { PhysicsComponentArray } from "./PhysicsComponent";
 import { clearEntityPathfindingNodes, entityCanBlockPathfinding, updateEntityPathfindingNodeOccupance } from "../pathfinding";
 import { resolveEntityTileCollision } from "../collision";
+import { Packet } from "webgl-test-shared/dist/packets";
 
 // @Cleanup: move mass/hitbox related stuff out? (Are there any entities which would make use of that?)
 
@@ -434,7 +435,8 @@ export class TransformComponent {
 export const TransformComponentArray = new ComponentArray<TransformComponent>(ServerComponentType.transform, true, {
    onJoin: onJoin,
    onRemove: onRemove,
-   serialise: serialise
+   getDataLength: getDataLength,
+   addDataToPacket: addDataToPacket
 });
 
 const getTile = (transformComponent: TransformComponent): Tile => {
@@ -470,62 +472,80 @@ function onRemove(entity: EntityID): void {
    }
 }
 
-const bundleRectangularHitboxData = (hitbox: RectangularHitbox, localID: number): RectangularHitboxData => {
-   return {
-      mass: hitbox.mass,
-      offsetX: hitbox.offset.x,
-      offsetY: hitbox.offset.y,
-      collisionType: hitbox.collisionType,
-      collisionBit: hitbox.collisionBit,
-      collisionMask: hitbox.collisionMask,
-      localID: localID,
-      flags: hitbox.flags,
-      width: hitbox.width,
-      height: hitbox.height,
-      rotation: hitbox.relativeRotation
-   };
-}
+function getDataLength(entity: EntityID): number {
+   const transformComponent = TransformComponentArray.getComponent(entity);
 
-const bundleCircularHitboxData = (hitbox: CircularHitbox, localID: number): CircularHitboxData => {
-   return {
-      mass: hitbox.mass,
-      offsetX: hitbox.offset.x,
-      offsetY: hitbox.offset.y,
-      collisionType: hitbox.collisionType,
-      collisionBit: hitbox.collisionBit,
-      collisionMask: hitbox.collisionMask,
-      localID: localID,
-      flags: hitbox.flags,
-      radius: hitbox.radius
-   };
-}
-
-function serialise(entityID: EntityID): TransformComponentData {
-   const transformComponent = TransformComponentArray.getComponent(entityID);
+   let lengthBytes = 9 * Float32Array.BYTES_PER_ELEMENT;
    
-   // @Speed: Garbage collection
-   const circularHitboxes = new Array<CircularHitboxData>();
-   const rectangularHitboxes = new Array<RectangularHitboxData>();
-
-   for (let i = 0; i < transformComponent.hitboxes.length; i++) {
-      const hitbox = transformComponent.hitboxes[i];
-      const localID = transformComponent.hitboxLocalIDs[i];
-      
+   for (const hitbox of transformComponent.hitboxes) {
       if (hitboxIsCircular(hitbox)) {
-         circularHitboxes.push(bundleCircularHitboxData(hitbox, localID));
+         lengthBytes += 9 * Float32Array.BYTES_PER_ELEMENT;
       } else {
-         rectangularHitboxes.push(bundleRectangularHitboxData(hitbox, localID));
+         lengthBytes += 11 * Float32Array.BYTES_PER_ELEMENT;
       }
    }
 
-   return {
-      componentType: ServerComponentType.transform,
-      position: transformComponent.position.package(),
-      rotation: transformComponent.rotation,
-      circularHitboxes: circularHitboxes,
-      rectangularHitboxes: rectangularHitboxes,
-      ageTicks: transformComponent.ageTicks,
-      collisionBit: transformComponent.collisionBit,
-      collisionMask: transformComponent.collisionMask,
-   };
+   return lengthBytes;
+}
+
+// @Speed
+function addDataToPacket(packet: Packet, entity: EntityID): void {
+   const transformComponent = TransformComponentArray.getComponent(entity);
+
+   packet.addNumber(transformComponent.position.x);
+   packet.addNumber(transformComponent.position.y);
+   packet.addNumber(transformComponent.rotation);
+   packet.addNumber(transformComponent.ageTicks);
+   packet.addNumber(transformComponent.collisionBit);
+   packet.addNumber(transformComponent.collisionMask);
+   
+   let numCircularHitboxes = 0;
+   for (const hitbox of transformComponent.hitboxes) {
+      if (hitboxIsCircular(hitbox)) {
+         numCircularHitboxes++;
+      }
+   }
+   const numRectangularHitboxes = transformComponent.hitboxes.length - numCircularHitboxes;
+   
+   // Circular
+   packet.addNumber(numCircularHitboxes);
+   for (const hitbox of transformComponent.hitboxes) {
+      if (!hitboxIsCircular(hitbox)) {
+         continue;
+      }
+
+      const localID = transformComponent.hitboxLocalIDs[transformComponent.hitboxes.indexOf(hitbox)];
+      
+      packet.addNumber(hitbox.mass);
+      packet.addNumber(hitbox.offset.x);
+      packet.addNumber(hitbox.offset.y);
+      packet.addNumber(hitbox.collisionType);
+      packet.addNumber(hitbox.collisionBit);
+      packet.addNumber(hitbox.collisionMask);
+      packet.addNumber(localID);
+      packet.addNumber(hitbox.flags);
+      packet.addNumber(hitbox.radius);
+   }
+   
+   // Rectangular
+   packet.addNumber(numRectangularHitboxes);
+   for (const hitbox of transformComponent.hitboxes) {
+      if (hitboxIsCircular(hitbox)) {
+         continue;
+      }
+
+      const localID = transformComponent.hitboxLocalIDs[transformComponent.hitboxes.indexOf(hitbox)];
+
+      packet.addNumber(hitbox.mass);
+      packet.addNumber(hitbox.offset.x);
+      packet.addNumber(hitbox.offset.y);
+      packet.addNumber(hitbox.collisionType);
+      packet.addNumber(hitbox.collisionBit);
+      packet.addNumber(hitbox.collisionMask);
+      packet.addNumber(localID);
+      packet.addNumber(hitbox.flags);
+      packet.addNumber(hitbox.width);
+      packet.addNumber(hitbox.height);
+      packet.addNumber(hitbox.relativeRotation);
+   }
 }

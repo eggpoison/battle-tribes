@@ -1,7 +1,8 @@
 import { EntityID, FishColour } from "webgl-test-shared/dist/entities";
 import { ComponentArray } from "./ComponentArray";
 import { unfollowLeader } from "../entities/mobs/fish";
-import { FishComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { Packet } from "webgl-test-shared/dist/packets";
 
 export interface FishComponentParams {
    readonly colour: FishColour;
@@ -23,7 +24,8 @@ export class FishComponent {
 
 export const FishComponentArray = new ComponentArray<FishComponent>(ServerComponentType.fish, true, {
    onRemove: onRemove,
-   serialise: serialise
+   getDataLength: getDataLength,
+   addDataToPacket: addDataToPacket
 });
 
 function onRemove(entity: EntityID): void {
@@ -34,10 +36,12 @@ function onRemove(entity: EntityID): void {
    }
 }
 
-function serialise(entity: EntityID): FishComponentData {
+function getDataLength(): number {
+   return 2 * Float32Array.BYTES_PER_ELEMENT;
+}
+
+function addDataToPacket(packet: Packet, entity: EntityID): void {
    const fishComponent = FishComponentArray.getComponent(entity);
-   return {
-      componentType: ServerComponentType.fish,
-      colour: fishComponent.colour
-   };
+
+   packet.addNumber(fishComponent.colour);
 }

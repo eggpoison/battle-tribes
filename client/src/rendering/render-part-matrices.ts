@@ -72,10 +72,10 @@ const calculateRenderPartMatrix = (renderPart: RenderPart): Matrix3x3 => {
 }
 
 export function updateRenderPartMatrices(frameProgress: number): void {
-   for (let i = 0; i < Board.sortedEntities.length; i++) {
-      const entity = Board.sortedEntities[i];
-   // for (let i = 0; i < dirtyEntities.length; i++) {
-   //    const entity = dirtyEntities[i];
+   // for (let i = 0; i < Board.sortedEntities.length; i++) {
+   //    const entity = Board.sortedEntities[i];
+   for (let i = 0; i < dirtyEntities.length; i++) {
+      const entity = dirtyEntities[i];
       
       const entityModelMatrix = calculateEntityModelMatrix(entity, frameProgress);
       entity.modelMatrix = entityModelMatrix;

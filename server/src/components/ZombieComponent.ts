@@ -1,6 +1,7 @@
-import { ServerComponentType, ZombieComponentData } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { ComponentArray } from "./ComponentArray";
 import { EntityID } from "webgl-test-shared/dist/entities";
+import { Packet } from "webgl-test-shared/dist/packets";
 
 export interface ZombieComponentParams {
    zombieType: number;
@@ -29,14 +30,15 @@ export class ZombieComponent {
 }
 
 export const ZombieComponentArray = new ComponentArray<ZombieComponent>(ServerComponentType.zombie, true, {
-   serialise: serialise
+   getDataLength: getDataLength,
+   addDataToPacket: addDataToPacket
 });
 
-function serialise(entityID: number): ZombieComponentData {
-   const zombieComponent = ZombieComponentArray.getComponent(entityID);
-   
-   return {
-      componentType: ServerComponentType.zombie,
-      zombieType: zombieComponent.zombieType
-   };
+function getDataLength(): number {
+   return 2 * Float32Array.BYTES_PER_ELEMENT;
+}
+
+function addDataToPacket(packet: Packet, entity: EntityID): void {
+   const zombieComponent = ZombieComponentArray.getComponent(entity);
+   packet.addNumber(zombieComponent.zombieType);
 }

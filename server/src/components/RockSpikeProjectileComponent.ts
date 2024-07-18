@@ -1,8 +1,9 @@
-import { RockSpikeProjectileSize } from "webgl-test-shared/dist/entities";
-import { RockSpikeProjectileComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
+import { EntityID, RockSpikeProjectileSize } from "webgl-test-shared/dist/entities";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { ComponentArray } from "./ComponentArray";
 import { ComponentConfig } from "../components";
 import { CircularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
+import { Packet } from "webgl-test-shared/dist/packets";
 
 export interface RockSpikeProjectileComponentParams {
    size: number;
@@ -28,7 +29,8 @@ export class RockSpikeProjectileComponent {
 
 export const RockSpikeProjectileComponentArray = new ComponentArray<RockSpikeProjectileComponent>(ServerComponentType.rockSpike, true, {
    onInitialise: onInitialise,
-   serialise: serialise
+   getDataLength: getDataLength,
+   addDataToPacket: addDataToPacket
 });
 
 function onInitialise(config: ComponentConfig<ServerComponentType.transform | ServerComponentType.rockSpike>): void {
@@ -39,12 +41,13 @@ function onInitialise(config: ComponentConfig<ServerComponentType.transform | Se
    hitbox.radius = ROCK_SPIKE_HITBOX_SIZES[size];
 }
 
-function serialise(entityID: number): RockSpikeProjectileComponentData {
-   const rockSpikeComponent = RockSpikeProjectileComponentArray.getComponent(entityID);
+function getDataLength(): number {
+   return 3 * Float32Array.BYTES_PER_ELEMENT;
+}
 
-   return {
-      componentType: ServerComponentType.rockSpike,
-      size: rockSpikeComponent.size,
-      lifetime: rockSpikeComponent.lifetimeTicks
-   };
+function addDataToPacket(packet: Packet, entity: EntityID): void {
+   const rockSpikeComponent = RockSpikeProjectileComponentArray.getComponent(entity);
+
+   packet.addNumber(rockSpikeComponent.size);
+   packet.addNumber(rockSpikeComponent.lifetimeTicks);
 }

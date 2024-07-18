@@ -1,5 +1,5 @@
 import { PathfindingNodeIndex } from "webgl-test-shared/dist/client-server-types";
-import { ServerComponentType, TribesmanAIComponentData, TribesmanAIType } from "webgl-test-shared/dist/components";
+import { ServerComponentType, TribesmanAIType } from "webgl-test-shared/dist/components";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { randInt } from "webgl-test-shared/dist/utils";
 import { ComponentArray } from "./ComponentArray";
@@ -11,6 +11,7 @@ import { CRAFTING_RECIPES } from "webgl-test-shared/dist/items/crafting-recipes"
 import { ItemType } from "webgl-test-shared/dist/items/items";
 import { EntityID } from "webgl-test-shared/dist/entities";
 import { tickTribesman } from "../entities/tribes/tribesman-ai/tribesman-ai";
+import { Packet } from "webgl-test-shared/dist/packets";
 
 // @Incomplete: periodically remove dead entities from the relations object
 // @Incomplete: only keep track of tribesman relations
@@ -159,11 +160,16 @@ export class TribesmanAIComponent {
 
 export const TribesmanAIComponentArray = new ComponentArray<TribesmanAIComponent>(ServerComponentType.tribesmanAI, true, {
    onTick: tickTribesman,
-   serialise: serialise
+   getDataLength: getDataLength,
+   addDataToPacket: addDataToPacket
 });
 
-function serialise(entityID: number, playerID: number | null): TribesmanAIComponentData {
-   const tribesmanComponent = TribesmanAIComponentArray.getComponent(entityID);
+function getDataLength(): number {
+   return 7 * Float32Array.BYTES_PER_ELEMENT;
+}
+
+function addDataToPacket(packet: Packet, entity: EntityID, player: EntityID | null): void {
+   const tribesmanComponent = TribesmanAIComponentArray.getComponent(entity);
 
    let craftingProgress: number;
    let craftingItemType: ItemType;
@@ -176,16 +182,14 @@ function serialise(entityID: number, playerID: number | null): TribesmanAICompon
       craftingProgress = 0;
       craftingItemType = 0;
    }
-   
-   return {
-      componentType: ServerComponentType.tribesmanAI,
-      name: tribesmanComponent.name,
-      untitledDescriptor: tribesmanComponent.untitledDescriptor,
-      currentAIType: tribesmanComponent.currentAIType,
-      relationsWithPlayer: playerID !== null && typeof tribesmanComponent.tribesmanRelations[playerID] !== "undefined" ? tribesmanComponent.tribesmanRelations[playerID]! : 0,
-      craftingItemType: craftingItemType,
-      craftingProgress: craftingProgress
-   };
+
+   packet.addNumber(tribesmanComponent.name);
+   packet.addNumber(tribesmanComponent.untitledDescriptor);
+   packet.addNumber(tribesmanComponent.currentAIType);
+   const relationsWithPlayer = player !== null && typeof tribesmanComponent.tribesmanRelations[player] !== "undefined" ? tribesmanComponent.tribesmanRelations[player]! : 0;
+   packet.addNumber(relationsWithPlayer);
+   packet.addNumber(craftingItemType);
+   packet.addNumber(craftingProgress);
 }
 
 const adjustTribesmanRelations = (tribesmanID: number, otherTribesmanID: number, adjustment: number): void => {

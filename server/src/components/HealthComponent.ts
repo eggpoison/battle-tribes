@@ -1,4 +1,4 @@
-import { HealthComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { PlayerCauseOfDeath, EntityType, EntityID } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { TribesmanTitle } from "webgl-test-shared/dist/titles";
@@ -27,6 +27,7 @@ import { registerEntityDeath, registerEntityHeal, registerEntityHit } from "../s
 import { ComponentArray } from "./ComponentArray";
 import Board from "../Board";
 import { TransformComponentArray } from "./TransformComponent";
+import { Packet } from "webgl-test-shared/dist/packets";
 
 export interface HealthComponentParams {
    maxHealth: number;
@@ -50,7 +51,8 @@ export class HealthComponent {
 }
 
 export const HealthComponentArray = new ComponentArray<HealthComponent>(ServerComponentType.health, true, {
-   serialise: serialiseHealthComponent
+   getDataLength: getDataLength,
+   addDataToPacket: addDataToPacket
 });
 
 export function tickHealthComponent(healthComponent: HealthComponent): void {
@@ -321,11 +323,13 @@ export function removeDefence(healthComponent: HealthComponent, name: string): v
    delete healthComponent.defenceFactors[name];
 }
 
-export function serialiseHealthComponent(entityID: number): HealthComponentData {
+function getDataLength(): number {
+   return 3 * Float32Array.BYTES_PER_ELEMENT;
+}
+
+function addDataToPacket(packet: Packet, entityID: number): void {
    const healthComponent = HealthComponentArray.getComponent(entityID);
-   return {
-      componentType: ServerComponentType.health,
-      health: healthComponent.health,
-      maxHealth: healthComponent.maxHealth
-   };
+
+   packet.addNumber(healthComponent.health);
+   packet.addNumber(healthComponent.maxHealth);
 }

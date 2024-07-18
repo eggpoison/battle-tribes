@@ -1,4 +1,4 @@
-import { ServerComponentType, TunnelComponentData } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { DoorToggleType, EntityID } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { Point, angle, lerp } from "webgl-test-shared/dist/utils";
@@ -6,6 +6,7 @@ import { HitboxCollisionBit, DEFAULT_HITBOX_COLLISION_MASK } from "webgl-test-sh
 import { ComponentArray } from "./ComponentArray";
 import { HitboxCollisionType, RectangularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { TransformComponentArray } from "./TransformComponent";
+import { Packet } from "webgl-test-shared/dist/packets";
 
 // @Cleanup: All the door toggling logic is stolen from DoorComponent.ts}
 
@@ -37,7 +38,8 @@ export class TunnelComponent {
 }
 
 export const TunnelComponentArray = new ComponentArray<TunnelComponent>(ServerComponentType.tunnel, true, {
-   serialise: serialise
+   getDataLength: getDataLength,
+   addDataToPacket: addDataToPacket
 });
 
 const doorHalfDiagonalLength = Math.sqrt(16 * 16 + 48 * 48) / 2;
@@ -182,15 +184,16 @@ export function toggleTunnelDoor(tunnel: EntityID, doorBit: number): void {
    }
 }
 
-function serialise(entityID: number): TunnelComponentData {
-   const tunnelComponent = TunnelComponentArray.getComponent(entityID);
+function getDataLength(): number {
+   return 4 * Float32Array.BYTES_PER_ELEMENT;
+}
+
+function addDataToPacket(packet: Packet, entity: EntityID): void {
+   const tunnelComponent = TunnelComponentArray.getComponent(entity);
    
-   return {
-      componentType: ServerComponentType.tunnel,
-      doorBitset: tunnelComponent.doorBitset,
-      topDoorOpenProgress: tunnelComponent.topDoorOpenProgress,
-      bottomDoorOpenProgress: tunnelComponent.bottomDoorOpenProgress
-   };
+   packet.addNumber(tunnelComponent.doorBitset);
+   packet.addNumber(tunnelComponent.topDoorOpenProgress);
+   packet.addNumber(tunnelComponent.bottomDoorOpenProgress);
 }
 
 export function updateTunnelDoorBitset(tunnel: EntityID, doorBitset: number): void {

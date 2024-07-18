@@ -1,4 +1,4 @@
-import { PlanterBoxComponentData, PlanterBoxPlant, ServerComponentType } from "webgl-test-shared/dist/components";
+import { PlanterBoxPlant, ServerComponentType } from "webgl-test-shared/dist/components";
 import { ComponentArray } from "./ComponentArray";
 import Board from "../Board";
 import { PlantComponentArray } from "./PlantComponent";
@@ -7,6 +7,7 @@ import { EntityID } from "webgl-test-shared/dist/entities";
 import { TransformComponentArray } from "./TransformComponent";
 import { createPlantConfig } from "../entities/plant";
 import { createEntityFromConfig } from "../Entity";
+import { Packet } from "webgl-test-shared/dist/packets";
 
 const enum Vars {
    FERTILISER_DURATION_TICKS = 300 * Settings.TPS
@@ -24,13 +25,14 @@ export class PlanterBoxComponent {
 
 export const PlanterBoxComponentArray = new ComponentArray<PlanterBoxComponent>(ServerComponentType.planterBox, true, {
    onRemove: onRemove,
-   serialise: serialise
+   getDataLength: getDataLength,
+   addDataToPacket: addDataToComponent
 });
 
-function onRemove(entityID: number): void {
+function onRemove(entity: EntityID): void {
    // When a planter box is destroyed, destroy the plant that was in it
    
-   const planterBoxComponent = PlanterBoxComponentArray.getComponent(entityID);
+   const planterBoxComponent = PlanterBoxComponentArray.getComponent(entity);
 
    const plant = planterBoxComponent.plantEntity;
    if (Board.hasEntity(plant)) {
@@ -44,10 +46,14 @@ export function tickPlanterBoxComponent(planterBoxComponent: PlanterBoxComponent
    }
 }
 
-function serialise(entityID: number): PlanterBoxComponentData {
-   const planterBoxComponent = PlanterBoxComponentArray.getComponent(entityID);
+function getDataLength(): number {
+   return 3 * Float32Array.BYTES_PER_ELEMENT;
+}
+
+function addDataToComponent(packet: Packet, entity: EntityID): void {
+   const planterBoxComponent = PlanterBoxComponentArray.getComponent(entity);
    
-   let plantType: PlanterBoxPlant | null = null;
+   let plantType = -1;
    if (planterBoxComponent.plantEntity !== null) {
       const plant = planterBoxComponent.plantEntity;
       if (Board.hasEntity(plant)) {
@@ -55,12 +61,10 @@ function serialise(entityID: number): PlanterBoxComponentData {
          plantType = plantComponent.plantType;
       }
    }
-   
-   return {
-      componentType: ServerComponentType.planterBox,
-      plantType: plantType,
-      isFertilised: planterBoxComponent.remainingFertiliserTicks > 0
-   };
+
+   packet.addNumber(plantType);
+   packet.addBoolean(planterBoxComponent.remainingFertiliserTicks > 0);
+   packet.padOffset(3);
 }
 
 export function placePlantInPlanterBox(planterBox: EntityID, plantType: PlanterBoxPlant): void {

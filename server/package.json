@@ -10,14 +10,16 @@
       "lint": "npx eslint ."
    },
    "dependencies": {
-      "webgl-test-shared": "file:../webgl-test-shared",
       "@eslint/js": "^9.2.0",
       "@types/ws": "^8.5.3",
       "eslint": "^8.57.0",
+      "express": "^4.19.2",
       "socket.io": "^4.5.1",
-      "ws": "^8.8.0"
+      "webgl-test-shared": "file:../webgl-test-shared",
+      "ws": "^8.18.0"
    },
    "devDependencies": {
+      "@types/express": "^4.17.21",
       "madge": "^6.1.0",
       "nodemon": "^2.0.18",
       "ts-node": "^10.9.1",

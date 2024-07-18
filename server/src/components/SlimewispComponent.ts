@@ -1,4 +1,4 @@
-import { ServerComponentType, SlimewispComponentData } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { SLIMEWISP_MERGE_TIME } from "../entities/mobs/slimewisp";
 import { ComponentArray } from "./ComponentArray";
 
@@ -9,11 +9,12 @@ export class SlimewispComponent {
 }
 
 export const SlimewispComponentArray = new ComponentArray<SlimewispComponent>(ServerComponentType.slimewisp, true, {
-   serialise: serialise
+   getDataLength: getDataLength,
+   addDataToPacket: addDataToPacket
 });
 
-function serialise(): SlimewispComponentData {
-   return {
-      componentType: ServerComponentType.slimewisp
-   };
+function getDataLength(): number {
+   return Float32Array.BYTES_PER_ELEMENT;
 }
+
+function addDataToPacket(): void {}

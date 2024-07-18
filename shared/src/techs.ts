@@ -30,7 +30,7 @@ export enum TechID {
 
 // @Cleanup: rename study to work everywhere
 
-interface TechUnlockProgress {
+export interface TechUnlockProgress {
    readonly itemProgress: ItemRequirements;
    studyProgress: number;
 }

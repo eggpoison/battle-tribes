@@ -72,8 +72,8 @@ const titlesAreDifferent = (titles1: ReadonlyArray<TitleGenerationInfo>, titles2
 }
 
 class TribeMemberComponent extends ServerComponent<ServerComponentType.tribeMember> {
-   public readonly bodyRenderPart: RenderPart;
-   public readonly handRenderParts: ReadonlyArray<RenderPart>;
+   public bodyRenderPart!: RenderPart;
+   public handRenderParts!: ReadonlyArray<RenderPart>;
    
    public warPaintType: number | null;
    
@@ -86,7 +86,9 @@ class TribeMemberComponent extends ServerComponent<ServerComponentType.tribeMemb
 
       this.warPaintType = data.warPaintType;
       this.updateTitles(data.titles);
+   }
 
+   public onLoad(): void {
       this.bodyRenderPart = this.entity.getRenderPart("tribeMemberComponent:body");
       this.handRenderParts = this.entity.getRenderParts("tribeMemberComponent:hand", 2);
    }

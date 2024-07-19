@@ -13,13 +13,17 @@ export const BERRY_BUSH_TEXTURE_SOURCES = [
 ];
 
 class BerryBushComponent extends ServerComponent<ServerComponentType.berryBush> {
-   private renderPart: TexturedRenderPart;
+   public readonly numBerries: number;
+   private renderPart!: TexturedRenderPart;
    
    constructor(entity: Entity, data: BerryBushComponentData) {
       super(entity);
       
+      this.numBerries = data.numBerries;
+   }
+
+   public onLoad(): void {
       this.renderPart = this.entity.getRenderPart("berryBushComponent:renderPart") as TexturedRenderPart;
-      this.updateFromData(data);
    }
 
    public updateFromData(data: BerryBushComponentData): void {

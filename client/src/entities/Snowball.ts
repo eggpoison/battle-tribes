@@ -7,7 +7,7 @@ import { createSnowParticle } from "../particles";
 import Particle from "../Particle";
 import { ParticleRenderLayer, addMonocolourParticleToBufferContainer } from "../rendering/webgl/particle-rendering";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
-import Entity, { ComponentDataRecord } from "../Entity";
+import Entity from "../Entity";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 const getTextureSource = (size: SnowballSize): string => {
@@ -22,10 +22,12 @@ const getTextureSource = (size: SnowballSize): string => {
 }
 
 class Snowball extends Entity {
-   constructor(id: number, componentDataRecord: ComponentDataRecord) {
+   constructor(id: number) {
       super(id, EntityType.snowball);
+   }
 
-      const snowballComponentData = componentDataRecord[ServerComponentType.snowball]!;
+   public onLoad(): void {
+      const snowballComponentData = this.getServerComponent(ServerComponentType.snowball);
 
       this.attachRenderPart(
          new TexturedRenderPart(

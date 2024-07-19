@@ -1,8 +1,8 @@
 import { ServerTileData, WaterRockData, RiverSteppingStoneData, GrassTileInfo, DecorationInfo, RiverFlowDirectionsRecord, WaterRockSize, RiverSteppingStoneSize, DecorationType, GameDataPacket, EntityData, StatusEffectData, CircularHitboxData, RectangularHitboxData, HitData, PlayerKnockbackData, HealData, ResearchOrbCompleteData, ServerTileUpdateData, DebugData, EntityDebugData, LineDebugData, CircleDebugData, TileHighlightData, PathData, PathfindingNodeIndex, PlayerInventoryData } from "webgl-test-shared/dist/client-server-types";
-import { AIHelperComponentData, AmmoBoxComponentData, BerryBushComponentData, BlueprintComponentData, BoulderComponentData, BuildingMaterialComponentData, CactusComponentData, ComponentData, CookingComponentData, CowComponentData, CraftingStationComponentData, DoorComponentData, EscapeAIComponentData, FenceComponentData, FenceGateComponentData, FishComponentData, FollowAIComponentData, FrozenYetiComponentData, GolemComponentData, HealingTotemComponentData, HealingTotemTargetData, HealthComponentData, HutComponentData, IceShardComponentData, IceSpikesComponentData, InventoryComponentData, InventoryUseComponentData, ItemComponentData, LayeredRodComponentData, PebblumComponentData, PhysicsComponentData, PlantComponentData, PlanterBoxComponentData, PlayerComponentData, ProjectileComponentData, ResearchBenchComponentData, RockSpikeProjectileComponentData, ScarInfo, ServerComponentType, SlimeComponentData, SlimeSpitComponentData, SlimewispComponentData, SnowballComponentData, SpikesComponentData, StatusEffectComponentData, StructureComponentData, ThrowingProjectileComponentData, TombstoneComponentData, TotemBannerComponentData, TransformComponentData, TreeComponentData, TribeComponentData, TribeMemberComponentData, TribesmanAIComponentData, TribeWarriorComponentData, TunnelComponentData, TurretComponentData, WanderAIComponentData, YetiComponentData, ZombieComponentData } from "webgl-test-shared/dist/components";
+import { AIHelperComponentData, AmmoBoxComponentData, BerryBushComponentData, BlueprintComponentData, BoulderComponentData, BuildingMaterialComponentData, CactusComponentData, ComponentData, CookingComponentData, CowComponentData, CraftingStationComponentData, DoorComponentData, EscapeAIComponentData, FenceComponentData, FenceGateComponentData, FishComponentData, FollowAIComponentData, FrozenYetiComponentData, GolemComponentData, HealingTotemComponentData, HealingTotemTargetData, HealthComponentData, HutComponentData, IceShardComponentData, IceSpikesComponentData, InventoryComponentData, InventoryUseComponentData, ItemComponentData, LayeredRodComponentData, LimbData, PebblumComponentData, PhysicsComponentData, PlantComponentData, PlanterBoxComponentData, PlayerComponentData, ProjectileComponentData, ResearchBenchComponentData, RockSpikeProjectileComponentData, ScarInfo, ServerComponentType, SlimeComponentData, SlimeSpitComponentData, SlimewispComponentData, SnowballComponentData, SpikesComponentData, StatusEffectComponentData, StructureComponentData, ThrowingProjectileComponentData, TombstoneComponentData, TotemBannerComponentData, TransformComponentData, TreeComponentData, TribeComponentData, TribeMemberComponentData, TribesmanAIComponentData, TribeWarriorComponentData, TunnelComponentData, TurretComponentData, WanderAIComponentData, YetiComponentData, ZombieComponentData } from "webgl-test-shared/dist/components";
 import { CactusBodyFlowerData, CactusLimbData, CactusLimbFlowerData, DeathInfo, EntityID, EntityType, FishColour, PlayerCauseOfDeath, SlimeSize, SnowballSize, TribeTotemBanner } from "webgl-test-shared/dist/entities";
 import { Inventory, InventoryName, Item, ItemType } from "webgl-test-shared/dist/items/items";
-import { PacketReader } from "webgl-test-shared/dist/packets";
+import { Packet, PacketReader } from "webgl-test-shared/dist/packets";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { Biome, TileType } from "webgl-test-shared/dist/tiles";
 import { LimbInfo } from "../entity-components/InventoryUseComponent";
@@ -11,12 +11,19 @@ import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { TitleGenerationInfo, TribesmanTitle } from "webgl-test-shared/dist/titles";
 import { CraftingStation, ItemRequirements } from "webgl-test-shared/dist/items/crafting-recipes";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
-import { EnemyTribeData, TechID, TechTreeUnlockProgress } from "webgl-test-shared/dist/techs";
+import { EnemyTribeData, PlayerTribeData, TechID, TechTreeUnlockProgress } from "webgl-test-shared/dist/techs";
 import { EntityTickEvent, EntityTickEventType } from "webgl-test-shared/dist/entity-events";
 import Game from "../Game";
 import Player from "../entities/Player";
 import Client from "./Client";
 import { definiteGameState } from "../game-state/game-states";
+import Entity from "../Entity";
+import { createEntity } from "../entity-class-record";
+import Board from "../Board";
+import { TitlesTab_setTitles } from "../components/game/dev/tabs/TitlesTab";
+import { Hotbar_updateRightThrownBattleaxeItemID } from "../components/game/inventories/Hotbar";
+import Camera from "../Camera";
+import { createComponent } from "../entity-components/components";
 
 export interface InitialGameDataPacket {
    readonly playerID: number;
@@ -212,7 +219,8 @@ const readCrossbowLoadProgressRecord = (reader: PacketReader): Partial<Record<nu
    return record;
 }
 
-const readComponentData = <T extends ServerComponentType>(reader: PacketReader, componentType: T): ComponentData => {
+// @Temporary
+export function readComponentData<T extends ServerComponentType>(reader: PacketReader, componentType: T): ComponentData {
    switch (componentType) {
       case ServerComponentType.aiHelper: {
          const visionRange = reader.readNumber();
@@ -1093,27 +1101,6 @@ const readComponentData = <T extends ServerComponentType>(reader: PacketReader, 
    }
 }
 
-const readEntityData = (reader: PacketReader): EntityData => {
-   const entityID = reader.readNumber() as EntityID;
-   const entityType = reader.readNumber() as EntityType;
-
-   // Components
-   const components = new Array<ComponentData>();
-   const numComponents = reader.readNumber();
-   for (let i = 0; i < numComponents; i++) {
-      const componentType = reader.readNumber() as ServerComponentType;
-
-      const componentData = readComponentData(reader, componentType);
-      components.push(componentData);
-   }
-
-   return {
-      id: entityID,
-      type: entityType,
-      components: components
-   };
-}
-
 const readDebugData = (reader: PacketReader): EntityDebugData => {
    const entityID = reader.readNumber();
 
@@ -1228,16 +1215,240 @@ const readPlayerInventories = (reader: PacketReader): PlayerInventoryData => {
    };
 }
 
-export function processGameDataPacket(reader: PacketReader): GameDataPacket {
+const processPlayerUpdateData = (reader: PacketReader): void => {
+   if (Player.instance === null) {
+      throw new Error();
+   }
+   
+   // @Hack @Temporary
+   
+   // Skip entity type
+   reader.padOffset(Float32Array.BYTES_PER_ELEMENT);
+      
+   const numComponents = reader.readNumber();
+   for (let i = 0; i < numComponents; i++) {
+      const componentType = reader.readNumber() as ServerComponentType;
+
+      // @Temporary
+      const componentData = readComponentData(reader, componentType) as any;
+
+      switch (componentType) {
+         case ServerComponentType.statusEffect: {
+            Player.instance.getServerComponent(ServerComponentType.statusEffect).updateFromData(componentData);
+            break;
+         }
+         case ServerComponentType.tribeMember: {
+            const tribeMemberComponent = Player.instance.getServerComponent(ServerComponentType.tribeMember);
+            tribeMemberComponent.updateFromData(componentData);
+
+            TitlesTab_setTitles(tribeMemberComponent.getTitles());
+            break;
+         }
+         case ServerComponentType.inventoryUse: {
+            let hotbarUseInfo: LimbData | undefined;
+            for (let i = 0; i < componentData.inventoryUseInfos.length; i++) {
+               const useInfo = componentData.inventoryUseInfos[i];
+               if (useInfo.inventoryName === InventoryName.hotbar) {
+                  hotbarUseInfo = useInfo;
+                  break;
+               }
+            }
+            if (typeof hotbarUseInfo === "undefined") {
+               throw new Error();
+            }
+
+            const inventoryUseComponent = Player.instance.getServerComponent(ServerComponentType.inventoryUse);
+            inventoryUseComponent.getUseInfo(InventoryName.hotbar).thrownBattleaxeItemID = hotbarUseInfo.thrownBattleaxeItemID;
+            
+            Hotbar_updateRightThrownBattleaxeItemID(hotbarUseInfo.thrownBattleaxeItemID);
+            
+            break;
+         }
+      }
+   }
+
+      // @Incomplete
+      // const leftThrownBattleaxeItemID = entityData.clientArgs[14] as number;
+      // player.leftThrownBattleaxeItemID = leftThrownBattleaxeItemID;
+      // Hotbar_updateLeftThrownBattleaxeItemID(leftThrownBattleaxeItemID);
+}
+
+const processEntityCreationData = (entityID: EntityID, reader: PacketReader): void => {
+   const entityType = reader.readNumber() as EntityType;
+
+   const entity = createEntity(entityID, entityType);
+
+   const numComponents = reader.readNumber();
+   for (let i = 0; i < numComponents; i++) {
+      const componentType = reader.readNumber() as ServerComponentType;
+      // @Temporary
+      const componentData = readComponentData(reader, componentType);
+      
+      const component = createComponent(entity, componentData);
+      entity.addServerComponent(componentType, component);
+   }
+
+   Board.addEntity(entity);
+
+   if (entityID === Game.playerID) {
+      Player.createInstancePlayer(entity as Player);
+   }
+}
+
+const processEntityUpdateData = (entityID: EntityID, reader: PacketReader): void => {
+   // Skip entity type
+   reader.padOffset(Float32Array.BYTES_PER_ELEMENT);
+   
+   const entity = Board.entityRecord[entityID]!;
+
+   // @Temporary
+   const numComponents = reader.readNumber();
+   for (let i = 0; i < numComponents; i++) {
+      const componentType = reader.readNumber() as ServerComponentType;
+      // @Temporary
+      const componentData = readComponentData(reader, componentType);
+      
+      const component = entity.getServerComponent(componentType);
+         // @Cleanup: nasty cast
+      component.updateFromData(componentData as any);
+   }
+}
+
+export function processGameDataPacket(reader: PacketReader): void {
    const simulationIsPaused = reader.readBoolean();
    reader.padOffset(3);
 
-   // Add entities
-   const entityDataArray = new Array<EntityData>();
+   // 
+   // Player tribe data
+   // 
+   // @Cleanup: move into a separate function
+
+   const tribeName = reader.readString(100);
+   const tribeID = reader.readNumber();
+   const tribeType = reader.readNumber();
+   const hasTotem = reader.readBoolean();
+   reader.padOffset(3);
+   const numHuts = reader.readNumber();
+   const tribesmanCap = reader.readNumber();
+
+   const area = new Array<[tileX: number, tileY: number]>();
+   const areaLength = reader.readNumber();
+   for (let i = 0; i < areaLength; i++) {
+      const tileX = reader.readNumber();
+      const tileY = reader.readNumber();
+      area.push([tileX, tileY]);
+   }
+
+   const rawSelectedTechID = reader.readNumber();
+   const selectedTechID = rawSelectedTechID !== -1 ? rawSelectedTechID : null;
+
+   const unlockedTechs = new Array<TechID>();
+   const numUnlockedTechs = reader.readNumber();
+   for (let i = 0; i < numUnlockedTechs; i++) {
+      const techID = reader.readNumber();
+      unlockedTechs.push(techID);
+   }
+
+   // Tech tree unlock progress
+   const techTreeUnlockProgress: TechTreeUnlockProgress = {};
+   const numTechProgressEntries = reader.readNumber();
+   for (let i = 0; i < numTechProgressEntries; i++) {
+      const techID = reader.readNumber() as TechID;
+
+      const itemProgress: ItemRequirements = {};
+      const numRequirements = reader.readNumber();
+      for (let j = 0; j < numRequirements; j++) {
+         const itemType = reader.readNumber() as ItemType;
+         const amount = reader.readNumber();
+         itemProgress[itemType] = amount;
+      }
+
+      const studyProgress = reader.readNumber();
+
+      techTreeUnlockProgress[techID] = {
+         itemProgress: itemProgress,
+         studyProgress: studyProgress
+      };
+   }
+
+   const tribeData: PlayerTribeData = {
+      name: tribeName,
+      id: tribeID,
+      tribeType: tribeType,
+      hasTotem: hasTotem,
+      numHuts: numHuts,
+      tribesmanCap: tribesmanCap,
+      area: area,
+      selectedTechID: selectedTechID,
+      unlockedTechs: unlockedTechs,
+      techTreeUnlockProgress: techTreeUnlockProgress
+   };
+   Client.updateTribe(tribeData);
+
+   // Enemy tribes data
+   const enemyTribesData = new Array<EnemyTribeData>();
+   const numEnemyTribes = reader.readNumber();
+   for (let i = 0; i < numEnemyTribes; i++) {
+      const name = reader.readString(100);
+      const id = reader.readNumber();
+      const tribeType = reader.readNumber();
+
+      enemyTribesData.push({
+         name: name,
+         id: id,
+         tribeType: tribeType
+      });
+   }
+   Game.enemyTribes = enemyTribesData;
+
+   // Process entities
+   const playerInstanceID = Game.playerID;
    const numEntities = reader.readNumber();
    for (let i = 0; i < numEntities; i++) {
-      const entityData = readEntityData(reader);
-      entityDataArray.push(entityData);
+      const entityID = reader.readNumber() as EntityID;
+      if (entityID === playerInstanceID) {
+         if (Player.instance === null) {
+            processEntityCreationData(entityID, reader);
+         } else {
+            processPlayerUpdateData(reader);
+         }
+      } else if (typeof Board.entityRecord[entityID] !== "undefined") {
+         processEntityUpdateData(entityID, reader);
+      } else {
+         processEntityCreationData(entityID, reader);
+      }
+   }
+
+   // @Cleanup: move to own function
+   
+   // Remove entities which are no longer visible
+   const entitiesToRemove = new Set<Entity>();
+   const minVisibleChunkX = Camera.minVisibleChunkX - 1;
+   const maxVisibleChunkX = Camera.maxVisibleChunkX + 1;
+   const minVisibleChunkY = Camera.minVisibleChunkY - 1;
+   const maxVisibleChunkY = Camera.maxVisibleChunkY + 1;
+   for (let chunkX = 0; chunkX < Settings.BOARD_SIZE; chunkX++) {
+      for (let chunkY = 0; chunkY < Settings.BOARD_SIZE; chunkY++) {
+         // Skip visible chunks
+         if (chunkX >= minVisibleChunkX && chunkX <= maxVisibleChunkX && chunkY >= minVisibleChunkY && chunkY <= maxVisibleChunkY) {
+            continue;
+         }
+
+         const chunk = Board.getChunk(chunkX, chunkY);
+         for (let i = 0; i < chunk.entities.length; i++) {
+            const entityID = chunk.entities[i];
+            const entity = Board.entityRecord[entityID]!;
+            entitiesToRemove.add(entity);
+         }
+      }
+   }
+
+   if (Player.instance !== null) {
+      entitiesToRemove.delete(Player.instance);
+   }
+
+   for (const entity of entitiesToRemove) {
+      Board.removeEntity(entity, false);
    }
 
    const playerInventories = readPlayerInventories(reader);
@@ -1341,74 +1552,6 @@ export function processGameDataPacket(reader: PacketReader): GameDataPacket {
       debugData = readDebugData(reader);
    }
 
-   // 
-   // Player tribe data
-   // 
-   // @Cleanup: move into a separate function
-
-   const tribeName = reader.readString(100);
-   const tribeID = reader.readNumber();
-   const tribeType = reader.readNumber();
-   const hasTotem = reader.readBoolean();
-   reader.padOffset(3);
-   const numHuts = reader.readNumber();
-   const tribesmanCap = reader.readNumber();
-
-   const area = new Array<[tileX: number, tileY: number]>();
-   const areaLength = reader.readNumber();
-   for (let i = 0; i < areaLength; i++) {
-      const tileX = reader.readNumber();
-      const tileY = reader.readNumber();
-      area.push([tileX, tileY]);
-   }
-
-   const rawSelectedTechID = reader.readNumber();
-   const selectedTechID = rawSelectedTechID !== -1 ? rawSelectedTechID : null;
-
-   const unlockedTechs = new Array<TechID>();
-   const numUnlockedTechs = reader.readNumber();
-   for (let i = 0; i < numUnlockedTechs; i++) {
-      const techID = reader.readNumber();
-      unlockedTechs.push(techID);
-   }
-
-   // Tech tree unlock progress
-   const techTreeUnlockProgress: TechTreeUnlockProgress = {};
-   const numTechProgressEntries = reader.readNumber();
-   for (let i = 0; i < numTechProgressEntries; i++) {
-      const techID = reader.readNumber() as TechID;
-
-      const itemProgress: ItemRequirements = {};
-      const numRequirements = reader.readNumber();
-      for (let j = 0; j < numRequirements; j++) {
-         const itemType = reader.readNumber() as ItemType;
-         const amount = reader.readNumber();
-         itemProgress[itemType] = amount;
-      }
-
-      const studyProgress = reader.readNumber();
-
-      techTreeUnlockProgress[techID] = {
-         itemProgress: itemProgress,
-         studyProgress: studyProgress
-      };
-   }
-
-   // Enemy tribes data
-   const enemyTribesData = new Array<EnemyTribeData>();
-   const numEnemyTribes = reader.readNumber();
-   for (let i = 0; i < numEnemyTribes; i++) {
-      const name = reader.readString(100);
-      const id = reader.readNumber();
-      const tribeType = reader.readNumber();
-
-      enemyTribesData.push({
-         name: name,
-         id: id,
-         tribeType: tribeType
-      });
-   }
-
    // @Incomplete
    // hasFrostShield: player.immunityTimer === 0 && playerArmour !== null && playerArmour.type === ItemType.deepfrost_armour,
 
@@ -1442,9 +1585,8 @@ export function processGameDataPacket(reader: PacketReader): GameDataPacket {
       });
    }
    
-   return {
+   const gameDataPacket: GameDataPacket = {
       simulationIsPaused: simulationIsPaused,
-      entityDataArray: entityDataArray,
       tileUpdates: tileUpdates,
       visibleHits: visibleHits,
       playerKnockbacks: playerKnockbacks,
@@ -1484,6 +1626,8 @@ export function processGameDataPacket(reader: PacketReader): GameDataPacket {
       visibleEntityDeathIDs: [],
       visibleGrassBlockers: []
    };
+
+   Client.processGameDataPacket(gameDataPacket)
 }
 
 export function processSyncDataPacket(reader: PacketReader): void {

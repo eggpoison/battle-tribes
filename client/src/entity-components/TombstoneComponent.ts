@@ -9,6 +9,7 @@ import { playSound, AudioFilePath } from "../sound";
 import { ParticleRenderLayer } from "../rendering/webgl/particle-rendering";
 
 class TombstoneComponent extends ServerComponent<ServerComponentType.tombstone> {
+   public readonly tombstoneType: number;
    private zombieSpawnProgress: number;
    private zombieSpawnX: number;
    private zombieSpawnY: number;
@@ -17,6 +18,7 @@ class TombstoneComponent extends ServerComponent<ServerComponentType.tombstone> 
    constructor(entity: Entity, data: TombstoneComponentData) {
       super(entity);
 
+      this.tombstoneType = data.tombstoneType;
       this.zombieSpawnProgress = data.zombieSpawnProgress;
       this.zombieSpawnX = data.zombieSpawnX;
       this.zombieSpawnY = data.zombieSpawnY;

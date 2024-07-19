@@ -1,7 +1,6 @@
 import { BuildingPlanData, PotentialBuildingPlanData, TribeWallData } from "webgl-test-shared/dist/ai-building-types";
-import { AttackPacket, CircularHitboxData, EntityData, GameDataPacket, GameDataPacketOptions, GameDataSyncPacket, PlayerDataPacket, PlayerInventoryData, RectangularHitboxData, RespawnDataPacket, ServerTileData, ServerTileUpdateData, ServerToClientEvents, VisibleChunkBounds } from "webgl-test-shared/dist/client-server-types";
+import { AttackPacket, CircularHitboxData, EntityData, GameDataPacket, PlayerInventoryData, RectangularHitboxData, RespawnDataPacket, ServerTileData, ServerTileUpdateData } from "webgl-test-shared/dist/client-server-types";
 import { distance, Point } from "webgl-test-shared/dist/utils";
-import { EntityType } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { BlueprintType, LimbData, ServerComponentType } from "webgl-test-shared/dist/components";
 import { PlayerTribeData, TechID } from "webgl-test-shared/dist/techs";
@@ -30,12 +29,10 @@ import { createDamageNumber, createHealNumber, createResearchNumber, setVisibleB
 import { playSound } from "../sound";
 import { updateTechTree } from "../components/game/tech-tree/TechTree";
 import { TechInfocard_setSelectedTech } from "../components/game/TechInfocard";
-import { getSelectedEntityID } from "../entity-selection";
 import { setVisiblePathfindingNodeOccupances } from "../rendering/webgl/pathfinding-node-rendering";
 import { setVisibleSafetyNodes } from "../rendering/webgl/safety-node-rendering";
 import { setVisibleRestrictedBuildingAreas } from "../rendering/webgl/restricted-building-areas-rendering";
 import { setVisibleWallConnections } from "../rendering/webgl/wall-connection-rendering";
-import OPTIONS from "../options";
 import { Infocards_setTitleOffer } from "../components/game/infocards/Infocards";
 import { GrassBlocker } from "webgl-test-shared/dist/grass-blockers";
 import { createEntity } from "../entity-class-record";
@@ -49,8 +46,9 @@ import { closeCurrentMenu } from "../menus";
 import { TribesTab_refresh } from "../components/game/dev/tabs/TribesTab";
 import { processTickEvents } from "../entity-tick-events";
 import { Packet, PacketReader, PacketType } from "webgl-test-shared/dist/packets";
-import { InitialGameDataPacket, processGameDataPacket, processInitialGameDataPacket, processSyncDataPacket } from "./packet-processing";
+import { InitialGameDataPacket, processInitialGameDataPacket, processSyncDataPacket } from "./packet-processing";
 import { createActivatePacket, createPlayerDataPacket, createSyncRequestPacket } from "./packet-creation";
+import Tribe from "../Tribe";
 
 export type GameData = {
    readonly gameTicks: number;
@@ -143,7 +141,7 @@ abstract class Client {
    private static socket: WebSocket | null = null;
 
    public static initialGameDataResolve: ((value: InitialGameDataPacket) => void) | null = null;
-   public static nextGameDataResolve: ((value: GameDataPacket) => void) | null = null;
+   public static nextGameDataResolve: ((value: PacketReader) => void) | null = null;
 
    public static connectToServer(): Promise<boolean> {
       return new Promise(resolve => {
@@ -169,8 +167,7 @@ abstract class Client {
                }
                case PacketType.gameData: {
                   if (this.nextGameDataResolve !== null) {
-                     const gameDataPacket = processGameDataPacket(packetReader);
-                     this.nextGameDataResolve(gameDataPacket);
+                     this.nextGameDataResolve(packetReader);
                      this.nextGameDataResolve = null;
                      return;
                   }
@@ -180,10 +177,8 @@ abstract class Client {
                      return;
                   }
 
-                  const gameDataPacket = processGameDataPacket(packetReader);
-
                   registerServerTick();
-                  Game.queuedPackets.push(gameDataPacket);
+                  Game.queuedPackets.push(packetReader);
 
                   break;
                }
@@ -300,7 +295,7 @@ abstract class Client {
       // })
    }
 
-   public static getNextGameDataPacket(): Promise<GameDataPacket> {
+   public static getNextGameDataPacket(): Promise<PacketReader> {
       return new Promise(resolve => {
          Client.nextGameDataResolve = resolve;
       })
@@ -346,8 +341,8 @@ abstract class Client {
          Game.setGameObjectDebugData(gameDataPacket.entityDebugData);
       }
 
-      this.updateTribe(gameDataPacket.playerTribeData);
-      Game.enemyTribes = gameDataPacket.enemyTribesData;
+      // this.updateTribe(gameDataPacket.playerTribeData);
+      // Game.enemyTribes = gameDataPacket.enemyTribesData;
       // @Hack: shouldn't do always
       TribesTab_refresh();
 
@@ -355,7 +350,7 @@ abstract class Client {
 
       processTickEvents(gameDataPacket.tickEvents);
 
-      this.updateEntities(gameDataPacket.entityDataArray, gameDataPacket.visibleEntityDeathIDs);
+      // this.updateEntities(gameDataPacket.entityDataArray, gameDataPacket.visibleEntityDeathIDs);
       
       this.updatePlayerInventory(gameDataPacket.inventory);
       this.registerTileUpdates(gameDataPacket.tileUpdates);
@@ -441,7 +436,12 @@ abstract class Client {
       grassBlockers = gameDataPacket.visibleGrassBlockers;
    }
 
-   private static updateTribe(tribeData: PlayerTribeData): void {
+   public static updateTribe(tribeData: PlayerTribeData): void {
+      // @Cleanup: the compile time type of Game.tribe is never undefined
+      if (typeof Game.tribe === "undefined") {
+         Game.tribe = new Tribe(tribeData.name, tribeData.id, tribeData.tribeType, tribeData.numHuts);
+      }
+
       if (tribeData.unlockedTechs.length > Game.tribe.unlockedTechs.length) {
          // @Incomplete: attach to camera so it doesn't decrease in loudness. Or make 'global sounds'
          playSound("research.mp3", 0.4, 1, Camera.position);
@@ -460,130 +460,130 @@ abstract class Client {
    /**
     * Updates the client's entities to match those in the server
     */
-   public static updateEntities(entityDataArray: Array<EntityData>, entityDeathIDs: ReadonlyArray<number>): void {
-      // // @Speed
-      // const knownEntityIDs = new Set(Object.keys(Board.entityRecord).map(idString => Number(idString)));
+   // public static updateEntities(entityDataArray: Array<EntityData>, entityDeathIDs: ReadonlyArray<number>): void {
+   //    // // @Speed
+   //    // const knownEntityIDs = new Set(Object.keys(Board.entityRecord).map(idString => Number(idString)));
       
-      // // Remove the player from the list of known entities so the player isn't removed
-      // if (Player.instance !== null) {
-      //    knownEntityIDs.delete(Player.instance.id);
-      // }
+   //    // // Remove the player from the list of known entities so the player isn't removed
+   //    // if (Player.instance !== null) {
+   //    //    knownEntityIDs.delete(Player.instance.id);
+   //    // }
 
-      // @Cleanup: This feels wrong to do. This hardcodes which components are updated from server data; is that correct to do?
-      // Remove the player so it doesn't get updated from the server data
-      // @Speed
-      for (let i = 0; i < entityDataArray.length; i++) {
-         const data = entityDataArray[i];
-         if (data.id === Game.playerID) {
-            if (Player.instance === null) {
-               const player = this.createEntityFromData(data) as Player;
-               Player.createInstancePlayer(player);
-            } else {
+   //    // @Cleanup: This feels wrong to do. This hardcodes which components are updated from server data; is that correct to do?
+   //    // Remove the player so it doesn't get updated from the server data
+   //    // @Speed
+   //    for (let i = 0; i < entityDataArray.length; i++) {
+   //       const data = entityDataArray[i];
+   //       if (data.id === Game.playerID) {
+   //          if (Player.instance === null) {
+   //             const player = this.createEntityFromData(data) as Player;
+   //             Player.createInstancePlayer(player);
+   //          } else {
                
-               // @Hack @Cleanup
-               for (let i = 0; i < data.components.length; i++) {
-                  const componentData = data.components[i];
+   //             // @Hack @Cleanup
+   //             for (let i = 0; i < data.components.length; i++) {
+   //                const componentData = data.components[i];
 
-                  switch (componentData.componentType) {
-                     case ServerComponentType.statusEffect: {
-                        Player.instance.getServerComponent(ServerComponentType.statusEffect).updateFromData(componentData);
-                        break;
-                     }
-                     case ServerComponentType.tribeMember: {
-                        const tribeMemberComponent = Player.instance.getServerComponent(ServerComponentType.tribeMember);
-                        tribeMemberComponent.updateFromData(componentData);
+   //                switch (componentData.componentType) {
+   //                   case ServerComponentType.statusEffect: {
+   //                      Player.instance.getServerComponent(ServerComponentType.statusEffect).updateFromData(componentData);
+   //                      break;
+   //                   }
+   //                   case ServerComponentType.tribeMember: {
+   //                      const tribeMemberComponent = Player.instance.getServerComponent(ServerComponentType.tribeMember);
+   //                      tribeMemberComponent.updateFromData(componentData);
 
-                        TitlesTab_setTitles(tribeMemberComponent.getTitles());
-                        break;
-                     }
-                     case ServerComponentType.inventoryUse: {
-                        let hotbarUseInfo: LimbData | undefined;
-                        for (let i = 0; i < componentData.inventoryUseInfos.length; i++) {
-                           const useInfo = componentData.inventoryUseInfos[i];
-                           if (useInfo.inventoryName === InventoryName.hotbar) {
-                              hotbarUseInfo = useInfo;
-                              break;
-                           }
-                        }
-                        if (typeof hotbarUseInfo === "undefined") {
-                           throw new Error();
-                        }
+   //                      TitlesTab_setTitles(tribeMemberComponent.getTitles());
+   //                      break;
+   //                   }
+   //                   case ServerComponentType.inventoryUse: {
+   //                      let hotbarUseInfo: LimbData | undefined;
+   //                      for (let i = 0; i < componentData.inventoryUseInfos.length; i++) {
+   //                         const useInfo = componentData.inventoryUseInfos[i];
+   //                         if (useInfo.inventoryName === InventoryName.hotbar) {
+   //                            hotbarUseInfo = useInfo;
+   //                            break;
+   //                         }
+   //                      }
+   //                      if (typeof hotbarUseInfo === "undefined") {
+   //                         throw new Error();
+   //                      }
          
-                        const inventoryUseComponent = Player.instance.getServerComponent(ServerComponentType.inventoryUse);
-                        inventoryUseComponent.getUseInfo(InventoryName.hotbar).thrownBattleaxeItemID = hotbarUseInfo.thrownBattleaxeItemID;
+   //                      const inventoryUseComponent = Player.instance.getServerComponent(ServerComponentType.inventoryUse);
+   //                      inventoryUseComponent.getUseInfo(InventoryName.hotbar).thrownBattleaxeItemID = hotbarUseInfo.thrownBattleaxeItemID;
                         
-                        Hotbar_updateRightThrownBattleaxeItemID(hotbarUseInfo.thrownBattleaxeItemID);
+   //                      Hotbar_updateRightThrownBattleaxeItemID(hotbarUseInfo.thrownBattleaxeItemID);
                         
-                        break;
-                     }
-                  }
-               }
+   //                      break;
+   //                   }
+   //                }
+   //             }
 
-               // @Incomplete
-               // const leftThrownBattleaxeItemID = entityData.clientArgs[14] as number;
-               // player.leftThrownBattleaxeItemID = leftThrownBattleaxeItemID;
-               // Hotbar_updateLeftThrownBattleaxeItemID(leftThrownBattleaxeItemID);
+   //             // @Incomplete
+   //             // const leftThrownBattleaxeItemID = entityData.clientArgs[14] as number;
+   //             // player.leftThrownBattleaxeItemID = leftThrownBattleaxeItemID;
+   //             // Hotbar_updateLeftThrownBattleaxeItemID(leftThrownBattleaxeItemID);
 
                
-               entityDataArray.splice(i, 1);
-            }
-            break;
-         }
-      }
+   //             entityDataArray.splice(i, 1);
+   //          }
+   //          break;
+   //       }
+   //    }
 
-      // Update the game entities
-      for (const entityData of entityDataArray) {
-         // If it already exists, update it
-         const entity = Board.entityRecord[entityData.id];
-         if (typeof entity !== "undefined") {
-            entity.updateFromData(entityData);
-         } else {
-            this.createEntityFromData(entityData);
-         }
+   //    // Update the game entities
+   //    for (const entityData of entityDataArray) {
+   //       // If it already exists, update it
+   //       const entity = Board.entityRecord[entityData.id];
+   //       if (typeof entity !== "undefined") {
+   //          entity.updateFromData(entityData);
+   //       } else {
+   //          this.createEntityFromData(entityData);
+   //       }
 
-         // knownEntityIDs.delete(entityData.id);
-      }
+   //       // knownEntityIDs.delete(entityData.id);
+   //    }
 
-      // Remove entities which are no longer visible
-      const entitiesToRemove = new Set<Entity>();
-      const minVisibleChunkX = Camera.minVisibleChunkX - 1;
-      const maxVisibleChunkX = Camera.maxVisibleChunkX + 1;
-      const minVisibleChunkY = Camera.minVisibleChunkY - 1;
-      const maxVisibleChunkY = Camera.maxVisibleChunkY + 1;
-      for (let chunkX = 0; chunkX < Settings.BOARD_SIZE; chunkX++) {
-         for (let chunkY = 0; chunkY < Settings.BOARD_SIZE; chunkY++) {
-            // Skip visible chunks
-            if (chunkX >= minVisibleChunkX && chunkX <= maxVisibleChunkX && chunkY >= minVisibleChunkY && chunkY <= maxVisibleChunkY) {
-               continue;
-            }
+   //    // Remove entities which are no longer visible
+   //    const entitiesToRemove = new Set<Entity>();
+   //    const minVisibleChunkX = Camera.minVisibleChunkX - 1;
+   //    const maxVisibleChunkX = Camera.maxVisibleChunkX + 1;
+   //    const minVisibleChunkY = Camera.minVisibleChunkY - 1;
+   //    const maxVisibleChunkY = Camera.maxVisibleChunkY + 1;
+   //    for (let chunkX = 0; chunkX < Settings.BOARD_SIZE; chunkX++) {
+   //       for (let chunkY = 0; chunkY < Settings.BOARD_SIZE; chunkY++) {
+   //          // Skip visible chunks
+   //          if (chunkX >= minVisibleChunkX && chunkX <= maxVisibleChunkX && chunkY >= minVisibleChunkY && chunkY <= maxVisibleChunkY) {
+   //             continue;
+   //          }
 
-            const chunk = Board.getChunk(chunkX, chunkY);
-            for (let i = 0; i < chunk.entities.length; i++) {
-               const entityID = chunk.entities[i];
-               const entity = Board.entityRecord[entityID]!;
-               entitiesToRemove.add(entity);
-            }
-         }
-      }
+   //          const chunk = Board.getChunk(chunkX, chunkY);
+   //          for (let i = 0; i < chunk.entities.length; i++) {
+   //             const entityID = chunk.entities[i];
+   //             const entity = Board.entityRecord[entityID]!;
+   //             entitiesToRemove.add(entity);
+   //          }
+   //       }
+   //    }
 
-      if (Player.instance !== null) {
-         entitiesToRemove.delete(Player.instance);
-      }
+   //    if (Player.instance !== null) {
+   //       entitiesToRemove.delete(Player.instance);
+   //    }
 
-      for (const entity of entitiesToRemove) {
-         Board.removeEntity(entity, false);
-      }
+   //    for (const entity of entitiesToRemove) {
+   //       Board.removeEntity(entity, false);
+   //    }
 
-      // // All known entity ids which haven't been removed are ones which are dead
-      // for (const id of knownEntityIDs) {
-      //    const isDeath = entityDeathIDs.indexOf(id) !== -1;
-      //    const entity = Board.entityRecord[id]!;
-      //    // @Hack
-      //    if (entity.type === EntityType.cow)continue;
+   //    // // All known entity ids which haven't been removed are ones which are dead
+   //    // for (const id of knownEntityIDs) {
+   //    //    const isDeath = entityDeathIDs.indexOf(id) !== -1;
+   //    //    const entity = Board.entityRecord[id]!;
+   //    //    // @Hack
+   //    //    if (entity.type === EntityType.cow)continue;
          
-      //    Board.removeEntity(entity, isDeath);
-      // }
-   }
+   //    //    Board.removeEntity(entity, isDeath);
+   //    // }
+   // }
 
    public static updatePlayerInventory(playerInventoryData: PlayerInventoryData) {
       // Call the remove function if the selected item has been removed, and the select function for new selected item slots
@@ -704,15 +704,6 @@ abstract class Client {
          }
       }
       return false;
-   }
-
-   private static createEntityFromData(entityData: EntityData): Entity {
-      // Create the entity
-      const entity = createEntity(entityData);
-      entity.createComponents(entityData.components);
-      Board.addEntity(entity);
-
-      return entity;
    }
    
    private static registerTileUpdates(tileUpdates: ReadonlyArray<ServerTileUpdateData>): void {

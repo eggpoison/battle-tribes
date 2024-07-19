@@ -1,8 +1,8 @@
-import { Point, angle, randFloat, randInt, randItem } from "webgl-test-shared/dist/utils";
+import { angle, randFloat, randInt, randItem } from "webgl-test-shared/dist/utils";
 import { PlanterBoxPlant, ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { HitData, HitFlags } from "webgl-test-shared/dist/client-server-types";
-import Entity, { ComponentDataRecord } from "../Entity";
+import Entity from "../Entity";
 import { LeafParticleSize, createDirtParticle, createLeafParticle, createLeafSpeckParticle, createWoodSpeckParticle } from "../particles";
 import Tree, { TREE_DESTROY_SOUNDS, TREE_HIT_SOUNDS } from "./Tree";
 import { playSound, AudioFilePath } from "../sound";
@@ -11,18 +11,20 @@ import { ParticleRenderLayer } from "../rendering/webgl/particle-rendering";
 class Plant extends Entity {
    public static readonly SIZE = 80;
 
-   constructor(id: number, componentDataRecord: ComponentDataRecord) {
+   constructor(id: number) {
       super(id, EntityType.plant);
+   }
 
-      const transformComponentData = componentDataRecord[ServerComponentType.transform]!;
-      if (transformComponentData.ageTicks <= 0) {
+   public onLoad(): void {
+      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      if (transformComponent.ageTicks <= 0) {
          // Create dirt particles
 
          for (let i = 0; i < 7; i++) {
             const offsetDirection = 2 * Math.PI * Math.random();
             const offsetMagnitude = randFloat(0, 10);
-            const x = transformComponentData.position[0] + offsetMagnitude * Math.sin(offsetDirection);
-            const y = transformComponentData.position[1] + offsetMagnitude * Math.cos(offsetDirection);
+            const x = transformComponent.position.x + offsetMagnitude * Math.sin(offsetDirection);
+            const y = transformComponent.position.y + offsetMagnitude * Math.cos(offsetDirection);
             createDirtParticle(x, y, ParticleRenderLayer.high);
          }
       }

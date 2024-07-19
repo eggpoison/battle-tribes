@@ -259,15 +259,15 @@ class InventoryUseComponent extends ServerComponent<ServerComponentType.inventor
          useInfos.push(limbInfo);
       }
       this.useInfos = useInfos;
-      
-      // @Cleanup
-      const handRenderParts = this.entity.getRenderParts("inventoryUseComponent:hand", 2);
-      for (let limbIdx = 0; limbIdx < data.inventoryUseInfos.length; limbIdx++) {
-         this.limbRenderParts.push(handRenderParts[limbIdx]);
-      }
    }
 
    public onLoad(): void {
+      // @Cleanup
+      const handRenderParts = this.entity.getRenderParts("inventoryUseComponent:hand", 2);
+      for (let limbIdx = 0; limbIdx < this.useInfos.length; limbIdx++) {
+         this.limbRenderParts.push(handRenderParts[limbIdx]);
+      }
+
       for (let i = 0; i < this.useInfos.length; i++) {
          this.updateLimb(i, this.useInfos[i]);
       }

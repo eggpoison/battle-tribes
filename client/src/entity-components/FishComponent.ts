@@ -2,13 +2,16 @@ import { FishComponentData, ServerComponentType } from "webgl-test-shared/dist/c
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import { randFloat } from "webgl-test-shared/dist/utils";
+import { FishColour } from "webgl-test-shared/dist/entities";
 
 class FishComponent extends ServerComponent<ServerComponentType.fish> {
+   public readonly colour: FishColour;
    public readonly waterOpacityMultiplier: number;
    
-   constructor(entity: Entity, _data: FishComponentData) {
+   constructor(entity: Entity, data: FishComponentData) {
       super(entity);
 
+      this.colour = data.colour;
       this.waterOpacityMultiplier = randFloat(0.6, 1);
    }
 

@@ -6,7 +6,7 @@ import { EntityType } from "webgl-test-shared/dist/entities";
 import { BloodParticleSize, createBloodParticle, createBloodParticleFountain, createBloodPoolParticle } from "../particles";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { AudioFilePath, playSound } from "../sound";
-import Entity, { ComponentDataRecord } from "../Entity";
+import Entity from "../Entity";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { RenderPart } from "../render-parts/render-parts";
 
@@ -18,10 +18,13 @@ class Zombie extends Entity {
    
    private static readonly BLOOD_FOUNTAIN_INTERVAL = 0.1;
 
-   constructor(id: number, componentDataRecord: ComponentDataRecord) {
+   constructor(id: number) {
       super(id, EntityType.zombie);
 
-      const zombieComponentData = componentDataRecord[ServerComponentType.zombie]!;
+   }
+
+   public onLoad(): void {
+      const zombieComponent = this.getServerComponent(ServerComponentType.zombie);
 
       // Body render part
       this.attachRenderPart(
@@ -29,12 +32,12 @@ class Zombie extends Entity {
             this,
             2,
             0,
-            getTextureArrayIndex(ZOMBIE_TEXTURE_SOURCES[zombieComponentData.zombieType])
+            getTextureArrayIndex(ZOMBIE_TEXTURE_SOURCES[zombieComponent.zombieType])
          )
       );
 
       // Hand render parts
-      const handTextureSource = ZOMBIE_HAND_TEXTURE_SOURCES[zombieComponentData.zombieType];
+      const handTextureSource = ZOMBIE_HAND_TEXTURE_SOURCES[zombieComponent.zombieType];
       const handRenderParts = new Array<RenderPart>();
       for (let i = 0; i < 2; i++) {
          const renderPart = new TexturedRenderPart(

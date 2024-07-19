@@ -4,22 +4,24 @@ import { angle } from "webgl-test-shared/dist/utils";
 import { HitData } from "webgl-test-shared/dist/client-server-types";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { playSound } from "../sound";
-import Entity, { ComponentDataRecord } from "../Entity";
+import Entity from "../Entity";
 import { createLightWoodSpeckParticle, createWoodShardParticle } from "../particles";
 import { EMBRASURE_TEXTURE_SOURCES } from "../entity-components/BuildingMaterialComponent";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 class Embrasure extends Entity {
-   constructor(id: number, componentDataRecord: ComponentDataRecord) {
+   constructor(id: number) {
       super(id, EntityType.embrasure);
+   }
 
-      const buildingMaterialComponentData = componentDataRecord[ServerComponentType.buildingMaterial]!;
+   public onLoad(): void {
+      const buildingMaterialComponent = this.getServerComponent(ServerComponentType.buildingMaterial);
 
       const renderPart = new TexturedRenderPart(
          this,
          0,
          0,
-         getTextureArrayIndex(EMBRASURE_TEXTURE_SOURCES[buildingMaterialComponentData.material])
+         getTextureArrayIndex(EMBRASURE_TEXTURE_SOURCES[buildingMaterialComponent.material])
       );
       renderPart.addTag("buildingMaterialComponent:material");
       this.attachRenderPart(renderPart);

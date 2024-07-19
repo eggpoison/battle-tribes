@@ -3,7 +3,7 @@ import Particle from "../Particle";
 import { ParticleRenderLayer, addMonocolourParticleToBufferContainer } from "../rendering/webgl/particle-rendering";
 import Board from "../Board";
 import { createRockParticle } from "../particles";
-import Entity, { ComponentDataRecord } from "../Entity";
+import Entity from "../Entity";
 import { lerp, randFloat, randInt } from "webgl-test-shared/dist/utils";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { Settings } from "webgl-test-shared/dist/settings";
@@ -26,20 +26,22 @@ class RockSpikeProjectile extends Entity {
    private static readonly EXIT_SHAKE_DURATION = 0.8;
    private static readonly EXIT_SHAKE_AMOUNTS = [1.25, 2.25, 3.25];
 
-   private readonly renderPart: RenderPart;
+   private renderPart!: RenderPart;
    
-   constructor(id: number, componentDataRecord: ComponentDataRecord) {
+   constructor(id: number) {
       super(id, EntityType.rockSpikeProjectile);
+   }
 
-      const rockSpikeComponentData = componentDataRecord[ServerComponentType.rockSpike]!;
+   public onLoad(): void {
+      const rockSpikeComponent = this.getServerComponent(ServerComponentType.rockSpike);
       
-      this.shakeAmount = RockSpikeProjectile.ENTRANCE_SHAKE_AMOUNTS[rockSpikeComponentData.size];
+      this.shakeAmount = RockSpikeProjectile.ENTRANCE_SHAKE_AMOUNTS[rockSpikeComponent.size];
       
       this.renderPart = new TexturedRenderPart(
          this,
          0,
          0,
-         getTextureArrayIndex(RockSpikeProjectile.SPRITE_TEXTURE_SOURCES[rockSpikeComponentData.size])
+         getTextureArrayIndex(RockSpikeProjectile.SPRITE_TEXTURE_SOURCES[rockSpikeComponent.size])
       );
       this.renderPart.scale = RockSpikeProjectile.ENTRANCE_SCALE;
       this.attachRenderPart(this.renderPart);
@@ -50,7 +52,7 @@ class RockSpikeProjectile extends Entity {
 
       let numSpeckParticles!: number;
       let numTexturedParticles!: number;
-      switch (rockSpikeComponentData.size) {
+      switch (rockSpikeComponent.size) {
          case 0: {
             numSpeckParticles = randInt(2, 3);
             numTexturedParticles = randInt(2, 3);
@@ -72,8 +74,8 @@ class RockSpikeProjectile extends Entity {
       for (let i = 0; i < numSpeckParticles; i++) {
          // @Cleanup: Move to particles file
          const spawnOffsetDirection = 2 * Math.PI * Math.random();
-         const spawnPositionX = transformComponent.position.x + RockSpikeProjectile.SIZES[rockSpikeComponentData.size] / 2 * Math.sin(spawnOffsetDirection);
-         const spawnPositionY = transformComponent.position.y + RockSpikeProjectile.SIZES[rockSpikeComponentData.size] / 2 * Math.cos(spawnOffsetDirection);
+         const spawnPositionX = transformComponent.position.x + RockSpikeProjectile.SIZES[rockSpikeComponent.size] / 2 * Math.sin(spawnOffsetDirection);
+         const spawnPositionY = transformComponent.position.y + RockSpikeProjectile.SIZES[rockSpikeComponent.size] / 2 * Math.cos(spawnOffsetDirection);
          
          const lifetime = randFloat(1, 1.2);
       
@@ -110,8 +112,8 @@ class RockSpikeProjectile extends Entity {
 
       for (let i = 0; i < numTexturedParticles; i++) {
          const spawnOffsetDirection = 2 * Math.PI * Math.random();
-         const spawnPositionX = transformComponent.position.x + RockSpikeProjectile.SIZES[rockSpikeComponentData.size] / 2 * Math.sin(spawnOffsetDirection);
-         const spawnPositionY = transformComponent.position.y + RockSpikeProjectile.SIZES[rockSpikeComponentData.size] / 2 * Math.cos(spawnOffsetDirection);
+         const spawnPositionX = transformComponent.position.x + RockSpikeProjectile.SIZES[rockSpikeComponent.size] / 2 * Math.sin(spawnOffsetDirection);
+         const spawnPositionY = transformComponent.position.y + RockSpikeProjectile.SIZES[rockSpikeComponent.size] / 2 * Math.cos(spawnOffsetDirection);
 
          createRockParticle(spawnPositionX, spawnPositionY, spawnOffsetDirection + randFloat(-0.5, 0.5), randFloat(80, 125), ParticleRenderLayer.low);
       }

@@ -1,7 +1,6 @@
 import { EntityType } from "webgl-test-shared/dist/entities";
 import Camera from "../Camera";
 import { halfWindowHeight, halfWindowWidth } from "../webgl";
-import { ComponentDataRecord } from "../Entity";
 import TribeMember, { addTribeMemberRenderParts } from "./TribeMember";
 import { definiteGameState, latencyGameState } from "../game-state/game-states";
 import Game from "../Game";
@@ -104,13 +103,15 @@ class Player extends TribeMember {
    /** The player entity associated with the current player. */
    public static instance: Player | null = null;
    
-   constructor(id: number, componentDataRecord: ComponentDataRecord) {
+   constructor(id: number) {
       super(id, EntityType.player);
       
-      addTribeMemberRenderParts(this, componentDataRecord);
-
       this.addClientComponent(ClientComponentType.footprint, new FootprintComponent(this, 0.2, 20, 64, 4, 64));
       this.addClientComponent(ClientComponentType.equipment, new EquipmentComponent(this));
+   }
+
+   public onLoad(): void {
+      addTribeMemberRenderParts(this);
    }
 
    public static createInstancePlayer(player: Player): void {

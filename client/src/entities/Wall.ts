@@ -1,10 +1,10 @@
 import { EntityType } from "webgl-test-shared/dist/entities";
-import { Point, angle } from "webgl-test-shared/dist/utils";
+import { angle } from "webgl-test-shared/dist/utils";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityData, HitData } from "webgl-test-shared/dist/client-server-types";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { playSound } from "../sound";
-import Entity, { ComponentDataRecord } from "../Entity";
+import Entity from "../Entity";
 import { createLightWoodSpeckParticle, createWoodShardParticle } from "../particles";
 import { WALL_TEXTURE_SOURCES } from "../entity-components/BuildingMaterialComponent";
 import Board from "../Board";
@@ -15,27 +15,28 @@ class Wall extends Entity {
 
    private damageRenderPart: TexturedRenderPart | null = null;
 
-   constructor(id: number, componentDataRecord: ComponentDataRecord) {
+   constructor(id: number) {
       super(id, EntityType.wall);
+   }
 
-      const buildingMaterialComponentData = componentDataRecord[ServerComponentType.buildingMaterial]!;
-      const healthComponentData = componentDataRecord[ServerComponentType.health]!;
+   public onLoad(): void {
+      const buildingMaterialComponent = this.getServerComponent(ServerComponentType.buildingMaterial);
+      const healthComponentData = this.getServerComponent(ServerComponentType.health);
       
       const renderPart = new TexturedRenderPart(
          this,
          0,
          0,
-         getTextureArrayIndex(WALL_TEXTURE_SOURCES[buildingMaterialComponentData.material])
+         getTextureArrayIndex(WALL_TEXTURE_SOURCES[buildingMaterialComponent.material])
       );
       renderPart.addTag("buildingMaterialComponent:material");
       this.attachRenderPart(renderPart);
 
       this.updateDamageRenderPart(healthComponentData.health, healthComponentData.maxHealth);
 
-      // @Cleanup: why <= 1?
-      const transformComponentData = componentDataRecord[ServerComponentType.transform]!;
-      if (transformComponentData.ageTicks <= 0) {
-         playSound("wooden-wall-place.mp3", 0.3, 1, Point.unpackage(transformComponentData.position));
+      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      if (transformComponent.ageTicks <= 0) {
+         playSound("wooden-wall-place.mp3", 0.3, 1, transformComponent.position);
       }
    }
 

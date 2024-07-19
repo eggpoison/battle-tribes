@@ -5,7 +5,7 @@ import { HitData, HitFlags } from "webgl-test-shared/dist/client-server-types";
 import { LeafParticleSize, createLeafParticle, createLeafSpeckParticle, createWoodSpeckParticle } from "../particles";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { AudioFilePath, playSound } from "../sound";
-import Entity, { ComponentDataRecord } from "../Entity";
+import Entity from "../Entity";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 const treeTextures: { [T in TreeSize]: string } = {
@@ -24,17 +24,19 @@ class Tree extends Entity {
    public static readonly LEAF_SPECK_COLOUR_LOW = [63/255, 204/255, 91/255] as const;
    public static readonly LEAF_SPECK_COLOUR_HIGH = [35/255, 158/255, 88/255] as const;
    
-   constructor(id: number, componentDataRecord: ComponentDataRecord) {
+   constructor(id: number) {
       super(id, EntityType.tree);
+   }
 
-      const treeComponentData = componentDataRecord[ServerComponentType.tree]!;
+   public onLoad(): void {
+      const treeComponent = this.getServerComponent(ServerComponentType.tree);
       
       this.attachRenderPart(
          new TexturedRenderPart(
             this,
             0,
             0,
-            getTextureArrayIndex(treeTextures[treeComponentData.treeSize])
+            getTextureArrayIndex(treeTextures[treeComponent.treeSize])
          )
       );
    }

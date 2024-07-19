@@ -7,13 +7,16 @@ import Board from "../Board";
 import { createDirtParticle } from "../particles";
 import { AudioFilePath, playSound } from "../sound";
 import { ParticleRenderLayer } from "../rendering/webgl/particle-rendering";
+import { CowSpecies } from "webgl-test-shared/dist/entities";
 
 class CowComponent extends ServerComponent<ServerComponentType.cow> {
+   public readonly species: CowSpecies;
    private grazeProgress: number;
 
    constructor(entity: Entity, data: CowComponentData) {
       super(entity);
 
+      this.species = data.species;
       this.grazeProgress = data.grazeProgress;
    }
 

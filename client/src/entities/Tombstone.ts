@@ -1,7 +1,7 @@
 import { createRockParticle, createRockSpeckParticle } from "../particles";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { playSound, ROCK_DESTROY_SOUNDS, ROCK_HIT_SOUNDS } from "../sound";
-import Entity, { ComponentDataRecord } from "../Entity";
+import Entity from "../Entity";
 import { ParticleRenderLayer } from "../rendering/webgl/particle-rendering";
 import { randFloat, randItem } from "webgl-test-shared/dist/utils";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
@@ -12,17 +12,19 @@ class Tombstone extends Entity {
    private static readonly HITBOX_WIDTH = 48;
    private static readonly HITBOX_HEIGHT = 88;
    
-   constructor(id: number, componentDataRecord: ComponentDataRecord) {
+   constructor(id: number) {
       super(id, EntityType.tombstone);
+   }
 
-      const tombstoneComponentData = componentDataRecord[ServerComponentType.tombstone]!;
+   public onLoad(): void {
+      const tombstoneComponent = this.getServerComponent(ServerComponentType.tombstone);
 
       this.attachRenderPart(
          new TexturedRenderPart(
             this,
             0,
             0,
-            getTextureArrayIndex(`entities/tombstone/tombstone${tombstoneComponentData.tombstoneType + 1}.png`)
+            getTextureArrayIndex(`entities/tombstone/tombstone${tombstoneComponent.tombstoneType + 1}.png`)
          )
       );
    }

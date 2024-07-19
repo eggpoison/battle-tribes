@@ -8,6 +8,7 @@ import { setGameState, setLoadingScreenInitialStatus } from "./App";
 import { definiteGameState } from "../game-state/game-states";
 import Tribe from "../Tribe";
 import { createActivatePacket } from "../client/packet-creation";
+import { processGameDataPacket } from "../client/packet-processing";
 
 // @Cleanup: This file does too much logic on its own. It should really only have UI/loading state
 
@@ -70,14 +71,16 @@ const LoadingScreen = ({ username, tribeType, initialStatus }: LoadingScreenProp
          Client.sendActivatePacket();
          
          const gameDataPacket = await Client.getNextGameDataPacket();
+         processGameDataPacket(gameDataPacket);
 
-         Game.tribe = new Tribe(gameDataPacket.playerTribeData.name, gameDataPacket.playerTribeData.id, tribeType, gameDataPacket.playerTribeData.numHuts);
+         // @Temporary
+         // Game.tribe = new Tribe(gameDataPacket.playerTribeData.name, gameDataPacket.playerTribeData.id, tribeType, gameDataPacket.playerTribeData.numHuts);
          
          // @Incomplete
          // const spawnPosition = Point.unpackage(initialGameDataPacket.spawnPosition);
          // Player.createInstancePlayer(spawnPosition, initialGameDataPacket.playerID);
          
-         Client.processGameDataPacket(gameDataPacket);
+         // Client.processGameDataPacket(gameDataPacket);
 
          Game.start();
 

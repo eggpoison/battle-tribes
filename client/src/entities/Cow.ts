@@ -5,7 +5,7 @@ import { HitData } from "webgl-test-shared/dist/client-server-types";
 import { BloodParticleSize, createBloodParticle, createBloodParticleFountain, createBloodPoolParticle } from "../particles";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { AudioFilePath, playSound } from "../sound";
-import Entity, { ComponentDataRecord } from "../Entity";
+import Entity from "../Entity";
 import { ClientComponentType } from "../entity-components/components";
 import FootprintComponent from "../entity-components/FootprintComponent";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
@@ -18,11 +18,13 @@ class Cow extends Entity {
 
    private static readonly BLOOD_FOUNTAIN_INTERVAL = 0.1;
 
-   constructor(id: number, componentDataRecord: ComponentDataRecord) {
+   constructor(id: number) {
       super(id, EntityType.cow);
+   }
 
-      const cowComponentData = componentDataRecord[ServerComponentType.cow]!;
-      const cowNum = cowComponentData.species === CowSpecies.brown ? 1 : 2;
+   public onLoad(): void {
+      const cowComponent = this.getServerComponent(ServerComponentType.cow);
+      const cowNum = cowComponent.species === CowSpecies.brown ? 1 : 2;
 
       // Body
       const bodyRenderPart = new TexturedRenderPart(

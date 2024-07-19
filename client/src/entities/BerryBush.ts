@@ -3,7 +3,7 @@ import { EntityType } from "webgl-test-shared/dist/entities";
 import { randFloat, randInt } from "webgl-test-shared/dist/utils";
 import { LeafParticleSize, createLeafParticle, createLeafSpeckParticle } from "../particles";
 import { AudioFilePath, playSound } from "../sound";
-import Entity, { ComponentDataRecord } from "../Entity";
+import Entity from "../Entity";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { BERRY_BUSH_TEXTURE_SOURCES } from "../entity-components/BerryBushComponent";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
@@ -14,16 +14,18 @@ class BerryBush extends Entity {
    private static readonly LEAF_SPECK_COLOUR_LOW = [63/255, 204/255, 91/255] as const;
    private static readonly LEAF_SPECK_COLOUR_HIGH = [35/255, 158/255, 88/255] as const;
 
-   constructor(id: number, componentDataRecord: ComponentDataRecord) {
+   constructor(id: number) {
       super(id, EntityType.berryBush);
-      
-      const berryBushComponentData = componentDataRecord[ServerComponentType.berryBush]!;
+   }
+
+   public onLoad(): void {
+      const berryBushComponent = this.getServerComponent(ServerComponentType.berryBush);
       
       const renderPart = new TexturedRenderPart(
          this,
          0,
          0,
-         getTextureArrayIndex(BERRY_BUSH_TEXTURE_SOURCES[berryBushComponentData.numBerries])
+         getTextureArrayIndex(BERRY_BUSH_TEXTURE_SOURCES[berryBushComponent.numBerries])
       );
       renderPart.addTag("berryBushComponent:renderPart");
       this.attachRenderPart(renderPart);

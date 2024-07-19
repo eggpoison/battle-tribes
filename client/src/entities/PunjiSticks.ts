@@ -1,21 +1,23 @@
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { Point, randFloat } from "webgl-test-shared/dist/utils";
 import { Settings } from "webgl-test-shared/dist/settings";
-import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { playSound } from "../sound";
 import { createFlyParticle } from "../particles";
-import Entity, { ComponentDataRecord } from "../Entity";
+import Entity from "../Entity";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
+import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 
 class PunjiSticks extends Entity {
    private ticksSinceLastFly = 0;
    private ticksSinceLastFlySound = 0;
 
-   constructor(id: number, entityType: EntityType, componentDataRecord: ComponentDataRecord) {
+   constructor(id: number, entityType: EntityType) {
       super(id, entityType);
+   }
 
-      const isAttachedToWall = entityType === EntityType.wallPunjiSticks;
+   public onLoad(): void {
+      const isAttachedToWall = this.type === EntityType.wallPunjiSticks;
       let textureArrayIndex: number;
       if (isAttachedToWall) {
          textureArrayIndex = getTextureArrayIndex("entities/wall-punji-sticks/wall-punji-sticks.png");
@@ -31,9 +33,9 @@ class PunjiSticks extends Entity {
       )
       this.attachRenderPart(renderPart);
 
-      const transformComponentData = componentDataRecord[ServerComponentType.transform]!;
-      if (transformComponentData.ageTicks <= 0) {
-         playSound("spike-place.mp3", 0.5, 1, Point.unpackage(transformComponentData.position));
+      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      if (transformComponent.ageTicks <= 0) {
+         playSound("spike-place.mp3", 0.5, 1, transformComponent.position);
       }
    }
 

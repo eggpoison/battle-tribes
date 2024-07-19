@@ -124,7 +124,6 @@ export enum GameDataPacketOptions {
 /** Data about the game state sent to the client each tick */
 export interface GameDataPacket {
    readonly simulationIsPaused: boolean;
-   readonly entityDataArray: Array<EntityData>;
    readonly tileUpdates: ReadonlyArray<ServerTileUpdateData>;
    /** All hits taken by visible entities server-side */
    readonly visibleHits: ReadonlyArray<HitData>;

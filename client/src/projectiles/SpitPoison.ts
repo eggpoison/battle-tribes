@@ -1,4 +1,4 @@
-import Entity, { ComponentDataRecord } from "../Entity";
+import Entity from "../Entity";
 import Board from "../Board";
 import { ParticleRenderLayer, addTexturedParticleToBufferContainer } from "../rendering/webgl/particle-rendering";
 import Particle from "../Particle";
@@ -43,14 +43,17 @@ const createParticle = (spawnPositionX: number, spawnPositionY: number): void =>
 class SpitPoison extends Entity {
    private static readonly MAX_RANGE = 55;
 
-   private readonly trackSource: AudioBufferSourceNode;
-   private readonly sound: Sound;
+   private trackSource!: AudioBufferSourceNode;
+   private sound!: Sound;
    
-   constructor(id: number, componentDataRecord: ComponentDataRecord) {
+   constructor(id: number) {
       super(id, EntityType.spitPoison);
+   }
 
-      const transformComponentData = componentDataRecord[ServerComponentType.transform]!;
-      const audioInfo = playSound("acid-burn.mp3", 0.25, 1, Point.unpackage(transformComponentData.position));
+   public onLoad(): void {
+      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+
+      const audioInfo = playSound("acid-burn.mp3", 0.25, 1, transformComponent.position);
       this.trackSource = audioInfo.trackSource;
       this.sound = audioInfo.sound;
 

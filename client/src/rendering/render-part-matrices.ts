@@ -5,6 +5,7 @@ import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { RenderPart, renderPartIsTextured } from "../render-parts/render-parts";
 import Board from "../Board";
+import { calculateRenderPartDepth } from "./webgl/entity-rendering";
 
 let dirtyEntities = new Array<Entity>();
 
@@ -72,15 +73,24 @@ const calculateRenderPartMatrix = (renderPart: RenderPart): Matrix3x3 => {
 }
 
 export function updateRenderPartMatrices(frameProgress: number): void {
-   // for (let i = 0; i < Board.sortedEntities.length; i++) {
-   //    const entity = Board.sortedEntities[i];
+   // @Incomplete: investigate
+   // depthData.set
+
    for (let i = 0; i < dirtyEntities.length; i++) {
       const entity = dirtyEntities[i];
+
+      const numRenderParts = entity.allRenderParts.length;
+
+      const depthData = new Float32Array(numRenderParts);
+      const textureArrayIndexData = new Float32Array(numRenderParts);
+      const tintData = new Float32Array(3 * numRenderParts);
+      const opacityData = new Float32Array(numRenderParts);
+      const modelMatrixData = new Float32Array(9 * numRenderParts);
       
       const entityModelMatrix = calculateEntityModelMatrix(entity, frameProgress);
       entity.modelMatrix = entityModelMatrix;
 
-      for (let j = 0; j < entity.renderPartsHierarchicalArray.length; j++) {
+      for (let j = 0; j < numRenderParts; j++) {
          const renderPart = entity.renderPartsHierarchicalArray[j];
 
          const modelMatrix = calculateRenderPartMatrix(renderPart);
@@ -92,7 +102,46 @@ export function updateRenderPartMatrices(frameProgress: number): void {
             // Base the matrix on the entity's model matrix without rotation
             renderPart.modelMatrix = matrixMultiply(entityModelMatrix, modelMatrix);
          }
+   
+         const depth = calculateRenderPartDepth(renderPart, entity);
+
+         let tintR = entity.tintR + renderPart.tintR;
+         let tintG = entity.tintG + renderPart.tintG;
+         let tintB = entity.tintB + renderPart.tintB;
+         if (!renderPartIsTextured(renderPart)) {
+            tintR = renderPart.colour.r;
+            tintG = renderPart.colour.g;
+            tintB = renderPart.colour.b;
+         }
+
+         const textureArrayIndex = renderPartIsTextured(renderPart) ? renderPart.textureArrayIndex : -1;
+
+         depthData[j] = depth;
+
+         textureArrayIndexData[j] = textureArrayIndex;
+   
+         tintData[j * 3] = tintR;
+         tintData[j * 3 + 1] = tintG;
+         tintData[j * 3 + 2] = tintB;
+         
+         opacityData[j] = renderPart.opacity;
+   
+         modelMatrixData[j * 9] = renderPart.modelMatrix[0];
+         modelMatrixData[j * 9 + 1] = renderPart.modelMatrix[1];
+         modelMatrixData[j * 9 + 2] = renderPart.modelMatrix[2];
+         modelMatrixData[j * 9 + 3] = renderPart.modelMatrix[3];
+         modelMatrixData[j * 9 + 4] = renderPart.modelMatrix[4];
+         modelMatrixData[j * 9 + 5] = renderPart.modelMatrix[5];
+         modelMatrixData[j * 9 + 6] = renderPart.modelMatrix[6];
+         modelMatrixData[j * 9 + 7] = renderPart.modelMatrix[7];
+         modelMatrixData[j * 9 + 8] = renderPart.modelMatrix[8];
       }
+
+      entity.depthData = depthData;
+      entity.textureArrayIndexData = textureArrayIndexData;
+      entity.tintData = tintData;
+      entity.opacityData = opacityData;
+      entity.modelMatrixData = modelMatrixData;
    }
 
    // Reset dirty entities

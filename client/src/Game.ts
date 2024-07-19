@@ -62,7 +62,8 @@ import { updateRenderPartMatrices } from "./rendering/render-part-matrices";
 import { EntitySummonPacket } from "webgl-test-shared/dist/dev-packets";
 import { Mutable } from "webgl-test-shared/dist/utils";
 import { renderRenderables } from "./rendering/render-loop";
-import { InitialGameDataPacket } from "./client/packet-processing";
+import { InitialGameDataPacket, processGameDataPacket } from "./client/packet-processing";
+import { PacketReader } from "webgl-test-shared/dist/packets";
 
 export const enum GameInteractState {
    none,
@@ -109,7 +110,7 @@ abstract class Game {
 
    private static numSkippablePackets = 0;
    
-   public static queuedPackets = new Array<GameDataPacket>();
+   public static queuedPackets = new Array<PacketReader>();
    
    public static isRunning = false;
    private static isPaused = false;
@@ -299,11 +300,11 @@ abstract class Game {
                if (this.numSkippablePackets === 0 && this.queuedPackets.length >= 2) {
                   // Unload all the packets so that things like hits taken aren't skipped
                   for (let i = 0; i < this.queuedPackets.length; i++) {
-                     Client.processGameDataPacket(this.queuedPackets[i]);
+                     processGameDataPacket(this.queuedPackets[i]);
                   }
                   this.queuedPackets.splice(0, this.queuedPackets.length);
                } else {
-                  Client.processGameDataPacket(this.queuedPackets[0]);
+                  processGameDataPacket(this.queuedPackets[0]);
                   this.queuedPackets.splice(0, 1);
                   this.numSkippablePackets--;
                   

@@ -1,7 +1,7 @@
 import { createRockParticle, createRockSpeckParticle } from "../particles";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { ROCK_DESTROY_SOUNDS, ROCK_HIT_SOUNDS, playSound } from "../sound";
-import Entity, { ComponentDataRecord } from "../Entity";
+import Entity from "../Entity";
 import { ParticleRenderLayer } from "../rendering/webgl/particle-rendering";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityType } from "webgl-test-shared/dist/entities";
@@ -16,17 +16,19 @@ class Boulder extends Entity {
       "entities/boulder/boulder2.png"
    ];
 
-   constructor(id: number, componentDataRecord: ComponentDataRecord) {
+   constructor(id: number) {
       super(id, EntityType.boulder);
+   }
 
-      const boulderComponentData = componentDataRecord[ServerComponentType.boulder]!;
+   public onLoad(): void {
+      const boulderComponent = this.getServerComponent(ServerComponentType.boulder);
 
       this.attachRenderPart(
          new TexturedRenderPart(
             this,
             0,
             0,
-            getTextureArrayIndex(Boulder.TEXTURE_SOURCES[boulderComponentData.boulderType])
+            getTextureArrayIndex(Boulder.TEXTURE_SOURCES[boulderComponent.boulderType])
          )
       );
    }

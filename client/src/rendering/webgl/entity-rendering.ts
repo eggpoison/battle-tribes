@@ -201,6 +201,12 @@ export function renderEntities(entities: ReadonlyArray<Entity>): void {
       numRenderParts += entity.allRenderParts.length;
    }
    
+   let currentDepthDataOffset = 0;
+   let currentTextureArrayIndexDataOffset = 0;
+   let currentTintDataOffset = 0;
+   let currentOpacityDataOffset = 0;
+   let currentModelMatrixDataOffset = 0;
+
    const depthData = new Float32Array(numRenderParts);
    const textureArrayIndexData = new Float32Array(numRenderParts);
    const tintData = new Float32Array(3 * numRenderParts);
@@ -211,43 +217,57 @@ export function renderEntities(entities: ReadonlyArray<Entity>): void {
    for (let i = 0; i < entities.length; i++) {
       const entity = entities[i];
 
-      for (let j = 0; j < entity.allRenderParts.length; j++) {
-         const renderPart = entity.allRenderParts[j];
-         const depth = calculateRenderPartDepth(renderPart, entity);
-   
-         const textureArrayIndex = renderPartIsTextured(renderPart) ? renderPart.textureArrayIndex : -1;
-   
-         let tintR = entity.tintR + renderPart.tintR;
-         let tintG = entity.tintG + renderPart.tintG;
-         let tintB = entity.tintB + renderPart.tintB;
-         if (!renderPartIsTextured(renderPart)) {
-            tintR = renderPart.colour.r;
-            tintG = renderPart.colour.g;
-            tintB = renderPart.colour.b;
-         }
-   
-         depthData[idx] = depth;
-   
-         textureArrayIndexData[idx] = textureArrayIndex;
-   
-         tintData[idx * 3] = tintR;
-         tintData[idx * 3 + 1] = tintG;
-         tintData[idx * 3 + 2] = tintB;
-   
-         opacityData[idx] = renderPart.opacity;
-   
-         modelMatrixData[idx * 9] = renderPart.modelMatrix[0];
-         modelMatrixData[idx * 9 + 1] = renderPart.modelMatrix[1];
-         modelMatrixData[idx * 9 + 2] = renderPart.modelMatrix[2];
-         modelMatrixData[idx * 9 + 3] = renderPart.modelMatrix[3];
-         modelMatrixData[idx * 9 + 4] = renderPart.modelMatrix[4];
-         modelMatrixData[idx * 9 + 5] = renderPart.modelMatrix[5];
-         modelMatrixData[idx * 9 + 6] = renderPart.modelMatrix[6];
-         modelMatrixData[idx * 9 + 7] = renderPart.modelMatrix[7];
-         modelMatrixData[idx * 9 + 8] = renderPart.modelMatrix[8];
+      depthData.set(entity.depthData, currentDepthDataOffset);
+      currentDepthDataOffset += entity.depthData.length;
 
-         idx++;
-      }
+      textureArrayIndexData.set(entity.textureArrayIndexData, currentTextureArrayIndexDataOffset);
+      currentTextureArrayIndexDataOffset += entity.textureArrayIndexData.length;
+
+      tintData.set(entity.tintData, currentTintDataOffset);
+      currentTintDataOffset += entity.tintData.length;
+
+      opacityData.set(entity.opacityData, currentOpacityDataOffset);
+      currentOpacityDataOffset += entity.opacityData.length;
+
+      modelMatrixData.set(entity.modelMatrixData, currentModelMatrixDataOffset);
+      currentModelMatrixDataOffset += entity.modelMatrixData.length;
+      // for (let j = 0; j < entity.allRenderParts.length; j++) {
+      //    const renderPart = entity.allRenderParts[j];
+      //    const depth = calculateRenderPartDepth(renderPart, entity);
+   
+      //    const textureArrayIndex = renderPartIsTextured(renderPart) ? renderPart.textureArrayIndex : -1;
+   
+      //    let tintR = entity.tintR + renderPart.tintR;
+      //    let tintG = entity.tintG + renderPart.tintG;
+      //    let tintB = entity.tintB + renderPart.tintB;
+      //    if (!renderPartIsTextured(renderPart)) {
+      //       tintR = renderPart.colour.r;
+      //       tintG = renderPart.colour.g;
+      //       tintB = renderPart.colour.b;
+      //    }
+   
+      //    depthData[idx] = depth;
+   
+      //    textureArrayIndexData[idx] = textureArrayIndex;
+   
+      //    tintData[idx * 3] = tintR;
+      //    tintData[idx * 3 + 1] = tintG;
+      //    tintData[idx * 3 + 2] = tintB;
+   
+      //    opacityData[idx] = renderPart.opacity;
+   
+      //    modelMatrixData[idx * 9] = renderPart.modelMatrix[0];
+      //    modelMatrixData[idx * 9 + 1] = renderPart.modelMatrix[1];
+      //    modelMatrixData[idx * 9 + 2] = renderPart.modelMatrix[2];
+      //    modelMatrixData[idx * 9 + 3] = renderPart.modelMatrix[3];
+      //    modelMatrixData[idx * 9 + 4] = renderPart.modelMatrix[4];
+      //    modelMatrixData[idx * 9 + 5] = renderPart.modelMatrix[5];
+      //    modelMatrixData[idx * 9 + 6] = renderPart.modelMatrix[6];
+      //    modelMatrixData[idx * 9 + 7] = renderPart.modelMatrix[7];
+      //    modelMatrixData[idx * 9 + 8] = renderPart.modelMatrix[8];
+
+      //    idx++;
+      // }
    }
 
    const textureAtlas = getEntityTextureAtlas();

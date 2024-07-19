@@ -1,9 +1,9 @@
-import { Point, randFloat } from "webgl-test-shared/dist/utils";
+import { randFloat } from "webgl-test-shared/dist/utils";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import Board from "../Board";
 import { createEmberParticle, createSmokeParticle } from "../particles";
-import Entity, { ComponentDataRecord } from "../Entity";
+import Entity from "../Entity";
 import { playSound } from "../sound";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
@@ -11,7 +11,7 @@ import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 class Campfire extends Entity {
    public static readonly SIZE = 104;
 
-   constructor(id: number, componentDataRecord: ComponentDataRecord) {
+   constructor(id: number) {
       super(id, EntityType.campfire);
 
       this.attachRenderPart(
@@ -22,10 +22,12 @@ class Campfire extends Entity {
             getTextureArrayIndex("entities/campfire/campfire.png")
          )
       );
+   }
 
-      const transformComponentData = componentDataRecord[ServerComponentType.transform]!;
-      if (transformComponentData.ageTicks <= 0) {
-         playSound("wooden-wall-place.mp3", 0.3, 1, Point.unpackage(transformComponentData.position));
+   public onLoad(): void {
+      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      if (transformComponent.ageTicks <= 0) {
+         playSound("wooden-wall-place.mp3", 0.3, 1, transformComponent.position);
       }
    }
 

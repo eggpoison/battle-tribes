@@ -5,7 +5,7 @@ import { EntityType } from "webgl-test-shared/dist/entities";
 import { EntityData, HitData } from "webgl-test-shared/dist/client-server-types";
 import { angle, lerp, randFloat, randInt, randItem } from "webgl-test-shared/dist/utils";
 import { TileType } from "webgl-test-shared/dist/tiles";
-import Entity, { ComponentDataRecord } from "../Entity";
+import Entity from "../Entity";
 import { BloodParticleSize, LeafParticleSize, createBloodParticle, createBloodParticleFountain, createBloodPoolParticle, createLeafParticle } from "../particles";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { AudioFilePath, playSound } from "../sound";
@@ -97,24 +97,15 @@ const getBodyTextureSource = (entity: Entity, tribeType: TribeType): string => {
 }
 
 // @Cleanup: sucks
-export function addTribeMemberRenderParts(tribesman: Entity, componentDataRecord: ComponentDataRecord): void {
+export function addTribeMemberRenderParts(tribesman: Entity): void {
    let warPaintType: number | null;
    let tribeType: TribeType;
    
-   // @Hack
-   if (Object.keys(componentDataRecord).length === 0) {
-      const tribeComponent = tribesman.getServerComponent(ServerComponentType.tribe);
-      const tribeMemberComponent = tribesman.getServerComponent(ServerComponentType.tribeMember);
+   const tribeComponentData = tribesman.getServerComponent(ServerComponentType.tribe);
+   const tribeMemberComponentData = tribesman.getServerComponent(ServerComponentType.tribeMember);
 
-      tribeType = tribeComponent.tribeType;
-      warPaintType = tribeMemberComponent.warPaintType;
-   } else {
-      const tribeComponentData = componentDataRecord[ServerComponentType.tribe]!;
-      const tribeMemberComponentData = componentDataRecord[ServerComponentType.tribeMember]!;
-   
-      tribeType = getTribeType(tribeComponentData.tribeID);
-      warPaintType = tribeMemberComponentData.warPaintType;
-   }
+   tribeType = getTribeType(tribeComponentData.tribeID);
+   warPaintType = tribeMemberComponentData.warPaintType;
 
    // @Temporary
    // const radius = tribesman.type === EntityType.player || tribesman.type === EntityType.tribeWarrior ? 32 : 28;

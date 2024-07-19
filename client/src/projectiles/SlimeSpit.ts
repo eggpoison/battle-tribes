@@ -1,8 +1,8 @@
-import { lerp, Point, randFloat } from "webgl-test-shared/dist/utils";
+import { lerp, randFloat } from "webgl-test-shared/dist/utils";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
-import Entity, { ComponentDataRecord } from "../Entity";
+import Entity from "../Entity";
 import Board from "../Board";
 import { ParticleRenderLayer, addMonocolourParticleToBufferContainer } from "../rendering/webgl/particle-rendering";
 import Particle from "../Particle";
@@ -16,7 +16,7 @@ const POISON_COLOUR_HIGH = [77/255, 173/255, 38/255];
 
 class SlimeSpit extends Entity {
    private readonly renderParts: ReadonlyArray<RenderPart>;
-   constructor(id: number, componentDataRecord: ComponentDataRecord) {
+   constructor(id: number) {
       super(id, EntityType.slimeSpit);
 
       const renderParts = new Array<RenderPart>();
@@ -44,10 +44,12 @@ class SlimeSpit extends Entity {
       renderParts.push(renderPart2);
 
       this.renderParts = renderParts;
+   }
 
-      const transformComponentData = componentDataRecord[ServerComponentType.transform]!;
-      if (transformComponentData.ageTicks <= 0) {
-         playSound("slime-spit.mp3", 0.5, 1, Point.unpackage(transformComponentData.position));
+   public onLoad(): void {
+      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      if (transformComponent.ageTicks <= 0) {
+         playSound("slime-spit.mp3", 0.5, 1, transformComponent.position);
       }
    }
 

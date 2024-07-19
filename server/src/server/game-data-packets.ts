@@ -163,6 +163,24 @@ export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend:
    let lengthBytes = Float32Array.BYTES_PER_ELEMENT;
    // Is simulating
    lengthBytes += Float32Array.BYTES_PER_ELEMENT;
+
+   // Player tribe data
+   lengthBytes += 100 + 5 * Float32Array.BYTES_PER_ELEMENT;
+   lengthBytes += Float32Array.BYTES_PER_ELEMENT + 2 * Float32Array.BYTES_PER_ELEMENT * area.length;
+   lengthBytes += Float32Array.BYTES_PER_ELEMENT;
+   lengthBytes += Float32Array.BYTES_PER_ELEMENT + Float32Array.BYTES_PER_ELEMENT * playerClient.tribe.unlockedTechs.length;
+   // Tech tree unlock progress
+   lengthBytes += Float32Array.BYTES_PER_ELEMENT;
+   for (const [, unlockProgress] of unlockProgressEntries) {
+      lengthBytes += 3 * Float32Array.BYTES_PER_ELEMENT;
+      
+      const numItemRequirements = Object.keys(unlockProgress.itemProgress).length;
+      lengthBytes += 2 * Float32Array.BYTES_PER_ELEMENT * numItemRequirements;
+   }
+
+   // Enemy tribes data
+   lengthBytes += Float32Array.BYTES_PER_ELEMENT + (100 + 2 * Float32Array.BYTES_PER_ELEMENT) * numEnemyTribes;
+
    // Entities
    lengthBytes += Float32Array.BYTES_PER_ELEMENT;
    for (const entity of entitiesToSend) {
@@ -198,23 +216,6 @@ export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend:
    const debugDataLength = debugData !== null ? getEntityDebugDataLength(debugData) : 0;
    lengthBytes += debugDataLength;
 
-   // Player tribe data
-   lengthBytes += 100 + 5 * Float32Array.BYTES_PER_ELEMENT;
-   lengthBytes += Float32Array.BYTES_PER_ELEMENT + 2 * Float32Array.BYTES_PER_ELEMENT * area.length;
-   lengthBytes += Float32Array.BYTES_PER_ELEMENT;
-   lengthBytes += Float32Array.BYTES_PER_ELEMENT + Float32Array.BYTES_PER_ELEMENT * playerClient.tribe.unlockedTechs.length;
-   // Tech tree unlock progress
-   lengthBytes += Float32Array.BYTES_PER_ELEMENT;
-   for (const [, unlockProgress] of unlockProgressEntries) {
-      lengthBytes += 3 * Float32Array.BYTES_PER_ELEMENT;
-      
-      const numItemRequirements = Object.keys(unlockProgress.itemProgress).length;
-      lengthBytes += 2 * Float32Array.BYTES_PER_ELEMENT * numItemRequirements;
-   }
-
-   // Enemy tribes data
-   lengthBytes += Float32Array.BYTES_PER_ELEMENT + (100 + 2 * Float32Array.BYTES_PER_ELEMENT) * numEnemyTribes;
-
    lengthBytes += 2 * Float32Array.BYTES_PER_ELEMENT;
    lengthBytes += getCrossbowLoadProgressRecordLength(hotbarUseInfo);
 
@@ -232,6 +233,59 @@ export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend:
    // Whether or not the simulation is paused
    packet.addBoolean(!SERVER.isSimulating);
    packet.padOffset(3);
+
+   // 
+   // Player tribe data
+   // 
+   // @Cleanup: move into a separate function
+
+   packet.addString(playerClient.tribe.name, 100);
+   packet.addNumber(playerClient.tribe.id);
+   packet.addNumber(playerClient.tribe.tribeType);
+   packet.addBoolean(playerClient.tribe.totem !== null);
+   packet.padOffset(3);
+   packet.addNumber(playerClient.tribe.getNumHuts());
+   packet.addNumber(playerClient.tribe.tribesmanCap);
+
+   packet.addNumber(area.length);
+   for (const tile of area) {
+      packet.addNumber(tile.x);
+      packet.addNumber(tile.y);
+   }
+
+   packet.addNumber(playerClient.tribe.selectedTechID !== null ? playerClient.tribe.selectedTechID : -1),
+
+   packet.addNumber(playerClient.tribe.unlockedTechs.length);
+   for (const techID of playerClient.tribe.unlockedTechs) {
+      packet.addNumber(techID);
+   }
+
+   // Tech tree unlock progress
+   packet.addNumber(unlockProgressEntries.length);
+   for (const [techID, unlockProgress] of unlockProgressEntries) {
+      packet.addNumber(techID);
+
+      const itemRequirementEntries = Object.entries(unlockProgress.itemProgress).map(([a, b]) => [Number(a), b]) as Array<[ItemType, number]>;
+      packet.addNumber(itemRequirementEntries.length);
+      for (const [itemType, amount] of itemRequirementEntries) {
+         packet.addNumber(itemType);
+         packet.addNumber(amount);
+      }
+      
+      packet.addNumber(unlockProgress.studyProgress);
+   }
+
+   // Enemy tribes data
+   packet.addNumber(numEnemyTribes);
+   for (const tribe of Board.tribes) {
+      if (tribe.id === playerClient.tribe.id) {
+         continue;
+      }
+      
+      packet.addString(tribe.name, 100);
+      packet.addNumber(tribe.id);
+      packet.addNumber(tribe.tribeType);
+   }
 
    // Add entities
    packet.addNumber(entitiesToSend.length);
@@ -325,59 +379,6 @@ export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend:
    } else {
       packet.addBoolean(false);
       packet.padOffset(3);
-   }
-
-   // 
-   // Player tribe data
-   // 
-   // @Cleanup: move into a separate function
-
-   packet.addString(playerClient.tribe.name, 100);
-   packet.addNumber(playerClient.tribe.id);
-   packet.addNumber(playerClient.tribe.tribeType);
-   packet.addBoolean(playerClient.tribe.totem !== null);
-   packet.padOffset(3);
-   packet.addNumber(playerClient.tribe.getNumHuts());
-   packet.addNumber(playerClient.tribe.tribesmanCap);
-
-   packet.addNumber(area.length);
-   for (const tile of area) {
-      packet.addNumber(tile.x);
-      packet.addNumber(tile.y);
-   }
-
-   packet.addNumber(playerClient.tribe.selectedTechID !== null ? playerClient.tribe.selectedTechID : -1),
-
-   packet.addNumber(playerClient.tribe.unlockedTechs.length);
-   for (const techID of playerClient.tribe.unlockedTechs) {
-      packet.addNumber(techID);
-   }
-
-   // Tech tree unlock progress
-   packet.addNumber(unlockProgressEntries.length);
-   for (const [techID, unlockProgress] of unlockProgressEntries) {
-      packet.addNumber(techID);
-
-      const itemRequirementEntries = Object.entries(unlockProgress.itemProgress).map(([a, b]) => [Number(a), b]) as Array<[ItemType, number]>;
-      packet.addNumber(itemRequirementEntries.length);
-      for (const [itemType, amount] of itemRequirementEntries) {
-         packet.addNumber(itemType);
-         packet.addNumber(amount);
-      }
-      
-      packet.addNumber(unlockProgress.studyProgress);
-   }
-
-   // Enemy tribes data
-   packet.addNumber(numEnemyTribes);
-   for (const tribe of Board.tribes) {
-      if (tribe.id === playerClient.tribe.id) {
-         continue;
-      }
-      
-      packet.addString(tribe.name, 100);
-      packet.addNumber(tribe.id);
-      packet.addNumber(tribe.tribeType);
    }
 
    // @Incomplete

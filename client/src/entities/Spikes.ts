@@ -2,23 +2,25 @@ import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { playSound } from "../sound";
-import Entity, { ComponentDataRecord } from "../Entity";
+import Entity from "../Entity";
 import { FLOOR_SPIKE_TEXTURE_SOURCES, WALL_SPIKE_TEXTURE_SOURCES } from "../entity-components/BuildingMaterialComponent";
-import { Point } from "webgl-test-shared/dist/utils";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
+// @Cleanup: split into floor spikes and wall spikes
 class Spikes extends Entity {
-   constructor(id: number, entityType: EntityType, componentDataRecord: ComponentDataRecord) {
+   constructor(id: number, entityType: EntityType) {
       super(id, entityType);
+   }
 
-      const materialComponentData = componentDataRecord[ServerComponentType.buildingMaterial]!;
+   public onLoad(): void {
+      const materialComponent = this.getServerComponent(ServerComponentType.buildingMaterial);
 
-      const isAttachedToWall = entityType === EntityType.wallSpikes;
+      const isAttachedToWall = this.type === EntityType.wallSpikes;
       let textureArrayIndex: number;
       if (isAttachedToWall) {
-         textureArrayIndex = getTextureArrayIndex(WALL_SPIKE_TEXTURE_SOURCES[materialComponentData.material]);
+         textureArrayIndex = getTextureArrayIndex(WALL_SPIKE_TEXTURE_SOURCES[materialComponent.material]);
       } else {
-         textureArrayIndex = getTextureArrayIndex(FLOOR_SPIKE_TEXTURE_SOURCES[materialComponentData.material]);
+         textureArrayIndex = getTextureArrayIndex(FLOOR_SPIKE_TEXTURE_SOURCES[materialComponent.material]);
       }
 
       const mainRenderPart = new TexturedRenderPart(
@@ -30,9 +32,9 @@ class Spikes extends Entity {
       mainRenderPart.addTag("buildingMaterialComponent:material");
       this.attachRenderPart(mainRenderPart);
       
-      const transformComponentData = componentDataRecord[ServerComponentType.transform]!;
-      if (transformComponentData.ageTicks <= 0) {
-         playSound("spike-place.mp3", 0.5, 1, Point.unpackage(transformComponentData.position));
+      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      if (transformComponent.ageTicks <= 0) {
+         playSound("spike-place.mp3", 0.5, 1, transformComponent.position);
       }
    }
 

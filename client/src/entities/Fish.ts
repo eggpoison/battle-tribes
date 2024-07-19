@@ -7,7 +7,7 @@ import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import Board from "../Board";
 import { BloodParticleSize, createBloodParticle, createBloodParticleFountain, createWaterSplashParticle } from "../particles";
 import { AudioFilePath, playSound } from "../sound";
-import Entity, { ComponentDataRecord } from "../Entity";
+import Entity from "../Entity";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 const TEXTURE_SOURCES: Record<FishColour, string> = {
@@ -18,17 +18,19 @@ const TEXTURE_SOURCES: Record<FishColour, string> = {
 };
 
 class Fish extends Entity {
-   constructor(id: number, componentDataRecord: ComponentDataRecord) {
+   constructor(id: number) {
       super(id, EntityType.fish);
+   }
 
-      const fishComponentData = componentDataRecord[ServerComponentType.fish]!;
+   public onLoad(): void {
+      const fishComponent = this.getServerComponent(ServerComponentType.fish);
 
       this.attachRenderPart(
          new TexturedRenderPart(
             this,
             0,
             0,
-            getTextureArrayIndex(TEXTURE_SOURCES[fishComponentData.colour])
+            getTextureArrayIndex(TEXTURE_SOURCES[fishComponent.colour])
          )
       );
    }

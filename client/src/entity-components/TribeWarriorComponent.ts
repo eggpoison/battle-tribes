@@ -1,10 +1,14 @@
-import { ServerComponentType, TribeWarriorComponentData } from "webgl-test-shared/dist/components";
+import { ScarInfo, ServerComponentType, TribeWarriorComponentData } from "webgl-test-shared/dist/components";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 
 class TribeWarriorComponent extends ServerComponent<ServerComponentType.tribeWarrior> {
-   constructor(entity: Entity, _data: TribeWarriorComponentData) {
+   public readonly scars: ReadonlyArray<ScarInfo>;
+   
+   constructor(entity: Entity, data: TribeWarriorComponentData) {
       super(entity);
+
+      this.scars = data.scars;
    }
    
    public updateFromData(_data: TribeWarriorComponentData): void {}

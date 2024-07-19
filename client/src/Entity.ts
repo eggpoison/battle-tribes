@@ -1,5 +1,5 @@
 import { Point, randFloat } from "webgl-test-shared/dist/utils";
-import { EntityType, EntityTypeString } from "webgl-test-shared/dist/entities";
+import { EntityID, EntityType, EntityTypeString } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { EntityData, HitData, HitFlags } from "webgl-test-shared/dist/client-server-types";
 import { ComponentData, ServerComponentType, ServerComponentTypeString } from "webgl-test-shared/dist/components";
@@ -19,10 +19,6 @@ import { registerDirtyEntity } from "./rendering/render-part-matrices";
 
 // Use prime numbers / 100 to ensure a decent distribution of different types of particles
 const HEALING_PARTICLE_AMOUNTS = [0.05, 0.37, 1.01];
-
-export type ComponentDataRecord = Partial<{
-   [T in ServerComponentType]: ComponentData<T>;
-}>;
 
 type ServerComponentsType = Partial<{
    [T in ServerComponentType]: ServerComponentClass<T>;
@@ -57,16 +53,18 @@ abstract class Entity<T extends EntityType = EntityType> extends BaseRenderObjec
 
    public readonly renderPartOverlayGroups = new Array<RenderPartOverlayGroup>();
 
-   constructor(id: number, entityType: T) {
+   public depthData!: Float32Array;
+   public textureArrayIndexData!: Float32Array;
+   public tintData!: Float32Array;
+   public opacityData!: Float32Array;
+   public modelMatrixData!: Float32Array;
+
+   constructor(id: EntityID, entityType: EntityType) {
       super();
       
-      // @Incomplete
-      // this.renderPosition.x = position.x;
-      // this.renderPosition.y = position.y;
       this.id = id;
+
       this.type = entityType;
-      
-      // @Cleanup: initialise the value in the constructor
       this.renderDepth = calculateEntityRenderDepth(entityType);
 
       // @Temporary? @Cleanup: should be done using the dirty function probs
@@ -131,7 +129,13 @@ abstract class Entity<T extends EntityType = EntityType> extends BaseRenderObjec
       removeRenderable(overlayGroup);
    }
 
+   public onLoad?(): void;
+
    public callOnLoadFunctions(): void {
+      if (typeof this.onLoad !== "undefined") {
+         this.onLoad();
+      }
+      
       // @Speed
       const serverComponents = Object.values(this.serverComponentsRecord);
       for (let i = 0; i < serverComponents.length; i++) {
@@ -151,7 +155,7 @@ abstract class Entity<T extends EntityType = EntityType> extends BaseRenderObjec
       }
    }
 
-   protected addServerComponent<T extends ServerComponentType>(componentType: T, component: ServerComponentClass<T>): void {
+   public addServerComponent<T extends ServerComponentType>(componentType: T, component: ServerComponentClass<T>): void {
       this.components.push(component);
       // @Cleanup: Remove cast
       this.serverComponentsRecord[componentType] = component as any;

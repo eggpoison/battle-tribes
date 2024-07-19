@@ -1,15 +1,14 @@
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { playBuildingHitSound, playSound } from "../sound";
-import Entity, { ComponentDataRecord } from "../Entity";
+import Entity from "../Entity";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { Point } from "webgl-test-shared/dist/utils";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 class Barrel extends Entity {
    public static readonly SIZE = 80;
 
-   constructor(id: number, componentDataRecord: ComponentDataRecord) {
+   constructor(id: number) {
       super(id, EntityType.barrel);
 
       this.attachRenderPart(
@@ -20,10 +19,12 @@ class Barrel extends Entity {
             getTextureArrayIndex("entities/barrel/barrel.png")
          )
       );
+   }
 
-      const transformComponentData = componentDataRecord[ServerComponentType.transform]!;
-      if (transformComponentData.ageTicks <= 0) {
-         playSound("barrel-place.mp3", 0.4, 1, Point.unpackage(transformComponentData.position));
+   public onLoad(): void {
+      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      if (transformComponent.ageTicks <= 0) {
+         playSound("barrel-place.mp3", 0.4, 1, transformComponent.position);
       }
    }
 

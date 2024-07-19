@@ -6,7 +6,7 @@ import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { playSound } from "../sound";
 import { BALLISTA_AMMO_BOX_OFFSET_X, BALLISTA_AMMO_BOX_OFFSET_Y, BALLISTA_GEAR_X, BALLISTA_GEAR_Y } from "../utils";
 import { createDustCloud, createLightWoodSpeckParticle, createRockParticle, createRockSpeckParticle, createSawdustCloud } from "../particles";
-import Entity, { ComponentDataRecord } from "../Entity";
+import Entity from "../Entity";
 import { ParticleRenderLayer } from "../rendering/webgl/particle-rendering";
 import { WARRIOR_HUT_SIZE } from "../entity-components/HutComponent";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
@@ -324,13 +324,15 @@ export function getCurrentBlueprintProgressTexture(blueprintType: BlueprintType,
 }
 
 class BlueprintEntity extends Entity {
-   constructor(id: number, componentDataRecord: ComponentDataRecord) {
+   constructor(id: number) {
       super(id, EntityType.blueprintEntity);
+   }
 
-      const blueprintComponentData = componentDataRecord[ServerComponentType.blueprint]!;
+   public onLoad(): void {
+      const blueprintComponent = this.getServerComponent(ServerComponentType.blueprint);
       
       // Create completed render parts
-      const progressTextureInfoArray = BLUEPRINT_PROGRESS_TEXTURE_SOURCES[blueprintComponentData.blueprintType];
+      const progressTextureInfoArray = BLUEPRINT_PROGRESS_TEXTURE_SOURCES[blueprintComponent.blueprintType];
       for (let i = 0; i < progressTextureInfoArray.length; i++) {
          const progressTextureInfo = progressTextureInfoArray[i];
 
@@ -349,9 +351,9 @@ class BlueprintEntity extends Entity {
          this.attachRenderPart(renderPart);
       }
 
-      const transformComponentData = componentDataRecord[ServerComponentType.transform]!;
-      if (transformComponentData.ageTicks <= 0) {
-         playSound("blueprint-place.mp3", 0.4, 1, Point.unpackage(transformComponentData.position));
+      const transformComponent = this.getServerComponent(ServerComponentType.transform);
+      if (transformComponent.ageTicks <= 0) {
+         playSound("blueprint-place.mp3", 0.4, 1, transformComponent.position);
       }
    }
 

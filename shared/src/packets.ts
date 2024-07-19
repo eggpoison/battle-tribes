@@ -5,6 +5,7 @@ export const enum PacketType {
    playerData,
    activate,
    deactivate,
+   syncRequest,
    syncData,
    sync
 }

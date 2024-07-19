@@ -20,6 +20,9 @@ import { ServerComponentType } from "webgl-test-shared/dist/components";
 import Client from "./client/Client";
 import { RenderPart } from "./render-parts/render-parts";
 import { InitialGameDataPacket } from "./client/packet-processing";
+import { collide } from "./collision";
+import { COLLISION_BITS } from "webgl-test-shared/dist/collision";
+import { latencyGameState } from "./game-state/game-states";
 
 export interface EntityHitboxInfo {
    readonly vertexPositions: readonly [Point, Point, Point, Point];
@@ -248,6 +251,63 @@ abstract class Board {
       removeRenderable(entity);
    
       this.numVisibleRenderParts -= entity.allRenderParts.length;
+   }
+
+   public static resolveEntityCollisions(): void {
+      const numChunks = Settings.BOARD_SIZE * Settings.BOARD_SIZE;
+      for (let i = 0; i < numChunks; i++) {
+         const chunk = this.chunks[i];
+
+         // @Speed: physics-physics comparisons happen twice
+         // For all physics entities, check for collisions with all other entities in the chunk
+         for (let j = 0; j < chunk.physicsEntities.length; j++) {
+            const entity1ID = chunk.physicsEntities[j];
+            const entity1 = this.entityRecord[entity1ID]!;
+
+            const transformComponent = entity1.getServerComponent(ServerComponentType.transform);
+            
+            for (let k = 0; k < chunk.entities.length; k++) {
+               const entity2ID = chunk.entities[k];
+               const entity2 = this.entityRecord[entity2ID]!;
+
+               // @Speed
+               if (entity1ID === entity2ID) {
+                  continue;
+               }
+
+               const otherTransformComponent = entity2.getServerComponent(ServerComponentType.transform);
+
+               for (const hitbox of transformComponent.hitboxes) {
+                  for (const otherHitbox of otherTransformComponent.hitboxes) {
+                     if (hitbox.isColliding(otherHitbox)) {
+                        if (!transformComponent.collidingEntities.includes(entity2)) {
+                           transformComponent.collidingEntities.push(entity2);
+                        }
+                        
+                        if ((otherTransformComponent.collisionMask & transformComponent.collisionBit) !== 0 && (transformComponent.collisionMask & otherTransformComponent.collisionBit) !== 0) {
+                           collide(entity1, entity2, hitbox, otherHitbox);
+                           collide(entity2, entity1, otherHitbox, hitbox);
+                        } else {
+                           // @Hack
+                           if (otherTransformComponent.collisionBit === COLLISION_BITS.plants) {
+                              latencyGameState.lastPlantCollisionTicks = Board.ticks;
+                           }
+                           break;
+                        }
+                     }
+                  }
+               }
+               // const collisionNum = entitiesAreColliding(entity1ID, entity2ID);
+               // if (collisionNum !== CollisionVars.NO_COLLISION) {
+               //    collisionPairs.push({
+               //       entity1: entity1ID,
+               //       entity2: entity2ID,
+               //       collisionNum: collisionNum
+               //    });
+               // }
+            }
+         }
+      }
    }
 
    public static getRiverFlowDirection(tileX: number, tileY: number): number {

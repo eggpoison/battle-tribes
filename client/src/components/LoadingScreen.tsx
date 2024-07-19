@@ -7,6 +7,7 @@ import Game from "../Game";
 import { setGameState, setLoadingScreenInitialStatus } from "./App";
 import { definiteGameState } from "../game-state/game-states";
 import Tribe from "../Tribe";
+import { createActivatePacket } from "../client/packet-creation";
 
 // @Cleanup: This file does too much logic on its own. It should really only have UI/loading state
 
@@ -65,6 +66,8 @@ const LoadingScreen = ({ username, tribeType, initialStatus }: LoadingScreenProp
          await Game.initialise(initialGameDataPacket);
          
          definiteGameState.playerUsername = username;
+         
+         Client.sendActivatePacket();
          
          const gameDataPacket = await Client.getNextGameDataPacket();
 

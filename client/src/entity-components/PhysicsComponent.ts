@@ -138,7 +138,7 @@ const resolveGameObjectCollisions = (physicsComponent: PhysicsComponent): void =
                }
                
                if ((entityTransformComponent.collisionMask & transformComponent.collisionBit) !== 0 && (transformComponent.collisionMask & entityTransformComponent.collisionBit) !== 0) {
-                  collide(physicsComponent.entity, hitbox, otherHitbox);
+                  collide(physicsComponent.entity, entity, hitbox, otherHitbox);
                } else {
                   // @Hack
                   if (entityTransformComponent.collisionBit === COLLISION_BITS.plants) {

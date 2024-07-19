@@ -36,12 +36,21 @@ const resolveSoftCollision = (entity: Entity, pushedHitbox: Hitbox, pushingHitbo
    physicsComponent.velocity.y += pushForce * Math.cos(pushInfo.direction);
 }
 
-export function collide(entity: Entity, pushedHitbox: Hitbox, pushingHitbox: Hitbox): void {
-   const pushInfo = getCollisionPushInfo(pushedHitbox, pushingHitbox);
-   if (pushingHitbox.collisionType === HitboxCollisionType.hard) {
-      resolveHardCollision(entity, pushInfo);
-   } else {
-      resolveSoftCollision(entity, pushedHitbox, pushingHitbox, pushInfo);
+export function collide(entity: Entity, collidingEntity: Entity, pushedHitbox: Hitbox, pushingHitbox: Hitbox): void {
+   if (entity.hasServerComponent(ServerComponentType.physics)) {
+      const pushInfo = getCollisionPushInfo(pushedHitbox, pushingHitbox);
+      if (pushingHitbox.collisionType === HitboxCollisionType.hard) {
+         resolveHardCollision(entity, pushInfo);
+      } else {
+         resolveSoftCollision(entity, pushedHitbox, pushingHitbox, pushInfo);
+      }
+   }
+
+   for (let i = 0; i < entity.components.length; i++) {
+      const component = entity.components[i];
+      if (typeof component.onCollision !== "undefined") {
+         component.onCollision(collidingEntity, pushedHitbox, pushingHitbox);
+      }
    }
 }
 

@@ -67,6 +67,7 @@ const addEntityDataToPacket = (packet: Packet, entity: EntityID, player: EntityI
    // Entity type
    packet.addNumber(Board.getEntityType(entity)!);
 
+   // @Speed
    let numComponents = 0;
    for (let i = 0; i < ComponentArrays.length; i++) {
       const componentArray = ComponentArrays[i];
@@ -80,6 +81,7 @@ const addEntityDataToPacket = (packet: Packet, entity: EntityID, player: EntityI
    for (let i = 0; i < ComponentArrays.length; i++) {
       const componentArray = ComponentArrays[i];
 
+      // @Speed
       if (componentArray.hasComponent(entity)) {
          const start = packet.currentByteOffset;
          
@@ -94,42 +96,6 @@ const addEntityDataToPacket = (packet: Packet, entity: EntityID, player: EntityI
    }
 }
 
-const entityIsHiddenFromPlayer = (entity: EntityID, playerTribe: Tribe): boolean => {
-   if (SpikesComponentArray.hasComponent(entity) && TribeComponentArray.hasComponent(entity)) {
-      const tribeComponent = TribeComponentArray.getComponent(entity);
-      const spikesComponent = SpikesComponentArray.getComponent(entity);
-      
-      if (spikesComponent.isCovered && tribeComponent.tribe !== playerTribe) {
-         return true;
-      }
-   }
-
-   return false;
-}
-
-const getPlayerVisibleEntities = (chunkBounds: VisibleChunkBounds, playerTribe: Tribe): ReadonlyArray<EntityID> => {
-   const entities = new Array<EntityID>();
-   const seenIDs = new Set<number>();
-   
-   for (let chunkX = chunkBounds[0]; chunkX <= chunkBounds[1]; chunkX++) {
-      for (let chunkY = chunkBounds[2]; chunkY <= chunkBounds[3]; chunkY++) {
-         const chunk = Board.getChunk(chunkX, chunkY);
-         for (const entity of chunk.entities) {
-            if (entityIsHiddenFromPlayer(entity, playerTribe)) {
-               continue;
-            }
-
-            if (!seenIDs.has(entity)) {
-               entities.push(entity);
-               seenIDs.add(entity);
-            }
-         }
-      }
-   }
-
-   return entities;
-}
-
 const createNewPlayerInventories = (): PlayerInventoryData => {
    return {
       hotbar: new Inventory(Settings.INITIAL_PLAYER_HOTBAR_SIZE, 1, InventoryName.hotbar),
@@ -141,67 +107,6 @@ const createNewPlayerInventories = (): PlayerInventoryData => {
       offhand: new Inventory(1, 1, InventoryName.offhand),
       gloveSlot: new Inventory(1, 1, InventoryName.gloveSlot)
    }
-}
-
-const bundlePlayerInventoryData = (player: EntityID | null): PlayerInventoryData => {
-   if (player === null) {
-      return createNewPlayerInventories();
-   }
-
-   const inventoryComponent = InventoryComponentArray.getComponent(player);
-
-   return {
-      hotbar: getInventory(inventoryComponent, InventoryName.hotbar),
-      backpackInventory: getInventory(inventoryComponent, InventoryName.backpack),
-      backpackSlot: getInventory(inventoryComponent, InventoryName.backpackSlot),
-      heldItemSlot: getInventory(inventoryComponent, InventoryName.heldItemSlot),
-      craftingOutputItemSlot: getInventory(inventoryComponent, InventoryName.craftingOutputSlot),
-      armourSlot: getInventory(inventoryComponent, InventoryName.armourSlot),
-      offhand: getInventory(inventoryComponent, InventoryName.offhand),
-      gloveSlot: getInventory(inventoryComponent, InventoryName.gloveSlot)
-   };
-}
-
-const bundlePlayerTribeData = (playerClient: PlayerClient): PlayerTribeData => {
-   return {
-      name: playerClient.tribe.name,
-      id: playerClient.tribe.id,
-      tribeType: playerClient.tribe.tribeType,
-      hasTotem: playerClient.tribe.totem !== null,
-      numHuts: playerClient.tribe.getNumHuts(),
-      tribesmanCap: playerClient.tribe.tribesmanCap,
-      area: playerClient.tribe.getArea().map(tile => [tile.x, tile.y]),
-      selectedTechID: playerClient.tribe.selectedTechID,
-      unlockedTechs: playerClient.tribe.unlockedTechs,
-      techTreeUnlockProgress: playerClient.tribe.techTreeUnlockProgress
-   };
-}
-
-const bundleEnemyTribesData = (playerClient: PlayerClient): ReadonlyArray<EnemyTribeData> => {
-   const enemyTribesData = new Array<EnemyTribeData>();
-   for (const tribe of Board.tribes) {
-      if (tribe.id === playerClient.tribe.id) {
-         continue;
-      }
-      
-      enemyTribesData.push({
-         name: tribe.name,
-         id: tribe.id,
-         tribeType: tribe.tribeType
-      });
-   }
-   return enemyTribesData;
-}
-
-const bundleHotbarCrossbowLoadProgressRecord = (player: EntityID | null): Partial<Record<number, number>> => {
-   if (player === null) {
-      return {};
-   }
-   
-   const inventoryUseComponent = InventoryUseComponentArray.getComponent(player);
-   const useInfo = inventoryUseComponent.getUseInfo(InventoryName.hotbar);
-
-   return useInfo.crossbowLoadProgressRecord;
 }
 
 const getVisibleGrassBlockers = (visibleChunkBounds: VisibleChunkBounds): ReadonlyArray<GrassBlocker> => {
@@ -225,16 +130,7 @@ const getVisibleGrassBlockers = (visibleChunkBounds: VisibleChunkBounds): Readon
    return visibleGrassBlockers;
 }
 
-export function createGameDataPacket(playerClient: PlayerClient): ArrayBuffer {
-   // @Speed @Memory
-   const extendedVisibleChunkBounds: VisibleChunkBounds = [
-      Math.max(playerClient.visibleChunkBounds[0] - 1, 0),
-      Math.min(playerClient.visibleChunkBounds[1] + 1, Settings.BOARD_SIZE - 1),
-      Math.max(playerClient.visibleChunkBounds[2] - 1, 0),
-      Math.min(playerClient.visibleChunkBounds[3] + 1, Settings.BOARD_SIZE - 1)
-   ];
-
-   const visibleEntities = getPlayerVisibleEntities(extendedVisibleChunkBounds, playerClient.tribe);
+export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend: ReadonlyArray<EntityID>): ArrayBuffer {
    const player = Board.validateEntity(playerClient.instance);
 
    const inventoryComponent = InventoryComponentArray.getComponent(player);
@@ -269,7 +165,7 @@ export function createGameDataPacket(playerClient: PlayerClient): ArrayBuffer {
    lengthBytes += Float32Array.BYTES_PER_ELEMENT;
    // Entities
    lengthBytes += Float32Array.BYTES_PER_ELEMENT;
-   for (const entity of visibleEntities) {
+   for (const entity of entitiesToSend) {
       lengthBytes += getEntityDataLength(entity, player);
    }
 
@@ -338,8 +234,8 @@ export function createGameDataPacket(playerClient: PlayerClient): ArrayBuffer {
    packet.padOffset(3);
 
    // Add entities
-   packet.addNumber(visibleEntities.length);
-   for (const entity of visibleEntities) {
+   packet.addNumber(entitiesToSend.length);
+   for (const entity of entitiesToSend) {
       addEntityDataToPacket(packet, entity, player);
    }
 

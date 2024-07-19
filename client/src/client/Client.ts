@@ -50,7 +50,7 @@ import { TribesTab_refresh } from "../components/game/dev/tabs/TribesTab";
 import { processTickEvents } from "../entity-tick-events";
 import { Packet, PacketReader, PacketType } from "webgl-test-shared/dist/packets";
 import { InitialGameDataPacket, processGameDataPacket, processInitialGameDataPacket, processSyncDataPacket } from "./packet-processing";
-import { createActivatePacket, createPlayerDataPacket } from "./packet-creation";
+import { createActivatePacket, createPlayerDataPacket, createSyncRequestPacket } from "./packet-creation";
 
 export type GameData = {
    readonly gameTicks: number;
@@ -460,14 +460,14 @@ abstract class Client {
    /**
     * Updates the client's entities to match those in the server
     */
-   private static updateEntities(entityDataArray: Array<EntityData>, entityDeathIDs: ReadonlyArray<number>): void {
-      // @Speed
-      const knownEntityIDs = new Set(Object.keys(Board.entityRecord).map(idString => Number(idString)));
+   public static updateEntities(entityDataArray: Array<EntityData>, entityDeathIDs: ReadonlyArray<number>): void {
+      // // @Speed
+      // const knownEntityIDs = new Set(Object.keys(Board.entityRecord).map(idString => Number(idString)));
       
-      // Remove the player from the list of known entities so the player isn't removed
-      if (Player.instance !== null) {
-         knownEntityIDs.delete(Player.instance.id);
-      }
+      // // Remove the player from the list of known entities so the player isn't removed
+      // if (Player.instance !== null) {
+      //    knownEntityIDs.delete(Player.instance.id);
+      // }
 
       // @Cleanup: This feels wrong to do. This hardcodes which components are updated from server data; is that correct to do?
       // Remove the player so it doesn't get updated from the server data
@@ -541,18 +541,48 @@ abstract class Client {
             this.createEntityFromData(entityData);
          }
 
-         knownEntityIDs.delete(entityData.id);
+         // knownEntityIDs.delete(entityData.id);
       }
 
-      // All known entity ids which haven't been removed are ones which are dead
-      for (const id of knownEntityIDs) {
-         const isDeath = entityDeathIDs.indexOf(id) !== -1;
-         const entity = Board.entityRecord[id]!;
-         // @Hack
-         if (entity.type === EntityType.cow)continue;
-         
-         Board.removeEntity(entity, isDeath);
+      // Remove entities which are no longer visible
+      const entitiesToRemove = new Set<Entity>();
+      const minVisibleChunkX = Camera.minVisibleChunkX - 1;
+      const maxVisibleChunkX = Camera.maxVisibleChunkX + 1;
+      const minVisibleChunkY = Camera.minVisibleChunkY - 1;
+      const maxVisibleChunkY = Camera.maxVisibleChunkY + 1;
+      for (let chunkX = 0; chunkX < Settings.BOARD_SIZE; chunkX++) {
+         for (let chunkY = 0; chunkY < Settings.BOARD_SIZE; chunkY++) {
+            // Skip visible chunks
+            if (chunkX >= minVisibleChunkX && chunkX <= maxVisibleChunkX && chunkY >= minVisibleChunkY && chunkY <= maxVisibleChunkY) {
+               continue;
+            }
+
+            const chunk = Board.getChunk(chunkX, chunkY);
+            for (let i = 0; i < chunk.entities.length; i++) {
+               const entityID = chunk.entities[i];
+               const entity = Board.entityRecord[entityID]!;
+               entitiesToRemove.add(entity);
+            }
+         }
       }
+
+      if (Player.instance !== null) {
+         entitiesToRemove.delete(Player.instance);
+      }
+
+      for (const entity of entitiesToRemove) {
+         Board.removeEntity(entity, false);
+      }
+
+      // // All known entity ids which haven't been removed are ones which are dead
+      // for (const id of knownEntityIDs) {
+      //    const isDeath = entityDeathIDs.indexOf(id) !== -1;
+      //    const entity = Board.entityRecord[id]!;
+      //    // @Hack
+      //    if (entity.type === EntityType.cow)continue;
+         
+      //    Board.removeEntity(entity, isDeath);
+      // }
    }
 
    public static updatePlayerInventory(playerInventoryData: PlayerInventoryData) {
@@ -797,8 +827,15 @@ abstract class Client {
    }
 
    public static sendActivatePacket(): void {
-      if (Game.isRunning && this.socket !== null) {
+      if (this.socket !== null) {
          const buffer = createActivatePacket();
+         this.socket.send(buffer);
+      }
+   }
+
+   public static sendSyncRequestPacket(): void {
+      if (Game.isRunning && this.socket !== null) {
+         const buffer = createSyncRequestPacket();
          this.socket.send(buffer);
       }
    }

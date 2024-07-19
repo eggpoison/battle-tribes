@@ -11,7 +11,7 @@ class PlayerClient {
 
    /** ID of the player's entity */
    public instance: EntityID;
-   public clientIsActive = true;
+   public clientIsActive = false;
 
    public visibleChunkBounds: VisibleChunkBounds;
 
@@ -29,7 +29,7 @@ class PlayerClient {
    public hasPickedUpItem = false;
    public gameDataOptions = 0;
 
-   public visibleEntities = new Array<EntityID>();
+   public visibleEntities = new Set<EntityID>();
 
    constructor(socket: WebSocket, tribe: Tribe, visibleChunkBounds: VisibleChunkBounds, instance: EntityID, username: string) {
       this.socket = socket;

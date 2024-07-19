@@ -82,3 +82,8 @@ export function createActivatePacket(): ArrayBuffer {
    const packet = new Packet(PacketType.activate, Float32Array.BYTES_PER_ELEMENT);
    return packet.buffer;
 }
+
+export function createSyncRequestPacket(): ArrayBuffer {
+   const packet = new Packet(PacketType.syncRequest, Float32Array.BYTES_PER_ELEMENT);
+   return packet.buffer;
+}

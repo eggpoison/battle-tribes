@@ -22,6 +22,9 @@ import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { createEntityFromConfig } from "../Entity";
 import { createGrassStrands } from "../world-generation/grass-generation";
 import { processPlayerDataPacket } from "./packet-processing";
+import { EntityID } from "webgl-test-shared/dist/entities";
+import { SpikesComponentArray } from "../components/SpikesComponent";
+import { TribeComponentArray } from "../components/TribeComponent";
 
 /*
 
@@ -29,6 +32,38 @@ Reference for future self:
 node --prof-process isolate-0xnnnnnnnnnnnn-v8.log > processed.txt
 
 */
+
+const entityIsHiddenFromPlayer = (entity: EntityID, playerTribe: Tribe): boolean => {
+   if (SpikesComponentArray.hasComponent(entity) && TribeComponentArray.hasComponent(entity)) {
+      const tribeComponent = TribeComponentArray.getComponent(entity);
+      const spikesComponent = SpikesComponentArray.getComponent(entity);
+      
+      if (spikesComponent.isCovered && tribeComponent.tribe !== playerTribe) {
+         return true;
+      }
+   }
+
+   return false;
+}
+
+const getPlayerVisibleEntities = (chunkBounds: VisibleChunkBounds, playerTribe: Tribe): Set<EntityID> => {
+   const entities = new Set<EntityID>();
+   
+   for (let chunkX = chunkBounds[0]; chunkX <= chunkBounds[1]; chunkX++) {
+      for (let chunkY = chunkBounds[2]; chunkY <= chunkBounds[3]; chunkY++) {
+         const chunk = Board.getChunk(chunkX, chunkY);
+         for (const entity of chunk.entities) {
+            if (entityIsHiddenFromPlayer(entity, playerTribe)) {
+               continue;
+            }
+
+            entities.add(entity);
+         }
+      }
+   }
+
+   return entities;
+}
 
 const estimateVisibleChunkBounds = (spawnPosition: Point, screenWidth: number, screenHeight: number): VisibleChunkBounds => {
    const zoom = 1;
@@ -120,6 +155,9 @@ class GameServer {
                }
                case PacketType.activate: {
                   playerClient.clientIsActive = true;
+                  break;
+               }
+               case PacketType.syncRequest: {
                   if (Board.hasEntity(playerClient.instance)) {
                      const buffer = createSyncDataPacket(playerClient);
                      socket.send(buffer);
@@ -209,6 +247,7 @@ class GameServer {
          })();
 
          // setTimeout(() => {
+         // @Cleanup: should this all be in this file?
             const playerClients = getPlayerClients();
             for (let i = 0; i < playerClients.length; i++) {
                const playerClient = playerClients[i];
@@ -216,9 +255,33 @@ class GameServer {
                   continue;
                }
 
+               // @Speed @Memory
+               const extendedVisibleChunkBounds: VisibleChunkBounds = [
+                  Math.max(playerClient.visibleChunkBounds[0] - 1, 0),
+                  Math.min(playerClient.visibleChunkBounds[1] + 1, Settings.BOARD_SIZE - 1),
+                  Math.max(playerClient.visibleChunkBounds[2] - 1, 0),
+                  Math.min(playerClient.visibleChunkBounds[3] + 1, Settings.BOARD_SIZE - 1)
+               ];
+            
+               const visibleEntities = getPlayerVisibleEntities(extendedVisibleChunkBounds, playerClient.tribe);
+               
+               const newlyVisibleEntities = new Array<EntityID>();
+               // @Speed
+               for (const visibleEntity of visibleEntities) {
+                  if (!playerClient.visibleEntities.has(visibleEntity)) {
+                     newlyVisibleEntities.push(visibleEntity);
+                  }
+               }
+
+               if (newlyVisibleEntities.indexOf(playerClient.instance) === -1) {
+                  newlyVisibleEntities.push(playerClient.instance);
+               }
+               
                // Send the game data to the player
-               const gameDataPacket = createGameDataPacket(playerClient);
+               const gameDataPacket = createGameDataPacket(playerClient, newlyVisibleEntities);
                playerClient.socket.send(gameDataPacket);
+
+               playerClient.visibleEntities = visibleEntities;
    
                // @Cleanup: should these be here?
                playerClient.visibleHits = [];

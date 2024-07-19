@@ -195,6 +195,7 @@ abstract class Game {
       hidePauseScreen();
 
       Client.sendActivatePacket();
+      Client.sendSyncRequestPacket();
    }
 
    public static getIsPaused(): boolean {
@@ -351,6 +352,8 @@ abstract class Game {
    }
 
    private static update(): void {
+      Board.resolveEntityCollisions();
+      
       updateSpamFilter();
 
       updatePlayerMovement();

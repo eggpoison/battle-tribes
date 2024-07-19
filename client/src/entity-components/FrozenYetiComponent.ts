@@ -10,6 +10,7 @@ import Particle from "../Particle";
 import { addMonocolourParticleToBufferContainer, addTexturedParticleToBufferContainer, ParticleRenderLayer } from "../rendering/webgl/particle-rendering";
 import Player from "../entities/Player";
 import { RenderPart } from "../render-parts/render-parts";
+import { PacketReader } from "webgl-test-shared/dist/packets";
 
 const HEAD_SIZE = 80;
 export const FROZEN_YETI_HEAD_DISTANCE = 60;
@@ -22,7 +23,7 @@ const ROAR_ARC = Math.PI / 6;
 const ROAR_REACH = 450;
 const SNOWBALL_THROW_OFFSET = 150;
 
-class FrozenYetiComponent extends ServerComponent<ServerComponentType.frozenYeti> {
+class FrozenYetiComponent extends ServerComponent {
    public readonly headRenderPart: RenderPart;
    /** Index 0: left paw, index 1: right paw */
    public readonly pawRenderParts: ReadonlyArray<RenderPart>;
@@ -31,18 +32,77 @@ class FrozenYetiComponent extends ServerComponent<ServerComponentType.frozenYeti
    public attackStage: number;
    public stageProgress: number;
 
-   constructor(entity: Entity, data: FrozenYetiComponentData) {
+   constructor(entity: Entity, reader: PacketReader) {
       super(entity);
 
-      this.attackType = data.attackType;
-      this.attackStage = data.attackStage;
-      this.stageProgress = data.stageProgress;
+      this.attackType = reader.readNumber();
+      this.attackStage = reader.readNumber();
+      this.stageProgress = reader.readNumber();
+      this.readRockSpikes(reader);
 
       this.headRenderPart = this.entity.getRenderPart("frozenYetiComponent:head");
       this.pawRenderParts = this.entity.getRenderParts("frozenYetiComponent:paw", 2);
 
       // Initial paw transforms
       this.setPawRotationAndOffset(this, PAW_RESTING_ANGLE, PAW_OFFSET);
+   }
+
+   private readRockSpikes(reader: PacketReader): void {
+      const numRockSpikes = reader.readNumber();
+      for (let i = 0; i < numRockSpikes; i++) {
+         const x = reader.readNumber();
+         const y = reader.readNumber();
+
+         if (Math.random() < 5 / Settings.TPS) {
+            if (Math.random() < 0.5) {
+               // @Cleanup: Move to particles file
+               
+               const spawnOffsetMagnitude = randFloat(0, 5);
+               const spawnOffsetDirection = 2 * Math.PI * Math.random();
+               const spawnPositionX = x + spawnOffsetMagnitude / 2 * Math.sin(spawnOffsetDirection);
+               const spawnPositionY = y + spawnOffsetMagnitude / 2 * Math.cos(spawnOffsetDirection);
+               
+               const lifetime = randFloat(1, 1.2);
+            
+               const velocityMagnitude = randFloat(30, 50);
+               const velocityDirection = spawnOffsetDirection + randFloat(-0.5, 0.5);
+               const velocityX = velocityMagnitude * Math.sin(velocityDirection);
+               const velocityY = velocityMagnitude * Math.cos(velocityDirection);
+               
+               const particle = new Particle(lifetime);
+               particle.getOpacity = (): number => {
+                  return 1 - particle.age / lifetime;
+               };
+            
+               const pixelSize = 4 * randInt(1, 2);
+            
+               const colour = randFloat(0.3, 0.5);
+               
+               addMonocolourParticleToBufferContainer(
+                  particle,
+                  ParticleRenderLayer.low,
+                  pixelSize, pixelSize,
+                  spawnPositionX, spawnPositionY,
+                  velocityX, velocityY,
+                  0, 0,
+                  0,
+                  2 * Math.PI * Math.random(),
+                  0,
+                  0,
+                  0,
+                  colour, colour, colour
+               );
+               Board.lowMonocolourParticles.push(particle);
+            } else {
+               const spawnOffsetMagnitude = randFloat(0, 5);
+               const spawnOffsetDirection = 2 * Math.PI * Math.random();
+               const spawnPositionX = x + spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
+               const spawnPositionY = y + spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
+   
+               createRockParticle(spawnPositionX, spawnPositionY, spawnOffsetDirection + randFloat(-0.5, 0.5), randFloat(80, 125), ParticleRenderLayer.low);
+            }
+         }
+      }
    }
 
    private setPawRotationAndOffset(frozenYetiComponent: FrozenYetiComponent, rotation: number, offsetMagnitude: number): void {
@@ -318,11 +378,23 @@ class FrozenYetiComponent extends ServerComponent<ServerComponentType.frozenYeti
       }
    }
 
-   public updateFromData(data: FrozenYetiComponentData): void {
+   public padData(reader: PacketReader): void {
+      reader.padOffset(3 * Float32Array.BYTES_PER_ELEMENT);
+      
+      const numRockSpikes = reader.readNumber();
+      reader.padOffset(2 * Float32Array.BYTES_PER_ELEMENT * numRockSpikes);
+   }
+
+   public updateFromData(reader: PacketReader): void {
+      const attackType = reader.readNumber();
+      const attackStage = reader.readNumber();
+      const stageProgress = reader.readNumber();
+      this.readRockSpikes(reader);
+
       const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
       
       // If the yeti did a bite attack, create a bite particle
-      if (this.attackType === FrozenYetiAttackType.bite && data.attackStage === 2 && this.attackStage === 1) {
+      if (this.attackType === FrozenYetiAttackType.bite && attackStage === 2 && this.attackStage === 1) {
          const spawnPositionX = transformComponent.position.x + 140 * Math.sin(transformComponent.rotation);
          const spawnPositionY = transformComponent.position.y + 140 * Math.cos(transformComponent.rotation);
          
@@ -330,7 +402,7 @@ class FrozenYetiComponent extends ServerComponent<ServerComponentType.frozenYeti
       }
       
       // If the yeti did a snow throw attack, create impact particles
-      if (this.attackType === FrozenYetiAttackType.snowThrow && data.attackStage === 2 && this.attackStage === 1) {
+      if (this.attackType === FrozenYetiAttackType.snowThrow && attackStage === 2 && this.attackStage === 1) {
          const offsetMagnitude = SNOWBALL_THROW_OFFSET + 20;
          const impactPositionX = transformComponent.position.x + offsetMagnitude * Math.sin(transformComponent.rotation);
          const impactPositionY = transformComponent.position.y + offsetMagnitude * Math.cos(transformComponent.rotation);
@@ -352,61 +424,9 @@ class FrozenYetiComponent extends ServerComponent<ServerComponentType.frozenYeti
          }
       }
 
-      this.attackType = data.attackType;
-      this.attackStage = data.attackStage;
-      this.stageProgress = data.stageProgress;
-
-      for (const positionData of data.rockSpikePositions) {
-         if (Math.random() < 5 / Settings.TPS) {
-            if (Math.random() < 0.5) {
-               // @Cleanup: Move to particles file
-               
-               const spawnOffsetMagnitude = randFloat(0, 5);
-               const spawnOffsetDirection = 2 * Math.PI * Math.random();
-               const spawnPositionX = positionData[0] + spawnOffsetMagnitude / 2 * Math.sin(spawnOffsetDirection);
-               const spawnPositionY = positionData[1] + spawnOffsetMagnitude / 2 * Math.cos(spawnOffsetDirection);
-               
-               const lifetime = randFloat(1, 1.2);
-            
-               const velocityMagnitude = randFloat(30, 50);
-               const velocityDirection = spawnOffsetDirection + randFloat(-0.5, 0.5);
-               const velocityX = velocityMagnitude * Math.sin(velocityDirection);
-               const velocityY = velocityMagnitude * Math.cos(velocityDirection);
-               
-               const particle = new Particle(lifetime);
-               particle.getOpacity = (): number => {
-                  return 1 - particle.age / lifetime;
-               };
-            
-               const pixelSize = 4 * randInt(1, 2);
-            
-               const colour = randFloat(0.3, 0.5);
-               
-               addMonocolourParticleToBufferContainer(
-                  particle,
-                  ParticleRenderLayer.low,
-                  pixelSize, pixelSize,
-                  spawnPositionX, spawnPositionY,
-                  velocityX, velocityY,
-                  0, 0,
-                  0,
-                  2 * Math.PI * Math.random(),
-                  0,
-                  0,
-                  0,
-                  colour, colour, colour
-               );
-               Board.lowMonocolourParticles.push(particle);
-            } else {
-               const spawnOffsetMagnitude = randFloat(0, 5);
-               const spawnOffsetDirection = 2 * Math.PI * Math.random();
-               const spawnPositionX = positionData[0] + spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
-               const spawnPositionY = positionData[1] + spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
-   
-               createRockParticle(spawnPositionX, spawnPositionY, spawnOffsetDirection + randFloat(-0.5, 0.5), randFloat(80, 125), ParticleRenderLayer.low);
-            }
-         }
-      }
+      this.attackType = attackType;
+      this.attackStage = attackStage;
+      this.stageProgress = stageProgress;
    }
 }
 

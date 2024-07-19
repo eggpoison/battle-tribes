@@ -8,6 +8,7 @@ import { EntityType } from "webgl-test-shared/dist/entities";
 import Board from "../Board";
 import { GameDataPacketOptions } from "webgl-test-shared/dist/client-server-types";
 import OPTIONS from "../options";
+import { windowHeight, windowWidth } from "../webgl";
 
 export function createPlayerDataPacket(): ArrayBuffer {
    let lengthBytes = 4 * Float32Array.BYTES_PER_ELEMENT;
@@ -32,11 +33,13 @@ export function createPlayerDataPacket(): ArrayBuffer {
    packet.addNumber(physicsComponent.acceleration.x);
    packet.addNumber(physicsComponent.acceleration.y);
 
-   const visibleChunkBounds = Camera.getVisibleChunkBounds();
-   packet.addNumber(visibleChunkBounds[0]);
-   packet.addNumber(visibleChunkBounds[1]);
-   packet.addNumber(visibleChunkBounds[2]);
-   packet.addNumber(visibleChunkBounds[3]);
+   packet.addNumber(windowWidth);
+   packet.addNumber(windowHeight);
+   // const visibleChunkBounds = Camera.getVisibleChunkBounds();
+   // packet.addNumber(visibleChunkBounds[0]);
+   // packet.addNumber(visibleChunkBounds[1]);
+   // packet.addNumber(visibleChunkBounds[2]);
+   // packet.addNumber(visibleChunkBounds[3]);
 
    packet.addNumber(latencyGameState.selectedHotbarItemSlot);
    packet.addNumber(latencyGameState.mainAction);

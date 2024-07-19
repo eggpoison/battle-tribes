@@ -11,6 +11,7 @@ import { playSound } from "../sound";
 import { CircularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { RenderPart } from "../render-parts/render-parts";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
+import { PacketReader } from "webgl-test-shared/dist/packets";
 
 const ANGRY_SOUND_INTERVAL_TICKS = Settings.TPS * 3;
 
@@ -76,17 +77,20 @@ const getZIndex = (size: GolemRockSize): number => {
    }
 }
 
-class GolemComponent extends ServerComponent<ServerComponentType.golem> {
+class GolemComponent extends ServerComponent {
    private rockRenderParts = new Array<RenderPart>();
    private readonly eyeRenderParts = new Array<RenderPart>();
    private readonly eyeLights = new Array<Light>();
 
    private wakeProgress: number;
    
-   constructor(entity: Entity, data: GolemComponentData) {
+   constructor(entity: Entity, reader: PacketReader) {
       super(entity);
 
-      this.wakeProgress = data.wakeProgress;
+      this.wakeProgress = reader.readNumber();
+      reader.padOffset(2 * Float32Array.BYTES_PER_ELEMENT);
+
+      // @Incomplete
    }
 
    public tick(): void {
@@ -117,15 +121,24 @@ class GolemComponent extends ServerComponent<ServerComponentType.golem> {
          }
       }
    }
+
+   public padData(reader: PacketReader): void {
+      reader.padOffset(3 * Float32Array.BYTES_PER_ELEMENT);
+   }
    
-   public updateFromData(data: GolemComponentData): void {
+   public updateFromData(reader: PacketReader): void {
+      const wakeProgress = reader.readNumber();
+      const ticksAwake = reader.readNumber();
+      const isAwake = reader.readBoolean();
+      reader.padOffset(3);
+
       const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
 
-      if (data.isAwake && data.ticksAwake % ANGRY_SOUND_INTERVAL_TICKS === 0) {
+      if (isAwake && ticksAwake % ANGRY_SOUND_INTERVAL_TICKS === 0) {
          playSound("golem-angry.mp3", 0.4, 1, transformComponent.position);
       }
       
-      this.wakeProgress = data.wakeProgress;
+      this.wakeProgress = wakeProgress;
 
       // Add new rocks
       for (let i = this.rockRenderParts.length; i < transformComponent.hitboxes.length; i++) {

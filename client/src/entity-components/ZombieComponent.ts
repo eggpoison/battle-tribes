@@ -1,17 +1,23 @@
-import { ServerComponentType, ZombieComponentData } from "webgl-test-shared/dist/components";
 import Entity from "../Entity";
 import ServerComponent from "./ServerComponent";
+import { PacketReader } from "webgl-test-shared/dist/packets";
 
-class ZombieComponent extends ServerComponent<ServerComponentType.zombie> {
+class ZombieComponent extends ServerComponent {
    public readonly zombieType: number;
    
-   constructor(entity: Entity, data: ZombieComponentData) {
+   constructor(entity: Entity, reader: PacketReader) {
       super(entity);
 
-      this.zombieType = data.zombieType;
+      this.zombieType = reader.readNumber();
    }
 
-   public updateFromData(_data: ZombieComponentData): void {}
+   public padData(reader: PacketReader): void {
+      reader.padOffset(Float32Array.BYTES_PER_ELEMENT);
+   }
+
+   public updateFromData(reader: PacketReader): void {
+      reader.padOffset(Float32Array.BYTES_PER_ELEMENT);
+   }
 }
 
 export default ZombieComponent;

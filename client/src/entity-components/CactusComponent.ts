@@ -1,10 +1,11 @@
-import { CactusBodyFlowerData, CactusFlowerSize, CactusLimbData } from "webgl-test-shared/dist/entities";
+import { CactusBodyFlowerData, CactusFlowerSize, CactusLimbData, CactusLimbFlowerData } from "webgl-test-shared/dist/entities";
 import { CactusComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { createFlowerParticle } from "../particles";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
+import { PacketReader } from "webgl-test-shared/dist/packets";
 
 export const CACTUS_RADIUS = 40;
 
@@ -16,12 +17,66 @@ const getFlowerTextureSource = (type: number, size: CactusFlowerSize): string =>
    }
 }
 
-class CactusComponent extends ServerComponent<ServerComponentType.cactus> {
+class CactusComponent extends ServerComponent {
    private readonly flowerData: ReadonlyArray<CactusBodyFlowerData>;
    private readonly limbData: ReadonlyArray<CactusLimbData>;
 
-   constructor(entity: Entity, data: CactusComponentData) {
+   constructor(entity: Entity, reader: PacketReader) {
       super(entity);
+      
+      const flowers = new Array<CactusBodyFlowerData>();
+      const numFlowers = reader.readNumber();
+      for (let i = 0; i < numFlowers; i++) {
+         const flowerType = reader.readNumber();
+         const height = reader.readNumber();
+         const rotation = reader.readNumber();
+         const size = reader.readNumber();
+         const column = reader.readNumber();
+
+         const flower: CactusBodyFlowerData = {
+            type: flowerType,
+            height: height,
+            rotation: rotation,
+            size: size,
+            column: column
+         };
+         flowers.push(flower);
+      }
+   
+      const limbs = new Array<CactusLimbData>();
+      const numLimbs = reader.readNumber();
+      for (let i = 0; i < numLimbs; i++) {
+         const limbDirection = reader.readNumber();
+         const hasFlower = reader.readBoolean();
+         reader.padOffset(3);
+
+         let flower: CactusLimbFlowerData | undefined;
+         if (hasFlower) {
+            const type = reader.readNumber();
+            const height = reader.readNumber();
+            const rotation = reader.readNumber();
+            const direction = reader.readNumber();
+            
+            flower = {
+               type: type,
+               height: height,
+               rotation: rotation,
+               direction: direction
+            };
+         }
+
+         const limbData: CactusLimbData = {
+            direction: limbDirection,
+            flower: flower
+         };
+         limbs.push(limbData);
+      }
+
+      const data: CactusComponentData = {
+         componentType: ServerComponentType.cactus,
+         flowers: flowers,
+         limbs: limbs
+      };
 
       this.flowerData = data.flowers;
       this.limbData = data.limbs;
@@ -72,7 +127,25 @@ class CactusComponent extends ServerComponent<ServerComponentType.cactus> {
       }
    }
 
-   public updateFromData(_data: CactusComponentData): void {}
+   public padData(reader: PacketReader): void {
+      const numFlowers = reader.readNumber();
+      reader.padOffset(5 * Float32Array.BYTES_PER_ELEMENT * numFlowers);
+   
+      const numLimbs = reader.readNumber();
+      for (let i = 0; i < numLimbs; i++) {
+         reader.padOffset(Float32Array.BYTES_PER_ELEMENT);
+         const hasFlower = reader.readBoolean();
+         reader.padOffset(3);
+
+         if (hasFlower) {
+            reader.padOffset(4 * Float32Array.BYTES_PER_ELEMENT);
+         }
+      }
+   }
+
+   public updateFromData(reader: PacketReader): void {
+      this.padData(reader)
+   }
 
    onDie(): void {
       const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);

@@ -1,25 +1,46 @@
-import { HealingTotemComponentData, HealingTotemTargetData, ServerComponentType } from "webgl-test-shared/dist/components";
+import { HealingTotemTargetData, ServerComponentType } from "webgl-test-shared/dist/components";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { Point, angle, distance, lerp, randInt } from "webgl-test-shared/dist/utils";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import { createHealingParticle } from "../particles";
 import { Light, addLight, attachLightToEntity, removeLight } from "../lights";
+import { PacketReader } from "webgl-test-shared/dist/packets";
 
 const EYE_LIGHTS_TRANSFORM_TICKS = Math.floor(0.5 / Settings.TPS);
 const BASELINE_EYE_LIGHT_INTENSITY = 0.5;
 
-class HealingTotemComponent extends ServerComponent<ServerComponentType.healingTotem> {
-   public healingTargetsData: ReadonlyArray<HealingTotemTargetData>;
+class HealingTotemComponent extends ServerComponent {
+   public healingTargetsData!: ReadonlyArray<HealingTotemTargetData>;
 
    private ticksSpentHealing = 0;
 
    private eyeLights = new Array<Light>();
    
-   constructor(entity: Entity, data: HealingTotemComponentData) {
+   constructor(entity: Entity, reader: PacketReader) {
       super(entity);
 
-      this.healingTargetsData = data.healingTargetsData;
+      this.updateHealingTargets(reader);
+   }
+
+   private updateHealingTargets(reader: PacketReader): void {
+      const healTargets = new Array<HealingTotemTargetData>();
+      const numTargets = reader.readNumber();
+      for (let i = 0; i < numTargets; i++) {
+         const healTargetID = reader.readNumber();
+         const x = reader.readNumber();
+         const y = reader.readNumber();
+         const ticksHealed = reader.readNumber();
+
+         healTargets.push({
+            entityID: healTargetID,
+            x: x,
+            y: y,
+            ticksHealed: ticksHealed
+         });
+      }
+      
+      this.healingTargetsData = healTargets;
    }
 
    public tick(): void {
@@ -103,8 +124,13 @@ class HealingTotemComponent extends ServerComponent<ServerComponentType.healingT
       }
    }
 
-   public updateFromData(data: HealingTotemComponentData): void {
-      this.healingTargetsData = data.healingTargetsData;
+   public padData(reader: PacketReader): void {
+      const numTargets = reader.readNumber();
+      reader.padOffset(4 * Float32Array.BYTES_PER_ELEMENT * numTargets);
+   }
+
+   public updateFromData(reader: PacketReader): void {
+      this.updateHealingTargets(reader);
    }
 }
 

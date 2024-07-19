@@ -1,4 +1,3 @@
-import { ServerComponentType, SlimeComponentData } from "webgl-test-shared/dist/components";
 import { lerp, randFloat } from "webgl-test-shared/dist/utils";
 import { SlimeSize } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
@@ -7,6 +6,7 @@ import Entity from "../Entity";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { RenderPart } from "../render-parts/render-parts";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
+import { PacketReader } from "webgl-test-shared/dist/packets";
 
 export const SLIME_SIZES: ReadonlyArray<number> = [
    64, // small
@@ -29,7 +29,7 @@ const getBodyShakeAmount = (spitProgress: number): number => {
    return lerp(0, 5, spitProgress);
 }
 
-class SlimeComponent extends ServerComponent<ServerComponentType.slime> {
+class SlimeComponent extends ServerComponent {
    private static readonly EYE_OFFSETS: ReadonlyArray<number> = [16, 24, 34];
 
    private static readonly EYE_SHAKE_START_FREQUENCY = 0.5;
@@ -46,12 +46,15 @@ class SlimeComponent extends ServerComponent<ServerComponentType.slime> {
 
    private internalTickCounter = 0;
 
-   constructor(entity: Entity, data: SlimeComponentData) {
+   constructor(entity: Entity, reader: PacketReader) {
       super(entity);
 
-      this.size = data.size;
+      this.size = reader.readNumber();
+      const eyeRotation = reader.readNumber();
+      reader.padOffset(Float32Array.BYTES_PER_ELEMENT);
+      const spitChargeProgress = reader.readNumber();
       
-      const sizeString = SIZE_STRINGS[data.size];
+      const sizeString = SIZE_STRINGS[this.size];
 
       // Body
       this.bodyRenderPart = new TexturedRenderPart(
@@ -60,7 +63,7 @@ class SlimeComponent extends ServerComponent<ServerComponentType.slime> {
          0,
          getTextureArrayIndex(`entities/slime/slime-${sizeString}-body.png`)
       );
-      this.bodyRenderPart.shakeAmount = getBodyShakeAmount(data.spitChargeProgress);
+      this.bodyRenderPart.shakeAmount = getBodyShakeAmount(spitChargeProgress);
       this.entity.attachRenderPart(this.bodyRenderPart);
 
       // Shading
@@ -75,21 +78,29 @@ class SlimeComponent extends ServerComponent<ServerComponentType.slime> {
       const eyeRenderPart = new TexturedRenderPart(
          this.entity,
          3,
-         data.eyeRotation,
+         eyeRotation,
          getTextureArrayIndex(`entities/slime/slime-${sizeString}-eye.png`)
       );
 
       const eyeOffsetAmount = SlimeComponent.EYE_OFFSETS[this.size];
-      eyeRenderPart.offset.x = eyeOffsetAmount * Math.sin(data.eyeRotation);
-      eyeRenderPart.offset.y = eyeOffsetAmount * Math.cos(data.eyeRotation);
+      eyeRenderPart.offset.x = eyeOffsetAmount * Math.sin(eyeRotation);
+      eyeRenderPart.offset.y = eyeOffsetAmount * Math.cos(eyeRotation);
       eyeRenderPart.inheritParentRotation = false;
       this.entity.attachRenderPart(eyeRenderPart);
 
       this.eyeRenderPart = eyeRenderPart;
 
+      // @Temporary @Speed
+      const orbSizes = new Array<SlimeSize>();
+      const numOrbs = reader.readNumber();
+      for (let i = 0; i < numOrbs; i++) {
+         const orbSize = reader.readNumber() as SlimeSize;
+         orbSizes.push(orbSize);
+      }
+
       // Create initial orbs
-      for (let i = 0; i < data.orbSizes.length; i++) {
-         const size = data.orbSizes[i];
+      for (let i = 0; i < orbSizes.length; i++) {
+         const size = orbSizes[i];
          this.createOrb(size);
       }
    }
@@ -148,13 +159,23 @@ class SlimeComponent extends ServerComponent<ServerComponentType.slime> {
       this.orbRenderParts.push(renderPart);
    }
 
-   public updateFromData(data: SlimeComponentData): void {
+   public padData(reader: PacketReader): void {
+      reader.padOffset(4 * Float32Array.BYTES_PER_ELEMENT);
+      
+      const numOrbs = reader.readNumber();
+      reader.padOffset(Float32Array.BYTES_PER_ELEMENT * numOrbs);
+   }
+
+   public updateFromData(reader: PacketReader): void {
+      reader.padOffset(Float32Array.BYTES_PER_ELEMENT);
+      const eyeRotation = reader.readNumber();
+      const anger = reader.readNumber();
+      const spitChargeProgress = reader.readNumber();
       // 
       // Update the eye's rotation
       // 
 
-      const anger = data.anger;
-      this.eyeRenderPart.rotation = data.eyeRotation;
+      this.eyeRenderPart.rotation = eyeRotation;
       if (anger >= 0) {
          const frequency = lerp(SlimeComponent.EYE_SHAKE_START_FREQUENCY, SlimeComponent.EYE_SHAKE_END_FREQUENCY, anger);
          this.internalTickCounter += frequency;
@@ -169,17 +190,24 @@ class SlimeComponent extends ServerComponent<ServerComponentType.slime> {
       this.eyeRenderPart.offset.x = SlimeComponent.EYE_OFFSETS[this.size] * Math.sin(this.eyeRenderPart.rotation);
       this.eyeRenderPart.offset.y = SlimeComponent.EYE_OFFSETS[this.size] * Math.cos(this.eyeRenderPart.rotation);
 
-      // Add any new orbs
-      for (let i = this.orbs.length; i < data.orbSizes.length; i++) {
-         const size = data.orbSizes[i];
-         this.createOrb(size);
-      }
-
-      if (data.anger === -1) {
+      if (anger === -1) {
          this.bodyRenderPart.shakeAmount = 0;
       } else {
-         const spitChargeProgress = data.spitChargeProgress;
          this.bodyRenderPart.shakeAmount = getBodyShakeAmount(spitChargeProgress);
+      }
+
+      // @Temporary @Speed
+      const orbSizes = new Array<SlimeSize>();
+      const numOrbs = reader.readNumber();
+      for (let i = 0; i < numOrbs; i++) {
+         const orbSize = reader.readNumber() as SlimeSize;
+         orbSizes.push(orbSize);
+      }
+
+      // Add any new orbs
+      for (let i = this.orbs.length; i < orbSizes.length; i++) {
+         const size = orbSizes[i];
+         this.createOrb(size);
       }
    }
 }

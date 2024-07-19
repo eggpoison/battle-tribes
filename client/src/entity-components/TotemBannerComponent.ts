@@ -1,31 +1,52 @@
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { TribeTotemBanner } from "webgl-test-shared/dist/entities";
-import { TotemBannerComponentData } from "webgl-test-shared/dist/components";
 import { TribeType } from "webgl-test-shared/dist/tribes";
 import ServerComponent from "./ServerComponent";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import Entity from "../Entity";
 import { RenderPart } from "../render-parts/render-parts";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
+import { PacketReader } from "webgl-test-shared/dist/packets";
 
 const BANNER_LAYER_DISTANCES = [34, 52, 65];
 
-class TotemBannerComponent extends ServerComponent<ServerComponentType.totemBanner> {
+class TotemBannerComponent extends ServerComponent {
    private readonly banners: Record<number, TribeTotemBanner> = {};
    private readonly bannerRenderParts: Record<number, RenderPart> = {};
 
-   constructor(entity: Entity, data: TotemBannerComponentData) {
+   constructor(entity: Entity, reader: PacketReader) {
       super(entity);
 
-      this.updateBanners(data.banners);
+      this.updateBanners(reader);
    }
 
-   public updateFromData(data: TotemBannerComponentData): void {
-      this.updateBanners(data.banners);
+   public padData(reader: PacketReader): void {
+      const numBanners = reader.readNumber();
+      reader.padOffset(3 * Float32Array.BYTES_PER_ELEMENT * numBanners);
    }
 
-   private updateBanners(banners: ReadonlyArray<TribeTotemBanner>): void {
+   public updateFromData(reader: PacketReader): void {
+      this.updateBanners(reader);
+   }
+
+   private updateBanners(reader: PacketReader): void {
       const removedBannerNums = Object.keys(this.banners).map(num => Number(num));
+      
+      // @Temporary @Speed
+      const banners = new Array<TribeTotemBanner>();
+      const numBanners = reader.readNumber();
+      for (let i = 0; i < numBanners; i++) {
+         const hutNum = reader.readNumber();
+         const layer = reader.readNumber();
+         const direction = reader.readNumber();
+
+         const banner: TribeTotemBanner = {
+            hutNum: hutNum,
+            layer: layer,
+            direction: direction
+         };
+         banners.push(banner);
+      }
       
       // Add new banners
       for (const banner of banners) {

@@ -1,6 +1,6 @@
 import { EntityType, LimbAction } from "webgl-test-shared/dist/entities";
 import { Point, lerp, randFloat, randItem } from "webgl-test-shared/dist/utils";
-import { InventoryUseComponentData, LimbData, ServerComponentType } from "webgl-test-shared/dist/components";
+import { LimbData, ServerComponentType } from "webgl-test-shared/dist/components";
 import { Settings } from "webgl-test-shared/dist/settings";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
@@ -16,6 +16,8 @@ import { getFrameProgress } from "../Game";
 import { InventoryName, ItemType, ITEM_TYPE_RECORD, Item, ITEM_INFO_RECORD, itemInfoIsUtility, itemInfoIsBow, BowItemInfo, itemInfoIsTool } from "webgl-test-shared/dist/items/items";
 import { RenderPart } from "../render-parts/render-parts";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
+import { PacketReader } from "webgl-test-shared/dist/packets";
+import { Hotbar_updateRightThrownBattleaxeItemID } from "../components/game/inventories/Hotbar";
 
 export interface LimbInfo {
    selectedItemSlot: number;
@@ -216,7 +218,20 @@ const getLimbRestingDirection = (entityType: InventoryUseEntityType): number => 
    }
 }
 
-class InventoryUseComponent extends ServerComponent<ServerComponentType.inventoryUse> {
+export function readCrossbowLoadProgressRecord(reader: PacketReader): Partial<Record<number, number>> {
+   const record: Partial<Record<number, number>> = {};
+
+   const numEntries = reader.readNumber();
+   for (let i = 0; i < numEntries; i++) {
+      const itemSlot = reader.readNumber();
+      const cooldown = reader.readNumber();
+      record[itemSlot] = cooldown;
+   }
+
+   return record;
+}
+
+class InventoryUseComponent extends ServerComponent{
    public readonly useInfos: ReadonlyArray<LimbInfo>;
    public readonly limbRenderParts = new Array<RenderPart>();
    private readonly activeItemRenderParts: Record<number, TexturedRenderPart> = {};
@@ -226,31 +241,64 @@ class InventoryUseComponent extends ServerComponent<ServerComponentType.inventor
    public customItemRenderPart: RenderPart | null = null;
    public readonly bandageRenderParts = new Array<RenderPart>();
    
-   constructor(entity: Entity, data: InventoryUseComponentData) {
+   constructor(entity: Entity, reader: PacketReader) {
       super(entity);
-      
+
       const useInfos = new Array<LimbInfo>();
-      for (let i = 0; i < data.inventoryUseInfos.length; i++) {
-         const limbData = data.inventoryUseInfos[i];
+      const numUseInfos = reader.readNumber();
+      for (let i = 0; i < numUseInfos; i++) {
+         const usedInventoryName = reader.readNumber() as InventoryName;
+         const selectedItemSlot = reader.readNumber();
+         const bowCooldownTicks = reader.readNumber();
+
+         const itemAttackCooldowns: Partial<Record<number, number>> = {};
+         const numAttackCooldowns = reader.readNumber();
+         for (let j = 0; j < numAttackCooldowns; j++) {
+            const itemSlot = reader.readNumber();
+            const cooldown = reader.readNumber();
+            itemAttackCooldowns[itemSlot] = cooldown;
+         }
+
+         const spearWindupCooldowns: Partial<Record<number, number>> = {};
+         const numSpearWindupCooldowns = reader.readNumber();
+         for (let j = 0; j < numSpearWindupCooldowns; j++) {
+            const itemSlot = reader.readNumber();
+            const cooldown = reader.readNumber();
+            spearWindupCooldowns[itemSlot] = cooldown;
+         }
+
+         const crossbowLoadProgressRecord = readCrossbowLoadProgressRecord(reader);
+
+         const foodEatingTimer = reader.readNumber();
+         const action = reader.readNumber();
+         const lastAttackTicks = reader.readNumber();
+         const lastEatTicks = reader.readNumber();
+         const lastBowChargeTicks = reader.readNumber();
+         const lastSpearChargeTicks = reader.readNumber();
+         const lastBattleaxeChargeTicks = reader.readNumber();
+         const lastCrossbowLoadTicks = reader.readNumber();
+         const lastCraftTicks = reader.readNumber();
+         const thrownBattleaxeItemID = reader.readNumber();
+         const lastAttackCooldown = reader.readNumber();
 
          const limbInfo: LimbInfo = {
-            selectedItemSlot: limbData.selectedItemSlot,
-            inventoryName: limbData.inventoryName,
-            bowCooldownTicks: limbData.bowCooldownTicks,
-            itemAttackCooldowns: limbData.itemAttackCooldowns,
-            spearWindupCooldowns: limbData.spearWindupCooldowns,
-            crossbowLoadProgressRecord: limbData.crossbowLoadProgressRecord,
-            foodEatingTimer: limbData.foodEatingTimer,
-            action: limbData.action,
-            lastAttackTicks: limbData.lastAttackTicks,
-            lastEatTicks: limbData.lastEatTicks,
-            lastBowChargeTicks: limbData.lastBowChargeTicks,
-            lastSpearChargeTicks: limbData.lastSpearChargeTicks,
-            lastBattleaxeChargeTicks: limbData.lastBattleaxeChargeTicks,
-            lastCrossbowLoadTicks: limbData.lastCrossbowLoadTicks,
-            thrownBattleaxeItemID: limbData.thrownBattleaxeItemID,
-            lastAttackCooldown: limbData.lastAttackCooldown,
-            lastCraftTicks: limbData.lastCraftTicks,
+            selectedItemSlot: selectedItemSlot,
+            inventoryName: usedInventoryName,
+            bowCooldownTicks: bowCooldownTicks,
+            itemAttackCooldowns: itemAttackCooldowns,
+            spearWindupCooldowns: spearWindupCooldowns,
+            crossbowLoadProgressRecord: crossbowLoadProgressRecord,
+            foodEatingTimer: foodEatingTimer,
+            action: action,
+            lastAttackTicks: lastAttackTicks,
+            lastEatTicks: lastEatTicks,
+            lastBowChargeTicks: lastBowChargeTicks,
+            lastSpearChargeTicks: lastSpearChargeTicks,
+            lastBattleaxeChargeTicks: lastBattleaxeChargeTicks,
+            lastCrossbowLoadTicks: lastCrossbowLoadTicks,
+            thrownBattleaxeItemID: thrownBattleaxeItemID,
+            lastAttackCooldown: lastAttackCooldown,
+            lastCraftTicks: lastCraftTicks,
             animationStartOffset: new Point(0, 0),
             animationEndOffset: new Point(0, 0),
             animationDurationTicks: 0,
@@ -748,33 +796,89 @@ class InventoryUseComponent extends ServerComponent<ServerComponentType.inventor
          this.updateLimb(i, useInfo);
       }
    }
-   
-   public updateFromData(data: InventoryUseComponentData): void {
-      for (let i = 0; i < data.inventoryUseInfos.length; i++) {
-         const useInfoData = data.inventoryUseInfos[i];
-         const limbInfo = this.useInfos[i];
+
+   public padData(reader: PacketReader): void {
+      const numUseInfos = reader.readNumber();
+      for (let i = 0; i < numUseInfos; i++) {
+         reader.padOffset(3 * Float32Array.BYTES_PER_ELEMENT);
+
+         const numAttackCooldowns = reader.readNumber();
+         reader.padOffset(2 * Float32Array.BYTES_PER_ELEMENT * numAttackCooldowns);
+
+         const numSpearWindupCooldowns = reader.readNumber();
+         reader.padOffset(2 * Float32Array.BYTES_PER_ELEMENT * numSpearWindupCooldowns);
          
-         limbInfo.bowCooldownTicks = useInfoData.bowCooldownTicks;
-         limbInfo.selectedItemSlot = useInfoData.selectedItemSlot;
-         limbInfo.bowCooldownTicks = useInfoData.bowCooldownTicks;
-         limbInfo.itemAttackCooldowns = useInfoData.itemAttackCooldowns;
-         limbInfo.spearWindupCooldowns = useInfoData.spearWindupCooldowns;
-         limbInfo.crossbowLoadProgressRecord = useInfoData.crossbowLoadProgressRecord;
-         limbInfo.foodEatingTimer = useInfoData.foodEatingTimer;
-         limbInfo.action = useInfoData.action;
-         limbInfo.lastAttackTicks = useInfoData.lastAttackTicks;
-         limbInfo.lastEatTicks = useInfoData.lastEatTicks;
-         limbInfo.lastBowChargeTicks = useInfoData.lastBowChargeTicks;
-         limbInfo.lastSpearChargeTicks = useInfoData.lastSpearChargeTicks;
-         limbInfo.lastBattleaxeChargeTicks = useInfoData.lastBattleaxeChargeTicks;
-         limbInfo.lastCrossbowLoadTicks = useInfoData.lastCrossbowLoadTicks;
-         limbInfo.lastCraftTicks = useInfoData.lastCraftTicks;
-         limbInfo.thrownBattleaxeItemID = useInfoData.thrownBattleaxeItemID;
-         limbInfo.lastAttackCooldown = useInfoData.lastAttackCooldown;
+         // @Speed
+         readCrossbowLoadProgressRecord(reader);
+
+         reader.padOffset(11 * Float32Array.BYTES_PER_ELEMENT);
+      }
+   }
+   
+   public updateFromData(reader: PacketReader): void {
+      const numUseInfos = reader.readNumber();
+      for (let i = 0; i < numUseInfos; i++) {
+         const limbInfo = this.useInfos[i];
+
+         const usedInventoryName = reader.readNumber() as InventoryName;
+         if (limbInfo.inventoryName !== usedInventoryName) {
+            throw new Error();
+         }
+         
+         const selectedItemSlot = reader.readNumber();
+         const bowCooldownTicks = reader.readNumber();
+
+         const itemAttackCooldowns: Partial<Record<number, number>> = {};
+         const numAttackCooldowns = reader.readNumber();
+         for (let j = 0; j < numAttackCooldowns; j++) {
+            const itemSlot = reader.readNumber();
+            const cooldown = reader.readNumber();
+            itemAttackCooldowns[itemSlot] = cooldown;
+         }
+
+         const spearWindupCooldowns: Partial<Record<number, number>> = {};
+         const numSpearWindupCooldowns = reader.readNumber();
+         for (let j = 0; j < numSpearWindupCooldowns; j++) {
+            const itemSlot = reader.readNumber();
+            const cooldown = reader.readNumber();
+            spearWindupCooldowns[itemSlot] = cooldown;
+         }
+
+         const crossbowLoadProgressRecord = readCrossbowLoadProgressRecord(reader);
+
+         const foodEatingTimer = reader.readNumber();
+         const action = reader.readNumber();
+         const lastAttackTicks = reader.readNumber();
+         const lastEatTicks = reader.readNumber();
+         const lastBowChargeTicks = reader.readNumber();
+         const lastSpearChargeTicks = reader.readNumber();
+         const lastBattleaxeChargeTicks = reader.readNumber();
+         const lastCrossbowLoadTicks = reader.readNumber();
+         const lastCraftTicks = reader.readNumber();
+         const thrownBattleaxeItemID = reader.readNumber();
+         const lastAttackCooldown = reader.readNumber();
+
+         limbInfo.bowCooldownTicks = bowCooldownTicks;
+         limbInfo.selectedItemSlot = selectedItemSlot;
+         limbInfo.bowCooldownTicks = bowCooldownTicks;
+         limbInfo.itemAttackCooldowns = itemAttackCooldowns;
+         limbInfo.spearWindupCooldowns = spearWindupCooldowns;
+         limbInfo.crossbowLoadProgressRecord = crossbowLoadProgressRecord;
+         limbInfo.foodEatingTimer = foodEatingTimer;
+         limbInfo.action = action;
+         limbInfo.lastAttackTicks = lastAttackTicks;
+         limbInfo.lastEatTicks = lastEatTicks;
+         limbInfo.lastBowChargeTicks = lastBowChargeTicks;
+         limbInfo.lastSpearChargeTicks = lastSpearChargeTicks;
+         limbInfo.lastBattleaxeChargeTicks = lastBattleaxeChargeTicks;
+         limbInfo.lastCrossbowLoadTicks = lastCrossbowLoadTicks;
+         limbInfo.lastCraftTicks = lastCraftTicks;
+         limbInfo.thrownBattleaxeItemID = thrownBattleaxeItemID;
+         limbInfo.lastAttackCooldown = lastAttackCooldown;
 
          // @Hack
          // Initial animation start position
-         if (useInfoData.action === LimbAction.craft || useInfoData.action === LimbAction.researching) {
+         if (action === LimbAction.craft || action === LimbAction.researching) {
             if (limbInfo.animationStartOffset.x === -1) {
                const startOffset = generateRandomLimbPosition(i);
                limbInfo.animationStartOffset.x = startOffset.x;
@@ -789,6 +893,38 @@ class InventoryUseComponent extends ServerComponent<ServerComponentType.inventor
          }
          
          this.updateLimb(i, limbInfo);
+      }
+   }
+
+   public updatePlayerFromData(reader: PacketReader): void {
+      const numUseInfos = reader.readNumber();
+      for (let i = 0; i < numUseInfos; i++) {
+         const limbInfo = this.useInfos[i];
+
+         const usedInventoryName = reader.readNumber() as InventoryName;
+         if (limbInfo.inventoryName !== usedInventoryName) {
+            throw new Error();
+         }
+
+         reader.padOffset(2 * Float32Array.BYTES_PER_ELEMENT);
+         
+         const numAttackCooldowns = reader.readNumber();
+         reader.padOffset(2 * Float32Array.BYTES_PER_ELEMENT * numAttackCooldowns);
+
+         const numSpearWindupCooldowns = reader.readNumber();
+         reader.padOffset(2 * Float32Array.BYTES_PER_ELEMENT * numSpearWindupCooldowns);
+
+         // @Speed
+         readCrossbowLoadProgressRecord(reader);
+
+         reader.padOffset(9 * Float32Array.BYTES_PER_ELEMENT);
+         const thrownBattleaxeItemID = reader.readNumber();
+         reader.padOffset(Float32Array.BYTES_PER_ELEMENT);
+
+         if (limbInfo.inventoryName === InventoryName.hotbar) {
+            limbInfo.thrownBattleaxeItemID = thrownBattleaxeItemID;
+            Hotbar_updateRightThrownBattleaxeItemID(thrownBattleaxeItemID);
+         }
       }
    }
 

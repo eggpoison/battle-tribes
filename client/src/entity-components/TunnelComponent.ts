@@ -6,6 +6,7 @@ import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { playSound } from "../sound";
 import { RenderPart } from "../render-parts/render-parts";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
+import { PacketReader } from "webgl-test-shared/dist/packets";
 
 const doorHalfDiagonalLength = Math.sqrt(16 * 16 + 48 * 48) / 2;
 const angleToCenter = angle(16, 48);
@@ -34,20 +35,20 @@ const getTunnelDoorInfo = (doorBit: number, openProgress: number): TunnelDoorInf
    };
 }
 
-class TunnelComponent extends ServerComponent<ServerComponentType.tunnel> {
+class TunnelComponent extends ServerComponent {
    private readonly doorRenderParts: Record<number, RenderPart> = {};
    public doorBitset: number;
 
    public topDoorOpenProgress: number;
    public bottomDoorOpenProgress: number;
    
-   constructor(entity: Entity, data: TunnelComponentData) {
+   constructor(entity: Entity, reader: PacketReader) {
       super(entity);
 
-      this.doorBitset = 0;
-      this.topDoorOpenProgress = data.topDoorOpenProgress;
-      this.bottomDoorOpenProgress = data.bottomDoorOpenProgress;
-      this.updateFromData(data);
+      this.doorBitset = reader.readNumber();
+      this.topDoorOpenProgress = reader.readNumber();
+      this.bottomDoorOpenProgress = reader.readNumber();
+      this.updateFromData(reader);
    }
 
    private addDoor(doorBit: number): void {
@@ -77,34 +78,42 @@ class TunnelComponent extends ServerComponent<ServerComponentType.tunnel> {
       doorRenderPart.rotation = doorInfo.rotation;
    }
 
-   public updateFromData(data: TunnelComponentData): void {
+   public padData(reader: PacketReader): void {
+      reader.padOffset(3 * Float32Array.BYTES_PER_ELEMENT);
+   }
+   
+   public updateFromData(reader: PacketReader): void {
+      const doorBitset = reader.readNumber();
+      const topDoorOpenProgress = reader.readNumber();
+      const bottomDoorOpenProgress = reader.readNumber();
+
       const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
 
-      if ((data.doorBitset & 0b01) !== (this.doorBitset & 0b01)) {
+      if ((doorBitset & 0b01) !== (this.doorBitset & 0b01)) {
          this.addDoor(0b01);
       }
-      if ((data.doorBitset & 0b10) !== (this.doorBitset & 0b10)) {
+      if ((doorBitset & 0b10) !== (this.doorBitset & 0b10)) {
          this.addDoor(0b10);
       }
 
       // Play open/close sounds
-      if ((data.topDoorOpenProgress > 0 && this.topDoorOpenProgress === 0) || (data.bottomDoorOpenProgress > 0 && this.bottomDoorOpenProgress === 0)) {
+      if ((topDoorOpenProgress > 0 && this.topDoorOpenProgress === 0) || (bottomDoorOpenProgress > 0 && this.bottomDoorOpenProgress === 0)) {
          playSound("door-open.mp3", 0.4, 1, transformComponent.position);
       }
-      if ((data.topDoorOpenProgress < 1 && this.topDoorOpenProgress === 1) || (data.bottomDoorOpenProgress < 1 && this.bottomDoorOpenProgress === 1)) {
+      if ((topDoorOpenProgress < 1 && this.topDoorOpenProgress === 1) || (bottomDoorOpenProgress < 1 && this.bottomDoorOpenProgress === 1)) {
          playSound("door-close.mp3", 0.4, 1, transformComponent.position);
       }
       
-      this.doorBitset = data.doorBitset;
-      this.topDoorOpenProgress = data.topDoorOpenProgress;
-      this.bottomDoorOpenProgress = data.bottomDoorOpenProgress;
+      this.doorBitset = doorBitset;
+      this.topDoorOpenProgress = topDoorOpenProgress;
+      this.bottomDoorOpenProgress = bottomDoorOpenProgress;
 
       // Update the doors
       if ((this.doorBitset & 0b01) !== 0) {
-         this.updateDoor(0b01, data.topDoorOpenProgress);
+         this.updateDoor(0b01, topDoorOpenProgress);
       }
       if ((this.doorBitset & 0b10) !== 0) {
-         this.updateDoor(0b10, data.bottomDoorOpenProgress);
+         this.updateDoor(0b10, bottomDoorOpenProgress);
       }
    }
 

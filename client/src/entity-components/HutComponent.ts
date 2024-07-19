@@ -9,6 +9,7 @@ import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { playSound } from "../sound";
 import { RenderPart } from "../render-parts/render-parts";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
+import { PacketReader } from "webgl-test-shared/dist/packets";
 
 export const WORKER_HUT_SIZE = 88;
 export const WARRIOR_HUT_SIZE = 104;
@@ -53,7 +54,7 @@ const getDoorXOffset = (hutType: HutType, i: number): number => {
    }
 }
 
-class HutComponent extends ServerComponent<ServerComponentType.hut> {
+class HutComponent extends ServerComponent {
    private readonly doorRenderParts: ReadonlyArray<RenderPart>;
    
    // @Memory: Don't need to store
@@ -63,12 +64,13 @@ class HutComponent extends ServerComponent<ServerComponentType.hut> {
 
    private recallMarker: RenderPart | null = null;
 
-   constructor(entity: Entity, data: HutComponentData) {
+   constructor(entity: Entity, reader: PacketReader) {
       super(entity);
       
-      this.isRecalling = data.isRecalling;
+      this.doorSwingAmount = calculateDoorSwingAmount(reader.readNumber());
+      this.isRecalling = reader.readBoolean();
+      reader.padOffset(3);
       
-      this.doorSwingAmount = calculateDoorSwingAmount(data.lastDoorSwingTicks);
       this.doorRenderParts = this.entity.getRenderParts("hutComponent:door");
 
       this.updateDoors();
@@ -99,16 +101,24 @@ class HutComponent extends ServerComponent<ServerComponentType.hut> {
       }
    }
 
-   public updateFromData(data: HutComponentData): void {
+   public padData(reader: PacketReader): void {
+      reader.padOffset(2 * Float32Array.BYTES_PER_ELEMENT);
+   }
+
+   public updateFromData(reader: PacketReader): void {
+      const lastDoorSwingTicks = reader.readNumber();
+      const isRecalling = reader.readBoolean();
+      reader.padOffset(3);
+
       const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
       
       // @Incomplete: What if this packet is skipped?
-      if (data.lastDoorSwingTicks === Board.ticks) {
+      if (lastDoorSwingTicks === Board.ticks) {
          playSound("door-open.mp3", 0.4, 1, transformComponent.position);
       }
       
-      this.isRecalling = data.isRecalling;
-      this.doorSwingAmount = calculateDoorSwingAmount(data.lastDoorSwingTicks);
+      this.isRecalling = isRecalling;
+      this.doorSwingAmount = calculateDoorSwingAmount(lastDoorSwingTicks);
       this.updateDoors();
 
       if (this.isRecalling) {

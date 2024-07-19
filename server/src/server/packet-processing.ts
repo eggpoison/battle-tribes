@@ -26,10 +26,12 @@ export function processPlayerDataPacket(playerClient: PlayerClient, reader: Pack
    const accelerationX = reader.readNumber();
    const accelerationY = reader.readNumber();
 
-   const minVisibleChunkX = reader.readNumber();
-   const maxVisibleChunkX = reader.readNumber();
-   const minVisibleChunkY = reader.readNumber();
-   const maxVisibleChunkY = reader.readNumber();
+   const screenWidth = reader.readNumber();
+   const screenHeight = reader.readNumber();
+   // const minVisibleChunkX = reader.readNumber();
+   // const maxVisibleChunkX = reader.readNumber();
+   // const minVisibleChunkY = reader.readNumber();
+   // const maxVisibleChunkY = reader.readNumber();
    
    const selectedHotbarItemSlot = reader.readNumber();
    const mainAction = reader.readNumber() as LimbAction;
@@ -46,7 +48,10 @@ export function processPlayerDataPacket(playerClient: PlayerClient, reader: Pack
    transformComponent.position.y = positionY;
    transformComponent.rotation = rotation;
 
-   playerClient.visibleChunkBounds = [minVisibleChunkX, maxVisibleChunkX, minVisibleChunkY, maxVisibleChunkY];
+   // playerClient.visibleChunkBounds = [minVisibleChunkX, maxVisibleChunkX, minVisibleChunkY, maxVisibleChunkY];
+   playerClient.screenWidth = screenWidth;
+   playerClient.screenHeight = screenHeight;
+   playerClient.visibleChunkBounds = playerClient.getVisibleChunkBounds(transformComponent.position, screenWidth, screenHeight);
    playerClient.gameDataOptions = gameDataOptions;
    
    const physicsComponent = PhysicsComponentArray.getComponent(playerClient.instance);

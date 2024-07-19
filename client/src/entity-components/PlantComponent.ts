@@ -1,9 +1,10 @@
-import { PlantComponentData, PlanterBoxPlant, ServerComponentType } from "webgl-test-shared/dist/components";
+import { PlanterBoxPlant } from "webgl-test-shared/dist/components";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { ItemType } from "webgl-test-shared/dist/items/items";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
+import { PacketReader } from "webgl-test-shared/dist/packets";
 
 const TEXTURE_SOURCES: Record<PlanterBoxPlant, ReadonlyArray<string>> = {
    [PlanterBoxPlant.tree]: ["entities/plant/tree-sapling-1.png", "entities/plant/tree-sapling-2.png", "entities/plant/tree-sapling-3.png", "entities/plant/tree-sapling-4.png", "entities/plant/tree-sapling-5.png", "entities/plant/tree-sapling-6.png", "entities/plant/tree-sapling-7.png", "entities/plant/tree-sapling-8.png", "entities/plant/tree-sapling-9.png", "entities/plant/tree-sapling-10.png", "entities/plant/tree-sapling-11.png"],
@@ -25,19 +26,20 @@ export const SEED_TO_PLANT_RECORD: Partial<Record<ItemType, PlanterBoxPlant>> = 
    [ItemType.frostcicle]: PlanterBoxPlant.iceSpikes
 };
 
-class PlantComponent extends ServerComponent<ServerComponentType.plant> {
+class PlantComponent extends ServerComponent {
    public readonly plant: PlanterBoxPlant;
    public growthProgress: number;
    
    private plantRenderPart: TexturedRenderPart | null = null;
    
-   constructor(entity: Entity, data: PlantComponentData) {
+   constructor(entity: Entity, reader: PacketReader) {
       super(entity);
 
-      this.plant = data.plant
-      this.growthProgress = data.plantGrowthProgress;
+      this.plant = reader.readNumber();
+      this.growthProgress = reader.readNumber();
+      const numFruit = reader.readNumber();
 
-      this.updatePlantRenderPart(data.plant, data.plantGrowthProgress, data.numFruit);
+      this.updatePlantRenderPart(this.plant, this.growthProgress, numFruit);
    }
 
    private updatePlantRenderPart(plant: PlanterBoxPlant | null, growthProgress: number, numFruits: number): void {
@@ -76,10 +78,16 @@ class PlantComponent extends ServerComponent<ServerComponentType.plant> {
       }
    }
 
-   public updateFromData(data: PlantComponentData): void {
-      this.growthProgress = data.plantGrowthProgress;
+   public padData(reader: PacketReader): void {
+      reader.padOffset(3 * Float32Array.BYTES_PER_ELEMENT);
+   }
+
+   public updateFromData(reader: PacketReader): void {
+      reader.padOffset(Float32Array.BYTES_PER_ELEMENT);
+      this.growthProgress = reader.readNumber();
+      const numFruit = reader.readNumber();
       
-      this.updatePlantRenderPart(data.plant, data.plantGrowthProgress, data.numFruit);
+      this.updatePlantRenderPart(this.plant, this.growthProgress, numFruit);
    }
 }
 

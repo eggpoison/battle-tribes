@@ -1,17 +1,41 @@
-import { ScarInfo, ServerComponentType, TribeWarriorComponentData } from "webgl-test-shared/dist/components";
+import { ScarInfo } from "webgl-test-shared/dist/components";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
+import { PacketReader } from "webgl-test-shared/dist/packets";
 
-class TribeWarriorComponent extends ServerComponent<ServerComponentType.tribeWarrior> {
+class TribeWarriorComponent extends ServerComponent {
    public readonly scars: ReadonlyArray<ScarInfo>;
    
-   constructor(entity: Entity, data: TribeWarriorComponentData) {
+   constructor(entity: Entity, reader: PacketReader) {
       super(entity);
 
-      this.scars = data.scars;
+      const scars = new Array<ScarInfo>();
+      const numScars = reader.readNumber();
+      for (let i = 0; i < numScars; i++) {
+         const offsetX = reader.readNumber();
+         const offsetY = reader.readNumber();
+         const rotation = reader.readNumber();
+         const type = reader.readNumber();
+
+         scars.push({
+            offsetX: offsetX,
+            offsetY: offsetY,
+            rotation: rotation,
+            type: type
+         });
+      }
+      this.scars = scars;
+   }
+
+   public padData(reader: PacketReader): void {
+      const numScars = reader.readNumber();
+      reader.padOffset(4 * Float32Array.BYTES_PER_ELEMENT * numScars);
    }
    
-   public updateFromData(_data: TribeWarriorComponentData): void {}
+   public updateFromData(reader: PacketReader): void {
+      const numScars = reader.readNumber();
+      reader.padOffset(4 * Float32Array.BYTES_PER_ELEMENT * numScars);
+   }
 }
 
 export default TribeWarriorComponent;

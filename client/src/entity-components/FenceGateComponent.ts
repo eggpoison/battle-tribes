@@ -1,8 +1,8 @@
 import { angle, lerp } from "webgl-test-shared/dist/utils";
-import { FenceGateComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import { RenderPart } from "../render-parts/render-parts";
+import { PacketReader } from "webgl-test-shared/dist/packets";
 
 interface DoorInfo {
    readonly offsetX: number;
@@ -32,32 +32,38 @@ const getFenceGateDoorInfo = (openProgress: number): DoorInfo => {
    };
 }
 
-class FenceGateComponent extends ServerComponent<ServerComponentType.fenceGate> {
+class FenceGateComponent extends ServerComponent {
    private readonly doorRenderPart: RenderPart;
 
    public openProgress: number;
    
-   constructor(entity: Entity, data: FenceGateComponentData) {
+   constructor(entity: Entity, reader: PacketReader) {
       super(entity);
 
-      this.openProgress = data.openProgress;
+      reader.padOffset(Float32Array.BYTES_PER_ELEMENT);
+      this.openProgress = reader.readNumber();
 
       this.doorRenderPart = this.entity.getRenderPart("fenceGateComponent:door");
-      this.updateDoor(data.openProgress);
+      this.updateDoor();
    }
 
-   private updateDoor(openProgress: number): void {
-      const doorInfo = getFenceGateDoorInfo(openProgress);
+   private updateDoor(): void {
+      const doorInfo = getFenceGateDoorInfo(this.openProgress);
 
       this.doorRenderPart.offset.x = doorInfo.offsetX;
       this.doorRenderPart.offset.y = doorInfo.offsetY;
       this.doorRenderPart.rotation = doorInfo.rotation;
    }
 
-   public updateFromData(data: FenceGateComponentData): void {
-      this.openProgress = data.openProgress;
+   public padData(reader: PacketReader): void {
+      reader.padOffset(2 * Float32Array.BYTES_PER_ELEMENT);
+   }
+
+   public updateFromData(reader: PacketReader): void {
+      reader.padOffset(Float32Array.BYTES_PER_ELEMENT);
+      this.openProgress = reader.readNumber();
       
-      this.updateDoor(data.openProgress);
+      this.updateDoor();
    }
 }
 

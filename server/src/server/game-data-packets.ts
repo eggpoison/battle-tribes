@@ -1,6 +1,6 @@
 import { VisibleChunkBounds, GameDataPacket, GameDataPacketOptions, PlayerInventoryData, GameDataSyncPacket } from "webgl-test-shared/dist/client-server-types";
 import { ServerComponentType, ServerComponentTypeString } from "webgl-test-shared/dist/components";
-import { EntityID } from "webgl-test-shared/dist/entities";
+import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
 import { TechUnlockProgress } from "webgl-test-shared/dist/techs";
 import Board from "../Board";
 import Tribe from "../Tribe";
@@ -180,12 +180,14 @@ export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend:
 
    // Enemy tribes data
    lengthBytes += Float32Array.BYTES_PER_ELEMENT + (100 + 2 * Float32Array.BYTES_PER_ELEMENT) * numEnemyTribes;
+   // console.log(lengthBytes);
 
    // Entities
    lengthBytes += Float32Array.BYTES_PER_ELEMENT;
    for (const entity of entitiesToSend) {
       lengthBytes += getEntityDataLength(entity, player);
    }
+   // console.log(lengthBytes);
 
    // Player inventories
    lengthBytes += getInventoryDataLength(hotbarInventory);

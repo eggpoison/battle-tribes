@@ -1,4 +1,3 @@
-import { ServerComponentType, TransformComponentData } from "webgl-test-shared/dist/components";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import { distance, Point, rotateXAroundOrigin, rotateYAroundOrigin } from "webgl-test-shared/dist/utils";
@@ -9,11 +8,12 @@ import { createWaterSplashParticle } from "../particles";
 import { Tile } from "../Tile";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { TileType } from "webgl-test-shared/dist/tiles";
-import { RIVER_STEPPING_STONE_SIZES } from "webgl-test-shared/dist/client-server-types";
+import { CircularHitboxData, RectangularHitboxData, RIVER_STEPPING_STONE_SIZES } from "webgl-test-shared/dist/client-server-types";
 import Chunk from "../Chunk";
 import { randInt } from "webgl-test-shared/dist/utils";
 import { randFloat } from "webgl-test-shared/dist/utils";
 import { createCircularHitboxFromData, createRectangularHitboxFromData } from "../client/Client";
+import { PacketReader } from "webgl-test-shared/dist/packets";
 
 const getTile = (position: Point): Tile => {
    const tileX = Math.floor(position.x / Settings.TILE_SIZE);
@@ -26,7 +26,7 @@ const getTile = (position: Point): Tile => {
    return Board.getTile(tileX, tileY);
 }
 
-class TransformComponent extends ServerComponent<ServerComponentType.transform> {
+class TransformComponent extends ServerComponent {
    public ageTicks: number;
    
    public readonly position: Point;
@@ -46,32 +46,49 @@ class TransformComponent extends ServerComponent<ServerComponentType.transform> 
 
    public collidingEntities = new Array<Entity>();
    
-   constructor(entity: Entity, data: TransformComponentData) {
+   constructor(entity: Entity, reader: PacketReader) {
       super(entity);
 
-      this.ageTicks = data.ageTicks;
-      
-      this.position = Point.unpackage(data.position);
-      this.rotation = data.rotation;
-
-      this.collisionBit = data.collisionBit;
-      this.collisionMask = data.collisionMask;
+      this.position = new Point(reader.readNumber(), reader.readNumber());
+      this.rotation = reader.readNumber();
+      this.ageTicks = reader.readNumber();
+      this.collisionBit = reader.readNumber();
+      this.collisionMask = reader.readNumber();
       
       this.tile = getTile(this.position);
 
-      // Add hitboxes
-      for (let i = 0; i < data.circularHitboxes.length; i++) {
-         const hitboxData = data.circularHitboxes[i];
+      const numCircularHitboxes = reader.readNumber();
+      for (let i = 0; i < numCircularHitboxes; i++) {
+         const mass = reader.readNumber();
+         const offsetX = reader.readNumber();
+         const offsetY = reader.readNumber();
+         const collisionType = reader.readNumber();
+         const collisionBit = reader.readNumber();
+         const collisionMask = reader.readNumber();
+         const localID = reader.readNumber();
+         const flags = reader.readNumber();
+         const radius = reader.readNumber();
 
-         const hitbox = createCircularHitboxFromData(hitboxData);
-         this.addHitbox(hitbox, hitboxData.localID);
+         const hitbox = new CircularHitbox(mass, new Point(offsetX, offsetY), collisionType, collisionBit, collisionMask, flags, radius);
+         this.addHitbox(hitbox, localID);
       }
 
-      for (let i = 0; i < data.rectangularHitboxes.length; i++) {
-         const hitboxData = data.rectangularHitboxes[i];
+      const numRectangularHitboxes = reader.readNumber();
+      for (let i = 0; i < numRectangularHitboxes; i++) {
+         const mass = reader.readNumber();
+         const offsetX = reader.readNumber();
+         const offsetY = reader.readNumber();
+         const collisionType = reader.readNumber();
+         const collisionBit = reader.readNumber();
+         const collisionMask = reader.readNumber();
+         const localID = reader.readNumber();
+         const flags = reader.readNumber();
+         const width = reader.readNumber();
+         const height = reader.readNumber();
+         const rotation = reader.readNumber();
 
-         const hitbox = createRectangularHitboxFromData(hitboxData);
-         this.addHitbox(hitbox, hitboxData.localID);
+         const hitbox = new RectangularHitbox(mass, new Point(offsetX, offsetY), collisionType, collisionBit, collisionMask, flags, width, height, rotation);
+         this.addHitbox(hitbox, localID);
       }
    }
 
@@ -164,17 +181,93 @@ class TransformComponent extends ServerComponent<ServerComponentType.transform> 
       }
    }
 
-   public updateFromData(data: TransformComponentData): void {
-      this.ageTicks = data.ageTicks;
-      
-      if (data.position[0] !== this.position.x || data.position[1] !== this.position.y || data.rotation !== this.rotation) {
+   public padData(reader: PacketReader): void {
+      reader.padOffset(6 * Float32Array.BYTES_PER_ELEMENT);
+
+      const numCircularHitboxes = reader.readNumber();
+      reader.padOffset(9 * Float32Array.BYTES_PER_ELEMENT * numCircularHitboxes);
+
+      const numRectangularHitboxes = reader.readNumber();
+      reader.padOffset(11 * Float32Array.BYTES_PER_ELEMENT * numRectangularHitboxes);
+   }
+
+   public updateFromData(reader: PacketReader): void {
+      const positionX = reader.readNumber();
+      const positionY = reader.readNumber();
+      const rotation = reader.readNumber();
+
+      if (positionX !== this.position.x || positionY !== this.position.y || rotation !== this.rotation) {
          this.entity.dirty();
       }
       
-      this.position.x = data.position[0];
-      this.position.y = data.position[1];
-      this.rotation = data.rotation;
+      this.position.x = positionX;
+      this.position.y = positionY;
+      this.rotation = rotation;
+      this.ageTicks = reader.readNumber();
+      this.collisionBit = reader.readNumber();
+      this.collisionMask = reader.readNumber();
 
+      // @Hack
+      // @Hack
+      // @Hack
+      
+      const circularHitboxes = new Array<CircularHitboxData>();
+      const numCircularHitboxes = reader.readNumber();
+      for (let i = 0; i < numCircularHitboxes; i++) {
+         const mass = reader.readNumber();
+         const offsetX = reader.readNumber();
+         const offsetY = reader.readNumber();
+         const collisionType = reader.readNumber();
+         const collisionBit = reader.readNumber();
+         const collisionMask = reader.readNumber();
+         const localID = reader.readNumber();
+         const flags = reader.readNumber();
+         const radius = reader.readNumber();
+
+         const data: CircularHitboxData = {
+            mass: mass,
+            offsetX: offsetX,
+            offsetY: offsetY,
+            collisionType: collisionType,
+            collisionBit: collisionBit,
+            collisionMask: collisionMask,
+            localID: localID,
+            flags: flags,
+            radius: radius
+         };
+         circularHitboxes.push(data);
+      }
+
+      const rectangularHitboxes = new Array<RectangularHitboxData>();
+      const numRectangularHitboxes = reader.readNumber();
+      for (let i = 0; i < numRectangularHitboxes; i++) {
+         const mass = reader.readNumber();
+         const offsetX = reader.readNumber();
+         const offsetY = reader.readNumber();
+         const collisionType = reader.readNumber();
+         const collisionBit = reader.readNumber();
+         const collisionMask = reader.readNumber();
+         const localID = reader.readNumber();
+         const flags = reader.readNumber();
+         const width = reader.readNumber();
+         const height = reader.readNumber();
+         const rotation = reader.readNumber();
+
+         const data: RectangularHitboxData = {
+            mass: mass,
+            offsetX: offsetX,
+            offsetY: offsetY,
+            collisionType: collisionType,
+            collisionBit: collisionBit,
+            collisionMask: collisionMask,
+            localID: localID,
+            flags: flags,
+            width: width,
+            height: height,
+            rotation: rotation
+         };
+         rectangularHitboxes.push(data);
+      }
       
       // 
       // Update hitboxes
@@ -187,15 +280,15 @@ class TransformComponent extends ServerComponent<ServerComponentType.transform> 
 
          // @Speed
          let localIDExists = false;
-         for (let j = 0; j < data.circularHitboxes.length; j++) {
-            const hitboxData = data.circularHitboxes[j];
+         for (let j = 0; j < circularHitboxes.length; j++) {
+            const hitboxData = circularHitboxes[j];
             if (hitboxData.localID === localID) {
                localIDExists = true;
                break;
             }
          }
-         for (let j = 0; j < data.rectangularHitboxes.length; j++) {
-            const hitboxData = data.rectangularHitboxes[j];
+         for (let j = 0; j < rectangularHitboxes.length; j++) {
+            const hitboxData = rectangularHitboxes[j];
             if (hitboxData.localID === localID) {
                localIDExists = true;
                break;
@@ -209,8 +302,8 @@ class TransformComponent extends ServerComponent<ServerComponentType.transform> 
          }
       }
 
-      for (let i = 0; i < data.circularHitboxes.length; i++) {
-         const hitboxData = data.circularHitboxes[i];
+      for (let i = 0; i < circularHitboxes.length; i++) {
+         const hitboxData = circularHitboxes[i];
 
          // Check for an existing hitbox
          // @Speed
@@ -244,8 +337,8 @@ class TransformComponent extends ServerComponent<ServerComponentType.transform> 
          }
       }
       // @Cleanup: Copy and paste
-      for (let i = 0; i < data.rectangularHitboxes.length; i++) {
-         const hitboxData = data.rectangularHitboxes[i];
+      for (let i = 0; i < rectangularHitboxes.length; i++) {
+         const hitboxData = rectangularHitboxes[i];
 
          // Check for an existing hitbox
          // @Speed

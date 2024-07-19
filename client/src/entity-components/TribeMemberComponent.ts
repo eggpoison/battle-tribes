@@ -1,5 +1,5 @@
 import { EntityType, EntityTypeString } from "webgl-test-shared/dist/entities";
-import { ComponentData, ServerComponentType, TribeMemberComponentData } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { TitleGenerationInfo, TribesmanTitle } from "webgl-test-shared/dist/titles";
 import { Point, lerp, randFloat, veryBadHash } from "webgl-test-shared/dist/utils";
@@ -12,6 +12,8 @@ import { createSprintParticle, createTitleObtainParticle } from "../particles";
 import { createRenderPartOverlayGroup } from "../rendering/webgl/overlay-rendering";
 import { RenderPart } from "../render-parts/render-parts";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
+import { PacketReader } from "webgl-test-shared/dist/packets";
+import { TitlesTab_setTitles } from "../components/game/dev/tabs/TitlesTab";
 
 export function getTribesmanRadius(tribesman: Entity): number {
    switch (tribesman.type) {
@@ -71,7 +73,7 @@ const titlesAreDifferent = (titles1: ReadonlyArray<TitleGenerationInfo>, titles2
    return titlesArrayHasExtra(titles1, titles2) || titlesArrayHasExtra(titles2, titles1);
 }
 
-class TribeMemberComponent extends ServerComponent<ServerComponentType.tribeMember> {
+class TribeMemberComponent extends ServerComponent {
    public bodyRenderPart!: RenderPart;
    public handRenderParts!: ReadonlyArray<RenderPart>;
    
@@ -81,11 +83,31 @@ class TribeMemberComponent extends ServerComponent<ServerComponentType.tribeMemb
 
    private deathbringerEyeLights = new Array<Light>();
    
-   constructor(entity: Entity, data: ComponentData<ServerComponentType.tribeMember>) {
+   constructor(entity: Entity, reader: PacketReader) {
       super(entity);
 
-      this.warPaintType = data.warPaintType;
-      this.updateTitles(data.titles);
+      this.warPaintType = this.readWarpaint(reader);
+
+      // @Temporary
+      const titles = new Array<TitleGenerationInfo>();
+      const numTitles = reader.readNumber();
+      for (let i = 0; i < numTitles; i++) {
+         const title = reader.readNumber() as TribesmanTitle;
+         const displayOption = reader.readNumber();
+         
+         titles.push({
+            title: title,
+            displayOption: displayOption
+         });
+      }
+
+      this.updateTitles(titles);
+   }
+
+   private readWarpaint(reader: PacketReader): number | null {
+      const rawWarpaintType = reader.readNumber();
+      const warpaintType = rawWarpaintType !== -1 ? rawWarpaintType : null;
+      return warpaintType;
    }
 
    public onLoad(): void {
@@ -357,10 +379,36 @@ class TribeMemberComponent extends ServerComponent<ServerComponentType.tribeMemb
       }
    }
 
-   public updateFromData(data: TribeMemberComponentData): void {
-      this.warPaintType = data.warPaintType;
+   public padData(reader: PacketReader): void {
+      reader.padOffset(Float32Array.BYTES_PER_ELEMENT);
+
+      const numTitles = reader.readNumber();
+      reader.padOffset(2 * Float32Array.BYTES_PER_ELEMENT * numTitles);
+   }
+
+   public updateFromData(reader: PacketReader): void {
+      this.warPaintType = this.readWarpaint(reader);
+
+      // @Temporary
+      const titles = new Array<TitleGenerationInfo>();
+      const numTitles = reader.readNumber();
+      for (let i = 0; i < numTitles; i++) {
+         const title = reader.readNumber() as TribesmanTitle;
+         const displayOption = reader.readNumber();
+         
+         titles.push({
+            title: title,
+            displayOption: displayOption
+         });
+      }
       
-      this.updateTitles(data.titles);
+      this.updateTitles(titles);
+   }
+
+   public updatePlayerFromData(reader: PacketReader): void {
+      this.updateFromData(reader);
+
+      TitlesTab_setTitles(this.getTitles());
    }
 }
 

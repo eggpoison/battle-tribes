@@ -1,4 +1,4 @@
-import { PhysicsComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import { Point, lerp, randInt } from "webgl-test-shared/dist/utils";
@@ -15,6 +15,7 @@ import { collide, resolveWallTileCollisions } from "../collision";
 import TransformComponent from "./TransformComponent";
 import { COLLISION_BITS } from "webgl-test-shared/dist/collision";
 import { latencyGameState } from "../game-state/game-states";
+import { PacketReader } from "webgl-test-shared/dist/packets";
 
 const applyPhysics = (physicsComponent: PhysicsComponent): void => {
    const transformComponent = physicsComponent.entity.getServerComponent(ServerComponentType.transform);
@@ -152,15 +153,15 @@ const resolveGameObjectCollisions = (physicsComponent: PhysicsComponent): void =
    }
 }
 
-class PhysicsComponent extends ServerComponent<ServerComponentType.physics> {
+class PhysicsComponent extends ServerComponent {
    public readonly velocity: Point;
    public readonly acceleration: Point;
    
-   constructor(entity: Entity, data: PhysicsComponentData) {
+   constructor(entity: Entity, reader: PacketReader) {
       super(entity);
 
-      this.velocity = new Point(data.velocity[0], data.velocity[1]);
-      this.acceleration = new Point(data.acceleration[0], data.acceleration[1]);
+      this.velocity = new Point(reader.readNumber(), reader.readNumber());
+      this.acceleration = new Point(reader.readNumber(), reader.readNumber());
    }
 
    public tick(): void {
@@ -212,11 +213,15 @@ class PhysicsComponent extends ServerComponent<ServerComponentType.physics> {
       resolveBorderCollisions(this);
    }
 
-   public updateFromData(data: PhysicsComponentData): void {
-      this.velocity.x = data.velocity[0];
-      this.velocity.y = data.velocity[1];
-      this.acceleration.x = data.acceleration[0];
-      this.acceleration.y = data.acceleration[1];
+   public padData(reader: PacketReader): void {
+      reader.padOffset(4 * Float32Array.BYTES_PER_ELEMENT);
+   }
+
+   public updateFromData(reader: PacketReader): void {
+      this.velocity.x = reader.readNumber();
+      this.velocity.y = reader.readNumber();
+      this.acceleration.x = reader.readNumber();
+      this.acceleration.y = reader.readNumber();
    }
 }
 

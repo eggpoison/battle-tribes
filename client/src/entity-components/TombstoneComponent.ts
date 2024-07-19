@@ -1,5 +1,5 @@
 import { ServerComponentType, TombstoneComponentData } from "webgl-test-shared/dist/components";
-import { DeathInfo } from "webgl-test-shared/dist/entities";
+import { DeathInfo, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { Point, randInt } from "webgl-test-shared/dist/utils";
 import ServerComponent from "./ServerComponent";
@@ -7,22 +7,36 @@ import Entity from "../Entity";
 import { createDirtParticle } from "../particles";
 import { playSound, AudioFilePath } from "../sound";
 import { ParticleRenderLayer } from "../rendering/webgl/particle-rendering";
+import { PacketReader } from "webgl-test-shared/dist/packets";
 
-class TombstoneComponent extends ServerComponent<ServerComponentType.tombstone> {
+class TombstoneComponent extends ServerComponent {
    public readonly tombstoneType: number;
    private zombieSpawnProgress: number;
    private zombieSpawnX: number;
    private zombieSpawnY: number;
    public readonly deathInfo: DeathInfo | null;
 
-   constructor(entity: Entity, data: TombstoneComponentData) {
+   constructor(entity: Entity, reader: PacketReader) {
       super(entity);
 
-      this.tombstoneType = data.tombstoneType;
-      this.zombieSpawnProgress = data.zombieSpawnProgress;
-      this.zombieSpawnX = data.zombieSpawnX;
-      this.zombieSpawnY = data.zombieSpawnY;
-      this.deathInfo = data.deathInfo;
+      this.tombstoneType = reader.readNumber();
+      this.zombieSpawnProgress = reader.readNumber();
+      this.zombieSpawnX = reader.readNumber();
+      this.zombieSpawnY = reader.readNumber();
+
+      const hasDeathInfo = reader.readBoolean();
+      reader.padOffset(3);
+      if (hasDeathInfo) {
+         // @Hack: hardcoded
+         const username = reader.readString(100);
+         const causeOfDeath = reader.readNumber() as PlayerCauseOfDeath;
+         this.deathInfo = {
+            username: username,
+            causeOfDeath: causeOfDeath
+         };
+      } else {
+         this.deathInfo = null;
+      }
    }
 
    public tick(): void {
@@ -44,11 +58,28 @@ class TombstoneComponent extends ServerComponent<ServerComponentType.tombstone> 
          }
       }
    }
+
+   public padData(reader: PacketReader): void {
+      reader.padOffset(4 * Float32Array.BYTES_PER_ELEMENT);
+
+      const hasDeathInfo = reader.readBoolean();
+      reader.padOffset(3);
+      if (hasDeathInfo) {
+         reader.padOffset(100 + Float32Array.BYTES_PER_ELEMENT);
+      }
+   }
    
-   public updateFromData(data: TombstoneComponentData): void {
-      this.zombieSpawnProgress = data.zombieSpawnProgress;
-      this.zombieSpawnX = data.zombieSpawnX;
-      this.zombieSpawnY = data.zombieSpawnY;
+   public updateFromData(reader: PacketReader): void {
+      reader.padOffset(Float32Array.BYTES_PER_ELEMENT)
+      this.zombieSpawnProgress = reader.readNumber();
+      this.zombieSpawnX = reader.readNumber();
+      this.zombieSpawnY = reader.readNumber();
+
+      const hasDeathInfo = reader.readBoolean();
+      reader.padOffset(3);
+      if (hasDeathInfo) {
+         reader.padOffset(100 + Float32Array.BYTES_PER_ELEMENT);
+      }
    }
 }
 

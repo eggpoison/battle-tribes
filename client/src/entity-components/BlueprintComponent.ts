@@ -1,4 +1,4 @@
-import { BlueprintComponentData, BlueprintType, ServerComponentType } from "webgl-test-shared/dist/components";
+import { BlueprintType, ServerComponentType } from "webgl-test-shared/dist/components";
 import { assertUnreachable, randFloat, rotateXAroundOrigin, rotateYAroundOrigin } from "webgl-test-shared/dist/utils";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
@@ -8,6 +8,7 @@ import { getCurrentBlueprintProgressTexture } from "../entities/BlueprintEntity"
 import { getEntityTextureAtlas, getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { ParticleRenderLayer } from "../rendering/webgl/particle-rendering";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
+import { PacketReader } from "webgl-test-shared/dist/packets";
 
 const createWoodenBlueprintWorkParticleEffects = (entity: Entity): void => {
    const transformComponent = entity.getServerComponent(ServerComponentType.transform);
@@ -53,30 +54,36 @@ const createStoneBlueprintWorkParticleEffects = (originX: number, originY: numbe
    }
 }
 
-class BlueprintComponent extends ServerComponent<ServerComponentType.blueprint> {
+class BlueprintComponent extends ServerComponent {
    public readonly partialRenderParts = new Array<TexturedRenderPart>();
    
    public readonly blueprintType: BlueprintType;
    public lastBlueprintProgress: number;
    public readonly associatedEntityID: number;
 
-   constructor(entity: Entity, data: BlueprintComponentData) {
+   constructor(entity: Entity, reader: PacketReader) {
       super(entity);
 
-      this.blueprintType = data.blueprintType;
-      this.lastBlueprintProgress = data.buildProgress;
-      this.associatedEntityID = data.associatedEntityID;
+      this.blueprintType = reader.readNumber();
+      this.lastBlueprintProgress = reader.readNumber();
+      this.associatedEntityID = reader.readNumber();
    }
 
-   public updateFromData(data: BlueprintComponentData): void {
-      const blueprintProgress = data.buildProgress;
+   public padData(reader: PacketReader): void {
+      reader.padOffset(3 * Float32Array.BYTES_PER_ELEMENT);
+   }
+
+   public updateFromData(reader: PacketReader): void {
+      reader.padOffset(Float32Array.BYTES_PER_ELEMENT);
+      const blueprintProgress = reader.readNumber();
+      reader.padOffset(Float32Array.BYTES_PER_ELEMENT);
 
       if (blueprintProgress !== this.lastBlueprintProgress) {
          const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
 
          playSound("blueprint-work.mp3", 0.4, randFloat(0.9, 1.1), transformComponent.position);
 
-         const progressTexture = getCurrentBlueprintProgressTexture(data.blueprintType, data.buildProgress);
+         const progressTexture = getCurrentBlueprintProgressTexture(this.blueprintType, blueprintProgress);
          
          // @Cleanup
          const textureAtlas = getEntityTextureAtlas();

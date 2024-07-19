@@ -1,21 +1,22 @@
-import { CookingComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
 import { Point, randFloat } from "webgl-test-shared/dist/utils";
 import ServerComponent from "./ServerComponent";
 import Board from "../Board";
 import Entity from "../Entity";
 import { Light, addLight, attachLightToEntity } from "../lights";
+import { PacketReader } from "webgl-test-shared/dist/packets";
 
-class CookingComponent extends ServerComponent<ServerComponentType.cooking> {
+class CookingComponent extends ServerComponent {
    public heatingProgress: number;
    public isCooking: boolean;
 
    private readonly light: Light;
 
-   constructor(entity: Entity, data: CookingComponentData) {
+   constructor(entity: Entity, reader: PacketReader) {
       super(entity);
 
-      this.heatingProgress = data.heatingProgress;
-      this.isCooking = data.isCooking;
+      this.heatingProgress = reader.readNumber();
+      this.isCooking = reader.readBoolean();
+      reader.padOffset(3);
 
       this.light = {
          offset: new Point(0, 0),
@@ -35,10 +36,15 @@ class CookingComponent extends ServerComponent<ServerComponentType.cooking> {
          this.light.radius = 40 + randFloat(-7, 7);
       }
    }
+
+   public padData(reader: PacketReader): void {
+      reader.padOffset(2 * Float32Array.BYTES_PER_ELEMENT);
+   }
    
-   public updateFromData(data: CookingComponentData): void {
-      this.heatingProgress = data.heatingProgress;
-      this.isCooking = data.isCooking;
+   public updateFromData(reader: PacketReader): void {
+      this.heatingProgress = reader.readNumber();
+      this.isCooking = reader.readBoolean();
+      reader.padOffset(3);
    }
 }
 

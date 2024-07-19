@@ -82,15 +82,6 @@ abstract class Entity<T extends EntityType = EntityType> extends BaseRenderObjec
       super.dirty();
    }
 
-   public createComponents(componentsData: ReadonlyArray<ComponentData>): void {
-      for (let i = 0; i < componentsData.length; i++) {
-         const componentData = componentsData[i];
-
-         const component = createComponent(this, componentData);
-         this.addServerComponent(componentData.componentType, component);
-      }
-   }
-
    public getRenderPart(tag: string): RenderPart {
       for (let i = 0; i < this.allRenderParts.length; i++) {
          const renderPart = this.allRenderParts[i];

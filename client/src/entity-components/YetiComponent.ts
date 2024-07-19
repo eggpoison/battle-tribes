@@ -1,25 +1,25 @@
-import { ServerComponentType, YetiComponentData } from "webgl-test-shared/dist/components";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import { lerp } from "webgl-test-shared/dist/utils";
 import { RenderPart } from "../render-parts/render-parts";
+import { PacketReader } from "webgl-test-shared/dist/packets";
 
 export const YETI_SIZE = 128;
 
 const YETI_PAW_START_ANGLE = Math.PI/3;
 const YETI_PAW_END_ANGLE = Math.PI/6;
 
-class YetiComponent extends ServerComponent<ServerComponentType.yeti> {
+class YetiComponent extends ServerComponent {
    public pawRenderParts: ReadonlyArray<RenderPart>;
    
    public lastAttackProgress: number;
    public attackProgress: number;
 
-   constructor(entity: Entity, data: YetiComponentData) {
+   constructor(entity: Entity, reader: PacketReader) {
       super(entity);
 
-      this.lastAttackProgress = data.attackProgress;
-      this.attackProgress = data.attackProgress;
+      this.lastAttackProgress = reader.readNumber();
+      this.attackProgress = this.lastAttackProgress;
 
       this.pawRenderParts = this.entity.getRenderParts("yetiComponent:paw", 2);
       this.updatePaws();
@@ -38,8 +38,12 @@ class YetiComponent extends ServerComponent<ServerComponentType.yeti> {
       }
    }
 
-   public updateFromData(data: YetiComponentData): void {
-      this.attackProgress = data.attackProgress;
+
+   public padData(reader: PacketReader): void {
+      reader.padOffset(Float32Array.BYTES_PER_ELEMENT);
+   }
+   public updateFromData(reader: PacketReader): void {
+      this.attackProgress = reader.readNumber();
       this.updatePaws();
    }
 }

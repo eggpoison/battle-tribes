@@ -1,4 +1,4 @@
-import { ServerComponentType, StatusEffectComponentData } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { StatusEffectData } from "webgl-test-shared/dist/client-server-types";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { Point, customTickIntervalHasPassed, lerp, randFloat, randItem } from "webgl-test-shared/dist/utils";
@@ -10,6 +10,7 @@ import Particle from "../Particle";
 import { createPoisonBubble, createBloodParticle, BloodParticleSize } from "../particles";
 import { addTexturedParticleToBufferContainer, ParticleRenderLayer, addMonocolourParticleToBufferContainer, ParticleColour } from "../rendering/webgl/particle-rendering";
 import { Light, addLight, attachLightToEntity, removeLight } from "../lights";
+import { PacketReader } from "webgl-test-shared/dist/packets";
 
 const BURNING_PARTICLE_COLOURS: ReadonlyArray<ParticleColour> = [
    [255/255, 102/255, 0],
@@ -18,15 +19,15 @@ const BURNING_PARTICLE_COLOURS: ReadonlyArray<ParticleColour> = [
 
 const BURNING_SMOKE_PARTICLE_FADEIN_TIME = 0.15;
 
-class StatusEffectComponent extends ServerComponent<ServerComponentType.statusEffect> {
+class StatusEffectComponent extends ServerComponent {
    private burningLight: Light | null = null;
    
    public statusEffects = new Array<StatusEffectData>()
 
-   constructor(entity: Entity, data: StatusEffectComponentData) {
+   constructor(entity: Entity, reader: PacketReader) {
       super(entity);
 
-      this.updateFromData(data);
+      this.updateFromData(reader);
    }
 
    public tick(): void {
@@ -203,8 +204,27 @@ class StatusEffectComponent extends ServerComponent<ServerComponentType.statusEf
       }
    }
 
-   public updateFromData(data: StatusEffectComponentData): void {
-      for (const statusEffectData of data.statusEffects) {
+   public padData(reader: PacketReader): void {
+      const numStatusEffects = reader.readNumber();
+      reader.padOffset(2 * Float32Array.BYTES_PER_ELEMENT * numStatusEffects);
+   }
+
+   public updateFromData(reader: PacketReader): void {
+      // @Temporary @Speed
+      const statusEffects = new Array<StatusEffectData>();
+      const numStatusEffects = reader.readNumber();
+      for (let i = 0; i < numStatusEffects; i++) {
+         const type = reader.readNumber() as StatusEffect;
+         const ticksElapsed = reader.readNumber();
+
+         const statusEffectData: StatusEffectData = {
+            type: type,
+            ticksElapsed: ticksElapsed
+         }
+         statusEffects.push(statusEffectData);
+      }
+      
+      for (const statusEffectData of statusEffects) {
          if (!this.hasStatusEffect(statusEffectData.type)) {
             switch (statusEffectData.type) {
                case StatusEffect.freezing: {
@@ -216,7 +236,11 @@ class StatusEffectComponent extends ServerComponent<ServerComponentType.statusEf
          }
       }
       
-      this.statusEffects = data.statusEffects;
+      this.statusEffects = statusEffects;
+   }
+
+   public updatePlayerFromData(reader: PacketReader): void {
+      this.updateFromData(reader);
    }
 
    public hasStatusEffect(type: StatusEffect): boolean {

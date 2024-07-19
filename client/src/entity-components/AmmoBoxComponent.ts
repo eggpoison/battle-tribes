@@ -8,18 +8,22 @@ import Board from "../Board";
 import { BallistaAmmoType } from "webgl-test-shared/dist/items/items";
 import { RenderPart } from "../render-parts/render-parts";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
+import { PacketReader } from "webgl-test-shared/dist/packets";
 
-class AmmoBoxComponent extends ServerComponent<ServerComponentType.ammoBox> {
+class AmmoBoxComponent extends ServerComponent {
    public ammoType: BallistaAmmoType | null;
    public ammoRemaining: number;
 
    private ammoWarningRenderPart: RenderPart | null = null;
    
-   constructor(entity: Entity, data: AmmoBoxComponentData) {
+   constructor(entity: Entity, reader: PacketReader) {
       super(entity);
 
-      this.ammoType = data.ammoRemaining > 0 ? data.ammoType : null;
-      this.ammoRemaining = data.ammoRemaining;
+      const ammoType = reader.readNumber();
+      const ammoRemaining = reader.readNumber();
+
+      this.ammoType = ammoRemaining > 0 ? ammoType : null;
+      this.ammoRemaining = ammoRemaining;
    }
 
    private updateAmmoType(ammoType: BallistaAmmoType | null): void {
@@ -54,14 +58,21 @@ class AmmoBoxComponent extends ServerComponent<ServerComponentType.ammoBox> {
       this.ammoType = ammoType;
    }
 
-   public updateFromData(data: AmmoBoxComponentData): void {
-      const ammoType = data.ammoType;
-      this.ammoRemaining = data.ammoRemaining;
+   public padData(reader: PacketReader): void {
+      reader.padOffset(2 * Float32Array.BYTES_PER_ELEMENT);
+   }
+
+   public updateFromData(reader: PacketReader): void {
+      const ammoType = reader.readNumber();
+      const ammoRemaining = reader.readNumber();
+
       if (this.ammoRemaining === 0) {
          this.updateAmmoType(null);
       } else {
          this.updateAmmoType(ammoType);
       }
+
+      this.ammoRemaining = ammoRemaining;
    }
 }
 

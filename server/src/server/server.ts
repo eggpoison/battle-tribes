@@ -15,7 +15,7 @@ import { updateDynamicPathfindingNodes } from "../pathfinding";
 import { updateResourceDistributions } from "../resource-distributions";
 import { updateGrassBlockers } from "../grass-blockers";
 import { createGameDataPacket, createSyncDataPacket, createSyncPacket } from "./game-data-packets";
-import PlayerClient from "./PlayerClient";
+import PlayerClient, { PlayerClientVars } from "./PlayerClient";
 import { addPlayerClient, generatePlayerSpawnPosition, getPlayerClients } from "./player-clients";
 import { createPlayerConfig } from "../entities/tribes/player";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
@@ -25,6 +25,7 @@ import { processPlayerDataPacket } from "./packet-processing";
 import { EntityID } from "webgl-test-shared/dist/entities";
 import { SpikesComponentArray } from "../components/SpikesComponent";
 import { TribeComponentArray } from "../components/TribeComponent";
+import { TransformComponentArray } from "../components/TransformComponent";
 
 /*
 
@@ -46,18 +47,28 @@ const entityIsHiddenFromPlayer = (entity: EntityID, playerTribe: Tribe): boolean
    return false;
 }
 
-const getPlayerVisibleEntities = (chunkBounds: VisibleChunkBounds, playerTribe: Tribe): Set<EntityID> => {
+const getPlayerVisibleEntities = (playerClient: PlayerClient): Set<EntityID> => {
    const entities = new Set<EntityID>();
+      
+   // @Copynpaste
+   const playerTransformComponent = TransformComponentArray.getComponent(playerClient.instance);
+   const minVisibleX = playerTransformComponent.position.x - playerClient.screenWidth * 0.5 - PlayerClientVars.VIEW_PADDING;
+   const maxVisibleX = playerTransformComponent.position.x + playerClient.screenWidth * 0.5 + PlayerClientVars.VIEW_PADDING;
+   const minVisibleY = playerTransformComponent.position.y - playerClient.screenHeight * 0.5 - PlayerClientVars.VIEW_PADDING;
+   const maxVisibleY = playerTransformComponent.position.y + playerClient.screenHeight * 0.5 + PlayerClientVars.VIEW_PADDING;
    
-   for (let chunkX = chunkBounds[0]; chunkX <= chunkBounds[1]; chunkX++) {
-      for (let chunkY = chunkBounds[2]; chunkY <= chunkBounds[3]; chunkY++) {
+   for (let chunkX = playerClient.visibleChunkBounds[0]; chunkX <= playerClient.visibleChunkBounds[1]; chunkX++) {
+      for (let chunkY = playerClient.visibleChunkBounds[2]; chunkY <= playerClient.visibleChunkBounds[3]; chunkY++) {
          const chunk = Board.getChunk(chunkX, chunkY);
          for (const entity of chunk.entities) {
-            if (entityIsHiddenFromPlayer(entity, playerTribe)) {
+            if (entityIsHiddenFromPlayer(entity, playerClient.tribe)) {
                continue;
             }
 
-            entities.add(entity);
+            const transformComponent = TransformComponentArray.getComponent(entity);
+            if (transformComponent.boundingAreaMinX <= maxVisibleX && transformComponent.boundingAreaMaxX >= minVisibleX && transformComponent.boundingAreaMinY <= maxVisibleY && transformComponent.boundingAreaMaxY >= minVisibleY) {
+               entities.add(entity);
+            }
          }
       }
    }
@@ -144,7 +155,7 @@ class GameServer {
                   config[ServerComponentType.player].username = username;
                   const player = createEntityFromConfig(config);
       
-                  playerClient = new PlayerClient(socket, tribe, visibleChunkBounds, player, username);
+                  playerClient = new PlayerClient(socket, tribe, screenWidth, screenHeight, spawnPosition, player, username);
                   addPlayerClient(playerClient, player, config);
 
                   break;
@@ -263,7 +274,7 @@ class GameServer {
                   Math.min(playerClient.visibleChunkBounds[3] + 1, Settings.BOARD_SIZE - 1)
                ];
             
-               const visibleEntities = getPlayerVisibleEntities(extendedVisibleChunkBounds, playerClient.tribe);
+               const visibleEntities = getPlayerVisibleEntities(playerClient);
                
                const newlyVisibleEntities = new Array<EntityID>();
                // @Speed

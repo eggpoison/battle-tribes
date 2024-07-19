@@ -1,4 +1,4 @@
-import { PlanterBoxComponentData, PlanterBoxPlant, ServerComponentType } from "webgl-test-shared/dist/components";
+import { PlanterBoxPlant, ServerComponentType } from "webgl-test-shared/dist/components";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
@@ -8,19 +8,23 @@ import { createGrowthParticle } from "../particles";
 import { getRandomPointInEntity } from "./TransformComponent";
 import { RenderPart } from "../render-parts/render-parts";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
+import { PacketReader } from "webgl-test-shared/dist/packets";
 
-class PlanterBoxComponent extends ServerComponent<ServerComponentType.planterBox> {
+class PlanterBoxComponent extends ServerComponent {
    private moundRenderPart: RenderPart | null = null;
    
    public hasPlant: boolean;
    public isFertilised: boolean;
    
-   constructor(entity: Entity, data: PlanterBoxComponentData) {
+   constructor(entity: Entity, reader: PacketReader) {
       super(entity);
 
-      this.hasPlant = data.plantType !== null;
-      this.isFertilised = data.isFertilised;
-      this.updateMoundRenderPart(data.plantType);
+      const plantType = reader.readNumber();
+      this.hasPlant = plantType !== -1;
+      this.isFertilised = reader.readBoolean();
+      reader.padOffset(3);
+      
+      this.updateMoundRenderPart(plantType);
    }
 
    private createGrowthParticle(): void {
@@ -37,8 +41,8 @@ class PlanterBoxComponent extends ServerComponent<ServerComponentType.planterBox
       }
    }
 
-   private updateMoundRenderPart(plantType: PlanterBoxPlant | null): void {
-      if (plantType !== null) {
+   private updateMoundRenderPart(plantType: PlanterBoxPlant | -1): void {
+      if (plantType !== -1) {
          if (this.moundRenderPart === null) {
             // @Temporary
             const textureSource = plantType === PlanterBoxPlant.iceSpikes ? "entities/plant/snow-clump.png" : "entities/plant/dirt-clump.png";
@@ -57,8 +61,16 @@ class PlanterBoxComponent extends ServerComponent<ServerComponentType.planterBox
       }
    }
 
-   public updateFromData(data: PlanterBoxComponentData): void {
-      if (data.isFertilised && !this.isFertilised) {
+   public padData(reader: PacketReader): void {
+      reader.padOffset(2 * Float32Array.BYTES_PER_ELEMENT);
+   }
+
+   public updateFromData(reader: PacketReader): void {
+      const plantType = reader.readNumber();
+      const isFertilised = reader.readBoolean();
+      reader.padOffset(3);
+      
+      if (isFertilised && !this.isFertilised) {
          for (let i = 0; i < 25; i++) {
             this.createGrowthParticle();
          }
@@ -66,9 +78,9 @@ class PlanterBoxComponent extends ServerComponent<ServerComponentType.planterBox
          const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
          playSound("fertiliser.mp3", 0.6, 1, transformComponent.position);
       }
-      this.isFertilised = data.isFertilised;
+      this.isFertilised = isFertilised;
       
-      const hasPlant = data.plantType !== null;
+      const hasPlant = plantType !== -1;
       if (hasPlant && this.hasPlant !== hasPlant) {
          // Plant sound effect
          const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
@@ -76,7 +88,7 @@ class PlanterBoxComponent extends ServerComponent<ServerComponentType.planterBox
       }
       this.hasPlant = hasPlant;
 
-      this.updateMoundRenderPart(data.plantType);
+      this.updateMoundRenderPart(plantType);
    }
 }
 

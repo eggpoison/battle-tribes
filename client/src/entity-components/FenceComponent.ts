@@ -4,6 +4,7 @@ import Entity from "../Entity";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { RenderPart } from "../render-parts/render-parts";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
+import { PacketReader } from "webgl-test-shared/dist/packets";
 
 type RailBit = 0b0001 | 0b0010 | 0b0100 | 0b1000;
 
@@ -16,12 +17,12 @@ const getRailIdx = (railBit: RailBit): number => {
    }
 }
 
-class FenceComponent extends ServerComponent<ServerComponentType.fence> {
+class FenceComponent extends ServerComponent {
    private readonly railRenderParts: [RenderPart | null, RenderPart | null, RenderPart | null, RenderPart | null] = [null, null, null, null]
    
    private connectedSidesBitset = 0;
    
-   constructor(entity: Entity, _data: FenceComponentData) {
+   constructor(entity: Entity) {
       super(entity);
 
       this.updateRails();
@@ -106,8 +107,10 @@ class FenceComponent extends ServerComponent<ServerComponentType.fence> {
 
       this.connectedSidesBitset = connectedSidesBitset;
    }
+
+   public padData(): void {}
    
-   public updateFromData(_data: FenceComponentData): void {
+   public updateFromData(): void {
       this.updateRails();
    }
 }

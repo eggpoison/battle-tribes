@@ -1,13 +1,21 @@
-import { ServerComponentType, SlimeSpitComponentData } from "webgl-test-shared/dist/components";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
+import { PacketReader } from "webgl-test-shared/dist/packets";
 
-class SlimeSpitComponent extends ServerComponent<ServerComponentType.slimeSpit> {
-   constructor(entity: Entity, _data: SlimeSpitComponentData) {
+class SlimeSpitComponent extends ServerComponent {
+   constructor(entity: Entity, reader: PacketReader) {
       super(entity);
+
+      reader.padOffset(Float32Array.BYTES_PER_ELEMENT);
    }
    
-   public updateFromData(_data: SlimeSpitComponentData): void {}
+   public padData(reader: PacketReader): void {
+      reader.padOffset(Float32Array.BYTES_PER_ELEMENT);
+   }
+   
+   public updateFromData(reader: PacketReader): void {
+      reader.padOffset(Float32Array.BYTES_PER_ELEMENT);
+   }
 }
 
 export default SlimeSpitComponent;

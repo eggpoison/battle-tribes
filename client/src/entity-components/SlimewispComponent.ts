@@ -1,13 +1,9 @@
-import { ServerComponentType, SlimewispComponentData } from "webgl-test-shared/dist/components";
 import ServerComponent from "./ServerComponent";
-import Entity from "../Entity";
 
-class SlimewispComponent extends ServerComponent<ServerComponentType.slimewisp> {
-   constructor(entity: Entity, _data: SlimewispComponentData) {
-      super(entity);
-   }
+class SlimewispComponent extends ServerComponent {
+   public padData(): void {}
    
-   public updateFromData(_data: SlimewispComponentData): void {}
+   public updateFromData(): void {}
 }
 
 export default SlimewispComponent;

@@ -61,8 +61,8 @@ function getDataLength(entity: EntityID): number {
    const slimeComponent = SlimeComponentArray.getComponent(entity);
 
    let lengthBytes = 4 * Float32Array.BYTES_PER_ELEMENT;
-   lengthBytes += Float32Array.BYTES_PER_ELEMENT * slimeComponent.orbSizes.length;
    lengthBytes += 2 * Float32Array.BYTES_PER_ELEMENT;
+   lengthBytes += Float32Array.BYTES_PER_ELEMENT * slimeComponent.orbSizes.length;
 
    return lengthBytes;
 }
@@ -72,12 +72,6 @@ function addDataToPacket(packet: Packet, entity: EntityID): void {
 
    packet.addNumber(slimeComponent.size);
    packet.addNumber(slimeComponent.eyeRotation);
-
-   packet.addNumber(slimeComponent.orbSizes.length);
-   for (let i = 0; i < slimeComponent.orbSizes.length; i++) {
-      const orbSize = slimeComponent.orbSizes[i];
-      packet.addNumber(orbSize);
-   }
    
    let anger = -1;
    if (slimeComponent.angeredEntities.length > 0) {
@@ -93,4 +87,10 @@ function addDataToPacket(packet: Packet, entity: EntityID): void {
 
    const spitChargeProgress = slimeComponent.spitChargeTicks >= SPIT_COOLDOWN_TICKS ? (slimeComponent.spitChargeTicks - SPIT_COOLDOWN_TICKS) / (SPIT_CHARGE_TIME_TICKS - SPIT_COOLDOWN_TICKS) : -1;
    packet.addNumber(spitChargeProgress);
+
+   packet.addNumber(slimeComponent.orbSizes.length);
+   for (let i = 0; i < slimeComponent.orbSizes.length; i++) {
+      const orbSize = slimeComponent.orbSizes[i];
+      packet.addNumber(orbSize);
+   }
 }

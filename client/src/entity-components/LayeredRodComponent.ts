@@ -1,4 +1,4 @@
-import { LayeredRodComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 import Entity from "../Entity";
 import ColouredRenderPart, { RenderPartColour } from "../render-parts/ColouredRenderPart";
 import { RenderPart } from "../render-parts/render-parts";
@@ -8,6 +8,7 @@ import { Settings } from "webgl-test-shared/dist/settings";
 import Board from "../Board";
 import { hueShift } from "../colour";
 import { Hitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
+import { PacketReader } from "webgl-test-shared/dist/packets";
 
 const enum Vars {
    // NATURAL_DRIFT = 0.6 / Settings.TPS
@@ -38,12 +39,16 @@ class LayeredRodComponent extends ServerComponent {
    private bendX = 0;
    private bendY = 0;
    
-   constructor(entity: Entity, data: LayeredRodComponentData) {
+   constructor(entity: Entity, reader: PacketReader) {
       super(entity);
 
-      this.numLayers = data.numLayers;
-      this.naturalBendX = data.bend[0];
-      this.naturalBendY = data.bend[1];
+      this.numLayers = reader.readNumber();
+      this.naturalBendX = reader.readNumber();
+      this.naturalBendY = reader.readNumber();
+
+      const r = reader.readNumber();
+      const g = reader.readNumber();
+      const b = reader.readNumber();
       
       const transformComponent = entity.getServerComponent(ServerComponentType.transform);
 
@@ -57,22 +62,22 @@ class LayeredRodComponent extends ServerComponent {
          humidity = lerp(humidity, 0, 1 - grassInfo.temperature * 2);
       }
       
-      const bendX = data.bend[0];
-      const bendY = data.bend[1];
+      const bendX = this.naturalBendX;
+      const bendY = this.naturalBendY;
       
       // Create layers
-      for (let layer = 1; layer <= data.numLayers; layer++) {
+      for (let layer = 1; layer <= this.numLayers; layer++) {
          // Lower layers are darker
          // let brightnessMultiplier = layer / data.numLayers;
-         let brightnessMultiplier = (layer - 1) / Math.max((data.numLayers - 1), 1);
+         let brightnessMultiplier = (layer - 1) / Math.max((this.numLayers - 1), 1);
 
          // Minimum brighness
          brightnessMultiplier = lerp(brightnessMultiplier, 1, 0.88);
          
          const colour: RenderPartColour = {
-            r: data.colour.r * brightnessMultiplier,
-            g: data.colour.g * brightnessMultiplier,
-            b: data.colour.b * brightnessMultiplier,
+            r: r * brightnessMultiplier,
+            g: g * brightnessMultiplier,
+            b: b * brightnessMultiplier,
             a: 1
          };
 
@@ -172,7 +177,13 @@ class LayeredRodComponent extends ServerComponent {
       this.entity.dirty();
    }
 
-   public updateFromData(data: LayeredRodComponentData): void {}
+   public padData(reader: PacketReader): void {
+      reader.padOffset(6 * Float32Array.BYTES_PER_ELEMENT);
+   }
+
+   public updateFromData(reader: PacketReader): void {
+      reader.padOffset(6 * Float32Array.BYTES_PER_ELEMENT);
+   }
 }
 
 export default LayeredRodComponent;

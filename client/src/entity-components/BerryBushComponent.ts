@@ -1,7 +1,7 @@
-import { BerryBushComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
+import { PacketReader } from "webgl-test-shared/dist/packets";
 
 export const BERRY_BUSH_TEXTURE_SOURCES = [
    "entities/berry-bush1.png",
@@ -12,23 +12,27 @@ export const BERRY_BUSH_TEXTURE_SOURCES = [
    "entities/berry-bush6.png"
 ];
 
-class BerryBushComponent extends ServerComponent<ServerComponentType.berryBush> {
-   public readonly numBerries: number;
+class BerryBushComponent extends ServerComponent {
+   public numBerries: number;
    private renderPart!: TexturedRenderPart;
    
-   constructor(entity: Entity, data: BerryBushComponentData) {
+   constructor(entity: Entity, reader: PacketReader) {
       super(entity);
       
-      this.numBerries = data.numBerries;
+      this.numBerries = reader.readNumber();
    }
 
    public onLoad(): void {
       this.renderPart = this.entity.getRenderPart("berryBushComponent:renderPart") as TexturedRenderPart;
    }
 
-   public updateFromData(data: BerryBushComponentData): void {
-      const numBerries = data.numBerries;
-      this.renderPart.switchTextureSource(BERRY_BUSH_TEXTURE_SOURCES[numBerries]);
+   public padData(reader: PacketReader): void {
+      reader.padOffset(Float32Array.BYTES_PER_ELEMENT);
+   }
+
+   public updateFromData(reader: PacketReader): void {
+      this.numBerries = reader.readNumber();
+      this.renderPart.switchTextureSource(BERRY_BUSH_TEXTURE_SOURCES[this.numBerries]);
    }
 }
 

@@ -1,4 +1,4 @@
-import { ServerComponentType, TribesmanAIType, TribesmanAIComponentData } from "webgl-test-shared/dist/components";
+import { ServerComponentType, TribesmanAIType } from "webgl-test-shared/dist/components";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { TribeType } from "webgl-test-shared/dist/tribes";
 import { randInt, randItem } from "webgl-test-shared/dist/utils";
@@ -6,29 +6,30 @@ import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import { AudioFilePath, playSound } from "../sound";
 import { ItemType } from "webgl-test-shared/dist/items/items";
+import { PacketReader } from "webgl-test-shared/dist/packets";
 
 const GOBLIN_ANGRY_SOUNDS: ReadonlyArray<AudioFilePath> = ["goblin-angry-1.mp3", "goblin-angry-2.mp3", "goblin-angry-3.mp3", "goblin-angry-4.mp3"];
 const GOBLIN_ESCAPE_SOUNDS: ReadonlyArray<AudioFilePath> = ["goblin-escape-1.mp3", "goblin-escape-2.mp3", "goblin-escape-3.mp3"];
 const GOBLIN_AMBIENT_SOUNDS: ReadonlyArray<AudioFilePath> = ["goblin-ambient-1.mp3", "goblin-ambient-2.mp3", "goblin-ambient-3.mp3", "goblin-ambient-4.mp3", "goblin-ambient-5.mp3"];
 
-class TribesmanAIComponent extends ServerComponent<ServerComponentType.tribesmanAI> {
+class TribesmanAIComponent extends ServerComponent {
    public readonly name: number;
    public readonly untitledDescriptor: number;
    public aiType: TribesmanAIType;
    public relationsWithPlayer: number;
 
-   public craftingProgress: number;
    public craftingItemType: ItemType;
+   public craftingProgress: number;
 
-   constructor(entity: Entity, data: TribesmanAIComponentData) {
+   constructor(entity: Entity, reader: PacketReader) {
       super(entity);
 
-      this.name = data.name;
-      this.untitledDescriptor = data.untitledDescriptor;
-      this.aiType = data.currentAIType;
-      this.relationsWithPlayer = data.relationsWithPlayer;
-      this.craftingProgress = data.craftingProgress;
-      this.craftingItemType = data.craftingItemType;
+      this.name = reader.readNumber();
+      this.untitledDescriptor = reader.readNumber();
+      this.aiType = reader.readNumber();
+      this.relationsWithPlayer = reader.readNumber();
+      this.craftingItemType = reader.readNumber();
+      this.craftingProgress = reader.readNumber();
    }
 
    public tick(): void {
@@ -81,11 +82,16 @@ class TribesmanAIComponent extends ServerComponent<ServerComponentType.tribesman
       }
    }
 
-   public updateFromData(data: TribesmanAIComponentData): void {
-      this.aiType = data.currentAIType;
-      this.relationsWithPlayer = data.relationsWithPlayer;
-      this.craftingProgress = data.craftingProgress;
-      this.craftingItemType = data.craftingItemType;
+   public padData(reader: PacketReader): void {
+      reader.padOffset(6 * Float32Array.BYTES_PER_ELEMENT);
+   }
+
+   public updateFromData(reader: PacketReader): void {
+      reader.padOffset(2 * Float32Array.BYTES_PER_ELEMENT);
+      this.aiType = reader.readNumber();
+      this.relationsWithPlayer = reader.readNumber();
+      this.craftingItemType = reader.readNumber();
+      this.craftingProgress = reader.readNumber();
    }
 }
 

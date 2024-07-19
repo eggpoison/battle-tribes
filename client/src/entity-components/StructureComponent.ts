@@ -1,21 +1,27 @@
-import { StructureComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
+import { PacketReader } from "webgl-test-shared/dist/packets";
 
-class StructureComponent extends ServerComponent<ServerComponentType.structure> {
+class StructureComponent extends ServerComponent {
    public hasActiveBlueprint: boolean;
    public connectedSidesBitset: number;
    
-   constructor(entity: Entity, data: StructureComponentData) {
+   constructor(entity: Entity, reader: PacketReader) {
       super(entity);
 
-      this.hasActiveBlueprint = data.hasActiveBlueprint;
-      this.connectedSidesBitset = data.connectedSidesBitset;
+      this.hasActiveBlueprint = reader.readBoolean();
+      reader.padOffset(3);
+      this.connectedSidesBitset = reader.readNumber();
    }
 
-   public updateFromData(data: StructureComponentData): void {
-      this.hasActiveBlueprint = data.hasActiveBlueprint;
-      this.connectedSidesBitset = data.connectedSidesBitset;
+   public padData(reader: PacketReader): void {
+      reader.padOffset(2 * Float32Array.BYTES_PER_ELEMENT);
+   }
+
+   public updateFromData(reader: PacketReader): void {
+      this.hasActiveBlueprint = reader.readBoolean();
+      reader.padOffset(3);
+      this.connectedSidesBitset = reader.readNumber();
    }
 }
 

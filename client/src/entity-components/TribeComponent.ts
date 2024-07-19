@@ -8,6 +8,7 @@ import Game from "../Game";
 import { playSound } from "../sound";
 import { getTribesmanRadius } from "./TribeMemberComponent";
 import { createConversionParticle } from "../particles";
+import { PacketReader } from "webgl-test-shared/dist/packets";
 
 export function getTribeType(tribeID: number): TribeType {
    if (tribeID === Game.tribe.id) {
@@ -29,20 +30,26 @@ export function getTribeType(tribeID: number): TribeType {
    }
 }
 
-class TribeComponent extends ServerComponent<ServerComponentType.tribe> {
+class TribeComponent extends ServerComponent {
    public tribeID: number;
    public tribeType: TribeType;
 
-   constructor(entity: Entity, data: TribeComponentData) {
+   constructor(entity: Entity, reader: PacketReader) {
       super(entity);
       
-      this.tribeID = data.tribeID;
-      this.tribeType = getTribeType(data.tribeID);
+      this.tribeID = reader.readNumber();
+      this.tribeType = getTribeType(this.tribeID);
    }
 
-   public updateFromData(data: TribeComponentData): void {
+   public padData(reader: PacketReader): void {
+      reader.padOffset(Float32Array.BYTES_PER_ELEMENT);
+   }
+
+   public updateFromData(reader: PacketReader): void {
+      const tribeID = reader.readNumber();
+      
       // Tribesman conversion
-      if (data.tribeID !== this.tribeID && this.entity.hasServerComponent(ServerComponentType.tribeMember)) {
+      if (tribeID !== this.tribeID && this.entity.hasServerComponent(ServerComponentType.tribeMember)) {
          const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
 
          playSound("conversion.mp3", 0.4, 1, transformComponent.position);
@@ -63,8 +70,8 @@ class TribeComponent extends ServerComponent<ServerComponentType.tribe> {
          }
       }
       
-      this.tribeID = data.tribeID;
-      this.tribeType = getTribeType(data.tribeID);
+      this.tribeID = tribeID;
+      this.tribeType = getTribeType(tribeID);
    }
 }
 

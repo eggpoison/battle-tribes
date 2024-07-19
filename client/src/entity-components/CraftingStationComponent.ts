@@ -1,18 +1,24 @@
-import { CraftingStationComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import { CraftingStation } from "webgl-test-shared/dist/items/crafting-recipes";
+import { PacketReader } from "webgl-test-shared/dist/packets";
 
-class CraftingStationComponent extends ServerComponent<ServerComponentType.craftingStation> {
+class CraftingStationComponent extends ServerComponent {
    public readonly craftingStation: CraftingStation;
    
-   constructor(entity: Entity, data: CraftingStationComponentData) {
+   constructor(entity: Entity, reader: PacketReader) {
       super(entity);
 
-      this.craftingStation = data.craftingStation;
+      this.craftingStation = reader.readNumber();
    }
 
-   public updateFromData(_data: CraftingStationComponentData): void {}
+   public padData(reader: PacketReader): void {
+      reader.padOffset(Float32Array.BYTES_PER_ELEMENT);
+   }
+
+   public updateFromData(reader: PacketReader): void {
+      reader.padOffset(Float32Array.BYTES_PER_ELEMENT);
+   }
 }
 
 export default CraftingStationComponent;

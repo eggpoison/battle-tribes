@@ -1,4 +1,4 @@
-import { CowComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { randInt } from "webgl-test-shared/dist/utils";
 import Entity from "../Entity";
@@ -8,16 +8,17 @@ import { createDirtParticle } from "../particles";
 import { AudioFilePath, playSound } from "../sound";
 import { ParticleRenderLayer } from "../rendering/webgl/particle-rendering";
 import { CowSpecies } from "webgl-test-shared/dist/entities";
+import { PacketReader } from "webgl-test-shared/dist/packets";
 
-class CowComponent extends ServerComponent<ServerComponentType.cow> {
+class CowComponent extends ServerComponent {
    public readonly species: CowSpecies;
    private grazeProgress: number;
 
-   constructor(entity: Entity, data: CowComponentData) {
+   constructor(entity: Entity, reader: PacketReader) {
       super(entity);
 
-      this.species = data.species;
-      this.grazeProgress = data.grazeProgress;
+      this.species = reader.readNumber();
+      this.grazeProgress = reader.readNumber();
    }
 
    public tick(): void {
@@ -36,9 +37,16 @@ class CowComponent extends ServerComponent<ServerComponentType.cow> {
       }
    }
 
-   public updateFromData(data: CowComponentData): void {
+   public padData(reader: PacketReader): void {
+      reader.padOffset(2 * Float32Array.BYTES_PER_ELEMENT);
+   }
+
+   public updateFromData(reader: PacketReader): void {
+      reader.padOffset(4);
+      const grazeProgress = reader.readNumber();
+      
       // When the cow has finished grazing, create a bunch of dirt particles
-      if (data.grazeProgress < this.grazeProgress) {
+      if (grazeProgress < this.grazeProgress) {
          const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
          for (let i = 0; i < 15; i++) {
             const x = (transformComponent.tile.x + Math.random()) * Settings.TILE_SIZE;
@@ -46,7 +54,7 @@ class CowComponent extends ServerComponent<ServerComponentType.cow> {
             createDirtParticle(x, y, ParticleRenderLayer.low);
          }
       }
-      this.grazeProgress = data.grazeProgress;
+      this.grazeProgress = grazeProgress;
    }
 }
 

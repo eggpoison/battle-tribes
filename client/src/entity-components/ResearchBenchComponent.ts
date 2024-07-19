@@ -1,17 +1,19 @@
-import { ResearchBenchComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
 import { customTickIntervalHasPassed } from "webgl-test-shared/dist/utils";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import { createPaperParticle } from "../particles";
 import { getRandomPointInEntity } from "./TransformComponent";
+import { PacketReader } from "webgl-test-shared/dist/packets";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 
-class ResearchBenchComponent extends ServerComponent<ServerComponentType.researchBench> {
+class ResearchBenchComponent extends ServerComponent {
    public isOccupied: boolean;
 
-   constructor(entity: Entity, data: ResearchBenchComponentData) {
+   constructor(entity: Entity, reader: PacketReader) {
       super(entity);
       
-      this.isOccupied = data.isOccupied;
+      this.isOccupied = reader.readBoolean();
+      reader.padOffset(3);
    }
 
    public tick(): void {
@@ -22,8 +24,13 @@ class ResearchBenchComponent extends ServerComponent<ServerComponentType.researc
       }
    }
 
-   public updateFromData(data: ResearchBenchComponentData): void {
-      this.isOccupied = data.isOccupied;
+   public padData(reader: PacketReader): void {
+      reader.padOffset(Float32Array.BYTES_PER_ELEMENT);
+   }
+
+   public updateFromData(reader: PacketReader): void {
+      this.isOccupied = reader.readBoolean();
+      reader.padOffset(3);
    }
 }
 

@@ -1,5 +1,5 @@
 import { EntityType } from "webgl-test-shared/dist/entities";
-import { ServerComponentType, TurretComponentData } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { lerp } from "webgl-test-shared/dist/utils";
 import Entity from "../Entity";
 import ServerComponent from "./ServerComponent";
@@ -8,6 +8,7 @@ import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { BallistaAmmoType, ItemType } from "webgl-test-shared/dist/items/items";
 import { RenderPart } from "../render-parts/render-parts";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
+import { PacketReader } from "webgl-test-shared/dist/packets";
 
 type TurretType = EntityType.slingTurret | EntityType.ballista;
 
@@ -113,7 +114,7 @@ const getProjectileZIndex = (entityType: TurretType): number => {
    }
 }
 
-class TurretComponent extends ServerComponent<ServerComponentType.turret> {
+class TurretComponent extends ServerComponent {
    /** The render part which changes texture as the turret charges */
    private readonly aimingRenderPart: TexturedRenderPart;
    /** The render part which pivots as the turret aims */
@@ -124,16 +125,18 @@ class TurretComponent extends ServerComponent<ServerComponentType.turret> {
    // @Cleanup: Do we need to store this?
    private chargeProgress: number;
    
-   constructor(entity: Entity, data: TurretComponentData) {
+   constructor(entity: Entity, reader: PacketReader) {
       super(entity);
 
-      this.chargeProgress = data.chargeProgress;
+      const aimDirection = reader.readNumber();
+      this.chargeProgress = reader.readNumber();
+      reader.padOffset(Float32Array.BYTES_PER_ELEMENT);
 
       this.aimingRenderPart = this.entity.getRenderPart("turretComponent:aiming") as TexturedRenderPart;
       this.pivotingRenderPart = this.entity.getRenderPart("turretComponent:pivoting");
       this.gearRenderParts = this.entity.getRenderParts("turretComponent:gear");
 
-      this.updateAimDirection(data.aimDirection, data.chargeProgress);
+      this.updateAimDirection(aimDirection, this.chargeProgress);
    }
 
    private updateAimDirection(aimDirection: number, chargeProgress: number): void {
@@ -203,11 +206,14 @@ class TurretComponent extends ServerComponent<ServerComponentType.turret> {
          this.projectileRenderPart = null;
       }
    }
+   public padData(reader: PacketReader): void {
+      reader.padOffset(3 * Float32Array.BYTES_PER_ELEMENT);
+   }
    
-   public updateFromData(data: TurretComponentData): void {
-      const aimDirection = data.aimDirection;
-      const chargeProgress = data.chargeProgress;
-      const reloadProgress = data.reloadProgress;
+   public updateFromData(reader: PacketReader): void {
+      const aimDirection = reader.readNumber();
+      const chargeProgress = reader.readNumber();
+      const reloadProgress = reader.readNumber();
       
       if (chargeProgress < this.chargeProgress) {
          playFireSound(this.entity);

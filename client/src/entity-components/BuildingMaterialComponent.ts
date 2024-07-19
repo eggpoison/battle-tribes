@@ -1,8 +1,9 @@
-import { BuildingMaterial, BuildingMaterialComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
+import { BuildingMaterial } from "webgl-test-shared/dist/components";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
+import { PacketReader } from "webgl-test-shared/dist/packets";
 
 export const WALL_TEXTURE_SOURCES = ["entities/wall/wooden-wall.png", "entities/wall/stone-wall.png"];
 export const DOOR_TEXTURE_SOURCES = ["entities/door/wooden-door.png", "entities/door/stone-door.png"];
@@ -25,26 +26,32 @@ const getMaterialTextureSources = (entity: Entity): ReadonlyArray<string> => {
    }
 }
 
-class BuildingMaterialComponent extends ServerComponent<ServerComponentType.buildingMaterial> {
+class BuildingMaterialComponent extends ServerComponent {
    private readonly materialRenderPart: TexturedRenderPart;
    public material: BuildingMaterial;
    
-   constructor(entity: Entity, data: BuildingMaterialComponentData) {
+   constructor(entity: Entity, reader: PacketReader) {
       super(entity);
 
-      this.material = data.material;
+      this.material = reader.readNumber();
       this.materialRenderPart = this.entity.getRenderPart("buildingMaterialComponent:material") as TexturedRenderPart;
    }
 
-   public updateFromData(data: BuildingMaterialComponentData): void {
-      if (data.material !== this.material) {
+   public padData(reader: PacketReader): void {
+      reader.padOffset(Float32Array.BYTES_PER_ELEMENT);
+   }
+   
+   public updateFromData(reader: PacketReader): void {
+      const material = reader.readNumber();
+      
+      if (material !== this.material) {
          const textureSources = getMaterialTextureSources(this.entity);
 
-         const textureSource = textureSources[data.material];
+         const textureSource = textureSources[material];
       this.materialRenderPart.switchTextureSource(textureSource);
       }
       
-      this.material = data.material;
+      this.material = material;
    }
 }
 

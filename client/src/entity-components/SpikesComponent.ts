@@ -1,5 +1,5 @@
 import { randFloat } from "webgl-test-shared/dist/utils";
-import { ServerComponentType, SpikesComponentData } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
@@ -7,11 +7,12 @@ import { playSound } from "../sound";
 import { LeafParticleSize, createLeafParticle, createLeafSpeckParticle } from "../particles";
 import { RenderPart } from "../render-parts/render-parts";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
+import { PacketReader } from "webgl-test-shared/dist/packets";
 
 export const NUM_SMALL_COVER_LEAVES = 8;
 export const NUM_LARGE_COVER_LEAVES = 3;
 
-class SpikesComponent extends ServerComponent<ServerComponentType.spikes> {
+class SpikesComponent extends ServerComponent {
    // @Cleanup: should be in particles.ts
    public static readonly LEAF_SPECK_COLOUR_LOW = [63/255, 204/255, 91/255] as const;
    public static readonly LEAF_SPECK_COLOUR_HIGH = [35/255, 158/255, 88/255] as const;
@@ -20,10 +21,11 @@ class SpikesComponent extends ServerComponent<ServerComponentType.spikes> {
 
    public isCovered: boolean;
 
-   constructor(entity: Entity, data: SpikesComponentData) {
+   constructor(entity: Entity, reader: PacketReader) {
       super(entity);
 
-      this.isCovered = data.isCovered;
+      this.isCovered = reader.readBoolean();
+      reader.padOffset(3);
 
       const leafRenderParts = new Array<RenderPart>();
       for (let i = 0; i < NUM_SMALL_COVER_LEAVES; i++) {
@@ -74,10 +76,15 @@ class SpikesComponent extends ServerComponent<ServerComponentType.spikes> {
       }
    }
 
-   public updateFromData(data: SpikesComponentData): void {
+   public padData(reader: PacketReader): void {
+      reader.padOffset(Float32Array.BYTES_PER_ELEMENT);
+   }
+
+   public updateFromData(reader: PacketReader): void {
       const isCoveredBefore = this.isCovered;
       
-      this.isCovered = data.isCovered;
+      this.isCovered = reader.readBoolean();
+      reader.padOffset(3);
       
       if (isCoveredBefore !== this.isCovered) {
          const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);

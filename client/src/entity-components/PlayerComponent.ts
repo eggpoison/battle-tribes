@@ -1,17 +1,23 @@
-import { PlayerComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
+import { PacketReader } from "webgl-test-shared/dist/packets";
 
-class PlayerComponent extends ServerComponent<ServerComponentType.player> {
+class PlayerComponent extends ServerComponent {
    public readonly username: string;
    
-   constructor(entity: Entity, data: PlayerComponentData) {
+   constructor(entity: Entity, reader: PacketReader) {
       super(entity);
 
-      this.username = data.username;
+      this.username = reader.readString(100);
+   }
+
+   public padData(reader: PacketReader): void {
+      reader.padOffset(100);
    }
    
-   public updateFromData(_data: PlayerComponentData): void {}
+   public updateFromData(reader: PacketReader): void {
+      reader.padOffset(100);
+   }
 }
 
 export default PlayerComponent;

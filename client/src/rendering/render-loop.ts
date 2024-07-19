@@ -1,4 +1,3 @@
-import Board from "../Board";
 import Entity from "../Entity";
 import Particle from "../Particle";
 import { RenderPart } from "../render-parts/render-parts";
@@ -69,6 +68,13 @@ export function addRenderable(type: RenderableType, renderable: Renderable): voi
       renderable: renderable
    };
    renderables.splice(idx, 0, renderableInfo);
+
+   // switch (type) {
+   //    case RenderableType.entity: {
+   //       addEntityToBuffer(renderable as Entity);
+   //       break;
+   //    }
+   // }
 }
 
 export function removeRenderable(renderable: Renderable): void {

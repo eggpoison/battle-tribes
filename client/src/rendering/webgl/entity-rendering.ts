@@ -2,10 +2,13 @@ import { createWebGLProgram, gl } from "../../webgl";
 import { getEntityTextureAtlas } from "../../texture-atlases/texture-atlases";
 import { bindUBOToProgram, ENTITY_TEXTURE_ATLAS_UBO, UBOBindingIndex } from "../ubos";
 import Entity from "../../Entity";
-import { RenderPart, renderPartIsTextured } from "../../render-parts/render-parts";
+import { RenderPart } from "../../render-parts/render-parts";
+import { EntityID } from "webgl-test-shared/dist/entities";
+import Board from "../../Board";
 
 const enum Vars {
-   ATTRIBUTES_PER_VERTEX = 17
+   ATTRIBUTES_PER_VERTEX = 17,
+   MAX_RENDER_PARTS = 65536
 }
 
 let program: WebGLProgram;
@@ -14,6 +17,16 @@ let buffer: WebGLBuffer;
 let indexBuffer: WebGLBuffer;
 
 let vertexBuffer: WebGLBuffer;
+
+let depthBuffer: WebGLBuffer;
+let textureArrayIndexBuffer: WebGLBuffer;
+let tintBuffer: WebGLBuffer;
+let opacityBuffer: WebGLBuffer;
+let modelMatrixBuffer: WebGLBuffer;
+
+/** Maps entity IDs to indexes in the buffers */
+const entityIDToBufferIndexRecord: Partial<Record<EntityID, number>> = {};
+const bufferIndexToEntityRecord: Partial<Record<number, EntityID>> = {};
 
 export function createEntityShaders(): void {
    const vertexShaderText = `#version 300 es
@@ -189,6 +202,204 @@ export function createEntityShaders(): void {
    vertexBuffer = gl.createBuffer()!;
    gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
    gl.bufferData(gl.ARRAY_BUFFER, vertexData, gl.STATIC_DRAW);
+
+   depthBuffer = gl.createBuffer()!;
+   gl.bindBuffer(gl.ARRAY_BUFFER, depthBuffer);
+   gl.bufferData(gl.ARRAY_BUFFER, Float32Array.BYTES_PER_ELEMENT * Vars.MAX_RENDER_PARTS, gl.DYNAMIC_DRAW);
+
+   textureArrayIndexBuffer = gl.createBuffer()!;
+   gl.bindBuffer(gl.ARRAY_BUFFER, textureArrayIndexBuffer);
+   gl.bufferData(gl.ARRAY_BUFFER, Float32Array.BYTES_PER_ELEMENT * Vars.MAX_RENDER_PARTS, gl.DYNAMIC_DRAW);
+
+   tintBuffer = gl.createBuffer()!;
+   gl.bindBuffer(gl.ARRAY_BUFFER, tintBuffer);
+   gl.bufferData(gl.ARRAY_BUFFER, 3 * Float32Array.BYTES_PER_ELEMENT * Vars.MAX_RENDER_PARTS, gl.DYNAMIC_DRAW);
+
+   opacityBuffer = gl.createBuffer()!;
+   gl.bindBuffer(gl.ARRAY_BUFFER, opacityBuffer);
+   gl.bufferData(gl.ARRAY_BUFFER, Float32Array.BYTES_PER_ELEMENT * Vars.MAX_RENDER_PARTS, gl.DYNAMIC_DRAW);
+
+   modelMatrixBuffer = gl.createBuffer()!;
+   gl.bindBuffer(gl.ARRAY_BUFFER, modelMatrixBuffer);
+   gl.bufferData(gl.ARRAY_BUFFER, 9 * Float32Array.BYTES_PER_ELEMENT * Vars.MAX_RENDER_PARTS, gl.DYNAMIC_DRAW);
+}
+
+const setData = (entity: Entity, bufferIndex: number): void => {
+   // Depth buffer
+   gl.bindBuffer(gl.ARRAY_BUFFER, depthBuffer);
+   gl.bufferSubData(gl.ARRAY_BUFFER, bufferIndex * Float32Array.BYTES_PER_ELEMENT, entity.depthData);
+   // Texture array index
+   gl.bindBuffer(gl.ARRAY_BUFFER, textureArrayIndexBuffer);
+   gl.bufferSubData(gl.ARRAY_BUFFER, bufferIndex * Float32Array.BYTES_PER_ELEMENT, entity.textureArrayIndexData);
+   // Tint
+   gl.bindBuffer(gl.ARRAY_BUFFER, tintBuffer);
+   gl.bufferSubData(gl.ARRAY_BUFFER, bufferIndex * 3 * Float32Array.BYTES_PER_ELEMENT, entity.tintData);
+   // Opacity
+   gl.bindBuffer(gl.ARRAY_BUFFER, opacityBuffer);
+   gl.bufferSubData(gl.ARRAY_BUFFER, bufferIndex * Float32Array.BYTES_PER_ELEMENT, entity.opacityData);
+   // Model matrix
+   gl.bindBuffer(gl.ARRAY_BUFFER, modelMatrixBuffer);
+   gl.bufferSubData(gl.ARRAY_BUFFER, bufferIndex * 9 * Float32Array.BYTES_PER_ELEMENT, entity.modelMatrixData);
+}
+
+const getBufferIndex = (entity: Entity): number => {
+   // @Speed
+   // Find the first empty buffer index or a buffer index with a greater renderDepth
+   let bufferIndex = 0;
+   for (; bufferIndex < Vars.MAX_RENDER_PARTS; bufferIndex++) {
+      const entityID = bufferIndexToEntityRecord[bufferIndex];
+      if (typeof entityID === "undefined") {
+         // console.log("empty");
+         break;
+      } else {
+         const currentEntity = Board.entityRecord[entityID]!;
+         if (typeof currentEntity === "undefined") {
+            throw new Error();
+         }
+         if (currentEntity.renderDepth > entity.renderDepth) {
+            // console.log("greater");
+            break;
+         }
+      }
+   }
+   return bufferIndex;
+}
+
+const getFinalBufferIndex = (): number => {
+   // @Speed?
+   let finalBufferIndex = 0;
+   for (;;) {
+      const entityID = bufferIndexToEntityRecord[finalBufferIndex];
+      if (typeof entityID === "undefined") {
+         finalBufferIndex--;
+         break;
+      }
+      finalBufferIndex++;
+   }
+   return finalBufferIndex;
+}
+
+export function addEntitiesToBuffer(entities: Array<Entity>): void {
+   const a = entities.length <= 4000;
+   if(a)return;
+   if(a)console.log("-=-=-=-=-=-=---=-=-=-=-=--");
+   if(a)console.log("-=-=-=-=-=-=---=-=-=-=-=--");
+   if(a)console.log("-=-=-=-=-=-=---=-=-=-=-=--");
+
+   // Sort entities from lowest render depth to highest render depth
+   // @Speed
+   const entitiesToAdd = entities.sort((a: Entity, b: Entity) => a.renderDepth - b.renderDepth);
+
+   // Entities which got displaced as a result of shifting data
+   const queuedEntityIDs = new Array<EntityID>();
+   
+   for (let i = 0; i < entitiesToAdd.length; i++) {
+      const entity = entitiesToAdd[i];
+
+      // If the entity is already in the buffer, update its data
+      const existingBufferIndex = entityIDToBufferIndexRecord[entity.id];
+      if (typeof existingBufferIndex !== "undefined") {
+         console.log("update existing data at " + existingBufferIndex + " for entity id " + entity.id);
+         setData(entity, existingBufferIndex);
+         continue;
+      }
+      
+      const bufferIndex = getBufferIndex(entity);
+
+      /** Buffer index of the next entity data to be updated/inserted */
+      let nextBufferIndex: number;
+      if (i < entitiesToAdd.length - 1) {
+         if (queuedEntityIDs.length > 0) {
+            nextBufferIndex = queuedEntityIDs[0];
+         } else {
+            // We add 1 to simulate the current entity being added
+            nextBufferIndex = getBufferIndex(entitiesToAdd[i + 1]) + 1;
+         }
+
+         const overriddenEntityID = bufferIndexToEntityRecord[nextBufferIndex - 1];
+         // Can be undefined if the buffer is completely empty
+         if (typeof overriddenEntityID !== "undefined") {
+            queuedEntityIDs.push(overriddenEntityID!);
+         }
+      } else {
+         // Final buffer index
+         nextBufferIndex = getFinalBufferIndex();
+      }
+      if(a)console.log("next: " + nextBufferIndex);
+      
+      // // Shift all following entities until just before the next entity to insert or the end of the buffer
+      // // Start the swap 2 before the next index, so it doesn't get overridden
+      for (let currentBufferIndex = nextBufferIndex - 2; currentBufferIndex >= bufferIndex; currentBufferIndex--) {
+         // Always >= 0
+         const shiftIndex = currentBufferIndex - bufferIndex;
+
+         let currentEntityID: EntityID;
+         if (shiftIndex <= queuedEntityIDs.length - 1) {
+            currentEntityID = queuedEntityIDs[shiftIndex];
+            queuedEntityIDs.splice(shiftIndex, 1);
+         } else {
+            currentEntityID = bufferIndexToEntityRecord[currentBufferIndex - queuedEntityIDs.length]!;
+         }
+
+         const currentEntity = Board.entityRecord[currentEntityID]!;
+         if(a)console.log("shift up " + currentBufferIndex + " to " + (currentBufferIndex + 1));
+
+         entityIDToBufferIndexRecord[currentEntityID] = currentBufferIndex + 1;
+         bufferIndexToEntityRecord[currentBufferIndex + 1] = currentEntityID;
+         setData(currentEntity, currentBufferIndex + 1);
+   
+         if (currentBufferIndex === bufferIndex) {
+            break;
+         }
+      }
+
+      // Insert into the buffer
+      // if(a)console.log("add into buffer index " + bufferIndex + ". next buffer index: " + nextBufferIndex + " (" + queuedEntityIDs.length + " queued, next = " + entityIDToBufferIndexRecord[queuedEntityIDs[0]] + ")");
+      console.log("add into buffer index " + bufferIndex + ". next buffer index: " + nextBufferIndex + " (" + queuedEntityIDs.length + " queued, next = " + entityIDToBufferIndexRecord[queuedEntityIDs[0]] + ")");
+      entityIDToBufferIndexRecord[entity.id] = bufferIndex;
+      bufferIndexToEntityRecord[bufferIndex] = entity.id;
+      setData(entity, bufferIndex);
+   }
+
+   // Add any remaining queued entities to the end of the buffer
+   for (let i = 0; i < queuedEntityIDs.length; i++) {
+      const entityID = queuedEntityIDs[i];
+      const entity = Board.entityRecord[entityID]!;
+
+      const bufferIndex = getFinalBufferIndex();
+      // @Bug: these seem to all be the same????
+      if(a)console.log("add queued entity into buffer index " + bufferIndex);
+      entityIDToBufferIndexRecord[entityID] = bufferIndex;
+      bufferIndexToEntityRecord[bufferIndex] = entityID;
+      setData(entity, bufferIndex);
+   }
+
+   
+   // console.log(bufferIndex);
+
+   
+   // // Shift up all entities at >= bufferIndex
+   // let currentBufferIndex = finalBufferIndex;
+   // for (;;) {
+   //    const entityID = bufferIndexToEntityRecord[currentBufferIndex];
+   //    if (typeof entityID === "undefined") {
+   //       break;
+   //    }
+      
+   //    const entity = Board.entityRecord[entityID]!;
+   //    bufferIndexToEntityRecord[currentBufferIndex + 1] = entityID;
+   //    setData(entity, currentBufferIndex + 1);
+
+   //    if (currentBufferIndex === bufferIndex) {
+   //       break;
+   //    }
+   //    currentBufferIndex--;
+   // }
+   
+   // // Insert into the buffer
+   // bufferIndexToEntityRecord[bufferIndex] = entity.id;
+
+   // setData(entity, bufferIndex);
 }
 
 export function calculateRenderPartDepth(renderPart: RenderPart, entity: Entity): number {
@@ -201,74 +412,73 @@ export function renderEntities(entities: ReadonlyArray<Entity>): void {
       numRenderParts += entity.allRenderParts.length;
    }
    
-   let currentDepthDataOffset = 0;
-   let currentTextureArrayIndexDataOffset = 0;
-   let currentTintDataOffset = 0;
-   let currentOpacityDataOffset = 0;
-   let currentModelMatrixDataOffset = 0;
+   // let currentDepthDataOffset = 0;
+   // let currentTextureArrayIndexDataOffset = 0;
+   // let currentTintDataOffset = 0;
+   // let currentOpacityDataOffset = 0;
+   // let currentModelMatrixDataOffset = 0;
 
-   const depthData = new Float32Array(numRenderParts);
-   const textureArrayIndexData = new Float32Array(numRenderParts);
-   const tintData = new Float32Array(3 * numRenderParts);
-   const opacityData = new Float32Array(numRenderParts);
-   const modelMatrixData = new Float32Array(9 * numRenderParts);
+   // const depthData = new Float32Array(numRenderParts);
+   // const textureArrayIndexData = new Float32Array(numRenderParts);
+   // const tintData = new Float32Array(3 * numRenderParts);
+   // const opacityData = new Float32Array(numRenderParts);
+   // const modelMatrixData = new Float32Array(9 * numRenderParts);
    
-   let idx = 0;
-   for (let i = 0; i < entities.length; i++) {
-      const entity = entities[i];
+   // for (let i = 0; i < entities.length; i++) {
+   //    const entity = entities[i];
 
-      depthData.set(entity.depthData, currentDepthDataOffset);
-      currentDepthDataOffset += entity.depthData.length;
+   //    depthData.set(entity.depthData, currentDepthDataOffset);
+   //    currentDepthDataOffset += entity.depthData.length;
 
-      textureArrayIndexData.set(entity.textureArrayIndexData, currentTextureArrayIndexDataOffset);
-      currentTextureArrayIndexDataOffset += entity.textureArrayIndexData.length;
+   //    textureArrayIndexData.set(entity.textureArrayIndexData, currentTextureArrayIndexDataOffset);
+   //    currentTextureArrayIndexDataOffset += entity.textureArrayIndexData.length;
 
-      tintData.set(entity.tintData, currentTintDataOffset);
-      currentTintDataOffset += entity.tintData.length;
+   //    tintData.set(entity.tintData, currentTintDataOffset);
+   //    currentTintDataOffset += entity.tintData.length;
 
-      opacityData.set(entity.opacityData, currentOpacityDataOffset);
-      currentOpacityDataOffset += entity.opacityData.length;
+   //    opacityData.set(entity.opacityData, currentOpacityDataOffset);
+   //    currentOpacityDataOffset += entity.opacityData.length;
 
-      modelMatrixData.set(entity.modelMatrixData, currentModelMatrixDataOffset);
-      currentModelMatrixDataOffset += entity.modelMatrixData.length;
-      // for (let j = 0; j < entity.allRenderParts.length; j++) {
-      //    const renderPart = entity.allRenderParts[j];
-      //    const depth = calculateRenderPartDepth(renderPart, entity);
+   //    modelMatrixData.set(entity.modelMatrixData, currentModelMatrixDataOffset);
+   //    currentModelMatrixDataOffset += entity.modelMatrixData.length;
+   //    // for (let j = 0; j < entity.allRenderParts.length; j++) {
+   //    //    const renderPart = entity.allRenderParts[j];
+   //    //    const depth = calculateRenderPartDepth(renderPart, entity);
    
-      //    const textureArrayIndex = renderPartIsTextured(renderPart) ? renderPart.textureArrayIndex : -1;
+   //    //    const textureArrayIndex = renderPartIsTextured(renderPart) ? renderPart.textureArrayIndex : -1;
    
-      //    let tintR = entity.tintR + renderPart.tintR;
-      //    let tintG = entity.tintG + renderPart.tintG;
-      //    let tintB = entity.tintB + renderPart.tintB;
-      //    if (!renderPartIsTextured(renderPart)) {
-      //       tintR = renderPart.colour.r;
-      //       tintG = renderPart.colour.g;
-      //       tintB = renderPart.colour.b;
-      //    }
+   //    //    let tintR = entity.tintR + renderPart.tintR;
+   //    //    let tintG = entity.tintG + renderPart.tintG;
+   //    //    let tintB = entity.tintB + renderPart.tintB;
+   //    //    if (!renderPartIsTextured(renderPart)) {
+   //    //       tintR = renderPart.colour.r;
+   //    //       tintG = renderPart.colour.g;
+   //    //       tintB = renderPart.colour.b;
+   //    //    }
    
-      //    depthData[idx] = depth;
+   //    //    depthData[idx] = depth;
    
-      //    textureArrayIndexData[idx] = textureArrayIndex;
+   //    //    textureArrayIndexData[idx] = textureArrayIndex;
    
-      //    tintData[idx * 3] = tintR;
-      //    tintData[idx * 3 + 1] = tintG;
-      //    tintData[idx * 3 + 2] = tintB;
+   //    //    tintData[idx * 3] = tintR;
+   //    //    tintData[idx * 3 + 1] = tintG;
+   //    //    tintData[idx * 3 + 2] = tintB;
    
-      //    opacityData[idx] = renderPart.opacity;
+   //    //    opacityData[idx] = renderPart.opacity;
    
-      //    modelMatrixData[idx * 9] = renderPart.modelMatrix[0];
-      //    modelMatrixData[idx * 9 + 1] = renderPart.modelMatrix[1];
-      //    modelMatrixData[idx * 9 + 2] = renderPart.modelMatrix[2];
-      //    modelMatrixData[idx * 9 + 3] = renderPart.modelMatrix[3];
-      //    modelMatrixData[idx * 9 + 4] = renderPart.modelMatrix[4];
-      //    modelMatrixData[idx * 9 + 5] = renderPart.modelMatrix[5];
-      //    modelMatrixData[idx * 9 + 6] = renderPart.modelMatrix[6];
-      //    modelMatrixData[idx * 9 + 7] = renderPart.modelMatrix[7];
-      //    modelMatrixData[idx * 9 + 8] = renderPart.modelMatrix[8];
+   //    //    modelMatrixData[idx * 9] = renderPart.modelMatrix[0];
+   //    //    modelMatrixData[idx * 9 + 1] = renderPart.modelMatrix[1];
+   //    //    modelMatrixData[idx * 9 + 2] = renderPart.modelMatrix[2];
+   //    //    modelMatrixData[idx * 9 + 3] = renderPart.modelMatrix[3];
+   //    //    modelMatrixData[idx * 9 + 4] = renderPart.modelMatrix[4];
+   //    //    modelMatrixData[idx * 9 + 5] = renderPart.modelMatrix[5];
+   //    //    modelMatrixData[idx * 9 + 6] = renderPart.modelMatrix[6];
+   //    //    modelMatrixData[idx * 9 + 7] = renderPart.modelMatrix[7];
+   //    //    modelMatrixData[idx * 9 + 8] = renderPart.modelMatrix[8];
 
-      //    idx++;
-      // }
-   }
+   //    //    idx++;
+   //    // }
+   // }
 
    const textureAtlas = getEntityTextureAtlas();
 
@@ -287,37 +497,27 @@ export function renderEntities(entities: ReadonlyArray<Entity>): void {
    gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
    gl.enableVertexAttribArray(0);
 
-   const depthBuffer = gl.createBuffer()!;
    gl.bindBuffer(gl.ARRAY_BUFFER, depthBuffer);
-   gl.bufferData(gl.ARRAY_BUFFER, depthData, gl.STATIC_DRAW);
    gl.vertexAttribPointer(1, 1, gl.FLOAT, false, 0, 0);
    gl.enableVertexAttribArray(1);
    gl.vertexAttribDivisor(1, 1);
 
-   const textureArrayIndexBuffer = gl.createBuffer()!;
    gl.bindBuffer(gl.ARRAY_BUFFER, textureArrayIndexBuffer);
-   gl.bufferData(gl.ARRAY_BUFFER, textureArrayIndexData, gl.STATIC_DRAW);
    gl.vertexAttribPointer(2, 1, gl.FLOAT, false, 0, 0);
    gl.enableVertexAttribArray(2);
    gl.vertexAttribDivisor(2, 1);
 
-   const tintBuffer = gl.createBuffer()!;
    gl.bindBuffer(gl.ARRAY_BUFFER, tintBuffer);
-   gl.bufferData(gl.ARRAY_BUFFER, tintData, gl.STATIC_DRAW);
    gl.vertexAttribPointer(3, 3, gl.FLOAT, false, 0, 0);
    gl.enableVertexAttribArray(3);
    gl.vertexAttribDivisor(3, 1);
 
-   const opacityBuffer = gl.createBuffer()!;
    gl.bindBuffer(gl.ARRAY_BUFFER, opacityBuffer);
-   gl.bufferData(gl.ARRAY_BUFFER, opacityData, gl.STATIC_DRAW);
    gl.vertexAttribPointer(4, 1, gl.FLOAT, false, 0, 0);
    gl.enableVertexAttribArray(4);
    gl.vertexAttribDivisor(4, 1);
 
-   const modelMatrixBuffer = gl.createBuffer()!;
    gl.bindBuffer(gl.ARRAY_BUFFER, modelMatrixBuffer);
-   gl.bufferData(gl.ARRAY_BUFFER, modelMatrixData, gl.STATIC_DRAW);
    gl.vertexAttribPointer(5, 3, gl.FLOAT, false, 9 * Float32Array.BYTES_PER_ELEMENT, 0);
    gl.enableVertexAttribArray(5);
    gl.vertexAttribDivisor(5, 1);

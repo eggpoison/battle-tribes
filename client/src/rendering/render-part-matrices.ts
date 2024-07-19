@@ -5,7 +5,7 @@ import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { RenderPart, renderPartIsTextured } from "../render-parts/render-parts";
 import Board from "../Board";
-import { calculateRenderPartDepth } from "./webgl/entity-rendering";
+import { addEntitiesToBuffer, calculateRenderPartDepth } from "./webgl/entity-rendering";
 
 let dirtyEntities = new Array<Entity>();
 
@@ -143,6 +143,8 @@ export function updateRenderPartMatrices(frameProgress: number): void {
       entity.opacityData = opacityData;
       entity.modelMatrixData = modelMatrixData;
    }
+
+   addEntitiesToBuffer(dirtyEntities);
 
    // Reset dirty entities
    // @Speed: Garbage collection. An individual entity rarely switches between dirty/undirty

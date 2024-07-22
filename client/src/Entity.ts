@@ -2,12 +2,12 @@ import { Point, randFloat } from "webgl-test-shared/dist/utils";
 import { EntityID, EntityType, EntityTypeString } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { EntityData, HitData, HitFlags } from "webgl-test-shared/dist/client-server-types";
-import { ComponentData, ServerComponentType, ServerComponentTypeString } from "webgl-test-shared/dist/components";
+import { ServerComponentType, ServerComponentTypeString } from "webgl-test-shared/dist/components";
 import { BaseRenderObject } from "./render-parts/RenderPart";
 import Board from "./Board";
 import { createHealingParticle, createSlimePoolParticle, createSparkParticle } from "./particles";
 import { playSound } from "./sound";
-import { ClientComponentClass, ClientComponentType, ClientComponents, ServerComponentClass, createComponent } from "./entity-components/components";
+import { ClientComponentClass, ClientComponentType, ClientComponents, ServerComponentClass } from "./entity-components/components";
 import Component from "./entity-components/Component";
 import { removeLightsAttachedToEntity, removeLightsAttachedToRenderPart } from "./lights";
 import { RenderPartOverlayGroup } from "./rendering/webgl/overlay-rendering";
@@ -27,7 +27,7 @@ type ClientComponentsType = Partial<{
    [T in keyof typeof ClientComponents]: ClientComponentClass<T>;
 }>;
 
-abstract class Entity<T extends EntityType = EntityType> extends BaseRenderObject {
+abstract class Entity extends BaseRenderObject {
    public readonly id: number;
 
    public readonly type: EntityType;
@@ -38,8 +38,9 @@ abstract class Entity<T extends EntityType = EntityType> extends BaseRenderObjec
    /** Render parts sorted in a way that all render parts are after their parent */
    public readonly renderPartsHierarchicalArray = new Array<RenderPart>();
 
+   // @Cleanup: Make it range from 0 -> infinity
    /** Visual depth of the game object while being rendered */
-   public renderDepth: number;
+   public readonly renderDepth: number;
 
    /** Amount the game object's render parts will shake */
    public shakeAmount = 0;

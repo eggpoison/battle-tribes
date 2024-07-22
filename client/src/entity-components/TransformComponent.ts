@@ -92,6 +92,10 @@ class TransformComponent extends ServerComponent {
       }
    }
 
+   public onLoad(): void {
+      this.updatePosition();
+   }
+
    public isInRiver(): boolean {
       if (this.tile.type !== TileType.water) {
          return false;
@@ -122,10 +126,6 @@ class TransformComponent extends ServerComponent {
 
    public update(): void {
       this.ageTicks++;
-      
-      this.tile = getTile(this.position);
-      this.updateHitboxes();
-      this.updateContainingChunks();
    }
 
    public addHitbox(hitbox: Hitbox, localID: number): void {
@@ -191,12 +191,19 @@ class TransformComponent extends ServerComponent {
       reader.padOffset(11 * Float32Array.BYTES_PER_ELEMENT * numRectangularHitboxes);
    }
 
+   public updatePosition(): void {
+      this.tile = getTile(this.position);
+      this.updateHitboxes();
+      this.updateContainingChunks();
+   }
+   
    public updateFromData(reader: PacketReader): void {
       const positionX = reader.readNumber();
       const positionY = reader.readNumber();
       const rotation = reader.readNumber();
 
       if (positionX !== this.position.x || positionY !== this.position.y || rotation !== this.rotation) {
+         this.updatePosition();
          this.entity.dirty();
       }
       

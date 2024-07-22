@@ -498,9 +498,10 @@ export function processGameDataPacket(reader: PacketReader): void {
       entitiesToRemove.delete(Player.instance);
    }
 
-   for (const entity of entitiesToRemove) {
-      Board.removeEntity(entity, false);
-   }
+   // @Temporary
+   // for (const entity of entitiesToRemove) {
+   //    Board.removeEntity(entity, false);
+   // }
 
    const playerInventories = readPlayerInventories(reader);
    

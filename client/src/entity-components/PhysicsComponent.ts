@@ -60,6 +60,7 @@ const applyPhysics = (physicsComponent: PhysicsComponent): void => {
       transformComponent.position.x += physicsComponent.velocity.x * Settings.I_TPS;
       transformComponent.position.y += physicsComponent.velocity.y * Settings.I_TPS;
 
+      transformComponent.updatePosition();
       transformComponent.entity.dirty();
    }
 

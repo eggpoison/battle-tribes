@@ -8,7 +8,6 @@ import Camera from "../../Camera";
 import Board from "../../Board";
 import { RenderChunkRiverInfo, WORLD_RENDER_CHUNK_SIZE, getRenderChunkMaxTileX, getRenderChunkMaxTileY, getRenderChunkMinTileX, getRenderChunkMinTileY, getRenderChunkRiverInfo } from "../render-chunks";
 import { Tile } from "../../Tile";
-import { renderFish } from "./fish-rendering";
 import { UBOBindingIndex, bindUBOToProgram } from "../ubos";
 
 const SHALLOW_WATER_COLOUR = [118/255, 185/255, 242/255] as const;
@@ -1679,11 +1678,7 @@ export function renderRivers(frameProgress: number): void {
       gl.drawArrays(gl.TRIANGLES, 0, renderChunkRiverInfo.transitionVertexCount);
    }
 
-   // 
-   // FISH
-   // 
-
-   renderFish(frameProgress);
+   // @INCOMPLETE: Render fish here (but extract this function into lower and upper river parts)
 
    // 
    // Highlights program

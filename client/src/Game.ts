@@ -36,7 +36,6 @@ import { createNightShaders, renderNight } from "./rendering/webgl/light-renderi
 import { createPlaceableItemProgram, renderGhostEntities } from "./rendering/webgl/entity-ghost-rendering";
 import { setupFrameGraph } from "./rendering/webgl/frame-graph-rendering";
 import { createTextureAtlases } from "./texture-atlases/texture-atlases";
-import { createFishShaders } from "./rendering/webgl/fish-rendering";
 import { createForcefieldShaders, renderForcefield } from "./rendering/webgl/world-border-forcefield-rendering";
 import { createDecorationShaders, renderDecorations } from "./rendering/webgl/decoration-rendering";
 import { playRiverSounds, setupAudio, updateSoundEffectVolumes } from "./sound";
@@ -239,7 +238,6 @@ abstract class Game {
             // Create shaders
             createSolidTileShaders();
             createRiverShaders();
-            createFishShaders();
             createEntityShaders();
             await createEntityOverlayShaders();
             createWorldBorderShaders();
@@ -316,6 +314,7 @@ abstract class Game {
                updateTextNumbers();
                Board.updateTickCallbacks();
                Board.tickEntities();
+               Board.resolvePlayerCollisions();
                this.update();
 
                if (Player.instance !== null) {
@@ -328,6 +327,7 @@ abstract class Game {
                Board.updateTickCallbacks();
                Board.updateParticles();
                Board.updateEntities();
+               Board.resolveEntityCollisions();
                this.update();
             }
             Client.sendPlayerDataPacket();
@@ -353,8 +353,6 @@ abstract class Game {
    }
 
    private static update(): void {
-      Board.resolveEntityCollisions();
-      
       updateSpamFilter();
 
       updatePlayerMovement();

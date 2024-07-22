@@ -45,10 +45,6 @@ abstract class Board {
    private static riverFlowDirections: RiverFlowDirectionsRecord;
 
    public static numVisibleRenderParts = 0;
-   /** Game objects sorted in descending render weight */
-   public static readonly sortedEntities = new Array<Entity>();
-   /** All fish in the board */
-   public static readonly fish = new Array<Fish>();
 
    public static readonly entities = new Set<Entity>();
    public static readonly entityRecord: Partial<Record<number, Entity>> = {};
@@ -194,22 +190,7 @@ abstract class Board {
          this.players.push(entity as Player);
       }
 
-      if (entity.type === EntityType.fish) {
-         this.fish.push(entity as Fish);
-      } else {
-         // Add into the sorted array
-         let idx = this.sortedEntities.length;
-         for (let i = 0; i < this.sortedEntities.length; i++) {
-            const currentEntity = this.sortedEntities[i];
-            if (entity.renderDepth > currentEntity.renderDepth) {
-               idx = i;
-               break;
-            }
-         }
-         this.sortedEntities.splice(idx, 0, entity);
-
-         addRenderable(RenderableType.entity, entity);
-      }
+      addRenderable(RenderableType.entity, entity);
    }
 
    public static removeEntity(entity: Entity, isDeath: boolean): void {
@@ -239,18 +220,57 @@ abstract class Board {
       }
    
       this.entities.delete(entity);
-      if (entity.type === EntityType.fish) {
-         const idx = this.fish.indexOf(entity as Fish);
-         if (idx !== -1) {
-            this.fish.splice(idx, 1);
-         }
-      } else {
-         this.sortedEntities.splice(this.sortedEntities.indexOf(entity), 1);
-      }
 
       removeRenderable(entity);
    
       this.numVisibleRenderParts -= entity.allRenderParts.length;
+   }
+
+   public static resolvePlayerCollisions(): void {
+      const player = Player.instance!;
+      const transformComponent = player.getServerComponent(ServerComponentType.transform);
+
+      for (const chunk of transformComponent.chunks) {
+         // @Cleanup: Copy and paste
+         for (const entityID of chunk.entities) {
+               // @Speed
+               if (entityID === player.id) {
+                  continue;
+               }
+
+               const entity = Board.entityRecord[entityID]!;
+               const otherTransformComponent = entity.getServerComponent(ServerComponentType.transform);
+
+               for (const hitbox of transformComponent.hitboxes) {
+                  for (const otherHitbox of otherTransformComponent.hitboxes) {
+                     if (hitbox.isColliding(otherHitbox)) {
+                        if (!transformComponent.collidingEntities.includes(entity)) {
+                           transformComponent.collidingEntities.push(entity);
+                        }
+                        
+                        if ((otherTransformComponent.collisionMask & transformComponent.collisionBit) !== 0 && (transformComponent.collisionMask & otherTransformComponent.collisionBit) !== 0) {
+                           collide(player, entity, hitbox, otherHitbox);
+                           collide(entity, player, otherHitbox, hitbox);
+                        } else {
+                           // @Hack
+                           if (otherTransformComponent.collisionBit === COLLISION_BITS.plants) {
+                              latencyGameState.lastPlantCollisionTicks = Board.ticks;
+                           }
+                           break;
+                        }
+                     }
+                  }
+               }
+               // const collisionNum = entitiesAreColliding(entity1ID, entity2ID);
+               // if (collisionNum !== CollisionVars.NO_COLLISION) {
+               //    collisionPairs.push({
+               //       entity1: entity1ID,
+               //       entity2: entity2ID,
+               //       collisionNum: collisionNum
+               //    });
+               // }
+         }
+      }
    }
 
    public static resolveEntityCollisions(): void {
@@ -268,13 +288,12 @@ abstract class Board {
             
             for (let k = 0; k < chunk.entities.length; k++) {
                const entity2ID = chunk.entities[k];
-               const entity2 = this.entityRecord[entity2ID]!;
-
                // @Speed
                if (entity1ID === entity2ID) {
                   continue;
                }
 
+               const entity2 = this.entityRecord[entity2ID]!;
                const otherTransformComponent = entity2.getServerComponent(ServerComponentType.transform);
 
                for (const hitbox of transformComponent.hitboxes) {

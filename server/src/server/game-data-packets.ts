@@ -1,9 +1,8 @@
-import { VisibleChunkBounds, GameDataPacket, GameDataPacketOptions, PlayerInventoryData, GameDataSyncPacket } from "webgl-test-shared/dist/client-server-types";
+import { VisibleChunkBounds, PlayerInventoryData } from "webgl-test-shared/dist/client-server-types";
 import { ServerComponentType, ServerComponentTypeString } from "webgl-test-shared/dist/components";
-import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
+import { EntityID } from "webgl-test-shared/dist/entities";
 import { TechUnlockProgress } from "webgl-test-shared/dist/techs";
 import Board from "../Board";
-import Tribe from "../Tribe";
 import { ComponentArrays } from "../components/ComponentArray";
 import { HealthComponentArray } from "../components/HealthComponent";
 import { InventoryComponentArray, getInventory } from "../components/InventoryComponent";
@@ -11,12 +10,9 @@ import { addCrossbowLoadProgressRecordToPacket, getCrossbowLoadProgressRecordLen
 import { PhysicsComponentArray } from "../components/PhysicsComponent";
 import { SERVER } from "./server";
 import { Settings } from "webgl-test-shared/dist/settings";
-import { EnemyTribeData, PlayerTribeData } from "webgl-test-shared/dist/techs";
 import { GrassBlocker } from "webgl-test-shared/dist/grass-blockers";
 import { addEntityDebugDataToPacket, createEntityDebugData, getEntityDebugDataLength } from "../entity-debug-data";
 import PlayerClient from "./PlayerClient";
-import { TribeComponentArray } from "../components/TribeComponent";
-import { SpikesComponentArray } from "../components/SpikesComponent";
 import { PlayerComponentArray } from "../components/PlayerComponent";
 import { Inventory, InventoryName, ItemType } from "webgl-test-shared/dist/items/items";
 import { TransformComponentArray } from "../components/TransformComponent";
@@ -165,7 +161,7 @@ export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend:
    lengthBytes += Float32Array.BYTES_PER_ELEMENT;
 
    // Player tribe data
-   lengthBytes += 100 + 5 * Float32Array.BYTES_PER_ELEMENT;
+   lengthBytes += Float32Array.BYTES_PER_ELEMENT + 100 + 5 * Float32Array.BYTES_PER_ELEMENT;
    lengthBytes += Float32Array.BYTES_PER_ELEMENT + 2 * Float32Array.BYTES_PER_ELEMENT * area.length;
    lengthBytes += Float32Array.BYTES_PER_ELEMENT;
    lengthBytes += Float32Array.BYTES_PER_ELEMENT + Float32Array.BYTES_PER_ELEMENT * playerClient.tribe.unlockedTechs.length;
@@ -179,15 +175,13 @@ export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend:
    }
 
    // Enemy tribes data
-   lengthBytes += Float32Array.BYTES_PER_ELEMENT + (100 + 2 * Float32Array.BYTES_PER_ELEMENT) * numEnemyTribes;
-   // console.log(lengthBytes);
+   lengthBytes += Float32Array.BYTES_PER_ELEMENT + (Float32Array.BYTES_PER_ELEMENT + 100 + 2 * Float32Array.BYTES_PER_ELEMENT) * numEnemyTribes;
 
    // Entities
    lengthBytes += Float32Array.BYTES_PER_ELEMENT;
    for (const entity of entitiesToSend) {
       lengthBytes += getEntityDataLength(entity, player);
    }
-   // console.log(lengthBytes);
 
    // Player inventories
    lengthBytes += getInventoryDataLength(hotbarInventory);
@@ -453,12 +447,11 @@ export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend:
 export function createInitialGameDataPacket(player: EntityID, playerConfig: ComponentConfig<ServerComponentType.transform>): ArrayBuffer {
    let lengthBytes = Float32Array.BYTES_PER_ELEMENT * 4;
    lengthBytes += Settings.BOARD_DIMENSIONS * Settings.BOARD_DIMENSIONS * 5 * Float32Array.BYTES_PER_ELEMENT;
-   lengthBytes += Float32Array.BYTES_PER_ELEMENT + Board.edgeTiles.length * 5 * Float32Array.BYTES_PER_ELEMENT;
+   lengthBytes += Float32Array.BYTES_PER_ELEMENT + Board.edgeTilesArray.length * 5 * Float32Array.BYTES_PER_ELEMENT;
    lengthBytes += Float32Array.BYTES_PER_ELEMENT + Board.waterRocks.length * 5 * Float32Array.BYTES_PER_ELEMENT;
    lengthBytes += Float32Array.BYTES_PER_ELEMENT + Board.riverSteppingStones.length * 5 * Float32Array.BYTES_PER_ELEMENT;
    lengthBytes += Float32Array.BYTES_PER_ELEMENT + Board.riverFlowDirectionsArray.length * 3 * Float32Array.BYTES_PER_ELEMENT;
    lengthBytes += Float32Array.BYTES_PER_ELEMENT + Board.grassInfo.length * 4 * Float32Array.BYTES_PER_ELEMENT;
-   lengthBytes += Float32Array.BYTES_PER_ELEMENT + Board.decorations.length * 5 * Float32Array.BYTES_PER_ELEMENT;
    lengthBytes = alignLengthBytes(lengthBytes);
    const packet = new Packet(PacketType.initialGameData, lengthBytes);
    
@@ -479,9 +472,9 @@ export function createInitialGameDataPacket(player: EntityID, playerConfig: Comp
       packet.padOffset(3);
    }
 
-   packet.addNumber(Board.edgeTiles.length);
-   for (let i = 0; i < Board.edgeTiles.length; i++) {
-      const tile = Board.edgeTiles[i];
+   packet.addNumber(Board.edgeTilesArray.length);
+   for (let i = 0; i < Board.edgeTilesArray.length; i++) {
+      const tile = Board.edgeTilesArray[i];
 
       packet.addNumber(tile.x);
       packet.addNumber(tile.y);
@@ -530,17 +523,6 @@ export function createInitialGameDataPacket(player: EntityID, playerConfig: Comp
       packet.addNumber(grassInfo.tileY);
       packet.addNumber(grassInfo.temperature);
       packet.addNumber(grassInfo.humidity);
-   }
-
-   packet.addNumber(Board.decorations.length);
-   for (let i = 0; i < Board.decorations.length; i++) {
-      const decoration = Board.decorations[i];
-
-      packet.addNumber(decoration.positionX);
-      packet.addNumber(decoration.positionY);
-      packet.addNumber(decoration.rotation);
-      packet.addNumber(decoration.type);
-      packet.addNumber(decoration.variant);
    }
 
    return packet.buffer;

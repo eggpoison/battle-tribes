@@ -187,6 +187,12 @@ const CLIENT_ENTITY_INFO_RECORD: Record<EntityType, ClientEntityInfo> = {
    },
    [EntityType.grassStrand]: {
       name: "Grass Strand"
+   },
+   [EntityType.decoration]: {
+      name: "Decoration"
+   },
+   [EntityType.reed]: {
+      name: "Reed"
    }
 };
 

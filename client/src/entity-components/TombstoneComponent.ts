@@ -65,7 +65,7 @@ class TombstoneComponent extends ServerComponent {
       const hasDeathInfo = reader.readBoolean();
       reader.padOffset(3);
       if (hasDeathInfo) {
-         reader.padOffset(100 + Float32Array.BYTES_PER_ELEMENT);
+         reader.padOffset(Float32Array.BYTES_PER_ELEMENT + 100 + Float32Array.BYTES_PER_ELEMENT);
       }
    }
    

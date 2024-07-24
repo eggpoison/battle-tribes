@@ -1,8 +1,8 @@
 import { BuildingPlanData, PotentialBuildingPlanData, TribeWallData } from "webgl-test-shared/dist/ai-building-types";
-import { AttackPacket, CircularHitboxData, EntityData, GameDataPacket, PlayerInventoryData, RectangularHitboxData, RespawnDataPacket, ServerTileData, ServerTileUpdateData } from "webgl-test-shared/dist/client-server-types";
+import { AttackPacket, CircularHitboxData, GameDataPacket, PlayerInventoryData, RectangularHitboxData, RespawnDataPacket, ServerTileData, ServerTileUpdateData } from "webgl-test-shared/dist/client-server-types";
 import { distance, Point } from "webgl-test-shared/dist/utils";
 import { Settings } from "webgl-test-shared/dist/settings";
-import { BlueprintType, LimbData, ServerComponentType } from "webgl-test-shared/dist/components";
+import { BlueprintType, ServerComponentType } from "webgl-test-shared/dist/components";
 import { PlayerTribeData, TechID } from "webgl-test-shared/dist/techs";
 import { STRUCTURE_TYPES } from "webgl-test-shared/dist/structures";
 import { TRIBE_INFO_RECORD, TribeType } from "webgl-test-shared/dist/tribes";
@@ -12,7 +12,7 @@ import Game from "../Game";
 import { Tile } from "../Tile";
 import { gameScreenSetIsDead } from "../components/game/GameScreen";
 import { removeSelectedItem, selectItem } from "../player-input";
-import { Hotbar_setHotbarSelectedItemSlot, Hotbar_update, Hotbar_updateRightThrownBattleaxeItemID } from "../components/game/inventories/Hotbar";
+import { Hotbar_setHotbarSelectedItemSlot, Hotbar_update } from "../components/game/inventories/Hotbar";
 import { HeldItem_setHeldItemCount, HeldItem_setHeldItemType } from "../components/game/HeldItem";
 import { CraftingMenu_setCraftingMenuOutputItem, CraftingMenu_updateRecipes } from "../components/game/menus/CraftingMenu";
 import { HealthBar_setHasFrostShield, updateHealthBar } from "../components/game/HealthBar";
@@ -24,7 +24,6 @@ import Board from "../Board";
 import { definiteGameState, latencyGameState } from "../game-state/game-states";
 import { BackpackInventoryMenu_update } from "../components/game/inventories/BackpackInventory";
 import { createInventoryFromData, updateInventoryFromData } from "../inventory-manipulation";
-import Entity from "../Entity";
 import { createDamageNumber, createHealNumber, createResearchNumber, setVisibleBuildingSafetys } from "../text-canvas";
 import { playSound } from "../sound";
 import { updateTechTree } from "../components/game/tech-tree/TechTree";
@@ -35,13 +34,11 @@ import { setVisibleRestrictedBuildingAreas } from "../rendering/webgl/restricted
 import { setVisibleWallConnections } from "../rendering/webgl/wall-connection-rendering";
 import { Infocards_setTitleOffer } from "../components/game/infocards/Infocards";
 import { GrassBlocker } from "webgl-test-shared/dist/grass-blockers";
-import { createEntity } from "../entity-class-record";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
 import { windowHeight, windowWidth } from "../webgl";
 import { EntitySummonPacket } from "webgl-test-shared/dist/dev-packets";
 import { CircularHitbox, RectangularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { InventoryName, Inventory, ItemType } from "webgl-test-shared/dist/items/items";
-import { TitlesTab_setTitles } from "../components/game/dev/tabs/TitlesTab";
 import { closeCurrentMenu } from "../menus";
 import { TribesTab_refresh } from "../components/game/dev/tabs/TribesTab";
 import { processTickEvents } from "../entity-tick-events";
@@ -751,7 +748,7 @@ abstract class Client {
       if (this.socket !== null) {
          const maxUsernameUInt8Length = 24;
          
-         const packet = new Packet(PacketType.initialPlayerData, Float32Array.BYTES_PER_ELEMENT * 4 + maxUsernameUInt8Length);
+         const packet = new Packet(PacketType.initialPlayerData, Float32Array.BYTES_PER_ELEMENT * 4 + Float32Array.BYTES_PER_ELEMENT + maxUsernameUInt8Length);
          packet.addString(username, maxUsernameUInt8Length);
          packet.addNumber(tribeType);
          packet.addNumber(windowWidth);

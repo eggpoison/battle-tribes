@@ -37,7 +37,6 @@ import { createPlaceableItemProgram, renderGhostEntities } from "./rendering/web
 import { setupFrameGraph } from "./rendering/webgl/frame-graph-rendering";
 import { createTextureAtlases } from "./texture-atlases/texture-atlases";
 import { createForcefieldShaders, renderForcefield } from "./rendering/webgl/world-border-forcefield-rendering";
-import { createDecorationShaders, renderDecorations } from "./rendering/webgl/decoration-rendering";
 import { playRiverSounds, setupAudio, updateSoundEffectVolumes } from "./sound";
 import { createTechTreeGLContext, createTechTreeShaders, renderTechTree } from "./rendering/webgl/tech-tree-rendering";
 import { createResearchOrbShaders, renderResearchOrb } from "./rendering/webgl/research-orb-rendering";
@@ -250,7 +249,6 @@ abstract class Game {
             createWallBorderShaders();
             createAmbientOcclusionShaders();
             createForcefieldShaders();
-            createDecorationShaders();
             createTechTreeShaders();
             createTechTreeItemShaders();
             createResearchOrbShaders();
@@ -269,7 +267,7 @@ abstract class Game {
                setupFrameGraph();
             }
 
-            createRenderChunks(initialGameDataPacket.decorations, initialGameDataPacket.waterRocks, initialGameDataPacket.riverSteppingStones);
+            createRenderChunks(initialGameDataPacket.waterRocks, initialGameDataPacket.riverSteppingStones);
 
             this.hasInitialised = true;
    
@@ -279,7 +277,7 @@ abstract class Game {
          Board.initialise(initialGameDataPacket);
          Board.addRiverSteppingStonesToChunks(initialGameDataPacket.riverSteppingStones);
 
-         createRenderChunks(initialGameDataPacket.decorations, initialGameDataPacket.waterRocks, initialGameDataPacket.riverSteppingStones);
+         createRenderChunks(initialGameDataPacket.waterRocks, initialGameDataPacket.riverSteppingStones);
       }
    }
 
@@ -424,7 +422,6 @@ abstract class Game {
       renderSolidTiles(false);
       renderGrassBlockers();
       renderRivers(frameProgress);
-      renderDecorations();
       renderTurretRange();
       renderAmbientOcclusion();
       if (nerdVisionIsVisible() && this.entityDebugData !== null && typeof Board.entityRecord[this.entityDebugData.entityID] !== "undefined") {

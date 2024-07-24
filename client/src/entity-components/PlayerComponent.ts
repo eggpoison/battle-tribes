@@ -9,14 +9,17 @@ class PlayerComponent extends ServerComponent {
       super(entity);
 
       this.username = reader.readString(100);
+      // @Incomplete
+      console.log(this.username);
+      console.log(this.username.trim());
    }
 
    public padData(reader: PacketReader): void {
-      reader.padOffset(100);
+      reader.padOffset(Float32Array.BYTES_PER_ELEMENT + 100);
    }
    
    public updateFromData(reader: PacketReader): void {
-      reader.padOffset(100);
+      reader.padOffset(Float32Array.BYTES_PER_ELEMENT + 100);
    }
 }
 

@@ -1,11 +1,15 @@
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { lerp, randFloat } from "webgl-test-shared/dist/utils";
+import Entity from "./Entity";
+import { DecorationType, ServerComponentType } from "webgl-test-shared/dist/components";
 
 const MIN_RENDER_DEPTH = -0.95;
 const MAX_RENDER_DEPTH = 0.95;
 
 enum RenderLayer {
+   lowDecorations,
    grass,
+   highDecorations,
    // @Temporary?
    lowestEntities,
    droppedItems,
@@ -28,19 +32,31 @@ const calculateRenderDepthFromLayer = (renderLayer: RenderLayer): number => {
    let max = min + 1 / NUM_RENDER_LAYERS;
 
    // Account for the bounds
-   min = lerp(MAX_RENDER_DEPTH, MIN_RENDER_DEPTH, (min + 1) / 2);
-   max = lerp(MAX_RENDER_DEPTH, MIN_RENDER_DEPTH, (max + 1) / 2);
+   min = lerp(MIN_RENDER_DEPTH, MAX_RENDER_DEPTH, (min + 1) / 2);
+   max = lerp(MIN_RENDER_DEPTH, MAX_RENDER_DEPTH, (max + 1) / 2);
 
    return randFloat(min, max);
 }
 
-const getEntityRenderLayer = (entityType: EntityType): RenderLayer => {
+const decorationIsHigh = (decorationType: DecorationType): boolean => {
+   return decorationType === DecorationType.flower1
+       || decorationType === DecorationType.flower2
+       || decorationType === DecorationType.flower3
+       || decorationType === DecorationType.flower4;
+}
+
+const getEntityRenderLayer = (entity: Entity): RenderLayer => {
    // @Incomplete: Make 
    
-   switch (entityType) {
+   switch (entity.type) {
       // Grass
       case EntityType.grassStrand: {
          return RenderLayer.grass;
+      }
+      // Decorations
+      case EntityType.decoration: {
+         const decorationComponent = entity.getServerComponent(ServerComponentType.decoration) 
+         return decorationIsHigh(decorationComponent.decorationType) ? RenderLayer.highDecorations : RenderLayer.lowDecorations;
       }
       // Item entities
       case EntityType.itemEntity: {
@@ -97,6 +113,7 @@ const getEntityRenderLayer = (entityType: EntityType): RenderLayer => {
    }
 }
 
-export function calculateEntityRenderDepth(entityType: EntityType): number {
-   return calculateRenderDepthFromLayer(getEntityRenderLayer(entityType));
+export function calculateEntityRenderDepth(entity: Entity): number {
+   const renderLayer = getEntityRenderLayer(entity);
+   return calculateRenderDepthFromLayer(renderLayer);
 }

@@ -1,6 +1,6 @@
 import { BuildingPlanData, BuildingSafetyData, SafetyNodeData, TribeWallData, WallConnectionData } from "./ai-building-types";
 import { HitboxCollisionBit } from "./collision";
-import { BlueprintType, ComponentData } from "./components";
+import { BlueprintType } from "./components";
 import { EntitySummonPacket } from "./dev-packets";
 import { EntityType, LimbAction } from "./entities";
 import { AttackEffectiveness } from "./entity-damage-types";
@@ -104,12 +104,6 @@ export interface ResearchOrbCompleteData {
    readonly amount: number;
 }
 
-export interface EntityData {
-   readonly id: number;
-   readonly type: EntityType;
-   readonly components: ReadonlyArray<ComponentData>;
-}
-
 export enum GameDataPacketOptions {
    sendVisiblePathfindingNodeOccupances = 1 << 0,
    sendVisibleSafetyNodes = 1 << 1,
@@ -196,28 +190,6 @@ export interface GrassTileInfo {
    readonly tileY: number;
    readonly temperature: number;
    readonly humidity: number;
-}
-
-export enum DecorationType {
-   pebble,
-   rock,
-   sandstoneRock,
-   sandstoneRockBig,
-   blackRockSmall,
-   blackRock,
-   snowPile,
-   flower1,
-   flower2,
-   flower3,
-   flower4
-}
-
-export interface DecorationInfo {
-   readonly positionX: number;
-   readonly positionY: number;
-   readonly rotation: number;
-   readonly type: DecorationType;
-   readonly variant: number;
 }
 
 export type VisibleChunkBounds = [minChunkX: number, maxChunkX: number, minChunkY: number, maxChunkY: number];

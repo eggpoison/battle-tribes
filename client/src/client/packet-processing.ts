@@ -1,12 +1,11 @@
-import { ServerTileData, WaterRockData, RiverSteppingStoneData, GrassTileInfo, DecorationInfo, RiverFlowDirectionsRecord, WaterRockSize, RiverSteppingStoneSize, DecorationType, GameDataPacket, StatusEffectData, CircularHitboxData, RectangularHitboxData, HitData, PlayerKnockbackData, HealData, ResearchOrbCompleteData, ServerTileUpdateData, EntityDebugData, LineDebugData, CircleDebugData, TileHighlightData, PathData, PathfindingNodeIndex, PlayerInventoryData } from "webgl-test-shared/dist/client-server-types";
-import { ComponentData, EscapeAIComponentData, HealingTotemComponentData, HealingTotemTargetData, LimbData, ServerComponentType, ServerComponentTypeString, SlimeComponentData, StatusEffectComponentData, TombstoneComponentData, TotemBannerComponentData, TransformComponentData } from "webgl-test-shared/dist/components";
-import { DeathInfo, EntityID, EntityType, PlayerCauseOfDeath, SlimeSize, TribeTotemBanner } from "webgl-test-shared/dist/entities";
-import { InventoryName, ItemType } from "webgl-test-shared/dist/items/items";
+import { ServerTileData, WaterRockData, RiverSteppingStoneData, GrassTileInfo, RiverFlowDirectionsRecord, WaterRockSize, RiverSteppingStoneSize, GameDataPacket, HitData, PlayerKnockbackData, HealData, ResearchOrbCompleteData, ServerTileUpdateData, EntityDebugData, LineDebugData, CircleDebugData, TileHighlightData, PathData, PathfindingNodeIndex, PlayerInventoryData } from "webgl-test-shared/dist/client-server-types";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
+import { ItemType } from "webgl-test-shared/dist/items/items";
 import { PacketReader } from "webgl-test-shared/dist/packets";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { Biome, TileType } from "webgl-test-shared/dist/tiles";
 import { readCrossbowLoadProgressRecord } from "../entity-components/InventoryUseComponent";
-import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { TribesmanTitle } from "webgl-test-shared/dist/titles";
 import { ItemRequirements } from "webgl-test-shared/dist/items/crafting-recipes";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
@@ -19,8 +18,6 @@ import { definiteGameState } from "../game-state/game-states";
 import Entity from "../Entity";
 import { createEntity } from "../entity-class-record";
 import Board from "../Board";
-import { TitlesTab_setTitles } from "../components/game/dev/tabs/TitlesTab";
-import { Hotbar_updateRightThrownBattleaxeItemID } from "../components/game/inventories/Hotbar";
 import Camera from "../Camera";
 import { createComponent } from "../entity-components/components";
 import { readInventory } from "../entity-components/InventoryComponent";
@@ -34,7 +31,6 @@ export interface InitialGameDataPacket {
    readonly riverFlowDirections: RiverFlowDirectionsRecord;
    readonly edgeTiles: Array<ServerTileData>;
    readonly grassInfo: Record<number, Record<number, GrassTileInfo>>;
-   readonly decorations: ReadonlyArray<DecorationInfo>;
 }
 
 export function processInitialGameDataPacket(reader: PacketReader): InitialGameDataPacket {
@@ -154,25 +150,6 @@ export function processInitialGameDataPacket(reader: PacketReader): InitialGameD
       grassInfoRecord[tileX]![tileY] = grassInfo;
    }
 
-   const decorations = new Array<DecorationInfo>();
-   const numDecorations = reader.readNumber();
-   for (let i = 0; i < numDecorations; i++) {
-      const positionX = reader.readNumber();
-      const positionY = reader.readNumber();
-      const rotation = reader.readNumber();
-      const type = reader.readNumber() as DecorationType;
-      const variant = reader.readNumber();
-
-      const decorationInfo: DecorationInfo = {
-         positionX: positionX,
-         positionY: positionY,
-         rotation: rotation,
-         type: type,
-         variant: variant
-      };
-      decorations.push(decorationInfo);
-   }
-
    return {
       playerID: playerID,
       spawnPosition: [spawnPositionX, spawnPositionY],
@@ -181,8 +158,7 @@ export function processInitialGameDataPacket(reader: PacketReader): InitialGameD
       waterRocks: waterRocks,
       riverSteppingStones: steppingStones,
       riverFlowDirections: flowDirections,
-      grassInfo: grassInfoRecord,
-      decorations: decorations
+      grassInfo: grassInfoRecord
    };
 }
 

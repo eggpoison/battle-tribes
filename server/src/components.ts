@@ -55,6 +55,7 @@ import { TransformComponent, TransformComponentParams } from "./components/Trans
 import { BoulderComponent, BoulderComponentParams } from "./components/BoulderComponent";
 import { ProjectileComponent, ProjectileComponentParams } from "./components/ProjectileComponent";
 import { LayeredRodComponent, LayeredRodComponentParams } from "./components/LayeredRodComponent";
+import { DecorationComponent, DecorationComponentParams } from "./components/DecorationComponent";
 
 const ComponentParamsRecord = {
    [ServerComponentType.aiHelper]: (): AIHelperComponentParams => 0 as any,
@@ -112,14 +113,14 @@ const ComponentParamsRecord = {
    [ServerComponentType.craftingStation]: (): CraftingStationComponentParams => 0 as any,
    [ServerComponentType.transform]: (): TransformComponentParams => 0 as any,
    [ServerComponentType.projectile]: (): ProjectileComponentParams => 0 as any,
-   [ServerComponentType.layeredRod]: (): LayeredRodComponentParams => 0 as any
+   [ServerComponentType.layeredRod]: (): LayeredRodComponentParams => 0 as any,
+   [ServerComponentType.decoration]: (): DecorationComponentParams => 0 as any
 } satisfies Record<ServerComponentType, object>;
 
 export type ComponentParams<T extends ServerComponentType> = ReturnType<typeof ComponentParamsRecord[T]>;
 
 // @Cleanup: find better way to do this
 export const ComponentClassRecord = {
-   // [ServerComponentType.aiHelper]: (): AIHelperComponent => { return 0 as any },
    [ServerComponentType.aiHelper]: () => AIHelperComponent,
    [ServerComponentType.cow]: () => CowComponent,
    [ServerComponentType.turret]: () => TurretComponent,
@@ -175,7 +176,8 @@ export const ComponentClassRecord = {
    [ServerComponentType.craftingStation]: () => CraftingStationComponent,
    [ServerComponentType.transform]: () => TransformComponent,
    [ServerComponentType.projectile]: () => ProjectileComponent,
-   [ServerComponentType.layeredRod]: () => LayeredRodComponent
+   [ServerComponentType.layeredRod]: () => LayeredRodComponent,
+   [ServerComponentType.decoration]: () => DecorationComponent
 } satisfies {
    [T in ServerComponentType]: () => {
       new (args: ComponentParams<T>): unknown;

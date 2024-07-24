@@ -3,8 +3,6 @@ import Entity from "../Entity";
 import { distance, Point, rotateXAroundOrigin, rotateYAroundOrigin } from "webgl-test-shared/dist/utils";
 import { CircularHitbox, Hitbox, hitboxIsCircular, RectangularHitbox, updateHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import Board from "../Board";
-import { EntityType } from "webgl-test-shared/dist/entities";
-import { createWaterSplashParticle } from "../particles";
 import { Tile } from "../Tile";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { TileType } from "webgl-test-shared/dist/tiles";
@@ -114,14 +112,6 @@ class TransformComponent extends ServerComponent {
       }
 
       return true;
-   }
-
-   public tick(): void {
-      // Water droplet particles
-      // @Cleanup: Don't hardcode fish condition
-      if (this.isInRiver() && Board.tickIntervalHasPassed(0.05) && (this.entity.type !== EntityType.fish)) {
-         createWaterSplashParticle(this.position.x, this.position.y);
-      }
    }
 
    public update(): void {

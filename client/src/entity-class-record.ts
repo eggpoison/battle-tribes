@@ -58,7 +58,9 @@ import BallistaSlimeball from "./projectiles/BallistaSlimeball";
 import BallistaRock from "./projectiles/BallistaRock";
 import SlingTurretRock from "./projectiles/SlingTurretRock";
 import BallistaWoodenBolt from "./projectiles/BallistaWoodenBolt";
-import GrassStrand from "./client-entities/GrassStrand";
+import GrassStrand from "./entities/GrassStrand";
+import Decoration from "./entities/Decoration";
+import Reed from "./entity-components/Reed";
 
 // @Cleanup: remove this and just have entities be a collection of components
 export function createEntity(entityID: EntityID, entityType: EntityType): Entity {
@@ -124,6 +126,8 @@ export function createEntity(entityID: EntityID, entityType: EntityType): Entity
       case EntityType.frostshaper: return new Frostshaper(entityID);
       case EntityType.stonecarvingTable: return new StonecarvingTable(entityID);
       case EntityType.grassStrand: return new GrassStrand(entityID);
+      case EntityType.decoration: return new Decoration(entityID);
+      case EntityType.reed: return new Reed(entityID);
       default: {
          const unreachable: never = entityType;
          return unreachable;

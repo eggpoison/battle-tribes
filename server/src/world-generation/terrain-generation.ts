@@ -1,4 +1,4 @@
-import { WaterRockData, RiverSteppingStoneData, GrassTileInfo, DecorationInfo, RiverFlowDirectionsRecord } from "webgl-test-shared/dist/client-server-types";
+import { WaterRockData, RiverSteppingStoneData, GrassTileInfo, RiverFlowDirectionsRecord } from "webgl-test-shared/dist/client-server-types";
 import { Biome, TileInfo, TileType } from "webgl-test-shared/dist/tiles";
 import { smoothstep } from "webgl-test-shared/dist/utils";
 import { Settings } from "webgl-test-shared/dist/settings";
@@ -7,17 +7,21 @@ import BIOME_GENERATION_INFO, { BIOME_GENERATION_PRIORITY, BiomeSpawnRequirement
 import Tile from "../Tile";
 import { WaterTileGenerationInfo, generateRiverFeatures, generateRiverTiles } from "./river-generation";
 import OPTIONS from "../options";
-import { generateDecorations } from "./decoration-generation";
-import { RiverFlowDirection } from "../Board";
+import Board, { RiverFlowDirection } from "../Board";
+import { createReedConfig } from "../entities/reed";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { createEntityFromConfig } from "../Entity";
 
 export interface TerrainGenerationInfo {
    readonly tiles: Array<Tile>;
    readonly riverFlowDirectionsArray: ReadonlyArray<RiverFlowDirection>;
    readonly waterRocks: ReadonlyArray<WaterRockData>;
    readonly riverSteppingStones: ReadonlyArray<RiverSteppingStoneData>;
-   readonly edgeTiles: Array<Tile>;
+   readonly edgeTilesArray: Array<Tile>;
+   readonly edgeTilesRecord: Partial<Record<number, Tile>>;
    readonly grassInfo: ReadonlyArray<GrassTileInfo>;
-   readonly decorations: ReadonlyArray<DecorationInfo>;
+   readonly tileTemperatures: Float32Array;
+   readonly tileHumidities: Float32Array;
 }
 
 const HEIGHT_NOISE_SCALE = 50;
@@ -146,6 +150,20 @@ export function generateTileInfo(biomeNames: Array<Array<Biome>>, tileTypeArray:
    }
 }
 
+const createNoiseMapData = (noise: ReadonlyArray<ReadonlyArray<number>>): Float32Array => {
+   const data = new Float32Array(Settings.FULL_BOARD_DIMENSIONS * Settings.FULL_BOARD_DIMENSIONS)
+   let idx = 0;
+   for (let tileY = 0; tileY < Settings.FULL_BOARD_DIMENSIONS; tileY++) {
+      for (let tileX = 0; tileX < Settings.FULL_BOARD_DIMENSIONS; tileX++) {
+         const val = noise[tileX][tileY];
+         data[idx] = val;
+         
+         idx++;
+      }
+   }
+   return data;
+}
+
 function generateTerrain(): TerrainGenerationInfo {
    const biomeNameArray = new Array<Array<Biome>>();
    const tileTypeArray = new Array<Array<TileType>>();
@@ -247,7 +265,8 @@ function generateTerrain(): TerrainGenerationInfo {
    // Make an array of tiles from the tile info array
    // The outer loop has to be tileY so that the tiles array is filled properly
    const tiles = new Array<Tile>();
-   const edgeTiles = new Array<Tile>();
+   const edgeTilesArray = new Array<Tile>();
+   const edgeTilesRecord: Partial<Record<number, Tile>> = {};
    const grassInfo = new Array<GrassTileInfo>();
    for (let tileY = -Settings.EDGE_GENERATION_DISTANCE; tileY < Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE; tileY++) {
       for (let tileX = -Settings.EDGE_GENERATION_DISTANCE; tileX < Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE; tileX++) {
@@ -283,7 +302,10 @@ function generateTerrain(): TerrainGenerationInfo {
          if (tileIsInBoard(tileX, tileY)) {
             tiles.push(tile);
          } else {
-            edgeTiles.push(tile);
+            edgeTilesArray.push(tile);
+
+            const idx = Board.getTileIndexIncludingEdges(tileX, tileY);
+            edgeTilesRecord[idx] = tile;
          }
          
          if (tileType === TileType.grass) {
@@ -305,9 +327,11 @@ function generateTerrain(): TerrainGenerationInfo {
       waterRocks: waterRocks,
       riverSteppingStones: riverSteppingStones,
       riverFlowDirectionsArray: riverFlowDirectionsArray,
-      edgeTiles: edgeTiles,
+      edgeTilesArray: edgeTilesArray,
+      edgeTilesRecord: edgeTilesRecord,
       grassInfo: grassInfo,
-      decorations: generateDecorations(tileTypeArray, temperatureMap)
+      tileTemperatures: createNoiseMapData(temperatureMap),
+      tileHumidities: createNoiseMapData(humidityMap)
    };
 }
 

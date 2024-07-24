@@ -1,4 +1,4 @@
-import { ComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 import TurretComponent from "./TurretComponent";
 import CowComponent from "./CowComponent";
 import TribeComponent from "./TribeComponent";
@@ -61,6 +61,7 @@ import TribeWarriorComponent from "./TribeWarriorComponent";
 import TransformComponent from "./TransformComponent";
 import LayeredRodComponent from "./LayeredRodComponent";
 import { PacketReader } from "webgl-test-shared/dist/packets";
+import DecorationComponent from "./DecorationComponent";
 
 export enum ClientComponentType {
    equipment,
@@ -123,7 +124,8 @@ const ServerComponents = {
    [ServerComponentType.escapeAI]: (): EscapeAIComponent => 0 as any,
    [ServerComponentType.followAI]: (): FollowAIComponent => 0 as any,
    [ServerComponentType.tribeWarrior]: (): TribeWarriorComponent => 0 as any,
-   [ServerComponentType.layeredRod]: (): LayeredRodComponent => 0 as any
+   [ServerComponentType.layeredRod]: (): LayeredRodComponent => 0 as any,
+   [ServerComponentType.decoration]: (): DecorationComponent => 0 as any
 } satisfies Record<ServerComponentType, () => ServerComponent>;
 
 export const ClientComponents = {
@@ -192,5 +194,6 @@ export function createComponent(entity: Entity, componentType: ServerComponentTy
       case ServerComponentType.throwingProjectile: return new ThrowingProjectileComponent(entity);
       case ServerComponentType.tribeWarrior: return new TribeWarriorComponent(entity, reader);
       case ServerComponentType.layeredRod: return new LayeredRodComponent(entity, reader);
+      case ServerComponentType.decoration: return new DecorationComponent(entity, reader);
    }
 }

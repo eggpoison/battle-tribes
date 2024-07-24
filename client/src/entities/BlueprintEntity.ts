@@ -1,7 +1,6 @@
 import { BlueprintType, ServerComponentType } from "webgl-test-shared/dist/components";
-import { Point, assertUnreachable, randFloat } from "webgl-test-shared/dist/utils";
+import { assertUnreachable, randFloat } from "webgl-test-shared/dist/utils";
 import { EntityType } from "webgl-test-shared/dist/entities";
-import { EntityData } from "webgl-test-shared/dist/client-server-types";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { playSound } from "../sound";
 import { BALLISTA_AMMO_BOX_OFFSET_X, BALLISTA_AMMO_BOX_OFFSET_Y, BALLISTA_GEAR_X, BALLISTA_GEAR_Y } from "../utils";
@@ -423,11 +422,11 @@ class BlueprintEntity extends Entity {
       }
    }
 
-   public updateFromData(data: EntityData): void {
-      super.updateFromData(data);
+   // public updateFromData(data: EntityData): void {
+   //    super.updateFromData(data);
 
-      this.updatePartialTexture();
-   }
+   //    this.updatePartialTexture();
+   // }
 
    private updatePartialTexture(): void {
       const blueprintComponent = this.getServerComponent(ServerComponentType.blueprint);

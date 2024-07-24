@@ -38,7 +38,7 @@ function getDataLength(entity: EntityID): number {
    
    let lengthBytes = 6 * Float32Array.BYTES_PER_ELEMENT;
    if (tombstoneComponent.deathInfo !== null) {
-      lengthBytes += 100 + Float32Array.BYTES_PER_ELEMENT;
+      lengthBytes += Float32Array.BYTES_PER_ELEMENT + 100 + Float32Array.BYTES_PER_ELEMENT;
    }
 
    return lengthBytes;

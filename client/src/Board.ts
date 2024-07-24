@@ -11,7 +11,6 @@ import { highMonocolourBufferContainer, highTexturedBufferContainer, lowMonocolo
 import ObjectBufferContainer from "./rendering/ObjectBufferContainer";
 import { tempFloat32ArrayLength1 } from "./webgl";
 import Player from "./entities/Player";
-import Fish from "./entities/Fish";
 import { NEIGHBOUR_OFFSETS } from "./utils";
 import { RenderableType, addRenderable, removeRenderable } from "./rendering/render-loop";
 import { WorldInfo } from "webgl-test-shared/dist/structures";
@@ -23,6 +22,7 @@ import { InitialGameDataPacket } from "./client/packet-processing";
 import { collide } from "./collision";
 import { COLLISION_BITS } from "webgl-test-shared/dist/collision";
 import { latencyGameState } from "./game-state/game-states";
+import { addEntityToRenderHeightMap } from "./rendering/webgl/entity-rendering";
 
 export interface EntityHitboxInfo {
    readonly vertexPositions: readonly [Point, Point, Point, Point];
@@ -190,6 +190,7 @@ abstract class Board {
          this.players.push(entity as Player);
       }
 
+      addEntityToRenderHeightMap(entity);
       addRenderable(RenderableType.entity, entity);
    }
 

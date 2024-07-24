@@ -1,4 +1,4 @@
-import { DecorationInfo, RIVER_STEPPING_STONE_SIZES, RiverSteppingStoneData, ServerTileUpdateData, WaterRockData } from "webgl-test-shared/dist/client-server-types";
+import { RIVER_STEPPING_STONE_SIZES, RiverSteppingStoneData, ServerTileUpdateData, WaterRockData } from "webgl-test-shared/dist/client-server-types";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { createTileRenderChunks, recalculateSolidTileRenderChunkData } from "./webgl/solid-tile-rendering";
 import { calculateRiverRenderChunkData } from "./webgl/river-rendering";
@@ -46,25 +46,16 @@ export interface RenderChunkWallBorderInfo {
    readonly vertexCount: number;
 }
 
-export interface RenderChunkDecorationInfo {
-   readonly decorations: Array<DecorationInfo>;
-}
-
 // @Speed: Polymorphism
 let riverInfoArray: Array<RenderChunkRiverInfo | null>;
 // @Speed: Polymorphism
 let ambientOcclusionInfoArray: Array<RenderChunkAmbientOcclusionInfo | null>;
 let wallBorderInfoArray: Array<RenderChunkWallBorderInfo>;
-let decorationInfoArray: Array<RenderChunkDecorationInfo>;
 
 export function getRenderChunkIndex(renderChunkX: number, renderChunkY: number): number {
    const x = renderChunkX + RENDER_CHUNK_EDGE_GENERATION;
    const y = renderChunkY + RENDER_CHUNK_EDGE_GENERATION;
    return y * (WORLD_RENDER_CHUNK_SIZE + RENDER_CHUNK_EDGE_GENERATION * 2) + x;
-}
-
-export function getRenderChunkDecorationInfo(renderChunkX: number, renderChunkY: number): RenderChunkDecorationInfo {
-   return decorationInfoArray[getRenderChunkIndex(renderChunkX, renderChunkY)];
 }
 
 export function getRenderChunkRiverInfo(renderChunkX: number, renderChunkY: number): RenderChunkRiverInfo | null {
@@ -79,7 +70,7 @@ export function getRenderChunkAmbientOcclusionInfo(renderChunkX: number, renderC
    return ambientOcclusionInfoArray[getRenderChunkIndex(renderChunkX, renderChunkY)];
 }
 
-export function createRenderChunks(decorations: ReadonlyArray<DecorationInfo>, waterRocks: ReadonlyArray<WaterRockData>, riverSteppingStones: ReadonlyArray<RiverSteppingStoneData>): void {
+export function createRenderChunks(waterRocks: ReadonlyArray<WaterRockData>, riverSteppingStones: ReadonlyArray<RiverSteppingStoneData>): void {
    // Group water rocks
    // @Speed: Garbage collection
    let waterRocksChunked: Record<number, Record<number, Array<WaterRockData>>> = {};
@@ -154,24 +145,6 @@ export function createRenderChunks(decorations: ReadonlyArray<DecorationInfo>, w
          const data = calculateWallBorderInfo(renderChunkX, renderChunkY);
          wallBorderInfoArray.push(data);
       }
-   }
-
-   // Decoration info
-   decorationInfoArray = [];
-   for (let renderChunkY = -RENDER_CHUNK_EDGE_GENERATION; renderChunkY < WORLD_RENDER_CHUNK_SIZE + RENDER_CHUNK_EDGE_GENERATION; renderChunkY++) {
-      for (let renderChunkX = -RENDER_CHUNK_EDGE_GENERATION; renderChunkX < WORLD_RENDER_CHUNK_SIZE + RENDER_CHUNK_EDGE_GENERATION; renderChunkX++) {
-         decorationInfoArray.push({ decorations: [] });
-      }
-   }
-
-   // Add decorations to chunks
-   for (let i = 0; i < decorations.length; i++) {
-      const decoration = decorations[i];
-
-      const renderChunkX = Math.floor(decoration.positionX / RENDER_CHUNK_UNITS);
-      const renderChunkY = Math.floor(decoration.positionY / RENDER_CHUNK_UNITS);
-      const renderChunkIndex = getRenderChunkIndex(renderChunkX, renderChunkY);
-      decorationInfoArray[renderChunkIndex].decorations.push(decoration);
    }
 }
 

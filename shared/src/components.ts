@@ -71,7 +71,8 @@ export enum ServerComponentType {
    craftingStation,
    transform,
    projectile,
-   layeredRod
+   layeredRod,
+   decoration
 }
 
 export const ServerComponentTypeString: Record<ServerComponentType, string> = {
@@ -130,67 +131,9 @@ export const ServerComponentTypeString: Record<ServerComponentType, string> = {
    [ServerComponentType.craftingStation]: "crafting station",
    [ServerComponentType.transform]: "transform",
    [ServerComponentType.projectile]: "projectile",
-   [ServerComponentType.layeredRod]: "layered rod"
+   [ServerComponentType.layeredRod]: "layered rod",
+   [ServerComponentType.decoration]: "decoration"
 };
-
-const _ComponentData = {
-   [ServerComponentType.aiHelper]: (): AIHelperComponentData => 0 as any,
-   [ServerComponentType.ammoBox]: (): AmmoBoxComponentData => 0 as any,
-   [ServerComponentType.berryBush]: (): BerryBushComponentData => 0 as any,
-   [ServerComponentType.blueprint]: (): BlueprintComponentData => 0 as any,
-   [ServerComponentType.boulder]: (): BoulderComponentData => 0 as any,
-   [ServerComponentType.cactus]: (): CactusComponentData => 0 as any,
-   [ServerComponentType.cooking]: (): CookingComponentData => 0 as any,
-   [ServerComponentType.cow]: (): CowComponentData => 0 as any,
-   [ServerComponentType.door]: (): DoorComponentData => 0 as any,
-   [ServerComponentType.fish]: (): FishComponentData => 0 as any,
-   [ServerComponentType.frozenYeti]: (): FrozenYetiComponentData => 0 as any,
-   [ServerComponentType.golem]: (): GolemComponentData => 0 as any,
-   [ServerComponentType.health]: (): HealthComponentData => 0 as any,
-   [ServerComponentType.hut]: (): HutComponentData => 0 as any,
-   [ServerComponentType.iceShard]: (): IceShardComponentData => 0 as any,
-   [ServerComponentType.iceSpikes]: (): IceSpikesComponentData => 0 as any,
-   [ServerComponentType.inventory]: (): InventoryComponentData => 0 as any,
-   [ServerComponentType.inventoryUse]: (): InventoryUseComponentData => 0 as any,
-   [ServerComponentType.item]: (): ItemComponentData => 0 as any,
-   [ServerComponentType.pebblum]: (): PebblumComponentData => 0 as any,
-   [ServerComponentType.physics]: (): PhysicsComponentData => 0 as any,
-   [ServerComponentType.player]: (): PlayerComponentData => 0 as any,
-   [ServerComponentType.rockSpike]: (): RockSpikeProjectileComponentData => 0 as any,
-   [ServerComponentType.slime]: (): SlimeComponentData => 0 as any,
-   [ServerComponentType.slimeSpit]: (): SlimeSpitComponentData => 0 as any,
-   [ServerComponentType.slimewisp]: (): SlimewispComponentData => 0 as any,
-   [ServerComponentType.snowball]: (): SnowballComponentData => 0 as any,
-   [ServerComponentType.statusEffect]: (): StatusEffectComponentData => 0 as any,
-   [ServerComponentType.throwingProjectile]: (): ThrowingProjectileComponentData => 0 as any,
-   [ServerComponentType.tombstone]: (): TombstoneComponentData => 0 as any,
-   [ServerComponentType.totemBanner]: (): TotemBannerComponentData => 0 as any,
-   [ServerComponentType.tree]: (): TreeComponentData => 0 as any,
-   [ServerComponentType.tribe]: (): TribeComponentData => 0 as any,
-   [ServerComponentType.tribeMember]: (): TribeMemberComponentData => 0 as any,
-   [ServerComponentType.tribesmanAI]: (): TribesmanAIComponentData => 0 as any,
-   [ServerComponentType.turret]: (): TurretComponentData => 0 as any,
-   [ServerComponentType.yeti]: (): YetiComponentData => 0 as any,
-   [ServerComponentType.zombie]: (): ZombieComponentData => 0 as any,
-   [ServerComponentType.wanderAI]: (): WanderAIComponentData => 0 as any,
-   [ServerComponentType.escapeAI]: (): EscapeAIComponentData => 0 as any,
-   [ServerComponentType.followAI]: (): FollowAIComponentData => 0 as any,
-   [ServerComponentType.researchBench]: (): ResearchBenchComponentData => 0 as any,
-   [ServerComponentType.tunnel]: (): TunnelComponentData => 0 as any,
-   [ServerComponentType.buildingMaterial]: (): BuildingMaterialComponentData => 0 as any,
-   [ServerComponentType.spikes]: (): SpikesComponentData => 0 as any,
-   [ServerComponentType.tribeWarrior]: (): TribeWarriorComponentData => 0 as any,
-   [ServerComponentType.healingTotem]: (): HealingTotemComponentData => 0 as any,
-   [ServerComponentType.planterBox]: (): PlanterBoxComponentData => 0 as any,
-   [ServerComponentType.plant]: (): PlantComponentData => 0 as any,
-   [ServerComponentType.structure]: (): StructureComponentData => 0 as any,
-   [ServerComponentType.fence]: (): FenceComponentData => 0 as any,
-   [ServerComponentType.fenceGate]: (): FenceGateComponentData => 0 as any,
-   [ServerComponentType.craftingStation]: (): CraftingStationComponentData => 0 as any,
-   [ServerComponentType.transform]: (): TransformComponentData => 0 as any,
-   [ServerComponentType.projectile]: (): ProjectileComponentData => 0 as any,
-   [ServerComponentType.layeredRod]: (): LayeredRodComponentData => 0 as any
-} satisfies Record<ServerComponentType, () => unknown>;
 
 // @Hack: shouldn't be hardcoded
 export const EntityComponents = {
@@ -254,12 +197,12 @@ export const EntityComponents = {
    [EntityType.fenceGate]: [ServerComponentType.transform, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.tribe, ServerComponentType.fenceGate] as const,
    [EntityType.frostshaper]: [ServerComponentType.transform, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.structure, ServerComponentType.craftingStation] as const,
    [EntityType.stonecarvingTable]: [ServerComponentType.transform, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.structure, ServerComponentType.craftingStation] as const,
-   [EntityType.grassStrand]: [ServerComponentType.transform, ServerComponentType.layeredRod] as const
+   [EntityType.grassStrand]: [ServerComponentType.transform, ServerComponentType.layeredRod] as const,
+   [EntityType.decoration]: [ServerComponentType.transform, ServerComponentType.decoration] as const,
+   [EntityType.reed]: [ServerComponentType.transform, ServerComponentType.layeredRod] as const
 } satisfies Record<EntityType, ReadonlyArray<ServerComponentType>>;
 
 export type EntityComponentTypes<T extends EntityType> = typeof EntityComponents[T];
-
-export type ComponentData<T extends ServerComponentType = ServerComponentType> = ReturnType<typeof _ComponentData[T]>;
 
 interface BaseComponentData {
    readonly componentType: ServerComponentType;
@@ -805,6 +748,23 @@ export interface LayeredRodComponentData extends BaseComponentData {
    readonly numLayers: number;
    readonly bend: [number, number];
    readonly colour: Colour;
+}
+
+/* Decoration Component Data */
+
+export enum DecorationType {
+   pebble,
+   rock,
+   sandstoneRock,
+   sandstoneRockBig1,
+   sandstoneRockBig2,
+   blackRockSmall,
+   blackRock,
+   snowPile,
+   flower1,
+   flower2,
+   flower3,
+   flower4
 }
 
 // @Cleanup: Should these be here?

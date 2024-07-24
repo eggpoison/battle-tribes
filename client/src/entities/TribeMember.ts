@@ -2,14 +2,13 @@ import { Settings } from "webgl-test-shared/dist/settings";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { TribeType } from "webgl-test-shared/dist/tribes";
 import { EntityType } from "webgl-test-shared/dist/entities";
-import { EntityData, HitData } from "webgl-test-shared/dist/client-server-types";
+import { HitData } from "webgl-test-shared/dist/client-server-types";
 import { angle, lerp, randFloat, randInt, randItem } from "webgl-test-shared/dist/utils";
 import { TileType } from "webgl-test-shared/dist/tiles";
 import Entity from "../Entity";
 import { BloodParticleSize, LeafParticleSize, createBloodParticle, createBloodParticleFountain, createBloodPoolParticle, createLeafParticle } from "../particles";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { AudioFilePath, playSound } from "../sound";
-import Game from "../Game";
 import { getTribesmanRadius } from "../entity-components/TribeMemberComponent";
 import { getTribeType } from "../entity-components/TribeComponent";
 import { InventoryName, ItemType } from "webgl-test-shared/dist/items/items";
@@ -360,23 +359,23 @@ abstract class TribeMember extends Entity {
    }
 
    // @Cleanup: remove. just do in components
-   public updateFromData(data: EntityData): void {
-      const tribeComponent = this.getServerComponent(ServerComponentType.tribe);
-      const tribeTypeBeforeUpdate = tribeComponent.tribeType;
+   // public updateFromData(data: EntityData): void {
+   //    const tribeComponent = this.getServerComponent(ServerComponentType.tribe);
+   //    const tribeTypeBeforeUpdate = tribeComponent.tribeType;
 
-      super.updateFromData(data);
+   //    super.updateFromData(data);
 
-      // Show low health marker for friendly tribe members
-      if (tribeComponent.tribeID === Game.tribe.id) {
-         const healthComponent = this.getServerComponent(ServerComponentType.health);
-         this.updateLowHealthMarker(healthComponent.health <= healthComponent.maxHealth / 2);
-      }
+   //    // Show low health marker for friendly tribe members
+   //    if (tribeComponent.tribeID === Game.tribe.id) {
+   //       const healthComponent = this.getServerComponent(ServerComponentType.health);
+   //       this.updateLowHealthMarker(healthComponent.health <= healthComponent.maxHealth / 2);
+   //    }
 
-      // If tribe type is changed, update render parts
-      if (tribeComponent.tribeType !== tribeTypeBeforeUpdate) {
-         switchTribeMemberRenderParts(this);
-      }
-   }
+   //    // If tribe type is changed, update render parts
+   //    if (tribeComponent.tribeType !== tribeTypeBeforeUpdate) {
+   //       switchTribeMemberRenderParts(this);
+   //    }
+   // }
 }
 
 export default TribeMember;

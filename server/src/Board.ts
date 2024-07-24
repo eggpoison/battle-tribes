@@ -1,4 +1,4 @@
-import { WaterRockData, RiverSteppingStoneData, GrassTileInfo, DecorationInfo, RIVER_STEPPING_STONE_SIZES, ServerTileUpdateData } from "webgl-test-shared/dist/client-server-types";
+import { WaterRockData, RiverSteppingStoneData, GrassTileInfo, RIVER_STEPPING_STONE_SIZES, ServerTileUpdateData } from "webgl-test-shared/dist/client-server-types";
 import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { TileType } from "webgl-test-shared/dist/tiles";
@@ -104,13 +104,15 @@ abstract class Board {
    public static tribes = new Array<Tribe>();
 
    // @Incomplete @Bug: These shouldn't be tiles but instead serverdata, so that they aren't counted in the census
-   public static edgeTiles = new Array<Tile>();
+   public static edgeTilesArray: Array<Tile>;
+   public static edgeTilesRecord: Partial<Record<number, Tile>>;
 
    public static grassInfo: ReadonlyArray<GrassTileInfo>;
 
-   public static decorations: ReadonlyArray<DecorationInfo>;
-   
-   public static globalCollisionData: Partial<Record<number, ReadonlyArray<number>>> = {}
+   public static globalCollisionData: Partial<Record<number, ReadonlyArray<number>>> = {};
+
+   public static tileTemperatures: Float32Array;
+   public static tileHumidities: Float32Array;
 
    public static setup(): void {
       this.initialiseChunks();
@@ -119,10 +121,12 @@ abstract class Board {
       this.tiles = generationInfo.tiles;
       this.waterRocks = generationInfo.waterRocks;
       this.riverSteppingStones = generationInfo.riverSteppingStones;
-      this.edgeTiles = generationInfo.edgeTiles;
+      this.edgeTilesArray = generationInfo.edgeTilesArray;
+      this.edgeTilesRecord = generationInfo.edgeTilesRecord;
       this.grassInfo = generationInfo.grassInfo;
-      this.decorations = generationInfo.decorations;
       this.riverFlowDirectionsArray = generationInfo.riverFlowDirectionsArray;
+      this.tileTemperatures = generationInfo.tileTemperatures;
+      this.tileHumidities = generationInfo.tileHumidities;
 
       if (OPTIONS.generateWalls) {
          for (let i = 0; i < generationInfo.tiles.length; i++) {
@@ -183,7 +187,7 @@ abstract class Board {
       this.entityJoinBuffer = [];
       this.entityRemoveBuffer = [];
       this.tribes = [];
-      this.edgeTiles = [];
+      this.edgeTilesArray = [];
    }
 
    public static isNight(): boolean {
@@ -220,6 +224,23 @@ abstract class Board {
    public static getTile(tileX: number, tileY: number): Tile {
       const tileIndex = tileY * Settings.BOARD_DIMENSIONS + tileX;
       return this.tiles[tileIndex];
+   }
+
+   public static getTileIndexIncludingEdges(tileX: number, tileY: number): number {
+      return (tileY + Settings.EDGE_GENERATION_DISTANCE) * (Settings.BOARD_DIMENSIONS + 2 * Settings.EDGE_GENERATION_DISTANCE) + tileX + Settings.EDGE_GENERATION_DISTANCE;
+   }
+
+   public static getTileIncludingEdges(tileX: number, tileY: number): Tile {
+      if (this.tileIsInBoard(tileX, tileY)) {
+         return this.getTile(tileX, tileY);
+      } else {
+         const idx = this.getTileIndexIncludingEdges(tileX, tileY);
+         const tile = this.edgeTilesRecord[idx];
+         if (typeof tile === "undefined") {
+            throw new Error();
+         }
+         return tile;
+      }
    }
 
    public static getChunk(chunkX: number, chunkY: number): Chunk {
@@ -667,6 +688,10 @@ abstract class Board {
 
    public static tileIsInBoard(tileX: number, tileY: number): boolean {
       return tileX >= 0 && tileX < Settings.BOARD_DIMENSIONS && tileY >= 0 && tileY < Settings.BOARD_DIMENSIONS;
+   }
+
+   public static tileIsInBoardIncludingEdges(tileX: number, tileY: number): boolean {
+      return tileX >= -Settings.EDGE_GENERATION_DISTANCE && tileX < Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE && tileY >= -Settings.EDGE_GENERATION_DISTANCE && tileY < Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE;
    }
 
    public static positionIsInBoard(x: number, y: number): boolean {

@@ -16,6 +16,7 @@ import TransformComponent from "./TransformComponent";
 import { COLLISION_BITS } from "webgl-test-shared/dist/collision";
 import { latencyGameState } from "../game-state/game-states";
 import { PacketReader } from "webgl-test-shared/dist/packets";
+import { createWaterSplashParticle } from "../particles";
 
 const applyPhysics = (physicsComponent: PhysicsComponent): void => {
    const transformComponent = physicsComponent.entity.getServerComponent(ServerComponentType.transform);
@@ -101,58 +102,6 @@ const resolveBorderCollisions = (physicsComponent: PhysicsComponent): void => {
 }
 
 
-const getPotentialCollidingEntities = (transformComponent: TransformComponent): ReadonlyArray<Entity> => {
-   const entities = new Array<Entity>();
-
-   for (const chunk of transformComponent.chunks) {
-      for (const entityID of chunk.entities) {
-         if (entityID !== transformComponent.entity.id) {
-            const entity = Board.entityRecord[entityID]!;
-            entities.push(entity);
-         }
-      }
-   }
-
-   return entities;
-}
-const resolveGameObjectCollisions = (physicsComponent: PhysicsComponent): void => {
-   const transformComponent = physicsComponent.entity.getServerComponent(ServerComponentType.transform);
-   
-   const potentialCollidingEntities = getPotentialCollidingEntities(transformComponent);
-
-   transformComponent.collidingEntities = [];
-
-   for (let i = 0; i < potentialCollidingEntities.length; i++) {
-      const entity = potentialCollidingEntities[i];
-
-      const entityTransformComponent = entity.getServerComponent(ServerComponentType.transform);
-      
-      // If the two entities are exactly on top of each other, don't do anything
-      if (entityTransformComponent.position.x === transformComponent.position.x && entityTransformComponent.position.y === transformComponent.position.y) {
-         continue;
-      }
-
-      for (const hitbox of transformComponent.hitboxes) {
-         for (const otherHitbox of entityTransformComponent.hitboxes) {
-            if (hitbox.isColliding(otherHitbox)) {
-               if (!transformComponent.collidingEntities.includes(entity)) {
-                  transformComponent.collidingEntities.push(entity);
-               }
-               
-               if ((entityTransformComponent.collisionMask & transformComponent.collisionBit) !== 0 && (transformComponent.collisionMask & entityTransformComponent.collisionBit) !== 0) {
-                  collide(physicsComponent.entity, entity, hitbox, otherHitbox);
-               } else {
-                  // @Hack
-                  if (entityTransformComponent.collisionBit === COLLISION_BITS.plants) {
-                     latencyGameState.lastPlantCollisionTicks = Board.ticks;
-                  }
-                  break;
-               }
-            }
-         }
-      }
-   }
-}
 
 class PhysicsComponent extends ServerComponent {
    public readonly velocity: Point;
@@ -167,6 +116,12 @@ class PhysicsComponent extends ServerComponent {
 
    public tick(): void {
       const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
+
+      // Water droplet particles
+      // @Cleanup: Don't hardcode fish condition
+      if (transformComponent.isInRiver() && Board.tickIntervalHasPassed(0.05) && (this.entity.type !== EntityType.fish)) {
+         createWaterSplashParticle(transformComponent.position.x, transformComponent.position.y);
+      }
       
       // Water splash particles
       // @Cleanup: Move to particles file
@@ -210,7 +165,6 @@ class PhysicsComponent extends ServerComponent {
          resolveWallTileCollisions(this.entity);
       }
 
-      resolveGameObjectCollisions(this);
       resolveBorderCollisions(this);
    }
 

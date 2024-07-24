@@ -1,19 +1,28 @@
-import { Point, randFloat, randInt } from "webgl-test-shared/dist/utils";
+import { Colour, Point, randFloat, randInt } from "webgl-test-shared/dist/utils";
 import { ComponentArray } from "./ComponentArray";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityID } from "webgl-test-shared/dist/entities";
 import { Packet } from "webgl-test-shared/dist/packets";
 
-export interface LayeredRodComponentParams {}
+export interface LayeredRodComponentParams {
+   readonly colour: Colour;
+}
 
 export class LayeredRodComponent {
    public readonly numLayers = randInt(2, 5);
+   // @Memory: Can be removed and just use a hash on the entity ID
    public readonly naturalBend = Point.fromVectorForm(randFloat(2, 4), 2 * Math.PI * Math.random());
-   public readonly colour = {
-      r: randFloat(0.4, 0.5),
-      g: randFloat(0.83, 0.95),
-      b: randFloat(0.2, 0.3)
-   };
+
+   // @Memory: Can be removed and just use a hash on the entity ID
+   public readonly r: number;
+   public readonly g: number;
+   public readonly b: number;
+   
+   constructor(params: LayeredRodComponentParams) {
+      this.r = params.colour.r;
+      this.g = params.colour.g;
+      this.b = params.colour.b;
+   }
 }
 
 export const LayeredRodComponentArray = new ComponentArray<LayeredRodComponent>(ServerComponentType.layeredRod, true, {
@@ -35,9 +44,9 @@ function addDataToPacket(packet: Packet, entity: EntityID): void {
    // NaturalBendY
    packet.addNumber(layeredRodComponent.naturalBend.y);
    // Colour R
-   packet.addNumber(layeredRodComponent.colour.r);
+   packet.addNumber(layeredRodComponent.r);
    // Colour G
-   packet.addNumber(layeredRodComponent.colour.g);
+   packet.addNumber(layeredRodComponent.g);
    // Colour B
-   packet.addNumber(layeredRodComponent.colour.b);
+   packet.addNumber(layeredRodComponent.b);
 }

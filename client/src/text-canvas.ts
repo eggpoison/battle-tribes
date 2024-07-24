@@ -269,7 +269,15 @@ const renderHealNumbers = (): void => {
    }
 }
 
+// @Speed
+// @Speed
+// @Speed
 const renderPlayerNames = (): void => {
+   ctx.fillStyle = "#000";
+   ctx.font = "400 20px Helvetica";
+   ctx.lineJoin = "round";
+   ctx.miterLimit = 2;
+
    for (const player of Board.players) {
       if (player === Player.instance) {
          continue;
@@ -278,13 +286,9 @@ const renderPlayerNames = (): void => {
       // Calculate position in camera
       const cameraX = getXPosInCamera(player.renderPosition.x);
       const cameraY = getYPosInCamera(player.renderPosition.y + 21);
-
-      ctx.fillStyle = "#000";
-      ctx.font = "400 20px Helvetica";
-      ctx.lineJoin = "round";
-      ctx.miterLimit = 2;
-
+      
       const playerComponent = player.getServerComponent(ServerComponentType.player);
+      // console.log(playerComponent.username);
       const username = playerComponent.username;
 
       const width = ctx.measureText(username).width; // @Speed

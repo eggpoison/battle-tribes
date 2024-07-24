@@ -20,12 +20,14 @@ import { addPlayerClient, generatePlayerSpawnPosition, getPlayerClients } from "
 import { createPlayerConfig } from "../entities/tribes/player";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { createEntityFromConfig } from "../Entity";
-import { createGrassStrands } from "../world-generation/grass-generation";
+import { generateGrassStrands } from "../world-generation/grass-generation";
 import { processPlayerDataPacket } from "./packet-processing";
 import { EntityID } from "webgl-test-shared/dist/entities";
 import { SpikesComponentArray } from "../components/SpikesComponent";
 import { TribeComponentArray } from "../components/TribeComponent";
 import { TransformComponentArray } from "../components/TransformComponent";
+import { generateDecorations } from "../world-generation/decoration-generation";
+import { generateReeds } from "../world-generation/reed-generation";
 
 /*
 
@@ -121,7 +123,9 @@ class GameServer {
       updateResourceDistributions();
       spawnInitialEntities();
       forceMaxGrowAllIceSpikes();
-      createGrassStrands();
+      generateGrassStrands();
+      generateDecorations();
+      // generateReeds();
       
       const app = express();
       this.server = new Server({

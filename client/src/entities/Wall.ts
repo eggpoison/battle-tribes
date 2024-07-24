@@ -1,7 +1,7 @@
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { angle } from "webgl-test-shared/dist/utils";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { EntityData, HitData } from "webgl-test-shared/dist/client-server-types";
+import { HitData } from "webgl-test-shared/dist/client-server-types";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { playSound } from "../sound";
 import Entity from "../Entity";
@@ -67,12 +67,13 @@ class Wall extends Entity {
          this.damageRenderPart.switchTextureSource(textureSource);
       }
    }
-   public updateFromData(data: EntityData): void {
-      super.updateFromData(data);
 
-      const healthComponent = this.getServerComponent(ServerComponentType.health);
-      this.updateDamageRenderPart(healthComponent.health, healthComponent.maxHealth);
-   }
+   // public updateFromData(data: EntityData): void {
+   //    super.updateFromData(data);
+
+   //    const healthComponent = this.getServerComponent(ServerComponentType.health);
+   //    this.updateDamageRenderPart(healthComponent.health, healthComponent.maxHealth);
+   // }
 
    protected onHit(hitData: HitData): void {
       const transformComponent = this.getServerComponent(ServerComponentType.transform);

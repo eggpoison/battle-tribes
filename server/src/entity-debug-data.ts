@@ -116,7 +116,7 @@ export function getEntityDebugDataLength(debugData: EntityDebugData): number {
    lengthBytes += Float32Array.BYTES_PER_ELEMENT;
    lengthBytes += 5 * Float32Array.BYTES_PER_ELEMENT * debugData.tileHighlights.length;
    lengthBytes += Float32Array.BYTES_PER_ELEMENT;
-   lengthBytes += 1000 * debugData.debugEntries.length;
+   lengthBytes += (Float32Array.BYTES_PER_ELEMENT + 1000) * debugData.debugEntries.length;
 
    lengthBytes += 2 * Float32Array.BYTES_PER_ELEMENT;
    if (typeof debugData.pathData !== "undefined") {

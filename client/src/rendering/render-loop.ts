@@ -1,7 +1,6 @@
 import Entity from "../Entity";
 import Particle from "../Particle";
-import { RenderPart } from "../render-parts/render-parts";
-import { calculateRenderPartDepth, renderEntities } from "./webgl/entity-rendering";
+import { calculateRenderPartDepth, getEntityHeight, renderEntities } from "./webgl/entity-rendering";
 import { RenderPartOverlayGroup, renderEntityOverlay } from "./webgl/overlay-rendering";
 
 export const enum RenderableType {
@@ -23,9 +22,8 @@ const renderables = new Array<RenderableInfo>();
 const getRenderableDepth = (type: RenderableType, renderable: Renderable): number => {
    switch (type) {
       case RenderableType.entity: {
-         // @Cleanup: cast
-         const entity = renderable as Entity;
-         return entity.renderDepth;
+         // @Cleanup: remove cast
+         return getEntityHeight(renderable as Entity);
       }
       // @Incomplete
       case RenderableType.particle: {
@@ -49,32 +47,37 @@ const getRenderableDepth = (type: RenderableType, renderable: Renderable): numbe
    }
 }
 
-export function addRenderable(type: RenderableType, renderable: Renderable): void {
+const getRenderableIdx = (type: RenderableType, renderable: Renderable): number => {
    const depth = getRenderableDepth(type, renderable);
-   
-   let idx = renderables.length;
-   for (let i = 0; i < renderables.length; i++) {
-      const renderableInfo = renderables[i];
-      const currentDepth = getRenderableDepth(renderableInfo.type, renderableInfo.renderable);
-      
-      if (depth > currentDepth) {
-         idx = i;
-         break;
+
+   let left = 0;
+   let right = renderables.length - 1;
+   while (left <= right) {
+      const midIdx = Math.floor((left + right) * 0.5);
+      const mid = renderables[midIdx];
+      const midDepth = getRenderableDepth(mid.type, mid.renderable);
+
+      if (midDepth < depth) {
+         left = midIdx + 1;
+      } else if (midDepth > depth) {
+         right = midIdx - 1;
+      } else {
+         return midIdx;
       }
    }
+   
+   return left + 1;
+}
+
+export function addRenderable(type: RenderableType, renderable: Renderable): void {
+   // Use binary search to find index in array
+   const idx = getRenderableIdx(type, renderable);
 
    const renderableInfo: RenderableInfo = {
       type: type,
       renderable: renderable
    };
    renderables.splice(idx, 0, renderableInfo);
-
-   // switch (type) {
-   //    case RenderableType.entity: {
-   //       addEntityToBuffer(renderable as Entity);
-   //       break;
-   //    }
-   // }
 }
 
 export function removeRenderable(renderable: Renderable): void {

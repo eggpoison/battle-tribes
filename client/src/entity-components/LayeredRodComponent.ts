@@ -3,16 +3,15 @@ import Entity from "../Entity";
 import ColouredRenderPart, { RenderPartColour } from "../render-parts/ColouredRenderPart";
 import { RenderPart } from "../render-parts/render-parts";
 import ServerComponent from "./ServerComponent";
-import { lerp } from "webgl-test-shared/dist/utils";
+import { Colour, hueShift, lerp } from "webgl-test-shared/dist/utils";
 import { Settings } from "webgl-test-shared/dist/settings";
 import Board from "../Board";
-import { hueShift } from "../colour";
 import { Hitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { PacketReader } from "webgl-test-shared/dist/packets";
+import { EntityType } from "webgl-test-shared/dist/entities";
 
 const enum Vars {
-   // NATURAL_DRIFT = 0.6 / Settings.TPS
-   NATURAL_DRIFT = 30 / Settings.TPS
+   NATURAL_DRIFT = 20 / Settings.TPS
 }
 
 const MAX_BEND = 6;
@@ -26,6 +25,54 @@ const pushAmountToBend = (pushAmount: number): number => {
    bend /= 2;
    bend += MAX_BEND;
    return bend;
+}
+
+const getLayerColour = (entity: Entity, r: number, g: number, b: number, layer: number): Colour => {
+   switch (entity.type as EntityType.grassStrand | EntityType.reed) {
+      case EntityType.grassStrand: {
+         // @Speed: a lot of this is shared for all strands
+         
+         const transformComponent = entity.getServerComponent(ServerComponentType.transform);
+   
+         const tileX = Math.floor(transformComponent.position.x / Settings.TILE_SIZE);
+         const tileY = Math.floor(transformComponent.position.y / Settings.TILE_SIZE);
+   
+         const grassInfo = Board.grassInfo[tileX][tileY];
+   
+         let humidity = grassInfo.humidity;
+         if (grassInfo.temperature <= 0.5) {
+            humidity = lerp(humidity, 0, 1 - grassInfo.temperature * 2);
+         }
+
+         const colour: Colour = {
+            r: r,
+            g: g,
+            b: b
+         };
+         if (grassInfo.temperature > 0) {
+            const humidityMultiplier = (humidity - 0.5) * -0.7;
+            if (humidityMultiplier > 0) {
+               colour.r = lerp(colour.r, 1, humidityMultiplier * 0.7);
+               colour.b = lerp(colour.b, 1, humidityMultiplier * 0.7);
+            } else {
+               colour.r = lerp(colour.r, 0, -humidityMultiplier);
+               colour.b = lerp(colour.b, 0, -humidityMultiplier);
+            }
+   
+            const hueAdjust = (grassInfo.temperature - 0.5) * 0.8;
+            hueShift(colour, hueAdjust);
+         }
+         return colour;
+      }
+      case EntityType.reed: {
+         const colour: Colour = {
+            r: r,
+            g: g,
+            b: b
+         };
+         return colour;
+      }
+   }
 }
 
 class LayeredRodComponent extends ServerComponent {
@@ -50,18 +97,6 @@ class LayeredRodComponent extends ServerComponent {
       const g = reader.readNumber();
       const b = reader.readNumber();
       
-      const transformComponent = entity.getServerComponent(ServerComponentType.transform);
-
-      const tileX = Math.floor(transformComponent.position.x / Settings.TILE_SIZE);
-      const tileY = Math.floor(transformComponent.position.y / Settings.TILE_SIZE);
-
-      const grassInfo = Board.grassInfo[tileX][tileY];
-
-      let humidity = grassInfo.humidity;
-      if (grassInfo.temperature <= 0.5) {
-         humidity = lerp(humidity, 0, 1 - grassInfo.temperature * 2);
-      }
-      
       const bendX = this.naturalBendX;
       const bendY = this.naturalBendY;
       
@@ -72,35 +107,23 @@ class LayeredRodComponent extends ServerComponent {
          let brightnessMultiplier = (layer - 1) / Math.max((this.numLayers - 1), 1);
 
          // Minimum brighness
-         brightnessMultiplier = lerp(brightnessMultiplier, 1, 0.88);
+         brightnessMultiplier = lerp(brightnessMultiplier, 1, 0.9);
+
+         const colour = getLayerColour(this.entity, r, g, b, layer);
          
-         const colour: RenderPartColour = {
-            r: r * brightnessMultiplier,
-            g: g * brightnessMultiplier,
-            b: b * brightnessMultiplier,
+         const renderPartColour: RenderPartColour = {
+            r: colour.r * brightnessMultiplier,
+            g: colour.g * brightnessMultiplier,
+            b: colour.b * brightnessMultiplier,
             a: 1
          };
 
-         if (grassInfo.temperature > 0) {
-            const humidityMultiplier = (humidity - 0.5) * -0.7;
-            if (humidityMultiplier > 0) {
-               colour.r = lerp(colour.r, 1, humidityMultiplier * 0.7);
-               colour.b = lerp(colour.b, 1, humidityMultiplier * 0.7);
-            } else {
-               colour.r = lerp(colour.r, 0, -humidityMultiplier);
-               colour.b = lerp(colour.b, 0, -humidityMultiplier);
-            }
-   
-            const hueAdjust = (grassInfo.temperature - 0.5) * 0.8;
-            hueShift(colour, hueAdjust);
-         }
-         
          const zIndex = layer / 10;
          const renderPart = new ColouredRenderPart(
             entity,
             zIndex,
             0,
-            colour
+            renderPartColour
          );
 
          renderPart.offset.x = bendX * layer;
@@ -112,8 +135,12 @@ class LayeredRodComponent extends ServerComponent {
    }
 
    private updateOffsets(): void {
-      const bendX = this.naturalBendX + this.bendX;
-      const bendY = this.naturalBendY + this.bendY;
+      const bendMagnitude = Math.sqrt(this.bendX * this.bendX + this.bendY * this.bendY);
+      const bendProgress = bendMagnitude / MAX_BEND;
+      const naturalBendMultiplier = 1 - bendProgress;
+      
+      const bendX = this.naturalBendX * naturalBendMultiplier + this.bendX;
+      const bendY = this.naturalBendY * naturalBendMultiplier + this.bendY;
       
       for (let layer = 1; layer <= this.numLayers; layer++) {
          const renderPart = this.renderParts[layer - 1];

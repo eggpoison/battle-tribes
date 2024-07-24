@@ -71,6 +71,9 @@ export class Packet extends BasePacketObject {
       if (encodedUsername.byteLength > lengthBytes) {
          throw new Error("String was too long!");
       }
+
+      // Write the length of the string
+      this.addNumber(string.length);
       
       new Uint8Array(this.buffer).set(encodedUsername, this.currentByteOffset);
       
@@ -125,7 +128,9 @@ export class PacketReader extends BasePacketObject {
    }
 
    public readString(lengthBytes: number): string {
-      const decodeBuffer = this.uint8View.subarray(this.currentByteOffset, this.currentByteOffset + lengthBytes - 1);
+      const stringLength = this.readNumber();
+      
+      const decodeBuffer = this.uint8View.subarray(this.currentByteOffset, this.currentByteOffset + stringLength - 1);
       const string = new TextDecoder().decode(decodeBuffer);
 
       this.currentByteOffset += lengthBytes;

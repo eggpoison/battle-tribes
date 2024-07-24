@@ -1,7 +1,7 @@
 import { Point, randFloat } from "webgl-test-shared/dist/utils";
 import { EntityID, EntityType, EntityTypeString } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
-import { EntityData, HitData, HitFlags } from "webgl-test-shared/dist/client-server-types";
+import { HitData, HitFlags } from "webgl-test-shared/dist/client-server-types";
 import { ServerComponentType, ServerComponentTypeString } from "webgl-test-shared/dist/components";
 import { BaseRenderObject } from "./render-parts/RenderPart";
 import Board from "./Board";
@@ -38,10 +38,6 @@ abstract class Entity extends BaseRenderObject {
    /** Render parts sorted in a way that all render parts are after their parent */
    public readonly renderPartsHierarchicalArray = new Array<RenderPart>();
 
-   // @Cleanup: Make it range from 0 -> infinity
-   /** Visual depth of the game object while being rendered */
-   public readonly renderDepth: number;
-
    /** Amount the game object's render parts will shake */
    public shakeAmount = 0;
 
@@ -66,7 +62,6 @@ abstract class Entity extends BaseRenderObject {
       this.id = id;
 
       this.type = entityType;
-      this.renderDepth = calculateEntityRenderDepth(entityType);
 
       // @Temporary? @Cleanup: should be done using the dirty function probs
       registerDirtyEntity(this);
@@ -224,6 +219,8 @@ abstract class Entity extends BaseRenderObject {
       
       Board.numVisibleRenderParts++;
       Board.renderPartRecord[renderPart.id] = renderPart;
+
+      this.dirty();
    }
 
    public removeRenderPart(renderPart: RenderPart): void {
@@ -304,17 +301,6 @@ abstract class Entity extends BaseRenderObject {
          const direction = 2 * Math.PI * Math.random();
          this.renderPosition.x += this.shakeAmount * Math.sin(direction);
          this.renderPosition.y += this.shakeAmount * Math.cos(direction);
-      }
-   }
-
-   public updateFromData(data: EntityData): void {
-      // Update components from data
-      for (let i = 0; i < data.components.length; i++) {
-         const componentData = data.components[i];
-         const component = this.getServerComponent(componentData.componentType);
-
-         // @Cleanup: nasty cast
-         component.updateFromData(componentData as any);
       }
    }
 

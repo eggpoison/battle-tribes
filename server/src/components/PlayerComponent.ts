@@ -27,7 +27,7 @@ export const PlayerComponentArray = new ComponentArray<PlayerComponent>(ServerCo
 });
 
 function getDataLength(): number {
-   return Float32Array.BYTES_PER_ELEMENT + 100;
+   return 2 * Float32Array.BYTES_PER_ELEMENT + 100;
 }
 
 function addDataToPacket(packet: Packet, entity: EntityID): void {

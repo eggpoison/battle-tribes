@@ -158,7 +158,6 @@ const SPAWN_INFOS: ReadonlyArray<EntitySpawnInfo> = [
       minSpawnDistance: 150,
       usesSpawnDistribution: false
    },
-   // @Temporary
    {
       entityType: EntityType.frozenYeti,
       spawnRate: 0.004,
@@ -169,17 +168,17 @@ const SPAWN_INFOS: ReadonlyArray<EntitySpawnInfo> = [
       minSpawnDistance: 150,
       usesSpawnDistribution: false
    },
-   {
-      entityType: EntityType.fish,
-      spawnRate: 0.015,
-      maxDensity: 0.03,
-      minPackSize: 3,
-      maxPackSize: 4,
-      onlySpawnsInNight: false,
-      minSpawnDistance: 150,
-      usesSpawnDistribution: false
-   },
    // @Temporary
+   // {
+   //    entityType: EntityType.fish,
+   //    spawnRate: 0.015,
+   //    maxDensity: 0.03,
+   //    minPackSize: 3,
+   //    maxPackSize: 4,
+   //    onlySpawnsInNight: false,
+   //    minSpawnDistance: 150,
+   //    usesSpawnDistribution: false
+   // },
    {
       entityType: EntityType.golem,
       spawnRate: 0.002,

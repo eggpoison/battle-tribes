@@ -7,7 +7,8 @@ export const enum PacketType {
    deactivate,
    syncRequest,
    syncData,
-   sync
+   sync,
+   attack
 }
 
 // @Bandwidth: figure out a way to be tightly packed (not have to add padding)

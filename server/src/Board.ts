@@ -8,7 +8,7 @@ import Chunk from "./Chunk";
 import Tile from "./Tile";
 import { removeEntityFromCensus } from "./census";
 import Tribe from "./Tribe";
-import generateTerrain from "./world-generation/terrain-generation";
+import generateTerrain, { TerrainGenerationInfo } from "./world-generation/terrain-generation";
 import { ComponentArrays } from "./components/ComponentArray";
 import { InventoryUseComponentArray, tickInventoryUseComponent } from "./components/InventoryUseComponent";
 import { HealthComponentArray, tickHealthComponent } from "./components/HealthComponent";
@@ -114,10 +114,9 @@ abstract class Board {
    public static tileTemperatures: Float32Array;
    public static tileHumidities: Float32Array;
 
-   public static setup(): void {
+   public static setup(generationInfo: TerrainGenerationInfo): void {
       this.initialiseChunks();
 
-      const generationInfo = generateTerrain();
       this.tiles = generationInfo.tiles;
       this.waterRocks = generationInfo.waterRocks;
       this.riverSteppingStones = generationInfo.riverSteppingStones;
@@ -456,6 +455,8 @@ abstract class Board {
 
    // @Cleanup: Split into collision detection and resolution
    public static resolveEntityCollisions(): void {
+      // @Incomplete: allow multiple collisions between entities for different render parts
+
       const collisionPairs = new Array<CollisionPair>();
 
       const globalCollisionData: Partial<Record<number, Array<number>>> = {};
@@ -497,7 +498,7 @@ abstract class Board {
          let isDupe = false;
          for (let j = 0; j < i; j++) {
             const test2 = collisionPairs[j];
-            if (test.entity1 === test2.entity1 && test.entity2 === test2.entity2 && test.collisionNum === test2.collisionNum) {
+            if (((test.entity1 === test2.entity1 && test.entity2 === test2.entity2) || (test.entity1 === test2.entity2 && test.entity2 === test2.entity1)) && test.collisionNum === test2.collisionNum) {
                isDupe = true;
                break;
             }

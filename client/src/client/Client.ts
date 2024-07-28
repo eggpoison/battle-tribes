@@ -328,12 +328,6 @@ abstract class Client {
    }
 
    public static processGameDataPacket(gameDataPacket: GameDataPacket): void {
-      Board.ticks = gameDataPacket.serverTicks;
-      updateDebugScreenTicks(gameDataPacket.serverTicks);
-      Board.time = gameDataPacket.serverTime;
-      updateDebugScreenCurrentTime(gameDataPacket.serverTime);
-      updateDebugScreenIsPaused(gameDataPacket.simulationIsPaused);
-
       if (isDev()) {
          Game.setGameObjectDebugData(gameDataPacket.entityDebugData);
       }
@@ -856,6 +850,12 @@ abstract class Client {
 
       gameScreenSetIsDead(true);
       closeCurrentMenu();
+   }
+
+   public static sendPacket(data: ArrayBuffer): void {
+      if (Game.isRunning && this.socket !== null) {
+         this.socket.send(data);
+      }
    }
 
    public static sendSelectTech(techID: TechID): void {

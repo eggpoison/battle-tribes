@@ -107,7 +107,7 @@ class LayeredRodComponent extends ServerComponent {
          let brightnessMultiplier = (layer - 1) / Math.max((this.numLayers - 1), 1);
 
          // Minimum brighness
-         brightnessMultiplier = lerp(brightnessMultiplier, 1, 0.9);
+         brightnessMultiplier = lerp(brightnessMultiplier, 1, 0.915);
 
          const colour = getLayerColour(this.entity, r, g, b, layer);
          

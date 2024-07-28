@@ -23,6 +23,7 @@ export function updatePlayerRotation(cursorX: number, cursorY: number): void {
 
    const transformComponent = Player.instance.getServerComponent(ServerComponentType.transform);
    transformComponent.rotation = cursorDirection;
+   Player.instance.dirty();
 }
 
 // export function updateAvailableCraftingRecipes(): void {

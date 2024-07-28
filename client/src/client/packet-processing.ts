@@ -21,6 +21,7 @@ import Board from "../Board";
 import Camera from "../Camera";
 import { createComponent } from "../entity-components/components";
 import { readInventory } from "../entity-components/InventoryComponent";
+import { updateDebugScreenIsPaused, updateDebugScreenTicks, updateDebugScreenCurrentTime } from "../components/game/dev/GameInfoDisplay";
 
 export interface InitialGameDataPacket {
    readonly playerID: number;
@@ -344,6 +345,15 @@ const processEntityUpdateData = (entityID: EntityID, reader: PacketReader): void
 export function processGameDataPacket(reader: PacketReader): void {
    const simulationIsPaused = reader.readBoolean();
    reader.padOffset(3);
+   updateDebugScreenIsPaused(simulationIsPaused);
+
+   const ticks = reader.readNumber();
+   const time = reader.readNumber();
+
+   Board.ticks = ticks;
+   updateDebugScreenTicks(ticks);
+   Board.time = time;
+   updateDebugScreenCurrentTime(time);
 
    // 
    // Player tribe data
@@ -475,9 +485,10 @@ export function processGameDataPacket(reader: PacketReader): void {
    }
 
    // @Temporary
-   // for (const entity of entitiesToRemove) {
-   //    Board.removeEntity(entity, false);
-   // }
+   for (const entity of entitiesToRemove) {
+      // @Incomplete: isDeath
+      Board.removeEntity(entity, false);
+   }
 
    const playerInventories = readPlayerInventories(reader);
    
@@ -568,8 +579,6 @@ export function processGameDataPacket(reader: PacketReader): void {
       });
    }
 
-   const ticks = reader.readNumber();
-   const time = reader.readNumber();
    const playerHealth = reader.readNumber();
 
    const hasDebugData = reader.readBoolean();
@@ -614,15 +623,12 @@ export function processGameDataPacket(reader: PacketReader): void {
    }
    
    const gameDataPacket: GameDataPacket = {
-      simulationIsPaused: simulationIsPaused,
       tileUpdates: tileUpdates,
       visibleHits: visibleHits,
       playerKnockbacks: playerKnockbacks,
       heals: heals,
       orbCompletes: orbCompletes,
       inventory: playerInventories,
-      serverTicks: ticks,
-      serverTime: time,
       playerHealth: playerHealth,
       entityDebugData: debugData,
       playerTribeData: {
@@ -655,7 +661,8 @@ export function processGameDataPacket(reader: PacketReader): void {
       visibleGrassBlockers: []
    };
 
-   Client.processGameDataPacket(gameDataPacket)
+   // @Cleanup: remove
+   Client.processGameDataPacket(gameDataPacket);
 }
 
 export function processSyncDataPacket(reader: PacketReader): void {

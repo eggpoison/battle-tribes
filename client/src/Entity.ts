@@ -14,7 +14,7 @@ import { RenderPartOverlayGroup } from "./rendering/webgl/overlay-rendering";
 import { removeRenderable } from "./rendering/render-loop";
 import { getRandomPointInEntity } from "./entity-components/TransformComponent";
 import { RenderPart } from "./render-parts/render-parts";
-import { calculateEntityRenderDepth } from "./render-layers";
+import { calculateEntityRenderHeight } from "./render-layers";
 import { registerDirtyEntity } from "./rendering/render-part-matrices";
 
 // Use prime numbers / 100 to ensure a decent distribution of different types of particles
@@ -49,12 +49,6 @@ abstract class Entity extends BaseRenderObject {
    private readonly updateableComponents = new Array<Component>();
 
    public readonly renderPartOverlayGroups = new Array<RenderPartOverlayGroup>();
-
-   public depthData!: Float32Array;
-   public textureArrayIndexData!: Float32Array;
-   public tintData!: Float32Array;
-   public opacityData!: Float32Array;
-   public modelMatrixData!: Float32Array;
 
    constructor(id: EntityID, entityType: EntityType) {
       super();

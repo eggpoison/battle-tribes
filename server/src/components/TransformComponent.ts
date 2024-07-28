@@ -30,7 +30,7 @@ export interface TransformComponentParams {
 
 export class TransformComponent {
    /** Combined mass of all the entity's hitboxes */
-   public totalMass = Number.EPSILON;
+   public totalMass = 0;
 
    // @Cleanup: should this be here? (Do all entities need this property regardless)
    public ageTicks = 0;

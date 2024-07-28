@@ -14,7 +14,7 @@ import { EntityID, EntityType, LimbAction } from "webgl-test-shared/dist/entitie
 import { TRIBE_INFO_RECORD, TribeType } from "webgl-test-shared/dist/tribes";
 import { InventoryUseComponentArray } from "../components/InventoryUseComponent";
 import { PhysicsComponentArray } from "../components/PhysicsComponent";
-import { InventoryComponentArray, InventoryCreationInfo, addItemToInventory, addItemToSlot, consumeItemFromSlot, consumeItemTypeFromInventory, craftRecipe, getInventory, getInventoryFromCreationInfo, inventoryComponentCanAffordRecipe, recipeCraftingStationIsAvailable } from "../components/InventoryComponent";
+import { InventoryComponentArray, addItemToInventory, addItemToSlot, consumeItemFromSlot, consumeItemTypeFromInventory, craftRecipe, getInventory, getInventoryFromCreationInfo, inventoryComponentCanAffordRecipe, recipeCraftingStationIsAvailable } from "../components/InventoryComponent";
 import { EntityRelationship, TribeComponentArray, recruitTribesman } from "../components/TribeComponent";
 import { createItem } from "../items";
 import { Point, randInt, randItem } from "webgl-test-shared/dist/utils";
@@ -31,7 +31,6 @@ import { PlayerComponentArray } from "../components/PlayerComponent";
 import { TurretComponentArray } from "../components/TurretComponent";
 import { TribesmanAIComponentArray } from "../components/TribesmanAIComponent";
 import { EntitySummonPacket } from "webgl-test-shared/dist/dev-packets";
-import { createEmptyStructureConnectionInfo } from "webgl-test-shared/dist/structures";
 import { CRAFTING_RECIPES, ItemRequirements } from "webgl-test-shared/dist/items/crafting-recipes";
 import { InventoryName, Item, ITEM_TYPE_RECORD, ItemType } from "webgl-test-shared/dist/items/items";
 import Tribe from "../Tribe";
@@ -46,12 +45,9 @@ import { ComponentConfig } from "../components";
 /** Minimum number of units away from the border that the player will spawn at */
 const PLAYER_SPAWN_POSITION_PADDING = 300;
 
-/** How far away from the entity the attack is done */
-const ATTACK_OFFSET = 50;
-/** Max distance from the attack position that the attack will be registered from */
-const ATTACK_RADIUS = 50;
-
 const playerClients = new Array<PlayerClient>();
+
+const dirtyEntities = new Set<EntityID>();
 
 export function getPlayerClients(): ReadonlyArray<PlayerClient> {
    return playerClients;
@@ -216,64 +212,6 @@ const respawnPlayer = (playerClient: PlayerClient): void => {
    };
 
    playerClient.socket.emit("respawn_data_packet", dataPacket);
-}
-
-/** Returns whether the swing was successfully swang or not */
-const attemptSwing = (player: EntityID, attackTargets: ReadonlyArray<EntityID>, itemSlot: number, inventoryName: InventoryName): boolean => {
-   const inventoryComponent = InventoryComponentArray.getComponent(player);
-   const inventory = getInventory(inventoryComponent, inventoryName);
-
-   const item = inventory.itemSlots[itemSlot];
-   if (typeof item !== "undefined" && ITEM_TYPE_RECORD[item.type] === "hammer") {
-      // First look for friendly buildings to repair
-      const repairTarget = calculateRepairTarget(player, attackTargets);
-      if (repairTarget !== null) {
-         return repairBuilding(player, repairTarget, itemSlot, inventoryName);
-      }
-
-      // Then look for attack targets
-      const attackTarget = calculateAttackTarget(player, attackTargets, ~(EntityRelationship.friendly | EntityRelationship.friendlyBuilding));
-      if (attackTarget !== null) {
-         return attemptAttack(player, attackTarget, itemSlot, inventoryName);
-      }
-
-      // Then look for blueprints to work on
-      const workTarget = calculateBlueprintWorkTarget(player, attackTargets);
-      if (workTarget !== null) {
-         return repairBuilding(player, workTarget, itemSlot, inventoryName);
-      }
-
-      return false;
-   }
-   
-   // For non-hammer items, just look for attack targets
-   const attackTarget = calculateAttackTarget(player, attackTargets, ~EntityRelationship.friendly);
-   if (attackTarget !== null) {
-      return attemptAttack(player, attackTarget, itemSlot, inventoryName);
-   }
-
-   return false;
-}
-
-// @Cleanup: most of this logic and that in attemptSwing should be done in tribe-member.ts
-const processPlayerAttackPacket = (playerClient: PlayerClient, attackPacket: AttackPacket): void => {
-   const player = playerClient.instance;
-   if (!Board.hasEntity(player)) {
-      return;
-   }
-   
-   const targets = calculateRadialAttackTargets(player, ATTACK_OFFSET, ATTACK_RADIUS);
-
-   const didSwingWithRightHand = attemptSwing(player, targets, attackPacket.itemSlot, InventoryName.hotbar);
-   if (didSwingWithRightHand) {
-      return;
-   }
-
-   // If a barbarian, attack with offhand
-   const tribeComponent = TribeComponentArray.getComponent(player);
-   if (tribeComponent.tribe.tribeType === TribeType.barbarians) {
-      attemptSwing(player, targets, 1, InventoryName.offhand);
-   }
 }
 
 const processPlayerCraftingPacket = (playerClient: PlayerClient, recipeIndex: number): void => {
@@ -678,10 +616,6 @@ export function addPlayerClient(playerClient: PlayerClient, player: EntityID, pl
       processPlayerDataPacket(playerClient, playerDataPacket);
    });
 
-   socket.on("attack_packet", (attackPacket: AttackPacket) => {
-      processPlayerAttackPacket(playerClient, attackPacket);
-   });
-
    socket.on("crafting_packet", (recipeIndex: number) => {
       processPlayerCraftingPacket(playerClient, recipeIndex);
    });
@@ -957,4 +891,23 @@ export function forcePlayerTeleport(player: EntityID, position: Point): void {
    if (playerClient !== null) {
       playerClient.socket.emit("force_position_update", position.package());
    }
+}
+
+export function registerDirtyEntity(entity: EntityID): void {
+   if (dirtyEntities.has(entity)) {
+      return;
+   }
+   dirtyEntities.add(entity);
+   
+   const transformComponent = TransformComponentArray.getComponent(entity);
+   const viewingPlayers = getPlayersViewingPosition(transformComponent.boundingAreaMinX, transformComponent.boundingAreaMaxX, transformComponent.boundingAreaMinY, transformComponent.boundingAreaMaxY);
+
+   for (let i = 0; i < viewingPlayers.length; i++) {
+      const playerClient = viewingPlayers[i];
+      playerClient.visibleDirtiedEntities.push(entity);
+   }
+}
+
+export function resetDirtyEntities(): void {
+   dirtyEntities.clear();
 }

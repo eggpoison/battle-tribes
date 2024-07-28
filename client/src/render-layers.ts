@@ -113,7 +113,7 @@ const getEntityRenderLayer = (entity: Entity): RenderLayer => {
    }
 }
 
-export function calculateEntityRenderDepth(entity: Entity): number {
+export function calculateEntityRenderHeight(entity: Entity): number {
    const renderLayer = getEntityRenderLayer(entity);
    return calculateRenderDepthFromLayer(renderLayer);
 }

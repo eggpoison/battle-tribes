@@ -31,10 +31,7 @@ const virtualBuildingTakesUpWallSpace = (wallPosition: Point, wallRotation: numb
             return true;
          }
       } else {
-         const sinRotation = Math.sin(wallRotation);
-         const cosRotation = Math.cos(wallRotation);
-
-         const collisionData = rectanglesAreColliding(wallHitbox, hitbox, wallPosition, hitbox.position, cosRotation, -sinRotation, hitbox.axisX, hitbox.axisY);
+         const collisionData = rectanglesAreColliding(wallHitbox, hitbox);
          if (collisionData.isColliding) {
             return true;
          }
@@ -92,7 +89,7 @@ const wallSpaceIsFree = (wallPosition: Point, wallRotation: number, tribe: Tribe
    for (let i = 0; i < tribe.restrictedBuildingAreas.length; i++) {
       const restrictedArea = tribe.restrictedBuildingAreas[i];
 
-      const collisionData = rectanglesAreColliding(tempWallHitbox, restrictedArea.hitbox, wallPosition, restrictedArea.position, cosRotation, -sinRotation, Math.sin(restrictedArea.rotation), Math.cos(restrictedArea.rotation));
+      const collisionData = rectanglesAreColliding(tempWallHitbox, restrictedArea.hitbox);
       if (collisionData.isColliding) {
          return false;
       }
@@ -113,24 +110,13 @@ const wallSpaceIsFree = (wallPosition: Point, wallRotation: number, tribe: Tribe
          
          // @Speed
          
-         const x2 = Settings.TILE_SIZE * 0.499;
-         const x1 = -x2;
-         const y2 = Settings.TILE_SIZE * 0.499;
-         
-         const tileVertexOffsets: HitboxVertexPositions = [
-            new Point(x1, y2),
-            new Point(x2, y2),
-            new Point(-x1, -y2),
-            new Point(-x2, -y2)
-         ];
-
          const tileXUnits = (tile.x + 0.5) * Settings.TILE_SIZE;
          const tileYUnits = (tile.y + 0.5) * Settings.TILE_SIZE;
-         const tilePos = new Point(tileXUnits, tileYUnits);
 
          const tempTileHitbox = new RectangularHitbox(0, new Point(tileXUnits, tileYUnits), 0, 0, 0, 0, Settings.TILE_SIZE * 0.499, Settings.TILE_SIZE * 0.499, 0);
+         updateHitbox(tempTileHitbox, tileXUnits, tileYUnits, 0);
 
-         const collisionData = rectanglesAreColliding(tempWallHitbox, tempTileHitbox, wallPosition, tilePos, cosRotation, -sinRotation, 1, 0);
+         const collisionData = rectanglesAreColliding(tempWallHitbox, tempTileHitbox);
          if (collisionData.isColliding) {
             return false;
          }

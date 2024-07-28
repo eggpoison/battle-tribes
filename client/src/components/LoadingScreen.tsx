@@ -1,14 +1,11 @@
 import { TribeType } from "webgl-test-shared/dist/tribes";
-import { Point } from "webgl-test-shared/dist/utils";
 import { useEffect, useRef, useState } from "react";
 import Client from "../client/Client";
-import Player from "../entities/Player";
 import Game from "../Game";
 import { setGameState, setLoadingScreenInitialStatus } from "./App";
 import { definiteGameState } from "../game-state/game-states";
-import Tribe from "../Tribe";
-import { createActivatePacket } from "../client/packet-creation";
 import { processGameDataPacket } from "../client/packet-processing";
+import Camera from "../Camera";
 
 // @Cleanup: This file does too much logic on its own. It should really only have UI/loading state
 
@@ -61,10 +58,13 @@ const LoadingScreen = ({ username, tribeType, initialStatus }: LoadingScreenProp
          
          const initialGameDataPacket = await Client.getInitialGameDataPacket();
          setStatus("initialising_game");
-               
+         
          Game.playerID = initialGameDataPacket.playerID;
          
          await Game.initialise(initialGameDataPacket);
+               
+         Camera.setPosition(initialGameDataPacket.spawnPosition[0], initialGameDataPacket.spawnPosition[1]);
+         Camera.setInitialVisibleChunkBounds();
          
          definiteGameState.playerUsername = username;
          

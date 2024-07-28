@@ -12,7 +12,6 @@ import { playSound } from "./sound";
 import { attemptToCompleteNode } from "./research";
 import { calculateStructurePlaceInfo } from "webgl-test-shared/dist/structures";
 import { LimbAction } from "webgl-test-shared/dist/entities";
-import { AttackPacket } from "webgl-test-shared/dist/client-server-types";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { TRIBE_INFO_RECORD, TribeType } from "webgl-test-shared/dist/tribes";
@@ -26,6 +25,7 @@ import { calculateCursorWorldPositionX, calculateCursorWorldPositionY } from "./
 import { Inventory, Item, ITEM_TYPE_RECORD, ItemType, InventoryName, ITEM_INFO_RECORD, itemInfoIsTool, ConsumableItemInfo, ConsumableItemCategory, PlaceableItemType } from "webgl-test-shared/dist/items/items";
 import { playBowFireSound } from "./entity-tick-events";
 import { closeCurrentMenu } from "./menus";
+import { createAttackPacket } from "./client/packet-creation";
 
 /*
 // @Temporary @Incomplete
@@ -112,13 +112,8 @@ export function updatePlayerItems(): void {
 }
 
 const attack = (isOffhand: boolean, attackCooldown: number): void => {
-   const transformComponent = Player.instance!.getServerComponent(ServerComponentType.transform);
-   
-   const attackPacket: AttackPacket = {
-      itemSlot: latencyGameState.selectedHotbarItemSlot,
-      attackDirection: transformComponent.rotation
-   };
-   Client.sendAttackPacket(attackPacket);
+   const attackPacket = createAttackPacket();
+   Client.sendPacket(attackPacket);
 
    // Update bow charge cooldown
    if (latencyGameState.mainAction !== LimbAction.chargeBow) {

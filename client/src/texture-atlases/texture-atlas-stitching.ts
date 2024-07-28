@@ -123,13 +123,13 @@ export async function stitchTextureAtlas(textureSources: ReadonlyArray<string>, 
    
       // Draw textures once the atlas has been fully expanded
       for (let i = 0; i < textureSources.length; i++) {
-         const slotIndex = textureSlotIndexes[i];
-         const x = (slotIndex % atlasSize) * ATLAS_SLOT_SIZE;
-         const y = Math.floor(slotIndex / atlasSize) * ATLAS_SLOT_SIZE;
-         
          const image = textureImages[i];
          const width = textureWidths[i];
          const height = textureHeights[i];
+
+         const slotIndex = textureSlotIndexes[i];
+         const x = (slotIndex % atlasSize) * ATLAS_SLOT_SIZE;
+         const y = (atlasSize - Math.floor(slotIndex / atlasSize)) * ATLAS_SLOT_SIZE - height;
          context.drawImage(image, x, y, width, height);
       }
    

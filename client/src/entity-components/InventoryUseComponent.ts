@@ -538,7 +538,7 @@ class InventoryUseComponent extends ServerComponent{
       
       // @Speed: Has exactly the same switch statement as the switch (useInfo.currentAction). Doing same switch twice!!
       const lastActionTicks = getLastActionTicks(limbInfo);
-      const secondsSinceLastAction = getSecondsSinceLastAction(lastActionTicks)
+      const secondsSinceLastAction = getSecondsSinceLastAction(lastActionTicks);
 
       // Special case if the entity is drawing a bow
       // Two hands are needed to draw a bow, one from each side of the entity
@@ -562,7 +562,6 @@ class InventoryUseComponent extends ServerComponent{
             return;
          }
       }
-
       
       const inventoryComponent = this.entity.getServerComponent(ServerComponentType.inventory);
       const inventory = inventoryComponent.getInventory(limbInfo.inventoryName);

@@ -1,7 +1,6 @@
 import { alignLengthBytes, Packet, PacketType } from "webgl-test-shared/dist/packets";
 import Player from "../entities/Player";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
-import Camera from "../Camera";
 import { latencyGameState } from "../game-state/game-states";
 import { getSelectedEntityID } from "../entity-selection";
 import { EntityType } from "webgl-test-shared/dist/entities";
@@ -88,5 +87,16 @@ export function createActivatePacket(): ArrayBuffer {
 
 export function createSyncRequestPacket(): ArrayBuffer {
    const packet = new Packet(PacketType.syncRequest, Float32Array.BYTES_PER_ELEMENT);
+   return packet.buffer;
+}
+
+export function createAttackPacket(): ArrayBuffer {
+   const transformComponent = Player.instance!.getServerComponent(ServerComponentType.transform);
+   
+   const packet = new Packet(PacketType.attack, 3 * Float32Array.BYTES_PER_ELEMENT);
+
+   packet.addNumber(latencyGameState.selectedHotbarItemSlot);
+   packet.addNumber(transformComponent.rotation);
+   
    return packet.buffer;
 }

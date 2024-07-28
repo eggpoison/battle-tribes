@@ -1,15 +1,22 @@
 import { PacketReader } from "webgl-test-shared/dist/packets";
 import PlayerClient from "./PlayerClient";
-import { LimbAction } from "webgl-test-shared/dist/entities";
-import { InventoryName } from "webgl-test-shared/dist/items/items";
+import { EntityID, LimbAction } from "webgl-test-shared/dist/entities";
+import { InventoryName, ITEM_TYPE_RECORD } from "webgl-test-shared/dist/items/items";
 import { TribeType } from "webgl-test-shared/dist/tribes";
 import Board from "../Board";
 import { InventoryUseComponentArray } from "../components/InventoryUseComponent";
 import { PhysicsComponentArray } from "../components/PhysicsComponent";
 import { PlayerComponentArray } from "../components/PlayerComponent";
 import { TransformComponentArray } from "../components/TransformComponent";
-import { TribeComponentArray } from "../components/TribeComponent";
+import { EntityRelationship, TribeComponentArray } from "../components/TribeComponent";
 import { startEating, startChargingBow, startChargingSpear, startChargingBattleaxe } from "../entities/tribes/player";
+import { attemptAttack, calculateAttackTarget, calculateBlueprintWorkTarget, calculateRadialAttackTargets, calculateRepairTarget, repairBuilding } from "../entities/tribes/tribe-member";
+import { InventoryComponentArray, getInventory } from "../components/InventoryComponent";
+
+/** How far away from the entity the attack is done */
+const ATTACK_OFFSET = 50;
+/** Max distance from the attack position that the attack will be registered from */
+const ATTACK_RADIUS = 50;
 
 // @Cleanup: Messy as fuck
 export function processPlayerDataPacket(playerClient: PlayerClient, reader: PacketReader): void {
@@ -99,5 +106,67 @@ export function processPlayerDataPacket(playerClient: PlayerClient, reader: Pack
             offhandUseInfo.action = offhandAction;
          }
       }
+   }
+}
+
+/** Returns whether the swing was successfully swang or not */
+const attemptSwing = (player: EntityID, attackTargets: ReadonlyArray<EntityID>, itemSlot: number, inventoryName: InventoryName): boolean => {
+   const inventoryComponent = InventoryComponentArray.getComponent(player);
+   const inventory = getInventory(inventoryComponent, inventoryName);
+
+   const item = inventory.itemSlots[itemSlot];
+   if (typeof item !== "undefined" && ITEM_TYPE_RECORD[item.type] === "hammer") {
+      // First look for friendly buildings to repair
+      const repairTarget = calculateRepairTarget(player, attackTargets);
+      if (repairTarget !== null) {
+         return repairBuilding(player, repairTarget, itemSlot, inventoryName);
+      }
+
+      // Then look for attack targets
+      const attackTarget = calculateAttackTarget(player, attackTargets, ~(EntityRelationship.friendly | EntityRelationship.friendlyBuilding));
+      if (attackTarget !== null) {
+         return attemptAttack(player, attackTarget, itemSlot, inventoryName);
+      }
+
+      // Then look for blueprints to work on
+      const workTarget = calculateBlueprintWorkTarget(player, attackTargets);
+      if (workTarget !== null) {
+         return repairBuilding(player, workTarget, itemSlot, inventoryName);
+      }
+
+      return false;
+   }
+   
+   // For non-hammer items, just look for attack targets
+   const attackTarget = calculateAttackTarget(player, attackTargets, ~EntityRelationship.friendly);
+   if (attackTarget !== null) {
+      return attemptAttack(player, attackTarget, itemSlot, inventoryName);
+   }
+
+   return false;
+}
+
+// @Cleanup: most of this logic and that in attemptSwing should be done in tribe-member.ts
+export function processAttackPacket(playerClient: PlayerClient, reader: PacketReader): void {
+   const player = playerClient.instance;
+   if (!Board.hasEntity(player)) {
+      return;
+   }
+
+   const itemSlot = reader.readNumber();
+   // @Cleanup: unused?
+   const attackDirection = reader.readNumber();
+   
+   const targets = calculateRadialAttackTargets(player, ATTACK_OFFSET, ATTACK_RADIUS);
+
+   const didSwingWithRightHand = attemptSwing(player, targets, itemSlot, InventoryName.hotbar);
+   if (didSwingWithRightHand) {
+      return;
+   }
+
+   // If a barbarian, attack with offhand
+   const tribeComponent = TribeComponentArray.getComponent(player);
+   if (tribeComponent.tribe.tribeType === TribeType.barbarians) {
+      attemptSwing(player, targets, 1, InventoryName.offhand);
    }
 }

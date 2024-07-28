@@ -23,6 +23,12 @@ export abstract class BaseRenderObject {
 
    public modelMatrixIsDirty = true;
 
+   public depthData = new Float32Array(1);
+   public textureArrayIndexData = new Float32Array(1);
+   public tintData = new Float32Array(3);
+   public opacityData = new Float32Array(1);
+   public modelMatrixData = new Float32Array(9);
+
    public dirty(): void {
       this.modelMatrixIsDirty = true;
    }

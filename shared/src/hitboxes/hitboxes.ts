@@ -82,7 +82,7 @@ export class RectangularHitbox extends BaseHitbox {
             updateRotationAndVertexPositionsAndSideAxes(this, parentRotation);
          }
          
-         const collisionData = rectanglesAreColliding(this, otherHitbox, this.position, otherHitbox.position, this.axisX, this.axisY, otherHitbox.axisX, otherHitbox.axisY);
+         const collisionData = rectanglesAreColliding(this, otherHitbox);
 
          if (epsilon > 0) {
             this.width = thisWidthBefore;

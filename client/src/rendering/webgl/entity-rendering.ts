@@ -5,11 +5,11 @@ import Entity from "../../Entity";
 import { RenderPart } from "../../render-parts/render-parts";
 import { EntityID } from "webgl-test-shared/dist/entities";
 import Board from "../../Board";
-import { calculateEntityRenderDepth as calculateEntityRenderHeight } from "../../render-layers";
+import { calculateEntityRenderHeight } from "../../render-layers";
 
 const enum Vars {
    ATTRIBUTES_PER_VERTEX = 17,
-   MAX_RENDER_PARTS = 65536
+   MAX_RENDER_PARTS = 131072
 }
 
 let program: WebGLProgram;
@@ -33,6 +33,7 @@ let modelMatrixBuffer: WebGLBuffer;
 /** Maps entity IDs to indexes in the buffers */
 const entityIDToBufferIndexRecord: Partial<Record<EntityID, number>> = {};
 const bufferIndexToEntityRecord: Partial<Record<number, EntityID>> = {};
+/** For any given buffer index, counts the number of render parts of all entities up to and including the entity at the specified buffer index */
 const bufferIndexToOffsetAmount: Partial<Record<number, number>> = {};
 
 const entityRenderHeightMap = new WeakMap<Entity, number>();
@@ -122,23 +123,20 @@ export function createEntityShaders(): void {
          float atlasPixelSize = u_atlasSize * ATLAS_SLOT_SIZE;
          
          // Calculate the coordinates of the top left corner of the texture
-         float textureX = mod(textureIndex, u_atlasSize) * ATLAS_SLOT_SIZE;
-         // float textureX = mod(textureIndex * ATLAS_SLOT_SIZE, atlasPixelSize);
-         float textureY = floor(textureIndex / u_atlasSize) * ATLAS_SLOT_SIZE;
+         float textureXOffset = mod(textureIndex, u_atlasSize) * ATLAS_SLOT_SIZE;
+         float textureYOffset = floor(textureIndex / u_atlasSize) * ATLAS_SLOT_SIZE;
+
+         float textureX = floor(v_texCoord.x * textureSize.x);
+         textureX = min(textureX, textureSize.x - 1.0);
+         textureX = max(textureX, 0.0);
+         float textureY = floor(v_texCoord.y * textureSize.y);
+         textureY = min(textureY, textureSize.y - 1.0);
+         textureY = max(textureY, 0.0);
          
-         // @Incomplete: This is very hacky, the - 0.2 and + 0.1 shenanigans are to prevent texture bleeding but it causes tiny bits of the edge of the textures to get cut off.
-
-         // float u = (textureX + v_texCoord.x * (textureSize.x - 0.2) + 0.1) / atlasPixelSize;
-         // float v = 1.0 - ((textureY + (1.0 - v_texCoord.y) * (textureSize.y - 0.2) + 0.1) / atlasPixelSize);
-
-         // We add 0.5 for half-pixel correction
-         // float u = (textureX + v_texCoord.x * textureSize.x / ATLAS_SLOT_SIZE + 0.5 / ATLAS_SLOT_SIZE) / u_atlasSize;
-         // float u = (textureX + v_texCoord.x * textureSize.x + 0.5) / atlasPixelSize;
-         float x = floor(textureX + v_texCoord.x * textureSize.x);
-         float y = floor(textureY + (1.0 - v_texCoord.y) * textureSize.y);
+         float x = textureXOffset + textureX;
+         float y = textureYOffset + textureY;
          float u = (x + 0.5) / atlasPixelSize;
-         float v = 1.0 - (y + 0.5) / atlasPixelSize;
-         // float v = 1.0 - ((textureY + (1.0 - v_texCoord.y) * textureSize.y) / atlasPixelSize);
+         float v = (y + 0.5) / atlasPixelSize;
 
          outputColour = texture(u_textureAtlas, vec2(u, v));
       
@@ -264,7 +262,8 @@ export function getEntityHeight(entity: Entity): number {
 }
 
 const setData = (entity: Entity, bufferIndex: number): void => {
-   const offsetAmount = bufferIndexToOffsetAmount[bufferIndex];
+   const offsetAmount = bufferIndex > 0 ? bufferIndexToOffsetAmount[bufferIndex - 1] : 0;
+   // @Temporary?
    if (typeof offsetAmount === "undefined") {
       throw new Error();
    }
@@ -276,9 +275,36 @@ const setData = (entity: Entity, bufferIndex: number): void => {
    modelMatrixData.set(entity.modelMatrixData, 9 * offsetAmount);
 }
 
+const clearData = (bufferIndex: number): void => {
+   let offsetAmount = bufferIndex > 0 ? bufferIndexToOffsetAmount[bufferIndex - 1] : 0;
+   // @Temporary?
+   if (typeof offsetAmount === "undefined") {
+      throw new Error();
+   }
+   
+   depthData[offsetAmount] = 0;
+
+   textureArrayIndexData[offsetAmount] = 0;
+
+   tintData[offsetAmount * 3] = 0;
+   tintData[offsetAmount * 3 + 1] = 0;
+   tintData[offsetAmount * 3 + 2] = 0;
+
+   opacityData[offsetAmount] = 0;
+
+   modelMatrixData[offsetAmount * 9] = 0;
+   modelMatrixData[offsetAmount * 9 + 1] = 0;
+   modelMatrixData[offsetAmount * 9 + 2] = 0;
+   modelMatrixData[offsetAmount * 9 + 3] = 0;
+   modelMatrixData[offsetAmount * 9 + 4] = 0;
+   modelMatrixData[offsetAmount * 9 + 5] = 0;
+   modelMatrixData[offsetAmount * 9 + 6] = 0;
+   modelMatrixData[offsetAmount * 9 + 7] = 0;
+   modelMatrixData[offsetAmount * 9 + 8] = 0;
+}
+
 const getBufferIndex = (entityRenderHeight: number, minBufferIndex: number): number => {
    // Find the first empty buffer index or a buffer index with a greater renderDepth
-   // let bufferIndex = 0;
    let bufferIndex = minBufferIndex;
    for (; bufferIndex < Vars.MAX_RENDER_PARTS; bufferIndex++) {
       const entityID = bufferIndexToEntityRecord[bufferIndex];
@@ -292,9 +318,6 @@ const getBufferIndex = (entityRenderHeight: number, minBufferIndex: number): num
          }
       }
    }
-   // if (bufferIndex < minBufferIndex) {
-   //    throw new Error();
-   // }
    return bufferIndex;
 }
 
@@ -313,13 +336,42 @@ const getFinalBufferIndex = (): number => {
    return finalBufferIndex;
 }
 
+export function removeEntityFromBuffer(entity: Entity): void {
+   console.log("(!!!) remove an entity from the buffer. id=" + entity.id);
+   const bufferIndex = entityIDToBufferIndexRecord[entity.id];
+   if (typeof bufferIndex !== "undefined") {
+      console.log("remove from " + bufferIndex);
+      clearData(bufferIndex);
+      delete bufferIndexToEntityRecord[bufferIndex];
+      delete entityIDToBufferIndexRecord[entity.id];
+      // delete bufferIndexToOffsetAmount[bufferIndex];
+   }
+}
+
+const catalogue = (): Record<EntityID, number> => {
+   const c: Record<EntityID, number> = {};
+   for (let b = 0; b <= getFinalBufferIndex(); b++) {
+      const eID = bufferIndexToEntityRecord[b];
+      if (typeof eID !== "undefined") {
+         if (typeof c[eID] === "undefined") {
+            c[eID] = 1;
+         } else {
+            c[eID]++;
+         }
+      }
+   }
+   return c;
+}
+
 export function addEntitiesToBuffer(entities: Array<Entity>): void {
    if (entities.length === 0) {
       return;
    }
 
+   console.log("-=-=-=-=--=--=-");
+
    // Sort entities from lowest render depth to highest render depth
-   // @Speed
+   // @Speed?
    const entitiesToAddSorted = entities.sort((a: Entity, b: Entity) => entityRenderHeightMap.get(a)! - entityRenderHeightMap.get(b)!);
    const queuedEntityIDs = new Array<EntityID>();
 
@@ -338,18 +390,14 @@ export function addEntitiesToBuffer(entities: Array<Entity>): void {
          if (bufferIndex === 0) {
             entityIDToBufferIndexRecord[entity.id] = bufferIndex;
             bufferIndexToEntityRecord[bufferIndex] = entity.id;
-            bufferIndexToOffsetAmount[bufferIndex] = 0;
+            bufferIndexToOffsetAmount[bufferIndex] = entity.allRenderParts.length;
             setData(entity, bufferIndex);
          } else {
             const previousOffsetAmount = bufferIndexToOffsetAmount[bufferIndex - 1]!;
-            const previousEntityID = bufferIndexToEntityRecord[bufferIndex - 1]!;
-   
-            const prevousEntity = Board.entityRecord[previousEntityID]!;
    
             entityIDToBufferIndexRecord[entity.id] = bufferIndex;
             bufferIndexToEntityRecord[bufferIndex] = entity.id;
-            // @Speed: can probably just fill in with current entity amount, and subtract/use previous amount
-            bufferIndexToOffsetAmount[bufferIndex] = previousOffsetAmount + prevousEntity.allRenderParts.length;
+            bufferIndexToOffsetAmount[bufferIndex] = previousOffsetAmount + entity.allRenderParts.length;
             setData(entity, bufferIndex);
          }
       } else {
@@ -374,11 +422,35 @@ export function addEntitiesToBuffer(entities: Array<Entity>): void {
    for (; idx < entitiesToAddSorted.length; idx++) {
       const entity = entitiesToAddSorted[idx];
       const entityRenderHeight = entityRenderHeightMap.get(entity)!;
+      console.log("___________");
+
+      console.log("new. entity id=" + entity.id + ", buffer index:",bufferIndex);
+
+      // @Cleanup? @Hack?
+      // Update in-place
+      if (typeof entityIDToBufferIndexRecord[entity.id] !== "undefined" && queuedEntityIDs.length === 0) {
+         // @Copynpaste
+         if (bufferIndex === 0) {
+            entityIDToBufferIndexRecord[entity.id] = bufferIndex;
+            bufferIndexToEntityRecord[bufferIndex] = entity.id;
+            bufferIndexToOffsetAmount[bufferIndex] = entity.allRenderParts.length;
+            setData(entity, bufferIndex);
+         } else {
+            const previousOffsetAmount = bufferIndexToOffsetAmount[bufferIndex - 1]!;
+   
+            entityIDToBufferIndexRecord[entity.id] = bufferIndex;
+            bufferIndexToEntityRecord[bufferIndex] = entity.id;
+            bufferIndexToOffsetAmount[bufferIndex] = previousOffsetAmount + entity.allRenderParts.length;
+            setData(entity, bufferIndex);
+         }
+         continue;
+      }
       
       // @Cleanup: Copy and paste
       // Do the first swap
       {
-         // If the entity isn't in the buffer whatsoever, add them to the queue.
+         console.log("doing first swap");
+         // If the entity isn't in the buffer or the queue, add them to the queue.
          // @Copynpaste
          if (typeof entityIDToBufferIndexRecord[entity.id] === "undefined" && !queuedEntityIDs.includes(entity.id)) {
             let insertIdx = 0;
@@ -391,35 +463,58 @@ export function addEntitiesToBuffer(entities: Array<Entity>): void {
                }
             }
             queuedEntityIDs.splice(insertIdx, 0, entity.id);
+            // @Temporary
+            if (typeof Board.entityRecord[entity.id] === "undefined") {
+               throw new Error();
+            }
+            console.log("add entity into queued")
+         } else {
+            if (typeof entityIDToBufferIndexRecord[entity.id] !== "undefined") {
+               console.log("already in buffer! at buffer index " + entityIDToBufferIndexRecord[entity.id]);
+            }
+            if (queuedEntityIDs.includes(entity.id)) {
+               console.log("already in queue!");
+            }
          }
          
          const overriddenEntityID = bufferIndexToEntityRecord[bufferIndex];
 
+         if (queuedEntityIDs.length === 0) {
+            throw new Error("GRUG");
+         }
          const currentEntityID = queuedEntityIDs.shift()!;
          const currentEntity = Board.entityRecord[currentEntityID]!;
+         if (typeof currentEntity === "undefined") {
+            
+            console.log(currentEntityID);
+            throw new Error();
+         }
 
          if (bufferIndex === 0) {
             entityIDToBufferIndexRecord[currentEntityID] = bufferIndex;
             bufferIndexToEntityRecord[bufferIndex] = currentEntityID;
-            bufferIndexToOffsetAmount[bufferIndex] = 0;
+            bufferIndexToOffsetAmount[bufferIndex] = currentEntity.allRenderParts.length;
             setData(currentEntity, bufferIndex);
          } else {
             const previousOffsetAmount = bufferIndexToOffsetAmount[bufferIndex - 1]!;
-            const previousEntityID = bufferIndexToEntityRecord[bufferIndex - 1]!;
-   
-            const prevousEntity = Board.entityRecord[previousEntityID]!;
    
             entityIDToBufferIndexRecord[currentEntityID] = bufferIndex;
             bufferIndexToEntityRecord[bufferIndex] = currentEntityID;
-            // @Speed: can probably just fill in with current entity amount, and subtract/use previous amount
-            bufferIndexToOffsetAmount[bufferIndex] = previousOffsetAmount + prevousEntity.allRenderParts.length;
+            bufferIndexToOffsetAmount[bufferIndex] = previousOffsetAmount + currentEntity.allRenderParts.length;
             setData(currentEntity, bufferIndex);
          }
          
          if (typeof overriddenEntityID !== "undefined") {
+            console.log("add overridden. id:",overriddenEntityID);
             queuedEntityIDs.push(overriddenEntityID);
             // @Temporary?
             delete entityIDToBufferIndexRecord[overriddenEntityID];
+            // @Temporary
+            if (typeof Board.entityRecord[overriddenEntityID] === "undefined") {
+               throw new Error();
+            }
+         } else {
+            console.log("added into empty slot")
          }
       }
 
@@ -442,64 +537,68 @@ export function addEntitiesToBuffer(entities: Array<Entity>): void {
          // We are at the final entity, so we want to swap all remaining entities
          nextBufferIndex = getFinalBufferIndex() + 1;
       }
+      console.log("buffer index:",bufferIndex,"next buffer index:",nextBufferIndex);
 
-      // @Speed: experiment with doing one big data swap for the whole lot
-      // Swap until just before the next buffer
-      for (let currentBufferIndex = bufferIndex + 1; currentBufferIndex < nextBufferIndex; currentBufferIndex++) {
-         // Put the first queued entity into this buffer index, and the entity which was there into the buffer index onto the end of the queue
-
-         const overriddenEntityID = bufferIndexToEntityRecord[currentBufferIndex];
-
-         // @Temporary?
-         if (queuedEntityIDs.length === 0) {
-            throw new Error();
-         }
-         const currentEntityID = queuedEntityIDs.shift()!;
-         const currentEntity = Board.entityRecord[currentEntityID]!;
-
-         if (currentBufferIndex === 0) {
-            entityIDToBufferIndexRecord[currentEntityID] = currentBufferIndex;
-            bufferIndexToEntityRecord[currentBufferIndex] = currentEntityID;
-            bufferIndexToOffsetAmount[currentBufferIndex] = 0;
-            setData(currentEntity, currentBufferIndex);
-         } else {
-            const previousOffsetAmount = bufferIndexToOffsetAmount[currentBufferIndex - 1]!;
-            const previousEntityID = bufferIndexToEntityRecord[currentBufferIndex - 1]!;
+      if (queuedEntityIDs.length > 0) {
+         // @Speed: experiment with doing one big data swap for the whole lot
+         // Swap until just before the next buffer
+         for (let currentBufferIndex = bufferIndex + 1; currentBufferIndex < nextBufferIndex; currentBufferIndex++) {
+            // Put the first queued entity into this buffer index, and the entity which was there into the buffer index onto the end of the queue
    
-            const prevousEntity = Board.entityRecord[previousEntityID]!;
+            const overriddenEntityID = bufferIndexToEntityRecord[currentBufferIndex];
    
-            entityIDToBufferIndexRecord[currentEntityID] = currentBufferIndex;
-            bufferIndexToEntityRecord[currentBufferIndex] = currentEntityID;
-            // @Speed: can probably just fill in with current entity amount, and subtract/use previous amount
-            bufferIndexToOffsetAmount[currentBufferIndex] = previousOffsetAmount + prevousEntity.allRenderParts.length;
-            setData(currentEntity, currentBufferIndex);
+            // @Temporary?
+            if (queuedEntityIDs.length === 0) {
+               // break;
+               throw new Error();
+            }
+            const currentEntityID = queuedEntityIDs.shift()!;
+            const currentEntity = Board.entityRecord[currentEntityID]!;
+   
+            if (currentBufferIndex === 0) {
+               entityIDToBufferIndexRecord[currentEntityID] = currentBufferIndex;
+               bufferIndexToEntityRecord[currentBufferIndex] = currentEntityID;
+               bufferIndexToOffsetAmount[currentBufferIndex] = currentEntity.allRenderParts.length;
+               setData(currentEntity, currentBufferIndex);
+            } else {
+               const previousOffsetAmount = bufferIndexToOffsetAmount[currentBufferIndex - 1]!;
+      
+               entityIDToBufferIndexRecord[currentEntityID] = currentBufferIndex;
+               bufferIndexToEntityRecord[currentBufferIndex] = currentEntityID;
+               bufferIndexToOffsetAmount[currentBufferIndex] = previousOffsetAmount + currentEntity.allRenderParts.length;
+               setData(currentEntity, currentBufferIndex);
+            }
+            
+            if (typeof overriddenEntityID !== "undefined") {
+               queuedEntityIDs.push(overriddenEntityID);
+               // @Temporary: Is this really necessary?
+               delete entityIDToBufferIndexRecord[overriddenEntityID];
+               // @Temporary
+               if (typeof Board.entityRecord[overriddenEntityID] === "undefined") {
+                  throw new Error();
+               }
+            } else if (queuedEntityIDs.length === 0) {
+               console.log("break early!");
+               break;
+            }
          }
-         
-         if (typeof overriddenEntityID !== "undefined") {
-            queuedEntityIDs.push(overriddenEntityID);
-            // @Temporary: Is this really necessary?
-            delete entityIDToBufferIndexRecord[overriddenEntityID];
-         }
+         console.log("following num queued:",queuedEntityIDs.length);
       }
 
       bufferIndex = nextBufferIndex;
    }
 
    // Add any remaining queued entities to the end of the buffer
-   // console.log("num queued:",queuedEntityIDs.length);
    for (let i = 0; i < queuedEntityIDs.length; i++) {
       const entityID = queuedEntityIDs[i];
       const entity = Board.entityRecord[entityID]!;
       const bufferIndex = getFinalBufferIndex() + 1;
 
       const previousOffsetAmount = bufferIndexToOffsetAmount[bufferIndex - 1]!;
-      const previousEntityID = bufferIndexToEntityRecord[bufferIndex - 1]!;
-
-      const prevousEntity = Board.entityRecord[previousEntityID]!
 
       entityIDToBufferIndexRecord[entityID] = bufferIndex;
       bufferIndexToEntityRecord[bufferIndex] = entityID;
-      bufferIndexToOffsetAmount[bufferIndex] = previousOffsetAmount + prevousEntity.allRenderParts.length;
+      bufferIndexToOffsetAmount[bufferIndex] = previousOffsetAmount + entity.allRenderParts.length;
       setData(entity, bufferIndex);
    }
 }
@@ -514,12 +613,7 @@ export function renderEntities(entities: ReadonlyArray<Entity>): void {
    // @Incomplete: do in the specified range
    
    const finalBufferIndex = getFinalBufferIndex();
-   let finalBufferOffset = bufferIndexToOffsetAmount[finalBufferIndex]!;
-
-   // @Cleanup: make offset amount keep track of the amount up to the current one
-   const finalEntityID = bufferIndexToEntityRecord[finalBufferIndex]!;
-   const finalEntity = Board.entityRecord[finalEntityID]!;
-   finalBufferOffset += finalEntity.allRenderParts.length;
+   const finalBufferOffset = bufferIndexToOffsetAmount[finalBufferIndex]!;
 
    const textureAtlas = getEntityTextureAtlas();
 

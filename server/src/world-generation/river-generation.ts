@@ -1,7 +1,7 @@
 import { WaterRockData, RiverSteppingStoneData, RiverSteppingStoneSize, RIVER_STEPPING_STONE_SIZES } from "webgl-test-shared/dist/client-server-types";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { Point, lerp } from "webgl-test-shared/dist/utils";
-import { TileCoordinates } from "../Tile";
+import Tile, { TileCoordinates } from "../Tile";
 import { generateOctavePerlinNoise } from "../perlin-noise";
 import Board from "../Board";
 import SRandom from "../SRandom";
@@ -35,7 +35,12 @@ export interface WaterTileGenerationInfo {
    readonly flowDirection: number;
 }
 
-export function generateRiverTiles(): ReadonlyArray<WaterTileGenerationInfo> {
+export interface RiverGenerationInfo {
+   readonly waterTiles: ReadonlyArray<WaterTileGenerationInfo>;
+   readonly riverMainTiles: ReadonlyArray<WaterTileGenerationInfo>;
+}
+
+export function generateRiverTiles(): RiverGenerationInfo {
    const rootTiles = new Array<WaterTileGenerationInfo>();
 
    for (let i = 0; i < NUM_RIVERS; i++) {
@@ -152,7 +157,10 @@ export function generateRiverTiles(): ReadonlyArray<WaterTileGenerationInfo> {
       }
    }
 
-   return tiles;
+   return {
+      waterTiles: tiles,
+      riverMainTiles: rootTiles
+   };
 }
 
 const tileIsWater = (tileX: number, tileY: number, riverTiles: ReadonlyArray<WaterTileGenerationInfo>): boolean => {

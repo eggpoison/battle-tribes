@@ -117,7 +117,6 @@ export enum GameDataPacketOptions {
 // @Cleanup: A whole bunch of the data in this for the player can be deduced from the entity data array
 /** Data about the game state sent to the client each tick */
 export interface GameDataPacket {
-   readonly simulationIsPaused: boolean;
    readonly tileUpdates: ReadonlyArray<ServerTileUpdateData>;
    /** All hits taken by visible entities server-side */
    readonly visibleHits: ReadonlyArray<HitData>;
@@ -126,10 +125,6 @@ export interface GameDataPacket {
    readonly heals: ReadonlyArray<HealData>;
    readonly orbCompletes: ReadonlyArray<ResearchOrbCompleteData>;
    readonly inventory: PlayerInventoryData;
-   /** How many ticks have passed in the server */
-   readonly serverTicks: number;
-   /** Current time of the server */
-   readonly serverTime: number;
    readonly playerHealth: number;
    /** Extra debug information about a game object being tracked */
    readonly entityDebugData?: EntityDebugData;

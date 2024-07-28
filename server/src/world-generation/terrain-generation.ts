@@ -8,13 +8,11 @@ import Tile from "../Tile";
 import { WaterTileGenerationInfo, generateRiverFeatures, generateRiverTiles } from "./river-generation";
 import OPTIONS from "../options";
 import Board, { RiverFlowDirection } from "../Board";
-import { createReedConfig } from "../entities/reed";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { createEntityFromConfig } from "../Entity";
 
 export interface TerrainGenerationInfo {
    readonly tiles: Array<Tile>;
    readonly riverFlowDirectionsArray: ReadonlyArray<RiverFlowDirection>;
+   readonly riverMainTiles: ReadonlyArray<WaterTileGenerationInfo>;
    readonly waterRocks: ReadonlyArray<WaterRockData>;
    readonly riverSteppingStones: ReadonlyArray<RiverSteppingStoneData>;
    readonly edgeTilesArray: Array<Tile>;
@@ -225,10 +223,14 @@ function generateTerrain(): TerrainGenerationInfo {
 
    // Generate rivers
    let riverTiles: ReadonlyArray<WaterTileGenerationInfo>;
+   let riverMainTiles: ReadonlyArray<WaterTileGenerationInfo>;
    if (OPTIONS.generateRivers) {
-      riverTiles = generateRiverTiles();
+      const riverGenerationInfo = generateRiverTiles();
+      riverTiles = riverGenerationInfo.waterTiles;
+      riverMainTiles = riverGenerationInfo.riverMainTiles;
    } else {
       riverTiles = [];
+      riverMainTiles = [];
    }
 
    generateTileInfo(biomeNameArray, tileTypeArray, tileIsWallArray);
@@ -325,6 +327,7 @@ function generateTerrain(): TerrainGenerationInfo {
    return {
       tiles: tiles,
       waterRocks: waterRocks,
+      riverMainTiles: riverMainTiles,
       riverSteppingStones: riverSteppingStones,
       riverFlowDirectionsArray: riverFlowDirectionsArray,
       edgeTilesArray: edgeTilesArray,

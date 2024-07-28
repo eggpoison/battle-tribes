@@ -16,18 +16,20 @@ import { updateResourceDistributions } from "../resource-distributions";
 import { updateGrassBlockers } from "../grass-blockers";
 import { createGameDataPacket, createSyncDataPacket, createSyncPacket } from "./game-data-packets";
 import PlayerClient, { PlayerClientVars } from "./PlayerClient";
-import { addPlayerClient, generatePlayerSpawnPosition, getPlayerClients } from "./player-clients";
+import { addPlayerClient, generatePlayerSpawnPosition, getPlayerClients, resetDirtyEntities } from "./player-clients";
 import { createPlayerConfig } from "../entities/tribes/player";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { createEntityFromConfig } from "../Entity";
 import { generateGrassStrands } from "../world-generation/grass-generation";
-import { processPlayerDataPacket } from "./packet-processing";
+import { processAttackPacket, processPlayerDataPacket } from "./packet-processing";
 import { EntityID } from "webgl-test-shared/dist/entities";
 import { SpikesComponentArray } from "../components/SpikesComponent";
 import { TribeComponentArray } from "../components/TribeComponent";
 import { TransformComponentArray } from "../components/TransformComponent";
 import { generateDecorations } from "../world-generation/decoration-generation";
 import { generateReeds } from "../world-generation/reed-generation";
+import generateTerrain from "../world-generation/terrain-generation";
+import { createCowConfig } from "../entities/mobs/cow";
 
 /*
 
@@ -119,14 +121,15 @@ class GameServer {
       }
 
       // Setup
-      Board.setup();
+      const generationInfo = generateTerrain();
+      Board.setup(generationInfo);
       updateResourceDistributions();
       spawnInitialEntities();
       forceMaxGrowAllIceSpikes();
-      generateGrassStrands();
+      // generateGrassStrands();
       generateDecorations();
-      // generateReeds();
-      
+      generateReeds(generationInfo.riverMainTiles);
+
       const app = express();
       this.server = new Server({
          server: app.listen(Settings.SERVER_PORT)
@@ -182,6 +185,10 @@ class GameServer {
                   }
                   break;
                }
+               case PacketType.attack: {
+                  processAttackPacket(playerClient, reader);
+                  break;
+               }
             }
          });
       });
@@ -197,6 +204,7 @@ class GameServer {
       SERVER.isRunning = true;
       
       if (typeof SERVER.tickInterval === "undefined") {
+         console.log("Server started on port " + Settings.SERVER_PORT);
          while (SERVER.isRunning) {
             await SERVER.tick();
          }
@@ -280,17 +288,20 @@ class GameServer {
             
                const visibleEntities = getPlayerVisibleEntities(playerClient);
                
-               const newlyVisibleEntities = new Array<EntityID>();
+               const newlyVisibleEntities = new Set<EntityID>();
                // @Speed
                for (const visibleEntity of visibleEntities) {
                   if (!playerClient.visibleEntities.has(visibleEntity)) {
-                     newlyVisibleEntities.push(visibleEntity);
+                     newlyVisibleEntities.add(visibleEntity);
                   }
                }
 
-               if (newlyVisibleEntities.indexOf(playerClient.instance) === -1) {
-                  newlyVisibleEntities.push(playerClient.instance);
+               // Add dirty entities
+               for (const entity of playerClient.visibleDirtiedEntities) {
+                  newlyVisibleEntities.add(entity);
                }
+
+               newlyVisibleEntities.add(playerClient.instance);
                
                // Send the game data to the player
                const gameDataPacket = createGameDataPacket(playerClient, newlyVisibleEntities);
@@ -305,9 +316,11 @@ class GameServer {
                playerClient.orbCompletes = [];
                playerClient.hasPickedUpItem = false;
                playerClient.entityTickEvents = [];
+               playerClient.visibleDirtiedEntities = [];
             }
 
             // console.log(performance.now());
+            resetDirtyEntities();
 
             resolve();
          // }, this.nextTickTime - currentTime);

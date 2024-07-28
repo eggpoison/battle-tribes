@@ -6,7 +6,7 @@ import { ComponentArray } from "./ComponentArray";
 import { addDirtyPathfindingEntity, entityCanBlockPathfinding, removeDirtyPathfindingEntity } from "../pathfinding";
 import { Point } from "webgl-test-shared/dist/utils";
 import Board from "../Board";
-import { registerPlayerKnockback } from "../server/player-clients";
+import { registerDirtyEntity, registerPlayerKnockback } from "../server/player-clients";
 import { TransformComponent, TransformComponentArray } from "./TransformComponent";
 import { Packet } from "webgl-test-shared/dist/packets";
 
@@ -90,7 +90,7 @@ const cleanRotation = (transformComponent: TransformComponent): void => {
    }
 }
 
-const turnEntity = (transformComponent: TransformComponent, physicsComponent: PhysicsComponent): void => {
+const turnEntity = (entity: EntityID, transformComponent: TransformComponent, physicsComponent: PhysicsComponent): void => {
    const previousRotation = transformComponent.rotation;
 
    transformComponent.rotation += physicsComponent.angularVelocity * Settings.I_TPS;
@@ -130,6 +130,7 @@ const turnEntity = (transformComponent: TransformComponent, physicsComponent: Ph
       cleanRotation(transformComponent);
 
       physicsComponent.hitboxesAreDirty = true;
+      registerDirtyEntity(entity);
    }
 }
 
@@ -203,6 +204,7 @@ const applyPhysics = (entity: EntityID, physicsComponent: PhysicsComponent): voi
       transformComponent.position.y += physicsComponent.velocity.y * Settings.I_TPS;
 
       physicsComponent.positionIsDirty = true;
+      registerDirtyEntity(entity);
    }
 }
 
@@ -258,7 +260,7 @@ export function tickPhysicsComponents(): void {
       const physicsComponent = PhysicsComponentArray.components[i];
       const transformComponent = TransformComponentArray.getComponent(entity);
 
-      turnEntity(transformComponent, physicsComponent);
+      turnEntity(entity, transformComponent, physicsComponent);
       applyPhysics(entity, physicsComponent);
       updatePosition(entity, physicsComponent);
    }

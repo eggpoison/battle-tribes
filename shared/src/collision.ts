@@ -28,41 +28,55 @@ export interface CollisionData {
    readonly collisionPoint: Point;
 }
 
+const getDot = (vertexX: number, vertexY: number, x: number, y: number, axisX: number, axisY: number): number => {
+   return axisX * (vertexX + x) + axisY * (vertexY + y);
+}
+
 const findMinWithOffset = (hitbox: RectangularHitbox, x: number, y: number, axisX: number, axisY: number): number => {
+   // @Speed: can combine bits of this in the getDot function
+
    // Top left and bottom right
    const topLeftVertex = hitbox.topLeftVertexOffset;
-   let min = axisX * (topLeftVertex.x + x) + axisY * (topLeftVertex.y + y);
-   if (-min < min) {
-      min = -min;
+   let min = getDot(topLeftVertex.x, topLeftVertex.y, x, y, axisX, axisY);
+   const bottomRight = getDot(-topLeftVertex.x, -topLeftVertex.y, x, y, axisX, axisY);
+   if (bottomRight < min) {
+      min = bottomRight;
    }
 
    // Top right and bottom left
    const topRightVertex = hitbox.topRightVertexOffset;
-   const dotProduct = axisX * (topRightVertex.x + x) + axisY * (topRightVertex.y + y);
-   if (dotProduct < min) {
-      min = dotProduct;
-   } else if (-dotProduct < min) {
-      min = -dotProduct;
+   const topRight = getDot(topRightVertex.x, topRightVertex.y, x, y, axisX, axisY);
+   if (topRight < min) {
+      min = topRight;
+   }
+   const bottomLeft = getDot(-topRightVertex.x, -topRightVertex.y, x, y, axisX, axisY);
+   if (bottomLeft < min) {
+      min = bottomLeft;
    }
 
    return min;
 }
 
 const findMaxWithOffset = (hitbox: RectangularHitbox, x: number, y: number, axisX: number, axisY: number): number => {
+   // @Speed: can combine bits of this in the getDot function
+
    // Top left and bottom right
    const topLeftVertex = hitbox.topLeftVertexOffset;
-   let max = axisX * (topLeftVertex.x + x) + axisY * (topLeftVertex.y + y);
-   if (-max > max) {
-      max = -max;
+   let max = getDot(topLeftVertex.x, topLeftVertex.y, x, y, axisX, axisY);
+   const bottomRight = getDot(-topLeftVertex.x, -topLeftVertex.y, x, y, axisX, axisY);
+   if (bottomRight > max) {
+      max = bottomRight;
    }
 
    // Top right and bottom left
    const topRightVertex = hitbox.topRightVertexOffset;
-   const dotProduct = axisX * (topRightVertex.x + x) + axisY * (topRightVertex.y + y);
-   if (dotProduct > max) {
-      max = dotProduct;
-   } else if (-dotProduct > max) {
-      max = -dotProduct;
+   const topRight = getDot(topRightVertex.x, topRightVertex.y, x, y, axisX, axisY);
+   if (topRight > max) {
+      max = topRight;
+   }
+   const bottomLeft = getDot(-topRightVertex.x, -topRightVertex.y, x, y, axisX, axisY);
+   if (bottomLeft > max) {
+      max = bottomLeft;
    }
 
    return max;
@@ -117,9 +131,7 @@ const updateMinOverlap = (collisionData: Mutable<CollisionData>, proj1min: numbe
    }
 }
 
-export function rectanglesAreColliding(hitbox1: RectangularHitbox, hitbox2: RectangularHitbox, offset1: Point, offset2: Point, axis1x: number, axis1y: number, axis2x: number, axis2y: number): CollisionData {
-   // @Cleanup: it may be worth switching the axes to Points instead of two numbers for the readability improvement
-
+export function rectanglesAreColliding(hitbox1: RectangularHitbox, hitbox2: RectangularHitbox): CollisionData {
    // @Incomplete: Collision point
    
    const collisionData: Mutable<CollisionData> = {
@@ -129,54 +141,54 @@ export function rectanglesAreColliding(hitbox1: RectangularHitbox, hitbox2: Rect
       overlap: Number.MAX_SAFE_INTEGER,
       collisionPoint: new Point(0, 0)
    };
-   
-   const hitbox1x = hitbox1.position.x + hitbox1.offset.x;
-   const hitbox1y = hitbox1.position.y + hitbox1.offset.y;
-   const hitbox2x = hitbox2.position.x + hitbox2.offset.x;
-   const hitbox2y = hitbox2.position.y + hitbox2.offset.y;
+
+   const hitbox1x = hitbox1.position.x;
+   const hitbox1y = hitbox1.position.y;
+   const hitbox2x = hitbox2.position.x;
+   const hitbox2y = hitbox2.position.y;
    
    // Axis 1
-   const axis1min1 = findMinWithOffset(hitbox1, hitbox1x, hitbox1y, axis1x, axis1y);
-   const axis1max1 = findMaxWithOffset(hitbox1, hitbox1x, hitbox1y, axis1x, axis1y);
-   const axis1min2 = findMinWithOffset(hitbox2, hitbox2x, hitbox2y, axis1x, axis1y);
-   const axis1max2 = findMaxWithOffset(hitbox2, hitbox2x, hitbox2y, axis1x, axis1y);
+   const axis1min1 = findMinWithOffset(hitbox1, hitbox1x, hitbox1y, hitbox1.axisX, hitbox1.axisY);
+   const axis1max1 = findMaxWithOffset(hitbox1, hitbox1x, hitbox1y, hitbox1.axisX, hitbox1.axisY);
+   const axis1min2 = findMinWithOffset(hitbox2, hitbox2x, hitbox2y, hitbox1.axisX, hitbox1.axisY);
+   const axis1max2 = findMaxWithOffset(hitbox2, hitbox2x, hitbox2y, hitbox1.axisX, hitbox1.axisY);
    if (axis1min2 >= axis1max1 || axis1min1 >= axis1max2) {
       return collisionData;
    }
-   updateMinOverlap(collisionData, axis1min1, axis1max1, axis1min2, axis1max2, axis1x, axis1y);
+   updateMinOverlap(collisionData, axis1min1, axis1max1, axis1min2, axis1max2, hitbox1.axisX, hitbox1.axisY);
    
    // Axis 1 complement
-   const axis1ComplementMin1 = findMinWithOffset(hitbox1, hitbox1x, hitbox1y, -axis1y, axis1x);
-   const axis1ComplementMax1 = findMaxWithOffset(hitbox1, hitbox1x, hitbox1y, -axis1y, axis1x);
-   const axis1ComplementMin2 = findMinWithOffset(hitbox2, hitbox2x, hitbox2y, -axis1y, axis1x);
-   const axis1ComplementMax2 = findMaxWithOffset(hitbox2, hitbox2x, hitbox2y, -axis1y, axis1x);
+   const axis1ComplementMin1 = findMinWithOffset(hitbox1, hitbox1x, hitbox1y, -hitbox1.axisY, hitbox1.axisX);
+   const axis1ComplementMax1 = findMaxWithOffset(hitbox1, hitbox1x, hitbox1y, -hitbox1.axisY, hitbox1.axisX);
+   const axis1ComplementMin2 = findMinWithOffset(hitbox2, hitbox2x, hitbox2y, -hitbox1.axisY, hitbox1.axisX);
+   const axis1ComplementMax2 = findMaxWithOffset(hitbox2, hitbox2x, hitbox2y, -hitbox1.axisY, hitbox1.axisX);
    if (axis1ComplementMin2 >= axis1ComplementMax1 || axis1ComplementMin1 >= axis1ComplementMax2) {
       return collisionData;
    }
-   updateMinOverlap(collisionData, axis1ComplementMin1, axis1ComplementMax1, axis1ComplementMin2, axis1ComplementMax2, -axis1y, axis1x);
+   updateMinOverlap(collisionData, axis1ComplementMin1, axis1ComplementMax1, axis1ComplementMin2, axis1ComplementMax2, -hitbox1.axisY, hitbox1.axisX);
    
    // Axis 2
-   const axis2min1 = findMinWithOffset(hitbox1, hitbox1x, hitbox1y, axis2x, axis2y);
-   const axis2max1 = findMaxWithOffset(hitbox1, hitbox1x, hitbox1y, axis2x, axis2y);
-   const axis2min2 = findMinWithOffset(hitbox2, hitbox2x, hitbox2y, axis2x, axis2y);
-   const axis2max2 = findMaxWithOffset(hitbox2, hitbox2x, hitbox2y, axis2x, axis2y);
+   const axis2min1 = findMinWithOffset(hitbox1, hitbox1x, hitbox1y, hitbox2.axisX, hitbox2.axisY);
+   const axis2max1 = findMaxWithOffset(hitbox1, hitbox1x, hitbox1y, hitbox2.axisX, hitbox2.axisY);
+   const axis2min2 = findMinWithOffset(hitbox2, hitbox2x, hitbox2y, hitbox2.axisX, hitbox2.axisY);
+   const axis2max2 = findMaxWithOffset(hitbox2, hitbox2x, hitbox2y, hitbox2.axisX, hitbox2.axisY);
    if (axis2min2 >= axis2max1 || axis2min1 >= axis2max2) {
       return collisionData;
    }
-   updateMinOverlap(collisionData, axis2min1, axis2max1, axis2min2, axis2max2, axis2x, axis2y);
+   updateMinOverlap(collisionData, axis2min1, axis2max1, axis2min2, axis2max2, hitbox2.axisX, hitbox2.axisY);
 
    // Axis 2 complement
-   const axis2ComplementMin1 = findMinWithOffset(hitbox1, hitbox1x, hitbox1y, -axis2y, axis2x);
-   const axis2ComplementMax1 = findMaxWithOffset(hitbox1, hitbox1x, hitbox1y, -axis2y, axis2x);
-   const axis2ComplementMin2 = findMinWithOffset(hitbox2, hitbox2x, hitbox2y, -axis2y, axis2x);
-   const axis2ComplementMax2 = findMaxWithOffset(hitbox2, hitbox2x, hitbox2y, -axis2y, axis2x);
+   const axis2ComplementMin1 = findMinWithOffset(hitbox1, hitbox1x, hitbox1y, -hitbox2.axisY, hitbox2.axisX);
+   const axis2ComplementMax1 = findMaxWithOffset(hitbox1, hitbox1x, hitbox1y, -hitbox2.axisY, hitbox2.axisX);
+   const axis2ComplementMin2 = findMinWithOffset(hitbox2, hitbox2x, hitbox2y, -hitbox2.axisY, hitbox2.axisX);
+   const axis2ComplementMax2 = findMaxWithOffset(hitbox2, hitbox2x, hitbox2y, -hitbox2.axisY, hitbox2.axisX);
    if (axis2ComplementMin2 >= axis2ComplementMax1 || axis2ComplementMin1 >= axis2ComplementMax2) {
       return collisionData;
    }
-   updateMinOverlap(collisionData, axis2ComplementMin1, axis2ComplementMax1, axis2ComplementMin2, axis2ComplementMax2, -axis2y, axis2x);
+   updateMinOverlap(collisionData, axis2ComplementMin1, axis2ComplementMax1, axis2ComplementMin2, axis2ComplementMax2, -hitbox2.axisY, hitbox2.axisX);
 
-   const directionVectorX = offset2.x - offset1.x;
-   const directionVectorY = offset2.y - offset1.y;
+   const directionVectorX = hitbox2.position.x - hitbox1.position.x;
+   const directionVectorY = hitbox2.position.y - hitbox1.position.y;
 
    if (collisionData.axisX * directionVectorX + collisionData.axisY * directionVectorY > 0) {
       collisionData.axisX = -collisionData.axisX;

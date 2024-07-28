@@ -21,7 +21,7 @@ import { alignLengthBytes, Packet, PacketType } from "webgl-test-shared/dist/pac
 
 export function getInventoryDataLength(inventory: Inventory): number {
    let lengthBytes = 4 * Float32Array.BYTES_PER_ELEMENT;
-   lengthBytes += 3 * Float32Array.BYTES_PER_ELEMENT * inventory.items.length;
+   lengthBytes += 4 * Float32Array.BYTES_PER_ELEMENT * inventory.items.length;
    return lengthBytes;
 }
 
@@ -126,7 +126,7 @@ const getVisibleGrassBlockers = (visibleChunkBounds: VisibleChunkBounds): Readon
    return visibleGrassBlockers;
 }
 
-export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend: ReadonlyArray<EntityID>): ArrayBuffer {
+export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend: Set<EntityID>): ArrayBuffer {
    const player = Board.validateEntity(playerClient.instance);
 
    const inventoryComponent = InventoryComponentArray.getComponent(player);
@@ -159,7 +159,8 @@ export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend:
    let lengthBytes = Float32Array.BYTES_PER_ELEMENT;
    // Is simulating
    lengthBytes += Float32Array.BYTES_PER_ELEMENT;
-
+   // Ticks, time
+   lengthBytes += 2 * Float32Array.BYTES_PER_ELEMENT;
    // Player tribe data
    lengthBytes += Float32Array.BYTES_PER_ELEMENT + 100 + 5 * Float32Array.BYTES_PER_ELEMENT;
    lengthBytes += Float32Array.BYTES_PER_ELEMENT + 2 * Float32Array.BYTES_PER_ELEMENT * area.length;
@@ -205,7 +206,7 @@ export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend:
    lengthBytes += Float32Array.BYTES_PER_ELEMENT + 3 * Float32Array.BYTES_PER_ELEMENT * playerClient.orbCompletes.length;
    // Tile updates
    lengthBytes += Float32Array.BYTES_PER_ELEMENT + 3 * Float32Array.BYTES_PER_ELEMENT * tileUpdates.length;
-   lengthBytes += 3 * Float32Array.BYTES_PER_ELEMENT;
+   lengthBytes += Float32Array.BYTES_PER_ELEMENT;
 
    // Has debug data boolean
    lengthBytes += Float32Array.BYTES_PER_ELEMENT;
@@ -229,6 +230,9 @@ export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend:
    // Whether or not the simulation is paused
    packet.addBoolean(!SERVER.isSimulating);
    packet.padOffset(3);
+
+   packet.addNumber(Board.ticks);
+   packet.addNumber(Board.time);
 
    // 
    // Player tribe data
@@ -284,7 +288,7 @@ export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend:
    }
 
    // Add entities
-   packet.addNumber(entitiesToSend.length);
+   packet.addNumber(entitiesToSend.size);
    for (const entity of entitiesToSend) {
       addEntityDataToPacket(packet, entity, player);
    }
@@ -358,8 +362,6 @@ export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend:
       packet.padOffset(3);
    }
 
-   packet.addNumber(Board.ticks);
-   packet.addNumber(Board.time);
    packet.addNumber(player !== null ? HealthComponentArray.getComponent(player).health : 0);
 
    // @Bug: Shared for all players

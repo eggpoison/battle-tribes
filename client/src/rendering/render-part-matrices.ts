@@ -74,9 +74,9 @@ const calculateRenderPartMatrix = (renderPart: RenderPart): Matrix3x3 => {
 export function updateRenderPartMatrices(frameProgress: number): void {
    for (let i = 0; i < dirtyEntities.length; i++) {
       const entity = dirtyEntities[i];
-
+      
       const numRenderParts = entity.allRenderParts.length;
-
+      
       const depthData = new Float32Array(numRenderParts);
       const textureArrayIndexData = new Float32Array(numRenderParts);
       const tintData = new Float32Array(3 * numRenderParts);
@@ -87,6 +87,7 @@ export function updateRenderPartMatrices(frameProgress: number): void {
       entity.modelMatrix = entityModelMatrix;
 
       for (let j = 0; j < numRenderParts; j++) {
+         // const renderPart = entity.renderPartsHierarchicalArray[j];
          const renderPart = entity.renderPartsHierarchicalArray[j];
 
          const modelMatrix = calculateRenderPartMatrix(renderPart);
@@ -112,25 +113,49 @@ export function updateRenderPartMatrices(frameProgress: number): void {
 
          const textureArrayIndex = renderPartIsTextured(renderPart) ? renderPart.textureArrayIndex : -1;
 
-         depthData[j] = depth;
+         renderPart.depthData[0] = depth;
 
-         textureArrayIndexData[j] = textureArrayIndex;
+         renderPart.textureArrayIndexData[0] = textureArrayIndex;
    
-         tintData[j * 3] = tintR;
-         tintData[j * 3 + 1] = tintG;
-         tintData[j * 3 + 2] = tintB;
+         renderPart.tintData[0] = tintR;
+         renderPart.tintData[1] = tintG;
+         renderPart.tintData[2] = tintB;
          
-         opacityData[j] = renderPart.opacity;
+         renderPart.opacityData[0] = renderPart.opacity;
    
-         modelMatrixData[j * 9] = renderPart.modelMatrix[0];
-         modelMatrixData[j * 9 + 1] = renderPart.modelMatrix[1];
-         modelMatrixData[j * 9 + 2] = renderPart.modelMatrix[2];
-         modelMatrixData[j * 9 + 3] = renderPart.modelMatrix[3];
-         modelMatrixData[j * 9 + 4] = renderPart.modelMatrix[4];
-         modelMatrixData[j * 9 + 5] = renderPart.modelMatrix[5];
-         modelMatrixData[j * 9 + 6] = renderPart.modelMatrix[6];
-         modelMatrixData[j * 9 + 7] = renderPart.modelMatrix[7];
-         modelMatrixData[j * 9 + 8] = renderPart.modelMatrix[8];
+         renderPart.modelMatrixData[0] = renderPart.modelMatrix[0];
+         renderPart.modelMatrixData[1] = renderPart.modelMatrix[1];
+         renderPart.modelMatrixData[2] = renderPart.modelMatrix[2];
+         renderPart.modelMatrixData[3] = renderPart.modelMatrix[3];
+         renderPart.modelMatrixData[4] = renderPart.modelMatrix[4];
+         renderPart.modelMatrixData[5] = renderPart.modelMatrix[5];
+         renderPart.modelMatrixData[6] = renderPart.modelMatrix[6];
+         renderPart.modelMatrixData[7] = renderPart.modelMatrix[7];
+         renderPart.modelMatrixData[8] = renderPart.modelMatrix[8];
+      }
+
+      for (let j = 0; j < numRenderParts; j++) {
+         const renderPart = entity.allRenderParts[j];
+
+         depthData[j] = renderPart.depthData[0];
+
+         textureArrayIndexData[j] = renderPart.textureArrayIndexData[0];
+   
+         tintData[j * 3] = renderPart.tintData[0];
+         tintData[j * 3 + 1] = renderPart.tintData[1];
+         tintData[j * 3 + 2] = renderPart.tintData[2];
+         
+         opacityData[j] = renderPart.opacityData[0];
+   
+         modelMatrixData[j * 9] = renderPart.modelMatrixData[0];
+         modelMatrixData[j * 9 + 1] = renderPart.modelMatrixData[1];
+         modelMatrixData[j * 9 + 2] = renderPart.modelMatrixData[2];
+         modelMatrixData[j * 9 + 3] = renderPart.modelMatrixData[3];
+         modelMatrixData[j * 9 + 4] = renderPart.modelMatrixData[4];
+         modelMatrixData[j * 9 + 5] = renderPart.modelMatrixData[5];
+         modelMatrixData[j * 9 + 6] = renderPart.modelMatrixData[6];
+         modelMatrixData[j * 9 + 7] = renderPart.modelMatrixData[7];
+         modelMatrixData[j * 9 + 8] = renderPart.modelMatrixData[8];
       }
 
       entity.depthData = depthData;

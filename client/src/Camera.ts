@@ -58,15 +58,28 @@ abstract class Camera {
    
    public static isFree = false;
    
-   public static minVisibleChunkX = -1;
-   public static maxVisibleChunkX = -1;
-   public static minVisibleChunkY = -1;
-   public static maxVisibleChunkY = -1;
+   public static minVisibleChunkX = 0;
+   public static maxVisibleChunkX = 0;
+   public static minVisibleChunkY = 0;
+   public static maxVisibleChunkY = 0;
 
    public static minVisibleRenderChunkX = -1;
    public static maxVisibleRenderChunkX = -1;
    public static minVisibleRenderChunkY = -1;
    public static maxVisibleRenderChunkY = -1;
+
+   public static setInitialVisibleChunkBounds(): void {
+      this.minVisibleChunkX = Math.max(Math.floor((this.position.x - halfWindowWidth / this.zoom) / Settings.CHUNK_UNITS), 0);
+      this.maxVisibleChunkX = Math.min(Math.floor((this.position.x + halfWindowWidth / this.zoom) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1);
+      this.minVisibleChunkY = Math.max(Math.floor((this.position.y - halfWindowHeight / this.zoom) / Settings.CHUNK_UNITS), 0);
+      this.maxVisibleChunkY = Math.min(Math.floor((this.position.y + halfWindowHeight / this.zoom) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1);
+
+      const newChunks = getChunksFromRange(this.minVisibleChunkX, this.maxVisibleChunkX, this.minVisibleChunkY, this.maxVisibleChunkY);
+
+      for (const chunk of newChunks) {
+         registerVisibleChunk(chunk);
+      }
+   }
 
    public static updateVisibleChunkBounds(): void {
       const previousChunks = getChunksFromRange(this.minVisibleChunkX, this.maxVisibleChunkX, this.minVisibleChunkY, this.maxVisibleChunkY);

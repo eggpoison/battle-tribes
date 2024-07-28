@@ -39,6 +39,7 @@ class PlayerClient {
    public gameDataOptions = 0;
 
    public visibleEntities = new Set<EntityID>();
+   public visibleDirtiedEntities = new Array<EntityID>();
 
    constructor(socket: WebSocket, tribe: Tribe, screenWidth: number, screenHeight: number, playerPosition: Point, instance: EntityID, username: string) {
       this.socket = socket;

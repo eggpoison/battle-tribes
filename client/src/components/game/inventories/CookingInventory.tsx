@@ -3,7 +3,7 @@ import { EntityType } from "webgl-test-shared/dist/entities";
 import { COOKING_INGREDIENT_ITEM_TYPES, FUEL_SOURCE_ITEM_TYPES } from "webgl-test-shared/dist/cooking-info";
 import ItemSlot from "./ItemSlot";
 import { getSelectedEntity } from "../../../entity-selection";
-import { InventoryName } from "webgl-test-shared/dist/items/items";
+import { InventoryName, ItemType } from "webgl-test-shared/dist/items/items";
 
 const CookingInventory = () => {
    const cookingEntity = getSelectedEntity();
@@ -17,9 +17,9 @@ const CookingInventory = () => {
    const heatingBarProgress = cookingComponent.heatingProgress !== -1 ? cookingComponent.heatingProgress : 0;
 
    return <div id="cooking-inventory" className={`heating-inventory inventory${cookingEntity.type !== EntityType.campfire ? " with-fuel" : ""}`}>
-      <ItemSlot validItemSpecifier={COOKING_INGREDIENT_ITEM_TYPES.includes} className="ingredient-inventory" entityID={cookingEntity.id} inventory={ingredientInventory} itemSlot={1} />
+      <ItemSlot validItemSpecifier={(COOKING_INGREDIENT_ITEM_TYPES as unknown as Array<ItemType>).includes} className="ingredient-inventory" entityID={cookingEntity.id} inventory={ingredientInventory} itemSlot={1} />
       {cookingEntity.type !== EntityType.campfire ? (
-         <ItemSlot validItemSpecifier={FUEL_SOURCE_ITEM_TYPES.includes} className="fuel-inventory" entityID={cookingEntity.id} inventory={fuelInventory} itemSlot={1} />
+         <ItemSlot validItemSpecifier={(FUEL_SOURCE_ITEM_TYPES as unknown as Array<ItemType>).includes} className="fuel-inventory" entityID={cookingEntity.id} inventory={fuelInventory} itemSlot={1} />
       ) : undefined}
       <ItemSlot validItemSpecifier={() => false} className="output-inventory" entityID={cookingEntity.id} inventory={outputInventory} itemSlot={1} />
 

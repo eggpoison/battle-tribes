@@ -257,7 +257,8 @@ abstract class Client {
 
    /** Creates the socket used to connect to the server */
    private static createSocket(): ISocket {
-      return io(`ws://localhost:${Settings.SERVER_PORT}`, {
+      return io(`ws://10.0.0.9:${Settings.SERVER_PORT}`, {
+      // return io(`ws://localhost:${Settings.SERVER_PORT}`, {
          transports: ["websocket", "polling", "flashsocket"],
          autoConnect: false,
          reconnection: false

@@ -6,9 +6,10 @@ import { createReedConfig } from "../entities/reed";
 import { createEntityFromConfig } from "../Entity";
 import { WaterTileGenerationInfo } from "./river-generation";
 import { distance } from "webgl-test-shared/dist/utils";
+import { generateOctavePerlinNoise } from "../perlin-noise";
 
 const enum Vars {
-   MAX_DENSITY_PER_TILE = 5
+   MAX_DENSITY_PER_TILE = 13
 }
 
 // @Speed
@@ -30,6 +31,8 @@ const getClosestRiverMainTile = (x: number, y: number, riverMainTiles: ReadonlyA
 }
 
 export function generateReeds(riverMainTiles: ReadonlyArray<WaterTileGenerationInfo>): void {
+   const probabilityWeightMap = generateOctavePerlinNoise(Settings.FULL_BOARD_DIMENSIONS, Settings.FULL_BOARD_DIMENSIONS, 10, 3, 1.5, 0.75);
+   
    // @Incomplete: generate in edges
    for (let tileX = 0; tileX < Settings.BOARD_DIMENSIONS; tileX++) {
       for (let tileY = 0; tileY < Settings.BOARD_DIMENSIONS; tileY++) {
@@ -46,10 +49,15 @@ export function generateReeds(riverMainTiles: ReadonlyArray<WaterTileGenerationI
 
             // @Speed @Copynpaste
             const distanceTiles = distance(x / Settings.TILE_SIZE, y / Settings.TILE_SIZE, closestMainTile.tileX, closestMainTile.tileY);
-            if (Math.random() >= distanceTiles / Math.SQRT2) {
+            let successProbability = distanceTiles / Math.SQRT2;
+            successProbability *= successProbability;
+
+            const weight = probabilityWeightMap[tile.x + Settings.EDGE_GENERATION_DISTANCE][tile.y + Settings.EDGE_GENERATION_DISTANCE];
+            successProbability *= weight * weight;
+            
+            if (Math.random() >= successProbability) {
                continue;
             }
-
             const config = createReedConfig();
             config[ServerComponentType.transform].position.x = x;
             config[ServerComponentType.transform].position.y = y;

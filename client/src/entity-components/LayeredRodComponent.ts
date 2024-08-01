@@ -27,7 +27,7 @@ const pushAmountToBend = (pushAmount: number): number => {
    return bend;
 }
 
-const getLayerColour = (entity: Entity, r: number, g: number, b: number, layer: number): Colour => {
+const getLayerColour = (entity: Entity, r: number, g: number, b: number, layer: number, numLayers: number): Colour => {
    switch (entity.type as EntityType.grassStrand | EntityType.reed) {
       case EntityType.grassStrand: {
          // @Speed: a lot of this is shared for all strands
@@ -44,10 +44,17 @@ const getLayerColour = (entity: Entity, r: number, g: number, b: number, layer: 
             humidity = lerp(humidity, 0, 1 - grassInfo.temperature * 2);
          }
 
+         // Lower layers are darker
+         // let brightnessMultiplier = layer / data.numLayers;
+         let brightnessMultiplier = (layer - 1) / Math.max((numLayers - 1), 1);
+
+         // Minimum brighness
+         brightnessMultiplier = lerp(brightnessMultiplier, 1, 0.915);
+
          const colour: Colour = {
-            r: r,
-            g: g,
-            b: b
+            r: r * brightnessMultiplier,
+            g: g * brightnessMultiplier,
+            b: b * brightnessMultiplier
          };
          if (grassInfo.temperature > 0) {
             const humidityMultiplier = (humidity - 0.5) * -0.7;
@@ -65,6 +72,12 @@ const getLayerColour = (entity: Entity, r: number, g: number, b: number, layer: 
          return colour;
       }
       case EntityType.reed: {
+         const height = (layer - 1) / Math.max((numLayers - 1), 1);
+
+         const r = lerp(203/255, 168/255, height);
+         const g = lerp(255/255, 162/255, height);
+         const b = lerp(194/255, 138/255, height);
+         
          const colour: Colour = {
             r: r,
             g: g,
@@ -102,19 +115,12 @@ class LayeredRodComponent extends ServerComponent {
       
       // Create layers
       for (let layer = 1; layer <= this.numLayers; layer++) {
-         // Lower layers are darker
-         // let brightnessMultiplier = layer / data.numLayers;
-         let brightnessMultiplier = (layer - 1) / Math.max((this.numLayers - 1), 1);
-
-         // Minimum brighness
-         brightnessMultiplier = lerp(brightnessMultiplier, 1, 0.915);
-
-         const colour = getLayerColour(this.entity, r, g, b, layer);
+         const colour = getLayerColour(this.entity, r, g, b, layer, this.numLayers);
          
          const renderPartColour: RenderPartColour = {
-            r: colour.r * brightnessMultiplier,
-            g: colour.g * brightnessMultiplier,
-            b: colour.b * brightnessMultiplier,
+            r: colour.r,
+            g: colour.g,
+            b: colour.b,
             a: 1
          };
 

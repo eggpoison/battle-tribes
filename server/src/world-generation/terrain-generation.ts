@@ -188,9 +188,9 @@ function generateTerrain(): TerrainGenerationInfo {
    }
 
    // Generate the noise
-   const heightMap = generateOctavePerlinNoise(Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE * 2, Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE * 2, HEIGHT_NOISE_SCALE, 3, 1.5, 0.75);
-   const temperatureMap = generatePerlinNoise(Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE * 2, Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE * 2, TEMPERATURE_NOISE_SCALE);
-   const humidityMap = generatePerlinNoise(Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE * 2, Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE * 2, HUMIDITY_NOISE_SCALE);
+   const heightMap = generateOctavePerlinNoise(Settings.FULL_BOARD_DIMENSIONS, Settings.FULL_BOARD_DIMENSIONS, HEIGHT_NOISE_SCALE, 3, 1.5, 0.75);
+   const temperatureMap = generatePerlinNoise(Settings.FULL_BOARD_DIMENSIONS, Settings.FULL_BOARD_DIMENSIONS, TEMPERATURE_NOISE_SCALE);
+   const humidityMap = generatePerlinNoise(Settings.FULL_BOARD_DIMENSIONS, Settings.FULL_BOARD_DIMENSIONS, HUMIDITY_NOISE_SCALE);
 
    // Push humidity and temperature towards the extremes
    for (let i = 0; i < Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE * 2; i++) {

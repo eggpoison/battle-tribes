@@ -368,7 +368,7 @@ export function addEntitiesToBuffer(entities: Array<Entity>): void {
       return;
    }
 
-   console.log("-=-=-=-=--=--=-");
+   // console.log("-=-=-=-=--=--=-");
 
    // Sort entities from lowest render depth to highest render depth
    // @Speed?
@@ -410,6 +410,8 @@ export function addEntitiesToBuffer(entities: Array<Entity>): void {
       return;
    }
 
+   // const before = catalogue();
+
    // @Copynpaste
    const existingBufferIndex = entityIDToBufferIndexRecord[entitiesToAddSorted[idx].id];
    if (typeof existingBufferIndex !== "undefined") {
@@ -422,9 +424,9 @@ export function addEntitiesToBuffer(entities: Array<Entity>): void {
    for (; idx < entitiesToAddSorted.length; idx++) {
       const entity = entitiesToAddSorted[idx];
       const entityRenderHeight = entityRenderHeightMap.get(entity)!;
-      console.log("___________");
+      // console.log("___________");
 
-      console.log("new. entity id=" + entity.id + ", buffer index:",bufferIndex);
+      // console.log("new. entity id=" + entity.id + ", buffer index:",bufferIndex);
 
       // @Cleanup? @Hack?
       // Update in-place
@@ -449,7 +451,7 @@ export function addEntitiesToBuffer(entities: Array<Entity>): void {
       // @Cleanup: Copy and paste
       // Do the first swap
       {
-         console.log("doing first swap");
+         // console.log("doing first swap");
          // If the entity isn't in the buffer or the queue, add them to the queue.
          // @Copynpaste
          if (typeof entityIDToBufferIndexRecord[entity.id] === "undefined" && !queuedEntityIDs.includes(entity.id)) {
@@ -467,13 +469,13 @@ export function addEntitiesToBuffer(entities: Array<Entity>): void {
             if (typeof Board.entityRecord[entity.id] === "undefined") {
                throw new Error();
             }
-            console.log("add entity into queued")
+            // console.log("add entity into queued")
          } else {
             if (typeof entityIDToBufferIndexRecord[entity.id] !== "undefined") {
-               console.log("already in buffer! at buffer index " + entityIDToBufferIndexRecord[entity.id]);
+               // console.log("already in buffer! at buffer index " + entityIDToBufferIndexRecord[entity.id]);
             }
             if (queuedEntityIDs.includes(entity.id)) {
-               console.log("already in queue!");
+               // console.log("already in queue!");
             }
          }
          
@@ -505,7 +507,7 @@ export function addEntitiesToBuffer(entities: Array<Entity>): void {
          }
          
          if (typeof overriddenEntityID !== "undefined") {
-            console.log("add overridden. id:",overriddenEntityID);
+            // console.log("add overridden. id:",overriddenEntityID);
             queuedEntityIDs.push(overriddenEntityID);
             // @Temporary?
             delete entityIDToBufferIndexRecord[overriddenEntityID];
@@ -514,7 +516,7 @@ export function addEntitiesToBuffer(entities: Array<Entity>): void {
                throw new Error();
             }
          } else {
-            console.log("added into empty slot")
+            // console.log("added into empty slot")
          }
       }
 
@@ -537,7 +539,7 @@ export function addEntitiesToBuffer(entities: Array<Entity>): void {
          // We are at the final entity, so we want to swap all remaining entities
          nextBufferIndex = getFinalBufferIndex() + 1;
       }
-      console.log("buffer index:",bufferIndex,"next buffer index:",nextBufferIndex);
+      // console.log("buffer index:",bufferIndex,"next buffer index:",nextBufferIndex);
 
       if (queuedEntityIDs.length > 0) {
          // @Speed: experiment with doing one big data swap for the whole lot
@@ -578,11 +580,11 @@ export function addEntitiesToBuffer(entities: Array<Entity>): void {
                   throw new Error();
                }
             } else if (queuedEntityIDs.length === 0) {
-               console.log("break early!");
+               // console.log("break early!");
                break;
             }
          }
-         console.log("following num queued:",queuedEntityIDs.length);
+         // console.log("following num queued:",queuedEntityIDs.length);
       }
 
       bufferIndex = nextBufferIndex;

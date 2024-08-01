@@ -484,11 +484,10 @@ export function processGameDataPacket(reader: PacketReader): void {
       entitiesToRemove.delete(Player.instance);
    }
 
-   // @Temporary
-   for (const entity of entitiesToRemove) {
-      // @Incomplete: isDeath
-      Board.removeEntity(entity, false);
-   }
+   // for (const entity of entitiesToRemove) {
+   //    // @Incomplete: isDeath
+   //    Board.removeEntity(entity, false);
+   // }
 
    const playerInventories = readPlayerInventories(reader);
    

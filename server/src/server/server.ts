@@ -126,7 +126,7 @@ class GameServer {
       updateResourceDistributions();
       spawnInitialEntities();
       forceMaxGrowAllIceSpikes();
-      // generateGrassStrands();
+      generateGrassStrands();
       generateDecorations();
       generateReeds(generationInfo.riverMainTiles);
 

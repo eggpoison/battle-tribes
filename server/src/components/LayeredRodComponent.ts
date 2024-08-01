@@ -1,15 +1,16 @@
-import { Colour, Point, randFloat, randInt } from "webgl-test-shared/dist/utils";
+import { Colour, Point, randFloat } from "webgl-test-shared/dist/utils";
 import { ComponentArray } from "./ComponentArray";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityID } from "webgl-test-shared/dist/entities";
 import { Packet } from "webgl-test-shared/dist/packets";
 
 export interface LayeredRodComponentParams {
+   readonly numLayers: number;
    readonly colour: Colour;
 }
 
 export class LayeredRodComponent {
-   public readonly numLayers = randInt(2, 5);
+   public readonly numLayers: number;
    // @Memory: Can be removed and just use a hash on the entity ID
    public readonly naturalBend = Point.fromVectorForm(randFloat(2, 4), 2 * Math.PI * Math.random());
 
@@ -19,6 +20,7 @@ export class LayeredRodComponent {
    public readonly b: number;
    
    constructor(params: LayeredRodComponentParams) {
+      this.numLayers = params.numLayers;
       this.r = params.colour.r;
       this.g = params.colour.g;
       this.b = params.colour.b;

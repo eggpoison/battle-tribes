@@ -7,6 +7,10 @@ export interface TileCoordinates {
 }
 
 class Tile {
+   // @Memory: Unnecessary, don't store these
+   public readonly x: number;
+   public readonly y: number;
+
    public type: TileType;
    // @Memory @Cleanup: Might be unnecessary if we can just infer the biome from the tile type.
    public biome: Biome;
@@ -14,7 +18,10 @@ class Tile {
 
    public riverFlowDirection: number;
 
-   constructor(tileType: TileType, biome: Biome, isWall: boolean, riverFlowDirection: number) {
+   constructor(x: number, y: number, tileType: TileType, biome: Biome, isWall: boolean, riverFlowDirection: number) {
+      this.x = x;
+      this.y = y;
+
       this.type = tileType;
       this.biome = biome;
       this.isWall = isWall;

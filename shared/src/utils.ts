@@ -41,6 +41,21 @@ export function hueShift(colour: Colour, hueAdjust: number): void {
    colour.b = YPrime * kYIQToB[0] + I * kYIQToB[1] + Q * kYIQToB[2];
 }
 
+export function multiColourLerp(colours: ReadonlyArray<Colour>, a: number): Colour {
+   const progress = a * (colours.length - 1);
+   
+   const lowColour = colours[Math.floor(progress)];
+   const highColour = colours[Math.ceil(progress)];
+
+   const interLerp = progress % 1;
+
+   return {
+      r: lerp(lowColour.r, highColour.r, interLerp),
+      g: lerp(lowColour.g, highColour.g, interLerp),
+      b: lerp(lowColour.b, highColour.b, interLerp)
+   };
+}
+
 /**
  * Returns a random integer inclusively.
  * @param min The minimum value of the random number.

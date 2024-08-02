@@ -8,7 +8,7 @@ import Chunk from "./Chunk";
 import Tile from "./Tile";
 import { removeEntityFromCensus } from "./census";
 import Tribe from "./Tribe";
-import generateTerrain, { TerrainGenerationInfo } from "./world-generation/terrain-generation";
+import { TerrainGenerationInfo } from "./world-generation/terrain-generation";
 import { ComponentArrays } from "./components/ComponentArray";
 import { InventoryUseComponentArray, tickInventoryUseComponent } from "./components/InventoryUseComponent";
 import { HealthComponentArray, tickHealthComponent } from "./components/HealthComponent";
@@ -111,6 +111,8 @@ abstract class Board {
 
    public static globalCollisionData: Partial<Record<number, ReadonlyArray<number>>> = {};
 
+   public static tileTypes: Float32Array;
+   public static tileBiomes: Float32Array;
    public static tileTemperatures: Float32Array;
    public static tileHumidities: Float32Array;
 

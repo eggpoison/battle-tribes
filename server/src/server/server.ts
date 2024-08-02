@@ -30,6 +30,7 @@ import { generateDecorations } from "../world-generation/decoration-generation";
 import { generateReeds } from "../world-generation/reed-generation";
 import generateTerrain from "../world-generation/terrain-generation";
 import { createCowConfig } from "../entities/mobs/cow";
+import { generateLilypads } from "../world-generation/lilypad-generation";
 
 /*
 
@@ -129,6 +130,7 @@ class GameServer {
       generateGrassStrands();
       generateDecorations();
       generateReeds(generationInfo.riverMainTiles);
+      generateLilypads();
 
       const app = express();
       this.server = new Server({

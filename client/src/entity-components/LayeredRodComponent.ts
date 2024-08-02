@@ -3,7 +3,7 @@ import Entity from "../Entity";
 import ColouredRenderPart, { RenderPartColour } from "../render-parts/ColouredRenderPart";
 import { RenderPart } from "../render-parts/render-parts";
 import ServerComponent from "./ServerComponent";
-import { Colour, hueShift, lerp } from "webgl-test-shared/dist/utils";
+import { Colour, hueShift, lerp, multiColourLerp } from "webgl-test-shared/dist/utils";
 import { Settings } from "webgl-test-shared/dist/settings";
 import Board from "../Board";
 import { Hitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
@@ -15,6 +15,24 @@ const enum Vars {
 }
 
 const MAX_BEND = 6;
+
+const REED_COLOURS: ReadonlyArray<Colour> = [
+   {
+      r: 189/255,
+      g: 182/255,
+      b: 153/255
+   },
+   {
+      r: 97/255,
+      g: 214/255,
+      b: 77/255
+   },
+   {
+      r: 203/255,
+      g: 255/255,
+      b: 194/255
+   }
+];
 
 const bendToPushAmount = (bend: number): number => {
    return bend - 1 / (bend - MAX_BEND) - 1 / MAX_BEND;
@@ -73,17 +91,7 @@ const getLayerColour = (entity: Entity, r: number, g: number, b: number, layer: 
       }
       case EntityType.reed: {
          const height = (layer - 1) / Math.max((numLayers - 1), 1);
-
-         const r = lerp(203/255, 168/255, height);
-         const g = lerp(255/255, 162/255, height);
-         const b = lerp(194/255, 138/255, height);
-         
-         const colour: Colour = {
-            r: r,
-            g: g,
-            b: b
-         };
-         return colour;
+         return multiColourLerp(REED_COLOURS, height);
       }
    }
 }

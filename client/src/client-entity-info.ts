@@ -193,6 +193,9 @@ const CLIENT_ENTITY_INFO_RECORD: Record<EntityType, ClientEntityInfo> = {
    },
    [EntityType.reed]: {
       name: "Reed"
+   },
+   [EntityType.lilypad]: {
+      name: "Lilypad"
    }
 };
 

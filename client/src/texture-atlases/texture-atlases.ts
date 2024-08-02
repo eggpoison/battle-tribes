@@ -314,7 +314,8 @@ const TEXTURE_SOURCES: Array<string> = [
    "items/large/fertiliser.png",
    "entities/frostshaper/frostshaper.png",
    "entities/stonecarving-table/stonecarving-table.png",
-   "entities/miscellaneous/tribesman-health-patch.png"
+   "entities/miscellaneous/tribesman-health-patch.png",
+   "entities/lilypad/lilypad.png"
 ];
 
 const addTextureSource = (textureSource: string): void => {

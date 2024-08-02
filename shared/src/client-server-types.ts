@@ -2,7 +2,7 @@ import { BuildingPlanData, BuildingSafetyData, SafetyNodeData, TribeWallData, Wa
 import { HitboxCollisionBit } from "./collision";
 import { BlueprintType } from "./components";
 import { EntitySummonPacket } from "./dev-packets";
-import { EntityType, LimbAction } from "./entities";
+import { LimbAction } from "./entities";
 import { AttackEffectiveness } from "./entity-damage-types";
 import { EntityTickEvent } from "./entity-events";
 import { GrassBlocker } from "./grass-blockers";

@@ -199,7 +199,8 @@ export const EntityComponents = {
    [EntityType.stonecarvingTable]: [ServerComponentType.transform, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.structure, ServerComponentType.craftingStation] as const,
    [EntityType.grassStrand]: [ServerComponentType.transform, ServerComponentType.layeredRod] as const,
    [EntityType.decoration]: [ServerComponentType.transform, ServerComponentType.decoration] as const,
-   [EntityType.reed]: [ServerComponentType.transform, ServerComponentType.layeredRod] as const
+   [EntityType.reed]: [ServerComponentType.transform, ServerComponentType.layeredRod] as const,
+   [EntityType.lilypad]: [ServerComponentType.transform] as const
 } satisfies Record<EntityType, ReadonlyArray<ServerComponentType>>;
 
 export type EntityComponentTypes<T extends EntityType> = typeof EntityComponents[T];

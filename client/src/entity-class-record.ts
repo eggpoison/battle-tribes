@@ -61,6 +61,7 @@ import BallistaWoodenBolt from "./projectiles/BallistaWoodenBolt";
 import GrassStrand from "./entities/GrassStrand";
 import Decoration from "./entities/Decoration";
 import Reed from "./entity-components/Reed";
+import Lilypad from "./entities/Lilypad";
 
 // @Cleanup: remove this and just have entities be a collection of components
 export function createEntity(entityID: EntityID, entityType: EntityType): Entity {
@@ -128,6 +129,7 @@ export function createEntity(entityID: EntityID, entityType: EntityType): Entity
       case EntityType.grassStrand: return new GrassStrand(entityID);
       case EntityType.decoration: return new Decoration(entityID);
       case EntityType.reed: return new Reed(entityID);
+      case EntityType.lilypad: return new Lilypad(entityID);
       default: {
          const unreachable: never = entityType;
          return unreachable;

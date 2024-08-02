@@ -6,10 +6,11 @@ import { createReedConfig } from "../entities/reed";
 import { createEntityFromConfig } from "../Entity";
 import { WaterTileGenerationInfo } from "./river-generation";
 import { distance } from "webgl-test-shared/dist/utils";
-import { generateOctavePerlinNoise } from "../perlin-noise";
+import { generatePerlinNoise } from "../perlin-noise";
+import { isTooCloseToSteppingStone } from "../Chunk";
 
 const enum Vars {
-   MAX_DENSITY_PER_TILE = 13
+   MAX_DENSITY_PER_TILE = 35
 }
 
 // @Speed
@@ -20,7 +21,7 @@ const getClosestRiverMainTile = (x: number, y: number, riverMainTiles: ReadonlyA
    let minDistanceTiles = 999;
    let closestTile!: WaterTileGenerationInfo;
    for (const tileGenerationInfo of riverMainTiles) {
-      const distanceTiles = distance(tileX, tileY, tileGenerationInfo.tileX, tileGenerationInfo.tileY);
+      const distanceTiles = distance(tileX, tileY, tileGenerationInfo.tileX + 0.5, tileGenerationInfo.tileY + 0.5);
 
       if (distanceTiles < minDistanceTiles) {
          minDistanceTiles = distanceTiles;
@@ -31,7 +32,8 @@ const getClosestRiverMainTile = (x: number, y: number, riverMainTiles: ReadonlyA
 }
 
 export function generateReeds(riverMainTiles: ReadonlyArray<WaterTileGenerationInfo>): void {
-   const probabilityWeightMap = generateOctavePerlinNoise(Settings.FULL_BOARD_DIMENSIONS, Settings.FULL_BOARD_DIMENSIONS, 10, 3, 1.5, 0.75);
+   // const probabilityWeightMap = generateOctavePerlinNoise(Settings.FULL_BOARD_DIMENSIONS, Settings.FULL_BOARD_DIMENSIONS, 7, 3, 1.5, 0.75);
+   const probabilityWeightMap = generatePerlinNoise(Settings.FULL_BOARD_DIMENSIONS, Settings.FULL_BOARD_DIMENSIONS, 7);
    
    // @Incomplete: generate in edges
    for (let tileX = 0; tileX < Settings.BOARD_DIMENSIONS; tileX++) {
@@ -45,12 +47,16 @@ export function generateReeds(riverMainTiles: ReadonlyArray<WaterTileGenerationI
             const x = (tile.x + Math.random()) * Settings.TILE_SIZE;
             const y = (tile.y + Math.random()) * Settings.TILE_SIZE;
 
+            if (isTooCloseToSteppingStone(x, y, 13)) {
+               continue;
+            }
+
             const closestMainTile = getClosestRiverMainTile(x, y, riverMainTiles);
 
             // @Speed @Copynpaste
-            const distanceTiles = distance(x / Settings.TILE_SIZE, y / Settings.TILE_SIZE, closestMainTile.tileX, closestMainTile.tileY);
-            let successProbability = distanceTiles / Math.SQRT2;
-            successProbability *= successProbability;
+            const distanceTiles = distance(x / Settings.TILE_SIZE, y / Settings.TILE_SIZE, closestMainTile.tileX + 0.5, closestMainTile.tileY + 0.5);
+            let successProbability = (distanceTiles - 0.3) * 1;
+            successProbability = successProbability * successProbability * successProbability;
 
             const weight = probabilityWeightMap[tile.x + Settings.EDGE_GENERATION_DISTANCE][tile.y + Settings.EDGE_GENERATION_DISTANCE];
             successProbability *= weight * weight;

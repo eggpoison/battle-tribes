@@ -272,6 +272,10 @@ const ENTITY_DAMAGE_INFO_RECORD: Record<EntityType, EntityDamageInfo> = {
    [EntityType.reed]: {
       effectiveDamageTypes: [],
       stoppedDamageTypes: []
+   },
+   [EntityType.lilypad]: {
+      effectiveDamageTypes: [],
+      stoppedDamageTypes: []
    }
 };
 

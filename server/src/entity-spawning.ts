@@ -36,7 +36,8 @@ export const SPAWNABLE_TILE_RECORD: Partial<Record<EntityType, ReadonlyArray<Til
    [EntityType.frozenYeti]: [TileType.fimbultur],
    [EntityType.fish]: [TileType.water],
    [EntityType.golem]: [TileType.rock],
-   [EntityType.tribeWorker]: [TileType.grass, TileType.rock, TileType.sand, TileType.snow, TileType.ice]
+   [EntityType.tribeWorker]: [TileType.grass, TileType.rock, TileType.sand, TileType.snow, TileType.ice],
+   [EntityType.lilypad]: [TileType.water]
 };
 
 export interface EntitySpawnInfo {
@@ -179,6 +180,16 @@ const SPAWN_INFOS: ReadonlyArray<EntitySpawnInfo> = [
    //    minSpawnDistance: 150,
    //    usesSpawnDistribution: false
    // },
+   {
+      entityType: EntityType.lilypad,
+      spawnRate: 0,
+      maxDensity: 0.03,
+      minPackSize: 2,
+      maxPackSize: 3,
+      onlySpawnsInNight: false,
+      minSpawnDistance: 0,
+      usesSpawnDistribution: false
+   },
    {
       entityType: EntityType.golem,
       spawnRate: 0.002,

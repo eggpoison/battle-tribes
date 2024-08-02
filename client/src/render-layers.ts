@@ -13,6 +13,8 @@ enum RenderLayer {
    // @Temporary?
    lowestEntities,
    droppedItems,
+   lilypads,
+   reeds,
    lowEntities,
    defaultEntities,
    projectiles,
@@ -28,6 +30,14 @@ const NUM_RENDER_LAYERS = Object.keys(RenderLayer).length / 2;
 // @Incomplete: there needs to be some padding between render layers so render parts don't leak into higher render layers
 
 const calculateRenderDepthFromLayer = (renderLayer: RenderLayer): number => {
+   // @Temporary
+   // return Math.random();
+   // if (renderLayer === RenderLayer.reeds) {
+   //    return renderLayer + Math.random() * 0.000000001;
+   // } else {
+   //    return renderLayer + Math.random() * 0.9;
+   // }
+   
    let min = lerp(-1, 1, renderLayer / NUM_RENDER_LAYERS);
    let max = min + 1 / NUM_RENDER_LAYERS;
 
@@ -61,6 +71,12 @@ const getEntityRenderLayer = (entity: Entity): RenderLayer => {
       // Item entities
       case EntityType.itemEntity: {
          return RenderLayer.droppedItems;
+      }
+      case EntityType.lilypad: {
+         return RenderLayer.lilypads;
+      }
+      case EntityType.reed: {
+         return RenderLayer.reeds;
       }
       // @Incomplete: Only blueprints which go on existing buildings should be here, all others should be low entities
       // Blueprints

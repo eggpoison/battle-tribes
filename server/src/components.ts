@@ -38,7 +38,7 @@ import { TunnelComponent, TunnelComponentParams } from "./components/TunnelCompo
 import { TurretComponent, TurretComponentParams } from "./components/TurretComponent";
 import { YetiComponent, YetiComponentParams } from "./components/YetiComponent";
 import { ZombieComponent, ZombieComponentParams } from "./components/ZombieComponent";
-import { RockSpikeProjectileComponent, RockSpikeProjectileComponentParams } from "./components/RockSpikeProjectileComponent";
+import { RockSpikeComponent, RockSpikeProjectileComponentParams } from "./components/RockSpikeComponent";
 import { AIHelperComponent, AIHelperComponentParams } from "./components/AIHelperComponent";
 import { IceShardComponent, IceShardComponentParams } from "./components/IceShardComponent";
 import { IceSpikesComponent, IceSpikesComponentParams } from "./components/IceSpikesComponent";
@@ -56,6 +56,10 @@ import { BoulderComponent, BoulderComponentParams } from "./components/BoulderCo
 import { ProjectileComponent, ProjectileComponentParams } from "./components/ProjectileComponent";
 import { LayeredRodComponent, LayeredRodComponentParams } from "./components/LayeredRodComponent";
 import { DecorationComponent, DecorationComponentParams } from "./components/DecorationComponent";
+import { SpitPoisonAreaComponent, SpitPoisonAreaComponentParams } from "./components/SpitPoisonAreaComponent";
+import { BattleaxeProjectileComponent, BattleaxeProjectileComponentParams } from "./components/BattleaxeProjectileComponent";
+import { KrumblidComponent, KrumblidComponentParams } from "./components/KrumblidComponent";
+import { SpearProjectileComponent, SpearProjectileComponentParams } from "./components/SpearProjectileComponent";
 
 const ComponentParamsRecord = {
    [ServerComponentType.aiHelper]: (): AIHelperComponentParams => 0 as any,
@@ -114,7 +118,11 @@ const ComponentParamsRecord = {
    [ServerComponentType.transform]: (): TransformComponentParams => 0 as any,
    [ServerComponentType.projectile]: (): ProjectileComponentParams => 0 as any,
    [ServerComponentType.layeredRod]: (): LayeredRodComponentParams => 0 as any,
-   [ServerComponentType.decoration]: (): DecorationComponentParams => 0 as any
+   [ServerComponentType.decoration]: (): DecorationComponentParams => 0 as any,
+   [ServerComponentType.spitPoisonArea]: (): SpitPoisonAreaComponentParams => 0 as any,
+   [ServerComponentType.battleaxeProjectile]: (): BattleaxeProjectileComponentParams => 0 as any,
+   [ServerComponentType.spearProjectile]: (): SpearProjectileComponentParams => 0 as any,
+   [ServerComponentType.krumblid]: (): KrumblidComponentParams => 0 as any
 } satisfies Record<ServerComponentType, object>;
 
 export type ComponentParams<T extends ServerComponentType> = ReturnType<typeof ComponentParamsRecord[T]>;
@@ -150,7 +158,7 @@ export const ComponentClassRecord = {
    [ServerComponentType.hut]: () => HutComponent,
    [ServerComponentType.snowball]: () => SnowballComponent,
    [ServerComponentType.fish]: () => FishComponent,
-   [ServerComponentType.rockSpike]: () => RockSpikeProjectileComponent,
+   [ServerComponentType.rockSpike]: () => RockSpikeComponent,
    [ServerComponentType.slimeSpit]: () => SlimeSpitComponent,
    [ServerComponentType.door]: () => DoorComponent,
    [ServerComponentType.tribesmanAI]: () => TribesmanAIComponent,
@@ -177,7 +185,11 @@ export const ComponentClassRecord = {
    [ServerComponentType.transform]: () => TransformComponent,
    [ServerComponentType.projectile]: () => ProjectileComponent,
    [ServerComponentType.layeredRod]: () => LayeredRodComponent,
-   [ServerComponentType.decoration]: () => DecorationComponent
+   [ServerComponentType.decoration]: () => DecorationComponent,
+   [ServerComponentType.spitPoisonArea]: () => SpitPoisonAreaComponent,
+   [ServerComponentType.battleaxeProjectile]: () => BattleaxeProjectileComponent,
+   [ServerComponentType.spearProjectile]: () => SpearProjectileComponent,
+   [ServerComponentType.krumblid]: () => KrumblidComponent
 } satisfies {
    [T in ServerComponentType]: () => {
       new (args: ComponentParams<T>): unknown;

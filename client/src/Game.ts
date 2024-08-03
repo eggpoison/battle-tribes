@@ -59,7 +59,7 @@ import { createEntityOverlayShaders } from "./rendering/webgl/overlay-rendering"
 import { updateRenderPartMatrices } from "./rendering/render-part-matrices";
 import { EntitySummonPacket } from "webgl-test-shared/dist/dev-packets";
 import { Mutable } from "webgl-test-shared/dist/utils";
-import { renderRenderables } from "./rendering/render-loop";
+import { renderNextRenderables, resetRenderOrder } from "./rendering/render-loop";
 import { InitialGameDataPacket, processGameDataPacket } from "./client/packet-processing";
 import { PacketReader } from "webgl-test-shared/dist/packets";
 
@@ -421,7 +421,6 @@ abstract class Game {
 
       renderSolidTiles(false);
       renderGrassBlockers();
-      renderRivers(frameProgress);
       renderTurretRange();
       renderAmbientOcclusion();
       if (nerdVisionIsVisible() && this.entityDebugData !== null && typeof Board.entityRecord[this.entityDebugData.entityID] !== "undefined") {
@@ -446,7 +445,12 @@ abstract class Game {
 
       updateRenderPartMatrices(frameProgress);
 
-      renderRenderables(frameProgress);
+      console.log("-=-=-=--=--=-=-");
+      resetRenderOrder();
+      renderNextRenderables(0);
+      renderRivers(frameProgress);
+      // @Hack @Temporary: max render height
+      renderNextRenderables(9999);
 
       // renderGameObjects(frameProgress);
       // renderEntityOverlays();

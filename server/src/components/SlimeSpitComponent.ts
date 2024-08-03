@@ -4,6 +4,12 @@ import { ComponentConfig } from "../components";
 import { RectangularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { EntityID } from "webgl-test-shared/dist/entities";
 import { Packet } from "webgl-test-shared/dist/packets";
+import { PhysicsComponentArray } from "./PhysicsComponent";
+import Board from "../Board";
+
+const enum Vars {
+   BREAK_VELOCITY = 100
+}
 
 export interface SlimeSpitComponentParams {
    size: number;
@@ -32,6 +38,13 @@ function onInitialise(config: ComponentConfig<ServerComponentType.transform | Se
    const hitbox = config[ServerComponentType.transform].hitboxes[0] as RectangularHitbox;
    hitbox.width = hitboxSize;
    hitbox.height = hitboxSize;
+}
+
+export function onTick(_slimeSpitComponent: SlimeSpitComponent, spit: EntityID): void {
+   const physicsComponent = PhysicsComponentArray.getComponent(spit);
+   if (physicsComponent.velocity.lengthSquared() <= Vars.BREAK_VELOCITY * Vars.BREAK_VELOCITY) {
+      Board.destroyEntity(spit);
+   }
 }
 
 function getDataLength(): number {

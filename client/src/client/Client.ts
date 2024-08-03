@@ -307,26 +307,6 @@ abstract class Client {
       this.socket = null;
    }
 
-   /** Parses the server tile data array into an array of client tiles */
-   public static parseServerTileDataArray(serverTileDataArray: ReadonlyArray<ServerTileData>): Array<Array<Tile>> {
-      const tiles = new Array<Array<Tile>>();
-   
-      for (let tileIndex = 0; tileIndex < Settings.BOARD_DIMENSIONS * Settings.BOARD_DIMENSIONS; tileIndex++) {
-         const serverTileData = serverTileDataArray[tileIndex];
-         
-         const x = tileIndex % Settings.BOARD_DIMENSIONS;
-         const y = Math.floor(tileIndex / Settings.BOARD_DIMENSIONS);
-         if (typeof tiles[x] === "undefined") {
-            tiles.push([]);
-         }
-
-         const tile = new Tile(x, y, serverTileData.type, serverTileData.biome, serverTileData.isWall);
-         tiles[x].push(tile);
-      }
-   
-      return tiles;
-   }
-
    public static processGameDataPacket(gameDataPacket: GameDataPacket): void {
       if (isDev()) {
          Game.setGameObjectDebugData(gameDataPacket.entityDebugData);

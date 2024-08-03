@@ -63,7 +63,11 @@ const SUMMON_DATA_RECORD = {
    [ServerComponentType.transform]: {},
    [ServerComponentType.projectile]: {},
    [ServerComponentType.layeredRod]: {},
-   [ServerComponentType.decoration]: {}
+   [ServerComponentType.decoration]: {},
+   [ServerComponentType.spitPoisonArea]: {},
+   [ServerComponentType.battleaxeProjectile]: {},
+   [ServerComponentType.spearProjectile]: {},
+   [ServerComponentType.krumblid]: {}
 } satisfies Record<ServerComponentType, object>;
 
 export type ComponentSummonData<T extends ServerComponentType> = typeof SUMMON_DATA_RECORD[T];

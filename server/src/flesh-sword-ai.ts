@@ -1,8 +1,7 @@
 import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
-import { Point, lerp, randItem, angle } from "webgl-test-shared/dist/utils";
+import { Point, lerp, randItem, angle, TileIndex } from "webgl-test-shared/dist/utils";
 import Board from "./Board";
-import Tile from "./Tile";
 import { PhysicsComponentArray } from "./components/PhysicsComponent";
 import { Biome } from "webgl-test-shared/dist/tiles";
 import { TransformComponentArray } from "./components/TransformComponent";
@@ -65,7 +64,7 @@ const getRunTarget = (itemEntity: EntityID, visibleEntities: ReadonlyArray<Entit
    return runTarget;
 }
 
-const getTileWanderTargets = (itemEntity: EntityID): Array<Tile> => {
+const getTileWanderTargets = (itemEntity: EntityID): Array<TileIndex> => {
    const transformComponent = TransformComponentArray.getComponent(itemEntity);
 
    const minTileX = Math.max(Math.min(Math.floor((transformComponent.position.x - FLESH_SWORD_VISION_RANGE) / Settings.TILE_SIZE), Settings.BOARD_DIMENSIONS - 1), 0);
@@ -73,17 +72,18 @@ const getTileWanderTargets = (itemEntity: EntityID): Array<Tile> => {
    const minTileY = Math.max(Math.min(Math.floor((transformComponent.position.y - FLESH_SWORD_VISION_RANGE) / Settings.TILE_SIZE), Settings.BOARD_DIMENSIONS - 1), 0);
    const maxTileY = Math.max(Math.min(Math.floor((transformComponent.position.y + FLESH_SWORD_VISION_RANGE) / Settings.TILE_SIZE), Settings.BOARD_DIMENSIONS - 1), 0);
 
-   const wanderTargets = new Array<Tile>();
+   const wanderTargets = new Array<TileIndex>();
    for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
       for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
+         const tileIndex = Board.getTileIndexIncludingEdges(tileX, tileY);
+         
          // Don't try to wander to wall tiles
-         const tile = Board.getTile(tileX, tileY);
-         if (tile.isWall) continue;
+         if (Board.tileIsWalls[tileIndex]) continue;
          
          const position = new Point((tileX + Math.random()) * Settings.TILE_SIZE, (tileY + Math.random()) * Settings.TILE_SIZE);
          const distance = transformComponent.position.calculateDistanceBetween(position);
          if (distance <= FLESH_SWORD_VISION_RANGE) {
-            wanderTargets.push(tile);
+            wanderTargets.push(tileIndex);
          }
       }
    }
@@ -165,19 +165,19 @@ export function runFleshSwordAI(itemEntity: EntityID) {
             // Otherwise move to any random tile
             
             let foundSwampTile = false;
-            for (const tile of tileWanderTargets) {
-               if (tile.biome === Biome.swamp) {
+            for (const tileIndex of tileWanderTargets) {
+               if (Board.tileBiomes[tileIndex] === Biome.swamp) {
                   foundSwampTile = true;
                   break;
                }
             }
 
-            let targetTile: Tile;
+            let targetTile: TileIndex;
             if (foundSwampTile) {
-               const tiles = new Array<Tile>();
-               for (const tile of tileWanderTargets) {
-                  if (tile.biome === Biome.swamp) {
-                     tiles.push(tile);
+               const tiles = new Array<TileIndex>();
+               for (const tileIndex of tileWanderTargets) {
+                  if (Board.tileBiomes[tileIndex] === Biome.swamp) {
+                     tiles.push(tileIndex);
                   }
                }
                targetTile = randItem(tiles);
@@ -185,8 +185,8 @@ export function runFleshSwordAI(itemEntity: EntityID) {
                targetTile = randItem(tileWanderTargets);
             }
    
-            const x = (targetTile.x + Math.random()) * Settings.TILE_SIZE;
-            const y = (targetTile.y + Math.random()) * Settings.TILE_SIZE;
+            const x = (Board.getTileX(targetTile) + Math.random()) * Settings.TILE_SIZE;
+            const y = (Board.getTileY(targetTile) + Math.random()) * Settings.TILE_SIZE;
             info.tileTargetPosition = new Point(x, y);
             moveSpeed = FLESH_SWORD_WANDER_MOVE_SPEED;
             wiggleSpeed = 1;

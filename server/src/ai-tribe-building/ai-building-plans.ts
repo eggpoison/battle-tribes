@@ -103,8 +103,8 @@ const wallSpaceIsFree = (wallPosition: Point, wallRotation: number, tribe: Tribe
    const maxTileY = Math.min(Math.floor((wallPosition.y + Settings.TILE_SIZE) / Settings.TILE_SIZE), Settings.TILES_IN_WORLD_WIDTH - 1);
    for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
       for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
-         const tile = Board.getTile(tileX, tileY);
-         if (!tile.isWall) {
+         const isWall = Board.getTileIsWall(tileX, tileY);
+         if (!isWall) {
             continue;
          }
          

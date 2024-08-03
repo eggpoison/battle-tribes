@@ -15,7 +15,7 @@ import { createTombstoneConfig } from "./entities/tombstone";
 import { createTreeConfig } from "./entities/resources/tree";
 import { createYetiConfig } from "./entities/mobs/yeti";
 import { createZombieConfig } from "./entities/mobs/zombie";
-import { createSpitPoisonConfig } from "./entities/projectiles/spit-poison";
+import { createSpitPoisonAreaConfig } from "./entities/projectiles/spit-poison-area";
 import { createGolemConfig } from "./entities/mobs/golem";
 import { createPebblumConfig } from "./entities/mobs/pebblum";
 import { createTribeWorkerConfig } from "./entities/tribes/tribe-worker";
@@ -84,7 +84,7 @@ export function createEntityConfig(entityType: EntityType): ComponentConfig<Serv
       case EntityType.tree: return createTreeConfig() as any;
       case EntityType.yeti: return createYetiConfig() as any;
       case EntityType.zombie: return createZombieConfig() as any;
-      case EntityType.spitPoison: return createSpitPoisonConfig() as any;
+      case EntityType.spitPoisonArea: return createSpitPoisonAreaConfig() as any;
       case EntityType.golem: return createGolemConfig() as any;
       case EntityType.pebblum: return createPebblumConfig() as any;
       case EntityType.tribeWorker: return createTribeWorkerConfig() as any;

@@ -827,7 +827,3 @@ export function itemTypeIsBackpack(itemType: ItemType): boolean {
 export function itemTypeIsGlove(itemType: ItemType): boolean {
    return ITEM_TYPE_RECORD[itemType] === "glove";
 }
-
-// @Cleanup: move elsewhere
-export const BALLISTA_AMMO_TYPES = [ItemType.wood, ItemType.rock, ItemType.slimeball, ItemType.frostcicle] as const;
-export type BallistaAmmoType = typeof BALLISTA_AMMO_TYPES[number];

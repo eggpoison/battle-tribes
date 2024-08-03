@@ -6,7 +6,7 @@ import Tribe, { RestrictedBuildingArea, VirtualBuilding, getNumWallConnections, 
 import Board from "../Board";
 import { TribeArea, createTribeArea, updateTribeAreaDoors } from "./ai-building-areas";
 import { updateTribePlans } from "./ai-building-plans";
-import { HitboxVertexPositions, CircularHitbox, Hitbox, hitboxIsCircular, updateHitbox, RectangularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
+import { CircularHitbox, Hitbox, hitboxIsCircular, updateHitbox, RectangularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { createEntityHitboxes } from "webgl-test-shared/dist/hitboxes/entity-hitbox-creation";
 
 const enum Vars {
@@ -378,8 +378,7 @@ const getBorderNodes = (tribe: Tribe, insideNodes: ReadonlySet<SafetyNode>): Set
 export function safetyNodeIsInWall(nodeX: number, nodeY: number): boolean {
    const tileX = Math.floor(nodeX * Settings.SAFETY_NODE_SEPARATION / Settings.TILE_SIZE);
    const tileY = Math.floor(nodeY * Settings.SAFETY_NODE_SEPARATION / Settings.TILE_SIZE);
-   const tile = Board.getTile(tileX, tileY);
-   return tile.isWall;
+   return Board.getTileIsWall(tileX, tileY);
 }
 
 const createPaddingNodes = (tribe: Tribe, outmostPaddingNodes: Set<SafetyNode>, borderNodes: ReadonlySet<SafetyNode>, paddingNodes: Set<SafetyNode>): void => {

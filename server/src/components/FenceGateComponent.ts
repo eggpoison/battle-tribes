@@ -21,6 +21,10 @@ export class FenceGateComponent {
 }
 
 export const FenceGateComponentArray = new ComponentArray<FenceGateComponent>(ServerComponentType.fenceGate, true, {
+   onTick: {
+      tickInterval: 1,
+      func: onTick
+   },
    getDataLength: getDataLength,
    addDataToPacket: addDataToPacket
 });
@@ -48,9 +52,7 @@ const updateDoorOpenProgress = (fenceGate: EntityID, fenceGateComponent: FenceGa
    hitbox.relativeRotation = rotation - Math.PI/2;
 }
 
-export function tickFenceGateComponent(fenceGate: EntityID): void {
-   const fenceGateComponent = FenceGateComponentArray.getComponent(fenceGate);
-
+function onTick(fenceGateComponent: FenceGateComponent, fenceGate: EntityID): void {
    // @Incomplete: Hard hitboxes
    
    if (fenceGateComponent.toggleType !== DoorToggleType.none) {

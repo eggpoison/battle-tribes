@@ -17,12 +17,15 @@ export class BerryBushComponent {
 }
 
 export const BerryBushComponentArray = new ComponentArray<BerryBushComponent>(ServerComponentType.berryBush, true, {
-   onTick: onTick,
+   onTick: {
+      tickInterval: 1,
+      func: onTick
+   },
    getDataLength: getDataLength,
    addDataToPacket: addDataToPacket
 });
 
-function onTick(_berryBush: EntityID, berryBushComponent: BerryBushComponent): void {
+function onTick(berryBushComponent: BerryBushComponent): void {
    if (berryBushComponent.numBerries >= 5) {
       return;
    }

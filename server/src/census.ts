@@ -1,7 +1,7 @@
 import { EntityID, EntityType, NUM_ENTITY_TYPES } from "webgl-test-shared/dist/entities";
-import { TileType, Biome } from "webgl-test-shared/dist/tiles";
-import Tile from "./Tile";
+import { TileType, Biome, NUM_TILE_TYPES, NUM_BIOMES } from "webgl-test-shared/dist/tiles";
 import Board from "./Board";
+import { TileIndex } from "webgl-test-shared/dist/utils";
 
 const entityCounts = new Array<EntityType>();
 for (let i = 0; i < NUM_ENTITY_TYPES; i++) {
@@ -9,14 +9,25 @@ for (let i = 0; i < NUM_ENTITY_TYPES; i++) {
 }
 
 interface TileCensus {
-   // @Cleanup: remove the partial. Have them always be defined
-   types: Partial<Record<TileType, Array<Tile>>>;
-   biomes: Partial<Record<Biome, Array<Tile>>>;
+   readonly types: Record<TileType, Array<TileIndex>>;
+   biomes: Record<Biome, Array<TileIndex>>;
 }
 
 const tileCensus: TileCensus = {
-   types: {},
-   biomes: {}
+   types: (() => {
+      const types: Partial<Record<TileType, Array<TileIndex>>> = {};
+      for (let tileType: TileType = 0; tileType < NUM_TILE_TYPES; tileType++) {
+         types[tileType] = [];
+      }
+      return types as Record<TileType, Array<TileIndex>>;
+   })(),
+   biomes: (() => {
+      const biomes: Partial<Record<Biome, Array<TileIndex>>> = {};
+      for (let biome: Biome = 0; biome < NUM_BIOMES; biome++) {
+         biomes[biome] = [];
+      }
+      return biomes as Record<Biome, Array<TileIndex>>;
+   })()
 };
 
 /** Stores the IDs of all entities that are being tracked in the census */
@@ -47,34 +58,20 @@ export function getEntityCount(entityType: EntityType): number {
    return entityCounts[entityType];
 }
 
-export function addTileToCensus(tile: Tile): void {
-   if (!tileCensus.types.hasOwnProperty(tile.type)) {
-      tileCensus.types[tile.type] = [tile];
-   } else {
-      tileCensus.types[tile.type]!.push(tile);
-   }
+export function addTileToCensus(tileIndex: TileIndex): void {
+   const tileType = Board.tileTypes[tileIndex] as TileType;
+   tileCensus.types[tileType].push(tileIndex);
 
-   if (!tileCensus.biomes.hasOwnProperty(tile.biome)) {
-      tileCensus.biomes[tile.biome] = [tile];
-   } else {
-      tileCensus.biomes[tile.biome]!.push(tile);
-   }
+   const biome = Board.tileBiomes[tileIndex] as Biome;
+   tileCensus.biomes[biome].push(tileIndex);
 }
 
-export function removeTileFromCensus(tile: Tile): void {
-   if (!tileCensus.types.hasOwnProperty(tile.type)) {
-      throw new Error("Tile type is not in the census.")
-   }
+export function removeTileFromCensus(tileIndex: TileIndex): void {
+   const tileType = Board.tileTypes[tileIndex] as TileType;
+   tileCensus.types[tileType].splice(tileCensus.types[tileType].indexOf(tileIndex), 1);
 
-   tileCensus.types[tile.type]!.splice(tileCensus.types[tile.type]!.indexOf(tile), 1);
-   if (tileCensus.types[tile.type]!.length === 0) {
-      delete tileCensus.types[tile.type];
-   }
-
-   tileCensus.biomes[tile.biome]!.splice(tileCensus.biomes[tile.biome]!.indexOf(tile), 1);
-   if (tileCensus.biomes[tile.biome]!.length === 0) {
-      delete tileCensus.biomes[tile.biome];
-   }
+   const biome = Board.tileBiomes[tileIndex] as Biome;
+   tileCensus.biomes[biome].splice(tileCensus.biomes[biome].indexOf(tileIndex), 1);
 }
 
 export function getTileTypeCount(tileType: TileType): number {
@@ -82,21 +79,6 @@ export function getTileTypeCount(tileType: TileType): number {
    return typeof tiles !== "undefined" ? tiles.length : 0;
 }
 
-export function getTilesOfBiome(biomeName: Biome): ReadonlyArray<Tile> {
-   const tiles = tileCensus.biomes[biomeName];
-   return typeof tiles !== "undefined" ? tiles : [];
-}
-
-export function getTilesOfType(type: TileType): ReadonlyArray<Tile> {
-   const tiles = tileCensus.types[type];
-   return typeof tiles !== "undefined" ? tiles : [];
-}
-
-export function resetCensus(): void {
-   for (let i = 0; i < NUM_ENTITY_TYPES; i++) {
-      entityCounts[i] = 0;
-   }
-
-   tileCensus.types = {};
-   tileCensus.biomes = {};
+export function getTilesOfBiome(biomeName: Biome): ReadonlyArray<TileIndex> {
+   return tileCensus.biomes[biomeName];
 }

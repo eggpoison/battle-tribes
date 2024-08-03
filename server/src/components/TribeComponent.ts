@@ -131,7 +131,7 @@ export function getEntityRelationship(entity: EntityID, comparingEntity: EntityI
       case EntityType.slimewisp:
       case EntityType.snowball:
       case EntityType.spearProjectile:
-      case EntityType.spitPoison:
+      case EntityType.spitPoisonArea:
       case EntityType.battleaxeProjectile:
       case EntityType.grassStrand: {
          return EntityRelationship.neutral;

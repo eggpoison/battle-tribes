@@ -51,11 +51,15 @@ export class HealthComponent {
 }
 
 export const HealthComponentArray = new ComponentArray<HealthComponent>(ServerComponentType.health, true, {
+   onTick: {
+      tickInterval: 1,
+      func: onTick
+   },
    getDataLength: getDataLength,
    addDataToPacket: addDataToPacket
 });
 
-export function tickHealthComponent(healthComponent: HealthComponent): void {
+function onTick(healthComponent: HealthComponent): void {
    // Update local invulnerability hashes
    for (let i = 0; i < healthComponent.localIframeHashes.length; i++) {
       healthComponent.localIframeDurations[i] -= Settings.I_TPS;

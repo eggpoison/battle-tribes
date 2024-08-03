@@ -1,11 +1,10 @@
 import { PlayerCauseOfDeath, EntityID } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { Biome } from "webgl-test-shared/dist/tiles";
-import { Point, randItem } from "webgl-test-shared/dist/utils";
+import { Point, randItem, TileIndex } from "webgl-test-shared/dist/utils";
 import { parseCommand } from "webgl-test-shared/dist/commands";
 import { getTilesOfBiome } from "./census";
 import Board from "./Board";
-import Tile from "./Tile";
 import { damageEntity, healEntity } from "./components/HealthComponent";
 import { getRandomPositionInEntity } from "./Entity";
 import { InventoryComponentArray, addItem } from "./components/InventoryComponent";
@@ -54,16 +53,18 @@ const tpBiome = (player: EntityID, biomeName: Biome): void => {
    }
 
    let numAttempts = 0;
-   let tile: Tile;
+   let tileIndex: TileIndex;
    do {
-      tile = randItem(potentialTiles);
+      tileIndex = randItem(potentialTiles);
       if (++numAttempts === 999) {
          return;
       }
-   } while (tile.isWall);
+   } while (Board.tileIsWalls[tileIndex] === 1);
    
-   const x = (tile.x + Math.random()) * Settings.TILE_SIZE;
-   const y = (tile.y + Math.random()) * Settings.TILE_SIZE;
+   const tileX = Board.getTileX(tileIndex);
+   const tileY = Board.getTileY(tileIndex);
+   const x = (tileX + Math.random()) * Settings.TILE_SIZE;
+   const y = (tileY + Math.random()) * Settings.TILE_SIZE;
 
    const newPosition = new Point(x, y);
    forcePlayerTeleport(player, newPosition);

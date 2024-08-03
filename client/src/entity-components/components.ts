@@ -62,6 +62,10 @@ import TransformComponent from "./TransformComponent";
 import LayeredRodComponent from "./LayeredRodComponent";
 import { PacketReader } from "webgl-test-shared/dist/packets";
 import DecorationComponent from "./DecorationComponent";
+import BattleaxeProjectileComponent from "./BattleaxeProjectileComponent";
+import SpearProjectileComponent from "./SpearProjectileComponent";
+import KrumblidComponent from "./KrumblidComponent";
+import SpitPoisonAreaComponent from "./SpitPoisonAreaComponent";
 
 export enum ClientComponentType {
    equipment,
@@ -125,7 +129,11 @@ const ServerComponents = {
    [ServerComponentType.followAI]: (): FollowAIComponent => 0 as any,
    [ServerComponentType.tribeWarrior]: (): TribeWarriorComponent => 0 as any,
    [ServerComponentType.layeredRod]: (): LayeredRodComponent => 0 as any,
-   [ServerComponentType.decoration]: (): DecorationComponent => 0 as any
+   [ServerComponentType.decoration]: (): DecorationComponent => 0 as any,
+   [ServerComponentType.spitPoisonArea]: (): SpitPoisonAreaComponent => 0 as any,
+   [ServerComponentType.battleaxeProjectile]: (): BattleaxeProjectileComponent => 0 as any,
+   [ServerComponentType.spearProjectile]: (): SpearProjectileComponent => 0 as any,
+   [ServerComponentType.krumblid]: (): KrumblidComponent => 0 as any
 } satisfies Record<ServerComponentType, () => ServerComponent>;
 
 export const ClientComponents = {
@@ -195,5 +203,9 @@ export function createComponent(entity: Entity, componentType: ServerComponentTy
       case ServerComponentType.tribeWarrior: return new TribeWarriorComponent(entity, reader);
       case ServerComponentType.layeredRod: return new LayeredRodComponent(entity, reader);
       case ServerComponentType.decoration: return new DecorationComponent(entity, reader);
+      case ServerComponentType.spitPoisonArea: return new SpitPoisonAreaComponent(entity);
+      case ServerComponentType.battleaxeProjectile: return new BattleaxeProjectileComponent(entity);
+      case ServerComponentType.spearProjectile: return new SpearProjectileComponent(entity);
+      case ServerComponentType.krumblid: return new KrumblidComponent(entity);
    }
 }

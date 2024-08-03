@@ -5,36 +5,40 @@ import { isTooCloseToSteppingStone } from "../Chunk";
 import { createLilypadConfig } from "../entities/lilypad";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { createEntityFromConfig } from "../Entity";
+import { randInt } from "webgl-test-shared/dist/utils";
 
 const enum Vars {
-   DENSITY_PER_TILE = 0.025
+   GROUP_DENSITY_PER_TILE = 0.03
 }
 
 export function generateLilypads(): void {
    // @Incomplete: generate in edges
    for (let tileX = 0; tileX < Settings.BOARD_DIMENSIONS; tileX++) {
       for (let tileY = 0; tileY < Settings.BOARD_DIMENSIONS; tileY++) {
-         const tile = Board.getTile(tileX, tileY);
-         if (tile.type !== TileType.water) {
+         if (Board.getTileType(tileX, tileY) !== TileType.water) {
             continue;
          }
 
-         if (Math.random() > Vars.DENSITY_PER_TILE) {
+         if (Math.random() > Vars.GROUP_DENSITY_PER_TILE) {
             continue;
          }
 
-         const x = (tile.x + Math.random()) * Settings.TILE_SIZE;
-         const y = (tile.y + Math.random()) * Settings.TILE_SIZE;
-
-         if (isTooCloseToSteppingStone(x, y, 50)) {
-            continue;
+         const numLilypads = randInt(1, 3);
+         for (let i = 0; i < numLilypads; i++) {
+         
+            const x = (tileX + Math.random()) * Settings.TILE_SIZE;
+            const y = (tileY + Math.random()) * Settings.TILE_SIZE;
+   
+            if (isTooCloseToSteppingStone(x, y, 50)) {
+               continue;
+            }
+   
+            const config = createLilypadConfig();
+            config[ServerComponentType.transform].position.x = x;
+            config[ServerComponentType.transform].position.y = y;
+            config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
+            createEntityFromConfig(config);
          }
-
-         const config = createLilypadConfig();
-         config[ServerComponentType.transform].position.x = x;
-         config[ServerComponentType.transform].position.y = y;
-         config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
-         createEntityFromConfig(config);
       }
    }
 }

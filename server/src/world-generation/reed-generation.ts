@@ -6,7 +6,7 @@ import { createReedConfig } from "../entities/reed";
 import { createEntityFromConfig } from "../Entity";
 import { WaterTileGenerationInfo } from "./river-generation";
 import { distance } from "webgl-test-shared/dist/utils";
-import { generatePerlinNoise } from "../perlin-noise";
+import { generateOctavePerlinNoise, generatePerlinNoise } from "../perlin-noise";
 import { isTooCloseToSteppingStone } from "../Chunk";
 
 const enum Vars {
@@ -32,20 +32,19 @@ const getClosestRiverMainTile = (x: number, y: number, riverMainTiles: ReadonlyA
 }
 
 export function generateReeds(riverMainTiles: ReadonlyArray<WaterTileGenerationInfo>): void {
-   // const probabilityWeightMap = generateOctavePerlinNoise(Settings.FULL_BOARD_DIMENSIONS, Settings.FULL_BOARD_DIMENSIONS, 7, 3, 1.5, 0.75);
-   const probabilityWeightMap = generatePerlinNoise(Settings.FULL_BOARD_DIMENSIONS, Settings.FULL_BOARD_DIMENSIONS, 7);
+   const probabilityWeightMap1 = generateOctavePerlinNoise(Settings.FULL_BOARD_DIMENSIONS, Settings.FULL_BOARD_DIMENSIONS, 5, 3, 1.5, 0.75);
+   const probabilityWeightMap2 = generatePerlinNoise(Settings.FULL_BOARD_DIMENSIONS, Settings.FULL_BOARD_DIMENSIONS, 7);
    
    // @Incomplete: generate in edges
    for (let tileX = 0; tileX < Settings.BOARD_DIMENSIONS; tileX++) {
       for (let tileY = 0; tileY < Settings.BOARD_DIMENSIONS; tileY++) {
-         const tile = Board.getTile(tileX, tileY);
-         if (tile.type !== TileType.water) {
+         if (Board.getTileType(tileX, tileY) !== TileType.water) {
             continue;
          }
 
          for (let i = 0; i < Vars.MAX_DENSITY_PER_TILE; i++) {
-            const x = (tile.x + Math.random()) * Settings.TILE_SIZE;
-            const y = (tile.y + Math.random()) * Settings.TILE_SIZE;
+            const x = (tileX + Math.random()) * Settings.TILE_SIZE;
+            const y = (tileY + Math.random()) * Settings.TILE_SIZE;
 
             if (isTooCloseToSteppingStone(x, y, 13)) {
                continue;
@@ -58,8 +57,11 @@ export function generateReeds(riverMainTiles: ReadonlyArray<WaterTileGenerationI
             let successProbability = (distanceTiles - 0.3) * 1;
             successProbability = successProbability * successProbability * successProbability;
 
-            const weight = probabilityWeightMap[tile.x + Settings.EDGE_GENERATION_DISTANCE][tile.y + Settings.EDGE_GENERATION_DISTANCE];
+            const weight = probabilityWeightMap1[tileY + Settings.EDGE_GENERATION_DISTANCE][tileX + Settings.EDGE_GENERATION_DISTANCE];
             successProbability *= weight * weight;
+
+            const weight2 = probabilityWeightMap2[tileY + Settings.EDGE_GENERATION_DISTANCE][tileX + Settings.EDGE_GENERATION_DISTANCE];
+            successProbability *= weight2 * weight2;
             
             if (Math.random() >= successProbability) {
                continue;

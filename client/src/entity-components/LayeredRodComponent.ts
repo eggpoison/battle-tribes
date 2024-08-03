@@ -18,9 +18,14 @@ const MAX_BEND = 6;
 
 const REED_COLOURS: ReadonlyArray<Colour> = [
    {
-      r: 189/255,
-      g: 182/255,
-      b: 153/255
+      r: 219/255,
+      g: 215/255,
+      b: 197/255
+   },
+   {
+      r: 68/255,
+      g: 181/255,
+      b: 49/255
    },
    {
       r: 97/255,
@@ -106,6 +111,10 @@ class LayeredRodComponent extends ServerComponent {
    
    private bendX = 0;
    private bendY = 0;
+
+   private readonly r: number;
+   private readonly g: number;
+   private readonly b: number;
    
    constructor(entity: Entity, reader: PacketReader) {
       super(entity);
@@ -114,16 +123,19 @@ class LayeredRodComponent extends ServerComponent {
       this.naturalBendX = reader.readNumber();
       this.naturalBendY = reader.readNumber();
 
-      const r = reader.readNumber();
-      const g = reader.readNumber();
-      const b = reader.readNumber();
-      
+      // @Temporary
+      this.r = reader.readNumber();
+      this.g = reader.readNumber();
+      this.b = reader.readNumber();
+   }
+
+   public onLoad(): void {
       const bendX = this.naturalBendX;
       const bendY = this.naturalBendY;
       
       // Create layers
       for (let layer = 1; layer <= this.numLayers; layer++) {
-         const colour = getLayerColour(this.entity, r, g, b, layer, this.numLayers);
+         const colour = getLayerColour(this.entity, this.r, this.g, this.b, layer, this.numLayers);
          
          const renderPartColour: RenderPartColour = {
             r: colour.r,
@@ -134,7 +146,7 @@ class LayeredRodComponent extends ServerComponent {
 
          const zIndex = layer / 10;
          const renderPart = new ColouredRenderPart(
-            entity,
+            this.entity,
             zIndex,
             0,
             renderPartColour
@@ -171,13 +183,15 @@ class LayeredRodComponent extends ServerComponent {
       
       const bendMagnitude = Math.sqrt(this.bendX * this.bendX + this.bendY * this.bendY);
    
-      if (bendMagnitude > Vars.NATURAL_DRIFT) {
-         this.bendX -= Vars.NATURAL_DRIFT * this.bendX / bendMagnitude;
-         this.bendY -= Vars.NATURAL_DRIFT * this.bendY / bendMagnitude;
-      } else {
-         this.bendX = 0;
-         this.bendY = 0;
-      }
+      // Slow the return the closer to straight it is
+      let bendSmoothnessMultiplier = 1 - bendMagnitude / MAX_BEND;
+      bendSmoothnessMultiplier *= bendSmoothnessMultiplier * bendSmoothnessMultiplier;
+      bendSmoothnessMultiplier = 1 - bendSmoothnessMultiplier;
+      // Make sure it doesn't completely stop movement
+      bendSmoothnessMultiplier = bendSmoothnessMultiplier * 0.9 + 0.1;
+      
+      this.bendX -= Vars.NATURAL_DRIFT * bendSmoothnessMultiplier * this.bendX / bendMagnitude / Math.sqrt(this.numLayers);
+      this.bendY -= Vars.NATURAL_DRIFT * bendSmoothnessMultiplier * this.bendY / bendMagnitude / Math.sqrt(this.numLayers);
 
       this.updateOffsets();
       this.entity.dirty();
@@ -186,14 +200,14 @@ class LayeredRodComponent extends ServerComponent {
    public onCollision(_collidingEntity: Entity, _pushedHitbox: Hitbox, pushingHitbox: Hitbox): void {
       const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
    
-      const distance = transformComponent.position.calculateDistanceBetween(pushingHitbox.position);
+      // const distance = transformComponent.position.calculateDistanceBetween(pushingHitbox.position);
       const directionFromCollidingEntity = pushingHitbox.position.calculateAngleBetween(transformComponent.position);
    
       let existingPushX = bendToPushAmount(this.bendX);
       let existingPushY = bendToPushAmount(this.bendY);
       
-      // let pushAmount = 400 / Settings.TPS / (distance + 0.5);
-      let pushAmount = 1000 / Settings.TPS / (distance + 0.5);
+      // let pushAmount = 1200 / Settings.TPS / (distance + 0.5) / Math.sqrt(this.numLayers);
+      let pushAmount = 75 / Settings.TPS / Math.sqrt(this.numLayers);
       pushAmount *= pushingHitbox.mass;
       
       // Restrict the bend from going past the max bend

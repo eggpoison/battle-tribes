@@ -7,7 +7,7 @@ import { addDirtyPathfindingEntity, entityCanBlockPathfinding, removeDirtyPathfi
 import { Point } from "webgl-test-shared/dist/utils";
 import Board from "../Board";
 import { registerDirtyEntity, registerPlayerKnockback } from "../server/player-clients";
-import { TransformComponent, TransformComponentArray } from "./TransformComponent";
+import { getEntityTile, TransformComponent, TransformComponentArray } from "./TransformComponent";
 import { Packet } from "webgl-test-shared/dist/packets";
 
 export interface PhysicsComponentParams {
@@ -69,6 +69,10 @@ export class PhysicsComponent {
 }
 
 export const PhysicsComponentArray = new ComponentArray<PhysicsComponent>(ServerComponentType.physics, true, {
+   onTick: {
+      tickInterval: 1,
+      func: onTick
+   },
    onRemove: onRemove,
    getDataLength: getDataLength,
    addDataToPacket: addDataToPacket
@@ -148,6 +152,8 @@ const applyPhysics = (entity: EntityID, physicsComponent: PhysicsComponent): voi
    }
 
    const transformComponent = TransformComponentArray.getComponent(entity);
+   const tileIndex = getEntityTile(transformComponent);
+   const tileType = Board.tileTypes[tileIndex];
 
    // Apply acceleration
    if (physicsComponent.acceleration.x !== 0 || physicsComponent.acceleration.y !== 0) {
@@ -155,13 +161,13 @@ const applyPhysics = (entity: EntityID, physicsComponent: PhysicsComponent): voi
       let moveSpeedMultiplier: number;
       if (physicsComponent.overrideMoveSpeedMultiplier || !physicsComponent.isAffectedByFriction) {
          moveSpeedMultiplier = 1;
-      } else if (transformComponent.tile.type === TileType.water && !transformComponent.isInRiver) {
+      } else if (tileType === TileType.water && !transformComponent.isInRiver) {
          moveSpeedMultiplier = physicsComponent.moveSpeedMultiplier;
       } else {
-         moveSpeedMultiplier = TILE_MOVE_SPEED_MULTIPLIERS[transformComponent.tile.type] * physicsComponent.moveSpeedMultiplier;
+         moveSpeedMultiplier = TILE_MOVE_SPEED_MULTIPLIERS[tileType] * physicsComponent.moveSpeedMultiplier;
       }
 
-      const tileFriction = TILE_FRICTIONS[transformComponent.tile.type];
+      const tileFriction = TILE_FRICTIONS[tileType];
       
       // @Speed: A lot of multiplies
       physicsComponent.velocity.x += physicsComponent.acceleration.x * tileFriction * moveSpeedMultiplier * Settings.I_TPS;
@@ -171,9 +177,9 @@ const applyPhysics = (entity: EntityID, physicsComponent: PhysicsComponent): voi
    // If the game object is in a river, push them in the flow direction of the river
    // The tileMoveSpeedMultiplier check is so that game objects on stepping stones aren't pushed
    if (transformComponent.isInRiver && !physicsComponent.overrideMoveSpeedMultiplier && physicsComponent.isAffectedByFriction) {
-      const flowDirection = transformComponent.tile.riverFlowDirection;
-      physicsComponent.velocity.x += 240 * Settings.I_TPS * a[flowDirection];
-      physicsComponent.velocity.y += 240 * Settings.I_TPS * b[flowDirection];
+      const flowDirectionIdx = Board.riverFlowDirections[tileIndex];
+      physicsComponent.velocity.x += 240 * Settings.I_TPS * a[flowDirectionIdx];
+      physicsComponent.velocity.y += 240 * Settings.I_TPS * b[flowDirectionIdx];
    }
 
    // Apply velocity
@@ -181,7 +187,7 @@ const applyPhysics = (entity: EntityID, physicsComponent: PhysicsComponent): voi
       // Friction
       if (physicsComponent.isAffectedByFriction) {
          // @Speed: pre-multiply the array
-         const tileFriction = TILE_FRICTIONS[transformComponent.tile.type];
+         const tileFriction = TILE_FRICTIONS[tileType];
 
          // Apply a friction based on the tile type for air resistance (???)
          physicsComponent.velocity.x *= 1 - tileFriction * Settings.I_TPS * 2;
@@ -249,21 +255,16 @@ const updatePosition = (entity: EntityID, physicsComponent: PhysicsComponent): v
          transformComponent.cleanHitboxes(entity);
       }
 
-      transformComponent.updateTile();
       transformComponent.checkIsInRiver(entity);
    }
 }
 
-export function tickPhysicsComponents(): void {
-   for (let i = 0; i < PhysicsComponentArray.components.length; i++) {
-      const entity = PhysicsComponentArray.getEntityFromArrayIdx(i);
-      const physicsComponent = PhysicsComponentArray.components[i];
-      const transformComponent = TransformComponentArray.getComponent(entity);
+function onTick(physicsComponent: PhysicsComponent, entity: EntityID): void {
+   const transformComponent = TransformComponentArray.getComponent(entity);
 
-      turnEntity(entity, transformComponent, physicsComponent);
-      applyPhysics(entity, physicsComponent);
-      updatePosition(entity, physicsComponent);
-   }
+   turnEntity(entity, transformComponent, physicsComponent);
+   applyPhysics(entity, physicsComponent);
+   updatePosition(entity, physicsComponent);
 }
 
 export function applyKnockback(entity: EntityID, knockback: number, knockbackDirection: number): void {

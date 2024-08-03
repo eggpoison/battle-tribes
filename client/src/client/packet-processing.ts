@@ -22,15 +22,15 @@ import Camera from "../Camera";
 import { createComponent } from "../entity-components/components";
 import { readInventory } from "../entity-components/InventoryComponent";
 import { updateDebugScreenIsPaused, updateDebugScreenTicks, updateDebugScreenCurrentTime } from "../components/game/dev/GameInfoDisplay";
+import { Tile } from "../Tile";
 
 export interface InitialGameDataPacket {
    readonly playerID: number;
    readonly spawnPosition: [number, number];
-   readonly tiles: Array<ServerTileData>;
+   readonly tiles: ReadonlyArray<Tile>;
    readonly waterRocks: ReadonlyArray<WaterRockData>;
    readonly riverSteppingStones: ReadonlyArray<RiverSteppingStoneData>;
    readonly riverFlowDirections: RiverFlowDirectionsRecord;
-   readonly edgeTiles: Array<ServerTileData>;
    readonly grassInfo: Record<number, Record<number, GrassTileInfo>>;
 }
 
@@ -40,44 +40,39 @@ export function processInitialGameDataPacket(reader: PacketReader): InitialGameD
    const spawnPositionX = reader.readNumber();
    const spawnPositionY = reader.readNumber();
    
-   const tiles = new Array<ServerTileData>();
-   for (let tileIndex = 0; tileIndex < Settings.BOARD_DIMENSIONS * Settings.BOARD_DIMENSIONS; tileIndex++) {
-      const tileX = reader.readNumber();
-      const tileY = reader.readNumber();
+   const tiles = new Array<Tile>();
+   const flowDirections: RiverFlowDirectionsRecord = {};
+   const grassInfoRecord: Record<number, Record<number, GrassTileInfo>> = {};
+   for (let tileIndex = 0; tileIndex < Settings.FULL_BOARD_DIMENSIONS * Settings.FULL_BOARD_DIMENSIONS; tileIndex++) {
       const tileType = reader.readNumber() as TileType;
       const tileBiome = reader.readNumber() as Biome;
       const isWall = reader.readBoolean();
       reader.padOffset(3);
+      const flowDirection = reader.readNumber();
+      const temperature = reader.readNumber();
+      const humidity = reader.readNumber();
 
-      const tile: ServerTileData = {
-         x: tileX,
-         y: tileY,
-         type: tileType,
-         biome: tileBiome,
-         isWall: isWall
-      };
+      const tileX = Board.getTileX(tileIndex);
+      const tileY = Board.getTileY(tileIndex);
+
+      const tile = new Tile(tileX, tileY, tileType, tileBiome, isWall);
       tiles.push(tile);
-   }
 
-   // @Copynpaste
-   const edgeTiles = new Array<ServerTileData>();
-   const numEdgeTiles = reader.readNumber();
-   for (let i = 0; i < numEdgeTiles; i++) {
-      const tileX = reader.readNumber();
-      const tileY = reader.readNumber();
-      const tileType = reader.readNumber() as TileType;
-      const tileBiome = reader.readNumber() as Biome;
-      const isWall = reader.readBoolean();
-      reader.padOffset(3);
+      if (typeof flowDirections[tileX] === "undefined") {
+         flowDirections[tileX] = {};
+      }
+      flowDirections[tileX]![tileY] = flowDirection;
 
-      const tile: ServerTileData = {
-         x: tileX,
-         y: tileY,
-         type: tileType,
-         biome: tileBiome,
-         isWall: isWall
+      const grassInfo: GrassTileInfo = {
+         tileX: tileX,
+         tileY: tileY,
+         temperature: temperature,
+         humidity: humidity
       };
-      edgeTiles.push(tile);
+      if (typeof grassInfoRecord[tileX] === "undefined") {
+         grassInfoRecord[tileX] = {};
+      }
+      grassInfoRecord[tileX]![tileY] = grassInfo;
    }
 
    const waterRocks = new Array<WaterRockData>();
@@ -117,45 +112,10 @@ export function processInitialGameDataPacket(reader: PacketReader): InitialGameD
       steppingStones.push(steppingStone);
    }
 
-   const flowDirections: RiverFlowDirectionsRecord = {};
-   const numFlowDirections = reader.readNumber();
-   for (let i = 0; i < numFlowDirections; i++) {
-      const tileX = reader.readNumber();
-      const tileY = reader.readNumber();
-      const flowDirection = reader.readNumber();
-
-      if (typeof flowDirections[tileX] === "undefined") {
-         flowDirections[tileX] = {};
-      }
-      flowDirections[tileX]![tileY] = flowDirection;
-   }
-
-   const grassInfoRecord: Record<number, Record<number, GrassTileInfo>> = {};
-   const numGrassInfos = reader.readNumber();
-   for (let i = 0; i < numGrassInfos; i++) {
-      const tileX = reader.readNumber();
-      const tileY = reader.readNumber();
-      const temperature = reader.readNumber();
-      const humidity = reader.readNumber();
-
-      const grassInfo: GrassTileInfo = {
-         tileX: tileX,
-         tileY: tileY,
-         temperature: temperature,
-         humidity: humidity
-      };
-
-      if (typeof grassInfoRecord[tileX] === "undefined") {
-         grassInfoRecord[tileX] = {};
-      }
-      grassInfoRecord[tileX]![tileY] = grassInfo;
-   }
-
    return {
       playerID: playerID,
       spawnPosition: [spawnPositionX, spawnPositionY],
       tiles: tiles,
-      edgeTiles: edgeTiles,
       waterRocks: waterRocks,
       riverSteppingStones: steppingStones,
       riverFlowDirections: flowDirections,

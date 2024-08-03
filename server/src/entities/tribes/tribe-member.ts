@@ -27,7 +27,7 @@ import Tribe from "../../Tribe";
 import { entityIsResource } from "./tribesman-ai/tribesman-resource-gathering";
 import { TribesmanAIComponentArray, adjustTribesmanRelationsAfterGift } from "../../components/TribesmanAIComponent";
 import { TITLE_REWARD_CHANCES } from "../../tribesman-title-generation";
-import { TribeMemberComponentArray, awardTitle, hasTitle } from "../../components/TribeMemberComponent";
+import { TribeMemberComponent, TribeMemberComponentArray, awardTitle, hasTitle } from "../../components/TribeMemberComponent";
 import { BERRY_BUSH_RADIUS, dropBerryOverEntity } from "../resources/berry-bush";
 import { createItemEntityConfig, itemEntityCanBePickedUp } from "../item-entity";
 import { PlantComponentArray, plantIsFullyGrown } from "../../components/PlantComponent";
@@ -59,7 +59,6 @@ export type ConnectedEntityIDs = [number, number, number, number];
 const DEFAULT_ATTACK_KNOCKBACK = 125;
 
 export const VACUUM_RANGE = 85;
-const VACUUM_STRENGTH = 25;
 
 const getDamageMultiplier = (entity: EntityID): number => {
    let multiplier = 1;
@@ -797,7 +796,7 @@ export function useItem(tribeMember: EntityID, item: Item, inventoryName: Invent
          config[ServerComponentType.transform].rotation = transformComponent.rotation;
          config[ServerComponentType.physics].velocityX = velocityMagnitude * Math.sin(transformComponent.rotation);
          config[ServerComponentType.physics].velocityY = velocityMagnitude * Math.cos(transformComponent.rotation);
-         config[ServerComponentType.throwingProjectile].tribeMemberID = tribeMember;
+         config[ServerComponentType.throwingProjectile].tribeMember = tribeMember;
          createEntityFromConfig(config);
 
          consumeItemFromSlot(inventory, itemSlot, 1);
@@ -833,7 +832,7 @@ export function useItem(tribeMember: EntityID, item: Item, inventoryName: Invent
          config[ServerComponentType.physics].velocityX = physicsComponent.velocity.x + velocityMagnitude * Math.sin(transformComponent.rotation)
          config[ServerComponentType.physics].velocityY = physicsComponent.velocity.y + velocityMagnitude * Math.cos(transformComponent.rotation)
          config[ServerComponentType.tribe].tribe = tribeComponent.tribe;
-         config[ServerComponentType.throwingProjectile].tribeMemberID = tribeMember;
+         config[ServerComponentType.throwingProjectile].tribeMember = tribeMember;
          config[ServerComponentType.throwingProjectile].itemID = item.id;
          createEntityFromConfig(config);
 
@@ -862,144 +861,6 @@ export function tribeMemberCanPickUpItem(tribeMember: EntityID, itemType: ItemTy
    }
 
    return false;
-}
-
-// @Cleanup: Move to tick function
-const tickInventoryUseInfo = (tribeMember: EntityID, inventoryUseInfo: InventoryUseInfo): void => {
-   const inventoryComponent = InventoryComponentArray.getComponent(tribeMember);
-   
-   switch (inventoryUseInfo.action) {
-      case LimbAction.eat:
-      case LimbAction.useMedicine: {
-         inventoryUseInfo.foodEatingTimer -= Settings.I_TPS;
-   
-         if (inventoryUseInfo.foodEatingTimer <= 0) {
-            const inventory = getInventory(inventoryComponent, inventoryUseInfo.usedInventoryName);
-            
-            const selectedItem = inventory.itemSlots[inventoryUseInfo.selectedItemSlot];
-            if (typeof selectedItem !== "undefined") {
-               const itemCategory = ITEM_TYPE_RECORD[selectedItem.type];
-               if (itemCategory === "healing") {
-                  useItem(tribeMember, selectedItem, inventory.name, inventoryUseInfo.selectedItemSlot);
-   
-                  const itemInfo = ITEM_INFO_RECORD[selectedItem.type] as ConsumableItemInfo;
-                  inventoryUseInfo.foodEatingTimer = itemInfo.consumeTime;
-
-                  if (TribesmanAIComponentArray.hasComponent(tribeMember) && Math.random() < TITLE_REWARD_CHANCES.BERRYMUNCHER_REWARD_CHANCE) {
-                     awardTitle(tribeMember, TribesmanTitle.berrymuncher);
-                  }
-               }
-            }
-         }
-         break;
-      }
-      case LimbAction.loadCrossbow: {
-         const loadProgress = inventoryUseInfo.crossbowLoadProgressRecord[inventoryUseInfo.selectedItemSlot];
-         if (typeof loadProgress === "undefined") {
-            inventoryUseInfo.crossbowLoadProgressRecord[inventoryUseInfo.selectedItemSlot] = Settings.I_TPS;
-         } else {
-            inventoryUseInfo.crossbowLoadProgressRecord[inventoryUseInfo.selectedItemSlot]! += Settings.I_TPS;
-         }
-         
-         if (inventoryUseInfo.crossbowLoadProgressRecord[inventoryUseInfo.selectedItemSlot]! >= 1) {
-            inventoryUseInfo.crossbowLoadProgressRecord[inventoryUseInfo.selectedItemSlot] = 1;
-            inventoryUseInfo.action = LimbAction.none;
-         }
-         
-         break;
-      }
-   }
-}
-
-export function tickTribeMember(tribeMember: EntityID): void {
-   const transformComponent = TransformComponentArray.getComponent(tribeMember);
-   
-   // Vacuum nearby items to the tribesman
-   // @Incomplete: Don't vacuum items which the player doesn't have the inventory space for
-   // @Bug: permits vacuuming the same item entity twice
-   const minChunkX = Math.max(Math.floor((transformComponent.position.x - VACUUM_RANGE) / Settings.CHUNK_UNITS), 0);
-   const maxChunkX = Math.min(Math.floor((transformComponent.position.x + VACUUM_RANGE) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1);
-   const minChunkY = Math.max(Math.floor((transformComponent.position.y - VACUUM_RANGE) / Settings.CHUNK_UNITS), 0);
-   const maxChunkY = Math.min(Math.floor((transformComponent.position.y + VACUUM_RANGE) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1);
-   for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
-      for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
-         const chunk = Board.getChunk(chunkX, chunkY);
-         for (const itemEntity of chunk.entities) {
-            if (Board.getEntityType(itemEntity) !== EntityType.itemEntity || !itemEntityCanBePickedUp(itemEntity, tribeMember)) {
-               continue;
-            }
-
-            const itemComponent = ItemComponentArray.getComponent(itemEntity);
-            if (!tribeMemberCanPickUpItem(tribeMember, itemComponent.itemType)) {
-               continue;
-            }
-
-            const itemEntityTransformComponent = TransformComponentArray.getComponent(itemEntity);
-            
-            const distance = transformComponent.position.calculateDistanceBetween(itemEntityTransformComponent.position);
-            if (distance <= VACUUM_RANGE) {
-               // @Temporary
-               let forceMult = 1 - distance / VACUUM_RANGE;
-               forceMult = lerp(0.5, 1, forceMult);
-
-               const vacuumDirection = itemEntityTransformComponent.position.calculateAngleBetween(transformComponent.position);
-               const physicsComponent = PhysicsComponentArray.getComponent(itemEntity);
-               physicsComponent.velocity.x += VACUUM_STRENGTH * forceMult * Math.sin(vacuumDirection);
-               physicsComponent.velocity.y += VACUUM_STRENGTH * forceMult * Math.cos(vacuumDirection);
-            }
-         }
-      }
-   }
-
-   const physicsComponent = PhysicsComponentArray.getComponent(tribeMember);
-   if (physicsComponent.velocity.x !== 0 || physicsComponent.velocity.y !== 0) {
-      const chance = TITLE_REWARD_CHANCES.SPRINTER_REWARD_CHANCE_PER_SPEED * physicsComponent.velocity.length();
-      if (Math.random() < chance / Settings.TPS) {
-         awardTitle(tribeMember, TribesmanTitle.sprinter);
-      }
-   }
-
-   const inventoryComponent = InventoryComponentArray.getComponent(tribeMember);
-   const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribeMember);
-
-   const useInfo = inventoryUseComponent.getUseInfo(InventoryName.hotbar);
-   tickInventoryUseInfo(tribeMember, useInfo);
-
-   const tribeComponent = TribeComponentArray.getComponent(tribeMember);
-   if (tribeComponent.tribe.tribeType === TribeType.barbarians && Board.getEntityType(tribeMember) !== EntityType.tribeWorker) {
-      const useInfo = inventoryUseComponent.getUseInfo(InventoryName.offhand);
-      tickInventoryUseInfo(tribeMember, useInfo);
-   }
-
-   // @Speed: Shouldn't be done every tick, only do when the backpack changes
-   // Update backpack
-   const backpackSlotInventory = getInventory(inventoryComponent, InventoryName.backpackSlot);
-   const backpack = backpackSlotInventory.itemSlots[1];
-   if (typeof backpack !== "undefined") {
-      const itemInfo = ITEM_INFO_RECORD[backpack.type] as BackpackItemInfo;
-      resizeInventory(inventoryComponent, InventoryName.backpack, itemInfo.inventoryWidth, itemInfo.inventoryHeight);
-   } else {
-      resizeInventory(inventoryComponent, InventoryName.backpack, 0, 0);
-   }
-      
-   const healthComponent = HealthComponentArray.getComponent(tribeMember);
-
-   // @Speed: Shouldn't be done every tick, only do when the armour changes
-   // Armour defence
-   const armourSlotInventory = getInventory(inventoryComponent, InventoryName.armourSlot);
-   const armour = armourSlotInventory.itemSlots[1];
-   if (typeof armour !== "undefined") {
-      const itemInfo = ITEM_INFO_RECORD[armour.type] as ArmourItemInfo;
-      addDefence(healthComponent, itemInfo.defence, "armour");
-
-      if (armour.type === ItemType.leaf_suit) {
-         transformComponent.collisionMask &= ~COLLISION_BITS.plants;
-      } else {
-         transformComponent.collisionMask |= COLLISION_BITS.plants;
-      }
-   } else {
-      removeDefence(healthComponent, "armour");
-   }
 }
 
 export function onTribeMemberHurt(tribeMember: EntityID, attackingEntity: EntityID): void {

@@ -56,17 +56,16 @@ export interface EntitySpawnInfo {
 }
 
 const SPAWN_INFOS: ReadonlyArray<EntitySpawnInfo> = [
-   // @Temporary
-   // {
-   //    entityType: EntityType.cow,
-   //    spawnRate: 0.01,
-   //    maxDensity: 0.004,
-   //    minPackSize: 2,
-   //    maxPackSize: 5,
-   //    onlySpawnsInNight: false,
-   //    minSpawnDistance: 150,
-   //    usesSpawnDistribution: false
-   // },
+   {
+      entityType: EntityType.cow,
+      spawnRate: 0.01,
+      maxDensity: 0.004,
+      minPackSize: 2,
+      maxPackSize: 5,
+      onlySpawnsInNight: false,
+      minSpawnDistance: 150,
+      usesSpawnDistribution: false
+   },
    {
       entityType: EntityType.berryBush,
       spawnRate: 0.001,
@@ -169,17 +168,16 @@ const SPAWN_INFOS: ReadonlyArray<EntitySpawnInfo> = [
       minSpawnDistance: 150,
       usesSpawnDistribution: false
    },
-   // @Temporary
-   // {
-   //    entityType: EntityType.fish,
-   //    spawnRate: 0.015,
-   //    maxDensity: 0.03,
-   //    minPackSize: 3,
-   //    maxPackSize: 4,
-   //    onlySpawnsInNight: false,
-   //    minSpawnDistance: 150,
-   //    usesSpawnDistribution: false
-   // },
+   {
+      entityType: EntityType.fish,
+      spawnRate: 0.015,
+      maxDensity: 0.03,
+      minPackSize: 3,
+      maxPackSize: 4,
+      onlySpawnsInNight: false,
+      minSpawnDistance: 150,
+      usesSpawnDistribution: false
+   },
    {
       entityType: EntityType.lilypad,
       spawnRate: 0,
@@ -333,8 +331,8 @@ const spawnEntities = (spawnInfo: EntitySpawnInfo, spawnOriginX: number, spawnOr
          spawnPositionY = randFloat(minY, maxY);
       }
 
-      const tile = Board.getTile(Math.floor(spawnPositionX / Settings.TILE_SIZE), Math.floor(spawnPositionY / Settings.TILE_SIZE));
-      if (!SPAWNABLE_TILE_RECORD[spawnInfo.entityType]!.includes(tile.type)) {
+      const tileType = Board.getTileType(Math.floor(spawnPositionX / Settings.TILE_SIZE), Math.floor(spawnPositionY / Settings.TILE_SIZE));
+      if (!SPAWNABLE_TILE_RECORD[spawnInfo.entityType]!.includes(tileType)) {
          continue;
       }
 
@@ -385,10 +383,10 @@ const runSpawnEvent = (spawnInfo: EntitySpawnInfo): void => {
    // @Speed: Instead of randomly picking a tile until it matches the spawnable, pick a random tile from the spawnable tiles
    const tileX = randInt(0, Settings.BOARD_SIZE * Settings.CHUNK_SIZE - 1);
    const tileY = randInt(0, Settings.BOARD_SIZE * Settings.CHUNK_SIZE - 1);
-   const tile = Board.getTile(tileX, tileY);
+   const tileType = Board.getTileType(tileX, tileY);
 
    // If the tile is a valid tile for the spawn info, continue with the spawn event
-   if (SPAWNABLE_TILE_RECORD[spawnInfo.entityType]!.includes(tile.type)) {
+   if (SPAWNABLE_TILE_RECORD[spawnInfo.entityType]!.includes(tileType)) {
       // Calculate a random position in that tile to run the spawn at
       let x: number;
       let y: number;

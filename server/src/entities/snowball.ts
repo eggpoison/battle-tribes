@@ -10,7 +10,7 @@ import { ComponentConfig } from "../components";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
 import { CircularHitbox, HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
-import { TransformComponentArray } from "../components/TransformComponent";
+import { getAgeTicks, TransformComponentArray } from "../components/TransformComponent";
 import Board from "../Board";
    
 type ComponentTypes = ServerComponentType.transform
@@ -53,30 +53,6 @@ export function createSnowballConfig(): ComponentConfig<ComponentTypes> {
    };
 }
 
-export function tickSnowball(snowball: EntityID): void {
-   const transformComponent = TransformComponentArray.getComponent(snowball);
-   const snowballComponent = SnowballComponentArray.getComponent(snowball);
-   
-   // @Incomplete. we use physics component angular velocity now, but that doesn't decrease over time!
-   // Angular velocity
-   // if (snowballComponent.angularVelocity !== 0) {
-   //    snowball.rotation += snowballComponent.angularVelocity / Settings.TPS;
-
-   //    const physicsComponent = PhysicsComponentArray.getComponent(snowball.id);
-   //    physicsComponent.hitboxesAreDirty = true;
-      
-   //    const beforeSign = Math.sign(snowballComponent.angularVelocity);
-   //    snowballComponent.angularVelocity -= Math.PI / Settings.TPS * beforeSign;
-   //    if (beforeSign !== Math.sign(snowballComponent.angularVelocity)) {
-   //       snowballComponent.angularVelocity = 0;
-   //    }
-   // }
-
-   if (transformComponent.ageTicks >= snowballComponent.lifetimeTicks) {
-      Board.destroyEntity(snowball);
-   }
-}
-
 export function onSnowballCollision(snowball: EntityID, collidingEntity: EntityID, collisionPoint: Point): void {
    const collidingEntityType = Board.getEntityType(collidingEntity);
    if (collidingEntityType === EntityType.snowball) {
@@ -93,7 +69,9 @@ export function onSnowballCollision(snowball: EntityID, collidingEntity: EntityI
    
    const transformComponent = TransformComponentArray.getComponent(snowball);
    const physicsComponent = PhysicsComponentArray.getComponent(snowball);
-   if (physicsComponent.velocity.length() < DAMAGE_VELOCITY_THRESHOLD || transformComponent.ageTicks >= 2 * Settings.TPS) {
+
+   const ageTicks = getAgeTicks(transformComponent);
+   if (physicsComponent.velocity.length() < DAMAGE_VELOCITY_THRESHOLD || ageTicks >= 2 * Settings.TPS) {
       return;
    }
 

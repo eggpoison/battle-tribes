@@ -119,8 +119,8 @@ const CLIENT_ENTITY_INFO_RECORD: Record<EntityType, ClientEntityInfo> = {
    [EntityType.slimeSpit]: {
       name: "Slime Spit"
    },
-   [EntityType.spitPoison]: {
-      name: "Spit Poison"
+   [EntityType.spitPoisonArea]: {
+      name: "Spit Poison Area"
    },
    [EntityType.door]: {
       name: "Door"

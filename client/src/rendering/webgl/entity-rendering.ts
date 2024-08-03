@@ -611,11 +611,12 @@ export function calculateRenderPartDepth(renderPart: RenderPart, entity: Entity)
 }
 
 // @Speed: VBO
-export function renderEntities(entities: ReadonlyArray<Entity>): void {
-   // @Incomplete: do in the specified range
-   
-   const finalBufferIndex = getFinalBufferIndex();
-   const finalBufferOffset = bufferIndexToOffsetAmount[finalBufferIndex]!;
+export function renderEntities(startEntityID: EntityID, endEntityID: EntityID): void {
+   const startBufferIndex = entityIDToBufferIndexRecord[startEntityID]!;
+   const startBufferOffset = bufferIndexToOffsetAmount[startBufferIndex]!;
+
+   const endBufferIndex = entityIDToBufferIndexRecord[endEntityID]!;
+   const endBufferOffset = bufferIndexToOffsetAmount[endBufferIndex]!;
 
    const textureAtlas = getEntityTextureAtlas();
 
@@ -677,7 +678,7 @@ export function renderEntities(entities: ReadonlyArray<Entity>): void {
    gl.enableVertexAttribArray(7);
    gl.vertexAttribDivisor(7, 1);
 
-   gl.drawArraysInstanced(gl.TRIANGLES, 0, 6, finalBufferOffset);
+   gl.drawArraysInstanced(gl.TRIANGLES, 0, 6, endBufferOffset - startBufferOffset + 1);
    
    gl.vertexAttribDivisor(1, 0);
    gl.vertexAttribDivisor(2, 0);

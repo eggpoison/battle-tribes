@@ -38,7 +38,8 @@ abstract class Board {
    public static ticks: number;
    public static time: number;
 
-   private static tiles = new Array<Tile>();
+   // @Hack: don't have this default value
+   private static tiles: ReadonlyArray<Tile>;
    private static chunks: Array<Chunk>;
    
    public static grassInfo: Record<number, Record<number, GrassTileInfo>>;
@@ -65,32 +66,11 @@ abstract class Board {
 
    // @Cleanup: This function gets called by Game.ts, which gets called by LoadingScreen.tsx, with these same parameters. This feels unnecessary.
    public static initialise(initialGameDataPacket: InitialGameDataPacket): void {
-      const edgeTilesRecord: Record<number, Record<number, Tile>> = {};
-      for (const tileData of initialGameDataPacket.edgeTiles) {
-         if (!edgeTilesRecord.hasOwnProperty(tileData.x)) {
-            edgeTilesRecord[tileData.x] = {};
-         }
-         edgeTilesRecord[tileData.x][tileData.y] = new Tile(tileData.x, tileData.y, tileData.type, tileData.biome, tileData.isWall);
-      }
-
-      const tiles = Client.parseServerTileDataArray(initialGameDataPacket.tiles);
-      
-      // Combine the tiles and edge tiles
-      this.tiles = [];
-      for (let tileY = -Settings.EDGE_GENERATION_DISTANCE; tileY < Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE; tileY++) {
-         for (let tileX = -Settings.EDGE_GENERATION_DISTANCE; tileX < Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE; tileX++) {
-            if (tileX >= 0 && tileX < Settings.BOARD_DIMENSIONS && tileY >= 0 && tileY < Settings.BOARD_DIMENSIONS) {
-               this.tiles.push(tiles[tileX][tileY]);
-            } else {
-               this.tiles.push(edgeTilesRecord[tileX][tileY]);
-            }
-         }
-      }
+      this.tiles = initialGameDataPacket.tiles;
 
       // Flag all tiles which border water or walls
       for (let i = 0; i < this.tiles.length; i++) {
          const tile = this.tiles[i];
-
          if (tile.isWall) {
             const tileX = i % (Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE * 2) - Settings.EDGE_GENERATION_DISTANCE;
             const tileY = Math.floor(i / (Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE * 2)) - Settings.EDGE_GENERATION_DISTANCE;
@@ -437,6 +417,14 @@ abstract class Board {
 
    public static tileIsInBoard(tileX: number, tileY: number): boolean {
       return tileX >= 0 && tileX < Settings.BOARD_DIMENSIONS && tileY >= 0 && tileY < Settings.BOARD_DIMENSIONS;
+   }
+
+   public static getTileX(tileIndex: number): number {
+      return tileIndex % Settings.FULL_BOARD_DIMENSIONS - Settings.EDGE_GENERATION_DISTANCE;
+   }
+
+   public static getTileY(tileIndex: number): number {
+      return Math.floor(tileIndex / Settings.FULL_BOARD_DIMENSIONS) - Settings.EDGE_GENERATION_DISTANCE;
    }
 
    public static getWorldInfo(): WorldInfo {

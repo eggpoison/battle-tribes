@@ -33,7 +33,7 @@ import TribeWorker from "./entities/TribeWorker";
 import TribeWarrior from "./entities/TribeWarrior";
 import Wall from "./entities/Wall";
 import SlimeSpit from "./projectiles/SlimeSpit";
-import SpitPoison from "./projectiles/SpitPoison";
+import SpitPoisonArea from "./projectiles/SpitPoisonArea";
 import Door from "./entities/Door";
 import BattleaxeProjectile from "./projectiles/BattleaxeProjectile";
 import Golem from "./entities/Golem";
@@ -104,7 +104,7 @@ export function createEntity(entityID: EntityID, entityType: EntityType): Entity
       case EntityType.researchBench: return new ResearchBench(entityID);
       case EntityType.wall: return new Wall(entityID);
       case EntityType.slimeSpit: return new SlimeSpit(entityID);
-      case EntityType.spitPoison: return new SpitPoison(entityID);
+      case EntityType.spitPoisonArea: return new SpitPoisonArea(entityID);
       case EntityType.door: return new Door(entityID);
       case EntityType.battleaxeProjectile: return new BattleaxeProjectile(entityID);
       case EntityType.golem: return new Golem(entityID);

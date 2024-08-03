@@ -2,7 +2,6 @@ import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/c
 import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { Point } from "webgl-test-shared/dist/utils";
-import { tickCookingEntity } from "./cooking-entity";
 import { createEmptyStructureConnectionInfo } from "webgl-test-shared/dist/structures";
 import { createFurnaceHitboxes } from "webgl-test-shared/dist/hitboxes/entity-hitbox-creation";
 import { InventoryName } from "webgl-test-shared/dist/items/items";
@@ -69,8 +68,4 @@ export function createFurnaceConfig(): ComponentConfig<ComponentTypes> {
          remainingHeatSeconds: 0
       }
    };
-}
-
-export function tickFurnace(furnace: EntityID): void {
-   tickCookingEntity(furnace);
 }

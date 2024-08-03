@@ -5,9 +5,8 @@ import { Settings } from "webgl-test-shared/dist/settings";
 import { StructureType } from "webgl-test-shared/dist/structures";
 import { TechID, TechTreeUnlockProgress, TechInfo, getTechByID, TECHS } from "webgl-test-shared/dist/techs";
 import { TribeType, TRIBE_INFO_RECORD } from "webgl-test-shared/dist/tribes";
-import { Point, angle, randItem, clampToBoardDimensions } from "webgl-test-shared/dist/utils";
+import { Point, angle, randItem, clampToBoardDimensions, TileIndex } from "webgl-test-shared/dist/utils";
 import Board from "./Board";
-import Tile from "./Tile";
 import Chunk from "./Chunk";
 import { TotemBannerComponentArray, addBannerToTotem, removeBannerFromTotem } from "./components/TotemBannerComponent";
 import { SafetyNode, addHitboxesOccupiedNodes, createRestrictedBuildingArea, getSafetyNode } from "./ai-tribe-building/ai-building";
@@ -17,7 +16,7 @@ import { cleanAngle } from "./ai-shared";
 import { getPathfindingGroupID } from "./pathfinding";
 import { registerResearchOrbComplete } from "./server/player-clients";
 import { HutComponentArray } from "./components/HutComponent";
-import { HitboxVertexPositions, RectangularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
+import { RectangularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { CraftingRecipe } from "webgl-test-shared/dist/items/crafting-recipes";
 import { ItemType, InventoryName } from "webgl-test-shared/dist/items/items";
 import { TransformComponentArray } from "./components/TransformComponent";
@@ -40,7 +39,7 @@ const TRIBE_BUILDING_AREA_INFLUENCES = {
 } satisfies Partial<Record<EntityType, number>>;
 
 interface TileInfluence {
-   readonly tile: Tile;
+   readonly tile: TileIndex;
    /** The number of buildings contributing to the tile */
    numInfluences: number;
 }
@@ -788,13 +787,12 @@ class Tribe {
    }
 
    private addTileToArea(tileX: number, tileY: number): void {
-      const tileIndex = tileY * Settings.BOARD_DIMENSIONS + tileX;
+      const tileIndex = Board.getTileIndexIncludingEdges(tileX, tileY);
       
       if (!this.area.hasOwnProperty(tileIndex)) {
          // If the tile isn't in the area, create a new record
-         const tile = Board.getTile(tileX, tileY);
          this.area[tileIndex] = {
-            tile: tile,
+            tile: tileIndex,
             numInfluences: 1
          };
       } else {
@@ -816,7 +814,7 @@ class Tribe {
    }
 
    public tileIsInArea(tileX: number, tileY: number): boolean {
-      const tileIndex = tileY * Settings.BOARD_DIMENSIONS + tileX;
+      const tileIndex = Board.getTileIndexIncludingEdges(tileX, tileY);
       return this.area.hasOwnProperty(tileIndex);
    }
 
@@ -828,8 +826,8 @@ class Tribe {
       return this.barrels.includes(barrel);
    }
 
-   public getArea(): Array<Tile> {
-      const area = new Array<Tile>();
+   public getArea(): Array<TileIndex> {
+      const area = new Array<TileIndex>();
       for (const tileInfluence of Object.values(this.area)) {
          area.push(tileInfluence.tile);
       }

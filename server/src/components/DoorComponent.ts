@@ -1,4 +1,4 @@
-import { DoorComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { DoorToggleType, EntityID } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { angle, lerp } from "webgl-test-shared/dist/utils";
@@ -34,6 +34,10 @@ export class DoorComponent {
 
 export const DoorComponentArray = new ComponentArray<DoorComponent>(ServerComponentType.door, true, {
    onInitialise: onInitialise,
+   onTick: {
+      tickInterval: 1,
+      func: onTick
+   },
    getDataLength: getDataLength,
    addDataToPacket: addDataToPacket
 });
@@ -59,9 +63,8 @@ const updateDoorOpenProgress = (door: EntityID, doorComponent: DoorComponent): v
    physicsComponent.hitboxesAreDirty = true;
 }
 
-export function tickDoorComponent(door: EntityID): void {
+function onTick(doorComponent: DoorComponent, door: EntityID): void {
    const transformComponent = TransformComponentArray.getComponent(door);
-   const doorComponent = DoorComponentArray.getComponent(door);
    
    switch (doorComponent.toggleType) {
       case DoorToggleType.open: {

@@ -17,9 +17,10 @@ interface RenderableInfo {
    readonly renderable: Renderable;
 }
 
+let currentRenderableIdx = 0;
 const renderables = new Array<RenderableInfo>();
 
-const getRenderableDepth = (type: RenderableType, renderable: Renderable): number => {
+const getRenderableRenderHeight = (type: RenderableType, renderable: Renderable): number => {
    switch (type) {
       case RenderableType.entity: {
          // @Cleanup: remove cast
@@ -47,15 +48,15 @@ const getRenderableDepth = (type: RenderableType, renderable: Renderable): numbe
    }
 }
 
-const getRenderableIdx = (type: RenderableType, renderable: Renderable): number => {
-   const depth = getRenderableDepth(type, renderable);
+const getRenderableInsertIdx = (type: RenderableType, renderable: Renderable): number => {
+   const depth = getRenderableRenderHeight(type, renderable);
 
    let left = 0;
    let right = renderables.length - 1;
    while (left <= right) {
       const midIdx = Math.floor((left + right) * 0.5);
       const mid = renderables[midIdx];
-      const midDepth = getRenderableDepth(mid.type, mid.renderable);
+      const midDepth = getRenderableRenderHeight(mid.type, mid.renderable);
 
       if (midDepth < depth) {
          left = midIdx + 1;
@@ -66,12 +67,12 @@ const getRenderableIdx = (type: RenderableType, renderable: Renderable): number 
       }
    }
    
-   return left + 1;
+   return left;
 }
 
 export function addRenderable(type: RenderableType, renderable: Renderable): void {
    // Use binary search to find index in array
-   const idx = getRenderableIdx(type, renderable);
+   const idx = getRenderableInsertIdx(type, renderable);
 
    const renderableInfo: RenderableInfo = {
       type: type,
@@ -95,11 +96,15 @@ export function removeRenderable(renderable: Renderable): void {
    }
 }
 
-const renderRenderablesBatch = (renderableType: RenderableType, renderables: ReadonlyArray<Renderable>): void => {
+const renderRenderablesBatch = (renderableType: RenderableType, startIdx: number, endIdx: number): void => {
    switch (renderableType) {
       case RenderableType.entity: {
+         const startEntity = renderables[startIdx].renderable as Entity;
+         
+         const endEntity = renderables[endIdx].renderable as Entity;
+         
          // @Cleanup: remove need for cast
-         renderEntities(renderables as Array<Entity>);
+         renderEntities(startEntity.id, endEntity.id);
          break;
       }
       case RenderableType.particle: {
@@ -108,7 +113,8 @@ const renderRenderablesBatch = (renderableType: RenderableType, renderables: Rea
       }
       case RenderableType.overlay: {
          // @Cleanup: remove need for cast
-         for (const overlay of renderables as Array<RenderPartOverlayGroup>) {
+         for (let idx = startIdx; idx <= endIdx; idx++) {
+            const overlay = renderables[idx].renderable as RenderPartOverlayGroup;
             renderEntityOverlay(overlay);
          }
          break;
@@ -116,11 +122,12 @@ const renderRenderablesBatch = (renderableType: RenderableType, renderables: Rea
    }
 }
 
-export function renderRenderables(frameProgress: number): void {
-   if (renderables.length === 0) {
-      return;
-   }
-   
+export function resetRenderOrder(): void {
+   currentRenderableIdx = 0;
+}
+
+export function renderNextRenderables(maxRenderHeight: number): void {
+   // @Temporary
    // @Hack: shouldn't be done here
    // for (const entity of Board.sortedEntities) {
    //    entity.updateRenderPosition(frameProgress);
@@ -144,19 +151,41 @@ export function renderRenderables(frameProgress: number): void {
    // }
    
    let currentRenderableType = RenderableType.entity;
-   let currentRenderables = new Array<Renderable>();
-   for (let i = 0; i < renderables.length; i++) {
-      const renderableInfo = renderables[i];
+   let startIdx = currentRenderableIdx;
+   for (; currentRenderableIdx < renderables.length; currentRenderableIdx++) {
+      const renderableInfo = renderables[currentRenderableIdx];
 
-      if (renderableInfo.type === currentRenderableType) {
-         currentRenderables.push(renderableInfo.renderable);
-      } else {
-         renderRenderablesBatch(currentRenderableType, currentRenderables);
+      const renderHeight = getRenderableRenderHeight(renderableInfo.type, renderableInfo.renderable);
+      if (renderHeight > maxRenderHeight) {
+         break;
+      }
+
+      if (renderableInfo.type !== currentRenderableType) {
+         console.log("a");
+         console.log("indexes:",startIdx,currentRenderableIdx - 1);
+         renderRenderablesBatch(currentRenderableType, startIdx, currentRenderableIdx - 1);
          
          currentRenderableType = renderableInfo.type;
-         currentRenderables = [renderableInfo.renderable];
+         startIdx = currentRenderableIdx + 1;
       }
    }
 
-   renderRenderablesBatch(currentRenderableType, currentRenderables);
+   console.log("b",startIdx,currentRenderableIdx - 1, renderables.length);
+   if (currentRenderableIdx - 1 === -1) {
+      console.log("max render height:",maxRenderHeight);
+
+      const a = renderables[0];
+      const renderHeight = getRenderableRenderHeight(a.type, a.renderable);
+      console.log(renderHeight);
+
+      const b = renderables[1];
+      const renderHeight2 = getRenderableRenderHeight(b.type, b.renderable);
+      console.log(renderHeight2);
+
+      const c = renderables[2];
+      const renderHeight3 = getRenderableRenderHeight(c.type, c.renderable);
+      console.log(renderHeight3);
+   }
+   console.log("indexes:",startIdx,currentRenderableIdx - 1);
+   renderRenderablesBatch(currentRenderableType, startIdx, currentRenderableIdx - 1);
 }

@@ -9,7 +9,6 @@ import Board from "../Board";
 import { runSpawnAttempt, spawnInitialEntities } from "../entity-spawning";
 import Tribe from "../Tribe";
 import OPTIONS from "../options";
-import { forceMaxGrowAllIceSpikes } from "../entities/resources/ice-spikes";
 import SRandom from "../SRandom";
 import { updateDynamicPathfindingNodes } from "../pathfinding";
 import { updateResourceDistributions } from "../resource-distributions";
@@ -31,6 +30,8 @@ import { generateReeds } from "../world-generation/reed-generation";
 import generateTerrain from "../world-generation/terrain-generation";
 import { createCowConfig } from "../entities/mobs/cow";
 import { generateLilypads } from "../world-generation/lilypad-generation";
+import { forceMaxGrowAllIceSpikes } from "../components/IceSpikesComponent";
+import { sortComponentArrays } from "../components/ComponentArray";
 
 /*
 
@@ -122,6 +123,7 @@ class GameServer {
       }
 
       // Setup
+      sortComponentArrays();
       const generationInfo = generateTerrain();
       Board.setup(generationInfo);
       updateResourceDistributions();

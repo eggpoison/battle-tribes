@@ -9,38 +9,26 @@ import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types"
 import { CircularHitbox, HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { ComponentConfig } from "../../components";
-import { TransformComponentArray } from "../../components/TransformComponent";
 import Board from "../../Board";
 
-type ComponentTypes = ServerComponentType.transform;
+type ComponentTypes = ServerComponentType.transform
+   | ServerComponentType.spitPoisonArea;
 
 const RADIUS = 55;
 
-export function createSpitPoisonConfig(): ComponentConfig<ComponentTypes> {
+export function createSpitPoisonAreaConfig(): ComponentConfig<ComponentTypes> {
    return {
       [ServerComponentType.transform]: {
          position: new Point(0, 0),
          rotation: 0,
-         type: EntityType.spitPoison,
+         type: EntityType.spitPoisonArea,
          collisionBit: COLLISION_BITS.default,
          collisionMask: DEFAULT_COLLISION_MASK,
          // @Hack mass
          hitboxes: [new CircularHitbox(Number.EPSILON, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, RADIUS)]
       },
+      [ServerComponentType.spitPoisonArea]: {}
    }
-}
-
-export function tickSpitPoison(spit: EntityID): void {
-   const transformComponent = TransformComponentArray.getComponent(spit);
-   
-   const hitbox = transformComponent.hitboxes[0] as CircularHitbox;
-   hitbox.radius -= 5 / Settings.TPS;
-   if (hitbox.radius <= 0) {
-      Board.destroyEntity(spit);
-   }
-   
-   // @Incomplete: Shrinking the hitbox should make the hitboxes dirty, but hitboxes being dirty only has an impact on entities with a physics component.
-   // Fundamental problem with the hitbox/dirty system.
 }
 
 export function onSpitPoisonCollision(spit: EntityID, collidingEntity: EntityID, collisionPoint: Point): void {

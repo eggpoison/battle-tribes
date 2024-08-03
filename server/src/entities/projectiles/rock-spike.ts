@@ -2,7 +2,7 @@ import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, 
 import { EntityID, EntityType, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { Point, randFloat } from "webgl-test-shared/dist/utils";
-import { RockSpikeProjectileComponentArray } from "../../components/RockSpikeProjectileComponent";
+import { RockSpikeComponentArray } from "../../components/RockSpikeComponent";
 import { HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
 import { applyKnockback } from "../../components/PhysicsComponent";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
@@ -33,21 +33,11 @@ export function createRockSpikeConfig(): ComponentConfig<ComponentTypes> {
    };
 }
 
-export function tickRockSpikeProjectile(rockSpikeProjectile: EntityID): void {
-   const transformComponent = TransformComponentArray.getComponent(rockSpikeProjectile);
-   
-   // Remove if past lifetime
-   const rockSpikeProjectileComponent = RockSpikeProjectileComponentArray.getComponent(rockSpikeProjectile);
-   if (transformComponent.ageTicks >= rockSpikeProjectileComponent.lifetimeTicks) {
-      Board.destroyEntity(rockSpikeProjectile);
-   }
-}
-
 export function onRockSpikeProjectileCollision(rockSpikeProjectile: EntityID, collidingEntity: EntityID, collisionPoint: Point): void {
-   const rockSpikeProjectileComponent = RockSpikeProjectileComponentArray.getComponent(rockSpikeProjectile);
+   const rockSpikeProjectileComponent = RockSpikeComponentArray.getComponent(rockSpikeProjectile);
 
    // Don't hurt the yeti which created the spike
-   if (collidingEntity === rockSpikeProjectileComponent.frozenYetiID) {
+   if (collidingEntity === rockSpikeProjectileComponent.frozenYeti) {
       return;
    }
    

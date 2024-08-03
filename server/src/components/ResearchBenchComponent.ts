@@ -31,13 +31,15 @@ export class ResearchBenchComponent {
 }
 
 export const ResearchBenchComponentArray = new ComponentArray<ResearchBenchComponent>(ServerComponentType.researchBench, true, {
+   onTick: {
+      tickInterval: 1,
+      func: onTick
+   },
    getDataLength: getDataLength,
    addDataToPacket: addDataToPacket
 });
 
-export function tickResearchBenchComponent(researchBench: EntityID): void {
-   const researchBenchComponent = ResearchBenchComponentArray.getComponent(researchBench);
-   
+function onTick(researchBenchComponent: ResearchBenchComponent, researchBench: EntityID): void {
    // @Speed: This runs every tick, but this condition only activates rarely when the bench is being used.
    if (researchBenchComponent.isOccupied) {
       // @Incomplete?

@@ -1,19 +1,21 @@
 import { circlesDoIntersect, circleAndRectangleDoIntersect } from "webgl-test-shared/dist/collision";
-import { AIHelperComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { Settings } from "webgl-test-shared/dist/settings";
 import Chunk from "../Chunk";
 import Board from "../Board";
 import { ComponentArray } from "./ComponentArray";
 import { Hitbox, hitboxIsCircular } from "webgl-test-shared/dist/hitboxes/hitboxes";
-import { EntityID } from "webgl-test-shared/dist/entities";
+import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
 import { TransformComponent, TransformComponentArray } from "./TransformComponent";
 import { Packet } from "webgl-test-shared/dist/packets";
 
 export interface AIHelperComponentParams {
+   /** If enabled, ignores all decorative entities. Enable if possible for performance */
+   ignoreDecorativeEntities: boolean;
    visionRange: number;
 }
 
-export class AIHelperComponent {
+export class AIHelperComponent implements AIHelperComponentParams {
    public visibleChunkBounds = [999, 999, 999, 999];
    public visibleChunks = new Array<Chunk>();
 
@@ -21,15 +23,21 @@ export class AIHelperComponent {
    /** The number of times each potential visible game object appears in the mob's visible chunks */
    public readonly potentialVisibleEntityAppearances = new Array<number>();
 
+   public readonly ignoreDecorativeEntities: boolean;
    public readonly visionRange: number;
    public visibleEntities = new Array<EntityID>();
 
    constructor(params: AIHelperComponentParams) {
+      this.ignoreDecorativeEntities = params.ignoreDecorativeEntities;
       this.visionRange = params.visionRange;
    }
 }
 
 export const AIHelperComponentArray = new ComponentArray<AIHelperComponent>(ServerComponentType.aiHelper, true, {
+   onTick: {
+      tickInterval: 3,
+      func: onTick,
+   },
    onRemove: onRemove,
    getDataLength: getDataLength,
    addDataToPacket: addDataToPacket
@@ -91,13 +99,20 @@ const calculateVisibleEntities = (entity: EntityID, aiHelperComponent: AIHelperC
    return visibleEntities;
 }
 
-export function tickAIHelperComponent(entity: EntityID): void {
+const entityIsDecorative = (entity: EntityID): boolean => {
+   const entityType = Board.getEntityType(entity);
+   return entityType === EntityType.grassStrand || entityType === EntityType.reed;
+}
+
+export function entityIsNoticedByAI(aiHelperComponent: AIHelperComponent, entity: EntityID): boolean {
+   return !aiHelperComponent.ignoreDecorativeEntities || !entityIsDecorative(entity);
+}
+
+function onTick(aiHelperComponent: AIHelperComponent, entity: EntityID): void {
    // @Speed: Not all entities with this component need this always.
-   // Krumblid: probably can pass with 
    // Slimewisp: can pass with once per second
    
    const transformComponent = TransformComponentArray.getComponent(entity);
-   const aiHelperComponent = AIHelperComponentArray.getComponent(entity);
    
    const minChunkX = Math.max(Math.floor((transformComponent.position.x - aiHelperComponent.visionRange) / Settings.CHUNK_UNITS), 0);
    const maxChunkX = Math.min(Math.floor((transformComponent.position.x + aiHelperComponent.visionRange) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1);
@@ -131,15 +146,18 @@ export function tickAIHelperComponent(entity: EntityID): void {
          chunk.viewingEntities.splice(chunk.viewingEntities.indexOf(entity), 1);
          aiHelperComponent.visibleChunks.splice(aiHelperComponent.visibleChunks.indexOf(chunk), 1);
 
-         // Remove game objects in the chunk from the potentially visible list
-         const numGameObjects = chunk.entities.length;
-         for (let i = 0; i < numGameObjects; i++) {
-            const gameObject = chunk.entities[i];
-            const idx = aiHelperComponent.potentialVisibleEntities.indexOf(gameObject);
-            aiHelperComponent.potentialVisibleEntityAppearances[idx]--;
-            if (aiHelperComponent.potentialVisibleEntityAppearances[idx] === 0) {
-               aiHelperComponent.potentialVisibleEntities.splice(idx, 1);
-               aiHelperComponent.potentialVisibleEntityAppearances.splice(idx, 1);
+         // Remove entities in the chunk from the potentially visible list
+         for (let i = 0; i < chunk.entities.length; i++) {
+            const entity = chunk.entities[i];
+
+            const idx = aiHelperComponent.potentialVisibleEntities.indexOf(entity);
+            // We do this check as decorative entities might not be in the potential visible array
+            if (idx !== -1) {
+               aiHelperComponent.potentialVisibleEntityAppearances[idx]--;
+               if (aiHelperComponent.potentialVisibleEntityAppearances[idx] === 0) {
+                  aiHelperComponent.potentialVisibleEntities.splice(idx, 1);
+                  aiHelperComponent.potentialVisibleEntityAppearances.splice(idx, 1);
+               }
             }
          }
       }
@@ -156,12 +174,15 @@ export function tickAIHelperComponent(entity: EntityID): void {
          const numEntities = chunk.entities.length;
          for (let i = 0; i < numEntities; i++) {
             const currentEntity = chunk.entities[i];
-            const idx = aiHelperComponent.potentialVisibleEntities.indexOf(currentEntity);
-            if (idx === -1 && currentEntity !== entity) {
-               aiHelperComponent.potentialVisibleEntities.push(currentEntity);
-               aiHelperComponent.potentialVisibleEntityAppearances.push(1);
-            } else {
-               aiHelperComponent.potentialVisibleEntityAppearances[idx]++;
+
+            if (entityIsNoticedByAI(aiHelperComponent, currentEntity)) {
+               const idx = aiHelperComponent.potentialVisibleEntities.indexOf(currentEntity);
+               if (idx === -1 && currentEntity !== entity) {
+                  aiHelperComponent.potentialVisibleEntities.push(currentEntity);
+                  aiHelperComponent.potentialVisibleEntityAppearances.push(1);
+               } else {
+                  aiHelperComponent.potentialVisibleEntityAppearances[idx]++;
+               }
             }
          }
       }

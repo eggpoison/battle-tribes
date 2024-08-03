@@ -4,12 +4,29 @@ import { EntityID } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { distance } from "webgl-test-shared/dist/utils";
 import Board from "./Board";
+import { PhysicsComponentArray } from "./components/PhysicsComponent";
+import { TransformComponentArray } from "./components/TransformComponent";
+
+// @Cleanup: location
+export function entityIsCollisionRelevant(entity: EntityID): boolean {
+   // @Incomplete: account for entities which have no physics component but have collision events
+
+   if (PhysicsComponentArray.hasComponent(entity)) {
+      return true;
+   }
+
+   const transformComponent = TransformComponentArray.getComponent(entity);
+   return transformComponent.totalMass > 0;
+}
 
 class Chunk {
    /** Stores all entities inside the chunk */
    public readonly entities = new Array<EntityID>();
-   /** All entities in the chunk with a physics component */
-   public readonly physicsEntities = new Array<EntityID>();
+
+   /** All collision relevant entities in the chunk */
+   public readonly collisionRelevantEntities = new Array<EntityID>();
+   /** All collision relevant entities in the chunk with a physics component */
+   public readonly collisionRelevantPhysicsEntities = new Array<EntityID>();
 
    /** Stores all mobs which have the chunk in their vision range */
    public readonly viewingEntities = new Array<EntityID>();

@@ -1,17 +1,16 @@
-import { AmmoBoxComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType, TurretAmmoType } from "webgl-test-shared/dist/components";
 import { rotateXAroundOrigin, rotateYAroundOrigin } from "webgl-test-shared/dist/utils";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { BALLISTA_AMMO_BOX_OFFSET_X, BALLISTA_AMMO_BOX_OFFSET_Y } from "../utils";
 import Board from "../Board";
-import { BallistaAmmoType } from "webgl-test-shared/dist/items/items";
 import { RenderPart } from "../render-parts/render-parts";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { PacketReader } from "webgl-test-shared/dist/packets";
 
 class AmmoBoxComponent extends ServerComponent {
-   public ammoType: BallistaAmmoType | null;
+   public ammoType: TurretAmmoType | null;
    public ammoRemaining: number;
 
    private ammoWarningRenderPart: RenderPart | null = null;
@@ -26,7 +25,7 @@ class AmmoBoxComponent extends ServerComponent {
       this.ammoRemaining = ammoRemaining;
    }
 
-   private updateAmmoType(ammoType: BallistaAmmoType | null): void {
+   private updateAmmoType(ammoType: TurretAmmoType | null): void {
       if (ammoType === null) {
          this.ammoType = null;
 

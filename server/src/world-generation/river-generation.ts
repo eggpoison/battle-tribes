@@ -1,7 +1,6 @@
 import { WaterRockData, RiverSteppingStoneData, RiverSteppingStoneSize, RIVER_STEPPING_STONE_SIZES } from "webgl-test-shared/dist/client-server-types";
 import { Settings } from "webgl-test-shared/dist/settings";
-import { Point, lerp } from "webgl-test-shared/dist/utils";
-import Tile, { TileCoordinates } from "../Tile";
+import { Point, TileCoordinates, lerp } from "webgl-test-shared/dist/utils";
 import { generateOctavePerlinNoise } from "../perlin-noise";
 import Board from "../Board";
 import SRandom from "../SRandom";
@@ -32,12 +31,32 @@ const BORDER_PADDING = Settings.EDGE_GENERATION_DISTANCE + 5;
 export interface WaterTileGenerationInfo {
    readonly tileX: number;
    readonly tileY: number;
-   readonly flowDirection: number;
+   /** Index of the river flow direction */
+   readonly flowDirectionIdx: number;
 }
 
 export interface RiverGenerationInfo {
    readonly waterTiles: ReadonlyArray<WaterTileGenerationInfo>;
    readonly riverMainTiles: ReadonlyArray<WaterTileGenerationInfo>;
+}
+
+const getFlowDirectionIdx = (flowDirection: number): number => {
+   // @Hack
+
+   if (flowDirection >= 2 * Math.PI) {
+      flowDirection -= 2 * Math.PI;
+   } else if (flowDirection < 0) {
+      flowDirection += 2 * Math.PI;
+   }
+
+   for (let i = 0; i < 8; i++) {
+      const angle = i / 4 * Math.PI;
+      if (Math.abs(angle - flowDirection) < 0.01) {
+         return i;
+      }
+   }
+
+   throw new Error();
 }
 
 export function generateRiverTiles(): RiverGenerationInfo {
@@ -91,20 +110,20 @@ export function generateRiverTiles(): RiverGenerationInfo {
             break;
          }
 
-         let flowDirection: number;
+         let flowDirectionIdx: number;
          if (rootTiles.length > 0 && typeof secondMinTileCoordinates !== "undefined" && Math.random() < 0.3) {
             minTileCoordinates = secondMinTileCoordinates;
-            flowDirection = rootTiles[rootTiles.length - 1].flowDirection;
+            flowDirectionIdx = rootTiles[rootTiles.length - 1].flowDirectionIdx;
          } else {
             const startPos = new Point(currentTileCoordinates.x, currentTileCoordinates.y);
             const endPos = new Point(minTileCoordinates.x, minTileCoordinates.y);
-            flowDirection = startPos.calculateAngleBetween(endPos);
+            flowDirectionIdx = getFlowDirectionIdx(startPos.calculateAngleBetween(endPos));
          }
 
          rootTiles.push({
             tileX: currentTileCoordinates.x,
             tileY: currentTileCoordinates.y,
-            flowDirection: flowDirection
+            flowDirectionIdx: flowDirectionIdx
          });
          currentTileCoordinates = minTileCoordinates;
       }
@@ -112,7 +131,7 @@ export function generateRiverTiles(): RiverGenerationInfo {
       rootTiles.push({
          tileX: currentTileCoordinates.x,
          tileY: currentTileCoordinates.y,
-         flowDirection: rootTiles[rootTiles.length - 2].flowDirection
+         flowDirectionIdx: rootTiles[rootTiles.length - 2].flowDirectionIdx
       });
    }
 
@@ -135,23 +154,23 @@ export function generateRiverTiles(): RiverGenerationInfo {
       if (maxTileY >= Settings.BOARD_DIMENSIONS + BORDER_PADDING) {
          maxTileY = Settings.BOARD_DIMENSIONS + BORDER_PADDING - 1;
       }
-      for (let x = minTileX; x <= maxTileX; x++) {
-         outerLoop: for (let y = minTileY; y <= maxTileY; y++) {
-            if (x < -Settings.EDGE_GENERATION_DISTANCE || x >= Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE || y < -Settings.EDGE_GENERATION_DISTANCE || y >= Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE) {
+      for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
+         outerLoop: for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
+            if (tileX < -Settings.EDGE_GENERATION_DISTANCE || tileX >= Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE || tileY < -Settings.EDGE_GENERATION_DISTANCE || tileY >= Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE) {
                continue;
             }
             
             // Make sure the tile isn't already in the tiles array
             // @Speed
             for (const tile of tiles) {
-               if (tile.tileX === x && tile.tileY === 0) {
+               if (tile.tileX === tileX && tile.tileY === tileY) {
                   continue outerLoop;
                }
             }
             tiles.push({
-               tileX: x,
-               tileY: y,
-               flowDirection: rootTile.flowDirection
+               tileX: tileX,
+               tileY: tileY,
+               flowDirectionIdx: rootTile.flowDirectionIdx
             });
          }
       }
@@ -212,17 +231,17 @@ const calculateRiverCrossingPositions = (riverTiles: ReadonlyArray<WaterTileGene
       const directionOffset = SRandom.randFloat(0, Math.PI/10) * sign;
 
       let crossingDirection: number | undefined;
-      const clockwiseIsWater = tileAtOffsetIsWater(startTile.tileX, startTile.tileY, startTile.flowDirection + directionOffset + Math.PI/2, riverTiles);
-      const anticlockwiseIsWater = tileAtOffsetIsWater(startTile.tileX, startTile.tileY, startTile.flowDirection + directionOffset - Math.PI/2, riverTiles);
+      const clockwiseIsWater = tileAtOffsetIsWater(startTile.tileX, startTile.tileY, startTile.flowDirectionIdx + directionOffset + Math.PI/2, riverTiles);
+      const anticlockwiseIsWater = tileAtOffsetIsWater(startTile.tileX, startTile.tileY, startTile.flowDirectionIdx + directionOffset - Math.PI/2, riverTiles);
 
       // Only generate a river if only one side of the river is water
       if ((!clockwiseIsWater && !anticlockwiseIsWater) || (clockwiseIsWater && anticlockwiseIsWater)) {
          continue;
       }
       if (clockwiseIsWater) {
-         crossingDirection = startTile.flowDirection + directionOffset + Math.PI/2;
+         crossingDirection = startTile.flowDirectionIdx + directionOffset + Math.PI/2;
       } else {
-         crossingDirection = startTile.flowDirection + directionOffset - Math.PI/2;
+         crossingDirection = startTile.flowDirectionIdx + directionOffset - Math.PI/2;
       }
 
       // Calculate distance of crossing

@@ -12,6 +12,8 @@ enum RenderLayer {
    highDecorations,
    // @Temporary?
    lowestEntities,
+   fish,
+   // Everything before this will render under water, everything after will render above
    droppedItems,
    lilypads,
    reeds,
@@ -77,6 +79,9 @@ const getEntityRenderLayer = (entity: Entity): RenderLayer => {
       }
       case EntityType.reed: {
          return RenderLayer.reeds;
+      }
+      case EntityType.fish: {
+         return RenderLayer.fish;
       }
       // @Incomplete: Only blueprints which go on existing buildings should be here, all others should be low entities
       // Blueprints

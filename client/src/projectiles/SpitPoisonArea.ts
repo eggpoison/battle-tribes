@@ -40,14 +40,14 @@ const createParticle = (spawnPositionX: number, spawnPositionY: number): void =>
    Board.lowTexturedParticles.push(particle);
 }
 
-class SpitPoison extends Entity {
+class SpitPoisonArea extends Entity {
    private static readonly MAX_RANGE = 55;
 
    private trackSource!: AudioBufferSourceNode;
    private sound!: Sound;
    
    constructor(id: number) {
-      super(id, EntityType.spitPoison);
+      super(id, EntityType.spitPoisonArea);
    }
 
    public onLoad(): void {
@@ -66,9 +66,9 @@ class SpitPoison extends Entity {
       const hitbox = transformComponent.hitboxes[0] as CircularHitbox;
       const range = hitbox.radius;
 
-      this.sound.volume = lerp(0.25, 0, 1 - range / SpitPoison.MAX_RANGE);
+      this.sound.volume = lerp(0.25, 0, 1 - range / SpitPoisonArea.MAX_RANGE);
 
-      if (SpitPoison.MAX_RANGE * Math.random() < range) {
+      if (SpitPoisonArea.MAX_RANGE * Math.random() < range) {
          // Calculate spawn position
          const offsetMagnitude = range * Math.random();
          const moveDirection = 2 * Math.PI * Math.random();
@@ -95,4 +95,4 @@ class SpitPoison extends Entity {
    }
 }
 
-export default SpitPoison;
+export default SpitPoisonArea;

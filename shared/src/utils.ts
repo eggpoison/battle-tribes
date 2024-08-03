@@ -1,5 +1,16 @@
 import { Settings } from "./settings";
 
+export const enum UtilVars {
+   PI = 3.14159265358979
+}
+
+export type TileIndex = number;
+
+export interface TileCoordinates {
+   readonly x: number;
+   readonly y: number;
+}
+
 export type Mutable<T> = {
    -readonly [P in keyof T]: T[P];
 };

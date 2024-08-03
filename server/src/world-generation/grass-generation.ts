@@ -4,18 +4,15 @@ import Board from "../Board";
 import { createGrassStrandConfig } from "../entities/grass-strand";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { createEntityFromConfig } from "../Entity";
-import Tile from "../Tile";
-import { distance } from "webgl-test-shared/dist/utils";
+import { distance, TileIndex } from "webgl-test-shared/dist/utils";
 
 const enum Vars {
    /** Average number of grass strands per tile in a fully humidified area. */
    MAX_STRAND_DENSITY = 25
 }
 
-const getGrassDensityMultiplier = (tile: Tile): number => {
-   const idx = Board.getTileIndexIncludingEdges(tile.x, tile.y);
-   const humidity = Board.tileHumidities[idx];
-
+const getGrassDensityMultiplier = (tileIndex: TileIndex): number => {
+   const humidity = Board.tileHumidities[tileIndex];
    return humidity * 0.7 + 0.3;
 }
 
@@ -25,8 +22,7 @@ const getAdjacentWaterDist = (tileX: number, tileY: number, grassTileX: number, 
       return 1;
    }
    
-   const tile = Board.getTileIncludingEdges(tileX, tileY);
-   if (tile.type !== TileType.water) {
+   if (Board.getTileType(tileX, tileY) !== TileType.water) {
       return 1;
    }
 
@@ -43,8 +39,7 @@ const getDiagonalWaterDist = (tileX: number, tileY: number, grassTileX: number, 
       return 1;
    }
    
-   const tile = Board.getTileIncludingEdges(tileX, tileY);
-   if (tile.type !== TileType.water) {
+   if (Board.getTileType(tileX, tileY) !== TileType.water) {
       return 1;
    }
 
@@ -82,12 +77,12 @@ export function generateGrassStrands(): void {
    // @Incomplete: generate in edges
    for (let tileX = 0; tileX < Settings.BOARD_DIMENSIONS; tileX++) {
       for (let tileY = 0; tileY < Settings.BOARD_DIMENSIONS; tileY++) {
-         const tile = Board.getTile(tileX, tileY);
-         if (tile.type !== TileType.grass) {
+         const tileIndex = Board.getTileIndexIncludingEdges(tileX, tileY);
+         if (Board.tileTypes[tileIndex] !== TileType.grass) {
             continue;
          }
 
-         let density = Vars.MAX_STRAND_DENSITY * getGrassDensityMultiplier(tile);
+         let density = Vars.MAX_STRAND_DENSITY * getGrassDensityMultiplier(tileIndex);
          if (Math.random() < density % 1) {
             density = Math.ceil(density);
          } else {

@@ -1,11 +1,13 @@
 import { EntityID, SNOWBALL_SIZES, SnowballSize } from "webgl-test-shared/dist/entities";
-import { ServerComponentType, SnowballComponentData } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { ComponentArray } from "./ComponentArray";
 import { ComponentConfig } from "../components";
 import { CircularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { PhysicsComponentArray } from "./PhysicsComponent";
 import { randFloat, randSign } from "webgl-test-shared/dist/utils";
 import { Packet } from "webgl-test-shared/dist/packets";
+import { getAgeTicks, TransformComponentArray } from "./TransformComponent";
+import Board from "../Board";
 
 export interface SnowballComponentParams {
    yetiID: number;
@@ -28,17 +30,15 @@ export class SnowballComponent {
 }
 
 export const SnowballComponentArray = new ComponentArray<SnowballComponent>(ServerComponentType.snowball, true, {
-   onJoin: onJoin,
    onInitialise: onInitialise,
+   onJoin: onJoin,
+   onTick: {
+      tickInterval: 1,
+      func: onTick
+   },
    getDataLength: getDataLength,
    addDataToPacket: addDataToPacket
 });
-
-function onJoin(entity: EntityID): void {
-   /** Set the snowball to spin */
-   const physicsComponent = PhysicsComponentArray.getComponent(entity);
-   physicsComponent.angularVelocity = randFloat(1, 2) * Math.PI * randSign();
-}
 
 function onInitialise(config: ComponentConfig<ServerComponentType.transform | ServerComponentType.health | ServerComponentType.snowball>): void {
    const size = config[ServerComponentType.snowball].size;
@@ -48,6 +48,36 @@ function onInitialise(config: ComponentConfig<ServerComponentType.transform | Se
    const hitbox = config[ServerComponentType.transform].hitboxes[0] as CircularHitbox;
    hitbox.mass = size === SnowballSize.small ? 1 : 1.5;
    hitbox.radius = SNOWBALL_SIZES[size] / 2;
+}
+
+function onJoin(entity: EntityID): void {
+   /** Set the snowball to spin */
+   const physicsComponent = PhysicsComponentArray.getComponent(entity);
+   physicsComponent.angularVelocity = randFloat(1, 2) * Math.PI * randSign();
+}
+
+function onTick(snowballComponent: SnowballComponent, snowball: EntityID): void {
+   const transformComponent = TransformComponentArray.getComponent(snowball);
+   const ageTicks = getAgeTicks(transformComponent);
+   
+   // @Incomplete. we use physics component angular velocity now, but that doesn't decrease over time!
+   // Angular velocity
+   // if (snowballComponent.angularVelocity !== 0) {
+   //    snowball.rotation += snowballComponent.angularVelocity / Settings.TPS;
+
+   //    const physicsComponent = PhysicsComponentArray.getComponent(snowball.id);
+   //    physicsComponent.hitboxesAreDirty = true;
+      
+   //    const beforeSign = Math.sign(snowballComponent.angularVelocity);
+   //    snowballComponent.angularVelocity -= Math.PI / Settings.TPS * beforeSign;
+   //    if (beforeSign !== Math.sign(snowballComponent.angularVelocity)) {
+   //       snowballComponent.angularVelocity = 0;
+   //    }
+   // }
+
+   if (ageTicks >= snowballComponent.lifetimeTicks) {
+      Board.destroyEntity(snowball);
+   }
 }
 
 function getDataLength(): number {

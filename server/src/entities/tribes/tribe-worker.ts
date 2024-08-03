@@ -7,7 +7,6 @@ import { Point, randInt } from "webgl-test-shared/dist/utils";
 import Tribe from "../../Tribe";
 import { TribesmanAIComponentArray } from "../../components/TribesmanAIComponent";
 import Board from "../../Board";
-import { tickTribesman } from "./tribesman-ai/tribesman-ai";
 import { TribeComponentArray } from "../../components/TribeComponent";
 import { HutComponentArray } from "../../components/HutComponent";
 import { CircularHitbox, HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
@@ -29,15 +28,14 @@ export const TRIBE_WORKER_RADIUS = 28;
 export const TRIBE_WORKER_VISION_RANGE = 500;
 
 const getTribeType = (workerPosition: Point): TribeType => {
-   const tileX = Math.floor(workerPosition.x / Settings.TILE_SIZE);
-   const tileY = Math.floor(workerPosition.y / Settings.TILE_SIZE);
-   const tile = Board.getTile(tileX, tileY);
-
    if (Math.random() < 0.2) {
       return TribeType.goblins;
    }
    
-   switch (tile.type) {
+   const tileX = Math.floor(workerPosition.x / Settings.TILE_SIZE);
+   const tileY = Math.floor(workerPosition.y / Settings.TILE_SIZE);
+   const tileType = Board.getTileType(tileX, tileY);
+   switch (tileType) {
       case TileType.grass: {
          return TribeType.plainspeople;
       }
@@ -107,6 +105,7 @@ export function createTribeWorkerConfig(): ComponentConfig<ComponentTypes> {
          hut: 0
       },
       [ServerComponentType.aiHelper]: {
+         ignoreDecorativeEntities: true,
          visionRange: TRIBE_WORKER_VISION_RANGE
       },
       [ServerComponentType.inventory]: {

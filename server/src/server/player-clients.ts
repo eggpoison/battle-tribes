@@ -166,10 +166,12 @@ export function generatePlayerSpawnPosition(tribeType: TribeType): Point {
          continue;
       }
 
-      const tile = randItem(biomeTiles);
+      const tileIndex = randItem(biomeTiles);
 
-      const x = (tile.x + Math.random()) * Settings.TILE_SIZE;
-      const y = (tile.y + Math.random()) * Settings.TILE_SIZE;
+      const tileX = Board.getTileX(tileIndex);
+      const tileY = Board.getTileY(tileIndex);
+      const x = (tileX + Math.random()) * Settings.TILE_SIZE;
+      const y = (tileY + Math.random()) * Settings.TILE_SIZE;
 
       if (x < PLAYER_SPAWN_POSITION_PADDING || x >= Settings.BOARD_UNITS - PLAYER_SPAWN_POSITION_PADDING || y < PLAYER_SPAWN_POSITION_PADDING || y >= Settings.BOARD_UNITS - PLAYER_SPAWN_POSITION_PADDING) {
          continue;

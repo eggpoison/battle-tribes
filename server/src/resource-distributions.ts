@@ -43,9 +43,8 @@ const countNumSpawnableTiles = (sampleX: number, sampleY: number, spawnableTiles
       for (let yOffset = 0; yOffset < Vars.SAMPLE_SIZE; yOffset++) {
          const tileX = originTileX + xOffset;
          const tileY = originTileY + yOffset;
-         const tile = Board.getTile(tileX, tileY);
 
-         if (spawnableTiles.includes(tile.type)) {
+         if (spawnableTiles.includes(Board.getTileType(tileX, tileY))) {
             count++;
          }
       }
@@ -140,9 +139,8 @@ const getRandomSpawnableTileIndex = (sampleIdx: number, spawnableTiles: Readonly
       for (let yOffset = 0; yOffset < Vars.SAMPLE_SIZE; yOffset++) {
          const tileX = originTileX + xOffset;
          const tileY = originTileY + yOffset;
-         const tile = Board.getTile(tileX, tileY);
 
-         if (spawnableTiles.includes(tile.type)) {
+         if (spawnableTiles.includes(Board.getTileType(tileX, tileY))) {
             const tileIndex = tileY * Settings.TILES_IN_WORLD_WIDTH + tileX;
             spawnableTileIndexes.push(tileIndex);
          }

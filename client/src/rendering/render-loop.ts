@@ -99,11 +99,10 @@ export function removeRenderable(renderable: Renderable): void {
 const renderRenderablesBatch = (renderableType: RenderableType, startIdx: number, endIdx: number): void => {
    switch (renderableType) {
       case RenderableType.entity: {
+         // @Cleanup: remove need for cast
          const startEntity = renderables[startIdx].renderable as Entity;
-         
          const endEntity = renderables[endIdx].renderable as Entity;
          
-         // @Cleanup: remove need for cast
          renderEntities(startEntity.id, endEntity.id);
          break;
       }
@@ -149,6 +148,15 @@ export function renderNextRenderables(maxRenderHeight: number): void {
    //       remainingRenderParts.splice(0, 1);
    //    }
    // }
+
+   const firstRenderable = renderables[currentRenderableIdx];
+   const firstRenderableRenderHeight = getRenderableRenderHeight(firstRenderable.type, firstRenderable.renderable);
+   if (firstRenderableRenderHeight > maxRenderHeight) {
+      return;
+   }
+
+   // @Speed: all we are doing here is finding the next entity with a render height as high to the max render height as possible.
+   // Which probably means that we can do a log(n) type of binary search to find it.
    
    let currentRenderableType = RenderableType.entity;
    let startIdx = currentRenderableIdx;
@@ -161,8 +169,6 @@ export function renderNextRenderables(maxRenderHeight: number): void {
       }
 
       if (renderableInfo.type !== currentRenderableType) {
-         console.log("a");
-         console.log("indexes:",startIdx,currentRenderableIdx - 1);
          renderRenderablesBatch(currentRenderableType, startIdx, currentRenderableIdx - 1);
          
          currentRenderableType = renderableInfo.type;
@@ -170,22 +176,5 @@ export function renderNextRenderables(maxRenderHeight: number): void {
       }
    }
 
-   console.log("b",startIdx,currentRenderableIdx - 1, renderables.length);
-   if (currentRenderableIdx - 1 === -1) {
-      console.log("max render height:",maxRenderHeight);
-
-      const a = renderables[0];
-      const renderHeight = getRenderableRenderHeight(a.type, a.renderable);
-      console.log(renderHeight);
-
-      const b = renderables[1];
-      const renderHeight2 = getRenderableRenderHeight(b.type, b.renderable);
-      console.log(renderHeight2);
-
-      const c = renderables[2];
-      const renderHeight3 = getRenderableRenderHeight(c.type, c.renderable);
-      console.log(renderHeight3);
-   }
-   console.log("indexes:",startIdx,currentRenderableIdx - 1);
    renderRenderablesBatch(currentRenderableType, startIdx, currentRenderableIdx - 1);
 }

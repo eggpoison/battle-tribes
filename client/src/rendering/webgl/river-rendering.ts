@@ -49,6 +49,8 @@ const riverFoamVertexCounts = new Array<number>();
 const riverSteppingStoneVAOs = new Array<WebGLVertexArrayObject>();
 const riverSteppingStoneVertexCounts = new Array<number>();
 
+let baseProgramOpacityUniformLocation: WebGLUniformLocation;
+
 export function createRiverSteppingStoneData(riverSteppingStones: ReadonlyArray<RiverSteppingStoneData>): void {
    // Group the stepping stones
    const groups = new Array<Array<RiverSteppingStoneData>>();
@@ -129,6 +131,8 @@ export function createRiverShaders(): void {
    precision mediump float;
    
    uniform sampler2D u_baseTexture;
+
+   uniform float u_opacity;
     
    in vec2 v_coord;
    in float v_topLeftLandDistance;
@@ -146,7 +150,7 @@ export function createRiverShaders(): void {
       float r = mix(${SHALLOW_WATER_COLOUR[0]}, ${DEEP_WATER_COLOUR[0]}, dist);
       float g = mix(${SHALLOW_WATER_COLOUR[1]}, ${DEEP_WATER_COLOUR[1]}, dist);
       float b = mix(${SHALLOW_WATER_COLOUR[2]}, ${DEEP_WATER_COLOUR[2]}, dist);
-      vec4 colourWithAlpha = vec4(r, g, b, 1.0);
+      vec4 colourWithAlpha = vec4(r, g, b, u_opacity);
    
       vec4 textureColour = texture(u_baseTexture, v_coord);
    
@@ -608,6 +612,7 @@ export function createRiverShaders(): void {
    bindUBOToProgram(gl, baseProgram, UBOBindingIndex.CAMERA);
 
    const baseTextureUniformLocation = gl.getUniformLocation(baseProgram, "u_baseTexture")!;
+   baseProgramOpacityUniformLocation = gl.getUniformLocation(baseProgram, "u_opacity")!;
 
    gl.useProgram(baseProgram);
    gl.uniform1i(baseTextureUniformLocation, 0);
@@ -1592,7 +1597,8 @@ const calculateHighlightsVertexData = (waterTiles: ReadonlyArray<Tile>): Float32
    return vertexData;
 }
 
-const calculateVisibleRiverInfo = (): ReadonlyArray<RenderChunkRiverInfo> => {
+export function calculateVisibleRiverInfo(): ReadonlyArray<RenderChunkRiverInfo> {
+   // @Speed: Garbage collection
    const riverInfoArray = new Array<RenderChunkRiverInfo>();
 
    for (let renderChunkX = Camera.minVisibleRenderChunkX; renderChunkX <= Camera.maxVisibleRenderChunkX; renderChunkX++) {
@@ -1607,24 +1613,17 @@ const calculateVisibleRiverInfo = (): ReadonlyArray<RenderChunkRiverInfo> => {
    return riverInfoArray;
 }
 
-export function renderRivers(frameProgress: number): void {
-   const visibleRenderChunks = calculateVisibleRiverInfo();
-
-   // Calculate visible stepping stone groups
-   const steppingStoneGroupIDs = new Array<number>();
-   for (const chunk of visibleRenderChunks) {
-      for (const groupID of chunk.riverSteppingStoneGroupIDs) {
-         if (!steppingStoneGroupIDs.includes(groupID)) {
-            steppingStoneGroupIDs.push(groupID);
-         }
-      }
-   }
-
+export function renderLowerRiverFeatures(visibleRenderChunks: ReadonlyArray<RenderChunkRiverInfo>): void {
    // 
    // Base program
    // 
    
    gl.useProgram(baseProgram);
+
+   gl.enable(gl.BLEND);
+   gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
+   gl.uniform1f(baseProgramOpacityUniformLocation, 1);
 
    // Bind water base texture
    const baseTexture = getTexture("miscellaneous/river/water-base.png");
@@ -1641,9 +1640,6 @@ export function renderRivers(frameProgress: number): void {
    // 
 
    gl.useProgram(rockProgram);
-
-   gl.enable(gl.BLEND);
-   gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
    // Bind water rock textures
    for (let rockSize: WaterRockSize = 0; rockSize < 2; rockSize++) {
@@ -1678,7 +1674,41 @@ export function renderRivers(frameProgress: number): void {
       gl.drawArrays(gl.TRIANGLES, 0, renderChunkRiverInfo.transitionVertexCount);
    }
 
-   // @INCOMPLETE: Render fish here (but extract this function into lower and upper river parts)
+   gl.disable(gl.BLEND);
+   gl.blendFunc(gl.ONE, gl.ZERO);
+}
+
+export function renderUpperRiverFeatures(visibleRenderChunks: ReadonlyArray<RenderChunkRiverInfo>): void {
+   // Calculate visible stepping stone groups
+   const steppingStoneGroupIDs = new Array<number>();
+   for (const chunk of visibleRenderChunks) {
+      for (const groupID of chunk.riverSteppingStoneGroupIDs) {
+         if (!steppingStoneGroupIDs.includes(groupID)) {
+            steppingStoneGroupIDs.push(groupID);
+         }
+      }
+   }
+
+   // 
+   // Base program
+   // 
+   
+   gl.useProgram(baseProgram);
+
+   gl.enable(gl.BLEND);
+   gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
+   gl.uniform1f(baseProgramOpacityUniformLocation, 0.6);
+
+   // Bind water base texture
+   const baseTexture = getTexture("miscellaneous/river/water-base.png");
+   gl.activeTexture(gl.TEXTURE0);
+   gl.bindTexture(gl.TEXTURE_2D, baseTexture);
+
+   for (const renderChunkInfo of visibleRenderChunks) {
+      gl.bindVertexArray(renderChunkInfo.baseVAO);
+      gl.drawArrays(gl.TRIANGLES, 0, renderChunkInfo.baseVertexCount);
+   }
 
    // 
    // Highlights program

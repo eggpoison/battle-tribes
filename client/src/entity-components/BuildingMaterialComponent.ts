@@ -1,9 +1,10 @@
-import { BuildingMaterial } from "webgl-test-shared/dist/components";
+import { BuildingMaterial, ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { PacketReader } from "webgl-test-shared/dist/packets";
+import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 
 export const WALL_TEXTURE_SOURCES = ["entities/wall/wooden-wall.png", "entities/wall/stone-wall.png"];
 export const DOOR_TEXTURE_SOURCES = ["entities/door/wooden-door.png", "entities/door/stone-door.png"];
@@ -56,3 +57,5 @@ class BuildingMaterialComponent extends ServerComponent {
 }
 
 export default BuildingMaterialComponent;
+
+export const BuildingMaterialComponentArray = new ComponentArray<BuildingMaterialComponent>(ComponentArrayType.server, ServerComponentType.buildingMaterial, {});

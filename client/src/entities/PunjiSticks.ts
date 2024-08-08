@@ -1,17 +1,11 @@
 import { EntityType } from "webgl-test-shared/dist/entities";
-import { Point, randFloat } from "webgl-test-shared/dist/utils";
-import { Settings } from "webgl-test-shared/dist/settings";
 import { playSound } from "../sound";
-import { createFlyParticle } from "../particles";
 import Entity from "../Entity";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 
 class PunjiSticks extends Entity {
-   private ticksSinceLastFly = 0;
-   private ticksSinceLastFlySound = 0;
-
    constructor(id: number, entityType: EntityType) {
       super(id, entityType);
    }
@@ -36,30 +30,6 @@ class PunjiSticks extends Entity {
       const transformComponent = this.getServerComponent(ServerComponentType.transform);
       if (transformComponent.ageTicks <= 0) {
          playSound("spike-place.mp3", 0.5, 1, transformComponent.position);
-      }
-   }
-
-   public tick(): void {
-      super.tick();
-
-      const transformComponent = this.getServerComponent(ServerComponentType.transform);
-
-      this.ticksSinceLastFly++;
-      const flyChance = ((this.ticksSinceLastFly / Settings.TPS) - 0.25) * 0.2;
-      if (Math.random() / Settings.TPS < flyChance) {
-         const offsetMagnitude = 32 * Math.random();
-         const offsetDirection = 2 * Math.PI * Math.random();
-         const x = transformComponent.position.x + offsetMagnitude * Math.sin(offsetDirection);
-         const y = transformComponent.position.y + offsetMagnitude * Math.cos(offsetDirection);
-         createFlyParticle(x, y);
-         this.ticksSinceLastFly = 0;
-      }
-
-      this.ticksSinceLastFlySound++;
-      const soundChance = ((this.ticksSinceLastFlySound / Settings.TPS) - 0.3) * 2;
-      if (Math.random() < soundChance / Settings.TPS) {
-         playSound("flies.mp3", 0.15, randFloat(0.9, 1.1), transformComponent.position);
-         this.ticksSinceLastFlySound = 0;
       }
    }
 

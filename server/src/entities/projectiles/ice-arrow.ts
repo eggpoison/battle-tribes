@@ -14,7 +14,8 @@ import Board from "../../Board";
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics
    | ServerComponentType.tribe
-   | ServerComponentType.projectile;
+   | ServerComponentType.projectile
+   | ServerComponentType.iceArrow;
 
 const ARROW_WIDTH = 5 * 4;
 const ARROW_HEIGHT = 14 * 4;
@@ -43,7 +44,8 @@ export function createIceArrowConfig(): ComponentConfig<ComponentTypes> {
       },
       [ServerComponentType.projectile]: {
          owner: 0
-      }
+      },
+      [ServerComponentType.iceArrow]: {}
    };
 }
 

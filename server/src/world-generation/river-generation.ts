@@ -1,6 +1,6 @@
 import { WaterRockData, RiverSteppingStoneData, RiverSteppingStoneSize, RIVER_STEPPING_STONE_SIZES } from "webgl-test-shared/dist/client-server-types";
 import { Settings } from "webgl-test-shared/dist/settings";
-import { Point, TileCoordinates, lerp } from "webgl-test-shared/dist/utils";
+import { Point, TileCoordinates, lerp, randFloat } from "webgl-test-shared/dist/utils";
 import { generateOctavePerlinNoise } from "../perlin-noise";
 import Board from "../Board";
 import SRandom from "../SRandom";
@@ -416,7 +416,7 @@ export function generateRiverFeatures(riverTiles: ReadonlyArray<WaterTileGenerat
             position: [x, y],
             size: SRandom.randInt(0, 1),
             rotation: 2 * Math.PI * SRandom.next(),
-            opacity: SRandom.next()
+            opacity: randFloat(0.6, 1)
          });
       }
 

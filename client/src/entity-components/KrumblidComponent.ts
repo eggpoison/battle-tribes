@@ -1,3 +1,5 @@
+import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 import ServerComponent from "./ServerComponent";
 
 class KrumblidComponent extends ServerComponent {
@@ -6,3 +8,5 @@ class KrumblidComponent extends ServerComponent {
 }
 
 export default KrumblidComponent;
+
+export const KrumblidComponentArray = new ComponentArray<KrumblidComponent>(ComponentArrayType.server, ServerComponentType.krumblid, {});

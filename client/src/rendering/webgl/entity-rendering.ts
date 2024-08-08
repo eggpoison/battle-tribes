@@ -14,10 +14,12 @@ const enum Vars {
 
 let program: WebGLProgram;
 let vao: WebGLVertexArrayObject;
-let buffer: WebGLBuffer;
 let indexBuffer: WebGLBuffer;
 
 let vertexBuffer: WebGLBuffer;
+const indicesData = new Uint16Array(6 * Vars.MAX_RENDER_PARTS);
+// @Incomplete: investigate
+// const indicesData = new Uint16Array([0, 1, 2, 2, 1, 3]);
 
 let depthData: Float32Array;
 let depthBuffer: WebGLBuffer;
@@ -37,6 +39,9 @@ const bufferIndexToEntityRecord: Partial<Record<number, EntityID>> = {};
 const bufferIndexToOffsetAmount: Partial<Record<number, number>> = {};
 
 const entityRenderHeightMap = new WeakMap<Entity, number>();
+
+let previousRenderStartBufferOffset = 0;
+let previousRenderEndBufferOffset = 0;
 
 export function createEntityShaders(): void {
    const vertexShaderText = `#version 300 es
@@ -170,82 +175,80 @@ export function createEntityShaders(): void {
    gl.useProgram(program);
    gl.uniform1i(textureUniformLocation, 0);
 
-   // 
-   // Create VAO
-   // 
-
    vao = gl.createVertexArray()!;
    gl.bindVertexArray(vao);
-
-   buffer = gl.createBuffer()!;
-   gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-
-   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, Vars.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT, 0);
-   gl.vertexAttribPointer(1, 1, gl.FLOAT, false, Vars.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT, 2 * Float32Array.BYTES_PER_ELEMENT);
-   gl.vertexAttribPointer(2, 1, gl.FLOAT, false, Vars.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT, 3 * Float32Array.BYTES_PER_ELEMENT);
-   gl.vertexAttribPointer(3, 3, gl.FLOAT, false, Vars.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT, 4 * Float32Array.BYTES_PER_ELEMENT);
-   gl.vertexAttribPointer(4, 1, gl.FLOAT, false, Vars.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT, 7 * Float32Array.BYTES_PER_ELEMENT);
-
-   gl.vertexAttribPointer(5, 3, gl.FLOAT, false, Vars.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT, 8 * Float32Array.BYTES_PER_ELEMENT);
-   gl.vertexAttribPointer(6, 3, gl.FLOAT, false, Vars.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT, 11 * Float32Array.BYTES_PER_ELEMENT);
-   gl.vertexAttribPointer(7, 3, gl.FLOAT, false, Vars.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT, 14 * Float32Array.BYTES_PER_ELEMENT);
-   
-   gl.enableVertexAttribArray(0);
-   gl.enableVertexAttribArray(1);
-   gl.enableVertexAttribArray(2);
-   gl.enableVertexAttribArray(3);
-   gl.enableVertexAttribArray(4);
-   gl.enableVertexAttribArray(5);
-   gl.enableVertexAttribArray(6);
-   gl.enableVertexAttribArray(7);
 
    indexBuffer = gl.createBuffer()!;
    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
 
-   gl.bindVertexArray(null);
-
-   const vertexData = new Float32Array(12);
+   const vertexData = new Float32Array(8);
    vertexData[0] = -0.5;
    vertexData[1] = -0.5;
    vertexData[2] = 0.5;
    vertexData[3] = -0.5;
    vertexData[4] = -0.5;
    vertexData[5] = 0.5;
-   vertexData[6] = -0.5;
+   vertexData[6] = 0.5;
    vertexData[7] = 0.5;
-   vertexData[8] = 0.5;
-   vertexData[9] = -0.5;
-   vertexData[10] = 0.5;
-   vertexData[11] = 0.5;
 
    vertexBuffer = gl.createBuffer()!;
    gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
    gl.bufferData(gl.ARRAY_BUFFER, vertexData, gl.STATIC_DRAW);
+   gl.enableVertexAttribArray(0);
+   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
 
+   // Depth buffer
    depthData = new Float32Array(Vars.MAX_RENDER_PARTS);
    depthBuffer = gl.createBuffer()!;
    gl.bindBuffer(gl.ARRAY_BUFFER, depthBuffer);
    gl.bufferData(gl.ARRAY_BUFFER, depthData, gl.DYNAMIC_DRAW);
+   gl.enableVertexAttribArray(1);
+   gl.vertexAttribPointer(1, 1, gl.FLOAT, false, Float32Array.BYTES_PER_ELEMENT, 0);
+   gl.vertexAttribDivisor(1, 1);
 
+   // Texture array index buffer
    textureArrayIndexData = new Float32Array(Vars.MAX_RENDER_PARTS);
    textureArrayIndexBuffer = gl.createBuffer()!;
    gl.bindBuffer(gl.ARRAY_BUFFER, textureArrayIndexBuffer);
    gl.bufferData(gl.ARRAY_BUFFER, textureArrayIndexData, gl.DYNAMIC_DRAW);
+   gl.enableVertexAttribArray(2);
+   gl.vertexAttribPointer(2, 1, gl.FLOAT, false, Float32Array.BYTES_PER_ELEMENT, 0);
+   gl.vertexAttribDivisor(2, 1);
 
+   // Tint buffer
    tintData = new Float32Array(3 * Vars.MAX_RENDER_PARTS);
    tintBuffer = gl.createBuffer()!;
    gl.bindBuffer(gl.ARRAY_BUFFER, tintBuffer);
    gl.bufferData(gl.ARRAY_BUFFER, tintData, gl.DYNAMIC_DRAW);
+   gl.enableVertexAttribArray(3);
+   gl.vertexAttribPointer(3, 3, gl.FLOAT, false, 3 * Float32Array.BYTES_PER_ELEMENT, 0);
+   gl.vertexAttribDivisor(3, 1);
 
+   // Opacity buffer
    opacityData = new Float32Array(Vars.MAX_RENDER_PARTS);
    opacityBuffer = gl.createBuffer()!;
    gl.bindBuffer(gl.ARRAY_BUFFER, opacityBuffer);
    gl.bufferData(gl.ARRAY_BUFFER, opacityData, gl.DYNAMIC_DRAW);
+   gl.enableVertexAttribArray(4);
+   gl.vertexAttribPointer(4, 1, gl.FLOAT, false, Float32Array.BYTES_PER_ELEMENT, 0);
+   gl.vertexAttribDivisor(4, 1);
 
+   // Model matrix buffer
    modelMatrixData = new Float32Array(9 * Vars.MAX_RENDER_PARTS);
    modelMatrixBuffer = gl.createBuffer()!;
    gl.bindBuffer(gl.ARRAY_BUFFER, modelMatrixBuffer);
    gl.bufferData(gl.ARRAY_BUFFER, modelMatrixData, gl.DYNAMIC_DRAW);
+   gl.enableVertexAttribArray(5);
+   gl.vertexAttribPointer(5, 3, gl.FLOAT, false, 9 * Float32Array.BYTES_PER_ELEMENT, 0);
+   gl.vertexAttribDivisor(5, 1);
+   gl.enableVertexAttribArray(6);
+   gl.vertexAttribPointer(6, 3, gl.FLOAT, false, 9 * Float32Array.BYTES_PER_ELEMENT, 3 * Float32Array.BYTES_PER_ELEMENT);
+   gl.vertexAttribDivisor(6, 1);
+   gl.enableVertexAttribArray(7);
+   gl.vertexAttribPointer(7, 3, gl.FLOAT, false, 9 * Float32Array.BYTES_PER_ELEMENT, 6 * Float32Array.BYTES_PER_ELEMENT);
+   gl.vertexAttribDivisor(7, 1);
+
+   gl.bindVertexArray(null);
 }
 
 export function addEntityToRenderHeightMap(entity: Entity): void {
@@ -273,6 +276,13 @@ const setData = (entity: Entity, bufferIndex: number): void => {
    tintData.set(entity.tintData, 3 * offsetAmount);
    opacityData.set(entity.opacityData, offsetAmount);
    modelMatrixData.set(entity.modelMatrixData, 9 * offsetAmount);
+
+   indicesData[offsetAmount * 6] = 0;
+   indicesData[offsetAmount * 6 + 1] = 1;
+   indicesData[offsetAmount * 6 + 2] = 2;
+   indicesData[offsetAmount * 6 + 3] = 2;
+   indicesData[offsetAmount * 6 + 4] = 1;
+   indicesData[offsetAmount * 6 + 5] = 3;
 }
 
 const clearData = (bufferIndex: number): void => {
@@ -612,11 +622,14 @@ export function calculateRenderPartDepth(renderPart: RenderPart, entity: Entity)
 
 // @Speed: VBO
 export function renderEntities(startEntityID: EntityID, endEntityID: EntityID): void {
+   const numPrevousRenderedRenderParts = previousRenderEndBufferOffset - previousRenderStartBufferOffset + 1;
+   
+   const startEntity = Board.entityRecord[startEntityID]!;
    const startBufferIndex = entityIDToBufferIndexRecord[startEntityID]!;
-   const startBufferOffset = bufferIndexToOffsetAmount[startBufferIndex]!;
+   const startBufferOffset = bufferIndexToOffsetAmount[startBufferIndex]! - startEntity.allRenderParts.length;
 
    const endBufferIndex = entityIDToBufferIndexRecord[endEntityID]!;
-   const endBufferOffset = bufferIndexToOffsetAmount[endBufferIndex]!;
+   const endBufferOffset = bufferIndexToOffsetAmount[endBufferIndex]! - 1;
 
    const textureAtlas = getEntityTextureAtlas();
 
@@ -632,64 +645,44 @@ export function renderEntities(startEntityID: EntityID, endEntityID: EntityID): 
    gl.bindVertexArray(vao);
 
    gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
-   gl.enableVertexAttribArray(0);
 
-   // @Speed: not all parts of these buffers are updated every frame!
+   // @Speed
+   const indexBuffer = gl.createBuffer()!;
+   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+   gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indicesData, gl.STATIC_DRAW);
 
    // Depth buffer
    gl.bindBuffer(gl.ARRAY_BUFFER, depthBuffer);
-   gl.bufferSubData(gl.ARRAY_BUFFER, 0, depthData);
-   gl.vertexAttribPointer(1, 1, gl.FLOAT, false, 0, 0);
-   gl.enableVertexAttribArray(1);
-   gl.vertexAttribDivisor(1, 1);
+   gl.bufferSubData(gl.ARRAY_BUFFER, Float32Array.BYTES_PER_ELEMENT * previousRenderStartBufferOffset, new Float32Array(numPrevousRenderedRenderParts));
+   gl.bufferSubData(gl.ARRAY_BUFFER, 0, depthData.subarray(startBufferOffset, endBufferOffset));
 
    // Texture array index buffer
    gl.bindBuffer(gl.ARRAY_BUFFER, textureArrayIndexBuffer);
-   gl.bufferSubData(gl.ARRAY_BUFFER, 0, textureArrayIndexData);
-   gl.vertexAttribPointer(2, 1, gl.FLOAT, false, 0, 0);
-   gl.enableVertexAttribArray(2);
-   gl.vertexAttribDivisor(2, 1);
+   gl.bufferSubData(gl.ARRAY_BUFFER, Float32Array.BYTES_PER_ELEMENT * previousRenderStartBufferOffset, new Float32Array(numPrevousRenderedRenderParts));
+   gl.bufferSubData(gl.ARRAY_BUFFER, 0, textureArrayIndexData.subarray(startBufferOffset, endBufferOffset));
 
    // Tint buffer
    gl.bindBuffer(gl.ARRAY_BUFFER, tintBuffer);
-   gl.bufferSubData(gl.ARRAY_BUFFER, 0, tintData);
-   gl.vertexAttribPointer(3, 3, gl.FLOAT, false, 0, 0);
-   gl.enableVertexAttribArray(3);
-   gl.vertexAttribDivisor(3, 1);
+   gl.bufferSubData(gl.ARRAY_BUFFER, Float32Array.BYTES_PER_ELEMENT * 3 * previousRenderStartBufferOffset, new Float32Array(numPrevousRenderedRenderParts * 3));
+   gl.bufferSubData(gl.ARRAY_BUFFER, 0, tintData.subarray(startBufferOffset * 3, endBufferOffset * 3));
 
    // Opacity buffer
    gl.bindBuffer(gl.ARRAY_BUFFER, opacityBuffer);
-   gl.bufferSubData(gl.ARRAY_BUFFER, 0, opacityData);
-   gl.vertexAttribPointer(4, 1, gl.FLOAT, false, 0, 0);
-   gl.enableVertexAttribArray(4);
-   gl.vertexAttribDivisor(4, 1);
+   gl.bufferSubData(gl.ARRAY_BUFFER, Float32Array.BYTES_PER_ELEMENT * previousRenderStartBufferOffset, new Float32Array(numPrevousRenderedRenderParts));
+   gl.bufferSubData(gl.ARRAY_BUFFER, 0, opacityData.subarray(startBufferOffset, endBufferOffset));
 
    // Model matrix buffer
    gl.bindBuffer(gl.ARRAY_BUFFER, modelMatrixBuffer);
-   gl.bufferSubData(gl.ARRAY_BUFFER, 0, modelMatrixData);
-   gl.vertexAttribPointer(5, 3, gl.FLOAT, false, 9 * Float32Array.BYTES_PER_ELEMENT, 0);
-   gl.enableVertexAttribArray(5);
-   gl.vertexAttribDivisor(5, 1);
-   gl.vertexAttribPointer(6, 3, gl.FLOAT, false, 9 * Float32Array.BYTES_PER_ELEMENT, 3 * Float32Array.BYTES_PER_ELEMENT);
-   gl.enableVertexAttribArray(6);
-   gl.vertexAttribDivisor(6, 1);
-   gl.vertexAttribPointer(7, 3, gl.FLOAT, false, 9 * Float32Array.BYTES_PER_ELEMENT, 6 * Float32Array.BYTES_PER_ELEMENT);
-   gl.enableVertexAttribArray(7);
-   gl.vertexAttribDivisor(7, 1);
+   gl.bufferSubData(gl.ARRAY_BUFFER, Float32Array.BYTES_PER_ELEMENT * 9 * previousRenderStartBufferOffset, new Float32Array(numPrevousRenderedRenderParts * 9));
+   gl.bufferSubData(gl.ARRAY_BUFFER, 0, modelMatrixData.subarray(startBufferOffset * 9, endBufferOffset * 9));
 
-   gl.drawArraysInstanced(gl.TRIANGLES, 0, 6, endBufferOffset - startBufferOffset + 1);
+   gl.drawElementsInstanced(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0, endBufferOffset - startBufferOffset + 1);
    
-   gl.vertexAttribDivisor(1, 0);
-   gl.vertexAttribDivisor(2, 0);
-   gl.vertexAttribDivisor(3, 0);
-   gl.vertexAttribDivisor(4, 0);
-   gl.vertexAttribDivisor(5, 0);
-   gl.vertexAttribDivisor(6, 0);
-   gl.vertexAttribDivisor(7, 0);
+   gl.bindVertexArray(null);
 
    gl.disable(gl.BLEND);
    gl.blendFunc(gl.ONE, gl.ZERO);
 
-   gl.bindVertexArray(null);
+   previousRenderStartBufferOffset = startBufferOffset;
+   previousRenderEndBufferOffset = endBufferOffset;
 }

@@ -5,6 +5,7 @@ import { createPaperParticle } from "../particles";
 import { getRandomPointInEntity } from "./TransformComponent";
 import { PacketReader } from "webgl-test-shared/dist/packets";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 
 class ResearchBenchComponent extends ServerComponent {
    public isOccupied: boolean;
@@ -14,14 +15,6 @@ class ResearchBenchComponent extends ServerComponent {
       
       this.isOccupied = reader.readBoolean();
       reader.padOffset(3);
-   }
-
-   public tick(): void {
-      const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
-      if (this.isOccupied && customTickIntervalHasPassed(transformComponent.ageTicks, 0.3)) {
-         const pos = getRandomPointInEntity(transformComponent);
-         createPaperParticle(pos.x, pos.y);
-      }
    }
 
    public padData(reader: PacketReader): void {
@@ -35,3 +28,15 @@ class ResearchBenchComponent extends ServerComponent {
 }
 
 export default ResearchBenchComponent;
+
+export const ResearchBenchComponentArray = new ComponentArray<ResearchBenchComponent>(ComponentArrayType.server, ServerComponentType.researchBench, {
+   onTick: onTick
+});
+
+function onTick(researchBenchComponent: ResearchBenchComponent): void {
+   const transformComponent = researchBenchComponent.entity.getServerComponent(ServerComponentType.transform);
+   if (researchBenchComponent.isOccupied && customTickIntervalHasPassed(transformComponent.ageTicks, 0.3)) {
+      const pos = getRandomPointInEntity(transformComponent);
+      createPaperParticle(pos.x, pos.y);
+   }
+}

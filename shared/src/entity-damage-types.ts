@@ -276,6 +276,10 @@ const ENTITY_DAMAGE_INFO_RECORD: Record<EntityType, EntityDamageInfo> = {
    [EntityType.lilypad]: {
       effectiveDamageTypes: [],
       stoppedDamageTypes: []
+   },
+   [EntityType.fibrePlant]: {
+      effectiveDamageTypes: [],
+      stoppedDamageTypes: []
    }
 };
 

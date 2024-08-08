@@ -3,6 +3,8 @@ import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import { RenderPart } from "../render-parts/render-parts";
 import { PacketReader } from "webgl-test-shared/dist/packets";
+import { ComponentArray, ComponentArrayType } from "./ComponentArray";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 
 interface DoorInfo {
    readonly offsetX: number;
@@ -68,3 +70,5 @@ class FenceGateComponent extends ServerComponent {
 }
 
 export default FenceGateComponent;
+
+export const FenceGateComponentArray = new ComponentArray<FenceGateComponent>(ComponentArrayType.server, ServerComponentType.fenceGate, {});

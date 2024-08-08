@@ -199,7 +199,7 @@ const interactWithEntity = (entity: Entity, action: InteractAction): void => {
          // @Hack
          const inventoryUseComponent = Player.instance!.getServerComponent(ServerComponentType.inventoryUse);
          const hotbarUseInfo = inventoryUseComponent.getUseInfo(InventoryName.hotbar);
-         hotbarUseInfo.lastAttackTicks = Board.ticks;
+         hotbarUseInfo.lastAttackTicks = Board.serverTicks;
          
          break;
       }
@@ -209,7 +209,7 @@ const interactWithEntity = (entity: Entity, action: InteractAction): void => {
          // @Hack
          const inventoryUseComponent = Player.instance!.getServerComponent(ServerComponentType.inventoryUse);
          const hotbarUseInfo = inventoryUseComponent.getUseInfo(InventoryName.hotbar);
-         hotbarUseInfo.lastAttackTicks = Board.ticks;
+         hotbarUseInfo.lastAttackTicks = Board.serverTicks;
 
          break;
       }
@@ -219,7 +219,7 @@ const interactWithEntity = (entity: Entity, action: InteractAction): void => {
          // @Hack
          const inventoryUseComponent = Player.instance!.getServerComponent(ServerComponentType.inventoryUse);
          const hotbarUseInfo = inventoryUseComponent.getUseInfo(InventoryName.hotbar);
-         hotbarUseInfo.lastAttackTicks = Board.ticks;
+         hotbarUseInfo.lastAttackTicks = Board.serverTicks;
          
          break;
       }
@@ -235,7 +235,7 @@ const interactWithEntity = (entity: Entity, action: InteractAction): void => {
          // @Hack
          const inventoryUseComponent = Player.instance!.getServerComponent(ServerComponentType.inventoryUse);
          const hotbarUseInfo = inventoryUseComponent.getUseInfo(InventoryName.hotbar);
-         hotbarUseInfo.lastAttackTicks = Board.ticks;
+         hotbarUseInfo.lastAttackTicks = Board.serverTicks;
 
          break;
       }

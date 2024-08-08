@@ -1,6 +1,7 @@
 import { Point, rotateXAroundPoint, rotateYAroundPoint } from "webgl-test-shared/dist/utils";
 import { createIdentityMatrix } from "../rendering/matrices";
 import { RenderObject, RenderPart } from "./render-parts";
+import Board from "../Board";
 
 let idCounter = 0;
 
@@ -15,18 +16,10 @@ export abstract class BaseRenderObject {
    // @Cleanup: change to total rotation
    public totalParentRotation = 0;
 
-   public tintR = 0;
-   public tintG = 0;
-   public tintB = 0;
-
-   public modelMatrix = createIdentityMatrix();
+   public readonly modelMatrix = createIdentityMatrix();
 
    public modelMatrixIsDirty = true;
-
-   public depthData = new Float32Array(1);
-   public textureArrayIndexData = new Float32Array(1);
-   public tintData = new Float32Array(3);
-   public opacityData = new Float32Array(1);
+   
    public modelMatrixData = new Float32Array(9);
 
    public dirty(): void {
@@ -42,8 +35,8 @@ abstract class BaseRenderPart extends BaseRenderObject {
    public readonly id: number;
    public readonly parent: BaseRenderObject;
 
-   /** Age of the render part in ticks */
-   public age = 0;
+   /** The point in time when the render part was created */
+   private creationTicks = Board.serverTicks;
 
    public readonly offset = new Point(0, 0)
    public readonly zIndex: number;
@@ -52,6 +45,10 @@ abstract class BaseRenderPart extends BaseRenderObject {
    public opacity = 1;
    public scale = 1;
    public shakeAmount = 0;
+
+   public tintR = 0;
+   public tintG = 0;
+   public tintB = 0;
    
    /** Whether or not the render part will inherit its parents' rotation */
    public inheritParentRotation = true;
@@ -66,6 +63,10 @@ abstract class BaseRenderPart extends BaseRenderObject {
       this.parent = parent;
       this.zIndex = zIndex;
       this.rotation = rotation;
+   }
+
+   public getAge(): number {
+      return Board.serverTicks - this.creationTicks;
    }
 
    public dirty(): void {

@@ -2,8 +2,7 @@ import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { angle, randFloat } from "webgl-test-shared/dist/utils";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
-import { createEmberParticle, createRockParticle, createRockSpeckParticle, createSmokeParticle } from "../particles";
-import Board from "../Board";
+import { createRockParticle, createRockSpeckParticle } from "../particles";
 import Entity from "../Entity";
 import { ParticleRenderLayer } from "../rendering/webgl/particle-rendering";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
@@ -22,37 +21,6 @@ class Furnace extends Entity {
             getTextureArrayIndex("entities/furnace/furnace.png")
          )
       );
-   }
-
-   public tick(): void {
-      super.tick();
-
-      const cookingComponent = this.getServerComponent(ServerComponentType.cooking);
-      if (cookingComponent.isCooking) {
-         const transformComponent = this.getServerComponent(ServerComponentType.transform);
-
-         // Smoke particles
-         if (Board.tickIntervalHasPassed(0.1)) {
-            const spawnOffsetMagnitude = 20 * Math.random();
-            const spawnOffsetDirection = 2 * Math.PI * Math.random();
-            const spawnPositionX = transformComponent.position.x + spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
-            const spawnPositionY = transformComponent.position.y + spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
-            createSmokeParticle(spawnPositionX, spawnPositionY);
-         }
-
-         // Ember particles
-         if (Board.tickIntervalHasPassed(0.05)) {
-            let spawnPositionX = transformComponent.position.x - 30 * Math.sin(transformComponent.rotation);
-            let spawnPositionY = transformComponent.position.y - 30 * Math.cos(transformComponent.rotation);
-
-            const spawnOffsetMagnitude = 11 * Math.random();
-            const spawnOffsetDirection = 2 * Math.PI * Math.random();
-            spawnPositionX += spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
-            spawnPositionY += spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
-
-            createEmberParticle(spawnPositionX, spawnPositionY, transformComponent.rotation + Math.PI + randFloat(-0.8, 0.8), randFloat(80, 120));
-         }
-      }
    }
 
    protected onHit(): void {

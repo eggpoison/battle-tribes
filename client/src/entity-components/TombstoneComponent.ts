@@ -8,12 +8,13 @@ import { createDirtParticle } from "../particles";
 import { playSound, AudioFilePath } from "../sound";
 import { ParticleRenderLayer } from "../rendering/webgl/particle-rendering";
 import { PacketReader } from "webgl-test-shared/dist/packets";
+import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 
 class TombstoneComponent extends ServerComponent {
    public readonly tombstoneType: number;
-   private zombieSpawnProgress: number;
-   private zombieSpawnX: number;
-   private zombieSpawnY: number;
+   public zombieSpawnProgress: number;
+   public zombieSpawnX: number;
+   public zombieSpawnY: number;
    public readonly deathInfo: DeathInfo | null;
 
    constructor(entity: Entity, reader: PacketReader) {
@@ -36,26 +37,6 @@ class TombstoneComponent extends ServerComponent {
          };
       } else {
          this.deathInfo = null;
-      }
-   }
-
-   public tick(): void {
-      if (this.zombieSpawnProgress !== -1) {
-         // Create zombie digging particles
-         if (this.zombieSpawnProgress < 0.8) {
-            if (Math.random() < 7.5 / Settings.TPS) {
-               createDirtParticle(this.zombieSpawnX, this.zombieSpawnY, ParticleRenderLayer.low);
-            }
-         } else {
-            if (Math.random() < 20 / Settings.TPS) {
-               createDirtParticle(this.zombieSpawnX, this.zombieSpawnY, ParticleRenderLayer.low);
-            }
-         }
-
-         const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
-         if (transformComponent.ageTicks % 6 === 0) {
-            playSound(("zombie-dig-" + randInt(1, 5) + ".mp3") as AudioFilePath, 0.15, 1, new Point(this.zombieSpawnX, this.zombieSpawnY));
-         }
       }
    }
 
@@ -84,3 +65,27 @@ class TombstoneComponent extends ServerComponent {
 }
 
 export default TombstoneComponent;
+
+export const TombstoneComponentArray = new ComponentArray<TombstoneComponent>(ComponentArrayType.server, ServerComponentType.tombstone, {
+   onTick: onTick
+});
+
+function onTick(tombstoneComponent: TombstoneComponent): void {
+   if (tombstoneComponent.zombieSpawnProgress !== -1) {
+      // Create zombie digging particles
+      if (tombstoneComponent.zombieSpawnProgress < 0.8) {
+         if (Math.random() < 7.5 / Settings.TPS) {
+            createDirtParticle(tombstoneComponent.zombieSpawnX, tombstoneComponent.zombieSpawnY, ParticleRenderLayer.low);
+         }
+      } else {
+         if (Math.random() < 20 / Settings.TPS) {
+            createDirtParticle(tombstoneComponent.zombieSpawnX, tombstoneComponent.zombieSpawnY, ParticleRenderLayer.low);
+         }
+      }
+
+      const transformComponent = tombstoneComponent.entity.getServerComponent(ServerComponentType.transform);
+      if (transformComponent.ageTicks % 6 === 0) {
+         playSound(("zombie-dig-" + randInt(1, 5) + ".mp3") as AudioFilePath, 0.15, 1, new Point(tombstoneComponent.zombieSpawnX, tombstoneComponent.zombieSpawnY));
+      }
+   }
+}

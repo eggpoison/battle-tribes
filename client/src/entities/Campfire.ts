@@ -30,32 +30,6 @@ class Campfire extends Entity {
          playSound("wooden-wall-place.mp3", 0.3, 1, transformComponent.position);
       }
    }
-
-   public tick(): void {
-      super.tick();
-
-      // Smoke particles
-      if (Board.tickIntervalHasPassed(0.1)) {
-         const transformComponent = this.getServerComponent(ServerComponentType.transform);
-
-         const spawnOffsetMagnitude = 20 * Math.random();
-         const spawnOffsetDirection = 2 * Math.PI * Math.random();
-         const spawnPositionX = transformComponent.position.x + spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
-         const spawnPositionY = transformComponent.position.y + spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
-         createSmokeParticle(spawnPositionX, spawnPositionY);
-      }
-
-      // Ember particles
-      if (Board.tickIntervalHasPassed(0.05)) {
-         const transformComponent = this.getServerComponent(ServerComponentType.transform);
-         
-         const spawnOffsetMagnitude = 30 * Math.random();
-         const spawnOffsetDirection = 2 * Math.PI * Math.random();
-         const spawnPositionX = transformComponent.position.x + spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
-         const spawnPositionY = transformComponent.position.y + spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
-         createEmberParticle(spawnPositionX, spawnPositionY, 2 * Math.PI * Math.random(), randFloat(100, 140));
-      }
-   }
 }
 
 export default Campfire;

@@ -1,12 +1,8 @@
 import { EntityType } from "webgl-test-shared/dist/entities";
-import { lerp, randFloat } from "webgl-test-shared/dist/utils";
 import Entity from "./Entity";
 import { DecorationType, ServerComponentType } from "webgl-test-shared/dist/components";
 
-const MIN_RENDER_DEPTH = -0.95;
-const MAX_RENDER_DEPTH = 0.95;
-
-enum RenderLayer {
+export enum RenderLayer {
    lowDecorations,
    grass,
    highDecorations,
@@ -25,29 +21,23 @@ enum RenderLayer {
 }
 const NUM_RENDER_LAYERS = Object.keys(RenderLayer).length / 2;
 
+const MAX_RENDER_HEIGHT = NUM_RENDER_LAYERS;
+
 /*
  * Each render layer is split into a distinct chunk of the -1 -> 1 period of render depths.
 */
 
 // @Incomplete: there needs to be some padding between render layers so render parts don't leak into higher render layers
 
+export function getMaxRenderHeightForRenderLayer(renderLayer: RenderLayer): number {
+   const rawRenderHeight = renderLayer + 0.9999;
+   return rawRenderHeight / MAX_RENDER_HEIGHT * 2 - 1;
+}
+
 const calculateRenderDepthFromLayer = (renderLayer: RenderLayer): number => {
-   // @Temporary
-   // return Math.random();
-   // if (renderLayer === RenderLayer.reeds) {
-   //    return renderLayer + Math.random() * 0.000000001;
-   // } else {
-   //    return renderLayer + Math.random() * 0.9;
-   // }
-   
-   let min = lerp(-1, 1, renderLayer / NUM_RENDER_LAYERS);
-   let max = min + 1 / NUM_RENDER_LAYERS;
-
-   // Account for the bounds
-   min = lerp(MIN_RENDER_DEPTH, MAX_RENDER_DEPTH, (min + 1) / 2);
-   max = lerp(MIN_RENDER_DEPTH, MAX_RENDER_DEPTH, (max + 1) / 2);
-
-   return randFloat(min, max);
+   const rawRenderHeight = renderLayer + Math.random() * 0.9;
+   // Convert from [0, 1] to [-1, 1];
+   return rawRenderHeight / MAX_RENDER_HEIGHT * 2 - 1;
 }
 
 const decorationIsHigh = (decorationType: DecorationType): boolean => {

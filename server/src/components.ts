@@ -60,6 +60,8 @@ import { SpitPoisonAreaComponent, SpitPoisonAreaComponentParams } from "./compon
 import { BattleaxeProjectileComponent, BattleaxeProjectileComponentParams } from "./components/BattleaxeProjectileComponent";
 import { KrumblidComponent, KrumblidComponentParams } from "./components/KrumblidComponent";
 import { SpearProjectileComponent, SpearProjectileComponentParams } from "./components/SpearProjectileComponent";
+import { PunjiSticksComponent, PunjiSticksComponentParams } from "./components/PunjiSticksComponent";
+import { IceArrowComponent, IceArrowComponentParams } from "./components/IceArrowComponent";
 
 const ComponentParamsRecord = {
    [ServerComponentType.aiHelper]: (): AIHelperComponentParams => 0 as any,
@@ -98,6 +100,7 @@ const ComponentParamsRecord = {
    [ServerComponentType.tunnel]: (): TunnelComponentParams => 0 as any,
    [ServerComponentType.buildingMaterial]: (): BuildingMaterialComponentParams => 0 as any,
    [ServerComponentType.spikes]: (): SpikesComponentParams => 0 as any,
+   [ServerComponentType.punjiSticks]: (): PunjiSticksComponentParams => 0 as any,
    [ServerComponentType.tribeMember]: (): TribeMemberComponentParams => 0 as any,
    [ServerComponentType.healingTotem]: (): HealingTotemComponentParams => 0 as any,
    [ServerComponentType.planterBox]: (): PlanterBoxComponentParams => 0 as any,
@@ -117,6 +120,7 @@ const ComponentParamsRecord = {
    [ServerComponentType.craftingStation]: (): CraftingStationComponentParams => 0 as any,
    [ServerComponentType.transform]: (): TransformComponentParams => 0 as any,
    [ServerComponentType.projectile]: (): ProjectileComponentParams => 0 as any,
+   [ServerComponentType.iceArrow]: (): IceArrowComponentParams => 0 as any,
    [ServerComponentType.layeredRod]: (): LayeredRodComponentParams => 0 as any,
    [ServerComponentType.decoration]: (): DecorationComponentParams => 0 as any,
    [ServerComponentType.spitPoisonArea]: (): SpitPoisonAreaComponentParams => 0 as any,
@@ -165,6 +169,7 @@ export const ComponentClassRecord = {
    [ServerComponentType.tunnel]: () => TunnelComponent,
    [ServerComponentType.buildingMaterial]: () => BuildingMaterialComponent,
    [ServerComponentType.spikes]: () => SpikesComponent,
+   [ServerComponentType.punjiSticks]: () => PunjiSticksComponent,
    [ServerComponentType.tribeMember]: () => TribeMemberComponent,
    [ServerComponentType.healingTotem]: () => HealingTotemComponent,
    [ServerComponentType.planterBox]: () => PlanterBoxComponent,
@@ -184,6 +189,7 @@ export const ComponentClassRecord = {
    [ServerComponentType.craftingStation]: () => CraftingStationComponent,
    [ServerComponentType.transform]: () => TransformComponent,
    [ServerComponentType.projectile]: () => ProjectileComponent,
+   [ServerComponentType.iceArrow]: () => IceArrowComponent,
    [ServerComponentType.layeredRod]: () => LayeredRodComponent,
    [ServerComponentType.decoration]: () => DecorationComponent,
    [ServerComponentType.spitPoisonArea]: () => SpitPoisonAreaComponent,

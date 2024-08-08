@@ -19,7 +19,8 @@ type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.statusEffect
    | ServerComponentType.structure
    | ServerComponentType.tribe
-   | ServerComponentType.spikes;
+   | ServerComponentType.spikes
+   | ServerComponentType.punjiSticks;
 
 export function createFloorPunjiSticksConfig(): ComponentConfig<ComponentTypes> {
    return {
@@ -44,7 +45,8 @@ export function createFloorPunjiSticksConfig(): ComponentConfig<ComponentTypes> 
          tribe: null,
          tribeType: 0
       },
-      [ServerComponentType.spikes]: {}
+      [ServerComponentType.spikes]: {},
+      [ServerComponentType.punjiSticks]: {}
    };
 }
 
@@ -71,7 +73,8 @@ export function createWallPunjiSticksConfig(): ComponentConfig<ComponentTypes> {
          tribe: null,
          tribeType: 0
       },
-      [ServerComponentType.spikes]: {}
+      [ServerComponentType.spikes]: {},
+      [ServerComponentType.punjiSticks]: {}
    };
 }
 

@@ -8,6 +8,7 @@ import { LeafParticleSize, createLeafParticle, createLeafSpeckParticle } from ".
 import { RenderPart } from "../render-parts/render-parts";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { PacketReader } from "webgl-test-shared/dist/packets";
+import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 
 export const NUM_SMALL_COVER_LEAVES = 8;
 export const NUM_LARGE_COVER_LEAVES = 3;
@@ -114,3 +115,5 @@ class SpikesComponent extends ServerComponent {
 }
 
 export default SpikesComponent;
+
+export const SpikesComponentArray = new ComponentArray<SpikesComponent>(ComponentArrayType.server, ServerComponentType.spikes, {});

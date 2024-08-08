@@ -9,32 +9,17 @@ import { AudioFilePath, playSound } from "../sound";
 import { ParticleRenderLayer } from "../rendering/webgl/particle-rendering";
 import { CowSpecies } from "webgl-test-shared/dist/entities";
 import { PacketReader } from "webgl-test-shared/dist/packets";
+import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 
 class CowComponent extends ServerComponent {
    public readonly species: CowSpecies;
-   private grazeProgress: number;
+   public grazeProgress: number;
 
    constructor(entity: Entity, reader: PacketReader) {
       super(entity);
 
       this.species = reader.readNumber();
       this.grazeProgress = reader.readNumber();
-   }
-
-   public tick(): void {
-      const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
-
-      if (this.grazeProgress !== -1 && Board.tickIntervalHasPassed(0.1)) {
-         const spawnOffsetMagnitude = 30 * Math.random();
-         const spawnOffsetDirection = 2 * Math.PI * Math.random();
-         const spawnPositionX = transformComponent.position.x + spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
-         const spawnPositionY = transformComponent.position.y + spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
-         createDirtParticle(spawnPositionX, spawnPositionY, ParticleRenderLayer.low);
-      }
-
-      if (Math.random() < 0.1 / Settings.TPS) {
-         playSound(("cow-ambient-" + randInt(1, 3) + ".mp3") as AudioFilePath, 0.2, 1, transformComponent.position);
-      }
    }
 
    public padData(reader: PacketReader): void {
@@ -59,3 +44,23 @@ class CowComponent extends ServerComponent {
 }
 
 export default CowComponent;
+
+export const CowComponentArray = new ComponentArray<CowComponent>(ComponentArrayType.server, ServerComponentType.cow, {
+   onTick: onTick
+});
+
+function onTick(cowComponent: CowComponent): void {
+   const transformComponent = cowComponent.entity.getServerComponent(ServerComponentType.transform);
+
+   if (cowComponent.grazeProgress !== -1 && Board.tickIntervalHasPassed(0.1)) {
+      const spawnOffsetMagnitude = 30 * Math.random();
+      const spawnOffsetDirection = 2 * Math.PI * Math.random();
+      const spawnPositionX = transformComponent.position.x + spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
+      const spawnPositionY = transformComponent.position.y + spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
+      createDirtParticle(spawnPositionX, spawnPositionY, ParticleRenderLayer.low);
+   }
+
+   if (Math.random() < 0.1 / Settings.TPS) {
+      playSound(("cow-ambient-" + randInt(1, 3) + ".mp3") as AudioFilePath, 0.2, 1, transformComponent.position);
+   }
+}

@@ -109,7 +109,7 @@ const completeOrb = (): void => {
    // Make the player smack to the bench
    const inventoryUseComponent = Player.instance!.getServerComponent(ServerComponentType.inventoryUse);
    const useInfo = inventoryUseComponent.useInfos[0];
-   useInfo.lastAttackTicks = Board.ticks;
+   useInfo.lastAttackTicks = Board.serverTicks;
    
    const selectedStructureID = getSelectedEntityID();
    const structure = Board.entityRecord[selectedStructureID]!;

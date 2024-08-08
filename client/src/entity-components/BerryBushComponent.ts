@@ -2,6 +2,8 @@ import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { PacketReader } from "webgl-test-shared/dist/packets";
+import { ComponentArray, ComponentArrayType } from "./ComponentArray";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 
 export const BERRY_BUSH_TEXTURE_SOURCES = [
    "entities/berry-bush1.png",
@@ -36,4 +38,6 @@ class BerryBushComponent extends ServerComponent {
    }
 }
 
-export default BerryBushComponent
+export default BerryBushComponent;
+
+export const BerryBushComponentArray = new ComponentArray<BerryBushComponent>(ComponentArrayType.server, ServerComponentType.berryBush, {});

@@ -9,6 +9,7 @@ import { getEntityTextureAtlas, getTextureArrayIndex } from "../texture-atlases/
 import { ParticleRenderLayer } from "../rendering/webgl/particle-rendering";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { PacketReader } from "webgl-test-shared/dist/packets";
+import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 
 const createWoodenBlueprintWorkParticleEffects = (entity: Entity): void => {
    const transformComponent = entity.getServerComponent(ServerComponentType.transform);
@@ -32,9 +33,6 @@ const createWoodenBlueprintWorkParticleEffects = (entity: Entity): void => {
 make them render on high position
 make the origin point for the offset be based on the partial render part (random point in the partial render part)
 */
-
-
-
 
 const createStoneBlueprintWorkParticleEffects = (originX: number, originY: number): void => {
    for (let i = 0; i < 3; i++) {
@@ -129,3 +127,5 @@ class BlueprintComponent extends ServerComponent {
 }
 
 export default BlueprintComponent;
+
+export const BlueprintComponentArray = new ComponentArray<BlueprintComponent>(ComponentArrayType.server, ServerComponentType.blueprint, {});

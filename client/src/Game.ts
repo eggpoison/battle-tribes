@@ -1,4 +1,4 @@
-import { EntityDebugData, GameDataPacket } from "webgl-test-shared/dist/client-server-types";
+import { EntityDebugData } from "webgl-test-shared/dist/client-server-types";
 import { EnemyTribeData } from "webgl-test-shared/dist/techs";
 import { Settings } from "webgl-test-shared/dist/settings";
 import Board from "./Board";
@@ -21,7 +21,7 @@ import { updatePlayerItems, updatePlayerMovement } from "./player-input";
 import { clearServerTicks, updateDebugScreenFPS, updateDebugScreenRenderTime } from "./components/game/dev/GameInfoDisplay";
 import { createWorldBorderShaders, renderWorldBorder } from "./rendering/webgl/world-border-rendering";
 import { createSolidTileShaders, renderSolidTiles } from "./rendering/webgl/solid-tile-rendering";
-import { createRiverShaders, createRiverSteppingStoneData, renderRivers } from "./rendering/webgl/river-rendering";
+import { calculateVisibleRiverInfo, createRiverShaders, createRiverSteppingStoneData, renderLowerRiverFeatures, renderUpperRiverFeatures } from "./rendering/webgl/river-rendering";
 import { createChunkBorderShaders, renderChunkBorders } from "./rendering/webgl/chunk-border-rendering";
 import { nerdVisionIsVisible } from "./components/game/dev/NerdVision";
 import { createDebugDataShaders, renderLineDebugData, renderTriangleDebugData } from "./rendering/webgl/debug-data-rendering";
@@ -62,6 +62,8 @@ import { Mutable } from "webgl-test-shared/dist/utils";
 import { renderNextRenderables, resetRenderOrder } from "./rendering/render-loop";
 import { InitialGameDataPacket, processGameDataPacket } from "./client/packet-processing";
 import { PacketReader } from "webgl-test-shared/dist/packets";
+import { getMaxRenderHeightForRenderLayer, RenderLayer } from "./render-layers";
+import { updateEntity } from "./entity-components/ComponentArray";
 
 export const enum GameInteractState {
    none,
@@ -311,13 +313,12 @@ abstract class Game {
 
                updateTextNumbers();
                Board.updateTickCallbacks();
+               if (Player.instance !== null) {
+                  updateEntity(Player.instance);
+               }
                Board.tickEntities();
                Board.resolvePlayerCollisions();
                this.update();
-
-               if (Player.instance !== null) {
-                  Player.instance.update();
-               }
             } else {
                this.numSkippablePackets++;
                
@@ -325,6 +326,7 @@ abstract class Game {
                Board.updateTickCallbacks();
                Board.updateParticles();
                Board.updateEntities();
+               Board.tickEntities();
                Board.resolveEntityCollisions();
                this.update();
             }
@@ -351,6 +353,8 @@ abstract class Game {
    }
 
    private static update(): void {
+      Board.clientTicks++;
+      
       updateSpamFilter();
 
       updatePlayerMovement();
@@ -436,19 +440,22 @@ abstract class Game {
          renderChunkBorders(Camera.minVisibleRenderChunkX, Camera.maxVisibleRenderChunkX, Camera.minVisibleRenderChunkY, Camera.maxVisibleRenderChunkY, RENDER_CHUNK_SIZE, 2);
       }
 
-      if (OPTIONS.showParticles) {
-         renderMonocolourParticles(ParticleRenderLayer.low);
-         renderTexturedParticles(ParticleRenderLayer.low);
-      }
-
       renderHealingBeams();
 
       updateRenderPartMatrices(frameProgress);
 
-      console.log("-=-=-=--=--=-=-");
+      const visibleRiverRenderChunks = calculateVisibleRiverInfo();
       resetRenderOrder();
-      renderNextRenderables(0);
-      renderRivers(frameProgress);
+
+      renderLowerRiverFeatures(visibleRiverRenderChunks);
+      // @Hack: hardcoded
+      // Render everything up to fish
+      renderNextRenderables(getMaxRenderHeightForRenderLayer(RenderLayer.fish));
+      renderUpperRiverFeatures(visibleRiverRenderChunks);
+      if (OPTIONS.showParticles) {
+         renderMonocolourParticles(ParticleRenderLayer.low);
+         renderTexturedParticles(ParticleRenderLayer.low);
+      }
       // @Hack @Temporary: max render height
       renderNextRenderables(9999);
 

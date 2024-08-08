@@ -2,6 +2,8 @@ import { TreeSize } from "webgl-test-shared/dist/entities";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import { PacketReader } from "webgl-test-shared/dist/packets";
+import { ComponentArray, ComponentArrayType } from "./ComponentArray";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 
 class TreeComponent extends ServerComponent {
    public readonly treeSize: TreeSize;
@@ -22,3 +24,5 @@ class TreeComponent extends ServerComponent {
 }
 
 export default TreeComponent;
+
+export const TreeComponentArray = new ComponentArray<TreeComponent>(ComponentArrayType.server, ServerComponentType.tree, {});

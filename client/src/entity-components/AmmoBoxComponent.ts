@@ -8,6 +8,7 @@ import Board from "../Board";
 import { RenderPart } from "../render-parts/render-parts";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { PacketReader } from "webgl-test-shared/dist/packets";
+import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 
 class AmmoBoxComponent extends ServerComponent {
    public ammoType: TurretAmmoType | null;
@@ -44,7 +45,7 @@ class AmmoBoxComponent extends ServerComponent {
             this.entity.attachRenderPart(this.ammoWarningRenderPart);
          }
 
-         this.ammoWarningRenderPart.opacity = (Math.sin(Board.ticks / 15) * 0.5 + 0.5) * 0.4 + 0.4;
+         this.ammoWarningRenderPart.opacity = (Math.sin(Board.serverTicks / 15) * 0.5 + 0.5) * 0.4 + 0.4;
          
          return;
       }
@@ -76,3 +77,5 @@ class AmmoBoxComponent extends ServerComponent {
 }
 
 export default AmmoBoxComponent;
+
+export const AmmoBoxComponentArray = new ComponentArray<AmmoBoxComponent>(ComponentArrayType.server, ServerComponentType.ammoBox, {});

@@ -9,6 +9,7 @@ import { playSound } from "../sound";
 import { getTribesmanRadius } from "./TribeMemberComponent";
 import { createConversionParticle } from "../particles";
 import { PacketReader } from "webgl-test-shared/dist/packets";
+import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 
 export function getTribeType(tribeID: number): TribeType {
    if (tribeID === Game.tribe.id) {
@@ -76,3 +77,5 @@ class TribeComponent extends ServerComponent {
 }
 
 export default TribeComponent;
+
+export const TribeComponentArray = new ComponentArray<TribeComponent>(ComponentArrayType.server, ServerComponentType.tribe, {});

@@ -14,6 +14,7 @@ import { RenderPart } from "../render-parts/render-parts";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { PacketReader } from "webgl-test-shared/dist/packets";
 import { TitlesTab_setTitles } from "../components/game/dev/tabs/TitlesTab";
+import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 
 export function getTribesmanRadius(tribesman: Entity): number {
    switch (tribesman.type) {
@@ -42,7 +43,7 @@ const getSecondsSinceLastAttack = (entity: Entity): number => {
       }
    }
 
-   const ticksSinceLastAttack = Board.ticks - maxLastTicks;
+   const ticksSinceLastAttack = Board.serverTicks - maxLastTicks;
    return ticksSinceLastAttack / Settings.TPS;
 }
 
@@ -81,7 +82,7 @@ class TribeMemberComponent extends ServerComponent {
    
    public titles: ReadonlyArray<TitleGenerationInfo> = [];
 
-   private deathbringerEyeLights = new Array<Light>();
+   public deathbringerEyeLights = new Array<Light>();
    
    constructor(entity: Entity, reader: PacketReader) {
       super(entity);
@@ -331,54 +332,6 @@ class TribeMemberComponent extends ServerComponent {
       }
    }
 
-   public tick(): void {
-      if (this.deathbringerEyeLights.length > 0) {
-         const eyeFlashProgress = Math.min(getSecondsSinceLastAttack(this.entity) / 0.5, 1)
-         const intensity = lerp(0.6, 0.5, eyeFlashProgress);
-         const r = lerp(2, 1.75, eyeFlashProgress);
-         for (let i = 0; i < this.deathbringerEyeLights.length; i++) {
-            const light = this.deathbringerEyeLights[i];
-            light.intensity = intensity;
-            light.r = r;
-         }
-      }
-
-      const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
-      const physicsComponent = this.entity.getServerComponent(ServerComponentType.physics);
-
-      // Sprinter particles
-      if (this.hasTitle(TribesmanTitle.sprinter) && physicsComponent.velocity.length() > 100) {
-         const sprintParticleSpawnRate = Math.sqrt(physicsComponent.velocity.length() * 0.8);
-         if (Math.random() < sprintParticleSpawnRate / Settings.TPS) {
-            const offsetMagnitude = 32 * Math.random();
-            const offsetDirection = 2 * Math.PI * Math.random();
-            const x = transformComponent.position.x + offsetMagnitude * Math.sin(offsetDirection);
-            const y = transformComponent.position.y + offsetMagnitude * Math.cos(offsetDirection);
-            
-            const velocityMagnitude = 32 * Math.random();
-            const velocityDirection = 2 * Math.PI * Math.random();
-            const vx = velocityMagnitude * Math.sin(velocityDirection);
-            const vy = velocityMagnitude * Math.cos(offsetDirection);
-            createSprintParticle(x, y, vx, vy);
-         }
-      }
-
-      // Winterswrath particles
-      if (this.hasTitle(TribesmanTitle.winterswrath) && Math.random() < 18 * Settings.I_TPS) {
-         const offsetMagnitude = randFloat(36, 50);
-         const offsetDirection = 2 * Math.PI * Math.random();
-         const x = transformComponent.position.x + offsetMagnitude * Math.sin(offsetDirection);
-         const y = transformComponent.position.y + offsetMagnitude * Math.cos(offsetDirection);
-         
-         const velocityMagnitude = randFloat(45, 75);
-         const velocityDirection = offsetDirection + Math.PI * 0.5;
-         const vx = physicsComponent.velocity.x + velocityMagnitude * Math.sin(velocityDirection);
-         const vy = physicsComponent.velocity.y + velocityMagnitude * Math.cos(velocityDirection);
-         
-         createSprintParticle(x, y, vx, vy);
-      }
-   }
-
    public padData(reader: PacketReader): void {
       reader.padOffset(Float32Array.BYTES_PER_ELEMENT);
 
@@ -413,3 +366,53 @@ class TribeMemberComponent extends ServerComponent {
 }
 
 export default TribeMemberComponent;
+
+export const TribeMemberComponentArray = new ComponentArray<TribeMemberComponent>(ComponentArrayType.server, ServerComponentType.tribeMember, {});
+
+function onTick(tribeMemberComponent: TribeMemberComponent): void {
+   if (tribeMemberComponent.deathbringerEyeLights.length > 0) {
+      const eyeFlashProgress = Math.min(getSecondsSinceLastAttack(tribeMemberComponent.entity) / 0.5, 1)
+      const intensity = lerp(0.6, 0.5, eyeFlashProgress);
+      const r = lerp(2, 1.75, eyeFlashProgress);
+      for (let i = 0; i < tribeMemberComponent.deathbringerEyeLights.length; i++) {
+         const light = tribeMemberComponent.deathbringerEyeLights[i];
+         light.intensity = intensity;
+         light.r = r;
+      }
+   }
+
+   const transformComponent = tribeMemberComponent.entity.getServerComponent(ServerComponentType.transform);
+   const physicsComponent = tribeMemberComponent.entity.getServerComponent(ServerComponentType.physics);
+
+   // Sprinter particles
+   if (tribeMemberComponent.hasTitle(TribesmanTitle.sprinter) && physicsComponent.velocity.length() > 100) {
+      const sprintParticleSpawnRate = Math.sqrt(physicsComponent.velocity.length() * 0.8);
+      if (Math.random() < sprintParticleSpawnRate / Settings.TPS) {
+         const offsetMagnitude = 32 * Math.random();
+         const offsetDirection = 2 * Math.PI * Math.random();
+         const x = transformComponent.position.x + offsetMagnitude * Math.sin(offsetDirection);
+         const y = transformComponent.position.y + offsetMagnitude * Math.cos(offsetDirection);
+         
+         const velocityMagnitude = 32 * Math.random();
+         const velocityDirection = 2 * Math.PI * Math.random();
+         const vx = velocityMagnitude * Math.sin(velocityDirection);
+         const vy = velocityMagnitude * Math.cos(offsetDirection);
+         createSprintParticle(x, y, vx, vy);
+      }
+   }
+
+   // Winterswrath particles
+   if (tribeMemberComponent.hasTitle(TribesmanTitle.winterswrath) && Math.random() < 18 * Settings.I_TPS) {
+      const offsetMagnitude = randFloat(36, 50);
+      const offsetDirection = 2 * Math.PI * Math.random();
+      const x = transformComponent.position.x + offsetMagnitude * Math.sin(offsetDirection);
+      const y = transformComponent.position.y + offsetMagnitude * Math.cos(offsetDirection);
+      
+      const velocityMagnitude = randFloat(45, 75);
+      const velocityDirection = offsetDirection + Math.PI * 0.5;
+      const vx = physicsComponent.velocity.x + velocityMagnitude * Math.sin(velocityDirection);
+      const vy = physicsComponent.velocity.y + velocityMagnitude * Math.cos(velocityDirection);
+      
+      createSprintParticle(x, y, vx, vy);
+   }
+}

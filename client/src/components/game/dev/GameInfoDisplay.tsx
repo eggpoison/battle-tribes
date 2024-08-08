@@ -31,7 +31,7 @@ const GameInfoDisplay = () => {
    const maxGreenSafetyInputRef = useRef<HTMLInputElement | null>(null);
    
    const [currentTime, setCurrentTime] = useState(0);
-   const [ticks, setTicks] = useState(Board.ticks);
+   const [ticks, setTicks] = useState(Board.serverTicks);
    const [zoom, setZoom] = useState(Camera.zoom);
    const [isPaused, setIsPaused] = useState(false);
 

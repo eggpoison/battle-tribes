@@ -23,6 +23,7 @@ import { createComponent } from "../entity-components/components";
 import { readInventory } from "../entity-components/InventoryComponent";
 import { updateDebugScreenIsPaused, updateDebugScreenTicks, updateDebugScreenCurrentTime } from "../components/game/dev/GameInfoDisplay";
 import { Tile } from "../Tile";
+import { getServerComponentArray } from "../entity-components/ComponentArray";
 
 export interface InitialGameDataPacket {
    readonly playerID: number;
@@ -278,6 +279,9 @@ const processEntityCreationData = (entityID: EntityID, reader: PacketReader): vo
       
       const component = createComponent(entity, componentType, reader);
       entity.addServerComponent(componentType, component);
+
+      const componentArray = getServerComponentArray(componentType);
+      componentArray.addComponent(entity.id, component);
    }
 
    Board.addEntity(entity);
@@ -310,7 +314,7 @@ export function processGameDataPacket(reader: PacketReader): void {
    const ticks = reader.readNumber();
    const time = reader.readNumber();
 
-   Board.ticks = ticks;
+   Board.serverTicks = ticks;
    updateDebugScreenTicks(ticks);
    Board.time = time;
    updateDebugScreenCurrentTime(time);

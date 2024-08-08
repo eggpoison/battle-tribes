@@ -21,6 +21,7 @@ const enum Vars {
    TRIBESMAN_SPAWN_EXCLUSION_RANGE = 2000
 }
 
+// @Robustness
 /** Record of entity types -> arrays of all tile types in which the entity is able to be spawned in */
 export const SPAWNABLE_TILE_RECORD: Partial<Record<EntityType, ReadonlyArray<TileType>>> = {
    [EntityType.cow]: [TileType.grass],
@@ -37,7 +38,8 @@ export const SPAWNABLE_TILE_RECORD: Partial<Record<EntityType, ReadonlyArray<Til
    [EntityType.fish]: [TileType.water],
    [EntityType.golem]: [TileType.rock],
    [EntityType.tribeWorker]: [TileType.grass, TileType.rock, TileType.sand, TileType.snow, TileType.ice],
-   [EntityType.lilypad]: [TileType.water]
+   [EntityType.lilypad]: [TileType.water],
+   [EntityType.fibrePlant]: [TileType.grass]
 };
 
 export interface EntitySpawnInfo {
@@ -84,6 +86,16 @@ const SPAWN_INFOS: ReadonlyArray<EntitySpawnInfo> = [
       maxPackSize: 1,
       onlySpawnsInNight: false,
       minSpawnDistance: 75,
+      usesSpawnDistribution: true
+   },
+   {
+      entityType: EntityType.fibrePlant,
+      spawnRate: 0.001,
+      maxDensity: 0.0015,
+      minPackSize: 1,
+      maxPackSize: 1,
+      onlySpawnsInNight: false,
+      minSpawnDistance: 45,
       usesSpawnDistribution: true
    },
    // @Temporary

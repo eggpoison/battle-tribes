@@ -1,4 +1,4 @@
-import { lerp, randFloat } from "webgl-test-shared/dist/utils";
+import { lerp, randFloat, randInt } from "webgl-test-shared/dist/utils";
 import { SlimeSize } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import ServerComponent from "./ServerComponent";
@@ -7,6 +7,9 @@ import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { RenderPart } from "../render-parts/render-parts";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { PacketReader } from "webgl-test-shared/dist/packets";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { playSound, AudioFilePath } from "../sound";
+import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 
 export const SLIME_SIZES: ReadonlyArray<number> = [
    64, // small
@@ -39,10 +42,10 @@ class SlimeComponent extends ServerComponent {
 
    private readonly bodyRenderPart: RenderPart;
    private readonly eyeRenderPart: RenderPart;
-   private readonly orbRenderParts = new Array<RenderPart>();
+   public readonly orbRenderParts = new Array<RenderPart>();
 
    public readonly size: number;
-   private readonly orbs = new Array<SlimeOrbInfo>();
+   public readonly orbs = new Array<SlimeOrbInfo>();
 
    private internalTickCounter = 0;
 
@@ -102,33 +105,6 @@ class SlimeComponent extends ServerComponent {
       for (let i = 0; i < orbSizes.length; i++) {
          const size = orbSizes[i];
          this.createOrb(size);
-      }
-   }
-
-   public tick(): void {
-      for (let i = 0; i < this.orbs.length; i++) {
-         const orb = this.orbs[i];
-
-         // Randomly move around the orbs
-         if (Math.random() < 0.3 / Settings.TPS) {
-            orb.angularVelocity = randFloat(-3, 3);
-         }
-
-         // Update orb angular velocity & rotation
-         orb.rotation += orb.angularVelocity / Settings.TPS;
-
-         // Update the orb's rotation
-         if (orb.angularVelocity !== 0) {
-            const spriteSize = SLIME_SIZES[this.size];
-            const offsetMagnitude = spriteSize / 2 * lerp(0.3, 0.7, orb.offset);
-            this.orbRenderParts[i].offset.x = offsetMagnitude * Math.sin(orb.rotation);
-            this.orbRenderParts[i].offset.y = offsetMagnitude * Math.cos(orb.rotation);
-         }
-
-         orb.angularVelocity -= 3 / Settings.TPS;
-         if (orb.angularVelocity < 0) {
-            orb.angularVelocity = 0;
-         }
       }
    }
 
@@ -213,3 +189,39 @@ class SlimeComponent extends ServerComponent {
 }
 
 export default SlimeComponent;
+
+export const SlimeComponentArray = new ComponentArray<SlimeComponent>(ComponentArrayType.server, ServerComponentType.slime, {
+   onTick: onTick
+});
+
+function onTick(slimeComponent: SlimeComponent): void {
+   if (Math.random() < 0.2 / Settings.TPS) {
+      const transformComponent = slimeComponent.entity.getServerComponent(ServerComponentType.transform);
+      playSound(("slime-ambient-" + randInt(1, 4) + ".mp3") as AudioFilePath, 0.4, 1, transformComponent.position);
+   }
+
+   for (let i = 0; i < slimeComponent.orbs.length; i++) {
+      const orb = slimeComponent.orbs[i];
+
+      // Randomly move around the orbs
+      if (Math.random() < 0.3 / Settings.TPS) {
+         orb.angularVelocity = randFloat(-3, 3);
+      }
+
+      // Update orb angular velocity & rotation
+      orb.rotation += orb.angularVelocity / Settings.TPS;
+
+      // Update the orb's rotation
+      if (orb.angularVelocity !== 0) {
+         const spriteSize = SLIME_SIZES[slimeComponent.size];
+         const offsetMagnitude = spriteSize / 2 * lerp(0.3, 0.7, orb.offset);
+         slimeComponent.orbRenderParts[i].offset.x = offsetMagnitude * Math.sin(orb.rotation);
+         slimeComponent.orbRenderParts[i].offset.y = offsetMagnitude * Math.cos(orb.rotation);
+      }
+
+      orb.angularVelocity -= 3 / Settings.TPS;
+      if (orb.angularVelocity < 0) {
+         orb.angularVelocity = 0;
+      }
+   }
+}

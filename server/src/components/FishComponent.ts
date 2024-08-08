@@ -265,7 +265,7 @@ function onTick(fishComponent: FishComponent, fish: EntityID): void {
          wanderAIComponent.targetPositionX = -1;
          stopEntity(physicsComponent);
       }
-   } else if (shouldWander(physicsComponent, 0.5)) {
+   } else if (shouldWander(physicsComponent, 1)) {
       let attempts = 0;
       let targetTile: TileIndex;
       do {

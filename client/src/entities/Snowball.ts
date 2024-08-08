@@ -39,18 +39,6 @@ class Snowball extends Entity {
       );
    }
 
-   public tick(): void {
-      super.tick();
-      
-      const transformComponent = this.getServerComponent(ServerComponentType.transform);
-      const physicsComponent = this.getServerComponent(ServerComponentType.physics);
-      if ((physicsComponent.velocity.x !== 0 || physicsComponent.velocity.y !== 0) && physicsComponent.velocity.lengthSquared() > 2500) {
-         if (Board.tickIntervalHasPassed(0.05)) {
-            createSnowParticle(transformComponent.position.x, transformComponent.position.y, randFloat(40, 60));
-         }
-      }
-   }
-
    protected onHit(hitData: HitData): void {
       const transformComponent = this.getServerComponent(ServerComponentType.transform);
       const snowballComponent = this.getServerComponent(ServerComponentType.snowball);

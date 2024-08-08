@@ -16,6 +16,7 @@ import { getRandomPointInEntity } from "./entity-components/TransformComponent";
 import { RenderPart } from "./render-parts/render-parts";
 import { calculateEntityRenderHeight } from "./render-layers";
 import { registerDirtyEntity } from "./rendering/render-part-matrices";
+import ServerComponent from "./entity-components/ServerComponent";
 
 // Use prime numbers / 100 to ensure a decent distribution of different types of particles
 const HEALING_PARTICLE_AMOUNTS = [0.05, 0.37, 1.01];
@@ -35,13 +36,11 @@ abstract class Entity extends BaseRenderObject {
    /** Stores all render parts attached to the object, sorted ascending based on zIndex. (So that render part with smallest zIndex is rendered first) */
    public readonly allRenderParts = new Array<RenderPart>();
 
-   /** Render parts sorted in a way that all render parts are after their parent */
-   public readonly renderPartsHierarchicalArray = new Array<RenderPart>();
-
    /** Amount the game object's render parts will shake */
    public shakeAmount = 0;
 
    public readonly components = new Array<Component>();
+   public readonly serverComponents = new Array<ServerComponent>();
    private readonly serverComponentsRecord: ServerComponentsType = {};
    private readonly clientComponents: ClientComponentsType = {};
    // @Cleanup: make this an array of functions instead
@@ -49,6 +48,12 @@ abstract class Entity extends BaseRenderObject {
    private readonly updateableComponents = new Array<Component>();
 
    public readonly renderPartOverlayGroups = new Array<RenderPartOverlayGroup>();
+
+   public depthData = new Float32Array(1);
+   public textureArrayIndexData = new Float32Array(1);
+   public tintData = new Float32Array(3);
+   public opacityData = new Float32Array(1);
+   public modelMatrixData = new Float32Array(9);
 
    constructor(id: EntityID, entityType: EntityType) {
       super();
@@ -138,6 +143,7 @@ abstract class Entity extends BaseRenderObject {
 
    public addServerComponent<T extends ServerComponentType>(componentType: T, component: ServerComponentClass<T>): void {
       this.components.push(component);
+      this.serverComponents.push(component);
       // @Cleanup: Remove cast
       this.serverComponentsRecord[componentType] = component as any;
 
@@ -177,6 +183,10 @@ abstract class Entity extends BaseRenderObject {
       return this.clientComponents[componentType]!;
    }
 
+   public hasClientComponent(componentType: ClientComponentType): boolean {
+      return this.clientComponents.hasOwnProperty(componentType);
+   }
+
    public hasServerComponent(componentType: ServerComponentType): boolean {
       return this.serverComponentsRecord.hasOwnProperty(componentType);
    }
@@ -185,6 +195,14 @@ abstract class Entity extends BaseRenderObject {
       // Don't add if already attached
       if (this.allRenderParts.indexOf(renderPart) !== -1) {
          return;
+      }
+
+      // @Hack
+      // Make sure the render part has a higher z-index than its parent
+      if (!(renderPart.parent instanceof Entity)) {
+         if (renderPart.zIndex < (renderPart.parent as RenderPart).zIndex) {
+            throw new Error("Render part had smaller zIndex than its parent");
+         }
       }
 
       // Add to the root array
@@ -197,17 +215,6 @@ abstract class Entity extends BaseRenderObject {
          }
       }
       this.allRenderParts.splice(idx, 0, renderPart);
-
-      // Insert into hierarchical array directly after parent
-      let insertIdx = 0;
-      for (let i = 0; i < this.renderPartsHierarchicalArray.length; i++) {
-         const currentRenderPart = this.renderPartsHierarchicalArray[i];
-
-         if (currentRenderPart === renderPart.parent) {
-            insertIdx = i + 1;
-         }
-      }
-      this.renderPartsHierarchicalArray.splice(insertIdx, 0, renderPart);
 
       renderPart.parent.children.push(renderPart);
       
@@ -232,8 +239,6 @@ abstract class Entity extends BaseRenderObject {
       
       // Remove from the root array
       this.allRenderParts.splice(this.allRenderParts.indexOf(renderPart), 1);
-
-      this.renderPartsHierarchicalArray.splice(this.renderPartsHierarchicalArray.indexOf(renderPart), 1);
    }
 
    public remove(): void {
@@ -253,28 +258,22 @@ abstract class Entity extends BaseRenderObject {
 
    public overrideTileMoveSpeedMultiplier?(): number | null;
 
-   public tick(): void {
-      this.tintR = 0;
-      this.tintG = 0;
-      this.tintB = 0;
+   // public tick(): void {
+   //    this.tintR = 0;
+   //    this.tintG = 0;
+   //    this.tintB = 0;
 
-      for (let i = 0; i < this.tickableComponents.length; i++) {
-         const component = this.tickableComponents[i];
-         component.tick!();
-      }
+   //    for (let i = 0; i < this.tickableComponents.length; i++) {
+   //       const component = this.tickableComponents[i];
+   //       component.tick!();
+   //    }
 
-      for (let i = 0; i < this.allRenderParts.length; i++) {
-         const renderPart = this.allRenderParts[i];
-         renderPart.age++;
-      }
-   };
-
-   public update(): void {
-      for (let i = 0; i < this.updateableComponents.length; i++) {
-         const component = this.updateableComponents[i];
-         component.update!();
-      }
-   }
+   // @Incomplete
+   //    for (let i = 0; i < this.allRenderParts.length; i++) {
+   //       const renderPart = this.allRenderParts[i];
+   //       renderPart.age++;
+   //    }
+   // };
 
    // @Cleanup: remove
    public updateRenderPosition(frameProgress: number): void {

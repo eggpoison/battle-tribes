@@ -7,6 +7,7 @@ import Entity from "../Entity";
 import { RenderPart } from "../render-parts/render-parts";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { PacketReader } from "webgl-test-shared/dist/packets";
+import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 
 const BANNER_LAYER_DISTANCES = [34, 52, 65];
 
@@ -107,3 +108,5 @@ class TotemBannerComponent extends ServerComponent {
 }
 
 export default TotemBannerComponent;
+
+export const TotemBannerComponentArray = new ComponentArray<TotemBannerComponent>(ComponentArrayType.server, ServerComponentType.totemBanner, {});

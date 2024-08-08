@@ -1,6 +1,8 @@
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import { PacketReader } from "webgl-test-shared/dist/packets";
+import { ComponentArray, ComponentArrayType } from "./ComponentArray";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 
 class PlayerComponent extends ServerComponent {
    public readonly username: string;
@@ -24,3 +26,5 @@ class PlayerComponent extends ServerComponent {
 }
 
 export default PlayerComponent;
+
+export const PlayerComponentArray = new ComponentArray<PlayerComponent>(ComponentArrayType.server, ServerComponentType.player, {});

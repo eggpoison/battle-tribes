@@ -1,10 +1,10 @@
-import { FenceComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { RenderPart } from "../render-parts/render-parts";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
-import { PacketReader } from "webgl-test-shared/dist/packets";
+import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 
 type RailBit = 0b0001 | 0b0010 | 0b0100 | 0b1000;
 
@@ -116,3 +116,5 @@ class FenceComponent extends ServerComponent {
 }
 
 export default FenceComponent;
+
+export const FenceComponentArray = new ComponentArray<FenceComponent>(ComponentArrayType.server, ServerComponentType.fence, {});

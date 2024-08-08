@@ -33,7 +33,6 @@ const getClosestRiverMainTile = (x: number, y: number, riverMainTiles: ReadonlyA
 
 export function generateReeds(riverMainTiles: ReadonlyArray<WaterTileGenerationInfo>): void {
    const probabilityWeightMap1 = generateOctavePerlinNoise(Settings.FULL_BOARD_DIMENSIONS, Settings.FULL_BOARD_DIMENSIONS, 5, 3, 1.5, 0.75);
-   const probabilityWeightMap2 = generatePerlinNoise(Settings.FULL_BOARD_DIMENSIONS, Settings.FULL_BOARD_DIMENSIONS, 7);
    
    // @Incomplete: generate in edges
    for (let tileX = 0; tileX < Settings.BOARD_DIMENSIONS; tileX++) {
@@ -57,12 +56,13 @@ export function generateReeds(riverMainTiles: ReadonlyArray<WaterTileGenerationI
             let successProbability = (distanceTiles - 0.3) * 1;
             successProbability = successProbability * successProbability * successProbability;
 
-            const weight = probabilityWeightMap1[tileY + Settings.EDGE_GENERATION_DISTANCE][tileX + Settings.EDGE_GENERATION_DISTANCE];
+            let weight = probabilityWeightMap1[tileY + Settings.EDGE_GENERATION_DISTANCE][tileX + Settings.EDGE_GENERATION_DISTANCE];
+            weight = weight * 2 - 1;
+            if (weight <= 0) {
+               continue;
+            }
             successProbability *= weight * weight;
 
-            const weight2 = probabilityWeightMap2[tileY + Settings.EDGE_GENERATION_DISTANCE][tileX + Settings.EDGE_GENERATION_DISTANCE];
-            successProbability *= weight2 * weight2;
-            
             if (Math.random() >= successProbability) {
                continue;
             }

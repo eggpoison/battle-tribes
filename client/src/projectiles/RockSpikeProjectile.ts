@@ -4,12 +4,10 @@ import { ParticleRenderLayer, addMonocolourParticleToBufferContainer } from "../
 import Board from "../Board";
 import { createRockParticle } from "../particles";
 import Entity from "../Entity";
-import { lerp, randFloat, randInt } from "webgl-test-shared/dist/utils";
+import { randFloat, randInt } from "webgl-test-shared/dist/utils";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { Settings } from "webgl-test-shared/dist/settings";
 import { EntityType } from "webgl-test-shared/dist/entities";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
-import { RenderPart } from "../render-parts/render-parts";
 
 class RockSpikeProjectile extends Entity {
    private static readonly SIZES = [12 * 4, 16 * 4, 20 * 4];
@@ -19,15 +17,11 @@ class RockSpikeProjectile extends Entity {
       "projectiles/rock-spike-large.png"
    ];
 
-   private static readonly ENTRANCE_SHAKE_AMOUNTS = [2, 3.5, 5];
-   private static readonly ENTRANCE_SHAKE_DURATION = 0.5;
-   private static readonly ENTRANCE_SCALE = 0.65;
+   public static readonly ENTRANCE_SHAKE_AMOUNTS = [2, 3.5, 5];
+   public static readonly ENTRANCE_SCALE = 0.65;
 
-   private static readonly EXIT_SHAKE_DURATION = 0.8;
-   private static readonly EXIT_SHAKE_AMOUNTS = [1.25, 2.25, 3.25];
+   public static readonly EXIT_SHAKE_AMOUNTS = [1.25, 2.25, 3.25];
 
-   private renderPart!: RenderPart;
-   
    constructor(id: number) {
       super(id, EntityType.rockSpikeProjectile);
    }
@@ -37,14 +31,15 @@ class RockSpikeProjectile extends Entity {
       
       this.shakeAmount = RockSpikeProjectile.ENTRANCE_SHAKE_AMOUNTS[rockSpikeComponent.size];
       
-      this.renderPart = new TexturedRenderPart(
+      const renderPart = new TexturedRenderPart(
          this,
          0,
          0,
          getTextureArrayIndex(RockSpikeProjectile.SPRITE_TEXTURE_SOURCES[rockSpikeComponent.size])
       );
-      this.renderPart.scale = RockSpikeProjectile.ENTRANCE_SCALE;
-      this.attachRenderPart(this.renderPart);
+      renderPart.addTag("rockSpikeProjectile:part");
+      renderPart.scale = RockSpikeProjectile.ENTRANCE_SCALE;
+      this.attachRenderPart(renderPart);
 
       // 
       // Create debris particles
@@ -116,29 +111,6 @@ class RockSpikeProjectile extends Entity {
          const spawnPositionY = transformComponent.position.y + RockSpikeProjectile.SIZES[rockSpikeComponent.size] / 2 * Math.cos(spawnOffsetDirection);
 
          createRockParticle(spawnPositionX, spawnPositionY, spawnOffsetDirection + randFloat(-0.5, 0.5), randFloat(80, 125), ParticleRenderLayer.low);
-      }
-   }
-
-   public tick(): void {
-      super.tick();
-      
-      const transformComponent = this.getServerComponent(ServerComponentType.transform);
-      const rockSpikeComponent = this.getServerComponent(ServerComponentType.rockSpike);
-
-      const ageSeconds = transformComponent.ageTicks / Settings.TPS;
-      if (ageSeconds < RockSpikeProjectile.ENTRANCE_SHAKE_DURATION) {
-         // Entrance
-         const entranceProgress = ageSeconds / RockSpikeProjectile.ENTRANCE_SHAKE_DURATION;
-         this.shakeAmount = lerp(RockSpikeProjectile.ENTRANCE_SHAKE_AMOUNTS[rockSpikeComponent.size], 0, entranceProgress);
-         this.renderPart.scale = lerp(RockSpikeProjectile.ENTRANCE_SCALE, 1, Math.pow(entranceProgress, 0.5));
-      } else if (ageSeconds > rockSpikeComponent.lifetime - RockSpikeProjectile.EXIT_SHAKE_DURATION) {
-         // Exit
-         const exitProgress = (ageSeconds - (rockSpikeComponent.lifetime - RockSpikeProjectile.EXIT_SHAKE_DURATION)) / RockSpikeProjectile.EXIT_SHAKE_DURATION;
-         this.shakeAmount = lerp(0, RockSpikeProjectile.EXIT_SHAKE_AMOUNTS[rockSpikeComponent.size], exitProgress);
-         this.renderPart.opacity = 1 - Math.pow(exitProgress, 2);
-         this.renderPart.scale = 1 - lerp(0, 0.5, Math.pow(exitProgress, 2));
-      } else {
-         this.shakeAmount = 0;
       }
    }
 }

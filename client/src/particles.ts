@@ -5,6 +5,7 @@ import { ParticleColour, ParticleRenderLayer, addMonocolourParticleToBufferConta
 import Board from "./Board";
 import Entity from "./Entity";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
+import TransformComponent from "./entity-components/TransformComponent";
 
 // @Cleanup: Standardise all these functions to just take the stuff necessary to create them, then have the places which call them modify the returned particle
 
@@ -1638,4 +1639,118 @@ export function createDeepFrostHeartBloodParticles(originX: number, originY: num
          createFrozenYetiBloodParticle(BloodParticleSize.small, spawnPositionX, spawnPositionY, 2 * Math.PI * Math.random(), randFloat(40, 60), true, extraVelocityX, extraVelocityY);
       }
    }
+}
+
+export function createAcidParticle(spawnPositionX: number, spawnPositionY: number): void {
+   const lifetime = randFloat(0.5, 0.7);
+
+   const particle = new Particle(lifetime);
+   particle.getOpacity = (): number => {
+      return Math.pow(1 - particle.age / lifetime, 0.5);
+   };
+
+   const purp = Math.random() / 4;
+
+   addTexturedParticleToBufferContainer(
+      particle,
+      ParticleRenderLayer.low,
+      64, 64,
+      spawnPositionX, spawnPositionY,
+      0, 0,
+      0, 0,
+      0,
+      2 * Math.PI * Math.random(),
+      0,
+      0,
+      0,
+      5 * 8 + 0,
+      // 0, randFloat(-0.2, 0.2), 0
+      lerp(0, 1, purp), lerp(randFloat(-0.2, 0.2), -1, purp), lerp(0, 1, purp)
+   );
+   Board.lowTexturedParticles.push(particle);
+}
+
+const POISON_COLOUR_LOW = [34/255, 12/255, 0];
+const POISON_COLOUR_HIGH = [77/255, 173/255, 38/255];
+
+export function createPoisonParticle(entity: Entity): void {
+   const transformComponent = entity.getServerComponent(ServerComponentType.transform);
+
+   // Calculate spawn position
+   const offsetMagnitude = 20 * Math.random();
+   const moveDirection = 2 * Math.PI * Math.random();
+   const spawnPositionX = transformComponent.position.x + offsetMagnitude * Math.sin(moveDirection);
+   const spawnPositionY = transformComponent.position.y + offsetMagnitude * Math.cos(moveDirection);
+
+   const lifetime = randFloat(0.2, 0.3);
+   
+   const pixelSize = 4;
+
+   const moveSpeed = randFloat(75, 150);
+   const velocityX = moveSpeed * Math.sin(moveDirection);
+   const velocityY = moveSpeed * Math.cos(moveDirection);
+
+   const particle = new Particle(lifetime);
+   particle.getOpacity = (): number => {
+      return 1 - particle.age / lifetime;
+   };
+
+   const colourLerp = Math.random();
+   const r = lerp(POISON_COLOUR_LOW[0], POISON_COLOUR_HIGH[0], colourLerp);
+   const g = lerp(POISON_COLOUR_LOW[1], POISON_COLOUR_HIGH[1], colourLerp);
+   const b = lerp(POISON_COLOUR_LOW[2], POISON_COLOUR_HIGH[2], colourLerp);
+
+   addMonocolourParticleToBufferContainer(
+      particle,
+      ParticleRenderLayer.low,
+      pixelSize, pixelSize,
+      spawnPositionX, spawnPositionY,
+      velocityX, velocityY,
+      0, 0,
+      0,
+      2 * Math.PI * Math.random(),
+      0,
+      0,
+      0,
+      r, g, b
+   );
+   Board.lowMonocolourParticles.push(particle);
+}
+
+// @Cleanup: move to particles file
+export function createIceSpeckProjectile(transformComponent: TransformComponent): void {
+   const spawnOffsetDirection = 2 * Math.PI * Math.random();
+   const spawnPositionX = transformComponent.position.x + 4 * Math.sin(spawnOffsetDirection);
+   const spawnPositionY = transformComponent.position.y + 4 * Math.cos(spawnOffsetDirection);
+
+   const velocityMagnitude = randFloat(150, 300);
+   const velocityDirection = spawnOffsetDirection + randFloat(-0.8, 0.8);
+   const velocityX = velocityMagnitude * Math.sin(velocityDirection);
+   const velocityY = velocityMagnitude * Math.cos(velocityDirection);
+   
+   const lifetime = randFloat(0.1, 0.2);
+   
+   const particle = new Particle(lifetime);
+   particle.getOpacity = () => {
+      return 1 - Math.pow(particle.age / particle.lifetime, 2);
+   }
+
+   const pixelSize = Math.random() < 0.5 ? 4 : 8;
+
+   addMonocolourParticleToBufferContainer(
+      particle,
+      ParticleRenderLayer.low,
+      pixelSize,
+      pixelSize,
+      spawnPositionX, spawnPositionY,
+      velocityX, velocityY,
+      0, 0,
+      0,
+      velocityDirection,
+      0,
+      0,
+      0,
+      140/255, 143/255, 207/255
+   );
+   Board.lowMonocolourParticles.push(particle);
 }

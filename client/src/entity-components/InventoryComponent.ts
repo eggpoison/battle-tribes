@@ -5,6 +5,7 @@ import { createInventoryFromData, updateInventoryFromData } from "../inventory-m
 import { InventoryName, Inventory, Item } from "webgl-test-shared/dist/items/items";
 import { PacketReader } from "webgl-test-shared/dist/packets";
 import { ItemType } from "webgl-test-shared/dist/items/items";
+import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 
 export function readInventory(reader: PacketReader): Inventory {
    const name = reader.readNumber() as InventoryName;
@@ -97,3 +98,5 @@ class InventoryComponent extends ServerComponent {
 }
 
 export default InventoryComponent;
+
+export const InventoryComponentArray = new ComponentArray<InventoryComponent>(ComponentArrayType.server, ServerComponentType.inventory, {});

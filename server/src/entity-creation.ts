@@ -63,6 +63,7 @@ import { createGrassStrandConfig } from "./entities/grass-strand";
 import { createDecorationConfig } from "./entities/decoration";
 import { createReedConfig } from "./entities/reed";
 import { createLilypadConfig } from "./entities/lilypad";
+import { createFibrePlantConfig } from "./entities/resources/fibre-plant";
 
 // @Robustness: from the given entity type, deduce which component params will be returned.
 // - Will require defining the component configs in a variable to be analysed at compile-time, not in functions
@@ -133,5 +134,6 @@ export function createEntityConfig(entityType: EntityType): ComponentConfig<Serv
       case EntityType.decoration: return createDecorationConfig() as any;
       case EntityType.reed: return createReedConfig() as any;
       case EntityType.lilypad: return createLilypadConfig() as any;
+      case EntityType.fibrePlant: return createFibrePlantConfig() as any;
    }
 }

@@ -106,7 +106,9 @@ const createBandageRenderPart = (entity: Entity): void => {
 }
 
 export function updateBandageRenderPart(entity: Entity, renderPart: RenderPart): void {
-   if (renderPart.age >= BANDAGE_LIFETIME_TICKS) {
+   const renderPartAge = renderPart.getAge();
+   
+   if (renderPartAge >= BANDAGE_LIFETIME_TICKS) {
       entity.removeRenderPart(renderPart);
 
       const inventoryUseComponent = entity.getServerComponent(ServerComponentType.inventoryUse);
@@ -117,7 +119,7 @@ export function updateBandageRenderPart(entity: Entity, renderPart: RenderPart):
       return;
    }
 
-   const progress = renderPart.age / BANDAGE_LIFETIME_TICKS;
+   const progress = renderPartAge / BANDAGE_LIFETIME_TICKS;
    renderPart.opacity = 1 - progress * progress;
 }
 
@@ -173,7 +175,7 @@ const getCustomItemRenderPartOpacity = (entity: Entity, state: CustomItemState):
          
          const useInfo = ITEM_INFO_RECORD[ItemType.herbal_medicine] as ConsumableItemInfo;
 
-         const ticksSpentUsingMedicine = Board.ticks - lastEatTicks;
+         const ticksSpentUsingMedicine = Board.serverTicks - lastEatTicks;
          const useProgress = ticksSpentUsingMedicine / Math.floor(useInfo.consumeTime * Settings.TPS);
          return 1 - useProgress;
       }

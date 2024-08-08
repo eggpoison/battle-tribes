@@ -7,6 +7,7 @@ import { playSound } from "../sound";
 import { RenderPart } from "../render-parts/render-parts";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { PacketReader } from "webgl-test-shared/dist/packets";
+import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 
 const doorHalfDiagonalLength = Math.sqrt(16 * 16 + 48 * 48) / 2;
 const angleToCenter = angle(16, 48);
@@ -127,3 +128,5 @@ class TunnelComponent extends ServerComponent {
 }
 
 export default TunnelComponent;
+
+export const TunnelComponentArray = new ComponentArray<TunnelComponent>(ComponentArrayType.server, ServerComponentType.tunnel, {});

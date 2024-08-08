@@ -1,6 +1,8 @@
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import { PacketReader } from "webgl-test-shared/dist/packets";
+import { ComponentArray, ComponentArrayType } from "./ComponentArray";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 
 class EscapeAIComponent extends ServerComponent {
    constructor(entity: Entity, reader: PacketReader) {
@@ -22,3 +24,5 @@ class EscapeAIComponent extends ServerComponent {
 }
 
 export default EscapeAIComponent;
+
+export const EscapeAIComponentArray = new ComponentArray<EscapeAIComponent>(ComponentArrayType.server, ServerComponentType.escapeAI, {});

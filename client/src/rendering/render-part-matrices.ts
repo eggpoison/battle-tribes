@@ -1,10 +1,11 @@
 import { Point } from "webgl-test-shared/dist/utils";
 import Entity from "../Entity";
-import { Matrix3x3, createRotationMatrix, createScaleMatrix, createTranslationMatrix, matrixMultiply } from "./matrices";
+import { matrixMultiplyInPlace, overrideWithRotationMatrix, overrideWithScaleMatrix, rotateMatrix, translateMatrix } from "./matrices";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { RenderPart, renderPartIsTextured } from "../render-parts/render-parts";
 import { addEntitiesToBuffer, calculateRenderPartDepth } from "./webgl/entity-rendering";
+import { EntityType } from "webgl-test-shared/dist/entities";
 
 let dirtyEntities = new Array<Entity>();
 
@@ -33,42 +34,28 @@ const calculateEntityRenderPosition = (entity: Entity, frameProgress: number): P
    return renderPosition;
 }
 
-const calculateEntityModelMatrix = (entity: Entity, frameProgress: number): Matrix3x3 => {
+const calculateAndOverrideEntityModelMatrix = (entity: Entity, frameProgress: number): void => {
    // Rotate
    const transformComponent = entity.getServerComponent(ServerComponentType.transform);
-   let model = createRotationMatrix(transformComponent.rotation);
+   overrideWithRotationMatrix(entity.modelMatrix, transformComponent.rotation);
 
    // Translate
    const renderPosition = calculateEntityRenderPosition(entity, frameProgress);
-   const translation = createTranslationMatrix(renderPosition.x, renderPosition.y);
-   model = matrixMultiply(translation, model);
-
-   return model;
-}
-
-const calculateEntityTranslationMatrix = (entity: Entity, frameProgress: number): Matrix3x3 => {
-   const renderPosition = calculateEntityRenderPosition(entity, frameProgress);
-   return createTranslationMatrix(renderPosition.x, renderPosition.y);
+   translateMatrix(entity.modelMatrix, renderPosition.x, renderPosition.y);
 }
 
 // @Cleanup: Copy and paste. combine with entity function.
-const calculateRenderPartMatrix = (renderPart: RenderPart): Matrix3x3 => {
+const calculateAndOverrideRenderPartMatrix = (renderPart: RenderPart): void => {
    // Scale
    const scaleX = renderPart.scale * (renderPartIsTextured(renderPart) && renderPart.flipX ? -1 : 1);
    const scaleY = renderPart.scale;
-   let model = createScaleMatrix(scaleX, scaleY);
+   overrideWithScaleMatrix(renderPart.modelMatrix, scaleX, scaleY);
    
-   // @Speed: Garbage collection
    // Rotation
-   const rotationMatrix = createRotationMatrix(renderPart.rotation);
-   model = matrixMultiply(rotationMatrix, model);
+   rotateMatrix(renderPart.modelMatrix, renderPart.rotation);
 
-   // @Speed: Garbage collection
    // Translation
-   const translation = createTranslationMatrix(renderPart.offset.x, renderPart.offset.y);
-   model = matrixMultiply(translation, model);
-
-   return model;
+   translateMatrix(renderPart.modelMatrix, renderPart.offset.x, renderPart.offset.y);
 }
 
 export function updateRenderPartMatrices(frameProgress: number): void {
@@ -77,34 +64,50 @@ export function updateRenderPartMatrices(frameProgress: number): void {
       
       const numRenderParts = entity.allRenderParts.length;
       
-      const depthData = new Float32Array(numRenderParts);
-      const textureArrayIndexData = new Float32Array(numRenderParts);
-      const tintData = new Float32Array(3 * numRenderParts);
-      const opacityData = new Float32Array(numRenderParts);
-      const modelMatrixData = new Float32Array(9 * numRenderParts);
+      // If the entity has added or removed render parts, recreate the data arrays
+      if (numRenderParts !== entity.depthData.length) {
+         entity.depthData = new Float32Array(numRenderParts);
+         entity.textureArrayIndexData = new Float32Array(numRenderParts);
+         entity.tintData = new Float32Array(3 * numRenderParts);
+         entity.opacityData = new Float32Array(numRenderParts);
+         entity.modelMatrixData = new Float32Array(9 * numRenderParts);
+      }
       
-      const entityModelMatrix = calculateEntityModelMatrix(entity, frameProgress);
-      entity.modelMatrix = entityModelMatrix;
+      calculateAndOverrideEntityModelMatrix(entity, frameProgress);
+
+      let baseTintR = 0;
+      let baseTintG = 0;
+      let baseTintB = 0;
+      for (let j = 0; j < entity.serverComponents.length; j++) {
+         const component = entity.serverComponents[j];
+         baseTintR += component.tintR;
+         baseTintG += component.tintG;
+         baseTintB += component.tintB;
+      }
+      
+      const entityDepthData = entity.depthData;
+      const entityTextureArrayIndexData = entity.textureArrayIndexData;
+      const entityTintData = entity.tintData;
+      const entityOpacityData = entity.opacityData;
+      const entityModelMatrixData = entity.modelMatrixData;
 
       for (let j = 0; j < numRenderParts; j++) {
-         // const renderPart = entity.renderPartsHierarchicalArray[j];
-         const renderPart = entity.renderPartsHierarchicalArray[j];
+         const renderPart = entity.allRenderParts[j];
 
-         const modelMatrix = calculateRenderPartMatrix(renderPart);
+         // Model matrix for the render part
+         calculateAndOverrideRenderPartMatrix(renderPart);
 
          if (renderPart.inheritParentRotation) {
-            renderPart.modelMatrix = matrixMultiply(renderPart.parent.modelMatrix, modelMatrix);
+            matrixMultiplyInPlace(renderPart.parent.modelMatrix, renderPart.modelMatrix);
          } else {
-            const entityModelMatrix = calculateEntityTranslationMatrix(entity, frameProgress);
-            // Base the matrix on the entity's model matrix without rotation
-            renderPart.modelMatrix = matrixMultiply(entityModelMatrix, modelMatrix);
+            const renderPosition = calculateEntityRenderPosition(entity, frameProgress);
+            translateMatrix(renderPart.modelMatrix, renderPosition.x, renderPosition.y);
          }
    
-         const depth = calculateRenderPartDepth(renderPart, entity);
+         let tintR = baseTintR + renderPart.tintR;
+         let tintG = baseTintG + renderPart.tintG;
+         let tintB = baseTintB + renderPart.tintB;
 
-         let tintR = entity.tintR + renderPart.tintR;
-         let tintG = entity.tintG + renderPart.tintG;
-         let tintB = entity.tintB + renderPart.tintB;
          if (!renderPartIsTextured(renderPart)) {
             tintR = renderPart.colour.r;
             tintG = renderPart.colour.g;
@@ -113,16 +116,6 @@ export function updateRenderPartMatrices(frameProgress: number): void {
 
          const textureArrayIndex = renderPartIsTextured(renderPart) ? renderPart.textureArrayIndex : -1;
 
-         renderPart.depthData[0] = depth;
-
-         renderPart.textureArrayIndexData[0] = textureArrayIndex;
-   
-         renderPart.tintData[0] = tintR;
-         renderPart.tintData[1] = tintG;
-         renderPart.tintData[2] = tintB;
-         
-         renderPart.opacityData[0] = renderPart.opacity;
-   
          renderPart.modelMatrixData[0] = renderPart.modelMatrix[0];
          renderPart.modelMatrixData[1] = renderPart.modelMatrix[1];
          renderPart.modelMatrixData[2] = renderPart.modelMatrix[2];
@@ -132,37 +125,27 @@ export function updateRenderPartMatrices(frameProgress: number): void {
          renderPart.modelMatrixData[6] = renderPart.modelMatrix[6];
          renderPart.modelMatrixData[7] = renderPart.modelMatrix[7];
          renderPart.modelMatrixData[8] = renderPart.modelMatrix[8];
-      }
 
-      for (let j = 0; j < numRenderParts; j++) {
-         const renderPart = entity.allRenderParts[j];
+         entityDepthData[j] = calculateRenderPartDepth(renderPart, entity);
 
-         depthData[j] = renderPart.depthData[0];
-
-         textureArrayIndexData[j] = renderPart.textureArrayIndexData[0];
+         entityTextureArrayIndexData[j] = textureArrayIndex;
    
-         tintData[j * 3] = renderPart.tintData[0];
-         tintData[j * 3 + 1] = renderPart.tintData[1];
-         tintData[j * 3 + 2] = renderPart.tintData[2];
+         entityTintData[j * 3] = tintR;
+         entityTintData[j * 3 + 1] = tintG;
+         entityTintData[j * 3 + 2] = tintB;
          
-         opacityData[j] = renderPart.opacityData[0];
+         entityOpacityData[j] = renderPart.opacity;
    
-         modelMatrixData[j * 9] = renderPart.modelMatrixData[0];
-         modelMatrixData[j * 9 + 1] = renderPart.modelMatrixData[1];
-         modelMatrixData[j * 9 + 2] = renderPart.modelMatrixData[2];
-         modelMatrixData[j * 9 + 3] = renderPart.modelMatrixData[3];
-         modelMatrixData[j * 9 + 4] = renderPart.modelMatrixData[4];
-         modelMatrixData[j * 9 + 5] = renderPart.modelMatrixData[5];
-         modelMatrixData[j * 9 + 6] = renderPart.modelMatrixData[6];
-         modelMatrixData[j * 9 + 7] = renderPart.modelMatrixData[7];
-         modelMatrixData[j * 9 + 8] = renderPart.modelMatrixData[8];
+         entityModelMatrixData[j * 9] = renderPart.modelMatrixData[0];
+         entityModelMatrixData[j * 9 + 1] = renderPart.modelMatrixData[1];
+         entityModelMatrixData[j * 9 + 2] = renderPart.modelMatrixData[2];
+         entityModelMatrixData[j * 9 + 3] = renderPart.modelMatrixData[3];
+         entityModelMatrixData[j * 9 + 4] = renderPart.modelMatrixData[4];
+         entityModelMatrixData[j * 9 + 5] = renderPart.modelMatrixData[5];
+         entityModelMatrixData[j * 9 + 6] = renderPart.modelMatrixData[6];
+         entityModelMatrixData[j * 9 + 7] = renderPart.modelMatrixData[7];
+         entityModelMatrixData[j * 9 + 8] = renderPart.modelMatrixData[8];
       }
-
-      entity.depthData = depthData;
-      entity.textureArrayIndexData = textureArrayIndexData;
-      entity.tintData = tintData;
-      entity.opacityData = opacityData;
-      entity.modelMatrixData = modelMatrixData;
    }
 
    addEntitiesToBuffer(dirtyEntities);

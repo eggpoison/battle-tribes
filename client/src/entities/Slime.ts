@@ -28,13 +28,6 @@ class Slime extends Entity {
       return null;
    }
 
-   public tick(): void {
-      if (Math.random() < 0.2 / Settings.TPS) {
-         const transformComponent = this.getServerComponent(ServerComponentType.transform);
-         playSound(("slime-ambient-" + randInt(1, 4) + ".mp3") as AudioFilePath, 0.4, 1, transformComponent.position);
-      }
-   }
-
    protected onHit(): void {
       const transformComponent = this.getServerComponent(ServerComponentType.transform);
       const slimeComponent = this.getServerComponent(ServerComponentType.slime);

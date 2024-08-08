@@ -9,6 +9,7 @@ import { ItemType } from "webgl-test-shared/dist/items/items";
 import { RenderPart } from "../render-parts/render-parts";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { PacketReader } from "webgl-test-shared/dist/packets";
+import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 
 type TurretType = EntityType.slingTurret | EntityType.ballista;
 
@@ -228,3 +229,5 @@ class TurretComponent extends ServerComponent {
 }
 
 export default TurretComponent;
+
+export const TurretComponentArray = new ComponentArray<TurretComponent>(ComponentArrayType.server, ServerComponentType.turret, {});

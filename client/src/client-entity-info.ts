@@ -196,6 +196,9 @@ const CLIENT_ENTITY_INFO_RECORD: Record<EntityType, ClientEntityInfo> = {
    },
    [EntityType.lilypad]: {
       name: "Lilypad"
+   },
+   [EntityType.fibrePlant]: {
+      name: "Fibre Plant"
    }
 };
 

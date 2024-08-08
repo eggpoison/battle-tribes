@@ -23,6 +23,7 @@ import { collide } from "./collision";
 import { COLLISION_BITS } from "webgl-test-shared/dist/collision";
 import { latencyGameState } from "./game-state/game-states";
 import { addEntityToRenderHeightMap, removeEntityFromBuffer } from "./rendering/webgl/entity-rendering";
+import { getComponentArrays } from "./entity-components/ComponentArray";
 
 export interface EntityHitboxInfo {
    readonly vertexPositions: readonly [Point, Point, Point, Point];
@@ -35,7 +36,8 @@ interface TickCallback {
 }
 
 abstract class Board {
-   public static ticks: number;
+   public static serverTicks: number;
+   public static clientTicks = 0;
    public static time: number;
 
    // @Hack: don't have this default value
@@ -155,8 +157,8 @@ abstract class Board {
    public static tickIntervalHasPassed(intervalSeconds: number): boolean {
       const ticksPerInterval = intervalSeconds * Settings.TPS;
       
-      const previousCheck = (Board.ticks - 1) / ticksPerInterval;
-      const check = Board.ticks / ticksPerInterval;
+      const previousCheck = (Board.serverTicks - 1) / ticksPerInterval;
+      const check = Board.serverTicks / ticksPerInterval;
       return Math.floor(previousCheck) !== Math.floor(check);
    }
 
@@ -236,7 +238,7 @@ abstract class Board {
                         } else {
                            // @Hack
                            if (otherTransformComponent.collisionBit === COLLISION_BITS.plants) {
-                              latencyGameState.lastPlantCollisionTicks = Board.ticks;
+                              latencyGameState.lastPlantCollisionTicks = Board.serverTicks;
                            }
                            break;
                         }
@@ -291,7 +293,7 @@ abstract class Board {
                         } else {
                            // @Hack
                            if (otherTransformComponent.collisionBit === COLLISION_BITS.plants) {
-                              latencyGameState.lastPlantCollisionTicks = Board.ticks;
+                              latencyGameState.lastPlantCollisionTicks = Board.serverTicks;
                            }
                            break;
                         }
@@ -387,15 +389,32 @@ abstract class Board {
 
    /** Ticks all game objects without updating them */
    public static tickEntities(): void {
-      for (const entity of this.entities) {
-         entity.tick();
+      const componentArrays = getComponentArrays();
+      
+      for (let i = 0; i < componentArrays.length; i++) {
+         const componentArray = componentArrays[i];
+         if (typeof componentArray.onTick !== "undefined") {
+            for (let j = 0; j < componentArray.components.length; j++) {
+               const component = componentArray.components[j];
+               // @Temporary @Hack
+               componentArray.onTick(component, 0);
+            }
+         }
       }
    }
 
    public static updateEntities(): void {
-      for (const entity of this.entities) {
-         entity.tick();
-         entity.update();
+      const componentArrays = getComponentArrays();
+      
+      for (let i = 0; i < componentArrays.length; i++) {
+         const componentArray = componentArrays[i];
+         if (typeof componentArray.onUpdate !== "undefined") {
+            for (let j = 0; j < componentArray.components.length; j++) {
+               const component = componentArray.components[j];
+               // @Temporary @Hack
+               componentArray.onUpdate(component, 0);
+            }
+         }
       }
    }
 

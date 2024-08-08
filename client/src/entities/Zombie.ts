@@ -52,15 +52,6 @@ class Zombie extends Entity {
       }
    }
 
-   public tick(): void {
-      super.tick();
-
-      if (Math.random() < 0.1 / Settings.TPS) {
-         const transformComponent = this.getServerComponent(ServerComponentType.transform);
-         playSound(("zombie-ambient-" + randInt(1, 3) + ".mp3") as AudioFilePath, 0.4, 1, transformComponent.position);
-      }
-   }
-
    protected onHit(hitData: HitData): void {
       const transformComponent = this.getServerComponent(ServerComponentType.transform);
 

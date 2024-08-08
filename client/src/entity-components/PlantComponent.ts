@@ -5,6 +5,8 @@ import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { ItemType } from "webgl-test-shared/dist/items/items";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { PacketReader } from "webgl-test-shared/dist/packets";
+import { ComponentArray, ComponentArrayType } from "./ComponentArray";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 
 const TEXTURE_SOURCES: Record<PlanterBoxPlant, ReadonlyArray<string>> = {
    [PlanterBoxPlant.tree]: ["entities/plant/tree-sapling-1.png", "entities/plant/tree-sapling-2.png", "entities/plant/tree-sapling-3.png", "entities/plant/tree-sapling-4.png", "entities/plant/tree-sapling-5.png", "entities/plant/tree-sapling-6.png", "entities/plant/tree-sapling-7.png", "entities/plant/tree-sapling-8.png", "entities/plant/tree-sapling-9.png", "entities/plant/tree-sapling-10.png", "entities/plant/tree-sapling-11.png"],
@@ -92,3 +94,5 @@ class PlantComponent extends ServerComponent {
 }
 
 export default PlantComponent;
+
+export const PlantComponentArray = new ComponentArray<PlantComponent>(ComponentArrayType.server, ServerComponentType.plant, {});

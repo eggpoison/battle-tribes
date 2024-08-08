@@ -2,7 +2,7 @@ import { WaterRockData, RiverSteppingStoneData, RIVER_STEPPING_STONE_SIZES, Serv
 import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { Biome, TileType } from "webgl-test-shared/dist/tiles";
-import { Point, TileIndex } from "webgl-test-shared/dist/utils";
+import { distance, Point, TileIndex } from "webgl-test-shared/dist/utils";
 import { circlesDoIntersect, circleAndRectangleDoIntersect } from "webgl-test-shared/dist/collision";
 import Chunk from "./Chunk";
 import { addTileToCensus, removeEntityFromCensus } from "./census";
@@ -565,12 +565,16 @@ abstract class Board {
       return x >= 0 && x < Settings.BOARD_DIMENSIONS * Settings.TILE_SIZE && y >= 0 && y < Settings.BOARD_DIMENSIONS * Settings.TILE_SIZE;
    }
 
-   public static getEntitiesInRange(position: Point, range: number): Array<EntityID> {
-      const minChunkX = Math.max(Math.min(Math.floor((position.x - range) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
-      const maxChunkX = Math.max(Math.min(Math.floor((position.x + range) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
-      const minChunkY = Math.max(Math.min(Math.floor((position.y - range) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
-      const maxChunkY = Math.max(Math.min(Math.floor((position.y + range) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
+   public static getEntitiesInRange(x: number, y: number, range: number): Array<EntityID> {
+      const minChunkX = Math.max(Math.min(Math.floor((x - range) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
+      const maxChunkX = Math.max(Math.min(Math.floor((x + range) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
+      const minChunkY = Math.max(Math.min(Math.floor((y - range) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
+      const maxChunkY = Math.max(Math.min(Math.floor((y + range) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
 
+      // @Speed: garbage collection
+      const position = new Point(x, y);
+      
+      // @Speed: garbage collection
       const checkedEntities = new Set<EntityID>();
       const entities = new Array<EntityID>();
       
@@ -769,4 +773,50 @@ export function getChunksInBounds(minX: number, maxX: number, minY: number, maxY
    }
 
    return chunks;
+}
+
+const tileIsInRange = (x: number, y: number, range: number, tileX: number, tileY: number): boolean => {
+   const blX = tileX * Settings.TILE_SIZE;
+   const blY = tileY * Settings.TILE_SIZE;
+   if (distance(x, y, blX, blY) <= range) {
+      return true;
+   }
+   
+   const brX = (tileX + 1) * Settings.TILE_SIZE;
+   const brY = tileY * Settings.TILE_SIZE;
+   if (distance(x, y, brX, brY) <= range) {
+      return true;
+   }
+
+   const tlX = tileX * Settings.TILE_SIZE;
+   const tlY = (tileY + 1) * Settings.TILE_SIZE;
+   if (distance(x, y, tlX, tlY) <= range) {
+      return true;
+   }
+
+   const trX = (tileX + 1) * Settings.TILE_SIZE;
+   const trY = (tileY + 1) * Settings.TILE_SIZE;
+   if (distance(x, y, trX, trY) <= range) {
+      return true;
+   }
+
+   return false;
+}
+
+export function getTilesInRange(x: number, y: number, range: number): ReadonlyArray<TileIndex> {
+   const minTileX = Math.floor((x - range) / Settings.TILE_SIZE);
+   const maxTileX = Math.floor((x + range) / Settings.TILE_SIZE);
+   const minTileY = Math.floor((y - range) / Settings.TILE_SIZE);
+   const maxTileY = Math.floor((y + range) / Settings.TILE_SIZE);
+
+   const tiles = new Array<TileIndex>();
+   for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
+      for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
+         if (tileIsInRange(x, y, range, tileX, tileY)) {
+            const tileIndex = Board.getTileIndexIncludingEdges(tileX, tileY);
+            tiles.push(tileIndex);
+         }
+      }
+   }
+   return tiles;
 }

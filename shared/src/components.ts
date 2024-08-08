@@ -61,6 +61,7 @@ export enum ServerComponentType {
    tunnel,
    buildingMaterial,
    spikes,
+   punjiSticks,
    tribeWarrior,
    healingTotem,
    planterBox,
@@ -71,6 +72,7 @@ export enum ServerComponentType {
    craftingStation,
    transform,
    projectile,
+   iceArrow,
    layeredRod,
    decoration,
    spitPoisonArea,
@@ -125,6 +127,7 @@ export const ServerComponentTypeString: Record<ServerComponentType, string> = {
    [ServerComponentType.tunnel]: "tunnel",
    [ServerComponentType.buildingMaterial]: "building material",
    [ServerComponentType.spikes]: "spikes",
+   [ServerComponentType.punjiSticks]: "punji sticks",
    [ServerComponentType.tribeWarrior]: "tribe warrior",
    [ServerComponentType.healingTotem]: "healing totem",
    [ServerComponentType.planterBox]: "planter box",
@@ -135,6 +138,7 @@ export const ServerComponentTypeString: Record<ServerComponentType, string> = {
    [ServerComponentType.craftingStation]: "crafting station",
    [ServerComponentType.transform]: "transform",
    [ServerComponentType.projectile]: "projectile",
+   [ServerComponentType.iceArrow]: "ice arrow",
    [ServerComponentType.layeredRod]: "layered rod",
    [ServerComponentType.decoration]: "decoration",
    [ServerComponentType.spitPoisonArea]: "spit poison area",
@@ -142,6 +146,8 @@ export const ServerComponentTypeString: Record<ServerComponentType, string> = {
    [ServerComponentType.spearProjectile]: "spear projectile",
    [ServerComponentType.krumblid]: "krumblid"
 };
+
+export const NUM_COMPONENTS = Object.keys(ServerComponentTypeString).length;
 
 // @Hack: shouldn't be hardcoded
 export const EntityComponents = {
@@ -188,13 +194,13 @@ export const EntityComponents = {
    [EntityType.battleaxeProjectile]: [ServerComponentType.transform, ServerComponentType.physics, ServerComponentType.throwingProjectile] as const,
    [EntityType.golem]: [ServerComponentType.transform, ServerComponentType.physics, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.golem] as const,
    [EntityType.planterBox]: [ServerComponentType.transform, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.tribe, ServerComponentType.planterBox] as const,
-   [EntityType.iceArrow]: [ServerComponentType.transform, ServerComponentType.physics, ServerComponentType.tribe] as const,
+   [EntityType.iceArrow]: [ServerComponentType.transform, ServerComponentType.physics, ServerComponentType.tribe, ServerComponentType.iceArrow] as const,
    [EntityType.pebblum]: [ServerComponentType.transform, ServerComponentType.physics, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.pebblum] as const,
    [EntityType.embrasure]: [ServerComponentType.transform, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.tribe, ServerComponentType.buildingMaterial] as const,
    [EntityType.floorSpikes]: [ServerComponentType.transform, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.tribe, ServerComponentType.spikes, ServerComponentType.buildingMaterial] as const,
    [EntityType.wallSpikes]: [ServerComponentType.transform, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.tribe, ServerComponentType.spikes, ServerComponentType.buildingMaterial] as const,
-   [EntityType.floorPunjiSticks]: [ServerComponentType.transform, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.tribe, ServerComponentType.spikes] as const,
-   [EntityType.wallPunjiSticks]: [ServerComponentType.transform, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.tribe, ServerComponentType.spikes] as const,
+   [EntityType.floorPunjiSticks]: [ServerComponentType.transform, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.tribe, ServerComponentType.spikes, ServerComponentType.punjiSticks] as const,
+   [EntityType.wallPunjiSticks]: [ServerComponentType.transform, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.tribe, ServerComponentType.spikes, ServerComponentType.punjiSticks] as const,
    [EntityType.blueprintEntity]: [ServerComponentType.transform, ServerComponentType.health, ServerComponentType.blueprint, ServerComponentType.tribe] as const,
    [EntityType.ballista]: [ServerComponentType.transform, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.tribe, ServerComponentType.turret, ServerComponentType.aiHelper, ServerComponentType.ammoBox, ServerComponentType.inventory] as const,
    [EntityType.slingTurret]: [ServerComponentType.transform, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.tribe, ServerComponentType.turret, ServerComponentType.aiHelper] as const,
@@ -208,7 +214,8 @@ export const EntityComponents = {
    [EntityType.grassStrand]: [ServerComponentType.transform, ServerComponentType.layeredRod] as const,
    [EntityType.decoration]: [ServerComponentType.transform, ServerComponentType.decoration] as const,
    [EntityType.reed]: [ServerComponentType.transform, ServerComponentType.layeredRod] as const,
-   [EntityType.lilypad]: [ServerComponentType.transform] as const
+   [EntityType.lilypad]: [ServerComponentType.transform] as const,
+   [EntityType.fibrePlant]: [ServerComponentType.transform, ServerComponentType.statusEffect, ServerComponentType.health] as const
 } satisfies Record<EntityType, ReadonlyArray<ServerComponentType>>;
 
 export type EntityComponentTypes<T extends EntityType> = typeof EntityComponents[T];

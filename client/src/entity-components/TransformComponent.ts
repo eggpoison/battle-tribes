@@ -12,6 +12,8 @@ import { randInt } from "webgl-test-shared/dist/utils";
 import { randFloat } from "webgl-test-shared/dist/utils";
 import { createCircularHitboxFromData, createRectangularHitboxFromData } from "../client/Client";
 import { PacketReader } from "webgl-test-shared/dist/packets";
+import { ComponentArray, ComponentArrayType } from "./ComponentArray";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 
 const getTile = (position: Point): Tile => {
    const tileX = Math.floor(position.x / Settings.TILE_SIZE);
@@ -112,10 +114,6 @@ class TransformComponent extends ServerComponent {
       }
 
       return true;
-   }
-
-   public update(): void {
-      this.ageTicks++;
    }
 
    public addHitbox(hitbox: Hitbox, localID: number): void {
@@ -424,6 +422,15 @@ class TransformComponent extends ServerComponent {
 }
 
 export default TransformComponent;
+
+export const TransformComponentArray = new ComponentArray<TransformComponent>(ComponentArrayType.server, ServerComponentType.transform, {
+   onUpdate: onUpdate
+});
+
+// @Speed
+function onUpdate(transformComponent: TransformComponent): void {
+   transformComponent.ageTicks++;
+}
 
 // @Cleanup: copy and paste from server
 export function getRandomPointInEntity(transformComponent: TransformComponent): Point {

@@ -9,6 +9,7 @@ import Board from "../Board";
 import { Hitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { PacketReader } from "webgl-test-shared/dist/packets";
 import { EntityType } from "webgl-test-shared/dist/entities";
+import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 
 const enum Vars {
    NATURAL_DRIFT = 20 / Settings.TPS
@@ -102,15 +103,15 @@ const getLayerColour = (entity: Entity, r: number, g: number, b: number, layer: 
 }
 
 class LayeredRodComponent extends ServerComponent {
-   private readonly renderParts = new Array<RenderPart>();
+   public readonly renderParts = new Array<RenderPart>();
 
-   private readonly numLayers: number;
+   public readonly numLayers: number;
    
-   private readonly naturalBendX: number;
-   private readonly naturalBendY: number;
+   public readonly naturalBendX: number;
+   public readonly naturalBendY: number;
    
-   private bendX = 0;
-   private bendY = 0;
+   public bendX = 0;
+   public bendY = 0;
 
    private readonly r: number;
    private readonly g: number;
@@ -160,43 +161,6 @@ class LayeredRodComponent extends ServerComponent {
       }
    }
 
-   private updateOffsets(): void {
-      const bendMagnitude = Math.sqrt(this.bendX * this.bendX + this.bendY * this.bendY);
-      const bendProgress = bendMagnitude / MAX_BEND;
-      const naturalBendMultiplier = 1 - bendProgress;
-      
-      const bendX = this.naturalBendX * naturalBendMultiplier + this.bendX;
-      const bendY = this.naturalBendY * naturalBendMultiplier + this.bendY;
-      
-      for (let layer = 1; layer <= this.numLayers; layer++) {
-         const renderPart = this.renderParts[layer - 1];
-
-         renderPart.offset.x = bendX * layer;
-         renderPart.offset.y = bendY * layer;
-      }
-   }
-
-   public tick(): void {
-      if (this.bendX === 0 && this.bendY === 0) {
-         return;
-      }
-      
-      const bendMagnitude = Math.sqrt(this.bendX * this.bendX + this.bendY * this.bendY);
-   
-      // Slow the return the closer to straight it is
-      let bendSmoothnessMultiplier = 1 - bendMagnitude / MAX_BEND;
-      bendSmoothnessMultiplier *= bendSmoothnessMultiplier * bendSmoothnessMultiplier;
-      bendSmoothnessMultiplier = 1 - bendSmoothnessMultiplier;
-      // Make sure it doesn't completely stop movement
-      bendSmoothnessMultiplier = bendSmoothnessMultiplier * 0.9 + 0.1;
-      
-      this.bendX -= Vars.NATURAL_DRIFT * bendSmoothnessMultiplier * this.bendX / bendMagnitude / Math.sqrt(this.numLayers);
-      this.bendY -= Vars.NATURAL_DRIFT * bendSmoothnessMultiplier * this.bendY / bendMagnitude / Math.sqrt(this.numLayers);
-
-      this.updateOffsets();
-      this.entity.dirty();
-   }
-
    public onCollision(_collidingEntity: Entity, _pushedHitbox: Hitbox, pushingHitbox: Hitbox): void {
       const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
    
@@ -228,7 +192,7 @@ class LayeredRodComponent extends ServerComponent {
       this.bendX = bendX;
       this.bendY = bendY;
       
-      this.updateOffsets();
+      updateOffsets(this);
       this.entity.dirty();
    }
 
@@ -242,3 +206,44 @@ class LayeredRodComponent extends ServerComponent {
 }
 
 export default LayeredRodComponent;
+
+export const LayeredRodComponentArray = new ComponentArray<LayeredRodComponent>(ComponentArrayType.server, ServerComponentType.layeredRod, {
+   onTick: onTick
+});
+
+const updateOffsets = (layeredRodComponent: LayeredRodComponent): void => {
+   const bendMagnitude = Math.sqrt(layeredRodComponent.bendX * layeredRodComponent.bendX + layeredRodComponent.bendY * layeredRodComponent.bendY);
+   const bendProgress = bendMagnitude / MAX_BEND;
+   const naturalBendMultiplier = 1 - bendProgress;
+   
+   const bendX = layeredRodComponent.naturalBendX * naturalBendMultiplier + layeredRodComponent.bendX;
+   const bendY = layeredRodComponent.naturalBendY * naturalBendMultiplier + layeredRodComponent.bendY;
+   
+   for (let layer = 1; layer <= layeredRodComponent.numLayers; layer++) {
+      const renderPart = layeredRodComponent.renderParts[layer - 1];
+
+      renderPart.offset.x = bendX * layer;
+      renderPart.offset.y = bendY * layer;
+   }
+}
+
+function onTick(layeredRodComponent: LayeredRodComponent): void {
+   if (layeredRodComponent.bendX === 0 && layeredRodComponent.bendY === 0) {
+      return;
+   }
+   
+   const bendMagnitude = Math.sqrt(layeredRodComponent.bendX * layeredRodComponent.bendX + layeredRodComponent.bendY * layeredRodComponent.bendY);
+
+   // Slow the return the closer to straight it is
+   let bendSmoothnessMultiplier = 1 - bendMagnitude / MAX_BEND;
+   bendSmoothnessMultiplier *= bendSmoothnessMultiplier * bendSmoothnessMultiplier;
+   bendSmoothnessMultiplier = 1 - bendSmoothnessMultiplier;
+   // Make sure it doesn't completely stop movement
+   bendSmoothnessMultiplier = bendSmoothnessMultiplier * 0.9 + 0.1;
+   
+   layeredRodComponent.bendX -= Vars.NATURAL_DRIFT * bendSmoothnessMultiplier * layeredRodComponent.bendX / bendMagnitude / Math.sqrt(layeredRodComponent.numLayers);
+   layeredRodComponent.bendY -= Vars.NATURAL_DRIFT * bendSmoothnessMultiplier * layeredRodComponent.bendY / bendMagnitude / Math.sqrt(layeredRodComponent.numLayers);
+
+   updateOffsets(layeredRodComponent);
+   layeredRodComponent.entity.dirty();
+}

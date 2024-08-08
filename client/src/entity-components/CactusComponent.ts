@@ -6,6 +6,7 @@ import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { createFlowerParticle } from "../particles";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { PacketReader } from "webgl-test-shared/dist/packets";
+import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 
 export const CACTUS_RADIUS = 40;
 
@@ -170,3 +171,5 @@ class CactusComponent extends ServerComponent {
 }
 
 export default CactusComponent;
+
+export const CactusComponentArray = new ComponentArray<CactusComponent>(ComponentArrayType.server, ServerComponentType.cactus, {});

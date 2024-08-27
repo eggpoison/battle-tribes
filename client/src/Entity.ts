@@ -71,6 +71,9 @@ abstract class Entity extends BaseRenderObject {
 
    public dirty(): void {
       if (!this.modelMatrixIsDirty) {
+         if (typeof Board.entityRecord[this.id] === "undefined") {
+            throw new Error("12");
+         }
          registerDirtyEntity(this);
       }
       

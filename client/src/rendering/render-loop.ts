@@ -1,3 +1,5 @@
+import { EntityType } from "webgl-test-shared/dist/entities";
+import Board from "../Board";
 import Entity from "../Entity";
 import Particle from "../Particle";
 import { calculateRenderPartDepth, getEntityHeight, renderEntities } from "./webgl/entity-rendering";
@@ -79,9 +81,48 @@ export function addRenderable(type: RenderableType, renderable: Renderable): voi
       renderable: renderable
    };
    renderables.splice(idx, 0, renderableInfo);
+
+   let previousRenderHeight = -99999;
+   for (let i = 0; i < renderables.length; i++) {
+      const renderable = renderables[i];
+      const renderHeight = getRenderableRenderHeight(renderable.type, renderable.renderable);
+      if (renderHeight < previousRenderHeight) {
+         throw new Error();
+      }
+      previousRenderHeight = renderHeight;
+   }
+}
+
+export function aaTEMPTEMP(): void {
+   // setTimeout(() => {
+   //    const trees = renderables.filter(entity => (entity.renderable as Entity).type !== EntityType.player);
+   //    const idx = 0;
+   //    const renderable = trees[idx];
+   //    Board.removeEntity(renderable.renderable as Entity, false);
+   // }, 3000);
+
+   // setTimeout(() => {
+   //    const trees = renderables.filter(entity => (entity.renderable as Entity).type !== EntityType.player);
+   //    const idx = 0;
+   //    const renderable = trees[idx];
+   //    Board.removeEntity(renderable.renderable as Entity, false);
+   // }, 6000);
+   
+   // setTimeout(() => {
+   //    const trees = renderables.filter(entity => (entity.renderable as Entity).type !== EntityType.player);
+   //    if (trees.length === 0) {
+   //       return;
+   //    }
+   //    const idx = 0;
+   //    const renderable = trees[idx];
+   //    Board.removeEntity(renderable.renderable as Entity, false);
+
+   //    aaTEMPTEMP();
+   // }, 400);
 }
 
 export function removeRenderable(renderable: Renderable): void {
+   // @Speed
    let idx = -1;
    for (let i = 0; i < renderables.length; i++) {
       const renderableInfo = renderables[i];
@@ -93,6 +134,8 @@ export function removeRenderable(renderable: Renderable): void {
 
    if (idx !== -1) {
       renderables.splice(idx, 1);
+   } else {
+      throw new Error();
    }
 }
 

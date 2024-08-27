@@ -59,7 +59,7 @@ import { createEntityOverlayShaders } from "./rendering/webgl/overlay-rendering"
 import { updateRenderPartMatrices } from "./rendering/render-part-matrices";
 import { EntitySummonPacket } from "webgl-test-shared/dist/dev-packets";
 import { Mutable } from "webgl-test-shared/dist/utils";
-import { renderNextRenderables, resetRenderOrder } from "./rendering/render-loop";
+import { aaTEMPTEMP, renderNextRenderables, resetRenderOrder } from "./rendering/render-loop";
 import { InitialGameDataPacket, processGameDataPacket } from "./client/packet-processing";
 import { PacketReader } from "webgl-test-shared/dist/packets";
 import { getMaxRenderHeightForRenderLayer, RenderLayer } from "./render-layers";
@@ -174,6 +174,10 @@ abstract class Game {
       this.isRunning = true;
       this.lastTime = performance.now();
       requestAnimationFrame(time => this.main(time));
+      // @Temporary
+      setTimeout(() => {
+         aaTEMPTEMP();
+      }, 1000);
    }
 
    public static stop(): void {

@@ -277,7 +277,7 @@ const TEXTURE_SOURCES: Array<string> = [
    "entities/sling-turret/plate-blueprint-2.png",
    "entities/sling-turret/sling-blueprint-1.png",
    "entities/sling-turret/sling-blueprint-2.png",
-   "projectiles/sling-rock.png",
+   "projectiles/sling-rock.png", 
    "projectiles/ballista-rock.png",
    "projectiles/ballista-slimeball.png",
    "projectiles/ballista-frostcicle.png",

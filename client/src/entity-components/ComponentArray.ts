@@ -82,6 +82,10 @@ export class ComponentArray<T extends Component = Component, ArrayType extends C
    public getComponent(entity: EntityID): T {
       return this.components[this.entityToIndexMap[entity]!];
    }
+
+   public hasComponent(entity: EntityID): boolean {
+      return typeof this.entityToIndexMap[entity] !== "undefined";
+   }
 }
 
 export function getComponentArrays(): ReadonlyArray<ComponentArray> {

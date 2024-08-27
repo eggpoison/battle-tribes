@@ -28,10 +28,10 @@ import { TransformComponentArray } from "../components/TransformComponent";
 import { generateDecorations } from "../world-generation/decoration-generation";
 import { generateReeds } from "../world-generation/reed-generation";
 import generateTerrain from "../world-generation/terrain-generation";
-import { createCowConfig } from "../entities/mobs/cow";
 import { generateLilypads } from "../world-generation/lilypad-generation";
 import { forceMaxGrowAllIceSpikes } from "../components/IceSpikesComponent";
 import { sortComponentArrays } from "../components/ComponentArray";
+import { createTreeConfig } from "../entities/resources/tree";
 
 /*
 
@@ -129,8 +129,8 @@ class GameServer {
       updateResourceDistributions();
       spawnInitialEntities();
       forceMaxGrowAllIceSpikes();
-      generateGrassStrands();
-      generateDecorations();
+      // generateGrassStrands();
+      // generateDecorations();
       generateReeds(generationInfo.riverMainTiles);
       generateLilypads();
 
@@ -168,6 +168,57 @@ class GameServer {
       
                   playerClient = new PlayerClient(socket, tribe, screenWidth, screenHeight, spawnPosition, player, username);
                   addPlayerClient(playerClient, player, config);
+
+                  // @Temporary
+                  setTimeout(() => {
+                     const size = 2;
+                     
+                     // const treeIDs = new Array<EntityID>();
+                     // for (let x = -size; x <= size; x++) {
+                     //    for (let y = -size; y <= size; y++) {
+                     //       if (x === 0 && y === 0) {
+                     //          continue;
+                     //       }
+
+                     //       const config = createTreeConfig();
+                     //       config[ServerComponentType.transform].position.x = spawnPosition.x + x * 150;
+                     //       config[ServerComponentType.transform].position.y = spawnPosition.y + y * 150;
+                     //       const tree = createEntityFromConfig(config); 
+                     //       treeIDs.push(tree);
+                     //    }
+                     // }
+                     
+                     // const p = [
+                     //    new Point(spawnPosition.x + 200, spawnPosition.y),
+                     //    new Point(spawnPosition.x + 200, spawnPosition.y + 200),
+                     //    new Point(spawnPosition.x + 200, spawnPosition.y - 200),
+                     //    new Point(spawnPosition.x - 200, spawnPosition.y),
+                     //    new Point(spawnPosition.x - 200, spawnPosition.y + 200),
+                     //    new Point(spawnPosition.x - 200, spawnPosition.y - 200),
+                     //    new Point(spawnPosition.x, spawnPosition.y - 200),
+                     //    new Point(spawnPosition.x, spawnPosition.y + 200)
+                     // ]
+                     // for (const pos of p) {
+                     //    const config = createTreeConfig();
+                     //    config[ServerComponentType.transform].position.x = pos.x;
+                     //    config[ServerComponentType.transform].position.y = pos.y;
+                     //    createEntityFromConfig(config); 
+                     // }
+
+                     // setTimeout(() => {
+                     //    setInterval(() => {
+                     //       if (treeIDs.length === 0) {
+                     //          return;
+                     //       }
+                           
+                     //       const idx = Math.floor(Math.random() * treeIDs.length);
+                     //       const tree = treeIDs[idx];
+                     //       treeIDs.splice(idx, 1);
+                     //       console.log(tree);
+                     //       Board.destroyEntity(tree);
+                     //    }, 500);
+                     // }, 3000);
+                  })
 
                   break;
                }

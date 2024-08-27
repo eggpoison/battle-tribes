@@ -405,8 +405,10 @@ export function processGameDataPacket(reader: PacketReader): void {
    // Process entities
    const playerInstanceID = Game.playerID;
    const numEntities = reader.readNumber();
+   const visibleEntities = [];
    for (let i = 0; i < numEntities; i++) {
       const entityID = reader.readNumber() as EntityID;
+      visibleEntities.push(entityID);
       if (entityID === playerInstanceID) {
          if (Player.instance === null) {
             processEntityCreationData(entityID, reader);
@@ -448,10 +450,10 @@ export function processGameDataPacket(reader: PacketReader): void {
       entitiesToRemove.delete(Player.instance);
    }
 
-   // for (const entity of entitiesToRemove) {
-   //    // @Incomplete: isDeath
-   //    Board.removeEntity(entity, false);
-   // }
+   for (const entity of entitiesToRemove) {
+      // @Incomplete: isDeath
+      Board.removeEntity(entity, false);
+   }
 
    const playerInventories = readPlayerInventories(reader);
    

@@ -255,7 +255,8 @@ abstract class Board {
       // @Cleanup: do these functions actually need to be called here? why not in the proper remove flagged function?
       switch (entityType) {
          case EntityType.cow: onCowDeath(entity); break;
-         case EntityType.tree: onTreeDeath(entity); break;
+         // @Temporary
+         // case EntityType.tree: onTreeDeath(entity); break;
          case EntityType.krumblid: onKrumblidDeath(entity); break;
          case EntityType.cactus: onCactusDeath(entity); break;
          case EntityType.tribeWorker: onTribeWorkerDeath(entity); break;

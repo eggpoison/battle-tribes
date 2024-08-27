@@ -5,12 +5,19 @@ import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { RenderPart, renderPartIsTextured } from "../render-parts/render-parts";
 import { addEntitiesToBuffer, calculateRenderPartDepth } from "./webgl/entity-rendering";
-import { EntityType } from "webgl-test-shared/dist/entities";
+import Board from "../Board";
 
 let dirtyEntities = new Array<Entity>();
 
 export function registerDirtyEntity(entity: Entity): void {
    dirtyEntities.push(entity);
+}
+
+export function removeEntityFromDirtyArray(entity: Entity): void {
+   const idx = dirtyEntities.indexOf(entity);
+   if (idx !== -1) {
+      dirtyEntities.splice(idx, 1);
+   }
 }
 
 const calculateEntityRenderPosition = (entity: Entity, frameProgress: number): Point => {
@@ -61,6 +68,9 @@ const calculateAndOverrideRenderPartMatrix = (renderPart: RenderPart): void => {
 export function updateRenderPartMatrices(frameProgress: number): void {
    for (let i = 0; i < dirtyEntities.length; i++) {
       const entity = dirtyEntities[i];
+      if (typeof Board.entityRecord[entity.id] === "undefined") {
+         throw new Error(entity.id.toString());
+      }
       
       const numRenderParts = entity.allRenderParts.length;
       

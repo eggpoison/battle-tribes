@@ -158,6 +158,9 @@ const processPlayerDataPacket = (playerClient: PlayerClient, playerDataPacket: P
 }
 
 export function generatePlayerSpawnPosition(tribeType: TribeType): Point {
+   // @Temporary
+   return new Point(Settings.BOARD_UNITS * 0.5, Settings.BOARD_UNITS * 0.5);
+   
    const tribeInfo = TRIBE_INFO_RECORD[tribeType];
    for (let numAttempts = 0; numAttempts < 50; numAttempts++) {
       const biomeName = randItem(tribeInfo.biomes);

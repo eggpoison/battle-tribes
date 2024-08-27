@@ -24,6 +24,7 @@ import { COLLISION_BITS } from "webgl-test-shared/dist/collision";
 import { latencyGameState } from "./game-state/game-states";
 import { addEntityToRenderHeightMap, removeEntityFromBuffer } from "./rendering/webgl/entity-rendering";
 import { getComponentArrays } from "./entity-components/ComponentArray";
+import { removeEntityFromDirtyArray } from "./rendering/render-part-matrices";
 
 export interface EntityHitboxInfo {
    readonly vertexPositions: readonly [Point, Point, Point, Point];
@@ -201,15 +202,26 @@ abstract class Board {
             component.onRemove();
          }
       }
+
+      // Remove from component arrays
+      const componentArrays = getComponentArrays();
+      for (let i = 0; i < componentArrays.length; i++) {
+         const componentArray = componentArrays[i];
+         if (componentArray.hasComponent(entity.id)) {
+            componentArray.removeComponent(entity.id);
+         }
+      }
    
       this.entities.delete(entity);
 
       removeRenderable(entity);
       removeEntityFromBuffer(entity);
+      removeEntityFromDirtyArray(entity);
    
       this.numVisibleRenderParts -= entity.allRenderParts.length;
    }
 
+   // @Cleanup: Copy and paste
    public static resolvePlayerCollisions(): void {
       const player = Player.instance!;
       const transformComponent = player.getServerComponent(ServerComponentType.transform);
@@ -233,6 +245,7 @@ abstract class Board {
                         }
                         
                         if ((otherTransformComponent.collisionMask & transformComponent.collisionBit) !== 0 && (transformComponent.collisionMask & otherTransformComponent.collisionBit) !== 0) {
+                           console.log("colliding with id=" + entity.id);
                            collide(player, entity, hitbox, otherHitbox);
                            collide(entity, player, otherHitbox, hitbox);
                         } else {

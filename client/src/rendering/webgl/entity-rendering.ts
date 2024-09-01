@@ -363,6 +363,26 @@ const catalogue = (): Record<EntityID, number> => {
    return c;
 }
 
+let tempIsGood = false;
+
+const checkCatalogue = (before: Record<EntityID, number>, queued: ReadonlyArray<EntityID>): void => {
+   const newc = catalogue();
+
+   for (let entityID = 0; entityID < Vars.MAX_RENDER_PARTS; entityID++) {
+      const numBefore = before[entityID];
+      const numAfter = newc[entityID];
+      if (typeof numBefore !== "undefined" && (numAfter === 0 || typeof numAfter === "undefined") && typeof Board.entityRecord[entityID] !== "undefined" && !queued.includes(entityID)) {
+         console.warn("bad entity ID:",entityID);
+         console.log("Before:",numBefore,", num after:",numAfter);
+         throw new Error();
+      }
+      if (typeof Board.entityRecord[entityID] !== "undefined" && typeof numAfter === "undefined") {
+         console.warn("didn't find",entityID);
+         throw new Error();
+      }
+   }
+}
+
 export function addEntitiesToBuffer(entities: Array<Entity>): void {
    if (entities.length === 0) {
       return;
@@ -410,6 +430,8 @@ export function addEntitiesToBuffer(entities: Array<Entity>): void {
       return;
    }
 
+   const before = catalogue();
+
    // @Copynpaste
    const existingBufferIndex = entityIDToBufferIndexRecord[entitiesToAddSorted[idx].id];
    if (typeof existingBufferIndex !== "undefined") {
@@ -449,6 +471,7 @@ export function addEntitiesToBuffer(entities: Array<Entity>): void {
       // @Cleanup: Copy and paste
       // Do the first swap
       {
+         checkCatalogue(before, queuedEntityIDs);
          console.log("doing first swap");
          // If the entity isn't in the buffer or the queue, add them to the queue.
          // @Copynpaste
@@ -516,6 +539,7 @@ export function addEntitiesToBuffer(entities: Array<Entity>): void {
          } else {
             console.log("added into empty slot")
          }
+         checkCatalogue(before, queuedEntityIDs);
       }
 
       /** Buffer index of the next entity data to be updated/inserted (from entitiesToAddSorted) */

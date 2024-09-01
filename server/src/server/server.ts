@@ -20,7 +20,6 @@ import { addPlayerClient, generatePlayerSpawnPosition, getPlayerClients, resetDi
 import { createPlayerConfig } from "../entities/tribes/player";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { createEntityFromConfig } from "../Entity";
-import { generateGrassStrands } from "../world-generation/grass-generation";
 import { processAttackPacket, processPlayerDataPacket } from "./packet-processing";
 import { EntityID } from "webgl-test-shared/dist/entities";
 import { SpikesComponentArray } from "../components/SpikesComponent";
@@ -30,6 +29,7 @@ import { generateDecorations } from "../world-generation/decoration-generation";
 import { generateReeds } from "../world-generation/reed-generation";
 import generateTerrain from "../world-generation/terrain-generation";
 import { createCowConfig } from "../entities/mobs/cow";
+import { createTreeConfig } from "../entities/resources/tree";
 
 /*
 
@@ -127,8 +127,8 @@ class GameServer {
       spawnInitialEntities();
       forceMaxGrowAllIceSpikes();
       // generateGrassStrands();
-      generateDecorations();
-      generateReeds(generationInfo.riverMainTiles);
+      // generateDecorations();
+      // generateReeds(generationInfo.riverMainTiles);
 
       const app = express();
       this.server = new Server({
@@ -164,6 +164,20 @@ class GameServer {
       
                   playerClient = new PlayerClient(socket, tribe, screenWidth, screenHeight, spawnPosition, player, username);
                   addPlayerClient(playerClient, player, config);
+
+                  setTimeout(() => {
+                     const config = createTreeConfig();
+                     config[ServerComponentType.transform].position.x = spawnPosition.x + 100;
+                     config[ServerComponentType.transform].position.y = spawnPosition.y;
+                     createEntityFromConfig(config);
+
+                     {
+                        const config = createTreeConfig();
+                        config[ServerComponentType.transform].position.x = spawnPosition.x - 100;
+                        config[ServerComponentType.transform].position.y = spawnPosition.y - 20;
+                        createEntityFromConfig(config);
+                     }
+                  }, 100);
 
                   break;
                }

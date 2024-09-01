@@ -1,13 +1,13 @@
 import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
-import { CookingIngredientItemType, FuelSourceItemType } from "webgl-test-shared/dist/cooking-info";
+import { FuelSourceItemType } from "webgl-test-shared/dist/cooking-info";
 import { InventoryComponentArray, addItemToInventory, consumeItemTypeFromInventory, getInventory } from "../../../components/InventoryComponent";
 import { CookingComponentArray } from "../../../components/CookingComponent";
 import { ItemType, InventoryName, ItemTypeString } from "webgl-test-shared/dist/items/items";
 import Board from "../../../Board";
 
 export interface HeatingRecipe {
-   readonly ingredientType: CookingIngredientItemType;
+   readonly ingredientType: ItemType;
    readonly ingredientAmount: number;
    readonly productType: ItemType;
    readonly productAmount: number;
@@ -88,7 +88,7 @@ export function tickCookingEntity(entity: EntityID): void {
                return;
             }
    
-            cookingComponent.remainingHeatSeconds += FUEL_SOURCES[fuel.type as keyof typeof FUEL_SOURCES];
+            cookingComponent.remainingHeatSeconds += FUEL_SOURCES[fuel.type as unknown as keyof typeof FUEL_SOURCES];
             consumeItemTypeFromInventory(inventoryComponent, InventoryName.fuelInventory, fuel.type, 1);
          }
       }

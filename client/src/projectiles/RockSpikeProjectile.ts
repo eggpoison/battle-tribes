@@ -32,14 +32,14 @@ class RockSpikeProjectile extends Entity {
       this.shakeAmount = RockSpikeProjectile.ENTRANCE_SHAKE_AMOUNTS[rockSpikeComponent.size];
       
       const renderPart = new TexturedRenderPart(
-         this,
+         null,
          0,
          0,
          getTextureArrayIndex(RockSpikeProjectile.SPRITE_TEXTURE_SOURCES[rockSpikeComponent.size])
       );
       renderPart.addTag("rockSpikeProjectile:part");
       renderPart.scale = RockSpikeProjectile.ENTRANCE_SCALE;
-      this.attachRenderPart(renderPart);
+      this.attachRenderThing(renderPart);
 
       // 
       // Create debris particles

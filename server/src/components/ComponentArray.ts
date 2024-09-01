@@ -47,7 +47,7 @@ export class ComponentArray<T extends object = object, C extends ServerComponent
    public activeEntities = new Array<EntityID>();
 
    /** Maps entity IDs to component indexes */
-   public activeEntityToIndexMap: Record<EntityID, number> = {};
+   private activeEntityToIndexMap: Record<EntityID, number> = {};
    /** Maps component indexes to entity IDs */
    private activeIndexToEntityMap: Record<number, EntityID> = {};
 
@@ -149,6 +149,10 @@ export class ComponentArray<T extends object = object, C extends ServerComponent
    }
 
    public activateComponent(component: T, entity: EntityID): void {
+      if (typeof this.activeEntityToIndexMap[entity] !== "undefined") {
+         return;
+      }
+      
       // Put new entry at end and update the maps
       const newIndex = this.activeComponents.length;
       this.activeEntityToIndexMap[entity] = newIndex;
@@ -186,19 +190,6 @@ export class ComponentArray<T extends object = object, C extends ServerComponent
          this.deactivateComponent(entityID);
       }
       this.deactivateBuffer = [];
-   }
-
-   // @Hack: should never be allowed.
-   public getEntityFromArrayIdx(index: number): EntityID {
-      return this.indexToEntityMap[index]!;
-   }
-
-   public reset(): void {
-      this.components = [];
-      this.componentBuffer = [];
-      this.entityToIndexMap = {};
-      this.indexToEntityMap = {};
-      this.componentBufferIDs = [];
    }
 }
 

@@ -10,9 +10,9 @@ class BallistaFrostcicle extends Entity {
    constructor(id: number) {
       super(id, EntityType.ballistaFrostcicle);
 
-      this.attachRenderPart(
+      this.attachRenderThing(
          new TexturedRenderPart(
-            this,
+            null,
             0,
             0,
             getTextureArrayIndex("projectiles/ballista-frostcicle.png")

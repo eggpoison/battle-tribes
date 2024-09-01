@@ -40,4 +40,4 @@ class BerryBushComponent extends ServerComponent {
 
 export default BerryBushComponent;
 
-export const BerryBushComponentArray = new ComponentArray<BerryBushComponent>(ComponentArrayType.server, ServerComponentType.berryBush, {});
+export const BerryBushComponentArray = new ComponentArray<BerryBushComponent>(ComponentArrayType.server, ServerComponentType.berryBush, true, {});

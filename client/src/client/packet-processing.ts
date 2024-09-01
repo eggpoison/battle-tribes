@@ -1,4 +1,4 @@
-import { ServerTileData, WaterRockData, RiverSteppingStoneData, GrassTileInfo, RiverFlowDirectionsRecord, WaterRockSize, RiverSteppingStoneSize, GameDataPacket, HitData, PlayerKnockbackData, HealData, ResearchOrbCompleteData, ServerTileUpdateData, EntityDebugData, LineDebugData, CircleDebugData, TileHighlightData, PathData, PathfindingNodeIndex, PlayerInventoryData } from "webgl-test-shared/dist/client-server-types";
+import { WaterRockData, RiverSteppingStoneData, GrassTileInfo, RiverFlowDirectionsRecord, WaterRockSize, RiverSteppingStoneSize, GameDataPacket, HitData, PlayerKnockbackData, HealData, ResearchOrbCompleteData, ServerTileUpdateData, EntityDebugData, LineDebugData, CircleDebugData, TileHighlightData, PathData, PathfindingNodeIndex, PlayerInventoryData } from "webgl-test-shared/dist/client-server-types";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
 import { ItemType } from "webgl-test-shared/dist/items/items";
@@ -422,10 +422,25 @@ export function processGameDataPacket(reader: PacketReader): void {
       }
    }
 
+   const entitiesToRemove = new Set<Entity>();
+   
+   // Read removed entity IDs
+   const serverRemovedEntityIDs = new Set<number>();
+   const numRemovedEntities = reader.readNumber();
+   for (let i = 0; i < numRemovedEntities; i++) {
+      const entityID = reader.readNumber();
+
+      serverRemovedEntityIDs.add(entityID);
+      
+      const entity = Board.entityRecord[entityID];
+      if (typeof entity !== "undefined") {
+         entitiesToRemove.add(entity);
+      }
+   }
+
    // @Cleanup: move to own function
    
    // Remove entities which are no longer visible
-   const entitiesToRemove = new Set<Entity>();
    const minVisibleChunkX = Camera.minVisibleChunkX - 2;
    const maxVisibleChunkX = Camera.maxVisibleChunkX + 2;
    const minVisibleChunkY = Camera.minVisibleChunkY - 2;
@@ -451,8 +466,8 @@ export function processGameDataPacket(reader: PacketReader): void {
    }
 
    for (const entity of entitiesToRemove) {
-      // @Incomplete: isDeath
-      Board.removeEntity(entity, false);
+      const isDeath = serverRemovedEntityIDs.has(entity.id);
+      Board.removeEntity(entity, isDeath);
    }
 
    const playerInventories = readPlayerInventories(reader);

@@ -9,4 +9,4 @@ class SpearProjectileComponent extends ServerComponent {
 
 export default SpearProjectileComponent;
 
-export const SpearProjectileComponentArray = new ComponentArray<SpearProjectileComponent>(ComponentArrayType.server, ServerComponentType.spearProjectile, {});
+export const SpearProjectileComponentArray = new ComponentArray<SpearProjectileComponent>(ComponentArrayType.server, ServerComponentType.spearProjectile, true, {});

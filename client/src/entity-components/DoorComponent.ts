@@ -40,4 +40,4 @@ class DoorComponent extends ServerComponent {
 
 export default DoorComponent;
 
-export const DoorComponentArray = new ComponentArray<DoorComponent>(ComponentArrayType.server, ServerComponentType.door, {});
+export const DoorComponentArray = new ComponentArray<DoorComponent>(ComponentArrayType.server, ServerComponentType.door, true, {});

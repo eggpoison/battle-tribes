@@ -21,7 +21,7 @@ import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { createEntityFromConfig } from "../Entity";
 import { generateGrassStrands } from "../world-generation/grass-generation";
 import { processAttackPacket, processPlayerDataPacket } from "./packet-processing";
-import { EntityID } from "webgl-test-shared/dist/entities";
+import { EntityID, EntityTypeString } from "webgl-test-shared/dist/entities";
 import { SpikesComponentArray } from "../components/SpikesComponent";
 import { TribeComponentArray } from "../components/TribeComponent";
 import { TransformComponentArray } from "../components/TransformComponent";
@@ -32,6 +32,7 @@ import { generateLilypads } from "../world-generation/lilypad-generation";
 import { forceMaxGrowAllIceSpikes } from "../components/IceSpikesComponent";
 import { sortComponentArrays } from "../components/ComponentArray";
 import { createTreeConfig } from "../entities/resources/tree";
+import http from "http";
 
 /*
 
@@ -129,14 +130,13 @@ class GameServer {
       updateResourceDistributions();
       spawnInitialEntities();
       forceMaxGrowAllIceSpikes();
-      // generateGrassStrands();
-      // generateDecorations();
+      generateGrassStrands();
+      generateDecorations();
       generateReeds(generationInfo.riverMainTiles);
       generateLilypads();
 
-      const app = express();
       this.server = new Server({
-         server: app.listen(Settings.SERVER_PORT)
+         port: Settings.SERVER_PORT
       });
 
       // Handle player connections
@@ -155,6 +155,7 @@ class GameServer {
                   const screenHeight = reader.readNumber();
 
                   const spawnPosition = generatePlayerSpawnPosition(tribeType);
+                  // @Incomplete? Unused?
                   const visibleChunkBounds = estimateVisibleChunkBounds(spawnPosition, screenWidth, screenHeight);
       
                   const tribe = new Tribe(tribeType, false);
@@ -168,57 +169,6 @@ class GameServer {
       
                   playerClient = new PlayerClient(socket, tribe, screenWidth, screenHeight, spawnPosition, player, username);
                   addPlayerClient(playerClient, player, config);
-
-                  // @Temporary
-                  setTimeout(() => {
-                     const size = 2;
-                     
-                     // const treeIDs = new Array<EntityID>();
-                     // for (let x = -size; x <= size; x++) {
-                     //    for (let y = -size; y <= size; y++) {
-                     //       if (x === 0 && y === 0) {
-                     //          continue;
-                     //       }
-
-                     //       const config = createTreeConfig();
-                     //       config[ServerComponentType.transform].position.x = spawnPosition.x + x * 150;
-                     //       config[ServerComponentType.transform].position.y = spawnPosition.y + y * 150;
-                     //       const tree = createEntityFromConfig(config); 
-                     //       treeIDs.push(tree);
-                     //    }
-                     // }
-                     
-                     // const p = [
-                     //    new Point(spawnPosition.x + 200, spawnPosition.y),
-                     //    new Point(spawnPosition.x + 200, spawnPosition.y + 200),
-                     //    new Point(spawnPosition.x + 200, spawnPosition.y - 200),
-                     //    new Point(spawnPosition.x - 200, spawnPosition.y),
-                     //    new Point(spawnPosition.x - 200, spawnPosition.y + 200),
-                     //    new Point(spawnPosition.x - 200, spawnPosition.y - 200),
-                     //    new Point(spawnPosition.x, spawnPosition.y - 200),
-                     //    new Point(spawnPosition.x, spawnPosition.y + 200)
-                     // ]
-                     // for (const pos of p) {
-                     //    const config = createTreeConfig();
-                     //    config[ServerComponentType.transform].position.x = pos.x;
-                     //    config[ServerComponentType.transform].position.y = pos.y;
-                     //    createEntityFromConfig(config); 
-                     // }
-
-                     // setTimeout(() => {
-                     //    setInterval(() => {
-                     //       if (treeIDs.length === 0) {
-                     //          return;
-                     //       }
-                           
-                     //       const idx = Math.floor(Math.random() * treeIDs.length);
-                     //       const tree = treeIDs[idx];
-                     //       treeIDs.splice(idx, 1);
-                     //       console.log(tree);
-                     //       Board.destroyEntity(tree);
-                     //    }, 500);
-                     // }, 3000);
-                  })
 
                   break;
                }
@@ -243,6 +193,9 @@ class GameServer {
                case PacketType.attack: {
                   processAttackPacket(playerClient, reader);
                   break;
+               }
+               default: {
+                  console.log("Unknown packet type: " + packetType);
                }
             }
          });
@@ -356,6 +309,7 @@ class GameServer {
                   newlyVisibleEntities.add(entity);
                }
 
+               // Always send the player's data
                newlyVisibleEntities.add(playerClient.instance);
                
                // Send the game data to the player

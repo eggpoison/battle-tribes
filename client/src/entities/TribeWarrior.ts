@@ -25,14 +25,14 @@ class TribeWarrior extends Tribesman {
          const scarInfo = tribeWarriorComponent.scars[i];
 
          const renderPart = new TexturedRenderPart(
-            this,
+            null,
             2.5,
             scarInfo.rotation,
             getTextureArrayIndex("scars/scar-" + (scarInfo.type + 1) + ".png")
          );
          renderPart.offset.x = scarInfo.offsetX;
          renderPart.offset.y = scarInfo.offsetY;
-         this.attachRenderPart(renderPart);
+         this.attachRenderThing(renderPart);
       }
    }
 }

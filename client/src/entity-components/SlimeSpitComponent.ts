@@ -33,7 +33,7 @@ class SlimeSpitComponent extends ServerComponent {
 
 export default SlimeSpitComponent;
 
-export const SlimeSpitComponentArray = new ComponentArray<SlimeSpitComponent>(ComponentArrayType.server, ServerComponentType.slimeSpit, {
+export const SlimeSpitComponentArray = new ComponentArray<SlimeSpitComponent>(ComponentArrayType.server, ServerComponentType.slimeSpit, true, {
    onTick: onTick
 });
 

@@ -15,7 +15,7 @@ class BattleaxeProjectileComponent extends ServerComponent {
 
 export default BattleaxeProjectileComponent;
 
-export const BattleaxeProjectileComponentArray = new ComponentArray<BattleaxeProjectileComponent>(ComponentArrayType.server, ServerComponentType.battleaxeProjectile, {
+export const BattleaxeProjectileComponentArray = new ComponentArray<BattleaxeProjectileComponent>(ComponentArrayType.server, ServerComponentType.battleaxeProjectile, true, {
    onTick: onTick
 });
 

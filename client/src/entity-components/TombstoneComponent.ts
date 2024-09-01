@@ -66,7 +66,7 @@ class TombstoneComponent extends ServerComponent {
 
 export default TombstoneComponent;
 
-export const TombstoneComponentArray = new ComponentArray<TombstoneComponent>(ComponentArrayType.server, ServerComponentType.tombstone, {
+export const TombstoneComponentArray = new ComponentArray<TombstoneComponent>(ComponentArrayType.server, ServerComponentType.tombstone, true, {
    onTick: onTick
 });
 

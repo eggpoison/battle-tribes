@@ -8,12 +8,12 @@ class FibrePlant extends Entity {
       super(id, EntityType.fibrePlant);
 
       const renderPart = new TexturedRenderPart(
-         this,
+         null,
          0,
          0,
          getTextureArrayIndex("entities/fibre-plant/fibre-plant.png")
       );
-      this.attachRenderPart(renderPart);
+      this.attachRenderThing(renderPart);
    }
 }
 

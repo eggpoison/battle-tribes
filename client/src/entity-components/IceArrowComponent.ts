@@ -18,7 +18,7 @@ class IceArrowComponent extends ServerComponent {
 
 export default IceArrowComponent;
 
-export const IceArrowComponentArray = new ComponentArray<IceArrowComponent>(ComponentArrayType.server, ServerComponentType.iceArrow, {
+export const IceArrowComponentArray = new ComponentArray<IceArrowComponent>(ComponentArrayType.server, ServerComponentType.iceArrow, true, {
    onTick: onTick
 });
 

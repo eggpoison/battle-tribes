@@ -93,7 +93,7 @@ class EquipmentComponent extends Component {
 
 export default EquipmentComponent;
 
-export const EquipmentComponentArray = new ComponentArray<EquipmentComponent>(ComponentArrayType.client, ClientComponentType.equipment, {
+export const EquipmentComponentArray = new ComponentArray<EquipmentComponent>(ComponentArrayType.client, ClientComponentType.equipment, true, {
    onTick: onTick
 });
 
@@ -107,12 +107,12 @@ const updateArmourRenderPart = (equipmentComponent: EquipmentComponent): void =>
       
       if (equipmentComponent.armourRenderPart === null) {
          equipmentComponent.armourRenderPart = new TexturedRenderPart(
-            equipmentComponent.entity,
+            null,
             3,
             0,
             getTextureArrayIndex(getArmourTextureSource(armour.type))
          );
-         equipmentComponent.entity.attachRenderPart(equipmentComponent.armourRenderPart);
+         equipmentComponent.entity.attachRenderThing(equipmentComponent.armourRenderPart);
       } else {
          equipmentComponent.armourRenderPart.switchTextureSource(getArmourTextureSource(armour.type));
       }
@@ -140,7 +140,7 @@ const updateGloveRenderParts = (equipmentComponent: EquipmentComponent): void =>
                0,
                getTextureArrayIndex(getGloveTextureSource(glove.type))
             );
-            equipmentComponent.entity.attachRenderPart(gloveRenderPart);
+            equipmentComponent.entity.attachRenderThing(gloveRenderPart);
             equipmentComponent.gloveRenderParts.push(gloveRenderPart);
          }
       } else {

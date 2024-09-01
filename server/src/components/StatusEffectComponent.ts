@@ -45,9 +45,7 @@ export function applyStatusEffect(entityID: number, statusEffect: StatusEffect, 
       return;
    }
 
-   if (StatusEffectComponentArray.activeEntityToIndexMap[entityID] === undefined) {
-      StatusEffectComponentArray.activateComponent(statusEffectComponent, entityID);
-   }
+   StatusEffectComponentArray.activateComponent(statusEffectComponent, entityID);
    
    if (!hasStatusEffect(statusEffectComponent, statusEffect)) {
       // New status effect

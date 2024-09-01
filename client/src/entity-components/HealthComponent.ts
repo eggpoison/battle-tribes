@@ -40,7 +40,7 @@ class HealthComponent extends ServerComponent {
 
 export default HealthComponent;
 
-export const HealthComponentArray = new ComponentArray<HealthComponent>(ComponentArrayType.server, ServerComponentType.health, {
+export const HealthComponentArray = new ComponentArray<HealthComponent>(ComponentArrayType.server, ServerComponentType.health, true, {
    onTick: onTick
 });
 

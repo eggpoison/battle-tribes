@@ -7,9 +7,9 @@ class Frostshaper extends Entity {
    constructor(id: number) {
       super(id, EntityType.frostshaper);
 
-      this.attachRenderPart(
+      this.attachRenderThing(
          new TexturedRenderPart(
-            this,
+            null,
             1,
             0,
             getTextureArrayIndex("entities/frostshaper/frostshaper.png")

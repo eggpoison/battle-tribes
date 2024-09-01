@@ -49,7 +49,7 @@ class SpikesComponent extends ServerComponent {
       }
       
       const renderPart = new TexturedRenderPart(
-         this.entity,
+         null,
          1 + Math.random() * 0.5,
          2 * Math.PI * Math.random(),
          getTextureArrayIndex(textureSource)
@@ -60,7 +60,7 @@ class SpikesComponent extends ServerComponent {
       renderPart.offset.x = randFloat(-spawnRange, spawnRange);
       renderPart.offset.y = randFloat(-spawnRange, spawnRange);
    
-      this.entity.attachRenderPart(renderPart);
+      this.entity.attachRenderThing(renderPart);
    
       return renderPart;
    }
@@ -116,4 +116,4 @@ class SpikesComponent extends ServerComponent {
 
 export default SpikesComponent;
 
-export const SpikesComponentArray = new ComponentArray<SpikesComponent>(ComponentArrayType.server, ServerComponentType.spikes, {});
+export const SpikesComponentArray = new ComponentArray<SpikesComponent>(ComponentArrayType.server, ServerComponentType.spikes, true, {});

@@ -14,12 +14,12 @@ class Tunnel extends Entity {
       const buildingMaterialComponent = this.getServerComponent(ServerComponentType.buildingMaterial);
 
       const renderPart = new TexturedRenderPart(
-         this,
+         null,
          1,
          0,
          getTextureArrayIndex(TUNNEL_TEXTURE_SOURCES[buildingMaterialComponent.material])
       );
-      this.attachRenderPart(renderPart);
+      this.attachRenderThing(renderPart);
    }
 }
 

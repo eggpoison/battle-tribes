@@ -190,7 +190,7 @@ class TurretComponent extends ServerComponent {
                this.projectileRenderPart.rotation = 2 * Math.PI * Math.random();
             }
 
-            this.entity.attachRenderPart(this.projectileRenderPart);
+            this.entity.attachRenderThing(this.projectileRenderPart);
          } else {
             this.projectileRenderPart.switchTextureSource(textureSource);
          }
@@ -230,4 +230,4 @@ class TurretComponent extends ServerComponent {
 
 export default TurretComponent;
 
-export const TurretComponentArray = new ComponentArray<TurretComponent>(ComponentArrayType.server, ServerComponentType.turret, {});
+export const TurretComponentArray = new ComponentArray<TurretComponent>(ComponentArrayType.server, ServerComponentType.turret, true, {});

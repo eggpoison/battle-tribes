@@ -26,7 +26,7 @@ class ItemComponent extends ServerComponent {
 
 export default ItemComponent;
 
-export const ItemComponentArray = new ComponentArray<ItemComponent>(ComponentArrayType.server, ServerComponentType.item, {
+export const ItemComponentArray = new ComponentArray<ItemComponent>(ComponentArrayType.server, ServerComponentType.item, true, {
    onTick: onTick
 });
 

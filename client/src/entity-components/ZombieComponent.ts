@@ -27,7 +27,7 @@ class ZombieComponent extends ServerComponent {
 
 export default ZombieComponent;
 
-export const ZombieComponentArray = new ComponentArray<ZombieComponent>(ComponentArrayType.server, ServerComponentType.zombie, {
+export const ZombieComponentArray = new ComponentArray<ZombieComponent>(ComponentArrayType.server, ServerComponentType.zombie, true, {
    onTick: onTick
 });
 

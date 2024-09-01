@@ -71,4 +71,4 @@ class FenceGateComponent extends ServerComponent {
 
 export default FenceGateComponent;
 
-export const FenceGateComponentArray = new ComponentArray<FenceGateComponent>(ComponentArrayType.server, ServerComponentType.fenceGate, {});
+export const FenceGateComponentArray = new ComponentArray<FenceGateComponent>(ComponentArrayType.server, ServerComponentType.fenceGate, true, {});

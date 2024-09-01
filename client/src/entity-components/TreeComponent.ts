@@ -25,4 +25,4 @@ class TreeComponent extends ServerComponent {
 
 export default TreeComponent;
 
-export const TreeComponentArray = new ComponentArray<TreeComponent>(ComponentArrayType.server, ServerComponentType.tree, {});
+export const TreeComponentArray = new ComponentArray<TreeComponent>(ComponentArrayType.server, ServerComponentType.tree, true, {});

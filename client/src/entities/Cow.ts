@@ -28,23 +28,23 @@ class Cow extends Entity {
 
       // Body
       const bodyRenderPart = new TexturedRenderPart(
-         this,
+         null,
          0,
          0,
          getTextureArrayIndex(`entities/cow/cow-body-${cowNum}.png`)
       );
       bodyRenderPart.offset.y = -(Cow.HEAD_SIZE - Cow.HEAD_OVERLAP) / 2;
-      this.attachRenderPart(bodyRenderPart);
+      this.attachRenderThing(bodyRenderPart);
 
       // Head
       const headRenderPart = new TexturedRenderPart(
-         this,
+         null,
          1,
          0,
          getTextureArrayIndex(`entities/cow/cow-head-${cowNum}.png`)
       );
       headRenderPart.offset.y = (Cow.BODY_HEIGHT - Cow.HEAD_OVERLAP) / 2;
-      this.attachRenderPart(headRenderPart);
+      this.attachRenderThing(headRenderPart);
 
       this.addClientComponent(ClientComponentType.footprint, new FootprintComponent(this, 0.3, 20, 64, 5, 40));
    }

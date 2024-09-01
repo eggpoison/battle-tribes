@@ -184,6 +184,9 @@ export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend:
       lengthBytes += getEntityDataLength(entity, player);
    }
 
+   // Removed entity IDs
+   lengthBytes += Float32Array.BYTES_PER_ELEMENT + Float32Array.BYTES_PER_ELEMENT * playerClient.visibleEntityDeathIDs.length;
+
    // Player inventories
    lengthBytes += getInventoryDataLength(hotbarInventory);
    lengthBytes += getInventoryDataLength(backpackInventory);
@@ -293,6 +296,12 @@ export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend:
    packet.addNumber(entitiesToSend.size);
    for (const entity of entitiesToSend) {
       addEntityDataToPacket(packet, entity, player);
+   }
+
+   // Removed entity IDs
+   packet.addNumber(playerClient.visibleEntityDeathIDs.length);
+   for (const entity of playerClient.visibleEntityDeathIDs) {
+      packet.addNumber(entity);
    }
 
    // Add inventory data

@@ -25,9 +25,9 @@ class Fish extends Entity {
    public onLoad(): void {
       const fishComponent = this.getServerComponent(ServerComponentType.fish);
 
-      this.attachRenderPart(
+      this.attachRenderThing(
          new TexturedRenderPart(
-            this,
+            null,
             0,
             0,
             getTextureArrayIndex(TEXTURE_SOURCES[fishComponent.colour])

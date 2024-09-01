@@ -1,5 +1,4 @@
 import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { Settings } from "webgl-test-shared/dist/settings";
 import { angle, randFloat, randInt } from "webgl-test-shared/dist/utils";
 import { HitData } from "webgl-test-shared/dist/client-server-types";
 import { EntityType } from "webgl-test-shared/dist/entities";
@@ -27,9 +26,9 @@ class Zombie extends Entity {
       const zombieComponent = this.getServerComponent(ServerComponentType.zombie);
 
       // Body render part
-      this.attachRenderPart(
+      this.attachRenderThing(
          new TexturedRenderPart(
-            this,
+            null,
             2,
             0,
             getTextureArrayIndex(ZOMBIE_TEXTURE_SOURCES[zombieComponent.zombieType])
@@ -41,13 +40,13 @@ class Zombie extends Entity {
       const handRenderParts = new Array<RenderPart>();
       for (let i = 0; i < 2; i++) {
          const renderPart = new TexturedRenderPart(
-            this,
+            null,
             1,
             0,
             getTextureArrayIndex(handTextureSource)
          );
          renderPart.addTag("inventoryUseComponent:hand");
-         this.attachRenderPart(renderPart);
+         this.attachRenderThing(renderPart);
          handRenderParts.push(renderPart);
       }
    }

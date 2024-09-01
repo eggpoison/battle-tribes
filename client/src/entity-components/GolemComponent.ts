@@ -118,14 +118,14 @@ class GolemComponent extends ServerComponent {
          const size = getHitboxSize(hitbox);
    
          const renderPart = new TexturedRenderPart(
-            this.entity,
+            null,
             getZIndex(size),
             2 * Math.PI * Math.random(),
             getTextureArrayIndex(getTextureSource(size))
          );
          renderPart.offset.x = hitbox.offset.x;
          renderPart.offset.y = hitbox.offset.y;
-         this.entity.attachRenderPart(renderPart);
+         this.entity.attachRenderThing(renderPart);
          this.rockRenderParts.push(renderPart);
    
          if (size === GolemRockSize.large) {
@@ -140,7 +140,7 @@ class GolemComponent extends ServerComponent {
                eyeRenderPart.offset.x = 20 * (i === 0 ? -1 : 1);
                eyeRenderPart.offset.y = 17;
                eyeRenderPart.inheritParentRotation = false;
-               this.entity.attachRenderPart(eyeRenderPart);
+               this.entity.attachRenderThing(eyeRenderPart);
                this.eyeRenderParts.push(eyeRenderPart);
    
                // Create eye light
@@ -179,7 +179,7 @@ class GolemComponent extends ServerComponent {
 
 export default GolemComponent;
 
-export const GolemComponentArray = new ComponentArray<GolemComponent>(ComponentArrayType.server, ServerComponentType.golem, {
+export const GolemComponentArray = new ComponentArray<GolemComponent>(ComponentArrayType.server, ServerComponentType.golem, true, {
    onTick: onTick
 });
 

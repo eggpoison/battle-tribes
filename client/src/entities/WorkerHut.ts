@@ -11,22 +11,22 @@ class WorkerHut extends Entity {
 
       // Hut
       const hutRenderPart = new TexturedRenderPart(
-         this,
+         null,
          2,
          0,
          getTextureArrayIndex("entities/worker-hut/worker-hut.png")
       );
-      this.attachRenderPart(hutRenderPart);
+      this.attachRenderThing(hutRenderPart);
 
       // Door
       const doorRenderPart = new TexturedRenderPart(
-         this,
+         null,
          1,
          0,
          getTextureArrayIndex("entities/worker-hut/worker-hut-door.png")
       );
       doorRenderPart.addTag("hutComponent:door");
-      this.attachRenderPart(doorRenderPart);
+      this.attachRenderThing(doorRenderPart);
    }
 
    protected onHit(): void {

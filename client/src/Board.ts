@@ -2,7 +2,7 @@ import { Settings } from "webgl-test-shared/dist/settings";
 import { GrassTileInfo, RIVER_STEPPING_STONE_SIZES, RiverFlowDirectionsRecord, RiverSteppingStoneData, ServerTileUpdateData } from "webgl-test-shared/dist/client-server-types";
 import { TileType } from "webgl-test-shared/dist/tiles";
 import { Point, Vector } from "webgl-test-shared/dist/utils";
-import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
+import { EntityID, EntityType, EntityTypeString } from "webgl-test-shared/dist/entities";
 import Chunk from "./Chunk";
 import { Tile } from "./Tile";
 import Entity from "./Entity";
@@ -16,15 +16,16 @@ import { RenderableType, addRenderable, removeRenderable } from "./rendering/ren
 import { WorldInfo } from "webgl-test-shared/dist/structures";
 import { EntityInfo } from "webgl-test-shared/dist/board-interface";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
-import Client from "./client/Client";
 import { RenderPart } from "./render-parts/render-parts";
 import { InitialGameDataPacket } from "./client/packet-processing";
 import { collide } from "./collision";
 import { COLLISION_BITS } from "webgl-test-shared/dist/collision";
 import { latencyGameState } from "./game-state/game-states";
-import { addEntityToRenderHeightMap, removeEntityFromBuffer } from "./rendering/webgl/entity-rendering";
+import { addEntityToRenderHeightMap } from "./rendering/webgl/entity-rendering";
 import { getComponentArrays } from "./entity-components/ComponentArray";
 import { removeEntityFromDirtyArray } from "./rendering/render-part-matrices";
+import { getEntityRenderLayer } from "./render-layers";
+import { registerChunkRenderedEntity, removeChunkRenderedEntity, renderLayerIsChunkRendered } from "./rendering/webgl/chunked-entity-rendering";
 
 export interface EntityHitboxInfo {
    readonly vertexPositions: readonly [Point, Point, Point, Point];
@@ -173,15 +174,26 @@ abstract class Board {
          this.players.push(entity as Player);
       }
 
+      // @Temporary? useless now?
       addEntityToRenderHeightMap(entity);
-      addRenderable(RenderableType.entity, entity);
+
+      const renderLayer = getEntityRenderLayer(entity);
+      if (renderLayerIsChunkRendered(renderLayer)) {
+         registerChunkRenderedEntity(entity, renderLayer);
+      } else {
+         addRenderable(RenderableType.entity, entity, renderLayer);
+      }
    }
 
    public static removeEntity(entity: Entity, isDeath: boolean): void {
-      if (typeof entity === "undefined") {
-         throw new Error("Tried to remove an undefined entity.");
+      const renderLayer = getEntityRenderLayer(entity);
+      if (renderLayerIsChunkRendered(renderLayer)) {
+         removeChunkRenderedEntity(entity, renderLayer);
+      } else {
+         removeRenderable(entity, renderLayer);
       }
- 
+      removeEntityFromDirtyArray(entity);
+
       delete Board.entityRecord[entity.id];
 
       if (isDeath) {
@@ -213,12 +225,8 @@ abstract class Board {
       }
    
       this.entities.delete(entity);
-
-      removeRenderable(entity);
-      removeEntityFromBuffer(entity);
-      removeEntityFromDirtyArray(entity);
    
-      this.numVisibleRenderParts -= entity.allRenderParts.length;
+      this.numVisibleRenderParts -= entity.allRenderThings.length;
    }
 
    // @Cleanup: Copy and paste
@@ -245,7 +253,6 @@ abstract class Board {
                         }
                         
                         if ((otherTransformComponent.collisionMask & transformComponent.collisionBit) !== 0 && (transformComponent.collisionMask & otherTransformComponent.collisionBit) !== 0) {
-                           console.log("colliding with id=" + entity.id);
                            collide(player, entity, hitbox, otherHitbox);
                            collide(entity, player, otherHitbox, hitbox);
                         } else {
@@ -407,12 +414,14 @@ abstract class Board {
       for (let i = 0; i < componentArrays.length; i++) {
          const componentArray = componentArrays[i];
          if (typeof componentArray.onTick !== "undefined") {
-            for (let j = 0; j < componentArray.components.length; j++) {
-               const component = componentArray.components[j];
-               // @Temporary @Hack
-               componentArray.onTick(component, 0);
+            for (let j = 0; j < componentArray.activeComponents.length; j++) {
+               const component = componentArray.activeComponents[j];
+               const entity = componentArray.activeEntities[j];
+               componentArray.onTick(component, entity);
             }
          }
+         
+         componentArray.deactivateQueue();
       }
    }
 

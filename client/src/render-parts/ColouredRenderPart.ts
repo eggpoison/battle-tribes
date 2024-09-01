@@ -1,4 +1,5 @@
-import BaseRenderPart, { BaseRenderObject } from "./RenderPart";
+import { RenderThing } from "./render-parts";
+import BaseRenderPart from "./RenderPart";
 
 export interface RenderPartColour {
    r: number;
@@ -8,10 +9,10 @@ export interface RenderPartColour {
 }
 
 class ColouredRenderPart extends BaseRenderPart {
-   // @Bug: alpha doesn't actualy do anything
+   // @Incomplete: alpha doesn't actualy do anything
    public readonly colour: RenderPartColour;
 
-   constructor(parent: BaseRenderObject, zIndex: number, rotation: number, colour: RenderPartColour) {
+   constructor(parent: RenderThing | null, zIndex: number, rotation: number, colour: RenderPartColour) {
       super(parent, zIndex, rotation);
 
       this.colour = colour;

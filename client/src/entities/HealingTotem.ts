@@ -7,9 +7,9 @@ class HealingTotem extends Entity {
    constructor(id: number) {
       super(id, EntityType.healingTotem);
 
-      this.attachRenderPart(
+      this.attachRenderThing(
          new TexturedRenderPart(
-            this,
+            null,
             0,
             0,
             getTextureArrayIndex("entities/healing-totem/healing-totem.png")

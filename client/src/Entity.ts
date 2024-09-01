@@ -3,7 +3,6 @@ import { EntityID, EntityType, EntityTypeString } from "webgl-test-shared/dist/e
 import { Settings } from "webgl-test-shared/dist/settings";
 import { HitData, HitFlags } from "webgl-test-shared/dist/client-server-types";
 import { ServerComponentType, ServerComponentTypeString } from "webgl-test-shared/dist/components";
-import { BaseRenderObject } from "./render-parts/RenderPart";
 import Board from "./Board";
 import { createHealingParticle, createSlimePoolParticle, createSparkParticle } from "./particles";
 import { playSound } from "./sound";
@@ -13,10 +12,11 @@ import { removeLightsAttachedToEntity, removeLightsAttachedToRenderPart } from "
 import { RenderPartOverlayGroup } from "./rendering/webgl/overlay-rendering";
 import { removeRenderable } from "./rendering/render-loop";
 import { getRandomPointInEntity } from "./entity-components/TransformComponent";
-import { RenderPart } from "./render-parts/render-parts";
-import { calculateEntityRenderHeight } from "./render-layers";
+import { RenderPart, RenderThing, thingIsRenderPart } from "./render-parts/render-parts";
 import { registerDirtyEntity } from "./rendering/render-part-matrices";
 import ServerComponent from "./entity-components/ServerComponent";
+import { createIdentityMatrix } from "./rendering/matrices";
+import { getEntityRenderLayer } from "./render-layers";
 
 // Use prime numbers / 100 to ensure a decent distribution of different types of particles
 const HEALING_PARTICLE_AMOUNTS = [0.05, 0.37, 1.01];
@@ -28,13 +28,15 @@ type ClientComponentsType = Partial<{
    [T in keyof typeof ClientComponents]: ClientComponentClass<T>;
 }>;
 
-abstract class Entity extends BaseRenderObject {
+abstract class Entity {
    public readonly id: number;
 
    public readonly type: EntityType;
 
+   public renderPosition = new Point(-1, -1);
+
    /** Stores all render parts attached to the object, sorted ascending based on zIndex. (So that render part with smallest zIndex is rendered first) */
-   public readonly allRenderParts = new Array<RenderPart>();
+   public readonly allRenderThings = new Array<RenderThing>();
 
    /** Amount the game object's render parts will shake */
    public shakeAmount = 0;
@@ -54,10 +56,17 @@ abstract class Entity extends BaseRenderObject {
    public tintData = new Float32Array(3);
    public opacityData = new Float32Array(1);
    public modelMatrixData = new Float32Array(9);
+   
+   public readonly modelMatrix = createIdentityMatrix();
+
+   /** Whether or not the entity has changed visually at all since its last dirty check */
+   public isDirty = true;
+
+   public tintR = 0;
+   public tintG = 0;
+   public tintB = 0;
 
    constructor(id: EntityID, entityType: EntityType) {
-      super();
-      
       this.id = id;
 
       this.type = entityType;
@@ -69,20 +78,35 @@ abstract class Entity extends BaseRenderObject {
       // so that all constructors have time to run
    }
 
-   public dirty(): void {
-      if (!this.modelMatrixIsDirty) {
-         if (typeof Board.entityRecord[this.id] === "undefined") {
-            throw new Error("12");
-         }
-         registerDirtyEntity(this);
+   public recalculateTint(): void {
+      this.tintR = 0;
+      this.tintG = 0;
+      this.tintB = 0;
+      for (let j = 0; j < this.serverComponents.length; j++) {
+         const component = this.serverComponents[j];
+         this.tintR += component.tintR;
+         this.tintG += component.tintG;
+         this.tintB += component.tintB;
       }
-      
-      super.dirty();
+   }
+
+   public dirty(): void {
+      if (!this.isDirty) {
+         if (typeof Board.entityRecord[this.id] === "undefined") {
+            throw new Error("Tried to dirty an entity which does not exist!");
+         }
+         
+         registerDirtyEntity(this);
+         this.isDirty = true;
+      }
    }
 
    public getRenderPart(tag: string): RenderPart {
-      for (let i = 0; i < this.allRenderParts.length; i++) {
-         const renderPart = this.allRenderParts[i];
+      for (let i = 0; i < this.allRenderThings.length; i++) {
+         const renderPart = this.allRenderThings[i];
+         if (!thingIsRenderPart(renderPart)) {
+            continue;
+         }
 
          if (renderPart.tags.includes(tag)) {
             return renderPart;
@@ -94,8 +118,11 @@ abstract class Entity extends BaseRenderObject {
 
    public getRenderParts(tag: string, expectedAmount?: number): Array<RenderPart> {
       const renderParts = new Array<RenderPart>();
-      for (let i = 0; i < this.allRenderParts.length; i++) {
-         const renderPart = this.allRenderParts[i];
+      for (let i = 0; i < this.allRenderThings.length; i++) {
+         const renderPart = this.allRenderThings[i];
+         if (!thingIsRenderPart(renderPart)) {
+            continue;
+         }
 
          if (renderPart.tags.includes(tag)) {
             renderParts.push(renderPart);
@@ -115,7 +142,9 @@ abstract class Entity extends BaseRenderObject {
          this.renderPartOverlayGroups.splice(idx, 1);
       }
       
-      removeRenderable(overlayGroup);
+      // @Hack
+      const renderLayer = getEntityRenderLayer(this);
+      removeRenderable(overlayGroup, renderLayer);
    }
 
    public onLoad?(): void;
@@ -194,42 +223,46 @@ abstract class Entity extends BaseRenderObject {
       return this.serverComponentsRecord.hasOwnProperty(componentType);
    }
    
-   public attachRenderPart(renderPart: RenderPart): void {
+   public attachRenderThing(thing: RenderThing): void {
       // Don't add if already attached
-      if (this.allRenderParts.indexOf(renderPart) !== -1) {
+      if (this.allRenderThings.indexOf(thing) !== -1) {
          return;
       }
 
-      // @Hack
+      // @Temporary?
+      // @Incomplete: Check with the first render part up the chain
       // Make sure the render part has a higher z-index than its parent
-      if (!(renderPart.parent instanceof Entity)) {
-         if (renderPart.zIndex < (renderPart.parent as RenderPart).zIndex) {
-            throw new Error("Render part had smaller zIndex than its parent");
-         }
-      }
+      // if (thing.parent !== null && thing.zIndex <= thing.parent.zIndex) {
+      //    throw new Error("Render part less-than-or-equal z-index compared to its parent.");
+      // }
 
-      // Add to the root array
-      let idx = this.allRenderParts.length;
-      for (let i = 0; i < this.allRenderParts.length; i++) {
-         const currentRenderPart = this.allRenderParts[i];
-         if (renderPart.zIndex < currentRenderPart.zIndex) {
+      // Add to the array of all render parts
+      let idx = this.allRenderThings.length;
+      for (let i = 0; i < this.allRenderThings.length; i++) {
+         const currentRenderPart = this.allRenderThings[i];
+         if (thing.zIndex < currentRenderPart.zIndex) {
             idx = i;
             break;
          }
       }
-      this.allRenderParts.splice(idx, 0, renderPart);
+      this.allRenderThings.splice(idx, 0, thing);
 
-      renderPart.parent.children.push(renderPart);
+      if (thing.parent !== null) {
+         thing.parent.children.push(thing);
+      }
       
       Board.numVisibleRenderParts++;
-      Board.renderPartRecord[renderPart.id] = renderPart;
+
+      if (thingIsRenderPart(thing)) {
+         Board.renderPartRecord[thing.id] = thing;
+      }
 
       this.dirty();
    }
 
    public removeRenderPart(renderPart: RenderPart): void {
       // Don't remove if already removed
-      const idx = this.allRenderParts.indexOf(renderPart);
+      const idx = this.allRenderThings.indexOf(renderPart);
       if (idx === -1) {
          console.warn("Tried to remove when already removed!");
          return;
@@ -241,7 +274,7 @@ abstract class Entity extends BaseRenderObject {
       delete Board.renderPartRecord[renderPart.id];
       
       // Remove from the root array
-      this.allRenderParts.splice(this.allRenderParts.indexOf(renderPart), 1);
+      this.allRenderThings.splice(this.allRenderThings.indexOf(renderPart), 1);
    }
 
    public remove(): void {
@@ -251,32 +284,17 @@ abstract class Entity extends BaseRenderObject {
 
       // Remove any attached lights
       removeLightsAttachedToEntity(this.id);
-      for (let i = 0; i < this.allRenderParts.length; i++) {
-         const renderPart = this.allRenderParts[i];
-         removeLightsAttachedToRenderPart(renderPart.id);
+      for (let i = 0; i < this.allRenderThings.length; i++) {
+         const renderPart = this.allRenderThings[i];
+         if (thingIsRenderPart(renderPart)) {
+            removeLightsAttachedToRenderPart(renderPart.id);
+         }
       }
    }
 
    protected onRemove?(): void;
 
    public overrideTileMoveSpeedMultiplier?(): number | null;
-
-   // public tick(): void {
-   //    this.tintR = 0;
-   //    this.tintG = 0;
-   //    this.tintB = 0;
-
-   //    for (let i = 0; i < this.tickableComponents.length; i++) {
-   //       const component = this.tickableComponents[i];
-   //       component.tick!();
-   //    }
-
-   // @Incomplete
-   //    for (let i = 0; i < this.allRenderParts.length; i++) {
-   //       const renderPart = this.allRenderParts[i];
-   //       renderPart.age++;
-   //    }
-   // };
 
    // @Cleanup: remove
    public updateRenderPosition(frameProgress: number): void {

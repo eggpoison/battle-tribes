@@ -20,12 +20,12 @@ class PunjiSticks extends Entity {
       }
 
       const renderPart = new TexturedRenderPart(
-         this,
+         null,
          0,
          0,
          textureArrayIndex
       )
-      this.attachRenderPart(renderPart);
+      this.attachRenderThing(renderPart);
 
       const transformComponent = this.getServerComponent(ServerComponentType.transform);
       if (transformComponent.ageTicks <= 0) {

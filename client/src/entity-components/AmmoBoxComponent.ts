@@ -34,7 +34,7 @@ class AmmoBoxComponent extends ServerComponent {
             const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
             
             this.ammoWarningRenderPart = new TexturedRenderPart(
-               this.entity,
+               null,
                999,
                0,
                getTextureArrayIndex("entities/ballista/ammo-warning.png")
@@ -42,7 +42,7 @@ class AmmoBoxComponent extends ServerComponent {
             this.ammoWarningRenderPart.offset.x = rotateXAroundOrigin(BALLISTA_AMMO_BOX_OFFSET_X, BALLISTA_AMMO_BOX_OFFSET_Y, transformComponent.rotation);
             this.ammoWarningRenderPart.offset.y = rotateYAroundOrigin(BALLISTA_AMMO_BOX_OFFSET_X, BALLISTA_AMMO_BOX_OFFSET_Y, transformComponent.rotation);
             this.ammoWarningRenderPart.inheritParentRotation = false;
-            this.entity.attachRenderPart(this.ammoWarningRenderPart);
+            this.entity.attachRenderThing(this.ammoWarningRenderPart);
          }
 
          this.ammoWarningRenderPart.opacity = (Math.sin(Board.serverTicks / 15) * 0.5 + 0.5) * 0.4 + 0.4;
@@ -78,4 +78,4 @@ class AmmoBoxComponent extends ServerComponent {
 
 export default AmmoBoxComponent;
 
-export const AmmoBoxComponentArray = new ComponentArray<AmmoBoxComponent>(ComponentArrayType.server, ServerComponentType.ammoBox, {});
+export const AmmoBoxComponentArray = new ComponentArray<AmmoBoxComponent>(ComponentArrayType.server, ServerComponentType.ammoBox, true, {});

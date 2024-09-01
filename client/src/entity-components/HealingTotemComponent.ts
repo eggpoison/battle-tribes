@@ -56,7 +56,7 @@ class HealingTotemComponent extends ServerComponent {
 
 export default HealingTotemComponent;
 
-export const HealingTotemComponentArray = new ComponentArray<HealingTotemComponent>(ComponentArrayType.server, ServerComponentType.healingTotem, {
+export const HealingTotemComponentArray = new ComponentArray<HealingTotemComponent>(ComponentArrayType.server, ServerComponentType.healingTotem, true, {
    onTick: onTick
 });
 

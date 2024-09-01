@@ -25,4 +25,4 @@ class CraftingStationComponent extends ServerComponent {
 
 export default CraftingStationComponent;
 
-export const CraftingStationComponentArray = new ComponentArray<CraftingStationComponent>(ComponentArrayType.server, ServerComponentType.craftingStation, {});
+export const CraftingStationComponentArray = new ComponentArray<CraftingStationComponent>(ComponentArrayType.server, ServerComponentType.craftingStation, true, {});

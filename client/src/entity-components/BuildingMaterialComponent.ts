@@ -58,4 +58,4 @@ class BuildingMaterialComponent extends ServerComponent {
 
 export default BuildingMaterialComponent;
 
-export const BuildingMaterialComponentArray = new ComponentArray<BuildingMaterialComponent>(ComponentArrayType.server, ServerComponentType.buildingMaterial, {});
+export const BuildingMaterialComponentArray = new ComponentArray<BuildingMaterialComponent>(ComponentArrayType.server, ServerComponentType.buildingMaterial, true, {});

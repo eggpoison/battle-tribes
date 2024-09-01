@@ -15,9 +15,9 @@ class Yeti extends Entity {
    constructor(id: number) {
       super(id, EntityType.yeti);
 
-      this.attachRenderPart(
+      this.attachRenderThing(
          new TexturedRenderPart(
-            this,
+            null,
             1,
             0,
             getTextureArrayIndex("entities/yeti/yeti.png")
@@ -26,13 +26,13 @@ class Yeti extends Entity {
 
       for (let i = 0; i < 2; i++) {
          const paw = new TexturedRenderPart(
-            this,
+            null,
             0,
             0,
             getTextureArrayIndex("entities/yeti/yeti-paw.png")
          );
          paw.addTag("yetiComponent:paw");
-         this.attachRenderPart(paw);
+         this.attachRenderThing(paw);
       }
    }
 

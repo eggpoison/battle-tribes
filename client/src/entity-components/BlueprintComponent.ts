@@ -128,4 +128,4 @@ class BlueprintComponent extends ServerComponent {
 
 export default BlueprintComponent;
 
-export const BlueprintComponentArray = new ComponentArray<BlueprintComponent>(ComponentArrayType.server, ServerComponentType.blueprint, {});
+export const BlueprintComponentArray = new ComponentArray<BlueprintComponent>(ComponentArrayType.server, ServerComponentType.blueprint, true, {});

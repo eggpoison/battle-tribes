@@ -10,4 +10,4 @@ class SlimewispComponent extends ServerComponent {
 
 export default SlimewispComponent;
 
-export const SlimewispComponentArray = new ComponentArray<SlimewispComponent>(ComponentArrayType.server, ServerComponentType.slimewisp, {});
+export const SlimewispComponentArray = new ComponentArray<SlimewispComponent>(ComponentArrayType.server, ServerComponentType.slimewisp, true, {});

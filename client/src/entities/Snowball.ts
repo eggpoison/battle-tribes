@@ -3,7 +3,6 @@ import { randFloat, randInt } from "webgl-test-shared/dist/utils";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { HitData } from "webgl-test-shared/dist/client-server-types";
 import Board from "../Board";
-import { createSnowParticle } from "../particles";
 import Particle from "../Particle";
 import { ParticleRenderLayer, addMonocolourParticleToBufferContainer } from "../rendering/webgl/particle-rendering";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
@@ -29,9 +28,9 @@ class Snowball extends Entity {
    public onLoad(): void {
       const snowballComponentData = this.getServerComponent(ServerComponentType.snowball);
 
-      this.attachRenderPart(
+      this.attachRenderThing(
          new TexturedRenderPart(
-            this,
+            null,
             0,
             0,
             getTextureArrayIndex(getTextureSource(snowballComponentData.size))

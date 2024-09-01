@@ -35,12 +35,12 @@ class PlanterBoxComponent extends ServerComponent {
             const textureSource = plantType === PlanterBoxPlant.iceSpikes ? "entities/plant/snow-clump.png" : "entities/plant/dirt-clump.png";
             
             this.moundRenderPart = new TexturedRenderPart(
-               this.entity,
+               null,
                1,
                Math.PI / 2 * randInt(0, 3),
                getTextureArrayIndex(textureSource)
             );
-            this.entity.attachRenderPart(this.moundRenderPart);
+            this.entity.attachRenderThing(this.moundRenderPart);
          }
       } else if (this.moundRenderPart !== null) {
          this.entity.removeRenderPart(this.moundRenderPart);
@@ -81,7 +81,7 @@ class PlanterBoxComponent extends ServerComponent {
 
 export default PlanterBoxComponent;
 
-export const PlanterBoxComponentArray = new ComponentArray<PlanterBoxComponent>(ComponentArrayType.server, ServerComponentType.planterBox, {
+export const PlanterBoxComponentArray = new ComponentArray<PlanterBoxComponent>(ComponentArrayType.server, ServerComponentType.planterBox, true, {
    onTick: onTick
 });
 

@@ -22,4 +22,4 @@ class WanderAIComponent extends ServerComponent {
 
 export default WanderAIComponent;
 
-export const WanderAIComponentArray = new ComponentArray<WanderAIComponent>(ComponentArrayType.server, ServerComponentType.wanderAI, {});
+export const WanderAIComponentArray = new ComponentArray<WanderAIComponent>(ComponentArrayType.server, ServerComponentType.wanderAI, true, {});

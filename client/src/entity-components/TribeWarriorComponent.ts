@@ -42,4 +42,4 @@ class TribeWarriorComponent extends ServerComponent {
 
 export default TribeWarriorComponent;
 
-export const TribeWarriorComponentArray = new ComponentArray<TribeWarriorComponent>(ComponentArrayType.server, ServerComponentType.tribeWarrior, {});
+export const TribeWarriorComponentArray = new ComponentArray<TribeWarriorComponent>(ComponentArrayType.server, ServerComponentType.tribeWarrior, true, {});

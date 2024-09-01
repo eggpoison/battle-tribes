@@ -469,7 +469,7 @@ class InventoryUseComponent extends ServerComponent{
 
 export default InventoryUseComponent;
 
-export const InventoryUseComponentArray = new ComponentArray<InventoryUseComponent>(ComponentArrayType.server, ServerComponentType.inventoryUse, {
+export const InventoryUseComponentArray = new ComponentArray<InventoryUseComponent>(ComponentArrayType.server, ServerComponentType.inventoryUse, true, {
    onTick: onTick,
    onUpdate: onUpdate
 });
@@ -579,7 +579,7 @@ const updateActiveItemRenderPart = (inventoryUseComponent: InventoryUseComponent
             0,
             activeItem !== null ? getTextureArrayIndex(CLIENT_ITEM_INFO_RECORD[activeItem.type].entityTextureSource) : -1
          );
-         inventoryUseComponent.entity.attachRenderPart(renderPart);
+         inventoryUseComponent.entity.attachRenderThing(renderPart);
          inventoryUseComponent.activeItemRenderParts[limbIdx] = renderPart;
       }
 
@@ -635,7 +635,7 @@ const updateActiveItemRenderPart = (inventoryUseComponent: InventoryUseComponent
                   Math.PI/4,
                   getTextureArrayIndex(arrowTextureSource)
                );
-               inventoryUseComponent.entity.attachRenderPart(inventoryUseComponent.arrowRenderParts[limbIdx]);
+               inventoryUseComponent.entity.attachRenderThing(inventoryUseComponent.arrowRenderParts[limbIdx]);
             }
 
             let textureIdx = Math.floor(chargeProgress * textureSourceArray.length);

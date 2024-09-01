@@ -16,25 +16,25 @@ class SlimeSpit extends Entity {
       // @Incomplete: SIZE DOESN'T ACTUALLY AFFECT ANYTHING
 
       const renderPart1 = new TexturedRenderPart(
-         this,
+         null,
          1,
          0,
          getTextureArrayIndex("projectiles/slime-spit-medium.png")
       );
       renderPart1.opacity = 0.75;
       renderPart1.addTag("slimeSpit:part");
-      this.attachRenderPart(renderPart1);
+      this.attachRenderThing(renderPart1);
       renderParts.push(renderPart1);
 
       const renderPart2 = new TexturedRenderPart(
-         this,
+         null,
          0,
          Math.PI/4,
          getTextureArrayIndex("projectiles/slime-spit-medium.png")
       );
       renderPart2.addTag("slimeSpit:part");
       renderPart2.opacity = 0.75;
-      this.attachRenderPart(renderPart2);
+      this.attachRenderThing(renderPart2);
       renderParts.push(renderPart2);
    }
 

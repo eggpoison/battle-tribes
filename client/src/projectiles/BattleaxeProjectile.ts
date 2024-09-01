@@ -7,9 +7,9 @@ class BattleaxeProjectile extends Entity {
    constructor(id: number) {
       super(id, EntityType.battleaxeProjectile);
 
-      this.attachRenderPart(
+      this.attachRenderThing(
          new TexturedRenderPart(
-            this,
+            null,
             0,
             0,
             getTextureArrayIndex("items/large/stone-battleaxe.png")

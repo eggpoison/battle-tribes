@@ -160,7 +160,7 @@ class FrozenYetiComponent extends ServerComponent {
 
 export default FrozenYetiComponent;
 
-export const FrozenYetiComponentArray = new ComponentArray<FrozenYetiComponent>(ComponentArrayType.server, ServerComponentType.frozenYeti, {
+export const FrozenYetiComponentArray = new ComponentArray<FrozenYetiComponent>(ComponentArrayType.server, ServerComponentType.frozenYeti, true, {
    onTick: onTick
 });
 

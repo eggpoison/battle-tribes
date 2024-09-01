@@ -9,9 +9,9 @@ class ResearchBench extends Entity {
    constructor(id: number) {
       super(id, EntityType.researchBench);
 
-      this.attachRenderPart(
+      this.attachRenderThing(
          new TexturedRenderPart(
-            this,
+            null,
             0,
             0,
             getTextureArrayIndex("entities/research-bench/research-bench.png")

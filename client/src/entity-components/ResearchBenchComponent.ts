@@ -29,7 +29,7 @@ class ResearchBenchComponent extends ServerComponent {
 
 export default ResearchBenchComponent;
 
-export const ResearchBenchComponentArray = new ComponentArray<ResearchBenchComponent>(ComponentArrayType.server, ServerComponentType.researchBench, {
+export const ResearchBenchComponentArray = new ComponentArray<ResearchBenchComponent>(ComponentArrayType.server, ServerComponentType.researchBench, true, {
    onTick: onTick
 });
 

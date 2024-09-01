@@ -56,7 +56,7 @@ class YetiComponent extends ServerComponent {
 
 export default YetiComponent;
 
-export const YetiComponentArray = new ComponentArray<YetiComponent>(ComponentArrayType.server, ServerComponentType.yeti, {
+export const YetiComponentArray = new ComponentArray<YetiComponent>(ComponentArrayType.server, ServerComponentType.yeti, true, {
    onTick: onTick
 });
 

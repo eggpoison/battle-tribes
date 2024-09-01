@@ -16,7 +16,7 @@ class PunjiSticksComponent extends ServerComponent {
 
 export default PunjiSticksComponent;
 
-export const PunjiSticksComponentArray = new ComponentArray<PunjiSticksComponent>(ComponentArrayType.server, ServerComponentType.punjiSticks, {
+export const PunjiSticksComponentArray = new ComponentArray<PunjiSticksComponent>(ComponentArrayType.server, ServerComponentType.punjiSticks, true, {
    onTick: onTick
 });
    

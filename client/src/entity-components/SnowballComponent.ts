@@ -28,7 +28,7 @@ class SnowballComponent extends ServerComponent {
 
 export default SnowballComponent;
 
-export const SnowballComponentArray = new ComponentArray<SnowballComponent>(ComponentArrayType.server, ServerComponentType.snowball, {
+export const SnowballComponentArray = new ComponentArray<SnowballComponent>(ComponentArrayType.server, ServerComponentType.snowball, true, {
    onTick: onTick
 });
    

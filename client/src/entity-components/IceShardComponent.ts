@@ -9,4 +9,4 @@ class IceShardComponent extends ServerComponent {
 
 export default IceShardComponent;
 
-export const IceShardComponentArray = new ComponentArray<IceShardComponent>(ComponentArrayType.server, ServerComponentType.iceShard, {});
+export const IceShardComponentArray = new ComponentArray<IceShardComponent>(ComponentArrayType.server, ServerComponentType.iceShard, true, {});

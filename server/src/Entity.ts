@@ -6,7 +6,7 @@ import { hitboxIsCircular } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { TransformComponentArray } from "./components/TransformComponent";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { ComponentClassRecord, ComponentConfig, ComponentParams } from "./components";
-import { ComponentArray, ComponentArrayRecord, ComponentArrays } from "./components/ComponentArray";
+import { ComponentArray, ComponentArrayRecord } from "./components/ComponentArray";
 
 let idCounter = 1;
 

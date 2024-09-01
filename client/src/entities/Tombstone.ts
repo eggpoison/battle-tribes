@@ -19,9 +19,9 @@ class Tombstone extends Entity {
    public onLoad(): void {
       const tombstoneComponent = this.getServerComponent(ServerComponentType.tombstone);
 
-      this.attachRenderPart(
+      this.attachRenderThing(
          new TexturedRenderPart(
-            this,
+            null,
             0,
             0,
             getTextureArrayIndex(`entities/tombstone/tombstone${tombstoneComponent.tombstoneType + 1}.png`)

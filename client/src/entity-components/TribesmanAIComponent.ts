@@ -48,7 +48,7 @@ class TribesmanAIComponent extends ServerComponent {
 
 export default TribesmanAIComponent;
 
-export const TribesmanAIComponentArray = new ComponentArray<TribesmanAIComponent>(ComponentArrayType.server, ServerComponentType.tribesmanAI, {
+export const TribesmanAIComponentArray = new ComponentArray<TribesmanAIComponent>(ComponentArrayType.server, ServerComponentType.tribesmanAI, true, {
    onTick: onTick
 });
 

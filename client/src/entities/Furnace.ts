@@ -13,9 +13,9 @@ class Furnace extends Entity {
    constructor(id: number) {
       super(id, EntityType.furnace);
 
-      this.attachRenderPart(
+      this.attachRenderThing(
          new TexturedRenderPart(
-            this,
+            null,
             0,
             0,
             getTextureArrayIndex("entities/furnace/furnace.png")

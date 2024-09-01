@@ -8,17 +8,14 @@ import Chunk from "./Chunk";
 
 export type VisiblePositionBounds = [minX: number, maxX: number, minY: number, maxY: number];
 
+// @Incomplete?
 const registerVisibleChunk = (chunk: Chunk): void => {
-   // for (let i = 0; i < chunk.grassStrands.length; i++) {
-   //    const grassStrandData = chunk.grassStrands[i];
-      
-   //    const entity = new GrassStrand(grassStrandData);
-   //    Board.addEntity(entity);
-   // }
+   // createEntityRenderedChunkData(chunk.x, chunk.y);
 }
 
+// @Incomplete?
 const deregisterVisibleChunk = (chunk: Chunk): void => {
-
+   // removeEntityRenderedChunkData(chunk.x, chunk.y);
 }
 
 const getChunksFromRange = (minChunkX: number, maxChunkX: number, minChunkY: number, maxChunkY: number): ReadonlyArray<Chunk> => {

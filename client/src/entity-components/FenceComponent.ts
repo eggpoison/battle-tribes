@@ -60,7 +60,7 @@ class FenceComponent extends ServerComponent {
       }
       
       const renderPart = new TexturedRenderPart(
-         this.entity,
+         null,
          0,
          0,
          getTextureArrayIndex(textureSource)
@@ -68,7 +68,7 @@ class FenceComponent extends ServerComponent {
       renderPart.offset.x = offsetX;
       renderPart.offset.y = offsetY;
 
-      this.entity.attachRenderPart(renderPart);
+      this.entity.attachRenderThing(renderPart);
 
       const idx = getRailIdx(railBit);
       this.railRenderParts[idx] = renderPart;
@@ -117,4 +117,4 @@ class FenceComponent extends ServerComponent {
 
 export default FenceComponent;
 
-export const FenceComponentArray = new ComponentArray<FenceComponent>(ComponentArrayType.server, ServerComponentType.fence, {});
+export const FenceComponentArray = new ComponentArray<FenceComponent>(ComponentArrayType.server, ServerComponentType.fence, true, {});

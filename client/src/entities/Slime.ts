@@ -1,11 +1,10 @@
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityType } from "webgl-test-shared/dist/entities";
-import { Point, randInt } from "webgl-test-shared/dist/utils";
+import { randInt } from "webgl-test-shared/dist/utils";
 import { TileType } from "webgl-test-shared/dist/tiles";
 import { createSlimePoolParticle, createSlimeSpeckParticle } from "../particles";
 import Entity from "../Entity";
 import { AudioFilePath, playSound } from "../sound";
-import { Settings } from "webgl-test-shared/dist/settings";
 import { SLIME_SIZES } from "../entity-components/SlimeComponent";
 
 class Slime extends Entity {

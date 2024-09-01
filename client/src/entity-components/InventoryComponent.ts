@@ -99,4 +99,4 @@ class InventoryComponent extends ServerComponent {
 
 export default InventoryComponent;
 
-export const InventoryComponentArray = new ComponentArray<InventoryComponent>(ComponentArrayType.server, ServerComponentType.inventory, {});
+export const InventoryComponentArray = new ComponentArray<InventoryComponent>(ComponentArrayType.server, ServerComponentType.inventory, true, {});

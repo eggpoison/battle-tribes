@@ -25,6 +25,18 @@ export function createRotationMatrix(rotation: number): Matrix3x3 {
    ];
 }
 
+export function overrideWithIdentityMatrix(matrix: Matrix3x3): void {
+   matrix[0] = 1;
+   matrix[1] = 0;
+   matrix[2] = 0;
+   matrix[3] = 0;
+   matrix[4] = 1;
+   matrix[5] = 0;
+   matrix[6] = 0;
+   matrix[7] = 0;
+   matrix[8] = 1;
+}
+
 export function overrideWithRotationMatrix(matrix: Matrix3x3, rotation: number): void {
    const sin = Math.sin(rotation);
    const cos = Math.cos(rotation);

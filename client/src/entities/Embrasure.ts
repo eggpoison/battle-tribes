@@ -18,13 +18,13 @@ class Embrasure extends Entity {
       const buildingMaterialComponent = this.getServerComponent(ServerComponentType.buildingMaterial);
 
       const renderPart = new TexturedRenderPart(
-         this,
+         null,
          0,
          0,
          getTextureArrayIndex(EMBRASURE_TEXTURE_SOURCES[buildingMaterialComponent.material])
       );
       renderPart.addTag("buildingMaterialComponent:material");
-      this.attachRenderPart(renderPart);
+      this.attachRenderThing(renderPart);
    }
 
    protected onHit(hitData: HitData): void {

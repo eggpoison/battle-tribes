@@ -7,9 +7,9 @@ class Lilypad extends Entity {
    constructor(entityID: EntityID) {
       super(entityID, EntityType.lilypad);
 
-      this.attachRenderPart(
+      this.attachRenderThing(
          new TexturedRenderPart(
-            this,
+            null,
             0,
             0,
             getTextureArrayIndex("entities/lilypad/lilypad.png")

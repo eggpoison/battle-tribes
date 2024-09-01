@@ -13,13 +13,13 @@ class Slimewisp extends Entity {
       super(id, EntityType.slimewisp);
 
       const renderPart = new TexturedRenderPart(
-         this,
+         null,
          0,
          0,
          getTextureArrayIndex(`entities/slimewisp/slimewisp.png`)
       );
       renderPart.opacity = 0.8;
-      this.attachRenderPart(renderPart);
+      this.attachRenderThing(renderPart);
    }
 
    public overrideTileMoveSpeedMultiplier(): number | null {

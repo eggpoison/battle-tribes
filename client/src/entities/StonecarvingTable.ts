@@ -7,9 +7,9 @@ class StonecarvingTable extends Entity {
    constructor(id: number) {
       super(id, EntityType.stonecarvingTable);
 
-      this.attachRenderPart(
+      this.attachRenderThing(
          new TexturedRenderPart(
-            this,
+            null,
             1,
             0,
             getTextureArrayIndex("entities/stonecarving-table/stonecarving-table.png")

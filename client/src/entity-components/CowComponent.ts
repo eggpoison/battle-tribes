@@ -45,7 +45,7 @@ class CowComponent extends ServerComponent {
 
 export default CowComponent;
 
-export const CowComponentArray = new ComponentArray<CowComponent>(ComponentArrayType.server, ServerComponentType.cow, {
+export const CowComponentArray = new ComponentArray<CowComponent>(ComponentArrayType.server, ServerComponentType.cow, true, {
    onTick: onTick
 });
 

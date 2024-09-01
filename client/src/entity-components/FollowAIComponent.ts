@@ -22,4 +22,4 @@ class FollowAIComponent extends ServerComponent {
 
 export default FollowAIComponent;
 
-export const FollowAIComponentArray = new ComponentArray<FollowAIComponent>(ComponentArrayType.server, ServerComponentType.followAI, {});
+export const FollowAIComponentArray = new ComponentArray<FollowAIComponent>(ComponentArrayType.server, ServerComponentType.followAI, true, {});

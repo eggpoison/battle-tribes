@@ -25,4 +25,4 @@ class EscapeAIComponent extends ServerComponent {
 
 export default EscapeAIComponent;
 
-export const EscapeAIComponentArray = new ComponentArray<EscapeAIComponent>(ComponentArrayType.server, ServerComponentType.escapeAI, {});
+export const EscapeAIComponentArray = new ComponentArray<EscapeAIComponent>(ComponentArrayType.server, ServerComponentType.escapeAI, true, {});

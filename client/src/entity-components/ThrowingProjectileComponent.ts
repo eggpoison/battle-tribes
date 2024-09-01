@@ -9,4 +9,4 @@ class ThrowingProjectileComponent extends ServerComponent {
 
 export default ThrowingProjectileComponent;
 
-export const ThrowingProjectileComponentArray = new ComponentArray<ThrowingProjectileComponent>(ComponentArrayType.server, ServerComponentType.throwingProjectile, {});
+export const ThrowingProjectileComponentArray = new ComponentArray<ThrowingProjectileComponent>(ComponentArrayType.server, ServerComponentType.throwingProjectile, true, {});

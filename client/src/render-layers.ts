@@ -19,7 +19,8 @@ export enum RenderLayer {
    highEntities,
    blueprints
 }
-const NUM_RENDER_LAYERS = Object.keys(RenderLayer).length / 2;
+export const NUM_RENDER_LAYERS = Object.keys(RenderLayer).length / 2;
+export const MAX_RENDER_LAYER = NUM_RENDER_LAYERS - 1;
 
 const MAX_RENDER_HEIGHT = NUM_RENDER_LAYERS;
 
@@ -47,9 +48,7 @@ const decorationIsHigh = (decorationType: DecorationType): boolean => {
        || decorationType === DecorationType.flower4;
 }
 
-const getEntityRenderLayer = (entity: Entity): RenderLayer => {
-   // @Incomplete: Make 
-   
+export function getEntityRenderLayer(entity: Entity): RenderLayer {
    switch (entity.type) {
       // Grass
       case EntityType.grassStrand: {

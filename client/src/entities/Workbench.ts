@@ -9,9 +9,9 @@ class Workbench extends Entity {
    constructor(id: number) {
       super(id, EntityType.workbench);
 
-      this.attachRenderPart(
+      this.attachRenderThing(
          new TexturedRenderPart(
-            this,
+            null,
             0,
             0,
             getTextureArrayIndex("entities/workbench/workbench.png")

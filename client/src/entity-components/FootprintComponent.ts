@@ -33,7 +33,7 @@ export class FootprintComponent extends Component {
 
 export default FootprintComponent;
 
-export const FootprintComponentArray = new ComponentArray<FootprintComponent>(ComponentArrayType.client, ClientComponentType.footprint, {
+export const FootprintComponentArray = new ComponentArray<FootprintComponent>(ComponentArrayType.client, ClientComponentType.footprint, true, {
    onTick: onTick
 });
 

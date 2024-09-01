@@ -27,4 +27,4 @@ class PlayerComponent extends ServerComponent {
 
 export default PlayerComponent;
 
-export const PlayerComponentArray = new ComponentArray<PlayerComponent>(ComponentArrayType.server, ServerComponentType.player, {});
+export const PlayerComponentArray = new ComponentArray<PlayerComponent>(ComponentArrayType.server, ServerComponentType.player, true, {});

@@ -22,4 +22,4 @@ class AIHelperComponent extends ServerComponent {
 
 export default AIHelperComponent;
 
-export const AIHelperComponentArray = new ComponentArray<AIHelperComponent>(ComponentArrayType.server, ServerComponentType.aiHelper, {});
+export const AIHelperComponentArray = new ComponentArray<AIHelperComponent>(ComponentArrayType.server, ServerComponentType.aiHelper, true, {});

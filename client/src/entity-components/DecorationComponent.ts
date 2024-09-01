@@ -25,4 +25,4 @@ class DecorationComponent extends ServerComponent {
 
 export default DecorationComponent;
 
-export const DecorationComponentArray = new ComponentArray<DecorationComponent>(ComponentArrayType.server, ServerComponentType.decoration, {});
+export const DecorationComponentArray = new ComponentArray<DecorationComponent>(ComponentArrayType.server, ServerComponentType.decoration, true, {});

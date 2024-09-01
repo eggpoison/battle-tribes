@@ -31,7 +31,7 @@ class FishComponent extends ServerComponent {
 
 export default FishComponent;
 
-export const FishComponentArray = new ComponentArray<FishComponent>(ComponentArrayType.server, ServerComponentType.fish, {
+export const FishComponentArray = new ComponentArray<FishComponent>(ComponentArrayType.server, ServerComponentType.fish, true, {
    onTick: onTick
 });
 

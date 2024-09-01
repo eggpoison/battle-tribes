@@ -41,7 +41,7 @@ class RockSpikeComponent extends ServerComponent {
 
 export default RockSpikeComponent;
 
-export const RockSpikeComponentArray = new ComponentArray<RockSpikeComponent>(ComponentArrayType.server, ServerComponentType.rockSpike, {
+export const RockSpikeComponentArray = new ComponentArray<RockSpikeComponent>(ComponentArrayType.server, ServerComponentType.rockSpike, true, {
    onTick: onTick
 });
 

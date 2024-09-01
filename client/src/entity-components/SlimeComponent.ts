@@ -61,17 +61,17 @@ class SlimeComponent extends ServerComponent {
 
       // Body
       this.bodyRenderPart = new TexturedRenderPart(
-         this.entity,
+         null,
          2,
          0,
          getTextureArrayIndex(`entities/slime/slime-${sizeString}-body.png`)
       );
       this.bodyRenderPart.shakeAmount = getBodyShakeAmount(spitChargeProgress);
-      this.entity.attachRenderPart(this.bodyRenderPart);
+      this.entity.attachRenderThing(this.bodyRenderPart);
 
       // Shading
-      this.entity.attachRenderPart(new TexturedRenderPart(
-         this.entity,
+      this.entity.attachRenderThing(new TexturedRenderPart(
+         null,
          0,
          0,
          getTextureArrayIndex(`entities/slime/slime-${sizeString}-shading.png`)
@@ -79,7 +79,7 @@ class SlimeComponent extends ServerComponent {
 
       // Eye
       const eyeRenderPart = new TexturedRenderPart(
-         this.entity,
+         null,
          3,
          eyeRotation,
          getTextureArrayIndex(`entities/slime/slime-${sizeString}-eye.png`)
@@ -89,7 +89,7 @@ class SlimeComponent extends ServerComponent {
       eyeRenderPart.offset.x = eyeOffsetAmount * Math.sin(eyeRotation);
       eyeRenderPart.offset.y = eyeOffsetAmount * Math.cos(eyeRotation);
       eyeRenderPart.inheritParentRotation = false;
-      this.entity.attachRenderPart(eyeRenderPart);
+      this.entity.attachRenderThing(eyeRenderPart);
 
       this.eyeRenderPart = eyeRenderPart;
 
@@ -124,14 +124,14 @@ class SlimeComponent extends ServerComponent {
       const offsetMagnitude = spriteSize / 2 * lerp(0.3, 0.7, orbInfo.offset);
 
       const renderPart = new TexturedRenderPart(
-         this.entity,
+         null,
          1,
          orbInfo.rotation,
          getTextureArrayIndex(`entities/slime/slime-orb-${sizeString}.png`)
       );
       renderPart.offset.x = offsetMagnitude * Math.sin(orbInfo.rotation);
       renderPart.offset.y = offsetMagnitude * Math.cos(orbInfo.rotation);
-      this.entity.attachRenderPart(renderPart);
+      this.entity.attachRenderThing(renderPart);
       this.orbRenderParts.push(renderPart);
    }
 
@@ -190,7 +190,7 @@ class SlimeComponent extends ServerComponent {
 
 export default SlimeComponent;
 
-export const SlimeComponentArray = new ComponentArray<SlimeComponent>(ComponentArrayType.server, ServerComponentType.slime, {
+export const SlimeComponentArray = new ComponentArray<SlimeComponent>(ComponentArrayType.server, ServerComponentType.slime, true, {
    onTick: onTick
 });
 

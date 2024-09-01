@@ -8,7 +8,7 @@ import { Settings } from "webgl-test-shared/dist/settings";
 import Board from "../Board";
 import { Hitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { PacketReader } from "webgl-test-shared/dist/packets";
-import { EntityType } from "webgl-test-shared/dist/entities";
+import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 
 const enum Vars {
@@ -147,7 +147,7 @@ class LayeredRodComponent extends ServerComponent {
 
          const zIndex = layer / 10;
          const renderPart = new ColouredRenderPart(
-            this.entity,
+            null,
             zIndex,
             0,
             renderPartColour
@@ -157,11 +157,17 @@ class LayeredRodComponent extends ServerComponent {
          renderPart.offset.y = bendY * layer;
 
          this.renderParts.push(renderPart);
-         this.entity.attachRenderPart(renderPart);
+         this.entity.attachRenderThing(renderPart);
       }
    }
 
-   public onCollision(_collidingEntity: Entity, _pushedHitbox: Hitbox, pushingHitbox: Hitbox): void {
+   public onCollision(collidingEntity: Entity, _pushedHitbox: Hitbox, pushingHitbox: Hitbox): void {
+      if (collidingEntity.type === EntityType.tree) {
+         return;
+      }
+      
+      LayeredRodComponentArray.activateComponent(this, this.entity.id);
+      
       const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
    
       // const distance = transformComponent.position.calculateDistanceBetween(pushingHitbox.position);
@@ -207,7 +213,7 @@ class LayeredRodComponent extends ServerComponent {
 
 export default LayeredRodComponent;
 
-export const LayeredRodComponentArray = new ComponentArray<LayeredRodComponent>(ComponentArrayType.server, ServerComponentType.layeredRod, {
+export const LayeredRodComponentArray = new ComponentArray<LayeredRodComponent>(ComponentArrayType.server, ServerComponentType.layeredRod, false, {
    onTick: onTick
 });
 
@@ -227,8 +233,9 @@ const updateOffsets = (layeredRodComponent: LayeredRodComponent): void => {
    }
 }
 
-function onTick(layeredRodComponent: LayeredRodComponent): void {
+function onTick(layeredRodComponent: LayeredRodComponent, entity: EntityID): void {
    if (layeredRodComponent.bendX === 0 && layeredRodComponent.bendY === 0) {
+      LayeredRodComponentArray.queueComponentDeactivate(entity);
       return;
    }
    

@@ -12,12 +12,12 @@ class TribeTotem extends Entity {
       super(id, EntityType.tribeTotem);
 
       const renderPart = new TexturedRenderPart(
-         this,
+         null,
          1,
          0,
          getTextureArrayIndex(`entities/tribe-totem/tribe-totem.png`)
       );
-      this.attachRenderPart(renderPart);
+      this.attachRenderThing(renderPart);
    }
 
    protected onHit(): void {

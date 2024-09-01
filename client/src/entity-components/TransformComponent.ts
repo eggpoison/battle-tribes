@@ -28,6 +28,7 @@ const getTile = (position: Point): Tile => {
 
 class TransformComponent extends ServerComponent {
    public ageTicks: number;
+   public totalMass: number;
    
    public readonly position: Point;
 
@@ -57,6 +58,8 @@ class TransformComponent extends ServerComponent {
       
       this.tile = getTile(this.position);
 
+      this.totalMass = 0;
+
       const numCircularHitboxes = reader.readNumber();
       for (let i = 0; i < numCircularHitboxes; i++) {
          const mass = reader.readNumber();
@@ -71,6 +74,8 @@ class TransformComponent extends ServerComponent {
 
          const hitbox = new CircularHitbox(mass, new Point(offsetX, offsetY), collisionType, collisionBit, collisionMask, flags, radius);
          this.addHitbox(hitbox, localID);
+
+         this.totalMass += mass;
       }
 
       const numRectangularHitboxes = reader.readNumber();
@@ -89,6 +94,8 @@ class TransformComponent extends ServerComponent {
 
          const hitbox = new RectangularHitbox(mass, new Point(offsetX, offsetY), collisionType, collisionBit, collisionMask, flags, width, height, rotation);
          this.addHitbox(hitbox, localID);
+
+         this.totalMass += mass;
       }
    }
 
@@ -369,6 +376,12 @@ class TransformComponent extends ServerComponent {
          }
       }
 
+      // @Speed
+      this.totalMass = 0;
+      for (const hitbox of this.hitboxes) {
+         this.totalMass += hitbox.mass;
+      }
+
       // Update containing chunks
 
       // @Speed
@@ -423,7 +436,7 @@ class TransformComponent extends ServerComponent {
 
 export default TransformComponent;
 
-export const TransformComponentArray = new ComponentArray<TransformComponent>(ComponentArrayType.server, ServerComponentType.transform, {
+export const TransformComponentArray = new ComponentArray<TransformComponent>(ComponentArrayType.server, ServerComponentType.transform, true, {
    onUpdate: onUpdate
 });
 

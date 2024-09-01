@@ -129,7 +129,7 @@ class PhysicsComponent extends ServerComponent {
 
 export default PhysicsComponent;
 
-export const PhysicsComponentArray = new ComponentArray<PhysicsComponent>(ComponentArrayType.server, ServerComponentType.physics, {
+export const PhysicsComponentArray = new ComponentArray<PhysicsComponent>(ComponentArrayType.server, ServerComponentType.physics, true, {
    onTick: onTick,
    onUpdate: onUpdate
 });

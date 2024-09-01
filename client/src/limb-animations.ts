@@ -88,7 +88,7 @@ export function createCraftingAnimationParticles(entity: Entity, limbIdx: number
 
 const createBandageRenderPart = (entity: Entity): void => {
    const renderPart = new TexturedRenderPart(
-      entity,
+      null,
       6,
       2 * Math.PI * Math.random(),
       getTextureArrayIndex("entities/miscellaneous/bandage.png")
@@ -99,7 +99,7 @@ const createBandageRenderPart = (entity: Entity): void => {
    renderPart.offset.x = offsetMagnitude * Math.sin(offsetDirection);
    renderPart.offset.y = offsetMagnitude * Math.cos(offsetDirection);
 
-   entity.attachRenderPart(renderPart);
+   entity.attachRenderThing(renderPart);
 
    const inventoryUseComponent = entity.getServerComponent(ServerComponentType.inventoryUse);
    inventoryUseComponent.bandageRenderParts.push(renderPart);
@@ -209,13 +209,13 @@ export function updateCustomItemRenderPart(entity: Entity): void {
    if (customItemState !== null) {
       if (inventoryUseComponent.customItemRenderPart === null) {
          inventoryUseComponent.customItemRenderPart = new TexturedRenderPart(
-            inventoryUseComponent.entity,
+            null,
             getTextureArrayIndex(getCustomItemRenderPartTextureSource(entity, customItemState)),
             9,
             0
          );
          inventoryUseComponent.customItemRenderPart.offset.y = 38;
-         inventoryUseComponent.entity.attachRenderPart(inventoryUseComponent.customItemRenderPart);
+         inventoryUseComponent.entity.attachRenderThing(inventoryUseComponent.customItemRenderPart);
       }
       
       inventoryUseComponent.customItemRenderPart.opacity = getCustomItemRenderPartOpacity(entity, customItemState);

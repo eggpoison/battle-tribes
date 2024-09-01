@@ -29,4 +29,4 @@ class StructureComponent extends ServerComponent {
 
 export default StructureComponent;
 
-export const StructureComponentArray = new ComponentArray<StructureComponent>(ComponentArrayType.server, ServerComponentType.structure, {});
+export const StructureComponentArray = new ComponentArray<StructureComponent>(ComponentArrayType.server, ServerComponentType.structure, true, {});

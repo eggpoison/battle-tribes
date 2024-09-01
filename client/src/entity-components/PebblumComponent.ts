@@ -9,4 +9,4 @@ class PebblumComponent extends ServerComponent {
 
 export default PebblumComponent;
 
-export const PebblumComponentArray = new ComponentArray<PebblumComponent>(ComponentArrayType.server, ServerComponentType.pebblum, {});
+export const PebblumComponentArray = new ComponentArray<PebblumComponent>(ComponentArrayType.server, ServerComponentType.pebblum, true, {});

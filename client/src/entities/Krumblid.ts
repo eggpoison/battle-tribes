@@ -15,9 +15,9 @@ class Krumblid extends Entity {
    constructor(id: number) {
       super(id, EntityType.krumblid);
 
-      this.attachRenderPart(
+      this.attachRenderThing(
          new TexturedRenderPart(
-            this,
+            null,
             0,
             0,
             getTextureArrayIndex("entities/krumblid/krumblid.png")

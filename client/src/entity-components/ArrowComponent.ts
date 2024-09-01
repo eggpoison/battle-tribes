@@ -10,4 +10,4 @@ class ProjectileComponent extends ServerComponent {
 
 export default ProjectileComponent;
 
-export const ProjectileComponentArray = new ComponentArray<ProjectileComponent>(ComponentArrayType.server, ServerComponentType.projectile, {});
+export const ProjectileComponentArray = new ComponentArray<ProjectileComponent>(ComponentArrayType.server, ServerComponentType.projectile, true, {});

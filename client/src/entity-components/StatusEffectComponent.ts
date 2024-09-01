@@ -91,7 +91,7 @@ class StatusEffectComponent extends ServerComponent {
 
 export default StatusEffectComponent;
 
-export const StatusEffectComponentArray = new ComponentArray<StatusEffectComponent>(ComponentArrayType.server, ServerComponentType.statusEffect, {
+export const StatusEffectComponentArray = new ComponentArray<StatusEffectComponent>(ComponentArrayType.server, ServerComponentType.statusEffect, true, {
    onTick: onTick
 });
 

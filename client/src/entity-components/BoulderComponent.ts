@@ -24,4 +24,4 @@ class BoulderComponent extends ServerComponent {
 
 export default BoulderComponent;
 
-export const BoulderComponentArray = new ComponentArray<BoulderComponent>(ComponentArrayType.server, ServerComponentType.boulder, {});
+export const BoulderComponentArray = new ComponentArray<BoulderComponent>(ComponentArrayType.server, ServerComponentType.boulder, true, {});

@@ -59,11 +59,13 @@ import { createEntityOverlayShaders } from "./rendering/webgl/overlay-rendering"
 import { updateRenderPartMatrices } from "./rendering/render-part-matrices";
 import { EntitySummonPacket } from "webgl-test-shared/dist/dev-packets";
 import { Mutable } from "webgl-test-shared/dist/utils";
-import { aaTEMPTEMP, renderNextRenderables, resetRenderOrder } from "./rendering/render-loop";
+import { renderNextRenderables, resetRenderOrder } from "./rendering/render-loop";
 import { InitialGameDataPacket, processGameDataPacket } from "./client/packet-processing";
 import { PacketReader } from "webgl-test-shared/dist/packets";
-import { getMaxRenderHeightForRenderLayer, RenderLayer } from "./render-layers";
+import { getMaxRenderHeightForRenderLayer, MAX_RENDER_LAYER, RenderLayer } from "./render-layers";
 import { updateEntity } from "./entity-components/ComponentArray";
+
+let tempPacketSendCounter = 0;
 
 export const enum GameInteractState {
    none,
@@ -174,10 +176,6 @@ abstract class Game {
       this.isRunning = true;
       this.lastTime = performance.now();
       requestAnimationFrame(time => this.main(time));
-      // @Temporary
-      setTimeout(() => {
-         aaTEMPTEMP();
-      }, 1000);
    }
 
    public static stop(): void {
@@ -334,7 +332,10 @@ abstract class Game {
                Board.resolveEntityCollisions();
                this.update();
             }
-            Client.sendPlayerDataPacket();
+            
+            // @Hack: For some reason, if the player sends this packet 60 times a second the server begins to mess up how it receives other packet types. Weird.
+            if (++tempPacketSendCounter % 6 === 0) Client.sendPlayerDataPacket();
+
             this.lag -= 1000 / Settings.TPS;
          }
 
@@ -452,19 +453,15 @@ abstract class Game {
       resetRenderOrder();
 
       renderLowerRiverFeatures(visibleRiverRenderChunks);
-      // @Hack: hardcoded
       // Render everything up to fish
-      renderNextRenderables(getMaxRenderHeightForRenderLayer(RenderLayer.fish));
+      renderNextRenderables(RenderLayer.fish);
       renderUpperRiverFeatures(visibleRiverRenderChunks);
       if (OPTIONS.showParticles) {
          renderMonocolourParticles(ParticleRenderLayer.low);
          renderTexturedParticles(ParticleRenderLayer.low);
       }
-      // @Hack @Temporary: max render height
-      renderNextRenderables(9999);
-
-      // renderGameObjects(frameProgress);
-      // renderEntityOverlays();
+      // Render the rest
+      renderNextRenderables(MAX_RENDER_LAYER);
 
       renderSolidTiles(true);
       renderWallBorders();

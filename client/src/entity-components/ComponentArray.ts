@@ -29,22 +29,35 @@ const serverComponentArrayRecord: Record<ServerComponentType, ComponentArray> = 
 
 export class ComponentArray<T extends Component = Component, ArrayType extends ComponentArrayType = ComponentArrayType, ComponentType extends ComponentTypeForArray[ArrayType] = ComponentTypeForArray[ArrayType]> implements ComponentArrayFunctions<T> {
    public readonly typeObject: ComponentArrayTypeObject<ArrayType>;
+   private readonly isActiveByDefault: boolean;
    
+   public entities = new Array<EntityID>();
    public components = new Array<T>();
 
    /** Maps entity IDs to component indexes */
    private entityToIndexMap: Partial<Record<EntityID, number>> = {};
    /** Maps component indexes to entity IDs */
    private indexToEntityMap: Partial<Record<number, EntityID>> = {};
+   
+   public activeComponents = new Array<T>();
+   public activeEntities = new Array<EntityID>();
+
+   /** Maps entity IDs to component indexes */
+   private activeEntityToIndexMap: Record<EntityID, number> = {};
+   /** Maps component indexes to entity IDs */
+   private activeIndexToEntityMap: Record<number, EntityID> = {};
+
+   private deactivateBuffer = new Array<number>();
 
    public onTick?: (component: T, entity: EntityID) => void;
    public onUpdate?: (component: T, entity: EntityID) => void;
 
-   constructor(arrayType: ArrayType, componentType: ComponentType, functions: ComponentArrayFunctions<T>) {
+   constructor(arrayType: ArrayType, componentType: ComponentType, isActiveByDefault: boolean, functions: ComponentArrayFunctions<T>) {
       this.typeObject = {
          type: arrayType,
          componentType: componentType
       };
+      this.isActiveByDefault = isActiveByDefault;
       
       this.onTick = functions.onTick;
       this.onUpdate = functions.onUpdate;
@@ -61,12 +74,18 @@ export class ComponentArray<T extends Component = Component, ArrayType extends C
       this.entityToIndexMap[entityID] = newIndex;
       this.indexToEntityMap[newIndex] = entityID;
       this.components.push(component);
+      this.entities.push(entityID);
+
+      if (this.isActiveByDefault) {
+         this.activateComponent(component, entityID);
+      }
    }
 
    public removeComponent(entityID: EntityID): void {
 		// Copy element at end into deleted element's place to maintain density
       const indexOfRemovedEntity = this.entityToIndexMap[entityID]!;
       this.components[indexOfRemovedEntity] = this.components[this.components.length - 1];
+      this.entities[indexOfRemovedEntity] = this.entities[this.entities.length - 1];
 
 		// Update map to point to moved spot
       const entityOfLastElement = this.indexToEntityMap[this.components.length - 1]!;
@@ -77,6 +96,11 @@ export class ComponentArray<T extends Component = Component, ArrayType extends C
       delete this.indexToEntityMap[this.components.length - 1];
 
       this.components.pop();
+      this.entities.pop();
+
+      if (typeof this.activeEntityToIndexMap[entityID] !== "undefined") {
+         this.deactivateComponent(entityID);
+      }
    }
 
    public getComponent(entity: EntityID): T {
@@ -85,6 +109,50 @@ export class ComponentArray<T extends Component = Component, ArrayType extends C
 
    public hasComponent(entity: EntityID): boolean {
       return typeof this.entityToIndexMap[entity] !== "undefined";
+   }
+
+   public activateComponent(component: T, entity: EntityID): void {
+      if (typeof this.activeEntityToIndexMap[entity] !== "undefined") {
+         return;
+      }
+      
+      // Put new entry at end and update the maps
+      const newIndex = this.activeComponents.length;
+      this.activeEntityToIndexMap[entity] = newIndex;
+      this.activeIndexToEntityMap[newIndex] = entity;
+      this.activeComponents.push(component);
+
+      this.activeEntities.push(entity);
+   }
+
+   private deactivateComponent(entity: EntityID): void {
+      // Copy element at end into deleted element's place to maintain density
+      const indexOfRemovedEntity = this.activeEntityToIndexMap[entity];
+      this.activeComponents[indexOfRemovedEntity] = this.activeComponents[this.activeComponents.length - 1];
+      this.activeEntities[indexOfRemovedEntity] = this.activeEntities[this.activeComponents.length - 1];
+
+      // Update map to point to moved spot
+      const entityOfLastElement = this.activeIndexToEntityMap[this.activeComponents.length - 1];
+      this.activeEntityToIndexMap[entityOfLastElement] = indexOfRemovedEntity;
+      this.activeIndexToEntityMap[indexOfRemovedEntity] = entityOfLastElement;
+
+      delete this.activeEntityToIndexMap[entity];
+      delete this.activeIndexToEntityMap[this.activeComponents.length - 1];
+
+      this.activeComponents.pop();
+      this.activeEntities.pop();
+   }
+
+   public queueComponentDeactivate(entity: EntityID): void {
+      this.deactivateBuffer.push(entity);
+   }
+
+   public deactivateQueue(): void {
+      for (let i = 0; i < this.deactivateBuffer.length; i++) {
+         const entityID = this.deactivateBuffer[i];
+         this.deactivateComponent(entityID);
+      }
+      this.deactivateBuffer = [];
    }
 }
 

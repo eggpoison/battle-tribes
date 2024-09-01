@@ -35,7 +35,7 @@ class SpitPoisonAreaComponent extends ServerComponent {
 
 export default SpitPoisonAreaComponent;
 
-export const SpitPoisonAreaComponentArray = new ComponentArray<SpitPoisonAreaComponent>(ComponentArrayType.server, ServerComponentType.spitPoisonArea, {
+export const SpitPoisonAreaComponentArray = new ComponentArray<SpitPoisonAreaComponent>(ComponentArrayType.server, ServerComponentType.spitPoisonArea, true, {
    onTick: onTick
 });
 

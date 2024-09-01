@@ -11,6 +11,7 @@ abstract class ServerComponent extends Component {
          this.tintR = r;
          this.tintG = g;
          this.tintB = b;
+         this.entity.recalculateTint();
          this.entity.dirty();
       }
    }

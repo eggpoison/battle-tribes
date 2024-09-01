@@ -11,23 +11,23 @@ class Pebblum extends Entity {
 
       // Nose
       const nose = new TexturedRenderPart(
-         this,
+         null,
          0,
          2 * Math.PI * Math.random(),
          getTextureArrayIndex("entities/pebblum/pebblum-nose.png")
       )
       nose.offset.y = 12;
-      this.attachRenderPart(nose);
+      this.attachRenderThing(nose);
 
       // Body
       const body = new TexturedRenderPart(
-         this,
+         null,
          1,
          2 * Math.PI * Math.random(),
          getTextureArrayIndex("entities/pebblum/pebblum-body.png")
       )
       body.offset.y = -8;
-      this.attachRenderPart(body);
+      this.attachRenderThing(body);
 
       this.addClientComponent(ClientComponentType.footprint, new FootprintComponent(this, 0.3, 20, 64, 5, 40));
    }

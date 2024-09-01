@@ -1,5 +1,5 @@
 import { angle, lerp } from "webgl-test-shared/dist/utils";
-import { ServerComponentType, TunnelComponentData } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
@@ -56,7 +56,7 @@ class TunnelComponent extends ServerComponent {
       const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
       
       const renderPart = new TexturedRenderPart(
-         this.entity,
+         null,
          0,
          doorBit === 0b10 ? Math.PI : 0,
          getTextureArrayIndex("entities/tunnel/tunnel-door.png")
@@ -64,7 +64,7 @@ class TunnelComponent extends ServerComponent {
       renderPart.offset.y = doorBit === 0b10 ? -32 : 32;
       
       this.doorRenderParts[doorBit] = renderPart;
-      this.entity.attachRenderPart(renderPart);
+      this.entity.attachRenderThing(renderPart);
 
       // @Temporary
       playSound("spike-place.mp3", 0.5, 1, transformComponent.position);
@@ -129,4 +129,4 @@ class TunnelComponent extends ServerComponent {
 
 export default TunnelComponent;
 
-export const TunnelComponentArray = new ComponentArray<TunnelComponent>(ComponentArrayType.server, ServerComponentType.tunnel, {});
+export const TunnelComponentArray = new ComponentArray<TunnelComponent>(ComponentArrayType.server, ServerComponentType.tunnel, true, {});

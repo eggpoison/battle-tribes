@@ -63,12 +63,12 @@ class PlantComponent extends ServerComponent {
          
          if (this.plantRenderPart === null) {
             this.plantRenderPart = new TexturedRenderPart(
-               this.entity,
+               null,
                9,
                0,
                getTextureArrayIndex(textureSource)
             );
-            this.entity.attachRenderPart(this.plantRenderPart);
+            this.entity.attachRenderThing(this.plantRenderPart);
          } else {
             this.plantRenderPart.switchTextureSource(textureSource);
          }
@@ -95,4 +95,4 @@ class PlantComponent extends ServerComponent {
 
 export default PlantComponent;
 
-export const PlantComponentArray = new ComponentArray<PlantComponent>(ComponentArrayType.server, ServerComponentType.plant, {});
+export const PlantComponentArray = new ComponentArray<PlantComponent>(ComponentArrayType.server, ServerComponentType.plant, true, {});

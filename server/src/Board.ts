@@ -22,10 +22,10 @@ import { tickTribes } from "./ai-tribe-building/ai-building";
 import { Hitbox, hitboxIsCircular } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { TransformComponentArray } from "./components/TransformComponent";
 import { onCactusDeath } from "./entities/resources/cactus";
-import { onTreeDeath } from "./entities/resources/tree";
 import { WorldInfo } from "webgl-test-shared/dist/structures";
 import { EntityInfo } from "webgl-test-shared/dist/board-interface";
 import { onCowDeath } from "./entities/mobs/cow";
+import { registerEntityRemoval } from "./server/player-clients";
 
 const START_TIME = 6;
 
@@ -274,6 +274,8 @@ abstract class Board {
          if (idx === -1) {
             throw new Error("Tried to remove a game object which doesn't exist or was already removed.");
          }
+         
+         registerEntityRemoval(entity);
    
          // @Speed: don't do per entity, do per component array
          // Call remove functions

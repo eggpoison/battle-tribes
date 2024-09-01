@@ -9,4 +9,4 @@ class KrumblidComponent extends ServerComponent {
 
 export default KrumblidComponent;
 
-export const KrumblidComponentArray = new ComponentArray<KrumblidComponent>(ComponentArrayType.server, ServerComponentType.krumblid, {});
+export const KrumblidComponentArray = new ComponentArray<KrumblidComponent>(ComponentArrayType.server, ServerComponentType.krumblid, true, {});

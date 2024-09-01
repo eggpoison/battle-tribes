@@ -47,7 +47,9 @@ class CookingComponent extends ServerComponent {
 
 export default CookingComponent;
 
-export const CookingComponentArray = new ComponentArray<CookingComponent>(ComponentArrayType.server, ServerComponentType.cooking, {});
+export const CookingComponentArray = new ComponentArray<CookingComponent>(ComponentArrayType.server, ServerComponentType.cooking, true, {
+   onTick: onTick
+});
 
 function onTick(cookingComponent: CookingComponent): void {
    if (Board.tickIntervalHasPassed(0.15)) {

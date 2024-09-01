@@ -324,7 +324,7 @@ const getEntityID = (doPlayerProximityCheck: boolean, doCanSelectCheck: boolean)
    for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
       for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
          const chunk = Board.getChunk(chunkX, chunkY);
-         for (const currentEntityID of chunk.entities) {
+         for (const currentEntityID of chunk.nonGrassEntities) {
             const entity = Board.entityRecord[currentEntityID]!;
             if (doCanSelectCheck && getEntityInteractAction(entity) === null) {
                continue;

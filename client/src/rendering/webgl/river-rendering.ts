@@ -1676,6 +1676,8 @@ export function renderLowerRiverFeatures(visibleRenderChunks: ReadonlyArray<Rend
 
    gl.disable(gl.BLEND);
    gl.blendFunc(gl.ONE, gl.ZERO);
+
+   gl.bindVertexArray(null);
 }
 
 export function renderUpperRiverFeatures(visibleRenderChunks: ReadonlyArray<RenderChunkRiverInfo>): void {

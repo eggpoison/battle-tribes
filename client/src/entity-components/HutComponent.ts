@@ -125,13 +125,13 @@ class HutComponent extends ServerComponent {
       if (this.isRecalling) {
          if (this.recallMarker === null) {
             this.recallMarker = new TexturedRenderPart(
-               this.entity,
+               null,
                9,
                0,
                getTextureArrayIndex("entities/recall-marker.png")
             );
             this.recallMarker.inheritParentRotation = false;
-            this.entity.attachRenderPart(this.recallMarker);
+            this.entity.attachRenderThing(this.recallMarker);
          }
 
          let opacity = Math.sin(transformComponent.ageTicks / Settings.TPS * 5) * 0.5 + 0.5;
@@ -148,4 +148,4 @@ class HutComponent extends ServerComponent {
 
 export default HutComponent;
 
-export const HutComponentArray = new ComponentArray<HutComponent>(ComponentArrayType.server, ServerComponentType.hut, {});
+export const HutComponentArray = new ComponentArray<HutComponent>(ComponentArrayType.server, ServerComponentType.hut, true, {});

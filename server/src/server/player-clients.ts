@@ -844,7 +844,7 @@ export function registerEntityHeal(healedEntity: EntityID, healer: EntityID, hea
    }
 }
 
-export function registerEntityDeath(entity: EntityID): void {
+export function registerEntityRemoval(entity: EntityID): void {
    const transformComponent = TransformComponentArray.getComponent(entity);
    const viewingPlayers = getPlayersViewingPosition(transformComponent.boundingAreaMinX, transformComponent.boundingAreaMaxX, transformComponent.boundingAreaMinY, transformComponent.boundingAreaMaxY);
    if (viewingPlayers.length === 0) {

@@ -13,9 +13,9 @@ class ItemEntity extends Entity {
    public onLoad(): void {
       const itemComponent = this.getServerComponent(ServerComponentType.item);
       
-      this.attachRenderPart(
+      this.attachRenderThing(
          new TexturedRenderPart(
-            this,
+            null,
             0,
             0,
             getTextureArrayIndex(CLIENT_ITEM_INFO_RECORD[itemComponent.itemType].entityTextureSource)

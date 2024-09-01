@@ -176,7 +176,7 @@ class TribeMemberComponent extends ServerComponent {
                const offsetY = 24 - 6 * 4 / 2;
 
                const renderPart = new TexturedRenderPart(
-                  this.entity,
+                  null,
                   2.2,
                   0,
                   getTextureArrayIndex("entities/miscellaneous/eye-scar.png")
@@ -187,14 +187,14 @@ class TribeMemberComponent extends ServerComponent {
                renderPart.offset.x = offsetX;
                renderPart.offset.y = offsetY;
 
-               this.entity.attachRenderPart(renderPart);
+               this.entity.attachRenderThing(renderPart);
                break;
             }
             // Create shrewd eyes
             case TribesmanTitle.shrewd: {
                for (let i = 0; i < 2; i++) {
                   const renderPart = new TexturedRenderPart(
-                     this.entity,
+                     null,
                      2.1,
                      0,
                      // @Incomplete
@@ -220,7 +220,7 @@ class TribeMemberComponent extends ServerComponent {
                   renderPart.offset.x = (xo - 5 * 4 / 2) * (i === 1 ? 1 : -1);
                   renderPart.offset.y = yo - 5 * 4 / 2;
 
-                  this.entity.attachRenderPart(renderPart);
+                  this.entity.attachRenderThing(renderPart);
                }
                
                break;
@@ -233,7 +233,7 @@ class TribeMemberComponent extends ServerComponent {
                   const angle = ((i - (numLeaves - 1) / 2) * Math.PI * 0.2) + Math.PI;
                   
                   const renderPart = new TexturedRenderPart(
-                     this.entity,
+                     null,
                      0,
                      angle + Math.PI/2 + randFloat(-0.5, 0.5),
                      getTextureArrayIndex("entities/miscellaneous/tribesman-leaf.png")
@@ -246,13 +246,13 @@ class TribeMemberComponent extends ServerComponent {
                   renderPart.offset.x = (radius + radiusAdd) * Math.sin(angle);
                   renderPart.offset.y = (radius + radiusAdd) * Math.cos(angle);
 
-                  this.entity.attachRenderPart(renderPart);
+                  this.entity.attachRenderThing(renderPart);
                }
                break;
             }
             case TribesmanTitle.yetisbane: {
                const renderPart = new TexturedRenderPart(
-                  this.entity,
+                  null,
                   0,
                   0,
                   getTextureArrayIndex("entities/miscellaneous/tribesman-fangs.png")
@@ -262,7 +262,7 @@ class TribeMemberComponent extends ServerComponent {
                const radius = getTribesmanRadius(this.entity);
                renderPart.offset.y = radius - 2;
 
-               this.entity.attachRenderPart(renderPart);
+               this.entity.attachRenderThing(renderPart);
                break;
             }
             case TribesmanTitle.builder: {
@@ -285,13 +285,13 @@ class TribeMemberComponent extends ServerComponent {
             }
             case TribesmanTitle.wellful: {
                const renderPart = new TexturedRenderPart(
-                  this.entity,
+                  null,
                   2.1,
                   0,
                   getTextureArrayIndex("entities/miscellaneous/tribesman-health-patch.png")
                );
                renderPart.addTag("tribeMemberComponent:fromTitle");
-               this.entity.attachRenderPart(renderPart);
+               this.entity.attachRenderThing(renderPart);
             }
          }
       }
@@ -367,7 +367,7 @@ class TribeMemberComponent extends ServerComponent {
 
 export default TribeMemberComponent;
 
-export const TribeMemberComponentArray = new ComponentArray<TribeMemberComponent>(ComponentArrayType.server, ServerComponentType.tribeMember, {});
+export const TribeMemberComponentArray = new ComponentArray<TribeMemberComponent>(ComponentArrayType.server, ServerComponentType.tribeMember, true, {});
 
 function onTick(tribeMemberComponent: TribeMemberComponent): void {
    if (tribeMemberComponent.deathbringerEyeLights.length > 0) {

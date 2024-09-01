@@ -9,4 +9,4 @@ class IceSpikesComponent extends ServerComponent {
 
 export default IceSpikesComponent;
 
-export const IceSpikesComponentArray = new ComponentArray<IceSpikesComponent>(ComponentArrayType.server, ServerComponentType.iceSpikes, {});
+export const IceSpikesComponentArray = new ComponentArray<IceSpikesComponent>(ComponentArrayType.server, ServerComponentType.iceSpikes, true, {});

@@ -45,6 +45,10 @@ export class PlantComponent {
 
 export const PlantComponentArray = new ComponentArray<PlantComponent>(ServerComponentType.plant, true, {
    onInitialise: onInitialise,
+   onTick: {
+      tickInterval: 1,
+      func: onTick
+   },
    onRemove: onRemove,
    getDataLength: getDataLength,
    addDataToPacket: addDataToPacket
@@ -80,7 +84,7 @@ const plantIsFertilised = (plantComponent: PlantComponent): boolean => {
    return planterBoxComponent.remainingFertiliserTicks > 0;
 }
 
-export function tickPlantComponent(plantComponent: PlantComponent): void {
+function onTick(plantComponent: PlantComponent): void {
    if (plantComponent.plantType === null) {
       return;
    }

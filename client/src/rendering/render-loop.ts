@@ -2,6 +2,8 @@ import Entity from "../Entity";
 import Particle from "../Particle";
 import { calculateRenderPartDepth, getEntityHeight, renderEntities } from "./webgl/entity-rendering";
 import { RenderPartOverlayGroup, renderEntityOverlay } from "./webgl/overlay-rendering";
+import { NUM_RENDER_LAYERS, RenderLayer } from "../render-layers";
+import { renderChunkedEntities, renderLayerIsChunkRendered } from "./webgl/chunked-entity-rendering";
 
 export const enum RenderableType {
    entity,
@@ -17,9 +19,13 @@ interface RenderableInfo {
    readonly renderable: Renderable;
 }
 
-const renderables = new Array<RenderableInfo>();
+let currentRenderLayer: RenderLayer = 0;
+const renderableArrays = new Array<Array<RenderableInfo>>();
+for (let i = 0; i < NUM_RENDER_LAYERS; i++) {
+   renderableArrays.push([]);
+}
 
-const getRenderableDepth = (type: RenderableType, renderable: Renderable): number => {
+const getRenderableRenderHeight = (type: RenderableType, renderable: Renderable): number => {
    switch (type) {
       case RenderableType.entity: {
          // @Cleanup: remove cast
@@ -47,15 +53,15 @@ const getRenderableDepth = (type: RenderableType, renderable: Renderable): numbe
    }
 }
 
-const getRenderableIdx = (type: RenderableType, renderable: Renderable): number => {
-   const depth = getRenderableDepth(type, renderable);
+const getRenderableInsertIdx = (type: RenderableType, renderable: Renderable, renderables: ReadonlyArray<RenderableInfo>): number => {
+   const depth = getRenderableRenderHeight(type, renderable);
 
    let left = 0;
    let right = renderables.length - 1;
    while (left <= right) {
       const midIdx = Math.floor((left + right) * 0.5);
       const mid = renderables[midIdx];
-      const midDepth = getRenderableDepth(mid.type, mid.renderable);
+      const midDepth = getRenderableRenderHeight(mid.type, mid.renderable);
 
       if (midDepth < depth) {
          left = midIdx + 1;
@@ -66,21 +72,36 @@ const getRenderableIdx = (type: RenderableType, renderable: Renderable): number 
       }
    }
    
-   return left + 1;
+   return left;
 }
 
-export function addRenderable(type: RenderableType, renderable: Renderable): void {
+export function addRenderable(type: RenderableType, renderable: Renderable, renderLayer: RenderLayer): void {
+   const renderables = renderableArrays[renderLayer];
+   
    // Use binary search to find index in array
-   const idx = getRenderableIdx(type, renderable);
+   const idx = getRenderableInsertIdx(type, renderable, renderables);
 
    const renderableInfo: RenderableInfo = {
       type: type,
       renderable: renderable
    };
    renderables.splice(idx, 0, renderableInfo);
+
+   let previousRenderHeight = -99999;
+   for (let i = 0; i < renderables.length; i++) {
+      const renderable = renderables[i];
+      const renderHeight = getRenderableRenderHeight(renderable.type, renderable.renderable);
+      if (renderHeight < previousRenderHeight) {
+         throw new Error();
+      }
+      previousRenderHeight = renderHeight;
+   }
 }
 
-export function removeRenderable(renderable: Renderable): void {
+export function removeRenderable(renderable: Renderable, renderLayer: RenderLayer): void {
+   const renderables = renderableArrays[renderLayer];
+
+   // @Speed
    let idx = -1;
    for (let i = 0; i < renderables.length; i++) {
       const renderableInfo = renderables[i];
@@ -92,14 +113,21 @@ export function removeRenderable(renderable: Renderable): void {
 
    if (idx !== -1) {
       renderables.splice(idx, 1);
+   } else {
+      throw new Error();
    }
 }
 
-const renderRenderablesBatch = (renderableType: RenderableType, renderables: ReadonlyArray<Renderable>): void => {
+const renderRenderablesBatch = (renderableType: RenderableType, renderables: ReadonlyArray<Renderable>, renderLayer: RenderLayer): void => {
    switch (renderableType) {
       case RenderableType.entity: {
-         // @Cleanup: remove need for cast
-         renderEntities(renderables as Array<Entity>);
+         if (renderLayerIsChunkRendered(renderLayer)) {
+            // @Bug: this always renders the whole render layer...
+            renderChunkedEntities(renderLayer);
+         } else {
+            // @Cleanup: remove need for cast
+            renderEntities(renderables as Array<Entity>);
+         }
          break;
       }
       case RenderableType.particle: {
@@ -108,7 +136,8 @@ const renderRenderablesBatch = (renderableType: RenderableType, renderables: Rea
       }
       case RenderableType.overlay: {
          // @Cleanup: remove need for cast
-         for (const overlay of renderables as Array<RenderPartOverlayGroup>) {
+         for (let i = 0; i < renderables.length; i++) {
+            const overlay = renderables[i] as RenderPartOverlayGroup;
             renderEntityOverlay(overlay);
          }
          break;
@@ -116,47 +145,34 @@ const renderRenderablesBatch = (renderableType: RenderableType, renderables: Rea
    }
 }
 
-export function renderRenderables(frameProgress: number): void {
-   if (renderables.length === 0) {
+export function resetRenderOrder(): void {
+   currentRenderLayer = 0;
+}
+
+export function renderNextRenderables(maxRenderLayer: RenderLayer): void {
+   if (currentRenderLayer >= NUM_RENDER_LAYERS) {
       return;
    }
+
+   for (; currentRenderLayer <= maxRenderLayer; currentRenderLayer++) {
+      const renderables = renderableArrays[currentRenderLayer];
+
+      let currentRenderableType = RenderableType.entity;
+      let currentRenderables = new Array<Renderable>();
+
+      for (let idx = 0; idx < renderables.length; idx++) {
+         const renderableInfo = renderables[idx];
    
-   // @Hack: shouldn't be done here
-   // for (const entity of Board.sortedEntities) {
-   //    entity.updateRenderPosition(frameProgress);
-
-   //    // Calculate render info for all render parts
-   //    // Update render parts from parent -> child
-   //    const remainingRenderParts: Array<RenderPart> = [];
-   //    for (const child of entity.children) {
-   //       remainingRenderParts.push(child);
-   //    }
-   //    while (remainingRenderParts.length > 0) {
-   //       const renderObject = remainingRenderParts[0];
-   //       renderObject.update();
-
-   //       for (const child of renderObject.children) {
-   //          remainingRenderParts.push(child);
-   //       }
-
-   //       remainingRenderParts.splice(0, 1);
-   //    }
-   // }
-   
-   let currentRenderableType = RenderableType.entity;
-   let currentRenderables = new Array<Renderable>();
-   for (let i = 0; i < renderables.length; i++) {
-      const renderableInfo = renderables[i];
-
-      if (renderableInfo.type === currentRenderableType) {
-         currentRenderables.push(renderableInfo.renderable);
-      } else {
-         renderRenderablesBatch(currentRenderableType, currentRenderables);
-         
-         currentRenderableType = renderableInfo.type;
-         currentRenderables = [renderableInfo.renderable];
+         if (renderableInfo.type === currentRenderableType) {
+            currentRenderables.push(renderableInfo.renderable);
+         } else {
+            renderRenderablesBatch(currentRenderableType, currentRenderables, currentRenderLayer);
+            
+            currentRenderableType = renderableInfo.type;
+            currentRenderables = [renderableInfo.renderable];
+         }
       }
+   
+      renderRenderablesBatch(currentRenderableType, currentRenderables, currentRenderLayer);
    }
-
-   renderRenderablesBatch(currentRenderableType, currentRenderables);
 }

@@ -8,9 +8,9 @@ class SlingTurret extends Entity {
       super(id, EntityType.slingTurret);
 
       // Base
-      this.attachRenderPart(
+      this.attachRenderThing(
          new TexturedRenderPart(
-            this,
+            null,
             0,
             0,
             getTextureArrayIndex("entities/sling-turret/sling-turret-base.png")
@@ -19,13 +19,13 @@ class SlingTurret extends Entity {
 
       // Plate
       const plateRenderPart = new TexturedRenderPart(
-         this,
+         null,
          1,
          0,
          getTextureArrayIndex("entities/sling-turret/sling-turret-plate.png")
       );
       plateRenderPart.addTag("turretComponent:pivoting");
-      this.attachRenderPart(plateRenderPart);
+      this.attachRenderThing(plateRenderPart);
 
       // Sling
       const slingRenderPart = new TexturedRenderPart(
@@ -35,7 +35,7 @@ class SlingTurret extends Entity {
          getTextureArrayIndex("entities/sling-turret/sling-turret-sling.png")
       );
       slingRenderPart.addTag("turretComponent:aiming");
-      this.attachRenderPart(slingRenderPart);
+      this.attachRenderThing(slingRenderPart);
    }
 }
 

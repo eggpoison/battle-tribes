@@ -4,12 +4,15 @@ import Board from "../Board";
 import Entity from "../Entity";
 import { Light, addLight, attachLightToEntity } from "../lights";
 import { PacketReader } from "webgl-test-shared/dist/packets";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { createSmokeParticle, createEmberParticle } from "../particles";
+import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 
 class CookingComponent extends ServerComponent {
    public heatingProgress: number;
    public isCooking: boolean;
 
-   private readonly light: Light;
+   public readonly light: Light;
 
    constructor(entity: Entity, reader: PacketReader) {
       super(entity);
@@ -31,12 +34,6 @@ class CookingComponent extends ServerComponent {
       attachLightToEntity(lightID, this.entity.id);
    }
 
-   public tick(): void {
-      if (Board.tickIntervalHasPassed(0.15)) {
-         this.light.radius = 40 + randFloat(-7, 7);
-      }
-   }
-
    public padData(reader: PacketReader): void {
       reader.padOffset(2 * Float32Array.BYTES_PER_ELEMENT);
    }
@@ -49,3 +46,39 @@ class CookingComponent extends ServerComponent {
 }
 
 export default CookingComponent;
+
+export const CookingComponentArray = new ComponentArray<CookingComponent>(ComponentArrayType.server, ServerComponentType.cooking, true, {
+   onTick: onTick
+});
+
+function onTick(cookingComponent: CookingComponent): void {
+   if (Board.tickIntervalHasPassed(0.15)) {
+      cookingComponent.light.radius = 40 + randFloat(-7, 7);
+   }
+
+   if (cookingComponent.isCooking) {
+      const transformComponent = cookingComponent.entity.getServerComponent(ServerComponentType.transform);
+
+      // Smoke particles
+      if (Board.tickIntervalHasPassed(0.1)) {
+         const spawnOffsetMagnitude = 20 * Math.random();
+         const spawnOffsetDirection = 2 * Math.PI * Math.random();
+         const spawnPositionX = transformComponent.position.x + spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
+         const spawnPositionY = transformComponent.position.y + spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
+         createSmokeParticle(spawnPositionX, spawnPositionY);
+      }
+
+      // Ember particles
+      if (Board.tickIntervalHasPassed(0.05)) {
+         let spawnPositionX = transformComponent.position.x - 30 * Math.sin(transformComponent.rotation);
+         let spawnPositionY = transformComponent.position.y - 30 * Math.cos(transformComponent.rotation);
+
+         const spawnOffsetMagnitude = 11 * Math.random();
+         const spawnOffsetDirection = 2 * Math.PI * Math.random();
+         spawnPositionX += spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
+         spawnPositionY += spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
+
+         createEmberParticle(spawnPositionX, spawnPositionY, transformComponent.rotation + Math.PI + randFloat(-0.8, 0.8), randFloat(80, 120));
+      }
+   }
+}

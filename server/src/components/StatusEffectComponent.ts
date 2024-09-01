@@ -27,6 +27,10 @@ export class StatusEffectComponent {
 }
 
 export const StatusEffectComponentArray = new ComponentArray<StatusEffectComponent>(ServerComponentType.statusEffect, false, {
+   onTick: {
+      tickInterval: 1,
+      func: onTick
+   },
    getDataLength: getDataLength,
    addDataToPacket: addDataToPacket
 });
@@ -41,9 +45,7 @@ export function applyStatusEffect(entityID: number, statusEffect: StatusEffect, 
       return;
    }
 
-   if (StatusEffectComponentArray.activeEntityToIndexMap[entityID] === undefined) {
-      StatusEffectComponentArray.activateComponent(statusEffectComponent, entityID);
-   }
+   StatusEffectComponentArray.activateComponent(statusEffectComponent, entityID);
    
    if (!hasStatusEffect(statusEffectComponent, statusEffect)) {
       // New status effect
@@ -105,7 +107,7 @@ export function clearStatusEffects(entityID: number): void {
    }
 }
 
-export function tickStatusEffectComponent(statusEffectComponent: StatusEffectComponent, entity: EntityID): void {
+function onTick(statusEffectComponent: StatusEffectComponent, entity: EntityID): void {
    for (let i = 0; i < statusEffectComponent.activeStatusEffectTypes.length; i++) {
       const statusEffect = statusEffectComponent.activeStatusEffectTypes[i];
 
@@ -156,16 +158,6 @@ export function tickStatusEffectComponent(statusEffectComponent: StatusEffectCom
    if (statusEffectComponent.activeStatusEffectTypes.length === 0) {
       StatusEffectComponentArray.queueComponentDeactivate(entity);
    }
-}
-
-export function tickStatusEffectComponents(): void {
-   for (let i = 0; i < StatusEffectComponentArray.activeComponents.length; i++) {
-      const component = StatusEffectComponentArray.activeComponents[i];
-      const entityID = StatusEffectComponentArray.activeEntityIDs[i];
-      tickStatusEffectComponent(component, entityID);
-   }
-
-   StatusEffectComponentArray.deactivateQueue();
 }
 
 function getDataLength(entity: EntityID): number {

@@ -1,64 +1,31 @@
-import { WaterRockData, RiverSteppingStoneData, GrassTileInfo, RIVER_STEPPING_STONE_SIZES, ServerTileUpdateData } from "webgl-test-shared/dist/client-server-types";
+import { WaterRockData, RiverSteppingStoneData, RIVER_STEPPING_STONE_SIZES, ServerTileUpdateData } from "webgl-test-shared/dist/client-server-types";
 import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
-import { TileType } from "webgl-test-shared/dist/tiles";
-import { Point } from "webgl-test-shared/dist/utils";
+import { Biome, TileType } from "webgl-test-shared/dist/tiles";
+import { distance, Point, TileIndex } from "webgl-test-shared/dist/utils";
 import { circlesDoIntersect, circleAndRectangleDoIntersect } from "webgl-test-shared/dist/collision";
 import Chunk from "./Chunk";
-import Tile from "./Tile";
-import { removeEntityFromCensus } from "./census";
+import { addTileToCensus, removeEntityFromCensus } from "./census";
 import Tribe from "./Tribe";
-import generateTerrain, { TerrainGenerationInfo } from "./world-generation/terrain-generation";
+import { TerrainGenerationInfo } from "./world-generation/terrain-generation";
 import { ComponentArrays } from "./components/ComponentArray";
-import { InventoryUseComponentArray, tickInventoryUseComponent } from "./components/InventoryUseComponent";
-import { HealthComponentArray, tickHealthComponent } from "./components/HealthComponent";
-import { tickIceShard } from "./entities/projectiles/ice-shard";
-import { onCowDeath, tickCow } from "./entities/mobs/cow";
-import { onKrumblidDeath, tickKrumblid } from "./entities/mobs/krumblid";
-import { ItemComponentArray, tickItemComponent } from "./components/ItemComponent";
+import { onKrumblidDeath } from "./entities/mobs/krumblid";
 import { onTribeWorkerDeath } from "./entities/tribes/tribe-worker";
-import { tickTombstone } from "./entities/tombstone";
-import { tickZombie } from "./entities/mobs/zombie";
-import { tickSlimewisp } from "./entities/mobs/slimewisp";
-import { tickSlime } from "./entities/mobs/slime";
-import { onYetiDeath, tickYeti } from "./entities/mobs/yeti";
-import { tickSnowball } from "./entities/snowball";
-import { onFishDeath, tickFish } from "./entities/mobs/fish";
-import { tickStatusEffectComponents } from "./components/StatusEffectComponent";
-import { tickIceSpikes } from "./entities/resources/ice-spikes";
-import { tickItemEntity } from "./entities/item-entity";
-import { tickFrozenYeti } from "./entities/mobs/frozen-yeti";
-import { tickRockSpikeProjectile } from "./entities/projectiles/rock-spike";
-import { AIHelperComponentArray, tickAIHelperComponent } from "./components/AIHelperComponent";
-import {  tickCampfire } from "./entities/structures/cooking-entities/campfire";
-import {  tickFurnace } from "./entities/structures/cooking-entities/furnace";
-import { tickSpearProjectile } from "./entities/projectiles/spear-projectile";
+import { onYetiDeath } from "./entities/mobs/yeti";
+import { onFishDeath } from "./entities/mobs/fish";
 import { onTribeWarriorDeath } from "./entities/tribes/tribe-warrior";
-import { onSlimeSpitDeath, tickSlimeSpit } from "./entities/projectiles/slime-spit";
-import { tickSpitPoison } from "./entities/projectiles/spit-poison";
-import { DoorComponentArray, tickDoorComponent } from "./components/DoorComponent";
-import { tickGolem } from "./entities/mobs/golem";
-import { tickPebblum } from "./entities/mobs/pebblum";
-import { tickPhysicsComponents } from "./components/PhysicsComponent";
-import { tickBallista } from "./entities/structures/ballista";
-import { tickSlingTurret } from "./entities/structures/sling-turret";
-import { ResearchBenchComponentArray, tickResearchBenchComponent } from "./components/ResearchBenchComponent";
+import { onSlimeSpitDeath } from "./entities/projectiles/slime-spit";
 import { markWallTileInPathfinding } from "./pathfinding";
 import OPTIONS from "./options";
 import { CollisionVars, collide, entitiesAreColliding } from "./collision";
-import { TunnelComponentArray, tickTunnelComponent } from "./components/TunnelComponent";
 import { tickTribes } from "./ai-tribe-building/ai-building";
-import { HealingTotemComponentArray, tickHealingTotemComponent } from "./components/HealingTotemComponent";
-import { PlantComponentArray, tickPlantComponent } from "./components/PlantComponent";
-import { FenceGateComponentArray, tickFenceGateComponent } from "./components/FenceGateComponent";
-import { PlanterBoxComponentArray, tickPlanterBoxComponent } from "./components/PlanterBoxComponent";
 import { Hitbox, hitboxIsCircular } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { TransformComponentArray } from "./components/TransformComponent";
 import { onCactusDeath } from "./entities/resources/cactus";
-import { onTreeDeath } from "./entities/resources/tree";
-import { tickBattleaxeProjectile } from "./entities/projectiles/battleaxe-projectile";
 import { WorldInfo } from "webgl-test-shared/dist/structures";
 import { EntityInfo } from "webgl-test-shared/dist/board-interface";
+import { onCowDeath } from "./entities/mobs/cow";
+import { registerEntityRemoval } from "./server/player-clients";
 
 const START_TIME = 6;
 
@@ -89,57 +56,63 @@ abstract class Board {
    public static entities = new Array<EntityID>();
    public static entityTypes: Partial<Record<EntityID, EntityType>> = {};
 
-   public static tiles: Array<Tile>;
-   public static chunks = new Array<Chunk>();
+   public static tileTypes: Float32Array;
+   public static tileBiomes: Float32Array;
+   public static tileIsWalls: Float32Array;
+   public static riverFlowDirections: Float32Array;
+   public static tileTemperatures: Float32Array;
+   public static tileHumidities: Float32Array;
 
-   public static riverFlowDirectionsArray: ReadonlyArray<RiverFlowDirection>;
    public static waterRocks: ReadonlyArray<WaterRockData>;
    public static riverSteppingStones: ReadonlyArray<RiverSteppingStoneData>;
 
    private static tileUpdateCoordinates: Set<number>;
+
+   public static chunks = new Array<Chunk>();
 
    private static entityJoinBuffer = new Array<EntityJoinInfo>();
    private static entityRemoveBuffer = new Array<EntityID>();
 
    public static tribes = new Array<Tribe>();
 
-   // @Incomplete @Bug: These shouldn't be tiles but instead serverdata, so that they aren't counted in the census
-   public static edgeTilesArray: Array<Tile>;
-   public static edgeTilesRecord: Partial<Record<number, Tile>>;
-
-   public static grassInfo: ReadonlyArray<GrassTileInfo>;
-
    public static globalCollisionData: Partial<Record<number, ReadonlyArray<number>>> = {};
-
-   public static tileTemperatures: Float32Array;
-   public static tileHumidities: Float32Array;
 
    public static setup(generationInfo: TerrainGenerationInfo): void {
       this.initialiseChunks();
 
-      this.tiles = generationInfo.tiles;
-      this.waterRocks = generationInfo.waterRocks;
-      this.riverSteppingStones = generationInfo.riverSteppingStones;
-      this.edgeTilesArray = generationInfo.edgeTilesArray;
-      this.edgeTilesRecord = generationInfo.edgeTilesRecord;
-      this.grassInfo = generationInfo.grassInfo;
-      this.riverFlowDirectionsArray = generationInfo.riverFlowDirectionsArray;
+      this.tileTypes = generationInfo.tileTypes;
+      this.tileBiomes = generationInfo.tileBiomes;
+      this.tileIsWalls = generationInfo.tileIsWalls;
+      this.riverFlowDirections = generationInfo.riverFlowDirections;
       this.tileTemperatures = generationInfo.tileTemperatures;
       this.tileHumidities = generationInfo.tileHumidities;
+      this.waterRocks = generationInfo.waterRocks;
+      this.riverSteppingStones = generationInfo.riverSteppingStones;
+
+      for (let tileIndex = 0; tileIndex < Settings.FULL_BOARD_DIMENSIONS * Settings.FULL_BOARD_DIMENSIONS; tileIndex++) {
+         const tileX = Board.getTileX(tileIndex);
+         const tileY = Board.getTileY(tileIndex);
+         if (Board.tileIsInBoardIncludingEdges(tileX, tileY)) {
+            addTileToCensus(tileIndex);
+         }
+      }
 
       if (OPTIONS.generateWalls) {
-         for (let i = 0; i < generationInfo.tiles.length; i++) {
-            const tile = generationInfo.tiles[i];
+         for (let tileY = 0; tileY < Settings.BOARD_DIMENSIONS; tileY++) {
+            for (let tileX = 0; tileX < Settings.BOARD_DIMENSIONS; tileX++) {
+               const tileIndex = Board.getTileIndexIncludingEdges(tileX, tileY);
 
-            if (tile.isWall) {
-               // Mark which chunks have wall tiles
-               const chunkX = Math.floor(tile.x / Settings.CHUNK_SIZE);
-               const chunkY = Math.floor(tile.y / Settings.CHUNK_SIZE);
-               const chunk = this.getChunk(chunkX, chunkY);
-               chunk.hasWallTiles = true;
-               
-               // Mark inaccessible pathfinding nodes
-               markWallTileInPathfinding(tile.x, tile.y);
+               const isWall = this.tileIsWalls[tileIndex];
+               if (isWall) {
+                  // Mark which chunks have wall tiles
+                  const chunkX = Math.floor(tileX / Settings.CHUNK_SIZE);
+                  const chunkY = Math.floor(tileY / Settings.CHUNK_SIZE);
+                  const chunk = this.getChunk(chunkX, chunkY);
+                  chunk.hasWallTiles = true;
+                  
+                  // Mark inaccessible pathfinding nodes
+                  markWallTileInPathfinding(tileX, tileY);
+               }
             }
          }
       }
@@ -164,29 +137,16 @@ abstract class Board {
    }
 
    // @Cleanup: why does this have to be called from the board? And is kind of weird
-   public static getEntityType(entityID: EntityID): EntityType | undefined {
-      return this.entityTypes[entityID];
+   public static getEntityType(entity: EntityID): EntityType | undefined {
+      return this.entityTypes[entity];
    }
 
-   public static validateEntity(entityID: EntityID): EntityID | 0 {
-      return typeof this.entityTypes[entityID] !== "undefined" ? entityID : 0;
+   public static validateEntity(entity: EntityID): EntityID | 0 {
+      return typeof this.entityTypes[entity] !== "undefined" ? entity : 0;
    }
 
-   public static hasEntity(entityID: EntityID): boolean {
-      return typeof this.entityTypes[entityID] !== "undefined";
-   }
-
-   // @Cleanup: remove
-   public static reset(): void {
-      this.time = START_TIME;
-      this.ticks = 0;
-      this.chunks = [];
-      this.entities = [];
-      this.entityTypes = {};
-      this.entityJoinBuffer = [];
-      this.entityRemoveBuffer = [];
-      this.tribes = [];
-      this.edgeTilesArray = [];
+   public static hasEntity(entity: EntityID): boolean {
+      return typeof this.entityTypes[entity] !== "undefined";
    }
 
    public static isNight(): boolean {
@@ -220,26 +180,31 @@ abstract class Board {
       return Math.floor(previousCheck) !== Math.floor(check);
    }
 
-   public static getTile(tileX: number, tileY: number): Tile {
-      const tileIndex = tileY * Settings.BOARD_DIMENSIONS + tileX;
-      return this.tiles[tileIndex];
+   public static getTileType(tileX: number, tileY: number): TileType {
+      const tileIndex = this.getTileIndexIncludingEdges(tileX, tileY);
+      return this.tileTypes[tileIndex];
    }
 
-   public static getTileIndexIncludingEdges(tileX: number, tileY: number): number {
-      return (tileY + Settings.EDGE_GENERATION_DISTANCE) * (Settings.BOARD_DIMENSIONS + 2 * Settings.EDGE_GENERATION_DISTANCE) + tileX + Settings.EDGE_GENERATION_DISTANCE;
+   public static getTileIsWall(tileX: number, tileY: number): boolean {
+      const tileIndex = this.getTileIndexIncludingEdges(tileX, tileY);
+      return this.tileIsWalls[tileIndex] === 1 ? true : false;
    }
 
-   public static getTileIncludingEdges(tileX: number, tileY: number): Tile {
-      if (this.tileIsInBoard(tileX, tileY)) {
-         return this.getTile(tileX, tileY);
-      } else {
-         const idx = this.getTileIndexIncludingEdges(tileX, tileY);
-         const tile = this.edgeTilesRecord[idx];
-         if (typeof tile === "undefined") {
-            throw new Error();
-         }
-         return tile;
-      }
+   public static getTileBiome(tileX: number, tileY: number): Biome {
+      const tileIndex = this.getTileIndexIncludingEdges(tileX, tileY);
+      return this.tileBiomes[tileIndex];
+   }
+
+   public static getTileIndexIncludingEdges(tileX: number, tileY: number): TileIndex {
+      return (tileY + Settings.EDGE_GENERATION_DISTANCE) * Settings.FULL_BOARD_DIMENSIONS + tileX + Settings.EDGE_GENERATION_DISTANCE;
+   }
+
+   public static getTileX(tileIndex: TileIndex): number {
+      return tileIndex % Settings.FULL_BOARD_DIMENSIONS - Settings.EDGE_GENERATION_DISTANCE;
+   }
+
+   public static getTileY(tileIndex: TileIndex): number {
+      return Math.floor(tileIndex / Settings.FULL_BOARD_DIMENSIONS) - Settings.EDGE_GENERATION_DISTANCE;
    }
 
    public static getChunk(chunkX: number, chunkY: number): Chunk {
@@ -290,7 +255,8 @@ abstract class Board {
       // @Cleanup: do these functions actually need to be called here? why not in the proper remove flagged function?
       switch (entityType) {
          case EntityType.cow: onCowDeath(entity); break;
-         case EntityType.tree: onTreeDeath(entity); break;
+         // @Temporary
+         // case EntityType.tree: onTreeDeath(entity); break;
          case EntityType.krumblid: onKrumblidDeath(entity); break;
          case EntityType.cactus: onCactusDeath(entity); break;
          case EntityType.tribeWorker: onTribeWorkerDeath(entity); break;
@@ -308,6 +274,8 @@ abstract class Board {
          if (idx === -1) {
             throw new Error("Tried to remove a game object which doesn't exist or was already removed.");
          }
+         
+         registerEntityRemoval(entity);
    
          // @Speed: don't do per entity, do per component array
          // Call remove functions
@@ -336,116 +304,18 @@ abstract class Board {
    }
 
    public static updateEntities(): void {
-      if (Board.ticks % 3 === 0) {
-         for (let i = 0; i < AIHelperComponentArray.components.length; i++) {
-            const entity = AIHelperComponentArray.getEntityFromArrayIdx(i);
-            tickAIHelperComponent(entity);
-         }
-      }
-
-      // @Speed: Ideally we should remove this as there are many entities which the switch won't fire for at all
-      for (let i = 0; i < this.entities.length; i++) {
-         const entity = this.entities[i];
-
-         // @Hack
-         switch (Board.getEntityType(entity)) {
-            case EntityType.iceShardProjectile: tickIceShard(entity); break;
-            case EntityType.cow: tickCow(entity); break;
-            case EntityType.krumblid: tickKrumblid(entity); break;
-            case EntityType.tombstone: tickTombstone(entity); break;
-            case EntityType.zombie: tickZombie(entity); break;
-            case EntityType.slimewisp: tickSlimewisp(entity); break;
-            case EntityType.slime: tickSlime(entity); break;
-            case EntityType.yeti: tickYeti(entity); break;
-            case EntityType.snowball: tickSnowball(entity); break;
-            case EntityType.fish: tickFish(entity); break;
-            case EntityType.itemEntity: tickItemEntity(entity); break;
-            case EntityType.frozenYeti: tickFrozenYeti(entity); break;
-            case EntityType.rockSpikeProjectile: tickRockSpikeProjectile(entity); break;
-            case EntityType.campfire: tickCampfire(entity); break;
-            case EntityType.furnace: tickFurnace(entity); break;
-            case EntityType.spearProjectile: tickSpearProjectile(entity); break;
-            case EntityType.slimeSpit: tickSlimeSpit(entity); break;
-            case EntityType.spitPoison: tickSpitPoison(entity); break;
-            case EntityType.battleaxeProjectile: tickBattleaxeProjectile(entity); break;
-            case EntityType.golem: tickGolem(entity); break;
-            case EntityType.iceSpikes: tickIceSpikes(entity); break;
-            case EntityType.pebblum: tickPebblum(entity); break;
-            case EntityType.ballista: tickBallista(entity); break;
-            case EntityType.slingTurret: tickSlingTurret(entity); break;
-         }
-
-         // @Hack: should be in tick transform component
-         const transformComponent = TransformComponentArray.getComponent(entity);
-         transformComponent.ageTicks++;
-      }
-
       for (const componentArray of ComponentArrays) {
-         if (typeof componentArray.onTick !== "undefined") {
-            for (let i = 0; i < componentArray.components.length; i++) {
-               const entity = componentArray.getEntityFromArrayIdx(i);
-               const component = componentArray.components[i];
-               componentArray.onTick(entity, component);
+         if (typeof componentArray.onTick !== "undefined" && Board.ticks % componentArray.onTick.tickInterval === 0) {
+            const func = componentArray.onTick.func;
+            for (let i = 0; i < componentArray.activeComponents.length; i++) {
+               const entity = componentArray.activeEntities[i];
+               const component = componentArray.activeComponents[i];
+               func(component, entity);
             }
          }
+
+         componentArray.deactivateQueue();
       }
-
-      for (let i = 0; i < InventoryUseComponentArray.components.length; i++) {
-         const inventoryUseComponent = InventoryUseComponentArray.components[i];
-         const entity = InventoryUseComponentArray.getEntityFromArrayIdx(i);
-         tickInventoryUseComponent(entity, inventoryUseComponent);
-      }
-
-      for (let i = 0; i < HealthComponentArray.components.length; i++) {
-         const healthComponent = HealthComponentArray.components[i];
-         tickHealthComponent(healthComponent);
-      }
-
-      for (let i = 0; i < ItemComponentArray.components.length; i++) {
-         const itemComponent = ItemComponentArray.components[i];
-         tickItemComponent(itemComponent);
-      }
-
-      for (let i = 0; i < PlantComponentArray.components.length; i++) {
-         const plantComponent = PlantComponentArray.components[i];
-         tickPlantComponent(plantComponent);
-      }
-
-      for (let i = 0; i < FenceGateComponentArray.components.length; i++) {
-         const entity = FenceGateComponentArray.getEntityFromArrayIdx(i);
-         tickFenceGateComponent(entity);
-      }
-
-      for (let i = 0; i < PlanterBoxComponentArray.components.length; i++) {
-         const planterBoxComponent = PlanterBoxComponentArray.components[i];
-         tickPlanterBoxComponent(planterBoxComponent);
-      }
-
-      tickStatusEffectComponents();
-
-      for (let i = 0; i < DoorComponentArray.components.length; i++) {
-         const door = DoorComponentArray.getEntityFromArrayIdx(i);
-         tickDoorComponent(door);
-      }
-
-      for (let i = 0; i < TunnelComponentArray.components.length; i++) {
-         const tunnel = TunnelComponentArray.getEntityFromArrayIdx(i);
-         tickTunnelComponent(tunnel);
-      }
-
-      for (let i = 0; i < ResearchBenchComponentArray.components.length; i++) {
-         const entity = ResearchBenchComponentArray.getEntityFromArrayIdx(i);
-         tickResearchBenchComponent(entity);
-      }
-
-      for (let i = 0; i < HealingTotemComponentArray.components.length; i++) {
-         const entity = HealingTotemComponentArray.getEntityFromArrayIdx(i);
-         const healingTotemComponent = HealingTotemComponentArray.components[i];
-         tickHealingTotemComponent(entity, healingTotemComponent);
-      }
-
-      // The physics component ticking must be done at the end so there is time for the positionIsDirty and hitboxesAreDirty flags to collect
-      tickPhysicsComponents();
    }
 
    public static getEntityCollisions(entityID: number): ReadonlyArray<number> {
@@ -467,11 +337,11 @@ abstract class Board {
 
          // @Speed: physics-physics comparisons happen twice
          // For all physics entities, check for collisions with all other entities in the chunk
-         for (let j = 0; j < chunk.physicsEntities.length; j++) {
-            const entity1 = chunk.physicsEntities[j];
+         for (let j = 0; j < chunk.collisionRelevantPhysicsEntities.length; j++) {
+            const entity1 = chunk.collisionRelevantPhysicsEntities[j];
             
-            for (let k = 0; k < chunk.entities.length; k++) {
-               const entity2 = chunk.entities[k];
+            for (let k = 0; k < chunk.collisionRelevantEntities.length; k++) {
+               const entity2 = chunk.collisionRelevantEntities[k];
 
                // @Speed
                if (entity1 === entity2) {
@@ -545,11 +415,10 @@ abstract class Board {
          const tileX = tileIndex % Settings.BOARD_DIMENSIONS;
          const tileY = Math.floor(tileIndex / Settings.BOARD_DIMENSIONS);
          
-         const tile = this.getTile(tileX, tileY);
          tileUpdates.push({
             tileIndex: tileIndex,
-            type: tile.type,
-            isWall: tile.isWall
+            type: this.getTileType(tileX, tileY),
+            isWall: this.getTileIsWall(tileX, tileY)
          });
       }
 
@@ -699,18 +568,16 @@ abstract class Board {
       return x >= 0 && x < Settings.BOARD_DIMENSIONS * Settings.TILE_SIZE && y >= 0 && y < Settings.BOARD_DIMENSIONS * Settings.TILE_SIZE;
    }
 
-   public static getTileAtPosition(position: Point): Tile {
-      const tileX = Math.floor(position.x / Settings.TILE_SIZE);
-      const tileY = Math.floor(position.y / Settings.TILE_SIZE);
-      return this.getTile(tileX, tileY);
-   }
+   public static getEntitiesInRange(x: number, y: number, range: number): Array<EntityID> {
+      const minChunkX = Math.max(Math.min(Math.floor((x - range) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
+      const maxChunkX = Math.max(Math.min(Math.floor((x + range) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
+      const minChunkY = Math.max(Math.min(Math.floor((y - range) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
+      const maxChunkY = Math.max(Math.min(Math.floor((y + range) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
 
-   public static getEntitiesInRange(position: Point, range: number): Array<EntityID> {
-      const minChunkX = Math.max(Math.min(Math.floor((position.x - range) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
-      const maxChunkX = Math.max(Math.min(Math.floor((position.x + range) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
-      const minChunkY = Math.max(Math.min(Math.floor((position.y - range) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
-      const maxChunkY = Math.max(Math.min(Math.floor((position.y + range) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
-
+      // @Speed: garbage collection
+      const position = new Point(x, y);
+      
+      // @Speed: garbage collection
       const checkedEntities = new Set<EntityID>();
       const entities = new Array<EntityID>();
       
@@ -807,8 +674,8 @@ export function tileRaytraceMatchesTileTypes(startX: number, startY: number, end
    }
 
    for (; n > 0; n--) {
-      const tile = Board.getTile(x, y);
-      if (!tileTypes.includes(tile.type)) {
+      const tileType = Board.getTileType(x, y);
+      if (!tileTypes.includes(tileType)) {
          return false;
       }
 
@@ -877,8 +744,8 @@ export function raytraceHasWallTile(startX: number, startY: number, endX: number
    }
 
    for (; n > 0; n--) {
-      const tile = Board.getTile(x, y);
-      if (tile.isWall) {
+      const tileIsWall = Board.getTileIsWall(x, y);
+      if (tileIsWall) {
          return true;
       }
 
@@ -909,4 +776,50 @@ export function getChunksInBounds(minX: number, maxX: number, minY: number, maxY
    }
 
    return chunks;
+}
+
+const tileIsInRange = (x: number, y: number, range: number, tileX: number, tileY: number): boolean => {
+   const blX = tileX * Settings.TILE_SIZE;
+   const blY = tileY * Settings.TILE_SIZE;
+   if (distance(x, y, blX, blY) <= range) {
+      return true;
+   }
+   
+   const brX = (tileX + 1) * Settings.TILE_SIZE;
+   const brY = tileY * Settings.TILE_SIZE;
+   if (distance(x, y, brX, brY) <= range) {
+      return true;
+   }
+
+   const tlX = tileX * Settings.TILE_SIZE;
+   const tlY = (tileY + 1) * Settings.TILE_SIZE;
+   if (distance(x, y, tlX, tlY) <= range) {
+      return true;
+   }
+
+   const trX = (tileX + 1) * Settings.TILE_SIZE;
+   const trY = (tileY + 1) * Settings.TILE_SIZE;
+   if (distance(x, y, trX, trY) <= range) {
+      return true;
+   }
+
+   return false;
+}
+
+export function getTilesInRange(x: number, y: number, range: number): ReadonlyArray<TileIndex> {
+   const minTileX = Math.floor((x - range) / Settings.TILE_SIZE);
+   const maxTileX = Math.floor((x + range) / Settings.TILE_SIZE);
+   const minTileY = Math.floor((y - range) / Settings.TILE_SIZE);
+   const maxTileY = Math.floor((y + range) / Settings.TILE_SIZE);
+
+   const tiles = new Array<TileIndex>();
+   for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
+      for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
+         if (tileIsInRange(x, y, range, tileX, tileY)) {
+            const tileIndex = Board.getTileIndexIncludingEdges(tileX, tileY);
+            tiles.push(tileIndex);
+         }
+      }
+   }
+   return tiles;
 }

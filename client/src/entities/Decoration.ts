@@ -27,9 +27,9 @@ class Decoration extends Entity {
    public onLoad(): void {
       const decorationComponent = this.getServerComponent(ServerComponentType.decoration);
       
-      this.attachRenderPart(
+      this.attachRenderThing(
          new TexturedRenderPart(
-            this,
+            null,
             0,
             0,
             getTextureArrayIndex(DECORATION_RENDER_INFO[decorationComponent.decorationType])

@@ -1,6 +1,6 @@
 import { TribeType } from "webgl-test-shared/dist/tribes";
 import { EnemyTribeData } from "webgl-test-shared/dist/techs";
-import { ServerComponentType, TribeComponentData } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { randFloat } from "webgl-test-shared/dist/utils";
 import Entity from "../Entity";
 import ServerComponent from "./ServerComponent";
@@ -9,6 +9,7 @@ import { playSound } from "../sound";
 import { getTribesmanRadius } from "./TribeMemberComponent";
 import { createConversionParticle } from "../particles";
 import { PacketReader } from "webgl-test-shared/dist/packets";
+import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 
 export function getTribeType(tribeID: number): TribeType {
    if (tribeID === Game.tribe.id) {
@@ -76,3 +77,5 @@ class TribeComponent extends ServerComponent {
 }
 
 export default TribeComponent;
+
+export const TribeComponentArray = new ComponentArray<TribeComponent>(ComponentArrayType.server, ServerComponentType.tribe, true, {});

@@ -14,6 +14,7 @@ import { getTribeType } from "../entity-components/TribeComponent";
 import { InventoryName, ItemType } from "webgl-test-shared/dist/items/items";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { RenderPart } from "../render-parts/render-parts";
+import RenderAttachPoint from "../render-parts/RenderAttachPoint";
 
 export const TRIBE_MEMBER_Z_INDEXES: Record<string, number> = {
    hand: 1,
@@ -115,13 +116,13 @@ export function addTribeMemberRenderParts(tribesman: Entity): void {
    // 
    
    const bodyRenderPart = new TexturedRenderPart(
-      tribesman,
+      null,
       2,
       0,
       getTextureArrayIndex(getBodyTextureSource(tribesman, tribeType))
    );
    bodyRenderPart.addTag("tribeMemberComponent:body");
-   tribesman.attachRenderPart(bodyRenderPart);
+   tribesman.attachRenderThing(bodyRenderPart);
 
    if (tribeType === TribeType.goblins) {
       if (warPaintType !== null) {
@@ -134,20 +135,20 @@ export function addTribeMemberRenderParts(tribesman: Entity): void {
          
          // Goblin warpaint
          const warpaintRenderPart = new TexturedRenderPart(
-            tribesman,
+            null,
             4,
             0,
             getTextureArrayIndex(textureSource)
          );
          warpaintRenderPart.addTag("tribeMemberComponent:warpaint");
-         tribesman.attachRenderPart(warpaintRenderPart);
+         tribesman.attachRenderThing(warpaintRenderPart);
       } else {
          console.warn("bad");
       }
 
       // Left ear
       const leftEarRenderPart = new TexturedRenderPart(
-         tribesman,
+         null,
          3,
          Math.PI/2 - GOBLIN_EAR_ANGLE,
          getTextureArrayIndex("entities/goblins/goblin-ear.png")
@@ -156,11 +157,11 @@ export function addTribeMemberRenderParts(tribesman: Entity): void {
       leftEarRenderPart.offset.x = (radius + GOBLIN_EAR_OFFSET) * Math.sin(-GOBLIN_EAR_ANGLE);
       leftEarRenderPart.offset.y = (radius + GOBLIN_EAR_OFFSET) * Math.cos(-GOBLIN_EAR_ANGLE);
       leftEarRenderPart.flipX = true;
-      tribesman.attachRenderPart(leftEarRenderPart);
+      tribesman.attachRenderThing(leftEarRenderPart);
 
       // Right ear
       const rightEarRenderPart = new TexturedRenderPart(
-         tribesman,
+         null,
          3,
          -Math.PI/2 + GOBLIN_EAR_ANGLE,
          getTextureArrayIndex("entities/goblins/goblin-ear.png")
@@ -168,20 +169,27 @@ export function addTribeMemberRenderParts(tribesman: Entity): void {
       rightEarRenderPart.addTag("tribeMemberComponent:ear");
       rightEarRenderPart.offset.x = (radius + GOBLIN_EAR_OFFSET) * Math.sin(GOBLIN_EAR_ANGLE);
       rightEarRenderPart.offset.y = (radius + GOBLIN_EAR_OFFSET) * Math.cos(GOBLIN_EAR_ANGLE);
-      tribesman.attachRenderPart(rightEarRenderPart);
+      tribesman.attachRenderThing(rightEarRenderPart);
    }
 
    // Hands
    for (let i = 0; i < 2; i++) {
+      // const attachPoint = new RenderAttachPoint(
+      //    null,
+      //    1,
+      //    0
+      // );
+      // tribesman.attachRenderThing(attachPoint);
+      
       const handRenderPart = new TexturedRenderPart(
-         tribesman,
-         1,
+         null,
+         1.2,
          0,
          getTextureArrayIndex(getFistTextureSource(tribesman, tribeType))
       );
       handRenderPart.addTag("tribeMemberComponent:hand")
       handRenderPart.addTag("inventoryUseComponent:hand");
-      tribesman.attachRenderPart(handRenderPart);
+      tribesman.attachRenderThing(handRenderPart);
    }
 }
 
@@ -331,11 +339,12 @@ abstract class TribeMember extends Entity {
       return null;
    }
 
+   // @Incomplete?
    private updateLowHealthMarker(shouldShow: boolean): void {
       if (shouldShow) {
          if (this.lowHealthMarker === null) {
             this.lowHealthMarker = new TexturedRenderPart(
-               this,
+               null,
                9,
                0,
                getTextureArrayIndex("entities/low-health-marker.png")
@@ -343,7 +352,7 @@ abstract class TribeMember extends Entity {
             this.lowHealthMarker.inheritParentRotation = false;
             this.lowHealthMarker.offset.x = 20;
             this.lowHealthMarker.offset.y = 20;
-            this.attachRenderPart(this.lowHealthMarker);
+            this.attachRenderThing(this.lowHealthMarker);
          }
 
          const transformComponent = this.getServerComponent(ServerComponentType.transform);

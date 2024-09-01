@@ -1,12 +1,12 @@
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType, TurretAmmoType } from "webgl-test-shared/dist/components";
 import { ComponentArray } from "./ComponentArray";
-import { BallistaAmmoType, ItemType } from "webgl-test-shared/dist/items/items";
+import { ItemType } from "webgl-test-shared/dist/items/items";
 import { Packet } from "webgl-test-shared/dist/packets";
 
 export interface AmmoBoxComponentParams {}
 
 export class AmmoBoxComponent {
-   public ammoType: BallistaAmmoType = ItemType.wood;
+   public ammoType: TurretAmmoType = ItemType.wood;
    public ammoRemaining = 0;
 }
 

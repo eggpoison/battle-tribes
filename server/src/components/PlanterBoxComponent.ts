@@ -24,6 +24,10 @@ export class PlanterBoxComponent {
 }
 
 export const PlanterBoxComponentArray = new ComponentArray<PlanterBoxComponent>(ServerComponentType.planterBox, true, {
+   onTick: {
+      tickInterval: 1,
+      func: onTick
+   },
    onRemove: onRemove,
    getDataLength: getDataLength,
    addDataToPacket: addDataToComponent
@@ -40,7 +44,7 @@ function onRemove(entity: EntityID): void {
    }
 }
 
-export function tickPlanterBoxComponent(planterBoxComponent: PlanterBoxComponent): void {
+function onTick(planterBoxComponent: PlanterBoxComponent): void {
    if (planterBoxComponent.remainingFertiliserTicks > 0) {
       planterBoxComponent.remainingFertiliserTicks--;
    }

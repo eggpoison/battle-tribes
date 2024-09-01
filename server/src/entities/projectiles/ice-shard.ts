@@ -10,7 +10,6 @@ import { applyKnockback } from "../../components/PhysicsComponent";
 import { ComponentConfig } from "../../components";
 import { PlantComponentArray } from "../../components/PlantComponent";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
-import { IceShardComponentArray } from "../../components/IceShardComponent";
 import { HitboxCollisionType, RectangularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { TransformComponentArray } from "../../components/TransformComponent";
 import Board from "../../Board";
@@ -39,15 +38,6 @@ export function createIceShardConfig(): ComponentConfig<ComponentTypes> {
       },
       [ServerComponentType.iceShard]: {}
    };
-}
-
-export function tickIceShard(iceShard: EntityID): void {
-   // @Cleanup @Speed: Don't even need a component for this, just do it based on age with a random chance
-   const iceShardComponent = IceShardComponentArray.getComponent(iceShard);
-   const transformComponent = TransformComponentArray.getComponent(iceShard);
-   if (transformComponent.ageTicks / Settings.TPS >= iceShardComponent.lifetime) {
-      Board.destroyEntity(iceShard);
-   }
 }
 
 const entityIsIceSpikes = (entity: EntityID): boolean => {

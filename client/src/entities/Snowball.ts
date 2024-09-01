@@ -3,7 +3,6 @@ import { randFloat, randInt } from "webgl-test-shared/dist/utils";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { HitData } from "webgl-test-shared/dist/client-server-types";
 import Board from "../Board";
-import { createSnowParticle } from "../particles";
 import Particle from "../Particle";
 import { ParticleRenderLayer, addMonocolourParticleToBufferContainer } from "../rendering/webgl/particle-rendering";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
@@ -29,26 +28,14 @@ class Snowball extends Entity {
    public onLoad(): void {
       const snowballComponentData = this.getServerComponent(ServerComponentType.snowball);
 
-      this.attachRenderPart(
+      this.attachRenderThing(
          new TexturedRenderPart(
-            this,
+            null,
             0,
             0,
             getTextureArrayIndex(getTextureSource(snowballComponentData.size))
          )
       );
-   }
-
-   public tick(): void {
-      super.tick();
-      
-      const transformComponent = this.getServerComponent(ServerComponentType.transform);
-      const physicsComponent = this.getServerComponent(ServerComponentType.physics);
-      if ((physicsComponent.velocity.x !== 0 || physicsComponent.velocity.y !== 0) && physicsComponent.velocity.lengthSquared() > 2500) {
-         if (Board.tickIntervalHasPassed(0.05)) {
-            createSnowParticle(transformComponent.position.x, transformComponent.position.y, randFloat(40, 60));
-         }
-      }
    }
 
    protected onHit(hitData: HitData): void {

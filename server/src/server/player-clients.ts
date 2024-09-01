@@ -158,6 +158,9 @@ const processPlayerDataPacket = (playerClient: PlayerClient, playerDataPacket: P
 }
 
 export function generatePlayerSpawnPosition(tribeType: TribeType): Point {
+   // @Temporary
+   return new Point(Settings.BOARD_UNITS * 0.5, Settings.BOARD_UNITS * 0.5);
+   
    const tribeInfo = TRIBE_INFO_RECORD[tribeType];
    for (let numAttempts = 0; numAttempts < 50; numAttempts++) {
       const biomeName = randItem(tribeInfo.biomes);
@@ -166,10 +169,12 @@ export function generatePlayerSpawnPosition(tribeType: TribeType): Point {
          continue;
       }
 
-      const tile = randItem(biomeTiles);
+      const tileIndex = randItem(biomeTiles);
 
-      const x = (tile.x + Math.random()) * Settings.TILE_SIZE;
-      const y = (tile.y + Math.random()) * Settings.TILE_SIZE;
+      const tileX = Board.getTileX(tileIndex);
+      const tileY = Board.getTileY(tileIndex);
+      const x = (tileX + Math.random()) * Settings.TILE_SIZE;
+      const y = (tileY + Math.random()) * Settings.TILE_SIZE;
 
       if (x < PLAYER_SPAWN_POSITION_PADDING || x >= Settings.BOARD_UNITS - PLAYER_SPAWN_POSITION_PADDING || y < PLAYER_SPAWN_POSITION_PADDING || y >= Settings.BOARD_UNITS - PLAYER_SPAWN_POSITION_PADDING) {
          continue;
@@ -839,7 +844,7 @@ export function registerEntityHeal(healedEntity: EntityID, healer: EntityID, hea
    }
 }
 
-export function registerEntityDeath(entity: EntityID): void {
+export function registerEntityRemoval(entity: EntityID): void {
    const transformComponent = TransformComponentArray.getComponent(entity);
    const viewingPlayers = getPlayersViewingPosition(transformComponent.boundingAreaMinX, transformComponent.boundingAreaMaxX, transformComponent.boundingAreaMinY, transformComponent.boundingAreaMaxY);
    if (viewingPlayers.length === 0) {

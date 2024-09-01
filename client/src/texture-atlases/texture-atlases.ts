@@ -277,7 +277,7 @@ const TEXTURE_SOURCES: Array<string> = [
    "entities/sling-turret/plate-blueprint-2.png",
    "entities/sling-turret/sling-blueprint-1.png",
    "entities/sling-turret/sling-blueprint-2.png",
-   "projectiles/sling-rock.png",
+   "projectiles/sling-rock.png", 
    "projectiles/ballista-rock.png",
    "projectiles/ballista-slimeball.png",
    "projectiles/ballista-frostcicle.png",
@@ -314,7 +314,9 @@ const TEXTURE_SOURCES: Array<string> = [
    "items/large/fertiliser.png",
    "entities/frostshaper/frostshaper.png",
    "entities/stonecarving-table/stonecarving-table.png",
-   "entities/miscellaneous/tribesman-health-patch.png"
+   "entities/miscellaneous/tribesman-health-patch.png",
+   "entities/lilypad/lilypad.png",
+   "entities/fibre-plant/fibre-plant.png"
 ];
 
 const addTextureSource = (textureSource: string): void => {

@@ -7,9 +7,9 @@ class Fence extends Entity {
    constructor(id: number) {
       super(id, EntityType.fence);
 
-      this.attachRenderPart(
+      this.attachRenderThing(
          new TexturedRenderPart(
-            this,
+            null,
             1,
             0,
             getTextureArrayIndex("entities/fence/fence-node.png")

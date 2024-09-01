@@ -199,7 +199,7 @@ const interactWithEntity = (entity: Entity, action: InteractAction): void => {
          // @Hack
          const inventoryUseComponent = Player.instance!.getServerComponent(ServerComponentType.inventoryUse);
          const hotbarUseInfo = inventoryUseComponent.getUseInfo(InventoryName.hotbar);
-         hotbarUseInfo.lastAttackTicks = Board.ticks;
+         hotbarUseInfo.lastAttackTicks = Board.serverTicks;
          
          break;
       }
@@ -209,7 +209,7 @@ const interactWithEntity = (entity: Entity, action: InteractAction): void => {
          // @Hack
          const inventoryUseComponent = Player.instance!.getServerComponent(ServerComponentType.inventoryUse);
          const hotbarUseInfo = inventoryUseComponent.getUseInfo(InventoryName.hotbar);
-         hotbarUseInfo.lastAttackTicks = Board.ticks;
+         hotbarUseInfo.lastAttackTicks = Board.serverTicks;
 
          break;
       }
@@ -219,7 +219,7 @@ const interactWithEntity = (entity: Entity, action: InteractAction): void => {
          // @Hack
          const inventoryUseComponent = Player.instance!.getServerComponent(ServerComponentType.inventoryUse);
          const hotbarUseInfo = inventoryUseComponent.getUseInfo(InventoryName.hotbar);
-         hotbarUseInfo.lastAttackTicks = Board.ticks;
+         hotbarUseInfo.lastAttackTicks = Board.serverTicks;
          
          break;
       }
@@ -235,7 +235,7 @@ const interactWithEntity = (entity: Entity, action: InteractAction): void => {
          // @Hack
          const inventoryUseComponent = Player.instance!.getServerComponent(ServerComponentType.inventoryUse);
          const hotbarUseInfo = inventoryUseComponent.getUseInfo(InventoryName.hotbar);
-         hotbarUseInfo.lastAttackTicks = Board.ticks;
+         hotbarUseInfo.lastAttackTicks = Board.serverTicks;
 
          break;
       }
@@ -324,7 +324,7 @@ const getEntityID = (doPlayerProximityCheck: boolean, doCanSelectCheck: boolean)
    for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
       for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
          const chunk = Board.getChunk(chunkX, chunkY);
-         for (const currentEntityID of chunk.entities) {
+         for (const currentEntityID of chunk.nonGrassEntities) {
             const entity = Board.entityRecord[currentEntityID]!;
             if (doCanSelectCheck && getEntityInteractAction(entity) === null) {
                continue;

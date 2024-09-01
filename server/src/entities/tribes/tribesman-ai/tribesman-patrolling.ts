@@ -21,10 +21,12 @@ const generateTribeAreaPatrolPosition = (tribesman: EntityID, tribe: Tribe): Poi
    // Randomly look for a place to patrol to
    while (potentialTiles.length > 0) {
       const idx = randInt(0, potentialTiles.length - 1);
-      const tile = potentialTiles[idx];
+      const tileIndex = potentialTiles[idx];
       
-      const x = (tile.x + Math.random()) * Settings.TILE_SIZE;
-      const y = (tile.y + Math.random()) * Settings.TILE_SIZE;
+      const tileX = Board.getTileX(tileIndex);
+      const tileY = Board.getTileY(tileIndex);
+      const x = (tileX + Math.random()) * Settings.TILE_SIZE;
+      const y = (tileY + Math.random()) * Settings.TILE_SIZE;
 
       if (positionIsAccessible(x, y, tribe.pathfindingGroupID, getEntityFootprint(getTribesmanRadius(tribesman)))) {
          return new Point(x, y);

@@ -1,7 +1,7 @@
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { ComponentArray } from "./ComponentArray";
 import { EntityID } from "webgl-test-shared/dist/entities";
-import { TransformComponentArray } from "./TransformComponent";
+import { getAgeTicks, TransformComponentArray } from "./TransformComponent";
 import { Settings } from "webgl-test-shared/dist/settings";
 import Board from "../Board";
 import { PhysicsComponentArray } from "./PhysicsComponent";
@@ -24,14 +24,19 @@ export class ProjectileComponent {
 }
 
 export const ProjectileComponentArray = new ComponentArray<ProjectileComponent>(ServerComponentType.projectile, true, {
+   onTick: {
+      tickInterval: 1,
+      func: onTick
+   },
    getDataLength: getDataLength,
    addDataToPacket: addDataToPacket
 });
 
-const tickProjectileComponent = (projectile: EntityID, projectileComponent: ProjectileComponent): void => {
+function onTick(_projectileComponent: ProjectileComponent, projectile: EntityID): void {
    const transformComponent = TransformComponentArray.getComponent(projectile);
+   const ageTicks = getAgeTicks(transformComponent);
 
-   if (transformComponent.ageTicks >= 1.5 * Settings.TPS) {
+   if (ageTicks >= 1.5 * Settings.TPS) {
       Board.destroyEntity(projectile);
       return;
    }
@@ -57,15 +62,6 @@ const tickProjectileComponent = (projectile: EntityID, projectileComponent: Proj
    if (transformComponent.position.x <= ARROW_DESTROY_DISTANCE || transformComponent.position.x >= Settings.BOARD_DIMENSIONS * Settings.TILE_SIZE - ARROW_DESTROY_DISTANCE || transformComponent.position.y <= ARROW_DESTROY_DISTANCE || transformComponent.position.y >= Settings.BOARD_DIMENSIONS * Settings.TILE_SIZE - ARROW_DESTROY_DISTANCE) {
       Board.destroyEntity(projectile);
       return;
-   }
-}
-
-export function tickProjectileComponents(): void {
-   for (let i = 0; i < ProjectileComponentArray.components.length; i++) {
-      const entity = ProjectileComponentArray.getEntityFromArrayIdx(i);
-      const projectileComponent = ProjectileComponentArray.components[i];
-
-      tickProjectileComponent(entity, projectileComponent);
    }
 }
 

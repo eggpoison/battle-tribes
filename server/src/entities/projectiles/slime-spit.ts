@@ -6,22 +6,19 @@ import { Point } from "webgl-test-shared/dist/utils";
 import { SlimeSpitComponentArray } from "../../components/SlimeSpitComponent";
 import { HealthComponentArray, damageEntity } from "../../components/HealthComponent";
 import { StatusEffectComponentArray, applyStatusEffect } from "../../components/StatusEffectComponent";
-import { PhysicsComponentArray, applyKnockback } from "../../components/PhysicsComponent";
+import { applyKnockback } from "../../components/PhysicsComponent";
 import { ComponentConfig } from "../../components";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
 import { HitboxCollisionType, RectangularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import Board from "../../Board";
 import { TransformComponentArray } from "../../components/TransformComponent";
-import { createSpitPoisonConfig } from "./spit-poison";
+import { createSpitPoisonAreaConfig } from "./spit-poison-area";
 import { createEntityFromConfig } from "../../Entity";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics
    | ServerComponentType.slimeSpit;
-
-const BREAK_VELOCITY = 100;
-
 
 export function createSlimeSpitConfig(): ComponentConfig<ComponentTypes> {
    return {
@@ -45,13 +42,6 @@ export function createSlimeSpitConfig(): ComponentConfig<ComponentTypes> {
          size: 0
       }
    };
-}
-
-export function tickSlimeSpit(spit: EntityID): void {
-   const physicsComponent = PhysicsComponentArray.getComponent(spit);
-   if (physicsComponent.velocity.lengthSquared() <= BREAK_VELOCITY * BREAK_VELOCITY) {
-      Board.destroyEntity(spit);
-   }
 }
 
 export function onSlimeSpitCollision(spit: EntityID, collidingEntity: EntityID, collisionPoint: Point): void {
@@ -83,7 +73,7 @@ export function onSlimeSpitDeath(spit: EntityID): void {
    if (spitComponent.size === 1) {
       const transformComponent = TransformComponentArray.getComponent(spit);
 
-      const config = createSpitPoisonConfig();
+      const config = createSpitPoisonAreaConfig();
       config[ServerComponentType.transform].position.x = transformComponent.position.x;
       config[ServerComponentType.transform].position.y = transformComponent.position.y;
       config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();

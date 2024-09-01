@@ -336,7 +336,7 @@ class BlueprintEntity extends Entity {
          const progressTextureInfo = progressTextureInfoArray[i];
 
          const renderPart = new TexturedRenderPart(
-            this,
+            null,
             progressTextureInfo.zIndex,
             progressTextureInfo.rotation,
             getTextureArrayIndex(progressTextureInfo.completedTextureSource)
@@ -347,7 +347,7 @@ class BlueprintEntity extends Entity {
          renderPart.tintR = 0.2;
          renderPart.tintG = 0.1;
          renderPart.tintB = 0.8;
-         this.attachRenderPart(renderPart);
+         this.attachRenderThing(renderPart);
       }
 
       const transformComponent = this.getServerComponent(ServerComponentType.transform);
@@ -455,14 +455,14 @@ class BlueprintEntity extends Entity {
          if (blueprintComponent.partialRenderParts.length <= i) {
             // New render part
             const renderPart = new TexturedRenderPart(
-               this,
+               null,
                progressTextureInfo.zIndex + 0.01,
                progressTextureInfo.rotation,
                getTextureArrayIndex(textureSource)
             );
             renderPart.offset.x = progressTextureInfo.offsetX
             renderPart.offset.y = progressTextureInfo.offsetY;
-            this.attachRenderPart(renderPart);
+            this.attachRenderThing(renderPart);
             blueprintComponent.partialRenderParts.push(renderPart);
          } else {
             // Existing render part

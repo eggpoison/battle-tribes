@@ -1,14 +1,15 @@
 import { EntityType } from "webgl-test-shared/dist/entities";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType, TurretAmmoType } from "webgl-test-shared/dist/components";
 import { lerp } from "webgl-test-shared/dist/utils";
 import Entity from "../Entity";
 import ServerComponent from "./ServerComponent";
 import { playSound } from "../sound";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
-import { BallistaAmmoType, ItemType } from "webgl-test-shared/dist/items/items";
+import { ItemType } from "webgl-test-shared/dist/items/items";
 import { RenderPart } from "../render-parts/render-parts";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { PacketReader } from "webgl-test-shared/dist/packets";
+import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 
 type TurretType = EntityType.slingTurret | EntityType.ballista;
 
@@ -20,7 +21,7 @@ interface AmmoRenderInfo {
    readonly drawOffset: number;
 }
 
-const AMMO_RENDER_INFO_RECORD: Record<BallistaAmmoType, AmmoRenderInfo> = {
+const AMMO_RENDER_INFO_RECORD: Record<TurretAmmoType, AmmoRenderInfo> = {
    [ItemType.wood]: {
       projectileTextureSource: "projectiles/wooden-bolt.png",
       drawOffset: 0
@@ -189,7 +190,7 @@ class TurretComponent extends ServerComponent {
                this.projectileRenderPart.rotation = 2 * Math.PI * Math.random();
             }
 
-            this.entity.attachRenderPart(this.projectileRenderPart);
+            this.entity.attachRenderThing(this.projectileRenderPart);
          } else {
             this.projectileRenderPart.switchTextureSource(textureSource);
          }
@@ -228,3 +229,5 @@ class TurretComponent extends ServerComponent {
 }
 
 export default TurretComponent;
+
+export const TurretComponentArray = new ComponentArray<TurretComponent>(ComponentArrayType.server, ServerComponentType.turret, true, {});

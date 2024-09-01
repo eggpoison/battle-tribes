@@ -1,114 +1,110 @@
-import { Point, rotateXAroundPoint, rotateYAroundPoint } from "webgl-test-shared/dist/utils";
+import { Point } from "webgl-test-shared/dist/utils";
 import { createIdentityMatrix } from "../rendering/matrices";
-import { RenderObject, RenderPart } from "./render-parts";
+import { RenderThing } from "./render-parts";
+import Board from "../Board";
 
 let idCounter = 0;
 
 /** A thing which is able to hold render parts */
-export abstract class BaseRenderObject {
-   public readonly children = new Array<RenderPart>();
-   
+export abstract class BaseRenderThing {
    /** Estimated position of the object during the current frame */
    public renderPosition = new Point(-1, -1);
 
-   public rotation = 0;
+   public readonly offset = new Point(0, 0);
+
+   public rotation: number;
    // @Cleanup: change to total rotation
    public totalParentRotation = 0;
+   
+   /** Whether or not the thing will inherit its parents' rotation */
+   public inheritParentRotation = true;
 
-   public tintR = 0;
-   public tintG = 0;
-   public tintB = 0;
+   public readonly zIndex: number;
 
-   public modelMatrix = createIdentityMatrix();
+   public readonly children = new Array<RenderThing>();
+   public readonly parent: RenderThing | null;
 
+   // Needed for the tree-like update system regardless of whether the thing is visible visually
+   public readonly modelMatrix = createIdentityMatrix();
    public modelMatrixIsDirty = true;
 
-   public depthData = new Float32Array(1);
-   public textureArrayIndexData = new Float32Array(1);
-   public tintData = new Float32Array(3);
-   public opacityData = new Float32Array(1);
-   public modelMatrixData = new Float32Array(9);
-
-   public dirty(): void {
-      this.modelMatrixIsDirty = true;
-   }
-}
-
-const isRenderPart = (renderObject: RenderObject): renderObject is BaseRenderPart => {
-   return typeof (renderObject as BaseRenderPart).tags !== "undefined";
-}
-
-abstract class BaseRenderPart extends BaseRenderObject {
-   public readonly id: number;
-   public readonly parent: BaseRenderObject;
-
-   /** Age of the render part in ticks */
-   public age = 0;
-
-   public readonly offset = new Point(0, 0)
-   public readonly zIndex: number;
-   public rotation = 0;
-
-   public opacity = 1;
-   public scale = 1;
-   public shakeAmount = 0;
-   
-   /** Whether or not the render part will inherit its parents' rotation */
-   public inheritParentRotation = true;
-   
-   public readonly tags = new Array<string>();
-   
-   constructor(parent: BaseRenderObject, zIndex: number, rotation: number) {
-      super();
-
-      this.id = idCounter++;
-
+   constructor(parent: RenderThing | null, zIndex: number, rotation: number) {
       this.parent = parent;
       this.zIndex = zIndex;
       this.rotation = rotation;
    }
 
    public dirty(): void {
-      super.dirty();
+      this.modelMatrixIsDirty = true;
 
       // Propagate to parent
-      if (isRenderPart(this.parent)) {
+      if (this.parent !== null) {
          this.parent.dirty();
       }
+   }
+}
+
+abstract class BaseRenderPart extends BaseRenderThing {
+   public readonly id: number;
+   
+   public modelMatrixData = new Float32Array(9);
+
+   /** The point in time when the render part was created */
+   private creationTicks = Board.serverTicks;
+
+   public opacity = 1;
+   public scale = 1;
+   public shakeAmount = 0;
+
+   public tintR = 0;
+   public tintG = 0;
+   public tintB = 0;
+   
+   public readonly tags = new Array<string>();
+   
+   constructor(parent: RenderThing | null, zIndex: number, rotation: number) {
+      super(parent, zIndex, rotation);
+
+      this.id = idCounter++;
+   }
+
+   public getAge(): number {
+      return Board.serverTicks - this.creationTicks;
    }
 
    public addTag(tag: string): void {
       this.tags.push(tag);
    }
 
+   // @Incomplete
    /** Updates the render part based on its parent */
-   public update(): void {
-      this.renderPosition.x = this.parent.renderPosition.x;
-      this.renderPosition.y = this.parent.renderPosition.y;
+   // public update(): void {
+   //    this.renderPosition.x = this.parent.renderPosition.x;
+   //    this.renderPosition.y = this.parent.renderPosition.y;
 
-      // Rotate the offset to match the parent object's rotation
-      if (this.inheritParentRotation) {
-         this.renderPosition.x += rotateXAroundPoint(this.offset.x, this.offset.y, 0, 0, this.parent.rotation + this.parent.totalParentRotation);
-         this.renderPosition.y += rotateYAroundPoint(this.offset.x, this.offset.y, 0, 0, this.parent.rotation + this.parent.totalParentRotation);
-      } else {
-         this.renderPosition.x += rotateXAroundPoint(this.offset.x, this.offset.y, 0, 0, this.parent.totalParentRotation);
-         this.renderPosition.y += rotateYAroundPoint(this.offset.x, this.offset.y, 0, 0, this.parent.totalParentRotation);
-      }
+   //    // Rotate the offset to match the parent object's rotation
+   //    if (this.inheritParentRotation) {
+   //       this.renderPosition.x += rotateXAroundPoint(this.offset.x, this.offset.y, 0, 0, this.parent.rotation + this.parent.totalParentRotation);
+   //       this.renderPosition.y += rotateYAroundPoint(this.offset.x, this.offset.y, 0, 0, this.parent.rotation + this.parent.totalParentRotation);
+   //    } else {
+   //       this.renderPosition.x += rotateXAroundPoint(this.offset.x, this.offset.y, 0, 0, this.parent.totalParentRotation);
+   //       this.renderPosition.y += rotateYAroundPoint(this.offset.x, this.offset.y, 0, 0, this.parent.totalParentRotation);
+   //    }
 
-      // Shake
-      if (this.shakeAmount > 0) {
-         const direction = 2 * Math.PI * Math.random();
-         this.renderPosition.x += this.shakeAmount * Math.sin(direction);
-         this.renderPosition.y += this.shakeAmount * Math.cos(direction);
-      }
+   //    // Shake
+   //    if (this.shakeAmount > 0) {
+   //       const direction = 2 * Math.PI * Math.random();
+   //       this.renderPosition.x += this.shakeAmount * Math.sin(direction);
+   //       this.renderPosition.y += this.shakeAmount * Math.cos(direction);
+   //    }
 
-      // Recalculate rotation
-      if (this.inheritParentRotation) {
-         this.totalParentRotation = this.parent.rotation + this.parent.totalParentRotation;
-      } else {
-         this.totalParentRotation = this.parent.totalParentRotation;
-      }
-   }
+   //    // Recalculate rotation
+   //    if (this.inheritParentRotation) {
+   //       this.totalParentRotation = this.parent.rotation + this.parent.totalParentRotation;
+   //    } else {
+   //       this.totalParentRotation = this.parent.totalParentRotation;
+   //    }
+   // }
 }
 
 export default BaseRenderPart;

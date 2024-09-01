@@ -9,6 +9,7 @@ import { getRandomPointInEntity } from "./TransformComponent";
 import { RenderPart } from "../render-parts/render-parts";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { PacketReader } from "webgl-test-shared/dist/packets";
+import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 
 class PlanterBoxComponent extends ServerComponent {
    private moundRenderPart: RenderPart | null = null;
@@ -27,20 +28,6 @@ class PlanterBoxComponent extends ServerComponent {
       this.updateMoundRenderPart(plantType);
    }
 
-   private createGrowthParticle(): void {
-      const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
-
-      const pos = getRandomPointInEntity(transformComponent);
-      createGrowthParticle(pos.x, pos.y);
-   }
-   
-   public tick(): void {
-      const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
-      if (this.isFertilised && customTickIntervalHasPassed(transformComponent.ageTicks, 0.35)) {
-         this.createGrowthParticle();
-      }
-   }
-
    private updateMoundRenderPart(plantType: PlanterBoxPlant | -1): void {
       if (plantType !== -1) {
          if (this.moundRenderPart === null) {
@@ -48,12 +35,12 @@ class PlanterBoxComponent extends ServerComponent {
             const textureSource = plantType === PlanterBoxPlant.iceSpikes ? "entities/plant/snow-clump.png" : "entities/plant/dirt-clump.png";
             
             this.moundRenderPart = new TexturedRenderPart(
-               this.entity,
+               null,
                1,
                Math.PI / 2 * randInt(0, 3),
                getTextureArrayIndex(textureSource)
             );
-            this.entity.attachRenderPart(this.moundRenderPart);
+            this.entity.attachRenderThing(this.moundRenderPart);
          }
       } else if (this.moundRenderPart !== null) {
          this.entity.removeRenderPart(this.moundRenderPart);
@@ -72,7 +59,7 @@ class PlanterBoxComponent extends ServerComponent {
       
       if (isFertilised && !this.isFertilised) {
          for (let i = 0; i < 25; i++) {
-            this.createGrowthParticle();
+            createGrowthParticleInEntity(this);
          }
 
          const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
@@ -93,3 +80,21 @@ class PlanterBoxComponent extends ServerComponent {
 }
 
 export default PlanterBoxComponent;
+
+export const PlanterBoxComponentArray = new ComponentArray<PlanterBoxComponent>(ComponentArrayType.server, ServerComponentType.planterBox, true, {
+   onTick: onTick
+});
+
+const createGrowthParticleInEntity = (planterBoxComponent: PlanterBoxComponent): void => {
+   const transformComponent = planterBoxComponent.entity.getServerComponent(ServerComponentType.transform);
+
+   const pos = getRandomPointInEntity(transformComponent);
+   createGrowthParticle(pos.x, pos.y);
+}
+   
+function onTick(planterBoxComponent: PlanterBoxComponent): void {
+   const transformComponent = planterBoxComponent.entity.getServerComponent(ServerComponentType.transform);
+   if (planterBoxComponent.isFertilised && customTickIntervalHasPassed(transformComponent.ageTicks, 0.35)) {
+      createGrowthParticleInEntity(planterBoxComponent);
+   }
+}

@@ -7,13 +7,18 @@ import Board from "../Board";
 import { createFootprintParticle } from "../particles";
 import Entity from "../Entity";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ComponentArray, ComponentArrayType } from "./ComponentArray";
+import { ClientComponentType } from "./components";
 
 export class FootprintComponent extends Component {
-   private readonly footstepParticleIntervalSeconds: number;
-   private readonly footstepOffset: number;
-   private readonly footstepSize: number;
-   private readonly footstepLifetime: number;
-   private readonly footstepSoundIntervalDist: number;
+   public readonly footstepParticleIntervalSeconds: number;
+   public readonly footstepOffset: number;
+   public readonly footstepSize: number;
+   public readonly footstepLifetime: number;
+   public readonly footstepSoundIntervalDist: number;
+   
+   public numFootstepsTaken = 0;
+   public distanceTracker = 0;
 
    constructor(entity: Entity, footstepParticleIntervalSeconds: number, footstepOffset: number, footstepSize: number, footstepLifetime: number, footstepSoundIntervalDist: number) {
       super(entity);
@@ -24,54 +29,55 @@ export class FootprintComponent extends Component {
       this.footstepLifetime = footstepLifetime;
       this.footstepSoundIntervalDist = footstepSoundIntervalDist;
    }
+}
+
+export default FootprintComponent;
+
+export const FootprintComponentArray = new ComponentArray<FootprintComponent>(ComponentArrayType.client, ClientComponentType.footprint, true, {
+   onTick: onTick
+});
+
+const createFootstepSound = (footprintComponent: FootprintComponent): void => {
+   const transformComponent = footprintComponent.entity.getServerComponent(ServerComponentType.transform);
    
-   private numFootstepsTaken = 0;
-   private distanceTracker = 0;
-
-   public tick(): void {
-      const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
-      const physicsComponent = this.entity.getServerComponent(ServerComponentType.physics);
-
-      // Footsteps
-      if (physicsComponent.velocity.lengthSquared() >= 2500 && !transformComponent.isInRiver() && Board.tickIntervalHasPassed(this.footstepParticleIntervalSeconds)) {
-         createFootprintParticle(this.entity, this.numFootstepsTaken, this.footstepOffset, this.footstepSize, this.footstepLifetime);
-         this.numFootstepsTaken++;
+   switch (transformComponent.tile.type) {
+      case TileType.grass: {
+         playSound(("grass-walk-" + randInt(1, 4) + ".mp3") as AudioFilePath, 0.04, 1, transformComponent.position);
+         break;
       }
-      this.distanceTracker += physicsComponent.velocity.length() / Settings.TPS;
-      if (this.distanceTracker > this.footstepSoundIntervalDist) {
-         this.distanceTracker -= this.footstepSoundIntervalDist;
-         this.createFootstepSound();
+      case TileType.sand: {
+         playSound(("sand-walk-" + randInt(1, 4) + ".mp3") as AudioFilePath, 0.02, 1, transformComponent.position);
+         break;
       }
-   }
-
-   private createFootstepSound(): void {
-      const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
-      
-      switch (transformComponent.tile.type) {
-         case TileType.grass: {
-            playSound(("grass-walk-" + randInt(1, 4) + ".mp3") as AudioFilePath, 0.04, 1, transformComponent.position);
-            break;
-         }
-         case TileType.sand: {
-            playSound(("sand-walk-" + randInt(1, 4) + ".mp3") as AudioFilePath, 0.02, 1, transformComponent.position);
-            break;
-         }
-         case TileType.snow: {
-            playSound(("snow-walk-" + randInt(1, 3) + ".mp3") as AudioFilePath, 0.07, 1, transformComponent.position);
-            break;
-         }
-         case TileType.rock: {
+      case TileType.snow: {
+         playSound(("snow-walk-" + randInt(1, 3) + ".mp3") as AudioFilePath, 0.07, 1, transformComponent.position);
+         break;
+      }
+      case TileType.rock: {
+         playSound(("rock-walk-" + randInt(1, 4) + ".mp3") as AudioFilePath, 0.08, 1, transformComponent.position);
+         break;
+      }
+      case TileType.water: {
+         if (!transformComponent.isInRiver()) {
             playSound(("rock-walk-" + randInt(1, 4) + ".mp3") as AudioFilePath, 0.08, 1, transformComponent.position);
-            break;
          }
-         case TileType.water: {
-            if (!transformComponent.isInRiver()) {
-               playSound(("rock-walk-" + randInt(1, 4) + ".mp3") as AudioFilePath, 0.08, 1, transformComponent.position);
-            }
-            break;
-         }
+         break;
       }
    }
 }
 
-export default FootprintComponent;
+function onTick(footprintComponent: FootprintComponent): void {
+   const transformComponent = footprintComponent.entity.getServerComponent(ServerComponentType.transform);
+   const physicsComponent = footprintComponent.entity.getServerComponent(ServerComponentType.physics);
+
+   // Footsteps
+   if (physicsComponent.velocity.lengthSquared() >= 2500 && !transformComponent.isInRiver() && Board.tickIntervalHasPassed(footprintComponent.footstepParticleIntervalSeconds)) {
+      createFootprintParticle(footprintComponent.entity, footprintComponent.numFootstepsTaken, footprintComponent.footstepOffset, footprintComponent.footstepSize, footprintComponent.footstepLifetime);
+      footprintComponent.numFootstepsTaken++;
+   }
+   footprintComponent.distanceTracker += physicsComponent.velocity.length() / Settings.TPS;
+   if (footprintComponent.distanceTracker > footprintComponent.footstepSoundIntervalDist) {
+      footprintComponent.distanceTracker -= footprintComponent.footstepSoundIntervalDist;
+      createFootstepSound(footprintComponent);
+   }
+}

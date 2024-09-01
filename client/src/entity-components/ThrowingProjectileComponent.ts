@@ -1,3 +1,5 @@
+import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 import ServerComponent from "./ServerComponent";
 
 class ThrowingProjectileComponent extends ServerComponent {
@@ -6,3 +8,5 @@ class ThrowingProjectileComponent extends ServerComponent {
 }
 
 export default ThrowingProjectileComponent;
+
+export const ThrowingProjectileComponentArray = new ComponentArray<ThrowingProjectileComponent>(ComponentArrayType.server, ServerComponentType.throwingProjectile, true, {});

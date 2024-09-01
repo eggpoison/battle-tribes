@@ -1,3 +1,5 @@
+import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 import ServerComponent from "./ServerComponent";
 
 class PebblumComponent extends ServerComponent {
@@ -6,3 +8,5 @@ class PebblumComponent extends ServerComponent {
 }
 
 export default PebblumComponent;
+
+export const PebblumComponentArray = new ComponentArray<PebblumComponent>(ComponentArrayType.server, ServerComponentType.pebblum, true, {});

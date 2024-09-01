@@ -2,41 +2,28 @@ import { createWebGLProgram, gl } from "../../webgl";
 import { getEntityTextureAtlas } from "../../texture-atlases/texture-atlases";
 import { bindUBOToProgram, ENTITY_TEXTURE_ATLAS_UBO, UBOBindingIndex } from "../ubos";
 import Entity from "../../Entity";
-import { RenderPart } from "../../render-parts/render-parts";
-import { EntityID } from "webgl-test-shared/dist/entities";
-import Board from "../../Board";
+import { RenderPart, renderPartIsTextured, thingIsRenderPart } from "../../render-parts/render-parts";
 import { calculateEntityRenderHeight } from "../../render-layers";
 
 const enum Vars {
-   ATTRIBUTES_PER_VERTEX = 17,
-   MAX_RENDER_PARTS = 131072
+   ATTRIBUTES_PER_VERTEX = 17
+}
+
+export const enum EntityRenderingVars {
+   ATTRIBUTES_PER_VERTEX = Vars.ATTRIBUTES_PER_VERTEX
 }
 
 let program: WebGLProgram;
 let vao: WebGLVertexArrayObject;
-let buffer: WebGLBuffer;
 let indexBuffer: WebGLBuffer;
 
 let vertexBuffer: WebGLBuffer;
 
-let depthData: Float32Array;
-let depthBuffer: WebGLBuffer;
-let textureArrayIndexData: Float32Array;
-let textureArrayIndexBuffer: WebGLBuffer;
-let tintData: Float32Array;
-let tintBuffer: WebGLBuffer;
-let opacityData: Float32Array;
-let opacityBuffer: WebGLBuffer;
-let modelMatrixData: Float32Array;
-let modelMatrixBuffer: WebGLBuffer;
-
-/** Maps entity IDs to indexes in the buffers */
-const entityIDToBufferIndexRecord: Partial<Record<EntityID, number>> = {};
-const bufferIndexToEntityRecord: Partial<Record<number, EntityID>> = {};
-/** For any given buffer index, counts the number of render parts of all entities up to and including the entity at the specified buffer index */
-const bufferIndexToOffsetAmount: Partial<Record<number, number>> = {};
-
 const entityRenderHeightMap = new WeakMap<Entity, number>();
+
+export function getEntityRenderingProgram(): WebGLProgram {
+   return program;
+}
 
 export function createEntityShaders(): void {
    const vertexShaderText = `#version 300 es
@@ -170,15 +157,282 @@ export function createEntityShaders(): void {
    gl.useProgram(program);
    gl.uniform1i(textureUniformLocation, 0);
 
-   // 
-   // Create VAO
-   // 
-
    vao = gl.createVertexArray()!;
    gl.bindVertexArray(vao);
 
-   buffer = gl.createBuffer()!;
-   gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+   indexBuffer = gl.createBuffer()!;
+   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+
+   const vertexData = new Float32Array(8);
+   vertexData[0] = -0.5;
+   vertexData[1] = -0.5;
+   vertexData[2] = 0.5;
+   vertexData[3] = -0.5;
+   vertexData[4] = -0.5;
+   vertexData[5] = 0.5;
+   vertexData[6] = 0.5;
+   vertexData[7] = 0.5;
+
+   vertexBuffer = gl.createBuffer()!;
+   gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+   gl.bufferData(gl.ARRAY_BUFFER, vertexData, gl.STATIC_DRAW);
+   gl.enableVertexAttribArray(0);
+   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+
+   gl.bindVertexArray(null);
+}
+
+export function addEntityToRenderHeightMap(entity: Entity): void {
+   const renderHeight = calculateEntityRenderHeight(entity);
+   entityRenderHeightMap.set(entity, renderHeight);
+}
+
+export function getEntityHeight(entity: Entity): number {
+   const height = entityRenderHeightMap.get(entity);
+   if (typeof height === "undefined") {
+      throw new Error();
+   }
+   return height;
+}
+
+export function calculateRenderPartDepth(renderPart: RenderPart, entity: Entity): number {
+   const renderHeight = entityRenderHeightMap.get(entity)!;
+   return renderHeight + renderPart.zIndex * 0.0001;
+}
+
+const countRenderParts = (entities: ReadonlyArray<Entity>): number => {
+   let numRenderParts = 0;
+   for (let i = 0; i < entities.length; i++) {
+      const entity = entities[i];
+      numRenderParts += entity.allRenderThings.length;
+   }
+   return numRenderParts;
+}
+
+export function setEntityInVertexData(entity: Entity, vertexData: Float32Array, indicesData: Uint16Array | null, renderPartIdx: number): number {
+   const baseTintR = entity.tintR;
+   const baseTintG = entity.tintG;
+   const baseTintB = entity.tintB;
+
+   for (let j = 0; j < entity.allRenderThings.length; j++) {
+      const renderPart = entity.allRenderThings[j];
+      if (!thingIsRenderPart(renderPart)) {
+         continue;
+      }
+      
+      const depth = calculateRenderPartDepth(renderPart, entity);
+      
+      const textureArrayIndex = renderPartIsTextured(renderPart) ? renderPart.textureArrayIndex : -1;
+
+      let tintR = baseTintR + renderPart.tintR;
+      let tintG = baseTintG + renderPart.tintG;
+      let tintB = baseTintB + renderPart.tintB;
+
+      if (!renderPartIsTextured(renderPart)) {
+         tintR = renderPart.colour.r;
+         tintG = renderPart.colour.g;
+         tintB = renderPart.colour.b;
+      }
+      
+      const vertexDataOffset = renderPartIdx * 4 * Vars.ATTRIBUTES_PER_VERTEX;
+
+      vertexData[vertexDataOffset] = -0.5;
+      vertexData[vertexDataOffset + 1] = -0.5;
+      vertexData[vertexDataOffset + 2] = depth;
+      vertexData[vertexDataOffset + 3] = textureArrayIndex;
+      vertexData[vertexDataOffset + 4] = tintR;
+      vertexData[vertexDataOffset + 5] = tintG;
+      vertexData[vertexDataOffset + 6] = tintB;
+      vertexData[vertexDataOffset + 7] = renderPart.opacity;
+      vertexData[vertexDataOffset + 8] = renderPart.modelMatrix[0];
+      vertexData[vertexDataOffset + 9] = renderPart.modelMatrix[1];
+      vertexData[vertexDataOffset + 10] = renderPart.modelMatrix[2];
+      vertexData[vertexDataOffset + 11] = renderPart.modelMatrix[3];
+      vertexData[vertexDataOffset + 12] = renderPart.modelMatrix[4];
+      vertexData[vertexDataOffset + 13] = renderPart.modelMatrix[5];
+      vertexData[vertexDataOffset + 14] = renderPart.modelMatrix[6];
+      vertexData[vertexDataOffset + 15] = renderPart.modelMatrix[7];
+      vertexData[vertexDataOffset + 16] = renderPart.modelMatrix[8];
+
+      vertexData[vertexDataOffset + 17] = 0.5;
+      vertexData[vertexDataOffset + 18] = -0.5;
+      vertexData[vertexDataOffset + 19] = depth;
+      vertexData[vertexDataOffset + 20] = textureArrayIndex;
+      vertexData[vertexDataOffset + 21] = tintR;
+      vertexData[vertexDataOffset + 22] = tintG;
+      vertexData[vertexDataOffset + 23] = tintB;
+      vertexData[vertexDataOffset + 24] = renderPart.opacity;
+      vertexData[vertexDataOffset + 25] = renderPart.modelMatrix[0];
+      vertexData[vertexDataOffset + 26] = renderPart.modelMatrix[1];
+      vertexData[vertexDataOffset + 27] = renderPart.modelMatrix[2];
+      vertexData[vertexDataOffset + 28] = renderPart.modelMatrix[3];
+      vertexData[vertexDataOffset + 29] = renderPart.modelMatrix[4];
+      vertexData[vertexDataOffset + 30] = renderPart.modelMatrix[5];
+      vertexData[vertexDataOffset + 31] = renderPart.modelMatrix[6];
+      vertexData[vertexDataOffset + 32] = renderPart.modelMatrix[7];
+      vertexData[vertexDataOffset + 33] = renderPart.modelMatrix[8];
+
+      vertexData[vertexDataOffset + 34] = -0.5;
+      vertexData[vertexDataOffset + 35] = 0.5;
+      vertexData[vertexDataOffset + 36] = depth;
+      vertexData[vertexDataOffset + 37] = textureArrayIndex;
+      vertexData[vertexDataOffset + 38] = tintR;
+      vertexData[vertexDataOffset + 39] = tintG;
+      vertexData[vertexDataOffset + 40] = tintB;
+      vertexData[vertexDataOffset + 41] = renderPart.opacity;
+      vertexData[vertexDataOffset + 42] = renderPart.modelMatrix[0];
+      vertexData[vertexDataOffset + 43] = renderPart.modelMatrix[1];
+      vertexData[vertexDataOffset + 44] = renderPart.modelMatrix[2];
+      vertexData[vertexDataOffset + 45] = renderPart.modelMatrix[3];
+      vertexData[vertexDataOffset + 46] = renderPart.modelMatrix[4];
+      vertexData[vertexDataOffset + 47] = renderPart.modelMatrix[5];
+      vertexData[vertexDataOffset + 48] = renderPart.modelMatrix[6];
+      vertexData[vertexDataOffset + 49] = renderPart.modelMatrix[7];
+      vertexData[vertexDataOffset + 50] = renderPart.modelMatrix[8];
+
+      vertexData[vertexDataOffset + 51] = 0.5;
+      vertexData[vertexDataOffset + 52] = 0.5;
+      vertexData[vertexDataOffset + 53] = depth;
+      vertexData[vertexDataOffset + 54] = textureArrayIndex;
+      vertexData[vertexDataOffset + 55] = tintR;
+      vertexData[vertexDataOffset + 56] = tintG;
+      vertexData[vertexDataOffset + 57] = tintB;
+      vertexData[vertexDataOffset + 58] = renderPart.opacity;
+      vertexData[vertexDataOffset + 59] = renderPart.modelMatrix[0];
+      vertexData[vertexDataOffset + 60] = renderPart.modelMatrix[1];
+      vertexData[vertexDataOffset + 61] = renderPart.modelMatrix[2];
+      vertexData[vertexDataOffset + 62] = renderPart.modelMatrix[3];
+      vertexData[vertexDataOffset + 63] = renderPart.modelMatrix[4];
+      vertexData[vertexDataOffset + 64] = renderPart.modelMatrix[5];
+      vertexData[vertexDataOffset + 65] = renderPart.modelMatrix[6];
+      vertexData[vertexDataOffset + 66] = renderPart.modelMatrix[7];
+      vertexData[vertexDataOffset + 67] = renderPart.modelMatrix[8];
+
+      if (indicesData !== null) {
+         const indicesDataOffset = renderPartIdx * 6;
+   
+         indicesData[indicesDataOffset] = renderPartIdx * 4;
+         indicesData[indicesDataOffset + 1] = renderPartIdx * 4 + 1;
+         indicesData[indicesDataOffset + 2] = renderPartIdx * 4 + 2;
+         indicesData[indicesDataOffset + 3] = renderPartIdx * 4 + 2;
+         indicesData[indicesDataOffset + 4] = renderPartIdx * 4 + 1;
+         indicesData[indicesDataOffset + 5] = renderPartIdx * 4 + 3;
+      }
+
+      renderPartIdx++;
+   }
+
+   return renderPartIdx;
+}
+
+export function clearEntityInVertexData(entity: Entity, vertexData: Float32Array, renderPartIdx: number): void {
+   for (let j = 0; j < entity.allRenderThings.length; j++) {
+      const renderPart = entity.allRenderThings[j];
+      if (!thingIsRenderPart(renderPart)) {
+         continue;
+      }
+      
+      const vertexDataOffset = renderPartIdx * 4 * Vars.ATTRIBUTES_PER_VERTEX;
+
+      vertexData[vertexDataOffset] = 0;
+      vertexData[vertexDataOffset + 1] = 0;
+      vertexData[vertexDataOffset + 2] = 0;
+      vertexData[vertexDataOffset + 3] = 0;
+      vertexData[vertexDataOffset + 4] = 0;
+      vertexData[vertexDataOffset + 5] = 0;
+      vertexData[vertexDataOffset + 6] = 0;
+      vertexData[vertexDataOffset + 7] = 0;
+      vertexData[vertexDataOffset + 8] = 0;
+      vertexData[vertexDataOffset + 9] = 0;
+      vertexData[vertexDataOffset + 10] = 0;
+      vertexData[vertexDataOffset + 11] = 0;
+      vertexData[vertexDataOffset + 12] = 0;
+      vertexData[vertexDataOffset + 13] = 0;
+      vertexData[vertexDataOffset + 14] = 0;
+      vertexData[vertexDataOffset + 15] = 0;
+      vertexData[vertexDataOffset + 16] = 0;
+
+      vertexData[vertexDataOffset + 17] = 0;
+      vertexData[vertexDataOffset + 18] = 0;
+      vertexData[vertexDataOffset + 19] = 0;
+      vertexData[vertexDataOffset + 20] = 0;
+      vertexData[vertexDataOffset + 21] = 0;
+      vertexData[vertexDataOffset + 22] = 0;
+      vertexData[vertexDataOffset + 23] = 0;
+      vertexData[vertexDataOffset + 24] = 0;
+      vertexData[vertexDataOffset + 25] = 0;
+      vertexData[vertexDataOffset + 26] = 0;
+      vertexData[vertexDataOffset + 27] = 0;
+      vertexData[vertexDataOffset + 28] = 0;
+      vertexData[vertexDataOffset + 29] = 0;
+      vertexData[vertexDataOffset + 30] = 0;
+      vertexData[vertexDataOffset + 31] = 0;
+      vertexData[vertexDataOffset + 32] = 0;
+      vertexData[vertexDataOffset + 33] = 0;
+
+      vertexData[vertexDataOffset + 34] = 0;
+      vertexData[vertexDataOffset + 35] = 0;
+      vertexData[vertexDataOffset + 36] = 0;
+      vertexData[vertexDataOffset + 37] = 0;
+      vertexData[vertexDataOffset + 38] = 0;
+      vertexData[vertexDataOffset + 39] = 0;
+      vertexData[vertexDataOffset + 40] = 0;
+      vertexData[vertexDataOffset + 41] = 0;
+      vertexData[vertexDataOffset + 42] = 0;
+      vertexData[vertexDataOffset + 43] = 0;
+      vertexData[vertexDataOffset + 44] = 0;
+      vertexData[vertexDataOffset + 45] = 0;
+      vertexData[vertexDataOffset + 46] = 0;
+      vertexData[vertexDataOffset + 47] = 0;
+      vertexData[vertexDataOffset + 48] = 0;
+      vertexData[vertexDataOffset + 49] = 0;
+      vertexData[vertexDataOffset + 50] = 0;
+
+      vertexData[vertexDataOffset + 51] = 0;
+      vertexData[vertexDataOffset + 52] = 0;
+      vertexData[vertexDataOffset + 53] = 0;
+      vertexData[vertexDataOffset + 54] = 0;
+      vertexData[vertexDataOffset + 55] = 0;
+      vertexData[vertexDataOffset + 56] = 0;
+      vertexData[vertexDataOffset + 57] = 0;
+      vertexData[vertexDataOffset + 58] = 0;
+      vertexData[vertexDataOffset + 59] = 0;
+      vertexData[vertexDataOffset + 60] = 0;
+      vertexData[vertexDataOffset + 61] = 0;
+      vertexData[vertexDataOffset + 62] = 0;
+      vertexData[vertexDataOffset + 63] = 0;
+      vertexData[vertexDataOffset + 64] = 0;
+      vertexData[vertexDataOffset + 65] = 0;
+      vertexData[vertexDataOffset + 66] = 0;
+      vertexData[vertexDataOffset + 67] = 0;
+
+      renderPartIdx++;
+   }
+}
+
+export function renderEntities(entities: ReadonlyArray<Entity>): void {
+   const textureAtlas = getEntityTextureAtlas();
+
+   const numRenderParts = countRenderParts(entities);
+   const vertexData = new Float32Array(numRenderParts * 4 * Vars.ATTRIBUTES_PER_VERTEX);
+   const indicesData = new Uint16Array(numRenderParts * 6);
+
+   let renderPartIdx = 0;
+   for (const entity of entities) {
+      renderPartIdx = setEntityInVertexData(entity, vertexData, indicesData, renderPartIdx);
+   }
+   
+   gl.useProgram(program);
+
+   gl.enable(gl.BLEND);
+   gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
+   // Bind texture atlas
+   gl.activeTexture(gl.TEXTURE0);
+   gl.bindTexture(gl.TEXTURE_2D, textureAtlas.texture);
+
+   gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+   gl.bufferData(gl.ARRAY_BUFFER, vertexData, gl.STATIC_DRAW);
 
    gl.vertexAttribPointer(0, 2, gl.FLOAT, false, Vars.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT, 0);
    gl.vertexAttribPointer(1, 1, gl.FLOAT, false, Vars.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT, 2 * Float32Array.BYTES_PER_ELEMENT);
@@ -199,75 +453,10 @@ export function createEntityShaders(): void {
    gl.enableVertexAttribArray(6);
    gl.enableVertexAttribArray(7);
 
-   indexBuffer = gl.createBuffer()!;
    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
-
-   gl.bindVertexArray(null);
-
-   const vertexData = new Float32Array(12);
-   vertexData[0] = -0.5;
-   vertexData[1] = -0.5;
-   vertexData[2] = 0.5;
-   vertexData[3] = -0.5;
-   vertexData[4] = -0.5;
-   vertexData[5] = 0.5;
-   vertexData[6] = -0.5;
-   vertexData[7] = 0.5;
-   vertexData[8] = 0.5;
-   vertexData[9] = -0.5;
-   vertexData[10] = 0.5;
-   vertexData[11] = 0.5;
-
-   vertexBuffer = gl.createBuffer()!;
-   gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-   gl.bufferData(gl.ARRAY_BUFFER, vertexData, gl.STATIC_DRAW);
-
-   depthData = new Float32Array(Vars.MAX_RENDER_PARTS);
-   depthBuffer = gl.createBuffer()!;
-   gl.bindBuffer(gl.ARRAY_BUFFER, depthBuffer);
-   gl.bufferData(gl.ARRAY_BUFFER, depthData, gl.DYNAMIC_DRAW);
-
-   textureArrayIndexData = new Float32Array(Vars.MAX_RENDER_PARTS);
-   textureArrayIndexBuffer = gl.createBuffer()!;
-   gl.bindBuffer(gl.ARRAY_BUFFER, textureArrayIndexBuffer);
-   gl.bufferData(gl.ARRAY_BUFFER, textureArrayIndexData, gl.DYNAMIC_DRAW);
-
-   tintData = new Float32Array(3 * Vars.MAX_RENDER_PARTS);
-   tintBuffer = gl.createBuffer()!;
-   gl.bindBuffer(gl.ARRAY_BUFFER, tintBuffer);
-   gl.bufferData(gl.ARRAY_BUFFER, tintData, gl.DYNAMIC_DRAW);
-
-   opacityData = new Float32Array(Vars.MAX_RENDER_PARTS);
-   opacityBuffer = gl.createBuffer()!;
-   gl.bindBuffer(gl.ARRAY_BUFFER, opacityBuffer);
-   gl.bufferData(gl.ARRAY_BUFFER, opacityData, gl.DYNAMIC_DRAW);
-
-   modelMatrixData = new Float32Array(9 * Vars.MAX_RENDER_PARTS);
-   modelMatrixBuffer = gl.createBuffer()!;
-   gl.bindBuffer(gl.ARRAY_BUFFER, modelMatrixBuffer);
-   gl.bufferData(gl.ARRAY_BUFFER, modelMatrixData, gl.DYNAMIC_DRAW);
-}
-
-export function addEntityToRenderHeightMap(entity: Entity): void {
-   const renderHeight = calculateEntityRenderHeight(entity);
-   entityRenderHeightMap.set(entity, renderHeight);
-}
-
-export function getEntityHeight(entity: Entity): number {
-   const height = entityRenderHeightMap.get(entity);
-   if (typeof height === "undefined") {
-      throw new Error();
-   }
-   return height;
-}
-
-const setData = (entity: Entity, bufferIndex: number): void => {
-   const offsetAmount = bufferIndex > 0 ? bufferIndexToOffsetAmount[bufferIndex - 1] : 0;
-   // @Temporary?
-   if (typeof offsetAmount === "undefined") {
-      throw new Error();
-   }
+   gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indicesData, gl.STATIC_DRAW);
    
+<<<<<<< HEAD
    depthData.set(entity.depthData, offsetAmount);
    textureArrayIndexData.set(entity.textureArrayIndexData, offsetAmount);
    tintData.set(entity.tintData, 3 * offsetAmount);
@@ -708,9 +897,10 @@ export function renderEntities(entities: ReadonlyArray<Entity>): void {
    gl.vertexAttribDivisor(5, 0);
    gl.vertexAttribDivisor(6, 0);
    gl.vertexAttribDivisor(7, 0);
+=======
+   gl.drawElements(gl.TRIANGLES, numRenderParts * 6, gl.UNSIGNED_SHORT, 0);
+>>>>>>> dc29c70f26f0d7da3b3ec39ca14cd43b4722bc5b
 
    gl.disable(gl.BLEND);
    gl.blendFunc(gl.ONE, gl.ZERO);
-
-   gl.bindVertexArray(null);
 }

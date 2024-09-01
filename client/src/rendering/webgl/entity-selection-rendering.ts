@@ -5,7 +5,7 @@ import { createWebGLProgram, gl, windowWidth, windowHeight, createTexture } from
 import Entity from "../../Entity";
 import { getEntityTextureAtlas } from "../../texture-atlases/texture-atlases";
 import { bindUBOToProgram, ENTITY_TEXTURE_ATLAS_UBO, UBOBindingIndex } from "../ubos";
-import { renderPartIsTextured } from "../../render-parts/render-parts";
+import { renderPartIsTextured, thingIsRenderPart } from "../../render-parts/render-parts";
 
 let framebufferProgram: WebGLProgram;
 let renderProgram: WebGLProgram;
@@ -259,8 +259,11 @@ export function createStructureHighlightShaders(): void {
 const addVertices = (vertices: Array<number>, entity: Entity, offsetX: number, offsetY: number, lightness: number): void => {
    const textureAtlas = getEntityTextureAtlas();
    
-   for (let i = 0; i < entity.allRenderParts.length; i++) {
-      const renderPart = entity.allRenderParts[i];
+   for (let i = 0; i < entity.allRenderThings.length; i++) {
+      const renderPart = entity.allRenderThings[i];
+      if (!thingIsRenderPart(renderPart)) {
+         continue;
+      }
 
       // @Hack
       if (!renderPartIsTextured(renderPart)) {

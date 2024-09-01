@@ -4,9 +4,7 @@ import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { Point } from "webgl-test-shared/dist/utils";
 import { HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
 import { PebblumComponentArray } from "../../components/PebblumComponent";
-import { moveEntityToPosition, stopEntity } from "../../ai-shared";
-import Board from "../../Board";
-import { PhysicsComponentArray, applyKnockback } from "../../components/PhysicsComponent";
+import { applyKnockback } from "../../components/PhysicsComponent";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
 import { CircularHitbox, Hitbox, HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
@@ -18,8 +16,6 @@ type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.health
    | ServerComponentType.statusEffect
    | ServerComponentType.pebblum;
-
-const TURN_SPEED = Math.PI * 2;
 
 export function createPebblumConfig(): ComponentConfig<ComponentTypes> {
    const hitboxes = new Array<Hitbox>();
@@ -57,20 +53,6 @@ export function createPebblumConfig(): ComponentConfig<ComponentTypes> {
          targetEntityID: 0
       }
    };
-}
-
-export function tickPebblum(pebblum: EntityID): void {
-   const pebblumComponent = PebblumComponentArray.getComponent(pebblum);
-
-   const target = pebblumComponent.targetEntityID;
-   if (Board.hasEntity(target)) {
-      const targetTransformComponent = TransformComponentArray.getComponent(target);
-
-      moveEntityToPosition(pebblum, targetTransformComponent.position.x, targetTransformComponent.position.y, 850, TURN_SPEED);
-   } else {
-      const physicsComponent = PhysicsComponentArray.getComponent(pebblum);
-      stopEntity(physicsComponent);
-   }
 }
 
 export function onPebblumCollision(pebblum: EntityID, collidingEntity: EntityID, collisionPoint: Point): void {

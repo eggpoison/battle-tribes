@@ -13,12 +13,12 @@ class Cactus extends Entity {
       super(id, EntityType.cactus);
 
       const baseRenderPart = new TexturedRenderPart(
-         this,
+         null,
          2,
          0,
          getTextureArrayIndex("entities/cactus/cactus.png")
       );
-      this.attachRenderPart(baseRenderPart);
+      this.attachRenderThing(baseRenderPart);
    }
 
    protected onHit(): void {

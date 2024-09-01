@@ -1,11 +1,15 @@
 import { DecorationType, ServerComponentType } from "webgl-test-shared/dist/components";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { TileType } from "webgl-test-shared/dist/tiles";
-import { randInt, randFloat } from "webgl-test-shared/dist/utils";
-import Board from "../Board";
-import Tile from "../Tile";
+import { randInt, randFloat, TileIndex } from "webgl-test-shared/dist/utils";
+import Board, { getTilesInRange } from "../Board";
 import { createDecorationConfig } from "../entities/decoration";
 import { createEntityFromConfig } from "../Entity";
+
+const enum Vars {
+   RIVERSIDE_DECORATION_SPAWN_ATTEMPT_DENSITY_PER_TILE = 0.5,
+   RIVERSIDE_DECORATION_MAX_RIVER_DIST = 50
+}
 
 interface DecorationGenerationInfo {
    readonly decorationTypes: ReadonlyArray<DecorationType>;
@@ -15,6 +19,51 @@ interface DecorationGenerationInfo {
    readonly maxGroupSize: number;
    readonly isAffectedByTemperature: boolean;
    readonly hasUniformGroups: boolean;
+}
+
+const createDecoration = (x: number, y: number, decorationType: DecorationType): void => {
+   const config = createDecorationConfig();
+   config[ServerComponentType.transform].position.x = x;
+   config[ServerComponentType.transform].position.y = y;
+   config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
+   config[ServerComponentType.decoration].decorationType = decorationType;
+   createEntityFromConfig(config);
+}
+
+const generateRiversideDecorations = (): void => {
+   // @Speed
+   
+   // @Incomplete: generate everywhere
+
+   const numAttempts = Vars.RIVERSIDE_DECORATION_SPAWN_ATTEMPT_DENSITY_PER_TILE * Settings.BOARD_DIMENSIONS * Settings.BOARD_DIMENSIONS;
+   
+   for (let i = 0; i < numAttempts; i++) {
+      const x = Settings.BOARD_UNITS * Math.random();
+      const y = Settings.BOARD_UNITS * Math.random();
+
+      const tileX = Math.floor(x / Settings.TILE_SIZE);
+      const tileY = Math.floor(y / Settings.TILE_SIZE);
+      const tileType = Board.getTileType(tileX, tileY);
+      if (tileType === TileType.water) {
+         continue;
+      }
+      
+      const tilesInRange = getTilesInRange(x, y, Vars.RIVERSIDE_DECORATION_MAX_RIVER_DIST);
+      let isGood = false;
+      for (const tileIndex of tilesInRange) {
+         const tileX = Board.getTileX(tileIndex);
+         const tileY = Board.getTileY(tileIndex);
+         if (Board.getTileType(tileX, tileY) === TileType.water) {
+            isGood = true;
+            break;
+         }
+      }
+      if (!isGood) {
+         continue;
+      }
+
+      createDecoration(x, y, Math.random() < 0.5 ? DecorationType.rock : DecorationType.pebble);
+   }
 }
 
 export function generateDecorations(): void {
@@ -95,16 +144,20 @@ export function generateDecorations(): void {
       }
    ];
 
-   const getDecorationGenerationInfo = (tile: Tile): DecorationGenerationInfo | null => {
+   const getDecorationGenerationInfo = (tileIndex: TileIndex): DecorationGenerationInfo | null => {
+      const tileType = Board.tileTypes[tileIndex];
+      const tileX = Board.getTileX(tileIndex);
+      const tileY = Board.getTileY(tileIndex);
+      
       for (let i = 0; i < DECORATION_GENERATION_INFO.length; i++) {
          const generationInfo = DECORATION_GENERATION_INFO[i];
-         if (!generationInfo.spawnableTileTypes.includes(tile.type)) {
+         if (!generationInfo.spawnableTileTypes.includes(tileType)) {
             continue;
          }
 
          if (generationInfo.isAffectedByTemperature) {
             // Flowers spawn less frequently the colder the tile is
-            const idx = Board.getTileIndexIncludingEdges(tile.x, tile.y);
+            const idx = Board.getTileIndexIncludingEdges(tileX, tileY);
             const temperature = Board.tileTemperatures[idx];
             if (Math.random() > Math.pow(temperature, 0.3)) {
                continue;
@@ -119,20 +172,11 @@ export function generateDecorations(): void {
       return null;
    }
 
-   const createDecoration = (x: number, y: number, decorationType: DecorationType): void => {
-      const config = createDecorationConfig();
-      config[ServerComponentType.transform].position.x = x;
-      config[ServerComponentType.transform].position.y = y;
-      config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
-      config[ServerComponentType.decoration].decorationType = decorationType;
-      createEntityFromConfig(config);
-   }
-
    for (let tileX = -Settings.EDGE_GENERATION_DISTANCE; tileX < Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE; tileX++) {
       for (let tileY = -Settings.EDGE_GENERATION_DISTANCE; tileY < Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE; tileY++) {
-         const tile = Board.getTileIncludingEdges(tileX, tileY);
+         const tileIndex = Board.getTileIndexIncludingEdges(tileX, tileY);
          
-         const generationInfo = getDecorationGenerationInfo(tile);
+         const generationInfo = getDecorationGenerationInfo(tileIndex);
          if (generationInfo === null) {
             continue;
          }
@@ -150,15 +194,16 @@ export function generateDecorations(): void {
             const spawnX = x + spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
             const spawnY = y + spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
 
-            // Don't spawn in different tile types
-            const currentTileX = Math.floor(spawnX / Settings.TILE_SIZE) - Settings.EDGE_GENERATION_DISTANCE;
-            const currentTileY = Math.floor(spawnY / Settings.TILE_SIZE) - Settings.EDGE_GENERATION_DISTANCE;
+            const currentTileX = Math.floor(spawnX / Settings.TILE_SIZE);
+            const currentTileY = Math.floor(spawnY / Settings.TILE_SIZE);
             if (!Board.tileIsInBoardIncludingEdges(currentTileX, currentTileY)) {
                continue;
             }
             
-            const currentTile = Board.getTileIncludingEdges(currentTileX, currentTileY);
-            if (!generationInfo.spawnableTileTypes.includes(currentTile.type)) {
+            // Don't spawn in different tile types
+            const currentTileIndex = Board.getTileIndexIncludingEdges(currentTileX, currentTileY);
+            const tileType = Board.tileTypes[currentTileIndex];
+            if (!generationInfo.spawnableTileTypes.includes(tileType)) {
                continue;
             }
 
@@ -170,4 +215,6 @@ export function generateDecorations(): void {
          }
       }
    }
+
+   generateRiversideDecorations();
 }

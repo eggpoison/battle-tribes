@@ -2,6 +2,8 @@ import { ScarInfo } from "webgl-test-shared/dist/components";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import { PacketReader } from "webgl-test-shared/dist/packets";
+import { ComponentArray, ComponentArrayType } from "./ComponentArray";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 
 class TribeWarriorComponent extends ServerComponent {
    public readonly scars: ReadonlyArray<ScarInfo>;
@@ -39,3 +41,5 @@ class TribeWarriorComponent extends ServerComponent {
 }
 
 export default TribeWarriorComponent;
+
+export const TribeWarriorComponentArray = new ComponentArray<TribeWarriorComponent>(ComponentArrayType.server, ServerComponentType.tribeWarrior, true, {});

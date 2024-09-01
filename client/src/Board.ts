@@ -2,7 +2,7 @@ import { Settings } from "webgl-test-shared/dist/settings";
 import { GrassTileInfo, RIVER_STEPPING_STONE_SIZES, RiverFlowDirectionsRecord, RiverSteppingStoneData, ServerTileUpdateData } from "webgl-test-shared/dist/client-server-types";
 import { TileType } from "webgl-test-shared/dist/tiles";
 import { Point, Vector } from "webgl-test-shared/dist/utils";
-import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
+import { EntityID, EntityType, EntityTypeString } from "webgl-test-shared/dist/entities";
 import Chunk from "./Chunk";
 import { Tile } from "./Tile";
 import Entity from "./Entity";
@@ -16,13 +16,16 @@ import { RenderableType, addRenderable, removeRenderable } from "./rendering/ren
 import { WorldInfo } from "webgl-test-shared/dist/structures";
 import { EntityInfo } from "webgl-test-shared/dist/board-interface";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
-import Client from "./client/Client";
 import { RenderPart } from "./render-parts/render-parts";
 import { InitialGameDataPacket } from "./client/packet-processing";
 import { collide } from "./collision";
 import { COLLISION_BITS } from "webgl-test-shared/dist/collision";
 import { latencyGameState } from "./game-state/game-states";
-import { addEntityToRenderHeightMap, removeEntityFromBuffer } from "./rendering/webgl/entity-rendering";
+import { addEntityToRenderHeightMap } from "./rendering/webgl/entity-rendering";
+import { getComponentArrays } from "./entity-components/ComponentArray";
+import { removeEntityFromDirtyArray } from "./rendering/render-part-matrices";
+import { getEntityRenderLayer } from "./render-layers";
+import { registerChunkRenderedEntity, removeChunkRenderedEntity, renderLayerIsChunkRendered } from "./rendering/webgl/chunked-entity-rendering";
 
 export interface EntityHitboxInfo {
    readonly vertexPositions: readonly [Point, Point, Point, Point];
@@ -35,10 +38,12 @@ interface TickCallback {
 }
 
 abstract class Board {
-   public static ticks: number;
+   public static serverTicks: number;
+   public static clientTicks = 0;
    public static time: number;
 
-   private static tiles = new Array<Tile>();
+   // @Hack: don't have this default value
+   private static tiles: ReadonlyArray<Tile>;
    private static chunks: Array<Chunk>;
    
    public static grassInfo: Record<number, Record<number, GrassTileInfo>>;
@@ -65,32 +70,11 @@ abstract class Board {
 
    // @Cleanup: This function gets called by Game.ts, which gets called by LoadingScreen.tsx, with these same parameters. This feels unnecessary.
    public static initialise(initialGameDataPacket: InitialGameDataPacket): void {
-      const edgeTilesRecord: Record<number, Record<number, Tile>> = {};
-      for (const tileData of initialGameDataPacket.edgeTiles) {
-         if (!edgeTilesRecord.hasOwnProperty(tileData.x)) {
-            edgeTilesRecord[tileData.x] = {};
-         }
-         edgeTilesRecord[tileData.x][tileData.y] = new Tile(tileData.x, tileData.y, tileData.type, tileData.biome, tileData.isWall);
-      }
-
-      const tiles = Client.parseServerTileDataArray(initialGameDataPacket.tiles);
-      
-      // Combine the tiles and edge tiles
-      this.tiles = [];
-      for (let tileY = -Settings.EDGE_GENERATION_DISTANCE; tileY < Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE; tileY++) {
-         for (let tileX = -Settings.EDGE_GENERATION_DISTANCE; tileX < Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE; tileX++) {
-            if (tileX >= 0 && tileX < Settings.BOARD_DIMENSIONS && tileY >= 0 && tileY < Settings.BOARD_DIMENSIONS) {
-               this.tiles.push(tiles[tileX][tileY]);
-            } else {
-               this.tiles.push(edgeTilesRecord[tileX][tileY]);
-            }
-         }
-      }
+      this.tiles = initialGameDataPacket.tiles;
 
       // Flag all tiles which border water or walls
       for (let i = 0; i < this.tiles.length; i++) {
          const tile = this.tiles[i];
-
          if (tile.isWall) {
             const tileX = i % (Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE * 2) - Settings.EDGE_GENERATION_DISTANCE;
             const tileY = Math.floor(i / (Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE * 2)) - Settings.EDGE_GENERATION_DISTANCE;
@@ -175,8 +159,8 @@ abstract class Board {
    public static tickIntervalHasPassed(intervalSeconds: number): boolean {
       const ticksPerInterval = intervalSeconds * Settings.TPS;
       
-      const previousCheck = (Board.ticks - 1) / ticksPerInterval;
-      const check = Board.ticks / ticksPerInterval;
+      const previousCheck = (Board.serverTicks - 1) / ticksPerInterval;
+      const check = Board.serverTicks / ticksPerInterval;
       return Math.floor(previousCheck) !== Math.floor(check);
    }
 
@@ -190,15 +174,26 @@ abstract class Board {
          this.players.push(entity as Player);
       }
 
+      // @Temporary? useless now?
       addEntityToRenderHeightMap(entity);
-      addRenderable(RenderableType.entity, entity);
+
+      const renderLayer = getEntityRenderLayer(entity);
+      if (renderLayerIsChunkRendered(renderLayer)) {
+         registerChunkRenderedEntity(entity, renderLayer);
+      } else {
+         addRenderable(RenderableType.entity, entity, renderLayer);
+      }
    }
 
    public static removeEntity(entity: Entity, isDeath: boolean): void {
-      if (typeof entity === "undefined") {
-         throw new Error("Tried to remove an undefined entity.");
+      const renderLayer = getEntityRenderLayer(entity);
+      if (renderLayerIsChunkRendered(renderLayer)) {
+         removeChunkRenderedEntity(entity, renderLayer);
+      } else {
+         removeRenderable(entity, renderLayer);
       }
- 
+      removeEntityFromDirtyArray(entity);
+
       delete Board.entityRecord[entity.id];
 
       if (isDeath) {
@@ -219,15 +214,22 @@ abstract class Board {
             component.onRemove();
          }
       }
+
+      // Remove from component arrays
+      const componentArrays = getComponentArrays();
+      for (let i = 0; i < componentArrays.length; i++) {
+         const componentArray = componentArrays[i];
+         if (componentArray.hasComponent(entity.id)) {
+            componentArray.removeComponent(entity.id);
+         }
+      }
    
       this.entities.delete(entity);
-
-      removeRenderable(entity);
-      removeEntityFromBuffer(entity);
    
-      this.numVisibleRenderParts -= entity.allRenderParts.length;
+      this.numVisibleRenderParts -= entity.allRenderThings.length;
    }
 
+   // @Cleanup: Copy and paste
    public static resolvePlayerCollisions(): void {
       const player = Player.instance!;
       const transformComponent = player.getServerComponent(ServerComponentType.transform);
@@ -256,7 +258,7 @@ abstract class Board {
                         } else {
                            // @Hack
                            if (otherTransformComponent.collisionBit === COLLISION_BITS.plants) {
-                              latencyGameState.lastPlantCollisionTicks = Board.ticks;
+                              latencyGameState.lastPlantCollisionTicks = Board.serverTicks;
                            }
                            break;
                         }
@@ -311,7 +313,7 @@ abstract class Board {
                         } else {
                            // @Hack
                            if (otherTransformComponent.collisionBit === COLLISION_BITS.plants) {
-                              latencyGameState.lastPlantCollisionTicks = Board.ticks;
+                              latencyGameState.lastPlantCollisionTicks = Board.serverTicks;
                            }
                            break;
                         }
@@ -407,15 +409,34 @@ abstract class Board {
 
    /** Ticks all game objects without updating them */
    public static tickEntities(): void {
-      for (const entity of this.entities) {
-         entity.tick();
+      const componentArrays = getComponentArrays();
+      
+      for (let i = 0; i < componentArrays.length; i++) {
+         const componentArray = componentArrays[i];
+         if (typeof componentArray.onTick !== "undefined") {
+            for (let j = 0; j < componentArray.activeComponents.length; j++) {
+               const component = componentArray.activeComponents[j];
+               const entity = componentArray.activeEntities[j];
+               componentArray.onTick(component, entity);
+            }
+         }
+         
+         componentArray.deactivateQueue();
       }
    }
 
    public static updateEntities(): void {
-      for (const entity of this.entities) {
-         entity.tick();
-         entity.update();
+      const componentArrays = getComponentArrays();
+      
+      for (let i = 0; i < componentArrays.length; i++) {
+         const componentArray = componentArrays[i];
+         if (typeof componentArray.onUpdate !== "undefined") {
+            for (let j = 0; j < componentArray.components.length; j++) {
+               const component = componentArray.components[j];
+               // @Temporary @Hack
+               componentArray.onUpdate(component, 0);
+            }
+         }
       }
    }
 
@@ -437,6 +458,14 @@ abstract class Board {
 
    public static tileIsInBoard(tileX: number, tileY: number): boolean {
       return tileX >= 0 && tileX < Settings.BOARD_DIMENSIONS && tileY >= 0 && tileY < Settings.BOARD_DIMENSIONS;
+   }
+
+   public static getTileX(tileIndex: number): number {
+      return tileIndex % Settings.FULL_BOARD_DIMENSIONS - Settings.EDGE_GENERATION_DISTANCE;
+   }
+
+   public static getTileY(tileIndex: number): number {
+      return Math.floor(tileIndex / Settings.FULL_BOARD_DIMENSIONS) - Settings.EDGE_GENERATION_DISTANCE;
    }
 
    public static getWorldInfo(): WorldInfo {

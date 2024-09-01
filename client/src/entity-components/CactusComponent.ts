@@ -6,6 +6,7 @@ import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { createFlowerParticle } from "../particles";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { PacketReader } from "webgl-test-shared/dist/packets";
+import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 
 export const CACTUS_RADIUS = 40;
 
@@ -86,7 +87,7 @@ class CactusComponent extends ServerComponent {
          const flowerInfo = data.flowers[i];
 
          const renderPart = new TexturedRenderPart(
-            this.entity,
+            null,
             3 + Math.random(),
             flowerInfo.rotation,
             getTextureArrayIndex(getFlowerTextureSource(flowerInfo.type, flowerInfo.size))
@@ -94,7 +95,7 @@ class CactusComponent extends ServerComponent {
          const offsetDirection = flowerInfo.column * Math.PI / 4;
          renderPart.offset.x = flowerInfo.height * Math.sin(offsetDirection);
          renderPart.offset.y = flowerInfo.height * Math.cos(offsetDirection);
-         this.entity.attachRenderPart(renderPart);
+         this.entity.attachRenderThing(renderPart);
       }
 
       // Limbs
@@ -102,14 +103,14 @@ class CactusComponent extends ServerComponent {
          const limbInfo = data.limbs[i];
 
          const limbRenderPart = new TexturedRenderPart(
-            this.entity,
+            null,
             Math.random(),
             2 * Math.PI * Math.random(),
             getTextureArrayIndex("entities/cactus/cactus-limb.png")
          )
          limbRenderPart.offset.x = CACTUS_RADIUS * Math.sin(limbInfo.direction);
          limbRenderPart.offset.y = CACTUS_RADIUS * Math.cos(limbInfo.direction);
-         this.entity.attachRenderPart(limbRenderPart);
+         this.entity.attachRenderThing(limbRenderPart);
          
          if (typeof limbInfo.flower !== "undefined") {
             const flowerInfo = limbInfo.flower;
@@ -122,7 +123,7 @@ class CactusComponent extends ServerComponent {
             )
             flowerRenderPart.offset.x = flowerInfo.height * Math.sin(flowerInfo.direction);
             flowerRenderPart.offset.y = flowerInfo.height * Math.cos(flowerInfo.direction);
-            this.entity.attachRenderPart(flowerRenderPart);
+            this.entity.attachRenderThing(flowerRenderPart);
          }
       }
    }
@@ -170,3 +171,5 @@ class CactusComponent extends ServerComponent {
 }
 
 export default CactusComponent;
+
+export const CactusComponentArray = new ComponentArray<CactusComponent>(ComponentArrayType.server, ServerComponentType.cactus, true, {});

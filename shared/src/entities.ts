@@ -40,7 +40,7 @@ export const enum EntityType {
    researchBench,
    wall,
    slimeSpit,
-   spitPoison,
+   spitPoisonArea,
    door,
    battleaxeProjectile,
    golem,
@@ -64,7 +64,9 @@ export const enum EntityType {
    stonecarvingTable,
    grassStrand,
    decoration,
-   reed
+   reed,
+   lilypad,
+   fibrePlant
 }
 
 export const EntityTypeString: Record<EntityType, string> = {
@@ -106,7 +108,7 @@ export const EntityTypeString: Record<EntityType, string> = {
    [EntityType.researchBench]: "research bench",
    [EntityType.wall]: "wall",
    [EntityType.slimeSpit]: "slime spit",
-   [EntityType.spitPoison]: "spit poison",
+   [EntityType.spitPoisonArea]: "spit poison",
    [EntityType.door]: "door",
    [EntityType.battleaxeProjectile]: "battleaxe projectile",
    [EntityType.golem]: "golem",
@@ -130,7 +132,9 @@ export const EntityTypeString: Record<EntityType, string> = {
    [EntityType.stonecarvingTable]: "stonecarving table",
    [EntityType.grassStrand]: "grass strand",
    [EntityType.decoration]: "decoration",
-   [EntityType.reed]: "reed"
+   [EntityType.reed]: "reed",
+   [EntityType.lilypad]: "lilypad",
+   [EntityType.fibrePlant]: "fibre plant"
 };
 
 export const NUM_ENTITY_TYPES = Object.keys(EntityTypeString).length;

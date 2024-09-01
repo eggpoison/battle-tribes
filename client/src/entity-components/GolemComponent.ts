@@ -1,4 +1,4 @@
-import { GolemComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { Point } from "webgl-test-shared/dist/utils";
 import ServerComponent from "./ServerComponent";
@@ -12,6 +12,7 @@ import { CircularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { RenderPart } from "../render-parts/render-parts";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { PacketReader } from "webgl-test-shared/dist/packets";
+import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 
 const ANGRY_SOUND_INTERVAL_TICKS = Settings.TPS * 3;
 
@@ -82,7 +83,7 @@ class GolemComponent extends ServerComponent {
    private readonly eyeRenderParts = new Array<RenderPart>();
    private readonly eyeLights = new Array<Light>();
 
-   private wakeProgress: number;
+   public wakeProgress: number;
    
    constructor(entity: Entity, reader: PacketReader) {
       super(entity);
@@ -91,35 +92,6 @@ class GolemComponent extends ServerComponent {
       reader.padOffset(2 * Float32Array.BYTES_PER_ELEMENT);
 
       // @Incomplete
-   }
-
-   public tick(): void {
-      const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
-      const physicsComponent = this.entity.getServerComponent(ServerComponentType.physics);
-
-      if (this.wakeProgress > 0 && this.wakeProgress < 1) {
-         for (let i = 0; i < transformComponent.hitboxes.length; i++) {
-            const hitbox = transformComponent.hitboxes[i] as CircularHitbox;
-
-            const offsetDirection = 2 * Math.PI * Math.random();
-            const x = hitbox.position.x + hitbox.radius * Math.sin(offsetDirection);
-            const y = hitbox.position.y + hitbox.radius * Math.cos(offsetDirection);
-            createRockSpeckParticle(x, y, 0, physicsComponent.velocity.x, physicsComponent.velocity.y, ParticleRenderLayer.low);
-         }
-      } else if (this.wakeProgress === 1) {
-         for (let i = 0; i < transformComponent.hitboxes.length; i++) {
-            if (Math.random() >= 6 / Settings.TPS) {
-               continue;
-            }
-
-            const hitbox = transformComponent.hitboxes[i] as CircularHitbox;
-
-            const offsetDirection = 2 * Math.PI * Math.random();
-            const x = hitbox.position.x + hitbox.radius * Math.sin(offsetDirection);
-            const y = hitbox.position.y + hitbox.radius * Math.cos(offsetDirection);
-            createRockSpeckParticle(x, y, 0, physicsComponent.velocity.x, physicsComponent.velocity.y, ParticleRenderLayer.low);
-         }
-      }
    }
 
    public padData(reader: PacketReader): void {
@@ -146,14 +118,14 @@ class GolemComponent extends ServerComponent {
          const size = getHitboxSize(hitbox);
    
          const renderPart = new TexturedRenderPart(
-            this.entity,
+            null,
             getZIndex(size),
             2 * Math.PI * Math.random(),
             getTextureArrayIndex(getTextureSource(size))
          );
          renderPart.offset.x = hitbox.offset.x;
          renderPart.offset.y = hitbox.offset.y;
-         this.entity.attachRenderPart(renderPart);
+         this.entity.attachRenderThing(renderPart);
          this.rockRenderParts.push(renderPart);
    
          if (size === GolemRockSize.large) {
@@ -168,7 +140,7 @@ class GolemComponent extends ServerComponent {
                eyeRenderPart.offset.x = 20 * (i === 0 ? -1 : 1);
                eyeRenderPart.offset.y = 17;
                eyeRenderPart.inheritParentRotation = false;
-               this.entity.attachRenderPart(eyeRenderPart);
+               this.entity.attachRenderThing(eyeRenderPart);
                this.eyeRenderParts.push(eyeRenderPart);
    
                // Create eye light
@@ -206,3 +178,36 @@ class GolemComponent extends ServerComponent {
 }
 
 export default GolemComponent;
+
+export const GolemComponentArray = new ComponentArray<GolemComponent>(ComponentArrayType.server, ServerComponentType.golem, true, {
+   onTick: onTick
+});
+
+function onTick(golemComponent: GolemComponent): void {
+   const transformComponent = golemComponent.entity.getServerComponent(ServerComponentType.transform);
+   const physicsComponent = golemComponent.entity.getServerComponent(ServerComponentType.physics);
+
+   if (golemComponent.wakeProgress > 0 && golemComponent.wakeProgress < 1) {
+      for (let i = 0; i < transformComponent.hitboxes.length; i++) {
+         const hitbox = transformComponent.hitboxes[i] as CircularHitbox;
+
+         const offsetDirection = 2 * Math.PI * Math.random();
+         const x = hitbox.position.x + hitbox.radius * Math.sin(offsetDirection);
+         const y = hitbox.position.y + hitbox.radius * Math.cos(offsetDirection);
+         createRockSpeckParticle(x, y, 0, physicsComponent.velocity.x, physicsComponent.velocity.y, ParticleRenderLayer.low);
+      }
+   } else if (golemComponent.wakeProgress === 1) {
+      for (let i = 0; i < transformComponent.hitboxes.length; i++) {
+         if (Math.random() >= 6 / Settings.TPS) {
+            continue;
+         }
+
+         const hitbox = transformComponent.hitboxes[i] as CircularHitbox;
+
+         const offsetDirection = 2 * Math.PI * Math.random();
+         const x = hitbox.position.x + hitbox.radius * Math.sin(offsetDirection);
+         const y = hitbox.position.y + hitbox.radius * Math.cos(offsetDirection);
+         createRockSpeckParticle(x, y, 0, physicsComponent.velocity.x, physicsComponent.velocity.y, ParticleRenderLayer.low);
+      }
+   }
+}

@@ -18,7 +18,7 @@ import { calculateAttackEffectiveness } from "webgl-test-shared/dist/entity-dama
 import { clearTribesmanPath, getBestToolItemSlot, getTribesmanAttackOffset, getTribesmanAttackRadius, getTribesmanDesiredAttackRange, getTribesmanRadius, getTribesmanSlowAcceleration, pathfindToPosition, pathToEntityExists } from "./tribesman-ai-utils";
 import { attemptToRepairBuildings } from "./tribesman-structures";
 import { InventoryName, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, BowItemInfo } from "webgl-test-shared/dist/items/items";
-import { TransformComponentArray } from "../../../components/TransformComponent";
+import { getAgeTicks, TransformComponentArray } from "../../../components/TransformComponent";
 
 const enum Vars {
    BOW_LINE_OF_SIGHT_WAIT_TIME = 0.5 * Settings.TPS,
@@ -339,7 +339,8 @@ export function huntEntity(tribesman: EntityID, huntedEntity: EntityID, isAggres
    if (hammerItemSlot !== null) {
       // If there isn't a path to the entity, try to repair buildings
       // @Incomplete: This will cause a delay after the tribesman finishes repairing the building.
-      if (transformComponent.ageTicks % (Settings.TPS / 2) === 0) {
+      const ageTicks = getAgeTicks(transformComponent);
+      if (ageTicks % (Settings.TPS / 2) === 0) {
          const tribeComponent = TribeComponentArray.getComponent(tribesman);
          const pathExists = pathToEntityExists(tribesman, huntedEntity, tribeComponent.tribe, getTribesmanRadius(tribesman));
          if (!pathExists) {

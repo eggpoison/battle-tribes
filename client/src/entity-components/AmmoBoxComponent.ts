@@ -1,17 +1,17 @@
-import { AmmoBoxComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType, TurretAmmoType } from "webgl-test-shared/dist/components";
 import { rotateXAroundOrigin, rotateYAroundOrigin } from "webgl-test-shared/dist/utils";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { BALLISTA_AMMO_BOX_OFFSET_X, BALLISTA_AMMO_BOX_OFFSET_Y } from "../utils";
 import Board from "../Board";
-import { BallistaAmmoType } from "webgl-test-shared/dist/items/items";
 import { RenderPart } from "../render-parts/render-parts";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { PacketReader } from "webgl-test-shared/dist/packets";
+import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 
 class AmmoBoxComponent extends ServerComponent {
-   public ammoType: BallistaAmmoType | null;
+   public ammoType: TurretAmmoType | null;
    public ammoRemaining: number;
 
    private ammoWarningRenderPart: RenderPart | null = null;
@@ -26,7 +26,7 @@ class AmmoBoxComponent extends ServerComponent {
       this.ammoRemaining = ammoRemaining;
    }
 
-   private updateAmmoType(ammoType: BallistaAmmoType | null): void {
+   private updateAmmoType(ammoType: TurretAmmoType | null): void {
       if (ammoType === null) {
          this.ammoType = null;
 
@@ -34,7 +34,7 @@ class AmmoBoxComponent extends ServerComponent {
             const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
             
             this.ammoWarningRenderPart = new TexturedRenderPart(
-               this.entity,
+               null,
                999,
                0,
                getTextureArrayIndex("entities/ballista/ammo-warning.png")
@@ -42,10 +42,10 @@ class AmmoBoxComponent extends ServerComponent {
             this.ammoWarningRenderPart.offset.x = rotateXAroundOrigin(BALLISTA_AMMO_BOX_OFFSET_X, BALLISTA_AMMO_BOX_OFFSET_Y, transformComponent.rotation);
             this.ammoWarningRenderPart.offset.y = rotateYAroundOrigin(BALLISTA_AMMO_BOX_OFFSET_X, BALLISTA_AMMO_BOX_OFFSET_Y, transformComponent.rotation);
             this.ammoWarningRenderPart.inheritParentRotation = false;
-            this.entity.attachRenderPart(this.ammoWarningRenderPart);
+            this.entity.attachRenderThing(this.ammoWarningRenderPart);
          }
 
-         this.ammoWarningRenderPart.opacity = (Math.sin(Board.ticks / 15) * 0.5 + 0.5) * 0.4 + 0.4;
+         this.ammoWarningRenderPart.opacity = (Math.sin(Board.serverTicks / 15) * 0.5 + 0.5) * 0.4 + 0.4;
          
          return;
       }
@@ -77,3 +77,5 @@ class AmmoBoxComponent extends ServerComponent {
 }
 
 export default AmmoBoxComponent;
+
+export const AmmoBoxComponentArray = new ComponentArray<AmmoBoxComponent>(ComponentArrayType.server, ServerComponentType.ammoBox, true, {});

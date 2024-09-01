@@ -7,6 +7,7 @@ import Entity from "../Entity";
 import { RenderPart } from "../render-parts/render-parts";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { PacketReader } from "webgl-test-shared/dist/packets";
+import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 
 const BANNER_LAYER_DISTANCES = [34, 52, 65];
 
@@ -93,7 +94,7 @@ class TotemBannerComponent extends ServerComponent {
       }
 
       const renderPart = new TexturedRenderPart(
-         this.entity,
+         null,
          2,
          banner.direction,
          getTextureArrayIndex(`entities/tribe-ttem/${totemTextureSourceID}`)
@@ -101,9 +102,11 @@ class TotemBannerComponent extends ServerComponent {
       const bannerOffsetAmount = BANNER_LAYER_DISTANCES[banner.layer];
       renderPart.offset.x = bannerOffsetAmount * Math.sin(banner.direction);
       renderPart.offset.y = bannerOffsetAmount * Math.cos(banner.direction);
-      this.entity.attachRenderPart(renderPart);
+      this.entity.attachRenderThing(renderPart);
       this.bannerRenderParts[banner.hutNum] = renderPart;
    }
 }
 
 export default TotemBannerComponent;
+
+export const TotemBannerComponentArray = new ComponentArray<TotemBannerComponent>(ComponentArrayType.server, ServerComponentType.totemBanner, true, {});

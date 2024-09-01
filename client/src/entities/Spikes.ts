@@ -24,13 +24,13 @@ class Spikes extends Entity {
       }
 
       const mainRenderPart = new TexturedRenderPart(
-         this,
+         null,
          0,
          0,
          textureArrayIndex
       )
       mainRenderPart.addTag("buildingMaterialComponent:material");
-      this.attachRenderPart(mainRenderPart);
+      this.attachRenderThing(mainRenderPart);
       
       const transformComponent = this.getServerComponent(ServerComponentType.transform);
       if (transformComponent.ageTicks <= 0) {

@@ -9,17 +9,15 @@ import { YETI_SIZE } from "../entity-components/YetiComponent";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 class Yeti extends Entity {
-   private static readonly SNOW_THROW_OFFSET = 64;
-
    private static readonly BLOOD_POOL_SIZE = 30;
    private static readonly BLOOD_FOUNTAIN_INTERVAL = 0.15;
 
    constructor(id: number) {
       super(id, EntityType.yeti);
 
-      this.attachRenderPart(
+      this.attachRenderThing(
          new TexturedRenderPart(
-            this,
+            null,
             1,
             0,
             getTextureArrayIndex("entities/yeti/yeti.png")
@@ -28,45 +26,14 @@ class Yeti extends Entity {
 
       for (let i = 0; i < 2; i++) {
          const paw = new TexturedRenderPart(
-            this,
+            null,
             0,
             0,
             getTextureArrayIndex("entities/yeti/yeti-paw.png")
          );
          paw.addTag("yetiComponent:paw");
-         this.attachRenderPart(paw);
+         this.attachRenderThing(paw);
       }
-   }
-
-   public tick(): void {
-      super.tick();
-
-      const transformComponent = this.getServerComponent(ServerComponentType.transform);
-
-      // Create snow impact particles when the Yeti does a throw attack
-      const yetiComponent = this.getServerComponent(ServerComponentType.yeti);
-      if (yetiComponent.attackProgress === 0 && yetiComponent.lastAttackProgress !== 0) {
-         const offsetMagnitude = Yeti.SNOW_THROW_OFFSET + 20;
-         const impactPositionX = transformComponent.position.x + offsetMagnitude * Math.sin(transformComponent.rotation);
-         const impactPositionY = transformComponent.position.y + offsetMagnitude * Math.cos(transformComponent.rotation);
-         
-         for (let i = 0; i < 30; i++) {
-            const offsetMagnitude = randFloat(0, 20);
-            const offsetDirection = 2 * Math.PI * Math.random();
-            const positionX = impactPositionX + offsetMagnitude * Math.sin(offsetDirection);
-            const positionY = impactPositionY + offsetMagnitude * Math.cos(offsetDirection);
-            
-            createSnowParticle(positionX, positionY, randFloat(40, 100));
-         }
-
-         // White smoke particles
-         for (let i = 0; i < 10; i++) {
-            const spawnPositionX = impactPositionX;
-            const spawnPositionY = impactPositionY;
-            createWhiteSmokeParticle(spawnPositionX, spawnPositionY, 1);
-         }
-      }
-      yetiComponent.lastAttackProgress = yetiComponent.attackProgress;
    }
 
    protected onHit(hitData: HitData): void {

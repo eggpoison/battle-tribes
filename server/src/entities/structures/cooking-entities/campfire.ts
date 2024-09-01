@@ -2,7 +2,6 @@ import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/c
 import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { Point } from "webgl-test-shared/dist/utils";
-import { tickCookingEntity } from "./cooking-entity";
 import { createEmptyStructureConnectionInfo } from "webgl-test-shared/dist/structures";
 import { createCampfireHitboxes } from "webgl-test-shared/dist/hitboxes/entity-hitbox-creation";
 import { InventoryName } from "webgl-test-shared/dist/items/items";
@@ -18,6 +17,8 @@ type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.cooking;
 
 const LIFETIME_SECONDS = 30;
+
+// @Incomplete: Destroy campfire when remaining heat reaches 0
 
 export function createCampfireConfig(): ComponentConfig<ComponentTypes> {
    return {
@@ -71,9 +72,4 @@ export function createCampfireConfig(): ComponentConfig<ComponentTypes> {
          remainingHeatSeconds: LIFETIME_SECONDS
       }
    };
-}
-
-export function tickCampfire(campfire: EntityID): void {
-   // @Incomplete: Destroy campfire when remaining heat reaches 0
-   tickCookingEntity(campfire);
 }

@@ -33,7 +33,7 @@ import TribeWorker from "./entities/TribeWorker";
 import TribeWarrior from "./entities/TribeWarrior";
 import Wall from "./entities/Wall";
 import SlimeSpit from "./projectiles/SlimeSpit";
-import SpitPoison from "./projectiles/SpitPoison";
+import SpitPoisonArea from "./projectiles/SpitPoisonArea";
 import Door from "./entities/Door";
 import BattleaxeProjectile from "./projectiles/BattleaxeProjectile";
 import Golem from "./entities/Golem";
@@ -60,7 +60,9 @@ import SlingTurretRock from "./projectiles/SlingTurretRock";
 import BallistaWoodenBolt from "./projectiles/BallistaWoodenBolt";
 import GrassStrand from "./entities/GrassStrand";
 import Decoration from "./entities/Decoration";
-import Reed from "./entity-components/Reed";
+import Reed from "./entities/Reed";
+import Lilypad from "./entities/Lilypad";
+import FibrePlant from "./entities/FibrePlant";
 
 // @Cleanup: remove this and just have entities be a collection of components
 export function createEntity(entityID: EntityID, entityType: EntityType): Entity {
@@ -103,7 +105,7 @@ export function createEntity(entityID: EntityID, entityType: EntityType): Entity
       case EntityType.researchBench: return new ResearchBench(entityID);
       case EntityType.wall: return new Wall(entityID);
       case EntityType.slimeSpit: return new SlimeSpit(entityID);
-      case EntityType.spitPoison: return new SpitPoison(entityID);
+      case EntityType.spitPoisonArea: return new SpitPoisonArea(entityID);
       case EntityType.door: return new Door(entityID);
       case EntityType.battleaxeProjectile: return new BattleaxeProjectile(entityID);
       case EntityType.golem: return new Golem(entityID);
@@ -128,6 +130,8 @@ export function createEntity(entityID: EntityID, entityType: EntityType): Entity
       case EntityType.grassStrand: return new GrassStrand(entityID);
       case EntityType.decoration: return new Decoration(entityID);
       case EntityType.reed: return new Reed(entityID);
+      case EntityType.lilypad: return new Lilypad(entityID);
+      case EntityType.fibrePlant: return new FibrePlant(entityID);
       default: {
          const unreachable: never = entityType;
          return unreachable;

@@ -4,6 +4,7 @@ import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import { playSound } from "../sound";
 import { PacketReader } from "webgl-test-shared/dist/packets";
+import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 
 class DoorComponent extends ServerComponent {
    public toggleType: DoorToggleType;
@@ -38,3 +39,5 @@ class DoorComponent extends ServerComponent {
 }
 
 export default DoorComponent;
+
+export const DoorComponentArray = new ComponentArray<DoorComponent>(ComponentArrayType.server, ServerComponentType.door, true, {});

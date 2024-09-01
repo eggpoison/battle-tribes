@@ -2,13 +2,15 @@ import { createWebGLProgram, gl } from "../../webgl";
 import Board from "../../Board";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { angle, distance, rotateXAroundPoint, rotateYAroundPoint } from "webgl-test-shared/dist/utils";
-import { EntityType } from "webgl-test-shared/dist/entities";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
+import { HealingTotemComponentArray } from "../../entity-components/HealingTotemComponent";
+import { TransformComponentArray } from "../../entity-components/TransformComponent";
 
 export const HEALING_BEAM_THICKNESS = 32;
 
 let program: WebGLProgram;
+let vertexBuffer: WebGLBuffer;
+let vao: WebGLVertexArrayObject;
 
 export function createHealingBeamShaders(): void {
    const vertexShaderText = `#version 300 es
@@ -96,6 +98,24 @@ export function createHealingBeamShaders(): void {
 
    program = createWebGLProgram(gl, vertexShaderText, fragmentShaderText);
    bindUBOToProgram(gl, program, UBOBindingIndex.CAMERA);
+
+   vao = gl.createVertexArray()!;
+   gl.bindVertexArray(vao);
+   
+   vertexBuffer = gl.createBuffer()!;
+   gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+
+   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 7 * Float32Array.BYTES_PER_ELEMENT, 0);
+   gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 7 * Float32Array.BYTES_PER_ELEMENT, 2 * Float32Array.BYTES_PER_ELEMENT);
+   gl.vertexAttribPointer(2, 2, gl.FLOAT, false, 7 * Float32Array.BYTES_PER_ELEMENT, 4 * Float32Array.BYTES_PER_ELEMENT);
+   gl.vertexAttribPointer(3, 1, gl.FLOAT, false, 7 * Float32Array.BYTES_PER_ELEMENT, 6 * Float32Array.BYTES_PER_ELEMENT);
+
+   gl.enableVertexAttribArray(0);
+   gl.enableVertexAttribArray(1);
+   gl.enableVertexAttribArray(2);
+   gl.enableVertexAttribArray(3);
+
+   gl.bindVertexArray(null);
 }
 
 interface HealingBeam {
@@ -110,13 +130,12 @@ interface HealingBeam {
 const getVisibleHealingBeams = (): ReadonlyArray<HealingBeam> => {
    const beams = new Array<HealingBeam>();
    
-   for (const entity of Board.entities) {
-      if (entity.type !== EntityType.healingTotem) {
-         continue;
-      }
+   const entities = HealingTotemComponentArray.entities;
+   for (let i = 0; i < entities.length; i++) {
+      const entity = entities[i];
+      const healingTotemComponent = HealingTotemComponentArray.components[i];
 
-      const transformComponent = entity.getServerComponent(ServerComponentType.transform);
-      const healingTotemComponent = entity.getServerComponent(ServerComponentType.healingTotem);
+      const transformComponent = TransformComponentArray.getComponent(entity);
 
       for (let i = 0; i < healingTotemComponent.healingTargetsData.length; i++) {
          const healingTargetData = healingTotemComponent.healingTargetsData[i];
@@ -195,23 +214,16 @@ export function renderHealingBeams(): void {
 
    gl.enable(gl.BLEND);
    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
+   gl.bindVertexArray(vao);
    
-   const buffer = gl.createBuffer()!;
-   gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+   gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
-
-   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 7 * Float32Array.BYTES_PER_ELEMENT, 0);
-   gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 7 * Float32Array.BYTES_PER_ELEMENT, 2 * Float32Array.BYTES_PER_ELEMENT);
-   gl.vertexAttribPointer(2, 2, gl.FLOAT, false, 7 * Float32Array.BYTES_PER_ELEMENT, 4 * Float32Array.BYTES_PER_ELEMENT);
-   gl.vertexAttribPointer(3, 1, gl.FLOAT, false, 7 * Float32Array.BYTES_PER_ELEMENT, 6 * Float32Array.BYTES_PER_ELEMENT);
-
-   gl.enableVertexAttribArray(0);
-   gl.enableVertexAttribArray(1);
-   gl.enableVertexAttribArray(2);
-   gl.enableVertexAttribArray(3);
 
    gl.drawArrays(gl.TRIANGLES, 0, vertices.length / 7);
 
    gl.disable(gl.BLEND);
    gl.blendFunc(gl.ONE, gl.ZERO);
+
+   gl.bindVertexArray(null);
 }

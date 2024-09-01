@@ -89,11 +89,15 @@ export class InventoryUseComponent {
 }
 
 export const InventoryUseComponentArray = new ComponentArray<InventoryUseComponent>(ServerComponentType.inventoryUse, true, {
+   onTick: {
+      tickInterval: 1,
+      func: onTick
+   },
    getDataLength: getDataLength,
    addDataToPacket: addDataToPacket
 });
 
-export function tickInventoryUseComponent(entity: EntityID, inventoryUseComponent: InventoryUseComponent): void {
+function onTick(inventoryUseComponent: InventoryUseComponent, entity: EntityID): void {
    if (inventoryUseComponent.globalAttackCooldown > 0) {
       inventoryUseComponent.globalAttackCooldown--;
    }

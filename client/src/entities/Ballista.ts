@@ -13,9 +13,9 @@ class Ballista extends Entity {
       super(id, EntityType.ballista);
 
       // Base
-      this.attachRenderPart(
+      this.attachRenderThing(
          new TexturedRenderPart(
-            this,
+            null,
             0,
             0,
             getTextureArrayIndex("entities/ballista/base.png")
@@ -24,24 +24,24 @@ class Ballista extends Entity {
 
       // Ammo box
       const ammoBoxRenderPart = new TexturedRenderPart(
-         this,
+         null,
          1,
          Math.PI / 2,
          getTextureArrayIndex("entities/ballista/ammo-box.png")
       );
       ammoBoxRenderPart.offset.x = BALLISTA_AMMO_BOX_OFFSET_X;
       ammoBoxRenderPart.offset.y = BALLISTA_AMMO_BOX_OFFSET_Y;
-      this.attachRenderPart(ammoBoxRenderPart);
+      this.attachRenderThing(ammoBoxRenderPart);
 
       // Plate
       const plateRenderPart = new TexturedRenderPart(
-         this,
+         null,
          2,
          0,
          getTextureArrayIndex("entities/ballista/plate.png")
       );
       plateRenderPart.addTag("turretComponent:pivoting");
-      this.attachRenderPart(plateRenderPart);
+      this.attachRenderThing(plateRenderPart);
 
       // Shaft
       const shaftRenderPart = new TexturedRenderPart(
@@ -50,7 +50,7 @@ class Ballista extends Entity {
          0,
          getTextureArrayIndex("entities/ballista/shaft.png")
       );
-      this.attachRenderPart(shaftRenderPart);
+      this.attachRenderThing(shaftRenderPart);
 
       // Gears
       const gearRenderParts = new Array<RenderPart>();
@@ -65,7 +65,7 @@ class Ballista extends Entity {
          // @Speed: Garbage collection
          renderPart.offset.x = i === 0 ? BALLISTA_GEAR_X : -BALLISTA_GEAR_X;
          renderPart.offset.y = BALLISTA_GEAR_Y;
-         this.attachRenderPart(renderPart);
+         this.attachRenderThing(renderPart);
          gearRenderParts.push(renderPart);
       }
 
@@ -77,7 +77,7 @@ class Ballista extends Entity {
          getTextureArrayIndex("entities/ballista/crossbow-1.png")
       );
       crossbowRenderPart.addTag("turretComponent:aiming");
-      this.attachRenderPart(crossbowRenderPart);
+      this.attachRenderThing(crossbowRenderPart);
    }
 
    protected onHit(): void {

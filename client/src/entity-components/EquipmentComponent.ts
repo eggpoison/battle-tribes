@@ -5,6 +5,8 @@ import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { createFrostShieldBreakParticle } from "../particles";
 import { ArmourItemType, ItemType, GloveItemType, ItemTypeString, InventoryName } from "webgl-test-shared/dist/items/items";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
+import { ComponentArray, ComponentArrayType } from "./ComponentArray";
+import { ClientComponentType } from "./components";
 
 // @Incomplete
 // public genericUpdateFromData(entityData: EntityData<EntityType.player> | EntityData<EntityType.tribeWorker> | EntityData<EntityType.tribeWarrior>): void {
@@ -64,8 +66,8 @@ const getGloveTextureSource = (gloveType: ItemType): string => {
 }
 
 class EquipmentComponent extends Component {
-   private armourRenderPart: TexturedRenderPart | null = null;
-   private gloveRenderParts = new Array<TexturedRenderPart>();
+   public armourRenderPart: TexturedRenderPart | null = null;
+   public gloveRenderParts = new Array<TexturedRenderPart>();
    
    // @Incomplete
    public hasFrostShield: boolean;
@@ -77,72 +79,8 @@ class EquipmentComponent extends Component {
    }
 
    public onLoad(): void {
-      this.updateArmourRenderPart();
-      this.updateGloveRenderParts();
-   }
-
-   public tick(): void {
-      this.updateArmourRenderPart();
-      this.updateGloveRenderParts();
-   }
-
-   /** Updates the current armour render part based on the entity's inventory component */
-   public updateArmourRenderPart(): void {
-      const inventoryComponent = this.entity.getServerComponent(ServerComponentType.inventory);
-      const armourInventory = inventoryComponent.getInventory(InventoryName.armourSlot);
-      
-      const armour = armourInventory.itemSlots[1];
-      if (typeof armour !== "undefined") {
-         
-         if (this.armourRenderPart === null) {
-            this.armourRenderPart = new TexturedRenderPart(
-               this.entity,
-               3,
-               0,
-               getTextureArrayIndex(getArmourTextureSource(armour.type))
-            );
-            this.entity.attachRenderPart(this.armourRenderPart);
-         } else {
-            this.armourRenderPart.switchTextureSource(getArmourTextureSource(armour.type));
-         }
-      } else if (this.armourRenderPart !== null) {
-         this.entity.removeRenderPart(this.armourRenderPart);
-         this.armourRenderPart = null;
-      }
-   }
-
-   // @Cleanup: Copy and paste from armour
-   private updateGloveRenderParts(): void {
-      const inventoryComponent = this.entity.getServerComponent(ServerComponentType.inventory);
-      const gloveInventory = inventoryComponent.getInventory(InventoryName.gloveSlot);
-      
-      // @Incomplete: Make a glove for every hand
-      const glove = gloveInventory.itemSlots[1];
-      if (typeof glove !== "undefined") {
-         const inventoryUseComponent = this.entity.getServerComponent(ServerComponentType.inventoryUse);
-
-         if (this.gloveRenderParts.length === 0) {
-            for (let limbIdx = 0; limbIdx < inventoryUseComponent.useInfos.length; limbIdx++) {
-               const gloveRenderPart = new TexturedRenderPart(
-                  inventoryUseComponent.limbRenderParts[limbIdx],
-                  1.1,
-                  0,
-                  getTextureArrayIndex(getGloveTextureSource(glove.type))
-               );
-               this.entity.attachRenderPart(gloveRenderPart);
-               this.gloveRenderParts.push(gloveRenderPart);
-            }
-         } else {
-            for (let limbIdx = 0; limbIdx < inventoryUseComponent.useInfos.length; limbIdx++) {
-               this.gloveRenderParts[limbIdx].switchTextureSource(getGloveTextureSource(glove.type));
-            }
-         }
-      } else {
-         while (this.gloveRenderParts.length > 0) {
-            this.entity.removeRenderPart(this.gloveRenderParts[0]);
-            this.gloveRenderParts.splice(0, 1);
-         }
-      }
+      updateArmourRenderPart(this);
+      updateGloveRenderParts(this);
    }
 
    public createFrostShieldBreakParticles(): void {
@@ -154,3 +92,71 @@ class EquipmentComponent extends Component {
 }
 
 export default EquipmentComponent;
+
+export const EquipmentComponentArray = new ComponentArray<EquipmentComponent>(ComponentArrayType.client, ClientComponentType.equipment, true, {
+   onTick: onTick
+});
+
+/** Updates the current armour render part based on the entity's inventory component */
+const updateArmourRenderPart = (equipmentComponent: EquipmentComponent): void => {
+   const inventoryComponent = equipmentComponent.entity.getServerComponent(ServerComponentType.inventory);
+   const armourInventory = inventoryComponent.getInventory(InventoryName.armourSlot);
+   
+   const armour = armourInventory.itemSlots[1];
+   if (typeof armour !== "undefined") {
+      
+      if (equipmentComponent.armourRenderPart === null) {
+         equipmentComponent.armourRenderPart = new TexturedRenderPart(
+            null,
+            3,
+            0,
+            getTextureArrayIndex(getArmourTextureSource(armour.type))
+         );
+         equipmentComponent.entity.attachRenderThing(equipmentComponent.armourRenderPart);
+      } else {
+         equipmentComponent.armourRenderPart.switchTextureSource(getArmourTextureSource(armour.type));
+      }
+   } else if (equipmentComponent.armourRenderPart !== null) {
+      equipmentComponent.entity.removeRenderPart(equipmentComponent.armourRenderPart);
+      equipmentComponent.armourRenderPart = null;
+   }
+}
+
+// @Cleanup: Copy and paste from armour
+const updateGloveRenderParts = (equipmentComponent: EquipmentComponent): void => {
+   const inventoryComponent = equipmentComponent.entity.getServerComponent(ServerComponentType.inventory);
+   const gloveInventory = inventoryComponent.getInventory(InventoryName.gloveSlot);
+   
+   // @Incomplete: Make a glove for every hand
+   const glove = gloveInventory.itemSlots[1];
+   if (typeof glove !== "undefined") {
+      const inventoryUseComponent = equipmentComponent.entity.getServerComponent(ServerComponentType.inventoryUse);
+
+      if (equipmentComponent.gloveRenderParts.length === 0) {
+         for (let limbIdx = 0; limbIdx < inventoryUseComponent.useInfos.length; limbIdx++) {
+            const gloveRenderPart = new TexturedRenderPart(
+               inventoryUseComponent.limbRenderParts[limbIdx],
+               1.1,
+               0,
+               getTextureArrayIndex(getGloveTextureSource(glove.type))
+            );
+            equipmentComponent.entity.attachRenderThing(gloveRenderPart);
+            equipmentComponent.gloveRenderParts.push(gloveRenderPart);
+         }
+      } else {
+         for (let limbIdx = 0; limbIdx < inventoryUseComponent.useInfos.length; limbIdx++) {
+            equipmentComponent.gloveRenderParts[limbIdx].switchTextureSource(getGloveTextureSource(glove.type));
+         }
+      }
+   } else {
+      while (equipmentComponent.gloveRenderParts.length > 0) {
+         equipmentComponent.entity.removeRenderPart(equipmentComponent.gloveRenderParts[0]);
+         equipmentComponent.gloveRenderParts.splice(0, 1);
+      }
+   }
+}
+
+function onTick(equipmentComponent: EquipmentComponent): void {
+   updateArmourRenderPart(equipmentComponent);
+   updateGloveRenderParts(equipmentComponent);
+}

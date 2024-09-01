@@ -10,16 +10,12 @@ import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { ComponentConfig } from "../../components";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
 import { HitboxCollisionType, RectangularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
-import { ItemType } from "webgl-test-shared/dist/items/items";
 import { TransformComponentArray } from "../../components/TransformComponent";
-import { createItemEntityConfig } from "../item-entity";
-import { createEntityFromConfig } from "../../Entity";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics
-   | ServerComponentType.throwingProjectile;
-
-const DROP_VELOCITY = 400;
+   | ServerComponentType.throwingProjectile
+   | ServerComponentType.spearProjectile;
 
 export function createSpearProjectileConfig(): ComponentConfig<ComponentTypes> {
    return {
@@ -40,34 +36,17 @@ export function createSpearProjectileConfig(): ComponentConfig<ComponentTypes> {
          isImmovable: false
       },
       [ServerComponentType.throwingProjectile]: {
-         tribeMemberID: 0,
+         tribeMember: 0,
          itemID: null
-      }
+      },
+      [ServerComponentType.spearProjectile]: {}
    };
-}
-
-export function tickSpearProjectile(spear: EntityID): void {
-   const physicsComponent = PhysicsComponentArray.getComponent(spear);
-
-   if (physicsComponent.velocity.lengthSquared() <= DROP_VELOCITY * DROP_VELOCITY) {
-      const transformComponent = TransformComponentArray.getComponent(spear);
-
-      const config = createItemEntityConfig();
-      config[ServerComponentType.transform].position.x = transformComponent.position.x;
-      config[ServerComponentType.transform].position.y = transformComponent.position.y;
-      config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
-      config[ServerComponentType.item].itemType = ItemType.spear;
-      config[ServerComponentType.item].amount = 1;
-      createEntityFromConfig(config);
-      
-      Board.destroyEntity(spear);
-   }
 }
 
 export function onSpearProjectileCollision(spear: EntityID, collidingEntity: EntityID, collisionPoint: Point): void {
    // Don't hurt friendlies
    const spearComponent = ThrowingProjectileComponentArray.getComponent(spear);
-   if (Board.hasEntity(spearComponent.tribeMemberID) && getEntityRelationship(spearComponent.tribeMemberID, collidingEntity) === EntityRelationship.friendly) {
+   if (Board.hasEntity(spearComponent.tribeMember) && getEntityRelationship(spearComponent.tribeMember, collidingEntity) === EntityRelationship.friendly) {
       return;
    }
    
@@ -75,7 +54,7 @@ export function onSpearProjectileCollision(spear: EntityID, collidingEntity: Ent
       return;
    }
 
-   const tribeMember = Board.hasEntity(spearComponent.tribeMemberID) ? spearComponent.tribeMemberID : null;
+   const tribeMember = Board.hasEntity(spearComponent.tribeMember) ? spearComponent.tribeMember : null;
 
    const physicsComponent = PhysicsComponentArray.getComponent(spear);
    const damage = Math.floor(physicsComponent.velocity.length() / 140);

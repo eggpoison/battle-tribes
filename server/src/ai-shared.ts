@@ -1,9 +1,8 @@
 import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { TileType } from "webgl-test-shared/dist/tiles";
-import { angle, curveWeight, Point, lerp, rotateXAroundPoint, rotateYAroundPoint, distance, distBetweenPointAndRectangle } from "webgl-test-shared/dist/utils";
+import { angle, curveWeight, Point, lerp, rotateXAroundPoint, rotateYAroundPoint, distance, distBetweenPointAndRectangle, TileIndex } from "webgl-test-shared/dist/utils";
 import Board, { raytraceHasWallTile } from "./Board";
-import Tile from "./Tile";
 import { PhysicsComponent, PhysicsComponentArray } from "./components/PhysicsComponent";
 import { getEntityPathfindingGroupID } from "./pathfinding";
 import { DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
@@ -302,8 +301,8 @@ export function runHerdAI(entity: EntityID, herdMembers: ReadonlyArray<EntityID>
 }
 
 /** Gets all tiles within a given distance from a position */
-export function getPositionRadialTiles(position: Point, radius: number): Array<Tile> {
-   const tiles = new Array<Tile>();
+export function getPositionRadialTiles(position: Point, radius: number): Array<TileIndex> {
+   const tiles = new Array<TileIndex>();
 
    const minTileX = Math.max(Math.min(Math.floor((position.x - radius) / Settings.TILE_SIZE), Settings.BOARD_DIMENSIONS - 1), 0);
    const maxTileX = Math.max(Math.min(Math.floor((position.x + radius) / Settings.TILE_SIZE), Settings.BOARD_DIMENSIONS - 1), 0);
@@ -314,14 +313,22 @@ export function getPositionRadialTiles(position: Point, radius: number): Array<T
 
    for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
       for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
-         const tile = Board.getTile(tileX, tileY);
-
-         // Don't try to wander to wall tiles or water
-         if (tile.isWall || tile.type === TileType.water) continue;
+         // Don't try to wander to wall tiles
+         const isWall = Board.getTileIsWall(tileX, tileY);
+         if (isWall) {
+            continue;
+         }
+         
+         // Don't try to wander to water
+         const tileType = Board.getTileType(tileX, tileY);
+         if (tileType === TileType.water) {
+            continue;
+         }
 
          const distanceSquared = Math.pow(position.x - tileX * Settings.TILE_SIZE, 2) + Math.pow(position.y - tileY * Settings.TILE_SIZE, 2);
          if (distanceSquared <= radiusSquared) {
-            tiles.push(tile);
+            const tileIndex = Board.getTileIndexIncludingEdges(tileX, tileY);
+            tiles.push(tileIndex);
          }
       }
    }
@@ -330,8 +337,8 @@ export function getPositionRadialTiles(position: Point, radius: number): Array<T
 }
 
 /** Gets all tiles within a given distance from a position */
-export function getAllowedPositionRadialTiles(position: Point, radius: number, validTileTargets: ReadonlyArray<TileType>): Array<Tile> {
-   const tiles = new Array<Tile>();
+export function getAllowedPositionRadialTiles(position: Point, radius: number, validTileTargets: ReadonlyArray<TileType>): Array<TileIndex> {
+   const tiles = new Array<TileIndex>();
 
    const minTileX = Math.max(Math.min(Math.floor((position.x - radius) / Settings.TILE_SIZE), Settings.BOARD_DIMENSIONS - 1), 0);
    const maxTileX = Math.max(Math.min(Math.floor((position.x + radius) / Settings.TILE_SIZE), Settings.BOARD_DIMENSIONS - 1), 0);
@@ -342,14 +349,22 @@ export function getAllowedPositionRadialTiles(position: Point, radius: number, v
 
    for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
       for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
-         const tile = Board.getTile(tileX, tileY);
-
-         // Don't try to wander to wall tiles or disallowed tiles
-         if (tile.isWall || validTileTargets.indexOf(tile.type) === -1) continue;
+         // Don't try to wander to wall tiles
+         const isWall = Board.getTileIsWall(tileX, tileY);
+         if (isWall) {
+            continue;
+         }
+         
+         // Don't try to wander to disallowed tiles
+         const tileType = Board.getTileType(tileX, tileY);
+         if (validTileTargets.indexOf(tileType) === -1) {
+            continue;
+         }
 
          const distanceSquared = Math.pow(position.x - tileX * Settings.TILE_SIZE, 2) + Math.pow(position.y - tileY * Settings.TILE_SIZE, 2);
          if (distanceSquared <= radiusSquared) {
-            tiles.push(tile);
+            const tileIndex = Board.getTileIndexIncludingEdges(tileX, tileY);
+            tiles.push(tileIndex);
          }
       }
    }

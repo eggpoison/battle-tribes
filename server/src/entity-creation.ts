@@ -15,7 +15,7 @@ import { createTombstoneConfig } from "./entities/tombstone";
 import { createTreeConfig } from "./entities/resources/tree";
 import { createYetiConfig } from "./entities/mobs/yeti";
 import { createZombieConfig } from "./entities/mobs/zombie";
-import { createSpitPoisonConfig } from "./entities/projectiles/spit-poison";
+import { createSpitPoisonAreaConfig } from "./entities/projectiles/spit-poison-area";
 import { createGolemConfig } from "./entities/mobs/golem";
 import { createPebblumConfig } from "./entities/mobs/pebblum";
 import { createTribeWorkerConfig } from "./entities/tribes/tribe-worker";
@@ -62,6 +62,8 @@ import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { createGrassStrandConfig } from "./entities/grass-strand";
 import { createDecorationConfig } from "./entities/decoration";
 import { createReedConfig } from "./entities/reed";
+import { createLilypadConfig } from "./entities/lilypad";
+import { createFibrePlantConfig } from "./entities/resources/fibre-plant";
 
 // @Robustness: from the given entity type, deduce which component params will be returned.
 // - Will require defining the component configs in a variable to be analysed at compile-time, not in functions
@@ -83,7 +85,7 @@ export function createEntityConfig(entityType: EntityType): ComponentConfig<Serv
       case EntityType.tree: return createTreeConfig() as any;
       case EntityType.yeti: return createYetiConfig() as any;
       case EntityType.zombie: return createZombieConfig() as any;
-      case EntityType.spitPoison: return createSpitPoisonConfig() as any;
+      case EntityType.spitPoisonArea: return createSpitPoisonAreaConfig() as any;
       case EntityType.golem: return createGolemConfig() as any;
       case EntityType.pebblum: return createPebblumConfig() as any;
       case EntityType.tribeWorker: return createTribeWorkerConfig() as any;
@@ -131,5 +133,7 @@ export function createEntityConfig(entityType: EntityType): ComponentConfig<Serv
       case EntityType.grassStrand: return createGrassStrandConfig() as any;
       case EntityType.decoration: return createDecorationConfig() as any;
       case EntityType.reed: return createReedConfig() as any;
+      case EntityType.lilypad: return createLilypadConfig() as any;
+      case EntityType.fibrePlant: return createFibrePlantConfig() as any;
    }
 }

@@ -5,7 +5,6 @@ import { TribeType } from "webgl-test-shared/dist/tribes";
 import { randInt, Point } from "webgl-test-shared/dist/utils";
 import { TribesmanAIComponentArray } from "../../components/TribesmanAIComponent";
 import Board from "../../Board";
-import { tickTribesman } from "./tribesman-ai/tribesman-ai";
 import { TribeComponentArray } from "../../components/TribeComponent";
 import { CircularHitbox, HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { ComponentConfig } from "../../components";
@@ -81,6 +80,7 @@ export function createTribeWarriorConfig(): ComponentConfig<ComponentTypes> {
          hut: 0
       },
       [ServerComponentType.aiHelper]: {
+         ignoreDecorativeEntities: true,
          visionRange: TRIBE_WARRIOR_VISION_RANGE
       },
       [ServerComponentType.inventory]: {

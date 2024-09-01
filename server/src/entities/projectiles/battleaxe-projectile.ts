@@ -1,12 +1,10 @@
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { EntityID, EntityType, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { Point, lerp } from "webgl-test-shared/dist/utils";
+import { Point } from "webgl-test-shared/dist/utils";
 import { HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
 import { ThrowingProjectileComponentArray } from "../../components/ThrowingProjectileComponent";
 import Board from "../../Board";
-import { PhysicsComponentArray, applyKnockback } from "../../components/PhysicsComponent";
-import { CollisionVars, entitiesAreColliding } from "../../collision";
+import { applyKnockback } from "../../components/PhysicsComponent";
 import { EntityRelationship, getEntityRelationship } from "../../components/TribeComponent";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { ComponentConfig } from "../../components";
@@ -17,9 +15,8 @@ import { TransformComponentArray } from "../../components/TransformComponent";
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics
    | ServerComponentType.tribe
-   | ServerComponentType.throwingProjectile;
-
-const RETURN_TIME_TICKS = 1 * Settings.TPS;
+   | ServerComponentType.throwingProjectile
+   | ServerComponentType.battleaxeProjectile;
 
 export function createBattleaxeProjectileConfig(): ComponentConfig<ComponentTypes> {
    return {
@@ -44,55 +41,17 @@ export function createBattleaxeProjectileConfig(): ComponentConfig<ComponentType
          tribeType: 0
       },
       [ServerComponentType.throwingProjectile]: {
-         tribeMemberID: 0,
+         tribeMember: 0,
          itemID: null
-      }
+      },
+      [ServerComponentType.battleaxeProjectile]: {}
    };
-}
-
-export function tickBattleaxeProjectile(battleaxe: EntityID): void {
-   const transformComponent = TransformComponentArray.getComponent(battleaxe);
-   const physicsComponent = PhysicsComponentArray.getComponent(battleaxe);
-
-   if (transformComponent.ageTicks < RETURN_TIME_TICKS) {
-      physicsComponent.angularVelocity = -6 * Math.PI;
-   } else {
-      physicsComponent.angularVelocity = 0;
-      
-      const throwingProjectileComponent = ThrowingProjectileComponentArray.getComponent(battleaxe);
-
-      if (!Board.hasEntity(throwingProjectileComponent.tribeMemberID)) {
-         Board.destroyEntity(battleaxe);
-         return;
-      }
-      
-      if (entitiesAreColliding(battleaxe, throwingProjectileComponent.tribeMemberID) !== CollisionVars.NO_COLLISION) {
-         Board.destroyEntity(battleaxe);
-         return;
-      }
-
-      const ownerTransformComponent = TransformComponentArray.getComponent(throwingProjectileComponent.tribeMemberID);
-      
-      const ticksSinceReturn = transformComponent.ageTicks - RETURN_TIME_TICKS;
-      transformComponent.rotation -= lerp(6 * Math.PI / Settings.TPS, 0, Math.min(ticksSinceReturn / Settings.TPS * 1.25, 1));
-
-      // @Hack: Just set velocity instead of adding to position
-      const returnDirection = transformComponent.position.calculateAngleBetween(ownerTransformComponent.position);
-      const returnSpeed = lerp(0, 800, Math.min(ticksSinceReturn / Settings.TPS * 1.5, 1));
-      transformComponent.position.x += returnSpeed * Settings.I_TPS * Math.sin(returnDirection);
-      transformComponent.position.y += returnSpeed * Settings.I_TPS * Math.cos(returnDirection);
-      physicsComponent.positionIsDirty = true;
-
-      // Turn to face the owner
-      physicsComponent.targetRotation = ownerTransformComponent.rotation;
-      physicsComponent.turnSpeed = ticksSinceReturn / Settings.TPS * Math.PI;
-   }
 }
 
 export function onBattleaxeProjectileCollision(battleaxe: EntityID, collidingEntity: EntityID, collisionPoint: Point): void {
    // Don't hurt the entity who threw the spear
    const spearComponent = ThrowingProjectileComponentArray.getComponent(battleaxe);
-   if (collidingEntity === spearComponent.tribeMemberID) {
+   if (collidingEntity === spearComponent.tribeMember) {
       return;
    }
 
@@ -108,7 +67,7 @@ export function onBattleaxeProjectileCollision(battleaxe: EntityID, collidingEnt
          return;
       }
       
-      const tribeMember = Board.validateEntity(spearComponent.tribeMemberID);
+      const tribeMember = Board.validateEntity(spearComponent.tribeMember);
 
       // Damage the entity
       const battleaxeTransformComponent = TransformComponentArray.getComponent(battleaxe);

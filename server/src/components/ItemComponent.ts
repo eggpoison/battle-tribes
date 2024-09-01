@@ -5,6 +5,12 @@ import { removeFleshSword } from "../flesh-sword-ai";
 import { ItemType } from "webgl-test-shared/dist/items/items";
 import { EntityID } from "webgl-test-shared/dist/entities";
 import { Packet } from "webgl-test-shared/dist/packets";
+import { getAgeTicks, TransformComponentArray } from "./TransformComponent";
+import Board from "../Board";
+
+const enum Vars {
+   TICKS_TO_DESPAWN = 300 * Settings.TPS
+}
 
 export interface ItemComponentParams {
    itemType: ItemType;
@@ -34,6 +40,10 @@ export class ItemComponent {
 }
 
 export const ItemComponentArray = new ComponentArray<ItemComponent>(ServerComponentType.item, true, {
+   onTick: {
+      tickInterval: 1,
+      func: onTick
+   },
    onRemove: onRemove,
    getDataLength: getDataLength,
    addDataToPacket: addDataToPacket
@@ -47,13 +57,20 @@ function onRemove(entity: EntityID): void {
    }
 }
 
-export function tickItemComponent(itemComponent: ItemComponent): void {
+function onTick(itemComponent: ItemComponent, itemEntity: EntityID): void {
    // @Speed
    for (const entityID of Object.keys(itemComponent.entityPickupCooldowns).map(idString => Number(idString))) {
       itemComponent.entityPickupCooldowns[entityID]! -= Settings.I_TPS;
       if (itemComponent.entityPickupCooldowns[entityID]! <= 0) {
          delete itemComponent.entityPickupCooldowns[entityID];
       }
+   }
+   
+   // Despawn old items
+   const transformComponent = TransformComponentArray.getComponent(itemEntity);
+   const ageTicks = getAgeTicks(transformComponent);
+   if (ageTicks >= Vars.TICKS_TO_DESPAWN) {
+      Board.destroyEntity(itemEntity);
    }
 }
 

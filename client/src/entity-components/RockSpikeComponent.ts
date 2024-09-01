@@ -1,16 +1,33 @@
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import { PacketReader } from "webgl-test-shared/dist/packets";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { Settings } from "webgl-test-shared/dist/settings";
+import { lerp } from "webgl-test-shared/dist/utils";
+import RockSpikeProjectile from "../projectiles/RockSpikeProjectile";
+import { RenderPart } from "../render-parts/render-parts";
+import { ComponentArray, ComponentArrayType } from "./ComponentArray";
+
+const enum Vars {
+   ENTRANCE_SHAKE_DURATION = 0.5,
+   EXIT_SHAKE_DURATION = 0.8
+}
 
 class RockSpikeComponent extends ServerComponent {
    public readonly size: number;
    public readonly lifetime: number;
+   
+   public renderPart!: RenderPart;
 
    constructor(entity: Entity, reader: PacketReader) {
       super(entity);
-
+ 
       this.size = reader.readNumber();
       this.lifetime = reader.readNumber();
+   }
+
+   public onLoad(): void {
+      this.renderPart = this.entity.getRenderPart("rockSpikeProjectile:part");
    }
 
    public padData(reader: PacketReader): void {
@@ -23,3 +40,27 @@ class RockSpikeComponent extends ServerComponent {
 }
 
 export default RockSpikeComponent;
+
+export const RockSpikeComponentArray = new ComponentArray<RockSpikeComponent>(ComponentArrayType.server, ServerComponentType.rockSpike, true, {
+   onTick: onTick
+});
+
+function onTick(rockSpikeComponent: RockSpikeComponent): void {
+   const transformComponent = rockSpikeComponent.entity.getServerComponent(ServerComponentType.transform);
+
+   const ageSeconds = transformComponent.ageTicks / Settings.TPS;
+   if (ageSeconds < Vars.ENTRANCE_SHAKE_DURATION) {
+      // Entrance
+      const entranceProgress = ageSeconds / Vars.ENTRANCE_SHAKE_DURATION;
+      rockSpikeComponent.entity.shakeAmount = lerp(RockSpikeProjectile.ENTRANCE_SHAKE_AMOUNTS[rockSpikeComponent.size], 0, entranceProgress);
+      rockSpikeComponent.renderPart.scale = lerp(RockSpikeProjectile.ENTRANCE_SCALE, 1, Math.pow(entranceProgress, 0.5));
+   } else if (ageSeconds > rockSpikeComponent.lifetime - Vars.EXIT_SHAKE_DURATION) {
+      // Exit
+      const exitProgress = (ageSeconds - (rockSpikeComponent.lifetime - Vars.EXIT_SHAKE_DURATION)) / Vars.EXIT_SHAKE_DURATION;
+      rockSpikeComponent.entity.shakeAmount = lerp(0, RockSpikeProjectile.EXIT_SHAKE_AMOUNTS[rockSpikeComponent.size], exitProgress);
+      rockSpikeComponent.renderPart.opacity = 1 - Math.pow(exitProgress, 2);
+      rockSpikeComponent.renderPart.scale = 1 - lerp(0, 0.5, Math.pow(exitProgress, 2));
+   } else {
+      rockSpikeComponent.entity.shakeAmount = 0;
+   }
+}

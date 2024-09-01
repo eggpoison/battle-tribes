@@ -52,6 +52,7 @@ const SUMMON_DATA_RECORD = {
    [ServerComponentType.tunnel]: {},
    [ServerComponentType.buildingMaterial]: {},
    [ServerComponentType.spikes]: {},
+   [ServerComponentType.punjiSticks]: {},
    [ServerComponentType.tribeWarrior]: {},
    [ServerComponentType.healingTotem]: {},
    [ServerComponentType.planterBox]: {},
@@ -62,8 +63,13 @@ const SUMMON_DATA_RECORD = {
    [ServerComponentType.craftingStation]: {},
    [ServerComponentType.transform]: {},
    [ServerComponentType.projectile]: {},
+   [ServerComponentType.iceArrow]: {},
    [ServerComponentType.layeredRod]: {},
-   [ServerComponentType.decoration]: {}
+   [ServerComponentType.decoration]: {},
+   [ServerComponentType.spitPoisonArea]: {},
+   [ServerComponentType.battleaxeProjectile]: {},
+   [ServerComponentType.spearProjectile]: {},
+   [ServerComponentType.krumblid]: {}
 } satisfies Record<ServerComponentType, object>;
 
 export type ComponentSummonData<T extends ServerComponentType> = typeof SUMMON_DATA_RECORD[T];

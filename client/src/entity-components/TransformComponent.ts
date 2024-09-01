@@ -12,6 +12,8 @@ import { randInt } from "webgl-test-shared/dist/utils";
 import { randFloat } from "webgl-test-shared/dist/utils";
 import { createCircularHitboxFromData, createRectangularHitboxFromData } from "../client/Client";
 import { PacketReader } from "webgl-test-shared/dist/packets";
+import { ComponentArray, ComponentArrayType } from "./ComponentArray";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 
 const getTile = (position: Point): Tile => {
    const tileX = Math.floor(position.x / Settings.TILE_SIZE);
@@ -26,6 +28,7 @@ const getTile = (position: Point): Tile => {
 
 class TransformComponent extends ServerComponent {
    public ageTicks: number;
+   public totalMass: number;
    
    public readonly position: Point;
 
@@ -55,6 +58,8 @@ class TransformComponent extends ServerComponent {
       
       this.tile = getTile(this.position);
 
+      this.totalMass = 0;
+
       const numCircularHitboxes = reader.readNumber();
       for (let i = 0; i < numCircularHitboxes; i++) {
          const mass = reader.readNumber();
@@ -69,6 +74,8 @@ class TransformComponent extends ServerComponent {
 
          const hitbox = new CircularHitbox(mass, new Point(offsetX, offsetY), collisionType, collisionBit, collisionMask, flags, radius);
          this.addHitbox(hitbox, localID);
+
+         this.totalMass += mass;
       }
 
       const numRectangularHitboxes = reader.readNumber();
@@ -87,6 +94,8 @@ class TransformComponent extends ServerComponent {
 
          const hitbox = new RectangularHitbox(mass, new Point(offsetX, offsetY), collisionType, collisionBit, collisionMask, flags, width, height, rotation);
          this.addHitbox(hitbox, localID);
+
+         this.totalMass += mass;
       }
    }
 
@@ -112,10 +121,6 @@ class TransformComponent extends ServerComponent {
       }
 
       return true;
-   }
-
-   public update(): void {
-      this.ageTicks++;
    }
 
    public addHitbox(hitbox: Hitbox, localID: number): void {
@@ -371,6 +376,12 @@ class TransformComponent extends ServerComponent {
          }
       }
 
+      // @Speed
+      this.totalMass = 0;
+      for (const hitbox of this.hitboxes) {
+         this.totalMass += hitbox.mass;
+      }
+
       // Update containing chunks
 
       // @Speed
@@ -424,6 +435,15 @@ class TransformComponent extends ServerComponent {
 }
 
 export default TransformComponent;
+
+export const TransformComponentArray = new ComponentArray<TransformComponent>(ComponentArrayType.server, ServerComponentType.transform, true, {
+   onUpdate: onUpdate
+});
+
+// @Speed
+function onUpdate(transformComponent: TransformComponent): void {
+   transformComponent.ageTicks++;
+}
 
 // @Cleanup: copy and paste from server
 export function getRandomPointInEntity(transformComponent: TransformComponent): Point {

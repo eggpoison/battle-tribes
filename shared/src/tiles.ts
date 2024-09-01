@@ -8,6 +8,9 @@ export const enum Biome {
    river
 }
 
+// @Hack @Robustness
+export const NUM_BIOMES = Biome.river + 1;
+
 export const enum TileType {
    grass,
    dirt,

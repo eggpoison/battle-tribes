@@ -12,24 +12,24 @@ class WarriorHut extends Entity {
       
       // Hut
       const hutRenderPart = new TexturedRenderPart(
-         this,
+         null,
          2,
          0,
          getTextureArrayIndex("entities/warrior-hut/warrior-hut.png")
       );
-      this.attachRenderPart(hutRenderPart);
+      this.attachRenderThing(hutRenderPart);
 
       // Doors
       const doorRenderParts = new Array<RenderPart>();
       for (let i = 0; i < 2; i++) {
          const doorRenderPart = new TexturedRenderPart(
-            this,
+            null,
             1,
             0,
             getTextureArrayIndex("entities/warrior-hut/warrior-hut-door.png")
          );
          doorRenderPart.addTag("hutComponent:door");
-         this.attachRenderPart(doorRenderPart);
+         this.attachRenderThing(doorRenderPart);
          doorRenderParts.push(doorRenderPart);
       }
    }

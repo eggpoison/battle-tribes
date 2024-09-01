@@ -17,9 +17,9 @@ class IceSpikes extends Entity {
    constructor(id: number) {
       super(id, EntityType.iceSpikes);
 
-      this.attachRenderPart(
+      this.attachRenderThing(
          new TexturedRenderPart(
-            this,
+            null,
             0,
             0,
             getTextureArrayIndex(`entities/ice-spikes/ice-spikes.png`)

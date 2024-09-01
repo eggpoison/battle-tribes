@@ -62,6 +62,12 @@ import TransformComponent from "./TransformComponent";
 import LayeredRodComponent from "./LayeredRodComponent";
 import { PacketReader } from "webgl-test-shared/dist/packets";
 import DecorationComponent from "./DecorationComponent";
+import BattleaxeProjectileComponent from "./BattleaxeProjectileComponent";
+import SpearProjectileComponent from "./SpearProjectileComponent";
+import KrumblidComponent from "./KrumblidComponent";
+import SpitPoisonAreaComponent from "./SpitPoisonAreaComponent";
+import PunjiSticksComponent from "./PunjiSticksComponent";
+import IceArrowComponent from "./IceArrowComponent";
 
 export enum ClientComponentType {
    equipment,
@@ -91,6 +97,7 @@ const ServerComponents = {
    [ServerComponentType.tree]: (): TreeComponent => 0 as any,
    [ServerComponentType.blueprint]: (): BlueprintComponent => 0 as any,
    [ServerComponentType.projectile]: (): ProjectileComponent => 0 as any,
+   [ServerComponentType.iceArrow]: (): IceArrowComponent => 0 as any,
    [ServerComponentType.yeti]: (): YetiComponent => 0 as any,
    [ServerComponentType.frozenYeti]: (): FrozenYetiComponent => 0 as any,
    [ServerComponentType.totemBanner]: (): TotemBannerComponent => 0 as any,
@@ -105,6 +112,7 @@ const ServerComponents = {
    [ServerComponentType.tunnel]: (): TunnelComponent => 0 as any,
    [ServerComponentType.buildingMaterial]: (): BuildingMaterialComponent => 0 as any,
    [ServerComponentType.spikes]: (): SpikesComponent => 0 as any,
+   [ServerComponentType.punjiSticks]: (): PunjiSticksComponent => 0 as any,
    [ServerComponentType.tribeMember]: (): TribeMemberComponent => 0 as any,
    [ServerComponentType.healingTotem]: (): HealingTotemComponent => 0 as any,
    [ServerComponentType.planterBox]: (): PlanterBoxComponent => 0 as any,
@@ -125,7 +133,11 @@ const ServerComponents = {
    [ServerComponentType.followAI]: (): FollowAIComponent => 0 as any,
    [ServerComponentType.tribeWarrior]: (): TribeWarriorComponent => 0 as any,
    [ServerComponentType.layeredRod]: (): LayeredRodComponent => 0 as any,
-   [ServerComponentType.decoration]: (): DecorationComponent => 0 as any
+   [ServerComponentType.decoration]: (): DecorationComponent => 0 as any,
+   [ServerComponentType.spitPoisonArea]: (): SpitPoisonAreaComponent => 0 as any,
+   [ServerComponentType.battleaxeProjectile]: (): BattleaxeProjectileComponent => 0 as any,
+   [ServerComponentType.spearProjectile]: (): SpearProjectileComponent => 0 as any,
+   [ServerComponentType.krumblid]: (): KrumblidComponent => 0 as any
 } satisfies Record<ServerComponentType, () => ServerComponent>;
 
 export const ClientComponents = {
@@ -160,6 +172,7 @@ export function createComponent(entity: Entity, componentType: ServerComponentTy
       case ServerComponentType.tree: return new TreeComponent(entity, reader);
       case ServerComponentType.blueprint: return new BlueprintComponent(entity, reader);
       case ServerComponentType.projectile: return new ProjectileComponent(entity);
+      case ServerComponentType.iceArrow: return new IceArrowComponent(entity);
       case ServerComponentType.yeti: return new YetiComponent(entity, reader);
       case ServerComponentType.frozenYeti: return new FrozenYetiComponent(entity, reader);
       case ServerComponentType.totemBanner: return new TotemBannerComponent(entity, reader);
@@ -174,6 +187,7 @@ export function createComponent(entity: Entity, componentType: ServerComponentTy
       case ServerComponentType.tunnel: return new TunnelComponent(entity, reader);
       case ServerComponentType.buildingMaterial: return new BuildingMaterialComponent(entity, reader);
       case ServerComponentType.spikes: return new SpikesComponent(entity, reader);
+      case ServerComponentType.punjiSticks: return new PunjiSticksComponent(entity);
       case ServerComponentType.tribeMember: return new TribeMemberComponent(entity, reader);
       case ServerComponentType.healingTotem: return new HealingTotemComponent(entity, reader);
       case ServerComponentType.planterBox: return new PlanterBoxComponent(entity, reader);
@@ -195,5 +209,9 @@ export function createComponent(entity: Entity, componentType: ServerComponentTy
       case ServerComponentType.tribeWarrior: return new TribeWarriorComponent(entity, reader);
       case ServerComponentType.layeredRod: return new LayeredRodComponent(entity, reader);
       case ServerComponentType.decoration: return new DecorationComponent(entity, reader);
+      case ServerComponentType.spitPoisonArea: return new SpitPoisonAreaComponent(entity);
+      case ServerComponentType.battleaxeProjectile: return new BattleaxeProjectileComponent(entity);
+      case ServerComponentType.spearProjectile: return new SpearProjectileComponent(entity);
+      case ServerComponentType.krumblid: return new KrumblidComponent(entity);
    }
 }

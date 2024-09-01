@@ -2,6 +2,8 @@ import { PacketReader } from "webgl-test-shared/dist/packets";
 import ServerComponent from "./ServerComponent";
 import { DecorationType } from "webgl-test-shared/dist/components";
 import Entity from "../Entity";
+import { ComponentArray, ComponentArrayType } from "./ComponentArray";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 
 class DecorationComponent extends ServerComponent {
    public readonly decorationType: DecorationType;
@@ -22,3 +24,5 @@ class DecorationComponent extends ServerComponent {
 }
 
 export default DecorationComponent;
+
+export const DecorationComponentArray = new ComponentArray<DecorationComponent>(ComponentArrayType.server, ServerComponentType.decoration, true, {});

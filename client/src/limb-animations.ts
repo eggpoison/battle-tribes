@@ -88,7 +88,7 @@ export function createCraftingAnimationParticles(entity: Entity, limbIdx: number
 
 const createBandageRenderPart = (entity: Entity): void => {
    const renderPart = new TexturedRenderPart(
-      entity,
+      null,
       6,
       2 * Math.PI * Math.random(),
       getTextureArrayIndex("entities/miscellaneous/bandage.png")
@@ -99,14 +99,16 @@ const createBandageRenderPart = (entity: Entity): void => {
    renderPart.offset.x = offsetMagnitude * Math.sin(offsetDirection);
    renderPart.offset.y = offsetMagnitude * Math.cos(offsetDirection);
 
-   entity.attachRenderPart(renderPart);
+   entity.attachRenderThing(renderPart);
 
    const inventoryUseComponent = entity.getServerComponent(ServerComponentType.inventoryUse);
    inventoryUseComponent.bandageRenderParts.push(renderPart);
 }
 
 export function updateBandageRenderPart(entity: Entity, renderPart: RenderPart): void {
-   if (renderPart.age >= BANDAGE_LIFETIME_TICKS) {
+   const renderPartAge = renderPart.getAge();
+   
+   if (renderPartAge >= BANDAGE_LIFETIME_TICKS) {
       entity.removeRenderPart(renderPart);
 
       const inventoryUseComponent = entity.getServerComponent(ServerComponentType.inventoryUse);
@@ -117,7 +119,7 @@ export function updateBandageRenderPart(entity: Entity, renderPart: RenderPart):
       return;
    }
 
-   const progress = renderPart.age / BANDAGE_LIFETIME_TICKS;
+   const progress = renderPartAge / BANDAGE_LIFETIME_TICKS;
    renderPart.opacity = 1 - progress * progress;
 }
 
@@ -173,7 +175,7 @@ const getCustomItemRenderPartOpacity = (entity: Entity, state: CustomItemState):
          
          const useInfo = ITEM_INFO_RECORD[ItemType.herbal_medicine] as ConsumableItemInfo;
 
-         const ticksSpentUsingMedicine = Board.ticks - lastEatTicks;
+         const ticksSpentUsingMedicine = Board.serverTicks - lastEatTicks;
          const useProgress = ticksSpentUsingMedicine / Math.floor(useInfo.consumeTime * Settings.TPS);
          return 1 - useProgress;
       }
@@ -207,13 +209,13 @@ export function updateCustomItemRenderPart(entity: Entity): void {
    if (customItemState !== null) {
       if (inventoryUseComponent.customItemRenderPart === null) {
          inventoryUseComponent.customItemRenderPart = new TexturedRenderPart(
-            inventoryUseComponent.entity,
+            null,
             getTextureArrayIndex(getCustomItemRenderPartTextureSource(entity, customItemState)),
             9,
             0
          );
          inventoryUseComponent.customItemRenderPart.offset.y = 38;
-         inventoryUseComponent.entity.attachRenderPart(inventoryUseComponent.customItemRenderPart);
+         inventoryUseComponent.entity.attachRenderThing(inventoryUseComponent.customItemRenderPart);
       }
       
       inventoryUseComponent.customItemRenderPart.opacity = getCustomItemRenderPartOpacity(entity, customItemState);

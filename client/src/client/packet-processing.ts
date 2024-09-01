@@ -1,4 +1,4 @@
-import { ServerTileData, WaterRockData, RiverSteppingStoneData, GrassTileInfo, RiverFlowDirectionsRecord, WaterRockSize, RiverSteppingStoneSize, GameDataPacket, HitData, PlayerKnockbackData, HealData, ResearchOrbCompleteData, ServerTileUpdateData, EntityDebugData, LineDebugData, CircleDebugData, TileHighlightData, PathData, PathfindingNodeIndex, PlayerInventoryData } from "webgl-test-shared/dist/client-server-types";
+import { WaterRockData, RiverSteppingStoneData, GrassTileInfo, RiverFlowDirectionsRecord, WaterRockSize, RiverSteppingStoneSize, GameDataPacket, HitData, PlayerKnockbackData, HealData, ResearchOrbCompleteData, ServerTileUpdateData, EntityDebugData, LineDebugData, CircleDebugData, TileHighlightData, PathData, PathfindingNodeIndex, PlayerInventoryData } from "webgl-test-shared/dist/client-server-types";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
 import { ItemType } from "webgl-test-shared/dist/items/items";
@@ -22,15 +22,16 @@ import Camera from "../Camera";
 import { createComponent } from "../entity-components/components";
 import { readInventory } from "../entity-components/InventoryComponent";
 import { updateDebugScreenIsPaused, updateDebugScreenTicks, updateDebugScreenCurrentTime } from "../components/game/dev/GameInfoDisplay";
+import { Tile } from "../Tile";
+import { getServerComponentArray } from "../entity-components/ComponentArray";
 
 export interface InitialGameDataPacket {
    readonly playerID: number;
    readonly spawnPosition: [number, number];
-   readonly tiles: Array<ServerTileData>;
+   readonly tiles: ReadonlyArray<Tile>;
    readonly waterRocks: ReadonlyArray<WaterRockData>;
    readonly riverSteppingStones: ReadonlyArray<RiverSteppingStoneData>;
    readonly riverFlowDirections: RiverFlowDirectionsRecord;
-   readonly edgeTiles: Array<ServerTileData>;
    readonly grassInfo: Record<number, Record<number, GrassTileInfo>>;
 }
 
@@ -40,44 +41,39 @@ export function processInitialGameDataPacket(reader: PacketReader): InitialGameD
    const spawnPositionX = reader.readNumber();
    const spawnPositionY = reader.readNumber();
    
-   const tiles = new Array<ServerTileData>();
-   for (let tileIndex = 0; tileIndex < Settings.BOARD_DIMENSIONS * Settings.BOARD_DIMENSIONS; tileIndex++) {
-      const tileX = reader.readNumber();
-      const tileY = reader.readNumber();
+   const tiles = new Array<Tile>();
+   const flowDirections: RiverFlowDirectionsRecord = {};
+   const grassInfoRecord: Record<number, Record<number, GrassTileInfo>> = {};
+   for (let tileIndex = 0; tileIndex < Settings.FULL_BOARD_DIMENSIONS * Settings.FULL_BOARD_DIMENSIONS; tileIndex++) {
       const tileType = reader.readNumber() as TileType;
       const tileBiome = reader.readNumber() as Biome;
       const isWall = reader.readBoolean();
       reader.padOffset(3);
+      const flowDirection = reader.readNumber();
+      const temperature = reader.readNumber();
+      const humidity = reader.readNumber();
 
-      const tile: ServerTileData = {
-         x: tileX,
-         y: tileY,
-         type: tileType,
-         biome: tileBiome,
-         isWall: isWall
-      };
+      const tileX = Board.getTileX(tileIndex);
+      const tileY = Board.getTileY(tileIndex);
+
+      const tile = new Tile(tileX, tileY, tileType, tileBiome, isWall);
       tiles.push(tile);
-   }
 
-   // @Copynpaste
-   const edgeTiles = new Array<ServerTileData>();
-   const numEdgeTiles = reader.readNumber();
-   for (let i = 0; i < numEdgeTiles; i++) {
-      const tileX = reader.readNumber();
-      const tileY = reader.readNumber();
-      const tileType = reader.readNumber() as TileType;
-      const tileBiome = reader.readNumber() as Biome;
-      const isWall = reader.readBoolean();
-      reader.padOffset(3);
+      if (typeof flowDirections[tileX] === "undefined") {
+         flowDirections[tileX] = {};
+      }
+      flowDirections[tileX]![tileY] = flowDirection;
 
-      const tile: ServerTileData = {
-         x: tileX,
-         y: tileY,
-         type: tileType,
-         biome: tileBiome,
-         isWall: isWall
+      const grassInfo: GrassTileInfo = {
+         tileX: tileX,
+         tileY: tileY,
+         temperature: temperature,
+         humidity: humidity
       };
-      edgeTiles.push(tile);
+      if (typeof grassInfoRecord[tileX] === "undefined") {
+         grassInfoRecord[tileX] = {};
+      }
+      grassInfoRecord[tileX]![tileY] = grassInfo;
    }
 
    const waterRocks = new Array<WaterRockData>();
@@ -117,45 +113,10 @@ export function processInitialGameDataPacket(reader: PacketReader): InitialGameD
       steppingStones.push(steppingStone);
    }
 
-   const flowDirections: RiverFlowDirectionsRecord = {};
-   const numFlowDirections = reader.readNumber();
-   for (let i = 0; i < numFlowDirections; i++) {
-      const tileX = reader.readNumber();
-      const tileY = reader.readNumber();
-      const flowDirection = reader.readNumber();
-
-      if (typeof flowDirections[tileX] === "undefined") {
-         flowDirections[tileX] = {};
-      }
-      flowDirections[tileX]![tileY] = flowDirection;
-   }
-
-   const grassInfoRecord: Record<number, Record<number, GrassTileInfo>> = {};
-   const numGrassInfos = reader.readNumber();
-   for (let i = 0; i < numGrassInfos; i++) {
-      const tileX = reader.readNumber();
-      const tileY = reader.readNumber();
-      const temperature = reader.readNumber();
-      const humidity = reader.readNumber();
-
-      const grassInfo: GrassTileInfo = {
-         tileX: tileX,
-         tileY: tileY,
-         temperature: temperature,
-         humidity: humidity
-      };
-
-      if (typeof grassInfoRecord[tileX] === "undefined") {
-         grassInfoRecord[tileX] = {};
-      }
-      grassInfoRecord[tileX]![tileY] = grassInfo;
-   }
-
    return {
       playerID: playerID,
       spawnPosition: [spawnPositionX, spawnPositionY],
       tiles: tiles,
-      edgeTiles: edgeTiles,
       waterRocks: waterRocks,
       riverSteppingStones: steppingStones,
       riverFlowDirections: flowDirections,
@@ -318,6 +279,9 @@ const processEntityCreationData = (entityID: EntityID, reader: PacketReader): vo
       
       const component = createComponent(entity, componentType, reader);
       entity.addServerComponent(componentType, component);
+
+      const componentArray = getServerComponentArray(componentType);
+      componentArray.addComponent(entity.id, component);
    }
 
    Board.addEntity(entity);
@@ -350,7 +314,7 @@ export function processGameDataPacket(reader: PacketReader): void {
    const ticks = reader.readNumber();
    const time = reader.readNumber();
 
-   Board.ticks = ticks;
+   Board.serverTicks = ticks;
    updateDebugScreenTicks(ticks);
    Board.time = time;
    updateDebugScreenCurrentTime(time);
@@ -441,8 +405,10 @@ export function processGameDataPacket(reader: PacketReader): void {
    // Process entities
    const playerInstanceID = Game.playerID;
    const numEntities = reader.readNumber();
+   const visibleEntities = [];
    for (let i = 0; i < numEntities; i++) {
       const entityID = reader.readNumber() as EntityID;
+      visibleEntities.push(entityID);
       if (entityID === playerInstanceID) {
          if (Player.instance === null) {
             processEntityCreationData(entityID, reader);
@@ -456,10 +422,25 @@ export function processGameDataPacket(reader: PacketReader): void {
       }
    }
 
+   const entitiesToRemove = new Set<Entity>();
+   
+   // Read removed entity IDs
+   const serverRemovedEntityIDs = new Set<number>();
+   const numRemovedEntities = reader.readNumber();
+   for (let i = 0; i < numRemovedEntities; i++) {
+      const entityID = reader.readNumber();
+
+      serverRemovedEntityIDs.add(entityID);
+      
+      const entity = Board.entityRecord[entityID];
+      if (typeof entity !== "undefined") {
+         entitiesToRemove.add(entity);
+      }
+   }
+
    // @Cleanup: move to own function
    
    // Remove entities which are no longer visible
-   const entitiesToRemove = new Set<Entity>();
    const minVisibleChunkX = Camera.minVisibleChunkX - 2;
    const maxVisibleChunkX = Camera.maxVisibleChunkX + 2;
    const minVisibleChunkY = Camera.minVisibleChunkY - 2;
@@ -484,10 +465,9 @@ export function processGameDataPacket(reader: PacketReader): void {
       entitiesToRemove.delete(Player.instance);
    }
 
-   // @Temporary
    for (const entity of entitiesToRemove) {
-      // @Incomplete: isDeath
-      Board.removeEntity(entity, false);
+      const isDeath = serverRemovedEntityIDs.has(entity.id);
+      Board.removeEntity(entity, isDeath);
    }
 
    const playerInventories = readPlayerInventories(reader);

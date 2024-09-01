@@ -7,6 +7,9 @@ import { TransformComponentArray } from "./TransformComponent";
 import { CircularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { addGrassBlocker } from "../grass-blockers";
 import { Packet } from "webgl-test-shared/dist/packets";
+import { ItemType } from "webgl-test-shared/dist/items/items";
+import { randInt } from "webgl-test-shared/dist/utils";
+import { createItemsOverEntity } from "../entity-shared";
 
 export interface TreeComponentParams {
    readonly treeSize: TreeSize;
@@ -14,6 +17,13 @@ export interface TreeComponentParams {
 
 export const TREE_RADII: ReadonlyArray<number> = [40, 50];
 const TREE_MAX_HEALTHS = [10, 15];
+
+const SEED_DROP_CHANCES: ReadonlyArray<number> = [0.25, 0.5];
+
+const WOOD_DROP_AMOUNTS: ReadonlyArray<[number, number]> = [
+   [2, 4],
+   [5, 7]
+];
 
 const TREE_TRUNK_RADII: Record<TreeSize, number> = {
    [TreeSize.small]: 15,
@@ -31,6 +41,7 @@ export class TreeComponent {
 export const TreeComponentArray = new ComponentArray<TreeComponent>(ServerComponentType.tree, true, {
    onInitialise: onInitialise,
    onJoin: onJoin,
+   onRemove: onRemove,
    getDataLength: getDataLength,
    addDataToPacket: addDataToPacket
 });
@@ -57,6 +68,17 @@ function onJoin(entity: EntityID): void {
       maxBlockAmount: 0.9
    };
    addGrassBlocker(blocker, entity);
+}
+
+function onRemove(tree: EntityID): void {
+   const treeComponent = TreeComponentArray.getComponent(tree);
+
+   createItemsOverEntity(tree, ItemType.wood, randInt(...WOOD_DROP_AMOUNTS[treeComponent.treeSize]), TREE_RADII[treeComponent.treeSize]);
+
+   const dropChance = SEED_DROP_CHANCES[treeComponent.treeSize];
+   if (Math.random() < dropChance) {
+      createItemsOverEntity(tree, ItemType.seed, 1, TREE_RADII[treeComponent.treeSize])
+   }
 }
 
 function getDataLength(): number {

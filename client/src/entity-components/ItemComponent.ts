@@ -4,6 +4,7 @@ import Entity from "../Entity";
 import { createDeepFrostHeartBloodParticles } from "../particles";
 import { ItemType } from "webgl-test-shared/dist/items/items";
 import { PacketReader } from "webgl-test-shared/dist/packets";
+import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 
 class ItemComponent extends ServerComponent {
    public readonly itemType: ItemType;
@@ -12,14 +13,6 @@ class ItemComponent extends ServerComponent {
       super(entity);
 
       this.itemType = reader.readNumber();
-   }
-
-   public tick(): void {
-      // Make the deep frost heart item spew blue blood particles
-      if (this.itemType === ItemType.deepfrost_heart) {
-         const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
-         createDeepFrostHeartBloodParticles(transformComponent.position.x, transformComponent.position.y, 0, 0);
-      }
    }
 
    public padData(reader: PacketReader): void {
@@ -32,3 +25,15 @@ class ItemComponent extends ServerComponent {
 }
 
 export default ItemComponent;
+
+export const ItemComponentArray = new ComponentArray<ItemComponent>(ComponentArrayType.server, ServerComponentType.item, true, {
+   onTick: onTick
+});
+
+function onTick(itemComponent: ItemComponent): void {
+   // Make the deep frost heart item spew blue blood particles
+   if (itemComponent.itemType === ItemType.deepfrost_heart) {
+      const transformComponent = itemComponent.entity.getServerComponent(ServerComponentType.transform);
+      createDeepFrostHeartBloodParticles(transformComponent.position.x, transformComponent.position.y, 0, 0);
+   }
+}

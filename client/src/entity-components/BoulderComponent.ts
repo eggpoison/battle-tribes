@@ -1,6 +1,8 @@
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import { PacketReader } from "webgl-test-shared/dist/packets";
+import { ComponentArray, ComponentArrayType } from "./ComponentArray";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 
 class BoulderComponent extends ServerComponent {
    public readonly boulderType: number;
@@ -21,3 +23,5 @@ class BoulderComponent extends ServerComponent {
 }
 
 export default BoulderComponent;
+
+export const BoulderComponentArray = new ComponentArray<BoulderComponent>(ComponentArrayType.server, ServerComponentType.boulder, true, {});

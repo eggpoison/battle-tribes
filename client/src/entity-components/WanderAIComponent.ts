@@ -1,6 +1,8 @@
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import { PacketReader } from "webgl-test-shared/dist/packets";
+import { ComponentArray, ComponentArrayType } from "./ComponentArray";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 
 class WanderAIComponent extends ServerComponent {
    constructor(entity: Entity, reader: PacketReader) {
@@ -19,3 +21,5 @@ class WanderAIComponent extends ServerComponent {
 }
 
 export default WanderAIComponent;
+
+export const WanderAIComponentArray = new ComponentArray<WanderAIComponent>(ComponentArrayType.server, ServerComponentType.wanderAI, true, {});

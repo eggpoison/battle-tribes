@@ -184,6 +184,9 @@ export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend:
       lengthBytes += getEntityDataLength(entity, player);
    }
 
+   // Removed entity IDs
+   lengthBytes += Float32Array.BYTES_PER_ELEMENT + Float32Array.BYTES_PER_ELEMENT * playerClient.visibleEntityDeathIDs.length;
+
    // Player inventories
    lengthBytes += getInventoryDataLength(hotbarInventory);
    lengthBytes += getInventoryDataLength(backpackInventory);
@@ -248,9 +251,11 @@ export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend:
    packet.addNumber(playerClient.tribe.tribesmanCap);
 
    packet.addNumber(area.length);
-   for (const tile of area) {
-      packet.addNumber(tile.x);
-      packet.addNumber(tile.y);
+   for (const tileIndex of area) {
+      const tileX = Board.getTileX(tileIndex);
+      const tileY = Board.getTileY(tileIndex);
+      packet.addNumber(tileX);
+      packet.addNumber(tileY);
    }
 
    packet.addNumber(playerClient.tribe.selectedTechID !== null ? playerClient.tribe.selectedTechID : -1),
@@ -291,6 +296,12 @@ export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend:
    packet.addNumber(entitiesToSend.size);
    for (const entity of entitiesToSend) {
       addEntityDataToPacket(packet, entity, player);
+   }
+
+   // Removed entity IDs
+   packet.addNumber(playerClient.visibleEntityDeathIDs.length);
+   for (const entity of playerClient.visibleEntityDeathIDs) {
+      packet.addNumber(entity);
    }
 
    // Add inventory data
@@ -448,12 +459,9 @@ export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend:
 
 export function createInitialGameDataPacket(player: EntityID, playerConfig: ComponentConfig<ServerComponentType.transform>): ArrayBuffer {
    let lengthBytes = Float32Array.BYTES_PER_ELEMENT * 4;
-   lengthBytes += Settings.BOARD_DIMENSIONS * Settings.BOARD_DIMENSIONS * 5 * Float32Array.BYTES_PER_ELEMENT;
-   lengthBytes += Float32Array.BYTES_PER_ELEMENT + Board.edgeTilesArray.length * 5 * Float32Array.BYTES_PER_ELEMENT;
+   lengthBytes += Settings.FULL_BOARD_DIMENSIONS * Settings.FULL_BOARD_DIMENSIONS * 6 * Float32Array.BYTES_PER_ELEMENT;
    lengthBytes += Float32Array.BYTES_PER_ELEMENT + Board.waterRocks.length * 5 * Float32Array.BYTES_PER_ELEMENT;
    lengthBytes += Float32Array.BYTES_PER_ELEMENT + Board.riverSteppingStones.length * 5 * Float32Array.BYTES_PER_ELEMENT;
-   lengthBytes += Float32Array.BYTES_PER_ELEMENT + Board.riverFlowDirectionsArray.length * 3 * Float32Array.BYTES_PER_ELEMENT;
-   lengthBytes += Float32Array.BYTES_PER_ELEMENT + Board.grassInfo.length * 4 * Float32Array.BYTES_PER_ELEMENT;
    lengthBytes = alignLengthBytes(lengthBytes);
    const packet = new Packet(PacketType.initialGameData, lengthBytes);
    
@@ -463,27 +471,14 @@ export function createInitialGameDataPacket(player: EntityID, playerConfig: Comp
    packet.addNumber(spawnPosition.x);
    packet.addNumber(spawnPosition.y);
    
-   for (let tileIndex = 0; tileIndex < Settings.BOARD_DIMENSIONS * Settings.BOARD_DIMENSIONS; tileIndex++) {
-      const tile = Board.tiles[tileIndex];
-
-      packet.addNumber(tile.x);
-      packet.addNumber(tile.y);
-      packet.addNumber(tile.type);
-      packet.addNumber(tile.biome);
-      packet.addBoolean(tile.isWall);
+   for (let tileIndex = 0; tileIndex < Settings.FULL_BOARD_DIMENSIONS * Settings.FULL_BOARD_DIMENSIONS; tileIndex++) {
+      packet.addNumber(Board.tileTypes[tileIndex]);
+      packet.addNumber(Board.tileBiomes[tileIndex]);
+      packet.addBoolean(Board.tileIsWalls[tileIndex] === 1 ? true : false);
       packet.padOffset(3);
-   }
-
-   packet.addNumber(Board.edgeTilesArray.length);
-   for (let i = 0; i < Board.edgeTilesArray.length; i++) {
-      const tile = Board.edgeTilesArray[i];
-
-      packet.addNumber(tile.x);
-      packet.addNumber(tile.y);
-      packet.addNumber(tile.type);
-      packet.addNumber(tile.biome);
-      packet.addBoolean(tile.isWall);
-      packet.padOffset(3);
+      packet.addNumber(Board.riverFlowDirections[tileIndex]);
+      packet.addNumber(Board.tileTemperatures[tileIndex]);
+      packet.addNumber(Board.tileHumidities[tileIndex]);
    }
 
    packet.addNumber(Board.waterRocks.length);
@@ -506,25 +501,6 @@ export function createInitialGameDataPacket(player: EntityID, playerConfig: Comp
       packet.addNumber(steppingStone.rotation);
       packet.addNumber(steppingStone.size);
       packet.addNumber(steppingStone.groupID);
-   }
-
-   packet.addNumber(Board.riverFlowDirectionsArray.length);
-   for (let i = 0; i < Board.riverFlowDirectionsArray.length; i++) {
-      const flowDirectionInfo = Board.riverFlowDirectionsArray[i];
-
-      packet.addNumber(flowDirectionInfo.tileX);
-      packet.addNumber(flowDirectionInfo.tileY);
-      packet.addNumber(flowDirectionInfo.flowDirection);
-   }
-
-   packet.addNumber(Board.grassInfo.length);
-   for (let i = 0; i < Board.grassInfo.length; i++) {
-      const grassInfo = Board.grassInfo[i];
-
-      packet.addNumber(grassInfo.tileX);
-      packet.addNumber(grassInfo.tileY);
-      packet.addNumber(grassInfo.temperature);
-      packet.addNumber(grassInfo.humidity);
    }
 
    return packet.buffer;

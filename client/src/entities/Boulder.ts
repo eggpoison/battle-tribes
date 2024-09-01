@@ -23,9 +23,9 @@ class Boulder extends Entity {
    public onLoad(): void {
       const boulderComponent = this.getServerComponent(ServerComponentType.boulder);
 
-      this.attachRenderPart(
+      this.attachRenderThing(
          new TexturedRenderPart(
-            this,
+            null,
             0,
             0,
             getTextureArrayIndex(Boulder.TEXTURE_SOURCES[boulderComponent.boulderType])

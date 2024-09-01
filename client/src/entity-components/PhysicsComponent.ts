@@ -1,7 +1,7 @@
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
-import { Point, lerp, randInt } from "webgl-test-shared/dist/utils";
+import { Point, customTickIntervalHasPassed, lerp, randInt } from "webgl-test-shared/dist/utils";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { TILE_MOVE_SPEED_MULTIPLIERS, TileType, TILE_FRICTIONS } from "webgl-test-shared/dist/tiles";
 import Board from "../Board";
@@ -17,6 +17,7 @@ import { COLLISION_BITS } from "webgl-test-shared/dist/collision";
 import { latencyGameState } from "../game-state/game-states";
 import { PacketReader } from "webgl-test-shared/dist/packets";
 import { createWaterSplashParticle } from "../particles";
+import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 
 const applyPhysics = (physicsComponent: PhysicsComponent): void => {
    const transformComponent = physicsComponent.entity.getServerComponent(ServerComponentType.transform);
@@ -114,60 +115,6 @@ class PhysicsComponent extends ServerComponent {
       this.acceleration = new Point(reader.readNumber(), reader.readNumber());
    }
 
-   public tick(): void {
-      const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
-
-      // Water droplet particles
-      // @Cleanup: Don't hardcode fish condition
-      if (transformComponent.isInRiver() && Board.tickIntervalHasPassed(0.05) && (this.entity.type !== EntityType.fish)) {
-         createWaterSplashParticle(transformComponent.position.x, transformComponent.position.y);
-      }
-      
-      // Water splash particles
-      // @Cleanup: Move to particles file
-      if (transformComponent.isInRiver() && Board.tickIntervalHasPassed(0.15) && (this.acceleration.x !== 0 || this.acceleration.y !== 0) && this.entity.type !== EntityType.fish) {
-         const lifetime = 2.5;
-
-         const particle = new Particle(lifetime);
-         particle.getOpacity = (): number => {
-            return lerp(0.75, 0, Math.sqrt(particle.age / lifetime));
-         }
-         particle.getScale = (): number => {
-            return 1 + particle.age / lifetime * 1.4;
-         }
-
-         addTexturedParticleToBufferContainer(
-            particle,
-            ParticleRenderLayer.low,
-            64, 64,
-            transformComponent.position.x, transformComponent.position.y,
-            0, 0,
-            0, 0,
-            0,
-            2 * Math.PI * Math.random(),
-            0,
-            0,
-            0,
-            8 * 1 + 5,
-            0, 0, 0
-         );
-         Board.lowTexturedParticles.push(particle);
-
-         playSound(("water-splash-" + randInt(1, 3) + ".mp3") as AudioFilePath, 0.25, 1, transformComponent.position);
-      }
-   }
-
-   public update(): void {
-      applyPhysics(this);
-      
-      // Don't resolve wall tile collisions in lightspeed mode
-      if (Player.instance === null || this.entity.id !== Player.instance.id || !keyIsPressed("l")) { 
-         resolveWallTileCollisions(this.entity);
-      }
-
-      resolveBorderCollisions(this);
-   }
-
    public padData(reader: PacketReader): void {
       reader.padOffset(4 * Float32Array.BYTES_PER_ELEMENT);
    }
@@ -181,3 +128,62 @@ class PhysicsComponent extends ServerComponent {
 }
 
 export default PhysicsComponent;
+
+export const PhysicsComponentArray = new ComponentArray<PhysicsComponent>(ComponentArrayType.server, ServerComponentType.physics, true, {
+   onTick: onTick,
+   onUpdate: onUpdate
+});
+
+function onTick(physicsComponent: PhysicsComponent): void {
+   const transformComponent = physicsComponent.entity.getServerComponent(ServerComponentType.transform);
+
+   // Water droplet particles
+   // @Cleanup: Don't hardcode fish condition
+   if (transformComponent.isInRiver() && customTickIntervalHasPassed(Board.clientTicks, 0.05) && (physicsComponent.entity.type !== EntityType.fish)) {
+      createWaterSplashParticle(transformComponent.position.x, transformComponent.position.y);
+   }
+   
+   // Water splash particles
+   // @Cleanup: Move to particles file
+   if (transformComponent.isInRiver() && customTickIntervalHasPassed(Board.clientTicks, 0.15) && (physicsComponent.acceleration.x !== 0 || physicsComponent.acceleration.y !== 0) && physicsComponent.entity.type !== EntityType.fish) {
+      const lifetime = 2.5;
+
+      const particle = new Particle(lifetime);
+      particle.getOpacity = (): number => {
+         return lerp(0.75, 0, Math.sqrt(particle.age / lifetime));
+      }
+      particle.getScale = (): number => {
+         return 1 + particle.age / lifetime * 1.4;
+      }
+
+      addTexturedParticleToBufferContainer(
+         particle,
+         ParticleRenderLayer.low,
+         64, 64,
+         transformComponent.position.x, transformComponent.position.y,
+         0, 0,
+         0, 0,
+         0,
+         2 * Math.PI * Math.random(),
+         0,
+         0,
+         0,
+         8 * 1 + 5,
+         0, 0, 0
+      );
+      Board.lowTexturedParticles.push(particle);
+
+      playSound(("water-splash-" + randInt(1, 3) + ".mp3") as AudioFilePath, 0.25, 1, transformComponent.position);
+   }
+}
+
+function onUpdate(physicsComponent: PhysicsComponent): void {
+   applyPhysics(physicsComponent);
+   
+   // Don't resolve wall tile collisions in lightspeed mode
+   if (Player.instance === null || physicsComponent.entity.id !== Player.instance.id || !keyIsPressed("l")) { 
+      resolveWallTileCollisions(physicsComponent.entity);
+   }
+
+   resolveBorderCollisions(physicsComponent);
+}

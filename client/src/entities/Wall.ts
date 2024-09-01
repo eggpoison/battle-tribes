@@ -24,13 +24,13 @@ class Wall extends Entity {
       const healthComponentData = this.getServerComponent(ServerComponentType.health);
       
       const renderPart = new TexturedRenderPart(
-         this,
+         null,
          0,
          0,
          getTextureArrayIndex(WALL_TEXTURE_SOURCES[buildingMaterialComponent.material])
       );
       renderPart.addTag("buildingMaterialComponent:material");
-      this.attachRenderPart(renderPart);
+      this.attachRenderThing(renderPart);
 
       this.updateDamageRenderPart(healthComponentData.health, healthComponentData.maxHealth);
 
@@ -57,12 +57,12 @@ class Wall extends Entity {
       const textureSource = "entities/wall/wooden-wall-damage-" + damageStage + ".png";
       if (this.damageRenderPart === null) {
          this.damageRenderPart = new TexturedRenderPart(
-            this,
+            null,
             1,
             0,
             getTextureArrayIndex(textureSource)
          );
-         this.attachRenderPart(this.damageRenderPart);
+         this.attachRenderThing(this.damageRenderPart);
       } else {
          this.damageRenderPart.switchTextureSource(textureSource);
       }

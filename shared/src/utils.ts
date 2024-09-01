@@ -1,5 +1,16 @@
 import { Settings } from "./settings";
 
+export const enum UtilVars {
+   PI = 3.14159265358979
+}
+
+export type TileIndex = number;
+
+export interface TileCoordinates {
+   readonly x: number;
+   readonly y: number;
+}
+
 export type Mutable<T> = {
    -readonly [P in keyof T]: T[P];
 };
@@ -39,6 +50,21 @@ export function hueShift(colour: Colour, hueAdjust: number): void {
    colour.r = YPrime * kYIQToR[0] + I * kYIQToR[1] + Q * kYIQToR[2];
    colour.g = YPrime * kYIQToG[0] + I * kYIQToG[1] + Q * kYIQToG[2];
    colour.b = YPrime * kYIQToB[0] + I * kYIQToB[1] + Q * kYIQToB[2];
+}
+
+export function multiColourLerp(colours: ReadonlyArray<Colour>, a: number): Colour {
+   const progress = a * (colours.length - 1);
+   
+   const lowColour = colours[Math.floor(progress)];
+   const highColour = colours[Math.ceil(progress)];
+
+   const interLerp = progress % 1;
+
+   return {
+      r: lerp(lowColour.r, highColour.r, interLerp),
+      g: lerp(lowColour.g, highColour.g, interLerp),
+      b: lerp(lowColour.b, highColour.b, interLerp)
+   };
 }
 
 /**

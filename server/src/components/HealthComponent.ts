@@ -23,7 +23,7 @@ import { TITLE_REWARD_CHANCES } from "../tribesman-title-generation";
 import { TribeMemberComponentArray, awardTitle } from "./TribeMemberComponent";
 import { onPlantDeath, onPlantHit } from "../entities/plant";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
-import { registerEntityDeath, registerEntityHeal, registerEntityHit } from "../server/player-clients";
+import { registerEntityHeal, registerEntityHit } from "../server/player-clients";
 import { ComponentArray } from "./ComponentArray";
 import Board from "../Board";
 import { TransformComponentArray } from "./TransformComponent";
@@ -51,11 +51,15 @@ export class HealthComponent {
 }
 
 export const HealthComponentArray = new ComponentArray<HealthComponent>(ServerComponentType.health, true, {
+   onTick: {
+      tickInterval: 1,
+      func: onTick
+   },
    getDataLength: getDataLength,
    addDataToPacket: addDataToPacket
 });
 
-export function tickHealthComponent(healthComponent: HealthComponent): void {
+function onTick(healthComponent: HealthComponent): void {
    // Update local invulnerability hashes
    for (let i = 0; i < healthComponent.localIframeHashes.length; i++) {
       healthComponent.localIframeDurations[i] -= Settings.I_TPS;
@@ -98,7 +102,6 @@ export function damageEntity(entity: EntityID, attackingEntity: EntityID | null,
    // If the entity was killed by the attack, destroy the entity
    if (healthComponent.health <= 0) {
       Board.destroyEntity(entity);
-      registerEntityDeath(entity);
 
       switch (entityType) {
          case EntityType.tombstone: {

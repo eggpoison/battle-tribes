@@ -121,7 +121,7 @@ const attack = (isOffhand: boolean, attackCooldown: number): void => {
       const inventoryUseComponent = Player.instance!.getServerComponent(ServerComponentType.inventoryUse);
       const useInfo = inventoryUseComponent.useInfos[limbIdx];
 
-      useInfo.lastAttackTicks = Board.ticks;
+      useInfo.lastAttackTicks = Board.serverTicks;
       useInfo.lastAttackCooldown = attackCooldown;
    }
 }
@@ -507,7 +507,7 @@ export function updatePlayerMovement(): void {
          acceleration = PLAYER_ACCELERATION * getPlayerMoveSpeedMultiplier();
       }
 
-      if (latencyGameState.lastPlantCollisionTicks >= Board.ticks - 1) {
+      if (latencyGameState.lastPlantCollisionTicks >= Board.serverTicks - 1) {
          acceleration *= 0.5;
       }
       
@@ -606,7 +606,7 @@ const itemRightClickDown = (item: Item, isOffhand: boolean, itemSlot: number): v
          }
             
          useInfo.action = action;
-         useInfo.lastEatTicks = Board.ticks;
+         useInfo.lastEatTicks = Board.serverTicks;
 
          if (itemInfo.consumableItemCategory === ConsumableItemCategory.medicine) {
             latencyGameState.offhandAction = action;
@@ -615,7 +615,7 @@ const itemRightClickDown = (item: Item, isOffhand: boolean, itemSlot: number): v
             // @Cleanup
             const otherUseInfo = inventoryUseComponent.useInfos[isOffhand ? 0 : 1];
             otherUseInfo.action = action;
-            otherUseInfo.lastEatTicks = Board.ticks;
+            otherUseInfo.lastEatTicks = Board.serverTicks;
          } else {
             if (isOffhand) {
                latencyGameState.offhandAction = action;
@@ -630,7 +630,7 @@ const itemRightClickDown = (item: Item, isOffhand: boolean, itemSlot: number): v
          if (!definiteGameState.hotbarCrossbowLoadProgressRecord.hasOwnProperty(itemSlot) || definiteGameState.hotbarCrossbowLoadProgressRecord[itemSlot]! < 1) {
             // Start loading crossbow
             useInfo.action = LimbAction.loadCrossbow;
-            useInfo.lastCrossbowLoadTicks = Board.ticks;
+            useInfo.lastCrossbowLoadTicks = Board.serverTicks;
             if (isOffhand) {
                latencyGameState.offhandAction = LimbAction.loadCrossbow;
             } else {
@@ -646,7 +646,7 @@ const itemRightClickDown = (item: Item, isOffhand: boolean, itemSlot: number): v
       }
       case "bow": {
          useInfo.action = LimbAction.chargeBow;
-         useInfo.lastBowChargeTicks = Board.ticks;
+         useInfo.lastBowChargeTicks = Board.serverTicks;
          if (isOffhand) {
             latencyGameState.offhandAction = LimbAction.chargeBow;
          } else {
@@ -659,7 +659,7 @@ const itemRightClickDown = (item: Item, isOffhand: boolean, itemSlot: number): v
       }
       case "spear": {
          useInfo.action = LimbAction.chargeSpear;
-         useInfo.lastSpearChargeTicks = Board.ticks;
+         useInfo.lastSpearChargeTicks = Board.serverTicks;
          if (isOffhand) {
             latencyGameState.offhandAction = LimbAction.chargeSpear;
          } else {
@@ -674,7 +674,7 @@ const itemRightClickDown = (item: Item, isOffhand: boolean, itemSlot: number): v
          }
 
          useInfo.action = LimbAction.chargeBattleaxe;
-         useInfo.lastBattleaxeChargeTicks = Board.ticks;
+         useInfo.lastBattleaxeChargeTicks = Board.serverTicks;
          if (isOffhand) {
             latencyGameState.offhandAction = LimbAction.chargeBattleaxe;
          } else {
@@ -693,7 +693,7 @@ const itemRightClickDown = (item: Item, isOffhand: boolean, itemSlot: number): v
          
          if (placeInfo.isValid) {
             Client.sendItemUsePacket();
-            useInfo.lastAttackTicks = Board.ticks;
+            useInfo.lastAttackTicks = Board.serverTicks;
          }
 
          break;

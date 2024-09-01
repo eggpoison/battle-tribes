@@ -31,9 +31,9 @@ class Tree extends Entity {
    public onLoad(): void {
       const treeComponent = this.getServerComponent(ServerComponentType.tree);
       
-      this.attachRenderPart(
+      this.attachRenderThing(
          new TexturedRenderPart(
-            this,
+            null,
             0,
             0,
             getTextureArrayIndex(treeTextures[treeComponent.treeSize])

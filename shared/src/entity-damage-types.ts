@@ -173,7 +173,7 @@ const ENTITY_DAMAGE_INFO_RECORD: Record<EntityType, EntityDamageInfo> = {
       effectiveDamageTypes: [],
       stoppedDamageTypes: []
    },
-   [EntityType.spitPoison]: {
+   [EntityType.spitPoisonArea]: {
       effectiveDamageTypes: [],
       stoppedDamageTypes: []
    },
@@ -270,6 +270,14 @@ const ENTITY_DAMAGE_INFO_RECORD: Record<EntityType, EntityDamageInfo> = {
       stoppedDamageTypes: []
    },
    [EntityType.reed]: {
+      effectiveDamageTypes: [],
+      stoppedDamageTypes: []
+   },
+   [EntityType.lilypad]: {
+      effectiveDamageTypes: [],
+      stoppedDamageTypes: []
+   },
+   [EntityType.fibrePlant]: {
       effectiveDamageTypes: [],
       stoppedDamageTypes: []
    }

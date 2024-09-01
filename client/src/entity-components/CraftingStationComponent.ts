@@ -2,6 +2,8 @@ import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import { CraftingStation } from "webgl-test-shared/dist/items/crafting-recipes";
 import { PacketReader } from "webgl-test-shared/dist/packets";
+import { ComponentArray, ComponentArrayType } from "./ComponentArray";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 
 class CraftingStationComponent extends ServerComponent {
    public readonly craftingStation: CraftingStation;
@@ -22,3 +24,5 @@ class CraftingStationComponent extends ServerComponent {
 }
 
 export default CraftingStationComponent;
+
+export const CraftingStationComponentArray = new ComponentArray<CraftingStationComponent>(ComponentArrayType.server, ServerComponentType.craftingStation, true, {});

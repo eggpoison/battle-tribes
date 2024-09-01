@@ -1,7 +1,7 @@
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { Point, lerp } from "webgl-test-shared/dist/utils";
 import { Settings } from "webgl-test-shared/dist/settings";
-import { HutComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import Board from "../Board";
@@ -10,6 +10,7 @@ import { playSound } from "../sound";
 import { RenderPart } from "../render-parts/render-parts";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { PacketReader } from "webgl-test-shared/dist/packets";
+import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 
 export const WORKER_HUT_SIZE = 88;
 export const WARRIOR_HUT_SIZE = 104;
@@ -19,7 +20,7 @@ const DOOR_REMAIN_TICKS = Math.floor(0.175 * Settings.TPS);
 const DOOR_CLOSE_TICKS = Math.floor(0.175 * Settings.TPS);
 
 const calculateDoorSwingAmount = (lastDoorSwingTicks: number): number => {
-   const ticksSinceLastSwing = Board.ticks - lastDoorSwingTicks;
+   const ticksSinceLastSwing = Board.serverTicks - lastDoorSwingTicks;
    if (ticksSinceLastSwing <= DOOR_OPEN_TICKS) {
       return lerp(0, 1, ticksSinceLastSwing / DOOR_OPEN_TICKS);
    } else if (ticksSinceLastSwing <= DOOR_OPEN_TICKS + DOOR_REMAIN_TICKS) {
@@ -113,7 +114,7 @@ class HutComponent extends ServerComponent {
       const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
       
       // @Incomplete: What if this packet is skipped?
-      if (lastDoorSwingTicks === Board.ticks) {
+      if (lastDoorSwingTicks === Board.serverTicks) {
          playSound("door-open.mp3", 0.4, 1, transformComponent.position);
       }
       
@@ -124,13 +125,13 @@ class HutComponent extends ServerComponent {
       if (this.isRecalling) {
          if (this.recallMarker === null) {
             this.recallMarker = new TexturedRenderPart(
-               this.entity,
+               null,
                9,
                0,
                getTextureArrayIndex("entities/recall-marker.png")
             );
             this.recallMarker.inheritParentRotation = false;
-            this.entity.attachRenderPart(this.recallMarker);
+            this.entity.attachRenderThing(this.recallMarker);
          }
 
          let opacity = Math.sin(transformComponent.ageTicks / Settings.TPS * 5) * 0.5 + 0.5;
@@ -146,3 +147,5 @@ class HutComponent extends ServerComponent {
 }
 
 export default HutComponent;
+
+export const HutComponentArray = new ComponentArray<HutComponent>(ComponentArrayType.server, ServerComponentType.hut, true, {});

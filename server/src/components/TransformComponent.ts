@@ -1,14 +1,13 @@
-import { CircularHitboxData, PathfindingNodeIndex, RectangularHitboxData, RIVER_STEPPING_STONE_SIZES } from "webgl-test-shared/dist/client-server-types";
-import { CircularHitbox, Hitbox, RectangularHitbox, hitboxIsCircular, updateHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
+import { PathfindingNodeIndex, RIVER_STEPPING_STONE_SIZES } from "webgl-test-shared/dist/client-server-types";
+import { Hitbox, hitboxIsCircular, updateHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { Settings } from "webgl-test-shared/dist/settings";
-import { clampToBoardDimensions, Point } from "webgl-test-shared/dist/utils";
+import { clampToBoardDimensions, Point, TileIndex } from "webgl-test-shared/dist/utils";
 import Board from "../Board";
-import Chunk from "../Chunk";
-import Tile from "../Tile";
+import Chunk, { entityIsCollisionRelevant } from "../Chunk";
 import { EntityID, EntityType, EntityTypeString } from "webgl-test-shared/dist/entities";
 import { ComponentArray } from "./ComponentArray";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { AIHelperComponentArray } from "./AIHelperComponent";
+import { AIHelperComponentArray, entityIsNoticedByAI } from "./AIHelperComponent";
 import { TileType } from "webgl-test-shared/dist/tiles";
 import { PhysicsComponentArray } from "./PhysicsComponent";
 import { clearEntityPathfindingNodes, entityCanBlockPathfinding, updateEntityPathfindingNodeOccupance } from "../pathfinding";
@@ -33,7 +32,8 @@ export class TransformComponent {
    public totalMass = 0;
 
    // @Cleanup: should this be here? (Do all entities need this property regardless)
-   public ageTicks = 0;
+   /** The tick when the entity with this component was spawned */
+   public readonly spawnTicks = Board.ticks;
 
    /** Position of the entity in the world */
    public position: Point;
@@ -47,8 +47,6 @@ export class TransformComponent {
    /** Set of all chunks the entity is contained in */
    public chunks = new Array<Chunk>();
 
-   /** The tile the entity is currently standing on. */
-   public tile: Tile;
    public isInRiver!: boolean;
 
    /** All hitboxes attached to the entity */
@@ -84,19 +82,16 @@ export class TransformComponent {
       if (this.position.y < 0) this.position.y = 0;
       if (this.position.y >= Settings.BOARD_UNITS) this.position.y = Settings.BOARD_UNITS - 1;
 
-      this.tile = getTile(this);
       // @Hack @Bug: if this is done now, the check for physicscomponent will always fail.
       this.strictCheckIsInRiver(0);
-   }
-
-   public updateTile(): void {
-      this.tile = getTile(this);
    }
 
    // @Cleanup: combine
    
    public strictCheckIsInRiver(entity: EntityID): void {
-      if (this.tile.type !== TileType.water) {
+      const tileIndex = getEntityTile(this);
+      const tileType = Board.tileTypes[tileIndex];
+      if (tileType !== TileType.water) {
          this.isInRiver = false;
          return;
       }
@@ -127,11 +122,10 @@ export class TransformComponent {
    }
 
    public checkIsInRiver(entity: EntityID): void {
-      if (typeof this.tile === "undefined") {
-         console.log("tile undefined???");
-      }
+      const tileIndex = getEntityTile(this);
       
-      if (this.tile.type !== TileType.water) {
+      const tileType = Board.tileTypes[tileIndex];
+      if (tileType !== TileType.water) {
          this.isInRiver = false;
          return;
       }
@@ -299,8 +293,11 @@ export class TransformComponent {
 
    private addToChunk(entity: EntityID, chunk: Chunk): void {
       chunk.entities.push(entity);
-      if (PhysicsComponentArray.hasComponent(entity)) {
-         chunk.physicsEntities.push(entity);
+      if (entityIsCollisionRelevant(entity)) {
+         chunk.collisionRelevantEntities.push(entity);
+         if (PhysicsComponentArray.hasComponent(entity)) {
+            chunk.collisionRelevantPhysicsEntities.push(entity);
+         }
       }
    
       const numViewingMobs = chunk.viewingEntities.length;
@@ -308,26 +305,30 @@ export class TransformComponent {
          const viewingEntity = chunk.viewingEntities[i];
          const aiHelperComponent = AIHelperComponentArray.getComponent(viewingEntity);
    
-         const idx = aiHelperComponent.potentialVisibleEntities.indexOf(entity);
-         if (idx === -1 && viewingEntity !== entity) {
-            aiHelperComponent.potentialVisibleEntities.push(entity);
-            aiHelperComponent.potentialVisibleEntityAppearances.push(1);
-         } else {
-            aiHelperComponent.potentialVisibleEntityAppearances[idx]++;
+         if (entityIsNoticedByAI(aiHelperComponent, entity)) {
+            const idx = aiHelperComponent.potentialVisibleEntities.indexOf(entity);
+            if (idx === -1 && viewingEntity !== entity) {
+               aiHelperComponent.potentialVisibleEntities.push(entity);
+               aiHelperComponent.potentialVisibleEntityAppearances.push(1);
+            } else {
+               aiHelperComponent.potentialVisibleEntityAppearances[idx]++;
+            }
          }
       }
    }
    
    public removeFromChunk(entity: EntityID, chunk: Chunk): void {
-      const idx = chunk.entities.indexOf(entity);
+      let idx = chunk.entities.indexOf(entity);
       if (idx !== -1) {
          chunk.entities.splice(idx, 1);
       }
-      if (PhysicsComponentArray.hasComponent(entity)) {
-         const idx = chunk.physicsEntities.indexOf(entity);
-         if (idx !== -1) {
-            chunk.physicsEntities.splice(idx, 1);
-         }
+      idx = chunk.collisionRelevantEntities.indexOf(entity);
+      if (idx !== -1) {
+         chunk.collisionRelevantEntities.splice(idx, 1);
+      }
+      idx = chunk.collisionRelevantPhysicsEntities.indexOf(entity);
+      if (idx !== -1) {
+         chunk.collisionRelevantPhysicsEntities.splice(idx, 1);
       }
    
       // @Incomplete
@@ -342,17 +343,17 @@ export class TransformComponent {
          const aiHelperComponent = AIHelperComponentArray.getComponent(viewingEntity);
    
          const idx = aiHelperComponent.potentialVisibleEntities.indexOf(entity);
-         if (idx === -1) {
-            throw new Error("Tried to remove entity from visible entities when it wasn't in it");
-         }
-         aiHelperComponent.potentialVisibleEntityAppearances[idx]--;
-         if (aiHelperComponent.potentialVisibleEntityAppearances[idx] === 0) {
-            aiHelperComponent.potentialVisibleEntities.splice(idx, 1);
-            aiHelperComponent.potentialVisibleEntityAppearances.splice(idx, 1);
-   
-            const idx2 = aiHelperComponent.visibleEntities.indexOf(entity);
-            if (idx2 !== -1) {
-               aiHelperComponent.visibleEntities.splice(idx2, 1);
+         // We do this check as decorative entities are sometimes not in the potential visible entities array
+         if (idx !== -1) {
+            aiHelperComponent.potentialVisibleEntityAppearances[idx]--;
+            if (aiHelperComponent.potentialVisibleEntityAppearances[idx] === 0) {
+               aiHelperComponent.potentialVisibleEntities.splice(idx, 1);
+               aiHelperComponent.potentialVisibleEntityAppearances.splice(idx, 1);
+      
+               const idx2 = aiHelperComponent.visibleEntities.indexOf(entity);
+               if (idx2 !== -1) {
+                  aiHelperComponent.visibleEntities.splice(idx2, 1);
+               }
             }
          }
       }
@@ -386,8 +387,8 @@ export class TransformComponent {
 
          for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
             for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
-               const tile = Board.getTile(tileX, tileY);
-               if (tile.isWall) {
+               const isWall = Board.getTileIsWall(tileX, tileY);
+               if (isWall) {
                   resolveEntityTileCollision(entity, hitbox, tileX, tileY);
                }
             }
@@ -439,10 +440,10 @@ export const TransformComponentArray = new ComponentArray<TransformComponent>(Se
    addDataToPacket: addDataToPacket
 });
 
-const getTile = (transformComponent: TransformComponent): Tile => {
+export function getEntityTile(transformComponent: TransformComponent): TileIndex {
    const tileX = Math.floor(transformComponent.position.x / Settings.TILE_SIZE);
    const tileY = Math.floor(transformComponent.position.y / Settings.TILE_SIZE);
-   return Board.getTile(tileX, tileY);
+   return Board.getTileIndexIncludingEdges(tileX, tileY);
 }
 
 function onJoin(entity: EntityID): void {
@@ -495,7 +496,7 @@ function addDataToPacket(packet: Packet, entity: EntityID): void {
    packet.addNumber(transformComponent.position.x);
    packet.addNumber(transformComponent.position.y);
    packet.addNumber(transformComponent.rotation);
-   packet.addNumber(transformComponent.ageTicks);
+   packet.addNumber(getAgeTicks(transformComponent));
    packet.addNumber(transformComponent.collisionBit);
    packet.addNumber(transformComponent.collisionMask);
    
@@ -548,4 +549,8 @@ function addDataToPacket(packet: Packet, entity: EntityID): void {
       packet.addNumber(hitbox.height);
       packet.addNumber(hitbox.relativeRotation);
    }
+}
+
+export function getAgeTicks(transformComponent: TransformComponent): number {
+   return Board.ticks - transformComponent.spawnTicks;
 }

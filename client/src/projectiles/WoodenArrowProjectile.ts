@@ -9,9 +9,9 @@ class WoodenArrowProjectile extends Entity {
    constructor(id: number) {
       super(id, EntityType.woodenArrow);
 
-      this.attachRenderPart(
+      this.attachRenderThing(
          new TexturedRenderPart(
-            this,
+            null,
             0,
             0,
             getTextureArrayIndex("projectiles/wooden-arrow.png")

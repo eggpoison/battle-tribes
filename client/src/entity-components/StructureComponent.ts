@@ -1,6 +1,8 @@
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import { PacketReader } from "webgl-test-shared/dist/packets";
+import { ComponentArray, ComponentArrayType } from "./ComponentArray";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 
 class StructureComponent extends ServerComponent {
    public hasActiveBlueprint: boolean;
@@ -26,3 +28,5 @@ class StructureComponent extends ServerComponent {
 }
 
 export default StructureComponent;
+
+export const StructureComponentArray = new ComponentArray<StructureComponent>(ComponentArrayType.server, ServerComponentType.structure, true, {});

@@ -14,7 +14,7 @@ import { onIceShardCollision } from "./entities/projectiles/ice-shard";
 import { onRockSpikeProjectileCollision } from "./entities/projectiles/rock-spike";
 import { onSlimeSpitCollision } from "./entities/projectiles/slime-spit";
 import { onSpearProjectileCollision } from "./entities/projectiles/spear-projectile";
-import { onSpitPoisonCollision } from "./entities/projectiles/spit-poison";
+import { onSpitPoisonCollision } from "./entities/projectiles/spit-poison-area";
 import { onCactusCollision } from "./entities/resources/cactus";
 import { onIceSpikesCollision } from "./entities/resources/ice-spikes";
 import { onSnowballCollision } from "./entities/snowball";
@@ -154,7 +154,7 @@ export function collide(entity: EntityID, pushingEntity: EntityID, pushedHitboxI
       case EntityType.rockSpikeProjectile: onRockSpikeProjectileCollision(entity, pushingEntity, collisionPoint); break;
       case EntityType.spearProjectile: onSpearProjectileCollision(entity, pushingEntity, collisionPoint); break;
       case EntityType.slimeSpit: onSlimeSpitCollision(entity, pushingEntity, collisionPoint); break;
-      case EntityType.spitPoison: onSpitPoisonCollision(entity, pushingEntity, collisionPoint); break;
+      case EntityType.spitPoisonArea: onSpitPoisonCollision(entity, pushingEntity, collisionPoint); break;
       case EntityType.battleaxeProjectile: onBattleaxeProjectileCollision(entity, pushingEntity, collisionPoint); break;
       case EntityType.iceArrow: onIceArrowCollision(entity, pushingEntity); break;
       case EntityType.pebblum: onPebblumCollision(entity, pushingEntity, collisionPoint); break;

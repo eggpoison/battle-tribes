@@ -1,7 +1,7 @@
 import { CircularHitboxData, RectangularHitboxData, StatusEffectData } from "./client-server-types";
 import { CraftingStation } from "./items/crafting-recipes";
 import { CactusBodyFlowerData, CactusLimbData, CowSpecies, DeathInfo, DoorToggleType, FishColour, FrozenYetiAttackType, RockSpikeProjectileSize, SlimeSize, SnowballSize, TreeSize, LimbAction, TribeTotemBanner, EntityType } from "./entities";
-import { BallistaAmmoType, Inventory, InventoryName, ItemType } from "./items/items";
+import { Inventory, InventoryName, ItemType } from "./items/items";
 import { Settings } from "./settings";
 import { StatusEffect } from "./status-effects";
 import { TitleGenerationInfo } from "./titles";
@@ -61,6 +61,7 @@ export enum ServerComponentType {
    tunnel,
    buildingMaterial,
    spikes,
+   punjiSticks,
    tribeWarrior,
    healingTotem,
    planterBox,
@@ -71,8 +72,13 @@ export enum ServerComponentType {
    craftingStation,
    transform,
    projectile,
+   iceArrow,
    layeredRod,
-   decoration
+   decoration,
+   spitPoisonArea,
+   battleaxeProjectile,
+   spearProjectile,
+   krumblid
 }
 
 export const ServerComponentTypeString: Record<ServerComponentType, string> = {
@@ -121,6 +127,7 @@ export const ServerComponentTypeString: Record<ServerComponentType, string> = {
    [ServerComponentType.tunnel]: "tunnel",
    [ServerComponentType.buildingMaterial]: "building material",
    [ServerComponentType.spikes]: "spikes",
+   [ServerComponentType.punjiSticks]: "punji sticks",
    [ServerComponentType.tribeWarrior]: "tribe warrior",
    [ServerComponentType.healingTotem]: "healing totem",
    [ServerComponentType.planterBox]: "planter box",
@@ -131,9 +138,16 @@ export const ServerComponentTypeString: Record<ServerComponentType, string> = {
    [ServerComponentType.craftingStation]: "crafting station",
    [ServerComponentType.transform]: "transform",
    [ServerComponentType.projectile]: "projectile",
+   [ServerComponentType.iceArrow]: "ice arrow",
    [ServerComponentType.layeredRod]: "layered rod",
-   [ServerComponentType.decoration]: "decoration"
+   [ServerComponentType.decoration]: "decoration",
+   [ServerComponentType.spitPoisonArea]: "spit poison area",
+   [ServerComponentType.battleaxeProjectile]: "battleaxe projectile",
+   [ServerComponentType.spearProjectile]: "spear projectile",
+   [ServerComponentType.krumblid]: "krumblid"
 };
+
+export const NUM_COMPONENTS = Object.keys(ServerComponentTypeString).length;
 
 // @Hack: shouldn't be hardcoded
 export const EntityComponents = {
@@ -159,7 +173,7 @@ export const EntityComponents = {
    [EntityType.campfire]: [ServerComponentType.transform, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.tribe, ServerComponentType.inventory, ServerComponentType.cooking] as const,
    [EntityType.furnace]: [ServerComponentType.transform, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.tribe, ServerComponentType.inventory, ServerComponentType.cooking] as const,
    [EntityType.snowball]: [ServerComponentType.transform, ServerComponentType.physics, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.snowball] as const,
-   [EntityType.krumblid]: [ServerComponentType.transform, ServerComponentType.physics, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.wanderAI, ServerComponentType.followAI, ServerComponentType.escapeAI, ServerComponentType.aiHelper] as const,
+   [EntityType.krumblid]: [ServerComponentType.transform, ServerComponentType.physics, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.wanderAI, ServerComponentType.followAI, ServerComponentType.escapeAI, ServerComponentType.aiHelper, ServerComponentType.krumblid] as const,
    [EntityType.frozenYeti]: [ServerComponentType.transform, ServerComponentType.physics, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.wanderAI, ServerComponentType.frozenYeti, ServerComponentType.aiHelper] as const,
    [EntityType.fish]: [ServerComponentType.transform, ServerComponentType.physics, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.wanderAI, ServerComponentType.escapeAI, ServerComponentType.aiHelper, ServerComponentType.fish] as const,
    [EntityType.itemEntity]: [ServerComponentType.transform, ServerComponentType.physics, ServerComponentType.item] as const,
@@ -171,22 +185,22 @@ export const EntityComponents = {
    [EntityType.slingTurretRock]: [ServerComponentType.transform, ServerComponentType.physics, ServerComponentType.tribe] as const,
    [EntityType.iceShardProjectile]: [ServerComponentType.transform, ServerComponentType.physics, ServerComponentType.iceShard] as const,
    [EntityType.rockSpikeProjectile]: [ServerComponentType.transform, ServerComponentType.rockSpike] as const,
-   [EntityType.spearProjectile]: [ServerComponentType.transform, ServerComponentType.physics, ServerComponentType.throwingProjectile] as const,
+   [EntityType.spearProjectile]: [ServerComponentType.transform, ServerComponentType.physics, ServerComponentType.throwingProjectile, ServerComponentType.spearProjectile] as const,
    [EntityType.researchBench]: [ServerComponentType.transform, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.tribe, ServerComponentType.researchBench] as const,
    [EntityType.wall]: [ServerComponentType.transform, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.tribe, ServerComponentType.buildingMaterial] as const,
    [EntityType.slimeSpit]: [ServerComponentType.transform, ServerComponentType.physics, ServerComponentType.slimeSpit] as const,
-   [EntityType.spitPoison]: [ServerComponentType.transform] as const,
+   [EntityType.spitPoisonArea]: [ServerComponentType.transform, ServerComponentType.spitPoisonArea] as const,
    [EntityType.door]: [ServerComponentType.transform, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.door, ServerComponentType.structure, ServerComponentType.tribe, ServerComponentType.buildingMaterial] as const,
    [EntityType.battleaxeProjectile]: [ServerComponentType.transform, ServerComponentType.physics, ServerComponentType.throwingProjectile] as const,
    [EntityType.golem]: [ServerComponentType.transform, ServerComponentType.physics, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.golem] as const,
    [EntityType.planterBox]: [ServerComponentType.transform, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.tribe, ServerComponentType.planterBox] as const,
-   [EntityType.iceArrow]: [ServerComponentType.transform, ServerComponentType.physics, ServerComponentType.tribe] as const,
+   [EntityType.iceArrow]: [ServerComponentType.transform, ServerComponentType.physics, ServerComponentType.tribe, ServerComponentType.iceArrow] as const,
    [EntityType.pebblum]: [ServerComponentType.transform, ServerComponentType.physics, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.pebblum] as const,
    [EntityType.embrasure]: [ServerComponentType.transform, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.tribe, ServerComponentType.buildingMaterial] as const,
    [EntityType.floorSpikes]: [ServerComponentType.transform, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.tribe, ServerComponentType.spikes, ServerComponentType.buildingMaterial] as const,
    [EntityType.wallSpikes]: [ServerComponentType.transform, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.tribe, ServerComponentType.spikes, ServerComponentType.buildingMaterial] as const,
-   [EntityType.floorPunjiSticks]: [ServerComponentType.transform, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.tribe, ServerComponentType.spikes] as const,
-   [EntityType.wallPunjiSticks]: [ServerComponentType.transform, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.tribe, ServerComponentType.spikes] as const,
+   [EntityType.floorPunjiSticks]: [ServerComponentType.transform, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.tribe, ServerComponentType.spikes, ServerComponentType.punjiSticks] as const,
+   [EntityType.wallPunjiSticks]: [ServerComponentType.transform, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.tribe, ServerComponentType.spikes, ServerComponentType.punjiSticks] as const,
    [EntityType.blueprintEntity]: [ServerComponentType.transform, ServerComponentType.health, ServerComponentType.blueprint, ServerComponentType.tribe] as const,
    [EntityType.ballista]: [ServerComponentType.transform, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.tribe, ServerComponentType.turret, ServerComponentType.aiHelper, ServerComponentType.ammoBox, ServerComponentType.inventory] as const,
    [EntityType.slingTurret]: [ServerComponentType.transform, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.tribe, ServerComponentType.turret, ServerComponentType.aiHelper] as const,
@@ -199,7 +213,9 @@ export const EntityComponents = {
    [EntityType.stonecarvingTable]: [ServerComponentType.transform, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.structure, ServerComponentType.craftingStation] as const,
    [EntityType.grassStrand]: [ServerComponentType.transform, ServerComponentType.layeredRod] as const,
    [EntityType.decoration]: [ServerComponentType.transform, ServerComponentType.decoration] as const,
-   [EntityType.reed]: [ServerComponentType.transform, ServerComponentType.layeredRod] as const
+   [EntityType.reed]: [ServerComponentType.transform, ServerComponentType.layeredRod] as const,
+   [EntityType.lilypad]: [ServerComponentType.transform] as const,
+   [EntityType.fibrePlant]: [ServerComponentType.transform, ServerComponentType.statusEffect, ServerComponentType.health] as const
 } satisfies Record<EntityType, ReadonlyArray<ServerComponentType>>;
 
 export type EntityComponentTypes<T extends EntityType> = typeof EntityComponents[T];
@@ -537,12 +553,14 @@ export interface TribesmanAIComponentData extends BaseComponentData {
 
 /* Turret Component */
 
-export interface TurretComponentData extends BaseComponentData {
-   readonly componentType: ServerComponentType.turret;
-   readonly aimDirection: number;
-   readonly chargeProgress: number;
-   readonly reloadProgress: number;
-}
+// @Robustness
+export type TurretEntityType = EntityType.slingTurret | EntityType.ballista;
+
+export type TurretAmmoType = ItemType.wood | ItemType.rock | ItemType.slimeball | ItemType.frostcicle;
+export const TURRET_AMMO_TYPES: Record<TurretEntityType, ReadonlyArray<TurretAmmoType>> = {
+   [EntityType.slingTurret]: [ItemType.rock],
+   [EntityType.ballista]: [ItemType.wood, ItemType.rock, ItemType.slimeball, ItemType.frostcicle]
+};
 
 /* Yeti Component */
 
@@ -558,11 +576,11 @@ export interface ZombieComponentData extends BaseComponentData {
    readonly zombieType: number;
 }
 
-/* Ballista Component */
+/* Ammo Box Component */
 
 export interface AmmoBoxComponentData extends BaseComponentData {
    readonly componentType: ServerComponentType.ammoBox;
-   readonly ammoType: BallistaAmmoType;
+   readonly ammoType: TurretAmmoType;
    readonly ammoRemaining: number;
 }
 
@@ -794,7 +812,7 @@ export interface GenericAmmoInfo {
    readonly statusEffect: ArrowStatusEffectInfo | null;
 }
 
-export const AMMO_INFO_RECORD: Record<BallistaAmmoType, GenericAmmoInfo> = {
+export const AMMO_INFO_RECORD: Record<TurretAmmoType, GenericAmmoInfo> = {
    [ItemType.wood]: {
       // projectileType: BallistaProjectileType.woodenBolt,
       damage: 5,

@@ -159,7 +159,10 @@ export class TribesmanAIComponent {
 }
 
 export const TribesmanAIComponentArray = new ComponentArray<TribesmanAIComponent>(ServerComponentType.tribesmanAI, true, {
-   onTick: tickTribesman,
+   onTick: {
+      tickInterval: 1,
+      func: tickTribesman
+   },
    getDataLength: getDataLength,
    addDataToPacket: addDataToPacket
 });

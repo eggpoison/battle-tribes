@@ -5,16 +5,16 @@ import { InventoryComponentArray } from "./InventoryComponent";
 import Board from "../Board";
 
 export interface ThrowingProjectileComponentParams {
-   tribeMemberID: number;
+   tribeMember: EntityID;
    itemID: number | null;
 }
 
-export class ThrowingProjectileComponent {
-   readonly tribeMemberID: number;
+export class ThrowingProjectileComponent implements ThrowingProjectileComponentParams {
+   readonly tribeMember: EntityID;
    readonly itemID: number | null;
 
    constructor(params: ThrowingProjectileComponentParams) {
-      this.tribeMemberID = params.tribeMemberID;
+      this.tribeMember = params.tribeMember;
       this.itemID = params.itemID;
    }
 }
@@ -27,11 +27,11 @@ export const ThrowingProjectileComponentArray = new ComponentArray<ThrowingProje
 
 function onRemove(entity: EntityID): void {
    const throwingProjectileComponent = ThrowingProjectileComponentArray.getComponent(entity);
-   if (!Board.hasEntity(throwingProjectileComponent.tribeMemberID) || throwingProjectileComponent.itemID === null) {
+   if (!Board.hasEntity(throwingProjectileComponent.tribeMember) || throwingProjectileComponent.itemID === null) {
       return;
    }
 
-   const ownerInventoryComponent = InventoryComponentArray.getComponent(throwingProjectileComponent.tribeMemberID);
+   const ownerInventoryComponent = InventoryComponentArray.getComponent(throwingProjectileComponent.tribeMember);
    
    const idx = ownerInventoryComponent.absentItemIDs.indexOf(throwingProjectileComponent.itemID);
    if (idx !== -1) {

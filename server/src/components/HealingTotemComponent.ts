@@ -21,6 +21,10 @@ export class HealingTotemComponent {
 }
 
 export const HealingTotemComponentArray = new ComponentArray<HealingTotemComponent>(ServerComponentType.healingTotem, true, {
+   onTick: {
+      tickInterval: 1,
+      func: onTick
+   },
    getDataLength: getDataLength,
    addDataToPacket: addDataToPacket
 });
@@ -89,7 +93,7 @@ const healTargetIsInIDs = (target: EntityID, ids: ReadonlyArray<number>): boolea
    return false;
 }
 
-export function tickHealingTotemComponent(healingTotem: EntityID, healingTotemComponent: HealingTotemComponent): void {
+function onTick(healingTotemComponent: HealingTotemComponent, healingTotem: EntityID): void {
    // @Speed: shouldn't call every tick
    const healingTargets = getHealingTargets(healingTotem);
 

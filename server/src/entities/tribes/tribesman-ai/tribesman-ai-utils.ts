@@ -18,7 +18,7 @@ import { SpikesComponentArray } from "../../../components/SpikesComponent";
 import { TRIBE_WARRIOR_VISION_RANGE } from "../tribe-warrior";
 import { TRIBE_WORKER_VISION_RANGE, TRIBE_WORKER_RADIUS } from "../tribe-worker";
 import { InventoryName, Inventory, ItemInfoRecord, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, ToolItemInfo } from "webgl-test-shared/dist/items/items";
-import { TransformComponentArray } from "../../../components/TransformComponent";
+import { getAgeTicks, TransformComponentArray } from "../../../components/TransformComponent";
 
 const enum Vars {
    BLOCKING_TRIBESMAN_DISTANCE = 80,
@@ -145,7 +145,9 @@ const shouldRecalculatePath = (tribesman: EntityID, goalX: number, goalY: number
       // Recalculate if the tribesman isn't making any progress
       const transformComponent = TransformComponentArray.getComponent(tribesman);
       const physicsComponent = PhysicsComponentArray.getComponent(tribesman);
-      if (tribesmanComponent.rawPath.length > 2 && transformComponent.ageTicks % Settings.TPS === 0 && physicsComponent.velocity.lengthSquared() < 10 * 10) {
+
+      const ageTicks = getAgeTicks(transformComponent);
+      if (tribesmanComponent.rawPath.length > 2 && ageTicks % Settings.TPS === 0 && physicsComponent.velocity.lengthSquared() < 10 * 10) {
          return true;
       }
 
@@ -243,7 +245,8 @@ const continueCurrentPath = (tribesman: EntityID, goalX: number, goalY: number):
 
       // @Speed: only do this if we know the path has a door in it
       // Open any doors in their way
-      if (transformComponent.ageTicks % ((Settings.TPS / 6) | 0) === 0) {
+      const ageTicks = getAgeTicks(transformComponent);
+      if (ageTicks % ((Settings.TPS / 6) | 0) === 0) {
          openDoors(tribesman, tribeComponent.tribe);
       }
 

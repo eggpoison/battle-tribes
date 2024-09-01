@@ -3,7 +3,6 @@ import Tribe from "../Tribe";
 import { EntityTickEvent } from "webgl-test-shared/dist/entity-events";
 import { EntityID } from "webgl-test-shared/dist/entities";
 import WebSocket from "ws";
-import { TransformComponentArray } from "../components/TransformComponent";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { Point } from "webgl-test-shared/dist/utils";
 
@@ -40,6 +39,7 @@ class PlayerClient {
 
    public visibleEntities = new Set<EntityID>();
    public visibleDirtiedEntities = new Array<EntityID>();
+   public visibleRemovedEntities = new Array<EntityID>();
 
    constructor(socket: WebSocket, tribe: Tribe, screenWidth: number, screenHeight: number, playerPosition: Point, instance: EntityID, username: string) {
       this.socket = socket;

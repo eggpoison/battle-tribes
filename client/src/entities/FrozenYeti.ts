@@ -15,35 +15,35 @@ class FrozenYeti extends Entity {
    constructor(id: number) {
       super(id, EntityType.frozenYeti);
 
-      this.attachRenderPart(new TexturedRenderPart(
-         this,
+      this.attachRenderThing(new TexturedRenderPart(
+         null,
          1,
          0,
          getTextureArrayIndex("entities/frozen-yeti/frozen-yeti.png")
       ));
 
       const headRenderPart = new TexturedRenderPart(
-         this,
+         null,
          2,
          0,
          getTextureArrayIndex("entities/frozen-yeti/frozen-yeti-head.png")
       );
       headRenderPart.addTag("frozenYetiComponent:head");
       headRenderPart.offset.y = FROZEN_YETI_HEAD_DISTANCE;
-      this.attachRenderPart(headRenderPart);
+      this.attachRenderThing(headRenderPart);
 
       // Create paw render parts
       const pawRenderParts = new Array<RenderPart>();
       for (let i = 0; i < 2; i++) {
          const paw = new TexturedRenderPart(
-            this,
+            null,
             0,
             0,
             getTextureArrayIndex("entities/frozen-yeti/frozen-yeti-paw.png")
          );
          paw.addTag("frozenYetiComponent:paw");
 
-         this.attachRenderPart(paw);
+         this.attachRenderThing(paw);
          pawRenderParts.push(paw);
       }
    }

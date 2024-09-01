@@ -22,13 +22,13 @@ class BerryBush extends Entity {
       const berryBushComponent = this.getServerComponent(ServerComponentType.berryBush);
       
       const renderPart = new TexturedRenderPart(
-         this,
+         null,
          0,
          0,
          getTextureArrayIndex(BERRY_BUSH_TEXTURE_SOURCES[berryBushComponent.numBerries])
       );
       renderPart.addTag("berryBushComponent:renderPart");
-      this.attachRenderPart(renderPart);
+      this.attachRenderThing(renderPart);
    }
 
    protected onHit(): void {

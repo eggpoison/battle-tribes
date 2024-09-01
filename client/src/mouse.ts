@@ -9,6 +9,7 @@ import Board from "./Board";
 import { Tile } from "./Tile";
 import Entity from "./Entity";
 import { updateCursorTooltip } from "./components/game/dev/CursorTooltip";
+import { TransformComponentArray } from "./entity-components/TransformComponent";
 
 export let cursorX: number | null = null;
 export let cursorY: number | null = null;
@@ -72,11 +73,13 @@ export function getMouseTargetEntity(): Entity | null {
          const chunk = Board.getChunk(chunkX, chunkY);
          for (const entityID of chunk.entities) {
             const entity = Board.entityRecord[entityID]!;
+
+            const transformComponent = TransformComponentArray.getComponent(entity.id);
             
-            const distance = Math.sqrt(Math.pow(Game.cursorPositionX - entity.renderPosition.x, 2) + Math.pow(Game.cursorPositionY - entity.renderPosition.y, 2))
-            if (distance <= CLIENT_SETTINGS.CURSOR_TOOLTIP_HOVER_RANGE && distance < minDistance) {
+            const distanceFromCursor = Math.sqrt(Math.pow(Game.cursorPositionX - transformComponent.position.x, 2) + Math.pow(Game.cursorPositionY - transformComponent.position.y, 2))
+            if (distanceFromCursor <= CLIENT_SETTINGS.CURSOR_TOOLTIP_HOVER_RANGE && distanceFromCursor < minDistance) {
                closestEntity = entity;
-               minDistance = distance;
+               minDistance = distanceFromCursor;
             }
          }
       }

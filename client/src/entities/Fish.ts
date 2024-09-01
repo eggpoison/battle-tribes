@@ -25,29 +25,14 @@ class Fish extends Entity {
    public onLoad(): void {
       const fishComponent = this.getServerComponent(ServerComponentType.fish);
 
-      this.attachRenderPart(
+      this.attachRenderThing(
          new TexturedRenderPart(
-            this,
+            null,
             0,
             0,
             getTextureArrayIndex(TEXTURE_SOURCES[fishComponent.colour])
          )
       );
-   }
-
-   public tick(): void {
-      super.tick();
-
-      const transformComponent = this.getServerComponent(ServerComponentType.transform);
-      if (transformComponent.tile.type !== TileType.water && Board.tickIntervalHasPassed(0.4)) {
-         for (let i = 0; i < 8; i++) {
-            const spawnOffsetDirection = 2 * Math.PI * Math.random();
-            const spawnPositionX = transformComponent.position.x + 8 * Math.sin(spawnOffsetDirection);
-            const spawnPositionY = transformComponent.position.y + 8 * Math.cos(spawnOffsetDirection);
-
-            createWaterSplashParticle(spawnPositionX, spawnPositionY);
-         }
-      }
    }
 
    protected onHit(hitData: HitData): void {

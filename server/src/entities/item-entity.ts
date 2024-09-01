@@ -7,14 +7,10 @@ import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { ComponentConfig } from "../components";
 import { HitboxCollisionType, RectangularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { ItemType } from "webgl-test-shared/dist/items/items";
-import { TransformComponentArray } from "../components/TransformComponent";
-import Board from "../Board";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics
    | ServerComponentType.item;
-
-const TICKS_TO_DESPAWN = 300 * Settings.TPS;
 
 export function createItemEntityConfig(): ComponentConfig<ComponentTypes> {
    return {
@@ -40,14 +36,6 @@ export function createItemEntityConfig(): ComponentConfig<ComponentTypes> {
          throwingEntity: null
       }
    };
-}
-
-export function tickItemEntity(itemEntity: EntityID): void {
-   // Despawn old items
-   const transformComponent = TransformComponentArray.getComponent(itemEntity);
-   if (transformComponent.ageTicks >= TICKS_TO_DESPAWN) {
-      Board.destroyEntity(itemEntity);
-   }
 }
 
 export function addItemEntityPlayerPickupCooldown(itemEntity: EntityID, entityID: number, cooldownDuration: number): void {

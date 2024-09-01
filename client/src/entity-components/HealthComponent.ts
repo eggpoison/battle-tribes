@@ -1,8 +1,9 @@
 import { Settings } from "webgl-test-shared/dist/settings";
-import { lerp } from "webgl-test-shared/dist/utils";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import { PacketReader } from "webgl-test-shared/dist/packets";
+import { ComponentArray, ComponentArrayType } from "./ComponentArray";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 
 /** Amount of seconds that the hit flash occurs for */
 const ATTACK_HIT_FLASH_DURATION = 0.4;
@@ -19,21 +20,6 @@ class HealthComponent extends ServerComponent {
 
       this.health = reader.readNumber();
       this.maxHealth = reader.readNumber();
-   }
-
-   public tick(): void {
-      this.secondsSinceLastHit += Settings.I_TPS;
-      
-      let redness: number;
-      if (this.secondsSinceLastHit === null || this.secondsSinceLastHit > ATTACK_HIT_FLASH_DURATION) {
-         redness = 0;
-      } else {
-         redness = MAX_REDNESS * (1 - this.secondsSinceLastHit / ATTACK_HIT_FLASH_DURATION);
-      }
-
-      this.entity.tintR = lerp(this.entity.tintR, 1, redness);
-      this.entity.tintG = lerp(this.entity.tintG, -1, redness);
-      this.entity.tintB = lerp(this.entity.tintB, -1, redness);
    }
 
    public onHit(isDamagingHit: boolean): void {
@@ -53,3 +39,27 @@ class HealthComponent extends ServerComponent {
 }
 
 export default HealthComponent;
+
+export const HealthComponentArray = new ComponentArray<HealthComponent>(ComponentArrayType.server, ServerComponentType.health, true, {
+   onTick: onTick
+});
+
+function onTick(healthComponent: HealthComponent): void {
+   healthComponent.secondsSinceLastHit += Settings.I_TPS;
+   
+   let redness: number;
+   if (healthComponent.secondsSinceLastHit === null || healthComponent.secondsSinceLastHit > ATTACK_HIT_FLASH_DURATION) {
+      redness = 0;
+   } else {
+      redness = MAX_REDNESS * (1 - healthComponent.secondsSinceLastHit / ATTACK_HIT_FLASH_DURATION);
+   }
+
+   // @Incomplete?
+   // const r = lerp(this.entity.tintR, 1, redness);
+   // const g = lerp(this.entity.tintG, -1, redness);
+   // const b = lerp(this.entity.tintB, -1, redness);
+   const r = redness;
+   const g = -redness;
+   const b = -redness;
+   healthComponent.setTint(r, g, b);
+}

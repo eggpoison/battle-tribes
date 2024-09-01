@@ -4,7 +4,7 @@ import { EntityID, EntityType, EntityTypeString, LimbAction } from "webgl-test-s
 import { TribeType } from "webgl-test-shared/dist/tribes";
 import { Point } from "webgl-test-shared/dist/utils";
 import { CircularHitbox, HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
-import { onTribeMemberHurt, tickTribeMember } from "./tribe-member";
+import { onTribeMemberHurt } from "./tribe-member";
 import { consumeItemFromSlot, consumeItemType, countItemType, getInventory, pickupItemEntity, InventoryComponentArray } from "../../components/InventoryComponent";
 import Board from "../../Board";
 import { InventoryUseComponentArray, setLimbActions } from "../../components/InventoryUseComponent";

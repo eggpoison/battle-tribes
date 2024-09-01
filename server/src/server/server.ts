@@ -9,7 +9,6 @@ import Board from "../Board";
 import { runSpawnAttempt, spawnInitialEntities } from "../entity-spawning";
 import Tribe from "../Tribe";
 import OPTIONS from "../options";
-import { forceMaxGrowAllIceSpikes } from "../entities/resources/ice-spikes";
 import SRandom from "../SRandom";
 import { updateDynamicPathfindingNodes } from "../pathfinding";
 import { updateResourceDistributions } from "../resource-distributions";
@@ -21,15 +20,19 @@ import { createPlayerConfig } from "../entities/tribes/player";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { createEntityFromConfig } from "../Entity";
 import { processAttackPacket, processPlayerDataPacket } from "./packet-processing";
-import { EntityID } from "webgl-test-shared/dist/entities";
+import { EntityID, EntityTypeString } from "webgl-test-shared/dist/entities";
 import { SpikesComponentArray } from "../components/SpikesComponent";
 import { TribeComponentArray } from "../components/TribeComponent";
 import { TransformComponentArray } from "../components/TransformComponent";
 import { generateDecorations } from "../world-generation/decoration-generation";
 import { generateReeds } from "../world-generation/reed-generation";
 import generateTerrain from "../world-generation/terrain-generation";
-import { createCowConfig } from "../entities/mobs/cow";
+import { generateLilypads } from "../world-generation/lilypad-generation";
+import { forceMaxGrowAllIceSpikes } from "../components/IceSpikesComponent";
+import { sortComponentArrays } from "../components/ComponentArray";
 import { createTreeConfig } from "../entities/resources/tree";
+import http from "http";
+import { generateGrassStrands } from "../world-generation/grass-generation";
 
 /*
 
@@ -121,18 +124,19 @@ class GameServer {
       }
 
       // Setup
+      sortComponentArrays();
       const generationInfo = generateTerrain();
       Board.setup(generationInfo);
       updateResourceDistributions();
       spawnInitialEntities();
       forceMaxGrowAllIceSpikes();
-      // generateGrassStrands();
-      // generateDecorations();
-      // generateReeds(generationInfo.riverMainTiles);
+      generateGrassStrands();
+      generateDecorations();
+      generateReeds(generationInfo.riverMainTiles);
+      generateLilypads();
 
-      const app = express();
       this.server = new Server({
-         server: app.listen(Settings.SERVER_PORT)
+         port: Settings.SERVER_PORT
       });
 
       // Handle player connections
@@ -151,6 +155,7 @@ class GameServer {
                   const screenHeight = reader.readNumber();
 
                   const spawnPosition = generatePlayerSpawnPosition(tribeType);
+                  // @Incomplete? Unused?
                   const visibleChunkBounds = estimateVisibleChunkBounds(spawnPosition, screenWidth, screenHeight);
       
                   const tribe = new Tribe(tribeType, false);
@@ -202,6 +207,9 @@ class GameServer {
                case PacketType.attack: {
                   processAttackPacket(playerClient, reader);
                   break;
+               }
+               default: {
+                  console.log("Unknown packet type: " + packetType);
                }
             }
          });
@@ -315,6 +323,7 @@ class GameServer {
                   newlyVisibleEntities.add(entity);
                }
 
+               // Always send the player's data
                newlyVisibleEntities.add(playerClient.instance);
                
                // Send the game data to the player

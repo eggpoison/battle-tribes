@@ -1,11 +1,10 @@
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityType } from "webgl-test-shared/dist/entities";
-import { Point, randInt } from "webgl-test-shared/dist/utils";
+import { randInt } from "webgl-test-shared/dist/utils";
 import { TileType } from "webgl-test-shared/dist/tiles";
 import { createSlimePoolParticle, createSlimeSpeckParticle } from "../particles";
 import Entity from "../Entity";
 import { AudioFilePath, playSound } from "../sound";
-import { Settings } from "webgl-test-shared/dist/settings";
 import { SLIME_SIZES } from "../entity-components/SlimeComponent";
 
 class Slime extends Entity {
@@ -26,13 +25,6 @@ class Slime extends Entity {
          return 1;
       }
       return null;
-   }
-
-   public tick(): void {
-      if (Math.random() < 0.2 / Settings.TPS) {
-         const transformComponent = this.getServerComponent(ServerComponentType.transform);
-         playSound(("slime-ambient-" + randInt(1, 4) + ".mp3") as AudioFilePath, 0.4, 1, transformComponent.position);
-      }
    }
 
    protected onHit(): void {

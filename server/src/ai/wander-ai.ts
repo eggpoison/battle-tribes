@@ -1,6 +1,5 @@
 import { Settings } from "webgl-test-shared/dist/settings";
-import { randInt } from "webgl-test-shared/dist/utils";
-import Tile from "../Tile";
+import { randInt, TileIndex } from "webgl-test-shared/dist/utils";
 import Board from "../Board";
 import { moveEntityToPosition } from "../ai-shared";
 import { PhysicsComponent } from "../components/PhysicsComponent";
@@ -12,7 +11,7 @@ export function shouldWander(physicsComponent: PhysicsComponent, wanderRate: num
    return physicsComponent.velocity.x === 0 && physicsComponent.velocity.y === 0 && Math.random() < wanderRate / Settings.TPS;
 }
 
-export function getWanderTargetTile(entity: EntityID, visionRange: number): Tile {
+export function getWanderTargetTile(entity: EntityID, visionRange: number): TileIndex {
    const transformComponent = TransformComponentArray.getComponent(entity);
    
    const minTileX = Math.max(Math.floor((transformComponent.position.x - visionRange) / Settings.TILE_SIZE), 0);
@@ -28,13 +27,7 @@ export function getWanderTargetTile(entity: EntityID, visionRange: number): Tile
       tileY = randInt(minTileY, maxTileY);
    } while (++attempts <= 50 && Math.pow(transformComponent.position.x - (tileX + 0.5) * Settings.TILE_SIZE, 2) + Math.pow(transformComponent.position.y - (tileY + 0.5) * Settings.TILE_SIZE, 2) > visionRange * visionRange);
 
-   // @Temporary
-   if (typeof Board.getTile(tileX, tileY) === "undefined") {
-      console.log(transformComponent.position, visionRange);
-      throw new Error();
-   }
-
-   return Board.getTile(tileX, tileY);
+   return Board.getTileIndexIncludingEdges(tileX, tileY);
 }
 
 export function wander(entity: EntityID, x: number, y: number, acceleration: number, turnSpeed: number): void {

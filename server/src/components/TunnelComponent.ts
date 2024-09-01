@@ -38,6 +38,10 @@ export class TunnelComponent {
 }
 
 export const TunnelComponentArray = new ComponentArray<TunnelComponent>(ServerComponentType.tunnel, true, {
+   onTick: {
+      tickInterval: 1,
+      func: onTick
+   },
    getDataLength: getDataLength,
    addDataToPacket: addDataToPacket
 });
@@ -101,9 +105,7 @@ const updateDoorOpenProgress = (tunnel: EntityID, tunnelComponent: TunnelCompone
    }
 }
 
-export function tickTunnelComponent(tunnel: EntityID): void {
-   const tunnelComponent = TunnelComponentArray.getComponent(tunnel);
-
+function onTick(tunnelComponent: TunnelComponent, tunnel: EntityID): void {
    // @Incomplete: Hard hitboxes
    
    if (tunnelComponent.topDoorToggleType !== DoorToggleType.none) {

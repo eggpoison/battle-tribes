@@ -103,15 +103,15 @@ const wallSpaceIsFree = (wallPosition: Point, wallRotation: number, tribe: Tribe
    const maxTileY = Math.min(Math.floor((wallPosition.y + Settings.TILE_SIZE) / Settings.TILE_SIZE), Settings.TILES_IN_WORLD_WIDTH - 1);
    for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
       for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
-         const tile = Board.getTile(tileX, tileY);
-         if (!tile.isWall) {
+         const isWall = Board.getTileIsWall(tileX, tileY);
+         if (!isWall) {
             continue;
          }
          
          // @Speed
          
-         const tileXUnits = (tile.x + 0.5) * Settings.TILE_SIZE;
-         const tileYUnits = (tile.y + 0.5) * Settings.TILE_SIZE;
+         const tileXUnits = (tileX + 0.5) * Settings.TILE_SIZE;
+         const tileYUnits = (tileY + 0.5) * Settings.TILE_SIZE;
 
          const tempTileHitbox = new RectangularHitbox(0, new Point(tileXUnits, tileYUnits), 0, 0, 0, 0, Settings.TILE_SIZE * 0.499, Settings.TILE_SIZE * 0.499, 0);
          updateHitbox(tempTileHitbox, tileXUnits, tileYUnits, 0);

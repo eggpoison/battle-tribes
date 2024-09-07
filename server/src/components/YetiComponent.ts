@@ -233,8 +233,8 @@ const throwSnow = (yeti: EntityID, target: EntityID): void => {
 
    // Kickback
    const physicsComponent = PhysicsComponentArray.getComponent(yeti);
-   physicsComponent.velocity.x += Vars.SNOW_THROW_KICKBACK_AMOUNT * Math.sin(throwAngle * Math.PI);
-   physicsComponent.velocity.y += Vars.SNOW_THROW_KICKBACK_AMOUNT * Math.cos(throwAngle * Math.PI);
+   physicsComponent.externalVelocity.x += Vars.SNOW_THROW_KICKBACK_AMOUNT * Math.sin(throwAngle * Math.PI);
+   physicsComponent.externalVelocity.y += Vars.SNOW_THROW_KICKBACK_AMOUNT * Math.cos(throwAngle * Math.PI);
 }
 
 const getYetiTarget = (yeti: EntityID, visibleEntities: ReadonlyArray<EntityID>): EntityID | null => {

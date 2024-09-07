@@ -11,10 +11,7 @@ import { addTexturedParticleToBufferContainer, ParticleRenderLayer } from "../re
 import { playSound, AudioFilePath } from "../sound";
 import Player from "../entities/Player";
 import { keyIsPressed } from "../keyboard-input";
-import { collide, resolveWallTileCollisions } from "../collision";
-import TransformComponent from "./TransformComponent";
-import { COLLISION_BITS } from "webgl-test-shared/dist/collision";
-import { latencyGameState } from "../game-state/game-states";
+import { resolveWallTileCollisions } from "../collision";
 import { PacketReader } from "webgl-test-shared/dist/packets";
 import { createWaterSplashParticle } from "../particles";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
@@ -22,7 +19,7 @@ import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 const applyPhysics = (physicsComponent: PhysicsComponent): void => {
    const transformComponent = physicsComponent.entity.getServerComponent(ServerComponentType.transform);
    
-   // Apply acceleration
+   // Apply acceleration (to self-velocity)
    if (physicsComponent.acceleration.x !== 0 || physicsComponent.acceleration.y !== 0) {
       let tileMoveSpeedMultiplier = TILE_MOVE_SPEED_MULTIPLIERS[transformComponent.tile.type];
       if (transformComponent.tile.type === TileType.water && !transformComponent.isInRiver()) {
@@ -31,37 +28,68 @@ const applyPhysics = (physicsComponent: PhysicsComponent): void => {
 
       const friction = TILE_FRICTIONS[transformComponent.tile.type];
       
-      physicsComponent.velocity.x += physicsComponent.acceleration.x * friction * tileMoveSpeedMultiplier * Settings.I_TPS;
-      physicsComponent.velocity.y += physicsComponent.acceleration.y * friction * tileMoveSpeedMultiplier * Settings.I_TPS;
+      // Calculate the desired velocity based on acceleration
+      const desiredVelocityX = physicsComponent.acceleration.x * friction * tileMoveSpeedMultiplier;
+      const desiredVelocityY = physicsComponent.acceleration.y * friction * tileMoveSpeedMultiplier;
+
+      // Apply velocity with traction (blend towards desired velocity)
+      physicsComponent.selfVelocity.x += (desiredVelocityX - physicsComponent.selfVelocity.x) * physicsComponent.traction * Settings.I_TPS;
+      physicsComponent.selfVelocity.y += (desiredVelocityY - physicsComponent.selfVelocity.y) * physicsComponent.traction * Settings.I_TPS;
    }
 
-   // If the game object is in a river, push them in the flow direction of the river
+   // @Speed: so much polymorphism and function calls and shit
+   // Apply river flow to external velocity
    const moveSpeedIsOverridden = typeof physicsComponent.entity.overrideTileMoveSpeedMultiplier !== "undefined" && physicsComponent.entity.overrideTileMoveSpeedMultiplier() !== null;
    if (transformComponent.isInRiver() && !moveSpeedIsOverridden) {
       const flowDirection = Board.getRiverFlowDirection(transformComponent.tile.x, transformComponent.tile.y);
-      physicsComponent.velocity.x += 240 / Settings.TPS * Math.sin(flowDirection);
-      physicsComponent.velocity.y += 240 / Settings.TPS * Math.cos(flowDirection);
+      physicsComponent.selfVelocity.x += 240 / Settings.TPS * Math.sin(flowDirection);
+      physicsComponent.selfVelocity.y += 240 / Settings.TPS * Math.cos(flowDirection);
    }
 
-   // Apply velocity
-   if (physicsComponent.velocity.x !== 0 || physicsComponent.velocity.y !== 0) {
+   let shouldUpdate = false;
+   
+   // Apply friction to self-velocity
+   if (physicsComponent.selfVelocity.x !== 0 || physicsComponent.selfVelocity.y !== 0) {
       const friction = TILE_FRICTIONS[transformComponent.tile.type];
-
-      // Apply a friction based on the tile type to simulate air resistance (???)
-      physicsComponent.velocity.x *= 1 - friction * Settings.I_TPS * 2;
-      physicsComponent.velocity.y *= 1 - friction * Settings.I_TPS * 2;
-
-      // Apply a constant friction based on the tile type to simulate ground friction
-      const velocityMagnitude = physicsComponent.velocity.length();
-      if (velocityMagnitude > 0) {
-         const groundFriction = Math.min(friction, velocityMagnitude);
-         physicsComponent.velocity.x -= groundFriction * physicsComponent.velocity.x / velocityMagnitude;
-         physicsComponent.velocity.y -= groundFriction * physicsComponent.velocity.y / velocityMagnitude;
-      }
       
-      transformComponent.position.x += physicsComponent.velocity.x * Settings.I_TPS;
-      transformComponent.position.y += physicsComponent.velocity.y * Settings.I_TPS;
+      // Apply air and ground friction to selfVelocity
+      physicsComponent.selfVelocity.x *= 1 - friction * Settings.I_TPS * 2;
+      physicsComponent.selfVelocity.y *= 1 - friction * Settings.I_TPS * 2;
 
+      const selfVelocityMagnitude = physicsComponent.selfVelocity.length();
+      if (selfVelocityMagnitude > 0) {
+         const groundFriction = Math.min(friction, selfVelocityMagnitude);
+         physicsComponent.selfVelocity.x -= groundFriction * physicsComponent.selfVelocity.x / selfVelocityMagnitude;
+         physicsComponent.selfVelocity.y -= groundFriction * physicsComponent.selfVelocity.y / selfVelocityMagnitude;
+      }
+
+      shouldUpdate = true;
+   }
+
+   // Apply friction to external velocity
+   if (physicsComponent.externalVelocity.x !== 0 || physicsComponent.externalVelocity.y !== 0) {
+      const friction = TILE_FRICTIONS[transformComponent.tile.type];
+      
+      // Apply air and ground friction to externalVelocity
+      physicsComponent.externalVelocity.x *= 1 - friction * Settings.I_TPS * 2;
+      physicsComponent.externalVelocity.y *= 1 - friction * Settings.I_TPS * 2;
+
+      const externalVelocityMagnitude = physicsComponent.externalVelocity.length();
+      if (externalVelocityMagnitude > 0) {
+         const groundFriction = Math.min(friction, externalVelocityMagnitude);
+         physicsComponent.externalVelocity.x -= groundFriction * physicsComponent.externalVelocity.x / externalVelocityMagnitude;
+         physicsComponent.externalVelocity.y -= groundFriction * physicsComponent.externalVelocity.y / externalVelocityMagnitude;
+      }
+
+      shouldUpdate = true;
+   }
+
+   if (shouldUpdate) {
+      // Update position based on the sum of self-velocity and external velocity
+      transformComponent.position.x += (physicsComponent.selfVelocity.x + physicsComponent.externalVelocity.x) * Settings.I_TPS;
+      transformComponent.position.y += (physicsComponent.selfVelocity.y + physicsComponent.externalVelocity.y) * Settings.I_TPS;
+
+      // Mark entity's position as updated
       transformComponent.updatePosition();
       transformComponent.entity.dirty();
    }
@@ -85,47 +113,56 @@ const resolveBorderCollisions = (physicsComponent: PhysicsComponent): void => {
       // Left wall
       if (minX < 0) {
          transformComponent.position.x -= minX;
-         physicsComponent.velocity.x = 0;
+         physicsComponent.selfVelocity.x = 0;
          // Right wall
       } else if (maxX > Settings.BOARD_UNITS) {
          transformComponent.position.x -= maxX - Settings.BOARD_UNITS;
-         physicsComponent.velocity.x = 0;
+         physicsComponent.selfVelocity.x = 0;
       }
       
       // Bottom wall
       if (minY < 0) {
          transformComponent.position.y -= minY;
-         physicsComponent.velocity.y = 0;
+         physicsComponent.selfVelocity.y = 0;
          // Top wall
       } else if (maxY > Settings.BOARD_UNITS) {
          transformComponent.position.y -= maxY - Settings.BOARD_UNITS;
-         physicsComponent.velocity.y = 0;
+         physicsComponent.selfVelocity.y = 0;
       }
    }
 }
 
-
-
 class PhysicsComponent extends ServerComponent {
-   public readonly velocity: Point;
+   // @Memory @Speed: Unbox external velocity and velocity
+   
+   public readonly selfVelocity: Point;
    public readonly acceleration: Point;
+
+   public readonly externalVelocity: Point;
+
+   public traction: number;
    
    constructor(entity: Entity, reader: PacketReader) {
       super(entity);
 
-      this.velocity = new Point(reader.readNumber(), reader.readNumber());
+      this.selfVelocity = new Point(reader.readNumber(), reader.readNumber());
+      this.externalVelocity = new Point(reader.readNumber(), reader.readNumber());
       this.acceleration = new Point(reader.readNumber(), reader.readNumber());
+      this.traction = reader.readNumber();
    }
 
    public padData(reader: PacketReader): void {
-      reader.padOffset(4 * Float32Array.BYTES_PER_ELEMENT);
+      reader.padOffset(7 * Float32Array.BYTES_PER_ELEMENT);
    }
 
    public updateFromData(reader: PacketReader): void {
-      this.velocity.x = reader.readNumber();
-      this.velocity.y = reader.readNumber();
+      this.selfVelocity.x = reader.readNumber();
+      this.selfVelocity.y = reader.readNumber();
+      this.externalVelocity.x = reader.readNumber();
+      this.externalVelocity.y = reader.readNumber();
       this.acceleration.x = reader.readNumber();
       this.acceleration.y = reader.readNumber();
+      this.traction = reader.readNumber();
    }
 }
 

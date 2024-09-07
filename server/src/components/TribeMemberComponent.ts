@@ -394,16 +394,18 @@ function onTick(_tribeMemberComponent: TribeMemberComponent, tribeMember: Entity
 
                const vacuumDirection = itemEntityTransformComponent.position.calculateAngleBetween(transformComponent.position);
                const physicsComponent = PhysicsComponentArray.getComponent(itemEntity);
-               physicsComponent.velocity.x += Vars.VACUUM_STRENGTH * forceMult * Math.sin(vacuumDirection);
-               physicsComponent.velocity.y += Vars.VACUUM_STRENGTH * forceMult * Math.cos(vacuumDirection);
+               physicsComponent.externalVelocity.x += Vars.VACUUM_STRENGTH * forceMult * Math.sin(vacuumDirection);
+               physicsComponent.externalVelocity.y += Vars.VACUUM_STRENGTH * forceMult * Math.cos(vacuumDirection);
             }
          }
       }
    }
 
    const physicsComponent = PhysicsComponentArray.getComponent(tribeMember);
-   if (physicsComponent.velocity.x !== 0 || physicsComponent.velocity.y !== 0) {
-      const chance = TITLE_REWARD_CHANCES.SPRINTER_REWARD_CHANCE_PER_SPEED * physicsComponent.velocity.length();
+   if (physicsComponent.selfVelocity.x !== 0 || physicsComponent.selfVelocity.y !== 0) {
+      const selfVelocityMagnitude = Math.sqrt(physicsComponent.selfVelocity.x * physicsComponent.selfVelocity.x + physicsComponent.selfVelocity.y * physicsComponent.selfVelocity.y);
+      
+      const chance = TITLE_REWARD_CHANCES.SPRINTER_REWARD_CHANCE_PER_SPEED * selfVelocityMagnitude;
       if (Math.random() < chance / Settings.TPS) {
          awardTitle(tribeMember, TribesmanTitle.sprinter);
       }

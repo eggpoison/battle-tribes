@@ -47,14 +47,14 @@ function onTick(_projectileComponent: ProjectileComponent, projectile: EntityID)
 
    const physicsComponent = PhysicsComponentArray.getComponent(projectile);
 
-   const xSignBefore = Math.sign(physicsComponent.velocity.x);
+   const xSignBefore = Math.sign(physicsComponent.selfVelocity.x);
    
-   const velocityLength = physicsComponent.velocity.length();
-   physicsComponent.velocity.x = (velocityLength - 3) * physicsComponent.velocity.x / velocityLength;
-   physicsComponent.velocity.y = (velocityLength - 3) * physicsComponent.velocity.y / velocityLength;
-   if (Math.sign(physicsComponent.velocity.x) !== xSignBefore) {
-      physicsComponent.velocity.x = 0;
-      physicsComponent.velocity.y = 0;
+   const velocityLength = physicsComponent.selfVelocity.length();
+   physicsComponent.selfVelocity.x = (velocityLength - 3) * physicsComponent.selfVelocity.x / velocityLength;
+   physicsComponent.selfVelocity.y = (velocityLength - 3) * physicsComponent.selfVelocity.y / velocityLength;
+   if (Math.sign(physicsComponent.selfVelocity.x) !== xSignBefore) {
+      physicsComponent.selfVelocity.x = 0;
+      physicsComponent.selfVelocity.y = 0;
    }
    
    // @Hack

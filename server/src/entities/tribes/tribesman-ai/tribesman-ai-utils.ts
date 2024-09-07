@@ -146,8 +146,12 @@ const shouldRecalculatePath = (tribesman: EntityID, goalX: number, goalY: number
       const transformComponent = TransformComponentArray.getComponent(tribesman);
       const physicsComponent = PhysicsComponentArray.getComponent(tribesman);
 
+      const vx = physicsComponent.selfVelocity.x;
+      const vy = physicsComponent.selfVelocity.y;
+      const velocitySquare = vx * vx + vy * vy;
+      
       const ageTicks = getAgeTicks(transformComponent);
-      if (tribesmanComponent.rawPath.length > 2 && ageTicks % Settings.TPS === 0 && physicsComponent.velocity.lengthSquared() < 10 * 10) {
+      if (tribesmanComponent.rawPath.length > 2 && ageTicks % Settings.TPS === 0 && velocitySquare < 10 * 10) {
          return true;
       }
 

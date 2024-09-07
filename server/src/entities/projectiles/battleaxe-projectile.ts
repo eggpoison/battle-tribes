@@ -34,6 +34,7 @@ export function createBattleaxeProjectileConfig(): ComponentConfig<ComponentType
          velocityY: 0,
          accelerationX: 0,
          accelerationY: 0,
+         traction: 1,
          isAffectedByFriction: true,
          isImmovable: true
       },

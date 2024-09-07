@@ -292,8 +292,8 @@ abstract class Entity {
       if (this.hasServerComponent(ServerComponentType.physics)) {
          const physicsComponent = this.getServerComponent(ServerComponentType.physics);
          
-         this.renderPosition.x += physicsComponent.velocity.x * frameProgress / Settings.TPS;
-         this.renderPosition.y += physicsComponent.velocity.y * frameProgress / Settings.TPS;
+         this.renderPosition.x += physicsComponent.selfVelocity.x * frameProgress / Settings.TPS;
+         this.renderPosition.y += physicsComponent.selfVelocity.y * frameProgress / Settings.TPS;
       }
 
       // Shake

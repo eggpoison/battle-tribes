@@ -41,10 +41,15 @@ export function getClosestAccessibleEntity(entity: EntityID, entities: ReadonlyA
 
 /** Estimates the distance it will take for the entity to stop */
 const estimateStopDistance = (physicsComponent: PhysicsComponent): number => {
+   // Get the total velocity length
+   const vx = physicsComponent.selfVelocity.x + physicsComponent.externalVelocity.x;
+   const vy = physicsComponent.selfVelocity.y + physicsComponent.externalVelocity.y;
+   const totalVelocityMagnitude = Math.sqrt(vx * vx + vy * vy);
+   
    // @Incomplete: Hard-coded
    // Estimate time it will take for the entity to stop
-   const stopTime = Math.pow(physicsComponent.velocity.length(), 0.8) / (3 * 50);
-   const stopDistance = (Math.pow(stopTime, 2) + stopTime) * physicsComponent.velocity.length();
+   const stopTime = Math.pow(totalVelocityMagnitude, 0.8) / (3 * 50);
+   const stopDistance = (Math.pow(stopTime, 2) + stopTime) * totalVelocityMagnitude;
    return stopDistance;
 }
 
@@ -93,14 +98,17 @@ export function moveEntityToEntity(entity: EntityID, targetEntity: EntityID, acc
 
 export function entityHasReachedPosition(entity: EntityID, positionX: number, positionY: number): boolean {
    const transformComponent = TransformComponentArray.getComponent(entity);
+   const physicsComponent = PhysicsComponentArray.getComponent(entity);
    
    // @Speed: garbage
    const relativeTargetPosition = transformComponent.position.copy();
    relativeTargetPosition.x -= positionX;
    relativeTargetPosition.y -= positionY;
 
-   const physicsComponent = PhysicsComponentArray.getComponent(entity);
-   const dotProduct = physicsComponent.velocity.calculateDotProduct(relativeTargetPosition);
+   const vx = physicsComponent.selfVelocity.x + physicsComponent.externalVelocity.x;
+   const vy = physicsComponent.selfVelocity.y + physicsComponent.externalVelocity.y;
+   const dotProduct = vx * relativeTargetPosition.x + vy * relativeTargetPosition.y;
+   
    return dotProduct > 0;
 }
 

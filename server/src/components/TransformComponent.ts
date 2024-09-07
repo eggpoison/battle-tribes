@@ -406,13 +406,15 @@ export class TransformComponent {
       if (this.boundingAreaMinX < 0) {
          const physicsComponent = PhysicsComponentArray.getComponent(entity);
          this.position.x -= this.boundingAreaMinX;
-         physicsComponent.velocity.x = 0;
+         physicsComponent.selfVelocity.x = 0;
+         physicsComponent.externalVelocity.x = 0;
          physicsComponent.positionIsDirty = true;
          // Right border
       } else if (this.boundingAreaMaxX > Settings.BOARD_UNITS) {
          const physicsComponent = PhysicsComponentArray.getComponent(entity);
          this.position.x -= this.boundingAreaMaxX - Settings.BOARD_UNITS;
-         physicsComponent.velocity.x = 0;
+         physicsComponent.selfVelocity.x = 0;
+         physicsComponent.externalVelocity.x = 0;
          physicsComponent.positionIsDirty = true;
       }
 
@@ -420,13 +422,15 @@ export class TransformComponent {
       if (this.boundingAreaMinY < 0) {
          const physicsComponent = PhysicsComponentArray.getComponent(entity);
          this.position.y -= this.boundingAreaMinY;
-         physicsComponent.velocity.y = 0;
+         physicsComponent.selfVelocity.y = 0;
+         physicsComponent.externalVelocity.y = 0;
          physicsComponent.positionIsDirty = true;
          // Top border
       } else if (this.boundingAreaMaxY > Settings.BOARD_UNITS) {
          const physicsComponent = PhysicsComponentArray.getComponent(entity);
          this.position.y -= this.boundingAreaMaxY - Settings.BOARD_UNITS;
-         physicsComponent.velocity.y = 0;
+         physicsComponent.selfVelocity.y = 0;
+         physicsComponent.externalVelocity.y = 0;
          physicsComponent.positionIsDirty = true;
       }
 

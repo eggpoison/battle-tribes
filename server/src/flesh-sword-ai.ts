@@ -5,6 +5,7 @@ import Board from "./Board";
 import { PhysicsComponentArray } from "./components/PhysicsComponent";
 import { Biome } from "webgl-test-shared/dist/tiles";
 import { TransformComponentArray } from "./components/TransformComponent";
+import { entityHasReachedPosition } from "./ai-shared";
 
 const FLESH_SWORD_VISION_RANGE = 250;
 
@@ -91,19 +92,6 @@ const getTileWanderTargets = (itemEntity: EntityID): Array<TileIndex> => {
    return wanderTargets;
 }
 
-const hasReachedTargetPosition = (itemEntity: EntityID, targetPosition: Point): boolean => {
-   const physicsComponent = PhysicsComponentArray.getComponent(itemEntity);
-   if (physicsComponent.velocity.x === 0 || physicsComponent.velocity.y === 0) return true;
-
-   const transformComponent = TransformComponentArray.getComponent(itemEntity);
-   
-   const relativeTargetPosition = transformComponent.position.copy();
-   relativeTargetPosition.subtract(targetPosition);
-
-   const dotProduct = physicsComponent.velocity.calculateDotProduct(relativeTargetPosition);
-   return dotProduct > 0;
-}
-
 interface FleshSwordInfo {
    internalWiggleTicks: number;
    // @Speed: Garbage collection
@@ -148,7 +136,7 @@ export function runFleshSwordAI(itemEntity: EntityID) {
       info.tileTargetPosition = null;
    } else {
       if (info.tileTargetPosition !== null) {
-         if (hasReachedTargetPosition(itemEntity, info.tileTargetPosition)) {
+         if (entityHasReachedPosition(itemEntity, info.tileTargetPosition.x, info.tileTargetPosition.y)) {
             info.tileTargetPosition = null;
          } else {
             targetPositionX = info.tileTargetPosition.x;
@@ -206,8 +194,8 @@ export function runFleshSwordAI(itemEntity: EntityID) {
       // @Hack: should instead change angularvelocity
       const moveAngle = directMoveAngle + moveAngleOffset;
       transformComponent.rotation = moveAngle - Math.PI/4;
-      physicsComponent.velocity.x = moveSpeed! * Math.sin(moveAngle);
-      physicsComponent.velocity.y = moveSpeed! * Math.cos(moveAngle);
+      physicsComponent.selfVelocity.x = moveSpeed! * Math.sin(moveAngle);
+      physicsComponent.selfVelocity.y = moveSpeed! * Math.cos(moveAngle);
 
       physicsComponent.hitboxesAreDirty = true;
    }

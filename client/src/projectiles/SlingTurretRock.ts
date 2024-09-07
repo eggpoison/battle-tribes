@@ -26,7 +26,7 @@ class SlingTurretRock extends Entity {
       const transformComponent = this.getServerComponent(ServerComponentType.transform);
       const physicsComponent = this.getServerComponent(ServerComponentType.physics);
       for (let i = 0; i < 6; i++) {
-         createArrowDestroyParticle(transformComponent.position.x, transformComponent.position.y, physicsComponent.velocity.x, physicsComponent.velocity.y);
+         createArrowDestroyParticle(transformComponent.position.x, transformComponent.position.y, physicsComponent.selfVelocity.x, physicsComponent.selfVelocity.y);
       }
    }
 

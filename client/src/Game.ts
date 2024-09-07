@@ -64,7 +64,7 @@ import { InitialGameDataPacket, processGameDataPacket } from "./client/packet-pr
 import { PacketReader } from "webgl-test-shared/dist/packets";
 import { getMaxRenderHeightForRenderLayer, MAX_RENDER_LAYER, RenderLayer } from "./render-layers";
 import { updateEntity } from "./entity-components/ComponentArray";
-import { resolveEntityCollisions } from "./collision";
+import { resolveEntityCollisions, resolvePlayerCollisions } from "./collision";
 
 let tempPacketSendCounter = 0;
 
@@ -139,7 +139,7 @@ const main = (currentTime: number): void => {
                updateEntity(Player.instance);
             }
             Board.tickEntities();
-            Board.resolvePlayerCollisions();
+            resolvePlayerCollisions();
             Game.update();
          } else {
             Game.numSkippablePackets++;

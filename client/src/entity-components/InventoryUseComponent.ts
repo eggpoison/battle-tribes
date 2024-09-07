@@ -527,7 +527,7 @@ function onTick(inventoryUseComponent: InventoryUseComponent): void {
       // Make the deep frost heart item spew blue blood particles
       if (item.type === ItemType.deepfrost_heart) {
          const activeItemRenderPart = inventoryUseComponent.activeItemRenderParts[limbIdx];
-         createDeepFrostHeartBloodParticles(activeItemRenderPart.renderPosition.x, activeItemRenderPart.renderPosition.y, physicsComponent.velocity.x, physicsComponent.velocity.y);
+         createDeepFrostHeartBloodParticles(activeItemRenderPart.renderPosition.x, activeItemRenderPart.renderPosition.y, physicsComponent.selfVelocity.x, physicsComponent.selfVelocity.y);
       }
 
       if (useInfo.action === LimbAction.eat && ITEM_TYPE_RECORD[item.type] === "healing") {
@@ -545,9 +545,9 @@ function onTick(inventoryUseComponent: InventoryUseComponent): void {
 
             let velocityMagnitude = randFloat(130, 170);
             const velocityDirection = 2 * Math.PI * Math.random();
-            const velocityX = velocityMagnitude * Math.sin(velocityDirection) + physicsComponent.velocity.x;
-            const velocityY = velocityMagnitude * Math.cos(velocityDirection) + physicsComponent.velocity.y;
-            velocityMagnitude += physicsComponent.velocity.length();
+            const velocityX = velocityMagnitude * Math.sin(velocityDirection) + physicsComponent.selfVelocity.x;
+            const velocityY = velocityMagnitude * Math.cos(velocityDirection) + physicsComponent.selfVelocity.y;
+            velocityMagnitude += physicsComponent.selfVelocity.length();
             
             const lifetime = randFloat(0.3, 0.4);
 

@@ -85,9 +85,12 @@ const resolveHardCollision = (transformComponent: TransformComponent, physicsCom
    // Kill all the velocity going into the hitbox
    const bx = Math.sin(pushInfo.direction + Math.PI/2);
    const by = Math.cos(pushInfo.direction + Math.PI/2);
-   const projectionCoeff = physicsComponent.velocity.x * bx + physicsComponent.velocity.y * by;
-   physicsComponent.velocity.x = bx * projectionCoeff;
-   physicsComponent.velocity.y = by * projectionCoeff;
+   const selfVelocityProjectionCoeff = physicsComponent.selfVelocity.x * bx + physicsComponent.selfVelocity.y * by;
+   physicsComponent.selfVelocity.x = bx * selfVelocityProjectionCoeff;
+   physicsComponent.selfVelocity.y = by * selfVelocityProjectionCoeff;
+   const externalVelocityProjectionCoeff = physicsComponent.externalVelocity.x * bx + physicsComponent.externalVelocity.y * by;
+   physicsComponent.externalVelocity.x = bx * externalVelocityProjectionCoeff;
+   physicsComponent.externalVelocity.y = by * externalVelocityProjectionCoeff;
 }
 
 const resolveSoftCollision = (transformComponent: TransformComponent, physicsComponent: PhysicsComponent, pushingHitbox: HitboxWrapper, pushInfo: CollisionPushInfo): void => {
@@ -95,8 +98,8 @@ const resolveSoftCollision = (transformComponent: TransformComponent, physicsCom
    const distMultiplier = Math.pow(pushInfo.amountIn, 1.1);
    const pushForce = Settings.ENTITY_PUSH_FORCE * Settings.I_TPS * distMultiplier * pushingHitbox.mass / transformComponent.totalMass;
    
-   physicsComponent.velocity.x += pushForce * Math.sin(pushInfo.direction);
-   physicsComponent.velocity.y += pushForce * Math.cos(pushInfo.direction);
+   physicsComponent.externalVelocity.x += pushForce * Math.sin(pushInfo.direction);
+   physicsComponent.externalVelocity.y += pushForce * Math.cos(pushInfo.direction);
 }
 
 export function collide(entity: EntityID, pushingEntity: EntityID, pushedHitboxIdx: number, pushingHitboxIdx: number): void {

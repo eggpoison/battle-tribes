@@ -198,7 +198,7 @@ function onTick(golemComponent: GolemComponent): void {
          const offsetDirection = 2 * Math.PI * Math.random();
          const x = box.position.x + box.radius * Math.sin(offsetDirection);
          const y = box.position.y + box.radius * Math.cos(offsetDirection);
-         createRockSpeckParticle(x, y, 0, physicsComponent.velocity.x, physicsComponent.velocity.y, ParticleRenderLayer.low);
+         createRockSpeckParticle(x, y, 0, physicsComponent.selfVelocity.x, physicsComponent.selfVelocity.y, ParticleRenderLayer.low);
       }
    } else if (golemComponent.wakeProgress === 1) {
       for (let i = 0; i < transformComponent.hitboxes.length; i++) {
@@ -212,7 +212,7 @@ function onTick(golemComponent: GolemComponent): void {
          const offsetDirection = 2 * Math.PI * Math.random();
          const x = box.position.x + box.radius * Math.sin(offsetDirection);
          const y = box.position.y + box.radius * Math.cos(offsetDirection);
-         createRockSpeckParticle(x, y, 0, physicsComponent.velocity.x, physicsComponent.velocity.y, ParticleRenderLayer.low);
+         createRockSpeckParticle(x, y, 0, physicsComponent.selfVelocity.x, physicsComponent.selfVelocity.y, ParticleRenderLayer.low);
       }
    }
 }

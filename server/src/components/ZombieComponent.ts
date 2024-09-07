@@ -180,8 +180,8 @@ const doBiteAttack = (zombie: EntityID, target: EntityID): void => {
    const lungeDirection = transformComponent.position.calculateAngleBetween(targetTransformComponent.position);
 
    const physicsComponent = PhysicsComponentArray.getComponent(zombie);
-   physicsComponent.velocity.x += 130 * Math.sin(lungeDirection);
-   physicsComponent.velocity.y += 130 * Math.cos(lungeDirection);
+   physicsComponent.externalVelocity.x += 130 * Math.sin(lungeDirection);
+   physicsComponent.externalVelocity.y += 130 * Math.cos(lungeDirection);
 
    // Reset attack cooldown
    const zombieComponent = ZombieComponentArray.getComponent(zombie);

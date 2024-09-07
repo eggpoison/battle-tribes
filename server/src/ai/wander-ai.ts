@@ -8,7 +8,7 @@ import { EntityID } from "webgl-test-shared/dist/entities";
 import { TransformComponentArray } from "../components/TransformComponent";
 
 export function shouldWander(physicsComponent: PhysicsComponent, wanderRate: number) {
-   return physicsComponent.velocity.x === 0 && physicsComponent.velocity.y === 0 && Math.random() < wanderRate / Settings.TPS;
+   return physicsComponent.selfVelocity.x === 0 && physicsComponent.selfVelocity.y === 0 && Math.random() < wanderRate / Settings.TPS;
 }
 
 export function getWanderTargetTile(entity: EntityID, visionRange: number): TileIndex {

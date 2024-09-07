@@ -360,11 +360,11 @@ abstract class Client {
          for (let i = 0; i < gameDataPacket.playerKnockbacks.length; i++) {
             const knockbackData = gameDataPacket.playerKnockbacks[i];
             
-            physicsComponent.velocity.x *= 0.5;
-            physicsComponent.velocity.y *= 0.5;
+            physicsComponent.selfVelocity.x *= 0.5;
+            physicsComponent.selfVelocity.y *= 0.5;
    
-            physicsComponent.velocity.x += knockbackData.knockback * Math.sin(knockbackData.knockbackDirection);
-            physicsComponent.velocity.y += knockbackData.knockback * Math.cos(knockbackData.knockbackDirection);
+            physicsComponent.selfVelocity.x += knockbackData.knockback * Math.sin(knockbackData.knockbackDirection);
+            physicsComponent.selfVelocity.y += knockbackData.knockback * Math.cos(knockbackData.knockbackDirection);
          }
       }
 

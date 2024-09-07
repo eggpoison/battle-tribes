@@ -42,7 +42,10 @@ function onInitialise(config: ComponentConfig<ServerComponentType.transform | Se
 
 export function onTick(_slimeSpitComponent: SlimeSpitComponent, spit: EntityID): void {
    const physicsComponent = PhysicsComponentArray.getComponent(spit);
-   if (physicsComponent.velocity.lengthSquared() <= Vars.BREAK_VELOCITY * Vars.BREAK_VELOCITY) {
+
+   const vx = physicsComponent.selfVelocity.x + physicsComponent.externalVelocity.x;
+   const vy = physicsComponent.selfVelocity.y + physicsComponent.externalVelocity.y;
+   if (vx * vx + vy * vy <= Vars.BREAK_VELOCITY * Vars.BREAK_VELOCITY) {
       Board.destroyEntity(spit);
    }
 }

@@ -24,7 +24,11 @@ export const SpearProjectileComponentArray = new ComponentArray<SpearProjectileC
 function onTick(_spearProjectileComponent: SpearProjectileComponent, spear: EntityID): void {
    const physicsComponent = PhysicsComponentArray.getComponent(spear);
 
-   if (physicsComponent.velocity.lengthSquared() <= Vars.DROP_VELOCITY * Vars.DROP_VELOCITY) {
+   const vx = physicsComponent.selfVelocity.x;
+   const vy = physicsComponent.selfVelocity.y;
+   const velocity = Math.sqrt(vx * vx + vy * vy);
+   
+   if (velocity <= Vars.DROP_VELOCITY * Vars.DROP_VELOCITY) {
       const transformComponent = TransformComponentArray.getComponent(spear);
 
       const config = createItemEntityConfig();

@@ -385,8 +385,8 @@ function onTick(tribeMemberComponent: TribeMemberComponent): void {
    const physicsComponent = tribeMemberComponent.entity.getServerComponent(ServerComponentType.physics);
 
    // Sprinter particles
-   if (tribeMemberComponent.hasTitle(TribesmanTitle.sprinter) && physicsComponent.velocity.length() > 100) {
-      const sprintParticleSpawnRate = Math.sqrt(physicsComponent.velocity.length() * 0.8);
+   if (tribeMemberComponent.hasTitle(TribesmanTitle.sprinter) && physicsComponent.selfVelocity.length() > 100) {
+      const sprintParticleSpawnRate = Math.sqrt(physicsComponent.selfVelocity.length() * 0.8);
       if (Math.random() < sprintParticleSpawnRate / Settings.TPS) {
          const offsetMagnitude = 32 * Math.random();
          const offsetDirection = 2 * Math.PI * Math.random();
@@ -410,8 +410,8 @@ function onTick(tribeMemberComponent: TribeMemberComponent): void {
       
       const velocityMagnitude = randFloat(45, 75);
       const velocityDirection = offsetDirection + Math.PI * 0.5;
-      const vx = physicsComponent.velocity.x + velocityMagnitude * Math.sin(velocityDirection);
-      const vy = physicsComponent.velocity.y + velocityMagnitude * Math.cos(velocityDirection);
+      const vx = physicsComponent.selfVelocity.x + velocityMagnitude * Math.sin(velocityDirection);
+      const vy = physicsComponent.selfVelocity.y + velocityMagnitude * Math.cos(velocityDirection);
       
       createSprintParticle(x, y, vx, vy);
    }

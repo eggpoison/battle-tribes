@@ -545,8 +545,10 @@ export function createSyncDataPacket(playerClient: PlayerClient): ArrayBuffer {
    packet.addNumber(transformComponent.rotation);
 
    const physicsComponent = PhysicsComponentArray.getComponent(player);
-   packet.addNumber(physicsComponent.velocity.x);
-   packet.addNumber(physicsComponent.velocity.y);
+   packet.addNumber(physicsComponent.selfVelocity.x);
+   packet.addNumber(physicsComponent.selfVelocity.y);
+   packet.addNumber(physicsComponent.externalVelocity.x);
+   packet.addNumber(physicsComponent.externalVelocity.y);
    packet.addNumber(physicsComponent.acceleration.x);
    packet.addNumber(physicsComponent.acceleration.y);
 

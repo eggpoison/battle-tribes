@@ -2,7 +2,7 @@ import { Settings } from "webgl-test-shared/dist/settings";
 import { GrassTileInfo, RIVER_STEPPING_STONE_SIZES, RiverFlowDirectionsRecord, RiverSteppingStoneData, ServerTileUpdateData } from "webgl-test-shared/dist/client-server-types";
 import { TileType } from "webgl-test-shared/dist/tiles";
 import { Point, Vector } from "webgl-test-shared/dist/utils";
-import { EntityID, EntityType, EntityTypeString } from "webgl-test-shared/dist/entities";
+import { EntityID } from "webgl-test-shared/dist/entities";
 import Chunk from "./Chunk";
 import { Tile } from "./Tile";
 import Entity from "./Entity";
@@ -10,7 +10,6 @@ import Particle from "./Particle";
 import { highMonocolourBufferContainer, highTexturedBufferContainer, lowMonocolourBufferContainer, lowTexturedBufferContainer } from "./rendering/webgl/particle-rendering";
 import ObjectBufferContainer from "./rendering/ObjectBufferContainer";
 import { tempFloat32ArrayLength1 } from "./webgl";
-import Player from "./entities/Player";
 import { NEIGHBOUR_OFFSETS } from "./utils";
 import { RenderableType, addRenderable, removeRenderable } from "./rendering/render-loop";
 import { WorldInfo } from "webgl-test-shared/dist/structures";
@@ -18,9 +17,6 @@ import { EntityInfo } from "webgl-test-shared/dist/board-interface";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { RenderPart } from "./render-parts/render-parts";
 import { InitialGameDataPacket } from "./client/packet-processing";
-import { collide } from "./collision";
-import { COLLISION_BITS } from "webgl-test-shared/dist/collision";
-import { latencyGameState } from "./game-state/game-states";
 import { addEntityToRenderHeightMap } from "./rendering/webgl/entity-rendering";
 import { getComponentArrays } from "./entity-components/ComponentArray";
 import { removeEntityFromDirtyArray } from "./rendering/render-part-matrices";
@@ -213,56 +209,6 @@ abstract class Board {
       this.entities.delete(entity);
    
       this.numVisibleRenderParts -= entity.allRenderThings.length;
-   }
-
-   // @Cleanup: Copy and paste
-   public static resolvePlayerCollisions(): void {
-      const player = Player.instance!;
-      const transformComponent = player.getServerComponent(ServerComponentType.transform);
-
-      for (const chunk of transformComponent.chunks) {
-         // @Cleanup: Copy and paste
-         for (const entityID of chunk.entities) {
-               // @Speed
-               if (entityID === player.id) {
-                  continue;
-               }
-
-               const entity = Board.entityRecord[entityID]!;
-               const otherTransformComponent = entity.getServerComponent(ServerComponentType.transform);
-
-               for (const hitbox of transformComponent.hitboxes) {
-                  const box = hitbox.box;
-                  for (const otherHitbox of otherTransformComponent.hitboxes) {
-                     const otherBox = otherHitbox.box;
-                     if (box.isColliding(otherBox)) {
-                        if (!transformComponent.collidingEntities.includes(entity)) {
-                           transformComponent.collidingEntities.push(entity);
-                        }
-                        
-                        if ((otherTransformComponent.collisionMask & transformComponent.collisionBit) !== 0 && (transformComponent.collisionMask & otherTransformComponent.collisionBit) !== 0) {
-                           collide(player, entity, hitbox, otherHitbox);
-                           collide(entity, player, otherHitbox, hitbox);
-                        } else {
-                           // @Hack
-                           if (otherTransformComponent.collisionBit === COLLISION_BITS.plants) {
-                              latencyGameState.lastPlantCollisionTicks = Board.serverTicks;
-                           }
-                           break;
-                        }
-                     }
-                  }
-               }
-               // const collisionNum = entitiesAreColliding(entity1ID, entity2ID);
-               // if (collisionNum !== CollisionVars.NO_COLLISION) {
-               //    collisionPairs.push({
-               //       entity1: entity1ID,
-               //       entity2: entity2ID,
-               //       collisionNum: collisionNum
-               //    });
-               // }
-         }
-      }
    }
 
    public static getRiverFlowDirection(tileX: number, tileY: number): number {

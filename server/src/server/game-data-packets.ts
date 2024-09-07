@@ -6,7 +6,7 @@ import Board from "../Board";
 import { ComponentArrays } from "../components/ComponentArray";
 import { HealthComponentArray } from "../components/HealthComponent";
 import { InventoryComponentArray, getInventory } from "../components/InventoryComponent";
-import { addCrossbowLoadProgressRecordToPacket, getCrossbowLoadProgressRecordLength, InventoryUseComponentArray } from "../components/InventoryUseComponent";
+import { addCrossbowLoadProgressRecordToPacket, getCrossbowLoadProgressRecordLength, InventoryUseComponentArray, LimbInfo } from "../components/InventoryUseComponent";
 import { PhysicsComponentArray } from "../components/PhysicsComponent";
 import { SERVER } from "./server";
 import { Settings } from "webgl-test-shared/dist/settings";
@@ -127,18 +127,29 @@ const getVisibleGrassBlockers = (visibleChunkBounds: VisibleChunkBounds): Readon
 }
 
 export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend: Set<EntityID>): ArrayBuffer {
-   const player = Board.validateEntity(playerClient.instance);
+   const playerIsAlive = Board.hasEntity(playerClient.instance);
+   const player = playerClient.instance;
 
-   const inventoryComponent = InventoryComponentArray.getComponent(player);
-   // @Copynpaste @Robustness
-   const hotbarInventory = getInventory(inventoryComponent, InventoryName.hotbar);
-   const backpackInventory = getInventory(inventoryComponent, InventoryName.backpack);
-   const backpackSlotInventory = getInventory(inventoryComponent, InventoryName.backpackSlot);
-   const heldItemSlotInventory = getInventory(inventoryComponent, InventoryName.heldItemSlot);
-   const craftingOutputSlotInventory = getInventory(inventoryComponent, InventoryName.craftingOutputSlot);
-   const armourSlotInventory = getInventory(inventoryComponent, InventoryName.armourSlot);
-   const offhandInventory = getInventory(inventoryComponent, InventoryName.offhand);
-   const gloveSlotInventory = getInventory(inventoryComponent, InventoryName.gloveSlot);
+   let hotbarInventory: Inventory | undefined;
+   let backpackInventory: Inventory | undefined;
+   let backpackSlotInventory: Inventory | undefined;
+   let heldItemSlotInventory: Inventory | undefined;
+   let craftingOutputSlotInventory: Inventory | undefined;
+   let armourSlotInventory: Inventory | undefined;
+   let offhandInventory: Inventory | undefined;
+   let gloveSlotInventory: Inventory | undefined;
+   if (playerIsAlive) {
+      const inventoryComponent = InventoryComponentArray.getComponent(player);
+      // @Copynpaste @Robustness
+      hotbarInventory = getInventory(inventoryComponent, InventoryName.hotbar);
+      backpackInventory = getInventory(inventoryComponent, InventoryName.backpack);
+      backpackSlotInventory = getInventory(inventoryComponent, InventoryName.backpackSlot);
+      heldItemSlotInventory = getInventory(inventoryComponent, InventoryName.heldItemSlot);
+      craftingOutputSlotInventory = getInventory(inventoryComponent, InventoryName.craftingOutputSlot);
+      armourSlotInventory = getInventory(inventoryComponent, InventoryName.armourSlot);
+      offhandInventory = getInventory(inventoryComponent, InventoryName.offhand);
+      gloveSlotInventory = getInventory(inventoryComponent, InventoryName.gloveSlot);
+   }
    
    const tileUpdates = Board.popTileUpdates();
 
@@ -150,10 +161,13 @@ export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend:
 
    const numEnemyTribes = Board.tribes.filter(tribe => tribe.id !== playerClient.tribe.id).length;
 
-   const inventoryUseComponent = InventoryUseComponentArray.getComponent(playerClient.instance);
-   const hotbarUseInfo = inventoryUseComponent.getUseInfo(InventoryName.hotbar);
+   let hotbarUseInfo: LimbInfo | undefined;
+   if (playerIsAlive) {
+      const inventoryUseComponent = InventoryUseComponentArray.getComponent(playerClient.instance);
+      hotbarUseInfo = inventoryUseComponent.getUseInfo(InventoryName.hotbar);
+   }
 
-   const titleOffer = player !== null ? PlayerComponentArray.getComponent(player).titleOffer : null;
+   const titleOffer = playerIsAlive ? PlayerComponentArray.getComponent(player).titleOffer : null;
    
    // Packet type
    let lengthBytes = Float32Array.BYTES_PER_ELEMENT;
@@ -161,6 +175,8 @@ export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend:
    lengthBytes += Float32Array.BYTES_PER_ELEMENT;
    // Ticks, time
    lengthBytes += 2 * Float32Array.BYTES_PER_ELEMENT;
+   // Player is alive
+   lengthBytes += Float32Array.BYTES_PER_ELEMENT;
    // Player tribe data
    lengthBytes += Float32Array.BYTES_PER_ELEMENT + 100 + 5 * Float32Array.BYTES_PER_ELEMENT;
    lengthBytes += Float32Array.BYTES_PER_ELEMENT + 2 * Float32Array.BYTES_PER_ELEMENT * area.length;
@@ -188,14 +204,16 @@ export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend:
    lengthBytes += Float32Array.BYTES_PER_ELEMENT + Float32Array.BYTES_PER_ELEMENT * playerClient.visibleEntityDeathIDs.length;
 
    // Player inventories
-   lengthBytes += getInventoryDataLength(hotbarInventory);
-   lengthBytes += getInventoryDataLength(backpackInventory);
-   lengthBytes += getInventoryDataLength(backpackSlotInventory);
-   lengthBytes += getInventoryDataLength(heldItemSlotInventory);
-   lengthBytes += getInventoryDataLength(craftingOutputSlotInventory);
-   lengthBytes += getInventoryDataLength(armourSlotInventory);
-   lengthBytes += getInventoryDataLength(offhandInventory);
-   lengthBytes += getInventoryDataLength(gloveSlotInventory);
+   if (playerIsAlive) {
+      lengthBytes += getInventoryDataLength(hotbarInventory!);
+      lengthBytes += getInventoryDataLength(backpackInventory!);
+      lengthBytes += getInventoryDataLength(backpackSlotInventory!);
+      lengthBytes += getInventoryDataLength(heldItemSlotInventory!);
+      lengthBytes += getInventoryDataLength(craftingOutputSlotInventory!);
+      lengthBytes += getInventoryDataLength(armourSlotInventory!);
+      lengthBytes += getInventoryDataLength(offhandInventory!);
+      lengthBytes += getInventoryDataLength(gloveSlotInventory!);
+   }
 
    // Visible hits
    lengthBytes += Float32Array.BYTES_PER_ELEMENT + 7 * Float32Array.BYTES_PER_ELEMENT * playerClient.visibleHits.length;
@@ -217,7 +235,9 @@ export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend:
    lengthBytes += debugDataLength;
 
    lengthBytes += 2 * Float32Array.BYTES_PER_ELEMENT;
-   lengthBytes += getCrossbowLoadProgressRecordLength(hotbarUseInfo);
+   if (playerIsAlive) {
+      lengthBytes += getCrossbowLoadProgressRecordLength(hotbarUseInfo!);
+   }
 
    lengthBytes += Float32Array.BYTES_PER_ELEMENT;
    if (titleOffer !== null) {
@@ -236,6 +256,9 @@ export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend:
 
    packet.addNumber(Board.ticks);
    packet.addNumber(Board.time);
+
+   packet.addBoolean(playerIsAlive);
+   packet.padOffset(3);
 
    // 
    // Player tribe data
@@ -305,14 +328,16 @@ export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend:
    }
 
    // Add inventory data
-   addInventoryDataToPacket(packet, hotbarInventory);
-   addInventoryDataToPacket(packet, backpackInventory);
-   addInventoryDataToPacket(packet, backpackSlotInventory);
-   addInventoryDataToPacket(packet, heldItemSlotInventory);
-   addInventoryDataToPacket(packet, craftingOutputSlotInventory);
-   addInventoryDataToPacket(packet, armourSlotInventory);
-   addInventoryDataToPacket(packet, offhandInventory);
-   addInventoryDataToPacket(packet, gloveSlotInventory);
+   if (playerIsAlive) {
+      addInventoryDataToPacket(packet, hotbarInventory!);
+      addInventoryDataToPacket(packet, backpackInventory!);
+      addInventoryDataToPacket(packet, backpackSlotInventory!);
+      addInventoryDataToPacket(packet, heldItemSlotInventory!);
+      addInventoryDataToPacket(packet, craftingOutputSlotInventory!);
+      addInventoryDataToPacket(packet, armourSlotInventory!);
+      addInventoryDataToPacket(packet, offhandInventory!);
+      addInventoryDataToPacket(packet, gloveSlotInventory!);
+   }
    
    // Add visible hits
    packet.addNumber(playerClient.visibleHits.length);
@@ -373,7 +398,7 @@ export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend:
       packet.padOffset(3);
    }
 
-   packet.addNumber(player !== null ? HealthComponentArray.getComponent(player).health : 0);
+   packet.addNumber(playerIsAlive ? HealthComponentArray.getComponent(player).health : 0);
 
    // @Bug: Shared for all players
    if (debugData !== null) {
@@ -399,7 +424,9 @@ export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend:
    packet.addBoolean(playerClient.hasPickedUpItem);
    packet.padOffset(3);
 
-   addCrossbowLoadProgressRecordToPacket(packet, hotbarUseInfo);
+   if (playerIsAlive) {
+      addCrossbowLoadProgressRecordToPacket(packet, hotbarUseInfo!);
+   }
 
    // Title offer
    packet.addBoolean(titleOffer !== null);

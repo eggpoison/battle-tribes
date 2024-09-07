@@ -124,7 +124,7 @@ export interface GameDataPacket {
    /** All healing received by visible entities server-side */
    readonly heals: ReadonlyArray<HealData>;
    readonly orbCompletes: ReadonlyArray<ResearchOrbCompleteData>;
-   readonly inventory: PlayerInventoryData;
+   readonly inventory: PlayerInventoryData | undefined;
    readonly playerHealth: number;
    /** Extra debug information about a game object being tracked */
    readonly entityDebugData?: EntityDebugData;
@@ -132,7 +132,7 @@ export interface GameDataPacket {
    readonly enemyTribesData: ReadonlyArray<EnemyTribeData>;
    readonly hasFrostShield: boolean;
    readonly pickedUpItem: boolean;
-   readonly hotbarCrossbowLoadProgressRecord: Partial<Record<number, number>>;
+   readonly hotbarCrossbowLoadProgressRecord: Partial<Record<number, number>> | undefined;
    readonly titleOffer: TribesmanTitle | null;
    readonly tickEvents: ReadonlyArray<EntityTickEvent>;
    // @Cleanup @Bandwidth: move these all to a special dev info packet

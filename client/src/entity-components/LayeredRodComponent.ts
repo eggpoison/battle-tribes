@@ -175,8 +175,7 @@ class LayeredRodComponent extends ServerComponent {
       let existingPushY = bendToPushAmount(this.bendY);
       
       // let pushAmount = 1200 / Settings.TPS / (distance + 0.5) / Math.sqrt(this.numLayers);
-      let pushAmount = 75 / Settings.TPS / Math.sqrt(this.numLayers);
-      pushAmount *= pushingHitbox.mass;
+      let pushAmount = 250 * pushingHitbox.mass / Settings.TPS / Math.sqrt(this.numLayers);
       
       // Restrict the bend from going past the max bend
       const currentBend = Math.sqrt(this.bendX * this.bendX + this.bendY * this.bendY);

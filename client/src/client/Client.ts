@@ -328,7 +328,9 @@ abstract class Client {
 
       // this.updateEntities(gameDataPacket.entityDataArray, gameDataPacket.visibleEntityDeathIDs);
       
-      this.updatePlayerInventory(gameDataPacket.inventory);
+      if (typeof gameDataPacket.inventory !== "undefined") {
+         this.updatePlayerInventory(gameDataPacket.inventory);
+      }
       this.registerTileUpdates(gameDataPacket.tileUpdates);
 
       definiteGameState.setPlayerHealth(gameDataPacket.playerHealth);
@@ -399,7 +401,9 @@ abstract class Client {
          playSound("item-pickup.mp3", 0.3, 1, Camera.position);
       }
 
-      definiteGameState.hotbarCrossbowLoadProgressRecord = gameDataPacket.hotbarCrossbowLoadProgressRecord;
+      if (typeof gameDataPacket.hotbarCrossbowLoadProgressRecord !== "undefined") {
+         definiteGameState.hotbarCrossbowLoadProgressRecord = gameDataPacket.hotbarCrossbowLoadProgressRecord;
+      }
 
       setVisiblePathfindingNodeOccupances(gameDataPacket.visiblePathfindingNodeOccupances);
       setVisibleSafetyNodes(gameDataPacket.visibleSafetyNodes);

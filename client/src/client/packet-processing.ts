@@ -318,6 +318,9 @@ export function processGameDataPacket(reader: PacketReader): void {
    const ticks = reader.readNumber();
    const time = reader.readNumber();
 
+   const playerIsAlive = reader.readBoolean();
+   reader.padOffset(3);
+
    Board.serverTicks = ticks;
    updateDebugScreenTicks(ticks);
    Board.time = time;
@@ -376,6 +379,7 @@ export function processGameDataPacket(reader: PacketReader): void {
       };
    }
 
+   // @Temporary @Incomplete @Speed: garbage collection
    const tribeData: PlayerTribeData = {
       name: tribeName,
       id: tribeID,
@@ -391,6 +395,7 @@ export function processGameDataPacket(reader: PacketReader): void {
    Client.updateTribe(tribeData);
 
    // Enemy tribes data
+   // @Temporary
    const enemyTribesData = new Array<EnemyTribeData>();
    const numEnemyTribes = reader.readNumber();
    for (let i = 0; i < numEnemyTribes; i++) {
@@ -474,7 +479,7 @@ export function processGameDataPacket(reader: PacketReader): void {
       Board.removeEntity(entity, isDeath);
    }
 
-   const playerInventories = readPlayerInventories(reader);
+   const playerInventories = playerIsAlive ? readPlayerInventories(reader) : undefined;
    
    const visibleHits = new Array<HitData>();
    const numHits = reader.readNumber();
@@ -582,7 +587,10 @@ export function processGameDataPacket(reader: PacketReader): void {
    const hasPickedUpItem = reader.readBoolean();
    reader.padOffset(3);
 
-   const hotbarCrossbowLoadProgressRecord = readCrossbowLoadProgressRecord(reader);
+   let hotbarCrossbowLoadProgressRecord: Partial<Record<number, number>> | undefined;
+   if (playerIsAlive) {
+      hotbarCrossbowLoadProgressRecord = readCrossbowLoadProgressRecord(reader);
+   }
 
    // Title offer
    const hasTitleOffer = reader.readBoolean();

@@ -2,9 +2,9 @@ import { Settings } from "webgl-test-shared/dist/settings";
 import Board, { getChunksInBounds } from "./Board";
 import { GrassBlocker, GrassBlockerCircle, GrassBlockerRectangle, blockerIsCircluar } from "webgl-test-shared/dist/grass-blockers";
 import Chunk from "./Chunk";
-import { HitboxFlags, hitboxIsCircular } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { EntityID } from "webgl-test-shared/dist/entities";
 import { TransformComponentArray } from "./components/TransformComponent";
+import { boxIsCircular, HitboxFlags } from "webgl-test-shared/dist/boxes/boxes";
 
 const blockers = new Array<GrassBlocker>();
 const blockerAssociatedEntities = new Array<EntityID>();
@@ -87,20 +87,21 @@ export function createStructureGrassBlockers(structure: EntityID): void {
    
    for (let i = 0; i < transformComponent.hitboxes.length; i++) {
       const hitbox = transformComponent.hitboxes[i];
-
       if ((hitbox.flags & HitboxFlags.NON_GRASS_BLOCKING) !== 0) {
          continue;
       }
 
-      const position = transformComponent.position.copy();
-      position.x += hitbox.offset.x;
-      position.y += hitbox.offset.y;
+      const box = hitbox.box;
 
-      if (hitboxIsCircular(hitbox)) {
+      const position = transformComponent.position.copy();
+      position.x += box.offset.x;
+      position.y += box.offset.y;
+
+      if (boxIsCircular(box)) {
          const blocker: GrassBlockerCircle = {
             position: position,
             blockAmount: 0,
-            radius: hitbox.radius + Vars.BLOCKER_PADDING,
+            radius: box.radius + Vars.BLOCKER_PADDING,
             maxBlockAmount: 1
          };
          addGrassBlocker(blocker, structure);
@@ -108,9 +109,9 @@ export function createStructureGrassBlockers(structure: EntityID): void {
          const blocker: GrassBlockerRectangle = {
             position: position,
             blockAmount: 0,
-            width: hitbox.width + Vars.BLOCKER_PADDING * 2,
-            height: hitbox.height + Vars.BLOCKER_PADDING * 2,
-            rotation: transformComponent.rotation + hitbox.relativeRotation,
+            width: box.width + Vars.BLOCKER_PADDING * 2,
+            height: box.height + Vars.BLOCKER_PADDING * 2,
+            rotation: transformComponent.rotation + box.relativeRotation,
             maxBlockAmount: 1
          };
          addGrassBlocker(blocker, structure);

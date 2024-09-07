@@ -26,6 +26,7 @@ import { getComponentArrays } from "./entity-components/ComponentArray";
 import { removeEntityFromDirtyArray } from "./rendering/render-part-matrices";
 import { getEntityRenderLayer } from "./render-layers";
 import { registerChunkRenderedEntity, removeChunkRenderedEntity, renderLayerIsChunkRendered } from "./rendering/webgl/chunked-entity-rendering";
+import { getFrameProgress } from "./Game";
 
 export interface EntityHitboxInfo {
    readonly vertexPositions: readonly [Point, Point, Point, Point];
@@ -42,9 +43,8 @@ abstract class Board {
    public static clientTicks = 0;
    public static time: number;
 
-   // @Hack: don't have this default value
    private static tiles: ReadonlyArray<Tile>;
-   private static chunks: Array<Chunk>;
+   public static chunks: Array<Chunk>;
    
    public static grassInfo: Record<number, Record<number, GrassTileInfo>>;
    private static riverFlowDirections: RiverFlowDirectionsRecord;
@@ -55,9 +55,6 @@ abstract class Board {
    public static readonly entityRecord: Partial<Record<number, Entity>> = {};
 
    public static readonly renderPartRecord: Record<number, RenderPart> = {};
-
-   /** Stores all player entities in the game. Necessary for rendering their names. */
-   public static readonly players = new Array<Player>();
 
    // @Cleanup This is too messy. Perhaps combine all into one
    // public static readonly particles = new Array<Particle>();
@@ -170,10 +167,6 @@ abstract class Board {
       this.entityRecord[entity.id] = entity;
       this.entities.add(entity);
 
-      if (entity.type === EntityType.player) {
-         this.players.push(entity as Player);
-      }
-
       // @Temporary? useless now?
       addEntityToRenderHeightMap(entity);
 
@@ -200,13 +193,6 @@ abstract class Board {
          entity.die();
       }
       entity.remove();
-
-      if (entity.type === EntityType.player) {
-         const idx = Board.players.indexOf(entity as Player);
-         if (idx !== -1) {
-            Board.players.splice(idx, 1);
-         }
-      }
 
       for (let i = 0; i < entity.components.length; i++) {
          const component = entity.components[i];
@@ -246,8 +232,10 @@ abstract class Board {
                const otherTransformComponent = entity.getServerComponent(ServerComponentType.transform);
 
                for (const hitbox of transformComponent.hitboxes) {
+                  const box = hitbox.box;
                   for (const otherHitbox of otherTransformComponent.hitboxes) {
-                     if (hitbox.isColliding(otherHitbox)) {
+                     const otherBox = otherHitbox.box;
+                     if (box.isColliding(otherBox)) {
                         if (!transformComponent.collidingEntities.includes(entity)) {
                            transformComponent.collidingEntities.push(entity);
                         }
@@ -273,62 +261,6 @@ abstract class Board {
                //       collisionNum: collisionNum
                //    });
                // }
-         }
-      }
-   }
-
-   public static resolveEntityCollisions(): void {
-      const numChunks = Settings.BOARD_SIZE * Settings.BOARD_SIZE;
-      for (let i = 0; i < numChunks; i++) {
-         const chunk = this.chunks[i];
-
-         // @Speed: physics-physics comparisons happen twice
-         // For all physics entities, check for collisions with all other entities in the chunk
-         for (let j = 0; j < chunk.physicsEntities.length; j++) {
-            const entity1ID = chunk.physicsEntities[j];
-            const entity1 = this.entityRecord[entity1ID]!;
-
-            const transformComponent = entity1.getServerComponent(ServerComponentType.transform);
-            
-            for (let k = 0; k < chunk.entities.length; k++) {
-               const entity2ID = chunk.entities[k];
-               // @Speed
-               if (entity1ID === entity2ID) {
-                  continue;
-               }
-
-               const entity2 = this.entityRecord[entity2ID]!;
-               const otherTransformComponent = entity2.getServerComponent(ServerComponentType.transform);
-
-               for (const hitbox of transformComponent.hitboxes) {
-                  for (const otherHitbox of otherTransformComponent.hitboxes) {
-                     if (hitbox.isColliding(otherHitbox)) {
-                        if (!transformComponent.collidingEntities.includes(entity2)) {
-                           transformComponent.collidingEntities.push(entity2);
-                        }
-                        
-                        if ((otherTransformComponent.collisionMask & transformComponent.collisionBit) !== 0 && (transformComponent.collisionMask & otherTransformComponent.collisionBit) !== 0) {
-                           collide(entity1, entity2, hitbox, otherHitbox);
-                           collide(entity2, entity1, otherHitbox, hitbox);
-                        } else {
-                           // @Hack
-                           if (otherTransformComponent.collisionBit === COLLISION_BITS.plants) {
-                              latencyGameState.lastPlantCollisionTicks = Board.serverTicks;
-                           }
-                           break;
-                        }
-                     }
-                  }
-               }
-               // const collisionNum = entitiesAreColliding(entity1ID, entity2ID);
-               // if (collisionNum !== CollisionVars.NO_COLLISION) {
-               //    collisionPairs.push({
-               //       entity1: entity1ID,
-               //       entity2: entity2ID,
-               //       collisionNum: collisionNum
-               //    });
-               // }
-            }
          }
       }
    }
@@ -488,3 +420,13 @@ abstract class Board {
 }
 
 export default Board;
+
+export function getSecondsSinceTickTimestamp(ticks: number): number {
+   const ticksSince = Board.serverTicks - ticks;
+   let secondsSince = ticksSince / Settings.TPS;
+
+   // Account for frame progress
+   secondsSince += getFrameProgress() / Settings.TPS;
+
+   return secondsSince;
+}

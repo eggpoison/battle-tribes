@@ -6,8 +6,10 @@ import Tribe, { RestrictedBuildingArea, VirtualBuilding, getNumWallConnections, 
 import Board from "../Board";
 import { TribeArea, createTribeArea, updateTribeAreaDoors } from "./ai-building-areas";
 import { updateTribePlans } from "./ai-building-plans";
-import { CircularHitbox, Hitbox, hitboxIsCircular, updateHitbox, RectangularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
-import { createEntityHitboxes } from "webgl-test-shared/dist/hitboxes/entity-hitbox-creation";
+import { assertHitboxIsRectangular, BoxType, createHitbox, hitboxIsCircular, HitboxWrapper, updateBox } from "webgl-test-shared/dist/boxes/boxes";
+import RectangularBox from "webgl-test-shared/dist/boxes/RectangularBox";
+import { HitboxCollisionBit } from "webgl-test-shared/dist/collision";
+import { createEntityHitboxes } from "webgl-test-shared/dist/boxes/entity-hitbox-creation";
 
 const enum Vars {
    /** How much safety increases when moving in a node */
@@ -50,9 +52,10 @@ const BUILDING_SAFETY: Record<StructureType, number> = {
 };
 
 export function createRestrictedBuildingArea(position: Point, width: number, height: number, rotation: number, associatedBuildingID: number): RestrictedBuildingArea {
-   const hitbox = new RectangularHitbox(0, new Point(0, 0), 0, 0, 0, 0, width, height, rotation);
-   hitbox.position.x = position.x;
-   hitbox.position.y = position.y;
+   const box = new RectangularBox(new Point(0, 0), width, height, rotation);
+   const hitbox = createHitbox<BoxType.rectangular>(box, 0, 0, HitboxCollisionBit.DEFAULT, 0, 0);
+   box.position.x = position.x;
+   box.position.y = position.y;
    
    return {
       position: position,
@@ -68,21 +71,23 @@ export function getSafetyNode(nodeX: number, nodeY: number): SafetyNode {
    return nodeY * Settings.SAFETY_NODES_IN_WORLD_WIDTH + nodeX;
 }
 
-const addCircularHitboxNodePositions = (hitbox: CircularHitbox, positions: Set<SafetyNode>): void => {
-   const minX = hitbox.calculateHitboxBoundsMinX();
-   const maxX = hitbox.calculateHitboxBoundsMaxX();
-   const minY = hitbox.calculateHitboxBoundsMinY();
-   const maxY = hitbox.calculateHitboxBoundsMaxY();
+const addCircularHitboxNodePositions = (hitbox: HitboxWrapper<BoxType.circular>, positions: Set<SafetyNode>): void => {
+   const box = hitbox.box;
+   
+   const minX = box.calculateBoundsMinX();
+   const maxX = box.calculateBoundsMaxX();
+   const minY = box.calculateBoundsMinY();
+   const maxY = box.calculateBoundsMaxY();
 
-   const centerX = hitbox.position.x / Settings.SAFETY_NODE_SEPARATION;
-   const centerY = hitbox.position.y / Settings.SAFETY_NODE_SEPARATION;
+   const centerX = box.position.x / Settings.SAFETY_NODE_SEPARATION;
+   const centerY = box.position.y / Settings.SAFETY_NODE_SEPARATION;
    
    const minNodeX = Math.max(Math.floor(minX / Settings.SAFETY_NODE_SEPARATION), 0);
    const maxNodeX = Math.min(Math.ceil(maxX / Settings.SAFETY_NODE_SEPARATION), Settings.SAFETY_NODES_IN_WORLD_WIDTH - 1);
    const minNodeY = Math.max(Math.floor(minY / Settings.SAFETY_NODE_SEPARATION), 0);
    const maxNodeY = Math.min(Math.ceil(maxY / Settings.SAFETY_NODE_SEPARATION), Settings.SAFETY_NODES_IN_WORLD_WIDTH - 1);
 
-   const hitboxNodeRadius = hitbox.radius / Settings.SAFETY_NODE_SEPARATION + 0.5;
+   const hitboxNodeRadius = box.radius / Settings.SAFETY_NODE_SEPARATION + 0.5;
    const hitboxNodeRadiusSquared = hitboxNodeRadius * hitboxNodeRadius;
 
    for (let nodeX = minNodeX; nodeX <= maxNodeX; nodeX++) {
@@ -97,6 +102,7 @@ const addCircularHitboxNodePositions = (hitbox: CircularHitbox, positions: Set<S
    }
 }
 
+// @Cleanup: Make this take a hitbox as params instead of all this shit
 export function addRectangularSafetyNodePositions(rectPosition: Point, rectWidth: number, rectHeight: number, rectRotation: number, rectMinX: number, rectMaxX: number, rectMinY: number, rectMaxY: number, positions: Set<SafetyNode>): void {
    // @Speed: Math.round might also work
    const minNodeX = Math.max(Math.floor(rectMinX / Settings.SAFETY_NODE_SEPARATION), 0);
@@ -116,7 +122,7 @@ export function addRectangularSafetyNodePositions(rectPosition: Point, rectWidth
    }
 }
 
-export function addHitboxesOccupiedNodes(hitboxes: ReadonlyArray<Hitbox>, positions: Set<SafetyNode>): void {
+export function addHitboxesOccupiedNodes(hitboxes: ReadonlyArray<HitboxWrapper>, positions: Set<SafetyNode>): void {
    for (let i = 0; i < hitboxes.length; i++) {
       const hitbox = hitboxes[i];
 
@@ -124,7 +130,11 @@ export function addHitboxesOccupiedNodes(hitboxes: ReadonlyArray<Hitbox>, positi
       if (hitboxIsCircular(hitbox)) {
          addCircularHitboxNodePositions(hitbox, positions);
       } else {
-         addRectangularSafetyNodePositions(hitbox.position, hitbox.width, hitbox.height, hitbox.rotation, hitbox.calculateHitboxBoundsMinX(), hitbox.calculateHitboxBoundsMaxX(), hitbox.calculateHitboxBoundsMinY(), hitbox.calculateHitboxBoundsMaxY(), positions);
+         // @Hack
+         assertHitboxIsRectangular(hitbox);
+         
+         const box = hitbox.box;
+         addRectangularSafetyNodePositions(box.position, box.width, box.height, box.rotation, box.calculateBoundsMinX(), box.calculateBoundsMaxX(), box.calculateBoundsMinY(), box.calculateBoundsMaxY(), positions);
       }
    }
 }
@@ -641,7 +651,7 @@ export function placeVirtualBuilding(tribe: Tribe, position: Readonly<Point>, ro
    const hitboxes = createEntityHitboxes(entityType);
    for (let i = 0; i < hitboxes.length; i++) {
       const hitbox = hitboxes[i];
-      updateHitbox(hitbox, position.x, position.y, rotation);
+      updateBox(hitbox.box, position.x, position.y, rotation);
    }
    
    const occupiedNodes = new Set<SafetyNode>();

@@ -25,7 +25,7 @@ class BerryBushComponent extends ServerComponent {
    }
 
    public onLoad(): void {
-      this.renderPart = this.entity.getRenderPart("berryBushComponent:renderPart") as TexturedRenderPart;
+      this.renderPart = this.entity.getRenderThing("berryBushComponent:renderPart") as TexturedRenderPart;
    }
 
    public padData(reader: PacketReader): void {
@@ -33,8 +33,15 @@ class BerryBushComponent extends ServerComponent {
    }
 
    public updateFromData(reader: PacketReader): void {
-      this.numBerries = reader.readNumber();
-      this.renderPart.switchTextureSource(BERRY_BUSH_TEXTURE_SOURCES[this.numBerries]);
+      const numBerries = reader.readNumber();
+
+      if (numBerries !== this.numBerries) {
+         this.numBerries = numBerries;
+
+         this.renderPart.switchTextureSource(BERRY_BUSH_TEXTURE_SOURCES[this.numBerries]);
+         // @Bug: not working!
+         this.entity.dirty();
+      }
    }
 }
 

@@ -2,7 +2,7 @@ import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/c
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { Point } from "webgl-test-shared/dist/utils";
-import { createWarriorHutHitboxes } from "webgl-test-shared/dist/hitboxes/entity-hitbox-creation";
+import { createWarriorHutHitboxes } from "webgl-test-shared/dist/boxes/entity-hitbox-creation";
 import { createEmptyStructureConnectionInfo } from "webgl-test-shared/dist/structures";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { ComponentConfig } from "../../components";

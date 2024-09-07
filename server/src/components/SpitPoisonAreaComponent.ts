@@ -1,10 +1,10 @@
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { ComponentArray } from "./ComponentArray";
 import { EntityID } from "webgl-test-shared/dist/entities";
-import { CircularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { Settings } from "webgl-test-shared/dist/settings";
 import Board from "../Board";
 import { TransformComponentArray } from "./TransformComponent";
+import CircularBox from "webgl-test-shared/dist/boxes/CircularBox";
 
 export interface SpitPoisonAreaComponentParams {}
 
@@ -22,9 +22,10 @@ export const SpitPoisonAreaComponentArray = new ComponentArray<SpitPoisonAreaCom
 function onTick(_spitPoisonAreaComponent: SpitPoisonAreaComponent, spit: EntityID): void {
    const transformComponent = TransformComponentArray.getComponent(spit);
    
-   const hitbox = transformComponent.hitboxes[0] as CircularHitbox;
-   hitbox.radius -= 5 / Settings.TPS;
-   if (hitbox.radius <= 0) {
+   const hitbox = transformComponent.hitboxes[0];
+   const box = hitbox.box as CircularBox;
+   box.radius -= 5 / Settings.TPS;
+   if (box.radius <= 0) {
       Board.destroyEntity(spit);
    }
    

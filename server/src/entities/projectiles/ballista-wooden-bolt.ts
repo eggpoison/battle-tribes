@@ -10,9 +10,10 @@ import { StatusEffectComponentArray, applyStatusEffect } from "../../components/
 import { ComponentConfig } from "../../components";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
 import { TransformComponentArray } from "../../components/TransformComponent";
-import { HitboxCollisionType, RectangularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { ProjectileComponentArray } from "../../components/ProjectileComponent";
 import { ItemType } from "webgl-test-shared/dist/items/items";
+import { createHitbox, HitboxCollisionType } from "webgl-test-shared/dist/boxes/boxes";
+import RectangularBox from "webgl-test-shared/dist/boxes/RectangularBox";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics
@@ -27,7 +28,7 @@ export function createBallistaWoodenBoltConfig(): ComponentConfig<ComponentTypes
          type: EntityType.ballistaWoodenBolt,
          collisionBit: COLLISION_BITS.default,
          collisionMask: DEFAULT_COLLISION_MASK,
-         hitboxes: [new RectangularHitbox(0.5, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK & ~HitboxCollisionBit.ARROW_PASSABLE, 0, 12, 80, 0)]
+         hitboxes: [createHitbox(new RectangularBox(new Point(0, 0), 12, 80, 0), 0.5, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK & ~HitboxCollisionBit.ARROW_PASSABLE, 0)]
       },
       [ServerComponentType.physics]: {
          velocityX: 0,

@@ -7,9 +7,11 @@ import PathfindingHeap from "./PathfindingHeap";
 import OPTIONS from "./options";
 import { PhysicsComponentArray } from "./components/PhysicsComponent";
 import { TribeComponentArray } from "./components/TribeComponent";
-import { CircularHitbox, HitboxCollisionType, RectangularHitbox, Hitbox, hitboxIsCircular } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { TransformComponent, TransformComponentArray } from "./components/TransformComponent";
 import { ProjectileComponentArray } from "./components/ProjectileComponent";
+import CircularBox from "webgl-test-shared/dist/boxes/CircularBox";
+import { boxIsCircular, HitboxCollisionType, HitboxWrapper } from "webgl-test-shared/dist/boxes/boxes";
+import RectangularBox from "webgl-test-shared/dist/boxes/RectangularBox";
 
 const enum Vars {
    NODE_ACCESSIBILITY_RESOLUTION = 3,
@@ -211,14 +213,16 @@ const nodeIsAccessibleForEntity = (node: PathfindingNodeIndex, ignoredGroupID: n
    return slowAccessibilityCheck(node, ignoredGroupID, pathfindingEntityFootprint);
 }
 
-const getCircularHitboxOccupiedNodes = (hitbox: CircularHitbox): ReadonlyArray<PathfindingNodeIndex> => {
-   const minX = hitbox.calculateHitboxBoundsMinX();
-   const maxX = hitbox.calculateHitboxBoundsMaxX();
-   const minY = hitbox.calculateHitboxBoundsMinY();
-   const maxY = hitbox.calculateHitboxBoundsMaxY();
+const getCircularHitboxOccupiedNodes = (hitbox: HitboxWrapper): ReadonlyArray<PathfindingNodeIndex> => {
+   const box = hitbox.box as CircularBox;
+   
+   const minX = box.calculateBoundsMinX();
+   const maxX = box.calculateBoundsMaxX();
+   const minY = box.calculateBoundsMinY();
+   const maxY = box.calculateBoundsMaxY();
 
-   const centerX = hitbox.position.x / PathfindingSettings.NODE_SEPARATION;
-   const centerY = hitbox.position.y / PathfindingSettings.NODE_SEPARATION;
+   const centerX = box.position.x / PathfindingSettings.NODE_SEPARATION;
+   const centerY = box.position.y / PathfindingSettings.NODE_SEPARATION;
    
    let minNodeX = Math.floor(minX / PathfindingSettings.NODE_SEPARATION);
    let maxNodeX = Math.ceil(maxX / PathfindingSettings.NODE_SEPARATION);
@@ -240,7 +244,7 @@ const getCircularHitboxOccupiedNodes = (hitbox: CircularHitbox): ReadonlyArray<P
    // @Incomplete: Also take up more if it's ice spikes
    // Make soft hitboxes take up less node radius so that it easier to pathfind around them
    const radiusOffset = hitbox.collisionType === HitboxCollisionType.hard ? 0.5 : 0;
-   const hitboxNodeRadius = hitbox.radius / PathfindingSettings.NODE_SEPARATION + radiusOffset;
+   const hitboxNodeRadius = box.radius / PathfindingSettings.NODE_SEPARATION + radiusOffset;
    const hitboxNodeRadiusSquared = hitboxNodeRadius * hitboxNodeRadius;
 
    const occupiedNodes = new Array<PathfindingNodeIndex>();
@@ -257,11 +261,13 @@ const getCircularHitboxOccupiedNodes = (hitbox: CircularHitbox): ReadonlyArray<P
    return occupiedNodes;
 }
 
-const getRectangularHitboxOccupiedNodes = (hitbox: RectangularHitbox): ReadonlyArray<PathfindingNodeIndex> => {
-   const minX = hitbox.calculateHitboxBoundsMinX();
-   const maxX = hitbox.calculateHitboxBoundsMaxX();
-   const minY = hitbox.calculateHitboxBoundsMinY();
-   const maxY = hitbox.calculateHitboxBoundsMaxY();
+const getRectangularHitboxOccupiedNodes = (hitbox: HitboxWrapper): ReadonlyArray<PathfindingNodeIndex> => {
+   const box = hitbox.box as RectangularBox;
+   
+   const minX = box.calculateBoundsMinX();
+   const maxX = box.calculateBoundsMaxX();
+   const minY = box.calculateBoundsMinY();
+   const maxY = box.calculateBoundsMaxY();
 
    // @Speed: Math.round might also work
    let minNodeX = Math.floor(minX / PathfindingSettings.NODE_SEPARATION);
@@ -293,7 +299,7 @@ const getRectangularHitboxOccupiedNodes = (hitbox: RectangularHitbox): ReadonlyA
          const y = nodeY * PathfindingSettings.NODE_SEPARATION;
          const nodePos = new Point(x, y);
          
-         if (distBetweenPointAndRectangle(nodePos, hitbox.position, hitbox.width, hitbox.height, hitbox.rotation) <= nodeClearance) {
+         if (distBetweenPointAndRectangle(nodePos, box.position, box.width, box.height, box.rotation) <= nodeClearance) {
             const node = getNode(nodeX, nodeY);
             // @Temporary
             if (node >= PathfindingSettings.NODES_IN_WORLD_WIDTH*PathfindingSettings.NODES_IN_WORLD_WIDTH) {
@@ -306,8 +312,8 @@ const getRectangularHitboxOccupiedNodes = (hitbox: RectangularHitbox): ReadonlyA
    return occupiedNodes;
 }
 
-export function getHitboxOccupiedNodes(hitbox: Hitbox): ReadonlyArray<PathfindingNodeIndex> {
-   if (hitboxIsCircular(hitbox)) {
+export function getHitboxOccupiedNodes(hitbox: HitboxWrapper): ReadonlyArray<PathfindingNodeIndex> {
+   if (boxIsCircular(hitbox.box)) {
       return getCircularHitboxOccupiedNodes(hitbox);
    } else {
       return getRectangularHitboxOccupiedNodes(hitbox);

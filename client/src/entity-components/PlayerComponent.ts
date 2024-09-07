@@ -11,9 +11,6 @@ class PlayerComponent extends ServerComponent {
       super(entity);
 
       this.username = reader.readString(100);
-      // @Incomplete
-      console.log(this.username);
-      console.log(this.username.trim());
    }
 
    public padData(reader: PacketReader): void {

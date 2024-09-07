@@ -6,10 +6,10 @@ import ServerComponent from "./ServerComponent";
 import { Colour, hueShift, lerp, multiColourLerp } from "webgl-test-shared/dist/utils";
 import { Settings } from "webgl-test-shared/dist/settings";
 import Board from "../Board";
-import { Hitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { PacketReader } from "webgl-test-shared/dist/packets";
 import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
+import { HitboxWrapper } from "webgl-test-shared/dist/boxes/boxes";
 
 const enum Vars {
    NATURAL_DRIFT = 20 / Settings.TPS
@@ -21,22 +21,26 @@ const REED_COLOURS: ReadonlyArray<Colour> = [
    {
       r: 219/255,
       g: 215/255,
-      b: 197/255
+      b: 197/255,
+      a: 1
    },
    {
       r: 68/255,
       g: 181/255,
-      b: 49/255
+      b: 49/255,
+      a: 1
    },
    {
       r: 97/255,
       g: 214/255,
-      b: 77/255
+      b: 77/255,
+      a: 1
    },
    {
       r: 203/255,
       g: 255/255,
-      b: 194/255
+      b: 194/255,
+      a: 1
    }
 ];
 
@@ -51,7 +55,7 @@ const pushAmountToBend = (pushAmount: number): number => {
    return bend;
 }
 
-const getLayerColour = (entity: Entity, r: number, g: number, b: number, layer: number, numLayers: number): Colour => {
+const getLayerColour = (entity: Entity, r: number, g: number, b: number, layer: number, numLayers: number): RenderPartColour => {
    switch (entity.type as EntityType.grassStrand | EntityType.reed) {
       case EntityType.grassStrand: {
          // @Speed: a lot of this is shared for all strands
@@ -75,10 +79,11 @@ const getLayerColour = (entity: Entity, r: number, g: number, b: number, layer: 
          // Minimum brighness
          brightnessMultiplier = lerp(brightnessMultiplier, 1, 0.915);
 
-         const colour: Colour = {
+         const colour: RenderPartColour = {
             r: r * brightnessMultiplier,
             g: g * brightnessMultiplier,
-            b: b * brightnessMultiplier
+            b: b * brightnessMultiplier,
+            a: 1
          };
          if (grassInfo.temperature > 0) {
             const humidityMultiplier = (humidity - 0.5) * -0.7;
@@ -137,20 +142,13 @@ class LayeredRodComponent extends ServerComponent {
       // Create layers
       for (let layer = 1; layer <= this.numLayers; layer++) {
          const colour = getLayerColour(this.entity, this.r, this.g, this.b, layer, this.numLayers);
-         
-         const renderPartColour: RenderPartColour = {
-            r: colour.r,
-            g: colour.g,
-            b: colour.b,
-            a: 1
-         };
 
          const zIndex = layer / 10;
          const renderPart = new ColouredRenderPart(
             null,
             zIndex,
             0,
-            renderPartColour
+            colour
          );
 
          renderPart.offset.x = bendX * layer;
@@ -161,7 +159,7 @@ class LayeredRodComponent extends ServerComponent {
       }
    }
 
-   public onCollision(collidingEntity: Entity, _pushedHitbox: Hitbox, pushingHitbox: Hitbox): void {
+   public onCollision(collidingEntity: Entity, _pushedHitbox: HitboxWrapper, pushingHitbox: HitboxWrapper): void {
       if (collidingEntity.type === EntityType.tree) {
          return;
       }
@@ -171,7 +169,7 @@ class LayeredRodComponent extends ServerComponent {
       const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
    
       // const distance = transformComponent.position.calculateDistanceBetween(pushingHitbox.position);
-      const directionFromCollidingEntity = pushingHitbox.position.calculateAngleBetween(transformComponent.position);
+      const directionFromCollidingEntity = pushingHitbox.box.position.calculateAngleBetween(transformComponent.position);
    
       let existingPushX = bendToPushAmount(this.bendX);
       let existingPushY = bendToPushAmount(this.bendY);

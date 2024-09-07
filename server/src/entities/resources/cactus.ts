@@ -5,13 +5,14 @@ import { HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, dam
 import { createItemsOverEntity } from "../../entity-shared";
 import { applyKnockback } from "../../components/PhysicsComponent";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
-import { CircularHitbox, Hitbox, HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { ItemType } from "webgl-test-shared/dist/items/items";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { ComponentConfig } from "../../components";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import Board from "../../Board";
 import { TransformComponentArray } from "../../components/TransformComponent";
+import { createHitbox, HitboxCollisionType, HitboxWrapper } from "webgl-test-shared/dist/boxes/boxes";
+import CircularBox from "webgl-test-shared/dist/boxes/CircularBox";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.health
@@ -79,17 +80,19 @@ const generateRandomLimbs = (): ReadonlyArray<CactusLimbData> => {
 }
 
 export function createCactusConfig(): ComponentConfig<ComponentTypes> {
-   const hitboxes = new Array<Hitbox>();
+   const hitboxes = new Array<HitboxWrapper>();
 
-   hitboxes.push(new CircularHitbox(1, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, RADIUS - HITBOX_PADDING));
+   hitboxes.push(createHitbox(new CircularBox(new Point(0, 0), RADIUS - HITBOX_PADDING), 1, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0));
 
    const flowers = generateRandomFlowers();
    const limbs = generateRandomLimbs();
 
    // Create hitboxes for all the cactus limbs
    for (let i = 0; i < limbs.length; i++) {
-      const limb = limbs[i]
-      const hitbox = new CircularHitbox(0.4, Point.fromVectorForm(37, limb.direction), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, 18);
+      const limb = limbs[i];
+
+      const box = new CircularBox(Point.fromVectorForm(37, limb.direction), 18);
+      const hitbox = createHitbox(box, 0.4, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0);
       hitboxes.push(hitbox);
    }
 

@@ -24,7 +24,6 @@ import { onPlayerCollision } from "./entities/tribes/player";
 import { onEmbrasureCollision } from "./entities/structures/embrasure";
 import { onTribesmanCollision } from "./entities/tribes/tribe-member";
 import { DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
-import { RectangularHitbox, Hitbox, HitboxCollisionType, updateHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { CollisionPushInfo, collisionBitsAreCompatible, getCollisionPushInfo } from "webgl-test-shared/dist/hitbox-collision";
 import { TransformComponent, TransformComponentArray } from "./components/TransformComponent";
 import Board from "./Board";
@@ -34,6 +33,8 @@ import { onBallistaSlimeballCollision } from "./entities/projectiles/ballista-sl
 import { onBallistaFrostcicleCollision } from "./entities/projectiles/ballista-frostcicle";
 import { onWoodenArrowCollision } from "./entities/projectiles/wooden-arrow";
 import { ComponentArrays } from "./components/ComponentArray";
+import { HitboxCollisionType, HitboxWrapper, updateBox } from "webgl-test-shared/dist/boxes/boxes";
+import RectangularBox from "webgl-test-shared/dist/boxes/RectangularBox";
 
 export const enum CollisionVars {
    NO_COLLISION = 0xFFFF
@@ -59,12 +60,14 @@ export function entitiesAreColliding(entity1: EntityID, entity2: EntityID): numb
    const numOtherHitboxes = transformComponent2.hitboxes.length;
    for (let i = 0; i < numHitboxes; i++) {
       const hitbox = transformComponent1.hitboxes[i];
+      const box = hitbox.box;
 
       for (let j = 0; j < numOtherHitboxes; j++) {
          const otherHitbox = transformComponent2.hitboxes[j];
+         const otherBox = otherHitbox.box;
 
          // If the objects are colliding, add the colliding object and this object
-         if (collisionBitsAreCompatible(hitbox.collisionMask, hitbox.collisionBit, otherHitbox.collisionMask, otherHitbox.collisionBit) && hitbox.isColliding(otherHitbox)) {
+         if (collisionBitsAreCompatible(hitbox.collisionMask, hitbox.collisionBit, otherHitbox.collisionMask, otherHitbox.collisionBit) && box.isColliding(otherBox)) {
             return i + (j << 8);
          }
       }
@@ -87,7 +90,7 @@ const resolveHardCollision = (transformComponent: TransformComponent, physicsCom
    physicsComponent.velocity.y = by * projectionCoeff;
 }
 
-const resolveSoftCollision = (transformComponent: TransformComponent, physicsComponent: PhysicsComponent, pushingHitbox: Hitbox, pushInfo: CollisionPushInfo): void => {
+const resolveSoftCollision = (transformComponent: TransformComponent, physicsComponent: PhysicsComponent, pushingHitbox: HitboxWrapper, pushInfo: CollisionPushInfo): void => {
    // Force gets greater the further into each other the entities are
    const distMultiplier = Math.pow(pushInfo.amountIn, 1.1);
    const pushForce = Settings.ENTITY_PUSH_FORCE * Settings.I_TPS * distMultiplier * pushingHitbox.mass / transformComponent.totalMass;
@@ -103,7 +106,7 @@ export function collide(entity: EntityID, pushingEntity: EntityID, pushedHitboxI
    const pushedHitbox = pushedEntityTransformComponent.hitboxes[pushedHitboxIdx];
    const pushingHitbox = pushingEntityTransformComponent.hitboxes[pushingHitboxIdx];
    
-   const pushInfo = getCollisionPushInfo(pushedHitbox, pushingHitbox);
+   const pushInfo = getCollisionPushInfo(pushedHitbox.box, pushingHitbox.box);
 
    // @Hack @Temporary
    const collisionPoint = new Point((pushedEntityTransformComponent.position.x + pushingEntityTransformComponent.position.x) / 2, (pushedEntityTransformComponent.position.y + pushingEntityTransformComponent.position.y) / 2);
@@ -168,16 +171,16 @@ export function collide(entity: EntityID, pushingEntity: EntityID, pushedHitboxI
 }
 
 /** If no collision is found, does nothing. */
-export function resolveEntityTileCollision(entity: EntityID, hitbox: Hitbox, tileX: number, tileY: number): void {
+export function resolveEntityTileCollision(entity: EntityID, hitbox: HitboxWrapper, tileX: number, tileY: number): void {
    // @Speed
-   const tileHitbox = new RectangularHitbox(1, new Point(0, 0), HitboxCollisionType.hard, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, Settings.TILE_SIZE, Settings.TILE_SIZE, 0);
-   updateHitbox(tileHitbox, (tileX + 0.5) * Settings.TILE_SIZE, (tileY + 0.5) * Settings.TILE_SIZE, 0);
+   const tileBox = new RectangularBox(new Point(0, 0), Settings.TILE_SIZE, Settings.TILE_SIZE, 0);
+   updateBox(tileBox, (tileX + 0.5) * Settings.TILE_SIZE, (tileY + 0.5) * Settings.TILE_SIZE, 0);
    
-   if (hitbox.isColliding(tileHitbox)) {
+   if (hitbox.box.isColliding(tileBox)) {
       const transformComponent = TransformComponentArray.getComponent(entity);
       const physicsComponent = PhysicsComponentArray.getComponent(entity);
       
-      const pushInfo = getCollisionPushInfo(hitbox, tileHitbox);
+      const pushInfo = getCollisionPushInfo(hitbox.box, tileBox);
       resolveHardCollision(transformComponent, physicsComponent, pushInfo);
    }
 }

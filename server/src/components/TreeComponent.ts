@@ -4,12 +4,12 @@ import { GrassBlockerCircle } from "webgl-test-shared/dist/grass-blockers";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { ComponentConfig } from "../components";
 import { TransformComponentArray } from "./TransformComponent";
-import { CircularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { addGrassBlocker } from "../grass-blockers";
 import { Packet } from "webgl-test-shared/dist/packets";
 import { ItemType } from "webgl-test-shared/dist/items/items";
 import { randInt } from "webgl-test-shared/dist/utils";
 import { createItemsOverEntity } from "../entity-shared";
+import CircularBox from "webgl-test-shared/dist/boxes/CircularBox";
 
 export interface TreeComponentParams {
    readonly treeSize: TreeSize;
@@ -51,10 +51,11 @@ function onInitialise(config: ComponentConfig<ServerComponentType.transform | Se
 
    config[ServerComponentType.health].maxHealth = TREE_MAX_HEALTHS[treeSize];
 
-   const mass = 1.25 + treeSize * 0.25;
-   const hitbox = config[ServerComponentType.transform].hitboxes[0] as CircularHitbox;
-   hitbox.mass = mass;
-   hitbox.radius = TREE_RADII[treeSize];
+   const hitbox = config[ServerComponentType.transform].hitboxes[0];
+   const box = hitbox.box as CircularBox;
+   
+   hitbox.mass = 1.25 + treeSize * 0.25;
+   box.radius = TREE_RADII[treeSize];
 }
 
 function onJoin(entity: EntityID): void {

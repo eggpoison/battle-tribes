@@ -1,5 +1,4 @@
 import { PathfindingNodeIndex, RIVER_STEPPING_STONE_SIZES } from "webgl-test-shared/dist/client-server-types";
-import { Hitbox, hitboxIsCircular, updateHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { clampToBoardDimensions, Point, TileIndex } from "webgl-test-shared/dist/utils";
 import Board from "../Board";
@@ -13,6 +12,7 @@ import { PhysicsComponentArray } from "./PhysicsComponent";
 import { clearEntityPathfindingNodes, entityCanBlockPathfinding, updateEntityPathfindingNodeOccupance } from "../pathfinding";
 import { resolveEntityTileCollision } from "../collision";
 import { Packet } from "webgl-test-shared/dist/packets";
+import { boxIsCircular, HitboxWrapper, updateBox } from "webgl-test-shared/dist/boxes/boxes";
 
 // @Cleanup: move mass/hitbox related stuff out? (Are there any entities which would make use of that?)
 
@@ -24,7 +24,7 @@ export interface TransformComponentParams {
    readonly collisionBit: number;
    readonly collisionMask: number;
    // @Cleanup: should this instead be hitbox info?
-   hitboxes: ReadonlyArray<Hitbox>;
+   hitboxes: ReadonlyArray<HitboxWrapper>;
 }
 
 export class TransformComponent {
@@ -50,7 +50,7 @@ export class TransformComponent {
    public isInRiver!: boolean;
 
    /** All hitboxes attached to the entity */
-   public hitboxes = new Array<Hitbox>();
+   public hitboxes = new Array<HitboxWrapper>();
    public hitboxLocalIDs = new Array<number>();
    
    public boundingAreaMinX = Number.MAX_SAFE_INTEGER;
@@ -153,8 +153,10 @@ export class TransformComponent {
       this.isInRiver = true;
    }
 
-   public addHitbox(hitbox: Hitbox, entity: EntityID | null): void {
-      updateHitbox(hitbox, this.position.x, this.position.y, this.rotation);
+   public addHitbox(hitbox: HitboxWrapper, entity: EntityID | null): void {
+      const box = hitbox.box;
+      
+      updateBox(box, this.position.x, this.position.y, this.rotation);
    
       const localID = this.nextHitboxLocalID++;
       this.hitboxLocalIDs.push(localID);
@@ -162,10 +164,10 @@ export class TransformComponent {
       this.hitboxes.push(hitbox);
       this.totalMass += hitbox.mass;
    
-      const boundsMinX = hitbox.calculateHitboxBoundsMinX();
-      const boundsMaxX = hitbox.calculateHitboxBoundsMaxX();
-      const boundsMinY = hitbox.calculateHitboxBoundsMinY();
-      const boundsMaxY = hitbox.calculateHitboxBoundsMaxY();
+      const boundsMinX = box.calculateBoundsMinX();
+      const boundsMaxX = box.calculateBoundsMaxX();
+      const boundsMinY = box.calculateBoundsMinY();
+      const boundsMaxY = box.calculateBoundsMaxY();
    
       // Update bounding area
       if (boundsMinX < this.boundingAreaMinX) {
@@ -199,18 +201,19 @@ export class TransformComponent {
       const numHitboxes = this.hitboxes.length;
       for (let i = 0; i < numHitboxes; i++) {
          const hitbox = this.hitboxes[i];
+         const box = hitbox.box;
 
-         const previousBoundsMinX = hitbox.calculateHitboxBoundsMinX();
-         const previousBoundsMaxX = hitbox.calculateHitboxBoundsMaxX();
-         const previousBoundsMinY = hitbox.calculateHitboxBoundsMinY();
-         const previousBoundsMaxY = hitbox.calculateHitboxBoundsMaxY();
+         const previousBoundsMinX = box.calculateBoundsMinX();
+         const previousBoundsMaxX = box.calculateBoundsMaxX();
+         const previousBoundsMinY = box.calculateBoundsMinY();
+         const previousBoundsMaxY = box.calculateBoundsMaxY();
 
-         updateHitbox(hitbox, this.position.x, this.position.y, this.rotation);
+         updateBox(box, this.position.x, this.position.y, this.rotation);
 
-         const boundsMinX = hitbox.calculateHitboxBoundsMinX();
-         const boundsMaxX = hitbox.calculateHitboxBoundsMaxX();
-         const boundsMinY = hitbox.calculateHitboxBoundsMinY();
-         const boundsMaxY = hitbox.calculateHitboxBoundsMaxY();
+         const boundsMinX = box.calculateBoundsMinX();
+         const boundsMaxX = box.calculateBoundsMaxX();
+         const boundsMinY = box.calculateBoundsMinY();
+         const boundsMaxY = box.calculateBoundsMaxY();
 
          // Update bounding area
          if (boundsMinX < this.boundingAreaMinX) {
@@ -250,11 +253,12 @@ export class TransformComponent {
       const containingChunks = new Array<Chunk>();
       for (let i = 0; i < this.hitboxes.length; i++) {
          const hitbox = this.hitboxes[i];
+         const box = hitbox.box;
    
-         const boundsMinX = hitbox.calculateHitboxBoundsMinX();
-         const boundsMaxX = hitbox.calculateHitboxBoundsMaxX();
-         const boundsMinY = hitbox.calculateHitboxBoundsMinY();
-         const boundsMaxY = hitbox.calculateHitboxBoundsMaxY();
+         const boundsMinX = box.calculateBoundsMinX();
+         const boundsMaxX = box.calculateBoundsMaxX();
+         const boundsMinY = box.calculateBoundsMinY();
+         const boundsMaxY = box.calculateBoundsMaxY();
    
          const minChunkX = Math.max(Math.min(Math.floor(boundsMinX / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
          const maxChunkX = Math.max(Math.min(Math.floor(boundsMaxX / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
@@ -374,11 +378,12 @@ export class TransformComponent {
       
       for (let i = 0; i < this.hitboxes.length; i++) {
          const hitbox = this.hitboxes[i];
+         const box = hitbox.box;
 
-         const boundsMinX = hitbox.calculateHitboxBoundsMinX();
-         const boundsMaxX = hitbox.calculateHitboxBoundsMaxX();
-         const boundsMinY = hitbox.calculateHitboxBoundsMinY();
-         const boundsMaxY = hitbox.calculateHitboxBoundsMaxY();
+         const boundsMinX = box.calculateBoundsMinX();
+         const boundsMaxX = box.calculateBoundsMaxX();
+         const boundsMinY = box.calculateBoundsMinY();
+         const boundsMaxY = box.calculateBoundsMaxY();
 
          const minTileX = clampToBoardDimensions(Math.floor(boundsMinX / Settings.TILE_SIZE));
          const maxTileX = clampToBoardDimensions(Math.floor(boundsMaxX / Settings.TILE_SIZE));
@@ -479,7 +484,7 @@ function getDataLength(entity: EntityID): number {
    let lengthBytes = 9 * Float32Array.BYTES_PER_ELEMENT;
    
    for (const hitbox of transformComponent.hitboxes) {
-      if (hitboxIsCircular(hitbox)) {
+      if (boxIsCircular(hitbox.box)) {
          lengthBytes += 9 * Float32Array.BYTES_PER_ELEMENT;
       } else {
          lengthBytes += 11 * Float32Array.BYTES_PER_ELEMENT;
@@ -491,6 +496,8 @@ function getDataLength(entity: EntityID): number {
 
 // @Speed
 function addDataToPacket(packet: Packet, entity: EntityID): void {
+   // @Speed: can be made faster if we pre-filter which hitboxes are circular and rectangular
+
    const transformComponent = TransformComponentArray.getComponent(entity);
 
    packet.addNumber(transformComponent.position.x);
@@ -500,9 +507,10 @@ function addDataToPacket(packet: Packet, entity: EntityID): void {
    packet.addNumber(transformComponent.collisionBit);
    packet.addNumber(transformComponent.collisionMask);
    
+   // @Speed
    let numCircularHitboxes = 0;
    for (const hitbox of transformComponent.hitboxes) {
-      if (hitboxIsCircular(hitbox)) {
+      if (boxIsCircular(hitbox.box)) {
          numCircularHitboxes++;
       }
    }
@@ -511,43 +519,47 @@ function addDataToPacket(packet: Packet, entity: EntityID): void {
    // Circular
    packet.addNumber(numCircularHitboxes);
    for (const hitbox of transformComponent.hitboxes) {
-      if (!hitboxIsCircular(hitbox)) {
+      const box = hitbox.box;
+      // @Speed
+      if (!boxIsCircular(box)) {
          continue;
       }
 
       const localID = transformComponent.hitboxLocalIDs[transformComponent.hitboxes.indexOf(hitbox)];
       
       packet.addNumber(hitbox.mass);
-      packet.addNumber(hitbox.offset.x);
-      packet.addNumber(hitbox.offset.y);
+      packet.addNumber(box.offset.x);
+      packet.addNumber(box.offset.y);
       packet.addNumber(hitbox.collisionType);
       packet.addNumber(hitbox.collisionBit);
       packet.addNumber(hitbox.collisionMask);
       packet.addNumber(localID);
       packet.addNumber(hitbox.flags);
-      packet.addNumber(hitbox.radius);
+      packet.addNumber(box.radius);
    }
    
    // Rectangular
    packet.addNumber(numRectangularHitboxes);
    for (const hitbox of transformComponent.hitboxes) {
-      if (hitboxIsCircular(hitbox)) {
+      const box = hitbox.box;
+      // @Speed
+      if (boxIsCircular(box)) {
          continue;
       }
 
       const localID = transformComponent.hitboxLocalIDs[transformComponent.hitboxes.indexOf(hitbox)];
 
       packet.addNumber(hitbox.mass);
-      packet.addNumber(hitbox.offset.x);
-      packet.addNumber(hitbox.offset.y);
+      packet.addNumber(box.offset.x);
+      packet.addNumber(box.offset.y);
       packet.addNumber(hitbox.collisionType);
       packet.addNumber(hitbox.collisionBit);
       packet.addNumber(hitbox.collisionMask);
       packet.addNumber(localID);
       packet.addNumber(hitbox.flags);
-      packet.addNumber(hitbox.width);
-      packet.addNumber(hitbox.height);
-      packet.addNumber(hitbox.relativeRotation);
+      packet.addNumber(box.width);
+      packet.addNumber(box.height);
+      packet.addNumber(box.relativeRotation);
    }
 }
 

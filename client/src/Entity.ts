@@ -101,39 +101,33 @@ abstract class Entity {
       }
    }
 
-   public getRenderPart(tag: string): RenderPart {
+   public getRenderThing(tag: string): RenderThing {
       for (let i = 0; i < this.allRenderThings.length; i++) {
-         const renderPart = this.allRenderThings[i];
-         if (!thingIsRenderPart(renderPart)) {
-            continue;
-         }
+         const renderThing = this.allRenderThings[i];
 
-         if (renderPart.tags.includes(tag)) {
-            return renderPart;
+         if (renderThing.tags.includes(tag)) {
+            return renderThing;
          }
       }
 
       throw new Error("No render part with tag '" + tag + "' could be found on entity type " + EntityTypeString[this.type]);
    }
 
-   public getRenderParts(tag: string, expectedAmount?: number): Array<RenderPart> {
-      const renderParts = new Array<RenderPart>();
+   public getRenderThings(tag: string, expectedAmount?: number): Array<RenderThing> {
+      const renderThings = new Array<RenderThing>();
       for (let i = 0; i < this.allRenderThings.length; i++) {
-         const renderPart = this.allRenderThings[i];
-         if (!thingIsRenderPart(renderPart)) {
-            continue;
-         }
+         const renderThing = this.allRenderThings[i];
 
-         if (renderPart.tags.includes(tag)) {
-            renderParts.push(renderPart);
+         if (renderThing.tags.includes(tag)) {
+            renderThings.push(renderThing);
          }
       }
 
-      if (typeof expectedAmount !== "undefined" && renderParts.length !== expectedAmount) {
-         throw new Error("Expected " + expectedAmount + " render parts with tag '" + tag + "' on " + EntityTypeString[this.type] + " but got " + renderParts.length);
+      if (typeof expectedAmount !== "undefined" && renderThings.length !== expectedAmount) {
+         throw new Error("Expected " + expectedAmount + " render parts with tag '" + tag + "' on " + EntityTypeString[this.type] + " but got " + renderThings.length);
       }
       
-      return renderParts;
+      return renderThings;
    }
 
    public removeOverlayGroup(overlayGroup: RenderPartOverlayGroup): void {
@@ -154,19 +148,8 @@ abstract class Entity {
          this.onLoad();
       }
       
-      // @Speed
-      const serverComponents = Object.values(this.serverComponentsRecord);
-      for (let i = 0; i < serverComponents.length; i++) {
-         const component = serverComponents[i];
-         if (typeof component.onLoad !== "undefined") {
-            component.onLoad();
-         }
-      }
-
-      // @Cleanup: copy and paste
-      const clientComponents = Object.values(this.clientComponents);
-      for (let i = 0; i < clientComponents.length; i++) {
-         const component = clientComponents[i];
+      for (let i = 0; i < this.components.length; i++) {
+         const component = this.components[i];
          if (typeof component.onLoad !== "undefined") {
             component.onLoad();
          }
@@ -235,6 +218,9 @@ abstract class Entity {
       // if (thing.parent !== null && thing.zIndex <= thing.parent.zIndex) {
       //    throw new Error("Render part less-than-or-equal z-index compared to its parent.");
       // }
+
+      // @Incomplete
+      // Add to the array just after its parent
 
       // Add to the array of all render parts
       let idx = this.allRenderThings.length;

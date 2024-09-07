@@ -10,11 +10,12 @@ import { applyKnockback } from "../../components/PhysicsComponent";
 import { ComponentConfig } from "../../components";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
-import { HitboxCollisionType, RectangularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import Board from "../../Board";
 import { TransformComponentArray } from "../../components/TransformComponent";
 import { createSpitPoisonAreaConfig } from "./spit-poison-area";
 import { createEntityFromConfig } from "../../Entity";
+import { createHitbox, HitboxCollisionType } from "webgl-test-shared/dist/boxes/boxes";
+import RectangularBox from "webgl-test-shared/dist/boxes/RectangularBox";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics
@@ -28,7 +29,7 @@ export function createSlimeSpitConfig(): ComponentConfig<ComponentTypes> {
          type: EntityType.slimeSpit,
          collisionBit: COLLISION_BITS.default,
          collisionMask: DEFAULT_COLLISION_MASK,
-         hitboxes: [new RectangularHitbox(0.2, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, 0, 0, 0)]
+         hitboxes: [createHitbox(new RectangularBox(new Point(0, 0), 0, 0, 0), 0.2, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0)]
       },
       [ServerComponentType.physics]: {
          velocityX: 0,

@@ -37,6 +37,7 @@ const GameInfoDisplay = () => {
 
    const [nightVisionIsEnabled, setNightvisionIsEnabled] = useState(OPTIONS.nightVisionIsEnabled);
    const [showHitboxes, setShowEntityHitboxes] = useState(OPTIONS.showHitboxes);
+   const [showDamageBoxes, setShowDamageBoxes] = useState(OPTIONS.showDamageBoxes);
    const [showChunkBorders, setShowChunkBorders] = useState(OPTIONS.showChunkBorders);
    const [showRenderChunkBorders, setShowRenderChunkBorders] = useState(OPTIONS.showRenderChunkBorders);
    const [showPathfindingNodes, setShowPathfindingNodes] = useState(OPTIONS.showPathfindingNodes);
@@ -71,6 +72,11 @@ const GameInfoDisplay = () => {
       OPTIONS.showHitboxes = !showHitboxes;
       setShowEntityHitboxes(!showHitboxes);
    }, [showHitboxes]);
+
+   const toggleShowDamageBoxes = useCallback(() => {
+      OPTIONS.showDamageBoxes = !showDamageBoxes;
+      setShowDamageBoxes(!showDamageBoxes);
+   }, [showDamageBoxes]);
 
    const toggleShowChunkBorders = useCallback(() => {
       OPTIONS.showChunkBorders = !showChunkBorders;
@@ -174,6 +180,12 @@ const GameInfoDisplay = () => {
             <label className={showHitboxes ? "enabled" : undefined}>
                <input checked={showHitboxes} name="hitboxes-checkbox" type="checkbox" onChange={toggleShowHitboxes} />
                Hitboxes
+            </label>
+         </li>
+         <li>
+            <label className={showDamageBoxes ? "enabled" : undefined}>
+               <input checked={showDamageBoxes} name="damage-boxes-checkbox" type="checkbox" onChange={toggleShowDamageBoxes} />
+               Damage boxes
             </label>
          </li>
          <li>

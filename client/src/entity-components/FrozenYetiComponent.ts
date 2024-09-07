@@ -41,8 +41,8 @@ class FrozenYetiComponent extends ServerComponent {
       this.stageProgress = reader.readNumber();
       this.readRockSpikes(reader);
 
-      this.headRenderPart = this.entity.getRenderPart("frozenYetiComponent:head");
-      this.pawRenderParts = this.entity.getRenderParts("frozenYetiComponent:paw", 2);
+      this.headRenderPart = this.entity.getRenderThing("frozenYetiComponent:head") as RenderPart;
+      this.pawRenderParts = this.entity.getRenderThings("frozenYetiComponent:paw", 2) as Array<RenderPart>;
 
       // Initial paw transforms
       setPawRotationAndOffset(this, PAW_RESTING_ANGLE, PAW_OFFSET);

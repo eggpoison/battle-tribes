@@ -9,8 +9,9 @@ import { EntityRelationship, getEntityRelationship } from "../../components/Trib
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { ComponentConfig } from "../../components";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
-import { CircularHitbox, HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { TransformComponentArray } from "../../components/TransformComponent";
+import { createHitbox, HitboxCollisionType } from "webgl-test-shared/dist/boxes/boxes";
+import CircularBox from "webgl-test-shared/dist/boxes/CircularBox";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics
@@ -26,7 +27,7 @@ export function createBattleaxeProjectileConfig(): ComponentConfig<ComponentType
          type: EntityType.battleaxeProjectile,
          collisionBit: COLLISION_BITS.default,
          collisionMask: DEFAULT_COLLISION_MASK,
-         hitboxes: [new CircularHitbox(0.6, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, 32)]
+         hitboxes: [createHitbox(new CircularBox(new Point(0, 0), 32), 0.6, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0)]
       },
       [ServerComponentType.physics]: {
          velocityX: 0,

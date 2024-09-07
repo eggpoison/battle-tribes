@@ -5,10 +5,9 @@ import { SLING_TURRET_RELOAD_TIME_TICKS, SLING_TURRET_SHOT_COOLDOWN_TICKS } from
 import Board from "../Board";
 import { AmmoBoxComponentArray } from "./AmmoBoxComponent";
 import { Packet } from "webgl-test-shared/dist/packets";
-import { hitboxIsCircular } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { InventoryName, ItemType } from "webgl-test-shared/dist/items/items";
 import { Settings } from "webgl-test-shared/dist/settings";
-import { getMinAngleToCircularHitbox, getMaxAngleToCircularHitbox, getMinAngleToRectangularHitbox, getMaxAngleToRectangularHitbox, angleIsInRange, getClockwiseAngleDistance } from "../ai-shared";
+import { getMinAngleToCircularBox, getMaxAngleToCircularBox, getMinAngleToRectangularBox, getMaxAngleToRectangularBox, angleIsInRange, getClockwiseAngleDistance } from "../ai-shared";
 import { ComponentConfig } from "../components";
 import { createBallistaFrostcicleConfig } from "../entities/projectiles/ballista-frostcicle";
 import { createBallistaRockConfig } from "../entities/projectiles/ballista-rock";
@@ -19,6 +18,7 @@ import { InventoryComponentArray, getInventory, getFirstOccupiedItemSlotInInvent
 import { TransformComponentArray, TransformComponent } from "./TransformComponent";
 import { getEntityRelationship, EntityRelationship } from "./TribeComponent";
 import { UtilVars } from "webgl-test-shared/dist/utils";
+import { boxIsCircular } from "webgl-test-shared/dist/boxes/boxes";
 
 export interface TurretComponentParams {
    readonly fireCooldownTicks: number;
@@ -102,7 +102,7 @@ const entityIsTargetted = (turret: EntityID, entity: EntityID): boolean => {
    let hasHitboxInRange = false;
    for (let i = 0; i < entityTransformComponent.hitboxes.length; i++) {
       const hitbox = entityTransformComponent.hitboxes[i];
-      if (Board.hitboxIsInRange(entityTransformComponent.position, hitbox, visionRange)) {
+      if (Board.boxIsInRange(entityTransformComponent.position, hitbox.box, visionRange)) {
          hasHitboxInRange = true;
          break;
       }
@@ -122,14 +122,15 @@ const entityIsTargetted = (turret: EntityID, entity: EntityID): boolean => {
       let maxAngleToHitbox: number;
       
       const hitbox = entityTransformComponent.hitboxes[i];
-      if (hitboxIsCircular(hitbox)) {
+      const box = hitbox.box;
+      if (boxIsCircular(box)) {
          // Circular hitbox
-         minAngleToHitbox = getMinAngleToCircularHitbox(turretTransformComponent.position.x, turretTransformComponent.position.y, hitbox);
-         maxAngleToHitbox = getMaxAngleToCircularHitbox(turretTransformComponent.position.x, turretTransformComponent.position.y, hitbox);
+         minAngleToHitbox = getMinAngleToCircularBox(turretTransformComponent.position.x, turretTransformComponent.position.y, box);
+         maxAngleToHitbox = getMaxAngleToCircularBox(turretTransformComponent.position.x, turretTransformComponent.position.y, box);
       } else {
          // Rectangular hitbox
-         minAngleToHitbox = getMinAngleToRectangularHitbox(turretTransformComponent.position.x, turretTransformComponent.position.y, hitbox);
-         maxAngleToHitbox = getMaxAngleToRectangularHitbox(turretTransformComponent.position.x, turretTransformComponent.position.y, hitbox);
+         minAngleToHitbox = getMinAngleToRectangularBox(turretTransformComponent.position.x, turretTransformComponent.position.y, box);
+         maxAngleToHitbox = getMaxAngleToRectangularBox(turretTransformComponent.position.x, turretTransformComponent.position.y, box);
       }
 
       if (angleIsInRange(minAngleToHitbox, minAngle, maxAngle) || angleIsInRange(maxAngleToHitbox, minAngle, maxAngle)) {

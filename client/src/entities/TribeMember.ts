@@ -9,8 +9,8 @@ import Entity from "../Entity";
 import { BloodParticleSize, LeafParticleSize, createBloodParticle, createBloodParticleFountain, createBloodPoolParticle, createLeafParticle } from "../particles";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { AudioFilePath, playSound } from "../sound";
-import { getTribesmanRadius } from "../entity-components/TribeMemberComponent";
-import { getTribeType } from "../entity-components/TribeComponent";
+import { getTribesmanRadius, TribeMemberComponentArray } from "../entity-components/TribeMemberComponent";
+import { getTribeType, TribeComponentArray } from "../entity-components/TribeComponent";
 import { InventoryName, ItemType } from "webgl-test-shared/dist/items/items";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { RenderPart } from "../render-parts/render-parts";
@@ -101,8 +101,8 @@ export function addTribeMemberRenderParts(tribesman: Entity): void {
    let warPaintType: number | null;
    let tribeType: TribeType;
    
-   const tribeComponentData = tribesman.getServerComponent(ServerComponentType.tribe);
-   const tribeMemberComponentData = tribesman.getServerComponent(ServerComponentType.tribeMember);
+   const tribeComponentData = TribeComponentArray.getComponent(tribesman.id);
+   const tribeMemberComponentData = TribeMemberComponentArray.getComponent(tribesman.id);
 
    tribeType = getTribeType(tribeComponentData.tribeID);
    warPaintType = tribeMemberComponentData.warPaintType;
@@ -174,15 +174,16 @@ export function addTribeMemberRenderParts(tribesman: Entity): void {
 
    // Hands
    for (let i = 0; i < 2; i++) {
-      // const attachPoint = new RenderAttachPoint(
-      //    null,
-      //    1,
-      //    0
-      // );
-      // tribesman.attachRenderThing(attachPoint);
+      const attachPoint = new RenderAttachPoint(
+         null,
+         1,
+         0
+      );
+      attachPoint.addTag("inventoryUseComponent:attachPoint");
+      tribesman.attachRenderThing(attachPoint);
       
       const handRenderPart = new TexturedRenderPart(
-         null,
+         attachPoint,
          1.2,
          0,
          getTextureArrayIndex(getFistTextureSource(tribesman, tribeType))
@@ -201,7 +202,7 @@ const switchTribeMemberRenderParts = (tribesman: Entity): void => {
    
    // Switch hand texture sources
    const handTextureSource = getFistTextureSource(tribesman, tribeType);
-   const handRenderParts = tribesman.getRenderParts("tribeMemberComponent:hand", 2) as Array<TexturedRenderPart>;
+   const handRenderParts = tribesman.getRenderThings("tribeMemberComponent:hand", 2) as Array<TexturedRenderPart>;
    for (let i = 0; i < handRenderParts.length; i++) {
       const renderPart = handRenderParts[i];
       renderPart.switchTextureSource(handTextureSource);
@@ -209,11 +210,11 @@ const switchTribeMemberRenderParts = (tribesman: Entity): void => {
 
    // Switch body texture source
    const bodyTextureSource = getBodyTextureSource(tribesman, tribeType);
-   const handRenderPart = tribesman.getRenderPart("tribeMemberComponent:body") as TexturedRenderPart;
+   const handRenderPart = tribesman.getRenderThing("tribeMemberComponent:body") as TexturedRenderPart;
    handRenderPart.switchTextureSource(bodyTextureSource);
 
    // Remove any goblin ears
-   const goblinEars = tribesman.getRenderParts("tribeMemberComponent:ear");
+   const goblinEars = tribesman.getRenderThings("tribeMemberComponent:ear") as Array<RenderPart>;
    for (let i = 0; i < goblinEars.length; i++) {
       const renderPart = goblinEars[i];
       tribesman.removeRenderPart(renderPart);
@@ -224,7 +225,7 @@ const switchTribeMemberRenderParts = (tribesman: Entity): void => {
       // @Incomplete
    } else {
       // Remove warpaint (if any)
-      const warpaints = tribesman.getRenderParts("tribeMemberComponent:warpaint");
+      const warpaints = tribesman.getRenderThings("tribeMemberComponent:warpaint") as Array<RenderPart>;
       for (let i = 0; i < warpaints.length; i++) {
          const renderPart = warpaints[i];
          tribesman.removeRenderPart(renderPart);

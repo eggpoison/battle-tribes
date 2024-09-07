@@ -35,8 +35,8 @@ const getSecondsSinceLastAttack = (entity: Entity): number => {
    const inventoryUseComponent = entity.getServerComponent(ServerComponentType.inventoryUse);
 
    let maxLastTicks = 0;
-   for (let i = 0; i < inventoryUseComponent.useInfos.length; i++) {
-      const limbInfo = inventoryUseComponent.useInfos[i];
+   for (let i = 0; i < inventoryUseComponent.limbInfos.length; i++) {
+      const limbInfo = inventoryUseComponent.limbInfos[i];
 
       if (limbInfo.lastAttackTicks > maxLastTicks) {
          maxLastTicks = limbInfo.lastAttackTicks;
@@ -112,8 +112,8 @@ class TribeMemberComponent extends ServerComponent {
    }
 
    public onLoad(): void {
-      this.bodyRenderPart = this.entity.getRenderPart("tribeMemberComponent:body");
-      this.handRenderParts = this.entity.getRenderParts("tribeMemberComponent:hand", 2);
+      this.bodyRenderPart = this.entity.getRenderThing("tribeMemberComponent:body") as RenderPart;
+      this.handRenderParts = this.entity.getRenderThings("tribeMemberComponent:hand", 2) as Array<RenderPart>;
    }
 
    public getTitles(): Array<TribesmanTitle> {
@@ -127,7 +127,7 @@ class TribeMemberComponent extends ServerComponent {
 
    private regenerateTitleEffects(): void {
       // Remove previous effects
-      const previousRenderParts = this.entity.getRenderParts("tribeMemberComponent:fromTitle");
+      const previousRenderParts = this.entity.getRenderThings("tribeMemberComponent:fromTitle") as Array<RenderPart>;
       for (let i = 0; i < previousRenderParts.length; i++) {
          const renderPart = previousRenderParts[i];
          this.entity.removeRenderPart(renderPart);
@@ -270,11 +270,11 @@ class TribeMemberComponent extends ServerComponent {
                // Create a dirty shine on body render parts
                // 
                
-               const bodyRenderPart = this.entity.getRenderPart("tribeMemberComponent:body");
+               const bodyRenderPart = this.entity.getRenderThing("tribeMemberComponent:body") as RenderPart;
                const bodyOverlayGroup = createRenderPartOverlayGroup(this.entity, "overlays/dirt.png", [bodyRenderPart]);
                this.entity.renderPartOverlayGroups.push(bodyOverlayGroup);
 
-               const handRenderParts = this.entity.getRenderParts("tribeMemberComponent:hand", 2);
+               const handRenderParts = this.entity.getRenderThings("tribeMemberComponent:hand", 2) as Array<RenderPart>;
                for (let i = 0; i < handRenderParts.length; i++) {
                   const renderPart = handRenderParts[i];
                   const handOverlayGroup = createRenderPartOverlayGroup(this.entity, "overlays/dirt.png", [renderPart]);

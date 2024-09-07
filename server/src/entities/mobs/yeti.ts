@@ -11,10 +11,11 @@ import { applyKnockback } from "../../components/PhysicsComponent";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
 import { SnowballComponentArray } from "../../components/SnowballComponent";
-import { CircularHitbox, HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { ItemType } from "webgl-test-shared/dist/items/items";
 import { ComponentConfig } from "../../components";
 import { TransformComponentArray } from "../../components/TransformComponent";
+import { createHitbox, HitboxCollisionType } from "webgl-test-shared/dist/boxes/boxes";
+import CircularBox from "webgl-test-shared/dist/boxes/CircularBox";
 
 export const enum YetiVars {
    VISION_RANGE = 500
@@ -48,7 +49,7 @@ export function createYetiConfig(): ComponentConfig<ComponentTypes> {
          type: EntityType.yeti,
          collisionBit: COLLISION_BITS.default,
          collisionMask: DEFAULT_COLLISION_MASK,
-         hitboxes: [new CircularHitbox(3, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, YETI_SIZE / 2)]
+         hitboxes: [createHitbox(new CircularBox(new Point(0, 0), YETI_SIZE / 2), 3, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0)]
       },
       [ServerComponentType.physics]: {
          velocityX: 0,

@@ -5,12 +5,13 @@ import { Point } from "webgl-test-shared/dist/utils";
 import { createEntityFromConfig } from "../../Entity";
 import Board from "../../Board";
 import { BerryBushComponentArray } from "../../components/BerryBushComponent";
-import { CircularHitbox, HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { ItemType } from "webgl-test-shared/dist/items/items";
 import { TransformComponentArray } from "../../components/TransformComponent";
 import { createItemEntityConfig } from "../item-entity";
 import { ComponentConfig } from "../../components";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
+import CircularBox from "webgl-test-shared/dist/boxes/CircularBox";
+import { createHitbox, HitboxCollisionType } from "webgl-test-shared/dist/boxes/boxes";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.health
@@ -27,7 +28,7 @@ export function createBerryBushConfig(): ComponentConfig<ComponentTypes> {
          type: EntityType.berryBush,
          collisionBit: COLLISION_BITS.plants,
          collisionMask: DEFAULT_COLLISION_MASK,
-         hitboxes: [new CircularHitbox(1, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, BERRY_BUSH_RADIUS)]
+         hitboxes: [createHitbox(new CircularBox(new Point(0, 0), BERRY_BUSH_RADIUS), 1, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0)]
       },
       [ServerComponentType.health]: {
          maxHealth: 10
@@ -63,7 +64,7 @@ export function dropBerryOverEntity(entity: EntityID): void {
    config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
    config[ServerComponentType.physics].velocityX = 40 * Math.sin(spawnDirection + velocityDirectionOffset);
    config[ServerComponentType.physics].velocityY = 40 * Math.cos(spawnDirection + velocityDirectionOffset);
-   config[ServerComponentType.item].itemType = ItemType.berry;
+   config[ServerComponentType.item].itemType = ItemType.wooden_sword;
    config[ServerComponentType.item].amount = 1;
    createEntityFromConfig(config);
 }

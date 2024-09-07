@@ -3,19 +3,19 @@ import { Settings } from "webgl-test-shared/dist/settings";
 import { StructureType } from "webgl-test-shared/dist/structures";
 import { TechInfo, getTechChain } from "webgl-test-shared/dist/techs";
 import { Point } from "webgl-test-shared/dist/utils";
-import { InventoryComponentArray, getInventory, getItemTypeSlot, inventoryComponentCanAffordRecipe, inventoryHasItemType, createInventoryComponentTally } from "../../../components/InventoryComponent";
+import { InventoryComponentArray, getInventory, getItemTypeSlot, inventoryHasItemType, createInventoryComponentTally } from "../../../components/InventoryComponent";
 import Tribe, { BuildingPlan, BuildingPlanType, BuildingUpgradePlan, NewBuildingPlan } from "../../../Tribe";
 import { generateBuildingPosition } from "../../../ai-tribe-building/ai-building-plans";
 import { TribeComponentArray } from "../../../components/TribeComponent";
 import { TribesmanAIComponentArray } from "../../../components/TribesmanAIComponent";
 import { craftingStationExists } from "./tribesman-crafting";
 import { getBestToolItemSlot } from "./tribesman-ai-utils";
-import { updateHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
-import { createEntityHitboxes } from "webgl-test-shared/dist/hitboxes/entity-hitbox-creation";
 import { CraftingRecipe, CRAFTING_STATION_ITEM_TYPE_RECORD, getRecipeProductChain, forceGetItemRecipe } from "webgl-test-shared/dist/items/crafting-recipes";
 import { ItemType, ToolType, Inventory, InventoryName, PlaceableItemType, ITEM_INFO_RECORD, PlaceableItemInfo, ItemTypeString } from "webgl-test-shared/dist/items/items";
 import { TransformComponentArray } from "../../../components/TransformComponent";
 import Board from "../../../Board";
+import { createEntityHitboxes } from "webgl-test-shared/dist/boxes/entity-hitbox-creation";
+import { updateBox } from "webgl-test-shared/dist/boxes/boxes";
 
 // @Cleanup: can this be inferred from stuff like the entity->resource-dropped record?
 const TOOL_TYPE_FOR_MATERIAL_RECORD: Record<ItemType, ToolType | null> = {
@@ -225,15 +225,17 @@ const generateRandomNearbyPosition = (tribesman: EntityID, entityType: Structure
       const hitboxes = createEntityHitboxes(entityType);
       for (let i = 0; i < hitboxes.length; i++) {
          const hitbox = hitboxes[i];
-         updateHitbox(hitbox, position.x, position.y, rotation);
+         const box = hitbox.box;
+
+         updateBox(box, position.x, position.y, rotation);
          
          // @Incomplete: Make sure hitboxes aren't colliding with an entity
          
          // Make sure the hitboxes don't go outside the world
-         const minX = hitbox.calculateHitboxBoundsMinX();
-         const maxX = hitbox.calculateHitboxBoundsMaxX();
-         const minY = hitbox.calculateHitboxBoundsMinY();
-         const maxY = hitbox.calculateHitboxBoundsMaxY();
+         const minX = box.calculateBoundsMinX();
+         const maxX = box.calculateBoundsMaxX();
+         const minY = box.calculateBoundsMinY();
+         const maxY = box.calculateBoundsMaxY();
          if (minX < 0 || maxX >= Settings.BOARD_UNITS || minY < 0 || maxY >= Settings.BOARD_UNITS) {
             continue main;
          }

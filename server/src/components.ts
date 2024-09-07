@@ -62,6 +62,7 @@ import { KrumblidComponent, KrumblidComponentParams } from "./components/Krumbli
 import { SpearProjectileComponent, SpearProjectileComponentParams } from "./components/SpearProjectileComponent";
 import { PunjiSticksComponent, PunjiSticksComponentParams } from "./components/PunjiSticksComponent";
 import { IceArrowComponent, IceArrowComponentParams } from "./components/IceArrowComponent";
+import { DamageBoxComponent, DamageBoxComponentParams } from "./components/DamageBoxComponent";
 
 const ComponentParamsRecord = {
    [ServerComponentType.aiHelper]: (): AIHelperComponentParams => 0 as any,
@@ -126,7 +127,8 @@ const ComponentParamsRecord = {
    [ServerComponentType.spitPoisonArea]: (): SpitPoisonAreaComponentParams => 0 as any,
    [ServerComponentType.battleaxeProjectile]: (): BattleaxeProjectileComponentParams => 0 as any,
    [ServerComponentType.spearProjectile]: (): SpearProjectileComponentParams => 0 as any,
-   [ServerComponentType.krumblid]: (): KrumblidComponentParams => 0 as any
+   [ServerComponentType.krumblid]: (): KrumblidComponentParams => 0 as any,
+   [ServerComponentType.damageBox]: (): DamageBoxComponentParams => 0 as any
 } satisfies Record<ServerComponentType, object>;
 
 export type ComponentParams<T extends ServerComponentType> = ReturnType<typeof ComponentParamsRecord[T]>;
@@ -195,7 +197,8 @@ export const ComponentClassRecord = {
    [ServerComponentType.spitPoisonArea]: () => SpitPoisonAreaComponent,
    [ServerComponentType.battleaxeProjectile]: () => BattleaxeProjectileComponent,
    [ServerComponentType.spearProjectile]: () => SpearProjectileComponent,
-   [ServerComponentType.krumblid]: () => KrumblidComponent
+   [ServerComponentType.krumblid]: () => KrumblidComponent,
+   [ServerComponentType.damageBox]: () => DamageBoxComponent
 } satisfies {
    [T in ServerComponentType]: () => {
       new (args: ComponentParams<T>): unknown;

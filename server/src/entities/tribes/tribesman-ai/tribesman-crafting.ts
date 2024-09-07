@@ -101,8 +101,8 @@ export function goCraftItem(tribesman: EntityID, recipe: CraftingRecipe, tribe: 
       }
       
       const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman);
-      for (let i = 0; i < inventoryUseComponent.inventoryUseInfos.length; i++) {
-         const limbInfo = inventoryUseComponent.inventoryUseInfos[i];
+      for (let i = 0; i < inventoryUseComponent.limbInfos.length; i++) {
+         const limbInfo = inventoryUseComponent.limbInfos[i];
          if (limbInfo.action !== LimbAction.craft) {
             limbInfo.lastCraftTicks = Board.ticks;
          }

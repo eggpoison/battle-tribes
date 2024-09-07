@@ -8,8 +8,9 @@ import { EntityRelationship, getEntityRelationship } from "../../components/Trib
 import { ComponentConfig } from "../../components";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { HealthComponentArray } from "../../components/HealthComponent";
-import { HitboxCollisionType, RectangularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import Board from "../../Board";
+import { createHitbox, HitboxCollisionType } from "webgl-test-shared/dist/boxes/boxes";
+import RectangularBox from "webgl-test-shared/dist/boxes/RectangularBox";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics
@@ -28,7 +29,7 @@ export function createIceArrowConfig(): ComponentConfig<ComponentTypes> {
          type: EntityType.iceArrow,
          collisionBit: COLLISION_BITS.default,
          collisionMask: DEFAULT_COLLISION_MASK,
-         hitboxes: [new RectangularHitbox(0.4, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, ARROW_WIDTH, ARROW_HEIGHT, 0)]
+         hitboxes: [createHitbox(new RectangularBox(new Point(0, 0), ARROW_WIDTH, ARROW_HEIGHT, 0), 0.4, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0)]
       },
       [ServerComponentType.physics]: {
          velocityX: 0,

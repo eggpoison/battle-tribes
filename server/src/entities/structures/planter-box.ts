@@ -3,7 +3,7 @@ import { EntityType } from "webgl-test-shared/dist/entities";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { Point } from "webgl-test-shared/dist/utils";
 import { createEmptyStructureConnectionInfo } from "webgl-test-shared/dist/structures";
-import { createPlanterBoxHitboxes } from "webgl-test-shared/dist/hitboxes/entity-hitbox-creation";
+import { createPlanterBoxHitboxes } from "webgl-test-shared/dist/boxes/entity-hitbox-creation";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { ComponentConfig } from "../../components";
 

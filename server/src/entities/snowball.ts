@@ -9,9 +9,10 @@ import { PhysicsComponentArray, applyKnockback } from "../components/PhysicsComp
 import { ComponentConfig } from "../components";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
-import { CircularHitbox, HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { getAgeTicks, TransformComponentArray } from "../components/TransformComponent";
 import Board from "../Board";
+import { createHitbox, HitboxCollisionType } from "webgl-test-shared/dist/boxes/boxes";
+import CircularBox from "webgl-test-shared/dist/boxes/CircularBox";
    
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics
@@ -29,7 +30,7 @@ export function createSnowballConfig(): ComponentConfig<ComponentTypes> {
          type: EntityType.slime,
          collisionBit: COLLISION_BITS.default,
          collisionMask: DEFAULT_COLLISION_MASK,
-         hitboxes: [new CircularHitbox(0, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, 0)]
+         hitboxes: [createHitbox(new CircularBox(new Point(0, 0), 0), 0, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0)]
       },
       [ServerComponentType.physics]: {
          velocityX: 0,

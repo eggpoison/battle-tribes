@@ -4,10 +4,10 @@ import { Settings } from "webgl-test-shared/dist/settings";
 import { angle, lerp } from "webgl-test-shared/dist/utils";
 import { PhysicsComponentArray } from "./PhysicsComponent";
 import { ComponentArray } from "./ComponentArray";
-import { HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { ComponentConfig } from "../components";
 import { TransformComponentArray } from "./TransformComponent";
 import { Packet } from "webgl-test-shared/dist/packets";
+import { HitboxCollisionType } from "webgl-test-shared/dist/boxes/boxes";
 
 export interface DoorComponentParams {
    originX: number;

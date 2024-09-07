@@ -28,7 +28,7 @@ class YetiComponent extends ServerComponent {
       this.lastAttackProgress = reader.readNumber();
       this.attackProgress = this.lastAttackProgress;
 
-      this.pawRenderParts = this.entity.getRenderParts("yetiComponent:paw", 2);
+      this.pawRenderParts = this.entity.getRenderThings("yetiComponent:paw", 2) as Array<RenderPart>;
       this.updatePaws();
    }
    

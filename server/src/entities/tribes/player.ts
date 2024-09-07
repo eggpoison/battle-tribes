@@ -3,7 +3,6 @@ import { PlanterBoxPlant, ServerComponentType } from "webgl-test-shared/dist/com
 import { EntityID, EntityType, EntityTypeString, LimbAction } from "webgl-test-shared/dist/entities";
 import { TribeType } from "webgl-test-shared/dist/tribes";
 import { Point } from "webgl-test-shared/dist/utils";
-import { CircularHitbox, HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { onTribeMemberHurt } from "./tribe-member";
 import { consumeItemFromSlot, consumeItemType, countItemType, getInventory, pickupItemEntity, InventoryComponentArray } from "../../components/InventoryComponent";
 import Board from "../../Board";
@@ -17,6 +16,8 @@ import { SpikesComponentArray } from "../../components/SpikesComponent";
 import { InventoryName, ITEM_INFO_RECORD, ConsumableItemInfo, ConsumableItemCategory, BowItemInfo, ItemType } from "webgl-test-shared/dist/items/items";
 import { ComponentConfig } from "../../components";
 import { TransformComponentArray } from "../../components/TransformComponent";
+import { createHitbox, HitboxCollisionType } from "webgl-test-shared/dist/boxes/boxes";
+import CircularBox from "webgl-test-shared/dist/boxes/CircularBox";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics
@@ -26,7 +27,8 @@ type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.tribeMember
    | ServerComponentType.player
    | ServerComponentType.inventory
-   | ServerComponentType.inventoryUse;
+   | ServerComponentType.inventoryUse
+   | ServerComponentType.damageBox;
 
 export function createPlayerConfig(): ComponentConfig<ComponentTypes> {
    return {
@@ -36,7 +38,7 @@ export function createPlayerConfig(): ComponentConfig<ComponentTypes> {
          type: EntityType.player,
          collisionBit: COLLISION_BITS.default,
          collisionMask: DEFAULT_COLLISION_MASK,
-         hitboxes: [new CircularHitbox(1.25, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, 32)]
+         hitboxes: [createHitbox(new CircularBox(new Point(0, 0), 32), 1.25, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0)]
       },
       [ServerComponentType.physics]: {
          velocityX: 0,
@@ -68,7 +70,8 @@ export function createPlayerConfig(): ComponentConfig<ComponentTypes> {
       },
       [ServerComponentType.inventoryUse]: {
          usedInventoryNames: []
-      }
+      },
+      [ServerComponentType.damageBox]: {}
    };
 }
 

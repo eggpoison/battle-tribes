@@ -2,12 +2,12 @@ import { EntityID, SNOWBALL_SIZES, SnowballSize } from "webgl-test-shared/dist/e
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { ComponentArray } from "./ComponentArray";
 import { ComponentConfig } from "../components";
-import { CircularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { PhysicsComponentArray } from "./PhysicsComponent";
 import { randFloat, randSign } from "webgl-test-shared/dist/utils";
 import { Packet } from "webgl-test-shared/dist/packets";
 import { getAgeTicks, TransformComponentArray } from "./TransformComponent";
 import Board from "../Board";
+import CircularBox from "webgl-test-shared/dist/boxes/CircularBox";
 
 export interface SnowballComponentParams {
    yetiID: number;
@@ -45,9 +45,11 @@ function onInitialise(config: ComponentConfig<ServerComponentType.transform | Se
 
    config[ServerComponentType.health].maxHealth = MAX_HEALTHS[size];
    
-   const hitbox = config[ServerComponentType.transform].hitboxes[0] as CircularHitbox;
+   const hitbox = config[ServerComponentType.transform].hitboxes[0];
+   const box = hitbox.box as CircularBox;
+
    hitbox.mass = size === SnowballSize.small ? 1 : 1.5;
-   hitbox.radius = SNOWBALL_SIZES[size] / 2;
+   box.radius = SNOWBALL_SIZES[size] / 2;
 }
 
 function onJoin(entity: EntityID): void {

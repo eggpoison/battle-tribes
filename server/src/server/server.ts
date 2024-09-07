@@ -20,7 +20,7 @@ import { createPlayerConfig } from "../entities/tribes/player";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { createEntityFromConfig } from "../Entity";
 import { generateGrassStrands } from "../world-generation/grass-generation";
-import { processAttackPacket, processPlayerDataPacket } from "./packet-processing";
+import { processDevGiveItemPacket, processPlayerAttackPacket, processPlayerDataPacket } from "./packet-processing";
 import { EntityID, EntityTypeString } from "webgl-test-shared/dist/entities";
 import { SpikesComponentArray } from "../components/SpikesComponent";
 import { TribeComponentArray } from "../components/TribeComponent";
@@ -191,7 +191,11 @@ class GameServer {
                   break;
                }
                case PacketType.attack: {
-                  processAttackPacket(playerClient, reader);
+                  processPlayerAttackPacket(playerClient, reader);
+                  break;
+               }
+               case PacketType.devGiveItem: {
+                  processDevGiveItemPacket(playerClient, reader);
                   break;
                }
                default: {
@@ -286,6 +290,7 @@ class GameServer {
                   continue;
                }
 
+               // @Incomplete?
                // @Speed @Memory
                const extendedVisibleChunkBounds: VisibleChunkBounds = [
                   Math.max(playerClient.visibleChunkBounds[0] - 1, 0),
@@ -296,24 +301,29 @@ class GameServer {
             
                const visibleEntities = getPlayerVisibleEntities(playerClient);
                
-               const newlyVisibleEntities = new Set<EntityID>();
+               const entitiesToSend = new Set<EntityID>();
+
+               // Send all newly visible entities
                // @Speed
                for (const visibleEntity of visibleEntities) {
                   if (!playerClient.visibleEntities.has(visibleEntity)) {
-                     newlyVisibleEntities.add(visibleEntity);
+                     entitiesToSend.add(visibleEntity);
                   }
                }
 
-               // Add dirty entities
+               // Send dirty entities
                for (const entity of playerClient.visibleDirtiedEntities) {
-                  newlyVisibleEntities.add(entity);
+                  // Sometimes entities are simultaneously removed from the board and on the visible dirtied list, this catches that
+                  if (Board.hasEntity(entity)) {
+                     entitiesToSend.add(entity);
+                  }
                }
 
                // Always send the player's data
-               newlyVisibleEntities.add(playerClient.instance);
+               entitiesToSend.add(playerClient.instance);
                
                // Send the game data to the player
-               const gameDataPacket = createGameDataPacket(playerClient, newlyVisibleEntities);
+               const gameDataPacket = createGameDataPacket(playerClient, entitiesToSend);
                playerClient.socket.send(gameDataPacket);
 
                playerClient.visibleEntities = visibleEntities;

@@ -5,12 +5,13 @@ import { Point, randInt } from "webgl-test-shared/dist/utils";
 import { createItemsOverEntity } from "../entity-shared";
 import { createZombieConfig } from "./mobs/zombie";
 import TombstoneDeathManager from "../tombstone-deaths";
-import { HitboxCollisionType, RectangularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { ItemType } from "webgl-test-shared/dist/items/items";
 import { TransformComponentArray } from "../components/TransformComponent";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { ComponentConfig } from "../components";
 import { createEntityFromConfig } from "../Entity";
+import { createHitbox, HitboxCollisionType } from "webgl-test-shared/dist/boxes/boxes";
+import RectangularBox from "webgl-test-shared/dist/boxes/RectangularBox";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.health
@@ -28,7 +29,7 @@ export function createTombstoneConfig(): ComponentConfig<ComponentTypes> {
          type: EntityType.tombstone,
          collisionBit: COLLISION_BITS.default,
          collisionMask: DEFAULT_COLLISION_MASK,
-         hitboxes: [new RectangularHitbox(1.25, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, WIDTH, HEIGHT, 0)]
+         hitboxes: [createHitbox(new RectangularBox(new Point(0, 0), WIDTH, HEIGHT, 0), 1.25, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0)]
       },
       [ServerComponentType.health]: {
          maxHealth: 50

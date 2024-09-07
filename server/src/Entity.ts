@@ -2,11 +2,11 @@ import { Point, randFloat, randInt, rotateXAroundOrigin, rotateYAroundOrigin } f
 import { EntityID } from "webgl-test-shared/dist/entities";
 import Board from "./Board";
 import { STRUCTURE_TYPES, StructureType } from "webgl-test-shared/dist/structures";
-import { hitboxIsCircular } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { TransformComponentArray } from "./components/TransformComponent";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { ComponentClassRecord, ComponentConfig, ComponentParams } from "./components";
 import { ComponentArray, ComponentArrayRecord } from "./components/ComponentArray";
+import { boxIsCircular } from "webgl-test-shared/dist/boxes/boxes";
 
 let idCounter = 1;
 
@@ -69,18 +69,19 @@ export function getRandomPositionInEntity(entity: EntityID): Point {
    const transformComponent = TransformComponentArray.getComponent(entity);
    
    const hitbox = transformComponent.hitboxes[randInt(0, transformComponent.hitboxes.length - 1)];
+   const box = hitbox.box;
 
-   if (hitboxIsCircular(hitbox)) {
-      return hitbox.position.offset(hitbox.radius * Math.random(), 2 * Math.PI * Math.random());
+   if (boxIsCircular(box)) {
+      return box.position.offset(box.radius * Math.random(), 2 * Math.PI * Math.random());
    } else {
-      const halfWidth = hitbox.width / 2;
-      const halfHeight = hitbox.height / 2;
+      const halfWidth = box.width / 2;
+      const halfHeight = box.height / 2;
       
       const xOffset = randFloat(-halfWidth, halfWidth);
       const yOffset = randFloat(-halfHeight, halfHeight);
 
-      const x = transformComponent.position.x + rotateXAroundOrigin(xOffset, yOffset, transformComponent.rotation + hitbox.rotation);
-      const y = transformComponent.position.y + rotateYAroundOrigin(xOffset, yOffset, transformComponent.rotation + hitbox.rotation);
+      const x = transformComponent.position.x + rotateXAroundOrigin(xOffset, yOffset, transformComponent.rotation + box.rotation);
+      const y = transformComponent.position.y + rotateYAroundOrigin(xOffset, yOffset, transformComponent.rotation + box.rotation);
       return new Point(x, y);
    }
 }

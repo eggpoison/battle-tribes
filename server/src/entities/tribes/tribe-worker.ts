@@ -9,9 +9,10 @@ import { TribesmanAIComponentArray } from "../../components/TribesmanAIComponent
 import Board from "../../Board";
 import { TribeComponentArray } from "../../components/TribeComponent";
 import { HutComponentArray } from "../../components/HutComponent";
-import { CircularHitbox, HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { ComponentConfig } from "../../components";
+import CircularBox from "webgl-test-shared/dist/boxes/CircularBox";
+import { createHitbox, HitboxCollisionType } from "webgl-test-shared/dist/boxes/boxes";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics
@@ -77,7 +78,7 @@ export function createTribeWorkerConfig(): ComponentConfig<ComponentTypes> {
          type: EntityType.tribeWorker,
          collisionBit: COLLISION_BITS.default,
          collisionMask: DEFAULT_COLLISION_MASK,
-         hitboxes: [new CircularHitbox(1, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, TRIBE_WORKER_RADIUS)]
+         hitboxes: [createHitbox(new CircularBox(new Point(0, 0), TRIBE_WORKER_RADIUS), 1, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0)]
       },
       [ServerComponentType.physics]: {
          velocityX: 0,

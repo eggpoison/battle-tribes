@@ -4,10 +4,10 @@ import { Settings } from "webgl-test-shared/dist/settings";
 import Chunk from "../Chunk";
 import Board from "../Board";
 import { ComponentArray } from "./ComponentArray";
-import { Hitbox, hitboxIsCircular } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
 import { TransformComponent, TransformComponentArray } from "./TransformComponent";
 import { Packet } from "webgl-test-shared/dist/packets";
+import { Box, boxIsCircular } from "webgl-test-shared/dist/boxes/boxes";
 
 export interface AIHelperComponentParams {
    /** If enabled, ignores all decorative entities. Enable if possible for performance */
@@ -51,13 +51,13 @@ function onRemove(entity: EntityID): void {
    }
 }
 
-const hitboxIsVisible = (transformComponent: TransformComponent, hitbox: Hitbox, visionRange: number): boolean => {
-   if (hitboxIsCircular(hitbox)) {
+const boxIsVisible = (transformComponent: TransformComponent, box: Box, visionRange: number): boolean => {
+   if (boxIsCircular(box)) {
       // Circular hitbox
-      return circlesDoIntersect(transformComponent.position, visionRange, hitbox.position, hitbox.radius);
+      return circlesDoIntersect(transformComponent.position, visionRange, box.position, box.radius);
    } else {
       // Rectangular hitbox
-      return circleAndRectangleDoIntersect(transformComponent.position, visionRange, hitbox.position, hitbox.width, hitbox.height, hitbox.relativeRotation);
+      return circleAndRectangleDoIntersect(transformComponent.position, visionRange, box.position, box.width, box.height, box.relativeRotation);
    }
 }
 
@@ -73,7 +73,7 @@ const entityIsVisible = (transformComponent: TransformComponent, checkEntity: En
    // If the mob can see any of the game object's hitboxes, it is visible
    for (let j = 0; j < checkEntityTransformComponent.hitboxes.length; j++) {
       const hitbox = checkEntityTransformComponent.hitboxes[j];
-      if (hitboxIsVisible(transformComponent, hitbox, visionRange)) {
+      if (boxIsVisible(transformComponent, hitbox.box, visionRange)) {
          return true;
       }
    }

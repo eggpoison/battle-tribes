@@ -3,7 +3,7 @@ import { EntityType } from "webgl-test-shared/dist/entities";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { createEmptyStructureConnectionInfo } from "webgl-test-shared/dist/structures";
 import { Point } from "webgl-test-shared/dist/utils";
-import { createStonecarvingTableHitboxes } from "webgl-test-shared/dist/hitboxes/entity-hitbox-creation";
+import { createStonecarvingTableHitboxes } from "webgl-test-shared/dist/boxes/entity-hitbox-creation";
 import { CraftingStation } from "webgl-test-shared/dist/items/crafting-recipes";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { ComponentConfig } from "../../components";

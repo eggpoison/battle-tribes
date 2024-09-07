@@ -1,5 +1,5 @@
 import { BuildingPlanData, PotentialBuildingPlanData, TribeWallData } from "webgl-test-shared/dist/ai-building-types";
-import { AttackPacket, CircularHitboxData, GameDataPacket, PlayerInventoryData, RectangularHitboxData, RespawnDataPacket, ServerTileData, ServerTileUpdateData } from "webgl-test-shared/dist/client-server-types";
+import { AttackPacket, CircularHitboxData, GameDataPacket, PlayerInventoryData, RectangularHitboxData, RespawnDataPacket, ServerTileUpdateData } from "webgl-test-shared/dist/client-server-types";
 import { distance, Point } from "webgl-test-shared/dist/utils";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { BlueprintType, ServerComponentType } from "webgl-test-shared/dist/components";
@@ -16,7 +16,7 @@ import { Hotbar_setHotbarSelectedItemSlot, Hotbar_update } from "../components/g
 import { HeldItem_setHeldItemCount, HeldItem_setHeldItemType } from "../components/game/HeldItem";
 import { CraftingMenu_setCraftingMenuOutputItem, CraftingMenu_updateRecipes } from "../components/game/menus/CraftingMenu";
 import { HealthBar_setHasFrostShield, updateHealthBar } from "../components/game/HealthBar";
-import { registerServerTick, updateDebugScreenCurrentTime, updateDebugScreenIsPaused, updateDebugScreenTicks } from "../components/game/dev/GameInfoDisplay";
+import { registerServerTick } from "../components/game/dev/GameInfoDisplay";
 import Camera from "../Camera";
 import { isDev } from "../utils";
 import { updateRenderChunkFromTileUpdate } from "../rendering/render-chunks";
@@ -37,7 +37,6 @@ import { GrassBlocker } from "webgl-test-shared/dist/grass-blockers";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
 import { windowHeight, windowWidth } from "../webgl";
 import { EntitySummonPacket } from "webgl-test-shared/dist/dev-packets";
-import { CircularHitbox, RectangularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { InventoryName, Inventory, ItemType } from "webgl-test-shared/dist/items/items";
 import { closeCurrentMenu } from "../menus";
 import { TribesTab_refresh } from "../components/game/dev/tabs/TribesTab";
@@ -46,6 +45,9 @@ import { Packet, PacketReader, PacketType } from "webgl-test-shared/dist/packets
 import { InitialGameDataPacket, processInitialGameDataPacket, processSyncDataPacket } from "./packet-processing";
 import { createActivatePacket, createPlayerDataPacket, createSyncRequestPacket } from "./packet-creation";
 import Tribe from "../Tribe";
+import { createHitbox, HitboxWrapper } from "webgl-test-shared/dist/boxes/boxes";
+import CircularBox from "webgl-test-shared/dist/boxes/CircularBox";
+import RectangularBox from "webgl-test-shared/dist/boxes/RectangularBox";
 
 export type GameData = {
    readonly gameTicks: number;
@@ -124,14 +126,16 @@ export function getGrassBlockers(): ReadonlyArray<GrassBlocker> {
 
 // @Cleanup: put these 2 in a more appropriate file
 
-export function createCircularHitboxFromData(data: CircularHitboxData): CircularHitbox {
+export function createCircularHitboxFromData(data: CircularHitboxData): HitboxWrapper {
    const offset = new Point(data.offsetX, data.offsetY);
-   return new CircularHitbox(data.mass, offset, data.collisionType, data.collisionBit, data.collisionMask, data.flags, data.radius);
+   const box = new CircularBox(offset, data.radius);
+   return createHitbox(box, data.mass, data.collisionType, data.collisionBit, data.collisionMask, data.flags);
 }
 
-export function createRectangularHitboxFromData(data: RectangularHitboxData): RectangularHitbox {
+export function createRectangularHitboxFromData(data: RectangularHitboxData): HitboxWrapper {
    const offset = new Point(data.offsetX, data.offsetY);
-   return new RectangularHitbox(data.mass, offset, data.collisionType, data.collisionBit, data.collisionMask, data.flags, data.width, data.height, data.rotation);
+   const box = new RectangularBox(offset, data.width, data.height, data.rotation);
+   return createHitbox(box, data.mass, data.collisionType, data.collisionBit, data.collisionMask, data.flags);
 }
 
 abstract class Client {
@@ -909,12 +913,6 @@ abstract class Client {
    public static sendEntitySummonPacket(summonPacket: EntitySummonPacket): void {
       if (Game.isRunning && this.socket !== null) {
          // this.socket.emit("dev_summon_entity", summonPacket);
-      }
-   }
-
-   public static sendDevGiveItemPacket(itemType: ItemType, amount: number): void {
-      if (Game.isRunning && this.socket !== null) {
-         // this.socket.emit("dev_give_item", itemType, amount);
       }
    }
 

@@ -75,10 +75,12 @@ const resolveBorderCollisions = (physicsComponent: PhysicsComponent): void => {
    const transformComponent = physicsComponent.entity.getServerComponent(ServerComponentType.transform);
    
    for (const hitbox of transformComponent.hitboxes) {
-      const minX = hitbox.calculateHitboxBoundsMinX();
-      const maxX = hitbox.calculateHitboxBoundsMaxX();
-      const minY = hitbox.calculateHitboxBoundsMinY();
-      const maxY = hitbox.calculateHitboxBoundsMaxY();
+      const box = hitbox.box;
+      
+      const minX = box.calculateBoundsMinX();
+      const maxX = box.calculateBoundsMaxX();
+      const minY = box.calculateBoundsMinY();
+      const maxY = box.calculateBoundsMaxY();
 
       // Left wall
       if (minX < 0) {

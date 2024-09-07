@@ -4,9 +4,10 @@ import { Settings } from "webgl-test-shared/dist/settings";
 import { Point, angle, lerp } from "webgl-test-shared/dist/utils";
 import { HitboxCollisionBit, DEFAULT_HITBOX_COLLISION_MASK } from "webgl-test-shared/dist/collision";
 import { ComponentArray } from "./ComponentArray";
-import { HitboxCollisionType, RectangularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { TransformComponentArray } from "./TransformComponent";
 import { Packet } from "webgl-test-shared/dist/packets";
+import { HitboxCollisionType, createHitbox } from "webgl-test-shared/dist/boxes/boxes";
+import RectangularBox from "webgl-test-shared/dist/boxes/RectangularBox";
 
 // @Cleanup: All the door toggling logic is stolen from DoorComponent.ts}
 
@@ -62,7 +63,7 @@ const updateDoorOpenProgress = (tunnel: EntityID, tunnelComponent: TunnelCompone
       // Create hard hitbox
       const alreadyExists = doorBit === tunnelComponent.firstHitboxDoorBit ? (transformComponent.hitboxes.length > 5 && transformComponent.hitboxes[5].collisionType === HitboxCollisionType.hard) : transformComponent.hitboxes[transformComponent.hitboxes.length - 1].collisionType === HitboxCollisionType.hard;
       if (!alreadyExists) {
-         const hitbox = new RectangularHitbox(0.5, new Point(0, 0), HitboxCollisionType.hard, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, DOOR_HITBOX_WIDTH, THIN_HITBOX_HEIGHT, 0);
+         const hitbox = createHitbox(new RectangularBox(new Point(0, 0), DOOR_HITBOX_WIDTH, THIN_HITBOX_HEIGHT, 0), 0.5, HitboxCollisionType.hard, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0);
          transformComponent.addHitbox(hitbox, tunnel);
          
          // @Hack!!! Wouldn't be needed if we had a hitbox awake/asleep system
@@ -92,13 +93,13 @@ const updateDoorOpenProgress = (tunnel: EntityID, tunnelComponent: TunnelCompone
    const xOffset = doorHalfDiagonalLength * Math.sin(offsetDirection) - doorHalfDiagonalLength * Math.sin(baseRotation + angleToCenter);
    const yOffset = doorHalfDiagonalLength * Math.cos(offsetDirection) - doorHalfDiagonalLength * Math.cos(baseRotation + angleToCenter);
 
-   const softDoorHitbox = transformComponent.hitboxes[doorBit === tunnelComponent.firstHitboxDoorBit ? 4 : (transformComponent.hitboxes[5].collisionType === HitboxCollisionType.hard ? 6 : 5)] as RectangularHitbox;
+   const softDoorHitbox = transformComponent.hitboxes[doorBit === tunnelComponent.firstHitboxDoorBit ? 4 : (transformComponent.hitboxes[5].collisionType === HitboxCollisionType.hard ? 6 : 5)].box as RectangularBox;
    softDoorHitbox.offset.x = xOffset;
    softDoorHitbox.offset.y = yOffset + (doorType === DoorType.top ? DOOR_HITBOX_OFFSET : -DOOR_HITBOX_OFFSET);
    softDoorHitbox.relativeRotation = rotation + Math.PI/2;
 
    if (hasHardHitbox) {
-      const hardDoorHitbox = transformComponent.hitboxes[doorBit === tunnelComponent.firstHitboxDoorBit ? 5 : (transformComponent.hitboxes[5].collisionType === HitboxCollisionType.hard ? 7 : 6)] as RectangularHitbox;
+      const hardDoorHitbox = transformComponent.hitboxes[doorBit === tunnelComponent.firstHitboxDoorBit ? 5 : (transformComponent.hitboxes[5].collisionType === HitboxCollisionType.hard ? 7 : 6)].box as RectangularBox;
       hardDoorHitbox.offset.x = xOffset + DOOR_HITBOX_HEIGHT * 0.5 * Math.sin(rotation + Math.PI/2);
       hardDoorHitbox.offset.y = yOffset + DOOR_HITBOX_HEIGHT * 0.5 * Math.cos(rotation + Math.PI/2) + (doorType === DoorType.top ? DOOR_HITBOX_OFFSET : -DOOR_HITBOX_OFFSET);
       hardDoorHitbox.relativeRotation = rotation + Math.PI/2;
@@ -204,7 +205,7 @@ export function updateTunnelDoorBitset(tunnel: EntityID, doorBitset: number): vo
 
    if ((tunnelComponent.doorBitset & 0b01) !== (doorBitset & 0b01)) {
       // Add top door hitbox
-      transformComponent.addHitbox(new RectangularHitbox(DOOR_HITBOX_MASS, new Point(0, DOOR_HITBOX_OFFSET), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, DOOR_HITBOX_WIDTH, DOOR_HITBOX_HEIGHT, 0), tunnel);
+      transformComponent.addHitbox(createHitbox(new RectangularBox(new Point(0, DOOR_HITBOX_OFFSET), DOOR_HITBOX_WIDTH, DOOR_HITBOX_HEIGHT, 0), DOOR_HITBOX_MASS, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0), tunnel);
       if (transformComponent.hitboxes.length === 5) {
          tunnelComponent.firstHitboxDoorBit = 0b01;
       }
@@ -212,7 +213,7 @@ export function updateTunnelDoorBitset(tunnel: EntityID, doorBitset: number): vo
    }
    if ((tunnelComponent.doorBitset & 0b10) !== (doorBitset & 0b10)) {
       // Add bottom door hitbox
-      transformComponent.addHitbox(new RectangularHitbox(DOOR_HITBOX_MASS, new Point(0, -DOOR_HITBOX_OFFSET), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, DOOR_HITBOX_WIDTH, DOOR_HITBOX_HEIGHT, 0), tunnel);
+      transformComponent.addHitbox(createHitbox(new RectangularBox(new Point(0, -DOOR_HITBOX_OFFSET), DOOR_HITBOX_WIDTH, DOOR_HITBOX_HEIGHT, 0), DOOR_HITBOX_MASS, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0), tunnel);
       if (transformComponent.hitboxes.length === 5) {
          tunnelComponent.firstHitboxDoorBit = 0b10;
       }

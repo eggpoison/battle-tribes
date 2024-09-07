@@ -2,6 +2,12 @@ import { EntityType } from "../entities";
 import { Settings } from "../settings";
 import { StructureType } from "../structures";
 
+export const enum ItemVars {
+   DEFAULT_ATTACK_WINDUP_TICKS = (0.1 * Settings.TPS) | 0,
+   DEFAULT_ATTACK_SWING_TICKS = (0.15 * Settings.TPS) | 0,
+   DEFAULT_ATTACK_RETURN_TICKS = (0.2 * Settings.TPS) | 0
+}
+
 export const enum ItemType {
    wood,
    workbench,
@@ -174,12 +180,15 @@ export interface ConsumableItemInfo extends StackableItemInfo {
 // @Cleanup: Is this necessary?
 export type ToolType = "sword" | "bow" | "axe" | "pickaxe" | "spear" | "hammer" | "battleaxe";
 
+   // Windup time, swing time, swing cooldown
+
 export interface ToolItemInfo extends StackableItemInfo {
    readonly toolType: ToolType;
    readonly damage: number;
    readonly knockback: number;
-   /** Cooldown between attacks */
-   readonly attackCooldown: number;
+   readonly attackWindupTimeTicks: number;
+   readonly attackSwingTimeTicks: number;
+   readonly attackReturnTimeTicks: number;
    /** Rough estimate of how powerful the item is. */
    readonly level: number;
 }
@@ -343,7 +352,11 @@ export const ITEM_INFO_RECORD = {
       toolType: "sword",
       damage: 2,
       knockback: 150,
-      attackCooldown: 0.3,
+      attackWindupTimeTicks: ItemVars.DEFAULT_ATTACK_WINDUP_TICKS,
+      attackSwingTimeTicks: ItemVars.DEFAULT_ATTACK_SWING_TICKS,
+      attackReturnTimeTicks: ItemVars.DEFAULT_ATTACK_RETURN_TICKS,
+      // @Incomplete
+      // attackCooldown: 0.3,
       level: 1
    },
    [ItemType.wooden_axe]: {
@@ -351,7 +364,11 @@ export const ITEM_INFO_RECORD = {
       toolType: "axe",
       damage: 3,
       knockback: 100,
-      attackCooldown: 0.5,
+      attackWindupTimeTicks: ItemVars.DEFAULT_ATTACK_WINDUP_TICKS,
+      attackSwingTimeTicks: ItemVars.DEFAULT_ATTACK_SWING_TICKS,
+      attackReturnTimeTicks: ItemVars.DEFAULT_ATTACK_RETURN_TICKS,
+      // @Incomplete
+      // attackCooldown: 0.5,
       level: 1
    },
    [ItemType.wooden_pickaxe]: {
@@ -359,7 +376,11 @@ export const ITEM_INFO_RECORD = {
       toolType: "pickaxe",
       damage: 5,
       knockback: 100,
-      attackCooldown: 0.5,
+      attackWindupTimeTicks: ItemVars.DEFAULT_ATTACK_WINDUP_TICKS,
+      attackSwingTimeTicks: ItemVars.DEFAULT_ATTACK_SWING_TICKS,
+      attackReturnTimeTicks: ItemVars.DEFAULT_ATTACK_RETURN_TICKS,
+      // @Incomplete
+      // attackCooldown: 0.5,
       level: 1
    },
    [ItemType.wooden_hammer]: {
@@ -367,7 +388,11 @@ export const ITEM_INFO_RECORD = {
       toolType: "hammer",
       damage: 2,
       knockback: 150,
-      attackCooldown: 0.7,
+      attackWindupTimeTicks: ItemVars.DEFAULT_ATTACK_WINDUP_TICKS,
+      attackSwingTimeTicks: ItemVars.DEFAULT_ATTACK_SWING_TICKS,
+      attackReturnTimeTicks: ItemVars.DEFAULT_ATTACK_RETURN_TICKS,
+      // @Incomplete
+      // attackCooldown: 0.7,
       level: 1,
       repairAmount: 3,
       workAmount: 1
@@ -398,7 +423,11 @@ export const ITEM_INFO_RECORD = {
       toolType: "sword",
       damage: 3,
       knockback: 150,
-      attackCooldown: 0.3,
+      attackWindupTimeTicks: ItemVars.DEFAULT_ATTACK_WINDUP_TICKS,
+      attackSwingTimeTicks: ItemVars.DEFAULT_ATTACK_SWING_TICKS,
+      attackReturnTimeTicks: ItemVars.DEFAULT_ATTACK_RETURN_TICKS,
+      // @Incomplete
+      // attackCooldown: 0.3,
       level: 2
    },
    [ItemType.stone_axe]: {
@@ -406,7 +435,11 @@ export const ITEM_INFO_RECORD = {
       toolType: "axe",
       damage: 5,
       knockback: 100,
-      attackCooldown: 0.5,
+      attackWindupTimeTicks: ItemVars.DEFAULT_ATTACK_WINDUP_TICKS,
+      attackSwingTimeTicks: ItemVars.DEFAULT_ATTACK_SWING_TICKS,
+      attackReturnTimeTicks: ItemVars.DEFAULT_ATTACK_RETURN_TICKS,
+      // @Incomplete
+      // attackCooldown: 0.5,
       level: 2
    },
    [ItemType.stone_pickaxe]: {
@@ -414,7 +447,11 @@ export const ITEM_INFO_RECORD = {
       toolType: "pickaxe",
       damage: 8,
       knockback: 100,
-      attackCooldown: 0.5,
+      attackWindupTimeTicks: ItemVars.DEFAULT_ATTACK_WINDUP_TICKS,
+      attackSwingTimeTicks: ItemVars.DEFAULT_ATTACK_SWING_TICKS,
+      attackReturnTimeTicks: ItemVars.DEFAULT_ATTACK_RETURN_TICKS,
+      // @Incomplete
+      // attackCooldown: 0.5,
       level: 2
    },
    [ItemType.stone_hammer]: {
@@ -422,7 +459,11 @@ export const ITEM_INFO_RECORD = {
       toolType: "hammer",
       damage: 3,
       knockback: 150,
-      attackCooldown: 0.7,
+      attackWindupTimeTicks: ItemVars.DEFAULT_ATTACK_WINDUP_TICKS,
+      attackSwingTimeTicks: ItemVars.DEFAULT_ATTACK_SWING_TICKS,
+      attackReturnTimeTicks: ItemVars.DEFAULT_ATTACK_RETURN_TICKS,
+      // @Incomplete
+      // attackCooldown: 0.7,
       level: 2,
       repairAmount: 5,
       workAmount: 2
@@ -455,7 +496,11 @@ export const ITEM_INFO_RECORD = {
       toolType: "sword",
       damage: 2,
       knockback: 0,
-      attackCooldown: 0.3,
+      attackWindupTimeTicks: ItemVars.DEFAULT_ATTACK_WINDUP_TICKS,
+      attackSwingTimeTicks: ItemVars.DEFAULT_ATTACK_SWING_TICKS,
+      attackReturnTimeTicks: ItemVars.DEFAULT_ATTACK_RETURN_TICKS,
+      // @Incomplete
+      // attackCooldown: 0.3,
       level: 1.5
    },
    [ItemType.tribe_totem]: {
@@ -526,7 +571,11 @@ export const ITEM_INFO_RECORD = {
       toolType: "sword",
       damage: 4,
       knockback: 170,
-      attackCooldown: 0.3,
+      attackWindupTimeTicks: ItemVars.DEFAULT_ATTACK_WINDUP_TICKS,
+      attackSwingTimeTicks: ItemVars.DEFAULT_ATTACK_SWING_TICKS,
+      attackReturnTimeTicks: ItemVars.DEFAULT_ATTACK_RETURN_TICKS,
+      // @Incomplete
+      // attackCooldown: 0.3,
       level: 3
    },
    [ItemType.deepfrost_pickaxe]: {
@@ -534,7 +583,11 @@ export const ITEM_INFO_RECORD = {
       toolType: "pickaxe",
       damage: 13,
       knockback: 100,
-      attackCooldown: 0.5,
+      attackWindupTimeTicks: ItemVars.DEFAULT_ATTACK_WINDUP_TICKS,
+      attackSwingTimeTicks: ItemVars.DEFAULT_ATTACK_SWING_TICKS,
+      attackReturnTimeTicks: ItemVars.DEFAULT_ATTACK_RETURN_TICKS,
+      // @Incomplete
+      // attackCooldown: 0.5,
       level: 3
    },
    [ItemType.deepfrost_axe]: {
@@ -542,7 +595,11 @@ export const ITEM_INFO_RECORD = {
       toolType: "axe",
       damage: 8,
       knockback: 100,
-      attackCooldown: 0.5,
+      attackWindupTimeTicks: ItemVars.DEFAULT_ATTACK_WINDUP_TICKS,
+      attackSwingTimeTicks: ItemVars.DEFAULT_ATTACK_SWING_TICKS,
+      attackReturnTimeTicks: ItemVars.DEFAULT_ATTACK_RETURN_TICKS,
+      // @Incomplete
+      // attackCooldown: 0.5,
       level: 3
    },
    [ItemType.deepfrost_armour]: {
@@ -573,7 +630,11 @@ export const ITEM_INFO_RECORD = {
       toolType: "sword",
       damage: 2,
       knockback: 400,
-      attackCooldown: 0.5,
+      attackWindupTimeTicks: ItemVars.DEFAULT_ATTACK_WINDUP_TICKS,
+      attackSwingTimeTicks: ItemVars.DEFAULT_ATTACK_SWING_TICKS,
+      attackReturnTimeTicks: ItemVars.DEFAULT_ATTACK_RETURN_TICKS,
+      // @Incomplete
+      // attackCooldown: 0.5,
       level: 2.5
    },
    [ItemType.leather_armour]: {
@@ -585,7 +646,11 @@ export const ITEM_INFO_RECORD = {
       toolType: "spear",
       damage: 4,
       knockback: 300,
-      attackCooldown: 0.8,
+      attackWindupTimeTicks: ItemVars.DEFAULT_ATTACK_WINDUP_TICKS,
+      attackSwingTimeTicks: ItemVars.DEFAULT_ATTACK_SWING_TICKS,
+      attackReturnTimeTicks: ItemVars.DEFAULT_ATTACK_RETURN_TICKS,
+      // @Incomplete
+      // attackCooldown: 0.8,
       level: 2.5
    },
    [ItemType.paper]: {
@@ -604,7 +669,11 @@ export const ITEM_INFO_RECORD = {
       toolType: "battleaxe",
       damage: 3,
       knockback: 150,
-      attackCooldown: 0.5,
+      attackWindupTimeTicks: ItemVars.DEFAULT_ATTACK_WINDUP_TICKS,
+      attackSwingTimeTicks: ItemVars.DEFAULT_ATTACK_SWING_TICKS,
+      attackReturnTimeTicks: ItemVars.DEFAULT_ATTACK_RETURN_TICKS,
+      // @Incomplete
+      // attackCooldown: 0.5,
       level: 2.5
    },
    [ItemType.living_rock]: {

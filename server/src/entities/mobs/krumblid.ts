@@ -3,10 +3,11 @@ import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
 import { Point, randInt } from "webgl-test-shared/dist/utils";
 import { createItemsOverEntity } from "../../entity-shared";
 import { registerAttackingEntity } from "../../ai/escape-ai";
-import { CircularHitbox, HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { ItemType } from "webgl-test-shared/dist/items/items";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { ComponentConfig } from "../../components";
+import { createHitbox, HitboxCollisionType } from "webgl-test-shared/dist/boxes/boxes";
+import CircularBox from "webgl-test-shared/dist/boxes/CircularBox";
 
 export const enum KrumblidVars {
    VISION_RANGE = 224,
@@ -37,7 +38,7 @@ export function createKrumblidConfig(): ComponentConfig<ComponentTypes> {
          type: EntityType.krumblid,
          collisionBit: COLLISION_BITS.default,
          collisionMask: DEFAULT_COLLISION_MASK,
-         hitboxes: [new CircularHitbox(0.75, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, KRUMBLID_SIZE / 2)]
+         hitboxes: [createHitbox(new CircularBox(new Point(0, 0), KRUMBLID_SIZE / 2), 0.75, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0)]
       },
       [ServerComponentType.physics]: {
          velocityX: 0,

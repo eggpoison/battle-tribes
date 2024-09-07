@@ -1,11 +1,11 @@
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { ComponentArray } from "./ComponentArray";
 import { ComponentConfig } from "../components";
-import { RectangularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { EntityID } from "webgl-test-shared/dist/entities";
 import { Packet } from "webgl-test-shared/dist/packets";
 import { PhysicsComponentArray } from "./PhysicsComponent";
 import Board from "../Board";
+import RectangularBox from "webgl-test-shared/dist/boxes/RectangularBox";
 
 const enum Vars {
    BREAK_VELOCITY = 100
@@ -35,7 +35,7 @@ function onInitialise(config: ComponentConfig<ServerComponentType.transform | Se
    const size = config[ServerComponentType.slimeSpit].size;
 
    const hitboxSize = SIZES[size];
-   const hitbox = config[ServerComponentType.transform].hitboxes[0] as RectangularHitbox;
+   const hitbox = config[ServerComponentType.transform].hitboxes[0].box as RectangularBox;
    hitbox.width = hitboxSize;
    hitbox.height = hitboxSize;
 }

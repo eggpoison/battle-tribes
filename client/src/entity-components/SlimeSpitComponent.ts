@@ -19,7 +19,7 @@ class SlimeSpitComponent extends ServerComponent {
    }
 
    public onLoad(): void {
-      this.renderParts = this.entity.getRenderParts("slimeSpit:part", 2);
+      this.renderParts = this.entity.getRenderThings("slimeSpit:part", 2) as Array<RenderPart>;
    }
    
    public padData(reader: PacketReader): void {

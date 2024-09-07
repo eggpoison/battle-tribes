@@ -16,7 +16,7 @@ import { loadTextures } from "./textures";
 import { hidePauseScreen, showPauseScreen, toggleSettingsMenu } from "./components/game/GameScreen";
 import { App_setGameInteractState, getGameState } from "./components/App";
 import { clearPressedKeys } from "./keyboard-input";
-import { createHitboxShaders, renderDamageBoxes, renderHitboxes } from "./rendering/webgl/hitbox-rendering";
+import { createHitboxShaders, renderDamageBoxes, renderHitboxes } from "./rendering/webgl/box-wireframe-rendering";
 import { updatePlayerItems, updatePlayerMovement } from "./player-input";
 import { clearServerTicks, updateDebugScreenFPS, updateDebugScreenRenderTime } from "./components/game/dev/GameInfoDisplay";
 import { createWorldBorderShaders, renderWorldBorder } from "./rendering/webgl/world-border-rendering";
@@ -210,7 +210,7 @@ abstract class Game {
    public static tribe: Tribe;
    public static enemyTribes: ReadonlyArray<EnemyTribeData>;
 
-   // @Hack @Cleanup
+   // @Hack @Cleanup: remove this!
    public static playerID: number;
 
    public static setInteractState(interactState: GameInteractState): void {

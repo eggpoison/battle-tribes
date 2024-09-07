@@ -1,7 +1,6 @@
 import { TribesmanAIType } from "webgl-test-shared/dist/components";
 import { EntityID, EntityType, LimbAction } from "webgl-test-shared/dist/entities";
 import { Settings, PathfindingSettings } from "webgl-test-shared/dist/settings";
-import { TribeType } from "webgl-test-shared/dist/tribes";
 import { Point, distance } from "webgl-test-shared/dist/utils";
 import Board from "../../../Board";
 import { getDistanceFromPointToEntity, stopEntity, entityIsInLineOfSight, willStopAtDesiredDistance } from "../../../ai-shared";
@@ -10,16 +9,14 @@ import { InventoryUseComponentArray, setLimbActions } from "../../../components/
 import { PhysicsComponentArray } from "../../../components/PhysicsComponent";
 import { TribesmanAIComponentArray, TribesmanPathType } from "../../../components/TribesmanAIComponent";
 import { PathfindFailureDefault } from "../../../pathfinding";
-import { calculateItemDamage, calculateRadialAttackTargets, useItem } from "../tribe-member";
+import { calculateItemDamage, useItem } from "../tribe-member";
 import { TRIBESMAN_TURN_SPEED } from "./tribesman-ai";
-import { EntityRelationship, TribeComponentArray } from "../../../components/TribeComponent";
-import { getItemAttackCooldown } from "../../../items";
+import { TribeComponentArray } from "../../../components/TribeComponent";
 import { calculateAttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
-import { clearTribesmanPath, getBestToolItemSlot, getTribesmanAttackOffset, getTribesmanAttackRadius, getTribesmanDesiredAttackRange, getTribesmanRadius, getTribesmanSlowAcceleration, pathfindToPosition, pathToEntityExists } from "./tribesman-ai-utils";
+import { clearTribesmanPath, getBestToolItemSlot, getTribesmanDesiredAttackRange, getTribesmanRadius, getTribesmanSlowAcceleration, pathfindToPosition, pathToEntityExists } from "./tribesman-ai-utils";
 import { attemptToRepairBuildings } from "./tribesman-structures";
-import { InventoryName, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, BowItemInfo } from "webgl-test-shared/dist/items/items";
+import { InventoryName, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, BowItemInfo, getItemAttackInfo, Item } from "webgl-test-shared/dist/items/items";
 import { getAgeTicks, TransformComponentArray } from "../../../components/TransformComponent";
-import { beginSwing } from "../limb-use";
 
 const enum Vars {
    BOW_LINE_OF_SIGHT_WAIT_TIME = 0.5 * Settings.TPS,
@@ -60,6 +57,12 @@ const doMeleeAttack = (tribesman: EntityID): void => {
    // }
 }
 
+const getItemAttackExecuteTimeSeconds = (item: Item): number => {
+   const attackInfo = getItemAttackInfo(item);
+   const timings = attackInfo.attackTimings;
+   return (timings.windupTimeTicks + timings.swingTimeTicks + timings.returnTimeTicks) / Settings.TPS;
+}
+
 const getMostDamagingItemSlot = (tribesman: EntityID, huntedEntity: EntityID): number => {
    const inventoryComponent = InventoryComponentArray.getComponent(tribesman);
    const hotbarInventory = getInventory(inventoryComponent, InventoryName.hotbar);
@@ -80,9 +83,9 @@ const getMostDamagingItemSlot = (tribesman: EntityID, huntedEntity: EntityID): n
 
       const attackEffectiveness = calculateAttackEffectiveness(item, Board.getEntityType(huntedEntity)!);
       
-      const attackCooldown = getItemAttackCooldown(item);
+      const attackExecuteTimeSeconds = getItemAttackExecuteTimeSeconds(item);
       const damage = calculateItemDamage(tribesman, item, attackEffectiveness);
-      const dps = damage / attackCooldown;
+      const dps = damage / attackExecuteTimeSeconds;
 
       if (dps > mostDps) {
          mostDps = dps;

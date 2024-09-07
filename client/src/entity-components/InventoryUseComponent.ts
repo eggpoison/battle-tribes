@@ -12,7 +12,7 @@ import { ParticleColour, ParticleRenderLayer, addMonocolourParticleToBufferConta
 import { animateLimb, createCraftingAnimationParticles, createMedicineAnimationParticles, generateRandomLimbPosition, updateBandageRenderPart, updateCustomItemRenderPart } from "../limb-animations";
 import { createDeepFrostHeartBloodParticles } from "../particles";
 import { definiteGameState } from "../game-state/game-states";
-import { InventoryName, ItemType, ITEM_TYPE_RECORD, Item, ITEM_INFO_RECORD, itemInfoIsUtility, itemInfoIsBow, BowItemInfo, itemInfoIsTool, ItemVars } from "webgl-test-shared/dist/items/items";
+import { InventoryName, ItemType, ITEM_TYPE_RECORD, Item, ITEM_INFO_RECORD, itemInfoIsUtility, itemInfoIsBow, BowItemInfo, itemInfoIsTool, getItemAttackInfo } from "webgl-test-shared/dist/items/items";
 import { RenderPart } from "../render-parts/render-parts";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { PacketReader } from "webgl-test-shared/dist/packets";
@@ -229,6 +229,42 @@ const setLimbToState = (handMult: number, attachPoint: RenderAttachPoint, state:
    // @Incomplete? Hand mult
    attachPoint.rotation = state.rotation;
    // limb.rotation = attackHandRotation * handMult;
+}
+
+const updateHeldItem = (inventoryUseComponent: InventoryUseComponent, limbIdx: number, heldItem: Item | null): void => {
+   const attackInfo = getItemAttackInfo(heldItem);
+
+   if (heldItem === null) {
+      if (inventoryUseComponent.activeItemRenderParts.hasOwnProperty(limbIdx)) {
+         inventoryUseComponent.entity.removeRenderPart(inventoryUseComponent.activeItemRenderParts[limbIdx]);
+         delete inventoryUseComponent.activeItemRenderParts[limbIdx];
+      }
+
+      return;
+   }
+   
+   if (!inventoryUseComponent.activeItemRenderParts.hasOwnProperty(limbIdx)) {
+      const renderPart = new TexturedRenderPart(
+         inventoryUseComponent.limbAttachPoints[limbIdx],
+         limbIdx === 0 ? 1.15 : 1.1,
+         0,
+         heldItem !== null ? getTextureArrayIndex(CLIENT_ITEM_INFO_RECORD[heldItem.type].entityTextureSource) : -1
+      );
+      renderPart.flipX = limbIdx === 1;
+      inventoryUseComponent.entity.attachRenderThing(renderPart);
+      inventoryUseComponent.activeItemRenderParts[limbIdx] = renderPart;
+   }
+
+   const heldItemDamageBoxInfo = attackInfo.heldItemDamageBoxInfo!;
+   const heldItemRenderPart = inventoryUseComponent.activeItemRenderParts[limbIdx];
+   
+   heldItemRenderPart.offset.x = heldItemDamageBoxInfo.offsetX;
+   heldItemRenderPart.offset.y = heldItemDamageBoxInfo.offsetY;
+   
+   // Texture
+   const clientItemInfo = CLIENT_ITEM_INFO_RECORD[heldItem.type];
+   const textureSource = heldItemDamageBoxInfo.showLargeTexture ? clientItemInfo.toolTextureSource : clientItemInfo.entityTextureSource;
+   heldItemRenderPart.switchTextureSource(textureSource);
 }
 
 const getHandRestingOffset = (entityType: InventoryUseEntityType): number => {
@@ -586,8 +622,8 @@ function onTick(inventoryUseComponent: InventoryUseComponent): void {
    updateCustomItemRenderPart(inventoryUseComponent.entity);
 }
 
-const updateActiveItemRenderPart = (inventoryUseComponent: InventoryUseComponent, limbIdx: number, limbInfo: LimbInfo, activeItem: Item | null, shouldShow: boolean): void => {
-   if (activeItem === null || !shouldShow) {
+const updateActiveItemRenderPart = (inventoryUseComponent: InventoryUseComponent, limbIdx: number, limbInfo: LimbInfo, activeItem: Item | null): void => {
+   if (activeItem === null) {
       if (inventoryUseComponent.activeItemRenderParts.hasOwnProperty(limbIdx)) {
          inventoryUseComponent.entity.removeRenderPart(inventoryUseComponent.activeItemRenderParts[limbIdx]);
          delete inventoryUseComponent.activeItemRenderParts[limbIdx];
@@ -747,18 +783,19 @@ const updateLimb = (inventoryUseComponent: InventoryUseComponent, limbIdx: numbe
    const inventoryComponent = inventoryUseComponent.entity.getServerComponent(ServerComponentType.inventory);
    const inventory = inventoryComponent.getInventory(limbInfo.inventoryName);
    
-   let item: Item | null | undefined = inventory.itemSlots[limbInfo.selectedItemSlot];
+   let heldItem: Item | null | undefined = inventory.itemSlots[limbInfo.selectedItemSlot];
    
-   if (typeof item === "undefined" || limbInfo.thrownBattleaxeItemID === item.id) {
-      item = null;
+   if (typeof heldItem === "undefined" || limbInfo.thrownBattleaxeItemID === heldItem.id) {
+      heldItem = null;
    }
    
-   const itemSize = item !== null && itemInfoIsTool(item.type, ITEM_INFO_RECORD[item.type]) ? 8 * 4 : 4 * 4;
+   const itemSize = heldItem !== null && itemInfoIsTool(heldItem.type, ITEM_INFO_RECORD[heldItem.type]) ? 8 * 4 : 4 * 4;
    
    // @Hack
-   updateActiveItemRenderPart(inventoryUseComponent, limbIdx, limbInfo, item, true);
+   // updateActiveItemRenderPart(inventoryUseComponent, limbIdx, limbInfo, null);
    const itemRenderPart = inventoryUseComponent.activeItemRenderParts[limbIdx];
    
+   // @Hack
    let shouldShowActiveItemRenderPart = true;
 
    // @Hack
@@ -790,7 +827,7 @@ const updateLimb = (inventoryUseComponent: InventoryUseComponent, limbIdx: numbe
          const windupProgress = secondsSinceLastAction * Settings.TPS / limbInfo.currentActionDurationTicks;
 
          lerpLimbBetweenStates(limb, attachPoint, TRIBESMAN_RESTING_LIMB_STATE, DEFAULT_ATTACK_PATTERN.windedBack, windupProgress);
-         
+         updateHeldItem(inventoryUseComponent, limbIdx, heldItem);
          break;
       }
       case LimbAction.attack: {
@@ -798,6 +835,7 @@ const updateLimb = (inventoryUseComponent: InventoryUseComponent, limbIdx: numbe
          const attackProgress = secondsSinceLastAction * Settings.TPS / limbInfo.currentActionDurationTicks;
 
          lerpLimbBetweenStates(limb, attachPoint, DEFAULT_ATTACK_PATTERN.windedBack, DEFAULT_ATTACK_PATTERN.swung, attackProgress);
+         updateHeldItem(inventoryUseComponent, limbIdx, heldItem);
          break;
       }
       case LimbAction.returnAttackToRest: {
@@ -805,11 +843,12 @@ const updateLimb = (inventoryUseComponent: InventoryUseComponent, limbIdx: numbe
          const animationProgress = secondsIntoAnimation * Settings.TPS / limbInfo.currentActionDurationTicks;
 
          lerpLimbBetweenStates(limb, attachPoint, DEFAULT_ATTACK_PATTERN.swung, TRIBESMAN_RESTING_LIMB_STATE, animationProgress);
-
+         updateHeldItem(inventoryUseComponent, limbIdx, heldItem);
          break;
       }
       case LimbAction.none: {
          setLimbToState(limbMult, attachPoint, TRIBESMAN_RESTING_LIMB_STATE);
+         updateHeldItem(inventoryUseComponent, limbIdx, heldItem);
          break;
       }
       // Bow charge animation
@@ -867,7 +906,7 @@ const updateLimb = (inventoryUseComponent: InventoryUseComponent, limbIdx: numbe
             itemRenderPart.rotation = -Math.PI/6 * limbMult;
          }
 
-         if (item !== null && limbInfo.thrownBattleaxeItemID === item.id) {
+         if (heldItem !== null && limbInfo.thrownBattleaxeItemID === heldItem.id) {
             shouldShowActiveItemRenderPart = false;
          }
 
@@ -1003,7 +1042,7 @@ const updateLimb = (inventoryUseComponent: InventoryUseComponent, limbIdx: numbe
       // }
    }
 
-   updateActiveItemRenderPart(inventoryUseComponent, limbIdx, limbInfo, item, shouldShowActiveItemRenderPart);
+   // updateActiveItemRenderPart(inventoryUseComponent, limbIdx, limbInfo, heldItem, shouldShowActiveItemRenderPart);
 }
 
 function onUpdate(inventoryUseComponent: InventoryUseComponent): void {

@@ -33,7 +33,7 @@ export function createIceSpikesConfig(): ComponentConfig<ComponentTypes> {
          type: EntityType.iceSpikes,
          collisionBit: COLLISION_BITS.iceSpikes,
          collisionMask: DEFAULT_COLLISION_MASK & ~COLLISION_BITS.iceSpikes,
-         hitboxes: [createHitbox(new CircularBox(new Point(0, 0), ICE_SPIKE_RADIUS), 1, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0)]
+         hitboxes: [createHitbox(new CircularBox(new Point(0, 0), 0, ICE_SPIKE_RADIUS), 1, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0)]
       },
       [ServerComponentType.health]: {
          maxHealth: 5

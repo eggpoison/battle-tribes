@@ -14,7 +14,7 @@ import { EntityTickEvent, EntityTickEventType } from "webgl-test-shared/dist/ent
 import Game from "../Game";
 import Player from "../entities/Player";
 import Client from "./Client";
-import { definiteGameState } from "../game-state/game-states";
+import { definiteGameState, latencyGameState } from "../game-state/game-states";
 import Entity from "../Entity";
 import { createEntity } from "../entity-class-record";
 import Board from "../Board";
@@ -24,6 +24,11 @@ import { readInventory } from "../entity-components/InventoryComponent";
 import { updateDebugScreenIsPaused, updateDebugScreenTicks, updateDebugScreenCurrentTime } from "../components/game/dev/GameInfoDisplay";
 import { Tile } from "../Tile";
 import { getServerComponentArray } from "../entity-components/ComponentArray";
+import { TRIBE_INFO_RECORD } from "webgl-test-shared/dist/tribes";
+import { gameScreenSetIsDead } from "../components/game/GameScreen";
+import { updateHealthBar } from "../components/game/HealthBar";
+import { Hotbar_setHotbarSelectedItemSlot } from "../components/game/inventories/Hotbar";
+import { Point } from "webgl-test-shared/dist/utils";
 
 export interface InitialGameDataPacket {
    readonly playerID: number;
@@ -268,7 +273,7 @@ const processPlayerUpdateData = (reader: PacketReader): void => {
       // Hotbar_updateLeftThrownBattleaxeItemID(leftThrownBattleaxeItemID);
 }
 
-const processEntityCreationData = (entityID: EntityID, reader: PacketReader): void => {
+export function processEntityCreationData(entityID: EntityID, reader: PacketReader): void {
    const entityType = reader.readNumber() as EntityType;
 
    const entity = createEntity(entityID, entityType);
@@ -706,4 +711,24 @@ export function processSyncDataPacket(reader: PacketReader): void {
    }
 
    Game.sync();
+}
+
+export function processRespawnDataPacket(reader: PacketReader): void {
+   // Create the player
+   const playerID = reader.readNumber();
+   // @Hack
+   Game.playerID = playerID;
+   processEntityCreationData(playerID, reader);
+   
+   latencyGameState.selectedHotbarItemSlot = 1;
+   Hotbar_setHotbarSelectedItemSlot(1);
+   
+   const maxHealth = TRIBE_INFO_RECORD[Game.tribe.tribeType].maxHealthPlayer;
+   definiteGameState.setPlayerHealth(maxHealth);
+   updateHealthBar(maxHealth);
+
+   gameScreenSetIsDead(false);
+
+   // Clear any queued packets, as they contain data from when the player wasn't respawned.
+   Game.queuedPackets.splice(0, Game.queuedPackets.length);
 }

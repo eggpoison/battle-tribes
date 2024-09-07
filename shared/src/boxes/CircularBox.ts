@@ -6,8 +6,8 @@ import { Box, boxIsCircular } from "./boxes";
 export class CircularBox extends BaseBox {
    public radius: number;
 
-   constructor(offset: Point, radius: number) {
-      super(offset);
+   constructor(offset: Point, rotation: number, radius: number) {
+      super(offset, rotation);
 
       this.radius = radius;
    }

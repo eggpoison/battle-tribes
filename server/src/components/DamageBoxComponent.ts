@@ -58,7 +58,7 @@ function onTick(damageBoxComponent: DamageBoxComponent, entity: EntityID): void 
       for (let j = 0; j < collidingEntities.length; j++) {
          const collidingEntity = collidingEntities[j];
          if (collidingEntity !== entity) {
-            onEntityLimbCollision(entity, collidingEntity, damageBox);
+            onEntityLimbCollision(entity, collidingEntity, damageBox.limbInfo, damageBoxComponent);
          }
       }
    }
@@ -71,9 +71,9 @@ function getDataLength(entity: EntityID): number {
    
    for (const damageBox of damageBoxComponent.damageBoxes) {
       if (boxIsCircular(damageBox.box)) {
-         lengthBytes += 4 * Float32Array.BYTES_PER_ELEMENT;
+         lengthBytes += 7 * Float32Array.BYTES_PER_ELEMENT;
       } else {
-         lengthBytes += 6 * Float32Array.BYTES_PER_ELEMENT;
+         lengthBytes += 9 * Float32Array.BYTES_PER_ELEMENT;
       }
    }
 
@@ -105,8 +105,11 @@ function addDataToPacket(packet: Packet, entity: EntityID): void {
 
       const localID = damageBoxComponent.damageBoxLocalIDs[i];
 
+      packet.addNumber(box.position.x);
+      packet.addNumber(box.position.y);
       packet.addNumber(box.offset.x);
       packet.addNumber(box.offset.y);
+      packet.addNumber(box.rotation);
       packet.addNumber(localID);
       packet.addNumber(box.radius);
    }
@@ -123,8 +126,11 @@ function addDataToPacket(packet: Packet, entity: EntityID): void {
 
       const localID = damageBoxComponent.damageBoxLocalIDs[i];
 
+      packet.addNumber(box.position.x);
+      packet.addNumber(box.position.y);
       packet.addNumber(box.offset.x);
       packet.addNumber(box.offset.y);
+      packet.addNumber(box.rotation);
       packet.addNumber(localID);
       packet.addNumber(box.width);
       packet.addNumber(box.height);

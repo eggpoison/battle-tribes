@@ -1,7 +1,7 @@
 import { HitFlags } from "webgl-test-shared/dist/client-server-types";
-import { EntityID, LimbAction, EntityType, PlayerCauseOfDeath, EntityTypeString } from "webgl-test-shared/dist/entities";
+import { EntityID, LimbAction, EntityType, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
 import { AttackEffectiveness, calculateAttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
-import { InventoryName, Item, ITEM_INFO_RECORD, ITEM_TYPE_RECORD, itemInfoIsTool, ItemType, ItemVars } from "webgl-test-shared/dist/items/items";
+import { getItemAttackInfo, InventoryName, Item, ITEM_INFO_RECORD, itemInfoIsTool, ItemType } from "webgl-test-shared/dist/items/items";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { TribesmanTitle } from "webgl-test-shared/dist/titles";
@@ -9,13 +9,12 @@ import { Point } from "webgl-test-shared/dist/utils";
 import Board from "../../Board";
 import { damageEntity, HealthComponentArray } from "../../components/HealthComponent";
 import { InventoryComponentArray, getInventory } from "../../components/InventoryComponent";
-import { InventoryUseComponentArray, LimbInfo } from "../../components/InventoryUseComponent";
+import { getHeldItem, InventoryUseComponentArray, LimbInfo } from "../../components/InventoryUseComponent";
 import { applyKnockback } from "../../components/PhysicsComponent";
 import { applyStatusEffect } from "../../components/StatusEffectComponent";
 import { TransformComponentArray } from "../../components/TransformComponent";
 import { hasTitle } from "../../components/TribeMemberComponent";
-import { getItemAttackCooldown } from "../../items";
-import { getSwingTimeMultiplier, calculateItemDamage, repairBuilding } from "./tribe-member";
+import { calculateItemDamage } from "./tribe-member";
 import { PlanterBoxPlant, ServerComponentType } from "webgl-test-shared/dist/components";
 import { BerryBushComponentArray } from "../../components/BerryBushComponent";
 import { PlantComponentArray, plantIsFullyGrown } from "../../components/PlantComponent";
@@ -24,8 +23,7 @@ import { createEntityFromConfig } from "../../Entity";
 import { createItemEntityConfig } from "../item-entity";
 import { dropBerryOverEntity, BERRY_BUSH_RADIUS } from "../resources/berry-bush";
 import { getEntityRelationship, EntityRelationship } from "../../components/TribeComponent";
-import { DamageBoxWrapper } from "webgl-test-shared/dist/boxes/boxes";
-import { ServerDamageBoxWrapper } from "../../boxes";
+import { DamageBoxComponent } from "../../components/DamageBoxComponent";
 
 const enum Vars {
    DEFAULT_ATTACK_KNOCKBACK = 125
@@ -204,22 +202,6 @@ const attemptAttack = (attackingEntity: EntityID, victim: EntityID, limbInfo: Li
    return true;
 }
 
-const getWindupTimeTicks = (attackingEntity: EntityID, itemSlot: number, inventoryName: InventoryName): number => {
-   // Find the selected item
-   const inventoryComponent = InventoryComponentArray.getComponent(attackingEntity);
-   const inventory = getInventory(inventoryComponent, inventoryName);
-
-   const item = inventory.itemSlots[itemSlot];
-   if (typeof item !== "undefined") {
-      const itemInfo = ITEM_INFO_RECORD[item.type];
-      if (itemInfoIsTool(item.type, itemInfo)) {
-         return itemInfo.attackWindupTimeTicks;
-      }
-   }
-
-   return ItemVars.DEFAULT_ATTACK_WINDUP_TICKS;
-}
-
 export function beginSwing(attackingEntity: EntityID, itemSlot: number, inventoryName: InventoryName): boolean {
    // Global attack cooldown
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(attackingEntity);
@@ -233,13 +215,16 @@ export function beginSwing(attackingEntity: EntityID, itemSlot: number, inventor
       return false;
    }
 
+   const heldItem = getHeldItem(limbInfo);
+   const heldItemAttackInfo = getItemAttackInfo(heldItem);
+   
    // Being winding up the attack
    limbInfo.selectedItemSlot = itemSlot;
    limbInfo.action = LimbAction.windAttack;
    // @Temporary
    limbInfo.lastAttackWindupTicks = Board.ticks;
    limbInfo.currentActionStartingTicks = Board.ticks;
-   limbInfo.currentActionDurationTicks = getWindupTimeTicks(attackingEntity, itemSlot, inventoryName);
+   limbInfo.currentActionDurationTicks = heldItemAttackInfo.attackTimings.windupTimeTicks;
 
    // Swing was successful
    return true;
@@ -362,7 +347,7 @@ export function calculateBlueprintWorkTarget(tribeMember: EntityID, targetEntiti
    return closestEntity;
 }
 
-export function onEntityLimbCollision(attackingEntity: EntityID, victim: EntityID, damageBox: ServerDamageBoxWrapper): void {
+export function onEntityLimbCollision(attackingEntity: EntityID, victim: EntityID, limbInfo: LimbInfo, damageBoxComponent: DamageBoxComponent): void {
    // @Incomplete
    // const item = limbInfo.associatedInventory.itemSlots[limbInfo.selectedItemSlot];
    // if (typeof item !== "undefined" && ITEM_TYPE_RECORD[item.type] === "hammer") {
@@ -388,9 +373,13 @@ export function onEntityLimbCollision(attackingEntity: EntityID, victim: EntityI
    // }
    
    if (HealthComponentArray.hasComponent(victim)) {
-      attemptAttack(attackingEntity, victim, damageBox.limbInfo);
+      attemptAttack(attackingEntity, victim, limbInfo);
 
       // @Hack
-      damageBox.isRemoved = true;
+      // Remove all damage boxes
+      for (let i = 0; i < damageBoxComponent.damageBoxes.length; i++) {
+         const damageBox = damageBoxComponent.damageBoxes[i];
+         damageBox.isRemoved = true;
+      }
    }
 }

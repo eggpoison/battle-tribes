@@ -1,18 +1,24 @@
 // @Cleanup: maybe extract into client-to-server and server-to-client ?
 export const enum PacketType {
+   // -----------------
    // CLIENT-TO-SERVER
+   // -----------------
    initialPlayerData,
    activate,
    deactivate,
    playerData,
    syncRequest,
    attack,
+   respawn,
    devGiveItem, // ((DEV))
+   // -----------------
    // SERVER-TO-CLIENT
+   // -----------------
    initialGameData,
    gameData,
    syncData,
-   sync
+   sync,
+   respawnData
 }
 
 // @Bandwidth: figure out a way to be tightly packed (not have to add padding)

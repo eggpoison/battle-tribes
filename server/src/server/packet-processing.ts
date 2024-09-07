@@ -1,4 +1,4 @@
-import { PacketReader } from "webgl-test-shared/dist/packets";
+import { Packet, PacketReader, PacketType } from "webgl-test-shared/dist/packets";
 import PlayerClient from "./PlayerClient";
 import { EntityID, LimbAction } from "webgl-test-shared/dist/entities";
 import { InventoryName, ItemType } from "webgl-test-shared/dist/items/items";
@@ -9,10 +9,15 @@ import { PhysicsComponentArray } from "../components/PhysicsComponent";
 import { PlayerComponentArray } from "../components/PlayerComponent";
 import { TransformComponentArray } from "../components/TransformComponent";
 import { TribeComponentArray } from "../components/TribeComponent";
-import { startEating, startChargingBow, startChargingSpear, startChargingBattleaxe } from "../entities/tribes/player";
+import { startEating, startChargingBow, startChargingSpear, startChargingBattleaxe, createPlayerConfig } from "../entities/tribes/player";
 import { calculateRadialAttackTargets } from "../entities/tribes/tribe-member";
 import { beginSwing } from "../entities/tribes/limb-use";
 import { InventoryComponentArray, getInventory, addItemToInventory } from "../components/InventoryComponent";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { Point } from "webgl-test-shared/dist/utils";
+import { createEntityFromConfig } from "../Entity";
+import { generatePlayerSpawnPosition } from "./player-clients";
+import { addEntityDataToPacket, getEntityDataLength } from "./game-data-packets";
 
 /** How far away from the entity the attack is done */
 const ATTACK_OFFSET = 50;
@@ -149,4 +154,42 @@ export function processDevGiveItemPacket(playerClient: PlayerClient, reader: Pac
    const inventoryComponent = InventoryComponentArray.getComponent(playerClient.instance);
    const inventory = getInventory(inventoryComponent, InventoryName.hotbar);
    addItemToInventory(inventory, itemType, amount);
+}
+
+export function processRespawnPacket(playerClient: PlayerClient): void {
+   // Calculate spawn position
+   let spawnPosition: Point;
+   if (playerClient.tribe.totem !== null) {
+      const totemTransformComponent = TransformComponentArray.getComponent(playerClient.tribe.totem);
+      spawnPosition = totemTransformComponent.position.copy();
+      const offsetDirection = 2 * Math.PI * Math.random();
+      spawnPosition.x += 100 * Math.sin(offsetDirection);
+      spawnPosition.y += 100 * Math.cos(offsetDirection);
+   } else {
+      spawnPosition = generatePlayerSpawnPosition(playerClient.tribe.tribeType);
+   }
+
+   const config = createPlayerConfig();
+   config[ServerComponentType.transform].position.x = spawnPosition.x;
+   config[ServerComponentType.transform].position.y = spawnPosition.y;
+   config[ServerComponentType.tribe].tribe = playerClient.tribe;
+   config[ServerComponentType.player].username = playerClient.username;
+   const player = createEntityFromConfig(config);
+
+   playerClient.instance = player;
+
+   // The PlayerComponent onJoin function will send the packet with all the information
+}
+
+export function sendRespawnDataPacket(playerClient: PlayerClient): void {
+   const player = playerClient.instance;
+   
+   let lengthBytes = Float32Array.BYTES_PER_ELEMENT;
+   lengthBytes += getEntityDataLength(player, player);
+   
+   const packet = new Packet(PacketType.respawnData, lengthBytes);
+
+   addEntityDataToPacket(packet, player, player);
+
+   playerClient.socket.send(packet.buffer);
 }

@@ -68,11 +68,11 @@ export function createGolemConfig(): ComponentConfig<ComponentTypes> {
    const hitboxes = new Array<HitboxWrapper>();
 
    // Create core hitbox
-   const hitbox = createHitbox(new CircularBox(new Point(0, 0), 36), ROCK_MASSIVE_MASS, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0);
+   const hitbox = createHitbox(new CircularBox(new Point(0, 0), 0, 36), ROCK_MASSIVE_MASS, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0);
    hitboxes.push(hitbox);
 
    // Create head hitbox
-   hitboxes.push(createHitbox(new CircularBox(new Point(0, 45), 32), ROCK_LARGE_MASS, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0));
+   hitboxes.push(createHitbox(new CircularBox(new Point(0, 45), 0, 32), ROCK_LARGE_MASS, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0));
    
    // Create body hitboxes
    let i = 0;
@@ -98,7 +98,7 @@ export function createGolemConfig(): ComponentConfig<ComponentTypes> {
       }
 
       const mass = size === 0 ? ROCK_SMALL_MASS : ROCK_MEDIUM_MASS;
-      const hitbox = createHitbox(new CircularBox(new Point(x, y), radius), mass, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0);
+      const hitbox = createHitbox(new CircularBox(new Point(x, y), 0, radius), mass, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0);
       hitboxes.push(hitbox);
 
       i++;
@@ -107,12 +107,12 @@ export function createGolemConfig(): ComponentConfig<ComponentTypes> {
    // Create hand hitboxes
    for (let j = 0; j < 2; j++) {
       const offsetX = 60 * (j === 0 ? -1 : 1);
-      const hitbox = createHitbox(new CircularBox(new Point(offsetX, 50), 20), ROCK_MEDIUM_MASS, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0);
+      const hitbox = createHitbox(new CircularBox(new Point(offsetX, 50), 0, 20), ROCK_MEDIUM_MASS, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0);
       hitboxes.push(hitbox);
 
       // Wrist
       const inFactor = 0.75;
-      hitboxes.push(createHitbox(new CircularBox(new Point(offsetX * inFactor, 50 * inFactor), 12), ROCK_TINY_MASS, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0));
+      hitboxes.push(createHitbox(new CircularBox(new Point(offsetX * inFactor, 50 * inFactor), 0, 12), ROCK_TINY_MASS, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0));
    }
    
    return {

@@ -2,7 +2,7 @@ import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityID, LimbAction } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { ComponentArray } from "./ComponentArray";
-import { Inventory, InventoryName, ITEM_INFO_RECORD, itemInfoIsTool, ItemVars } from "webgl-test-shared/dist/items/items";
+import { getItemAttackInfo, Inventory, InventoryName, Item, ITEM_INFO_RECORD, itemInfoIsTool } from "webgl-test-shared/dist/items/items";
 import { Packet } from "webgl-test-shared/dist/packets";
 import Board from "../Board";
 import { getInventory, InventoryComponentArray } from "./InventoryComponent";
@@ -14,6 +14,7 @@ import { updateBox } from "webgl-test-shared/dist/boxes/boxes";
 import { TransformComponentArray } from "./TransformComponent";
 import { DEFAULT_ATTACK_PATTERN, LimbState } from "webgl-test-shared/dist/attack-patterns";
 import { registerDirtyEntity } from "../server/player-clients";
+import RectangularBox from "webgl-test-shared/dist/boxes/RectangularBox";
 
 export interface InventoryUseComponentParams {
    usedInventoryNames: Array<InventoryName>;
@@ -47,7 +48,8 @@ export interface LimbInfo {
    currentActionDurationTicks: number;
 
    /** Damage box used to create limb attacks. */
-   damageBox: WeakRef<ServerDamageBoxWrapper> | null;
+   limbDamageBox: WeakRef<ServerDamageBoxWrapper> | null;
+   heldItemDamageBox: WeakRef<ServerDamageBoxWrapper> | null;
 }
 
 export class InventoryUseComponent {
@@ -80,7 +82,8 @@ export class InventoryUseComponent {
          extraAttackCooldownTicks: 0,
          currentActionStartingTicks: 0,
          currentActionDurationTicks: 0,
-         damageBox: null
+         limbDamageBox: null,
+         heldItemDamageBox: null
       };
       
       this.limbInfos.push(useInfo);
@@ -136,38 +139,18 @@ const currentActionHasFinished = (limbInfo: LimbInfo): boolean => {
    return ticksSince >= limbInfo.currentActionDurationTicks;
 }
 
-const getSwingTimeTicks = (limbInfo: LimbInfo): number => {
+// @Cleanup: remove once proper method is made
+export function getHeldItem(limbInfo: LimbInfo): Item | null {
    const item = limbInfo.associatedInventory.itemSlots[limbInfo.selectedItemSlot];
-
-   if (typeof item !== "undefined") {
-      const itemInfo = ITEM_INFO_RECORD[item.type];
-      if (itemInfoIsTool(item.type, itemInfo)) {
-         return itemInfo.attackSwingTimeTicks;
-      }
-   }
-
-   return ItemVars.DEFAULT_ATTACK_SWING_TICKS;
-}
-
-// @Copynpaste @Cleanup: Copynpaste
-const getReturnTimeTicks = (limbInfo: LimbInfo): number => {
-   const item = limbInfo.associatedInventory.itemSlots[limbInfo.selectedItemSlot];
-   if (typeof item !== "undefined") {
-      const itemInfo = ITEM_INFO_RECORD[item.type];
-      if (itemInfoIsTool(item.type, itemInfo)) {
-         return itemInfo.attackReturnTimeTicks;
-      }
-   }
-
-   return ItemVars.DEFAULT_ATTACK_RETURN_TICKS;
+   return typeof item !== "undefined" ? item : null;
 }
 
 const updateLimb = (entity: EntityID, limbInfo: LimbInfo, startingLimbState: LimbState, targetLimbState: LimbState, progress: number): void => {
-   if (limbInfo.damageBox === null) {
+   if (limbInfo.limbDamageBox === null) {
       throw new Error();
    }
 
-   const damageBox = limbInfo.damageBox.deref();
+   const damageBox = limbInfo.limbDamageBox.deref();
    if (typeof damageBox === "undefined") {
       throw new Error();
    }
@@ -177,12 +160,20 @@ const updateLimb = (entity: EntityID, limbInfo: LimbInfo, startingLimbState: Lim
    // @Temporary @Hack
    const offset = extraOffset + 34;
 
-   const box = damageBox.box;
-   box.offset.x = offset * Math.sin(direction);
-   box.offset.y = offset * Math.cos(direction);
+   const limbBox = damageBox.box;
+   limbBox.offset.x = offset * Math.sin(direction);
+   limbBox.offset.y = offset * Math.cos(direction);
+   limbBox.relativeRotation = lerp(startingLimbState.rotation, targetLimbState.rotation, progress);
 
    const transformComponent = TransformComponentArray.getComponent(entity);
-   updateBox(box, transformComponent.position.x, transformComponent.position.y, transformComponent.rotation);
+   updateBox(limbBox, transformComponent.position.x, transformComponent.position.y, transformComponent.rotation);
+
+   const heldItemDamageBox = limbInfo.heldItemDamageBox?.deref();
+   if (typeof heldItemDamageBox !== "undefined") {
+      const heldItemBox = heldItemDamageBox.box;
+      
+      updateBox(heldItemBox, limbBox.position.x, limbBox.position.y, limbBox.rotation);
+   }
 }
 
 function onTick(inventoryUseComponent: InventoryUseComponent, entity: EntityID): void {
@@ -201,32 +192,62 @@ function onTick(inventoryUseComponent: InventoryUseComponent, entity: EntityID):
       if (currentActionHasFinished(limbInfo)) {
          switch (limbInfo.action) {
             case LimbAction.windAttack: {
+               const heldItem = getHeldItem(limbInfo);
+               const heldItemAttackInfo = getItemAttackInfo(heldItem);
+               
                limbInfo.action = LimbAction.attack;
                limbInfo.currentActionStartingTicks = Board.ticks;
-               limbInfo.currentActionDurationTicks = getSwingTimeTicks(limbInfo);
+               limbInfo.currentActionDurationTicks = heldItemAttackInfo.attackTimings.swingTimeTicks;
 
-               if (limbInfo.damageBox === null) {
-                  const box = new CircularBox(new Point(0, 0), 16);
+               if (limbInfo.limbDamageBox !== null || limbInfo.heldItemDamageBox !== null) {
+                  throw new Error();
+               }
+
+               // Create limb damage box
+               {
+                  const box = new CircularBox(new Point(0, 0), 0, 12);
                   const damageBox = createDamageBox(box, limbInfo);
                   
                   const damageBoxComponent = DamageBoxComponentArray.getComponent(entity);
                   damageBoxComponent.addDamageBox(damageBox);
+   
+                  limbInfo.limbDamageBox = new WeakRef(damageBox);
+               }
 
-                  limbInfo.damageBox = new WeakRef(damageBox);
+               // Create held item damage box
+               const damageBoxInfo = heldItemAttackInfo.heldItemDamageBoxInfo;
+               if (damageBoxInfo !== null) {
+                  const box = new RectangularBox(new Point(damageBoxInfo.offsetX, damageBoxInfo.offsetY), damageBoxInfo.width, damageBoxInfo.height, damageBoxInfo.rotation);
+                  const damageBox = createDamageBox(box, limbInfo);
+                  
+                  const damageBoxComponent = DamageBoxComponentArray.getComponent(entity);
+                  damageBoxComponent.addDamageBox(damageBox);
+   
+                  limbInfo.heldItemDamageBox = new WeakRef(damageBox);
                }
                break;
             }
             case LimbAction.attack: {
+               const heldItem = getHeldItem(limbInfo);
+               const heldItemAttackInfo = getItemAttackInfo(heldItem);
+
                limbInfo.action = LimbAction.returnAttackToRest;
                limbInfo.currentActionStartingTicks = Board.ticks;
-               limbInfo.currentActionDurationTicks = getReturnTimeTicks(limbInfo);
+               limbInfo.currentActionDurationTicks = heldItemAttackInfo.attackTimings.returnTimeTicks;
 
-               const damageBox = limbInfo.damageBox?.deref();
+               const damageBox = limbInfo.limbDamageBox?.deref();
                if (typeof damageBox !== "undefined") {
                   const damageBoxComponent = DamageBoxComponentArray.getComponent(entity);
                   damageBoxComponent.removeDamageBox(damageBox);
                }
-               limbInfo.damageBox = null;
+               limbInfo.limbDamageBox = null;
+
+               const heldItemDamageBox = limbInfo.heldItemDamageBox?.deref();
+               if (typeof heldItemDamageBox !== "undefined") {
+                  const damageBoxComponent = DamageBoxComponentArray.getComponent(entity);
+                  damageBoxComponent.removeDamageBox(heldItemDamageBox);
+               }
+               limbInfo.heldItemDamageBox = null;
                break;
             }
             case LimbAction.returnAttackToRest: {

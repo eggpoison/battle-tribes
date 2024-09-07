@@ -9,7 +9,7 @@ import Board from "../Board";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { TribeComponentArray } from "./TribeComponent";
 import { PlayerComponentArray } from "./PlayerComponent";
-import { ArmourItemInfo, BackpackItemInfo, ConsumableItemInfo, InventoryName, ITEM_INFO_RECORD, ITEM_TYPE_RECORD, ItemType } from "webgl-test-shared/dist/items/items";
+import { ArmourItemInfo, BackpackItemInfo, ConsumableItemInfo, InventoryName, Item, ITEM_INFO_RECORD, ITEM_TYPE_RECORD, ItemType } from "webgl-test-shared/dist/items/items";
 import { ComponentConfig } from "../components";
 import { tribeMemberCanPickUpItem, useItem, VACUUM_RANGE } from "../entities/tribes/tribe-member";
 import { Packet } from "webgl-test-shared/dist/packets";
@@ -22,6 +22,7 @@ import { ItemComponentArray } from "./ItemComponent";
 import { PhysicsComponentArray } from "./PhysicsComponent";
 import { TransformComponentArray } from "./TransformComponent";
 import { TribesmanAIComponentArray } from "./TribesmanAIComponent";
+import { createItem } from "../items";
 
 const enum Vars {
    VACUUM_STRENGTH = 25
@@ -91,7 +92,29 @@ function onInitialise(config: ComponentConfig<ServerComponentType.health | Serve
       width: getHotbarSize(entityType as TribesmanEntityType),
       height: 1,
       options: { acceptsPickedUpItems: true, isDroppedOnDeath: true },
-      items: []
+      // @Temporary
+      items: [
+         {
+            item: createItem(ItemType.wooden_sword, 1),
+            itemSlot: 2
+         },
+         {
+            item: createItem(ItemType.wooden_pickaxe, 1),
+            itemSlot: 3
+         },
+         {
+            item: createItem(ItemType.wooden_axe, 1),
+            itemSlot: 4
+         },
+         {
+            item: createItem(ItemType.spear, 5),
+            itemSlot: 5
+         },
+         {
+            item: createItem(ItemType.wooden_bow, 1),
+            itemSlot: 6
+         },
+      ]
    });
    
    // Offhand

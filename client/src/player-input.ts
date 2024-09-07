@@ -21,7 +21,7 @@ import { InventoryUseComponentArray } from "./entity-components/InventoryUseComp
 import { ENTITY_TYPE_TO_GHOST_TYPE_MAP, GhostInfo, setGhostInfo } from "./rendering/webgl/entity-ghost-rendering";
 import Camera from "./Camera";
 import { calculateCursorWorldPositionX, calculateCursorWorldPositionY } from "./mouse";
-import { Inventory, Item, ITEM_TYPE_RECORD, InventoryName, ITEM_INFO_RECORD, itemInfoIsTool, ConsumableItemInfo, ConsumableItemCategory, PlaceableItemType, ItemVars } from "webgl-test-shared/dist/items/items";
+import { Inventory, Item, ITEM_TYPE_RECORD, InventoryName, ITEM_INFO_RECORD, ConsumableItemInfo, ConsumableItemCategory, PlaceableItemType, getItemAttackInfo } from "webgl-test-shared/dist/items/items";
 import { playBowFireSound } from "./entity-tick-events";
 import { closeCurrentMenu } from "./menus";
 import { createAttackPacket } from "./client/packet-creation";
@@ -83,17 +83,10 @@ export function updatePlayerItems(): void {
       // @Copynpaste
 
       const selectedItemSlot = hotbarLimbInfo.selectedItemSlot;
-      const selectedItem = definiteGameState.hotbar.itemSlots[selectedItemSlot];
+      const selectedItem = definiteGameState.hotbar.getItem(selectedItemSlot);
 
-      let swingTimeTicks = ItemVars.DEFAULT_ATTACK_SWING_TICKS;
-      if (typeof selectedItem !== "undefined") {
-         const itemInfo = ITEM_INFO_RECORD[selectedItem.type];
-         if (itemInfoIsTool(selectedItem.type, itemInfo)) {
-            swingTimeTicks = itemInfo.attackSwingTimeTicks;
-         }
-      }
-
-      hotbarLimbInfo.currentActionDurationTicks = swingTimeTicks;
+      const attackInfo = getItemAttackInfo(selectedItem);
+      hotbarLimbInfo.currentActionDurationTicks = attackInfo.attackTimings.swingTimeTicks;
    }
 
    // If finished attacking, go to rest
@@ -104,17 +97,10 @@ export function updatePlayerItems(): void {
       // @Copynpaste
 
       const selectedItemSlot = hotbarLimbInfo.selectedItemSlot;
-      const selectedItem = definiteGameState.hotbar.itemSlots[selectedItemSlot];
+      const selectedItem = definiteGameState.hotbar.getItem(selectedItemSlot);
 
-      let returnTimeTicks = ItemVars.DEFAULT_ATTACK_RETURN_TICKS;
-      if (typeof selectedItem !== "undefined") {
-         const itemInfo = ITEM_INFO_RECORD[selectedItem.type];
-         if (itemInfoIsTool(selectedItem.type, itemInfo)) {
-            returnTimeTicks = itemInfo.attackReturnTimeTicks;
-         }
-      }
-
-      hotbarLimbInfo.currentActionDurationTicks = returnTimeTicks;
+      const attackInfo = getItemAttackInfo(selectedItem);
+      hotbarLimbInfo.currentActionDurationTicks = attackInfo.attackTimings.returnTimeTicks;
    }
 
    // If finished going to rest, set to default
@@ -144,19 +130,12 @@ const swing = (inventory: Inventory): void => {
    const limbInfo = inventoryUseComponent.getLimbInfoByInventoryName(inventory.name);
 
    const selectedItemSlot = limbInfo.selectedItemSlot;
-   const selectedItem = inventory.itemSlots[selectedItemSlot];
-
-   let windupTimeTicks = ItemVars.DEFAULT_ATTACK_WINDUP_TICKS;
-   if (typeof selectedItem !== "undefined") {
-      const itemInfo = ITEM_INFO_RECORD[selectedItem.type];
-      if (itemInfoIsTool(selectedItem.type, itemInfo)) {
-         windupTimeTicks = itemInfo.attackWindupTimeTicks;
-      }
-   }
+   const selectedItem = inventory.getItem(selectedItemSlot);
+   const attackInfo = getItemAttackInfo(selectedItem);
 
    limbInfo.action = LimbAction.windAttack;
    limbInfo.currentActionStartingTicks = Board.serverTicks;
-   limbInfo.currentActionDurationTicks = windupTimeTicks;
+   limbInfo.currentActionDurationTicks = attackInfo.attackTimings.windupTimeTicks;
 }
 
 const getSwingTimeMultiplier = (item: Item | null): number => {

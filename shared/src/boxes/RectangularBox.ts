@@ -1,17 +1,13 @@
 import { circleAndRectangleDoIntersect, rectanglesAreColliding } from "../collision";
 import { Point } from "../utils";
 import BaseBox from "./BaseBox";
-import { Box, boxIsCircular, updateRotationAndVertexPositionsAndSideAxes } from "./boxes";
+import { Box, boxIsCircular, updateVertexPositionsAndSideAxes } from "./boxes";
 
 export type RectangularBoxVertexPositions = [tl: Point, tr: Point, bl: Point, br: Point];
 
 export class RectangularBox extends BaseBox {
    public width: number;
    public height: number;
-   
-   /** The rotation of the hitbox relative to its game object */
-   public relativeRotation: number;
-   public rotation: number;
 
    public topLeftVertexOffset = new Point(0, 0);
    public topRightVertexOffset = new Point(0, 0);
@@ -19,15 +15,14 @@ export class RectangularBox extends BaseBox {
    public axisX = 0;
    public axisY = 0;
 
+   // @Cleanup: move rotation to just after offset
    constructor(offset: Point, width: number, height: number, rotation: number) {
-      super(offset);
+      super(offset, rotation);
 
       this.width = width;
       this.height = height;
-      this.relativeRotation = rotation;
-      this.rotation = rotation;
 
-      updateRotationAndVertexPositionsAndSideAxes(this, 0);
+      updateVertexPositionsAndSideAxes(this);
    }
 
    public calculateBoundsMinX(): number {
@@ -70,8 +65,7 @@ export class RectangularBox extends BaseBox {
             this.width -= epsilon * 0.5;
             this.height -= epsilon * 0.5;
 
-            const parentRotation = this.rotation - this.relativeRotation;
-            updateRotationAndVertexPositionsAndSideAxes(this, parentRotation);
+            updateVertexPositionsAndSideAxes(this);
          }
          
          const collisionData = rectanglesAreColliding(this, otherHitbox);
@@ -80,8 +74,7 @@ export class RectangularBox extends BaseBox {
             this.width = thisWidthBefore;
             this.height = thisHeightBefore;
 
-            const parentRotation = this.rotation - this.relativeRotation;
-            updateRotationAndVertexPositionsAndSideAxes(this, parentRotation);
+            updateVertexPositionsAndSideAxes(this);
          }
          
          return collisionData.isColliding;

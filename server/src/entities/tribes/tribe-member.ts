@@ -512,8 +512,8 @@ export function useItem(tribeMember: EntityID, item: Item, inventoryName: Invent
          config[ServerComponentType.transform].position.x = x;
          config[ServerComponentType.transform].position.y = y;
          config[ServerComponentType.transform].rotation = transformComponent.rotation;
-         config[ServerComponentType.physics].velocityX = physicsComponent.velocity.x + velocityMagnitude * Math.sin(transformComponent.rotation)
-         config[ServerComponentType.physics].velocityY = physicsComponent.velocity.y + velocityMagnitude * Math.cos(transformComponent.rotation)
+         config[ServerComponentType.physics].velocityX = physicsComponent.selfVelocity.x + physicsComponent.externalVelocity.x + velocityMagnitude * Math.sin(transformComponent.rotation)
+         config[ServerComponentType.physics].velocityY = physicsComponent.selfVelocity.y + physicsComponent.externalVelocity.y + velocityMagnitude * Math.cos(transformComponent.rotation)
          config[ServerComponentType.tribe].tribe = tribeComponent.tribe;
          config[ServerComponentType.throwingProjectile].tribeMember = tribeMember;
          config[ServerComponentType.throwingProjectile].itemID = item.id;
@@ -859,8 +859,8 @@ export function throwItem(tribesman: EntityID, inventoryName: InventoryName, ite
    config[ServerComponentType.transform].position.y = dropPosition.y;
    config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
    // Throw the dropped item away from the player
-   config[ServerComponentType.physics].velocityX = tribesmanPhysicsComponent.velocity.x + Vars.ITEM_THROW_FORCE * Math.sin(throwDirection);
-   config[ServerComponentType.physics].velocityY = tribesmanPhysicsComponent.velocity.y + Vars.ITEM_THROW_FORCE * Math.cos(throwDirection);
+   config[ServerComponentType.physics].velocityX = tribesmanPhysicsComponent.selfVelocity.x + tribesmanPhysicsComponent.externalVelocity.x + Vars.ITEM_THROW_FORCE * Math.sin(throwDirection);
+   config[ServerComponentType.physics].velocityY = tribesmanPhysicsComponent.selfVelocity.y + tribesmanPhysicsComponent.externalVelocity.y + Vars.ITEM_THROW_FORCE * Math.cos(throwDirection);
    config[ServerComponentType.item].itemType = itemType;
    config[ServerComponentType.item].amount = amountRemoved;
    config[ServerComponentType.item].throwingEntity = tribesman;

@@ -36,6 +36,7 @@ export function createSlimewispConfig(): ComponentConfig<ComponentTypes> {
          velocityY: 0,
          accelerationX: 0,
          accelerationY: 0,
+         traction: 1,
          isAffectedByFriction: true,
          isImmovable: false
       },

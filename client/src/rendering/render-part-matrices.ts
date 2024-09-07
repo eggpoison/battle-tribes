@@ -29,8 +29,8 @@ const calculateEntityRenderPosition = (entity: Entity, frameProgress: number): P
    if (entity.hasServerComponent(ServerComponentType.physics)) {
       const physicsComponent = entity.getServerComponent(ServerComponentType.physics);
       
-      renderPosition.x += physicsComponent.velocity.x * frameProgress * Settings.I_TPS;
-      renderPosition.y += physicsComponent.velocity.y * frameProgress * Settings.I_TPS;
+      renderPosition.x += physicsComponent.selfVelocity.x * frameProgress * Settings.I_TPS;
+      renderPosition.y += physicsComponent.selfVelocity.y * frameProgress * Settings.I_TPS;
    }
 
    // Shake
@@ -53,8 +53,10 @@ const calculateAndOverrideEntityModelMatrix = (entity: Entity, frameProgress: nu
    translateMatrix(entity.modelMatrix, renderPosition.x, renderPosition.y);
 }
 
+// @Speed: this ends up being slows as fuck with all the property accesses and external functions
 // @Cleanup: Copy and paste. combine with entity function.
 const calculateAndOverrideRenderThingMatrix = (thing: RenderThing): void => {
+   // @Cleanup: should we allow non-render-parts to have scale and flipX? I think yes. See: limb render parts
    // Scale
    if (thingIsRenderPart(thing)) {
       const scaleX = thing.scale * (renderPartIsTextured(thing) && thing.flipX ? -1 : 1);

@@ -29,8 +29,10 @@ export function processPlayerDataPacket(playerClient: PlayerClient, reader: Pack
    const positionY = reader.readNumber();
    const rotation = reader.readNumber();
 
-   const velocityX = reader.readNumber();
-   const velocityY = reader.readNumber();
+   const selfVelocityX = reader.readNumber();
+   const selfVelocityY = reader.readNumber();
+   const externalVelocityX = reader.readNumber();
+   const externalVelocityY = reader.readNumber();
    const accelerationX = reader.readNumber();
    const accelerationY = reader.readNumber();
 
@@ -65,8 +67,10 @@ export function processPlayerDataPacket(playerClient: PlayerClient, reader: Pack
    const physicsComponent = PhysicsComponentArray.getComponent(playerClient.instance);
    physicsComponent.hitboxesAreDirty = true;
    
-   physicsComponent.velocity.x = velocityX;
-   physicsComponent.velocity.y = velocityY;
+   physicsComponent.selfVelocity.x = selfVelocityX;
+   physicsComponent.selfVelocity.y = selfVelocityY;
+   physicsComponent.externalVelocity.x = externalVelocityX;
+   physicsComponent.externalVelocity.y = externalVelocityY;
    physicsComponent.acceleration.x = accelerationX;
    physicsComponent.acceleration.y = accelerationY;
    

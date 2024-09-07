@@ -73,6 +73,7 @@ export function createZombieConfig(): ComponentConfig<ComponentTypes> {
          velocityY: 0,
          accelerationX: 0,
          accelerationY: 0,
+         traction: 1,
          isAffectedByFriction: true,
          isImmovable: false
       },
@@ -130,8 +131,8 @@ export function onZombieCollision(zombie: EntityID, collidingEntity: EntityID, c
    // Push the zombie away from the entity
    const flinchDirection = hitDirection + Math.PI;
    const physicsComponent = PhysicsComponentArray.getComponent(zombie);
-   physicsComponent.velocity.x += 100 * Math.sin(flinchDirection);
-   physicsComponent.velocity.y += 100 * Math.cos(flinchDirection);
+   physicsComponent.externalVelocity.x += 100 * Math.sin(flinchDirection);
+   physicsComponent.externalVelocity.y += 100 * Math.cos(flinchDirection);
 }
 
 export function onZombieHurt(zombie: EntityID, attackingEntity: EntityID): void {

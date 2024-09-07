@@ -13,7 +13,7 @@ import { createCircularHitboxFromData, createRectangularHitboxFromData } from ".
 import { PacketReader } from "webgl-test-shared/dist/packets";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { boxIsCircular, createHitbox, HitboxWrapper, updateBox } from "webgl-test-shared/dist/boxes/boxes";
+import { boxIsCircular, createHitbox, hitboxIsCircular, HitboxWrapper, updateBox } from "webgl-test-shared/dist/boxes/boxes";
 import CircularBox from "webgl-test-shared/dist/boxes/CircularBox";
 import RectangularBox from "webgl-test-shared/dist/boxes/RectangularBox";
 
@@ -348,7 +348,7 @@ class TransformComponent extends ServerComponent {
          let existingHitboxIdx = 99999;
          for (let j = 0; j < this.hitboxes.length; j++) {
             const hitbox = this.hitboxes[j];
-            if (!hitbox.hasOwnProperty("radius")) {
+            if (!hitboxIsCircular(hitbox)) {
                continue;
             }
 
@@ -384,7 +384,7 @@ class TransformComponent extends ServerComponent {
          let existingHitboxIdx = 99999;
          for (let j = 0; j < this.hitboxes.length; j++) {
             const hitbox = this.hitboxes[j];
-            if (hitbox.hasOwnProperty("radius")) {
+            if (hitboxIsCircular(hitbox)) {
                continue;
             }
             

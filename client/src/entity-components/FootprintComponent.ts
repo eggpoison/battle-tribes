@@ -71,11 +71,11 @@ function onTick(footprintComponent: FootprintComponent): void {
    const physicsComponent = footprintComponent.entity.getServerComponent(ServerComponentType.physics);
 
    // Footsteps
-   if (physicsComponent.velocity.lengthSquared() >= 2500 && !transformComponent.isInRiver() && Board.tickIntervalHasPassed(footprintComponent.footstepParticleIntervalSeconds)) {
+   if (physicsComponent.selfVelocity.lengthSquared() >= 2500 && !transformComponent.isInRiver() && Board.tickIntervalHasPassed(footprintComponent.footstepParticleIntervalSeconds)) {
       createFootprintParticle(footprintComponent.entity, footprintComponent.numFootstepsTaken, footprintComponent.footstepOffset, footprintComponent.footstepSize, footprintComponent.footstepLifetime);
       footprintComponent.numFootstepsTaken++;
    }
-   footprintComponent.distanceTracker += physicsComponent.velocity.length() / Settings.TPS;
+   footprintComponent.distanceTracker += physicsComponent.selfVelocity.length() / Settings.TPS;
    if (footprintComponent.distanceTracker > footprintComponent.footstepSoundIntervalDist) {
       footprintComponent.distanceTracker -= footprintComponent.footstepSoundIntervalDist;
       createFootstepSound(footprintComponent);

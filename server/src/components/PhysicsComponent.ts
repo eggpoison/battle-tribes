@@ -15,6 +15,7 @@ export interface PhysicsComponentParams {
    velocityY: number;
    accelerationX: number;
    accelerationY: number;
+   traction: number;
    isAffectedByFriction: boolean;
    isImmovable: boolean;
 }
@@ -30,8 +31,10 @@ for (let i = 0; i < 8; i++) {
 
 /** Anything to do with entities moving */
 export class PhysicsComponent {
-   public velocity: Point;
+   // @Cleanup: unbox all of these into x and y and make the component implement its params
+   public selfVelocity: Point;
    public acceleration: Point;
+   public externalVelocity = new Point(0, 0);
 
    public turnSpeed = 0;
    /** Rotation the entity will try to turn towards. SHOULD ALWAYS BE IN RANGE [-PI, PI) */
@@ -40,6 +43,9 @@ export class PhysicsComponent {
    public angularVelocity = 0;
    
    public moveSpeedMultiplier = 1 + Number.EPSILON;
+
+   /** The higher this number is the faster the entity reaches its maximum speed. 1 = normal */
+   public traction: number;
 
    // @Cleanup: Might be able to be put on the physics component
    public overrideMoveSpeedMultiplier = false;
@@ -60,8 +66,9 @@ export class PhysicsComponent {
    public pathfindingNodesAreDirty = false;
    
    constructor(params: PhysicsComponentParams) {
-      this.velocity = new Point(params.velocityX, params.velocityY);
+      this.selfVelocity = new Point(params.velocityX, params.velocityY);
       this.acceleration = new Point(params.accelerationX, params.accelerationY);
+      this.traction = params.traction;
       
       this.isAffectedByFriction = params.isAffectedByFriction;
       this.isImmovable = params.isImmovable;
@@ -145,10 +152,10 @@ const applyPhysics = (entity: EntityID, physicsComponent: PhysicsComponent): voi
    // the corresponding groups
    
    // @Temporary @Hack
-   if (isNaN(physicsComponent.velocity.x) || isNaN(physicsComponent.velocity.x)) {
+   if (isNaN(physicsComponent.selfVelocity.x) || isNaN(physicsComponent.selfVelocity.x)) {
       console.warn("Entity type " + EntityTypeString[Board.getEntityType(entity)!] + " velocity was NaN.");
-      physicsComponent.velocity.x = 0;
-      physicsComponent.velocity.y = 0;
+      physicsComponent.selfVelocity.x = 0;
+      physicsComponent.selfVelocity.y = 0;
    }
 
    const transformComponent = TransformComponentArray.getComponent(entity);
@@ -169,45 +176,67 @@ const applyPhysics = (entity: EntityID, physicsComponent: PhysicsComponent): voi
 
       const tileFriction = TILE_FRICTIONS[tileType];
       
-      // @Speed: A lot of multiplies
-      physicsComponent.velocity.x += physicsComponent.acceleration.x * tileFriction * moveSpeedMultiplier * Settings.I_TPS;
-      physicsComponent.velocity.y += physicsComponent.acceleration.y * tileFriction * moveSpeedMultiplier * Settings.I_TPS;
+      // Calculate the desired velocity based on acceleration
+      const desiredVelocityX = physicsComponent.acceleration.x * tileFriction * moveSpeedMultiplier;
+      const desiredVelocityY = physicsComponent.acceleration.y * tileFriction * moveSpeedMultiplier;
+
+      // Apply velocity with traction (blend towards desired velocity)
+      physicsComponent.selfVelocity.x += (desiredVelocityX - physicsComponent.selfVelocity.x) * physicsComponent.traction * Settings.I_TPS;
+      physicsComponent.selfVelocity.y += (desiredVelocityY - physicsComponent.selfVelocity.y) * physicsComponent.traction * Settings.I_TPS;
    }
 
    // If the game object is in a river, push them in the flow direction of the river
    // The tileMoveSpeedMultiplier check is so that game objects on stepping stones aren't pushed
    if (transformComponent.isInRiver && !physicsComponent.overrideMoveSpeedMultiplier && physicsComponent.isAffectedByFriction) {
       const flowDirectionIdx = Board.riverFlowDirections[tileIndex];
-      physicsComponent.velocity.x += 240 * Settings.I_TPS * a[flowDirectionIdx];
-      physicsComponent.velocity.y += 240 * Settings.I_TPS * b[flowDirectionIdx];
+      physicsComponent.externalVelocity.x += 240 * Settings.I_TPS * a[flowDirectionIdx];
+      physicsComponent.externalVelocity.y += 240 * Settings.I_TPS * b[flowDirectionIdx];
    }
 
-   // Apply velocity
-   if (physicsComponent.velocity.x !== 0 || physicsComponent.velocity.y !== 0) {
-      // Friction
-      if (physicsComponent.isAffectedByFriction) {
-         // @Speed: pre-multiply the array
-         const tileFriction = TILE_FRICTIONS[tileType];
-
-         // Apply a friction based on the tile type for air resistance (???)
-         physicsComponent.velocity.x *= 1 - tileFriction * Settings.I_TPS * 2;
-         physicsComponent.velocity.y *= 1 - tileFriction * Settings.I_TPS * 2;
-
-         // Apply a constant friction based on the tile type to simulate ground friction
-         // @Incomplete @Bug: Doesn't take into acount the TPS. Would also be fixed by pre-multiplying the array
-         const velocityMagnitude = physicsComponent.velocity.length();
-         if (tileFriction < velocityMagnitude) {
-            physicsComponent.velocity.x -= tileFriction * physicsComponent.velocity.x / velocityMagnitude;
-            physicsComponent.velocity.y -= tileFriction * physicsComponent.velocity.y / velocityMagnitude;
-         } else {
-            physicsComponent.velocity.x = 0;
-            physicsComponent.velocity.y = 0;
-         }
-      }
+   let shouldUpdate = false;
+   
+   // Apply friction to self-velocity
+   if (physicsComponent.selfVelocity.x !== 0 || physicsComponent.selfVelocity.y !== 0) {
+      const friction = TILE_FRICTIONS[tileType];
       
-      // @Incomplete(???): Multiply by move speed multiplier?
-      transformComponent.position.x += physicsComponent.velocity.x * Settings.I_TPS;
-      transformComponent.position.y += physicsComponent.velocity.y * Settings.I_TPS;
+      // Apply air and ground friction to selfVelocity
+      physicsComponent.selfVelocity.x *= 1 - friction * Settings.I_TPS * 2;
+      physicsComponent.selfVelocity.y *= 1 - friction * Settings.I_TPS * 2;
+
+      // @Incomplete @Bug: Doesn't take into acount the TPS. Would also be fixed by pre-multiplying the array
+      const selfVelocityMagnitude = physicsComponent.selfVelocity.length();
+      if (selfVelocityMagnitude > 0) {
+         const groundFriction = Math.min(friction, selfVelocityMagnitude);
+         physicsComponent.selfVelocity.x -= groundFriction * physicsComponent.selfVelocity.x / selfVelocityMagnitude;
+         physicsComponent.selfVelocity.y -= groundFriction * physicsComponent.selfVelocity.y / selfVelocityMagnitude;
+      }
+
+      shouldUpdate = true;
+   }
+
+   // Apply friction to external velocity
+   if (physicsComponent.externalVelocity.x !== 0 || physicsComponent.externalVelocity.y !== 0) {
+      const friction = TILE_FRICTIONS[tileType];
+      
+      // Apply air and ground friction to externalVelocity
+      physicsComponent.externalVelocity.x *= 1 - friction * Settings.I_TPS * 2;
+      physicsComponent.externalVelocity.y *= 1 - friction * Settings.I_TPS * 2;
+
+      // @Incomplete @Bug: Doesn't take into acount the TPS. Would also be fixed by pre-multiplying the array
+      const externalVelocityMagnitude = physicsComponent.externalVelocity.length();
+      if (externalVelocityMagnitude > 0) {
+         const groundFriction = Math.min(friction, externalVelocityMagnitude);
+         physicsComponent.externalVelocity.x -= groundFriction * physicsComponent.externalVelocity.x / externalVelocityMagnitude;
+         physicsComponent.externalVelocity.y -= groundFriction * physicsComponent.externalVelocity.y / externalVelocityMagnitude;
+      }
+
+      shouldUpdate = true;
+   }
+
+   if (shouldUpdate) {
+      // Update position based on the sum of self-velocity and external velocity
+      transformComponent.position.x += (physicsComponent.selfVelocity.x + physicsComponent.externalVelocity.x) * Settings.I_TPS;
+      transformComponent.position.y += (physicsComponent.selfVelocity.y + physicsComponent.externalVelocity.y) * Settings.I_TPS;
 
       physicsComponent.positionIsDirty = true;
       registerDirtyEntity(entity);
@@ -279,8 +308,8 @@ export function applyKnockback(entity: EntityID, knockback: number, knockbackDir
    
    const transformComponent = TransformComponentArray.getComponent(entity);
    const knockbackForce = knockback / transformComponent.totalMass;
-   physicsComponent.velocity.x += knockbackForce * Math.sin(knockbackDirection);
-   physicsComponent.velocity.y += knockbackForce * Math.cos(knockbackDirection);
+   physicsComponent.externalVelocity.x += knockbackForce * Math.sin(knockbackDirection);
+   physicsComponent.externalVelocity.y += knockbackForce * Math.cos(knockbackDirection);
 
    if (Board.getEntityType(entity)! === EntityType.player) {
       registerPlayerKnockback(entity, knockback, knockbackDirection);
@@ -288,14 +317,17 @@ export function applyKnockback(entity: EntityID, knockback: number, knockbackDir
 }
 
 function getDataLength(): number {
-   return 5 * Float32Array.BYTES_PER_ELEMENT;
+   return 8 * Float32Array.BYTES_PER_ELEMENT;
 }
 
 function addDataToPacket(packet: Packet, entity: EntityID): void {
    const physicsComponent = PhysicsComponentArray.getComponent(entity);
 
-   packet.addNumber(physicsComponent.velocity.x);
-   packet.addNumber(physicsComponent.velocity.y);
+   packet.addNumber(physicsComponent.selfVelocity.x);
+   packet.addNumber(physicsComponent.selfVelocity.y);
+   packet.addNumber(physicsComponent.externalVelocity.x);
+   packet.addNumber(physicsComponent.externalVelocity.y);
    packet.addNumber(physicsComponent.acceleration.x);
    packet.addNumber(physicsComponent.acceleration.y);
+   packet.addNumber(physicsComponent.traction);
 }

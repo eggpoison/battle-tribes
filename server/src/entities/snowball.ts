@@ -37,6 +37,7 @@ export function createSnowballConfig(): ComponentConfig<ComponentTypes> {
          velocityY: 0,
          accelerationX: 0,
          accelerationY: 0,
+         traction: 1,
          isAffectedByFriction: true,
          isImmovable: false
       },
@@ -71,8 +72,12 @@ export function onSnowballCollision(snowball: EntityID, collidingEntity: EntityI
    const transformComponent = TransformComponentArray.getComponent(snowball);
    const physicsComponent = PhysicsComponentArray.getComponent(snowball);
 
+   const vx = physicsComponent.selfVelocity.x + physicsComponent.externalVelocity.x;
+   const vy = physicsComponent.selfVelocity.y + physicsComponent.externalVelocity.y;
+   const velocity = Math.sqrt(vx * vx + vy * vy);
+
    const ageTicks = getAgeTicks(transformComponent);
-   if (physicsComponent.velocity.length() < DAMAGE_VELOCITY_THRESHOLD || ageTicks >= 2 * Settings.TPS) {
+   if (velocity < DAMAGE_VELOCITY_THRESHOLD || ageTicks >= 2 * Settings.TPS) {
       return;
    }
 

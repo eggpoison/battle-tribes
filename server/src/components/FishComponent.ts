@@ -105,8 +105,8 @@ const move = (fish: EntityID, direction: number): void => {
 
       const fishComponent = FishComponentArray.getComponent(fish);
       if (customTickIntervalHasPassed(fishComponent.secondsOutOfWater * Settings.TPS, Vars.LUNGE_INTERVAL)) {
-         physicsComponent.velocity.x += Vars.LUNGE_FORCE * Math.sin(direction);
-         physicsComponent.velocity.y += Vars.LUNGE_FORCE * Math.cos(direction);
+         physicsComponent.externalVelocity.x += Vars.LUNGE_FORCE * Math.sin(direction);
+         physicsComponent.externalVelocity.y += Vars.LUNGE_FORCE * Math.cos(direction);
          if (direction !== transformComponent.rotation) {
             transformComponent.rotation = direction;
 
@@ -220,8 +220,8 @@ function onTick(fishComponent: FishComponent, fish: EntityID): void {
          
          physicsComponent.hitboxesAreDirty = true;
          
-         physicsComponent.velocity.x += 200 * Math.sin(flailDirection);
-         physicsComponent.velocity.y += 200 * Math.cos(flailDirection);
+         physicsComponent.externalVelocity.x += 200 * Math.sin(flailDirection);
+         physicsComponent.externalVelocity.y += 200 * Math.cos(flailDirection);
    
          fishComponent.flailTimer = 0;
       }

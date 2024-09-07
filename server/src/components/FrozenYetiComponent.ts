@@ -325,8 +325,8 @@ const throwSnow = (frozenYeti: EntityID): void => {
    // Kickback
    const transformComponent = TransformComponentArray.getComponent(frozenYeti);
    const physicsComponent = PhysicsComponentArray.getComponent(frozenYeti);
-   physicsComponent.velocity.x += 50 * Math.sin(transformComponent.rotation + Math.PI);
-   physicsComponent.velocity.y += 50 * Math.cos(transformComponent.rotation + Math.PI);
+   physicsComponent.externalVelocity.x += 50 * Math.sin(transformComponent.rotation + Math.PI);
+   physicsComponent.externalVelocity.y += 50 * Math.cos(transformComponent.rotation + Math.PI);
 }
 
 const duringRoar = (frozenYeti: EntityID, targets: ReadonlyArray<EntityID>): void => {
@@ -345,8 +345,8 @@ const duringRoar = (frozenYeti: EntityID, targets: ReadonlyArray<EntityID>): voi
       const angleDifference = getAngleDifference(transformComponent.rotation, angle);
       if (Math.abs(angleDifference) <= Vars.ROAR_ARC / 2) {
          const physicsComponent = PhysicsComponentArray.getComponent(frozenYeti);
-         physicsComponent.velocity.x += 1500 / Settings.TPS * Math.sin(angle);
-         physicsComponent.velocity.y += 1500 / Settings.TPS * Math.cos(angle);
+         physicsComponent.externalVelocity.x += 1500 / Settings.TPS * Math.sin(angle);
+         physicsComponent.externalVelocity.y += 1500 / Settings.TPS * Math.cos(angle);
 
          if (StatusEffectComponentArray.hasComponent(entity)) {
             applyStatusEffect(entity, StatusEffect.freezing, 5 * Settings.TPS);
@@ -639,8 +639,8 @@ function onTick(frozenYetiComponent: FrozenYetiComponent, frozenYeti: EntityID):
 
                // Lunge forwards at the beginning of this stage
                if (frozenYetiComponent.stageProgress === 0) {
-                  physicsComponent.velocity.x += 450 * Math.sin(transformComponent.rotation);
-                  physicsComponent.velocity.y += 450 * Math.cos(transformComponent.rotation);
+                  physicsComponent.externalVelocity.x += 450 * Math.sin(transformComponent.rotation);
+                  physicsComponent.externalVelocity.y += 450 * Math.cos(transformComponent.rotation);
                }
 
                frozenYetiComponent.stageProgress += 2 / Settings.TPS;

@@ -45,12 +45,12 @@ import { createAttackPacket } from "./client/packet-creation";
 */
 
 /** Acceleration of the player while moving without any modifiers. */
-const PLAYER_ACCELERATION = 700;
+const PLAYER_ACCELERATION = 900;
 
 const PLAYER_LIGHTSPEED_ACCELERATION = 15000;
 
 /** Acceleration of the player while slowed. */
-const PLAYER_SLOW_ACCELERATION = 400;
+const PLAYER_SLOW_ACCELERATION = 500;
 
 export let rightMouseButtonIsPressed = false;
 export let leftMouseButtonIsPressed = false;

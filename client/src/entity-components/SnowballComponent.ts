@@ -35,7 +35,7 @@ export const SnowballComponentArray = new ComponentArray<SnowballComponent>(Comp
 function onTick(snowballComponent: SnowballComponent): void {
    const transformComponent = snowballComponent.entity.getServerComponent(ServerComponentType.transform);
    const physicsComponent = snowballComponent.entity.getServerComponent(ServerComponentType.physics);
-   if ((physicsComponent.velocity.x !== 0 || physicsComponent.velocity.y !== 0) && physicsComponent.velocity.lengthSquared() > 2500) {
+   if ((physicsComponent.selfVelocity.x !== 0 || physicsComponent.selfVelocity.y !== 0) && physicsComponent.selfVelocity.lengthSquared() > 2500) {
       if (Board.tickIntervalHasPassed(0.05)) {
          createSnowParticle(transformComponent.position.x, transformComponent.position.y, randFloat(40, 60));
       }

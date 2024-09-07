@@ -61,7 +61,7 @@ const EntityDebugInfo = ({ entity, debugData }: EntityDebugInfoProps) => {
    if (entity.hasServerComponent(ServerComponentType.physics)) {
       const physicsComponent = entity.getServerComponent(ServerComponentType.physics);
 
-      displayVelocityMagnitude = roundNum(physicsComponent.velocity.length(), 0);
+      displayVelocityMagnitude = roundNum(physicsComponent.selfVelocity.length(), 0);
       displayAccelerationMagnitude = roundNum(physicsComponent.acceleration.length(), 0);
    }
 

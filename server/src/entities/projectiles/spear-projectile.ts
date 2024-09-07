@@ -33,6 +33,7 @@ export function createSpearProjectileConfig(): ComponentConfig<ComponentTypes> {
          velocityY: 0,
          accelerationX: 0,
          accelerationY: 0,
+         traction: 1,
          isAffectedByFriction: true,
          isImmovable: false
       },
@@ -57,8 +58,18 @@ export function onSpearProjectileCollision(spear: EntityID, collidingEntity: Ent
 
    const tribeMember = Board.hasEntity(spearComponent.tribeMember) ? spearComponent.tribeMember : null;
 
-   const physicsComponent = PhysicsComponentArray.getComponent(spear);
-   const damage = Math.floor(physicsComponent.velocity.length() / 140);
+   const spearPhysicsComponent = PhysicsComponentArray.getComponent(spear);
+
+   let vx = spearPhysicsComponent.selfVelocity.x + spearPhysicsComponent.externalVelocity.x;
+   let vy = spearPhysicsComponent.selfVelocity.y + spearPhysicsComponent.externalVelocity.y;
+   if (tribeMember !== null) {
+      const tribeMemberPhysicsComponent = PhysicsComponentArray.getComponent(tribeMember);
+      vx -= tribeMemberPhysicsComponent.selfVelocity.x + tribeMemberPhysicsComponent.externalVelocity.x;
+      vy -= tribeMemberPhysicsComponent.selfVelocity.y + tribeMemberPhysicsComponent.externalVelocity.y;
+   }
+   
+   const spearVelocityMagnitude = Math.sqrt(vx * vx + vy * vy);
+   const damage = Math.floor(spearVelocityMagnitude / 140);
    
    const spearTransformComponent = TransformComponentArray.getComponent(spear);
    const collidingEntityTransformComponent = TransformComponentArray.getComponent(collidingEntity);

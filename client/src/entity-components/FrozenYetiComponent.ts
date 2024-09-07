@@ -366,8 +366,8 @@ function onTick(frozenYetiComponent: FrozenYetiComponent): void {
                }
                if (Math.abs(angleDifference) <= ROAR_ARC / 2 && distanceToPlayer <= ROAR_REACH) {
                   const physicsComponent = frozenYetiComponent.entity.getServerComponent(ServerComponentType.physics);
-                  physicsComponent.velocity.x += 50 * Math.sin(angleToPlayer);
-                  physicsComponent.velocity.y += 50 * Math.cos(angleToPlayer);
+                  physicsComponent.selfVelocity.x += 50 * Math.sin(angleToPlayer);
+                  physicsComponent.selfVelocity.y += 50 * Math.cos(angleToPlayer);
                }
                
                break;

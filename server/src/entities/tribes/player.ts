@@ -45,6 +45,7 @@ export function createPlayerConfig(): ComponentConfig<ComponentTypes> {
          velocityY: 0,
          accelerationX: 0,
          accelerationY: 0,
+         traction: 1.4,
          isAffectedByFriction: true,
          isImmovable: false
       },

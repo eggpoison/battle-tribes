@@ -8,7 +8,7 @@ import { calculateEntityRenderHeight } from "../../render-layers";
 const enum Vars {
    ATTRIBUTES_PER_VERTEX = 17,
    /** Maximum number of render parts that the rendering supports */
-   MAX_RENDER_PARTS = 4096
+   MAX_RENDER_PARTS = 8192
 }
 
 export const enum EntityRenderingVars {
@@ -460,6 +460,7 @@ export function renderEntities(entities: ReadonlyArray<Entity>): void {
    gl.bindTexture(gl.TEXTURE_2D, textureAtlas.texture);
 
    gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+   // @Speed: only need to sub up to the max of previousnumrenderparts and numrenderparts
    gl.bufferSubData(gl.ARRAY_BUFFER, 0, vertexData);
 
    gl.drawElements(gl.TRIANGLES, numRenderParts * 6, gl.UNSIGNED_SHORT, 0);

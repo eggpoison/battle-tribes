@@ -2,7 +2,7 @@ import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityID, LimbAction } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { ComponentArray } from "./ComponentArray";
-import { getItemAttackInfo, Inventory, InventoryName, Item, ITEM_INFO_RECORD, itemInfoIsTool } from "webgl-test-shared/dist/items/items";
+import { getItemAttackInfo, Inventory, InventoryName, Item } from "webgl-test-shared/dist/items/items";
 import { Packet } from "webgl-test-shared/dist/packets";
 import Board from "../Board";
 import { getInventory, InventoryComponentArray } from "./InventoryComponent";
@@ -12,7 +12,7 @@ import { DamageBoxComponentArray } from "./DamageBoxComponent";
 import { createDamageBox, ServerDamageBoxWrapper } from "../boxes";
 import { updateBox } from "webgl-test-shared/dist/boxes/boxes";
 import { TransformComponentArray } from "./TransformComponent";
-import { DEFAULT_ATTACK_PATTERN, LimbState } from "webgl-test-shared/dist/attack-patterns";
+import { LimbState } from "webgl-test-shared/dist/attack-patterns";
 import { registerDirtyEntity } from "../server/player-clients";
 import RectangularBox from "webgl-test-shared/dist/boxes/RectangularBox";
 
@@ -262,7 +262,9 @@ function onTick(inventoryUseComponent: InventoryUseComponent, entity: EntityID):
          const ticksSince = Board.ticks - limbInfo.currentActionStartingTicks;
          const swingProgress = ticksSince / limbInfo.currentActionDurationTicks;
 
-         updateLimb(entity, limbInfo, DEFAULT_ATTACK_PATTERN.windedBack, DEFAULT_ATTACK_PATTERN.swung, swingProgress);
+         const heldItem = getHeldItem(limbInfo);
+         const attackInfo = getItemAttackInfo(heldItem);
+         updateLimb(entity, limbInfo, attackInfo.attackPattern.windedBack, attackInfo.attackPattern.swung, swingProgress);
       }
       
       // Update bow cooldown

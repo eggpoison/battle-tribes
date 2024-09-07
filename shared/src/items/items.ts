@@ -1,4 +1,4 @@
-import { AttackPatternInfo, AttackTimingsInfo, DEFAULT_ATTACK_PATTERN, DEFAULT_ATTACK_TIMINGS, DEFAULT_ITEM_DAMAGE_BOX_INFO, LimbHeldItemDamageBoxInfo, SWORD_ATTACK_TIMINGS, SWORD_ITEM_DAMAGE_BOX_INFO, TOOL_ITEM_DAMAGE_BOX_INFO } from "../attack-patterns";
+import { AttackPatternInfo, AttackTimingsInfo, AXE_ATTACK_TIMINGS, DEFAULT_ATTACK_PATTERN, DEFAULT_ATTACK_TIMINGS, DEFAULT_ITEM_DAMAGE_BOX_INFO, LimbHeldItemDamageBoxInfo, PICKAXE_ATTACK_TIMINGS, SPEAR_ATTACK_PATTERN, SPEAR_ATTACK_TIMINGS, SPEAR_DAMAGE_BOX_INFO, SWORD_ATTACK_TIMINGS, SWORD_ITEM_DAMAGE_BOX_INFO, TOOL_ITEM_DAMAGE_BOX_INFO } from "../attack-patterns";
 import { EntityType } from "../entities";
 import { Settings } from "../settings";
 import { StructureType } from "../structures";
@@ -295,12 +295,12 @@ const ITEM_CATEGORY_ATTACK_INFO_RECORD: Record<keyof ItemInfoRecord, ItemCategor
    },
    axe: {
       attackPattern: DEFAULT_ATTACK_PATTERN,
-      attackTimings: DEFAULT_ATTACK_TIMINGS,
+      attackTimings: AXE_ATTACK_TIMINGS,
       heldItemDamageBoxInfo: TOOL_ITEM_DAMAGE_BOX_INFO
    },
    pickaxe: {
       attackPattern: DEFAULT_ATTACK_PATTERN,
-      attackTimings: DEFAULT_ATTACK_TIMINGS,
+      attackTimings: PICKAXE_ATTACK_TIMINGS,
       heldItemDamageBoxInfo: TOOL_ITEM_DAMAGE_BOX_INFO
    },
    placeable: {
@@ -324,9 +324,9 @@ const ITEM_CATEGORY_ATTACK_INFO_RECORD: Record<keyof ItemInfoRecord, ItemCategor
       heldItemDamageBoxInfo: DEFAULT_ITEM_DAMAGE_BOX_INFO
    },
    spear: {
-      attackPattern: DEFAULT_ATTACK_PATTERN,
-      attackTimings: DEFAULT_ATTACK_TIMINGS,
-      heldItemDamageBoxInfo: SWORD_ITEM_DAMAGE_BOX_INFO
+      attackPattern: SPEAR_ATTACK_PATTERN,
+      attackTimings: SPEAR_ATTACK_TIMINGS,
+      heldItemDamageBoxInfo: SPEAR_DAMAGE_BOX_INFO
    },
    hammer: {
       attackPattern: DEFAULT_ATTACK_PATTERN,

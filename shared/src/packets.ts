@@ -10,6 +10,7 @@ export const enum PacketType {
    syncRequest,
    attack,
    respawn,
+   useItem,
    devGiveItem, // ((DEV))
    // -----------------
    // SERVER-TO-CLIENT

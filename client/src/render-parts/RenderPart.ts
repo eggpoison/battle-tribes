@@ -18,6 +18,8 @@ export abstract class BaseRenderThing {
    
    /** Whether or not the thing will inherit its parents' rotation */
    public inheritParentRotation = true;
+   
+   public shakeAmount = 0;
 
    public readonly zIndex: number;
 
@@ -58,7 +60,6 @@ abstract class BaseRenderPart extends BaseRenderThing {
 
    public opacity = 1;
    public scale = 1;
-   public shakeAmount = 0;
 
    public tintR = 0;
    public tintG = 0;

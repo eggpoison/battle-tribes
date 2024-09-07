@@ -24,7 +24,7 @@ import { calculateCursorWorldPositionX, calculateCursorWorldPositionY } from "./
 import { Inventory, Item, ITEM_TYPE_RECORD, InventoryName, ITEM_INFO_RECORD, ConsumableItemInfo, ConsumableItemCategory, PlaceableItemType, getItemAttackInfo } from "webgl-test-shared/dist/items/items";
 import { playBowFireSound } from "./entity-tick-events";
 import { closeCurrentMenu } from "./menus";
-import { createAttackPacket } from "./client/packet-creation";
+import { createAttackPacket, sendItemUsePacket } from "./client/packet-creation";
 import { HealthComponentArray } from "./entity-components/HealthComponent";
 
 /*
@@ -678,7 +678,7 @@ const itemRightClickDown = (item: Item, isOffhand: boolean, itemSlot: number): v
             playSound("crossbow-load.mp3", 0.4, 1, transformComponent.position);
          } else {
             // Fire crossbow
-            Client.sendItemUsePacket();
+            sendItemUsePacket();
             playSound("crossbow-fire.mp3", 0.4, 1, transformComponent.position);
          }
          break;
@@ -698,7 +698,7 @@ const itemRightClickDown = (item: Item, isOffhand: boolean, itemSlot: number): v
       }
       case "spear": {
          useInfo.action = LimbAction.chargeSpear;
-         useInfo.lastSpearChargeTicks = Board.serverTicks;
+         useInfo.currentActionStartingTicks = Board.serverTicks;
          if (isOffhand) {
             latencyGameState.offhandAction = LimbAction.chargeSpear;
          } else {
@@ -723,7 +723,7 @@ const itemRightClickDown = (item: Item, isOffhand: boolean, itemSlot: number): v
       }
       case "glove":
       case "armour": {
-         Client.sendItemUsePacket();
+         sendItemUsePacket();
          break;
       }
       case "placeable": {
@@ -731,7 +731,7 @@ const itemRightClickDown = (item: Item, isOffhand: boolean, itemSlot: number): v
          const placeInfo = calculateStructurePlaceInfo(transformComponent.position, transformComponent.rotation, structureType, Board.getWorldInfo());
          
          if (placeInfo.isValid) {
-            Client.sendItemUsePacket();
+            sendItemUsePacket();
             useInfo.lastAttackTicks = Board.serverTicks;
          }
 
@@ -768,7 +768,7 @@ const itemRightClickUp = (item: Item, isOffhand: boolean): void => {
             }
          }
 
-         Client.sendItemUsePacket();
+         sendItemUsePacket();
 
          useInfo.action = LimbAction.none;
          if (isOffhand) {

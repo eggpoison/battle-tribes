@@ -141,14 +141,13 @@ export function startChargingSpear(player: EntityID, inventoryName: InventoryNam
    const useInfo = inventoryUseComponent.getUseInfo(inventoryName);
 
    const inventory = getInventory(inventoryComponent, inventoryName);
-   const spear = inventory.itemSlots[useInfo.selectedItemSlot];
-
-   // Reset the cooldown so the battleaxe doesn't fire immediately
-   if (typeof spear !== "undefined") {
-      useInfo.lastSpearChargeTicks = Board.ticks;
+   const spear = inventory.getItem(useInfo.selectedItemSlot);
+   if (spear === null) {
+      return;
    }
-   
+
    useInfo.action = LimbAction.chargeSpear;
+   useInfo.currentActionStartingTicks = Board.ticks;
 }
 
 export function startChargingBattleaxe(player: EntityID, inventoryName: InventoryName): void {

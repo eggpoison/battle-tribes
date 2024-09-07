@@ -18,7 +18,7 @@ import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { PacketReader } from "webgl-test-shared/dist/packets";
 import { Hotbar_updateRightThrownBattleaxeItemID } from "../components/game/inventories/Hotbar";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
-import { DEFAULT_ATTACK_PATTERN, LimbState, TRIBESMAN_RESTING_LIMB_STATE } from "webgl-test-shared/dist/attack-patterns";
+import { LimbState, SPEAR_CHARGED_LIMB_STATE, TRIBESMAN_RESTING_LIMB_STATE } from "webgl-test-shared/dist/attack-patterns";
 import RenderAttachPoint from "../render-parts/RenderAttachPoint";
 
 export interface LimbInfo {
@@ -160,50 +160,6 @@ const FOOD_EATING_COLOURS: { [T in ItemType as Exclude<T, FilterHealingItemTypes
 };
 
 type InventoryUseEntityType = EntityType.player | EntityType.tribeWorker | EntityType.tribeWarrior | EntityType.zombie;
-
-// @Incomplete
-// const getLimbRenderInfos = (entityType: InventoryUseEntityType, item: Item | null): LimbRenderInfos => {
-//    const handRestingDirection = getLimbRestingDirection(entityType);
-//    const restingOffset = getHandRestingOffset(entityType);
-
-//    if (item !== null && item.type === ItemType.spear) {
-//       return {
-//          resting: {
-//             direction: handRestingDirection,
-//             offset: restingOffset,
-//             rotation: ITEM_RESTING_ROTATION
-//          },
-//          windedBack: {
-//             direction: handRestingDirection + Math.PI / 5,
-//             offset: restingOffset,
-//             rotation: ITEM_RESTING_ROTATION
-//          },
-//          swung: {
-//             direction: Math.PI / 4,
-//             offset: restingOffset + 7,
-//             rotation: -Math.PI / 7
-//          }
-//       };
-//    }
-
-//    return {
-//       resting: {
-//          direction: handRestingDirection,
-//          offset: restingOffset,
-//          rotation: ITEM_RESTING_ROTATION
-//       },
-//       windedBack: {
-//          direction: handRestingDirection + Math.PI / 5,
-//          offset: restingOffset,
-//          rotation: ITEM_RESTING_ROTATION
-//       },
-//       swung: {
-//          direction: handRestingDirection - ITEM_SWING_RANGE,
-//          offset: restingOffset,
-//          rotation: ITEM_END_ROTATION
-//       }
-//    };
-// }
 
 const lerpLimbBetweenStates = (limb: RenderPart, attachPoint: RenderAttachPoint, startState: LimbState, endState: LimbState, progress: number): void => {
    const direction = lerp(startState.direction, endState.direction, progress);
@@ -752,7 +708,7 @@ const updateLimb = (inventoryUseComponent: InventoryUseComponent, limbIdx: numbe
    const limb = inventoryUseComponent.limbRenderParts[limbIdx];
    const attachPoint = inventoryUseComponent.limbAttachPoints[limbIdx];
    
-   limb.shakeAmount = 0;
+   attachPoint.shakeAmount = 0;
 
    const limbMult = limbIdx === 0 ? 1 : -1;
    
@@ -823,32 +779,48 @@ const updateLimb = (inventoryUseComponent: InventoryUseComponent, limbIdx: numbe
 
    switch (limbInfo.action) {
       case LimbAction.windAttack: {
+         const heldItemAttackInfo = getItemAttackInfo(heldItem);
+         
          const secondsSinceLastAction = getSecondsSinceTickTimestamp(limbInfo.currentActionStartingTicks);
          const windupProgress = secondsSinceLastAction * Settings.TPS / limbInfo.currentActionDurationTicks;
 
-         lerpLimbBetweenStates(limb, attachPoint, TRIBESMAN_RESTING_LIMB_STATE, DEFAULT_ATTACK_PATTERN.windedBack, windupProgress);
+         lerpLimbBetweenStates(limb, attachPoint, TRIBESMAN_RESTING_LIMB_STATE, heldItemAttackInfo.attackPattern.windedBack, windupProgress);
          updateHeldItem(inventoryUseComponent, limbIdx, heldItem);
          break;
       }
       case LimbAction.attack: {
+         const heldItemAttackInfo = getItemAttackInfo(heldItem);
+
          const secondsSinceLastAction = getSecondsSinceTickTimestamp(limbInfo.currentActionStartingTicks);
          const attackProgress = secondsSinceLastAction * Settings.TPS / limbInfo.currentActionDurationTicks;
 
-         lerpLimbBetweenStates(limb, attachPoint, DEFAULT_ATTACK_PATTERN.windedBack, DEFAULT_ATTACK_PATTERN.swung, attackProgress);
+         lerpLimbBetweenStates(limb, attachPoint, heldItemAttackInfo.attackPattern.windedBack, heldItemAttackInfo.attackPattern.swung, attackProgress);
          updateHeldItem(inventoryUseComponent, limbIdx, heldItem);
          break;
       }
       case LimbAction.returnAttackToRest: {
+         const heldItemAttackInfo = getItemAttackInfo(heldItem);
+
          const secondsIntoAnimation = getSecondsSinceTickTimestamp(limbInfo.currentActionStartingTicks);
          const animationProgress = secondsIntoAnimation * Settings.TPS / limbInfo.currentActionDurationTicks;
 
-         lerpLimbBetweenStates(limb, attachPoint, DEFAULT_ATTACK_PATTERN.swung, TRIBESMAN_RESTING_LIMB_STATE, animationProgress);
+         lerpLimbBetweenStates(limb, attachPoint, heldItemAttackInfo.attackPattern.swung, TRIBESMAN_RESTING_LIMB_STATE, animationProgress);
          updateHeldItem(inventoryUseComponent, limbIdx, heldItem);
          break;
       }
       case LimbAction.none: {
          setLimbToState(limbMult, attachPoint, TRIBESMAN_RESTING_LIMB_STATE);
          updateHeldItem(inventoryUseComponent, limbIdx, heldItem);
+         break;
+      }
+      case LimbAction.chargeSpear: {
+         const secondsSinceLastAction = getSecondsSinceTickTimestamp(limbInfo.currentActionStartingTicks);
+         const chargeProgress = secondsSinceLastAction < 3 ? 1 - Math.pow(secondsSinceLastAction / 3 - 1, 2) : 1;
+
+         lerpLimbBetweenStates(limb, attachPoint, TRIBESMAN_RESTING_LIMB_STATE, SPEAR_CHARGED_LIMB_STATE, chargeProgress);
+         updateHeldItem(inventoryUseComponent, limbIdx, heldItem);
+
+         attachPoint.shakeAmount = chargeProgress * 1.5;
          break;
       }
       // Bow charge animation

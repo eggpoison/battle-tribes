@@ -28,7 +28,7 @@ export function createSpearProjectileConfig(): ComponentConfig<ComponentTypes> {
          collisionMask: DEFAULT_COLLISION_MASK,
          hitboxes: [createHitbox(new RectangularBox(new Point(0, 0), 12, 60, 0), 0.5, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0)]
       },
-      [ServerComponentType.physics]: {
+   [ServerComponentType.physics]: {
          velocityX: 0,
          velocityY: 0,
          accelerationX: 0,

@@ -754,13 +754,6 @@ abstract class Client {
       }
    }
 
-   public static sendItemUsePacket(): void {
-      if (Game.isRunning && this.socket !== null) {
-         const itemSlot = latencyGameState.selectedHotbarItemSlot;
-         // this.socket.emit("item_use_packet", itemSlot);
-      }
-   }
-
    public static sendHeldItemDropPacket(dropAmount: number, dropDirection: number): void {
       if (Game.isRunning && this.socket !== null) {
          // this.socket.emit("held_item_drop", dropAmount, dropDirection);

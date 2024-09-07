@@ -199,20 +199,6 @@ const processItemReleasePacket = (playerClient: PlayerClient, entity: EntityID, 
    consumeItemTypeFromInventory(inventoryComponent, InventoryName.heldItemSlot, heldItem.type, amountAdded);
 }
 
-const processItemUsePacket = (playerClient: PlayerClient, itemSlot: number): void => {
-   if (!Board.hasEntity(playerClient.instance)) {
-      return;
-   }
-
-   const inventoryComponent = InventoryComponentArray.getComponent(playerClient.instance);
-   const hotbarInventory = getInventory(inventoryComponent, InventoryName.hotbar);
-
-   const item = hotbarInventory.itemSlots[itemSlot];
-   if (typeof item !== "undefined")  {
-      useItem(playerClient.instance, item, InventoryName.hotbar, itemSlot);
-   }
-}
-
 const processItemDropPacket = (playerClient: PlayerClient, inventoryName: InventoryName, itemSlot: number, dropAmount: number, throwDirection: number): void => {
    if (!Board.hasEntity(playerClient.instance)) {
       return;
@@ -530,10 +516,6 @@ export function addPlayerClient(playerClient: PlayerClient, player: EntityID, pl
 
    socket.on("item_release", (entity: EntityID, inventoryName: InventoryName, itemSlot: number, amount: number) => {
       processItemReleasePacket(playerClient, entity, inventoryName, itemSlot, amount);
-   });
-
-   socket.on("item_use_packet", (itemSlot: number) => {
-      processItemUsePacket(playerClient, itemSlot);
    });
 
    socket.on("held_item_drop", (dropAmount: number, throwDirection: number) => {

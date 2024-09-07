@@ -9,7 +9,7 @@ import Board from "../Board";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { TribeComponentArray } from "./TribeComponent";
 import { PlayerComponentArray } from "./PlayerComponent";
-import { ArmourItemInfo, BackpackItemInfo, ConsumableItemInfo, InventoryName, Item, ITEM_INFO_RECORD, ITEM_TYPE_RECORD, ItemType } from "webgl-test-shared/dist/items/items";
+import { ArmourItemInfo, BackpackItemInfo, ConsumableItemInfo, InventoryName, ITEM_INFO_RECORD, ITEM_TYPE_RECORD, ItemType } from "webgl-test-shared/dist/items/items";
 import { ComponentConfig } from "../components";
 import { tribeMemberCanPickUpItem, useItem, VACUUM_RANGE } from "../entities/tribes/tribe-member";
 import { Packet } from "webgl-test-shared/dist/packets";
@@ -110,10 +110,11 @@ function onInitialise(config: ComponentConfig<ServerComponentType.health | Serve
             item: createItem(ItemType.spear, 5),
             itemSlot: 5
          },
-         {
-            item: createItem(ItemType.wooden_bow, 1),
-            itemSlot: 6
-         },
+         // @Temporary
+         // {
+         //    item: createItem(ItemType.wooden_bow, 1),
+         //    itemSlot: 6
+         // },
       ]
    });
    

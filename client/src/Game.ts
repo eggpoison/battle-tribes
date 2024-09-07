@@ -481,10 +481,10 @@ abstract class Game {
       renderWallConnections();
       renderResearchOrb();
 
-      if (nerdVisionIsVisible() && OPTIONS.showHitboxes) {
+      if (OPTIONS.showHitboxes) {
          renderHitboxes();
       }
-      if (nerdVisionIsVisible() && OPTIONS.showDamageBoxes) {
+      if (OPTIONS.showDamageBoxes) {
          renderDamageBoxes();
       }
       if (nerdVisionIsVisible() && this.entityDebugData !== null && typeof Board.entityRecord[this.entityDebugData.entityID] !== "undefined") {

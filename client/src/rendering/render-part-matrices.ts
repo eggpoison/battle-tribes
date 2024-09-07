@@ -69,8 +69,18 @@ const calculateAndOverrideRenderThingMatrix = (thing: RenderThing): void => {
    // Rotation
    rotateMatrix(thing.modelMatrix, thing.rotation);
 
+   let tx = thing.offset.x;
+   let ty = thing.offset.y;
+
+   // Shake
+   if (thing.shakeAmount > 0) {
+      const direction = 2 * Math.PI * Math.random();
+      tx += thing.shakeAmount * Math.sin(direction);
+      ty += thing.shakeAmount * Math.cos(direction);
+   }
+   
    // Translation
-   translateMatrix(thing.modelMatrix, thing.offset.x, thing.offset.y);
+   translateMatrix(thing.modelMatrix, tx, ty);
 }
 
 export function updateRenderPartMatrices(frameProgress: number): void {

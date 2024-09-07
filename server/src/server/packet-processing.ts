@@ -10,7 +10,7 @@ import { PlayerComponentArray } from "../components/PlayerComponent";
 import { TransformComponentArray } from "../components/TransformComponent";
 import { TribeComponentArray } from "../components/TribeComponent";
 import { startEating, startChargingBow, startChargingSpear, startChargingBattleaxe, createPlayerConfig } from "../entities/tribes/player";
-import { calculateRadialAttackTargets } from "../entities/tribes/tribe-member";
+import { calculateRadialAttackTargets, useItem } from "../entities/tribes/tribe-member";
 import { beginSwing } from "../entities/tribes/limb-use";
 import { InventoryComponentArray, getInventory, addItemToInventory } from "../components/InventoryComponent";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
@@ -56,7 +56,7 @@ export function processPlayerDataPacket(playerClient: PlayerClient, reader: Pack
    const gameDataOptions = reader.readNumber();
 
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(playerClient.instance);
-   const hotbarUseInfo = inventoryUseComponent.getUseInfo(InventoryName.hotbar);
+   const hotbarLimbInfo = inventoryUseComponent.getUseInfo(InventoryName.hotbar);
 
    const transformComponent = TransformComponentArray.getComponent(playerClient.instance);
    transformComponent.position.x = positionX;
@@ -79,7 +79,7 @@ export function processPlayerDataPacket(playerClient: PlayerClient, reader: Pack
    physicsComponent.acceleration.x = accelerationX;
    physicsComponent.acceleration.y = accelerationY;
    
-   hotbarUseInfo.selectedItemSlot = selectedHotbarItemSlot;
+   hotbarLimbInfo.selectedItemSlot = selectedHotbarItemSlot;
 
    const playerComponent = PlayerComponentArray.getComponent(playerClient.instance);
    playerComponent.interactingEntityID = interactingEntityID;
@@ -87,28 +87,28 @@ export function processPlayerDataPacket(playerClient: PlayerClient, reader: Pack
    // @Bug: won't work for using medicine in offhand
    let overrideOffhand = false;
    
-   if ((mainAction === LimbAction.eat || mainAction === LimbAction.useMedicine) && (hotbarUseInfo.action !== LimbAction.eat && hotbarUseInfo.action !== LimbAction.useMedicine)) {
+   if ((mainAction === LimbAction.eat || mainAction === LimbAction.useMedicine) && (hotbarLimbInfo.action !== LimbAction.eat && hotbarLimbInfo.action !== LimbAction.useMedicine)) {
       overrideOffhand = startEating(playerClient.instance, InventoryName.hotbar);
-   } else if (mainAction === LimbAction.chargeBow && hotbarUseInfo.action !== LimbAction.chargeBow) {
+   } else if (mainAction === LimbAction.chargeBow && hotbarLimbInfo.action !== LimbAction.chargeBow) {
       startChargingBow(playerClient.instance, InventoryName.hotbar);
-   } else if (mainAction === LimbAction.chargeSpear && hotbarUseInfo.action !== LimbAction.chargeSpear) {
+   } else if (mainAction === LimbAction.chargeSpear && hotbarLimbInfo.action !== LimbAction.chargeSpear) {
       startChargingSpear(playerClient.instance, InventoryName.hotbar);
-   } else if (mainAction === LimbAction.chargeBattleaxe && hotbarUseInfo.action !== LimbAction.chargeBattleaxe) {
+   } else if (mainAction === LimbAction.chargeBattleaxe && hotbarLimbInfo.action !== LimbAction.chargeBattleaxe) {
       startChargingBattleaxe(playerClient.instance, InventoryName.hotbar);
    }
 
    if (!overrideOffhand) {
       const tribeComponent = TribeComponentArray.getComponent(playerClient.instance);
       if (tribeComponent.tribe.tribeType === TribeType.barbarians) {
-         const offhandUseInfo = inventoryUseComponent.getUseInfo(InventoryName.offhand);
+         const offhandLimbInfo = inventoryUseComponent.getUseInfo(InventoryName.offhand);
 
-         if ((offhandAction === LimbAction.eat || offhandAction === LimbAction.useMedicine) && (offhandUseInfo.action !== LimbAction.eat && offhandUseInfo.action !== LimbAction.useMedicine)) {
+         if ((offhandAction === LimbAction.eat || offhandAction === LimbAction.useMedicine) && (offhandLimbInfo.action !== LimbAction.eat && offhandLimbInfo.action !== LimbAction.useMedicine)) {
             startEating(playerClient.instance, InventoryName.offhand);
-         } else if (offhandAction === LimbAction.chargeBow && offhandUseInfo.action !== LimbAction.chargeBow) {
+         } else if (offhandAction === LimbAction.chargeBow && offhandLimbInfo.action !== LimbAction.chargeBow) {
             startChargingBow(playerClient.instance, InventoryName.offhand);
-         } else if (offhandAction === LimbAction.chargeSpear && offhandUseInfo.action !== LimbAction.chargeSpear) {
+         } else if (offhandAction === LimbAction.chargeSpear && offhandLimbInfo.action !== LimbAction.chargeSpear) {
             startChargingSpear(playerClient.instance, InventoryName.offhand);
-         } else if (offhandAction === LimbAction.chargeBattleaxe && offhandUseInfo.action !== LimbAction.chargeBattleaxe) {
+         } else if (offhandAction === LimbAction.chargeBattleaxe && offhandLimbInfo.action !== LimbAction.chargeBattleaxe) {
             startChargingBattleaxe(playerClient.instance, InventoryName.offhand);
          }
       }
@@ -192,4 +192,21 @@ export function sendRespawnDataPacket(playerClient: PlayerClient): void {
    addEntityDataToPacket(packet, player, player);
 
    playerClient.socket.send(packet.buffer);
+}
+
+export function processUseItemPacket(playerClient: PlayerClient, reader: PacketReader): void {
+   const player = playerClient.instance;
+   if (!Board.hasEntity(player)) {
+      return;
+   }
+
+   const itemSlot = reader.readNumber();
+
+   const inventoryComponent = InventoryComponentArray.getComponent(playerClient.instance);
+   const hotbarInventory = getInventory(inventoryComponent, InventoryName.hotbar);
+
+   const item = hotbarInventory.itemSlots[itemSlot];
+   if (typeof item !== "undefined")  {
+      useItem(playerClient.instance, item, InventoryName.hotbar, itemSlot);
+   }
 }

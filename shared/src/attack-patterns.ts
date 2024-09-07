@@ -46,6 +46,19 @@ export const DEFAULT_ATTACK_PATTERN: AttackPatternInfo = {
    }
 };
 
+export const SPEAR_ATTACK_PATTERN: AttackPatternInfo = {
+   windedBack: {
+      direction: Math.PI * 0.6,
+      extraOffset: 0,
+      rotation: 0
+   },
+   swung: {
+      direction: Math.PI * 0.2,
+      extraOffset: 7,
+      rotation: Math.PI * -1/7
+   }
+};
+
 /* -------------- */
 /* ATTACK TIMINGS */
 /* -------------- */
@@ -54,18 +67,46 @@ export const DEFAULT_ATTACK_TIMINGS: AttackTimingsInfo = {
    windupTimeTicks: Math.floor(0.1 * Settings.TPS),
    swingTimeTicks: Math.floor(0.15 * Settings.TPS),
    returnTimeTicks: Math.floor(0.2 * Settings.TPS)
-}
+};
+
+export const AXE_ATTACK_TIMINGS: AttackTimingsInfo = {
+   windupTimeTicks: Math.floor(0.15 * Settings.TPS),
+   swingTimeTicks: Math.floor(0.2 * Settings.TPS),
+   returnTimeTicks: Math.floor(0.3 * Settings.TPS)
+};
+
+export const PICKAXE_ATTACK_TIMINGS: AttackTimingsInfo = {
+   windupTimeTicks: Math.floor(0.2 * Settings.TPS),
+   swingTimeTicks: Math.floor(0.25 * Settings.TPS),
+   returnTimeTicks: Math.floor(0.35 * Settings.TPS)
+};
 
 export const SWORD_ATTACK_TIMINGS: AttackTimingsInfo = {
    windupTimeTicks: Math.floor(0.1 * Settings.TPS),
    swingTimeTicks: Math.floor(0.2 * Settings.TPS),
    returnTimeTicks: Math.floor(0.15 * Settings.TPS)
-}
+};
+
+export const SPEAR_ATTACK_TIMINGS: AttackTimingsInfo = {
+   windupTimeTicks: Math.floor(0.25 * Settings.TPS),
+   swingTimeTicks: Math.floor(0.2 * Settings.TPS),
+   returnTimeTicks: Math.floor(0.35 * Settings.TPS)
+};
+
+/* ----------- */
+/* LIMB STATES */
+/* ----------- */
 
 export const TRIBESMAN_RESTING_LIMB_STATE: LimbState = {
    direction: Math.PI * 0.4,
    extraOffset: 0,
    rotation: 0
+};
+
+export const SPEAR_CHARGED_LIMB_STATE: LimbState = {
+   direction: Math.PI * 0.6,
+   extraOffset: 0,
+   rotation: Math.PI * 0.3
 };
 
 export const DEFAULT_ITEM_DAMAGE_BOX_INFO: LimbHeldItemDamageBoxInfo = {
@@ -92,5 +133,14 @@ export const TOOL_ITEM_DAMAGE_BOX_INFO: LimbHeldItemDamageBoxInfo = {
    rotation: Math.PI / 4, // 45 degrees to the right
    offsetX: 20,
    offsetY: 20,
+   showLargeTexture: true
+};
+
+export const SPEAR_DAMAGE_BOX_INFO: LimbHeldItemDamageBoxInfo = {
+   width: 20,
+   height: 88,
+   rotation: 0,
+   offsetX: 5,
+   offsetY: 11,
    showLargeTexture: true
 };

@@ -1,6 +1,6 @@
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
 import { BlueprintType, BuildingMaterial, MATERIAL_TO_ITEM_MAP, ServerComponentType } from "webgl-test-shared/dist/components";
-import { EntityType, EntityID } from "webgl-test-shared/dist/entities";
+import { EntityType, EntityID, LimbAction } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { StructureConnectionInfo, StructureType, calculateStructurePlaceInfo } from "webgl-test-shared/dist/structures";
 import { TribesmanTitle } from "webgl-test-shared/dist/titles";
@@ -460,13 +460,13 @@ export function useItem(tribeMember: EntityID, item: Item, inventoryName: Invent
          const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribeMember);
          
          const inventory = getInventory(inventoryComponent, inventoryName);
-         const useInfo = inventoryUseComponent.getUseInfo(inventoryName);
+         const limbInfo = inventoryUseComponent.getUseInfo(inventoryName);
 
          const offsetDirection = transformComponent.rotation + Math.PI / 1.5 - Math.PI / 14;
          const x = transformComponent.position.x + 35 * Math.sin(offsetDirection);
          const y = transformComponent.position.y + 35 * Math.cos(offsetDirection);
 
-         const ticksSinceLastAction = Board.ticks - useInfo.lastSpearChargeTicks;
+         const ticksSinceLastAction = Board.ticks - limbInfo.currentActionStartingTicks;
          const secondsSinceLastAction = ticksSinceLastAction / Settings.TPS;
          const velocityMagnitude = lerp(1000, 1700, Math.min(secondsSinceLastAction / 3, 1));
 
@@ -481,8 +481,9 @@ export function useItem(tribeMember: EntityID, item: Item, inventoryName: Invent
 
          consumeItemFromSlot(inventory, itemSlot, 1);
 
-         useInfo.lastSpearChargeTicks = Board.ticks;
-         
+         // Once thrown, the limb goes back to doing nothing
+         limbInfo.action = LimbAction.none;
+
          break;
       }
       case "battleaxe": {

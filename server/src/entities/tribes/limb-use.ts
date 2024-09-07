@@ -221,8 +221,6 @@ export function beginSwing(attackingEntity: EntityID, itemSlot: number, inventor
    // Being winding up the attack
    limbInfo.selectedItemSlot = itemSlot;
    limbInfo.action = LimbAction.windAttack;
-   // @Temporary
-   limbInfo.lastAttackWindupTicks = Board.ticks;
    limbInfo.currentActionStartingTicks = Board.ticks;
    limbInfo.currentActionDurationTicks = heldItemAttackInfo.attackTimings.windupTimeTicks;
 

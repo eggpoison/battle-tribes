@@ -8,6 +8,7 @@ import { halfWindowHeight, halfWindowWidth, windowHeight, windowWidth } from "./
 import OPTIONS from "./options";
 import { calculatePotentialPlanIdealness, getHoveredBuildingPlan, getPotentialPlanStats, getVisibleBuildingPlans } from "./client/Client";
 import Player from "./entities/Player";
+import { PlayerComponentArray } from "./entity-components/PlayerComponent";
 
 // @Cleanup: The logic for damage, research and heal numbers is extremely similar, can probably be combined
 
@@ -173,6 +174,10 @@ const getDamageNumberColour = (damage: number): string => {
 }
 
 const renderDamageNumbers = (): void => {
+   if (accumulatedDamage === 0) {
+      return;
+   }
+   
    ctx.lineWidth = 0;
 
    // Calculate position in camera
@@ -191,14 +196,28 @@ const renderDamageNumbers = (): void => {
       damageNumberWidth = ctx.measureText(damageString).width;
    }
 
+   const timeSinceDamage = DAMAGE_NUMBER_LIFETIME - damageTime;
+   let scaleProgress = Math.min(timeSinceDamage * 2.5, 1);
+   scaleProgress = 1 - ((1 - scaleProgress) * (1 - scaleProgress));
+   const scaleX = lerp(1.3, 1, scaleProgress);
+   
+   ctx.save();
+   ctx.scale(scaleX, 1);
+
+   const scaleCenterOffset = -(scaleX - 1) * damageNumberWidth / 2;
+   
    // Draw text outline
+   ctx.globalAlpha = scaleProgress;
    const SHADOW_OFFSET = 3;
    ctx.fillStyle = "#000";
-   ctx.fillText(damageString, cameraX - damageNumberWidth / 2 + SHADOW_OFFSET, cameraY + SHADOW_OFFSET);
+   ctx.fillText(damageString, (cameraX - damageNumberWidth / 2 + SHADOW_OFFSET) / scaleX + scaleCenterOffset, cameraY + SHADOW_OFFSET);
+   ctx.globalAlpha = 1;
    
    // Draw text
    ctx.fillStyle = getDamageNumberColour(accumulatedDamage);
-   ctx.fillText(damageString, cameraX - damageNumberWidth / 2, cameraY);
+   ctx.fillText(damageString, (cameraX - damageNumberWidth / 2) / scaleX + scaleCenterOffset, cameraY);
+
+   ctx.restore();
 
    ctx.globalAlpha = 1;
 }
@@ -278,21 +297,34 @@ const renderPlayerNames = (): void => {
    ctx.lineJoin = "round";
    ctx.miterLimit = 2;
 
-   for (const player of Board.players) {
-      if (player === Player.instance) {
+   for (let i = 0; i < PlayerComponentArray.entities.length; i++) {
+      const entityID = PlayerComponentArray.entities[i];
+      if (Player.instance !== null && entityID === Player.instance.id) {
          continue;
       }
+
+      const player = Board.entityRecord[entityID]!;
+      const playerComponent = PlayerComponentArray.components[i];
       
       // Calculate position in camera
       const cameraX = getXPosInCamera(player.renderPosition.x);
       const cameraY = getYPosInCamera(player.renderPosition.y + 21);
       
-      const playerComponent = player.getServerComponent(ServerComponentType.player);
-      // console.log(playerComponent.username);
       const username = playerComponent.username;
 
       const width = ctx.measureText(username).width; // @Speed
 
+      // Bg
+      const bgWidthPadding = 4;
+      const bgHeight = 12;
+      const bgHeightPadding = 4;
+      ctx.globalAlpha = 0.5;
+      ctx.fillStyle = "#000";
+      ctx.beginPath();
+      ctx.rect(cameraX - width / 2 - bgWidthPadding, cameraY - bgHeight - bgHeightPadding, width + bgWidthPadding * 2, bgHeight + bgHeightPadding * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      
       // Draw text outline
       ctx.lineWidth = 6;
       ctx.strokeStyle = "#000";

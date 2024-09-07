@@ -72,7 +72,7 @@ class HutComponent extends ServerComponent {
       this.isRecalling = reader.readBoolean();
       reader.padOffset(3);
       
-      this.doorRenderParts = this.entity.getRenderParts("hutComponent:door");
+      this.doorRenderParts = this.entity.getRenderThings("hutComponent:door") as Array<RenderPart>;
 
       this.updateDoors();
    }

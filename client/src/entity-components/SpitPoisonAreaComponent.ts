@@ -1,11 +1,11 @@
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import ServerComponent from "./ServerComponent";
 import { playSound, Sound } from "../sound";
-import { CircularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { lerp } from "webgl-test-shared/dist/utils";
 import { createAcidParticle, createPoisonBubble } from "../particles";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
+import CircularBox from "webgl-test-shared/dist/boxes/CircularBox";
 
 const enum Vars {
    MAX_RANGE = 55
@@ -42,8 +42,9 @@ export const SpitPoisonAreaComponentArray = new ComponentArray<SpitPoisonAreaCom
 function onTick(spitPoisonAreaComponent: SpitPoisonAreaComponent): void {
    const transformComponent = spitPoisonAreaComponent.entity.getServerComponent(ServerComponentType.transform);
 
-   const hitbox = transformComponent.hitboxes[0] as CircularHitbox;
-   const range = hitbox.radius;
+   const hitbox = transformComponent.hitboxes[0];
+   const box = hitbox.box as CircularBox;
+   const range = box.radius;
 
    spitPoisonAreaComponent.sound.volume = lerp(0.25, 0, 1 - range / Vars.MAX_RANGE);
 

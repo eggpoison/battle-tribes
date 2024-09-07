@@ -10,7 +10,7 @@ import { InventoryUseComponentArray, setLimbActions } from "../../../components/
 import { PhysicsComponentArray } from "../../../components/PhysicsComponent";
 import { TribesmanAIComponentArray, TribesmanPathType } from "../../../components/TribesmanAIComponent";
 import { PathfindFailureDefault } from "../../../pathfinding";
-import { attemptAttack, calculateAttackTarget, calculateItemDamage, calculateRadialAttackTargets, useItem } from "../tribe-member";
+import { calculateItemDamage, calculateRadialAttackTargets, useItem } from "../tribe-member";
 import { TRIBESMAN_TURN_SPEED } from "./tribesman-ai";
 import { EntityRelationship, TribeComponentArray } from "../../../components/TribeComponent";
 import { getItemAttackCooldown } from "../../../items";
@@ -19,6 +19,7 @@ import { clearTribesmanPath, getBestToolItemSlot, getTribesmanAttackOffset, getT
 import { attemptToRepairBuildings } from "./tribesman-structures";
 import { InventoryName, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, BowItemInfo } from "webgl-test-shared/dist/items/items";
 import { getAgeTicks, TransformComponentArray } from "../../../components/TransformComponent";
+import { beginSwing } from "../limb-use";
 
 const enum Vars {
    BOW_LINE_OF_SIGHT_WAIT_TIME = 0.5 * Settings.TPS,
@@ -34,28 +35,29 @@ const EXTRA_BOW_COOLDOWNS: Partial<Record<EntityType, number>> = {
    [EntityType.tribeWarrior]: Math.floor(0.1 * Settings.TPS)
 };
 
+// @Incomplete
 const doMeleeAttack = (tribesman: EntityID): void => {
    // @Speed: Do the check for if the item is on cooldown before doing the expensive radial attack calculations
 
-   // Find the attack target
-   const attackTargets = calculateRadialAttackTargets(tribesman, getTribesmanAttackOffset(tribesman), getTribesmanAttackRadius(tribesman));
-   const target = calculateAttackTarget(tribesman, attackTargets, ~(EntityRelationship.friendly | EntityRelationship.friendlyBuilding));
+   // // Find the attack target
+   // const attackTargets = calculateRadialAttackTargets(tribesman, getTribesmanAttackOffset(tribesman), getTribesmanAttackRadius(tribesman));
+   // const target = calculateAttackTarget(tribesman, attackTargets, ~(EntityRelationship.friendly | EntityRelationship.friendlyBuilding));
 
-   // Register the hit
-   if (target !== null) {
-      const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman);
-      const hotbarUseInfo = inventoryUseComponent.getUseInfo(InventoryName.hotbar);
-      const didSucceed = attemptAttack(tribesman, target, hotbarUseInfo.selectedItemSlot, InventoryName.hotbar);
+   // // Register the hit
+   // if (target !== null) {
+   //    const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman);
+   //    const hotbarUseInfo = inventoryUseComponent.getUseInfo(InventoryName.hotbar);
+   //    const didSucceed = beginSwing(tribesman, hotbarUseInfo.selectedItemSlot, InventoryName.hotbar);
 
-      if (!didSucceed) {
-         // Use offhand
-         const tribeComponent = TribeComponentArray.getComponent(tribesman);
-         if (tribeComponent.tribe.tribeType === TribeType.barbarians) {
-            const offhandUseInfo = inventoryUseComponent.getUseInfo(InventoryName.offhand);
-            attemptAttack(tribesman, target, offhandUseInfo.selectedItemSlot, InventoryName.offhand);
-         }
-      }
-   }
+   //    if (!didSucceed) {
+   //       // Use offhand
+   //       const tribeComponent = TribeComponentArray.getComponent(tribesman);
+   //       if (tribeComponent.tribe.tribeType === TribeType.barbarians) {
+   //          const offhandUseInfo = inventoryUseComponent.getUseInfo(InventoryName.offhand);
+   //          beginSwing(tribesman, offhandUseInfo.selectedItemSlot, InventoryName.offhand);
+   //       }
+   //    }
+   // }
 }
 
 const getMostDamagingItemSlot = (tribesman: EntityID, huntedEntity: EntityID): number => {

@@ -6,7 +6,7 @@ import { LimbAction } from "./entities";
 import { AttackEffectiveness } from "./entity-damage-types";
 import { EntityTickEvent } from "./entity-events";
 import { GrassBlocker } from "./grass-blockers";
-import { HitboxCollisionType } from "./hitboxes/hitboxes";
+import { HitboxCollisionType } from "./boxes/boxes";
 import { Inventory, InventoryName, ItemType } from "./items/items";
 import { StatusEffect } from "./status-effects";
 import { EnemyTribeData, PlayerTribeData, TechID } from "./techs";

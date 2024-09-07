@@ -35,7 +35,7 @@ class BuildingMaterialComponent extends ServerComponent {
       super(entity);
 
       this.material = reader.readNumber();
-      this.materialRenderPart = this.entity.getRenderPart("buildingMaterialComponent:material") as TexturedRenderPart;
+      this.materialRenderPart = this.entity.getRenderThing("buildingMaterialComponent:material") as TexturedRenderPart;
    }
 
    public padData(reader: PacketReader): void {

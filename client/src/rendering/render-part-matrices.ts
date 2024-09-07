@@ -7,6 +7,7 @@ import { renderPartIsTextured, RenderThing, thingIsRenderPart } from "../render-
 import Board from "../Board";
 import { getEntityRenderLayer } from "../render-layers";
 import { renderLayerIsChunkRendered, updateChunkedEntityData, updateChunkRenderedEntity } from "./webgl/chunked-entity-rendering";
+import { EntityType } from "webgl-test-shared/dist/entities";
 
 let dirtyEntities = new Array<Entity>();
 
@@ -73,30 +74,29 @@ const calculateAndOverrideRenderThingMatrix = (thing: RenderThing): void => {
 export function updateRenderPartMatrices(frameProgress: number): void {
    for (let i = 0; i < dirtyEntities.length; i++) {
       const entity = dirtyEntities[i];
+      // @Temporary?
       if (typeof Board.entityRecord[entity.id] === "undefined") {
          throw new Error(entity.id.toString());
       }
       
-      const numRenderParts = entity.allRenderThings.length;
+      const numRenderThings = entity.allRenderThings.length;
       
       // If the entity has added or removed render parts, recreate the data arrays
-      if (numRenderParts !== entity.depthData.length) {
-         entity.depthData = new Float32Array(numRenderParts);
-         entity.textureArrayIndexData = new Float32Array(numRenderParts);
-         entity.tintData = new Float32Array(3 * numRenderParts);
-         entity.opacityData = new Float32Array(numRenderParts);
-         entity.modelMatrixData = new Float32Array(9 * numRenderParts);
+      if (numRenderThings !== entity.depthData.length) {
+         entity.depthData = new Float32Array(numRenderThings);
+         entity.textureArrayIndexData = new Float32Array(numRenderThings);
+         entity.tintData = new Float32Array(3 * numRenderThings);
+         entity.opacityData = new Float32Array(numRenderThings);
+         entity.modelMatrixData = new Float32Array(9 * numRenderThings);
       }
       
       calculateAndOverrideEntityModelMatrix(entity, frameProgress);
-      
-      // const entityDepthData = entity.depthData;
-      // const entityTextureArrayIndexData = entity.textureArrayIndexData;
-      // const entityTintData = entity.tintData;
-      // const entityOpacityData = entity.opacityData;
-      // const entityModelMatrixData = entity.modelMatrixData;
 
-      for (let j = 0; j < numRenderParts; j++) {
+      // @Speed: Garbage collection
+      const renderPosition = calculateEntityRenderPosition(entity, frameProgress);
+      entity.renderPosition = renderPosition;
+      
+      for (let j = 0; j < numRenderThings; j++) {
          const thing = entity.allRenderThings[j];
 
          // Model matrix for the render part
@@ -106,43 +106,8 @@ export function updateRenderPartMatrices(frameProgress: number): void {
             const parentModelMatrix = thing.parent !== null ? thing.parent.modelMatrix : entity.modelMatrix;
             matrixMultiplyInPlace(parentModelMatrix, thing.modelMatrix);
          } else {
-            const renderPosition = calculateEntityRenderPosition(entity, frameProgress);
             translateMatrix(thing.modelMatrix, renderPosition.x, renderPosition.y);
          }
-
-         // const textureArrayIndex = renderPartIsTextured(thing) ? thing.textureArrayIndex : -1;
-
-         if (thingIsRenderPart(thing)) {
-            thing.modelMatrixData[0] = thing.modelMatrix[0];
-            thing.modelMatrixData[1] = thing.modelMatrix[1];
-            thing.modelMatrixData[2] = thing.modelMatrix[2];
-            thing.modelMatrixData[3] = thing.modelMatrix[3];
-            thing.modelMatrixData[4] = thing.modelMatrix[4];
-            thing.modelMatrixData[5] = thing.modelMatrix[5];
-            thing.modelMatrixData[6] = thing.modelMatrix[6];
-            thing.modelMatrixData[7] = thing.modelMatrix[7];
-            thing.modelMatrixData[8] = thing.modelMatrix[8];
-         }
-
-         // entityDepthData[j] = calculateRenderPartDepth(thing, entity);
-
-         // entityTextureArrayIndexData[j] = textureArrayIndex;
-   
-         // entityTintData[j * 3] = tintR;
-         // entityTintData[j * 3 + 1] = tintG;
-         // entityTintData[j * 3 + 2] = tintB;
-         
-         // entityOpacityData[j] = thing.opacity;
-   
-         // entityModelMatrixData[j * 9] = thing.modelMatrixData[0];
-         // entityModelMatrixData[j * 9 + 1] = thing.modelMatrixData[1];
-         // entityModelMatrixData[j * 9 + 2] = thing.modelMatrixData[2];
-         // entityModelMatrixData[j * 9 + 3] = thing.modelMatrixData[3];
-         // entityModelMatrixData[j * 9 + 4] = thing.modelMatrixData[4];
-         // entityModelMatrixData[j * 9 + 5] = thing.modelMatrixData[5];
-         // entityModelMatrixData[j * 9 + 6] = thing.modelMatrixData[6];
-         // entityModelMatrixData[j * 9 + 7] = thing.modelMatrixData[7];
-         // entityModelMatrixData[j * 9 + 8] = thing.modelMatrixData[8];
       }
 
       const renderLayer = getEntityRenderLayer(entity);
@@ -155,10 +120,11 @@ export function updateRenderPartMatrices(frameProgress: number): void {
    updateChunkedEntityData();
    
    // Reset dirty entities
-   // @Speed: Garbage collection. An individual entity rarely switches between dirty/undirty
+   // @Speed: Garbage collection. An individual entity rarely switches between being dirty/undirty
    while (dirtyEntities.length > 0) {
       const entity = dirtyEntities[0];
       entity.isDirty = false;
+      // @Speed: this will be very slow. shifts the whole array down each time
       dirtyEntities.splice(0, 1);
    }
 }

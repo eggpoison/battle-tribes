@@ -45,7 +45,7 @@ class FenceGateComponent extends ServerComponent {
       reader.padOffset(Float32Array.BYTES_PER_ELEMENT);
       this.openProgress = reader.readNumber();
 
-      this.doorRenderPart = this.entity.getRenderPart("fenceGateComponent:door");
+      this.doorRenderPart = this.entity.getRenderThing("fenceGateComponent:door") as RenderPart;
       this.updateDoor();
    }
 

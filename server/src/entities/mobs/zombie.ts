@@ -11,11 +11,12 @@ import { PhysicsComponentArray, applyKnockback } from "../../components/PhysicsC
 import { createItemsOverEntity } from "../../entity-shared";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
 import { TombstoneComponentArray } from "../../components/TombstoneComponent";
-import { CircularHitbox, HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { InventoryName, ItemType } from "webgl-test-shared/dist/items/items";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { ComponentConfig } from "../../components";
 import { TransformComponentArray } from "../../components/TransformComponent";
+import { createHitbox, HitboxCollisionType } from "webgl-test-shared/dist/boxes/boxes";
+import CircularBox from "webgl-test-shared/dist/boxes/CircularBox";
 
 export const enum ZombieVars {
    CHASE_PURSUE_TIME_TICKS = 5 * Settings.TPS,
@@ -65,7 +66,7 @@ export function createZombieConfig(): ComponentConfig<ComponentTypes> {
          type: EntityType.zombie,
          collisionBit: COLLISION_BITS.default,
          collisionMask: DEFAULT_COLLISION_MASK,
-         hitboxes: [new CircularHitbox(1, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, 32)]
+         hitboxes: [createHitbox(new CircularBox(new Point(0, 0), 32), 1, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0)]
       },
       [ServerComponentType.physics]: {
          velocityX: 0,

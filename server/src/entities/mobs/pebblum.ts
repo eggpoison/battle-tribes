@@ -6,10 +6,11 @@ import { HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, dam
 import { PebblumComponentArray } from "../../components/PebblumComponent";
 import { applyKnockback } from "../../components/PhysicsComponent";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
-import { CircularHitbox, Hitbox, HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { ComponentConfig } from "../../components";
 import { TransformComponentArray } from "../../components/TransformComponent";
+import { createHitbox, HitboxCollisionType, HitboxWrapper } from "webgl-test-shared/dist/boxes/boxes";
+import CircularBox from "webgl-test-shared/dist/boxes/CircularBox";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics
@@ -18,12 +19,12 @@ type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.pebblum;
 
 export function createPebblumConfig(): ComponentConfig<ComponentTypes> {
-   const hitboxes = new Array<Hitbox>();
+   const hitboxes = new Array<HitboxWrapper>();
 
    // Body
-   hitboxes.push(new CircularHitbox(0.4, new Point(0, -4), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, 10 * 2));
+   hitboxes.push(createHitbox(new CircularBox(new Point(0, -4), 10 * 2), 0.4, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0));
    // Nose
-   hitboxes.push(new CircularHitbox(0.3, new Point(0, 6), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, 8 * 2));
+   hitboxes.push(createHitbox(new CircularBox(new Point(0, 6), 8 * 2), 0.3, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0));
    
    return {
       [ServerComponentType.transform]: {

@@ -17,7 +17,7 @@ import { COLLISION_BITS } from "webgl-test-shared/dist/collision";
 import { itemEntityCanBePickedUp } from "../entities/item-entity";
 import { HealthComponentArray, addDefence, removeDefence } from "./HealthComponent";
 import { InventoryComponentArray, getInventory, resizeInventory } from "./InventoryComponent";
-import { InventoryUseComponentArray, InventoryUseInfo } from "./InventoryUseComponent";
+import { InventoryUseComponentArray, LimbInfo } from "./InventoryUseComponent";
 import { ItemComponentArray } from "./ItemComponent";
 import { PhysicsComponentArray } from "./PhysicsComponent";
 import { TransformComponentArray } from "./TransformComponent";
@@ -317,16 +317,14 @@ export function removeTitle(entityID: EntityID, title: TribesmanTitle): void {
 }
 
 // @Cleanup: Move to tick function
-const tickInventoryUseInfo = (tribeMember: EntityID, inventoryUseInfo: InventoryUseInfo): void => {
-   const inventoryComponent = InventoryComponentArray.getComponent(tribeMember);
-   
+const tickInventoryUseInfo = (tribeMember: EntityID, inventoryUseInfo: LimbInfo): void => {
    switch (inventoryUseInfo.action) {
       case LimbAction.eat:
       case LimbAction.useMedicine: {
          inventoryUseInfo.foodEatingTimer -= Settings.I_TPS;
    
          if (inventoryUseInfo.foodEatingTimer <= 0) {
-            const inventory = getInventory(inventoryComponent, inventoryUseInfo.usedInventoryName);
+            const inventory = inventoryUseInfo.associatedInventory;
             
             const selectedItem = inventory.itemSlots[inventoryUseInfo.selectedItemSlot];
             if (typeof selectedItem !== "undefined") {

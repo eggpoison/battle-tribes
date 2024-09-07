@@ -68,6 +68,7 @@ import KrumblidComponent from "./KrumblidComponent";
 import SpitPoisonAreaComponent from "./SpitPoisonAreaComponent";
 import PunjiSticksComponent from "./PunjiSticksComponent";
 import IceArrowComponent from "./IceArrowComponent";
+import DamageBoxComponent from "./DamageBoxComponent";
 
 export enum ClientComponentType {
    equipment,
@@ -137,7 +138,8 @@ const ServerComponents = {
    [ServerComponentType.spitPoisonArea]: (): SpitPoisonAreaComponent => 0 as any,
    [ServerComponentType.battleaxeProjectile]: (): BattleaxeProjectileComponent => 0 as any,
    [ServerComponentType.spearProjectile]: (): SpearProjectileComponent => 0 as any,
-   [ServerComponentType.krumblid]: (): KrumblidComponent => 0 as any
+   [ServerComponentType.krumblid]: (): KrumblidComponent => 0 as any,
+   [ServerComponentType.damageBox]: (): DamageBoxComponent => 0 as any
 } satisfies Record<ServerComponentType, () => ServerComponent>;
 
 export const ClientComponents = {
@@ -213,5 +215,6 @@ export function createComponent(entity: Entity, componentType: ServerComponentTy
       case ServerComponentType.battleaxeProjectile: return new BattleaxeProjectileComponent(entity);
       case ServerComponentType.spearProjectile: return new SpearProjectileComponent(entity);
       case ServerComponentType.krumblid: return new KrumblidComponent(entity);
+      case ServerComponentType.damageBox: return new DamageBoxComponent(entity, reader);
    }
 }

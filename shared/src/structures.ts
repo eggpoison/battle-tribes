@@ -1,8 +1,8 @@
 import { Chunks, EntityInfo, getChunk } from "./board-interface";
 import { EntityID, EntityType } from "./entities";
 import { estimateCollidingEntities } from "./hitbox-collision";
-import { createEntityHitboxes } from "./hitboxes/entity-hitbox-creation";
-import { hitboxIsCircular } from "./hitboxes/hitboxes";
+import { createEntityHitboxes } from "./boxes/entity-hitbox-creation";
+import { boxIsCircular } from "./boxes/boxes";
 import { Settings } from "./settings";
 import { Point, distance, getAbsAngleDiff } from "./utils";
 
@@ -91,11 +91,12 @@ const calculateRegularPlacePosition = (placeOrigin: Point, placingEntityRotation
    
    for (let i = 0; i < hitboxes.length; i++) {
       const hitbox = hitboxes[i];
+      const box = hitbox.box;
 
-      const minX = hitbox.calculateHitboxBoundsMinX();
-      const maxX = hitbox.calculateHitboxBoundsMaxX();
-      const minY = hitbox.calculateHitboxBoundsMinY();
-      const maxY = hitbox.calculateHitboxBoundsMaxY();
+      const minX = box.calculateBoundsMinX();
+      const maxX = box.calculateBoundsMaxX();
+      const minY = box.calculateBoundsMinY();
+      const maxY = box.calculateBoundsMaxY();
       
       if (minX < entityMinX) {
          entityMinX = minX;
@@ -191,29 +192,31 @@ const getPositionsOffEntity = (snapOrigin: Readonly<Point>, connectingEntity: En
 
    for (let i = 0; i < connectingEntity.hitboxes.length; i++) {
       const hitbox = connectingEntity.hitboxes[i];
+      const box = hitbox.box;
    
       let hitboxHalfWidth: number;
       let hitboxHalfHeight: number;
-      if (hitboxIsCircular(hitbox)) {
-         hitboxHalfWidth = hitbox.radius;
-         hitboxHalfHeight = hitbox.radius;
+      if (boxIsCircular(box)) {
+         hitboxHalfWidth = box.radius;
+         hitboxHalfHeight = box.radius;
       } else {
-         hitboxHalfWidth = hitbox.width * 0.5;
-         hitboxHalfHeight = hitbox.height * 0.5;
+         hitboxHalfWidth = box.width * 0.5;
+         hitboxHalfHeight = box.height * 0.5;
       }
 
       for (let j = 0; j < placingEntityHitboxes.length; j++) {
          const placingEntityHitbox = placingEntityHitboxes[j];
+         const box = placingEntityHitbox.box;
    
          // @Cleanup: copy and paste
          let placingEntityHitboxHalfWidth: number;
          let placingEntityHitboxHalfHeight: number;
-         if (hitboxIsCircular(placingEntityHitbox)) {
-            placingEntityHitboxHalfWidth = placingEntityHitbox.radius;
-            placingEntityHitboxHalfHeight = placingEntityHitbox.radius;
+         if (boxIsCircular(box)) {
+            placingEntityHitboxHalfWidth = box.radius;
+            placingEntityHitboxHalfHeight = box.radius;
          } else {
-            placingEntityHitboxHalfWidth = placingEntityHitbox.width * 0.5;
-            placingEntityHitboxHalfHeight = placingEntityHitbox.height * 0.5;
+            placingEntityHitboxHalfWidth = box.width * 0.5;
+            placingEntityHitboxHalfHeight = box.height * 0.5;
          }
 
          // Add snap positions for each direction off the connecting entity hitbox

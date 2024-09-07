@@ -8,7 +8,7 @@ import { EntityRelationship, getEntityRelationship } from "../../components/Trib
 import { SpikesComponentArray } from "../../components/SpikesComponent";
 import { createEmptyStructureConnectionInfo } from "webgl-test-shared/dist/structures";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
-import { createWallSpikesHitboxes, createFloorSpikesHitboxes } from "webgl-test-shared/dist/hitboxes/entity-hitbox-creation";
+import { createWallSpikesHitboxes, createFloorSpikesHitboxes } from "webgl-test-shared/dist/boxes/entity-hitbox-creation";
 import { ComponentConfig } from "../../components";
 import Board from "../../Board";
 

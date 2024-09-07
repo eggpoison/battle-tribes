@@ -1,4 +1,4 @@
-import { BlueprintType, BuildingMaterial, BlueprintComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
+import { BlueprintType, BuildingMaterial, ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityID } from "webgl-test-shared/dist/entities";
 import { ComponentArray } from "./ComponentArray";
 import Board from "../Board";
@@ -13,7 +13,6 @@ import { HutComponentArray } from "./HutComponent";
 import { Item, ITEM_INFO_RECORD, HammerItemInfo } from "webgl-test-shared/dist/items/items";
 import { TransformComponentArray } from "./TransformComponent";
 import { ComponentConfig } from "../components";
-import { createEntityHitboxes } from "webgl-test-shared/dist/hitboxes/entity-hitbox-creation";
 import { createDoorConfig } from "../entities/structures/door";
 import { createEntityFromConfig } from "../Entity";
 import { createEmbrasureConfig } from "../entities/structures/embrasure";
@@ -23,6 +22,7 @@ import { createTunnelConfig } from "../entities/structures/tunnel";
 import { createFenceGateConfig } from "../entities/structures/fence-gate";
 import { createWarriorHutConfig } from "../entities/structures/warrior-hut";
 import { Packet } from "webgl-test-shared/dist/packets";
+import { createEntityHitboxes } from "webgl-test-shared/dist/boxes/entity-hitbox-creation";
 
 export interface BlueprintComponentParams {
    blueprintType: BlueprintType;

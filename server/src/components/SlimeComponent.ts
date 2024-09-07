@@ -3,7 +3,6 @@ import { EntityID, EntityType, SlimeSize } from "webgl-test-shared/dist/entities
 import { SLIME_MAX_MERGE_WANT, SLIME_MERGE_TIME, SLIME_MERGE_WEIGHTS, SLIME_RADII, SLIME_VISION_RANGES, SPIT_CHARGE_TIME_TICKS, SPIT_COOLDOWN_TICKS, SlimeEntityAnger } from "../entities/mobs/slime";
 import Board from "../Board";
 import { ComponentArray } from "./ComponentArray";
-import { CircularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { ComponentConfig } from "../components";
 import { Packet } from "webgl-test-shared/dist/packets";
 import { Settings } from "webgl-test-shared/dist/settings";
@@ -18,6 +17,7 @@ import { HealthComponentArray, healEntity } from "./HealthComponent";
 import { PhysicsComponentArray } from "./PhysicsComponent";
 import { TransformComponentArray, getEntityTile } from "./TransformComponent";
 import { WanderAIComponentArray } from "./WanderAIComponent";
+import CircularBox from "webgl-test-shared/dist/boxes/CircularBox";
 
 const enum Vars {
    TURN_SPEED = 2 * UtilVars.PI,
@@ -79,9 +79,11 @@ export const SlimeComponentArray = new ComponentArray<SlimeComponent>(ServerComp
 function onInitialise(config: ComponentConfig<ServerComponentType.transform | ServerComponentType.health | ServerComponentType.aiHelper | ServerComponentType.slime>): void {
    const size = config[ServerComponentType.slime].size;
 
-   const hitbox = config[ServerComponentType.transform].hitboxes[0] as CircularHitbox;
+   const hitbox = config[ServerComponentType.transform].hitboxes[0];
+   const box = hitbox.box as CircularBox;
+   
    hitbox.mass = 1 + size * 0.5;
-   hitbox.radius = SLIME_RADII[size];
+   box.radius = SLIME_RADII[size];
 
    config[ServerComponentType.health].maxHealth = MAX_HEALTH[size];
    config[ServerComponentType.aiHelper].visionRange = SLIME_VISION_RANGES[size];

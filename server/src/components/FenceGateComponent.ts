@@ -3,9 +3,10 @@ import { DoorToggleType, EntityID } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { angle, lerp } from "webgl-test-shared/dist/utils";
 import { ComponentArray } from "./ComponentArray";
-import { RectangularHitbox, HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { TransformComponentArray } from "./TransformComponent";
 import { Packet } from "webgl-test-shared/dist/packets";
+import { HitboxCollisionType } from "webgl-test-shared/dist/boxes/boxes";
+import RectangularBox from "webgl-test-shared/dist/boxes/RectangularBox";
 
 // @Cleanup: All the door toggling logic is stolen from DoorComponent.ts
 
@@ -46,7 +47,7 @@ const updateDoorOpenProgress = (fenceGate: EntityID, fenceGateComponent: FenceGa
 
    const transformComponent = TransformComponentArray.getComponent(fenceGate);
    
-   const hitbox = transformComponent.hitboxes[0] as RectangularHitbox;
+   const hitbox = transformComponent.hitboxes[0].box as RectangularBox;
    hitbox.offset.x = xOffset;
    hitbox.offset.y = yOffset;
    hitbox.relativeRotation = rotation - Math.PI/2;

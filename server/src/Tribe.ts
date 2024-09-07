@@ -16,12 +16,12 @@ import { cleanAngle } from "./ai-shared";
 import { getPathfindingGroupID } from "./pathfinding";
 import { registerResearchOrbComplete } from "./server/player-clients";
 import { HutComponentArray } from "./components/HutComponent";
-import { RectangularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { CraftingRecipe } from "webgl-test-shared/dist/items/crafting-recipes";
 import { ItemType, InventoryName } from "webgl-test-shared/dist/items/items";
 import { TransformComponentArray } from "./components/TransformComponent";
 import { createEntityConfig } from "./entity-creation";
 import { createEntityFromConfig } from "./Entity";
+import { BoxType, HitboxWrapper } from "webgl-test-shared/dist/boxes/boxes";
 
 const ENEMY_ATTACK_REMEMBER_TIME_TICKS = 30 * Settings.TPS;
 const RESPAWN_TIME_TICKS = 5 * Settings.TPS;
@@ -84,7 +84,7 @@ export interface RestrictedBuildingArea {
    readonly rotation: number;
    /** The ID of the building responsible for the restricted area */
    readonly associatedBuildingID: number;
-   readonly hitbox: RectangularHitbox;
+   readonly hitbox: HitboxWrapper<BoxType.rectangular>;
 }
 
 export interface VirtualBuilding {

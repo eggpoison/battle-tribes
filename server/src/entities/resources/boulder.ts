@@ -4,10 +4,11 @@ import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { Point, randInt } from "webgl-test-shared/dist/utils";
 import { createItemsOverEntity } from "../../entity-shared";
 import { wasTribeMemberKill } from "../tribes/tribe-member";
-import { CircularHitbox, HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { ItemType } from "webgl-test-shared/dist/items/items";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { ComponentConfig } from "../../components";
+import { createHitbox, HitboxCollisionType } from "webgl-test-shared/dist/boxes/boxes";
+import CircularBox from "webgl-test-shared/dist/boxes/CircularBox";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.health
@@ -24,7 +25,7 @@ export function createBoulderConfig(): ComponentConfig<ComponentTypes> {
          type: EntityType.boulder,
          collisionBit: COLLISION_BITS.default,
          collisionMask: DEFAULT_COLLISION_MASK,
-         hitboxes: [new CircularHitbox(1.25, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, RADIUS)]
+         hitboxes: [createHitbox(new CircularBox(new Point(0, 0), RADIUS), 1.25, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0)]
       },
       [ServerComponentType.health]: {
          maxHealth: 40

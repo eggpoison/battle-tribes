@@ -4,7 +4,6 @@ import { PathfindingSettings } from "webgl-test-shared/dist/settings";
 import { calculateStructureConnectionInfo } from "webgl-test-shared/dist/structures";
 import { TribesmanTitle } from "webgl-test-shared/dist/titles";
 import { angle, getAngleDiff } from "webgl-test-shared/dist/utils";
-import { updateHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes"
 import Board from "../../../Board";
 import Tribe from "../../../Tribe";
 import { getDistanceFromPointToEntity, stopEntity, willStopAtDesiredDistance } from "../../../ai-shared";
@@ -17,16 +16,17 @@ import { awardTitle } from "../../../components/TribeMemberComponent";
 import { TribesmanAIComponentArray, TribesmanPathType } from "../../../components/TribesmanAIComponent";
 import { PathfindFailureDefault } from "../../../pathfinding";
 import { TITLE_REWARD_CHANCES } from "../../../tribesman-title-generation";
-import { placeBuilding, placeBlueprint, calculateRadialAttackTargets, calculateRepairTarget, repairBuilding } from "../tribe-member";
+import { placeBuilding, placeBlueprint, calculateRadialAttackTargets, repairBuilding } from "../tribe-member";
 import { TRIBESMAN_TURN_SPEED } from "./tribesman-ai";
 import { getBestToolItemSlot, getTribesmanAttackOffset, getTribesmanAttackRadius, getTribesmanDesiredAttackRange, getTribesmanRadius, getTribesmanSlowAcceleration, pathfindToPosition } from "./tribesman-ai-utils";
 import { huntEntity } from "./tribesman-combat-ai";
 import { TribesmanPlaceGoal, TribesmanUpgradeGoal } from "./tribesman-goals";
 import { AIHelperComponentArray } from "../../../components/AIHelperComponent";
-import { createEntityHitboxes } from "webgl-test-shared/dist/hitboxes/entity-hitbox-creation";
-import { getHitboxesCollidingEntities } from "webgl-test-shared/dist/hitbox-collision";
+import { getBoxesCollidingEntities } from "webgl-test-shared/dist/hitbox-collision";
 import { Inventory, ITEM_INFO_RECORD, PlaceableItemInfo, InventoryName } from "webgl-test-shared/dist/items/items";
 import { TransformComponentArray } from "../../../components/TransformComponent";
+import { createEntityHitboxes } from "webgl-test-shared/dist/boxes/entity-hitbox-creation";
+import { updateBox } from "webgl-test-shared/dist/boxes/boxes";
 
 const enum Vars {
    BUILDING_PLACE_DISTANCE = 80
@@ -39,10 +39,10 @@ export function goPlaceBuilding(tribesman: EntityID, hotbarInventory: Inventory,
    const hitboxes = createEntityHitboxes(entityType);
    for (let i = 0; i < hitboxes.length; i++) {
       const hitbox = hitboxes[i];
-      updateHitbox(hitbox, plan.position.x, plan.position.y, plan.rotation);
+      updateBox(hitbox.box, plan.position.x, plan.position.y, plan.rotation);
    }
    
-   const blockingEntities = getHitboxesCollidingEntities(Board.getWorldInfo(), hitboxes);
+   const blockingEntities = getBoxesCollidingEntities(Board.getWorldInfo(), hitboxes);
    for (let i = 0; i < blockingEntities.length; i++) {
       const blockingEntity = blockingEntities[i];
       if (!HealthComponentArray.hasComponent(blockingEntity)) {
@@ -247,12 +247,14 @@ export function attemptToRepairBuildings(tribesman: EntityID, hammerItemSlot: nu
       physicsComponent.turnSpeed = TRIBESMAN_TURN_SPEED;
 
       if (Math.abs(getAngleDiff(transformComponent.rotation, targetRotation)) < 0.1) {
-         // If in melee range, try to repair the building
-         const targets = calculateRadialAttackTargets(tribesman, getTribesmanAttackOffset(tribesman), getTribesmanAttackRadius(tribesman));
-         const repairTarget = calculateRepairTarget(tribesman, targets);
-         if (repairTarget !== null) {
-            repairBuilding(tribesman, repairTarget, hammerItemSlot, InventoryName.hotbar);
-         }
+         // @Incomplete
+
+         // // If in melee range, try to repair the building
+         // const targets = calculateRadialAttackTargets(tribesman, getTribesmanAttackOffset(tribesman), getTribesmanAttackRadius(tribesman));
+         // const repairTarget = calculateRepairTarget(tribesman, targets);
+         // if (repairTarget !== null) {
+         //    repairBuilding(tribesman, repairTarget, hammerItemSlot, InventoryName.hotbar);
+         // }
       }
    } else {
       pathfindToPosition(tribesman, buildingTransformComponent.position.x, buildingTransformComponent.position.y, closestDamagedBuilding, TribesmanPathType.default, Math.floor(desiredAttackRange / PathfindingSettings.NODE_SEPARATION), PathfindFailureDefault.throwError);

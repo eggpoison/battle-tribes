@@ -2,7 +2,6 @@ import { ServerComponentType } from "webgl-test-shared/dist/components";
 import Board from "../Board";
 import { BODY_GENERATION_RADIUS, GOLEM_WAKE_TIME_TICKS, GolemVars } from "../entities/mobs/golem";
 import { ComponentArray } from "./ComponentArray";
-import { Hitbox, CircularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { EntityID } from "webgl-test-shared/dist/entities";
 import { Packet } from "webgl-test-shared/dist/packets";
 import { Settings } from "webgl-test-shared/dist/settings";
@@ -13,6 +12,8 @@ import { createEntityFromConfig } from "../Entity";
 import { PebblumComponentArray } from "./PebblumComponent";
 import { PhysicsComponentArray } from "./PhysicsComponent";
 import { TransformComponentArray } from "./TransformComponent";
+import { HitboxWrapper } from "webgl-test-shared/dist/boxes/boxes";
+import CircularBox from "webgl-test-shared/dist/boxes/CircularBox";
 
 const enum Vars {
    TARGET_ENTITY_FORGET_TIME = 20,
@@ -20,13 +21,13 @@ const enum Vars {
 }
 
 export interface GolemComponentParams {
-   readonly hitboxes: ReadonlyArray<Hitbox>;
+   readonly hitboxes: ReadonlyArray<HitboxWrapper>;
    readonly pebblumSummonCooldownTicks: number;
 }
 
 export interface RockInfo {
    /** The hitbox corresponding to the rock info */
-   readonly hitbox: Hitbox;
+   readonly hitbox: HitboxWrapper;
    readonly sleepOffsetX: number;
    readonly sleepOffsetY: number;
    readonly awakeOffsetX: number;
@@ -43,11 +44,12 @@ export interface GolemTargetInfo {
    timeSinceLastAggro: number;
 }
 
-const generateRockInfoArray = (hitboxes: ReadonlyArray<Hitbox>): Array<RockInfo> => {
+const generateRockInfoArray = (hitboxes: ReadonlyArray<HitboxWrapper>): Array<RockInfo> => {
    const rockInfoArray = new Array<RockInfo>();
    
    for (let i = 0; i < hitboxes.length; i++) {
-      const hitbox = hitboxes[i] as CircularHitbox;
+      const hitbox = hitboxes[i];
+      const box = hitbox.box as CircularBox;
 
       const offsetMagnitude = BODY_GENERATION_RADIUS * Math.random()
       const offsetDirection = 2 * Math.PI * Math.random();
@@ -56,12 +58,12 @@ const generateRockInfoArray = (hitboxes: ReadonlyArray<Hitbox>): Array<RockInfo>
          hitbox: hitbox,
          sleepOffsetX: offsetMagnitude * Math.sin(offsetDirection),
          sleepOffsetY: offsetMagnitude * Math.cos(offsetDirection),
-         awakeOffsetX: hitbox.offset.x,
-         awakeOffsetY: hitbox.offset.y,
-         lastOffsetX: hitbox.offset.x,
-         lastOffsetY: hitbox.offset.y,
-         targetOffsetX: hitbox.offset.x,
-         targetOffsetY: hitbox.offset.y,
+         awakeOffsetX: box.offset.x,
+         awakeOffsetY: box.offset.y,
+         lastOffsetX: box.offset.x,
+         lastOffsetY: box.offset.y,
+         targetOffsetX: box.offset.x,
+         targetOffsetY: box.offset.y,
          currentShiftTimerTicks: 0
       });
    }
@@ -136,8 +138,8 @@ const shiftRocks = (golem: EntityID, golemComponent: GolemComponent): void => {
       }
 
       const shiftProgress = rockInfo.currentShiftTimerTicks / Vars.ROCK_SHIFT_INTERVAL;
-      rockInfo.hitbox.offset.x = lerp(rockInfo.lastOffsetX, rockInfo.targetOffsetX, shiftProgress);
-      rockInfo.hitbox.offset.y = lerp(rockInfo.lastOffsetY, rockInfo.targetOffsetY, shiftProgress);
+      rockInfo.hitbox.box.offset.x = lerp(rockInfo.lastOffsetX, rockInfo.targetOffsetX, shiftProgress);
+      rockInfo.hitbox.box.offset.y = lerp(rockInfo.lastOffsetY, rockInfo.targetOffsetY, shiftProgress);
    }
 
    const physicsComponent = PhysicsComponentArray.getComponent(golem);
@@ -169,8 +171,8 @@ const updateGolemHitboxPositions = (golem: EntityID, golemComponent: GolemCompon
    for (let i = 0; i < golemComponent.rockInfoArray.length; i++) {
       const rockInfo = golemComponent.rockInfoArray[i];
 
-      rockInfo.hitbox.offset.x = lerp(rockInfo.sleepOffsetX, rockInfo.awakeOffsetX, wakeProgress);
-      rockInfo.hitbox.offset.y = lerp(rockInfo.sleepOffsetY, rockInfo.awakeOffsetY, wakeProgress);
+      rockInfo.hitbox.box.offset.x = lerp(rockInfo.sleepOffsetX, rockInfo.awakeOffsetX, wakeProgress);
+      rockInfo.hitbox.box.offset.y = lerp(rockInfo.sleepOffsetY, rockInfo.awakeOffsetY, wakeProgress);
    }
 
    const physicsComponent = PhysicsComponentArray.getComponent(golem);

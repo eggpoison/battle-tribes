@@ -2,10 +2,10 @@ import { EntityID, RockSpikeProjectileSize } from "webgl-test-shared/dist/entiti
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { ComponentArray } from "./ComponentArray";
 import { ComponentConfig } from "../components";
-import { CircularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { Packet } from "webgl-test-shared/dist/packets";
 import { getAgeTicks, TransformComponentArray } from "./TransformComponent";
 import Board from "../Board";
+import CircularBox from "webgl-test-shared/dist/boxes/CircularBox";
 
 export interface RockSpikeProjectileComponentParams {
    size: number;
@@ -42,9 +42,11 @@ export const RockSpikeComponentArray = new ComponentArray<RockSpikeComponent>(Se
 function onInitialise(config: ComponentConfig<ServerComponentType.transform | ServerComponentType.rockSpike>): void {
    const size = config[ServerComponentType.rockSpike].size;
 
-   const hitbox = config[ServerComponentType.transform].hitboxes[0] as CircularHitbox;
+   const hitbox = config[ServerComponentType.transform].hitboxes[0];
+   const box = hitbox.box as CircularBox;
+   
    hitbox.mass = ROCK_SPIKE_MASSES[size];
-   hitbox.radius = ROCK_SPIKE_HITBOX_SIZES[size];
+   box.radius = ROCK_SPIKE_HITBOX_SIZES[size];
 }
 
 function onTick(rockSpikeComponent: RockSpikeComponent, rockSpike: EntityID): void {

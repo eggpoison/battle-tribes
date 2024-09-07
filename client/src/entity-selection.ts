@@ -14,9 +14,9 @@ import { SEED_TO_PLANT_RECORD } from "./entity-components/PlantComponent";
 import { GhostInfo, GhostType, PARTIAL_OPACITY, setGhostInfo } from "./rendering/webgl/entity-ghost-rendering";
 import { getClosestGroupNum } from "./rendering/webgl/entity-selection-rendering";
 import { CraftingMenu_setCraftingStation, CraftingMenu_setIsVisible } from "./components/game/menus/CraftingMenu";
-import { hitboxIsWithinRange } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { CraftingStation } from "webgl-test-shared/dist/items/crafting-recipes";
 import { ItemType, InventoryName } from "webgl-test-shared/dist/items/items";
+import { boxIsWithinRange } from "webgl-test-shared/dist/boxes/boxes";
 
 const enum InteractActionType {
    openBuildMenu,
@@ -198,7 +198,7 @@ const interactWithEntity = (entity: Entity, action: InteractAction): void => {
 
          // @Hack
          const inventoryUseComponent = Player.instance!.getServerComponent(ServerComponentType.inventoryUse);
-         const hotbarUseInfo = inventoryUseComponent.getUseInfo(InventoryName.hotbar);
+         const hotbarUseInfo = inventoryUseComponent.getLimbInfoByInventoryName(InventoryName.hotbar);
          hotbarUseInfo.lastAttackTicks = Board.serverTicks;
          
          break;
@@ -208,7 +208,7 @@ const interactWithEntity = (entity: Entity, action: InteractAction): void => {
 
          // @Hack
          const inventoryUseComponent = Player.instance!.getServerComponent(ServerComponentType.inventoryUse);
-         const hotbarUseInfo = inventoryUseComponent.getUseInfo(InventoryName.hotbar);
+         const hotbarUseInfo = inventoryUseComponent.getLimbInfoByInventoryName(InventoryName.hotbar);
          hotbarUseInfo.lastAttackTicks = Board.serverTicks;
 
          break;
@@ -218,7 +218,7 @@ const interactWithEntity = (entity: Entity, action: InteractAction): void => {
 
          // @Hack
          const inventoryUseComponent = Player.instance!.getServerComponent(ServerComponentType.inventoryUse);
-         const hotbarUseInfo = inventoryUseComponent.getUseInfo(InventoryName.hotbar);
+         const hotbarUseInfo = inventoryUseComponent.getLimbInfoByInventoryName(InventoryName.hotbar);
          hotbarUseInfo.lastAttackTicks = Board.serverTicks;
          
          break;
@@ -234,7 +234,7 @@ const interactWithEntity = (entity: Entity, action: InteractAction): void => {
 
          // @Hack
          const inventoryUseComponent = Player.instance!.getServerComponent(ServerComponentType.inventoryUse);
-         const hotbarUseInfo = inventoryUseComponent.getUseInfo(InventoryName.hotbar);
+         const hotbarUseInfo = inventoryUseComponent.getLimbInfoByInventoryName(InventoryName.hotbar);
          hotbarUseInfo.lastAttackTicks = Board.serverTicks;
 
          break;
@@ -341,7 +341,7 @@ const getEntityID = (doPlayerProximityCheck: boolean, doCanSelectCheck: boolean)
             
             // Distance from cursor
             for (const hitbox of entityTransformComponent.hitboxes) {
-               if (hitboxIsWithinRange(hitbox, origin, HIGHLIGHT_RANGE)) {
+               if (boxIsWithinRange(hitbox.box, origin, HIGHLIGHT_RANGE)) {
                   const distance = origin.calculateDistanceBetween(entityTransformComponent.position);
                   if (distance < minDist) {
                      minDist = distance;

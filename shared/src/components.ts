@@ -78,7 +78,8 @@ export enum ServerComponentType {
    spitPoisonArea,
    battleaxeProjectile,
    spearProjectile,
-   krumblid
+   krumblid,
+   damageBox
 }
 
 export const ServerComponentTypeString: Record<ServerComponentType, string> = {
@@ -144,7 +145,8 @@ export const ServerComponentTypeString: Record<ServerComponentType, string> = {
    [ServerComponentType.spitPoisonArea]: "spit poison area",
    [ServerComponentType.battleaxeProjectile]: "battleaxe projectile",
    [ServerComponentType.spearProjectile]: "spear projectile",
-   [ServerComponentType.krumblid]: "krumblid"
+   [ServerComponentType.krumblid]: "krumblid",
+   [ServerComponentType.damageBox]: "damage box"
 };
 
 export const NUM_COMPONENTS = Object.keys(ServerComponentTypeString).length;
@@ -163,9 +165,9 @@ export const EntityComponents = {
    [EntityType.iceSpikes]: [ServerComponentType.transform, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.iceSpikes] as const,
    [EntityType.slime]: [ServerComponentType.transform, ServerComponentType.physics, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.slime, ServerComponentType.wanderAI, ServerComponentType.aiHelper] as const,
    [EntityType.slimewisp]: [ServerComponentType.transform, ServerComponentType.physics, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.slimewisp, ServerComponentType.wanderAI, ServerComponentType.aiHelper] as const,
-   [EntityType.player]: [ServerComponentType.transform, ServerComponentType.physics, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.tribe, ServerComponentType.tribeMember, ServerComponentType.inventory, ServerComponentType.inventoryUse, ServerComponentType.player] as const,
-   [EntityType.tribeWorker]: [ServerComponentType.transform, ServerComponentType.physics, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.tribe, ServerComponentType.tribeMember, ServerComponentType.inventory, ServerComponentType.inventoryUse, ServerComponentType.tribesmanAI] as const,
-   [EntityType.tribeWarrior]: [ServerComponentType.transform, ServerComponentType.physics, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.tribe, ServerComponentType.tribeMember, ServerComponentType.inventory, ServerComponentType.inventoryUse, ServerComponentType.tribesmanAI, ServerComponentType.tribeWarrior] as const,
+   [EntityType.player]: [ServerComponentType.transform, ServerComponentType.physics, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.tribe, ServerComponentType.tribeMember, ServerComponentType.inventory, ServerComponentType.inventoryUse, ServerComponentType.player, ServerComponentType.damageBox] as const,
+   [EntityType.tribeWorker]: [ServerComponentType.transform, ServerComponentType.physics, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.tribe, ServerComponentType.tribeMember, ServerComponentType.inventory, ServerComponentType.inventoryUse, ServerComponentType.tribesmanAI, ServerComponentType.damageBox] as const,
+   [EntityType.tribeWarrior]: [ServerComponentType.transform, ServerComponentType.physics, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.tribe, ServerComponentType.tribeMember, ServerComponentType.inventory, ServerComponentType.inventoryUse, ServerComponentType.tribesmanAI, ServerComponentType.tribeWarrior, ServerComponentType.damageBox] as const,
    [EntityType.tribeTotem]: [ServerComponentType.transform, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.tribe, ServerComponentType.totemBanner] as const,
    [EntityType.workerHut]: [ServerComponentType.transform, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.tribe, ServerComponentType.hut] as const,
    [EntityType.warriorHut]: [ServerComponentType.transform, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.tribe, ServerComponentType.hut] as const,
@@ -365,35 +367,6 @@ export interface IceSpikesComponentData extends BaseComponentData {
 export interface InventoryComponentData extends BaseComponentData {
    readonly componentType: ServerComponentType.inventory;
    readonly inventories: Partial<Record<InventoryName, Inventory>>;
-}
-
-/* Inventory Use Component */
-
-// @Cleanup: Merge with server definition
-export interface LimbData {
-   selectedItemSlot: number;
-   readonly inventoryName: InventoryName;
-   bowCooldownTicks: number;
-   itemAttackCooldowns: Partial<Record<number, number>>;
-   spearWindupCooldowns: Partial<Record<number, number>>;
-   crossbowLoadProgressRecord: Partial<Record<number, number>>;
-   foodEatingTimer: number;
-   action: LimbAction;
-   lastAttackTicks: number;
-   lastEatTicks: number;
-   // @Cleanup: May be able to merge all 3 of these into 1
-   lastBowChargeTicks: number;
-   lastSpearChargeTicks: number;
-   lastBattleaxeChargeTicks: number;
-   lastCrossbowLoadTicks: number;
-   lastCraftTicks: number;
-   thrownBattleaxeItemID: number;
-   lastAttackCooldown: number;
-}
-
-export interface InventoryUseComponentData extends BaseComponentData {
-   readonly componentType: ServerComponentType.inventoryUse;
-   readonly inventoryUseInfos: Array<LimbData>;
 }
 
 /* Item Component */

@@ -3,7 +3,7 @@ import { BuildingMaterial, ServerComponentType } from "webgl-test-shared/dist/co
 import { EntityType } from "webgl-test-shared/dist/entities";
 import { Point } from "webgl-test-shared/dist/utils";
 import { createEmptyStructureConnectionInfo } from "webgl-test-shared/dist/structures";
-import { createDoorHitboxes } from "webgl-test-shared/dist/hitboxes/entity-hitbox-creation";
+import { createDoorHitboxes } from "webgl-test-shared/dist/boxes/entity-hitbox-creation";
 import { ComponentConfig } from "../../components";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 

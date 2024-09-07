@@ -5,7 +5,7 @@ import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { Point } from "webgl-test-shared/dist/utils";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { createEmptyStructureConnectionInfo } from "webgl-test-shared/dist/structures";
-import { createSlingTurretHitboxes } from "webgl-test-shared/dist/hitboxes/entity-hitbox-creation";
+import { createSlingTurretHitboxes } from "webgl-test-shared/dist/boxes/entity-hitbox-creation";
 import { ComponentConfig } from "../../components";
 
 type ComponentTypes = ServerComponentType.transform

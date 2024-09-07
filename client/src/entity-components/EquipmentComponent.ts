@@ -133,7 +133,7 @@ const updateGloveRenderParts = (equipmentComponent: EquipmentComponent): void =>
       const inventoryUseComponent = equipmentComponent.entity.getServerComponent(ServerComponentType.inventoryUse);
 
       if (equipmentComponent.gloveRenderParts.length === 0) {
-         for (let limbIdx = 0; limbIdx < inventoryUseComponent.useInfos.length; limbIdx++) {
+         for (let limbIdx = 0; limbIdx < inventoryUseComponent.limbInfos.length; limbIdx++) {
             const gloveRenderPart = new TexturedRenderPart(
                inventoryUseComponent.limbRenderParts[limbIdx],
                1.1,
@@ -144,7 +144,7 @@ const updateGloveRenderParts = (equipmentComponent: EquipmentComponent): void =>
             equipmentComponent.gloveRenderParts.push(gloveRenderPart);
          }
       } else {
-         for (let limbIdx = 0; limbIdx < inventoryUseComponent.useInfos.length; limbIdx++) {
+         for (let limbIdx = 0; limbIdx < inventoryUseComponent.limbInfos.length; limbIdx++) {
             equipmentComponent.gloveRenderParts[limbIdx].switchTextureSource(getGloveTextureSource(glove.type));
          }
       }

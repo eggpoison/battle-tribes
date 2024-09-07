@@ -6,7 +6,9 @@ import { RenderPart, renderPartIsTextured, thingIsRenderPart } from "../../rende
 import { calculateEntityRenderHeight } from "../../render-layers";
 
 const enum Vars {
-   ATTRIBUTES_PER_VERTEX = 17
+   ATTRIBUTES_PER_VERTEX = 17,
+   /** Maximum number of render parts that the rendering supports */
+   MAX_RENDER_PARTS = 4096
 }
 
 export const enum EntityRenderingVars {
@@ -15,9 +17,14 @@ export const enum EntityRenderingVars {
 
 let program: WebGLProgram;
 let vao: WebGLVertexArrayObject;
+
 let indexBuffer: WebGLBuffer;
+let indicesData: Uint16Array;
 
 let vertexBuffer: WebGLBuffer;
+let vertexData: Float32Array;
+
+let previousNumRenderParts = 0;
 
 const entityRenderHeightMap = new WeakMap<Entity, number>();
 
@@ -62,9 +69,6 @@ export function createEntityShaders(): void {
          uint hash = pcg_hash(vertexID);
          float rand = fract(float(hash) / 10000.0);
 
-         // @Temporary
-         // textureSize = vec2(2.0, 2.0);
-         // textureSize = vec2(1.5, 1.5);
          float size = mix(1.4, 1.6, rand);
          textureSize = vec2(size, size);
       } else {
@@ -160,24 +164,46 @@ export function createEntityShaders(): void {
    vao = gl.createVertexArray()!;
    gl.bindVertexArray(vao);
 
-   indexBuffer = gl.createBuffer()!;
-   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+   vertexData = new Float32Array(Vars.MAX_RENDER_PARTS * 4 * Vars.ATTRIBUTES_PER_VERTEX);
 
-   const vertexData = new Float32Array(8);
-   vertexData[0] = -0.5;
-   vertexData[1] = -0.5;
-   vertexData[2] = 0.5;
-   vertexData[3] = -0.5;
-   vertexData[4] = -0.5;
-   vertexData[5] = 0.5;
-   vertexData[6] = 0.5;
-   vertexData[7] = 0.5;
+   indicesData = new Uint16Array(Vars.MAX_RENDER_PARTS * 6);
+   for (let i = 0; i < Vars.MAX_RENDER_PARTS; i++) {
+      const dataOffset = i * 6;
+      
+      indicesData[dataOffset] = i * 4;
+      indicesData[dataOffset + 1] = i * 4 + 1;
+      indicesData[dataOffset + 2] = i * 4 + 2;
+      indicesData[dataOffset + 3] = i * 4 + 2;
+      indicesData[dataOffset + 4] = i * 4 + 1;
+      indicesData[dataOffset + 5] = i * 4 + 3;
+   }
 
    vertexBuffer = gl.createBuffer()!;
    gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-   gl.bufferData(gl.ARRAY_BUFFER, vertexData, gl.STATIC_DRAW);
+   gl.bufferData(gl.ARRAY_BUFFER, vertexData, gl.DYNAMIC_DRAW);
+
+   indexBuffer = gl.createBuffer()!;
+   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+   gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indicesData, gl.DYNAMIC_DRAW);
+
+   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, Vars.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT, 0);
+   gl.vertexAttribPointer(1, 1, gl.FLOAT, false, Vars.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT, 2 * Float32Array.BYTES_PER_ELEMENT);
+   gl.vertexAttribPointer(2, 1, gl.FLOAT, false, Vars.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT, 3 * Float32Array.BYTES_PER_ELEMENT);
+   gl.vertexAttribPointer(3, 3, gl.FLOAT, false, Vars.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT, 4 * Float32Array.BYTES_PER_ELEMENT);
+   gl.vertexAttribPointer(4, 1, gl.FLOAT, false, Vars.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT, 7 * Float32Array.BYTES_PER_ELEMENT);
+
+   gl.vertexAttribPointer(5, 3, gl.FLOAT, false, Vars.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT, 8 * Float32Array.BYTES_PER_ELEMENT);
+   gl.vertexAttribPointer(6, 3, gl.FLOAT, false, Vars.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT, 11 * Float32Array.BYTES_PER_ELEMENT);
+   gl.vertexAttribPointer(7, 3, gl.FLOAT, false, Vars.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT, 14 * Float32Array.BYTES_PER_ELEMENT);
+   
    gl.enableVertexAttribArray(0);
-   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+   gl.enableVertexAttribArray(1);
+   gl.enableVertexAttribArray(2);
+   gl.enableVertexAttribArray(3);
+   gl.enableVertexAttribArray(4);
+   gl.enableVertexAttribArray(5);
+   gl.enableVertexAttribArray(6);
+   gl.enableVertexAttribArray(7);
 
    gl.bindVertexArray(null);
 }
@@ -198,15 +224,6 @@ export function getEntityHeight(entity: Entity): number {
 export function calculateRenderPartDepth(renderPart: RenderPart, entity: Entity): number {
    const renderHeight = entityRenderHeightMap.get(entity)!;
    return renderHeight + renderPart.zIndex * 0.0001;
-}
-
-const countRenderParts = (entities: ReadonlyArray<Entity>): number => {
-   let numRenderParts = 0;
-   for (let i = 0; i < entities.length; i++) {
-      const entity = entities[i];
-      numRenderParts += entity.allRenderThings.length;
-   }
-   return numRenderParts;
 }
 
 export function setEntityInVertexData(entity: Entity, vertexData: Float32Array, indicesData: Uint16Array | null, renderPartIdx: number): number {
@@ -325,87 +342,90 @@ export function setEntityInVertexData(entity: Entity, vertexData: Float32Array, 
    return renderPartIdx;
 }
 
+const clearRenderPartInVertexData = (vertexData: Float32Array, renderPartIdx: number): void => {
+   const vertexDataOffset = renderPartIdx * 4 * Vars.ATTRIBUTES_PER_VERTEX;
+
+   vertexData[vertexDataOffset] = 0;
+   vertexData[vertexDataOffset + 1] = 0;
+   vertexData[vertexDataOffset + 2] = 0;
+   vertexData[vertexDataOffset + 3] = 0;
+   vertexData[vertexDataOffset + 4] = 0;
+   vertexData[vertexDataOffset + 5] = 0;
+   vertexData[vertexDataOffset + 6] = 0;
+   vertexData[vertexDataOffset + 7] = 0;
+   vertexData[vertexDataOffset + 8] = 0;
+   vertexData[vertexDataOffset + 9] = 0;
+   vertexData[vertexDataOffset + 10] = 0;
+   vertexData[vertexDataOffset + 11] = 0;
+   vertexData[vertexDataOffset + 12] = 0;
+   vertexData[vertexDataOffset + 13] = 0;
+   vertexData[vertexDataOffset + 14] = 0;
+   vertexData[vertexDataOffset + 15] = 0;
+   vertexData[vertexDataOffset + 16] = 0;
+
+   vertexData[vertexDataOffset + 17] = 0;
+   vertexData[vertexDataOffset + 18] = 0;
+   vertexData[vertexDataOffset + 19] = 0;
+   vertexData[vertexDataOffset + 20] = 0;
+   vertexData[vertexDataOffset + 21] = 0;
+   vertexData[vertexDataOffset + 22] = 0;
+   vertexData[vertexDataOffset + 23] = 0;
+   vertexData[vertexDataOffset + 24] = 0;
+   vertexData[vertexDataOffset + 25] = 0;
+   vertexData[vertexDataOffset + 26] = 0;
+   vertexData[vertexDataOffset + 27] = 0;
+   vertexData[vertexDataOffset + 28] = 0;
+   vertexData[vertexDataOffset + 29] = 0;
+   vertexData[vertexDataOffset + 30] = 0;
+   vertexData[vertexDataOffset + 31] = 0;
+   vertexData[vertexDataOffset + 32] = 0;
+   vertexData[vertexDataOffset + 33] = 0;
+
+   vertexData[vertexDataOffset + 34] = 0;
+   vertexData[vertexDataOffset + 35] = 0;
+   vertexData[vertexDataOffset + 36] = 0;
+   vertexData[vertexDataOffset + 37] = 0;
+   vertexData[vertexDataOffset + 38] = 0;
+   vertexData[vertexDataOffset + 39] = 0;
+   vertexData[vertexDataOffset + 40] = 0;
+   vertexData[vertexDataOffset + 41] = 0;
+   vertexData[vertexDataOffset + 42] = 0;
+   vertexData[vertexDataOffset + 43] = 0;
+   vertexData[vertexDataOffset + 44] = 0;
+   vertexData[vertexDataOffset + 45] = 0;
+   vertexData[vertexDataOffset + 46] = 0;
+   vertexData[vertexDataOffset + 47] = 0;
+   vertexData[vertexDataOffset + 48] = 0;
+   vertexData[vertexDataOffset + 49] = 0;
+   vertexData[vertexDataOffset + 50] = 0;
+
+   vertexData[vertexDataOffset + 51] = 0;
+   vertexData[vertexDataOffset + 52] = 0;
+   vertexData[vertexDataOffset + 53] = 0;
+   vertexData[vertexDataOffset + 54] = 0;
+   vertexData[vertexDataOffset + 55] = 0;
+   vertexData[vertexDataOffset + 56] = 0;
+   vertexData[vertexDataOffset + 57] = 0;
+   vertexData[vertexDataOffset + 58] = 0;
+   vertexData[vertexDataOffset + 59] = 0;
+   vertexData[vertexDataOffset + 60] = 0;
+   vertexData[vertexDataOffset + 61] = 0;
+   vertexData[vertexDataOffset + 62] = 0;
+   vertexData[vertexDataOffset + 63] = 0;
+   vertexData[vertexDataOffset + 64] = 0;
+   vertexData[vertexDataOffset + 65] = 0;
+   vertexData[vertexDataOffset + 66] = 0;
+   vertexData[vertexDataOffset + 67] = 0;
+}
+
 export function clearEntityInVertexData(entity: Entity, vertexData: Float32Array, renderPartIdx: number): void {
    for (let j = 0; j < entity.allRenderThings.length; j++) {
       const renderPart = entity.allRenderThings[j];
       if (!thingIsRenderPart(renderPart)) {
          continue;
       }
-      
-      const vertexDataOffset = renderPartIdx * 4 * Vars.ATTRIBUTES_PER_VERTEX;
 
-      vertexData[vertexDataOffset] = 0;
-      vertexData[vertexDataOffset + 1] = 0;
-      vertexData[vertexDataOffset + 2] = 0;
-      vertexData[vertexDataOffset + 3] = 0;
-      vertexData[vertexDataOffset + 4] = 0;
-      vertexData[vertexDataOffset + 5] = 0;
-      vertexData[vertexDataOffset + 6] = 0;
-      vertexData[vertexDataOffset + 7] = 0;
-      vertexData[vertexDataOffset + 8] = 0;
-      vertexData[vertexDataOffset + 9] = 0;
-      vertexData[vertexDataOffset + 10] = 0;
-      vertexData[vertexDataOffset + 11] = 0;
-      vertexData[vertexDataOffset + 12] = 0;
-      vertexData[vertexDataOffset + 13] = 0;
-      vertexData[vertexDataOffset + 14] = 0;
-      vertexData[vertexDataOffset + 15] = 0;
-      vertexData[vertexDataOffset + 16] = 0;
-
-      vertexData[vertexDataOffset + 17] = 0;
-      vertexData[vertexDataOffset + 18] = 0;
-      vertexData[vertexDataOffset + 19] = 0;
-      vertexData[vertexDataOffset + 20] = 0;
-      vertexData[vertexDataOffset + 21] = 0;
-      vertexData[vertexDataOffset + 22] = 0;
-      vertexData[vertexDataOffset + 23] = 0;
-      vertexData[vertexDataOffset + 24] = 0;
-      vertexData[vertexDataOffset + 25] = 0;
-      vertexData[vertexDataOffset + 26] = 0;
-      vertexData[vertexDataOffset + 27] = 0;
-      vertexData[vertexDataOffset + 28] = 0;
-      vertexData[vertexDataOffset + 29] = 0;
-      vertexData[vertexDataOffset + 30] = 0;
-      vertexData[vertexDataOffset + 31] = 0;
-      vertexData[vertexDataOffset + 32] = 0;
-      vertexData[vertexDataOffset + 33] = 0;
-
-      vertexData[vertexDataOffset + 34] = 0;
-      vertexData[vertexDataOffset + 35] = 0;
-      vertexData[vertexDataOffset + 36] = 0;
-      vertexData[vertexDataOffset + 37] = 0;
-      vertexData[vertexDataOffset + 38] = 0;
-      vertexData[vertexDataOffset + 39] = 0;
-      vertexData[vertexDataOffset + 40] = 0;
-      vertexData[vertexDataOffset + 41] = 0;
-      vertexData[vertexDataOffset + 42] = 0;
-      vertexData[vertexDataOffset + 43] = 0;
-      vertexData[vertexDataOffset + 44] = 0;
-      vertexData[vertexDataOffset + 45] = 0;
-      vertexData[vertexDataOffset + 46] = 0;
-      vertexData[vertexDataOffset + 47] = 0;
-      vertexData[vertexDataOffset + 48] = 0;
-      vertexData[vertexDataOffset + 49] = 0;
-      vertexData[vertexDataOffset + 50] = 0;
-
-      vertexData[vertexDataOffset + 51] = 0;
-      vertexData[vertexDataOffset + 52] = 0;
-      vertexData[vertexDataOffset + 53] = 0;
-      vertexData[vertexDataOffset + 54] = 0;
-      vertexData[vertexDataOffset + 55] = 0;
-      vertexData[vertexDataOffset + 56] = 0;
-      vertexData[vertexDataOffset + 57] = 0;
-      vertexData[vertexDataOffset + 58] = 0;
-      vertexData[vertexDataOffset + 59] = 0;
-      vertexData[vertexDataOffset + 60] = 0;
-      vertexData[vertexDataOffset + 61] = 0;
-      vertexData[vertexDataOffset + 62] = 0;
-      vertexData[vertexDataOffset + 63] = 0;
-      vertexData[vertexDataOffset + 64] = 0;
-      vertexData[vertexDataOffset + 65] = 0;
-      vertexData[vertexDataOffset + 66] = 0;
-      vertexData[vertexDataOffset + 67] = 0;
-
+      clearRenderPartInVertexData(vertexData, renderPartIdx);
       renderPartIdx++;
    }
 }
@@ -413,16 +433,24 @@ export function clearEntityInVertexData(entity: Entity, vertexData: Float32Array
 export function renderEntities(entities: ReadonlyArray<Entity>): void {
    const textureAtlas = getEntityTextureAtlas();
 
-   const numRenderParts = countRenderParts(entities);
-   const vertexData = new Float32Array(numRenderParts * 4 * Vars.ATTRIBUTES_PER_VERTEX);
-   const indicesData = new Uint16Array(numRenderParts * 6);
-
+   // Set data
    let renderPartIdx = 0;
    for (const entity of entities) {
-      renderPartIdx = setEntityInVertexData(entity, vertexData, indicesData, renderPartIdx);
+      renderPartIdx = setEntityInVertexData(entity, vertexData, null, renderPartIdx);
+   }
+
+   // Clear any data from the previous render
+   for (let i = (renderPartIdx + 1) * 4 * Vars.ATTRIBUTES_PER_VERTEX; i < previousNumRenderParts * 4 * Vars.ATTRIBUTES_PER_VERTEX; i++) {
+      vertexData[i] = 0;
    }
    
+   const numRenderParts = renderPartIdx + 1;
+   if (numRenderParts > Vars.MAX_RENDER_PARTS) {
+      console.warn("Exceeded maximum buffer size for non-chunked entity rendering.");
+   }
+
    gl.useProgram(program);
+   gl.bindVertexArray(vao);
 
    gl.enable(gl.BLEND);
    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
@@ -432,32 +460,14 @@ export function renderEntities(entities: ReadonlyArray<Entity>): void {
    gl.bindTexture(gl.TEXTURE_2D, textureAtlas.texture);
 
    gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-   gl.bufferData(gl.ARRAY_BUFFER, vertexData, gl.STATIC_DRAW);
+   gl.bufferSubData(gl.ARRAY_BUFFER, 0, vertexData);
 
-   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, Vars.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT, 0);
-   gl.vertexAttribPointer(1, 1, gl.FLOAT, false, Vars.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT, 2 * Float32Array.BYTES_PER_ELEMENT);
-   gl.vertexAttribPointer(2, 1, gl.FLOAT, false, Vars.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT, 3 * Float32Array.BYTES_PER_ELEMENT);
-   gl.vertexAttribPointer(3, 3, gl.FLOAT, false, Vars.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT, 4 * Float32Array.BYTES_PER_ELEMENT);
-   gl.vertexAttribPointer(4, 1, gl.FLOAT, false, Vars.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT, 7 * Float32Array.BYTES_PER_ELEMENT);
-
-   gl.vertexAttribPointer(5, 3, gl.FLOAT, false, Vars.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT, 8 * Float32Array.BYTES_PER_ELEMENT);
-   gl.vertexAttribPointer(6, 3, gl.FLOAT, false, Vars.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT, 11 * Float32Array.BYTES_PER_ELEMENT);
-   gl.vertexAttribPointer(7, 3, gl.FLOAT, false, Vars.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT, 14 * Float32Array.BYTES_PER_ELEMENT);
-   
-   gl.enableVertexAttribArray(0);
-   gl.enableVertexAttribArray(1);
-   gl.enableVertexAttribArray(2);
-   gl.enableVertexAttribArray(3);
-   gl.enableVertexAttribArray(4);
-   gl.enableVertexAttribArray(5);
-   gl.enableVertexAttribArray(6);
-   gl.enableVertexAttribArray(7);
-
-   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
-   gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indicesData, gl.STATIC_DRAW);
-   
    gl.drawElements(gl.TRIANGLES, numRenderParts * 6, gl.UNSIGNED_SHORT, 0);
 
    gl.disable(gl.BLEND);
    gl.blendFunc(gl.ONE, gl.ZERO);
+
+   gl.bindVertexArray(null);
+
+   previousNumRenderParts = numRenderParts;
 }

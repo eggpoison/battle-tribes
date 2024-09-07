@@ -16,7 +16,7 @@ import { loadTextures } from "./textures";
 import { hidePauseScreen, showPauseScreen, toggleSettingsMenu } from "./components/game/GameScreen";
 import { App_setGameInteractState, getGameState } from "./components/App";
 import { clearPressedKeys } from "./keyboard-input";
-import { createHitboxShaders, renderEntityHitboxes } from "./rendering/webgl/hitbox-rendering";
+import { createHitboxShaders, renderDamageBoxes, renderHitboxes } from "./rendering/webgl/hitbox-rendering";
 import { updatePlayerItems, updatePlayerMovement } from "./player-input";
 import { clearServerTicks, updateDebugScreenFPS, updateDebugScreenRenderTime } from "./components/game/dev/GameInfoDisplay";
 import { createWorldBorderShaders, renderWorldBorder } from "./rendering/webgl/world-border-rendering";
@@ -64,6 +64,7 @@ import { InitialGameDataPacket, processGameDataPacket } from "./client/packet-pr
 import { PacketReader } from "webgl-test-shared/dist/packets";
 import { getMaxRenderHeightForRenderLayer, MAX_RENDER_LAYER, RenderLayer } from "./render-layers";
 import { updateEntity } from "./entity-components/ComponentArray";
+import { resolveEntityCollisions } from "./collision";
 
 let tempPacketSendCounter = 0;
 
@@ -104,13 +105,85 @@ const createEventListeners = (): void => {
 
 let lastRenderTime = Math.floor(new Date().getTime() / 1000);
 
+const main = (currentTime: number): void => {
+   if (Game.isSynced) {
+      const deltaTime = currentTime - Game.lastTime;
+      Game.lastTime = currentTime;
+   
+      Game.lag += deltaTime;
+      while (Game.lag >= 1000 / Settings.TPS) {
+         if (Game.queuedPackets.length > 0) {
+            // Done before so that server data can override particles
+            Board.updateParticles();
+            
+            // If there is a backlog of packets and none are able to be skipped, skip to the final packet
+            if (Game.numSkippablePackets === 0 && Game.queuedPackets.length >= 2) {
+               // Unload all the packets so that things like hits taken aren't skipped
+               for (let i = 0; i < Game.queuedPackets.length; i++) {
+                  processGameDataPacket(Game.queuedPackets[i]);
+               }
+               Game.queuedPackets.splice(0, Game.queuedPackets.length);
+            } else {
+               processGameDataPacket(Game.queuedPackets[0]);
+               Game.queuedPackets.splice(0, 1);
+               Game.numSkippablePackets--;
+               
+               if (Game.queuedPackets.length === 0 || Game.numSkippablePackets < 0) {
+                  Game.numSkippablePackets = 0;
+               }
+            }
+
+            updateTextNumbers();
+            Board.updateTickCallbacks();
+            if (Player.instance !== null) {
+               updateEntity(Player.instance);
+            }
+            Board.tickEntities();
+            Board.resolvePlayerCollisions();
+            Game.update();
+         } else {
+            Game.numSkippablePackets++;
+            
+            updateTextNumbers();
+            Board.updateTickCallbacks();
+            Board.updateParticles();
+            Board.updateEntities();
+            Board.tickEntities();
+            resolveEntityCollisions();
+            Game.update();
+         }
+         
+         // @Hack: For some reason, if the player sends this packet 60 times a second the server begins to mess up how it receives other packet types. Weird.
+         if (++tempPacketSendCounter % 6 === 0) Client.sendPlayerDataPacket();
+
+         Game.lag -= 1000 / Settings.TPS;
+      }
+
+      const renderStartTime = performance.now();
+
+      const frameProgress = Game.lag / 1000 * Settings.TPS;
+      Game.render(frameProgress);
+
+      const renderEndTime = performance.now();
+
+      const renderTime = renderEndTime - renderStartTime;
+      registerFrame(renderStartTime, renderEndTime);
+      updateFrameGraph();
+      updateDebugScreenRenderTime(renderTime);
+   }
+
+   if (Game.isRunning) {
+      requestAnimationFrame(main);
+   }
+}
+
 abstract class Game {
    private static interactState = GameInteractState.none;
    public static summonPacket: Mutable<EntitySummonPacket> | null = null;
    
-   private static lastTime = 0;
+   public static lastTime = 0;
 
-   private static numSkippablePackets = 0;
+   public static numSkippablePackets = 0;
    
    public static queuedPackets = new Array<PacketReader>();
    
@@ -124,7 +197,7 @@ abstract class Game {
    public static hasInitialised = false;
 
    /** Amount of time the game is through the current frame */
-   private static lag = 0;
+   public static lag = 0;
 
    // @Cleanup: Make these not be able to be null, just number
    public static cursorPositionX: number | null = null;
@@ -175,7 +248,7 @@ abstract class Game {
       this.isSynced = true;
       this.isRunning = true;
       this.lastTime = performance.now();
-      requestAnimationFrame(time => this.main(time));
+      requestAnimationFrame(main);
    }
 
    public static stop(): void {
@@ -285,79 +358,7 @@ abstract class Game {
       }
    }
 
-   public static main(currentTime: number): void {
-      if (this.isSynced) {
-         const deltaTime = currentTime - Game.lastTime;
-         Game.lastTime = currentTime;
-      
-         this.lag += deltaTime;
-         while (this.lag >= 1000 / Settings.TPS) {
-            if (this.queuedPackets.length > 0) {
-               // Done before so that server data can override particles
-               Board.updateParticles();
-               
-               // If there is a backlog of packets and none are able to be skipped, skip to the final packet
-               if (this.numSkippablePackets === 0 && this.queuedPackets.length >= 2) {
-                  // Unload all the packets so that things like hits taken aren't skipped
-                  for (let i = 0; i < this.queuedPackets.length; i++) {
-                     processGameDataPacket(this.queuedPackets[i]);
-                  }
-                  this.queuedPackets.splice(0, this.queuedPackets.length);
-               } else {
-                  processGameDataPacket(this.queuedPackets[0]);
-                  this.queuedPackets.splice(0, 1);
-                  this.numSkippablePackets--;
-                  
-                  if (this.queuedPackets.length === 0 || this.numSkippablePackets < 0) {
-                     this.numSkippablePackets = 0;
-                  }
-               }
-
-               updateTextNumbers();
-               Board.updateTickCallbacks();
-               if (Player.instance !== null) {
-                  updateEntity(Player.instance);
-               }
-               Board.tickEntities();
-               Board.resolvePlayerCollisions();
-               this.update();
-            } else {
-               this.numSkippablePackets++;
-               
-               updateTextNumbers();
-               Board.updateTickCallbacks();
-               Board.updateParticles();
-               Board.updateEntities();
-               Board.tickEntities();
-               Board.resolveEntityCollisions();
-               this.update();
-            }
-            
-            // @Hack: For some reason, if the player sends this packet 60 times a second the server begins to mess up how it receives other packet types. Weird.
-            if (++tempPacketSendCounter % 6 === 0) Client.sendPlayerDataPacket();
-
-            this.lag -= 1000 / Settings.TPS;
-         }
-
-         const renderStartTime = performance.now();
-
-         const frameProgress = this.lag / 1000 * Settings.TPS;
-         this.render(frameProgress);
-
-         const renderEndTime = performance.now();
-
-         const renderTime = renderEndTime - renderStartTime;
-         registerFrame(renderStartTime, renderEndTime);
-         updateFrameGraph();
-         updateDebugScreenRenderTime(renderTime);
-      }
-
-      if (this.isRunning) {
-         requestAnimationFrame(time => this.main(time));
-      }
-   }
-
-   private static update(): void {
+   public static update(): void {
       Board.clientTicks++;
       
       updateSpamFilter();
@@ -395,7 +396,7 @@ abstract class Game {
     * 
     * @param frameProgress How far the game is into the current frame (0 = frame just started, 0.99 means frame is about to end)
     */
-   private static render(frameProgress: number): void {
+   public static render(frameProgress: number): void {
       // Player rotation is updated each render, but only sent each update
       if (cursorX !== null && cursorY !== null) {
          updatePlayerRotation(cursorX, cursorY);
@@ -479,7 +480,10 @@ abstract class Game {
       renderResearchOrb();
 
       if (nerdVisionIsVisible() && OPTIONS.showHitboxes) {
-         renderEntityHitboxes();
+         renderHitboxes();
+      }
+      if (nerdVisionIsVisible() && OPTIONS.showDamageBoxes) {
+         renderDamageBoxes();
       }
       if (nerdVisionIsVisible() && this.entityDebugData !== null && typeof Board.entityRecord[this.entityDebugData.entityID] !== "undefined") {
          renderLineDebugData(this.entityDebugData);

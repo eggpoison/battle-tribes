@@ -6,11 +6,12 @@ import { PLANT_GROWTH_TICKS, PlantComponentArray } from "../components/PlantComp
 import { dropBerryOverEntity } from "./resources/berry-bush";
 import { createItemsOverEntity } from "../entity-shared";
 import { createIceShardExplosion } from "./resources/ice-spikes";
-import { CircularHitbox, HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { ItemType } from "webgl-test-shared/dist/items/items";
 import { ComponentConfig } from "../components";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { TransformComponentArray } from "../components/TransformComponent";
+import { createHitbox, HitboxCollisionType } from "webgl-test-shared/dist/boxes/boxes";
+import CircularBox from "webgl-test-shared/dist/boxes/CircularBox";
    
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.health
@@ -25,7 +26,7 @@ export function createPlantConfig(): ComponentConfig<ComponentTypes> {
          type: EntityType.plant,
          collisionBit: COLLISION_BITS.plants,
          collisionMask: DEFAULT_COLLISION_MASK,
-         hitboxes: [new CircularHitbox(0.3, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, 28)]
+         hitboxes: [createHitbox(new CircularBox(new Point(0, 0), 28), 0.3, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0)]
       },
       [ServerComponentType.health]: {
          maxHealth: 0

@@ -27,7 +27,7 @@ class RockSpikeComponent extends ServerComponent {
    }
 
    public onLoad(): void {
-      this.renderPart = this.entity.getRenderPart("rockSpikeProjectile:part");
+      this.renderPart = this.entity.getRenderThing("rockSpikeProjectile:part") as RenderPart;
    }
 
    public padData(reader: PacketReader): void {

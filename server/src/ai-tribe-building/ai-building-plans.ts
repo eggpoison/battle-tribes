@@ -10,28 +10,30 @@ import { placeBuilding } from "../entities/tribes/tribe-member";
 import { SafetyNode, addHitboxesOccupiedNodes, addRectangularSafetyNodePositions, placeVirtualBuilding, updateTribeBuildingInfo } from "./ai-building";
 import { buildingIsInfrastructure, getTribeSafety, tribeIsVulnerable } from "./ai-building-heuristics";
 import { TribeArea, areaHasOutsideDoor, getOutsideDoorPlacePlan } from "./ai-building-areas";
-import { HitboxVertexPositions, updateHitbox, hitboxIsCircular, RectangularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
-import { createEntityHitboxes } from "webgl-test-shared/dist/hitboxes/entity-hitbox-creation";
-import { getHitboxesCollidingEntities } from "webgl-test-shared/dist/hitbox-collision";
 import { getItemRecipe } from "webgl-test-shared/dist/items/crafting-recipes";
 import { ItemType, ITEM_INFO_RECORD, PlaceableItemInfo } from "webgl-test-shared/dist/items/items";
 import { TransformComponentArray } from "../components/TransformComponent";
+import { createEntityHitboxes } from "webgl-test-shared/dist/boxes/entity-hitbox-creation";
+import { boxIsCircular, updateBox } from "webgl-test-shared/dist/boxes/boxes";
+import RectangularBox from "webgl-test-shared/dist/boxes/RectangularBox";
+import { getBoxesCollidingEntities } from "webgl-test-shared/dist/hitbox-collision";
 
-const virtualBuildingTakesUpWallSpace = (wallPosition: Point, wallRotation: number, virtualBuilding: VirtualBuilding, wallHitbox: RectangularHitbox): boolean => {
+const virtualBuildingTakesUpWallSpace = (wallPosition: Point, wallRotation: number, virtualBuilding: VirtualBuilding, wallHitbox: RectangularBox): boolean => {
    // @Speed: cache when virutal entity is first created
    const hitboxes = createEntityHitboxes(virtualBuilding.entityType);
    
    for (let i = 0; i < hitboxes.length; i++) {
       const hitbox = hitboxes[i];
-      updateHitbox(hitbox, virtualBuilding.position.x, virtualBuilding.position.y, virtualBuilding.rotation);
+      const box = hitbox.box;
+      updateBox(box, virtualBuilding.position.x, virtualBuilding.position.y, virtualBuilding.rotation);
       
       // @Cleanup: copy and paste
-      if (hitboxIsCircular(hitbox)) {
-         if (circleAndRectangleDoIntersect(hitbox.position, hitbox.radius, wallPosition, Settings.TILE_SIZE, Settings.TILE_SIZE, wallRotation)) {
+      if (boxIsCircular(box)) {
+         if (circleAndRectangleDoIntersect(box.position, box.radius, wallPosition, Settings.TILE_SIZE, Settings.TILE_SIZE, wallRotation)) {
             return true;
          }
       } else {
-         const collisionData = rectanglesAreColliding(wallHitbox, hitbox);
+         const collisionData = rectanglesAreColliding(wallHitbox, box);
          if (collisionData.isColliding) {
             return true;
          }
@@ -49,17 +51,16 @@ const wallSpaceIsFree = (wallPosition: Point, wallRotation: number, tribe: Tribe
    // const minChunkY = Math.max(Math.floor((y - Settings.TILE_SIZE) / Settings.CHUNK_UNITS), 0);
    // const maxChunkY = Math.min(Math.floor((y + Settings.TILE_SIZE) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1);
 
-   // @Speed
-   const tempWallHitbox = new RectangularHitbox(0, new Point(0, 0), 0, 0, 0, 0, Settings.TILE_SIZE * 0.499, Settings.TILE_SIZE * 0.499, wallRotation);
-   tempWallHitbox.position.x = wallPosition.x;
-   tempWallHitbox.position.y = wallPosition.y;
+   const tempWallBox = new RectangularBox(new Point(0, 0), Settings.TILE_SIZE * 0.499, Settings.TILE_SIZE * 0.499, wallRotation); 
+   tempWallBox.position.x = wallPosition.x;
+   tempWallBox.position.y = wallPosition.y;
    
    // Check for existing walls
    // @Speed!!
    for (let i = 0; i < tribe.virtualBuildings.length; i++) {
       const virtualBuilding = tribe.virtualBuildings[i];
 
-      if (virtualBuildingTakesUpWallSpace(wallPosition, wallRotation, virtualBuilding, tempWallHitbox)) {
+      if (virtualBuildingTakesUpWallSpace(wallPosition, wallRotation, virtualBuilding, tempWallBox)) {
          return false;
       }
    }
@@ -82,14 +83,11 @@ const wallSpaceIsFree = (wallPosition: Point, wallRotation: number, tribe: Tribe
    //    }
    // }
 
-   const sinRotation = Math.sin(wallRotation);
-   const cosRotation = Math.cos(wallRotation);
-
    // Check for restricted areas
    for (let i = 0; i < tribe.restrictedBuildingAreas.length; i++) {
       const restrictedArea = tribe.restrictedBuildingAreas[i];
 
-      const collisionData = rectanglesAreColliding(tempWallHitbox, restrictedArea.hitbox);
+      const collisionData = rectanglesAreColliding(tempWallBox, restrictedArea.hitbox.box);
       if (collisionData.isColliding) {
          return false;
       }
@@ -113,10 +111,10 @@ const wallSpaceIsFree = (wallPosition: Point, wallRotation: number, tribe: Tribe
          const tileXUnits = (tileX + 0.5) * Settings.TILE_SIZE;
          const tileYUnits = (tileY + 0.5) * Settings.TILE_SIZE;
 
-         const tempTileHitbox = new RectangularHitbox(0, new Point(tileXUnits, tileYUnits), 0, 0, 0, 0, Settings.TILE_SIZE * 0.499, Settings.TILE_SIZE * 0.499, 0);
-         updateHitbox(tempTileHitbox, tileXUnits, tileYUnits, 0);
+         const tempTileBox = new RectangularBox(new Point(tileXUnits, tileYUnits), Settings.TILE_SIZE * 0.499, Settings.TILE_SIZE * 0.499, 0);
+         updateBox(tempTileBox, tileXUnits, tileYUnits, 0);
 
-         const collisionData = rectanglesAreColliding(tempWallHitbox, tempTileHitbox);
+         const collisionData = rectanglesAreColliding(tempWallBox, tempTileBox);
          if (collisionData.isColliding) {
             return false;
          }
@@ -200,10 +198,10 @@ const addGridAlignedWallCandidates = (tribe: Tribe, placeCandidates: Array<WallP
    for (let i = 0; i < tribe.restrictedBuildingAreas.length; i++) {
       const restrictedArea = tribe.restrictedBuildingAreas[i];
 
-      const minX = restrictedArea.hitbox.calculateHitboxBoundsMinX();
-      const maxX = restrictedArea.hitbox.calculateHitboxBoundsMaxX();
-      const minY = restrictedArea.hitbox.calculateHitboxBoundsMinY();
-      const maxY = restrictedArea.hitbox.calculateHitboxBoundsMaxY();
+      const minX = restrictedArea.hitbox.box.calculateBoundsMinX();
+      const maxX = restrictedArea.hitbox.box.calculateBoundsMaxX();
+      const minY = restrictedArea.hitbox.box.calculateBoundsMinY();
+      const maxY = restrictedArea.hitbox.box.calculateBoundsMaxY();
       
       addRectangularSafetyNodePositions(restrictedArea.position, restrictedArea.width, restrictedArea.height, restrictedArea.rotation, minX, maxX, minY, maxY, occupiedNodes);
    }
@@ -444,10 +442,10 @@ const buildingPositionIsValid = (tribe: Tribe, x: number, y: number, rotation: n
    const hitboxes = createEntityHitboxes(entityType);
    for (let i = 0; i < hitboxes.length; i++) {
       const hitbox = hitboxes[i];
-      updateHitbox(hitbox, x, y, rotation);
+      updateBox(hitbox.box, x, y, rotation);
    }
    
-   const collidingEntities = getHitboxesCollidingEntities(Board.getWorldInfo(), hitboxes);
+   const collidingEntities = getBoxesCollidingEntities(Board.getWorldInfo(), hitboxes);
    
    for (let i = 0; i < collidingEntities.length; i++) {
       const collidingEntity = collidingEntities[i];
@@ -506,13 +504,15 @@ export function generateBuildingPosition(tribe: Tribe, entityType: StructureType
       const hitboxes = createEntityHitboxes(entityType);
       for (let i = 0; i < hitboxes.length; i++) {
          const hitbox = hitboxes[i];
-         updateHitbox(hitbox, x, y, rotation);
+         const box = hitbox.box;
+
+         updateBox(box, x, y, rotation);
          
          // Make sure the hitboxes don't go outside the world
-         const minX = hitbox.calculateHitboxBoundsMinX();
-         const maxX = hitbox.calculateHitboxBoundsMaxX();
-         const minY = hitbox.calculateHitboxBoundsMinY();
-         const maxY = hitbox.calculateHitboxBoundsMaxY();
+         const minX = box.calculateBoundsMinX();
+         const maxX = box.calculateBoundsMaxX();
+         const minY = box.calculateBoundsMinY();
+         const maxY = box.calculateBoundsMaxY();
          if (minX < 0 || maxX >= Settings.BOARD_UNITS || minY < 0 || maxY >= Settings.BOARD_UNITS) {
             continue main;
          }

@@ -6,6 +6,7 @@ interface Options {
     * @default false
     */
    showHitboxes: boolean;
+   showDamageBoxes: boolean;
    /**
     * If true, then chunk borders will be displayed in a wireframe.
     * @default false
@@ -33,6 +34,7 @@ const OPTIONS: Options = {
    // uiZoom: 1,
    nightVisionIsEnabled: false,
    showHitboxes: false,
+   showDamageBoxes: false,
    showChunkBorders: false,
    showRenderChunkBorders: false,
    showParticles: true,

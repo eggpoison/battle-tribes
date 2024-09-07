@@ -1,7 +1,6 @@
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import { distance, Point, rotateXAroundOrigin, rotateYAroundOrigin } from "webgl-test-shared/dist/utils";
-import { CircularHitbox, Hitbox, hitboxIsCircular, RectangularHitbox, updateHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import Board from "../Board";
 import { Tile } from "../Tile";
 import { Settings } from "webgl-test-shared/dist/settings";
@@ -14,6 +13,9 @@ import { createCircularHitboxFromData, createRectangularHitboxFromData } from ".
 import { PacketReader } from "webgl-test-shared/dist/packets";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { boxIsCircular, createHitbox, HitboxWrapper, updateBox } from "webgl-test-shared/dist/boxes/boxes";
+import CircularBox from "webgl-test-shared/dist/boxes/CircularBox";
+import RectangularBox from "webgl-test-shared/dist/boxes/RectangularBox";
 
 const getTile = (position: Point): Tile => {
    const tileX = Math.floor(position.x / Settings.TILE_SIZE);
@@ -39,13 +41,18 @@ class TransformComponent extends ServerComponent {
    
    public chunks = new Set<Chunk>();
 
-   public hitboxes = new Array<Hitbox>();
+   public hitboxes = new Array<HitboxWrapper>();
    public readonly hitboxLocalIDs = new Array<number>();
 
    public collisionBit: number;
    public collisionMask: number;
 
    public collidingEntities = new Array<Entity>();
+   
+   public boundingAreaMinX = Number.MAX_SAFE_INTEGER;
+   public boundingAreaMaxX = Number.MIN_SAFE_INTEGER;
+   public boundingAreaMinY = Number.MAX_SAFE_INTEGER;
+   public boundingAreaMaxY = Number.MIN_SAFE_INTEGER;
    
    constructor(entity: Entity, reader: PacketReader) {
       super(entity);
@@ -72,7 +79,8 @@ class TransformComponent extends ServerComponent {
          const flags = reader.readNumber();
          const radius = reader.readNumber();
 
-         const hitbox = new CircularHitbox(mass, new Point(offsetX, offsetY), collisionType, collisionBit, collisionMask, flags, radius);
+         const box = new CircularBox(new Point(offsetX, offsetY), radius);
+         const hitbox = createHitbox(box, mass, collisionType, collisionBit, collisionMask, flags);
          this.addHitbox(hitbox, localID);
 
          this.totalMass += mass;
@@ -92,7 +100,8 @@ class TransformComponent extends ServerComponent {
          const height = reader.readNumber();
          const rotation = reader.readNumber();
 
-         const hitbox = new RectangularHitbox(mass, new Point(offsetX, offsetY), collisionType, collisionBit, collisionMask, flags, width, height, rotation);
+         const box = new RectangularBox(new Point(offsetX, offsetY), width, height, rotation);
+         const hitbox = createHitbox(box, mass, collisionType, collisionBit, collisionMask, flags);
          this.addHitbox(hitbox, localID);
 
          this.totalMass += mass;
@@ -123,15 +132,40 @@ class TransformComponent extends ServerComponent {
       return true;
    }
 
-   public addHitbox(hitbox: Hitbox, localID: number): void {
-      updateHitbox(hitbox, this.position.x, this.position.y, this.rotation);
+   public addHitbox(hitbox: HitboxWrapper, localID: number): void {
+      updateBox(hitbox.box, this.position.x, this.position.y, this.rotation);
       this.hitboxes.push(hitbox);
       this.hitboxLocalIDs.push(localID);
    }
 
    private updateHitboxes(): void {
+      this.boundingAreaMinX = Number.MAX_SAFE_INTEGER;
+      this.boundingAreaMaxX = Number.MIN_SAFE_INTEGER;
+      this.boundingAreaMinY = Number.MAX_SAFE_INTEGER;
+      this.boundingAreaMaxY = Number.MIN_SAFE_INTEGER;
+
       for (const hitbox of this.hitboxes) {
-         updateHitbox(hitbox, this.position.x, this.position.y, this.rotation);
+         const box = hitbox.box;
+         updateBox(box, this.position.x, this.position.y, this.rotation);
+
+         const boundsMinX = box.calculateBoundsMinX();
+         const boundsMaxX = box.calculateBoundsMaxX();
+         const boundsMinY = box.calculateBoundsMinY();
+         const boundsMaxY = box.calculateBoundsMaxY();
+
+         // Update bounding area
+         if (boundsMinX < this.boundingAreaMinX) {
+            this.boundingAreaMinX = boundsMinX;
+         }
+         if (boundsMaxX > this.boundingAreaMaxX) {
+            this.boundingAreaMaxX = boundsMaxX;
+         }
+         if (boundsMinY < this.boundingAreaMinY) {
+            this.boundingAreaMinY = boundsMinY;
+         }
+         if (boundsMaxY > this.boundingAreaMaxY) {
+            this.boundingAreaMaxY = boundsMaxY;
+         }
       }
    }
 
@@ -141,10 +175,12 @@ class TransformComponent extends ServerComponent {
       
       // Find containing chunks
       for (const hitbox of this.hitboxes) {
-         const minX = hitbox.calculateHitboxBoundsMinX();
-         const maxX = hitbox.calculateHitboxBoundsMaxX();
-         const minY = hitbox.calculateHitboxBoundsMinY();
-         const maxY = hitbox.calculateHitboxBoundsMaxY();
+         const box = hitbox.box;
+
+         const minX = box.calculateBoundsMinX();
+         const maxX = box.calculateBoundsMaxX();
+         const minY = box.calculateBoundsMinY();
+         const maxY = box.calculateBoundsMaxY();
 
          const minChunkX = Math.max(Math.min(Math.floor(minX / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
          const maxChunkX = Math.max(Math.min(Math.floor(maxX / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
@@ -323,18 +359,19 @@ class TransformComponent extends ServerComponent {
             }
          }
          
-         let hitbox: CircularHitbox;
          if (existingHitboxIdx !== 99999) {
+            const hitbox = this.hitboxes[existingHitboxIdx];
+            const box = hitbox.box as CircularBox;
+            
             // Update the existing hitbox
-            hitbox = this.hitboxes[existingHitboxIdx] as CircularHitbox;
-            hitbox.radius = hitboxData.radius;
-            hitbox.offset.x = hitboxData.offsetX;
-            hitbox.offset.y = hitboxData.offsetY;
+            box.radius = hitboxData.radius;
+            box.offset.x = hitboxData.offsetX;
+            box.offset.y = hitboxData.offsetY;
             hitbox.collisionType = hitboxData.collisionType;
-            updateHitbox(hitbox, this.position.x, this.position.y, this.rotation);
+            updateBox(box, this.position.x, this.position.y, this.rotation);
          } else {
             // Create new hitbox
-            hitbox = createCircularHitboxFromData(hitboxData);
+            const hitbox = createCircularHitboxFromData(hitboxData);
             this.addHitbox(hitbox, hitboxData.localID);
          }
       }
@@ -358,20 +395,21 @@ class TransformComponent extends ServerComponent {
             }
          }
          
-         let hitbox: RectangularHitbox;
          if (existingHitboxIdx !== 99999) {
             // Update the existing hitbox
-            hitbox = this.hitboxes[existingHitboxIdx] as RectangularHitbox;
-            hitbox.width = hitboxData.width;
-            hitbox.height = hitboxData.height;
-            hitbox.relativeRotation = hitboxData.rotation;
-            hitbox.offset.x = hitboxData.offsetX;
-            hitbox.offset.y = hitboxData.offsetY;
+            const hitbox = this.hitboxes[existingHitboxIdx];
+            const box = hitbox.box as RectangularBox;
+
+            box.width = hitboxData.width;
+            box.height = hitboxData.height;
+            box.relativeRotation = hitboxData.rotation;
+            box.offset.x = hitboxData.offsetX;
+            box.offset.y = hitboxData.offsetY;
             hitbox.collisionType = hitboxData.collisionType;
-            updateHitbox(hitbox, this.position.x, this.position.y, this.rotation);
+            updateBox(box, this.position.x, this.position.y, this.rotation);
          } else {
             // Create new hitbox
-            hitbox = createRectangularHitboxFromData(hitboxData);
+            const hitbox = createRectangularHitboxFromData(hitboxData);
             this.addHitbox(hitbox, hitboxData.localID);
          }
       }
@@ -391,10 +429,12 @@ class TransformComponent extends ServerComponent {
       const containingChunks = new Set<Chunk>();
 
       for (const hitbox of this.hitboxes) {
-         const minX = hitbox.calculateHitboxBoundsMinX();
-         const maxX = hitbox.calculateHitboxBoundsMaxX();
-         const minY = hitbox.calculateHitboxBoundsMinY();
-         const maxY = hitbox.calculateHitboxBoundsMaxY();
+         const box = hitbox.box;
+
+         const minX = box.calculateBoundsMinX();
+         const maxX = box.calculateBoundsMaxX();
+         const minY = box.calculateBoundsMinY();
+         const maxY = box.calculateBoundsMaxY();
 
          // Recalculate the game object's containing chunks based on the new hitbox bounds
          const minChunkX = Math.max(Math.min(Math.floor(minX / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
@@ -448,20 +488,21 @@ function onUpdate(transformComponent: TransformComponent): void {
 // @Cleanup: copy and paste from server
 export function getRandomPointInEntity(transformComponent: TransformComponent): Point {
    const hitbox = transformComponent.hitboxes[randInt(0, transformComponent.hitboxes.length - 1)];
+   const box = hitbox.box;
 
-   if (hitboxIsCircular(hitbox)) {
-      const offsetMagnitude = hitbox.radius * Math.random();
+   if (boxIsCircular(box)) {
+      const offsetMagnitude = box.radius * Math.random();
       const offsetDirection = 2 * Math.PI * Math.random();
       return new Point(transformComponent.position.x + offsetMagnitude * Math.sin(offsetDirection), transformComponent.position.y + offsetMagnitude * Math.cos(offsetDirection));
    } else {
-      const halfWidth = hitbox.width / 2;
-      const halfHeight = hitbox.height / 2;
+      const halfWidth = box.width / 2;
+      const halfHeight = box.height / 2;
       
       const xOffset = randFloat(-halfWidth, halfWidth);
       const yOffset = randFloat(-halfHeight, halfHeight);
 
-      const x = transformComponent.position.x + rotateXAroundOrigin(xOffset, yOffset, hitbox.rotation);
-      const y = transformComponent.position.y + rotateYAroundOrigin(xOffset, yOffset, hitbox.rotation);
+      const x = transformComponent.position.x + rotateXAroundOrigin(xOffset, yOffset, box.rotation);
+      const y = transformComponent.position.y + rotateYAroundOrigin(xOffset, yOffset, box.rotation);
       return new Point(x, y);
    }
 }

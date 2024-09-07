@@ -175,14 +175,12 @@ const chaseAndEatBerry = (cow: EntityID, cowComponent: CowComponent, berryItemEn
 }
 
 const entityIsHoldingBerry = (entity: EntityID): boolean => {
-   const inventoryComponent = InventoryComponentArray.getComponent(entity);
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(entity);
 
-   for (let i = 0 ; i < inventoryUseComponent.inventoryUseInfos.length; i++) {
-      const useInfo = inventoryUseComponent.inventoryUseInfos[i];
-      const inventory = getInventory(inventoryComponent, useInfo.usedInventoryName);
+   for (let i = 0 ; i < inventoryUseComponent.limbInfos.length; i++) {
+      const limbInfo = inventoryUseComponent.limbInfos[i];
       
-      const heldItem = inventory.itemSlots[useInfo.selectedItemSlot];
+      const heldItem = limbInfo.associatedInventory.itemSlots[limbInfo.selectedItemSlot];
       if (typeof heldItem !== "undefined" && heldItem.type === ItemType.berry) {
          return true;
       }

@@ -8,11 +8,11 @@ import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { ParticleRenderLayer } from "../rendering/webgl/particle-rendering";
 import { Light, addLight, attachLightToRenderPart } from "../lights";
 import { playSound } from "../sound";
-import { CircularHitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { RenderPart } from "../render-parts/render-parts";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { PacketReader } from "webgl-test-shared/dist/packets";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
+import CircularBox from "webgl-test-shared/dist/boxes/CircularBox";
 
 const ANGRY_SOUND_INTERVAL_TICKS = Settings.TPS * 3;
 
@@ -24,17 +24,17 @@ enum GolemRockSize {
    tiny
 }
 
-const getHitboxSize = (hitbox: CircularHitbox): GolemRockSize => {
-   if (Math.abs(hitbox.radius - 36) < 0.01) {
+const getHitboxSize = (hitboxBox: CircularBox): GolemRockSize => {
+   if (Math.abs(hitboxBox.radius - 36) < 0.01) {
       return GolemRockSize.massive;
    }
-   if (Math.abs(hitbox.radius - 32) < 0.01) {
+   if (Math.abs(hitboxBox.radius - 32) < 0.01) {
       return GolemRockSize.large;
    }
-   if (Math.abs(hitbox.radius - 26) < 0.01) {
+   if (Math.abs(hitboxBox.radius - 26) < 0.01) {
       return GolemRockSize.medium;
    }
-   if (Math.abs(hitbox.radius - 12) < 0.01) {
+   if (Math.abs(hitboxBox.radius - 12) < 0.01) {
       return GolemRockSize.tiny;
    }
    return GolemRockSize.small;
@@ -114,8 +114,10 @@ class GolemComponent extends ServerComponent {
 
       // Add new rocks
       for (let i = this.rockRenderParts.length; i < transformComponent.hitboxes.length; i++) {
-         const hitbox = transformComponent.hitboxes[i] as CircularHitbox;
-         const size = getHitboxSize(hitbox);
+         const hitbox = transformComponent.hitboxes[i];
+         const box = hitbox.box as CircularBox;
+         
+         const size = getHitboxSize(box);
    
          const renderPart = new TexturedRenderPart(
             null,
@@ -123,8 +125,8 @@ class GolemComponent extends ServerComponent {
             2 * Math.PI * Math.random(),
             getTextureArrayIndex(getTextureSource(size))
          );
-         renderPart.offset.x = hitbox.offset.x;
-         renderPart.offset.y = hitbox.offset.y;
+         renderPart.offset.x = box.offset.x;
+         renderPart.offset.y = box.offset.y;
          this.entity.attachRenderThing(renderPart);
          this.rockRenderParts.push(renderPart);
    
@@ -163,10 +165,11 @@ class GolemComponent extends ServerComponent {
       const shakeAmount = this.wakeProgress > 0 && this.wakeProgress < 1 ? 1 : 0;
       for (let i = 0; i < transformComponent.hitboxes.length; i++) {
          const hitbox = transformComponent.hitboxes[i];
+         const box = hitbox.box;
          const renderPart = this.rockRenderParts[i];
 
-         renderPart.offset.x = hitbox.offset.x;
-         renderPart.offset.y = hitbox.offset.y;
+         renderPart.offset.x = box.offset.x;
+         renderPart.offset.y = box.offset.y;
          renderPart.shakeAmount = shakeAmount;
       }
 
@@ -189,11 +192,12 @@ function onTick(golemComponent: GolemComponent): void {
 
    if (golemComponent.wakeProgress > 0 && golemComponent.wakeProgress < 1) {
       for (let i = 0; i < transformComponent.hitboxes.length; i++) {
-         const hitbox = transformComponent.hitboxes[i] as CircularHitbox;
+         const hitbox = transformComponent.hitboxes[i];
+         const box = hitbox.box as CircularBox;
 
          const offsetDirection = 2 * Math.PI * Math.random();
-         const x = hitbox.position.x + hitbox.radius * Math.sin(offsetDirection);
-         const y = hitbox.position.y + hitbox.radius * Math.cos(offsetDirection);
+         const x = box.position.x + box.radius * Math.sin(offsetDirection);
+         const y = box.position.y + box.radius * Math.cos(offsetDirection);
          createRockSpeckParticle(x, y, 0, physicsComponent.velocity.x, physicsComponent.velocity.y, ParticleRenderLayer.low);
       }
    } else if (golemComponent.wakeProgress === 1) {
@@ -202,11 +206,12 @@ function onTick(golemComponent: GolemComponent): void {
             continue;
          }
 
-         const hitbox = transformComponent.hitboxes[i] as CircularHitbox;
+         const hitbox = transformComponent.hitboxes[i];
+         const box = hitbox.box as CircularBox;
 
          const offsetDirection = 2 * Math.PI * Math.random();
-         const x = hitbox.position.x + hitbox.radius * Math.sin(offsetDirection);
-         const y = hitbox.position.y + hitbox.radius * Math.cos(offsetDirection);
+         const x = box.position.x + box.radius * Math.sin(offsetDirection);
+         const y = box.position.y + box.radius * Math.cos(offsetDirection);
          createRockSpeckParticle(x, y, 0, physicsComponent.velocity.x, physicsComponent.velocity.y, ParticleRenderLayer.low);
       }
    }

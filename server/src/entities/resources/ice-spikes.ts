@@ -12,10 +12,11 @@ import Board from "../../Board";
 import { createItemsOverEntity } from "../../entity-shared";
 import { applyKnockback } from "../../components/PhysicsComponent";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
-import { CircularHitbox, HitboxCollisionType } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { ItemType } from "webgl-test-shared/dist/items/items";
 import { ComponentConfig } from "../../components";
 import { TransformComponentArray } from "../../components/TransformComponent";
+import CircularBox from "webgl-test-shared/dist/boxes/CircularBox";
+import { createHitbox, HitboxCollisionType } from "webgl-test-shared/dist/boxes/boxes";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.health
@@ -32,7 +33,7 @@ export function createIceSpikesConfig(): ComponentConfig<ComponentTypes> {
          type: EntityType.iceSpikes,
          collisionBit: COLLISION_BITS.iceSpikes,
          collisionMask: DEFAULT_COLLISION_MASK & ~COLLISION_BITS.iceSpikes,
-         hitboxes: [new CircularHitbox(1, new Point(0, 0), HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0, ICE_SPIKE_RADIUS)]
+         hitboxes: [createHitbox(new CircularBox(new Point(0, 0), ICE_SPIKE_RADIUS), 1, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0)]
       },
       [ServerComponentType.health]: {
          maxHealth: 5

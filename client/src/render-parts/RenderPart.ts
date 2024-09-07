@@ -28,6 +28,8 @@ export abstract class BaseRenderThing {
    public readonly modelMatrix = createIdentityMatrix();
    public modelMatrixIsDirty = true;
 
+   public readonly tags = new Array<string>();
+
    constructor(parent: RenderThing | null, zIndex: number, rotation: number) {
       this.parent = parent;
       this.zIndex = zIndex;
@@ -42,13 +44,15 @@ export abstract class BaseRenderThing {
          this.parent.dirty();
       }
    }
+
+   public addTag(tag: string): void {
+      this.tags.push(tag);
+   }
 }
 
 abstract class BaseRenderPart extends BaseRenderThing {
    public readonly id: number;
    
-   public modelMatrixData = new Float32Array(9);
-
    /** The point in time when the render part was created */
    private creationTicks = Board.serverTicks;
 
@@ -60,8 +64,6 @@ abstract class BaseRenderPart extends BaseRenderThing {
    public tintG = 0;
    public tintB = 0;
    
-   public readonly tags = new Array<string>();
-   
    constructor(parent: RenderThing | null, zIndex: number, rotation: number) {
       super(parent, zIndex, rotation);
 
@@ -70,10 +72,6 @@ abstract class BaseRenderPart extends BaseRenderThing {
 
    public getAge(): number {
       return Board.serverTicks - this.creationTicks;
-   }
-
-   public addTag(tag: string): void {
-      this.tags.push(tag);
    }
 
    // @Incomplete

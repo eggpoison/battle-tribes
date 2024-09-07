@@ -253,7 +253,7 @@ const TribesmanInteractMenu = () => {
 
       {tribeComponent.tribeID === Game.tribe.id ? (
          <div className="hotbar-container">
-            <InventoryContainer isBordered className="hotbar" entityID={tribesman.id} inventory={inventoryComponent.getInventory(InventoryName.hotbar)} selectedItemSlot={inventoryUseComponent.getUseInfo(InventoryName.hotbar).selectedItemSlot} />
+            <InventoryContainer isBordered className="hotbar" entityID={tribesman.id} inventory={inventoryComponent.getInventory(InventoryName.hotbar)} selectedItemSlot={inventoryUseComponent.getLimbInfoByInventoryName(InventoryName.hotbar).selectedItemSlot} />
             <div className="inventory">
                {backpackSlotElement}
                {armourItemSlotElement}

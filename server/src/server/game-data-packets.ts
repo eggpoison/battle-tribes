@@ -1,6 +1,6 @@
 import { VisibleChunkBounds, PlayerInventoryData } from "webgl-test-shared/dist/client-server-types";
 import { ServerComponentType, ServerComponentTypeString } from "webgl-test-shared/dist/components";
-import { EntityID } from "webgl-test-shared/dist/entities";
+import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
 import { TechUnlockProgress } from "webgl-test-shared/dist/techs";
 import Board from "../Board";
 import { ComponentArrays } from "../components/ComponentArray";

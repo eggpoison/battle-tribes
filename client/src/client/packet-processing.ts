@@ -1,6 +1,6 @@
 import { WaterRockData, RiverSteppingStoneData, GrassTileInfo, RiverFlowDirectionsRecord, WaterRockSize, RiverSteppingStoneSize, GameDataPacket, HitData, PlayerKnockbackData, HealData, ResearchOrbCompleteData, ServerTileUpdateData, EntityDebugData, LineDebugData, CircleDebugData, TileHighlightData, PathData, PathfindingNodeIndex, PlayerInventoryData } from "webgl-test-shared/dist/client-server-types";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
+import { ServerComponentType, ServerComponentTypeString } from "webgl-test-shared/dist/components";
+import { EntityID, EntityType, EntityTypeString } from "webgl-test-shared/dist/entities";
 import { ItemType } from "webgl-test-shared/dist/items/items";
 import { PacketReader } from "webgl-test-shared/dist/packets";
 import { Settings } from "webgl-test-shared/dist/settings";

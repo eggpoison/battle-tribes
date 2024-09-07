@@ -1,4 +1,4 @@
-import { PlayerDataPacket, AttackPacket, RespawnDataPacket, HitData, PlayerKnockbackData, HealData, ResearchOrbCompleteData } from "webgl-test-shared/dist/client-server-types";
+import { PlayerDataPacket, RespawnDataPacket, HitData, PlayerKnockbackData, HealData, ResearchOrbCompleteData } from "webgl-test-shared/dist/client-server-types";
 import { BlueprintType, BuildingMaterial, MATERIAL_TO_ITEM_MAP, ServerComponentType } from "webgl-test-shared/dist/components";
 import { TechID, TechInfo, getTechByID } from "webgl-test-shared/dist/techs";
 import { TribesmanTitle } from "webgl-test-shared/dist/titles";
@@ -6,16 +6,16 @@ import Board from "../Board";
 import { registerCommand } from "../commands";
 import { acceptTitleOffer, forceAddTitle, rejectTitleOffer, removeTitle } from "../components/TribeMemberComponent";
 import { createPlayerConfig, modifyBuilding, startChargingBattleaxe, startChargingBow, startChargingSpear, startEating } from "../entities/tribes/player";
-import { throwItem, placeBlueprint, attemptAttack, calculateAttackTarget, calculateBlueprintWorkTarget, calculateRadialAttackTargets, calculateRepairTarget, repairBuilding, getAvailableCraftingStations, useItem } from "../entities/tribes/tribe-member";
+import { throwItem, placeBlueprint, getAvailableCraftingStations, useItem } from "../entities/tribes/tribe-member";
 import PlayerClient from "./PlayerClient";
 import { SERVER } from "./server";
-import { createSyncDataPacket, createInitialGameDataPacket } from "./game-data-packets";
+import { createInitialGameDataPacket } from "./game-data-packets";
 import { EntityID, EntityType, LimbAction } from "webgl-test-shared/dist/entities";
 import { TRIBE_INFO_RECORD, TribeType } from "webgl-test-shared/dist/tribes";
 import { InventoryUseComponentArray } from "../components/InventoryUseComponent";
 import { PhysicsComponentArray } from "../components/PhysicsComponent";
 import { InventoryComponentArray, addItemToInventory, addItemToSlot, consumeItemFromSlot, consumeItemTypeFromInventory, craftRecipe, getInventory, getInventoryFromCreationInfo, inventoryComponentCanAffordRecipe, recipeCraftingStationIsAvailable } from "../components/InventoryComponent";
-import { EntityRelationship, TribeComponentArray, recruitTribesman } from "../components/TribeComponent";
+import { TribeComponentArray, recruitTribesman } from "../components/TribeComponent";
 import { createItem } from "../items";
 import { Point, randInt, randItem } from "webgl-test-shared/dist/utils";
 import { Settings } from "webgl-test-shared/dist/settings";
@@ -32,7 +32,7 @@ import { TurretComponentArray } from "../components/TurretComponent";
 import { TribesmanAIComponentArray } from "../components/TribesmanAIComponent";
 import { EntitySummonPacket } from "webgl-test-shared/dist/dev-packets";
 import { CRAFTING_RECIPES, ItemRequirements } from "webgl-test-shared/dist/items/crafting-recipes";
-import { InventoryName, Item, ITEM_TYPE_RECORD, ItemType } from "webgl-test-shared/dist/items/items";
+import { InventoryName, Item, ItemType } from "webgl-test-shared/dist/items/items";
 import Tribe from "../Tribe";
 import { EntityTickEvent } from "webgl-test-shared/dist/entity-events";
 import { TransformComponentArray } from "../components/TransformComponent";
@@ -90,70 +90,6 @@ const handlePlayerDisconnect = (playerClient: PlayerClient): void => {
    // Kill the player
    if (Board.hasEntity(playerClient.instance)) {
       Board.destroyEntity(playerClient.instance);
-   }
-}
-
-const processPlayerDataPacket = (playerClient: PlayerClient, playerDataPacket: PlayerDataPacket): void => {
-   if (!Board.hasEntity(playerClient.instance)) {
-      return;
-   }
-
-   const inventoryUseComponent = InventoryUseComponentArray.getComponent(playerClient.instance);
-   const hotbarUseInfo = inventoryUseComponent.getUseInfo(InventoryName.hotbar);
-
-   const transformComponent = TransformComponentArray.getComponent(playerClient.instance);
-   transformComponent.position.x = playerDataPacket.position[0];
-   transformComponent.position.y = playerDataPacket.position[1];
-   transformComponent.rotation = playerDataPacket.rotation;
-
-   playerClient.visibleChunkBounds = playerDataPacket.visibleChunkBounds;
-   playerClient.gameDataOptions = playerDataPacket.gameDataOptions;
-   
-   const physicsComponent = PhysicsComponentArray.getComponent(playerClient.instance);
-   physicsComponent.hitboxesAreDirty = true;
-   
-   physicsComponent.velocity.x = playerDataPacket.velocity[0];
-   physicsComponent.velocity.y = playerDataPacket.velocity[1];
-   physicsComponent.acceleration.x = playerDataPacket.acceleration[0];
-   physicsComponent.acceleration.y = playerDataPacket.acceleration[1];
-   
-   hotbarUseInfo.selectedItemSlot = playerDataPacket.selectedItemSlot;
-
-   const playerComponent = PlayerComponentArray.getComponent(playerClient.instance);
-   playerComponent.interactingEntityID = playerDataPacket.interactingEntityID !== null ? playerDataPacket.interactingEntityID : 0;
-
-   // @Bug: won't work for using medicine in offhand
-   let overrideOffhand = false;
-   
-   if ((playerDataPacket.mainAction === LimbAction.eat || playerDataPacket.mainAction === LimbAction.useMedicine) && (hotbarUseInfo.action !== LimbAction.eat && hotbarUseInfo.action !== LimbAction.useMedicine)) {
-      overrideOffhand = startEating(playerClient.instance, InventoryName.hotbar);
-   } else if (playerDataPacket.mainAction === LimbAction.chargeBow && hotbarUseInfo.action !== LimbAction.chargeBow) {
-      startChargingBow(playerClient.instance, InventoryName.hotbar);
-   } else if (playerDataPacket.mainAction === LimbAction.chargeSpear && hotbarUseInfo.action !== LimbAction.chargeSpear) {
-      startChargingSpear(playerClient.instance, InventoryName.hotbar);
-   } else if (playerDataPacket.mainAction === LimbAction.chargeBattleaxe && hotbarUseInfo.action !== LimbAction.chargeBattleaxe) {
-      startChargingBattleaxe(playerClient.instance, InventoryName.hotbar);
-   } else {
-      hotbarUseInfo.action = playerDataPacket.mainAction;
-   }
-
-   if (!overrideOffhand) {
-      const tribeComponent = TribeComponentArray.getComponent(playerClient.instance);
-      if (tribeComponent.tribe.tribeType === TribeType.barbarians) {
-         const offhandUseInfo = inventoryUseComponent.getUseInfo(InventoryName.offhand);
-
-         if ((playerDataPacket.offhandAction === LimbAction.eat || playerDataPacket.offhandAction === LimbAction.useMedicine) && (offhandUseInfo.action !== LimbAction.eat && offhandUseInfo.action !== LimbAction.useMedicine)) {
-            startEating(playerClient.instance, InventoryName.offhand);
-         } else if (playerDataPacket.offhandAction === LimbAction.chargeBow && offhandUseInfo.action !== LimbAction.chargeBow) {
-            startChargingBow(playerClient.instance, InventoryName.offhand);
-         } else if (playerDataPacket.offhandAction === LimbAction.chargeSpear && offhandUseInfo.action !== LimbAction.chargeSpear) {
-            startChargingSpear(playerClient.instance, InventoryName.offhand);
-         } else if (playerDataPacket.offhandAction === LimbAction.chargeBattleaxe && offhandUseInfo.action !== LimbAction.chargeBattleaxe) {
-            startChargingBattleaxe(playerClient.instance, InventoryName.offhand);
-         } else {
-            offhandUseInfo.action = playerDataPacket.offhandAction;
-         }
-      }
    }
 }
 
@@ -615,10 +551,6 @@ export function addPlayerClient(playerClient: PlayerClient, player: EntityID, pl
 
    socket.on("deactivate", () => {
       playerClient.clientIsActive = false;
-   });
-
-   socket.on("player_data_packet", (playerDataPacket: PlayerDataPacket) => {
-      processPlayerDataPacket(playerClient, playerDataPacket);
    });
 
    socket.on("crafting_packet", (recipeIndex: number) => {

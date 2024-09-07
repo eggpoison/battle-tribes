@@ -1,14 +1,18 @@
+// @Cleanup: maybe extract into client-to-server and server-to-client ?
 export const enum PacketType {
+   // CLIENT-TO-SERVER
    initialPlayerData,
-   initialGameData,
-   gameData,
-   playerData,
    activate,
    deactivate,
+   playerData,
    syncRequest,
+   attack,
+   devGiveItem, // ((DEV))
+   // SERVER-TO-CLIENT
+   initialGameData,
+   gameData,
    syncData,
-   sync,
-   attack
+   sync
 }
 
 // @Bandwidth: figure out a way to be tightly packed (not have to add padding)
@@ -50,6 +54,10 @@ export class Packet extends BasePacketObject {
    }
 
    public addNumber(number: number): void {
+      if (isNaN(number)) {
+         throw new Error("Tried to write NaN to a packet.");
+      }
+      
       // this.cleanByteOffset();
       if (this.currentByteOffset >= this.buffer.byteLength) {
          throw new Error("Exceeded length of buffer");
@@ -131,7 +139,7 @@ export class PacketReader extends BasePacketObject {
    public readString(lengthBytes: number): string {
       const stringLength = this.readNumber();
       
-      const decodeBuffer = this.uint8View.subarray(this.currentByteOffset, this.currentByteOffset + stringLength - 1);
+      const decodeBuffer = this.uint8View.subarray(this.currentByteOffset, this.currentByteOffset + stringLength);
       const string = new TextDecoder().decode(decodeBuffer);
 
       this.currentByteOffset += lengthBytes;

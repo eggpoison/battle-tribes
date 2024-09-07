@@ -8,6 +8,8 @@ import Board from "../Board";
 import { GameDataPacketOptions } from "webgl-test-shared/dist/client-server-types";
 import OPTIONS from "../options";
 import { windowHeight, windowWidth } from "../webgl";
+import { ItemType } from "webgl-test-shared/dist/items/items";
+import Client from "./Client";
 
 export function createPlayerDataPacket(): ArrayBuffer {
    let lengthBytes = 4 * Float32Array.BYTES_PER_ELEMENT;
@@ -94,4 +96,13 @@ export function createAttackPacket(): ArrayBuffer {
    packet.addNumber(transformComponent.rotation);
    
    return packet.buffer;
+}
+
+export function sendDevGiveItemPacket(itemType: ItemType, amount: number): void {
+   const packet = new Packet(PacketType.devGiveItem, 3 * Float32Array.BYTES_PER_ELEMENT);
+
+   packet.addNumber(itemType);
+   packet.addNumber(amount);
+
+   Client.sendPacket(packet.buffer);
 }

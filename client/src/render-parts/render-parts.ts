@@ -19,5 +19,5 @@ export const enum RenderUnitType {
 export type RenderThing = RenderPart | RenderAttachPoint;
 
 export function thingIsRenderPart(thing: RenderThing): thing is RenderPart {
-   return typeof (thing as RenderPart).modelMatrixData !== "undefined";
+   return typeof (thing as RenderPart).tintR !== "undefined";
 }

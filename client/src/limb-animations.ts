@@ -162,8 +162,8 @@ const getCustomItemRenderPartOpacity = (entity: Entity, state: CustomItemState):
 
          // @Hack
          let lastEatTicks: number | undefined;
-         for (let i = 0; i < inventoryUseComponent.useInfos.length; i++) {
-            const limbInfo = inventoryUseComponent.useInfos[i];
+         for (let i = 0; i < inventoryUseComponent.limbInfos.length; i++) {
+            const limbInfo = inventoryUseComponent.limbInfos[i];
             
             if (limbInfo.action === LimbAction.useMedicine) {
                lastEatTicks = limbInfo.lastEatTicks;
@@ -189,8 +189,8 @@ const getCustomItemRenderPartOpacity = (entity: Entity, state: CustomItemState):
 const getCustomItemRenderPartState = (entity: Entity): CustomItemState | null => {
    const inventoryUseComponent = entity.getServerComponent(ServerComponentType.inventoryUse);
    
-   for (let i = 0; i < inventoryUseComponent.useInfos.length; i++) {
-      const limbInfo = inventoryUseComponent.useInfos[i];
+   for (let i = 0; i < inventoryUseComponent.limbInfos.length; i++) {
+      const limbInfo = inventoryUseComponent.limbInfos[i];
       
       if (limbInfo.action === LimbAction.craft) {
          return CustomItemState.crafting;

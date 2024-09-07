@@ -133,9 +133,9 @@ class TurretComponent extends ServerComponent {
       this.chargeProgress = reader.readNumber();
       reader.padOffset(Float32Array.BYTES_PER_ELEMENT);
 
-      this.aimingRenderPart = this.entity.getRenderPart("turretComponent:aiming") as TexturedRenderPart;
-      this.pivotingRenderPart = this.entity.getRenderPart("turretComponent:pivoting");
-      this.gearRenderParts = this.entity.getRenderParts("turretComponent:gear");
+      this.aimingRenderPart = this.entity.getRenderThing("turretComponent:aiming") as TexturedRenderPart;
+      this.pivotingRenderPart = this.entity.getRenderThing("turretComponent:pivoting") as RenderPart;
+      this.gearRenderParts = this.entity.getRenderThings("turretComponent:gear") as Array<RenderPart>;
 
       this.updateAimDirection(aimDirection, this.chargeProgress);
    }

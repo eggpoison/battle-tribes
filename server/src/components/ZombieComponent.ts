@@ -18,12 +18,13 @@ import { PhysicsComponentArray } from "./PhysicsComponent";
 import { StatusEffectComponentArray, hasStatusEffect, applyStatusEffect } from "./StatusEffectComponent";
 import { TransformComponentArray } from "./TransformComponent";
 import { WanderAIComponentArray } from "./WanderAIComponent";
-import { calculateRadialAttackTargets, attemptAttack } from "../entities/tribes/tribe-member";
+import { calculateRadialAttackTargets } from "../entities/tribes/tribe-member";
 import { entityIsStructure } from "../Entity";
 import { InventoryComponentArray, getInventory } from "./InventoryComponent";
 import { InventoryUseComponentArray } from "./InventoryUseComponent";
 import { TribeMemberComponentArray } from "./TribeMemberComponent";
 import { ZombieVars } from "../entities/mobs/zombie";
+import { beginSwing } from "../entities/tribes/limb-use";
 
 const enum Vars {
    TURN_SPEED = 3 * UtilVars.PI,
@@ -159,7 +160,9 @@ const doMeleeAttack = (zombie: EntityID, target: EntityID): void => {
 
    // Register the hit
    if (attackTargets.includes(target)) {
-      attemptAttack(zombie, target, 1, InventoryName.handSlot);
+      // @Incomplete
+      // attemptAttack(zombie, target, 1, InventoryName.handSlot);
+      beginSwing(zombie, 1, InventoryName.handSlot);
 
       // Reset attack cooldown
       const zombieComponent = ZombieComponentArray.getComponent(zombie);

@@ -1,4 +1,4 @@
-import { Hitbox } from "webgl-test-shared/dist/hitboxes/hitboxes";
+import { HitboxWrapper } from "webgl-test-shared/dist/boxes/boxes";
 import Entity from "../Entity";
 
 abstract class Component {
@@ -17,7 +17,7 @@ abstract class Component {
    public onHit?(isDamagingHit: boolean): void;
    public onDie?(): void;
    public onRemove?(): void;
-   public onCollision?(collidingEntity: Entity, pushedHitbox: Hitbox, pushingHitbox: Hitbox): void;
+   public onCollision?(collidingEntity: Entity, pushedHitbox: HitboxWrapper, pushingHitbox: HitboxWrapper): void;
 }
 
 export default Component;

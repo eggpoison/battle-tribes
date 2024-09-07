@@ -19,13 +19,13 @@ import { markWallTileInPathfinding } from "./pathfinding";
 import OPTIONS from "./options";
 import { CollisionVars, collide, entitiesAreColliding } from "./collision";
 import { tickTribes } from "./ai-tribe-building/ai-building";
-import { Hitbox, hitboxIsCircular } from "webgl-test-shared/dist/hitboxes/hitboxes";
 import { TransformComponentArray } from "./components/TransformComponent";
 import { onCactusDeath } from "./entities/resources/cactus";
 import { WorldInfo } from "webgl-test-shared/dist/structures";
 import { EntityInfo } from "webgl-test-shared/dist/board-interface";
 import { onCowDeath } from "./entities/mobs/cow";
 import { registerEntityRemoval } from "./server/player-clients";
+import { Box, boxIsCircular } from "webgl-test-shared/dist/boxes/boxes";
 
 const START_TIME = 6;
 
@@ -535,7 +535,7 @@ abstract class Board {
       for (const entity of chunk.entities) {
          const transformComponent = TransformComponentArray.getComponent(entity);
          for (const hitbox of transformComponent.hitboxes) {
-            if (this.hitboxIsInRange(testPosition, hitbox, 1)) {
+            if (this.boxIsInRange(testPosition, hitbox.box, 1)) {
                entities.push(entity);
                break;
             }
@@ -546,13 +546,14 @@ abstract class Board {
    }
 
    // @Cleanup: Move this into ai-shared
-   public static hitboxIsInRange(testPosition: Point, hitbox: Hitbox, range: number): boolean {
-      if (hitboxIsCircular(hitbox)) {
+   // @Copynpaste: something like this already exists probs
+   public static boxIsInRange(testPosition: Point, box: Box, range: number): boolean {
+      if (boxIsCircular(box)) {
          // Circular hitbox
-         return circlesDoIntersect(testPosition, range, hitbox.position, hitbox.radius);
+         return circlesDoIntersect(testPosition, range, box.position, box.radius);
       } else {
          // Rectangular hitbox
-         return circleAndRectangleDoIntersect(testPosition, range, hitbox.position, hitbox.width, hitbox.height, hitbox.relativeRotation);
+         return circleAndRectangleDoIntersect(testPosition, range, box.position, box.width, box.height, box.relativeRotation);
       }
    }
 

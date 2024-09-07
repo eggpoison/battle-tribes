@@ -4,7 +4,7 @@ import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { Point } from "webgl-test-shared/dist/utils";
 import { TotemBannerPosition } from "../../components/TotemBannerComponent";
 import { createEmptyStructureConnectionInfo } from "webgl-test-shared/dist/structures";
-import { createTribeTotemHitboxes } from "webgl-test-shared/dist/hitboxes/entity-hitbox-creation";
+import { createTribeTotemHitboxes } from "webgl-test-shared/dist/boxes/entity-hitbox-creation";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { ComponentConfig } from "../../components";
 

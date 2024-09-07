@@ -10,10 +10,11 @@ export function createItem(itemType: ItemType, amount: number): Item {
    return new Item(itemType, amount, getUniqueID());
 }
 
+// @Incomplete
 export function getItemAttackCooldown(item: Item): number {
    const itemInfo = ITEM_INFO_RECORD[item.type];
    if (itemInfoIsTool(item.type, itemInfo)) {
-      return itemInfo.attackCooldown;
+      return itemInfo.attackSwingTimeTicks;
    } else {
       return Settings.DEFAULT_ATTACK_COOLDOWN;
    }

@@ -1,30 +1,30 @@
 import { EntityType, LimbAction } from "webgl-test-shared/dist/entities";
 import { Point, lerp, randFloat, randItem } from "webgl-test-shared/dist/utils";
-import { LimbData, ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { Settings } from "webgl-test-shared/dist/settings";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
-import Board from "../Board";
+import Board, { getSecondsSinceTickTimestamp } from "../Board";
 import CLIENT_ITEM_INFO_RECORD from "../client-item-info";
 import Particle from "../Particle";
 import { ParticleColour, ParticleRenderLayer, addMonocolourParticleToBufferContainer } from "../rendering/webgl/particle-rendering";
 import { animateLimb, createCraftingAnimationParticles, createMedicineAnimationParticles, generateRandomLimbPosition, updateBandageRenderPart, updateCustomItemRenderPart } from "../limb-animations";
 import { createDeepFrostHeartBloodParticles } from "../particles";
 import { definiteGameState } from "../game-state/game-states";
-import { getFrameProgress } from "../Game";
-import { InventoryName, ItemType, ITEM_TYPE_RECORD, Item, ITEM_INFO_RECORD, itemInfoIsUtility, itemInfoIsBow, BowItemInfo, itemInfoIsTool } from "webgl-test-shared/dist/items/items";
+import { InventoryName, ItemType, ITEM_TYPE_RECORD, Item, ITEM_INFO_RECORD, itemInfoIsUtility, itemInfoIsBow, BowItemInfo, itemInfoIsTool, ItemVars } from "webgl-test-shared/dist/items/items";
 import { RenderPart } from "../render-parts/render-parts";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { PacketReader } from "webgl-test-shared/dist/packets";
 import { Hotbar_updateRightThrownBattleaxeItemID } from "../components/game/inventories/Hotbar";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
+import { DEFAULT_ATTACK_PATTERN, LimbState, TRIBESMAN_RESTING_LIMB_STATE } from "webgl-test-shared/dist/attack-patterns";
+import RenderAttachPoint from "../render-parts/RenderAttachPoint";
 
 export interface LimbInfo {
    selectedItemSlot: number;
    readonly inventoryName: InventoryName;
    bowCooldownTicks: number;
-   itemAttackCooldowns: Partial<Record<number, number>>;
    spearWindupCooldowns: Partial<Record<number, number>>;
    crossbowLoadProgressRecord: Partial<Record<number, number>>;
    foodEatingTimer: number;
@@ -37,8 +37,13 @@ export interface LimbInfo {
    lastBattleaxeChargeTicks: number;
    lastCrossbowLoadTicks: number;
    lastCraftTicks: number;
+   lastAttackWindupTicks: number;
    thrownBattleaxeItemID: number;
    lastAttackCooldown: number;
+   /** Tick timestamp when the current action was started */
+   currentActionStartingTicks: number;
+   /** Expected duration of the current action in ticks */
+   currentActionDurationTicks: number;
 
    animationStartOffset: Point;
    animationEndOffset: Point;
@@ -55,7 +60,7 @@ const ZOMBIE_HAND_RESTING_ROTATION = 0;
 const ZOMBIE_HAND_RESTING_DIRECTION = Math.PI / 4;
 const ZOMBIE_HAND_RESTING_OFFSET = 32;
    
-const HAND_RESTING_DIRECTION = Math.PI / 2.5;
+const HAND_RESTING_DIRECTION = Math.PI * 0.4;
 const HAND_RESTING_ROTATION = 0;
 
 const SPEAR_ATTACK_LUNGE_TIME = 0.2;
@@ -156,43 +161,74 @@ const FOOD_EATING_COLOURS: { [T in ItemType as Exclude<T, FilterHealingItemTypes
 
 type InventoryUseEntityType = EntityType.player | EntityType.tribeWorker | EntityType.tribeWarrior | EntityType.zombie;
 
-const getSecondsSinceLastAction = (lastActionTicks: number): number => {
-   const ticksSinceLastAction = Board.serverTicks - lastActionTicks;
-   let secondsSinceLastAction = ticksSinceLastAction / Settings.TPS;
+// @Incomplete
+// const getLimbRenderInfos = (entityType: InventoryUseEntityType, item: Item | null): LimbRenderInfos => {
+//    const handRestingDirection = getLimbRestingDirection(entityType);
+//    const restingOffset = getHandRestingOffset(entityType);
 
-   // Account for frame progress
-   secondsSinceLastAction += getFrameProgress() / Settings.TPS;
+//    if (item !== null && item.type === ItemType.spear) {
+//       return {
+//          resting: {
+//             direction: handRestingDirection,
+//             offset: restingOffset,
+//             rotation: ITEM_RESTING_ROTATION
+//          },
+//          windedBack: {
+//             direction: handRestingDirection + Math.PI / 5,
+//             offset: restingOffset,
+//             rotation: ITEM_RESTING_ROTATION
+//          },
+//          swung: {
+//             direction: Math.PI / 4,
+//             offset: restingOffset + 7,
+//             rotation: -Math.PI / 7
+//          }
+//       };
+//    }
 
-   return secondsSinceLastAction;
+//    return {
+//       resting: {
+//          direction: handRestingDirection,
+//          offset: restingOffset,
+//          rotation: ITEM_RESTING_ROTATION
+//       },
+//       windedBack: {
+//          direction: handRestingDirection + Math.PI / 5,
+//          offset: restingOffset,
+//          rotation: ITEM_RESTING_ROTATION
+//       },
+//       swung: {
+//          direction: handRestingDirection - ITEM_SWING_RANGE,
+//          offset: restingOffset,
+//          rotation: ITEM_END_ROTATION
+//       }
+//    };
+// }
+
+const lerpLimbBetweenStates = (limb: RenderPart, attachPoint: RenderAttachPoint, startState: LimbState, endState: LimbState, progress: number): void => {
+   const direction = lerp(startState.direction, endState.direction, progress);
+   const extraOffset = lerp(startState.extraOffset, endState.extraOffset, progress);
+   // @Temporary @Hack
+   const offset = 32 + extraOffset;
+   
+   attachPoint.offset.x = offset * Math.sin(direction);
+   attachPoint.offset.y = offset * Math.cos(direction);
+   // @Incomplete? Hand mult
+   attachPoint.rotation = lerp(startState.rotation, endState.rotation, progress);
+   // limb.rotation = attackHandRotation * handMult;
 }
 
-const getLastActionTicks = (useInfo: LimbData): number => {
-   switch (useInfo.action) {
-      case LimbAction.chargeBow: {
-         return useInfo.lastBowChargeTicks;
-      }
-      case LimbAction.chargeSpear: {
-         return useInfo.lastSpearChargeTicks;
-      }
-      case LimbAction.chargeBattleaxe: {
-         return useInfo.lastBattleaxeChargeTicks;
-      }
-      case LimbAction.loadCrossbow: {
-         return useInfo.lastCrossbowLoadTicks;
-      }
-      case LimbAction.eat:
-      case LimbAction.useMedicine: {
-         return useInfo.lastEatTicks;
-      }
-      case LimbAction.none: {
-         return useInfo.lastAttackTicks;
-      }
-      case LimbAction.craft:
-      case LimbAction.researching: {
-         // @Incomplete
-         return Board.serverTicks;
-      }
-   }
+
+const setLimbToState = (handMult: number, attachPoint: RenderAttachPoint, state: LimbState): void => {
+   const direction = state.direction * handMult;
+   // @Temporary @Hack
+   const offset = 32 + state.extraOffset;
+
+   attachPoint.offset.x = offset * Math.sin(direction);
+   attachPoint.offset.y = offset * Math.cos(direction);
+   // @Incomplete? Hand mult
+   attachPoint.rotation = state.rotation;
+   // limb.rotation = attackHandRotation * handMult;
 }
 
 const getHandRestingOffset = (entityType: InventoryUseEntityType): number => {
@@ -233,7 +269,9 @@ export function readCrossbowLoadProgressRecord(reader: PacketReader): Partial<Re
 }
 
 class InventoryUseComponent extends ServerComponent{
-   public readonly useInfos: ReadonlyArray<LimbInfo>;
+   public readonly limbInfos: ReadonlyArray<LimbInfo>;
+
+   public readonly limbAttachPoints = new Array<RenderAttachPoint>();
    public readonly limbRenderParts = new Array<RenderPart>();
    public readonly activeItemRenderParts: Record<number, TexturedRenderPart> = {};
    public readonly inactiveCrossbowArrowRenderParts: Record<number, RenderPart> = {};
@@ -252,14 +290,6 @@ class InventoryUseComponent extends ServerComponent{
          const selectedItemSlot = reader.readNumber();
          const bowCooldownTicks = reader.readNumber();
 
-         const itemAttackCooldowns: Partial<Record<number, number>> = {};
-         const numAttackCooldowns = reader.readNumber();
-         for (let j = 0; j < numAttackCooldowns; j++) {
-            const itemSlot = reader.readNumber();
-            const cooldown = reader.readNumber();
-            itemAttackCooldowns[itemSlot] = cooldown;
-         }
-
          const spearWindupCooldowns: Partial<Record<number, number>> = {};
          const numSpearWindupCooldowns = reader.readNumber();
          for (let j = 0; j < numSpearWindupCooldowns; j++) {
@@ -281,12 +311,13 @@ class InventoryUseComponent extends ServerComponent{
          const lastCraftTicks = reader.readNumber();
          const thrownBattleaxeItemID = reader.readNumber();
          const lastAttackCooldown = reader.readNumber();
+         const currentActionStartingTicks = reader.readNumber();
+         const currentActionDurationTicks = reader.readNumber();
 
          const limbInfo: LimbInfo = {
             selectedItemSlot: selectedItemSlot,
             inventoryName: usedInventoryName,
             bowCooldownTicks: bowCooldownTicks,
-            itemAttackCooldowns: itemAttackCooldowns,
             spearWindupCooldowns: spearWindupCooldowns,
             crossbowLoadProgressRecord: crossbowLoadProgressRecord,
             foodEatingTimer: foodEatingTimer,
@@ -300,6 +331,9 @@ class InventoryUseComponent extends ServerComponent{
             thrownBattleaxeItemID: thrownBattleaxeItemID,
             lastAttackCooldown: lastAttackCooldown,
             lastCraftTicks: lastCraftTicks,
+            lastAttackWindupTicks: 0,
+            currentActionStartingTicks: currentActionStartingTicks,
+            currentActionDurationTicks: currentActionDurationTicks,
             animationStartOffset: new Point(0, 0),
             animationEndOffset: new Point(0, 0),
             animationDurationTicks: 0,
@@ -307,18 +341,23 @@ class InventoryUseComponent extends ServerComponent{
          };
          useInfos.push(limbInfo);
       }
-      this.useInfos = useInfos;
+      this.limbInfos = useInfos;
    }
 
    public onLoad(): void {
+      const attachPoints = this.entity.getRenderThings("inventoryUseComponent:attachPoint", 2) as Array<RenderAttachPoint>;
+      for (let limbIdx = 0; limbIdx < this.limbInfos.length; limbIdx++) {
+         this.limbAttachPoints.push(attachPoints[limbIdx]);
+      }
+      
       // @Cleanup
-      const handRenderParts = this.entity.getRenderParts("inventoryUseComponent:hand", 2);
-      for (let limbIdx = 0; limbIdx < this.useInfos.length; limbIdx++) {
+      const handRenderParts = this.entity.getRenderThings("inventoryUseComponent:hand", 2) as Array<RenderPart>;
+      for (let limbIdx = 0; limbIdx < this.limbInfos.length; limbIdx++) {
          this.limbRenderParts.push(handRenderParts[limbIdx]);
       }
 
-      for (let i = 0; i < this.useInfos.length; i++) {
-         updateLimb(this, i, this.useInfos[i]);
+      for (let i = 0; i < this.limbInfos.length; i++) {
+         updateLimb(this, i, this.limbInfos[i]);
       }
 
       updateCustomItemRenderPart(this.entity);
@@ -329,39 +368,31 @@ class InventoryUseComponent extends ServerComponent{
       for (let i = 0; i < numUseInfos; i++) {
          reader.padOffset(3 * Float32Array.BYTES_PER_ELEMENT);
 
-         const numAttackCooldowns = reader.readNumber();
-         reader.padOffset(2 * Float32Array.BYTES_PER_ELEMENT * numAttackCooldowns);
-
          const numSpearWindupCooldowns = reader.readNumber();
          reader.padOffset(2 * Float32Array.BYTES_PER_ELEMENT * numSpearWindupCooldowns);
          
          // @Speed
          readCrossbowLoadProgressRecord(reader);
 
-         reader.padOffset(11 * Float32Array.BYTES_PER_ELEMENT);
+         reader.padOffset(13 * Float32Array.BYTES_PER_ELEMENT);
       }
    }
    
    public updateFromData(reader: PacketReader): void {
       const numUseInfos = reader.readNumber();
       for (let i = 0; i < numUseInfos; i++) {
-         const limbInfo = this.useInfos[i];
+         const limbInfo = this.limbInfos[i];
 
          const usedInventoryName = reader.readNumber() as InventoryName;
          if (limbInfo.inventoryName !== usedInventoryName) {
+            console.log("Limb info i=" + i);
+            console.log("Client inventory name: " + limbInfo.inventoryName);
+            console.log("Server used inventory name: " + usedInventoryName);
             throw new Error();
          }
          
          const selectedItemSlot = reader.readNumber();
          const bowCooldownTicks = reader.readNumber();
-
-         const itemAttackCooldowns: Partial<Record<number, number>> = {};
-         const numAttackCooldowns = reader.readNumber();
-         for (let j = 0; j < numAttackCooldowns; j++) {
-            const itemSlot = reader.readNumber();
-            const cooldown = reader.readNumber();
-            itemAttackCooldowns[itemSlot] = cooldown;
-         }
 
          const spearWindupCooldowns: Partial<Record<number, number>> = {};
          const numSpearWindupCooldowns = reader.readNumber();
@@ -384,11 +415,12 @@ class InventoryUseComponent extends ServerComponent{
          const lastCraftTicks = reader.readNumber();
          const thrownBattleaxeItemID = reader.readNumber();
          const lastAttackCooldown = reader.readNumber();
+         const currentActionStartingTicks = reader.readNumber();
+         const currentActionDurationTicks = reader.readNumber();
 
          limbInfo.bowCooldownTicks = bowCooldownTicks;
          limbInfo.selectedItemSlot = selectedItemSlot;
          limbInfo.bowCooldownTicks = bowCooldownTicks;
-         limbInfo.itemAttackCooldowns = itemAttackCooldowns;
          limbInfo.spearWindupCooldowns = spearWindupCooldowns;
          limbInfo.crossbowLoadProgressRecord = crossbowLoadProgressRecord;
          limbInfo.foodEatingTimer = foodEatingTimer;
@@ -402,6 +434,8 @@ class InventoryUseComponent extends ServerComponent{
          limbInfo.lastCraftTicks = lastCraftTicks;
          limbInfo.thrownBattleaxeItemID = thrownBattleaxeItemID;
          limbInfo.lastAttackCooldown = lastAttackCooldown;
+         limbInfo.currentActionStartingTicks = currentActionStartingTicks;
+         limbInfo.currentActionDurationTicks = currentActionDurationTicks;
 
          // @Hack
          // Initial animation start position
@@ -426,7 +460,7 @@ class InventoryUseComponent extends ServerComponent{
    public updatePlayerFromData(reader: PacketReader): void {
       const numUseInfos = reader.readNumber();
       for (let i = 0; i < numUseInfos; i++) {
-         const limbInfo = this.useInfos[i];
+         const limbInfo = this.limbInfos[i];
 
          const usedInventoryName = reader.readNumber() as InventoryName;
          if (limbInfo.inventoryName !== usedInventoryName) {
@@ -434,9 +468,6 @@ class InventoryUseComponent extends ServerComponent{
          }
 
          reader.padOffset(2 * Float32Array.BYTES_PER_ELEMENT);
-         
-         const numAttackCooldowns = reader.readNumber();
-         reader.padOffset(2 * Float32Array.BYTES_PER_ELEMENT * numAttackCooldowns);
 
          const numSpearWindupCooldowns = reader.readNumber();
          reader.padOffset(2 * Float32Array.BYTES_PER_ELEMENT * numSpearWindupCooldowns);
@@ -446,7 +477,7 @@ class InventoryUseComponent extends ServerComponent{
 
          reader.padOffset(9 * Float32Array.BYTES_PER_ELEMENT);
          const thrownBattleaxeItemID = reader.readNumber();
-         reader.padOffset(Float32Array.BYTES_PER_ELEMENT);
+         reader.padOffset(3 * Float32Array.BYTES_PER_ELEMENT);
 
          if (limbInfo.inventoryName === InventoryName.hotbar) {
             limbInfo.thrownBattleaxeItemID = thrownBattleaxeItemID;
@@ -455,9 +486,9 @@ class InventoryUseComponent extends ServerComponent{
       }
    }
 
-   public getUseInfo(inventoryName: InventoryName): LimbData {
-      for (let i = 0; i < this.useInfos.length; i++) {
-         const useInfo = this.useInfos[i];
+   public getLimbInfoByInventoryName(inventoryName: InventoryName): LimbInfo {
+      for (let i = 0; i < this.limbInfos.length; i++) {
+         const useInfo = this.limbInfos[i];
          if (useInfo.inventoryName === inventoryName) {
             return useInfo;
          }
@@ -477,8 +508,8 @@ export const InventoryUseComponentArray = new ComponentArray<InventoryUseCompone
 function onTick(inventoryUseComponent: InventoryUseComponent): void {
    // @Cleanup: move to separate function
    const inventoryComponent = inventoryUseComponent.entity.getServerComponent(ServerComponentType.inventory);
-   for (let limbIdx = 0; limbIdx < inventoryUseComponent.useInfos.length; limbIdx++) {
-      const useInfo = inventoryUseComponent.useInfos[limbIdx];
+   for (let limbIdx = 0; limbIdx < inventoryUseComponent.limbInfos.length; limbIdx++) {
+      const useInfo = inventoryUseComponent.limbInfos[limbIdx];
       const inventory = inventoryComponent.getInventory(useInfo.inventoryName);
 
       // @Incomplete: If eating multiple foods at once, shouldn't be on the same tick interval
@@ -555,7 +586,7 @@ function onTick(inventoryUseComponent: InventoryUseComponent): void {
    updateCustomItemRenderPart(inventoryUseComponent.entity);
 }
 
-const updateActiveItemRenderPart = (inventoryUseComponent: InventoryUseComponent, limbIdx: number, useInfo: LimbData, activeItem: Item | null, shouldShow: boolean): void => {
+const updateActiveItemRenderPart = (inventoryUseComponent: InventoryUseComponent, limbIdx: number, limbInfo: LimbInfo, activeItem: Item | null, shouldShow: boolean): void => {
    if (activeItem === null || !shouldShow) {
       if (inventoryUseComponent.activeItemRenderParts.hasOwnProperty(limbIdx)) {
          inventoryUseComponent.entity.removeRenderPart(inventoryUseComponent.activeItemRenderParts[limbIdx]);
@@ -574,8 +605,8 @@ const updateActiveItemRenderPart = (inventoryUseComponent: InventoryUseComponent
    } else {
       if (!inventoryUseComponent.activeItemRenderParts.hasOwnProperty(limbIdx)) {
          const renderPart = new TexturedRenderPart(
-            inventoryUseComponent.limbRenderParts[limbIdx],
-            limbIdx === 0 ? 0.5 : 0,
+            inventoryUseComponent.limbAttachPoints[limbIdx],
+            limbIdx === 0 ? 1.15 : 1.1,
             0,
             activeItem !== null ? getTextureArrayIndex(CLIENT_ITEM_INFO_RECORD[activeItem.type].entityTextureSource) : -1
          );
@@ -590,9 +621,9 @@ const updateActiveItemRenderPart = (inventoryUseComponent: InventoryUseComponent
       if (itemInfoIsUtility(activeItem.type, itemInfo)) {
          // @Hack: only works for player
          // Change the bow charging texture based on the charge progress
-         if ((useInfo.action === LimbAction.chargeBow || useInfo.action === LimbAction.loadCrossbow || typeof definiteGameState.hotbarCrossbowLoadProgressRecord[useInfo.selectedItemSlot] !== "undefined") && itemInfoIsBow(activeItem.type, itemInfo)) {
-            const lastActionTicks = useInfo.action === LimbAction.chargeBow ? useInfo.lastBowChargeTicks : useInfo.lastCrossbowLoadTicks;
-            const secondsSinceLastAction = getSecondsSinceLastAction(lastActionTicks);
+         if ((limbInfo.action === LimbAction.chargeBow || limbInfo.action === LimbAction.loadCrossbow || typeof definiteGameState.hotbarCrossbowLoadProgressRecord[limbInfo.selectedItemSlot] !== "undefined") && itemInfoIsBow(activeItem.type, itemInfo)) {
+            const lastActionTicks = limbInfo.action === LimbAction.chargeBow ? limbInfo.lastBowChargeTicks : limbInfo.lastCrossbowLoadTicks;
+            const secondsSinceLastAction = getSecondsSinceTickTimestamp(lastActionTicks);
             // @Hack: why does itemInfoIsBow not narrow this fully??
             const chargeProgress = secondsSinceLastAction / (itemInfo as BowItemInfo).shotCooldownTicks * Settings.TPS;
 
@@ -683,22 +714,21 @@ const updateLimb = (inventoryUseComponent: InventoryUseComponent, limbIdx: numbe
    // @Bug: The itemSize variable will be one tick too slow as it gets the size of the item before it has been updated
    
    const limb = inventoryUseComponent.limbRenderParts[limbIdx];
+   const attachPoint = inventoryUseComponent.limbAttachPoints[limbIdx];
+   
    limb.shakeAmount = 0;
 
-   const handMult = limbIdx === 0 ? 1 : -1;
+   const limbMult = limbIdx === 0 ? 1 : -1;
    
-   // @Speed: Has exactly the same switch statement as the switch (useInfo.currentAction). Doing same switch twice!!
-   const lastActionTicks = getLastActionTicks(limbInfo);
-   const secondsSinceLastAction = getSecondsSinceLastAction(lastActionTicks);
-
    // Special case if the entity is drawing a bow
    // Two hands are needed to draw a bow, one from each side of the entity
 
-   if (inventoryUseComponent.useInfos.length > 1) {
-      const otherUseInfo = inventoryUseComponent.useInfos[limbIdx === 0 ? 1 : 0];
+   // @Hack?
+   if (inventoryUseComponent.limbInfos.length > 1) {
+      const otherUseInfo = inventoryUseComponent.limbInfos[limbIdx === 0 ? 1 : 0];
       if (otherUseInfo.action === LimbAction.chargeBow || otherUseInfo.action === LimbAction.loadCrossbow) {
-         const otherLastActionTicks = getLastActionTicks(otherUseInfo);
-         const otherSecondsSinceLastAction = getSecondsSinceLastAction(otherLastActionTicks);
+         const otherLastActionTicks = otherUseInfo.action === LimbAction.chargeBow ? otherUseInfo.lastBowChargeTicks : otherUseInfo.lastCrossbowLoadTicks;
+         const otherSecondsSinceLastAction = getSecondsSinceTickTimestamp(otherLastActionTicks);
 
          let chargeProgress = otherSecondsSinceLastAction;
          if (chargeProgress > 1) {
@@ -737,25 +767,57 @@ const updateLimb = (inventoryUseComponent: InventoryUseComponent, limbIdx: numbe
       const inventoryComponent = inventoryUseComponent.entity.getServerComponent(ServerComponentType.inventory);
       const heldItemInventory = inventoryComponent.getInventory(InventoryName.handSlot);
       if (!heldItemInventory.itemSlots.hasOwnProperty(1)) {
+         const secondsSinceLastAction = getSecondsSinceTickTimestamp(limbInfo.lastAttackTicks);
+         
          let attackProgress = secondsSinceLastAction / ATTACK_LUNGE_TIME;
          if (attackProgress > 1) {
             attackProgress = 1;
          }
 
-         const direction = lerp(Math.PI / 7, ZOMBIE_HAND_RESTING_DIRECTION, attackProgress) * handMult;
+         const direction = lerp(Math.PI / 7, ZOMBIE_HAND_RESTING_DIRECTION, attackProgress) * limbMult;
          const offset = lerp(42, ZOMBIE_HAND_RESTING_OFFSET, attackProgress);
          
          limb.offset.x = offset * Math.sin(direction);
          limb.offset.y = offset * Math.cos(direction);
-         limb.rotation = lerp(-Math.PI/8, ZOMBIE_HAND_RESTING_ROTATION, attackProgress) * handMult;
+         limb.rotation = lerp(-Math.PI/8, ZOMBIE_HAND_RESTING_ROTATION, attackProgress) * limbMult;
          return;
       }
    }
 
    switch (limbInfo.action) {
+      case LimbAction.windAttack: {
+         const secondsSinceLastAction = getSecondsSinceTickTimestamp(limbInfo.currentActionStartingTicks);
+         const windupProgress = secondsSinceLastAction * Settings.TPS / limbInfo.currentActionDurationTicks;
+
+         lerpLimbBetweenStates(limb, attachPoint, TRIBESMAN_RESTING_LIMB_STATE, DEFAULT_ATTACK_PATTERN.windedBack, windupProgress);
+         
+         break;
+      }
+      case LimbAction.attack: {
+         const secondsSinceLastAction = getSecondsSinceTickTimestamp(limbInfo.currentActionStartingTicks);
+         const attackProgress = secondsSinceLastAction * Settings.TPS / limbInfo.currentActionDurationTicks;
+
+         lerpLimbBetweenStates(limb, attachPoint, DEFAULT_ATTACK_PATTERN.windedBack, DEFAULT_ATTACK_PATTERN.swung, attackProgress);
+         break;
+      }
+      case LimbAction.returnAttackToRest: {
+         const secondsIntoAnimation = getSecondsSinceTickTimestamp(limbInfo.currentActionStartingTicks);
+         const animationProgress = secondsIntoAnimation * Settings.TPS / limbInfo.currentActionDurationTicks;
+
+         lerpLimbBetweenStates(limb, attachPoint, DEFAULT_ATTACK_PATTERN.swung, TRIBESMAN_RESTING_LIMB_STATE, animationProgress);
+
+         break;
+      }
+      case LimbAction.none: {
+         setLimbToState(limbMult, attachPoint, TRIBESMAN_RESTING_LIMB_STATE);
+         break;
+      }
       // Bow charge animation
       case LimbAction.loadCrossbow:
       case LimbAction.chargeBow: {
+         const lastActionTicks = limbInfo.action === LimbAction.loadCrossbow ? limbInfo.lastCrossbowLoadTicks : limbInfo.lastBowChargeTicks;
+         const secondsSinceLastAction = getSecondsSinceTickTimestamp(lastActionTicks);
+         
          // @Incomplete
          if (inventoryUseComponent.arrowRenderParts.hasOwnProperty(limbIdx)) {
             let chargeProgress = secondsSinceLastAction;
@@ -768,11 +830,11 @@ const updateLimb = (inventoryUseComponent: InventoryUseComponent, limbIdx: numbe
             inventoryUseComponent.arrowRenderParts[limbIdx].offset.y = pullbackOffset;
          }
 
-         limb.offset.x = 10 * handMult;
+         limb.offset.x = 10 * limbMult;
          limb.offset.y = 60;
          limb.rotation = 0;
 
-         itemRenderPart.offset.x = -10 * handMult;
+         itemRenderPart.offset.x = -10 * limbMult;
          itemRenderPart.offset.y = -10;
          itemRenderPart.rotation = -Math.PI / 4;
          break;
@@ -782,25 +844,27 @@ const updateLimb = (inventoryUseComponent: InventoryUseComponent, limbIdx: numbe
          // 
          // Spear charge animation
          // 
+         const lastActionTicks = limbInfo.action === LimbAction.chargeBattleaxe ? limbInfo.lastBattleaxeChargeTicks : limbInfo.lastSpearChargeTicks;
+         const secondsSinceLastAction = getSecondsSinceTickTimestamp(lastActionTicks);
          const chargeProgress = secondsSinceLastAction < 3 ? 1 - Math.pow(secondsSinceLastAction / 3 - 1, 2) : 1;
 
          const handRestingDirection = getLimbRestingDirection(inventoryUseComponent.entity.type as InventoryUseEntityType);
-         const handDirection = lerp(handRestingDirection, Math.PI / 1.5, chargeProgress) * handMult;
+         const handDirection = lerp(handRestingDirection, Math.PI / 1.5, chargeProgress) * limbMult;
 
          const handRestingOffset = getHandRestingOffset(inventoryUseComponent.entity.type as InventoryUseEntityType);
          limb.offset.x = handRestingOffset * Math.sin(handDirection);
          limb.offset.y = handRestingOffset * Math.cos(handDirection);
 
          if (limbInfo.action === LimbAction.chargeSpear) {
-            limb.rotation = lerp(ITEM_RESTING_ROTATION, Math.PI / 3.5, chargeProgress) * handMult;
+            limb.rotation = lerp(ITEM_RESTING_ROTATION, Math.PI / 3.5, chargeProgress) * limbMult;
             itemRenderPart.offset.x = 5;
             itemRenderPart.offset.y = 11;
             itemRenderPart.rotation = 0;
          } else {
-            limb.rotation = lerp(Math.PI / 4.2, Math.PI / 2.5, chargeProgress) * handMult;
+            limb.rotation = lerp(Math.PI / 4.2, Math.PI / 2.5, chargeProgress) * limbMult;
             itemRenderPart.offset.x = 12;
             itemRenderPart.offset.y = 36;
-            itemRenderPart.rotation = -Math.PI/6 * handMult;
+            itemRenderPart.rotation = -Math.PI/6 * limbMult;
          }
 
          if (item !== null && limbInfo.thrownBattleaxeItemID === item.id) {
@@ -832,6 +896,7 @@ const updateLimb = (inventoryUseComponent: InventoryUseComponent, limbIdx: numbe
          // Eating animation
          // 
       
+         const secondsSinceLastAction = getSecondsSinceTickTimestamp(limbInfo.lastEatTicks);
          let eatIntervalProgress = (secondsSinceLastAction % FOOD_EAT_INTERVAL) / FOOD_EAT_INTERVAL * 2;
          if (eatIntervalProgress > 1) {
             eatIntervalProgress = 2 - eatIntervalProgress;
@@ -846,103 +911,104 @@ const updateLimb = (inventoryUseComponent: InventoryUseComponent, limbIdx: numbe
          const handOffsetAmount = handRestingOffset - insetAmount;
          limb.offset.x = handOffsetAmount * Math.sin(activeItemDirection);
          limb.offset.y = handOffsetAmount * Math.cos(activeItemDirection);
-         limb.rotation = lerp(HAND_RESTING_ROTATION, HAND_RESTING_ROTATION - Math.PI/5, eatIntervalProgress) * handMult;
+         limb.rotation = lerp(HAND_RESTING_ROTATION, HAND_RESTING_ROTATION - Math.PI/5, eatIntervalProgress) * limbMult;
 
          const activeItemOffsetAmount = ITEM_RESTING_OFFSET + itemSize/2 - insetAmount;
-         const activeItemOffsetDirection = (activeItemDirection - Math.PI/14) * handMult;
+         const activeItemOffsetDirection = (activeItemDirection - Math.PI/14) * limbMult;
          limb.offset.x = activeItemOffsetAmount * Math.sin(activeItemOffsetDirection);
          limb.offset.y = activeItemOffsetAmount * Math.cos(activeItemOffsetDirection);
-         limb.rotation = lerp(0, -Math.PI/3, eatIntervalProgress) * handMult;
+         limb.rotation = lerp(0, -Math.PI/3, eatIntervalProgress) * limbMult;
          break;
       }
-      case LimbAction.none: {
-         // 
-         // Attack animation
-         // 
+      // case LimbAction.none: {
+      //    // 
+      //    // Attack animation
+      //    // 
 
-         const handRestingDirection = getLimbRestingDirection(inventoryUseComponent.entity.type as InventoryUseEntityType);
+      //    const secondsSinceLastAction = getSecondsSinceTickTimestamp(limbInfo.lastAttackTicks);
+      //    const handRestingDirection = getLimbRestingDirection(inventoryUseComponent.entity.type as InventoryUseEntityType);
 
-         // 
-         // Calculate attack progress
-         // 
+      //    // 
+      //    // Calculate attack progress
+      //    // 
    
-         let attackProgress = secondsSinceLastAction / limbInfo.lastAttackCooldown;
-         if (attackProgress > 1) {
-            attackProgress = 1;
-         }
+      //    let attackProgress = secondsSinceLastAction / limbInfo.lastAttackCooldown;
+      //    if (attackProgress > 1) {
+      //       attackProgress = 1;
+      //    }
 
-         // @Cleanup: Copy and paste
-         if (item !== null && item.type === ItemType.spear) {
-            let direction: number;
-            let attackHandRotation: number;
-            let extraOffset: number;
-            if (attackProgress < SPEAR_ATTACK_LUNGE_TIME) {
-               // Lunge part of the animation
-               direction = lerp(handRestingDirection, Math.PI / 4, attackProgress / SPEAR_ATTACK_LUNGE_TIME);
-               attackHandRotation = lerp(ITEM_RESTING_ROTATION, -Math.PI / 7, attackProgress / SPEAR_ATTACK_LUNGE_TIME);
-               extraOffset = lerp(0, 7, attackProgress / SPEAR_ATTACK_LUNGE_TIME);
-            } else {
-               // Return part of the animation
-               const returnProgress = (attackProgress - SPEAR_ATTACK_LUNGE_TIME) / (1 - SPEAR_ATTACK_LUNGE_TIME);
-               direction = lerp(Math.PI / 4, handRestingDirection, returnProgress);
-               attackHandRotation = lerp(-Math.PI / 7, ITEM_RESTING_ROTATION, returnProgress);
-               extraOffset = lerp(7, 0, returnProgress);
-            }
+      //    // @Cleanup: Copy and paste
+      //    if (item !== null && item.type === ItemType.spear) {
+      //       let direction: number;
+      //       let attackHandRotation: number;
+      //       let extraOffset: number;
+      //       if (attackProgress < SPEAR_ATTACK_LUNGE_TIME) {
+      //          // Lunge part of the animation
+      //          direction = lerp(handRestingDirection, Math.PI / 4, attackProgress / SPEAR_ATTACK_LUNGE_TIME);
+      //          attackHandRotation = lerp(ITEM_RESTING_ROTATION, -Math.PI / 7, attackProgress / SPEAR_ATTACK_LUNGE_TIME);
+      //          extraOffset = lerp(0, 7, attackProgress / SPEAR_ATTACK_LUNGE_TIME);
+      //       } else {
+      //          // Return part of the animation
+      //          const returnProgress = (attackProgress - SPEAR_ATTACK_LUNGE_TIME) / (1 - SPEAR_ATTACK_LUNGE_TIME);
+      //          direction = lerp(Math.PI / 4, handRestingDirection, returnProgress);
+      //          attackHandRotation = lerp(-Math.PI / 7, ITEM_RESTING_ROTATION, returnProgress);
+      //          extraOffset = lerp(7, 0, returnProgress);
+      //       }
 
-            const handRestingOffset = getHandRestingOffset(inventoryUseComponent.entity.type as InventoryUseEntityType);
-            const handOffsetDirection = direction * handMult;
-            const handOffsetAmount = handRestingOffset + extraOffset;
-            limb.offset.x = handOffsetAmount * Math.sin(handOffsetDirection);
-            limb.offset.y = handOffsetAmount * Math.cos(handOffsetDirection);
-            limb.rotation = attackHandRotation * handMult;
+      //       const handRestingOffset = getHandRestingOffset(inventoryUseComponent.entity.type as InventoryUseEntityType);
+      //       const handOffsetDirection = direction * handMult;
+      //       const handOffsetAmount = handRestingOffset + extraOffset;
+      //       limb.offset.x = handOffsetAmount * Math.sin(handOffsetDirection);
+      //       limb.offset.y = handOffsetAmount * Math.cos(handOffsetDirection);
+      //       limb.rotation = attackHandRotation * handMult;
 
-            itemRenderPart.offset.x = 5;
-            itemRenderPart.offset.y = 11;
-            itemRenderPart.rotation = 0;
-         } else {
-            let direction: number;
-            let attackHandRotation: number;
-            if (attackProgress < ATTACK_LUNGE_TIME) {
-               // Lunge part of the animation
-               direction = lerp(handRestingDirection, handRestingDirection - ITEM_SWING_RANGE, attackProgress / ATTACK_LUNGE_TIME);
-               attackHandRotation = lerp(ITEM_RESTING_ROTATION, ITEM_END_ROTATION, attackProgress / ATTACK_LUNGE_TIME);
-            } else {
-               // Return part of the animation
-               const returnProgress = (attackProgress - ATTACK_LUNGE_TIME) / (1 - ATTACK_LUNGE_TIME);
-               direction = lerp(handRestingDirection - ITEM_SWING_RANGE, handRestingDirection, returnProgress);
-               attackHandRotation = lerp(ITEM_END_ROTATION, ITEM_RESTING_ROTATION, returnProgress);
-            }
+      //       itemRenderPart.offset.x = 5;
+      //       itemRenderPart.offset.y = 11;
+      //       itemRenderPart.rotation = 0;
+      //    } else {
+      //       let direction: number;
+      //       let attackHandRotation: number;
+      //       if (attackProgress < ATTACK_LUNGE_TIME) {
+      //          // Lunge part of the animation
+      //          direction = lerp(handRestingDirection, handRestingDirection - ITEM_SWING_RANGE, attackProgress / ATTACK_LUNGE_TIME);
+      //          attackHandRotation = lerp(ITEM_RESTING_ROTATION, ITEM_END_ROTATION, attackProgress / ATTACK_LUNGE_TIME);
+      //       } else {
+      //          // Return part of the animation
+      //          const returnProgress = (attackProgress - ATTACK_LUNGE_TIME) / (1 - ATTACK_LUNGE_TIME);
+      //          direction = lerp(handRestingDirection - ITEM_SWING_RANGE, handRestingDirection, returnProgress);
+      //          attackHandRotation = lerp(ITEM_END_ROTATION, ITEM_RESTING_ROTATION, returnProgress);
+      //       }
             
-            const handRestingOffset = getHandRestingOffset(inventoryUseComponent.entity.type as InventoryUseEntityType);
-            const handOffsetDirection = direction * handMult;
-            limb.offset.x = handRestingOffset * Math.sin(handOffsetDirection);
-            limb.offset.y = handRestingOffset * Math.cos(handOffsetDirection);
-            limb.rotation = attackHandRotation * handMult;
+      //       const handRestingOffset = getHandRestingOffset(inventoryUseComponent.entity.type as InventoryUseEntityType);
+      //       const handOffsetDirection = direction * handMult;
+      //       limb.offset.x = handRestingOffset * Math.sin(handOffsetDirection);
+      //       limb.offset.y = handRestingOffset * Math.cos(handOffsetDirection);
+      //       limb.rotation = attackHandRotation * handMult;
 
-            if (item !== null && ITEM_TYPE_RECORD[item.type] === "bow") {
-               itemRenderPart.rotation = 0;
-               itemRenderPart.offset.x = 4 * handMult;
-               itemRenderPart.offset.y = 4;
-            } else if (item !== null && itemInfoIsTool(item.type, ITEM_INFO_RECORD[item.type])) {
-               itemRenderPart.rotation = 0;
-               itemRenderPart.offset.x = (itemSize - 8) * handMult;
-               itemRenderPart.offset.y = itemSize - 8;
-            } else if (item !== null) {
-               itemRenderPart.rotation = 0;
-               itemRenderPart.offset.x = itemSize/2 * handMult;
-               itemRenderPart.offset.y = itemSize/2;
-            }
-         }
-         break;
-      }
+      //       if (item !== null && ITEM_TYPE_RECORD[item.type] === "bow") {
+      //          itemRenderPart.rotation = 0;
+      //          itemRenderPart.offset.x = 4 * handMult;
+      //          itemRenderPart.offset.y = 4;
+      //       } else if (item !== null && itemInfoIsTool(item.type, ITEM_INFO_RECORD[item.type])) {
+      //          itemRenderPart.rotation = 0;
+      //          itemRenderPart.offset.x = (itemSize - 8) * handMult;
+      //          itemRenderPart.offset.y = itemSize - 8;
+      //       } else if (item !== null) {
+      //          itemRenderPart.rotation = 0;
+      //          itemRenderPart.offset.x = itemSize/2 * handMult;
+      //          itemRenderPart.offset.y = itemSize/2;
+      //       }
+      //    }
+      //    break;
+      // }
    }
 
    updateActiveItemRenderPart(inventoryUseComponent, limbIdx, limbInfo, item, shouldShowActiveItemRenderPart);
 }
 
 function onUpdate(inventoryUseComponent: InventoryUseComponent): void {
-   for (let i = 0; i < inventoryUseComponent.useInfos.length; i++) {
-      const useInfo = inventoryUseComponent.useInfos[i];
+   for (let i = 0; i < inventoryUseComponent.limbInfos.length; i++) {
+      const useInfo = inventoryUseComponent.limbInfos[i];
       updateLimb(inventoryUseComponent, i, useInfo);
    }
 }

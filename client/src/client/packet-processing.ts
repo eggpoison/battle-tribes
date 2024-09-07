@@ -304,6 +304,10 @@ const processEntityUpdateData = (entityID: EntityID, reader: PacketReader): void
       const component = entity.getServerComponent(componentType);
       component.updateFromData(reader);
    }
+
+   // If you're updating from data, then the entity is always dirty.
+   // @Incomplete: Are there some situations where this isn't the case?
+   entity.dirty();
 }
 
 export function processGameDataPacket(reader: PacketReader): void {

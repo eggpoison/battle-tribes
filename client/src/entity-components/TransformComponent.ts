@@ -79,7 +79,7 @@ class TransformComponent extends ServerComponent {
          const flags = reader.readNumber();
          const radius = reader.readNumber();
 
-         const box = new CircularBox(new Point(offsetX, offsetY), radius);
+         const box = new CircularBox(new Point(offsetX, offsetY), 0, radius);
          const hitbox = createHitbox(box, mass, collisionType, collisionBit, collisionMask, flags);
          this.addHitbox(hitbox, localID);
 

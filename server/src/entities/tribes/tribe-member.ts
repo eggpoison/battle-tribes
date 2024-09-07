@@ -1,12 +1,12 @@
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
 import { BlueprintType, BuildingMaterial, MATERIAL_TO_ITEM_MAP, ServerComponentType } from "webgl-test-shared/dist/components";
-import { EntityType, LimbAction, EntityID } from "webgl-test-shared/dist/entities";
+import { EntityType, EntityID, LimbAction } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { StructureConnectionInfo, StructureType, calculateStructurePlaceInfo } from "webgl-test-shared/dist/structures";
 import { TribesmanTitle } from "webgl-test-shared/dist/titles";
 import { TribeType } from "webgl-test-shared/dist/tribes";
 import { Point, dotAngles, lerp } from "webgl-test-shared/dist/utils";
-import { createEntityFromConfig, entityIsStructure } from "../../Entity";
+import { createEntityFromConfig } from "../../Entity";
 import Board from "../../Board";
 import { InventoryComponentArray, consumeItemFromSlot, consumeItemType, countItemType, getInventory, inventoryIsFull, pickupItemEntity } from "../../components/InventoryComponent";
 import { getEntitiesInRange } from "../../ai-shared";
@@ -16,16 +16,13 @@ import { onFishLeaderHurt } from "../mobs/fish";
 import { InventoryUseComponentArray } from "../../components/InventoryUseComponent";
 import { createBattleaxeProjectileConfig } from "../projectiles/battleaxe-projectile";
 import { createIceArrowConfig } from "../projectiles/ice-arrow";
-import { doBlueprintWork } from "../../components/BlueprintComponent";
-import { EntityRelationship, TribeComponentArray, getEntityRelationship } from "../../components/TribeComponent";
-import { getItemAttackCooldown } from "../../items";
+import { TribeComponentArray } from "../../components/TribeComponent";
 import { PhysicsComponentArray } from "../../components/PhysicsComponent";
 import Tribe from "../../Tribe";
 import { entityIsResource } from "./tribesman-ai/tribesman-resource-gathering";
 import { TribesmanAIComponentArray, adjustTribesmanRelationsAfterGift } from "../../components/TribesmanAIComponent";
 import { TribeMemberComponentArray, awardTitle, hasTitle } from "../../components/TribeMemberComponent";
 import { createItemEntityConfig } from "../item-entity";
-import { PlantComponentArray, plantIsFullyGrown } from "../../components/PlantComponent";
 import { ItemComponentArray } from "../../components/ItemComponent";
 import { StructureComponentArray } from "../../components/StructureComponent";
 import { BuildingMaterialComponentArray } from "../../components/BuildingMaterialComponent";
@@ -463,13 +460,13 @@ export function useItem(tribeMember: EntityID, item: Item, inventoryName: Invent
          const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribeMember);
          
          const inventory = getInventory(inventoryComponent, inventoryName);
-         const useInfo = inventoryUseComponent.getUseInfo(inventoryName);
+         const limbInfo = inventoryUseComponent.getUseInfo(inventoryName);
 
          const offsetDirection = transformComponent.rotation + Math.PI / 1.5 - Math.PI / 14;
          const x = transformComponent.position.x + 35 * Math.sin(offsetDirection);
          const y = transformComponent.position.y + 35 * Math.cos(offsetDirection);
 
-         const ticksSinceLastAction = Board.ticks - useInfo.lastSpearChargeTicks;
+         const ticksSinceLastAction = Board.ticks - limbInfo.currentActionStartingTicks;
          const secondsSinceLastAction = ticksSinceLastAction / Settings.TPS;
          const velocityMagnitude = lerp(1000, 1700, Math.min(secondsSinceLastAction / 3, 1));
 
@@ -484,8 +481,9 @@ export function useItem(tribeMember: EntityID, item: Item, inventoryName: Invent
 
          consumeItemFromSlot(inventory, itemSlot, 1);
 
-         useInfo.lastSpearChargeTicks = Board.ticks;
-         
+         // Once thrown, the limb goes back to doing nothing
+         limbInfo.action = LimbAction.none;
+
          break;
       }
       case "battleaxe": {

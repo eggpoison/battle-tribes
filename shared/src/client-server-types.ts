@@ -227,11 +227,6 @@ export interface AttackPacket {
    readonly attackDirection: number;
 }
 
-export interface RespawnDataPacket {
-   readonly playerID: number;
-   readonly spawnPosition: [number, number];
-}
-
 export interface DebugData {
    readonly colour: [r: number, g: number, b: number];
 }
@@ -287,7 +282,6 @@ export interface ServerToClientEvents {
    game_data_sync_packet: (gameDataSyncPacket: GameDataSyncPacket) => void;
    chat_message: (senderName: string, message: string) => void;
    client_disconnect: (clientID: string) => void;
-   respawn_data_packet: (respawnDataPacket: RespawnDataPacket) => void;
    force_position_update: (position: [number, number]) => void;
 }
 

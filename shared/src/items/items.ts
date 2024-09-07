@@ -1,12 +1,7 @@
+import { AttackPatternInfo, AttackTimingsInfo, AXE_ATTACK_TIMINGS, DEFAULT_ATTACK_PATTERN, DEFAULT_ATTACK_TIMINGS, DEFAULT_ITEM_DAMAGE_BOX_INFO, LimbHeldItemDamageBoxInfo, PICKAXE_ATTACK_TIMINGS, SPEAR_ATTACK_PATTERN, SPEAR_ATTACK_TIMINGS, SPEAR_DAMAGE_BOX_INFO, SWORD_ATTACK_TIMINGS, SWORD_ITEM_DAMAGE_BOX_INFO, TOOL_ITEM_DAMAGE_BOX_INFO } from "../attack-patterns";
 import { EntityType } from "../entities";
 import { Settings } from "../settings";
 import { StructureType } from "../structures";
-
-export const enum ItemVars {
-   DEFAULT_ATTACK_WINDUP_TICKS = (0.1 * Settings.TPS) | 0,
-   DEFAULT_ATTACK_SWING_TICKS = (0.15 * Settings.TPS) | 0,
-   DEFAULT_ATTACK_RETURN_TICKS = (0.2 * Settings.TPS) | 0
-}
 
 export const enum ItemType {
    wood,
@@ -186,9 +181,6 @@ export interface ToolItemInfo extends StackableItemInfo {
    readonly toolType: ToolType;
    readonly damage: number;
    readonly knockback: number;
-   readonly attackWindupTimeTicks: number;
-   readonly attackSwingTimeTicks: number;
-   readonly attackReturnTimeTicks: number;
    /** Rough estimate of how powerful the item is. */
    readonly level: number;
 }
@@ -267,6 +259,91 @@ export interface ItemInfoRecord {
    battleaxe: BattleaxeItemInfo;
    crossbow: CrossbowItemInfo;
 }
+
+export interface ItemCategoryAttackInfo {
+   readonly attackPattern: AttackPatternInfo;
+   readonly attackTimings: AttackTimingsInfo;
+   readonly heldItemDamageBoxInfo: LimbHeldItemDamageBoxInfo | null;
+}
+
+const UNARMED_ATTACK_INFO: ItemCategoryAttackInfo = {
+   attackPattern: DEFAULT_ATTACK_PATTERN,
+   attackTimings: DEFAULT_ATTACK_TIMINGS,
+   heldItemDamageBoxInfo: null
+}
+
+const ITEM_CATEGORY_ATTACK_INFO_RECORD: Record<keyof ItemInfoRecord, ItemCategoryAttackInfo> = {
+   material: {
+      attackPattern: DEFAULT_ATTACK_PATTERN,
+      attackTimings: DEFAULT_ATTACK_TIMINGS,
+      heldItemDamageBoxInfo: DEFAULT_ITEM_DAMAGE_BOX_INFO
+   },
+   healing: {
+      attackPattern: DEFAULT_ATTACK_PATTERN,
+      attackTimings: DEFAULT_ATTACK_TIMINGS,
+      heldItemDamageBoxInfo: DEFAULT_ITEM_DAMAGE_BOX_INFO
+   },
+   sword: {
+      attackPattern: DEFAULT_ATTACK_PATTERN,
+      attackTimings: SWORD_ATTACK_TIMINGS,
+      heldItemDamageBoxInfo: SWORD_ITEM_DAMAGE_BOX_INFO
+   },
+   bow: {
+      attackPattern: DEFAULT_ATTACK_PATTERN,
+      attackTimings: DEFAULT_ATTACK_TIMINGS,
+      heldItemDamageBoxInfo: DEFAULT_ITEM_DAMAGE_BOX_INFO
+   },
+   axe: {
+      attackPattern: DEFAULT_ATTACK_PATTERN,
+      attackTimings: AXE_ATTACK_TIMINGS,
+      heldItemDamageBoxInfo: TOOL_ITEM_DAMAGE_BOX_INFO
+   },
+   pickaxe: {
+      attackPattern: DEFAULT_ATTACK_PATTERN,
+      attackTimings: PICKAXE_ATTACK_TIMINGS,
+      heldItemDamageBoxInfo: TOOL_ITEM_DAMAGE_BOX_INFO
+   },
+   placeable: {
+      attackPattern: DEFAULT_ATTACK_PATTERN,
+      attackTimings: DEFAULT_ATTACK_TIMINGS,
+      heldItemDamageBoxInfo: DEFAULT_ITEM_DAMAGE_BOX_INFO
+   },
+   backpack: {
+      attackPattern: DEFAULT_ATTACK_PATTERN,
+      attackTimings: DEFAULT_ATTACK_TIMINGS,
+      heldItemDamageBoxInfo: DEFAULT_ITEM_DAMAGE_BOX_INFO
+   },
+   armour: {
+      attackPattern: DEFAULT_ATTACK_PATTERN,
+      attackTimings: DEFAULT_ATTACK_TIMINGS,
+      heldItemDamageBoxInfo: DEFAULT_ITEM_DAMAGE_BOX_INFO
+   },
+   glove: {
+      attackPattern: DEFAULT_ATTACK_PATTERN,
+      attackTimings: DEFAULT_ATTACK_TIMINGS,
+      heldItemDamageBoxInfo: DEFAULT_ITEM_DAMAGE_BOX_INFO
+   },
+   spear: {
+      attackPattern: SPEAR_ATTACK_PATTERN,
+      attackTimings: SPEAR_ATTACK_TIMINGS,
+      heldItemDamageBoxInfo: SPEAR_DAMAGE_BOX_INFO
+   },
+   hammer: {
+      attackPattern: DEFAULT_ATTACK_PATTERN,
+      attackTimings: DEFAULT_ATTACK_TIMINGS,
+      heldItemDamageBoxInfo: TOOL_ITEM_DAMAGE_BOX_INFO
+   },
+   battleaxe: {
+      attackPattern: DEFAULT_ATTACK_PATTERN,
+      attackTimings: SWORD_ATTACK_TIMINGS,
+      heldItemDamageBoxInfo: SWORD_ITEM_DAMAGE_BOX_INFO
+   },
+   crossbow: {
+      attackPattern: DEFAULT_ATTACK_PATTERN,
+      attackTimings: DEFAULT_ATTACK_TIMINGS,
+      heldItemDamageBoxInfo: DEFAULT_ITEM_DAMAGE_BOX_INFO
+   }
+};
 
 export const ITEM_TYPE_RECORD = {
    [ItemType.wood]: "material",
@@ -352,9 +429,6 @@ export const ITEM_INFO_RECORD = {
       toolType: "sword",
       damage: 2,
       knockback: 150,
-      attackWindupTimeTicks: ItemVars.DEFAULT_ATTACK_WINDUP_TICKS,
-      attackSwingTimeTicks: ItemVars.DEFAULT_ATTACK_SWING_TICKS,
-      attackReturnTimeTicks: ItemVars.DEFAULT_ATTACK_RETURN_TICKS,
       // @Incomplete
       // attackCooldown: 0.3,
       level: 1
@@ -364,9 +438,6 @@ export const ITEM_INFO_RECORD = {
       toolType: "axe",
       damage: 3,
       knockback: 100,
-      attackWindupTimeTicks: ItemVars.DEFAULT_ATTACK_WINDUP_TICKS,
-      attackSwingTimeTicks: ItemVars.DEFAULT_ATTACK_SWING_TICKS,
-      attackReturnTimeTicks: ItemVars.DEFAULT_ATTACK_RETURN_TICKS,
       // @Incomplete
       // attackCooldown: 0.5,
       level: 1
@@ -376,9 +447,6 @@ export const ITEM_INFO_RECORD = {
       toolType: "pickaxe",
       damage: 5,
       knockback: 100,
-      attackWindupTimeTicks: ItemVars.DEFAULT_ATTACK_WINDUP_TICKS,
-      attackSwingTimeTicks: ItemVars.DEFAULT_ATTACK_SWING_TICKS,
-      attackReturnTimeTicks: ItemVars.DEFAULT_ATTACK_RETURN_TICKS,
       // @Incomplete
       // attackCooldown: 0.5,
       level: 1
@@ -388,9 +456,6 @@ export const ITEM_INFO_RECORD = {
       toolType: "hammer",
       damage: 2,
       knockback: 150,
-      attackWindupTimeTicks: ItemVars.DEFAULT_ATTACK_WINDUP_TICKS,
-      attackSwingTimeTicks: ItemVars.DEFAULT_ATTACK_SWING_TICKS,
-      attackReturnTimeTicks: ItemVars.DEFAULT_ATTACK_RETURN_TICKS,
       // @Incomplete
       // attackCooldown: 0.7,
       level: 1,
@@ -423,9 +488,6 @@ export const ITEM_INFO_RECORD = {
       toolType: "sword",
       damage: 3,
       knockback: 150,
-      attackWindupTimeTicks: ItemVars.DEFAULT_ATTACK_WINDUP_TICKS,
-      attackSwingTimeTicks: ItemVars.DEFAULT_ATTACK_SWING_TICKS,
-      attackReturnTimeTicks: ItemVars.DEFAULT_ATTACK_RETURN_TICKS,
       // @Incomplete
       // attackCooldown: 0.3,
       level: 2
@@ -435,9 +497,6 @@ export const ITEM_INFO_RECORD = {
       toolType: "axe",
       damage: 5,
       knockback: 100,
-      attackWindupTimeTicks: ItemVars.DEFAULT_ATTACK_WINDUP_TICKS,
-      attackSwingTimeTicks: ItemVars.DEFAULT_ATTACK_SWING_TICKS,
-      attackReturnTimeTicks: ItemVars.DEFAULT_ATTACK_RETURN_TICKS,
       // @Incomplete
       // attackCooldown: 0.5,
       level: 2
@@ -447,9 +506,6 @@ export const ITEM_INFO_RECORD = {
       toolType: "pickaxe",
       damage: 8,
       knockback: 100,
-      attackWindupTimeTicks: ItemVars.DEFAULT_ATTACK_WINDUP_TICKS,
-      attackSwingTimeTicks: ItemVars.DEFAULT_ATTACK_SWING_TICKS,
-      attackReturnTimeTicks: ItemVars.DEFAULT_ATTACK_RETURN_TICKS,
       // @Incomplete
       // attackCooldown: 0.5,
       level: 2
@@ -459,9 +515,6 @@ export const ITEM_INFO_RECORD = {
       toolType: "hammer",
       damage: 3,
       knockback: 150,
-      attackWindupTimeTicks: ItemVars.DEFAULT_ATTACK_WINDUP_TICKS,
-      attackSwingTimeTicks: ItemVars.DEFAULT_ATTACK_SWING_TICKS,
-      attackReturnTimeTicks: ItemVars.DEFAULT_ATTACK_RETURN_TICKS,
       // @Incomplete
       // attackCooldown: 0.7,
       level: 2,
@@ -496,9 +549,6 @@ export const ITEM_INFO_RECORD = {
       toolType: "sword",
       damage: 2,
       knockback: 0,
-      attackWindupTimeTicks: ItemVars.DEFAULT_ATTACK_WINDUP_TICKS,
-      attackSwingTimeTicks: ItemVars.DEFAULT_ATTACK_SWING_TICKS,
-      attackReturnTimeTicks: ItemVars.DEFAULT_ATTACK_RETURN_TICKS,
       // @Incomplete
       // attackCooldown: 0.3,
       level: 1.5
@@ -571,9 +621,6 @@ export const ITEM_INFO_RECORD = {
       toolType: "sword",
       damage: 4,
       knockback: 170,
-      attackWindupTimeTicks: ItemVars.DEFAULT_ATTACK_WINDUP_TICKS,
-      attackSwingTimeTicks: ItemVars.DEFAULT_ATTACK_SWING_TICKS,
-      attackReturnTimeTicks: ItemVars.DEFAULT_ATTACK_RETURN_TICKS,
       // @Incomplete
       // attackCooldown: 0.3,
       level: 3
@@ -583,9 +630,6 @@ export const ITEM_INFO_RECORD = {
       toolType: "pickaxe",
       damage: 13,
       knockback: 100,
-      attackWindupTimeTicks: ItemVars.DEFAULT_ATTACK_WINDUP_TICKS,
-      attackSwingTimeTicks: ItemVars.DEFAULT_ATTACK_SWING_TICKS,
-      attackReturnTimeTicks: ItemVars.DEFAULT_ATTACK_RETURN_TICKS,
       // @Incomplete
       // attackCooldown: 0.5,
       level: 3
@@ -595,9 +639,6 @@ export const ITEM_INFO_RECORD = {
       toolType: "axe",
       damage: 8,
       knockback: 100,
-      attackWindupTimeTicks: ItemVars.DEFAULT_ATTACK_WINDUP_TICKS,
-      attackSwingTimeTicks: ItemVars.DEFAULT_ATTACK_SWING_TICKS,
-      attackReturnTimeTicks: ItemVars.DEFAULT_ATTACK_RETURN_TICKS,
       // @Incomplete
       // attackCooldown: 0.5,
       level: 3
@@ -630,9 +671,6 @@ export const ITEM_INFO_RECORD = {
       toolType: "sword",
       damage: 2,
       knockback: 400,
-      attackWindupTimeTicks: ItemVars.DEFAULT_ATTACK_WINDUP_TICKS,
-      attackSwingTimeTicks: ItemVars.DEFAULT_ATTACK_SWING_TICKS,
-      attackReturnTimeTicks: ItemVars.DEFAULT_ATTACK_RETURN_TICKS,
       // @Incomplete
       // attackCooldown: 0.5,
       level: 2.5
@@ -646,9 +684,6 @@ export const ITEM_INFO_RECORD = {
       toolType: "spear",
       damage: 4,
       knockback: 300,
-      attackWindupTimeTicks: ItemVars.DEFAULT_ATTACK_WINDUP_TICKS,
-      attackSwingTimeTicks: ItemVars.DEFAULT_ATTACK_SWING_TICKS,
-      attackReturnTimeTicks: ItemVars.DEFAULT_ATTACK_RETURN_TICKS,
       // @Incomplete
       // attackCooldown: 0.8,
       level: 2.5
@@ -669,9 +704,6 @@ export const ITEM_INFO_RECORD = {
       toolType: "battleaxe",
       damage: 3,
       knockback: 150,
-      attackWindupTimeTicks: ItemVars.DEFAULT_ATTACK_WINDUP_TICKS,
-      attackSwingTimeTicks: ItemVars.DEFAULT_ATTACK_SWING_TICKS,
-      attackReturnTimeTicks: ItemVars.DEFAULT_ATTACK_RETURN_TICKS,
       // @Incomplete
       // attackCooldown: 0.5,
       level: 2.5
@@ -810,6 +842,14 @@ export class Inventory {
       this.items.push(item);
    }
 
+   public getItem(itemSlot: number): Item | null {
+      const item = this.itemSlots[itemSlot];
+      if (typeof item === "undefined") {
+         return null;
+      }
+      return item;
+   }
+
    public removeItem(itemSlot: number): void {
       const item = this.itemSlots[itemSlot];
       if (typeof item === "undefined") {
@@ -895,4 +935,13 @@ export function itemTypeIsBackpack(itemType: ItemType): boolean {
 
 export function itemTypeIsGlove(itemType: ItemType): boolean {
    return ITEM_TYPE_RECORD[itemType] === "glove";
+}
+
+export function getItemAttackInfo(item: Item | null): ItemCategoryAttackInfo {
+   if (item === null) {
+      return UNARMED_ATTACK_INFO;
+   }
+
+   const itemCategory = ITEM_TYPE_RECORD[item.type];
+   return ITEM_CATEGORY_ATTACK_INFO_RECORD[itemCategory];
 }

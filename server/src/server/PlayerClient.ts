@@ -18,6 +18,7 @@ class PlayerClient {
    /** ID of the player's entity */
    public instance: EntityID;
    public clientIsActive = false;
+   public isAlive = true;
 
    // When the player is dead, we need to remember where their final position is so they can receive updates while dead
    public lastPlayerPositionX = 0;

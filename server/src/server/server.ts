@@ -20,7 +20,7 @@ import { createPlayerConfig } from "../entities/tribes/player";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { createEntityFromConfig } from "../Entity";
 import { generateGrassStrands } from "../world-generation/grass-generation";
-import { processDevGiveItemPacket, processPlayerAttackPacket, processPlayerDataPacket } from "./packet-processing";
+import { processDevGiveItemPacket, processPlayerAttackPacket, processPlayerDataPacket, processRespawnPacket, processUseItemPacket } from "./packet-processing";
 import { EntityID } from "webgl-test-shared/dist/entities";
 import { SpikesComponentArray } from "../components/SpikesComponent";
 import { TribeComponentArray } from "../components/TribeComponent";
@@ -201,6 +201,14 @@ class GameServer {
                }
                case PacketType.devGiveItem: {
                   processDevGiveItemPacket(playerClient, reader);
+                  break;
+               }
+               case PacketType.respawn: {
+                  processRespawnPacket(playerClient);
+                  break;
+               }
+               case PacketType.useItem: {
+                  processUseItemPacket(playerClient, reader);
                   break;
                }
                default: {

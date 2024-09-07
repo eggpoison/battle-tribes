@@ -1,19 +1,17 @@
-import { PlayerDataPacket, RespawnDataPacket, HitData, PlayerKnockbackData, HealData, ResearchOrbCompleteData } from "webgl-test-shared/dist/client-server-types";
+import { HitData, PlayerKnockbackData, HealData, ResearchOrbCompleteData } from "webgl-test-shared/dist/client-server-types";
 import { BlueprintType, BuildingMaterial, MATERIAL_TO_ITEM_MAP, ServerComponentType } from "webgl-test-shared/dist/components";
 import { TechID, TechInfo, getTechByID } from "webgl-test-shared/dist/techs";
 import { TribesmanTitle } from "webgl-test-shared/dist/titles";
 import Board from "../Board";
 import { registerCommand } from "../commands";
 import { acceptTitleOffer, forceAddTitle, rejectTitleOffer, removeTitle } from "../components/TribeMemberComponent";
-import { createPlayerConfig, modifyBuilding, startChargingBattleaxe, startChargingBow, startChargingSpear, startEating } from "../entities/tribes/player";
+import { modifyBuilding } from "../entities/tribes/player";
 import { throwItem, placeBlueprint, getAvailableCraftingStations, useItem } from "../entities/tribes/tribe-member";
 import PlayerClient from "./PlayerClient";
 import { SERVER } from "./server";
 import { createInitialGameDataPacket } from "./game-data-packets";
-import { EntityID, EntityType, LimbAction } from "webgl-test-shared/dist/entities";
+import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
 import { TRIBE_INFO_RECORD, TribeType } from "webgl-test-shared/dist/tribes";
-import { InventoryUseComponentArray } from "../components/InventoryUseComponent";
-import { PhysicsComponentArray } from "../components/PhysicsComponent";
 import { InventoryComponentArray, addItemToInventory, addItemToSlot, consumeItemFromSlot, consumeItemTypeFromInventory, craftRecipe, getInventory, getInventoryFromCreationInfo, inventoryComponentCanAffordRecipe, recipeCraftingStationIsAvailable } from "../components/InventoryComponent";
 import { TribeComponentArray, recruitTribesman } from "../components/TribeComponent";
 import { createItem } from "../items";
@@ -27,7 +25,6 @@ import { toggleFenceGateDoor } from "../components/FenceGateComponent";
 import { toggleTunnelDoor } from "../components/TunnelComponent";
 import { createItemsOverEntity } from "../entity-shared";
 import { BuildingMaterialComponentArray } from "../components/BuildingMaterialComponent";
-import { PlayerComponentArray } from "../components/PlayerComponent";
 import { TurretComponentArray } from "../components/TurretComponent";
 import { TribesmanAIComponentArray } from "../components/TribesmanAIComponent";
 import { EntitySummonPacket } from "webgl-test-shared/dist/dev-packets";
@@ -53,7 +50,7 @@ export function getPlayerClients(): ReadonlyArray<PlayerClient> {
    return playerClients;
 }
 
-const getPlayerClientFromInstanceID = (instanceID: number): PlayerClient | null => {
+export function getPlayerClientFromInstanceID(instanceID: number): PlayerClient | null {
    for (let i = 0; i < playerClients.length; i++) {
       const playerClient = playerClients[i];
 
@@ -123,36 +120,6 @@ export function generatePlayerSpawnPosition(tribeType: TribeType): Point {
    const x = randInt(PLAYER_SPAWN_POSITION_PADDING, Settings.BOARD_DIMENSIONS * Settings.TILE_SIZE - PLAYER_SPAWN_POSITION_PADDING);
    const y = randInt(PLAYER_SPAWN_POSITION_PADDING, Settings.BOARD_DIMENSIONS * Settings.TILE_SIZE - PLAYER_SPAWN_POSITION_PADDING);
    return new Point(x, y);
-}
-
-const respawnPlayer = (playerClient: PlayerClient): void => {
-   // Calculate spawn position
-   let spawnPosition: Point;
-   if (playerClient.tribe.totem !== null) {
-      const totemTransformComponent = TransformComponentArray.getComponent(playerClient.tribe.totem);
-      spawnPosition = totemTransformComponent.position.copy();
-      const offsetDirection = 2 * Math.PI * Math.random();
-      spawnPosition.x += 100 * Math.sin(offsetDirection);
-      spawnPosition.y += 100 * Math.cos(offsetDirection);
-   } else {
-      spawnPosition = generatePlayerSpawnPosition(playerClient.tribe.tribeType);
-   }
-
-   const config = createPlayerConfig();
-   config[ServerComponentType.transform].position.x = spawnPosition.x;
-   config[ServerComponentType.transform].position.y = spawnPosition.y;
-   config[ServerComponentType.tribe].tribe = playerClient.tribe;
-   config[ServerComponentType.player].username = playerClient.username;
-   const player = createEntityFromConfig(config);
-
-   playerClient.instance = player;
-
-   const dataPacket: RespawnDataPacket = {
-      playerID: player,
-      spawnPosition: spawnPosition.package()
-   };
-
-   playerClient.socket.emit("respawn_data_packet", dataPacket);
 }
 
 const processPlayerCraftingPacket = (playerClient: PlayerClient, recipeIndex: number): void => {
@@ -230,20 +197,6 @@ const processItemReleasePacket = (playerClient: PlayerClient, entity: EntityID, 
 
    // If all of the item was added, clear the held item
    consumeItemTypeFromInventory(inventoryComponent, InventoryName.heldItemSlot, heldItem.type, amountAdded);
-}
-
-const processItemUsePacket = (playerClient: PlayerClient, itemSlot: number): void => {
-   if (!Board.hasEntity(playerClient.instance)) {
-      return;
-   }
-
-   const inventoryComponent = InventoryComponentArray.getComponent(playerClient.instance);
-   const hotbarInventory = getInventory(inventoryComponent, InventoryName.hotbar);
-
-   const item = hotbarInventory.itemSlots[itemSlot];
-   if (typeof item !== "undefined")  {
-      useItem(playerClient.instance, item, InventoryName.hotbar, itemSlot);
-   }
 }
 
 const processItemDropPacket = (playerClient: PlayerClient, inventoryName: InventoryName, itemSlot: number, dropAmount: number, throwDirection: number): void => {
@@ -565,21 +518,12 @@ export function addPlayerClient(playerClient: PlayerClient, player: EntityID, pl
       processItemReleasePacket(playerClient, entity, inventoryName, itemSlot, amount);
    });
 
-   socket.on("item_use_packet", (itemSlot: number) => {
-      processItemUsePacket(playerClient, itemSlot);
-   });
-
    socket.on("held_item_drop", (dropAmount: number, throwDirection: number) => {
       processItemDropPacket(playerClient, InventoryName.heldItemSlot, 1, dropAmount, throwDirection);
    });
 
    socket.on("item_drop", (itemSlot: number, dropAmount: number, throwDirection: number) => {
       processItemDropPacket(playerClient, InventoryName.hotbar, itemSlot, dropAmount, throwDirection);
-   });
-
-   socket.on("respawn", () => {
-      // @Cleanup: show the emit here
-      respawnPlayer(playerClient);
    });
    
    socket.on("command", (command: string) => {

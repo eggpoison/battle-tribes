@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Client from "../../client/Client";
 import Game from "../../Game";
 import { resetUsername, setGameState, setLoadingScreenInitialStatus } from "../App";
+import { sendRespawnPacket } from "../../client/packet-creation";
 
 const DEATH_TIPS: ReadonlyArray<string> = [
    "Always make sure your monitor is on, as otherwise it will not be on.",
@@ -37,7 +38,7 @@ const DeathScreen = () => {
          <p className="tip">Tip: {tip}</p>
 
          <div className="button-container">
-            <button onClick={Client.sendRespawnRequest}>Respawn</button>
+            <button onClick={sendRespawnPacket}>Respawn</button>
             <button onClick={quitGame}>Quit</button>
          </div>
       </div>

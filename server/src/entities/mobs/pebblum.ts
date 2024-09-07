@@ -22,9 +22,9 @@ export function createPebblumConfig(): ComponentConfig<ComponentTypes> {
    const hitboxes = new Array<HitboxWrapper>();
 
    // Body
-   hitboxes.push(createHitbox(new CircularBox(new Point(0, -4), 10 * 2), 0.4, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0));
+   hitboxes.push(createHitbox(new CircularBox(new Point(0, -4), 0, 10 * 2), 0.4, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0));
    // Nose
-   hitboxes.push(createHitbox(new CircularBox(new Point(0, 6), 8 * 2), 0.3, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0));
+   hitboxes.push(createHitbox(new CircularBox(new Point(0, 6), 0, 8 * 2), 0.3, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0));
    
    return {
       [ServerComponentType.transform]: {

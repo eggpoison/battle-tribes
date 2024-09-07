@@ -3,6 +3,8 @@ import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { ComponentArray } from "./ComponentArray";
 import { EntityID } from "webgl-test-shared/dist/entities";
 import { Packet } from "webgl-test-shared/dist/packets";
+import { getPlayerClientFromInstanceID } from "../server/player-clients";
+import { sendRespawnDataPacket } from "../server/packet-processing";
 
 export interface PlayerComponentParams {
    username: string;
@@ -22,9 +24,26 @@ export class PlayerComponent {
 }
 
 export const PlayerComponentArray = new ComponentArray<PlayerComponent>(ServerComponentType.player, true, {
+   onJoin: onJoin,
+   onRemove: onRemove,
    getDataLength: getDataLength,
    addDataToPacket: addDataToPacket
 });
+
+function onJoin(player: EntityID): void {
+   const playerClient = getPlayerClientFromInstanceID(player);
+   if (playerClient !== null && !playerClient.isAlive) {
+      sendRespawnDataPacket(playerClient);
+      playerClient.isAlive = true;
+   }
+}
+
+function onRemove(player: EntityID): void {
+   const playerClient = getPlayerClientFromInstanceID(player);
+   if (playerClient !== null) {
+      playerClient.isAlive = false;
+   }
+}
 
 function getDataLength(): number {
    return 2 * Float32Array.BYTES_PER_ELEMENT + 100;

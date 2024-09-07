@@ -42,7 +42,7 @@ export function addInventoryDataToPacket(packet: Packet, inventory: Inventory): 
    }
 }
 
-const getEntityDataLength = (entity: EntityID, player: EntityID | null): number => {
+export function getEntityDataLength(entity: EntityID, player: EntityID | null): number {
    let lengthBytes = 3 * Float32Array.BYTES_PER_ELEMENT;
 
    for (let i = 0; i < ComponentArrays.length; i++) {
@@ -56,7 +56,7 @@ const getEntityDataLength = (entity: EntityID, player: EntityID | null): number 
    return lengthBytes;
 }
 
-const addEntityDataToPacket = (packet: Packet, entity: EntityID, player: EntityID | null): void => {
+export function addEntityDataToPacket(packet: Packet, entity: EntityID, player: EntityID | null): void {
    // Entity ID
    packet.addNumber(entity);
 
@@ -92,6 +92,7 @@ const addEntityDataToPacket = (packet: Packet, entity: EntityID, player: EntityI
    }
 }
 
+// @Cleanup: unused?
 const createNewPlayerInventories = (): PlayerInventoryData => {
    return {
       hotbar: new Inventory(Settings.INITIAL_PLAYER_HOTBAR_SIZE, 1, InventoryName.hotbar),
@@ -552,7 +553,7 @@ export function createSyncDataPacket(playerClient: PlayerClient): ArrayBuffer {
    const offhandInventory = getInventory(inventoryComponent, InventoryName.offhand);
    const gloveSlotInventory = getInventory(inventoryComponent, InventoryName.gloveSlot);
 
-   let lengthBytes = 9 * Float32Array.BYTES_PER_ELEMENT;
+   let lengthBytes = 11 * Float32Array.BYTES_PER_ELEMENT;
    
    // Player inventories
    lengthBytes += getInventoryDataLength(hotbarInventory);

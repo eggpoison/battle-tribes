@@ -78,14 +78,12 @@ export function assertHitboxIsRectangular(hitbox: HitboxWrapper): asserts hitbox
 }
 
 // @Incomplete: make private to this project
-export function updateRotationAndVertexPositionsAndSideAxes(box: RectangularBox, parentRotation: number): void {
-   const rotation = box.relativeRotation + parentRotation;
-   box.rotation = rotation;
-   
+export function updateVertexPositionsAndSideAxes(box: RectangularBox): void {
    const x1 = -box.width * 0.5;
    const x2 = box.width * 0.5;
    const y2 = box.height * 0.5;
 
+   const rotation = box.rotation;
    const sinRotation = Math.sin(rotation);
    const cosRotation = Math.cos(rotation);
 
@@ -108,8 +106,10 @@ export function updateBox(box: Box, parentX: number, parentY: number, parentRota
    box.position.x = parentX + cosRotation * box.offset.x + sinRotation * box.offset.y;
    box.position.y = parentY + cosRotation * box.offset.y - sinRotation * box.offset.x;
 
+   box.rotation = box.relativeRotation + parentRotation;
+
    if (!boxIsCircular(box)) {
-      updateRotationAndVertexPositionsAndSideAxes(box, parentRotation);
+      updateVertexPositionsAndSideAxes(box);
    }
 }
 

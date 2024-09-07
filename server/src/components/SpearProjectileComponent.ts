@@ -9,7 +9,7 @@ import { PhysicsComponentArray } from "./PhysicsComponent";
 import { TransformComponentArray } from "./TransformComponent";
 
 const enum Vars {
-   DROP_VELOCITY = 400
+   DROP_VELOCITY = 300
 }
 
 export interface SpearProjectileComponentParams {}
@@ -17,6 +17,10 @@ export interface SpearProjectileComponentParams {}
 export class SpearProjectileComponent implements SpearProjectileComponentParams {}
 
 export const SpearProjectileComponentArray = new ComponentArray<SpearProjectileComponent>(ServerComponentType.spearProjectile, true, {
+   onTick: {
+      tickInterval: 1,
+      func: onTick
+   },
    getDataLength: getDataLength,
    addDataToPacket: addDataToPacket
 });
@@ -24,11 +28,11 @@ export const SpearProjectileComponentArray = new ComponentArray<SpearProjectileC
 function onTick(_spearProjectileComponent: SpearProjectileComponent, spear: EntityID): void {
    const physicsComponent = PhysicsComponentArray.getComponent(spear);
 
-   const vx = physicsComponent.selfVelocity.x;
-   const vy = physicsComponent.selfVelocity.y;
-   const velocity = Math.sqrt(vx * vx + vy * vy);
+   const vx = physicsComponent.selfVelocity.x + physicsComponent.externalVelocity.x;
+   const vy = physicsComponent.selfVelocity.y + physicsComponent.externalVelocity.y;
+   const velocitySquared = vx * vx + vy * vy;
    
-   if (velocity <= Vars.DROP_VELOCITY * Vars.DROP_VELOCITY) {
+   if (velocitySquared <= Vars.DROP_VELOCITY * Vars.DROP_VELOCITY) {
       const transformComponent = TransformComponentArray.getComponent(spear);
 
       const config = createItemEntityConfig();

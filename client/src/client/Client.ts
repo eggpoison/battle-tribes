@@ -1,21 +1,21 @@
 import { BuildingPlanData, PotentialBuildingPlanData, TribeWallData } from "webgl-test-shared/dist/ai-building-types";
-import { AttackPacket, CircularHitboxData, GameDataPacket, PlayerInventoryData, RectangularHitboxData, RespawnDataPacket, ServerTileUpdateData } from "webgl-test-shared/dist/client-server-types";
+import { AttackPacket, CircularHitboxData, GameDataPacket, PlayerInventoryData, RectangularHitboxData, ServerTileUpdateData } from "webgl-test-shared/dist/client-server-types";
 import { distance, Point } from "webgl-test-shared/dist/utils";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { BlueprintType, ServerComponentType } from "webgl-test-shared/dist/components";
 import { PlayerTribeData, TechID } from "webgl-test-shared/dist/techs";
 import { STRUCTURE_TYPES } from "webgl-test-shared/dist/structures";
-import { TRIBE_INFO_RECORD, TribeType } from "webgl-test-shared/dist/tribes";
+import { TribeType } from "webgl-test-shared/dist/tribes";
 import { TribesmanTitle } from "webgl-test-shared/dist/titles";
 import Player from "../entities/Player";
 import Game from "../Game";
 import { Tile } from "../Tile";
 import { gameScreenSetIsDead } from "../components/game/GameScreen";
 import { removeSelectedItem, selectItem } from "../player-input";
-import { Hotbar_setHotbarSelectedItemSlot, Hotbar_update } from "../components/game/inventories/Hotbar";
+import { Hotbar_update } from "../components/game/inventories/Hotbar";
 import { HeldItem_setHeldItemCount, HeldItem_setHeldItemType } from "../components/game/HeldItem";
 import { CraftingMenu_setCraftingMenuOutputItem, CraftingMenu_updateRecipes } from "../components/game/menus/CraftingMenu";
-import { HealthBar_setHasFrostShield, updateHealthBar } from "../components/game/HealthBar";
+import { HealthBar_setHasFrostShield } from "../components/game/HealthBar";
 import { registerServerTick } from "../components/game/dev/GameInfoDisplay";
 import Camera from "../Camera";
 import { isDev } from "../utils";
@@ -37,12 +37,12 @@ import { GrassBlocker } from "webgl-test-shared/dist/grass-blockers";
 import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
 import { windowHeight, windowWidth } from "../webgl";
 import { EntitySummonPacket } from "webgl-test-shared/dist/dev-packets";
-import { InventoryName, Inventory, ItemType } from "webgl-test-shared/dist/items/items";
+import { InventoryName, Inventory } from "webgl-test-shared/dist/items/items";
 import { closeCurrentMenu } from "../menus";
 import { TribesTab_refresh } from "../components/game/dev/tabs/TribesTab";
 import { processTickEvents } from "../entity-tick-events";
 import { Packet, PacketReader, PacketType } from "webgl-test-shared/dist/packets";
-import { InitialGameDataPacket, processInitialGameDataPacket, processSyncDataPacket } from "./packet-processing";
+import { InitialGameDataPacket, processInitialGameDataPacket, processRespawnDataPacket, processSyncDataPacket } from "./packet-processing";
 import { createActivatePacket, createPlayerDataPacket, createSyncRequestPacket } from "./packet-creation";
 import Tribe from "../Tribe";
 import { createHitbox, HitboxWrapper } from "webgl-test-shared/dist/boxes/boxes";
@@ -128,7 +128,7 @@ export function getGrassBlockers(): ReadonlyArray<GrassBlocker> {
 
 export function createCircularHitboxFromData(data: CircularHitboxData): HitboxWrapper {
    const offset = new Point(data.offsetX, data.offsetY);
-   const box = new CircularBox(offset, data.radius);
+   const box = new CircularBox(offset, 0, data.radius);
    return createHitbox(box, data.mass, data.collisionType, data.collisionBit, data.collisionMask, data.flags);
 }
 
@@ -155,13 +155,13 @@ abstract class Client {
          }
 
          this.socket.onmessage = (message): void => {
-            const packetReader = new PacketReader(message.data, 0);
+            const reader = new PacketReader(message.data, 0);
             
-            const packetType = packetReader.readNumber() as PacketType;
+            const packetType = reader.readNumber() as PacketType;
             switch (packetType) {
                case PacketType.initialGameData: {
                   if (this.initialGameDataResolve !== null) {
-                     const initialGameDataPacket = processInitialGameDataPacket(packetReader);
+                     const initialGameDataPacket = processInitialGameDataPacket(reader);
                      this.initialGameDataResolve(initialGameDataPacket);
                      this.initialGameDataResolve = null;
                   }
@@ -169,7 +169,7 @@ abstract class Client {
                }
                case PacketType.gameData: {
                   if (this.nextGameDataResolve !== null) {
-                     this.nextGameDataResolve(packetReader);
+                     this.nextGameDataResolve(reader);
                      this.nextGameDataResolve = null;
                      return;
                   }
@@ -180,16 +180,20 @@ abstract class Client {
                   }
 
                   registerServerTick();
-                  Game.queuedPackets.push(packetReader);
+                  Game.queuedPackets.push(reader);
 
                   break;
                }
                case PacketType.syncData: {
-                  processSyncDataPacket(packetReader);
+                  processSyncDataPacket(reader);
                   break;
                }
                case PacketType.sync: {
                   Game.sync();
+                  break;
+               }
+               case PacketType.respawnData: {
+                  processRespawnDataPacket(reader);
                   break;
                }
             }
@@ -251,10 +255,6 @@ abstract class Client {
 
          //    this.socket.on("game_data_sync_packet", (gameDataSyncPacket: GameDataSyncPacket) => {
          //       this.registerGameDataSyncPacket(gameDataSyncPacket);
-         //    });
-
-         //    this.socket.on("respawn_data_packet", (respawnDataPacket: RespawnDataPacket): void => {
-         //       this.respawnPlayer(respawnDataPacket);
          //    });
 
          //    this.socket.on("force_position_update", (position: [number, number]): void => {
@@ -698,23 +698,6 @@ abstract class Client {
       }
    }
 
-   private static respawnPlayer(respawnDataPacket: RespawnDataPacket): void {
-      latencyGameState.selectedHotbarItemSlot = 1;
-      Hotbar_setHotbarSelectedItemSlot(1);
-      
-      const maxHealth = TRIBE_INFO_RECORD[Game.tribe.tribeType].maxHealthPlayer;
-      definiteGameState.setPlayerHealth(maxHealth);
-      updateHealthBar(maxHealth);
-      
-      // const spawnPosition = Point.unpackage(respawnDataPacket.spawnPosition);
-      // Player.createInstancePlayer(spawnPosition, respawnDataPacket.playerID);
-
-      gameScreenSetIsDead(false);
-
-      // Clear any queued packets, as they contain data from when the player wasn't respawned.
-      Game.queuedPackets.splice(0, Game.queuedPackets.length);
-   }
-
    /**
     * Sends a message to all players in the server.
     * @param message The message to send to the other players
@@ -772,13 +755,6 @@ abstract class Client {
       }
    }
 
-   public static sendItemUsePacket(): void {
-      if (Game.isRunning && this.socket !== null) {
-         const itemSlot = latencyGameState.selectedHotbarItemSlot;
-         // this.socket.emit("item_use_packet", itemSlot);
-      }
-   }
-
    public static sendHeldItemDropPacket(dropAmount: number, dropDirection: number): void {
       if (Game.isRunning && this.socket !== null) {
          // this.socket.emit("held_item_drop", dropAmount, dropDirection);
@@ -808,12 +784,6 @@ abstract class Client {
       if (Game.isRunning && this.socket !== null) {
          const buffer = createSyncRequestPacket();
          this.socket.send(buffer);
-      }
-   }
-
-   public static sendRespawnRequest(): void {
-      if (Game.isRunning && Client.socket !== null) {
-         // Client.socket.emit("respawn");
       }
    }
 

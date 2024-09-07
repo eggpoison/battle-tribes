@@ -46,7 +46,7 @@ export function createTunnelHitboxes(): ReadonlyArray<HitboxWrapper> {
 export function createTribeTotemHitboxes(): ReadonlyArray<HitboxWrapper> {
    const HITBOX_SIZE = 120;
    
-   const box = new CircularBox(new Point(0, 0), HITBOX_SIZE / 2);
+   const box = new CircularBox(new Point(0, 0), 0, HITBOX_SIZE / 2);
    const hitbox = createHitbox(box, 2.2, HitboxCollisionType.hard, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0);
 
    return [hitbox];
@@ -84,7 +84,7 @@ export function createWallSpikesHitboxes(): ReadonlyArray<HitboxWrapper> {
 }
 
 export function createSlingTurretHitboxes(): ReadonlyArray<HitboxWrapper> {
-   const box = new CircularBox(new Point(0, 0), 40);
+   const box = new CircularBox(new Point(0, 0), 0, 40);
    const hitbox = createHitbox(box, 1.5, HitboxCollisionType.hard, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0);
    return [hitbox];
 }
@@ -125,7 +125,7 @@ export function createPlanterBoxHitboxes(): ReadonlyArray<HitboxWrapper> {
 export function createHealingTotemHitboxes(): ReadonlyArray<HitboxWrapper> {
    const SIZE = 96;
 
-   const box = new CircularBox(new Point(0, 0), SIZE / 2);
+   const box = new CircularBox(new Point(0, 0), 0, SIZE / 2);
    const hitbox = createHitbox(box, 1, HitboxCollisionType.hard, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0);
    return [hitbox];
 }
@@ -189,7 +189,7 @@ export function createDoorHitboxes(): ReadonlyArray<HitboxWrapper> {
 export function createBarrelHitboxes(): ReadonlyArray<HitboxWrapper> {
    const HITBOX_SIZE = 80;
 
-   const box = new CircularBox(new Point(0, 0), HITBOX_SIZE / 2);
+   const box = new CircularBox(new Point(0, 0), 0, HITBOX_SIZE / 2);
    const hitbox = createHitbox(box, 1.5, HitboxCollisionType.hard, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0);
    return [hitbox];
 }
@@ -229,7 +229,7 @@ export function createFurnaceHitboxes(): ReadonlyArray<HitboxWrapper> {
 export function createCampfireHitboxes(): ReadonlyArray<HitboxWrapper> {
    const CAMPFIRE_SIZE = 104;
 
-   const box = new CircularBox(new Point(0, 0), CAMPFIRE_SIZE / 2);
+   const box = new CircularBox(new Point(0, 0), 0, CAMPFIRE_SIZE / 2);
    const hitbox = createHitbox(box, 2, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, HitboxFlags.NON_GRASS_BLOCKING);
    return [hitbox];
 }

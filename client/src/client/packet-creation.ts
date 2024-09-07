@@ -108,3 +108,17 @@ export function sendDevGiveItemPacket(itemType: ItemType, amount: number): void 
 
    Client.sendPacket(packet.buffer);
 }
+
+export function sendRespawnPacket(): void {
+   const packet = new Packet(PacketType.respawn, Float32Array.BYTES_PER_ELEMENT);
+   Client.sendPacket(packet.buffer);
+}
+
+export function sendItemUsePacket(): void {
+   const packet = new Packet(PacketType.useItem, 2 * Float32Array.BYTES_PER_ELEMENT);
+   
+   const itemSlot = latencyGameState.selectedHotbarItemSlot;
+   packet.addNumber(itemSlot);
+   
+   Client.sendPacket(packet.buffer);
+}

@@ -25,6 +25,7 @@ import { Inventory, Item, ITEM_TYPE_RECORD, InventoryName, ITEM_INFO_RECORD, ite
 import { playBowFireSound } from "./entity-tick-events";
 import { closeCurrentMenu } from "./menus";
 import { createAttackPacket } from "./client/packet-creation";
+import { HealthComponentArray } from "./entity-components/HealthComponent";
 
 /*
 // @Temporary @Incomplete
@@ -51,6 +52,11 @@ const PLAYER_LIGHTSPEED_ACCELERATION = 15000;
 
 /** Acceleration of the player while slowed. */
 const PLAYER_SLOW_ACCELERATION = 500;
+
+/** Acceleration of the player for a brief period after being hit */
+const PLAYER_DISCOMBOBULATED_ACCELERATION = 300;
+
+const DISCOMBOBULATION_TIME_SECONDS = 0.2;
 
 export let rightMouseButtonIsPressed = false;
 export let leftMouseButtonIsPressed = false;
@@ -553,6 +559,12 @@ export function updatePlayerMovement(): void {
          acceleration = PLAYER_SLOW_ACCELERATION * getPlayerMoveSpeedMultiplier();
       } else {
          acceleration = PLAYER_ACCELERATION * getPlayerMoveSpeedMultiplier();
+      }
+
+      // If discombobulated, limit the acceleration to the discombobulated acceleration
+      const healthComponent = HealthComponentArray.getComponent(Player.instance.id);
+      if (healthComponent.secondsSinceLastHit <= DISCOMBOBULATION_TIME_SECONDS && acceleration > PLAYER_DISCOMBOBULATED_ACCELERATION) {
+         acceleration = PLAYER_DISCOMBOBULATED_ACCELERATION;
       }
 
       if (latencyGameState.lastPlantCollisionTicks >= Board.serverTicks - 1) {

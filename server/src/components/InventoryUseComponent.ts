@@ -13,6 +13,7 @@ import { createDamageBox, ServerDamageBoxWrapper } from "../boxes";
 import { updateBox } from "webgl-test-shared/dist/boxes/boxes";
 import { TransformComponentArray } from "./TransformComponent";
 import { DEFAULT_ATTACK_PATTERN, LimbState } from "webgl-test-shared/dist/attack-patterns";
+import { registerDirtyEntity } from "../server/player-clients";
 
 export interface InventoryUseComponentParams {
    usedInventoryNames: Array<InventoryName>;
@@ -192,6 +193,11 @@ function onTick(inventoryUseComponent: InventoryUseComponent, entity: EntityID):
    for (let i = 0; i < inventoryUseComponent.limbInfos.length; i++) {
       const limbInfo = inventoryUseComponent.limbInfos[i];
 
+      // Certain actions should always show an update for the player
+      if (limbInfo.action === LimbAction.windAttack || limbInfo.action === LimbAction.attack || limbInfo.action === LimbAction.returnAttackToRest) {
+         registerDirtyEntity(entity);
+      }
+      
       if (currentActionHasFinished(limbInfo)) {
          switch (limbInfo.action) {
             case LimbAction.windAttack: {

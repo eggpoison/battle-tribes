@@ -19,6 +19,9 @@ class PlayerClient {
    public instance: EntityID;
    public clientIsActive = false;
 
+   // When the player is dead, we need to remember where their final position is so they can receive updates while dead
+   public lastPlayerPositionX = 0;
+   public lastPlayerPositionY = 0;
    public screenWidth: number;
    public screenHeight: number;
    public visibleChunkBounds: VisibleChunkBounds;

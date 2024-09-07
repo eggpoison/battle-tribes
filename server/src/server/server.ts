@@ -21,7 +21,7 @@ import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { createEntityFromConfig } from "../Entity";
 import { generateGrassStrands } from "../world-generation/grass-generation";
 import { processDevGiveItemPacket, processPlayerAttackPacket, processPlayerDataPacket } from "./packet-processing";
-import { EntityID, EntityTypeString } from "webgl-test-shared/dist/entities";
+import { EntityID } from "webgl-test-shared/dist/entities";
 import { SpikesComponentArray } from "../components/SpikesComponent";
 import { TribeComponentArray } from "../components/TribeComponent";
 import { TransformComponentArray } from "../components/TransformComponent";
@@ -31,8 +31,7 @@ import generateTerrain from "../world-generation/terrain-generation";
 import { generateLilypads } from "../world-generation/lilypad-generation";
 import { forceMaxGrowAllIceSpikes } from "../components/IceSpikesComponent";
 import { sortComponentArrays } from "../components/ComponentArray";
-import { createTreeConfig } from "../entities/resources/tree";
-import http from "http";
+import { createCactusConfig } from "../entities/resources/cactus";
 
 /*
 
@@ -58,11 +57,10 @@ const getPlayerVisibleEntities = (playerClient: PlayerClient): Set<EntityID> => 
    const entities = new Set<EntityID>();
       
    // @Copynpaste
-   const playerTransformComponent = TransformComponentArray.getComponent(playerClient.instance);
-   const minVisibleX = playerTransformComponent.position.x - playerClient.screenWidth * 0.5 - PlayerClientVars.VIEW_PADDING;
-   const maxVisibleX = playerTransformComponent.position.x + playerClient.screenWidth * 0.5 + PlayerClientVars.VIEW_PADDING;
-   const minVisibleY = playerTransformComponent.position.y - playerClient.screenHeight * 0.5 - PlayerClientVars.VIEW_PADDING;
-   const maxVisibleY = playerTransformComponent.position.y + playerClient.screenHeight * 0.5 + PlayerClientVars.VIEW_PADDING;
+   const minVisibleX = playerClient.lastPlayerPositionX - playerClient.screenWidth * 0.5 - PlayerClientVars.VIEW_PADDING;
+   const maxVisibleX = playerClient.lastPlayerPositionX + playerClient.screenWidth * 0.5 + PlayerClientVars.VIEW_PADDING;
+   const minVisibleY = playerClient.lastPlayerPositionY - playerClient.screenHeight * 0.5 - PlayerClientVars.VIEW_PADDING;
+   const maxVisibleY = playerClient.lastPlayerPositionY + playerClient.screenHeight * 0.5 + PlayerClientVars.VIEW_PADDING;
    
    for (let chunkX = playerClient.visibleChunkBounds[0]; chunkX <= playerClient.visibleChunkBounds[1]; chunkX++) {
       for (let chunkY = playerClient.visibleChunkBounds[2]; chunkY <= playerClient.visibleChunkBounds[3]; chunkY++) {
@@ -169,6 +167,13 @@ class GameServer {
       
                   playerClient = new PlayerClient(socket, tribe, screenWidth, screenHeight, spawnPosition, player, username);
                   addPlayerClient(playerClient, player, config);
+
+                  setTimeout(() => {
+                     const config = createCactusConfig();
+                     config[ServerComponentType.transform].position.x = spawnPosition.x + 200;
+                     config[ServerComponentType.transform].position.y = spawnPosition.y;
+                     createEntityFromConfig(config);
+                  }, 1000);
 
                   break;
                }
@@ -286,8 +291,15 @@ class GameServer {
             const playerClients = getPlayerClients();
             for (let i = 0; i < playerClients.length; i++) {
                const playerClient = playerClients[i];
-               if (!playerClient.clientIsActive || !Board.hasEntity(playerClient.instance)) {
+               if (!playerClient.clientIsActive) {
                   continue;
+               }
+
+               // Update player client position if player is alive
+               if (Board.hasEntity(playerClient.instance)) {
+                  const transformComponent = TransformComponentArray.getComponent(playerClient.instance);
+                  playerClient.lastPlayerPositionX = transformComponent.position.x;
+                  playerClient.lastPlayerPositionY = transformComponent.position.y;
                }
 
                // @Incomplete?
@@ -319,8 +331,10 @@ class GameServer {
                   }
                }
 
-               // Always send the player's data
-               entitiesToSend.add(playerClient.instance);
+               // Always send the player's data (if alive)
+               if (Board.hasEntity(playerClient.instance)) {
+                  entitiesToSend.add(playerClient.instance);
+               }
                
                // Send the game data to the player
                const gameDataPacket = createGameDataPacket(playerClient, entitiesToSend);

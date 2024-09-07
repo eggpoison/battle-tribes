@@ -139,7 +139,9 @@ const main = (currentTime: number): void => {
                updateEntity(Player.instance);
             }
             Board.tickEntities();
-            resolvePlayerCollisions();
+            if (Player.instance !== null) {
+               resolvePlayerCollisions();
+            }
             Game.update();
          } else {
             Game.numSkippablePackets++;

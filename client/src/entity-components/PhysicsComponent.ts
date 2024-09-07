@@ -139,6 +139,8 @@ class PhysicsComponent extends ServerComponent {
    public readonly acceleration: Point;
 
    public readonly externalVelocity: Point;
+   
+   public angularVelocity = 0;
 
    public traction: number;
    

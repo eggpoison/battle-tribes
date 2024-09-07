@@ -41,6 +41,7 @@ export function processPlayerDataPacket(playerClient: PlayerClient, reader: Pack
    const externalVelocityY = reader.readNumber();
    const accelerationX = reader.readNumber();
    const accelerationY = reader.readNumber();
+   const angularVelocity = reader.readNumber();
 
    const screenWidth = reader.readNumber();
    const screenHeight = reader.readNumber();
@@ -83,6 +84,7 @@ export function processPlayerDataPacket(playerClient: PlayerClient, reader: Pack
    physicsComponent.externalVelocity.y = externalVelocityY;
    physicsComponent.acceleration.x = accelerationX;
    physicsComponent.acceleration.y = accelerationY;
+   physicsComponent.angularVelocity = angularVelocity;
    
    hotbarLimbInfo.selectedItemSlot = selectedHotbarItemSlot;
 

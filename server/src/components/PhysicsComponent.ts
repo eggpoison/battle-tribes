@@ -42,7 +42,7 @@ export class PhysicsComponent {
    /** Can be negative. Unaffected by target rotation */
    public angularVelocity = 0;
    
-   public moveSpeedMultiplier = 1 + Number.EPSILON;
+   public moveSpeedMultiplier = 1;
 
    /** The higher this number is the faster the entity reaches its maximum speed. 1 = normal */
    public traction: number;

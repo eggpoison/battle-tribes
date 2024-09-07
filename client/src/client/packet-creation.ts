@@ -35,6 +35,7 @@ export function createPlayerDataPacket(): ArrayBuffer {
    packet.addNumber(physicsComponent.externalVelocity.y);
    packet.addNumber(physicsComponent.acceleration.x);
    packet.addNumber(physicsComponent.acceleration.y);
+   packet.addNumber(physicsComponent.angularVelocity);
 
    packet.addNumber(windowWidth);
    packet.addNumber(windowHeight);
@@ -119,6 +120,6 @@ export function sendItemUsePacket(): void {
    
    const itemSlot = latencyGameState.selectedHotbarItemSlot;
    packet.addNumber(itemSlot);
-   
+
    Client.sendPacket(packet.buffer);
 }

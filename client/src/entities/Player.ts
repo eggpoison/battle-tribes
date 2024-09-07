@@ -10,6 +10,7 @@ import EquipmentComponent from "../entity-components/EquipmentComponent";
 import { TRIBE_INFO_RECORD } from "webgl-test-shared/dist/tribes";
 import { Item } from "webgl-test-shared/dist/items/items";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { PhysicsComponentArray } from "../entity-components/PhysicsComponent";
 
 /** Updates the rotation of the player to match the cursor position */
 export function updatePlayerRotation(cursorX: number, cursorY: number): void {
@@ -22,7 +23,14 @@ export function updatePlayerRotation(cursorX: number, cursorY: number): void {
    cursorDirection = Math.PI/2 - cursorDirection;
 
    const transformComponent = Player.instance.getServerComponent(ServerComponentType.transform);
+   const physicsComponent = PhysicsComponentArray.getComponent(Player.instance.id);
+   
+   const previousRotation = transformComponent.rotation;
    transformComponent.rotation = cursorDirection;
+
+   // Angular velocity
+   physicsComponent.angularVelocity = transformComponent.rotation - previousRotation;
+
    Player.instance.dirty();
 }
 

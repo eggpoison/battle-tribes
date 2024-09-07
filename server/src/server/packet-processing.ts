@@ -16,7 +16,7 @@ import { InventoryComponentArray, getInventory, addItemToInventory } from "../co
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { Point } from "webgl-test-shared/dist/utils";
 import { createEntityFromConfig } from "../Entity";
-import { generatePlayerSpawnPosition } from "./player-clients";
+import { generatePlayerSpawnPosition, registerDirtyEntity } from "./player-clients";
 import { addEntityDataToPacket, getEntityDataLength } from "./game-data-packets";
 
 /** How far away from the entity the attack is done */
@@ -26,7 +26,8 @@ const ATTACK_RADIUS = 50;
 
 // @Cleanup: Messy as fuck
 export function processPlayerDataPacket(playerClient: PlayerClient, reader: PacketReader): void {
-   if (!Board.hasEntity(playerClient.instance)) {
+   const player = playerClient.instance;
+   if (!Board.hasEntity(player)) {
       return;
    }
 
@@ -55,10 +56,14 @@ export function processPlayerDataPacket(playerClient: PlayerClient, reader: Pack
    const interactingEntityID = reader.readNumber();
    const gameDataOptions = reader.readNumber();
 
-   const inventoryUseComponent = InventoryUseComponentArray.getComponent(playerClient.instance);
+   const inventoryUseComponent = InventoryUseComponentArray.getComponent(player);
    const hotbarLimbInfo = inventoryUseComponent.getUseInfo(InventoryName.hotbar);
 
-   const transformComponent = TransformComponentArray.getComponent(playerClient.instance);
+   const transformComponent = TransformComponentArray.getComponent(player);
+   if (positionX !== transformComponent.position.x || positionY !== transformComponent.position.y || rotation !== transformComponent.rotation) {
+      registerDirtyEntity(player);
+   }
+   // If the player has moved or rotated, is is dirty
    transformComponent.position.x = positionX;
    transformComponent.position.y = positionY;
    transformComponent.rotation = rotation;
@@ -69,7 +74,7 @@ export function processPlayerDataPacket(playerClient: PlayerClient, reader: Pack
    playerClient.visibleChunkBounds = playerClient.getVisibleChunkBounds(transformComponent.position, screenWidth, screenHeight);
    playerClient.gameDataOptions = gameDataOptions;
    
-   const physicsComponent = PhysicsComponentArray.getComponent(playerClient.instance);
+   const physicsComponent = PhysicsComponentArray.getComponent(player);
    physicsComponent.hitboxesAreDirty = true;
    
    physicsComponent.selfVelocity.x = selfVelocityX;
@@ -81,7 +86,7 @@ export function processPlayerDataPacket(playerClient: PlayerClient, reader: Pack
    
    hotbarLimbInfo.selectedItemSlot = selectedHotbarItemSlot;
 
-   const playerComponent = PlayerComponentArray.getComponent(playerClient.instance);
+   const playerComponent = PlayerComponentArray.getComponent(player);
    playerComponent.interactingEntityID = interactingEntityID;
 
    // @Bug: won't work for using medicine in offhand
@@ -98,7 +103,7 @@ export function processPlayerDataPacket(playerClient: PlayerClient, reader: Pack
    }
 
    if (!overrideOffhand) {
-      const tribeComponent = TribeComponentArray.getComponent(playerClient.instance);
+      const tribeComponent = TribeComponentArray.getComponent(player);
       if (tribeComponent.tribe.tribeType === TribeType.barbarians) {
          const offhandLimbInfo = inventoryUseComponent.getUseInfo(InventoryName.offhand);
 

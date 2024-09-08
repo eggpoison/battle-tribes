@@ -14,7 +14,7 @@ import { InventoryComponentArray, getInventory } from "./components/InventoryCom
 import { TribeArea } from "./ai-tribe-building/ai-building-areas";
 import { cleanAngle } from "./ai-shared";
 import { getPathfindingGroupID } from "./pathfinding";
-import { registerResearchOrbComplete } from "./server/player-clients";
+import { getPlayerClients, registerResearchOrbComplete } from "./server/player-clients";
 import { HutComponentArray } from "./components/HutComponent";
 import { CraftingRecipe } from "webgl-test-shared/dist/items/crafting-recipes";
 import { ItemType, InventoryName } from "webgl-test-shared/dist/items/items";
@@ -633,8 +633,20 @@ class Tribe {
       // @Incomplete: automatically detect if there are no entities left which have a tribe component with this tribe
       // Destroy tribe if it has no entities left
       if (this.isRemoveable && this.totem === null && this.tribesmanIDs.length === 0 && this.buildings.length === 0) {
-         this.destroy();
-         return;
+         // @Speed
+         // Make sure there are no players which can still respawn as this tribe
+         let hasPlayers = false;
+         for (const playerClient of getPlayerClients()) {
+            if (playerClient.tribe === this) {
+               hasPlayers = true;
+               break;
+            }
+         }
+         
+         if (!hasPlayers) {
+            this.destroy();
+            return;
+         }
       }
 
       const attackingEntityIDs = Object.keys(this.attackingEntities).map(idString => Number(idString));

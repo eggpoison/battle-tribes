@@ -64,7 +64,7 @@ export function dropBerryOverEntity(entity: EntityID): void {
    config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
    config[ServerComponentType.physics].velocityX = 40 * Math.sin(spawnDirection + velocityDirectionOffset);
    config[ServerComponentType.physics].velocityY = 40 * Math.cos(spawnDirection + velocityDirectionOffset);
-   config[ServerComponentType.item].itemType = ItemType.wooden_sword;
+   config[ServerComponentType.item].itemType = ItemType.berry;
    config[ServerComponentType.item].amount = 1;
    createEntityFromConfig(config);
 }

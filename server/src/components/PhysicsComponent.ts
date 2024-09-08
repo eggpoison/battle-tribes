@@ -152,7 +152,7 @@ const applyPhysics = (entity: EntityID, physicsComponent: PhysicsComponent): voi
    // the corresponding groups
    
    // @Temporary @Hack
-   if (isNaN(physicsComponent.selfVelocity.x) || isNaN(physicsComponent.selfVelocity.x)) {
+   if (isNaN(physicsComponent.selfVelocity.x) || isNaN(physicsComponent.selfVelocity.y)) {
       console.warn("Entity type " + EntityTypeString[Board.getEntityType(entity)!] + " velocity was NaN.");
       physicsComponent.selfVelocity.x = 0;
       physicsComponent.selfVelocity.y = 0;

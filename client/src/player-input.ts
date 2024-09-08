@@ -24,7 +24,7 @@ import { calculateCursorWorldPositionX, calculateCursorWorldPositionY } from "./
 import { Inventory, Item, ITEM_TYPE_RECORD, InventoryName, ITEM_INFO_RECORD, ConsumableItemInfo, ConsumableItemCategory, PlaceableItemType, getItemAttackInfo } from "webgl-test-shared/dist/items/items";
 import { playBowFireSound } from "./entity-tick-events";
 import { closeCurrentMenu } from "./menus";
-import { createAttackPacket, sendItemUsePacket } from "./client/packet-creation";
+import { createAttackPacket, sendItemUsePacket, sendStopItemUsePacket } from "./client/packet-creation";
 import { HealthComponentArray } from "./entity-components/HealthComponent";
 
 /*
@@ -612,6 +612,9 @@ const unuseItem = (item: Item): void => {
             const otherUseInfo = inventoryUseComponent.limbInfos[1];
             otherUseInfo.action = LimbAction.none;
          }
+
+         // Tell the server to stop using the item
+         sendStopItemUsePacket();
          break;
       }
    }

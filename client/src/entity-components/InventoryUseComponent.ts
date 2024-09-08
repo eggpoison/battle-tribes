@@ -187,18 +187,7 @@ const setLimbToState = (handMult: number, attachPoint: RenderAttachPoint, state:
    // limb.rotation = attackHandRotation * handMult;
 }
 
-const updateHeldItem = (inventoryUseComponent: InventoryUseComponent, limbIdx: number, heldItem: Item | null): void => {
-   const attackInfo = getItemAttackInfo(heldItem);
-
-   if (heldItem === null) {
-      if (inventoryUseComponent.activeItemRenderParts.hasOwnProperty(limbIdx)) {
-         inventoryUseComponent.entity.removeRenderPart(inventoryUseComponent.activeItemRenderParts[limbIdx]);
-         delete inventoryUseComponent.activeItemRenderParts[limbIdx];
-      }
-
-      return;
-   }
-   
+const createHeldItemIfMissing = (inventoryUseComponent: InventoryUseComponent, limbIdx: number, heldItem: Item | null): void => {
    if (!inventoryUseComponent.activeItemRenderParts.hasOwnProperty(limbIdx)) {
       const renderPart = new TexturedRenderPart(
          inventoryUseComponent.limbAttachPoints[limbIdx],
@@ -210,6 +199,20 @@ const updateHeldItem = (inventoryUseComponent: InventoryUseComponent, limbIdx: n
       inventoryUseComponent.entity.attachRenderThing(renderPart);
       inventoryUseComponent.activeItemRenderParts[limbIdx] = renderPart;
    }
+}
+
+const updateHeldItem = (inventoryUseComponent: InventoryUseComponent, limbIdx: number, heldItem: Item | null): void => {
+   const attackInfo = getItemAttackInfo(heldItem);
+
+   if (heldItem === null) {
+      if (inventoryUseComponent.activeItemRenderParts.hasOwnProperty(limbIdx)) {
+         inventoryUseComponent.entity.removeRenderPart(inventoryUseComponent.activeItemRenderParts[limbIdx]);
+         delete inventoryUseComponent.activeItemRenderParts[limbIdx];
+      }
+      return;
+   }
+   
+   createHeldItemIfMissing(inventoryUseComponent, limbIdx, heldItem);
 
    const heldItemDamageBoxInfo = attackInfo.heldItemDamageBoxInfo!;
    const heldItemRenderPart = inventoryUseComponent.activeItemRenderParts[limbIdx];
@@ -919,16 +922,18 @@ const updateLimb = (inventoryUseComponent: InventoryUseComponent, limbIdx: numbe
          const insetAmount = lerp(0, 17, eatIntervalProgress);
 
          const handRestingOffset = getHandRestingOffset(inventoryUseComponent.entity.type as InventoryUseEntityType);
-         const handOffsetAmount = handRestingOffset - insetAmount;
-         limb.offset.x = handOffsetAmount * Math.sin(activeItemDirection);
-         limb.offset.y = handOffsetAmount * Math.cos(activeItemDirection);
-         limb.rotation = lerp(HAND_RESTING_ROTATION, HAND_RESTING_ROTATION - Math.PI/5, eatIntervalProgress) * limbMult;
+         const handOffsetAmount = handRestingOffset + 4 - insetAmount;
+         attachPoint.offset.x = handOffsetAmount * Math.sin(activeItemDirection);
+         attachPoint.offset.y = handOffsetAmount * Math.cos(activeItemDirection);
+         attachPoint.rotation = lerp(HAND_RESTING_ROTATION, HAND_RESTING_ROTATION - Math.PI/5, eatIntervalProgress) * limbMult;
 
-         const activeItemOffsetAmount = ITEM_RESTING_OFFSET + itemSize/2 - insetAmount;
+         createHeldItemIfMissing(inventoryUseComponent, limbIdx, heldItem);
+         const heldItemRenderPart = inventoryUseComponent.activeItemRenderParts[limbIdx];
+         const activeItemOffsetAmount = itemSize/2 - insetAmount;
          const activeItemOffsetDirection = (activeItemDirection - Math.PI/14) * limbMult;
-         limb.offset.x = activeItemOffsetAmount * Math.sin(activeItemOffsetDirection);
-         limb.offset.y = activeItemOffsetAmount * Math.cos(activeItemOffsetDirection);
-         limb.rotation = lerp(0, -Math.PI/3, eatIntervalProgress) * limbMult;
+         heldItemRenderPart.offset.x = activeItemOffsetAmount * Math.sin(activeItemOffsetDirection);
+         heldItemRenderPart.offset.y = activeItemOffsetAmount * Math.cos(activeItemOffsetDirection);
+         heldItemRenderPart.rotation = lerp(0, -Math.PI/3, eatIntervalProgress) * limbMult;
          break;
       }
       // case LimbAction.none: {

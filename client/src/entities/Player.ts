@@ -11,6 +11,7 @@ import { TRIBE_INFO_RECORD } from "webgl-test-shared/dist/tribes";
 import { Item } from "webgl-test-shared/dist/items/items";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { PhysicsComponentArray } from "../entity-components/PhysicsComponent";
+import { Settings } from "webgl-test-shared/dist/settings";
 
 /** Updates the rotation of the player to match the cursor position */
 export function updatePlayerRotation(cursorX: number, cursorY: number): void {
@@ -29,7 +30,7 @@ export function updatePlayerRotation(cursorX: number, cursorY: number): void {
    transformComponent.rotation = cursorDirection;
 
    // Angular velocity
-   physicsComponent.angularVelocity = transformComponent.rotation - previousRotation;
+   physicsComponent.angularVelocity = (transformComponent.rotation - previousRotation) * Settings.TPS;
 
    Player.instance.dirty();
 }

@@ -2,6 +2,7 @@ import { BoxFromType, BoxType, DamageBoxWrapper, HitboxWrapper } from "webgl-tes
 import { LimbInfo } from "./components/InventoryUseComponent";
 import { EntityID } from "webgl-test-shared/dist/entities";
 import { InventoryName } from "webgl-test-shared/dist/items/items";
+import { DamageBoxType } from "webgl-test-shared/dist/components";
 
 type CollisionCallback = (attacker: EntityID, victim: EntityID, limb: LimbInfo, collidingDamageBox: ServerDamageBoxWrapper | null) => void;
 
@@ -21,9 +22,10 @@ export interface ServerDamageBoxWrapper<T extends BoxType = BoxType> extends Dam
    isActive: boolean;
    // @Hack
    readonly isTemporary: boolean;
+   readonly type: DamageBoxType;
 }
 
-export function createDamageBox<T extends BoxType>(box: BoxFromType[T], associatedLimbInventoryName: InventoryName, callbacks: DamageBoxCallbacks, isTemporary: boolean): ServerDamageBoxWrapper<T> {
+export function createDamageBox<T extends BoxType>(box: BoxFromType[T], associatedLimbInventoryName: InventoryName, callbacks: DamageBoxCallbacks, isTemporary: boolean, type: DamageBoxType): ServerDamageBoxWrapper<T> {
    return {
       box: box,
       associatedLimbInventoryName: associatedLimbInventoryName,
@@ -32,7 +34,8 @@ export function createDamageBox<T extends BoxType>(box: BoxFromType[T], associat
       collidingDamageBox: null,
       isRemoved: false,
       isActive: true,
-      isTemporary: isTemporary
+      isTemporary: isTemporary,
+      type: type
    };
 }
 

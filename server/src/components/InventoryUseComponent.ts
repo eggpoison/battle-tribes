@@ -1,4 +1,4 @@
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { DamageBoxType, ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityID, LimbAction } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import { ComponentArray } from "./ComponentArray";
@@ -43,12 +43,14 @@ export interface LimbInfo {
    lastAttackCooldown: number;
    /** Artificial cooldown added to tribesmen to make them a bit worse at combat */
    extraAttackCooldownTicks: number;
+
    /** Tick timestamp when the current action was started */
    currentActionElapsedTicks: number;
    /** Expected duration of the current action in ticks */
    currentActionDurationTicks: number;
    /** Number of ticks that the current animation is being paused. */
    currentActionPauseTicksRemaining: number;
+   currentActionRate: number;
 
    /** Damage box used to create limb attacks. */
    limbDamageBox: ServerDamageBoxWrapper;
@@ -71,7 +73,7 @@ export class InventoryUseComponent {
       const damageBox = createDamageBox(box, associatedInventory.name, {
          onCollision: onLimbAttackBoxCollision,
          onCollisionEnter: onLimbAttackBoxCollisionEnter
-      }, false);
+      }, false, DamageBoxType.attacking);
       
       const damageBoxComponent = DamageBoxComponentArray.getComponent(entity);
       damageBoxComponent.addDamageBox(damageBox);
@@ -98,6 +100,7 @@ export class InventoryUseComponent {
          currentActionElapsedTicks: 0,
          currentActionDurationTicks: 0,
          currentActionPauseTicksRemaining: 0,
+         currentActionRate: 1,
          limbDamageBox: damageBox,
          heldItemDamageBox: null,
          blockingDamageBox: null
@@ -201,7 +204,9 @@ const onLimbAttackBoxCollisionEnter = (attacker: EntityID, victim: EntityID, lim
    // Attack is blocked if the wrapper is a damage box
    if (collidingDamageBox !== null) {
       // Pause the attack for a brief period
-      limb.currentActionPauseTicksRemaining = Math.floor(Settings.TPS / 20);
+      limb.currentActionPauseTicksRemaining = Math.floor(Settings.TPS / 15);
+      // @Temporary
+      // limb.currentActionRate = 0.6;
    }
 }
 
@@ -241,7 +246,7 @@ function onTick(inventoryUseComponent: InventoryUseComponent, entity: EntityID):
       if (limbInfo.currentActionPauseTicksRemaining > 0) {
          limbInfo.currentActionPauseTicksRemaining--;
       } else {
-         limbInfo.currentActionElapsedTicks++;
+         limbInfo.currentActionElapsedTicks += limbInfo.currentActionRate;
       }
       
       if (currentActionHasFinished(limbInfo)) {
@@ -257,7 +262,7 @@ function onTick(inventoryUseComponent: InventoryUseComponent, entity: EntityID):
                   
                   // @Copynpaste
                   const box = new RectangularBox(new Point(damageBoxInfo.offsetX, damageBoxInfo.offsetY), damageBoxInfo.width, damageBoxInfo.height, damageBoxInfo.rotation);
-                  const damageBox = createDamageBox(box, limbInfo.associatedInventory.name, {}, true);
+                  const damageBox = createDamageBox(box, limbInfo.associatedInventory.name, {}, true, DamageBoxType.blocking);
                   
                   const damageBoxComponent = DamageBoxComponentArray.getComponent(entity);
                   damageBoxComponent.addDamageBox(damageBox);
@@ -287,7 +292,7 @@ function onTick(inventoryUseComponent: InventoryUseComponent, entity: EntityID):
                   const damageBox = createDamageBox(box, limbInfo.associatedInventory.name, {
                      onCollision: onLimbAttackBoxCollision,
                      onCollisionEnter: onLimbAttackBoxCollisionEnter
-                  }, true);
+                  }, true, DamageBoxType.attacking);
                   
                   const damageBoxComponent = DamageBoxComponentArray.getComponent(entity);
                   damageBoxComponent.addDamageBox(damageBox);

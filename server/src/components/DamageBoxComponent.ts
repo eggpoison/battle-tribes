@@ -5,10 +5,16 @@ import { Packet } from "webgl-test-shared/dist/packets";
 import { boxIsCircular } from "webgl-test-shared/dist/boxes/boxes";
 import { getBoxesCollidingEntities } from "webgl-test-shared/dist/hitbox-collision";
 import Board from "../Board";
-import { onEntityLimbCollision } from "../entities/tribes/limb-use";
 import { ServerDamageBoxWrapper } from "../boxes";
+import { InventoryUseComponentArray } from "./InventoryUseComponent";
+import { Settings } from "webgl-test-shared/dist/settings";
 
 export interface DamageBoxComponentParams {}
+
+interface DamageBoxCollisionInfo {
+   readonly collidingEntity: EntityID;
+   readonly collidingDamageBox: ServerDamageBoxWrapper;
+}
 
 export class DamageBoxComponent implements DamageBoxComponentParams {
    public damageBoxes = new Array<ServerDamageBoxWrapper>();
@@ -43,9 +49,45 @@ export const DamageBoxComponentArray = new ComponentArray<DamageBoxComponent>(Se
    addDataToPacket: addDataToPacket
 });
 
+// @Hack: this whole thing is cursed
+const getCollidingDamageBox = (entity: EntityID, damageBox: ServerDamageBoxWrapper): DamageBoxCollisionInfo | null => {
+   // @Hack
+   const CHECK_PADDING = 200;
+   const minChunkX = Math.max(Math.min(Math.floor((damageBox.box.position.x - CHECK_PADDING) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
+   const maxChunkX = Math.max(Math.min(Math.floor((damageBox.box.position.x + CHECK_PADDING) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
+   const minChunkY = Math.max(Math.min(Math.floor((damageBox.box.position.y - CHECK_PADDING) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
+   const maxChunkY = Math.max(Math.min(Math.floor((damageBox.box.position.y + CHECK_PADDING) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
+
+   for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
+      for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
+         const chunk = Board.getChunk(chunkX, chunkY);
+         for (const currentEntity of chunk.entities) {
+            if (currentEntity === entity || !DamageBoxComponentArray.hasComponent(currentEntity)) {
+               continue;
+            }
+
+            const damageBoxComponent = DamageBoxComponentArray.getComponent(currentEntity);
+            for (const currentDamageBox of damageBoxComponent.damageBoxes) { 
+               if (damageBox.box.isColliding(currentDamageBox.box)) {
+                  return {
+                     collidingEntity: currentEntity,
+                     collidingDamageBox: currentDamageBox
+                  };
+               }
+            }
+         }
+      }
+   }
+
+   return null;
+}
+
 function onTick(damageBoxComponent: DamageBoxComponent, entity: EntityID): void {
+   const inventoryUseComponent = InventoryUseComponentArray.getComponent(entity);
+   
    for (let i = 0; i < damageBoxComponent.damageBoxes.length; i++) {
       const damageBox = damageBoxComponent.damageBoxes[i];
+      const limbInfo = inventoryUseComponent.getLimbInfo(damageBox.associatedLimbInventoryName);
 
       // Check for removed damage boxes
       if (damageBox.isRemoved) {
@@ -54,11 +96,21 @@ function onTick(damageBoxComponent: DamageBoxComponent, entity: EntityID): void 
          continue;
       }
 
+      if (!damageBox.isActive) {
+         continue;
+      }
+
+      // First check if it is colliding with another damage box 
+      const collisionInfo = getCollidingDamageBox(entity, damageBox);
+      if (collisionInfo !== null) {
+         damageBox.collisionCallback(entity, collisionInfo.collidingEntity, limbInfo, collisionInfo.collidingDamageBox);
+      }
+
       const collidingEntities = getBoxesCollidingEntities(Board.getWorldInfo(), [damageBox]);
       for (let j = 0; j < collidingEntities.length; j++) {
          const collidingEntity = collidingEntities[j];
          if (collidingEntity !== entity) {
-            onEntityLimbCollision(entity, collidingEntity, damageBox.limbInfo, damageBoxComponent);
+            damageBox.collisionCallback(entity, collidingEntity, limbInfo, null);
          }
       }
    }
@@ -70,6 +122,10 @@ function getDataLength(entity: EntityID): number {
    let lengthBytes = 3 * Float32Array.BYTES_PER_ELEMENT;
    
    for (const damageBox of damageBoxComponent.damageBoxes) {
+      if (!damageBox.isActive) {
+         continue;
+      }
+      
       if (boxIsCircular(damageBox.box)) {
          lengthBytes += 7 * Float32Array.BYTES_PER_ELEMENT;
       } else {
@@ -86,17 +142,27 @@ function addDataToPacket(packet: Packet, entity: EntityID): void {
    const damageBoxComponent = DamageBoxComponentArray.getComponent(entity);
    
    let numCircularBoxes = 0;
+   let numRectangularBoxes = 0;
    for (const damageBox of damageBoxComponent.damageBoxes) {
+      if (!damageBox.isActive) {
+         continue;
+      }
+      
       if (boxIsCircular(damageBox.box)) {
          numCircularBoxes++;
+      } else {
+         numRectangularBoxes++;
       }
    }
-   const numRectangularBoxes = damageBoxComponent.damageBoxes.length - numCircularBoxes;
    
    // Circular
    packet.addNumber(numCircularBoxes);
    for (let i = 0; i < damageBoxComponent.damageBoxes.length; i++) {
       const damageBox = damageBoxComponent.damageBoxes[i];
+      if (!damageBox.isActive) {
+         continue;
+      }
+      
       const box = damageBox.box;
       // @Speed
       if (!boxIsCircular(box)) {
@@ -118,6 +184,10 @@ function addDataToPacket(packet: Packet, entity: EntityID): void {
    packet.addNumber(numRectangularBoxes);
    for (let i = 0; i < damageBoxComponent.damageBoxes.length; i++) {
       const damageBox = damageBoxComponent.damageBoxes[i];
+      if (!damageBox.isActive) {
+         continue;
+      }
+      
       const box = damageBox.box;
       // @Speed
       if (boxIsCircular(box)) {

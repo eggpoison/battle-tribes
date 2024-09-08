@@ -4,6 +4,8 @@ import Entity from "../Entity";
 import { PacketReader } from "webgl-test-shared/dist/packets";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { updateHealthBar } from "../components/game/HealthBar";
+import Client from "../client/Client";
 
 /** Amount of seconds that the hit flash occurs for */
 const ATTACK_HIT_FLASH_DURATION = 0.4;
@@ -35,6 +37,17 @@ class HealthComponent extends ServerComponent {
    public updateFromData(reader: PacketReader): void {
       this.health = reader.readNumber();
       this.maxHealth = reader.readNumber();
+   }
+
+   public updatePlayerFromData(reader: PacketReader): void {
+      const health = reader.readNumber();
+      reader.padOffset(Float32Array.BYTES_PER_ELEMENT);
+
+      if (health > 0) {
+         updateHealthBar(health);
+      } else {
+         Client.killPlayer();
+      }
    }
 }
 

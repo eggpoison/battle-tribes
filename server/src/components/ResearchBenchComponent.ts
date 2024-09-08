@@ -130,7 +130,7 @@ export function continueResearching(researchBench: EntityID, researcher: EntityI
 
       // Make the tribesman slap the bench each time they complete an orb
       const inventoryUseComponent = InventoryUseComponentArray.getComponent(researcher);
-      const useInfo = inventoryUseComponent.getUseInfo(InventoryName.hotbar);
+      const useInfo = inventoryUseComponent.getLimbInfo(InventoryName.hotbar);
       useInfo.lastAttackTicks = Board.ticks;
    }
 

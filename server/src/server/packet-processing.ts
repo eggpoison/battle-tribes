@@ -18,6 +18,7 @@ import { Point } from "webgl-test-shared/dist/utils";
 import { createEntityFromConfig } from "../Entity";
 import { generatePlayerSpawnPosition, registerDirtyEntity } from "./player-clients";
 import { addEntityDataToPacket, getEntityDataLength } from "./game-data-packets";
+import { DamageBoxComponentArray } from "../components/DamageBoxComponent";
 
 /** How far away from the entity the attack is done */
 const ATTACK_OFFSET = 50;
@@ -58,7 +59,7 @@ export function processPlayerDataPacket(playerClient: PlayerClient, reader: Pack
    const gameDataOptions = reader.readNumber();
 
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(player);
-   const hotbarLimbInfo = inventoryUseComponent.getUseInfo(InventoryName.hotbar);
+   const hotbarLimbInfo = inventoryUseComponent.getLimbInfo(InventoryName.hotbar);
 
    const transformComponent = TransformComponentArray.getComponent(player);
    // If the player has moved or rotated, is is dirty
@@ -107,7 +108,7 @@ export function processPlayerDataPacket(playerClient: PlayerClient, reader: Pack
    if (!overrideOffhand) {
       const tribeComponent = TribeComponentArray.getComponent(player);
       if (tribeComponent.tribe.tribeType === TribeType.barbarians) {
-         const offhandLimbInfo = inventoryUseComponent.getUseInfo(InventoryName.offhand);
+         const offhandLimbInfo = inventoryUseComponent.getLimbInfo(InventoryName.offhand);
 
          if ((offhandAction === LimbAction.eat || offhandAction === LimbAction.useMedicine) && (offhandLimbInfo.action !== LimbAction.eat && offhandLimbInfo.action !== LimbAction.useMedicine)) {
             startEating(playerClient.instance, InventoryName.offhand);
@@ -226,6 +227,18 @@ export function processStopItemUsePacket(playerClient: PlayerClient): void {
 
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(player);
 
-   const limbInfo = inventoryUseComponent.getUseInfo(InventoryName.hotbar);
+   const limbInfo = inventoryUseComponent.getLimbInfo(InventoryName.hotbar);
+
+   // If the limb was blocking, remove any blocking damage boxes
+   if (limbInfo.action === LimbAction.block) {
+      const damageBox = limbInfo.blockingDamageBox?.deref();
+      if (typeof damageBox !== "undefined") {
+         const damageBoxComponent = DamageBoxComponentArray.getComponent(player);
+         damageBoxComponent.removeDamageBox(damageBox);
+         
+         limbInfo.blockingDamageBox = null;
+      }
+   }
+   
    limbInfo.action = LimbAction.none;
 }

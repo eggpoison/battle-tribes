@@ -189,11 +189,11 @@ const doBiteAttack = (zombie: EntityID, target: EntityID): void => {
 
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(zombie);
 
-   const mainHandUseInfo = inventoryUseComponent.getUseInfo(InventoryName.handSlot);
+   const mainHandUseInfo = inventoryUseComponent.getLimbInfo(InventoryName.handSlot);
    mainHandUseInfo.lastAttackTicks = Board.ticks;
 
    if (inventoryUseComponent.hasUseInfo(InventoryName.offhand)) {
-      const offhandUseInfo = inventoryUseComponent.getUseInfo(InventoryName.offhand);
+      const offhandUseInfo = inventoryUseComponent.getLimbInfo(InventoryName.offhand);
       offhandUseInfo.lastAttackTicks = Board.ticks;
    }
 }

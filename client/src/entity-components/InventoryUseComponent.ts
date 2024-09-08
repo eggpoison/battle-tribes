@@ -18,7 +18,7 @@ import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { PacketReader } from "webgl-test-shared/dist/packets";
 import { Hotbar_updateRightThrownBattleaxeItemID } from "../components/game/inventories/Hotbar";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
-import { LimbState, SPEAR_CHARGED_LIMB_STATE, TRIBESMAN_RESTING_LIMB_STATE } from "webgl-test-shared/dist/attack-patterns";
+import { BLOCKING_LIMB_STATE, LimbState, SPEAR_CHARGED_LIMB_STATE, TRIBESMAN_RESTING_LIMB_STATE } from "webgl-test-shared/dist/attack-patterns";
 import RenderAttachPoint from "../render-parts/RenderAttachPoint";
 
 export interface LimbInfo {
@@ -489,7 +489,7 @@ class InventoryUseComponent extends ServerComponent{
          }
       }
 
-      throw new Error();
+      throw new Error("No inventory by name " + inventoryName + ".");
    }
 }
 
@@ -784,6 +784,7 @@ const updateLimb = (inventoryUseComponent: InventoryUseComponent, limbIdx: numbe
       case LimbAction.windAttack: {
          const heldItemAttackInfo = getItemAttackInfo(heldItem);
          
+         // @Copynpaste
          const secondsSinceLastAction = getSecondsSinceTickTimestamp(limbInfo.currentActionStartingTicks);
          const windupProgress = secondsSinceLastAction * Settings.TPS / limbInfo.currentActionDurationTicks;
 
@@ -794,6 +795,7 @@ const updateLimb = (inventoryUseComponent: InventoryUseComponent, limbIdx: numbe
       case LimbAction.attack: {
          const heldItemAttackInfo = getItemAttackInfo(heldItem);
 
+         // @Copynpaste
          const secondsSinceLastAction = getSecondsSinceTickTimestamp(limbInfo.currentActionStartingTicks);
          const attackProgress = secondsSinceLastAction * Settings.TPS / limbInfo.currentActionDurationTicks;
 
@@ -804,6 +806,7 @@ const updateLimb = (inventoryUseComponent: InventoryUseComponent, limbIdx: numbe
       case LimbAction.returnAttackToRest: {
          const heldItemAttackInfo = getItemAttackInfo(heldItem);
 
+         // @Copynpaste
          const secondsIntoAnimation = getSecondsSinceTickTimestamp(limbInfo.currentActionStartingTicks);
          const animationProgress = secondsIntoAnimation * Settings.TPS / limbInfo.currentActionDurationTicks;
 
@@ -813,6 +816,30 @@ const updateLimb = (inventoryUseComponent: InventoryUseComponent, limbIdx: numbe
       }
       case LimbAction.none: {
          setLimbToState(limbMult, attachPoint, TRIBESMAN_RESTING_LIMB_STATE);
+         updateHeldItem(inventoryUseComponent, limbIdx, heldItem);
+         break;
+      }
+      case LimbAction.block: {
+         // @Copynpaste
+         const secondsIntoAnimation = getSecondsSinceTickTimestamp(limbInfo.currentActionStartingTicks);
+         let animationProgress = secondsIntoAnimation * Settings.TPS / limbInfo.currentActionDurationTicks;
+         if (animationProgress > 1) {
+            animationProgress = 1;
+         }
+
+         lerpLimbBetweenStates(limb, attachPoint, TRIBESMAN_RESTING_LIMB_STATE, BLOCKING_LIMB_STATE, animationProgress);
+         updateHeldItem(inventoryUseComponent, limbIdx, heldItem);
+         break;
+      }
+      case LimbAction.returnBlockToRest: {
+         // @Copynpaste
+         const secondsIntoAnimation = getSecondsSinceTickTimestamp(limbInfo.currentActionStartingTicks);
+         let animationProgress = secondsIntoAnimation * Settings.TPS / limbInfo.currentActionDurationTicks;
+         if (animationProgress > 1) {
+            animationProgress = 1;
+         }
+
+         lerpLimbBetweenStates(limb, attachPoint, BLOCKING_LIMB_STATE, TRIBESMAN_RESTING_LIMB_STATE, animationProgress);
          updateHeldItem(inventoryUseComponent, limbIdx, heldItem);
          break;
       }

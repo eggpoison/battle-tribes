@@ -123,9 +123,11 @@ class GameServer {
 
       // Setup
       sortComponentArrays();
+      console.log("Generating terrain...")
       const generationInfo = generateTerrain();
       Board.setup(generationInfo);
       updateResourceDistributions();
+      console.log("Spawning entities...");
       spawnInitialEntities();
       forceMaxGrowAllIceSpikes();
       generateGrassStrands();

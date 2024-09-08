@@ -161,7 +161,7 @@ export function huntEntity(tribesman: EntityID, huntedEntity: EntityID, isAggres
    const mostDamagingItemSlot = getMostDamagingItemSlot(tribesman, huntedEntity);
 
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman);
-   const hotbarUseInfo = inventoryUseComponent.getUseInfo(InventoryName.hotbar);
+   const hotbarUseInfo = inventoryUseComponent.getLimbInfo(InventoryName.hotbar);
    
    // Select the item slot
    hotbarUseInfo.selectedItemSlot = mostDamagingItemSlot;

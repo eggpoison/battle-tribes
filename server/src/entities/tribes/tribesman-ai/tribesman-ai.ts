@@ -455,7 +455,7 @@ export function tickTribesman(tribesmanAIComponent: TribesmanAIComponent, tribes
          physicsComponent.turnSpeed = TRIBESMAN_TURN_SPEED;
 
          const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman);
-         const useInfo = inventoryUseComponent.getUseInfo(InventoryName.hotbar);
+         const useInfo = inventoryUseComponent.getLimbInfo(InventoryName.hotbar);
          
          tribesmanAIComponent.currentAIType = TribesmanAIType.idle;
          useInfo.action = LimbAction.none;
@@ -596,14 +596,14 @@ export function tickTribesman(tribesmanAIComponent: TribesmanAIComponent, tribes
 
          // Select the hammer item slot
          const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman);
-         const useInfo = inventoryUseComponent.getUseInfo(InventoryName.hotbar);
+         const useInfo = inventoryUseComponent.getLimbInfo(InventoryName.hotbar);
          useInfo.selectedItemSlot = hammerItemSlot;
          setLimbActions(inventoryUseComponent, LimbAction.none);
 
          // Find the target
          const targets = calculateRadialAttackTargets(tribesman, getTribesmanAttackOffset(tribesman), getTribesmanAttackRadius(tribesman));
          if (targets.includes(closestBlueprint)) {
-            const useInfo = inventoryUseComponent.getUseInfo(InventoryName.hotbar);
+            const useInfo = inventoryUseComponent.getLimbInfo(InventoryName.hotbar);
             repairBuilding(tribesman, closestBlueprint, useInfo.selectedItemSlot, InventoryName.hotbar);
          }
          
@@ -643,7 +643,7 @@ export function tickTribesman(tribesmanAIComponent: TribesmanAIComponent, tribes
             const targetTransformComponent = TransformComponentArray.getComponent(recruitTarget);
 
             const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman);
-            const useInfo = inventoryUseComponent.getUseInfo(InventoryName.hotbar);
+            const useInfo = inventoryUseComponent.getLimbInfo(InventoryName.hotbar);
             useInfo.selectedItemSlot = giftItemSlot;
    
             // Swap to that item slot
@@ -883,7 +883,7 @@ export function tickTribesman(tribesmanAIComponent: TribesmanAIComponent, tribes
       if (typeof closestReplantablePlanterBox !== "undefined") {
          // Select the seed
          const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman);
-         const hotbarUseInfo = inventoryUseComponent.getUseInfo(InventoryName.hotbar);
+         const hotbarUseInfo = inventoryUseComponent.getLimbInfo(InventoryName.hotbar);
          hotbarUseInfo.selectedItemSlot = seedItemSlot!;
          
          const physicsComponent = PhysicsComponentArray.getComponent(tribesman);
@@ -902,7 +902,7 @@ export function tickTribesman(tribesmanAIComponent: TribesmanAIComponent, tribes
             // Consume the item
             const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman);
             const inventoryComponent = InventoryComponentArray.getComponent(tribesman);
-            const hotbarUseInfo = inventoryUseComponent.getUseInfo(InventoryName.hotbar);
+            const hotbarUseInfo = inventoryUseComponent.getLimbInfo(InventoryName.hotbar);
             const hotbarInventory = getInventory(inventoryComponent, InventoryName.hotbar);
 
             consumeItemFromSlot(hotbarInventory, hotbarUseInfo.selectedItemSlot, 1);

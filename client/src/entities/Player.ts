@@ -3,11 +3,9 @@ import Camera from "../Camera";
 import { halfWindowHeight, halfWindowWidth } from "../webgl";
 import TribeMember, { addTribeMemberRenderParts } from "./TribeMember";
 import { definiteGameState, latencyGameState } from "../game-state/game-states";
-import Game from "../Game";
 import { ClientComponentType } from "../entity-components/components";
 import FootprintComponent from "../entity-components/FootprintComponent";
 import EquipmentComponent from "../entity-components/EquipmentComponent";
-import { TRIBE_INFO_RECORD } from "webgl-test-shared/dist/tribes";
 import { Item } from "webgl-test-shared/dist/items/items";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { PhysicsComponentArray } from "../entity-components/PhysicsComponent";
@@ -110,7 +108,8 @@ export function getPlayerSelectedItem(): Item | null {
 }
 
 class Player extends TribeMember {
-   /** The player entity associated with the current player. */
+   // @Cleanup: once reworked entity out of existance, this should be changed to instanceID which can be EntityID | null (or Entity | null)
+   /** The player entity associated with the current player. If null, then the player is dead */
    public static instance: Player | null = null;
    
    constructor(id: number) {
@@ -126,15 +125,7 @@ class Player extends TribeMember {
 
    public static createInstancePlayer(player: Player): void {
       Player.instance = player;
-
       Camera.setTrackedEntityID(player.id);
-
-      // @Cleanup: Shouldn't be in this function
-      const maxHealth = TRIBE_INFO_RECORD[Game.tribe.tribeType].maxHealthPlayer;
-      definiteGameState.setPlayerHealth(maxHealth);
-
-      // @Cleanup @Temproary?: do we actually need this?
-      // definiteGameState.hotbar = new Inventory(Settings.INITIAL_PLAYER_HOTBAR_SIZE, 1, InventoryName.hotbar);
    }
 }
 

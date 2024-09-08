@@ -95,7 +95,7 @@ export function startEating(player: EntityID, inventoryName: InventoryName): boo
    const inventoryComponent = InventoryComponentArray.getComponent(player);
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(player);
 
-   const useInfo = inventoryUseComponent.getUseInfo(inventoryName);
+   const useInfo = inventoryUseComponent.getLimbInfo(inventoryName);
    const inventory = getInventory(inventoryComponent, inventoryName);
    
    const foodItem = inventory.itemSlots[useInfo.selectedItemSlot];
@@ -119,7 +119,7 @@ export function startChargingBow(player: EntityID, inventoryName: InventoryName)
    const inventoryComponent = InventoryComponentArray.getComponent(player);
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(player);
 
-   const useInfo = inventoryUseComponent.getUseInfo(inventoryName);
+   const useInfo = inventoryUseComponent.getLimbInfo(inventoryName);
 
    const inventory = getInventory(inventoryComponent, inventoryName);
    const bow = inventory.itemSlots[useInfo.selectedItemSlot];
@@ -138,7 +138,7 @@ export function startChargingSpear(player: EntityID, inventoryName: InventoryNam
    const inventoryComponent = InventoryComponentArray.getComponent(player);
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(player);
 
-   const useInfo = inventoryUseComponent.getUseInfo(inventoryName);
+   const useInfo = inventoryUseComponent.getLimbInfo(inventoryName);
 
    const inventory = getInventory(inventoryComponent, inventoryName);
    const spear = inventory.getItem(useInfo.selectedItemSlot);
@@ -154,7 +154,7 @@ export function startChargingBattleaxe(player: EntityID, inventoryName: Inventor
    const inventoryComponent = InventoryComponentArray.getComponent(player);
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(player);
 
-   const useInfo = inventoryUseComponent.getUseInfo(inventoryName);
+   const useInfo = inventoryUseComponent.getLimbInfo(inventoryName);
 
    const inventory = getInventory(inventoryComponent, inventoryName);
    const battleaxe = inventory.itemSlots[useInfo.selectedItemSlot];
@@ -259,7 +259,7 @@ const modifyPlanterBox = (player: EntityID, planterBox: EntityID, plantType: Pla
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(player);
    const inventoryComponent = InventoryComponentArray.getComponent(player);
 
-   const hotbarUseInfo = inventoryUseComponent.getUseInfo(InventoryName.hotbar);
+   const hotbarUseInfo = inventoryUseComponent.getLimbInfo(InventoryName.hotbar);
    const hotbarInventory = getInventory(inventoryComponent, InventoryName.hotbar);
 
    consumeItemFromSlot(hotbarInventory, hotbarUseInfo.selectedItemSlot, 1);
@@ -294,7 +294,7 @@ export function modifyBuilding(player: EntityID, structure: EntityID, data: numb
             const inventoryUseComponent = InventoryUseComponentArray.getComponent(player);
             const inventoryComponent = InventoryComponentArray.getComponent(player);
 
-            const hotbarUseInfo = inventoryUseComponent.getUseInfo(InventoryName.hotbar);
+            const hotbarUseInfo = inventoryUseComponent.getLimbInfo(InventoryName.hotbar);
             const hotbarInventory = getInventory(inventoryComponent, InventoryName.hotbar);
 
             consumeItemFromSlot(hotbarInventory, hotbarUseInfo.selectedItemSlot, 1);

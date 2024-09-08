@@ -241,7 +241,6 @@ export interface DeathInfo {
 
 export enum LimbAction {
    none,
-   // @Cleanup: Maybe we can combine all 3 of these into one?
    chargeBow,
    chargeSpear,
    chargeBattleaxe,
@@ -252,7 +251,9 @@ export enum LimbAction {
    craft,
    windAttack,
    attack,
-   returnAttackToRest
+   returnAttackToRest,
+   block,
+   returnBlockToRest
 }
 
 export enum FrozenYetiAttackType {

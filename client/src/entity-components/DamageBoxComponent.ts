@@ -7,7 +7,6 @@ import CircularBox from "webgl-test-shared/dist/boxes/CircularBox";
 import { Point } from "webgl-test-shared/dist/utils";
 import { BoxType, createDamageBox, DamageBoxWrapper } from "webgl-test-shared/dist/boxes/boxes";
 import RectangularBox from "webgl-test-shared/dist/boxes/RectangularBox";
-import { TransformComponentArray } from "./TransformComponent";
 
 class DamageBoxComponent extends ServerComponent {
    public readonly damageBoxes = new Array<DamageBoxWrapper>();
@@ -28,8 +27,6 @@ class DamageBoxComponent extends ServerComponent {
    }
 
    private readInData(reader: PacketReader): void {
-      const transformComponent = TransformComponentArray.getComponent(this.entity.id);
-
       // @Speed
       const missingLocalIDs = this.damageBoxLocalIDs.slice();
       
@@ -52,7 +49,7 @@ class DamageBoxComponent extends ServerComponent {
             this.damageBoxLocalIDs.push(localID);
             this.damageBoxesRecord[localID] = damageBox;
          } else {
-            missingLocalIDs.splice(missingLocalIDs.indexOf(localID));
+            missingLocalIDs.splice(missingLocalIDs.indexOf(localID), 1);
          }
          
          damageBox.box.position.x = positionX;
@@ -84,7 +81,7 @@ class DamageBoxComponent extends ServerComponent {
             this.damageBoxLocalIDs.push(localID);
             this.damageBoxesRecord[localID] = damageBox;
          } else {
-            missingLocalIDs.splice(missingLocalIDs.indexOf(localID));
+            missingLocalIDs.splice(missingLocalIDs.indexOf(localID), 1);
          }
 
          damageBox.box.position.x = positionX;

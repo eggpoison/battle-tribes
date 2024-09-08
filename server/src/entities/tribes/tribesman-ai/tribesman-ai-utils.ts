@@ -189,7 +189,7 @@ const openDoors = (tribesman: EntityID, tribe: Tribe): void => {
          toggleDoor(entity);
 
          const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman);
-         const useInfo = inventoryUseComponent.getUseInfo(InventoryName.hotbar);
+         const useInfo = inventoryUseComponent.getLimbInfo(InventoryName.hotbar);
          useInfo.lastAttackTicks = Board.ticks;
       }
    }

@@ -165,7 +165,7 @@ export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend:
    let hotbarUseInfo: LimbInfo | undefined;
    if (playerIsAlive) {
       const inventoryUseComponent = InventoryUseComponentArray.getComponent(playerClient.instance);
-      hotbarUseInfo = inventoryUseComponent.getUseInfo(InventoryName.hotbar);
+      hotbarUseInfo = inventoryUseComponent.getLimbInfo(InventoryName.hotbar);
    }
 
    const titleOffer = playerIsAlive ? PlayerComponentArray.getComponent(player).titleOffer : null;
@@ -579,9 +579,6 @@ export function createSyncDataPacket(playerClient: PlayerClient): ArrayBuffer {
    packet.addNumber(physicsComponent.externalVelocity.y);
    packet.addNumber(physicsComponent.acceleration.x);
    packet.addNumber(physicsComponent.acceleration.y);
-
-   const healthComponent = HealthComponentArray.getComponent(player);
-   packet.addNumber(healthComponent.health);
 
    // Add inventory data
    addInventoryDataToPacket(packet, hotbarInventory);

@@ -332,11 +332,6 @@ abstract class Client {
       }
       this.registerTileUpdates(gameDataPacket.tileUpdates);
 
-      definiteGameState.setPlayerHealth(gameDataPacket.playerHealth);
-      if (Player.instance !== null && definiteGameState.playerIsDead()) {
-         this.killPlayer();
-      }
-
       HealthBar_setHasFrostShield(gameDataPacket.hasFrostShield);
 
       // Register hits
@@ -799,6 +794,7 @@ abstract class Client {
    }
 
    public static killPlayer(): void {
+      console.log("kill player");
       // Remove the player from the game
       Board.removeEntity(Player.instance!, true);
       Player.instance = null;

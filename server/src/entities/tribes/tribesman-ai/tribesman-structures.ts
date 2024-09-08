@@ -64,7 +64,7 @@ export function goPlaceBuilding(tribesman: EntityID, hotbarInventory: Inventory,
    if (distance < Vars.BUILDING_PLACE_DISTANCE) {
       // Equip the item
       const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman);
-      const useInfo = inventoryUseComponent.getUseInfo(InventoryName.hotbar);
+      const useInfo = inventoryUseComponent.getLimbInfo(InventoryName.hotbar);
       useInfo.selectedItemSlot = goal.placeableItemSlot;
       
       const transformComponent = TransformComponentArray.getComponent(tribesman);
@@ -152,7 +152,7 @@ export function goUpgradeBuilding(tribesman: EntityID, goal: TribesmanUpgradeGoa
 
    // Select the hammer item slot
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman);
-   const useInfo = inventoryUseComponent.getUseInfo(InventoryName.hotbar);
+   const useInfo = inventoryUseComponent.getLimbInfo(InventoryName.hotbar);
    useInfo.selectedItemSlot = hammerItemSlot;
    setLimbActions(inventoryUseComponent, LimbAction.none);
 
@@ -223,7 +223,7 @@ export function attemptToRepairBuildings(tribesman: EntityID, hammerItemSlot: nu
 
    // Select the hammer item slot
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman);
-   const useInfo = inventoryUseComponent.getUseInfo(InventoryName.hotbar);
+   const useInfo = inventoryUseComponent.getLimbInfo(InventoryName.hotbar);
    useInfo.selectedItemSlot = hammerItemSlot;
    setLimbActions(inventoryUseComponent, LimbAction.none);
 

@@ -458,6 +458,7 @@ export function useItem(tribeMember: EntityID, item: Item, inventoryName: Invent
          const transformComponent = TransformComponentArray.getComponent(tribeMember);
          const inventoryComponent = InventoryComponentArray.getComponent(tribeMember);
          const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribeMember);
+         const entityPhysicsComponent = PhysicsComponentArray.getComponent(tribeMember);
          
          const inventory = getInventory(inventoryComponent, inventoryName);
          const limbInfo = inventoryUseComponent.getUseInfo(inventoryName);
@@ -474,8 +475,8 @@ export function useItem(tribeMember: EntityID, item: Item, inventoryName: Invent
          config[ServerComponentType.transform].position.x = x;
          config[ServerComponentType.transform].position.y = y;
          config[ServerComponentType.transform].rotation = transformComponent.rotation;
-         config[ServerComponentType.physics].velocityX = velocityMagnitude * Math.sin(transformComponent.rotation);
-         config[ServerComponentType.physics].velocityY = velocityMagnitude * Math.cos(transformComponent.rotation);
+         config[ServerComponentType.physics].velocityX = entityPhysicsComponent.selfVelocity.x + entityPhysicsComponent.externalVelocity.x + velocityMagnitude * Math.sin(transformComponent.rotation);
+         config[ServerComponentType.physics].velocityY = entityPhysicsComponent.selfVelocity.y + entityPhysicsComponent.externalVelocity.y + velocityMagnitude * Math.cos(transformComponent.rotation);
          config[ServerComponentType.throwingProjectile].tribeMember = tribeMember;
          createEntityFromConfig(config);
 

@@ -1,6 +1,6 @@
 import { WaterRockData, RiverSteppingStoneData, GrassTileInfo, RiverFlowDirectionsRecord, WaterRockSize, RiverSteppingStoneSize, GameDataPacket, HitData, PlayerKnockbackData, HealData, ResearchOrbCompleteData, ServerTileUpdateData, EntityDebugData, LineDebugData, CircleDebugData, TileHighlightData, PathData, PathfindingNodeIndex, PlayerInventoryData } from "webgl-test-shared/dist/client-server-types";
-import { ServerComponentType, ServerComponentTypeString } from "webgl-test-shared/dist/components";
-import { EntityID, EntityType, EntityTypeString } from "webgl-test-shared/dist/entities";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
 import { ItemType } from "webgl-test-shared/dist/items/items";
 import { PacketReader } from "webgl-test-shared/dist/packets";
 import { Settings } from "webgl-test-shared/dist/settings";
@@ -28,7 +28,6 @@ import { TRIBE_INFO_RECORD } from "webgl-test-shared/dist/tribes";
 import { gameScreenSetIsDead } from "../components/game/GameScreen";
 import { updateHealthBar } from "../components/game/HealthBar";
 import { Hotbar_setHotbarSelectedItemSlot } from "../components/game/inventories/Hotbar";
-import { Point } from "webgl-test-shared/dist/utils";
 
 export interface InitialGameDataPacket {
    readonly playerID: number;
@@ -247,8 +246,6 @@ const processPlayerUpdateData = (reader: PacketReader): void => {
    if (Player.instance === null) {
       throw new Error();
    }
-   
-   // @Hack @Temporary
    
    // Skip entity type
    reader.padOffset(Float32Array.BYTES_PER_ELEMENT);

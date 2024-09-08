@@ -123,3 +123,8 @@ export function sendItemUsePacket(): void {
 
    Client.sendPacket(packet.buffer);
 }
+
+export function sendStopItemUsePacket(): void {
+   const packet = new Packet(PacketType.stopItemUse, Float32Array.BYTES_PER_ELEMENT);
+   Client.sendPacket(packet.buffer);
+}

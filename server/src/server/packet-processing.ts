@@ -61,10 +61,10 @@ export function processPlayerDataPacket(playerClient: PlayerClient, reader: Pack
    const hotbarLimbInfo = inventoryUseComponent.getUseInfo(InventoryName.hotbar);
 
    const transformComponent = TransformComponentArray.getComponent(player);
+   // If the player has moved or rotated, is is dirty
    if (positionX !== transformComponent.position.x || positionY !== transformComponent.position.y || rotation !== transformComponent.rotation) {
       registerDirtyEntity(player);
    }
-   // If the player has moved or rotated, is is dirty
    transformComponent.position.x = positionX;
    transformComponent.position.y = positionY;
    transformComponent.rotation = rotation;
@@ -209,11 +209,23 @@ export function processUseItemPacket(playerClient: PlayerClient, reader: PacketR
 
    const itemSlot = reader.readNumber();
 
-   const inventoryComponent = InventoryComponentArray.getComponent(playerClient.instance);
+   const inventoryComponent = InventoryComponentArray.getComponent(player);
    const hotbarInventory = getInventory(inventoryComponent, InventoryName.hotbar);
 
    const item = hotbarInventory.itemSlots[itemSlot];
    if (typeof item !== "undefined")  {
       useItem(playerClient.instance, item, InventoryName.hotbar, itemSlot);
    }
+}
+
+export function processStopItemUsePacket(playerClient: PlayerClient): void {
+   const player = playerClient.instance;
+   if (!Board.hasEntity(player)) {
+      return;
+   }
+
+   const inventoryUseComponent = InventoryUseComponentArray.getComponent(player);
+
+   const limbInfo = inventoryUseComponent.getUseInfo(InventoryName.hotbar);
+   limbInfo.action = LimbAction.none;
 }

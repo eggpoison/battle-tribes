@@ -5,10 +5,17 @@ import { InventoryName } from "webgl-test-shared/dist/items/items";
 
 type CollisionCallback = (attacker: EntityID, victim: EntityID, limb: LimbInfo, collidingDamageBox: ServerDamageBoxWrapper | null) => void;
 
+export interface DamageBoxCallbacks {
+   readonly onCollisionEnter?: CollisionCallback;
+   readonly onCollision?: CollisionCallback;
+}
+
 export interface ServerDamageBoxWrapper<T extends BoxType = BoxType> extends DamageBoxWrapper<T> {
    // Kinda hacky but whatever. It works (imagine there is a shrug in ascii here)
    readonly associatedLimbInventoryName: InventoryName;
-   readonly collisionCallback: CollisionCallback;
+   readonly onCollisionEnter?: CollisionCallback;
+   readonly onCollision?: CollisionCallback;
+   collidingDamageBox: ServerDamageBoxWrapper | null;
    /** If set to true, the wrapper will be destroyed. */
    isRemoved: boolean;
    isActive: boolean;
@@ -16,11 +23,13 @@ export interface ServerDamageBoxWrapper<T extends BoxType = BoxType> extends Dam
    readonly isTemporary: boolean;
 }
 
-export function createDamageBox<T extends BoxType>(box: BoxFromType[T], associatedLimbInventoryName: InventoryName, collisionCallback: CollisionCallback, isTemporary: boolean): ServerDamageBoxWrapper<T> {
+export function createDamageBox<T extends BoxType>(box: BoxFromType[T], associatedLimbInventoryName: InventoryName, callbacks: DamageBoxCallbacks, isTemporary: boolean): ServerDamageBoxWrapper<T> {
    return {
       box: box,
       associatedLimbInventoryName: associatedLimbInventoryName,
-      collisionCallback: collisionCallback,
+      onCollisionEnter: callbacks.onCollisionEnter,
+      onCollision: callbacks.onCollision,
+      collidingDamageBox: null,
       isRemoved: false,
       isActive: true,
       isTemporary: isTemporary

@@ -376,3 +376,12 @@ export function getSecondsSinceTickTimestamp(ticks: number): number {
 
    return secondsSince;
 }
+
+export function getElapsedTimeInSeconds(elapsedTicks: number): number {
+   let secondsSince = elapsedTicks / Settings.TPS;
+
+   // Account for frame progress
+   secondsSince += getFrameProgress() / Settings.TPS;
+
+   return secondsSince;
+}

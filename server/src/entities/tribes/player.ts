@@ -147,7 +147,7 @@ export function startChargingSpear(player: EntityID, inventoryName: InventoryNam
    }
 
    useInfo.action = LimbAction.chargeSpear;
-   useInfo.currentActionStartingTicks = Board.ticks;
+   useInfo.currentActionElapsedTicks = 0;
 }
 
 export function startChargingBattleaxe(player: EntityID, inventoryName: InventoryName): void {

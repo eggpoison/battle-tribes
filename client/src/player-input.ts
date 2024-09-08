@@ -4,7 +4,7 @@ import Player from "./entities/Player";
 import Client from "./client/Client";
 import { Hotbar_setHotbarSelectedItemSlot, Hotbar_updateLeftThrownBattleaxeItemID, Hotbar_updateRightThrownBattleaxeItemID } from "./components/game/inventories/Hotbar";
 import { BackpackInventoryMenu_setIsVisible } from "./components/game/inventories/BackpackInventory";
-import Board, { getSecondsSinceTickTimestamp } from "./Board";
+import Board, { getElapsedTimeInSeconds } from "./Board";
 import { definiteGameState, latencyGameState } from "./game-state/game-states";
 import Game, { GameInteractState } from "./Game";
 import { attemptEntitySelection } from "./entity-selection";
@@ -83,10 +83,12 @@ export function updatePlayerItems(): void {
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(Player.instance.id);
    const hotbarLimbInfo = inventoryUseComponent.getLimbInfoByInventoryName(InventoryName.hotbar);
 
+   hotbarLimbInfo.currentActionElapsedTicks++;
+   
    // If finished winding attack, switch to doing attack
-   if (hotbarLimbInfo.action === LimbAction.windAttack && getSecondsSinceTickTimestamp(hotbarLimbInfo.currentActionStartingTicks) * Settings.TPS >= hotbarLimbInfo.currentActionDurationTicks) {
+   if (hotbarLimbInfo.action === LimbAction.windAttack && getElapsedTimeInSeconds(hotbarLimbInfo.currentActionElapsedTicks) * Settings.TPS >= hotbarLimbInfo.currentActionDurationTicks) {
       hotbarLimbInfo.action = LimbAction.attack;
-      hotbarLimbInfo.currentActionStartingTicks = Board.serverTicks;
+      hotbarLimbInfo.currentActionElapsedTicks = 0;
 
       // @Copynpaste
       const selectedItemSlot = hotbarLimbInfo.selectedItemSlot;
@@ -97,9 +99,9 @@ export function updatePlayerItems(): void {
    }
 
    // If finished attacking, go to rest
-   if (hotbarLimbInfo.action === LimbAction.attack && getSecondsSinceTickTimestamp(hotbarLimbInfo.currentActionStartingTicks) * Settings.TPS >= hotbarLimbInfo.currentActionDurationTicks) {
+   if (hotbarLimbInfo.action === LimbAction.attack && getElapsedTimeInSeconds(hotbarLimbInfo.currentActionElapsedTicks) * Settings.TPS >= hotbarLimbInfo.currentActionDurationTicks) {
       hotbarLimbInfo.action = LimbAction.returnAttackToRest;
-      hotbarLimbInfo.currentActionStartingTicks = Board.serverTicks;
+      hotbarLimbInfo.currentActionElapsedTicks = 0;
 
       // @Copynpaste
       const selectedItemSlot = hotbarLimbInfo.selectedItemSlot;
@@ -110,20 +112,20 @@ export function updatePlayerItems(): void {
    }
 
    // If finished going to rest, set to default
-   if (hotbarLimbInfo.action === LimbAction.returnAttackToRest && getSecondsSinceTickTimestamp(hotbarLimbInfo.currentActionStartingTicks) * Settings.TPS >= hotbarLimbInfo.currentActionDurationTicks) {
+   if (hotbarLimbInfo.action === LimbAction.returnAttackToRest && getElapsedTimeInSeconds(hotbarLimbInfo.currentActionElapsedTicks) * Settings.TPS >= hotbarLimbInfo.currentActionDurationTicks) {
       hotbarLimbInfo.action = LimbAction.none;
    }
 
    // @Incomplete: Double-check there isn't a tick immediately after depressing the button where this hasn't registered in the limb yet
    // If blocking but not right clicking, return to rest
-   if (hotbarLimbInfo.action === LimbAction.block && !rightMouseButtonIsPressed && getSecondsSinceTickTimestamp(hotbarLimbInfo.currentActionStartingTicks) * Settings.TPS >= hotbarLimbInfo.currentActionDurationTicks) {
+   if (hotbarLimbInfo.action === LimbAction.block && !rightMouseButtonIsPressed && getElapsedTimeInSeconds(hotbarLimbInfo.currentActionElapsedTicks) * Settings.TPS >= hotbarLimbInfo.currentActionDurationTicks) {
       // @Copynpaste
       const selectedItemSlot = hotbarLimbInfo.selectedItemSlot;
       const selectedItem = definiteGameState.hotbar.getItem(selectedItemSlot)!;
       const attackInfo = getItemAttackInfo(selectedItem);
 
       hotbarLimbInfo.action = LimbAction.returnBlockToRest;
-      hotbarLimbInfo.currentActionStartingTicks = Board.serverTicks;
+      hotbarLimbInfo.currentActionElapsedTicks = 0;
       // @Temporary? Perhaps use separate blockReturnTimeTicks.
       hotbarLimbInfo.currentActionDurationTicks = attackInfo.attackTimings.blockTimeTicks!;
 
@@ -132,7 +134,7 @@ export function updatePlayerItems(): void {
 
    // @Copynpaste
    // If finished returning block to rest, go to rest
-   if (hotbarLimbInfo.action === LimbAction.returnBlockToRest && getSecondsSinceTickTimestamp(hotbarLimbInfo.currentActionStartingTicks) * Settings.TPS >= hotbarLimbInfo.currentActionDurationTicks) {
+   if (hotbarLimbInfo.action === LimbAction.returnBlockToRest && getElapsedTimeInSeconds(hotbarLimbInfo.currentActionElapsedTicks) * Settings.TPS >= hotbarLimbInfo.currentActionDurationTicks) {
       hotbarLimbInfo.action = LimbAction.none;
    }
 
@@ -156,7 +158,7 @@ const swing = (inventory: Inventory): void => {
    const attackInfo = getItemAttackInfo(selectedItem);
 
    limbInfo.action = LimbAction.windAttack;
-   limbInfo.currentActionStartingTicks = Board.serverTicks;
+   limbInfo.currentActionElapsedTicks = 0;
    limbInfo.currentActionDurationTicks = attackInfo.attackTimings.windupTimeTicks;
 }
 
@@ -650,7 +652,7 @@ const itemRightClickDown = (item: Item, isOffhand: boolean, itemSlot: number): v
       const attackInfo = getItemAttackInfo(item);
       if (attackInfo.attackTimings.blockTimeTicks !== null) {
          limbInfo.action = LimbAction.block;
-         limbInfo.currentActionStartingTicks = Board.serverTicks;
+         limbInfo.currentActionElapsedTicks = 0;
          limbInfo.currentActionDurationTicks = attackInfo.attackTimings.blockTimeTicks;
 
          sendItemUsePacket();
@@ -715,7 +717,7 @@ const itemRightClickDown = (item: Item, isOffhand: boolean, itemSlot: number): v
       }
       case "spear": {
          limbInfo.action = LimbAction.chargeSpear;
-         limbInfo.currentActionStartingTicks = Board.serverTicks;
+         limbInfo.currentActionElapsedTicks = 0;
          break;
       }
       case "battleaxe": {

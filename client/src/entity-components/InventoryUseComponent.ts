@@ -5,7 +5,7 @@ import { Settings } from "webgl-test-shared/dist/settings";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
-import Board, { getSecondsSinceTickTimestamp } from "../Board";
+import Board, { getElapsedTimeInSeconds, getSecondsSinceTickTimestamp } from "../Board";
 import CLIENT_ITEM_INFO_RECORD from "../client-item-info";
 import Particle from "../Particle";
 import { ParticleColour, ParticleRenderLayer, addMonocolourParticleToBufferContainer } from "../rendering/webgl/particle-rendering";
@@ -40,9 +40,7 @@ export interface LimbInfo {
    lastAttackWindupTicks: number;
    thrownBattleaxeItemID: number;
    lastAttackCooldown: number;
-   /** Tick timestamp when the current action was started */
-   currentActionStartingTicks: number;
-   /** Expected duration of the current action in ticks */
+   currentActionElapsedTicks: number;
    currentActionDurationTicks: number;
 
    animationStartOffset: Point;
@@ -306,7 +304,7 @@ class InventoryUseComponent extends ServerComponent{
          const lastCraftTicks = reader.readNumber();
          const thrownBattleaxeItemID = reader.readNumber();
          const lastAttackCooldown = reader.readNumber();
-         const currentActionStartingTicks = reader.readNumber();
+         const currentActionElapsedTicks = reader.readNumber();
          const currentActionDurationTicks = reader.readNumber();
 
          const limbInfo: LimbInfo = {
@@ -327,7 +325,7 @@ class InventoryUseComponent extends ServerComponent{
             lastAttackCooldown: lastAttackCooldown,
             lastCraftTicks: lastCraftTicks,
             lastAttackWindupTicks: 0,
-            currentActionStartingTicks: currentActionStartingTicks,
+            currentActionElapsedTicks: currentActionElapsedTicks,
             currentActionDurationTicks: currentActionDurationTicks,
             animationStartOffset: new Point(0, 0),
             animationEndOffset: new Point(0, 0),
@@ -410,7 +408,7 @@ class InventoryUseComponent extends ServerComponent{
          const lastCraftTicks = reader.readNumber();
          const thrownBattleaxeItemID = reader.readNumber();
          const lastAttackCooldown = reader.readNumber();
-         const currentActionStartingTicks = reader.readNumber();
+         const currentActionElapsedTicks = reader.readNumber();
          const currentActionDurationTicks = reader.readNumber();
 
          limbInfo.bowCooldownTicks = bowCooldownTicks;
@@ -429,7 +427,7 @@ class InventoryUseComponent extends ServerComponent{
          limbInfo.lastCraftTicks = lastCraftTicks;
          limbInfo.thrownBattleaxeItemID = thrownBattleaxeItemID;
          limbInfo.lastAttackCooldown = lastAttackCooldown;
-         limbInfo.currentActionStartingTicks = currentActionStartingTicks;
+         limbInfo.currentActionElapsedTicks = currentActionElapsedTicks;
          limbInfo.currentActionDurationTicks = currentActionDurationTicks;
 
          // @Hack
@@ -785,7 +783,7 @@ const updateLimb = (inventoryUseComponent: InventoryUseComponent, limbIdx: numbe
          const heldItemAttackInfo = getItemAttackInfo(heldItem);
          
          // @Copynpaste
-         const secondsSinceLastAction = getSecondsSinceTickTimestamp(limbInfo.currentActionStartingTicks);
+         const secondsSinceLastAction = getElapsedTimeInSeconds(limbInfo.currentActionElapsedTicks);
          const windupProgress = secondsSinceLastAction * Settings.TPS / limbInfo.currentActionDurationTicks;
 
          lerpLimbBetweenStates(limb, attachPoint, TRIBESMAN_RESTING_LIMB_STATE, heldItemAttackInfo.attackPattern.windedBack, windupProgress);
@@ -796,7 +794,7 @@ const updateLimb = (inventoryUseComponent: InventoryUseComponent, limbIdx: numbe
          const heldItemAttackInfo = getItemAttackInfo(heldItem);
 
          // @Copynpaste
-         const secondsSinceLastAction = getSecondsSinceTickTimestamp(limbInfo.currentActionStartingTicks);
+         const secondsSinceLastAction = getElapsedTimeInSeconds(limbInfo.currentActionElapsedTicks);
          const attackProgress = secondsSinceLastAction * Settings.TPS / limbInfo.currentActionDurationTicks;
 
          lerpLimbBetweenStates(limb, attachPoint, heldItemAttackInfo.attackPattern.windedBack, heldItemAttackInfo.attackPattern.swung, attackProgress);
@@ -807,7 +805,7 @@ const updateLimb = (inventoryUseComponent: InventoryUseComponent, limbIdx: numbe
          const heldItemAttackInfo = getItemAttackInfo(heldItem);
 
          // @Copynpaste
-         const secondsIntoAnimation = getSecondsSinceTickTimestamp(limbInfo.currentActionStartingTicks);
+         const secondsIntoAnimation = getElapsedTimeInSeconds(limbInfo.currentActionElapsedTicks);
          const animationProgress = secondsIntoAnimation * Settings.TPS / limbInfo.currentActionDurationTicks;
 
          lerpLimbBetweenStates(limb, attachPoint, heldItemAttackInfo.attackPattern.swung, TRIBESMAN_RESTING_LIMB_STATE, animationProgress);
@@ -821,7 +819,7 @@ const updateLimb = (inventoryUseComponent: InventoryUseComponent, limbIdx: numbe
       }
       case LimbAction.block: {
          // @Copynpaste
-         const secondsIntoAnimation = getSecondsSinceTickTimestamp(limbInfo.currentActionStartingTicks);
+         const secondsIntoAnimation = getElapsedTimeInSeconds(limbInfo.currentActionElapsedTicks);
          let animationProgress = secondsIntoAnimation * Settings.TPS / limbInfo.currentActionDurationTicks;
          if (animationProgress > 1) {
             animationProgress = 1;
@@ -833,7 +831,7 @@ const updateLimb = (inventoryUseComponent: InventoryUseComponent, limbIdx: numbe
       }
       case LimbAction.returnBlockToRest: {
          // @Copynpaste
-         const secondsIntoAnimation = getSecondsSinceTickTimestamp(limbInfo.currentActionStartingTicks);
+         const secondsIntoAnimation = getElapsedTimeInSeconds(limbInfo.currentActionElapsedTicks);
          let animationProgress = secondsIntoAnimation * Settings.TPS / limbInfo.currentActionDurationTicks;
          if (animationProgress > 1) {
             animationProgress = 1;
@@ -844,7 +842,7 @@ const updateLimb = (inventoryUseComponent: InventoryUseComponent, limbIdx: numbe
          break;
       }
       case LimbAction.chargeSpear: {
-         const secondsSinceLastAction = getSecondsSinceTickTimestamp(limbInfo.currentActionStartingTicks);
+         const secondsSinceLastAction = getElapsedTimeInSeconds(limbInfo.currentActionElapsedTicks);
          const chargeProgress = secondsSinceLastAction < 3 ? 1 - Math.pow(secondsSinceLastAction / 3 - 1, 2) : 1;
 
          lerpLimbBetweenStates(limb, attachPoint, TRIBESMAN_RESTING_LIMB_STATE, SPEAR_CHARGED_LIMB_STATE, chargeProgress);

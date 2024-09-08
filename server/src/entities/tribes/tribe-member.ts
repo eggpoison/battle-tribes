@@ -273,7 +273,7 @@ export function useItem(tribeMember: EntityID, item: Item, inventoryName: Invent
       // Begin blocking
       limbInfo.selectedItemSlot = itemSlot;
       limbInfo.action = LimbAction.block;
-      limbInfo.currentActionStartingTicks = Board.ticks;
+      limbInfo.currentActionElapsedTicks = 0;
       limbInfo.currentActionDurationTicks = attackInfo.attackTimings.blockTimeTicks;
       return;
    }
@@ -481,8 +481,7 @@ export function useItem(tribeMember: EntityID, item: Item, inventoryName: Invent
          const x = transformComponent.position.x + 35 * Math.sin(offsetDirection);
          const y = transformComponent.position.y + 35 * Math.cos(offsetDirection);
 
-         const ticksSinceLastAction = Board.ticks - limbInfo.currentActionStartingTicks;
-         const secondsSinceLastAction = ticksSinceLastAction / Settings.TPS;
+         const secondsSinceLastAction = limbInfo.currentActionElapsedTicks / Settings.TPS;
          const velocityMagnitude = lerp(1000, 1700, Math.min(secondsSinceLastAction / 3, 1));
 
          const config = createSpearProjectileConfig();

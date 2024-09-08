@@ -45,9 +45,11 @@ export interface LimbInfo {
    /** Artificial cooldown added to tribesmen to make them a bit worse at combat */
    extraAttackCooldownTicks: number;
    /** Tick timestamp when the current action was started */
-   currentActionStartingTicks: number;
+   currentActionElapsedTicks: number;
    /** Expected duration of the current action in ticks */
    currentActionDurationTicks: number;
+   /** Number of ticks that the current animation is being paused. */
+   currentActionPauseTicksRemaining: number;
 
    /** Damage box used to create limb attacks. */
    limbDamageBox: ServerDamageBoxWrapper;
@@ -91,8 +93,9 @@ export class InventoryUseComponent {
          thrownBattleaxeItemID: -1,
          lastAttackCooldown: Settings.DEFAULT_ATTACK_COOLDOWN,
          extraAttackCooldownTicks: 0,
-         currentActionStartingTicks: 0,
+         currentActionElapsedTicks: 0,
          currentActionDurationTicks: 0,
+         currentActionPauseTicksRemaining: 0,
          limbDamageBox: damageBox,
          heldItemDamageBox: null,
          blockingDamageBox: null
@@ -147,8 +150,7 @@ function onJoin(entity: EntityID): void {
 }
 
 const currentActionHasFinished = (limbInfo: LimbInfo): boolean => {
-   const ticksSince = Board.ticks - limbInfo.currentActionStartingTicks;
-   return ticksSince >= limbInfo.currentActionDurationTicks;
+   return limbInfo.currentActionElapsedTicks >= limbInfo.currentActionDurationTicks;
 }
 
 // @Cleanup: remove once proper method is made
@@ -200,27 +202,17 @@ const onLimbBlockingBoxCollision = (attacker: EntityID, victim: EntityID, limb: 
 const onLimbAttackBoxCollision = (attacker: EntityID, victim: EntityID, limb: LimbInfo, collidingDamageBox: ServerDamageBoxWrapper | null): void => {
    const damageBoxComponent = DamageBoxComponentArray.getComponent(attacker);
    
-   // @Incomplete: only do if the damage box is blocking
    // Attack is blocked if the wrapper is a damage box
    if (collidingDamageBox !== null) {
-      // @Hack @Copynpaste
-      // Remove all damage boxes
-      for (let i = 0; i < damageBoxComponent.damageBoxes.length; i++) {
-         const damageBox = damageBoxComponent.damageBoxes[i];
-         if (damageBox.isTemporary) {
-            damageBox.isRemoved = true;
-         } else {
-            damageBox.isActive = false;
-         }
-      }
+      // Pause the attack for a brief period
+      limb.currentActionPauseTicksRemaining = Math.floor(Settings.TPS / 20);
 
-      console.log("BLOCKED!");
       return;
    }
    
    // Attack the entity
    if (HealthComponentArray.hasComponent(victim)) {
-      // @Hack @Copynpaste
+      // @Hack @Incomplete: shouldn't work for offhand
       // Remove all damage boxes
       for (let i = 0; i < damageBoxComponent.damageBoxes.length; i++) {
          const damageBox = damageBoxComponent.damageBoxes[i];
@@ -246,6 +238,12 @@ function onTick(inventoryUseComponent: InventoryUseComponent, entity: EntityID):
       // Certain actions should always show an update for the player
       if (limbInfo.action === LimbAction.windAttack || limbInfo.action === LimbAction.attack || limbInfo.action === LimbAction.returnAttackToRest) {
          registerDirtyEntity(entity);
+      }
+
+      if (limbInfo.currentActionPauseTicksRemaining > 0) {
+         limbInfo.currentActionPauseTicksRemaining--;
+      } else {
+         limbInfo.currentActionElapsedTicks++;
       }
       
       if (currentActionHasFinished(limbInfo)) {
@@ -276,7 +274,7 @@ function onTick(inventoryUseComponent: InventoryUseComponent, entity: EntityID):
                const heldItemAttackInfo = getItemAttackInfo(heldItem);
                
                limbInfo.action = LimbAction.attack;
-               limbInfo.currentActionStartingTicks = Board.ticks;
+               limbInfo.currentActionElapsedTicks = 0;
                limbInfo.currentActionDurationTicks = heldItemAttackInfo.attackTimings.swingTimeTicks;
                limbInfo.limbDamageBox.isActive = true;
 
@@ -302,7 +300,7 @@ function onTick(inventoryUseComponent: InventoryUseComponent, entity: EntityID):
                const heldItemAttackInfo = getItemAttackInfo(heldItem);
 
                limbInfo.action = LimbAction.returnAttackToRest;
-               limbInfo.currentActionStartingTicks = Board.ticks;
+               limbInfo.currentActionElapsedTicks = 0;
                limbInfo.currentActionDurationTicks = heldItemAttackInfo.attackTimings.returnTimeTicks;
                limbInfo.limbDamageBox.isActive = false;
 
@@ -323,8 +321,7 @@ function onTick(inventoryUseComponent: InventoryUseComponent, entity: EntityID):
 
       // Update damage box for limb attacks
       if (limbInfo.action === LimbAction.attack) {
-         const ticksSince = Board.ticks - limbInfo.currentActionStartingTicks;
-         const swingProgress = ticksSince / limbInfo.currentActionDurationTicks;
+         const swingProgress = limbInfo.currentActionElapsedTicks / limbInfo.currentActionDurationTicks;
 
          const heldItem = getHeldItem(limbInfo);
          const attackInfo = getItemAttackInfo(heldItem);
@@ -333,8 +330,7 @@ function onTick(inventoryUseComponent: InventoryUseComponent, entity: EntityID):
 
       // Update blocking damage box when blocking
       if (limbInfo.action === LimbAction.block) {
-         const ticksSince = Board.ticks - limbInfo.currentActionStartingTicks;
-         if (ticksSince >= limbInfo.currentActionDurationTicks) {
+         if (limbInfo.currentActionElapsedTicks >= limbInfo.currentActionDurationTicks) {
             limbInfo.limbDamageBox.isActive = false;
             setLimbToState(entity, limbInfo, BLOCKING_LIMB_STATE);
          }
@@ -417,7 +413,7 @@ function addDataToPacket(packet: Packet, entity: EntityID): void {
       packet.addNumber(limbInfo.lastCraftTicks);
       packet.addNumber(limbInfo.thrownBattleaxeItemID);
       packet.addNumber(limbInfo.lastAttackCooldown);
-      packet.addNumber(limbInfo.currentActionStartingTicks);
+      packet.addNumber(limbInfo.currentActionElapsedTicks);
       packet.addNumber(limbInfo.currentActionDurationTicks);
    }
 }

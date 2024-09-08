@@ -8,8 +8,9 @@ import Board from "../Board";
 import { GameDataPacketOptions } from "webgl-test-shared/dist/client-server-types";
 import OPTIONS from "../options";
 import { windowHeight, windowWidth } from "../webgl";
-import { ItemType } from "webgl-test-shared/dist/items/items";
+import { InventoryName, ItemType } from "webgl-test-shared/dist/items/items";
 import Client from "./Client";
+import { getInstancePlayerAction } from "../player-input";
 
 export function createPlayerDataPacket(): ArrayBuffer {
    let lengthBytes = 4 * Float32Array.BYTES_PER_ELEMENT;
@@ -41,8 +42,8 @@ export function createPlayerDataPacket(): ArrayBuffer {
    packet.addNumber(windowHeight);
 
    packet.addNumber(latencyGameState.selectedHotbarItemSlot);
-   packet.addNumber(latencyGameState.mainAction);
-   packet.addNumber(latencyGameState.offhandAction);
+   packet.addNumber(getInstancePlayerAction(InventoryName.hotbar));
+   packet.addNumber(getInstancePlayerAction(InventoryName.offhand));
 
    let interactingEntityID = 0;
    const selectedEntityID = getSelectedEntityID();

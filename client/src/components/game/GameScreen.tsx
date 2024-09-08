@@ -68,7 +68,7 @@ const GameScreen = (props: GameScreenProps) => {
       <ChatBox />
 
       {!cinematicModeIsEnabled ? <>
-         <HealthBar />
+         <HealthBar isDead={isDead} />
          <Hotbar />
          <Infocards />
       </> : undefined}

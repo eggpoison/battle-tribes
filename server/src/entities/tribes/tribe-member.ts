@@ -27,7 +27,7 @@ import { ItemComponentArray } from "../../components/ItemComponent";
 import { StructureComponentArray } from "../../components/StructureComponent";
 import { BuildingMaterialComponentArray } from "../../components/BuildingMaterialComponent";
 import { CraftingStation } from "webgl-test-shared/dist/items/crafting-recipes";
-import { Item, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, BattleaxeItemInfo, SwordItemInfo, AxeItemInfo, HammerItemInfo, InventoryName, ItemType, ConsumableItemInfo, ConsumableItemCategory, PlaceableItemType, BowItemInfo, itemIsStackable, getItemStackSize } from "webgl-test-shared/dist/items/items";
+import { Item, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, BattleaxeItemInfo, SwordItemInfo, AxeItemInfo, HammerItemInfo, InventoryName, ItemType, ConsumableItemInfo, ConsumableItemCategory, PlaceableItemType, BowItemInfo, itemIsStackable, getItemStackSize, getItemAttackInfo } from "webgl-test-shared/dist/items/items";
 import { EntityTickEvent, EntityTickEventType } from "webgl-test-shared/dist/entity-events";
 import { registerEntityTickEvent } from "../../server/player-clients";
 import { TransformComponentArray } from "../../components/TransformComponent";
@@ -264,6 +264,20 @@ export function useItem(tribeMember: EntityID, item: Item, inventoryName: Invent
 
    const inventoryComponent = InventoryComponentArray.getComponent(tribeMember);
 
+   // Block with the item if possible
+   const attackInfo = getItemAttackInfo(item);
+   if (attackInfo.attackTimings.blockTimeTicks !== null) {
+      const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribeMember);
+      const limbInfo = inventoryUseComponent.getLimbInfo(inventoryName);
+
+      // Begin blocking
+      limbInfo.selectedItemSlot = itemSlot;
+      limbInfo.action = LimbAction.block;
+      limbInfo.currentActionStartingTicks = Board.ticks;
+      limbInfo.currentActionDurationTicks = attackInfo.attackTimings.blockTimeTicks;
+      return;
+   }
+   
    // @Cleanup: Extract each one of these cases into their own function
 
    switch (itemCategory) {
@@ -317,7 +331,7 @@ export function useItem(tribeMember: EntityID, item: Item, inventoryName: Invent
          const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribeMember);
 
          const inventory = getInventory(inventoryComponent, inventoryName);
-         const useInfo = inventoryUseComponent.getUseInfo(inventoryName)
+         const useInfo = inventoryUseComponent.getLimbInfo(inventoryName)
          
          healEntity(tribeMember, itemInfo.healAmount, tribeMember);
          consumeItemFromSlot(inventory, itemSlot, 1);
@@ -361,7 +375,7 @@ export function useItem(tribeMember: EntityID, item: Item, inventoryName: Invent
          const transformComponent = TransformComponentArray.getComponent(tribeMember);
 
          const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribeMember);
-         const useInfo = inventoryUseComponent.getUseInfo(inventoryName);
+         const useInfo = inventoryUseComponent.getLimbInfo(inventoryName);
          if (useInfo.bowCooldownTicks !== 0) {
             return;
          }
@@ -414,7 +428,7 @@ export function useItem(tribeMember: EntityID, item: Item, inventoryName: Invent
 
          // Don't fire if not loaded
          const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribeMember);
-         const useInfo = inventoryUseComponent.getUseInfo(inventoryName);
+         const useInfo = inventoryUseComponent.getLimbInfo(inventoryName);
 
          const loadProgress = useInfo.crossbowLoadProgressRecord[itemSlot];
          if (typeof loadProgress === "undefined" || loadProgress < 1) {
@@ -461,7 +475,7 @@ export function useItem(tribeMember: EntityID, item: Item, inventoryName: Invent
          const entityPhysicsComponent = PhysicsComponentArray.getComponent(tribeMember);
          
          const inventory = getInventory(inventoryComponent, inventoryName);
-         const limbInfo = inventoryUseComponent.getUseInfo(inventoryName);
+         const limbInfo = inventoryUseComponent.getLimbInfo(inventoryName);
 
          const offsetDirection = transformComponent.rotation + Math.PI / 1.5 - Math.PI / 14;
          const x = transformComponent.position.x + 35 * Math.sin(offsetDirection);
@@ -497,7 +511,7 @@ export function useItem(tribeMember: EntityID, item: Item, inventoryName: Invent
          const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribeMember);
          const tribeComponent = TribeComponentArray.getComponent(tribeMember);
 
-         const useInfo = inventoryUseComponent.getUseInfo(inventoryName);
+         const useInfo = inventoryUseComponent.getLimbInfo(inventoryName);
 
          const offsetDirection = transformComponent.rotation + Math.PI / 1.5 - Math.PI / 14;
          const x = transformComponent.position.x + 35 * Math.sin(offsetDirection);

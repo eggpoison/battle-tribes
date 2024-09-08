@@ -66,10 +66,18 @@ let _inventoryIsOpen = false;
 
 let currentRightClickEvent: MouseEvent | null = null;
 
+export function getInstancePlayerAction(inventoryName: InventoryName): LimbAction {
+   const inventoryUseComponent = InventoryUseComponentArray.getComponent(Player.instance!.id);
+   const limbInfo = inventoryUseComponent.getLimbInfoByInventoryName(inventoryName);
+   return limbInfo.action;
+}
+
 export function updatePlayerItems(): void {
    if (Player.instance === null) {
       return;
    }
+
+   // @Cleanup: Copynpaste for the action completion all over here. solution: make currentActionIsFinished method on Limb class
 
    // @Incomplete: only for hotbar so far
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(Player.instance.id);
@@ -81,11 +89,10 @@ export function updatePlayerItems(): void {
       hotbarLimbInfo.currentActionStartingTicks = Board.serverTicks;
 
       // @Copynpaste
-
       const selectedItemSlot = hotbarLimbInfo.selectedItemSlot;
       const selectedItem = definiteGameState.hotbar.getItem(selectedItemSlot);
-
       const attackInfo = getItemAttackInfo(selectedItem);
+
       hotbarLimbInfo.currentActionDurationTicks = attackInfo.attackTimings.swingTimeTicks;
    }
 
@@ -95,16 +102,37 @@ export function updatePlayerItems(): void {
       hotbarLimbInfo.currentActionStartingTicks = Board.serverTicks;
 
       // @Copynpaste
-
       const selectedItemSlot = hotbarLimbInfo.selectedItemSlot;
       const selectedItem = definiteGameState.hotbar.getItem(selectedItemSlot);
-
       const attackInfo = getItemAttackInfo(selectedItem);
+
       hotbarLimbInfo.currentActionDurationTicks = attackInfo.attackTimings.returnTimeTicks;
    }
 
    // If finished going to rest, set to default
    if (hotbarLimbInfo.action === LimbAction.returnAttackToRest && getSecondsSinceTickTimestamp(hotbarLimbInfo.currentActionStartingTicks) * Settings.TPS >= hotbarLimbInfo.currentActionDurationTicks) {
+      hotbarLimbInfo.action = LimbAction.none;
+   }
+
+   // @Incomplete: Double-check there isn't a tick immediately after depressing the button where this hasn't registered in the limb yet
+   // If blocking but not right clicking, return to rest
+   if (hotbarLimbInfo.action === LimbAction.block && !rightMouseButtonIsPressed && getSecondsSinceTickTimestamp(hotbarLimbInfo.currentActionStartingTicks) * Settings.TPS >= hotbarLimbInfo.currentActionDurationTicks) {
+      // @Copynpaste
+      const selectedItemSlot = hotbarLimbInfo.selectedItemSlot;
+      const selectedItem = definiteGameState.hotbar.getItem(selectedItemSlot)!;
+      const attackInfo = getItemAttackInfo(selectedItem);
+
+      hotbarLimbInfo.action = LimbAction.returnBlockToRest;
+      hotbarLimbInfo.currentActionStartingTicks = Board.serverTicks;
+      // @Temporary? Perhaps use separate blockReturnTimeTicks.
+      hotbarLimbInfo.currentActionDurationTicks = attackInfo.attackTimings.blockTimeTicks!;
+
+      sendStopItemUsePacket();
+   }
+
+   // @Copynpaste
+   // If finished returning block to rest, go to rest
+   if (hotbarLimbInfo.action === LimbAction.returnBlockToRest && getSecondsSinceTickTimestamp(hotbarLimbInfo.currentActionStartingTicks) * Settings.TPS >= hotbarLimbInfo.currentActionDurationTicks) {
       hotbarLimbInfo.action = LimbAction.none;
    }
 
@@ -119,12 +147,6 @@ const swing = (inventory: Inventory): void => {
    const attackPacket = createAttackPacket();
    Client.sendPacket(attackPacket);
 
-   // @Hack @Incomplete: do before this function is even called
-   // Don't attack if charging bow
-   if (latencyGameState.mainAction === LimbAction.chargeBow) {
-      return;
-   }
-
    const inventoryUseComponent = Player.instance!.getServerComponent(ServerComponentType.inventoryUse);
 
    const limbInfo = inventoryUseComponent.getLimbInfoByInventoryName(inventory.name);
@@ -138,6 +160,7 @@ const swing = (inventory: Inventory): void => {
    limbInfo.currentActionDurationTicks = attackInfo.attackTimings.windupTimeTicks;
 }
 
+// @Cleanup: unused?
 const getSwingTimeMultiplier = (item: Item | null): number => {
    let swingTimeMultiplier = 1;
 
@@ -281,7 +304,7 @@ const clickShouldPreventDefault = (e: MouseEvent): boolean => {
 
 const createItemUseListeners = (): void => {
    document.addEventListener("mousedown", e => {
-      if (Player.instance === null || definiteGameState.hotbar === null || definiteGameState.playerIsDead()) return;
+      if (Player.instance === null || definiteGameState.hotbar === null) return;
 
       // Only attempt to use an item if the game canvas was clicked
       if ((e.target as HTMLElement).id !== "game-canvas") {
@@ -329,7 +352,7 @@ const createItemUseListeners = (): void => {
    });
 
    document.addEventListener("mouseup", e => {
-      if (Player.instance === null || definiteGameState.hotbar === null || definiteGameState.playerIsDead()) return;
+      if (Player.instance === null || definiteGameState.hotbar === null) return;
 
       // Only attempt to use an item if the game canvas was clicked
       if ((e.target as HTMLElement).id !== "game-canvas") {
@@ -531,10 +554,13 @@ export function updatePlayerMovement(): void {
    const physicsComponent = Player.instance.getServerComponent(ServerComponentType.physics);
 
    if (moveDirection !== null) {
+      const playerAction = getInstancePlayerAction(InventoryName.hotbar);
+      
       let acceleration: number;
       if (keyIsPressed("l")) {
          acceleration = PLAYER_LIGHTSPEED_ACCELERATION;
-      } else if (latencyGameState.mainAction === LimbAction.eat || latencyGameState.mainAction === LimbAction.useMedicine || latencyGameState.mainAction === LimbAction.chargeBow || latencyGameState.mainAction === LimbAction.loadCrossbow || latencyGameState.playerIsPlacingEntity) {
+      // @Bug: doesn't account for offhand
+      } else if (playerAction === LimbAction.eat || playerAction === LimbAction.useMedicine || playerAction === LimbAction.chargeBow || playerAction === LimbAction.loadCrossbow || playerAction === LimbAction.block || latencyGameState.playerIsPlacingEntity) {
          acceleration = PLAYER_SLOW_ACCELERATION * getPlayerMoveSpeedMultiplier();
       } else {
          acceleration = PLAYER_ACCELERATION * getPlayerMoveSpeedMultiplier();
@@ -568,11 +594,6 @@ const deselectItem = (item: Item, isOffhand: boolean): void => {
       case "battleaxe":
       case "bow": {
          useInfo.action = LimbAction.none;
-         if (isOffhand) {
-            latencyGameState.offhandAction = LimbAction.none;
-         } else {
-            latencyGameState.mainAction = LimbAction.none;
-         }
          break;
       }
       case "placeable": {
@@ -601,14 +622,12 @@ const unuseItem = (item: Item): void => {
          const inventoryUseComponent = Player.instance!.getServerComponent(ServerComponentType.inventoryUse);
          const useInfo = inventoryUseComponent.limbInfos[0];
          
-         latencyGameState.mainAction = LimbAction.none;
          useInfo.action = LimbAction.none;
 
+         // @Bug: won't work when offhand is healing
          // Also unuse the other hand
          const itemInfo = ITEM_INFO_RECORD[item.type] as ConsumableItemInfo;
          if (itemInfo.consumableItemCategory === ConsumableItemCategory.medicine) {
-            latencyGameState.offhandAction = LimbAction.none;
-
             const otherUseInfo = inventoryUseComponent.limbInfos[1];
             otherUseInfo.action = LimbAction.none;
          }
@@ -624,13 +643,27 @@ const itemRightClickDown = (item: Item, isOffhand: boolean, itemSlot: number): v
    const transformComponent = Player.instance!.getServerComponent(ServerComponentType.transform);
    const inventoryUseComponent = Player.instance!.getServerComponent(ServerComponentType.inventoryUse);
 
-   const useInfo = inventoryUseComponent.limbInfos[isOffhand ? 1 : 0];
+   const limbInfo = inventoryUseComponent.limbInfos[isOffhand ? 1 : 0];
+
+   // Start blocking
+   if (limbInfo.action === LimbAction.none) {
+      const attackInfo = getItemAttackInfo(item);
+      if (attackInfo.attackTimings.blockTimeTicks !== null) {
+         limbInfo.action = LimbAction.block;
+         limbInfo.currentActionStartingTicks = Board.serverTicks;
+         limbInfo.currentActionDurationTicks = attackInfo.attackTimings.blockTimeTicks;
+
+         sendItemUsePacket();
+         return;
+      }
+   }
 
    const itemCategory = ITEM_TYPE_RECORD[item.type];
    switch (itemCategory) {
       case "healing": {
+         const healthComponent = HealthComponentArray.getComponent(Player.instance!.id);
          const maxHealth = TRIBE_INFO_RECORD[Game.tribe.tribeType].maxHealthPlayer;
-         if (definiteGameState.playerHealth >= maxHealth) {
+         if (healthComponent.health >= maxHealth) {
             break;
          }
 
@@ -647,23 +680,14 @@ const itemRightClickDown = (item: Item, isOffhand: boolean, itemSlot: number): v
             }
          }
             
-         useInfo.action = action;
-         useInfo.lastEatTicks = Board.serverTicks;
+         limbInfo.action = action;
+         limbInfo.lastEatTicks = Board.serverTicks;
 
          if (itemInfo.consumableItemCategory === ConsumableItemCategory.medicine) {
-            latencyGameState.offhandAction = action;
-            latencyGameState.mainAction = action;
-
             // @Cleanup
             const otherUseInfo = inventoryUseComponent.limbInfos[isOffhand ? 0 : 1];
             otherUseInfo.action = action;
             otherUseInfo.lastEatTicks = Board.serverTicks;
-         } else {
-            if (isOffhand) {
-               latencyGameState.offhandAction = action;
-            } else {
-               latencyGameState.mainAction = action;
-            }
          }
 
          break;
@@ -671,13 +695,8 @@ const itemRightClickDown = (item: Item, isOffhand: boolean, itemSlot: number): v
       case "crossbow": {
          if (!definiteGameState.hotbarCrossbowLoadProgressRecord.hasOwnProperty(itemSlot) || definiteGameState.hotbarCrossbowLoadProgressRecord[itemSlot]! < 1) {
             // Start loading crossbow
-            useInfo.action = LimbAction.loadCrossbow;
-            useInfo.lastCrossbowLoadTicks = Board.serverTicks;
-            if (isOffhand) {
-               latencyGameState.offhandAction = LimbAction.loadCrossbow;
-            } else {
-               latencyGameState.mainAction = LimbAction.loadCrossbow;
-            }
+            limbInfo.action = LimbAction.loadCrossbow;
+            limbInfo.lastCrossbowLoadTicks = Board.serverTicks;
             playSound("crossbow-load.mp3", 0.4, 1, transformComponent.position);
          } else {
             // Fire crossbow
@@ -687,41 +706,26 @@ const itemRightClickDown = (item: Item, isOffhand: boolean, itemSlot: number): v
          break;
       }
       case "bow": {
-         useInfo.action = LimbAction.chargeBow;
-         useInfo.lastBowChargeTicks = Board.serverTicks;
-         if (isOffhand) {
-            latencyGameState.offhandAction = LimbAction.chargeBow;
-         } else {
-            latencyGameState.mainAction = LimbAction.chargeBow;
-         }
+         limbInfo.action = LimbAction.chargeBow;
+         limbInfo.lastBowChargeTicks = Board.serverTicks;
          
          playSound("bow-charge.mp3", 0.4, 1, transformComponent.position);
 
          break;
       }
       case "spear": {
-         useInfo.action = LimbAction.chargeSpear;
-         useInfo.currentActionStartingTicks = Board.serverTicks;
-         if (isOffhand) {
-            latencyGameState.offhandAction = LimbAction.chargeSpear;
-         } else {
-            latencyGameState.mainAction = LimbAction.chargeSpear;
-         }
+         limbInfo.action = LimbAction.chargeSpear;
+         limbInfo.currentActionStartingTicks = Board.serverTicks;
          break;
       }
       case "battleaxe": {
          // If an axe is already thrown, don't throw another
-         if (useInfo.thrownBattleaxeItemID !== -1) {
+         if (limbInfo.thrownBattleaxeItemID !== -1) {
             break;
          }
 
-         useInfo.action = LimbAction.chargeBattleaxe;
-         useInfo.lastBattleaxeChargeTicks = Board.serverTicks;
-         if (isOffhand) {
-            latencyGameState.offhandAction = LimbAction.chargeBattleaxe;
-         } else {
-            latencyGameState.mainAction = LimbAction.chargeBattleaxe;
-         }
+         limbInfo.action = LimbAction.chargeBattleaxe;
+         limbInfo.lastBattleaxeChargeTicks = Board.serverTicks;
          break;
       }
       case "glove":
@@ -735,7 +739,7 @@ const itemRightClickDown = (item: Item, isOffhand: boolean, itemSlot: number): v
          
          if (placeInfo.isValid) {
             sendItemUsePacket();
-            useInfo.lastAttackTicks = Board.serverTicks;
+            limbInfo.lastAttackTicks = Board.serverTicks;
          }
 
          break;
@@ -745,7 +749,7 @@ const itemRightClickDown = (item: Item, isOffhand: boolean, itemSlot: number): v
 
 const itemRightClickUp = (item: Item, isOffhand: boolean): void => {
    const inventoryUseComponent = Player.instance!.getServerComponent(ServerComponentType.inventoryUse);
-   const useInfo = inventoryUseComponent.limbInfos[isOffhand ? 1 : 0];
+   const limbInfo = inventoryUseComponent.limbInfos[isOffhand ? 1 : 0];
 
    const itemCategory = ITEM_TYPE_RECORD[item.type];
    switch (itemCategory) {
@@ -757,11 +761,11 @@ const itemRightClickUp = (item: Item, isOffhand: boolean): void => {
       case "spear":
       case "bow": {
          if (itemCategory === "battleaxe") {
-            if (useInfo.thrownBattleaxeItemID !== -1 || useInfo.action !== LimbAction.chargeBattleaxe) {
+            if (limbInfo.thrownBattleaxeItemID !== -1 || limbInfo.action !== LimbAction.chargeBattleaxe) {
                break;
             }
 
-            useInfo.thrownBattleaxeItemID = item.id;
+            limbInfo.thrownBattleaxeItemID = item.id;
 
             if (isOffhand) {
                // If an axe is already thrown, don't throw another
@@ -771,27 +775,16 @@ const itemRightClickUp = (item: Item, isOffhand: boolean): void => {
             }
          }
 
+         limbInfo.action = LimbAction.none;
+         
          sendItemUsePacket();
-
-         useInfo.action = LimbAction.none;
-         if (isOffhand) {
-            latencyGameState.offhandAction = LimbAction.none;
-         } else {
-            latencyGameState.mainAction = LimbAction.none;
-         }
-
          // @Incomplete: Don't play if bow didn't actually fire an arrow
          playBowFireSound(Player.instance!, item.type);
 
          break;
       }
       case "crossbow": {
-         useInfo.action = LimbAction.none;
-         if (isOffhand) {
-            latencyGameState.offhandAction = LimbAction.none;
-         } else {
-            latencyGameState.mainAction = LimbAction.none;
-         }
+         limbInfo.action = LimbAction.none;
          break;
       }
    }
@@ -848,8 +841,10 @@ const tickItem = (item: Item, itemSlot: number): void => {
    switch (itemCategory) {
       case "healing": {
          // If the player can no longer eat food without wasting it, stop eating
+         const healthComponent = HealthComponentArray.getComponent(Player.instance!.id);
          const maxHealth = TRIBE_INFO_RECORD[Game.tribe.tribeType].maxHealthPlayer;
-         if (isSelected && (latencyGameState.mainAction === LimbAction.eat || latencyGameState.mainAction === LimbAction.useMedicine) && definiteGameState.playerHealth >= maxHealth) {
+         const playerAction = getInstancePlayerAction(InventoryName.hotbar);
+         if (isSelected && (playerAction === LimbAction.eat || playerAction === LimbAction.useMedicine) && healthComponent.health >= maxHealth) {
             unuseItem(item);
          }
 

@@ -150,8 +150,7 @@ const calculateItemKnockback = (item: Item | null): number => {
 }
 
 // @Cleanup: (?) Pass in the item to use directly instead of passing in the item slot and inventory name
-// @Cleanup: Not just for tribe members, move to different file
-const attemptAttack = (attackingEntity: EntityID, victim: EntityID, limbInfo: LimbInfo): boolean => {
+export function attemptAttack(attacker: EntityID, victim: EntityID, limbInfo: LimbInfo): boolean {
    // @Cleanup: instead use getHeldItem
    // Find the selected item
    let item: Item | undefined | null = limbInfo.associatedInventory.itemSlots[limbInfo.selectedItemSlot];
@@ -165,20 +164,20 @@ const attemptAttack = (attackingEntity: EntityID, victim: EntityID, limbInfo: Li
 
    // Harvest leaves from trees and berries when wearing the gathering or gardening gloves
    if ((item === null || item.type === ItemType.leaf) && (targetEntityType === EntityType.tree || targetEntityType === EntityType.berryBush || targetEntityType === EntityType.plant)) {
-      const inventoryComponent = InventoryComponentArray.getComponent(attackingEntity);
+      const inventoryComponent = InventoryComponentArray.getComponent(attacker);
       const gloveInventory = getInventory(inventoryComponent, InventoryName.gloveSlot);
       const gloves = gloveInventory.itemSlots[1];
       if (typeof gloves !== "undefined" && (gloves.type === ItemType.gathering_gloves || gloves.type === ItemType.gardening_gloves)) {
-         gatherPlant(victim, attackingEntity, gloves);
+         gatherPlant(victim, attacker, gloves);
          return true;
       }
    }
 
-   const attackDamage = calculateItemDamage(attackingEntity, item, attackEffectiveness);
+   const attackDamage = calculateItemDamage(attacker, item, attackEffectiveness);
    const attackKnockback = calculateItemKnockback(item);
 
    const targetEntityTransformComponent = TransformComponentArray.getComponent(victim);
-   const attackerTransformComponent = TransformComponentArray.getComponent(attackingEntity);
+   const attackerTransformComponent = TransformComponentArray.getComponent(attacker);
 
    const hitDirection = attackerTransformComponent.position.calculateAngleBetween(targetEntityTransformComponent.position);
 
@@ -187,7 +186,7 @@ const attemptAttack = (attackingEntity: EntityID, victim: EntityID, limbInfo: Li
 
    // Register the hit
    const hitFlags = item !== null && item.type === ItemType.flesh_sword ? HitFlags.HIT_BY_FLESH_SWORD : 0;
-   damageEntity(victim, attackingEntity, attackDamage, PlayerCauseOfDeath.tribe_member, attackEffectiveness, collisionPoint, hitFlags);
+   damageEntity(victim, attacker, attackDamage, PlayerCauseOfDeath.tribe_member, attackEffectiveness, collisionPoint, hitFlags);
    applyKnockback(victim, attackKnockback, hitDirection);
 
    if (item !== null && item.type === ItemType.flesh_sword) {
@@ -195,7 +194,7 @@ const attemptAttack = (attackingEntity: EntityID, victim: EntityID, limbInfo: Li
    }
 
    // Bloodaxes have a 20% chance to inflict bleeding on hit
-   if (hasTitle(attackingEntity, TribesmanTitle.bloodaxe) && Math.random() < 0.2) {
+   if (hasTitle(attacker, TribesmanTitle.bloodaxe) && Math.random() < 0.2) {
       applyStatusEffect(victim, StatusEffect.bleeding, 2 * Settings.TPS);
    }
 
@@ -209,7 +208,7 @@ export function beginSwing(attackingEntity: EntityID, itemSlot: number, inventor
       return false;
    }
 
-   const limbInfo = inventoryUseComponent.getUseInfo(inventoryName);
+   const limbInfo = inventoryUseComponent.getLimbInfo(inventoryName);
    // If the limb is doing something, don't swing
    if (limbInfo.action !== LimbAction.none) {
       return false;
@@ -218,7 +217,7 @@ export function beginSwing(attackingEntity: EntityID, itemSlot: number, inventor
    const heldItem = getHeldItem(limbInfo);
    const heldItemAttackInfo = getItemAttackInfo(heldItem);
    
-   // Being winding up the attack
+   // Begin winding up the attack
    limbInfo.selectedItemSlot = itemSlot;
    limbInfo.action = LimbAction.windAttack;
    limbInfo.currentActionStartingTicks = Board.ticks;
@@ -345,39 +344,26 @@ export function calculateBlueprintWorkTarget(tribeMember: EntityID, targetEntiti
    return closestEntity;
 }
 
-export function onEntityLimbCollision(attackingEntity: EntityID, victim: EntityID, limbInfo: LimbInfo, damageBoxComponent: DamageBoxComponent): void {
-   // @Incomplete
-   // const item = limbInfo.associatedInventory.itemSlots[limbInfo.selectedItemSlot];
-   // if (typeof item !== "undefined" && ITEM_TYPE_RECORD[item.type] === "hammer") {
-   //    // First look for friendly buildings to repair
-   //    const repairTarget = calculateRepairTarget(player, attackTargets);
-   //    if (repairTarget !== null) {
-   //       return repairBuilding(player, repairTarget, itemSlot, inventoryName);
-   //    }
+// @Incomplete
+// const item = limbInfo.associatedInventory.itemSlots[limbInfo.selectedItemSlot];
+// if (typeof item !== "undefined" && ITEM_TYPE_RECORD[item.type] === "hammer") {
+//    // First look for friendly buildings to repair
+//    const repairTarget = calculateRepairTarget(player, attackTargets);
+//    if (repairTarget !== null) {
+//       return repairBuilding(player, repairTarget, itemSlot, inventoryName);
+//    }
 
-   //    // Then look for attack targets
-   //    const attackTarget = calculateAttackTarget(player, attackTargets, ~(EntityRelationship.friendly | EntityRelationship.friendlyBuilding));
-   //    if (attackTarget !== null) {
-   //       return attemptAttack(player, attackTarget, itemSlot, inventoryName);
-   //    }
+//    // Then look for attack targets
+//    const attackTarget = calculateAttackTarget(player, attackTargets, ~(EntityRelationship.friendly | EntityRelationship.friendlyBuilding));
+//    if (attackTarget !== null) {
+//       return attemptAttack(player, attackTarget, itemSlot, inventoryName);
+//    }
 
-   //    // Then look for blueprints to work on
-   //    const workTarget = calculateBlueprintWorkTarget(player, attackTargets);
-   //    if (workTarget !== null) {
-   //       return repairBuilding(player, workTarget, itemSlot, inventoryName);
-   //    }
+//    // Then look for blueprints to work on
+//    const workTarget = calculateBlueprintWorkTarget(player, attackTargets);
+//    if (workTarget !== null) {
+//       return repairBuilding(player, workTarget, itemSlot, inventoryName);
+//    }
 
-   //    return false;
-   // }
-   
-   if (HealthComponentArray.hasComponent(victim)) {
-      attemptAttack(attackingEntity, victim, limbInfo);
-
-      // @Hack
-      // Remove all damage boxes
-      for (let i = 0; i < damageBoxComponent.damageBoxes.length; i++) {
-         const damageBox = damageBoxComponent.damageBoxes[i];
-         damageBox.isRemoved = true;
-      }
-   }
-}
+//    return false;
+// }

@@ -4,9 +4,6 @@ import { Settings } from "webgl-test-shared/dist/settings";
 
 /** Information about the game and player. */
 abstract class GameState {
-   public mainAction = LimbAction.none;
-   public offhandAction = LimbAction.none;
-
    /** Whether the instance player is placing an entity. */
    public playerIsPlacingEntity = false;
 
@@ -42,8 +39,6 @@ abstract class GameState {
    public lastPlantCollisionTicks = 0;
 
    public resetFlags(): void {
-      this.mainAction = LimbAction.none;
-      this.offhandAction = LimbAction.none;
       this.playerIsPlacingEntity = false;
    }
 }

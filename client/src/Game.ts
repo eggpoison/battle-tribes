@@ -156,6 +156,7 @@ const main = (currentTime: number): void => {
          }
          
          // @Hack: For some reason, if the player sends this packet 60 times a second the server begins to mess up how it receives other packet types. Weird.
+         // 10 times a second looks flickery
          if (++tempPacketSendCounter % 3 === 0) Client.sendPlayerDataPacket();
 
          Game.lag -= 1000 / Settings.TPS;

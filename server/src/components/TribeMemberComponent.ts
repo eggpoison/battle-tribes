@@ -442,12 +442,12 @@ function onTick(_tribeMemberComponent: TribeMemberComponent, tribeMember: Entity
    const inventoryComponent = InventoryComponentArray.getComponent(tribeMember);
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribeMember);
 
-   const useInfo = inventoryUseComponent.getUseInfo(InventoryName.hotbar);
+   const useInfo = inventoryUseComponent.getLimbInfo(InventoryName.hotbar);
    tickInventoryUseInfo(tribeMember, useInfo);
 
    const tribeComponent = TribeComponentArray.getComponent(tribeMember);
    if (tribeComponent.tribe.tribeType === TribeType.barbarians && Board.getEntityType(tribeMember) !== EntityType.tribeWorker) {
-      const useInfo = inventoryUseComponent.getUseInfo(InventoryName.offhand);
+      const useInfo = inventoryUseComponent.getLimbInfo(InventoryName.offhand);
       tickInventoryUseInfo(tribeMember, useInfo);
    }
 

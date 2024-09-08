@@ -33,7 +33,7 @@ export function getHealingItemUseInfo(tribesmanID: number): HealingItemUseInfo |
 
 export function continueTribesmanHealing(tribesmanID: EntityID, healingItemUseInfo: HealingItemUseInfo): void {
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesmanID);
-   const limbInfo = inventoryUseComponent.getUseInfo(InventoryName.hotbar);
+   const limbInfo = inventoryUseComponent.getLimbInfo(InventoryName.hotbar);
    limbInfo.selectedItemSlot = healingItemUseInfo.itemSlot;
 
    const foodItem = healingItemUseInfo.inventory.itemSlots[healingItemUseInfo.itemSlot]!;

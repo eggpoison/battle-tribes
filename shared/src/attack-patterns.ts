@@ -17,6 +17,8 @@ export interface AttackTimingsInfo {
    readonly windupTimeTicks: number;
    readonly swingTimeTicks: number;
    readonly returnTimeTicks: number;
+   /** If null, then the attack cannot block. */
+   readonly blockTimeTicks: number | null;
 }
 
 // @Cleanup: rename. not just damage box
@@ -66,31 +68,36 @@ export const SPEAR_ATTACK_PATTERN: AttackPatternInfo = {
 export const DEFAULT_ATTACK_TIMINGS: AttackTimingsInfo = {
    windupTimeTicks: Math.floor(0.1 * Settings.TPS),
    swingTimeTicks: Math.floor(0.15 * Settings.TPS),
-   returnTimeTicks: Math.floor(0.2 * Settings.TPS)
+   returnTimeTicks: Math.floor(0.2 * Settings.TPS),
+   blockTimeTicks: null
 };
 
 export const AXE_ATTACK_TIMINGS: AttackTimingsInfo = {
    windupTimeTicks: Math.floor(0.15 * Settings.TPS),
    swingTimeTicks: Math.floor(0.2 * Settings.TPS),
-   returnTimeTicks: Math.floor(0.3 * Settings.TPS)
+   returnTimeTicks: Math.floor(0.3 * Settings.TPS),
+   blockTimeTicks: Math.floor(0.3 * Settings.TPS)
 };
 
 export const PICKAXE_ATTACK_TIMINGS: AttackTimingsInfo = {
    windupTimeTicks: Math.floor(0.2 * Settings.TPS),
    swingTimeTicks: Math.floor(0.25 * Settings.TPS),
-   returnTimeTicks: Math.floor(0.35 * Settings.TPS)
+   returnTimeTicks: Math.floor(0.35 * Settings.TPS),
+   blockTimeTicks: Math.floor(0.3 * Settings.TPS)
 };
 
 export const SWORD_ATTACK_TIMINGS: AttackTimingsInfo = {
    windupTimeTicks: Math.floor(0.1 * Settings.TPS),
    swingTimeTicks: Math.floor(0.2 * Settings.TPS),
-   returnTimeTicks: Math.floor(0.15 * Settings.TPS)
+   returnTimeTicks: Math.floor(0.15 * Settings.TPS),
+   blockTimeTicks: Math.floor(0.2 * Settings.TPS)
 };
 
 export const SPEAR_ATTACK_TIMINGS: AttackTimingsInfo = {
    windupTimeTicks: Math.floor(0.25 * Settings.TPS),
    swingTimeTicks: Math.floor(0.2 * Settings.TPS),
-   returnTimeTicks: Math.floor(0.35 * Settings.TPS)
+   returnTimeTicks: Math.floor(0.35 * Settings.TPS),
+   blockTimeTicks: null
 };
 
 /* ----------- */
@@ -107,6 +114,12 @@ export const SPEAR_CHARGED_LIMB_STATE: LimbState = {
    direction: Math.PI * 0.6,
    extraOffset: 0,
    rotation: Math.PI * 0.3
+};
+
+export const BLOCKING_LIMB_STATE: LimbState = {
+   direction: Math.PI * 0.3,
+   extraOffset: 6,
+   rotation: Math.PI * -0.65
 };
 
 export const DEFAULT_ITEM_DAMAGE_BOX_INFO: LimbHeldItemDamageBoxInfo = {

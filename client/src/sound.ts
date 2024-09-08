@@ -210,11 +210,11 @@ export async function setupAudio(): Promise<void> {
       tempAudioBuffers[filePath] = audioBuffer;
 
       // @Hack: For some reason if we decode the audio too fast, then shit breaks. So we have to do this evilness. Why? Because god is not real.
-      await (new Promise<void>(resolve => {
-         setTimeout(() => {
-            resolve();
-         }, 20)
-      }));
+      // await (new Promise<void>(resolve => {
+      //    setTimeout(() => {
+      //       resolve();
+      //    }, 20)
+      // }));
    }
    audioBuffers = tempAudioBuffers as Record<AudioFilePath, AudioBuffer>;
 }

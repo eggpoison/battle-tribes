@@ -2,21 +2,24 @@ import { TRIBE_INFO_RECORD } from "webgl-test-shared/dist/tribes";
 import { useEffect, useRef, useState } from "react";
 import HealthIcon from "../../images/miscellaneous/health.png";
 import FrozenHealthIcon from "../../images/miscellaneous/health-frozen.png";
-import Player from "../../entities/Player";
 import Game from "../../Game";
 
-export let updateHealthBar: (newHealth: number) => void;
+export let updateHealthBar: (newHealth: number) => void = () => {};
 
 export let HealthBar_setHasFrostShield: (hasFrostShield: boolean) => void = () => {};
 
-const HealthBar = () => {
+interface HealthBarProps {
+   readonly isDead: boolean;
+}
+
+const HealthBar = (props: HealthBarProps) => {
    const healthBarRef = useRef<HTMLDivElement | null>(null);
-   const [health, setHealth] = useState(Player.instance !== null ? TRIBE_INFO_RECORD[Game.tribe.tribeType].maxHealthPlayer : 0);
+   const [health, setHealth] = useState(!props.isDead ? TRIBE_INFO_RECORD[Game.tribe.tribeType].maxHealthPlayer : 0);
    const [hasFrostShield, setHasFrostShield] = useState(false);
 
    useEffect(() => {
       if (healthBarRef.current !== null) {
-         const maxHealth = Player.instance !== null ? TRIBE_INFO_RECORD[Game.tribe.tribeType].maxHealthPlayer : 0;
+         const maxHealth = !props.isDead ? TRIBE_INFO_RECORD[Game.tribe.tribeType].maxHealthPlayer : 0;
 
          healthBarRef.current.style.setProperty("--max-health", maxHealth.toString());
          healthBarRef.current.style.setProperty("--current-health", maxHealth.toString());
@@ -30,7 +33,7 @@ const HealthBar = () => {
       }
       
       updateHealthBar = (newHealth: number) => {
-         if (healthBarRef.current !== null) {
+         if (healthBarRef.current !== null && newHealth !== health) {
             // Stop health from being negative
             const clampedNewHealth = Math.max(newHealth, 0);
             

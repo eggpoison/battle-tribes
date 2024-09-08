@@ -14,7 +14,7 @@ import { EntityTickEvent, EntityTickEventType } from "webgl-test-shared/dist/ent
 import Game from "../Game";
 import Player from "../entities/Player";
 import Client from "./Client";
-import { definiteGameState, latencyGameState } from "../game-state/game-states";
+import { latencyGameState } from "../game-state/game-states";
 import Entity from "../Entity";
 import { createEntity } from "../entity-class-record";
 import Board from "../Board";
@@ -288,8 +288,10 @@ export function processEntityCreationData(entityID: EntityID, reader: PacketRead
 
    Board.addEntity(entity);
 
+   // Set the player instance
    if (entityID === Game.playerID) {
-      Player.createInstancePlayer(entity as Player);
+      Player.instance = entity as Player;
+      Camera.setTrackedEntityID(entityID);
    }
 }
 
@@ -307,7 +309,8 @@ const processEntityUpdateData = (entityID: EntityID, reader: PacketReader): void
       component.updateFromData(reader);
    }
 
-   // If you're updating from data, then the entity is always dirty.
+   // @Speed: Does this mean we can just collect all updated entities each tick and not have to do the dirty array bullshit?
+   // If you're updating the entity, then the server must have had some reason to send the data, so we should always consider the entity dirty.
    // @Incomplete: Are there some situations where this isn't the case?
    entity.dirty();
 }
@@ -673,8 +676,6 @@ export function processSyncDataPacket(reader: PacketReader): void {
    const accelerationX = reader.readNumber();
    const accelerationY = reader.readNumber();
 
-   const health = reader.readNumber();
-
    const playerInventories = readPlayerInventories(reader);
    // // Add inventory data
    // addInventoryDataToPacket(packet, hotbarInventory);
@@ -702,11 +703,6 @@ export function processSyncDataPacket(reader: PacketReader): void {
    physicsComponent.acceleration.x = accelerationX;
    physicsComponent.acceleration.y = accelerationY;
    
-   definiteGameState.setPlayerHealth(health);
-   if (definiteGameState.playerIsDead()) {
-      Client.killPlayer();
-   }
-
    Game.sync();
 }
 
@@ -721,7 +717,6 @@ export function processRespawnDataPacket(reader: PacketReader): void {
    Hotbar_setHotbarSelectedItemSlot(1);
    
    const maxHealth = TRIBE_INFO_RECORD[Game.tribe.tribeType].maxHealthPlayer;
-   definiteGameState.setPlayerHealth(maxHealth);
    updateHealthBar(maxHealth);
 
    gameScreenSetIsDead(false);

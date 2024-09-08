@@ -139,9 +139,9 @@ function getDataLength(entity: EntityID): number {
       }
       
       if (boxIsCircular(damageBox.box)) {
-         lengthBytes += 7 * Float32Array.BYTES_PER_ELEMENT;
+         lengthBytes += 8 * Float32Array.BYTES_PER_ELEMENT;
       } else {
-         lengthBytes += 9 * Float32Array.BYTES_PER_ELEMENT;
+         lengthBytes += 10 * Float32Array.BYTES_PER_ELEMENT;
       }
    }
 
@@ -190,6 +190,7 @@ function addDataToPacket(packet: Packet, entity: EntityID): void {
       packet.addNumber(box.rotation);
       packet.addNumber(localID);
       packet.addNumber(box.radius);
+      packet.addNumber(damageBox.type);
    }
 
    // Rectangular
@@ -217,5 +218,6 @@ function addDataToPacket(packet: Packet, entity: EntityID): void {
       packet.addNumber(box.width);
       packet.addNumber(box.height);
       packet.addNumber(box.relativeRotation);
+      packet.addNumber(damageBox.type);
    }
 }

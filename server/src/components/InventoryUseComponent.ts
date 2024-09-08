@@ -4,7 +4,6 @@ import { Settings } from "webgl-test-shared/dist/settings";
 import { ComponentArray } from "./ComponentArray";
 import { getItemAttackInfo, Inventory, InventoryName, Item } from "webgl-test-shared/dist/items/items";
 import { Packet } from "webgl-test-shared/dist/packets";
-import Board from "../Board";
 import { getInventory, InventoryComponentArray } from "./InventoryComponent";
 import CircularBox from "webgl-test-shared/dist/boxes/CircularBox";
 import { lerp, Point } from "webgl-test-shared/dist/utils";
@@ -69,7 +68,10 @@ export class InventoryUseComponent {
       // Create limb damage box
 
       const box = new CircularBox(new Point(0, 0), 0, 12);
-      const damageBox = createDamageBox(box, associatedInventory.name, onLimbAttackBoxCollision, false);
+      const damageBox = createDamageBox(box, associatedInventory.name, {
+         onCollision: onLimbAttackBoxCollision,
+         onCollisionEnter: onLimbAttackBoxCollisionEnter
+      }, false);
       
       const damageBoxComponent = DamageBoxComponentArray.getComponent(entity);
       damageBoxComponent.addDamageBox(damageBox);
@@ -195,20 +197,16 @@ const setLimbToState = (entity: EntityID, limbInfo: LimbInfo, state: LimbState):
    setLimb(entity, limbInfo, state.direction, state.extraOffset, state.rotation);
 }
 
-const onLimbBlockingBoxCollision = (attacker: EntityID, victim: EntityID, limb: LimbInfo, collidingDamageBox: ServerDamageBoxWrapper | null): void => {
-
-}
-
-const onLimbAttackBoxCollision = (attacker: EntityID, victim: EntityID, limb: LimbInfo, collidingDamageBox: ServerDamageBoxWrapper | null): void => {
-   const damageBoxComponent = DamageBoxComponentArray.getComponent(attacker);
-   
+const onLimbAttackBoxCollisionEnter = (attacker: EntityID, victim: EntityID, limb: LimbInfo, collidingDamageBox: ServerDamageBoxWrapper | null): void => {
    // Attack is blocked if the wrapper is a damage box
    if (collidingDamageBox !== null) {
       // Pause the attack for a brief period
       limb.currentActionPauseTicksRemaining = Math.floor(Settings.TPS / 20);
-
-      return;
    }
+}
+
+const onLimbAttackBoxCollision = (attacker: EntityID, victim: EntityID, limb: LimbInfo): void => {
+   const damageBoxComponent = DamageBoxComponentArray.getComponent(attacker);
    
    // Attack the entity
    if (HealthComponentArray.hasComponent(victim)) {
@@ -259,7 +257,7 @@ function onTick(inventoryUseComponent: InventoryUseComponent, entity: EntityID):
                   
                   // @Copynpaste
                   const box = new RectangularBox(new Point(damageBoxInfo.offsetX, damageBoxInfo.offsetY), damageBoxInfo.width, damageBoxInfo.height, damageBoxInfo.rotation);
-                  const damageBox = createDamageBox(box, limbInfo.associatedInventory.name, onLimbBlockingBoxCollision, true);
+                  const damageBox = createDamageBox(box, limbInfo.associatedInventory.name, {}, true);
                   
                   const damageBoxComponent = DamageBoxComponentArray.getComponent(entity);
                   damageBoxComponent.addDamageBox(damageBox);
@@ -286,7 +284,10 @@ function onTick(inventoryUseComponent: InventoryUseComponent, entity: EntityID):
                const damageBoxInfo = heldItemAttackInfo.heldItemDamageBoxInfo;
                if (damageBoxInfo !== null) {
                   const box = new RectangularBox(new Point(damageBoxInfo.offsetX, damageBoxInfo.offsetY), damageBoxInfo.width, damageBoxInfo.height, damageBoxInfo.rotation);
-                  const damageBox = createDamageBox(box, limbInfo.associatedInventory.name, onLimbAttackBoxCollision, true);
+                  const damageBox = createDamageBox(box, limbInfo.associatedInventory.name, {
+                     onCollision: onLimbAttackBoxCollision,
+                     onCollisionEnter: onLimbAttackBoxCollisionEnter
+                  }, true);
                   
                   const damageBoxComponent = DamageBoxComponentArray.getComponent(entity);
                   damageBoxComponent.addDamageBox(damageBox);

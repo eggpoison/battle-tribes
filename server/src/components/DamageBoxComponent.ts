@@ -85,32 +85,44 @@ const getCollidingDamageBox = (entity: EntityID, damageBox: ServerDamageBoxWrapp
 function onTick(damageBoxComponent: DamageBoxComponent, entity: EntityID): void {
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(entity);
    
+   // Check for removed damage boxes
    for (let i = 0; i < damageBoxComponent.damageBoxes.length; i++) {
       const damageBox = damageBoxComponent.damageBoxes[i];
-      const limbInfo = inventoryUseComponent.getLimbInfo(damageBox.associatedLimbInventoryName);
-
-      // Check for removed damage boxes
       if (damageBox.isRemoved) {
          damageBoxComponent.removeDamageBox(damageBox);
          i--;
-         continue;
       }
-
+   }
+   
+   for (let i = 0; i < damageBoxComponent.damageBoxes.length; i++) {
+      const damageBox = damageBoxComponent.damageBoxes[i];
       if (!damageBox.isActive) {
          continue;
       }
+      
+      const limbInfo = inventoryUseComponent.getLimbInfo(damageBox.associatedLimbInventoryName);
 
       // First check if it is colliding with another damage box 
       const collisionInfo = getCollidingDamageBox(entity, damageBox);
       if (collisionInfo !== null) {
-         damageBox.collisionCallback(entity, collisionInfo.collidingEntity, limbInfo, collisionInfo.collidingDamageBox);
+         if (typeof damageBox.onCollision !== "undefined") {
+            damageBox.onCollision(entity, collisionInfo.collidingEntity, limbInfo, collisionInfo.collidingDamageBox);
+         }
+         if (damageBox.collidingDamageBox !== collisionInfo.collidingDamageBox && typeof damageBox.onCollisionEnter !== "undefined") {
+            damageBox.onCollisionEnter(entity, collisionInfo.collidingEntity, limbInfo, collisionInfo.collidingDamageBox);
+         }
+         damageBox.collidingDamageBox = collisionInfo.collidingDamageBox;
+      } else {
+         damageBox.collidingDamageBox = null;
       }
 
-      const collidingEntities = getBoxesCollidingEntities(Board.getWorldInfo(), [damageBox]);
-      for (let j = 0; j < collidingEntities.length; j++) {
-         const collidingEntity = collidingEntities[j];
-         if (collidingEntity !== entity) {
-            damageBox.collisionCallback(entity, collidingEntity, limbInfo, null);
+      if (typeof damageBox.onCollision !== "undefined") {
+         const collidingEntities = getBoxesCollidingEntities(Board.getWorldInfo(), [damageBox]);
+         for (let j = 0; j < collidingEntities.length; j++) {
+            const collidingEntity = collidingEntities[j];
+            if (collidingEntity !== entity) {
+               damageBox.onCollision(entity, collidingEntity, limbInfo, null);
+            }
          }
       }
    }

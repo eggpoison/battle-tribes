@@ -133,10 +133,9 @@ export function updatePlayerItems(): void {
       hotbarLimbInfo.action = LimbAction.none;
    }
 
-   // @Temporary
    // @Incomplete: Double-check there isn't a tick immediately after depressing the button where this hasn't registered in the limb yet
    // If blocking but not right clicking, return to rest
-   if (1+1===1 && hotbarLimbInfo.action === LimbAction.block && !rightMouseButtonIsPressed && getElapsedTimeInSeconds(hotbarLimbInfo.currentActionElapsedTicks) * Settings.TPS >= hotbarLimbInfo.currentActionDurationTicks) {
+   if (hotbarLimbInfo.action === LimbAction.block && !rightMouseButtonIsPressed && getElapsedTimeInSeconds(hotbarLimbInfo.currentActionElapsedTicks) * Settings.TPS >= hotbarLimbInfo.currentActionDurationTicks) {
       // @Copynpaste
       const selectedItemSlot = hotbarLimbInfo.selectedItemSlot;
       const selectedItem = definiteGameState.hotbar.getItem(selectedItemSlot)!;

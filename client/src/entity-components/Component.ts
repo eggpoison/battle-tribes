@@ -2,14 +2,12 @@ import { HitboxWrapper } from "webgl-test-shared/dist/boxes/boxes";
 import Entity from "../Entity";
 
 abstract class Component {
+   // @Memory: remove
    public readonly entity: Entity;
 
    constructor(entity: Entity) {
       this.entity = entity;
    }
-
-   public tick?(): void;
-   public update?(): void;
 
    /** Called once when the entity is created, just after all the components are added */
    public onLoad?(): void;

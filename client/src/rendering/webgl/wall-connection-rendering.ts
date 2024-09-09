@@ -12,7 +12,7 @@ let program: WebGLProgram;
 let wallConnections: ReadonlyArray<WallConnectionData>;
 
 export function setVisibleWallConnections(newWallConnections: ReadonlyArray<WallConnectionData>): void {
-   // @Speed: Garbage collection
+   // @Speed: Garbage collection 
    wallConnections = newWallConnections;
 }
 

@@ -1,8 +1,7 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import ChatBox from "./ChatBox";
 import NerdVision from "./dev/NerdVision";
 import HealthBar from "./HealthBar";
-import PauseScreen from "./PauseScreen";
 import Hotbar from "./inventories/Hotbar";
 import CraftingMenu from "./menus/CraftingMenu";
 import HeldItem from "./HeldItem";
@@ -17,9 +16,6 @@ import Infocards from "./infocards/Infocards";
 import { GameInteractState } from "../../Game";
 import SummonCrosshair from "./SummonCrosshair";
 
-export let showPauseScreen: () => void = () => {};
-export let hidePauseScreen: () => void = () => {};
-
 export let openSettingsMenu: () => void;
 export let closeSettingsMenu: () => void;
 export let toggleSettingsMenu: () => void;
@@ -33,15 +29,11 @@ interface GameScreenProps {
 }
 
 const GameScreen = (props: GameScreenProps) => {
-   const [isPaused, setIsPaused] = useState(false);
    const [settingsIsOpen, setSettingsIsOpen] = useState(false);
    const [isDead, setIsDead] = useState(false);
    const [cinematicModeIsEnabled, setCinematicModeIsEnabled] = useState(false);
 
    useEffect(() => {
-      showPauseScreen = (): void => setIsPaused(true);
-      hidePauseScreen = (): void => setIsPaused(false);
-      
       openSettingsMenu = (): void => setSettingsIsOpen(true);
       closeSettingsMenu = (): void => setSettingsIsOpen(false);
 
@@ -94,8 +86,6 @@ const GameScreen = (props: GameScreenProps) => {
 
          <SummonCrosshair />
       </>}
-
-      {isPaused && !isDead ? <PauseScreen /> : null}
 
       <TechTree />
       <TechInfocard />

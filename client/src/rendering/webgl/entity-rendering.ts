@@ -460,8 +460,8 @@ export function renderEntities(entities: ReadonlyArray<Entity>): void {
    gl.bindTexture(gl.TEXTURE_2D, textureAtlas.texture);
 
    gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-   // @Speed: only need to sub up to the max of previousnumrenderparts and numrenderparts
-   gl.bufferSubData(gl.ARRAY_BUFFER, 0, vertexData);
+   const length = Math.max(previousNumRenderParts, numRenderParts) * EntityRenderingVars.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT;
+   gl.bufferSubData(gl.ARRAY_BUFFER, 0, vertexData, 0, length);
 
    gl.drawElements(gl.TRIANGLES, numRenderParts * 6, gl.UNSIGNED_SHORT, 0);
 

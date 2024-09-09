@@ -744,12 +744,6 @@ abstract class Client {
       }
    }
 
-   public static sendAttackPacket(attackPacket: AttackPacket): void {
-      if (Game.isRunning && this.socket !== null) {
-         // this.socket.emit("attack_packet", attackPacket);
-      }
-   }
-
    public static sendHeldItemDropPacket(dropAmount: number, dropDirection: number): void {
       if (Game.isRunning && this.socket !== null) {
          // this.socket.emit("held_item_drop", dropAmount, dropDirection);
@@ -795,7 +789,6 @@ abstract class Client {
    }
 
    public static killPlayer(): void {
-      console.log("kill player");
       // Remove the player from the game
       Board.removeEntity(Player.instance!, true);
       Player.instance = null;

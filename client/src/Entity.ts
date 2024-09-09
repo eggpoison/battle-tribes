@@ -33,7 +33,7 @@ abstract class Entity {
 
    public readonly type: EntityType;
 
-   public renderPosition = new Point(-1, -1);
+   public renderPosition = new Point(0, 0);
 
    /** Stores all render parts attached to the object, sorted ascending based on zIndex. (So that render part with smallest zIndex is rendered first) */
    public readonly allRenderThings = new Array<RenderThing>();
@@ -41,13 +41,11 @@ abstract class Entity {
    /** Amount the game object's render parts will shake */
    public shakeAmount = 0;
 
+   // @Cleanup: some of this has to be superfluous.
    public readonly components = new Array<Component>();
    public readonly serverComponents = new Array<ServerComponent>();
    private readonly serverComponentsRecord: ServerComponentsType = {};
    private readonly clientComponents: ClientComponentsType = {};
-   // @Cleanup: make this an array of functions instead
-   private readonly tickableComponents = new Array<Component>();
-   private readonly updateableComponents = new Array<Component>();
 
    public readonly renderPartOverlayGroups = new Array<RenderPartOverlayGroup>();
 
@@ -161,26 +159,12 @@ abstract class Entity {
       this.serverComponents.push(component);
       // @Cleanup: Remove cast
       this.serverComponentsRecord[componentType] = component as any;
-
-      if (typeof component.tick !== "undefined") {
-         this.tickableComponents.push(component);
-      }
-      if (typeof component.update !== "undefined") {
-         this.updateableComponents.push(component);
-      }
    }
 
    protected addClientComponent<T extends ClientComponentType>(componentType: T, component: ClientComponentClass<T>): void {
       this.components.push(component);
       // @Cleanup: Remove cast
       this.clientComponents[componentType] = component as any;
-      
-      if (typeof component.tick !== "undefined") {
-         this.tickableComponents.push(component);
-      }
-      if (typeof component.update !== "undefined") {
-         this.updateableComponents.push(component);
-      }
    }
 
    public getServerComponent<T extends ServerComponentType>(componentType: T): ServerComponentClass<T> {
@@ -237,8 +221,6 @@ abstract class Entity {
          thing.parent.children.push(thing);
       }
       
-      Board.numVisibleRenderParts++;
-
       if (thingIsRenderPart(thing)) {
          Board.renderPartRecord[thing.id] = thing;
       }
@@ -256,7 +238,6 @@ abstract class Entity {
       
       removeLightsAttachedToRenderPart(renderPart.id);
 
-      Board.numVisibleRenderParts--;
       delete Board.renderPartRecord[renderPart.id];
       
       // Remove from the root array

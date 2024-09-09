@@ -4,13 +4,18 @@ import Entity from "../Entity";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 import { DamageBoxType, ServerComponentType } from "webgl-test-shared/dist/components";
 import CircularBox from "webgl-test-shared/dist/boxes/CircularBox";
-import { Point } from "webgl-test-shared/dist/utils";
+import { Point, randFloat } from "webgl-test-shared/dist/utils";
 import { BoxType } from "webgl-test-shared/dist/boxes/boxes";
 import RectangularBox from "webgl-test-shared/dist/boxes/RectangularBox";
 import { ClientDamageBoxWrapper, createDamageBox } from "../boxes";
 import { EntityID } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import Board from "../Board";
+import { InventoryName } from "webgl-test-shared/dist/items/items";
+import Player from "../entities/Player";
+import { InventoryUseComponentArray } from "./InventoryUseComponent";
+import { discombobulate } from "../player-input";
+import { createBlockParticle } from "../particles";
 
 interface DamageBoxCollisionInfo {
    readonly collidingEntity: EntityID;
@@ -61,27 +66,6 @@ class DamageBoxComponent extends ServerComponent {
       this.readInData(reader);
    }
 
-   public tick(): void {
-      for (let i = 0; i < this.damageBoxes.length; i++) {
-         const damageBox = this.damageBoxes[i];
-         
-         // const limbInfo = inventoryUseComponent.getLimbInfo(damageBox.associatedLimbInventoryName);
-
-         if (damageBox.type === DamageBoxType.attacking) {
-            const collisionInfo = getCollidingDamageBox(this.entity.id, damageBox);
-            
-            if (collisionInfo !== null && collisionInfo.collidingDamageBox.type === DamageBoxType.blocking && damageBox.collidingDamageBox !== collisionInfo.collidingDamageBox) {
-               console.warn("bad");
-
-               damageBox.collidingDamageBox = collisionInfo.collidingDamageBox;
-            } else {
-               damageBox.collidingDamageBox = null;
-            }
-            
-         }
-      }
-   }
-
    public padData(reader: PacketReader): void {
       const numCircular = reader.readNumber();
       reader.padOffset(8 * Float32Array.BYTES_PER_ELEMENT * numCircular);
@@ -103,11 +87,12 @@ class DamageBoxComponent extends ServerComponent {
          const localID = reader.readNumber();
          const radius = reader.readNumber();
          const damageBoxType = reader.readNumber() as DamageBoxType;
+         const associatedLimbInventoryName = reader.readNumber() as InventoryName;
 
          let damageBox = this.damageBoxesRecord[localID] as ClientDamageBoxWrapper<BoxType.circular> | undefined;
          if (typeof damageBox === "undefined") {
             const box = new CircularBox(new Point(offsetX, offsetY), 0, radius);
-            damageBox = createDamageBox(box, damageBoxType);
+            damageBox = createDamageBox(box, associatedLimbInventoryName, damageBoxType);
 
             this.damageBoxes.push(damageBox);
             this.damageBoxLocalIDs.push(localID);
@@ -136,11 +121,12 @@ class DamageBoxComponent extends ServerComponent {
          const height = reader.readNumber();
          const relativeRotation = reader.readNumber();
          const damageBoxType = reader.readNumber() as DamageBoxType;
+         const associatedLimbInventoryName = reader.readNumber() as InventoryName;
 
          let damageBox = this.damageBoxesRecord[localID] as ClientDamageBoxWrapper<BoxType.rectangular> | undefined;
          if (typeof damageBox === "undefined") {
             const box = new RectangularBox(new Point(offsetX, offsetY), width, height, relativeRotation);
-            damageBox = createDamageBox(box, damageBoxType);
+            damageBox = createDamageBox(box, associatedLimbInventoryName, damageBoxType);
 
             this.damageBoxes.push(damageBox);
             this.damageBoxLocalIDs.push(localID);
@@ -180,4 +166,42 @@ class DamageBoxComponent extends ServerComponent {
 
 export default DamageBoxComponent;
 
-export const DamageBoxComponentArray = new ComponentArray<DamageBoxComponent>(ComponentArrayType.server, ServerComponentType.damageBox, true, {});
+export const DamageBoxComponentArray = new ComponentArray<DamageBoxComponent>(ComponentArrayType.server, ServerComponentType.damageBox, true, {
+   onTick: onTick
+});
+
+const blockAttack = (damageBox: ClientDamageBoxWrapper): void => {
+   const inventoryUseComponent = InventoryUseComponentArray.getComponent(Player.instance!.id);
+   const limb = inventoryUseComponent.getLimbInfoByInventoryName(damageBox.associatedLimbInventoryName);
+   
+   // Pause the attack for a brief period
+   limb.currentActionPauseTicksRemaining = Math.floor(Settings.TPS / 15);
+   limb.currentActionRate = 0.4;
+
+   discombobulate(0.2);
+}
+
+function onTick(damageBoxComponent: DamageBoxComponent, entity: EntityID): void {
+   if (Player.instance === null || entity !== Player.instance.id) {
+      return;
+   }
+   
+   for (let i = 0; i < damageBoxComponent.damageBoxes.length; i++) {
+      const damageBox = damageBoxComponent.damageBoxes[i];
+      
+      // Check if the attacking hitbox is blocked
+      if (damageBox.type === DamageBoxType.attacking) {
+         const collisionInfo = getCollidingDamageBox(entity, damageBox);
+         
+         if (collisionInfo !== null && collisionInfo.collidingDamageBox.type === DamageBoxType.blocking) {
+            if (damageBox.collidingDamageBox !== collisionInfo.collidingDamageBox) {
+               console.warn("blocked!");
+               blockAttack(damageBox);
+            }
+            damageBox.collidingDamageBox = collisionInfo.collidingDamageBox;
+         } else {
+            damageBox.collidingDamageBox = null;
+         }
+      }
+   }
+}

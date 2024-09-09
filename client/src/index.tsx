@@ -9,7 +9,6 @@ import "./css/loading-screen.css";
 import "./css/game/chatbox.css";
 import "./css/game/menus/settings.css";
 import "./css/game/death-screen.css";
-import "./css/game/pause-screen.css";
 import "./css/game/health-bar.css";
 import "./css/game/inventories/inventory.css";
 import "./css/game/inventories/hotbar.css";

@@ -56,8 +56,6 @@ const PLAYER_SLOW_ACCELERATION = 500;
 /** Acceleration of the player for a brief period after being hit */
 const PLAYER_DISCOMBOBULATED_ACCELERATION = 300;
 
-const DISCOMBOBULATION_TIME_SECONDS = 0.2;
-
 export let rightMouseButtonIsPressed = false;
 export let leftMouseButtonIsPressed = false;
 
@@ -66,15 +64,30 @@ let _inventoryIsOpen = false;
 
 let currentRightClickEvent: MouseEvent | null = null;
 
+let discombobulationTimer = 0;
+
 export function getInstancePlayerAction(inventoryName: InventoryName): LimbAction {
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(Player.instance!.id);
    const limbInfo = inventoryUseComponent.getLimbInfoByInventoryName(inventoryName);
    return limbInfo.action;
 }
 
+/** Distract blind target. Now, discombobulate. */
+export function discombobulate(discombobulationTimeSeconds: number): void {
+   if (discombobulationTimeSeconds > discombobulationTimer) {
+      discombobulationTimer = discombobulationTimeSeconds;
+   }
+}
+
+// @Cleanup: bad name. mostly updating limbs
 export function updatePlayerItems(): void {
    if (Player.instance === null) {
       return;
+   }
+
+   discombobulationTimer -= Settings.I_TPS;
+   if (discombobulationTimer < 0) {
+      discombobulationTimer = 0;
    }
 
    // @Cleanup: Copynpaste for the action completion all over here. solution: make currentActionIsFinished method on Limb class
@@ -83,7 +96,11 @@ export function updatePlayerItems(): void {
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(Player.instance.id);
    const hotbarLimbInfo = inventoryUseComponent.getLimbInfoByInventoryName(InventoryName.hotbar);
 
-   hotbarLimbInfo.currentActionElapsedTicks++;
+   if (hotbarLimbInfo.currentActionPauseTicksRemaining > 0) {
+      hotbarLimbInfo.currentActionPauseTicksRemaining--;
+   } else {
+      hotbarLimbInfo.currentActionElapsedTicks += hotbarLimbInfo.currentActionRate;
+   }
    
    // If finished winding attack, switch to doing attack
    if (hotbarLimbInfo.action === LimbAction.windAttack && getElapsedTimeInSeconds(hotbarLimbInfo.currentActionElapsedTicks) * Settings.TPS >= hotbarLimbInfo.currentActionDurationTicks) {
@@ -116,9 +133,10 @@ export function updatePlayerItems(): void {
       hotbarLimbInfo.action = LimbAction.none;
    }
 
+   // @Temporary
    // @Incomplete: Double-check there isn't a tick immediately after depressing the button where this hasn't registered in the limb yet
    // If blocking but not right clicking, return to rest
-   if (hotbarLimbInfo.action === LimbAction.block && !rightMouseButtonIsPressed && getElapsedTimeInSeconds(hotbarLimbInfo.currentActionElapsedTicks) * Settings.TPS >= hotbarLimbInfo.currentActionDurationTicks) {
+   if (1+1===1 && hotbarLimbInfo.action === LimbAction.block && !rightMouseButtonIsPressed && getElapsedTimeInSeconds(hotbarLimbInfo.currentActionElapsedTicks) * Settings.TPS >= hotbarLimbInfo.currentActionDurationTicks) {
       // @Copynpaste
       const selectedItemSlot = hotbarLimbInfo.selectedItemSlot;
       const selectedItem = definiteGameState.hotbar.getItem(selectedItemSlot)!;
@@ -138,6 +156,7 @@ export function updatePlayerItems(): void {
       hotbarLimbInfo.action = LimbAction.none;
    }
 
+   // @Cleanup: really different from the rest of this function
    // Tick items
    for (let i = 0; i < definiteGameState.hotbar.items.length; i++) {
       const item = definiteGameState.hotbar.items[i];
@@ -160,6 +179,7 @@ const swing = (inventory: Inventory): void => {
    limbInfo.action = LimbAction.windAttack;
    limbInfo.currentActionElapsedTicks = 0;
    limbInfo.currentActionDurationTicks = attackInfo.attackTimings.windupTimeTicks;
+   limbInfo.currentActionRate = 1;
 }
 
 // @Cleanup: unused?
@@ -569,8 +589,7 @@ export function updatePlayerMovement(): void {
       }
 
       // If discombobulated, limit the acceleration to the discombobulated acceleration
-      const healthComponent = HealthComponentArray.getComponent(Player.instance.id);
-      if (healthComponent.secondsSinceLastHit <= DISCOMBOBULATION_TIME_SECONDS && acceleration > PLAYER_DISCOMBOBULATED_ACCELERATION) {
+      if (discombobulationTimer > 0 && acceleration > PLAYER_DISCOMBOBULATED_ACCELERATION) {
          acceleration = PLAYER_DISCOMBOBULATED_ACCELERATION;
       }
 
@@ -654,6 +673,7 @@ const itemRightClickDown = (item: Item, isOffhand: boolean, itemSlot: number): v
          limbInfo.action = LimbAction.block;
          limbInfo.currentActionElapsedTicks = 0;
          limbInfo.currentActionDurationTicks = attackInfo.attackTimings.blockTimeTicks;
+         limbInfo.currentActionRate = 1;
 
          sendItemUsePacket();
          return;

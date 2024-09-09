@@ -1,8 +1,6 @@
 import { imageIsLoaded } from "../utils";
 
-export interface TextureAtlasInfo {
-   /** The texture atlas */
-   readonly texture: WebGLTexture;
+interface BaseTextureAtlasInfo {
    readonly atlasSize: number;
    /** The widths of all inputted textures, in the original order */
    readonly textureWidths: Array<number>;
@@ -12,6 +10,15 @@ export interface TextureAtlasInfo {
    readonly textureSlotIndexes: Array<number>;
    /** Number of textures inside the atlas */
    readonly numTextures: number;
+}
+
+export interface TextureAtlasGenerationInfo extends BaseTextureAtlasInfo {
+   readonly atlasElement: HTMLCanvasElement;
+}
+
+export interface TextureAtlasInfo extends BaseTextureAtlasInfo {
+   /** The texture atlas */
+   readonly texture: WebGLTexture;
 }
 
 export const ATLAS_SLOT_SIZE = 16;
@@ -66,7 +73,7 @@ const expand = (atlasSize: number): void => {
    textureSlotIndexes = newIndexes;
 }
 
-export async function stitchTextureAtlas(textureSources: ReadonlyArray<string>, gl: WebGL2RenderingContext): Promise<TextureAtlasInfo> {
+export async function generateTextureAtlas(textureSources: ReadonlyArray<string>): Promise<TextureAtlasGenerationInfo> {
    return new Promise(async (resolve) => {
       unavailableSlots = [];
       textureSlotIndexes = [];
@@ -132,25 +139,36 @@ export async function stitchTextureAtlas(textureSources: ReadonlyArray<string>, 
          const y = (atlasSize - Math.floor(slotIndex / atlasSize)) * ATLAS_SLOT_SIZE - height;
          context.drawImage(image, x, y, width, height);
       }
-   
-      // Make atlas image into texture
-      const texture = gl.createTexture()!;
-      gl.bindTexture(gl.TEXTURE_2D, texture);
-      // Set parameters
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, atlasElement);
-      gl.bindTexture(gl.TEXTURE_2D, null);
 
       resolve({
-         texture: texture,
          atlasSize: atlasSize,
          textureWidths: textureWidths,
          textureHeights: textureHeights,
          textureSlotIndexes: textureSlotIndexes,
-         numTextures: textureSources.length
+         numTextures: textureSources.length,
+         atlasElement: atlasElement
       });
    });
+}
+
+export function stitchTextureAtlas(generationInfo: TextureAtlasGenerationInfo, gl: WebGL2RenderingContext): TextureAtlasInfo {
+   // Make atlas image into texture
+   const texture = gl.createTexture()!;
+   gl.bindTexture(gl.TEXTURE_2D, texture);
+   // Set parameters
+   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, generationInfo.atlasElement);
+   gl.bindTexture(gl.TEXTURE_2D, null);
+
+   return {
+      texture: texture,
+      atlasSize: generationInfo.atlasSize,
+      textureWidths: generationInfo.textureWidths,
+      textureHeights: generationInfo.textureHeights,
+      textureSlotIndexes: generationInfo.textureSlotIndexes,
+      numTextures: generationInfo.numTextures
+   };
 }

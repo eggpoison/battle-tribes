@@ -5,8 +5,10 @@ export const enum PacketType {
    // -----------------
    initialPlayerData,
    activate,
+   // @Cleanup: unused?
    deactivate,
    playerData,
+   // @Cleanup: unused?
    syncRequest,
    attack,
    respawn,
@@ -18,6 +20,7 @@ export const enum PacketType {
    // -----------------
    initialGameData,
    gameData,
+   // @Cleanup: unused?
    syncData,
    sync,
    respawnData
@@ -38,6 +41,7 @@ abstract class BasePacketObject {
    }
 }
 
+// @Hack: remove once packets are tightly packed
 export function alignLengthBytes(lengthBytes: number): number {
    if (lengthBytes % 4 !== 0) {
       return lengthBytes + 4 - lengthBytes % 4;
@@ -45,7 +49,7 @@ export function alignLengthBytes(lengthBytes: number): number {
    return lengthBytes;
 }
 
-// @Cleanup: change to 'write'
+// @Cleanup: change 'add' to 'write'
 export class Packet extends BasePacketObject {
    public readonly buffer: ArrayBuffer;
    private readonly floatView: Float32Array;

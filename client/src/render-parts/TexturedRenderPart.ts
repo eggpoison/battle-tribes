@@ -5,8 +5,6 @@ import BaseRenderPart from "./RenderPart";
 class TexturedRenderPart extends BaseRenderPart {
    public textureArrayIndex: number;
 
-   public flipX = false;
-
    constructor(parent: RenderThing | null, zIndex: number, rotation: number, textureArrayIndex: number) {
       super(parent, zIndex, rotation);
       

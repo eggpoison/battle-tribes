@@ -46,9 +46,7 @@ export class HealthComponent {
 
    constructor(params: HealthComponentParams) {
       this.maxHealth = params.maxHealth;
-      // @Temporary
-      // this.health = params.maxHealth;
-      this.health = Math.floor(params.maxHealth / 2);
+      this.health = params.maxHealth;
    }
 }
 

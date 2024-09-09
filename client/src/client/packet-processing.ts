@@ -575,6 +575,11 @@ export function processGameDataPacket(reader: PacketReader): void {
 
    const playerHealth = reader.readNumber();
 
+   // We call the kill function here as the if the player is dead then they won't be in the update array.
+   if (playerHealth === 0 && Player.instance !== null) {
+      Client.killPlayer();
+   }
+
    const hasDebugData = reader.readBoolean();
    reader.padOffset(3);
    

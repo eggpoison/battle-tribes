@@ -2,7 +2,7 @@ import CLIENT_ITEM_INFO_RECORD from "../client-item-info";
 import { BLUEPRINT_PROGRESS_TEXTURE_SOURCES } from "../entities/BlueprintEntity";
 import { getTechTreeGL } from "../rendering/webgl/tech-tree-rendering";
 import { gl } from "../webgl";
-import { TextureAtlasInfo, stitchTextureAtlas } from "./texture-atlas-stitching";
+import { TextureAtlasInfo, generateTextureAtlas, stitchTextureAtlas } from "./texture-atlas-stitching";
 
 const TEXTURE_SOURCES: Array<string> = [
    "entities/cow/cow-body-1.png",
@@ -350,8 +350,10 @@ let ENTITY_TEXTURE_ATLAS: TextureAtlasInfo;
 let TECH_TREE_ENTITY_TEXTURE_ATLAS: TextureAtlasInfo;
 
 export async function createTextureAtlases(): Promise<void> {
-   ENTITY_TEXTURE_ATLAS = await stitchTextureAtlas(TEXTURE_SOURCES, gl)
-   TECH_TREE_ENTITY_TEXTURE_ATLAS = await stitchTextureAtlas(TEXTURE_SOURCES, getTechTreeGL());
+   const entityTextureAtlasGenerationInfo = await generateTextureAtlas(TEXTURE_SOURCES);
+   
+   ENTITY_TEXTURE_ATLAS = stitchTextureAtlas(entityTextureAtlasGenerationInfo, gl)
+   TECH_TREE_ENTITY_TEXTURE_ATLAS = stitchTextureAtlas(entityTextureAtlasGenerationInfo, getTechTreeGL());
 }
 
 export function getTextureArrayIndex(textureSource: string): number {

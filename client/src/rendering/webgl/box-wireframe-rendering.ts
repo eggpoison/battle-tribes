@@ -216,10 +216,11 @@ const renderVertices = (vertices: Array<number>): void => {
 export function renderHitboxes(): void {
    const vertices = new Array<number>();
    
-   for (const entity of Board.entities) {
-      const transformComponent = entity.getServerComponent(ServerComponentType.transform);
+   for (let i = 0; i < TransformComponentArray.entities.length; i++) {
+      const entity = TransformComponentArray.entities[i];
+      const transformComponent = TransformComponentArray.components[i];
       
-      const adjustment = calculateBoxAdjustment(entity.id);
+      const adjustment = calculateBoxAdjustment(entity);
 
       for (const hitbox of transformComponent.hitboxes) {
          let r: number;

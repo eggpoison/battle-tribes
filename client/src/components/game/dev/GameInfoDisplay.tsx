@@ -4,6 +4,8 @@ import OPTIONS from "../../../options";
 import Board from "../../../Board";
 import Camera from "../../../Camera";
 import Client from "../../../client/Client";
+import { TransformComponentArray } from "../../../entity-components/TransformComponent";
+import Game from "../../../Game";
 
 // @Cleanup: shouldn't be able to interact with the info display, all the interactable stuff should be in tabs
 
@@ -166,6 +168,7 @@ const GameInfoDisplay = () => {
       <p>Time: {currentTime.toFixed(2)}</p>
       <p>Ticks: {roundNum(ticks, 2)}</p>
       <p>Server TPS: {tps}</p>
+      <p>Num queued packets: {Game.queuedPackets.length}</p>
 
       <button onClick={toggleSimulation}>{isPaused ? "Resume" : "Pause"} Simulation</button>
 
@@ -209,7 +212,7 @@ const GameInfoDisplay = () => {
       </ul>
 
       <ul className="area">
-         <li>{Board.entities.size} Entities</li>
+         <li>{TransformComponentArray.entities.length} Entities</li>
          <li>{Board.lowMonocolourParticles.length + Board.lowTexturedParticles.length + Board.highMonocolourParticles.length + Board.highTexturedParticles.length} Particles</li>
       </ul>
 

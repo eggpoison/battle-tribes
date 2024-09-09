@@ -6,6 +6,8 @@ import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { updateHealthBar } from "../components/game/HealthBar";
 import Client from "../client/Client";
+import Player from "../entities/Player";
+import { discombobulate } from "../player-input";
 
 /** Amount of seconds that the hit flash occurs for */
 const ATTACK_HIT_FLASH_DURATION = 0.4;
@@ -28,6 +30,11 @@ class HealthComponent extends ServerComponent {
       if (isDamagingHit) {
          this.secondsSinceLastHit = 0;
       }
+
+      // @Hack
+      if (this.entity === Player.instance) {
+         discombobulate(0.2);
+      }
    }
    
    public padData(reader: PacketReader): void {
@@ -43,11 +50,7 @@ class HealthComponent extends ServerComponent {
       const health = reader.readNumber();
       reader.padOffset(Float32Array.BYTES_PER_ELEMENT);
 
-      if (health > 0) {
-         updateHealthBar(health);
-      } else {
-         Client.killPlayer();
-      }
+      updateHealthBar(health);
    }
 }
 

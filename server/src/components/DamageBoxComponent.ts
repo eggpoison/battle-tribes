@@ -96,7 +96,7 @@ function onTick(damageBoxComponent: DamageBoxComponent, entity: EntityID): void 
    
    for (let i = 0; i < damageBoxComponent.damageBoxes.length; i++) {
       const damageBox = damageBoxComponent.damageBoxes[i];
-      if (!damageBox.isActive) {
+      if (!damageBox.isActive || damageBox.isRemoved) {
          continue;
       }
       
@@ -139,9 +139,9 @@ function getDataLength(entity: EntityID): number {
       }
       
       if (boxIsCircular(damageBox.box)) {
-         lengthBytes += 8 * Float32Array.BYTES_PER_ELEMENT;
+         lengthBytes += 9 * Float32Array.BYTES_PER_ELEMENT;
       } else {
-         lengthBytes += 10 * Float32Array.BYTES_PER_ELEMENT;
+         lengthBytes += 11 * Float32Array.BYTES_PER_ELEMENT;
       }
    }
 
@@ -171,7 +171,7 @@ function addDataToPacket(packet: Packet, entity: EntityID): void {
    packet.addNumber(numCircularBoxes);
    for (let i = 0; i < damageBoxComponent.damageBoxes.length; i++) {
       const damageBox = damageBoxComponent.damageBoxes[i];
-      if (!damageBox.isActive) {
+      if (!damageBox.isActive || damageBox.isRemoved) {
          continue;
       }
       
@@ -191,6 +191,7 @@ function addDataToPacket(packet: Packet, entity: EntityID): void {
       packet.addNumber(localID);
       packet.addNumber(box.radius);
       packet.addNumber(damageBox.type);
+      packet.addNumber(damageBox.associatedLimbInventoryName);
    }
 
    // Rectangular
@@ -219,5 +220,6 @@ function addDataToPacket(packet: Packet, entity: EntityID): void {
       packet.addNumber(box.height);
       packet.addNumber(box.relativeRotation);
       packet.addNumber(damageBox.type);
+      packet.addNumber(damageBox.associatedLimbInventoryName);
    }
 }

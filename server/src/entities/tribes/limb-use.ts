@@ -222,6 +222,7 @@ export function beginSwing(attackingEntity: EntityID, itemSlot: number, inventor
    limbInfo.action = LimbAction.windAttack;
    limbInfo.currentActionElapsedTicks = 0;
    limbInfo.currentActionDurationTicks = heldItemAttackInfo.attackTimings.windupTimeTicks;
+   limbInfo.currentActionRate = 1;
 
    // Swing was successful
    return true;
@@ -276,8 +277,6 @@ export function calculateAttackTarget(tribeMember: EntityID, targetEntities: Rea
       }
    }
    
-   if (closestEntity === null) return null;
-
    return closestEntity;
 }
 

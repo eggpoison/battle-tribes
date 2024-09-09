@@ -3,7 +3,6 @@ import { Settings } from "webgl-test-shared/dist/settings";
 import { TribeType } from "webgl-test-shared/dist/tribes";
 import { Point, randInt } from "webgl-test-shared/dist/utils";
 import { PacketReader, PacketType } from "webgl-test-shared/dist/packets";
-import express from "express";
 import WebSocket, { Server } from "ws";
 import Board from "../Board";
 import { runSpawnAttempt, spawnInitialEntities } from "../entity-spawning";
@@ -144,7 +143,8 @@ class GameServer {
          let playerClient: PlayerClient;
          
          socket.on("message", (message: Buffer) => {
-            const reader = new PacketReader(message.buffer, 6);
+            // 6 bytes are added on for some reason
+            const reader = new PacketReader(message.buffer, message.byteOffset);
             const packetType = reader.readNumber() as PacketType;
 
             switch (packetType) {
@@ -236,9 +236,7 @@ class GameServer {
       
       if (typeof SERVER.tickInterval === "undefined") {
          console.log("Server started on port " + Settings.SERVER_PORT);
-         while (SERVER.isRunning) {
-            await SERVER.tick();
-         }
+         setInterval(SERVER.tick, 1000 / Settings.TPS);
       }
    }
 
@@ -247,7 +245,7 @@ class GameServer {
       Board.pushJoinBuffer();
       Board.destroyFlaggedEntities();
 
-      if (this.isSimulating) {
+      if (SERVER.isSimulating) {
          Board.updateTribes();
          
          updateGrassBlockers();
@@ -264,7 +262,7 @@ class GameServer {
          Board.updateTribes();
       }
 
-      await this.sendGameDataPackets();
+      SERVER.sendGameDataPackets();
 
       // Update server ticks and time
       // This is done at the end of the tick so that information sent by players is associated with the next tick to run
@@ -281,97 +279,76 @@ class GameServer {
 
    // @Cleanup: maybe move this function to player-clients?
    /** Send data about the server to all players */
-   public async sendGameDataPackets(): Promise<void> {
+   public sendGameDataPackets(): void {
       if (this.server === null) return;
       
-      return new Promise(async resolve => {
-         const currentTime = performance.now();
-         while (this.nextTickTime < currentTime) {
-            this.nextTickTime += 1000 * Settings.I_TPS;
+      // @Cleanup: should this all be in this file?
+      
+      const playerClients = getPlayerClients();
+      for (let i = 0; i < playerClients.length; i++) {
+         const playerClient = playerClients[i];
+         if (!playerClient.clientIsActive) {
+            continue;
+         }
+
+         // Update player client position if player is alive
+         if (Board.hasEntity(playerClient.instance)) {
+            const transformComponent = TransformComponentArray.getComponent(playerClient.instance);
+            playerClient.lastPlayerPositionX = transformComponent.position.x;
+            playerClient.lastPlayerPositionY = transformComponent.position.y;
+         }
+
+         // @Incomplete?
+         // @Speed @Memory
+         const extendedVisibleChunkBounds: VisibleChunkBounds = [
+            Math.max(playerClient.visibleChunkBounds[0] - 1, 0),
+            Math.min(playerClient.visibleChunkBounds[1] + 1, Settings.BOARD_SIZE - 1),
+            Math.max(playerClient.visibleChunkBounds[2] - 1, 0),
+            Math.min(playerClient.visibleChunkBounds[3] + 1, Settings.BOARD_SIZE - 1)
+         ];
+      
+         const visibleEntities = getPlayerVisibleEntities(playerClient);
+         
+         const entitiesToSend = new Set<EntityID>();
+
+         // Send all newly visible entities
+         // @Speed
+         for (const visibleEntity of visibleEntities) {
+            if (!playerClient.visibleEntities.has(visibleEntity)) {
+               entitiesToSend.add(visibleEntity);
+            }
+         }
+
+         // Send dirty entities
+         for (const entity of playerClient.visibleDirtiedEntities) {
+            // Sometimes entities are simultaneously removed from the board and on the visible dirtied list, this catches that
+            if (Board.hasEntity(entity)) {
+               entitiesToSend.add(entity);
+            }
+         }
+
+         // Always send the player's data (if alive)
+         if (Board.hasEntity(playerClient.instance)) {
+            entitiesToSend.add(playerClient.instance);
          }
          
-         // @Speed: use while loop instead maybe?
-         await (() => {
-            return new Promise<void>(resolve => {
-               // console.log(currentTime, this.nextTickTime, OPTIONS.warp ? 2 : this.nextTickTime - currentTime);
-               setTimeout(() => {
-                  resolve();
-               }, OPTIONS.warp ? 2 : this.nextTickTime - currentTime);
-            })
-         })();
+         // Send the game data to the player
+         const gameDataPacket = createGameDataPacket(playerClient, entitiesToSend);
+         playerClient.socket.send(gameDataPacket);
 
-         // setTimeout(() => {
-         // @Cleanup: should this all be in this file?
-            const playerClients = getPlayerClients();
-            for (let i = 0; i < playerClients.length; i++) {
-               const playerClient = playerClients[i];
-               if (!playerClient.clientIsActive) {
-                  continue;
-               }
+         playerClient.visibleEntities = visibleEntities;
 
-               // Update player client position if player is alive
-               if (Board.hasEntity(playerClient.instance)) {
-                  const transformComponent = TransformComponentArray.getComponent(playerClient.instance);
-                  playerClient.lastPlayerPositionX = transformComponent.position.x;
-                  playerClient.lastPlayerPositionY = transformComponent.position.y;
-               }
+         // @Cleanup: should these be here?
+         playerClient.visibleHits = [];
+         playerClient.playerKnockbacks = [];
+         playerClient.heals = [];
+         playerClient.orbCompletes = [];
+         playerClient.hasPickedUpItem = false;
+         playerClient.entityTickEvents = [];
+         playerClient.visibleDirtiedEntities = [];
+      }
 
-               // @Incomplete?
-               // @Speed @Memory
-               const extendedVisibleChunkBounds: VisibleChunkBounds = [
-                  Math.max(playerClient.visibleChunkBounds[0] - 1, 0),
-                  Math.min(playerClient.visibleChunkBounds[1] + 1, Settings.BOARD_SIZE - 1),
-                  Math.max(playerClient.visibleChunkBounds[2] - 1, 0),
-                  Math.min(playerClient.visibleChunkBounds[3] + 1, Settings.BOARD_SIZE - 1)
-               ];
-            
-               const visibleEntities = getPlayerVisibleEntities(playerClient);
-               
-               const entitiesToSend = new Set<EntityID>();
-
-               // Send all newly visible entities
-               // @Speed
-               for (const visibleEntity of visibleEntities) {
-                  if (!playerClient.visibleEntities.has(visibleEntity)) {
-                     entitiesToSend.add(visibleEntity);
-                  }
-               }
-
-               // Send dirty entities
-               for (const entity of playerClient.visibleDirtiedEntities) {
-                  // Sometimes entities are simultaneously removed from the board and on the visible dirtied list, this catches that
-                  if (Board.hasEntity(entity)) {
-                     entitiesToSend.add(entity);
-                  }
-               }
-
-               // Always send the player's data (if alive)
-               if (Board.hasEntity(playerClient.instance)) {
-                  entitiesToSend.add(playerClient.instance);
-               }
-               
-               // Send the game data to the player
-               const gameDataPacket = createGameDataPacket(playerClient, entitiesToSend);
-               playerClient.socket.send(gameDataPacket);
-
-               playerClient.visibleEntities = visibleEntities;
-   
-               // @Cleanup: should these be here?
-               playerClient.visibleHits = [];
-               playerClient.playerKnockbacks = [];
-               playerClient.heals = [];
-               playerClient.orbCompletes = [];
-               playerClient.hasPickedUpItem = false;
-               playerClient.entityTickEvents = [];
-               playerClient.visibleDirtiedEntities = [];
-            }
-
-            // console.log(performance.now());
-            resetDirtyEntities();
-
-            resolve();
-         // }, this.nextTickTime - currentTime);
-      });
+      resetDirtyEntities();
    }
 }
 

@@ -237,6 +237,9 @@ function addDataToPacket(packet: Packet, entity: EntityID): void {
 }
 
 export function awardTitle(tribesman: EntityID, title: TribesmanTitle): void {
+   // @Temporary
+   if (1+1===2)return;
+   
    const tribeMemberComponent = TribeMemberComponentArray.getComponent(tribesman);
    
    const titleTier = TRIBESMAN_TITLE_RECORD[title].tier;

@@ -13,7 +13,7 @@ import { calculateCursorWorldPositionX, calculateCursorWorldPositionY, cursorX, 
 import { refreshDebugInfo, setDebugInfoDebugData } from "./components/game/dev/DebugInfo";
 import { createWebGLContext, gl, resizeCanvas } from "./webgl";
 import { loadTextures } from "./textures";
-import { hidePauseScreen, showPauseScreen, toggleSettingsMenu } from "./components/game/GameScreen";
+import { toggleSettingsMenu } from "./components/game/GameScreen";
 import { App_setGameInteractState, getGameState } from "./components/App";
 import { clearPressedKeys } from "./keyboard-input";
 import { createHitboxShaders, renderDamageBoxes, renderHitboxes } from "./rendering/webgl/box-wireframe-rendering";
@@ -62,7 +62,7 @@ import { Mutable } from "webgl-test-shared/dist/utils";
 import { renderNextRenderables, resetRenderOrder } from "./rendering/render-loop";
 import { InitialGameDataPacket, processGameDataPacket } from "./client/packet-processing";
 import { PacketReader } from "webgl-test-shared/dist/packets";
-import { getMaxRenderHeightForRenderLayer, MAX_RENDER_LAYER, RenderLayer } from "./render-layers";
+import { MAX_RENDER_LAYER, RenderLayer } from "./render-layers";
 import { updateEntity } from "./entity-components/ComponentArray";
 import { resolveEntityCollisions, resolvePlayerCollisions } from "./collision";
 
@@ -91,13 +91,6 @@ const createEventListeners = (): void => {
       if (e.key === "Escape" && getGameState() === "game") {
          toggleSettingsMenu();
       }
-   });
-   
-   window.addEventListener("focus", () => {
-      Game.unpause();
-   });
-   window.addEventListener("blur", () => {
-      Game.pause();
    });
 
    window.addEventListener("mousemove", handleMouseMovement);
@@ -156,8 +149,9 @@ const main = (currentTime: number): void => {
          }
          
          // @Hack: For some reason, if the player sends this packet 60 times a second the server begins to mess up how it receives other packet types. Weird.
-         // 10 times a second looks flickery
-         if (++tempPacketSendCounter % 3 === 0) Client.sendPlayerDataPacket();
+         // @Incomplete: This still happens even at low send rates - investigate.
+         // if (++tempPacketSendCounter % 3 === 0) Client.sendPlayerDataPacket();
+         Client.sendPlayerDataPacket();
 
          Game.lag -= 1000 / Settings.TPS;
       }
@@ -258,25 +252,6 @@ abstract class Game {
       this.isRunning = false;
    }
 
-   public static pause(): void {
-      this.isPaused = true;
-      showPauseScreen();
-
-      this.isSynced = false;
-
-      clearPressedKeys();
-
-      Client.sendDeactivatePacket();
-   }
-   
-   public static unpause(): void {
-      this.isPaused = false;
-      hidePauseScreen();
-
-      Client.sendActivatePacket();
-      Client.sendSyncRequestPacket();
-   }
-
    public static getIsPaused(): boolean {
       return this.isPaused;
    }
@@ -312,6 +287,7 @@ abstract class Game {
             
             // We load the textures before we create the shaders because some shader initialisations stitch textures together
             await loadTextures();
+            // @Speed
             await createTextureAtlases();
             
             // Create shaders
@@ -340,12 +316,12 @@ abstract class Game {
             createWallConnectionShaders();
             createHealingBeamShaders();
             createGrassBlockerShaders();
-
-            await setupAudio();
-
             if (isDev()) {
                setupFrameGraph();
             }
+
+            // @Speed
+            await setupAudio();
 
             createRenderChunks(initialGameDataPacket.waterRocks, initialGameDataPacket.riverSteppingStones);
 

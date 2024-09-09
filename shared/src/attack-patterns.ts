@@ -133,10 +133,10 @@ export const DEFAULT_ITEM_DAMAGE_BOX_INFO: LimbHeldItemDamageBoxInfo = {
 
 export const SWORD_ITEM_DAMAGE_BOX_INFO: LimbHeldItemDamageBoxInfo = {
    width: 20,
-   height: 64,
+   height: 72,
    rotation: Math.PI / 4, // 45 degrees to the right
-   offsetX: 24,
-   offsetY: 24,
+   offsetX: 28,
+   offsetY: 28,
    showLargeTexture: true
 };
 

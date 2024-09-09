@@ -10,7 +10,7 @@ import CLIENT_ITEM_INFO_RECORD from "../client-item-info";
 import Particle from "../Particle";
 import { ParticleColour, ParticleRenderLayer, addMonocolourParticleToBufferContainer } from "../rendering/webgl/particle-rendering";
 import { animateLimb, createCraftingAnimationParticles, createMedicineAnimationParticles, generateRandomLimbPosition, updateBandageRenderPart, updateCustomItemRenderPart } from "../limb-animations";
-import { createDeepFrostHeartBloodParticles } from "../particles";
+import { createBlockParticle, createDeepFrostHeartBloodParticles } from "../particles";
 import { definiteGameState } from "../game-state/game-states";
 import { InventoryName, ItemType, ITEM_TYPE_RECORD, Item, ITEM_INFO_RECORD, itemInfoIsUtility, itemInfoIsBow, BowItemInfo, itemInfoIsTool, getItemAttackInfo } from "webgl-test-shared/dist/items/items";
 import { RenderPart } from "../render-parts/render-parts";
@@ -20,6 +20,7 @@ import { Hotbar_updateRightThrownBattleaxeItemID } from "../components/game/inve
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 import { BLOCKING_LIMB_STATE, LimbState, SPEAR_CHARGED_LIMB_STATE, TRIBESMAN_RESTING_LIMB_STATE } from "webgl-test-shared/dist/attack-patterns";
 import RenderAttachPoint from "../render-parts/RenderAttachPoint";
+import { playSound } from "../sound";
 
 export interface LimbInfo {
    selectedItemSlot: number;
@@ -42,6 +43,8 @@ export interface LimbInfo {
    lastAttackCooldown: number;
    currentActionElapsedTicks: number;
    currentActionDurationTicks: number;
+   currentActionPauseTicksRemaining: number;
+   currentActionRate: number;
 
    animationStartOffset: Point;
    animationEndOffset: Point;
@@ -306,6 +309,11 @@ class InventoryUseComponent extends ServerComponent{
          const lastAttackCooldown = reader.readNumber();
          const currentActionElapsedTicks = reader.readNumber();
          const currentActionDurationTicks = reader.readNumber();
+         const currentActionPauseTicksRemaining = reader.readNumber();
+         const currentActionRate = reader.readNumber();
+         const lastBlockTick = reader.readNumber();
+         const blockPositionX = reader.readNumber();
+         const blockPositionY = reader.readNumber();
 
          const limbInfo: LimbInfo = {
             selectedItemSlot: selectedItemSlot,
@@ -327,6 +335,8 @@ class InventoryUseComponent extends ServerComponent{
             lastAttackWindupTicks: 0,
             currentActionElapsedTicks: currentActionElapsedTicks,
             currentActionDurationTicks: currentActionDurationTicks,
+            currentActionPauseTicksRemaining: currentActionPauseTicksRemaining,
+            currentActionRate: currentActionRate,
             animationStartOffset: new Point(0, 0),
             animationEndOffset: new Point(0, 0),
             animationDurationTicks: 0,
@@ -367,7 +377,7 @@ class InventoryUseComponent extends ServerComponent{
          // @Speed
          readCrossbowLoadProgressRecord(reader);
 
-         reader.padOffset(13 * Float32Array.BYTES_PER_ELEMENT);
+         reader.padOffset(18 * Float32Array.BYTES_PER_ELEMENT);
       }
    }
    
@@ -410,6 +420,11 @@ class InventoryUseComponent extends ServerComponent{
          const lastAttackCooldown = reader.readNumber();
          const currentActionElapsedTicks = reader.readNumber();
          const currentActionDurationTicks = reader.readNumber();
+         const currentActionPauseTicksRemaining = reader.readNumber();
+         const currentActionRate = reader.readNumber();
+         const lastBlockTick = reader.readNumber();
+         const blockPositionX = reader.readNumber();
+         const blockPositionY = reader.readNumber();
 
          limbInfo.bowCooldownTicks = bowCooldownTicks;
          limbInfo.selectedItemSlot = selectedItemSlot;
@@ -429,6 +444,8 @@ class InventoryUseComponent extends ServerComponent{
          limbInfo.lastAttackCooldown = lastAttackCooldown;
          limbInfo.currentActionElapsedTicks = currentActionElapsedTicks;
          limbInfo.currentActionDurationTicks = currentActionDurationTicks;
+         limbInfo.currentActionPauseTicksRemaining = currentActionPauseTicksRemaining;
+         limbInfo.currentActionRate = currentActionRate;
 
          // @Hack
          // Initial animation start position
@@ -444,6 +461,10 @@ class InventoryUseComponent extends ServerComponent{
             }
          } else {
             limbInfo.animationStartOffset.x = -1;
+         }
+
+         if (lastBlockTick === Board.serverTicks) {
+            this.playBlockEffects(blockPositionX, blockPositionY);
          }
          
          updateLimb(this, i, limbInfo);
@@ -470,12 +491,33 @@ class InventoryUseComponent extends ServerComponent{
 
          reader.padOffset(9 * Float32Array.BYTES_PER_ELEMENT);
          const thrownBattleaxeItemID = reader.readNumber();
-         reader.padOffset(3 * Float32Array.BYTES_PER_ELEMENT);
+         reader.padOffset(5 * Float32Array.BYTES_PER_ELEMENT);
+         // @Copynpaste
+         const lastBlockTick = reader.readNumber();
+         const blockPositionX = reader.readNumber();
+         const blockPositionY = reader.readNumber();
+
+         // @Copynpaste
+         if (lastBlockTick === Board.serverTicks) {
+            this.playBlockEffects(blockPositionX, blockPositionY);
+         }
 
          if (limbInfo.inventoryName === InventoryName.hotbar) {
             limbInfo.thrownBattleaxeItemID = thrownBattleaxeItemID;
             Hotbar_updateRightThrownBattleaxeItemID(thrownBattleaxeItemID);
          }
+      }
+   }
+
+   private playBlockEffects(x: number, y: number): void {
+      playSound("block.mp3", 0.7, 1, new Point(x, y));
+      
+      for (let i = 0; i < 8; i++) {
+         const offsetMagnitude = randFloat(0, 18);
+         const offsetDirection = 2 * Math.PI * Math.random();
+         const particleX = x + offsetMagnitude * Math.sin(offsetDirection);
+         const particleY = y + offsetMagnitude * Math.cos(offsetDirection);
+         createBlockParticle(particleX, particleY);
       }
    }
 
@@ -579,6 +621,7 @@ function onTick(inventoryUseComponent: InventoryUseComponent): void {
    updateCustomItemRenderPart(inventoryUseComponent.entity);
 }
 
+// @Cleanup: unused
 const updateActiveItemRenderPart = (inventoryUseComponent: InventoryUseComponent, limbIdx: number, limbInfo: LimbInfo, activeItem: Item | null): void => {
    if (activeItem === null) {
       if (inventoryUseComponent.activeItemRenderParts.hasOwnProperty(limbIdx)) {

@@ -45,9 +45,6 @@ abstract class Board {
    public static grassInfo: Record<number, Record<number, GrassTileInfo>>;
    private static riverFlowDirections: RiverFlowDirectionsRecord;
 
-   public static numVisibleRenderParts = 0;
-
-   public static readonly entities = new Set<Entity>();
    public static readonly entityRecord: Partial<Record<number, Entity>> = {};
 
    public static readonly renderPartRecord: Record<number, RenderPart> = {};
@@ -161,7 +158,6 @@ abstract class Board {
       entity.callOnLoadFunctions();
 
       this.entityRecord[entity.id] = entity;
-      this.entities.add(entity);
 
       // @Temporary? useless now?
       addEntityToRenderHeightMap(entity);
@@ -205,10 +201,6 @@ abstract class Board {
             componentArray.removeComponent(entity.id);
          }
       }
-   
-      this.entities.delete(entity);
-   
-      this.numVisibleRenderParts -= entity.allRenderThings.length;
    }
 
    public static getRiverFlowDirection(tileX: number, tileY: number): number {

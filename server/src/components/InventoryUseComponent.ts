@@ -16,6 +16,7 @@ import { registerDirtyEntity } from "../server/player-clients";
 import RectangularBox from "webgl-test-shared/dist/boxes/RectangularBox";
 import { HealthComponentArray } from "./HealthComponent";
 import { attemptAttack } from "../entities/tribes/limb-use";
+import Board from "../Board";
 
 export interface InventoryUseComponentParams {
    usedInventoryNames: Array<InventoryName>;
@@ -56,6 +57,11 @@ export interface LimbInfo {
    limbDamageBox: ServerDamageBoxWrapper;
    heldItemDamageBox: WeakRef<ServerDamageBoxWrapper> | null;
    blockingDamageBox: WeakRef<ServerDamageBoxWrapper> | null;
+
+   // @Bug: If multiple attacks are blocked in 1 tick by the same damage box, only one of them is sent. 
+   lastBlockTick: number;
+   blockPositionX: number;
+   blockPositionY: number;
 }
 
 export class InventoryUseComponent {
@@ -74,6 +80,7 @@ export class InventoryUseComponent {
          onCollision: onLimbAttackBoxCollision,
          onCollisionEnter: onLimbAttackBoxCollisionEnter
       }, false, DamageBoxType.attacking);
+      damageBox.isActive = false;
       
       const damageBoxComponent = DamageBoxComponentArray.getComponent(entity);
       damageBoxComponent.addDamageBox(damageBox);
@@ -103,7 +110,10 @@ export class InventoryUseComponent {
          currentActionRate: 1,
          limbDamageBox: damageBox,
          heldItemDamageBox: null,
-         blockingDamageBox: null
+         blockingDamageBox: null,
+         lastBlockTick: 0,
+         blockPositionX: 0,
+         blockPositionY: 0
       };
       
       this.limbInfos.push(useInfo);
@@ -200,17 +210,29 @@ const setLimbToState = (entity: EntityID, limbInfo: LimbInfo, state: LimbState):
    setLimb(entity, limbInfo, state.direction, state.extraOffset, state.rotation);
 }
 
-const onLimbAttackBoxCollisionEnter = (attacker: EntityID, victim: EntityID, limb: LimbInfo, collidingDamageBox: ServerDamageBoxWrapper | null): void => {
+const onLimbAttackBoxCollisionEnter = (attacker: EntityID, victim: EntityID, attackingLimb: LimbInfo, collidingDamageBox: ServerDamageBoxWrapper | null): void => {
    // Attack is blocked if the wrapper is a damage box
    if (collidingDamageBox !== null) {
+      console.log("attack bocked!",Math.random());
       // Pause the attack for a brief period
-      limb.currentActionPauseTicksRemaining = Math.floor(Settings.TPS / 15);
-      // @Temporary
-      // limb.currentActionRate = 0.6;
+      attackingLimb.currentActionPauseTicksRemaining = Math.floor(Settings.TPS / 15);
+      attackingLimb.currentActionRate = 0.4;
+
+      const victimInventoryUseComponent = InventoryUseComponentArray.getComponent(victim);
+      const associatedLimb = victimInventoryUseComponent.getLimbInfo(collidingDamageBox.associatedLimbInventoryName);
+      associatedLimb.lastBlockTick = Board.ticks;
+      associatedLimb.blockPositionX = collidingDamageBox.box.position.x;
+      associatedLimb.blockPositionY = collidingDamageBox.box.position.y;
+      registerDirtyEntity(victim);
    }
 }
 
-const onLimbAttackBoxCollision = (attacker: EntityID, victim: EntityID, limb: LimbInfo): void => {
+const onLimbAttackBoxCollision = (attacker: EntityID, victim: EntityID, limb: LimbInfo, collidingDamageBox: ServerDamageBoxWrapper | null): void => {
+   // If the collision is with a damage box, don't try to hurt the entity
+   if (collidingDamageBox !== null) {
+      return;
+   }
+   
    const damageBoxComponent = DamageBoxComponentArray.getComponent(attacker);
    
    // Attack the entity
@@ -238,8 +260,9 @@ function onTick(inventoryUseComponent: InventoryUseComponent, entity: EntityID):
    for (let i = 0; i < inventoryUseComponent.limbInfos.length; i++) {
       const limbInfo = inventoryUseComponent.limbInfos[i];
 
+      // @Cleanup: When blocking, once the block is finished going up the entity should no longer be dirtied by this
       // Certain actions should always show an update for the player
-      if (limbInfo.action === LimbAction.windAttack || limbInfo.action === LimbAction.attack || limbInfo.action === LimbAction.returnAttackToRest) {
+      if (limbInfo.action === LimbAction.windAttack || limbInfo.action === LimbAction.attack || limbInfo.action === LimbAction.returnAttackToRest || limbInfo.action === LimbAction.block) {
          registerDirtyEntity(entity);
       }
 
@@ -380,7 +403,7 @@ function getDataLength(entity: EntityID): number {
       lengthBytes += Float32Array.BYTES_PER_ELEMENT;
       lengthBytes += 2 * Float32Array.BYTES_PER_ELEMENT * Object.keys(useInfo.spearWindupCooldowns).length;
       lengthBytes += getCrossbowLoadProgressRecordLength(useInfo);
-      lengthBytes += 13 * Float32Array.BYTES_PER_ELEMENT;
+      lengthBytes += 18 * Float32Array.BYTES_PER_ELEMENT;
    }
 
    return lengthBytes;
@@ -421,6 +444,11 @@ function addDataToPacket(packet: Packet, entity: EntityID): void {
       packet.addNumber(limbInfo.lastAttackCooldown);
       packet.addNumber(limbInfo.currentActionElapsedTicks);
       packet.addNumber(limbInfo.currentActionDurationTicks);
+      packet.addNumber(limbInfo.currentActionPauseTicksRemaining);
+      packet.addNumber(limbInfo.currentActionRate);
+      packet.addNumber(limbInfo.lastBlockTick);
+      packet.addNumber(limbInfo.blockPositionX);
+      packet.addNumber(limbInfo.blockPositionY);
    }
 }
 

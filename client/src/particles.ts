@@ -1717,7 +1717,6 @@ export function createPoisonParticle(entity: Entity): void {
    Board.lowMonocolourParticles.push(particle);
 }
 
-// @Cleanup: move to particles file
 export function createIceSpeckProjectile(transformComponent: TransformComponent): void {
    const spawnOffsetDirection = 2 * Math.PI * Math.random();
    const spawnPositionX = transformComponent.position.x + 4 * Math.sin(spawnOffsetDirection);
@@ -1753,4 +1752,38 @@ export function createIceSpeckProjectile(transformComponent: TransformComponent)
       140/255, 143/255, 207/255
    );
    Board.lowMonocolourParticles.push(particle);
+}
+
+export function createBlockParticle(x: number, y: number): void {
+   const velocityMagnitude = randFloat(80, 150);
+   const velocityDirection = 2 * Math.PI * Math.random();
+   const velocityX = velocityMagnitude * Math.sin(velocityDirection);
+   const velocityY = velocityMagnitude * Math.cos(velocityDirection);
+   
+   const lifetime = randFloat(0.25, 0.35);
+   
+   const particle = new Particle(lifetime);
+   particle.getOpacity = () => {
+      return 1 - Math.pow(particle.age / particle.lifetime, 2);
+   }
+
+   // const pixelSize = 4;
+   const pixelSize = Math.random() < 0.5 ? 4 : 8;
+
+   addMonocolourParticleToBufferContainer(
+      particle,
+      ParticleRenderLayer.high,
+      pixelSize,
+      pixelSize,
+      x, y,
+      velocityX, velocityY,
+      0, 0,
+      0,
+      velocityDirection,
+      0,
+      0,
+      0,
+      255/255, 249/255, 201/255
+   );
+   Board.highMonocolourParticles.push(particle);
 }

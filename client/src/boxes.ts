@@ -13,4 +13,6 @@ class GenericCollisionBox<T extends BoxType> implements GenericCollisionBoxInfo<
 }
 
 export class ClientDamageBox<T extends BoxType = BoxType> extends GenericCollisionBox<T> implements DamageBox<T> {}
-export class ClientBlockBox<T extends BoxType = BoxType> extends GenericCollisionBox<T> implements BlockBox<T> {}
+export class ClientBlockBox<T extends BoxType = BoxType> extends GenericCollisionBox<T> implements BlockBox<T> {
+   public hasBlocked = false;
+}

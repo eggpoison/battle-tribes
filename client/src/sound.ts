@@ -202,21 +202,25 @@ export function createAudioContext(): void {
    audioContext = new AudioContext()
 }
 
+// @Hack: For some reason if we decode the audio too fast, then shit breaks. So we have to do this evilness. Why? Because god is not real.
+// await (new Promise<void>(resolve => {
+//    setTimeout(() => {
+//       resolve();
+//    }, 20)
+// }));
+
 export async function setupAudio(): Promise<void> {
    const tempAudioBuffers: Partial<Record<AudioFilePath, AudioBuffer>> = {};
-   for (const filePath of AUDIO_FILE_PATHS) {
+   
+   const audioBufferPromises = AUDIO_FILE_PATHS.map(async (filePath) => {
       const response = await fetch(require("./sounds/" + filePath));
       const arrayBuffer = await response.arrayBuffer();
       const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
       tempAudioBuffers[filePath] = audioBuffer;
+   });
 
-      // @Hack: For some reason if we decode the audio too fast, then shit breaks. So we have to do this evilness. Why? Because god is not real.
-      // await (new Promise<void>(resolve => {
-      //    setTimeout(() => {
-      //       resolve();
-      //    }, 20)
-      // }));
-   }
+   await Promise.all(audioBufferPromises);
+   
    audioBuffers = tempAudioBuffers as Record<AudioFilePath, AudioBuffer>;
 }
 

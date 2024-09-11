@@ -26,7 +26,9 @@ class GenericCollisionBox<T extends BoxType> implements GenericCollisionBoxInfo<
 export class ServerDamageBox<T extends BoxType = BoxType> extends GenericCollisionBox<T> implements DamageBox<T> {
    public isBlocked = false;
 }
-export class ServerBlockBox<T extends BoxType = BoxType> extends GenericCollisionBox<T> implements BlockBox<T> {}
+export class ServerBlockBox<T extends BoxType = BoxType> extends GenericCollisionBox<T> implements BlockBox<T> {
+   public hasBlocked = false;
+}
 
 export function getCollisionBoxType(collisionBox: ServerDamageBox | ServerBlockBox): GenericCollisionBoxType {
    if (collisionBox instanceof ServerDamageBox) {

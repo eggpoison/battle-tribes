@@ -17,7 +17,7 @@ import { ServerComponentType } from "battletribes-shared/components";
 import { TRIBE_INFO_RECORD, TribeType } from "battletribes-shared/tribes";
 import { STATUS_EFFECT_MODIFIERS } from "battletribes-shared/status-effects";
 import { TribesmanTitle } from "battletribes-shared/titles";
-import { InventoryUseComponentArray } from "./entity-components/InventoryUseComponent";
+import { InventoryUseComponentArray, LimbInfo } from "./entity-components/InventoryUseComponent";
 import { ENTITY_TYPE_TO_GHOST_TYPE_MAP, GhostInfo, setGhostInfo } from "./rendering/webgl/entity-ghost-rendering";
 import Camera from "./Camera";
 import { calculateCursorWorldPositionX, calculateCursorWorldPositionY } from "./mouse";
@@ -27,6 +27,7 @@ import { closeCurrentMenu } from "./menus";
 import { createAttackPacket, sendItemDropPacket, sendItemUsePacket, sendStopItemUsePacket } from "./client/packet-creation";
 import { HealthComponentArray } from "./entity-components/HealthComponent";
 import { InventoryComponentArray } from "./entity-components/InventoryComponent";
+import { DamageBoxComponentArray } from "./entity-components/DamageBoxComponent";
 
 interface SelectedItemInfo {
    readonly item: Item;
@@ -97,6 +98,18 @@ export function discombobulate(discombobulationTimeSeconds: number): void {
    }
 }
 
+const hasBlockedAttack = (limb: LimbInfo): boolean => {
+   const damageBoxComponent = DamageBoxComponentArray.getComponent(Player.instance!.id);
+
+   for (const blockBox of damageBoxComponent.blockBoxes) {
+      if (blockBox.hasBlocked) {
+         return true;
+      }
+   }
+
+   return false;
+}
+
 // @Cleanup: bad name. mostly updating limbs
 export function updatePlayerItems(): void {
    if (Player.instance === null) {
@@ -147,12 +160,13 @@ export function updatePlayerItems(): void {
 
    // @Incomplete: Double-check there isn't a tick immediately after depressing the button where this hasn't registered in the limb yet
    // If blocking but not right clicking, return to rest
-   if (1+1===2 && hotbarLimbInfo.action === LimbAction.block && !rightMouseButtonIsPressed && getElapsedTimeInSeconds(hotbarLimbInfo.currentActionElapsedTicks) * Settings.TPS >= hotbarLimbInfo.currentActionDurationTicks) {
+   if (hotbarLimbInfo.action === LimbAction.block && !rightMouseButtonIsPressed && getElapsedTimeInSeconds(hotbarLimbInfo.currentActionElapsedTicks) * Settings.TPS >= hotbarLimbInfo.currentActionDurationTicks) {
       const attackInfo = getItemAttackInfo(hotbarLimbInfo.heldItemType);
       hotbarLimbInfo.action = LimbAction.returnBlockToRest;
       hotbarLimbInfo.currentActionElapsedTicks = 0;
       // @Temporary? Perhaps use separate blockReturnTimeTicks.
       hotbarLimbInfo.currentActionDurationTicks = attackInfo.attackTimings.blockTimeTicks!;
+      hotbarLimbInfo.currentActionRate = hasBlockedAttack(hotbarLimbInfo) ? 2 : 1;
 
       sendStopItemUsePacket();
    }

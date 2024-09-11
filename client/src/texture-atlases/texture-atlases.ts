@@ -4,7 +4,8 @@ import { getTechTreeGL } from "../rendering/webgl/tech-tree-rendering";
 import { gl } from "../webgl";
 import { TextureAtlasInfo, generateTextureAtlas, stitchTextureAtlas } from "./texture-atlas-stitching";
 
-const TEXTURE_SOURCES: Array<string> = [
+// @Hack: remove export
+export const TEXTURE_SOURCES: Array<string> = [
    "entities/cow/cow-body-1.png",
    "entities/cow/cow-head-1.png",
    "entities/cow/cow-body-2.png",

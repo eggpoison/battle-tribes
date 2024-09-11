@@ -279,6 +279,8 @@ export function useItem(tribeMember: EntityID, item: Item, inventoryName: Invent
       limbInfo.action = LimbAction.block;
       limbInfo.currentActionElapsedTicks = 0;
       limbInfo.currentActionDurationTicks = attackInfo.attackTimings.blockTimeTicks;
+      limbInfo.currentActionRate = 1;
+      limbInfo.blockBox.hasBlocked = false;
       return;
    }
    

@@ -235,11 +235,14 @@ export function processStopItemUsePacket(playerClient: PlayerClient): void {
       const heldItem = getHeldItem(limb);
       const heldItemAttackInfo = getItemAttackInfo(heldItem !== null ? heldItem.type : null);
       
+      const hasBlocked = limb.blockBox.hasBlocked;
+      
       limb.blockBox.isActive = false;
       limb.action = LimbAction.returnBlockToRest;
       limb.currentActionElapsedTicks = 0;
       // @Temporary? Perhaps use separate blockReturnTimeTicks.
       limb.currentActionDurationTicks = heldItemAttackInfo.attackTimings.blockTimeTicks!;
+      limb.currentActionRate = hasBlocked ? 2 : 1;
    } else {
       limb.action = LimbAction.none;
    }

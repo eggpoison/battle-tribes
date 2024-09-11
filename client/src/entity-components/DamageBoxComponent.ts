@@ -267,14 +267,29 @@ function onTick(damageBoxComponent: DamageBoxComponent, entity: EntityID): void 
       return;
    }
    
+   for (let i = 0; i < damageBoxComponent.damageBoxes.length; i++) {
+      const damageBox = damageBoxComponent.damageBoxes[i];
+      
+      // Check if the attacking hitbox is blocked
+      const collisionInfo = getCollidingBox(entity, damageBox);
+      if (collisionInfo !== null && collisionInfo.collidingBox instanceof ClientBlockBox) {
+         if (damageBox.collidingBox !== collisionInfo.collidingBox) {
+            blockAttack(damageBox);
+         }
+         damageBox.collidingBox = collisionInfo.collidingBox;
+      } else {
+         damageBox.collidingBox = null;
+      }
+   }
+   
    for (let i = 0; i < damageBoxComponent.blockBoxes.length; i++) {
       const blockBox = damageBoxComponent.blockBoxes[i];
       
-      // Check if the attacking hitbox is blocked
+      // Check for blocks
       const collisionInfo = getCollidingBox(entity, blockBox);
       if (collisionInfo !== null && collisionInfo.collidingBox instanceof ClientDamageBox) {
          if (blockBox.collidingBox !== collisionInfo.collidingBox) {
-            blockAttack(blockBox);
+            blockBox.hasBlocked = true;
          }
          blockBox.collidingBox = collisionInfo.collidingBox;
       } else {

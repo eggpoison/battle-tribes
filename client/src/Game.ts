@@ -12,7 +12,7 @@ import Client, { popGameDataPacket } from "./client/Client";
 import { calculateCursorWorldPositionX, calculateCursorWorldPositionY, cursorX, cursorY, getMouseTargetEntity, handleMouseMovement, renderCursorTooltip } from "./mouse";
 import { refreshDebugInfo, setDebugInfoDebugData } from "./components/game/dev/DebugInfo";
 import { createWebGLContext, gl, resizeCanvas } from "./webgl";
-import { loadTextures } from "./textures";
+import { loadTextures, preloadTextureImages } from "./textures";
 import { toggleSettingsMenu } from "./components/game/GameScreen";
 import { App_setGameInteractState, getGameState } from "./components/App";
 import { clearPressedKeys } from "./keyboard-input";
@@ -65,6 +65,7 @@ import { PacketReader } from "battletribes-shared/packets";
 import { MAX_RENDER_LAYER, RenderLayer } from "./render-layers";
 import { updateEntity } from "./entity-components/ComponentArray";
 import { resolveEntityCollisions, resolvePlayerCollisions } from "./collision";
+import { preloadTextureAtlasImages } from "./texture-atlases/texture-atlas-stitching";
 
 let tempPacketSendCounter = 0;
 
@@ -247,26 +248,40 @@ abstract class Game {
       if (!Game.hasInitialised) {
          return new Promise(async resolve => {
             const start = performance.now();
-            console.log("creating contexts",0);
+            let l = performance.now();
             createWebGLContext();
             createTechTreeGLContext();
             createTextCanvasContext();
 
-            console.log("initialising board",performance.now() - start);
+            console.log("creating contexts",performance.now() - l);
+            l = performance.now();
             Board.initialise(initialGameDataPacket);
             Board.addRiverSteppingStonesToChunks(initialGameDataPacket.riverSteppingStones);
          
             createRiverSteppingStoneData(initialGameDataPacket.riverSteppingStones);
 
-            console.log("loading textures",performance.now() - start);
             createUBOs();
             
+            console.log("initialising board",performance.now() - l);
+            l = performance.now();
+            preloadTextureAtlasImages();
+            const textureImages = preloadTextureImages();
+
+            console.log("preloading images",performance.now() - l);
+            l = performance.now();
+            // @Speed
+            await setupAudio();
+            
+            console.log("audio",performance.now() - l);
+            l = performance.now();
             // We load the textures before we create the shaders because some shader initialisations stitch textures together
-            await loadTextures();
-            console.log("creating texture atlases",performance.now() - start);
+            await loadTextures(textureImages);
+            console.log("loading textures",performance.now() - l);
+            l = performance.now();
             // @Speed
             await createTextureAtlases();
-            console.log("doing shader stuff",performance.now() - start);
+            console.log("texture atlases",performance.now() - l);
+            l = performance.now();
             
             // Create shaders
             createSolidTileShaders();
@@ -298,14 +313,12 @@ abstract class Game {
                setupFrameGraph();
             }
 
-            console.log("doing audio",performance.now() - start);
-            // @Speed
-            await setupAudio();
-
-            console.log("creating render chunks",performance.now() - start);
+            console.log("shader stuff",performance.now() - l);
+            l = performance.now();
             createRenderChunks(initialGameDataPacket.waterRocks, initialGameDataPacket.riverSteppingStones);
 
-            console.log("done",performance.now() - start);
+            console.log("render chunks",performance.now() - l);
+            console.log(performance.now() - start);
             this.hasInitialised = true;
    
             resolve();

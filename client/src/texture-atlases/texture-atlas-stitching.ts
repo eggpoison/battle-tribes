@@ -1,4 +1,5 @@
 import { imageIsLoaded } from "../utils";
+import { TEXTURE_SOURCES } from "./texture-atlases";
 
 interface BaseTextureAtlasInfo {
    readonly atlasSize: number;
@@ -73,6 +74,43 @@ const expand = (atlasSize: number): void => {
    textureSlotIndexes = newIndexes;
 }
 
+// const createTextureImages = (textureSources: ReadonlyArray<string>): Promise<Array<HTMLImageElement>> => {
+//    return new Promise(resolve => {
+//       let numLoaded = 0;
+      
+//       const textureImages = new Array<HTMLImageElement>();
+//       for (let i = 0; i < textureSources.length; i++) {
+//          const textureSource = textureSources[i];
+   
+//          const image = new Image();
+//          image.src = require("../images/" + textureSource);
+   
+//          image.onload = () => {
+//             // If all images are loaded, resolve
+//             numLoaded++;
+//             if (numLoaded === text)
+//          }
+         
+//          textureImages.push(image);
+//       }
+//    })
+// }
+
+// @Hack
+
+const textureImages = new Array<HTMLImageElement>();
+
+export function preloadTextureAtlasImages(): void {
+   for (let i = 0; i < TEXTURE_SOURCES.length; i++) {
+      const textureSource = TEXTURE_SOURCES[i];
+
+      const image = new Image();
+      image.src = require("../images/" + textureSource);
+
+      textureImages.push(image);
+   }
+}
+
 export async function generateTextureAtlas(textureSources: ReadonlyArray<string>): Promise<TextureAtlasGenerationInfo> {
    return new Promise(async (resolve) => {
       unavailableSlots = [];
@@ -92,20 +130,32 @@ export async function generateTextureAtlas(textureSources: ReadonlyArray<string>
       // document.body.appendChild(atlasElement);
       // atlasElement.style.position = "absolute";
    
-      let textureImages = new Array<HTMLImageElement>();
+      // const textureImages = new Array<HTMLImageElement>();
+      // for (let i = 0; i < textureSources.length; i++) {
+      //    const textureSource = textureSources[i];
+
+      //    const image = new Image();
+      //    image.src = require("../images/" + textureSource);
+
+      //    textureImages.push(image);
+      // }
+      // console.log(textureImages.length);
       
       for (let i = 0; i < textureSources.length; i++) {
-         const textureSource = textureSources[i];
-         textureImages[i] = new Image();
-         textureImages[i].src = require("../images/" + textureSource);
+         const image = textureImages[i];
+
+         if (image.width === 0) {
+            console.log("Waiting for load...");
+            await imageIsLoaded(image);
+         }
    
          // eslint-disable-next-line no-loop-func
-         await imageIsLoaded(textureImages[i]).then(() => {
-            const slotWidth = Math.ceil(textureImages[i].width / ATLAS_SLOT_SIZE);
-            const slotHeight = Math.ceil(textureImages[i].height / ATLAS_SLOT_SIZE);
+         // await imageIsLoaded(textureImages[i]).then(() => {
+            const slotWidth = Math.ceil(image.width / ATLAS_SLOT_SIZE);
+            const slotHeight = Math.ceil(image.height / ATLAS_SLOT_SIZE);
    
-            textureWidths.push(textureImages[i].width);
-            textureHeights.push(textureImages[i].height);
+            textureWidths.push(image.width);
+            textureHeights.push(image.height);
    
             let slotIndex = getAvailableSlotIndex(slotWidth, slotHeight, atlasSize);
             for (; slotIndex === -1; slotIndex = getAvailableSlotIndex(slotWidth, slotHeight, atlasSize)) {
@@ -125,7 +175,7 @@ export async function generateTextureAtlas(textureSources: ReadonlyArray<string>
                   unavailableSlots.push(cy * atlasSize + cx);
                }
             }
-         });
+         // });
       }
    
       // Draw textures once the atlas has been fully expanded

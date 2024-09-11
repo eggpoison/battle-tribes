@@ -37,38 +37,50 @@ export function createImage(imageSrc: string): Promise<HTMLImageElement> {
    })
 }
 
-export function loadTextures(): Promise<void> {
-   return new Promise(async resolve => {
-      // Add solid tile textures
-      for (const textureSource of TILE_TYPE_TEXTURE_SOURCES) {
-         if (!TEXTURE_SOURCES.includes(textureSource)) {
-            TEXTURE_SOURCES.push(textureSource);
-         }
+export function preloadTextureImages(): Array<HTMLImageElement> {
+   // Add solid tile textures
+   for (const textureSource of TILE_TYPE_TEXTURE_SOURCES) {
+      if (!TEXTURE_SOURCES.includes(textureSource)) {
+         TEXTURE_SOURCES.push(textureSource);
+      }
+   }
+
+   const images = new Array<HTMLImageElement>();
+   for (let i = 0; i < TEXTURE_SOURCES.length; i++) {
+      const textureSource = TEXTURE_SOURCES[i];
+      const image = new Image();
+      image.src = require("./images/" + textureSource);
+      images.push(image);
+   }
+   return images;
+} 
+
+export async function loadTextures(textureImages: Array<HTMLImageElement>): Promise<void> {
+   // Create textures after all images are loaded
+   for (let i = 0; i < textureImages.length; i++) {
+      const image = textureImages[i];
+      if (image.width === 0) {
+         console.warn("Have to wait for texture in loadTextures!!!! Need to add more padding time in-between.");
+         await imageIsLoaded(image);
       }
       
-      for (const textureSource of TEXTURE_SOURCES) {
-         const image = await createImage(textureSource);
-
-         // Create texture from the image once it is loaded
-
-         const texture = gl.createTexture()!;
-         gl.bindTexture(gl.TEXTURE_2D, texture);
-         // Set parameters
-         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-   
-         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
-   
-         gl.bindTexture(gl.TEXTURE_2D, null);
-         
-         TEXTURES[textureSource] = texture;
-         TEXTURE_IMAGE_RECORD[textureSource] = image;
-      }
+      const textureSource = TEXTURE_SOURCES[i];
       
-      resolve();
-   });
+      const texture = gl.createTexture()!;
+      gl.bindTexture(gl.TEXTURE_2D, texture);
+
+      // Set parameters
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+      gl.bindTexture(gl.TEXTURE_2D, null);
+
+      TEXTURES[textureSource] = texture;
+      TEXTURE_IMAGE_RECORD[textureSource] = image;
+   }
 }
 
 export function getTexture(textureSource: string): WebGLTexture {

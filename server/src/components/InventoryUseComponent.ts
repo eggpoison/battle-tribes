@@ -206,7 +206,7 @@ const setLimbToState = (entity: EntityID, limbInfo: LimbInfo, state: LimbState):
    setLimb(entity, limbInfo, state.direction, state.extraOffset, state.rotation);
 }
 
-export function onBlockBoxCollision(attacker: EntityID, victim: EntityID, attackingLimb: LimbInfo, collidingDamageBox: ServerDamageBox): void {
+export function onBlockBoxCollision(attacker: EntityID, victim: EntityID, attackingLimb: LimbInfo, blockBox: ServerBlockBox, collidingDamageBox: ServerDamageBox): void {
    // Attack is blocked if the wrapper is a damage box
    if (collidingDamageBox !== null) {
       // Pause the attack for a brief period
@@ -215,6 +215,8 @@ export function onBlockBoxCollision(attacker: EntityID, victim: EntityID, attack
 
       attackingLimb.limbDamageBox.isBlocked = true;
       attackingLimb.heldItemDamageBox.isBlocked = true;
+
+      blockBox.hasBlocked = true;
 
       const victimInventoryUseComponent = InventoryUseComponentArray.getComponent(victim);
       const associatedLimb = victimInventoryUseComponent.getLimbInfo(collidingDamageBox.associatedLimbInventoryName);

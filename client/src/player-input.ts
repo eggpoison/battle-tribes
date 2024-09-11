@@ -21,11 +21,18 @@ import { InventoryUseComponentArray } from "./entity-components/InventoryUseComp
 import { ENTITY_TYPE_TO_GHOST_TYPE_MAP, GhostInfo, setGhostInfo } from "./rendering/webgl/entity-ghost-rendering";
 import Camera from "./Camera";
 import { calculateCursorWorldPositionX, calculateCursorWorldPositionY } from "./mouse";
-import { Inventory, Item, ITEM_TYPE_RECORD, InventoryName, ITEM_INFO_RECORD, ConsumableItemInfo, ConsumableItemCategory, PlaceableItemType, getItemAttackInfo } from "webgl-test-shared/dist/items/items";
+import { Item, ITEM_TYPE_RECORD, InventoryName, ITEM_INFO_RECORD, ConsumableItemInfo, ConsumableItemCategory, PlaceableItemType, getItemAttackInfo, ItemType } from "webgl-test-shared/dist/items/items";
 import { playBowFireSound } from "./entity-tick-events";
 import { closeCurrentMenu } from "./menus";
 import { createAttackPacket, sendItemUsePacket, sendStopItemUsePacket } from "./client/packet-creation";
 import { HealthComponentArray } from "./entity-components/HealthComponent";
+import { InventoryComponentArray } from "./entity-components/InventoryComponent";
+
+interface SelectedItemInfo {
+   readonly item: Item;
+   readonly itemSlot: number;
+   readonly inventoryName: InventoryName;
+}
 
 /*
 // @Temporary @Incomplete
@@ -59,12 +66,18 @@ const PLAYER_DISCOMBOBULATED_ACCELERATION = 300;
 export let rightMouseButtonIsPressed = false;
 export let leftMouseButtonIsPressed = false;
 
-/** Whether the inventory is open or not. */
+let hotbarSelectedItemSlot = 1;
+
+   /** Whether the inventory is open or not. */
 let _inventoryIsOpen = false;
 
 let currentRightClickEvent: MouseEvent | null = null;
 
 let discombobulationTimer = 0;
+
+export function getHotbarSelectedItemSlot(): number {
+   return hotbarSelectedItemSlot;
+}
 
 export function getInstancePlayerAction(inventoryName: InventoryName): LimbAction {
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(Player.instance!.id);
@@ -93,6 +106,8 @@ export function updatePlayerItems(): void {
    // @Cleanup: Copynpaste for the action completion all over here. solution: make currentActionIsFinished method on Limb class
 
    // @Incomplete: only for hotbar so far
+
+   // const inventoryComponent = InventoryComponentArray.getComponent(Player.instance.id);
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(Player.instance.id);
    const hotbarLimbInfo = inventoryUseComponent.getLimbInfoByInventoryName(InventoryName.hotbar);
 
@@ -107,11 +122,7 @@ export function updatePlayerItems(): void {
       hotbarLimbInfo.action = LimbAction.attack;
       hotbarLimbInfo.currentActionElapsedTicks = 0;
 
-      // @Copynpaste
-      const selectedItemSlot = hotbarLimbInfo.selectedItemSlot;
-      const selectedItem = definiteGameState.hotbar.getItem(selectedItemSlot);
-      const attackInfo = getItemAttackInfo(selectedItem);
-
+      const attackInfo = getItemAttackInfo(hotbarLimbInfo.heldItemType);
       hotbarLimbInfo.currentActionDurationTicks = attackInfo.attackTimings.swingTimeTicks;
    }
 
@@ -120,11 +131,7 @@ export function updatePlayerItems(): void {
       hotbarLimbInfo.action = LimbAction.returnAttackToRest;
       hotbarLimbInfo.currentActionElapsedTicks = 0;
 
-      // @Copynpaste
-      const selectedItemSlot = hotbarLimbInfo.selectedItemSlot;
-      const selectedItem = definiteGameState.hotbar.getItem(selectedItemSlot);
-      const attackInfo = getItemAttackInfo(selectedItem);
-
+      const attackInfo = getItemAttackInfo(hotbarLimbInfo.heldItemType);
       hotbarLimbInfo.currentActionDurationTicks = attackInfo.attackTimings.returnTimeTicks;
    }
 
@@ -136,11 +143,7 @@ export function updatePlayerItems(): void {
    // @Incomplete: Double-check there isn't a tick immediately after depressing the button where this hasn't registered in the limb yet
    // If blocking but not right clicking, return to rest
    if (hotbarLimbInfo.action === LimbAction.block && !rightMouseButtonIsPressed && getElapsedTimeInSeconds(hotbarLimbInfo.currentActionElapsedTicks) * Settings.TPS >= hotbarLimbInfo.currentActionDurationTicks) {
-      // @Copynpaste
-      const selectedItemSlot = hotbarLimbInfo.selectedItemSlot;
-      const selectedItem = definiteGameState.hotbar.getItem(selectedItemSlot)!;
-      const attackInfo = getItemAttackInfo(selectedItem);
-
+      const attackInfo = getItemAttackInfo(hotbarLimbInfo.heldItemType);
       hotbarLimbInfo.action = LimbAction.returnBlockToRest;
       hotbarLimbInfo.currentActionElapsedTicks = 0;
       // @Temporary? Perhaps use separate blockReturnTimeTicks.
@@ -155,25 +158,20 @@ export function updatePlayerItems(): void {
       hotbarLimbInfo.action = LimbAction.none;
    }
 
-   // @Cleanup: really different from the rest of this function
-   // Tick items
-   for (let i = 0; i < definiteGameState.hotbar.items.length; i++) {
-      const item = definiteGameState.hotbar.items[i];
-      tickItem(item, definiteGameState.hotbar.getItemSlot(item));
+   // Tick held item
+   if (hotbarLimbInfo.heldItemType !== null) {
+      tickItem(hotbarLimbInfo.heldItemType);
    }
 }
 
-const swing = (inventory: Inventory): void => {
+const swing = (inventoryName: InventoryName): void => {
    const attackPacket = createAttackPacket();
    Client.sendPacket(attackPacket);
 
    const inventoryUseComponent = Player.instance!.getServerComponent(ServerComponentType.inventoryUse);
 
-   const limbInfo = inventoryUseComponent.getLimbInfoByInventoryName(inventory.name);
-
-   const selectedItemSlot = limbInfo.selectedItemSlot;
-   const selectedItem = inventory.getItem(selectedItemSlot);
-   const attackInfo = getItemAttackInfo(selectedItem);
+   const limbInfo = inventoryUseComponent.getLimbInfoByInventoryName(inventoryName);
+   const attackInfo = getItemAttackInfo(limbInfo.heldItemType);
 
    limbInfo.action = LimbAction.windAttack;
    limbInfo.currentActionElapsedTicks = 0;
@@ -260,12 +258,12 @@ const getSwingTimeMultiplier = (item: Item | null): number => {
 //    return true;
 // }
 
-const attemptSwing = (inventory: Inventory): boolean => {
+const attemptSwing = (inventoryName: InventoryName): boolean => {
    // Only swing if not doing anything
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(Player.instance!.id);
-   const limbInfo = inventoryUseComponent.getLimbInfoByInventoryName(inventory.name);
+   const limbInfo = inventoryUseComponent.getLimbInfoByInventoryName(inventoryName);
    if (limbInfo.action === LimbAction.none) {
-      swing(inventory);
+      swing(inventoryName);
       return true;
    }
    
@@ -275,34 +273,40 @@ const attemptSwing = (inventory: Inventory): boolean => {
 const attemptAttack = (): void => {
    if (Player.instance === null) return;
 
-   const hotbarAttackDidSucceed = attemptSwing(definiteGameState.hotbar);
+   const hotbarAttackDidSucceed = attemptSwing(InventoryName.hotbar);
    if (!hotbarAttackDidSucceed && Game.tribe.tribeType === TribeType.barbarians) {
-      attemptSwing(definiteGameState.offhandInventory);
+      attemptSwing(InventoryName.offhand);
    }
 }
 
-interface SelectedItemInfo {
-   readonly item: Item;
-   readonly itemSlot: number;
-   readonly isOffhand: boolean;
+export function getPlayerSelectedItem(): Item | null {
+   if (Player.instance === null) return null;
+
+   const inventoryComponent = InventoryComponentArray.getComponent(Player.instance.id);
+   const hotbarInventory = inventoryComponent.getInventory(InventoryName.hotbar)!;
+   return hotbarInventory.getItem(hotbarSelectedItemSlot);
 }
 
 const getSelectedItemInfo = (): SelectedItemInfo | null => {
-   const hotbarItem = definiteGameState.hotbar.itemSlots[latencyGameState.selectedHotbarItemSlot];
-   if (typeof hotbarItem !== "undefined") {
+   const inventoryComponent = InventoryComponentArray.getComponent(Player.instance!.id);
+   const hotbarInventory = inventoryComponent.getInventory(InventoryName.hotbar)!;
+   
+   const heldItem = hotbarInventory.getItem(hotbarSelectedItemSlot);
+   if (heldItem !== null) {
       return {
-         item: hotbarItem,
-         itemSlot: latencyGameState.selectedHotbarItemSlot,
-         isOffhand: false
+         item: heldItem,
+         itemSlot: hotbarSelectedItemSlot,
+         inventoryName: InventoryName.hotbar
       };
    }
 
-   const offhandItem = definiteGameState.offhandInventory.itemSlots[1];
-   if (typeof offhandItem !== "undefined") {
+   const offhand = inventoryComponent.getInventory(InventoryName.offhand)!;
+   const offhandHeldItem = offhand.getItem(1);
+   if (offhandHeldItem !== null) {
       return {
-         item: offhandItem,
+         item: offhandHeldItem,
          itemSlot: 1,
-         isOffhand: true
+         inventoryName: InventoryName.offhand
       };
    }
 
@@ -325,7 +329,7 @@ const clickShouldPreventDefault = (e: MouseEvent): boolean => {
 
 const createItemUseListeners = (): void => {
    document.addEventListener("mousedown", e => {
-      if (Player.instance === null || definiteGameState.hotbar === null) return;
+      if (Player.instance === null) return;
 
       // Only attempt to use an item if the game canvas was clicked
       if ((e.target as HTMLElement).id !== "game-canvas") {
@@ -360,7 +364,7 @@ const createItemUseListeners = (): void => {
 
          const selectedItemInfo = getSelectedItemInfo();
          if (selectedItemInfo !== null) {
-            itemRightClickDown(selectedItemInfo.item, selectedItemInfo.isOffhand, selectedItemInfo.itemSlot);
+            itemRightClickDown(selectedItemInfo.item, selectedItemInfo.inventoryName, selectedItemInfo.itemSlot);
          }
          
          const didSelectEntity = attemptEntitySelection();
@@ -373,7 +377,7 @@ const createItemUseListeners = (): void => {
    });
 
    document.addEventListener("mouseup", e => {
-      if (Player.instance === null || definiteGameState.hotbar === null) return;
+      if (Player.instance === null) return;
 
       // Only attempt to use an item if the game canvas was clicked
       if ((e.target as HTMLElement).id !== "game-canvas") {
@@ -387,7 +391,7 @@ const createItemUseListeners = (): void => {
 
          const selectedItemInfo = getSelectedItemInfo();
          if (selectedItemInfo !== null) {
-            itemRightClickUp(selectedItemInfo.item, selectedItemInfo.isOffhand);
+            itemRightClickUp(selectedItemInfo.item, selectedItemInfo.inventoryName);
          }
       }
    });
@@ -433,7 +437,9 @@ const hideInventory = (): void => {
    BackpackInventoryMenu_setIsVisible(false);
 
    // If the player is holding an item when their inventory is closed, throw the item out
-   if (definiteGameState.heldItemSlot !== null) {
+   const inventoryComponent = InventoryComponentArray.getComponent(Player.instance!.id);
+   const heldItemInventory = inventoryComponent.getInventory(InventoryName.heldItemSlot)!;
+   if (heldItemInventory.hasItem(1)) {
       throwHeldItem();
    }
 }
@@ -481,7 +487,7 @@ export function createPlayerInputListeners(): void {
       }
       
       const scrollDirection = Math.sign(e.deltaY);
-      let newSlot = latencyGameState.selectedHotbarItemSlot + scrollDirection;
+      let newSlot = hotbarSelectedItemSlot + scrollDirection;
       if (newSlot <= 0) {
          newSlot += Settings.INITIAL_PLAYER_HOTBAR_SIZE;
       } else if (newSlot > Settings.INITIAL_PLAYER_HOTBAR_SIZE) {
@@ -494,7 +500,7 @@ export function createPlayerInputListeners(): void {
       if (Player.instance !== null) {
          const playerTransformComponent = Player.instance.getServerComponent(ServerComponentType.transform);
          const dropAmount = keyIsPressed("shift") ? 99999 : 1;
-         Client.sendItemDropPacket(latencyGameState.selectedHotbarItemSlot, dropAmount, playerTransformComponent.rotation);
+         Client.sendItemDropPacket(hotbarSelectedItemSlot, dropAmount, playerTransformComponent.rotation);
       }
    });
 }
@@ -581,7 +587,7 @@ export function updatePlayerMovement(): void {
       if (keyIsPressed("l")) {
          acceleration = PLAYER_LIGHTSPEED_ACCELERATION;
       // @Bug: doesn't account for offhand
-      } else if (playerAction === LimbAction.eat || playerAction === LimbAction.useMedicine || playerAction === LimbAction.chargeBow || playerAction === LimbAction.loadCrossbow || playerAction === LimbAction.block || latencyGameState.playerIsPlacingEntity) {
+      } else if (playerAction === LimbAction.eat || playerAction === LimbAction.useMedicine || playerAction === LimbAction.chargeBow || playerAction === LimbAction.chargeSpear || playerAction === LimbAction.loadCrossbow || playerAction === LimbAction.block || latencyGameState.playerIsPlacingEntity) {
          acceleration = PLAYER_SLOW_ACCELERATION * getPlayerMoveSpeedMultiplier();
       } else {
          acceleration = PLAYER_ACCELERATION * getPlayerMoveSpeedMultiplier();
@@ -606,14 +612,14 @@ export function updatePlayerMovement(): void {
 
 const deselectItem = (item: Item, isOffhand: boolean): void => {
    const inventoryUseComponent = Player.instance!.getServerComponent(ServerComponentType.inventoryUse);
-   const useInfo = inventoryUseComponent.limbInfos[isOffhand ? 1 : 0];
+   const limb = inventoryUseComponent.limbInfos[isOffhand ? 1 : 0];
 
    const itemCategory = ITEM_TYPE_RECORD[item.type];
    switch (itemCategory) {
       case "spear":
       case "battleaxe":
       case "bow": {
-         useInfo.action = LimbAction.none;
+         limb.action = LimbAction.none;
          break;
       }
       case "placeable": {
@@ -626,7 +632,7 @@ const deselectItem = (item: Item, isOffhand: boolean): void => {
    }
 }
 
-export function selectItem(item: Item): void {
+const selectItem = (item: Item): void => {
    const itemCategory = ITEM_TYPE_RECORD[item.type];
    switch (itemCategory) {
       case "placeable": {
@@ -636,8 +642,8 @@ export function selectItem(item: Item): void {
    }
 }
 
-const unuseItem = (item: Item): void => {
-   switch (ITEM_TYPE_RECORD[item.type]) {
+const unuseItem = (itemType: ItemType): void => {
+   switch (ITEM_TYPE_RECORD[itemType]) {
       case "healing": {
          const inventoryUseComponent = Player.instance!.getServerComponent(ServerComponentType.inventoryUse);
          const useInfo = inventoryUseComponent.limbInfos[0];
@@ -646,7 +652,7 @@ const unuseItem = (item: Item): void => {
 
          // @Bug: won't work when offhand is healing
          // Also unuse the other hand
-         const itemInfo = ITEM_INFO_RECORD[item.type] as ConsumableItemInfo;
+         const itemInfo = ITEM_INFO_RECORD[itemType] as ConsumableItemInfo;
          if (itemInfo.consumableItemCategory === ConsumableItemCategory.medicine) {
             const otherUseInfo = inventoryUseComponent.limbInfos[1];
             otherUseInfo.action = LimbAction.none;
@@ -659,15 +665,15 @@ const unuseItem = (item: Item): void => {
    }
 }
 
-const itemRightClickDown = (item: Item, isOffhand: boolean, itemSlot: number): void => {
+const itemRightClickDown = (item: Item, itemInventoryName: InventoryName, itemSlot: number): void => {
    const transformComponent = Player.instance!.getServerComponent(ServerComponentType.transform);
    const inventoryUseComponent = Player.instance!.getServerComponent(ServerComponentType.inventoryUse);
 
-   const limbInfo = inventoryUseComponent.limbInfos[isOffhand ? 1 : 0];
+   const limbInfo = inventoryUseComponent.getLimbInfoByInventoryName(itemInventoryName);
 
    // Start blocking
    if (limbInfo.action === LimbAction.none) {
-      const attackInfo = getItemAttackInfo(item);
+      const attackInfo = getItemAttackInfo(item.type);
       if (attackInfo.attackTimings.blockTimeTicks !== null) {
          limbInfo.action = LimbAction.block;
          limbInfo.currentActionElapsedTicks = 0;
@@ -704,12 +710,13 @@ const itemRightClickDown = (item: Item, isOffhand: boolean, itemSlot: number): v
          limbInfo.action = action;
          limbInfo.lastEatTicks = Board.serverTicks;
 
-         if (itemInfo.consumableItemCategory === ConsumableItemCategory.medicine) {
-            // @Cleanup
-            const otherUseInfo = inventoryUseComponent.limbInfos[isOffhand ? 0 : 1];
-            otherUseInfo.action = action;
-            otherUseInfo.lastEatTicks = Board.serverTicks;
-         }
+         // @Incomplete
+         // if (itemInfo.consumableItemCategory === ConsumableItemCategory.medicine) {
+         //    // @Cleanup
+         //    const otherUseInfo = inventoryUseComponent.limbInfos[isOffhand ? 0 : 1];
+         //    otherUseInfo.action = action;
+         //    otherUseInfo.lastEatTicks = Board.serverTicks;
+         // }
 
          break;
       }
@@ -768,27 +775,28 @@ const itemRightClickDown = (item: Item, isOffhand: boolean, itemSlot: number): v
    }
 }
 
-const itemRightClickUp = (item: Item, isOffhand: boolean): void => {
+const itemRightClickUp = (item: Item, inventoryName: InventoryName): void => {
    const inventoryUseComponent = Player.instance!.getServerComponent(ServerComponentType.inventoryUse);
-   const limbInfo = inventoryUseComponent.limbInfos[isOffhand ? 1 : 0];
+   const limb = inventoryUseComponent.getLimbInfoByInventoryName(inventoryName);
 
    const itemCategory = ITEM_TYPE_RECORD[item.type];
    switch (itemCategory) {
       case "healing": {
-         unuseItem(item);
+         unuseItem(item.type);
          break;
       }
       case "battleaxe":
       case "spear":
       case "bow": {
          if (itemCategory === "battleaxe") {
-            if (limbInfo.thrownBattleaxeItemID !== -1 || limbInfo.action !== LimbAction.chargeBattleaxe) {
+            if (limb.thrownBattleaxeItemID !== -1 || limb.action !== LimbAction.chargeBattleaxe) {
                break;
             }
 
-            limbInfo.thrownBattleaxeItemID = item.id;
+            limb.thrownBattleaxeItemID = item.id;
 
-            if (isOffhand) {
+            // @Hack?
+            if (inventoryName === InventoryName.offhand) {
                // If an axe is already thrown, don't throw another
                Hotbar_updateLeftThrownBattleaxeItemID(item.id);
             } else {
@@ -796,7 +804,7 @@ const itemRightClickUp = (item: Item, isOffhand: boolean): void => {
             }
          }
 
-         limbInfo.action = LimbAction.none;
+         limb.action = LimbAction.none;
          
          sendItemUsePacket();
          // @Incomplete: Don't play if bow didn't actually fire an arrow
@@ -805,31 +813,41 @@ const itemRightClickUp = (item: Item, isOffhand: boolean): void => {
          break;
       }
       case "crossbow": {
-         limbInfo.action = LimbAction.none;
+         limb.action = LimbAction.none;
          break;
       }
    }
 }
 
-const selectItemSlot = (itemSlot: number): void => {
-   if (definiteGameState.hotbar === null || itemSlot === latencyGameState.selectedHotbarItemSlot || Player.instance === null) {
+export function selectItemSlot(itemSlot: number): void {
+   if (Player.instance === null || itemSlot === hotbarSelectedItemSlot) {
       return;
    }
 
+   // Don't switch if the player is blocking
+   const playerAction = getInstancePlayerAction(InventoryName.hotbar);
+   if (playerAction === LimbAction.block || playerAction === LimbAction.returnBlockToRest) {
+      playSound("error.mp3", 0.4, 1, Camera.position);
+      return;
+   }
+
+   const inventoryComponent = InventoryComponentArray.getComponent(Player.instance!.id);
+   const hotbarInventory = inventoryComponent.getInventory(InventoryName.hotbar)!;
+
    // Deselect the previous item and select the new item
-   const previousItem = definiteGameState.hotbar.itemSlots[latencyGameState.selectedHotbarItemSlot];
+   const previousItem = hotbarInventory.itemSlots[hotbarSelectedItemSlot];
    if (typeof previousItem !== "undefined") {
       deselectItem(previousItem, false);
    }
-   const newItem = definiteGameState.hotbar.itemSlots[itemSlot];
+   const newItem = hotbarInventory.itemSlots[itemSlot];
    if (typeof newItem !== "undefined") {
       selectItem(newItem);
-      if (rightMouseButtonIsPressed && ITEM_TYPE_RECORD[newItem.type] === "bow") {
-         itemRightClickDown(newItem, false, itemSlot);
+      if (rightMouseButtonIsPressed) {
+         itemRightClickDown(newItem, InventoryName.hotbar, itemSlot);
       }
    }
 
-   latencyGameState.selectedHotbarItemSlot = itemSlot;
+   hotbarSelectedItemSlot = itemSlot;
       
    Hotbar_setHotbarSelectedItemSlot(itemSlot);
 
@@ -855,18 +873,16 @@ const selectItemSlot = (itemSlot: number): void => {
    // }
 }
 
-const tickItem = (item: Item, itemSlot: number): void => {
-   const isSelected = itemSlot === latencyGameState.selectedHotbarItemSlot;
-   
-   const itemCategory = ITEM_TYPE_RECORD[item.type];
+const tickItem = (itemType: ItemType): void => {
+   const itemCategory = ITEM_TYPE_RECORD[itemType];
    switch (itemCategory) {
       case "healing": {
          // If the player can no longer eat food without wasting it, stop eating
          const healthComponent = HealthComponentArray.getComponent(Player.instance!.id);
          const maxHealth = TRIBE_INFO_RECORD[Game.tribe.tribeType].maxHealthPlayer;
          const playerAction = getInstancePlayerAction(InventoryName.hotbar);
-         if (isSelected && (playerAction === LimbAction.eat || playerAction === LimbAction.useMedicine) && healthComponent.health >= maxHealth) {
-            unuseItem(item);
+         if ((playerAction === LimbAction.eat || playerAction === LimbAction.useMedicine) && healthComponent.health >= maxHealth) {
+            unuseItem(itemType);
          }
 
          break;
@@ -876,12 +892,8 @@ const tickItem = (item: Item, itemSlot: number): void => {
          // Placeable item ghost
          // 
 
-         if (!isSelected) {
-            break;
-         }
-
          const playerTransformComponent = Player.instance!.getServerComponent(ServerComponentType.transform);
-         const structureType = ITEM_INFO_RECORD[item.type as PlaceableItemType].entityType;
+         const structureType = ITEM_INFO_RECORD[itemType as PlaceableItemType].entityType;
          const placeInfo = calculateStructurePlaceInfo(Camera.position, playerTransformComponent.rotation, structureType, Board.getWorldInfo());
          
          const ghostInfo: GhostInfo = {
@@ -906,7 +918,7 @@ export function removeSelectedItem(item: Item): void {
    const itemCategory = ITEM_TYPE_RECORD[item.type];
    switch (itemCategory) {
       case "healing": {
-         unuseItem(item);
+         unuseItem(item.type);
          break;
       }
       case "placeable": {

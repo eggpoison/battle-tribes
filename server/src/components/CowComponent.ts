@@ -225,7 +225,7 @@ function onTick(cowComponent: CowComponent, cow: EntityID): void {
    if (escapeAIComponent.attackingEntities.length > 0) {
       const escapeEntity = chooseEscapeEntity(cow, aiHelperComponent.visibleEntities);
       if (escapeEntity !== null) {
-         runFromAttackingEntity(cow, escapeEntity, 300, Vars.TURN_SPEED);
+         runFromAttackingEntity(cow, escapeEntity, 500, Vars.TURN_SPEED);
          return;
       }
    }

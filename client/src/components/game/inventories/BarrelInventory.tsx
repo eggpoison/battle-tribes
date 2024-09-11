@@ -21,7 +21,7 @@ const BarrelInventory = () => {
             </label>
          </div>
          <div className="flex-container center">
-            <InventoryContainer entityID={barrel.id} inventory={inventoryComponent.getInventory(InventoryName.inventory)} />
+            <InventoryContainer entityID={barrel.id} inventory={inventoryComponent.getInventory(InventoryName.inventory)!} />
          </div>
       </div>
    </>;

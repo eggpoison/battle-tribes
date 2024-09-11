@@ -278,7 +278,7 @@ abstract class TribeMember extends Entity {
 
       // If the tribesman is wearing a leaf suit, create leaf particles
       const inventoryComponent = this.getServerComponent(ServerComponentType.inventory);
-      const armourInventory = inventoryComponent.getInventory(InventoryName.armourSlot);
+      const armourInventory = inventoryComponent.getInventory(InventoryName.armourSlot)!;
       const armour = armourInventory.itemSlots[1];
       if (typeof armour !== "undefined" && armour.type === ItemType.leaf_suit) {
          for (let i = 0; i < 3; i++) {
@@ -322,7 +322,7 @@ abstract class TribeMember extends Entity {
 
    public overrideTileMoveSpeedMultiplier(): number | null {
       const inventoryComponent = this.getServerComponent(ServerComponentType.inventory);
-      const armourSlotInventory = inventoryComponent.getInventory(InventoryName.armourSlot);
+      const armourSlotInventory = inventoryComponent.getInventory(InventoryName.armourSlot)!;
 
       const armour = armourSlotInventory.itemSlots[1];
       if (typeof armour !== "undefined") {

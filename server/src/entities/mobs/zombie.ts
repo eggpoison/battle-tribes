@@ -44,7 +44,7 @@ export function createZombieConfig(): ComponentConfig<ComponentTypes> {
       inventoryName: InventoryName.handSlot,
       width: 1,
       height: 1,
-      options: { acceptsPickedUpItems: true, isDroppedOnDeath: true },
+      options: { acceptsPickedUpItems: true, isDroppedOnDeath: true, isSentToEnemyPlayers: false },
       items: []
    });
 
@@ -54,7 +54,7 @@ export function createZombieConfig(): ComponentConfig<ComponentTypes> {
          inventoryName: InventoryName.offhand,
          width: 0,
          height: 0,
-         options: { acceptsPickedUpItems: true, isDroppedOnDeath: true },
+         options: { acceptsPickedUpItems: true, isDroppedOnDeath: true, isSentToEnemyPlayers: false },
          items: []
       });
    }

@@ -265,7 +265,7 @@ export function useItem(tribeMember: EntityID, item: Item, inventoryName: Invent
    const inventoryComponent = InventoryComponentArray.getComponent(tribeMember);
 
    // Block with the item if possible
-   const attackInfo = getItemAttackInfo(item);
+   const attackInfo = getItemAttackInfo(item.type);
    if (attackInfo.attackTimings.blockTimeTicks !== null) {
       const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribeMember);
       const limbInfo = inventoryUseComponent.getLimbInfo(inventoryName);

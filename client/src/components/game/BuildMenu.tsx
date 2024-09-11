@@ -8,13 +8,14 @@ import Client from "../../client/Client";
 import { GhostInfo, GhostType, PARTIAL_OPACITY, setGhostInfo } from "../../rendering/webgl/entity-ghost-rendering";
 import { getItemTypeImage } from "../../client-item-info";
 import Entity from "../../Entity";
-import { definiteGameState, playerIsHoldingHammer } from "../../game-state/game-states";
 import { countItemTypesInInventory } from "../../inventory-manipulation";
 import { playSound } from "../../sound";
 import Player from "../../entities/Player";
 import Game from "../../Game";
-import { ItemType } from "webgl-test-shared/dist/items/items";
+import { InventoryName, ITEM_TYPE_RECORD, ItemType } from "webgl-test-shared/dist/items/items";
 import { addMenuCloseFunction } from "../../menus";
+import { getPlayerSelectedItem } from "../../player-input";
+import { InventoryComponentArray } from "../../entity-components/InventoryComponent";
 
 /*
 // @Incomplete
@@ -112,6 +113,11 @@ const MATERIAL_UPGRADE_BLUEPRINT_TYPES: Record<UpgradeableEntityType, BlueprintT
    [EntityType.floorSpikes]: BlueprintType.stoneFloorSpikes,
    [EntityType.wallSpikes]: BlueprintType.stoneWallSpikes
 };
+
+const playerIsHoldingHammer = (): boolean => {
+   const heldItem = getPlayerSelectedItem();
+   return heldItem !== null && ITEM_TYPE_RECORD[heldItem.type] === "hammer";
+}
 
 const getMenuOptions = (entity: Entity): ReadonlyArray<MenuOption> => {
    if (!entity.hasServerComponent(ServerComponentType.structure) || !entity.hasServerComponent(ServerComponentType.tribe)) {
@@ -512,12 +518,16 @@ const BuildMenu = () => {
 
       // @Speed
       const selectOption = (option: MenuOption): void => {
+         const inventoryComponent = InventoryComponentArray.getComponent(Player.instance!.id);
+         const hotbar = inventoryComponent.getInventory(InventoryName.hotbar)!;
+         const backpack = inventoryComponent.getInventory(InventoryName.backpack);
+         
          for (let i = 0; i < option.costs.length; i++) {
             const cost = option.costs[i];
 
-            let count = countItemTypesInInventory(definiteGameState.hotbar, cost.itemType);
-            if (definiteGameState.backpack !== null) {
-               count += countItemTypesInInventory(definiteGameState.backpack, cost.itemType);
+            let count = countItemTypesInInventory(hotbar, cost.itemType);
+            if (backpack !== null) {
+               count += countItemTypesInInventory(backpack, cost.itemType);
             }
    
             if (count < cost.amount) {

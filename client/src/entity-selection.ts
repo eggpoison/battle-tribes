@@ -2,7 +2,7 @@ import { EntityType } from "webgl-test-shared/dist/entities";
 import { Point } from "webgl-test-shared/dist/utils";
 import { PlanterBoxPlant, ServerComponentType, TunnelDoorSide } from "webgl-test-shared/dist/components";
 import { Settings } from "webgl-test-shared/dist/settings";
-import Player, { getPlayerSelectedItem } from "./entities/Player";
+import Player from "./entities/Player";
 import Game from "./Game";
 import Board from "./Board";
 import Entity from "./Entity";
@@ -17,6 +17,7 @@ import { CraftingMenu_setCraftingStation, CraftingMenu_setIsVisible } from "./co
 import { CraftingStation } from "webgl-test-shared/dist/items/crafting-recipes";
 import { ItemType, InventoryName } from "webgl-test-shared/dist/items/items";
 import { boxIsWithinRange } from "webgl-test-shared/dist/boxes/boxes";
+import { getPlayerSelectedItem } from "./player-input";
 
 const enum InteractActionType {
    openBuildMenu,

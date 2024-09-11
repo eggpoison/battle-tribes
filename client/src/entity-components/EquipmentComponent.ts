@@ -100,7 +100,7 @@ export const EquipmentComponentArray = new ComponentArray<EquipmentComponent>(Co
 /** Updates the current armour render part based on the entity's inventory component */
 const updateArmourRenderPart = (equipmentComponent: EquipmentComponent): void => {
    const inventoryComponent = equipmentComponent.entity.getServerComponent(ServerComponentType.inventory);
-   const armourInventory = inventoryComponent.getInventory(InventoryName.armourSlot);
+   const armourInventory = inventoryComponent.getInventory(InventoryName.armourSlot)!;
    
    const armour = armourInventory.itemSlots[1];
    if (typeof armour !== "undefined") {
@@ -125,7 +125,7 @@ const updateArmourRenderPart = (equipmentComponent: EquipmentComponent): void =>
 // @Cleanup: Copy and paste from armour
 const updateGloveRenderParts = (equipmentComponent: EquipmentComponent): void => {
    const inventoryComponent = equipmentComponent.entity.getServerComponent(ServerComponentType.inventory);
-   const gloveInventory = inventoryComponent.getInventory(InventoryName.gloveSlot);
+   const gloveInventory = inventoryComponent.getInventory(InventoryName.gloveSlot)!;
    
    // @Incomplete: Make a glove for every hand
    const glove = gloveInventory.itemSlots[1];

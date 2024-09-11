@@ -214,8 +214,12 @@ export function beginSwing(attackingEntity: EntityID, itemSlot: number, inventor
       return false;
    }
 
+   if (limbInfo.heldItemDamageBox !== null) {
+      console.warn("Tried to attack when there was already a damage box.");
+   }
+
    const heldItem = getHeldItem(limbInfo);
-   const heldItemAttackInfo = getItemAttackInfo(heldItem);
+   const heldItemAttackInfo = getItemAttackInfo(heldItem !== null ? heldItem.type : null);
    
    // Begin winding up the attack
    limbInfo.selectedItemSlot = itemSlot;

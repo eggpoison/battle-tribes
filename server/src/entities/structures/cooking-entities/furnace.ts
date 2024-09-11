@@ -1,5 +1,5 @@
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision";
-import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
+import { EntityType } from "webgl-test-shared/dist/entities";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import { Point } from "webgl-test-shared/dist/utils";
 import { createEmptyStructureConnectionInfo } from "webgl-test-shared/dist/structures";
@@ -40,26 +40,27 @@ export function createFurnaceConfig(): ComponentConfig<ComponentTypes> {
          tribeType: 0
       },
       [ServerComponentType.inventory]: {
+         // @Copynpaste @Cleanup: don't add here, add in cooking component
          inventories: [
             {
                inventoryName: InventoryName.fuelInventory,
                width: 1,
                height: 1,
-               options: { acceptsPickedUpItems: false, isDroppedOnDeath: true },
+               options: { acceptsPickedUpItems: false, isDroppedOnDeath: true, isSentToEnemyPlayers: false },
                items: []
             },
             {
                inventoryName: InventoryName.ingredientInventory,
                width: 1,
                height: 1,
-               options: { acceptsPickedUpItems: false, isDroppedOnDeath: true },
+               options: { acceptsPickedUpItems: false, isDroppedOnDeath: true, isSentToEnemyPlayers: false },
                items: []
             },
             {
                inventoryName: InventoryName.outputInventory,
                width: 1,
                height: 1,
-               options: { acceptsPickedUpItems: false, isDroppedOnDeath: true },
+               options: { acceptsPickedUpItems: false, isDroppedOnDeath: true, isSentToEnemyPlayers: false },
                items: []
             }
          ]

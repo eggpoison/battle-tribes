@@ -44,7 +44,7 @@ export function createBarrelConfig(): ComponentConfig<ComponentTypes> {
                inventoryName: InventoryName.inventory,
                width: 3,
                height: 3,
-               options: { acceptsPickedUpItems: false, isDroppedOnDeath: true },
+               options: { acceptsPickedUpItems: false, isDroppedOnDeath: true, isSentToEnemyPlayers: false },
                items: []
             }
          ]

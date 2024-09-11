@@ -1,5 +1,5 @@
 import { EntityType } from "webgl-test-shared/dist/entities";
-import Player, { getPlayerSelectedItem } from "../../entities/Player";
+import Player from "../../entities/Player";
 import { createWebGLProgram, gl } from "../../webgl";
 import Board from "../../Board";
 import Entity from "../../Entity";
@@ -9,6 +9,7 @@ import Camera from "../../Camera";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 import { ItemType, ITEM_INFO_RECORD, PlaceableItemType } from "webgl-test-shared/dist/items/items";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { getPlayerSelectedItem } from "../../player-input";
 
 const CIRCLE_DETAIL = 300;
 

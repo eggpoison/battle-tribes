@@ -168,7 +168,6 @@ const GameInfoDisplay = () => {
       <p>Time: {currentTime.toFixed(2)}</p>
       <p>Ticks: {roundNum(ticks, 2)}</p>
       <p>Server TPS: {tps}</p>
-      <p>Num queued packets: {Game.queuedPackets.length}</p>
 
       <button onClick={toggleSimulation}>{isPaused ? "Resume" : "Pause"} Simulation</button>
 

@@ -58,7 +58,7 @@ export function createBallistaConfig(): ComponentConfig<ComponentTypes> {
                inventoryName: InventoryName.ammoBoxInventory,
                width: 3,
                height: 1,
-               options: { acceptsPickedUpItems: false, isDroppedOnDeath: true },
+               options: { acceptsPickedUpItems: false, isDroppedOnDeath: true, isSentToEnemyPlayers: false },
                items: []
             }
          ]

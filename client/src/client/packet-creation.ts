@@ -10,7 +10,7 @@ import OPTIONS from "../options";
 import { windowHeight, windowWidth } from "../webgl";
 import { InventoryName, ItemType } from "webgl-test-shared/dist/items/items";
 import Client from "./Client";
-import { getInstancePlayerAction } from "../player-input";
+import { getHotbarSelectedItemSlot, getInstancePlayerAction } from "../player-input";
 
 export function createPlayerDataPacket(): ArrayBuffer {
    let lengthBytes = 4 * Float32Array.BYTES_PER_ELEMENT;
@@ -41,7 +41,7 @@ export function createPlayerDataPacket(): ArrayBuffer {
    packet.addNumber(windowWidth);
    packet.addNumber(windowHeight);
 
-   packet.addNumber(latencyGameState.selectedHotbarItemSlot);
+   packet.addNumber(getHotbarSelectedItemSlot());
    packet.addNumber(getInstancePlayerAction(InventoryName.hotbar));
    packet.addNumber(getInstancePlayerAction(InventoryName.offhand));
 
@@ -96,7 +96,7 @@ export function createAttackPacket(): ArrayBuffer {
    
    const packet = new Packet(PacketType.attack, 3 * Float32Array.BYTES_PER_ELEMENT);
 
-   packet.addNumber(latencyGameState.selectedHotbarItemSlot);
+   packet.addNumber(getHotbarSelectedItemSlot());
    packet.addNumber(transformComponent.rotation);
    
    return packet.buffer;
@@ -119,8 +119,7 @@ export function sendRespawnPacket(): void {
 export function sendItemUsePacket(): void {
    const packet = new Packet(PacketType.useItem, 2 * Float32Array.BYTES_PER_ELEMENT);
    
-   const itemSlot = latencyGameState.selectedHotbarItemSlot;
-   packet.addNumber(itemSlot);
+   packet.addNumber(getHotbarSelectedItemSlot());
 
    Client.sendPacket(packet.buffer);
 }

@@ -150,13 +150,13 @@ export const ClientComponents = {
 export type ServerComponentClass<T extends ServerComponentType> = ReturnType<typeof ServerComponents[T]>;
 export type ClientComponentClass<T extends ClientComponentType> = ReturnType<typeof ClientComponents[T]>;
 
-export function createComponent(entity: Entity, componentType: ServerComponentType, reader: PacketReader): ServerComponent {
+export function createComponent(entity: Entity, componentType: ServerComponentType, reader: PacketReader, isPlayer: boolean): ServerComponent {
    switch (componentType) {
       case ServerComponentType.transform: return new TransformComponent(entity, reader);
       case ServerComponentType.cow: return new CowComponent(entity, reader);
       case ServerComponentType.turret: return new TurretComponent(entity, reader);
       case ServerComponentType.tribe: return new TribeComponent(entity, reader);
-      case ServerComponentType.inventory: return new InventoryComponent(entity, reader);
+      case ServerComponentType.inventory: return new InventoryComponent(entity, reader, isPlayer);
       case ServerComponentType.ammoBox: return new AmmoBoxComponent(entity, reader);
       case ServerComponentType.slime: return new SlimeComponent(entity, reader);
       case ServerComponentType.golem: return new GolemComponent(entity, reader);

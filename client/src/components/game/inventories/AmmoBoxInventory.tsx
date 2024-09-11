@@ -45,7 +45,7 @@ const AmmoBoxInventory = () => {
    const ballista = getSelectedEntity() as Ballista;
    
    const inventoryComponent = ballista.getServerComponent(ServerComponentType.inventory);
-   const inventory = inventoryComponent.getInventory(InventoryName.ammoBoxInventory);
+   const inventory = inventoryComponent.getInventory(InventoryName.ammoBoxInventory)!;
    
    const nextAmmoSlot = getAmmoSlot(inventory);
    const ammoBoxComponent = ballista.getServerComponent(ServerComponentType.ammoBox);

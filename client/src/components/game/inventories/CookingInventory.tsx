@@ -10,9 +10,9 @@ const CookingInventory = () => {
    const cookingComponent = cookingEntity.getServerComponent(ServerComponentType.cooking);
    const inventoryComponent = cookingEntity.getServerComponent(ServerComponentType.inventory);
 
-   const fuelInventory = inventoryComponent.getInventory(InventoryName.fuelInventory);
-   const ingredientInventory = inventoryComponent.getInventory(InventoryName.ingredientInventory);
-   const outputInventory = inventoryComponent.getInventory(InventoryName.outputInventory);
+   const fuelInventory = inventoryComponent.getInventory(InventoryName.fuelInventory)!;
+   const ingredientInventory = inventoryComponent.getInventory(InventoryName.ingredientInventory)!;
+   const outputInventory = inventoryComponent.getInventory(InventoryName.outputInventory)!;
 
    const heatingBarProgress = cookingComponent.heatingProgress !== -1 ? cookingComponent.heatingProgress : 0;
 

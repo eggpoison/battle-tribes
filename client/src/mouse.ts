@@ -15,7 +15,7 @@ export let cursorX: number | null = null;
 export let cursorY: number | null = null;
 
 export function calculateCursorWorldPositionX(cursorX: number): number | null {
-   if (Game.getIsPaused() || cursorX === null) return null;
+   if (cursorX === null) return null;
    
    const worldX = (cursorX - halfWindowWidth) / Camera.zoom + Camera.position.x;
    if (worldX < 0 || worldX >= Settings.BOARD_DIMENSIONS * Settings.TILE_SIZE) {
@@ -25,7 +25,7 @@ export function calculateCursorWorldPositionX(cursorX: number): number | null {
 }
 
 export function calculateCursorWorldPositionY(cursorY: number): number | null {
-   if (Game.getIsPaused() || cursorY === null) return null;
+   if (cursorY === null) return null;
    
    const worldY = (-cursorY + halfWindowHeight) / Camera.zoom + Camera.position.y;
    if (worldY < 0 || worldY >= Settings.BOARD_DIMENSIONS * Settings.TILE_SIZE) {

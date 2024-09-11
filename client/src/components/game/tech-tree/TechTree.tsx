@@ -15,8 +15,9 @@ import Camera from "../../../Camera";
 import { playSound } from "../../../sound";
 import TechTreeProgressBar from "./TechTreeProgressBar";
 import { ItemTally2, tallyInventoryItems } from "webgl-test-shared/dist/items/ItemTally";
-import { ItemType } from "webgl-test-shared/dist/items/items";
+import { InventoryName, ItemType } from "webgl-test-shared/dist/items/items";
 import { addMenuCloseFunction } from "../../../menus";
+import { InventoryComponentArray } from "../../../entity-components/InventoryComponent";
 
 const boundsScale = 16;
 
@@ -110,11 +111,14 @@ const TechTooltip = ({ techInfo, techPositionX, techPositionY, zoom }: TechToolt
          <div className="container">
             <ul>
                {Object.entries(techInfo.researchItemRequirements).map(([itemTypeString, itemAmount], i) => {
+                  const inventoryComponent = InventoryComponentArray.getComponent(Player.instance!.id);
+                  const hotbar = inventoryComponent.getInventory(InventoryName.hotbar)!;
+                  
                   const itemType = Number(itemTypeString) as ItemType;
                   const itemProgress = (Game.tribe.techTreeUnlockProgress[techInfo.id]?.itemProgress.hasOwnProperty(itemType)) ? Game.tribe.techTreeUnlockProgress[techInfo.id]!.itemProgress[itemType] : 0;
 
                   const hasFinished = typeof itemProgress !== "undefined" ? itemProgress >= itemAmount : false;
-                  const canContributeItems = countItemTypesInInventory(definiteGameState.hotbar, itemType) > 0;
+                  const canContributeItems = countItemTypesInInventory(hotbar, itemType) > 0;
                   
                   return <li key={i} className={hasFinished ? "completed" : undefined}>
                      <div>
@@ -145,8 +149,11 @@ const TechTooltip = ({ techInfo, techPositionX, techPositionY, zoom }: TechToolt
 
 /** Gets a tally of all the items which we predict will be researched when clicking */
 const getResearchedItems = (techInfo: TechInfo): ItemTally2 => {
+   const inventoryComponent = InventoryComponentArray.getComponent(Player.instance!.id);
+   const hotbar = inventoryComponent.getInventory(InventoryName.hotbar)!;
+   
    const availableItemsTally = new ItemTally2();
-   tallyInventoryItems(availableItemsTally, definiteGameState.hotbar);
+   tallyInventoryItems(availableItemsTally, hotbar);
    
    const researchTally = new ItemTally2();
    for (const [itemTypeString, count] of Object.entries(techInfo.researchItemRequirements)) {

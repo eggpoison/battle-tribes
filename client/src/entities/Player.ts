@@ -6,10 +6,11 @@ import { definiteGameState, latencyGameState } from "../game-state/game-states";
 import { ClientComponentType } from "../entity-components/components";
 import FootprintComponent from "../entity-components/FootprintComponent";
 import EquipmentComponent from "../entity-components/EquipmentComponent";
-import { Item } from "webgl-test-shared/dist/items/items";
+import { InventoryName, Item } from "webgl-test-shared/dist/items/items";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { PhysicsComponentArray } from "../entity-components/PhysicsComponent";
 import { Settings } from "webgl-test-shared/dist/settings";
+import { InventoryComponentArray } from "../entity-components/InventoryComponent";
 
 /** Updates the rotation of the player to match the cursor position */
 export function updatePlayerRotation(cursorX: number, cursorY: number): void {
@@ -99,13 +100,6 @@ export function updatePlayerRotation(cursorX: number, cursorY: number): void {
 //    setCraftingMenuAvailableRecipes(availableCraftingRecipes);
 //    setCraftingMenuAvailableCraftingStations(availableCraftingStations);
 // }
-
-export function getPlayerSelectedItem(): Item | null {
-   if (Player.instance === null || definiteGameState.hotbar === null) return null;
-
-   const item: Item | undefined = definiteGameState.hotbar.itemSlots[latencyGameState.selectedHotbarItemSlot];
-   return item || null;
-}
 
 class Player extends TribeMember {
    // @Cleanup: once reworked entity out of existance, this should be changed to instanceID which can be EntityID | null (or Entity | null)

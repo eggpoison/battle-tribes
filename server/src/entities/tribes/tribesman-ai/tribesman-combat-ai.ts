@@ -58,7 +58,7 @@ const doMeleeAttack = (tribesman: EntityID): void => {
 }
 
 const getItemAttackExecuteTimeSeconds = (item: Item): number => {
-   const attackInfo = getItemAttackInfo(item);
+   const attackInfo = getItemAttackInfo(item.type);
    const timings = attackInfo.attackTimings;
    return (timings.windupTimeTicks + timings.swingTimeTicks + timings.returnTimeTicks) / Settings.TPS;
 }

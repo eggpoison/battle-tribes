@@ -91,7 +91,7 @@ function onInitialise(config: ComponentConfig<ServerComponentType.health | Serve
       inventoryName: InventoryName.hotbar,
       width: getHotbarSize(entityType as TribesmanEntityType),
       height: 1,
-      options: { acceptsPickedUpItems: true, isDroppedOnDeath: true },
+      options: { acceptsPickedUpItems: true, isDroppedOnDeath: true, isSentToEnemyPlayers: false },
       // @Temporary
       items: [
          {
@@ -127,7 +127,7 @@ function onInitialise(config: ComponentConfig<ServerComponentType.health | Serve
       inventoryName: InventoryName.offhand,
       width: 1,
       height: 1,
-      options: { acceptsPickedUpItems: false, isDroppedOnDeath: true },
+      options: { acceptsPickedUpItems: false, isDroppedOnDeath: true, isSentToEnemyPlayers: false },
       items: []
    });
    
@@ -136,7 +136,7 @@ function onInitialise(config: ComponentConfig<ServerComponentType.health | Serve
       inventoryName: InventoryName.craftingOutputSlot,
       width: 1,
       height: 1,
-      options: { acceptsPickedUpItems: false, isDroppedOnDeath: true },
+      options: { acceptsPickedUpItems: false, isDroppedOnDeath: true, isSentToEnemyPlayers: false },
       items: []
    });
    
@@ -145,7 +145,7 @@ function onInitialise(config: ComponentConfig<ServerComponentType.health | Serve
       inventoryName: InventoryName.heldItemSlot,
       width: 1,
       height: 1,
-      options: { acceptsPickedUpItems: false, isDroppedOnDeath: true },
+      options: { acceptsPickedUpItems: false, isDroppedOnDeath: true, isSentToEnemyPlayers: false },
       items: []
    });
    
@@ -154,7 +154,7 @@ function onInitialise(config: ComponentConfig<ServerComponentType.health | Serve
       inventoryName: InventoryName.armourSlot,
       width: 1,
       height: 1,
-      options: { acceptsPickedUpItems: false, isDroppedOnDeath: true },
+      options: { acceptsPickedUpItems: false, isDroppedOnDeath: true, isSentToEnemyPlayers: true },
       items: []
    });
    
@@ -163,7 +163,7 @@ function onInitialise(config: ComponentConfig<ServerComponentType.health | Serve
       inventoryName: InventoryName.backpackSlot,
       width: 1,
       height: 1,
-      options: { acceptsPickedUpItems: false, isDroppedOnDeath: true },
+      options: { acceptsPickedUpItems: false, isDroppedOnDeath: true, isSentToEnemyPlayers: false },
       items: []
    });
    
@@ -172,7 +172,7 @@ function onInitialise(config: ComponentConfig<ServerComponentType.health | Serve
       inventoryName: InventoryName.gloveSlot,
       width: 1,
       height: 1,
-      options: { acceptsPickedUpItems: false, isDroppedOnDeath: true },
+      options: { acceptsPickedUpItems: false, isDroppedOnDeath: true, isSentToEnemyPlayers: true },
       items: []
    });
    
@@ -181,7 +181,7 @@ function onInitialise(config: ComponentConfig<ServerComponentType.health | Serve
       inventoryName: InventoryName.backpack,
       width: 0,
       height: 0,
-      options: { acceptsPickedUpItems: false, isDroppedOnDeath: true },
+      options: { acceptsPickedUpItems: false, isDroppedOnDeath: true, isSentToEnemyPlayers: false },
       items: []
    });
 

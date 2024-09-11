@@ -169,6 +169,7 @@ const currentActionHasFinished = (limbInfo: LimbInfo): boolean => {
 }
 
 // @Cleanup: remove once proper method is made
+// @Cleanup: also make getHeldItemAttackInfo method
 export function getHeldItem(limbInfo: LimbInfo): Item | null {
    const item = limbInfo.associatedInventory.itemSlots[limbInfo.selectedItemSlot];
    return typeof item !== "undefined" ? item : null;
@@ -280,7 +281,7 @@ function onTick(inventoryUseComponent: InventoryUseComponent, entity: EntityID):
                const existingDamageBox = limbInfo.blockingDamageBox?.deref();
                if (typeof existingDamageBox === "undefined") {
                   const heldItem = getHeldItem(limbInfo);
-                  const heldItemAttackInfo = getItemAttackInfo(heldItem);
+                  const heldItemAttackInfo = getItemAttackInfo(heldItem !== null ? heldItem.type : null);
                   const damageBoxInfo = heldItemAttackInfo.heldItemDamageBoxInfo!;
                   
                   // @Copynpaste
@@ -297,7 +298,7 @@ function onTick(inventoryUseComponent: InventoryUseComponent, entity: EntityID):
             }
             case LimbAction.windAttack: {
                const heldItem = getHeldItem(limbInfo);
-               const heldItemAttackInfo = getItemAttackInfo(heldItem);
+               const heldItemAttackInfo = getItemAttackInfo(heldItem !== null ? heldItem.type : null);
                
                limbInfo.action = LimbAction.attack;
                limbInfo.currentActionElapsedTicks = 0;
@@ -326,7 +327,7 @@ function onTick(inventoryUseComponent: InventoryUseComponent, entity: EntityID):
             }
             case LimbAction.attack: {
                const heldItem = getHeldItem(limbInfo);
-               const heldItemAttackInfo = getItemAttackInfo(heldItem);
+               const heldItemAttackInfo = getItemAttackInfo(heldItem !== null ? heldItem.type : null);
 
                limbInfo.action = LimbAction.returnAttackToRest;
                limbInfo.currentActionElapsedTicks = 0;
@@ -353,7 +354,7 @@ function onTick(inventoryUseComponent: InventoryUseComponent, entity: EntityID):
          const swingProgress = limbInfo.currentActionElapsedTicks / limbInfo.currentActionDurationTicks;
 
          const heldItem = getHeldItem(limbInfo);
-         const attackInfo = getItemAttackInfo(heldItem);
+         const attackInfo = getItemAttackInfo(heldItem !== null ? heldItem.type : null);
          lerpLimbBetweenStates(entity, limbInfo, attackInfo.attackPattern.windedBack, attackInfo.attackPattern.swung, swingProgress);
       }
 
@@ -399,7 +400,7 @@ function getDataLength(entity: EntityID): number {
 
    let lengthBytes = 2 * Float32Array.BYTES_PER_ELEMENT;
    for (const useInfo of inventoryUseComponent.limbInfos) {
-      lengthBytes += 3 * Float32Array.BYTES_PER_ELEMENT;
+      lengthBytes += 4 * Float32Array.BYTES_PER_ELEMENT;
       lengthBytes += Float32Array.BYTES_PER_ELEMENT;
       lengthBytes += 2 * Float32Array.BYTES_PER_ELEMENT * Object.keys(useInfo.spearWindupCooldowns).length;
       lengthBytes += getCrossbowLoadProgressRecordLength(useInfo);
@@ -418,6 +419,7 @@ function addDataToPacket(packet: Packet, entity: EntityID): void {
 
       packet.addNumber(limbInfo.associatedInventory.name);
       packet.addNumber(limbInfo.selectedItemSlot);
+      packet.addNumber(limbInfo.associatedInventory.itemSlots[limbInfo.selectedItemSlot]?.type || -1)
       packet.addNumber(limbInfo.bowCooldownTicks);
 
       // @Cleanup: Copy and paste

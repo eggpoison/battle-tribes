@@ -937,11 +937,11 @@ export function itemTypeIsGlove(itemType: ItemType): boolean {
    return ITEM_TYPE_RECORD[itemType] === "glove";
 }
 
-export function getItemAttackInfo(item: Item | null): ItemCategoryAttackInfo {
-   if (item === null) {
+export function getItemAttackInfo(itemType: ItemType | null): ItemCategoryAttackInfo {
+   if (itemType === null) {
       return UNARMED_ATTACK_INFO;
    }
 
-   const itemCategory = ITEM_TYPE_RECORD[item.type];
+   const itemCategory = ITEM_TYPE_RECORD[itemType];
    return ITEM_CATEGORY_ATTACK_INFO_RECORD[itemCategory];
 }

@@ -44,26 +44,27 @@ export function createCampfireConfig(): ComponentConfig<ComponentTypes> {
          tribeType: 0
       },
       [ServerComponentType.inventory]: {
+         // @Copynpaste @Cleanup: don't add here, add in cooking component
          inventories: [
             {
                inventoryName: InventoryName.fuelInventory,
                width: 1,
                height: 1,
-               options: { acceptsPickedUpItems: false, isDroppedOnDeath: true },
+               options: { acceptsPickedUpItems: false, isDroppedOnDeath: true, isSentToEnemyPlayers: false },
                items: []
             },
             {
                inventoryName: InventoryName.ingredientInventory,
                width: 1,
                height: 1,
-               options: { acceptsPickedUpItems: false, isDroppedOnDeath: true },
+               options: { acceptsPickedUpItems: false, isDroppedOnDeath: true, isSentToEnemyPlayers: false },
                items: []
             },
             {
                inventoryName: InventoryName.outputInventory,
                width: 1,
                height: 1,
-               options: { acceptsPickedUpItems: false, isDroppedOnDeath: true },
+               options: { acceptsPickedUpItems: false, isDroppedOnDeath: true, isSentToEnemyPlayers: false },
                items: []
             }
          ]

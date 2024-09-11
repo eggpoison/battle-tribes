@@ -4,9 +4,8 @@ import CLIENT_ITEM_INFO_RECORD, { getItemTypeImage } from "../../../client-item-
 import Client from "../../../client/Client";
 import { windowHeight } from "../../../webgl";
 import ItemSlot, { ItemSlotCallbackInfo } from "../inventories/ItemSlot";
-import { countItemTypesInInventory, leftClickItemSlot } from "../../../inventory-manipulation";
+import { countItemTypesInInventory } from "../../../inventory-manipulation";
 import Player from "../../../entities/Player";
-import { definiteGameState } from "../../../game-state/game-states";
 import Game from "../../../Game";
 import { playSound } from "../../../sound";
 import { CraftingRecipe, CraftingStation, CRAFTING_RECIPES, forceGetItemRecipe } from "webgl-test-shared/dist/items/crafting-recipes";
@@ -222,7 +221,11 @@ const CraftingMenu = () => {
    // }
 
    CraftingMenu_updateRecipes = useCallback((): void => {
-      const inventoryComponent = InventoryComponentArray.getComponent(Player.instance!.id);
+      if (Player.instance === null) {
+         return;
+      }
+      
+      const inventoryComponent = InventoryComponentArray.getComponent(Player.instance.id);
       const hotbar = inventoryComponent.getInventory(InventoryName.hotbar)!;
       const backpack = inventoryComponent.getInventory(InventoryName.backpack);
       

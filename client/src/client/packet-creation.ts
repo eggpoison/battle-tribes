@@ -128,3 +128,15 @@ export function sendStopItemUsePacket(): void {
    const packet = new Packet(PacketType.stopItemUse, Float32Array.BYTES_PER_ELEMENT);
    Client.sendPacket(packet.buffer);
 }
+
+export function sendItemDropPacket(isOffhand: boolean, itemSlot: number, dropAmount: number, throwDirection: number): void {
+   const packet = new Packet(PacketType.dropItem, 5 * Float32Array.BYTES_PER_ELEMENT);
+
+   packet.addBoolean(isOffhand);
+   packet.padOffset(3);
+   packet.addNumber(itemSlot);
+   packet.addNumber(dropAmount);
+   packet.addNumber(throwDirection);
+
+   Client.sendPacket(packet.buffer);
+}

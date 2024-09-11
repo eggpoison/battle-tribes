@@ -241,12 +241,14 @@ class InventoryComponent extends ServerComponent {
       // Update existing inventories
       for (const inventoryNameKey of Object.keys(this.inventories)) {
          const inventoryName = Number(inventoryNameKey) as InventoryName;
-         const inventoryData = data.inventories[inventoryName]!;
-
-         const inventory = this.inventories[inventoryName]!;
-         const hasChanged = updateInventoryFromData(inventory, inventoryData, isPlayer);
-         if (hasChanged && isPlayer) {
-            registerInventoryUpdate(inventoryName);
+         const inventoryData = data.inventories[inventoryName];
+         // @Hack: this shouldn't be necessary, but for some reason is needed sometimes when the player respawns
+         if (typeof inventoryData !== "undefined") {
+            const inventory = this.inventories[inventoryName]!;
+            const hasChanged = updateInventoryFromData(inventory, inventoryData, isPlayer);
+            if (hasChanged && isPlayer) {
+               registerInventoryUpdate(inventoryName);
+            }
          }
       }
    }

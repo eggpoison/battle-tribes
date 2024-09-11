@@ -24,7 +24,7 @@ import { calculateCursorWorldPositionX, calculateCursorWorldPositionY } from "./
 import { Item, ITEM_TYPE_RECORD, InventoryName, ITEM_INFO_RECORD, ConsumableItemInfo, ConsumableItemCategory, PlaceableItemType, getItemAttackInfo, ItemType } from "webgl-test-shared/dist/items/items";
 import { playBowFireSound } from "./entity-tick-events";
 import { closeCurrentMenu } from "./menus";
-import { createAttackPacket, sendItemUsePacket, sendStopItemUsePacket } from "./client/packet-creation";
+import { createAttackPacket, sendItemDropPacket, sendItemUsePacket, sendStopItemUsePacket } from "./client/packet-creation";
 import { HealthComponentArray } from "./entity-components/HealthComponent";
 import { InventoryComponentArray } from "./entity-components/InventoryComponent";
 
@@ -364,7 +364,7 @@ const createItemUseListeners = (): void => {
 
          const selectedItemInfo = getSelectedItemInfo();
          if (selectedItemInfo !== null) {
-            itemRightClickDown(selectedItemInfo.item, selectedItemInfo.inventoryName, selectedItemInfo.itemSlot);
+            onItemRightClickDown(selectedItemInfo.item, selectedItemInfo.inventoryName, selectedItemInfo.itemSlot);
          }
          
          const didSelectEntity = attemptEntitySelection();
@@ -391,7 +391,7 @@ const createItemUseListeners = (): void => {
 
          const selectedItemInfo = getSelectedItemInfo();
          if (selectedItemInfo !== null) {
-            itemRightClickUp(selectedItemInfo.item, selectedItemInfo.inventoryName);
+            onItemRightClickUp(selectedItemInfo.item, selectedItemInfo.inventoryName);
          }
       }
    });
@@ -498,9 +498,15 @@ export function createPlayerInputListeners(): void {
 
    addKeyListener("q", () => {
       if (Player.instance !== null) {
+         const selectedItemInfo = getSelectedItemInfo();
+         if (selectedItemInfo === null) {
+            return;
+         }
+
+         const isOffhand = selectedItemInfo.inventoryName === InventoryName.offhand;
          const playerTransformComponent = Player.instance.getServerComponent(ServerComponentType.transform);
          const dropAmount = keyIsPressed("shift") ? 99999 : 1;
-         Client.sendItemDropPacket(hotbarSelectedItemSlot, dropAmount, playerTransformComponent.rotation);
+         sendItemDropPacket(isOffhand, hotbarSelectedItemSlot, dropAmount, playerTransformComponent.rotation);
       }
    });
 }
@@ -665,7 +671,7 @@ const unuseItem = (itemType: ItemType): void => {
    }
 }
 
-const itemRightClickDown = (item: Item, itemInventoryName: InventoryName, itemSlot: number): void => {
+const onItemRightClickDown = (item: Item, itemInventoryName: InventoryName, itemSlot: number): void => {
    const transformComponent = Player.instance!.getServerComponent(ServerComponentType.transform);
    const inventoryUseComponent = Player.instance!.getServerComponent(ServerComponentType.inventoryUse);
 
@@ -775,7 +781,7 @@ const itemRightClickDown = (item: Item, itemInventoryName: InventoryName, itemSl
    }
 }
 
-const itemRightClickUp = (item: Item, inventoryName: InventoryName): void => {
+const onItemRightClickUp = (item: Item, inventoryName: InventoryName): void => {
    const inventoryUseComponent = Player.instance!.getServerComponent(ServerComponentType.inventoryUse);
    const limb = inventoryUseComponent.getLimbInfoByInventoryName(inventoryName);
 
@@ -843,7 +849,7 @@ export function selectItemSlot(itemSlot: number): void {
    if (typeof newItem !== "undefined") {
       selectItem(newItem);
       if (rightMouseButtonIsPressed) {
-         itemRightClickDown(newItem, InventoryName.hotbar, itemSlot);
+         onItemRightClickDown(newItem, InventoryName.hotbar, itemSlot);
       }
    }
 
@@ -906,23 +912,6 @@ const tickItem = (itemType: ItemType): void => {
          setGhostInfo(ghostInfo);
 
          break;
-      }
-   }
-}
-
-export function removeSelectedItem(item: Item): void {
-   if (Player.instance === null) {
-      return;
-   }
-
-   const itemCategory = ITEM_TYPE_RECORD[item.type];
-   switch (itemCategory) {
-      case "healing": {
-         unuseItem(item.type);
-         break;
-      }
-      case "placeable": {
-         latencyGameState.playerIsPlacingEntity = false;
       }
    }
 }

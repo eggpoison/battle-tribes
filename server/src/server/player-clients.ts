@@ -199,14 +199,6 @@ const processItemReleasePacket = (playerClient: PlayerClient, entity: EntityID, 
    consumeItemTypeFromInventory(inventoryComponent, InventoryName.heldItemSlot, heldItem.type, amountAdded);
 }
 
-const processItemDropPacket = (playerClient: PlayerClient, inventoryName: InventoryName, itemSlot: number, dropAmount: number, throwDirection: number): void => {
-   if (!Board.hasEntity(playerClient.instance)) {
-      return;
-   }
-
-   throwItem(playerClient.instance, inventoryName, itemSlot, dropAmount, throwDirection);
-}
-
 const processCommandPacket = (playerClient: PlayerClient, command: string): void => {
    if (!Board.hasEntity(playerClient.instance)) {
       return;
@@ -518,14 +510,11 @@ export function addPlayerClient(playerClient: PlayerClient, player: EntityID, pl
       processItemReleasePacket(playerClient, entity, inventoryName, itemSlot, amount);
    });
 
-   socket.on("held_item_drop", (dropAmount: number, throwDirection: number) => {
-      processItemDropPacket(playerClient, InventoryName.heldItemSlot, 1, dropAmount, throwDirection);
-   });
+   // @Incomplete
+   // socket.on("held_item_drop", (dropAmount: number, throwDirection: number) => {
+   //    processItemDropPacket(playerClient, InventoryName.heldItemSlot, 1, dropAmount, throwDirection);
+   // });
 
-   socket.on("item_drop", (itemSlot: number, dropAmount: number, throwDirection: number) => {
-      processItemDropPacket(playerClient, InventoryName.hotbar, itemSlot, dropAmount, throwDirection);
-   });
-   
    socket.on("command", (command: string) => {
       processCommandPacket(playerClient, command);
    });

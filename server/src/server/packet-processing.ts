@@ -10,7 +10,7 @@ import { PlayerComponentArray } from "../components/PlayerComponent";
 import { TransformComponentArray } from "../components/TransformComponent";
 import { TribeComponentArray } from "../components/TribeComponent";
 import { startEating, startChargingBow, startChargingSpear, startChargingBattleaxe, createPlayerConfig } from "../entities/tribes/player";
-import { calculateRadialAttackTargets, useItem } from "../entities/tribes/tribe-member";
+import { calculateRadialAttackTargets, throwItem, useItem } from "../entities/tribes/tribe-member";
 import { beginSwing } from "../entities/tribes/limb-use";
 import { InventoryComponentArray, getInventory, addItemToInventory } from "../components/InventoryComponent";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
@@ -241,4 +241,19 @@ export function processStopItemUsePacket(playerClient: PlayerClient): void {
    }
    
    limbInfo.action = LimbAction.none;
+}
+
+export function processItemDropPacket(playerClient: PlayerClient, reader: PacketReader): void {
+   if (!Board.hasEntity(playerClient.instance)) {
+      return;
+   }
+
+   const isOffhand = reader.readBoolean();
+   reader.padOffset(3);
+   const itemSlot = reader.readNumber();
+   const dropAmount = reader.readNumber();
+   const throwDirection = reader.readNumber();
+
+   const inventoryName = isOffhand ? InventoryName.offhand : InventoryName.hotbar;
+   throwItem(playerClient.instance, inventoryName, itemSlot, dropAmount, throwDirection);
 }

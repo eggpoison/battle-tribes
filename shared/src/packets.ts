@@ -14,6 +14,7 @@ export const enum PacketType {
    respawn,
    useItem,
    stopItemUse,
+   dropItem,
    devGiveItem, // ((DEV))
    // -----------------
    // SERVER-TO-CLIENT

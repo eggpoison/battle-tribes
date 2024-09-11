@@ -2,11 +2,11 @@ import { HitboxCollisionBit, DEFAULT_HITBOX_COLLISION_MASK } from "../collision"
 import { EntityType } from "../entities";
 import { StructureType } from "../structures";
 import { Point } from "../utils";
-import { createHitbox, HitboxCollisionType, HitboxFlags, HitboxWrapper } from "./boxes";
+import { createHitbox, HitboxCollisionType, HitboxFlags, Hitbox } from "./boxes";
 import CircularBox from "./CircularBox";
 import RectangularBox from "./RectangularBox";
 
-export function createWallHitboxes(): ReadonlyArray<HitboxWrapper> {
+export function createWallHitboxes(): ReadonlyArray<Hitbox> {
    const WALL_SIZE = 64;
 
    const box = new RectangularBox(new Point(0, 0), WALL_SIZE, WALL_SIZE, 0);
@@ -15,7 +15,7 @@ export function createWallHitboxes(): ReadonlyArray<HitboxWrapper> {
    return [hitbox];
 }
 
-export function createWarriorHutHitboxes(): ReadonlyArray<HitboxWrapper> {
+export function createWarriorHutHitboxes(): ReadonlyArray<Hitbox> {
    const WARRIOR_HUT_SIZE = 104;
 
    const box = new RectangularBox(new Point(0, 0), WARRIOR_HUT_SIZE, WARRIOR_HUT_SIZE, 0);
@@ -25,12 +25,12 @@ export function createWarriorHutHitboxes(): ReadonlyArray<HitboxWrapper> {
 }
 
 // @Incomplete: local id
-export function createTunnelHitboxes(): ReadonlyArray<HitboxWrapper> {
+export function createTunnelHitboxes(): ReadonlyArray<Hitbox> {
    const HITBOX_WIDTH = 8;
    const HITBOX_HEIGHT = 64;
    const THIN_HITBOX_WIDTH = 0.1;
 
-   const hitboxes = new Array<HitboxWrapper>();
+   const hitboxes = new Array<Hitbox>();
    
    // Soft hitboxes
    hitboxes.push(createHitbox(new RectangularBox(new Point(-32 + HITBOX_WIDTH / 2, 0), HITBOX_WIDTH, HITBOX_HEIGHT, 0), 1, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0));
@@ -43,7 +43,7 @@ export function createTunnelHitboxes(): ReadonlyArray<HitboxWrapper> {
    return hitboxes;
 }
 
-export function createTribeTotemHitboxes(): ReadonlyArray<HitboxWrapper> {
+export function createTribeTotemHitboxes(): ReadonlyArray<Hitbox> {
    const HITBOX_SIZE = 120;
    
    const box = new CircularBox(new Point(0, 0), 0, HITBOX_SIZE / 2);
@@ -52,7 +52,7 @@ export function createTribeTotemHitboxes(): ReadonlyArray<HitboxWrapper> {
    return [hitbox];
 }
 
-export function createStonecarvingTableHitboxes(): ReadonlyArray<HitboxWrapper> {
+export function createStonecarvingTableHitboxes(): ReadonlyArray<Hitbox> {
    const HITBOX_WIDTH = 120;
    const HITBOX_HEIGHT = 80;
 
@@ -62,7 +62,7 @@ export function createStonecarvingTableHitboxes(): ReadonlyArray<HitboxWrapper> 
    return [hitbox];
 }
 
-export function createFloorSpikesHitboxes(): ReadonlyArray<HitboxWrapper> {
+export function createFloorSpikesHitboxes(): ReadonlyArray<Hitbox> {
    const FLOOR_HITBOX_SIZE = 48;
    
    const box = new RectangularBox(new Point(0, 0), FLOOR_HITBOX_SIZE, FLOOR_HITBOX_SIZE, 0);
@@ -72,7 +72,7 @@ export function createFloorSpikesHitboxes(): ReadonlyArray<HitboxWrapper> {
    return [hitbox];
 }
 
-export function createWallSpikesHitboxes(): ReadonlyArray<HitboxWrapper> {
+export function createWallSpikesHitboxes(): ReadonlyArray<Hitbox> {
    const WALL_HITBOX_WIDTH = 56;
    const WALL_HITBOX_HEIGHT = 28;
 
@@ -83,19 +83,19 @@ export function createWallSpikesHitboxes(): ReadonlyArray<HitboxWrapper> {
    return [hitbox];
 }
 
-export function createSlingTurretHitboxes(): ReadonlyArray<HitboxWrapper> {
+export function createSlingTurretHitboxes(): ReadonlyArray<Hitbox> {
    const box = new CircularBox(new Point(0, 0), 0, 40);
    const hitbox = createHitbox(box, 1.5, HitboxCollisionType.hard, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0);
    return [hitbox];
 }
 
-export function createResearchBenchHitboxes(): ReadonlyArray<HitboxWrapper> {
+export function createResearchBenchHitboxes(): ReadonlyArray<Hitbox> {
    const box = new RectangularBox(new Point(0, 0), 128, 80, 0);
    const hitbox = createHitbox(box, 1.8, HitboxCollisionType.hard, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0);
    return [hitbox];
 }
 
-export function createFloorPunjiSticksHitboxes(): ReadonlyArray<HitboxWrapper> {
+export function createFloorPunjiSticksHitboxes(): ReadonlyArray<Hitbox> {
    const FLOOR_HITBOX_SIZE = 48;
 
    const box = new RectangularBox(new Point(0, 0), FLOOR_HITBOX_SIZE, FLOOR_HITBOX_SIZE, 0);
@@ -104,7 +104,7 @@ export function createFloorPunjiSticksHitboxes(): ReadonlyArray<HitboxWrapper> {
    return [hitbox];
 }
 
-export function createWallPunjiSticksHitboxes(): ReadonlyArray<HitboxWrapper> {
+export function createWallPunjiSticksHitboxes(): ReadonlyArray<Hitbox> {
    const WALL_HITBOX_WIDTH = 56;
    const WALL_HITBOX_HEIGHT = 32;
 
@@ -114,7 +114,7 @@ export function createWallPunjiSticksHitboxes(): ReadonlyArray<HitboxWrapper> {
    return [hitbox];
 }
 
-export function createPlanterBoxHitboxes(): ReadonlyArray<HitboxWrapper> {
+export function createPlanterBoxHitboxes(): ReadonlyArray<Hitbox> {
    const HITBOX_SIZE = 80;
 
    const box = new RectangularBox(new Point(0, 0), HITBOX_SIZE, HITBOX_SIZE, 0);
@@ -122,7 +122,7 @@ export function createPlanterBoxHitboxes(): ReadonlyArray<HitboxWrapper> {
    return [hitbox];
 }
 
-export function createHealingTotemHitboxes(): ReadonlyArray<HitboxWrapper> {
+export function createHealingTotemHitboxes(): ReadonlyArray<Hitbox> {
    const SIZE = 96;
 
    const box = new CircularBox(new Point(0, 0), 0, SIZE / 2);
@@ -130,7 +130,7 @@ export function createHealingTotemHitboxes(): ReadonlyArray<HitboxWrapper> {
    return [hitbox];
 }
 
-export function createFrostshaperHitboxes(): ReadonlyArray<HitboxWrapper> {
+export function createFrostshaperHitboxes(): ReadonlyArray<Hitbox> {
    const HITBOX_WIDTH = 120;
    const HITBOX_HEIGHT = 80;
 
@@ -139,7 +139,7 @@ export function createFrostshaperHitboxes(): ReadonlyArray<HitboxWrapper> {
    return [hitbox];
 }
 
-export function createFenceHitboxes(): ReadonlyArray<HitboxWrapper> {
+export function createFenceHitboxes(): ReadonlyArray<Hitbox> {
    const NODE_HITBOX_WIDTH = 20;
    const NODE_HITBOX_HEIGHT = 20;
    
@@ -148,7 +148,7 @@ export function createFenceHitboxes(): ReadonlyArray<HitboxWrapper> {
    return [hitbox];
 }
 
-export function createFenceGateHitboxes(): ReadonlyArray<HitboxWrapper> {
+export function createFenceGateHitboxes(): ReadonlyArray<Hitbox> {
    const HITBOX_WIDTH = 56;
    const HITBOX_HEIGHT = 16;
 
@@ -157,14 +157,14 @@ export function createFenceGateHitboxes(): ReadonlyArray<HitboxWrapper> {
    return [hitbox];
 }
 
-export function createEmbrasureHitboxes(): ReadonlyArray<HitboxWrapper> {
+export function createEmbrasureHitboxes(): ReadonlyArray<Hitbox> {
    const VERTICAL_HITBOX_WIDTH = 12;
    const VERTICAL_HITBOX_HEIGHT = 20;
    
    const HORIZONTAL_HITBOX_WIDTH = 24;
    const HORIZONTAL_HITBOX_HEIGHT = 16;
 
-   const hitboxes = new Array<HitboxWrapper>();
+   const hitboxes = new Array<Hitbox>();
    
    // Add the two vertical hitboxes (can stop arrows)
    hitboxes.push(createHitbox(new RectangularBox(new Point(-(64 - VERTICAL_HITBOX_WIDTH) / 2 + 0.025, 0), VERTICAL_HITBOX_WIDTH, VERTICAL_HITBOX_HEIGHT, 0), 0.4, HitboxCollisionType.hard, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0));
@@ -177,7 +177,7 @@ export function createEmbrasureHitboxes(): ReadonlyArray<HitboxWrapper> {
    return hitboxes;
 }
 
-export function createDoorHitboxes(): ReadonlyArray<HitboxWrapper> {
+export function createDoorHitboxes(): ReadonlyArray<Hitbox> {
    const HITBOX_WIDTH = 64;
    const HITBOX_HEIGHT = 16;
 
@@ -186,7 +186,7 @@ export function createDoorHitboxes(): ReadonlyArray<HitboxWrapper> {
    return [hitbox];
 }
 
-export function createBarrelHitboxes(): ReadonlyArray<HitboxWrapper> {
+export function createBarrelHitboxes(): ReadonlyArray<Hitbox> {
    const HITBOX_SIZE = 80;
 
    const box = new CircularBox(new Point(0, 0), 0, HITBOX_SIZE / 2);
@@ -194,7 +194,7 @@ export function createBarrelHitboxes(): ReadonlyArray<HitboxWrapper> {
    return [hitbox];
 }
 
-export function createBallistaHitboxes(): ReadonlyArray<HitboxWrapper> {
+export function createBallistaHitboxes(): ReadonlyArray<Hitbox> {
    const HITBOX_SIZE = 100;
 
    const box = new RectangularBox(new Point(0, 0), HITBOX_SIZE, HITBOX_SIZE, 0);
@@ -202,15 +202,15 @@ export function createBallistaHitboxes(): ReadonlyArray<HitboxWrapper> {
    return [hitbox];
 }
 
-export function createWorkbenchHitboxes(): ReadonlyArray<HitboxWrapper> {
+export function createWorkbenchHitboxes(): ReadonlyArray<Hitbox> {
 
-   const hitboxes = new Array<HitboxWrapper>();
+   const hitboxes = new Array<Hitbox>();
    hitboxes.push(createHitbox(new RectangularBox(new Point(0, 0), 72, 80, 0), 1.6, HitboxCollisionType.hard, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0));
    hitboxes.push(createHitbox(new RectangularBox(new Point(0, 0), 80, 72, 0), 1.6, HitboxCollisionType.hard, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0));
    return hitboxes;
 }
 
-export function createWorkerHutHitboxes(): ReadonlyArray<HitboxWrapper> {
+export function createWorkerHutHitboxes(): ReadonlyArray<Hitbox> {
    const HITBOX_SIZE = 88;
 
    const box = new RectangularBox(new Point(0, 0), HITBOX_SIZE, HITBOX_SIZE, 0);
@@ -218,7 +218,7 @@ export function createWorkerHutHitboxes(): ReadonlyArray<HitboxWrapper> {
    return [hitbox];
 }
 
-export function createFurnaceHitboxes(): ReadonlyArray<HitboxWrapper> {
+export function createFurnaceHitboxes(): ReadonlyArray<Hitbox> {
    const HITBOX_SIZE = 80;
    
    const box = new RectangularBox(new Point(0, 0), HITBOX_SIZE, HITBOX_SIZE, 0);
@@ -226,7 +226,7 @@ export function createFurnaceHitboxes(): ReadonlyArray<HitboxWrapper> {
    return [hitbox];
 }
 
-export function createCampfireHitboxes(): ReadonlyArray<HitboxWrapper> {
+export function createCampfireHitboxes(): ReadonlyArray<Hitbox> {
    const CAMPFIRE_SIZE = 104;
 
    const box = new CircularBox(new Point(0, 0), 0, CAMPFIRE_SIZE / 2);
@@ -240,7 +240,7 @@ Generic creation functions
 */
 
 // @Incomplete: Include all entity types not just structures
-export function createEntityHitboxes(entityType: StructureType): ReadonlyArray<HitboxWrapper> {
+export function createEntityHitboxes(entityType: StructureType): ReadonlyArray<Hitbox> {
    switch (entityType) {
       case EntityType.wall:              return createWallHitboxes();
       case EntityType.workbench:         return createWorkbenchHitboxes();

@@ -2,7 +2,7 @@ import { getChunk } from "./board-interface";
 import { rectanglesAreColliding } from "./collision";
 import { EntityID } from "./entities";
 import { createEntityHitboxes } from "./boxes/entity-hitbox-creation";
-import { Box, boxIsCircular, assertBoxIsRectangular, updateBox, BoxWrapper, HitboxWrapper } from "./boxes/boxes";
+import { Box, boxIsCircular, assertBoxIsRectangular, updateBox, BoxWrapper, Hitbox } from "./boxes/boxes";
 import { Settings } from "./settings";
 import { StructureType, WorldInfo } from "./structures";
 import { angle, rotateXAroundPoint, rotateYAroundPoint } from "./utils";
@@ -128,7 +128,7 @@ export function getCollisionPushInfo(pushedHitbox: Box, pushingHitbox: Box): Col
    }
 }
 
-export function hitboxesAreColliding(hitbox: Box, hitboxes: ReadonlyArray<HitboxWrapper>, epsilon: number = 0): boolean {
+export function hitboxesAreColliding(hitbox: Box, hitboxes: ReadonlyArray<Hitbox>, epsilon: number = 0): boolean {
    for (let j = 0; j < hitboxes.length; j++) {
       const otherHitbox = hitboxes[j];
 

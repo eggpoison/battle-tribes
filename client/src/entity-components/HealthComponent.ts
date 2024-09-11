@@ -5,7 +5,6 @@ import { PacketReader } from "webgl-test-shared/dist/packets";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { updateHealthBar } from "../components/game/HealthBar";
-import Client from "../client/Client";
 import Player from "../entities/Player";
 import { discombobulate } from "../player-input";
 
@@ -47,10 +46,8 @@ class HealthComponent extends ServerComponent {
    }
 
    public updatePlayerFromData(reader: PacketReader): void {
-      const health = reader.readNumber();
-      reader.padOffset(Float32Array.BYTES_PER_ELEMENT);
-
-      updateHealthBar(health);
+      this.updateFromData(reader);
+      updateHealthBar(this.health);
    }
 }
 

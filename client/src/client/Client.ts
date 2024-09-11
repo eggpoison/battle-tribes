@@ -486,12 +486,6 @@ abstract class Client {
       }
    }
 
-   public static sendItemDropPacket(itemSlot: number, dropAmount: number, dropDirection: number): void {
-      if (Game.isRunning && this.socket !== null) {
-         // this.socket.emit("item_drop", itemSlot, dropAmount, dropDirection);
-      }
-   }
-
    public static sendDeactivatePacket(): void {
       if (Game.isRunning && this.socket !== null) {
          // this.socket.emit("deactivate");

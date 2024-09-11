@@ -2,41 +2,42 @@ import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { ComponentArray } from "./ComponentArray";
 import { EntityID } from "webgl-test-shared/dist/entities";
 import { Packet } from "webgl-test-shared/dist/packets";
-import { boxIsCircular } from "webgl-test-shared/dist/boxes/boxes";
+import { boxIsCircular, GenericCollisionBoxType } from "webgl-test-shared/dist/boxes/boxes";
 import { getBoxesCollidingEntities } from "webgl-test-shared/dist/hitbox-collision";
 import Board from "../Board";
-import { ServerDamageBoxWrapper } from "../boxes";
-import { InventoryUseComponentArray } from "./InventoryUseComponent";
+import { ServerBlockBox, ServerDamageBox } from "../boxes";
+import { InventoryUseComponentArray, onBlockBoxCollision, onDamageBoxCollision } from "./InventoryUseComponent";
 import { Settings } from "webgl-test-shared/dist/settings";
 
 export interface DamageBoxComponentParams {}
 
 interface DamageBoxCollisionInfo {
    readonly collidingEntity: EntityID;
-   readonly collidingDamageBox: ServerDamageBoxWrapper;
+   readonly collidingDamageBox: ServerDamageBox;
 }
 
 export class DamageBoxComponent implements DamageBoxComponentParams {
-   public damageBoxes = new Array<ServerDamageBoxWrapper>();
-   public damageBoxLocalIDs = new Array<number>();
-   public nextDamageBoxLocalID = 1;
+   public damageBoxes = new Array<ServerDamageBox>();
+   public blockBoxes = new Array<ServerBlockBox>();
 
-   public addDamageBox(damageBox: ServerDamageBoxWrapper): void {
+   public damageBoxLocalIDs = new Array<number>();
+   public blockBoxLocalIDs = new Array<number>();
+
+   public nextDamageBoxLocalID = 1;
+   public nextBlockBoxLocalID = 1;
+
+   public addDamageBox(damageBox: ServerDamageBox): void {
       this.damageBoxes.push(damageBox);
       this.damageBoxLocalIDs.push(this.nextDamageBoxLocalID);
 
       this.nextDamageBoxLocalID++;
    }
 
-   public removeDamageBox(damageBox: ServerDamageBoxWrapper): void {
-      const idx = this.damageBoxes.indexOf(damageBox);
-      if (idx === -1) {
-         // console.warn("Tried to remove a damage box which wasn't on the component.");
-         return;
-      }
+   public addBlockBox(blockBox: ServerBlockBox): void {
+      this.blockBoxes.push(blockBox);
+      this.blockBoxLocalIDs.push(this.nextBlockBoxLocalID);
 
-      this.damageBoxes.splice(idx, 1);
-      this.damageBoxLocalIDs.splice(idx, 1);
+      this.nextBlockBoxLocalID++;
    }
 }
 
@@ -50,7 +51,7 @@ export const DamageBoxComponentArray = new ComponentArray<DamageBoxComponent>(Se
 });
 
 // @Hack: this whole thing is cursed
-const getCollidingDamageBox = (entity: EntityID, damageBox: ServerDamageBoxWrapper): DamageBoxCollisionInfo | null => {
+const getCollidingCollisionBox = (entity: EntityID, damageBox: ServerDamageBox): DamageBoxCollisionInfo | null => {
    // @Hack
    const CHECK_PADDING = 200;
    const minChunkX = Math.max(Math.min(Math.floor((damageBox.box.position.x - CHECK_PADDING) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
@@ -75,6 +76,14 @@ const getCollidingDamageBox = (entity: EntityID, damageBox: ServerDamageBoxWrapp
                   };
                }
             }
+            for (const currentDamageBox of damageBoxComponent.blockBoxes) { 
+               if (damageBox.box.isColliding(currentDamageBox.box)) {
+                  return {
+                     collidingEntity: currentEntity,
+                     collidingDamageBox: currentDamageBox
+                  };
+               }
+            }
          }
       }
    }
@@ -85,45 +94,39 @@ const getCollidingDamageBox = (entity: EntityID, damageBox: ServerDamageBoxWrapp
 function onTick(damageBoxComponent: DamageBoxComponent, entity: EntityID): void {
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(entity);
    
-   // Check for removed damage boxes
-   for (let i = 0; i < damageBoxComponent.damageBoxes.length; i++) {
-      const damageBox = damageBoxComponent.damageBoxes[i];
-      if (damageBox.isRemoved) {
-         damageBoxComponent.removeDamageBox(damageBox);
-         i--;
-      }
-   }
-   
-   for (let i = 0; i < damageBoxComponent.damageBoxes.length; i++) {
-      const damageBox = damageBoxComponent.damageBoxes[i];
-      if (!damageBox.isActive || damageBox.isRemoved) {
+   for (const damageBox of damageBoxComponent.damageBoxes) {
+      if (!damageBox.isActive) {
          continue;
       }
-      
+
       const limbInfo = inventoryUseComponent.getLimbInfo(damageBox.associatedLimbInventoryName);
 
-      // First check if it is colliding with another damage box 
-      const collisionInfo = getCollidingDamageBox(entity, damageBox);
-      if (collisionInfo !== null) {
-         if (typeof damageBox.onCollision !== "undefined") {
-            damageBox.onCollision(entity, collisionInfo.collidingEntity, limbInfo, collisionInfo.collidingDamageBox);
+      // Look for entities to damage
+      const collidingEntities = getBoxesCollidingEntities(Board.getWorldInfo(), [damageBox]);
+      for (let j = 0; j < collidingEntities.length; j++) {
+         const collidingEntity = collidingEntities[j];
+         if (collidingEntity !== entity) {
+            onDamageBoxCollision(entity, collidingEntity, limbInfo);
          }
-         if (damageBox.collidingDamageBox !== collisionInfo.collidingDamageBox && typeof damageBox.onCollisionEnter !== "undefined") {
-            damageBox.onCollisionEnter(entity, collisionInfo.collidingEntity, limbInfo, collisionInfo.collidingDamageBox);
-         }
-         damageBox.collidingDamageBox = collisionInfo.collidingDamageBox;
-      } else {
-         damageBox.collidingDamageBox = null;
+      }
+   }
+
+   for (const blockBox of damageBoxComponent.blockBoxes) {
+      if (!blockBox.isActive) {
+         continue;
       }
 
-      if (typeof damageBox.onCollision !== "undefined") {
-         const collidingEntities = getBoxesCollidingEntities(Board.getWorldInfo(), [damageBox]);
-         for (let j = 0; j < collidingEntities.length; j++) {
-            const collidingEntity = collidingEntities[j];
-            if (collidingEntity !== entity) {
-               damageBox.onCollision(entity, collidingEntity, limbInfo, null);
-            }
+      const limbInfo = inventoryUseComponent.getLimbInfo(blockBox.associatedLimbInventoryName);
+
+      const collisionInfo = getCollidingCollisionBox(entity, blockBox);
+      if (collisionInfo !== null) {
+         if (blockBox.collidingBox !== collisionInfo.collidingDamageBox) {
+            onBlockBoxCollision(entity, collisionInfo.collidingEntity, limbInfo, collisionInfo.collidingDamageBox);
          }
+
+         blockBox.collidingBox = collisionInfo.collidingDamageBox;
+      } else {
+         blockBox.collidingBox = null;
       }
    }
 }
@@ -131,7 +134,7 @@ function onTick(damageBoxComponent: DamageBoxComponent, entity: EntityID): void 
 function getDataLength(entity: EntityID): number {
    const damageBoxComponent = DamageBoxComponentArray.getComponent(entity);
 
-   let lengthBytes = 3 * Float32Array.BYTES_PER_ELEMENT;
+   let lengthBytes = 5 * Float32Array.BYTES_PER_ELEMENT;
    
    for (const damageBox of damageBoxComponent.damageBoxes) {
       if (!damageBox.isActive) {
@@ -139,9 +142,20 @@ function getDataLength(entity: EntityID): number {
       }
       
       if (boxIsCircular(damageBox.box)) {
-         lengthBytes += 9 * Float32Array.BYTES_PER_ELEMENT;
+         lengthBytes += 8 * Float32Array.BYTES_PER_ELEMENT;
       } else {
-         lengthBytes += 11 * Float32Array.BYTES_PER_ELEMENT;
+         lengthBytes += 10 * Float32Array.BYTES_PER_ELEMENT;
+      }
+   }
+   for (const blockBox of damageBoxComponent.blockBoxes) {
+      if (!blockBox.isActive) {
+         continue;
+      }
+      
+      if (boxIsCircular(blockBox.box)) {
+         lengthBytes += 8 * Float32Array.BYTES_PER_ELEMENT;
+      } else {
+         lengthBytes += 10 * Float32Array.BYTES_PER_ELEMENT;
       }
    }
 
@@ -153,25 +167,39 @@ function addDataToPacket(packet: Packet, entity: EntityID): void {
    
    const damageBoxComponent = DamageBoxComponentArray.getComponent(entity);
    
-   let numCircularBoxes = 0;
-   let numRectangularBoxes = 0;
+   let numCircularDamageBoxes = 0;
+   let numRectangularDamageBoxes = 0;
    for (const damageBox of damageBoxComponent.damageBoxes) {
       if (!damageBox.isActive) {
          continue;
       }
       
       if (boxIsCircular(damageBox.box)) {
-         numCircularBoxes++;
+         numCircularDamageBoxes++;
       } else {
-         numRectangularBoxes++;
+         numRectangularDamageBoxes++;
+      }
+   }
+   
+   let numCircularBlockBoxes = 0;
+   let numRectangularBlockBoxes = 0;
+   for (const blockBox of damageBoxComponent.blockBoxes) {
+      if (!blockBox.isActive) {
+         continue;
+      }
+      
+      if (boxIsCircular(blockBox.box)) {
+         numCircularBlockBoxes++;
+      } else {
+         numRectangularBlockBoxes++;
       }
    }
    
    // Circular
-   packet.addNumber(numCircularBoxes);
+   packet.addNumber(numCircularDamageBoxes);
    for (let i = 0; i < damageBoxComponent.damageBoxes.length; i++) {
       const damageBox = damageBoxComponent.damageBoxes[i];
-      if (!damageBox.isActive || damageBox.isRemoved) {
+      if (!damageBox.isActive) {
          continue;
       }
       
@@ -190,12 +218,11 @@ function addDataToPacket(packet: Packet, entity: EntityID): void {
       packet.addNumber(box.rotation);
       packet.addNumber(localID);
       packet.addNumber(box.radius);
-      packet.addNumber(damageBox.type);
       packet.addNumber(damageBox.associatedLimbInventoryName);
    }
 
    // Rectangular
-   packet.addNumber(numRectangularBoxes);
+   packet.addNumber(numRectangularDamageBoxes);
    for (let i = 0; i < damageBoxComponent.damageBoxes.length; i++) {
       const damageBox = damageBoxComponent.damageBoxes[i];
       if (!damageBox.isActive) {
@@ -219,7 +246,60 @@ function addDataToPacket(packet: Packet, entity: EntityID): void {
       packet.addNumber(box.width);
       packet.addNumber(box.height);
       packet.addNumber(box.relativeRotation);
-      packet.addNumber(damageBox.type);
       packet.addNumber(damageBox.associatedLimbInventoryName);
+   }
+   
+   // Circular
+   packet.addNumber(numCircularBlockBoxes);
+   for (let i = 0; i < damageBoxComponent.blockBoxes.length; i++) {
+      const blockBox = damageBoxComponent.blockBoxes[i];
+      if (!blockBox.isActive) {
+         continue;
+      }
+      
+      const box = blockBox.box;
+      // @Speed
+      if (!boxIsCircular(box)) {
+         continue;
+      }
+
+      const localID = damageBoxComponent.blockBoxLocalIDs[i];
+
+      packet.addNumber(box.position.x);
+      packet.addNumber(box.position.y);
+      packet.addNumber(box.offset.x);
+      packet.addNumber(box.offset.y);
+      packet.addNumber(box.rotation);
+      packet.addNumber(localID);
+      packet.addNumber(box.radius);
+      packet.addNumber(blockBox.associatedLimbInventoryName);
+   }
+
+   // Rectangular
+   packet.addNumber(numRectangularBlockBoxes);
+   for (let i = 0; i < damageBoxComponent.blockBoxes.length; i++) {
+      const blockBox = damageBoxComponent.blockBoxes[i];
+      if (!blockBox.isActive) {
+         continue;
+      }
+      
+      const box = blockBox.box;
+      // @Speed
+      if (boxIsCircular(box)) {
+         continue;
+      }
+
+      const localID = damageBoxComponent.blockBoxLocalIDs[i];
+
+      packet.addNumber(box.position.x);
+      packet.addNumber(box.position.y);
+      packet.addNumber(box.offset.x);
+      packet.addNumber(box.offset.y);
+      packet.addNumber(box.rotation);
+      packet.addNumber(localID);
+      packet.addNumber(box.width);
+      packet.addNumber(box.height);
+      packet.addNumber(box.relativeRotation);
+      packet.addNumber(blockBox.associatedLimbInventoryName);
    }
 }

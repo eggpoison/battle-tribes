@@ -1,18 +1,16 @@
-import { BoxFromType, BoxType, DamageBoxWrapper } from "webgl-test-shared/dist/boxes/boxes";
-import { DamageBoxType } from "webgl-test-shared/dist/components";
+import { BlockBox, BoxFromType, BoxType, DamageBox, GenericCollisionBoxInfo } from "webgl-test-shared/dist/boxes/boxes";
 import { InventoryName } from "webgl-test-shared/dist/items/items";
 
-export interface ClientDamageBoxWrapper<T extends BoxType = BoxType> extends DamageBoxWrapper<T> {
-   readonly associatedLimbInventoryName: InventoryName;
-   collidingDamageBox: ClientDamageBoxWrapper | null;
-   readonly type: DamageBoxType;
+class GenericCollisionBox<T extends BoxType> implements GenericCollisionBoxInfo<T> {
+   public box: BoxFromType[T];
+   public readonly associatedLimbInventoryName: InventoryName;
+   public collidingBox: ClientDamageBox | ClientBlockBox | null = null;
+   
+   constructor(box: BoxFromType[T], associatedLimbInventoryName: InventoryName) {
+      this.box = box;
+      this.associatedLimbInventoryName = associatedLimbInventoryName;
+   }
 }
 
-export function createDamageBox<T extends BoxType>(box: BoxFromType[T], associatedLimbInventoryName: InventoryName, type: DamageBoxType): ClientDamageBoxWrapper<T> {
-   return {
-      box: box,
-      associatedLimbInventoryName: associatedLimbInventoryName,
-      collidingDamageBox: null,
-      type: type
-   };
-}
+export class ClientDamageBox<T extends BoxType = BoxType> extends GenericCollisionBox<T> implements DamageBox<T> {}
+export class ClientBlockBox<T extends BoxType = BoxType> extends GenericCollisionBox<T> implements BlockBox<T> {}

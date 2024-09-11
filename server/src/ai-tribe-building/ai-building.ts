@@ -6,7 +6,7 @@ import Tribe, { RestrictedBuildingArea, VirtualBuilding, getNumWallConnections, 
 import Board from "../Board";
 import { TribeArea, createTribeArea, updateTribeAreaDoors } from "./ai-building-areas";
 import { updateTribePlans } from "./ai-building-plans";
-import { assertHitboxIsRectangular, BoxType, createHitbox, hitboxIsCircular, HitboxWrapper, updateBox } from "webgl-test-shared/dist/boxes/boxes";
+import { assertHitboxIsRectangular, BoxType, createHitbox, hitboxIsCircular, Hitbox, updateBox } from "webgl-test-shared/dist/boxes/boxes";
 import RectangularBox from "webgl-test-shared/dist/boxes/RectangularBox";
 import { HitboxCollisionBit } from "webgl-test-shared/dist/collision";
 import { createEntityHitboxes } from "webgl-test-shared/dist/boxes/entity-hitbox-creation";
@@ -71,7 +71,7 @@ export function getSafetyNode(nodeX: number, nodeY: number): SafetyNode {
    return nodeY * Settings.SAFETY_NODES_IN_WORLD_WIDTH + nodeX;
 }
 
-const addCircularHitboxNodePositions = (hitbox: HitboxWrapper<BoxType.circular>, positions: Set<SafetyNode>): void => {
+const addCircularHitboxNodePositions = (hitbox: Hitbox<BoxType.circular>, positions: Set<SafetyNode>): void => {
    const box = hitbox.box;
    
    const minX = box.calculateBoundsMinX();
@@ -122,7 +122,7 @@ export function addRectangularSafetyNodePositions(rectPosition: Point, rectWidth
    }
 }
 
-export function addHitboxesOccupiedNodes(hitboxes: ReadonlyArray<HitboxWrapper>, positions: Set<SafetyNode>): void {
+export function addHitboxesOccupiedNodes(hitboxes: ReadonlyArray<Hitbox>, positions: Set<SafetyNode>): void {
    for (let i = 0; i < hitboxes.length; i++) {
       const hitbox = hitboxes[i];
 

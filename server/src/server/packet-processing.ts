@@ -227,20 +227,14 @@ export function processStopItemUsePacket(playerClient: PlayerClient): void {
 
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(player);
 
-   const limbInfo = inventoryUseComponent.getLimbInfo(InventoryName.hotbar);
+   const limb = inventoryUseComponent.getLimbInfo(InventoryName.hotbar);
 
-   // If the limb was blocking, remove any blocking damage boxes
-   if (limbInfo.action === LimbAction.block) {
-      const damageBox = limbInfo.blockingDamageBox?.deref();
-      if (typeof damageBox !== "undefined") {
-         const damageBoxComponent = DamageBoxComponentArray.getComponent(player);
-         damageBoxComponent.removeDamageBox(damageBox);
-         
-         limbInfo.blockingDamageBox = null;
-      }
+   // If the limb was blocking, deactivate the block box
+   if (limb.action === LimbAction.block) {
+      limb.blockBox.isActive = false;
    }
    
-   limbInfo.action = LimbAction.none;
+   limb.action = LimbAction.none;
 }
 
 export function processItemDropPacket(playerClient: PlayerClient, reader: PacketReader): void {

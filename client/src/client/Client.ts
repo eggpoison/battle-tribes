@@ -38,7 +38,7 @@ import { Packet, PacketReader, PacketType } from "webgl-test-shared/dist/packets
 import { InitialGameDataPacket, processInitialGameDataPacket, processRespawnDataPacket, processSyncDataPacket } from "./packet-processing";
 import { createActivatePacket, createPlayerDataPacket, createSyncRequestPacket } from "./packet-creation";
 import Tribe from "../Tribe";
-import { createHitbox, HitboxWrapper } from "webgl-test-shared/dist/boxes/boxes";
+import { createHitbox, Hitbox } from "webgl-test-shared/dist/boxes/boxes";
 import CircularBox from "webgl-test-shared/dist/boxes/CircularBox";
 import RectangularBox from "webgl-test-shared/dist/boxes/RectangularBox";
 import { setGameState, setLoadingScreenInitialStatus } from "../components/App";
@@ -128,13 +128,13 @@ export function getGrassBlockers(): ReadonlyArray<GrassBlocker> {
 
 // @Cleanup: put these 2 in a more appropriate file
 
-export function createCircularHitboxFromData(data: CircularHitboxData): HitboxWrapper {
+export function createCircularHitboxFromData(data: CircularHitboxData): Hitbox {
    const offset = new Point(data.offsetX, data.offsetY);
    const box = new CircularBox(offset, 0, data.radius);
    return createHitbox(box, data.mass, data.collisionType, data.collisionBit, data.collisionMask, data.flags);
 }
 
-export function createRectangularHitboxFromData(data: RectangularHitboxData): HitboxWrapper {
+export function createRectangularHitboxFromData(data: RectangularHitboxData): Hitbox {
    const offset = new Point(data.offsetX, data.offsetY);
    const box = new RectangularBox(offset, data.width, data.height, data.rotation);
    return createHitbox(box, data.mass, data.collisionType, data.collisionBit, data.collisionMask, data.flags);

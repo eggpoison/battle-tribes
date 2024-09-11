@@ -10,7 +10,7 @@ import { TribeComponentArray } from "./components/TribeComponent";
 import { TransformComponent, TransformComponentArray } from "./components/TransformComponent";
 import { ProjectileComponentArray } from "./components/ProjectileComponent";
 import CircularBox from "webgl-test-shared/dist/boxes/CircularBox";
-import { boxIsCircular, HitboxCollisionType, HitboxWrapper } from "webgl-test-shared/dist/boxes/boxes";
+import { boxIsCircular, HitboxCollisionType, Hitbox } from "webgl-test-shared/dist/boxes/boxes";
 import RectangularBox from "webgl-test-shared/dist/boxes/RectangularBox";
 
 const enum Vars {
@@ -213,7 +213,7 @@ const nodeIsAccessibleForEntity = (node: PathfindingNodeIndex, ignoredGroupID: n
    return slowAccessibilityCheck(node, ignoredGroupID, pathfindingEntityFootprint);
 }
 
-const getCircularHitboxOccupiedNodes = (hitbox: HitboxWrapper): ReadonlyArray<PathfindingNodeIndex> => {
+const getCircularHitboxOccupiedNodes = (hitbox: Hitbox): ReadonlyArray<PathfindingNodeIndex> => {
    const box = hitbox.box as CircularBox;
    
    const minX = box.calculateBoundsMinX();
@@ -261,7 +261,7 @@ const getCircularHitboxOccupiedNodes = (hitbox: HitboxWrapper): ReadonlyArray<Pa
    return occupiedNodes;
 }
 
-const getRectangularHitboxOccupiedNodes = (hitbox: HitboxWrapper): ReadonlyArray<PathfindingNodeIndex> => {
+const getRectangularHitboxOccupiedNodes = (hitbox: Hitbox): ReadonlyArray<PathfindingNodeIndex> => {
    const box = hitbox.box as RectangularBox;
    
    const minX = box.calculateBoundsMinX();
@@ -312,7 +312,7 @@ const getRectangularHitboxOccupiedNodes = (hitbox: HitboxWrapper): ReadonlyArray
    return occupiedNodes;
 }
 
-export function getHitboxOccupiedNodes(hitbox: HitboxWrapper): ReadonlyArray<PathfindingNodeIndex> {
+export function getHitboxOccupiedNodes(hitbox: Hitbox): ReadonlyArray<PathfindingNodeIndex> {
    if (boxIsCircular(hitbox.box)) {
       return getCircularHitboxOccupiedNodes(hitbox);
    } else {

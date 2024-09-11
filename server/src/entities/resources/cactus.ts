@@ -11,7 +11,7 @@ import { ComponentConfig } from "../../components";
 import { StatusEffect } from "webgl-test-shared/dist/status-effects";
 import Board from "../../Board";
 import { TransformComponentArray } from "../../components/TransformComponent";
-import { createHitbox, HitboxCollisionType, HitboxWrapper } from "webgl-test-shared/dist/boxes/boxes";
+import { createHitbox, HitboxCollisionType, Hitbox } from "webgl-test-shared/dist/boxes/boxes";
 import CircularBox from "webgl-test-shared/dist/boxes/CircularBox";
 
 type ComponentTypes = ServerComponentType.transform
@@ -80,7 +80,7 @@ const generateRandomLimbs = (): ReadonlyArray<CactusLimbData> => {
 }
 
 export function createCactusConfig(): ComponentConfig<ComponentTypes> {
-   const hitboxes = new Array<HitboxWrapper>();
+   const hitboxes = new Array<Hitbox>();
 
    hitboxes.push(createHitbox(new CircularBox(new Point(0, 0), 0, RADIUS - HITBOX_PADDING), 1, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0));
 

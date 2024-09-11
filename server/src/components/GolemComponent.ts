@@ -12,7 +12,7 @@ import { createEntityFromConfig } from "../Entity";
 import { PebblumComponentArray } from "./PebblumComponent";
 import { PhysicsComponentArray } from "./PhysicsComponent";
 import { TransformComponentArray } from "./TransformComponent";
-import { HitboxWrapper } from "webgl-test-shared/dist/boxes/boxes";
+import { Hitbox } from "webgl-test-shared/dist/boxes/boxes";
 import CircularBox from "webgl-test-shared/dist/boxes/CircularBox";
 
 const enum Vars {
@@ -21,13 +21,13 @@ const enum Vars {
 }
 
 export interface GolemComponentParams {
-   readonly hitboxes: ReadonlyArray<HitboxWrapper>;
+   readonly hitboxes: ReadonlyArray<Hitbox>;
    readonly pebblumSummonCooldownTicks: number;
 }
 
 export interface RockInfo {
    /** The hitbox corresponding to the rock info */
-   readonly hitbox: HitboxWrapper;
+   readonly hitbox: Hitbox;
    readonly sleepOffsetX: number;
    readonly sleepOffsetY: number;
    readonly awakeOffsetX: number;
@@ -44,7 +44,7 @@ export interface GolemTargetInfo {
    timeSinceLastAggro: number;
 }
 
-const generateRockInfoArray = (hitboxes: ReadonlyArray<HitboxWrapper>): Array<RockInfo> => {
+const generateRockInfoArray = (hitboxes: ReadonlyArray<Hitbox>): Array<RockInfo> => {
    const rockInfoArray = new Array<RockInfo>();
    
    for (let i = 0; i < hitboxes.length; i++) {

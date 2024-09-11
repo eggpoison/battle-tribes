@@ -13,7 +13,7 @@ import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types"
 import { ItemType } from "webgl-test-shared/dist/items/items";
 import { ComponentConfig } from "../../components";
 import { TransformComponentArray } from "../../components/TransformComponent";
-import { createHitbox, HitboxCollisionType, HitboxWrapper } from "webgl-test-shared/dist/boxes/boxes";
+import { createHitbox, HitboxCollisionType, Hitbox } from "webgl-test-shared/dist/boxes/boxes";
 import CircularBox from "webgl-test-shared/dist/boxes/CircularBox";
 
 export const enum FrozenYetiVars {
@@ -54,7 +54,7 @@ export interface FrozenYetiRockSpikeInfo {
 }
 
 export function createFrozenYetiConfig(): ComponentConfig<ComponentTypes> {
-   const hitboxes = new Array<HitboxWrapper>();
+   const hitboxes = new Array<Hitbox>();
 
    const bodyHitbox = createHitbox(new CircularBox(new Point(0, 0), 0, FrozenYetiVars.FROZEN_YETI_SIZE / 2), 4, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0);
    hitboxes.push(bodyHitbox);

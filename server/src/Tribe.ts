@@ -21,7 +21,7 @@ import { ItemType, InventoryName } from "webgl-test-shared/dist/items/items";
 import { TransformComponentArray } from "./components/TransformComponent";
 import { createEntityConfig } from "./entity-creation";
 import { createEntityFromConfig } from "./Entity";
-import { BoxType, HitboxWrapper } from "webgl-test-shared/dist/boxes/boxes";
+import { BoxType, Hitbox } from "webgl-test-shared/dist/boxes/boxes";
 
 const ENEMY_ATTACK_REMEMBER_TIME_TICKS = 30 * Settings.TPS;
 const RESPAWN_TIME_TICKS = 5 * Settings.TPS;
@@ -84,7 +84,7 @@ export interface RestrictedBuildingArea {
    readonly rotation: number;
    /** The ID of the building responsible for the restricted area */
    readonly associatedBuildingID: number;
-   readonly hitbox: HitboxWrapper<BoxType.rectangular>;
+   readonly hitbox: Hitbox<BoxType.rectangular>;
 }
 
 export interface VirtualBuilding {

@@ -13,7 +13,7 @@ import { ItemType } from "webgl-test-shared/dist/items/items";
 import { TransformComponentArray } from "../../components/TransformComponent";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { ComponentConfig } from "../../components";
-import { createHitbox, HitboxCollisionType, HitboxWrapper } from "webgl-test-shared/dist/boxes/boxes";
+import { createHitbox, HitboxCollisionType, Hitbox } from "webgl-test-shared/dist/boxes/boxes";
 import CircularBox from "webgl-test-shared/dist/boxes/CircularBox";
 
 export const enum GolemVars {
@@ -36,7 +36,7 @@ const ROCK_MASSIVE_MASS = 2.25;
 
 export const GOLEM_WAKE_TIME_TICKS = Math.floor(2.5 * Settings.TPS);
 
-const hitboxIsTooClose = (existingHitboxes: ReadonlyArray<HitboxWrapper>, hitboxX: number, hitboxY: number): boolean => {
+const hitboxIsTooClose = (existingHitboxes: ReadonlyArray<Hitbox>, hitboxX: number, hitboxY: number): boolean => {
    for (let j = 0; j < existingHitboxes.length; j++) {
       const otherHitbox = existingHitboxes[j];
       const otherBox = otherHitbox.box;
@@ -50,7 +50,7 @@ const hitboxIsTooClose = (existingHitboxes: ReadonlyArray<HitboxWrapper>, hitbox
    return false;
 }
 
-const getMinSeparationFromOtherHitboxes = (hitboxes: ReadonlyArray<HitboxWrapper>, hitboxX: number, hitboxY: number, hitboxRadius: number): number => {
+const getMinSeparationFromOtherHitboxes = (hitboxes: ReadonlyArray<Hitbox>, hitboxX: number, hitboxY: number, hitboxRadius: number): number => {
    let minSeparation = 999.9;
    for (let i = 0; i < hitboxes.length; i++) {
       const otherHitbox = hitboxes[i].box as CircularBox;
@@ -65,7 +65,7 @@ const getMinSeparationFromOtherHitboxes = (hitboxes: ReadonlyArray<HitboxWrapper
 }
 
 export function createGolemConfig(): ComponentConfig<ComponentTypes> {
-   const hitboxes = new Array<HitboxWrapper>();
+   const hitboxes = new Array<Hitbox>();
 
    // Create core hitbox
    const hitbox = createHitbox(new CircularBox(new Point(0, 0), 0, 36), ROCK_MASSIVE_MASS, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0);

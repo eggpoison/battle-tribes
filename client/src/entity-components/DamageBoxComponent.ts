@@ -2,12 +2,12 @@ import ServerComponent from "./ServerComponent";
 import { PacketReader } from "webgl-test-shared/dist/packets";
 import Entity from "../Entity";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
-import { DamageBoxType, ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "webgl-test-shared/dist/components";
 import CircularBox from "webgl-test-shared/dist/boxes/CircularBox";
-import { Point, randFloat } from "webgl-test-shared/dist/utils";
+import { Point } from "webgl-test-shared/dist/utils";
 import { BoxType } from "webgl-test-shared/dist/boxes/boxes";
 import RectangularBox from "webgl-test-shared/dist/boxes/RectangularBox";
-import { ClientDamageBoxWrapper, createDamageBox } from "../boxes";
+import { ClientBlockBox, ClientDamageBox } from "../boxes";
 import { EntityID } from "webgl-test-shared/dist/entities";
 import { Settings } from "webgl-test-shared/dist/settings";
 import Board from "../Board";
@@ -15,15 +15,14 @@ import { InventoryName } from "webgl-test-shared/dist/items/items";
 import Player from "../entities/Player";
 import { InventoryUseComponentArray } from "./InventoryUseComponent";
 import { discombobulate } from "../player-input";
-import { createBlockParticle } from "../particles";
 
 interface DamageBoxCollisionInfo {
    readonly collidingEntity: EntityID;
-   readonly collidingDamageBox: ClientDamageBoxWrapper;
+   readonly collidingBox: ClientDamageBox | ClientBlockBox;
 }
 
 // @Hack: this whole thing is cursed
-const getCollidingDamageBox = (entity: EntityID, damageBox: ClientDamageBoxWrapper): DamageBoxCollisionInfo | null => {
+const getCollidingBox = (entity: EntityID, damageBox: ClientDamageBox): DamageBoxCollisionInfo | null => {
    // @Hack
    const CHECK_PADDING = 200;
    const minChunkX = Math.max(Math.min(Math.floor((damageBox.box.position.x - CHECK_PADDING) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
@@ -44,7 +43,7 @@ const getCollidingDamageBox = (entity: EntityID, damageBox: ClientDamageBoxWrapp
                if (damageBox.box.isColliding(currentDamageBox.box)) {
                   return {
                      collidingEntity: currentEntity,
-                     collidingDamageBox: currentDamageBox
+                     collidingBox: currentDamageBox
                   };
                }
             }
@@ -56,9 +55,16 @@ const getCollidingDamageBox = (entity: EntityID, damageBox: ClientDamageBoxWrapp
 }
 
 class DamageBoxComponent extends ServerComponent {
-   public readonly damageBoxes = new Array<ClientDamageBoxWrapper>();
-   private readonly damageBoxLocalIDs = new Array<number>();
-   private readonly damageBoxesRecord: Partial<Record<number, ClientDamageBoxWrapper>> = {};
+   public damageBoxes = new Array<ClientDamageBox>();
+   public blockBoxes = new Array<ClientBlockBox>();
+   private readonly damageBoxesRecord: Partial<Record<number, ClientDamageBox>> = {};
+   private readonly blockBoxesRecord: Partial<Record<number, ClientBlockBox>> = {};
+
+   public damageBoxLocalIDs = new Array<number>();
+   public blockBoxLocalIDs = new Array<number>();
+
+   public nextDamageBoxLocalID = 1;
+   public nextBlockBoxLocalID = 1;
    
    constructor(entity: Entity, reader: PacketReader) {
       super(entity);
@@ -75,10 +81,10 @@ class DamageBoxComponent extends ServerComponent {
 
    private readInData(reader: PacketReader): void {
       // @Speed
-      const missingLocalIDs = this.damageBoxLocalIDs.slice();
+      const missingDamageBoxLocalIDs = this.damageBoxLocalIDs.slice();
       
-      const numCircular = reader.readNumber();
-      for (let i = 0; i < numCircular; i++) {
+      const numCircularDamageBoxes = reader.readNumber();
+      for (let i = 0; i < numCircularDamageBoxes; i++) {
          const positionX = reader.readNumber();
          const positionY = reader.readNumber();
          const offsetX = reader.readNumber();
@@ -86,19 +92,18 @@ class DamageBoxComponent extends ServerComponent {
          const rotation = reader.readNumber();
          const localID = reader.readNumber();
          const radius = reader.readNumber();
-         const damageBoxType = reader.readNumber() as DamageBoxType;
          const associatedLimbInventoryName = reader.readNumber() as InventoryName;
 
-         let damageBox = this.damageBoxesRecord[localID] as ClientDamageBoxWrapper<BoxType.circular> | undefined;
+         let damageBox = this.damageBoxesRecord[localID] as ClientDamageBox<BoxType.circular> | undefined;
          if (typeof damageBox === "undefined") {
             const box = new CircularBox(new Point(offsetX, offsetY), 0, radius);
-            damageBox = createDamageBox(box, associatedLimbInventoryName, damageBoxType);
+            damageBox = new ClientDamageBox(box, associatedLimbInventoryName);
 
             this.damageBoxes.push(damageBox);
             this.damageBoxLocalIDs.push(localID);
             this.damageBoxesRecord[localID] = damageBox;
          } else {
-            missingLocalIDs.splice(missingLocalIDs.indexOf(localID), 1);
+            missingDamageBoxLocalIDs.splice(missingDamageBoxLocalIDs.indexOf(localID), 1);
          }
          
          damageBox.box.position.x = positionX;
@@ -109,8 +114,8 @@ class DamageBoxComponent extends ServerComponent {
          damageBox.box.radius = radius;
       }
 
-      const numRectangular = reader.readNumber();
-      for (let i = 0; i < numRectangular; i++) {
+      const numRectangularDamageBoxes = reader.readNumber();
+      for (let i = 0; i < numRectangularDamageBoxes; i++) {
          const positionX = reader.readNumber();
          const positionY = reader.readNumber();
          const offsetX = reader.readNumber();
@@ -120,19 +125,18 @@ class DamageBoxComponent extends ServerComponent {
          const width = reader.readNumber();
          const height = reader.readNumber();
          const relativeRotation = reader.readNumber();
-         const damageBoxType = reader.readNumber() as DamageBoxType;
          const associatedLimbInventoryName = reader.readNumber() as InventoryName;
 
-         let damageBox = this.damageBoxesRecord[localID] as ClientDamageBoxWrapper<BoxType.rectangular> | undefined;
+         let damageBox = this.damageBoxesRecord[localID] as ClientDamageBox<BoxType.rectangular> | undefined;
          if (typeof damageBox === "undefined") {
             const box = new RectangularBox(new Point(offsetX, offsetY), width, height, relativeRotation);
-            damageBox = createDamageBox(box, associatedLimbInventoryName, damageBoxType);
+            damageBox = new ClientDamageBox(box, associatedLimbInventoryName);
 
             this.damageBoxes.push(damageBox);
             this.damageBoxLocalIDs.push(localID);
             this.damageBoxesRecord[localID] = damageBox;
          } else {
-            missingLocalIDs.splice(missingLocalIDs.indexOf(localID), 1);
+            missingDamageBoxLocalIDs.splice(missingDamageBoxLocalIDs.indexOf(localID), 1);
          }
 
          damageBox.box.position.x = positionX;
@@ -144,14 +148,91 @@ class DamageBoxComponent extends ServerComponent {
          damageBox.box.height = height;
          damageBox.box.relativeRotation = relativeRotation;
       }
+      // @Speed
+      const missingBlockBoxLocalIDs = this.blockBoxLocalIDs.slice();
+      
+      const numCircularBlockBoxes = reader.readNumber();
+      for (let i = 0; i < numCircularBlockBoxes; i++) {
+         const positionX = reader.readNumber();
+         const positionY = reader.readNumber();
+         const offsetX = reader.readNumber();
+         const offsetY = reader.readNumber();
+         const rotation = reader.readNumber();
+         const localID = reader.readNumber();
+         const radius = reader.readNumber();
+         const associatedLimbInventoryName = reader.readNumber() as InventoryName;
 
-      for (const localID of missingLocalIDs) {
+         let blockBox = this.blockBoxesRecord[localID] as ClientBlockBox<BoxType.circular> | undefined;
+         if (typeof blockBox === "undefined") {
+            const box = new CircularBox(new Point(offsetX, offsetY), 0, radius);
+            blockBox = new ClientBlockBox(box, associatedLimbInventoryName);
+
+            this.blockBoxes.push(blockBox);
+            this.blockBoxLocalIDs.push(localID);
+            this.blockBoxesRecord[localID] = blockBox;
+         } else {
+            missingBlockBoxLocalIDs.splice(missingBlockBoxLocalIDs.indexOf(localID), 1);
+         }
+         
+         blockBox.box.position.x = positionX;
+         blockBox.box.position.y = positionY;
+         blockBox.box.offset.x = offsetX;
+         blockBox.box.offset.y = offsetY;
+         blockBox.box.rotation = rotation;
+         blockBox.box.radius = radius;
+      }
+
+      const numRectangularBlockBoxes = reader.readNumber();
+      for (let i = 0; i < numRectangularBlockBoxes; i++) {
+         const positionX = reader.readNumber();
+         const positionY = reader.readNumber();
+         const offsetX = reader.readNumber();
+         const offsetY = reader.readNumber();
+         const rotation = reader.readNumber();
+         const localID = reader.readNumber();
+         const width = reader.readNumber();
+         const height = reader.readNumber();
+         const relativeRotation = reader.readNumber();
+         const associatedLimbInventoryName = reader.readNumber() as InventoryName;
+
+         let blockBox = this.blockBoxesRecord[localID] as ClientBlockBox<BoxType.rectangular> | undefined;
+         if (typeof blockBox === "undefined") {
+            const box = new RectangularBox(new Point(offsetX, offsetY), width, height, relativeRotation);
+            blockBox = new ClientBlockBox(box, associatedLimbInventoryName);
+
+            this.blockBoxes.push(blockBox);
+            this.blockBoxLocalIDs.push(localID);
+            this.blockBoxesRecord[localID] = blockBox;
+         } else {
+            missingBlockBoxLocalIDs.splice(missingBlockBoxLocalIDs.indexOf(localID), 1);
+         }
+
+         blockBox.box.position.x = positionX;
+         blockBox.box.position.y = positionY;
+         blockBox.box.offset.x = offsetX;
+         blockBox.box.offset.y = offsetY;
+         blockBox.box.rotation = rotation;
+         blockBox.box.width = width;
+         blockBox.box.height = height;
+         blockBox.box.relativeRotation = relativeRotation;
+      }
+
+      for (const localID of missingDamageBoxLocalIDs) {
          const damageBox = this.damageBoxesRecord[localID]!;
          const idx = this.damageBoxes.indexOf(damageBox);
 
          this.damageBoxes.splice(idx, 1);
          this.damageBoxLocalIDs.splice(idx, 1);
          delete this.damageBoxesRecord[localID];
+      }
+
+      for (const localID of missingBlockBoxLocalIDs) {
+         const blockBox = this.blockBoxesRecord[localID]!;
+         const idx = this.blockBoxes.indexOf(blockBox);
+
+         this.blockBoxes.splice(idx, 1);
+         this.blockBoxLocalIDs.splice(idx, 1);
+         delete this.blockBoxesRecord[localID];
       }
    }
 
@@ -170,7 +251,7 @@ export const DamageBoxComponentArray = new ComponentArray<DamageBoxComponent>(Co
    onTick: onTick
 });
 
-const blockAttack = (damageBox: ClientDamageBoxWrapper): void => {
+const blockAttack = (damageBox: ClientDamageBox): void => {
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(Player.instance!.id);
    const limb = inventoryUseComponent.getLimbInfoByInventoryName(damageBox.associatedLimbInventoryName);
    
@@ -186,22 +267,18 @@ function onTick(damageBoxComponent: DamageBoxComponent, entity: EntityID): void 
       return;
    }
    
-   for (let i = 0; i < damageBoxComponent.damageBoxes.length; i++) {
-      const damageBox = damageBoxComponent.damageBoxes[i];
+   for (let i = 0; i < damageBoxComponent.blockBoxes.length; i++) {
+      const blockBox = damageBoxComponent.blockBoxes[i];
       
       // Check if the attacking hitbox is blocked
-      if (damageBox.type === DamageBoxType.attacking) {
-         const collisionInfo = getCollidingDamageBox(entity, damageBox);
-         
-         if (collisionInfo !== null && collisionInfo.collidingDamageBox.type === DamageBoxType.blocking) {
-            if (damageBox.collidingDamageBox !== collisionInfo.collidingDamageBox) {
-               console.warn("blocked!");
-               blockAttack(damageBox);
-            }
-            damageBox.collidingDamageBox = collisionInfo.collidingDamageBox;
-         } else {
-            damageBox.collidingDamageBox = null;
+      const collisionInfo = getCollidingBox(entity, blockBox);
+      if (collisionInfo !== null && collisionInfo.collidingBox instanceof ClientDamageBox) {
+         if (blockBox.collidingBox !== collisionInfo.collidingBox) {
+            blockAttack(blockBox);
          }
+         blockBox.collidingBox = collisionInfo.collidingBox;
+      } else {
+         blockBox.collidingBox = null;
       }
    }
 }

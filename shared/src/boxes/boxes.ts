@@ -1,4 +1,5 @@
 import { circlesDoIntersect, circleAndRectangleDoIntersect, HitboxCollisionBit } from "../collision";
+import { InventoryName } from "../items/items";
 import { Point } from "../utils";
 import { CircularBox } from "./CircularBox";
 import RectangularBox from "./RectangularBox";
@@ -37,10 +38,20 @@ export interface Hitbox<T extends BoxType = BoxType> extends BoxWrapper<T> {
    readonly flags: number;
 }
 
-/** Boxes which can damage hitboxes they collide with */
-export interface DamageBox<T extends BoxType = BoxType> extends BoxWrapper<T> {}
+export interface GenericCollisionBoxInfo<T extends BoxType = BoxType> extends BoxWrapper<T> {
+   readonly associatedLimbInventoryName: InventoryName;
+}
 
-export interface BlockBox<T extends BoxType = BoxType> extends BoxWrapper<T> {}
+// @Cleanup: rename to AttackBox
+/** Boxes which can damage hitboxes they collide with */
+export interface DamageBox<T extends BoxType = BoxType> extends GenericCollisionBoxInfo<T> {}
+
+export interface BlockBox<T extends BoxType = BoxType> extends GenericCollisionBoxInfo<T> {}
+
+export const enum GenericCollisionBoxType {
+   damage,
+   block
+}
 
 export function createHitbox<T extends BoxType>(box: BoxFromType[T], mass: number, collisionType: HitboxCollisionType, collisionBit: HitboxCollisionBit, collisionMask: number, flags: number): Hitbox<T> {
    return {
@@ -53,11 +64,12 @@ export function createHitbox<T extends BoxType>(box: BoxFromType[T], mass: numbe
    };
 }
 
-export function createDamageBox<T extends BoxType>(box: BoxFromType[T]): DamageBox<T> {
-   return {
-      box: box
-   };
-}
+// @Temporary?
+// export function createDamageBox<T extends BoxType>(box: BoxFromType[T]): DamageBox<T> {
+//    return {
+//       box: box
+//    };
+// }
 
 export function boxIsCircular(box: Box): box is CircularBox {
    return typeof (box as CircularBox).radius !== "undefined";

@@ -2,7 +2,7 @@ import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
 import { ComponentConfig } from "../components";
 import { Packet } from "webgl-test-shared/dist/packets";
-import { HitboxWrapper } from "webgl-test-shared/dist/boxes/boxes";
+import { Hitbox } from "webgl-test-shared/dist/boxes/boxes";
 
 const enum ComponentArrayPriority {
    low,
@@ -20,7 +20,7 @@ interface ComponentArrayFunctions<T extends object> {
    onInitialise?(config: ComponentConfig<ServerComponentType>, entity: EntityID, entityType: EntityType): void;
    onJoin?(entity: EntityID): void;
    readonly onTick?: ComponentArrayTickFunction<T>;
-   onCollision?(entity: EntityID, collidingEntity: EntityID, pushedHitbox: HitboxWrapper, pushingHitbox: HitboxWrapper): void;
+   onCollision?(entity: EntityID, collidingEntity: EntityID, pushedHitbox: Hitbox, pushingHitbox: Hitbox): void;
    onRemove?(entity: EntityID): void;
    // @Cleanup: make getDataLength not return an extra float length
    /** Returns the length of the data that would be added to the packet */
@@ -59,7 +59,7 @@ export class ComponentArray<T extends object = object, C extends ServerComponent
    public onInitialise?(config: ComponentConfig<ServerComponentType>, entity: EntityID, entityType: EntityType): void;
    public onJoin?(entity: EntityID): void;
    public onTick?: ComponentArrayTickFunction<T>;
-   public onCollision?(entity: EntityID, collidingEntity: EntityID, pushedHitbox: HitboxWrapper, pushingHitbox: HitboxWrapper): void;
+   public onCollision?(entity: EntityID, collidingEntity: EntityID, pushedHitbox: Hitbox, pushingHitbox: Hitbox): void;
    public onRemove?(entity: EntityID): void;
    public getDataLength: (entity: EntityID, player: EntityID | null) => number;
    public addDataToPacket: (packet: Packet, entity: EntityID, player: EntityID | null) => void;

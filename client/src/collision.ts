@@ -4,17 +4,17 @@ import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { collisionBitsAreCompatible, CollisionPushInfo, getCollisionPushInfo } from "webgl-test-shared/dist/hitbox-collision";
 import { clampToBoardDimensions, Point } from "webgl-test-shared/dist/utils";
 import Board from "./Board";
-import { HitboxCollisionType, HitboxWrapper, updateBox } from "webgl-test-shared/dist/boxes/boxes";
+import { HitboxCollisionType, Hitbox, updateBox } from "webgl-test-shared/dist/boxes/boxes";
 import RectangularBox from "webgl-test-shared/dist/boxes/RectangularBox";
-import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
+import { EntityID } from "webgl-test-shared/dist/entities";
 import { TransformComponentArray } from "./entity-components/TransformComponent";
 import Chunk from "./Chunk";
 import Player from "./entities/Player";
 import { PhysicsComponentArray } from "./entity-components/PhysicsComponent";
 
 interface EntityPairCollisionInfo {
-   readonly minEntityInvolvedHitboxes: Array<HitboxWrapper>;
-   readonly maxEntityInvolvedHitboxes: Array<HitboxWrapper>;
+   readonly minEntityInvolvedHitboxes: Array<Hitbox>;
+   readonly maxEntityInvolvedHitboxes: Array<Hitbox>;
 }
 
 type CollisionPairs = Record<number, Record<number, EntityPairCollisionInfo | null>>;
@@ -39,7 +39,7 @@ const resolveHardCollision = (entity: Entity, pushInfo: CollisionPushInfo): void
    physicsComponent.externalVelocity.y = by * externalVelocityProjectionCoeff;
 }
 
-const resolveSoftCollision = (entity: EntityID, pushingHitbox: HitboxWrapper, pushInfo: CollisionPushInfo): void => {
+const resolveSoftCollision = (entity: EntityID, pushingHitbox: Hitbox, pushInfo: CollisionPushInfo): void => {
    const physicsComponent = PhysicsComponentArray.getComponent(entity);
    const transformComponent = TransformComponentArray.getComponent(entity);
    
@@ -52,7 +52,7 @@ const resolveSoftCollision = (entity: EntityID, pushingHitbox: HitboxWrapper, pu
    physicsComponent.externalVelocity.y += pushForce * Math.cos(pushInfo.direction);
 }
 
-export function collide(entity: Entity, collidingEntity: Entity, pushedHitbox: HitboxWrapper, pushingHitbox: HitboxWrapper): void {
+export function collide(entity: Entity, collidingEntity: Entity, pushedHitbox: Hitbox, pushingHitbox: Hitbox): void {
    if (entity.hasServerComponent(ServerComponentType.physics)) {
       const pushInfo = getCollisionPushInfo(pushedHitbox.box, pushingHitbox.box);
       if (pushingHitbox.collisionType === HitboxCollisionType.hard) {
@@ -82,8 +82,8 @@ const getEntityPairCollisionInfo = (entity1: EntityID, entity2: EntityID): Entit
       return null;
    }
 
-   const entity1InvolvedHitboxes = new Array<HitboxWrapper>();
-   const entity2InvolvedHitboxes = new Array<HitboxWrapper>();
+   const entity1InvolvedHitboxes = new Array<Hitbox>();
+   const entity2InvolvedHitboxes = new Array<Hitbox>();
    
    // More expensive hitbox check
    const numHitboxes = transformComponent1.hitboxes.length;

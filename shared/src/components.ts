@@ -767,12 +767,6 @@ export enum DecorationType {
 //    frostcicle
 // }
 
-// @Temporary?
-export const enum DamageBoxType {
-   blocking,
-   attacking
-}
-
 export interface ArrowStatusEffectInfo {
    readonly type: StatusEffect;
    readonly durationTicks: number;

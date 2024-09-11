@@ -9,7 +9,7 @@ import Board from "../Board";
 import { PacketReader } from "webgl-test-shared/dist/packets";
 import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
-import { HitboxWrapper } from "webgl-test-shared/dist/boxes/boxes";
+import { Hitbox } from "webgl-test-shared/dist/boxes/boxes";
 
 const enum Vars {
    NATURAL_DRIFT = 20 / Settings.TPS
@@ -159,7 +159,7 @@ class LayeredRodComponent extends ServerComponent {
       }
    }
 
-   public onCollision(collidingEntity: Entity, _pushedHitbox: HitboxWrapper, pushingHitbox: HitboxWrapper): void {
+   public onCollision(collidingEntity: Entity, _pushedHitbox: Hitbox, pushingHitbox: Hitbox): void {
       if (collidingEntity.type === EntityType.tree) {
          return;
       }

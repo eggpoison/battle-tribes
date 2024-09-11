@@ -1,45 +1,34 @@
-import { BoxFromType, BoxType, DamageBoxWrapper, HitboxWrapper } from "webgl-test-shared/dist/boxes/boxes";
+import { BlockBox, BoxFromType, BoxType, DamageBox, GenericCollisionBoxInfo, GenericCollisionBoxType } from "webgl-test-shared/dist/boxes/boxes";
 import { LimbInfo } from "./components/InventoryUseComponent";
 import { EntityID } from "webgl-test-shared/dist/entities";
 import { InventoryName } from "webgl-test-shared/dist/items/items";
-import { DamageBoxType } from "webgl-test-shared/dist/components";
 
-type CollisionCallback = (attacker: EntityID, victim: EntityID, limb: LimbInfo, collidingDamageBox: ServerDamageBoxWrapper | null) => void;
+type CollisionCallback = (attacker: EntityID, victim: EntityID, limb: LimbInfo, collidingDamageBox: ServerDamageBox | null) => void;
 
 export interface DamageBoxCallbacks {
    readonly onCollisionEnter?: CollisionCallback;
    readonly onCollision?: CollisionCallback;
 }
 
-export interface ServerDamageBoxWrapper<T extends BoxType = BoxType> extends DamageBoxWrapper<T> {
-   // Kinda hacky but whatever. It works (imagine there is a shrug in ascii here)
-   readonly associatedLimbInventoryName: InventoryName;
-   readonly onCollisionEnter?: CollisionCallback;
-   readonly onCollision?: CollisionCallback;
-   collidingDamageBox: ServerDamageBoxWrapper | null;
-   /** If set to true, the wrapper will be destroyed. */
-   isRemoved: boolean;
-   isActive: boolean;
-   // @Hack
-   readonly isTemporary: boolean;
-   readonly type: DamageBoxType;
+class GenericCollisionBox<T extends BoxType> implements GenericCollisionBoxInfo<T> {
+   public box: BoxFromType[T];
+   public readonly associatedLimbInventoryName: InventoryName;
+   public isActive: boolean;
+   public collidingBox: ServerDamageBox | ServerBlockBox | null = null;
+   
+   constructor(box: BoxFromType[T], associatedLimbInventoryName: InventoryName, isActive: boolean) {
+      this.box = box;
+      this.associatedLimbInventoryName = associatedLimbInventoryName;
+      this.isActive = isActive;
+   }
 }
 
-export function createDamageBox<T extends BoxType>(box: BoxFromType[T], associatedLimbInventoryName: InventoryName, callbacks: DamageBoxCallbacks, isTemporary: boolean, type: DamageBoxType): ServerDamageBoxWrapper<T> {
-   return {
-      box: box,
-      associatedLimbInventoryName: associatedLimbInventoryName,
-      onCollisionEnter: callbacks.onCollisionEnter,
-      onCollision: callbacks.onCollision,
-      collidingDamageBox: null,
-      isRemoved: false,
-      isActive: true,
-      isTemporary: isTemporary,
-      type: type
-   };
-}
+export class ServerDamageBox<T extends BoxType = BoxType> extends GenericCollisionBox<T> implements DamageBox<T> {}
+export class ServerBlockBox<T extends BoxType = BoxType> extends GenericCollisionBox<T> implements BlockBox<T> {}
 
-// @Cleanup: unused?
-export function wrapperIsDamageBox(wrapper: ServerDamageBoxWrapper | HitboxWrapper): wrapper is ServerDamageBoxWrapper {
-   return typeof (wrapper as HitboxWrapper).collisionType === "undefined";
+export function getCollisionBoxType(collisionBox: ServerDamageBox | ServerBlockBox): GenericCollisionBoxType {
+   if (collisionBox instanceof ServerDamageBox) {
+      return GenericCollisionBoxType.damage;
+   }
+   return GenericCollisionBoxType.block;
 }

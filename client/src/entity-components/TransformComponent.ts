@@ -13,7 +13,7 @@ import { createCircularHitboxFromData, createRectangularHitboxFromData } from ".
 import { PacketReader } from "webgl-test-shared/dist/packets";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { boxIsCircular, createHitbox, hitboxIsCircular, HitboxWrapper, updateBox } from "webgl-test-shared/dist/boxes/boxes";
+import { boxIsCircular, createHitbox, hitboxIsCircular, Hitbox, updateBox } from "webgl-test-shared/dist/boxes/boxes";
 import CircularBox from "webgl-test-shared/dist/boxes/CircularBox";
 import RectangularBox from "webgl-test-shared/dist/boxes/RectangularBox";
 
@@ -41,7 +41,7 @@ class TransformComponent extends ServerComponent {
    
    public chunks = new Set<Chunk>();
 
-   public hitboxes = new Array<HitboxWrapper>();
+   public hitboxes = new Array<Hitbox>();
    public readonly hitboxLocalIDs = new Array<number>();
 
    public collisionBit: number;
@@ -132,7 +132,7 @@ class TransformComponent extends ServerComponent {
       return true;
    }
 
-   public addHitbox(hitbox: HitboxWrapper, localID: number): void {
+   public addHitbox(hitbox: Hitbox, localID: number): void {
       updateBox(hitbox.box, this.position.x, this.position.y, this.rotation);
       this.hitboxes.push(hitbox);
       this.hitboxLocalIDs.push(localID);

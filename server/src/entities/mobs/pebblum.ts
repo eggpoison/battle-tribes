@@ -9,7 +9,7 @@ import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types"
 import { ServerComponentType } from "webgl-test-shared/dist/components";
 import { ComponentConfig } from "../../components";
 import { TransformComponentArray } from "../../components/TransformComponent";
-import { createHitbox, HitboxCollisionType, HitboxWrapper } from "webgl-test-shared/dist/boxes/boxes";
+import { createHitbox, HitboxCollisionType, Hitbox } from "webgl-test-shared/dist/boxes/boxes";
 import CircularBox from "webgl-test-shared/dist/boxes/CircularBox";
 
 type ComponentTypes = ServerComponentType.transform
@@ -19,7 +19,7 @@ type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.pebblum;
 
 export function createPebblumConfig(): ComponentConfig<ComponentTypes> {
-   const hitboxes = new Array<HitboxWrapper>();
+   const hitboxes = new Array<Hitbox>();
 
    // Body
    hitboxes.push(createHitbox(new CircularBox(new Point(0, -4), 0, 10 * 2), 0.4, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0));

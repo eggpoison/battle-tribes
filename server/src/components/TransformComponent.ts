@@ -12,7 +12,7 @@ import { PhysicsComponentArray } from "./PhysicsComponent";
 import { clearEntityPathfindingNodes, entityCanBlockPathfinding, updateEntityPathfindingNodeOccupance } from "../pathfinding";
 import { resolveEntityTileCollision } from "../collision";
 import { Packet } from "webgl-test-shared/dist/packets";
-import { boxIsCircular, HitboxWrapper, updateBox } from "webgl-test-shared/dist/boxes/boxes";
+import { boxIsCircular, Hitbox, updateBox } from "webgl-test-shared/dist/boxes/boxes";
 
 // @Cleanup: move mass/hitbox related stuff out? (Are there any entities which would make use of that?)
 
@@ -24,7 +24,7 @@ export interface TransformComponentParams {
    readonly collisionBit: number;
    readonly collisionMask: number;
    // @Cleanup: should this instead be hitbox info?
-   hitboxes: ReadonlyArray<HitboxWrapper>;
+   hitboxes: ReadonlyArray<Hitbox>;
 }
 
 export class TransformComponent {
@@ -50,7 +50,7 @@ export class TransformComponent {
    public isInRiver!: boolean;
 
    /** All hitboxes attached to the entity */
-   public hitboxes = new Array<HitboxWrapper>();
+   public hitboxes = new Array<Hitbox>();
    public hitboxLocalIDs = new Array<number>();
    
    public boundingAreaMinX = Number.MAX_SAFE_INTEGER;
@@ -153,7 +153,7 @@ export class TransformComponent {
       this.isInRiver = true;
    }
 
-   public addHitbox(hitbox: HitboxWrapper, entity: EntityID | null): void {
+   public addHitbox(hitbox: Hitbox, entity: EntityID | null): void {
       const box = hitbox.box;
       
       updateBox(box, this.position.x, this.position.y, this.rotation);

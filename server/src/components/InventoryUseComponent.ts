@@ -79,6 +79,8 @@ export class InventoryUseComponent {
       
       const damageBoxComponent = DamageBoxComponentArray.getComponent(entity);
       damageBoxComponent.addDamageBox(limbDamageBox);
+      damageBoxComponent.addDamageBox(heldItemDamageBox);
+      damageBoxComponent.addBlockBox(blockBox);
 
       const useInfo: LimbInfo = {
          associatedInventory: associatedInventory,
@@ -309,8 +311,8 @@ function onTick(inventoryUseComponent: InventoryUseComponent, entity: EntityID):
                limbInfo.action = LimbAction.returnAttackToRest;
                limbInfo.currentActionElapsedTicks = 0;
                limbInfo.currentActionDurationTicks = heldItemAttackInfo.attackTimings.returnTimeTicks;
+
                limbInfo.limbDamageBox.isActive = false;
-               
                limbInfo.heldItemDamageBox.isActive = false;
                break;
             }

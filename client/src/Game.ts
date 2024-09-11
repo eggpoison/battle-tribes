@@ -246,21 +246,27 @@ abstract class Game {
       
       if (!Game.hasInitialised) {
          return new Promise(async resolve => {
+            const start = performance.now();
+            console.log("creating contexts",0);
             createWebGLContext();
             createTechTreeGLContext();
             createTextCanvasContext();
 
+            console.log("initialising board",performance.now() - start);
             Board.initialise(initialGameDataPacket);
             Board.addRiverSteppingStonesToChunks(initialGameDataPacket.riverSteppingStones);
          
             createRiverSteppingStoneData(initialGameDataPacket.riverSteppingStones);
 
+            console.log("loading textures",performance.now() - start);
             createUBOs();
             
             // We load the textures before we create the shaders because some shader initialisations stitch textures together
             await loadTextures();
+            console.log("creating texture atlases",performance.now() - start);
             // @Speed
             await createTextureAtlases();
+            console.log("doing shader stuff",performance.now() - start);
             
             // Create shaders
             createSolidTileShaders();
@@ -292,11 +298,14 @@ abstract class Game {
                setupFrameGraph();
             }
 
+            console.log("doing audio",performance.now() - start);
             // @Speed
             await setupAudio();
 
+            console.log("creating render chunks",performance.now() - start);
             createRenderChunks(initialGameDataPacket.waterRocks, initialGameDataPacket.riverSteppingStones);
 
+            console.log("done",performance.now() - start);
             this.hasInitialised = true;
    
             resolve();

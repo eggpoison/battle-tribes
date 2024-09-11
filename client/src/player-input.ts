@@ -52,6 +52,9 @@ interface SelectedItemInfo {
       },
 */
 
+/** Amount of time that attack inputs will be buffered */
+const ATTACK_COYOTE_TIME = 0.04;
+
 /** Acceleration of the player while moving without any modifiers. */
 const PLAYER_ACCELERATION = 900;
 
@@ -74,6 +77,8 @@ let _inventoryIsOpen = false;
 let currentRightClickEvent: MouseEvent | null = null;
 
 let discombobulationTimer = 0;
+/** If > 0, it counts down the remaining time that the attack is buffered. */
+let attackBufferTime = 0;
 
 export function getHotbarSelectedItemSlot(): number {
    return hotbarSelectedItemSlot;
@@ -156,6 +161,19 @@ export function updatePlayerItems(): void {
    // If finished returning block to rest, go to rest
    if (hotbarLimbInfo.action === LimbAction.returnBlockToRest && getElapsedTimeInSeconds(hotbarLimbInfo.currentActionElapsedTicks) * Settings.TPS >= hotbarLimbInfo.currentActionDurationTicks) {
       hotbarLimbInfo.action = LimbAction.none;
+   }
+
+   // Buffered attacks
+   if (attackBufferTime > 0) {
+      const didSwing = attemptSwing(InventoryName.hotbar);
+      if (didSwing) {
+         attackBufferTime = 0;
+      }
+      
+      attackBufferTime -= Settings.I_TPS;
+      if (attackBufferTime <= 0) {
+         attackBufferTime = 0;
+      }
    }
 
    // Tick held item
@@ -273,9 +291,13 @@ const attemptSwing = (inventoryName: InventoryName): boolean => {
 const attemptAttack = (): void => {
    if (Player.instance === null) return;
 
-   const hotbarAttackDidSucceed = attemptSwing(InventoryName.hotbar);
-   if (!hotbarAttackDidSucceed && Game.tribe.tribeType === TribeType.barbarians) {
-      attemptSwing(InventoryName.offhand);
+   let attackDidSucceed = attemptSwing(InventoryName.hotbar);
+   if (!attackDidSucceed && Game.tribe.tribeType === TribeType.barbarians) {
+      attackDidSucceed = attemptSwing(InventoryName.offhand);
+   }
+
+   if (!attackDidSucceed) {
+      attackBufferTime = ATTACK_COYOTE_TIME;
    }
 }
 

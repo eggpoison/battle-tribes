@@ -1,7 +1,7 @@
-import { EntityType, LimbAction } from "webgl-test-shared/dist/entities";
-import { Point, lerp, randFloat, randItem } from "webgl-test-shared/dist/utils";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { Settings } from "webgl-test-shared/dist/settings";
+import { EntityType, LimbAction } from "battletribes-shared/entities";
+import { Point, lerp, randFloat, randItem } from "battletribes-shared/utils";
+import { ServerComponentType } from "battletribes-shared/components";
+import { Settings } from "battletribes-shared/settings";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
@@ -12,13 +12,13 @@ import { ParticleColour, ParticleRenderLayer, addMonocolourParticleToBufferConta
 import { animateLimb, createCraftingAnimationParticles, createMedicineAnimationParticles, generateRandomLimbPosition, updateBandageRenderPart, updateCustomItemRenderPart } from "../limb-animations";
 import { createBlockParticle, createDeepFrostHeartBloodParticles } from "../particles";
 import { definiteGameState } from "../game-state/game-states";
-import { InventoryName, ItemType, ITEM_TYPE_RECORD, Item, ITEM_INFO_RECORD, itemInfoIsUtility, itemInfoIsBow, BowItemInfo, itemInfoIsTool, getItemAttackInfo } from "webgl-test-shared/dist/items/items";
+import { InventoryName, ItemType, ITEM_TYPE_RECORD, Item, ITEM_INFO_RECORD, itemInfoIsUtility, itemInfoIsBow, BowItemInfo, itemInfoIsTool, getItemAttackInfo } from "battletribes-shared/items/items";
 import { RenderPart } from "../render-parts/render-parts";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
-import { PacketReader } from "webgl-test-shared/dist/packets";
+import { PacketReader } from "battletribes-shared/packets";
 import { Hotbar_updateRightThrownBattleaxeItemID } from "../components/game/inventories/Hotbar";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
-import { BLOCKING_LIMB_STATE, LimbState, SPEAR_CHARGED_LIMB_STATE, TRIBESMAN_RESTING_LIMB_STATE } from "webgl-test-shared/dist/attack-patterns";
+import { BLOCKING_LIMB_STATE, LimbState, SPEAR_CHARGED_LIMB_STATE, TRIBESMAN_RESTING_LIMB_STATE } from "battletribes-shared/attack-patterns";
 import RenderAttachPoint from "../render-parts/RenderAttachPoint";
 import { playSound } from "../sound";
 

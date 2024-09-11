@@ -1,8 +1,8 @@
-import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
+import { ServerComponentType } from "battletribes-shared/components";
+import { EntityID, EntityType } from "battletribes-shared/entities";
 import { ComponentConfig } from "../components";
-import { Packet } from "webgl-test-shared/dist/packets";
-import { Hitbox } from "webgl-test-shared/dist/boxes/boxes";
+import { Packet } from "battletribes-shared/packets";
+import { Hitbox } from "battletribes-shared/boxes/boxes";
 
 const enum ComponentArrayPriority {
    low,

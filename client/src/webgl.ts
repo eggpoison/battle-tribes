@@ -1,4 +1,4 @@
-import { Point } from "webgl-test-shared/dist/utils";
+import { Point } from "battletribes-shared/utils";
 import { isDev } from "./utils";
 import { updateTechTreeCanvasSize } from "./rendering/webgl/tech-tree-rendering";
 

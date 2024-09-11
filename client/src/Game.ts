@@ -1,6 +1,6 @@
-import { EntityDebugData } from "webgl-test-shared/dist/client-server-types";
-import { EnemyTribeData } from "webgl-test-shared/dist/techs";
-import { Settings } from "webgl-test-shared/dist/settings";
+import { EntityDebugData } from "battletribes-shared/client-server-types";
+import { EnemyTribeData } from "battletribes-shared/techs";
+import { Settings } from "battletribes-shared/settings";
 import Board from "./Board";
 import Player, { updatePlayerRotation } from "./entities/Player";
 import { isDev } from "./utils";
@@ -57,11 +57,11 @@ import { createTechTreeItemShaders, renderTechTreeItems, updateTechTreeItems } f
 import { createUBOs, updateUBOs } from "./rendering/ubos";
 import { createEntityOverlayShaders } from "./rendering/webgl/overlay-rendering";
 import { updateRenderPartMatrices } from "./rendering/render-part-matrices";
-import { EntitySummonPacket } from "webgl-test-shared/dist/dev-packets";
-import { Mutable } from "webgl-test-shared/dist/utils";
+import { EntitySummonPacket } from "battletribes-shared/dev-packets";
+import { Mutable } from "battletribes-shared/utils";
 import { renderNextRenderables, resetRenderOrder } from "./rendering/render-loop";
 import { InitialGameDataPacket, processGameDataPacket } from "./client/packet-processing";
-import { PacketReader } from "webgl-test-shared/dist/packets";
+import { PacketReader } from "battletribes-shared/packets";
 import { MAX_RENDER_LAYER, RenderLayer } from "./render-layers";
 import { updateEntity } from "./entity-components/ComponentArray";
 import { resolveEntityCollisions, resolvePlayerCollisions } from "./collision";

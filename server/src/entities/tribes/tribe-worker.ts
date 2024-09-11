@@ -1,18 +1,18 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
-import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { TileType } from "webgl-test-shared/dist/tiles";
-import { TribeType } from "webgl-test-shared/dist/tribes";
-import { Point, randInt } from "webgl-test-shared/dist/utils";
+import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "battletribes-shared/collision";
+import { EntityID, EntityType } from "battletribes-shared/entities";
+import { Settings } from "battletribes-shared/settings";
+import { TileType } from "battletribes-shared/tiles";
+import { TribeType } from "battletribes-shared/tribes";
+import { Point, randInt } from "battletribes-shared/utils";
 import Tribe from "../../Tribe";
 import { TribesmanAIComponentArray } from "../../components/TribesmanAIComponent";
 import Board from "../../Board";
 import { TribeComponentArray } from "../../components/TribeComponent";
 import { HutComponentArray } from "../../components/HutComponent";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "battletribes-shared/components";
 import { ComponentConfig } from "../../components";
-import CircularBox from "webgl-test-shared/dist/boxes/CircularBox";
-import { createHitbox, HitboxCollisionType } from "webgl-test-shared/dist/boxes/boxes";
+import CircularBox from "battletribes-shared/boxes/CircularBox";
+import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics

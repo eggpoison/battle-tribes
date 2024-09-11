@@ -1,8 +1,8 @@
-import { EntityType } from "webgl-test-shared/dist/entities";
+import { EntityType } from "battletribes-shared/entities";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { playBuildingHitSound, playSound } from "../sound";
 import Entity from "../Entity";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "battletribes-shared/components";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 class WorkerHut extends Entity {

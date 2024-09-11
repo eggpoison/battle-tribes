@@ -1,15 +1,15 @@
-import { StructureConnectionInfo, getSnapDirection, getStructureSnapOrigin } from "webgl-test-shared/dist/structures";
+import { StructureConnectionInfo, getSnapDirection, getStructureSnapOrigin } from "battletribes-shared/structures";
 import Board from "../Board";
 import { createStructureGrassBlockers } from "../grass-blockers";
 import { BlueprintComponentArray } from "./BlueprintComponent";
 import { ComponentArray } from "./ComponentArray";
 import { ConnectedEntityIDs } from "../entities/tribes/tribe-member";
-import { Mutable } from "webgl-test-shared/dist/utils";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { EntityID } from "webgl-test-shared/dist/entities";
+import { Mutable } from "battletribes-shared/utils";
+import { ServerComponentType } from "battletribes-shared/components";
+import { EntityID } from "battletribes-shared/entities";
 import { TribeComponentArray } from "./TribeComponent";
 import { TransformComponentArray } from "./TransformComponent";
-import { Packet } from "webgl-test-shared/dist/packets";
+import { Packet } from "battletribes-shared/packets";
 
 export interface StructureComponentParams {
    connectionInfo: StructureConnectionInfo;

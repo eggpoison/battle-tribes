@@ -1,7 +1,7 @@
-import { EntityType, EntityTypeString, NUM_ENTITY_TYPES } from "webgl-test-shared/dist/entities";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { TileType } from "webgl-test-shared/dist/tiles";
-import { Point, randInt, randFloat } from "webgl-test-shared/dist/utils";
+import { EntityType, EntityTypeString, NUM_ENTITY_TYPES } from "battletribes-shared/entities";
+import { Settings } from "battletribes-shared/settings";
+import { TileType } from "battletribes-shared/tiles";
+import { Point, randInt, randFloat } from "battletribes-shared/utils";
 import Board from "./Board";
 import { addEntityToCensus, getEntityCount, getTileTypeCount } from "./census";
 import OPTIONS from "./options";
@@ -13,7 +13,7 @@ import { entityIsTribesman } from "./entities/tribes/tribe-member";
 import { TransformComponentArray } from "./components/TransformComponent";
 import { yetiSpawnPositionIsValid } from "./components/YetiComponent";
 import { createEntityConfig } from "./entity-creation";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "battletribes-shared/components";
 
 const PACK_SPAWN_RANGE = 200;
 

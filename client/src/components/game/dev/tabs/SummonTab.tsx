@@ -1,13 +1,13 @@
-import { EntityType, NUM_ENTITY_TYPES } from "webgl-test-shared/dist/entities";
+import { EntityType, NUM_ENTITY_TYPES } from "battletribes-shared/entities";
 import CLIENT_ENTITY_INFO_RECORD from "../../../../client-entity-info";
 import { useCallback, useEffect, useState } from "react";
 import DevmodeRangeInput from "../DevmodeRangeInput";
 import Game, { GameInteractState } from "../../../../Game";
-import { ComponentSummonData, EntitySummonData, EntitySummonPacket } from "webgl-test-shared/dist/dev-packets";
-import { EntityComponents, ServerComponentType } from "webgl-test-shared/dist/components";
+import { ComponentSummonData, EntitySummonData, EntitySummonPacket } from "battletribes-shared/dev-packets";
+import { EntityComponents, ServerComponentType } from "battletribes-shared/components";
 import TribeComponentInput from "./TribeComponentInput";
 import DevmodeScrollableOptions from "../DevmodeScrollableOptions";
-import { Inventory, InventoryName, ItemSlots } from "webgl-test-shared/dist/items/items";
+import { Inventory, InventoryName, ItemSlots } from "battletribes-shared/items/items";
 import InventoryComponentInput, { ENTITY_INVENTORY_NAME_RECORD, NUM_INVENTORY_NAMES } from "./InventoryComponentInput";
 import { closeCurrentMenu } from "../../../../menus";
 

@@ -1,4 +1,4 @@
-import { TechID, getTechByID } from "webgl-test-shared/dist/techs";
+import { TechID, getTechByID } from "battletribes-shared/techs";
 import { useEffect, useState } from "react";
 import Game from "../../Game";
 import TechTreeProgressBar from "./tech-tree/TechTreeProgressBar";

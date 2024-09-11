@@ -1,7 +1,7 @@
-import { EntityID, EntityType, NUM_ENTITY_TYPES } from "webgl-test-shared/dist/entities";
-import { TileType, Biome, NUM_TILE_TYPES, NUM_BIOMES } from "webgl-test-shared/dist/tiles";
+import { EntityID, EntityType, NUM_ENTITY_TYPES } from "battletribes-shared/entities";
+import { TileType, Biome, NUM_TILE_TYPES, NUM_BIOMES } from "battletribes-shared/tiles";
 import Board from "./Board";
-import { TileIndex } from "webgl-test-shared/dist/utils";
+import { TileIndex } from "battletribes-shared/utils";
 
 const entityCounts = new Array<EntityType>();
 for (let i = 0; i < NUM_ENTITY_TYPES; i++) {

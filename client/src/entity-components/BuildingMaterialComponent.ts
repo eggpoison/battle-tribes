@@ -1,9 +1,9 @@
-import { BuildingMaterial, ServerComponentType } from "webgl-test-shared/dist/components";
-import { EntityType } from "webgl-test-shared/dist/entities";
+import { BuildingMaterial, ServerComponentType } from "battletribes-shared/components";
+import { EntityType } from "battletribes-shared/entities";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
-import { PacketReader } from "webgl-test-shared/dist/packets";
+import { PacketReader } from "battletribes-shared/packets";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 
 export const WALL_TEXTURE_SOURCES = ["entities/wall/wooden-wall.png", "entities/wall/stone-wall.png"];

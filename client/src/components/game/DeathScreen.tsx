@@ -1,4 +1,4 @@
-import { randItem } from "webgl-test-shared/dist/utils";
+import { randItem } from "battletribes-shared/utils";
 import { useEffect, useState } from "react";
 import Client from "../../client/Client";
 import Game from "../../Game";

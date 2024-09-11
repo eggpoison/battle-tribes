@@ -1,7 +1,7 @@
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "battletribes-shared/components";
 import { ComponentArray } from "./ComponentArray";
-import { EntityID } from "webgl-test-shared/dist/entities";
-import { ItemType } from "webgl-test-shared/dist/items/items";
+import { EntityID } from "battletribes-shared/entities";
+import { ItemType } from "battletribes-shared/items/items";
 import Board from "../Board";
 import { createItemEntityConfig } from "../entities/item-entity";
 import { createEntityFromConfig } from "../Entity";

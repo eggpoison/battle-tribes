@@ -1,13 +1,13 @@
-import { EntityID, SNOWBALL_SIZES, SnowballSize } from "webgl-test-shared/dist/entities";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { EntityID, SNOWBALL_SIZES, SnowballSize } from "battletribes-shared/entities";
+import { ServerComponentType } from "battletribes-shared/components";
 import { ComponentArray } from "./ComponentArray";
 import { ComponentConfig } from "../components";
 import { PhysicsComponentArray } from "./PhysicsComponent";
-import { randFloat, randSign } from "webgl-test-shared/dist/utils";
-import { Packet } from "webgl-test-shared/dist/packets";
+import { randFloat, randSign } from "battletribes-shared/utils";
+import { Packet } from "battletribes-shared/packets";
 import { getAgeTicks, TransformComponentArray } from "./TransformComponent";
 import Board from "../Board";
-import CircularBox from "webgl-test-shared/dist/boxes/CircularBox";
+import CircularBox from "battletribes-shared/boxes/CircularBox";
 
 export interface SnowballComponentParams {
    yetiID: number;

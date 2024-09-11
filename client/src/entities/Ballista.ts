@@ -1,10 +1,10 @@
-import { EntityType } from "webgl-test-shared/dist/entities";
-import { randItem } from "webgl-test-shared/dist/utils";
+import { EntityType } from "battletribes-shared/entities";
+import { randItem } from "battletribes-shared/utils";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { ROCK_DESTROY_SOUNDS, ROCK_HIT_SOUNDS, playSound } from "../sound";
 import Entity from "../Entity";
 import { BALLISTA_AMMO_BOX_OFFSET_X, BALLISTA_AMMO_BOX_OFFSET_Y, BALLISTA_GEAR_X, BALLISTA_GEAR_Y } from "../utils";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "battletribes-shared/components";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { RenderPart } from "../render-parts/render-parts";
 

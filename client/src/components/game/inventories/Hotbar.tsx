@@ -1,9 +1,9 @@
-import { TribeType } from "webgl-test-shared/dist/tribes";
+import { TribeType } from "battletribes-shared/tribes";
 import { useEffect, useReducer, useState } from "react";
 import ItemSlot from "./ItemSlot";
 import Player from "../../../entities/Player";
 import Game from "../../../Game";
-import { InventoryName, Item, itemTypeIsArmour, itemTypeIsBackpack, itemTypeIsGlove } from "webgl-test-shared/dist/items/items";
+import { InventoryName, Item, itemTypeIsArmour, itemTypeIsBackpack, itemTypeIsGlove } from "battletribes-shared/items/items";
 import EmptyItemSlot from "./EmptyItemSlot";
 import { InventoryComponentArray } from "../../../entity-components/InventoryComponent";
 import InventoryContainer from "./InventoryContainer";

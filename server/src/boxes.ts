@@ -1,7 +1,7 @@
-import { BlockBox, BoxFromType, BoxType, DamageBox, GenericCollisionBoxInfo, GenericCollisionBoxType } from "webgl-test-shared/dist/boxes/boxes";
+import { BlockBox, BoxFromType, BoxType, DamageBox, GenericCollisionBoxInfo, GenericCollisionBoxType } from "battletribes-shared/boxes/boxes";
 import { LimbInfo } from "./components/InventoryUseComponent";
-import { EntityID } from "webgl-test-shared/dist/entities";
-import { InventoryName } from "webgl-test-shared/dist/items/items";
+import { EntityID } from "battletribes-shared/entities";
+import { InventoryName } from "battletribes-shared/items/items";
 
 type CollisionCallback = (attacker: EntityID, victim: EntityID, limb: LimbInfo, collidingDamageBox: ServerDamageBox | null) => void;
 
@@ -23,7 +23,9 @@ class GenericCollisionBox<T extends BoxType> implements GenericCollisionBoxInfo<
    }
 }
 
-export class ServerDamageBox<T extends BoxType = BoxType> extends GenericCollisionBox<T> implements DamageBox<T> {}
+export class ServerDamageBox<T extends BoxType = BoxType> extends GenericCollisionBox<T> implements DamageBox<T> {
+   public isBlocked = false;
+}
 export class ServerBlockBox<T extends BoxType = BoxType> extends GenericCollisionBox<T> implements BlockBox<T> {}
 
 export function getCollisionBoxType(collisionBox: ServerDamageBox | ServerBlockBox): GenericCollisionBoxType {

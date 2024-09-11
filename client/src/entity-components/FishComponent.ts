@@ -1,10 +1,10 @@
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
-import { randFloat } from "webgl-test-shared/dist/utils";
-import { FishColour } from "webgl-test-shared/dist/entities";
-import { PacketReader } from "webgl-test-shared/dist/packets";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { TileType } from "webgl-test-shared/dist/tiles";
+import { randFloat } from "battletribes-shared/utils";
+import { FishColour } from "battletribes-shared/entities";
+import { PacketReader } from "battletribes-shared/packets";
+import { ServerComponentType } from "battletribes-shared/components";
+import { TileType } from "battletribes-shared/tiles";
 import Board from "../Board";
 import { createWaterSplashParticle } from "../particles";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";

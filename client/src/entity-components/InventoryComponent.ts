@@ -1,15 +1,15 @@
-import { InventoryComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
+import { InventoryComponentData, ServerComponentType } from "battletribes-shared/components";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
-import { InventoryName, Inventory, Item, InventoryData, ITEM_TYPE_RECORD } from "webgl-test-shared/dist/items/items";
-import { PacketReader } from "webgl-test-shared/dist/packets";
-import { ItemType } from "webgl-test-shared/dist/items/items";
+import { InventoryName, Inventory, Item, InventoryData, ITEM_TYPE_RECORD } from "battletribes-shared/items/items";
+import { PacketReader } from "battletribes-shared/packets";
+import { ItemType } from "battletribes-shared/items/items";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 import { Hotbar_update } from "../components/game/inventories/Hotbar";
 import { BackpackInventoryMenu_update } from "../components/game/inventories/BackpackInventory";
 import { CraftingMenu_updateRecipes } from "../components/game/menus/CraftingMenu";
 import InventoryUseComponent, { InventoryUseComponentArray, LimbInfo } from "./InventoryUseComponent";
-import { LimbAction } from "webgl-test-shared/dist/entities";
+import { LimbAction } from "battletribes-shared/entities";
 import { getHotbarSelectedItemSlot } from "../player-input";
 import Player from "../entities/Player";
 

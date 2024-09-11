@@ -1,7 +1,7 @@
-import { TileType } from "webgl-test-shared/dist/tiles";
-import { Point, lerp, randFloat, rotatePoint, rotateXAroundPoint, rotateYAroundPoint } from "webgl-test-shared/dist/utils";
-import { RIVER_STEPPING_STONE_SIZES, RiverSteppingStoneData, RiverSteppingStoneSize, WaterRockData, WaterRockSize } from "webgl-test-shared/dist/client-server-types";
-import { Settings } from "webgl-test-shared/dist/settings";
+import { TileType } from "battletribes-shared/tiles";
+import { Point, lerp, randFloat, rotatePoint, rotateXAroundPoint, rotateYAroundPoint } from "battletribes-shared/utils";
+import { RIVER_STEPPING_STONE_SIZES, RiverSteppingStoneData, RiverSteppingStoneSize, WaterRockData, WaterRockSize } from "battletribes-shared/client-server-types";
+import { Settings } from "battletribes-shared/settings";
 import { createWebGLProgram, gl } from "../../webgl";
 import { getTexture } from "../../textures";
 import Camera from "../../Camera";

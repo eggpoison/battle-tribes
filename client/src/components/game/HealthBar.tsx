@@ -1,4 +1,4 @@
-import { TRIBE_INFO_RECORD } from "webgl-test-shared/dist/tribes";
+import { TRIBE_INFO_RECORD } from "battletribes-shared/tribes";
 import { useEffect, useRef, useState } from "react";
 import HealthIcon from "../../images/miscellaneous/health.png";
 import FrozenHealthIcon from "../../images/miscellaneous/health-frozen.png";

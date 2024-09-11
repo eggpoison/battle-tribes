@@ -1,7 +1,7 @@
-import { EntityType } from "webgl-test-shared/dist/entities";
-import { Point } from "webgl-test-shared/dist/utils";
-import { PlanterBoxPlant, ServerComponentType, TunnelDoorSide } from "webgl-test-shared/dist/components";
-import { Settings } from "webgl-test-shared/dist/settings";
+import { EntityType } from "battletribes-shared/entities";
+import { Point } from "battletribes-shared/utils";
+import { PlanterBoxPlant, ServerComponentType, TunnelDoorSide } from "battletribes-shared/components";
+import { Settings } from "battletribes-shared/settings";
 import Player from "./entities/Player";
 import Game from "./Game";
 import Board from "./Board";
@@ -14,9 +14,9 @@ import { SEED_TO_PLANT_RECORD } from "./entity-components/PlantComponent";
 import { GhostInfo, GhostType, PARTIAL_OPACITY, setGhostInfo } from "./rendering/webgl/entity-ghost-rendering";
 import { getClosestGroupNum } from "./rendering/webgl/entity-selection-rendering";
 import { CraftingMenu_setCraftingStation, CraftingMenu_setIsVisible } from "./components/game/menus/CraftingMenu";
-import { CraftingStation } from "webgl-test-shared/dist/items/crafting-recipes";
-import { ItemType, InventoryName } from "webgl-test-shared/dist/items/items";
-import { boxIsWithinRange } from "webgl-test-shared/dist/boxes/boxes";
+import { CraftingStation } from "battletribes-shared/items/crafting-recipes";
+import { ItemType, InventoryName } from "battletribes-shared/items/items";
+import { boxIsWithinRange } from "battletribes-shared/boxes/boxes";
 import { getPlayerSelectedItem } from "./player-input";
 
 const enum InteractActionType {

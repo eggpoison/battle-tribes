@@ -1,7 +1,7 @@
-import { FrozenYetiComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
-import { FrozenYetiAttackType } from "webgl-test-shared/dist/entities";
-import { lerp, randFloat, randInt } from "webgl-test-shared/dist/utils";
-import { Settings } from "webgl-test-shared/dist/settings";
+import { FrozenYetiComponentData, ServerComponentType } from "battletribes-shared/components";
+import { FrozenYetiAttackType } from "battletribes-shared/entities";
+import { lerp, randFloat, randInt } from "battletribes-shared/utils";
+import { Settings } from "battletribes-shared/settings";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import { createBiteParticle, createRockParticle, createSnowParticle, createWhiteSmokeParticle } from "../particles";
@@ -10,7 +10,7 @@ import Particle from "../Particle";
 import { addMonocolourParticleToBufferContainer, addTexturedParticleToBufferContainer, ParticleRenderLayer } from "../rendering/webgl/particle-rendering";
 import Player from "../entities/Player";
 import { RenderPart } from "../render-parts/render-parts";
-import { PacketReader } from "webgl-test-shared/dist/packets";
+import { PacketReader } from "battletribes-shared/packets";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 
 const HEAD_SIZE = 80;

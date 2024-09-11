@@ -1,18 +1,18 @@
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "battletribes-shared/components";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
-import { Point, customTickIntervalHasPassed, lerp, randInt } from "webgl-test-shared/dist/utils";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { TILE_MOVE_SPEED_MULTIPLIERS, TileType, TILE_FRICTIONS } from "webgl-test-shared/dist/tiles";
+import { Point, customTickIntervalHasPassed, lerp, randInt } from "battletribes-shared/utils";
+import { Settings } from "battletribes-shared/settings";
+import { TILE_MOVE_SPEED_MULTIPLIERS, TileType, TILE_FRICTIONS } from "battletribes-shared/tiles";
 import Board from "../Board";
-import { EntityType } from "webgl-test-shared/dist/entities";
+import { EntityType } from "battletribes-shared/entities";
 import Particle from "../Particle";
 import { addTexturedParticleToBufferContainer, ParticleRenderLayer } from "../rendering/webgl/particle-rendering";
 import { playSound, AudioFilePath } from "../sound";
 import Player from "../entities/Player";
 import { keyIsPressed } from "../keyboard-input";
 import { resolveWallTileCollisions } from "../collision";
-import { PacketReader } from "webgl-test-shared/dist/packets";
+import { PacketReader } from "battletribes-shared/packets";
 import { createWaterSplashParticle } from "../particles";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 
@@ -139,7 +139,7 @@ class PhysicsComponent extends ServerComponent {
    public readonly acceleration: Point;
 
    public readonly externalVelocity: Point;
-   
+
    public angularVelocity = 0;
 
    public traction: number;

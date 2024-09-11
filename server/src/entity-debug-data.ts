@@ -1,7 +1,7 @@
-import { CircleDebugData, EntityDebugData, LineDebugData, PathData, TileHighlightData } from "webgl-test-shared/dist/client-server-types";
-import { TribesmanAIType } from "webgl-test-shared/dist/components";
-import { EntityID, EntityTypeString } from "webgl-test-shared/dist/entities";
-import { getTechByID } from "webgl-test-shared/dist/techs";
+import { CircleDebugData, EntityDebugData, LineDebugData, PathData, TileHighlightData } from "battletribes-shared/client-server-types";
+import { TribesmanAIType } from "battletribes-shared/components";
+import { EntityID, EntityTypeString } from "battletribes-shared/entities";
+import { getTechByID } from "battletribes-shared/techs";
 import { TRIBESMAN_COMMUNICATION_RANGE } from "./entities/tribes/tribesman-ai/tribesman-ai";
 import { TribesmanGoalType } from "./entities/tribes/tribesman-ai/tribesman-goals";
 import Board from "./Board";
@@ -9,8 +9,8 @@ import { StructureComponentArray } from "./components/StructureComponent";
 import { TribeComponentArray } from "./components/TribeComponent";
 import { TribesmanAIComponentArray } from "./components/TribesmanAIComponent";
 import { getTribesmanVisionRange } from "./entities/tribes/tribesman-ai/tribesman-ai-utils";
-import { ItemTypeString, ITEM_INFO_RECORD, PlaceableItemInfo } from "webgl-test-shared/dist/items/items";
-import { Packet } from "webgl-test-shared/dist/packets";
+import { ItemTypeString, ITEM_INFO_RECORD, PlaceableItemInfo } from "battletribes-shared/items/items";
+import { Packet } from "battletribes-shared/packets";
 
 export function createEntityDebugData(entity: EntityID): EntityDebugData {
    const lines = new Array<LineDebugData>();

@@ -1,9 +1,9 @@
-import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
+import { EntityID, EntityType } from "battletribes-shared/entities";
 import { InventoryComponentArray, getInventory } from "../../../components/InventoryComponent";
 import { getEntityRelationship, EntityRelationship, TribeComponentArray } from "../../../components/TribeComponent";
 import { TribeMemberComponentArray } from "../../../components/TribeMemberComponent";
 import { getItemGiftAppreciation, TribesmanAIComponentArray } from "../../../components/TribesmanAIComponent";
-import { InventoryName } from "webgl-test-shared/dist/items/items";
+import { InventoryName } from "battletribes-shared/items/items";
 import Board from "../../../Board";
 
 export function getGiftableItemSlot(tribesman: EntityID): number {

@@ -1,7 +1,7 @@
 import Entity from "../Entity";
 import { Matrix3x3, matrixMultiplyInPlace, overrideWithIdentityMatrix, overrideWithRotationMatrix } from "./matrices";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { Settings } from "webgl-test-shared/dist/settings";
+import { ServerComponentType } from "battletribes-shared/components";
+import { Settings } from "battletribes-shared/settings";
 import { renderPartIsTextured, RenderThing, thingIsRenderPart } from "../render-parts/render-parts";
 import Board from "../Board";
 import { getEntityRenderLayer } from "../render-layers";

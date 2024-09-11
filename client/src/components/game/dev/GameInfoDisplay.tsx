@@ -1,4 +1,4 @@
-import { roundNum } from "webgl-test-shared/dist/utils";
+import { roundNum } from "battletribes-shared/utils";
 import { useCallback, useEffect, useRef, useState } from "react";
 import OPTIONS from "../../../options";
 import Board from "../../../Board";

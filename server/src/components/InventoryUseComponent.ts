@@ -1,19 +1,19 @@
-import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { EntityID, LimbAction } from "webgl-test-shared/dist/entities";
-import { Settings } from "webgl-test-shared/dist/settings";
+import { ServerComponentType } from "battletribes-shared/components";
+import { EntityID, LimbAction } from "battletribes-shared/entities";
+import { Settings } from "battletribes-shared/settings";
 import { ComponentArray } from "./ComponentArray";
-import { getItemAttackInfo, Inventory, InventoryName, Item } from "webgl-test-shared/dist/items/items";
-import { Packet } from "webgl-test-shared/dist/packets";
+import { getItemAttackInfo, Inventory, InventoryName, Item } from "battletribes-shared/items/items";
+import { Packet } from "battletribes-shared/packets";
 import { getInventory, InventoryComponentArray } from "./InventoryComponent";
-import CircularBox from "webgl-test-shared/dist/boxes/CircularBox";
-import { lerp, Point } from "webgl-test-shared/dist/utils";
+import CircularBox from "battletribes-shared/boxes/CircularBox";
+import { lerp, Point } from "battletribes-shared/utils";
 import { DamageBoxComponentArray } from "./DamageBoxComponent";
 import { ServerBlockBox, ServerDamageBox } from "../boxes";
-import { assertBoxIsRectangular, updateBox } from "webgl-test-shared/dist/boxes/boxes";
+import { assertBoxIsRectangular, updateBox } from "battletribes-shared/boxes/boxes";
 import { TransformComponentArray } from "./TransformComponent";
-import { BLOCKING_LIMB_STATE, LimbState } from "webgl-test-shared/dist/attack-patterns";
+import { BLOCKING_LIMB_STATE, LimbState } from "battletribes-shared/attack-patterns";
 import { registerDirtyEntity } from "../server/player-clients";
-import RectangularBox from "webgl-test-shared/dist/boxes/RectangularBox";
+import RectangularBox from "battletribes-shared/boxes/RectangularBox";
 import { HealthComponentArray } from "./HealthComponent";
 import { attemptAttack } from "../entities/tribes/limb-use";
 import Board from "../Board";
@@ -207,10 +207,12 @@ const setLimbToState = (entity: EntityID, limbInfo: LimbInfo, state: LimbState):
 export function onBlockBoxCollision(attacker: EntityID, victim: EntityID, attackingLimb: LimbInfo, collidingDamageBox: ServerDamageBox): void {
    // Attack is blocked if the wrapper is a damage box
    if (collidingDamageBox !== null) {
-      console.log("attack bocked!",Math.random());
       // Pause the attack for a brief period
       attackingLimb.currentActionPauseTicksRemaining = Math.floor(Settings.TPS / 15);
       attackingLimb.currentActionRate = 0.4;
+
+      attackingLimb.limbDamageBox.isBlocked = true;
+      attackingLimb.heldItemDamageBox.isBlocked = true;
 
       const victimInventoryUseComponent = InventoryUseComponentArray.getComponent(victim);
       const associatedLimb = victimInventoryUseComponent.getLimbInfo(collidingDamageBox.associatedLimbInventoryName);
@@ -281,6 +283,8 @@ function onTick(inventoryUseComponent: InventoryUseComponent, entity: EntityID):
                limbInfo.currentActionElapsedTicks = 0;
                limbInfo.currentActionDurationTicks = heldItemAttackInfo.attackTimings.swingTimeTicks;
                limbInfo.limbDamageBox.isActive = true;
+               limbInfo.limbDamageBox.isBlocked = false;
+               limbInfo.heldItemDamageBox.isBlocked = false;
 
                const damageBoxInfo = heldItemAttackInfo.heldItemDamageBoxInfo;
                if (damageBoxInfo !== null) {

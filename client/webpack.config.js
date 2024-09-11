@@ -139,6 +139,10 @@ module.exports = {
       ],
    },
    resolve: {
+      alias: {
+         // Battletribes alias (to match the path in tsconfig.json)
+        'battletribes-shared': path.resolve(__dirname, '../shared/src'),
+      },
       extensions: [".tsx", ".ts", ".js"],
    },
    output: {

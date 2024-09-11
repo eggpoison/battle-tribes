@@ -1,4 +1,4 @@
-import { PathfindingNodeIndex } from "webgl-test-shared/dist/client-server-types";
+import { PathfindingNodeIndex } from "battletribes-shared/client-server-types";
 
 interface HeapItem {
    readonly node: PathfindingNodeIndex;

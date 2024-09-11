@@ -1,5 +1,5 @@
-import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { Settings } from "webgl-test-shared/dist/settings";
+import { ServerComponentType } from "battletribes-shared/components";
+import { Settings } from "battletribes-shared/settings";
 import { createIceSpeckProjectile, createSnowflakeParticle } from "../particles";
 import ServerComponent from "./ServerComponent";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";

@@ -1,11 +1,11 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision";
-import { EntityType } from "webgl-test-shared/dist/entities";
-import { StatusEffect } from "webgl-test-shared/dist/status-effects";
-import { Point } from "webgl-test-shared/dist/utils";
-import { createEmptyStructureConnectionInfo } from "webgl-test-shared/dist/structures";
-import { createFurnaceHitboxes } from "webgl-test-shared/dist/boxes/entity-hitbox-creation";
-import { InventoryName } from "webgl-test-shared/dist/items/items";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "battletribes-shared/collision";
+import { EntityType } from "battletribes-shared/entities";
+import { StatusEffect } from "battletribes-shared/status-effects";
+import { Point } from "battletribes-shared/utils";
+import { createEmptyStructureConnectionInfo } from "battletribes-shared/structures";
+import { createFurnaceHitboxes } from "battletribes-shared/boxes/entity-hitbox-creation";
+import { InventoryName } from "battletribes-shared/items/items";
+import { ServerComponentType } from "battletribes-shared/components";
 import { ComponentConfig } from "../../../components";
 
 type ComponentTypes = ServerComponentType.transform

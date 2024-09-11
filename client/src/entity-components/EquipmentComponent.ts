@@ -1,9 +1,9 @@
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "battletribes-shared/components";
 import Entity from "../Entity";
 import Component from "./Component";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { createFrostShieldBreakParticle } from "../particles";
-import { ArmourItemType, ItemType, GloveItemType, ItemTypeString, InventoryName } from "webgl-test-shared/dist/items/items";
+import { ArmourItemType, ItemType, GloveItemType, ItemTypeString, InventoryName } from "battletribes-shared/items/items";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 import { ClientComponentType } from "./components";

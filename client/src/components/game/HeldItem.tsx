@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getItemTypeImage } from "../../client-item-info";
-import { ItemType } from "webgl-test-shared/dist/items/items";
+import { ItemType } from "battletribes-shared/items/items";
 
 export let HeldItem_setHeldItemCount: (count: number) => void = () => {};
 export let HeldItem_setHeldItemType: (itemType: ItemType | null) => void = () => {};

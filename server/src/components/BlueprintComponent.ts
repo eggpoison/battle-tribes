@@ -1,16 +1,16 @@
-import { BlueprintType, BuildingMaterial, ServerComponentType } from "webgl-test-shared/dist/components";
-import { EntityID } from "webgl-test-shared/dist/entities";
+import { BlueprintType, BuildingMaterial, ServerComponentType } from "battletribes-shared/components";
+import { EntityID } from "battletribes-shared/entities";
 import { ComponentArray } from "./ComponentArray";
 import Board from "../Board";
 import { placeVirtualBuilding } from "../ai-tribe-building/ai-building";
 import { getBlueprintEntityType } from "../entities/blueprint-entity";
 import { StructureComponentArray } from "./StructureComponent";
-import { calculateStructureConnectionInfo } from "webgl-test-shared/dist/structures";
+import { calculateStructureConnectionInfo } from "battletribes-shared/structures";
 import { HealthComponentArray } from "./HealthComponent";
 import { TribeComponentArray } from "./TribeComponent";
 import { BuildingMaterialComponentArray, getStructureHealth } from "./BuildingMaterialComponent";
 import { HutComponentArray } from "./HutComponent";
-import { Item, ITEM_INFO_RECORD, HammerItemInfo } from "webgl-test-shared/dist/items/items";
+import { Item, ITEM_INFO_RECORD, HammerItemInfo } from "battletribes-shared/items/items";
 import { TransformComponentArray } from "./TransformComponent";
 import { ComponentConfig } from "../components";
 import { createDoorConfig } from "../entities/structures/door";
@@ -21,8 +21,8 @@ import { createSlingTurretConfig } from "../entities/structures/sling-turret";
 import { createTunnelConfig } from "../entities/structures/tunnel";
 import { createFenceGateConfig } from "../entities/structures/fence-gate";
 import { createWarriorHutConfig } from "../entities/structures/warrior-hut";
-import { Packet } from "webgl-test-shared/dist/packets";
-import { createEntityHitboxes } from "webgl-test-shared/dist/boxes/entity-hitbox-creation";
+import { Packet } from "battletribes-shared/packets";
+import { createEntityHitboxes } from "battletribes-shared/boxes/entity-hitbox-creation";
 
 export interface BlueprintComponentParams {
    blueprintType: BlueprintType;

@@ -1,4 +1,4 @@
-import { TechInfo } from "webgl-test-shared/dist/techs";
+import { TechInfo } from "battletribes-shared/techs";
 import Game from "../../../Game";
 
 interface TechTreeProgressBarProps {

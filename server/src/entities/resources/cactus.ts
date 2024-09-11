@@ -1,18 +1,18 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
-import { CactusBodyFlowerData, CactusLimbData, CactusLimbFlowerData, EntityID, EntityType, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
-import { randInt, lerp, randFloat, Point } from "webgl-test-shared/dist/utils";
+import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "battletribes-shared/collision";
+import { CactusBodyFlowerData, CactusLimbData, CactusLimbFlowerData, EntityID, EntityType, PlayerCauseOfDeath } from "battletribes-shared/entities";
+import { randInt, lerp, randFloat, Point } from "battletribes-shared/utils";
 import { HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
 import { createItemsOverEntity } from "../../entity-shared";
 import { applyKnockback } from "../../components/PhysicsComponent";
-import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
-import { ItemType } from "webgl-test-shared/dist/items/items";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
+import { ItemType } from "battletribes-shared/items/items";
+import { ServerComponentType } from "battletribes-shared/components";
 import { ComponentConfig } from "../../components";
-import { StatusEffect } from "webgl-test-shared/dist/status-effects";
+import { StatusEffect } from "battletribes-shared/status-effects";
 import Board from "../../Board";
 import { TransformComponentArray } from "../../components/TransformComponent";
-import { createHitbox, HitboxCollisionType, Hitbox } from "webgl-test-shared/dist/boxes/boxes";
-import CircularBox from "webgl-test-shared/dist/boxes/CircularBox";
+import { createHitbox, HitboxCollisionType, Hitbox } from "battletribes-shared/boxes/boxes";
+import CircularBox from "battletribes-shared/boxes/CircularBox";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.health

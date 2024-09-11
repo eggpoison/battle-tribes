@@ -1,13 +1,13 @@
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "battletribes-shared/components";
 import { ComponentArray } from "./ComponentArray";
-import { EntityID } from "webgl-test-shared/dist/entities";
-import { Packet } from "webgl-test-shared/dist/packets";
-import { boxIsCircular, GenericCollisionBoxType } from "webgl-test-shared/dist/boxes/boxes";
-import { getBoxesCollidingEntities } from "webgl-test-shared/dist/hitbox-collision";
+import { EntityID } from "battletribes-shared/entities";
+import { Packet } from "battletribes-shared/packets";
+import { boxIsCircular } from "battletribes-shared/boxes/boxes";
+import { getBoxesCollidingEntities } from "battletribes-shared/hitbox-collision";
 import Board from "../Board";
 import { ServerBlockBox, ServerDamageBox } from "../boxes";
 import { InventoryUseComponentArray, onBlockBoxCollision, onDamageBoxCollision } from "./InventoryUseComponent";
-import { Settings } from "webgl-test-shared/dist/settings";
+import { Settings } from "battletribes-shared/settings";
 
 export interface DamageBoxComponentParams {}
 
@@ -51,13 +51,13 @@ export const DamageBoxComponentArray = new ComponentArray<DamageBoxComponent>(Se
 });
 
 // @Hack: this whole thing is cursed
-const getCollidingCollisionBox = (entity: EntityID, damageBox: ServerDamageBox): DamageBoxCollisionInfo | null => {
+const getCollidingCollisionBox = (entity: EntityID, blockBox: ServerBlockBox): DamageBoxCollisionInfo | null => {
    // @Hack
    const CHECK_PADDING = 200;
-   const minChunkX = Math.max(Math.min(Math.floor((damageBox.box.position.x - CHECK_PADDING) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
-   const maxChunkX = Math.max(Math.min(Math.floor((damageBox.box.position.x + CHECK_PADDING) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
-   const minChunkY = Math.max(Math.min(Math.floor((damageBox.box.position.y - CHECK_PADDING) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
-   const maxChunkY = Math.max(Math.min(Math.floor((damageBox.box.position.y + CHECK_PADDING) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
+   const minChunkX = Math.max(Math.min(Math.floor((blockBox.box.position.x - CHECK_PADDING) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
+   const maxChunkX = Math.max(Math.min(Math.floor((blockBox.box.position.x + CHECK_PADDING) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
+   const minChunkY = Math.max(Math.min(Math.floor((blockBox.box.position.y - CHECK_PADDING) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
+   const maxChunkY = Math.max(Math.min(Math.floor((blockBox.box.position.y + CHECK_PADDING) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
 
    for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
       for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
@@ -69,15 +69,7 @@ const getCollidingCollisionBox = (entity: EntityID, damageBox: ServerDamageBox):
 
             const damageBoxComponent = DamageBoxComponentArray.getComponent(currentEntity);
             for (const currentDamageBox of damageBoxComponent.damageBoxes) { 
-               if (damageBox.box.isColliding(currentDamageBox.box)) {
-                  return {
-                     collidingEntity: currentEntity,
-                     collidingDamageBox: currentDamageBox
-                  };
-               }
-            }
-            for (const currentDamageBox of damageBoxComponent.blockBoxes) { 
-               if (damageBox.box.isColliding(currentDamageBox.box)) {
+               if (blockBox.box.isColliding(currentDamageBox.box)) {
                   return {
                      collidingEntity: currentEntity,
                      collidingDamageBox: currentDamageBox

@@ -1,6 +1,6 @@
-import { WaterRockData, RiverSteppingStoneData, RiverSteppingStoneSize, RIVER_STEPPING_STONE_SIZES } from "webgl-test-shared/dist/client-server-types";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { Point, TileCoordinates, lerp, randFloat } from "webgl-test-shared/dist/utils";
+import { WaterRockData, RiverSteppingStoneData, RiverSteppingStoneSize, RIVER_STEPPING_STONE_SIZES } from "battletribes-shared/client-server-types";
+import { Settings } from "battletribes-shared/settings";
+import { Point, TileCoordinates, lerp, randFloat } from "battletribes-shared/utils";
 import { generateOctavePerlinNoise } from "../perlin-noise";
 import Board from "../Board";
 import SRandom from "../SRandom";

@@ -1,5 +1,5 @@
-import { EntityType } from "webgl-test-shared/dist/entities";
-import { InventoryName, Item } from "webgl-test-shared/dist/items/items";
+import { EntityType } from "battletribes-shared/entities";
+import { InventoryName, Item } from "battletribes-shared/items/items";
 import InventoryContainer from "../../inventories/InventoryContainer";
 import ItemCatalogue from "./ItemCatalogue";
 import { ItemSlotCallbackInfo } from "../../inventories/ItemSlot";

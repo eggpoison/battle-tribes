@@ -1,6 +1,6 @@
-import { Settings } from "webgl-test-shared/dist/settings";
-import { EntityDebugData } from "webgl-test-shared/dist/client-server-types";
-import { Point } from "webgl-test-shared/dist/utils";
+import { Settings } from "battletribes-shared/settings";
+import { EntityDebugData } from "battletribes-shared/client-server-types";
+import { Point } from "battletribes-shared/utils";
 import { createWebGLProgram, generateLine, generateThickCircleWireframeVertices, gl } from "../../webgl";
 import Entity from "../../Entity";
 import Board from "../../Board";

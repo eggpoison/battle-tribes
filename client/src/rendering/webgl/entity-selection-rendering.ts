@@ -1,4 +1,4 @@
-import { rotateXAroundOrigin, rotateXAroundPoint, rotateYAroundOrigin, rotateYAroundPoint } from "webgl-test-shared/dist/utils";
+import { rotateXAroundOrigin, rotateXAroundPoint, rotateYAroundOrigin, rotateYAroundPoint } from "battletribes-shared/utils";
 import Board from "../../Board";
 import { getHighlightedEntityID, getSelectedEntityID } from "../../entity-selection";
 import { createWebGLProgram, gl, windowWidth, windowHeight, createTexture } from "../../webgl";

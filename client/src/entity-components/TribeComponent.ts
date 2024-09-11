@@ -1,14 +1,14 @@
-import { TribeType } from "webgl-test-shared/dist/tribes";
-import { EnemyTribeData } from "webgl-test-shared/dist/techs";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { randFloat } from "webgl-test-shared/dist/utils";
+import { TribeType } from "battletribes-shared/tribes";
+import { EnemyTribeData } from "battletribes-shared/techs";
+import { ServerComponentType } from "battletribes-shared/components";
+import { randFloat } from "battletribes-shared/utils";
 import Entity from "../Entity";
 import ServerComponent from "./ServerComponent";
 import Game from "../Game";
 import { playSound } from "../sound";
 import { getTribesmanRadius } from "./TribeMemberComponent";
 import { createConversionParticle } from "../particles";
-import { PacketReader } from "webgl-test-shared/dist/packets";
+import { PacketReader } from "battletribes-shared/packets";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 
 export function getTribeType(tribeID: number): TribeType {

@@ -1,12 +1,12 @@
-import { Settings } from "webgl-test-shared/dist/settings";
-import { randInt } from "webgl-test-shared/dist/utils";
-import { TileType } from "webgl-test-shared/dist/tiles";
+import { Settings } from "battletribes-shared/settings";
+import { randInt } from "battletribes-shared/utils";
+import { TileType } from "battletribes-shared/tiles";
 import Component from "./Component";
 import { playSound, AudioFilePath } from "../sound";
 import Board from "../Board";
 import { createFootprintParticle } from "../particles";
 import Entity from "../Entity";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "battletribes-shared/components";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 import { ClientComponentType } from "./components";
 

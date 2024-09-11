@@ -1,6 +1,6 @@
-import { TribesmanAIType } from "webgl-test-shared/dist/components";
-import { EntityID, LimbAction } from "webgl-test-shared/dist/entities";
-import { TechInfo } from "webgl-test-shared/dist/techs";
+import { TribesmanAIType } from "battletribes-shared/components";
+import { EntityID, LimbAction } from "battletribes-shared/entities";
+import { TechInfo } from "battletribes-shared/techs";
 import Board from "../../../Board";
 import { moveEntityToPosition, getDistanceFromPointToEntity } from "../../../ai-shared";
 import { InventoryUseComponentArray, setLimbActions } from "../../../components/InventoryUseComponent";

@@ -10,18 +10,18 @@ import Game, { GameInteractState } from "./Game";
 import { attemptEntitySelection } from "./entity-selection";
 import { playSound } from "./sound";
 import { attemptToCompleteNode } from "./research";
-import { calculateStructurePlaceInfo } from "webgl-test-shared/dist/structures";
-import { LimbAction } from "webgl-test-shared/dist/entities";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { TRIBE_INFO_RECORD, TribeType } from "webgl-test-shared/dist/tribes";
-import { STATUS_EFFECT_MODIFIERS } from "webgl-test-shared/dist/status-effects";
-import { TribesmanTitle } from "webgl-test-shared/dist/titles";
+import { calculateStructurePlaceInfo } from "battletribes-shared/structures";
+import { LimbAction } from "battletribes-shared/entities";
+import { Settings } from "battletribes-shared/settings";
+import { ServerComponentType } from "battletribes-shared/components";
+import { TRIBE_INFO_RECORD, TribeType } from "battletribes-shared/tribes";
+import { STATUS_EFFECT_MODIFIERS } from "battletribes-shared/status-effects";
+import { TribesmanTitle } from "battletribes-shared/titles";
 import { InventoryUseComponentArray } from "./entity-components/InventoryUseComponent";
 import { ENTITY_TYPE_TO_GHOST_TYPE_MAP, GhostInfo, setGhostInfo } from "./rendering/webgl/entity-ghost-rendering";
 import Camera from "./Camera";
 import { calculateCursorWorldPositionX, calculateCursorWorldPositionY } from "./mouse";
-import { Item, ITEM_TYPE_RECORD, InventoryName, ITEM_INFO_RECORD, ConsumableItemInfo, ConsumableItemCategory, PlaceableItemType, getItemAttackInfo, ItemType } from "webgl-test-shared/dist/items/items";
+import { Item, ITEM_TYPE_RECORD, InventoryName, ITEM_INFO_RECORD, ConsumableItemInfo, ConsumableItemCategory, PlaceableItemType, getItemAttackInfo, ItemType } from "battletribes-shared/items/items";
 import { playBowFireSound } from "./entity-tick-events";
 import { closeCurrentMenu } from "./menus";
 import { createAttackPacket, sendItemDropPacket, sendItemUsePacket, sendStopItemUsePacket } from "./client/packet-creation";
@@ -142,7 +142,7 @@ export function updatePlayerItems(): void {
 
    // @Incomplete: Double-check there isn't a tick immediately after depressing the button where this hasn't registered in the limb yet
    // If blocking but not right clicking, return to rest
-   if (hotbarLimbInfo.action === LimbAction.block && !rightMouseButtonIsPressed && getElapsedTimeInSeconds(hotbarLimbInfo.currentActionElapsedTicks) * Settings.TPS >= hotbarLimbInfo.currentActionDurationTicks) {
+   if (1+1===2 && hotbarLimbInfo.action === LimbAction.block && !rightMouseButtonIsPressed && getElapsedTimeInSeconds(hotbarLimbInfo.currentActionElapsedTicks) * Settings.TPS >= hotbarLimbInfo.currentActionDurationTicks) {
       const attackInfo = getItemAttackInfo(hotbarLimbInfo.heldItemType);
       hotbarLimbInfo.action = LimbAction.returnBlockToRest;
       hotbarLimbInfo.currentActionElapsedTicks = 0;

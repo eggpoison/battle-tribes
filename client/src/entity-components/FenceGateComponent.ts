@@ -1,10 +1,10 @@
-import { angle, lerp } from "webgl-test-shared/dist/utils";
+import { angle, lerp } from "battletribes-shared/utils";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import { RenderPart } from "../render-parts/render-parts";
-import { PacketReader } from "webgl-test-shared/dist/packets";
+import { PacketReader } from "battletribes-shared/packets";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "battletribes-shared/components";
 
 interface DoorInfo {
    readonly offsetX: number;

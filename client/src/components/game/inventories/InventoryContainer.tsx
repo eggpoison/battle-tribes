@@ -1,4 +1,4 @@
-import { Inventory, InventoryName } from "webgl-test-shared/dist/items/items";
+import { Inventory, InventoryName } from "battletribes-shared/items/items";
 import ItemSlot, { ItemSlotCallbackInfo } from "./ItemSlot";
 import { useRef } from "react";
 

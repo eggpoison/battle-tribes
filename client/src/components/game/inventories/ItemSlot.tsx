@@ -1,4 +1,4 @@
-import { Inventory, ItemType } from "webgl-test-shared/dist/items/items";
+import { Inventory, ItemType } from "battletribes-shared/items/items";
 import { onItemSlotMouseDown } from "../../../inventory-manipulation";
 import { getItemTypeImage } from "../../../client-item-info";
 

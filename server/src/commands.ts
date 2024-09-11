@@ -1,8 +1,8 @@
-import { PlayerCauseOfDeath, EntityID } from "webgl-test-shared/dist/entities";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { Biome } from "webgl-test-shared/dist/tiles";
-import { Point, randItem, TileIndex } from "webgl-test-shared/dist/utils";
-import { parseCommand } from "webgl-test-shared/dist/commands";
+import { PlayerCauseOfDeath, EntityID } from "battletribes-shared/entities";
+import { Settings } from "battletribes-shared/settings";
+import { Biome } from "battletribes-shared/tiles";
+import { Point, randItem, TileIndex } from "battletribes-shared/utils";
+import { parseCommand } from "battletribes-shared/commands";
 import { getTilesOfBiome } from "./census";
 import Board from "./Board";
 import { damageEntity, healEntity } from "./components/HealthComponent";
@@ -10,10 +10,10 @@ import { getRandomPositionInEntity } from "./Entity";
 import { InventoryComponentArray, addItem } from "./components/InventoryComponent";
 import { createItem } from "./items";
 import { forceBuildPlans } from "./ai-tribe-building/ai-building-plans";
-import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
+import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
 import { forcePlayerTeleport, getPlayerFromUsername } from "./server/player-clients";
 import { TribeComponentArray } from "./components/TribeComponent";
-import { ItemType, getItemTypeFromString } from "webgl-test-shared/dist/items/items";
+import { ItemType, getItemTypeFromString } from "battletribes-shared/items/items";
 
 const ENTITY_SPAWN_RANGE = 200;
 

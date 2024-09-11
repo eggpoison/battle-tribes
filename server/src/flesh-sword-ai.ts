@@ -1,9 +1,9 @@
-import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { Point, lerp, randItem, angle, TileIndex } from "webgl-test-shared/dist/utils";
+import { EntityID, EntityType } from "battletribes-shared/entities";
+import { Settings } from "battletribes-shared/settings";
+import { Point, lerp, randItem, angle, TileIndex } from "battletribes-shared/utils";
 import Board from "./Board";
 import { PhysicsComponentArray } from "./components/PhysicsComponent";
-import { Biome } from "webgl-test-shared/dist/tiles";
+import { Biome } from "battletribes-shared/tiles";
 import { TransformComponentArray } from "./components/TransformComponent";
 import { entityHasReachedPosition } from "./ai-shared";
 

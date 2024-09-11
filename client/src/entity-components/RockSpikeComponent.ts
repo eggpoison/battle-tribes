@@ -1,9 +1,9 @@
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
-import { PacketReader } from "webgl-test-shared/dist/packets";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { lerp } from "webgl-test-shared/dist/utils";
+import { PacketReader } from "battletribes-shared/packets";
+import { ServerComponentType } from "battletribes-shared/components";
+import { Settings } from "battletribes-shared/settings";
+import { lerp } from "battletribes-shared/utils";
 import RockSpikeProjectile from "../projectiles/RockSpikeProjectile";
 import { RenderPart } from "../render-parts/render-parts";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";

@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useReducer, useState } from "react";
 import Game from "../../../../Game";
 import DevmodeScrollableOptions from "../DevmodeScrollableOptions";
-import { TribeData } from "webgl-test-shared/dist/techs";
+import { TribeData } from "battletribes-shared/techs";
 import Client from "../../../../client/Client";
-import { TribeType, NUM_TRIBE_TYPES } from "webgl-test-shared/dist/tribes";
+import { TribeType, NUM_TRIBE_TYPES } from "battletribes-shared/tribes";
 import CLIENT_TRIBE_INFO_RECORD from "../../../../client-tribe-info";
 import DevmodeDropdownInput from "../DevmodeDropdownInput";
 

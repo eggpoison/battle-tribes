@@ -3,9 +3,9 @@ import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { playSound, ROCK_DESTROY_SOUNDS, ROCK_HIT_SOUNDS } from "../sound";
 import Entity from "../Entity";
 import { ParticleRenderLayer } from "../rendering/webgl/particle-rendering";
-import { randFloat, randItem } from "webgl-test-shared/dist/utils";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { EntityType } from "webgl-test-shared/dist/entities";
+import { randFloat, randItem } from "battletribes-shared/utils";
+import { ServerComponentType } from "battletribes-shared/components";
+import { EntityType } from "battletribes-shared/entities";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 class Tombstone extends Entity {

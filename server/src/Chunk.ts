@@ -1,8 +1,8 @@
-import { RIVER_STEPPING_STONE_SIZES, RiverSteppingStoneData } from "webgl-test-shared/dist/client-server-types";
-import { GrassBlocker } from "webgl-test-shared/dist/grass-blockers";
-import { EntityID } from "webgl-test-shared/dist/entities";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { distance } from "webgl-test-shared/dist/utils";
+import { RIVER_STEPPING_STONE_SIZES, RiverSteppingStoneData } from "battletribes-shared/client-server-types";
+import { GrassBlocker } from "battletribes-shared/grass-blockers";
+import { EntityID } from "battletribes-shared/entities";
+import { Settings } from "battletribes-shared/settings";
+import { distance } from "battletribes-shared/utils";
 import Board from "./Board";
 import { PhysicsComponentArray } from "./components/PhysicsComponent";
 import { TransformComponentArray } from "./components/TransformComponent";

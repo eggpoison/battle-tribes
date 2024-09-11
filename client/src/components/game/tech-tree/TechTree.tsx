@@ -1,4 +1,4 @@
-import { TECHS, TechID, TechInfo, getTechByID, getTechRequiredForItem } from "webgl-test-shared/dist/techs";
+import { TECHS, TechID, TechInfo, getTechByID, getTechRequiredForItem } from "battletribes-shared/techs";
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { addKeyListener } from "../../../keyboard-input";
 import CLIENT_ITEM_INFO_RECORD, { getItemTypeImage } from "../../../client-item-info";
@@ -10,12 +10,12 @@ import Player from "../../../entities/Player";
 import { countItemTypesInInventory } from "../../../inventory-manipulation";
 import { definiteGameState } from "../../../game-state/game-states";
 import { createTechTreeItem } from "../../../rendering/webgl/tech-tree-item-rendering";
-import { Point, randFloat } from "webgl-test-shared/dist/utils";
+import { Point, randFloat } from "battletribes-shared/utils";
 import Camera from "../../../Camera";
 import { playSound } from "../../../sound";
 import TechTreeProgressBar from "./TechTreeProgressBar";
-import { ItemTally2, tallyInventoryItems } from "webgl-test-shared/dist/items/ItemTally";
-import { InventoryName, ItemType } from "webgl-test-shared/dist/items/items";
+import { ItemTally2, tallyInventoryItems } from "battletribes-shared/items/ItemTally";
+import { InventoryName, ItemType } from "battletribes-shared/items/items";
 import { addMenuCloseFunction } from "../../../menus";
 import { InventoryComponentArray } from "../../../entity-components/InventoryComponent";
 

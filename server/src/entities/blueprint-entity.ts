@@ -1,8 +1,8 @@
-import { COLLISION_BITS } from "webgl-test-shared/dist/collision";
-import { BlueprintType, ServerComponentType } from "webgl-test-shared/dist/components";
-import { EntityType } from "webgl-test-shared/dist/entities";
-import { StructureType } from "webgl-test-shared/dist/structures";
-import { Point } from "webgl-test-shared/dist/utils";
+import { COLLISION_BITS } from "battletribes-shared/collision";
+import { BlueprintType, ServerComponentType } from "battletribes-shared/components";
+import { EntityType } from "battletribes-shared/entities";
+import { StructureType } from "battletribes-shared/structures";
+import { Point } from "battletribes-shared/utils";
 import { ComponentConfig } from "../components";
    
 type ComponentTypes = ServerComponentType.transform

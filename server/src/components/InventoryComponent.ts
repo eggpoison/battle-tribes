@@ -1,16 +1,16 @@
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "battletribes-shared/components";
 import { createItemEntityConfig, itemEntityCanBePickedUp } from "../entities/item-entity";
 import { ComponentArray } from "./ComponentArray";
 import { createItem } from "../items";
 import Board from "../Board";
 import { ItemComponentArray } from "./ItemComponent";
-import { CraftingRecipe, CraftingStation } from "webgl-test-shared/dist/items/crafting-recipes";
-import { ItemTally2, tallyInventoryItems } from "webgl-test-shared/dist/items/ItemTally";
-import { InventoryName, Inventory, ItemType, Item, itemIsStackable, ITEM_INFO_RECORD, StackableItemInfo, getItemStackSize } from "webgl-test-shared/dist/items/items";
-import { EntityID } from "webgl-test-shared/dist/entities";
+import { CraftingRecipe, CraftingStation } from "battletribes-shared/items/crafting-recipes";
+import { ItemTally2, tallyInventoryItems } from "battletribes-shared/items/ItemTally";
+import { InventoryName, Inventory, ItemType, Item, itemIsStackable, ITEM_INFO_RECORD, StackableItemInfo, getItemStackSize } from "battletribes-shared/items/items";
+import { EntityID } from "battletribes-shared/entities";
 import { TransformComponentArray } from "./TransformComponent";
 import { createEntityFromConfig } from "../Entity";
-import { Packet } from "webgl-test-shared/dist/packets";
+import { Packet } from "battletribes-shared/packets";
 import { addInventoryDataToPacket, getInventoryDataLength } from "../server/game-data-packets";
 import { EntityRelationship, getEntityRelationship } from "./TribeComponent";
 

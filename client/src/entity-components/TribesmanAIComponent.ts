@@ -1,12 +1,12 @@
-import { ServerComponentType, TribesmanAIType } from "webgl-test-shared/dist/components";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { TribeType } from "webgl-test-shared/dist/tribes";
-import { randInt, randItem } from "webgl-test-shared/dist/utils";
+import { ServerComponentType, TribesmanAIType } from "battletribes-shared/components";
+import { Settings } from "battletribes-shared/settings";
+import { TribeType } from "battletribes-shared/tribes";
+import { randInt, randItem } from "battletribes-shared/utils";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import { AudioFilePath, playSound } from "../sound";
-import { ItemType } from "webgl-test-shared/dist/items/items";
-import { PacketReader } from "webgl-test-shared/dist/packets";
+import { ItemType } from "battletribes-shared/items/items";
+import { PacketReader } from "battletribes-shared/packets";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 
 const GOBLIN_ANGRY_SOUNDS: ReadonlyArray<AudioFilePath> = ["goblin-angry-1.mp3", "goblin-angry-2.mp3", "goblin-angry-3.mp3", "goblin-angry-4.mp3"];

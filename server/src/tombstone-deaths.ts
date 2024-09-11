@@ -1,4 +1,4 @@
-import { DeathInfo, EntityID, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
+import { DeathInfo, EntityID, PlayerCauseOfDeath } from "battletribes-shared/entities";
 import { PlayerComponentArray } from "./components/PlayerComponent";
 
 abstract class TombstoneDeathManager {

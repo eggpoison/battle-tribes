@@ -1,8 +1,8 @@
-import { Colour, Point, randFloat } from "webgl-test-shared/dist/utils";
+import { Colour, Point, randFloat } from "battletribes-shared/utils";
 import { ComponentArray } from "./ComponentArray";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { EntityID } from "webgl-test-shared/dist/entities";
-import { Packet } from "webgl-test-shared/dist/packets";
+import { ServerComponentType } from "battletribes-shared/components";
+import { EntityID } from "battletribes-shared/entities";
+import { Packet } from "battletribes-shared/packets";
 
 export interface LayeredRodComponentParams {
    readonly numLayers: number;

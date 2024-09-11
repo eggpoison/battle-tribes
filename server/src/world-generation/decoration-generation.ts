@@ -1,7 +1,7 @@
-import { DecorationType, ServerComponentType } from "webgl-test-shared/dist/components";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { TileType } from "webgl-test-shared/dist/tiles";
-import { randInt, randFloat, TileIndex } from "webgl-test-shared/dist/utils";
+import { DecorationType, ServerComponentType } from "battletribes-shared/components";
+import { Settings } from "battletribes-shared/settings";
+import { TileType } from "battletribes-shared/tiles";
+import { randInt, randFloat, TileIndex } from "battletribes-shared/utils";
 import Board, { getTilesInRange } from "../Board";
 import { createDecorationConfig } from "../entities/decoration";
 import { createEntityFromConfig } from "../Entity";

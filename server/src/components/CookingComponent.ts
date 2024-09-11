@@ -1,12 +1,12 @@
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "battletribes-shared/components";
 import { ComponentArray } from "./ComponentArray";
-import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
-import { Packet } from "webgl-test-shared/dist/packets";
-import { InventoryName, ItemType, ItemTypeString } from "webgl-test-shared/dist/items/items";
-import { Settings } from "webgl-test-shared/dist/settings";
+import { EntityID, EntityType } from "battletribes-shared/entities";
+import { Packet } from "battletribes-shared/packets";
+import { InventoryName, ItemType, ItemTypeString } from "battletribes-shared/items/items";
+import { Settings } from "battletribes-shared/settings";
 import Board from "../Board";
 import { InventoryComponentArray, getInventory, consumeItemTypeFromInventory, addItemToInventory } from "./InventoryComponent";
-import { CookingIngredientItemType, FuelSourceItemType } from "webgl-test-shared/dist/cooking-info";
+import { CookingIngredientItemType, FuelSourceItemType } from "battletribes-shared/items/cooking-info";
 
 export interface CookingComponentParams {
    readonly remainingHeatSeconds: number;

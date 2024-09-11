@@ -1,5 +1,5 @@
 import Entity from "../Entity";
-import { EntityType } from "webgl-test-shared/dist/entities";
+import { EntityType } from "battletribes-shared/entities";
 
 class SpitPoisonArea extends Entity {
    constructor(id: number) {

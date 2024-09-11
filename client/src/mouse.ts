@@ -1,4 +1,4 @@
-import { Settings } from "webgl-test-shared/dist/settings";
+import { Settings } from "battletribes-shared/settings";
 import { halfWindowHeight, halfWindowWidth } from "./webgl";
 import CLIENT_SETTINGS from "./client-settings";
 import Game from "./Game";

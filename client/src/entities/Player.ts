@@ -1,4 +1,4 @@
-import { EntityType } from "webgl-test-shared/dist/entities";
+import { EntityType } from "battletribes-shared/entities";
 import Camera from "../Camera";
 import { halfWindowHeight, halfWindowWidth } from "../webgl";
 import TribeMember, { addTribeMemberRenderParts } from "./TribeMember";
@@ -6,10 +6,10 @@ import { definiteGameState, latencyGameState } from "../game-state/game-states";
 import { ClientComponentType } from "../entity-components/components";
 import FootprintComponent from "../entity-components/FootprintComponent";
 import EquipmentComponent from "../entity-components/EquipmentComponent";
-import { InventoryName, Item } from "webgl-test-shared/dist/items/items";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { InventoryName, Item } from "battletribes-shared/items/items";
+import { ServerComponentType } from "battletribes-shared/components";
 import { PhysicsComponentArray } from "../entity-components/PhysicsComponent";
-import { Settings } from "webgl-test-shared/dist/settings";
+import { Settings } from "battletribes-shared/settings";
 import { InventoryComponentArray } from "../entity-components/InventoryComponent";
 
 /** Updates the rotation of the player to match the cursor position */

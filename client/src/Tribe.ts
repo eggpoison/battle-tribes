@@ -1,5 +1,5 @@
-import { TechID, TechTreeUnlockProgress } from "webgl-test-shared/dist/techs";
-import { TRIBE_INFO_RECORD, TribeType } from "webgl-test-shared/dist/tribes";
+import { TechID, TechTreeUnlockProgress } from "battletribes-shared/techs";
+import { TRIBE_INFO_RECORD, TribeType } from "battletribes-shared/tribes";
 
 /** Stores information about the player's tribe */
 class Tribe {

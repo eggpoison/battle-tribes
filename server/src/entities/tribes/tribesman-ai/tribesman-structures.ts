@@ -1,9 +1,9 @@
-import { TribesmanAIType } from "webgl-test-shared/dist/components";
-import { EntityID, LimbAction } from "webgl-test-shared/dist/entities";
-import { PathfindingSettings } from "webgl-test-shared/dist/settings";
-import { calculateStructureConnectionInfo } from "webgl-test-shared/dist/structures";
-import { TribesmanTitle } from "webgl-test-shared/dist/titles";
-import { angle, getAngleDiff } from "webgl-test-shared/dist/utils";
+import { TribesmanAIType } from "battletribes-shared/components";
+import { EntityID, LimbAction } from "battletribes-shared/entities";
+import { PathfindingSettings } from "battletribes-shared/settings";
+import { calculateStructureConnectionInfo } from "battletribes-shared/structures";
+import { TribesmanTitle } from "battletribes-shared/titles";
+import { angle, getAngleDiff } from "battletribes-shared/utils";
 import Board from "../../../Board";
 import Tribe from "../../../Tribe";
 import { getDistanceFromPointToEntity, stopEntity, willStopAtDesiredDistance } from "../../../ai-shared";
@@ -22,11 +22,11 @@ import { getBestToolItemSlot, getTribesmanAttackOffset, getTribesmanAttackRadius
 import { huntEntity } from "./tribesman-combat-ai";
 import { TribesmanPlaceGoal, TribesmanUpgradeGoal } from "./tribesman-goals";
 import { AIHelperComponentArray } from "../../../components/AIHelperComponent";
-import { getBoxesCollidingEntities } from "webgl-test-shared/dist/hitbox-collision";
-import { Inventory, ITEM_INFO_RECORD, PlaceableItemInfo, InventoryName } from "webgl-test-shared/dist/items/items";
+import { getBoxesCollidingEntities } from "battletribes-shared/hitbox-collision";
+import { Inventory, ITEM_INFO_RECORD, PlaceableItemInfo, InventoryName } from "battletribes-shared/items/items";
 import { TransformComponentArray } from "../../../components/TransformComponent";
-import { createEntityHitboxes } from "webgl-test-shared/dist/boxes/entity-hitbox-creation";
-import { updateBox } from "webgl-test-shared/dist/boxes/boxes";
+import { createEntityHitboxes } from "battletribes-shared/boxes/entity-hitbox-creation";
+import { updateBox } from "battletribes-shared/boxes/boxes";
 
 const enum Vars {
    BUILDING_PLACE_DISTANCE = 80

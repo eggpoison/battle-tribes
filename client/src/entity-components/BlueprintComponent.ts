@@ -1,5 +1,5 @@
-import { BlueprintType, ServerComponentType } from "webgl-test-shared/dist/components";
-import { assertUnreachable, randFloat, rotateXAroundOrigin, rotateYAroundOrigin } from "webgl-test-shared/dist/utils";
+import { BlueprintType, ServerComponentType } from "battletribes-shared/components";
+import { assertUnreachable, randFloat, rotateXAroundOrigin, rotateYAroundOrigin } from "battletribes-shared/utils";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import { playSound } from "../sound";
@@ -8,7 +8,7 @@ import { getCurrentBlueprintProgressTexture } from "../entities/BlueprintEntity"
 import { getEntityTextureAtlas, getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { ParticleRenderLayer } from "../rendering/webgl/particle-rendering";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
-import { PacketReader } from "webgl-test-shared/dist/packets";
+import { PacketReader } from "battletribes-shared/packets";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 
 const createWoodenBlueprintWorkParticleEffects = (entity: Entity): void => {

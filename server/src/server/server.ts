@@ -1,8 +1,8 @@
-import { VisibleChunkBounds } from "webgl-test-shared/dist/client-server-types";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { TribeType } from "webgl-test-shared/dist/tribes";
-import { Point, randInt } from "webgl-test-shared/dist/utils";
-import { PacketReader, PacketType } from "webgl-test-shared/dist/packets";
+import { VisibleChunkBounds } from "battletribes-shared/client-server-types";
+import { Settings } from "battletribes-shared/settings";
+import { TribeType } from "battletribes-shared/tribes";
+import { Point, randInt } from "battletribes-shared/utils";
+import { PacketReader, PacketType } from "battletribes-shared/packets";
 import WebSocket, { Server } from "ws";
 import Board from "../Board";
 import { runSpawnAttempt, spawnInitialEntities } from "../entity-spawning";
@@ -16,11 +16,11 @@ import { createGameDataPacket, createSyncDataPacket, createSyncPacket } from "./
 import PlayerClient, { PlayerClientVars } from "./PlayerClient";
 import { addPlayerClient, generatePlayerSpawnPosition, getPlayerClients, resetDirtyEntities } from "./player-clients";
 import { createPlayerConfig } from "../entities/tribes/player";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "battletribes-shared/components";
 import { createEntityFromConfig } from "../Entity";
 import { generateGrassStrands } from "../world-generation/grass-generation";
 import { processDevGiveItemPacket, processItemDropPacket, processPlayerAttackPacket, processPlayerDataPacket, processRespawnPacket, processStopItemUsePacket, processUseItemPacket } from "./packet-processing";
-import { EntityID } from "webgl-test-shared/dist/entities";
+import { EntityID } from "battletribes-shared/entities";
 import { SpikesComponentArray } from "../components/SpikesComponent";
 import { TribeComponentArray } from "../components/TribeComponent";
 import { TransformComponentArray } from "../components/TransformComponent";

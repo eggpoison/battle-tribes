@@ -1,4 +1,4 @@
-import { rotateXAroundPoint, rotateYAroundPoint } from "webgl-test-shared/dist/utils";
+import { rotateXAroundPoint, rotateYAroundPoint } from "battletribes-shared/utils";
 import { RESEARCH_ORB_SIZES, ResearchOrb, getResearchOrb, getResearchOrbCompleteProgress } from "../../research";
 import { createWebGLProgram, gl } from "../../webgl";
 import { UBOBindingIndex, bindUBOToProgram } from "../ubos";

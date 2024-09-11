@@ -1,4 +1,4 @@
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "battletribes-shared/components";
 import TurretComponent from "./TurretComponent";
 import CowComponent from "./CowComponent";
 import TribeComponent from "./TribeComponent";
@@ -60,7 +60,7 @@ import ThrowingProjectileComponent from "./ThrowingProjectileComponent";
 import TribeWarriorComponent from "./TribeWarriorComponent";
 import TransformComponent from "./TransformComponent";
 import LayeredRodComponent from "./LayeredRodComponent";
-import { PacketReader } from "webgl-test-shared/dist/packets";
+import { PacketReader } from "battletribes-shared/packets";
 import DecorationComponent from "./DecorationComponent";
 import BattleaxeProjectileComponent from "./BattleaxeProjectileComponent";
 import SpearProjectileComponent from "./SpearProjectileComponent";

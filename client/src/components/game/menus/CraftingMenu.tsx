@@ -1,4 +1,4 @@
-import { getTechRequiredForItem } from "webgl-test-shared/dist/techs";
+import { getTechRequiredForItem } from "battletribes-shared/techs";
 import { useCallback, useEffect, useRef, useState } from "react";
 import CLIENT_ITEM_INFO_RECORD, { getItemTypeImage } from "../../../client-item-info";
 import Client from "../../../client/Client";
@@ -8,13 +8,13 @@ import { countItemTypesInInventory } from "../../../inventory-manipulation";
 import Player from "../../../entities/Player";
 import Game from "../../../Game";
 import { playSound } from "../../../sound";
-import { CraftingRecipe, CraftingStation, CRAFTING_RECIPES, forceGetItemRecipe } from "webgl-test-shared/dist/items/crafting-recipes";
-import { ItemType, Item, Inventory, InventoryName } from "webgl-test-shared/dist/items/items";
-import { ItemTally2, tallyInventoryItems } from "webgl-test-shared/dist/items/ItemTally";
+import { CraftingRecipe, CraftingStation, CRAFTING_RECIPES, forceGetItemRecipe } from "battletribes-shared/items/crafting-recipes";
+import { ItemType, Item, Inventory, InventoryName } from "battletribes-shared/items/items";
+import { ItemTally2, tallyInventoryItems } from "battletribes-shared/items/ItemTally";
 import InventoryContainer from "../inventories/InventoryContainer";
 import { deselectHighlightedEntity } from "../../../entity-selection";
 import { addMenuCloseFunction } from "../../../menus";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "battletribes-shared/components";
 import { InventoryComponentArray } from "../../../entity-components/InventoryComponent";
 
 interface RecipeViewerProps {

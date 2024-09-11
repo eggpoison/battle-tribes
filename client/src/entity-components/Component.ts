@@ -1,4 +1,4 @@
-import { Hitbox } from "webgl-test-shared/dist/boxes/boxes";
+import { Hitbox } from "battletribes-shared/boxes/boxes";
 import Entity from "../Entity";
 
 abstract class Component {

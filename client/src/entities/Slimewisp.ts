@@ -1,9 +1,9 @@
-import { EntityType } from "webgl-test-shared/dist/entities";
+import { EntityType } from "battletribes-shared/entities";
 import { createSlimePoolParticle, createSlimeSpeckParticle } from "../particles";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import Entity from "../Entity";
-import { TileType } from "webgl-test-shared/dist/tiles";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { TileType } from "battletribes-shared/tiles";
+import { ServerComponentType } from "battletribes-shared/components";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 class Slimewisp extends Entity {

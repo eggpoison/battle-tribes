@@ -1,5 +1,5 @@
-import { ServerComponentType, TurretAmmoType } from "webgl-test-shared/dist/components";
-import { rotateXAroundOrigin, rotateYAroundOrigin } from "webgl-test-shared/dist/utils";
+import { ServerComponentType, TurretAmmoType } from "battletribes-shared/components";
+import { rotateXAroundOrigin, rotateYAroundOrigin } from "battletribes-shared/utils";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
@@ -7,7 +7,7 @@ import { BALLISTA_AMMO_BOX_OFFSET_X, BALLISTA_AMMO_BOX_OFFSET_Y } from "../utils
 import Board from "../Board";
 import { RenderPart } from "../render-parts/render-parts";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
-import { PacketReader } from "webgl-test-shared/dist/packets";
+import { PacketReader } from "battletribes-shared/packets";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 
 class AmmoBoxComponent extends ServerComponent {

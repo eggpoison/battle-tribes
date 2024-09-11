@@ -1,12 +1,12 @@
-import { HitData } from "webgl-test-shared/dist/client-server-types";
-import { EntityType } from "webgl-test-shared/dist/entities";
-import { angle, randFloat } from "webgl-test-shared/dist/utils";
+import { HitData } from "battletribes-shared/client-server-types";
+import { EntityType } from "battletribes-shared/entities";
+import { angle, randFloat } from "battletribes-shared/utils";
 import { BloodParticleSize, createBloodParticle, createBloodParticleFountain, createBloodPoolParticle } from "../particles";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { ClientComponentType } from "../entity-components/components";
 import FootprintComponent from "../entity-components/FootprintComponent";
 import Entity from "../Entity";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "battletribes-shared/components";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 class Krumblid extends Entity {

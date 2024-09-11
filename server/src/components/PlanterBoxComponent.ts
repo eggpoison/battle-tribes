@@ -1,13 +1,13 @@
-import { PlanterBoxPlant, ServerComponentType } from "webgl-test-shared/dist/components";
+import { PlanterBoxPlant, ServerComponentType } from "battletribes-shared/components";
 import { ComponentArray } from "./ComponentArray";
 import Board from "../Board";
 import { PlantComponentArray } from "./PlantComponent";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { EntityID } from "webgl-test-shared/dist/entities";
+import { Settings } from "battletribes-shared/settings";
+import { EntityID } from "battletribes-shared/entities";
 import { TransformComponentArray } from "./TransformComponent";
 import { createPlantConfig } from "../entities/plant";
 import { createEntityFromConfig } from "../Entity";
-import { Packet } from "webgl-test-shared/dist/packets";
+import { Packet } from "battletribes-shared/packets";
 
 const enum Vars {
    FERTILISER_DURATION_TICKS = 300 * Settings.TPS

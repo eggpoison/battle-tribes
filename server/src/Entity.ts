@@ -1,12 +1,12 @@
-import { Point, randFloat, randInt, rotateXAroundOrigin, rotateYAroundOrigin } from "webgl-test-shared/dist/utils";
-import { EntityID } from "webgl-test-shared/dist/entities";
+import { Point, randFloat, randInt, rotateXAroundOrigin, rotateYAroundOrigin } from "battletribes-shared/utils";
+import { EntityID } from "battletribes-shared/entities";
 import Board from "./Board";
-import { STRUCTURE_TYPES, StructureType } from "webgl-test-shared/dist/structures";
+import { STRUCTURE_TYPES, StructureType } from "battletribes-shared/structures";
 import { TransformComponentArray } from "./components/TransformComponent";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "battletribes-shared/components";
 import { ComponentClassRecord, ComponentConfig, ComponentParams } from "./components";
 import { ComponentArray, ComponentArrayRecord } from "./components/ComponentArray";
-import { boxIsCircular } from "webgl-test-shared/dist/boxes/boxes";
+import { boxIsCircular } from "battletribes-shared/boxes/boxes";
 
 let idCounter = 1;
 

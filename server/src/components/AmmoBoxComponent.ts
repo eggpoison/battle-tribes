@@ -1,7 +1,7 @@
-import { ServerComponentType, TurretAmmoType } from "webgl-test-shared/dist/components";
+import { ServerComponentType, TurretAmmoType } from "battletribes-shared/components";
 import { ComponentArray } from "./ComponentArray";
-import { ItemType } from "webgl-test-shared/dist/items/items";
-import { Packet } from "webgl-test-shared/dist/packets";
+import { ItemType } from "battletribes-shared/items/items";
+import { Packet } from "battletribes-shared/packets";
 
 export interface AmmoBoxComponentParams {}
 

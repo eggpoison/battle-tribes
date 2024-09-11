@@ -1,12 +1,12 @@
-import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { TribeTotemBanner } from "webgl-test-shared/dist/entities";
-import { TribeType } from "webgl-test-shared/dist/tribes";
+import { ServerComponentType } from "battletribes-shared/components";
+import { TribeTotemBanner } from "battletribes-shared/entities";
+import { TribeType } from "battletribes-shared/tribes";
 import ServerComponent from "./ServerComponent";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import Entity from "../Entity";
 import { RenderPart } from "../render-parts/render-parts";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
-import { PacketReader } from "webgl-test-shared/dist/packets";
+import { PacketReader } from "battletribes-shared/packets";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 
 const BANNER_LAYER_DISTANCES = [34, 52, 65];

@@ -1,17 +1,17 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
-import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
-import { StatusEffect } from "webgl-test-shared/dist/status-effects";
-import { Point, randInt } from "webgl-test-shared/dist/utils";
+import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "battletribes-shared/collision";
+import { EntityID, EntityType } from "battletribes-shared/entities";
+import { StatusEffect } from "battletribes-shared/status-effects";
+import { Point, randInt } from "battletribes-shared/utils";
 import { createItemsOverEntity } from "../entity-shared";
 import { createZombieConfig } from "./mobs/zombie";
 import TombstoneDeathManager from "../tombstone-deaths";
-import { ItemType } from "webgl-test-shared/dist/items/items";
+import { ItemType } from "battletribes-shared/items/items";
 import { TransformComponentArray } from "../components/TransformComponent";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "battletribes-shared/components";
 import { ComponentConfig } from "../components";
 import { createEntityFromConfig } from "../Entity";
-import { createHitbox, HitboxCollisionType } from "webgl-test-shared/dist/boxes/boxes";
-import RectangularBox from "webgl-test-shared/dist/boxes/RectangularBox";
+import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
+import RectangularBox from "battletribes-shared/boxes/RectangularBox";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.health

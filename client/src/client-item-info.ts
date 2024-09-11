@@ -1,4 +1,4 @@
-import { ItemType } from "webgl-test-shared/dist/items/items";
+import { ItemType } from "battletribes-shared/items/items";
 
 export type ClientItemInfo = {
    readonly entityTextureSource: string;

@@ -1,6 +1,6 @@
-import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { Point } from "webgl-test-shared/dist/utils";
+import { ServerComponentType } from "battletribes-shared/components";
+import { Settings } from "battletribes-shared/settings";
+import { Point } from "battletribes-shared/utils";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import { createRockSpeckParticle } from "../particles";
@@ -10,9 +10,9 @@ import { Light, addLight, attachLightToRenderPart } from "../lights";
 import { playSound } from "../sound";
 import { RenderPart } from "../render-parts/render-parts";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
-import { PacketReader } from "webgl-test-shared/dist/packets";
+import { PacketReader } from "battletribes-shared/packets";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
-import CircularBox from "webgl-test-shared/dist/boxes/CircularBox";
+import CircularBox from "battletribes-shared/boxes/CircularBox";
 
 const ANGRY_SOUND_INTERVAL_TICKS = Settings.TPS * 3;
 

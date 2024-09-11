@@ -1,10 +1,10 @@
-import { Settings } from "webgl-test-shared/dist/settings";
-import { distance, Point, randInt } from "webgl-test-shared/dist/utils";
-import { TileType } from "webgl-test-shared/dist/tiles";
+import { Settings } from "battletribes-shared/settings";
+import { distance, Point, randInt } from "battletribes-shared/utils";
+import { TileType } from "battletribes-shared/tiles";
 import Camera from "./Camera";
 import Board from "./Board";
 import Entity from "./Entity";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "battletribes-shared/components";
 
 // @Robustness: automatically detect from folder
 const AUDIO_FILE_PATHS = [

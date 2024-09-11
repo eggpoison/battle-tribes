@@ -1,21 +1,21 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
-import { EntityType, PlayerCauseOfDeath, EntityID } from "webgl-test-shared/dist/entities";
-import { StatusEffect } from "webgl-test-shared/dist/status-effects";
-import { Point, randInt } from "webgl-test-shared/dist/utils";
-import { Settings } from "webgl-test-shared/dist/settings";
+import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "battletribes-shared/collision";
+import { EntityType, PlayerCauseOfDeath, EntityID } from "battletribes-shared/entities";
+import { StatusEffect } from "battletribes-shared/status-effects";
+import { Point, randInt } from "battletribes-shared/utils";
+import { Settings } from "battletribes-shared/settings";
 import { HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
 import { YetiComponentArray } from "../../components/YetiComponent";
 import Board from "../../Board";
 import { createItemsOverEntity } from "../../entity-shared";
 import { applyKnockback } from "../../components/PhysicsComponent";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
+import { ServerComponentType } from "battletribes-shared/components";
+import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
 import { SnowballComponentArray } from "../../components/SnowballComponent";
-import { ItemType } from "webgl-test-shared/dist/items/items";
+import { ItemType } from "battletribes-shared/items/items";
 import { ComponentConfig } from "../../components";
 import { TransformComponentArray } from "../../components/TransformComponent";
-import { createHitbox, HitboxCollisionType } from "webgl-test-shared/dist/boxes/boxes";
-import CircularBox from "webgl-test-shared/dist/boxes/CircularBox";
+import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
+import CircularBox from "battletribes-shared/boxes/CircularBox";
 
 export const enum YetiVars {
    VISION_RANGE = 500

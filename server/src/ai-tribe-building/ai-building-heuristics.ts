@@ -1,6 +1,6 @@
-import { PotentialPlanSafetyData } from "webgl-test-shared/dist/ai-building-types";
-import { EntityID, EntityType, EntityTypeString } from "webgl-test-shared/dist/entities";
-import { Settings } from "webgl-test-shared/dist/settings";
+import { PotentialPlanSafetyData } from "battletribes-shared/ai-building-types";
+import { EntityID, EntityType, EntityTypeString } from "battletribes-shared/entities";
+import { Settings } from "battletribes-shared/settings";
 import Tribe from "../Tribe";
 import { SafetyNode, addHitboxesOccupiedNodes, getSafetyNode, safetyNodeIsInWall } from "./ai-building";
 import Board from "../Board";

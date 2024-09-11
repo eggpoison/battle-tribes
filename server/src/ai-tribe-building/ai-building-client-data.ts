@@ -1,14 +1,14 @@
-import { SafetyNodeData, PotentialBuildingPlanData, BuildingPlanData, BuildingSafetyData, PotentialPlanSafetyData, WallSideNodeData, TribeWallData, WallConnectionData } from "webgl-test-shared/dist/ai-building-types";
-import { VisibleChunkBounds, RestrictedBuildingAreaData } from "webgl-test-shared/dist/client-server-types";
-import { EntityType } from "webgl-test-shared/dist/entities";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { Point } from "webgl-test-shared/dist/utils";
+import { SafetyNodeData, PotentialBuildingPlanData, BuildingPlanData, BuildingSafetyData, PotentialPlanSafetyData, WallSideNodeData, TribeWallData, WallConnectionData } from "battletribes-shared/ai-building-types";
+import { VisibleChunkBounds, RestrictedBuildingAreaData } from "battletribes-shared/client-server-types";
+import { EntityType } from "battletribes-shared/entities";
+import { Settings } from "battletribes-shared/settings";
+import { Point } from "battletribes-shared/utils";
 import Board from "../Board";
 import Tribe, { BuildingPlan, BuildingPlanType } from "../Tribe";
 import { SafetyNode, getSafetyNode } from "./ai-building";
 import { buildingIsInfrastructure, getBuildingSafety } from "./ai-building-heuristics";
 import { TribeComponentArray } from "../components/TribeComponent";
-import { ITEM_INFO_RECORD, PlaceableItemInfo } from "webgl-test-shared/dist/items/items";
+import { ITEM_INFO_RECORD, PlaceableItemInfo } from "battletribes-shared/items/items";
 import { TransformComponentArray } from "../components/TransformComponent";
 
 // @Cleanup: should this be here?

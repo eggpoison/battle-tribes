@@ -1,7 +1,7 @@
-import { TribesmanAIType } from "webgl-test-shared/dist/components";
-import { EntityID, EntityType, LimbAction } from "webgl-test-shared/dist/entities";
-import { Settings, PathfindingSettings } from "webgl-test-shared/dist/settings";
-import { Point, distance } from "webgl-test-shared/dist/utils";
+import { TribesmanAIType } from "battletribes-shared/components";
+import { EntityID, EntityType, LimbAction } from "battletribes-shared/entities";
+import { Settings, PathfindingSettings } from "battletribes-shared/settings";
+import { Point, distance } from "battletribes-shared/utils";
 import Board from "../../../Board";
 import { getDistanceFromPointToEntity, stopEntity, entityIsInLineOfSight, willStopAtDesiredDistance } from "../../../ai-shared";
 import { InventoryComponentArray, getInventory } from "../../../components/InventoryComponent";
@@ -12,10 +12,10 @@ import { PathfindFailureDefault } from "../../../pathfinding";
 import { calculateItemDamage, useItem } from "../tribe-member";
 import { TRIBESMAN_TURN_SPEED } from "./tribesman-ai";
 import { TribeComponentArray } from "../../../components/TribeComponent";
-import { calculateAttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
+import { calculateAttackEffectiveness } from "battletribes-shared/entity-damage-types";
 import { clearTribesmanPath, getBestToolItemSlot, getTribesmanDesiredAttackRange, getTribesmanRadius, getTribesmanSlowAcceleration, pathfindToPosition, pathToEntityExists } from "./tribesman-ai-utils";
 import { attemptToRepairBuildings } from "./tribesman-structures";
-import { InventoryName, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, BowItemInfo, getItemAttackInfo, Item } from "webgl-test-shared/dist/items/items";
+import { InventoryName, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, BowItemInfo, getItemAttackInfo, Item } from "battletribes-shared/items/items";
 import { getAgeTicks, TransformComponentArray } from "../../../components/TransformComponent";
 
 const enum Vars {
@@ -84,7 +84,7 @@ const getMostDamagingItemSlot = (tribesman: EntityID, huntedEntity: EntityID): n
       const attackEffectiveness = calculateAttackEffectiveness(item, Board.getEntityType(huntedEntity)!);
       
       const attackExecuteTimeSeconds = getItemAttackExecuteTimeSeconds(item);
-      const damage = calculateItemDamage(tribesman, item, attackEffectiveness);
+      const damage = calculateItemDamage(tribesman, item, attackEffectiveness, false);
       const dps = damage / attackExecuteTimeSeconds;
 
       if (dps > mostDps) {

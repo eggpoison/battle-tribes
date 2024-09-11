@@ -1,21 +1,21 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
-import { EntityID, EntityType, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { StatusEffect } from "webgl-test-shared/dist/status-effects";
-import { Point } from "webgl-test-shared/dist/utils";
+import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "battletribes-shared/collision";
+import { EntityID, EntityType, PlayerCauseOfDeath } from "battletribes-shared/entities";
+import { Settings } from "battletribes-shared/settings";
+import { StatusEffect } from "battletribes-shared/status-effects";
+import { Point } from "battletribes-shared/utils";
 import { SlimeSpitComponentArray } from "../../components/SlimeSpitComponent";
 import { HealthComponentArray, damageEntity } from "../../components/HealthComponent";
 import { StatusEffectComponentArray, applyStatusEffect } from "../../components/StatusEffectComponent";
 import { applyKnockback } from "../../components/PhysicsComponent";
 import { ComponentConfig } from "../../components";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
+import { ServerComponentType } from "battletribes-shared/components";
+import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
 import Board from "../../Board";
 import { TransformComponentArray } from "../../components/TransformComponent";
 import { createSpitPoisonAreaConfig } from "./spit-poison-area";
 import { createEntityFromConfig } from "../../Entity";
-import { createHitbox, HitboxCollisionType } from "webgl-test-shared/dist/boxes/boxes";
-import RectangularBox from "webgl-test-shared/dist/boxes/RectangularBox";
+import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
+import RectangularBox from "battletribes-shared/boxes/RectangularBox";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics

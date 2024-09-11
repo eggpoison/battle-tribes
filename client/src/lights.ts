@@ -1,6 +1,6 @@
-import { Point, rotateXAroundOrigin, rotateYAroundOrigin } from "webgl-test-shared/dist/utils";
+import { Point, rotateXAroundOrigin, rotateYAroundOrigin } from "battletribes-shared/utils";
 import Board from "./Board";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "battletribes-shared/components";
 
 type LightID = number;
 

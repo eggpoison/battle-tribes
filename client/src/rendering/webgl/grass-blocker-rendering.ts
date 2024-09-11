@@ -1,7 +1,7 @@
-import { GrassBlocker, blockerIsCircluar } from "webgl-test-shared/dist/grass-blockers";
+import { GrassBlocker, blockerIsCircluar } from "battletribes-shared/grass-blockers";
 import { getGrassBlockers } from "../../client/Client";
 import { createTexture, createWebGLProgram, getCirclePoint, gl, windowHeight, windowWidth } from "../../webgl";
-import { rotateXAroundOrigin, rotateYAroundOrigin } from "webgl-test-shared/dist/utils";
+import { rotateXAroundOrigin, rotateYAroundOrigin } from "battletribes-shared/utils";
 import { getTexture } from "../../textures";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 

@@ -4,9 +4,9 @@ import { ParticleRenderLayer, addMonocolourParticleToBufferContainer } from "../
 import Board from "../Board";
 import { createRockParticle } from "../particles";
 import Entity from "../Entity";
-import { randFloat, randInt } from "webgl-test-shared/dist/utils";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { EntityType } from "webgl-test-shared/dist/entities";
+import { randFloat, randInt } from "battletribes-shared/utils";
+import { ServerComponentType } from "battletribes-shared/components";
+import { EntityType } from "battletribes-shared/entities";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 class RockSpikeProjectile extends Entity {

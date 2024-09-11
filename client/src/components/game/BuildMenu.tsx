@@ -1,5 +1,5 @@
-import { BlueprintType, BuildingMaterial, ServerComponentType } from "webgl-test-shared/dist/components";
-import { EntityType, EntityTypeString } from "webgl-test-shared/dist/entities";
+import { BlueprintType, BuildingMaterial, ServerComponentType } from "battletribes-shared/components";
+import { EntityType, EntityTypeString } from "battletribes-shared/entities";
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { deselectSelectedEntity, getSelectedEntityID } from "../../entity-selection";
 import Board from "../../Board";
@@ -12,7 +12,7 @@ import { countItemTypesInInventory } from "../../inventory-manipulation";
 import { playSound } from "../../sound";
 import Player from "../../entities/Player";
 import Game from "../../Game";
-import { InventoryName, ITEM_TYPE_RECORD, ItemType } from "webgl-test-shared/dist/items/items";
+import { InventoryName, ITEM_TYPE_RECORD, ItemType } from "battletribes-shared/items/items";
 import { addMenuCloseFunction } from "../../menus";
 import { getPlayerSelectedItem } from "../../player-input";
 import { InventoryComponentArray } from "../../entity-components/InventoryComponent";

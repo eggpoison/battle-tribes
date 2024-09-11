@@ -1,11 +1,11 @@
-import { CactusBodyFlowerData, CactusFlowerSize, CactusLimbData, CactusLimbFlowerData } from "webgl-test-shared/dist/entities";
-import { CactusComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
+import { CactusBodyFlowerData, CactusFlowerSize, CactusLimbData, CactusLimbFlowerData } from "battletribes-shared/entities";
+import { CactusComponentData, ServerComponentType } from "battletribes-shared/components";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { createFlowerParticle } from "../particles";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
-import { PacketReader } from "webgl-test-shared/dist/packets";
+import { PacketReader } from "battletribes-shared/packets";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 
 export const CACTUS_RADIUS = 40;

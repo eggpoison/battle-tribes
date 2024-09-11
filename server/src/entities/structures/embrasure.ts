@@ -1,10 +1,10 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision";
-import { BuildingMaterial, ServerComponentType } from "webgl-test-shared/dist/components";
-import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
-import { StatusEffect } from "webgl-test-shared/dist/status-effects";
-import { Point } from "webgl-test-shared/dist/utils";
-import { createEmptyStructureConnectionInfo } from "webgl-test-shared/dist/structures";
-import { createEmbrasureHitboxes } from "webgl-test-shared/dist/boxes/entity-hitbox-creation";
+import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "battletribes-shared/collision";
+import { BuildingMaterial, ServerComponentType } from "battletribes-shared/components";
+import { EntityID, EntityType } from "battletribes-shared/entities";
+import { StatusEffect } from "battletribes-shared/status-effects";
+import { Point } from "battletribes-shared/utils";
+import { createEmptyStructureConnectionInfo } from "battletribes-shared/structures";
+import { createEmbrasureHitboxes } from "battletribes-shared/boxes/entity-hitbox-creation";
 import { ComponentConfig } from "../../components";
 import Board from "../../Board";
 

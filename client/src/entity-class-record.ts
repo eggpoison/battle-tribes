@@ -1,4 +1,4 @@
-import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
+import { EntityID, EntityType } from "battletribes-shared/entities";
 import Boulder from "./entities/Boulder";
 import Cow from "./entities/Cow";
 import Player from "./entities/Player";

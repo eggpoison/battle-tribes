@@ -1,5 +1,5 @@
-import { Settings } from "webgl-test-shared/dist/settings";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { Settings } from "battletribes-shared/settings";
+import { ServerComponentType } from "battletribes-shared/components";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Client from "../../client/Client";
 import Player from "../../entities/Player";

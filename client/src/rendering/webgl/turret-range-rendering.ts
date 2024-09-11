@@ -1,14 +1,14 @@
-import { EntityType } from "webgl-test-shared/dist/entities";
+import { EntityType } from "battletribes-shared/entities";
 import Player from "../../entities/Player";
 import { createWebGLProgram, gl } from "../../webgl";
 import Board from "../../Board";
 import Entity from "../../Entity";
 import { getHoveredEntityID } from "../../entity-selection";
-import { calculateStructurePlaceInfo } from "webgl-test-shared/dist/structures";
+import { calculateStructurePlaceInfo } from "battletribes-shared/structures";
 import Camera from "../../Camera";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
-import { ItemType, ITEM_INFO_RECORD, PlaceableItemType } from "webgl-test-shared/dist/items/items";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ItemType, ITEM_INFO_RECORD, PlaceableItemType } from "battletribes-shared/items/items";
+import { ServerComponentType } from "battletribes-shared/components";
 import { getPlayerSelectedItem } from "../../player-input";
 
 const CIRCLE_DETAIL = 300;

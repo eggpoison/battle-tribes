@@ -1,5 +1,5 @@
 import Component from "./Component";
-import { PacketReader } from "webgl-test-shared/dist/packets";
+import { PacketReader } from "battletribes-shared/packets";
 
 abstract class ServerComponent extends Component {
    public tintR = 0;

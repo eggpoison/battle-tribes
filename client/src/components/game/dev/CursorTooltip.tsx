@@ -1,4 +1,4 @@
-import { EntityDebugData } from "webgl-test-shared/dist/client-server-types";
+import { EntityDebugData } from "battletribes-shared/client-server-types";
 import { useEffect, useRef, useState } from "react";
 
 export let updateCursorTooltip: (debugData: EntityDebugData | null, screenPositionX: number, screenPositionY: number) => void = () => {};

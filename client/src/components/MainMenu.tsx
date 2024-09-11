@@ -1,4 +1,4 @@
-import { TribeType } from "webgl-test-shared/dist/tribes";
+import { TribeType } from "battletribes-shared/tribes";
 import { useCallback, useRef } from "react";
 import { setGameState } from "./App";
 import { createAudioContext } from "../sound";

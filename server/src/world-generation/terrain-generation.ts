@@ -1,7 +1,7 @@
-import { WaterRockData, RiverSteppingStoneData } from "webgl-test-shared/dist/client-server-types";
-import { Biome, TileType } from "webgl-test-shared/dist/tiles";
-import { smoothstep } from "webgl-test-shared/dist/utils";
-import { Settings } from "webgl-test-shared/dist/settings";
+import { WaterRockData, RiverSteppingStoneData } from "battletribes-shared/client-server-types";
+import { Biome, TileType } from "battletribes-shared/tiles";
+import { smoothstep } from "battletribes-shared/utils";
+import { Settings } from "battletribes-shared/settings";
 import { generateOctavePerlinNoise, generatePerlinNoise, generatePointPerlinNoise } from "../perlin-noise";
 import BIOME_GENERATION_INFO, { BIOME_GENERATION_PRIORITY, BiomeSpawnRequirements, TileGenerationInfo } from "./terrain-generation-info";
 import { WaterTileGenerationInfo, generateRiverFeatures, generateRiverTiles } from "./river-generation";

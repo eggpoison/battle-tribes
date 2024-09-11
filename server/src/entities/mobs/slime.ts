@@ -1,23 +1,23 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
-import { SlimeSize, EntityType, PlayerCauseOfDeath, EntityID } from "webgl-test-shared/dist/entities";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { StatusEffect } from "webgl-test-shared/dist/status-effects";
-import { Point, lerp, randInt } from "webgl-test-shared/dist/utils";
+import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "battletribes-shared/collision";
+import { SlimeSize, EntityType, PlayerCauseOfDeath, EntityID } from "battletribes-shared/entities";
+import { Settings } from "battletribes-shared/settings";
+import { StatusEffect } from "battletribes-shared/status-effects";
+import { Point, lerp, randInt } from "battletribes-shared/utils";
 import { HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity, getEntityHealth, healEntity } from "../../components/HealthComponent";
 import { SlimeComponent, SlimeComponentArray } from "../../components/SlimeComponent";
 import { getEntitiesInRange } from "../../ai-shared";
 import { createItemsOverEntity } from "../../entity-shared";
 import Board from "../../Board";
 import { wasTribeMemberKill } from "../tribes/tribe-member";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
-import { CraftingStation } from "webgl-test-shared/dist/items/crafting-recipes";
-import { ItemType } from "webgl-test-shared/dist/items/items";
+import { ServerComponentType } from "battletribes-shared/components";
+import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
+import { CraftingStation } from "battletribes-shared/items/crafting-recipes";
+import { ItemType } from "battletribes-shared/items/items";
 import { ComponentConfig } from "../../components";
 import { TransformComponentArray } from "../../components/TransformComponent";
 import { createEntityFromConfig } from "../../Entity";
-import { createHitbox, HitboxCollisionType } from "webgl-test-shared/dist/boxes/boxes";
-import CircularBox from "webgl-test-shared/dist/boxes/CircularBox";
+import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
+import CircularBox from "battletribes-shared/boxes/CircularBox";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics

@@ -1,5 +1,5 @@
-import { BlockBox, BoxFromType, BoxType, DamageBox, GenericCollisionBoxInfo } from "webgl-test-shared/dist/boxes/boxes";
-import { InventoryName } from "webgl-test-shared/dist/items/items";
+import { BlockBox, BoxFromType, BoxType, DamageBox, GenericCollisionBoxInfo } from "battletribes-shared/boxes/boxes";
+import { InventoryName } from "battletribes-shared/items/items";
 
 class GenericCollisionBox<T extends BoxType> implements GenericCollisionBoxInfo<T> {
    public box: BoxFromType[T];

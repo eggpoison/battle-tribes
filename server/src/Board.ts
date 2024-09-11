@@ -1,9 +1,9 @@
-import { WaterRockData, RiverSteppingStoneData, RIVER_STEPPING_STONE_SIZES, ServerTileUpdateData } from "webgl-test-shared/dist/client-server-types";
-import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { Biome, TileType } from "webgl-test-shared/dist/tiles";
-import { distance, Point, TileIndex } from "webgl-test-shared/dist/utils";
-import { circlesDoIntersect, circleAndRectangleDoIntersect } from "webgl-test-shared/dist/collision";
+import { WaterRockData, RiverSteppingStoneData, RIVER_STEPPING_STONE_SIZES, ServerTileUpdateData } from "battletribes-shared/client-server-types";
+import { EntityID, EntityType } from "battletribes-shared/entities";
+import { Settings } from "battletribes-shared/settings";
+import { Biome, TileType } from "battletribes-shared/tiles";
+import { distance, Point, TileIndex } from "battletribes-shared/utils";
+import { circlesDoIntersect, circleAndRectangleDoIntersect } from "battletribes-shared/collision";
 import Chunk from "./Chunk";
 import { addTileToCensus, removeEntityFromCensus } from "./census";
 import Tribe from "./Tribe";
@@ -21,11 +21,11 @@ import { CollisionVars, collide, entitiesAreColliding } from "./collision";
 import { tickTribes } from "./ai-tribe-building/ai-building";
 import { TransformComponentArray } from "./components/TransformComponent";
 import { onCactusDeath } from "./entities/resources/cactus";
-import { WorldInfo } from "webgl-test-shared/dist/structures";
-import { EntityInfo } from "webgl-test-shared/dist/board-interface";
+import { WorldInfo } from "battletribes-shared/structures";
+import { EntityInfo } from "battletribes-shared/board-interface";
 import { onCowDeath } from "./entities/mobs/cow";
 import { registerEntityRemoval } from "./server/player-clients";
-import { Box, boxIsCircular } from "webgl-test-shared/dist/boxes/boxes";
+import { Box, boxIsCircular } from "battletribes-shared/boxes/boxes";
 
 const START_TIME = 6;
 

@@ -1,9 +1,9 @@
-import { SnowballSize } from "webgl-test-shared/dist/entities";
+import { SnowballSize } from "battletribes-shared/entities";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
-import { PacketReader } from "webgl-test-shared/dist/packets";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { randFloat } from "webgl-test-shared/dist/utils";
+import { PacketReader } from "battletribes-shared/packets";
+import { ServerComponentType } from "battletribes-shared/components";
+import { randFloat } from "battletribes-shared/utils";
 import Board from "../Board";
 import { createSnowParticle } from "../particles";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";

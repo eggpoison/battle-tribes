@@ -1,9 +1,9 @@
-import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { EntityID, TribeTotemBanner } from "webgl-test-shared/dist/entities";
-import { randInt } from "webgl-test-shared/dist/utils";
+import { ServerComponentType } from "battletribes-shared/components";
+import { EntityID, TribeTotemBanner } from "battletribes-shared/entities";
+import { randInt } from "battletribes-shared/utils";
 import { ComponentArray } from "./ComponentArray";
 import { TRIBE_TOTEM_POSITIONS } from "../entities/structures/tribe-totem";
-import { Packet } from "webgl-test-shared/dist/packets";
+import { Packet } from "battletribes-shared/packets";
 
 export interface TotemBannerComponentParams {}
 

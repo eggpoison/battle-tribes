@@ -1,10 +1,10 @@
-import { Point, randFloat } from "webgl-test-shared/dist/utils";
+import { Point, randFloat } from "battletribes-shared/utils";
 import ServerComponent from "./ServerComponent";
 import Board from "../Board";
 import Entity from "../Entity";
 import { Light, addLight, attachLightToEntity } from "../lights";
-import { PacketReader } from "webgl-test-shared/dist/packets";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { PacketReader } from "battletribes-shared/packets";
+import { ServerComponentType } from "battletribes-shared/components";
 import { createSmokeParticle, createEmberParticle } from "../particles";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 

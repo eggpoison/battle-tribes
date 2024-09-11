@@ -1,4 +1,4 @@
-import { TileType, Biome } from "webgl-test-shared/dist/tiles";
+import { TileType, Biome } from "battletribes-shared/tiles";
 
 export interface TileGenerationInfo {
    readonly tileType: TileType;

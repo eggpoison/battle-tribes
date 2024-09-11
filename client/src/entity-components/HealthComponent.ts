@@ -1,9 +1,9 @@
-import { Settings } from "webgl-test-shared/dist/settings";
+import { Settings } from "battletribes-shared/settings";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
-import { PacketReader } from "webgl-test-shared/dist/packets";
+import { PacketReader } from "battletribes-shared/packets";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "battletribes-shared/components";
 import { updateHealthBar } from "../components/game/HealthBar";
 import Player from "../entities/Player";
 import { discombobulate } from "../player-input";

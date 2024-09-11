@@ -1,13 +1,13 @@
-import { ServerComponentType, TombstoneComponentData } from "webgl-test-shared/dist/components";
-import { DeathInfo, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { Point, randInt } from "webgl-test-shared/dist/utils";
+import { ServerComponentType, TombstoneComponentData } from "battletribes-shared/components";
+import { DeathInfo, PlayerCauseOfDeath } from "battletribes-shared/entities";
+import { Settings } from "battletribes-shared/settings";
+import { Point, randInt } from "battletribes-shared/utils";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import { createDirtParticle } from "../particles";
 import { playSound, AudioFilePath } from "../sound";
 import { ParticleRenderLayer } from "../rendering/webgl/particle-rendering";
-import { PacketReader } from "webgl-test-shared/dist/packets";
+import { PacketReader } from "battletribes-shared/packets";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 
 class TombstoneComponent extends ServerComponent {

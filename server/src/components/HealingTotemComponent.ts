@@ -1,12 +1,12 @@
-import { Settings } from "webgl-test-shared/dist/settings";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { Settings } from "battletribes-shared/settings";
+import { ServerComponentType } from "battletribes-shared/components";
 import Board from "../Board";
 import { EntityRelationship, getEntityRelationship } from "./TribeComponent";
 import { HealthComponentArray, healEntity } from "./HealthComponent";
 import { ComponentArray } from "./ComponentArray";
-import { EntityID } from "webgl-test-shared/dist/entities";
+import { EntityID } from "battletribes-shared/entities";
 import { TransformComponentArray } from "./TransformComponent";
-import { Packet } from "webgl-test-shared/dist/packets";
+import { Packet } from "battletribes-shared/packets";
 
 const enum Vars {
    HEALING_RANGE = 270,

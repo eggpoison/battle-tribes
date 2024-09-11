@@ -6,8 +6,14 @@
       "strict": true,
       "sourceMap": false,
       "removeComments": false,
-      "baseUrl": "./"
+      "baseUrl": "./",
+      "paths": {
+         "battletribes-shared/*": ["../shared/src/*"]
+       }
    },
+   "references": [
+     { "path": "../shared" }
+   ],
    "include": [
       "src"
    ]

@@ -1,14 +1,14 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
-import { ScarInfo, ServerComponentType } from "webgl-test-shared/dist/components";
-import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
-import { TribeType } from "webgl-test-shared/dist/tribes";
-import { randInt, Point } from "webgl-test-shared/dist/utils";
+import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "battletribes-shared/collision";
+import { ScarInfo, ServerComponentType } from "battletribes-shared/components";
+import { EntityID, EntityType } from "battletribes-shared/entities";
+import { TribeType } from "battletribes-shared/tribes";
+import { randInt, Point } from "battletribes-shared/utils";
 import { TribesmanAIComponentArray } from "../../components/TribesmanAIComponent";
 import Board from "../../Board";
 import { TribeComponentArray } from "../../components/TribeComponent";
 import { ComponentConfig } from "../../components";
-import { createHitbox, HitboxCollisionType } from "webgl-test-shared/dist/boxes/boxes";
-import CircularBox from "webgl-test-shared/dist/boxes/CircularBox";
+import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
+import CircularBox from "battletribes-shared/boxes/CircularBox";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics

@@ -20,8 +20,14 @@
       "jsx": "react-jsx",
       "sourceMap": true,
       "isolatedModules": false,
-      "declaration": true
+      "declaration": true,
+      "paths": {
+         "battletribes-shared/*": ["../shared/src/*"]
+       }
    },
+   "references": [
+     { "path": "../shared" }
+   ],
    "include": [
       "src",
       "node_modules/webgl-test-shared/**/*.d.ts"

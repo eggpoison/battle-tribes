@@ -1,10 +1,10 @@
-import { EntityTickEvent, EntityTickEventType } from "webgl-test-shared/dist/entity-events";
+import { EntityTickEvent, EntityTickEventType } from "battletribes-shared/entity-events";
 import Entity from "./Entity";
-import { randFloat } from "webgl-test-shared/dist/utils";
+import { randFloat } from "battletribes-shared/utils";
 import { playSound } from "./sound";
-import { ItemType } from "webgl-test-shared/dist/items/items";
+import { ItemType } from "battletribes-shared/items/items";
 import Board from "./Board";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "battletribes-shared/components";
 
 export function playBowFireSound(sourceEntity: Entity, bowItemType: ItemType): void {
    const transformComponent = sourceEntity.getServerComponent(ServerComponentType.transform);

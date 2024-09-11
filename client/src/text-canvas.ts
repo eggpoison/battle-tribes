@@ -1,7 +1,7 @@
-import { BuildingSafetyData } from "webgl-test-shared/dist/ai-building-types";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { lerp, randFloat } from "webgl-test-shared/dist/utils";
+import { BuildingSafetyData } from "battletribes-shared/ai-building-types";
+import { Settings } from "battletribes-shared/settings";
+import { ServerComponentType } from "battletribes-shared/components";
+import { lerp, randFloat } from "battletribes-shared/utils";
 import Board from "./Board";
 import Camera from "./Camera";
 import { halfWindowHeight, halfWindowWidth, windowHeight, windowWidth } from "./webgl";

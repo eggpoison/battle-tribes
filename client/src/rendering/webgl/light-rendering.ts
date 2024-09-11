@@ -1,5 +1,5 @@
-import { Settings } from "webgl-test-shared/dist/settings";
-import { lerp } from "webgl-test-shared/dist/utils";
+import { Settings } from "battletribes-shared/settings";
+import { lerp } from "battletribes-shared/utils";
 import { createWebGLProgram, gl } from "../../webgl";
 import Board from "../../Board";
 import OPTIONS from "../../options";

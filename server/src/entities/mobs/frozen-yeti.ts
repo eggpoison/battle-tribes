@@ -1,20 +1,20 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
-import { EntityType, PlayerCauseOfDeath, EntityID } from "webgl-test-shared/dist/entities";
-import { StatusEffect } from "webgl-test-shared/dist/status-effects";
-import { Point, randInt } from "webgl-test-shared/dist/utils";
+import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "battletribes-shared/collision";
+import { EntityType, PlayerCauseOfDeath, EntityID } from "battletribes-shared/entities";
+import { StatusEffect } from "battletribes-shared/status-effects";
+import { Point, randInt } from "battletribes-shared/utils";
 import { HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
 import { createItemsOverEntity } from "../../entity-shared";
 import { FrozenYetiComponentArray } from "../../components/FrozenYetiComponent";
 import Board from "../../Board";
 import { applyKnockback } from "../../components/PhysicsComponent";
 import { wasTribeMemberKill } from "../tribes/tribe-member";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
-import { ItemType } from "webgl-test-shared/dist/items/items";
+import { ServerComponentType } from "battletribes-shared/components";
+import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
+import { ItemType } from "battletribes-shared/items/items";
 import { ComponentConfig } from "../../components";
 import { TransformComponentArray } from "../../components/TransformComponent";
-import { createHitbox, HitboxCollisionType, Hitbox } from "webgl-test-shared/dist/boxes/boxes";
-import CircularBox from "webgl-test-shared/dist/boxes/CircularBox";
+import { createHitbox, HitboxCollisionType, Hitbox } from "battletribes-shared/boxes/boxes";
+import CircularBox from "battletribes-shared/boxes/CircularBox";
 
 export const enum FrozenYetiVars {
    VISION_RANGE = 350,

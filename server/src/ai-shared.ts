@@ -1,15 +1,15 @@
-import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { TileType } from "webgl-test-shared/dist/tiles";
-import { angle, curveWeight, Point, lerp, rotateXAroundPoint, rotateYAroundPoint, distance, distBetweenPointAndRectangle, TileIndex } from "webgl-test-shared/dist/utils";
+import { EntityID, EntityType } from "battletribes-shared/entities";
+import { Settings } from "battletribes-shared/settings";
+import { TileType } from "battletribes-shared/tiles";
+import { angle, curveWeight, Point, lerp, rotateXAroundPoint, rotateYAroundPoint, distance, distBetweenPointAndRectangle, TileIndex } from "battletribes-shared/utils";
 import Board, { raytraceHasWallTile } from "./Board";
 import { PhysicsComponent, PhysicsComponentArray } from "./components/PhysicsComponent";
 import { getEntityPathfindingGroupID } from "./pathfinding";
 import { TransformComponentArray } from "./components/TransformComponent";
 import { ProjectileComponentArray } from "./components/ProjectileComponent";
-import CircularBox from "webgl-test-shared/dist/boxes/CircularBox";
-import RectangularBox from "webgl-test-shared/dist/boxes/RectangularBox";
-import { boxIsCircular } from "webgl-test-shared/dist/boxes/boxes";
+import CircularBox from "battletribes-shared/boxes/CircularBox";
+import RectangularBox from "battletribes-shared/boxes/RectangularBox";
+import { boxIsCircular } from "battletribes-shared/boxes/boxes";
 
 const TURN_CONSTANT = Math.PI / Settings.TPS;
 const WALL_AVOIDANCE_MULTIPLIER = 1.5;

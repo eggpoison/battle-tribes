@@ -1,9 +1,9 @@
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "battletribes-shared/components";
 import { ComponentArray } from "./ComponentArray";
-import { EntityID, EntityType, SlimeSize } from "webgl-test-shared/dist/entities";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { TileType, Biome } from "webgl-test-shared/dist/tiles";
-import { TileIndex, UtilVars } from "webgl-test-shared/dist/utils";
+import { EntityID, EntityType, SlimeSize } from "battletribes-shared/entities";
+import { Settings } from "battletribes-shared/settings";
+import { TileType, Biome } from "battletribes-shared/tiles";
+import { TileIndex, UtilVars } from "battletribes-shared/utils";
 import { moveEntityToPosition, entityHasReachedPosition, stopEntity } from "../ai-shared";
 import { shouldWander, getWanderTargetTile, wander } from "../ai/wander-ai";
 import Board from "../Board";

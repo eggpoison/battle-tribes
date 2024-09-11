@@ -3,7 +3,7 @@ import { craftingMenuIsOpen } from "./components/game/menus/CraftingMenu";
 import { setHeldItemVisualPosition } from "./components/game/HeldItem";
 import { definiteGameState } from "./game-state/game-states";
 import { InventorySelector_inventoryIsOpen } from "./components/game/inventories/InventorySelector";
-import { Inventory, InventoryName, Item, ItemType } from "webgl-test-shared/dist/items/items";
+import { Inventory, InventoryName, Item, ItemType } from "battletribes-shared/items/items";
 import { InventoryComponentArray } from "./entity-components/InventoryComponent";
 import Player from "./entities/Player";
 

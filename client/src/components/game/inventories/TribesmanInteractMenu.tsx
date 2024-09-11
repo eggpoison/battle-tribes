@@ -1,14 +1,14 @@
-import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { TRIBESMAN_TITLE_RECORD, TitleGenerationInfo, TribesmanTitle } from "webgl-test-shared/dist/titles";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { TribeType } from "webgl-test-shared/dist/tribes";
+import { ServerComponentType } from "battletribes-shared/components";
+import { TRIBESMAN_TITLE_RECORD, TitleGenerationInfo, TribesmanTitle } from "battletribes-shared/titles";
+import { Settings } from "battletribes-shared/settings";
+import { TribeType } from "battletribes-shared/tribes";
 import Tribesman from "../../../entities/Tribesman";
 import InventoryContainer from "./InventoryContainer";
 import ItemSlot from "./ItemSlot";
 import { getSelectedEntity } from "../../../entity-selection";
 import Game from "../../../Game";
 import Client from "../../../client/Client";
-import { InventoryName, itemTypeIsArmour, itemTypeIsBackpack } from "webgl-test-shared/dist/items/items";
+import { InventoryName, itemTypeIsArmour, itemTypeIsBackpack } from "battletribes-shared/items/items";
 import Player from "../../../entities/Player";
 
 const PLAINSPEOPLE_NAMES: ReadonlyArray<string> = [

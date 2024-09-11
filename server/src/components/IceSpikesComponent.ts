@@ -1,10 +1,10 @@
-import { randInt } from "webgl-test-shared/dist/utils";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { randInt } from "battletribes-shared/utils";
+import { ServerComponentType } from "battletribes-shared/components";
 import { ComponentArray } from "./ComponentArray";
-import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
+import { EntityID, EntityType } from "battletribes-shared/entities";
 import { ComponentConfig } from "../components";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { Biome } from "webgl-test-shared/dist/tiles";
+import { Settings } from "battletribes-shared/settings";
+import { Biome } from "battletribes-shared/tiles";
 import Board from "../Board";
 import { createIceSpikesConfig } from "../entities/resources/ice-spikes";
 import { createEntityFromConfig } from "../Entity";

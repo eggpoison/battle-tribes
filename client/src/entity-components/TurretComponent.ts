@@ -1,14 +1,14 @@
-import { EntityType } from "webgl-test-shared/dist/entities";
-import { ServerComponentType, TurretAmmoType } from "webgl-test-shared/dist/components";
-import { lerp } from "webgl-test-shared/dist/utils";
+import { EntityType } from "battletribes-shared/entities";
+import { ServerComponentType, TurretAmmoType } from "battletribes-shared/components";
+import { lerp } from "battletribes-shared/utils";
 import Entity from "../Entity";
 import ServerComponent from "./ServerComponent";
 import { playSound } from "../sound";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
-import { ItemType } from "webgl-test-shared/dist/items/items";
+import { ItemType } from "battletribes-shared/items/items";
 import { RenderPart } from "../render-parts/render-parts";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
-import { PacketReader } from "webgl-test-shared/dist/packets";
+import { PacketReader } from "battletribes-shared/packets";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 
 type TurretType = EntityType.slingTurret | EntityType.ballista;

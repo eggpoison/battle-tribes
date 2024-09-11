@@ -1,4 +1,4 @@
-import { EntityType } from "webgl-test-shared/dist/entities";
+import { EntityType } from "battletribes-shared/entities";
 import { ComponentConfig } from "./components";
 import { createBerryBushConfig } from "./entities/resources/berry-bush";
 import { createBoulderConfig } from "./entities/resources/boulder";
@@ -58,7 +58,7 @@ import { createBallistaRockConfig } from "./entities/projectiles/ballista-rock";
 import { createBallistaSlimeballConfig } from "./entities/projectiles/ballista-slimeball";
 import { createBallistaFrostcicleConfig } from "./entities/projectiles/ballista-frostcicle";
 import { createSlingTurretRockConfig } from "./entities/projectiles/sling-turret-rock";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "battletribes-shared/components";
 import { createGrassStrandConfig } from "./entities/grass-strand";
 import { createDecorationConfig } from "./entities/decoration";
 import { createReedConfig } from "./entities/reed";

@@ -1,7 +1,7 @@
-import { CowSpecies, EntityType } from "webgl-test-shared/dist/entities";
-import { angle, randFloat, randInt } from "webgl-test-shared/dist/utils";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { HitData } from "webgl-test-shared/dist/client-server-types";
+import { CowSpecies, EntityType } from "battletribes-shared/entities";
+import { angle, randFloat, randInt } from "battletribes-shared/utils";
+import { ServerComponentType } from "battletribes-shared/components";
+import { HitData } from "battletribes-shared/client-server-types";
 import { BloodParticleSize, createBloodParticle, createBloodParticleFountain, createBloodPoolParticle } from "../particles";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { AudioFilePath, playSound } from "../sound";

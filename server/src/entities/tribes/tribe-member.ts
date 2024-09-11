@@ -1,11 +1,11 @@
-import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
-import { BlueprintType, BuildingMaterial, MATERIAL_TO_ITEM_MAP, ServerComponentType } from "webgl-test-shared/dist/components";
-import { EntityType, EntityID, LimbAction } from "webgl-test-shared/dist/entities";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { StructureConnectionInfo, StructureType, calculateStructurePlaceInfo } from "webgl-test-shared/dist/structures";
-import { TribesmanTitle } from "webgl-test-shared/dist/titles";
-import { TribeType } from "webgl-test-shared/dist/tribes";
-import { Point, dotAngles, lerp } from "webgl-test-shared/dist/utils";
+import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
+import { BlueprintType, BuildingMaterial, MATERIAL_TO_ITEM_MAP, ServerComponentType } from "battletribes-shared/components";
+import { EntityType, EntityID, LimbAction } from "battletribes-shared/entities";
+import { Settings } from "battletribes-shared/settings";
+import { StructureConnectionInfo, StructureType, calculateStructurePlaceInfo } from "battletribes-shared/structures";
+import { TribesmanTitle } from "battletribes-shared/titles";
+import { TribeType } from "battletribes-shared/tribes";
+import { Point, dotAngles, lerp } from "battletribes-shared/utils";
 import { createEntityFromConfig } from "../../Entity";
 import Board from "../../Board";
 import { InventoryComponentArray, consumeItemFromSlot, consumeItemType, countItemType, getInventory, inventoryIsFull, pickupItemEntity } from "../../components/InventoryComponent";
@@ -26,9 +26,9 @@ import { createItemEntityConfig } from "../item-entity";
 import { ItemComponentArray } from "../../components/ItemComponent";
 import { StructureComponentArray } from "../../components/StructureComponent";
 import { BuildingMaterialComponentArray } from "../../components/BuildingMaterialComponent";
-import { CraftingStation } from "webgl-test-shared/dist/items/crafting-recipes";
-import { Item, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, BattleaxeItemInfo, SwordItemInfo, AxeItemInfo, HammerItemInfo, InventoryName, ItemType, ConsumableItemInfo, ConsumableItemCategory, PlaceableItemType, BowItemInfo, itemIsStackable, getItemStackSize, getItemAttackInfo } from "webgl-test-shared/dist/items/items";
-import { EntityTickEvent, EntityTickEventType } from "webgl-test-shared/dist/entity-events";
+import { CraftingStation } from "battletribes-shared/items/crafting-recipes";
+import { Item, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, BattleaxeItemInfo, SwordItemInfo, AxeItemInfo, HammerItemInfo, InventoryName, ItemType, ConsumableItemInfo, ConsumableItemCategory, PlaceableItemType, BowItemInfo, itemIsStackable, getItemStackSize, getItemAttackInfo } from "battletribes-shared/items/items";
+import { EntityTickEvent, EntityTickEventType } from "battletribes-shared/entity-events";
 import { registerEntityTickEvent } from "../../server/player-clients";
 import { TransformComponentArray } from "../../components/TransformComponent";
 import { createWoodenArrowConfig } from "../projectiles/wooden-arrow";
@@ -69,14 +69,14 @@ const getDamageMultiplier = (entity: EntityID): number => {
    return multiplier;
 }
 
-export function calculateItemDamage(entity: EntityID, item: Item | null, attackEffectiveness: AttackEffectiveness): number {
+export function calculateItemDamage(entity: EntityID, item: Item | null, attackEffectiveness: AttackEffectiveness, attackIsBlocked: boolean): number {
    if (attackEffectiveness === AttackEffectiveness.stopped) {
       return 0;
    }
    
-   let baseItemDamage: number;
+   let damage: number;
    if (item === null) {
-      baseItemDamage = 1;
+      damage = 1;
    } else {
       // @Cleanup
       const itemCategory = ITEM_TYPE_RECORD[item.type];
@@ -84,9 +84,9 @@ export function calculateItemDamage(entity: EntityID, item: Item | null, attackE
          case "battleaxe": {
             const itemInfo = ITEM_INFO_RECORD[item.type] as BattleaxeItemInfo;
             if (attackEffectiveness === AttackEffectiveness.effective) {
-               baseItemDamage = itemInfo.damage;
+               damage = itemInfo.damage;
             } else {
-               baseItemDamage = Math.floor(itemInfo.damage / 2);
+               damage = Math.floor(itemInfo.damage / 2);
             }
             break;
          }
@@ -94,37 +94,41 @@ export function calculateItemDamage(entity: EntityID, item: Item | null, attackE
          case "sword": {
             const itemInfo = ITEM_INFO_RECORD[item.type] as SwordItemInfo;
             if (attackEffectiveness === AttackEffectiveness.effective) {
-               baseItemDamage = itemInfo.damage;
+               damage = itemInfo.damage;
             } else {
-               baseItemDamage = Math.floor(itemInfo.damage / 2);
+               damage = Math.floor(itemInfo.damage / 2);
             }
             break;
          }
          case "axe": {
             const itemInfo = ITEM_INFO_RECORD[item.type] as AxeItemInfo;
             if (attackEffectiveness === AttackEffectiveness.effective) {
-               baseItemDamage = itemInfo.damage;
+               damage = itemInfo.damage;
             } else {
-               baseItemDamage = Math.ceil(itemInfo.damage / 3);
+               damage = Math.ceil(itemInfo.damage / 3);
             }
             break;
          }
          case "pickaxe": {
             const itemInfo = ITEM_INFO_RECORD[item.type] as AxeItemInfo;
             if (attackEffectiveness === AttackEffectiveness.effective) {
-               baseItemDamage = itemInfo.damage;
+               damage = itemInfo.damage;
             } else {
-               baseItemDamage = Math.floor(itemInfo.damage / 4);
+               damage = Math.floor(itemInfo.damage / 4);
             }
             break;
          }
          default: {
-            baseItemDamage = 1;
+            damage = 1;
          }
       }
    }
 
-   return baseItemDamage * getDamageMultiplier(entity);
+   if (attackIsBlocked) {
+      damage *= 0.5;
+   }
+
+   return damage * getDamageMultiplier(entity);
 }
 
 const getRepairTimeMultiplier = (tribeMember: EntityID): number => {

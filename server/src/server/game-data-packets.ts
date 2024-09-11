@@ -1,7 +1,7 @@
-import { VisibleChunkBounds } from "webgl-test-shared/dist/client-server-types";
-import { ServerComponentType, ServerComponentTypeString } from "webgl-test-shared/dist/components";
-import { EntityID } from "webgl-test-shared/dist/entities";
-import { TechUnlockProgress } from "webgl-test-shared/dist/techs";
+import { VisibleChunkBounds } from "battletribes-shared/client-server-types";
+import { ServerComponentType, ServerComponentTypeString } from "battletribes-shared/components";
+import { EntityID } from "battletribes-shared/entities";
+import { TechUnlockProgress } from "battletribes-shared/techs";
 import Board from "../Board";
 import { ComponentArrays } from "../components/ComponentArray";
 import { HealthComponentArray } from "../components/HealthComponent";
@@ -9,15 +9,15 @@ import { InventoryComponentArray, getInventory } from "../components/InventoryCo
 import { addCrossbowLoadProgressRecordToPacket, getCrossbowLoadProgressRecordLength, InventoryUseComponentArray, LimbInfo } from "../components/InventoryUseComponent";
 import { PhysicsComponentArray } from "../components/PhysicsComponent";
 import { SERVER } from "./server";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { GrassBlocker } from "webgl-test-shared/dist/grass-blockers";
+import { Settings } from "battletribes-shared/settings";
+import { GrassBlocker } from "battletribes-shared/grass-blockers";
 import { addEntityDebugDataToPacket, createEntityDebugData, getEntityDebugDataLength } from "../entity-debug-data";
 import PlayerClient from "./PlayerClient";
 import { PlayerComponentArray } from "../components/PlayerComponent";
-import { Inventory, InventoryName, ItemType } from "webgl-test-shared/dist/items/items";
+import { Inventory, InventoryName, ItemType } from "battletribes-shared/items/items";
 import { TransformComponentArray } from "../components/TransformComponent";
 import { ComponentConfig } from "../components";
-import { alignLengthBytes, Packet, PacketType } from "webgl-test-shared/dist/packets";
+import { alignLengthBytes, Packet, PacketType } from "battletribes-shared/packets";
 
 export function getInventoryDataLength(inventory: Inventory): number {
    let lengthBytes = 4 * Float32Array.BYTES_PER_ELEMENT;

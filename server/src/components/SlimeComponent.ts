@@ -1,13 +1,13 @@
-import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { EntityID, EntityType, SlimeSize } from "webgl-test-shared/dist/entities";
+import { ServerComponentType } from "battletribes-shared/components";
+import { EntityID, EntityType, SlimeSize } from "battletribes-shared/entities";
 import { SLIME_MAX_MERGE_WANT, SLIME_MERGE_TIME, SLIME_MERGE_WEIGHTS, SLIME_RADII, SLIME_VISION_RANGES, SPIT_CHARGE_TIME_TICKS, SPIT_COOLDOWN_TICKS, SlimeEntityAnger } from "../entities/mobs/slime";
 import Board from "../Board";
 import { ComponentArray } from "./ComponentArray";
 import { ComponentConfig } from "../components";
-import { Packet } from "webgl-test-shared/dist/packets";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { Biome, TileType } from "webgl-test-shared/dist/tiles";
-import { TileIndex, UtilVars } from "webgl-test-shared/dist/utils";
+import { Packet } from "battletribes-shared/packets";
+import { Settings } from "battletribes-shared/settings";
+import { Biome, TileType } from "battletribes-shared/tiles";
+import { TileIndex, UtilVars } from "battletribes-shared/utils";
 import { turnAngle, stopEntity, entityHasReachedPosition } from "../ai-shared";
 import { shouldWander, getWanderTargetTile, wander } from "../ai/wander-ai";
 import { createSlimeSpitConfig } from "../entities/projectiles/slime-spit";
@@ -17,7 +17,7 @@ import { HealthComponentArray, healEntity } from "./HealthComponent";
 import { PhysicsComponentArray } from "./PhysicsComponent";
 import { TransformComponentArray, getEntityTile } from "./TransformComponent";
 import { WanderAIComponentArray } from "./WanderAIComponent";
-import CircularBox from "webgl-test-shared/dist/boxes/CircularBox";
+import CircularBox from "battletribes-shared/boxes/CircularBox";
 
 const enum Vars {
    TURN_SPEED = 2 * UtilVars.PI,

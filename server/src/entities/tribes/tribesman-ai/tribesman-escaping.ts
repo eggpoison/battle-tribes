@@ -1,8 +1,8 @@
-import { angle } from "webgl-test-shared/dist/utils";
+import { angle } from "battletribes-shared/utils";
 import { PhysicsComponentArray } from "../../../components/PhysicsComponent";
 import { TRIBESMAN_TURN_SPEED } from "./tribesman-ai";
 import { clearTribesmanPath, getTribesmanAcceleration, getTribesmanVisionRange } from "./tribesman-ai-utils";
-import { EntityID, EntityType, EntityTypeString } from "webgl-test-shared/dist/entities";
+import { EntityID, EntityType, EntityTypeString } from "battletribes-shared/entities";
 import { HealthComponent } from "../../../components/HealthComponent";
 import { TransformComponentArray } from "../../../components/TransformComponent";
 

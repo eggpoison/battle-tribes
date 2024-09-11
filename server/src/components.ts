@@ -1,4 +1,4 @@
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "battletribes-shared/components";
 import { AmmoBoxComponent, AmmoBoxComponentParams } from "./components/AmmoBoxComponent";
 import { BerryBushComponent, BerryBushComponentParams } from "./components/BerryBushComponent";
 import { BlueprintComponent, BlueprintComponentParams } from "./components/BlueprintComponent";

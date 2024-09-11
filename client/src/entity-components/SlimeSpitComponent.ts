@@ -1,12 +1,12 @@
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
-import { PacketReader } from "webgl-test-shared/dist/packets";
+import { PacketReader } from "battletribes-shared/packets";
 import { RenderPart } from "../render-parts/render-parts";
-import { Settings } from "webgl-test-shared/dist/settings";
+import { Settings } from "battletribes-shared/settings";
 import Board from "../Board";
 import { createPoisonParticle } from "../particles";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "battletribes-shared/components";
 
 class SlimeSpitComponent extends ServerComponent {
    // @Speed: polymorphism

@@ -1,8 +1,8 @@
-import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { EntityDebugData } from "webgl-test-shared/dist/client-server-types";
-import { roundNum } from "webgl-test-shared/dist/utils";
-import { TileType, TileTypeString } from "webgl-test-shared/dist/tiles";
-import { Settings } from "webgl-test-shared/dist/settings";
+import { ServerComponentType } from "battletribes-shared/components";
+import { EntityDebugData } from "battletribes-shared/client-server-types";
+import { roundNum } from "battletribes-shared/utils";
+import { TileType, TileTypeString } from "battletribes-shared/tiles";
+import { Settings } from "battletribes-shared/settings";
 import { useEffect, useReducer, useRef, useState } from "react";
 import Entity from "../../../Entity";
 import Board from "../../../Board";

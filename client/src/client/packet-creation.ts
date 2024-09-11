@@ -1,14 +1,14 @@
-import { alignLengthBytes, Packet, PacketType } from "webgl-test-shared/dist/packets";
+import { alignLengthBytes, Packet, PacketType } from "battletribes-shared/packets";
 import Player from "../entities/Player";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "battletribes-shared/components";
 import { latencyGameState } from "../game-state/game-states";
 import { getSelectedEntityID } from "../entity-selection";
-import { EntityType } from "webgl-test-shared/dist/entities";
+import { EntityType } from "battletribes-shared/entities";
 import Board from "../Board";
-import { GameDataPacketOptions } from "webgl-test-shared/dist/client-server-types";
+import { GameDataPacketOptions } from "battletribes-shared/client-server-types";
 import OPTIONS from "../options";
 import { windowHeight, windowWidth } from "../webgl";
-import { InventoryName, ItemType } from "webgl-test-shared/dist/items/items";
+import { InventoryName, ItemType } from "battletribes-shared/items/items";
 import Client from "./Client";
 import { getHotbarSelectedItemSlot, getInstancePlayerAction } from "../player-input";
 

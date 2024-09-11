@@ -1,13 +1,13 @@
-import { lerp, randFloat, randInt } from "webgl-test-shared/dist/utils";
-import { SlimeSize } from "webgl-test-shared/dist/entities";
-import { Settings } from "webgl-test-shared/dist/settings";
+import { lerp, randFloat, randInt } from "battletribes-shared/utils";
+import { SlimeSize } from "battletribes-shared/entities";
+import { Settings } from "battletribes-shared/settings";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { RenderPart } from "../render-parts/render-parts";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
-import { PacketReader } from "webgl-test-shared/dist/packets";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { PacketReader } from "battletribes-shared/packets";
+import { ServerComponentType } from "battletribes-shared/components";
 import { playSound, AudioFilePath } from "../sound";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 

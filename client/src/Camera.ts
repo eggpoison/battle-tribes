@@ -1,6 +1,6 @@
-import { Point } from "webgl-test-shared/dist/utils";
-import { VisibleChunkBounds } from "webgl-test-shared/dist/client-server-types";
-import { Settings } from "webgl-test-shared/dist/settings";
+import { Point } from "battletribes-shared/utils";
+import { VisibleChunkBounds } from "battletribes-shared/client-server-types";
+import { Settings } from "battletribes-shared/settings";
 import { halfWindowHeight, halfWindowWidth } from "./webgl";
 import { RENDER_CHUNK_EDGE_GENERATION, RENDER_CHUNK_SIZE, WORLD_RENDER_CHUNK_SIZE } from "./rendering/render-chunks";
 import Board from "./Board";

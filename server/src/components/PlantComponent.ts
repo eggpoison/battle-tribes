@@ -1,10 +1,10 @@
-import { PlanterBoxPlant, ServerComponentType } from "webgl-test-shared/dist/components";
-import { Settings } from "webgl-test-shared/dist/settings";
+import { PlanterBoxPlant, ServerComponentType } from "battletribes-shared/components";
+import { Settings } from "battletribes-shared/settings";
 import { ComponentArray } from "./ComponentArray";
 import { PlanterBoxComponentArray } from "./PlanterBoxComponent";
 import { ComponentConfig } from "../components";
-import { EntityID } from "webgl-test-shared/dist/entities";
-import { Packet } from "webgl-test-shared/dist/packets";
+import { EntityID } from "battletribes-shared/entities";
+import { Packet } from "battletribes-shared/packets";
 
 export interface PlantComponentParams {
    planterBox: EntityID;

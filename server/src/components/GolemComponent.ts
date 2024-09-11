@@ -1,19 +1,19 @@
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "battletribes-shared/components";
 import Board from "../Board";
 import { BODY_GENERATION_RADIUS, GOLEM_WAKE_TIME_TICKS, GolemVars } from "../entities/mobs/golem";
 import { ComponentArray } from "./ComponentArray";
-import { EntityID } from "webgl-test-shared/dist/entities";
-import { Packet } from "webgl-test-shared/dist/packets";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { randFloat, lerp, randInt } from "webgl-test-shared/dist/utils";
+import { EntityID } from "battletribes-shared/entities";
+import { Packet } from "battletribes-shared/packets";
+import { Settings } from "battletribes-shared/settings";
+import { randFloat, lerp, randInt } from "battletribes-shared/utils";
 import { stopEntity } from "../ai-shared";
 import { createPebblumConfig } from "../entities/mobs/pebblum";
 import { createEntityFromConfig } from "../Entity";
 import { PebblumComponentArray } from "./PebblumComponent";
 import { PhysicsComponentArray } from "./PhysicsComponent";
 import { TransformComponentArray } from "./TransformComponent";
-import { Hitbox } from "webgl-test-shared/dist/boxes/boxes";
-import CircularBox from "webgl-test-shared/dist/boxes/CircularBox";
+import { Hitbox } from "battletribes-shared/boxes/boxes";
+import CircularBox from "battletribes-shared/boxes/CircularBox";
 
 const enum Vars {
    TARGET_ENTITY_FORGET_TIME = 20,

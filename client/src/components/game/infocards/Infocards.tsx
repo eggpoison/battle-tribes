@@ -1,4 +1,4 @@
-import { TribesmanTitle } from "webgl-test-shared/dist/titles";
+import { TribesmanTitle } from "battletribes-shared/titles";
 import { useState, useEffect } from "react";
 import TribesmanTitleInfocard from "./TribesmanTitleInfocard";
 

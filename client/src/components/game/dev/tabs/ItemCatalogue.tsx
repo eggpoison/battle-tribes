@@ -1,7 +1,7 @@
 import InventoryContainer from "../../inventories/InventoryContainer";
 import { useEffect, useRef, useState } from "react";
 import CLIENT_ITEM_INFO_RECORD from "../../../../client-item-info";
-import { ItemType, ITEM_INFO_RECORD, Inventory, InventoryName, Item } from "webgl-test-shared/dist/items/items";
+import { ItemType, ITEM_INFO_RECORD, Inventory, InventoryName, Item } from "battletribes-shared/items/items";
 import { ItemSlotCallbackInfo } from "../../inventories/ItemSlot";
 import { closeCurrentMenu } from "../../../../menus";
 

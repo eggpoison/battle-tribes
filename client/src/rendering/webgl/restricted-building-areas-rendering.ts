@@ -1,5 +1,5 @@
-import { rotateXAroundOrigin, rotateYAroundOrigin } from "webgl-test-shared/dist/utils";
-import { RestrictedBuildingAreaData } from "webgl-test-shared/dist/client-server-types";
+import { rotateXAroundOrigin, rotateYAroundOrigin } from "battletribes-shared/utils";
+import { RestrictedBuildingAreaData } from "battletribes-shared/client-server-types";
 import { createWebGLProgram, gl } from "../../webgl";
 import OPTIONS from "../../options";
 import { UBOBindingIndex, bindUBOToProgram } from "../ubos";

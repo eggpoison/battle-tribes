@@ -2,7 +2,7 @@ import { useEffect, useReducer, useState } from "react";
 import Player from "../../../entities/Player";
 import InventoryContainer from "./InventoryContainer";
 import { InventoryComponentArray } from "../../../entity-components/InventoryComponent";
-import { InventoryName } from "webgl-test-shared/dist/items/items";
+import { InventoryName } from "battletribes-shared/items/items";
 
 export let BackpackInventoryMenu_setIsVisible: (isVisible: boolean) => void = () => {};
 export let BackpackInventoryMenu_update: () => void = () => {};

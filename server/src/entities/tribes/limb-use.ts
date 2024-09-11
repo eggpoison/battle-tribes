@@ -1,11 +1,11 @@
-import { HitFlags } from "webgl-test-shared/dist/client-server-types";
-import { EntityID, LimbAction, EntityType, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
-import { AttackEffectiveness, calculateAttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
-import { getItemAttackInfo, InventoryName, Item, ITEM_INFO_RECORD, itemInfoIsTool, ItemType } from "webgl-test-shared/dist/items/items";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { StatusEffect } from "webgl-test-shared/dist/status-effects";
-import { TribesmanTitle } from "webgl-test-shared/dist/titles";
-import { Point } from "webgl-test-shared/dist/utils";
+import { HitFlags } from "battletribes-shared/client-server-types";
+import { EntityID, LimbAction, EntityType, PlayerCauseOfDeath } from "battletribes-shared/entities";
+import { AttackEffectiveness, calculateAttackEffectiveness } from "battletribes-shared/entity-damage-types";
+import { getItemAttackInfo, InventoryName, Item, ITEM_INFO_RECORD, itemInfoIsTool, ItemType } from "battletribes-shared/items/items";
+import { Settings } from "battletribes-shared/settings";
+import { StatusEffect } from "battletribes-shared/status-effects";
+import { TribesmanTitle } from "battletribes-shared/titles";
+import { Point } from "battletribes-shared/utils";
 import Board from "../../Board";
 import { damageEntity, HealthComponentArray } from "../../components/HealthComponent";
 import { InventoryComponentArray, getInventory } from "../../components/InventoryComponent";
@@ -15,7 +15,7 @@ import { applyStatusEffect } from "../../components/StatusEffectComponent";
 import { TransformComponentArray } from "../../components/TransformComponent";
 import { hasTitle } from "../../components/TribeMemberComponent";
 import { calculateItemDamage } from "./tribe-member";
-import { PlanterBoxPlant, ServerComponentType } from "webgl-test-shared/dist/components";
+import { PlanterBoxPlant, ServerComponentType } from "battletribes-shared/components";
 import { BerryBushComponentArray } from "../../components/BerryBushComponent";
 import { PlantComponentArray, plantIsFullyGrown } from "../../components/PlantComponent";
 import { TreeComponentArray, TREE_RADII } from "../../components/TreeComponent";
@@ -136,7 +136,7 @@ const gatherPlant = (plant: EntityID, attacker: EntityID, gloves: Item | null): 
    damageEntity(plant, attacker, 0, 0, AttackEffectiveness.ineffective, collisionPoint, HitFlags.NON_DAMAGING_HIT);
 }
 
-const calculateItemKnockback = (item: Item | null): number => {
+const getBaseItemKnockback = (item: Item | null): number => {
    if (item === null) {
       return Vars.DEFAULT_ATTACK_KNOCKBACK;
    }
@@ -147,6 +147,16 @@ const calculateItemKnockback = (item: Item | null): number => {
    }
 
    return Vars.DEFAULT_ATTACK_KNOCKBACK;
+}
+
+const calculateItemKnockback = (item: Item | null, attackIsBlocked: boolean): number => {
+   let knockback = getBaseItemKnockback(item);
+   
+   if (attackIsBlocked) {
+      knockback *= 0.5;
+   }
+   
+   return knockback;
 }
 
 // @Cleanup: (?) Pass in the item to use directly instead of passing in the item slot and inventory name
@@ -173,8 +183,10 @@ export function attemptAttack(attacker: EntityID, victim: EntityID, limbInfo: Li
       }
    }
 
-   const attackDamage = calculateItemDamage(attacker, item, attackEffectiveness);
-   const attackKnockback = calculateItemKnockback(item);
+   const attackIsBlocked = limbInfo.limbDamageBox.isBlocked;
+
+   const attackDamage = calculateItemDamage(attacker, item, attackEffectiveness, attackIsBlocked);
+   const attackKnockback = calculateItemKnockback(item, attackIsBlocked);
 
    const targetEntityTransformComponent = TransformComponentArray.getComponent(victim);
    const attackerTransformComponent = TransformComponentArray.getComponent(attacker);

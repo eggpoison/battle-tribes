@@ -87,7 +87,10 @@ export function processPlayerDataPacket(playerClient: PlayerClient, reader: Pack
    physicsComponent.acceleration.y = accelerationY;
    physicsComponent.angularVelocity = angularVelocity;
    
-   hotbarLimbInfo.selectedItemSlot = selectedHotbarItemSlot;
+   if (selectedHotbarItemSlot !== hotbarLimbInfo.selectedItemSlot) {
+      hotbarLimbInfo.selectedItemSlot = selectedHotbarItemSlot;
+      registerDirtyEntity(player);
+   }
 
    const playerComponent = PlayerComponentArray.getComponent(player);
    playerComponent.interactingEntityID = interactingEntityID;
@@ -228,6 +231,10 @@ export function processStopItemUsePacket(playerClient: PlayerClient): void {
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(player);
 
    const limb = inventoryUseComponent.getLimbInfo(InventoryName.hotbar);
+   // If the limb isn't using an item, stop
+   if (limb.action === LimbAction.none) {
+      return;
+   }
 
    // If the limb was blocking, deactivate the block box
    if (limb.action === LimbAction.block) {
@@ -246,6 +253,8 @@ export function processStopItemUsePacket(playerClient: PlayerClient): void {
    } else {
       limb.action = LimbAction.none;
    }
+
+   registerDirtyEntity(player);
 }
 
 export function processItemDropPacket(playerClient: PlayerClient, reader: PacketReader): void {

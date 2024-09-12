@@ -2,6 +2,7 @@ const HtmlWebpackPlugin = require("html-webpack-plugin");
 const path = require("path");
 const getCSSModuleLocalIdent = require('react-dev-utils/getCSSModuleLocalIdent');
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
 
 // @Bug? are these correct?
 const isEnvDevelopment = process.env.NODE_ENV === 'development';
@@ -94,7 +95,14 @@ module.exports = {
          },
          {
             test: /.tsx?$/,
-            use: "ts-loader",
+            use: [
+               {
+                 loader: 'ts-loader',
+                 options: {
+                   transpileOnly: true, // Speeds up compilation
+                 },
+               },
+             ],
             exclude: /node_modules/,
          },
          {
@@ -176,10 +184,12 @@ module.exports = {
       ),
       new MiniCssExtractPlugin({
         filename:"bundle.css"
-      })
+      }),
+      new ReactRefreshWebpackPlugin()
    ],
    devServer: {
      static: path.join(__dirname, "dist"),
+     hot: true,
      compress: true,
      port: 3000,
    },

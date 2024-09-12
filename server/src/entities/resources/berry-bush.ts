@@ -12,6 +12,7 @@ import { ComponentConfig } from "../../components";
 import { StatusEffect } from "battletribes-shared/status-effects";
 import CircularBox from "battletribes-shared/boxes/CircularBox";
 import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
+import { registerDirtyEntity } from "../../server/player-clients";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.health
@@ -80,6 +81,7 @@ export function dropBerry(berryBush: EntityID, multiplier: number): void {
    }
 
    berryBushComponent.numBerries--;
+   registerDirtyEntity(berryBush);
 }
 
 export function onBerryBushHurt(berryBush: EntityID): void {

@@ -2,33 +2,37 @@ import { TribeType } from "battletribes-shared/tribes";
 import { useEffect, useRef, useState } from "react";
 import Client from "../client/Client";
 import Game from "../Game";
-import { setGameState, setLoadingScreenInitialStatus } from "./App";
+import { AppState } from "./App";
 import { definiteGameState } from "../game-state/game-states";
 import { processGameDataPacket } from "../client/packet-processing";
 import Camera from "../Camera";
 
 // @Cleanup: This file does too much logic on its own. It should really only have UI/loading state
 
-export type LoadingScreenStatus = "establishing_connection" | "sending_player_data" | "initialising_game" | "connection_error";
+export const enum LoadingScreenStatus {
+   establishingConnection,
+   sendingPlayerData,
+   initialisingGame,
+   connectionError
+}
 
 interface LoadingScreenProps {
    readonly username: string;
    readonly tribeType: TribeType;
-   readonly initialStatus: LoadingScreenStatus;
+   setAppState(appState: AppState): void;
 }
-const LoadingScreen = ({ username, tribeType, initialStatus }: LoadingScreenProps) => {
-   const [status, setStatus] = useState<LoadingScreenStatus>(initialStatus);
+const LoadingScreen = (props: LoadingScreenProps) => {
+   const [status, setStatus] = useState(LoadingScreenStatus.establishingConnection);
    const hasStarted = useRef(false);
    const hasLoaded = useRef(false);
 
    const openMainMenu = (): void => {
-      setLoadingScreenInitialStatus("establishing_connection");
-      setGameState("main_menu");
+      props.setAppState(AppState.mainMenu);
    }
 
    const reconnect = (): void => {
       hasStarted.current = false;
-      setStatus("establishing_connection");
+      setStatus(LoadingScreenStatus.establishingConnection);
    }
 
    useEffect(() => {
@@ -42,22 +46,22 @@ const LoadingScreen = ({ username, tribeType, initialStatus }: LoadingScreenProp
          // Establish connection with server
          // 
 
-         const connectionWasSuccessful = await Client.connectToServer();
+         const connectionWasSuccessful = await Client.connectToServer(props.setAppState, setStatus);
          if (connectionWasSuccessful) {
-            setStatus("sending_player_data");
+            setStatus(LoadingScreenStatus.sendingPlayerData);
          } else {
-            setStatus("connection_error");
+            setStatus(LoadingScreenStatus.connectionError);
             return;
          }
          
-         Client.sendInitialPlayerData(username, tribeType);
+         Client.sendInitialPlayerData(props.username, props.tribeType);
 
          // 
          // Initialise game
          // 
          
          const initialGameDataPacket = await Client.getInitialGameDataPacket();
-         setStatus("initialising_game");
+         setStatus(LoadingScreenStatus.initialisingGame);
          
          Game.playerID = initialGameDataPacket.playerID;
          
@@ -66,7 +70,7 @@ const LoadingScreen = ({ username, tribeType, initialStatus }: LoadingScreenProp
          Camera.setPosition(initialGameDataPacket.spawnPosition[0], initialGameDataPacket.spawnPosition[1]);
          Camera.setInitialVisibleChunkBounds();
          
-         definiteGameState.playerUsername = username;
+         definiteGameState.playerUsername = props.username;
          
          Client.sendActivatePacket();
          
@@ -84,11 +88,11 @@ const LoadingScreen = ({ username, tribeType, initialStatus }: LoadingScreenProp
 
          Game.start();
 
-         setGameState("game");
+         props.setAppState(AppState.game);
       })();
-   }, [username, tribeType]);
+   }, []);
 
-   if (status === "connection_error") {
+   if (status === LoadingScreenStatus.connectionError) {
       return <div id="loading-screen">
          <div className="content">
             <h1 className="title">Connection closed</h1>
@@ -97,7 +101,7 @@ const LoadingScreen = ({ username, tribeType, initialStatus }: LoadingScreenProp
                <p>Connection with server failed.</p>
 
                <button onClick={reconnect}>Reconnect</button>
-               <button onClick={() => openMainMenu()}>Back</button>
+               <button onClick={openMainMenu}>Back</button>
             </div>
          </div>
       </div>;
@@ -107,15 +111,15 @@ const LoadingScreen = ({ username, tribeType, initialStatus }: LoadingScreenProp
       <div className="content">
          <h1 className="title">Loading</h1>
 
-         {status === "establishing_connection" ? <>
+         {status === LoadingScreenStatus.establishingConnection ? <>
             <div className="loading-message">
                <p>Connecting to server...</p>
             </div>
-         </> : status === "sending_player_data" ? <>
+         </> : status === LoadingScreenStatus.sendingPlayerData ? <>
             <div className="loading-message">
                <p>Sending player data...</p>
             </div>
-         </> : status === "initialising_game" ? <>
+         </> : status === LoadingScreenStatus.initialisingGame ? <>
             <div className="loading-message">
                <p>Initialising game...</p>
             </div>

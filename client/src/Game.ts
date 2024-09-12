@@ -14,8 +14,6 @@ import { refreshDebugInfo, setDebugInfoDebugData } from "./components/game/dev/D
 import { createWebGLContext, gl, resizeCanvas } from "./webgl";
 import { loadTextures, preloadTextureImages } from "./textures";
 import { toggleSettingsMenu } from "./components/game/GameScreen";
-import { App_setGameInteractState, getGameState } from "./components/App";
-import { clearPressedKeys } from "./keyboard-input";
 import { createHitboxShaders, renderDamageBoxes, renderHitboxes } from "./rendering/webgl/box-wireframe-rendering";
 import { updatePlayerItems, updatePlayerMovement } from "./player-input";
 import { clearServerTicks, updateDebugScreenFPS, updateDebugScreenRenderTime } from "./components/game/dev/GameInfoDisplay";
@@ -57,22 +55,12 @@ import { createTechTreeItemShaders, renderTechTreeItems, updateTechTreeItems } f
 import { createUBOs, updateUBOs } from "./rendering/ubos";
 import { createEntityOverlayShaders } from "./rendering/webgl/overlay-rendering";
 import { updateRenderPartMatrices } from "./rendering/render-part-matrices";
-import { EntitySummonPacket } from "battletribes-shared/dev-packets";
-import { Mutable } from "battletribes-shared/utils";
 import { renderNextRenderables, resetRenderOrder } from "./rendering/render-loop";
 import { InitialGameDataPacket, processGameDataPacket } from "./client/packet-processing";
-import { PacketReader } from "battletribes-shared/packets";
 import { MAX_RENDER_LAYER, RenderLayer } from "./render-layers";
 import { updateEntity } from "./entity-components/ComponentArray";
 import { resolveEntityCollisions, resolvePlayerCollisions } from "./collision";
 import { preloadTextureAtlasImages } from "./texture-atlases/texture-atlas-stitching";
-
-let tempPacketSendCounter = 0;
-
-export const enum GameInteractState {
-   none,
-   summonEntity
-}
 
 // @Cleanup: remove.
 let _frameProgress = Number.EPSILON;
@@ -89,7 +77,7 @@ const createEventListeners = (): void => {
    listenersHaveBeenCreated = true;
 
    window.addEventListener("keydown", (e: KeyboardEvent) => {
-      if (e.key === "Escape" && getGameState() === "game") {
+      if (e.key === "Escape" && Game.isRunning) {
          toggleSettingsMenu();
       }
    });
@@ -157,9 +145,6 @@ const main = (currentTime: number): void => {
 }
 
 abstract class Game {
-   private static interactState = GameInteractState.none;
-   public static summonPacket: Mutable<EntitySummonPacket> | null = null;
-   
    public static lastTime = 0;
 
    public static isRunning = false;
@@ -184,15 +169,6 @@ abstract class Game {
 
    // @Hack @Cleanup: remove this!
    public static playerID: number;
-
-   public static setInteractState(interactState: GameInteractState): void {
-      App_setGameInteractState(interactState);
-      this.interactState = interactState;
-   }
-
-   public static getInteractState(): GameInteractState {
-      return this.interactState;
-   }
    
    public static setGameObjectDebugData(entityDebugData: EntityDebugData | undefined): void {
       if (typeof entityDebugData === "undefined") {
@@ -277,12 +253,18 @@ abstract class Game {
             // We load the textures before we create the shaders because some shader initialisations stitch textures together
             await loadTextures(textureImages);
             console.log("loading textures",performance.now() - l);
+            // @Hack
+            await new Promise<void>(resolve => {
+               setTimeout(() => {
+                  resolve();
+               }, 1000)
+            });
             l = performance.now();
             // @Speed
             await createTextureAtlases();
             console.log("texture atlases",performance.now() - l);
             l = performance.now();
-            
+
             // Create shaders
             createSolidTileShaders();
             createRiverShaders();
@@ -496,3 +478,15 @@ abstract class Game {
 }
 
 export default Game;
+
+if (module.hot) {
+   module.hot.dispose(data => {
+      data.tribe = Game.tribe;
+      data.playerID = Game.playerID;
+   });
+
+   if (module.hot.data) {
+      Game.tribe = module.hot.data.tribe;
+      Game.playerID = module.hot.data.playerID;
+   }
+}

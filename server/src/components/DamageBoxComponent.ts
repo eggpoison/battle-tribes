@@ -1,6 +1,6 @@
 import { ServerComponentType } from "battletribes-shared/components";
 import { ComponentArray } from "./ComponentArray";
-import { EntityID } from "battletribes-shared/entities";
+import { EntityID, LimbAction } from "battletribes-shared/entities";
 import { Packet } from "battletribes-shared/packets";
 import { boxIsCircular } from "battletribes-shared/boxes/boxes";
 import { getBoxesCollidingEntities } from "battletribes-shared/hitbox-collision";
@@ -92,6 +92,10 @@ function onTick(damageBoxComponent: DamageBoxComponent, entity: EntityID): void 
       }
 
       const limbInfo = inventoryUseComponent.getLimbInfo(damageBox.associatedLimbInventoryName);
+      if (limbInfo.action === LimbAction.none) {
+         // There shouldn't be any active damage boxes if the limb is doing nothing!
+         throw new Error();
+      }
 
       // Look for entities to damage
       const collidingEntities = getBoxesCollidingEntities(Board.getWorldInfo(), [damageBox]);
@@ -109,6 +113,10 @@ function onTick(damageBoxComponent: DamageBoxComponent, entity: EntityID): void 
       }
 
       const limbInfo = inventoryUseComponent.getLimbInfo(blockBox.associatedLimbInventoryName);
+      if (limbInfo.action !== LimbAction.block) {
+         // There shouldn't be any active block boxes if the limb isn't blocking!
+         throw new Error();
+      }
 
       const collisionInfo = getCollidingCollisionBox(entity, blockBox);
       if (collisionInfo !== null) {

@@ -14,7 +14,7 @@ import { updateResourceDistributions } from "../resource-distributions";
 import { updateGrassBlockers } from "../grass-blockers";
 import { createGameDataPacket, createSyncDataPacket, createSyncPacket } from "./game-data-packets";
 import PlayerClient, { PlayerClientVars } from "./PlayerClient";
-import { addPlayerClient, generatePlayerSpawnPosition, getPlayerClients, resetDirtyEntities } from "./player-clients";
+import { addPlayerClient, generatePlayerSpawnPosition, getPlayerClients, handlePlayerDisconnect, resetDirtyEntities } from "./player-clients";
 import { createPlayerConfig } from "../entities/tribes/player";
 import { ServerComponentType } from "battletribes-shared/components";
 import { createEntityFromConfig } from "../Entity";
@@ -141,6 +141,10 @@ class GameServer {
       // Handle player connections
       this.server.on("connection", (socket: WebSocket) => {
          let playerClient: PlayerClient;
+
+         socket.on("close", () => {
+            handlePlayerDisconnect(playerClient);
+         });
          
          socket.on("message", (message: Buffer) => {
             // 6 bytes are added on for some reason
@@ -227,14 +231,6 @@ class GameServer {
             }
          });
       });
-      
-      // if (SERVER.io === null) {
-      //    // Start the server
-      //    // SERVER.io = new Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>(Settings.SERVER_PORT);
-      //    SERVER.io = new Server(Settings.SERVER_PORT, { transports: ["websocket"], allowUpgrades: false });
-      //    SERVER.handlePlayerConnections();
-      //    console.log("Server started on port " + Settings.SERVER_PORT);
-      // }
 
       SERVER.isRunning = true;
       

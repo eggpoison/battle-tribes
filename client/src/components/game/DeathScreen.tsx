@@ -2,8 +2,12 @@ import { randItem } from "battletribes-shared/utils";
 import { useEffect, useState } from "react";
 import Client from "../../client/Client";
 import Game from "../../Game";
-import { resetUsername, setGameState, setLoadingScreenInitialStatus } from "../App";
+import { AppState } from "../App";
 import { sendRespawnPacket } from "../../client/packet-creation";
+
+interface DeathScreenProps {
+   setAppState(appState: AppState): void;
+}
 
 const DEATH_TIPS: ReadonlyArray<string> = [
    "Always make sure your monitor is on, as otherwise it will not be on.",
@@ -11,20 +15,20 @@ const DEATH_TIPS: ReadonlyArray<string> = [
    "Have you tried not dying?"
 ];
 
-const quitGame = (): void => {
-   resetUsername();
-   setLoadingScreenInitialStatus("establishing_connection");
-   setGameState("main_menu");
-   Game.stop();
-   Client.disconnect();
-}
-
-const DeathScreen = () => {
+const DeathScreen = (props: DeathScreenProps) => {
    const [tip, setTip] = useState<string>("");
 
+   // @Speed: Garbage collection
    const randomiseTip = (): void => {
       const newTip = randItem(DEATH_TIPS);
       setTip(newTip);
+   }
+
+   // @Speed: Garbage collection
+   const quitGame = (): void => {
+      props.setAppState(AppState.mainMenu);
+      Game.stop();
+      Client.disconnect();
    }
 
    useEffect(() => {

@@ -75,7 +75,7 @@ export function getPlayerFromUsername(username: string): EntityID | null {
    return null;
 }
 
-const handlePlayerDisconnect = (playerClient: PlayerClient): void => {
+export function handlePlayerDisconnect(playerClient: PlayerClient): void {
    // Remove player client
    const idx = playerClients.indexOf(playerClient);
    if (idx !== -1) {
@@ -489,10 +489,6 @@ export function addPlayerClient(playerClient: PlayerClient, player: EntityID, pl
 
    const initialGameDataPacket = createInitialGameDataPacket(player, playerConfig);
    socket.send(initialGameDataPacket);
-   
-   socket.on("disconnect", () => {
-      handlePlayerDisconnect(playerClient);
-   });
 
    socket.on("deactivate", () => {
       playerClient.clientIsActive = false;

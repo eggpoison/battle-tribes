@@ -1,8 +1,7 @@
 import { EntityType, NUM_ENTITY_TYPES } from "battletribes-shared/entities";
 import CLIENT_ENTITY_INFO_RECORD from "../../../../client-entity-info";
-import { useCallback, useEffect, useState } from "react";
+import { MutableRefObject, useCallback, useState } from "react";
 import DevmodeRangeInput from "../DevmodeRangeInput";
-import Game, { GameInteractState } from "../../../../Game";
 import { ComponentSummonData, EntitySummonData, EntitySummonPacket } from "battletribes-shared/dev-packets";
 import { EntityComponents, ServerComponentType } from "battletribes-shared/components";
 import TribeComponentInput from "./TribeComponentInput";
@@ -10,10 +9,14 @@ import DevmodeScrollableOptions from "../DevmodeScrollableOptions";
 import { Inventory, InventoryName, ItemSlots } from "battletribes-shared/items/items";
 import InventoryComponentInput, { ENTITY_INVENTORY_NAME_RECORD, NUM_INVENTORY_NAMES } from "./InventoryComponentInput";
 import { closeCurrentMenu } from "../../../../menus";
+import { Mutable } from "../../../../../../shared/src/utils";
+import { GameInteractState } from "../../GameScreen";
 
 type EntityTypeTuple = [EntityType, string];
 
 interface SummonTabProps {
+   readonly summonPacketRef: MutableRefObject<Mutable<EntitySummonPacket> | null>;
+   setGameInteractState(state: GameInteractState): void;
    setMenu(element: JSX.Element): void;
 }
 
@@ -120,7 +123,7 @@ const SummonTab = (props: SummonTabProps) => {
          entityType: selectedEntityType,
          summonData: summonData
       };
-      Game.summonPacket = packet;
+      props.summonPacketRef.current = packet;
    }, [selectedEntityType, spawnRange]);
 
    const beginSummon = (): void => {
@@ -128,7 +131,7 @@ const SummonTab = (props: SummonTabProps) => {
 
       // Close the tab
       closeCurrentMenu();
-      Game.setInteractState(GameInteractState.summonEntity);
+      props.setGameInteractState(GameInteractState.summonEntity);
    }
    
    const selectEntityType = (optionIdx: number): void => {

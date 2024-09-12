@@ -3,6 +3,7 @@ import { EntityID } from "battletribes-shared/entities";
 import Component from "./Component";
 import Entity from "../Entity";
 import { ClientComponentType } from "./components";
+import Player from "../entities/Player";
 
 export const enum ComponentArrayType {
    server,
@@ -24,8 +25,8 @@ interface ComponentArrayTypeObject<ArrayType extends ComponentArrayType> {
    readonly componentType: ComponentTypeForArray[ArrayType];
 }
 
-const componentArrays = new Array<ComponentArray>();
-const serverComponentArrayRecord: Record<ServerComponentType, ComponentArray> = {} as any;
+let componentArrays = new Array<ComponentArray>();
+let serverComponentArrayRecord: Record<ServerComponentType, ComponentArray> = {} as any;
 
 export class ComponentArray<T extends Component = Component, ArrayType extends ComponentArrayType = ComponentArrayType, ComponentType extends ComponentTypeForArray[ArrayType] = ComponentTypeForArray[ArrayType]> implements ComponentArrayFunctions<T> {
    public readonly typeObject: ComponentArrayTypeObject<ArrayType>;
@@ -171,9 +172,22 @@ export function updateEntity(entity: Entity): void {
          continue;
       }
       
-      if (componentArray.typeObject.type === ComponentArrayType.server && entity.hasServerComponent(componentArray.typeObject.componentType as ServerComponentType) || (componentArray.typeObject.type === ComponentArrayType.client && entity.hasClientComponent(componentArray.typeObject.componentType as ClientComponentType))) {
+      // if (componentArray.typeObject.type === ComponentArrayType.server && entity.hasServerComponent(componentArray.typeObject.componentType as ServerComponentType) || (componentArray.typeObject.type === ComponentArrayType.client && entity.hasClientComponent(componentArray.typeObject.componentType as ClientComponentType))) {
+      if (componentArray.hasComponent(entity.id)) {
          const component = componentArray.getComponent(entity.id);
          componentArray.onUpdate(component, entity.id);
       }
+   }
+}
+
+if (module.hot) {
+   module.hot.dispose(data => {
+      data.componentArrays = componentArrays;
+      data.serverComponentArrayRecord = serverComponentArrayRecord;
+   });
+
+   if (module.hot.data) {
+      componentArrays = module.hot.data.componentArrays;
+      serverComponentArrayRecord = module.hot.data.serverComponentArrayRecord;
    }
 }

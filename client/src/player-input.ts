@@ -6,7 +6,7 @@ import { Hotbar_setHotbarSelectedItemSlot, Hotbar_updateLeftThrownBattleaxeItemI
 import { BackpackInventoryMenu_setIsVisible } from "./components/game/inventories/BackpackInventory";
 import Board, { getElapsedTimeInSeconds } from "./Board";
 import { definiteGameState, latencyGameState } from "./game-state/game-states";
-import Game, { GameInteractState } from "./Game";
+import Game from "./Game";
 import { attemptEntitySelection } from "./entity-selection";
 import { playSound } from "./sound";
 import { attemptToCompleteNode } from "./research";
@@ -35,6 +35,11 @@ interface SelectedItemInfo {
    readonly inventoryName: InventoryName;
 }
 
+const enum BufferedInputType {
+   attack,
+   block
+}
+
 /*
 // @Temporary @Incomplete
 
@@ -53,8 +58,8 @@ interface SelectedItemInfo {
       },
 */
 
-/** Amount of time that attack inputs will be buffered */
-const ATTACK_COYOTE_TIME = 0.04;
+/** Amount of time that attack/block inputs will be buffered */
+const INPUT_COYOTE_TIME = 0.05;
 
 /** Acceleration of the player while moving without any modifiers. */
 const PLAYER_ACCELERATION = 900;
@@ -78,8 +83,10 @@ let _inventoryIsOpen = false;
 let currentRightClickEvent: MouseEvent | null = null;
 
 let discombobulationTimer = 0;
+
 /** If > 0, it counts down the remaining time that the attack is buffered. */
 let attackBufferTime = 0;
+let bufferedInputType = BufferedInputType.attack;
 
 export function getHotbarSelectedItemSlot(): number {
    return hotbarSelectedItemSlot;
@@ -179,6 +186,20 @@ export function updatePlayerItems(): void {
 
    // Buffered attacks
    if (attackBufferTime > 0) {
+      if (hotbarLimbInfo.action === LimbAction.none) {
+         switch (bufferedInputType) {
+            case BufferedInputType.attack: {
+               swing(InventoryName.hotbar);
+               break;
+            }
+            case BufferedInputType.block: {
+               if (hotbarLimbInfo.heldItemType !== null) {
+                  onItemRightClickDown(hotbarLimbInfo.heldItemType, InventoryName.hotbar, hotbarSelectedItemSlot);
+               }
+               break;
+            }
+         }
+      }
       const didSwing = attemptSwing(InventoryName.hotbar);
       if (didSwing) {
          attackBufferTime = 0;
@@ -311,7 +332,8 @@ const attemptAttack = (): void => {
    }
 
    if (!attackDidSucceed) {
-      attackBufferTime = ATTACK_COYOTE_TIME;
+      attackBufferTime = INPUT_COYOTE_TIME;
+      bufferedInputType = BufferedInputType.attack;
    }
 }
 
@@ -372,25 +394,6 @@ const createItemUseListeners = (): void => {
          return;
       }
 
-      if (Game.getInteractState() === GameInteractState.summonEntity) {
-         if (Game.summonPacket === null) {
-            console.warn("summon packet is null");
-            return;
-         }
-         
-         if (e.button === 0) {
-            Game.summonPacket.position[0] = calculateCursorWorldPositionX(e.clientX)!;
-            Game.summonPacket.position[1] = calculateCursorWorldPositionY(e.clientY)!;
-            Game.summonPacket.rotation = 2 * Math.PI * Math.random();
-            
-            Client.sendEntitySummonPacket(Game.summonPacket);
-         } else if (e.button === 2) {
-            // Get out of summon entity mode
-            Game.setInteractState(GameInteractState.none);
-         }
-         return;
-      }
-
       if (e.button === 0) { // Left click
          leftMouseButtonIsPressed = true;
          attemptAttack();
@@ -400,7 +403,7 @@ const createItemUseListeners = (): void => {
 
          const selectedItemInfo = getSelectedItemInfo();
          if (selectedItemInfo !== null) {
-            onItemRightClickDown(selectedItemInfo.item, selectedItemInfo.inventoryName, selectedItemInfo.itemSlot);
+            onItemRightClickDown(selectedItemInfo.item.type, selectedItemInfo.inventoryName, selectedItemInfo.itemSlot);
          }
          
          const didSelectEntity = attemptEntitySelection();
@@ -658,10 +661,15 @@ const deselectItem = (item: Item, isOffhand: boolean): void => {
 
    const itemCategory = ITEM_TYPE_RECORD[item.type];
    switch (itemCategory) {
+      case "healing": {
+         unuseItem(item.type);
+         break;
+      }
       case "spear":
       case "battleaxe":
       case "bow": {
          limb.action = LimbAction.none;
+         sendStopItemUsePacket();
          break;
       }
       case "placeable": {
@@ -707,16 +715,16 @@ const unuseItem = (itemType: ItemType): void => {
    }
 }
 
-const onItemRightClickDown = (item: Item, itemInventoryName: InventoryName, itemSlot: number): void => {
+const onItemRightClickDown = (itemType: ItemType, itemInventoryName: InventoryName, itemSlot: number): void => {
    const transformComponent = Player.instance!.getServerComponent(ServerComponentType.transform);
    const inventoryUseComponent = Player.instance!.getServerComponent(ServerComponentType.inventoryUse);
 
    const limbInfo = inventoryUseComponent.getLimbInfoByInventoryName(itemInventoryName);
 
    // Start blocking
-   if (limbInfo.action === LimbAction.none) {
-      const attackInfo = getItemAttackInfo(item.type);
-      if (attackInfo.attackTimings.blockTimeTicks !== null) {
+   const attackInfo = getItemAttackInfo(itemType);
+   if (attackInfo.attackTimings.blockTimeTicks !== null) {
+      if (limbInfo.action === LimbAction.none) {
          limbInfo.action = LimbAction.block;
          limbInfo.currentActionElapsedTicks = 0;
          limbInfo.currentActionDurationTicks = attackInfo.attackTimings.blockTimeTicks;
@@ -724,10 +732,13 @@ const onItemRightClickDown = (item: Item, itemInventoryName: InventoryName, item
 
          sendItemUsePacket();
          return;
+      } else {
+         attackBufferTime = INPUT_COYOTE_TIME;
+         bufferedInputType = BufferedInputType.block;
       }
    }
 
-   const itemCategory = ITEM_TYPE_RECORD[item.type];
+   const itemCategory = ITEM_TYPE_RECORD[itemType];
    switch (itemCategory) {
       case "healing": {
          const healthComponent = HealthComponentArray.getComponent(Player.instance!.id);
@@ -736,29 +747,31 @@ const onItemRightClickDown = (item: Item, itemInventoryName: InventoryName, item
             break;
          }
 
-         const itemInfo = ITEM_INFO_RECORD[item.type] as ConsumableItemInfo;
-         let action: LimbAction;
-         switch (itemInfo.consumableItemCategory) {
-            case ConsumableItemCategory.food: {
-               action = LimbAction.eat;
-               break;
+         if (limbInfo.action === LimbAction.none) {
+            const itemInfo = ITEM_INFO_RECORD[itemType] as ConsumableItemInfo;
+            let action: LimbAction;
+            switch (itemInfo.consumableItemCategory) {
+               case ConsumableItemCategory.food: {
+                  action = LimbAction.eat;
+                  break;
+               }
+               case ConsumableItemCategory.medicine: {
+                  action = LimbAction.useMedicine;
+                  break;
+               }
             }
-            case ConsumableItemCategory.medicine: {
-               action = LimbAction.useMedicine;
-               break;
-            }
-         }
-            
-         limbInfo.action = action;
-         limbInfo.lastEatTicks = Board.serverTicks;
+               
+            limbInfo.action = action;
+            limbInfo.lastEatTicks = Board.serverTicks;
 
-         // @Incomplete
-         // if (itemInfo.consumableItemCategory === ConsumableItemCategory.medicine) {
-         //    // @Cleanup
-         //    const otherUseInfo = inventoryUseComponent.limbInfos[isOffhand ? 0 : 1];
-         //    otherUseInfo.action = action;
-         //    otherUseInfo.lastEatTicks = Board.serverTicks;
-         // }
+            // @Incomplete
+            // if (itemInfo.consumableItemCategory === ConsumableItemCategory.medicine) {
+            //    // @Cleanup
+            //    const otherUseInfo = inventoryUseComponent.limbInfos[isOffhand ? 0 : 1];
+            //    otherUseInfo.action = action;
+            //    otherUseInfo.lastEatTicks = Board.serverTicks;
+            // }
+         }
 
          break;
       }
@@ -804,7 +817,7 @@ const onItemRightClickDown = (item: Item, itemInventoryName: InventoryName, item
          break;
       }
       case "placeable": {
-         const structureType = ITEM_INFO_RECORD[item.type as PlaceableItemType].entityType;
+         const structureType = ITEM_INFO_RECORD[itemType as PlaceableItemType].entityType;
          const placeInfo = calculateStructurePlaceInfo(transformComponent.position, transformComponent.rotation, structureType, Board.getWorldInfo());
          
          if (placeInfo.isValid) {
@@ -824,11 +837,26 @@ const onItemRightClickUp = (item: Item, inventoryName: InventoryName): void => {
    const itemCategory = ITEM_TYPE_RECORD[item.type];
    switch (itemCategory) {
       case "healing": {
-         unuseItem(item.type);
+         // Stop healing
+         if (limb.action === LimbAction.eat) {
+            unuseItem(item.type);
+         }
+         break;
+      }
+      case "spear": {
+         const chargeTime = getElapsedTimeInSeconds(limb.currentActionElapsedTicks);
+         
+         limb.action = LimbAction.none;
+         
+         if (chargeTime >= 1) {
+            sendItemUsePacket();
+         } else {
+            sendStopItemUsePacket();
+            playSound("error.mp3", 0.4, 1, Camera.position);
+         }
          break;
       }
       case "battleaxe":
-      case "spear":
       case "bow": {
          if (itemCategory === "battleaxe") {
             if (limb.thrownBattleaxeItemID !== -1 || limb.action !== LimbAction.chargeBattleaxe) {
@@ -875,9 +903,16 @@ export function selectItemSlot(itemSlot: number): void {
 
    const inventoryComponent = InventoryComponentArray.getComponent(Player.instance!.id);
    const hotbarInventory = inventoryComponent.getInventory(InventoryName.hotbar)!;
+   
+   const previousItem = hotbarInventory.itemSlots[hotbarSelectedItemSlot];
+
+   hotbarSelectedItemSlot = itemSlot;
+   Hotbar_setHotbarSelectedItemSlot(itemSlot);
+
+   // Clear any buffered inputs
+   attackBufferTime = 0;
 
    // Deselect the previous item and select the new item
-   const previousItem = hotbarInventory.itemSlots[hotbarSelectedItemSlot];
    if (typeof previousItem !== "undefined") {
       deselectItem(previousItem, false);
    }
@@ -885,13 +920,9 @@ export function selectItemSlot(itemSlot: number): void {
    if (typeof newItem !== "undefined") {
       selectItem(newItem);
       if (rightMouseButtonIsPressed) {
-         onItemRightClickDown(newItem, InventoryName.hotbar, itemSlot);
+         onItemRightClickDown(newItem.type, InventoryName.hotbar, itemSlot);
       }
    }
-
-   hotbarSelectedItemSlot = itemSlot;
-      
-   Hotbar_setHotbarSelectedItemSlot(itemSlot);
 
    const playerInventoryUseComponent = Player.instance.getServerComponent(ServerComponentType.inventoryUse);
    const hotbarUseInfo = playerInventoryUseComponent.getLimbInfoByInventoryName(InventoryName.hotbar);

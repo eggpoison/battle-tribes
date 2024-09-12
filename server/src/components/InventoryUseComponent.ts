@@ -246,9 +246,9 @@ function onTick(inventoryUseComponent: InventoryUseComponent, entity: EntityID):
    for (let i = 0; i < inventoryUseComponent.limbInfos.length; i++) {
       const limbInfo = inventoryUseComponent.limbInfos[i];
 
-      // @Cleanup: When blocking, once the block is finished going up the entity should no longer be dirtied by this
+      // @Cleanup @Bandwidth: When blocking, once the block is finished going up the entity should no longer be dirtied by this
       // Certain actions should always show an update for the player
-      if (limbInfo.action === LimbAction.windAttack || limbInfo.action === LimbAction.attack || limbInfo.action === LimbAction.returnAttackToRest || limbInfo.action === LimbAction.block) {
+      if (limbInfo.action !== LimbAction.none) {
          registerDirtyEntity(entity);
       }
 
@@ -319,6 +319,10 @@ function onTick(inventoryUseComponent: InventoryUseComponent, entity: EntityID):
                break;
             }
             case LimbAction.returnAttackToRest: {
+               limbInfo.action = LimbAction.none;
+               break;
+            }
+            case LimbAction.returnBlockToRest: {
                limbInfo.action = LimbAction.none;
                break;
             }

@@ -255,6 +255,10 @@ export function renderDamageBoxes(): void {
          const damageBox = damageBoxComponent.damageBoxes[j];
          addBoxVertices(vertices, damageBox.box, adjustment, 1, 0.6, 0);
       }
+      for (let j = 0; j < damageBoxComponent.blockBoxes.length; j++) {
+         const blockBox = damageBoxComponent.blockBoxes[j];
+         addBoxVertices(vertices, blockBox.box, adjustment, 1, 0.6, 0);
+      }
    }
 
    renderVertices(vertices);

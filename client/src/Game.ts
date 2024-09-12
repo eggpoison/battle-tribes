@@ -277,12 +277,18 @@ abstract class Game {
             // We load the textures before we create the shaders because some shader initialisations stitch textures together
             await loadTextures(textureImages);
             console.log("loading textures",performance.now() - l);
+            // @Hack
+            await new Promise<void>(resolve => {
+               setTimeout(() => {
+                  resolve();
+               }, 1000)
+            });
             l = performance.now();
             // @Speed
             await createTextureAtlases();
             console.log("texture atlases",performance.now() - l);
             l = performance.now();
-            
+
             // Create shaders
             createSolidTileShaders();
             createRiverShaders();

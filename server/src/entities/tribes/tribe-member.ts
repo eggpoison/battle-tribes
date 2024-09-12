@@ -327,9 +327,10 @@ export function useItem(tribeMember: EntityID, item: Item, inventoryName: Invent
       }
       case "healing": {
          const healthComponent = HealthComponentArray.getComponent(tribeMember);
-
+         
          // Don't use food if already at maximum health
          if (healthComponent.health >= healthComponent.maxHealth) return;
+         console.trace();
 
          const itemInfo = ITEM_INFO_RECORD[item.type] as ConsumableItemInfo;
          

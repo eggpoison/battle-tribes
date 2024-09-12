@@ -1,8 +1,9 @@
-import { BerryBushComponentData, ServerComponentType } from "battletribes-shared/components";
+import { ServerComponentType } from "battletribes-shared/components";
 import { ComponentArray } from "./ComponentArray";
 import { EntityID } from "battletribes-shared/entities";
 import { Settings } from "battletribes-shared/settings";
 import { Packet } from "battletribes-shared/packets";
+import { registerDirtyEntity } from "../server/player-clients";
 
 const enum Vars {
    /** Number of seconds it takes for a berry bush to regrow one of its berries */
@@ -25,7 +26,7 @@ export const BerryBushComponentArray = new ComponentArray<BerryBushComponent>(Se
    addDataToPacket: addDataToPacket
 });
 
-function onTick(berryBushComponent: BerryBushComponent): void {
+function onTick(berryBushComponent: BerryBushComponent, entity: EntityID): void {
    if (berryBushComponent.numBerries >= 5) {
       return;
    }
@@ -35,6 +36,7 @@ function onTick(berryBushComponent: BerryBushComponent): void {
       // Grow a new berry
       berryBushComponent.berryGrowTimer = 0;
       berryBushComponent.numBerries++;
+      registerDirtyEntity(entity);
    }
 }
 

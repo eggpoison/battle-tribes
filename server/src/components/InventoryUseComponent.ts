@@ -322,6 +322,10 @@ function onTick(inventoryUseComponent: InventoryUseComponent, entity: EntityID):
                limbInfo.action = LimbAction.none;
                break;
             }
+            case LimbAction.returnBlockToRest: {
+               limbInfo.action = LimbAction.none;
+               break;
+            }
          }
       }
 

@@ -1,6 +1,6 @@
-import { rotateXAroundOrigin, rotateYAroundOrigin } from "webgl-test-shared/dist/utils";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { SafetyNodeData, WallSideNodeData } from "webgl-test-shared/dist/ai-building-types";
+import { rotateXAroundOrigin, rotateYAroundOrigin } from "battletribes-shared/utils";
+import { Settings } from "battletribes-shared/settings";
+import { SafetyNodeData, WallSideNodeData } from "battletribes-shared/ai-building-types";
 import { createWebGLProgram, gl } from "../../webgl";
 import OPTIONS from "../../options";
 import { getVisibleWalls } from "../../client/Client";

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { NUM_TRIBESMAN_TITLES, TRIBESMAN_TITLE_RECORD, TribesmanTitle } from "webgl-test-shared/dist/titles";
+import { NUM_TRIBESMAN_TITLES, TRIBESMAN_TITLE_RECORD, TribesmanTitle } from "battletribes-shared/titles";
 import Client from "../../../../client/Client";
 
 const enum ListType {

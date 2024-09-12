@@ -1,18 +1,18 @@
-import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { EntityType } from "webgl-test-shared/dist/entities";
-import { COOKING_INGREDIENT_ITEM_TYPES, FUEL_SOURCE_ITEM_TYPES } from "webgl-test-shared/dist/cooking-info";
+import { ServerComponentType } from "battletribes-shared/components";
+import { EntityType } from "battletribes-shared/entities";
+import { COOKING_INGREDIENT_ITEM_TYPES, FUEL_SOURCE_ITEM_TYPES } from "battletribes-shared/items/cooking-info";
 import ItemSlot from "./ItemSlot";
 import { getSelectedEntity } from "../../../entity-selection";
-import { InventoryName, ItemType } from "webgl-test-shared/dist/items/items";
+import { InventoryName, ItemType } from "battletribes-shared/items/items";
 
 const CookingInventory = () => {
    const cookingEntity = getSelectedEntity();
    const cookingComponent = cookingEntity.getServerComponent(ServerComponentType.cooking);
    const inventoryComponent = cookingEntity.getServerComponent(ServerComponentType.inventory);
 
-   const fuelInventory = inventoryComponent.getInventory(InventoryName.fuelInventory);
-   const ingredientInventory = inventoryComponent.getInventory(InventoryName.ingredientInventory);
-   const outputInventory = inventoryComponent.getInventory(InventoryName.outputInventory);
+   const fuelInventory = inventoryComponent.getInventory(InventoryName.fuelInventory)!;
+   const ingredientInventory = inventoryComponent.getInventory(InventoryName.ingredientInventory)!;
+   const outputInventory = inventoryComponent.getInventory(InventoryName.outputInventory)!;
 
    const heatingBarProgress = cookingComponent.heatingProgress !== -1 ? cookingComponent.heatingProgress : 0;
 

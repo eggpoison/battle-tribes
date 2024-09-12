@@ -1,18 +1,18 @@
-import { PathfindingNodeIndex, RIVER_STEPPING_STONE_SIZES } from "webgl-test-shared/dist/client-server-types";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { clampToBoardDimensions, Point, TileIndex } from "webgl-test-shared/dist/utils";
+import { PathfindingNodeIndex, RIVER_STEPPING_STONE_SIZES } from "battletribes-shared/client-server-types";
+import { Settings } from "battletribes-shared/settings";
+import { clampToBoardDimensions, Point, TileIndex } from "battletribes-shared/utils";
 import Board from "../Board";
 import Chunk, { entityIsCollisionRelevant } from "../Chunk";
-import { EntityID, EntityType, EntityTypeString } from "webgl-test-shared/dist/entities";
+import { EntityID, EntityType, EntityTypeString } from "battletribes-shared/entities";
 import { ComponentArray } from "./ComponentArray";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "battletribes-shared/components";
 import { AIHelperComponentArray, entityIsNoticedByAI } from "./AIHelperComponent";
-import { TileType } from "webgl-test-shared/dist/tiles";
+import { TileType } from "battletribes-shared/tiles";
 import { PhysicsComponentArray } from "./PhysicsComponent";
 import { clearEntityPathfindingNodes, entityCanBlockPathfinding, updateEntityPathfindingNodeOccupance } from "../pathfinding";
 import { resolveEntityTileCollision } from "../collision";
-import { Packet } from "webgl-test-shared/dist/packets";
-import { boxIsCircular, HitboxWrapper, updateBox } from "webgl-test-shared/dist/boxes/boxes";
+import { Packet } from "battletribes-shared/packets";
+import { boxIsCircular, Hitbox, updateBox } from "battletribes-shared/boxes/boxes";
 
 // @Cleanup: move mass/hitbox related stuff out? (Are there any entities which would make use of that?)
 
@@ -24,7 +24,7 @@ export interface TransformComponentParams {
    readonly collisionBit: number;
    readonly collisionMask: number;
    // @Cleanup: should this instead be hitbox info?
-   hitboxes: ReadonlyArray<HitboxWrapper>;
+   hitboxes: ReadonlyArray<Hitbox>;
 }
 
 export class TransformComponent {
@@ -50,7 +50,7 @@ export class TransformComponent {
    public isInRiver!: boolean;
 
    /** All hitboxes attached to the entity */
-   public hitboxes = new Array<HitboxWrapper>();
+   public hitboxes = new Array<Hitbox>();
    public hitboxLocalIDs = new Array<number>();
    
    public boundingAreaMinX = Number.MAX_SAFE_INTEGER;
@@ -153,7 +153,7 @@ export class TransformComponent {
       this.isInRiver = true;
    }
 
-   public addHitbox(hitbox: HitboxWrapper, entity: EntityID | null): void {
+   public addHitbox(hitbox: Hitbox, entity: EntityID | null): void {
       const box = hitbox.box;
       
       updateBox(box, this.position.x, this.position.y, this.rotation);

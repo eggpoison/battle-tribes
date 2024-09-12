@@ -1,7 +1,7 @@
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "battletribes-shared/components";
 import ServerComponent from "./ServerComponent";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { randFloat } from "webgl-test-shared/dist/utils";
+import { Settings } from "battletribes-shared/settings";
+import { randFloat } from "battletribes-shared/utils";
 import { createFlyParticle } from "../particles";
 import { playSound } from "../sound";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";

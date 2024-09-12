@@ -1,10 +1,10 @@
-import { Settings } from "webgl-test-shared/dist/settings";
-import { TileType } from "webgl-test-shared/dist/tiles";
+import { Settings } from "battletribes-shared/settings";
+import { TileType } from "battletribes-shared/tiles";
 import Board from "../Board";
 import { createGrassStrandConfig } from "../entities/grass-strand";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "battletribes-shared/components";
 import { createEntityFromConfig } from "../Entity";
-import { distance, TileIndex } from "webgl-test-shared/dist/utils";
+import { distance, TileIndex } from "battletribes-shared/utils";
 
 const enum Vars {
    /** Average number of grass strands per tile in a fully humidified area. */

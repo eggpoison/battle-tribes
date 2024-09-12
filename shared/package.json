@@ -6,6 +6,7 @@
    "author": "eggpoison <edwrd.magee@gmail.com>",
    "license": "MIT",
    "scripts": {
+      "start": "tsc -b -w",
       "build": "tsc --build"
    },
    "devDependencies": {

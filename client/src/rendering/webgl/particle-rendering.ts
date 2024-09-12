@@ -1,4 +1,4 @@
-import { lerp } from "webgl-test-shared/dist/utils";
+import { lerp } from "battletribes-shared/utils";
 import { createWebGLProgram, gl, tempFloat32ArrayLength1, tempFloat32ArrayLength2, tempFloat32ArrayLength3 } from "../../webgl";
 import ObjectBufferContainer from "../ObjectBufferContainer";
 import { getTexture } from "../../textures";

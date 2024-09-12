@@ -1,10 +1,10 @@
-import { customTickIntervalHasPassed } from "webgl-test-shared/dist/utils";
+import { customTickIntervalHasPassed } from "battletribes-shared/utils";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import { createPaperParticle } from "../particles";
 import { getRandomPointInEntity } from "./TransformComponent";
-import { PacketReader } from "webgl-test-shared/dist/packets";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { PacketReader } from "battletribes-shared/packets";
+import { ServerComponentType } from "battletribes-shared/components";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 
 class ResearchBenchComponent extends ServerComponent {

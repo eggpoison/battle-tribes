@@ -1,9 +1,9 @@
-import { EntityType } from "webgl-test-shared/dist/entities";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { EntityType } from "battletribes-shared/entities";
+import { ServerComponentType } from "battletribes-shared/components";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import Entity from "../Entity";
 import { createArrowDestroyParticle, createRockParticle, createRockSpeckParticle } from "../particles";
-import { randFloat } from "webgl-test-shared/dist/utils";
+import { randFloat } from "battletribes-shared/utils";
 import { ParticleRenderLayer } from "../rendering/webgl/particle-rendering";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 

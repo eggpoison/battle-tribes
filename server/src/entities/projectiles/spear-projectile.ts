@@ -1,17 +1,17 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
-import { EntityID, EntityType, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
-import { Point } from "webgl-test-shared/dist/utils";
+import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "battletribes-shared/collision";
+import { EntityID, EntityType, PlayerCauseOfDeath } from "battletribes-shared/entities";
+import { Point } from "battletribes-shared/utils";
 import { HealthComponentArray, damageEntity } from "../../components/HealthComponent";
 import { ThrowingProjectileComponentArray } from "../../components/ThrowingProjectileComponent";
 import Board from "../../Board";
 import { PhysicsComponentArray, applyKnockback } from "../../components/PhysicsComponent";
 import { EntityRelationship, getEntityRelationship } from "../../components/TribeComponent";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "battletribes-shared/components";
 import { ComponentConfig } from "../../components";
-import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
+import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
 import { TransformComponentArray } from "../../components/TransformComponent";
-import { createHitbox, HitboxCollisionType } from "webgl-test-shared/dist/boxes/boxes";
-import RectangularBox from "webgl-test-shared/dist/boxes/RectangularBox";
+import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
+import RectangularBox from "battletribes-shared/boxes/RectangularBox";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics

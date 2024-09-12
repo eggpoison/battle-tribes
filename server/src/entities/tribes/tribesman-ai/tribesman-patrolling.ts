@@ -1,12 +1,12 @@
-import { TribesmanAIType } from "webgl-test-shared/dist/components";
-import { Settings } from "webgl-test-shared/dist/settings";
+import { TribesmanAIType } from "battletribes-shared/components";
+import { Settings } from "battletribes-shared/settings";
 import { getEntitiesInRange, stopEntity } from "../../../ai-shared";
 import { PhysicsComponentArray } from "../../../components/PhysicsComponent";
 import { TribesmanAIComponentArray, TribesmanPathType } from "../../../components/TribesmanAIComponent";
 import { PathfindFailureDefault, getEntityFootprint, positionIsAccessible } from "../../../pathfinding";
 import { pathfindToPosition, clearTribesmanPath, getTribesmanRadius, getTribesmanVisionRange } from "./tribesman-ai-utils";
-import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
-import { Point, randInt, distance } from "webgl-test-shared/dist/utils";
+import { EntityID, EntityType } from "battletribes-shared/entities";
+import { Point, randInt, distance } from "battletribes-shared/utils";
 import Board from "../../../Board";
 import Tribe from "../../../Tribe";
 import { TribesmanGoal } from "./tribesman-goals";

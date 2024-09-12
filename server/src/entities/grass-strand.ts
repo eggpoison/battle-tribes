@@ -1,10 +1,10 @@
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "battletribes-shared/components";
 import { ComponentConfig } from "../components";
-import { Point, randFloat, randInt } from "webgl-test-shared/dist/utils";
-import { EntityType } from "webgl-test-shared/dist/entities";
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
-import { createHitbox, HitboxCollisionType } from "webgl-test-shared/dist/boxes/boxes";
-import RectangularBox from "webgl-test-shared/dist/boxes/RectangularBox";
+import { Point, randFloat, randInt } from "battletribes-shared/utils";
+import { EntityType } from "battletribes-shared/entities";
+import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "battletribes-shared/collision";
+import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
+import RectangularBox from "battletribes-shared/boxes/RectangularBox";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.layeredRod;

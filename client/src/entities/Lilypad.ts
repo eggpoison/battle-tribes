@@ -1,4 +1,4 @@
-import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
+import { EntityID, EntityType } from "battletribes-shared/entities";
 import Entity from "../Entity";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";

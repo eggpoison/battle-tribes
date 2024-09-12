@@ -1,8 +1,8 @@
-import { CraftingStation } from "webgl-test-shared/dist/items/crafting-recipes";
+import { CraftingStation } from "battletribes-shared/items/crafting-recipes";
 import { ComponentArray } from "./ComponentArray";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { Packet } from "webgl-test-shared/dist/packets";
-import { EntityID } from "webgl-test-shared/dist/entities";
+import { ServerComponentType } from "battletribes-shared/components";
+import { Packet } from "battletribes-shared/packets";
+import { EntityID } from "battletribes-shared/entities";
 
 export interface CraftingStationComponentParams {
    readonly craftingStation: CraftingStation;

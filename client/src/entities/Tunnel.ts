@@ -1,5 +1,5 @@
-import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { EntityType } from "webgl-test-shared/dist/entities";
+import { ServerComponentType } from "battletribes-shared/components";
+import { EntityType } from "battletribes-shared/entities";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import Entity from "../Entity";
 import { TUNNEL_TEXTURE_SOURCES } from "../entity-components/BuildingMaterialComponent";

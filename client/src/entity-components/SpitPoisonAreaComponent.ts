@@ -1,11 +1,11 @@
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "battletribes-shared/components";
 import ServerComponent from "./ServerComponent";
 import { playSound, Sound } from "../sound";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { lerp } from "webgl-test-shared/dist/utils";
+import { Settings } from "battletribes-shared/settings";
+import { lerp } from "battletribes-shared/utils";
 import { createAcidParticle, createPoisonBubble } from "../particles";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
-import CircularBox from "webgl-test-shared/dist/boxes/CircularBox";
+import CircularBox from "battletribes-shared/boxes/CircularBox";
 
 const enum Vars {
    MAX_RANGE = 55

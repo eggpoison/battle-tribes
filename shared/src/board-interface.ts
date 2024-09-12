@@ -1,5 +1,5 @@
 import { EntityID, EntityType } from "./entities";
-import { HitboxWrapper } from "./boxes/boxes";
+import { Hitbox } from "./boxes/boxes";
 import { Settings } from "./settings";
 import { Point } from "./utils";
 
@@ -8,7 +8,7 @@ export interface EntityInfo<T extends EntityType = EntityType> {
    readonly position: Readonly<Point>;
    readonly rotation: number;
    readonly id: number;
-   readonly hitboxes: ReadonlyArray<HitboxWrapper>;
+   readonly hitboxes: ReadonlyArray<Hitbox>;
 }
 
 export interface ChunkInfo {

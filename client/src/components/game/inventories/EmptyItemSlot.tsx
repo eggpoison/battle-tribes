@@ -1,4 +1,4 @@
-import { Inventory } from "webgl-test-shared/dist/items/items";
+import { Inventory } from "battletribes-shared/items/items";
 import ItemSlot from "./ItemSlot";
 
 interface EmptyItemSlotProps {

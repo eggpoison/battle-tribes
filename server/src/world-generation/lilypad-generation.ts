@@ -1,13 +1,13 @@
-import { Settings } from "webgl-test-shared/dist/settings";
+import { Settings } from "battletribes-shared/settings";
 import Board from "../Board";
-import { TileType } from "webgl-test-shared/dist/tiles";
+import { TileType } from "battletribes-shared/tiles";
 import { isTooCloseToSteppingStone } from "../Chunk";
 import { createLilypadConfig } from "../entities/lilypad";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "battletribes-shared/components";
 import { createEntityFromConfig } from "../Entity";
-import { randInt } from "webgl-test-shared/dist/utils";
+import { randInt } from "battletribes-shared/utils";
 import { getEntitiesInRange } from "../ai-shared";
-import { EntityType } from "webgl-test-shared/dist/entities";
+import { EntityType } from "battletribes-shared/entities";
 
 const enum Vars {
    GROUP_DENSITY_PER_TILE = 0.03

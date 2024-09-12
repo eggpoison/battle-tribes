@@ -1,8 +1,8 @@
-import { ItemType } from "webgl-test-shared/dist/items/items";
-import { EntityID } from "webgl-test-shared/dist/entities";
+import { ItemType } from "battletribes-shared/items/items";
+import { EntityID } from "battletribes-shared/entities";
 import { TransformComponentArray } from "./components/TransformComponent";
 import { createItemEntityConfig } from "./entities/item-entity";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "battletribes-shared/components";
 import { createEntityFromConfig } from "./Entity";
 
 /**

@@ -1,4 +1,4 @@
-import { TribeType } from "webgl-test-shared/dist/tribes";
+import { TribeType } from "battletribes-shared/tribes";
 import { useEffect, useRef, useState } from "react";
 import GameScreen from "./game/GameScreen";
 import LoadingScreen, { LoadingScreenStatus } from "./LoadingScreen";

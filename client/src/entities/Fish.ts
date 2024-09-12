@@ -1,8 +1,8 @@
-import { randFloat, randInt } from "webgl-test-shared/dist/utils";
-import { EntityType, FishColour } from "webgl-test-shared/dist/entities";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { HitData } from "webgl-test-shared/dist/client-server-types";
-import { TileType } from "webgl-test-shared/dist/tiles";
+import { randFloat, randInt } from "battletribes-shared/utils";
+import { EntityType, FishColour } from "battletribes-shared/entities";
+import { ServerComponentType } from "battletribes-shared/components";
+import { HitData } from "battletribes-shared/client-server-types";
+import { TileType } from "battletribes-shared/tiles";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import Board from "../Board";
 import { BloodParticleSize, createBloodParticle, createBloodParticleFountain, createWaterSplashParticle } from "../particles";

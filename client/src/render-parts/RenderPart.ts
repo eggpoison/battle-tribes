@@ -1,4 +1,4 @@
-import { Point } from "webgl-test-shared/dist/utils";
+import { Point } from "battletribes-shared/utils";
 import { createIdentityMatrix } from "../rendering/matrices";
 import { RenderThing } from "./render-parts";
 import Board from "../Board";

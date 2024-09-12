@@ -1,10 +1,10 @@
-import { Settings } from "webgl-test-shared/dist/settings";
-import { distance, Point, randInt } from "webgl-test-shared/dist/utils";
-import { TileType } from "webgl-test-shared/dist/tiles";
+import { Settings } from "battletribes-shared/settings";
+import { distance, Point, randInt } from "battletribes-shared/utils";
+import { TileType } from "battletribes-shared/tiles";
 import Camera from "./Camera";
 import Board from "./Board";
 import Entity from "./Entity";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "battletribes-shared/components";
 
 // @Robustness: automatically detect from folder
 const AUDIO_FILE_PATHS = [
@@ -202,21 +202,25 @@ export function createAudioContext(): void {
    audioContext = new AudioContext()
 }
 
+// @Hack: For some reason if we decode the audio too fast, then shit breaks. So we have to do this evilness. Why? Because god is not real.
+// await (new Promise<void>(resolve => {
+//    setTimeout(() => {
+//       resolve();
+//    }, 20)
+// }));
+
 export async function setupAudio(): Promise<void> {
    const tempAudioBuffers: Partial<Record<AudioFilePath, AudioBuffer>> = {};
-   for (const filePath of AUDIO_FILE_PATHS) {
+   
+   const audioBufferPromises = AUDIO_FILE_PATHS.map(async (filePath) => {
       const response = await fetch(require("./sounds/" + filePath));
       const arrayBuffer = await response.arrayBuffer();
       const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
       tempAudioBuffers[filePath] = audioBuffer;
+   });
 
-      // @Hack: For some reason if we decode the audio too fast, then shit breaks. So we have to do this evilness. Why? Because god is not real.
-      // await (new Promise<void>(resolve => {
-      //    setTimeout(() => {
-      //       resolve();
-      //    }, 20)
-      // }));
-   }
+   await Promise.all(audioBufferPromises);
+   
    audioBuffers = tempAudioBuffers as Record<AudioFilePath, AudioBuffer>;
 }
 

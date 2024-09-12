@@ -1,10 +1,10 @@
-import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { randInt } from "webgl-test-shared/dist/utils";
+import { ServerComponentType } from "battletribes-shared/components";
+import { Settings } from "battletribes-shared/settings";
+import { randInt } from "battletribes-shared/utils";
 import Entity from "../Entity";
 import { playSound, AudioFilePath } from "../sound";
 import ServerComponent from "./ServerComponent";
-import { PacketReader } from "webgl-test-shared/dist/packets";
+import { PacketReader } from "battletribes-shared/packets";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 
 class ZombieComponent extends ServerComponent {

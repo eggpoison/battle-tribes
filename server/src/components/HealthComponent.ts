@@ -1,8 +1,8 @@
-import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { PlayerCauseOfDeath, EntityType, EntityID } from "webgl-test-shared/dist/entities";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { TribesmanTitle } from "webgl-test-shared/dist/titles";
-import { Point, clamp } from "webgl-test-shared/dist/utils";
+import { ServerComponentType } from "battletribes-shared/components";
+import { PlayerCauseOfDeath, EntityType, EntityID } from "battletribes-shared/entities";
+import { Settings } from "battletribes-shared/settings";
+import { TribesmanTitle } from "battletribes-shared/titles";
+import { Point, clamp } from "battletribes-shared/utils";
 import TombstoneDeathManager from "../tombstone-deaths";
 import { onBerryBushHurt } from "../entities/resources/berry-bush";
 import { onCowHurt } from "../entities/mobs/cow";
@@ -22,12 +22,12 @@ import { onTribeMemberHurt } from "../entities/tribes/tribe-member";
 import { TITLE_REWARD_CHANCES } from "../tribesman-title-generation";
 import { TribeMemberComponentArray, awardTitle } from "./TribeMemberComponent";
 import { onPlantDeath, onPlantHit } from "../entities/plant";
-import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
+import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
 import { registerEntityHeal, registerEntityHit } from "../server/player-clients";
 import { ComponentArray } from "./ComponentArray";
 import Board from "../Board";
 import { TransformComponentArray } from "./TransformComponent";
-import { Packet } from "webgl-test-shared/dist/packets";
+import { Packet } from "battletribes-shared/packets";
 
 export interface HealthComponentParams {
    maxHealth: number;

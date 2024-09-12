@@ -1,10 +1,10 @@
-import { Settings } from "webgl-test-shared/dist/settings";
+import { Settings } from "battletribes-shared/settings";
 import Board, { getChunksInBounds } from "./Board";
-import { GrassBlocker, GrassBlockerCircle, GrassBlockerRectangle, blockerIsCircluar } from "webgl-test-shared/dist/grass-blockers";
+import { GrassBlocker, GrassBlockerCircle, GrassBlockerRectangle, blockerIsCircluar } from "battletribes-shared/grass-blockers";
 import Chunk from "./Chunk";
-import { EntityID } from "webgl-test-shared/dist/entities";
+import { EntityID } from "battletribes-shared/entities";
 import { TransformComponentArray } from "./components/TransformComponent";
-import { boxIsCircular, HitboxFlags } from "webgl-test-shared/dist/boxes/boxes";
+import { boxIsCircular, HitboxFlags } from "battletribes-shared/boxes/boxes";
 
 const blockers = new Array<GrassBlocker>();
 const blockerAssociatedEntities = new Array<EntityID>();

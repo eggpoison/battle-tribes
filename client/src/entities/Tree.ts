@@ -1,7 +1,7 @@
-import { EntityType, TreeSize } from "webgl-test-shared/dist/entities";
-import { angle, randFloat, randInt, randItem } from "webgl-test-shared/dist/utils";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { HitData, HitFlags } from "webgl-test-shared/dist/client-server-types";
+import { EntityType, TreeSize } from "battletribes-shared/entities";
+import { angle, randFloat, randInt, randItem } from "battletribes-shared/utils";
+import { ServerComponentType } from "battletribes-shared/components";
+import { HitData, HitFlags } from "battletribes-shared/client-server-types";
 import { LeafParticleSize, createLeafParticle, createLeafSpeckParticle, createWoodSpeckParticle } from "../particles";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { AudioFilePath, playSound } from "../sound";

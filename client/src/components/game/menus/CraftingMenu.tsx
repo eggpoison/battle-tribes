@@ -1,21 +1,21 @@
-import { getTechRequiredForItem } from "webgl-test-shared/dist/techs";
+import { getTechRequiredForItem } from "battletribes-shared/techs";
 import { useCallback, useEffect, useRef, useState } from "react";
 import CLIENT_ITEM_INFO_RECORD, { getItemTypeImage } from "../../../client-item-info";
 import Client from "../../../client/Client";
 import { windowHeight } from "../../../webgl";
 import ItemSlot, { ItemSlotCallbackInfo } from "../inventories/ItemSlot";
-import { countItemTypesInInventory, leftClickItemSlot } from "../../../inventory-manipulation";
+import { countItemTypesInInventory } from "../../../inventory-manipulation";
 import Player from "../../../entities/Player";
-import { definiteGameState } from "../../../game-state/game-states";
 import Game from "../../../Game";
 import { playSound } from "../../../sound";
-import { CraftingRecipe, CraftingStation, CRAFTING_RECIPES, forceGetItemRecipe } from "webgl-test-shared/dist/items/crafting-recipes";
-import { ItemType, Item, Inventory } from "webgl-test-shared/dist/items/items";
-import { ItemTally2, tallyInventoryItems } from "webgl-test-shared/dist/items/ItemTally";
+import { CraftingRecipe, CraftingStation, CRAFTING_RECIPES, forceGetItemRecipe } from "battletribes-shared/items/crafting-recipes";
+import { ItemType, Item, Inventory, InventoryName } from "battletribes-shared/items/items";
+import { ItemTally2, tallyInventoryItems } from "battletribes-shared/items/ItemTally";
 import InventoryContainer from "../inventories/InventoryContainer";
 import { deselectHighlightedEntity } from "../../../entity-selection";
 import { addMenuCloseFunction } from "../../../menus";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "battletribes-shared/components";
+import { InventoryComponentArray } from "../../../entity-components/InventoryComponent";
 
 interface RecipeViewerProps {
    readonly recipe: CraftingRecipe;
@@ -93,8 +93,11 @@ const Ingredient = ({ ingredientType, amountRequiredForRecipe }: IngredientProps
    
    const itemIconSource = getItemTypeImage(ingredientType);
 
+   const inventoryComponent = InventoryComponentArray.getComponent(Player.instance!.id);
+   const hotbar = inventoryComponent.getInventory(InventoryName.hotbar)!;
+   
    // Find whether the player has enough available ingredients to craft the recipe
-   const numIngredientsAvailableToPlayer = countItemTypesInInventory(definiteGameState.hotbar, ingredientType);
+   const numIngredientsAvailableToPlayer = countItemTypesInInventory(hotbar, ingredientType);
    const playerHasEnoughIngredients = numIngredientsAvailableToPlayer >= amountRequiredForRecipe;
 
    const showIngredientTooltip = () => {
@@ -212,15 +215,24 @@ const CraftingMenu = () => {
       setHoverPosition([e.clientX, e.clientY]);
    }
 
-   const pickUpCraftingOutputItem = (e: MouseEvent): void => {
-      leftClickItemSlot(e, Player.instance!.id, definiteGameState.craftingOutputSlot!, 1);
-   }
+   // @Incomplete?
+   // const pickUpCraftingOutputItem = (e: MouseEvent): void => {
+   //    leftClickItemSlot(e, Player.instance!.id, definiteGameState.craftingOutputSlot!, 1);
+   // }
 
    CraftingMenu_updateRecipes = useCallback((): void => {
+      if (Player.instance === null) {
+         return;
+      }
+      
+      const inventoryComponent = InventoryComponentArray.getComponent(Player.instance.id);
+      const hotbar = inventoryComponent.getInventory(InventoryName.hotbar)!;
+      const backpack = inventoryComponent.getInventory(InventoryName.backpack);
+      
       const availableItemsTally = new ItemTally2();
-      tallyInventoryItems(availableItemsTally, definiteGameState.hotbar);
-      if (definiteGameState.backpack !== null) {
-         tallyInventoryItems(availableItemsTally, definiteGameState.backpack);
+      tallyInventoryItems(availableItemsTally, hotbar);
+      if (backpack !== null) {
+         tallyInventoryItems(availableItemsTally, backpack);
       }
       
       const craftableRecipesArray = new Array<CraftingRecipe>();
@@ -370,6 +382,9 @@ const CraftingMenu = () => {
       return isCraftable ? "craftable" : undefined;
    }
 
+   const inventoryComponent = InventoryComponentArray.getComponent(Player.instance!.id);
+   const craftingOutputSlot = inventoryComponent.getInventory(InventoryName.craftingOutputSlot)!;
+
    return <div id="crafting-menu" className="inventory" ref={onCraftingMenuRefChange}>
       {/*
       // @Temporary?
@@ -402,7 +417,7 @@ const CraftingMenu = () => {
 
             <div className="bottom">
                <button onClick={craftRecipe} className={`craft-button${craftableRecipes.current.includes(selectedRecipe) ? " craftable" : ""}`}>CRAFT</button>
-               <ItemSlot className="crafting-output" entityID={Player.instance!.id} inventory={definiteGameState.craftingOutputSlot} itemSlot={1} validItemSpecifier={() => false} />
+               <ItemSlot className="crafting-output" entityID={Player.instance!.id} inventory={craftingOutputSlot} itemSlot={1} validItemSpecifier={() => false} />
             </div>
          </> : <>
             <div className="select-message">&#40;Select a recipe to view&#41;</div>

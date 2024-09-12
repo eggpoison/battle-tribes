@@ -1,17 +1,17 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
-import { PlanterBoxPlant, ServerComponentType } from "webgl-test-shared/dist/components";
-import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
-import { Point, randInt } from "webgl-test-shared/dist/utils";
+import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "battletribes-shared/collision";
+import { PlanterBoxPlant, ServerComponentType } from "battletribes-shared/components";
+import { EntityID, EntityType } from "battletribes-shared/entities";
+import { Point, randInt } from "battletribes-shared/utils";
 import { PLANT_GROWTH_TICKS, PlantComponentArray } from "../components/PlantComponent";
 import { dropBerryOverEntity } from "./resources/berry-bush";
 import { createItemsOverEntity } from "../entity-shared";
 import { createIceShardExplosion } from "./resources/ice-spikes";
-import { ItemType } from "webgl-test-shared/dist/items/items";
+import { ItemType } from "battletribes-shared/items/items";
 import { ComponentConfig } from "../components";
-import { StatusEffect } from "webgl-test-shared/dist/status-effects";
+import { StatusEffect } from "battletribes-shared/status-effects";
 import { TransformComponentArray } from "../components/TransformComponent";
-import { createHitbox, HitboxCollisionType } from "webgl-test-shared/dist/boxes/boxes";
-import CircularBox from "webgl-test-shared/dist/boxes/CircularBox";
+import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
+import CircularBox from "battletribes-shared/boxes/CircularBox";
    
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.health

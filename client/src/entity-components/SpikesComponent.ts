@@ -1,5 +1,5 @@
-import { randFloat } from "webgl-test-shared/dist/utils";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { randFloat } from "battletribes-shared/utils";
+import { ServerComponentType } from "battletribes-shared/components";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
@@ -7,7 +7,7 @@ import { playSound } from "../sound";
 import { LeafParticleSize, createLeafParticle, createLeafSpeckParticle } from "../particles";
 import { RenderPart } from "../render-parts/render-parts";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
-import { PacketReader } from "webgl-test-shared/dist/packets";
+import { PacketReader } from "battletribes-shared/packets";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 
 export const NUM_SMALL_COVER_LEAVES = 8;

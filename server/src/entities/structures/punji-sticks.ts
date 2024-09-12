@@ -1,17 +1,17 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision";
-import { EntityID, EntityType, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { StatusEffect } from "webgl-test-shared/dist/status-effects";
-import { Point } from "webgl-test-shared/dist/utils";
+import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "battletribes-shared/collision";
+import { EntityID, EntityType, PlayerCauseOfDeath } from "battletribes-shared/entities";
+import { Settings } from "battletribes-shared/settings";
+import { StatusEffect } from "battletribes-shared/status-effects";
+import { Point } from "battletribes-shared/utils";
 import { HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
 import { StatusEffectComponentArray, applyStatusEffect } from "../../components/StatusEffectComponent";
 import { EntityRelationship, getEntityRelationship } from "../../components/TribeComponent";
 import { SpikesComponentArray } from "../../components/SpikesComponent";
-import { createEmptyStructureConnectionInfo } from "webgl-test-shared/dist/structures";
-import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
-import { createWallPunjiSticksHitboxes, createFloorPunjiSticksHitboxes } from "webgl-test-shared/dist/boxes/entity-hitbox-creation";
+import { createEmptyStructureConnectionInfo } from "battletribes-shared/structures";
+import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
+import { createWallPunjiSticksHitboxes, createFloorPunjiSticksHitboxes } from "battletribes-shared/boxes/entity-hitbox-creation";
 import { ComponentConfig } from "../../components";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "battletribes-shared/components";
 import Board from "../../Board";
 
 type ComponentTypes = ServerComponentType.transform

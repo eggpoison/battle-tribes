@@ -1,4 +1,4 @@
-import { Vector, Point } from "webgl-test-shared/dist/utils";
+import { Vector, Point } from "battletribes-shared/utils";
 import SRandom from "./SRandom";
 
 const lerp = (start: number, end: number, amount: number): number => {

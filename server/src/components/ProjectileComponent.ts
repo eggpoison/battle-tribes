@@ -1,8 +1,8 @@
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "battletribes-shared/components";
 import { ComponentArray } from "./ComponentArray";
-import { EntityID } from "webgl-test-shared/dist/entities";
+import { EntityID } from "battletribes-shared/entities";
 import { getAgeTicks, TransformComponentArray } from "./TransformComponent";
-import { Settings } from "webgl-test-shared/dist/settings";
+import { Settings } from "battletribes-shared/settings";
 import Board from "../Board";
 import { PhysicsComponentArray } from "./PhysicsComponent";
 

@@ -1,11 +1,11 @@
-import { EntityID, RockSpikeProjectileSize } from "webgl-test-shared/dist/entities";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { EntityID, RockSpikeProjectileSize } from "battletribes-shared/entities";
+import { ServerComponentType } from "battletribes-shared/components";
 import { ComponentArray } from "./ComponentArray";
 import { ComponentConfig } from "../components";
-import { Packet } from "webgl-test-shared/dist/packets";
+import { Packet } from "battletribes-shared/packets";
 import { getAgeTicks, TransformComponentArray } from "./TransformComponent";
 import Board from "../Board";
-import CircularBox from "webgl-test-shared/dist/boxes/CircularBox";
+import CircularBox from "battletribes-shared/boxes/CircularBox";
 
 export interface RockSpikeProjectileComponentParams {
    size: number;

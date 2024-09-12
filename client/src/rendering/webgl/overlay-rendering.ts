@@ -1,4 +1,4 @@
-import { rotateXAroundPoint, rotateYAroundPoint } from "webgl-test-shared/dist/utils";
+import { rotateXAroundPoint, rotateYAroundPoint } from "battletribes-shared/utils";
 import { createWebGLProgram, gl } from "../../webgl";
 import { getEntityTextureAtlas } from "../../texture-atlases/texture-atlases";
 import { bindUBOToProgram, ENTITY_TEXTURE_ATLAS_UBO, UBOBindingIndex } from "../ubos";

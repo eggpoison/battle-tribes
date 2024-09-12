@@ -1,11 +1,11 @@
-import { Settings } from "webgl-test-shared/dist/settings";
-import { TileType } from "webgl-test-shared/dist/tiles";
+import { Settings } from "battletribes-shared/settings";
+import { TileType } from "battletribes-shared/tiles";
 import Board from "../Board";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "battletribes-shared/components";
 import { createReedConfig } from "../entities/reed";
 import { createEntityFromConfig } from "../Entity";
 import { WaterTileGenerationInfo } from "./river-generation";
-import { distance } from "webgl-test-shared/dist/utils";
+import { distance } from "battletribes-shared/utils";
 import { generateOctavePerlinNoise, generatePerlinNoise } from "../perlin-noise";
 import { isTooCloseToSteppingStone } from "../Chunk";
 

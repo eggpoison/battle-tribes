@@ -1,6 +1,6 @@
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "battletribes-shared/components";
 import { ComponentArray } from "./ComponentArray";
-import { EntityID } from "webgl-test-shared/dist/entities";
+import { EntityID } from "battletribes-shared/entities";
 import { InventoryComponentArray } from "./InventoryComponent";
 import Board from "../Board";
 

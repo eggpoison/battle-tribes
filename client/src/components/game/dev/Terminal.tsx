@@ -1,4 +1,4 @@
-import { COMMANDS, CommandPermissions, CommandSpecifications, commandIsValid, parseCommand } from "webgl-test-shared/dist/commands";
+import { COMMANDS, CommandPermissions, CommandSpecifications, commandIsValid, parseCommand } from "battletribes-shared/commands";
 import { useEffect, useRef, useState } from "react";
 import { isDev } from "../../../utils";
 import Client from "../../../client/Client";

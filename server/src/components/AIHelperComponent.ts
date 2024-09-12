@@ -1,13 +1,13 @@
-import { circlesDoIntersect, circleAndRectangleDoIntersect } from "webgl-test-shared/dist/collision";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { Settings } from "webgl-test-shared/dist/settings";
+import { circlesDoIntersect, circleAndRectangleDoIntersect } from "battletribes-shared/collision";
+import { ServerComponentType } from "battletribes-shared/components";
+import { Settings } from "battletribes-shared/settings";
 import Chunk from "../Chunk";
 import Board from "../Board";
 import { ComponentArray } from "./ComponentArray";
-import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
+import { EntityID, EntityType } from "battletribes-shared/entities";
 import { TransformComponent, TransformComponentArray } from "./TransformComponent";
-import { Packet } from "webgl-test-shared/dist/packets";
-import { Box, boxIsCircular } from "webgl-test-shared/dist/boxes/boxes";
+import { Packet } from "battletribes-shared/packets";
+import { Box, boxIsCircular } from "battletribes-shared/boxes/boxes";
 
 export interface AIHelperComponentParams {
    /** If enabled, ignores all decorative entities. Enable if possible for performance */

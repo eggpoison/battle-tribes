@@ -1,6 +1,6 @@
-import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { EntityType } from "webgl-test-shared/dist/entities";
-import { randFloat, randInt } from "webgl-test-shared/dist/utils";
+import { ServerComponentType } from "battletribes-shared/components";
+import { EntityType } from "battletribes-shared/entities";
+import { randFloat, randInt } from "battletribes-shared/utils";
 import { LeafParticleSize, createLeafParticle, createLeafSpeckParticle } from "../particles";
 import { AudioFilePath, playSound } from "../sound";
 import Entity from "../Entity";

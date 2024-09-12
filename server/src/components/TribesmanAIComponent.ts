@@ -1,17 +1,17 @@
-import { PathfindingNodeIndex } from "webgl-test-shared/dist/client-server-types";
-import { ServerComponentType, TribesmanAIType } from "webgl-test-shared/dist/components";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { randInt } from "webgl-test-shared/dist/utils";
+import { PathfindingNodeIndex } from "battletribes-shared/client-server-types";
+import { ServerComponentType, TribesmanAIType } from "battletribes-shared/components";
+import { Settings } from "battletribes-shared/settings";
+import { randInt } from "battletribes-shared/utils";
 import { ComponentArray } from "./ComponentArray";
 import Board from "../Board";
 import Tribe, { BuildingPlan } from "../Tribe";
 import { EntityRelationship, TribeComponentArray } from "./TribeComponent";
 import { TribesmanGoal } from "../entities/tribes/tribesman-ai/tribesman-goals";
-import { CRAFTING_RECIPES } from "webgl-test-shared/dist/items/crafting-recipes";
-import { ItemType } from "webgl-test-shared/dist/items/items";
-import { EntityID } from "webgl-test-shared/dist/entities";
+import { CRAFTING_RECIPES } from "battletribes-shared/items/crafting-recipes";
+import { ItemType } from "battletribes-shared/items/items";
+import { EntityID } from "battletribes-shared/entities";
 import { tickTribesman } from "../entities/tribes/tribesman-ai/tribesman-ai";
-import { Packet } from "webgl-test-shared/dist/packets";
+import { Packet } from "battletribes-shared/packets";
 
 // @Incomplete: periodically remove dead entities from the relations object
 // @Incomplete: only keep track of tribesman relations

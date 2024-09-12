@@ -1,9 +1,9 @@
-import { PacketReader } from "webgl-test-shared/dist/packets";
+import { PacketReader } from "battletribes-shared/packets";
 import ServerComponent from "./ServerComponent";
-import { DecorationType } from "webgl-test-shared/dist/components";
+import { DecorationType } from "battletribes-shared/components";
 import Entity from "../Entity";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "battletribes-shared/components";
 
 class DecorationComponent extends ServerComponent {
    public readonly decorationType: DecorationType;

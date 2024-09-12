@@ -1,6 +1,6 @@
-import { DecorationType, ServerComponentType } from "webgl-test-shared/dist/components";
+import { DecorationType, ServerComponentType } from "battletribes-shared/components";
 import Entity from "../Entity";
-import { EntityType } from "webgl-test-shared/dist/entities";
+import { EntityType } from "battletribes-shared/entities";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 

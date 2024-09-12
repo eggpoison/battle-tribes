@@ -1,4 +1,4 @@
-import { EntityType } from "webgl-test-shared/dist/entities";
+import { EntityType } from "battletribes-shared/entities";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { ClientComponentType } from "../entity-components/components";
 import FootprintComponent from "../entity-components/FootprintComponent";

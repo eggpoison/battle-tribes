@@ -1,8 +1,8 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
-import { PlanterBoxPlant, ServerComponentType } from "webgl-test-shared/dist/components";
-import { EntityID, EntityType, EntityTypeString, LimbAction } from "webgl-test-shared/dist/entities";
-import { TribeType } from "webgl-test-shared/dist/tribes";
-import { Point } from "webgl-test-shared/dist/utils";
+import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "battletribes-shared/collision";
+import { PlanterBoxPlant, ServerComponentType } from "battletribes-shared/components";
+import { EntityID, EntityType, EntityTypeString, LimbAction } from "battletribes-shared/entities";
+import { TribeType } from "battletribes-shared/tribes";
+import { Point } from "battletribes-shared/utils";
 import { onTribeMemberHurt } from "./tribe-member";
 import { consumeItemFromSlot, consumeItemType, countItemType, getInventory, pickupItemEntity, InventoryComponentArray } from "../../components/InventoryComponent";
 import Board from "../../Board";
@@ -13,11 +13,11 @@ import { PlanterBoxComponentArray, fertilisePlanterBox, placePlantInPlanterBox }
 import { registerPlayerDroppedItemPickup } from "../../server/player-clients";
 import { HutComponentArray } from "../../components/HutComponent";
 import { SpikesComponentArray } from "../../components/SpikesComponent";
-import { InventoryName, ITEM_INFO_RECORD, ConsumableItemInfo, ConsumableItemCategory, BowItemInfo, ItemType } from "webgl-test-shared/dist/items/items";
+import { InventoryName, ITEM_INFO_RECORD, ConsumableItemInfo, ConsumableItemCategory, BowItemInfo, ItemType } from "battletribes-shared/items/items";
 import { ComponentConfig } from "../../components";
 import { TransformComponentArray } from "../../components/TransformComponent";
-import { createHitbox, HitboxCollisionType } from "webgl-test-shared/dist/boxes/boxes";
-import CircularBox from "webgl-test-shared/dist/boxes/CircularBox";
+import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
+import CircularBox from "battletribes-shared/boxes/CircularBox";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics

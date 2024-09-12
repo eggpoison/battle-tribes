@@ -1,10 +1,10 @@
-import { Settings } from "webgl-test-shared/dist/settings";
-import { randInt, TileIndex } from "webgl-test-shared/dist/utils";
+import { Settings } from "battletribes-shared/settings";
+import { randInt, TileIndex } from "battletribes-shared/utils";
 import Board from "../Board";
 import { moveEntityToPosition } from "../ai-shared";
 import { PhysicsComponent } from "../components/PhysicsComponent";
 import { WanderAIComponentArray } from "../components/WanderAIComponent";
-import { EntityID } from "webgl-test-shared/dist/entities";
+import { EntityID } from "battletribes-shared/entities";
 import { TransformComponentArray } from "../components/TransformComponent";
 
 export function shouldWander(physicsComponent: PhysicsComponent, wanderRate: number) {

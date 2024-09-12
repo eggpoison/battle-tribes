@@ -1,7 +1,7 @@
-import { EntityType, LimbAction } from "webgl-test-shared/dist/entities";
-import { Point, lerp, randFloat, randItem } from "webgl-test-shared/dist/utils";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { Settings } from "webgl-test-shared/dist/settings";
+import { EntityType, LimbAction } from "battletribes-shared/entities";
+import { Point, lerp, randFloat, randItem } from "battletribes-shared/utils";
+import { ServerComponentType } from "battletribes-shared/components";
+import { Settings } from "battletribes-shared/settings";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
@@ -12,18 +12,19 @@ import { ParticleColour, ParticleRenderLayer, addMonocolourParticleToBufferConta
 import { animateLimb, createCraftingAnimationParticles, createMedicineAnimationParticles, generateRandomLimbPosition, updateBandageRenderPart, updateCustomItemRenderPart } from "../limb-animations";
 import { createBlockParticle, createDeepFrostHeartBloodParticles } from "../particles";
 import { definiteGameState } from "../game-state/game-states";
-import { InventoryName, ItemType, ITEM_TYPE_RECORD, Item, ITEM_INFO_RECORD, itemInfoIsUtility, itemInfoIsBow, BowItemInfo, itemInfoIsTool, getItemAttackInfo } from "webgl-test-shared/dist/items/items";
+import { InventoryName, ItemType, ITEM_TYPE_RECORD, Item, ITEM_INFO_RECORD, itemInfoIsUtility, itemInfoIsBow, BowItemInfo, itemInfoIsTool, getItemAttackInfo } from "battletribes-shared/items/items";
 import { RenderPart } from "../render-parts/render-parts";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
-import { PacketReader } from "webgl-test-shared/dist/packets";
+import { PacketReader } from "battletribes-shared/packets";
 import { Hotbar_updateRightThrownBattleaxeItemID } from "../components/game/inventories/Hotbar";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
-import { BLOCKING_LIMB_STATE, LimbState, SPEAR_CHARGED_LIMB_STATE, TRIBESMAN_RESTING_LIMB_STATE } from "webgl-test-shared/dist/attack-patterns";
+import { BLOCKING_LIMB_STATE, LimbState, SPEAR_CHARGED_LIMB_STATE, TRIBESMAN_RESTING_LIMB_STATE } from "battletribes-shared/attack-patterns";
 import RenderAttachPoint from "../render-parts/RenderAttachPoint";
 import { playSound } from "../sound";
 
 export interface LimbInfo {
    selectedItemSlot: number;
+   heldItemType: ItemType | null;
    readonly inventoryName: InventoryName;
    bowCooldownTicks: number;
    spearWindupCooldowns: Partial<Record<number, number>>;
@@ -188,13 +189,13 @@ const setLimbToState = (handMult: number, attachPoint: RenderAttachPoint, state:
    // limb.rotation = attackHandRotation * handMult;
 }
 
-const createHeldItemIfMissing = (inventoryUseComponent: InventoryUseComponent, limbIdx: number, heldItem: Item | null): void => {
+const createHeldItemIfMissing = (inventoryUseComponent: InventoryUseComponent, limbIdx: number, heldItemType: ItemType | null): void => {
    if (!inventoryUseComponent.activeItemRenderParts.hasOwnProperty(limbIdx)) {
       const renderPart = new TexturedRenderPart(
          inventoryUseComponent.limbAttachPoints[limbIdx],
          limbIdx === 0 ? 1.15 : 1.1,
          0,
-         heldItem !== null ? getTextureArrayIndex(CLIENT_ITEM_INFO_RECORD[heldItem.type].entityTextureSource) : -1
+         heldItemType !== null ? getTextureArrayIndex(CLIENT_ITEM_INFO_RECORD[heldItemType].entityTextureSource) : -1
       );
       renderPart.flipX = limbIdx === 1;
       inventoryUseComponent.entity.attachRenderThing(renderPart);
@@ -202,10 +203,10 @@ const createHeldItemIfMissing = (inventoryUseComponent: InventoryUseComponent, l
    }
 }
 
-const updateHeldItem = (inventoryUseComponent: InventoryUseComponent, limbIdx: number, heldItem: Item | null): void => {
-   const attackInfo = getItemAttackInfo(heldItem);
+const updateHeldItem = (inventoryUseComponent: InventoryUseComponent, limbIdx: number, heldItemType: ItemType | null): void => {
+   const attackInfo = getItemAttackInfo(heldItemType);
 
-   if (heldItem === null) {
+   if (heldItemType === null) {
       if (inventoryUseComponent.activeItemRenderParts.hasOwnProperty(limbIdx)) {
          inventoryUseComponent.entity.removeRenderPart(inventoryUseComponent.activeItemRenderParts[limbIdx]);
          delete inventoryUseComponent.activeItemRenderParts[limbIdx];
@@ -213,7 +214,7 @@ const updateHeldItem = (inventoryUseComponent: InventoryUseComponent, limbIdx: n
       return;
    }
    
-   createHeldItemIfMissing(inventoryUseComponent, limbIdx, heldItem);
+   createHeldItemIfMissing(inventoryUseComponent, limbIdx, heldItemType);
 
    const heldItemDamageBoxInfo = attackInfo.heldItemDamageBoxInfo!;
    const heldItemRenderPart = inventoryUseComponent.activeItemRenderParts[limbIdx];
@@ -222,7 +223,7 @@ const updateHeldItem = (inventoryUseComponent: InventoryUseComponent, limbIdx: n
    heldItemRenderPart.offset.y = heldItemDamageBoxInfo.offsetY;
    
    // Texture
-   const clientItemInfo = CLIENT_ITEM_INFO_RECORD[heldItem.type];
+   const clientItemInfo = CLIENT_ITEM_INFO_RECORD[heldItemType];
    const textureSource = heldItemDamageBoxInfo.showLargeTexture ? clientItemInfo.toolTextureSource : clientItemInfo.entityTextureSource;
    heldItemRenderPart.switchTextureSource(textureSource);
 }
@@ -284,6 +285,7 @@ class InventoryUseComponent extends ServerComponent{
       for (let i = 0; i < numUseInfos; i++) {
          const usedInventoryName = reader.readNumber() as InventoryName;
          const selectedItemSlot = reader.readNumber();
+         const heldItemType = reader.readNumber();
          const bowCooldownTicks = reader.readNumber();
 
          const spearWindupCooldowns: Partial<Record<number, number>> = {};
@@ -317,6 +319,7 @@ class InventoryUseComponent extends ServerComponent{
 
          const limbInfo: LimbInfo = {
             selectedItemSlot: selectedItemSlot,
+            heldItemType: heldItemType !== -1 ? heldItemType : null,
             inventoryName: usedInventoryName,
             bowCooldownTicks: bowCooldownTicks,
             spearWindupCooldowns: spearWindupCooldowns,
@@ -369,7 +372,7 @@ class InventoryUseComponent extends ServerComponent{
    public padData(reader: PacketReader): void {
       const numUseInfos = reader.readNumber();
       for (let i = 0; i < numUseInfos; i++) {
-         reader.padOffset(3 * Float32Array.BYTES_PER_ELEMENT);
+         reader.padOffset(4 * Float32Array.BYTES_PER_ELEMENT);
 
          const numSpearWindupCooldowns = reader.readNumber();
          reader.padOffset(2 * Float32Array.BYTES_PER_ELEMENT * numSpearWindupCooldowns);
@@ -395,6 +398,7 @@ class InventoryUseComponent extends ServerComponent{
          }
          
          const selectedItemSlot = reader.readNumber();
+         const heldItemType = reader.readNumber();
          const bowCooldownTicks = reader.readNumber();
 
          const spearWindupCooldowns: Partial<Record<number, number>> = {};
@@ -428,6 +432,7 @@ class InventoryUseComponent extends ServerComponent{
 
          limbInfo.bowCooldownTicks = bowCooldownTicks;
          limbInfo.selectedItemSlot = selectedItemSlot;
+         limbInfo.heldItemType = heldItemType !== -1 ? heldItemType : null;
          limbInfo.bowCooldownTicks = bowCooldownTicks;
          limbInfo.spearWindupCooldowns = spearWindupCooldowns;
          limbInfo.crossbowLoadProgressRecord = crossbowLoadProgressRecord;
@@ -481,7 +486,7 @@ class InventoryUseComponent extends ServerComponent{
             throw new Error();
          }
 
-         reader.padOffset(2 * Float32Array.BYTES_PER_ELEMENT);
+         reader.padOffset(3 * Float32Array.BYTES_PER_ELEMENT);
 
          const numSpearWindupCooldowns = reader.readNumber();
          reader.padOffset(2 * Float32Array.BYTES_PER_ELEMENT * numSpearWindupCooldowns);
@@ -510,7 +515,7 @@ class InventoryUseComponent extends ServerComponent{
    }
 
    private playBlockEffects(x: number, y: number): void {
-      playSound("block.mp3", 0.7, 1, new Point(x, y));
+      playSound("block.mp3", 0.8, 1, new Point(x, y));
       
       for (let i = 0; i < 8; i++) {
          const offsetMagnitude = randFloat(0, 18);
@@ -519,6 +524,17 @@ class InventoryUseComponent extends ServerComponent{
          const particleY = y + offsetMagnitude * Math.cos(offsetDirection);
          createBlockParticle(particleX, particleY);
       }
+   }
+
+   public hasLimbInfo(inventoryName: InventoryName): boolean {
+      for (let i = 0; i < this.limbInfos.length; i++) {
+         const useInfo = this.limbInfos[i];
+         if (useInfo.inventoryName === inventoryName) {
+            return true;
+         }
+      }
+
+      return false;
    }
 
    public getLimbInfoByInventoryName(inventoryName: InventoryName): LimbInfo {
@@ -542,30 +558,26 @@ export const InventoryUseComponentArray = new ComponentArray<InventoryUseCompone
 
 function onTick(inventoryUseComponent: InventoryUseComponent): void {
    // @Cleanup: move to separate function
-   const inventoryComponent = inventoryUseComponent.entity.getServerComponent(ServerComponentType.inventory);
    for (let limbIdx = 0; limbIdx < inventoryUseComponent.limbInfos.length; limbIdx++) {
-      const useInfo = inventoryUseComponent.limbInfos[limbIdx];
-      const inventory = inventoryComponent.getInventory(useInfo.inventoryName);
+      const limbInfo = inventoryUseComponent.limbInfos[limbIdx];
+      if (limbInfo.heldItemType === null) {
+         continue;
+      }
 
       // @Incomplete: If eating multiple foods at once, shouldn't be on the same tick interval
       if (!Board.tickIntervalHasPassed(0.25)) {
          continue;
       }
 
-      const item = inventory.itemSlots[useInfo.selectedItemSlot];
-      if (typeof item === "undefined") {
-         continue;
-      }
-      
       const physicsComponent = inventoryUseComponent.entity.getServerComponent(ServerComponentType.physics);
 
       // Make the deep frost heart item spew blue blood particles
-      if (item.type === ItemType.deepfrost_heart) {
+      if (limbInfo.heldItemType === ItemType.deepfrost_heart) {
          const activeItemRenderPart = inventoryUseComponent.activeItemRenderParts[limbIdx];
          createDeepFrostHeartBloodParticles(activeItemRenderPart.renderPosition.x, activeItemRenderPart.renderPosition.y, physicsComponent.selfVelocity.x, physicsComponent.selfVelocity.y);
       }
 
-      if (useInfo.action === LimbAction.eat && ITEM_TYPE_RECORD[item.type] === "healing") {
+      if (limbInfo.action === LimbAction.eat && ITEM_TYPE_RECORD[limbInfo.heldItemType] === "healing") {
          const transformComponent = inventoryUseComponent.entity.getServerComponent(ServerComponentType.transform);
 
          // Create food eating particles
@@ -591,7 +603,7 @@ function onTick(inventoryUseComponent: InventoryUseComponent): void {
                return 1 - Math.pow(particle.age / lifetime, 3);
             }
 
-            const colour = randItem(FOOD_EATING_COLOURS[item.type as keyof typeof FOOD_EATING_COLOURS]);
+            const colour = randItem(FOOD_EATING_COLOURS[limbInfo.heldItemType as keyof typeof FOOD_EATING_COLOURS]);
 
             // @Cleanup @Incomplete: move to particles file
             addMonocolourParticleToBufferContainer(
@@ -780,84 +792,69 @@ const updateLimb = (inventoryUseComponent: InventoryUseComponent, limbIdx: numbe
       }
    }
    
-   const inventoryComponent = inventoryUseComponent.entity.getServerComponent(ServerComponentType.inventory);
-   const inventory = inventoryComponent.getInventory(limbInfo.inventoryName);
-   
-   let heldItem: Item | null | undefined = inventory.itemSlots[limbInfo.selectedItemSlot];
-   
-   if (typeof heldItem === "undefined" || limbInfo.thrownBattleaxeItemID === heldItem.id) {
-      heldItem = null;
-   }
-   
-   const itemSize = heldItem !== null && itemInfoIsTool(heldItem.type, ITEM_INFO_RECORD[heldItem.type]) ? 8 * 4 : 4 * 4;
+   const heldItemType = limbInfo.heldItemType;
+   const itemSize = heldItemType !== null && itemInfoIsTool(heldItemType, ITEM_INFO_RECORD[heldItemType]) ? 8 * 4 : 4 * 4;
    
    // @Hack
    // updateActiveItemRenderPart(inventoryUseComponent, limbIdx, limbInfo, null);
    const itemRenderPart = inventoryUseComponent.activeItemRenderParts[limbIdx];
    
    // @Hack
-   let shouldShowActiveItemRenderPart = true;
-
-   // @Hack
    // Zombie lunge attack
-   if (inventoryUseComponent.entity.type === EntityType.zombie) {
-      const inventoryComponent = inventoryUseComponent.entity.getServerComponent(ServerComponentType.inventory);
-      const heldItemInventory = inventoryComponent.getInventory(InventoryName.handSlot);
-      if (!heldItemInventory.itemSlots.hasOwnProperty(1)) {
-         const secondsSinceLastAction = getSecondsSinceTickTimestamp(limbInfo.lastAttackTicks);
-         
-         let attackProgress = secondsSinceLastAction / ATTACK_LUNGE_TIME;
-         if (attackProgress > 1) {
-            attackProgress = 1;
-         }
-
-         const direction = lerp(Math.PI / 7, ZOMBIE_HAND_RESTING_DIRECTION, attackProgress) * limbMult;
-         const offset = lerp(42, ZOMBIE_HAND_RESTING_OFFSET, attackProgress);
-         
-         limb.offset.x = offset * Math.sin(direction);
-         limb.offset.y = offset * Math.cos(direction);
-         limb.rotation = lerp(-Math.PI/8, ZOMBIE_HAND_RESTING_ROTATION, attackProgress) * limbMult;
-         return;
+   if (inventoryUseComponent.entity.type === EntityType.zombie && heldItemType !== null) {
+      const secondsSinceLastAction = getSecondsSinceTickTimestamp(limbInfo.lastAttackTicks);
+      
+      let attackProgress = secondsSinceLastAction / ATTACK_LUNGE_TIME;
+      if (attackProgress > 1) {
+         attackProgress = 1;
       }
+
+      const direction = lerp(Math.PI / 7, ZOMBIE_HAND_RESTING_DIRECTION, attackProgress) * limbMult;
+      const offset = lerp(42, ZOMBIE_HAND_RESTING_OFFSET, attackProgress);
+      
+      limb.offset.x = offset * Math.sin(direction);
+      limb.offset.y = offset * Math.cos(direction);
+      limb.rotation = lerp(-Math.PI/8, ZOMBIE_HAND_RESTING_ROTATION, attackProgress) * limbMult;
+      return;
    }
 
    switch (limbInfo.action) {
       case LimbAction.windAttack: {
-         const heldItemAttackInfo = getItemAttackInfo(heldItem);
+         const heldItemAttackInfo = getItemAttackInfo(heldItemType);
          
          // @Copynpaste
          const secondsSinceLastAction = getElapsedTimeInSeconds(limbInfo.currentActionElapsedTicks);
          const windupProgress = secondsSinceLastAction * Settings.TPS / limbInfo.currentActionDurationTicks;
 
          lerpLimbBetweenStates(limb, attachPoint, TRIBESMAN_RESTING_LIMB_STATE, heldItemAttackInfo.attackPattern.windedBack, windupProgress);
-         updateHeldItem(inventoryUseComponent, limbIdx, heldItem);
+         updateHeldItem(inventoryUseComponent, limbIdx, heldItemType);
          break;
       }
       case LimbAction.attack: {
-         const heldItemAttackInfo = getItemAttackInfo(heldItem);
+         const heldItemAttackInfo = getItemAttackInfo(heldItemType);
 
          // @Copynpaste
          const secondsSinceLastAction = getElapsedTimeInSeconds(limbInfo.currentActionElapsedTicks);
          const attackProgress = secondsSinceLastAction * Settings.TPS / limbInfo.currentActionDurationTicks;
 
          lerpLimbBetweenStates(limb, attachPoint, heldItemAttackInfo.attackPattern.windedBack, heldItemAttackInfo.attackPattern.swung, attackProgress);
-         updateHeldItem(inventoryUseComponent, limbIdx, heldItem);
+         updateHeldItem(inventoryUseComponent, limbIdx, heldItemType);
          break;
       }
       case LimbAction.returnAttackToRest: {
-         const heldItemAttackInfo = getItemAttackInfo(heldItem);
+         const heldItemAttackInfo = getItemAttackInfo(heldItemType);
 
          // @Copynpaste
          const secondsIntoAnimation = getElapsedTimeInSeconds(limbInfo.currentActionElapsedTicks);
          const animationProgress = secondsIntoAnimation * Settings.TPS / limbInfo.currentActionDurationTicks;
 
          lerpLimbBetweenStates(limb, attachPoint, heldItemAttackInfo.attackPattern.swung, TRIBESMAN_RESTING_LIMB_STATE, animationProgress);
-         updateHeldItem(inventoryUseComponent, limbIdx, heldItem);
+         updateHeldItem(inventoryUseComponent, limbIdx, heldItemType);
          break;
       }
       case LimbAction.none: {
          setLimbToState(limbMult, attachPoint, TRIBESMAN_RESTING_LIMB_STATE);
-         updateHeldItem(inventoryUseComponent, limbIdx, heldItem);
+         updateHeldItem(inventoryUseComponent, limbIdx, heldItemType);
          break;
       }
       case LimbAction.block: {
@@ -869,7 +866,7 @@ const updateLimb = (inventoryUseComponent: InventoryUseComponent, limbIdx: numbe
          }
 
          lerpLimbBetweenStates(limb, attachPoint, TRIBESMAN_RESTING_LIMB_STATE, BLOCKING_LIMB_STATE, animationProgress);
-         updateHeldItem(inventoryUseComponent, limbIdx, heldItem);
+         updateHeldItem(inventoryUseComponent, limbIdx, heldItemType);
          break;
       }
       case LimbAction.returnBlockToRest: {
@@ -881,7 +878,7 @@ const updateLimb = (inventoryUseComponent: InventoryUseComponent, limbIdx: numbe
          }
 
          lerpLimbBetweenStates(limb, attachPoint, BLOCKING_LIMB_STATE, TRIBESMAN_RESTING_LIMB_STATE, animationProgress);
-         updateHeldItem(inventoryUseComponent, limbIdx, heldItem);
+         updateHeldItem(inventoryUseComponent, limbIdx, heldItemType);
          break;
       }
       case LimbAction.chargeSpear: {
@@ -889,7 +886,7 @@ const updateLimb = (inventoryUseComponent: InventoryUseComponent, limbIdx: numbe
          const chargeProgress = secondsSinceLastAction < 3 ? 1 - Math.pow(secondsSinceLastAction / 3 - 1, 2) : 1;
 
          lerpLimbBetweenStates(limb, attachPoint, TRIBESMAN_RESTING_LIMB_STATE, SPEAR_CHARGED_LIMB_STATE, chargeProgress);
-         updateHeldItem(inventoryUseComponent, limbIdx, heldItem);
+         updateHeldItem(inventoryUseComponent, limbIdx, heldItemType);
 
          attachPoint.shakeAmount = chargeProgress * 1.5;
          break;
@@ -949,9 +946,10 @@ const updateLimb = (inventoryUseComponent: InventoryUseComponent, limbIdx: numbe
             itemRenderPart.rotation = -Math.PI/6 * limbMult;
          }
 
-         if (heldItem !== null && limbInfo.thrownBattleaxeItemID === heldItem.id) {
-            shouldShowActiveItemRenderPart = false;
-         }
+         // @Incomplete
+         // if (heldItem !== null && limbInfo.thrownBattleaxeItemID === heldItem.id) {
+         //    shouldShowActiveItemRenderPart = false;
+         // }
 
          limb.shakeAmount = lerp(0, 1.5, chargeProgress);
          break;
@@ -959,18 +957,21 @@ const updateLimb = (inventoryUseComponent: InventoryUseComponent, limbIdx: numbe
       case LimbAction.craft: {
          animateLimb(limb, limbIdx, limbInfo);
          createCraftingAnimationParticles(inventoryUseComponent.entity, limbIdx);
-         shouldShowActiveItemRenderPart = false;
+         // @Incomplete
+         // shouldShowActiveItemRenderPart = false;
          break;
       }
       case LimbAction.useMedicine: {
          animateLimb(limb, limbIdx, limbInfo);
          createMedicineAnimationParticles(inventoryUseComponent.entity, limbIdx);
-         shouldShowActiveItemRenderPart = false;
+         // @Incomplete
+         // shouldShowActiveItemRenderPart = false;
          break;
       }
       case LimbAction.researching: {
          animateLimb(limb, limbIdx, limbInfo);
-         shouldShowActiveItemRenderPart = false;
+         // @Incomplete
+         // shouldShowActiveItemRenderPart = false;
          break;
       }
       case LimbAction.eat: {
@@ -995,7 +996,7 @@ const updateLimb = (inventoryUseComponent: InventoryUseComponent, limbIdx: numbe
          attachPoint.offset.y = handOffsetAmount * Math.cos(activeItemDirection);
          attachPoint.rotation = lerp(HAND_RESTING_ROTATION, HAND_RESTING_ROTATION - Math.PI/5, eatIntervalProgress) * limbMult;
 
-         createHeldItemIfMissing(inventoryUseComponent, limbIdx, heldItem);
+         createHeldItemIfMissing(inventoryUseComponent, limbIdx, heldItemType);
          const heldItemRenderPart = inventoryUseComponent.activeItemRenderParts[limbIdx];
          const activeItemOffsetAmount = itemSize/2 - insetAmount;
          const activeItemOffsetDirection = (activeItemDirection - Math.PI/14) * limbMult;

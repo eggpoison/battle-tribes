@@ -1,7 +1,7 @@
-import { PotentialBuildingPlanData } from "webgl-test-shared/dist/ai-building-types";
-import { BlueprintType } from "webgl-test-shared/dist/components";
-import { EntityType } from "webgl-test-shared/dist/entities";
-import { Settings } from "webgl-test-shared/dist/settings";
+import { PotentialBuildingPlanData } from "battletribes-shared/ai-building-types";
+import { BlueprintType } from "battletribes-shared/components";
+import { EntityType } from "battletribes-shared/entities";
+import { Settings } from "battletribes-shared/settings";
 import Tribe, { BuildingPlanType, BuildingUpgradePlan, VirtualBuilding } from "../Tribe";
 import { SafetyNode, getSafetyNode, placeVirtualBuilding } from "./ai-building";
 

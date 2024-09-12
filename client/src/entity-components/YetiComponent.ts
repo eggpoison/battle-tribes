@@ -1,9 +1,9 @@
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
-import { lerp, randFloat } from "webgl-test-shared/dist/utils";
+import { lerp, randFloat } from "battletribes-shared/utils";
 import { RenderPart } from "../render-parts/render-parts";
-import { PacketReader } from "webgl-test-shared/dist/packets";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { PacketReader } from "battletribes-shared/packets";
+import { ServerComponentType } from "battletribes-shared/components";
 import { createSnowParticle, createWhiteSmokeParticle } from "../particles";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 

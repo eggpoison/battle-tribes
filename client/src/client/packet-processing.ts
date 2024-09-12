@@ -1,33 +1,31 @@
-import { WaterRockData, RiverSteppingStoneData, GrassTileInfo, RiverFlowDirectionsRecord, WaterRockSize, RiverSteppingStoneSize, GameDataPacket, HitData, PlayerKnockbackData, HealData, ResearchOrbCompleteData, ServerTileUpdateData, EntityDebugData, LineDebugData, CircleDebugData, TileHighlightData, PathData, PathfindingNodeIndex, PlayerInventoryData } from "webgl-test-shared/dist/client-server-types";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
-import { ItemType } from "webgl-test-shared/dist/items/items";
-import { PacketReader } from "webgl-test-shared/dist/packets";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { Biome, TileType } from "webgl-test-shared/dist/tiles";
+import { WaterRockData, RiverSteppingStoneData, GrassTileInfo, RiverFlowDirectionsRecord, WaterRockSize, RiverSteppingStoneSize, GameDataPacket, HitData, PlayerKnockbackData, HealData, ResearchOrbCompleteData, ServerTileUpdateData, EntityDebugData, LineDebugData, CircleDebugData, TileHighlightData, PathData, PathfindingNodeIndex } from "battletribes-shared/client-server-types";
+import { ServerComponentType } from "battletribes-shared/components";
+import { EntityID, EntityType } from "battletribes-shared/entities";
+import { ItemType } from "battletribes-shared/items/items";
+import { PacketReader } from "battletribes-shared/packets";
+import { Settings } from "battletribes-shared/settings";
+import { Biome, TileType } from "battletribes-shared/tiles";
 import { readCrossbowLoadProgressRecord } from "../entity-components/InventoryUseComponent";
-import { TribesmanTitle } from "webgl-test-shared/dist/titles";
-import { ItemRequirements } from "webgl-test-shared/dist/items/crafting-recipes";
-import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
-import { EnemyTribeData, PlayerTribeData, TechID, TechTreeUnlockProgress } from "webgl-test-shared/dist/techs";
-import { EntityTickEvent, EntityTickEventType } from "webgl-test-shared/dist/entity-events";
+import { TribesmanTitle } from "battletribes-shared/titles";
+import { ItemRequirements } from "battletribes-shared/items/crafting-recipes";
+import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
+import { EnemyTribeData, PlayerTribeData, TechID, TechTreeUnlockProgress } from "battletribes-shared/techs";
+import { EntityTickEvent, EntityTickEventType } from "battletribes-shared/entity-events";
 import Game from "../Game";
 import Player from "../entities/Player";
-import Client from "./Client";
-import { latencyGameState } from "../game-state/game-states";
+import Client, { popGameDataPacket } from "./Client";
 import Entity from "../Entity";
 import { createEntity } from "../entity-class-record";
 import Board from "../Board";
 import Camera from "../Camera";
 import { createComponent } from "../entity-components/components";
-import { readInventory } from "../entity-components/InventoryComponent";
-import { updateDebugScreenIsPaused, updateDebugScreenTicks, updateDebugScreenCurrentTime } from "../components/game/dev/GameInfoDisplay";
+import { updateDebugScreenIsPaused, updateDebugScreenTicks, updateDebugScreenCurrentTime, registerServerTick } from "../components/game/dev/GameInfoDisplay";
 import { Tile } from "../Tile";
 import { getServerComponentArray } from "../entity-components/ComponentArray";
-import { TRIBE_INFO_RECORD } from "webgl-test-shared/dist/tribes";
+import { TRIBE_INFO_RECORD } from "battletribes-shared/tribes";
 import { gameScreenSetIsDead } from "../components/game/GameScreen";
 import { updateHealthBar } from "../components/game/HealthBar";
-import { Hotbar_setHotbarSelectedItemSlot } from "../components/game/inventories/Hotbar";
+import { selectItemSlot } from "../player-input";
 
 export interface InitialGameDataPacket {
    readonly playerID: number;
@@ -220,28 +218,6 @@ const readDebugData = (reader: PacketReader): EntityDebugData => {
    };
 }
 
-const readPlayerInventories = (reader: PacketReader): PlayerInventoryData => {
-   const hotbarInventory = readInventory(reader);
-   const backpackInventory = readInventory(reader);
-   const backpackSlotInventory = readInventory(reader);
-   const heldItemSlotInventory = readInventory(reader);
-   const craftingOutputSlotInventory = readInventory(reader);
-   const armourSlotInventory = readInventory(reader);
-   const offhandInventory = readInventory(reader);
-   const gloveSlotInventory = readInventory(reader);
-
-   return {
-      hotbar: hotbarInventory,
-      backpackSlot: backpackSlotInventory,
-      backpackInventory: backpackInventory,
-      heldItemSlot: heldItemSlotInventory,
-      craftingOutputItemSlot: craftingOutputSlotInventory,
-      armourSlot: armourSlotInventory,
-      gloveSlot: gloveSlotInventory,
-      offhand: offhandInventory
-   };
-}
-
 const processPlayerUpdateData = (reader: PacketReader): void => {
    if (Player.instance === null) {
       throw new Error();
@@ -251,7 +227,6 @@ const processPlayerUpdateData = (reader: PacketReader): void => {
    reader.padOffset(Float32Array.BYTES_PER_ELEMENT);
       
    const numComponents = reader.readNumber();
-   let l = reader.currentByteOffset;
    for (let i = 0; i < numComponents; i++) {
       const componentType = reader.readNumber() as ServerComponentType;
 
@@ -261,7 +236,6 @@ const processPlayerUpdateData = (reader: PacketReader): void => {
       } else {
          component.padData(reader);
       }
-      l = reader.currentByteOffset;
    }
 
       // @Incomplete
@@ -274,12 +248,13 @@ export function processEntityCreationData(entityID: EntityID, reader: PacketRead
    const entityType = reader.readNumber() as EntityType;
 
    const entity = createEntity(entityID, entityType);
-
+   const isPlayer = entityID === Game.playerID;
+   
    const numComponents = reader.readNumber();
    for (let i = 0; i < numComponents; i++) {
       const componentType = reader.readNumber() as ServerComponentType;
       
-      const component = createComponent(entity, componentType, reader);
+      const component = createComponent(entity, componentType, reader, isPlayer);
       entity.addServerComponent(componentType, component);
 
       const componentArray = getServerComponentArray(componentType);
@@ -289,7 +264,7 @@ export function processEntityCreationData(entityID: EntityID, reader: PacketRead
    Board.addEntity(entity);
 
    // Set the player instance
-   if (entityID === Game.playerID) {
+   if (isPlayer) {
       Player.instance = entity as Player;
       Camera.setTrackedEntityID(entityID);
    }
@@ -316,6 +291,8 @@ const processEntityUpdateData = (entityID: EntityID, reader: PacketReader): void
 }
 
 export function processGameDataPacket(reader: PacketReader): void {
+   registerServerTick();
+   
    const simulationIsPaused = reader.readBoolean();
    reader.padOffset(3);
    updateDebugScreenIsPaused(simulationIsPaused);
@@ -484,8 +461,6 @@ export function processGameDataPacket(reader: PacketReader): void {
       Board.removeEntity(entity, isDeath);
    }
 
-   const playerInventories = playerIsAlive ? readPlayerInventories(reader) : undefined;
-   
    const visibleHits = new Array<HitData>();
    const numHits = reader.readNumber();
    for (let i = 0; i < numHits; i++) {
@@ -630,7 +605,6 @@ export function processGameDataPacket(reader: PacketReader): void {
       playerKnockbacks: playerKnockbacks,
       heals: heals,
       orbCompletes: orbCompletes,
-      inventory: playerInventories,
       playerHealth: playerHealth,
       entityDebugData: debugData,
       playerTribeData: {
@@ -681,24 +655,11 @@ export function processSyncDataPacket(reader: PacketReader): void {
    const accelerationX = reader.readNumber();
    const accelerationY = reader.readNumber();
 
-   const playerInventories = readPlayerInventories(reader);
-   // // Add inventory data
-   // addInventoryDataToPacket(packet, hotbarInventory);
-   // addInventoryDataToPacket(packet, backpackInventory);
-   // addInventoryDataToPacket(packet, backpackSlotInventory);
-   // addInventoryDataToPacket(packet, heldItemSlotInventory);
-   // addInventoryDataToPacket(packet, craftingOutputSlotInventory);
-   // addInventoryDataToPacket(packet, armourSlotInventory);
-   // addInventoryDataToPacket(packet, offhandInventory);
-   // addInventoryDataToPacket(packet, gloveSlotInventory);
-
-   
    const transformComponent = Player.instance.getServerComponent(ServerComponentType.transform);
    
    transformComponent.position.x = x;
    transformComponent.position.y = y;
    transformComponent.rotation = rotation;
-   Client.updatePlayerInventory(playerInventories);
 
    const physicsComponent = Player.instance.getServerComponent(ServerComponentType.physics);
    physicsComponent.selfVelocity.x = selfVelocityX;
@@ -718,8 +679,7 @@ export function processRespawnDataPacket(reader: PacketReader): void {
    Game.playerID = playerID;
    processEntityCreationData(playerID, reader);
    
-   latencyGameState.selectedHotbarItemSlot = 1;
-   Hotbar_setHotbarSelectedItemSlot(1);
+   selectItemSlot(1);
    
    const maxHealth = TRIBE_INFO_RECORD[Game.tribe.tribeType].maxHealthPlayer;
    updateHealthBar(maxHealth);
@@ -727,5 +687,5 @@ export function processRespawnDataPacket(reader: PacketReader): void {
    gameScreenSetIsDead(false);
 
    // Clear any queued packets, as they contain data from when the player wasn't respawned.
-   Game.queuedPackets.splice(0, Game.queuedPackets.length);
+   popGameDataPacket();
 }

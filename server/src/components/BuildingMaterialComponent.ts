@@ -1,8 +1,8 @@
-import { BuildingMaterial, BuildingMaterialComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
+import { BuildingMaterial, BuildingMaterialComponentData, ServerComponentType } from "battletribes-shared/components";
 import { ComponentArray } from "./ComponentArray";
-import { EntityID, EntityType, EntityTypeString } from "webgl-test-shared/dist/entities";
+import { EntityID, EntityType, EntityTypeString } from "battletribes-shared/entities";
 import { ComponentConfig } from "../components";
-import { Packet } from "webgl-test-shared/dist/packets";
+import { Packet } from "battletribes-shared/packets";
 
 export interface BuildingMaterialComponentParams {
    material: BuildingMaterial;

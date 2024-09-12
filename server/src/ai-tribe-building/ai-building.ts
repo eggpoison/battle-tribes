@@ -1,15 +1,15 @@
-import { EntityType } from "webgl-test-shared/dist/entities";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { StructureType } from "webgl-test-shared/dist/structures";
-import { Point, distBetweenPointAndRectangle } from "webgl-test-shared/dist/utils";
+import { EntityType } from "battletribes-shared/entities";
+import { Settings } from "battletribes-shared/settings";
+import { StructureType } from "battletribes-shared/structures";
+import { Point, distBetweenPointAndRectangle } from "battletribes-shared/utils";
 import Tribe, { RestrictedBuildingArea, VirtualBuilding, getNumWallConnections, updateTribeWalls } from "../Tribe";
 import Board from "../Board";
 import { TribeArea, createTribeArea, updateTribeAreaDoors } from "./ai-building-areas";
 import { updateTribePlans } from "./ai-building-plans";
-import { assertHitboxIsRectangular, BoxType, createHitbox, hitboxIsCircular, HitboxWrapper, updateBox } from "webgl-test-shared/dist/boxes/boxes";
-import RectangularBox from "webgl-test-shared/dist/boxes/RectangularBox";
-import { HitboxCollisionBit } from "webgl-test-shared/dist/collision";
-import { createEntityHitboxes } from "webgl-test-shared/dist/boxes/entity-hitbox-creation";
+import { assertHitboxIsRectangular, BoxType, createHitbox, hitboxIsCircular, Hitbox, updateBox } from "battletribes-shared/boxes/boxes";
+import RectangularBox from "battletribes-shared/boxes/RectangularBox";
+import { HitboxCollisionBit } from "battletribes-shared/collision";
+import { createEntityHitboxes } from "battletribes-shared/boxes/entity-hitbox-creation";
 
 const enum Vars {
    /** How much safety increases when moving in a node */
@@ -71,7 +71,7 @@ export function getSafetyNode(nodeX: number, nodeY: number): SafetyNode {
    return nodeY * Settings.SAFETY_NODES_IN_WORLD_WIDTH + nodeX;
 }
 
-const addCircularHitboxNodePositions = (hitbox: HitboxWrapper<BoxType.circular>, positions: Set<SafetyNode>): void => {
+const addCircularHitboxNodePositions = (hitbox: Hitbox<BoxType.circular>, positions: Set<SafetyNode>): void => {
    const box = hitbox.box;
    
    const minX = box.calculateBoundsMinX();
@@ -122,7 +122,7 @@ export function addRectangularSafetyNodePositions(rectPosition: Point, rectWidth
    }
 }
 
-export function addHitboxesOccupiedNodes(hitboxes: ReadonlyArray<HitboxWrapper>, positions: Set<SafetyNode>): void {
+export function addHitboxesOccupiedNodes(hitboxes: ReadonlyArray<Hitbox>, positions: Set<SafetyNode>): void {
    for (let i = 0; i < hitboxes.length; i++) {
       const hitbox = hitboxes[i];
 

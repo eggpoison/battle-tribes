@@ -1,7 +1,7 @@
-import { EntityType, SNOWBALL_SIZES, SnowballSize } from "webgl-test-shared/dist/entities";
-import { randFloat, randInt } from "webgl-test-shared/dist/utils";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { HitData } from "webgl-test-shared/dist/client-server-types";
+import { EntityType, SNOWBALL_SIZES, SnowballSize } from "battletribes-shared/entities";
+import { randFloat, randInt } from "battletribes-shared/utils";
+import { ServerComponentType } from "battletribes-shared/components";
+import { HitData } from "battletribes-shared/client-server-types";
 import Board from "../Board";
 import Particle from "../Particle";
 import { ParticleRenderLayer, addMonocolourParticleToBufferContainer } from "../rendering/webgl/particle-rendering";

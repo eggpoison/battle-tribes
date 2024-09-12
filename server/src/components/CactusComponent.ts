@@ -1,7 +1,7 @@
-import { CactusComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
-import { CactusBodyFlowerData, CactusLimbData, EntityID } from "webgl-test-shared/dist/entities";
+import { CactusComponentData, ServerComponentType } from "battletribes-shared/components";
+import { CactusBodyFlowerData, CactusLimbData, EntityID } from "battletribes-shared/entities";
 import { ComponentArray } from "./ComponentArray";
-import { Packet } from "webgl-test-shared/dist/packets";
+import { Packet } from "battletribes-shared/packets";
 
 export interface CactusComponentParams {
    readonly flowers: ReadonlyArray<CactusBodyFlowerData>;

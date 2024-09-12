@@ -1,5 +1,5 @@
-import { RIVER_STEPPING_STONE_SIZES, RiverSteppingStoneData, ServerTileUpdateData, WaterRockData } from "webgl-test-shared/dist/client-server-types";
-import { Settings } from "webgl-test-shared/dist/settings";
+import { RIVER_STEPPING_STONE_SIZES, RiverSteppingStoneData, ServerTileUpdateData, WaterRockData } from "battletribes-shared/client-server-types";
+import { Settings } from "battletribes-shared/settings";
 import { createTileRenderChunks, recalculateSolidTileRenderChunkData } from "./webgl/solid-tile-rendering";
 import { calculateRiverRenderChunkData } from "./webgl/river-rendering";
 import { calculateAmbientOcclusionInfo } from "./webgl/ambient-occlusion-rendering";

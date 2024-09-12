@@ -1,19 +1,19 @@
-import { ServerComponentType  } from "webgl-test-shared/dist/components";
-import { EntityID, EntityType, LimbAction } from "webgl-test-shared/dist/entities";
-import { TitleGenerationInfo, TribesmanTitle, TRIBESMAN_TITLE_RECORD } from "webgl-test-shared/dist/titles";
-import { TRIBE_INFO_RECORD, TribeType } from "webgl-test-shared/dist/tribes";
-import { lerp, randInt } from "webgl-test-shared/dist/utils";
+import { ServerComponentType  } from "battletribes-shared/components";
+import { EntityID, EntityType, LimbAction } from "battletribes-shared/entities";
+import { TitleGenerationInfo, TribesmanTitle, TRIBESMAN_TITLE_RECORD } from "battletribes-shared/titles";
+import { TRIBE_INFO_RECORD, TribeType } from "battletribes-shared/tribes";
+import { lerp, randInt } from "battletribes-shared/utils";
 import { ComponentArray } from "./ComponentArray";
 import { generateTitle, TITLE_REWARD_CHANCES } from "../tribesman-title-generation";
 import Board from "../Board";
-import { Settings } from "webgl-test-shared/dist/settings";
+import { Settings } from "battletribes-shared/settings";
 import { TribeComponentArray } from "./TribeComponent";
 import { PlayerComponentArray } from "./PlayerComponent";
-import { ArmourItemInfo, BackpackItemInfo, ConsumableItemInfo, InventoryName, ITEM_INFO_RECORD, ITEM_TYPE_RECORD, ItemType } from "webgl-test-shared/dist/items/items";
+import { ArmourItemInfo, BackpackItemInfo, ConsumableItemInfo, InventoryName, ITEM_INFO_RECORD, ITEM_TYPE_RECORD, ItemType } from "battletribes-shared/items/items";
 import { ComponentConfig } from "../components";
 import { tribeMemberCanPickUpItem, useItem, VACUUM_RANGE } from "../entities/tribes/tribe-member";
-import { Packet } from "webgl-test-shared/dist/packets";
-import { COLLISION_BITS } from "webgl-test-shared/dist/collision";
+import { Packet } from "battletribes-shared/packets";
+import { COLLISION_BITS } from "battletribes-shared/collision";
 import { itemEntityCanBePickedUp } from "../entities/item-entity";
 import { HealthComponentArray, addDefence, removeDefence } from "./HealthComponent";
 import { InventoryComponentArray, getInventory, resizeInventory } from "./InventoryComponent";
@@ -91,7 +91,7 @@ function onInitialise(config: ComponentConfig<ServerComponentType.health | Serve
       inventoryName: InventoryName.hotbar,
       width: getHotbarSize(entityType as TribesmanEntityType),
       height: 1,
-      options: { acceptsPickedUpItems: true, isDroppedOnDeath: true },
+      options: { acceptsPickedUpItems: true, isDroppedOnDeath: true, isSentToEnemyPlayers: false },
       // @Temporary
       items: [
          {
@@ -127,7 +127,7 @@ function onInitialise(config: ComponentConfig<ServerComponentType.health | Serve
       inventoryName: InventoryName.offhand,
       width: 1,
       height: 1,
-      options: { acceptsPickedUpItems: false, isDroppedOnDeath: true },
+      options: { acceptsPickedUpItems: false, isDroppedOnDeath: true, isSentToEnemyPlayers: false },
       items: []
    });
    
@@ -136,7 +136,7 @@ function onInitialise(config: ComponentConfig<ServerComponentType.health | Serve
       inventoryName: InventoryName.craftingOutputSlot,
       width: 1,
       height: 1,
-      options: { acceptsPickedUpItems: false, isDroppedOnDeath: true },
+      options: { acceptsPickedUpItems: false, isDroppedOnDeath: true, isSentToEnemyPlayers: false },
       items: []
    });
    
@@ -145,7 +145,7 @@ function onInitialise(config: ComponentConfig<ServerComponentType.health | Serve
       inventoryName: InventoryName.heldItemSlot,
       width: 1,
       height: 1,
-      options: { acceptsPickedUpItems: false, isDroppedOnDeath: true },
+      options: { acceptsPickedUpItems: false, isDroppedOnDeath: true, isSentToEnemyPlayers: false },
       items: []
    });
    
@@ -154,7 +154,7 @@ function onInitialise(config: ComponentConfig<ServerComponentType.health | Serve
       inventoryName: InventoryName.armourSlot,
       width: 1,
       height: 1,
-      options: { acceptsPickedUpItems: false, isDroppedOnDeath: true },
+      options: { acceptsPickedUpItems: false, isDroppedOnDeath: true, isSentToEnemyPlayers: true },
       items: []
    });
    
@@ -163,7 +163,7 @@ function onInitialise(config: ComponentConfig<ServerComponentType.health | Serve
       inventoryName: InventoryName.backpackSlot,
       width: 1,
       height: 1,
-      options: { acceptsPickedUpItems: false, isDroppedOnDeath: true },
+      options: { acceptsPickedUpItems: false, isDroppedOnDeath: true, isSentToEnemyPlayers: false },
       items: []
    });
    
@@ -172,7 +172,7 @@ function onInitialise(config: ComponentConfig<ServerComponentType.health | Serve
       inventoryName: InventoryName.gloveSlot,
       width: 1,
       height: 1,
-      options: { acceptsPickedUpItems: false, isDroppedOnDeath: true },
+      options: { acceptsPickedUpItems: false, isDroppedOnDeath: true, isSentToEnemyPlayers: true },
       items: []
    });
    
@@ -181,7 +181,7 @@ function onInitialise(config: ComponentConfig<ServerComponentType.health | Serve
       inventoryName: InventoryName.backpack,
       width: 0,
       height: 0,
-      options: { acceptsPickedUpItems: false, isDroppedOnDeath: true },
+      options: { acceptsPickedUpItems: false, isDroppedOnDeath: true, isSentToEnemyPlayers: false },
       items: []
    });
 

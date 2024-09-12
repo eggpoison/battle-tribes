@@ -1,4 +1,4 @@
-import { EntityType } from "webgl-test-shared/dist/entities";
+import { EntityType } from "battletribes-shared/entities";
 
 interface ClientEntityInfo {
    readonly name: string;

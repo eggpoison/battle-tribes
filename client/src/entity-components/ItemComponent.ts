@@ -1,9 +1,9 @@
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "battletribes-shared/components";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import { createDeepFrostHeartBloodParticles } from "../particles";
-import { ItemType } from "webgl-test-shared/dist/items/items";
-import { PacketReader } from "webgl-test-shared/dist/packets";
+import { ItemType } from "battletribes-shared/items/items";
+import { PacketReader } from "battletribes-shared/packets";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 
 class ItemComponent extends ServerComponent {

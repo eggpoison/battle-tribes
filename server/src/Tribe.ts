@@ -1,11 +1,11 @@
-import { PotentialBuildingPlanData } from "webgl-test-shared/dist/ai-building-types";
-import { BlueprintType, ServerComponentType } from "webgl-test-shared/dist/components";
-import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { StructureType } from "webgl-test-shared/dist/structures";
-import { TechID, TechTreeUnlockProgress, TechInfo, getTechByID, TECHS } from "webgl-test-shared/dist/techs";
-import { TribeType, TRIBE_INFO_RECORD } from "webgl-test-shared/dist/tribes";
-import { Point, angle, randItem, clampToBoardDimensions, TileIndex } from "webgl-test-shared/dist/utils";
+import { PotentialBuildingPlanData } from "battletribes-shared/ai-building-types";
+import { BlueprintType, ServerComponentType } from "battletribes-shared/components";
+import { EntityID, EntityType } from "battletribes-shared/entities";
+import { Settings } from "battletribes-shared/settings";
+import { StructureType } from "battletribes-shared/structures";
+import { TechID, TechTreeUnlockProgress, TechInfo, getTechByID, TECHS } from "battletribes-shared/techs";
+import { TribeType, TRIBE_INFO_RECORD } from "battletribes-shared/tribes";
+import { Point, angle, randItem, clampToBoardDimensions, TileIndex } from "battletribes-shared/utils";
 import Board from "./Board";
 import Chunk from "./Chunk";
 import { TotemBannerComponentArray, addBannerToTotem, removeBannerFromTotem } from "./components/TotemBannerComponent";
@@ -16,12 +16,12 @@ import { cleanAngle } from "./ai-shared";
 import { getPathfindingGroupID } from "./pathfinding";
 import { getPlayerClients, registerResearchOrbComplete } from "./server/player-clients";
 import { HutComponentArray } from "./components/HutComponent";
-import { CraftingRecipe } from "webgl-test-shared/dist/items/crafting-recipes";
-import { ItemType, InventoryName } from "webgl-test-shared/dist/items/items";
+import { CraftingRecipe } from "battletribes-shared/items/crafting-recipes";
+import { ItemType, InventoryName } from "battletribes-shared/items/items";
 import { TransformComponentArray } from "./components/TransformComponent";
 import { createEntityConfig } from "./entity-creation";
 import { createEntityFromConfig } from "./Entity";
-import { BoxType, HitboxWrapper } from "webgl-test-shared/dist/boxes/boxes";
+import { BoxType, Hitbox } from "battletribes-shared/boxes/boxes";
 
 const ENEMY_ATTACK_REMEMBER_TIME_TICKS = 30 * Settings.TPS;
 const RESPAWN_TIME_TICKS = 5 * Settings.TPS;
@@ -84,7 +84,7 @@ export interface RestrictedBuildingArea {
    readonly rotation: number;
    /** The ID of the building responsible for the restricted area */
    readonly associatedBuildingID: number;
-   readonly hitbox: HitboxWrapper<BoxType.rectangular>;
+   readonly hitbox: Hitbox<BoxType.rectangular>;
 }
 
 export interface VirtualBuilding {

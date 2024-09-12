@@ -1,12 +1,12 @@
-import { AMMO_INFO_RECORD, ServerComponentType, TURRET_AMMO_TYPES, TurretAmmoType, TurretEntityType } from "webgl-test-shared/dist/components";
-import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
+import { AMMO_INFO_RECORD, ServerComponentType, TURRET_AMMO_TYPES, TurretAmmoType, TurretEntityType } from "battletribes-shared/components";
+import { EntityID, EntityType } from "battletribes-shared/entities";
 import { ComponentArray } from "./ComponentArray";
 import { SLING_TURRET_RELOAD_TIME_TICKS, SLING_TURRET_SHOT_COOLDOWN_TICKS } from "../entities/structures/sling-turret";
 import Board from "../Board";
 import { AmmoBoxComponentArray } from "./AmmoBoxComponent";
-import { Packet } from "webgl-test-shared/dist/packets";
-import { InventoryName, ItemType } from "webgl-test-shared/dist/items/items";
-import { Settings } from "webgl-test-shared/dist/settings";
+import { Packet } from "battletribes-shared/packets";
+import { InventoryName, ItemType } from "battletribes-shared/items/items";
+import { Settings } from "battletribes-shared/settings";
 import { getMinAngleToCircularBox, getMaxAngleToCircularBox, getMinAngleToRectangularBox, getMaxAngleToRectangularBox, angleIsInRange, getClockwiseAngleDistance } from "../ai-shared";
 import { ComponentConfig } from "../components";
 import { createBallistaFrostcicleConfig } from "../entities/projectiles/ballista-frostcicle";
@@ -17,8 +17,8 @@ import { AIHelperComponentArray } from "./AIHelperComponent";
 import { InventoryComponentArray, getInventory, getFirstOccupiedItemSlotInInventory, consumeItemTypeFromInventory } from "./InventoryComponent";
 import { TransformComponentArray, TransformComponent } from "./TransformComponent";
 import { getEntityRelationship, EntityRelationship } from "./TribeComponent";
-import { UtilVars } from "webgl-test-shared/dist/utils";
-import { boxIsCircular } from "webgl-test-shared/dist/boxes/boxes";
+import { UtilVars } from "battletribes-shared/utils";
+import { boxIsCircular } from "battletribes-shared/boxes/boxes";
 
 export interface TurretComponentParams {
    readonly fireCooldownTicks: number;

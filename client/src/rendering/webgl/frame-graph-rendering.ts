@@ -1,4 +1,4 @@
-import { lerp } from "webgl-test-shared/dist/utils";
+import { lerp } from "battletribes-shared/utils";
 import { FrameInfo } from "../../components/game/dev/FrameGraph";
 import { createWebGLProgram } from "../../webgl";
 

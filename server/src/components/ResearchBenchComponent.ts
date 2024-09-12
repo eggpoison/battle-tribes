@@ -1,9 +1,9 @@
-import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { TechInfo } from "webgl-test-shared/dist/techs";
-import { TribesmanTitle } from "webgl-test-shared/dist/titles";
-import { RESEARCH_ORB_AMOUNTS, RESEARCH_ORB_COMPLETE_TIME, getRandomResearchOrbSize } from "webgl-test-shared/dist/research";
+import { ServerComponentType } from "battletribes-shared/components";
+import { EntityID, EntityType } from "battletribes-shared/entities";
+import { Settings } from "battletribes-shared/settings";
+import { TechInfo } from "battletribes-shared/techs";
+import { TribesmanTitle } from "battletribes-shared/titles";
+import { RESEARCH_ORB_AMOUNTS, RESEARCH_ORB_COMPLETE_TIME, getRandomResearchOrbSize } from "battletribes-shared/research";
 import { ComponentArray } from "./ComponentArray";
 import Board from "../Board";
 import { InventoryUseComponentArray } from "./InventoryUseComponent";
@@ -11,9 +11,9 @@ import { TITLE_REWARD_CHANCES } from "../tribesman-title-generation";
 import { TribeMemberComponentArray, awardTitle, hasTitle } from "./TribeMemberComponent";
 import { TribeComponentArray } from "./TribeComponent";
 import { TribesmanAIComponentArray } from "./TribesmanAIComponent";
-import { InventoryName } from "webgl-test-shared/dist/items/items";
+import { InventoryName } from "battletribes-shared/items/items";
 import { TransformComponentArray } from "./TransformComponent";
-import { Packet } from "webgl-test-shared/dist/packets";
+import { Packet } from "battletribes-shared/packets";
 
 export interface ResearchBenchComponentParams {}
 

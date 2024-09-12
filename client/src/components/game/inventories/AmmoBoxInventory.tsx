@@ -1,11 +1,11 @@
-import { AMMO_INFO_RECORD, ServerComponentType, TurretAmmoType } from "webgl-test-shared/dist/components";
-import { Settings } from "webgl-test-shared/dist/settings";
+import { AMMO_INFO_RECORD, ServerComponentType, TurretAmmoType } from "battletribes-shared/components";
+import { Settings } from "battletribes-shared/settings";
 import Ballista from "../../../entities/Ballista";
 import { getSelectedEntity } from "../../../entity-selection";
 import InventoryContainer from "./InventoryContainer";
 import CLIENT_ITEM_INFO_RECORD, { getItemTypeImage } from "../../../client-item-info";
 import { CLIENT_STATUS_EFFECT_INFO_RECORD } from "../../../status-effects";
-import { Inventory, ItemType, InventoryName } from "webgl-test-shared/dist/items/items";
+import { Inventory, ItemType, InventoryName } from "battletribes-shared/items/items";
 
 const getAmmoSlot = (ammoBoxInventory: Inventory): number => {
    for (let itemSlot = 1; itemSlot <= ammoBoxInventory.width * ammoBoxInventory.height; itemSlot++) {
@@ -45,7 +45,7 @@ const AmmoBoxInventory = () => {
    const ballista = getSelectedEntity() as Ballista;
    
    const inventoryComponent = ballista.getServerComponent(ServerComponentType.inventory);
-   const inventory = inventoryComponent.getInventory(InventoryName.ammoBoxInventory);
+   const inventory = inventoryComponent.getInventory(InventoryName.ammoBoxInventory)!;
    
    const nextAmmoSlot = getAmmoSlot(inventory);
    const ammoBoxComponent = ballista.getServerComponent(ServerComponentType.ammoBox);

@@ -1,4 +1,4 @@
-import { StatusEffect } from "webgl-test-shared/dist/status-effects";
+import { StatusEffect } from "battletribes-shared/status-effects";
 
 export interface ClientStatusEffectInfo {
    readonly name: string;

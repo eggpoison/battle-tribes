@@ -1,16 +1,16 @@
-import { alignLengthBytes, Packet, PacketType } from "webgl-test-shared/dist/packets";
+import { alignLengthBytes, Packet, PacketType } from "battletribes-shared/packets";
 import Player from "../entities/Player";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "battletribes-shared/components";
 import { latencyGameState } from "../game-state/game-states";
 import { getSelectedEntityID } from "../entity-selection";
-import { EntityType } from "webgl-test-shared/dist/entities";
+import { EntityType } from "battletribes-shared/entities";
 import Board from "../Board";
-import { GameDataPacketOptions } from "webgl-test-shared/dist/client-server-types";
+import { GameDataPacketOptions } from "battletribes-shared/client-server-types";
 import OPTIONS from "../options";
 import { windowHeight, windowWidth } from "../webgl";
-import { InventoryName, ItemType } from "webgl-test-shared/dist/items/items";
+import { InventoryName, ItemType } from "battletribes-shared/items/items";
 import Client from "./Client";
-import { getInstancePlayerAction } from "../player-input";
+import { getHotbarSelectedItemSlot, getInstancePlayerAction } from "../player-input";
 
 export function createPlayerDataPacket(): ArrayBuffer {
    let lengthBytes = 4 * Float32Array.BYTES_PER_ELEMENT;
@@ -41,7 +41,7 @@ export function createPlayerDataPacket(): ArrayBuffer {
    packet.addNumber(windowWidth);
    packet.addNumber(windowHeight);
 
-   packet.addNumber(latencyGameState.selectedHotbarItemSlot);
+   packet.addNumber(getHotbarSelectedItemSlot());
    packet.addNumber(getInstancePlayerAction(InventoryName.hotbar));
    packet.addNumber(getInstancePlayerAction(InventoryName.offhand));
 
@@ -96,7 +96,7 @@ export function createAttackPacket(): ArrayBuffer {
    
    const packet = new Packet(PacketType.attack, 3 * Float32Array.BYTES_PER_ELEMENT);
 
-   packet.addNumber(latencyGameState.selectedHotbarItemSlot);
+   packet.addNumber(getHotbarSelectedItemSlot());
    packet.addNumber(transformComponent.rotation);
    
    return packet.buffer;
@@ -119,13 +119,24 @@ export function sendRespawnPacket(): void {
 export function sendItemUsePacket(): void {
    const packet = new Packet(PacketType.useItem, 2 * Float32Array.BYTES_PER_ELEMENT);
    
-   const itemSlot = latencyGameState.selectedHotbarItemSlot;
-   packet.addNumber(itemSlot);
+   packet.addNumber(getHotbarSelectedItemSlot());
 
    Client.sendPacket(packet.buffer);
 }
 
 export function sendStopItemUsePacket(): void {
    const packet = new Packet(PacketType.stopItemUse, Float32Array.BYTES_PER_ELEMENT);
+   Client.sendPacket(packet.buffer);
+}
+
+export function sendItemDropPacket(isOffhand: boolean, itemSlot: number, dropAmount: number, throwDirection: number): void {
+   const packet = new Packet(PacketType.dropItem, 5 * Float32Array.BYTES_PER_ELEMENT);
+
+   packet.addBoolean(isOffhand);
+   packet.padOffset(3);
+   packet.addNumber(itemSlot);
+   packet.addNumber(dropAmount);
+   packet.addNumber(throwDirection);
+
    Client.sendPacket(packet.buffer);
 }

@@ -1,4 +1,5 @@
 import { circlesDoIntersect, circleAndRectangleDoIntersect, HitboxCollisionBit } from "../collision";
+import { InventoryName } from "../items/items";
 import { Point } from "../utils";
 import { CircularBox } from "./CircularBox";
 import RectangularBox from "./RectangularBox";
@@ -29,7 +30,7 @@ export interface BoxWrapper<T extends BoxType = BoxType> {
 }
 
 /** Boxes which can collide with each other and get hit */
-export interface HitboxWrapper<T extends BoxType = BoxType> extends BoxWrapper<T> {
+export interface Hitbox<T extends BoxType = BoxType> extends BoxWrapper<T> {
    mass: number;
    collisionType: HitboxCollisionType;
    readonly collisionBit: HitboxCollisionBit;
@@ -37,10 +38,22 @@ export interface HitboxWrapper<T extends BoxType = BoxType> extends BoxWrapper<T
    readonly flags: number;
 }
 
-/** Boxes which can damage hitboxes they collide with */
-export interface DamageBoxWrapper<T extends BoxType = BoxType> extends BoxWrapper<T> {}
+export interface GenericCollisionBoxInfo<T extends BoxType = BoxType> extends BoxWrapper<T> {
+   readonly associatedLimbInventoryName: InventoryName;
+}
 
-export function createHitbox<T extends BoxType>(box: BoxFromType[T], mass: number, collisionType: HitboxCollisionType, collisionBit: HitboxCollisionBit, collisionMask: number, flags: number): HitboxWrapper<T> {
+// @Cleanup: rename to AttackBox
+/** Boxes which can damage hitboxes they collide with */
+export interface DamageBox<T extends BoxType = BoxType> extends GenericCollisionBoxInfo<T> {}
+
+export interface BlockBox<T extends BoxType = BoxType> extends GenericCollisionBoxInfo<T> {}
+
+export const enum GenericCollisionBoxType {
+   damage,
+   block
+}
+
+export function createHitbox<T extends BoxType>(box: BoxFromType[T], mass: number, collisionType: HitboxCollisionType, collisionBit: HitboxCollisionBit, collisionMask: number, flags: number): Hitbox<T> {
    return {
       box: box,
       mass: mass,
@@ -51,17 +64,18 @@ export function createHitbox<T extends BoxType>(box: BoxFromType[T], mass: numbe
    };
 }
 
-export function createDamageBox<T extends BoxType>(box: BoxFromType[T]): DamageBoxWrapper<T> {
-   return {
-      box: box
-   };
-}
+// @Temporary?
+// export function createDamageBox<T extends BoxType>(box: BoxFromType[T]): DamageBox<T> {
+//    return {
+//       box: box
+//    };
+// }
 
 export function boxIsCircular(box: Box): box is CircularBox {
    return typeof (box as CircularBox).radius !== "undefined";
 }
 
-export function hitboxIsCircular(hitbox: HitboxWrapper): hitbox is HitboxWrapper<BoxType.circular> {
+export function hitboxIsCircular(hitbox: Hitbox): hitbox is Hitbox<BoxType.circular> {
    return typeof (hitbox.box as CircularBox).radius !== "undefined";
 }
 
@@ -71,7 +85,7 @@ export function assertBoxIsRectangular(box: Box): asserts box is RectangularBox 
    }
 }
 
-export function assertHitboxIsRectangular(hitbox: HitboxWrapper): asserts hitbox is HitboxWrapper<BoxType.rectangular> {
+export function assertHitboxIsRectangular(hitbox: Hitbox): asserts hitbox is Hitbox<BoxType.rectangular> {
    if (boxIsCircular(hitbox.box)) {
       throw new Error();
    }

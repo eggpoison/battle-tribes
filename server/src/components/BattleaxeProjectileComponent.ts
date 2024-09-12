@@ -1,8 +1,8 @@
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "battletribes-shared/components";
 import { ComponentArray } from "./ComponentArray";
-import { EntityID } from "webgl-test-shared/dist/entities";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { lerp } from "webgl-test-shared/dist/utils";
+import { EntityID } from "battletribes-shared/entities";
+import { Settings } from "battletribes-shared/settings";
+import { lerp } from "battletribes-shared/utils";
 import Board from "../Board";
 import { entitiesAreColliding, CollisionVars } from "../collision";
 import { PhysicsComponentArray } from "./PhysicsComponent";

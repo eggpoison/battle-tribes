@@ -1,15 +1,15 @@
-import { EntityID, TreeSize } from "webgl-test-shared/dist/entities";
+import { EntityID, TreeSize } from "battletribes-shared/entities";
 import { ComponentArray } from "./ComponentArray";
-import { GrassBlockerCircle } from "webgl-test-shared/dist/grass-blockers";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { GrassBlockerCircle } from "battletribes-shared/grass-blockers";
+import { ServerComponentType } from "battletribes-shared/components";
 import { ComponentConfig } from "../components";
 import { TransformComponentArray } from "./TransformComponent";
 import { addGrassBlocker } from "../grass-blockers";
-import { Packet } from "webgl-test-shared/dist/packets";
-import { ItemType } from "webgl-test-shared/dist/items/items";
-import { randInt } from "webgl-test-shared/dist/utils";
+import { Packet } from "battletribes-shared/packets";
+import { ItemType } from "battletribes-shared/items/items";
+import { randInt } from "battletribes-shared/utils";
 import { createItemsOverEntity } from "../entity-shared";
-import CircularBox from "webgl-test-shared/dist/boxes/CircularBox";
+import CircularBox from "battletribes-shared/boxes/CircularBox";
 
 export interface TreeComponentParams {
    readonly treeSize: TreeSize;

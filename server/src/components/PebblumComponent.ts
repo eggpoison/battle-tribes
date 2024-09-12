@@ -1,11 +1,11 @@
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "battletribes-shared/components";
 import { ComponentArray } from "./ComponentArray";
-import { EntityID } from "webgl-test-shared/dist/entities";
+import { EntityID } from "battletribes-shared/entities";
 import { moveEntityToPosition, stopEntity } from "../ai-shared";
 import Board from "../Board";
 import { PhysicsComponentArray } from "./PhysicsComponent";
 import { TransformComponentArray } from "./TransformComponent";
-import { UtilVars } from "webgl-test-shared/dist/utils";
+import { UtilVars } from "battletribes-shared/utils";
 
 const enum Vars {
    TURN_SPEED = UtilVars.PI * 2

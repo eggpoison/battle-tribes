@@ -1,5 +1,5 @@
-import { Settings } from "webgl-test-shared/dist/settings";
-import { TileType } from "webgl-test-shared/dist/tiles";
+import { Settings } from "battletribes-shared/settings";
+import { TileType } from "battletribes-shared/tiles";
 import Camera from "../../Camera";
 import { TEXTURE_IMAGE_RECORD } from "../../textures";
 import { gl, createWebGLProgram } from "../../webgl";

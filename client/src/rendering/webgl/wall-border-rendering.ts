@@ -1,4 +1,4 @@
-import { Settings } from "webgl-test-shared/dist/settings";
+import { Settings } from "battletribes-shared/settings";
 import Camera from "../../Camera";
 import { Tile } from "../../Tile";
 import { createWebGLProgram, gl } from "../../webgl";

@@ -1,5 +1,5 @@
-import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { EntityID, EntityType } from "battletribes-shared/entities";
+import { ServerComponentType } from "battletribes-shared/components";
 import Tribe from "../Tribe";
 import { ComponentArray } from "./ComponentArray";
 import { TribesmanAIComponentArray, getTribesmanRelationship } from "./TribesmanAIComponent";
@@ -7,9 +7,9 @@ import { TribeMemberComponentArray } from "./TribeMemberComponent";
 import { PlantComponentArray } from "./PlantComponent";
 import { GolemComponentArray } from "./GolemComponent";
 import Board from "../Board";
-import { TribeType } from "webgl-test-shared/dist/tribes";
+import { TribeType } from "battletribes-shared/tribes";
 import { StructureComponentArray } from "./StructureComponent";
-import { Packet } from "webgl-test-shared/dist/packets";
+import { Packet } from "battletribes-shared/packets";
 
 // /** Relationships a tribe member can have, in increasing order of threat */
 export const enum EntityRelationship {

@@ -1,8 +1,8 @@
-import { EntityType, EntityTypeString } from "webgl-test-shared/dist/entities";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { TitleGenerationInfo, TribesmanTitle } from "webgl-test-shared/dist/titles";
-import { Point, lerp, randFloat, veryBadHash } from "webgl-test-shared/dist/utils";
+import { EntityType, EntityTypeString } from "battletribes-shared/entities";
+import { ServerComponentType } from "battletribes-shared/components";
+import { Settings } from "battletribes-shared/settings";
+import { TitleGenerationInfo, TribesmanTitle } from "battletribes-shared/titles";
+import { Point, lerp, randFloat, veryBadHash } from "battletribes-shared/utils";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import { Light, addLight, attachLightToEntity, removeLightsAttachedToEntity } from "../lights";
@@ -12,7 +12,7 @@ import { createSprintParticle, createTitleObtainParticle } from "../particles";
 import { createRenderPartOverlayGroup } from "../rendering/webgl/overlay-rendering";
 import { RenderPart } from "../render-parts/render-parts";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
-import { PacketReader } from "webgl-test-shared/dist/packets";
+import { PacketReader } from "battletribes-shared/packets";
 import { TitlesTab_setTitles } from "../components/game/dev/tabs/TitlesTab";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 

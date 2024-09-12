@@ -1,12 +1,12 @@
-import { EntityType } from "webgl-test-shared/dist/entities";
-import { randFloat, randInt } from "webgl-test-shared/dist/utils";
+import { EntityType } from "battletribes-shared/entities";
+import { randFloat, randInt } from "battletribes-shared/utils";
 import Particle from "../Particle";
 import Board from "../Board";
 import { ParticleColour, ParticleRenderLayer, addMonocolourParticleToBufferContainer } from "../rendering/webgl/particle-rendering";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { AudioFilePath, playSound } from "../sound";
 import Entity from "../Entity";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "battletribes-shared/components";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 class IceSpikes extends Entity {

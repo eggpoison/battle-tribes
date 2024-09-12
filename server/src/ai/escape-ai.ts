@@ -1,4 +1,4 @@
-import { EntityID } from "webgl-test-shared/dist/entities";
+import { EntityID } from "battletribes-shared/entities";
 import { EscapeAIComponentArray } from "../components/EscapeAIComponent";
 import { PhysicsComponentArray } from "../components/PhysicsComponent";
 import { TransformComponentArray } from "../components/TransformComponent";

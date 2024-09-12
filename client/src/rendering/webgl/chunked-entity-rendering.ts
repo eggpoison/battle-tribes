@@ -1,6 +1,6 @@
-import { Settings } from "webgl-test-shared/dist/settings";
+import { Settings } from "battletribes-shared/settings";
 import { NUM_RENDER_LAYERS, RenderLayer } from "../../render-layers";
-import { EntityID } from "webgl-test-shared/dist/entities";
+import { EntityID } from "battletribes-shared/entities";
 import Entity from "../../Entity";
 import { TransformComponentArray } from "../../entity-components/TransformComponent";
 import { clearEntityInVertexData, EntityRenderingVars, getEntityRenderingProgram, setEntityInVertexData } from "./entity-rendering";

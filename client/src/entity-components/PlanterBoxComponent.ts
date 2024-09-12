@@ -1,14 +1,14 @@
-import { PlanterBoxPlant, ServerComponentType } from "webgl-test-shared/dist/components";
+import { PlanterBoxPlant, ServerComponentType } from "battletribes-shared/components";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { playSound } from "../sound";
-import { customTickIntervalHasPassed, randInt } from "webgl-test-shared/dist/utils";
+import { customTickIntervalHasPassed, randInt } from "battletribes-shared/utils";
 import { createGrowthParticle } from "../particles";
 import { getRandomPointInEntity } from "./TransformComponent";
 import { RenderPart } from "../render-parts/render-parts";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
-import { PacketReader } from "webgl-test-shared/dist/packets";
+import { PacketReader } from "battletribes-shared/packets";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 
 class PlanterBoxComponent extends ServerComponent {

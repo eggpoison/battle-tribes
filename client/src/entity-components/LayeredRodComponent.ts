@@ -1,15 +1,15 @@
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "battletribes-shared/components";
 import Entity from "../Entity";
 import ColouredRenderPart, { RenderPartColour } from "../render-parts/ColouredRenderPart";
 import { RenderPart } from "../render-parts/render-parts";
 import ServerComponent from "./ServerComponent";
-import { Colour, hueShift, lerp, multiColourLerp } from "webgl-test-shared/dist/utils";
-import { Settings } from "webgl-test-shared/dist/settings";
+import { Colour, hueShift, lerp, multiColourLerp } from "battletribes-shared/utils";
+import { Settings } from "battletribes-shared/settings";
 import Board from "../Board";
-import { PacketReader } from "webgl-test-shared/dist/packets";
-import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
+import { PacketReader } from "battletribes-shared/packets";
+import { EntityID, EntityType } from "battletribes-shared/entities";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
-import { HitboxWrapper } from "webgl-test-shared/dist/boxes/boxes";
+import { Hitbox } from "battletribes-shared/boxes/boxes";
 
 const enum Vars {
    NATURAL_DRIFT = 20 / Settings.TPS
@@ -159,7 +159,7 @@ class LayeredRodComponent extends ServerComponent {
       }
    }
 
-   public onCollision(collidingEntity: Entity, _pushedHitbox: HitboxWrapper, pushingHitbox: HitboxWrapper): void {
+   public onCollision(collidingEntity: Entity, _pushedHitbox: Hitbox, pushingHitbox: Hitbox): void {
       if (collidingEntity.type === EntityType.tree) {
          return;
       }

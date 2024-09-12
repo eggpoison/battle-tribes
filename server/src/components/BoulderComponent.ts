@@ -1,8 +1,8 @@
-import { BoulderComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
-import { randInt } from "webgl-test-shared/dist/utils";
+import { BoulderComponentData, ServerComponentType } from "battletribes-shared/components";
+import { randInt } from "battletribes-shared/utils";
 import { ComponentArray } from "./ComponentArray";
-import { EntityID } from "webgl-test-shared/dist/entities";
-import { Packet } from "webgl-test-shared/dist/packets";
+import { EntityID } from "battletribes-shared/entities";
+import { Packet } from "battletribes-shared/packets";
 
 export interface BoulderComponentParams {}
 

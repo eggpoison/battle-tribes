@@ -1,6 +1,6 @@
-import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { Point } from "webgl-test-shared/dist/utils";
+import { EntityID, EntityType } from "battletribes-shared/entities";
+import { Settings } from "battletribes-shared/settings";
+import { Point } from "battletribes-shared/utils";
 import { PhysicsComponent, PhysicsComponentArray } from "./components/PhysicsComponent";
 import { onFrozenYetiCollision } from "./entities/mobs/frozen-yeti";
 import { onGolemCollision } from "./entities/mobs/golem";
@@ -23,8 +23,7 @@ import { onSpikesCollision } from "./entities/structures/spikes";
 import { onPlayerCollision } from "./entities/tribes/player";
 import { onEmbrasureCollision } from "./entities/structures/embrasure";
 import { onTribesmanCollision } from "./entities/tribes/tribe-member";
-import { DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
-import { CollisionPushInfo, collisionBitsAreCompatible, getCollisionPushInfo } from "webgl-test-shared/dist/hitbox-collision";
+import { CollisionPushInfo, collisionBitsAreCompatible, getCollisionPushInfo } from "battletribes-shared/hitbox-collision";
 import { TransformComponent, TransformComponentArray } from "./components/TransformComponent";
 import Board from "./Board";
 import { onBallistaWoodenBoltCollision } from "./entities/projectiles/ballista-wooden-bolt";
@@ -33,8 +32,8 @@ import { onBallistaSlimeballCollision } from "./entities/projectiles/ballista-sl
 import { onBallistaFrostcicleCollision } from "./entities/projectiles/ballista-frostcicle";
 import { onWoodenArrowCollision } from "./entities/projectiles/wooden-arrow";
 import { ComponentArrays } from "./components/ComponentArray";
-import { HitboxCollisionType, HitboxWrapper, updateBox } from "webgl-test-shared/dist/boxes/boxes";
-import RectangularBox from "webgl-test-shared/dist/boxes/RectangularBox";
+import { HitboxCollisionType, Hitbox, updateBox } from "battletribes-shared/boxes/boxes";
+import RectangularBox from "battletribes-shared/boxes/RectangularBox";
 
 export const enum CollisionVars {
    NO_COLLISION = 0xFFFF
@@ -93,7 +92,7 @@ const resolveHardCollision = (transformComponent: TransformComponent, physicsCom
    physicsComponent.externalVelocity.y = by * externalVelocityProjectionCoeff;
 }
 
-const resolveSoftCollision = (transformComponent: TransformComponent, physicsComponent: PhysicsComponent, pushingHitbox: HitboxWrapper, pushInfo: CollisionPushInfo): void => {
+const resolveSoftCollision = (transformComponent: TransformComponent, physicsComponent: PhysicsComponent, pushingHitbox: Hitbox, pushInfo: CollisionPushInfo): void => {
    // Force gets greater the further into each other the entities are
    const distMultiplier = Math.pow(pushInfo.amountIn, 1.1);
    const pushForce = Settings.ENTITY_PUSH_FORCE * Settings.I_TPS * distMultiplier * pushingHitbox.mass / transformComponent.totalMass;
@@ -174,7 +173,7 @@ export function collide(entity: EntityID, pushingEntity: EntityID, pushedHitboxI
 }
 
 /** If no collision is found, does nothing. */
-export function resolveEntityTileCollision(entity: EntityID, hitbox: HitboxWrapper, tileX: number, tileY: number): void {
+export function resolveEntityTileCollision(entity: EntityID, hitbox: Hitbox, tileX: number, tileY: number): void {
    // @Speed
    const tileBox = new RectangularBox(new Point(0, 0), Settings.TILE_SIZE, Settings.TILE_SIZE, 0);
    updateBox(tileBox, (tileX + 0.5) * Settings.TILE_SIZE, (tileY + 0.5) * Settings.TILE_SIZE, 0);

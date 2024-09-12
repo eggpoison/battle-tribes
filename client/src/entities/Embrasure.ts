@@ -1,7 +1,7 @@
-import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { EntityType } from "webgl-test-shared/dist/entities";
-import { angle } from "webgl-test-shared/dist/utils";
-import { HitData } from "webgl-test-shared/dist/client-server-types";
+import { ServerComponentType } from "battletribes-shared/components";
+import { EntityType } from "battletribes-shared/entities";
+import { angle } from "battletribes-shared/utils";
+import { HitData } from "battletribes-shared/client-server-types";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { playSound } from "../sound";
 import Entity from "../Entity";

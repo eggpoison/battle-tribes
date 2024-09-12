@@ -1,11 +1,11 @@
-import { angle, randFloat } from "webgl-test-shared/dist/utils";
-import { EntityType } from "webgl-test-shared/dist/entities";
-import { HitData } from "webgl-test-shared/dist/client-server-types";
+import { angle, randFloat } from "battletribes-shared/utils";
+import { EntityType } from "battletribes-shared/entities";
+import { HitData } from "battletribes-shared/client-server-types";
 import { BloodParticleSize, createBlueBloodParticle, createBlueBloodParticleFountain, createBlueBloodPoolParticle } from "../particles";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import Entity from "../Entity";
 import { FROZEN_YETI_HEAD_DISTANCE } from "../entity-components/FrozenYetiComponent";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "battletribes-shared/components";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { RenderPart } from "../render-parts/render-parts";
 

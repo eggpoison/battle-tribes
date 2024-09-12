@@ -1,7 +1,7 @@
-import { VisibleChunkBounds, PlayerInventoryData } from "webgl-test-shared/dist/client-server-types";
-import { ServerComponentType, ServerComponentTypeString } from "webgl-test-shared/dist/components";
-import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
-import { TechUnlockProgress } from "webgl-test-shared/dist/techs";
+import { VisibleChunkBounds } from "battletribes-shared/client-server-types";
+import { ServerComponentType, ServerComponentTypeString } from "battletribes-shared/components";
+import { EntityID } from "battletribes-shared/entities";
+import { TechUnlockProgress } from "battletribes-shared/techs";
 import Board from "../Board";
 import { ComponentArrays } from "../components/ComponentArray";
 import { HealthComponentArray } from "../components/HealthComponent";
@@ -9,15 +9,15 @@ import { InventoryComponentArray, getInventory } from "../components/InventoryCo
 import { addCrossbowLoadProgressRecordToPacket, getCrossbowLoadProgressRecordLength, InventoryUseComponentArray, LimbInfo } from "../components/InventoryUseComponent";
 import { PhysicsComponentArray } from "../components/PhysicsComponent";
 import { SERVER } from "./server";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { GrassBlocker } from "webgl-test-shared/dist/grass-blockers";
+import { Settings } from "battletribes-shared/settings";
+import { GrassBlocker } from "battletribes-shared/grass-blockers";
 import { addEntityDebugDataToPacket, createEntityDebugData, getEntityDebugDataLength } from "../entity-debug-data";
 import PlayerClient from "./PlayerClient";
 import { PlayerComponentArray } from "../components/PlayerComponent";
-import { Inventory, InventoryName, ItemType } from "webgl-test-shared/dist/items/items";
+import { Inventory, InventoryName, ItemType } from "battletribes-shared/items/items";
 import { TransformComponentArray } from "../components/TransformComponent";
 import { ComponentConfig } from "../components";
-import { alignLengthBytes, Packet, PacketType } from "webgl-test-shared/dist/packets";
+import { alignLengthBytes, Packet, PacketType } from "battletribes-shared/packets";
 
 export function getInventoryDataLength(inventory: Inventory): number {
    let lengthBytes = 4 * Float32Array.BYTES_PER_ELEMENT;
@@ -89,20 +89,6 @@ export function addEntityDataToPacket(packet: Packet, entity: EntityID, player: 
             throw new Error(`Component type '${ServerComponentTypeString[componentArray.componentType]}' has wrong data length.`)
          }
       }
-   }
-}
-
-// @Cleanup: unused?
-const createNewPlayerInventories = (): PlayerInventoryData => {
-   return {
-      hotbar: new Inventory(Settings.INITIAL_PLAYER_HOTBAR_SIZE, 1, InventoryName.hotbar),
-      backpackInventory: new Inventory(0, 0, InventoryName.backpack),
-      backpackSlot: new Inventory(1, 1, InventoryName.backpackSlot),
-      heldItemSlot: new Inventory(1, 1, InventoryName.heldItemSlot),
-      craftingOutputItemSlot: new Inventory(1, 1, InventoryName.craftingOutputSlot),
-      armourSlot: new Inventory(1, 1, InventoryName.armourSlot),
-      offhand: new Inventory(1, 1, InventoryName.offhand),
-      gloveSlot: new Inventory(1, 1, InventoryName.gloveSlot)
    }
 }
 
@@ -203,18 +189,6 @@ export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend:
 
    // Removed entity IDs
    lengthBytes += Float32Array.BYTES_PER_ELEMENT + Float32Array.BYTES_PER_ELEMENT * playerClient.visibleEntityDeathIDs.length;
-
-   // Player inventories
-   if (playerIsAlive) {
-      lengthBytes += getInventoryDataLength(hotbarInventory!);
-      lengthBytes += getInventoryDataLength(backpackInventory!);
-      lengthBytes += getInventoryDataLength(backpackSlotInventory!);
-      lengthBytes += getInventoryDataLength(heldItemSlotInventory!);
-      lengthBytes += getInventoryDataLength(craftingOutputSlotInventory!);
-      lengthBytes += getInventoryDataLength(armourSlotInventory!);
-      lengthBytes += getInventoryDataLength(offhandInventory!);
-      lengthBytes += getInventoryDataLength(gloveSlotInventory!);
-   }
 
    // Visible hits
    lengthBytes += Float32Array.BYTES_PER_ELEMENT + 7 * Float32Array.BYTES_PER_ELEMENT * playerClient.visibleHits.length;
@@ -326,18 +300,6 @@ export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend:
    packet.addNumber(playerClient.visibleEntityDeathIDs.length);
    for (const entity of playerClient.visibleEntityDeathIDs) {
       packet.addNumber(entity);
-   }
-
-   // Add inventory data
-   if (playerIsAlive) {
-      addInventoryDataToPacket(packet, hotbarInventory!);
-      addInventoryDataToPacket(packet, backpackInventory!);
-      addInventoryDataToPacket(packet, backpackSlotInventory!);
-      addInventoryDataToPacket(packet, heldItemSlotInventory!);
-      addInventoryDataToPacket(packet, craftingOutputSlotInventory!);
-      addInventoryDataToPacket(packet, armourSlotInventory!);
-      addInventoryDataToPacket(packet, offhandInventory!);
-      addInventoryDataToPacket(packet, gloveSlotInventory!);
    }
    
    // Add visible hits

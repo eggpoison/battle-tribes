@@ -1,7 +1,7 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
-import { EntityID, EntityType, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { Point, randInt } from "webgl-test-shared/dist/utils";
+import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "battletribes-shared/collision";
+import { EntityID, EntityType, PlayerCauseOfDeath } from "battletribes-shared/entities";
+import { Settings } from "battletribes-shared/settings";
+import { Point, randInt } from "battletribes-shared/utils";
 import { HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
 import { ZombieComponentArray, zombieShouldAttackEntity } from "../../components/ZombieComponent";
 import { InventoryCreationInfo, pickupItemEntity } from "../../components/InventoryComponent";
@@ -9,14 +9,14 @@ import Board from "../../Board";
 import { wasTribeMemberKill } from "../tribes/tribe-member";
 import { PhysicsComponentArray, applyKnockback } from "../../components/PhysicsComponent";
 import { createItemsOverEntity } from "../../entity-shared";
-import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
+import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
 import { TombstoneComponentArray } from "../../components/TombstoneComponent";
-import { InventoryName, ItemType } from "webgl-test-shared/dist/items/items";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { InventoryName, ItemType } from "battletribes-shared/items/items";
+import { ServerComponentType } from "battletribes-shared/components";
 import { ComponentConfig } from "../../components";
 import { TransformComponentArray } from "../../components/TransformComponent";
-import { createHitbox, HitboxCollisionType } from "webgl-test-shared/dist/boxes/boxes";
-import CircularBox from "webgl-test-shared/dist/boxes/CircularBox";
+import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
+import CircularBox from "battletribes-shared/boxes/CircularBox";
 
 export const enum ZombieVars {
    CHASE_PURSUE_TIME_TICKS = 5 * Settings.TPS,
@@ -44,7 +44,7 @@ export function createZombieConfig(): ComponentConfig<ComponentTypes> {
       inventoryName: InventoryName.handSlot,
       width: 1,
       height: 1,
-      options: { acceptsPickedUpItems: true, isDroppedOnDeath: true },
+      options: { acceptsPickedUpItems: true, isDroppedOnDeath: true, isSentToEnemyPlayers: false },
       items: []
    });
 
@@ -54,7 +54,7 @@ export function createZombieConfig(): ComponentConfig<ComponentTypes> {
          inventoryName: InventoryName.offhand,
          width: 0,
          height: 0,
-         options: { acceptsPickedUpItems: true, isDroppedOnDeath: true },
+         options: { acceptsPickedUpItems: true, isDroppedOnDeath: true, isSentToEnemyPlayers: false },
          items: []
       });
    }

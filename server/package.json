@@ -1,7 +1,7 @@
 {
    "license": "UNLICENSED",
    "scripts": {
-      "start": "nodemon --legacy-watch",
+      "start": "ts-node-dev -r tsconfig-paths/register ./src/server/server",
       "perf": "node -r ts-node/register -r tsconfig-paths/register --inspect src/server/server.ts",
       "gigaperf": "node -r ts-node/register --log-deopt --redirect-code-traces --redirect-code-traces-to=./NUL --log-ic --log-maps --log-maps-details --log-code --log-source-code --prof --log-internal-timer-events --detailed-line-info --logfile=v8.log --no-logfile-per-isolate src/server.ts",
       "debug": "nodemon --inspect",
@@ -15,7 +15,6 @@
       "eslint": "^8.57.0",
       "express": "^4.19.2",
       "socket.io": "^4.5.1",
-      "webgl-test-shared": "file:../webgl-test-shared",
       "ws": "^8.18.0"
    },
    "devDependencies": {
@@ -23,6 +22,8 @@
       "madge": "^6.1.0",
       "nodemon": "^2.0.18",
       "ts-node": "^10.9.1",
+      "ts-node-dev": "^2.0.0",
+      "tsconfig-paths": "^4.2.0",
       "typescript": "^4.9.4",
       "typescript-eslint": "^7.8.0"
    }

@@ -1,14 +1,14 @@
-import { Settings } from "webgl-test-shared/dist/settings";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { EntityID, EntityType, EntityTypeString } from "webgl-test-shared/dist/entities";
-import { TileType, TILE_MOVE_SPEED_MULTIPLIERS, TILE_FRICTIONS } from "webgl-test-shared/dist/tiles";
+import { Settings } from "battletribes-shared/settings";
+import { ServerComponentType } from "battletribes-shared/components";
+import { EntityID, EntityType, EntityTypeString } from "battletribes-shared/entities";
+import { TileType, TILE_MOVE_SPEED_MULTIPLIERS, TILE_FRICTIONS } from "battletribes-shared/tiles";
 import { ComponentArray } from "./ComponentArray";
 import { addDirtyPathfindingEntity, entityCanBlockPathfinding, removeDirtyPathfindingEntity } from "../pathfinding";
-import { Point } from "webgl-test-shared/dist/utils";
+import { Point } from "battletribes-shared/utils";
 import Board from "../Board";
 import { registerDirtyEntity, registerPlayerKnockback } from "../server/player-clients";
 import { getEntityTile, TransformComponent, TransformComponentArray } from "./TransformComponent";
-import { Packet } from "webgl-test-shared/dist/packets";
+import { Packet } from "battletribes-shared/packets";
 
 export interface PhysicsComponentParams {
    velocityX: number;

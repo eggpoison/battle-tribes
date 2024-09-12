@@ -1,10 +1,10 @@
-import { HitData, PlayerKnockbackData, HealData, ResearchOrbCompleteData, VisibleChunkBounds } from "webgl-test-shared/dist/client-server-types";
+import { HitData, PlayerKnockbackData, HealData, ResearchOrbCompleteData, VisibleChunkBounds } from "battletribes-shared/client-server-types";
 import Tribe from "../Tribe";
-import { EntityTickEvent } from "webgl-test-shared/dist/entity-events";
-import { EntityID } from "webgl-test-shared/dist/entities";
+import { EntityTickEvent } from "battletribes-shared/entity-events";
+import { EntityID } from "battletribes-shared/entities";
 import WebSocket from "ws";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { Point } from "webgl-test-shared/dist/utils";
+import { Settings } from "battletribes-shared/settings";
+import { Point } from "battletribes-shared/utils";
 
 export const enum PlayerClientVars {
    VIEW_PADDING = 128

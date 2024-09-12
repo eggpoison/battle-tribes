@@ -1,17 +1,18 @@
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "battletribes-shared/components";
 import { createItemEntityConfig, itemEntityCanBePickedUp } from "../entities/item-entity";
 import { ComponentArray } from "./ComponentArray";
 import { createItem } from "../items";
 import Board from "../Board";
 import { ItemComponentArray } from "./ItemComponent";
-import { CraftingRecipe, CraftingStation } from "webgl-test-shared/dist/items/crafting-recipes";
-import { ItemTally2, tallyInventoryItems } from "webgl-test-shared/dist/items/ItemTally";
-import { InventoryName, Inventory, ItemType, Item, itemIsStackable, ITEM_INFO_RECORD, StackableItemInfo, getItemStackSize } from "webgl-test-shared/dist/items/items";
-import { EntityID } from "webgl-test-shared/dist/entities";
+import { CraftingRecipe, CraftingStation } from "battletribes-shared/items/crafting-recipes";
+import { ItemTally2, tallyInventoryItems } from "battletribes-shared/items/ItemTally";
+import { InventoryName, Inventory, ItemType, Item, itemIsStackable, ITEM_INFO_RECORD, StackableItemInfo, getItemStackSize } from "battletribes-shared/items/items";
+import { EntityID } from "battletribes-shared/entities";
 import { TransformComponentArray } from "./TransformComponent";
 import { createEntityFromConfig } from "../Entity";
-import { Packet } from "webgl-test-shared/dist/packets";
+import { Packet } from "battletribes-shared/packets";
 import { addInventoryDataToPacket, getInventoryDataLength } from "../server/game-data-packets";
+import { EntityRelationship, getEntityRelationship } from "./TribeComponent";
 
 export interface ItemCreationInfo {
    readonly itemSlot: number;
@@ -33,6 +34,8 @@ export interface InventoryComponentParams {
 export interface InventoryOptions {
    readonly acceptsPickedUpItems: boolean;
    readonly isDroppedOnDeath: boolean;
+   /** Whether or not the inventory is included in packets sent to enemy players. */
+   readonly isSentToEnemyPlayers: boolean;
 }
 
 export class InventoryComponent {
@@ -40,6 +43,8 @@ export class InventoryComponent {
    public readonly inventoryRecord: Partial<Record<InventoryName, Inventory>> = {};
    /** Stores all inventories associated with the inventory component in the order of when they were added. */
    public readonly inventories = new Array<Inventory>();
+   /** Companion array to inventories */
+   public readonly inventoryIsSentToEnemyPlayersArray = new Array<boolean>();
 
    public readonly accessibleInventories = new Array<Inventory>();
    /** Inventories which are dropped on death */
@@ -122,6 +127,7 @@ export function createNewInventory(inventoryComponent: InventoryComponent, inven
 
    inventoryComponent.inventoryRecord[inventoryName] = inventory;
    inventoryComponent.inventories.push(inventory);
+   inventoryComponent.inventoryIsSentToEnemyPlayersArray.push(options.isSentToEnemyPlayers);
 
    if (options.acceptsPickedUpItems) {
       inventoryComponent.accessibleInventories.push(inventory);
@@ -485,23 +491,42 @@ export function craftRecipe(inventoryComponent: InventoryComponent, recipe: Craf
    addItemToInventory(outputInventory, recipe.product, recipe.yield);
 }
 
-function getDataLength(entity: EntityID): number {
+function getDataLength(entity: EntityID, player: EntityID): number {
    const inventoryComponent = InventoryComponentArray.getComponent(entity);
+   const relationship = getEntityRelationship(entity, player);
 
    let lengthBytes = 2 * Float32Array.BYTES_PER_ELEMENT;
-   for (const inventory of inventoryComponent.inventories) {
-      lengthBytes += getInventoryDataLength(inventory);
+   for (let i = 0; i < inventoryComponent.inventories.length; i++) {
+      const isSentToEnemyPlayers = inventoryComponent.inventoryIsSentToEnemyPlayersArray[i];
+      const inventory = inventoryComponent.inventories[i];
+      if (isSentToEnemyPlayers || relationship !== EntityRelationship.enemy) {
+         lengthBytes += getInventoryDataLength(inventory);
+      }
    }
 
    return lengthBytes;
 }
 
-function addDataToPacket(packet: Packet, entity: EntityID): void {
+function addDataToPacket(packet: Packet, entity: EntityID, player: EntityID): void {
    const inventoryComponent = InventoryComponentArray.getComponent(entity);
+   const relationship = getEntityRelationship(entity, player);
 
-   packet.addNumber(inventoryComponent.inventories.length);
+   let numSentInventories = 0;
    for (let i = 0; i < inventoryComponent.inventories.length; i++) {
+      const isSentToEnemyPlayers = inventoryComponent.inventoryIsSentToEnemyPlayersArray[i];
+      if (isSentToEnemyPlayers || relationship !== EntityRelationship.enemy) {
+         numSentInventories++;
+      }
+   }
+   packet.addNumber(numSentInventories);
+   
+   for (let i = 0; i < inventoryComponent.inventories.length; i++) {
+      const isSentToEnemyPlayers = inventoryComponent.inventoryIsSentToEnemyPlayersArray[i];
       const inventory = inventoryComponent.inventories[i];
+      if (!isSentToEnemyPlayers && relationship === EntityRelationship.enemy) {
+         continue;
+      }
+
       addInventoryDataToPacket(packet, inventory);
    }
 }

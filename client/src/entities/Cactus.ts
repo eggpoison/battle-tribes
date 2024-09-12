@@ -1,11 +1,11 @@
-import { randInt } from "webgl-test-shared/dist/utils";
-import { EntityType } from "webgl-test-shared/dist/entities";
+import { randInt } from "battletribes-shared/utils";
+import { EntityType } from "battletribes-shared/entities";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { playSound } from "../sound";
 import { createCactusSpineParticle } from "../particles";
 import Entity from "../Entity";
 import { CACTUS_RADIUS } from "../entity-components/CactusComponent";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "battletribes-shared/components";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 class Cactus extends Entity {

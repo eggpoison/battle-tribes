@@ -1,7 +1,7 @@
-import { EntityType, NUM_ENTITY_TYPES } from "webgl-test-shared/dist/entities";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { TileType } from "webgl-test-shared/dist/tiles";
-import { Point } from "webgl-test-shared/dist/utils";
+import { EntityType, NUM_ENTITY_TYPES } from "battletribes-shared/entities";
+import { Settings } from "battletribes-shared/settings";
+import { TileType } from "battletribes-shared/tiles";
+import { Point } from "battletribes-shared/utils";
 import Board from "./Board";
 import { SPAWNABLE_TILE_RECORD } from "./entity-spawning";
 import { TransformComponentArray } from "./components/TransformComponent";

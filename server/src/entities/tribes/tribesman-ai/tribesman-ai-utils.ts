@@ -1,4 +1,4 @@
-import { PathfindingSettings, Settings } from "webgl-test-shared/dist/settings";
+import { PathfindingSettings, Settings } from "battletribes-shared/settings";
 import Board from "../../../Board";
 import Tribe from "../../../Tribe";
 import { getEntitiesInRange, stopEntity, willStopAtDesiredDistance } from "../../../ai-shared";
@@ -7,17 +7,17 @@ import { EntityRelationship, TribeComponentArray, getEntityRelationship } from "
 import { TribesmanPathType, TribesmanAIComponentArray } from "../../../components/TribesmanAIComponent";
 import { entityCanBlockPathfinding, getEntityPathfindingGroupID, PathfindFailureDefault, getEntityFootprint, PathfindOptions, pathfind, smoothPath, positionIsAccessible, replacePathfindingNodeGroupID, entityHasReachedNode, getAngleToNode, getClosestPathfindNode, getDistanceToNode, pathIsClear } from "../../../pathfinding";
 import { TRIBESMAN_TURN_SPEED } from "./tribesman-ai";
-import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
-import { distance, angle } from "webgl-test-shared/dist/utils";
+import { EntityID, EntityType } from "battletribes-shared/entities";
+import { distance, angle } from "battletribes-shared/utils";
 import { doorIsClosed, toggleDoor } from "../../../components/DoorComponent";
 import { InventoryUseComponentArray } from "../../../components/InventoryUseComponent";
-import { TribesmanTitle } from "webgl-test-shared/dist/titles";
-import { TRIBE_INFO_RECORD } from "webgl-test-shared/dist/tribes";
+import { TribesmanTitle } from "battletribes-shared/titles";
+import { TRIBE_INFO_RECORD } from "battletribes-shared/tribes";
 import { TribeMemberComponentArray, tribeMemberHasTitle } from "../../../components/TribeMemberComponent";
 import { SpikesComponentArray } from "../../../components/SpikesComponent";
 import { TRIBE_WARRIOR_VISION_RANGE } from "../tribe-warrior";
 import { TRIBE_WORKER_VISION_RANGE, TRIBE_WORKER_RADIUS } from "../tribe-worker";
-import { InventoryName, Inventory, ItemInfoRecord, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, ToolItemInfo } from "webgl-test-shared/dist/items/items";
+import { InventoryName, Inventory, ItemInfoRecord, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, ToolItemInfo } from "battletribes-shared/items/items";
 import { getAgeTicks, TransformComponentArray } from "../../../components/TransformComponent";
 
 const enum Vars {

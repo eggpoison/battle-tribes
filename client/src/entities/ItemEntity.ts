@@ -1,5 +1,5 @@
-import { EntityType } from "webgl-test-shared/dist/entities";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { EntityType } from "battletribes-shared/entities";
+import { ServerComponentType } from "battletribes-shared/components";
 import Entity from "../Entity";
 import CLIENT_ITEM_INFO_RECORD from "../client-item-info";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";

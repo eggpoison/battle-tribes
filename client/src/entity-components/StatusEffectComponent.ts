@@ -1,7 +1,7 @@
-import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { StatusEffectData } from "webgl-test-shared/dist/client-server-types";
-import { StatusEffect } from "webgl-test-shared/dist/status-effects";
-import { Point, customTickIntervalHasPassed, lerp, randFloat, randItem } from "webgl-test-shared/dist/utils";
+import { ServerComponentType } from "battletribes-shared/components";
+import { StatusEffectData } from "battletribes-shared/client-server-types";
+import { StatusEffect } from "battletribes-shared/status-effects";
+import { Point, customTickIntervalHasPassed, lerp, randFloat, randItem } from "battletribes-shared/utils";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import { playSound } from "../sound";
@@ -10,7 +10,7 @@ import Particle from "../Particle";
 import { createPoisonBubble, createBloodParticle, BloodParticleSize } from "../particles";
 import { addTexturedParticleToBufferContainer, ParticleRenderLayer, addMonocolourParticleToBufferContainer, ParticleColour } from "../rendering/webgl/particle-rendering";
 import { Light, addLight, attachLightToEntity, removeLight } from "../lights";
-import { PacketReader } from "webgl-test-shared/dist/packets";
+import { PacketReader } from "battletribes-shared/packets";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 
 const BURNING_PARTICLE_COLOURS: ReadonlyArray<ParticleColour> = [

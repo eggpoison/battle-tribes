@@ -1,7 +1,7 @@
-import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { angle, randFloat } from "webgl-test-shared/dist/utils";
-import { EntityType } from "webgl-test-shared/dist/entities";
-import { HitData } from "webgl-test-shared/dist/client-server-types";
+import { ServerComponentType } from "battletribes-shared/components";
+import { angle, randFloat } from "battletribes-shared/utils";
+import { EntityType } from "battletribes-shared/entities";
+import { HitData } from "battletribes-shared/client-server-types";
 import { BloodParticleSize, createBloodParticle, createBloodParticleFountain, createBloodPoolParticle, createSnowParticle, createWhiteSmokeParticle } from "../particles";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import Entity from "../Entity";

@@ -1,4 +1,4 @@
-import { TRIBESMAN_TITLE_RECORD, TribesmanTitle } from "webgl-test-shared/dist/titles";
+import { TRIBESMAN_TITLE_RECORD, TribesmanTitle } from "battletribes-shared/titles";
 import Client from "../../../client/Client";
 import { CLIENT_TITLE_INFO_RECORD } from "../../../client-title-info";
 

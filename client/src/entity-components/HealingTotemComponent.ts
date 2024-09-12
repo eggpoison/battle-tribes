@@ -1,11 +1,11 @@
-import { HealingTotemTargetData, ServerComponentType } from "webgl-test-shared/dist/components";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { Point, angle, distance, lerp, randInt } from "webgl-test-shared/dist/utils";
+import { HealingTotemTargetData, ServerComponentType } from "battletribes-shared/components";
+import { Settings } from "battletribes-shared/settings";
+import { Point, angle, distance, lerp, randInt } from "battletribes-shared/utils";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import { createHealingParticle } from "../particles";
 import { Light, addLight, attachLightToEntity, removeLight } from "../lights";
-import { PacketReader } from "webgl-test-shared/dist/packets";
+import { PacketReader } from "battletribes-shared/packets";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 
 const EYE_LIGHTS_TRANSFORM_TICKS = Math.floor(0.5 / Settings.TPS);

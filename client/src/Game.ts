@@ -1,6 +1,6 @@
-import { EntityDebugData } from "webgl-test-shared/dist/client-server-types";
-import { EnemyTribeData } from "webgl-test-shared/dist/techs";
-import { Settings } from "webgl-test-shared/dist/settings";
+import { EntityDebugData } from "battletribes-shared/client-server-types";
+import { EnemyTribeData } from "battletribes-shared/techs";
+import { Settings } from "battletribes-shared/settings";
 import Board from "./Board";
 import Player, { updatePlayerRotation } from "./entities/Player";
 import { isDev } from "./utils";
@@ -8,11 +8,11 @@ import { createTextCanvasContext, updateTextNumbers, renderText } from "./text-c
 import Camera from "./Camera";
 import { updateSpamFilter } from "./components/game/ChatBox";
 import { createEntityShaders } from "./rendering/webgl/entity-rendering";
-import Client from "./client/Client";
+import Client, { popGameDataPacket } from "./client/Client";
 import { calculateCursorWorldPositionX, calculateCursorWorldPositionY, cursorX, cursorY, getMouseTargetEntity, handleMouseMovement, renderCursorTooltip } from "./mouse";
 import { refreshDebugInfo, setDebugInfoDebugData } from "./components/game/dev/DebugInfo";
 import { createWebGLContext, gl, resizeCanvas } from "./webgl";
-import { loadTextures } from "./textures";
+import { loadTextures, preloadTextureImages } from "./textures";
 import { toggleSettingsMenu } from "./components/game/GameScreen";
 import { App_setGameInteractState, getGameState } from "./components/App";
 import { clearPressedKeys } from "./keyboard-input";
@@ -57,14 +57,15 @@ import { createTechTreeItemShaders, renderTechTreeItems, updateTechTreeItems } f
 import { createUBOs, updateUBOs } from "./rendering/ubos";
 import { createEntityOverlayShaders } from "./rendering/webgl/overlay-rendering";
 import { updateRenderPartMatrices } from "./rendering/render-part-matrices";
-import { EntitySummonPacket } from "webgl-test-shared/dist/dev-packets";
-import { Mutable } from "webgl-test-shared/dist/utils";
+import { EntitySummonPacket } from "battletribes-shared/dev-packets";
+import { Mutable } from "battletribes-shared/utils";
 import { renderNextRenderables, resetRenderOrder } from "./rendering/render-loop";
 import { InitialGameDataPacket, processGameDataPacket } from "./client/packet-processing";
-import { PacketReader } from "webgl-test-shared/dist/packets";
+import { PacketReader } from "battletribes-shared/packets";
 import { MAX_RENDER_LAYER, RenderLayer } from "./render-layers";
 import { updateEntity } from "./entity-components/ComponentArray";
 import { resolveEntityCollisions, resolvePlayerCollisions } from "./collision";
+import { preloadTextureAtlasImages } from "./texture-atlases/texture-atlas-stitching";
 
 let tempPacketSendCounter = 0;
 
@@ -105,26 +106,12 @@ const main = (currentTime: number): void => {
    
       Game.lag += deltaTime;
       while (Game.lag >= 1000 / Settings.TPS) {
-         if (Game.queuedPackets.length > 0) {
+         const packet = popGameDataPacket();
+         if (packet !== null) {
             // Done before so that server data can override particles
             Board.updateParticles();
-            
-            // If there is a backlog of packets and none are able to be skipped, skip to the final packet
-            if (Game.numSkippablePackets === 0 && Game.queuedPackets.length >= 2) {
-               // Unload all the packets so that things like hits taken aren't skipped
-               for (let i = 0; i < Game.queuedPackets.length; i++) {
-                  processGameDataPacket(Game.queuedPackets[i]);
-               }
-               Game.queuedPackets.splice(0, Game.queuedPackets.length);
-            } else {
-               processGameDataPacket(Game.queuedPackets[0]);
-               Game.queuedPackets.splice(0, 1);
-               Game.numSkippablePackets--;
-               
-               if (Game.queuedPackets.length === 0 || Game.numSkippablePackets < 0) {
-                  Game.numSkippablePackets = 0;
-               }
-            }
+
+            processGameDataPacket(packet);
 
             updateTextNumbers();
             Board.updateTickCallbacks();
@@ -137,8 +124,6 @@ const main = (currentTime: number): void => {
             }
             Game.update();
          } else {
-            Game.numSkippablePackets++;
-            
             updateTextNumbers();
             Board.updateTickCallbacks();
             Board.updateParticles();
@@ -148,9 +133,6 @@ const main = (currentTime: number): void => {
             Game.update();
          }
          
-         // @Hack: For some reason, if the player sends this packet 60 times a second the server begins to mess up how it receives other packet types. Weird.
-         // @Incomplete: This still happens even at low send rates - investigate.
-         // if (++tempPacketSendCounter % 3 === 0) Client.sendPlayerDataPacket();
          Client.sendPlayerDataPacket();
 
          Game.lag -= 1000 / Settings.TPS;
@@ -180,12 +162,7 @@ abstract class Game {
    
    public static lastTime = 0;
 
-   public static numSkippablePackets = 0;
-   
-   public static queuedPackets = new Array<PacketReader>();
-   
    public static isRunning = false;
-   private static isPaused = false;
 
    /** If the game has recevied up-to-date game data from the server. Set to false when paused */
    // @Cleanup: We might be able to remove this whole system by just always sending player data. But do we want to do that???
@@ -251,10 +228,6 @@ abstract class Game {
    public static stop(): void {
       this.isRunning = false;
    }
-
-   public static getIsPaused(): boolean {
-      return this.isPaused;
-   }
    
    public static sync(): void {
       Game.lastTime = performance.now();
@@ -268,16 +241,20 @@ abstract class Game {
       Game.enemyTribes = [];
 
       // Clear any queued packets from previous games
-      Game.queuedPackets = [];
+      popGameDataPacket();
 
       resetInteractableEntityIDs();
       
       if (!Game.hasInitialised) {
          return new Promise(async resolve => {
+            const start = performance.now();
+            let l = performance.now();
             createWebGLContext();
             createTechTreeGLContext();
             createTextCanvasContext();
 
+            console.log("creating contexts",performance.now() - l);
+            l = performance.now();
             Board.initialise(initialGameDataPacket);
             Board.addRiverSteppingStonesToChunks(initialGameDataPacket.riverSteppingStones);
          
@@ -285,10 +262,26 @@ abstract class Game {
 
             createUBOs();
             
+            console.log("initialising board",performance.now() - l);
+            l = performance.now();
+            preloadTextureAtlasImages();
+            const textureImages = preloadTextureImages();
+
+            console.log("preloading images",performance.now() - l);
+            l = performance.now();
+            // @Speed
+            await setupAudio();
+            
+            console.log("audio",performance.now() - l);
+            l = performance.now();
             // We load the textures before we create the shaders because some shader initialisations stitch textures together
-            await loadTextures();
+            await loadTextures(textureImages);
+            console.log("loading textures",performance.now() - l);
+            l = performance.now();
             // @Speed
             await createTextureAtlases();
+            console.log("texture atlases",performance.now() - l);
+            l = performance.now();
             
             // Create shaders
             createSolidTileShaders();
@@ -320,11 +313,12 @@ abstract class Game {
                setupFrameGraph();
             }
 
-            // @Speed
-            await setupAudio();
-
+            console.log("shader stuff",performance.now() - l);
+            l = performance.now();
             createRenderChunks(initialGameDataPacket.waterRocks, initialGameDataPacket.riverSteppingStones);
 
+            console.log("render chunks",performance.now() - l);
+            console.log(performance.now() - start);
             this.hasInitialised = true;
    
             resolve();

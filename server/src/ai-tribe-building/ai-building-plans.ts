@@ -1,22 +1,22 @@
-import { PotentialBuildingPlanData } from "webgl-test-shared/dist/ai-building-types";
-import { circleAndRectangleDoIntersect, rectanglesAreColliding } from "webgl-test-shared/dist/collision";
-import { EntityType } from "webgl-test-shared/dist/entities";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { StructureType, calculateStructureConnectionInfo } from "webgl-test-shared/dist/structures";
-import { Point, getAngleDiff, randFloat } from "webgl-test-shared/dist/utils";
+import { PotentialBuildingPlanData } from "battletribes-shared/ai-building-types";
+import { circleAndRectangleDoIntersect, rectanglesAreColliding } from "battletribes-shared/collision";
+import { EntityType } from "battletribes-shared/entities";
+import { Settings } from "battletribes-shared/settings";
+import { StructureType, calculateStructureConnectionInfo } from "battletribes-shared/structures";
+import { Point, getAngleDiff, randFloat } from "battletribes-shared/utils";
 import Board from "../Board";
 import Tribe, { BuildingPlan, NewBuildingPlan, BuildingPlanType, VirtualBuilding } from "../Tribe";
 import { placeBuilding } from "../entities/tribes/tribe-member";
 import { SafetyNode, addHitboxesOccupiedNodes, addRectangularSafetyNodePositions, placeVirtualBuilding, updateTribeBuildingInfo } from "./ai-building";
 import { buildingIsInfrastructure, getTribeSafety, tribeIsVulnerable } from "./ai-building-heuristics";
 import { TribeArea, areaHasOutsideDoor, getOutsideDoorPlacePlan } from "./ai-building-areas";
-import { getItemRecipe } from "webgl-test-shared/dist/items/crafting-recipes";
-import { ItemType, ITEM_INFO_RECORD, PlaceableItemInfo } from "webgl-test-shared/dist/items/items";
+import { getItemRecipe } from "battletribes-shared/items/crafting-recipes";
+import { ItemType, ITEM_INFO_RECORD, PlaceableItemInfo } from "battletribes-shared/items/items";
 import { TransformComponentArray } from "../components/TransformComponent";
-import { createEntityHitboxes } from "webgl-test-shared/dist/boxes/entity-hitbox-creation";
-import { boxIsCircular, updateBox } from "webgl-test-shared/dist/boxes/boxes";
-import RectangularBox from "webgl-test-shared/dist/boxes/RectangularBox";
-import { getBoxesCollidingEntities } from "webgl-test-shared/dist/hitbox-collision";
+import { createEntityHitboxes } from "battletribes-shared/boxes/entity-hitbox-creation";
+import { boxIsCircular, updateBox } from "battletribes-shared/boxes/boxes";
+import RectangularBox from "battletribes-shared/boxes/RectangularBox";
+import { getBoxesCollidingEntities } from "battletribes-shared/hitbox-collision";
 
 const virtualBuildingTakesUpWallSpace = (wallPosition: Point, wallRotation: number, virtualBuilding: VirtualBuilding, wallHitbox: RectangularBox): boolean => {
    // @Speed: cache when virutal entity is first created

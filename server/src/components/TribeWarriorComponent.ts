@@ -1,7 +1,7 @@
-import { ScarInfo, ServerComponentType } from "webgl-test-shared/dist/components";
+import { ScarInfo, ServerComponentType } from "battletribes-shared/components";
 import { ComponentArray } from "./ComponentArray";
-import { EntityID } from "webgl-test-shared/dist/entities";
-import { Packet } from "webgl-test-shared/dist/packets";
+import { EntityID } from "battletribes-shared/entities";
+import { Packet } from "battletribes-shared/packets";
 
 export interface TribeWarriorComponentParams {
    readonly scars: ReadonlyArray<ScarInfo>;

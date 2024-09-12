@@ -3,12 +3,12 @@ import Board from "../../Board";
 import Game from "../../Game";
 import OPTIONS from "../../options";
 import Camera from "../../Camera";
-import { PathfindingSettings, Settings } from "webgl-test-shared/dist/settings";
-import { angle } from "webgl-test-shared/dist/utils";
-import { PathfindingNodeIndex } from "webgl-test-shared/dist/client-server-types";
+import { PathfindingSettings, Settings } from "battletribes-shared/settings";
+import { angle } from "battletribes-shared/utils";
+import { PathfindingNodeIndex } from "battletribes-shared/client-server-types";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 import { nerdVisionIsVisible } from "../../components/game/dev/NerdVision";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "battletribes-shared/components";
 
 enum NodeType {
    occupied,

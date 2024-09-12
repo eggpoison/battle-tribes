@@ -1,9 +1,9 @@
-import { distance } from "webgl-test-shared/dist/utils";
-import { RESEARCH_ORB_AMOUNTS, RESEARCH_ORB_COMPLETE_TIME, getRandomResearchOrbSize } from "webgl-test-shared/dist/research";
-import { EntityType } from "webgl-test-shared/dist/entities";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { TribesmanTitle } from "webgl-test-shared/dist/titles";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { distance } from "battletribes-shared/utils";
+import { RESEARCH_ORB_AMOUNTS, RESEARCH_ORB_COMPLETE_TIME, getRandomResearchOrbSize } from "battletribes-shared/research";
+import { EntityType } from "battletribes-shared/entities";
+import { Settings } from "battletribes-shared/settings";
+import { TribesmanTitle } from "battletribes-shared/titles";
+import { ServerComponentType } from "battletribes-shared/components";
 import Player from "./entities/Player";
 import Board from "./Board";
 import Game from "./Game";

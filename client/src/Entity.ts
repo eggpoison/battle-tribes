@@ -1,8 +1,8 @@
-import { Point, randFloat } from "webgl-test-shared/dist/utils";
-import { EntityID, EntityType, EntityTypeString } from "webgl-test-shared/dist/entities";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { HitData, HitFlags } from "webgl-test-shared/dist/client-server-types";
-import { ServerComponentType, ServerComponentTypeString } from "webgl-test-shared/dist/components";
+import { Point, randFloat } from "battletribes-shared/utils";
+import { EntityID, EntityType, EntityTypeString } from "battletribes-shared/entities";
+import { Settings } from "battletribes-shared/settings";
+import { HitData, HitFlags } from "battletribes-shared/client-server-types";
+import { ServerComponentType, ServerComponentTypeString } from "battletribes-shared/components";
 import Board from "./Board";
 import { createHealingParticle, createSlimePoolParticle, createSparkParticle } from "./particles";
 import { playSound } from "./sound";

@@ -1,9 +1,11 @@
-import { Inventory } from "webgl-test-shared/dist/items/items";
+import { Inventory, InventoryName } from "battletribes-shared/items/items";
 import ItemSlot, { ItemSlotCallbackInfo } from "./ItemSlot";
+import { useRef } from "react";
 
 interface InventoryProps {
-   readonly entityID: number;
-   readonly inventory: Inventory;
+   readonly entityID?: number;
+   /** If null, the container will default to an empty inventory the size of the last inputted inventory. Cannot have an initial value of null. */
+   readonly inventory: Inventory | null;
    readonly className?: string;
    itemSlotClassNameCallback?(callbackInfo: ItemSlotCallbackInfo): string | undefined;
    readonly selectedItemSlot?: number;
@@ -15,23 +17,56 @@ interface InventoryProps {
    onMouseOut?(): void;
 }
 
+const getPlaceholderImg = (inventory: Inventory): any | undefined => {
+   switch (inventory.name) {
+      case InventoryName.backpackSlot: {
+         return require("../../../images/miscellaneous/backpack-wireframe.png");
+      }
+      case InventoryName.armourSlot: {
+         return require("../../../images/miscellaneous/armour-wireframe.png");
+      }
+      case InventoryName.gloveSlot: {
+         return require("../../../images/miscellaneous/glove-wireframe.png");
+      }
+   }
+}
+
 const InventoryContainer = ({ entityID, inventory, className, itemSlotClassNameCallback, selectedItemSlot, isBordered, isManipulable = true, onMouseDown, onMouseOver, onMouseOut, onMouseMove }: InventoryProps) => {
+   const inventoryWidthRef = useRef<number | null>(null);
+   const inventoryHeightRef = useRef<number | null>(null);
+   // @Hack
+   const placeholderImgRef = useRef<any | undefined>();
+   
+   if (inventory === null && (inventoryWidthRef.current === null || inventoryHeightRef.current === null)) {
+      throw new Error("Initial value of inventory cannot be null.");
+   }
+
+   if (inventory !== null) {
+      inventoryWidthRef.current = inventory.width;
+      inventoryHeightRef.current = inventory.height;
+      placeholderImgRef.current = getPlaceholderImg(inventory);
+   }
+   const width = inventoryWidthRef.current!;
+   const height = inventoryHeightRef.current!;
+   
    const itemSlots = new Array<JSX.Element>();
 
-   for (let y = 0; y < inventory.height; y++) {
+   for (let y = 0; y < height; y++) {
       const rowItemSlots = new Array<JSX.Element>();
-      for (let x = 0; x < inventory.width; x++) {
-         const itemSlot = y * inventory.width + x + 1;
-         const item = inventory.itemSlots[itemSlot];
+      for (let x = 0; x < width; x++) {
+         const itemSlot = y * width + x + 1;
 
+         // let callbackInfo: 
          const callbackInfo: ItemSlotCallbackInfo = {
-            itemType: typeof item !== "undefined" ? item.type : null,
+            itemType: inventory?.getItem(itemSlot)?.type || null,
             itemSlot: itemSlot
          };
 
          let leftClickFunc: ((e: MouseEvent) => void) | undefined;
-         if (typeof onMouseDown !== "undefined") {
-            leftClickFunc = (e: MouseEvent) => onMouseDown(e, callbackInfo);
+         if (inventory !== null) {
+            if (typeof onMouseDown !== "undefined") {
+               leftClickFunc = (e: MouseEvent) => onMouseDown(e, callbackInfo);
+            }
          }
 
          let className: string | undefined;
@@ -41,7 +76,7 @@ const InventoryContainer = ({ entityID, inventory, className, itemSlotClassNameC
 
          const isSelected = typeof selectedItemSlot !== "undefined" && itemSlot === selectedItemSlot;
          rowItemSlots.push(
-            <ItemSlot key={x} className={className} entityID={entityID} inventory={inventory} itemSlot={itemSlot} isManipulable={isManipulable} isSelected={isSelected} onMouseDown={leftClickFunc} onMouseOver={onMouseOver} onMouseOut={onMouseOut} onMouseMove={onMouseMove} />
+            <ItemSlot key={x} className={className} entityID={entityID} inventory={inventory} itemSlot={itemSlot} isManipulable={isManipulable} isSelected={isSelected} placeholderImg={placeholderImgRef.current} onMouseDown={leftClickFunc} onMouseOver={onMouseOver} onMouseOut={onMouseOut} onMouseMove={onMouseMove} />
          );
       }
       

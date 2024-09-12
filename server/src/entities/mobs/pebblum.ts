@@ -1,16 +1,16 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
-import { EntityID, EntityType, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
-import { StatusEffect } from "webgl-test-shared/dist/status-effects";
-import { Point } from "webgl-test-shared/dist/utils";
+import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "battletribes-shared/collision";
+import { EntityID, EntityType, PlayerCauseOfDeath } from "battletribes-shared/entities";
+import { StatusEffect } from "battletribes-shared/status-effects";
+import { Point } from "battletribes-shared/utils";
 import { HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
 import { PebblumComponentArray } from "../../components/PebblumComponent";
 import { applyKnockback } from "../../components/PhysicsComponent";
-import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
+import { ServerComponentType } from "battletribes-shared/components";
 import { ComponentConfig } from "../../components";
 import { TransformComponentArray } from "../../components/TransformComponent";
-import { createHitbox, HitboxCollisionType, HitboxWrapper } from "webgl-test-shared/dist/boxes/boxes";
-import CircularBox from "webgl-test-shared/dist/boxes/CircularBox";
+import { createHitbox, HitboxCollisionType, Hitbox } from "battletribes-shared/boxes/boxes";
+import CircularBox from "battletribes-shared/boxes/CircularBox";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics
@@ -19,7 +19,7 @@ type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.pebblum;
 
 export function createPebblumConfig(): ComponentConfig<ComponentTypes> {
-   const hitboxes = new Array<HitboxWrapper>();
+   const hitboxes = new Array<Hitbox>();
 
    // Body
    hitboxes.push(createHitbox(new CircularBox(new Point(0, -4), 0, 10 * 2), 0.4, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0));

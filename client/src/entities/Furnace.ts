@@ -1,6 +1,6 @@
-import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { EntityType } from "webgl-test-shared/dist/entities";
-import { angle, randFloat } from "webgl-test-shared/dist/utils";
+import { ServerComponentType } from "battletribes-shared/components";
+import { EntityType } from "battletribes-shared/entities";
+import { angle, randFloat } from "battletribes-shared/utils";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { createRockParticle, createRockSpeckParticle } from "../particles";
 import Entity from "../Entity";

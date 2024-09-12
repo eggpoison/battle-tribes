@@ -1,5 +1,5 @@
-import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { EntityType } from "webgl-test-shared/dist/entities";
+import { ServerComponentType } from "battletribes-shared/components";
+import { EntityType } from "battletribes-shared/entities";
 import Tribesman from "./Tribesman";
 import FootprintComponent from "../entity-components/FootprintComponent";
 import { ClientComponentType } from "../entity-components/components";

@@ -1,18 +1,18 @@
-import { CowSpecies, EntityID, EntityType } from "webgl-test-shared/dist/entities";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { randFloat, randInt, TileIndex } from "webgl-test-shared/dist/utils";
-import { EntityTickEvent, EntityTickEventType } from "webgl-test-shared/dist/entity-events";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { CowSpecies, EntityID, EntityType } from "battletribes-shared/entities";
+import { Settings } from "battletribes-shared/settings";
+import { randFloat, randInt, TileIndex } from "battletribes-shared/utils";
+import { EntityTickEvent, EntityTickEventType } from "battletribes-shared/entity-events";
+import { ServerComponentType } from "battletribes-shared/components";
 import { COW_GRAZE_TIME_TICKS, CowVars } from "../entities/mobs/cow";
 import { ComponentArray } from "./ComponentArray";
-import { ItemType } from "webgl-test-shared/dist/items/items";
+import { ItemType } from "battletribes-shared/items/items";
 import { registerEntityTickEvent } from "../server/player-clients";
 import { getEntityTile, TransformComponentArray } from "./TransformComponent";
 import Board from "../Board";
 import { createItemEntityConfig } from "../entities/item-entity";
 import { createEntityFromConfig } from "../Entity";
-import { Packet } from "webgl-test-shared/dist/packets";
-import { TileType, Biome } from "webgl-test-shared/dist/tiles";
+import { Packet } from "battletribes-shared/packets";
+import { TileType, Biome } from "battletribes-shared/tiles";
 import { moveEntityToPosition, runHerdAI, entityHasReachedPosition, stopEntity } from "../ai-shared";
 import { chooseEscapeEntity, runFromAttackingEntity } from "../ai/escape-ai";
 import { shouldWander, getWanderTargetTile, wander } from "../ai/wander-ai";
@@ -25,7 +25,7 @@ import { healEntity, getEntityHealth } from "./HealthComponent";
 import { ItemComponentArray } from "./ItemComponent";
 import { PhysicsComponentArray } from "./PhysicsComponent";
 import { WanderAIComponentArray } from "./WanderAIComponent";
-import { GrassBlockerCircle } from "webgl-test-shared/dist/grass-blockers";
+import { GrassBlockerCircle } from "battletribes-shared/grass-blockers";
 import { entitiesAreColliding, CollisionVars } from "../collision";
 import { addGrassBlocker } from "../grass-blockers";
 import { InventoryComponentArray, getInventory } from "./InventoryComponent";
@@ -225,7 +225,7 @@ function onTick(cowComponent: CowComponent, cow: EntityID): void {
    if (escapeAIComponent.attackingEntities.length > 0) {
       const escapeEntity = chooseEscapeEntity(cow, aiHelperComponent.visibleEntities);
       if (escapeEntity !== null) {
-         runFromAttackingEntity(cow, escapeEntity, 300, Vars.TURN_SPEED);
+         runFromAttackingEntity(cow, escapeEntity, 500, Vars.TURN_SPEED);
          return;
       }
    }

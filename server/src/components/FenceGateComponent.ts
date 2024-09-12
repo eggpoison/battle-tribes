@@ -1,12 +1,12 @@
-import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { DoorToggleType, EntityID } from "webgl-test-shared/dist/entities";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { angle, lerp } from "webgl-test-shared/dist/utils";
+import { ServerComponentType } from "battletribes-shared/components";
+import { DoorToggleType, EntityID } from "battletribes-shared/entities";
+import { Settings } from "battletribes-shared/settings";
+import { angle, lerp } from "battletribes-shared/utils";
 import { ComponentArray } from "./ComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
-import { Packet } from "webgl-test-shared/dist/packets";
-import { HitboxCollisionType } from "webgl-test-shared/dist/boxes/boxes";
-import RectangularBox from "webgl-test-shared/dist/boxes/RectangularBox";
+import { Packet } from "battletribes-shared/packets";
+import { HitboxCollisionType } from "battletribes-shared/boxes/boxes";
+import RectangularBox from "battletribes-shared/boxes/RectangularBox";
 
 // @Cleanup: All the door toggling logic is stolen from DoorComponent.ts
 

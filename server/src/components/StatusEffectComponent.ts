@@ -1,14 +1,14 @@
-import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { EntityID, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
-import { StatusEffect, STATUS_EFFECT_MODIFIERS } from "webgl-test-shared/dist/status-effects";
-import { customTickIntervalHasPassed } from "webgl-test-shared/dist/utils";
+import { ServerComponentType } from "battletribes-shared/components";
+import { EntityID, PlayerCauseOfDeath } from "battletribes-shared/entities";
+import { StatusEffect, STATUS_EFFECT_MODIFIERS } from "battletribes-shared/status-effects";
+import { customTickIntervalHasPassed } from "battletribes-shared/utils";
 import { ComponentArray } from "./ComponentArray";
 import { getRandomPositionInEntity } from "../Entity";
 import { damageEntity } from "./HealthComponent";
 import { PhysicsComponentArray } from "./PhysicsComponent";
-import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
+import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
 import { TransformComponentArray } from "./TransformComponent";
-import { Packet } from "webgl-test-shared/dist/packets";
+import { Packet } from "battletribes-shared/packets";
 
 export interface StatusEffectComponentParams {
    readonly statusEffectImmunityBitset: number;

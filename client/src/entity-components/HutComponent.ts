@@ -1,7 +1,7 @@
-import { EntityType } from "webgl-test-shared/dist/entities";
-import { Point, lerp } from "webgl-test-shared/dist/utils";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { EntityType } from "battletribes-shared/entities";
+import { Point, lerp } from "battletribes-shared/utils";
+import { Settings } from "battletribes-shared/settings";
+import { ServerComponentType } from "battletribes-shared/components";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import Board from "../Board";
@@ -9,7 +9,7 @@ import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { playSound } from "../sound";
 import { RenderPart } from "../render-parts/render-parts";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
-import { PacketReader } from "webgl-test-shared/dist/packets";
+import { PacketReader } from "battletribes-shared/packets";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 
 export const WORKER_HUT_SIZE = 88;

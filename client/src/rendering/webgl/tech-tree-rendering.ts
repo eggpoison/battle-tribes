@@ -1,5 +1,5 @@
-import { TECHS, TechID, TechInfo, getTechByID } from "webgl-test-shared/dist/techs";
-import { angle } from "webgl-test-shared/dist/utils";
+import { TECHS, TechID, TechInfo, getTechByID } from "battletribes-shared/techs";
+import { angle } from "battletribes-shared/utils";
 import Game from "../../Game";
 import { createWebGLProgram, halfWindowHeight, halfWindowWidth, windowHeight, windowWidth } from "../../webgl";
 import { techIsHovered } from "../../components/game/tech-tree/TechTree";

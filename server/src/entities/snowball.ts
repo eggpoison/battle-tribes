@@ -1,18 +1,18 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "webgl-test-shared/dist/collision";
-import { SnowballSize, EntityType, PlayerCauseOfDeath, EntityID } from "webgl-test-shared/dist/entities";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { StatusEffect } from "webgl-test-shared/dist/status-effects";
-import { Point, randFloat } from "webgl-test-shared/dist/utils";
+import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "battletribes-shared/collision";
+import { SnowballSize, EntityType, PlayerCauseOfDeath, EntityID } from "battletribes-shared/entities";
+import { Settings } from "battletribes-shared/settings";
+import { StatusEffect } from "battletribes-shared/status-effects";
+import { Point, randFloat } from "battletribes-shared/utils";
 import { HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../components/HealthComponent";
 import { SnowballComponentArray } from "../components/SnowballComponent";
 import { PhysicsComponentArray, applyKnockback } from "../components/PhysicsComponent";
 import { ComponentConfig } from "../components";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
+import { ServerComponentType } from "battletribes-shared/components";
+import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
 import { getAgeTicks, TransformComponentArray } from "../components/TransformComponent";
 import Board from "../Board";
-import { createHitbox, HitboxCollisionType } from "webgl-test-shared/dist/boxes/boxes";
-import CircularBox from "webgl-test-shared/dist/boxes/CircularBox";
+import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
+import CircularBox from "battletribes-shared/boxes/CircularBox";
    
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics

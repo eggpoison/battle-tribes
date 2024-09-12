@@ -1,7 +1,7 @@
-import { PathfindingNodeIndex, VisibleChunkBounds } from "webgl-test-shared/dist/client-server-types";
-import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
-import { PathfindingSettings, Settings } from "webgl-test-shared/dist/settings";
-import { distBetweenPointAndRectangle, angle, calculateDistanceSquared, Point } from "webgl-test-shared/dist/utils";
+import { PathfindingNodeIndex, VisibleChunkBounds } from "battletribes-shared/client-server-types";
+import { EntityID, EntityType } from "battletribes-shared/entities";
+import { PathfindingSettings, Settings } from "battletribes-shared/settings";
+import { distBetweenPointAndRectangle, angle, calculateDistanceSquared, Point } from "battletribes-shared/utils";
 import Board from "./Board";
 import PathfindingHeap from "./PathfindingHeap";
 import OPTIONS from "./options";
@@ -9,9 +9,9 @@ import { PhysicsComponentArray } from "./components/PhysicsComponent";
 import { TribeComponentArray } from "./components/TribeComponent";
 import { TransformComponent, TransformComponentArray } from "./components/TransformComponent";
 import { ProjectileComponentArray } from "./components/ProjectileComponent";
-import CircularBox from "webgl-test-shared/dist/boxes/CircularBox";
-import { boxIsCircular, HitboxCollisionType, HitboxWrapper } from "webgl-test-shared/dist/boxes/boxes";
-import RectangularBox from "webgl-test-shared/dist/boxes/RectangularBox";
+import CircularBox from "battletribes-shared/boxes/CircularBox";
+import { boxIsCircular, HitboxCollisionType, Hitbox } from "battletribes-shared/boxes/boxes";
+import RectangularBox from "battletribes-shared/boxes/RectangularBox";
 
 const enum Vars {
    NODE_ACCESSIBILITY_RESOLUTION = 3,
@@ -213,7 +213,7 @@ const nodeIsAccessibleForEntity = (node: PathfindingNodeIndex, ignoredGroupID: n
    return slowAccessibilityCheck(node, ignoredGroupID, pathfindingEntityFootprint);
 }
 
-const getCircularHitboxOccupiedNodes = (hitbox: HitboxWrapper): ReadonlyArray<PathfindingNodeIndex> => {
+const getCircularHitboxOccupiedNodes = (hitbox: Hitbox): ReadonlyArray<PathfindingNodeIndex> => {
    const box = hitbox.box as CircularBox;
    
    const minX = box.calculateBoundsMinX();
@@ -261,7 +261,7 @@ const getCircularHitboxOccupiedNodes = (hitbox: HitboxWrapper): ReadonlyArray<Pa
    return occupiedNodes;
 }
 
-const getRectangularHitboxOccupiedNodes = (hitbox: HitboxWrapper): ReadonlyArray<PathfindingNodeIndex> => {
+const getRectangularHitboxOccupiedNodes = (hitbox: Hitbox): ReadonlyArray<PathfindingNodeIndex> => {
    const box = hitbox.box as RectangularBox;
    
    const minX = box.calculateBoundsMinX();
@@ -312,7 +312,7 @@ const getRectangularHitboxOccupiedNodes = (hitbox: HitboxWrapper): ReadonlyArray
    return occupiedNodes;
 }
 
-export function getHitboxOccupiedNodes(hitbox: HitboxWrapper): ReadonlyArray<PathfindingNodeIndex> {
+export function getHitboxOccupiedNodes(hitbox: Hitbox): ReadonlyArray<PathfindingNodeIndex> {
    if (boxIsCircular(hitbox.box)) {
       return getCircularHitboxOccupiedNodes(hitbox);
    } else {

@@ -1,7 +1,7 @@
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "battletribes-shared/components";
 import InventoryContainer from "./InventoryContainer";
 import { getSelectedEntity } from "../../../entity-selection";
-import { InventoryName } from "webgl-test-shared/dist/items/items";
+import { InventoryName } from "battletribes-shared/items/items";
 
 const BarrelInventory = () => {
    const barrel = getSelectedEntity();
@@ -21,7 +21,7 @@ const BarrelInventory = () => {
             </label>
          </div>
          <div className="flex-container center">
-            <InventoryContainer entityID={barrel.id} inventory={inventoryComponent.getInventory(InventoryName.inventory)} />
+            <InventoryContainer entityID={barrel.id} inventory={inventoryComponent.getInventory(InventoryName.inventory)!} />
          </div>
       </div>
    </>;

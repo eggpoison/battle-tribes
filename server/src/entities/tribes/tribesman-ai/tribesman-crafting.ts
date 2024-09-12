@@ -1,6 +1,6 @@
-import { TribesmanAIType } from "webgl-test-shared/dist/components";
-import { EntityID, EntityType, LimbAction } from "webgl-test-shared/dist/entities";
-import { Settings, PathfindingSettings } from "webgl-test-shared/dist/settings";
+import { TribesmanAIType } from "battletribes-shared/components";
+import { EntityID, EntityType, LimbAction } from "battletribes-shared/entities";
+import { Settings, PathfindingSettings } from "battletribes-shared/settings";
 import Board from "../../../Board";
 import Tribe from "../../../Tribe";
 import { moveEntityToEntity, moveEntityToPosition, stopEntity, turnEntityToEntity } from "../../../ai-shared";
@@ -12,8 +12,8 @@ import { PathfindFailureDefault } from "../../../pathfinding";
 import { getAvailableCraftingStations } from "../tribe-member";
 import { TRIBESMAN_TURN_SPEED } from "./tribesman-ai";
 import { pathfindToPosition, clearTribesmanPath } from "./tribesman-ai-utils";
-import { CraftingStation, CraftingRecipe, CRAFTING_RECIPES } from "webgl-test-shared/dist/items/crafting-recipes";
-import { InventoryName } from "webgl-test-shared/dist/items/items";
+import { CraftingStation, CraftingRecipe, CRAFTING_RECIPES } from "battletribes-shared/items/crafting-recipes";
+import { InventoryName } from "battletribes-shared/items/items";
 import { TransformComponentArray } from "../../../components/TransformComponent";
 
 const buildingMatchesCraftingStation = (building: EntityID, craftingStation: CraftingStation): boolean => {

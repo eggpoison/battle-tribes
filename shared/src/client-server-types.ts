@@ -7,25 +7,12 @@ import { AttackEffectiveness } from "./entity-damage-types";
 import { EntityTickEvent } from "./entity-events";
 import { GrassBlocker } from "./grass-blockers";
 import { HitboxCollisionType } from "./boxes/boxes";
-import { Inventory, InventoryName, ItemType } from "./items/items";
+import { InventoryName, ItemType } from "./items/items";
 import { StatusEffect } from "./status-effects";
 import { EnemyTribeData, PlayerTribeData, TechID } from "./techs";
 import { Biome, TileType } from "./tiles";
 import { TribesmanTitle } from "./titles";
 import { TribeType } from "./tribes";
-
-export interface PlayerInventoryData {
-   readonly hotbar: Inventory;
-   readonly backpackSlot: Inventory;
-   readonly backpackInventory: Inventory;
-   /** Item currently being held by the player */
-   readonly heldItemSlot: Inventory;
-   /** Item held in the player's crafting output slot */
-   readonly craftingOutputItemSlot: Inventory;
-   readonly armourSlot: Inventory;
-   readonly gloveSlot: Inventory;
-   readonly offhand: Inventory;
-}
 
 export interface ServerTileData {
    // @Cleanup @Bandwidth: We don't need to send the x and y coordinates of a tile
@@ -124,7 +111,6 @@ export interface GameDataPacket {
    /** All healing received by visible entities server-side */
    readonly heals: ReadonlyArray<HealData>;
    readonly orbCompletes: ReadonlyArray<ResearchOrbCompleteData>;
-   readonly inventory: PlayerInventoryData | undefined;
    readonly playerHealth: number;
    /** Extra debug information about a game object being tracked */
    readonly entityDebugData?: EntityDebugData;
@@ -216,7 +202,6 @@ export interface GameDataSyncPacket {
    readonly acceleration: [number, number];
    readonly rotation: number;
    readonly health: number;
-   readonly inventory: PlayerInventoryData;
 }
 
 /** Data sent to the server when an attack is performed */

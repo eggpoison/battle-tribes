@@ -1,20 +1,20 @@
-import { Packet, PacketReader, PacketType } from "webgl-test-shared/dist/packets";
+import { Packet, PacketReader, PacketType } from "battletribes-shared/packets";
 import PlayerClient from "./PlayerClient";
-import { EntityID, LimbAction } from "webgl-test-shared/dist/entities";
-import { InventoryName, ItemType } from "webgl-test-shared/dist/items/items";
-import { TribeType } from "webgl-test-shared/dist/tribes";
+import { EntityID, LimbAction } from "battletribes-shared/entities";
+import { getItemAttackInfo, InventoryName, ItemType } from "battletribes-shared/items/items";
+import { TribeType } from "battletribes-shared/tribes";
 import Board from "../Board";
-import { InventoryUseComponentArray } from "../components/InventoryUseComponent";
+import { getHeldItem, InventoryUseComponentArray } from "../components/InventoryUseComponent";
 import { PhysicsComponentArray } from "../components/PhysicsComponent";
 import { PlayerComponentArray } from "../components/PlayerComponent";
 import { TransformComponentArray } from "../components/TransformComponent";
 import { TribeComponentArray } from "../components/TribeComponent";
 import { startEating, startChargingBow, startChargingSpear, startChargingBattleaxe, createPlayerConfig } from "../entities/tribes/player";
-import { calculateRadialAttackTargets, useItem } from "../entities/tribes/tribe-member";
+import { calculateRadialAttackTargets, throwItem, useItem } from "../entities/tribes/tribe-member";
 import { beginSwing } from "../entities/tribes/limb-use";
 import { InventoryComponentArray, getInventory, addItemToInventory } from "../components/InventoryComponent";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { Point } from "webgl-test-shared/dist/utils";
+import { ServerComponentType } from "battletribes-shared/components";
+import { Point } from "battletribes-shared/utils";
 import { createEntityFromConfig } from "../Entity";
 import { generatePlayerSpawnPosition, registerDirtyEntity } from "./player-clients";
 import { addEntityDataToPacket, getEntityDataLength } from "./game-data-packets";
@@ -227,18 +227,38 @@ export function processStopItemUsePacket(playerClient: PlayerClient): void {
 
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(player);
 
-   const limbInfo = inventoryUseComponent.getLimbInfo(InventoryName.hotbar);
+   const limb = inventoryUseComponent.getLimbInfo(InventoryName.hotbar);
 
-   // If the limb was blocking, remove any blocking damage boxes
-   if (limbInfo.action === LimbAction.block) {
-      const damageBox = limbInfo.blockingDamageBox?.deref();
-      if (typeof damageBox !== "undefined") {
-         const damageBoxComponent = DamageBoxComponentArray.getComponent(player);
-         damageBoxComponent.removeDamageBox(damageBox);
-         
-         limbInfo.blockingDamageBox = null;
-      }
+   // If the limb was blocking, deactivate the block box
+   if (limb.action === LimbAction.block) {
+      // @Copynpaste
+      const heldItem = getHeldItem(limb);
+      const heldItemAttackInfo = getItemAttackInfo(heldItem !== null ? heldItem.type : null);
+      
+      const hasBlocked = limb.blockBox.hasBlocked;
+      
+      limb.blockBox.isActive = false;
+      limb.action = LimbAction.returnBlockToRest;
+      limb.currentActionElapsedTicks = 0;
+      // @Temporary? Perhaps use separate blockReturnTimeTicks.
+      limb.currentActionDurationTicks = heldItemAttackInfo.attackTimings.blockTimeTicks!;
+      limb.currentActionRate = hasBlocked ? 2 : 1;
+   } else {
+      limb.action = LimbAction.none;
    }
-   
-   limbInfo.action = LimbAction.none;
+}
+
+export function processItemDropPacket(playerClient: PlayerClient, reader: PacketReader): void {
+   if (!Board.hasEntity(playerClient.instance)) {
+      return;
+   }
+
+   const isOffhand = reader.readBoolean();
+   reader.padOffset(3);
+   const itemSlot = reader.readNumber();
+   const dropAmount = reader.readNumber();
+   const throwDirection = reader.readNumber();
+
+   const inventoryName = isOffhand ? InventoryName.offhand : InventoryName.hotbar;
+   throwItem(playerClient.instance, inventoryName, itemSlot, dropAmount, throwDirection);
 }

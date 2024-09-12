@@ -1,7 +1,7 @@
-import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { EntityType } from "webgl-test-shared/dist/entities";
-import { randInt } from "webgl-test-shared/dist/utils";
-import { TileType } from "webgl-test-shared/dist/tiles";
+import { ServerComponentType } from "battletribes-shared/components";
+import { EntityType } from "battletribes-shared/entities";
+import { randInt } from "battletribes-shared/utils";
+import { TileType } from "battletribes-shared/tiles";
 import { createSlimePoolParticle, createSlimeSpeckParticle } from "../particles";
 import Entity from "../Entity";
 import { AudioFilePath, playSound } from "../sound";

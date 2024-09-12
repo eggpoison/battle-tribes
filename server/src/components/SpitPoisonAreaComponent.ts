@@ -1,10 +1,10 @@
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "battletribes-shared/components";
 import { ComponentArray } from "./ComponentArray";
-import { EntityID } from "webgl-test-shared/dist/entities";
-import { Settings } from "webgl-test-shared/dist/settings";
+import { EntityID } from "battletribes-shared/entities";
+import { Settings } from "battletribes-shared/settings";
 import Board from "../Board";
 import { TransformComponentArray } from "./TransformComponent";
-import CircularBox from "webgl-test-shared/dist/boxes/CircularBox";
+import CircularBox from "battletribes-shared/boxes/CircularBox";
 
 export interface SpitPoisonAreaComponentParams {}
 

@@ -1,9 +1,9 @@
-import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { DeathInfo, EntityID } from "webgl-test-shared/dist/entities";
+import { ServerComponentType } from "battletribes-shared/components";
+import { DeathInfo, EntityID } from "battletribes-shared/entities";
 import { ComponentArray } from "./ComponentArray";
-import { Packet } from "webgl-test-shared/dist/packets";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { Point, randInt } from "webgl-test-shared/dist/utils";
+import { Packet } from "battletribes-shared/packets";
+import { Settings } from "battletribes-shared/settings";
+import { Point, randInt } from "battletribes-shared/utils";
 import Board from "../Board";
 import { createZombieConfig } from "../entities/mobs/zombie";
 import { createEntityFromConfig } from "../Entity";

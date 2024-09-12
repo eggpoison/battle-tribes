@@ -1,4 +1,4 @@
-import { ItemType, Item } from "webgl-test-shared/dist/items/items";
+import { ItemType, Item } from "battletribes-shared/items/items";
 
 let nextAvailableID = 0;
 const getUniqueID = (): number => {

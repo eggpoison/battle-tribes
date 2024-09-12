@@ -1,6 +1,6 @@
-import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { veryBadHash } from "webgl-test-shared/dist/utils";
-import { PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
+import { ServerComponentType } from "battletribes-shared/components";
+import { veryBadHash } from "battletribes-shared/utils";
+import { PlayerCauseOfDeath } from "battletribes-shared/entities";
 import Tombstone from "../../../entities/Tombstone";
 import { getSelectedEntity } from "../../../entity-selection";
 

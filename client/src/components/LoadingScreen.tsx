@@ -1,4 +1,4 @@
-import { TribeType } from "webgl-test-shared/dist/tribes";
+import { TribeType } from "battletribes-shared/tribes";
 import { useEffect, useRef, useState } from "react";
 import Client from "../client/Client";
 import Game from "../Game";
@@ -91,7 +91,7 @@ const LoadingScreen = ({ username, tribeType, initialStatus }: LoadingScreenProp
    if (status === "connection_error") {
       return <div id="loading-screen">
          <div className="content">
-            <h1 className="title">Error while connecting to server.</h1>
+            <h1 className="title">Connection closed</h1>
             
             <div className="loading-message">
                <p>Connection with server failed.</p>
@@ -109,7 +109,7 @@ const LoadingScreen = ({ username, tribeType, initialStatus }: LoadingScreenProp
 
          {status === "establishing_connection" ? <>
             <div className="loading-message">
-               <p>Establishing connection with server...</p>
+               <p>Connecting to server...</p>
             </div>
          </> : status === "sending_player_data" ? <>
             <div className="loading-message">

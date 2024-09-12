@@ -1,6 +1,6 @@
-import { BlueprintType, ServerComponentType } from "webgl-test-shared/dist/components";
-import { assertUnreachable, randFloat } from "webgl-test-shared/dist/utils";
-import { EntityType } from "webgl-test-shared/dist/entities";
+import { BlueprintType, ServerComponentType } from "battletribes-shared/components";
+import { assertUnreachable, randFloat } from "battletribes-shared/utils";
+import { EntityType } from "battletribes-shared/entities";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { playSound } from "../sound";
 import { BALLISTA_AMMO_BOX_OFFSET_X, BALLISTA_AMMO_BOX_OFFSET_Y, BALLISTA_GEAR_X, BALLISTA_GEAR_Y } from "../utils";

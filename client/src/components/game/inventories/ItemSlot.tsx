@@ -1,4 +1,4 @@
-import { Inventory, ItemType } from "webgl-test-shared/dist/items/items";
+import { Inventory, ItemType } from "battletribes-shared/items/items";
 import { onItemSlotMouseDown } from "../../../inventory-manipulation";
 import { getItemTypeImage } from "../../../client-item-info";
 
@@ -8,8 +8,8 @@ export interface ItemSlotCallbackInfo {
 }
 
 export interface ItemSlotProps {
-   readonly entityID: number;
-   readonly inventory: Inventory;
+   readonly entityID?: number;
+   readonly inventory: Inventory | null;
    readonly itemSlot: number;
    // readonly picturedItemImageSrc?: any;
    readonly isSelected?: boolean;
@@ -31,7 +31,7 @@ const ItemSlot = (props: ItemSlotProps) => {
    const isManipulable = typeof props.isManipulable === "undefined" || props.isManipulable;
 
    const onMouseDown = (e: React.MouseEvent<HTMLDivElement, MouseEvent>): void => {
-      if (isManipulable) {
+      if (isManipulable && props.inventory !== null && typeof props.entityID !== "undefined") {
          onItemSlotMouseDown(e.nativeEvent, props.entityID, props.inventory, props.itemSlot);
       }
 
@@ -40,7 +40,7 @@ const ItemSlot = (props: ItemSlotProps) => {
       }
    }
 
-   const item = props.inventory.itemSlots[props.itemSlot];
+   const item = props.inventory?.itemSlots[props.itemSlot];
 
    const callbackInfo: ItemSlotCallbackInfo = {
       itemSlot: props.itemSlot,

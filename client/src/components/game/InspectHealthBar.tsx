@@ -1,5 +1,5 @@
-import { clamp, distance, lerp } from "webgl-test-shared/dist/utils";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { clamp, distance, lerp } from "battletribes-shared/utils";
+import { ServerComponentType } from "battletribes-shared/components";
 import { useEffect, useState } from "react";
 import Entity from "../../Entity"
 import Camera from "../../Camera";

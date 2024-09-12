@@ -1,21 +1,21 @@
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
-import { distance, Point, rotateXAroundOrigin, rotateYAroundOrigin } from "webgl-test-shared/dist/utils";
+import { distance, Point, rotateXAroundOrigin, rotateYAroundOrigin } from "battletribes-shared/utils";
 import Board from "../Board";
 import { Tile } from "../Tile";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { TileType } from "webgl-test-shared/dist/tiles";
-import { CircularHitboxData, RectangularHitboxData, RIVER_STEPPING_STONE_SIZES } from "webgl-test-shared/dist/client-server-types";
+import { Settings } from "battletribes-shared/settings";
+import { TileType } from "battletribes-shared/tiles";
+import { CircularHitboxData, RectangularHitboxData, RIVER_STEPPING_STONE_SIZES } from "battletribes-shared/client-server-types";
 import Chunk from "../Chunk";
-import { randInt } from "webgl-test-shared/dist/utils";
-import { randFloat } from "webgl-test-shared/dist/utils";
+import { randInt } from "battletribes-shared/utils";
+import { randFloat } from "battletribes-shared/utils";
 import { createCircularHitboxFromData, createRectangularHitboxFromData } from "../client/Client";
-import { PacketReader } from "webgl-test-shared/dist/packets";
+import { PacketReader } from "battletribes-shared/packets";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { boxIsCircular, createHitbox, hitboxIsCircular, HitboxWrapper, updateBox } from "webgl-test-shared/dist/boxes/boxes";
-import CircularBox from "webgl-test-shared/dist/boxes/CircularBox";
-import RectangularBox from "webgl-test-shared/dist/boxes/RectangularBox";
+import { ServerComponentType } from "battletribes-shared/components";
+import { boxIsCircular, createHitbox, hitboxIsCircular, Hitbox, updateBox } from "battletribes-shared/boxes/boxes";
+import CircularBox from "battletribes-shared/boxes/CircularBox";
+import RectangularBox from "battletribes-shared/boxes/RectangularBox";
 
 const getTile = (position: Point): Tile => {
    const tileX = Math.floor(position.x / Settings.TILE_SIZE);
@@ -41,7 +41,7 @@ class TransformComponent extends ServerComponent {
    
    public chunks = new Set<Chunk>();
 
-   public hitboxes = new Array<HitboxWrapper>();
+   public hitboxes = new Array<Hitbox>();
    public readonly hitboxLocalIDs = new Array<number>();
 
    public collisionBit: number;
@@ -132,7 +132,7 @@ class TransformComponent extends ServerComponent {
       return true;
    }
 
-   public addHitbox(hitbox: HitboxWrapper, localID: number): void {
+   public addHitbox(hitbox: Hitbox, localID: number): void {
       updateBox(hitbox.box, this.position.x, this.position.y, this.rotation);
       this.hitboxes.push(hitbox);
       this.hitboxLocalIDs.push(localID);

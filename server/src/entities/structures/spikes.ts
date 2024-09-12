@@ -1,14 +1,14 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "webgl-test-shared/dist/collision";
-import { BuildingMaterial, ServerComponentType } from "webgl-test-shared/dist/components";
-import { EntityID, EntityType, PlayerCauseOfDeath } from "webgl-test-shared/dist/entities";
-import { StatusEffect } from "webgl-test-shared/dist/status-effects";
-import { Point } from "webgl-test-shared/dist/utils";
+import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "battletribes-shared/collision";
+import { BuildingMaterial, ServerComponentType } from "battletribes-shared/components";
+import { EntityID, EntityType, PlayerCauseOfDeath } from "battletribes-shared/entities";
+import { StatusEffect } from "battletribes-shared/status-effects";
+import { Point } from "battletribes-shared/utils";
 import { HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
 import { EntityRelationship, getEntityRelationship } from "../../components/TribeComponent";
 import { SpikesComponentArray } from "../../components/SpikesComponent";
-import { createEmptyStructureConnectionInfo } from "webgl-test-shared/dist/structures";
-import { AttackEffectiveness } from "webgl-test-shared/dist/entity-damage-types";
-import { createWallSpikesHitboxes, createFloorSpikesHitboxes } from "webgl-test-shared/dist/boxes/entity-hitbox-creation";
+import { createEmptyStructureConnectionInfo } from "battletribes-shared/structures";
+import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
+import { createWallSpikesHitboxes, createFloorSpikesHitboxes } from "battletribes-shared/boxes/entity-hitbox-creation";
 import { ComponentConfig } from "../../components";
 import Board from "../../Board";
 

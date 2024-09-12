@@ -1,7 +1,7 @@
-import { RiverSteppingStoneData } from "webgl-test-shared/dist/client-server-types";
-import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
+import { RiverSteppingStoneData } from "battletribes-shared/client-server-types";
+import { EntityID, EntityType } from "battletribes-shared/entities";
 import Entity from "./Entity";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "battletribes-shared/components";
 
 class Chunk {
    public readonly x: number;

@@ -1,8 +1,8 @@
-import { PlanterBoxPlant, TribesmanAIType } from "webgl-test-shared/dist/components";
-import { EntityID, EntityType, LimbAction } from "webgl-test-shared/dist/entities";
-import { Settings, PathfindingSettings } from "webgl-test-shared/dist/settings";
-import { getTechByID } from "webgl-test-shared/dist/techs";
-import { getAngleDiff } from "webgl-test-shared/dist/utils";
+import { PlanterBoxPlant, TribesmanAIType } from "battletribes-shared/components";
+import { EntityID, EntityType, LimbAction } from "battletribes-shared/entities";
+import { Settings, PathfindingSettings } from "battletribes-shared/settings";
+import { getTechByID } from "battletribes-shared/techs";
+import { getAngleDiff } from "battletribes-shared/utils";
 import { willStopAtDesiredDistance, stopEntity, getDistanceFromPointToEntity, getClosestAccessibleEntity } from "../../../ai-shared";
 import { HealthComponentArray } from "../../../components/HealthComponent";
 import { getInventory, addItemToInventory, consumeItemFromSlot, inventoryIsFull, getItemTypeSlot, InventoryComponentArray, hasSpaceForRecipe } from "../../../components/InventoryComponent";
@@ -30,7 +30,7 @@ import { getGiftableItemSlot, getRecruitTarget } from "./tribesman-recruiting";
 import { escapeFromEnemies, tribesmanShouldEscape } from "./tribesman-escaping";
 import { continueTribesmanHealing, getHealingItemUseInfo } from "./tribesman-healing";
 import { tribesmanDoPatrol } from "./tribesman-patrolling";
-import { ItemType, InventoryName, Item, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, ConsumableItemInfo, Inventory } from "webgl-test-shared/dist/items/items";
+import { ItemType, InventoryName, Item, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, ConsumableItemInfo, Inventory } from "battletribes-shared/items/items";
 import { getAgeTicks, TransformComponentArray } from "../../../components/TransformComponent";
 
 // @Cleanup: Move all of this to the TribesmanComponent file

@@ -1,13 +1,11 @@
-import { Point, rotateXAroundOrigin, rotateYAroundOrigin } from "webgl-test-shared/dist/utils";
+import { Point, rotateXAroundOrigin, rotateYAroundOrigin } from "battletribes-shared/utils";
 import { createWebGLProgram, gl } from "../../webgl";
-import Entity from "../../Entity";
 import Board from "../../Board";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
-import { Box, boxIsCircular, HitboxCollisionType } from "webgl-test-shared/dist/boxes/boxes";
+import { Box, boxIsCircular, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
 import { DamageBoxComponentArray } from "../../entity-components/DamageBoxComponent";
 import { TransformComponentArray } from "../../entity-components/TransformComponent";
-import { EntityID } from "webgl-test-shared/dist/entities";
+import { EntityID } from "battletribes-shared/entities";
 
 const BORDER_THICKNESS = 3;
 const HALF_BORDER_THICKNESS = BORDER_THICKNESS / 2;

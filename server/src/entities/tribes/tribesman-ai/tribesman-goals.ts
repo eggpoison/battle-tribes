@@ -1,8 +1,8 @@
-import { EntityID, EntityType } from "webgl-test-shared/dist/entities";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { StructureType } from "webgl-test-shared/dist/structures";
-import { TechInfo, getTechChain } from "webgl-test-shared/dist/techs";
-import { Point } from "webgl-test-shared/dist/utils";
+import { EntityID, EntityType } from "battletribes-shared/entities";
+import { Settings } from "battletribes-shared/settings";
+import { StructureType } from "battletribes-shared/structures";
+import { TechInfo, getTechChain } from "battletribes-shared/techs";
+import { Point } from "battletribes-shared/utils";
 import { InventoryComponentArray, getInventory, getItemTypeSlot, inventoryHasItemType, createInventoryComponentTally } from "../../../components/InventoryComponent";
 import Tribe, { BuildingPlan, BuildingPlanType, BuildingUpgradePlan, NewBuildingPlan } from "../../../Tribe";
 import { generateBuildingPosition } from "../../../ai-tribe-building/ai-building-plans";
@@ -10,12 +10,12 @@ import { TribeComponentArray } from "../../../components/TribeComponent";
 import { TribesmanAIComponentArray } from "../../../components/TribesmanAIComponent";
 import { craftingStationExists } from "./tribesman-crafting";
 import { getBestToolItemSlot } from "./tribesman-ai-utils";
-import { CraftingRecipe, CRAFTING_STATION_ITEM_TYPE_RECORD, getRecipeProductChain, forceGetItemRecipe } from "webgl-test-shared/dist/items/crafting-recipes";
-import { ItemType, ToolType, Inventory, InventoryName, PlaceableItemType, ITEM_INFO_RECORD, PlaceableItemInfo, ItemTypeString } from "webgl-test-shared/dist/items/items";
+import { CraftingRecipe, CRAFTING_STATION_ITEM_TYPE_RECORD, getRecipeProductChain, forceGetItemRecipe } from "battletribes-shared/items/crafting-recipes";
+import { ItemType, ToolType, Inventory, InventoryName, PlaceableItemType, ITEM_INFO_RECORD, PlaceableItemInfo, ItemTypeString } from "battletribes-shared/items/items";
 import { TransformComponentArray } from "../../../components/TransformComponent";
 import Board from "../../../Board";
-import { createEntityHitboxes } from "webgl-test-shared/dist/boxes/entity-hitbox-creation";
-import { updateBox } from "webgl-test-shared/dist/boxes/boxes";
+import { createEntityHitboxes } from "battletribes-shared/boxes/entity-hitbox-creation";
+import { updateBox } from "battletribes-shared/boxes/boxes";
 
 // @Cleanup: can this be inferred from stuff like the entity->resource-dropped record?
 const TOOL_TYPE_FOR_MATERIAL_RECORD: Record<ItemType, ToolType | null> = {

@@ -1,8 +1,8 @@
-import { BerryBushComponentData, ServerComponentType } from "webgl-test-shared/dist/components";
+import { BerryBushComponentData, ServerComponentType } from "battletribes-shared/components";
 import { ComponentArray } from "./ComponentArray";
-import { EntityID } from "webgl-test-shared/dist/entities";
-import { Settings } from "webgl-test-shared/dist/settings";
-import { Packet } from "webgl-test-shared/dist/packets";
+import { EntityID } from "battletribes-shared/entities";
+import { Settings } from "battletribes-shared/settings";
+import { Packet } from "battletribes-shared/packets";
 
 const enum Vars {
    /** Number of seconds it takes for a berry bush to regrow one of its berries */

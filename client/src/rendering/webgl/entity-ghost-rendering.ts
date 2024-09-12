@@ -1,6 +1,6 @@
-import { Point, lerp, randFloat, rotateXAroundOrigin, rotateXAroundPoint, rotateYAroundOrigin, rotateYAroundPoint } from "webgl-test-shared/dist/utils";
-import { EntityType } from "webgl-test-shared/dist/entities";
-import { StructureType } from "webgl-test-shared/dist/structures";
+import { Point, lerp, randFloat, rotateXAroundOrigin, rotateXAroundPoint, rotateYAroundOrigin, rotateYAroundPoint } from "battletribes-shared/utils";
+import { EntityType } from "battletribes-shared/entities";
+import { StructureType } from "battletribes-shared/structures";
 import Player from "../../entities/Player";
 import { gl, createWebGLProgram } from "../../webgl";
 import { getEntityTextureAtlas, getTextureArrayIndex } from "../../texture-atlases/texture-atlases";

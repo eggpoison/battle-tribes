@@ -1,9 +1,9 @@
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
-import { CraftingStation } from "webgl-test-shared/dist/items/crafting-recipes";
-import { PacketReader } from "webgl-test-shared/dist/packets";
+import { CraftingStation } from "battletribes-shared/items/crafting-recipes";
+import { PacketReader } from "battletribes-shared/packets";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
-import { ServerComponentType } from "webgl-test-shared/dist/components";
+import { ServerComponentType } from "battletribes-shared/components";
 
 class CraftingStationComponent extends ServerComponent {
    public readonly craftingStation: CraftingStation;

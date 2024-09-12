@@ -1,9 +1,12 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, MutableRefObject } from "react";
 import ItemsTab from "./tabs/ItemsTab";
 import SummonTab from "./tabs/SummonTab";
 import TitlesTab from "./tabs/TitlesTab";
 import TribesTab from "./tabs/TribesTab";
 import { addMenuCloseFunction } from "../../../menus";
+import { EntitySummonPacket } from "../../../../../shared/src/dev-packets";
+import { Mutable } from "../../../../../shared/src/utils";
+import { GameInteractState } from "../GameScreen";
 
 const enum TabType {
    items,
@@ -24,6 +27,8 @@ interface TabProps {
 }
 
 interface TabSelectorProps {
+   readonly summonPacketRef: MutableRefObject<Mutable<EntitySummonPacket> | null>;
+   setGameInteractState(state: GameInteractState): void;
    setMenu(element: JSX.Element): void;
 }
 
@@ -90,7 +95,7 @@ const TabSelector = (props: TabSelectorProps) => {
       {selectedTab === TabType.items ? (
          <ItemsTab/>
       ) : selectedTab === TabType.summon ? (
-         <SummonTab setMenu={props.setMenu} />
+         <SummonTab summonPacketRef={props.summonPacketRef} setGameInteractState={props.setGameInteractState} setMenu={props.setMenu} />
       ) : selectedTab === TabType.titles ? (
          <TitlesTab />
       ) : selectedTab === TabType.tribes ? (

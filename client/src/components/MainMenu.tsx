@@ -1,24 +1,27 @@
 import { TribeType } from "battletribes-shared/tribes";
-import { useCallback, useRef } from "react";
-import { setGameState } from "./App";
+import { useRef } from "react";
 import { createAudioContext } from "../sound";
+import { AppState } from "./App";
 
-const MAX_USERNAME_CHARS = 21;
+const enum Vars {
+   MAX_USERNAME_CHARS = 21
+}
 
 /** Checks whether a given username is valid or not */
 const usernameIsValid = (username: string): [warning: string, isValid: false] | [warning: null, isValid: true] => {
-   if (username.length > MAX_USERNAME_CHARS) return ["Name cannot be more than " + MAX_USERNAME_CHARS + " characters long!", false];
+   if (username.length > Vars.MAX_USERNAME_CHARS) return ["Name cannot be more than " + Vars.MAX_USERNAME_CHARS + " characters long!", false];
    if (username.length === 0) return ["Name cannot be empty!", false];
 
    return [null, true];
 }
 
 interface MainMenuProps {
-   readonly existingUsername: string | null;
-   passUsername: (username: string) => void;
-   passTribeType: (tribeType: TribeType) => void;
+   readonly existingUsername: string;
+   readonly usernameRef: React.MutableRefObject<string>;
+   readonly tribeTypeRef: React.MutableRefObject<TribeType>;
+   setAppState(appState: AppState): void;
 }
-const MainMenu = ({ existingUsername, passUsername, passTribeType }: MainMenuProps) => {
+const MainMenu = (props: MainMenuProps) => {
    const nameInputBoxRef = useRef<HTMLInputElement | null>(null);
    const plainspeopleInputRef = useRef<HTMLInputElement | null>(null);
    const barbariansInputRef = useRef<HTMLInputElement | null>(null);
@@ -54,7 +57,7 @@ const MainMenu = ({ existingUsername, passUsername, passTribeType }: MainMenuPro
    }
 
    // Handles username input
-   const enterName = useCallback((): void => {
+   const enterName = () => {
       const username = getUsername();
       if (username === "") {
          return;
@@ -63,10 +66,10 @@ const MainMenu = ({ existingUsername, passUsername, passTribeType }: MainMenuPro
       const tribeType = getSelectedTribeType();
 
       createAudioContext();
-      passUsername(username!);
-      passTribeType(tribeType);
-      setGameState("loading");
-   }, [passUsername, passTribeType]);
+      props.usernameRef.current = username;
+      props.tribeTypeRef.current = tribeType;
+      props.setAppState(AppState.loading);
+   }
 
    // When the name is entered
    const pressEnter = (e: KeyboardEvent): void => {
@@ -78,7 +81,7 @@ const MainMenu = ({ existingUsername, passUsername, passTribeType }: MainMenuPro
 
    return <div id="main-menu">
       <div className="content">
-         <input ref={nameInputBoxRef} name="name-input" onKeyDown={e => pressEnter(e.nativeEvent)} type="text" placeholder="Enter name here" autoFocus />
+         <input ref={nameInputBoxRef} name="name-input" onKeyDown={e => pressEnter(e.nativeEvent)} type="text" defaultValue={props.existingUsername} placeholder="Enter name here" autoFocus />
          <form>
             <input ref={plainspeopleInputRef} type="radio" id="tribe-selection-plainspeople" name="tribe-selection" defaultChecked />
             <label htmlFor="tribe-selection-plainspeople">Plainspeople</label>

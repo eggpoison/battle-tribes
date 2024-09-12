@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { MutableRefObject, useCallback, useEffect, useRef, useState } from "react";
 import ChatBox from "./ChatBox";
 import NerdVision from "./dev/NerdVision";
 import HealthBar from "./HealthBar";
@@ -13,8 +13,17 @@ import TechInfocard from "./TechInfocard";
 import InventorySelector from "./inventories/InventorySelector";
 import InspectHealthBar from "./InspectHealthBar";
 import Infocards from "./infocards/Infocards";
-import { GameInteractState } from "../../Game";
 import SummonCrosshair from "./SummonCrosshair";
+import { AppState } from "../App";
+import { EntitySummonPacket } from "../../../../shared/src/dev-packets";
+import { Mutable } from "../../../../shared/src/utils";
+import { calculateCursorWorldPositionX, calculateCursorWorldPositionY } from "../../mouse";
+import Client from "../../client/Client";
+
+export const enum GameInteractState {
+   none,
+   summonEntity
+}
 
 export let openSettingsMenu: () => void;
 export let closeSettingsMenu: () => void;
@@ -25,13 +34,40 @@ export let toggleCinematicMode: () => void;
 export let gameScreenSetIsDead: (isDead: boolean) => void = () => {};
 
 interface GameScreenProps {
-   readonly interactState: GameInteractState;
+   setAppState(appState: AppState): void;
 }
 
 const GameScreen = (props: GameScreenProps) => {
    const [settingsIsOpen, setSettingsIsOpen] = useState(false);
    const [isDead, setIsDead] = useState(false);
    const [cinematicModeIsEnabled, setCinematicModeIsEnabled] = useState(false);
+   const [interactState, setInteractState] = useState(GameInteractState.none);
+   
+   const summonPacketRef = useRef<Mutable<EntitySummonPacket> | null>(null);
+
+   const placeEntity = useCallback((e: MouseEvent): void => {
+      if (interactState !== GameInteractState.summonEntity) {
+         return;
+      }
+
+      const summonPacket = summonPacketRef.current;
+      if (summonPacket === null) {
+         console.warn("summon packet is null");
+         return;
+      }
+      
+      if (e.button === 0) {
+         summonPacket.position[0] = calculateCursorWorldPositionX(e.clientX)!;
+         summonPacket.position[1] = calculateCursorWorldPositionY(e.clientY)!;
+         summonPacket.rotation = 2 * Math.PI * Math.random();
+         
+         Client.sendEntitySummonPacket(summonPacket);
+      } else if (e.button === 2) {
+         // Get out of summon entity mode
+         setInteractState(GameInteractState.none);
+      }
+      return;
+   }, [interactState]);
 
    useEffect(() => {
       openSettingsMenu = (): void => setSettingsIsOpen(true);
@@ -72,11 +108,11 @@ const GameScreen = (props: GameScreenProps) => {
       <HeldItem />
 
       {isDead ? (
-         <DeathScreen />
+         <DeathScreen setAppState={props.setAppState} />
       ) : undefined}
 
-      {props.interactState !== GameInteractState.summonEntity ? (
-         <NerdVision />
+      {interactState !== GameInteractState.summonEntity ? (
+         <NerdVision summonPacketRef={summonPacketRef} setGameInteractState={setInteractState} />
       ) : <>
          <div id="summon-prompt">
             <div className="line left"></div>
@@ -85,6 +121,8 @@ const GameScreen = (props: GameScreenProps) => {
          </div>
 
          <SummonCrosshair />
+
+         <div id="summon-entity-veil" onMouseDown={e => placeEntity(e.nativeEvent)}></div>
       </>}
 
       <TechTree />

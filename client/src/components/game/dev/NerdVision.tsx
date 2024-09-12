@@ -1,16 +1,24 @@
 import DebugInfo from "./DebugInfo";
 import Terminal, { forceTerminalFocus, setTerminalVisibility } from "./Terminal";
-import { useEffect, useState } from "react";
+import { MutableRefObject, useEffect, useState } from "react";
 import { addKeyListener } from "../../../keyboard-input";
 import GameInfoDisplay from "./GameInfoDisplay";
 import { setTerminalButtonOpened } from "./TerminalButton";
 import { hideFrameGraph, showFrameGraph } from "./FrameGraph";
 import TabSelector from "./TabSelector";
 import { addMenuCloseFunction } from "../../../menus";
+import { EntitySummonPacket } from "../../../../../shared/src/dev-packets";
+import { Mutable } from "../../../../../shared/src/utils";
+import { GameInteractState } from "../GameScreen";
+
+interface NerdVisionProps {
+   readonly summonPacketRef: MutableRefObject<Mutable<EntitySummonPacket> | null>;
+   setGameInteractState(state: GameInteractState): void;
+}
 
 export let nerdVisionIsVisible: () => boolean = () => false;
 
-const NerdVision = () => {
+const NerdVision = (props: NerdVisionProps) => {
    const [terminalStartingVisibility, setTerminalStartingVisibility] = useState(false);
    const [isEnabled, setIsEnabled] = useState(false); // Nerd vision always starts as disabled
    const [menu, setMenu] = useState<JSX.Element | null>(null);
@@ -66,7 +74,7 @@ const NerdVision = () => {
       {/* <TerminalButton startingIsOpened={terminalStartingVisibility} /> */}
       <Terminal startingIsVisible={terminalStartingVisibility}/>
 
-      <TabSelector setMenu={setMenuCallback} />
+      <TabSelector summonPacketRef={props.summonPacketRef} setGameInteractState={props.setGameInteractState} setMenu={setMenuCallback} />
 
       {menu}
    </div>;

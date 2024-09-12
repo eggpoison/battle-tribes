@@ -41,7 +41,8 @@ import Tribe from "../Tribe";
 import { createHitbox, Hitbox } from "battletribes-shared/boxes/boxes";
 import CircularBox from "battletribes-shared/boxes/CircularBox";
 import RectangularBox from "battletribes-shared/boxes/RectangularBox";
-import { setGameState, setLoadingScreenInitialStatus } from "../components/App";
+import { AppState } from "../components/App";
+import { LoadingScreenStatus } from "../components/LoadingScreen";
 
 export type GameData = {
    readonly gameTicks: number;
@@ -147,7 +148,7 @@ abstract class Client {
    public static initialGameDataResolve: ((value: InitialGameDataPacket) => void) | null = null;
    public static nextGameDataResolve: ((value: PacketReader) => void) | null = null;
 
-   public static connectToServer(): Promise<boolean> {
+   public static connectToServer(setAppState: (appState: AppState) => void, setLoadingScreenStatus: (status: LoadingScreenStatus) => void): Promise<boolean> {
       return new Promise(resolve => {
          this.socket = new WebSocket(`ws://localhost:${Settings.SERVER_PORT}`);
          this.socket.binaryType = "arraybuffer";
@@ -164,8 +165,8 @@ abstract class Client {
 
             Game.isRunning = false;
             
-            setLoadingScreenInitialStatus("connection_error");
-            setGameState("loading");
+            setLoadingScreenStatus(LoadingScreenStatus.connectionError);
+            setAppState(AppState.loading);
 
             Player.instance = null;
          }

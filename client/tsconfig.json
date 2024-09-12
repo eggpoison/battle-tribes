@@ -19,7 +19,7 @@
       "outDir": "./build",
       "jsx": "react-jsx",
       "sourceMap": true,
-      "isolatedModules": false,
+      "isolatedModules": true, // This might cause problems...
       "declaration": true,
       "paths": {
          "battletribes-shared/*": ["../shared/src/*"]

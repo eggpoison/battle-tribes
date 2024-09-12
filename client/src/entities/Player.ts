@@ -2,15 +2,12 @@ import { EntityType } from "battletribes-shared/entities";
 import Camera from "../Camera";
 import { halfWindowHeight, halfWindowWidth } from "../webgl";
 import TribeMember, { addTribeMemberRenderParts } from "./TribeMember";
-import { definiteGameState, latencyGameState } from "../game-state/game-states";
 import { ClientComponentType } from "../entity-components/components";
 import FootprintComponent from "../entity-components/FootprintComponent";
 import EquipmentComponent from "../entity-components/EquipmentComponent";
-import { InventoryName, Item } from "battletribes-shared/items/items";
 import { ServerComponentType } from "battletribes-shared/components";
 import { PhysicsComponentArray } from "../entity-components/PhysicsComponent";
 import { Settings } from "battletribes-shared/settings";
-import { InventoryComponentArray } from "../entity-components/InventoryComponent";
 
 /** Updates the rotation of the player to match the cursor position */
 export function updatePlayerRotation(cursorX: number, cursorY: number): void {
@@ -101,7 +98,7 @@ export function updatePlayerRotation(cursorX: number, cursorY: number): void {
 //    setCraftingMenuAvailableCraftingStations(availableCraftingStations);
 // }
 
-class Player extends TribeMember {
+export default class Player extends TribeMember {
    // @Cleanup: once reworked entity out of existance, this should be changed to instanceID which can be EntityID | null (or Entity | null)
    /** The player entity associated with the current player. If null, then the player is dead */
    public static instance: Player | null = null;
@@ -123,4 +120,12 @@ class Player extends TribeMember {
    }
 }
 
-export default Player;
+if (module.hot) {
+   module.hot.dispose(data => {
+      data.playerInstance = Player.instance;
+   });
+
+   if (module.hot.data) {
+      Player.instance = module.hot.data.playerInstance;
+   }
+}

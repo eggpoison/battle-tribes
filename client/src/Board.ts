@@ -2,7 +2,7 @@ import { Settings } from "battletribes-shared/settings";
 import { GrassTileInfo, RIVER_STEPPING_STONE_SIZES, RiverFlowDirectionsRecord, RiverSteppingStoneData, ServerTileUpdateData } from "battletribes-shared/client-server-types";
 import { TileType } from "battletribes-shared/tiles";
 import { Point, Vector } from "battletribes-shared/utils";
-import { EntityID } from "battletribes-shared/entities";
+import { EntityID, EntityTypeString } from "battletribes-shared/entities";
 import Chunk from "./Chunk";
 import { Tile } from "./Tile";
 import Entity from "./Entity";
@@ -39,24 +39,24 @@ abstract class Board {
    public static clientTicks = 0;
    public static time: number;
 
-   private static tiles: ReadonlyArray<Tile>;
+   public static tiles: ReadonlyArray<Tile>;
    public static chunks: Array<Chunk>;
    
    public static grassInfo: Record<number, Record<number, GrassTileInfo>>;
-   private static riverFlowDirections: RiverFlowDirectionsRecord;
+   public static riverFlowDirections: RiverFlowDirectionsRecord;
 
-   public static readonly entityRecord: Partial<Record<number, Entity>> = {};
+   public static entityRecord: Partial<Record<number, Entity>> = {};
 
-   public static readonly renderPartRecord: Record<number, RenderPart> = {};
+   public static renderPartRecord: Record<number, RenderPart> = {};
 
    // @Cleanup This is too messy. Perhaps combine all into one
    // public static readonly particles = new Array<Particle>();
-   public static readonly lowMonocolourParticles = new Array<Particle>();
-   public static readonly lowTexturedParticles = new Array<Particle>();
-   public static readonly highMonocolourParticles = new Array<Particle>();
-   public static readonly highTexturedParticles = new Array<Particle>();
+   public static lowMonocolourParticles = new Array<Particle>();
+   public static lowTexturedParticles = new Array<Particle>();
+   public static highMonocolourParticles = new Array<Particle>();
+   public static highTexturedParticles = new Array<Particle>();
 
-   private static tickCallbacks = new Array<TickCallback>();
+   public static tickCallbacks = new Array<TickCallback>();
 
    // @Cleanup: This function gets called by Game.ts, which gets called by LoadingScreen.tsx, with these same parameters. This feels unnecessary.
    public static initialise(initialGameDataPacket: InitialGameDataPacket): void {
@@ -376,4 +376,40 @@ export function getElapsedTimeInSeconds(elapsedTicks: number): number {
    secondsSince += getFrameProgress() / Settings.TPS;
 
    return secondsSince;
+}
+
+if (module.hot) {
+   module.hot.dispose(data => {
+      data.serverTicks = Board.serverTicks;
+      data.clientTicks = Board.clientTicks;
+      data.time = Board.time;
+      data.tiles = Board.tiles;
+      data.chunks = Board.chunks;
+      data.grassInfo = Board.grassInfo;
+      data.riverFlowDirections = Board.riverFlowDirections;
+      data.entityRecord = Board.entityRecord;
+      data.renderPartRecord = Board.renderPartRecord;
+      data.lowMonocolourParticles = Board.lowMonocolourParticles;
+      data.lowTexturedParticles = Board.lowTexturedParticles;
+      data.highMonocolourParticles = Board.highMonocolourParticles;
+      data.highTexturedParticles = Board.highTexturedParticles;
+      data.tickCallbacks = Board.tickCallbacks;
+   });
+
+   if (module.hot.data) {
+      Board.serverTicks = module.hot.data.serverTicks;
+      Board.clientTicks = module.hot.data.clientTicks;
+      Board.time = module.hot.data.time;
+      Board.tiles = module.hot.data.tiles;
+      Board.chunks = module.hot.data.chunks;
+      Board.grassInfo = module.hot.data.grassInfo;
+      Board.riverFlowDirections = module.hot.data.riverFlowDirections;
+      Board.entityRecord = module.hot.data.entityRecord;
+      Board.renderPartRecord = module.hot.data.renderPartRecord;
+      Board.lowMonocolourParticles = module.hot.data.lowMonocolourParticles;
+      Board.lowTexturedParticles = module.hot.data.lowTexturedParticles;
+      Board.highMonocolourParticles = module.hot.data.highMonocolourParticles;
+      Board.highTexturedParticles = module.hot.data.highTexturedParticles;
+      Board.tickCallbacks = module.hot.data.tickCallbacks;
+   }
 }

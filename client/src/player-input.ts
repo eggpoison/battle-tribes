@@ -6,7 +6,7 @@ import { Hotbar_setHotbarSelectedItemSlot, Hotbar_updateLeftThrownBattleaxeItemI
 import { BackpackInventoryMenu_setIsVisible } from "./components/game/inventories/BackpackInventory";
 import Board, { getElapsedTimeInSeconds } from "./Board";
 import { definiteGameState, latencyGameState } from "./game-state/game-states";
-import Game, { GameInteractState } from "./Game";
+import Game from "./Game";
 import { attemptEntitySelection } from "./entity-selection";
 import { playSound } from "./sound";
 import { attemptToCompleteNode } from "./research";
@@ -394,25 +394,6 @@ const createItemUseListeners = (): void => {
          return;
       }
 
-      if (Game.getInteractState() === GameInteractState.summonEntity) {
-         if (Game.summonPacket === null) {
-            console.warn("summon packet is null");
-            return;
-         }
-         
-         if (e.button === 0) {
-            Game.summonPacket.position[0] = calculateCursorWorldPositionX(e.clientX)!;
-            Game.summonPacket.position[1] = calculateCursorWorldPositionY(e.clientY)!;
-            Game.summonPacket.rotation = 2 * Math.PI * Math.random();
-            
-            Client.sendEntitySummonPacket(Game.summonPacket);
-         } else if (e.button === 2) {
-            // Get out of summon entity mode
-            Game.setInteractState(GameInteractState.none);
-         }
-         return;
-      }
-
       if (e.button === 0) { // Left click
          leftMouseButtonIsPressed = true;
          attemptAttack();
@@ -688,6 +669,7 @@ const deselectItem = (item: Item, isOffhand: boolean): void => {
       case "battleaxe":
       case "bow": {
          limb.action = LimbAction.none;
+         sendStopItemUsePacket();
          break;
       }
       case "placeable": {

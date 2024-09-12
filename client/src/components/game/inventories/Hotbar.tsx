@@ -41,7 +41,6 @@ const Hotbar = () => {
       }
    }, []);
 
-
    const playerID = Player.instance?.id || undefined;
    
    const inventoryComponent = Player.instance !== null ? InventoryComponentArray.getComponent(Player.instance.id) : undefined;

@@ -221,13 +221,14 @@ export function beginSwing(attackingEntity: EntityID, itemSlot: number, inventor
    }
 
    const limbInfo = inventoryUseComponent.getLimbInfo(inventoryName);
-   // If the limb is doing something, don't swing
-   if (limbInfo.action !== LimbAction.none) {
-      return false;
-   }
 
    const heldItem = getHeldItem(limbInfo);
    const heldItemAttackInfo = getItemAttackInfo(heldItem !== null ? heldItem.type : null);
+
+   // If the limb is doing something or is resting, don't swing
+   if (limbInfo.action !== LimbAction.none || limbInfo.currentActionElapsedTicks < limbInfo.currentActionDurationTicks) {
+      return false;
+   }
    
    // Begin winding up the attack
    limbInfo.selectedItemSlot = itemSlot;

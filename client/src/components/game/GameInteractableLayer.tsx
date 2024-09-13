@@ -1,33 +1,34 @@
-import { addKeyListener, clearPressedKeys, keyIsPressed } from "./keyboard-input";
-import { CraftingMenu_setCraftingStation, CraftingMenu_setIsVisible } from "./components/game/menus/CraftingMenu";
-import Player from "./entities/Player";
-import Client from "./client/Client";
-import { Hotbar_setHotbarSelectedItemSlot, Hotbar_updateLeftThrownBattleaxeItemID, Hotbar_updateRightThrownBattleaxeItemID } from "./components/game/inventories/Hotbar";
-import { BackpackInventoryMenu_setIsVisible } from "./components/game/inventories/BackpackInventory";
-import Board, { getElapsedTimeInSeconds } from "./Board";
-import { definiteGameState, latencyGameState } from "./game-state/game-states";
-import Game from "./Game";
-import { attemptEntitySelection } from "./entity-selection";
-import { playSound } from "./sound";
-import { attemptToCompleteNode } from "./research";
-import { calculateStructurePlaceInfo } from "battletribes-shared/structures";
-import { LimbAction } from "battletribes-shared/entities";
-import { Settings } from "battletribes-shared/settings";
-import { ServerComponentType } from "battletribes-shared/components";
-import { TRIBE_INFO_RECORD, TribeType } from "battletribes-shared/tribes";
-import { STATUS_EFFECT_MODIFIERS } from "battletribes-shared/status-effects";
-import { TribesmanTitle } from "battletribes-shared/titles";
-import { InventoryUseComponentArray, LimbInfo } from "./entity-components/InventoryUseComponent";
-import { ENTITY_TYPE_TO_GHOST_TYPE_MAP, GhostInfo, setGhostInfo } from "./rendering/webgl/entity-ghost-rendering";
-import Camera from "./Camera";
-import { calculateCursorWorldPositionX, calculateCursorWorldPositionY } from "./mouse";
-import { Item, ITEM_TYPE_RECORD, InventoryName, ITEM_INFO_RECORD, ConsumableItemInfo, ConsumableItemCategory, PlaceableItemType, getItemAttackInfo, ItemType } from "battletribes-shared/items/items";
-import { playBowFireSound } from "./entity-tick-events";
-import { closeCurrentMenu } from "./menus";
-import { createAttackPacket, sendItemDropPacket, sendItemUsePacket, sendStopItemUsePacket } from "./client/packet-creation";
-import { HealthComponentArray } from "./entity-components/HealthComponent";
-import { InventoryComponentArray } from "./entity-components/InventoryComponent";
-import { DamageBoxComponentArray } from "./entity-components/DamageBoxComponent";
+import { useCallback, useEffect, useState } from "react";
+import AttackChargeBar from "./AttackChargeBar";
+import { ServerComponentType } from "../../../../shared/src/components";
+import { LimbAction } from "../../../../shared/src/entities";
+import { Item, InventoryName, getItemAttackInfo, ITEM_TYPE_RECORD, ItemType, ITEM_INFO_RECORD, ConsumableItemInfo, ConsumableItemCategory, PlaceableItemType } from "../../../../shared/src/items/items";
+import { Settings } from "../../../../shared/src/settings";
+import { STATUS_EFFECT_MODIFIERS } from "../../../../shared/src/status-effects";
+import { calculateStructurePlaceInfo } from "../../../../shared/src/structures";
+import { TribesmanTitle } from "../../../../shared/src/titles";
+import { TribeType, TRIBE_INFO_RECORD } from "../../../../shared/src/tribes";
+import Board, { getElapsedTimeInSeconds } from "../../Board";
+import Camera from "../../Camera";
+import Client from "../../client/Client";
+import { sendStopItemUsePacket, createAttackPacket, sendItemDropPacket, sendItemUsePacket } from "../../client/packet-creation";
+import Player from "../../entities/Player";
+import { DamageBoxComponentArray } from "../../entity-components/DamageBoxComponent";
+import { HealthComponentArray } from "../../entity-components/HealthComponent";
+import { InventoryComponentArray } from "../../entity-components/InventoryComponent";
+import { InventoryUseComponentArray, LimbInfo } from "../../entity-components/InventoryUseComponent";
+import { attemptEntitySelection } from "../../entity-selection";
+import { playBowFireSound } from "../../entity-tick-events";
+import Game from "../../Game";
+import { latencyGameState, definiteGameState } from "../../game-state/game-states";
+import { clearPressedKeys, addKeyListener, keyIsPressed } from "../../keyboard-input";
+import { closeCurrentMenu } from "../../menus";
+import { setGhostInfo, GhostInfo, ENTITY_TYPE_TO_GHOST_TYPE_MAP } from "../../rendering/webgl/entity-ghost-rendering";
+import { attemptToCompleteNode } from "../../research";
+import { playSound } from "../../sound";
+import { BackpackInventoryMenu_setIsVisible } from "./inventories/BackpackInventory";
+import { Hotbar_updateLeftThrownBattleaxeItemID, Hotbar_updateRightThrownBattleaxeItemID, Hotbar_setHotbarSelectedItemSlot } from "./inventories/Hotbar";
+import { CraftingMenu_setCraftingStation, CraftingMenu_setIsVisible } from "./menus/CraftingMenu";
 
 interface SelectedItemInfo {
    readonly item: Item;
@@ -88,6 +89,9 @@ let discombobulationTimer = 0;
 let attackBufferTime = 0;
 let bufferedInputType = BufferedInputType.attack;
 
+// @Hack
+let GameInteractableLayer_setChargeInfo: (elapsedTicks: number, duration: number) => void = () => {};
+
 export function getHotbarSelectedItemSlot(): number {
    return hotbarSelectedItemSlot;
 }
@@ -109,7 +113,7 @@ const hasBlockedAttack = (limb: LimbInfo): boolean => {
    const damageBoxComponent = DamageBoxComponentArray.getComponent(Player.instance!.id);
 
    for (const blockBox of damageBoxComponent.blockBoxes) {
-      if (blockBox.hasBlocked) {
+      if (blockBox.associatedLimbInventoryName === limb.inventoryName && blockBox.hasBlocked) {
          return true;
       }
    }
@@ -134,72 +138,79 @@ export function updatePlayerItems(): void {
 
    // const inventoryComponent = InventoryComponentArray.getComponent(Player.instance.id);
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(Player.instance.id);
-   const hotbarLimbInfo = inventoryUseComponent.getLimbInfoByInventoryName(InventoryName.hotbar);
+   const hotbarLimb = inventoryUseComponent.getLimbInfoByInventoryName(InventoryName.hotbar);
 
-   if (hotbarLimbInfo.currentActionPauseTicksRemaining > 0) {
-      hotbarLimbInfo.currentActionPauseTicksRemaining--;
+   if (hotbarLimb.currentActionPauseTicksRemaining > 0) {
+      hotbarLimb.currentActionPauseTicksRemaining--;
    } else {
-      hotbarLimbInfo.currentActionElapsedTicks += hotbarLimbInfo.currentActionRate;
+      hotbarLimb.currentActionElapsedTicks += hotbarLimb.currentActionRate;
    }
    
    // If finished winding attack, switch to doing attack
-   if (hotbarLimbInfo.action === LimbAction.windAttack && getElapsedTimeInSeconds(hotbarLimbInfo.currentActionElapsedTicks) * Settings.TPS >= hotbarLimbInfo.currentActionDurationTicks) {
-      hotbarLimbInfo.action = LimbAction.attack;
-      hotbarLimbInfo.currentActionElapsedTicks = 0;
+   if (hotbarLimb.action === LimbAction.windAttack && getElapsedTimeInSeconds(hotbarLimb.currentActionElapsedTicks) * Settings.TPS >= hotbarLimb.currentActionDurationTicks) {
+      hotbarLimb.action = LimbAction.attack;
+      hotbarLimb.currentActionElapsedTicks = 0;
 
-      const attackInfo = getItemAttackInfo(hotbarLimbInfo.heldItemType);
-      hotbarLimbInfo.currentActionDurationTicks = attackInfo.attackTimings.swingTimeTicks;
+      const attackInfo = getItemAttackInfo(hotbarLimb.heldItemType);
+      hotbarLimb.currentActionDurationTicks = attackInfo.attackTimings.swingTimeTicks;
    }
 
    // If finished attacking, go to rest
-   if (hotbarLimbInfo.action === LimbAction.attack && getElapsedTimeInSeconds(hotbarLimbInfo.currentActionElapsedTicks) * Settings.TPS >= hotbarLimbInfo.currentActionDurationTicks) {
-      hotbarLimbInfo.action = LimbAction.returnAttackToRest;
-      hotbarLimbInfo.currentActionElapsedTicks = 0;
+   if (hotbarLimb.action === LimbAction.attack && getElapsedTimeInSeconds(hotbarLimb.currentActionElapsedTicks) * Settings.TPS >= hotbarLimb.currentActionDurationTicks) {
+      hotbarLimb.action = LimbAction.returnAttackToRest;
+      hotbarLimb.currentActionElapsedTicks = 0;
 
-      const attackInfo = getItemAttackInfo(hotbarLimbInfo.heldItemType);
-      hotbarLimbInfo.currentActionDurationTicks = attackInfo.attackTimings.returnTimeTicks;
+      const attackInfo = getItemAttackInfo(hotbarLimb.heldItemType);
+      hotbarLimb.currentActionDurationTicks = attackInfo.attackTimings.returnTimeTicks;
    }
 
    // If finished going to rest, set to default
-   if (hotbarLimbInfo.action === LimbAction.returnAttackToRest && getElapsedTimeInSeconds(hotbarLimbInfo.currentActionElapsedTicks) * Settings.TPS >= hotbarLimbInfo.currentActionDurationTicks) {
-      hotbarLimbInfo.action = LimbAction.none;
+   if (hotbarLimb.action === LimbAction.returnAttackToRest && getElapsedTimeInSeconds(hotbarLimb.currentActionElapsedTicks) * Settings.TPS >= hotbarLimb.currentActionDurationTicks) {
+      hotbarLimb.action = LimbAction.none;
+
+      const attackInfo = getItemAttackInfo(hotbarLimb.heldItemType);
+      hotbarLimb.currentActionElapsedTicks = 0;
+      hotbarLimb.currentActionDurationTicks = attackInfo.attackTimings.restTimeTicks;
    }
 
    // @Incomplete: Double-check there isn't a tick immediately after depressing the button where this hasn't registered in the limb yet
    // If blocking but not right clicking, return to rest
-   if (hotbarLimbInfo.action === LimbAction.block && !rightMouseButtonIsPressed && getElapsedTimeInSeconds(hotbarLimbInfo.currentActionElapsedTicks) * Settings.TPS >= hotbarLimbInfo.currentActionDurationTicks) {
-      const attackInfo = getItemAttackInfo(hotbarLimbInfo.heldItemType);
-      hotbarLimbInfo.action = LimbAction.returnBlockToRest;
-      hotbarLimbInfo.currentActionElapsedTicks = 0;
+   if (1+1===3 && hotbarLimb.action === LimbAction.block && !rightMouseButtonIsPressed && getElapsedTimeInSeconds(hotbarLimb.currentActionElapsedTicks) * Settings.TPS >= hotbarLimb.currentActionDurationTicks) {
+      const attackInfo = getItemAttackInfo(hotbarLimb.heldItemType);
+      hotbarLimb.action = LimbAction.returnBlockToRest;
+      hotbarLimb.currentActionElapsedTicks = 0;
       // @Temporary? Perhaps use separate blockReturnTimeTicks.
-      hotbarLimbInfo.currentActionDurationTicks = attackInfo.attackTimings.blockTimeTicks!;
-      hotbarLimbInfo.currentActionRate = hasBlockedAttack(hotbarLimbInfo) ? 2 : 1;
+      hotbarLimb.currentActionDurationTicks = attackInfo.attackTimings.blockTimeTicks!;
+      hotbarLimb.currentActionRate = hasBlockedAttack(hotbarLimb) ? 2 : 1;
 
       sendStopItemUsePacket();
    }
 
    // @Copynpaste
    // If finished returning block to rest, go to rest
-   if (hotbarLimbInfo.action === LimbAction.returnBlockToRest && getElapsedTimeInSeconds(hotbarLimbInfo.currentActionElapsedTicks) * Settings.TPS >= hotbarLimbInfo.currentActionDurationTicks) {
-      hotbarLimbInfo.action = LimbAction.none;
+   if (hotbarLimb.action === LimbAction.returnBlockToRest && getElapsedTimeInSeconds(hotbarLimb.currentActionElapsedTicks) * Settings.TPS >= hotbarLimb.currentActionDurationTicks) {
+      hotbarLimb.action = LimbAction.none;
+      hotbarLimb.currentActionElapsedTicks = 0;
+      hotbarLimb.currentActionDurationTicks = 0;
    }
 
    // Buffered attacks
-   if (attackBufferTime > 0) {
-      if (hotbarLimbInfo.action === LimbAction.none) {
-         switch (bufferedInputType) {
-            case BufferedInputType.attack: {
+   if (attackBufferTime > 0 || (bufferedInputType === BufferedInputType.block && rightMouseButtonIsPressed)) {
+      switch (bufferedInputType) {
+         case BufferedInputType.attack: {
+            if (hotbarLimb.action === LimbAction.none && hotbarLimb.currentActionElapsedTicks >= hotbarLimb.currentActionDurationTicks) {
                swing(InventoryName.hotbar);
-               break;
             }
-            case BufferedInputType.block: {
-               if (hotbarLimbInfo.heldItemType !== null) {
-                  onItemRightClickDown(hotbarLimbInfo.heldItemType, InventoryName.hotbar, hotbarSelectedItemSlot);
-               }
-               break;
+            break;
+         }
+         case BufferedInputType.block: {
+            if (hotbarLimb.action === LimbAction.none && hotbarLimb.heldItemType !== null) {
+               onItemRightClickDown(hotbarLimb.heldItemType, InventoryName.hotbar, hotbarSelectedItemSlot);
             }
+            break;
          }
       }
+      
       const didSwing = attemptSwing(InventoryName.hotbar);
       if (didSwing) {
          attackBufferTime = 0;
@@ -211,9 +222,42 @@ export function updatePlayerItems(): void {
       }
    }
 
+   // Update attack charge bar
+   let attackElapsedTicks = -1;
+   let attackDuration = -1;
+   if (hotbarLimb.action === LimbAction.windAttack || hotbarLimb.action === LimbAction.attack || hotbarLimb.action === LimbAction.returnAttackToRest || (hotbarLimb.action === LimbAction.none && hotbarLimb.currentActionDurationTicks > 0)) {
+      const attackInfo = getItemAttackInfo(hotbarLimb.heldItemType);
+
+      switch (hotbarLimb.action) {
+         case LimbAction.windAttack: {
+            attackElapsedTicks = hotbarLimb.currentActionElapsedTicks;
+            break;
+         }
+         case LimbAction.attack: {
+            attackElapsedTicks = attackInfo.attackTimings.windupTimeTicks + hotbarLimb.currentActionElapsedTicks;
+            break;
+         }
+         case LimbAction.returnAttackToRest: {
+            attackElapsedTicks = attackInfo.attackTimings.windupTimeTicks + attackInfo.attackTimings.swingTimeTicks + hotbarLimb.currentActionElapsedTicks;
+            break;
+         }
+         case LimbAction.none: {
+            attackElapsedTicks = attackInfo.attackTimings.windupTimeTicks + attackInfo.attackTimings.swingTimeTicks + attackInfo.attackTimings.returnTimeTicks + hotbarLimb.currentActionElapsedTicks;
+            break;
+         }
+      }
+
+      attackDuration = attackInfo.attackTimings.windupTimeTicks + attackInfo.attackTimings.swingTimeTicks + attackInfo.attackTimings.returnTimeTicks + attackInfo.attackTimings.restTimeTicks;
+   } else {
+      attackElapsedTicks = -1;
+      attackDuration = -1;
+   }
+   // @Hack
+   GameInteractableLayer_setChargeInfo(attackElapsedTicks, attackDuration);
+
    // Tick held item
-   if (hotbarLimbInfo.heldItemType !== null) {
-      tickItem(hotbarLimbInfo.heldItemType);
+   if (hotbarLimb.heldItemType !== null) {
+      tickItem(hotbarLimb.heldItemType);
    }
 }
 
@@ -315,7 +359,7 @@ const attemptSwing = (inventoryName: InventoryName): boolean => {
    // Only swing if not doing anything
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(Player.instance!.id);
    const limbInfo = inventoryUseComponent.getLimbInfoByInventoryName(inventoryName);
-   if (limbInfo.action === LimbAction.none) {
+   if (limbInfo.action === LimbAction.none && limbInfo.currentActionElapsedTicks >= limbInfo.currentActionDurationTicks) {
       swing(inventoryName);
       return true;
    }
@@ -371,81 +415,43 @@ const getSelectedItemInfo = (): SelectedItemInfo | null => {
    return null;
 }
 
-const clickShouldPreventDefault = (e: MouseEvent): boolean => {
-   for (const element of e.composedPath()) {
-      if (element instanceof Element && (element.id === "hotbar" || element.id === "crafting-menu" || element.classList.contains("inventory-container"))) {
-         return true;
-      }
-   }
-   
-   if ((e.target as HTMLElement).id === "game-canvas") {
-      return true;
-   }
+const onGameMouseDown = (e: React.MouseEvent): void => {
+   if (Player.instance === null) return;
 
-   return false;
+   if (e.button === 0) { // Left click
+      leftMouseButtonIsPressed = true;
+      attemptAttack();
+   } else if (e.button === 2) { // Right click
+      currentRightClickEvent = e.nativeEvent;
+      rightMouseButtonIsPressed = true;
+
+      const selectedItemInfo = getSelectedItemInfo();
+      if (selectedItemInfo !== null) {
+         onItemRightClickDown(selectedItemInfo.item.type, selectedItemInfo.inventoryName, selectedItemInfo.itemSlot);
+      }
+      
+      const didSelectEntity = attemptEntitySelection();
+      if (didSelectEntity) {
+         e.preventDefault();
+      }
+      
+      attemptToCompleteNode();
+   }
 }
 
-const createItemUseListeners = (): void => {
-   document.addEventListener("mousedown", e => {
-      if (Player.instance === null) return;
+const onGameMouseUp = (e: React.MouseEvent): void => {
+   if (Player.instance === null) return;
 
-      // Only attempt to use an item if the game canvas was clicked
-      if ((e.target as HTMLElement).id !== "game-canvas") {
-         return;
+   if (e.button === 0) { // Left click
+      leftMouseButtonIsPressed = false;
+   } else if (e.button === 2) { // Right click
+      rightMouseButtonIsPressed = false;
+
+      const selectedItemInfo = getSelectedItemInfo();
+      if (selectedItemInfo !== null) {
+         onItemRightClickUp(selectedItemInfo.item, selectedItemInfo.inventoryName);
       }
-
-      if (e.button === 0) { // Left click
-         leftMouseButtonIsPressed = true;
-         attemptAttack();
-      } else if (e.button === 2) { // Right click
-         currentRightClickEvent = e;
-         rightMouseButtonIsPressed = true;
-
-         const selectedItemInfo = getSelectedItemInfo();
-         if (selectedItemInfo !== null) {
-            onItemRightClickDown(selectedItemInfo.item.type, selectedItemInfo.inventoryName, selectedItemInfo.itemSlot);
-         }
-         
-         const didSelectEntity = attemptEntitySelection();
-         if (didSelectEntity) {
-            e.preventDefault();
-         }
-         
-         attemptToCompleteNode();
-      }
-   });
-
-   document.addEventListener("mouseup", e => {
-      if (Player.instance === null) return;
-
-      // Only attempt to use an item if the game canvas was clicked
-      if ((e.target as HTMLElement).id !== "game-canvas") {
-         return;
-      }
-
-      if (e.button === 0) { // Left click
-         leftMouseButtonIsPressed = false;
-      } else if (e.button === 2) { // Right click
-         rightMouseButtonIsPressed = false;
-
-         const selectedItemInfo = getSelectedItemInfo();
-         if (selectedItemInfo !== null) {
-            onItemRightClickUp(selectedItemInfo.item, selectedItemInfo.inventoryName);
-         }
-      }
-   });
-
-   // Stop the context menu from appearing
-   document.addEventListener("contextmenu", e => {
-      if (clickShouldPreventDefault(e) || (currentRightClickEvent !== null && clickShouldPreventDefault(currentRightClickEvent))) {
-         e.preventDefault();
-      } else {
-         // When the context menu is opened, stop player movement
-         clearPressedKeys();
-      }
-
-      currentRightClickEvent = null;
-   });
+   }
 }
 
 const createHotbarKeyListeners = (): void => {
@@ -507,7 +513,6 @@ const createInventoryToggleListeners = (): void => {
 
 /** Creates keyboard and mouse listeners for the player. */
 export function createPlayerInputListeners(): void {
-   createItemUseListeners();
    createHotbarKeyListeners();
    createInventoryToggleListeners();
 
@@ -799,6 +804,8 @@ const onItemRightClickDown = (itemType: ItemType, itemInventoryName: InventoryNa
       case "spear": {
          limbInfo.action = LimbAction.chargeSpear;
          limbInfo.currentActionElapsedTicks = 0;
+         limbInfo.currentActionDurationTicks = 3 * Settings.TPS;
+         limbInfo.currentActionRate = 1;
          break;
       }
       case "battleaxe": {
@@ -982,3 +989,35 @@ const tickItem = (itemType: ItemType): void => {
       }
    }
 }
+
+const GameInteractableLayer = () => {
+   const [mouseX, setMouseX] = useState(0);
+   const [mouseY, setMouseY] = useState(0);
+   const [chargeElapsedTicks, setChargeElapsedTicks] = useState(-1);
+   const [chargeDuration, setChargeDuration] = useState(-1);
+   
+   useEffect(() => {
+      GameInteractableLayer_setChargeInfo = (elapsedTicks: number, duration: number): void => {
+         setChargeElapsedTicks(elapsedTicks);
+         setChargeDuration(duration);
+      }
+   })
+   
+   const onMouseMove = useCallback((e: React.MouseEvent) => {
+      setMouseX(e.clientX);
+      setMouseY(e.clientY);
+   }, []);
+
+   const onContextMenu = useCallback((e: React.MouseEvent) => {
+      e.preventDefault();
+   }, []);
+
+   return <>
+      {/* @Hack: mousedown and mouseup events shouldn't be imported */}
+      <div id="game-interactable-layer" onMouseMove={onMouseMove} onMouseDown={onGameMouseDown} onMouseUp={onGameMouseUp} onContextMenu={onContextMenu}></div>
+      
+      <AttackChargeBar mouseX={mouseX} mouseY={mouseY} chargeElapsedTicks={chargeElapsedTicks} chargeDuration={chargeDuration} />
+   </>
+}
+
+export default GameInteractableLayer;

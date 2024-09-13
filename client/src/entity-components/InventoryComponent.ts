@@ -1,7 +1,7 @@
 import { InventoryComponentData, ServerComponentType } from "battletribes-shared/components";
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
-import { InventoryName, Inventory, Item, InventoryData, ITEM_TYPE_RECORD } from "battletribes-shared/items/items";
+import { InventoryName, Inventory, Item, ITEM_TYPE_RECORD } from "battletribes-shared/items/items";
 import { PacketReader } from "battletribes-shared/packets";
 import { ItemType } from "battletribes-shared/items/items";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
@@ -10,8 +10,8 @@ import { BackpackInventoryMenu_update } from "../components/game/inventories/Bac
 import { CraftingMenu_updateRecipes } from "../components/game/menus/CraftingMenu";
 import InventoryUseComponent, { InventoryUseComponentArray, LimbInfo } from "./InventoryUseComponent";
 import { LimbAction } from "battletribes-shared/entities";
-import { getHotbarSelectedItemSlot } from "../player-input";
 import Player from "../entities/Player";
+import { getHotbarSelectedItemSlot } from "../components/game/GameInteractableLayer";
 
 const registerInventoryUpdate = (inventoryName: InventoryName): void => {
    // @Hack
@@ -107,7 +107,7 @@ const updateInventoryFromData = (inventory: Inventory, inventoryData: Inventory,
          inventory.removeItem(itemSlot);
          hasChanged = true;
 
-         if (isPlayer) {
+         if (isPlayer && itemSlot === getHotbarSelectedItemSlot()) {
             validatePlayerAction(inventory.name, null);
          }
       }
@@ -127,7 +127,7 @@ const updateInventoryFromData = (inventory: Inventory, inventoryData: Inventory,
          inventory.addItem(item, itemSlot);
          hasChanged = true;
 
-         if (isPlayer) {
+         if (isPlayer && itemSlot === getHotbarSelectedItemSlot()) {
             validatePlayerAction(inventory.name, item);
          }
       } else if (item.count !== itemData.count) {

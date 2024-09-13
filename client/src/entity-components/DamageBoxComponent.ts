@@ -5,7 +5,7 @@ import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 import { ServerComponentType } from "battletribes-shared/components";
 import CircularBox from "battletribes-shared/boxes/CircularBox";
 import { Point } from "battletribes-shared/utils";
-import { BoxType } from "battletribes-shared/boxes/boxes";
+import { BoxType, updateVertexPositionsAndSideAxes } from "battletribes-shared/boxes/boxes";
 import RectangularBox from "battletribes-shared/boxes/RectangularBox";
 import { ClientBlockBox, ClientDamageBox } from "../boxes";
 import { EntityID } from "battletribes-shared/entities";
@@ -14,7 +14,7 @@ import Board from "../Board";
 import { InventoryName } from "battletribes-shared/items/items";
 import Player from "../entities/Player";
 import { InventoryUseComponentArray } from "./InventoryUseComponent";
-import { discombobulate } from "../player-input";
+import { discombobulate } from "../components/game/GameInteractableLayer";
 
 interface DamageBoxCollisionInfo {
    readonly collidingEntity: EntityID;
@@ -44,6 +44,14 @@ const getCollidingBox = (entity: EntityID, damageBox: ClientDamageBox): DamageBo
                   return {
                      collidingEntity: currentEntity,
                      collidingBox: currentDamageBox
+                  };
+               }
+            }
+            for (const currentBlockBox of damageBoxComponent.blockBoxes) {
+               if (damageBox.box.isColliding(currentBlockBox.box)) {
+                  return {
+                     collidingEntity: currentEntity,
+                     collidingBox: currentBlockBox
                   };
                }
             }
@@ -147,6 +155,7 @@ class DamageBoxComponent extends ServerComponent {
          damageBox.box.width = width;
          damageBox.box.height = height;
          damageBox.box.relativeRotation = relativeRotation;
+         updateVertexPositionsAndSideAxes(damageBox.box);
       }
       // @Speed
       const missingBlockBoxLocalIDs = this.blockBoxLocalIDs.slice();
@@ -215,6 +224,7 @@ class DamageBoxComponent extends ServerComponent {
          blockBox.box.width = width;
          blockBox.box.height = height;
          blockBox.box.relativeRotation = relativeRotation;
+         updateVertexPositionsAndSideAxes(blockBox.box);
       }
 
       for (const localID of missingDamageBoxLocalIDs) {

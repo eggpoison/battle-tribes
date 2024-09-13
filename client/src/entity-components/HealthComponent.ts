@@ -6,7 +6,7 @@ import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 import { ServerComponentType } from "battletribes-shared/components";
 import { updateHealthBar } from "../components/game/HealthBar";
 import Player from "../entities/Player";
-import { discombobulate } from "../player-input";
+import { discombobulate } from "../components/game/GameInteractableLayer";
 
 /** Amount of seconds that the hit flash occurs for */
 const ATTACK_HIT_FLASH_DURATION = 0.4;

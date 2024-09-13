@@ -88,16 +88,16 @@ const SPAWN_INFOS: ReadonlyArray<EntitySpawnInfo> = [
       minSpawnDistance: 75,
       usesSpawnDistribution: true
    },
-   {
-      entityType: EntityType.fibrePlant,
-      spawnRate: 0.001,
-      maxDensity: 0.0015,
-      minPackSize: 1,
-      maxPackSize: 1,
-      onlySpawnsInNight: false,
-      minSpawnDistance: 45,
-      usesSpawnDistribution: true
-   },
+   // {
+   //    entityType: EntityType.fibrePlant,
+   //    spawnRate: 0.001,
+   //    maxDensity: 0.0015,
+   //    minPackSize: 1,
+   //    maxPackSize: 1,
+   //    onlySpawnsInNight: false,
+   //    minSpawnDistance: 45,
+   //    usesSpawnDistribution: true
+   // },
    // @Temporary
    // {
    //    entityType: EntityType.tombstone,

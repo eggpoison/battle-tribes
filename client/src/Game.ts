@@ -15,7 +15,6 @@ import { createWebGLContext, gl, resizeCanvas } from "./webgl";
 import { loadTextures, preloadTextureImages } from "./textures";
 import { toggleSettingsMenu } from "./components/game/GameScreen";
 import { createHitboxShaders, renderDamageBoxes, renderHitboxes } from "./rendering/webgl/box-wireframe-rendering";
-import { updatePlayerItems, updatePlayerMovement } from "./player-input";
 import { clearServerTicks, updateDebugScreenFPS, updateDebugScreenRenderTime } from "./components/game/dev/GameInfoDisplay";
 import { createWorldBorderShaders, renderWorldBorder } from "./rendering/webgl/world-border-rendering";
 import { createSolidTileShaders, renderSolidTiles } from "./rendering/webgl/solid-tile-rendering";
@@ -61,6 +60,7 @@ import { MAX_RENDER_LAYER, RenderLayer } from "./render-layers";
 import { updateEntity } from "./entity-components/ComponentArray";
 import { resolveEntityCollisions, resolvePlayerCollisions } from "./collision";
 import { preloadTextureAtlasImages } from "./texture-atlases/texture-atlas-stitching";
+import { updatePlayerMovement, updatePlayerItems } from "./components/game/GameInteractableLayer";
 
 // @Cleanup: remove.
 let _frameProgress = Number.EPSILON;

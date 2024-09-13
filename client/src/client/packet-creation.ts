@@ -1,7 +1,6 @@
 import { alignLengthBytes, Packet, PacketType } from "battletribes-shared/packets";
 import Player from "../entities/Player";
 import { ServerComponentType } from "battletribes-shared/components";
-import { latencyGameState } from "../game-state/game-states";
 import { getSelectedEntityID } from "../entity-selection";
 import { EntityType } from "battletribes-shared/entities";
 import Board from "../Board";
@@ -10,7 +9,7 @@ import OPTIONS from "../options";
 import { windowHeight, windowWidth } from "../webgl";
 import { InventoryName, ItemType } from "battletribes-shared/items/items";
 import Client from "./Client";
-import { getHotbarSelectedItemSlot, getInstancePlayerAction } from "../player-input";
+import { getHotbarSelectedItemSlot, getInstancePlayerAction } from "../components/game/GameInteractableLayer";
 
 export function createPlayerDataPacket(): ArrayBuffer {
    let lengthBytes = 4 * Float32Array.BYTES_PER_ELEMENT;

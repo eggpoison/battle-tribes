@@ -138,16 +138,18 @@ export function startChargingSpear(player: EntityID, inventoryName: InventoryNam
    const inventoryComponent = InventoryComponentArray.getComponent(player);
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(player);
 
-   const useInfo = inventoryUseComponent.getLimbInfo(inventoryName);
+   const limb = inventoryUseComponent.getLimbInfo(inventoryName);
 
    const inventory = getInventory(inventoryComponent, inventoryName);
-   const spear = inventory.getItem(useInfo.selectedItemSlot);
+   const spear = inventory.getItem(limb.selectedItemSlot);
    if (spear === null) {
       return;
    }
 
-   useInfo.action = LimbAction.chargeSpear;
-   useInfo.currentActionElapsedTicks = 0;
+   limb.action = LimbAction.chargeSpear;
+   limb.currentActionElapsedTicks = 0;
+   limb.currentActionDurationTicks = 3;
+   limb.currentActionRate = 1;
 }
 
 export function startChargingBattleaxe(player: EntityID, inventoryName: InventoryName): void {

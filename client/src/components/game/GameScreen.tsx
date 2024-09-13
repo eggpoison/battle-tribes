@@ -19,6 +19,8 @@ import { EntitySummonPacket } from "../../../../shared/src/dev-packets";
 import { Mutable } from "../../../../shared/src/utils";
 import { calculateCursorWorldPositionX, calculateCursorWorldPositionY } from "../../mouse";
 import Client from "../../client/Client";
+import AttackChargeBar from "./AttackChargeBar";
+import GameInteractableLayer from "./GameInteractableLayer";
 
 export const enum GameInteractState {
    none,
@@ -93,6 +95,8 @@ const GameScreen = (props: GameScreenProps) => {
    }, [settingsIsOpen]);
    
    return <>
+      <GameInteractableLayer />
+   
       <ChatBox />
 
       {!cinematicModeIsEnabled ? <>

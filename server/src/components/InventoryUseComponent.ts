@@ -206,23 +206,25 @@ const setLimbToState = (entity: EntityID, limbInfo: LimbInfo, state: LimbState):
    setLimb(entity, limbInfo, state.direction, state.extraOffset, state.rotation);
 }
 
-export function onBlockBoxCollision(attacker: EntityID, victim: EntityID, attackingLimb: LimbInfo, blockBox: ServerBlockBox, collidingDamageBox: ServerDamageBox): void {
+export function onBlockBoxCollision(attacker: EntityID, victim: EntityID, blockBoxLimb: LimbInfo, blockBox: ServerBlockBox, collidingDamageBox: ServerDamageBox): void {
    // Attack is blocked if the wrapper is a damage box
    if (collidingDamageBox !== null) {
-      // Pause the attack for a brief period
-      attackingLimb.currentActionPauseTicksRemaining = Math.floor(Settings.TPS / 15);
-      attackingLimb.currentActionRate = 0.4;
+      const victimInventoryUseComponent = InventoryUseComponentArray.getComponent(victim);
+      const attackerLimb = victimInventoryUseComponent.getLimbInfo(collidingDamageBox.associatedLimbInventoryName);
 
-      attackingLimb.limbDamageBox.isBlocked = true;
-      attackingLimb.heldItemDamageBox.isBlocked = true;
+      // Pause the attack for a brief period
+      attackerLimb.currentActionPauseTicksRemaining = Math.floor(Settings.TPS / 15);
+      attackerLimb.currentActionRate = 0.4;
+
+      console.log("block");
+      attackerLimb.limbDamageBox.isBlocked = true;
+      attackerLimb.heldItemDamageBox.isBlocked = true;
 
       blockBox.hasBlocked = true;
 
-      const victimInventoryUseComponent = InventoryUseComponentArray.getComponent(victim);
-      const associatedLimb = victimInventoryUseComponent.getLimbInfo(collidingDamageBox.associatedLimbInventoryName);
-      associatedLimb.lastBlockTick = Board.ticks;
-      associatedLimb.blockPositionX = collidingDamageBox.box.position.x;
-      associatedLimb.blockPositionY = collidingDamageBox.box.position.y;
+      attackerLimb.lastBlockTick = Board.ticks;
+      attackerLimb.blockPositionX = collidingDamageBox.box.position.x;
+      attackerLimb.blockPositionY = collidingDamageBox.box.position.y;
       registerDirtyEntity(victim);
    }
 }

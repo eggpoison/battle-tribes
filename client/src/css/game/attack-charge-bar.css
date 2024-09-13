@@ -1,0 +1,20 @@
+#attack-charge-bar {
+   --scale: 5;
+   width: calc(9px * var(--scale));
+   height: calc(3px * var(--scale));
+   background-image: url("../../images/miscellaneous/attack-charge-bar.png");
+   background-size: 100% 100%;
+   position: absolute;
+   z-index: 2;
+   pointer-events: none;
+   image-rendering: pixelated;
+   transform: translateY(-50%);
+}
+#attack-charge-bar .charge-bar {
+   width: calc(7px * var(--scale) * var(--chargeProgress));
+   height: 3px;
+   background-color: #f0f0f0;
+   position: absolute;
+   top: calc(1px * var(--scale));
+   left: calc(1px * var(--scale));
+}

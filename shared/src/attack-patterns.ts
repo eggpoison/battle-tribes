@@ -17,6 +17,7 @@ export interface AttackTimingsInfo {
    readonly windupTimeTicks: number;
    readonly swingTimeTicks: number;
    readonly returnTimeTicks: number;
+   readonly restTimeTicks: number;
    /** If null, then the attack cannot block. */
    readonly blockTimeTicks: number | null;
 }
@@ -69,6 +70,7 @@ export const DEFAULT_ATTACK_TIMINGS: AttackTimingsInfo = {
    windupTimeTicks: Math.floor(0.1 * Settings.TPS),
    swingTimeTicks: Math.floor(0.15 * Settings.TPS),
    returnTimeTicks: Math.floor(0.2 * Settings.TPS),
+   restTimeTicks: Math.floor(0.2 * Settings.TPS),
    blockTimeTicks: null
 };
 
@@ -76,6 +78,7 @@ export const AXE_ATTACK_TIMINGS: AttackTimingsInfo = {
    windupTimeTicks: Math.floor(0.15 * Settings.TPS),
    swingTimeTicks: Math.floor(0.2 * Settings.TPS),
    returnTimeTicks: Math.floor(0.3 * Settings.TPS),
+   restTimeTicks: Math.floor(0.3 * Settings.TPS),
    blockTimeTicks: Math.floor(0.3 * Settings.TPS)
 };
 
@@ -83,6 +86,7 @@ export const PICKAXE_ATTACK_TIMINGS: AttackTimingsInfo = {
    windupTimeTicks: Math.floor(0.2 * Settings.TPS),
    swingTimeTicks: Math.floor(0.25 * Settings.TPS),
    returnTimeTicks: Math.floor(0.35 * Settings.TPS),
+   restTimeTicks: Math.floor(0.35 * Settings.TPS),
    blockTimeTicks: Math.floor(0.3 * Settings.TPS)
 };
 
@@ -90,6 +94,7 @@ export const SWORD_ATTACK_TIMINGS: AttackTimingsInfo = {
    windupTimeTicks: Math.floor(0.1 * Settings.TPS),
    swingTimeTicks: Math.floor(0.2 * Settings.TPS),
    returnTimeTicks: Math.floor(0.15 * Settings.TPS),
+   restTimeTicks: Math.floor(0.15 * Settings.TPS),
    blockTimeTicks: Math.floor(0.2 * Settings.TPS)
 };
 
@@ -97,6 +102,7 @@ export const SPEAR_ATTACK_TIMINGS: AttackTimingsInfo = {
    windupTimeTicks: Math.floor(0.25 * Settings.TPS),
    swingTimeTicks: Math.floor(0.2 * Settings.TPS),
    returnTimeTicks: Math.floor(0.35 * Settings.TPS),
+   restTimeTicks: Math.floor(0.35 * Settings.TPS),
    blockTimeTicks: null
 };
 

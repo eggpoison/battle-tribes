@@ -9,7 +9,7 @@ import Camera from "../../Camera";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 import { ItemType, ITEM_INFO_RECORD, PlaceableItemType } from "battletribes-shared/items/items";
 import { ServerComponentType } from "battletribes-shared/components";
-import { getPlayerSelectedItem } from "../../player-input";
+import { getPlayerSelectedItem } from "../../components/game/GameInteractableLayer";
 
 const CIRCLE_DETAIL = 300;
 

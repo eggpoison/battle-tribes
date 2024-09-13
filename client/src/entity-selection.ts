@@ -17,7 +17,7 @@ import { CraftingMenu_setCraftingStation, CraftingMenu_setIsVisible } from "./co
 import { CraftingStation } from "battletribes-shared/items/crafting-recipes";
 import { ItemType, InventoryName } from "battletribes-shared/items/items";
 import { boxIsWithinRange } from "battletribes-shared/boxes/boxes";
-import { getPlayerSelectedItem } from "./player-input";
+import { getPlayerSelectedItem } from "./components/game/GameInteractableLayer";
 
 const enum InteractActionType {
    openBuildMenu,

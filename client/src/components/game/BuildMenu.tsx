@@ -14,8 +14,8 @@ import Player from "../../entities/Player";
 import Game from "../../Game";
 import { InventoryName, ITEM_TYPE_RECORD, ItemType } from "battletribes-shared/items/items";
 import { addMenuCloseFunction } from "../../menus";
-import { getPlayerSelectedItem } from "../../player-input";
 import { InventoryComponentArray } from "../../entity-components/InventoryComponent";
+import { getPlayerSelectedItem } from "./GameInteractableLayer";
 
 /*
 // @Incomplete

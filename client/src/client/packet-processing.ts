@@ -25,7 +25,7 @@ import { getServerComponentArray } from "../entity-components/ComponentArray";
 import { TRIBE_INFO_RECORD } from "battletribes-shared/tribes";
 import { gameScreenSetIsDead } from "../components/game/GameScreen";
 import { updateHealthBar } from "../components/game/HealthBar";
-import { selectItemSlot } from "../player-input";
+import { selectItemSlot } from "../components/game/GameInteractableLayer";
 
 export interface InitialGameDataPacket {
    readonly playerID: number;

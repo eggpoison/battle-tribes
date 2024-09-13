@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './components/App';
-import { createPlayerInputListeners } from './player-input';
+import { createPlayerInputListeners } from './components/game/GameInteractableLayer';
 
 import "./css/index.css";
 import "./css/main-menu.css";
@@ -33,9 +33,10 @@ import "./css/game/research-bench-caption.css";
 import "./css/game/build-menu.css";
 import "./css/game/inspect-health-bar.css";
 import "./css/game/infocards.css";
+import "./css/game/attack-charge-bar.css";
 
 const root = ReactDOM.createRoot(
-  document.getElementById('root') as HTMLElement
+   document.getElementById('root') as HTMLElement
 );
 
 const renderApp = (Component: React.FC) => {

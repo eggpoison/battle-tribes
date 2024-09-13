@@ -91,7 +91,6 @@ export function assertHitboxIsRectangular(hitbox: Hitbox): asserts hitbox is Hit
    }
 }
 
-// @Incomplete: make private to this project
 export function updateVertexPositionsAndSideAxes(box: RectangularBox): void {
    const x1 = -box.width * 0.5;
    const x2 = box.width * 0.5;

@@ -976,6 +976,9 @@ const updateLimb = (inventoryUseComponent: InventoryUseComponent, limbIdx: numbe
          break;
       }
       case LimbAction.eat: {
+         if (heldItemType === null) {
+            break;
+         }
          // 
          // Eating animation
          // 

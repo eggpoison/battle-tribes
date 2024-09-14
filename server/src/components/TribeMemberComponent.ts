@@ -106,10 +106,10 @@ function onInitialise(config: ComponentConfig<ServerComponentType.health | Serve
             item: createItem(ItemType.wooden_axe, 1),
             itemSlot: 4
          },
-         {
-            item: createItem(ItemType.spear, 5),
-            itemSlot: 5
-         },
+         // {
+         //    item: createItem(ItemType.spear, 5),
+         //    itemSlot: 5
+         // },
          // @Temporary
          // {
          //    item: createItem(ItemType.wooden_bow, 1),

@@ -1,11 +1,19 @@
 import { Settings } from "./settings";
 
+export const enum AttackVars {
+   MAX_EXTRA_ATTACK_RANGE = 20,
+   // The speed needed to have the max attack range
+   MAX_EXTRA_ATTACK_RANGE_SPEED = 300
+}
+
 export interface LimbState {
    /** Limb direction */
-   readonly direction: number;
+   direction: number;
    /** Extra offset out from the entity's resting limb offset */
-   readonly extraOffset: number;
-   readonly rotation: number;
+   extraOffset: number;
+   rotation: number;
+   extraOffsetX: number;
+   extraOffsetY: number;
 }
 
 export interface AttackPatternInfo {
@@ -40,12 +48,16 @@ export const DEFAULT_ATTACK_PATTERN: AttackPatternInfo = {
    windedBack: {
       direction: Math.PI * 0.6,
       extraOffset: 0,
-      rotation: Math.PI * 1/3
+      rotation: Math.PI * 1/3,
+      extraOffsetX: 0,
+      extraOffsetY: 0
    },
    swung: {
       direction: 0,
       extraOffset: 16,
-      rotation: Math.PI * -2/3
+      rotation: Math.PI * -2/3,
+      extraOffsetX: 0,
+      extraOffsetY: 0
    }
 };
 
@@ -53,12 +65,16 @@ export const SPEAR_ATTACK_PATTERN: AttackPatternInfo = {
    windedBack: {
       direction: Math.PI * 0.6,
       extraOffset: 0,
-      rotation: 0
+      rotation: 0,
+      extraOffsetX: 0,
+      extraOffsetY: 0
    },
    swung: {
       direction: Math.PI * 0.2,
       extraOffset: 7,
-      rotation: Math.PI * -1/7
+      rotation: Math.PI * -1/7,
+      extraOffsetX: 0,
+      extraOffsetY: 0
    }
 };
 
@@ -113,19 +129,25 @@ export const SPEAR_ATTACK_TIMINGS: AttackTimingsInfo = {
 export const TRIBESMAN_RESTING_LIMB_STATE: LimbState = {
    direction: Math.PI * 0.4,
    extraOffset: 0,
-   rotation: 0
+   rotation: 0,
+   extraOffsetX: 0,
+   extraOffsetY: 0
 };
 
 export const SPEAR_CHARGED_LIMB_STATE: LimbState = {
    direction: Math.PI * 0.6,
    extraOffset: 0,
-   rotation: Math.PI * 0.3
+   rotation: Math.PI * 0.3,
+   extraOffsetX: 0,
+   extraOffsetY: 0
 };
 
 export const BLOCKING_LIMB_STATE: LimbState = {
    direction: Math.PI * 0.3,
    extraOffset: 6,
-   rotation: Math.PI * -0.65
+   rotation: Math.PI * -0.65,
+   extraOffsetX: 0,
+   extraOffsetY: 0
 };
 
 export const DEFAULT_ITEM_DAMAGE_BOX_INFO: LimbHeldItemDamageBoxInfo = {
@@ -163,3 +185,22 @@ export const SPEAR_DAMAGE_BOX_INFO: LimbHeldItemDamageBoxInfo = {
    offsetY: 11,
    showLargeTexture: true
 };
+
+export function copyAttackPattern(attackPattern: AttackPatternInfo): AttackPatternInfo {
+   return {
+      windedBack: {
+         direction: attackPattern.windedBack.direction,
+         extraOffset: attackPattern.windedBack.extraOffset,
+         rotation: attackPattern.windedBack.rotation,
+         extraOffsetX: attackPattern.windedBack.extraOffsetX,
+         extraOffsetY: attackPattern.windedBack.extraOffsetY
+      },
+      swung: {
+         direction: attackPattern.swung.direction,
+         extraOffset: attackPattern.swung.extraOffset,
+         rotation: attackPattern.swung.rotation,
+         extraOffsetX: attackPattern.swung.extraOffsetX,
+         extraOffsetY: attackPattern.swung.extraOffsetY
+      }
+   };
+}

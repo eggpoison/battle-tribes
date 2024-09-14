@@ -12,6 +12,7 @@ export const enum PacketType {
    syncRequest,
    attack,
    respawn,
+   startItemUse,
    useItem,
    stopItemUse,
    dropItem,

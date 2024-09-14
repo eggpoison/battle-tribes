@@ -28,7 +28,6 @@ import { WanderAIComponentArray } from "./WanderAIComponent";
 import { GrassBlockerCircle } from "battletribes-shared/grass-blockers";
 import { entitiesAreColliding, CollisionVars } from "../collision";
 import { addGrassBlocker } from "../grass-blockers";
-import { InventoryComponentArray, getInventory } from "./InventoryComponent";
 import { InventoryUseComponentArray } from "./InventoryUseComponent";
 
 const enum Vars {
@@ -225,7 +224,7 @@ function onTick(cowComponent: CowComponent, cow: EntityID): void {
    if (escapeAIComponent.attackingEntities.length > 0) {
       const escapeEntity = chooseEscapeEntity(cow, aiHelperComponent.visibleEntities);
       if (escapeEntity !== null) {
-         runFromAttackingEntity(cow, escapeEntity, 500, Vars.TURN_SPEED);
+         runFromAttackingEntity(cow, escapeEntity, 650, Vars.TURN_SPEED);
          return;
       }
    }

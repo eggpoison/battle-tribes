@@ -115,6 +115,14 @@ export function sendRespawnPacket(): void {
    Client.sendPacket(packet.buffer);
 }
 
+export function sendStartItemUsePacket(): void {
+   const packet = new Packet(PacketType.startItemUse, 2 * Float32Array.BYTES_PER_ELEMENT);
+   
+   packet.addNumber(getHotbarSelectedItemSlot());
+
+   Client.sendPacket(packet.buffer);
+}
+
 export function sendItemUsePacket(): void {
    const packet = new Packet(PacketType.useItem, 2 * Float32Array.BYTES_PER_ELEMENT);
    

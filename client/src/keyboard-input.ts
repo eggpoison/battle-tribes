@@ -1,7 +1,6 @@
 import Game from "./Game";
-import { chatboxIsFocused, focusChatbox } from "./components/game/ChatBox";
+import { focusChatbox } from "./components/game/ChatBox";
 import { toggleCinematicMode } from "./components/game/GameScreen";
-import { playerIsUsingTerminal } from "./components/game/dev/Terminal";
 
 const keyListeners: { [key: string]: Array<(e: KeyboardEvent) => void> } = {};
 

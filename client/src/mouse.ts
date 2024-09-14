@@ -72,7 +72,7 @@ export function getMouseTargetEntity(): Entity | null {
    for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
       for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
          const chunk = Board.getChunk(chunkX, chunkY);
-         for (const entityID of chunk.entities) {
+         for (const entityID of chunk.nonGrassEntities) {
             const entity = Board.entityRecord[entityID]!;
 
             const transformComponent = TransformComponentArray.getComponent(entity.id);

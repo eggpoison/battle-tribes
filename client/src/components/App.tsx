@@ -16,8 +16,6 @@ function App() {
    const tribeTypeRef = useRef(TribeType.plainspeople);
    const [appState, setAppState] = useState(AppState.mainMenu);
 
-   console.log(1);
-   
    return <>
       {appState === AppState.mainMenu ? <>
          <MainMenu existingUsername={usernameRef.current} usernameRef={usernameRef} tribeTypeRef={tribeTypeRef} setAppState={setAppState} />

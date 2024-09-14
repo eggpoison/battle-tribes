@@ -330,7 +330,6 @@ export function useItem(tribeMember: EntityID, item: Item, inventoryName: Invent
          
          // Don't use food if already at maximum health
          if (healthComponent.health >= healthComponent.maxHealth) return;
-         console.trace();
 
          const itemInfo = ITEM_INFO_RECORD[item.type] as ConsumableItemInfo;
          
@@ -338,12 +337,12 @@ export function useItem(tribeMember: EntityID, item: Item, inventoryName: Invent
          const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribeMember);
 
          const inventory = getInventory(inventoryComponent, inventoryName);
-         const useInfo = inventoryUseComponent.getLimbInfo(inventoryName)
+         const limb = inventoryUseComponent.getLimbInfo(inventoryName)
          
          healEntity(tribeMember, itemInfo.healAmount, tribeMember);
          consumeItemFromSlot(inventory, itemSlot, 1);
 
-         useInfo.lastEatTicks = Board.ticks;
+         limb.lastEatTicks = Board.ticks;
 
          if (item.type === ItemType.berry && Math.random() < 0.05) {
             awardTitle(tribeMember, TribesmanTitle.berrymuncher);
@@ -352,6 +351,13 @@ export function useItem(tribeMember: EntityID, item: Item, inventoryName: Invent
          if (itemInfo.consumableItemCategory === ConsumableItemCategory.medicine) {
             // Remove all debuffs
             clearStatusEffects(tribeMember);
+         }
+
+         // If all of the item was consumed, stop the eating action
+         if (!inventory.hasItem(itemSlot)) {
+            limb.action = LimbAction.none;
+            limb.currentActionElapsedTicks = 0;
+            limb.currentActionDurationTicks = 0;
          }
 
          break;

@@ -10,7 +10,7 @@ import Board from "../../Board";
 import { damageEntity, HealthComponentArray } from "../../components/HealthComponent";
 import { InventoryComponentArray, getInventory } from "../../components/InventoryComponent";
 import { getHeldItem, InventoryUseComponentArray, LimbInfo } from "../../components/InventoryUseComponent";
-import { applyKnockback } from "../../components/PhysicsComponent";
+import { applyKnockback, PhysicsComponentArray } from "../../components/PhysicsComponent";
 import { applyStatusEffect } from "../../components/StatusEffectComponent";
 import { TransformComponentArray } from "../../components/TransformComponent";
 import { hasTitle } from "../../components/TribeMemberComponent";
@@ -23,7 +23,7 @@ import { createEntityFromConfig } from "../../Entity";
 import { createItemEntityConfig } from "../item-entity";
 import { dropBerryOverEntity, BERRY_BUSH_RADIUS } from "../resources/berry-bush";
 import { getEntityRelationship, EntityRelationship } from "../../components/TribeComponent";
-import { DamageBoxComponent } from "../../components/DamageBoxComponent";
+import { AttackVars, copyAttackPattern } from "../../../../shared/src/attack-patterns";
 
 const enum Vars {
    DEFAULT_ATTACK_KNOCKBACK = 125
@@ -236,6 +236,22 @@ export function beginSwing(attackingEntity: EntityID, itemSlot: number, inventor
    limbInfo.currentActionElapsedTicks = 0;
    limbInfo.currentActionDurationTicks = heldItemAttackInfo.attackTimings.windupTimeTicks;
    limbInfo.currentActionRate = 1;
+   limbInfo.currentAttackPattern = copyAttackPattern(heldItemAttackInfo.attackPattern);
+
+   const physicsComponent = PhysicsComponentArray.getComponent(attackingEntity);
+
+   // Add extra range for moving attacks
+   const vx = physicsComponent.selfVelocity.x + physicsComponent.externalVelocity.x;
+   const vy = physicsComponent.selfVelocity.y + physicsComponent.externalVelocity.y;
+   if (vx !== 0 || vy !== 0) {
+      const transformComponent = TransformComponentArray.getComponent(attackingEntity);
+      const velocityMagnitude = Math.sqrt(vx * vx + vy * vy);
+      const attackAlignment = (vx * Math.sin(transformComponent.rotation) + vy * Math.cos(transformComponent.rotation)) / velocityMagnitude;
+      if (attackAlignment > 0) {
+         const extraAmount = AttackVars.MAX_EXTRA_ATTACK_RANGE * Math.min(velocityMagnitude / AttackVars.MAX_EXTRA_ATTACK_RANGE_SPEED);
+         limbInfo.currentAttackPattern.swung.extraOffsetY += extraAmount;
+      }
+   }
 
    // Swing was successful
    return true;

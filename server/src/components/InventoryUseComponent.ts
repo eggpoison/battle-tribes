@@ -11,7 +11,7 @@ import { DamageBoxComponentArray } from "./DamageBoxComponent";
 import { ServerBlockBox, ServerDamageBox } from "../boxes";
 import { assertBoxIsRectangular, updateBox } from "battletribes-shared/boxes/boxes";
 import { TransformComponentArray } from "./TransformComponent";
-import { BLOCKING_LIMB_STATE, LimbState } from "battletribes-shared/attack-patterns";
+import { AttackPatternInfo, BLOCKING_LIMB_STATE, copyAttackPattern, DEFAULT_ATTACK_PATTERN, LimbState } from "battletribes-shared/attack-patterns";
 import { registerDirtyEntity } from "../server/player-clients";
 import RectangularBox from "battletribes-shared/boxes/RectangularBox";
 import { HealthComponentArray } from "./HealthComponent";
@@ -53,6 +53,8 @@ export interface LimbInfo {
    currentActionPauseTicksRemaining: number;
    currentActionRate: number;
 
+   currentAttackPattern: AttackPatternInfo;
+   
    /** Damage box used to create limb attacks. */
    limbDamageBox: ServerDamageBox;
    heldItemDamageBox: ServerDamageBox;
@@ -62,6 +64,19 @@ export interface LimbInfo {
    lastBlockTick: number;
    blockPositionX: number;
    blockPositionY: number;
+}
+
+const addAttackPatternToPacket = (packet: Packet, attackPattern: AttackPatternInfo): void => {
+   packet.addNumber(attackPattern.windedBack.direction);
+   packet.addNumber(attackPattern.windedBack.extraOffset);
+   packet.addNumber(attackPattern.windedBack.rotation);
+   packet.addNumber(attackPattern.windedBack.extraOffsetX);
+   packet.addNumber(attackPattern.windedBack.extraOffsetY);
+   packet.addNumber(attackPattern.swung.direction);
+   packet.addNumber(attackPattern.swung.extraOffset);
+   packet.addNumber(attackPattern.swung.rotation);
+   packet.addNumber(attackPattern.swung.extraOffsetX);
+   packet.addNumber(attackPattern.swung.extraOffsetY);
 }
 
 export class InventoryUseComponent {
@@ -105,6 +120,7 @@ export class InventoryUseComponent {
          currentActionDurationTicks: 0,
          currentActionPauseTicksRemaining: 0,
          currentActionRate: 1,
+         currentAttackPattern: copyAttackPattern(DEFAULT_ATTACK_PATTERN),
          limbDamageBox: limbDamageBox,
          heldItemDamageBox: heldItemDamageBox,
          blockBox: blockBox,
@@ -172,15 +188,15 @@ export function getHeldItem(limbInfo: LimbInfo): Item | null {
    return typeof item !== "undefined" ? item : null;
 }
 
-const setLimb = (entity: EntityID, limb: LimbInfo, limbDirection: number, extraOffset: number, limbRotation: number): void => {
+const setLimb = (entity: EntityID, limb: LimbInfo, limbDirection: number, extraOffset: number, limbRotation: number, extraOffsetX: number, extraOffsetY: number): void => {
    const limbDamageBox = limb.limbDamageBox;
 
    // @Temporary @Hack
    const offset = extraOffset + 34;
 
    const limbBox = limbDamageBox.box;
-   limbBox.offset.x = offset * Math.sin(limbDirection);
-   limbBox.offset.y = offset * Math.cos(limbDirection);
+   limbBox.offset.x = offset * Math.sin(limbDirection) + extraOffsetX;
+   limbBox.offset.y = offset * Math.cos(limbDirection) + extraOffsetY;
    limbBox.relativeRotation = limbRotation;
 
    // Update limb
@@ -199,11 +215,13 @@ const lerpLimbBetweenStates = (entity: EntityID, limbInfo: LimbInfo, startingLim
    const direction = lerp(startingLimbState.direction, targetLimbState.direction, progress);
    const extraOffset = lerp(startingLimbState.extraOffset, targetLimbState.extraOffset, progress);
    const rotation = lerp(startingLimbState.rotation, targetLimbState.rotation, progress);
-   setLimb(entity, limbInfo, direction, extraOffset, rotation);
+   const extraOffsetX = lerp(startingLimbState.extraOffsetX, targetLimbState.extraOffsetX, progress);
+   const extraOffsetY = lerp(startingLimbState.extraOffsetY, targetLimbState.extraOffsetY, progress);
+   setLimb(entity, limbInfo, direction, extraOffset, rotation, extraOffsetX, extraOffsetY);
 }
 
 const setLimbToState = (entity: EntityID, limbInfo: LimbInfo, state: LimbState): void => {
-   setLimb(entity, limbInfo, state.direction, state.extraOffset, state.rotation);
+   setLimb(entity, limbInfo, state.direction, state.extraOffset, state.rotation, state.extraOffsetX, state.extraOffsetY);
 }
 
 export function onBlockBoxCollision(attacker: EntityID, victim: EntityID, blockBoxLimb: LimbInfo, blockBox: ServerBlockBox, collidingDamageBox: ServerDamageBox): void {
@@ -216,7 +234,6 @@ export function onBlockBoxCollision(attacker: EntityID, victim: EntityID, blockB
       attackerLimb.currentActionPauseTicksRemaining = Math.floor(Settings.TPS / 15);
       attackerLimb.currentActionRate = 0.4;
 
-      console.log("block");
       attackerLimb.limbDamageBox.isBlocked = true;
       attackerLimb.heldItemDamageBox.isBlocked = true;
 
@@ -246,110 +263,107 @@ function onTick(inventoryUseComponent: InventoryUseComponent, entity: EntityID):
    }
 
    for (let i = 0; i < inventoryUseComponent.limbInfos.length; i++) {
-      const limbInfo = inventoryUseComponent.limbInfos[i];
+      const limb = inventoryUseComponent.limbInfos[i];
 
       // @Cleanup @Bandwidth: When blocking, once the block is finished going up the entity should no longer be dirtied by this
       // Certain actions should always show an update for the player
-      if (limbInfo.action !== LimbAction.none) {
+      if (limb.action !== LimbAction.none) {
          registerDirtyEntity(entity);
       }
 
-      if (limbInfo.currentActionPauseTicksRemaining > 0) {
-         limbInfo.currentActionPauseTicksRemaining--;
+      if (limb.currentActionPauseTicksRemaining > 0) {
+         limb.currentActionPauseTicksRemaining--;
       } else {
-         limbInfo.currentActionElapsedTicks += limbInfo.currentActionRate;
+         limb.currentActionElapsedTicks += limb.currentActionRate;
       }
       
-      if (currentActionHasFinished(limbInfo)) {
-         switch (limbInfo.action) {
+      if (currentActionHasFinished(limb)) {
+         switch (limb.action) {
             // @Cleanup: Since the block action continues even past when its animation finishes, this will constantly run. when ideally it should only run once
             case LimbAction.block: {
-               limbInfo.limbDamageBox.isActive = false;
-               limbInfo.blockBox.isActive = true;
+               limb.limbDamageBox.isActive = false;
+               limb.blockBox.isActive = true;
 
-               const heldItem = getHeldItem(limbInfo);
+               const heldItem = getHeldItem(limb);
                const heldItemAttackInfo = getItemAttackInfo(heldItem !== null ? heldItem.type : null);
                const damageBoxInfo = heldItemAttackInfo.heldItemDamageBoxInfo!;
                
                // @Copynpaste
-               assertBoxIsRectangular(limbInfo.blockBox.box);
-               limbInfo.blockBox.box.offset.x = damageBoxInfo.offsetX;
-               limbInfo.blockBox.box.offset.y = damageBoxInfo.offsetY;
-               limbInfo.blockBox.box.width = damageBoxInfo.width;
-               limbInfo.blockBox.box.height = damageBoxInfo.height;
-               limbInfo.blockBox.box.relativeRotation = damageBoxInfo.rotation;
+               assertBoxIsRectangular(limb.blockBox.box);
+               limb.blockBox.box.offset.x = damageBoxInfo.offsetX;
+               limb.blockBox.box.offset.y = damageBoxInfo.offsetY;
+               limb.blockBox.box.width = damageBoxInfo.width;
+               limb.blockBox.box.height = damageBoxInfo.height;
+               limb.blockBox.box.relativeRotation = damageBoxInfo.rotation;
                   
                break;
             }
             case LimbAction.windAttack: {
-               const heldItem = getHeldItem(limbInfo);
+               const heldItem = getHeldItem(limb);
                const heldItemAttackInfo = getItemAttackInfo(heldItem !== null ? heldItem.type : null);
                
-               limbInfo.action = LimbAction.attack;
-               limbInfo.currentActionElapsedTicks = 0;
-               limbInfo.currentActionDurationTicks = heldItemAttackInfo.attackTimings.swingTimeTicks;
-               limbInfo.limbDamageBox.isActive = true;
-               limbInfo.limbDamageBox.isBlocked = false;
-               limbInfo.heldItemDamageBox.isBlocked = false;
+               limb.action = LimbAction.attack;
+               limb.currentActionElapsedTicks = 0;
+               limb.currentActionDurationTicks = heldItemAttackInfo.attackTimings.swingTimeTicks;
+               limb.limbDamageBox.isActive = true;
+               limb.limbDamageBox.isBlocked = false;
+               limb.heldItemDamageBox.isBlocked = false;
 
                const damageBoxInfo = heldItemAttackInfo.heldItemDamageBoxInfo;
                if (damageBoxInfo !== null) {
-                  limbInfo.heldItemDamageBox.isActive = true;
+                  limb.heldItemDamageBox.isActive = true;
 
                   // @Copynpaste
-                  assertBoxIsRectangular(limbInfo.heldItemDamageBox.box);
-                  limbInfo.heldItemDamageBox.box.offset.x = damageBoxInfo.offsetX;
-                  limbInfo.heldItemDamageBox.box.offset.y = damageBoxInfo.offsetY;
-                  limbInfo.heldItemDamageBox.box.width = damageBoxInfo.width;
-                  limbInfo.heldItemDamageBox.box.height = damageBoxInfo.height;
-                  limbInfo.heldItemDamageBox.box.relativeRotation = damageBoxInfo.rotation;
+                  assertBoxIsRectangular(limb.heldItemDamageBox.box);
+                  limb.heldItemDamageBox.box.offset.x = damageBoxInfo.offsetX;
+                  limb.heldItemDamageBox.box.offset.y = damageBoxInfo.offsetY;
+                  limb.heldItemDamageBox.box.width = damageBoxInfo.width;
+                  limb.heldItemDamageBox.box.height = damageBoxInfo.height;
+                  limb.heldItemDamageBox.box.relativeRotation = damageBoxInfo.rotation;
                } else {
-                  limbInfo.heldItemDamageBox.isActive = false;
+                  limb.heldItemDamageBox.isActive = false;
                }
                break;
             }
             case LimbAction.attack: {
-               const heldItem = getHeldItem(limbInfo);
+               const heldItem = getHeldItem(limb);
                const heldItemAttackInfo = getItemAttackInfo(heldItem !== null ? heldItem.type : null);
 
-               limbInfo.action = LimbAction.returnAttackToRest;
-               limbInfo.currentActionElapsedTicks = 0;
-               limbInfo.currentActionDurationTicks = heldItemAttackInfo.attackTimings.returnTimeTicks;
+               limb.action = LimbAction.returnAttackToRest;
+               limb.currentActionElapsedTicks = 0;
+               limb.currentActionDurationTicks = heldItemAttackInfo.attackTimings.returnTimeTicks;
 
-               limbInfo.limbDamageBox.isActive = false;
-               limbInfo.heldItemDamageBox.isActive = false;
+               limb.limbDamageBox.isActive = false;
+               limb.heldItemDamageBox.isActive = false;
                break;
             }
             case LimbAction.returnAttackToRest: {
-               limbInfo.action = LimbAction.none;
+               limb.action = LimbAction.none;
                break;
             }
             case LimbAction.returnBlockToRest: {
-               limbInfo.action = LimbAction.none;
+               limb.action = LimbAction.none;
                break;
             }
          }
       }
 
       // Update damage box for limb attacks
-      if (limbInfo.action === LimbAction.attack) {
-         const swingProgress = limbInfo.currentActionElapsedTicks / limbInfo.currentActionDurationTicks;
-
-         const heldItem = getHeldItem(limbInfo);
-         const attackInfo = getItemAttackInfo(heldItem !== null ? heldItem.type : null);
-         lerpLimbBetweenStates(entity, limbInfo, attackInfo.attackPattern.windedBack, attackInfo.attackPattern.swung, swingProgress);
+      if (limb.action === LimbAction.attack) {
+         const swingProgress = limb.currentActionElapsedTicks / limb.currentActionDurationTicks;
+         lerpLimbBetweenStates(entity, limb, limb.currentAttackPattern.windedBack, limb.currentAttackPattern.swung, swingProgress);
       }
 
       // Update blocking damage box when blocking
-      if (limbInfo.action === LimbAction.block) {
-         if (limbInfo.currentActionElapsedTicks >= limbInfo.currentActionDurationTicks) {
-            setLimbToState(entity, limbInfo, BLOCKING_LIMB_STATE);
+      if (limb.action === LimbAction.block) {
+         if (limb.currentActionElapsedTicks >= limb.currentActionDurationTicks) {
+            setLimbToState(entity, limb, BLOCKING_LIMB_STATE);
          }
       }
       
       // Update bow cooldown
-      if (limbInfo.bowCooldownTicks > 0) {
-         limbInfo.bowCooldownTicks--;
+      if (limb.bowCooldownTicks > 0) {
+         limb.bowCooldownTicks--;
       }
 
       // @Incomplete
@@ -386,6 +400,8 @@ function getDataLength(entity: EntityID): number {
       lengthBytes += 2 * Float32Array.BYTES_PER_ELEMENT * Object.keys(useInfo.spearWindupCooldowns).length;
       lengthBytes += getCrossbowLoadProgressRecordLength(useInfo);
       lengthBytes += 18 * Float32Array.BYTES_PER_ELEMENT;
+      // Attack pattern
+      lengthBytes += 10 * Float32Array.BYTES_PER_ELEMENT;
    }
 
    return lengthBytes;
@@ -396,15 +412,15 @@ function addDataToPacket(packet: Packet, entity: EntityID): void {
 
    packet.addNumber(inventoryUseComponent.limbInfos.length);
    for (let i = 0; i < inventoryUseComponent.limbInfos.length; i++) {
-      const limbInfo = inventoryUseComponent.limbInfos[i];
+      const limb = inventoryUseComponent.limbInfos[i];
 
-      packet.addNumber(limbInfo.associatedInventory.name);
-      packet.addNumber(limbInfo.selectedItemSlot);
-      packet.addNumber(limbInfo.associatedInventory.itemSlots[limbInfo.selectedItemSlot]?.type || -1)
-      packet.addNumber(limbInfo.bowCooldownTicks);
+      packet.addNumber(limb.associatedInventory.name);
+      packet.addNumber(limb.selectedItemSlot);
+      packet.addNumber(limb.associatedInventory.itemSlots[limb.selectedItemSlot]?.type || -1)
+      packet.addNumber(limb.bowCooldownTicks);
 
       // @Cleanup: Copy and paste
-      const spearWindupCooldownEntries = Object.entries(limbInfo.spearWindupCooldowns).map(([a, b]) => [Number(a), b]) as Array<[number, number]>;
+      const spearWindupCooldownEntries = Object.entries(limb.spearWindupCooldowns).map(([a, b]) => [Number(a), b]) as Array<[number, number]>;
       packet.addNumber(spearWindupCooldownEntries.length);
       for (let i = 0; i < spearWindupCooldownEntries.length; i++) {
          const [itemSlot, cooldown] = spearWindupCooldownEntries[i];
@@ -412,26 +428,28 @@ function addDataToPacket(packet: Packet, entity: EntityID): void {
          packet.addNumber(cooldown);
       }
 
-      addCrossbowLoadProgressRecordToPacket(packet, limbInfo);
+      addCrossbowLoadProgressRecordToPacket(packet, limb);
 
-      packet.addNumber(limbInfo.foodEatingTimer);
-      packet.addNumber(limbInfo.action);
-      packet.addNumber(limbInfo.lastAttackTicks);
-      packet.addNumber(limbInfo.lastEatTicks);
-      packet.addNumber(limbInfo.lastBowChargeTicks);
-      packet.addNumber(limbInfo.lastSpearChargeTicks);
-      packet.addNumber(limbInfo.lastBattleaxeChargeTicks);
-      packet.addNumber(limbInfo.lastCrossbowLoadTicks);
-      packet.addNumber(limbInfo.lastCraftTicks);
-      packet.addNumber(limbInfo.thrownBattleaxeItemID);
-      packet.addNumber(limbInfo.lastAttackCooldown);
-      packet.addNumber(limbInfo.currentActionElapsedTicks);
-      packet.addNumber(limbInfo.currentActionDurationTicks);
-      packet.addNumber(limbInfo.currentActionPauseTicksRemaining);
-      packet.addNumber(limbInfo.currentActionRate);
-      packet.addNumber(limbInfo.lastBlockTick);
-      packet.addNumber(limbInfo.blockPositionX);
-      packet.addNumber(limbInfo.blockPositionY);
+      packet.addNumber(limb.foodEatingTimer);
+      packet.addNumber(limb.action);
+      packet.addNumber(limb.lastAttackTicks);
+      packet.addNumber(limb.lastEatTicks);
+      packet.addNumber(limb.lastBowChargeTicks);
+      packet.addNumber(limb.lastSpearChargeTicks);
+      packet.addNumber(limb.lastBattleaxeChargeTicks);
+      packet.addNumber(limb.lastCrossbowLoadTicks);
+      packet.addNumber(limb.lastCraftTicks);
+      packet.addNumber(limb.thrownBattleaxeItemID);
+      packet.addNumber(limb.lastAttackCooldown);
+      packet.addNumber(limb.currentActionElapsedTicks);
+      packet.addNumber(limb.currentActionDurationTicks);
+      packet.addNumber(limb.currentActionPauseTicksRemaining);
+      packet.addNumber(limb.currentActionRate);
+      packet.addNumber(limb.lastBlockTick);
+      packet.addNumber(limb.blockPositionX);
+      packet.addNumber(limb.blockPositionY);
+
+      addAttackPatternToPacket(packet, limb.currentAttackPattern);
    }
 }
 

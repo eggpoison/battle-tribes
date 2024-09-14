@@ -11,7 +11,7 @@ import { TribeType, TRIBE_INFO_RECORD } from "../../../../shared/src/tribes";
 import Board, { getElapsedTimeInSeconds } from "../../Board";
 import Camera from "../../Camera";
 import Client from "../../client/Client";
-import { sendStopItemUsePacket, createAttackPacket, sendItemDropPacket, sendItemUsePacket } from "../../client/packet-creation";
+import { sendStopItemUsePacket, createAttackPacket, sendItemDropPacket, sendItemUsePacket, sendStartItemUsePacket } from "../../client/packet-creation";
 import Player from "../../entities/Player";
 import { DamageBoxComponentArray } from "../../entity-components/DamageBoxComponent";
 import { HealthComponentArray } from "../../entity-components/HealthComponent";
@@ -21,7 +21,7 @@ import { attemptEntitySelection } from "../../entity-selection";
 import { playBowFireSound } from "../../entity-tick-events";
 import Game from "../../Game";
 import { latencyGameState, definiteGameState } from "../../game-state/game-states";
-import { clearPressedKeys, addKeyListener, keyIsPressed } from "../../keyboard-input";
+import { addKeyListener, keyIsPressed } from "../../keyboard-input";
 import { closeCurrentMenu } from "../../menus";
 import { setGhostInfo, GhostInfo, ENTITY_TYPE_TO_GHOST_TYPE_MAP } from "../../rendering/webgl/entity-ghost-rendering";
 import { attemptToCompleteNode } from "../../research";
@@ -29,6 +29,9 @@ import { playSound } from "../../sound";
 import { BackpackInventoryMenu_setIsVisible } from "./inventories/BackpackInventory";
 import { Hotbar_updateLeftThrownBattleaxeItemID, Hotbar_updateRightThrownBattleaxeItemID, Hotbar_setHotbarSelectedItemSlot } from "./inventories/Hotbar";
 import { CraftingMenu_setCraftingStation, CraftingMenu_setIsVisible } from "./menus/CraftingMenu";
+import { TransformComponentArray } from "../../entity-components/TransformComponent";
+import { AttackVars, copyAttackPattern } from "../../../../shared/src/attack-patterns";
+import { PhysicsComponentArray } from "../../entity-components/PhysicsComponent";
 
 interface SelectedItemInfo {
    readonly item: Item;
@@ -265,6 +268,8 @@ const swing = (inventoryName: InventoryName): void => {
    const attackPacket = createAttackPacket();
    Client.sendPacket(attackPacket);
 
+   const transformComponent = TransformComponentArray.getComponent(Player.instance!.id);
+   const physicsComponent = PhysicsComponentArray.getComponent(Player.instance!.id);
    const inventoryUseComponent = Player.instance!.getServerComponent(ServerComponentType.inventoryUse);
 
    const limbInfo = inventoryUseComponent.getLimbInfoByInventoryName(inventoryName);
@@ -274,6 +279,20 @@ const swing = (inventoryName: InventoryName): void => {
    limbInfo.currentActionElapsedTicks = 0;
    limbInfo.currentActionDurationTicks = attackInfo.attackTimings.windupTimeTicks;
    limbInfo.currentActionRate = 1;
+
+   limbInfo.currentAttackPattern = copyAttackPattern(attackInfo.attackPattern);
+
+   // Add extra range for moving attacks
+   const vx = physicsComponent.selfVelocity.x + physicsComponent.externalVelocity.x;
+   const vy = physicsComponent.selfVelocity.y + physicsComponent.externalVelocity.y;
+   if (vx !== 0 || vy !== 0) {
+      const velocityMagnitude = Math.sqrt(vx * vx + vy * vy);
+      const attackAlignment = (vx * Math.sin(transformComponent.rotation) + vy * Math.cos(transformComponent.rotation)) / velocityMagnitude;
+      if (attackAlignment > 0) {
+         const extraAmount = AttackVars.MAX_EXTRA_ATTACK_RANGE * Math.min(velocityMagnitude / AttackVars.MAX_EXTRA_ATTACK_RANGE_SPEED);
+         limbInfo.currentAttackPattern.swung.extraOffsetY += extraAmount;
+      }
+   }
 }
 
 // @Cleanup: unused?
@@ -572,7 +591,7 @@ const isCollidingWithCoveredSpikes = (): boolean => {
    return false;
 }
 
-const getPlayerMoveSpeedMultiplier = (): number => {
+const getPlayerMoveSpeedMultiplier = (moveDirection: number): number => {
    let moveSpeedMultiplier = 1;
 
    const statusEffectComponent = Player.instance!.getServerComponent(ServerComponentType.statusEffect);
@@ -589,6 +608,15 @@ const getPlayerMoveSpeedMultiplier = (): number => {
 
    if (isCollidingWithCoveredSpikes()) {
       moveSpeedMultiplier *= 0.5;
+   }
+
+   const transformComponent = TransformComponentArray.getComponent(Player.instance!.id);
+   // Get how aligned the intended movement direction and the player's rotation are
+   const directionAlignmentDot = Math.sin(moveDirection) * Math.sin(transformComponent.rotation) + Math.cos(moveDirection) * Math.cos(transformComponent.rotation);
+   // Move 15% slower if you're accelerating away from where you're moving
+   if (directionAlignmentDot < 0) {
+      const reductionMultiplier = -directionAlignmentDot;
+      moveSpeedMultiplier *= 1 - 0.15 * reductionMultiplier;
    }
 
    return moveSpeedMultiplier;
@@ -638,15 +666,17 @@ export function updatePlayerMovement(): void {
          acceleration = PLAYER_LIGHTSPEED_ACCELERATION;
       // @Bug: doesn't account for offhand
       } else if (playerAction === LimbAction.eat || playerAction === LimbAction.useMedicine || playerAction === LimbAction.chargeBow || playerAction === LimbAction.chargeSpear || playerAction === LimbAction.loadCrossbow || playerAction === LimbAction.block || latencyGameState.playerIsPlacingEntity) {
-         acceleration = PLAYER_SLOW_ACCELERATION * getPlayerMoveSpeedMultiplier();
+         acceleration = PLAYER_SLOW_ACCELERATION;
       } else {
-         acceleration = PLAYER_ACCELERATION * getPlayerMoveSpeedMultiplier();
+         acceleration = PLAYER_ACCELERATION;
       }
 
       // If discombobulated, limit the acceleration to the discombobulated acceleration
       if (discombobulationTimer > 0 && acceleration > PLAYER_DISCOMBOBULATED_ACCELERATION) {
          acceleration = PLAYER_DISCOMBOBULATED_ACCELERATION;
       }
+
+      acceleration *= getPlayerMoveSpeedMultiplier(moveDirection);
 
       if (latencyGameState.lastPlantCollisionTicks >= Board.serverTicks - 1) {
          acceleration *= 0.5;
@@ -769,6 +799,7 @@ const onItemRightClickDown = (itemType: ItemType, itemInventoryName: InventoryNa
             limbInfo.action = action;
             limbInfo.lastEatTicks = Board.serverTicks;
 
+            sendStartItemUsePacket();
             // @Incomplete
             // if (itemInfo.consumableItemCategory === ConsumableItemCategory.medicine) {
             //    // @Cleanup
@@ -802,10 +833,12 @@ const onItemRightClickDown = (itemType: ItemType, itemInventoryName: InventoryNa
          break;
       }
       case "spear": {
-         limbInfo.action = LimbAction.chargeSpear;
-         limbInfo.currentActionElapsedTicks = 0;
-         limbInfo.currentActionDurationTicks = 3 * Settings.TPS;
-         limbInfo.currentActionRate = 1;
+         if (limbInfo.action === LimbAction.none) {
+            limbInfo.action = LimbAction.chargeSpear;
+            limbInfo.currentActionElapsedTicks = 0;
+            limbInfo.currentActionDurationTicks = 3 * Settings.TPS;
+            limbInfo.currentActionRate = 1;
+         }
          break;
       }
       case "battleaxe": {
@@ -851,15 +884,19 @@ const onItemRightClickUp = (item: Item, inventoryName: InventoryName): void => {
          break;
       }
       case "spear": {
-         const chargeTime = getElapsedTimeInSeconds(limb.currentActionElapsedTicks);
-         
-         limb.action = LimbAction.none;
-         
-         if (chargeTime >= 1) {
-            sendItemUsePacket();
-         } else {
-            sendStopItemUsePacket();
-            playSound("error.mp3", 0.4, 1, Camera.position);
+         if (limb.action === LimbAction.chargeSpear) {
+            const chargeTime = getElapsedTimeInSeconds(limb.currentActionElapsedTicks);
+            
+            limb.action = LimbAction.none;
+            limb.currentActionElapsedTicks = 0;
+            limb.currentActionDurationTicks = 0;
+            
+            if (chargeTime >= 1) {
+               sendItemUsePacket();
+            } else {
+               sendStopItemUsePacket();
+               playSound("error.mp3", 0.4, 1, Camera.position);
+            }
          }
          break;
       }

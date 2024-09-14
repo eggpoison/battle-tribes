@@ -19,7 +19,7 @@ import { createPlayerConfig } from "../entities/tribes/player";
 import { ServerComponentType } from "battletribes-shared/components";
 import { createEntityFromConfig } from "../Entity";
 import { generateGrassStrands } from "../world-generation/grass-generation";
-import { processDevGiveItemPacket, processItemDropPacket, processPlayerAttackPacket, processPlayerDataPacket, processRespawnPacket, processStopItemUsePacket, processUseItemPacket } from "./packet-processing";
+import { processDevGiveItemPacket, processItemDropPacket, processPlayerAttackPacket, processPlayerDataPacket, processRespawnPacket, processStartItemUsePacket, processStopItemUsePacket, processUseItemPacket } from "./packet-processing";
 import { EntityID } from "battletribes-shared/entities";
 import { SpikesComponentArray } from "../components/SpikesComponent";
 import { TribeComponentArray } from "../components/TribeComponent";
@@ -211,6 +211,10 @@ class GameServer {
                }
                case PacketType.respawn: {
                   processRespawnPacket(playerClient);
+                  break;
+               }
+               case PacketType.startItemUse: {
+                  processStartItemUsePacket(playerClient, reader);
                   break;
                }
                case PacketType.useItem: {

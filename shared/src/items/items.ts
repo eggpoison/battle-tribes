@@ -260,19 +260,19 @@ export interface ItemInfoRecord {
    crossbow: CrossbowItemInfo;
 }
 
-export interface ItemCategoryAttackInfo {
+export interface AttackInfo {
    readonly attackPattern: AttackPatternInfo;
    readonly attackTimings: AttackTimingsInfo;
    readonly heldItemDamageBoxInfo: LimbHeldItemDamageBoxInfo | null;
 }
 
-const UNARMED_ATTACK_INFO: ItemCategoryAttackInfo = {
+const UNARMED_ATTACK_INFO: AttackInfo = {
    attackPattern: DEFAULT_ATTACK_PATTERN,
    attackTimings: DEFAULT_ATTACK_TIMINGS,
    heldItemDamageBoxInfo: null
 }
 
-const ITEM_CATEGORY_ATTACK_INFO_RECORD: Record<keyof ItemInfoRecord, ItemCategoryAttackInfo> = {
+const ITEM_CATEGORY_ATTACK_INFO_RECORD: Record<keyof ItemInfoRecord, AttackInfo> = {
    material: {
       attackPattern: DEFAULT_ATTACK_PATTERN,
       attackTimings: DEFAULT_ATTACK_TIMINGS,
@@ -937,7 +937,7 @@ export function itemTypeIsGlove(itemType: ItemType): boolean {
    return ITEM_TYPE_RECORD[itemType] === "glove";
 }
 
-export function getItemAttackInfo(itemType: ItemType | null): ItemCategoryAttackInfo {
+export function getItemAttackInfo(itemType: ItemType | null): AttackInfo {
    if (itemType === null) {
       return UNARMED_ATTACK_INFO;
    }

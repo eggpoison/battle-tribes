@@ -1,15 +1,15 @@
 import { Packet, PacketReader, PacketType } from "battletribes-shared/packets";
 import PlayerClient from "./PlayerClient";
-import { EntityID, LimbAction } from "battletribes-shared/entities";
-import { getItemAttackInfo, InventoryName, ItemType } from "battletribes-shared/items/items";
+import { LimbAction } from "battletribes-shared/entities";
+import { ConsumableItemCategory, ConsumableItemInfo, getItemAttackInfo, InventoryName, ITEM_INFO_RECORD, ITEM_TYPE_RECORD, ItemType } from "battletribes-shared/items/items";
 import { TribeType } from "battletribes-shared/tribes";
 import Board from "../Board";
-import { getHeldItem, InventoryUseComponentArray } from "../components/InventoryUseComponent";
+import { getHeldItem, InventoryUseComponentArray, setLimbActions } from "../components/InventoryUseComponent";
 import { PhysicsComponentArray } from "../components/PhysicsComponent";
 import { PlayerComponentArray } from "../components/PlayerComponent";
 import { TransformComponentArray } from "../components/TransformComponent";
 import { TribeComponentArray } from "../components/TribeComponent";
-import { startEating, startChargingBow, startChargingSpear, startChargingBattleaxe, createPlayerConfig } from "../entities/tribes/player";
+import { startChargingBow, startChargingSpear, startChargingBattleaxe, createPlayerConfig } from "../entities/tribes/player";
 import { calculateRadialAttackTargets, throwItem, useItem } from "../entities/tribes/tribe-member";
 import { beginSwing } from "../entities/tribes/limb-use";
 import { InventoryComponentArray, getInventory, addItemToInventory } from "../components/InventoryComponent";
@@ -18,7 +18,6 @@ import { Point } from "battletribes-shared/utils";
 import { createEntityFromConfig } from "../Entity";
 import { generatePlayerSpawnPosition, registerDirtyEntity } from "./player-clients";
 import { addEntityDataToPacket, getEntityDataLength } from "./game-data-packets";
-import { DamageBoxComponentArray } from "../components/DamageBoxComponent";
 
 /** How far away from the entity the attack is done */
 const ATTACK_OFFSET = 50;
@@ -98,9 +97,7 @@ export function processPlayerDataPacket(playerClient: PlayerClient, reader: Pack
    // @Bug: won't work for using medicine in offhand
    let overrideOffhand = false;
    
-   if ((mainAction === LimbAction.eat || mainAction === LimbAction.useMedicine) && (hotbarLimbInfo.action !== LimbAction.eat && hotbarLimbInfo.action !== LimbAction.useMedicine)) {
-      overrideOffhand = startEating(playerClient.instance, InventoryName.hotbar);
-   } else if (mainAction === LimbAction.chargeBow && hotbarLimbInfo.action !== LimbAction.chargeBow) {
+   if (mainAction === LimbAction.chargeBow && hotbarLimbInfo.action !== LimbAction.chargeBow) {
       startChargingBow(playerClient.instance, InventoryName.hotbar);
    } else if (mainAction === LimbAction.chargeSpear && hotbarLimbInfo.action !== LimbAction.chargeSpear) {
       startChargingSpear(playerClient.instance, InventoryName.hotbar);
@@ -113,9 +110,7 @@ export function processPlayerDataPacket(playerClient: PlayerClient, reader: Pack
       if (tribeComponent.tribe.tribeType === TribeType.barbarians) {
          const offhandLimbInfo = inventoryUseComponent.getLimbInfo(InventoryName.offhand);
 
-         if ((offhandAction === LimbAction.eat || offhandAction === LimbAction.useMedicine) && (offhandLimbInfo.action !== LimbAction.eat && offhandLimbInfo.action !== LimbAction.useMedicine)) {
-            startEating(playerClient.instance, InventoryName.offhand);
-         } else if (offhandAction === LimbAction.chargeBow && offhandLimbInfo.action !== LimbAction.chargeBow) {
+         if (offhandAction === LimbAction.chargeBow && offhandLimbInfo.action !== LimbAction.chargeBow) {
             startChargingBow(playerClient.instance, InventoryName.offhand);
          } else if (offhandAction === LimbAction.chargeSpear && offhandLimbInfo.action !== LimbAction.chargeSpear) {
             startChargingSpear(playerClient.instance, InventoryName.offhand);
@@ -203,6 +198,42 @@ export function sendRespawnDataPacket(playerClient: PlayerClient): void {
    addEntityDataToPacket(packet, player, player);
 
    playerClient.socket.send(packet.buffer);
+}
+
+export function processStartItemUsePacket(playerClient: PlayerClient, reader: PacketReader): void {
+   const player = playerClient.instance;
+   if (!Board.hasEntity(player)) {
+      return;
+   }
+
+   const itemSlot = reader.readNumber();
+
+   const inventoryComponent = InventoryComponentArray.getComponent(player);
+   const hotbarInventory = getInventory(inventoryComponent, InventoryName.hotbar);
+
+   const item = hotbarInventory.itemSlots[itemSlot];
+   if (typeof item !== "undefined")  {
+      const inventoryUseComponent = InventoryUseComponentArray.getComponent(player);
+      const limb = inventoryUseComponent.getLimbInfo(InventoryName.hotbar);
+      
+      switch (ITEM_TYPE_RECORD[item.type]) {
+         case "healing": {
+            // Reset the food timer so that the food isn't immediately eaten
+            const itemInfo = ITEM_INFO_RECORD[item.type] as ConsumableItemInfo;
+            limb.foodEatingTimer = itemInfo.consumeTime;
+      
+            // @Incomplete
+            if (itemInfo.consumableItemCategory === ConsumableItemCategory.medicine) {
+               setLimbActions(inventoryUseComponent, LimbAction.useMedicine);
+            }
+            
+            limb.action = LimbAction.eat;
+            limb.currentActionElapsedTicks = 0;
+            limb.currentActionRate = 1;
+            break;
+         }
+      }
+   }
 }
 
 export function processUseItemPacket(playerClient: PlayerClient, reader: PacketReader): void {

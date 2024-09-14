@@ -91,30 +91,6 @@ export function onPlayerHurt(player: EntityID, attackingEntity: EntityID): void 
 
 // @Cleanup: ton of copy and paste between these functions
 
-export function startEating(player: EntityID, inventoryName: InventoryName): boolean {
-   const inventoryComponent = InventoryComponentArray.getComponent(player);
-   const inventoryUseComponent = InventoryUseComponentArray.getComponent(player);
-
-   const useInfo = inventoryUseComponent.getLimbInfo(inventoryName);
-   const inventory = getInventory(inventoryComponent, inventoryName);
-   
-   const foodItem = inventory.itemSlots[useInfo.selectedItemSlot];
-   
-   // Reset the food timer so that the food isn't immediately eaten
-   if (typeof foodItem !== "undefined") {
-      const itemInfo = ITEM_INFO_RECORD[foodItem.type] as ConsumableItemInfo;
-      useInfo.foodEatingTimer = itemInfo.consumeTime;
-
-      if (itemInfo.consumableItemCategory === ConsumableItemCategory.medicine) {
-         setLimbActions(inventoryUseComponent, LimbAction.useMedicine);
-         return true;
-      }
-   }
-   
-   useInfo.action = LimbAction.eat;
-   return false;
-}
-
 export function startChargingBow(player: EntityID, inventoryName: InventoryName): void {
    const inventoryComponent = InventoryComponentArray.getComponent(player);
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(player);

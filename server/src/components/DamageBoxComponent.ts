@@ -69,7 +69,7 @@ const getCollidingCollisionBox = (entity: EntityID, blockBox: ServerBlockBox): D
 
             const damageBoxComponent = DamageBoxComponentArray.getComponent(currentEntity);
             for (const currentDamageBox of damageBoxComponent.damageBoxes) { 
-               if (blockBox.box.isColliding(currentDamageBox.box)) {
+               if (currentDamageBox.isActive && blockBox.box.isColliding(currentDamageBox.box)) {
                   return {
                      collidingEntity: currentEntity,
                      collidingDamageBox: currentDamageBox

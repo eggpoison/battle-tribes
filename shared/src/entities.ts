@@ -252,6 +252,7 @@ export enum LimbAction {
    windAttack,
    attack,
    returnAttackToRest,
+   engageBlock,
    block,
    returnBlockToRest
 }

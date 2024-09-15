@@ -62,53 +62,58 @@ export function createUBOs(): void {
    }
 
    // Entity texture atlas uniform buffer
+
+   const textureAtlas = getEntityTextureAtlas();
+   entityTextureAtlasData[0] = textureAtlas.atlasSize;
+   for (let i = 0; i < ENTITY_TEXTURE_ATLAS_LENGTH; i++) {
+      entityTextureAtlasData[4 + i * 4] = textureAtlas.textureSlotIndexes[i];
+   }
+   for (let i = 0; i < ENTITY_TEXTURE_ATLAS_LENGTH; i++) {
+      entityTextureAtlasData[4 + ENTITY_TEXTURE_ATLAS_LENGTH * 4 + i * 4] = textureAtlas.textureWidths[i];
+      entityTextureAtlasData[4 + ENTITY_TEXTURE_ATLAS_LENGTH * 4 + i * 4 + 1] = textureAtlas.textureHeights[i];
+   }
+
    entityTextureAtlasBuffer = gl.createBuffer()!;
    gl.bindBufferBase(gl.UNIFORM_BUFFER, UBOBindingIndex.ENTITY_TEXTURE_ATLAS, entityTextureAtlasBuffer);
-   gl.bufferData(gl.UNIFORM_BUFFER, entityTextureAtlasData.byteLength, gl.DYNAMIC_DRAW);
+   gl.bufferData(gl.UNIFORM_BUFFER, entityTextureAtlasData, gl.STATIC_DRAW);
 }
 
+// @Speed
 export function updateUBOs(): void {
+   // @Speed: don't do these calls if the values haven't changed
+   
    // Update the camera buffer
-   cameraData[0] = Camera.position.x;
-   cameraData[1] = Camera.position.y;
-   cameraData[2] = halfWindowWidth;
-   cameraData[3] = halfWindowHeight;
-   cameraData[4] = Camera.zoom;
-   gl.bindBuffer(gl.UNIFORM_BUFFER, cameraBuffer);
-   gl.bufferSubData(gl.UNIFORM_BUFFER, 0, cameraData);
+   if (cameraData[0] !== Camera.position.x ||
+       cameraData[1] !== Camera.position.y ||
+       cameraData[2] !== halfWindowWidth ||
+       cameraData[3] !== halfWindowHeight ||
+       cameraData[4] !== Camera.zoom) {
+      cameraData[0] = Camera.position.x;
+      cameraData[1] = Camera.position.y;
+      cameraData[2] = halfWindowWidth;
+      cameraData[3] = halfWindowHeight;
+      cameraData[4] = Camera.zoom;
+      gl.bindBuffer(gl.UNIFORM_BUFFER, cameraBuffer);
+      gl.bufferSubData(gl.UNIFORM_BUFFER, 0, cameraData);
+
+      {
+         cameraDataTechTree[0] = Camera.position.x;
+         cameraDataTechTree[1] = Camera.position.y;
+         cameraDataTechTree[2] = halfWindowWidth;
+         cameraDataTechTree[3] = halfWindowHeight;
+         cameraDataTechTree[4] = Camera.zoom;
+
+         const gl = getTechTreeGL();
+         gl.bindBuffer(gl.UNIFORM_BUFFER, cameraBufferTechTree);
+         gl.bufferSubData(gl.UNIFORM_BUFFER, 0, cameraDataTechTree);
+      }
+   }
 
    // Update the time buffer
+   // @Bug: Should be the same as the time used in other places
    timeData[0] = performance.now();
    gl.bindBuffer(gl.UNIFORM_BUFFER, timeBuffer);
    gl.bufferSubData(gl.UNIFORM_BUFFER, 0, timeData);
-
-   {
-      cameraDataTechTree[0] = Camera.position.x;
-      cameraDataTechTree[1] = Camera.position.y;
-      cameraDataTechTree[2] = halfWindowWidth;
-      cameraDataTechTree[3] = halfWindowHeight;
-      cameraDataTechTree[4] = Camera.zoom;
-
-      const gl = getTechTreeGL();
-      gl.bindBuffer(gl.UNIFORM_BUFFER, cameraBufferTechTree);
-      gl.bufferSubData(gl.UNIFORM_BUFFER, 0, cameraDataTechTree);
-   }
-
-   // Update the entity texture atlas buffer
-   {
-      const textureAtlas = getEntityTextureAtlas();
-      entityTextureAtlasData[0] = textureAtlas.atlasSize;
-      for (let i = 0; i < ENTITY_TEXTURE_ATLAS_LENGTH; i++) {
-         entityTextureAtlasData[4 + i * 4] = textureAtlas.textureSlotIndexes[i];
-      }
-      for (let i = 0; i < ENTITY_TEXTURE_ATLAS_LENGTH; i++) {
-         entityTextureAtlasData[4 + ENTITY_TEXTURE_ATLAS_LENGTH * 4 + i * 4] = textureAtlas.textureWidths[i];
-         entityTextureAtlasData[4 + ENTITY_TEXTURE_ATLAS_LENGTH * 4 + i * 4 + 1] = textureAtlas.textureHeights[i];
-      }
-      
-      gl.bindBuffer(gl.UNIFORM_BUFFER, entityTextureAtlasBuffer);
-      gl.bufferSubData(gl.UNIFORM_BUFFER, 0, entityTextureAtlasData);
-   }
 }
 
 export function bindUBOToProgram(gl: WebGL2RenderingContext, program: WebGLProgram, bindingIndex: UBOBindingIndex): void {

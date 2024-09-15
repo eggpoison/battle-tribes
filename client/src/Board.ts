@@ -19,10 +19,10 @@ import { RenderPart } from "./render-parts/render-parts";
 import { InitialGameDataPacket } from "./client/packet-processing";
 import { addEntityToRenderHeightMap } from "./rendering/webgl/entity-rendering";
 import { getComponentArrays } from "./entity-components/ComponentArray";
-import { removeEntityFromDirtyArray } from "./rendering/render-part-matrices";
 import { getEntityRenderLayer } from "./render-layers";
 import { registerChunkRenderedEntity, removeChunkRenderedEntity, renderLayerIsChunkRendered } from "./rendering/webgl/chunked-entity-rendering";
 import { getFrameProgress } from "./Game";
+import { removeEntityFromDirtyArray } from "./rendering/render-part-matrices";
 
 export interface EntityHitboxInfo {
    readonly vertexPositions: readonly [Point, Point, Point, Point];

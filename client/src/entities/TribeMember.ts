@@ -179,6 +179,9 @@ export function addTribeMemberRenderParts(tribesman: Entity): void {
          1,
          0
       );
+      if (i === 1) {
+         attachPoint.flipX = true;
+      }
       attachPoint.addTag("inventoryUseComponent:attachPoint");
       tribesman.attachRenderThing(attachPoint);
       

@@ -475,6 +475,13 @@ const CLIENT_ITEM_INFO_RECORD: Record<ItemType, ClientItemInfo> = {
       toolTextureSource: "",
       name: "Stonecarving Table",
       description: "Carves stone into complex shapes."
+   },
+   [ItemType.woodenShield]: {
+      entityTextureSource: "items/small/wooden-shield.png",
+      textureSource: "items/large/wooden-shield.png",
+      toolTextureSource: "entities/shield-items/wooden-shield.png",
+      name: "Wooden Shield",
+      description: "Blocks projectiles and melee attack, poorly."
    }
 };
 

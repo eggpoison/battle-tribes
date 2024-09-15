@@ -1,9 +1,10 @@
 import { Settings } from "./settings";
 
 export const enum AttackVars {
-   MAX_EXTRA_ATTACK_RANGE = 20,
+   MAX_EXTRA_ATTACK_RANGE = 24,
    // The speed needed to have the max attack range
-   MAX_EXTRA_ATTACK_RANGE_SPEED = 300
+   MAX_EXTRA_ATTACK_RANGE_SPEED = 300,
+   BOW_REST_TIME_TICKS = (Settings.TPS * 0.25) | 0
 }
 
 export interface LimbState {
@@ -70,9 +71,9 @@ export const SPEAR_ATTACK_PATTERN: AttackPatternInfo = {
       extraOffsetY: 0
    },
    swung: {
-      direction: Math.PI * 0.2,
-      extraOffset: 7,
-      rotation: Math.PI * -1/7,
+      direction: Math.PI * 0.13,
+      extraOffset: 26,
+      rotation: Math.PI * -1/6,
       extraOffsetX: 0,
       extraOffsetY: 0
    }
@@ -111,7 +112,7 @@ export const SWORD_ATTACK_TIMINGS: AttackTimingsInfo = {
    swingTimeTicks: Math.floor(0.2 * Settings.TPS),
    returnTimeTicks: Math.floor(0.15 * Settings.TPS),
    restTimeTicks: Math.floor(0.15 * Settings.TPS),
-   blockTimeTicks: Math.floor(0.2 * Settings.TPS)
+   blockTimeTicks: Math.floor(0.15 * Settings.TPS)
 };
 
 export const SPEAR_ATTACK_TIMINGS: AttackTimingsInfo = {
@@ -150,6 +151,18 @@ export const BLOCKING_LIMB_STATE: LimbState = {
    extraOffsetY: 0
 };
 
+export const SHIELD_BLOCKING_LIMB_STATE: LimbState = {
+   direction: 0,
+   extraOffset: 0,
+   rotation: Math.PI * -0.25,
+   extraOffsetX: 0,
+   extraOffsetY: 0
+};
+
+/* ---------------- */
+/* DAMAGE BOX INFOS */
+/* ---------------- */
+
 export const DEFAULT_ITEM_DAMAGE_BOX_INFO: LimbHeldItemDamageBoxInfo = {
    width: 20,
    height: 20,
@@ -168,6 +181,15 @@ export const SWORD_ITEM_DAMAGE_BOX_INFO: LimbHeldItemDamageBoxInfo = {
    showLargeTexture: true
 };
 
+export const SHIELD_BLOCKING_DAMAGE_BOX_INFO: LimbHeldItemDamageBoxInfo = {
+   width: 52,
+   height: 16,
+   rotation: Math.PI * 0.25,
+   offsetX: 8,
+   offsetY: 8,
+   showLargeTexture: true
+};
+
 export const TOOL_ITEM_DAMAGE_BOX_INFO: LimbHeldItemDamageBoxInfo = {
    width: 30,
    height: 48,
@@ -179,10 +201,10 @@ export const TOOL_ITEM_DAMAGE_BOX_INFO: LimbHeldItemDamageBoxInfo = {
 
 export const SPEAR_DAMAGE_BOX_INFO: LimbHeldItemDamageBoxInfo = {
    width: 20,
-   height: 88,
+   height: 96,
    rotation: 0,
    offsetX: 5,
-   offsetY: 11,
+   offsetY: 22,
    showLargeTexture: true
 };
 

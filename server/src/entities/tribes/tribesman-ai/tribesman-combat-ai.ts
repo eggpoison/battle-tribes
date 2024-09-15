@@ -256,19 +256,20 @@ export function huntEntity(tribesman: EntityID, huntedEntity: EntityID, isAggres
             physicsComponent.targetRotation = targetRotation;
             physicsComponent.turnSpeed = TRIBESMAN_TURN_SPEED;
 
-            if (hotbarUseInfo.action !== LimbAction.chargeBow) {
-               // If the tribesman is only just charging the bow, reset the cooldown to prevent the bow firing immediately
-               const itemInfo = ITEM_INFO_RECORD[selectedItem.type] as BowItemInfo;
-               hotbarUseInfo.lastBowChargeTicks = Board.ticks;
-               hotbarUseInfo.bowCooldownTicks = itemInfo.shotCooldownTicks;
-               tribesmanComponent.extraBowCooldownTicks = EXTRA_BOW_COOLDOWNS[Board.getEntityType(tribesman)!]!;
-            } else if (hotbarUseInfo.bowCooldownTicks === 0 && tribesmanComponent.extraBowCooldownTicks > 0) {
-               tribesmanComponent.extraBowCooldownTicks--;
-            } else {
-               // If the bow is fully charged, fire it
-               useItem(tribesman, selectedItem, InventoryName.hotbar, hotbarUseInfo.selectedItemSlot);
-               tribesmanComponent.extraBowCooldownTicks = EXTRA_BOW_COOLDOWNS[Board.getEntityType(tribesman)!]!;
-            }
+            // @Incomplete!
+            // if (hotbarUseInfo.action !== LimbAction.chargeBow) {
+            //    // If the tribesman is only just charging the bow, reset the cooldown to prevent the bow firing immediately
+            //    const itemInfo = ITEM_INFO_RECORD[selectedItem.type] as BowItemInfo;
+            //    hotbarUseInfo.lastBowChargeTicks = Board.ticks;
+            //    hotbarUseInfo.bowCooldownTicks = itemInfo.shotCooldownTicks;
+            //    tribesmanComponent.extraBowCooldownTicks = EXTRA_BOW_COOLDOWNS[Board.getEntityType(tribesman)!]!;
+            // } else if (hotbarUseInfo.bowCooldownTicks === 0 && tribesmanComponent.extraBowCooldownTicks > 0) {
+            //    tribesmanComponent.extraBowCooldownTicks--;
+            // } else {
+            //    // If the bow is fully charged, fire it
+            //    useItem(tribesman, selectedItem, InventoryName.hotbar, hotbarUseInfo.selectedItemSlot);
+            //    tribesmanComponent.extraBowCooldownTicks = EXTRA_BOW_COOLDOWNS[Board.getEntityType(tribesman)!]!;
+            // }
             hotbarUseInfo.action = LimbAction.chargeBow;
 
             clearTribesmanPath(tribesman);

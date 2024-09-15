@@ -61,6 +61,7 @@ import { updateEntity } from "./entity-components/ComponentArray";
 import { resolveEntityCollisions, resolvePlayerCollisions } from "./collision";
 import { preloadTextureAtlasImages } from "./texture-atlases/texture-atlas-stitching";
 import { updatePlayerMovement, updatePlayerItems } from "./components/game/GameInteractableLayer";
+import { refreshChunkedEntityRenderingBuffers } from "./rendering/webgl/chunked-entity-rendering";
 
 // @Cleanup: remove.
 let _frameProgress = Number.EPSILON;
@@ -236,8 +237,6 @@ abstract class Game {
          
             createRiverSteppingStoneData(initialGameDataPacket.riverSteppingStones);
 
-            createUBOs();
-            
             console.log("initialising board",performance.now() - l);
             l = performance.now();
             preloadTextureAtlasImages();
@@ -264,6 +263,9 @@ abstract class Game {
             await createTextureAtlases();
             console.log("texture atlases",performance.now() - l);
             l = performance.now();
+            
+            // Done after creating texture atlases as the data from them is used in a ubo
+            createUBOs();
 
             // Create shaders
             createSolidTileShaders();
@@ -404,6 +406,7 @@ abstract class Game {
       renderHealingBeams();
 
       updateRenderPartMatrices(frameProgress);
+      refreshChunkedEntityRenderingBuffers();
 
       const visibleRiverRenderChunks = calculateVisibleRiverInfo();
       resetRenderOrder();

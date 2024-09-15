@@ -1,7 +1,7 @@
 import { Packet, PacketReader, PacketType } from "battletribes-shared/packets";
 import PlayerClient from "./PlayerClient";
 import { LimbAction } from "battletribes-shared/entities";
-import { ConsumableItemCategory, ConsumableItemInfo, getItemAttackInfo, InventoryName, ITEM_INFO_RECORD, ITEM_TYPE_RECORD, ItemType } from "battletribes-shared/items/items";
+import { BowItemInfo, ConsumableItemCategory, ConsumableItemInfo, getItemAttackInfo, InventoryName, ITEM_INFO_RECORD, ITEM_TYPE_RECORD, ItemType } from "battletribes-shared/items/items";
 import { TribeType } from "battletribes-shared/tribes";
 import Board from "../Board";
 import { getHeldItem, InventoryUseComponentArray, setLimbActions } from "../components/InventoryUseComponent";
@@ -97,9 +97,7 @@ export function processPlayerDataPacket(playerClient: PlayerClient, reader: Pack
    // @Bug: won't work for using medicine in offhand
    let overrideOffhand = false;
    
-   if (mainAction === LimbAction.chargeBow && hotbarLimbInfo.action !== LimbAction.chargeBow) {
-      startChargingBow(playerClient.instance, InventoryName.hotbar);
-   } else if (mainAction === LimbAction.chargeSpear && hotbarLimbInfo.action !== LimbAction.chargeSpear) {
+   if (mainAction === LimbAction.chargeSpear && hotbarLimbInfo.action !== LimbAction.chargeSpear) {
       startChargingSpear(playerClient.instance, InventoryName.hotbar);
    } else if (mainAction === LimbAction.chargeBattleaxe && hotbarLimbInfo.action !== LimbAction.chargeBattleaxe) {
       startChargingBattleaxe(playerClient.instance, InventoryName.hotbar);
@@ -110,9 +108,7 @@ export function processPlayerDataPacket(playerClient: PlayerClient, reader: Pack
       if (tribeComponent.tribe.tribeType === TribeType.barbarians) {
          const offhandLimbInfo = inventoryUseComponent.getLimbInfo(InventoryName.offhand);
 
-         if (offhandAction === LimbAction.chargeBow && offhandLimbInfo.action !== LimbAction.chargeBow) {
-            startChargingBow(playerClient.instance, InventoryName.offhand);
-         } else if (offhandAction === LimbAction.chargeSpear && offhandLimbInfo.action !== LimbAction.chargeSpear) {
+         if (offhandAction === LimbAction.chargeSpear && offhandLimbInfo.action !== LimbAction.chargeSpear) {
             startChargingSpear(playerClient.instance, InventoryName.offhand);
          } else if (offhandAction === LimbAction.chargeBattleaxe && offhandLimbInfo.action !== LimbAction.chargeBattleaxe) {
             startChargingBattleaxe(playerClient.instance, InventoryName.offhand);
@@ -211,27 +207,57 @@ export function processStartItemUsePacket(playerClient: PlayerClient, reader: Pa
    const inventoryComponent = InventoryComponentArray.getComponent(player);
    const hotbarInventory = getInventory(inventoryComponent, InventoryName.hotbar);
 
-   const item = hotbarInventory.itemSlots[itemSlot];
-   if (typeof item !== "undefined")  {
+   const item = hotbarInventory.getItem(itemSlot);
+   if (item === null) {
+      return;
+   }
+
+   // Block with the item if possible
+   const attackInfo = getItemAttackInfo(item.type);
+   if (attackInfo.attackTimings.blockTimeTicks !== null) {
       const inventoryUseComponent = InventoryUseComponentArray.getComponent(player);
-      const limb = inventoryUseComponent.getLimbInfo(InventoryName.hotbar);
+      const limbInfo = inventoryUseComponent.getLimbInfo(InventoryName.hotbar);
+
+      // @Cleanup: unneeded?
+      limbInfo.selectedItemSlot = itemSlot;
       
-      switch (ITEM_TYPE_RECORD[item.type]) {
-         case "healing": {
-            // Reset the food timer so that the food isn't immediately eaten
-            const itemInfo = ITEM_INFO_RECORD[item.type] as ConsumableItemInfo;
-            limb.foodEatingTimer = itemInfo.consumeTime;
-      
-            // @Incomplete
-            if (itemInfo.consumableItemCategory === ConsumableItemCategory.medicine) {
-               setLimbActions(inventoryUseComponent, LimbAction.useMedicine);
-            }
-            
-            limb.action = LimbAction.eat;
-            limb.currentActionElapsedTicks = 0;
-            limb.currentActionRate = 1;
-            break;
+      // Begin blocking
+      limbInfo.action = LimbAction.engageBlock;
+      limbInfo.currentActionElapsedTicks = 0;
+      limbInfo.currentActionDurationTicks = attackInfo.attackTimings.blockTimeTicks;
+      limbInfo.currentActionRate = 1;
+      limbInfo.blockBox.hasBlocked = false;
+      return;
+   }
+
+   const inventoryUseComponent = InventoryUseComponentArray.getComponent(player);
+   const limb = inventoryUseComponent.getLimbInfo(InventoryName.hotbar);
+   
+   switch (ITEM_TYPE_RECORD[item.type]) {
+      case "healing": {
+         // Reset the food timer so that the food isn't immediately eaten
+         const itemInfo = ITEM_INFO_RECORD[item.type] as ConsumableItemInfo;
+         limb.foodEatingTimer = itemInfo.consumeTime;
+   
+         // @Incomplete
+         if (itemInfo.consumableItemCategory === ConsumableItemCategory.medicine) {
+            setLimbActions(inventoryUseComponent, LimbAction.useMedicine);
          }
+         
+         limb.action = LimbAction.eat;
+         limb.currentActionElapsedTicks = 0;
+         limb.currentActionRate = 1;
+         break;
+      }
+      case "bow": {
+         for (let i = 0; i < 2; i++) {
+            const limb = inventoryUseComponent.getLimbInfo(i === 0 ? InventoryName.hotbar : InventoryName.offhand);
+            limb.action = LimbAction.chargeBow;
+            limb.currentActionElapsedTicks = 0;
+            limb.currentActionDurationTicks = (ITEM_INFO_RECORD[item.type] as BowItemInfo).shotChargeTimeTicks;
+            limb.currentActionRate = 1;
+         }
+         break;
       }
    }
 }

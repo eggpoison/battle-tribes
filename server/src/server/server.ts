@@ -31,6 +31,7 @@ import { generateLilypads } from "../world-generation/lilypad-generation";
 import { forceMaxGrowAllIceSpikes } from "../components/IceSpikesComponent";
 import { sortComponentArrays } from "../components/ComponentArray";
 import { createCactusConfig } from "../entities/resources/cactus";
+import { createReedConfig } from "../entities/reed";
 
 /*
 
@@ -173,13 +174,6 @@ class GameServer {
       
                   playerClient = new PlayerClient(socket, tribe, screenWidth, screenHeight, spawnPosition, player, username);
                   addPlayerClient(playerClient, player, config);
-
-                  setTimeout(() => {
-                     const config = createCactusConfig();
-                     config[ServerComponentType.transform].position.x = spawnPosition.x + 200;
-                     config[ServerComponentType.transform].position.y = spawnPosition.y;
-                     createEntityFromConfig(config);
-                  }, 1000);
 
                   break;
                }

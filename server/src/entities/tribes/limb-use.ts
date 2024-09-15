@@ -224,6 +224,9 @@ export function beginSwing(attackingEntity: EntityID, itemSlot: number, inventor
 
    const heldItem = getHeldItem(limbInfo);
    const heldItemAttackInfo = getItemAttackInfo(heldItem !== null ? heldItem.type : null);
+   if (heldItemAttackInfo.attackPattern === null) {
+      return false;
+   }
 
    // If the limb is doing something or is resting, don't swing
    if (limbInfo.action !== LimbAction.none || limbInfo.currentActionElapsedTicks < limbInfo.currentActionDurationTicks) {

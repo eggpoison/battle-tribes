@@ -85,8 +85,10 @@ export function onWoodenArrowCollision(arrow: EntityID, collidingEntity: EntityI
       const owner = Board.validateEntity(projectileComponent.owner);
       const hitDirection = transformComponent.position.calculateAngleBetween(collidingEntityTransformComponent.position);
       
-      damageEntity(collidingEntity, owner, ammoInfo.damage, PlayerCauseOfDeath.arrow, AttackEffectiveness.effective, collisionPoint, 0);
-      applyKnockback(collidingEntity, ammoInfo.knockback, hitDirection);
+      const damage = 2 * (projectileComponent.isBlocked ? 0.5 : 1);
+      const knockback = 150 * (projectileComponent.isBlocked ? 0.5 : 1);
+      damageEntity(collidingEntity, owner, damage, PlayerCauseOfDeath.arrow, AttackEffectiveness.effective, collisionPoint, 0);
+      applyKnockback(collidingEntity, knockback, hitDirection);
 
       if (StatusEffectComponentArray.hasComponent(collidingEntity) && ammoInfo.statusEffect !== null) {
          applyStatusEffect(collidingEntity, ammoInfo.statusEffect.type, ammoInfo.statusEffect.durationTicks);

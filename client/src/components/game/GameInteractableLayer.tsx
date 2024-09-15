@@ -185,7 +185,7 @@ export function updatePlayerItems(): void {
 
    // @Incomplete: Double-check there isn't a tick immediately after depressing the button where this hasn't registered in the limb yet
    // If blocking but not right clicking, return to rest
-   if (1 + 1 === 3 && hotbarLimb.action === LimbAction.block && !rightMouseButtonIsPressed) {
+   if (hotbarLimb.action === LimbAction.block && !rightMouseButtonIsPressed) {
       const attackInfo = getItemAttackInfo(hotbarLimb.heldItemType);
       hotbarLimb.action = LimbAction.returnBlockToRest;
       hotbarLimb.currentActionElapsedTicks = 0;

@@ -64,7 +64,3 @@ if (module.hot) {
 window.addEventListener("load", () => {
    createPlayerInputListeners();
 });
-
-document.addEventListener("mousedown", e => {
-   console.log(e.target);
-})

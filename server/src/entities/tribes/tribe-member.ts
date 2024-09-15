@@ -36,6 +36,7 @@ import { ComponentConfig } from "../../components";
 import { createSpearProjectileConfig } from "../projectiles/spear-projectile";
 import { createBlueprintEntityConfig } from "../blueprint-entity";
 import { createEntityConfig } from "../../entity-creation";
+import { AttackVars } from "../../../../shared/src/attack-patterns";
 
 const enum Vars {
    ITEM_THROW_FORCE = 100,
@@ -267,22 +268,6 @@ export function useItem(tribeMember: EntityID, item: Item, inventoryName: Invent
    const itemCategory = ITEM_TYPE_RECORD[item.type];
 
    const inventoryComponent = InventoryComponentArray.getComponent(tribeMember);
-
-   // Block with the item if possible
-   const attackInfo = getItemAttackInfo(item.type);
-   if (attackInfo.attackTimings.blockTimeTicks !== null) {
-      const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribeMember);
-      const limbInfo = inventoryUseComponent.getLimbInfo(inventoryName);
-
-      // Begin blocking
-      limbInfo.selectedItemSlot = itemSlot;
-      limbInfo.action = LimbAction.block;
-      limbInfo.currentActionElapsedTicks = 0;
-      limbInfo.currentActionDurationTicks = attackInfo.attackTimings.blockTimeTicks;
-      limbInfo.currentActionRate = 1;
-      limbInfo.blockBox.hasBlocked = false;
-      return;
-   }
    
    // @Cleanup: Extract each one of these cases into their own function
 
@@ -388,8 +373,8 @@ export function useItem(tribeMember: EntityID, item: Item, inventoryName: Invent
          const transformComponent = TransformComponentArray.getComponent(tribeMember);
 
          const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribeMember);
-         const useInfo = inventoryUseComponent.getLimbInfo(inventoryName);
-         if (useInfo.bowCooldownTicks !== 0) {
+         const limb = inventoryUseComponent.getLimbInfo(inventoryName);
+         if (limb.action !== LimbAction.chargeBow || limb.currentActionElapsedTicks < limb.currentActionDurationTicks) {
             return;
          }
 
@@ -400,10 +385,9 @@ export function useItem(tribeMember: EntityID, item: Item, inventoryName: Invent
          };
          registerEntityTickEvent(tribeMember, event);
 
-         useInfo.lastBowChargeTicks = Board.ticks;
+         limb.lastBowChargeTicks = Board.ticks;
 
          const itemInfo = ITEM_INFO_RECORD[item.type] as BowItemInfo;
-         useInfo.bowCooldownTicks = itemInfo.shotCooldownTicks;
 
          // Offset the arrow's spawn to be just outside of the tribe member's hitbox
          // @Speed: Garbage collection
@@ -411,7 +395,9 @@ export function useItem(tribeMember: EntityID, item: Item, inventoryName: Invent
          const offset = Point.fromVectorForm(35, transformComponent.rotation);
          spawnPosition.add(offset);
 
-         let config: ComponentConfig<ServerComponentType.transform | ServerComponentType.physics>;
+         const tribeComponent = TribeComponentArray.getComponent(tribeMember);
+
+         let config: ComponentConfig<ServerComponentType.transform | ServerComponentType.physics | ServerComponentType.tribe | ServerComponentType.projectile>;
          switch (item.type) {
             case ItemType.wooden_bow:
             case ItemType.reinforced_bow: {
@@ -432,7 +418,13 @@ export function useItem(tribeMember: EntityID, item: Item, inventoryName: Invent
          config[ServerComponentType.transform].rotation = transformComponent.rotation;
          config[ServerComponentType.physics].velocityX = itemInfo.projectileSpeed * Math.sin(transformComponent.rotation);
          config[ServerComponentType.physics].velocityY = itemInfo.projectileSpeed * Math.cos(transformComponent.rotation);
+         config[ServerComponentType.tribe].tribe = tribeComponent.tribe;
+         config[ServerComponentType.projectile].owner = tribeMember;
          createEntityFromConfig(config);
+
+         limb.action = LimbAction.none;
+         limb.currentActionElapsedTicks = 0;
+         limb.currentActionDurationTicks = AttackVars.BOW_REST_TIME_TICKS;
          
          break;
       }

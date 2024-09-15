@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import AttackChargeBar from "./AttackChargeBar";
 import { ServerComponentType } from "../../../../shared/src/components";
 import { LimbAction } from "../../../../shared/src/entities";
-import { Item, InventoryName, getItemAttackInfo, ITEM_TYPE_RECORD, ItemType, ITEM_INFO_RECORD, ConsumableItemInfo, ConsumableItemCategory, PlaceableItemType } from "../../../../shared/src/items/items";
+import { Item, InventoryName, getItemAttackInfo, ITEM_TYPE_RECORD, ItemType, ITEM_INFO_RECORD, ConsumableItemInfo, ConsumableItemCategory, PlaceableItemType, BowItemInfo } from "../../../../shared/src/items/items";
 import { Settings } from "../../../../shared/src/settings";
 import { STATUS_EFFECT_MODIFIERS } from "../../../../shared/src/status-effects";
 import { calculateStructurePlaceInfo } from "../../../../shared/src/structures";
@@ -176,9 +176,16 @@ export function updatePlayerItems(): void {
       hotbarLimb.currentActionDurationTicks = attackInfo.attackTimings.restTimeTicks;
    }
 
+   // If finished engaging block, go to block
+   if (hotbarLimb.action === LimbAction.engageBlock && getElapsedTimeInSeconds(hotbarLimb.currentActionElapsedTicks) * Settings.TPS >= hotbarLimb.currentActionDurationTicks) {
+      hotbarLimb.action = LimbAction.block;
+      hotbarLimb.currentActionElapsedTicks = 0;
+      hotbarLimb.currentActionDurationTicks = 0;
+   }
+
    // @Incomplete: Double-check there isn't a tick immediately after depressing the button where this hasn't registered in the limb yet
    // If blocking but not right clicking, return to rest
-   if (hotbarLimb.action === LimbAction.block && !rightMouseButtonIsPressed && getElapsedTimeInSeconds(hotbarLimb.currentActionElapsedTicks) * Settings.TPS >= hotbarLimb.currentActionDurationTicks) {
+   if (hotbarLimb.action === LimbAction.block && !rightMouseButtonIsPressed) {
       const attackInfo = getItemAttackInfo(hotbarLimb.heldItemType);
       hotbarLimb.action = LimbAction.returnBlockToRest;
       hotbarLimb.currentActionElapsedTicks = 0;
@@ -202,7 +209,7 @@ export function updatePlayerItems(): void {
       switch (bufferedInputType) {
          case BufferedInputType.attack: {
             if (hotbarLimb.action === LimbAction.none && hotbarLimb.currentActionElapsedTicks >= hotbarLimb.currentActionDurationTicks) {
-               swing(InventoryName.hotbar);
+               tryToSwing(InventoryName.hotbar);
             }
             break;
          }
@@ -214,7 +221,7 @@ export function updatePlayerItems(): void {
          }
       }
       
-      const didSwing = attemptSwing(InventoryName.hotbar);
+      const didSwing = tryToSwing(InventoryName.hotbar);
       if (didSwing) {
          attackBufferTime = 0;
       }
@@ -264,16 +271,21 @@ export function updatePlayerItems(): void {
    }
 }
 
-const swing = (inventoryName: InventoryName): void => {
-   const attackPacket = createAttackPacket();
-   Client.sendPacket(attackPacket);
-
-   const transformComponent = TransformComponentArray.getComponent(Player.instance!.id);
-   const physicsComponent = PhysicsComponentArray.getComponent(Player.instance!.id);
+const tryToSwing = (inventoryName: InventoryName): boolean => {
    const inventoryUseComponent = Player.instance!.getServerComponent(ServerComponentType.inventoryUse);
 
    const limbInfo = inventoryUseComponent.getLimbInfoByInventoryName(inventoryName);
+   if (limbInfo.action !== LimbAction.none || limbInfo.currentActionElapsedTicks < limbInfo.currentActionDurationTicks) {
+      return false;
+   }
+
    const attackInfo = getItemAttackInfo(limbInfo.heldItemType);
+   if (attackInfo.attackPattern === null) {
+      return false;
+   }
+
+   const transformComponent = TransformComponentArray.getComponent(Player.instance!.id);
+   const physicsComponent = PhysicsComponentArray.getComponent(Player.instance!.id);
 
    limbInfo.action = LimbAction.windAttack;
    limbInfo.currentActionElapsedTicks = 0;
@@ -293,6 +305,11 @@ const swing = (inventoryName: InventoryName): void => {
          limbInfo.currentAttackPattern.swung.extraOffsetY += extraAmount;
       }
    }
+
+   const attackPacket = createAttackPacket();
+   Client.sendPacket(attackPacket);
+
+   return true;
 }
 
 // @Cleanup: unused?
@@ -374,24 +391,12 @@ const getSwingTimeMultiplier = (item: Item | null): number => {
 //    return true;
 // }
 
-const attemptSwing = (inventoryName: InventoryName): boolean => {
-   // Only swing if not doing anything
-   const inventoryUseComponent = InventoryUseComponentArray.getComponent(Player.instance!.id);
-   const limbInfo = inventoryUseComponent.getLimbInfoByInventoryName(inventoryName);
-   if (limbInfo.action === LimbAction.none && limbInfo.currentActionElapsedTicks >= limbInfo.currentActionDurationTicks) {
-      swing(inventoryName);
-      return true;
-   }
-   
-   return false;
-}
-
 const attemptAttack = (): void => {
    if (Player.instance === null) return;
 
-   let attackDidSucceed = attemptSwing(InventoryName.hotbar);
+   let attackDidSucceed = tryToSwing(InventoryName.hotbar);
    if (!attackDidSucceed && Game.tribe.tribeType === TribeType.barbarians) {
-      attackDidSucceed = attemptSwing(InventoryName.offhand);
+      attackDidSucceed = tryToSwing(InventoryName.offhand);
    }
 
    if (!attackDidSucceed) {
@@ -754,18 +759,17 @@ const onItemRightClickDown = (itemType: ItemType, itemInventoryName: InventoryNa
    const transformComponent = Player.instance!.getServerComponent(ServerComponentType.transform);
    const inventoryUseComponent = Player.instance!.getServerComponent(ServerComponentType.inventoryUse);
 
-   const limbInfo = inventoryUseComponent.getLimbInfoByInventoryName(itemInventoryName);
-
    // Start blocking
    const attackInfo = getItemAttackInfo(itemType);
    if (attackInfo.attackTimings.blockTimeTicks !== null) {
-      if (limbInfo.action === LimbAction.none) {
-         limbInfo.action = LimbAction.block;
-         limbInfo.currentActionElapsedTicks = 0;
-         limbInfo.currentActionDurationTicks = attackInfo.attackTimings.blockTimeTicks;
-         limbInfo.currentActionRate = 1;
+      const limb = inventoryUseComponent.getLimbInfoByInventoryName(itemInventoryName);
+      if (limb.action === LimbAction.none) {
+         limb.action = LimbAction.engageBlock;
+         limb.currentActionElapsedTicks = 0;
+         limb.currentActionDurationTicks = attackInfo.attackTimings.blockTimeTicks;
+         limb.currentActionRate = 1;
 
-         sendItemUsePacket();
+         sendStartItemUsePacket();
          return;
       } else {
          attackBufferTime = INPUT_COYOTE_TIME;
@@ -782,7 +786,8 @@ const onItemRightClickDown = (itemType: ItemType, itemInventoryName: InventoryNa
             break;
          }
 
-         if (limbInfo.action === LimbAction.none) {
+         const limb = inventoryUseComponent.getLimbInfoByInventoryName(itemInventoryName);
+         if (limb.action === LimbAction.none) {
             const itemInfo = ITEM_INFO_RECORD[itemType] as ConsumableItemInfo;
             let action: LimbAction;
             switch (itemInfo.consumableItemCategory) {
@@ -796,8 +801,8 @@ const onItemRightClickDown = (itemType: ItemType, itemInventoryName: InventoryNa
                }
             }
                
-            limbInfo.action = action;
-            limbInfo.lastEatTicks = Board.serverTicks;
+            limb.action = action;
+            limb.lastEatTicks = Board.serverTicks;
 
             sendStartItemUsePacket();
             // @Incomplete
@@ -814,8 +819,9 @@ const onItemRightClickDown = (itemType: ItemType, itemInventoryName: InventoryNa
       case "crossbow": {
          if (!definiteGameState.hotbarCrossbowLoadProgressRecord.hasOwnProperty(itemSlot) || definiteGameState.hotbarCrossbowLoadProgressRecord[itemSlot]! < 1) {
             // Start loading crossbow
-            limbInfo.action = LimbAction.loadCrossbow;
-            limbInfo.lastCrossbowLoadTicks = Board.serverTicks;
+            const limb = inventoryUseComponent.getLimbInfoByInventoryName(itemInventoryName);
+            limb.action = LimbAction.loadCrossbow;
+            limb.lastCrossbowLoadTicks = Board.serverTicks;
             playSound("crossbow-load.mp3", 0.4, 1, transformComponent.position);
          } else {
             // Fire crossbow
@@ -825,30 +831,38 @@ const onItemRightClickDown = (itemType: ItemType, itemInventoryName: InventoryNa
          break;
       }
       case "bow": {
-         limbInfo.action = LimbAction.chargeBow;
-         limbInfo.lastBowChargeTicks = Board.serverTicks;
+         for (let i = 0; i < 2; i++) {
+            const limb = inventoryUseComponent.getLimbInfoByInventoryName(i === 0 ? InventoryName.hotbar : InventoryName.offhand);
+            limb.action = LimbAction.chargeBow;
+            limb.currentActionElapsedTicks = 0;
+            limb.currentActionDurationTicks = (ITEM_INFO_RECORD[itemType] as BowItemInfo).shotChargeTimeTicks;
+            limb.currentActionRate = 1;
+         }
          
+         sendStartItemUsePacket();
          playSound("bow-charge.mp3", 0.4, 1, transformComponent.position);
 
          break;
       }
       case "spear": {
-         if (limbInfo.action === LimbAction.none) {
-            limbInfo.action = LimbAction.chargeSpear;
-            limbInfo.currentActionElapsedTicks = 0;
-            limbInfo.currentActionDurationTicks = 3 * Settings.TPS;
-            limbInfo.currentActionRate = 1;
+         const limb = inventoryUseComponent.getLimbInfoByInventoryName(itemInventoryName);
+         if (limb.action === LimbAction.none) {
+            limb.action = LimbAction.chargeSpear;
+            limb.currentActionElapsedTicks = 0;
+            limb.currentActionDurationTicks = 3 * Settings.TPS;
+            limb.currentActionRate = 1;
          }
          break;
       }
       case "battleaxe": {
          // If an axe is already thrown, don't throw another
-         if (limbInfo.thrownBattleaxeItemID !== -1) {
+         const limb = inventoryUseComponent.getLimbInfoByInventoryName(itemInventoryName);
+         if (limb.thrownBattleaxeItemID !== -1) {
             break;
          }
 
-         limbInfo.action = LimbAction.chargeBattleaxe;
-         limbInfo.lastBattleaxeChargeTicks = Board.serverTicks;
+         limb.action = LimbAction.chargeBattleaxe;
+         limb.lastBattleaxeChargeTicks = Board.serverTicks;
          break;
       }
       case "glove":
@@ -861,8 +875,10 @@ const onItemRightClickDown = (itemType: ItemType, itemInventoryName: InventoryNa
          const placeInfo = calculateStructurePlaceInfo(transformComponent.position, transformComponent.rotation, structureType, Board.getWorldInfo());
          
          if (placeInfo.isValid) {
+            const limb = inventoryUseComponent.getLimbInfoByInventoryName(itemInventoryName);
+            limb.lastAttackTicks = Board.serverTicks;
+
             sendItemUsePacket();
-            limbInfo.lastAttackTicks = Board.serverTicks;
          }
 
          break;
@@ -918,7 +934,12 @@ const onItemRightClickUp = (item: Item, inventoryName: InventoryName): void => {
             }
          }
 
-         limb.action = LimbAction.none;
+         for (let i = 0; i < 2; i++) {
+            const limb = inventoryUseComponent.getLimbInfoByInventoryName(i === 0 ? InventoryName.hotbar : InventoryName.offhand);
+            limb.action = LimbAction.none;
+            limb.currentActionElapsedTicks = 0;
+            limb.currentActionDurationTicks = 0;
+         }
          
          sendItemUsePacket();
          // @Incomplete: Don't play if bow didn't actually fire an arrow

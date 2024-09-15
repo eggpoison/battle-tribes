@@ -299,6 +299,7 @@ const getItemDamageTypes = (item: Item | null): ReadonlyArray<DamageType> => {
       case "healing":
       case "material":
       case "placeable":
+      case "shield":
       case "armour": return [DamageType.basic];
       case "axe": return [DamageType.axe];
       case "battleaxe": return [DamageType.axe, DamageType.weapon];

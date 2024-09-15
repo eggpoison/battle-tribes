@@ -19,6 +19,19 @@ interface EntityPairCollisionInfo {
 
 type CollisionPairs = Record<number, Record<number, EntityPairCollisionInfo | null>>;
 
+// @Cleanup @Incomplete
+// const entity1 = Board.entityRecord[entity1ID]!;
+// const entity2 = Board.entityRecord[entity2ID]!;
+// collide(entity1, entity2, hitbox, otherHitbox);
+// collide(entity2, entity1, otherHitbox, hitbox);
+// } else {
+//    // @Hack
+//    if (otherTransformComponent.collisionBit === COLLISION_BITS.plants) {
+//       latencyGameState.lastPlantCollisionTicks = Board.serverTicks;
+//    }
+//    break;
+// }
+
 const resolveHardCollision = (entity: Entity, pushInfo: CollisionPushInfo): void => {
    const transformComponent = entity.getServerComponent(ServerComponentType.transform);
    
@@ -52,8 +65,8 @@ const resolveSoftCollision = (entity: EntityID, pushingHitbox: Hitbox, pushInfo:
    physicsComponent.externalVelocity.y += pushForce * Math.cos(pushInfo.direction);
 }
 
-export function collide(entity: Entity, collidingEntity: Entity, pushedHitbox: Hitbox, pushingHitbox: Hitbox): void {
-   if (entity.hasServerComponent(ServerComponentType.physics)) {
+export function collide(entity: Entity, collidingEntity: Entity, pushedHitbox: Hitbox, pushingHitbox: Hitbox, isPushed: boolean): void {
+   if (isPushed && entity.hasServerComponent(ServerComponentType.physics)) {
       const pushInfo = getCollisionPushInfo(pushedHitbox.box, pushingHitbox.box);
       if (pushingHitbox.collisionType === HitboxCollisionType.hard) {
          resolveHardCollision(entity, pushInfo);
@@ -144,69 +157,7 @@ const collectEntityCollisionsWithChunk = (collisionPairs: CollisionPairs, entity
             collisionPairs[minID] = {};
          }
          collisionPairs[minID][maxID] = collisionInfo;
-
-         // const collisionInfo = collisionPairs[minID][maxID];
-         
-         // const entity1HitboxIndex = collisionNum & 0xFF;
-         // const entity2HitboxIndex = (collisionNum & 0xFF00) >> 8;
-
-         // const transformComponent1 = TransformComponentArray.getComponent(entity1ID);
-         // const hitbox = transformComponent1.hitboxes[entity1HitboxIndex];
-
-         // const transformComponent2 = TransformComponentArray.getComponent(entity2ID);
-         // const otherHitbox = transformComponent2.hitboxes[entity2HitboxIndex];
-
-         // if (entity1ID > entity2ID) {
-         //    collisionInfo.minEntityInvolvedHitboxes.push(otherHitbox);
-         //    collisionInfo.maxEntityInvolvedHitboxes.push(hitbox);
-         // } else {
-         //    collisionInfo.minEntityInvolvedHitboxes.push(hitbox);
-         //    collisionInfo.maxEntityInvolvedHitboxes.push(otherHitbox);
-         // }
-
-         // // @Hack @Temporary @Incomplete?
-         // if (!transformComponent1.collidingEntities.includes(entity2)) {
-         //    transformComponent1.collidingEntities.push(entity2);
-         // }
-         
-         // const entity1 = Board.entityRecord[entity1ID]!;
-         // const entity2 = Board.entityRecord[entity2ID]!;
-         // collide(entity1, entity2, hitbox, otherHitbox);
-         // collide(entity2, entity1, otherHitbox, hitbox);
-         // } else {
-         //    // @Hack
-         //    if (otherTransformComponent.collisionBit === COLLISION_BITS.plants) {
-         //       latencyGameState.lastPlantCollisionTicks = Board.serverTicks;
-         //    }
-         //    break;
-         // }
       }
-
-      // const entity2 = Board.entityRecord[entity2ID]!;
-      // const otherTransformComponent = entity2.getServerComponent(ServerComponentType.transform);
-
-      // for (const hitbox of transformComponent.hitboxes) {
-      //    const box = hitbox.box;
-      //    for (const otherHitbox of otherTransformComponent.hitboxes) {
-      //       const otherBox = otherHitbox.box;
-      //       if (box.isColliding(otherBox)) {
-      //          if (!transformComponent.collidingEntities.includes(entity2)) {
-      //             transformComponent.collidingEntities.push(entity2);
-      //          }
-               
-      //          if ((otherTransformComponent.collisionMask & transformComponent.collisionBit) !== 0 && (transformComponent.collisionMask & otherTransformComponent.collisionBit) !== 0) {
-      //             collide(entity1, entity2, hitbox, otherHitbox);
-      //             collide(entity2, entity1, otherHitbox, hitbox);
-      //          } else {
-      //             // @Hack
-      //             if (otherTransformComponent.collisionBit === COLLISION_BITS.plants) {
-      //                latencyGameState.lastPlantCollisionTicks = Board.serverTicks;
-      //             }
-      //             break;
-      //          }
-      //       }
-      //    }
-      // }
    }
 }
 
@@ -223,17 +174,13 @@ const resolveCollisionPairs = (collisionPairs: CollisionPairs, onlyResolvePlayer
 
          const entity1 = Board.entityRecord[entity1ID]!;
          const entity2 = Board.entityRecord[entity2ID]!;
-         
+
          for (let i = 0; i < collisionInfo.minEntityInvolvedHitboxes.length; i++) {
             const entity1Hitbox = collisionInfo.minEntityInvolvedHitboxes[i];
             const entity2Hitbox = collisionInfo.maxEntityInvolvedHitboxes[i];
 
-            if (!onlyResolvePlayerCollisions || entity1ID === Player.instance!.id) {
-               collide(entity1, entity2, entity1Hitbox, entity2Hitbox);
-            }
-            if (!onlyResolvePlayerCollisions || entity2ID === Player.instance!.id) {
-               collide(entity2, entity1, entity2Hitbox, entity1Hitbox);
-            }
+            collide(entity1, entity2, entity1Hitbox, entity2Hitbox, !onlyResolvePlayerCollisions || entity1ID === Player.instance!.id);
+            collide(entity2, entity1, entity2Hitbox, entity1Hitbox, !onlyResolvePlayerCollisions || entity2ID === Player.instance!.id);
          }
       }
    }

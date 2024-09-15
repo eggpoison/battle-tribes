@@ -1,4 +1,4 @@
-import { BlockBox, BoxFromType, BoxType, DamageBox, GenericCollisionBoxInfo, GenericCollisionBoxType } from "battletribes-shared/boxes/boxes";
+import { BlockBox, BlockType, BoxFromType, BoxType, DamageBox, GenericCollisionBoxInfo, GenericCollisionBoxType } from "battletribes-shared/boxes/boxes";
 import { LimbInfo } from "./components/InventoryUseComponent";
 import { EntityID } from "battletribes-shared/entities";
 import { InventoryName } from "battletribes-shared/items/items";
@@ -28,6 +28,7 @@ export class ServerDamageBox<T extends BoxType = BoxType> extends GenericCollisi
 }
 export class ServerBlockBox<T extends BoxType = BoxType> extends GenericCollisionBox<T> implements BlockBox<T> {
    public hasBlocked = false;
+   public blockType = BlockType.partial;
 }
 
 export function getCollisionBoxType(collisionBox: ServerDamageBox | ServerBlockBox): GenericCollisionBoxType {

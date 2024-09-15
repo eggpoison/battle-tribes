@@ -2,16 +2,16 @@ import { ServerComponentType } from "battletribes-shared/components";
 import { EntityID, LimbAction } from "battletribes-shared/entities";
 import { Settings } from "battletribes-shared/settings";
 import { ComponentArray } from "./ComponentArray";
-import { getItemAttackInfo, Inventory, InventoryName, Item } from "battletribes-shared/items/items";
+import { getItemAttackInfo, Inventory, InventoryName, Item, ITEM_TYPE_RECORD } from "battletribes-shared/items/items";
 import { Packet } from "battletribes-shared/packets";
 import { getInventory, InventoryComponentArray } from "./InventoryComponent";
 import CircularBox from "battletribes-shared/boxes/CircularBox";
 import { lerp, Point } from "battletribes-shared/utils";
 import { DamageBoxComponentArray } from "./DamageBoxComponent";
 import { ServerBlockBox, ServerDamageBox } from "../boxes";
-import { assertBoxIsRectangular, updateBox } from "battletribes-shared/boxes/boxes";
+import { assertBoxIsRectangular, BlockType, updateBox } from "battletribes-shared/boxes/boxes";
 import { TransformComponentArray } from "./TransformComponent";
-import { AttackPatternInfo, BLOCKING_LIMB_STATE, copyAttackPattern, DEFAULT_ATTACK_PATTERN, LimbState } from "battletribes-shared/attack-patterns";
+import { AttackPatternInfo, BLOCKING_LIMB_STATE, copyAttackPattern, DEFAULT_ATTACK_PATTERN, LimbState, SHIELD_BLOCKING_LIMB_STATE } from "battletribes-shared/attack-patterns";
 import { registerDirtyEntity } from "../server/player-clients";
 import RectangularBox from "battletribes-shared/boxes/RectangularBox";
 import { HealthComponentArray } from "./HealthComponent";
@@ -26,7 +26,6 @@ export interface InventoryUseComponentParams {
 export interface LimbInfo {
    readonly associatedInventory: Inventory;
    selectedItemSlot: number;
-   bowCooldownTicks: number;
    readonly spearWindupCooldowns: Partial<Record<number, number>>;
    readonly crossbowLoadProgressRecord: Partial<Record<number, number>>;
    foodEatingTimer: number;
@@ -100,7 +99,6 @@ export class InventoryUseComponent {
       const useInfo: LimbInfo = {
          associatedInventory: associatedInventory,
          selectedItemSlot: 1,
-         bowCooldownTicks: 0,
          spearWindupCooldowns: {},
          crossbowLoadProgressRecord: {},
          foodEatingTimer: 0,
@@ -236,6 +234,11 @@ export function onBlockBoxCollision(attacker: EntityID, victim: EntityID, blockB
 
       attackerLimb.limbDamageBox.isBlocked = true;
       attackerLimb.heldItemDamageBox.isBlocked = true;
+      // If the attack is blocked fully, just deactivate the attack boxes
+      if (blockBox.blockType === BlockType.full) {
+         attackerLimb.limbDamageBox.isActive = false;
+         attackerLimb.heldItemDamageBox.isActive = false;
+      }
 
       blockBox.hasBlocked = true;
 
@@ -279,12 +282,13 @@ function onTick(inventoryUseComponent: InventoryUseComponent, entity: EntityID):
       
       if (currentActionHasFinished(limb)) {
          switch (limb.action) {
-            // @Cleanup: Since the block action continues even past when its animation finishes, this will constantly run. when ideally it should only run once
-            case LimbAction.block: {
+            case LimbAction.engageBlock: {
+               const heldItem = getHeldItem(limb);
+
                limb.limbDamageBox.isActive = false;
                limb.blockBox.isActive = true;
+               limb.blockBox.blockType = heldItem !== null && ITEM_TYPE_RECORD[heldItem.type] === "shield" ? BlockType.full : BlockType.partial;
 
-               const heldItem = getHeldItem(limb);
                const heldItemAttackInfo = getItemAttackInfo(heldItem !== null ? heldItem.type : null);
                const damageBoxInfo = heldItemAttackInfo.heldItemDamageBoxInfo!;
                
@@ -295,6 +299,10 @@ function onTick(inventoryUseComponent: InventoryUseComponent, entity: EntityID):
                limb.blockBox.box.width = damageBoxInfo.width;
                limb.blockBox.box.height = damageBoxInfo.height;
                limb.blockBox.box.relativeRotation = damageBoxInfo.rotation;
+
+               limb.action = LimbAction.block;
+               limb.currentActionElapsedTicks = 0;
+               limb.currentActionDurationTicks = 0;
                   
                break;
             }
@@ -357,13 +365,10 @@ function onTick(inventoryUseComponent: InventoryUseComponent, entity: EntityID):
       // Update blocking damage box when blocking
       if (limb.action === LimbAction.block) {
          if (limb.currentActionElapsedTicks >= limb.currentActionDurationTicks) {
-            setLimbToState(entity, limb, BLOCKING_LIMB_STATE);
+            const heldItem = getHeldItem(limb);
+            const blockingState = heldItem !== null && ITEM_TYPE_RECORD[heldItem.type] === "shield" ? SHIELD_BLOCKING_LIMB_STATE : BLOCKING_LIMB_STATE;
+            setLimbToState(entity, limb, blockingState);
          }
-      }
-      
-      // Update bow cooldown
-      if (limb.bowCooldownTicks > 0) {
-         limb.bowCooldownTicks--;
       }
 
       // @Incomplete
@@ -395,7 +400,7 @@ function getDataLength(entity: EntityID): number {
 
    let lengthBytes = 2 * Float32Array.BYTES_PER_ELEMENT;
    for (const useInfo of inventoryUseComponent.limbInfos) {
-      lengthBytes += 4 * Float32Array.BYTES_PER_ELEMENT;
+      lengthBytes += 3 * Float32Array.BYTES_PER_ELEMENT;
       lengthBytes += Float32Array.BYTES_PER_ELEMENT;
       lengthBytes += 2 * Float32Array.BYTES_PER_ELEMENT * Object.keys(useInfo.spearWindupCooldowns).length;
       lengthBytes += getCrossbowLoadProgressRecordLength(useInfo);
@@ -417,7 +422,6 @@ function addDataToPacket(packet: Packet, entity: EntityID): void {
       packet.addNumber(limb.associatedInventory.name);
       packet.addNumber(limb.selectedItemSlot);
       packet.addNumber(limb.associatedInventory.itemSlots[limb.selectedItemSlot]?.type || -1)
-      packet.addNumber(limb.bowCooldownTicks);
 
       // @Cleanup: Copy and paste
       const spearWindupCooldownEntries = Object.entries(limb.spearWindupCooldowns).map(([a, b]) => [Number(a), b]) as Array<[number, number]>;

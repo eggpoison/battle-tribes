@@ -107,7 +107,7 @@ function onTick(damageBoxComponent: DamageBoxComponent, entity: EntityID): void 
       }
    }
 
-   // Look for block boxes which are colliding with 
+   // Look for block boxes which are colliding with
    for (const blockBox of damageBoxComponent.blockBoxes) {
       if (!blockBox.isActive) {
          continue;

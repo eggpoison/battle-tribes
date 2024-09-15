@@ -13,10 +13,10 @@ import { RenderPartOverlayGroup } from "./rendering/webgl/overlay-rendering";
 import { removeRenderable } from "./rendering/render-loop";
 import { getRandomPointInEntity } from "./entity-components/TransformComponent";
 import { RenderPart, RenderThing, thingIsRenderPart } from "./render-parts/render-parts";
-import { registerDirtyEntity } from "./rendering/render-part-matrices";
 import ServerComponent from "./entity-components/ServerComponent";
 import { createIdentityMatrix } from "./rendering/matrices";
 import { getEntityRenderLayer } from "./render-layers";
+import { registerDirtyEntity } from "./rendering/render-part-matrices";
 
 // Use prime numbers / 100 to ensure a decent distribution of different types of particles
 const HEALING_PARTICLE_AMOUNTS = [0.05, 0.37, 1.01];

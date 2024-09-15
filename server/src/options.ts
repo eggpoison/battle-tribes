@@ -12,6 +12,7 @@ const OPTIONS: Options = {
    spawnEntities: true,
    spawnTribes: false,
    generateRivers: true,
+   // @Temporary
    generateWalls: false,
    inBenchmarkMode: false,
    warp: false

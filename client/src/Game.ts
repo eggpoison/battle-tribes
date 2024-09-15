@@ -236,8 +236,6 @@ abstract class Game {
          
             createRiverSteppingStoneData(initialGameDataPacket.riverSteppingStones);
 
-            createUBOs();
-            
             console.log("initialising board",performance.now() - l);
             l = performance.now();
             preloadTextureAtlasImages();
@@ -264,6 +262,9 @@ abstract class Game {
             await createTextureAtlases();
             console.log("texture atlases",performance.now() - l);
             l = performance.now();
+            
+            // Done after creating texture atlases as the data from them is used in a ubo
+            createUBOs();
 
             // Create shaders
             createSolidTileShaders();

@@ -103,7 +103,6 @@ export function startChargingBow(player: EntityID, inventoryName: InventoryName)
    // Reset the cooldown so the bow doesn't fire immediately
    if (typeof bow !== "undefined") {
       const itemInfo = ITEM_INFO_RECORD[bow.type] as BowItemInfo;
-      useInfo.bowCooldownTicks = itemInfo.shotCooldownTicks;
       useInfo.lastBowChargeTicks = Board.ticks;
    }
    

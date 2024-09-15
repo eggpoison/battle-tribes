@@ -1,8 +1,8 @@
 import Entity from "../Entity";
-import { Matrix3x3, matrixMultiplyInPlace, overrideWithIdentityMatrix, overrideWithRotationMatrix } from "./matrices";
+import { Matrix3x3, matrixMultiplyInPlace, overrideWithRotationMatrix } from "./matrices";
 import { ServerComponentType } from "battletribes-shared/components";
 import { Settings } from "battletribes-shared/settings";
-import { renderPartIsTextured, RenderThing, thingIsRenderPart } from "../render-parts/render-parts";
+import { RenderThing } from "../render-parts/render-parts";
 import Board from "../Board";
 import { getEntityRenderLayer } from "../render-layers";
 import { renderLayerIsChunkRendered, updateChunkedEntityData, updateChunkRenderedEntity } from "./webgl/chunked-entity-rendering";
@@ -133,19 +133,18 @@ const calculateAndOverrideEntityModelMatrix = (entity: Entity): void => {
    translateMatrix(entity.modelMatrix, entity.renderPosition.x, entity.renderPosition.y);
 }
 
-// @Speed: this ends up being slows as fuck with all the property accesses and external functions
-// @Cleanup: Copy and paste. combine with entity function.
 const calculateAndOverrideRenderThingMatrix = (thing: RenderThing): void => {
    const matrix = thing.modelMatrix;
+   const flipMultiplier = (thing.flipX ? -1 : 1);
    
    // Scale
    const scale = thing.scale;
-   overrideWithScaleMatrix(matrix, scale * (thing.flipX ? -1 : 1), scale);
+   overrideWithScaleMatrix(matrix, scale * flipMultiplier, scale);
    
    // Rotation
    rotateMatrix(matrix, thing.rotation);
 
-   let tx = thing.offset.x;
+   let tx = thing.offset.x * flipMultiplier;
    let ty = thing.offset.y;
 
    // Shake
@@ -160,6 +159,8 @@ const calculateAndOverrideRenderThingMatrix = (thing: RenderThing): void => {
 }
 
 export function updateRenderPartMatrices(frameProgress: number): void {
+   // @Bug: I don't think this will account for cases where the game is updated less than 60 times a second.
+   // To fix: temporarily set Settings.TPS to like 10 or something and then fix the subsequent slideshow
    for (let i = 0; i < dirtyEntities.length; i++) {
       const entity = dirtyEntities[i];
       // @Temporary?
@@ -177,8 +178,6 @@ export function updateRenderPartMatrices(frameProgress: number): void {
          entity.opacityData = new Float32Array(numRenderThings);
          entity.modelMatrixData = new Float32Array(9 * numRenderThings);
       }
-      
-
       
       updateEntityRenderPosition(entity, frameProgress);
       calculateAndOverrideEntityModelMatrix(entity);
@@ -203,17 +202,13 @@ export function updateRenderPartMatrices(frameProgress: number): void {
       if (renderLayerIsChunkRendered(renderLayer)) {
          updateChunkRenderedEntity(entity, renderLayer);
       }
+
+      entity.isDirty = false;
    }
 
    // @Cleanup: this isn't to do with matrices, so should rename this file/function
    updateChunkedEntityData();
    
    // Reset dirty entities
-   // @Speed: Garbage collection. An individual entity rarely switches between being dirty/undirty
-   while (dirtyEntities.length > 0) {
-      const entity = dirtyEntities[0];
-      entity.isDirty = false;
-      // @Speed: this will be very slow. shifts the whole array down each time
-      dirtyEntities.splice(0, 1);
-   }
+   dirtyEntities.length = 0;
 }

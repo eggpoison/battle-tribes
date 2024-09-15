@@ -1,4 +1,4 @@
-import { AttackPatternInfo, AttackTimingsInfo, AXE_ATTACK_TIMINGS, DEFAULT_ATTACK_PATTERN, DEFAULT_ATTACK_TIMINGS, DEFAULT_ITEM_DAMAGE_BOX_INFO, LimbHeldItemDamageBoxInfo, PICKAXE_ATTACK_TIMINGS, SPEAR_ATTACK_PATTERN, SPEAR_ATTACK_TIMINGS, SPEAR_DAMAGE_BOX_INFO, SWORD_ATTACK_TIMINGS, SWORD_ITEM_DAMAGE_BOX_INFO, TOOL_ITEM_DAMAGE_BOX_INFO } from "../attack-patterns";
+import { AttackPatternInfo, AttackTimingsInfo, AXE_ATTACK_TIMINGS, DEFAULT_ATTACK_PATTERN, DEFAULT_ATTACK_TIMINGS, DEFAULT_ITEM_DAMAGE_BOX_INFO, LimbHeldItemDamageBoxInfo, PICKAXE_ATTACK_TIMINGS, SHIELD_BLOCKING_DAMAGE_BOX_INFO, SPEAR_ATTACK_PATTERN, SPEAR_ATTACK_TIMINGS, SPEAR_DAMAGE_BOX_INFO, SWORD_ATTACK_TIMINGS, SWORD_ITEM_DAMAGE_BOX_INFO, TOOL_ITEM_DAMAGE_BOX_INFO } from "../attack-patterns";
 import { EntityType } from "../entities";
 import { Settings } from "../settings";
 import { StructureType } from "../structures";
@@ -69,7 +69,8 @@ export const enum ItemType {
    wooden_fence,
    fertiliser,
    frostshaper,
-   stonecarvingTable
+   stonecarvingTable,
+   woodenShield
 }
 
 export const ItemTypeString: Record<ItemType, string> = {
@@ -138,7 +139,8 @@ export const ItemTypeString: Record<ItemType, string> = {
    [ItemType.wooden_fence]: "wooden_fence",
    [ItemType.fertiliser]: "fertiliser",
    [ItemType.frostshaper]: "frostshaper",
-   [ItemType.stonecarvingTable]: "stonecarving_table"
+   [ItemType.stonecarvingTable]: "stonecarving_table",
+   [ItemType.woodenShield]: "Wooden Shield"
 };
 
 const numItemTypes = Object.keys(ItemTypeString).length;
@@ -192,7 +194,7 @@ export interface SwordItemInfo extends ToolItemInfo {
 export interface BowItemInfo extends BaseItemInfo {
    readonly projectileDamage: number;
    readonly projectileKnockback: number;
-   readonly shotCooldownTicks: number;
+   readonly shotChargeTimeTicks: number;
    readonly projectileSpeed: number;
    /** The units of speed that the arrow's velocity gets decreased by each second */
    readonly airResistance: number;
@@ -243,6 +245,8 @@ export interface SpearItemInfo extends ToolItemInfo {}
 
 export interface BattleaxeItemInfo extends ToolItemInfo {}
 
+export interface ShieldItemInfo extends BaseItemInfo {}
+
 export interface ItemInfoRecord {
    material: MaterialItemInfo;
    healing: ConsumableItemInfo;
@@ -258,10 +262,11 @@ export interface ItemInfoRecord {
    hammer: HammerItemInfo;
    battleaxe: BattleaxeItemInfo;
    crossbow: CrossbowItemInfo;
+   shield: ShieldItemInfo;
 }
 
 export interface AttackInfo {
-   readonly attackPattern: AttackPatternInfo;
+   readonly attackPattern: AttackPatternInfo | null;
    readonly attackTimings: AttackTimingsInfo;
    readonly heldItemDamageBoxInfo: LimbHeldItemDamageBoxInfo | null;
 }
@@ -272,6 +277,7 @@ const UNARMED_ATTACK_INFO: AttackInfo = {
    heldItemDamageBoxInfo: null
 }
 
+/** If an entry is null, then that item category can't attack. */
 const ITEM_CATEGORY_ATTACK_INFO_RECORD: Record<keyof ItemInfoRecord, AttackInfo> = {
    material: {
       attackPattern: DEFAULT_ATTACK_PATTERN,
@@ -342,7 +348,19 @@ const ITEM_CATEGORY_ATTACK_INFO_RECORD: Record<keyof ItemInfoRecord, AttackInfo>
       attackPattern: DEFAULT_ATTACK_PATTERN,
       attackTimings: DEFAULT_ATTACK_TIMINGS,
       heldItemDamageBoxInfo: DEFAULT_ITEM_DAMAGE_BOX_INFO
-   }
+   },
+   shield: {
+      attackPattern: null,
+      attackTimings: {
+         windupTimeTicks: 0,
+         swingTimeTicks: 0,
+         returnTimeTicks: 0,
+         restTimeTicks: 0,
+         /** If null, then the attack cannot block. */
+         blockTimeTicks: Math.floor(0.2 * Settings.TPS)
+      },
+      heldItemDamageBoxInfo: SHIELD_BLOCKING_DAMAGE_BOX_INFO
+   },
 };
 
 export const ITEM_TYPE_RECORD = {
@@ -411,7 +429,8 @@ export const ITEM_TYPE_RECORD = {
    [ItemType.wooden_fence]: "placeable",
    [ItemType.fertiliser]: "material",
    [ItemType.frostshaper]: "placeable",
-   [ItemType.stonecarvingTable]: "placeable"
+   [ItemType.stonecarvingTable]: "placeable",
+   [ItemType.woodenShield]: "shield"
 } satisfies Record<ItemType, keyof ItemInfoRecord>;
 
 export type ItemInfo<T extends ItemType> = ItemInfoRecord[typeof ITEM_TYPE_RECORD[T]];
@@ -580,7 +599,7 @@ export const ITEM_INFO_RECORD = {
    [ItemType.wooden_bow]: {
       projectileDamage: 4,
       projectileKnockback: 150,
-      shotCooldownTicks: 1 * Settings.TPS,
+      shotChargeTimeTicks: 1 * Settings.TPS,
       projectileSpeed: 1100,
       airResistance: 400,
       level: 2
@@ -588,7 +607,7 @@ export const ITEM_INFO_RECORD = {
    [ItemType.reinforced_bow]: {
       projectileDamage: 6,
       projectileKnockback: 200,
-      shotCooldownTicks: 1 * Settings.TPS,
+      shotChargeTimeTicks: 1 * Settings.TPS,
       projectileSpeed: 1500,
       airResistance: 300,
       level: 2.5
@@ -596,7 +615,7 @@ export const ITEM_INFO_RECORD = {
    [ItemType.ice_bow]: {
       projectileDamage: 0,
       projectileKnockback: 0,
-      shotCooldownTicks: 1.25 * Settings.TPS,
+      shotChargeTimeTicks: 1.25 * Settings.TPS,
       projectileSpeed: 1100,
       airResistance: 400,
       level: 2.5
@@ -604,7 +623,7 @@ export const ITEM_INFO_RECORD = {
    [ItemType.crossbow]: {
       projectileDamage: 6,
       projectileKnockback: 200,
-      shotCooldownTicks: 1 * Settings.TPS,
+      shotChargeTimeTicks: 1 * Settings.TPS,
       projectileSpeed: 1500,
       airResistance: 300,
       level: 2.5
@@ -773,7 +792,8 @@ export const ITEM_INFO_RECORD = {
    [ItemType.stonecarvingTable]: {
       stackSize: 99,
       entityType: EntityType.stonecarvingTable
-   }
+   },
+   [ItemType.woodenShield]: {}
 } satisfies { [T in ItemType]: ItemInfo<T> };
 
 // Some typescript wizardry

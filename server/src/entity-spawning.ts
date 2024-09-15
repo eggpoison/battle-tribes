@@ -150,36 +150,39 @@ const SPAWN_INFOS: ReadonlyArray<EntitySpawnInfo> = [
       minSpawnDistance: 150,
       usesSpawnDistribution: false
    },
-   {
-      entityType: EntityType.slimewisp,
-      spawnRate: 0.2,
-      maxDensity: 0.3,
-      minPackSize: 1,
-      maxPackSize: 1,
-      onlySpawnsInNight: false,
-      minSpawnDistance: 50,
-      usesSpawnDistribution: false
-   },
-   {
-      entityType: EntityType.krumblid,
-      spawnRate: 0.005,
-      maxDensity: 0.015,
-      minPackSize: 1,
-      maxPackSize: 1,
-      onlySpawnsInNight: false,
-      minSpawnDistance: 150,
-      usesSpawnDistribution: false
-   },
-   {
-      entityType: EntityType.frozenYeti,
-      spawnRate: 0.004,
-      maxDensity: 0.008,
-      minPackSize: 1,
-      maxPackSize: 1,
-      onlySpawnsInNight: false,
-      minSpawnDistance: 150,
-      usesSpawnDistribution: false
-   },
+   // @Temporary
+   // {
+   //    entityType: EntityType.slimewisp,
+   //    spawnRate: 0.2,
+   //    maxDensity: 0.3,
+   //    minPackSize: 1,
+   //    maxPackSize: 1,
+   //    onlySpawnsInNight: false,
+   //    minSpawnDistance: 50,
+   //    usesSpawnDistribution: false
+   // },
+   // @Temporary
+   // {
+   //    entityType: EntityType.krumblid,
+   //    spawnRate: 0.005,
+   //    maxDensity: 0.015,
+   //    minPackSize: 1,
+   //    maxPackSize: 1,
+   //    onlySpawnsInNight: false,
+   //    minSpawnDistance: 150,
+   //    usesSpawnDistribution: false
+   // },
+   // @Temporary
+   // {
+   //    entityType: EntityType.frozenYeti,
+   //    spawnRate: 0.004,
+   //    maxDensity: 0.008,
+   //    minPackSize: 1,
+   //    maxPackSize: 1,
+   //    onlySpawnsInNight: false,
+   //    minSpawnDistance: 150,
+   //    usesSpawnDistribution: false
+   // },
    {
       entityType: EntityType.fish,
       spawnRate: 0.015,

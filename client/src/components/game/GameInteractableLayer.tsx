@@ -185,7 +185,7 @@ export function updatePlayerItems(): void {
 
    // @Incomplete: Double-check there isn't a tick immediately after depressing the button where this hasn't registered in the limb yet
    // If blocking but not right clicking, return to rest
-   if (hotbarLimb.action === LimbAction.block && !rightMouseButtonIsPressed) {
+   if (1 + 1 === 3 && hotbarLimb.action === LimbAction.block && !rightMouseButtonIsPressed) {
       const attackInfo = getItemAttackInfo(hotbarLimb.heldItemType);
       hotbarLimb.action = LimbAction.returnBlockToRest;
       hotbarLimb.currentActionElapsedTicks = 0;
@@ -1071,8 +1071,7 @@ const GameInteractableLayer = () => {
    }, []);
 
    return <>
-      {/* @Hack: mousedown and mouseup events shouldn't be imported */}
-      <div id="game-interactable-layer" onMouseMove={onMouseMove} onMouseDown={onGameMouseDown} onMouseUp={onGameMouseUp} onContextMenu={onContextMenu}></div>
+      <div id="game-interactable-layer" draggable={false} onMouseMove={onMouseMove} onMouseDown={onGameMouseDown} onMouseUp={onGameMouseUp} onContextMenu={onContextMenu}></div>
       
       <AttackChargeBar mouseX={mouseX} mouseY={mouseY} chargeElapsedTicks={chargeElapsedTicks} chargeDuration={chargeDuration} />
    </>

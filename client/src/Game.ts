@@ -61,6 +61,7 @@ import { updateEntity } from "./entity-components/ComponentArray";
 import { resolveEntityCollisions, resolvePlayerCollisions } from "./collision";
 import { preloadTextureAtlasImages } from "./texture-atlases/texture-atlas-stitching";
 import { updatePlayerMovement, updatePlayerItems } from "./components/game/GameInteractableLayer";
+import { refreshChunkedEntityRenderingBuffers } from "./rendering/webgl/chunked-entity-rendering";
 
 // @Cleanup: remove.
 let _frameProgress = Number.EPSILON;
@@ -405,6 +406,7 @@ abstract class Game {
       renderHealingBeams();
 
       updateRenderPartMatrices(frameProgress);
+      refreshChunkedEntityRenderingBuffers();
 
       const visibleRiverRenderChunks = calculateVisibleRiverInfo();
       resetRenderOrder();

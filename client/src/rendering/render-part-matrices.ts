@@ -5,7 +5,7 @@ import { Settings } from "battletribes-shared/settings";
 import { RenderThing } from "../render-parts/render-parts";
 import Board from "../Board";
 import { getEntityRenderLayer } from "../render-layers";
-import { renderLayerIsChunkRendered, updateChunkedEntityData, updateChunkRenderedEntity } from "./webgl/chunked-entity-rendering";
+import { renderLayerIsChunkRendered, refreshChunkedEntityRenderingBuffers, updateChunkRenderedEntity } from "./webgl/chunked-entity-rendering";
 
 let dirtyEntities = new Array<Entity>();
 
@@ -170,15 +170,6 @@ export function updateRenderPartMatrices(frameProgress: number): void {
       
       const numRenderThings = entity.allRenderThings.length;
       
-      // If the entity has added or removed render parts, recreate the data arrays
-      if (numRenderThings !== entity.depthData.length) {
-         entity.depthData = new Float32Array(numRenderThings);
-         entity.textureArrayIndexData = new Float32Array(numRenderThings);
-         entity.tintData = new Float32Array(3 * numRenderThings);
-         entity.opacityData = new Float32Array(numRenderThings);
-         entity.modelMatrixData = new Float32Array(9 * numRenderThings);
-      }
-      
       updateEntityRenderPosition(entity, frameProgress);
       calculateAndOverrideEntityModelMatrix(entity);
 
@@ -206,9 +197,6 @@ export function updateRenderPartMatrices(frameProgress: number): void {
       entity.isDirty = false;
    }
 
-   // @Cleanup: this isn't to do with matrices, so should rename this file/function
-   updateChunkedEntityData();
-   
    // Reset dirty entities
    dirtyEntities.length = 0;
 }

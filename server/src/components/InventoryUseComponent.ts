@@ -9,7 +9,7 @@ import CircularBox from "battletribes-shared/boxes/CircularBox";
 import { lerp, Point } from "battletribes-shared/utils";
 import { DamageBoxComponentArray } from "./DamageBoxComponent";
 import { ServerBlockBox, ServerDamageBox } from "../boxes";
-import { assertBoxIsRectangular, BlockType, updateBox } from "battletribes-shared/boxes/boxes";
+import { assertBoxIsRectangular, BlockBox, BlockType, updateBox } from "battletribes-shared/boxes/boxes";
 import { TransformComponentArray } from "./TransformComponent";
 import { AttackPatternInfo, BLOCKING_LIMB_STATE, copyAttackPattern, DEFAULT_ATTACK_PATTERN, LimbState, SHIELD_BLOCKING_LIMB_STATE } from "battletribes-shared/attack-patterns";
 import { registerDirtyEntity } from "../server/player-clients";
@@ -17,6 +17,7 @@ import RectangularBox from "battletribes-shared/boxes/RectangularBox";
 import { HealthComponentArray } from "./HealthComponent";
 import { attemptAttack } from "../entities/tribes/limb-use";
 import Board from "../Board";
+import { ProjectileComponentArray } from "./ProjectileComponent";
 
 export interface InventoryUseComponentParams {
    usedInventoryNames: Array<InventoryName>;
@@ -222,31 +223,38 @@ const setLimbToState = (entity: EntityID, limbInfo: LimbInfo, state: LimbState):
    setLimb(entity, limbInfo, state.direction, state.extraOffset, state.rotation, state.extraOffsetX, state.extraOffsetY);
 }
 
-export function onBlockBoxCollision(attacker: EntityID, victim: EntityID, blockBoxLimb: LimbInfo, blockBox: ServerBlockBox, collidingDamageBox: ServerDamageBox): void {
-   // Attack is blocked if the wrapper is a damage box
-   if (collidingDamageBox !== null) {
-      const victimInventoryUseComponent = InventoryUseComponentArray.getComponent(victim);
-      const attackerLimb = victimInventoryUseComponent.getLimbInfo(collidingDamageBox.associatedLimbInventoryName);
+export function onBlockBoxCollisionWithDamageBox(victim: EntityID, blockBoxLimb: LimbInfo, blockBox: ServerBlockBox, collidingDamageBox: ServerDamageBox): void {
+   const victimInventoryUseComponent = InventoryUseComponentArray.getComponent(victim);
+   const attackerLimb = victimInventoryUseComponent.getLimbInfo(collidingDamageBox.associatedLimbInventoryName);
 
-      // Pause the attack for a brief period
-      attackerLimb.currentActionPauseTicksRemaining = Math.floor(Settings.TPS / 15);
-      attackerLimb.currentActionRate = 0.4;
+   // Pause the attack for a brief period
+   attackerLimb.currentActionPauseTicksRemaining = Math.floor(Settings.TPS / 15);
+   attackerLimb.currentActionRate = 0.4;
 
-      attackerLimb.limbDamageBox.isBlocked = true;
-      attackerLimb.heldItemDamageBox.isBlocked = true;
-      // If the attack is blocked fully, just deactivate the attack boxes
-      if (blockBox.blockType === BlockType.full) {
-         attackerLimb.limbDamageBox.isActive = false;
-         attackerLimb.heldItemDamageBox.isActive = false;
-      }
-
-      blockBox.hasBlocked = true;
-
-      attackerLimb.lastBlockTick = Board.ticks;
-      attackerLimb.blockPositionX = collidingDamageBox.box.position.x;
-      attackerLimb.blockPositionY = collidingDamageBox.box.position.y;
-      registerDirtyEntity(victim);
+   attackerLimb.limbDamageBox.isBlocked = true;
+   attackerLimb.heldItemDamageBox.isBlocked = true;
+   // If the attack is blocked fully, just deactivate the attack boxes
+   if (blockBox.blockType === BlockType.full) {
+      attackerLimb.limbDamageBox.isActive = false;
+      attackerLimb.heldItemDamageBox.isActive = false;
    }
+
+   blockBox.hasBlocked = true;
+
+   blockBoxLimb.lastBlockTick = Board.ticks;
+   blockBoxLimb.blockPositionX = blockBox.box.position.x;
+   blockBoxLimb.blockPositionY = blockBox.box.position.y;
+   registerDirtyEntity(victim);
+}
+
+export function onBlockBoxCollisionWithProjectile(projectile: EntityID, blockBoxLimb: LimbInfo, blockBox: ServerBlockBox): void {
+   const projectileComponent = ProjectileComponentArray.getComponent(projectile);
+   projectileComponent.isBlocked = true;
+
+   blockBox.hasBlocked = true;
+   blockBoxLimb.lastBlockTick = Board.ticks;
+   blockBoxLimb.blockPositionX = blockBox.box.position.x;
+   blockBoxLimb.blockPositionY = blockBox.box.position.y;
 }
 
 export function onDamageBoxCollision(attacker: EntityID, victim: EntityID, limb: LimbInfo): void {

@@ -1,13 +1,14 @@
 import { ServerComponentType } from "battletribes-shared/components";
 import { ComponentArray } from "./ComponentArray";
-import { EntityID, LimbAction } from "battletribes-shared/entities";
+import { EntityID, EntityType, EntityTypeString, LimbAction } from "battletribes-shared/entities";
 import { Packet } from "battletribes-shared/packets";
 import { boxIsCircular } from "battletribes-shared/boxes/boxes";
 import { getBoxesCollidingEntities } from "battletribes-shared/hitbox-collision";
 import Board from "../Board";
 import { ServerBlockBox, ServerDamageBox } from "../boxes";
-import { InventoryUseComponentArray, onBlockBoxCollision, onDamageBoxCollision } from "./InventoryUseComponent";
+import { InventoryUseComponentArray, onBlockBoxCollisionWithDamageBox, onBlockBoxCollisionWithProjectile, onDamageBoxCollision } from "./InventoryUseComponent";
 import { Settings } from "battletribes-shared/settings";
+import { ProjectileComponentArray } from "./ProjectileComponent";
 
 export interface DamageBoxComponentParams {}
 
@@ -107,7 +108,7 @@ function onTick(damageBoxComponent: DamageBoxComponent, entity: EntityID): void 
       }
    }
 
-   // Look for block boxes which are colliding with
+   // For each block box, look for damage boxes or projectiles to block
    for (const blockBox of damageBoxComponent.blockBoxes) {
       if (!blockBox.isActive) {
          continue;
@@ -122,12 +123,32 @@ function onTick(damageBoxComponent: DamageBoxComponent, entity: EntityID): void 
       const collisionInfo = getCollidingCollisionBox(entity, blockBox);
       if (collisionInfo !== null) {
          if (blockBox.collidingBox !== collisionInfo.collidingDamageBox) {
-            onBlockBoxCollision(entity, collisionInfo.collidingEntity, limbInfo, blockBox, collisionInfo.collidingDamageBox);
+            onBlockBoxCollisionWithDamageBox(collisionInfo.collidingEntity, limbInfo, blockBox, collisionInfo.collidingDamageBox);
          }
 
          blockBox.collidingBox = collisionInfo.collidingDamageBox;
       } else {
          blockBox.collidingBox = null;
+      }
+
+      // Look for projectiles to block
+      const collidingEntities = getBoxesCollidingEntities(Board.getWorldInfo(), [blockBox]);
+      let hasBlockedProjectile = false;
+      for (let i = 0; i < collidingEntities.length; i++) {
+         const collidingEntity = collidingEntities[i];
+         if (!ProjectileComponentArray.hasComponent(collidingEntity)) {
+            continue;
+         }
+         
+         if (collidingEntity !== blockBox.collidingEntity) {
+            onBlockBoxCollisionWithProjectile(collidingEntity, limbInfo, blockBox);
+         }
+         blockBox.collidingEntity = collidingEntity;
+         hasBlockedProjectile = true;
+      }
+
+      if (!hasBlockedProjectile) {
+         blockBox.collidingEntity = null;
       }
    }
 }

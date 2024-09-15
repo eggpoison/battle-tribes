@@ -17,6 +17,7 @@ const ARROW_DESTROY_DISTANCE = Math.sqrt(Math.pow(ARROW_WIDTH / 2, 2) + Math.pow
 
 export class ProjectileComponent {
    public readonly owner: EntityID;
+   public isBlocked = false;
 
    constructor(params: ProjectileComponentParams) {
       this.owner = params.owner;

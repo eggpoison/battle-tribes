@@ -170,6 +170,7 @@ const getFreeSpaceInChunk = (chunkData: ChunkData, renderLayer: ChunkedRenderLay
 const registerBufferChange = (renderLayer: ChunkedRenderLayer, chunkIdx: number, firstRenderPartIdx: number, lastRenderPartIdx: number): void => {
    const renderLayerModifyInfo = modifiedChunkIndicesArray[renderLayer];
    renderLayerModifyInfo.modifiedIndices.add(chunkIdx);
+   // @Speed: This function gets called a lot, but the place which uses this data gets called relatively infrequently. So we can remove this check and transfer it to the refresh function.
    if (typeof renderLayerModifyInfo.modifyInfoRecord[chunkIdx] === "undefined") {
       renderLayerModifyInfo.modifyInfoRecord[chunkIdx] = {
          firstModifiedRenderPartIdx: firstRenderPartIdx,
@@ -255,7 +256,7 @@ export function updateChunkRenderedEntity(entity: Entity, renderLayer: ChunkedRe
    setEntityInVertexData(entity, chunkData.vertexData, chunkData.indexData, renderPartIdx);
 }
 
-export function updateChunkedEntityData(): void {
+export function refreshChunkedEntityRenderingBuffers(): void {
    for (let renderLayer = 0; renderLayer < modifiedChunkIndicesArray.length; renderLayer++) {
       const renderLayerModifyInfo = modifiedChunkIndicesArray[renderLayer];
       if (renderLayerModifyInfo.modifiedIndices.size === 0) {
@@ -277,8 +278,6 @@ export function updateChunkedEntityData(): void {
          gl.bindVertexArray(chunkData.vao);
          gl.bindBuffer(gl.ARRAY_BUFFER, chunkData.vertexBuffer);
          gl.bufferSubData(gl.ARRAY_BUFFER, dstByteOffset, chunkData.vertexData, srcOffset, length);
-
-         // gl.bufferSubData(gl.ARRAY_BUFFER, 0, chunkData.vertexData);
       }
 
       renderLayerModifyInfo.modifiedIndices.clear();

@@ -1,10 +1,14 @@
 import { Settings } from "./settings";
+import { lerp } from "./utils";
 
 export const enum AttackVars {
    MAX_EXTRA_ATTACK_RANGE = 24,
    // The speed needed to have the max attack range
    MAX_EXTRA_ATTACK_RANGE_SPEED = 300,
-   BOW_REST_TIME_TICKS = (Settings.TPS * 0.25) | 0
+   BOW_REST_TIME_TICKS = (Settings.TPS * 0.25) | 0,
+   // Number of ticks into a swing that the attack can still be feigned
+   FEIGN_SWING_TICKS_LEEWAY = (Settings.TPS * 0.1) | 0,
+   FEIGN_TIME_TICKS = (Settings.TPS * 0.1) | 0
 }
 
 export interface LimbState {
@@ -183,10 +187,10 @@ export const SWORD_ITEM_DAMAGE_BOX_INFO: LimbHeldItemDamageBoxInfo = {
 
 export const SHIELD_BLOCKING_DAMAGE_BOX_INFO: LimbHeldItemDamageBoxInfo = {
    width: 52,
-   height: 16,
+   height: 24,
    rotation: Math.PI * 0.25,
    offsetX: 8,
-   offsetY: 8,
+   offsetY: 10,
    showLargeTexture: true
 };
 
@@ -208,21 +212,22 @@ export const SPEAR_DAMAGE_BOX_INFO: LimbHeldItemDamageBoxInfo = {
    showLargeTexture: true
 };
 
-export function copyAttackPattern(attackPattern: AttackPatternInfo): AttackPatternInfo {
+export function copyLimbState(limbState: LimbState): LimbState {
    return {
-      windedBack: {
-         direction: attackPattern.windedBack.direction,
-         extraOffset: attackPattern.windedBack.extraOffset,
-         rotation: attackPattern.windedBack.rotation,
-         extraOffsetX: attackPattern.windedBack.extraOffsetX,
-         extraOffsetY: attackPattern.windedBack.extraOffsetY
-      },
-      swung: {
-         direction: attackPattern.swung.direction,
-         extraOffset: attackPattern.swung.extraOffset,
-         rotation: attackPattern.swung.rotation,
-         extraOffsetX: attackPattern.swung.extraOffsetX,
-         extraOffsetY: attackPattern.swung.extraOffsetY
-      }
+      direction: limbState.direction,
+      extraOffset: limbState.extraOffset,
+      rotation: limbState.rotation,
+      extraOffsetX: limbState.extraOffsetX,
+      extraOffsetY: limbState.extraOffsetY
+   };
+}
+
+export function copyCurrentLimbState(startLimbState: LimbState, endLimbState: LimbState, progress: number): LimbState {
+   return {
+      direction: lerp(startLimbState.direction, endLimbState.direction, progress),
+      extraOffset: lerp(startLimbState.extraOffset, endLimbState.extraOffset, progress),
+      rotation: lerp(startLimbState.rotation, endLimbState.rotation, progress),
+      extraOffsetX: lerp(startLimbState.extraOffsetX, endLimbState.extraOffsetX, progress),
+      extraOffsetY: lerp(startLimbState.extraOffsetY, endLimbState.extraOffsetY, progress)
    };
 }

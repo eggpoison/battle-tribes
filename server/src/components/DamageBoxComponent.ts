@@ -95,7 +95,9 @@ function onTick(damageBoxComponent: DamageBoxComponent, entity: EntityID): void 
       const limbInfo = inventoryUseComponent.getLimbInfo(damageBox.associatedLimbInventoryName);
       if (limbInfo.action === LimbAction.none) {
          // There shouldn't be any active damage boxes if the limb is doing nothing!
-         throw new Error();
+         // @Temporary
+         console.warn("BAD!");
+         // throw new Error();
       }
 
       // Look for entities to damage
@@ -117,7 +119,9 @@ function onTick(damageBoxComponent: DamageBoxComponent, entity: EntityID): void 
       const limbInfo = inventoryUseComponent.getLimbInfo(blockBox.associatedLimbInventoryName);
       if (limbInfo.action !== LimbAction.block) {
          // There shouldn't be any active block boxes if the limb isn't blocking!
-         throw new Error();
+         // @Temporary
+         console.warn("BAD!");
+         // throw new Error();
       }
 
       const collisionInfo = getCollidingCollisionBox(entity, blockBox);
@@ -141,7 +145,7 @@ function onTick(damageBoxComponent: DamageBoxComponent, entity: EntityID): void 
          }
          
          if (collidingEntity !== blockBox.collidingEntity) {
-            onBlockBoxCollisionWithProjectile(collidingEntity, limbInfo, blockBox);
+            onBlockBoxCollisionWithProjectile(entity, collidingEntity, limbInfo, blockBox);
          }
          blockBox.collidingEntity = collidingEntity;
          hasBlockedProjectile = true;

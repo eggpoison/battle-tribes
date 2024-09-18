@@ -23,7 +23,7 @@ import { createEntityFromConfig } from "../../Entity";
 import { createItemEntityConfig } from "../item-entity";
 import { dropBerryOverEntity, BERRY_BUSH_RADIUS } from "../resources/berry-bush";
 import { getEntityRelationship, EntityRelationship } from "../../components/TribeComponent";
-import { AttackVars, copyAttackPattern } from "../../../../shared/src/attack-patterns";
+import { AttackVars, copyLimbState } from "../../../../shared/src/attack-patterns";
 
 const enum Vars {
    DEFAULT_ATTACK_KNOCKBACK = 125
@@ -239,7 +239,10 @@ export function beginSwing(attackingEntity: EntityID, itemSlot: number, inventor
    limbInfo.currentActionElapsedTicks = 0;
    limbInfo.currentActionDurationTicks = heldItemAttackInfo.attackTimings.windupTimeTicks;
    limbInfo.currentActionRate = 1;
-   limbInfo.currentAttackPattern = copyAttackPattern(heldItemAttackInfo.attackPattern);
+   // @Speed: Garbage collection
+   limbInfo.currentActionStartLimbState = copyLimbState(heldItemAttackInfo.attackPattern.windedBack);
+   // @Speed: Garbage collection
+   limbInfo.currentActionEndLimbState = copyLimbState(heldItemAttackInfo.attackPattern.swung);
 
    const physicsComponent = PhysicsComponentArray.getComponent(attackingEntity);
 
@@ -252,7 +255,7 @@ export function beginSwing(attackingEntity: EntityID, itemSlot: number, inventor
       const attackAlignment = (vx * Math.sin(transformComponent.rotation) + vy * Math.cos(transformComponent.rotation)) / velocityMagnitude;
       if (attackAlignment > 0) {
          const extraAmount = AttackVars.MAX_EXTRA_ATTACK_RANGE * Math.min(velocityMagnitude / AttackVars.MAX_EXTRA_ATTACK_RANGE_SPEED);
-         limbInfo.currentAttackPattern.swung.extraOffsetY += extraAmount;
+         limbInfo.currentActionEndLimbState.extraOffsetY += extraAmount;
       }
    }
 

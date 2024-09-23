@@ -254,7 +254,8 @@ export enum LimbAction {
    returnAttackToRest,
    engageBlock,
    block,
-   returnBlockToRest
+   returnBlockToRest,
+   feignAttack
 }
 
 export enum FrozenYetiAttackType {

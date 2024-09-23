@@ -9,15 +9,16 @@ import CircularBox from "battletribes-shared/boxes/CircularBox";
 import { lerp, Point } from "battletribes-shared/utils";
 import { DamageBoxComponentArray } from "./DamageBoxComponent";
 import { ServerBlockBox, ServerDamageBox } from "../boxes";
-import { assertBoxIsRectangular, BlockBox, BlockType, updateBox } from "battletribes-shared/boxes/boxes";
+import { assertBoxIsRectangular, BlockType, updateBox } from "battletribes-shared/boxes/boxes";
 import { TransformComponentArray } from "./TransformComponent";
-import { AttackPatternInfo, BLOCKING_LIMB_STATE, copyAttackPattern, DEFAULT_ATTACK_PATTERN, LimbState, SHIELD_BLOCKING_LIMB_STATE } from "battletribes-shared/attack-patterns";
+import { AttackPatternInfo, BLOCKING_LIMB_STATE, copyLimbState, DEFAULT_ATTACK_PATTERN, LimbState, SHIELD_BLOCKING_LIMB_STATE, TRIBESMAN_RESTING_LIMB_STATE } from "battletribes-shared/attack-patterns";
 import { registerDirtyEntity } from "../server/player-clients";
 import RectangularBox from "battletribes-shared/boxes/RectangularBox";
 import { HealthComponentArray } from "./HealthComponent";
 import { attemptAttack } from "../entities/tribes/limb-use";
 import Board from "../Board";
 import { ProjectileComponentArray } from "./ProjectileComponent";
+import { applyKnockback } from "./PhysicsComponent";
 
 export interface InventoryUseComponentParams {
    usedInventoryNames: Array<InventoryName>;
@@ -53,7 +54,8 @@ export interface LimbInfo {
    currentActionPauseTicksRemaining: number;
    currentActionRate: number;
 
-   currentAttackPattern: AttackPatternInfo;
+   currentActionStartLimbState: LimbState;
+   currentActionEndLimbState: LimbState;
    
    /** Damage box used to create limb attacks. */
    limbDamageBox: ServerDamageBox;
@@ -66,17 +68,12 @@ export interface LimbInfo {
    blockPositionY: number;
 }
 
-const addAttackPatternToPacket = (packet: Packet, attackPattern: AttackPatternInfo): void => {
-   packet.addNumber(attackPattern.windedBack.direction);
-   packet.addNumber(attackPattern.windedBack.extraOffset);
-   packet.addNumber(attackPattern.windedBack.rotation);
-   packet.addNumber(attackPattern.windedBack.extraOffsetX);
-   packet.addNumber(attackPattern.windedBack.extraOffsetY);
-   packet.addNumber(attackPattern.swung.direction);
-   packet.addNumber(attackPattern.swung.extraOffset);
-   packet.addNumber(attackPattern.swung.rotation);
-   packet.addNumber(attackPattern.swung.extraOffsetX);
-   packet.addNumber(attackPattern.swung.extraOffsetY);
+const addLimbStateToPacket = (packet: Packet, limbState: LimbState): void => {
+   packet.addNumber(limbState.direction);
+   packet.addNumber(limbState.extraOffset);
+   packet.addNumber(limbState.rotation);
+   packet.addNumber(limbState.extraOffsetX);
+   packet.addNumber(limbState.extraOffsetY);
 }
 
 export class InventoryUseComponent {
@@ -119,7 +116,8 @@ export class InventoryUseComponent {
          currentActionDurationTicks: 0,
          currentActionPauseTicksRemaining: 0,
          currentActionRate: 1,
-         currentAttackPattern: copyAttackPattern(DEFAULT_ATTACK_PATTERN),
+         currentActionStartLimbState: copyLimbState(TRIBESMAN_RESTING_LIMB_STATE),
+         currentActionEndLimbState: copyLimbState(TRIBESMAN_RESTING_LIMB_STATE),
          limbDamageBox: limbDamageBox,
          heldItemDamageBox: heldItemDamageBox,
          blockBox: blockBox,
@@ -247,14 +245,26 @@ export function onBlockBoxCollisionWithDamageBox(victim: EntityID, blockBoxLimb:
    registerDirtyEntity(victim);
 }
 
-export function onBlockBoxCollisionWithProjectile(projectile: EntityID, blockBoxLimb: LimbInfo, blockBox: ServerBlockBox): void {
-   const projectileComponent = ProjectileComponentArray.getComponent(projectile);
-   projectileComponent.isBlocked = true;
-
+export function onBlockBoxCollisionWithProjectile(blockingEntity: EntityID, projectile: EntityID, blockBoxLimb: LimbInfo, blockBox: ServerBlockBox): void {
    blockBox.hasBlocked = true;
    blockBoxLimb.lastBlockTick = Board.ticks;
    blockBoxLimb.blockPositionX = blockBox.box.position.x;
    blockBoxLimb.blockPositionY = blockBox.box.position.y;
+
+   if (blockBox.blockType === BlockType.full) {
+      const blockingEntityTransformComponent = TransformComponentArray.getComponent(blockingEntity);
+      const projectileTransformComponent = TransformComponentArray.getComponent(projectile);
+      
+      // Push back
+      const pushDirection = projectileTransformComponent.position.calculateAngleBetween(blockingEntityTransformComponent.position);
+      // @Hack @Hardcoded: knockback amount
+      applyKnockback(blockingEntity, 75, pushDirection);
+      
+      Board.destroyEntity(projectile);
+   } else {
+      const projectileComponent = ProjectileComponentArray.getComponent(projectile);
+      projectileComponent.isBlocked = true;
+   }
 }
 
 export function onDamageBoxCollision(attacker: EntityID, victim: EntityID, limb: LimbInfo): void {
@@ -367,7 +377,7 @@ function onTick(inventoryUseComponent: InventoryUseComponent, entity: EntityID):
       // Update damage box for limb attacks
       if (limb.action === LimbAction.attack) {
          const swingProgress = limb.currentActionElapsedTicks / limb.currentActionDurationTicks;
-         lerpLimbBetweenStates(entity, limb, limb.currentAttackPattern.windedBack, limb.currentAttackPattern.swung, swingProgress);
+         lerpLimbBetweenStates(entity, limb, limb.currentActionStartLimbState, limb.currentActionEndLimbState, swingProgress);
       }
 
       // Update blocking damage box when blocking
@@ -413,8 +423,8 @@ function getDataLength(entity: EntityID): number {
       lengthBytes += 2 * Float32Array.BYTES_PER_ELEMENT * Object.keys(useInfo.spearWindupCooldowns).length;
       lengthBytes += getCrossbowLoadProgressRecordLength(useInfo);
       lengthBytes += 18 * Float32Array.BYTES_PER_ELEMENT;
-      // Attack pattern
-      lengthBytes += 10 * Float32Array.BYTES_PER_ELEMENT;
+      // Limb states
+      lengthBytes += 2 * 5 * Float32Array.BYTES_PER_ELEMENT;
    }
 
    return lengthBytes;
@@ -461,7 +471,8 @@ function addDataToPacket(packet: Packet, entity: EntityID): void {
       packet.addNumber(limb.blockPositionX);
       packet.addNumber(limb.blockPositionY);
 
-      addAttackPatternToPacket(packet, limb.currentAttackPattern);
+      addLimbStateToPacket(packet, limb.currentActionStartLimbState);
+      addLimbStateToPacket(packet, limb.currentActionEndLimbState);
    }
 }
 

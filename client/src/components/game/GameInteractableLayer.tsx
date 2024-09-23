@@ -30,7 +30,7 @@ import { BackpackInventoryMenu_setIsVisible } from "./inventories/BackpackInvent
 import { Hotbar_updateLeftThrownBattleaxeItemID, Hotbar_updateRightThrownBattleaxeItemID, Hotbar_setHotbarSelectedItemSlot } from "./inventories/Hotbar";
 import { CraftingMenu_setCraftingStation, CraftingMenu_setIsVisible } from "./menus/CraftingMenu";
 import { TransformComponentArray } from "../../entity-components/TransformComponent";
-import { AttackVars, copyAttackPattern } from "../../../../shared/src/attack-patterns";
+import { AttackVars, copyCurrentLimbState, copyLimbState, TRIBESMAN_RESTING_LIMB_STATE } from "../../../../shared/src/attack-patterns";
 import { PhysicsComponentArray } from "../../entity-components/PhysicsComponent";
 
 interface SelectedItemInfo {
@@ -83,8 +83,6 @@ let hotbarSelectedItemSlot = 1;
 
    /** Whether the inventory is open or not. */
 let _inventoryIsOpen = false;
-
-let currentRightClickEvent: MouseEvent | null = null;
 
 let discombobulationTimer = 0;
 
@@ -151,20 +149,44 @@ export function updatePlayerItems(): void {
    
    // If finished winding attack, switch to doing attack
    if (hotbarLimb.action === LimbAction.windAttack && getElapsedTimeInSeconds(hotbarLimb.currentActionElapsedTicks) * Settings.TPS >= hotbarLimb.currentActionDurationTicks) {
+      const attackInfo = getItemAttackInfo(hotbarLimb.heldItemType);
+
       hotbarLimb.action = LimbAction.attack;
       hotbarLimb.currentActionElapsedTicks = 0;
-
-      const attackInfo = getItemAttackInfo(hotbarLimb.heldItemType);
       hotbarLimb.currentActionDurationTicks = attackInfo.attackTimings.swingTimeTicks;
+
+      // @Speed: Garbage collection
+      hotbarLimb.currentActionStartLimbState = copyLimbState(attackInfo.attackPattern!.windedBack);
+      // @Speed: Garbage collection
+      hotbarLimb.currentActionEndLimbState = copyLimbState(attackInfo.attackPattern!.swung);
+
+      const transformComponent = TransformComponentArray.getComponent(Player.instance!.id);
+      const physicsComponent = PhysicsComponentArray.getComponent(Player.instance!.id);
+
+      // Add extra range for moving attacks
+      const vx = physicsComponent.selfVelocity.x + physicsComponent.externalVelocity.x;
+      const vy = physicsComponent.selfVelocity.y + physicsComponent.externalVelocity.y;
+      if (vx !== 0 || vy !== 0) {
+         const velocityMagnitude = Math.sqrt(vx * vx + vy * vy);
+         const attackAlignment = (vx * Math.sin(transformComponent.rotation) + vy * Math.cos(transformComponent.rotation)) / velocityMagnitude;
+         if (attackAlignment > 0) {
+            const extraAmount = AttackVars.MAX_EXTRA_ATTACK_RANGE * Math.min(velocityMagnitude / AttackVars.MAX_EXTRA_ATTACK_RANGE_SPEED);
+            hotbarLimb.currentActionEndLimbState.extraOffsetY += extraAmount;
+         }
+      }
    }
 
    // If finished attacking, go to rest
    if (hotbarLimb.action === LimbAction.attack && getElapsedTimeInSeconds(hotbarLimb.currentActionElapsedTicks) * Settings.TPS >= hotbarLimb.currentActionDurationTicks) {
+      const attackInfo = getItemAttackInfo(hotbarLimb.heldItemType);
+
       hotbarLimb.action = LimbAction.returnAttackToRest;
       hotbarLimb.currentActionElapsedTicks = 0;
-
-      const attackInfo = getItemAttackInfo(hotbarLimb.heldItemType);
       hotbarLimb.currentActionDurationTicks = attackInfo.attackTimings.returnTimeTicks;
+
+      hotbarLimb.currentActionStartLimbState = hotbarLimb.currentActionEndLimbState;
+      // @Speed: Garbage collection
+      hotbarLimb.currentActionEndLimbState = copyLimbState(TRIBESMAN_RESTING_LIMB_STATE);
    }
 
    // If finished going to rest, set to default
@@ -185,7 +207,7 @@ export function updatePlayerItems(): void {
 
    // @Incomplete: Double-check there isn't a tick immediately after depressing the button where this hasn't registered in the limb yet
    // If blocking but not right clicking, return to rest
-   if (hotbarLimb.action === LimbAction.block && !rightMouseButtonIsPressed) {
+   if (1+1===3 && hotbarLimb.action === LimbAction.block && !rightMouseButtonIsPressed) {
       const attackInfo = getItemAttackInfo(hotbarLimb.heldItemType);
       hotbarLimb.action = LimbAction.returnBlockToRest;
       hotbarLimb.currentActionElapsedTicks = 0;
@@ -199,6 +221,13 @@ export function updatePlayerItems(): void {
    // @Copynpaste
    // If finished returning block to rest, go to rest
    if (hotbarLimb.action === LimbAction.returnBlockToRest && getElapsedTimeInSeconds(hotbarLimb.currentActionElapsedTicks) * Settings.TPS >= hotbarLimb.currentActionDurationTicks) {
+      hotbarLimb.action = LimbAction.none;
+      hotbarLimb.currentActionElapsedTicks = 0;
+      hotbarLimb.currentActionDurationTicks = 0;
+   }
+
+   // If finished feigning attack, go to rest
+   if (hotbarLimb.action === LimbAction.feignAttack && getElapsedTimeInSeconds(hotbarLimb.currentActionElapsedTicks) * Settings.TPS >= hotbarLimb.currentActionDurationTicks) {
       hotbarLimb.action = LimbAction.none;
       hotbarLimb.currentActionElapsedTicks = 0;
       hotbarLimb.currentActionDurationTicks = 0;
@@ -284,27 +313,15 @@ const tryToSwing = (inventoryName: InventoryName): boolean => {
       return false;
    }
 
-   const transformComponent = TransformComponentArray.getComponent(Player.instance!.id);
-   const physicsComponent = PhysicsComponentArray.getComponent(Player.instance!.id);
-
    limbInfo.action = LimbAction.windAttack;
    limbInfo.currentActionElapsedTicks = 0;
    limbInfo.currentActionDurationTicks = attackInfo.attackTimings.windupTimeTicks;
    limbInfo.currentActionRate = 1;
 
-   limbInfo.currentAttackPattern = copyAttackPattern(attackInfo.attackPattern);
-
-   // Add extra range for moving attacks
-   const vx = physicsComponent.selfVelocity.x + physicsComponent.externalVelocity.x;
-   const vy = physicsComponent.selfVelocity.y + physicsComponent.externalVelocity.y;
-   if (vx !== 0 || vy !== 0) {
-      const velocityMagnitude = Math.sqrt(vx * vx + vy * vy);
-      const attackAlignment = (vx * Math.sin(transformComponent.rotation) + vy * Math.cos(transformComponent.rotation)) / velocityMagnitude;
-      if (attackAlignment > 0) {
-         const extraAmount = AttackVars.MAX_EXTRA_ATTACK_RANGE * Math.min(velocityMagnitude / AttackVars.MAX_EXTRA_ATTACK_RANGE_SPEED);
-         limbInfo.currentAttackPattern.swung.extraOffsetY += extraAmount;
-      }
-   }
+   // @Speed: Garbage collection
+   limbInfo.currentActionStartLimbState = copyLimbState(TRIBESMAN_RESTING_LIMB_STATE);
+   // @Speed: Garbage collection
+   limbInfo.currentActionEndLimbState = copyLimbState(attackInfo.attackPattern.windedBack);
 
    const attackPacket = createAttackPacket();
    Client.sendPacket(attackPacket);
@@ -446,7 +463,6 @@ const onGameMouseDown = (e: React.MouseEvent): void => {
       leftMouseButtonIsPressed = true;
       attemptAttack();
    } else if (e.button === 2) { // Right click
-      currentRightClickEvent = e.nativeEvent;
       rightMouseButtonIsPressed = true;
 
       const selectedItemInfo = getSelectedItemInfo();
@@ -644,20 +660,20 @@ export function updatePlayerMovement(): void {
    let moveDirection!: number | null;
    switch (hash) {
       case 0:  moveDirection = null;          break;
-      case 1:  moveDirection = 0;   break;
-      case 2:  moveDirection = Math.PI * 3/2;       break;
+      case 1:  moveDirection = 0;             break;
+      case 2:  moveDirection = Math.PI * 3/2; break;
       case 3:  moveDirection = Math.PI * 7/4; break;
-      case 4:  moveDirection = Math.PI; break;
+      case 4:  moveDirection = Math.PI;       break;
       case 5:  moveDirection = null;          break;
       case 6:  moveDirection = Math.PI * 5/4; break;
-      case 7:  moveDirection = Math.PI * 3/2;     break;
-      case 8:  moveDirection = Math.PI/2;             break;
+      case 7:  moveDirection = Math.PI * 3/2; break;
+      case 8:  moveDirection = Math.PI/2;     break;
       case 9:  moveDirection = Math.PI / 4;   break;
       case 10: moveDirection = null;          break;
-      case 11: moveDirection = 0;   break;
+      case 11: moveDirection = 0;             break;
       case 12: moveDirection = Math.PI * 3/4; break;
-      case 13: moveDirection = Math.PI/2;             break;
-      case 14: moveDirection = Math.PI; break;
+      case 13: moveDirection = Math.PI/2;     break;
+      case 14: moveDirection = Math.PI;       break;
       case 15: moveDirection = null;          break;
    }
 
@@ -759,10 +775,11 @@ const onItemRightClickDown = (itemType: ItemType, itemInventoryName: InventoryNa
    const transformComponent = Player.instance!.getServerComponent(ServerComponentType.transform);
    const inventoryUseComponent = Player.instance!.getServerComponent(ServerComponentType.inventoryUse);
 
-   // Start blocking
    const attackInfo = getItemAttackInfo(itemType);
    if (attackInfo.attackTimings.blockTimeTicks !== null) {
       const limb = inventoryUseComponent.getLimbInfoByInventoryName(itemInventoryName);
+
+      // Start blocking
       if (limb.action === LimbAction.none) {
          limb.action = LimbAction.engageBlock;
          limb.currentActionElapsedTicks = 0;
@@ -771,6 +788,19 @@ const onItemRightClickDown = (itemType: ItemType, itemInventoryName: InventoryNa
 
          sendStartItemUsePacket();
          return;
+      // Feign attack
+      } else if (limb.action === LimbAction.windAttack || (limb.action === LimbAction.attack && limb.currentActionElapsedTicks <= AttackVars.FEIGN_SWING_TICKS_LEEWAY)) {
+         // @Copynpaste
+         const secondsSinceLastAction = getElapsedTimeInSeconds(limb.currentActionElapsedTicks);
+         const progress = secondsSinceLastAction * Settings.TPS / limb.currentActionDurationTicks;
+
+         limb.action = LimbAction.feignAttack;
+         limb.currentActionElapsedTicks = 0;
+         limb.currentActionElapsedTicks = AttackVars.FEIGN_TIME_TICKS;
+         limb.currentActionRate = 1;
+         limb.currentActionStartLimbState = copyCurrentLimbState(limb.currentActionStartLimbState, limb.currentActionEndLimbState, progress);
+         limb.currentActionEndLimbState = TRIBESMAN_RESTING_LIMB_STATE;
+      // Buffer block
       } else {
          attackBufferTime = INPUT_COYOTE_TIME;
          bufferedInputType = BufferedInputType.block;

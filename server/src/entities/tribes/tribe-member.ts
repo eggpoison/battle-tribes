@@ -422,9 +422,12 @@ export function useItem(tribeMember: EntityID, item: Item, inventoryName: Invent
          config[ServerComponentType.projectile].owner = tribeMember;
          createEntityFromConfig(config);
 
-         limb.action = LimbAction.none;
-         limb.currentActionElapsedTicks = 0;
-         limb.currentActionDurationTicks = AttackVars.BOW_REST_TIME_TICKS;
+         for (let i = 0; i < 2; i++) {
+            const limb = inventoryUseComponent.getLimbInfo(i === 0 ? InventoryName.hotbar : InventoryName.offhand);
+            limb.action = LimbAction.none;
+            limb.currentActionElapsedTicks = 0;
+            limb.currentActionDurationTicks = AttackVars.BOW_REST_TIME_TICKS;
+         }
          
          break;
       }

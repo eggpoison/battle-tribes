@@ -84,8 +84,6 @@ let hotbarSelectedItemSlot = 1;
    /** Whether the inventory is open or not. */
 let _inventoryIsOpen = false;
 
-let currentRightClickEvent: MouseEvent | null = null;
-
 let discombobulationTimer = 0;
 
 /** If > 0, it counts down the remaining time that the attack is buffered. */
@@ -465,7 +463,6 @@ const onGameMouseDown = (e: React.MouseEvent): void => {
       leftMouseButtonIsPressed = true;
       attemptAttack();
    } else if (e.button === 2) { // Right click
-      currentRightClickEvent = e.nativeEvent;
       rightMouseButtonIsPressed = true;
 
       const selectedItemInfo = getSelectedItemInfo();
@@ -663,20 +660,20 @@ export function updatePlayerMovement(): void {
    let moveDirection!: number | null;
    switch (hash) {
       case 0:  moveDirection = null;          break;
-      case 1:  moveDirection = 0;   break;
-      case 2:  moveDirection = Math.PI * 3/2;       break;
+      case 1:  moveDirection = 0;             break;
+      case 2:  moveDirection = Math.PI * 3/2; break;
       case 3:  moveDirection = Math.PI * 7/4; break;
-      case 4:  moveDirection = Math.PI; break;
+      case 4:  moveDirection = Math.PI;       break;
       case 5:  moveDirection = null;          break;
       case 6:  moveDirection = Math.PI * 5/4; break;
-      case 7:  moveDirection = Math.PI * 3/2;     break;
-      case 8:  moveDirection = Math.PI/2;             break;
+      case 7:  moveDirection = Math.PI * 3/2; break;
+      case 8:  moveDirection = Math.PI/2;     break;
       case 9:  moveDirection = Math.PI / 4;   break;
       case 10: moveDirection = null;          break;
-      case 11: moveDirection = 0;   break;
+      case 11: moveDirection = 0;             break;
       case 12: moveDirection = Math.PI * 3/4; break;
-      case 13: moveDirection = Math.PI/2;             break;
-      case 14: moveDirection = Math.PI; break;
+      case 13: moveDirection = Math.PI/2;     break;
+      case 14: moveDirection = Math.PI;       break;
       case 15: moveDirection = null;          break;
    }
 

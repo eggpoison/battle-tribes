@@ -239,6 +239,7 @@ export interface DeathInfo {
    readonly causeOfDeath: PlayerCauseOfDeath;
 }
 
+// @Refactor: It might be easier to send the animation info instead of whichever action which the client has to infer
 export enum LimbAction {
    none,
    chargeBow,
@@ -255,7 +256,10 @@ export enum LimbAction {
    engageBlock,
    block,
    returnBlockToRest,
-   feignAttack
+   feignAttack,
+   windShieldBash,
+   pushShieldBash,
+   returnShieldBashToRest
 }
 
 export enum FrozenYetiAttackType {

@@ -17,9 +17,10 @@ import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { PacketReader } from "battletribes-shared/packets";
 import { Hotbar_updateRightThrownBattleaxeItemID } from "../components/game/inventories/Hotbar";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
-import { AttackPatternInfo, BLOCKING_LIMB_STATE, LimbState, SHIELD_BLOCKING_LIMB_STATE, SPEAR_CHARGED_LIMB_STATE, TRIBESMAN_RESTING_LIMB_STATE } from "battletribes-shared/attack-patterns";
+import { BLOCKING_LIMB_STATE, LimbState, SHIELD_BLOCKING_LIMB_STATE, SPEAR_CHARGED_LIMB_STATE, TRIBESMAN_RESTING_LIMB_STATE } from "battletribes-shared/attack-patterns";
 import RenderAttachPoint from "../render-parts/RenderAttachPoint";
 import { playSound } from "../sound";
+import { BlockType } from "../../../shared/src/boxes/boxes";
 
 export interface LimbInfo {
    selectedItemSlot: number;
@@ -378,9 +379,11 @@ class InventoryUseComponent extends ServerComponent{
          const currentActionDurationTicks = reader.readNumber();
          const currentActionPauseTicksRemaining = reader.readNumber();
          const currentActionRate = reader.readNumber();
+         // @Hack
          const lastBlockTick = reader.readNumber();
          const blockPositionX = reader.readNumber();
          const blockPositionY = reader.readNumber();
+         const blockType = reader.readNumber();
 
          const currentActionStartLimbState = readLimbStateFromPacket(reader);
          const currentActionEndLimbState = readLimbStateFromPacket(reader);
@@ -449,7 +452,7 @@ class InventoryUseComponent extends ServerComponent{
          // @Speed
          readCrossbowLoadProgressRecord(reader);
 
-         reader.padOffset(18 * Float32Array.BYTES_PER_ELEMENT);
+         reader.padOffset(19 * Float32Array.BYTES_PER_ELEMENT);
          // Limb states
          reader.padOffset(2 * 5 * Float32Array.BYTES_PER_ELEMENT);
       }
@@ -499,6 +502,7 @@ class InventoryUseComponent extends ServerComponent{
          const lastBlockTick = reader.readNumber();
          const blockPositionX = reader.readNumber();
          const blockPositionY = reader.readNumber();
+         const blockType = reader.readNumber();
 
          updateLimbStateFromPacket(reader, limbInfo.currentActionStartLimbState);
          updateLimbStateFromPacket(reader, limbInfo.currentActionEndLimbState);
@@ -540,7 +544,7 @@ class InventoryUseComponent extends ServerComponent{
          }
 
          if (lastBlockTick === Board.serverTicks) {
-            this.playBlockEffects(blockPositionX, blockPositionY);
+            this.playBlockEffects(blockPositionX, blockPositionY, blockType);
          }
          
          updateLimb(this, i, limbInfo);
@@ -572,13 +576,14 @@ class InventoryUseComponent extends ServerComponent{
          const lastBlockTick = reader.readNumber();
          const blockPositionX = reader.readNumber();
          const blockPositionY = reader.readNumber();
+         const blockType = reader.readNumber();
 
          // Limb states
          reader.padOffset(2 * 5 * Float32Array.BYTES_PER_ELEMENT);
 
          // @Copynpaste
          if (lastBlockTick === Board.serverTicks) {
-            this.playBlockEffects(blockPositionX, blockPositionY);
+            this.playBlockEffects(blockPositionX, blockPositionY, blockType);
          }
 
          if (limbInfo.inventoryName === InventoryName.hotbar) {
@@ -588,15 +593,15 @@ class InventoryUseComponent extends ServerComponent{
       }
    }
 
-   private playBlockEffects(x: number, y: number): void {
-      playSound("block.mp3", 0.8, 1, new Point(x, y));
+   private playBlockEffects(x: number, y: number, blockType: BlockType): void {
+      playSound(blockType === BlockType.full ? "shield-block.mp3" : "block.mp3", blockType === BlockType.partial ? 0.8 : 0.5, 1, new Point(x, y));
       
       for (let i = 0; i < 8; i++) {
          const offsetMagnitude = randFloat(0, 18);
          const offsetDirection = 2 * Math.PI * Math.random();
          const particleX = x + offsetMagnitude * Math.sin(offsetDirection);
          const particleY = y + offsetMagnitude * Math.cos(offsetDirection);
-         createBlockParticle(particleX, particleY);
+         createBlockParticle(particleX, particleY, blockType);
       }
    }
 

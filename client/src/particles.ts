@@ -6,6 +6,7 @@ import Board from "./Board";
 import Entity from "./Entity";
 import { ServerComponentType } from "battletribes-shared/components";
 import TransformComponent from "./entity-components/TransformComponent";
+import { BlockType } from "../../shared/src/boxes/boxes";
 
 // @Cleanup: Standardise all these functions to just take the stuff necessary to create them, then have the places which call them modify the returned particle
 
@@ -1754,7 +1755,7 @@ export function createIceSpeckProjectile(transformComponent: TransformComponent)
    Board.lowMonocolourParticles.push(particle);
 }
 
-export function createBlockParticle(x: number, y: number): void {
+export function createBlockParticle(x: number, y: number, blockType: BlockType): void {
    const velocityMagnitude = randFloat(80, 150);
    const velocityDirection = 2 * Math.PI * Math.random();
    const velocityX = velocityMagnitude * Math.sin(velocityDirection);
@@ -1783,7 +1784,9 @@ export function createBlockParticle(x: number, y: number): void {
       0,
       0,
       0,
-      255/255, 249/255, 201/255
+      blockType === BlockType.partial ? 255/255 : 210/255,
+      blockType === BlockType.partial ? 249/255 : 210/255,
+      blockType === BlockType.partial ? 201/255 : 210/255
    );
    Board.highMonocolourParticles.push(particle);
 }

@@ -41,7 +41,7 @@ export interface LimbHeldItemDamageBoxInfo {
    readonly height: number;
    readonly rotation: number;
    readonly offsetX: number;
-   readonly offsetY: number;
+   offsetY: number;
    readonly showLargeTexture: boolean;
 }
 
@@ -194,6 +194,12 @@ export const SHIELD_BLOCKING_DAMAGE_BOX_INFO: LimbHeldItemDamageBoxInfo = {
    showLargeTexture: true
 };
 
+export const SHIELD_BLOCKING_WIND_UP_DAMAGE_BOX_INFO = copyDamageBoxInfo(SHIELD_BLOCKING_DAMAGE_BOX_INFO);
+SHIELD_BLOCKING_WIND_UP_DAMAGE_BOX_INFO.offsetY -= 4;
+
+export const SHIELD_BLOCKING_PUSHED_DAMAGE_BOX_INFO = copyDamageBoxInfo(SHIELD_BLOCKING_DAMAGE_BOX_INFO);
+SHIELD_BLOCKING_PUSHED_DAMAGE_BOX_INFO.offsetY += 8;
+
 export const TOOL_ITEM_DAMAGE_BOX_INFO: LimbHeldItemDamageBoxInfo = {
    width: 30,
    height: 48,
@@ -229,5 +235,16 @@ export function copyCurrentLimbState(startLimbState: LimbState, endLimbState: Li
       rotation: lerp(startLimbState.rotation, endLimbState.rotation, progress),
       extraOffsetX: lerp(startLimbState.extraOffsetX, endLimbState.extraOffsetX, progress),
       extraOffsetY: lerp(startLimbState.extraOffsetY, endLimbState.extraOffsetY, progress)
+   };
+}
+
+function copyDamageBoxInfo(damageBoxInfo: LimbHeldItemDamageBoxInfo): LimbHeldItemDamageBoxInfo {
+   return {
+      width: damageBoxInfo.width,
+      height: damageBoxInfo.height,
+      rotation: damageBoxInfo.rotation,
+      offsetX: damageBoxInfo.offsetX,
+      offsetY: damageBoxInfo.offsetY,
+      showLargeTexture: damageBoxInfo.showLargeTexture
    };
 }

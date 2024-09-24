@@ -23,7 +23,7 @@ import { createEntityFromConfig } from "../../Entity";
 import { createItemEntityConfig } from "../item-entity";
 import { dropBerryOverEntity, BERRY_BUSH_RADIUS } from "../resources/berry-bush";
 import { getEntityRelationship, EntityRelationship } from "../../components/TribeComponent";
-import { AttackVars, copyLimbState } from "../../../../shared/src/attack-patterns";
+import { AttackVars, copyLimbState, TRIBESMAN_RESTING_LIMB_STATE } from "../../../../shared/src/attack-patterns";
 
 const enum Vars {
    DEFAULT_ATTACK_KNOCKBACK = 125
@@ -149,7 +149,7 @@ const getBaseItemKnockback = (item: Item | null): number => {
    return Vars.DEFAULT_ATTACK_KNOCKBACK;
 }
 
-const calculateItemKnockback = (item: Item | null, attackIsBlocked: boolean): number => {
+export function calculateItemKnockback(item: Item | null, attackIsBlocked: boolean): number {
    let knockback = getBaseItemKnockback(item);
    
    if (attackIsBlocked) {
@@ -240,9 +240,9 @@ export function beginSwing(attackingEntity: EntityID, itemSlot: number, inventor
    limbInfo.currentActionDurationTicks = heldItemAttackInfo.attackTimings.windupTimeTicks;
    limbInfo.currentActionRate = 1;
    // @Speed: Garbage collection
-   limbInfo.currentActionStartLimbState = copyLimbState(heldItemAttackInfo.attackPattern.windedBack);
+   limbInfo.currentActionStartLimbState = copyLimbState(TRIBESMAN_RESTING_LIMB_STATE);
    // @Speed: Garbage collection
-   limbInfo.currentActionEndLimbState = copyLimbState(heldItemAttackInfo.attackPattern.swung);
+   limbInfo.currentActionEndLimbState = copyLimbState(heldItemAttackInfo.attackPattern.windedBack);
 
    const physicsComponent = PhysicsComponentArray.getComponent(attackingEntity);
 

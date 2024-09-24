@@ -171,7 +171,8 @@ const AUDIO_FILE_PATHS = [
    "frostling-hurt-3.mp3",
    "frostling-hurt-4.mp3",
    "frostling-die.mp3",
-   "block.mp3"
+   "block.mp3",
+   "shield-block.mp3"
 ] as const;
 
 export type AudioFilePath = typeof AUDIO_FILE_PATHS[number];

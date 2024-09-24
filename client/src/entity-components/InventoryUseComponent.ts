@@ -17,7 +17,7 @@ import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { PacketReader } from "battletribes-shared/packets";
 import { Hotbar_updateRightThrownBattleaxeItemID } from "../components/game/inventories/Hotbar";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
-import { BLOCKING_LIMB_STATE, LimbState, SHIELD_BLOCKING_LIMB_STATE, SPEAR_CHARGED_LIMB_STATE, TRIBESMAN_RESTING_LIMB_STATE } from "battletribes-shared/attack-patterns";
+import { BLOCKING_LIMB_STATE, LimbState, SHIELD_BASH_PUSHED_LIMB_STATE, SHIELD_BASH_WIND_UP_LIMB_STATE, SHIELD_BLOCKING_LIMB_STATE, SPEAR_CHARGED_LIMB_STATE, TRIBESMAN_RESTING_LIMB_STATE } from "battletribes-shared/attack-patterns";
 import RenderAttachPoint from "../render-parts/RenderAttachPoint";
 import { playSound } from "../sound";
 import { BlockType } from "../../../shared/src/boxes/boxes";
@@ -949,6 +949,39 @@ const updateLimb = (inventoryUseComponent: InventoryUseComponent, limbIdx: numbe
          const windupProgress = secondsSinceLastAction * Settings.TPS / limb.currentActionDurationTicks;
 
          lerpThingBetweenStates(attachPoint, limb.currentActionStartLimbState, limb.currentActionEndLimbState, windupProgress);
+         resetThing(limbRenderPart);
+         updateHeldItemRenderPartForAttack(inventoryUseComponent, limbIdx, heldItemType);
+         removeArrowRenderPart(inventoryUseComponent, limbIdx);
+         break;
+      }
+      case LimbAction.windShieldBash: {
+         // @Copynpaste
+         const secondsSinceLastAction = getElapsedTimeInSeconds(limb.currentActionElapsedTicks);
+         const windupProgress = secondsSinceLastAction * Settings.TPS / limb.currentActionDurationTicks;
+         
+         lerpThingBetweenStates(attachPoint, SHIELD_BLOCKING_LIMB_STATE, SHIELD_BASH_WIND_UP_LIMB_STATE, windupProgress);
+         resetThing(limbRenderPart);
+         updateHeldItemRenderPartForAttack(inventoryUseComponent, limbIdx, heldItemType);
+         removeArrowRenderPart(inventoryUseComponent, limbIdx);
+         break;
+      }
+      case LimbAction.pushShieldBash: {
+         // @Copynpaste
+         const secondsSinceLastAction = getElapsedTimeInSeconds(limb.currentActionElapsedTicks);
+         const windupProgress = secondsSinceLastAction * Settings.TPS / limb.currentActionDurationTicks;
+         
+         lerpThingBetweenStates(attachPoint, SHIELD_BASH_WIND_UP_LIMB_STATE, SHIELD_BASH_PUSHED_LIMB_STATE, windupProgress);
+         resetThing(limbRenderPart);
+         updateHeldItemRenderPartForAttack(inventoryUseComponent, limbIdx, heldItemType);
+         removeArrowRenderPart(inventoryUseComponent, limbIdx);
+         break;
+      }
+      case LimbAction.returnShieldBashToRest: {
+         // @Copynpaste
+         const secondsSinceLastAction = getElapsedTimeInSeconds(limb.currentActionElapsedTicks);
+         const windupProgress = secondsSinceLastAction * Settings.TPS / limb.currentActionDurationTicks;
+         
+         lerpThingBetweenStates(attachPoint, SHIELD_BASH_PUSHED_LIMB_STATE, SHIELD_BLOCKING_LIMB_STATE, windupProgress);
          resetThing(limbRenderPart);
          updateHeldItemRenderPartForAttack(inventoryUseComponent, limbIdx, heldItemType);
          removeArrowRenderPart(inventoryUseComponent, limbIdx);

@@ -30,7 +30,7 @@ import { BackpackInventoryMenu_setIsVisible } from "./inventories/BackpackInvent
 import { Hotbar_updateLeftThrownBattleaxeItemID, Hotbar_updateRightThrownBattleaxeItemID, Hotbar_setHotbarSelectedItemSlot } from "./inventories/Hotbar";
 import { CraftingMenu_setCraftingStation, CraftingMenu_setIsVisible } from "./menus/CraftingMenu";
 import { TransformComponentArray } from "../../entity-components/TransformComponent";
-import { AttackVars, copyCurrentLimbState, copyLimbState, TRIBESMAN_RESTING_LIMB_STATE } from "../../../../shared/src/attack-patterns";
+import { AttackVars, copyCurrentLimbState, copyLimbState, SHIELD_BASH_WIND_UP_LIMB_STATE, SHIELD_BLOCKING_LIMB_STATE, TRIBESMAN_RESTING_LIMB_STATE } from "../../../../shared/src/attack-patterns";
 import { PhysicsComponentArray } from "../../entity-components/PhysicsComponent";
 
 interface SelectedItemInfo {
@@ -233,6 +233,24 @@ export function updatePlayerItems(): void {
       hotbarLimb.currentActionDurationTicks = 0;
    }
 
+   if (hotbarLimb.action === LimbAction.windShieldBash && getElapsedTimeInSeconds(hotbarLimb.currentActionElapsedTicks) * Settings.TPS >= hotbarLimb.currentActionDurationTicks) {
+      hotbarLimb.action = LimbAction.pushShieldBash;
+      hotbarLimb.currentActionElapsedTicks = 0;
+      hotbarLimb.currentActionDurationTicks = AttackVars.SHIELD_BASH_PUSH_TIME_TICKS;
+   }
+
+   if (hotbarLimb.action === LimbAction.pushShieldBash && getElapsedTimeInSeconds(hotbarLimb.currentActionElapsedTicks) * Settings.TPS >= hotbarLimb.currentActionDurationTicks) {
+      hotbarLimb.action = LimbAction.returnShieldBashToRest;
+      hotbarLimb.currentActionElapsedTicks = 0;
+      hotbarLimb.currentActionDurationTicks = AttackVars.SHIELD_BASH_RETURN_TIME_TICKS;
+   }
+
+   if (hotbarLimb.action === LimbAction.returnShieldBashToRest && getElapsedTimeInSeconds(hotbarLimb.currentActionElapsedTicks) * Settings.TPS >= hotbarLimb.currentActionDurationTicks) {
+      hotbarLimb.action = LimbAction.block;
+      hotbarLimb.currentActionElapsedTicks = 0;
+      hotbarLimb.currentActionDurationTicks = AttackVars.SHIELD_BASH_RETURN_TIME_TICKS;
+   }
+
    // Buffered attacks
    if (attackBufferTime > 0 || (bufferedInputType === BufferedInputType.block && rightMouseButtonIsPressed)) {
       switch (bufferedInputType) {
@@ -303,25 +321,41 @@ export function updatePlayerItems(): void {
 const tryToSwing = (inventoryName: InventoryName): boolean => {
    const inventoryUseComponent = Player.instance!.getServerComponent(ServerComponentType.inventoryUse);
 
-   const limbInfo = inventoryUseComponent.getLimbInfoByInventoryName(inventoryName);
-   if (limbInfo.action !== LimbAction.none || limbInfo.currentActionElapsedTicks < limbInfo.currentActionDurationTicks) {
-      return false;
-   }
+   const limb = inventoryUseComponent.getLimbInfoByInventoryName(inventoryName);
+   const attackInfo = getItemAttackInfo(limb.heldItemType);
 
-   const attackInfo = getItemAttackInfo(limbInfo.heldItemType);
+   // Shield-bash
    if (attackInfo.attackPattern === null) {
+      if (limb.action === LimbAction.block) {
+         limb.action = LimbAction.windShieldBash;
+         limb.currentActionElapsedTicks = 0;
+         limb.currentActionDurationTicks = AttackVars.SHIELD_BASH_WINDUP_TIME_TICKS;
+         limb.currentActionRate = 1;
+
+         // @Speed: Garbage collection
+         limb.currentActionStartLimbState = copyLimbState(SHIELD_BLOCKING_LIMB_STATE);
+         // @Speed: Garbage collection
+         limb.currentActionEndLimbState = copyLimbState(SHIELD_BASH_WIND_UP_LIMB_STATE);
+
+         const attackPacket = createAttackPacket();
+         Client.sendPacket(attackPacket);
+      }
       return false;
    }
 
-   limbInfo.action = LimbAction.windAttack;
-   limbInfo.currentActionElapsedTicks = 0;
-   limbInfo.currentActionDurationTicks = attackInfo.attackTimings.windupTimeTicks;
-   limbInfo.currentActionRate = 1;
+   if (limb.action !== LimbAction.none || limb.currentActionElapsedTicks < limb.currentActionDurationTicks) {
+      return false;
+   }
+
+   limb.action = LimbAction.windAttack;
+   limb.currentActionElapsedTicks = 0;
+   limb.currentActionDurationTicks = attackInfo.attackTimings.windupTimeTicks;
+   limb.currentActionRate = 1;
 
    // @Speed: Garbage collection
-   limbInfo.currentActionStartLimbState = copyLimbState(TRIBESMAN_RESTING_LIMB_STATE);
+   limb.currentActionStartLimbState = copyLimbState(TRIBESMAN_RESTING_LIMB_STATE);
    // @Speed: Garbage collection
-   limbInfo.currentActionEndLimbState = copyLimbState(attackInfo.attackPattern.windedBack);
+   limb.currentActionEndLimbState = copyLimbState(attackInfo.attackPattern.windedBack);
 
    const attackPacket = createAttackPacket();
    Client.sendPacket(attackPacket);
@@ -686,7 +720,7 @@ export function updatePlayerMovement(): void {
       if (keyIsPressed("l")) {
          acceleration = PLAYER_LIGHTSPEED_ACCELERATION;
       // @Bug: doesn't account for offhand
-      } else if (playerAction === LimbAction.eat || playerAction === LimbAction.useMedicine || playerAction === LimbAction.chargeBow || playerAction === LimbAction.chargeSpear || playerAction === LimbAction.loadCrossbow || playerAction === LimbAction.block || latencyGameState.playerIsPlacingEntity) {
+      } else if (playerAction === LimbAction.eat || playerAction === LimbAction.useMedicine || playerAction === LimbAction.chargeBow || playerAction === LimbAction.chargeSpear || playerAction === LimbAction.loadCrossbow || playerAction === LimbAction.block || playerAction === LimbAction.windShieldBash || playerAction === LimbAction.pushShieldBash || playerAction === LimbAction.returnShieldBashToRest || latencyGameState.playerIsPlacingEntity) {
          acceleration = PLAYER_SLOW_ACCELERATION;
       } else {
          acceleration = PLAYER_ACCELERATION;

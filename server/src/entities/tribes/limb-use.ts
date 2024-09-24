@@ -23,7 +23,7 @@ import { createEntityFromConfig } from "../../Entity";
 import { createItemEntityConfig } from "../item-entity";
 import { dropBerryOverEntity, BERRY_BUSH_RADIUS } from "../resources/berry-bush";
 import { getEntityRelationship, EntityRelationship } from "../../components/TribeComponent";
-import { AttackVars, copyLimbState, TRIBESMAN_RESTING_LIMB_STATE } from "../../../../shared/src/attack-patterns";
+import { AttackVars, copyLimbState, SHIELD_BASH_WIND_UP_LIMB_STATE, SHIELD_BLOCKING_LIMB_STATE, TRIBESMAN_RESTING_LIMB_STATE } from "../../../../shared/src/attack-patterns";
 
 const enum Vars {
    DEFAULT_ATTACK_KNOCKBACK = 125
@@ -220,29 +220,42 @@ export function beginSwing(attackingEntity: EntityID, itemSlot: number, inventor
       return false;
    }
 
-   const limbInfo = inventoryUseComponent.getLimbInfo(inventoryName);
+   const limb = inventoryUseComponent.getLimbInfo(inventoryName);
 
-   const heldItem = getHeldItem(limbInfo);
+   const heldItem = getHeldItem(limb);
    const heldItemAttackInfo = getItemAttackInfo(heldItem !== null ? heldItem.type : null);
+   
+   // Shield bash
    if (heldItemAttackInfo.attackPattern === null) {
+      if (limb.action === LimbAction.block) {
+         limb.selectedItemSlot = itemSlot;
+         limb.action = LimbAction.windShieldBash;
+         limb.currentActionElapsedTicks = 0;
+         limb.currentActionDurationTicks = AttackVars.SHIELD_BASH_WINDUP_TIME_TICKS;
+         limb.currentActionRate = 1;
+         // @Speed: Garbage collection
+         limb.currentActionStartLimbState = copyLimbState(SHIELD_BLOCKING_LIMB_STATE);
+         // @Speed: Garbage collection
+         limb.currentActionEndLimbState = copyLimbState(SHIELD_BASH_WIND_UP_LIMB_STATE);
+      }
       return false;
    }
 
    // If the limb is doing something or is resting, don't swing
-   if (limbInfo.action !== LimbAction.none || limbInfo.currentActionElapsedTicks < limbInfo.currentActionDurationTicks) {
+   if (limb.action !== LimbAction.none || limb.currentActionElapsedTicks < limb.currentActionDurationTicks) {
       return false;
    }
    
    // Begin winding up the attack
-   limbInfo.selectedItemSlot = itemSlot;
-   limbInfo.action = LimbAction.windAttack;
-   limbInfo.currentActionElapsedTicks = 0;
-   limbInfo.currentActionDurationTicks = heldItemAttackInfo.attackTimings.windupTimeTicks;
-   limbInfo.currentActionRate = 1;
+   limb.selectedItemSlot = itemSlot;
+   limb.action = LimbAction.windAttack;
+   limb.currentActionElapsedTicks = 0;
+   limb.currentActionDurationTicks = heldItemAttackInfo.attackTimings.windupTimeTicks;
+   limb.currentActionRate = 1;
    // @Speed: Garbage collection
-   limbInfo.currentActionStartLimbState = copyLimbState(TRIBESMAN_RESTING_LIMB_STATE);
+   limb.currentActionStartLimbState = copyLimbState(TRIBESMAN_RESTING_LIMB_STATE);
    // @Speed: Garbage collection
-   limbInfo.currentActionEndLimbState = copyLimbState(heldItemAttackInfo.attackPattern.windedBack);
+   limb.currentActionEndLimbState = copyLimbState(heldItemAttackInfo.attackPattern.windedBack);
 
    const physicsComponent = PhysicsComponentArray.getComponent(attackingEntity);
 
@@ -255,7 +268,7 @@ export function beginSwing(attackingEntity: EntityID, itemSlot: number, inventor
       const attackAlignment = (vx * Math.sin(transformComponent.rotation) + vy * Math.cos(transformComponent.rotation)) / velocityMagnitude;
       if (attackAlignment > 0) {
          const extraAmount = AttackVars.MAX_EXTRA_ATTACK_RANGE * Math.min(velocityMagnitude / AttackVars.MAX_EXTRA_ATTACK_RANGE_SPEED);
-         limbInfo.currentActionEndLimbState.extraOffsetY += extraAmount;
+         limb.currentActionEndLimbState.extraOffsetY += extraAmount;
       }
    }
 

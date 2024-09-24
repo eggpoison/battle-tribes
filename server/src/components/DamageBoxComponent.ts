@@ -96,7 +96,7 @@ function onTick(damageBoxComponent: DamageBoxComponent, entity: EntityID): void 
       if (limbInfo.action === LimbAction.none) {
          // There shouldn't be any active damage boxes if the limb is doing nothing!
          // @Temporary
-         console.warn("BAD!");
+         console.warn("BAD!1");
          // throw new Error();
       }
 
@@ -117,10 +117,10 @@ function onTick(damageBoxComponent: DamageBoxComponent, entity: EntityID): void 
       }
 
       const limbInfo = inventoryUseComponent.getLimbInfo(blockBox.associatedLimbInventoryName);
-      if (limbInfo.action !== LimbAction.block) {
+      if (limbInfo.action !== LimbAction.block && limbInfo.action !== LimbAction.windShieldBash) {
          // There shouldn't be any active block boxes if the limb isn't blocking!
          // @Temporary
-         console.warn("BAD!");
+         console.warn("BAD!2");
          // throw new Error();
       }
 

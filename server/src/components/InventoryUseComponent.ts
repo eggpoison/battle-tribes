@@ -11,7 +11,7 @@ import { DamageBoxComponentArray } from "./DamageBoxComponent";
 import { ServerBlockBox, ServerDamageBox } from "../boxes";
 import { assertBoxIsRectangular, BlockType, updateBox } from "battletribes-shared/boxes/boxes";
 import { TransformComponentArray } from "./TransformComponent";
-import { BLOCKING_LIMB_STATE, copyLimbState, LimbState, SHIELD_BLOCKING_LIMB_STATE, TRIBESMAN_RESTING_LIMB_STATE } from "battletribes-shared/attack-patterns";
+import { AttackVars, BLOCKING_LIMB_STATE, copyLimbState, LimbState, SHIELD_BASH_PUSHED_LIMB_STATE, SHIELD_BASH_WIND_UP_LIMB_STATE, SHIELD_BLOCKING_DAMAGE_BOX_INFO, SHIELD_BLOCKING_LIMB_STATE, TRIBESMAN_RESTING_LIMB_STATE } from "battletribes-shared/attack-patterns";
 import { registerDirtyEntity } from "../server/player-clients";
 import RectangularBox from "battletribes-shared/boxes/RectangularBox";
 import { HealthComponentArray } from "./HealthComponent";
@@ -339,6 +339,49 @@ function onTick(inventoryUseComponent: InventoryUseComponent, entity: EntityID):
                   
                break;
             }
+            case LimbAction.windShieldBash: {
+               limb.action = LimbAction.pushShieldBash;
+               limb.currentActionElapsedTicks = 0;
+               limb.currentActionDurationTicks = AttackVars.SHIELD_BASH_PUSH_TIME_TICKS;
+
+               // Push forwards
+               const transformComponent = TransformComponentArray.getComponent(entity);
+               applyKnockback(entity, 250, transformComponent.rotation);
+               console.log("apply");
+
+               limb.blockBox.isActive = false;
+               
+               limb.limbDamageBox.isActive = true;
+               limb.limbDamageBox.isBlocked = false;
+               limb.heldItemDamageBox.isActive = true;
+               limb.heldItemDamageBox.isBlocked = false;
+
+               const damageBoxInfo = SHIELD_BLOCKING_DAMAGE_BOX_INFO;
+
+               // @Copynpaste
+               assertBoxIsRectangular(limb.heldItemDamageBox.box);
+               limb.heldItemDamageBox.box.offset.x = damageBoxInfo.offsetX;
+               limb.heldItemDamageBox.box.offset.y = damageBoxInfo.offsetY;
+               limb.heldItemDamageBox.box.width = damageBoxInfo.width;
+               limb.heldItemDamageBox.box.height = damageBoxInfo.height;
+               limb.heldItemDamageBox.box.relativeRotation = damageBoxInfo.rotation;
+               break;
+            }
+            case LimbAction.pushShieldBash: {
+               limb.action = LimbAction.returnShieldBashToRest;
+               limb.currentActionElapsedTicks = 0;
+               limb.currentActionDurationTicks = AttackVars.SHIELD_BASH_RETURN_TIME_TICKS;
+
+               limb.limbDamageBox.isActive = false;
+               limb.heldItemDamageBox.isActive = false;
+               break;
+            }
+            case LimbAction.returnShieldBashToRest: {
+               limb.action = LimbAction.block;
+               limb.currentActionElapsedTicks = 0;
+               limb.currentActionDurationTicks = 0;
+               break;
+            }
             case LimbAction.windAttack: {
                const heldItem = getHeldItem(limb);
                const heldItemAttackInfo = getItemAttackInfo(heldItem !== null ? heldItem.type : null);
@@ -402,6 +445,12 @@ function onTick(inventoryUseComponent: InventoryUseComponent, entity: EntityID):
       if (limb.action === LimbAction.attack) {
          const swingProgress = limb.currentActionElapsedTicks / limb.currentActionDurationTicks;
          lerpLimbBetweenStates(entity, limb, limb.currentActionStartLimbState, limb.currentActionEndLimbState, swingProgress);
+      }
+      // @Copynpaste
+      // Update damage box for shield bashes
+      if (limb.action === LimbAction.pushShieldBash) {
+         const swingProgress = limb.currentActionElapsedTicks / limb.currentActionDurationTicks;
+         lerpLimbBetweenStates(entity, limb, SHIELD_BASH_WIND_UP_LIMB_STATE, SHIELD_BASH_PUSHED_LIMB_STATE, swingProgress);
       }
 
       // Update blocking damage box when blocking

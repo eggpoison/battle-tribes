@@ -8,7 +8,11 @@ export const enum AttackVars {
    BOW_REST_TIME_TICKS = (Settings.TPS * 0.25) | 0,
    // Number of ticks into a swing that the attack can still be feigned
    FEIGN_SWING_TICKS_LEEWAY = (Settings.TPS * 0.1) | 0,
-   FEIGN_TIME_TICKS = (Settings.TPS * 0.1) | 0
+   FEIGN_TIME_TICKS = (Settings.TPS * 0.1) | 0,
+   SHIELD_BASH_WINDUP_TIME_TICKS = (Settings.TPS * 0.3) | 0,
+   SHIELD_BASH_PUSH_TIME_TICKS = (Settings.TPS * 0.15) | 0,
+   SHIELD_BASH_RETURN_TIME_TICKS = (Settings.TPS * 0.4) | 0,
+   SHIELD_BASH_REST_TIME_TICKS = (Settings.TPS * 0.4) | 0
 }
 
 export interface LimbState {
@@ -163,6 +167,12 @@ export const SHIELD_BLOCKING_LIMB_STATE: LimbState = {
    extraOffsetY: 0
 };
 
+export const SHIELD_BASH_WIND_UP_LIMB_STATE = copyLimbState(SHIELD_BLOCKING_LIMB_STATE);
+SHIELD_BASH_WIND_UP_LIMB_STATE.extraOffset -= 6;
+
+export const SHIELD_BASH_PUSHED_LIMB_STATE = copyLimbState(SHIELD_BLOCKING_LIMB_STATE);
+SHIELD_BASH_PUSHED_LIMB_STATE.extraOffset += 16;
+
 /* ---------------- */
 /* DAMAGE BOX INFOS */
 /* ---------------- */
@@ -193,12 +203,6 @@ export const SHIELD_BLOCKING_DAMAGE_BOX_INFO: LimbHeldItemDamageBoxInfo = {
    offsetY: 10,
    showLargeTexture: true
 };
-
-export const SHIELD_BLOCKING_WIND_UP_DAMAGE_BOX_INFO = copyDamageBoxInfo(SHIELD_BLOCKING_DAMAGE_BOX_INFO);
-SHIELD_BLOCKING_WIND_UP_DAMAGE_BOX_INFO.offsetY -= 4;
-
-export const SHIELD_BLOCKING_PUSHED_DAMAGE_BOX_INFO = copyDamageBoxInfo(SHIELD_BLOCKING_DAMAGE_BOX_INFO);
-SHIELD_BLOCKING_PUSHED_DAMAGE_BOX_INFO.offsetY += 8;
 
 export const TOOL_ITEM_DAMAGE_BOX_INFO: LimbHeldItemDamageBoxInfo = {
    width: 30,

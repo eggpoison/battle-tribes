@@ -95,6 +95,10 @@ function onInitialise(config: ComponentConfig<ServerComponentType.health | Serve
       // @Temporary
       items: [
          {
+            item: createItem(ItemType.woodenShield, 1),
+            itemSlot: 1
+         },
+         {
             item: createItem(ItemType.wooden_sword, 1),
             itemSlot: 2
          },

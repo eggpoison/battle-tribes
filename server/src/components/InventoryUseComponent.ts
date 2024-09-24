@@ -11,11 +11,11 @@ import { DamageBoxComponentArray } from "./DamageBoxComponent";
 import { ServerBlockBox, ServerDamageBox } from "../boxes";
 import { assertBoxIsRectangular, BlockType, updateBox } from "battletribes-shared/boxes/boxes";
 import { TransformComponentArray } from "./TransformComponent";
-import { AttackPatternInfo, BLOCKING_LIMB_STATE, copyLimbState, DEFAULT_ATTACK_PATTERN, LimbState, SHIELD_BLOCKING_LIMB_STATE, TRIBESMAN_RESTING_LIMB_STATE } from "battletribes-shared/attack-patterns";
+import { BLOCKING_LIMB_STATE, copyLimbState, LimbState, SHIELD_BLOCKING_LIMB_STATE, TRIBESMAN_RESTING_LIMB_STATE } from "battletribes-shared/attack-patterns";
 import { registerDirtyEntity } from "../server/player-clients";
 import RectangularBox from "battletribes-shared/boxes/RectangularBox";
 import { HealthComponentArray } from "./HealthComponent";
-import { attemptAttack } from "../entities/tribes/limb-use";
+import { attemptAttack, calculateItemKnockback } from "../entities/tribes/limb-use";
 import Board from "../Board";
 import { ProjectileComponentArray } from "./ProjectileComponent";
 import { applyKnockback } from "./PhysicsComponent";
@@ -62,10 +62,12 @@ export interface LimbInfo {
    heldItemDamageBox: ServerDamageBox;
    blockBox: ServerBlockBox;
 
+   // @Hack @Memory: Shouldn't be stored like this, should only be sent when block events happen
    // @Bug: If multiple attacks are blocked in 1 tick by the same damage box, only one of them is sent. 
    lastBlockTick: number;
    blockPositionX: number;
    blockPositionY: number;
+   blockType: BlockType;
 }
 
 const addLimbStateToPacket = (packet: Packet, limbState: LimbState): void => {
@@ -123,7 +125,8 @@ export class InventoryUseComponent {
          blockBox: blockBox,
          lastBlockTick: 0,
          blockPositionX: 0,
-         blockPositionY: 0
+         blockPositionY: 0,
+         blockType: BlockType.partial
       };
       
       this.limbInfos.push(useInfo);
@@ -221,8 +224,8 @@ const setLimbToState = (entity: EntityID, limbInfo: LimbInfo, state: LimbState):
    setLimb(entity, limbInfo, state.direction, state.extraOffset, state.rotation, state.extraOffsetX, state.extraOffsetY);
 }
 
-export function onBlockBoxCollisionWithDamageBox(victim: EntityID, blockBoxLimb: LimbInfo, blockBox: ServerBlockBox, collidingDamageBox: ServerDamageBox): void {
-   const victimInventoryUseComponent = InventoryUseComponentArray.getComponent(victim);
+export function onBlockBoxCollisionWithDamageBox(attacker: EntityID, victim: EntityID, blockBoxLimb: LimbInfo, blockBox: ServerBlockBox, collidingDamageBox: ServerDamageBox): void {
+   const victimInventoryUseComponent = InventoryUseComponentArray.getComponent(attacker);
    const attackerLimb = victimInventoryUseComponent.getLimbInfo(collidingDamageBox.associatedLimbInventoryName);
 
    // Pause the attack for a brief period
@@ -235,21 +238,33 @@ export function onBlockBoxCollisionWithDamageBox(victim: EntityID, blockBoxLimb:
    if (blockBox.blockType === BlockType.full) {
       attackerLimb.limbDamageBox.isActive = false;
       attackerLimb.heldItemDamageBox.isActive = false;
+
+      const attackerTransformComponent = TransformComponentArray.getComponent(attacker);
+      const victimTransformComponent = TransformComponentArray.getComponent(victim);
+      // Push back
+      const pushDirection = attackerTransformComponent.position.calculateAngleBetween(victimTransformComponent.position);
+      const attackingItem = getHeldItem(attackerLimb);
+      const knockbackAmount = calculateItemKnockback(attackingItem, true);
+      applyKnockback(victim, knockbackAmount, pushDirection);
    }
 
    blockBox.hasBlocked = true;
 
+   // @Copynpaste
    blockBoxLimb.lastBlockTick = Board.ticks;
    blockBoxLimb.blockPositionX = blockBox.box.position.x;
    blockBoxLimb.blockPositionY = blockBox.box.position.y;
-   registerDirtyEntity(victim);
+   blockBoxLimb.blockType = blockBox.blockType;
+   registerDirtyEntity(attacker);
 }
 
 export function onBlockBoxCollisionWithProjectile(blockingEntity: EntityID, projectile: EntityID, blockBoxLimb: LimbInfo, blockBox: ServerBlockBox): void {
    blockBox.hasBlocked = true;
+   // @Copynpaste
    blockBoxLimb.lastBlockTick = Board.ticks;
    blockBoxLimb.blockPositionX = blockBox.box.position.x;
    blockBoxLimb.blockPositionY = blockBox.box.position.y;
+   blockBoxLimb.blockType = blockBox.blockType;
 
    if (blockBox.blockType === BlockType.full) {
       const blockingEntityTransformComponent = TransformComponentArray.getComponent(blockingEntity);
@@ -331,6 +346,11 @@ function onTick(inventoryUseComponent: InventoryUseComponent, entity: EntityID):
                limb.action = LimbAction.attack;
                limb.currentActionElapsedTicks = 0;
                limb.currentActionDurationTicks = heldItemAttackInfo.attackTimings.swingTimeTicks;
+               // @Speed: Garbage collection
+               limb.currentActionStartLimbState = copyLimbState(heldItemAttackInfo.attackPattern!.windedBack);
+               // @Speed: Garbage collection
+               limb.currentActionEndLimbState = copyLimbState(heldItemAttackInfo.attackPattern!.swung);
+               
                limb.limbDamageBox.isActive = true;
                limb.limbDamageBox.isBlocked = false;
                limb.heldItemDamageBox.isBlocked = false;
@@ -358,6 +378,10 @@ function onTick(inventoryUseComponent: InventoryUseComponent, entity: EntityID):
                limb.action = LimbAction.returnAttackToRest;
                limb.currentActionElapsedTicks = 0;
                limb.currentActionDurationTicks = heldItemAttackInfo.attackTimings.returnTimeTicks;
+               // @Speed: Garbage collection
+               limb.currentActionStartLimbState = copyLimbState(heldItemAttackInfo.attackPattern!.swung);
+               // @Speed: Garbage collection
+               limb.currentActionEndLimbState = copyLimbState(TRIBESMAN_RESTING_LIMB_STATE);
 
                limb.limbDamageBox.isActive = false;
                limb.heldItemDamageBox.isActive = false;
@@ -422,7 +446,7 @@ function getDataLength(entity: EntityID): number {
       lengthBytes += Float32Array.BYTES_PER_ELEMENT;
       lengthBytes += 2 * Float32Array.BYTES_PER_ELEMENT * Object.keys(useInfo.spearWindupCooldowns).length;
       lengthBytes += getCrossbowLoadProgressRecordLength(useInfo);
-      lengthBytes += 18 * Float32Array.BYTES_PER_ELEMENT;
+      lengthBytes += 19 * Float32Array.BYTES_PER_ELEMENT;
       // Limb states
       lengthBytes += 2 * 5 * Float32Array.BYTES_PER_ELEMENT;
    }
@@ -470,6 +494,7 @@ function addDataToPacket(packet: Packet, entity: EntityID): void {
       packet.addNumber(limb.lastBlockTick);
       packet.addNumber(limb.blockPositionX);
       packet.addNumber(limb.blockPositionY);
+      packet.addNumber(limb.blockType);
 
       addLimbStateToPacket(packet, limb.currentActionStartLimbState);
       addLimbStateToPacket(packet, limb.currentActionEndLimbState);

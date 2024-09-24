@@ -127,7 +127,7 @@ function onTick(damageBoxComponent: DamageBoxComponent, entity: EntityID): void 
       const collisionInfo = getCollidingCollisionBox(entity, blockBox);
       if (collisionInfo !== null) {
          if (blockBox.collidingBox !== collisionInfo.collidingDamageBox) {
-            onBlockBoxCollisionWithDamageBox(collisionInfo.collidingEntity, limbInfo, blockBox, collisionInfo.collidingDamageBox);
+            onBlockBoxCollisionWithDamageBox(collisionInfo.collidingEntity, entity, limbInfo, blockBox, collisionInfo.collidingDamageBox);
          }
 
          blockBox.collidingBox = collisionInfo.collidingDamageBox;

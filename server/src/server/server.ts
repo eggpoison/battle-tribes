@@ -30,8 +30,6 @@ import generateTerrain from "../world-generation/terrain-generation";
 import { generateLilypads } from "../world-generation/lilypad-generation";
 import { forceMaxGrowAllIceSpikes } from "../components/IceSpikesComponent";
 import { sortComponentArrays } from "../components/ComponentArray";
-import { createCactusConfig } from "../entities/resources/cactus";
-import { createReedConfig } from "../entities/reed";
 
 /*
 

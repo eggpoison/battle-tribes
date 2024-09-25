@@ -147,3 +147,26 @@ export function sendItemDropPacket(isOffhand: boolean, itemSlot: number, dropAmo
 
    Client.sendPacket(packet.buffer);
 }
+
+
+export function sendItemPickupPacket(entityID: number, inventoryName: InventoryName, itemSlot: number, amount: number): void {
+   const packet = new Packet(PacketType.itemPickup, 5 * Float32Array.BYTES_PER_ELEMENT);
+
+   packet.addNumber(entityID);
+   packet.addNumber(inventoryName);
+   packet.addNumber(itemSlot);
+   packet.addNumber(amount);
+
+   Client.sendPacket(packet.buffer);
+}
+
+export function sendItemReleasePacket(entityID: number, inventoryName: InventoryName, itemSlot: number, amount: number): void {
+   const packet = new Packet(PacketType.itemRelease, 5 * Float32Array.BYTES_PER_ELEMENT);
+
+   packet.addNumber(entityID);
+   packet.addNumber(inventoryName);
+   packet.addNumber(itemSlot);
+   packet.addNumber(amount);
+
+   Client.sendPacket(packet.buffer);
+}

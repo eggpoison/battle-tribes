@@ -147,6 +147,15 @@
    transform: translate(50%, 50%);
    z-index: 2;
 }
+.item-slot .cooldown-bg {
+   width: 100%;
+   height: calc(var(--item-slot-size) * var(--cooldown));
+   background-color: rgba(0, 0, 0, 0.5);
+   position: absolute;
+   bottom: 0;
+   right: 0;
+   left: 0;
+}
 
 .sub-menu {
    background-color: #333;

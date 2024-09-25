@@ -188,16 +188,17 @@ export function getHeldItem(limbInfo: LimbInfo): Item | null {
    return typeof item !== "undefined" ? item : null;
 }
 
-const setLimb = (entity: EntityID, limb: LimbInfo, limbDirection: number, extraOffset: number, limbRotation: number, extraOffsetX: number, extraOffsetY: number): void => {
+const setLimb = (entity: EntityID, limb: LimbInfo, limbDirection: number, extraOffset: number, limbRotation: number, extraOffsetX: number, extraOffsetY: number, isFlipped: boolean): void => {
+   const flipMultiplier = isFlipped ? -1 : 1;
    const limbDamageBox = limb.limbDamageBox;
 
    // @Temporary @Hack
    const offset = extraOffset + 34;
 
    const limbBox = limbDamageBox.box;
-   limbBox.offset.x = offset * Math.sin(limbDirection) + extraOffsetX;
-   limbBox.offset.y = offset * Math.cos(limbDirection) + extraOffsetY;
-   limbBox.relativeRotation = limbRotation;
+   limbBox.offset.x = offset * Math.sin(limbDirection * flipMultiplier) + extraOffsetX * flipMultiplier;
+   limbBox.offset.y = offset * Math.cos(limbDirection * flipMultiplier) + extraOffsetY;
+   limbBox.relativeRotation = limbRotation * flipMultiplier;
 
    // Update limb
    const transformComponent = TransformComponentArray.getComponent(entity);
@@ -211,17 +212,17 @@ const setLimb = (entity: EntityID, limb: LimbInfo, limbDirection: number, extraO
    }
 }
 
-const lerpLimbBetweenStates = (entity: EntityID, limbInfo: LimbInfo, startingLimbState: LimbState, targetLimbState: LimbState, progress: number): void => {
+const lerpLimbBetweenStates = (entity: EntityID, limbInfo: LimbInfo, startingLimbState: LimbState, targetLimbState: LimbState, progress: number, isFlipped: boolean): void => {
    const direction = lerp(startingLimbState.direction, targetLimbState.direction, progress);
    const extraOffset = lerp(startingLimbState.extraOffset, targetLimbState.extraOffset, progress);
    const rotation = lerp(startingLimbState.rotation, targetLimbState.rotation, progress);
    const extraOffsetX = lerp(startingLimbState.extraOffsetX, targetLimbState.extraOffsetX, progress);
    const extraOffsetY = lerp(startingLimbState.extraOffsetY, targetLimbState.extraOffsetY, progress);
-   setLimb(entity, limbInfo, direction, extraOffset, rotation, extraOffsetX, extraOffsetY);
+   setLimb(entity, limbInfo, direction, extraOffset, rotation, extraOffsetX, extraOffsetY, isFlipped);
 }
 
-const setLimbToState = (entity: EntityID, limbInfo: LimbInfo, state: LimbState): void => {
-   setLimb(entity, limbInfo, state.direction, state.extraOffset, state.rotation, state.extraOffsetX, state.extraOffsetY);
+const setLimbToState = (entity: EntityID, limbInfo: LimbInfo, state: LimbState, isFlipped: boolean): void => {
+   setLimb(entity, limbInfo, state.direction, state.extraOffset, state.rotation, state.extraOffsetX, state.extraOffsetY, isFlipped);
 }
 
 export function onBlockBoxCollisionWithDamageBox(attacker: EntityID, victim: EntityID, blockBoxLimb: LimbInfo, blockBox: ServerBlockBox, collidingDamageBox: ServerDamageBox): void {
@@ -313,6 +314,8 @@ function onTick(inventoryUseComponent: InventoryUseComponent, entity: EntityID):
          limb.currentActionElapsedTicks += limb.currentActionRate;
       }
       
+      const isFlipped = limb.associatedInventory.name === InventoryName.offhand;
+      
       if (currentActionHasFinished(limb)) {
          switch (limb.action) {
             case LimbAction.engageBlock: {
@@ -327,11 +330,11 @@ function onTick(inventoryUseComponent: InventoryUseComponent, entity: EntityID):
                
                // @Copynpaste
                assertBoxIsRectangular(limb.blockBox.box);
-               limb.blockBox.box.offset.x = damageBoxInfo.offsetX;
+               limb.blockBox.box.offset.x = damageBoxInfo.offsetX * (isFlipped ? -1 : 1);
                limb.blockBox.box.offset.y = damageBoxInfo.offsetY;
                limb.blockBox.box.width = damageBoxInfo.width;
                limb.blockBox.box.height = damageBoxInfo.height;
-               limb.blockBox.box.relativeRotation = damageBoxInfo.rotation;
+               limb.blockBox.box.relativeRotation = damageBoxInfo.rotation * (isFlipped ? -1 : 1);
 
                limb.action = LimbAction.block;
                limb.currentActionElapsedTicks = 0;
@@ -347,7 +350,6 @@ function onTick(inventoryUseComponent: InventoryUseComponent, entity: EntityID):
                // Push forwards
                const transformComponent = TransformComponentArray.getComponent(entity);
                applyKnockback(entity, 250, transformComponent.rotation);
-               console.log("apply");
 
                limb.blockBox.isActive = false;
                
@@ -360,11 +362,11 @@ function onTick(inventoryUseComponent: InventoryUseComponent, entity: EntityID):
 
                // @Copynpaste
                assertBoxIsRectangular(limb.heldItemDamageBox.box);
-               limb.heldItemDamageBox.box.offset.x = damageBoxInfo.offsetX;
+               limb.heldItemDamageBox.box.offset.x = damageBoxInfo.offsetX * (isFlipped ? -1 : 1);
                limb.heldItemDamageBox.box.offset.y = damageBoxInfo.offsetY;
                limb.heldItemDamageBox.box.width = damageBoxInfo.width;
                limb.heldItemDamageBox.box.height = damageBoxInfo.height;
-               limb.heldItemDamageBox.box.relativeRotation = damageBoxInfo.rotation;
+               limb.heldItemDamageBox.box.relativeRotation = damageBoxInfo.rotation * (isFlipped ? -1 : 1);
                break;
             }
             case LimbAction.pushShieldBash: {
@@ -404,11 +406,11 @@ function onTick(inventoryUseComponent: InventoryUseComponent, entity: EntityID):
 
                   // @Copynpaste
                   assertBoxIsRectangular(limb.heldItemDamageBox.box);
-                  limb.heldItemDamageBox.box.offset.x = damageBoxInfo.offsetX;
+                  limb.heldItemDamageBox.box.offset.x = damageBoxInfo.offsetX * (isFlipped ? -1 : 1);
                   limb.heldItemDamageBox.box.offset.y = damageBoxInfo.offsetY;
                   limb.heldItemDamageBox.box.width = damageBoxInfo.width;
                   limb.heldItemDamageBox.box.height = damageBoxInfo.height;
-                  limb.heldItemDamageBox.box.relativeRotation = damageBoxInfo.rotation;
+                  limb.heldItemDamageBox.box.relativeRotation = damageBoxInfo.rotation * (isFlipped ? -1 : 1);
                } else {
                   limb.heldItemDamageBox.isActive = false;
                }
@@ -444,13 +446,13 @@ function onTick(inventoryUseComponent: InventoryUseComponent, entity: EntityID):
       // Update damage box for limb attacks
       if (limb.action === LimbAction.attack) {
          const swingProgress = limb.currentActionElapsedTicks / limb.currentActionDurationTicks;
-         lerpLimbBetweenStates(entity, limb, limb.currentActionStartLimbState, limb.currentActionEndLimbState, swingProgress);
+         lerpLimbBetweenStates(entity, limb, limb.currentActionStartLimbState, limb.currentActionEndLimbState, swingProgress, isFlipped);
       }
       // @Copynpaste
       // Update damage box for shield bashes
       if (limb.action === LimbAction.pushShieldBash) {
          const swingProgress = limb.currentActionElapsedTicks / limb.currentActionDurationTicks;
-         lerpLimbBetweenStates(entity, limb, SHIELD_BASH_WIND_UP_LIMB_STATE, SHIELD_BASH_PUSHED_LIMB_STATE, swingProgress);
+         lerpLimbBetweenStates(entity, limb, SHIELD_BASH_WIND_UP_LIMB_STATE, SHIELD_BASH_PUSHED_LIMB_STATE, swingProgress, isFlipped);
       }
 
       // Update blocking damage box when blocking
@@ -458,7 +460,7 @@ function onTick(inventoryUseComponent: InventoryUseComponent, entity: EntityID):
          if (limb.currentActionElapsedTicks >= limb.currentActionDurationTicks) {
             const heldItem = getHeldItem(limb);
             const blockingState = heldItem !== null && ITEM_TYPE_RECORD[heldItem.type] === "shield" ? SHIELD_BLOCKING_LIMB_STATE : BLOCKING_LIMB_STATE;
-            setLimbToState(entity, limb, blockingState);
+            setLimbToState(entity, limb, blockingState, isFlipped);
          }
       }
 

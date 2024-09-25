@@ -1,6 +1,7 @@
 import { Inventory, ItemType } from "battletribes-shared/items/items";
 import { onItemSlotMouseDown } from "../../../inventory-manipulation";
 import { getItemTypeImage } from "../../../client-item-info";
+import { ItemRestTime } from "../GameInteractableLayer";
 
 export interface ItemSlotCallbackInfo {
    readonly itemSlot: number;
@@ -18,6 +19,7 @@ export interface ItemSlotProps {
    /** Determines whether or not items can be added and removed freely. */
    readonly isManipulable?: boolean;
    readonly placeholderImg?: any;
+   readonly restTime?: ItemRestTime;
    onMouseDown?(e: MouseEvent): void;
    onMouseOver?(e: MouseEvent, callbackInfo: ItemSlotCallbackInfo): void;
    onMouseOut?: () => void;
@@ -60,6 +62,9 @@ const ItemSlot = (props: ItemSlotProps) => {
       ) : null}
       {typeof item !== "undefined" ? (
          <div className="item-count">{item.count !== 1 ? item.count : ""}</div>
+      ) : null}
+      {(typeof props.restTime !== "undefined" && props.restTime.durationTicks > 0) ? (
+         <div className="cooldown-bg" style={{"--cooldown": (props.restTime.remainingTimeTicks / props.restTime.durationTicks).toString()} as React.CSSProperties}></div>
       ) : null}
    </div>;
 }

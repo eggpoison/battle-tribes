@@ -182,7 +182,7 @@ class TribeMemberComponent extends ServerComponent {
                   getTextureArrayIndex("entities/miscellaneous/eye-scar.png")
                );
                renderPart.addTag("tribeMemberComponent:fromTitle");
-               renderPart.flipX = isFlipped;
+               renderPart.setFlipX(true);
 
                renderPart.offset.x = offsetX;
                renderPart.offset.y = offsetY;
@@ -203,7 +203,7 @@ class TribeMemberComponent extends ServerComponent {
                   renderPart.addTag("tribeMemberComponent:fromTitle");
 
                   if (i === 1) {
-                     renderPart.flipX = true;
+                     renderPart.setFlipX(true);
                   }
 
                   // @Hack

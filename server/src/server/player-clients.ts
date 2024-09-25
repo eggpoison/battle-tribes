@@ -145,60 +145,6 @@ const processPlayerCraftingPacket = (playerClient: PlayerClient, recipeIndex: nu
    }
 }
 
-const processItemPickupPacket = (playerClient: PlayerClient, entity: EntityID, inventoryName: InventoryName, itemSlot: number, amount: number): void => {
-   const player = playerClient.instance;
-   if (!Board.hasEntity(player) || !Board.hasEntity(entity)) {
-      return;
-   }
-   
-   const playerInventoryComponent = InventoryComponentArray.getComponent(player);
-   const heldItemInventory = getInventory(playerInventoryComponent, InventoryName.heldItemSlot);
-   
-   // Don't pick up the item if there is already a held item
-   if (typeof heldItemInventory.itemSlots[1] !== "undefined") {
-      return;
-   }
-
-   const targetInventoryComponent = InventoryComponentArray.getComponent(entity);
-   const targetInventory = getInventory(targetInventoryComponent, inventoryName);
-
-   const pickedUpItem = targetInventory.itemSlots[itemSlot];
-   if (typeof pickedUpItem === "undefined") {
-      return;
-   }
-
-   // Remove the item from its previous inventory
-   const amountConsumed = consumeItemFromSlot(targetInventory, itemSlot, amount);
-
-   // Hold the item
-   // Copy it as the consumeItemFromSlot function modifies the original item's count
-   const heldItem = createItem(pickedUpItem.type, amountConsumed);
-   heldItemInventory.addItem(heldItem, 1);
-}
-
-const processItemReleasePacket = (playerClient: PlayerClient, entity: EntityID, inventoryName: InventoryName, itemSlot: number, amount: number): void => {
-   if (!Board.hasEntity(playerClient.instance) || !Board.hasEntity(entity)) {
-      return;
-   }
-
-   const inventoryComponent = InventoryComponentArray.getComponent(playerClient.instance);
-   
-   // Don't release an item if there is no held item
-   const heldItemInventory = getInventory(inventoryComponent, InventoryName.heldItemSlot);
-   const heldItem = heldItemInventory.itemSlots[1];
-   if (typeof heldItem === "undefined") {
-      return;
-   }
-
-   const targetInventoryComponent = InventoryComponentArray.getComponent(entity);
-
-   // Add the item to the inventory
-   const amountAdded = addItemToSlot(targetInventoryComponent, inventoryName, itemSlot, heldItem.type, amount);
-
-   // If all of the item was added, clear the held item
-   consumeItemTypeFromInventory(inventoryComponent, InventoryName.heldItemSlot, heldItem.type, amountAdded);
-}
-
 const processCommandPacket = (playerClient: PlayerClient, command: string): void => {
    if (!Board.hasEntity(playerClient.instance)) {
       return;
@@ -496,14 +442,6 @@ export function addPlayerClient(playerClient: PlayerClient, player: EntityID, pl
 
    socket.on("crafting_packet", (recipeIndex: number) => {
       processPlayerCraftingPacket(playerClient, recipeIndex);
-   });
-
-   socket.on("item_pickup", (entity: EntityID, inventoryName: InventoryName, itemSlot: number, amount: number) => {
-      processItemPickupPacket(playerClient, entity, inventoryName, itemSlot, amount);
-   });
-
-   socket.on("item_release", (entity: EntityID, inventoryName: InventoryName, itemSlot: number, amount: number) => {
-      processItemReleasePacket(playerClient, entity, inventoryName, itemSlot, amount);
    });
 
    // @Incomplete

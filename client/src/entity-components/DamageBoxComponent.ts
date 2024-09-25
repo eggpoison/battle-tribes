@@ -13,8 +13,9 @@ import { Settings } from "battletribes-shared/settings";
 import Board from "../Board";
 import { InventoryName } from "battletribes-shared/items/items";
 import Player from "../entities/Player";
-import { InventoryUseComponentArray } from "./InventoryUseComponent";
-import { discombobulate } from "../components/game/GameInteractableLayer";
+import { InventoryUseComponentArray, LimbInfo } from "./InventoryUseComponent";
+import { discombobulate, GameInteractableLayer_setItemRestTime } from "../components/game/GameInteractableLayer";
+import { AttackVars } from "../../../shared/src/attack-patterns";
 
 interface DamageBoxCollisionInfo {
    readonly collidingEntity: EntityID;
@@ -261,7 +262,7 @@ export const DamageBoxComponentArray = new ComponentArray<DamageBoxComponent>(Co
    onTick: onTick
 });
 
-const blockAttack = (damageBox: ClientDamageBox): void => {
+const blockPlayerAttack = (damageBox: ClientDamageBox): void => {
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(Player.instance!.id);
    const limb = inventoryUseComponent.getLimbInfoByInventoryName(damageBox.associatedLimbInventoryName);
    
@@ -270,6 +271,10 @@ const blockAttack = (damageBox: ClientDamageBox): void => {
    limb.currentActionRate = 0.4;
 
    discombobulate(0.2);
+}
+
+const onPlayerBlock = (limb: LimbInfo): void => {
+   GameInteractableLayer_setItemRestTime(limb.inventoryName, limb.selectedItemSlot, AttackVars.SHIELD_BLOCK_REST_TIME_TICKS);
 }
 
 function onTick(damageBoxComponent: DamageBoxComponent, entity: EntityID): void {
@@ -284,7 +289,7 @@ function onTick(damageBoxComponent: DamageBoxComponent, entity: EntityID): void 
       const collisionInfo = getCollidingBox(entity, damageBox);
       if (collisionInfo !== null && collisionInfo.collidingBox instanceof ClientBlockBox) {
          if (damageBox.collidingBox !== collisionInfo.collidingBox) {
-            blockAttack(damageBox);
+            blockPlayerAttack(damageBox);
          }
          damageBox.collidingBox = collisionInfo.collidingBox;
       } else {
@@ -292,6 +297,7 @@ function onTick(damageBoxComponent: DamageBoxComponent, entity: EntityID): void 
       }
    }
    
+   const inventoryUseComponent = InventoryUseComponentArray.getComponent(entity);
    for (let i = 0; i < damageBoxComponent.blockBoxes.length; i++) {
       const blockBox = damageBoxComponent.blockBoxes[i];
       
@@ -300,6 +306,9 @@ function onTick(damageBoxComponent: DamageBoxComponent, entity: EntityID): void 
       if (collisionInfo !== null && collisionInfo.collidingBox instanceof ClientDamageBox) {
          if (blockBox.collidingBox !== collisionInfo.collidingBox) {
             blockBox.hasBlocked = true;
+
+            const limb = inventoryUseComponent.getLimbInfoByInventoryName(blockBox.associatedLimbInventoryName);
+            onPlayerBlock(limb);
          }
          blockBox.collidingBox = collisionInfo.collidingBox;
       } else {

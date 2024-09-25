@@ -13,7 +13,7 @@ import { EnemyTribeData, PlayerTribeData, TechID, TechTreeUnlockProgress } from 
 import { EntityTickEvent, EntityTickEventType } from "battletribes-shared/entity-events";
 import Game from "../Game";
 import Player from "../entities/Player";
-import Client, { popGameDataPacket } from "./Client";
+import Client, { getQueuedGameDataPackets } from "./Client";
 import Entity from "../Entity";
 import { createEntity } from "../entity-class-record";
 import Board from "../Board";
@@ -687,5 +687,6 @@ export function processRespawnDataPacket(reader: PacketReader): void {
    gameScreenSetIsDead(false);
 
    // Clear any queued packets, as they contain data from when the player wasn't respawned.
-   popGameDataPacket();
+   const queuedPackets = getQueuedGameDataPackets();
+   queuedPackets.length = 0;
 }

@@ -11,9 +11,8 @@ interface Options {
 const OPTIONS: Options = {
    spawnEntities: true,
    spawnTribes: false,
-   generateRivers: true,
-   // @Temporary
-   generateWalls: false,
+   generateRivers: false,
+   generateWalls: true,
    inBenchmarkMode: false,
    warp: false
 };

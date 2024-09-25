@@ -260,7 +260,6 @@ const updateHeldItemRenderPart = (inventoryUseComponent: InventoryUseComponent, 
          0,
          getTextureArrayIndex(CLIENT_ITEM_INFO_RECORD[heldItemType].entityTextureSource)
       );
-      renderPart.flipX = limbIdx === 1;
       inventoryUseComponent.entity.attachRenderThing(renderPart);
       inventoryUseComponent.activeItemRenderParts[limbIdx] = renderPart;
    }
@@ -850,7 +849,6 @@ const updateLimb = (inventoryUseComponent: InventoryUseComponent, limbIdx: numbe
    
    // @Hack
    // updateActiveItemRenderPart(inventoryUseComponent, limbIdx, limbInfo, null);
-   const itemRenderPart = inventoryUseComponent.activeItemRenderParts[limbIdx];
    
    // @Hack @Incomplete
    // Zombie lunge attack

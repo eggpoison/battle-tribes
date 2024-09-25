@@ -95,13 +95,12 @@ const GameScreen = (props: GameScreenProps) => {
    }, [settingsIsOpen]);
    
    return <>
-      <GameInteractableLayer />
+      <GameInteractableLayer cinematicModeIsEnabled={cinematicModeIsEnabled} />
    
       <ChatBox />
 
       {!cinematicModeIsEnabled ? <>
          <HealthBar isDead={isDead} />
-         <Hotbar />
          <Infocards />
       </> : undefined}
 

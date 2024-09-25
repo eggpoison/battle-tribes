@@ -6,6 +6,7 @@ import { InventorySelector_inventoryIsOpen } from "./components/game/inventories
 import { Inventory, InventoryName, Item, ItemType } from "battletribes-shared/items/items";
 import { InventoryComponentArray } from "./entity-components/InventoryComponent";
 import Player from "./entities/Player";
+import { sendItemPickupPacket, sendItemReleasePacket } from "./client/packet-creation";
 
 const canInteractWithItemSlots = (): boolean => {
    return craftingMenuIsOpen() || InventorySelector_inventoryIsOpen();
@@ -22,13 +23,13 @@ export function leftClickItemSlot(e: MouseEvent, entityID: number, inventory: In
       const heldItemInventory = inventoryComponent.getInventory(InventoryName.heldItemSlot)!;
       const heldItem = heldItemInventory.itemSlots[1];
       if (typeof heldItem === "undefined") {
-         Client.sendItemPickupPacket(entityID, inventory.name, itemSlot, clickedItem.count);
+         sendItemPickupPacket(entityID, inventory.name, itemSlot, clickedItem.count);
    
          setHeldItemVisualPosition(e.clientX, e.clientY);
       } else {
          // If both the held item and the clicked item are of the same type, attempt to add the held item to the clicked item
          if (clickedItem.type === heldItem.type) {
-            Client.sendItemReleasePacket(entityID, inventory.name, itemSlot, heldItem.count);
+            sendItemReleasePacket(entityID, inventory.name, itemSlot, heldItem.count);
          }
       }
    } else {
@@ -39,7 +40,7 @@ export function leftClickItemSlot(e: MouseEvent, entityID: number, inventory: In
       const heldItemInventory = inventoryComponent.getInventory(InventoryName.heldItemSlot)!;
       const heldItem = heldItemInventory.itemSlots[1];
       if (typeof heldItem !== "undefined") {
-         Client.sendItemReleasePacket(entityID, inventory.name, itemSlot, heldItem.count);
+         sendItemReleasePacket(entityID, inventory.name, itemSlot, heldItem.count);
       }
    }
 }
@@ -59,13 +60,13 @@ export function rightClickItemSlot(e: MouseEvent, entityID: number, inventory: I
          const numItemsInSlot = clickedItem.count;
          const pickupCount = Math.ceil(numItemsInSlot / 2);
 
-         Client.sendItemPickupPacket(entityID, inventory.name, itemSlot, pickupCount);
+         sendItemPickupPacket(entityID, inventory.name, itemSlot, pickupCount);
    
          setHeldItemVisualPosition(e.clientX, e.clientY);
       } else {
          // If both the held item and the clicked item are of the same type, attempt to drop 1 of the held item
          if (clickedItem.type === heldItem.type) {
-            Client.sendItemReleasePacket(entityID, inventory.name, itemSlot, 1);
+            sendItemReleasePacket(entityID, inventory.name, itemSlot, 1);
          }
       }
    } else {
@@ -75,7 +76,7 @@ export function rightClickItemSlot(e: MouseEvent, entityID: number, inventory: I
       const heldItemInventory = inventoryComponent.getInventory(InventoryName.heldItemSlot)!;
       if (heldItemInventory.hasItem(1)) {
          // Attempt to place one of the held item into the clicked item slot
-         Client.sendItemReleasePacket(entityID, inventory.name, itemSlot, 1);
+         sendItemReleasePacket(entityID, inventory.name, itemSlot, 1);
       }
    }
 }

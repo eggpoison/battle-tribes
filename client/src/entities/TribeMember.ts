@@ -156,7 +156,7 @@ export function addTribeMemberRenderParts(tribesman: Entity): void {
       leftEarRenderPart.addTag("tribeMemberComponent:ear");
       leftEarRenderPart.offset.x = (radius + GOBLIN_EAR_OFFSET) * Math.sin(-GOBLIN_EAR_ANGLE);
       leftEarRenderPart.offset.y = (radius + GOBLIN_EAR_OFFSET) * Math.cos(-GOBLIN_EAR_ANGLE);
-      leftEarRenderPart.flipX = true;
+      leftEarRenderPart.setFlipX(true);
       tribesman.attachRenderThing(leftEarRenderPart);
 
       // Right ear
@@ -180,7 +180,7 @@ export function addTribeMemberRenderParts(tribesman: Entity): void {
          0
       );
       if (i === 1) {
-         attachPoint.flipX = true;
+         attachPoint.setFlipX(true);
       }
       attachPoint.addTag("inventoryUseComponent:attachPoint");
       tribesman.attachRenderThing(attachPoint);

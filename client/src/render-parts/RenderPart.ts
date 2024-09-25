@@ -18,7 +18,7 @@ export abstract class BaseRenderThing {
    
    /** Whether or not the thing will inherit its parents' rotation */
    public inheritParentRotation = true;
-   public flipX = false;
+   public flipXMultiplier = 1;
 
    public scale = 1;
    public shakeAmount = 0;
@@ -51,6 +51,10 @@ export abstract class BaseRenderThing {
 
    public addTag(tag: string): void {
       this.tags.push(tag);
+   }
+
+   public setFlipX(flipX: boolean): void {
+      this.flipXMultiplier = flipX ? -1 : 1;
    }
 }
 

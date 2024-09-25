@@ -12,7 +12,8 @@ export const enum AttackVars {
    SHIELD_BASH_WINDUP_TIME_TICKS = (Settings.TPS * 0.3) | 0,
    SHIELD_BASH_PUSH_TIME_TICKS = (Settings.TPS * 0.15) | 0,
    SHIELD_BASH_RETURN_TIME_TICKS = (Settings.TPS * 0.4) | 0,
-   SHIELD_BASH_REST_TIME_TICKS = (Settings.TPS * 0.4) | 0
+   SHIELD_BASH_REST_TIME_TICKS = (Settings.TPS * 0.4) | 0,
+   SHIELD_BLOCK_REST_TIME_TICKS = (Settings.TPS * 2) | 0
 }
 
 export interface LimbState {

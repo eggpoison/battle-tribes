@@ -53,12 +53,10 @@ export type GameData = {
 let visibleWalls: ReadonlyArray<TribeWallData>;
 let buildingPlans: ReadonlyArray<BuildingPlanData>;
 
-let nextGameDataPacket: PacketReader | null;
+let queuedGameDataPackets = new Array<PacketReader>();
 
-export function popGameDataPacket(): PacketReader | null {
-   const reader = nextGameDataPacket;
-   nextGameDataPacket = null;
-   return reader;
+export function getQueuedGameDataPackets(): Array<PacketReader> {
+   return queuedGameDataPackets;
 }
 
 export function getVisibleWalls(): ReadonlyArray<TribeWallData> {
@@ -196,7 +194,7 @@ abstract class Client {
                      return;
                   }
 
-                  nextGameDataPacket = reader;
+                  queuedGameDataPackets.push(reader);
 
                   break;
                }
@@ -289,6 +287,7 @@ abstract class Client {
       });
    }
 
+   // @Hack
    public static getNextGameDataPacket(): Promise<PacketReader> {
       return new Promise(resolve => {
          Client.nextGameDataResolve = resolve;
@@ -466,18 +465,6 @@ abstract class Client {
    public static sendCraftingPacket(recipeIndex: number): void {
       if (Game.isRunning && this.socket !== null) {
          // this.socket.emit("crafting_packet", recipeIndex);
-      }
-   }
-
-   public static sendItemPickupPacket(entityID: number, inventoryName: InventoryName, itemSlot: number, amount: number): void {
-      if (Game.isRunning && this.socket !== null) {
-         // this.socket.emit("item_pickup", entityID, inventoryName, itemSlot, amount);
-      }
-   }
-
-   public static sendItemReleasePacket(entityID: number, inventoryName: InventoryName, itemSlot: number, amount: number): void {
-      if (Game.isRunning && this.socket !== null) {
-         // this.socket.emit("item_release", entityID, inventoryName, itemSlot, amount);
       }
    }
 

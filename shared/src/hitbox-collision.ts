@@ -124,7 +124,7 @@ export function getCollisionPushInfo(pushedHitbox: Box, pushingHitbox: Box): Col
          amountIn: collisionData.overlap,
          // @Hack
          direction: angle(collisionData.axisX, collisionData.axisY)
-      }
+      };
    }
 }
 

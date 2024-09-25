@@ -41,8 +41,6 @@ const matchesBiomeRequirements = (generationInfo: BiomeSpawnRequirements, height
 }
 
 const getBiome = (height: number, temperature: number, humidity: number): Biome => {
-   // @Temporary
-   if(1+1===2)return Biome.grasslands;
    // @Speed
    const numBiomes = Object.keys(BIOME_GENERATION_INFO).length;
 
@@ -140,11 +138,12 @@ export function generateTileInfo(tileBiomes: Float32Array, tileTypes: Float32Arr
          const generationInfo = getTileGenerationInfo(biome, dist, tileX, tileY);
 
          tileTypes[tileIndex] = generationInfo.tileType;
-         tileIsWalls[tileIndex] = OPTIONS.generateWalls ? 1 : 0;
+         tileIsWalls[tileIndex] = OPTIONS.generateWalls && generationInfo.isWall ? 1 : 0;
       }
    }
 }
 
+// @Incomplete: unused?
 const createNoiseMapData = (noise: ReadonlyArray<ReadonlyArray<number>>): Float32Array => {
    const data = new Float32Array(Settings.FULL_BOARD_DIMENSIONS * Settings.FULL_BOARD_DIMENSIONS)
    let idx = 0;
@@ -195,7 +194,9 @@ function generateTerrain(): TerrainGenerationInfo {
          const biome = getBiome(height, temperature, humidity);
          
          const tileIndex = Board.getTileIndexIncludingEdges(tileX, tileY);
-         tileBiomes[tileIndex] = biome;
+         // @Temporary
+         // tileBiomes[tileIndex] = biome;
+         tileBiomes[tileIndex] = (biome === Biome.grasslands || biome === Biome.mountains) ? biome : Biome.grasslands;
       }
    }
 

@@ -1,8 +1,8 @@
 import Entity from "../Entity";
-import { Matrix3x3, matrixMultiplyInPlace, overrideWithRotationMatrix } from "./matrices";
+import { Matrix3x3, matrixMultiplyInPlace, overrideWithIdentityMatrix, overrideWithRotationMatrix } from "./matrices";
 import { ServerComponentType } from "battletribes-shared/components";
 import { Settings } from "battletribes-shared/settings";
-import { RenderThing } from "../render-parts/render-parts";
+import { RenderThing, thingIsRenderPart } from "../render-parts/render-parts";
 import Board from "../Board";
 import { getEntityRenderLayer } from "../render-layers";
 import { renderLayerIsChunkRendered, refreshChunkedEntityRenderingBuffers, updateChunkRenderedEntity } from "./webgl/chunked-entity-rendering";
@@ -34,6 +34,38 @@ const rotateMatrix = (matrix: Matrix3x3, rotation: number): void => {
    const a02 = 0;
    const a10 = sin;
    const a11 = cos;
+   const a12 = 0;
+   const a20 = 0;
+   const a21 = 0;
+   const a22 = 1;
+
+   const b00 = matrix[0];
+   const b01 = matrix[1];
+   const b02 = matrix[2];
+   const b10 = matrix[3];
+   const b11 = matrix[4];
+   const b12 = matrix[5];
+   const b20 = matrix[6];
+   const b21 = matrix[7];
+   const b22 = matrix[8];
+
+   matrix[0] = b00 * a00 + b01 * a10 + b02 * a20;
+   matrix[1] = b00 * a01 + b01 * a11 + b02 * a21;
+   matrix[2] = b00 * a02 + b01 * a12 + b02 * a22;
+   matrix[3] = b10 * a00 + b11 * a10 + b12 * a20;
+   matrix[4] = b10 * a01 + b11 * a11 + b12 * a21;
+   matrix[5] = b10 * a02 + b11 * a12 + b12 * a22;
+   matrix[6] = b20 * a00 + b21 * a10 + b22 * a20;
+   matrix[7] = b20 * a01 + b21 * a11 + b22 * a21;
+   matrix[8] = b20 * a02 + b21 * a12 + b22 * a22;
+}
+
+const scaleMatrix = (matrix: Matrix3x3, sx: number, sy: number): void => {
+   const a00 = sx;
+   const a01 = 0;
+   const a02 = 0;
+   const a10 = 0;
+   const a11 = sy;
    const a12 = 0;
    const a20 = 0;
    const a21 = 0;
@@ -135,16 +167,16 @@ const calculateAndOverrideEntityModelMatrix = (entity: Entity): void => {
 
 const calculateAndOverrideRenderThingMatrix = (thing: RenderThing): void => {
    const matrix = thing.modelMatrix;
-   const flipMultiplier = (thing.flipX ? -1 : 1);
+
+   // Rotation
+   overrideWithRotationMatrix(matrix, thing.rotation);
    
    // Scale
    const scale = thing.scale;
-   overrideWithScaleMatrix(matrix, scale * flipMultiplier, scale);
+   scaleMatrix(matrix, scale * thing.flipXMultiplier, scale);
    
-   // Rotation
-   rotateMatrix(matrix, thing.rotation);
-
-   let tx = thing.offset.x * flipMultiplier;
+   // @Speed: Can probably get rid of this flip multiplication by doing the translation before scaling
+   let tx = thing.offset.x * thing.flipXMultiplier;
    let ty = thing.offset.y;
 
    // Shake

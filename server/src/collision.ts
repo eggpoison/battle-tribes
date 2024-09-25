@@ -184,5 +184,7 @@ export function resolveEntityTileCollision(entity: EntityID, hitbox: Hitbox, til
       
       const pushInfo = getCollisionPushInfo(hitbox.box, tileBox);
       resolveHardCollision(transformComponent, physicsComponent, pushInfo);
+
+      physicsComponent.positionIsDirty = true;
    }
 }

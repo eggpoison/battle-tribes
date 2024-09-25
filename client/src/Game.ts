@@ -8,7 +8,7 @@ import { createTextCanvasContext, updateTextNumbers, renderText } from "./text-c
 import Camera from "./Camera";
 import { updateSpamFilter } from "./components/game/ChatBox";
 import { createEntityShaders } from "./rendering/webgl/entity-rendering";
-import Client, { popGameDataPacket } from "./client/Client";
+import Client, { getQueuedGameDataPackets } from "./client/Client";
 import { calculateCursorWorldPositionX, calculateCursorWorldPositionY, cursorX, cursorY, getMouseTargetEntity, handleMouseMovement, renderCursorTooltip } from "./mouse";
 import { refreshDebugInfo, setDebugInfoDebugData } from "./components/game/dev/DebugInfo";
 import { createWebGLContext, gl, resizeCanvas } from "./webgl";
@@ -95,23 +95,26 @@ const main = (currentTime: number): void => {
    
       Game.lag += deltaTime;
       while (Game.lag >= 1000 / Settings.TPS) {
-         const packet = popGameDataPacket();
-         if (packet !== null) {
-            // Done before so that server data can override particles
-            Board.updateParticles();
+         const queuedPackets = getQueuedGameDataPackets();
+         if (queuedPackets.length > 0) {
+            for (const packet of queuedPackets) {
+               // Done before so that server data can override particles
+               Board.updateParticles();
+   
+               processGameDataPacket(packet);
+   
+               updateTextNumbers();
+               Board.updateTickCallbacks();
+               Board.tickEntities();
+               if (Player.instance !== null) {
+                  resolvePlayerCollisions();
+               }
+            }
+            queuedPackets.length = 0;
 
-            processGameDataPacket(packet);
-
-            updateTextNumbers();
-            Board.updateTickCallbacks();
             if (Player.instance !== null) {
                updateEntity(Player.instance);
             }
-            Board.tickEntities();
-            if (Player.instance !== null) {
-               resolvePlayerCollisions();
-            }
-            Game.update();
          } else {
             updateTextNumbers();
             Board.updateTickCallbacks();
@@ -119,8 +122,9 @@ const main = (currentTime: number): void => {
             Board.updateEntities();
             Board.tickEntities();
             resolveEntityCollisions();
-            Game.update();
          }
+
+         Game.update();
          
          Client.sendPlayerDataPacket();
 
@@ -218,7 +222,8 @@ abstract class Game {
       Game.enemyTribes = [];
 
       // Clear any queued packets from previous games
-      popGameDataPacket();
+      const queuedPackets = getQueuedGameDataPackets();
+      queuedPackets.length = 0;
 
       resetInteractableEntityIDs();
       

@@ -1,6 +1,6 @@
 import { Packet, PacketReader, PacketType } from "battletribes-shared/packets";
 import PlayerClient from "./PlayerClient";
-import { LimbAction } from "battletribes-shared/entities";
+import { EntityID, LimbAction } from "battletribes-shared/entities";
 import { BowItemInfo, ConsumableItemCategory, ConsumableItemInfo, getItemAttackInfo, InventoryName, ITEM_INFO_RECORD, ITEM_TYPE_RECORD, ItemType } from "battletribes-shared/items/items";
 import { TribeType } from "battletribes-shared/tribes";
 import Board from "../Board";
@@ -12,12 +12,13 @@ import { TribeComponentArray } from "../components/TribeComponent";
 import { startChargingBow, startChargingSpear, startChargingBattleaxe, createPlayerConfig } from "../entities/tribes/player";
 import { calculateRadialAttackTargets, throwItem, useItem } from "../entities/tribes/tribe-member";
 import { beginSwing } from "../entities/tribes/limb-use";
-import { InventoryComponentArray, getInventory, addItemToInventory } from "../components/InventoryComponent";
+import { InventoryComponentArray, getInventory, addItemToInventory, addItemToSlot, consumeItemFromSlot, consumeItemTypeFromInventory } from "../components/InventoryComponent";
 import { ServerComponentType } from "battletribes-shared/components";
 import { Point } from "battletribes-shared/utils";
 import { createEntityFromConfig } from "../Entity";
 import { generatePlayerSpawnPosition, registerDirtyEntity } from "./player-clients";
 import { addEntityDataToPacket, getEntityDataLength } from "./game-data-packets";
+import { createItem } from "../items";
 
 /** How far away from the entity the attack is done */
 const ATTACK_OFFSET = 50;
@@ -327,4 +328,75 @@ export function processItemDropPacket(playerClient: PlayerClient, reader: Packet
 
    const inventoryName = isOffhand ? InventoryName.offhand : InventoryName.hotbar;
    throwItem(playerClient.instance, inventoryName, itemSlot, dropAmount, throwDirection);
+}
+
+export function processItemPickupPacket(playerClient: PlayerClient, reader: PacketReader): void {
+   const player = playerClient.instance;
+   if (!Board.hasEntity(player)) {
+      return;
+   }
+
+   const entity = reader.readNumber() as EntityID;
+   if (!Board.hasEntity(entity)) {
+      return;
+   }
+   const inventoryName = reader.readNumber() as InventoryName;
+   const itemSlot = reader.readNumber();
+   const amount = reader.readNumber();
+   
+   const playerInventoryComponent = InventoryComponentArray.getComponent(player);
+   const heldItemInventory = getInventory(playerInventoryComponent, InventoryName.heldItemSlot);
+   
+   // Don't pick up the item if there is already a held item
+   if (typeof heldItemInventory.itemSlots[1] !== "undefined") {
+      return;
+   }
+
+   const targetInventoryComponent = InventoryComponentArray.getComponent(entity);
+   const targetInventory = getInventory(targetInventoryComponent, inventoryName);
+
+   const pickedUpItem = targetInventory.itemSlots[itemSlot];
+   if (typeof pickedUpItem === "undefined") {
+      return;
+   }
+
+   // Remove the item from its previous inventory
+   const amountConsumed = consumeItemFromSlot(targetInventory, itemSlot, amount);
+
+   // Hold the item
+   // Copy it as the consumeItemFromSlot function modifies the original item's count
+   const heldItem = createItem(pickedUpItem.type, amountConsumed);
+   heldItemInventory.addItem(heldItem, 1);
+}
+
+export function processItemReleasePacket(playerClient: PlayerClient, reader: PacketReader): void {
+   const player = playerClient.instance;
+   if (!Board.hasEntity(player)) {
+      return;
+   }
+
+   const entity = reader.readNumber() as EntityID;
+   if (!Board.hasEntity(entity)) {
+      return;
+   }
+   const inventoryName = reader.readNumber() as InventoryName;
+   const itemSlot = reader.readNumber();
+   const amount = reader.readNumber();
+
+   const inventoryComponent = InventoryComponentArray.getComponent(player);
+   
+   // Don't release an item if there is no held item
+   const heldItemInventory = getInventory(inventoryComponent, InventoryName.heldItemSlot);
+   const heldItem = heldItemInventory.itemSlots[1];
+   if (typeof heldItem === "undefined") {
+      return;
+   }
+
+   const targetInventoryComponent = InventoryComponentArray.getComponent(entity);
+
+   // Add the item to the inventory
+   const amountAdded = addItemToSlot(targetInventoryComponent, inventoryName, itemSlot, heldItem.type, amount);
+
+   // If all of the item was added, clear the held item
+   consumeItemTypeFromInventory(inventoryComponent, InventoryName.heldItemSlot, heldItem.type, amountAdded);
 }

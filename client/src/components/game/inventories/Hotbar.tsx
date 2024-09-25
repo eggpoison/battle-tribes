@@ -6,7 +6,7 @@ import { InventoryName } from "battletribes-shared/items/items";
 import EmptyItemSlot from "./EmptyItemSlot";
 import { InventoryComponentArray } from "../../../entity-components/InventoryComponent";
 import InventoryContainer from "./InventoryContainer";
-import { getHotbarSelectedItemSlot } from "../GameInteractableLayer";
+import { getHotbarSelectedItemSlot, ItemRestTime } from "../GameInteractableLayer";
 
 export let Hotbar_update: () => void = () => {};
 
@@ -15,7 +15,12 @@ export let Hotbar_setHotbarSelectedItemSlot: (itemSlot: number) => void = () => 
 export let Hotbar_updateRightThrownBattleaxeItemID: (rightThrownBattleaxeItemID: number) => void = () => {};
 export let Hotbar_updateLeftThrownBattleaxeItemID: (leftThrownBattleaxeItemID: number) => void = () => {};
 
-const Hotbar = () => {
+interface HotbarProps {
+   readonly hotbarItemRestTimes: ReadonlyArray<ItemRestTime>;
+   readonly offhandItemRestTimes: ReadonlyArray<ItemRestTime>;
+}
+
+const Hotbar = (props: HotbarProps) => {
    const [selectedItemSlot, setSelectedItemSlot] = useState(1);
    // @Incomplete
    const [rightThrownBattleaxeItemID, setRightThrownBattleaxeItemID] = useState(-1);
@@ -54,12 +59,12 @@ const Hotbar = () => {
          <EmptyItemSlot className="hidden" />
          <EmptyItemSlot className="hidden" />
          <div className={"inventory" + (Game.tribe.tribeType !== TribeType.barbarians ? " hidden" : "")}>
-            <InventoryContainer entityID={playerID} inventory={offhand} />
+            <InventoryContainer entityID={playerID} inventory={offhand} itemRestTimes={props.offhandItemRestTimes} />
          </div>
       </div>
       <div className="middle">
          <div className="inventory">
-            <InventoryContainer entityID={playerID} inventory={hotbar} selectedItemSlot={getHotbarSelectedItemSlot()} />
+            <InventoryContainer entityID={playerID} inventory={hotbar} itemRestTimes={props.hotbarItemRestTimes} selectedItemSlot={getHotbarSelectedItemSlot()} />
          </div>
       </div>
       <div className="flex-container">

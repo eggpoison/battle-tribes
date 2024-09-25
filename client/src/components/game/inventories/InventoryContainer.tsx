@@ -1,6 +1,7 @@
 import { Inventory, InventoryName } from "battletribes-shared/items/items";
 import ItemSlot, { ItemSlotCallbackInfo } from "./ItemSlot";
 import { useRef } from "react";
+import { ItemRestTime } from "../GameInteractableLayer";
 
 interface InventoryProps {
    readonly entityID?: number;
@@ -11,6 +12,7 @@ interface InventoryProps {
    readonly selectedItemSlot?: number;
    readonly isBordered?: boolean;
    readonly isManipulable?: boolean;
+   readonly itemRestTimes?: ReadonlyArray<ItemRestTime>;
    onMouseDown?(e: MouseEvent, callbackInfo: ItemSlotCallbackInfo): void;
    onMouseOver?(e: MouseEvent, callbackInfo: ItemSlotCallbackInfo): void;
    onMouseMove?: (e: MouseEvent) => void;
@@ -31,7 +33,7 @@ const getPlaceholderImg = (inventory: Inventory): any | undefined => {
    }
 }
 
-const InventoryContainer = ({ entityID, inventory, className, itemSlotClassNameCallback, selectedItemSlot, isBordered, isManipulable = true, onMouseDown, onMouseOver, onMouseOut, onMouseMove }: InventoryProps) => {
+const InventoryContainer = ({ entityID, inventory, className, itemSlotClassNameCallback, selectedItemSlot, isBordered, isManipulable = true, itemRestTimes, onMouseDown, onMouseOver, onMouseOut, onMouseMove }: InventoryProps) => {
    const inventoryWidthRef = useRef<number | null>(null);
    const inventoryHeightRef = useRef<number | null>(null);
    // @Hack
@@ -54,7 +56,8 @@ const InventoryContainer = ({ entityID, inventory, className, itemSlotClassNameC
    for (let y = 0; y < height; y++) {
       const rowItemSlots = new Array<JSX.Element>();
       for (let x = 0; x < width; x++) {
-         const itemSlot = y * width + x + 1;
+         const itemSlotIdx = y * width + x;
+         const itemSlot = itemSlotIdx + 1;
 
          // let callbackInfo: 
          const callbackInfo: ItemSlotCallbackInfo = {
@@ -76,7 +79,7 @@ const InventoryContainer = ({ entityID, inventory, className, itemSlotClassNameC
 
          const isSelected = typeof selectedItemSlot !== "undefined" && itemSlot === selectedItemSlot;
          rowItemSlots.push(
-            <ItemSlot key={x} className={className} entityID={entityID} inventory={inventory} itemSlot={itemSlot} isManipulable={isManipulable} isSelected={isSelected} placeholderImg={placeholderImgRef.current} onMouseDown={leftClickFunc} onMouseOver={onMouseOver} onMouseOut={onMouseOut} onMouseMove={onMouseMove} />
+            <ItemSlot key={x} className={className} entityID={entityID} inventory={inventory} itemSlot={itemSlot} isManipulable={isManipulable} isSelected={isSelected} placeholderImg={placeholderImgRef.current} restTime={typeof itemRestTimes !== "undefined" ? itemRestTimes[itemSlotIdx] : undefined} onMouseDown={leftClickFunc} onMouseOver={onMouseOver} onMouseOut={onMouseOut} onMouseMove={onMouseMove} />
          );
       }
       

@@ -99,6 +99,7 @@ let discombobulationTimer = 0;
 /** If > 0, it counts down the remaining time that the attack is buffered. */
 let attackBufferTime = 0;
 let bufferedInputType = BufferedInputType.attack;
+let bufferedInputInventory = InventoryName.hotbar;
 
 const createItemRestTimes = (num: number): Array<ItemRestTime> => {
    const restTimes = new Array<ItemRestTime>();
@@ -303,7 +304,7 @@ export function updatePlayerItems(): void {
       }
 
       // Buffered attacks
-      if (attackBufferTime > 0 || (bufferedInputType === BufferedInputType.block && rightMouseButtonIsPressed)) {
+      if (inventoryName === bufferedInputInventory && (attackBufferTime > 0 || (bufferedInputType === BufferedInputType.block && rightMouseButtonIsPressed))) {
          switch (bufferedInputType) {
             case BufferedInputType.attack: {
                if (limb.action === LimbAction.none && limb.currentActionElapsedTicks >= limb.currentActionDurationTicks) {
@@ -506,6 +507,7 @@ const attemptAttack = (): void => {
    if (!attackDidSucceed) {
       attackBufferTime = INPUT_COYOTE_TIME;
       bufferedInputType = BufferedInputType.attack;
+      bufferedInputInventory = InventoryName.hotbar;
    }
 }
 

@@ -274,7 +274,7 @@ abstract class Board {
          if (idx === -1) {
             throw new Error("Tried to remove a game object which doesn't exist or was already removed.");
          }
-         
+
          registerEntityRemoval(entity);
    
          // @Speed: don't do per entity, do per component array

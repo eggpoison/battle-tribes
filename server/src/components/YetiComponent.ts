@@ -29,7 +29,7 @@ const enum Vars {
    LARGE_SNOWBALL_THROW_SPEED_MAX = 450,
    SNOW_THROW_ARC = UtilVars.PI/5,
    SNOW_THROW_OFFSET = 64,
-   SNOW_THROW_WINDUP_TIME = 1.75,
+   SNOW_THROW_WINDUP_TIME = 1.25,
    SNOW_THROW_HOLD_TIME = 0.1,
    SNOW_THROW_RETURN_TIME = 0.6,
    SNOW_THROW_KICKBACK_AMOUNT = 110,
@@ -58,7 +58,7 @@ export class YetiComponent {
    // Stores the ids of all entities which have recently attacked the yeti
    public readonly attackingEntities: Partial<Record<number, YetiTargetInfo>> = {};
 
-   public attackTarget: EntityID | null = null;
+   public attackTarget: EntityID = 0;
    public isThrowingSnow = false;
    public snowThrowStage: SnowThrowStage = SnowThrowStage.windup;
    public snowThrowAttackProgress = 1;
@@ -303,12 +303,12 @@ function onTick(yetiComponent: YetiComponent, yeti: EntityID): void {
 
    if (yetiComponent.isThrowingSnow) {
       // If the target has run outside the yeti's vision range, cancel the attack
-      if (yetiComponent.attackTarget !== null && transformComponent.position.calculateDistanceBetween(TransformComponentArray.getComponent(yetiComponent.attackTarget).position) > YetiVars.VISION_RANGE) {
+      if (!Board.hasEntity(yetiComponent.attackTarget) || transformComponent.position.calculateDistanceBetween(TransformComponentArray.getComponent(yetiComponent.attackTarget).position) > YetiVars.VISION_RANGE) {
          yetiComponent.snowThrowAttackProgress = 1;
-         yetiComponent.attackTarget = null;
+         yetiComponent.attackTarget = 0;
          yetiComponent.isThrowingSnow = false;
       } else {
-         const targetTransformComponent = TransformComponentArray.getComponent(yetiComponent.attackTarget!);
+         const targetTransformComponent = TransformComponentArray.getComponent(yetiComponent.attackTarget);
          
          switch (yetiComponent.snowThrowStage) {
             case SnowThrowStage.windup: {
@@ -322,7 +322,7 @@ function onTick(yetiComponent: YetiComponent, yeti: EntityID): void {
                }
 
                const physicsComponent = PhysicsComponentArray.getComponent(yeti);
-               physicsComponent.targetRotation = transformComponent.position.calculateAngleBetween(targetTransformComponent.position);;
+               physicsComponent.targetRotation = transformComponent.position.calculateAngleBetween(targetTransformComponent.position);
                physicsComponent.turnSpeed = Vars.TURN_SPEED;
 
                stopEntity(physicsComponent);
@@ -335,7 +335,7 @@ function onTick(yetiComponent: YetiComponent, yeti: EntityID): void {
                }
 
                const physicsComponent = PhysicsComponentArray.getComponent(yeti);
-               physicsComponent.targetRotation = transformComponent.position.calculateAngleBetween(targetTransformComponent.position);;
+               physicsComponent.targetRotation = transformComponent.position.calculateAngleBetween(targetTransformComponent.position);
                physicsComponent.turnSpeed = Vars.TURN_SPEED;
 
                stopEntity(physicsComponent);
@@ -345,7 +345,7 @@ function onTick(yetiComponent: YetiComponent, yeti: EntityID): void {
                yetiComponent.snowThrowAttackProgress += Settings.I_TPS / Vars.SNOW_THROW_RETURN_TIME;
                if (yetiComponent.snowThrowAttackProgress >= 1) {
                   yetiComponent.snowThrowAttackProgress = 1;
-                  yetiComponent.attackTarget = null;
+                  yetiComponent.attackTarget = 0;
                   yetiComponent.isThrowingSnow = false;
                }
             }

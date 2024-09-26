@@ -5,7 +5,7 @@ import { Packet } from "battletribes-shared/packets";
 
 export interface EscapeAIComponentParams {}
 
-export class EscapeAIComponent {
+export class EscapeAIComponent implements EscapeAIComponentParams {
    /** IDs of all entities attacking the entity */
    public readonly attackingEntities = new Array<number>();
    public readonly attackEntityTicksSinceLastAttack = new Array<number>();

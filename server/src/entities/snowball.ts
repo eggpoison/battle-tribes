@@ -27,7 +27,7 @@ export function createSnowballConfig(): ComponentConfig<ComponentTypes> {
       [ServerComponentType.transform]: {
          position: new Point(0, 0),
          rotation: 0,
-         type: EntityType.slime,
+         type: EntityType.snowball,
          collisionBit: COLLISION_BITS.default,
          collisionMask: DEFAULT_COLLISION_MASK,
          hitboxes: [createHitbox(new CircularBox(new Point(0, 0), 0, 0), 0, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0)]

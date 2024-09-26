@@ -1,4 +1,4 @@
-import { ServerComponentType } from "battletribes-shared/components";
+import { ServerComponentType, ServerComponentTypeString } from "battletribes-shared/components";
 import { ComponentArray } from "./ComponentArray";
 import { EntityID, EntityType } from "battletribes-shared/entities";
 import { Settings } from "battletribes-shared/settings";
@@ -33,7 +33,7 @@ export const KrumblidComponentArray = new ComponentArray<KrumblidComponent>(Serv
    addDataToPacket: addDataToPacket
 });
 
-function onTick(krumblid: EntityID): void {
+function onTick(_krumblidComponent: KrumblidComponent, krumblid: EntityID): void {
    const aiHelperComponent = AIHelperComponentArray.getComponent(krumblid);
    
    // Escape AI
@@ -42,7 +42,7 @@ function onTick(krumblid: EntityID): void {
    if (escapeAIComponent.attackingEntities.length > 0) {
       const escapeEntity = chooseEscapeEntity(krumblid, aiHelperComponent.visibleEntities);
       if (escapeEntity !== null) {
-         runFromAttackingEntity(krumblid, escapeEntity, 500, Vars.TURN_SPEED);
+         runFromAttackingEntity(krumblid, escapeEntity, 700, Vars.TURN_SPEED);
          return;
       }
    }

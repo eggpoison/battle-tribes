@@ -2,12 +2,12 @@ import { circlesDoIntersect, circleAndRectangleDoIntersect } from "battletribes-
 import { ServerComponentType } from "battletribes-shared/components";
 import { Settings } from "battletribes-shared/settings";
 import Chunk from "../Chunk";
-import Board from "../Board";
 import { ComponentArray } from "./ComponentArray";
 import { EntityID, EntityType } from "battletribes-shared/entities";
 import { TransformComponent, TransformComponentArray } from "./TransformComponent";
 import { Packet } from "battletribes-shared/packets";
 import { Box, boxIsCircular } from "battletribes-shared/boxes/boxes";
+import { getEntityLayer, getEntityType } from "../world";
 
 export interface AIHelperComponentParams {
    /** If enabled, ignores all decorative entities. Enable if possible for performance */
@@ -100,7 +100,7 @@ const calculateVisibleEntities = (entity: EntityID, aiHelperComponent: AIHelperC
 }
 
 const entityIsDecorative = (entity: EntityID): boolean => {
-   const entityType = Board.getEntityType(entity);
+   const entityType = getEntityType(entity);
    return entityType === EntityType.grassStrand || entityType === EntityType.reed;
 }
 
@@ -131,10 +131,12 @@ function onTick(aiHelperComponent: AIHelperComponent, entity: EntityID): void {
    aiHelperComponent.visibleChunkBounds[2] = minChunkY;
    aiHelperComponent.visibleChunkBounds[3] = maxChunkY;
 
+   const layer = getEntityLayer(entity);
+
    const newVisibleChunks = new Array<Chunk>();
    for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
       for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
-         const chunk = Board.getChunk(chunkX, chunkY);
+         const chunk = layer.getChunk(chunkX, chunkY);
          newVisibleChunks.push(chunk);
       }
    }

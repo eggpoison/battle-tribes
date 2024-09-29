@@ -15,9 +15,11 @@ import { resolveWallTileCollisions } from "../collision";
 import { PacketReader } from "battletribes-shared/packets";
 import { createWaterSplashParticle } from "../particles";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
+import { getEntityLayer } from "../world";
 
 const applyPhysics = (physicsComponent: PhysicsComponent): void => {
    const transformComponent = physicsComponent.entity.getServerComponent(ServerComponentType.transform);
+   const layer = getEntityLayer(physicsComponent.entity.id);
    
    // Apply acceleration (to self-velocity)
    if (physicsComponent.acceleration.x !== 0 || physicsComponent.acceleration.y !== 0) {
@@ -41,7 +43,7 @@ const applyPhysics = (physicsComponent: PhysicsComponent): void => {
    // Apply river flow to external velocity
    const moveSpeedIsOverridden = typeof physicsComponent.entity.overrideTileMoveSpeedMultiplier !== "undefined" && physicsComponent.entity.overrideTileMoveSpeedMultiplier() !== null;
    if (transformComponent.isInRiver() && !moveSpeedIsOverridden) {
-      const flowDirection = Board.getRiverFlowDirection(transformComponent.tile.x, transformComponent.tile.y);
+      const flowDirection = layer.getRiverFlowDirection(transformComponent.tile.x, transformComponent.tile.y);
       physicsComponent.selfVelocity.x += 240 / Settings.TPS * Math.sin(flowDirection);
       physicsComponent.selfVelocity.y += 240 / Settings.TPS * Math.cos(flowDirection);
    }

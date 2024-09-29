@@ -13,6 +13,7 @@ import { playSound } from "./sound";
 import { createMagicParticle, createStarParticle } from "./particles";
 import Entity from "./Entity";
 import { getRandomPointInEntity } from "./entity-components/TransformComponent";
+import { getEntityByID } from "./world";
 
 export interface ResearchOrb {
    /* X position of the node in the world */
@@ -59,7 +60,7 @@ export function getResearchOrbCompleteProgress(): number {
 
 export function updateActiveResearchBench(): void {
    const selectedStructureID = getSelectedEntityID();
-   const structure = Board.entityRecord[selectedStructureID];
+   const structure = getEntityByID(selectedStructureID);
    if (typeof structure === "undefined") {
       currentResearchOrb = null;
       currentBenchID = -1;
@@ -112,7 +113,7 @@ const completeOrb = (): void => {
    useInfo.lastAttackTicks = Board.serverTicks;
    
    const selectedStructureID = getSelectedEntityID();
-   const structure = Board.entityRecord[selectedStructureID]!;
+   const structure = getEntityByID(selectedStructureID)!;
    currentResearchOrb = generateResearchOrb(structure);
    orbCompleteProgress = 0;
 }

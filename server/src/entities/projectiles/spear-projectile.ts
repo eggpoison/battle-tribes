@@ -3,7 +3,6 @@ import { EntityID, EntityType, PlayerCauseOfDeath } from "battletribes-shared/en
 import { Point } from "battletribes-shared/utils";
 import { HealthComponentArray, damageEntity } from "../../components/HealthComponent";
 import { ThrowingProjectileComponentArray } from "../../components/ThrowingProjectileComponent";
-import Board from "../../Board";
 import { PhysicsComponentArray, applyKnockback } from "../../components/PhysicsComponent";
 import { EntityRelationship, getEntityRelationship } from "../../components/TribeComponent";
 import { ServerComponentType } from "battletribes-shared/components";
@@ -12,6 +11,7 @@ import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
 import { TransformComponentArray } from "../../components/TransformComponent";
 import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
 import RectangularBox from "battletribes-shared/boxes/RectangularBox";
+import { destroyEntity, entityExists } from "../../world";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics
@@ -48,7 +48,7 @@ export function createSpearProjectileConfig(): ComponentConfig<ComponentTypes> {
 export function onSpearProjectileCollision(spear: EntityID, collidingEntity: EntityID, collisionPoint: Point): void {
    // Don't hurt friendlies
    const spearComponent = ThrowingProjectileComponentArray.getComponent(spear);
-   if (Board.hasEntity(spearComponent.tribeMember) && getEntityRelationship(spearComponent.tribeMember, collidingEntity) === EntityRelationship.friendly) {
+   if (entityExists(spearComponent.tribeMember) && getEntityRelationship(spearComponent.tribeMember, collidingEntity) === EntityRelationship.friendly) {
       return;
    }
    
@@ -56,7 +56,7 @@ export function onSpearProjectileCollision(spear: EntityID, collidingEntity: Ent
       return;
    }
 
-   const tribeMember = Board.hasEntity(spearComponent.tribeMember) ? spearComponent.tribeMember : null;
+   const tribeMember = entityExists(spearComponent.tribeMember) ? spearComponent.tribeMember : null;
 
    const spearPhysicsComponent = PhysicsComponentArray.getComponent(spear);
 
@@ -80,5 +80,5 @@ export function onSpearProjectileCollision(spear: EntityID, collidingEntity: Ent
    damageEntity(collidingEntity, tribeMember, damage, PlayerCauseOfDeath.spear, AttackEffectiveness.effective, collisionPoint, 0);
    applyKnockback(collidingEntity, 200, hitDirection);
    
-   Board.destroyEntity(spear);
+   destroyEntity(spear);
 }

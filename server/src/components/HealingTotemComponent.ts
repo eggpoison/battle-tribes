@@ -1,12 +1,12 @@
 import { Settings } from "battletribes-shared/settings";
 import { ServerComponentType } from "battletribes-shared/components";
-import Board from "../Board";
 import { EntityRelationship, getEntityRelationship } from "./TribeComponent";
 import { HealthComponentArray, healEntity } from "./HealthComponent";
 import { ComponentArray } from "./ComponentArray";
 import { EntityID } from "battletribes-shared/entities";
 import { TransformComponentArray } from "./TransformComponent";
 import { Packet } from "battletribes-shared/packets";
+import { entityExists, getEntityLayer } from "../world";
 
 const enum Vars {
    HEALING_RANGE = 270,
@@ -31,6 +31,7 @@ export const HealingTotemComponentArray = new ComponentArray<HealingTotemCompone
 
 const getHealingTargets = (healingTotem: EntityID): ReadonlyArray<EntityID> => {
    const transformComponent = TransformComponentArray.getComponent(healingTotem);
+   const layer = getEntityLayer(healingTotem);
    
    const minChunkX = Math.max(Math.floor((transformComponent.position.x - Vars.HEALING_RANGE) / Settings.CHUNK_UNITS), 0);
    const maxChunkX = Math.min(Math.floor((transformComponent.position.x + Vars.HEALING_RANGE) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1);
@@ -40,7 +41,7 @@ const getHealingTargets = (healingTotem: EntityID): ReadonlyArray<EntityID> => {
    const targets = new Array<EntityID>();
    for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
       for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
-         const chunk = Board.getChunk(chunkX, chunkY);
+         const chunk = layer.getChunk(chunkX, chunkY);
          for (const entity of chunk.entities) {
             if (targets.indexOf(entity) !== -1) {
                continue;
@@ -103,7 +104,7 @@ function onTick(healingTotemComponent: HealingTotemComponent, healingTotem: Enti
    // Check for removed healing targets
    for (let i = 0; i < healTargetIDs.length; i++) {
       const targetID = healTargetIDs[i];
-      if (!idIsInHealTargets(targetID, healingTargets) || !Board.hasEntity(targetID)) {
+      if (!idIsInHealTargets(targetID, healingTargets) || !entityExists(targetID)) {
          healTargetIDs.splice(i, 1);
          healTargetsTicksHealed.splice(i, 1);
          i--;

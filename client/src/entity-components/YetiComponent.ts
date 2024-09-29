@@ -1,11 +1,15 @@
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
-import { lerp, randFloat } from "battletribes-shared/utils";
+import { lerp, randFloat, randItem } from "battletribes-shared/utils";
 import { RenderPart } from "../render-parts/render-parts";
 import { PacketReader } from "battletribes-shared/packets";
 import { ServerComponentType } from "battletribes-shared/components";
 import { createSnowParticle, createWhiteSmokeParticle } from "../particles";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
+import { AudioFilePath, playSound } from "../sound";
+import { RandomSoundComponentArray } from "./client-components/RandomSoundComponent";
+import { Settings } from "../../../shared/src/settings";
+import { TransformComponentArray } from "./TransformComponent";
 
 const enum Vars {
    SNOW_THROW_OFFSET = 64
@@ -16,6 +20,11 @@ export const YETI_SIZE = 128;
 const YETI_PAW_START_ANGLE = Math.PI/3;
 const YETI_PAW_END_ANGLE = Math.PI/6;
 
+const AMBIENT_SOUNDS: ReadonlyArray<AudioFilePath> = ["yeti-ambient-1.mp3", "yeti-ambient-2.mp3", "yeti-ambient-3.mp3", "yeti-ambient-4.mp3", "yeti-ambient-5.mp3", "yeti-ambient-6.mp3"];
+const ANGRY_SOUNDS: ReadonlyArray<AudioFilePath> = ["yeti-angry-1.mp3", "yeti-angry-2.mp3", "yeti-angry-3.mp3", "yeti-angry-4.mp3", "yeti-angry-5.mp3"];
+const HURT_SOUNDS: ReadonlyArray<AudioFilePath> = ["yeti-hurt-1.mp3", "yeti-hurt-2.mp3", "yeti-hurt-3.mp3", "yeti-hurt-4.mp3", "yeti-hurt-5.mp3"];
+const DEATH_SOUNDS: ReadonlyArray<AudioFilePath> = ["yeti-death-1.mp3", "yeti-death-2.mp3"];
+
 class YetiComponent extends ServerComponent {
    public pawRenderParts: ReadonlyArray<RenderPart>;
    
@@ -25,6 +34,7 @@ class YetiComponent extends ServerComponent {
    constructor(entity: Entity, reader: PacketReader) {
       super(entity);
 
+      reader.padOffset(Float32Array.BYTES_PER_ELEMENT);
       this.lastAttackProgress = reader.readNumber();
       this.attackProgress = this.lastAttackProgress;
 
@@ -45,12 +55,31 @@ class YetiComponent extends ServerComponent {
       }
    }
 
+   public onHit(isDamagingHit: boolean): void {
+      const transformComponent = TransformComponentArray.getComponent(this.entity.id);
+      playSound(randItem(HURT_SOUNDS), 0.7, 1, transformComponent.position.copy());
+   }
+
+   public onDie(): void {
+      const transformComponent = TransformComponentArray.getComponent(this.entity.id);
+      playSound(randItem(DEATH_SOUNDS), 0.7, 1, transformComponent.position.copy());
+   }
+
    public padData(reader: PacketReader): void {
-      reader.padOffset(Float32Array.BYTES_PER_ELEMENT);
+      reader.padOffset(2 * Float32Array.BYTES_PER_ELEMENT);
    }
    public updateFromData(reader: PacketReader): void {
+      const isAttacking = reader.readBoolean();
+      reader.padOffset(3);
       this.attackProgress = reader.readNumber();
       this.updatePaws();
+
+      const randomSoundComponent = RandomSoundComponentArray.getComponent(this.entity.id);
+      if (isAttacking) {
+         randomSoundComponent.updateSounds(3.5 * Settings.TPS, 5.5 * Settings.TPS, ANGRY_SOUNDS, 0.7);
+      } else {
+         randomSoundComponent.updateSounds(7 * Settings.TPS, 11 * Settings.TPS, AMBIENT_SOUNDS, 0.7);
+      }
    }
 }
 

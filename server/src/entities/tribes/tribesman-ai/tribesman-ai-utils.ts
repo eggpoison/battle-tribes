@@ -1,5 +1,5 @@
 import { PathfindingSettings, Settings } from "battletribes-shared/settings";
-import Board from "../../../Board";
+import Layer from "../../../Layer";
 import Tribe from "../../../Tribe";
 import { getEntitiesInRange, stopEntity, willStopAtDesiredDistance } from "../../../ai-shared";
 import { PhysicsComponentArray } from "../../../components/PhysicsComponent";
@@ -19,6 +19,7 @@ import { TRIBE_WARRIOR_VISION_RANGE } from "../tribe-warrior";
 import { TRIBE_WORKER_VISION_RANGE, TRIBE_WORKER_RADIUS } from "../tribe-worker";
 import { InventoryName, Inventory, ItemInfoRecord, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, ToolItemInfo } from "battletribes-shared/items/items";
 import { getAgeTicks, TransformComponentArray } from "../../../components/TransformComponent";
+import { getEntityLayer, getEntityType, getGameTicks } from "../../../world";
 
 const enum Vars {
    BLOCKING_TRIBESMAN_DISTANCE = 80,
@@ -29,7 +30,7 @@ const enum Vars {
 }
 
 export function getTribesmanVisionRange(tribesman: EntityID): number {
-   if (Board.getEntityType(tribesman)! === EntityType.tribeWorker) {
+   if (getEntityType(tribesman)! === EntityType.tribeWorker) {
       return TRIBE_WORKER_VISION_RANGE;
    } else {
       return TRIBE_WARRIOR_VISION_RANGE;
@@ -38,7 +39,7 @@ export function getTribesmanVisionRange(tribesman: EntityID): number {
 
 /** How far away from the entity the attack is done */
 export function getTribesmanAttackOffset(tribesman: EntityID): number {
-   if (Board.getEntityType(tribesman)! === EntityType.tribeWorker) {
+   if (getEntityType(tribesman)! === EntityType.tribeWorker) {
       return 40;
    } else {
       return 50;
@@ -47,7 +48,7 @@ export function getTribesmanAttackOffset(tribesman: EntityID): number {
 
 /** Max distance from the attack position that the attack will be registered from */
 export function getTribesmanAttackRadius(tribesman: EntityID): number {
-   if (Board.getEntityType(tribesman)! === EntityType.tribeWorker) {
+   if (getEntityType(tribesman)! === EntityType.tribeWorker) {
       return 40;
    } else {
       return 50;
@@ -56,7 +57,7 @@ export function getTribesmanAttackRadius(tribesman: EntityID): number {
 
 /** How far the tribesman wants to be away from their target when attacking */
 export function getTribesmanDesiredAttackRange(tribesman: EntityID): number {
-   if (Board.getEntityType(tribesman)! === EntityType.tribeWorker) {
+   if (getEntityType(tribesman)! === EntityType.tribeWorker) {
       return 45;
    } else {
       return 55;
@@ -64,15 +65,16 @@ export function getTribesmanDesiredAttackRange(tribesman: EntityID): number {
 }
 
 export function getTribesmanRadius(tribesman: EntityID): number {
-   if (Board.getEntityType(tribesman)! === EntityType.tribeWorker) {
+   if (getEntityType(tribesman)! === EntityType.tribeWorker) {
       return TRIBE_WORKER_RADIUS;
    } else {
       return 32;
    }
 }
 
-const isCollidingWithCoveredSpikes = (tribesmanID: number): boolean => {
-   const collidingEntityIDs = Board.getEntityCollisions(tribesmanID);
+const isCollidingWithCoveredSpikes = (tribesman: EntityID): boolean => {
+   const layer = getEntityLayer(tribesman);
+   const collidingEntityIDs = layer.getEntityCollisions(tribesman);
 
    for (let i = 0; i < collidingEntityIDs.length; i++) {
       const entityID = collidingEntityIDs[i];
@@ -88,14 +90,14 @@ const isCollidingWithCoveredSpikes = (tribesmanID: number): boolean => {
    return false;
 }
 
-const getAccelerationMultiplier = (tribesmanID: number): number => {
-   const tribeComponent = TribeComponentArray.getComponent(tribesmanID);
-   const tribeMemberComponent = TribeMemberComponentArray.getComponent(tribesmanID);
+const getAccelerationMultiplier = (tribesman: EntityID): number => {
+   const tribeComponent = TribeComponentArray.getComponent(tribesman);
+   const tribeMemberComponent = TribeMemberComponentArray.getComponent(tribesman);
    
    let multiplier = TRIBE_INFO_RECORD[tribeComponent.tribe.tribeType].moveSpeedMultiplier;
 
    // @Incomplete: only do when wearing the bush suit
-   if (tribeMemberComponent.lastPlantCollisionTicks >= Board.ticks - 1) {
+   if (tribeMemberComponent.lastPlantCollisionTicks >= getGameTicks() - 1) {
       multiplier *= 0.5;
    }
    
@@ -103,7 +105,7 @@ const getAccelerationMultiplier = (tribesmanID: number): number => {
       multiplier *= 1.2;
    }
 
-   if (isCollidingWithCoveredSpikes(tribesmanID)) {
+   if (isCollidingWithCoveredSpikes(tribesman)) {
       multiplier *= 0.5;
    }
 
@@ -119,7 +121,8 @@ export function getTribesmanAcceleration(tribesmanID: number): number {
 }
 
 export function positionIsSafeForTribesman(tribesman: EntityID, x: number, y: number): boolean {
-   const visibleEntitiesFromItem = getEntitiesInRange(x, y, getTribesmanVisionRange(tribesman));
+   const layer = getEntityLayer(tribesman);
+   const visibleEntitiesFromItem = getEntitiesInRange(layer, x, y, getTribesmanVisionRange(tribesman));
 
    for (const entity of visibleEntitiesFromItem) {
       const relationship = getEntityRelationship(tribesman, entity);
@@ -168,14 +171,15 @@ const shouldRecalculatePath = (tribesman: EntityID, goalX: number, goalY: number
 
 const openDoors = (tribesman: EntityID, tribe: Tribe): void => {
    const transformComponent = TransformComponentArray.getComponent(tribesman);
+   const layer = getEntityLayer(tribesman);
    
    const offsetMagnitude = getTribesmanRadius(tribesman) + 20;
    const checkX = transformComponent.position.x + offsetMagnitude * Math.sin(transformComponent.rotation);
    const checkY = transformComponent.position.y + offsetMagnitude * Math.cos(transformComponent.rotation);
-   const entitiesInFront = getEntitiesInRange(checkX, checkY, 40);
+   const entitiesInFront = getEntitiesInRange(layer, checkX, checkY, 40);
    for (let i = 0; i < entitiesInFront.length; i++) {
       const entity = entitiesInFront[i];
-      if (Board.getEntityType(entity) !== EntityType.door) {
+      if (getEntityType(entity) !== EntityType.door) {
          continue;
       }
 
@@ -190,7 +194,7 @@ const openDoors = (tribesman: EntityID, tribe: Tribe): void => {
 
          const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman);
          const useInfo = inventoryUseComponent.getLimbInfo(InventoryName.hotbar);
-         useInfo.lastAttackTicks = Board.ticks;
+         useInfo.lastAttackTicks = getGameTicks();
       }
    }
 }
@@ -276,6 +280,7 @@ export function clearTribesmanPath(tribesman: EntityID): void {
 
 const getPotentialBlockingTribesmen = (tribesman: EntityID): ReadonlyArray<EntityID> => {
    const transformComponent = TransformComponentArray.getComponent(tribesman);
+   const layer = getEntityLayer(tribesman);
    
    const minChunkX = Math.max(Math.min(Math.floor((transformComponent.position.x - Vars.BLOCKING_TRIBESMAN_DISTANCE/2) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
    const maxChunkX = Math.max(Math.min(Math.floor((transformComponent.position.x + Vars.BLOCKING_TRIBESMAN_DISTANCE/2) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
@@ -285,7 +290,7 @@ const getPotentialBlockingTribesmen = (tribesman: EntityID): ReadonlyArray<Entit
    const blockingTribesmen = new Array<EntityID>();
    for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
       for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
-         const chunk = Board.getChunk(chunkX, chunkY);
+         const chunk = layer.getChunk(chunkX, chunkY);
 
          for (let i = 0; i < chunk.entities.length; i++) {
             const entity = chunk.entities[i];

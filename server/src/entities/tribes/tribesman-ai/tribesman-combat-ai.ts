@@ -2,7 +2,7 @@ import { TribesmanAIType } from "battletribes-shared/components";
 import { EntityID, EntityType, LimbAction } from "battletribes-shared/entities";
 import { Settings, PathfindingSettings } from "battletribes-shared/settings";
 import { Point, distance } from "battletribes-shared/utils";
-import Board from "../../../Board";
+import Layer from "../../../Layer";
 import { getDistanceFromPointToEntity, stopEntity, entityIsInLineOfSight, willStopAtDesiredDistance } from "../../../ai-shared";
 import { InventoryComponentArray, getInventory } from "../../../components/InventoryComponent";
 import { InventoryUseComponentArray, setLimbActions } from "../../../components/InventoryUseComponent";
@@ -17,6 +17,7 @@ import { clearTribesmanPath, getBestToolItemSlot, getTribesmanDesiredAttackRange
 import { attemptToRepairBuildings } from "./tribesman-structures";
 import { InventoryName, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, BowItemInfo, getItemAttackInfo, Item } from "battletribes-shared/items/items";
 import { getAgeTicks, TransformComponentArray } from "../../../components/TransformComponent";
+import { getEntityLayer, getEntityType, getGameTicks } from "../../../world";
 
 const enum Vars {
    BOW_LINE_OF_SIGHT_WAIT_TIME = 0.5 * Settings.TPS,
@@ -81,7 +82,7 @@ const getMostDamagingItemSlot = (tribesman: EntityID, huntedEntity: EntityID): n
          continue;
       }
 
-      const attackEffectiveness = calculateAttackEffectiveness(item, Board.getEntityType(huntedEntity)!);
+      const attackEffectiveness = calculateAttackEffectiveness(item, getEntityType(huntedEntity)!);
       
       const attackExecuteTimeSeconds = getItemAttackExecuteTimeSeconds(item);
       const damage = calculateItemDamage(tribesman, item, attackEffectiveness, false);
@@ -98,6 +99,7 @@ const getMostDamagingItemSlot = (tribesman: EntityID, huntedEntity: EntityID): n
 
 const getNearbyEmbrasureUsePoints = (tribesman: EntityID): ReadonlyArray<Point> => {
    const transformComponent = TransformComponentArray.getComponent(tribesman);
+   const layer = getEntityLayer(tribesman);
    
    // Add 30 to the range to account for the fact that use points are disconnected from the embrasure positions
    const minChunkX = Math.max(Math.floor((transformComponent.position.x - (Vars.EMBRASURE_USE_RADIUS + 30)) / Settings.CHUNK_UNITS), 0);
@@ -108,10 +110,10 @@ const getNearbyEmbrasureUsePoints = (tribesman: EntityID): ReadonlyArray<Point> 
    const usePoints = new Array<Point>();
    for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
       for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
-         const chunk = Board.getChunk(chunkX, chunkY);
+         const chunk = layer.getChunk(chunkX, chunkY);
          for (let i = 0; i < chunk.entities.length; i++) {
             const entity = chunk.entities[i];
-            if (Board.getEntityType(entity) !== EntityType.embrasure) {
+            if (getEntityType(entity) !== EntityType.embrasure) {
                continue;
             }
 
@@ -199,10 +201,10 @@ export function huntEntity(tribesman: EntityID, huntedEntity: EntityID, isAggres
          }
 
          if (hotbarUseInfo.action !== LimbAction.chargeSpear) {
-            hotbarUseInfo.lastSpearChargeTicks = Board.ticks;
+            hotbarUseInfo.lastSpearChargeTicks = getGameTicks();
          }
          
-         const ticksSinceLastAction = Board.ticks - hotbarUseInfo.lastSpearChargeTicks;
+         const ticksSinceLastAction = getGameTicks() - hotbarUseInfo.lastSpearChargeTicks;
          if (ticksSinceLastAction >= 3 * Settings.TPS) {
             // Throw spear
             useItem(tribesman, selectedItem, InventoryName.hotbar, hotbarUseInfo.selectedItemSlot);
@@ -226,10 +228,10 @@ export function huntEntity(tribesman: EntityID, huntedEntity: EntityID, isAggres
          
          const isInLineOfSight = entityIsInLineOfSight(tribesman, huntedEntity, tribeComponent.tribe.pathfindingGroupID);
          if (isInLineOfSight) {
-            tribesmanComponent.lastEnemyLineOfSightTicks = Board.ticks;
+            tribesmanComponent.lastEnemyLineOfSightTicks = getGameTicks();
          }
          
-         if (isInLineOfSight || (Board.ticks - tribesmanComponent.lastEnemyLineOfSightTicks) <= Vars.BOW_LINE_OF_SIGHT_WAIT_TIME) {
+         if (isInLineOfSight || (getGameTicks() - tribesmanComponent.lastEnemyLineOfSightTicks) <= Vars.BOW_LINE_OF_SIGHT_WAIT_TIME) {
             const physicsComponent = PhysicsComponentArray.getComponent(tribesman);
 
             const distance = getDistanceFromPointToEntity(transformComponent.position, huntedEntity) - getTribesmanRadius(tribesman);
@@ -296,7 +298,7 @@ export function huntEntity(tribesman: EntityID, huntedEntity: EntityID, isAggres
          const distance = getDistanceFromPointToEntity(transformComponent.position, huntedEntity) - getTribesmanRadius(tribesman);
          if (distance >= Vars.BATTLEAXE_MIN_USE_RANGE && distance <= Vars.BATTLEAXE_MAX_USE_RANGE && selectedItem.id !== hotbarUseInfo.thrownBattleaxeItemID) {
             if (hotbarUseInfo.action !== LimbAction.chargeBattleaxe) {
-               hotbarUseInfo.lastBattleaxeChargeTicks = Board.ticks;
+               hotbarUseInfo.lastBattleaxeChargeTicks = getGameTicks();
             }
 
             const targetDirection = transformComponent.position.calculateAngleBetween(huntedEntityTransformComponent.position);
@@ -321,7 +323,7 @@ export function huntEntity(tribesman: EntityID, huntedEntity: EntityID, isAggres
                stopEntity(physicsComponent);
             }
 
-            const ticksSinceLastAction = Board.ticks - hotbarUseInfo.lastBattleaxeChargeTicks;
+            const ticksSinceLastAction = getGameTicks() - hotbarUseInfo.lastBattleaxeChargeTicks;
             if (ticksSinceLastAction >= 3 * Settings.TPS) {
                // Throw the battleaxe
                useItem(tribesman, selectedItem, InventoryName.hotbar, mostDamagingItemSlot);

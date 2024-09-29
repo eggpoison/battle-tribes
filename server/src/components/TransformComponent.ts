@@ -1,7 +1,7 @@
 import { PathfindingNodeIndex, RIVER_STEPPING_STONE_SIZES } from "battletribes-shared/client-server-types";
 import { Settings } from "battletribes-shared/settings";
 import { clampToBoardDimensions, Point, TileIndex } from "battletribes-shared/utils";
-import Board from "../Board";
+import { getTileIndexIncludingEdges } from "../Layer";
 import Chunk, { entityIsCollisionRelevant } from "../Chunk";
 import { EntityID, EntityType, EntityTypeString } from "battletribes-shared/entities";
 import { ComponentArray } from "./ComponentArray";
@@ -13,6 +13,7 @@ import { clearEntityPathfindingNodes, entityCanBlockPathfinding, updateEntityPat
 import { resolveEntityTileCollision } from "../collision";
 import { Packet } from "battletribes-shared/packets";
 import { boxIsCircular, Hitbox, updateBox } from "battletribes-shared/boxes/boxes";
+import { getEntityLayer, getEntityType, getGameTicks } from "../world";
 
 // @Cleanup: move mass/hitbox related stuff out? (Are there any entities which would make use of that?)
 
@@ -33,7 +34,7 @@ export class TransformComponent {
 
    // @Cleanup: should this be here? (Do all entities need this property regardless)
    /** The tick when the entity with this component was spawned */
-   public readonly spawnTicks = Board.ticks;
+   public readonly spawnTicks = getGameTicks();
 
    /** Position of the entity in the world */
    public position: Point;
@@ -47,7 +48,7 @@ export class TransformComponent {
    /** Set of all chunks the entity is contained in */
    public chunks = new Array<Chunk>();
 
-   public isInRiver!: boolean;
+   public isInRiver = false;
 
    /** All hitboxes attached to the entity */
    public hitboxes = new Array<Hitbox>();
@@ -81,16 +82,13 @@ export class TransformComponent {
       if (this.position.x >= Settings.BOARD_UNITS) this.position.x = Settings.BOARD_UNITS - 1;
       if (this.position.y < 0) this.position.y = 0;
       if (this.position.y >= Settings.BOARD_UNITS) this.position.y = Settings.BOARD_UNITS - 1;
-
-      // @Hack @Bug: if this is done now, the check for physicscomponent will always fail.
-      this.strictCheckIsInRiver(0);
    }
 
-   // @Cleanup: combine
-   
-   public strictCheckIsInRiver(entity: EntityID): void {
+   public updateIsInRiver(entity: EntityID): void {
       const tileIndex = getEntityTile(this);
-      const tileType = Board.tileTypes[tileIndex];
+      const layer = getEntityLayer(entity);
+      
+      const tileType = layer.tileTypes[tileIndex];
       if (tileType !== TileType.water) {
          this.isInRiver = false;
          return;
@@ -102,38 +100,6 @@ export class TransformComponent {
             this.isInRiver = false;
             return;
          }
-      }
-
-      // If the game object is standing on a stepping stone they aren't in a river
-      for (const chunk of this.chunks) {
-         for (const steppingStone of chunk.riverSteppingStones) {
-            const size = RIVER_STEPPING_STONE_SIZES[steppingStone.size];
-            
-            const distX = this.position.x - steppingStone.positionX;
-            const distY = this.position.y - steppingStone.positionY;
-            if (distX * distX + distY * distY <= size * size / 4) {
-               this.isInRiver = false;
-               return;
-            }
-         }
-      }
-
-      this.isInRiver = true;
-   }
-
-   public checkIsInRiver(entity: EntityID): void {
-      const tileIndex = getEntityTile(this);
-      
-      const tileType = Board.tileTypes[tileIndex];
-      if (tileType !== TileType.water) {
-         this.isInRiver = false;
-         return;
-      }
-
-      const physicsComponent = PhysicsComponentArray.getComponent(entity);
-      if (!physicsComponent.isAffectedByFriction) {
-         this.isInRiver = false;
-         return;
       }
 
       // If the game object is standing on a stepping stone they aren't in a river
@@ -249,6 +215,8 @@ export class TransformComponent {
    }
 
    public updateContainingChunks(entity: EntityID): void {
+      const layer = getEntityLayer(entity);
+      
       // Calculate containing chunks
       const containingChunks = new Array<Chunk>();
       for (let i = 0; i < this.hitboxes.length; i++) {
@@ -267,7 +235,7 @@ export class TransformComponent {
    
          for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
             for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
-               const chunk = Board.getChunk(chunkX, chunkY);
+               const chunk = layer.getChunk(chunkX, chunkY);
                if (containingChunks.indexOf(chunk) === -1) {
                   containingChunks.push(chunk);
                }
@@ -295,7 +263,7 @@ export class TransformComponent {
       }
    }
 
-   private addToChunk(entity: EntityID, chunk: Chunk): void {
+   public addToChunk(entity: EntityID, chunk: Chunk): void {
       chunk.entities.push(entity);
       if (entityIsCollisionRelevant(entity)) {
          chunk.collisionRelevantEntities.push(entity);
@@ -376,6 +344,8 @@ export class TransformComponent {
          return;
       }
       
+      const layer = getEntityLayer(entity);
+      
       for (let i = 0; i < this.hitboxes.length; i++) {
          const hitbox = this.hitboxes[i];
          const box = hitbox.box;
@@ -392,7 +362,7 @@ export class TransformComponent {
 
          for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
             for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
-               const isWall = Board.getTileIsWall(tileX, tileY);
+               const isWall = layer.tileIsWall(tileX, tileY);
                if (isWall) {
                   resolveEntityTileCollision(entity, hitbox, tileX, tileY);
                }
@@ -437,7 +407,7 @@ export class TransformComponent {
       // @Temporary
       if (this.position.x < 0 || this.position.x >= Settings.BOARD_UNITS || this.position.y < 0 || this.position.y >= Settings.BOARD_UNITS) {
          console.log(this);
-         throw new Error("Unable to properly resolve border collisions for " + EntityTypeString[Board.getEntityType(entity)!] + ".");
+         throw new Error("Unable to properly resolve border collisions for " + EntityTypeString[getEntityType(entity)!] + ".");
       }
    }
 }
@@ -452,12 +422,14 @@ export const TransformComponentArray = new ComponentArray<TransformComponent>(Se
 export function getEntityTile(transformComponent: TransformComponent): TileIndex {
    const tileX = Math.floor(transformComponent.position.x / Settings.TILE_SIZE);
    const tileY = Math.floor(transformComponent.position.y / Settings.TILE_SIZE);
-   return Board.getTileIndexIncludingEdges(tileX, tileY);
+   return getTileIndexIncludingEdges(tileX, tileY);
 }
 
 function onJoin(entity: EntityID): void {
    const transformComponent = TransformComponentArray.getComponent(entity);
 
+   transformComponent.updateIsInRiver(entity);
+   
    // Add to chunks
    transformComponent.updateContainingChunks(entity);
 
@@ -568,5 +540,5 @@ function addDataToPacket(packet: Packet, entity: EntityID): void {
 }
 
 export function getAgeTicks(transformComponent: TransformComponent): number {
-   return Board.ticks - transformComponent.spawnTicks;
+   return getGameTicks() - transformComponent.spawnTicks;
 }

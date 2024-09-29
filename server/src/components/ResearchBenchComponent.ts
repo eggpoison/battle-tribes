@@ -5,7 +5,7 @@ import { TechInfo } from "battletribes-shared/techs";
 import { TribesmanTitle } from "battletribes-shared/titles";
 import { RESEARCH_ORB_AMOUNTS, RESEARCH_ORB_COMPLETE_TIME, getRandomResearchOrbSize } from "battletribes-shared/research";
 import { ComponentArray } from "./ComponentArray";
-import Board from "../Board";
+import Layer from "../Layer";
 import { InventoryUseComponentArray } from "./InventoryUseComponent";
 import { TITLE_REWARD_CHANCES } from "../tribesman-title-generation";
 import { TribeMemberComponentArray, awardTitle, hasTitle } from "./TribeMemberComponent";
@@ -14,6 +14,7 @@ import { TribesmanAIComponentArray } from "./TribesmanAIComponent";
 import { InventoryName } from "battletribes-shared/items/items";
 import { TransformComponentArray } from "./TransformComponent";
 import { Packet } from "battletribes-shared/packets";
+import { getEntityType, getGameTicks } from "../world";
 
 export interface ResearchBenchComponentParams {}
 
@@ -105,7 +106,7 @@ const getResearchTimeMultiplier = (researcher: EntityID): number => {
       multiplier *= 2/3;
    }
    
-   if (Board.getEntityType(researcher) === EntityType.tribeWarrior) {
+   if (getEntityType(researcher) === EntityType.tribeWarrior) {
       multiplier *= 2;
    }
 
@@ -131,7 +132,7 @@ export function continueResearching(researchBench: EntityID, researcher: EntityI
       // Make the tribesman slap the bench each time they complete an orb
       const inventoryUseComponent = InventoryUseComponentArray.getComponent(researcher);
       const useInfo = inventoryUseComponent.getLimbInfo(InventoryName.hotbar);
-      useInfo.lastAttackTicks = Board.ticks;
+      useInfo.lastAttackTicks = getGameTicks();
    }
 
    if (TribeMemberComponentArray.hasComponent(researcher) && Math.random() < TITLE_REWARD_CHANCES.SHREWD_REWARD_CHANCE / Settings.TPS) {

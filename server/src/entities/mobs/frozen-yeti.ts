@@ -5,7 +5,6 @@ import { Point, randInt } from "battletribes-shared/utils";
 import { HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
 import { createItemsOverEntity } from "../../entity-shared";
 import { FrozenYetiComponentArray } from "../../components/FrozenYetiComponent";
-import Board from "../../Board";
 import { applyKnockback } from "../../components/PhysicsComponent";
 import { wasTribeMemberKill } from "../tribes/tribe-member";
 import { ServerComponentType } from "battletribes-shared/components";
@@ -15,6 +14,7 @@ import { ComponentConfig } from "../../components";
 import { TransformComponentArray } from "../../components/TransformComponent";
 import { createHitbox, HitboxCollisionType, Hitbox } from "battletribes-shared/boxes/boxes";
 import CircularBox from "battletribes-shared/boxes/CircularBox";
+import { getEntityType } from "../../world";
 
 export const enum FrozenYetiVars {
    VISION_RANGE = 350,
@@ -103,7 +103,7 @@ export function createFrozenYetiConfig(): ComponentConfig<ComponentTypes> {
 }
 
 export function onFrozenYetiCollision(frozenYeti: EntityID, collidingEntity: EntityID, collisionPoint: Point): void {
-   const collidingEntityType = Board.getEntityType(collidingEntity);
+   const collidingEntityType = getEntityType(collidingEntity);
    
    if (collidingEntity === null || collidingEntityType === EntityType.iceSpikes) {
       return;

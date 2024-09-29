@@ -1,5 +1,4 @@
 import { StructureConnectionInfo, getSnapDirection, getStructureSnapOrigin } from "battletribes-shared/structures";
-import Board from "../Board";
 import { createStructureGrassBlockers } from "../grass-blockers";
 import { BlueprintComponentArray } from "./BlueprintComponent";
 import { ComponentArray } from "./ComponentArray";
@@ -10,6 +9,7 @@ import { EntityID } from "battletribes-shared/entities";
 import { TribeComponentArray } from "./TribeComponent";
 import { TransformComponentArray } from "./TransformComponent";
 import { Packet } from "battletribes-shared/packets";
+import { destroyEntity, getEntityLayer } from "../world";
 
 export interface StructureComponentParams {
    connectionInfo: StructureConnectionInfo;
@@ -64,6 +64,7 @@ function onJoin(entity: EntityID): void {
    createStructureGrassBlockers(entity);
 
    const structureComponent = StructureComponentArray.getComponent(entity);
+   const layer = getEntityLayer(entity);
    
    // Mark opposite connections
    for (let i = 0; i < 4; i++) {
@@ -73,7 +74,7 @@ function onJoin(entity: EntityID): void {
          const otherStructureComponent = StructureComponentArray.getComponent(connectedEntity);
          const connectedEntityTransformComponent = TransformComponentArray.getComponent(connectedEntity);
 
-         const worldInfo = Board.getWorldInfo();
+         const worldInfo = layer.getWorldInfo();
          const snapOrigin = getStructureSnapOrigin(worldInfo.getEntityCallback(entity));
          const connectedSnapOrigin = getStructureSnapOrigin(worldInfo.getEntityCallback(connectedEntity));
          const connectionDirection = getSnapDirection(connectedSnapOrigin.calculateAngleBetween(snapOrigin), connectedEntityTransformComponent.rotation);
@@ -97,7 +98,7 @@ function onRemove(entity: EntityID): void {
    }
 
    if (BlueprintComponentArray.hasComponent(structureComponent.activeBlueprint)) {
-      Board.destroyEntity(structureComponent.activeBlueprint);
+      destroyEntity(structureComponent.activeBlueprint);
    }
 }
 

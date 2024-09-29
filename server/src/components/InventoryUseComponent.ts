@@ -16,9 +16,10 @@ import { registerDirtyEntity } from "../server/player-clients";
 import RectangularBox from "battletribes-shared/boxes/RectangularBox";
 import { HealthComponentArray } from "./HealthComponent";
 import { attemptAttack, calculateItemKnockback } from "../entities/tribes/limb-use";
-import Board from "../Board";
+import Layer from "../Layer";
 import { ProjectileComponentArray } from "./ProjectileComponent";
 import { applyKnockback } from "./PhysicsComponent";
+import { destroyEntity, getGameTicks } from "../world";
 
 export interface InventoryUseComponentParams {
    usedInventoryNames: Array<InventoryName>;
@@ -252,7 +253,7 @@ export function onBlockBoxCollisionWithDamageBox(attacker: EntityID, victim: Ent
    blockBox.hasBlocked = true;
 
    // @Copynpaste
-   blockBoxLimb.lastBlockTick = Board.ticks;
+   blockBoxLimb.lastBlockTick = getGameTicks();
    blockBoxLimb.blockPositionX = blockBox.box.position.x;
    blockBoxLimb.blockPositionY = blockBox.box.position.y;
    blockBoxLimb.blockType = blockBox.blockType;
@@ -262,7 +263,7 @@ export function onBlockBoxCollisionWithDamageBox(attacker: EntityID, victim: Ent
 export function onBlockBoxCollisionWithProjectile(blockingEntity: EntityID, projectile: EntityID, blockBoxLimb: LimbInfo, blockBox: ServerBlockBox): void {
    blockBox.hasBlocked = true;
    // @Copynpaste
-   blockBoxLimb.lastBlockTick = Board.ticks;
+   blockBoxLimb.lastBlockTick = getGameTicks();
    blockBoxLimb.blockPositionX = blockBox.box.position.x;
    blockBoxLimb.blockPositionY = blockBox.box.position.y;
    blockBoxLimb.blockType = blockBox.blockType;
@@ -276,7 +277,7 @@ export function onBlockBoxCollisionWithProjectile(blockingEntity: EntityID, proj
       // @Hack @Hardcoded: knockback amount
       applyKnockback(blockingEntity, 75, pushDirection);
       
-      Board.destroyEntity(projectile);
+      destroyEntity(projectile);
    } else {
       const projectileComponent = ProjectileComponentArray.getComponent(projectile);
       projectileComponent.isBlocked = true;

@@ -3,7 +3,6 @@ import { AMMO_INFO_RECORD, ServerComponentType } from "battletribes-shared/compo
 import { EntityType, PlayerCauseOfDeath, EntityID } from "battletribes-shared/entities";
 import { Point } from "battletribes-shared/utils";
 import { HealthComponentArray, damageEntity } from "../../components/HealthComponent";
-import Board from "../../Board";
 import { applyKnockback } from "../../components/PhysicsComponent";
 import { EntityRelationship, TribeComponentArray, getEntityRelationship } from "../../components/TribeComponent";
 import { StatusEffectComponentArray, applyStatusEffect } from "../../components/StatusEffectComponent";
@@ -14,6 +13,7 @@ import { ItemType } from "battletribes-shared/items/items";
 import { ProjectileComponentArray } from "../../components/ProjectileComponent";
 import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
 import RectangularBox from "battletribes-shared/boxes/RectangularBox";
+import { destroyEntity, getEntityType, validateEntity } from "../../world";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics
@@ -58,7 +58,7 @@ export function onBallistaRockCollision(arrow: EntityID, collidingEntity: Entity
    }
    
    const tribeComponent = TribeComponentArray.getComponent(arrow);
-   const collidingEntityType = Board.getEntityType(collidingEntity)!;
+   const collidingEntityType = getEntityType(collidingEntity)!;
 
    // Collisions with embrasures are handled in the embrasures collision function
    if (collidingEntityType === EntityType.embrasure) {
@@ -85,7 +85,7 @@ export function onBallistaRockCollision(arrow: EntityID, collidingEntity: Entity
 
       const ammoInfo = AMMO_INFO_RECORD[ItemType.rock];
 
-      const owner = Board.validateEntity(projectileComponent.owner);
+      const owner = validateEntity(projectileComponent.owner);
       const hitDirection = transformComponent.position.calculateAngleBetween(collidingEntityTransformComponent.position);
       
       damageEntity(collidingEntity, owner, ammoInfo.damage, PlayerCauseOfDeath.arrow, AttackEffectiveness.effective, collisionPoint, 0);
@@ -95,6 +95,6 @@ export function onBallistaRockCollision(arrow: EntityID, collidingEntity: Entity
          applyStatusEffect(collidingEntity, ammoInfo.statusEffect.type, ammoInfo.statusEffect.durationTicks);
       }
 
-      Board.destroyEntity(arrow);
+      destroyEntity(arrow);
    }
 }

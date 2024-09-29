@@ -24,6 +24,7 @@ export interface ServerTileData {
 }
 
 export type ServerTileUpdateData = {
+   readonly layerIdx: number;
    readonly tileIndex: number;
    readonly type: TileType;
    readonly isWall: boolean;

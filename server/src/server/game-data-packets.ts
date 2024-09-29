@@ -2,7 +2,7 @@ import { VisibleChunkBounds } from "battletribes-shared/client-server-types";
 import { ServerComponentType, ServerComponentTypeString } from "battletribes-shared/components";
 import { EntityID } from "battletribes-shared/entities";
 import { TechUnlockProgress } from "battletribes-shared/techs";
-import Board from "../Board";
+import Layer, { getTileX, getTileY } from "../Layer";
 import { ComponentArrays } from "../components/ComponentArray";
 import { HealthComponentArray } from "../components/HealthComponent";
 import { InventoryComponentArray, getInventory } from "../components/InventoryComponent";
@@ -18,6 +18,7 @@ import { Inventory, InventoryName, ItemType } from "battletribes-shared/items/it
 import { TransformComponentArray } from "../components/TransformComponent";
 import { ComponentConfig } from "../components";
 import { alignLengthBytes, Packet, PacketType } from "battletribes-shared/packets";
+import { entityExists, getEntityLayer, getEntityType, getGameTicks, getGameTime, getTribes, layers, surfaceLayer } from "../world";
 
 export function getInventoryDataLength(inventory: Inventory): number {
    let lengthBytes = 4 * Float32Array.BYTES_PER_ELEMENT;
@@ -43,7 +44,7 @@ export function addInventoryDataToPacket(packet: Packet, inventory: Inventory): 
 }
 
 export function getEntityDataLength(entity: EntityID, player: EntityID | null): number {
-   let lengthBytes = 3 * Float32Array.BYTES_PER_ELEMENT;
+   let lengthBytes = 4 * Float32Array.BYTES_PER_ELEMENT;
 
    for (let i = 0; i < ComponentArrays.length; i++) {
       const componentArray = ComponentArrays[i];
@@ -57,11 +58,10 @@ export function getEntityDataLength(entity: EntityID, player: EntityID | null): 
 }
 
 export function addEntityDataToPacket(packet: Packet, entity: EntityID, player: EntityID | null): void {
-   // Entity ID
+   // Entity ID, type, and layer
    packet.addNumber(entity);
-
-   // Entity type
-   packet.addNumber(Board.getEntityType(entity)!);
+   packet.addNumber(getEntityType(entity)!);
+   packet.addNumber(layers.indexOf(getEntityLayer(entity)));
 
    // @Speed
    let numComponents = 0;
@@ -92,13 +92,13 @@ export function addEntityDataToPacket(packet: Packet, entity: EntityID, player: 
    }
 }
 
-const getVisibleGrassBlockers = (visibleChunkBounds: VisibleChunkBounds): ReadonlyArray<GrassBlocker> => {
+const getVisibleGrassBlockers = (layer: Layer, visibleChunkBounds: VisibleChunkBounds): ReadonlyArray<GrassBlocker> => {
    const visibleGrassBlockers = new Array<GrassBlocker>();
    const seenBlockers = new Set<GrassBlocker>();
    
    for (let chunkX = visibleChunkBounds[0]; chunkX <= visibleChunkBounds[1]; chunkX++) {
       for (let chunkY = visibleChunkBounds[2]; chunkY <= visibleChunkBounds[3]; chunkY++) {
-         const chunk = Board.getChunk(chunkX, chunkY);
+         const chunk = layer.getChunk(chunkX, chunkY);
          for (const grassBlocker of chunk.grassBlockers) {
             if (seenBlockers.has(grassBlocker)) {
                continue;
@@ -114,8 +114,9 @@ const getVisibleGrassBlockers = (visibleChunkBounds: VisibleChunkBounds): Readon
 }
 
 export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend: Set<EntityID>): ArrayBuffer {
-   const playerIsAlive = Board.hasEntity(playerClient.instance);
+   const playerIsAlive = entityExists(playerClient.instance);
    const player = playerClient.instance;
+   const layer = getEntityLayer(player);
 
    let hotbarInventory: Inventory | undefined;
    let backpackInventory: Inventory | undefined;
@@ -138,7 +139,7 @@ export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend:
       gloveSlotInventory = getInventory(inventoryComponent, InventoryName.gloveSlot);
    }
    
-   const tileUpdates = Board.popTileUpdates();
+   const tileUpdates = layer.popTileUpdates();
 
    const trackedEntity = SERVER.trackedEntityID;
    const debugData = typeof trackedEntity !== "undefined" ? createEntityDebugData(trackedEntity) : null;
@@ -146,7 +147,8 @@ export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend:
    const area = playerClient.tribe.getArea();
    const unlockProgressEntries = Object.entries(playerClient.tribe.techTreeUnlockProgress).map(([a, b]) => [Number(a), b]) as Array<[number, TechUnlockProgress]>;
 
-   const numEnemyTribes = Board.tribes.filter(tribe => tribe.id !== playerClient.tribe.id).length;
+   const tribes = getTribes();
+   const numEnemyTribes = tribes.filter(tribe => tribe.id !== playerClient.tribe.id).length;
 
    let hotbarUseInfo: LimbInfo | undefined;
    if (playerIsAlive) {
@@ -162,6 +164,8 @@ export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend:
    lengthBytes += Float32Array.BYTES_PER_ELEMENT;
    // Ticks, time
    lengthBytes += 2 * Float32Array.BYTES_PER_ELEMENT;
+   // Layer
+   lengthBytes += Float32Array.BYTES_PER_ELEMENT;
    // Player is alive
    lengthBytes += Float32Array.BYTES_PER_ELEMENT;
    // Player tribe data
@@ -229,8 +233,10 @@ export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend:
    packet.addBoolean(!SERVER.isSimulating);
    packet.padOffset(3);
 
-   packet.addNumber(Board.ticks);
-   packet.addNumber(Board.time);
+   packet.addNumber(getGameTicks());
+   packet.addNumber(getGameTime());
+
+   packet.addNumber(layers.indexOf(getEntityLayer(player)));
 
    packet.addBoolean(playerIsAlive);
    packet.padOffset(3);
@@ -250,8 +256,8 @@ export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend:
 
    packet.addNumber(area.length);
    for (const tileIndex of area) {
-      const tileX = Board.getTileX(tileIndex);
-      const tileY = Board.getTileY(tileIndex);
+      const tileX = getTileX(tileIndex);
+      const tileY = getTileY(tileIndex);
       packet.addNumber(tileX);
       packet.addNumber(tileY);
    }
@@ -280,7 +286,7 @@ export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend:
 
    // Enemy tribes data
    packet.addNumber(numEnemyTribes);
-   for (const tribe of Board.tribes) {
+   for (const tribe of tribes) {
       if (tribe.id === playerClient.tribe.id) {
          continue;
       }
@@ -447,33 +453,44 @@ export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend:
    return packet.buffer;
 }
 
-export function createInitialGameDataPacket(player: EntityID, playerConfig: ComponentConfig<ServerComponentType.transform>): ArrayBuffer {
-   let lengthBytes = Float32Array.BYTES_PER_ELEMENT * 4;
-   lengthBytes += Settings.FULL_BOARD_DIMENSIONS * Settings.FULL_BOARD_DIMENSIONS * 6 * Float32Array.BYTES_PER_ELEMENT;
-   lengthBytes += Float32Array.BYTES_PER_ELEMENT + Board.waterRocks.length * 5 * Float32Array.BYTES_PER_ELEMENT;
-   lengthBytes += Float32Array.BYTES_PER_ELEMENT + Board.riverSteppingStones.length * 5 * Float32Array.BYTES_PER_ELEMENT;
+export function createInitialGameDataPacket(player: EntityID, spawnLayer: Layer, playerConfig: ComponentConfig<ServerComponentType.transform>): ArrayBuffer {
+   let lengthBytes = Float32Array.BYTES_PER_ELEMENT * 5;
+   // Layers
+   lengthBytes += Float32Array.BYTES_PER_ELEMENT;
+   lengthBytes += layers.length * Settings.FULL_BOARD_DIMENSIONS * Settings.FULL_BOARD_DIMENSIONS * 6 * Float32Array.BYTES_PER_ELEMENT;
+   lengthBytes += Float32Array.BYTES_PER_ELEMENT + spawnLayer.waterRocks.length * 5 * Float32Array.BYTES_PER_ELEMENT;
+   lengthBytes += Float32Array.BYTES_PER_ELEMENT + spawnLayer.riverSteppingStones.length * 5 * Float32Array.BYTES_PER_ELEMENT;
    lengthBytes = alignLengthBytes(lengthBytes);
    const packet = new Packet(PacketType.initialGameData, lengthBytes);
    
    packet.addNumber(player);
+
+   // Layer idx
+   packet.addNumber(layers.indexOf(spawnLayer));
    
+   // Spawn position
    const spawnPosition = playerConfig[ServerComponentType.transform].position;
    packet.addNumber(spawnPosition.x);
    packet.addNumber(spawnPosition.y);
    
-   for (let tileIndex = 0; tileIndex < Settings.FULL_BOARD_DIMENSIONS * Settings.FULL_BOARD_DIMENSIONS; tileIndex++) {
-      packet.addNumber(Board.tileTypes[tileIndex]);
-      packet.addNumber(Board.tileBiomes[tileIndex]);
-      packet.addBoolean(Board.tileIsWalls[tileIndex] === 1 ? true : false);
-      packet.padOffset(3);
-      packet.addNumber(Board.riverFlowDirections[tileIndex]);
-      packet.addNumber(Board.tileTemperatures[tileIndex]);
-      packet.addNumber(Board.tileHumidities[tileIndex]);
+   // Layers
+   packet.addNumber(layers.length);
+   for (let layerIdx = 0; layerIdx < layers.length; layerIdx++) {
+      const layer = layers[layerIdx];
+      for (let tileIndex = 0; tileIndex < Settings.FULL_BOARD_DIMENSIONS * Settings.FULL_BOARD_DIMENSIONS; tileIndex++) {
+         packet.addNumber(layer.tileTypes[tileIndex]);
+         packet.addNumber(layer.tileBiomes[tileIndex]);
+         packet.addBoolean(layer.tileIsWalls[tileIndex] === 1 ? true : false);
+         packet.padOffset(3);
+         packet.addNumber(layer.riverFlowDirections[tileIndex]);
+         packet.addNumber(layer.tileTemperatures[tileIndex]);
+         packet.addNumber(layer.tileHumidities[tileIndex]);
+      }
    }
 
-   packet.addNumber(Board.waterRocks.length);
-   for (let i = 0; i < Board.waterRocks.length; i++) {
-      const waterRock = Board.waterRocks[i];
+   packet.addNumber(spawnLayer.waterRocks.length);
+   for (let i = 0; i < spawnLayer.waterRocks.length; i++) {
+      const waterRock = spawnLayer.waterRocks[i];
 
       packet.addNumber(waterRock.position[0]);
       packet.addNumber(waterRock.position[1]);
@@ -482,9 +499,9 @@ export function createInitialGameDataPacket(player: EntityID, playerConfig: Comp
       packet.addNumber(waterRock.opacity);
    }
 
-   packet.addNumber(Board.riverSteppingStones.length);
-   for (let i = 0; i < Board.riverSteppingStones.length; i++) {
-      const steppingStone = Board.riverSteppingStones[i];
+   packet.addNumber(spawnLayer.riverSteppingStones.length);
+   for (let i = 0; i < spawnLayer.riverSteppingStones.length; i++) {
+      const steppingStone = spawnLayer.riverSteppingStones[i];
 
       packet.addNumber(steppingStone.positionX);
       packet.addNumber(steppingStone.positionY);

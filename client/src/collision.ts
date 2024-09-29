@@ -11,6 +11,8 @@ import { TransformComponentArray } from "./entity-components/TransformComponent"
 import Chunk from "./Chunk";
 import Player from "./entities/Player";
 import { PhysicsComponentArray } from "./entity-components/PhysicsComponent";
+import { getEntityByID, getEntityLayer } from "./world";
+import Layer from "./Layer";
 
 interface EntityPairCollisionInfo {
    readonly minEntityInvolvedHitboxes: Array<Hitbox>;
@@ -172,8 +174,8 @@ const resolveCollisionPairs = (collisionPairs: CollisionPairs, onlyResolvePlayer
 
          // Note: from here, entity1ID < entity2ID (by definition)
 
-         const entity1 = Board.entityRecord[entity1ID]!;
-         const entity2 = Board.entityRecord[entity2ID]!;
+         const entity1 = getEntityByID(entity1ID)!;
+         const entity2 = getEntityByID(entity2ID)!;
 
          for (let i = 0; i < collisionInfo.minEntityInvolvedHitboxes.length; i++) {
             const entity1Hitbox = collisionInfo.minEntityInvolvedHitboxes[i];
@@ -186,12 +188,12 @@ const resolveCollisionPairs = (collisionPairs: CollisionPairs, onlyResolvePlayer
    }
 }
 
-export function resolveEntityCollisions(): void {
+export function resolveEntityCollisions(layer: Layer): void {
    const collisionPairs: CollisionPairs = {};
    
    const numChunks = Settings.BOARD_SIZE * Settings.BOARD_SIZE;
    for (let i = 0; i < numChunks; i++) {
-      const chunk = Board.chunks[i];
+      const chunk = layer.chunks[i];
 
       // @Bug: collision can happen multiple times
       // @Speed: physics-physics comparisons happen twice
@@ -220,6 +222,7 @@ export function resolvePlayerCollisions(): void {
 }
 
 export function resolveWallTileCollisions(entity: Entity): void {
+   const layer = getEntityLayer(entity.id);
    const transformComponent = entity.getServerComponent(ServerComponentType.transform);
    for (let i = 0; i < transformComponent.hitboxes.length; i++) {
       const hitbox = transformComponent.hitboxes[i];
@@ -234,7 +237,7 @@ export function resolveWallTileCollisions(entity: Entity): void {
       // @Incomplete
       for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
          for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
-            const tile = Board.getTile(tileX, tileY);
+            const tile = layer.getTileFromCoords(tileX, tileY);
             if (!tile.isWall) {
                continue;
             }

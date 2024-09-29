@@ -1,4 +1,4 @@
-import { WaterRockData, RiverSteppingStoneData, GrassTileInfo, RiverFlowDirectionsRecord, WaterRockSize, RiverSteppingStoneSize, GameDataPacket, HitData, PlayerKnockbackData, HealData, ResearchOrbCompleteData, ServerTileUpdateData, EntityDebugData, LineDebugData, CircleDebugData, TileHighlightData, PathData, PathfindingNodeIndex } from "battletribes-shared/client-server-types";
+import { WaterRockData, RiverSteppingStoneData, GrassTileInfo, RiverFlowDirectionsRecord, WaterRockSize, RiverSteppingStoneSize, GameDataPacket, HitData, PlayerKnockbackData, HealData, ResearchOrbCompleteData, ServerTileUpdateData, EntityDebugData, LineDebugData, CircleDebugData, TileHighlightData, PathData, PathfindingNodeIndex, RIVER_STEPPING_STONE_SIZES } from "battletribes-shared/client-server-types";
 import { ServerComponentType } from "battletribes-shared/components";
 import { EntityID, EntityType } from "battletribes-shared/entities";
 import { ItemType } from "battletribes-shared/items/items";
@@ -18,7 +18,6 @@ import Entity from "../Entity";
 import { createEntity } from "../entity-class-record";
 import Board from "../Board";
 import Camera from "../Camera";
-import { createComponent } from "../entity-components/components";
 import { updateDebugScreenIsPaused, updateDebugScreenTicks, updateDebugScreenCurrentTime, registerServerTick } from "../components/game/dev/GameInfoDisplay";
 import { Tile } from "../Tile";
 import { getServerComponentArray } from "../entity-components/ComponentArray";
@@ -26,59 +25,112 @@ import { TRIBE_INFO_RECORD } from "battletribes-shared/tribes";
 import { gameScreenSetIsDead } from "../components/game/GameScreen";
 import { updateHealthBar } from "../components/game/HealthBar";
 import { selectItemSlot } from "../components/game/GameInteractableLayer";
+import { createComponent } from "../entity-components/component-creation";
+import { addEntity, addLayer, changeEntityLayer, entityExists, getEntityByID, getEntityLayer, layers, removeEntity, setCurrentLayer } from "../world";
+import { NEIGHBOUR_OFFSETS } from "../utils";
+import { createRiverSteppingStoneData } from "../rendering/webgl/river-rendering";
+import Layer, { getTileIndexIncludingEdges, tileIsWithinEdge } from "../Layer";
+import { TransformComponentArray } from "../entity-components/TransformComponent";
+import { playSound } from "../sound";
 
-export interface InitialGameDataPacket {
-   readonly playerID: number;
-   readonly spawnPosition: [number, number];
-   readonly tiles: ReadonlyArray<Tile>;
-   readonly waterRocks: ReadonlyArray<WaterRockData>;
-   readonly riverSteppingStones: ReadonlyArray<RiverSteppingStoneData>;
-   readonly riverFlowDirections: RiverFlowDirectionsRecord;
-   readonly grassInfo: Record<number, Record<number, GrassTileInfo>>;
-}
+export function processInitialGameDataPacket(reader: PacketReader): void {
+   // Player ID
+   // @Hack: Is this really necessary?
+   Game.playerID = reader.readNumber();
 
-export function processInitialGameDataPacket(reader: PacketReader): InitialGameDataPacket {
-   const playerID = reader.readNumber();
+   const layerIdx = reader.readNumber();
    
    const spawnPositionX = reader.readNumber();
    const spawnPositionY = reader.readNumber();
    
-   const tiles = new Array<Tile>();
-   const flowDirections: RiverFlowDirectionsRecord = {};
-   const grassInfoRecord: Record<number, Record<number, GrassTileInfo>> = {};
-   for (let tileIndex = 0; tileIndex < Settings.FULL_BOARD_DIMENSIONS * Settings.FULL_BOARD_DIMENSIONS; tileIndex++) {
-      const tileType = reader.readNumber() as TileType;
-      const tileBiome = reader.readNumber() as Biome;
-      const isWall = reader.readBoolean();
-      reader.padOffset(3);
-      const flowDirection = reader.readNumber();
-      const temperature = reader.readNumber();
-      const humidity = reader.readNumber();
-
-      const tileX = Board.getTileX(tileIndex);
-      const tileY = Board.getTileY(tileIndex);
-
-      const tile = new Tile(tileX, tileY, tileType, tileBiome, isWall);
-      tiles.push(tile);
-
-      if (typeof flowDirections[tileX] === "undefined") {
-         flowDirections[tileX] = {};
+   // Create layers
+   const numLayers = reader.readNumber();
+   for (let i = 0; i < numLayers; i++) {
+      const tiles = new Array<Tile>();
+      const flowDirections: RiverFlowDirectionsRecord = {};
+      const grassInfoRecord: Record<number, Record<number, GrassTileInfo>> = {};
+      for (let tileIndex = 0; tileIndex < Settings.FULL_BOARD_DIMENSIONS * Settings.FULL_BOARD_DIMENSIONS; tileIndex++) {
+         const tileType = reader.readNumber() as TileType;
+         const tileBiome = reader.readNumber() as Biome;
+         const isWall = reader.readBoolean();
+         reader.padOffset(3);
+         const flowDirection = reader.readNumber();
+         const temperature = reader.readNumber();
+         const humidity = reader.readNumber();
+   
+         const tileX = Board.getTileX(tileIndex);
+         const tileY = Board.getTileY(tileIndex);
+   
+         const tile = new Tile(tileX, tileY, tileType, tileBiome, isWall);
+         tiles.push(tile);
+   
+         if (typeof flowDirections[tileX] === "undefined") {
+            flowDirections[tileX] = {};
+         }
+         flowDirections[tileX]![tileY] = flowDirection;
+   
+         const grassInfo: GrassTileInfo = {
+            tileX: tileX,
+            tileY: tileY,
+            temperature: temperature,
+            humidity: humidity
+         };
+         if (typeof grassInfoRecord[tileX] === "undefined") {
+            grassInfoRecord[tileX] = {};
+         }
+         grassInfoRecord[tileX]![tileY] = grassInfo;
       }
-      flowDirections[tileX]![tileY] = flowDirection;
 
-      const grassInfo: GrassTileInfo = {
-         tileX: tileX,
-         tileY: tileY,
-         temperature: temperature,
-         humidity: humidity
-      };
-      if (typeof grassInfoRecord[tileX] === "undefined") {
-         grassInfoRecord[tileX] = {};
+      // Flag all tiles which border water or walls
+      for (let i = 0; i < tiles.length; i++) {
+         const tile = tiles[i];
+         if (tile.isWall) {
+            const tileX = i % (Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE * 2) - Settings.EDGE_GENERATION_DISTANCE;
+            const tileY = Math.floor(i / (Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE * 2)) - Settings.EDGE_GENERATION_DISTANCE;
+
+            for (let j = 0; j < NEIGHBOUR_OFFSETS.length; j++) {
+               const neighbourTileX = tileX + NEIGHBOUR_OFFSETS[j][0];
+               const neighbourTileY = tileY + NEIGHBOUR_OFFSETS[j][1];
+
+               if (tileIsWithinEdge(neighbourTileX, neighbourTileY)) {
+                  const tileIndex = getTileIndexIncludingEdges(neighbourTileX, neighbourTileY);
+                  const neighbourTile = tiles[tileIndex];
+                  neighbourTile.bordersWall = true;
+               }
+            }
+         }
+
+         if (tile.type === TileType.water) {
+            const tileX = i % (Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE * 2) - Settings.EDGE_GENERATION_DISTANCE;
+            const tileY = Math.floor(i / (Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE * 2)) - Settings.EDGE_GENERATION_DISTANCE;
+
+            for (let j = 0; j < NEIGHBOUR_OFFSETS.length; j++) {
+               const neighbourTileX = tileX + NEIGHBOUR_OFFSETS[j][0];
+               const neighbourTileY = tileY + NEIGHBOUR_OFFSETS[j][1];
+
+               if (tileIsWithinEdge(neighbourTileX, neighbourTileY)) {
+                  const tileIndex = getTileIndexIncludingEdges(neighbourTileX, neighbourTileY);
+                  const neighbourTile = tiles[tileIndex];
+                  neighbourTile.bordersWater = true;
+               }
+            }
+         }
       }
-      grassInfoRecord[tileX]![tileY] = grassInfo;
+
+      const layer = new Layer(tiles, flowDirections, [], [], grassInfoRecord);
+      addLayer(layer);
    }
 
-   const waterRocks = new Array<WaterRockData>();
+   // Set the initial camera position
+   Camera.setPosition(spawnPositionX, spawnPositionY);
+   Camera.setInitialVisibleChunkBounds(layers[layerIdx]);
+
+   // @Temporary @Hack
+   setCurrentLayer(0);
+
+   // @Hack
+   const surfaceLayer = layers[0];
+
    const numWaterRocks = reader.readNumber();
    for (let i = 0; i < numWaterRocks; i++) {
       const x = reader.readNumber();
@@ -93,10 +145,9 @@ export function processInitialGameDataPacket(reader: PacketReader): InitialGameD
          size: size,
          opacity: opacity
       };
-      waterRocks.push(waterRock);
+      surfaceLayer.waterRocks.push(waterRock);
    }
 
-   const steppingStones = new Array<RiverSteppingStoneData>();
    const numSteppingStones = reader.readNumber();
    for (let i = 0; i < numSteppingStones; i++) {
       const x = reader.readNumber();
@@ -112,18 +163,28 @@ export function processInitialGameDataPacket(reader: PacketReader): InitialGameD
          size: size,
          groupID: groupID
       };
-      steppingStones.push(steppingStone);
+      surfaceLayer.riverSteppingStones.push(steppingStone);
    }
 
-   return {
-      playerID: playerID,
-      spawnPosition: [spawnPositionX, spawnPositionY],
-      tiles: tiles,
-      waterRocks: waterRocks,
-      riverSteppingStones: steppingStones,
-      riverFlowDirections: flowDirections,
-      grassInfo: grassInfoRecord
-   };
+   // Add river stepping stones to chunks
+   for (const steppingStone of surfaceLayer.riverSteppingStones) {
+      const size = RIVER_STEPPING_STONE_SIZES[steppingStone.size];
+
+      const minChunkX = Math.max(Math.min(Math.floor((steppingStone.positionX - size/2) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
+      const maxChunkX = Math.max(Math.min(Math.floor((steppingStone.positionX + size/2) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
+      const minChunkY = Math.max(Math.min(Math.floor((steppingStone.positionY - size/2) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
+      const maxChunkY = Math.max(Math.min(Math.floor((steppingStone.positionY + size/2) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
+      
+      for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
+         for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
+            const chunk = surfaceLayer.getChunk(chunkX, chunkY);
+            chunk.riverSteppingStones.push(steppingStone);
+         }
+      }
+   }
+
+   // @Hack @Temporary
+   createRiverSteppingStoneData(surfaceLayer.riverSteppingStones);
 }
 
 const readDebugData = (reader: PacketReader): EntityDebugData => {
@@ -225,6 +286,15 @@ const processPlayerUpdateData = (reader: PacketReader): void => {
    
    // Skip entity type
    reader.padOffset(Float32Array.BYTES_PER_ELEMENT);
+
+   // @Copynpaste
+   const layerIdx = reader.readNumber();
+   const layer = layers[layerIdx];
+   const previousLayer = getEntityLayer(Player.instance.id);
+   if (layer !== previousLayer) {
+      // Change layers
+      changeEntityLayer(Player.instance.id, layer);
+   }
       
    const numComponents = reader.readNumber();
    for (let i = 0; i < numComponents; i++) {
@@ -246,6 +316,7 @@ const processPlayerUpdateData = (reader: PacketReader): void => {
 
 export function processEntityCreationData(entityID: EntityID, reader: PacketReader): void {
    const entityType = reader.readNumber() as EntityType;
+   const layerIdx = reader.readNumber();
 
    const entity = createEntity(entityID, entityType);
    const isPlayer = entityID === Game.playerID;
@@ -261,7 +332,8 @@ export function processEntityCreationData(entityID: EntityID, reader: PacketRead
       componentArray.addComponent(entity.id, component);
    }
 
-   Board.addEntity(entity);
+   const layer = layers[layerIdx];
+   addEntity(entity, layer);
 
    // Set the player instance
    if (isPlayer) {
@@ -273,8 +345,16 @@ export function processEntityCreationData(entityID: EntityID, reader: PacketRead
 const processEntityUpdateData = (entityID: EntityID, reader: PacketReader): void => {
    // Skip entity type
    reader.padOffset(Float32Array.BYTES_PER_ELEMENT);
+
+   const layerIdx = reader.readNumber();
+   const layer = layers[layerIdx];
+   const previousLayer = getEntityLayer(entityID);
+   if (layer !== previousLayer) {
+      // Change layers
+      changeEntityLayer(entityID, layer);
+   }
    
-   const entity = Board.entityRecord[entityID]!;
+   const entity = getEntityByID(entityID)!;
 
    const numComponents = reader.readNumber();
    for (let i = 0; i < numComponents; i++) {
@@ -299,6 +379,16 @@ export function processGameDataPacket(reader: PacketReader): void {
 
    const ticks = reader.readNumber();
    const time = reader.readNumber();
+
+   const layerIdx = reader.readNumber();
+   const playerLayer = layers[layerIdx];
+
+   // @hack @Temporary
+   const startLayer = Player.instance !== null ? getEntityLayer(Player.instance!.id) : layers[0];
+
+   if (playerLayer !== startLayer) {
+      playSound("layer-change.mp3", 0.55, 1, Camera.position.copy());
+   }
 
    const playerIsAlive = reader.readBoolean();
    reader.padOffset(3);
@@ -406,7 +496,7 @@ export function processGameDataPacket(reader: PacketReader): void {
          } else {
             processPlayerUpdateData(reader);
          }
-      } else if (typeof Board.entityRecord[entityID] !== "undefined") {
+      } else if (entityExists(entityID)) {
          processEntityUpdateData(entityID, reader);
       } else {
          processEntityCreationData(entityID, reader);
@@ -414,6 +504,18 @@ export function processGameDataPacket(reader: PacketReader): void {
    }
 
    const entitiesToRemove = new Set<Entity>();
+
+   // @Hack @Speed: remove once carmack networking is in place
+   const newPlayerLayer = getEntityLayer(Player.instance!.id);
+   if (newPlayerLayer !== startLayer) {
+      for (let i = 0; i < TransformComponentArray.entities.length; i++) {
+         const entity = TransformComponentArray.entities[i];
+         const layer = getEntityLayer(entity);
+         if (layer !== newPlayerLayer) {
+            entitiesToRemove.add(getEntityByID(entity)!);
+         }
+      }
+   }
    
    // Read removed entity IDs
    const serverRemovedEntityIDs = new Set<number>();
@@ -423,7 +525,7 @@ export function processGameDataPacket(reader: PacketReader): void {
 
       serverRemovedEntityIDs.add(entityID);
       
-      const entity = Board.entityRecord[entityID];
+      const entity = getEntityByID(entityID);
       if (typeof entity !== "undefined") {
          entitiesToRemove.add(entity);
       }
@@ -436,6 +538,7 @@ export function processGameDataPacket(reader: PacketReader): void {
    const maxVisibleChunkX = Camera.maxVisibleChunkX + 2;
    const minVisibleChunkY = Camera.minVisibleChunkY - 2;
    const maxVisibleChunkY = Camera.maxVisibleChunkY + 2;
+   // @Speed
    for (let chunkX = 0; chunkX < Settings.BOARD_SIZE; chunkX++) {
       for (let chunkY = 0; chunkY < Settings.BOARD_SIZE; chunkY++) {
          // Skip visible chunks
@@ -443,10 +546,10 @@ export function processGameDataPacket(reader: PacketReader): void {
             continue;
          }
 
-         const chunk = Board.getChunk(chunkX, chunkY);
+         const chunk = playerLayer.getChunk(chunkX, chunkY);
          for (let i = 0; i < chunk.entities.length; i++) {
             const entityID = chunk.entities[i];
-            const entity = Board.entityRecord[entityID]!;
+            const entity = getEntityByID(entityID)!;
             entitiesToRemove.add(entity);
          }
       }
@@ -458,7 +561,7 @@ export function processGameDataPacket(reader: PacketReader): void {
 
    for (const entity of entitiesToRemove) {
       const isDeath = serverRemovedEntityIDs.has(entity.id);
-      Board.removeEntity(entity, isDeath);
+      removeEntity(entity, isDeath);
    }
 
    const visibleHits = new Array<HitData>();
@@ -536,12 +639,14 @@ export function processGameDataPacket(reader: PacketReader): void {
    const tileUpdates = new Array<ServerTileUpdateData>();
    const numTileUpdates = reader.readNumber();
    for (let i = 0; i < numTileUpdates; i++) {
+      const layerIdx = reader.readNumber();
       const tileIndex = reader.readNumber();
       const tileType = reader.readNumber();
       const isWall = reader.readBoolean();
       reader.padOffset(3);
 
       tileUpdates.push({
+         layerIdx: layerIdx,
          tileIndex: tileIndex,
          type: tileType,
          isWall: isWall

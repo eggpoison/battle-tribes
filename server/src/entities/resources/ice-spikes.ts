@@ -8,7 +8,7 @@ import { createEntityFromConfig } from "../../Entity";
 import { HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
 import { StatusEffectComponentArray, applyStatusEffect } from "../../components/StatusEffectComponent";
 import { createIceShardConfig } from "../projectiles/ice-shard";
-import Board from "../../Board";
+import Layer from "../../Layer";
 import { createItemsOverEntity } from "../../entity-shared";
 import { applyKnockback } from "../../components/PhysicsComponent";
 import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
@@ -17,6 +17,7 @@ import { ComponentConfig } from "../../components";
 import { TransformComponentArray } from "../../components/TransformComponent";
 import CircularBox from "battletribes-shared/boxes/CircularBox";
 import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
+import { getEntityType } from "../../world";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.health
@@ -48,7 +49,7 @@ export function createIceSpikesConfig(): ComponentConfig<ComponentTypes> {
 }
 
 export function onIceSpikesCollision(iceSpikes: EntityID, collidingEntity: EntityID, collisionPoint: Point): void {
-   const collidingEntityType = Board.getEntityType(collidingEntity);
+   const collidingEntityType = getEntityType(collidingEntity);
    if (collidingEntityType === EntityType.yeti || collidingEntityType === EntityType.frozenYeti || collidingEntityType === EntityType.iceSpikes || collidingEntityType === EntityType.snowball) {
       return;
    }
@@ -72,7 +73,7 @@ export function onIceSpikesCollision(iceSpikes: EntityID, collidingEntity: Entit
    }
 }
 
-export function createIceShardExplosion(originX: number, originY: number, numProjectiles: number): void {
+export function createIceShardExplosion(layer: Layer, originX: number, originY: number, numProjectiles: number): void {
    for (let i = 0; i < numProjectiles; i++) {
       const moveDirection = 2 * Math.PI * Math.random();
       const x = originX + 10 * Math.sin(moveDirection);
@@ -85,18 +86,6 @@ export function createIceShardExplosion(originX: number, originY: number, numPro
       config[ServerComponentType.transform].rotation = moveDirection;
       config[ServerComponentType.physics].velocityX += 700 * Math.sin(moveDirection);
       config[ServerComponentType.physics].velocityY += 700 * Math.cos(moveDirection);
-      createEntityFromConfig(config);
+      createEntityFromConfig(config, layer);
    }
-}
-
-export function onIceSpikesDeath(iceSpikes: EntityID): void {
-   if (Math.random() < 0.5) {
-      createItemsOverEntity(iceSpikes, ItemType.frostcicle, 1, 40);
-   }
-
-   const transformComponent = TransformComponentArray.getComponent(iceSpikes);
-   
-   // Explode into a bunch of ice spikes
-   const numProjectiles = randInt(3, 4);
-   createIceShardExplosion(transformComponent.position.x, transformComponent.position.y, numProjectiles);
 }

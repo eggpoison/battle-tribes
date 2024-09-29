@@ -15,5 +15,5 @@ export const TILE_TYPE_TEXTURE_SOURCES: ReadonlyArray<string> = [
    "tiles/grass.png",
    "tiles/grass.png",
    "tiles/fimbultur.png",
-   "tiles/dropdown.png"
+   "tiles/stone.png"
 ];

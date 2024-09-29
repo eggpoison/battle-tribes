@@ -4,13 +4,13 @@ import { EntityID, EntityTypeString } from "battletribes-shared/entities";
 import { getTechByID } from "battletribes-shared/techs";
 import { TRIBESMAN_COMMUNICATION_RANGE } from "./entities/tribes/tribesman-ai/tribesman-ai";
 import { TribesmanGoalType } from "./entities/tribes/tribesman-ai/tribesman-goals";
-import Board from "./Board";
 import { StructureComponentArray } from "./components/StructureComponent";
 import { TribeComponentArray } from "./components/TribeComponent";
 import { TribesmanAIComponentArray } from "./components/TribesmanAIComponent";
 import { getTribesmanVisionRange } from "./entities/tribes/tribesman-ai/tribesman-ai-utils";
 import { ItemTypeString, ITEM_INFO_RECORD, PlaceableItemInfo } from "battletribes-shared/items/items";
 import { Packet } from "battletribes-shared/packets";
+import { getEntityType } from "./world";
 
 export function createEntityDebugData(entity: EntityID): EntityDebugData {
    const lines = new Array<LineDebugData>();
@@ -70,7 +70,7 @@ export function createEntityDebugData(entity: EntityID): EntityDebugData {
                break;
             }
             case TribesmanGoalType.upgradeBuilding: {
-               goalString = "Upgrade " + EntityTypeString[Board.getEntityType(goal.plan.baseBuildingID)!];
+               goalString = "Upgrade " + EntityTypeString[getEntityType(goal.plan.baseBuildingID)!];
                break;
             }
          }

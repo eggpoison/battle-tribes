@@ -6,7 +6,6 @@ import { StructureType } from "battletribes-shared/structures";
 import { TechID, TechTreeUnlockProgress, TechInfo, getTechByID, TECHS } from "battletribes-shared/techs";
 import { TribeType, TRIBE_INFO_RECORD } from "battletribes-shared/tribes";
 import { Point, angle, randItem, clampToBoardDimensions, TileIndex } from "battletribes-shared/utils";
-import Board from "./Board";
 import Chunk from "./Chunk";
 import { TotemBannerComponentArray, addBannerToTotem, removeBannerFromTotem } from "./components/TotemBannerComponent";
 import { SafetyNode, addHitboxesOccupiedNodes, createRestrictedBuildingArea, getSafetyNode } from "./ai-tribe-building/ai-building";
@@ -22,6 +21,18 @@ import { TransformComponentArray } from "./components/TransformComponent";
 import { createEntityConfig } from "./entity-creation";
 import { createEntityFromConfig } from "./Entity";
 import { BoxType, Hitbox } from "battletribes-shared/boxes/boxes";
+import { addTribe, destroyEntity, entityExists, getEntityLayer, getEntityType, getGameTicks, LayerType, removeTribe } from "./world";
+import Layer, { getTileIndexIncludingEdges } from "./Layer";
+
+export interface TribeLayerBuildingInfo {
+   safetyRecord: Record<SafetyNode, number>;
+   occupiedSafetyNodes: Set<SafetyNode>;
+   safetyNodes: Set<SafetyNode>;
+
+   occupiedNodeToEntityIDRecord: Record<SafetyNode, Array<number>>;
+
+   nodeToAreaIDRecord: Record<SafetyNode, number>;
+}
 
 const ENEMY_ATTACK_REMEMBER_TIME_TICKS = 30 * Settings.TPS;
 const RESPAWN_TIME_TICKS = 5 * Settings.TPS;
@@ -204,15 +215,18 @@ const getWallNodeSides = (wall: VirtualBuilding): WallNodeSides => {
 }
 
 const wallSideIsConnected = (tribe: Tribe, sideNodes: ReadonlyArray<SafetyNode>): boolean => {
+   // @Hack: surfacelayer
+   const buildingInfo = tribe.layerBuildingInfoRecord[LayerType.surface];
+   
    // Make sure all nodes of the side link to another wall, except for the first and last
    for (let i = 1; i < sideNodes.length - 1; i++) {
       const node = sideNodes[i];
-      if (!tribe.occupiedSafetyNodes.has(node)) {
+      if (!buildingInfo.occupiedSafetyNodes.has(node)) {
          return false;
       }
 
       // Only make connections between walls and doors
-      const buildingIDs = tribe.occupiedNodeToEntityIDRecord[node];
+      const buildingIDs = buildingInfo.occupiedNodeToEntityIDRecord[node];
       for (let i = 0; i < buildingIDs.length; i++) {
          const buildingID = buildingIDs[i];
          const virtualBuilding = tribe.virtualBuildingRecord[buildingID];
@@ -317,6 +331,16 @@ const generateTribeName = (tribeType: TribeType): string => {
    }
 }
 
+const createBuildingInfo = (): TribeLayerBuildingInfo => {
+   return {
+      safetyRecord: {},
+      occupiedSafetyNodes: new Set(),
+      safetyNodes: new Set(),
+      occupiedNodeToEntityIDRecord: {},
+      nodeToAreaIDRecord: {}
+   };
+}
+
 class Tribe {
    public readonly name: string;
    public readonly id: number;
@@ -361,14 +385,12 @@ class Tribe {
    public virtualBuildingRecord: Record<number, VirtualBuilding> = {};
    public wallInfoRecord: Record<number, TribeWallInfo> = {};
 
-   public safetyRecord: Record<SafetyNode, number> = {};
-   public occupiedSafetyNodes = new Set<SafetyNode>();
-   public safetyNodes = new Set<SafetyNode>();
-
-   public occupiedNodeToEntityIDRecord: Record<SafetyNode, Array<number>> = {};
+   readonly layerBuildingInfoRecord: Record<LayerType, TribeLayerBuildingInfo> = {
+      [LayerType.surface]: createBuildingInfo(),
+      [LayerType.underground]: createBuildingInfo()
+   };
 
    public areas = new Array<TribeArea>();
-   public nodeToAreaIDRecord: Record<SafetyNode, number> = {};
    
    public restrictedBuildingAreas = new Array<RestrictedBuildingArea>();
 
@@ -391,7 +413,7 @@ class Tribe {
       this.tribesmanCap = TRIBE_INFO_RECORD[tribeType].baseTribesmanCap;
       this.pathfindingGroupID = getPathfindingGroupID();
 
-      Board.addTribe(this);
+      addTribe(this);
    }
 
    public addBuilding(building: EntityID): void {
@@ -402,7 +424,7 @@ class Tribe {
       
       this.buildings.push(building);
 
-      const entityType = Board.getEntityType(building)! as StructureType;
+      const entityType = getEntityType(building)! as StructureType;
       
       this.addVirtualBuilding({
          id: building,
@@ -424,7 +446,7 @@ class Tribe {
 
             this.totem = building;
 
-            this.createTribeAreaAroundBuilding(transformComponent.position, TRIBE_BUILDING_AREA_INFLUENCES[EntityType.tribeTotem]);
+            this.createTribeAreaAroundBuilding(getEntityLayer(building), transformComponent.position, TRIBE_BUILDING_AREA_INFLUENCES[EntityType.tribeTotem]);
             break;
          }
          case EntityType.researchBench: {
@@ -440,7 +462,7 @@ class Tribe {
 
             this.huts.push(building);
 
-            this.createTribeAreaAroundBuilding(transformComponent.position, TRIBE_BUILDING_AREA_INFLUENCES[entityType]);
+            this.createTribeAreaAroundBuilding(getEntityLayer(building), transformComponent.position, TRIBE_BUILDING_AREA_INFLUENCES[entityType]);
             
             const bannerComponent = TotemBannerComponentArray.getComponent(this.totem);
             addBannerToTotem(bannerComponent, this.huts.length - 1);
@@ -462,7 +484,7 @@ class Tribe {
       
       this.buildingsAreDirty = true;
 
-      switch (Board.getEntityType(building)) {
+      switch (getEntityType(building)) {
          case EntityType.tribeTotem: {
             this.totem = null;
             break;
@@ -665,7 +687,7 @@ class Tribe {
             this.respawnTimesRemaining.splice(i, 1);
             this.respawnHutIDs.splice(i, 1);
 
-            if (Board.hasEntity(hut)) {
+            if (entityExists(hut)) {
                this.createNewTribesman(hut);
             }
 
@@ -695,7 +717,7 @@ class Tribe {
          return;
       }
 
-      hutComponent.lastDoorSwingTicks = Board.ticks;
+      hutComponent.lastDoorSwingTicks = getGameTicks();
       hutComponent.hasSpawnedTribesman = true;
       hutComponent.hasTribesman = true;
       
@@ -704,7 +726,7 @@ class Tribe {
       // Offset the spawn position so the tribesman comes out of the correct side of the hut
       const position = new Point(transformComponent.position.x + 10 * Math.sin(transformComponent.rotation), transformComponent.position.y + 10 * Math.cos(transformComponent.rotation));
       
-      const tribesmanEntityType = Board.getEntityType(hut) === EntityType.workerHut ? EntityType.tribeWorker : EntityType.tribeWarrior;
+      const tribesmanEntityType = getEntityType(hut) === EntityType.workerHut ? EntityType.tribeWorker : EntityType.tribeWarrior;
 
       const config = createEntityConfig(tribesmanEntityType);
       config[ServerComponentType.transform].position.x = position.x;
@@ -712,7 +734,7 @@ class Tribe {
       config[ServerComponentType.transform].rotation = transformComponent.rotation;
       config[ServerComponentType.tribe].tribe = this;
       config[ServerComponentType.tribesmanAI].hut = hut;
-      createEntityFromConfig(config);
+      createEntityFromConfig(config, getEntityLayer(hut));
    }
 
    // @Cleanup
@@ -741,13 +763,13 @@ class Tribe {
    private destroy(): void {
       // Remove huts
       for (const hut of this.huts) {
-         Board.destroyEntity(hut);
+         destroyEntity(hut);
       }
 
-      Board.removeTribe(this);
+      removeTribe(this);
    }
 
-   private createTribeAreaAroundBuilding(buildingPosition: Point, influence: number): void {
+   private createTribeAreaAroundBuilding(buildingLayer: Layer, buildingPosition: Point, influence: number): void {
       const minTileX = clampToBoardDimensions(Math.floor((buildingPosition.x - influence) / Settings.TILE_SIZE));
       const maxTileX = clampToBoardDimensions(Math.floor((buildingPosition.x + influence) / Settings.TILE_SIZE));
       const minTileY = clampToBoardDimensions(Math.floor((buildingPosition.y - influence) / Settings.TILE_SIZE));
@@ -755,7 +777,7 @@ class Tribe {
 
       for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
          for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
-            this.addTileToArea(tileX, tileY);
+            this.addTileToArea(buildingLayer, tileX, tileY);
          }
       }
    }
@@ -798,8 +820,8 @@ class Tribe {
       }
    }
 
-   private addTileToArea(tileX: number, tileY: number): void {
-      const tileIndex = Board.getTileIndexIncludingEdges(tileX, tileY);
+   private addTileToArea(layer: Layer, tileX: number, tileY: number): void {
+      const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
       
       if (!this.area.hasOwnProperty(tileIndex)) {
          // If the tile isn't in the area, create a new record
@@ -815,7 +837,7 @@ class Tribe {
       const chunkY = Math.floor(tileY / Settings.CHUNK_SIZE);
       const chunkIndex = chunkY * Settings.BOARD_SIZE + chunkX;
       if (!this.chunkArea.hasOwnProperty(chunkIndex)) {
-         const chunk = Board.getChunk(chunkX, chunkY);
+         const chunk = layer.getChunk(chunkX, chunkY);
          this.chunkArea[chunkIndex] = {
             chunk: chunk,
             numInfluences: 1
@@ -826,7 +848,7 @@ class Tribe {
    }
 
    public tileIsInArea(tileX: number, tileY: number): boolean {
-      const tileIndex = Board.getTileIndexIncludingEdges(tileX, tileY);
+      const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
       return this.area.hasOwnProperty(tileIndex);
    }
 

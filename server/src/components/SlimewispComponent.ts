@@ -6,7 +6,7 @@ import { TileType, Biome } from "battletribes-shared/tiles";
 import { TileIndex, UtilVars } from "battletribes-shared/utils";
 import { moveEntityToPosition, entityHasReachedPosition, stopEntity } from "../ai-shared";
 import { shouldWander, getWanderTargetTile, wander } from "../ai/wander-ai";
-import Board from "../Board";
+import Layer, { getTileX, getTileY } from "../Layer";
 import { entitiesAreColliding, CollisionVars } from "../collision";
 import { createSlimeConfig } from "../entities/mobs/slime";
 import { createEntityFromConfig } from "../Entity";
@@ -15,6 +15,7 @@ import { PhysicsComponentArray } from "./PhysicsComponent";
 import { TransformComponentArray, getEntityTile } from "./TransformComponent";
 import { WanderAIComponentArray } from "./WanderAIComponent";
 import { SlimewispVars } from "../entities/mobs/slimewisp";
+import { destroyEntity, entityIsFlaggedForDestruction, getEntityLayer, getEntityType } from "../world";
 
 const enum Vars {
    ACCELERATION = 100,
@@ -41,7 +42,8 @@ function onTick(slimewispComponent: SlimewispComponent, slimewisp: EntityID): vo
    const transformComponent = TransformComponentArray.getComponent(slimewisp);
 
    const tileIndex = getEntityTile(transformComponent);
-   const tileType = Board.tileTypes[tileIndex];
+   const layer = getEntityLayer(slimewisp);
+   const tileType = layer.tileTypes[tileIndex];
    
    // Slimewisps move at normal speed on slime blocks
    const physicsComponent = PhysicsComponentArray.getComponent(slimewisp);
@@ -52,7 +54,7 @@ function onTick(slimewispComponent: SlimewispComponent, slimewisp: EntityID): vo
    // Merge with other slimewisps
    for (let i = 0; i < aiHelperComponent.visibleEntities.length; i++) {
       const mergingSlimewisp = aiHelperComponent.visibleEntities[i];
-      if (Board.getEntityType(mergingSlimewisp) === EntityType.slimewisp) {
+      if (getEntityType(mergingSlimewisp) === EntityType.slimewisp) {
          const mergingSlimewispTransformComponent = TransformComponentArray.getComponent(mergingSlimewisp);
          
          moveEntityToPosition(slimewisp, mergingSlimewispTransformComponent.position.x, mergingSlimewispTransformComponent.position.y, Vars.ACCELERATION, Vars.TURN_SPEED);
@@ -60,17 +62,17 @@ function onTick(slimewispComponent: SlimewispComponent, slimewisp: EntityID): vo
          // Continue merge
          if (entitiesAreColliding(slimewisp, mergingSlimewisp) !== CollisionVars.NO_COLLISION) {
             slimewispComponent.mergeTimer -= Settings.I_TPS;
-            if (slimewispComponent.mergeTimer <= 0 && !Board.entityIsFlaggedForDestruction(mergingSlimewisp)) {
+            if (slimewispComponent.mergeTimer <= 0 && !entityIsFlaggedForDestruction(mergingSlimewisp)) {
                // Create a slime between the two wisps
                const config = createSlimeConfig();
                config[ServerComponentType.transform].position.x = (transformComponent.position.x + mergingSlimewispTransformComponent.position.x) / 2;
                config[ServerComponentType.transform].position.y = (transformComponent.position.y + mergingSlimewispTransformComponent.position.y) / 2;
                config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
                config[ServerComponentType.slime].size = SlimeSize.small;
-               createEntityFromConfig(config);
+               createEntityFromConfig(config, layer);
             
-               Board.destroyEntity(slimewisp);
-               Board.destroyEntity(mergingSlimewisp);
+               destroyEntity(slimewisp);
+               destroyEntity(mergingSlimewisp);
             }
          }
          return;
@@ -89,10 +91,10 @@ function onTick(slimewispComponent: SlimewispComponent, slimewisp: EntityID): vo
       let targetTile: TileIndex;
       do {
          targetTile = getWanderTargetTile(slimewisp, SlimewispVars.VISION_RANGE);
-      } while (++attempts <= 50 && (Board.tileIsWalls[targetTile] === 1 || Board.tileBiomes[targetTile] !== Biome.swamp));
+      } while (++attempts <= 50 && (layer.tileIsWalls[targetTile] === 1 || layer.tileBiomes[targetTile] !== Biome.swamp));
 
-      const tileX = Board.getTileX(targetTile);
-      const tileY = Board.getTileY(targetTile);
+      const tileX = getTileX(targetTile);
+      const tileY = getTileY(targetTile);
       const x = (tileX + Math.random()) * Settings.TILE_SIZE;
       const y = (tileY + Math.random()) * Settings.TILE_SIZE;
       wander(slimewisp, x, y, Vars.ACCELERATION, Vars.TURN_SPEED);

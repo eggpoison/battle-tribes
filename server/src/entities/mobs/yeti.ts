@@ -5,7 +5,7 @@ import { Point, randInt } from "battletribes-shared/utils";
 import { Settings } from "battletribes-shared/settings";
 import { HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
 import { YetiComponentArray } from "../../components/YetiComponent";
-import Board from "../../Board";
+import Layer from "../../Layer";
 import { createItemsOverEntity } from "../../entity-shared";
 import { applyKnockback } from "../../components/PhysicsComponent";
 import { ServerComponentType } from "battletribes-shared/components";
@@ -16,6 +16,7 @@ import { ComponentConfig } from "../../components";
 import { TransformComponentArray } from "../../components/TransformComponent";
 import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
 import CircularBox from "battletribes-shared/boxes/CircularBox";
+import { getEntityType } from "../../world";
 
 export const enum YetiVars {
    VISION_RANGE = 500
@@ -78,7 +79,7 @@ export function createYetiConfig(): ComponentConfig<ComponentTypes> {
 }
 
 export function onYetiCollision(yeti: EntityID, collidingEntity: EntityID, collisionPoint: Point): void {
-   const collidingEntityType = Board.getEntityType(collidingEntity);
+   const collidingEntityType = getEntityType(collidingEntity);
    
    // Don't damage ice spikes
    if (collidingEntityType === EntityType.iceSpikes) return;

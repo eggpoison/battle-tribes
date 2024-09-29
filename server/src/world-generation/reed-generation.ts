@@ -1,13 +1,14 @@
 import { Settings } from "battletribes-shared/settings";
 import { TileType } from "battletribes-shared/tiles";
-import Board from "../Board";
+import Layer from "../Layer";
 import { ServerComponentType } from "battletribes-shared/components";
 import { createReedConfig } from "../entities/reed";
 import { createEntityFromConfig } from "../Entity";
 import { WaterTileGenerationInfo } from "./river-generation";
 import { distance } from "battletribes-shared/utils";
-import { generateOctavePerlinNoise, generatePerlinNoise } from "../perlin-noise";
+import { generateOctavePerlinNoise } from "../perlin-noise";
 import { isTooCloseToSteppingStone } from "../Chunk";
+import { surfaceLayer } from "../world";
 
 const enum Vars {
    MAX_DENSITY_PER_TILE = 35
@@ -37,7 +38,7 @@ export function generateReeds(riverMainTiles: ReadonlyArray<WaterTileGenerationI
    // @Incomplete: generate in edges
    for (let tileX = 0; tileX < Settings.BOARD_DIMENSIONS; tileX++) {
       for (let tileY = 0; tileY < Settings.BOARD_DIMENSIONS; tileY++) {
-         if (Board.getTileType(tileX, tileY) !== TileType.water) {
+         if (surfaceLayer.getTileType(tileX, tileY) !== TileType.water) {
             continue;
          }
 
@@ -69,7 +70,7 @@ export function generateReeds(riverMainTiles: ReadonlyArray<WaterTileGenerationI
             const config = createReedConfig();
             config[ServerComponentType.transform].position.x = x;
             config[ServerComponentType.transform].position.y = y;
-            createEntityFromConfig(config);
+            createEntityFromConfig(config, surfaceLayer);
          }
       }
    }

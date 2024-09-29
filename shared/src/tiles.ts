@@ -27,7 +27,8 @@ export const enum TileType {
    magma,
    lava,
    fimbultur,
-   dropdown
+   dropdown,
+   stone
 }
 
 export const TileTypeString: Record<TileType, string> = {
@@ -46,14 +47,15 @@ export const TileTypeString: Record<TileType, string> = {
    [TileType.magma]: "magma",
    [TileType.lava]: "lava",
    [TileType.fimbultur]: "fimbultur",
-   [TileType.dropdown]: "dropdown"
+   [TileType.dropdown]: "dropdown",
+   [TileType.stone]: "stone"
 };
 
 export const NUM_TILE_TYPES = Object.keys(TileTypeString).length;
 
-//                                                                 grass dirt  water sludge slime rock  darkRock sand  sandstone snow  ice  permafrost magma lava  frost dropdown
-export const TILE_FRICTIONS: ReadonlyArray<number>              = [0.65, 0.65, 1,    0.9,   1,    0.65, 0.65,    0.65, 0.65,     0.9,  0.2, 0.65,      0.65, 0.85, 0.65, 0.65];
-export const TILE_MOVE_SPEED_MULTIPLIERS: ReadonlyArray<number> = [1,    1,    0.6,  0.6,   0.3,  1,    1,       1,    1,        0.65, 1.5, 1,         1,    1,    1,    1];
+//                                                                 grass dirt  water sludge slime rock  darkRock sand  sandstone snow  ice  permafrost magma lava  frost dropdown stone
+export const TILE_FRICTIONS: ReadonlyArray<number>              = [0.65, 0.65, 1,    0.9,   1,    0.65, 0.65,    0.65, 0.65,     0.9,  0.2, 0.65,      0.65, 0.85, 0.65, 0.65,    0.65];
+export const TILE_MOVE_SPEED_MULTIPLIERS: ReadonlyArray<number> = [1,    1,    0.6,  0.6,   0.3,  1,    1,       1,    1,        0.65, 1.5, 1,         1,    1,    1,    1,       1];
 
 export interface TileInfo {
    type: TileType;

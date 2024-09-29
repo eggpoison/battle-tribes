@@ -7,11 +7,12 @@ import { PathfindFailureDefault, getEntityFootprint, positionIsAccessible } from
 import { pathfindToPosition, clearTribesmanPath, getTribesmanRadius, getTribesmanVisionRange } from "./tribesman-ai-utils";
 import { EntityID, EntityType } from "battletribes-shared/entities";
 import { Point, randInt, distance } from "battletribes-shared/utils";
-import Board from "../../../Board";
+import { getTileX, getTileY } from "../../../Layer";
 import Tribe from "../../../Tribe";
 import { TribesmanGoal } from "./tribesman-goals";
 import { TribeComponentArray } from "../../../components/TribeComponent";
 import { TransformComponentArray } from "../../../components/TransformComponent";
+import { getEntityLayer, getEntityType, isNight } from "../../../world";
 
 
 const generateTribeAreaPatrolPosition = (tribesman: EntityID, tribe: Tribe): Point | null => {
@@ -23,8 +24,8 @@ const generateTribeAreaPatrolPosition = (tribesman: EntityID, tribe: Tribe): Poi
       const idx = randInt(0, potentialTiles.length - 1);
       const tileIndex = potentialTiles[idx];
       
-      const tileX = Board.getTileX(tileIndex);
-      const tileY = Board.getTileY(tileIndex);
+      const tileX = getTileX(tileIndex);
+      const tileY = getTileY(tileIndex);
       const x = (tileX + Math.random()) * Settings.TILE_SIZE;
       const y = (tileY + Math.random()) * Settings.TILE_SIZE;
 
@@ -40,6 +41,7 @@ const generateTribeAreaPatrolPosition = (tribesman: EntityID, tribe: Tribe): Poi
 
 const generateRandomExplorePosition = (tribesman: EntityID, tribe: Tribe): Point | null => {
    const transformComponent = TransformComponentArray.getComponent(tribesman);
+   const layer = getEntityLayer(tribesman);
    
    const visionRange = getTribesmanVisionRange(tribesman);
    const footprint = getEntityFootprint(getTribesmanRadius(tribesman));
@@ -76,7 +78,7 @@ const generateRandomExplorePosition = (tribesman: EntityID, tribe: Tribe): Point
          continue;
       }
       
-      const nearbyEntities = getEntitiesInRange(x, y, 20);
+      const nearbyEntities = getEntitiesInRange(layer, x, y, 20);
       if (nearbyEntities.length === 0) {
          return new Point(x, y);
       }
@@ -86,9 +88,9 @@ const generateRandomExplorePosition = (tribesman: EntityID, tribe: Tribe): Point
 }
 
 const generatePatrolPosition = (tribesman: EntityID, tribe: Tribe, goal: TribesmanGoal | null): Point | null => {
-   switch (Board.getEntityType(tribesman)) {
+   switch (getEntityType(tribesman)) {
       case EntityType.tribeWorker: {
-         if (goal === null || Board.isNight()) {
+         if (goal === null || isNight()) {
             return generateTribeAreaPatrolPosition(tribesman, tribe);
          } else {
             return generateRandomExplorePosition(tribesman, tribe);

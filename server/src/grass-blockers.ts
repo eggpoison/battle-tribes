@@ -1,10 +1,10 @@
 import { Settings } from "battletribes-shared/settings";
-import Board, { getChunksInBounds } from "./Board";
 import { GrassBlocker, GrassBlockerCircle, GrassBlockerRectangle, blockerIsCircluar } from "battletribes-shared/grass-blockers";
 import Chunk from "./Chunk";
 import { EntityID } from "battletribes-shared/entities";
 import { TransformComponentArray } from "./components/TransformComponent";
 import { boxIsCircular, HitboxFlags } from "battletribes-shared/boxes/boxes";
+import { entityExists, surfaceLayer } from "./world";
 
 const blockers = new Array<GrassBlocker>();
 const blockerAssociatedEntities = new Array<EntityID>();
@@ -32,7 +32,7 @@ const getBlockerChunks = (blocker: GrassBlocker): ReadonlyArray<Chunk> => {
       maxY = blocker.position.y + blocker.height * 0.5;
    }
    
-   return getChunksInBounds(minX, maxX, minY, maxY);
+   return surfaceLayer.getChunksInBounds(minX, maxX, minY, maxY);
 }
 
 export function addGrassBlocker(blocker: GrassBlocker, associatedEntityID: number): void {
@@ -67,7 +67,7 @@ export function updateGrassBlockers(): void {
       const blocker = blockers[i];
       
       const associatedEntity = blockerAssociatedEntities[i];
-      if (Board.hasEntity(associatedEntity)) {
+      if (entityExists(associatedEntity)) {
          blocker.blockAmount += 1 / Vars.GRASS_FULL_DIE_TICKS;
          if (blocker.blockAmount > blocker.maxBlockAmount) {
             blocker.blockAmount = blocker.maxBlockAmount;

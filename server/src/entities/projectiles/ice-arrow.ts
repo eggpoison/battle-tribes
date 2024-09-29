@@ -8,9 +8,9 @@ import { EntityRelationship, getEntityRelationship } from "../../components/Trib
 import { ComponentConfig } from "../../components";
 import { ServerComponentType } from "battletribes-shared/components";
 import { HealthComponentArray } from "../../components/HealthComponent";
-import Board from "../../Board";
 import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
 import RectangularBox from "battletribes-shared/boxes/RectangularBox";
+import { destroyEntity } from "../../world";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics
@@ -62,6 +62,6 @@ export function onIceArrowCollision(arrow: EntityID, collidingEntity: EntityID):
          applyStatusEffect(collidingEntity, StatusEffect.freezing, 3 * Settings.TPS);
       }
       
-      Board.destroyEntity(arrow);
+      destroyEntity(arrow);
    }
 }

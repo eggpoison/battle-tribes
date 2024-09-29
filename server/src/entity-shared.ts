@@ -4,6 +4,7 @@ import { TransformComponentArray } from "./components/TransformComponent";
 import { createItemEntityConfig } from "./entities/item-entity";
 import { ServerComponentType } from "battletribes-shared/components";
 import { createEntityFromConfig } from "./Entity";
+import { getEntityLayer } from "./world";
 
 /**
  * @param itemSpawnRange Ideally should be a bit larger than the entity's size.
@@ -25,6 +26,6 @@ export function createItemsOverEntity(entity: EntityID, itemType: ItemType, amou
       config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
       config[ServerComponentType.item].itemType = itemType;
       config[ServerComponentType.item].amount = 1;
-      createEntityFromConfig(config);
+      createEntityFromConfig(config, getEntityLayer(entity));
    }
 }

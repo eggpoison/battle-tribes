@@ -12,6 +12,7 @@ import { StatusEffect } from "battletribes-shared/status-effects";
 import { TransformComponentArray } from "../components/TransformComponent";
 import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
 import CircularBox from "battletribes-shared/boxes/CircularBox";
+import { getEntityLayer } from "../world";
    
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.health
@@ -84,13 +85,14 @@ export function onPlantDeath(plant: EntityID): void {
       case PlanterBoxPlant.iceSpikes: {
          const transformComponent = TransformComponentArray.getComponent(plant);
          
+         const layer = getEntityLayer(plant);
          const ticksToGrow = PLANT_GROWTH_TICKS[PlanterBoxPlant.iceSpikes];
          if (plantComponent.plantGrowthTicks === ticksToGrow) {
             createItemsOverEntity(plant, ItemType.frostcicle, randInt(1, 2), 40);
             
-            createIceShardExplosion(transformComponent.position.x, transformComponent.position.y, randInt(2, 3));
+            createIceShardExplosion(layer, transformComponent.position.x, transformComponent.position.y, randInt(2, 3));
          } else if (plantComponent.plantGrowthTicks >= ticksToGrow * 0.5) {
-            createIceShardExplosion(transformComponent.position.x, transformComponent.position.y, randInt(1, 2));
+            createIceShardExplosion(layer, transformComponent.position.x, transformComponent.position.y, randInt(1, 2));
          }
          break;
       }

@@ -10,12 +10,12 @@ import RectangularBox from "battletribes-shared/boxes/RectangularBox";
 import { ClientBlockBox, ClientDamageBox } from "../boxes";
 import { EntityID } from "battletribes-shared/entities";
 import { Settings } from "battletribes-shared/settings";
-import Board from "../Board";
 import { InventoryName } from "battletribes-shared/items/items";
 import Player from "../entities/Player";
 import { InventoryUseComponentArray, LimbInfo } from "./InventoryUseComponent";
 import { discombobulate, GameInteractableLayer_setItemRestTime } from "../components/game/GameInteractableLayer";
 import { AttackVars } from "../../../shared/src/attack-patterns";
+import { getEntityLayer } from "../world";
 
 interface DamageBoxCollisionInfo {
    readonly collidingEntity: EntityID;
@@ -24,6 +24,8 @@ interface DamageBoxCollisionInfo {
 
 // @Hack: this whole thing is cursed
 const getCollidingBox = (entity: EntityID, damageBox: ClientDamageBox): DamageBoxCollisionInfo | null => {
+   const layer = getEntityLayer(entity);
+   
    // @Hack
    const CHECK_PADDING = 200;
    const minChunkX = Math.max(Math.min(Math.floor((damageBox.box.position.x - CHECK_PADDING) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
@@ -33,7 +35,7 @@ const getCollidingBox = (entity: EntityID, damageBox: ClientDamageBox): DamageBo
 
    for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
       for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
-         const chunk = Board.getChunk(chunkX, chunkY);
+         const chunk = layer.getChunk(chunkX, chunkY);
          for (const currentEntity of chunk.entities) {
             if (currentEntity === entity || !DamageBoxComponentArray.hasComponent(currentEntity)) {
                continue;

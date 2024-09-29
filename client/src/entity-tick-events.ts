@@ -5,6 +5,7 @@ import { playSound } from "./sound";
 import { ItemType } from "battletribes-shared/items/items";
 import Board from "./Board";
 import { ServerComponentType } from "battletribes-shared/components";
+import { getEntityByID } from "./world";
 
 export function playBowFireSound(sourceEntity: Entity, bowItemType: ItemType): void {
    const transformComponent = sourceEntity.getServerComponent(ServerComponentType.transform);
@@ -45,7 +46,7 @@ export function processTickEvents(tickEvents: ReadonlyArray<EntityTickEvent>): v
    for (let i = 0; i < tickEvents.length; i++) {
       const entityTickEvent = tickEvents[i];
       
-      const entity = Board.entityRecord[entityTickEvent.entityID];
+      const entity = getEntityByID(entityTickEvent.entityID);
       if (typeof entity !== "undefined") {
          processTickEvent(entity, entityTickEvent);
       }

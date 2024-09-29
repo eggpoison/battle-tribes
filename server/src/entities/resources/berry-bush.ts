@@ -3,7 +3,7 @@ import { ServerComponentType } from "battletribes-shared/components";
 import { EntityID, EntityType } from "battletribes-shared/entities";
 import { Point } from "battletribes-shared/utils";
 import { createEntityFromConfig } from "../../Entity";
-import Board from "../../Board";
+import Layer from "../../Layer";
 import { BerryBushComponentArray } from "../../components/BerryBushComponent";
 import { ItemType } from "battletribes-shared/items/items";
 import { TransformComponentArray } from "../../components/TransformComponent";
@@ -13,6 +13,7 @@ import { StatusEffect } from "battletribes-shared/status-effects";
 import CircularBox from "battletribes-shared/boxes/CircularBox";
 import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
 import { registerDirtyEntity } from "../../server/player-clients";
+import { getEntityLayer } from "../../world";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.health
@@ -55,7 +56,7 @@ export function dropBerryOverEntity(entity: EntityID): void {
       const spawnOffset = Point.fromVectorForm(40, spawnDirection);
 
       position.add(spawnOffset);
-   } while (!Board.isInBoard(position));
+   } while (!Layer.isInBoard(position));
 
    const velocityDirectionOffset = (Math.random() - 0.5) * Math.PI * 0.15;
 
@@ -67,7 +68,7 @@ export function dropBerryOverEntity(entity: EntityID): void {
    config[ServerComponentType.physics].velocityY = 40 * Math.cos(spawnDirection + velocityDirectionOffset);
    config[ServerComponentType.item].itemType = ItemType.berry;
    config[ServerComponentType.item].amount = 1;
-   createEntityFromConfig(config);
+   createEntityFromConfig(config, getEntityLayer(entity));
 }
 
 export function dropBerry(berryBush: EntityID, multiplier: number): void {

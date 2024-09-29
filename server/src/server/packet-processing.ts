@@ -3,13 +3,13 @@ import PlayerClient from "./PlayerClient";
 import { EntityID, LimbAction } from "battletribes-shared/entities";
 import { BowItemInfo, ConsumableItemCategory, ConsumableItemInfo, getItemAttackInfo, InventoryName, ITEM_INFO_RECORD, ITEM_TYPE_RECORD, ItemType } from "battletribes-shared/items/items";
 import { TribeType } from "battletribes-shared/tribes";
-import Board from "../Board";
+import Layer from "../Layer";
 import { getHeldItem, InventoryUseComponentArray, setLimbActions } from "../components/InventoryUseComponent";
 import { PhysicsComponentArray } from "../components/PhysicsComponent";
 import { PlayerComponentArray } from "../components/PlayerComponent";
 import { TransformComponentArray } from "../components/TransformComponent";
 import { TribeComponentArray } from "../components/TribeComponent";
-import { startChargingBow, startChargingSpear, startChargingBattleaxe, createPlayerConfig } from "../entities/tribes/player";
+import { startChargingSpear, startChargingBattleaxe, createPlayerConfig } from "../entities/tribes/player";
 import { calculateRadialAttackTargets, throwItem, useItem } from "../entities/tribes/tribe-member";
 import { beginSwing } from "../entities/tribes/limb-use";
 import { InventoryComponentArray, getInventory, addItemToInventory, addItemToSlot, consumeItemFromSlot, consumeItemTypeFromInventory } from "../components/InventoryComponent";
@@ -19,6 +19,7 @@ import { createEntityFromConfig } from "../Entity";
 import { generatePlayerSpawnPosition, registerDirtyEntity } from "./player-clients";
 import { addEntityDataToPacket, getEntityDataLength } from "./game-data-packets";
 import { createItem } from "../items";
+import { entityExists, getEntityLayer, surfaceLayer } from "../world";
 
 /** How far away from the entity the attack is done */
 const ATTACK_OFFSET = 50;
@@ -28,7 +29,7 @@ const ATTACK_RADIUS = 50;
 // @Cleanup: Messy as fuck
 export function processPlayerDataPacket(playerClient: PlayerClient, reader: PacketReader): void {
    const player = playerClient.instance;
-   if (!Board.hasEntity(player)) {
+   if (!entityExists(player)) {
       return;
    }
 
@@ -121,7 +122,7 @@ export function processPlayerDataPacket(playerClient: PlayerClient, reader: Pack
 // @Cleanup: most of this logic and that in attemptSwing should be done in tribe-member.ts
 export function processPlayerAttackPacket(playerClient: PlayerClient, reader: PacketReader): void {
    const player = playerClient.instance;
-   if (!Board.hasEntity(player)) {
+   if (!entityExists(player)) {
       return;
    }
 
@@ -147,7 +148,7 @@ export function processPlayerAttackPacket(playerClient: PlayerClient, reader: Pa
 
 export function processDevGiveItemPacket(playerClient: PlayerClient, reader: PacketReader): void {
    const player = playerClient.instance;
-   if (!Board.hasEntity(player)) {
+   if (!entityExists(player)) {
       return;
    }
 
@@ -162,14 +163,17 @@ export function processDevGiveItemPacket(playerClient: PlayerClient, reader: Pac
 export function processRespawnPacket(playerClient: PlayerClient): void {
    // Calculate spawn position
    let spawnPosition: Point;
+   let layer: Layer;
    if (playerClient.tribe.totem !== null) {
       const totemTransformComponent = TransformComponentArray.getComponent(playerClient.tribe.totem);
       spawnPosition = totemTransformComponent.position.copy();
       const offsetDirection = 2 * Math.PI * Math.random();
       spawnPosition.x += 100 * Math.sin(offsetDirection);
       spawnPosition.y += 100 * Math.cos(offsetDirection);
+      layer = getEntityLayer(playerClient.tribe.totem);
    } else {
       spawnPosition = generatePlayerSpawnPosition(playerClient.tribe.tribeType);
+      layer = surfaceLayer;
    }
 
    const config = createPlayerConfig();
@@ -177,7 +181,7 @@ export function processRespawnPacket(playerClient: PlayerClient): void {
    config[ServerComponentType.transform].position.y = spawnPosition.y;
    config[ServerComponentType.tribe].tribe = playerClient.tribe;
    config[ServerComponentType.player].username = playerClient.username;
-   const player = createEntityFromConfig(config);
+   const player = createEntityFromConfig(config, layer);
 
    playerClient.instance = player;
 
@@ -199,7 +203,7 @@ export function sendRespawnDataPacket(playerClient: PlayerClient): void {
 
 export function processStartItemUsePacket(playerClient: PlayerClient, reader: PacketReader): void {
    const player = playerClient.instance;
-   if (!Board.hasEntity(player)) {
+   if (!entityExists(player)) {
       return;
    }
 
@@ -265,7 +269,7 @@ export function processStartItemUsePacket(playerClient: PlayerClient, reader: Pa
 
 export function processUseItemPacket(playerClient: PlayerClient, reader: PacketReader): void {
    const player = playerClient.instance;
-   if (!Board.hasEntity(player)) {
+   if (!entityExists(player)) {
       return;
    }
 
@@ -282,7 +286,7 @@ export function processUseItemPacket(playerClient: PlayerClient, reader: PacketR
 
 export function processStopItemUsePacket(playerClient: PlayerClient): void {
    const player = playerClient.instance;
-   if (!Board.hasEntity(player)) {
+   if (!entityExists(player)) {
       return;
    }
 
@@ -316,7 +320,7 @@ export function processStopItemUsePacket(playerClient: PlayerClient): void {
 }
 
 export function processItemDropPacket(playerClient: PlayerClient, reader: PacketReader): void {
-   if (!Board.hasEntity(playerClient.instance)) {
+   if (!entityExists(playerClient.instance)) {
       return;
    }
 
@@ -332,12 +336,12 @@ export function processItemDropPacket(playerClient: PlayerClient, reader: Packet
 
 export function processItemPickupPacket(playerClient: PlayerClient, reader: PacketReader): void {
    const player = playerClient.instance;
-   if (!Board.hasEntity(player)) {
+   if (!entityExists(player)) {
       return;
    }
 
    const entity = reader.readNumber() as EntityID;
-   if (!Board.hasEntity(entity)) {
+   if (!entityExists(entity)) {
       return;
    }
    const inventoryName = reader.readNumber() as InventoryName;
@@ -371,12 +375,12 @@ export function processItemPickupPacket(playerClient: PlayerClient, reader: Pack
 
 export function processItemReleasePacket(playerClient: PlayerClient, reader: PacketReader): void {
    const player = playerClient.instance;
-   if (!Board.hasEntity(player)) {
+   if (!entityExists(player)) {
       return;
    }
 
    const entity = reader.readNumber() as EntityID;
-   if (!Board.hasEntity(entity)) {
+   if (!entityExists(entity)) {
       return;
    }
    const inventoryName = reader.readNumber() as InventoryName;

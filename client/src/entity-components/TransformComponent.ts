@@ -1,7 +1,6 @@
 import ServerComponent from "./ServerComponent";
 import Entity from "../Entity";
 import { distance, Point, rotateXAroundOrigin, rotateYAroundOrigin } from "battletribes-shared/utils";
-import Board from "../Board";
 import { Tile } from "../Tile";
 import { Settings } from "battletribes-shared/settings";
 import { TileType } from "battletribes-shared/tiles";
@@ -16,8 +15,10 @@ import { ServerComponentType } from "battletribes-shared/components";
 import { boxIsCircular, createHitbox, hitboxIsCircular, Hitbox, updateBox } from "battletribes-shared/boxes/boxes";
 import CircularBox from "battletribes-shared/boxes/CircularBox";
 import RectangularBox from "battletribes-shared/boxes/RectangularBox";
+import Layer, { getTileIndexIncludingEdges } from "../Layer";
+import { getEntityLayer } from "../world";
 
-const getTile = (position: Point): Tile => {
+const getTile = (layer: Layer, position: Point): Tile => {
    const tileX = Math.floor(position.x / Settings.TILE_SIZE);
    const tileY = Math.floor(position.y / Settings.TILE_SIZE);
 
@@ -25,7 +26,8 @@ const getTile = (position: Point): Tile => {
       throw new Error();
    }
    
-   return Board.getTile(tileX, tileY);
+   const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
+   return layer.getTile(tileIndex);
 }
 
 class TransformComponent extends ServerComponent {
@@ -37,7 +39,8 @@ class TransformComponent extends ServerComponent {
    /** Angle the object is facing, taken counterclockwise from the positive x axis (radians) */
    public rotation = 0;
 
-   public tile: Tile;
+   // @Cleanup: Shouldn't be undefined at first!
+   public tile!: Tile;
    
    public chunks = new Set<Chunk>();
 
@@ -62,8 +65,6 @@ class TransformComponent extends ServerComponent {
       this.ageTicks = reader.readNumber();
       this.collisionBit = reader.readNumber();
       this.collisionMask = reader.readNumber();
-      
-      this.tile = getTile(this.position);
 
       this.totalMass = 0;
 
@@ -109,6 +110,9 @@ class TransformComponent extends ServerComponent {
    }
 
    public onLoad(): void {
+      const layer = getEntityLayer(this.entity.id);
+      this.tile = getTile(layer, this.position);
+
       this.updatePosition();
    }
 
@@ -171,6 +175,7 @@ class TransformComponent extends ServerComponent {
 
    /** Recalculates which chunks the game object is contained in */
    private updateContainingChunks(): void {
+      const layer = getEntityLayer(this.entity.id);
       const containingChunks = new Set<Chunk>();
       
       // Find containing chunks
@@ -189,7 +194,7 @@ class TransformComponent extends ServerComponent {
          
          for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
             for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
-               const chunk = Board.getChunk(chunkX, chunkY);
+               const chunk = layer.getChunk(chunkX, chunkY);
                containingChunks.add(chunk);
             }
          }
@@ -223,7 +228,8 @@ class TransformComponent extends ServerComponent {
    }
 
    public updatePosition(): void {
-      this.tile = getTile(this.position);
+      const layer = getEntityLayer(this.entity.id);
+      this.tile = getTile(layer, this.position);
       this.updateHitboxes();
       this.updateContainingChunks();
    }
@@ -428,6 +434,7 @@ class TransformComponent extends ServerComponent {
 
       const containingChunks = new Set<Chunk>();
 
+      const layer = getEntityLayer(this.entity.id);
       for (const hitbox of this.hitboxes) {
          const box = hitbox.box;
 
@@ -444,7 +451,7 @@ class TransformComponent extends ServerComponent {
          
          for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
             for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
-               const chunk = Board.getChunk(chunkX, chunkY);
+               const chunk = layer.getChunk(chunkX, chunkY);
                containingChunks.add(chunk);
             }
          }

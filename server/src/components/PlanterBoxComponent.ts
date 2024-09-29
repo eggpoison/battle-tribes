@@ -1,6 +1,6 @@
 import { PlanterBoxPlant, ServerComponentType } from "battletribes-shared/components";
 import { ComponentArray } from "./ComponentArray";
-import Board from "../Board";
+import Layer from "../Layer";
 import { PlantComponentArray } from "./PlantComponent";
 import { Settings } from "battletribes-shared/settings";
 import { EntityID } from "battletribes-shared/entities";
@@ -8,6 +8,7 @@ import { TransformComponentArray } from "./TransformComponent";
 import { createPlantConfig } from "../entities/plant";
 import { createEntityFromConfig } from "../Entity";
 import { Packet } from "battletribes-shared/packets";
+import { destroyEntity, entityExists, getEntityLayer } from "../world";
 
 const enum Vars {
    FERTILISER_DURATION_TICKS = 300 * Settings.TPS
@@ -39,9 +40,7 @@ function onRemove(entity: EntityID): void {
    const planterBoxComponent = PlanterBoxComponentArray.getComponent(entity);
 
    const plant = planterBoxComponent.plantEntity;
-   if (Board.hasEntity(plant)) {
-      Board.destroyEntity(plant);
-   }
+   destroyEntity(plant);
 }
 
 function onTick(planterBoxComponent: PlanterBoxComponent): void {
@@ -60,7 +59,7 @@ function addDataToComponent(packet: Packet, entity: EntityID): void {
    let plantType = -1;
    if (planterBoxComponent.plantEntity !== null) {
       const plant = planterBoxComponent.plantEntity;
-      if (Board.hasEntity(plant)) {
+      if (entityExists(plant)) {
          const plantComponent = PlantComponentArray.getComponent(plant);
          plantType = plantComponent.plantType;
       }
@@ -82,7 +81,7 @@ export function placePlantInPlanterBox(planterBox: EntityID, plantType: PlanterB
    config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
    config[ServerComponentType.plant].plantType = plantType;
    config[ServerComponentType.plant].planterBox = planterBox;
-   const plant = createEntityFromConfig(config);
+   const plant = createEntityFromConfig(config, getEntityLayer(planterBox));
 
    planterBoxComponent.plantEntity = plant;
    planterBoxComponent.replantType = plantType;

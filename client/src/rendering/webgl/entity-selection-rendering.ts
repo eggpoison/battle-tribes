@@ -1,11 +1,11 @@
 import { rotateXAroundOrigin, rotateXAroundPoint, rotateYAroundOrigin, rotateYAroundPoint } from "battletribes-shared/utils";
-import Board from "../../Board";
 import { getHighlightedEntityID, getSelectedEntityID } from "../../entity-selection";
 import { createWebGLProgram, gl, windowWidth, windowHeight, createTexture } from "../../webgl";
 import Entity from "../../Entity";
 import { getEntityTextureAtlas } from "../../texture-atlases/texture-atlases";
 import { bindUBOToProgram, ENTITY_TEXTURE_ATLAS_UBO, UBOBindingIndex } from "../ubos";
 import { renderPartIsTextured, thingIsRenderPart } from "../../render-parts/render-parts";
+import { getEntityByID } from "../../world";
 
 let framebufferProgram: WebGLProgram;
 let renderProgram: WebGLProgram;
@@ -408,7 +408,7 @@ const calculateVertices = (entity: Entity): ReadonlyArray<number> => {
 
 export function renderEntitySelection(): void {
    const highlightedStructureID = getHighlightedEntityID();
-   const highlightedEntity = Board.entityRecord[highlightedStructureID];
+   const highlightedEntity = getEntityByID(highlightedStructureID);
    if (typeof highlightedEntity === "undefined") {
       return;
    }

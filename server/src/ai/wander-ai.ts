@@ -1,6 +1,6 @@
 import { Settings } from "battletribes-shared/settings";
 import { randInt, TileIndex } from "battletribes-shared/utils";
-import Board from "../Board";
+import { getTileIndexIncludingEdges } from "../Layer";
 import { moveEntityToPosition } from "../ai-shared";
 import { PhysicsComponent } from "../components/PhysicsComponent";
 import { WanderAIComponentArray } from "../components/WanderAIComponent";
@@ -27,7 +27,7 @@ export function getWanderTargetTile(entity: EntityID, visionRange: number): Tile
       tileY = randInt(minTileY, maxTileY);
    } while (++attempts <= 50 && Math.pow(transformComponent.position.x - (tileX + 0.5) * Settings.TILE_SIZE, 2) + Math.pow(transformComponent.position.y - (tileY + 0.5) * Settings.TILE_SIZE, 2) > visionRange * visionRange);
 
-   return Board.getTileIndexIncludingEdges(tileX, tileY);
+   return getTileIndexIncludingEdges(tileX, tileY);
 }
 
 export function wander(entity: EntityID, x: number, y: number, acceleration: number, turnSpeed: number): void {

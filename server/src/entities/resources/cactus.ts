@@ -9,10 +9,10 @@ import { ItemType } from "battletribes-shared/items/items";
 import { ServerComponentType } from "battletribes-shared/components";
 import { ComponentConfig } from "../../components";
 import { StatusEffect } from "battletribes-shared/status-effects";
-import Board from "../../Board";
 import { TransformComponentArray } from "../../components/TransformComponent";
 import { createHitbox, HitboxCollisionType, Hitbox } from "battletribes-shared/boxes/boxes";
 import CircularBox from "battletribes-shared/boxes/CircularBox";
+import { destroyEntity, getEntityType } from "../../world";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.health
@@ -119,8 +119,8 @@ export function createCactusConfig(): ComponentConfig<ComponentTypes> {
 }
 
 export function onCactusCollision(cactus: EntityID, collidingEntity: EntityID, collisionPoint: Point): void {
-   if (Board.getEntityType(collidingEntity) === EntityType.itemEntity) {
-      Board.destroyEntity(collidingEntity);
+   if (getEntityType(collidingEntity) === EntityType.itemEntity) {
+      destroyEntity(collidingEntity);
       return;
    }
    

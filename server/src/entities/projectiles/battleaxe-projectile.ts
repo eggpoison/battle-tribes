@@ -3,7 +3,6 @@ import { EntityID, EntityType, PlayerCauseOfDeath } from "battletribes-shared/en
 import { Point } from "battletribes-shared/utils";
 import { HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
 import { ThrowingProjectileComponentArray } from "../../components/ThrowingProjectileComponent";
-import Board from "../../Board";
 import { applyKnockback } from "../../components/PhysicsComponent";
 import { EntityRelationship, getEntityRelationship } from "../../components/TribeComponent";
 import { ServerComponentType } from "battletribes-shared/components";
@@ -12,6 +11,7 @@ import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
 import { TransformComponentArray } from "../../components/TransformComponent";
 import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
 import CircularBox from "battletribes-shared/boxes/CircularBox";
+import { validateEntity } from "../../world";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics
@@ -69,7 +69,7 @@ export function onBattleaxeProjectileCollision(battleaxe: EntityID, collidingEnt
          return;
       }
       
-      const tribeMember = Board.validateEntity(spearComponent.tribeMember);
+      const tribeMember = validateEntity(spearComponent.tribeMember);
 
       // Damage the entity
       const battleaxeTransformComponent = TransformComponentArray.getComponent(battleaxe);

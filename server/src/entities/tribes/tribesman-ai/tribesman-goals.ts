@@ -13,9 +13,9 @@ import { getBestToolItemSlot } from "./tribesman-ai-utils";
 import { CraftingRecipe, CRAFTING_STATION_ITEM_TYPE_RECORD, getRecipeProductChain, forceGetItemRecipe } from "battletribes-shared/items/crafting-recipes";
 import { ItemType, ToolType, Inventory, InventoryName, PlaceableItemType, ITEM_INFO_RECORD, PlaceableItemInfo, ItemTypeString } from "battletribes-shared/items/items";
 import { TransformComponentArray } from "../../../components/TransformComponent";
-import Board from "../../../Board";
 import { createEntityHitboxes } from "battletribes-shared/boxes/entity-hitbox-creation";
 import { updateBox } from "battletribes-shared/boxes/boxes";
+import { getEntityType, LayerType } from "../../../world";
 
 // @Cleanup: can this be inferred from stuff like the entity->resource-dropped record?
 const TOOL_TYPE_FOR_MATERIAL_RECORD: Record<ItemType, ToolType | null> = {
@@ -383,7 +383,7 @@ const getNextTechRequiredForItem = (tribesman: EntityID, itemType: ItemType): Te
 const tribeHasResearchBench = (tribe: Tribe): boolean => {
    for (let i = 0; i < tribe.buildings.length; i++) {
       const building = tribe.buildings[i];
-      if (Board.getEntityType(building) === EntityType.researchBench) {
+      if (getEntityType(building) === EntityType.researchBench) {
          return true;
       }
    }
@@ -450,7 +450,8 @@ const createBuildingPlaceGoal = (goals: Array<TribesmanGoal>, tribesman: EntityI
       let position: Point;
       let rotation: number;
       if (tribeComponent.tribe.buildings.length > 0) {
-         const positionInfo = generateBuildingPosition(tribeComponent.tribe, entityType);
+         // @Hack: surfacelayer
+         const positionInfo = generateBuildingPosition(tribeComponent.tribe, LayerType.surface, entityType);
          position = new Point(positionInfo.x, positionInfo.y);
          rotation = positionInfo.rotation;
       } else {

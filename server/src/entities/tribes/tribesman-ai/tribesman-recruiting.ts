@@ -4,7 +4,7 @@ import { getEntityRelationship, EntityRelationship, TribeComponentArray } from "
 import { TribeMemberComponentArray } from "../../../components/TribeMemberComponent";
 import { getItemGiftAppreciation, TribesmanAIComponentArray } from "../../../components/TribesmanAIComponent";
 import { InventoryName } from "battletribes-shared/items/items";
-import Board from "../../../Board";
+import { getEntityType } from "../../../world";
 
 export function getGiftableItemSlot(tribesman: EntityID): number {
    // @Incomplete: don't gift items useful to the tribesman
@@ -37,7 +37,7 @@ export function getRecruitTarget(tribesman: EntityID, visibleEntities: ReadonlyA
    let closestAcquaintance: EntityID | null = null;
    for (let i = 0; i < visibleEntities.length; i++) {
       const entity = visibleEntities[i];
-      if (Board.getEntityType(entity) === EntityType.player || !TribeMemberComponentArray.hasComponent(entity)) {
+      if (getEntityType(entity) === EntityType.player || !TribeMemberComponentArray.hasComponent(entity)) {
          continue;
       }
 

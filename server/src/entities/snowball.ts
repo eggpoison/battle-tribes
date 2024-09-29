@@ -10,9 +10,10 @@ import { ComponentConfig } from "../components";
 import { ServerComponentType } from "battletribes-shared/components";
 import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
 import { getAgeTicks, TransformComponentArray } from "../components/TransformComponent";
-import Board from "../Board";
+import Layer from "../Layer";
 import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
 import CircularBox from "battletribes-shared/boxes/CircularBox";
+import { getEntityType } from "../world";
    
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics
@@ -56,7 +57,7 @@ export function createSnowballConfig(): ComponentConfig<ComponentTypes> {
 }
 
 export function onSnowballCollision(snowball: EntityID, collidingEntity: EntityID, collisionPoint: Point): void {
-   const collidingEntityType = Board.getEntityType(collidingEntity);
+   const collidingEntityType = getEntityType(collidingEntity);
    if (collidingEntityType === EntityType.snowball) {
       return;
    }

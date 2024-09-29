@@ -1,7 +1,7 @@
 import { ServerComponentType } from "battletribes-shared/components";
 import { EntityID, EntityType, SlimeSize } from "battletribes-shared/entities";
 import { SLIME_MAX_MERGE_WANT, SLIME_MERGE_TIME, SLIME_MERGE_WEIGHTS, SLIME_RADII, SLIME_VISION_RANGES, SPIT_CHARGE_TIME_TICKS, SPIT_COOLDOWN_TICKS, SlimeEntityAnger } from "../entities/mobs/slime";
-import Board from "../Board";
+import Layer, { getTileX, getTileY } from "../Layer";
 import { ComponentArray } from "./ComponentArray";
 import { ComponentConfig } from "../components";
 import { Packet } from "battletribes-shared/packets";
@@ -18,6 +18,7 @@ import { PhysicsComponentArray } from "./PhysicsComponent";
 import { TransformComponentArray, getEntityTile } from "./TransformComponent";
 import { WanderAIComponentArray } from "./WanderAIComponent";
 import CircularBox from "battletribes-shared/boxes/CircularBox";
+import { entityExists, getEntityLayer, getEntityType, getGameTicks } from "../world";
 
 const enum Vars {
    TURN_SPEED = 2 * UtilVars.PI,
@@ -62,7 +63,7 @@ export class SlimeComponent {
       this.size = params.size;
       this.mergeWeight = params.mergeWeight;
       this.orbSizes = params.orbSizes;
-      this.lastMergeTicks = Board.ticks;
+      this.lastMergeTicks = getGameTicks();
    }
 }
 
@@ -100,7 +101,7 @@ const updateAngerTarget = (slime: EntityID): EntityID | null => {
       const angerInfo = slimeComponent.angeredEntities[i];
 
       // Remove anger at an entity if the entity is dead
-      if (!Board.hasEntity(angerInfo.target)) {
+      if (!entityExists(angerInfo.target)) {
          slimeComponent.angeredEntities.splice(i, 1);
          i--;
          continue;
@@ -139,7 +140,7 @@ const createSpit = (slime: EntityID, slimeComponent: SlimeComponent): void => {
    config[ServerComponentType.physics].velocityX = 500 * Math.sin(transformComponent.rotation);
    config[ServerComponentType.physics].velocityY = 500 * Math.cos(transformComponent.rotation);
    config[ServerComponentType.slimeSpit].size = slimeComponent.size === SlimeSize.large ? 1 : 0;
-   createEntityFromConfig(config);
+   createEntityFromConfig(config, getEntityLayer(slime));
 }
 
 // @Incomplete @Speed: Figure out why this first faster function seemingly gets called way less than the second one
@@ -147,6 +148,7 @@ const createSpit = (slime: EntityID, slimeComponent: SlimeComponent): void => {
 const getEnemyChaseTargetID = (slime: EntityID): number => {
    const transformComponent = TransformComponentArray.getComponent(slime);
    const aiHelperComponent = AIHelperComponentArray.getComponent(slime);
+   const layer = getEntityLayer(slime);
 
    let minDist = Number.MAX_SAFE_INTEGER;
    let closestEnemyID = 0;
@@ -157,8 +159,8 @@ const getEnemyChaseTargetID = (slime: EntityID): number => {
 
       const tileIndex = getEntityTile(entityTransformComponent);
       
-      const entityType = Board.getEntityType(entity);
-      if (entityType === EntityType.slime || entityType === EntityType.slimewisp || Board.tileBiomes[tileIndex] !== Biome.swamp || !HealthComponentArray.hasComponent(entity)) {
+      const entityType = getEntityType(entity);
+      if (entityType === EntityType.slime || entityType === EntityType.slimewisp || layer.tileBiomes[tileIndex] !== Biome.swamp || !HealthComponentArray.hasComponent(entity)) {
          continue;
       }
 
@@ -175,6 +177,7 @@ const getEnemyChaseTargetID = (slime: EntityID): number => {
 const getChaseTargetID = (slime: EntityID): number => {
    const transformComponent = TransformComponentArray.getComponent(slime);
    const aiHelperComponent = AIHelperComponentArray.getComponent(slime);
+   const layer = getEntityLayer(slime);
 
    let minDist = Number.MAX_SAFE_INTEGER;
    let closestEnemyID = 0;
@@ -183,7 +186,7 @@ const getChaseTargetID = (slime: EntityID): number => {
       const entity = aiHelperComponent.visibleEntities[i];
       const otherTransformComponent = TransformComponentArray.getComponent(entity);
 
-      if (Board.getEntityType(entity) === EntityType.slime) {
+      if (getEntityType(entity) === EntityType.slime) {
          // Don't try to merge with larger slimes
          const otherSlimeComponent = SlimeComponentArray.getComponent(entity);
          if (!slimeWantsToMerge(otherSlimeComponent)) {
@@ -198,7 +201,7 @@ const getChaseTargetID = (slime: EntityID): number => {
       } else {
          const tileIndex = getEntityTile(otherTransformComponent);
          
-         if (Board.getEntityType(entity) === EntityType.slimewisp || Board.tileBiomes[tileIndex] !== Biome.swamp || !HealthComponentArray.hasComponent(entity)) {
+         if (getEntityType(entity) === EntityType.slimewisp || layer.tileBiomes[tileIndex] !== Biome.swamp || !HealthComponentArray.hasComponent(entity)) {
             continue;
          }
 
@@ -217,15 +220,16 @@ const getChaseTargetID = (slime: EntityID): number => {
 }
 
 const slimeWantsToMerge = (slimeComponent: SlimeComponent): boolean => {
-   const mergeWant = Board.ticks - slimeComponent.lastMergeTicks;
+   const mergeWant = getGameTicks() - slimeComponent.lastMergeTicks;
    return mergeWant >= SLIME_MAX_MERGE_WANT[slimeComponent.size];
 }
 
 function onTick(slimeComponent: SlimeComponent, slime: EntityID): void {
    const transformComponent = TransformComponentArray.getComponent(slime);
+   const layer = getEntityLayer(slime);
 
    const tileIndex = getEntityTile(transformComponent);
-   const tileType = Board.tileTypes[tileIndex];
+   const tileType = layer.tileTypes[tileIndex];
    
    // Slimes move at normal speed on slime and sludge blocks
    const physicsComponent = PhysicsComponentArray.getComponent(slime);
@@ -233,7 +237,7 @@ function onTick(slimeComponent: SlimeComponent, slime: EntityID): void {
 
    // Heal when standing on slime blocks
    if (tileType === TileType.slime) {
-      if (Board.tickIntervalHasPassed(Vars.HEALING_PROC_INTERVAL)) {
+      if (Layer.tickIntervalHasPassed(Vars.HEALING_PROC_INTERVAL)) {
          healEntity(slime, Vars.HEALING_ON_SLIME_PER_SECOND * Vars.HEALING_PROC_INTERVAL, slime);
       }
    }
@@ -251,10 +255,10 @@ function onTick(slimeComponent: SlimeComponent, slime: EntityID): void {
 
       if (slimeComponent.size > SlimeSize.small) {
          // If it has been more than one tick since the slime has been angry, reset the charge progress
-         if (slimeComponent.lastSpitTicks < Board.ticks - 1) {
+         if (slimeComponent.lastSpitTicks < getGameTicks() - 1) {
             slimeComponent.spitChargeTicks = 0;
          }
-         slimeComponent.lastSpitTicks = Board.ticks;
+         slimeComponent.lastSpitTicks = getGameTicks();
          
          slimeComponent.spitChargeTicks++;
          if (slimeComponent.spitChargeTicks >= SPIT_COOLDOWN_TICKS) {
@@ -313,10 +317,10 @@ function onTick(slimeComponent: SlimeComponent, slime: EntityID): void {
       let targetTile: TileIndex;
       do {
          targetTile = getWanderTargetTile(slime, visionRange);
-      } while (++attempts <= 50 && (Board.tileIsWalls[targetTile] === 1 || Board.tileBiomes[targetTile] !== Biome.swamp));
+      } while (++attempts <= 50 && (layer.tileIsWalls[targetTile] === 1 || layer.tileBiomes[targetTile] !== Biome.swamp));
 
-      const tileX = Board.getTileX(targetTile);
-      const tileY = Board.getTileY(targetTile);
+      const tileX = getTileX(targetTile);
+      const tileY = getTileY(targetTile);
       const x = (tileX + Math.random()) * Settings.TILE_SIZE;
       const y = (tileY + Math.random()) * Settings.TILE_SIZE;
       const speedMultiplier = SPEED_MULTIPLIERS[slimeComponent.size];

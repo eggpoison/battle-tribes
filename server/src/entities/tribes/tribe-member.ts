@@ -7,7 +7,7 @@ import { TribesmanTitle } from "battletribes-shared/titles";
 import { TribeType } from "battletribes-shared/tribes";
 import { Point, dotAngles, lerp } from "battletribes-shared/utils";
 import { createEntityFromConfig } from "../../Entity";
-import Board from "../../Board";
+import Layer from "../../Layer";
 import { InventoryComponentArray, consumeItemFromSlot, consumeItemType, countItemType, getInventory, inventoryIsFull, pickupItemEntity } from "../../components/InventoryComponent";
 import { getEntitiesInRange } from "../../ai-shared";
 import { HealthComponentArray, healEntity } from "../../components/HealthComponent";
@@ -37,6 +37,7 @@ import { createSpearProjectileConfig } from "../projectiles/spear-projectile";
 import { createBlueprintEntityConfig } from "../blueprint-entity";
 import { createEntityConfig } from "../../entity-creation";
 import { AttackVars } from "../../../../shared/src/attack-patterns";
+import { destroyEntity, getEntityLayer, getEntityType, getGameTicks } from "../../world";
 
 const enum Vars {
    ITEM_THROW_FORCE = 100,
@@ -135,7 +136,7 @@ export function calculateItemDamage(entity: EntityID, item: Item | null, attackE
 const getRepairTimeMultiplier = (tribeMember: EntityID): number => {
    let multiplier = 1;
    
-   if (Board.getEntityType(tribeMember) === EntityType.tribeWarrior) {
+   if (getEntityType(tribeMember) === EntityType.tribeWarrior) {
       multiplier *= 2;
    }
 
@@ -219,7 +220,7 @@ export function getSwingTimeMultiplier(entity: EntityID, targetEntity: EntityID,
       }
    
       // Warriors attack resources slower
-      if (Board.getEntityType(entity) === EntityType.tribeWarrior && entityIsResource(targetEntity)) {
+      if (getEntityType(entity) === EntityType.tribeWarrior && entityIsResource(targetEntity)) {
          swingTimeMultiplier *= 2.5;
       }
    }
@@ -236,10 +237,11 @@ export function getSwingTimeMultiplier(entity: EntityID, targetEntity: EntityID,
 // @Cleanup: Not just for tribe members, move to different file
 export function calculateRadialAttackTargets(entity: EntityID, attackOffset: number, attackRadius: number): ReadonlyArray<EntityID> {
    const transformComponent = TransformComponentArray.getComponent(entity);
+   const layer = getEntityLayer(entity);
    
    const attackPositionX = transformComponent.position.x + attackOffset * Math.sin(transformComponent.rotation);
    const attackPositionY = transformComponent.position.y + attackOffset * Math.cos(transformComponent.rotation);
-   const attackedEntities = getEntitiesInRange(attackPositionX, attackPositionY, attackRadius);
+   const attackedEntities = getEntitiesInRange(layer, attackPositionX, attackPositionY, attackRadius);
    
    // Don't attack yourself
    for (;;) {
@@ -254,14 +256,14 @@ export function calculateRadialAttackTargets(entity: EntityID, attackOffset: num
    return attackedEntities;
 }
 
-export function placeBuilding(tribe: Tribe, position: Point, rotation: number, entityType: StructureType, connectionInfo: StructureConnectionInfo): void {
+export function placeBuilding(tribe: Tribe, layer: Layer, position: Point, rotation: number, entityType: StructureType, connectionInfo: StructureConnectionInfo): void {
    const config = createEntityConfig(entityType);
    config[ServerComponentType.transform].position.x = position.x;
    config[ServerComponentType.transform].position.y = position.y;
    config[ServerComponentType.transform].rotation = rotation;
    config[ServerComponentType.tribe].tribe = tribe;
    config[ServerComponentType.structure].connectionInfo = connectionInfo;
-   createEntityFromConfig(config);
+   createEntityFromConfig(config, layer);
 }
 
 export function useItem(tribeMember: EntityID, item: Item, inventoryName: InventoryName, itemSlot: number): void {
@@ -327,7 +329,7 @@ export function useItem(tribeMember: EntityID, item: Item, inventoryName: Invent
          healEntity(tribeMember, itemInfo.healAmount, tribeMember);
          consumeItemFromSlot(inventory, itemSlot, 1);
 
-         limb.lastEatTicks = Board.ticks;
+         limb.lastEatTicks = getGameTicks();
 
          if (item.type === ItemType.berry && Math.random() < 0.05) {
             awardTitle(tribeMember, TribesmanTitle.berrymuncher);
@@ -351,7 +353,7 @@ export function useItem(tribeMember: EntityID, item: Item, inventoryName: Invent
          const transformComponent = TransformComponentArray.getComponent(tribeMember);
          
          const structureType = ITEM_INFO_RECORD[item.type as PlaceableItemType].entityType;
-         const placeInfo = calculateStructurePlaceInfo(transformComponent.position, transformComponent.rotation, structureType, Board.getWorldInfo());
+         const placeInfo = calculateStructurePlaceInfo(transformComponent.position, transformComponent.rotation, structureType, getEntityLayer(tribeMember).getWorldInfo());
 
          // Make sure the placeable item can be placed
          if (!placeInfo.isValid) return;
@@ -362,7 +364,7 @@ export function useItem(tribeMember: EntityID, item: Item, inventoryName: Invent
          };
          
          const tribeComponent = TribeComponentArray.getComponent(tribeMember);
-         placeBuilding(tribeComponent.tribe, placeInfo.position, placeInfo.rotation, placeInfo.entityType, structureInfo);
+         placeBuilding(tribeComponent.tribe, getEntityLayer(tribeMember), placeInfo.position, placeInfo.rotation, placeInfo.entityType, structureInfo);
 
          const inventory = getInventory(inventoryComponent, InventoryName.hotbar);
          consumeItemFromSlot(inventory, itemSlot, 1);
@@ -385,7 +387,7 @@ export function useItem(tribeMember: EntityID, item: Item, inventoryName: Invent
          };
          registerEntityTickEvent(tribeMember, event);
 
-         limb.lastBowChargeTicks = Board.ticks;
+         limb.lastBowChargeTicks = getGameTicks();
 
          const itemInfo = ITEM_INFO_RECORD[item.type] as BowItemInfo;
 
@@ -420,7 +422,7 @@ export function useItem(tribeMember: EntityID, item: Item, inventoryName: Invent
          config[ServerComponentType.physics].velocityY = itemInfo.projectileSpeed * Math.cos(transformComponent.rotation);
          config[ServerComponentType.tribe].tribe = tribeComponent.tribe;
          config[ServerComponentType.projectile].owner = tribeMember;
-         createEntityFromConfig(config);
+         createEntityFromConfig(config, getEntityLayer(tribeMember));
 
          for (let i = 0; i < 2; i++) {
             const limb = inventoryUseComponent.getLimbInfo(i === 0 ? InventoryName.hotbar : InventoryName.offhand);
@@ -466,7 +468,7 @@ export function useItem(tribeMember: EntityID, item: Item, inventoryName: Invent
          config[ServerComponentType.transform].rotation = transformComponent.rotation;
          config[ServerComponentType.physics].velocityX = itemInfo.projectileSpeed * Math.sin(transformComponent.rotation);
          config[ServerComponentType.physics].velocityY = itemInfo.projectileSpeed * Math.cos(transformComponent.rotation);
-         createEntityFromConfig(config);
+         createEntityFromConfig(config, getEntityLayer(tribeMember));
 
          delete useInfo.crossbowLoadProgressRecord[itemSlot];
          
@@ -499,7 +501,7 @@ export function useItem(tribeMember: EntityID, item: Item, inventoryName: Invent
          config[ServerComponentType.physics].velocityX = entityPhysicsComponent.selfVelocity.x + entityPhysicsComponent.externalVelocity.x + velocityMagnitude * Math.sin(transformComponent.rotation);
          config[ServerComponentType.physics].velocityY = entityPhysicsComponent.selfVelocity.y + entityPhysicsComponent.externalVelocity.y + velocityMagnitude * Math.cos(transformComponent.rotation);
          config[ServerComponentType.throwingProjectile].tribeMember = tribeMember;
-         createEntityFromConfig(config);
+         createEntityFromConfig(config, getEntityLayer(tribeMember));
 
          consumeItemFromSlot(inventory, itemSlot, 1);
 
@@ -524,7 +526,7 @@ export function useItem(tribeMember: EntityID, item: Item, inventoryName: Invent
          const x = transformComponent.position.x + 35 * Math.sin(offsetDirection);
          const y = transformComponent.position.y + 35 * Math.cos(offsetDirection);
 
-         const ticksSinceLastAction = Board.ticks - useInfo.lastBattleaxeChargeTicks;
+         const ticksSinceLastAction = getGameTicks() - useInfo.lastBattleaxeChargeTicks;
          const secondsSinceLastAction = ticksSinceLastAction / Settings.TPS;
          const velocityMagnitude = lerp(600, 1100, Math.min(secondsSinceLastAction / 3, 1));
 
@@ -537,9 +539,9 @@ export function useItem(tribeMember: EntityID, item: Item, inventoryName: Invent
          config[ServerComponentType.tribe].tribe = tribeComponent.tribe;
          config[ServerComponentType.throwingProjectile].tribeMember = tribeMember;
          config[ServerComponentType.throwingProjectile].itemID = item.id;
-         createEntityFromConfig(config);
+         createEntityFromConfig(config, getEntityLayer(tribeMember));
 
-         useInfo.lastBattleaxeChargeTicks = Board.ticks;
+         useInfo.lastBattleaxeChargeTicks = getGameTicks();
          useInfo.thrownBattleaxeItemID = item.id;
          
          break;
@@ -588,7 +590,7 @@ export function wasTribeMemberKill(attackingEntity: EntityID | null): boolean {
 const blueprintTypeMatchesBuilding = (structure: EntityID, blueprintType: BlueprintType): boolean => {
    const materialComponent = BuildingMaterialComponentArray.getComponent(structure);
 
-   const entityType = Board.getEntityType(structure)!;
+   const entityType = getEntityType(structure)!;
    
    if (entityType === EntityType.wall) {
       switch (materialComponent.material) {
@@ -690,9 +692,9 @@ export function placeBlueprint(tribeMember: EntityID, structure: EntityID, bluep
          config[ServerComponentType.transform].rotation = dynamicRotation;
          config[ServerComponentType.blueprint].blueprintType = blueprintType;
          config[ServerComponentType.tribe].tribe = tribeComponent.tribe;
-         createEntityFromConfig(config);
+         createEntityFromConfig(config, getEntityLayer(tribeMember));
          
-         Board.destroyEntity(structure);
+         destroyEntity(structure);
          break;
       }
       case BlueprintType.stoneDoorUpgrade:
@@ -720,7 +722,7 @@ export function placeBlueprint(tribeMember: EntityID, structure: EntityID, bluep
          config[ServerComponentType.blueprint].blueprintType = blueprintType;
          config[ServerComponentType.blueprint].associatedEntityID = structure;
          config[ServerComponentType.tribe].tribe = tribeComponent.tribe;
-         createEntityFromConfig(config);
+         createEntityFromConfig(config, getEntityLayer(tribeMember));
          
          consumeItemType(inventoryComponent, upgradeMaterialItemType, 5);
          break;
@@ -744,7 +746,7 @@ export function placeBlueprint(tribeMember: EntityID, structure: EntityID, bluep
          config[ServerComponentType.blueprint].blueprintType = blueprintType;
          config[ServerComponentType.blueprint].associatedEntityID = structure;
          config[ServerComponentType.tribe].tribe = tribeComponent.tribe;
-         createEntityFromConfig(config);
+         createEntityFromConfig(config, getEntityLayer(tribeMember));
 
          consumeItemType(inventoryComponent, ItemType.rock, 25);
          consumeItemType(inventoryComponent, ItemType.wood, 15);
@@ -779,7 +781,7 @@ export function placeBlueprint(tribeMember: EntityID, structure: EntityID, bluep
          config[ServerComponentType.blueprint].blueprintType = blueprintType;
          config[ServerComponentType.blueprint].associatedEntityID = structure;
          config[ServerComponentType.tribe].tribe = tribeComponent.tribe;
-         createEntityFromConfig(config);
+         createEntityFromConfig(config, getEntityLayer(tribeMember));
 
          consumeItemType(inventoryComponent, ItemType.wood, 5);
       }
@@ -788,6 +790,7 @@ export function placeBlueprint(tribeMember: EntityID, structure: EntityID, bluep
 
 export function getAvailableCraftingStations(tribeMember: EntityID): ReadonlyArray<CraftingStation> {
    const transformComponent = TransformComponentArray.getComponent(tribeMember);
+   const layer = getEntityLayer(tribeMember);
    
    const minChunkX = Math.max(Math.floor((transformComponent.position.x - Settings.MAX_CRAFTING_STATION_USE_DISTANCE) / Settings.CHUNK_UNITS), 0);
    const maxChunkX = Math.min(Math.floor((transformComponent.position.x + Settings.MAX_CRAFTING_STATION_USE_DISTANCE) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1);
@@ -798,7 +801,7 @@ export function getAvailableCraftingStations(tribeMember: EntityID): ReadonlyArr
 
    for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
       for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
-         const chunk = Board.getChunk(chunkX, chunkY);
+         const chunk = layer.getChunk(chunkX, chunkY);
          for (const entity of chunk.entities) {
             const entityTransformComponent = TransformComponentArray.getComponent(entity);
             
@@ -807,7 +810,7 @@ export function getAvailableCraftingStations(tribeMember: EntityID): ReadonlyArr
                continue;
             }
 
-            switch (Board.getEntityType(entity)) {
+            switch (getEntityType(entity)) {
                case EntityType.workbench: {
                   if (!availableCraftingStations.includes(CraftingStation.workbench)) {
                      availableCraftingStations.push(CraftingStation.workbench);
@@ -831,16 +834,16 @@ export function getAvailableCraftingStations(tribeMember: EntityID): ReadonlyArr
 // @Cleanup: why need 2?
 
 export function onTribeMemberCollision(tribesman: EntityID, collidingEntity: EntityID): void {
-   const collidingEntityType = Board.getEntityType(collidingEntity);
+   const collidingEntityType = getEntityType(collidingEntity);
    if (collidingEntityType === EntityType.berryBush || collidingEntityType === EntityType.tree) {
       const tribeMemberComponent = TribeMemberComponentArray.getComponent(tribesman);
-      tribeMemberComponent.lastPlantCollisionTicks = Board.ticks;
+      tribeMemberComponent.lastPlantCollisionTicks = getGameTicks();
    }
 }
 
 // @Cleanup: not for player. reflect in function name
 export function onTribesmanCollision(tribesman: EntityID, collidingEntity: EntityID): void {
-   if (Board.getEntityType(collidingEntity) === EntityType.itemEntity) {
+   if (getEntityType(collidingEntity) === EntityType.itemEntity) {
       const itemComponent = ItemComponentArray.getComponent(collidingEntity);
 
       // Keep track of it beforehand as the amount variable gets changed when being picked up
@@ -884,10 +887,10 @@ export function throwItem(tribesman: EntityID, inventoryName: InventoryName, ite
    config[ServerComponentType.item].itemType = itemType;
    config[ServerComponentType.item].amount = amountRemoved;
    config[ServerComponentType.item].throwingEntity = tribesman;
-   createEntityFromConfig(config);
+   createEntityFromConfig(config, getEntityLayer(tribesman));
 
    if (TribesmanAIComponentArray.hasComponent(tribesman)) {
       const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman);
-      tribesmanComponent.lastItemThrowTicks = Board.ticks;
+      tribesmanComponent.lastItemThrowTicks = getGameTicks();
    }
 }

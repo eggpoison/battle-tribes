@@ -15,11 +15,11 @@ import { PathfindFailureDefault } from "../../../pathfinding";
 import { ItemType, InventoryName } from "battletribes-shared/items/items";
 import { AIHelperComponentArray } from "../../../components/AIHelperComponent";
 import { huntEntity } from "./tribesman-combat-ai";
-import Board from "../../../Board";
 import { TransformComponentArray } from "../../../components/TransformComponent";
+import { getEntityType } from "../../../world";
 
 const getResourceProducts = (entity: EntityID): ReadonlyArray<ItemType> => {
-   switch (Board.getEntityType(entity)) {
+   switch (getEntityType(entity)) {
       case EntityType.cow: return [ItemType.leather, ItemType.raw_beef];
       case EntityType.berryBush: return [ItemType.berry];
       case EntityType.tree: return [ItemType.wood, ItemType.seed];
@@ -88,13 +88,13 @@ const shouldGatherResource = (tribesman: EntityID, healthComponent: HealthCompon
    // If the tribesman is within the escape health threshold, make sure there wouldn't be any enemies visible while picking up the dropped item
    // @Hack: the accessibility check doesn't work for plants in planter boxes
    const resourceTransformComponent = TransformComponentArray.getComponent(resource);
-   if (tribesmanShouldEscape(Board.getEntityType(tribesman)!, healthComponent) || !positionIsSafeForTribesman(tribesman, resourceTransformComponent.position.x, resourceTransformComponent.position.y)) {
+   if (tribesmanShouldEscape(getEntityType(tribesman)!, healthComponent) || !positionIsSafeForTribesman(tribesman, resourceTransformComponent.position.x, resourceTransformComponent.position.y)) {
    // if (tribesmanShouldEscape(tribesman.type, healthComponent) || !positionIsSafeForTribesman(tribesman, resource.position.x, resource.position.y) || !entityIsAccessible(tribesman, resource, tribeComponent.tribe, getTribesmanAttackRadius(tribesman))) {
       return false;
    }
 
    // Only try to gather plants if they are fully grown
-   if (Board.getEntityType(resource) === EntityType.plant && !shouldGatherPlant(resource)) {
+   if (getEntityType(resource) === EntityType.plant && !shouldGatherPlant(resource)) {
       return false;
    }
 
@@ -175,7 +175,7 @@ export function getGatherTarget(tribesman: EntityID, visibleEntities: ReadonlyAr
 export function tribesmanGetItemPickupTarget(tribesman: EntityID, visibleItemEntities: ReadonlyArray<EntityID>, prioritisedItemTypes: ReadonlyArray<ItemType>, gatherTargetInfo: GatherTargetInfo): EntityID | null {
    const transformComponent = TransformComponentArray.getComponent(tribesman);
    const healthComponent = HealthComponentArray.getComponent(tribesman);
-   const shouldEscape = tribesmanShouldEscape(Board.getEntityType(tribesman)!, healthComponent);
+   const shouldEscape = tribesmanShouldEscape(getEntityType(tribesman)!, healthComponent);
    
    const goalRadius = getTribesmanRadius(tribesman);
       

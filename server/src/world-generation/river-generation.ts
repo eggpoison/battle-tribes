@@ -2,7 +2,7 @@ import { WaterRockData, RiverSteppingStoneData, RiverSteppingStoneSize, RIVER_ST
 import { Settings } from "battletribes-shared/settings";
 import { Point, TileCoordinates, lerp, randFloat } from "battletribes-shared/utils";
 import { generateOctavePerlinNoise } from "../perlin-noise";
-import Board from "../Board";
+import Layer, { tileIsInWorld } from "../Layer";
 import SRandom from "../SRandom";
 
 const NUM_RIVERS = 20;
@@ -195,10 +195,8 @@ const tileIsAdjacentToLand = (tileX: number, tileY: number, riverTiles: Readonly
    for (const offset of ADJACENT_TILE_OFFSETS) {
       const currentTileX = tileX + offset[0];
       const currentTileY = tileY + offset[1];
-      if (Board.tileIsInBoard(currentTileX, currentTileY)) {
-         if (!tileIsWater(currentTileX, currentTileY, riverTiles)) {
-            return true;
-         }
+      if (tileIsInWorld(currentTileX, currentTileY) && !tileIsWater(currentTileX, currentTileY, riverTiles)) {
+         return true;
       }
    }
 
@@ -252,7 +250,7 @@ const calculateRiverCrossingPositions = (riverTiles: ReadonlyArray<WaterTileGene
          const newTileX = currentTileX + Math.sin(crossingDirection);
          const newTileY = currentTileY + Math.cos(crossingDirection);
 
-         if (!Board.tileIsInBoard(newTileX - 0.5, newTileY - 0.5)) {
+         if (!tileIsInWorld(newTileX - 0.5, newTileY - 0.5)) {
             endTileIsValid = false;
             break;
          }

@@ -5,7 +5,7 @@ import { StatusEffect } from "battletribes-shared/status-effects";
 import { distance, Point, randInt } from "battletribes-shared/utils";
 import { HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
 import { GolemComponentArray } from "../../components/GolemComponent";
-import Board from "../../Board";
+import Layer from "../../Layer";
 import { createItemsOverEntity } from "../../entity-shared";
 import { applyKnockback } from "../../components/PhysicsComponent";
 import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
@@ -15,6 +15,7 @@ import { ServerComponentType } from "battletribes-shared/components";
 import { ComponentConfig } from "../../components";
 import { createHitbox, HitboxCollisionType, Hitbox } from "battletribes-shared/boxes/boxes";
 import CircularBox from "battletribes-shared/boxes/CircularBox";
+import { getGameTicks } from "../../world";
 
 export const enum GolemVars {
    PEBBLUM_SUMMON_COOLDOWN_TICKS = 10 * Settings.TPS
@@ -155,7 +156,7 @@ export function onGolemHurt(golem: EntityID, attackingEntity: EntityID, damage: 
    const golemComponent = GolemComponentArray.getComponent(golem);
 
    if (Object.keys(golemComponent.attackingEntities).length === 0) {
-      golemComponent.lastWakeTicks = Board.ticks;
+      golemComponent.lastWakeTicks = getGameTicks();
    }
    
    // Update/create the entity's targetInfo record

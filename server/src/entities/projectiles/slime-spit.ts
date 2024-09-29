@@ -10,12 +10,13 @@ import { applyKnockback } from "../../components/PhysicsComponent";
 import { ComponentConfig } from "../../components";
 import { ServerComponentType } from "battletribes-shared/components";
 import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
-import Board from "../../Board";
+import Layer from "../../Layer";
 import { TransformComponentArray } from "../../components/TransformComponent";
 import { createSpitPoisonAreaConfig } from "./spit-poison-area";
 import { createEntityFromConfig } from "../../Entity";
 import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
 import RectangularBox from "battletribes-shared/boxes/RectangularBox";
+import { destroyEntity, getEntityLayer, getEntityType } from "../../world";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics
@@ -47,7 +48,7 @@ export function createSlimeSpitConfig(): ComponentConfig<ComponentTypes> {
 }
 
 export function onSlimeSpitCollision(spit: EntityID, collidingEntity: EntityID, collisionPoint: Point): void {
-   const collidingEntityType = Board.getEntityType(collidingEntity);
+   const collidingEntityType = getEntityType(collidingEntity);
    if (collidingEntityType === EntityType.slime || collidingEntityType === EntityType.slimewisp || !HealthComponentArray.hasComponent(collidingEntity)) {
       return;
    }
@@ -67,7 +68,7 @@ export function onSlimeSpitCollision(spit: EntityID, collidingEntity: EntityID, 
       applyStatusEffect(collidingEntity, StatusEffect.poisoned, 2 * Settings.TPS);
    }
 
-   Board.destroyEntity(spit);
+   destroyEntity(spit);
 }
 
 export function onSlimeSpitDeath(spit: EntityID): void {
@@ -79,6 +80,6 @@ export function onSlimeSpitDeath(spit: EntityID): void {
       config[ServerComponentType.transform].position.x = transformComponent.position.x;
       config[ServerComponentType.transform].position.y = transformComponent.position.y;
       config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
-      createEntityFromConfig(config);
+      createEntityFromConfig(config, getEntityLayer(spit));
    }
 }

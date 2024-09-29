@@ -2,7 +2,6 @@ import { AMMO_INFO_RECORD, ServerComponentType, TURRET_AMMO_TYPES, TurretAmmoTyp
 import { EntityID, EntityType } from "battletribes-shared/entities";
 import { ComponentArray } from "./ComponentArray";
 import { SLING_TURRET_RELOAD_TIME_TICKS, SLING_TURRET_SHOT_COOLDOWN_TICKS } from "../entities/structures/sling-turret";
-import Board from "../Board";
 import { AmmoBoxComponentArray } from "./AmmoBoxComponent";
 import { Packet } from "battletribes-shared/packets";
 import { InventoryName, ItemType } from "battletribes-shared/items/items";
@@ -18,7 +17,8 @@ import { InventoryComponentArray, getInventory, getFirstOccupiedItemSlotInInvent
 import { TransformComponentArray, TransformComponent } from "./TransformComponent";
 import { getEntityRelationship, EntityRelationship } from "./TribeComponent";
 import { UtilVars } from "battletribes-shared/utils";
-import { boxIsCircular } from "battletribes-shared/boxes/boxes";
+import { boxIsCircular, boxIsWithinRange } from "battletribes-shared/boxes/boxes";
+import { getEntityType } from "../world";
 
 export interface TurretComponentParams {
    readonly fireCooldownTicks: number;
@@ -72,7 +72,7 @@ const getAmmoType = (turret: EntityID): TurretAmmoType | null => {
       return null;
    }
 
-   const entityType = Board.getEntityType(turret) as TurretEntityType;
+   const entityType = getEntityType(turret) as TurretEntityType;
    
    const item = ammoBoxInventory.itemSlots[firstOccupiedSlot]!;
    if (!TURRET_AMMO_TYPES[entityType].includes(item.type as TurretAmmoType)) {
@@ -84,7 +84,7 @@ const getAmmoType = (turret: EntityID): TurretAmmoType | null => {
 }
 
 const entityIsTargetted = (turret: EntityID, entity: EntityID): boolean => {
-   if (Board.getEntityType(entity) === EntityType.itemEntity) {
+   if (getEntityType(entity) === EntityType.itemEntity) {
       return false;
    }
 
@@ -94,7 +94,7 @@ const entityIsTargetted = (turret: EntityID, entity: EntityID): boolean => {
 
    const entityTransformComponent = TransformComponentArray.getComponent(entity);
 
-   const turretEntityType = Board.getEntityType(turret) as TurretEntityType;
+   const turretEntityType = getEntityType(turret) as TurretEntityType;
    const visionRange = getVisionRange(turretEntityType);
    const aimArcSize = getAimArcSize(turretEntityType);
    
@@ -102,7 +102,7 @@ const entityIsTargetted = (turret: EntityID, entity: EntityID): boolean => {
    let hasHitboxInRange = false;
    for (let i = 0; i < entityTransformComponent.hitboxes.length; i++) {
       const hitbox = entityTransformComponent.hitboxes[i];
-      if (Board.boxIsInRange(entityTransformComponent.position, hitbox.box, visionRange)) {
+      if (boxIsWithinRange(hitbox.box, entityTransformComponent.position, visionRange)) {
          hasHitboxInRange = true;
          break;
       }
@@ -247,7 +247,7 @@ function onTick(turretComponent: TurretComponent, turret: EntityID): void {
       attemptAmmoLoad(turret);
    }
 
-   const turretEntityType = Board.getEntityType(turret) as TurretEntityType;
+   const turretEntityType = getEntityType(turret) as TurretEntityType;
 
    if (aiHelperComponent.visibleEntities.length > 0 && ammoBoxComponent.ammoRemaining > 0) {
       const target = getTarget(turret, aiHelperComponent.visibleEntities);
@@ -316,7 +316,7 @@ function onTick(turretComponent: TurretComponent, turret: EntityID): void {
 }
 
 const getShotCooldownTicks = (turret: EntityID): number => {
-   const entityType = Board.getEntityType(turret);
+   const entityType = getEntityType(turret);
    switch (entityType) {
       case EntityType.ballista: {
          const ballistaComponent = AmmoBoxComponentArray.getComponent(turret);
@@ -332,7 +332,7 @@ const getShotCooldownTicks = (turret: EntityID): number => {
 }
 
 const getReloadTimeTicks = (turret: EntityID): number => {
-   const entityType = Board.getEntityType(turret);
+   const entityType = getEntityType(turret);
    switch (entityType) {
       case EntityType.ballista: {
          const ballistaComponent = AmmoBoxComponentArray.getComponent(turret);

@@ -9,6 +9,7 @@ import { PathfindingNodeIndex } from "battletribes-shared/client-server-types";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 import { nerdVisionIsVisible } from "../../components/game/dev/NerdVision";
 import { ServerComponentType } from "battletribes-shared/components";
+import { getEntityByID } from "../../world";
 
 enum NodeType {
    occupied,
@@ -119,7 +120,7 @@ export function createPathfindNodeShaders(): void {
 }
 
 const renderConnectors = (mainPathNodes: ReadonlyArray<PathfindingNodeIndex>): void => {
-   const debugEntity = Board.entityRecord[Game.entityDebugData!.entityID];
+   const debugEntity = getEntityByID(Game.getEntityDebugData()!.entityID);
    if (typeof debugEntity === "undefined") {
       return;
    }
@@ -274,15 +275,16 @@ export function renderPathfindingNodes(): void {
       }
    }
 
-   if (nerdVisionIsVisible() && Game.entityDebugData !== null && typeof Board.entityRecord[Game.entityDebugData.entityID] !== "undefined" && Game.entityDebugData.hasOwnProperty("pathData")) {
-      for (const node of Game.entityDebugData.pathData!.rawPathNodes) {
+   const entityDebugData = Game.getEntityDebugData();
+   if (nerdVisionIsVisible() && entityDebugData !== null && typeof getEntityByID(entityDebugData.entityID) !== "undefined" && entityDebugData.hasOwnProperty("pathData")) {
+      for (const node of entityDebugData.pathData!.rawPathNodes) {
          nodeInfoArray.push({
             node: node,
             type: NodeType.rawPath
          });
       }
 
-      for (const node of Game.entityDebugData.pathData!.pathNodes) {
+      for (const node of entityDebugData.pathData!.pathNodes) {
          nodeInfoArray.push({
             node: node,
             type: NodeType.path
@@ -290,8 +292,8 @@ export function renderPathfindingNodes(): void {
       }
    }
 
-   if (nerdVisionIsVisible() && Game.entityDebugData !== null && typeof Game.entityDebugData.pathData !== "undefined") {
-      renderConnectors(Game.entityDebugData.pathData.pathNodes);
+   if (nerdVisionIsVisible() && entityDebugData !== null && typeof entityDebugData.pathData !== "undefined") {
+      renderConnectors(entityDebugData.pathData.pathNodes);
    }
    if (nodeInfoArray.length > 0) {
       renderNodes(nodeInfoArray);

@@ -1,6 +1,7 @@
 import { Point, rotateXAroundOrigin, rotateYAroundOrigin } from "battletribes-shared/utils";
 import Board from "./Board";
 import { ServerComponentType } from "battletribes-shared/components";
+import { getEntityByID } from "./world";
 
 type LightID = number;
 
@@ -139,7 +140,7 @@ export function getLightPosition(lightIdx: number): Point {
 
    const attachedEntityID = lightToEntityRecord[lightID];
    if (typeof attachedEntityID !== "undefined") {
-      const attachedEntity = Board.entityRecord[attachedEntityID];
+      const attachedEntity = getEntityByID(attachedEntityID);
       if (typeof attachedEntity !== "undefined") {
          const offset = light.offset;
 

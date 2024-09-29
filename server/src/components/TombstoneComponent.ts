@@ -4,10 +4,11 @@ import { ComponentArray } from "./ComponentArray";
 import { Packet } from "battletribes-shared/packets";
 import { Settings } from "battletribes-shared/settings";
 import { Point, randInt } from "battletribes-shared/utils";
-import Board from "../Board";
+import Layer from "../Layer";
 import { createZombieConfig } from "../entities/mobs/zombie";
 import { createEntityFromConfig } from "../Entity";
 import { TransformComponentArray } from "./TransformComponent";
+import { destroyEntity, getEntityLayer, getGameTime, isNight } from "../world";
 
 const enum Vars {
    /** Average number of zombies that are created by the tombstone in a second */
@@ -90,7 +91,7 @@ const spawnZombie = (tombstone: EntityID, tombstoneComponent: TombstoneComponent
       config[ServerComponentType.zombie].zombieType = 3;
    }
    config[ServerComponentType.zombie].tombstone = tombstone;
-   createEntityFromConfig(config);
+   createEntityFromConfig(config, getEntityLayer(tombstone));
 
    tombstoneComponent.numZombies++;
    tombstoneComponent.isSpawningZombie = false;
@@ -98,12 +99,12 @@ const spawnZombie = (tombstone: EntityID, tombstoneComponent: TombstoneComponent
 
 export function tickTombstone(tombstone: EntityID): void {
    // If in the daytime, chance to crumble
-   if (Board.time > 6 && Board.time < 18) {
-      const dayProgress = (Board.time - 6) / 12;
+   if (!isNight()) {
+      const dayProgress = (getGameTime() - 6) / 12;
       const crumbleChance = Math.exp(dayProgress * 12 - 6);
       if (Math.random() < crumbleChance * Settings.I_TPS) {
          // Crumble
-         Board.destroyEntity(tombstone);
+         destroyEntity(tombstone);
          return;
       }
    }

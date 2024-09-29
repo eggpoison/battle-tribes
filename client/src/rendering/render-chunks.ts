@@ -2,9 +2,11 @@ import { RIVER_STEPPING_STONE_SIZES, RiverSteppingStoneData, ServerTileUpdateDat
 import { Settings } from "battletribes-shared/settings";
 import { createTileRenderChunks, recalculateSolidTileRenderChunkData } from "./webgl/solid-tile-rendering";
 import { calculateRiverRenderChunkData } from "./webgl/river-rendering";
-import { calculateAmbientOcclusionInfo } from "./webgl/ambient-occlusion-rendering";
+import { calculateTileShadowInfo, TileShadowType } from "./webgl/tile-shadow-rendering";
 import { calculateWallBorderInfo } from "./webgl/wall-border-rendering";
 import Board from "../Board";
+import Layer from "../Layer";
+import { layers } from "../world";
 
 /** Width and height of a render chunk in tiles */
 export const RENDER_CHUNK_SIZE = 8;
@@ -36,7 +38,7 @@ export interface RenderChunkRiverInfo {
    readonly waterRocks: Array<WaterRockData>;
 }
 
-export interface RenderChunkAmbientOcclusionInfo {
+export interface RenderChunkTileShadowInfo {
    readonly vao: WebGLVertexArrayObject;
    readonly vertexCount: number;
 }
@@ -48,9 +50,10 @@ export interface RenderChunkWallBorderInfo {
 
 // @Speed: Polymorphism
 let riverInfoArray: Array<RenderChunkRiverInfo | null>;
+// @Hack
 // @Speed: Polymorphism
-let ambientOcclusionInfoArray: Array<RenderChunkAmbientOcclusionInfo | null>;
-let wallBorderInfoArray: Array<RenderChunkWallBorderInfo>;
+let tileShadowInfoArrays = new Array<Record<TileShadowType, Array<RenderChunkTileShadowInfo | null>>>();
+let wallBorderInfoArrays = new Array<Array<RenderChunkWallBorderInfo>>();
 
 export function getRenderChunkIndex(renderChunkX: number, renderChunkY: number): number {
    const x = renderChunkX + RENDER_CHUNK_EDGE_GENERATION;
@@ -62,15 +65,22 @@ export function getRenderChunkRiverInfo(renderChunkX: number, renderChunkY: numb
    return riverInfoArray[getRenderChunkIndex(renderChunkX, renderChunkY)];
 }
 
-export function getRenderChunkWallBorderInfo(renderChunkX: number, renderChunkY: number): RenderChunkWallBorderInfo {
-   return wallBorderInfoArray[getRenderChunkIndex(renderChunkX, renderChunkY)];
+export function getRenderChunkWallBorderInfo(layer: Layer, renderChunkX: number, renderChunkY: number): RenderChunkWallBorderInfo {
+   // @Hack
+   const layerIdx = layers.indexOf(layer);
+   return wallBorderInfoArrays[layerIdx][getRenderChunkIndex(renderChunkX, renderChunkY)];
 }
 
-export function getRenderChunkAmbientOcclusionInfo(renderChunkX: number, renderChunkY: number): RenderChunkAmbientOcclusionInfo | null {
-   return ambientOcclusionInfoArray[getRenderChunkIndex(renderChunkX, renderChunkY)];
+export function getRenderChunkTileShadowInfo(layer: Layer, renderChunkX: number, renderChunkY: number, tileShadowType: TileShadowType): RenderChunkTileShadowInfo | null {
+   // @Hack
+   const layerIdx = layers.indexOf(layer);
+   return tileShadowInfoArrays[layerIdx][tileShadowType][getRenderChunkIndex(renderChunkX, renderChunkY)];
 }
 
-export function createRenderChunks(waterRocks: ReadonlyArray<WaterRockData>, riverSteppingStones: ReadonlyArray<RiverSteppingStoneData>): void {
+export function createRenderChunks(layer: Layer, waterRocks: ReadonlyArray<WaterRockData>, riverSteppingStones: ReadonlyArray<RiverSteppingStoneData>): void {
+   // @hack
+   const layerIdx = layers.indexOf(layer);
+   
    // Group water rocks
    // @Speed: Garbage collection
    let waterRocksChunked: Record<number, Record<number, Array<WaterRockData>>> = {};
@@ -115,7 +125,7 @@ export function createRenderChunks(waterRocks: ReadonlyArray<WaterRockData>, riv
       }
    }
 
-   createTileRenderChunks();
+   createTileRenderChunks(layer);
 
    // River info
    riverInfoArray = [];
@@ -124,28 +134,35 @@ export function createRenderChunks(waterRocks: ReadonlyArray<WaterRockData>, riv
          const waterRocks = (waterRocksChunked.hasOwnProperty(renderChunkX) && waterRocksChunked[renderChunkX].hasOwnProperty(renderChunkY)) ? waterRocksChunked[renderChunkX][renderChunkY] : [];
          const edgeSteppingStones = (edgeSteppingStonesChunked.hasOwnProperty(renderChunkX) && edgeSteppingStonesChunked[renderChunkX].hasOwnProperty(renderChunkY)) ? edgeSteppingStonesChunked[renderChunkX][renderChunkY] : [];
 
-         const data = calculateRiverRenderChunkData(renderChunkX, renderChunkY, waterRocks, edgeSteppingStones);
+         const data = calculateRiverRenderChunkData(layer, renderChunkX, renderChunkY, waterRocks, edgeSteppingStones);
          riverInfoArray.push(data);
       }
    }
 
-   // Ambient occlusion info
-   ambientOcclusionInfoArray = [];
+   // Tile shadow info
+   const tileShadowInfoArray: Record<TileShadowType, Array<RenderChunkTileShadowInfo | null>> = {
+      [TileShadowType.dropdownShadow]: [],
+      [TileShadowType.wallShadow]: []
+   };
    for (let renderChunkY = -RENDER_CHUNK_EDGE_GENERATION; renderChunkY < WORLD_RENDER_CHUNK_SIZE + RENDER_CHUNK_EDGE_GENERATION; renderChunkY++) {
       for (let renderChunkX = -RENDER_CHUNK_EDGE_GENERATION; renderChunkX < WORLD_RENDER_CHUNK_SIZE + RENDER_CHUNK_EDGE_GENERATION; renderChunkX++) {
-         const data = calculateAmbientOcclusionInfo(renderChunkX, renderChunkY);
-         ambientOcclusionInfoArray.push(data);
+         tileShadowInfoArray[TileShadowType.dropdownShadow].push(calculateTileShadowInfo(layer, renderChunkX, renderChunkY, TileShadowType.dropdownShadow));
+         tileShadowInfoArray[TileShadowType.wallShadow].push(calculateTileShadowInfo(layer, renderChunkX, renderChunkY, TileShadowType.wallShadow));
       }
    }
+   // @Speed: makes it unpacked
+   tileShadowInfoArrays[layerIdx] = tileShadowInfoArray;
 
    // Wall border info
-   wallBorderInfoArray = [];
+   const wallBorderInfoArray = [];
    for (let renderChunkY = -RENDER_CHUNK_EDGE_GENERATION; renderChunkY < WORLD_RENDER_CHUNK_SIZE + RENDER_CHUNK_EDGE_GENERATION; renderChunkY++) {
       for (let renderChunkX = -RENDER_CHUNK_EDGE_GENERATION; renderChunkX < WORLD_RENDER_CHUNK_SIZE + RENDER_CHUNK_EDGE_GENERATION; renderChunkX++) {
-         const data = calculateWallBorderInfo(renderChunkX, renderChunkY);
+         const data = calculateWallBorderInfo(layer, renderChunkX, renderChunkY);
          wallBorderInfoArray.push(data);
       }
    }
+   // @Speed: makes it unpacked
+   wallBorderInfoArrays[layerIdx] = wallBorderInfoArray;
 }
 
 export function updateRenderChunkFromTileUpdate(tileUpdate: ServerTileUpdateData): void {
@@ -155,7 +172,8 @@ export function updateRenderChunkFromTileUpdate(tileUpdate: ServerTileUpdateData
    const renderChunkX = Math.floor(tileX / RENDER_CHUNK_SIZE);
    const renderChunkY = Math.floor(tileY / RENDER_CHUNK_SIZE);
 
-   recalculateSolidTileRenderChunkData(renderChunkX, renderChunkY);
+   const layer = layers[tileUpdate.layerIdx];
+   recalculateSolidTileRenderChunkData(layer, renderChunkX, renderChunkY);
 }
 
 export function getRenderChunkMinTileX(renderChunkX: number): number {

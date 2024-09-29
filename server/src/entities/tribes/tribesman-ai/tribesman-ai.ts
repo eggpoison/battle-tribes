@@ -9,7 +9,6 @@ import { getInventory, addItemToInventory, consumeItemFromSlot, inventoryIsFull,
 import { TribesmanAIComponent, TribesmanAIComponentArray, TribesmanPathType, itemThrowIsOnCooldown } from "../../../components/TribesmanAIComponent";
 import { calculateRadialAttackTargets, repairBuilding, throwItem, } from "../tribe-member";
 import { InventoryUseComponentArray, setLimbActions } from "../../../components/InventoryUseComponent";
-import Board from "../../../Board";
 import { AIHelperComponentArray } from "../../../components/AIHelperComponent";
 import { EntityRelationship, TribeComponentArray, getEntityRelationship, recruitTribesman } from "../../../components/TribeComponent";
 import { PathfindFailureDefault } from "../../../pathfinding";
@@ -32,6 +31,7 @@ import { continueTribesmanHealing, getHealingItemUseInfo } from "./tribesman-hea
 import { tribesmanDoPatrol } from "./tribesman-patrolling";
 import { ItemType, InventoryName, Item, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, ConsumableItemInfo, Inventory } from "battletribes-shared/items/items";
 import { getAgeTicks, TransformComponentArray } from "../../../components/TransformComponent";
+import { destroyEntity, entityExists, getEntityLayer, getEntityType } from "../../../world";
 
 // @Cleanup: Move all of this to the TribesmanComponent file
 
@@ -55,6 +55,7 @@ export const PLANT_TO_SEED_RECORD: Record<PlanterBoxPlant, ItemType> = {
 
 const getCommunicationTargets = (tribesman: EntityID): ReadonlyArray<EntityID> => {
    const transformComponent = TransformComponentArray.getComponent(tribesman);
+   const layer = getEntityLayer(tribesman);
    
    const minChunkX = Math.max(Math.floor((transformComponent.position.x - TRIBESMAN_COMMUNICATION_RANGE) / Settings.CHUNK_UNITS), 0);
    const maxChunkX = Math.min(Math.floor((transformComponent.position.x + TRIBESMAN_COMMUNICATION_RANGE) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1);
@@ -66,7 +67,7 @@ const getCommunicationTargets = (tribesman: EntityID): ReadonlyArray<EntityID> =
    const communcationTargets = new Array<EntityID>();
    for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
       for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
-         const chunk = Board.getChunk(chunkX, chunkY);
+         const chunk = layer.getChunk(chunkX, chunkY);
          for (let i = 0; i < chunk.entities.length; i++) {
             const entity = chunk.entities[i];
             if (entity === tribesman || !TribesmanAIComponentArray.hasComponent(entity)) {
@@ -108,7 +109,7 @@ const sendHelpMessage = (communicatingTribesman: EntityID, communicationTargets:
 
       // @Cleanup: bad. should only change tribesman ai in that tribesman's tick function.
       const healthComponent = HealthComponentArray.getComponent(currentTribesman);
-      if (!tribesmanShouldEscape(Board.getEntityType(currentTribesman)!, healthComponent)) {
+      if (!tribesmanShouldEscape(getEntityType(currentTribesman)!, healthComponent)) {
          pathfindToPosition(currentTribesman, transformComponent.position.x, transformComponent.position.y, communicatingTribesman, TribesmanPathType.tribesmanRequest, Math.floor(64 / PathfindingSettings.NODE_SEPARATION), PathfindFailureDefault.returnEmpty);
       }
    }
@@ -327,7 +328,7 @@ export function tickTribesman(tribesmanAIComponent: TribesmanAIComponent, tribes
    // If recalled, go back to hut
    const hut = tribesmanAIComponent.hutID;
    if (hut !== 0) {
-      if (!Board.hasEntity(hut)) {
+      if (!entityExists(hut)) {
          tribesmanAIComponent.hutID = 0;
       } else {
          const hutComponent = HutComponentArray.getComponent(hut);
@@ -337,7 +338,7 @@ export function tickTribesman(tribesmanAIComponent: TribesmanAIComponent, tribes
             pathfindToPosition(tribesman, hutTransformComponent.position.x, hutTransformComponent.position.y, hut, TribesmanPathType.default, Math.floor(50 / PathfindingSettings.NODE_SEPARATION), PathfindFailureDefault.returnEmpty);
             
             if (entitiesAreColliding(tribesman, hut) !== CollisionVars.NO_COLLISION) {
-               Board.destroyEntity(tribesman);
+               destroyEntity(tribesman);
             }
 
             const inventoryUseComponent = InventoryUseComponentArray.getComponent(tribesman);
@@ -401,7 +402,7 @@ export function tickTribesman(tribesmanAIComponent: TribesmanAIComponent, tribes
             break;
          }
          case EntityRelationship.neutral: {
-            if (Board.getEntityType(entity) === EntityType.itemEntity) {
+            if (getEntityType(entity) === EntityType.itemEntity) {
                visibleItemEntities.push(entity);
             }
             break;
@@ -414,7 +415,7 @@ export function tickTribesman(tribesmanAIComponent: TribesmanAIComponent, tribes
    
    // Escape from enemies when low on health
    const healthComponent = HealthComponentArray.getComponent(tribesman);
-   if (tribesmanShouldEscape(Board.getEntityType(tribesman)!, healthComponent) && (visibleEnemies.length > 0 || visibleHostileMobs.length > 0)) {
+   if (tribesmanShouldEscape(getEntityType(tribesman)!, healthComponent) && (visibleEnemies.length > 0 || visibleHostileMobs.length > 0)) {
       escapeFromEnemies(tribesman, visibleEnemies, visibleHostileMobs);
 
       if (ageTicks % MESSAGE_INTERVAL_TICKS === 0) {
@@ -432,7 +433,7 @@ export function tickTribesman(tribesmanAIComponent: TribesmanAIComponent, tribes
    // @Speed
    // If the player is interacting with the tribesman, move towards the player
    for (const entity of aiHelperComponent.visibleEntities) {
-      if (Board.getEntityType(entity) !== EntityType.player) {
+      if (getEntityType(entity) !== EntityType.player) {
          continue;
       }
 
@@ -555,7 +556,7 @@ export function tickTribesman(tribesmanAIComponent: TribesmanAIComponent, tribes
       let closestBlueprint: EntityID | undefined;
       let minDistance = Number.MAX_SAFE_INTEGER;
       for (const entity of aiHelperComponent.visibleEntities) {
-         if (Board.getEntityType(entity) !== EntityType.blueprintEntity) {
+         if (getEntityType(entity) !== EntityType.blueprintEntity) {
             continue;
          }
 
@@ -813,7 +814,7 @@ export function tickTribesman(tribesmanAIComponent: TribesmanAIComponent, tribes
 
    // @Speed: shouldn't have to run for tribesmen which can't research
    // Research
-   if (tribeComponent.tribe.selectedTechID !== null && tribeComponent.tribe.techRequiresResearching(getTechByID(tribeComponent.tribe.selectedTechID)) && Board.getEntityType(tribesman) === EntityType.tribeWorker) {
+   if (tribeComponent.tribe.selectedTechID !== null && tribeComponent.tribe.techRequiresResearching(getTechByID(tribeComponent.tribe.selectedTechID)) && getEntityType(tribesman) === EntityType.tribeWorker) {
       const isGoing = goResearchTech(tribesman, getTechByID(tribeComponent.tribe.selectedTechID));
       if (isGoing) {
          return;
@@ -852,7 +853,7 @@ export function tickTribesman(tribesmanAIComponent: TribesmanAIComponent, tribes
       let minDist = Number.MAX_SAFE_INTEGER;
       for (let i = 0; i < aiHelperComponent.visibleEntities.length; i++) {
          const entity = aiHelperComponent.visibleEntities[i];
-         if (Board.getEntityType(entity) !== EntityType.planterBox) {
+         if (getEntityType(entity) !== EntityType.planterBox) {
             continue;
          }
    
@@ -861,7 +862,7 @@ export function tickTribesman(tribesmanAIComponent: TribesmanAIComponent, tribes
             continue;
          }
 
-         if (!Board.hasEntity(planterBoxComponent.plantEntity)) {
+         if (!entityExists(planterBoxComponent.plantEntity)) {
             continue;
          }
 
@@ -942,7 +943,7 @@ export function tickTribesman(tribesmanAIComponent: TribesmanAIComponent, tribes
       let closestBarrelWithFood: EntityID | undefined;
       let minDist = Number.MAX_SAFE_INTEGER;
       for (const entity of aiHelperComponent.visibleEntities) {
-         if (Board.getEntityType(entity) === EntityType.barrel) {
+         if (getEntityType(entity) === EntityType.barrel) {
             const entityTransformComponent = TransformComponentArray.getComponent(entity);
             
             const distance = transformComponent.position.calculateDistanceBetween(entityTransformComponent.position);

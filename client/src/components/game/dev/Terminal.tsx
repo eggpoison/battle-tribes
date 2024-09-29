@@ -5,6 +5,7 @@ import Client from "../../../client/Client";
 import { setTerminalButtonOpened } from "./TerminalButton";
 import Camera from "../../../Camera";
 import Board from "../../../Board";
+import { entityExists } from "../../../world";
 
 /** All lines output by the terminal */
 let terminalLines = new Array<string>();
@@ -137,7 +138,7 @@ const Terminal = ({ startingIsVisible }: TerminalParams) => {
             const trackedEntityID = command.split(" ")[1];
             if (!Number.isNaN(trackedEntityID)) {
                const id = Number(trackedEntityID);
-               if (Board.entityRecord.hasOwnProperty(id)) {
+               if (entityExists(id)) {
                   Camera.setTrackedEntityID(id);
                }
             }

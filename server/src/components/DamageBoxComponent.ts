@@ -1,14 +1,15 @@
 import { ServerComponentType } from "battletribes-shared/components";
 import { ComponentArray } from "./ComponentArray";
-import { EntityID, EntityType, EntityTypeString, LimbAction } from "battletribes-shared/entities";
+import { EntityID, LimbAction } from "battletribes-shared/entities";
 import { Packet } from "battletribes-shared/packets";
 import { boxIsCircular } from "battletribes-shared/boxes/boxes";
 import { getBoxesCollidingEntities } from "battletribes-shared/hitbox-collision";
-import Board from "../Board";
+import Layer from "../Layer";
 import { ServerBlockBox, ServerDamageBox } from "../boxes";
 import { InventoryUseComponentArray, onBlockBoxCollisionWithDamageBox, onBlockBoxCollisionWithProjectile, onDamageBoxCollision } from "./InventoryUseComponent";
 import { Settings } from "battletribes-shared/settings";
 import { ProjectileComponentArray } from "./ProjectileComponent";
+import { getEntityLayer } from "../world";
 
 export interface DamageBoxComponentParams {}
 
@@ -53,6 +54,8 @@ export const DamageBoxComponentArray = new ComponentArray<DamageBoxComponent>(Se
 
 // @Hack: this whole thing is cursed
 const getCollidingCollisionBox = (entity: EntityID, blockBox: ServerBlockBox): DamageBoxCollisionInfo | null => {
+   const layer = getEntityLayer(entity);
+   
    // @Hack
    const CHECK_PADDING = 200;
    const minChunkX = Math.max(Math.min(Math.floor((blockBox.box.position.x - CHECK_PADDING) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
@@ -62,7 +65,7 @@ const getCollidingCollisionBox = (entity: EntityID, blockBox: ServerBlockBox): D
 
    for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
       for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
-         const chunk = Board.getChunk(chunkX, chunkY);
+         const chunk = layer.getChunk(chunkX, chunkY);
          for (const currentEntity of chunk.entities) {
             if (currentEntity === entity || !DamageBoxComponentArray.hasComponent(currentEntity)) {
                continue;
@@ -85,6 +88,7 @@ const getCollidingCollisionBox = (entity: EntityID, blockBox: ServerBlockBox): D
 }
 
 function onTick(damageBoxComponent: DamageBoxComponent, entity: EntityID): void {
+   const layer = getEntityLayer(entity);
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(entity);
    
    for (const damageBox of damageBoxComponent.damageBoxes) {
@@ -101,7 +105,7 @@ function onTick(damageBoxComponent: DamageBoxComponent, entity: EntityID): void 
       }
 
       // Look for entities to damage
-      const collidingEntities = getBoxesCollidingEntities(Board.getWorldInfo(), [damageBox]);
+      const collidingEntities = getBoxesCollidingEntities(layer.getWorldInfo(), [damageBox]);
       for (let j = 0; j < collidingEntities.length; j++) {
          const collidingEntity = collidingEntities[j];
          if (collidingEntity !== entity) {
@@ -136,7 +140,7 @@ function onTick(damageBoxComponent: DamageBoxComponent, entity: EntityID): void 
       }
 
       // Look for projectiles to block
-      const collidingEntities = getBoxesCollidingEntities(Board.getWorldInfo(), [blockBox]);
+      const collidingEntities = getBoxesCollidingEntities(layer.getWorldInfo(), [blockBox]);
       let hasBlockedProjectile = false;
       for (let i = 0; i < collidingEntities.length; i++) {
          const collidingEntity = collidingEntities[i];

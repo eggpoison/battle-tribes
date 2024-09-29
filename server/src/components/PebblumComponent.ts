@@ -2,10 +2,10 @@ import { ServerComponentType } from "battletribes-shared/components";
 import { ComponentArray } from "./ComponentArray";
 import { EntityID } from "battletribes-shared/entities";
 import { moveEntityToPosition, stopEntity } from "../ai-shared";
-import Board from "../Board";
 import { PhysicsComponentArray } from "./PhysicsComponent";
 import { TransformComponentArray } from "./TransformComponent";
 import { UtilVars } from "battletribes-shared/utils";
+import { entityExists } from "../world";
 
 const enum Vars {
    TURN_SPEED = UtilVars.PI * 2
@@ -34,7 +34,7 @@ export const PebblumComponentArray = new ComponentArray<PebblumComponent>(Server
 
 function onTick(pebblumComponent: PebblumComponent, pebblum: EntityID): void {
    const target = pebblumComponent.targetEntityID;
-   if (Board.hasEntity(target)) {
+   if (entityExists(target)) {
       const targetTransformComponent = TransformComponentArray.getComponent(target);
 
       moveEntityToPosition(pebblum, targetTransformComponent.position.x, targetTransformComponent.position.y, 850, Vars.TURN_SPEED);

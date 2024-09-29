@@ -1,8 +1,9 @@
 import { Settings } from "../../../shared/src/settings";
 import { Biome, TileType } from "../../../shared/src/tiles";
-import { lerp, TileIndex } from "../../../shared/src/utils";
-import Board from "../Board";
-import { getTileDist, LocalBiomeInfo } from "./terrain-generation";
+import { lerp, randInt, TileIndex } from "../../../shared/src/utils";
+import { markTileAsUnspawnable } from "../entity-spawning";
+import { getTileIndexIncludingEdges, getTileX, getTileY } from "../Layer";
+import { getTileDist, LocalBiomeInfo } from "./surface-terrain-generation";
 
 const enum Vars {
    /** Minimum number of tiles in a mountain biome that will allow a cave to be generated */
@@ -17,17 +18,14 @@ export function generateCaveEntrances(tileTypes: Float32Array, tileBiomes: Float
          continue;
       }
 
-      for (let T = 0; T < 250; T++) {
-
-
       // Pick a random tile some distance away from other biomes to generate the cave
       let originTile: TileIndex | undefined;
       for (let attempts = 0; attempts < 200; attempts++) {
          const idx = Math.floor(Math.random() * localBiome.tileIndexes.length);
          const tileIndex = localBiome.tileIndexes[idx];
 
-         const tileX = Board.getTileX(tileIndex);
-         const tileY = Board.getTileY(tileIndex);
+         const tileX = getTileX(tileIndex);
+         const tileY = getTileY(tileIndex);
          const tileDist = getTileDist(tileBiomes, tileX, tileY, Vars.CAVE_ORIGIN_DIST);
          if (tileDist >= Vars.CAVE_ORIGIN_DIST) {
             originTile = tileIndex;
@@ -39,8 +37,8 @@ export function generateCaveEntrances(tileTypes: Float32Array, tileBiomes: Float
          continue;
       }
 
-      const originTileX = Board.getTileX(originTile);
-      const originTileY = Board.getTileY(originTile);
+      const originTileX = getTileX(originTile);
+      const originTileY = getTileY(originTile);
       const originX = (originTileX + Math.random()) * Settings.TILE_SIZE;
       const originY = (originTileY + Math.random()) * Settings.TILE_SIZE;
 
@@ -60,7 +58,7 @@ export function generateCaveEntrances(tileTypes: Float32Array, tileBiomes: Float
 
             const tileX = Math.floor(x / Settings.TILE_SIZE);
             const tileY = Math.floor(y / Settings.TILE_SIZE);
-            const tileIndex = Board.getTileIndexIncludingEdges(tileX, tileY);
+            const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
             if (tileTypes[tileIndex] === TileType.darkRock) {
                tileTypes[tileIndex] = TileType.rock;
                tileIsWalls[tileIndex] = 0;
@@ -82,7 +80,7 @@ export function generateCaveEntrances(tileTypes: Float32Array, tileBiomes: Float
 
             const tileX = Math.floor(x / Settings.TILE_SIZE);
             const tileY = Math.floor(y / Settings.TILE_SIZE);
-            const tileIndex = Board.getTileIndexIncludingEdges(tileX, tileY);
+            const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
             tileTypes[tileIndex] = TileType.dropdown;
          }
       }
@@ -109,7 +107,7 @@ export function generateCaveEntrances(tileTypes: Float32Array, tileBiomes: Float
 
             const tileX = Math.floor(x / Settings.TILE_SIZE);
             const tileY = Math.floor(y / Settings.TILE_SIZE);
-            const tileIndex = Board.getTileIndexIncludingEdges(tileX, tileY);
+            const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
             tileTypes[tileIndex] = TileType.darkRock;
             tileIsWalls[tileIndex] = 1;
          }
@@ -141,13 +139,43 @@ export function generateCaveEntrances(tileTypes: Float32Array, tileBiomes: Float
    
                const tileX = Math.floor(x / Settings.TILE_SIZE);
                const tileY = Math.floor(y / Settings.TILE_SIZE);
-               const tileIndex = Board.getTileIndexIncludingEdges(tileX, tileY);
+               const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
                tileTypes[tileIndex] = TileType.darkRock;
                tileIsWalls[tileIndex] = 1;
             }
          }
       }
-      
+
+      // Mark cave tiles
+      const tiles = new Array<TileIndex>();
+      for (let xOffset = -3; xOffset <= 3; xOffset++) {
+         for (let yOffset = -3; yOffset <= 19; yOffset++) {
+            let x = originX;
+            let y = originY;
+            // X offset
+            x += xOffset * 0.5 * Settings.TILE_SIZE * Math.sin(caveDirection + Math.PI * 0.5);
+            y += xOffset * 0.5 * Settings.TILE_SIZE * Math.cos(caveDirection + Math.PI * 0.5);
+            // Y offset
+            x += yOffset * 0.5 * Settings.TILE_SIZE * Math.sin(caveDirection);
+            y += yOffset * 0.5 * Settings.TILE_SIZE * Math.cos(caveDirection);
+
+            const tileX = Math.floor(x / Settings.TILE_SIZE);
+            const tileY = Math.floor(y / Settings.TILE_SIZE);
+            const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
+            if (!tileIsWalls[tileIndex]) {
+               tiles.push(tileIndex);
+            }
+         }
+      }
+      for (const tileIndex of tiles) {
+         markTileAsUnspawnable(tileIndex);
+      }
+
+      // Spawn 1-2 guardians in the cave
+      for (let i = 0; i < randInt(1, 2); i++) {
+         for (let attempts = 0; attempts < 50; attempts++) {
+            
+         }
       }
    }
 }

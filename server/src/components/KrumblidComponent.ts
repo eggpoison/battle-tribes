@@ -1,4 +1,4 @@
-import { ServerComponentType, ServerComponentTypeString } from "battletribes-shared/components";
+import { ServerComponentType } from "battletribes-shared/components";
 import { ComponentArray } from "./ComponentArray";
 import { EntityID, EntityType } from "battletribes-shared/entities";
 import { Settings } from "battletribes-shared/settings";
@@ -7,7 +7,7 @@ import { randInt, TileIndex, UtilVars } from "battletribes-shared/utils";
 import { moveEntityToPosition, entityHasReachedPosition, stopEntity } from "../ai-shared";
 import { chooseEscapeEntity, runFromAttackingEntity } from "../ai/escape-ai";
 import { shouldWander, getWanderTargetTile, wander } from "../ai/wander-ai";
-import Board from "../Board";
+import { getTileX, getTileY } from "../Layer";
 import { AIHelperComponentArray } from "./AIHelperComponent";
 import { EscapeAIComponentArray, updateEscapeAIComponent } from "./EscapeAIComponent";
 import { FollowAIComponentArray, updateFollowAIComponent, entityWantsToFollow, startFollowingEntity } from "./FollowAIComponent";
@@ -15,6 +15,7 @@ import { PhysicsComponentArray } from "./PhysicsComponent";
 import { TransformComponentArray } from "./TransformComponent";
 import { WanderAIComponentArray } from "./WanderAIComponent";
 import { KrumblidVars } from "../entities/mobs/krumblid";
+import { entityExists, getEntityLayer, getEntityType } from "../world";
 
 const enum Vars {
    TURN_SPEED = UtilVars.PI * 2
@@ -52,7 +53,7 @@ function onTick(_krumblidComponent: KrumblidComponent, krumblid: EntityID): void
    updateFollowAIComponent(krumblid, aiHelperComponent.visibleEntities, 5);
 
    const followedEntity = followAIComponent.followTargetID;
-   if (Board.hasEntity(followedEntity)) {
+   if (entityExists(followedEntity)) {
       const followedEntityTransformComponent = TransformComponentArray.getComponent(followedEntity);
       // Continue following the entity
       moveEntityToPosition(krumblid, followedEntityTransformComponent.position.x, followedEntityTransformComponent.position.y, 200, Vars.TURN_SPEED);
@@ -60,7 +61,7 @@ function onTick(_krumblidComponent: KrumblidComponent, krumblid: EntityID): void
    } else if (entityWantsToFollow(followAIComponent)) {
       for (let i = 0; i < aiHelperComponent.visibleEntities.length; i++) {
          const entity = aiHelperComponent.visibleEntities[i];
-         if (Board.getEntityType(entity) === EntityType.player) {
+         if (getEntityType(entity) === EntityType.player) {
             // Follow the entity
             startFollowingEntity(krumblid, entity, 200, Vars.TURN_SPEED, randInt(KrumblidVars.MIN_FOLLOW_COOLDOWN, KrumblidVars.MAX_FOLLOW_COOLDOWN));
             return;
@@ -71,6 +72,7 @@ function onTick(_krumblidComponent: KrumblidComponent, krumblid: EntityID): void
    const physicsComponent = PhysicsComponentArray.getComponent(krumblid);
 
    // Wander AI
+   const layer = getEntityLayer(krumblid);
    const wanderAIComponent = WanderAIComponentArray.getComponent(krumblid);
    if (wanderAIComponent.targetPositionX !== -1) {
       if (entityHasReachedPosition(krumblid, wanderAIComponent.targetPositionX, wanderAIComponent.targetPositionY)) {
@@ -82,10 +84,10 @@ function onTick(_krumblidComponent: KrumblidComponent, krumblid: EntityID): void
       let targetTile: TileIndex;
       do {
          targetTile = getWanderTargetTile(krumblid, KrumblidVars.VISION_RANGE);
-      } while (++attempts <= 50 && (Board.tileIsWalls[targetTile] === 1 || Board.tileBiomes[targetTile] !== Biome.desert));
+      } while (++attempts <= 50 && (layer.tileIsWalls[targetTile] === 1 || layer.tileBiomes[targetTile] !== Biome.desert));
 
-      const tileX = Board.getTileX(targetTile);
-      const tileY = Board.getTileY(targetTile);
+      const tileX = getTileX(targetTile);
+      const tileY = getTileY(targetTile);
       const x = (tileX + Math.random()) * Settings.TILE_SIZE;
       const y = (tileY + Math.random()) * Settings.TILE_SIZE;
       wander(krumblid, x, y, 200, Vars.TURN_SPEED);

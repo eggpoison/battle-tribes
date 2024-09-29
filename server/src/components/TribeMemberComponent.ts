@@ -5,7 +5,7 @@ import { TRIBE_INFO_RECORD, TribeType } from "battletribes-shared/tribes";
 import { lerp, randInt } from "battletribes-shared/utils";
 import { ComponentArray } from "./ComponentArray";
 import { generateTitle, TITLE_REWARD_CHANCES } from "../tribesman-title-generation";
-import Board from "../Board";
+import Layer from "../Layer";
 import { Settings } from "battletribes-shared/settings";
 import { TribeComponentArray } from "./TribeComponent";
 import { PlayerComponentArray } from "./PlayerComponent";
@@ -22,7 +22,7 @@ import { ItemComponentArray } from "./ItemComponent";
 import { PhysicsComponentArray } from "./PhysicsComponent";
 import { TransformComponentArray } from "./TransformComponent";
 import { TribesmanAIComponentArray } from "./TribesmanAIComponent";
-import { createItem } from "../items";
+import { getEntityLayer, getEntityType, getGameTicks } from "../world";
 
 const enum Vars {
    VACUUM_STRENGTH = 25
@@ -46,7 +46,7 @@ export class TribeMemberComponent {
 
    // Used to give movement penalty while wearing the leaf suit.
    // @Cleanup: would be great to not store a variable to do this.
-   public lastPlantCollisionTicks = Board.ticks;
+   public lastPlantCollisionTicks = getGameTicks();
 
    constructor(params: TribeMemberComponentParams) {
       if (params.tribeType === TribeType.goblins) {
@@ -92,38 +92,7 @@ function onInitialise(config: ComponentConfig<ServerComponentType.health | Serve
       width: getHotbarSize(entityType as TribesmanEntityType),
       height: 1,
       options: { acceptsPickedUpItems: true, isDroppedOnDeath: true, isSentToEnemyPlayers: false },
-      // @Temporary
-      items: [
-         {
-            item: createItem(ItemType.woodenShield, 1),
-            itemSlot: 1
-         },
-         {
-            item: createItem(ItemType.wooden_sword, 1),
-            itemSlot: 2
-         },
-         {
-            item: createItem(ItemType.wooden_pickaxe, 1),
-            itemSlot: 3
-         },
-         {
-            item: createItem(ItemType.wooden_axe, 1),
-            itemSlot: 4
-         },
-         // {
-         //    item: createItem(ItemType.spear, 5),
-         //    itemSlot: 5
-         // },
-         // @Temporary
-         {
-            item: createItem(ItemType.wooden_bow, 1),
-            itemSlot: 6
-         },
-         {
-            item: createItem(ItemType.berry, 5),
-            itemSlot: 7
-         },
-      ]
+      items: []
    });
    
    // Offhand
@@ -259,7 +228,7 @@ export function awardTitle(tribesman: EntityID, title: TribesmanTitle): void {
    }
    
    // If they are a player, buffer the title for the player to accept. AI tribesmen accept all titles immediately
-   if (Board.getEntityType(tribesman) === EntityType.player) {
+   if (getEntityType(tribesman) === EntityType.player) {
       const playerComponent = PlayerComponentArray.getComponent(tribesman);
       if (playerComponent.titleOffer === null) {
          playerComponent.titleOffer = title;
@@ -398,6 +367,7 @@ const tickInventoryUseInfo = (tribeMember: EntityID, inventoryUseInfo: LimbInfo)
 
 function onTick(_tribeMemberComponent: TribeMemberComponent, tribeMember: EntityID): void {
    const transformComponent = TransformComponentArray.getComponent(tribeMember);
+   const layer = getEntityLayer(tribeMember);
    
    // Vacuum nearby items to the tribesman
    // @Incomplete: Don't vacuum items which the player doesn't have the inventory space for
@@ -408,9 +378,9 @@ function onTick(_tribeMemberComponent: TribeMemberComponent, tribeMember: Entity
    const maxChunkY = Math.min(Math.floor((transformComponent.position.y + VACUUM_RANGE) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1);
    for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
       for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
-         const chunk = Board.getChunk(chunkX, chunkY);
+         const chunk = layer.getChunk(chunkX, chunkY);
          for (const itemEntity of chunk.entities) {
-            if (Board.getEntityType(itemEntity) !== EntityType.itemEntity || !itemEntityCanBePickedUp(itemEntity, tribeMember)) {
+            if (getEntityType(itemEntity) !== EntityType.itemEntity || !itemEntityCanBePickedUp(itemEntity, tribeMember)) {
                continue;
             }
 
@@ -453,7 +423,7 @@ function onTick(_tribeMemberComponent: TribeMemberComponent, tribeMember: Entity
    tickInventoryUseInfo(tribeMember, useInfo);
 
    const tribeComponent = TribeComponentArray.getComponent(tribeMember);
-   if (tribeComponent.tribe.tribeType === TribeType.barbarians && Board.getEntityType(tribeMember) !== EntityType.tribeWorker) {
+   if (tribeComponent.tribe.tribeType === TribeType.barbarians && getEntityType(tribeMember) !== EntityType.tribeWorker) {
       const useInfo = inventoryUseComponent.getLimbInfo(InventoryName.offhand);
       tickInventoryUseInfo(tribeMember, useInfo);
    }

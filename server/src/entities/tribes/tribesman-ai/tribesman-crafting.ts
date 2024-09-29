@@ -1,9 +1,8 @@
 import { TribesmanAIType } from "battletribes-shared/components";
 import { EntityID, EntityType, LimbAction } from "battletribes-shared/entities";
 import { Settings, PathfindingSettings } from "battletribes-shared/settings";
-import Board from "../../../Board";
 import Tribe from "../../../Tribe";
-import { moveEntityToEntity, moveEntityToPosition, stopEntity, turnEntityToEntity } from "../../../ai-shared";
+import { stopEntity, turnEntityToEntity } from "../../../ai-shared";
 import { recipeCraftingStationIsAvailable, InventoryComponentArray, craftRecipe } from "../../../components/InventoryComponent";
 import { InventoryUseComponentArray, setLimbActions } from "../../../components/InventoryUseComponent";
 import { PhysicsComponentArray } from "../../../components/PhysicsComponent";
@@ -15,9 +14,10 @@ import { pathfindToPosition, clearTribesmanPath } from "./tribesman-ai-utils";
 import { CraftingStation, CraftingRecipe, CRAFTING_RECIPES } from "battletribes-shared/items/crafting-recipes";
 import { InventoryName } from "battletribes-shared/items/items";
 import { TransformComponentArray } from "../../../components/TransformComponent";
+import { getEntityType, getGameTicks } from "../../../world";
 
 const buildingMatchesCraftingStation = (building: EntityID, craftingStation: CraftingStation): boolean => {
-   return Board.getEntityType(building) === EntityType.workbench && craftingStation === CraftingStation.workbench;
+   return getEntityType(building) === EntityType.workbench && craftingStation === CraftingStation.workbench;
 }
 
 // @Cleanup: move to different file
@@ -104,7 +104,7 @@ export function goCraftItem(tribesman: EntityID, recipe: CraftingRecipe, tribe: 
       for (let i = 0; i < inventoryUseComponent.limbInfos.length; i++) {
          const limbInfo = inventoryUseComponent.limbInfos[i];
          if (limbInfo.action !== LimbAction.craft) {
-            limbInfo.lastCraftTicks = Board.ticks;
+            limbInfo.lastCraftTicks = getGameTicks();
          }
          limbInfo.action = LimbAction.craft;
       }

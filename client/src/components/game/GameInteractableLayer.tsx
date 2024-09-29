@@ -33,6 +33,7 @@ import { TransformComponentArray } from "../../entity-components/TransformCompon
 import { AttackVars, copyCurrentLimbState, copyLimbState, SHIELD_BASH_WIND_UP_LIMB_STATE, SHIELD_BLOCKING_LIMB_STATE, TRIBESMAN_RESTING_LIMB_STATE } from "../../../../shared/src/attack-patterns";
 import { PhysicsComponentArray } from "../../entity-components/PhysicsComponent";
 import { PlayerComponentArray } from "../../entity-components/PlayerComponent";
+import { getEntityLayer } from "../../world";
 
 export interface ItemRestTime {
    remainingTimeTicks: number;
@@ -1002,8 +1003,9 @@ const onItemRightClickDown = (itemType: ItemType, itemInventoryName: InventoryNa
          break;
       }
       case "placeable": {
+         const layer = getEntityLayer(Player.instance!.id);
          const structureType = ITEM_INFO_RECORD[itemType as PlaceableItemType].entityType;
-         const placeInfo = calculateStructurePlaceInfo(transformComponent.position, transformComponent.rotation, structureType, Board.getWorldInfo());
+         const placeInfo = calculateStructurePlaceInfo(transformComponent.position, transformComponent.rotation, structureType, layer.getWorldInfo());
          
          if (placeInfo.isValid) {
             const limb = inventoryUseComponent.getLimbInfoByInventoryName(itemInventoryName);
@@ -1161,9 +1163,10 @@ const tickItem = (itemType: ItemType): void => {
          // Placeable item ghost
          // 
 
+         const layer = getEntityLayer(Player.instance!.id);
          const playerTransformComponent = Player.instance!.getServerComponent(ServerComponentType.transform);
          const structureType = ITEM_INFO_RECORD[itemType as PlaceableItemType].entityType;
-         const placeInfo = calculateStructurePlaceInfo(Camera.position, playerTransformComponent.rotation, structureType, Board.getWorldInfo());
+         const placeInfo = calculateStructurePlaceInfo(Camera.position, playerTransformComponent.rotation, structureType, layer.getWorldInfo());
          
          const ghostInfo: GhostInfo = {
             position: placeInfo.position,

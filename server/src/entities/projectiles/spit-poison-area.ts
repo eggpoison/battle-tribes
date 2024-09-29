@@ -8,9 +8,9 @@ import { StatusEffectComponentArray, applyStatusEffect } from "../../components/
 import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
 import { ServerComponentType } from "battletribes-shared/components";
 import { ComponentConfig } from "../../components";
-import Board from "../../Board";
 import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
 import CircularBox from "battletribes-shared/boxes/CircularBox";
+import { getEntityType } from "../../world";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.spitPoisonArea;
@@ -33,7 +33,7 @@ export function createSpitPoisonAreaConfig(): ComponentConfig<ComponentTypes> {
 }
 
 export function onSpitPoisonCollision(spit: EntityID, collidingEntity: EntityID, collisionPoint: Point): void {
-   const collidingEntityType = Board.getEntityType(collidingEntity);
+   const collidingEntityType = getEntityType(collidingEntity);
    if (collidingEntityType === EntityType.slime || collidingEntityType === EntityType.slimewisp || !HealthComponentArray.hasComponent(collidingEntity)) {
       return;
    }

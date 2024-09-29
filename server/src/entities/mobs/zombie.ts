@@ -5,7 +5,6 @@ import { Point, randInt } from "battletribes-shared/utils";
 import { HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
 import { ZombieComponentArray, zombieShouldAttackEntity } from "../../components/ZombieComponent";
 import { InventoryCreationInfo, pickupItemEntity } from "../../components/InventoryComponent";
-import Board from "../../Board";
 import { wasTribeMemberKill } from "../tribes/tribe-member";
 import { PhysicsComponentArray, applyKnockback } from "../../components/PhysicsComponent";
 import { createItemsOverEntity } from "../../entity-shared";
@@ -17,6 +16,7 @@ import { ComponentConfig } from "../../components";
 import { TransformComponentArray } from "../../components/TransformComponent";
 import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
 import CircularBox from "battletribes-shared/boxes/CircularBox";
+import { getEntityType } from "../../world";
 
 export const enum ZombieVars {
    CHASE_PURSUE_TIME_TICKS = 5 * Settings.TPS,
@@ -104,7 +104,7 @@ export function createZombieConfig(): ComponentConfig<ComponentTypes> {
 
 export function onZombieCollision(zombie: EntityID, collidingEntity: EntityID, collisionPoint: Point): void {
    // Pick up item entities
-   if (Board.getEntityType(collidingEntity) === EntityType.itemEntity) {
+   if (getEntityType(collidingEntity) === EntityType.itemEntity) {
       pickupItemEntity(zombie, collidingEntity);
       return;
    }
@@ -137,7 +137,7 @@ export function onZombieCollision(zombie: EntityID, collidingEntity: EntityID, c
 
 export function onZombieHurt(zombie: EntityID, attackingEntity: EntityID): void {
    // @Cleanup: too many ifs. generalise
-   const attackingEntityType = Board.getEntityType(attackingEntity);
+   const attackingEntityType = getEntityType(attackingEntity);
    if (HealthComponentArray.hasComponent(attackingEntity) && attackingEntityType !== EntityType.iceSpikes && attackingEntityType !== EntityType.cactus && attackingEntityType !== EntityType.floorSpikes && attackingEntityType !== EntityType.wallSpikes && attackingEntityType !== EntityType.floorPunjiSticks && attackingEntityType !== EntityType.wallPunjiSticks) {
       const zombieComponent = ZombieComponentArray.getComponent(zombie);
       zombieComponent.attackingEntityIDs[attackingEntity] = ZombieVars.CHASE_PURSUE_TIME_TICKS;

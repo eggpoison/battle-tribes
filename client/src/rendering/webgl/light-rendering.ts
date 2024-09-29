@@ -164,6 +164,7 @@ export function createNightShaders(): void {
    vao = gl.createVertexArray()!;
    gl.bindVertexArray(vao);
 
+   // @Speed: Garbage collection
    const vertices = [
       -1, -1,
       1, 1,

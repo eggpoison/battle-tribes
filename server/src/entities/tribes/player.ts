@@ -5,19 +5,20 @@ import { TribeType } from "battletribes-shared/tribes";
 import { Point } from "battletribes-shared/utils";
 import { onTribeMemberHurt } from "./tribe-member";
 import { consumeItemFromSlot, consumeItemType, countItemType, getInventory, pickupItemEntity, InventoryComponentArray } from "../../components/InventoryComponent";
-import Board from "../../Board";
-import { InventoryUseComponentArray, setLimbActions } from "../../components/InventoryUseComponent";
+import Layer from "../../Layer";
+import { InventoryUseComponentArray } from "../../components/InventoryUseComponent";
 import { TribeComponentArray } from "../../components/TribeComponent";
 import { TunnelComponentArray, updateTunnelDoorBitset } from "../../components/TunnelComponent";
 import { PlanterBoxComponentArray, fertilisePlanterBox, placePlantInPlanterBox } from "../../components/PlanterBoxComponent";
 import { registerPlayerDroppedItemPickup } from "../../server/player-clients";
 import { HutComponentArray } from "../../components/HutComponent";
 import { SpikesComponentArray } from "../../components/SpikesComponent";
-import { InventoryName, ITEM_INFO_RECORD, ConsumableItemInfo, ConsumableItemCategory, BowItemInfo, ItemType } from "battletribes-shared/items/items";
+import { InventoryName, ItemType } from "battletribes-shared/items/items";
 import { ComponentConfig } from "../../components";
 import { TransformComponentArray } from "../../components/TransformComponent";
 import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
 import CircularBox from "battletribes-shared/boxes/CircularBox";
+import { entityExists, getEntityType, getGameTicks } from "../../world";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics
@@ -77,7 +78,7 @@ export function createPlayerConfig(): ComponentConfig<ComponentTypes> {
 }
 
 export function onPlayerCollision(player: EntityID, collidingEntity: EntityID): void {
-   if (Board.getEntityType(collidingEntity) === EntityType.itemEntity) {
+   if (getEntityType(collidingEntity) === EntityType.itemEntity) {
       const wasPickedUp = pickupItemEntity(player, collidingEntity);
       if (wasPickedUp) {
          registerPlayerDroppedItemPickup(player);
@@ -92,21 +93,9 @@ export function onPlayerHurt(player: EntityID, attackingEntity: EntityID): void 
 // @Cleanup: ton of copy and paste between these functions
 
 export function startChargingBow(player: EntityID, inventoryName: InventoryName): void {
-   const inventoryComponent = InventoryComponentArray.getComponent(player);
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(player);
-
-   const useInfo = inventoryUseComponent.getLimbInfo(inventoryName);
-
-   const inventory = getInventory(inventoryComponent, inventoryName);
-   const bow = inventory.itemSlots[useInfo.selectedItemSlot];
-
-   // Reset the cooldown so the bow doesn't fire immediately
-   if (typeof bow !== "undefined") {
-      const itemInfo = ITEM_INFO_RECORD[bow.type] as BowItemInfo;
-      useInfo.lastBowChargeTicks = Board.ticks;
-   }
-   
-   useInfo.action = LimbAction.chargeBow;
+   const limb = inventoryUseComponent.getLimbInfo(inventoryName);
+   limb.action = LimbAction.chargeBow;
 }
 
 export function startChargingSpear(player: EntityID, inventoryName: InventoryName): void {
@@ -138,7 +127,7 @@ export function startChargingBattleaxe(player: EntityID, inventoryName: Inventor
 
    // Reset the cooldown so the battleaxe doesn't fire immediately
    if (typeof battleaxe !== "undefined") {
-      useInfo.lastBattleaxeChargeTicks = Board.ticks;
+      useInfo.lastBattleaxeChargeTicks = getGameTicks();
    }
    
    useInfo.action = LimbAction.chargeBattleaxe;
@@ -207,7 +196,7 @@ const modifySpikes = (player: EntityID, spikes: EntityID): void => {
    const spikesComponent = SpikesComponentArray.getComponent(spikes);
    
    // Can only cover non-covered floor spikes
-   const entityType = Board.getEntityType(spikes);
+   const entityType = getEntityType(spikes);
    if (spikesComponent.isCovered || entityType === EntityType.wallSpikes || entityType === EntityType.wallPunjiSticks) {
       return;
    }
@@ -225,7 +214,7 @@ const modifySpikes = (player: EntityID, spikes: EntityID): void => {
 const modifyPlanterBox = (player: EntityID, planterBox: EntityID, plantType: PlanterBoxPlant): void => {
    // Don't place plant if there's already a plant
    const planterBoxComponent = PlanterBoxComponentArray.getComponent(planterBox);
-   if (Board.hasEntity(planterBoxComponent.plantEntity)) {
+   if (entityExists(planterBoxComponent.plantEntity)) {
       return;
    }
    
@@ -243,7 +232,7 @@ const modifyPlanterBox = (player: EntityID, planterBox: EntityID, plantType: Pla
 }
 
 export function modifyBuilding(player: EntityID, structure: EntityID, data: number): void {
-   const structureEntityType = Board.getEntityType(structure)!;
+   const structureEntityType = getEntityType(structure)!;
    switch (structureEntityType) {
       case EntityType.tunnel: {
          modifyTunnel(player, structure);

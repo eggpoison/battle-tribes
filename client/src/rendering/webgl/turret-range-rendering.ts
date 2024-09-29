@@ -1,7 +1,6 @@
 import { EntityType } from "battletribes-shared/entities";
 import Player from "../../entities/Player";
 import { createWebGLProgram, gl } from "../../webgl";
-import Board from "../../Board";
 import Entity from "../../Entity";
 import { getHoveredEntityID } from "../../entity-selection";
 import { calculateStructurePlaceInfo } from "battletribes-shared/structures";
@@ -10,6 +9,7 @@ import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 import { ItemType, ITEM_INFO_RECORD, PlaceableItemType } from "battletribes-shared/items/items";
 import { ServerComponentType } from "battletribes-shared/components";
 import { getPlayerSelectedItem } from "../../components/game/GameInteractableLayer";
+import { getEntityByID, getEntityLayer } from "../../world";
 
 const CIRCLE_DETAIL = 300;
 
@@ -145,8 +145,9 @@ const getRenderingInfo = (): TurretRangeRenderingInfo | null => {
    if (playerSelectedItem !== null && (playerSelectedItem.type === ItemType.ballista || playerSelectedItem.type === ItemType.sling_turret)) {
       const playerTransformComponent = Player.instance!.getServerComponent(ServerComponentType.transform);
 
+      const layer = getEntityLayer(Player.instance!.id);
       const structureType = ITEM_INFO_RECORD[playerSelectedItem.type as PlaceableItemType].entityType;
-      const placeInfo = calculateStructurePlaceInfo(Camera.position, playerTransformComponent.rotation, structureType, Board.getWorldInfo());
+      const placeInfo = calculateStructurePlaceInfo(Camera.position, playerTransformComponent.rotation, structureType, layer.getWorldInfo());
 
       return {
          x: placeInfo.position.x,
@@ -159,7 +160,7 @@ const getRenderingInfo = (): TurretRangeRenderingInfo | null => {
 
    const hoveredEntityID = getHoveredEntityID();
    if (hoveredEntityID !== -1) {
-      const hoveredEntity = Board.entityRecord[hoveredEntityID];
+      const hoveredEntity = getEntityByID(hoveredEntityID);
       // @Temporary
       if (typeof hoveredEntity === "undefined") {
          console.warn("no hovered entity when id is not -1");

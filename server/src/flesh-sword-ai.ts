@@ -1,11 +1,12 @@
 import { EntityID, EntityType } from "battletribes-shared/entities";
 import { Settings } from "battletribes-shared/settings";
 import { Point, lerp, randItem, angle, TileIndex } from "battletribes-shared/utils";
-import Board from "./Board";
+import Layer, { getTileIndexIncludingEdges, getTileX, getTileY } from "./Layer";
 import { PhysicsComponentArray } from "./components/PhysicsComponent";
 import { Biome } from "battletribes-shared/tiles";
 import { TransformComponentArray } from "./components/TransformComponent";
 import { entityHasReachedPosition } from "./ai-shared";
+import { getEntityLayer, getEntityType } from "./world";
 
 const FLESH_SWORD_VISION_RANGE = 250;
 
@@ -16,6 +17,7 @@ const FLESH_SWORD_WANDER_RATE = 0.3;
 
 const getVisibleEntities = (itemEntity: EntityID): ReadonlyArray<EntityID> => {
    const transformComponent = TransformComponentArray.getComponent(itemEntity);
+   const layer = getEntityLayer(itemEntity);
    
    const minChunkX = Math.max(Math.min(Math.floor((transformComponent.position.x - FLESH_SWORD_VISION_RANGE) / Settings.TILE_SIZE / Settings.CHUNK_SIZE), Settings.BOARD_SIZE - 1), 0);
    const maxChunkX = Math.max(Math.min(Math.floor((transformComponent.position.x + FLESH_SWORD_VISION_RANGE) / Settings.TILE_SIZE / Settings.CHUNK_SIZE), Settings.BOARD_SIZE - 1), 0);
@@ -25,7 +27,7 @@ const getVisibleEntities = (itemEntity: EntityID): ReadonlyArray<EntityID> => {
    const entitiesInVisionRange = new Array<EntityID>();
    for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
       for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
-         const chunk = Board.getChunk(chunkX, chunkY);
+         const chunk = layer.getChunk(chunkX, chunkY);
          for (const entity of chunk.entities) {
             // Don't add existing entities
             if (entitiesInVisionRange.includes(entity)) continue;
@@ -50,7 +52,7 @@ const getRunTarget = (itemEntity: EntityID, visibleEntities: ReadonlyArray<Entit
    let runTarget: EntityID | null = null;
 
    for (const entity of visibleEntities) {
-      const entityType = Board.getEntityType(entity);
+      const entityType = getEntityType(entity);
       if (entityType === EntityType.player || entityType === EntityType.tribeWorker || entityType === EntityType.tribeWarrior) {
          const entityTransformComponent = TransformComponentArray.getComponent(itemEntity);
 
@@ -67,6 +69,7 @@ const getRunTarget = (itemEntity: EntityID, visibleEntities: ReadonlyArray<Entit
 
 const getTileWanderTargets = (itemEntity: EntityID): Array<TileIndex> => {
    const transformComponent = TransformComponentArray.getComponent(itemEntity);
+   const layer = getEntityLayer(itemEntity);
 
    const minTileX = Math.max(Math.min(Math.floor((transformComponent.position.x - FLESH_SWORD_VISION_RANGE) / Settings.TILE_SIZE), Settings.BOARD_DIMENSIONS - 1), 0);
    const maxTileX = Math.max(Math.min(Math.floor((transformComponent.position.x + FLESH_SWORD_VISION_RANGE) / Settings.TILE_SIZE), Settings.BOARD_DIMENSIONS - 1), 0);
@@ -76,10 +79,10 @@ const getTileWanderTargets = (itemEntity: EntityID): Array<TileIndex> => {
    const wanderTargets = new Array<TileIndex>();
    for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
       for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
-         const tileIndex = Board.getTileIndexIncludingEdges(tileX, tileY);
+         const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
          
          // Don't try to wander to wall tiles
-         if (Board.tileIsWalls[tileIndex]) continue;
+         if (layer.tileIsWalls[tileIndex]) continue;
          
          const position = new Point((tileX + Math.random()) * Settings.TILE_SIZE, (tileY + Math.random()) * Settings.TILE_SIZE);
          const distance = transformComponent.position.calculateDistanceBetween(position);
@@ -151,10 +154,12 @@ export function runFleshSwordAI(itemEntity: EntityID) {
    
             // If any of the tiles are in a swamp, move to them
             // Otherwise move to any random tile
+
+            const layer = getEntityLayer(itemEntity);
             
             let foundSwampTile = false;
             for (const tileIndex of tileWanderTargets) {
-               if (Board.tileBiomes[tileIndex] === Biome.swamp) {
+               if (layer.tileBiomes[tileIndex] === Biome.swamp) {
                   foundSwampTile = true;
                   break;
                }
@@ -164,7 +169,7 @@ export function runFleshSwordAI(itemEntity: EntityID) {
             if (foundSwampTile) {
                const tiles = new Array<TileIndex>();
                for (const tileIndex of tileWanderTargets) {
-                  if (Board.tileBiomes[tileIndex] === Biome.swamp) {
+                  if (layer.tileBiomes[tileIndex] === Biome.swamp) {
                      tiles.push(tileIndex);
                   }
                }
@@ -173,8 +178,8 @@ export function runFleshSwordAI(itemEntity: EntityID) {
                targetTile = randItem(tileWanderTargets);
             }
    
-            const x = (Board.getTileX(targetTile) + Math.random()) * Settings.TILE_SIZE;
-            const y = (Board.getTileY(targetTile) + Math.random()) * Settings.TILE_SIZE;
+            const x = (getTileX(targetTile) + Math.random()) * Settings.TILE_SIZE;
+            const y = (getTileY(targetTile) + Math.random()) * Settings.TILE_SIZE;
             info.tileTargetPosition = new Point(x, y);
             moveSpeed = FLESH_SWORD_WANDER_MOVE_SPEED;
             wiggleSpeed = 1;

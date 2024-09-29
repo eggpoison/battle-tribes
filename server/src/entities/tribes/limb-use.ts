@@ -6,7 +6,7 @@ import { Settings } from "battletribes-shared/settings";
 import { StatusEffect } from "battletribes-shared/status-effects";
 import { TribesmanTitle } from "battletribes-shared/titles";
 import { Point } from "battletribes-shared/utils";
-import Board from "../../Board";
+import Layer from "../../Layer";
 import { damageEntity, HealthComponentArray } from "../../components/HealthComponent";
 import { InventoryComponentArray, getInventory } from "../../components/InventoryComponent";
 import { getHeldItem, InventoryUseComponentArray, LimbInfo } from "../../components/InventoryUseComponent";
@@ -24,13 +24,14 @@ import { createItemEntityConfig } from "../item-entity";
 import { dropBerryOverEntity, BERRY_BUSH_RADIUS } from "../resources/berry-bush";
 import { getEntityRelationship, EntityRelationship } from "../../components/TribeComponent";
 import { AttackVars, copyLimbState, SHIELD_BASH_WIND_UP_LIMB_STATE, SHIELD_BLOCKING_LIMB_STATE, TRIBESMAN_RESTING_LIMB_STATE } from "../../../../shared/src/attack-patterns";
+import { getEntityLayer, getEntityType } from "../../world";
 
 const enum Vars {
    DEFAULT_ATTACK_KNOCKBACK = 125
 }
 
 const isBerryBushWithBerries = (entity: EntityID): boolean => {
-   switch (Board.getEntityType(entity)) {
+   switch (getEntityType(entity)) {
       case EntityType.berryBush: {
          const berryBushComponent = BerryBushComponentArray.getComponent(entity);
          return berryBushComponent.numBerries > 0;
@@ -46,7 +47,7 @@ const isBerryBushWithBerries = (entity: EntityID): boolean => {
 }
 
 const isBerryBush = (entity: EntityID): boolean => {
-   switch (Board.getEntityType(entity)) {
+   switch (getEntityType(entity)) {
       case EntityType.berryBush: {
          return true;
       }
@@ -97,7 +98,7 @@ const gatherPlant = (plant: EntityID, attacker: EntityID, gloves: Item | null): 
    } else {
       // @Hack @Cleanup: Do from hitboxes
       let plantRadius: number;
-      switch (Board.getEntityType(plant)) {
+      switch (getEntityType(plant)) {
          case EntityType.tree: {
             const treeComponent = TreeComponentArray.getComponent(plant);
             plantRadius = TREE_RADII[treeComponent.treeSize];
@@ -126,7 +127,7 @@ const gatherPlant = (plant: EntityID, attacker: EntityID, gloves: Item | null): 
       config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
       config[ServerComponentType.item].itemType = ItemType.leaf;
       config[ServerComponentType.item].amount = 1;
-      createEntityFromConfig(config);
+      createEntityFromConfig(config, getEntityLayer(plant));
    }
 
    // @Hack
@@ -168,7 +169,7 @@ export function attemptAttack(attacker: EntityID, victim: EntityID, limbInfo: Li
       item = null;
    }
 
-   const targetEntityType = Board.getEntityType(victim)!;
+   const targetEntityType = getEntityType(victim)!;
 
    const attackEffectiveness = calculateAttackEffectiveness(item, targetEntityType);
 
@@ -297,7 +298,7 @@ export function calculateAttackTarget(tribeMember: EntityID, targetEntities: Rea
       }
 
       // @Temporary
-      const targetEntityType = Board.getEntityType(targetEntity)!;
+      const targetEntityType = getEntityType(targetEntity)!;
       if (targetEntityType === EntityType.plant) {
          const plantComponent = PlantComponentArray.getComponent(targetEntity);
          if (!plantIsFullyGrown(plantComponent)) {
@@ -373,7 +374,7 @@ export function calculateBlueprintWorkTarget(tribeMember: EntityID, targetEntiti
    let minDistance = Number.MAX_SAFE_INTEGER;
    for (const targetEntity of targetEntities) {
       // Don't attack entities without health components
-      if (Board.getEntityType(targetEntity) !== EntityType.blueprintEntity) {
+      if (getEntityType(targetEntity) !== EntityType.blueprintEntity) {
          continue;
       }
 

@@ -3,8 +3,8 @@ import { EntityDebugData } from "battletribes-shared/client-server-types";
 import { Point } from "battletribes-shared/utils";
 import { createWebGLProgram, generateLine, generateThickCircleWireframeVertices, gl } from "../../webgl";
 import Entity from "../../Entity";
-import Board from "../../Board";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
+import { getEntityByID } from "../../world";
 
 let lineProgram: WebGLProgram;
 
@@ -107,7 +107,7 @@ const addLineVertices = (vertices: Array<number>, debugData: EntityDebugData, en
 export function renderLineDebugData(debugData: EntityDebugData): void {
    gl.useProgram(lineProgram);
 
-   const gameObject = Board.entityRecord[debugData.entityID];
+   const gameObject = getEntityByID(debugData.entityID);
    if (typeof gameObject === "undefined") {
       throw new Error("Couldn't find game object.");
    }

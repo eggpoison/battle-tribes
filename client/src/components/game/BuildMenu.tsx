@@ -2,7 +2,6 @@ import { BlueprintType, BuildingMaterial, ServerComponentType } from "battletrib
 import { EntityType, EntityTypeString } from "battletribes-shared/entities";
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { deselectSelectedEntity, getSelectedEntityID } from "../../entity-selection";
-import Board from "../../Board";
 import Camera from "../../Camera";
 import Client from "../../client/Client";
 import { GhostInfo, GhostType, PARTIAL_OPACITY, setGhostInfo } from "../../rendering/webgl/entity-ghost-rendering";
@@ -16,6 +15,7 @@ import { InventoryName, ITEM_TYPE_RECORD, ItemType } from "battletribes-shared/i
 import { addMenuCloseFunction } from "../../menus";
 import { InventoryComponentArray } from "../../entity-components/InventoryComponent";
 import { getPlayerSelectedItem } from "./GameInteractableLayer";
+import { getEntityByID } from "../../world";
 
 /*
 // @Incomplete
@@ -434,7 +434,7 @@ const BuildMenu = () => {
 
    useEffect(() => {
       // Clear blueprint ghost type when the build menu is closed
-      const building = Board.entityRecord[buildingID];
+      const building = getEntityByID(buildingID);
       if (typeof building === "undefined") {
          setGhostInfo(null);
          return;
@@ -446,14 +446,14 @@ const BuildMenu = () => {
          deselectSelectedEntity();
       });
       
-      BuildMenu_isOpen = () => typeof Board.entityRecord[buildingID] !== "undefined";
+      BuildMenu_isOpen = () => typeof getEntityByID(buildingID) !== "undefined";
 
       BuildMenu_hide = (): void => {
          setBuildingID(0);
       }
 
       BuildMenu_updateBuilding = (id?: number): void => {
-         const building = Board.entityRecord[typeof id !== "undefined" ? id : buildingID];
+         const building = getEntityByID(typeof id !== "undefined" ? id : buildingID);
          if (typeof building === "undefined") {
             return;
          }
@@ -467,7 +467,7 @@ const BuildMenu = () => {
       }
 
       BuildMenu_refreshBuildingID = (): void => {
-         if (buildingID !== 0 && typeof Board.entityRecord[buildingID] === "undefined") {
+         if (buildingID !== 0 && typeof getEntityByID(buildingID) === "undefined") {
             setBuildingID(0);
          }
 
@@ -485,7 +485,7 @@ const BuildMenu = () => {
       
       const option = options[hoveredOptionIdx];
 
-      const building = Board.entityRecord[buildingID];
+      const building = getEntityByID(buildingID);
       if (typeof building === "undefined") {
          setGhostInfo(null);
          return;
@@ -574,7 +574,7 @@ const BuildMenu = () => {
       }
    }, [hoveredOptionIdx]);
 
-   const building = Board.entityRecord[buildingID];
+   const building = getEntityByID(buildingID);
    if (typeof building === "undefined") {
       return null;
    }

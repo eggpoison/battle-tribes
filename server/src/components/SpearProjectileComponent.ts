@@ -2,11 +2,12 @@ import { ServerComponentType } from "battletribes-shared/components";
 import { ComponentArray } from "./ComponentArray";
 import { EntityID } from "battletribes-shared/entities";
 import { ItemType } from "battletribes-shared/items/items";
-import Board from "../Board";
+import Layer from "../Layer";
 import { createItemEntityConfig } from "../entities/item-entity";
 import { createEntityFromConfig } from "../Entity";
 import { PhysicsComponentArray } from "./PhysicsComponent";
 import { TransformComponentArray } from "./TransformComponent";
+import { destroyEntity, getEntityLayer } from "../world";
 
 const enum Vars {
    DROP_VELOCITY = 300
@@ -41,9 +42,9 @@ function onTick(_spearProjectileComponent: SpearProjectileComponent, spear: Enti
       config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
       config[ServerComponentType.item].itemType = ItemType.spear;
       config[ServerComponentType.item].amount = 1;
-      createEntityFromConfig(config);
+      createEntityFromConfig(config, getEntityLayer(spear));
       
-      Board.destroyEntity(spear);
+      destroyEntity(spear);
    }
 }
 

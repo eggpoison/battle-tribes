@@ -1,11 +1,12 @@
 import Entity from "../Entity";
-import { Matrix3x3, matrixMultiplyInPlace, overrideWithIdentityMatrix, overrideWithRotationMatrix } from "./matrices";
+import { Matrix3x3, matrixMultiplyInPlace, overrideWithRotationMatrix } from "./matrices";
 import { ServerComponentType } from "battletribes-shared/components";
 import { Settings } from "battletribes-shared/settings";
-import { RenderThing, thingIsRenderPart } from "../render-parts/render-parts";
+import { RenderThing } from "../render-parts/render-parts";
 import Board from "../Board";
 import { getEntityRenderLayer } from "../render-layers";
-import { renderLayerIsChunkRendered, refreshChunkedEntityRenderingBuffers, updateChunkRenderedEntity } from "./webgl/chunked-entity-rendering";
+import { renderLayerIsChunkRendered, updateChunkRenderedEntity } from "./webgl/chunked-entity-rendering";
+import { getEntityByID } from "../world";
 
 let dirtyEntities = new Array<Entity>();
 
@@ -196,7 +197,7 @@ export function updateRenderPartMatrices(frameProgress: number): void {
    for (let i = 0; i < dirtyEntities.length; i++) {
       const entity = dirtyEntities[i];
       // @Temporary?
-      if (typeof Board.entityRecord[entity.id] === "undefined") {
+      if (typeof getEntityByID(entity.id) === "undefined") {
          throw new Error(entity.id.toString());
       }
       

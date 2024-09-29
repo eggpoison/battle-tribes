@@ -7,7 +7,7 @@ import { HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, dam
 import { SlimeComponent, SlimeComponentArray } from "../../components/SlimeComponent";
 import { getEntitiesInRange } from "../../ai-shared";
 import { createItemsOverEntity } from "../../entity-shared";
-import Board from "../../Board";
+import Layer from "../../Layer";
 import { wasTribeMemberKill } from "../tribes/tribe-member";
 import { ServerComponentType } from "battletribes-shared/components";
 import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
@@ -18,6 +18,7 @@ import { TransformComponentArray } from "../../components/TransformComponent";
 import { createEntityFromConfig } from "../../Entity";
 import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
 import CircularBox from "battletribes-shared/boxes/CircularBox";
+import { destroyEntity, entityIsFlaggedForDestruction, getEntityLayer, getEntityType, getGameTicks } from "../../world";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics
@@ -99,8 +100,8 @@ export function createSlimeConfig(): ComponentConfig<ComponentTypes> {
 }
 
 const merge = (slime1: EntityID, slime2: EntityID): void => {
-   // Prevents both slimes fromj calling this function
-   if (Board.entityIsFlaggedForDestruction(slime2)) return;
+   // Prevents both slimes from calling this function
+   if (entityIsFlaggedForDestruction(slime2)) return;
 
    const slimeComponent1 = SlimeComponentArray.getComponent(slime1);
    const slimeComponent2 = SlimeComponentArray.getComponent(slime2);
@@ -131,9 +132,9 @@ const merge = (slime1: EntityID, slime2: EntityID): void => {
       config[ServerComponentType.transform].position.y = (slime1TransformComponent.position.y + slime2TransformComponent.position.y) / 2;
       config[ServerComponentType.slime].size = slimeComponent1.size + 1;
       config[ServerComponentType.slime].orbSizes = orbSizes;
-      createEntityFromConfig(config);
+      createEntityFromConfig(config, getEntityLayer(slime1));
       
-      Board.destroyEntity(slime1);
+      destroyEntity(slime1);
    } else {
       // @Incomplete: This allows small slimes to eat larger slimes. Very bad.
       
@@ -142,10 +143,10 @@ const merge = (slime1: EntityID, slime2: EntityID): void => {
 
       slimeComponent1.orbSizes.push(slimeComponent2.size);
 
-      slimeComponent1.lastMergeTicks = Board.ticks;
+      slimeComponent1.lastMergeTicks = getGameTicks();
    }
    
-   Board.destroyEntity(slime2);
+   destroyEntity(slime2);
 }
 
 /**
@@ -157,12 +158,12 @@ const wantsToMerge = (slimeComponent1: SlimeComponent, slime2: EntityID): boolea
    // Don't try to merge with larger slimes
    if (slimeComponent1.size > slimeComponent2.size) return false;
 
-   const mergeWant = Board.ticks - slimeComponent1.lastMergeTicks;
+   const mergeWant = getGameTicks() - slimeComponent1.lastMergeTicks;
    return mergeWant >= SLIME_MAX_MERGE_WANT[slimeComponent1.size];
 }
 
 export function onSlimeCollision(slime: EntityID, collidingEntity: EntityID, collisionPoint: Point): void {
-   const collidingEntityType = Board.getEntityType(collidingEntity);
+   const collidingEntityType = getEntityType(collidingEntity);
    
    // Merge with slimes
    if (collidingEntityType === EntityType.slime) {
@@ -225,7 +226,8 @@ const propagateAnger = (slime: EntityID, angeredEntity: EntityID, amount: number
 
    const visionRange = SLIME_VISION_RANGES[slimeComponent.size];
    // @Speed
-   const visibleEntities = getEntitiesInRange(transformComponent.position.x, transformComponent.position.y, visionRange);
+   const layer = getEntityLayer(slime);
+   const visibleEntities = getEntitiesInRange(layer, transformComponent.position.x, transformComponent.position.y, visionRange);
 
    // @Cleanup: don't do here
    let idx = visibleEntities.indexOf(slime);
@@ -236,7 +238,7 @@ const propagateAnger = (slime: EntityID, angeredEntity: EntityID, amount: number
    
    // Propagate the anger
    for (const entity of visibleEntities) {
-      if (Board.getEntityType(entity) === EntityType.slime && !propagationInfo.propagatedEntityIDs.has(entity)) {
+      if (getEntityType(entity) === EntityType.slime && !propagationInfo.propagatedEntityIDs.has(entity)) {
          const entityTransformComponent = TransformComponentArray.getComponent(entity);
          
          const distance = transformComponent.position.calculateDistanceBetween(entityTransformComponent.position);
@@ -257,7 +259,7 @@ const propagateAnger = (slime: EntityID, angeredEntity: EntityID, amount: number
 }
 
 export function onSlimeHurt(slime: EntityID, attackingEntity: EntityID): void {
-   const attackingEntityType = Board.getEntityType(attackingEntity);
+   const attackingEntityType = getEntityType(attackingEntity);
    if (attackingEntityType === EntityType.iceSpikes || attackingEntityType === EntityType.cactus) return;
 
    addEntityAnger(slime, attackingEntity, 1, { chainLength: 0, propagatedEntityIDs: new Set() });

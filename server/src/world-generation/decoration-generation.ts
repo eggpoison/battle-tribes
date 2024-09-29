@@ -2,9 +2,10 @@ import { DecorationType, ServerComponentType } from "battletribes-shared/compone
 import { Settings } from "battletribes-shared/settings";
 import { TileType } from "battletribes-shared/tiles";
 import { randInt, randFloat, TileIndex } from "battletribes-shared/utils";
-import Board, { getTilesInRange } from "../Board";
+import Layer, { getTileIndexIncludingEdges, getTilesInRange, getTileX, getTileY, tileIsInWorldIncludingEdges } from "../Layer";
 import { createDecorationConfig } from "../entities/decoration";
 import { createEntityFromConfig } from "../Entity";
+import { surfaceLayer } from "../world";
 
 const enum Vars {
    RIVERSIDE_DECORATION_SPAWN_ATTEMPT_DENSITY_PER_TILE = 0.5,
@@ -27,7 +28,7 @@ const createDecoration = (x: number, y: number, decorationType: DecorationType):
    config[ServerComponentType.transform].position.y = y;
    config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
    config[ServerComponentType.decoration].decorationType = decorationType;
-   createEntityFromConfig(config);
+   createEntityFromConfig(config, surfaceLayer);
 }
 
 const generateRiversideDecorations = (): void => {
@@ -43,7 +44,7 @@ const generateRiversideDecorations = (): void => {
 
       const tileX = Math.floor(x / Settings.TILE_SIZE);
       const tileY = Math.floor(y / Settings.TILE_SIZE);
-      const tileType = Board.getTileType(tileX, tileY);
+      const tileType = surfaceLayer.getTileType(tileX, tileY);
       if (tileType === TileType.water) {
          continue;
       }
@@ -51,9 +52,9 @@ const generateRiversideDecorations = (): void => {
       const tilesInRange = getTilesInRange(x, y, Vars.RIVERSIDE_DECORATION_MAX_RIVER_DIST);
       let isGood = false;
       for (const tileIndex of tilesInRange) {
-         const tileX = Board.getTileX(tileIndex);
-         const tileY = Board.getTileY(tileIndex);
-         if (Board.getTileType(tileX, tileY) === TileType.water) {
+         const tileX = getTileX(tileIndex);
+         const tileY = getTileY(tileIndex);
+         if (surfaceLayer.getTileType(tileX, tileY) === TileType.water) {
             isGood = true;
             break;
          }
@@ -145,9 +146,9 @@ export function generateDecorations(): void {
    ];
 
    const getDecorationGenerationInfo = (tileIndex: TileIndex): DecorationGenerationInfo | null => {
-      const tileType = Board.tileTypes[tileIndex];
-      const tileX = Board.getTileX(tileIndex);
-      const tileY = Board.getTileY(tileIndex);
+      const tileType = surfaceLayer.tileTypes[tileIndex];
+      const tileX = getTileX(tileIndex);
+      const tileY = getTileY(tileIndex);
       
       for (let i = 0; i < DECORATION_GENERATION_INFO.length; i++) {
          const generationInfo = DECORATION_GENERATION_INFO[i];
@@ -157,8 +158,8 @@ export function generateDecorations(): void {
 
          if (generationInfo.isAffectedByTemperature) {
             // Flowers spawn less frequently the colder the tile is
-            const idx = Board.getTileIndexIncludingEdges(tileX, tileY);
-            const temperature = Board.tileTemperatures[idx];
+            const idx = getTileIndexIncludingEdges(tileX, tileY);
+            const temperature = surfaceLayer.tileTemperatures[idx];
             if (Math.random() > Math.pow(temperature, 0.3)) {
                continue;
             }
@@ -174,7 +175,7 @@ export function generateDecorations(): void {
 
    for (let tileX = -Settings.EDGE_GENERATION_DISTANCE; tileX < Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE; tileX++) {
       for (let tileY = -Settings.EDGE_GENERATION_DISTANCE; tileY < Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE; tileY++) {
-         const tileIndex = Board.getTileIndexIncludingEdges(tileX, tileY);
+         const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
          
          const generationInfo = getDecorationGenerationInfo(tileIndex);
          if (generationInfo === null) {
@@ -196,13 +197,13 @@ export function generateDecorations(): void {
 
             const currentTileX = Math.floor(spawnX / Settings.TILE_SIZE);
             const currentTileY = Math.floor(spawnY / Settings.TILE_SIZE);
-            if (!Board.tileIsInBoardIncludingEdges(currentTileX, currentTileY)) {
+            if (!tileIsInWorldIncludingEdges(currentTileX, currentTileY)) {
                continue;
             }
             
             // Don't spawn in different tile types
-            const currentTileIndex = Board.getTileIndexIncludingEdges(currentTileX, currentTileY);
-            const tileType = Board.tileTypes[currentTileIndex];
+            const currentTileIndex = getTileIndexIncludingEdges(currentTileX, currentTileY);
+            const tileType = surfaceLayer.tileTypes[currentTileIndex];
             if (!generationInfo.spawnableTileTypes.includes(tileType)) {
                continue;
             }

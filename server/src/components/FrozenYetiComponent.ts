@@ -10,7 +10,7 @@ import { StatusEffect } from "battletribes-shared/status-effects";
 import { Biome, TileType } from "battletribes-shared/tiles";
 import { getAngleDifference, entityIsInVisionRange, getEntitiesInRange, entityHasReachedPosition, stopEntity } from "../ai-shared";
 import { shouldWander, getWanderTargetTile, wander } from "../ai/wander-ai";
-import Board from "../Board";
+import Layer, { getTileX, getTileY } from "../Layer";
 import { createRockSpikeConfig } from "../entities/projectiles/rock-spike";
 import { createSnowballConfig } from "../entities/snowball";
 import { createEntityFromConfig } from "../Entity";
@@ -21,6 +21,7 @@ import { ROCK_SPIKE_HITBOX_SIZES } from "./RockSpikeComponent";
 import { StatusEffectComponentArray, applyStatusEffect } from "./StatusEffectComponent";
 import { TransformComponentArray, getEntityTile } from "./TransformComponent";
 import { WanderAIComponentArray } from "./WanderAIComponent";
+import { entityExists, getEntityLayer, getEntityType } from "../world";
 
 const enum Vars {
    TARGET_ENTITY_FORGET_TIME = 10,
@@ -73,6 +74,8 @@ export const FrozenYetiComponentArray = new ComponentArray<FrozenYetiComponent>(
 });
 
 const findTargets = (frozenYeti: EntityID, visibleEntities: ReadonlyArray<EntityID>): ReadonlyArray<EntityID> => {
+   const layer = getEntityLayer(frozenYeti);
+   
    const targets = new Array<EntityID>();
    for (let i = 0; i < visibleEntities.length; i++) {
       const entity = visibleEntities[i];
@@ -80,8 +83,8 @@ const findTargets = (frozenYeti: EntityID, visibleEntities: ReadonlyArray<Entity
       const entityTransformComponent = TransformComponentArray.getComponent(entity);
       const entityTileIndex = getEntityTile(entityTransformComponent);
 
-      const entityType = Board.getEntityType(entity);
-      if (Board.tileBiomes[entityTileIndex] === Biome.tundra && entityType !== EntityType.itemEntity && entityType !== EntityType.frozenYeti && entityType !== EntityType.iceSpikes && entityType !== EntityType.snowball) {
+      const entityType = getEntityType(entity);
+      if (layer.tileBiomes[entityTileIndex] === Biome.tundra && entityType !== EntityType.itemEntity && entityType !== EntityType.frozenYeti && entityType !== EntityType.iceSpikes && entityType !== EntityType.snowball) {
          targets.push(entity);
       }
    }
@@ -92,7 +95,7 @@ const findTargets = (frozenYeti: EntityID, visibleEntities: ReadonlyArray<Entity
    for (const targetID of Object.keys(frozenYetiComponent.attackingEntities)) {
       const target = Number(targetID);
       // @Hack. should always be defined here. should be removed.
-      if (Board.hasEntity(target) && targets.indexOf(target) === -1) {
+      if (entityExists(target) && targets.indexOf(target) === -1) {
          targets.push(target);
       }
    }
@@ -285,7 +288,7 @@ const createRockSpikes = (frozenYeti: EntityID, frozenYetiComponent: FrozenYetiC
       config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
       config[ServerComponentType.rockSpike].size = info.size;
       config[ServerComponentType.rockSpike].frozenYetiID = frozenYeti;
-      createEntityFromConfig(config);
+      createEntityFromConfig(config, getEntityLayer(frozenYeti));
    }
    frozenYetiComponent.rockSpikeInfoArray = [];
 }
@@ -308,7 +311,7 @@ const spawnSnowball = (frozenYeti: EntityID, size: SnowballSize): void => {
    config[ServerComponentType.physics].velocityY = velocityMagnitude * Math.cos(angle);
    config[ServerComponentType.snowball].size = size;
    config[ServerComponentType.snowball].yetiID = frozenYeti;
-   createEntityFromConfig(config);
+   createEntityFromConfig(config, getEntityLayer(frozenYeti));
 }
 
 const throwSnow = (frozenYeti: EntityID): void => {
@@ -360,7 +363,7 @@ const doBiteAttack = (frozenYeti: EntityID, angleToTarget: number): void => {
    
    const x = transformComponent.position.x + Vars.BITE_ATTACK_OFFSET * Math.sin(transformComponent.rotation);
    const y = transformComponent.position.y + Vars.BITE_ATTACK_OFFSET * Math.cos(transformComponent.rotation);
-   const hitEntities = getEntitiesInRange(x, y, Vars.BITE_ATTACK_RANGE);
+   const hitEntities = getEntitiesInRange(getEntityLayer(frozenYeti), x, y, Vars.BITE_ATTACK_RANGE);
 
    for (let i = 0; i < hitEntities.length; i++) {
       const hitEntity = hitEntities[i];
@@ -415,6 +418,7 @@ function onTick(frozenYetiComponent: FrozenYetiComponent, frozenYeti: EntityID):
       const physicsComponent = PhysicsComponentArray.getComponent(frozenYeti);
       
       // Wander AI
+      const layer = getEntityLayer(frozenYeti);
       const wanderAIComponent = WanderAIComponentArray.getComponent(frozenYeti);
       if (wanderAIComponent.targetPositionX !== -1) {
          if (entityHasReachedPosition(frozenYeti, wanderAIComponent.targetPositionX, wanderAIComponent.targetPositionY)) {
@@ -426,10 +430,10 @@ function onTick(frozenYetiComponent: FrozenYetiComponent, frozenYeti: EntityID):
          let targetTile: TileIndex;
          do {
             targetTile = getWanderTargetTile(frozenYeti, FrozenYetiVars.VISION_RANGE);
-         } while (++attempts <= 50 && (Board.tileIsWalls[targetTile] === 1 || Board.tileBiomes[targetTile] !== TileType.fimbultur));
+         } while (++attempts <= 50 && (layer.tileIsWalls[targetTile] === 1 || layer.tileBiomes[targetTile] !== TileType.fimbultur));
 
-         const tileX = Board.getTileX(targetTile);
-         const tileY = Board.getTileY(targetTile);
+         const tileX = getTileX(targetTile);
+         const tileY = getTileY(targetTile);
          const x = (tileX + Math.random()) * Settings.TILE_SIZE;
          const y = (tileY + Math.random()) * Settings.TILE_SIZE;
          wander(frozenYeti, x, y, Vars.SLOW_ACCELERATION, Math.PI * 0.7);

@@ -2,7 +2,7 @@ import { EntityID, EntityType } from "battletribes-shared/entities";
 import { Settings } from "battletribes-shared/settings";
 import { TileType } from "battletribes-shared/tiles";
 import { angle, curveWeight, Point, lerp, rotateXAroundPoint, rotateYAroundPoint, distance, distBetweenPointAndRectangle, TileIndex } from "battletribes-shared/utils";
-import Board, { raytraceHasWallTile } from "./Board";
+import Layer, { getTileIndexIncludingEdges } from "./Layer";
 import { PhysicsComponent, PhysicsComponentArray } from "./components/PhysicsComponent";
 import { getEntityPathfindingGroupID } from "./pathfinding";
 import { TransformComponentArray } from "./components/TransformComponent";
@@ -10,6 +10,7 @@ import { ProjectileComponentArray } from "./components/ProjectileComponent";
 import CircularBox from "battletribes-shared/boxes/CircularBox";
 import RectangularBox from "battletribes-shared/boxes/RectangularBox";
 import { boxIsCircular } from "battletribes-shared/boxes/boxes";
+import { getEntityLayer, getEntityType } from "./world";
 
 const TURN_CONSTANT = Math.PI / Settings.TPS;
 const WALL_AVOIDANCE_MULTIPLIER = 1.5;
@@ -310,7 +311,7 @@ export function runHerdAI(entity: EntityID, herdMembers: ReadonlyArray<EntityID>
 }
 
 /** Gets all tiles within a given distance from a position */
-export function getPositionRadialTiles(position: Point, radius: number): Array<TileIndex> {
+export function getPositionRadialTiles(layer: Layer, position: Point, radius: number): Array<TileIndex> {
    const tiles = new Array<TileIndex>();
 
    const minTileX = Math.max(Math.min(Math.floor((position.x - radius) / Settings.TILE_SIZE), Settings.BOARD_DIMENSIONS - 1), 0);
@@ -323,20 +324,20 @@ export function getPositionRadialTiles(position: Point, radius: number): Array<T
    for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
       for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
          // Don't try to wander to wall tiles
-         const isWall = Board.getTileIsWall(tileX, tileY);
+         const isWall = layer.tileIsWall(tileX, tileY);
          if (isWall) {
             continue;
          }
          
          // Don't try to wander to water
-         const tileType = Board.getTileType(tileX, tileY);
+         const tileType = layer.getTileType(tileX, tileY);
          if (tileType === TileType.water) {
             continue;
          }
 
          const distanceSquared = Math.pow(position.x - tileX * Settings.TILE_SIZE, 2) + Math.pow(position.y - tileY * Settings.TILE_SIZE, 2);
          if (distanceSquared <= radiusSquared) {
-            const tileIndex = Board.getTileIndexIncludingEdges(tileX, tileY);
+            const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
             tiles.push(tileIndex);
          }
       }
@@ -346,7 +347,7 @@ export function getPositionRadialTiles(position: Point, radius: number): Array<T
 }
 
 /** Gets all tiles within a given distance from a position */
-export function getAllowedPositionRadialTiles(position: Point, radius: number, validTileTargets: ReadonlyArray<TileType>): Array<TileIndex> {
+export function getAllowedPositionRadialTiles(layer: Layer, position: Point, radius: number, validTileTargets: ReadonlyArray<TileType>): Array<TileIndex> {
    const tiles = new Array<TileIndex>();
 
    const minTileX = Math.max(Math.min(Math.floor((position.x - radius) / Settings.TILE_SIZE), Settings.BOARD_DIMENSIONS - 1), 0);
@@ -359,20 +360,20 @@ export function getAllowedPositionRadialTiles(position: Point, radius: number, v
    for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
       for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
          // Don't try to wander to wall tiles
-         const isWall = Board.getTileIsWall(tileX, tileY);
+         const isWall = layer.tileIsWall(tileX, tileY);
          if (isWall) {
             continue;
          }
          
          // Don't try to wander to disallowed tiles
-         const tileType = Board.getTileType(tileX, tileY);
+         const tileType = layer.getTileType(tileX, tileY);
          if (validTileTargets.indexOf(tileType) === -1) {
             continue;
          }
 
          const distanceSquared = Math.pow(position.x - tileX * Settings.TILE_SIZE, 2) + Math.pow(position.y - tileY * Settings.TILE_SIZE, 2);
          if (distanceSquared <= radiusSquared) {
-            const tileIndex = Board.getTileIndexIncludingEdges(tileX, tileY);
+            const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
             tiles.push(tileIndex);
          }
       }
@@ -402,7 +403,7 @@ export function entityIsInVisionRange(position: Point, visionRange: number, enti
    return false;
 }
 
-export function getEntitiesInRange(x: number, y: number, range: number): Array<EntityID> {
+export function getEntitiesInRange(layer: Layer, x: number, y: number, range: number): Array<EntityID> {
    const minChunkX = Math.max(Math.min(Math.floor((x - range) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
    const maxChunkX = Math.max(Math.min(Math.floor((x + range) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
    const minChunkY = Math.max(Math.min(Math.floor((y - range) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1), 0);
@@ -418,7 +419,7 @@ export function getEntitiesInRange(x: number, y: number, range: number): Array<E
    const entities = new Array<EntityID>();
    for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
       for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
-         const chunk = Board.getChunk(chunkX, chunkY);
+         const chunk = layer.getChunk(chunkX, chunkY);
          for (const entity of chunk.entities) {
             // Don't add existing game objects
             if (seenIDs.has(entity)) {
@@ -627,7 +628,7 @@ const entityIntersectsLineOfSight = (entity: EntityID, originEntity: EntityID, t
 
       // @Hack @Cleanup
       // Ignore the horizontal hitboxes of embrasures
-      if (Board.getEntityType(entity) === EntityType.embrasure && i > 1) {
+      if (getEntityType(entity) === EntityType.embrasure && i > 1) {
          continue;
       }
 
@@ -648,6 +649,7 @@ const entityIntersectsLineOfSight = (entity: EntityID, originEntity: EntityID, t
 export function entityIsInLineOfSight(originEntity: EntityID, targetEntity: EntityID, ignoredPathfindingGroupID: number): boolean {
    const originEntityTransformComponent = TransformComponentArray.getComponent(originEntity);
    const targetEntityTransformComponent = TransformComponentArray.getComponent(targetEntity);
+   const layer = getEntityLayer(originEntity);
 
    // 
    // Check for entity hitboxes in the path between
@@ -665,12 +667,12 @@ export function entityIsInLineOfSight(originEntity: EntityID, targetEntity: Enti
 
    for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
       for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
-         const chunk = Board.getChunk(chunkX, chunkY);
+         const chunk = layer.getChunk(chunkX, chunkY);
 
          for (let i = 0; i < chunk.entities.length; i++) {
             const entity = chunk.entities[i];
             const pathfindingGroupID = getEntityPathfindingGroupID(entity);
-            if (entity === originEntity || entity === targetEntity || pathfindingGroupID === ignoredPathfindingGroupID || !entityAffectsLineOfSight(Board.getEntityType(entity)!)) {
+            if (entity === originEntity || entity === targetEntity || pathfindingGroupID === ignoredPathfindingGroupID || !entityAffectsLineOfSight(getEntityType(entity)!)) {
                continue;
             }
 
@@ -682,7 +684,7 @@ export function entityIsInLineOfSight(originEntity: EntityID, targetEntity: Enti
    }
    
    // Check for walls in between
-   if (raytraceHasWallTile(originEntityTransformComponent.position.x, originEntityTransformComponent.position.y, targetEntityTransformComponent.position.x, targetEntityTransformComponent.position.y)) {
+   if (layer.raytraceHasWallTile(originEntityTransformComponent.position.x, originEntityTransformComponent.position.y, targetEntityTransformComponent.position.x, targetEntityTransformComponent.position.y)) {
       return false;
    }
 

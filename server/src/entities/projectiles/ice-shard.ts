@@ -11,9 +11,10 @@ import { ComponentConfig } from "../../components";
 import { PlantComponentArray } from "../../components/PlantComponent";
 import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
 import { TransformComponentArray } from "../../components/TransformComponent";
-import Board from "../../Board";
+import Layer from "../../Layer";
 import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
 import RectangularBox from "battletribes-shared/boxes/RectangularBox";
+import { destroyEntity, getEntityType } from "../../world";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics
@@ -43,7 +44,7 @@ export function createIceShardConfig(): ComponentConfig<ComponentTypes> {
 }
 
 const entityIsIceSpikes = (entity: EntityID): boolean => {
-   switch (Board.getEntityType(entity)) {
+   switch (getEntityType(entity)) {
       case EntityType.iceSpikes: {
          return true;
       }
@@ -63,7 +64,7 @@ export function onIceShardCollision(iceShard: EntityID, collidingEntity: EntityI
    }
 
    // Shatter the ice spike
-   Board.destroyEntity(iceShard);
+   destroyEntity(iceShard);
 
    if (entityIsIceSpikes(collidingEntity)) {
       // Instantly destroy ice spikes

@@ -3,8 +3,9 @@ import { EntityID, EntityType, EntityTypeString } from "battletribes-shared/enti
 import { Settings } from "battletribes-shared/settings";
 import Tribe from "../Tribe";
 import { SafetyNode, addHitboxesOccupiedNodes, getSafetyNode, safetyNodeIsInWall } from "./ai-building";
-import Board from "../Board";
+import Layer from "../Layer";
 import { TransformComponentArray } from "../components/TransformComponent";
+import { getEntityType, LayerType, surfaceLayer } from "../world";
 
 const enum Vars {
    /** Minimum safety that buildings should have */
@@ -27,17 +28,22 @@ const BASE_BUILDING_WEIGHTS: Record<InfrastructureBuildingType, number> = {
 };
 
 export function buildingIsInfrastructure(entity: EntityID): boolean {
-   const entityType = Board.getEntityType(entity);
+   const entityType = getEntityType(entity);
    return entityType !== EntityType.wall && entityType !== EntityType.embrasure && entityType !== EntityType.door && entityType !== EntityType.tunnel;
 }
 
 const getExtendedNodeSafety = (tribe: Tribe, nodeIndex: number, extendDist: number): number => {
-   let safety = tribe.safetyRecord[nodeIndex];
+   // @Hack
+   const buildingInfo = tribe.layerBuildingInfoRecord[LayerType.surface];
+   let safety = buildingInfo.safetyRecord[nodeIndex];
    safety *= 1 - extendDist / Vars.EXTENDED_NODE_RANGE;
    return safety;
 }
 
 const getExtendedBuildingNodeSafety = (tribe: Tribe, occupiedNodeIndexes: Set<SafetyNode>): number => {
+   // @Hack
+   const layer = surfaceLayer;
+   
    // Find border nodes
    const borderNodeIndexes = new Set<number>();
    for (const nodeIndex of occupiedNodeIndexes) {
@@ -47,7 +53,7 @@ const getExtendedBuildingNodeSafety = (tribe: Tribe, occupiedNodeIndexes: Set<Sa
       // Top
       if (nodeY < Settings.SAFETY_NODES_IN_WORLD_WIDTH - 1) {
          const nodeIndex = getSafetyNode(nodeX, nodeY + 1);
-         if (!occupiedNodeIndexes.has(nodeIndex) && !safetyNodeIsInWall(nodeX, nodeY + 1)) {
+         if (!occupiedNodeIndexes.has(nodeIndex) && !safetyNodeIsInWall(layer, nodeX, nodeY + 1)) {
             borderNodeIndexes.add(nodeIndex);
          }
       }
@@ -55,7 +61,7 @@ const getExtendedBuildingNodeSafety = (tribe: Tribe, occupiedNodeIndexes: Set<Sa
       // Right
       if (nodeX < Settings.SAFETY_NODES_IN_WORLD_WIDTH - 1) {
          const nodeIndex = getSafetyNode(nodeX + 1, nodeY);
-         if (!occupiedNodeIndexes.has(nodeIndex) && !safetyNodeIsInWall(nodeX + 1, nodeY)) {
+         if (!occupiedNodeIndexes.has(nodeIndex) && !safetyNodeIsInWall(layer, nodeX + 1, nodeY)) {
             borderNodeIndexes.add(nodeIndex);
          }
       }
@@ -63,7 +69,7 @@ const getExtendedBuildingNodeSafety = (tribe: Tribe, occupiedNodeIndexes: Set<Sa
       // Bottom
       if (nodeY > 0) {
          const nodeIndex = getSafetyNode(nodeX, nodeY - 1);
-         if (!occupiedNodeIndexes.has(nodeIndex) && !safetyNodeIsInWall(nodeX, nodeY - 1)) {
+         if (!occupiedNodeIndexes.has(nodeIndex) && !safetyNodeIsInWall(layer, nodeX, nodeY - 1)) {
             borderNodeIndexes.add(nodeIndex);
          }
       }
@@ -71,7 +77,7 @@ const getExtendedBuildingNodeSafety = (tribe: Tribe, occupiedNodeIndexes: Set<Sa
       // Left
       if (nodeX > 0) {
          const nodeIndex = getSafetyNode(nodeX - 1, nodeY);
-         if (!occupiedNodeIndexes.has(nodeIndex) && !safetyNodeIsInWall(nodeX - 1, nodeY)) {
+         if (!occupiedNodeIndexes.has(nodeIndex) && !safetyNodeIsInWall(layer, nodeX - 1, nodeY)) {
             borderNodeIndexes.add(nodeIndex);
          }
       }
@@ -96,7 +102,7 @@ const getExtendedBuildingNodeSafety = (tribe: Tribe, occupiedNodeIndexes: Set<Sa
          // Top
          if (nodeY < Settings.SAFETY_NODES_IN_WORLD_WIDTH - 1) {
             const nodeIndex = getSafetyNode(nodeX, nodeY + 1);
-            if (!expandedNodeIndexes.has(nodeIndex) && !occupiedNodeIndexes.has(nodeIndex) && !safetyNodeIsInWall(nodeX, nodeY + 1)) {
+            if (!expandedNodeIndexes.has(nodeIndex) && !occupiedNodeIndexes.has(nodeIndex) && !safetyNodeIsInWall(layer, nodeX, nodeY + 1)) {
                expandedNodeIndexes.add(nodeIndex);
                addedNodes.add(nodeIndex);
                safety += getExtendedNodeSafety(tribe, nodeIndex, extendDist);
@@ -106,7 +112,7 @@ const getExtendedBuildingNodeSafety = (tribe: Tribe, occupiedNodeIndexes: Set<Sa
          // Right
          if (nodeX < Settings.SAFETY_NODES_IN_WORLD_WIDTH - 1) {
             const nodeIndex = getSafetyNode(nodeX + 1, nodeY);
-            if (!expandedNodeIndexes.has(nodeIndex) && !occupiedNodeIndexes.has(nodeIndex) && !safetyNodeIsInWall(nodeX + 1, nodeY)) {
+            if (!expandedNodeIndexes.has(nodeIndex) && !occupiedNodeIndexes.has(nodeIndex) && !safetyNodeIsInWall(layer, nodeX + 1, nodeY)) {
                expandedNodeIndexes.add(nodeIndex);
                addedNodes.add(nodeIndex);
                safety += getExtendedNodeSafety(tribe, nodeIndex, extendDist);
@@ -116,7 +122,7 @@ const getExtendedBuildingNodeSafety = (tribe: Tribe, occupiedNodeIndexes: Set<Sa
          // Bottom
          if (nodeY > 0) {
             const nodeIndex = getSafetyNode(nodeX, nodeY - 1);
-            if (!expandedNodeIndexes.has(nodeIndex) && !occupiedNodeIndexes.has(nodeIndex) && !safetyNodeIsInWall(nodeX, nodeY - 1)) {
+            if (!expandedNodeIndexes.has(nodeIndex) && !occupiedNodeIndexes.has(nodeIndex) && !safetyNodeIsInWall(layer, nodeX, nodeY - 1)) {
                expandedNodeIndexes.add(nodeIndex);
                addedNodes.add(nodeIndex);
                safety += getExtendedNodeSafety(tribe, nodeIndex, extendDist);
@@ -126,7 +132,7 @@ const getExtendedBuildingNodeSafety = (tribe: Tribe, occupiedNodeIndexes: Set<Sa
          // Left
          if (nodeX > 0) {
             const nodeIndex = getSafetyNode(nodeX - 1, nodeY);
-            if (!expandedNodeIndexes.has(nodeIndex) && !occupiedNodeIndexes.has(nodeIndex) && !safetyNodeIsInWall(nodeX - 1, nodeY)) {
+            if (!expandedNodeIndexes.has(nodeIndex) && !occupiedNodeIndexes.has(nodeIndex) && !safetyNodeIsInWall(layer, nodeX - 1, nodeY)) {
                expandedNodeIndexes.add(nodeIndex);
                addedNodes.add(nodeIndex);
                safety += getExtendedNodeSafety(tribe, nodeIndex, extendDist);
@@ -144,9 +150,12 @@ const getExtendedBuildingNodeSafety = (tribe: Tribe, occupiedNodeIndexes: Set<Sa
 }
 
 const getMinBuildingNodeSafety = (tribe: Tribe, occupiedIndexes: Set<SafetyNode>): number => {
+   // @Hack
+   const buildingInfo = tribe.layerBuildingInfoRecord[LayerType.surface];
+   
    let minSafety = Number.MAX_SAFE_INTEGER;
    for (const nodeIndex of occupiedIndexes) {
-      const safety = tribe.safetyRecord[nodeIndex];
+      const safety = buildingInfo.safetyRecord[nodeIndex];
       if (safety < minSafety) {
          minSafety = safety;
       }
@@ -156,13 +165,16 @@ const getMinBuildingNodeSafety = (tribe: Tribe, occupiedIndexes: Set<SafetyNode>
 }
 
 const getAverageBuildingNodeSafety = (tribe: Tribe, occupiedIndexes: Set<SafetyNode>): number => {
+   // @Hack
+   const buildingInfo = tribe.layerBuildingInfoRecord[LayerType.surface];
+
    let averageSafety = 0;
    for (const nodeIndex of occupiedIndexes) {
-      if (tribe.safetyRecord[nodeIndex] === undefined) {
+      if (buildingInfo.safetyRecord[nodeIndex] === undefined) {
          throw new Error("Node wasn't in safety record");
       }
 
-      const safety = tribe.safetyRecord[nodeIndex];
+      const safety = buildingInfo.safetyRecord[nodeIndex];
       averageSafety += safety;
    }
 
@@ -173,7 +185,7 @@ const getAverageBuildingNodeSafety = (tribe: Tribe, occupiedIndexes: Set<SafetyN
 }
 
 export function getBuildingSafety(tribe: Tribe, building: EntityID, safetyInfo: PotentialPlanSafetyData | null): number {
-   const entityType = Board.getEntityType(building) as InfrastructureBuildingType;
+   const entityType = getEntityType(building) as InfrastructureBuildingType;
    if (BASE_BUILDING_WEIGHTS[entityType] === undefined) {
       throw new Error("Base buliding weight not defined for entity type " + EntityTypeString[entityType]);
    }

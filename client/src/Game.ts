@@ -17,12 +17,12 @@ import { toggleSettingsMenu } from "./components/game/GameScreen";
 import { createHitboxShaders, renderDamageBoxes, renderHitboxes } from "./rendering/webgl/box-wireframe-rendering";
 import { clearServerTicks, updateDebugScreenFPS, updateDebugScreenRenderTime } from "./components/game/dev/GameInfoDisplay";
 import { createWorldBorderShaders, renderWorldBorder } from "./rendering/webgl/world-border-rendering";
-import { createSolidTileShaders, renderSolidTiles } from "./rendering/webgl/solid-tile-rendering";
+import { clearSolidTileRenderingData, createSolidTileShaders, renderSolidTiles } from "./rendering/webgl/solid-tile-rendering";
 import { calculateVisibleRiverInfo, createRiverShaders, createRiverSteppingStoneData, renderLowerRiverFeatures, renderUpperRiverFeatures } from "./rendering/webgl/river-rendering";
 import { createChunkBorderShaders, renderChunkBorders } from "./rendering/webgl/chunk-border-rendering";
 import { nerdVisionIsVisible } from "./components/game/dev/NerdVision";
 import { createDebugDataShaders, renderLineDebugData, renderTriangleDebugData } from "./rendering/webgl/debug-data-rendering";
-import { createAmbientOcclusionShaders, renderAmbientOcclusion } from "./rendering/webgl/ambient-occlusion-rendering";
+import { createTileShadowShaders, renderTileShadows, TileShadowType } from "./rendering/webgl/tile-shadow-rendering";
 import { createWallBorderShaders, renderWallBorders } from "./rendering/webgl/wall-border-rendering";
 import { ParticleRenderLayer, createParticleShaders, renderMonocolourParticles, renderTexturedParticles } from "./rendering/webgl/particle-rendering";
 import Tribe from "./Tribe";
@@ -55,18 +55,23 @@ import { createUBOs, updateUBOs } from "./rendering/ubos";
 import { createEntityOverlayShaders } from "./rendering/webgl/overlay-rendering";
 import { updateRenderPartMatrices } from "./rendering/render-part-matrices";
 import { renderNextRenderables, resetRenderOrder } from "./rendering/render-loop";
-import { InitialGameDataPacket, processGameDataPacket } from "./client/packet-processing";
+import { processGameDataPacket } from "./client/packet-processing";
 import { MAX_RENDER_LAYER, RenderLayer } from "./render-layers";
 import { updateEntity } from "./entity-components/ComponentArray";
 import { resolveEntityCollisions, resolvePlayerCollisions } from "./collision";
 import { preloadTextureAtlasImages } from "./texture-atlases/texture-atlas-stitching";
 import { updatePlayerMovement, updatePlayerItems } from "./components/game/GameInteractableLayer";
 import { refreshChunkedEntityRenderingBuffers } from "./rendering/webgl/chunked-entity-rendering";
+import { getEntityByID, getEntityLayer, layers } from "./world";
+import Layer from "./Layer";
+import { createDarkeningShaders, renderDarkening } from "./rendering/webgl/darkening-rendering";
 
 // @Cleanup: remove.
 let _frameProgress = Number.EPSILON;
 
 let listenersHaveBeenCreated = false;
+
+let entityDebugData: EntityDebugData | null = null;
 
 // @Cleanup: remove.
 export function getFrameProgress(): number {
@@ -121,7 +126,9 @@ const main = (currentTime: number): void => {
             Board.updateParticles();
             Board.updateEntities();
             Board.tickEntities();
-            resolveEntityCollisions();
+            for (const layer of layers) {
+               resolveEntityCollisions(layer);
+            }
          }
 
          Game.update();
@@ -149,6 +156,75 @@ const main = (currentTime: number): void => {
    }
 }
 
+const renderLayer = (layer: Layer, frameProgress: number): void => {
+   renderText();
+
+   renderTileShadows(layer, TileShadowType.dropdownShadow);
+
+   renderSolidTiles(layer, false);
+   renderGrassBlockers();
+   renderTurretRange();
+   if (nerdVisionIsVisible() && entityDebugData !== null && typeof getEntityByID(entityDebugData.entityID) !== "undefined") {
+      renderTriangleDebugData(entityDebugData);
+   }
+   renderForcefield();
+   renderWorldBorder();
+   renderRestrictedBuildingAreas();
+   if (nerdVisionIsVisible() && OPTIONS.showChunkBorders) {
+      renderChunkBorders(Camera.minVisibleChunkX, Camera.maxVisibleChunkX, Camera.minVisibleChunkY, Camera.maxVisibleChunkY, Settings.CHUNK_SIZE, 1);
+   }
+   if (nerdVisionIsVisible() && OPTIONS.showRenderChunkBorders) {
+      renderChunkBorders(Camera.minVisibleRenderChunkX, Camera.maxVisibleRenderChunkX, Camera.minVisibleRenderChunkY, Camera.maxVisibleRenderChunkY, RENDER_CHUNK_SIZE, 2);
+   }
+
+   renderHealingBeams();
+
+   updateRenderPartMatrices(frameProgress);
+   refreshChunkedEntityRenderingBuffers();
+
+   const visibleRiverRenderChunks = calculateVisibleRiverInfo();
+   resetRenderOrder();
+
+   renderLowerRiverFeatures(visibleRiverRenderChunks);
+   // Render everything up to fish
+   renderNextRenderables(RenderLayer.fish);
+   renderUpperRiverFeatures(visibleRiverRenderChunks);
+   if (OPTIONS.showParticles) {
+      renderMonocolourParticles(ParticleRenderLayer.low);
+      renderTexturedParticles(ParticleRenderLayer.low);
+   }
+   // Render the rest
+   renderNextRenderables(MAX_RENDER_LAYER);
+
+   renderTileShadows(layer, TileShadowType.wallShadow);
+   renderSolidTiles(layer, true);
+   renderWallBorders(layer);
+
+   renderEntitySelection();
+   
+   if (OPTIONS.showParticles) {
+      renderMonocolourParticles(ParticleRenderLayer.high);
+      renderTexturedParticles(ParticleRenderLayer.high);
+   }
+
+   renderPathfindingNodes();
+   renderSafetyNodes();
+   renderWallConnections();
+   renderResearchOrb();
+
+   if (OPTIONS.showHitboxes) {
+      renderHitboxes();
+   }
+   if (OPTIONS.showDamageBoxes) {
+      renderDamageBoxes();
+   }
+   if (nerdVisionIsVisible() && entityDebugData !== null && typeof getEntityByID(entityDebugData.entityID) !== "undefined") {
+      renderLineDebugData(entityDebugData);
+   }
+
+   renderGhostEntities();
+}
+
 abstract class Game {
    public static lastTime = 0;
 
@@ -167,26 +243,24 @@ abstract class Game {
    public static cursorPositionX: number | null = null;
    public static cursorPositionY: number | null = null;
 
-   public static entityDebugData: EntityDebugData | null = null;
-
    public static tribe: Tribe;
    public static enemyTribes: ReadonlyArray<EnemyTribeData>;
 
    // @Hack @Cleanup: remove this!
    public static playerID: number;
    
-   public static setGameObjectDebugData(entityDebugData: EntityDebugData | undefined): void {
-      if (typeof entityDebugData === "undefined") {
-         this.entityDebugData = null;
+   public static setGameObjectDebugData(newEntityDebugData: EntityDebugData | undefined): void {
+      if (typeof newEntityDebugData === "undefined") {
+         entityDebugData = null;
          setDebugInfoDebugData(null);
       } else {
-         this.entityDebugData = entityDebugData;
+         entityDebugData = newEntityDebugData;
          setDebugInfoDebugData(entityDebugData);
       }
    }
 
-   public static getGameObjectDebugData(): EntityDebugData | null {
-      return this.entityDebugData || null;
+   public static getEntityDebugData(): EntityDebugData | null {
+      return entityDebugData || null;
    }
 
    /** Starts the game */
@@ -218,7 +292,7 @@ abstract class Game {
    /**
     * Prepares the game to be played. Called once just before the game starts.
     */
-   public static async initialise(initialGameDataPacket: InitialGameDataPacket): Promise<void> {
+   public static async initialise(): Promise<void> {
       Game.enemyTribes = [];
 
       // Clear any queued packets from previous games
@@ -237,13 +311,12 @@ abstract class Game {
 
             console.log("creating contexts",performance.now() - l);
             l = performance.now();
-            Board.initialise(initialGameDataPacket);
-            Board.addRiverSteppingStonesToChunks(initialGameDataPacket.riverSteppingStones);
+            
+            clearSolidTileRenderingData();
+            for (const layer of layers) {
+               createRenderChunks(layer, layer.waterRocks, layer.riverSteppingStones);
+            }
          
-            createRiverSteppingStoneData(initialGameDataPacket.riverSteppingStones);
-
-            console.log("initialising board",performance.now() - l);
-            l = performance.now();
             preloadTextureAtlasImages();
             const textureImages = preloadTextureImages();
 
@@ -285,7 +358,8 @@ abstract class Game {
             createNightShaders();
             createParticleShaders();
             createWallBorderShaders();
-            createAmbientOcclusionShaders();
+            createDarkeningShaders();
+            createTileShadowShaders();
             createForcefieldShaders();
             createTechTreeShaders();
             createTechTreeItemShaders();
@@ -304,7 +378,6 @@ abstract class Game {
 
             console.log("shader stuff",performance.now() - l);
             l = performance.now();
-            createRenderChunks(initialGameDataPacket.waterRocks, initialGameDataPacket.riverSteppingStones);
 
             console.log("render chunks",performance.now() - l);
             console.log(performance.now() - start);
@@ -313,10 +386,10 @@ abstract class Game {
             resolve();
          });
       } else {
-         Board.initialise(initialGameDataPacket);
-         Board.addRiverSteppingStonesToChunks(initialGameDataPacket.riverSteppingStones);
-
-         createRenderChunks(initialGameDataPacket.waterRocks, initialGameDataPacket.riverSteppingStones);
+         clearSolidTileRenderingData();
+         for (const layer of layers) {
+            createRenderChunks(layer, layer.waterRocks, layer.riverSteppingStones);
+         }
       }
    }
 
@@ -383,77 +456,26 @@ abstract class Game {
          const frameProgress = getFrameProgress();
          Player.instance.updateRenderPosition(frameProgress);
          Camera.updatePosition();
-         Camera.updateVisibleChunkBounds();
+         Camera.updateVisibleChunkBounds(getEntityLayer(Player.instance.id));
          Camera.updateVisibleRenderChunkBounds();
       }
 
+      // @Incomplete: will this work when the player dies?
+      const playerLayer = getEntityLayer(Player.instance!.id);
+
       updateUBOs();
 
-      renderText();
-
-      renderSolidTiles(false);
-      renderGrassBlockers();
-      renderTurretRange();
-      renderAmbientOcclusion();
-      if (nerdVisionIsVisible() && this.entityDebugData !== null && typeof Board.entityRecord[this.entityDebugData.entityID] !== "undefined") {
-         renderTriangleDebugData(this.entityDebugData);
-      }
-      renderForcefield();
-      renderWorldBorder();
-      renderRestrictedBuildingAreas();
-      if (nerdVisionIsVisible() && OPTIONS.showChunkBorders) {
-         renderChunkBorders(Camera.minVisibleChunkX, Camera.maxVisibleChunkX, Camera.minVisibleChunkY, Camera.maxVisibleChunkY, Settings.CHUNK_SIZE, 1);
-      }
-      if (nerdVisionIsVisible() && OPTIONS.showRenderChunkBorders) {
-         renderChunkBorders(Camera.minVisibleRenderChunkX, Camera.maxVisibleRenderChunkX, Camera.minVisibleRenderChunkY, Camera.maxVisibleRenderChunkY, RENDER_CHUNK_SIZE, 2);
-      }
-
-      renderHealingBeams();
-
-      updateRenderPartMatrices(frameProgress);
-      refreshChunkedEntityRenderingBuffers();
-
-      const visibleRiverRenderChunks = calculateVisibleRiverInfo();
-      resetRenderOrder();
-
-      renderLowerRiverFeatures(visibleRiverRenderChunks);
-      // Render everything up to fish
-      renderNextRenderables(RenderLayer.fish);
-      renderUpperRiverFeatures(visibleRiverRenderChunks);
-      if (OPTIONS.showParticles) {
-         renderMonocolourParticles(ParticleRenderLayer.low);
-         renderTexturedParticles(ParticleRenderLayer.low);
-      }
-      // Render the rest
-      renderNextRenderables(MAX_RENDER_LAYER);
-
-      renderSolidTiles(true);
-      renderWallBorders();
-
-      renderEntitySelection();
-      
-      if (OPTIONS.showParticles) {
-         renderMonocolourParticles(ParticleRenderLayer.high);
-         renderTexturedParticles(ParticleRenderLayer.high);
-      }
-
-      renderPathfindingNodes();
-      renderSafetyNodes();
-      renderWallConnections();
-      renderResearchOrb();
-
-      if (OPTIONS.showHitboxes) {
-         renderHitboxes();
-      }
-      if (OPTIONS.showDamageBoxes) {
-         renderDamageBoxes();
-      }
-      if (nerdVisionIsVisible() && this.entityDebugData !== null && typeof Board.entityRecord[this.entityDebugData.entityID] !== "undefined") {
-         renderLineDebugData(this.entityDebugData);
+      // @Hack
+      if (layers.indexOf(playerLayer) === 0) {
+         renderLayer(layers[1], frameProgress);
+         renderDarkening();
+         renderLayer(layers[0], frameProgress);
+      } else {
+         renderLayer(layers[1], frameProgress);
       }
 
       if (isDev()) {
-         const trackedEntity = Board.entityRecord[Camera.trackedEntityID];
+         const trackedEntity = getEntityByID(Camera.trackedEntityID);
          if (typeof trackedEntity !== "undefined" && Camera.trackedEntityID !== Player.instance?.id) {
             Client.sendTrackEntity(Camera.trackedEntityID);
          } else if (nerdVisionIsVisible()) {
@@ -463,8 +485,6 @@ abstract class Game {
             Client.sendTrackEntity(0);
          }
       }
-
-      renderGhostEntities();
       
       renderNight();
 

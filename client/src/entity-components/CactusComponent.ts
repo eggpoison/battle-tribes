@@ -1,7 +1,6 @@
 import { CactusBodyFlowerData, CactusFlowerSize, CactusLimbData, CactusLimbFlowerData } from "battletribes-shared/entities";
-import { CactusComponentData, ServerComponentType } from "battletribes-shared/components";
+import { ServerComponentType } from "battletribes-shared/components";
 import ServerComponent from "./ServerComponent";
-import Entity from "../Entity";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { createFlowerParticle } from "../particles";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
@@ -19,15 +18,31 @@ const getFlowerTextureSource = (type: number, size: CactusFlowerSize): string =>
 }
 
 class CactusComponent extends ServerComponent {
-   private readonly flowerData: ReadonlyArray<CactusBodyFlowerData>;
-   private readonly limbData: ReadonlyArray<CactusLimbData>;
+   // @Memory: go based off hitboxes/render parts
+   private flowerData = new Array<CactusBodyFlowerData>();
+   // @Memory: go based off hitboxes/render parts
+   private limbData = new Array<CactusLimbData>();
 
-   constructor(entity: Entity, reader: PacketReader) {
-      super(entity);
-      
+   public padData(reader: PacketReader): void {
+      const numFlowers = reader.readNumber();
+      reader.padOffset(5 * Float32Array.BYTES_PER_ELEMENT * numFlowers);
+   
+      const numLimbs = reader.readNumber();
+      for (let i = 0; i < numLimbs; i++) {
+         reader.padOffset(Float32Array.BYTES_PER_ELEMENT);
+         const hasFlower = reader.readBoolean();
+         reader.padOffset(3);
+
+         if (hasFlower) {
+            reader.padOffset(4 * Float32Array.BYTES_PER_ELEMENT);
+         }
+      }
+   }
+
+   public updateFromData(reader: PacketReader): void {
       const flowers = new Array<CactusBodyFlowerData>();
       const numFlowers = reader.readNumber();
-      for (let i = 0; i < numFlowers; i++) {
+      for (let i = this.flowerData.length; i < numFlowers; i++) {
          const flowerType = reader.readNumber();
          const height = reader.readNumber();
          const rotation = reader.readNumber();
@@ -42,11 +57,12 @@ class CactusComponent extends ServerComponent {
             column: column
          };
          flowers.push(flower);
+         this.flowerData.push(flower);
       }
    
       const limbs = new Array<CactusLimbData>();
       const numLimbs = reader.readNumber();
-      for (let i = 0; i < numLimbs; i++) {
+      for (let i = this.limbData.length; i < numLimbs; i++) {
          const limbDirection = reader.readNumber();
          const hasFlower = reader.readBoolean();
          reader.padOffset(3);
@@ -71,20 +87,12 @@ class CactusComponent extends ServerComponent {
             flower: flower
          };
          limbs.push(limbData);
+         this.limbData.push(limbData);
       }
 
-      const data: CactusComponentData = {
-         componentType: ServerComponentType.cactus,
-         flowers: flowers,
-         limbs: limbs
-      };
-
-      this.flowerData = data.flowers;
-      this.limbData = data.limbs;
-
       // Attach flower render parts
-      for (let i = 0; i < data.flowers.length; i++) {
-         const flowerInfo = data.flowers[i];
+      for (let i = 0; i < flowers.length; i++) {
+         const flowerInfo = flowers[i];
 
          const renderPart = new TexturedRenderPart(
             null,
@@ -99,8 +107,8 @@ class CactusComponent extends ServerComponent {
       }
 
       // Limbs
-      for (let i = 0; i < data.limbs.length; i++) {
-         const limbInfo = data.limbs[i];
+      for (let i = 0; i < limbs.length; i++) {
+         const limbInfo = limbs[i];
 
          const limbRenderPart = new TexturedRenderPart(
             null,
@@ -126,26 +134,6 @@ class CactusComponent extends ServerComponent {
             this.entity.attachRenderThing(flowerRenderPart);
          }
       }
-   }
-
-   public padData(reader: PacketReader): void {
-      const numFlowers = reader.readNumber();
-      reader.padOffset(5 * Float32Array.BYTES_PER_ELEMENT * numFlowers);
-   
-      const numLimbs = reader.readNumber();
-      for (let i = 0; i < numLimbs; i++) {
-         reader.padOffset(Float32Array.BYTES_PER_ELEMENT);
-         const hasFlower = reader.readBoolean();
-         reader.padOffset(3);
-
-         if (hasFlower) {
-            reader.padOffset(4 * Float32Array.BYTES_PER_ELEMENT);
-         }
-      }
-   }
-
-   public updateFromData(reader: PacketReader): void {
-      this.padData(reader)
    }
 
    onDie(): void {

@@ -28,20 +28,15 @@ const DEATH_SOUNDS: ReadonlyArray<AudioFilePath> = ["yeti-death-1.mp3", "yeti-de
 class YetiComponent extends ServerComponent {
    public pawRenderParts: ReadonlyArray<RenderPart>;
    
-   public lastAttackProgress: number;
-   public attackProgress: number;
+   public lastAttackProgress = 0;
+   public attackProgress = 0;
 
-   constructor(entity: Entity, reader: PacketReader) {
+   constructor(entity: Entity) {
       super(entity);
 
-      reader.padOffset(Float32Array.BYTES_PER_ELEMENT);
-      this.lastAttackProgress = reader.readNumber();
-      this.attackProgress = this.lastAttackProgress;
-
       this.pawRenderParts = this.entity.getRenderThings("yetiComponent:paw", 2) as Array<RenderPart>;
-      this.updatePaws();
    }
-   
+
    private updatePaws(): void {
       let attackProgress = this.attackProgress;
       attackProgress = Math.pow(attackProgress, 0.75);

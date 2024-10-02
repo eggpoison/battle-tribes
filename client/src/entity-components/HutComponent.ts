@@ -60,21 +60,15 @@ class HutComponent extends ServerComponent {
    
    // @Memory: Don't need to store
    /** Amount the door should swing outwards from 0 to 1 */
-   private doorSwingAmount: number;
-   public isRecalling: boolean;
+   private doorSwingAmount = 0;
+   public isRecalling = false;
 
    private recallMarker: RenderPart | null = null;
 
-   constructor(entity: Entity, reader: PacketReader) {
+   constructor(entity: Entity) {
       super(entity);
       
-      this.doorSwingAmount = calculateDoorSwingAmount(reader.readNumber());
-      this.isRecalling = reader.readBoolean();
-      reader.padOffset(3);
-      
       this.doorRenderParts = this.entity.getRenderThings("hutComponent:door") as Array<RenderPart>;
-
-      this.updateDoors();
    }
 
    private updateDoors(): void {

@@ -31,14 +31,16 @@ const getTile = (layer: Layer, position: Point): Tile => {
 }
 
 class TransformComponent extends ServerComponent {
-   public ageTicks: number;
-   public totalMass: number;
+   // @Hack
+   public ageTicks = 0;
+   public totalMass = 0;
    
-   public readonly position: Point;
+   public readonly position = new Point(-1, -1);
 
    /** Angle the object is facing, taken counterclockwise from the positive x axis (radians) */
    public rotation = 0;
 
+   // @Memory: Shouldn't even store this
    // @Cleanup: Shouldn't be undefined at first!
    public tile!: Tile;
    
@@ -47,8 +49,8 @@ class TransformComponent extends ServerComponent {
    public hitboxes = new Array<Hitbox>();
    public readonly hitboxLocalIDs = new Array<number>();
 
-   public collisionBit: number;
-   public collisionMask: number;
+   public collisionBit = 0;
+   public collisionMask = 0;
 
    public collidingEntities = new Array<Entity>();
    
@@ -56,66 +58,6 @@ class TransformComponent extends ServerComponent {
    public boundingAreaMaxX = Number.MIN_SAFE_INTEGER;
    public boundingAreaMinY = Number.MAX_SAFE_INTEGER;
    public boundingAreaMaxY = Number.MIN_SAFE_INTEGER;
-   
-   constructor(entity: Entity, reader: PacketReader) {
-      super(entity);
-
-      this.position = new Point(reader.readNumber(), reader.readNumber());
-      this.rotation = reader.readNumber();
-      this.ageTicks = reader.readNumber();
-      this.collisionBit = reader.readNumber();
-      this.collisionMask = reader.readNumber();
-
-      this.totalMass = 0;
-
-      const numCircularHitboxes = reader.readNumber();
-      for (let i = 0; i < numCircularHitboxes; i++) {
-         const mass = reader.readNumber();
-         const offsetX = reader.readNumber();
-         const offsetY = reader.readNumber();
-         const collisionType = reader.readNumber();
-         const collisionBit = reader.readNumber();
-         const collisionMask = reader.readNumber();
-         const localID = reader.readNumber();
-         const numFlags = reader.readNumber();
-         const flags = new Array<HitboxFlag>();
-         for (let i = 0; i < numFlags; i++) {
-            flags.push(reader.readNumber());
-         }
-         const radius = reader.readNumber();
-
-         const box = new CircularBox(new Point(offsetX, offsetY), 0, radius);
-         const hitbox = createHitbox(box, mass, collisionType, collisionBit, collisionMask, flags);
-         this.addHitbox(hitbox, localID);
-
-         this.totalMass += mass;
-      }
-
-      const numRectangularHitboxes = reader.readNumber();
-      for (let i = 0; i < numRectangularHitboxes; i++) {
-         const mass = reader.readNumber();
-         const offsetX = reader.readNumber();
-         const offsetY = reader.readNumber();
-         const collisionType = reader.readNumber();
-         const collisionBit = reader.readNumber();
-         const collisionMask = reader.readNumber();
-         const localID = reader.readNumber();
-         const numFlags = reader.readNumber();
-         const flags = new Array<HitboxFlag>();
-         for (let i = 0; i < numFlags; i++) {
-            flags.push(reader.readNumber());
-         }
-         const width = reader.readNumber();
-         const height = reader.readNumber();
-         const rotation = reader.readNumber();
-
-         const box = new RectangularBox(new Point(offsetX, offsetY), width, height, rotation);
-         const hitbox = createHitbox(box, mass, collisionType, collisionBit, collisionMask, flags);
-         this.addHitbox(hitbox, localID);
-
-         this.totalMass += mass;
-      }
-   }
 
    public onLoad(): void {
       const layer = getEntityLayer(this.entity.id);

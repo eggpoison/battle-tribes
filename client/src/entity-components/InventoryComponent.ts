@@ -176,16 +176,6 @@ const updateHeldItem = (inventoryComponent: InventoryComponent, inventoryUseComp
 class InventoryComponent extends ServerComponent {
    private readonly inventories: Partial<Record<InventoryName, Inventory>> = {};
 
-   constructor(entity: Entity, reader: PacketReader, isPlayer: boolean) {
-      super(entity);
-
-      if (isPlayer) {
-         this.updatePlayerFromData(reader);
-      } else {
-         this.updateFromData(reader);
-      }
-   }
-
    // @Cleanup: just combine these 2 and make it able to return undefined
 
    // public hasInventory(inventoryName: InventoryName): boolean {

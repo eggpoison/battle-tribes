@@ -137,23 +137,14 @@ const resolveBorderCollisions = (physicsComponent: PhysicsComponent): void => {
 class PhysicsComponent extends ServerComponent {
    // @Memory @Speed: Unbox external velocity and velocity
    
-   public readonly selfVelocity: Point;
-   public readonly acceleration: Point;
+   public readonly selfVelocity = new Point(-1, -1);
+   public readonly acceleration = new Point(-1, -1);
 
-   public readonly externalVelocity: Point;
+   public readonly externalVelocity = new Point(-1, -1);
 
    public angularVelocity = 0;
 
-   public traction: number;
-   
-   constructor(entity: Entity, reader: PacketReader) {
-      super(entity);
-
-      this.selfVelocity = new Point(reader.readNumber(), reader.readNumber());
-      this.externalVelocity = new Point(reader.readNumber(), reader.readNumber());
-      this.acceleration = new Point(reader.readNumber(), reader.readNumber());
-      this.traction = reader.readNumber();
-   }
+   public traction = 0;
 
    public padData(reader: PacketReader): void {
       reader.padOffset(7 * Float32Array.BYTES_PER_ELEMENT);

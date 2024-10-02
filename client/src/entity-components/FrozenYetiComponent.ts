@@ -1,4 +1,4 @@
-import { FrozenYetiComponentData, ServerComponentType } from "battletribes-shared/components";
+import { ServerComponentType } from "battletribes-shared/components";
 import { FrozenYetiAttackType } from "battletribes-shared/entities";
 import { lerp, randFloat, randInt } from "battletribes-shared/utils";
 import { Settings } from "battletribes-shared/settings";
@@ -29,23 +29,15 @@ class FrozenYetiComponent extends ServerComponent {
    /** Index 0: left paw, index 1: right paw */
    public readonly pawRenderParts: ReadonlyArray<RenderPart>;
    
-   public attackType: FrozenYetiAttackType;
-   public attackStage: number;
-   public stageProgress: number;
+   public attackType: FrozenYetiAttackType = 0;
+   public attackStage = 0;
+   public stageProgress = 0;
 
-   constructor(entity: Entity, reader: PacketReader) {
+   constructor(entity: Entity) {
       super(entity);
-
-      this.attackType = reader.readNumber();
-      this.attackStage = reader.readNumber();
-      this.stageProgress = reader.readNumber();
-      this.readRockSpikes(reader);
 
       this.headRenderPart = this.entity.getRenderThing("frozenYetiComponent:head") as RenderPart;
       this.pawRenderParts = this.entity.getRenderThings("frozenYetiComponent:paw", 2) as Array<RenderPart>;
-
-      // Initial paw transforms
-      setPawRotationAndOffset(this, PAW_RESTING_ANGLE, PAW_OFFSET);
    }
 
    private readRockSpikes(reader: PacketReader): void {

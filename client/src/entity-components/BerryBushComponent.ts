@@ -1,5 +1,4 @@
 import ServerComponent from "./ServerComponent";
-import Entity from "../Entity";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { PacketReader } from "battletribes-shared/packets";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
@@ -15,14 +14,8 @@ export const BERRY_BUSH_TEXTURE_SOURCES = [
 ];
 
 class BerryBushComponent extends ServerComponent {
-   public numBerries: number;
+   public numBerries = 0;
    private renderPart!: TexturedRenderPart;
-   
-   constructor(entity: Entity, reader: PacketReader) {
-      super(entity);
-      
-      this.numBerries = reader.readNumber();
-   }
 
    public onLoad(): void {
       this.renderPart = this.entity.getRenderThing("berryBushComponent:renderPart") as TexturedRenderPart;

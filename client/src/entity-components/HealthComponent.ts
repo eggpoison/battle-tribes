@@ -1,6 +1,5 @@
 import { Settings } from "battletribes-shared/settings";
 import ServerComponent from "./ServerComponent";
-import Entity from "../Entity";
 import { PacketReader } from "battletribes-shared/packets";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 import { ServerComponentType } from "battletribes-shared/components";
@@ -13,17 +12,10 @@ const ATTACK_HIT_FLASH_DURATION = 0.4;
 const MAX_REDNESS = 0.85;
 
 class HealthComponent extends ServerComponent {
-   public health: number;
-   public maxHealth: number;
+   public health = 0;
+   public maxHealth = 0;
 
    public secondsSinceLastHit = 99999;
-   
-   constructor(entity: Entity, reader: PacketReader) {
-      super(entity);
-
-      this.health = reader.readNumber();
-      this.maxHealth = reader.readNumber();
-   }
 
    public onHit(isDamagingHit: boolean): void {
       if (isDamagingHit) {

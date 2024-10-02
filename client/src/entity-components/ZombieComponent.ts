@@ -1,27 +1,20 @@
 import { ServerComponentType } from "battletribes-shared/components";
 import { Settings } from "battletribes-shared/settings";
 import { randInt } from "battletribes-shared/utils";
-import Entity from "../Entity";
 import { playSound, AudioFilePath } from "../sound";
 import ServerComponent from "./ServerComponent";
 import { PacketReader } from "battletribes-shared/packets";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 
 class ZombieComponent extends ServerComponent {
-   public readonly zombieType: number;
-   
-   constructor(entity: Entity, reader: PacketReader) {
-      super(entity);
-
-      this.zombieType = reader.readNumber();
-   }
+   public zombieType = 0;
 
    public padData(reader: PacketReader): void {
       reader.padOffset(Float32Array.BYTES_PER_ELEMENT);
    }
 
    public updateFromData(reader: PacketReader): void {
-      reader.padOffset(Float32Array.BYTES_PER_ELEMENT);
+      this.zombieType = reader.readNumber();
    }
 }
 

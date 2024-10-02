@@ -1,5 +1,4 @@
 import ServerComponent from "./ServerComponent";
-import Entity from "../Entity";
 import { randFloat } from "battletribes-shared/utils";
 import { FishColour } from "battletribes-shared/entities";
 import { PacketReader } from "battletribes-shared/packets";
@@ -10,22 +9,15 @@ import { createWaterSplashParticle } from "../particles";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 
 class FishComponent extends ServerComponent {
-   public readonly colour: FishColour;
-   public readonly waterOpacityMultiplier: number;
+   public colour: FishColour = 0;
+   public readonly waterOpacityMultiplier = randFloat(0.6, 1);
    
-   constructor(entity: Entity, reader: PacketReader) {
-      super(entity);
-
-      this.colour = reader.readNumber();
-      this.waterOpacityMultiplier = randFloat(0.6, 1);
-   }
-
    public padData(reader: PacketReader): void {
       reader.padOffset(Float32Array.BYTES_PER_ELEMENT);
    }
 
    public updateFromData(reader: PacketReader): void {
-      reader.padOffset(Float32Array.BYTES_PER_ELEMENT);
+      this.colour = reader.readNumber();
    }
 }
 

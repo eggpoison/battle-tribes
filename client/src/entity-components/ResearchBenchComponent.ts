@@ -1,6 +1,5 @@
 import { customTickIntervalHasPassed } from "battletribes-shared/utils";
 import ServerComponent from "./ServerComponent";
-import Entity from "../Entity";
 import { createPaperParticle } from "../particles";
 import { getRandomPointInEntity } from "./TransformComponent";
 import { PacketReader } from "battletribes-shared/packets";
@@ -8,14 +7,7 @@ import { ServerComponentType } from "battletribes-shared/components";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 
 class ResearchBenchComponent extends ServerComponent {
-   public isOccupied: boolean;
-
-   constructor(entity: Entity, reader: PacketReader) {
-      super(entity);
-      
-      this.isOccupied = reader.readBoolean();
-      reader.padOffset(3);
-   }
+   public isOccupied = false;
 
    public padData(reader: PacketReader): void {
       reader.padOffset(Float32Array.BYTES_PER_ELEMENT);

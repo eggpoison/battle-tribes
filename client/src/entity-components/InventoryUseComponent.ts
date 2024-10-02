@@ -332,7 +332,7 @@ export function readCrossbowLoadProgressRecord(reader: PacketReader): Partial<Re
 }
 
 class InventoryUseComponent extends ServerComponent{
-   public readonly limbInfos: ReadonlyArray<LimbInfo>;
+   public readonly limbInfos = new Array<LimbInfo>();
 
    public readonly limbAttachPoints = new Array<RenderAttachPoint>();
    public readonly limbRenderParts = new Array<RenderPart>();
@@ -342,84 +342,6 @@ class InventoryUseComponent extends ServerComponent{
 
    public customItemRenderPart: RenderPart | null = null;
    public readonly bandageRenderParts = new Array<RenderPart>();
-   
-   constructor(entity: Entity, reader: PacketReader) {
-      super(entity);
-
-      const useInfos = new Array<LimbInfo>();
-      const numUseInfos = reader.readNumber();
-      for (let i = 0; i < numUseInfos; i++) {
-         const usedInventoryName = reader.readNumber() as InventoryName;
-         const selectedItemSlot = reader.readNumber();
-         const heldItemType = reader.readNumber();
-
-         const spearWindupCooldowns: Partial<Record<number, number>> = {};
-         const numSpearWindupCooldowns = reader.readNumber();
-         for (let j = 0; j < numSpearWindupCooldowns; j++) {
-            const itemSlot = reader.readNumber();
-            const cooldown = reader.readNumber();
-            spearWindupCooldowns[itemSlot] = cooldown;
-         }
-
-         const crossbowLoadProgressRecord = readCrossbowLoadProgressRecord(reader);
-
-         const foodEatingTimer = reader.readNumber();
-         const action = reader.readNumber();
-         const lastAttackTicks = reader.readNumber();
-         const lastEatTicks = reader.readNumber();
-         const lastBowChargeTicks = reader.readNumber();
-         const lastSpearChargeTicks = reader.readNumber();
-         const lastBattleaxeChargeTicks = reader.readNumber();
-         const lastCrossbowLoadTicks = reader.readNumber();
-         const lastCraftTicks = reader.readNumber();
-         const thrownBattleaxeItemID = reader.readNumber();
-         const lastAttackCooldown = reader.readNumber();
-         const currentActionElapsedTicks = reader.readNumber();
-         const currentActionDurationTicks = reader.readNumber();
-         const currentActionPauseTicksRemaining = reader.readNumber();
-         const currentActionRate = reader.readNumber();
-         // @Hack
-         const lastBlockTick = reader.readNumber();
-         const blockPositionX = reader.readNumber();
-         const blockPositionY = reader.readNumber();
-         const blockType = reader.readNumber();
-
-         const currentActionStartLimbState = readLimbStateFromPacket(reader);
-         const currentActionEndLimbState = readLimbStateFromPacket(reader);
-
-         const limbInfo: LimbInfo = {
-            selectedItemSlot: selectedItemSlot,
-            heldItemType: heldItemType !== -1 ? heldItemType : null,
-            inventoryName: usedInventoryName,
-            spearWindupCooldowns: spearWindupCooldowns,
-            crossbowLoadProgressRecord: crossbowLoadProgressRecord,
-            foodEatingTimer: foodEatingTimer,
-            action: action,
-            lastAttackTicks: lastAttackTicks,
-            lastEatTicks: lastEatTicks,
-            lastBowChargeTicks: lastBowChargeTicks,
-            lastSpearChargeTicks: lastSpearChargeTicks,
-            lastBattleaxeChargeTicks: lastBattleaxeChargeTicks,
-            lastCrossbowLoadTicks: lastCrossbowLoadTicks,
-            thrownBattleaxeItemID: thrownBattleaxeItemID,
-            lastAttackCooldown: lastAttackCooldown,
-            lastCraftTicks: lastCraftTicks,
-            lastAttackWindupTicks: 0,
-            currentActionElapsedTicks: currentActionElapsedTicks,
-            currentActionDurationTicks: currentActionDurationTicks,
-            currentActionPauseTicksRemaining: currentActionPauseTicksRemaining,
-            currentActionRate: currentActionRate,
-            currentActionStartLimbState: currentActionStartLimbState,
-            currentActionEndLimbState: currentActionEndLimbState,
-            animationStartOffset: new Point(0, 0),
-            animationEndOffset: new Point(0, 0),
-            animationDurationTicks: 0,
-            animationTicksElapsed: 0
-         };
-         useInfos.push(limbInfo);
-      }
-      this.limbInfos = useInfos;
-   }
 
    public onLoad(): void {
       const attachPoints = this.entity.getRenderThings("inventoryUseComponent:attachPoint", 2) as Array<RenderAttachPoint>;

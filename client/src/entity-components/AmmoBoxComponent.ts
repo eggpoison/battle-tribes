@@ -1,7 +1,6 @@
 import { ServerComponentType, TurretAmmoType } from "battletribes-shared/components";
 import { rotateXAroundOrigin, rotateYAroundOrigin } from "battletribes-shared/utils";
 import ServerComponent from "./ServerComponent";
-import Entity from "../Entity";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { BALLISTA_AMMO_BOX_OFFSET_X, BALLISTA_AMMO_BOX_OFFSET_Y } from "../utils";
 import Board from "../Board";
@@ -11,20 +10,10 @@ import { PacketReader } from "battletribes-shared/packets";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 
 class AmmoBoxComponent extends ServerComponent {
-   public ammoType: TurretAmmoType | null;
-   public ammoRemaining: number;
+   public ammoType: TurretAmmoType | null = null;
+   public ammoRemaining = 0;
 
    private ammoWarningRenderPart: RenderPart | null = null;
-   
-   constructor(entity: Entity, reader: PacketReader) {
-      super(entity);
-
-      const ammoType = reader.readNumber();
-      const ammoRemaining = reader.readNumber();
-
-      this.ammoType = ammoRemaining > 0 ? ammoType : null;
-      this.ammoRemaining = ammoRemaining;
-   }
 
    private updateAmmoType(ammoType: TurretAmmoType | null): void {
       if (ammoType === null) {

@@ -325,7 +325,12 @@ export function processEntityCreationData(entityID: EntityID, reader: PacketRead
    for (let i = 0; i < numComponents; i++) {
       const componentType = reader.readNumber() as ServerComponentType;
       
-      const component = createComponent(entity, componentType, reader, isPlayer);
+      const component = createComponent(entity, componentType);
+      if (isPlayer) {
+         component.updatePlayerFromData!(reader);
+      } else {
+         component.updateFromData(reader);
+      }
       entity.addServerComponent(componentType, component);
 
       const componentArray = getServerComponentArray(componentType);

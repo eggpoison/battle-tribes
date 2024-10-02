@@ -3,7 +3,6 @@ import { EntityID, EntityType, PlayerCauseOfDeath } from "battletribes-shared/en
 import { Point } from "battletribes-shared/utils";
 import { HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
 import { ThrowingProjectileComponentArray } from "../../components/ThrowingProjectileComponent";
-import Board from "../../Board";
 import { applyKnockback } from "../../components/PhysicsComponent";
 import { EntityRelationship, getEntityRelationship } from "../../components/TribeComponent";
 import { ServerComponentType } from "battletribes-shared/components";
@@ -12,6 +11,7 @@ import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
 import { TransformComponentArray } from "../../components/TransformComponent";
 import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
 import CircularBox from "battletribes-shared/boxes/CircularBox";
+import { validateEntity } from "../../world";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics
@@ -27,7 +27,7 @@ export function createBattleaxeProjectileConfig(): ComponentConfig<ComponentType
          type: EntityType.battleaxeProjectile,
          collisionBit: COLLISION_BITS.default,
          collisionMask: DEFAULT_COLLISION_MASK,
-         hitboxes: [createHitbox(new CircularBox(new Point(0, 0), 0, 32), 0.6, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0)]
+         hitboxes: [createHitbox(new CircularBox(new Point(0, 0), 0, 32), 0.6, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, [])]
       },
       [ServerComponentType.physics]: {
          velocityX: 0,
@@ -69,7 +69,7 @@ export function onBattleaxeProjectileCollision(battleaxe: EntityID, collidingEnt
          return;
       }
       
-      const tribeMember = Board.validateEntity(spearComponent.tribeMember);
+      const tribeMember = validateEntity(spearComponent.tribeMember);
 
       // Damage the entity
       const battleaxeTransformComponent = TransformComponentArray.getComponent(battleaxe);

@@ -6,10 +6,10 @@ import { TribesmanAIComponentArray, getTribesmanRelationship } from "./Tribesman
 import { TribeMemberComponentArray } from "./TribeMemberComponent";
 import { PlantComponentArray } from "./PlantComponent";
 import { GolemComponentArray } from "./GolemComponent";
-import Board from "../Board";
 import { TribeType } from "battletribes-shared/tribes";
 import { StructureComponentArray } from "./StructureComponent";
 import { Packet } from "battletribes-shared/packets";
+import { getEntityType } from "../world";
 
 // /** Relationships a tribe member can have, in increasing order of threat */
 export const enum EntityRelationship {
@@ -65,7 +65,7 @@ export function getEntityRelationship(entity: EntityID, comparingEntity: EntityI
       return EntityRelationship.enemyBuilding;
    }
    
-   const entityType = Board.getEntityType(comparingEntity)!;
+   const entityType = getEntityType(comparingEntity)!;
    switch (entityType) {
       case EntityType.plant: {
          const plantComponent = PlantComponentArray.getComponent(comparingEntity);

@@ -17,6 +17,7 @@ import ServerComponent from "./entity-components/ServerComponent";
 import { createIdentityMatrix } from "./rendering/matrices";
 import { getEntityRenderLayer } from "./render-layers";
 import { registerDirtyEntity } from "./rendering/render-part-matrices";
+import { getEntityByID } from "./world";
 
 // Use prime numbers / 100 to ensure a decent distribution of different types of particles
 const HEALING_PARTICLE_AMOUNTS = [0.05, 0.37, 1.01];
@@ -84,7 +85,7 @@ abstract class Entity {
 
    public dirty(): void {
       if (!this.isDirty) {
-         if (typeof Board.entityRecord[this.id] === "undefined") {
+         if (typeof getEntityByID(this.id) === "undefined") {
             throw new Error("Tried to dirty an entity which does not exist!");
          }
          

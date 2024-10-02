@@ -1,12 +1,13 @@
 import { Point, randFloat, randInt, rotateXAroundOrigin, rotateYAroundOrigin } from "battletribes-shared/utils";
 import { EntityID } from "battletribes-shared/entities";
-import Board from "./Board";
+import Layer from "./Layer";
 import { STRUCTURE_TYPES, StructureType } from "battletribes-shared/structures";
 import { TransformComponentArray } from "./components/TransformComponent";
 import { ServerComponentType } from "battletribes-shared/components";
 import { ComponentClassRecord, ComponentConfig, ComponentParams } from "./components";
 import { ComponentArray, ComponentArrayRecord } from "./components/ComponentArray";
 import { boxIsCircular } from "battletribes-shared/boxes/boxes";
+import { addEntityToJoinBuffer, getEntityType } from "./world";
 
 let idCounter = 1;
 
@@ -23,7 +24,7 @@ const a = <ComponentTypes extends ServerComponentType>(componentConfig: Componen
 
 // @Cleanup: maybe rename once other generic one is reworked?
 // export function createEntityFromConfig<ComponentTypes extends ServerComponentType>(componentTypes: ReadonlyArray<ComponentTypes>, componentConfig: ComponentConfig<ComponentTypes>): void {
-export function createEntityFromConfig<ComponentTypes extends ServerComponentType>(componentConfig: ComponentConfig<ComponentTypes>): EntityID {
+export function createEntityFromConfig<ComponentTypes extends ServerComponentType>(componentConfig: ComponentConfig<ComponentTypes>, layer: Layer): EntityID {
    const id = getNextEntityID();
    // @Hack
    const componentTypes = a(componentConfig);
@@ -56,13 +57,13 @@ export function createEntityFromConfig<ComponentTypes extends ServerComponentTyp
 
    // @Hack: move type out of transform component
    const transformComponentParams = (componentConfig as ComponentConfig<ServerComponentType.transform>)[ServerComponentType.transform];
-   Board.addEntityToJoinBuffer(id, transformComponentParams.type);
+   addEntityToJoinBuffer(id, transformComponentParams.type, layer);
 
    return id;
 }
 
 export function entityIsStructure(entity: EntityID): boolean {
-   return STRUCTURE_TYPES.indexOf(Board.getEntityType(entity) as StructureType) !== -1;
+   return STRUCTURE_TYPES.indexOf(getEntityType(entity) as StructureType) !== -1;
 }
 
 export function getRandomPositionInEntity(entity: EntityID): Point {

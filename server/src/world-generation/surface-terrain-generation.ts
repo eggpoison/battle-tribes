@@ -1,12 +1,13 @@
 import { WaterRockData, RiverSteppingStoneData } from "battletribes-shared/client-server-types";
 import { Biome, TileType } from "battletribes-shared/tiles";
-import { smoothstep } from "battletribes-shared/utils";
+import { smoothstep, TileIndex } from "battletribes-shared/utils";
 import { Settings } from "battletribes-shared/settings";
 import { generateOctavePerlinNoise, generatePerlinNoise, generatePointPerlinNoise } from "../perlin-noise";
 import BIOME_GENERATION_INFO, { BIOME_GENERATION_PRIORITY, BiomeSpawnRequirements, TileGenerationInfo } from "./terrain-generation-info";
 import { WaterTileGenerationInfo, generateRiverFeatures, generateRiverTiles } from "./river-generation";
 import OPTIONS from "../options";
-import Board from "../Board";
+import { getTileIndexIncludingEdges, getTileX, getTileY } from "../Layer";
+import { generateCaveEntrances } from "./cave-entrance-generation";
 
 export interface TerrainGenerationInfo {
    readonly tileTypes: Float32Array;
@@ -18,6 +19,11 @@ export interface TerrainGenerationInfo {
    readonly riverMainTiles: ReadonlyArray<WaterTileGenerationInfo>;
    readonly waterRocks: ReadonlyArray<WaterRockData>;
    readonly riverSteppingStones: ReadonlyArray<RiverSteppingStoneData>;
+}
+
+export interface LocalBiomeInfo {
+   readonly biome: Biome;
+   readonly tileIndexes: ReadonlyArray<TileIndex>;
 }
 
 const HEIGHT_NOISE_SCALE = 50;
@@ -41,6 +47,9 @@ const matchesBiomeRequirements = (generationInfo: BiomeSpawnRequirements, height
 }
 
 const getBiome = (height: number, temperature: number, humidity: number): Biome => {
+   // @Temporary
+   if(1+1===2)return Biome.mountains;
+   
    // @Speed
    const numBiomes = Object.keys(BIOME_GENERATION_INFO).length;
 
@@ -84,38 +93,36 @@ const getTileGenerationInfo = (biomeName: Biome, dist: number, x: number, y: num
    throw new Error(`Couldn't find a valid tile info! Biome: ${biomeName}`);
 }
 
-const getTileDist = (tileBiomes: Float32Array, tileX: number, tileY: number): number => {
-   /** The maximum distance that the algorithm will search for */
-   const MAX_SEARCH_DIST = 10;
+export function getTileDist(tileBiomes: Float32Array, tileX: number, tileY: number, maxSearchDist: number): number {
+   const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
+   const tileBiome = tileBiomes[tileIndex] as Biome;
 
-   const tileBiome = tileBiomes[Board.getTileIndexIncludingEdges(tileX, tileY)];
-
-   for (let dist = 1; dist <= MAX_SEARCH_DIST; dist++) {
+   for (let dist = 1; dist <= maxSearchDist; dist++) {
       for (let i = 0; i <= dist; i++) {
          // Top right
          if (tileX + i >= -Settings.EDGE_GENERATION_DISTANCE && tileX + i < Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE && tileY - dist + i >= -Settings.EDGE_GENERATION_DISTANCE && tileY - dist + i < Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE) {
-            const topRightBiome = tileBiomes[Board.getTileIndexIncludingEdges(tileX + i, tileY - dist + i)];
+            const topRightBiome = tileBiomes[getTileIndexIncludingEdges(tileX + i, tileY - dist + i)];
             if (topRightBiome !== tileBiome) {
                return dist - 1;
             }
          }
          // Bottom right
          if (tileX + dist - i >= -Settings.EDGE_GENERATION_DISTANCE && tileX + dist - i < Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE && tileY + i >= -Settings.EDGE_GENERATION_DISTANCE && tileY + i < Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE) {
-            const bottomRightBiome = tileBiomes[Board.getTileIndexIncludingEdges(tileX + dist - i, tileY + i)];
+            const bottomRightBiome = tileBiomes[getTileIndexIncludingEdges(tileX + dist - i, tileY + i)];
             if (bottomRightBiome !== tileBiome) {
                return dist - 1;
             }
          }
          // Bottom left
          if (tileX - dist + i >= -Settings.EDGE_GENERATION_DISTANCE && tileX - dist + i < Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE && tileY + i >= -Settings.EDGE_GENERATION_DISTANCE && tileY + i < Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE) {
-            const bottomLeftBiome = tileBiomes[Board.getTileIndexIncludingEdges(tileX - dist + i, tileY + i)];
+            const bottomLeftBiome = tileBiomes[getTileIndexIncludingEdges(tileX - dist + i, tileY + i)];
             if (bottomLeftBiome !== tileBiome) {
                return dist - 1;
             }
          }
          // Top left
          if (tileX - i >= -Settings.EDGE_GENERATION_DISTANCE && tileX - i < Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE && tileY - dist + i >= -Settings.EDGE_GENERATION_DISTANCE && tileY - dist + i < Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE) {
-            const topLeftBiome = tileBiomes[Board.getTileIndexIncludingEdges(tileX - i, tileY - dist + i)];
+            const topLeftBiome = tileBiomes[getTileIndexIncludingEdges(tileX - i, tileY - dist + i)];
             if (topLeftBiome !== tileBiome) {
                return dist - 1;
             }
@@ -123,17 +130,34 @@ const getTileDist = (tileBiomes: Float32Array, tileX: number, tileY: number): nu
       }
    }
 
-   return MAX_SEARCH_DIST;
+   return maxSearchDist;
 }
 
 /** Generate the tile array's tile types based on their biomes */
 export function generateTileInfo(tileBiomes: Float32Array, tileTypes: Float32Array, tileIsWalls: Float32Array): void {
    for (let tileX = -Settings.EDGE_GENERATION_DISTANCE; tileX < Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE; tileX++) {
       for (let tileY = -Settings.EDGE_GENERATION_DISTANCE; tileY < Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE; tileY++) {
-         const tileIndex = Board.getTileIndexIncludingEdges(tileX, tileY);
+         const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
          
-         const biome = tileBiomes[tileIndex];
-         const dist = getTileDist(tileBiomes, tileX, tileY);
+         const biome = tileBiomes[tileIndex] as Biome;
+         
+         /** The maximum distance that the algorithm will search for */
+         let maxSearchDist = 0;
+         
+         // @Speed: Pre-calculate this for each biome
+         const biomeGenerationInfo = BIOME_GENERATION_INFO[biome];
+         for (let i = 0; i < biomeGenerationInfo.tiles.length; i++) {
+            const tileGenerationInfo = biomeGenerationInfo.tiles[i];
+            if (typeof tileGenerationInfo.minDist !== "undefined" && tileGenerationInfo.minDist > maxSearchDist) {
+               maxSearchDist = tileGenerationInfo.minDist;
+            }
+            if (typeof tileGenerationInfo.maxDist !== "undefined" && tileGenerationInfo.maxDist >= maxSearchDist) {
+               maxSearchDist = tileGenerationInfo.maxDist + 1;
+            }
+         }
+         
+         // @Speed: There are many tiles which don't need this information
+         const dist = getTileDist(tileBiomes, tileX, tileY, maxSearchDist);
 
          const generationInfo = getTileGenerationInfo(biome, dist, tileX, tileY);
 
@@ -158,7 +182,102 @@ const createNoiseMapData = (noise: ReadonlyArray<ReadonlyArray<number>>): Float3
    return data;
 }
 
-function generateTerrain(): TerrainGenerationInfo {
+const getConnectedBiomeTiles = (tileBiomes: Readonly<Float32Array>, processedTiles: Set<TileIndex>, tileX: number, tileY: number): ReadonlyArray<TileIndex> => {
+   const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
+   const targetBiome = tileBiomes[tileIndex];
+
+   processedTiles.add(tileIndex);
+   
+   /** Tiles to expand from, not tiles to check whether they belong in connectedTiles */
+   const tilesToCheck = [tileIndex];
+   const connectedTiles = [tileIndex];
+   while (tilesToCheck.length > 0) {
+      const currentTile = tilesToCheck.shift()!;
+      const currentTileX = getTileX(currentTile);
+      const currentTileY = getTileY(currentTile);
+
+      // Top
+      if (currentTileY < Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE - 1) {
+         // @Speed: can calculate this directly by offsetting the currentTile
+         const tileIndex = getTileIndexIncludingEdges(currentTileX, currentTileY + 1);
+         if (!processedTiles.has(tileIndex)) {
+            const biome = tileBiomes[tileIndex];
+            if (biome === targetBiome) {
+               tilesToCheck.push(tileIndex);
+               connectedTiles.push(tileIndex);
+               processedTiles.add(tileIndex);
+            }
+         }
+      }
+      // Right
+      if (currentTileX < Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE - 1) {
+         // @Speed: can calculate this directly by offsetting the currentTile
+         const tileIndex = getTileIndexIncludingEdges(currentTileX + 1, currentTileY);
+         if (!processedTiles.has(tileIndex)) {
+            const biome = tileBiomes[tileIndex];
+            if (biome === targetBiome) {
+               tilesToCheck.push(tileIndex);
+               connectedTiles.push(tileIndex);
+               processedTiles.add(tileIndex);
+            }
+         }
+      }
+      // Bottom
+      if (currentTileY > -Settings.EDGE_GENERATION_DISTANCE + 1) {
+         // @Speed: can calculate this directly by offsetting the currentTile
+         const tileIndex = getTileIndexIncludingEdges(currentTileX, currentTileY - 1);
+         if (!processedTiles.has(tileIndex)) {
+            const biome = tileBiomes[tileIndex];
+            if (biome === targetBiome) {
+               tilesToCheck.push(tileIndex);
+               connectedTiles.push(tileIndex);
+               processedTiles.add(tileIndex);
+            }
+         }
+      }
+      // Left
+      if (currentTileX > -Settings.EDGE_GENERATION_DISTANCE + 1) {
+         // @Speed: can calculate this directly by offsetting the currentTile
+         const tileIndex = getTileIndexIncludingEdges(currentTileX - 1, currentTileY);
+         if (!processedTiles.has(tileIndex)) {
+            const biome = tileBiomes[tileIndex];
+            if (biome === targetBiome) {
+               tilesToCheck.push(tileIndex);
+               connectedTiles.push(tileIndex);
+               processedTiles.add(tileIndex);
+            }
+         }
+      }
+   }
+
+   return connectedTiles;
+}
+
+const groupLocalBiomes = (tileBiomes: Readonly<Float32Array>): ReadonlyArray<LocalBiomeInfo> => {
+   const processedTiles = new Set<TileIndex>();
+   
+   const localBiomes = new Array<LocalBiomeInfo>();
+   for (let tileX = -Settings.EDGE_GENERATION_DISTANCE; tileX < Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE; tileX++) {
+      for (let tileY = -Settings.EDGE_GENERATION_DISTANCE; tileY < Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE; tileY++) {
+         const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
+         if (processedTiles.has(tileIndex)) {
+            continue;
+         }
+
+         // New tile! Make a local biome out of it
+         const connectedTiles = getConnectedBiomeTiles(tileBiomes, processedTiles, tileX, tileY);
+         const localBiome: LocalBiomeInfo = {
+            biome: tileBiomes[tileIndex],
+            tileIndexes: connectedTiles
+         };
+         localBiomes.push(localBiome);
+      }
+   }
+
+   return localBiomes;
+}
+
+function generateSurfaceTerrain(): TerrainGenerationInfo {
    const tileBiomes = new Float32Array(Settings.FULL_BOARD_DIMENSIONS * Settings.FULL_BOARD_DIMENSIONS);
    const tileTypes = new Float32Array(Settings.FULL_BOARD_DIMENSIONS * Settings.FULL_BOARD_DIMENSIONS);
    const tileIsWalls = new Float32Array(Settings.FULL_BOARD_DIMENSIONS * Settings.FULL_BOARD_DIMENSIONS);
@@ -174,7 +293,7 @@ function generateTerrain(): TerrainGenerationInfo {
    // Create temperature and humidity arrays
    for (let tileY = -Settings.EDGE_GENERATION_DISTANCE; tileY < Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE; tileY++) {
       for (let tileX = -Settings.EDGE_GENERATION_DISTANCE; tileX < Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE; tileX++) {
-         const tileIndex = Board.getTileIndexIncludingEdges(tileX, tileY);
+         const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
          
          const rawTemperature = temperatureMap[tileY + Settings.EDGE_GENERATION_DISTANCE][tileX + Settings.EDGE_GENERATION_DISTANCE];
          tileTemperatures[tileIndex] = smoothstep(rawTemperature);
@@ -193,10 +312,8 @@ function generateTerrain(): TerrainGenerationInfo {
 
          const biome = getBiome(height, temperature, humidity);
          
-         const tileIndex = Board.getTileIndexIncludingEdges(tileX, tileY);
-         // @Temporary
-         // tileBiomes[tileIndex] = biome;
-         tileBiomes[tileIndex] = (biome === Biome.grasslands || biome === Biome.mountains) ? biome : Biome.grasslands;
+         const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
+         tileBiomes[tileIndex] = biome;
       }
    }
 
@@ -217,7 +334,7 @@ function generateTerrain(): TerrainGenerationInfo {
 
    // Create flow directions array and create ice rivers
    for (const tileInfo of riverTiles) {
-      const tileIndex = Board.getTileIndexIncludingEdges(tileInfo.tileX, tileInfo.tileY);
+      const tileIndex = getTileIndexIncludingEdges(tileInfo.tileX, tileInfo.tileY);
       
       // @Cleanup @Speed: Do we have to hardcode this here?
       // Make ice rivers
@@ -236,6 +353,12 @@ function generateTerrain(): TerrainGenerationInfo {
    const riverSteppingStones = new Array<RiverSteppingStoneData>();
    generateRiverFeatures(riverTiles, waterRocks, riverSteppingStones);
 
+   const localBiomes = groupLocalBiomes(tileBiomes);
+
+   if (OPTIONS.generateCaves) {
+      generateCaveEntrances(tileTypes, tileBiomes, tileIsWalls, localBiomes);
+   }
+
    return {
       tileTypes: tileTypes,
       tileBiomes: tileBiomes,
@@ -249,4 +372,4 @@ function generateTerrain(): TerrainGenerationInfo {
    };
 }
 
-export default generateTerrain;
+export default generateSurfaceTerrain;

@@ -2,7 +2,7 @@ import { ServerComponentType } from "battletribes-shared/components";
 import { ComponentArray } from "./ComponentArray";
 import { EntityID } from "battletribes-shared/entities";
 import { InventoryComponentArray } from "./InventoryComponent";
-import Board from "../Board";
+import { entityExists } from "../world";
 
 export interface ThrowingProjectileComponentParams {
    tribeMember: EntityID;
@@ -27,7 +27,7 @@ export const ThrowingProjectileComponentArray = new ComponentArray<ThrowingProje
 
 function onRemove(entity: EntityID): void {
    const throwingProjectileComponent = ThrowingProjectileComponentArray.getComponent(entity);
-   if (!Board.hasEntity(throwingProjectileComponent.tribeMember) || throwingProjectileComponent.itemID === null) {
+   if (!entityExists(throwingProjectileComponent.tribeMember) || throwingProjectileComponent.itemID === null) {
       return;
    }
 

@@ -1,4 +1,4 @@
-import { ServerComponentType, TombstoneComponentData } from "battletribes-shared/components";
+import { ServerComponentType } from "battletribes-shared/components";
 import { DeathInfo, PlayerCauseOfDeath } from "battletribes-shared/entities";
 import { Settings } from "battletribes-shared/settings";
 import { Point, randInt } from "battletribes-shared/utils";
@@ -11,15 +11,23 @@ import { PacketReader } from "battletribes-shared/packets";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 
 class TombstoneComponent extends ServerComponent {
-   public readonly tombstoneType: number;
-   public zombieSpawnProgress: number;
-   public zombieSpawnX: number;
-   public zombieSpawnY: number;
-   public readonly deathInfo: DeathInfo | null;
+   public tombstoneType = 0;
+   public zombieSpawnProgress = 0;
+   public zombieSpawnX = -1;
+   public zombieSpawnY = -1;
+   public deathInfo: DeathInfo | null = null;
 
-   constructor(entity: Entity, reader: PacketReader) {
-      super(entity);
+   public padData(reader: PacketReader): void {
+      reader.padOffset(4 * Float32Array.BYTES_PER_ELEMENT);
 
+      const hasDeathInfo = reader.readBoolean();
+      reader.padOffset(3);
+      if (hasDeathInfo) {
+         reader.padOffset(Float32Array.BYTES_PER_ELEMENT + 100 + Float32Array.BYTES_PER_ELEMENT);
+      }
+   }
+   
+   public updateFromData(reader: PacketReader): void {
       this.tombstoneType = reader.readNumber();
       this.zombieSpawnProgress = reader.readNumber();
       this.zombieSpawnX = reader.readNumber();
@@ -37,29 +45,6 @@ class TombstoneComponent extends ServerComponent {
          };
       } else {
          this.deathInfo = null;
-      }
-   }
-
-   public padData(reader: PacketReader): void {
-      reader.padOffset(4 * Float32Array.BYTES_PER_ELEMENT);
-
-      const hasDeathInfo = reader.readBoolean();
-      reader.padOffset(3);
-      if (hasDeathInfo) {
-         reader.padOffset(Float32Array.BYTES_PER_ELEMENT + 100 + Float32Array.BYTES_PER_ELEMENT);
-      }
-   }
-   
-   public updateFromData(reader: PacketReader): void {
-      reader.padOffset(Float32Array.BYTES_PER_ELEMENT)
-      this.zombieSpawnProgress = reader.readNumber();
-      this.zombieSpawnX = reader.readNumber();
-      this.zombieSpawnY = reader.readNumber();
-
-      const hasDeathInfo = reader.readBoolean();
-      reader.padOffset(3);
-      if (hasDeathInfo) {
-         reader.padOffset(100 + Float32Array.BYTES_PER_ELEMENT);
       }
    }
 }

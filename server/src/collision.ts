@@ -25,7 +25,7 @@ import { onEmbrasureCollision } from "./entities/structures/embrasure";
 import { onTribesmanCollision } from "./entities/tribes/tribe-member";
 import { CollisionPushInfo, collisionBitsAreCompatible, getCollisionPushInfo } from "battletribes-shared/hitbox-collision";
 import { TransformComponent, TransformComponentArray } from "./components/TransformComponent";
-import Board from "./Board";
+import Layer from "./Layer";
 import { onBallistaWoodenBoltCollision } from "./entities/projectiles/ballista-wooden-bolt";
 import { onBallistaRockCollision } from "./entities/projectiles/ballista-rock";
 import { onBallistaSlimeballCollision } from "./entities/projectiles/ballista-slimeball";
@@ -34,6 +34,7 @@ import { onWoodenArrowCollision } from "./entities/projectiles/wooden-arrow";
 import { ComponentArrays } from "./components/ComponentArray";
 import { HitboxCollisionType, Hitbox, updateBox } from "battletribes-shared/boxes/boxes";
 import RectangularBox from "battletribes-shared/boxes/RectangularBox";
+import { getEntityType } from "./world";
 
 export const enum CollisionVars {
    NO_COLLISION = 0xFFFF
@@ -112,7 +113,7 @@ export function collide(entity: EntityID, pushingEntity: EntityID, pushedHitboxI
 
    // @Hack @Temporary
    const collisionPoint = new Point((pushedEntityTransformComponent.position.x + pushingEntityTransformComponent.position.x) / 2, (pushedEntityTransformComponent.position.y + pushingEntityTransformComponent.position.y) / 2);
-   const entityType = Board.getEntityType(entity)!;
+   const entityType = getEntityType(entity)!;
    
    if (collisionBitsAreCompatible(pushedEntityTransformComponent.collisionMask, pushedEntityTransformComponent.collisionBit, pushingEntityTransformComponent.collisionMask, pushingEntityTransformComponent.collisionBit) && PhysicsComponentArray.hasComponent(entity)) {
       const physicsComponent = PhysicsComponentArray.getComponent(entity);

@@ -30,12 +30,11 @@ import { GrassBlocker } from "battletribes-shared/grass-blockers";
 import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
 import { windowHeight, windowWidth } from "../webgl";
 import { EntitySummonPacket } from "battletribes-shared/dev-packets";
-import { InventoryName } from "battletribes-shared/items/items";
 import { closeCurrentMenu } from "../menus";
 import { TribesTab_refresh } from "../components/game/dev/tabs/TribesTab";
 import { processTickEvents } from "../entity-tick-events";
 import { Packet, PacketReader, PacketType } from "battletribes-shared/packets";
-import { InitialGameDataPacket, processInitialGameDataPacket, processRespawnDataPacket, processSyncDataPacket } from "./packet-processing";
+import { processInitialGameDataPacket, processRespawnDataPacket, processSyncDataPacket } from "./packet-processing";
 import { createActivatePacket, createPlayerDataPacket, createSyncRequestPacket } from "./packet-creation";
 import Tribe from "../Tribe";
 import { createHitbox, Hitbox } from "battletribes-shared/boxes/boxes";
@@ -43,6 +42,8 @@ import CircularBox from "battletribes-shared/boxes/CircularBox";
 import RectangularBox from "battletribes-shared/boxes/RectangularBox";
 import { AppState } from "../components/App";
 import { LoadingScreenStatus } from "../components/LoadingScreen";
+import { getEntityByID, layers, removeEntity } from "../world";
+import { getTileIndexIncludingEdges } from "../Layer";
 
 export type GameData = {
    readonly gameTicks: number;
@@ -143,7 +144,7 @@ export function createRectangularHitboxFromData(data: RectangularHitboxData): Hi
 abstract class Client {
    private static socket: WebSocket | null = null;
 
-   public static initialGameDataResolve: ((value: InitialGameDataPacket) => void) | null = null;
+   public static initialGameDataResolve: (() => void) | null = null;
    public static nextGameDataResolve: ((value: PacketReader) => void) | null = null;
 
    public static connectToServer(setAppState: (appState: AppState) => void, setLoadingScreenStatus: (status: LoadingScreenStatus) => void): Promise<boolean> {
@@ -176,9 +177,10 @@ abstract class Client {
             const packetType = reader.readNumber() as PacketType;
             switch (packetType) {
                case PacketType.initialGameData: {
+                  // @Hack
                   if (this.initialGameDataResolve !== null) {
-                     const initialGameDataPacket = processInitialGameDataPacket(reader);
-                     this.initialGameDataResolve(initialGameDataPacket);
+                     processInitialGameDataPacket(reader);
+                     this.initialGameDataResolve();
                      this.initialGameDataResolve = null;
                   }
                   break;
@@ -282,7 +284,7 @@ abstract class Client {
    // }
 
    // @Hack
-   public static getInitialGameDataPacket(): Promise<InitialGameDataPacket> {
+   public static getInitialGameDataPacket(): Promise<void> {
       return new Promise(resolve => {
          Client.initialGameDataResolve = resolve;
       });
@@ -327,7 +329,7 @@ abstract class Client {
       // Register hits
       for (const hitData of gameDataPacket.visibleHits) {
          // Register hit
-         const hitEntity = Board.entityRecord[hitData.hitEntityID];
+         const hitEntity = getEntityByID(hitData.hitEntityID);
          if (typeof hitEntity !== "undefined") {
             if (hitData.attackEffectiveness === AttackEffectiveness.stopped) {
                hitEntity.registerStoppedHit(hitData);
@@ -365,7 +367,7 @@ abstract class Client {
             createHealNumber(healData.healedID, healData.entityPositionX, healData.entityPositionY, healData.healAmount);
          }
 
-         const healedEntity = Board.entityRecord[healData.healedID];
+         const healedEntity = getEntityByID(healData.healedID);
          if (typeof healedEntity !== "undefined") {
             healedEntity.createHealingParticles(healData.healAmount);
 
@@ -423,9 +425,12 @@ abstract class Client {
    
    private static registerTileUpdates(tileUpdates: ReadonlyArray<ServerTileUpdateData>): void {
       for (const tileUpdate of tileUpdates) {
+         const layer = layers[tileUpdate.layerIdx];
+         
          const tileX = tileUpdate.tileIndex % Settings.BOARD_DIMENSIONS;
          const tileY = Math.floor(tileUpdate.tileIndex / Settings.BOARD_DIMENSIONS);
-         const tile = Board.getTile(tileX, tileY);
+         const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
+         const tile = layer.getTile(tileIndex);
          tile.type = tileUpdate.type;
          tile.isWall = tileUpdate.isWall;
          
@@ -509,7 +514,7 @@ abstract class Client {
 
    public static killPlayer(): void {
       // Remove the player from the game
-      Board.removeEntity(Player.instance!, true);
+      removeEntity(Player.instance!, true);
       Player.instance = null;
 
       latencyGameState.resetFlags();

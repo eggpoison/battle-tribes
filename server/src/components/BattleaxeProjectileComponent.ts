@@ -3,11 +3,12 @@ import { ComponentArray } from "./ComponentArray";
 import { EntityID } from "battletribes-shared/entities";
 import { Settings } from "battletribes-shared/settings";
 import { lerp } from "battletribes-shared/utils";
-import Board from "../Board";
+import Layer from "../Layer";
 import { entitiesAreColliding, CollisionVars } from "../collision";
 import { PhysicsComponentArray } from "./PhysicsComponent";
 import { ThrowingProjectileComponentArray } from "./ThrowingProjectileComponent";
 import { getAgeTicks, TransformComponentArray } from "./TransformComponent";
+import { destroyEntity, entityExists } from "../world";
 
 const enum Vars {
    RETURN_TIME_TICKS = 1 * Settings.TPS
@@ -38,13 +39,13 @@ function onTick(_battleaxeProjectileComponent: BattleaxeProjectileComponent, bat
       
       const throwingProjectileComponent = ThrowingProjectileComponentArray.getComponent(battleaxe);
 
-      if (!Board.hasEntity(throwingProjectileComponent.tribeMember)) {
-         Board.destroyEntity(battleaxe);
+      if (!entityExists(throwingProjectileComponent.tribeMember)) {
+         destroyEntity(battleaxe);
          return;
       }
       
       if (entitiesAreColliding(battleaxe, throwingProjectileComponent.tribeMember) !== CollisionVars.NO_COLLISION) {
-         Board.destroyEntity(battleaxe);
+         destroyEntity(battleaxe);
          return;
       }
 

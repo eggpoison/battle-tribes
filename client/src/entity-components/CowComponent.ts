@@ -12,22 +12,15 @@ import { PacketReader } from "battletribes-shared/packets";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 
 class CowComponent extends ServerComponent {
-   public readonly species: CowSpecies;
-   public grazeProgress: number;
-
-   constructor(entity: Entity, reader: PacketReader) {
-      super(entity);
-
-      this.species = reader.readNumber();
-      this.grazeProgress = reader.readNumber();
-   }
+   public species = CowSpecies.black;
+   public grazeProgress = 0;
 
    public padData(reader: PacketReader): void {
       reader.padOffset(2 * Float32Array.BYTES_PER_ELEMENT);
    }
 
    public updateFromData(reader: PacketReader): void {
-      reader.padOffset(4);
+      this.species = reader.readNumber();
       const grazeProgress = reader.readNumber();
       
       // When the cow has finished grazing, create a bunch of dirt particles

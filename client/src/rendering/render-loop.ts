@@ -114,6 +114,7 @@ export function removeRenderable(renderable: Renderable, renderLayer: RenderLaye
    if (idx !== -1) {
       renderables.splice(idx, 1);
    } else {
+      console.log(renderable, renderLayer);
       throw new Error();
    }
 }

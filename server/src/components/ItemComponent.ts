@@ -6,7 +6,7 @@ import { ItemType } from "battletribes-shared/items/items";
 import { EntityID } from "battletribes-shared/entities";
 import { Packet } from "battletribes-shared/packets";
 import { getAgeTicks, TransformComponentArray } from "./TransformComponent";
-import Board from "../Board";
+import { destroyEntity } from "../world";
 
 const enum Vars {
    TICKS_TO_DESPAWN = 300 * Settings.TPS
@@ -70,7 +70,7 @@ function onTick(itemComponent: ItemComponent, itemEntity: EntityID): void {
    const transformComponent = TransformComponentArray.getComponent(itemEntity);
    const ageTicks = getAgeTicks(transformComponent);
    if (ageTicks >= Vars.TICKS_TO_DESPAWN) {
-      Board.destroyEntity(itemEntity);
+      destroyEntity(itemEntity);
    }
 }
 

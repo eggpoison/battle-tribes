@@ -2,7 +2,6 @@ import { PathfindingNodeIndex, VisibleChunkBounds } from "battletribes-shared/cl
 import { EntityID, EntityType } from "battletribes-shared/entities";
 import { PathfindingSettings, Settings } from "battletribes-shared/settings";
 import { distBetweenPointAndRectangle, angle, calculateDistanceSquared, Point } from "battletribes-shared/utils";
-import Board from "./Board";
 import PathfindingHeap from "./PathfindingHeap";
 import OPTIONS from "./options";
 import { PhysicsComponentArray } from "./components/PhysicsComponent";
@@ -12,6 +11,7 @@ import { ProjectileComponentArray } from "./components/ProjectileComponent";
 import CircularBox from "battletribes-shared/boxes/CircularBox";
 import { boxIsCircular, HitboxCollisionType, Hitbox } from "battletribes-shared/boxes/boxes";
 import RectangularBox from "battletribes-shared/boxes/RectangularBox";
+import { getEntityType, getGameTicks } from "./world";
 
 const enum Vars {
    NODE_ACCESSIBILITY_RESOLUTION = 3,
@@ -764,7 +764,7 @@ export function getVisiblePathfindingNodeOccupances(visibleChunkBounds: VisibleC
 }
 
 export function entityCanBlockPathfinding(entity: EntityID): boolean {
-   const entityType = Board.getEntityType(entity);
+   const entityType = getEntityType(entity);
    return entityType !== EntityType.itemEntity
       && entityType !== EntityType.slimeSpit
       && !ProjectileComponentArray.hasComponent(entity)
@@ -773,7 +773,7 @@ export function entityCanBlockPathfinding(entity: EntityID): boolean {
 }
 
 export function getEntityPathfindingGroupID(entity: EntityID): number {
-   switch (Board.getEntityType(entity)!) {
+   switch (getEntityType(entity)!) {
       case EntityType.door:
       case EntityType.player:
       case EntityType.tribeWorker:
@@ -812,7 +812,7 @@ export function updateEntityPathfindingNodeOccupance(entity: EntityID): void {
 }
 
 export function updateDynamicPathfindingNodes(): void {
-   if (Board.ticks % 3 !== 0) {
+   if (getGameTicks() % 3 !== 0) {
       return;
    }
 

@@ -1,5 +1,4 @@
 import ServerComponent from "./ServerComponent";
-import Entity from "../Entity";
 import { PacketReader } from "battletribes-shared/packets";
 import { ServerComponentType } from "battletribes-shared/components";
 import { Settings } from "battletribes-shared/settings";
@@ -14,17 +13,10 @@ const enum Vars {
 }
 
 class RockSpikeComponent extends ServerComponent {
-   public readonly size: number;
-   public readonly lifetime: number;
+   public size = 0;
+   public lifetime = 0;
    
    public renderPart!: RenderPart;
-
-   constructor(entity: Entity, reader: PacketReader) {
-      super(entity);
- 
-      this.size = reader.readNumber();
-      this.lifetime = reader.readNumber();
-   }
 
    public onLoad(): void {
       this.renderPart = this.entity.getRenderThing("rockSpikeProjectile:part") as RenderPart;
@@ -35,7 +27,8 @@ class RockSpikeComponent extends ServerComponent {
    }
 
    public updateFromData(reader: PacketReader): void {
-      reader.padOffset(2 * Float32Array.BYTES_PER_ELEMENT);
+      this.size = reader.readNumber();
+      this.lifetime = reader.readNumber();
    }
 }
 

@@ -10,9 +10,10 @@ import { ComponentConfig } from "../components";
 import { ServerComponentType } from "battletribes-shared/components";
 import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
 import { getAgeTicks, TransformComponentArray } from "../components/TransformComponent";
-import Board from "../Board";
+import Layer from "../Layer";
 import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
 import CircularBox from "battletribes-shared/boxes/CircularBox";
+import { getEntityType } from "../world";
    
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics
@@ -27,10 +28,10 @@ export function createSnowballConfig(): ComponentConfig<ComponentTypes> {
       [ServerComponentType.transform]: {
          position: new Point(0, 0),
          rotation: 0,
-         type: EntityType.slime,
+         type: EntityType.snowball,
          collisionBit: COLLISION_BITS.default,
          collisionMask: DEFAULT_COLLISION_MASK,
-         hitboxes: [createHitbox(new CircularBox(new Point(0, 0), 0, 0), 0, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0)]
+         hitboxes: [createHitbox(new CircularBox(new Point(0, 0), 0, 0), 0, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, [])]
       },
       [ServerComponentType.physics]: {
          velocityX: 0,
@@ -56,7 +57,7 @@ export function createSnowballConfig(): ComponentConfig<ComponentTypes> {
 }
 
 export function onSnowballCollision(snowball: EntityID, collidingEntity: EntityID, collisionPoint: Point): void {
-   const collidingEntityType = Board.getEntityType(collidingEntity);
+   const collidingEntityType = getEntityType(collidingEntity);
    if (collidingEntityType === EntityType.snowball) {
       return;
    }

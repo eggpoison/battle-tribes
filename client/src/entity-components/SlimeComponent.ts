@@ -40,23 +40,16 @@ class SlimeComponent extends ServerComponent {
    private static readonly EYE_SHAKE_START_AMPLITUDE = 0.07;
    private static readonly EYE_SHAKE_END_AMPLITUDE = 0.2;
 
-   private readonly bodyRenderPart: RenderPart;
-   private readonly eyeRenderPart: RenderPart;
+   private bodyRenderPart!: RenderPart;
+   private eyeRenderPart!: RenderPart;
    public readonly orbRenderParts = new Array<RenderPart>();
 
-   public readonly size: number;
+   public size = 0;
    public readonly orbs = new Array<SlimeOrbInfo>();
 
    private internalTickCounter = 0;
 
-   constructor(entity: Entity, reader: PacketReader) {
-      super(entity);
-
-      this.size = reader.readNumber();
-      const eyeRotation = reader.readNumber();
-      reader.padOffset(Float32Array.BYTES_PER_ELEMENT);
-      const spitChargeProgress = reader.readNumber();
-      
+   public onLoad(): void {
       const sizeString = SIZE_STRINGS[this.size];
 
       // Body
@@ -66,7 +59,6 @@ class SlimeComponent extends ServerComponent {
          0,
          getTextureArrayIndex(`entities/slime/slime-${sizeString}-body.png`)
       );
-      this.bodyRenderPart.shakeAmount = getBodyShakeAmount(spitChargeProgress);
       this.entity.attachRenderThing(this.bodyRenderPart);
 
       // Shading
@@ -78,34 +70,14 @@ class SlimeComponent extends ServerComponent {
       ));
 
       // Eye
-      const eyeRenderPart = new TexturedRenderPart(
+      this.eyeRenderPart = new TexturedRenderPart(
          null,
          3,
-         eyeRotation,
+         0,
          getTextureArrayIndex(`entities/slime/slime-${sizeString}-eye.png`)
       );
-
-      const eyeOffsetAmount = SlimeComponent.EYE_OFFSETS[this.size];
-      eyeRenderPart.offset.x = eyeOffsetAmount * Math.sin(eyeRotation);
-      eyeRenderPart.offset.y = eyeOffsetAmount * Math.cos(eyeRotation);
-      eyeRenderPart.inheritParentRotation = false;
-      this.entity.attachRenderThing(eyeRenderPart);
-
-      this.eyeRenderPart = eyeRenderPart;
-
-      // @Temporary @Speed
-      const orbSizes = new Array<SlimeSize>();
-      const numOrbs = reader.readNumber();
-      for (let i = 0; i < numOrbs; i++) {
-         const orbSize = reader.readNumber() as SlimeSize;
-         orbSizes.push(orbSize);
-      }
-
-      // Create initial orbs
-      for (let i = 0; i < orbSizes.length; i++) {
-         const size = orbSizes[i];
-         this.createOrb(size);
-      }
+      this.eyeRenderPart.inheritParentRotation = false;
+      this.entity.attachRenderThing(this.eyeRenderPart);
    }
 
    private createOrb(size: SlimeSize): void {
@@ -143,7 +115,7 @@ class SlimeComponent extends ServerComponent {
    }
 
    public updateFromData(reader: PacketReader): void {
-      reader.padOffset(Float32Array.BYTES_PER_ELEMENT);
+      this.size = reader.readNumber();
       const eyeRotation = reader.readNumber();
       const anger = reader.readNumber();
       const spitChargeProgress = reader.readNumber();

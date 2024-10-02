@@ -3,7 +3,7 @@ import { ServerComponentType, TribesmanAIType } from "battletribes-shared/compon
 import { Settings } from "battletribes-shared/settings";
 import { randInt } from "battletribes-shared/utils";
 import { ComponentArray } from "./ComponentArray";
-import Board from "../Board";
+import Layer from "../Layer";
 import Tribe, { BuildingPlan } from "../Tribe";
 import { EntityRelationship, TribeComponentArray } from "./TribeComponent";
 import { TribesmanGoal } from "../entities/tribes/tribesman-ai/tribesman-goals";
@@ -12,6 +12,7 @@ import { ItemType } from "battletribes-shared/items/items";
 import { EntityID } from "battletribes-shared/entities";
 import { tickTribesman } from "../entities/tribes/tribesman-ai/tribesman-ai";
 import { Packet } from "battletribes-shared/packets";
+import { getGameTicks } from "../world";
 
 // @Incomplete: periodically remove dead entities from the relations object
 // @Incomplete: only keep track of tribesman relations
@@ -153,7 +154,7 @@ export class TribesmanAIComponent {
 
    constructor(params: TribesmanAIComponentParams) {
       this.hutID = params.hut;
-      this.lastEnemyLineOfSightTicks = Board.ticks;
+      this.lastEnemyLineOfSightTicks = getGameTicks();
       // @Bug: will favour certain names more.
       this.name = randInt(0, 99);
    }
@@ -294,6 +295,6 @@ export function getItemGiftAppreciation(itemType: ItemType): number {
 }
 
 export function itemThrowIsOnCooldown(tribesmanComponent: TribesmanAIComponent): boolean {
-   const ticksSinceThrow = Board.ticks - tribesmanComponent.lastItemThrowTicks;
+   const ticksSinceThrow = getGameTicks() - tribesmanComponent.lastItemThrowTicks;
    return ticksSinceThrow <= Vars.ITEM_THROW_COOLDOWN_TICKS;
 }

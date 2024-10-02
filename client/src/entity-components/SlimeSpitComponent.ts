@@ -1,5 +1,4 @@
 import ServerComponent from "./ServerComponent";
-import Entity from "../Entity";
 import { PacketReader } from "battletribes-shared/packets";
 import { RenderPart } from "../render-parts/render-parts";
 import { Settings } from "battletribes-shared/settings";
@@ -11,12 +10,6 @@ import { ServerComponentType } from "battletribes-shared/components";
 class SlimeSpitComponent extends ServerComponent {
    // @Speed: polymorphism
    public renderParts!: ReadonlyArray<RenderPart>;
-
-   constructor(entity: Entity, reader: PacketReader) {
-      super(entity);
-
-      reader.padOffset(Float32Array.BYTES_PER_ELEMENT);
-   }
 
    public onLoad(): void {
       this.renderParts = this.entity.getRenderThings("slimeSpit:part", 2) as Array<RenderPart>;

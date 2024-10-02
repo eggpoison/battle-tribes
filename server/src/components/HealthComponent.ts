@@ -25,9 +25,10 @@ import { onPlantDeath, onPlantHit } from "../entities/plant";
 import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
 import { registerEntityHeal, registerEntityHit } from "../server/player-clients";
 import { ComponentArray } from "./ComponentArray";
-import Board from "../Board";
+import Layer from "../Layer";
 import { TransformComponentArray } from "./TransformComponent";
 import { Packet } from "battletribes-shared/packets";
+import { destroyEntity, getEntityType } from "../world";
 
 export interface HealthComponentParams {
    maxHealth: number;
@@ -97,11 +98,11 @@ export function damageEntity(entity: EntityID, attackingEntity: EntityID | null,
 
    // @Hack? @Cleanup? Maybe should make 'on death' component array event
 
-   const entityType = Board.getEntityType(entity);
+   const entityType = getEntityType(entity);
    
    // If the entity was killed by the attack, destroy the entity
    if (healthComponent.health <= 0) {
-      Board.destroyEntity(entity);
+      destroyEntity(entity);
 
       switch (entityType) {
          case EntityType.tombstone: {
@@ -257,7 +258,7 @@ export function damageEntity(entity: EntityID, attackingEntity: EntityID | null,
 
          const aiHelperComponent = AIHelperComponentArray.getComponent(viewingEntity);
          if (aiHelperComponent.visibleEntities.includes(entity)) {
-            switch (Board.getEntityType(viewingEntity)) {
+            switch (getEntityType(viewingEntity)) {
                case EntityType.zombie: {
                   if (causeOfDeath !== PlayerCauseOfDeath.fire && causeOfDeath !== PlayerCauseOfDeath.poison) {
                      onZombieVisibleEntityHurt(viewingEntity, entity);

@@ -1,14 +1,17 @@
 import { randInt } from "battletribes-shared/utils";
 import { ServerComponentType } from "battletribes-shared/components";
 import { ComponentArray } from "./ComponentArray";
-import { EntityID, EntityType } from "battletribes-shared/entities";
+import { EntityID } from "battletribes-shared/entities";
 import { ComponentConfig } from "../components";
 import { Settings } from "battletribes-shared/settings";
 import { Biome } from "battletribes-shared/tiles";
-import Board from "../Board";
-import { createIceSpikesConfig } from "../entities/resources/ice-spikes";
+import Layer, { positionIsInWorld } from "../Layer";
+import { createIceShardExplosion, createIceSpikesConfig } from "../entities/resources/ice-spikes";
 import { createEntityFromConfig } from "../Entity";
 import { TransformComponentArray } from "./TransformComponent";
+import { ItemType } from "../../../shared/src/items/items";
+import { createItemsOverEntity } from "../entity-shared";
+import { entityExists, getEntityLayer } from "../world";
 
 const enum Vars {
    TICKS_TO_GROW = 1/5 * Settings.TPS,
@@ -43,6 +46,7 @@ export const IceSpikesComponentArray = new ComponentArray<IceSpikesComponent>(Se
       tickInterval: 1,
       func: onTick
    },
+   onRemove: onRemove,
    getDataLength: getDataLength,
    addDataToPacket: addDataToPacket
 });
@@ -54,7 +58,7 @@ function onInitialise(config: ComponentConfig<ServerComponentType.iceSpikes>, en
 }
 
 const canGrow = (iceSpikesComponent: IceSpikesComponent): boolean => {
-   if (!Board.hasEntity(iceSpikesComponent.rootIceSpike)) {
+   if (!entityExists(iceSpikesComponent.rootIceSpike)) {
       return false;
    }
    
@@ -74,18 +78,19 @@ const grow = (iceSpikes: EntityID): void => {
    position.y += Vars.GROWTH_OFFSET * Math.cos(offsetDirection);
 
    // Don't grow outside the board
-   if (!Board.positionIsInBoard(position.x, position.y)) {
+   if (!positionIsInWorld(position.x, position.y)) {
       return;
    }
 
    // Only grow into tundra
    const tileX = Math.floor(position.x / Settings.TILE_SIZE);
    const tileY = Math.floor(position.y / Settings.TILE_SIZE);
-   if (Board.getTileBiome(tileX, tileY) !== Biome.tundra) {
+   const layer = getEntityLayer(iceSpikes);
+   if (layer.getTileBiome(tileX, tileY) !== Biome.tundra) {
       return;
    }
 
-   const minDistanceToEntity = Board.distanceToClosestEntity(position);
+   const minDistanceToEntity = layer.getDistanceToClosestEntity(position);
    if (minDistanceToEntity >= 40) {
       const iceSpikesComponent = IceSpikesComponentArray.getComponent(iceSpikes);
 
@@ -94,7 +99,7 @@ const grow = (iceSpikes: EntityID): void => {
       config[ServerComponentType.transform].position.y = position.y;
       config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
       config[ServerComponentType.iceSpikes].rootIceSpike = iceSpikesComponent.rootIceSpike;
-      createEntityFromConfig(config);
+      createEntityFromConfig(config, layer);
       
       const rootIceSpikesComponent = IceSpikesComponentArray.getComponent(iceSpikesComponent.rootIceSpike);
       rootIceSpikesComponent.numChildrenIceSpikes++;
@@ -108,6 +113,18 @@ function onTick(iceSpikesComponent: IceSpikesComponent, iceSpikes: EntityID): vo
          grow(iceSpikes);
       }
    }
+}
+
+function onRemove(iceSpikes: EntityID): void {
+   if (Math.random() < 0.5) {
+      createItemsOverEntity(iceSpikes, ItemType.frostcicle, 1, 40);
+   }
+
+   const transformComponent = TransformComponentArray.getComponent(iceSpikes);
+   
+   // Explode into a bunch of ice spikes
+   const numProjectiles = randInt(3, 4);
+   createIceShardExplosion(getEntityLayer(iceSpikes), transformComponent.position.x, transformComponent.position.y, numProjectiles);
 }
 
 function getDataLength(): number {
@@ -129,10 +146,8 @@ const forceMaxGrowIceSpike = (iceSpikes: EntityID): void => {
 }
 
 export function forceMaxGrowAllIceSpikes(): void {
-   for (let i = 0; i < Board.entities.length; i++) {
-      const entity = Board.entities[i];
-      if (Board.getEntityType(entity) === EntityType.iceSpikes) {
-         forceMaxGrowIceSpike(entity);
-      }
+   for (let i = 0; i < IceSpikesComponentArray.activeEntities.length; i++) {
+      const entity = IceSpikesComponentArray.activeEntities[i];
+      forceMaxGrowIceSpike(entity);
    }
 }

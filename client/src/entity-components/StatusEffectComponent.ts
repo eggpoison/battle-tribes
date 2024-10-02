@@ -23,13 +23,7 @@ const BURNING_SMOKE_PARTICLE_FADEIN_TIME = 0.15;
 class StatusEffectComponent extends ServerComponent {
    public burningLight: Light | null = null;
    
-   public statusEffects = new Array<StatusEffectData>()
-
-   constructor(entity: Entity, reader: PacketReader) {
-      super(entity);
-
-      this.updateFromData(reader);
-   }
+   public statusEffects = new Array<StatusEffectData>();
 
    public padData(reader: PacketReader): void {
       const numStatusEffects = reader.readNumber();

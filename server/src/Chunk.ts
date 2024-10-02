@@ -3,9 +3,9 @@ import { GrassBlocker } from "battletribes-shared/grass-blockers";
 import { EntityID } from "battletribes-shared/entities";
 import { Settings } from "battletribes-shared/settings";
 import { distance } from "battletribes-shared/utils";
-import Board from "./Board";
 import { PhysicsComponentArray } from "./components/PhysicsComponent";
 import { TransformComponentArray } from "./components/TransformComponent";
+import { surfaceLayer } from "./world";
 
 // @Cleanup: location
 export function entityIsCollisionRelevant(entity: EntityID): boolean {
@@ -49,7 +49,7 @@ export function isTooCloseToSteppingStone(x: number, y: number, checkRadius: num
 
    for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
       for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
-         const chunk = Board.getChunk(chunkX, chunkY);
+         const chunk = surfaceLayer.getChunk(chunkX, chunkY);
 
          for (const steppingStone of chunk.riverSteppingStones) {
             const dist = distance(x, y, steppingStone.positionX, steppingStone.positionY) - RIVER_STEPPING_STONE_SIZES[steppingStone.size] * 0.5;

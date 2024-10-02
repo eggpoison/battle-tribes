@@ -1,28 +1,29 @@
 import { Settings } from "battletribes-shared/settings";
 import { TileType } from "battletribes-shared/tiles";
-import Board from "../Board";
+import Layer, { getTileIndexIncludingEdges, tileIsInWorldIncludingEdges } from "../Layer";
 import { createGrassStrandConfig } from "../entities/grass-strand";
 import { ServerComponentType } from "battletribes-shared/components";
 import { createEntityFromConfig } from "../Entity";
 import { distance, TileIndex } from "battletribes-shared/utils";
+import { surfaceLayer } from "../world";
 
 const enum Vars {
    /** Average number of grass strands per tile in a fully humidified area. */
    MAX_STRAND_DENSITY = 25
 }
 
-const getGrassDensityMultiplier = (tileIndex: TileIndex): number => {
-   const humidity = Board.tileHumidities[tileIndex];
+const getGrassDensityMultiplier = (layer: Layer, tileIndex: TileIndex): number => {
+   const humidity = layer.tileHumidities[tileIndex];
    return humidity * 0.7 + 0.3;
 }
 
 /** Calculates the distance in tiles of a position from a water tile */
-const getAdjacentWaterDist = (tileX: number, tileY: number, grassTileX: number, grassTileY: number): number => {
-   if (!Board.tileIsInBoardIncludingEdges(tileX, tileY)) {
+const getAdjacentWaterDist = (layer: Layer, tileX: number, tileY: number, grassTileX: number, grassTileY: number): number => {
+   if (!tileIsInWorldIncludingEdges(tileX, tileY)) {
       return 1;
    }
    
-   if (Board.getTileType(tileX, tileY) !== TileType.water) {
+   if (layer.getTileType(tileX, tileY) !== TileType.water) {
       return 1;
    }
 
@@ -34,12 +35,12 @@ const getAdjacentWaterDist = (tileX: number, tileY: number, grassTileX: number, 
    return Math.min(xDistMin, xDistMax, yDistMin, yDistMax);
 }
 
-const getDiagonalWaterDist = (tileX: number, tileY: number, grassTileX: number, grassTileY: number): number => {
-   if (!Board.tileIsInBoardIncludingEdges(tileX, tileY)) {
+const getDiagonalWaterDist = (layer: Layer, tileX: number, tileY: number, grassTileX: number, grassTileY: number): number => {
+   if (!tileIsInWorldIncludingEdges(tileX, tileY)) {
       return 1;
    }
    
-   if (Board.getTileType(tileX, tileY) !== TileType.water) {
+   if (layer.getTileType(tileX, tileY) !== TileType.water) {
       return 1;
    }
 
@@ -51,7 +52,7 @@ const getDiagonalWaterDist = (tileX: number, tileY: number, grassTileX: number, 
    return Math.min(xDistMin, xDistMax, yDistMin, yDistMax);
 }
 
-const isValidGrassPosition = (x: number, y: number): boolean => {
+const isValidGrassPosition = (layer: Layer, x: number, y: number): boolean => {
    const grassTileX = x / Settings.TILE_SIZE;
    const grassTileY = y / Settings.TILE_SIZE;
 
@@ -59,15 +60,15 @@ const isValidGrassPosition = (x: number, y: number): boolean => {
    const flooredGrassTileY = Math.floor(grassTileY);
    
    // Don't generate on river gravel
-   const topDist = getAdjacentWaterDist(flooredGrassTileX, flooredGrassTileY + 1, grassTileX, grassTileY);
-   const rightDist = getAdjacentWaterDist(flooredGrassTileX + 1, flooredGrassTileY, grassTileX, grassTileY);
-   const bottomDist = getAdjacentWaterDist(flooredGrassTileX, flooredGrassTileY - 1, grassTileX, grassTileY);
-   const leftDist = getAdjacentWaterDist(flooredGrassTileX - 1, flooredGrassTileY, grassTileX, grassTileY);
+   const topDist = getAdjacentWaterDist(layer, flooredGrassTileX, flooredGrassTileY + 1, grassTileX, grassTileY);
+   const rightDist = getAdjacentWaterDist(layer, flooredGrassTileX + 1, flooredGrassTileY, grassTileX, grassTileY);
+   const bottomDist = getAdjacentWaterDist(layer, flooredGrassTileX, flooredGrassTileY - 1, grassTileX, grassTileY);
+   const leftDist = getAdjacentWaterDist(layer, flooredGrassTileX - 1, flooredGrassTileY, grassTileX, grassTileY);
 
-   const topRightDist = getDiagonalWaterDist(flooredGrassTileX + 1, flooredGrassTileY + 1, grassTileX, grassTileY);
-   const bottomRightDist = getDiagonalWaterDist(flooredGrassTileX + 1, flooredGrassTileY - 1, grassTileX, grassTileY);
-   const topLeftDist = getDiagonalWaterDist(flooredGrassTileX - 1, flooredGrassTileY + 1, grassTileX, grassTileY);
-   const bottomLeftDist = getDiagonalWaterDist(flooredGrassTileX - 1, flooredGrassTileY - 1, grassTileX, grassTileY);
+   const topRightDist = getDiagonalWaterDist(layer, flooredGrassTileX + 1, flooredGrassTileY + 1, grassTileX, grassTileY);
+   const bottomRightDist = getDiagonalWaterDist(layer, flooredGrassTileX + 1, flooredGrassTileY - 1, grassTileX, grassTileY);
+   const topLeftDist = getDiagonalWaterDist(layer, flooredGrassTileX - 1, flooredGrassTileY + 1, grassTileX, grassTileY);
+   const bottomLeftDist = getDiagonalWaterDist(layer, flooredGrassTileX - 1, flooredGrassTileY - 1, grassTileX, grassTileY);
 
    const dist = Math.min(topDist, rightDist, bottomDist, leftDist, topRightDist, bottomRightDist, topLeftDist, bottomLeftDist);
    return dist > 0.25;
@@ -77,12 +78,12 @@ export function generateGrassStrands(): void {
    // @Incomplete: generate in edges
    for (let tileX = 0; tileX < Settings.BOARD_DIMENSIONS; tileX++) {
       for (let tileY = 0; tileY < Settings.BOARD_DIMENSIONS; tileY++) {
-         const tileIndex = Board.getTileIndexIncludingEdges(tileX, tileY);
-         if (Board.tileTypes[tileIndex] !== TileType.grass) {
+         const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
+         if (surfaceLayer.tileTypes[tileIndex] !== TileType.grass) {
             continue;
          }
 
-         let density = Vars.MAX_STRAND_DENSITY * getGrassDensityMultiplier(tileIndex);
+         let density = Vars.MAX_STRAND_DENSITY * getGrassDensityMultiplier(surfaceLayer, tileIndex);
          if (Math.random() < density % 1) {
             density = Math.ceil(density);
          } else {
@@ -93,14 +94,14 @@ export function generateGrassStrands(): void {
             const x = (tileX + Math.random()) * Settings.TILE_SIZE;
             const y = (tileY + Math.random()) * Settings.TILE_SIZE;
 
-            if (!isValidGrassPosition(x, y)) {
+            if (!isValidGrassPosition(surfaceLayer, x, y)) {
                continue;
             }
 
             const config = createGrassStrandConfig();
             config[ServerComponentType.transform].position.x = x;
             config[ServerComponentType.transform].position.y = y;
-            createEntityFromConfig(config);
+            createEntityFromConfig(config, surfaceLayer);
          }
       }
    }

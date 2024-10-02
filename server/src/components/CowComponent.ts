@@ -8,7 +8,7 @@ import { ComponentArray } from "./ComponentArray";
 import { ItemType } from "battletribes-shared/items/items";
 import { registerEntityTickEvent } from "../server/player-clients";
 import { getEntityTile, TransformComponentArray } from "./TransformComponent";
-import Board from "../Board";
+import { getTileX, getTileY, positionIsInWorld } from "../Layer";
 import { createItemEntityConfig } from "../entities/item-entity";
 import { createEntityFromConfig } from "../Entity";
 import { Packet } from "battletribes-shared/packets";
@@ -29,6 +29,7 @@ import { GrassBlockerCircle } from "battletribes-shared/grass-blockers";
 import { entitiesAreColliding, CollisionVars } from "../collision";
 import { addGrassBlocker } from "../grass-blockers";
 import { InventoryUseComponentArray } from "./InventoryUseComponent";
+import { destroyEntity, entityExists, getEntityLayer, getEntityType } from "../world";
 
 const enum Vars {
    MIN_POOP_PRODUCTION_COOLDOWN = 5 * Settings.TPS,
@@ -37,6 +38,7 @@ const enum Vars {
    MIN_POOP_PRODUCTION_FULLNESS = 0.4,
    BOWEL_EMPTY_TIME_TICKS = 55 * Settings.TPS,
    MAX_BERRY_CHASE_FULLNESS = 0.8,
+   // @Hack
    TURN_SPEED = 3.14159265358979,
    // Herd AI constants
    TURN_RATE = 0.4,
@@ -91,7 +93,7 @@ const poop = (cow: EntityID, cowComponent: CowComponent): void => {
    config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
    config[ServerComponentType.item].itemType = ItemType.poop;
    config[ServerComponentType.item].amount = 1;
-   createEntityFromConfig(config);
+   createEntityFromConfig(config, getEntityLayer(cow));
 
    // Let it out
    const event: EntityTickEvent<EntityTickEventType.cowFart> = {
@@ -151,7 +153,7 @@ const findHerdMembers = (cowComponent: CowComponent, visibleEntities: ReadonlyAr
    const herdMembers = new Array<EntityID>();
    for (let i = 0; i < visibleEntities.length; i++) {
       const entity = visibleEntities[i];
-      if (Board.getEntityType(entity) === EntityType.cow) {
+      if (getEntityType(entity) === EntityType.cow) {
          const otherCowComponent = CowComponentArray.getComponent(entity);
          if (otherCowComponent.species === cowComponent.species) {
             herdMembers.push(entity);
@@ -231,7 +233,8 @@ function onTick(cowComponent: CowComponent, cow: EntityID): void {
 
    // Graze dirt to recover health
    const tileIndex = getEntityTile(transformComponent);
-   const tileType = Board.tileTypes[tileIndex];
+   const layer = getEntityLayer(cow);
+   const tileType = layer.tileTypes[tileIndex];
    if (cowComponent.grazeCooldownTicks === 0 && tileType === TileType.grass) {
       graze(cow, cowComponent);
       return;
@@ -243,7 +246,7 @@ function onTick(cowComponent: CowComponent, cow: EntityID): void {
    if (wantsToEatBerries(cowComponent)) {
       for (let i = 0; i < aiHelperComponent.visibleEntities.length; i++) {
          const itemEntity = aiHelperComponent.visibleEntities[i];
-         if (Board.getEntityType(itemEntity) === EntityType.itemEntity) {
+         if (getEntityType(itemEntity) === EntityType.itemEntity) {
             const itemComponent = ItemComponentArray.getComponent(itemEntity);
             if (itemComponent.itemType === ItemType.berry) {
                const wasEaten = chaseAndEatBerry(cow, cowComponent, itemEntity, 200);
@@ -260,12 +263,12 @@ function onTick(cowComponent: CowComponent, cow: EntityID): void {
    // Shake berries off berry bushes
    if (getEntityHealth(cow) < CowVars.MAX_HEALTH) {
       // Attempt to find a berry bush
-      if (!Board.hasEntity(cowComponent.targetBushID)) {
+      if (!entityExists(cowComponent.targetBushID)) {
          let target: EntityID | null = null;
          let minDistance = Number.MAX_SAFE_INTEGER;
          for (let i = 0; i < aiHelperComponent.visibleEntities.length; i++) {
             const berryBush = aiHelperComponent.visibleEntities[i];
-            if (Board.getEntityType(berryBush) !== EntityType.berryBush) {
+            if (getEntityType(berryBush) !== EntityType.berryBush) {
                continue;
             }
    
@@ -288,7 +291,7 @@ function onTick(cowComponent: CowComponent, cow: EntityID): void {
          }
       }
 
-      if (Board.hasEntity(cowComponent.targetBushID)) {
+      if (entityExists(cowComponent.targetBushID)) {
          const targetTransformComponent = TransformComponentArray.getComponent(cowComponent.targetBushID);
 
          moveEntityToPosition(cow, targetTransformComponent.position.x, targetTransformComponent.position.y, 200, Vars.TURN_SPEED);
@@ -296,9 +299,9 @@ function onTick(cowComponent: CowComponent, cow: EntityID): void {
          // If the target entity is directly in front of the cow, start eatin it
          const testPositionX = transformComponent.position.x + 60 * Math.sin(transformComponent.rotation);
          const testPositionY = transformComponent.position.y + 60 * Math.cos(transformComponent.rotation);
-         if (Board.positionIsInBoard(testPositionX, testPositionY)) {
+         if (positionIsInWorld(testPositionX, testPositionY)) {
             // @Hack? The only place which uses this weird function
-            const testEntities = Board.getEntitiesAtPosition(testPositionX, testPositionY);
+            const testEntities = layer.getEntitiesAtPosition(testPositionX, testPositionY);
             if (testEntities.indexOf(cowComponent.targetBushID) !== -1) {
                cowComponent.bushShakeTimer++;
                if (cowComponent.bushShakeTimer >= 1.5 * Settings.TPS) {
@@ -321,7 +324,7 @@ function onTick(cowComponent: CowComponent, cow: EntityID): void {
    const followAIComponent = FollowAIComponentArray.getComponent(cow);
    updateFollowAIComponent(cow, aiHelperComponent.visibleEntities, 7)
    
-   if (Board.hasEntity(followAIComponent.followTargetID)) {
+   if (entityExists(followAIComponent.followTargetID)) {
       continueFollowingEntity(cow, followAIComponent.followTargetID, 200, Vars.TURN_SPEED);
       return;
    } else {
@@ -358,10 +361,10 @@ function onTick(cowComponent: CowComponent, cow: EntityID): void {
       let targetTile: TileIndex;
       do {
          targetTile = getWanderTargetTile(cow, CowVars.VISION_RANGE);
-      } while (++attempts <= 50 && (Board.tileIsWalls[targetTile] === 1 || Board.tileBiomes[targetTile] !== Biome.grasslands));
+      } while (++attempts <= 50 && (layer.tileIsWalls[targetTile] === 1 || layer.tileBiomes[targetTile] !== Biome.grasslands));
 
-      const tileX = Board.getTileX(targetTile);
-      const tileY = Board.getTileY(targetTile);
+      const tileX = getTileX(targetTile);
+      const tileY = getTileY(targetTile);
       const x = (tileX + Math.random()) * Settings.TILE_SIZE;
       const y = (tileY + Math.random()) * Settings.TILE_SIZE;
       wander(cow, x, y, 200, Vars.TURN_SPEED);
@@ -384,7 +387,7 @@ function addDataToPacket(packet: Packet, entity: EntityID): void {
 export function eatBerry(berryItemEntity: EntityID, cowComponent: CowComponent): void {
    cowComponent.bowelFullness += Vars.BERRY_FULLNESS_VALUE;
    
-   Board.destroyEntity(berryItemEntity);
+   destroyEntity(berryItemEntity);
 }
 
 export function wantsToEatBerries(cowComponent: CowComponent): boolean {

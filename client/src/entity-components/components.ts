@@ -69,10 +69,13 @@ import SpitPoisonAreaComponent from "./SpitPoisonAreaComponent";
 import PunjiSticksComponent from "./PunjiSticksComponent";
 import IceArrowComponent from "./IceArrowComponent";
 import DamageBoxComponent from "./DamageBoxComponent";
+import RandomSoundComponent from "./client-components/RandomSoundComponent";
+import GuardianComponent from "./GuardianComponent";
 
 export enum ClientComponentType {
    equipment,
-   footprint
+   footprint,
+   randomSound
 }
 
 const ServerComponents = {
@@ -139,82 +142,15 @@ const ServerComponents = {
    [ServerComponentType.battleaxeProjectile]: (): BattleaxeProjectileComponent => 0 as any,
    [ServerComponentType.spearProjectile]: (): SpearProjectileComponent => 0 as any,
    [ServerComponentType.krumblid]: (): KrumblidComponent => 0 as any,
-   [ServerComponentType.damageBox]: (): DamageBoxComponent => 0 as any
+   [ServerComponentType.damageBox]: (): DamageBoxComponent => 0 as any,
+   [ServerComponentType.guardian]: (): GuardianComponent => 0 as any
 } satisfies Record<ServerComponentType, () => ServerComponent>;
 
 export const ClientComponents = {
    [ClientComponentType.equipment]: (): EquipmentComponent => 0 as any,
-   [ClientComponentType.footprint]: (): FootprintComponent => 0 as any
+   [ClientComponentType.footprint]: (): FootprintComponent => 0 as any,
+   [ClientComponentType.randomSound]: (): RandomSoundComponent => 0 as any
 } satisfies Record<ClientComponentType, () => Component>;
 
 export type ServerComponentClass<T extends ServerComponentType> = ReturnType<typeof ServerComponents[T]>;
 export type ClientComponentClass<T extends ClientComponentType> = ReturnType<typeof ClientComponents[T]>;
-
-export function createComponent(entity: Entity, componentType: ServerComponentType, reader: PacketReader, isPlayer: boolean): ServerComponent {
-   switch (componentType) {
-      case ServerComponentType.transform: return new TransformComponent(entity, reader);
-      case ServerComponentType.cow: return new CowComponent(entity, reader);
-      case ServerComponentType.turret: return new TurretComponent(entity, reader);
-      case ServerComponentType.tribe: return new TribeComponent(entity, reader);
-      case ServerComponentType.inventory: return new InventoryComponent(entity, reader, isPlayer);
-      case ServerComponentType.ammoBox: return new AmmoBoxComponent(entity, reader);
-      case ServerComponentType.slime: return new SlimeComponent(entity, reader);
-      case ServerComponentType.golem: return new GolemComponent(entity, reader);
-      case ServerComponentType.statusEffect: return new StatusEffectComponent(entity, reader);
-      case ServerComponentType.cactus: return new CactusComponent(entity, reader);
-      case ServerComponentType.health: return new HealthComponent(entity, reader);
-      case ServerComponentType.physics: return new PhysicsComponent(entity, reader);
-      case ServerComponentType.researchBench: return new ResearchBenchComponent(entity, reader);
-      case ServerComponentType.berryBush: return new BerryBushComponent(entity, reader);
-      case ServerComponentType.inventoryUse: return new InventoryUseComponent(entity, reader);
-      case ServerComponentType.zombie: return new ZombieComponent(entity, reader);
-      case ServerComponentType.player: return new PlayerComponent(entity, reader);
-      case ServerComponentType.item: return new ItemComponent(entity, reader);
-      case ServerComponentType.tombstone: return new TombstoneComponent(entity, reader);
-      case ServerComponentType.tree: return new TreeComponent(entity, reader);
-      case ServerComponentType.blueprint: return new BlueprintComponent(entity, reader);
-      case ServerComponentType.projectile: return new ProjectileComponent(entity);
-      case ServerComponentType.iceArrow: return new IceArrowComponent(entity);
-      case ServerComponentType.yeti: return new YetiComponent(entity, reader);
-      case ServerComponentType.frozenYeti: return new FrozenYetiComponent(entity, reader);
-      case ServerComponentType.totemBanner: return new TotemBannerComponent(entity, reader);
-      case ServerComponentType.cooking: return new CookingComponent(entity, reader);
-      case ServerComponentType.hut: return new HutComponent(entity, reader);
-      case ServerComponentType.snowball: return new SnowballComponent(entity, reader);
-      case ServerComponentType.fish: return new FishComponent(entity, reader);
-      case ServerComponentType.rockSpike: return new RockSpikeComponent(entity, reader);
-      case ServerComponentType.slimeSpit: return new SlimeSpitComponent(entity, reader);
-      case ServerComponentType.door: return new DoorComponent(entity, reader);
-      case ServerComponentType.tribesmanAI: return new TribesmanAIComponent(entity, reader);
-      case ServerComponentType.tunnel: return new TunnelComponent(entity, reader);
-      case ServerComponentType.buildingMaterial: return new BuildingMaterialComponent(entity, reader);
-      case ServerComponentType.spikes: return new SpikesComponent(entity, reader);
-      case ServerComponentType.punjiSticks: return new PunjiSticksComponent(entity);
-      case ServerComponentType.tribeMember: return new TribeMemberComponent(entity, reader);
-      case ServerComponentType.healingTotem: return new HealingTotemComponent(entity, reader);
-      case ServerComponentType.planterBox: return new PlanterBoxComponent(entity, reader);
-      case ServerComponentType.plant: return new PlantComponent(entity, reader);
-      case ServerComponentType.structure: return new StructureComponent(entity, reader);
-      case ServerComponentType.fence: return new FenceComponent(entity);
-      case ServerComponentType.fenceGate: return new FenceGateComponent(entity, reader);
-      case ServerComponentType.craftingStation: return new CraftingStationComponent(entity, reader);
-      case ServerComponentType.boulder: return new BoulderComponent(entity, reader);
-      case ServerComponentType.aiHelper: return new AIHelperComponent(entity, reader);
-      case ServerComponentType.wanderAI: return new WanderAIComponent(entity, reader);
-      case ServerComponentType.escapeAI: return new EscapeAIComponent(entity, reader);
-      case ServerComponentType.iceSpikes: return new IceSpikesComponent(entity);
-      case ServerComponentType.followAI: return new FollowAIComponent(entity, reader);
-      case ServerComponentType.iceShard: return new IceShardComponent(entity);
-      case ServerComponentType.pebblum: return new PebblumComponent(entity);
-      case ServerComponentType.slimewisp: return new SlimewispComponent(entity);
-      case ServerComponentType.throwingProjectile: return new ThrowingProjectileComponent(entity);
-      case ServerComponentType.tribeWarrior: return new TribeWarriorComponent(entity, reader);
-      case ServerComponentType.layeredRod: return new LayeredRodComponent(entity, reader);
-      case ServerComponentType.decoration: return new DecorationComponent(entity, reader);
-      case ServerComponentType.spitPoisonArea: return new SpitPoisonAreaComponent(entity);
-      case ServerComponentType.battleaxeProjectile: return new BattleaxeProjectileComponent(entity);
-      case ServerComponentType.spearProjectile: return new SpearProjectileComponent(entity);
-      case ServerComponentType.krumblid: return new KrumblidComponent(entity);
-      case ServerComponentType.damageBox: return new DamageBoxComponent(entity, reader);
-   }
-}

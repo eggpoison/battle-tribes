@@ -6,7 +6,7 @@ import { Point } from "battletribes-shared/utils";
 import { createEmptyStructureConnectionInfo } from "battletribes-shared/structures";
 import { createEmbrasureHitboxes } from "battletribes-shared/boxes/entity-hitbox-creation";
 import { ComponentConfig } from "../../components";
-import Board from "../../Board";
+import { destroyEntity, getEntityType } from "../../world";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.health
@@ -45,7 +45,7 @@ export function createEmbrasureConfig(): ComponentConfig<ComponentTypes> {
 }
 
 export function onEmbrasureCollision(collidingEntity: EntityID, pushedHitboxIdx: number): void {
-   if (Board.getEntityType(collidingEntity) === EntityType.woodenArrow) {
+   if (getEntityType(collidingEntity) === EntityType.woodenArrow) {
       // @Incomplete?
       // const arrowComponent = ProjectileComponentArray.getComponent(collidingEntity.id);
       // if (arrowComponent.ignoreFriendlyBuildings) {
@@ -53,7 +53,7 @@ export function onEmbrasureCollision(collidingEntity: EntityID, pushedHitboxIdx:
       // }
 
       if (pushedHitboxIdx <= 1) {
-         Board.destroyEntity(collidingEntity);
+         destroyEntity(collidingEntity);
       }
    }
 }

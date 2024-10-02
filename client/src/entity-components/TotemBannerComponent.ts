@@ -3,7 +3,6 @@ import { TribeTotemBanner } from "battletribes-shared/entities";
 import { TribeType } from "battletribes-shared/tribes";
 import ServerComponent from "./ServerComponent";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
-import Entity from "../Entity";
 import { RenderPart } from "../render-parts/render-parts";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { PacketReader } from "battletribes-shared/packets";
@@ -14,12 +13,6 @@ const BANNER_LAYER_DISTANCES = [34, 52, 65];
 class TotemBannerComponent extends ServerComponent {
    private readonly banners: Record<number, TribeTotemBanner> = {};
    private readonly bannerRenderParts: Record<number, RenderPart> = {};
-
-   constructor(entity: Entity, reader: PacketReader) {
-      super(entity);
-
-      this.updateBanners(reader);
-   }
 
    public padData(reader: PacketReader): void {
       const numBanners = reader.readNumber();

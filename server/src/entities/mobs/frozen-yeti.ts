@@ -5,7 +5,6 @@ import { Point, randInt } from "battletribes-shared/utils";
 import { HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
 import { createItemsOverEntity } from "../../entity-shared";
 import { FrozenYetiComponentArray } from "../../components/FrozenYetiComponent";
-import Board from "../../Board";
 import { applyKnockback } from "../../components/PhysicsComponent";
 import { wasTribeMemberKill } from "../tribes/tribe-member";
 import { ServerComponentType } from "battletribes-shared/components";
@@ -15,6 +14,7 @@ import { ComponentConfig } from "../../components";
 import { TransformComponentArray } from "../../components/TransformComponent";
 import { createHitbox, HitboxCollisionType, Hitbox } from "battletribes-shared/boxes/boxes";
 import CircularBox from "battletribes-shared/boxes/CircularBox";
+import { getEntityType } from "../../world";
 
 export const enum FrozenYetiVars {
    VISION_RANGE = 350,
@@ -56,16 +56,16 @@ export interface FrozenYetiRockSpikeInfo {
 export function createFrozenYetiConfig(): ComponentConfig<ComponentTypes> {
    const hitboxes = new Array<Hitbox>();
 
-   const bodyHitbox = createHitbox(new CircularBox(new Point(0, 0), 0, FrozenYetiVars.FROZEN_YETI_SIZE / 2), 4, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0);
+   const bodyHitbox = createHitbox(new CircularBox(new Point(0, 0), 0, FrozenYetiVars.FROZEN_YETI_SIZE / 2), 4, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, []);
    hitboxes.push(bodyHitbox);
 
-   const headHitbox = createHitbox(new CircularBox(new Point(0, HEAD_DISTANCE), 0, HEAD_HITBOX_SIZE / 2), 0.8, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0);
+   const headHitbox = createHitbox(new CircularBox(new Point(0, HEAD_DISTANCE), 0, HEAD_HITBOX_SIZE / 2), 0.8, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, []);
    hitboxes.push(headHitbox);
 
    // Paw hitboxes
    for (let i = 0; i < 2; i++) {
       const pawDirection = PAW_RESTING_ANGLE * (i === 0 ? -1 : 1);
-      const hitbox = createHitbox(new CircularBox(Point.fromVectorForm(PAW_OFFSET, pawDirection), 0, PAW_SIZE / 2), 0.6, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0);
+      const hitbox = createHitbox(new CircularBox(Point.fromVectorForm(PAW_OFFSET, pawDirection), 0, PAW_SIZE / 2), 0.6, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, []);
       hitboxes.push(hitbox);
    }
    
@@ -103,7 +103,7 @@ export function createFrozenYetiConfig(): ComponentConfig<ComponentTypes> {
 }
 
 export function onFrozenYetiCollision(frozenYeti: EntityID, collidingEntity: EntityID, collisionPoint: Point): void {
-   const collidingEntityType = Board.getEntityType(collidingEntity);
+   const collidingEntityType = getEntityType(collidingEntity);
    
    if (collidingEntity === null || collidingEntityType === EntityType.iceSpikes) {
       return;

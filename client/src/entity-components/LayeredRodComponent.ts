@@ -10,6 +10,7 @@ import { PacketReader } from "battletribes-shared/packets";
 import { EntityID, EntityType } from "battletribes-shared/entities";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 import { Hitbox } from "battletribes-shared/boxes/boxes";
+import { getEntityLayer } from "../world";
 
 const enum Vars {
    NATURAL_DRIFT = 20 / Settings.TPS
@@ -65,7 +66,8 @@ const getLayerColour = (entity: Entity, r: number, g: number, b: number, layer: 
          const tileX = Math.floor(transformComponent.position.x / Settings.TILE_SIZE);
          const tileY = Math.floor(transformComponent.position.y / Settings.TILE_SIZE);
    
-         const grassInfo = Board.grassInfo[tileX][tileY];
+         const entityLayer = getEntityLayer(entity.id);
+         const grassInfo = entityLayer.grassInfo[tileX][tileY];
    
          let humidity = grassInfo.humidity;
          if (grassInfo.temperature <= 0.5) {

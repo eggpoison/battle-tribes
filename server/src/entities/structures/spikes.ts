@@ -10,7 +10,7 @@ import { createEmptyStructureConnectionInfo } from "battletribes-shared/structur
 import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
 import { createWallSpikesHitboxes, createFloorSpikesHitboxes } from "battletribes-shared/boxes/entity-hitbox-creation";
 import { ComponentConfig } from "../../components";
-import Board from "../../Board";
+import { getEntityType } from "../../world";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.health
@@ -83,7 +83,7 @@ export function createWallSpikesConfig(): ComponentConfig<ComponentTypes> {
 // @Cleanup: Copy and paste
 export function onSpikesCollision(spikes: EntityID, collidingEntity: EntityID, collisionPoint: Point): void {
    // @Incomplete: Why is this condition neeeded? Shouldn't be able to be placed colliding with other structures anyway.
-   const collidingEntityType = Board.getEntityType(collidingEntity);
+   const collidingEntityType = getEntityType(collidingEntity);
    if (collidingEntityType === EntityType.floorSpikes || collidingEntityType === EntityType.wallSpikes || collidingEntityType === EntityType.door || collidingEntityType === EntityType.wall) {
       return;
    }

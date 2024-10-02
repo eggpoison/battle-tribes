@@ -1,7 +1,8 @@
 import { EntityID, EntityType, NUM_ENTITY_TYPES } from "battletribes-shared/entities";
 import { TileType, Biome, NUM_TILE_TYPES, NUM_BIOMES } from "battletribes-shared/tiles";
-import Board from "./Board";
+import Layer from "./Layer";
 import { TileIndex } from "battletribes-shared/utils";
+import { getEntityType } from "./world";
 
 const entityCounts = new Array<EntityType>();
 for (let i = 0; i < NUM_ENTITY_TYPES; i++) {
@@ -41,7 +42,7 @@ export function addEntityToCensus(entity: EntityID, entityType: EntityType): voi
 export function removeEntityFromCensus(entity: EntityID): void {
    if (!trackedEntityIDs.has(entity)) return;
    
-   const entityType = Board.getEntityType(entity)!;
+   const entityType = getEntityType(entity)!;
    
    if (entityCounts[entityType] <= 0) {
       console.log(entityCounts);
@@ -58,25 +59,29 @@ export function getEntityCount(entityType: EntityType): number {
    return entityCounts[entityType];
 }
 
-export function addTileToCensus(tileIndex: TileIndex): void {
-   const tileType = Board.tileTypes[tileIndex] as TileType;
+export function addTileToCensus(layer: Layer, tileIndex: TileIndex): void {
+   const tileType = layer.tileTypes[tileIndex] as TileType;
    tileCensus.types[tileType].push(tileIndex);
 
-   const biome = Board.tileBiomes[tileIndex] as Biome;
+   const biome = layer.tileBiomes[tileIndex] as Biome;
    tileCensus.biomes[biome].push(tileIndex);
 }
 
-export function removeTileFromCensus(tileIndex: TileIndex): void {
-   const tileType = Board.tileTypes[tileIndex] as TileType;
+export function removeTileFromCensus(layer: Layer, tileIndex: TileIndex): void {
+   const tileType = layer.tileTypes[tileIndex] as TileType;
    tileCensus.types[tileType].splice(tileCensus.types[tileType].indexOf(tileIndex), 1);
 
-   const biome = Board.tileBiomes[tileIndex] as Biome;
+   const biome = layer.tileBiomes[tileIndex] as Biome;
    tileCensus.biomes[biome].splice(tileCensus.biomes[biome].indexOf(tileIndex), 1);
 }
 
 export function getTileTypeCount(tileType: TileType): number {
    const tiles = tileCensus.types[tileType];
    return typeof tiles !== "undefined" ? tiles.length : 0;
+}
+
+export function getTilesOfType(tileType: TileType): ReadonlyArray<TileIndex> {
+   return tileCensus.types[tileType];
 }
 
 export function getTilesOfBiome(biomeName: Biome): ReadonlyArray<TileIndex> {

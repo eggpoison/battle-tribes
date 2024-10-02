@@ -3,13 +3,13 @@ import Player from "../entities/Player";
 import { ServerComponentType } from "battletribes-shared/components";
 import { getSelectedEntityID } from "../entity-selection";
 import { EntityType } from "battletribes-shared/entities";
-import Board from "../Board";
 import { GameDataPacketOptions } from "battletribes-shared/client-server-types";
 import OPTIONS from "../options";
 import { windowHeight, windowWidth } from "../webgl";
 import { InventoryName, ItemType } from "battletribes-shared/items/items";
 import Client from "./Client";
 import { getHotbarSelectedItemSlot, getInstancePlayerAction } from "../components/game/GameInteractableLayer";
+import { getEntityByID } from "../world";
 
 export function createPlayerDataPacket(): ArrayBuffer {
    let lengthBytes = 4 * Float32Array.BYTES_PER_ELEMENT;
@@ -47,7 +47,7 @@ export function createPlayerDataPacket(): ArrayBuffer {
    let interactingEntityID = 0;
    const selectedEntityID = getSelectedEntityID();
 
-   const selectedEntity = Board.entityRecord[selectedEntityID];
+   const selectedEntity = getEntityByID(selectedEntityID);
    if (typeof selectedEntity !== "undefined") {
       if (selectedEntity.type === EntityType.tribeWorker || selectedEntity.type === EntityType.tribeWarrior) {
          interactingEntityID = selectedEntity.id;

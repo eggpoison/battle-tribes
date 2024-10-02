@@ -32,15 +32,8 @@ export function getTribeType(tribeID: number): TribeType {
 }
 
 class TribeComponent extends ServerComponent {
-   public tribeID: number;
-   public tribeType: TribeType;
-
-   constructor(entity: Entity, reader: PacketReader) {
-      super(entity);
-      
-      this.tribeID = reader.readNumber();
-      this.tribeType = getTribeType(this.tribeID);
-   }
+   public tribeID = 0;
+   public tribeType = TribeType.plainspeople;
 
    public padData(reader: PacketReader): void {
       reader.padOffset(Float32Array.BYTES_PER_ELEMENT);

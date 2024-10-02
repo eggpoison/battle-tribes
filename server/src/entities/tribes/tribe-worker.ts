@@ -6,13 +6,14 @@ import { TribeType } from "battletribes-shared/tribes";
 import { Point, randInt } from "battletribes-shared/utils";
 import Tribe from "../../Tribe";
 import { TribesmanAIComponentArray } from "../../components/TribesmanAIComponent";
-import Board from "../../Board";
+import Layer from "../../Layer";
 import { TribeComponentArray } from "../../components/TribeComponent";
 import { HutComponentArray } from "../../components/HutComponent";
 import { ServerComponentType } from "battletribes-shared/components";
 import { ComponentConfig } from "../../components";
 import CircularBox from "battletribes-shared/boxes/CircularBox";
 import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
+import { entityExists, getTribe } from "../../world";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics
@@ -28,14 +29,14 @@ type ComponentTypes = ServerComponentType.transform
 export const TRIBE_WORKER_RADIUS = 28;
 export const TRIBE_WORKER_VISION_RANGE = 500;
 
-const getTribeType = (workerPosition: Point): TribeType => {
+const getTribeType = (layer: Layer, workerPosition: Point): TribeType => {
    if (Math.random() < 0.2) {
       return TribeType.goblins;
    }
    
    const tileX = Math.floor(workerPosition.x / Settings.TILE_SIZE);
    const tileY = Math.floor(workerPosition.y / Settings.TILE_SIZE);
-   const tileType = Board.getTileType(tileX, tileY);
+   const tileType = layer.getTileType(tileX, tileY);
    switch (tileType) {
       case TileType.grass: {
          return TribeType.plainspeople;
@@ -57,16 +58,16 @@ const getTribeType = (workerPosition: Point): TribeType => {
 }
 
 // @Cleanup: unused?
-const findTribe = (tribeID: number, position: Point): Tribe => {
+const findTribe = (tribeID: number, layer: Layer, position: Point): Tribe => {
    if (tribeID !== -1) {
-      const tribe = Board.getTribeExpected(tribeID);
+      const tribe = getTribe(tribeID);
       if (tribe !== null) {
          return tribe;
       }
    }
 
    // Fallback: establish its own tribe
-   const tribeType = getTribeType(position);
+   const tribeType = getTribeType(layer, position);
    return new Tribe(tribeType, true);
 }
 
@@ -78,7 +79,7 @@ export function createTribeWorkerConfig(): ComponentConfig<ComponentTypes> {
          type: EntityType.tribeWorker,
          collisionBit: COLLISION_BITS.default,
          collisionMask: DEFAULT_COLLISION_MASK,
-         hitboxes: [createHitbox(new CircularBox(new Point(0, 0), 0, TRIBE_WORKER_RADIUS), 1, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0)]
+         hitboxes: [createHitbox(new CircularBox(new Point(0, 0), 0, TRIBE_WORKER_RADIUS), 1, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, [])]
       },
       [ServerComponentType.physics]: {
          velocityX: 0,
@@ -128,7 +129,7 @@ export function onTribeWorkerDeath(worker: EntityID): void {
    const tribesmanComponent = TribesmanAIComponentArray.getComponent(worker);
 
    // Only respawn the tribesman if their hut is alive
-   if (!Board.hasEntity(tribesmanComponent.hutID)) {
+   if (!entityExists(tribesmanComponent.hutID)) {
       return;
    }
    

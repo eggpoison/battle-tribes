@@ -2,7 +2,7 @@ import { ServerComponentType } from "battletribes-shared/components";
 import { createItemEntityConfig, itemEntityCanBePickedUp } from "../entities/item-entity";
 import { ComponentArray } from "./ComponentArray";
 import { createItem } from "../items";
-import Board from "../Board";
+import Layer from "../Layer";
 import { ItemComponentArray } from "./ItemComponent";
 import { CraftingRecipe, CraftingStation } from "battletribes-shared/items/crafting-recipes";
 import { ItemTally2, tallyInventoryItems } from "battletribes-shared/items/ItemTally";
@@ -13,6 +13,7 @@ import { createEntityFromConfig } from "../Entity";
 import { Packet } from "battletribes-shared/packets";
 import { addInventoryDataToPacket, getInventoryDataLength } from "../server/game-data-packets";
 import { EntityRelationship, getEntityRelationship } from "./TribeComponent";
+import { destroyEntity, getEntityLayer } from "../world";
 
 export interface ItemCreationInfo {
    readonly itemSlot: number;
@@ -102,7 +103,7 @@ const dropInventory = (entity: EntityID, inventory: Inventory, dropRange: number
       config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
       config[ServerComponentType.item].itemType = item.type;
       config[ServerComponentType.item].amount = item.count;
-      createEntityFromConfig(config);
+      createEntityFromConfig(config, getEntityLayer(entity));
    }
 }
 
@@ -203,7 +204,7 @@ export function pickupItemEntity(pickingUpEntityID: number, itemEntity: EntityID
 
    // If all of the item was added, destroy it
    if (itemComponent.amount === 0) {
-      Board.destroyEntity(itemEntity);
+      destroyEntity(itemEntity);
       return true;
    }
 

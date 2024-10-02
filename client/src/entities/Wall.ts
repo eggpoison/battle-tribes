@@ -102,7 +102,7 @@ class Wall extends Entity {
       // Don't play death effects if the wall was replaced by a blueprint
       for (const chunk of transformComponent.chunks) {
          for (const entityID of chunk.entities) {
-            const entity = Board.entityRecord[entityID]!;
+            const entity = getEntityByID(entityID)!;
             if (entity.type !== EntityType.blueprintEntity) {
                continue;
             }

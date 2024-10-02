@@ -18,6 +18,7 @@ import { CraftingStation } from "battletribes-shared/items/crafting-recipes";
 import { ItemType, InventoryName } from "battletribes-shared/items/items";
 import { boxIsWithinRange } from "battletribes-shared/boxes/boxes";
 import { getPlayerSelectedItem } from "./components/game/GameInteractableLayer";
+import { entityExists, getEntityByID, getEntityLayer } from "./world";
 
 const enum InteractActionType {
    openBuildMenu,
@@ -277,7 +278,7 @@ export function resetInteractableEntityIDs(): void {
 }
 
 export function getSelectedEntity(): Entity {
-   const entity = Board.entityRecord[selectedEntityID];
+   const entity = getEntityByID(selectedEntityID);
    
    if (typeof entity === "undefined") {
       throw new Error("Can't select: Entity with ID " + selectedEntityID + " doesn't exist");
@@ -287,7 +288,7 @@ export function getSelectedEntity(): Entity {
 }
 
 export function deselectSelectedEntity(closeInventory: boolean = true): void {
-   const previouslySelectedEntity = Board.entityRecord[selectedEntityID];
+   const previouslySelectedEntity = getEntityByID(selectedEntityID);
    if (typeof previouslySelectedEntity !== "undefined") {
       Client.sendStructureUninteract(previouslySelectedEntity.id);
 
@@ -312,6 +313,7 @@ export function deselectHighlightedEntity(): void {
 // @Cleanup: name
 const getEntityID = (doPlayerProximityCheck: boolean, doCanSelectCheck: boolean): number => {
    const playerTransformComponent = Player.instance!.getServerComponent(ServerComponentType.transform);
+   const layer = getEntityLayer(Player.instance!.id);
    
    const minChunkX = Math.max(Math.floor((Game.cursorPositionX! - HIGHLIGHT_RANGE) / Settings.CHUNK_UNITS), 0);
    const maxChunkX = Math.min(Math.floor((Game.cursorPositionX! + HIGHLIGHT_RANGE) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1);
@@ -324,9 +326,9 @@ const getEntityID = (doPlayerProximityCheck: boolean, doCanSelectCheck: boolean)
    let entityID = -1;
    for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
       for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
-         const chunk = Board.getChunk(chunkX, chunkY);
+         const chunk = layer.getChunk(chunkX, chunkY);
          for (const currentEntityID of chunk.nonGrassEntities) {
-            const entity = Board.entityRecord[currentEntityID]!;
+            const entity = getEntityByID(currentEntityID)!;
             if (doCanSelectCheck && getEntityInteractAction(entity) === null) {
                continue;
             }
@@ -433,7 +435,7 @@ export function updateHighlightedAndHoveredEntities(): void {
    }
 
    // If the player is interacting with an inventory, only consider the distance from the player not the cursor
-   if (Board.entityRecord.hasOwnProperty(selectedEntityID) && (isHoveringInBlueprintMenu() || InventorySelector_inventoryIsOpen())) {
+   if (entityExists(selectedEntityID) && (isHoveringInBlueprintMenu() || InventorySelector_inventoryIsOpen())) {
       const selectedEntity = getSelectedEntity();
 
       const playerTransformComponent = Player.instance.getServerComponent(ServerComponentType.transform);
@@ -455,12 +457,12 @@ export function updateHighlightedAndHoveredEntities(): void {
       highlightedEntityID = newHighlightedEntityID;
    }
 
-   const highlightedEntity = Board.entityRecord[highlightedEntityID];
+   const highlightedEntity = getEntityByID(highlightedEntityID);
    updateHighlightedEntity(typeof highlightedEntity !== "undefined" ? highlightedEntity : null);
 }
 
 export function attemptEntitySelection(): boolean {
-   const highlightedEntity = Board.entityRecord[highlightedEntityID];
+   const highlightedEntity = getEntityByID(highlightedEntityID);
    if (typeof highlightedEntity === "undefined") {
       // When a new entity is selected, deselect the previous entity
       deselectSelectedEntity();

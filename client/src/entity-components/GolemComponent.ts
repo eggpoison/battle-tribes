@@ -83,16 +83,7 @@ class GolemComponent extends ServerComponent {
    private readonly eyeRenderParts = new Array<RenderPart>();
    private readonly eyeLights = new Array<Light>();
 
-   public wakeProgress: number;
-   
-   constructor(entity: Entity, reader: PacketReader) {
-      super(entity);
-
-      this.wakeProgress = reader.readNumber();
-      reader.padOffset(2 * Float32Array.BYTES_PER_ELEMENT);
-
-      // @Incomplete
-   }
+   public wakeProgress = 0;
 
    public padData(reader: PacketReader): void {
       reader.padOffset(3 * Float32Array.BYTES_PER_ELEMENT);

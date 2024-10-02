@@ -9,6 +9,20 @@ export function createIdentityMatrix(): Matrix3x3 {
    ];
 }
 
+export function copyMatrix(matrix: Matrix3x3): Matrix3x3 {
+   return [
+      matrix[0],
+      matrix[1],
+      matrix[2],
+      matrix[3],
+      matrix[4],
+      matrix[5],
+      matrix[6],
+      matrix[7],
+      matrix[8]
+   ];
+}
+
 export function createRotationMatrix(rotation: number): Matrix3x3 {
    const sin = Math.sin(rotation);
    const cos = Math.cos(rotation);

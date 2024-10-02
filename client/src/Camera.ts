@@ -3,8 +3,9 @@ import { VisibleChunkBounds } from "battletribes-shared/client-server-types";
 import { Settings } from "battletribes-shared/settings";
 import { halfWindowHeight, halfWindowWidth } from "./webgl";
 import { RENDER_CHUNK_EDGE_GENERATION, RENDER_CHUNK_SIZE, WORLD_RENDER_CHUNK_SIZE } from "./rendering/render-chunks";
-import Board from "./Board";
 import Chunk from "./Chunk";
+import Layer from "./Layer";
+import { getEntityByID } from "./world";
 
 export type VisiblePositionBounds = [minX: number, maxX: number, minY: number, maxY: number];
 
@@ -18,12 +19,12 @@ const deregisterVisibleChunk = (chunk: Chunk): void => {
    // removeEntityRenderedChunkData(chunk.x, chunk.y);
 }
 
-const getChunksFromRange = (minChunkX: number, maxChunkX: number, minChunkY: number, maxChunkY: number): ReadonlyArray<Chunk> => {
+const getChunksFromRange = (layer: Layer, minChunkX: number, maxChunkX: number, minChunkY: number, maxChunkY: number): ReadonlyArray<Chunk> => {
    const chunks = new Array<Chunk>();
    
    for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
       for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
-         const chunk = Board.getChunk(chunkX, chunkY);
+         const chunk = layer.getChunk(chunkX, chunkY);
          chunks.push(chunk);
       }
    }
@@ -65,28 +66,28 @@ abstract class Camera {
    public static minVisibleRenderChunkY = -1;
    public static maxVisibleRenderChunkY = -1;
 
-   public static setInitialVisibleChunkBounds(): void {
+   public static setInitialVisibleChunkBounds(layer: Layer): void {
       this.minVisibleChunkX = Math.max(Math.floor((this.position.x - halfWindowWidth / this.zoom) / Settings.CHUNK_UNITS), 0);
       this.maxVisibleChunkX = Math.min(Math.floor((this.position.x + halfWindowWidth / this.zoom) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1);
       this.minVisibleChunkY = Math.max(Math.floor((this.position.y - halfWindowHeight / this.zoom) / Settings.CHUNK_UNITS), 0);
       this.maxVisibleChunkY = Math.min(Math.floor((this.position.y + halfWindowHeight / this.zoom) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1);
 
-      const newChunks = getChunksFromRange(this.minVisibleChunkX, this.maxVisibleChunkX, this.minVisibleChunkY, this.maxVisibleChunkY);
+      const newChunks = getChunksFromRange(layer, this.minVisibleChunkX, this.maxVisibleChunkX, this.minVisibleChunkY, this.maxVisibleChunkY);
 
       for (const chunk of newChunks) {
          registerVisibleChunk(chunk);
       }
    }
 
-   public static updateVisibleChunkBounds(): void {
-      const previousChunks = getChunksFromRange(this.minVisibleChunkX, this.maxVisibleChunkX, this.minVisibleChunkY, this.maxVisibleChunkY);
+   public static updateVisibleChunkBounds(layer: Layer): void {
+      const previousChunks = getChunksFromRange(layer, this.minVisibleChunkX, this.maxVisibleChunkX, this.minVisibleChunkY, this.maxVisibleChunkY);
       
       this.minVisibleChunkX = Math.max(Math.floor((this.position.x - halfWindowWidth / this.zoom) / Settings.CHUNK_UNITS), 0);
       this.maxVisibleChunkX = Math.min(Math.floor((this.position.x + halfWindowWidth / this.zoom) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1);
       this.minVisibleChunkY = Math.max(Math.floor((this.position.y - halfWindowHeight / this.zoom) / Settings.CHUNK_UNITS), 0);
       this.maxVisibleChunkY = Math.min(Math.floor((this.position.y + halfWindowHeight / this.zoom) / Settings.CHUNK_UNITS), Settings.BOARD_SIZE - 1);
 
-      const newChunks = getChunksFromRange(this.minVisibleChunkX, this.maxVisibleChunkX, this.minVisibleChunkY, this.maxVisibleChunkY);
+      const newChunks = getChunksFromRange(layer, this.minVisibleChunkX, this.maxVisibleChunkX, this.minVisibleChunkY, this.maxVisibleChunkY);
 
       const removedChunks = getMissingChunks(newChunks, previousChunks);
       for (const chunk of removedChunks) {
@@ -127,7 +128,7 @@ abstract class Camera {
          return;
       }
       
-      const entity = Board.entityRecord[this.trackedEntityID];
+      const entity = getEntityByID(this.trackedEntityID);
       if (typeof entity !== "undefined") {
          this.position.x = entity.renderPosition.x;
          this.position.y = entity.renderPosition.y;

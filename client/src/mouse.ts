@@ -5,11 +5,13 @@ import Game from "./Game";
 import Camera from "./Camera";
 import { updateDebugInfoEntity, updateDebugInfoTile } from "./components/game/dev/DebugInfo";
 import { isDev } from "./utils";
-import Board from "./Board";
 import { Tile } from "./Tile";
 import Entity from "./Entity";
 import { updateCursorTooltip } from "./components/game/dev/CursorTooltip";
 import { TransformComponentArray } from "./entity-components/TransformComponent";
+import Player from "./entities/Player";
+import { getTileIndexIncludingEdges, tileIsInWorld } from "./Layer";
+import { getEntityByID, getEntityLayer } from "./world";
 
 export let cursorX: number | null = null;
 export let cursorY: number | null = null;
@@ -48,8 +50,10 @@ export function getMouseTargetTile(): Tile | null {
    const tileX = Math.floor(Game.cursorPositionX / Settings.TILE_SIZE);
    const tileY = Math.floor(Game.cursorPositionY / Settings.TILE_SIZE);
 
-   if (Board.tileIsInBoard(tileX, tileY)) {
-      return Board.getTile(tileX, tileY);
+   if (tileIsInWorld(tileX, tileY)) {
+      const playerLayer = getEntityLayer(Player.instance!.id);
+      const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
+      return playerLayer.getTile(tileIndex);
    }
    return null;
 }
@@ -61,6 +65,8 @@ export function getMouseTargetTile(): Tile | null {
 // @Cleanup: Use the highlighted entity system instead of having this custom function
 export function getMouseTargetEntity(): Entity | null {
    if (Game.cursorPositionX === null || Game.cursorPositionY === null) return null;
+
+   const playerLayer = getEntityLayer(Player.instance!.id);
    
    const minChunkX = Math.max(Math.min(Math.floor((Game.cursorPositionX - CLIENT_SETTINGS.CURSOR_TOOLTIP_HOVER_RANGE / Camera.zoom) / Settings.CHUNK_SIZE / Settings.TILE_SIZE), Settings.BOARD_SIZE - 1), 0);
    const maxChunkX = Math.max(Math.min(Math.floor((Game.cursorPositionX + CLIENT_SETTINGS.CURSOR_TOOLTIP_HOVER_RANGE / Camera.zoom) / Settings.CHUNK_SIZE / Settings.TILE_SIZE), Settings.BOARD_SIZE - 1), 0);
@@ -71,9 +77,9 @@ export function getMouseTargetEntity(): Entity | null {
    let minDistance = Number.MAX_SAFE_INTEGER;
    for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
       for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
-         const chunk = Board.getChunk(chunkX, chunkY);
+         const chunk = playerLayer.getChunk(chunkX, chunkY);
          for (const entityID of chunk.nonGrassEntities) {
-            const entity = Board.entityRecord[entityID]!;
+            const entity = getEntityByID(entityID)!;
 
             const transformComponent = TransformComponentArray.getComponent(entity.id);
             
@@ -118,7 +124,7 @@ export function renderCursorTooltip(): void {
    const entityScreenPositionX = Camera.calculateXScreenPos(targetEntity.renderPosition.x);
    const entityScreenPositionY = Camera.calculateYScreenPos(targetEntity.renderPosition.y);
 
-   const debugData = Game.getGameObjectDebugData();
+   const debugData = Game.getEntityDebugData();
    if (debugData === null || targetEntity.id === debugData.entityID) {
       updateCursorTooltip(debugData, entityScreenPositionX, entityScreenPositionY);
    }

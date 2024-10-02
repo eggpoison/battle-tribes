@@ -8,9 +8,9 @@ import { EntityRelationship, getEntityRelationship } from "../../components/Trib
 import { ComponentConfig } from "../../components";
 import { ServerComponentType } from "battletribes-shared/components";
 import { HealthComponentArray } from "../../components/HealthComponent";
-import Board from "../../Board";
 import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
 import RectangularBox from "battletribes-shared/boxes/RectangularBox";
+import { destroyEntity } from "../../world";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics
@@ -29,7 +29,7 @@ export function createIceArrowConfig(): ComponentConfig<ComponentTypes> {
          type: EntityType.iceArrow,
          collisionBit: COLLISION_BITS.default,
          collisionMask: DEFAULT_COLLISION_MASK,
-         hitboxes: [createHitbox(new RectangularBox(new Point(0, 0), ARROW_WIDTH, ARROW_HEIGHT, 0), 0.4, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0)]
+         hitboxes: [createHitbox(new RectangularBox(new Point(0, 0), ARROW_WIDTH, ARROW_HEIGHT, 0), 0.4, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, [])]
       },
       [ServerComponentType.physics]: {
          velocityX: 0,
@@ -62,6 +62,6 @@ export function onIceArrowCollision(arrow: EntityID, collidingEntity: EntityID):
          applyStatusEffect(collidingEntity, StatusEffect.freezing, 3 * Settings.TPS);
       }
       
-      Board.destroyEntity(arrow);
+      destroyEntity(arrow);
    }
 }

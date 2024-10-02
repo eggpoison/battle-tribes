@@ -11,7 +11,7 @@ import { customTickIntervalHasPassed, Point, randFloat, TileIndex, UtilVars } fr
 import { stopEntity, runHerdAI, entityHasReachedPosition } from "../ai-shared";
 import { chooseEscapeEntity, runFromAttackingEntity } from "../ai/escape-ai";
 import { shouldWander, getWanderTargetTile, wander } from "../ai/wander-ai";
-import Board, { tileRaytraceMatchesTileTypes } from "../Board";
+import Layer, { getTileX, getTileY } from "../Layer";
 import { entitiesAreColliding, CollisionVars } from "../collision";
 import { getRandomPositionInEntity } from "../Entity";
 import { AIHelperComponentArray } from "./AIHelperComponent";
@@ -22,6 +22,7 @@ import { PhysicsComponentArray, applyKnockback } from "./PhysicsComponent";
 import { TransformComponentArray, getEntityTile } from "./TransformComponent";
 import { WanderAIComponentArray } from "./WanderAIComponent";
 import { TribeMemberComponentArray } from "./TribeMemberComponent";
+import { entityExists, getEntityLayer, getEntityType } from "../world";
 
 const enum Vars {
    TURN_SPEED = UtilVars.PI / 1.5,
@@ -68,7 +69,7 @@ export const FishComponentArray = new ComponentArray<FishComponent>(ServerCompon
    addDataToPacket: addDataToPacket
 });
 
-const isValidWanderPosition = (x: number, y: number): boolean => {
+const isValidWanderPosition = (layer: Layer, x: number, y: number): boolean => {
    const minTileX = Math.max(Math.floor((x - Vars.TILE_VALIDATION_PADDING) / Settings.TILE_SIZE), 0);
    const maxTileX = Math.min(Math.floor((x + Vars.TILE_VALIDATION_PADDING) / Settings.TILE_SIZE), Settings.BOARD_DIMENSIONS - 1);
    const minTileY = Math.max(Math.floor((y - Vars.TILE_VALIDATION_PADDING) / Settings.TILE_SIZE), 0);
@@ -76,7 +77,7 @@ const isValidWanderPosition = (x: number, y: number): boolean => {
 
    for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
       for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
-         if (Board.getTileBiome(tileX, tileY) !== Biome.river) {
+         if (layer.getTileBiome(tileX, tileY) !== Biome.river) {
             return false;
          }
       }
@@ -88,9 +89,10 @@ const isValidWanderPosition = (x: number, y: number): boolean => {
 const move = (fish: EntityID, direction: number): void => {
    const transformComponent = TransformComponentArray.getComponent(fish);
    const physicsComponent = PhysicsComponentArray.getComponent(fish);
+   const layer = getEntityLayer(fish);
    
    const tileIndex = getEntityTile(transformComponent);
-   if (Board.tileTypes[tileIndex] === TileType.water) {
+   if (layer.tileTypes[tileIndex] === TileType.water) {
       // Swim on water
       physicsComponent.acceleration.x = 40 * Math.sin(direction);
       physicsComponent.acceleration.y = 40 * Math.cos(direction);
@@ -143,7 +145,8 @@ function onTick(fishComponent: FishComponent, fish: EntityID): void {
    const physicsComponent = PhysicsComponentArray.getComponent(fish);
 
    const tileIndex = getEntityTile(transformComponent);
-   const tileType = Board.tileTypes[tileIndex];
+   const layer = getEntityLayer(fish)
+   const tileType = layer.tileTypes[tileIndex];
 
    physicsComponent.overrideMoveSpeedMultiplier = tileType === TileType.water;
 
@@ -160,7 +163,7 @@ function onTick(fishComponent: FishComponent, fish: EntityID): void {
    const aiHelperComponent = AIHelperComponentArray.getComponent(fish);
 
    // If the leader dies or is out of vision range, stop following them
-   if (fishComponent.leader !== null && (!Board.hasEntity(fishComponent.leader) || !aiHelperComponent.visibleEntities.includes(fishComponent.leader))) {
+   if (fishComponent.leader !== null && (!entityExists(fishComponent.leader) || !aiHelperComponent.visibleEntities.includes(fishComponent.leader))) {
       unfollowLeader(fish, fishComponent.leader);
       fishComponent.leader = null;
    }
@@ -181,7 +184,7 @@ function onTick(fishComponent: FishComponent, fish: EntityID): void {
    // If a tribe member is wearing a fishlord suit, follow them
    if (fishComponent.leader !== null) {
       const target = fishComponent.attackTargetID;
-      if (Board.hasEntity(target)) {
+      if (entityExists(target)) {
          const leaderTransformComponent = TransformComponentArray.getComponent(fishComponent.leader);
          
          // Follow leader
@@ -246,7 +249,7 @@ function onTick(fishComponent: FishComponent, fish: EntityID): void {
    const herdMembers = new Array<EntityID>();
    for (let i = 0; i < aiHelperComponent.visibleEntities.length; i++) {
       const entity = aiHelperComponent.visibleEntities[i];
-      if (Board.getEntityType(entity) === EntityType.fish) {
+      if (getEntityType(entity) === EntityType.fish) {
          herdMembers.push(entity);
       }
    }
@@ -270,7 +273,7 @@ function onTick(fishComponent: FishComponent, fish: EntityID): void {
       let targetTile: TileIndex;
       do {
          targetTile = getWanderTargetTile(fish, FishVars.VISION_RANGE);
-      } while (++attempts <= 50 && (Board.tileIsWalls[targetTile] === 1 || Board.tileBiomes[targetTile] !== Biome.river));
+      } while (++attempts <= 50 && (layer.tileIsWalls[targetTile] === 1 || layer.tileBiomes[targetTile] !== Biome.river));
 
       if (attempts > 50) {
          stopEntity(physicsComponent);
@@ -281,17 +284,17 @@ function onTick(fishComponent: FishComponent, fish: EntityID): void {
       let x: number;
       let y: number;
       do {
-         const tileX = Board.getTileX(targetTile);
-         const tileY = Board.getTileY(targetTile);
+         const tileX = getTileX(targetTile);
+         const tileY = getTileY(targetTile);
          x = (tileX + Math.random()) * Settings.TILE_SIZE;
          y = (tileY + Math.random()) * Settings.TILE_SIZE;
-      } while (!isValidWanderPosition(x, y));
+      } while (!isValidWanderPosition(layer, x, y));
 
       // Find a path which doesn't cross land
       attempts = 0;
-      while (++attempts <= 10 && !tileRaytraceMatchesTileTypes(transformComponent.position.x, transformComponent.position.y, x, y, [TileType.water])) {
-         const tileX = Board.getTileX(targetTile);
-         const tileY = Board.getTileY(targetTile);
+      while (++attempts <= 10 && !layer.tileRaytraceMatchesTileTypes(transformComponent.position.x, transformComponent.position.y, x, y, [TileType.water])) {
+         const tileX = getTileX(targetTile);
+         const tileY = getTileY(targetTile);
          x = (tileX + Math.random()) * Settings.TILE_SIZE;
          y = (tileY + Math.random()) * Settings.TILE_SIZE;
       }

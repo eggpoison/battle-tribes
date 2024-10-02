@@ -124,20 +124,14 @@ class TurretComponent extends ServerComponent {
    private projectileRenderPart: TexturedRenderPart | null = null;
    
    // @Cleanup: Do we need to store this?
-   private chargeProgress: number;
+   private chargeProgress = 0;
    
-   constructor(entity: Entity, reader: PacketReader) {
+   constructor(entity: Entity) {
       super(entity);
-
-      const aimDirection = reader.readNumber();
-      this.chargeProgress = reader.readNumber();
-      reader.padOffset(Float32Array.BYTES_PER_ELEMENT);
 
       this.aimingRenderPart = this.entity.getRenderThing("turretComponent:aiming") as TexturedRenderPart;
       this.pivotingRenderPart = this.entity.getRenderThing("turretComponent:pivoting") as RenderPart;
       this.gearRenderParts = this.entity.getRenderThings("turretComponent:gear") as Array<RenderPart>;
-
-      this.updateAimDirection(aimDirection, this.chargeProgress);
    }
 
    private updateAimDirection(aimDirection: number, chargeProgress: number): void {

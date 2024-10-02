@@ -3,12 +3,12 @@ import { ServerComponentType } from "battletribes-shared/components";
 import { useEffect, useState } from "react";
 import Entity from "../../Entity"
 import Camera from "../../Camera";
-import Board from "../../Board";
 import { getHoveredEntityID } from "../../entity-selection";
 import Game from "../../Game";
 import Player from "../../entities/Player";
 import { latencyGameState } from "../../game-state/game-states";
 import { BuildMenu_isOpen } from "./BuildMenu";
+import { getEntityByID } from "../../world";
 
 const Y_OFFSET = -50;
 
@@ -69,7 +69,7 @@ export function updateInspectHealthBar(): void {
       return;
    }
 
-   const hoveredEntity = Board.entityRecord[hoveredEntityID];
+   const hoveredEntity = getEntityByID(hoveredEntityID);
    if (typeof hoveredEntity === "undefined") {
       InspectHealthBar_setEntity(null);
       return;

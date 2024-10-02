@@ -1,12 +1,12 @@
 import { ServerComponentType } from "battletribes-shared/components";
 import { Settings } from "battletribes-shared/settings";
-import Board from "../Board";
 import { getDistanceFromPointToEntity, moveEntityToPosition, stopEntity, turnToPosition, willStopAtDesiredDistance } from "../ai-shared";
 import { PhysicsComponentArray } from "./PhysicsComponent";
 import { ComponentArray } from "./ComponentArray";
 import { EntityID } from "battletribes-shared/entities";
 import { TransformComponentArray } from "./TransformComponent";
 import { Packet } from "battletribes-shared/packets";
+import { entityExists } from "../world";
 
 export interface FollowAIComponentParams {
    readonly followCooldownTicks: number;
@@ -43,7 +43,7 @@ export function updateFollowAIComponent(entity: EntityID, visibleEntities: Reado
       followAIComponent.followCooldownTicks--;
    }
 
-   if (!Board.hasEntity(followAIComponent.followTargetID)) {
+   if (!entityExists(followAIComponent.followTargetID)) {
       return;
    }
    

@@ -3,7 +3,7 @@ import { AMMO_INFO_RECORD, ServerComponentType } from "battletribes-shared/compo
 import { EntityType, PlayerCauseOfDeath, EntityID } from "battletribes-shared/entities";
 import { Point } from "battletribes-shared/utils";
 import { HealthComponentArray, damageEntity } from "../../components/HealthComponent";
-import Board from "../../Board";
+import Layer from "../../Layer";
 import { applyKnockback } from "../../components/PhysicsComponent";
 import { EntityRelationship, TribeComponentArray, getEntityRelationship } from "../../components/TribeComponent";
 import { StatusEffectComponentArray, applyStatusEffect } from "../../components/StatusEffectComponent";
@@ -14,6 +14,7 @@ import { ProjectileComponentArray } from "../../components/ProjectileComponent";
 import { ItemType } from "battletribes-shared/items/items";
 import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
 import RectangularBox from "battletribes-shared/boxes/RectangularBox";
+import { destroyEntity, getEntityType, validateEntity } from "../../world";
 
 type ComponentTypes = ServerComponentType.transform | ServerComponentType.physics | ServerComponentType.tribe | ServerComponentType.projectile;
 
@@ -25,7 +26,7 @@ export function createWoodenArrowConfig(): ComponentConfig<ComponentTypes> {
          type: EntityType.woodenArrow,
          collisionBit: COLLISION_BITS.default,
          collisionMask: DEFAULT_COLLISION_MASK,
-         hitboxes: [createHitbox(new RectangularBox(new Point(0, 0), 12, 64, 0), 0.5, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK & ~HitboxCollisionBit.ARROW_PASSABLE, 0)]
+         hitboxes: [createHitbox(new RectangularBox(new Point(0, 0), 12, 64, 0), 0.5, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK & ~HitboxCollisionBit.ARROW_PASSABLE, [])]
       },
       [ServerComponentType.physics]: {
          velocityX: 0,
@@ -55,7 +56,7 @@ export function onWoodenArrowCollision(arrow: EntityID, collidingEntity: EntityI
    }
    
    const tribeComponent = TribeComponentArray.getComponent(arrow);
-   const collidingEntityType = Board.getEntityType(collidingEntity)!;
+   const collidingEntityType = getEntityType(collidingEntity)!;
 
    // Collisions with embrasures are handled in the embrasures collision function
    if (collidingEntityType === EntityType.embrasure) {
@@ -82,7 +83,7 @@ export function onWoodenArrowCollision(arrow: EntityID, collidingEntity: EntityI
 
       const ammoInfo = AMMO_INFO_RECORD[ItemType.wood];
 
-      const owner = Board.validateEntity(projectileComponent.owner);
+      const owner = validateEntity(projectileComponent.owner);
       const hitDirection = transformComponent.position.calculateAngleBetween(collidingEntityTransformComponent.position);
       
       const damage = 2 * (projectileComponent.isBlocked ? 0.5 : 1);
@@ -94,6 +95,6 @@ export function onWoodenArrowCollision(arrow: EntityID, collidingEntity: EntityI
          applyStatusEffect(collidingEntity, ammoInfo.statusEffect.type, ammoInfo.statusEffect.durationTicks);
       }
 
-      Board.destroyEntity(arrow);
+      destroyEntity(arrow);
    }
 }

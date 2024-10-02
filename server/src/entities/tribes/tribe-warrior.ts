@@ -4,11 +4,12 @@ import { EntityID, EntityType } from "battletribes-shared/entities";
 import { TribeType } from "battletribes-shared/tribes";
 import { randInt, Point } from "battletribes-shared/utils";
 import { TribesmanAIComponentArray } from "../../components/TribesmanAIComponent";
-import Board from "../../Board";
+import Layer from "../../Layer";
 import { TribeComponentArray } from "../../components/TribeComponent";
 import { ComponentConfig } from "../../components";
 import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
 import CircularBox from "battletribes-shared/boxes/CircularBox";
+import { entityExists } from "../../world";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics
@@ -53,7 +54,7 @@ export function createTribeWarriorConfig(): ComponentConfig<ComponentTypes> {
          type: EntityType.tribeWarrior,
          collisionBit: COLLISION_BITS.default,
          collisionMask: DEFAULT_COLLISION_MASK,
-         hitboxes: [createHitbox(new CircularBox(new Point(0, 0), 0, TRIBE_WARRIOR_RADIUS), 1.5, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0)]
+         hitboxes: [createHitbox(new CircularBox(new Point(0, 0), 0, TRIBE_WARRIOR_RADIUS), 1.5, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, [])]
       },
       [ServerComponentType.physics]: {
          velocityX: 0,
@@ -102,7 +103,7 @@ export function onTribeWarriorDeath(warrior: EntityID): void {
    // Only respawn the tribesman if their hut is alive
    const tribesmanComponent = TribesmanAIComponentArray.getComponent(warrior);
 
-   if (Board.hasEntity(tribesmanComponent.hutID)) {
+   if (entityExists(tribesmanComponent.hutID)) {
       const tribeComponent = TribeComponentArray.getComponent(warrior);
       tribeComponent.tribe.respawnTribesman(tribesmanComponent.hutID);
    }

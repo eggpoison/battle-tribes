@@ -3,8 +3,9 @@ import { ComponentArray } from "./ComponentArray";
 import { EntityID } from "battletribes-shared/entities";
 import { getAgeTicks, TransformComponentArray } from "./TransformComponent";
 import { Settings } from "battletribes-shared/settings";
-import Board from "../Board";
+import Layer from "../Layer";
 import { PhysicsComponentArray } from "./PhysicsComponent";
+import { destroyEntity } from "../world";
 
 export interface ProjectileComponentParams {
    owner: EntityID;
@@ -38,7 +39,7 @@ function onTick(_projectileComponent: ProjectileComponent, projectile: EntityID)
    const ageTicks = getAgeTicks(transformComponent);
 
    if (ageTicks >= 1.5 * Settings.TPS) {
-      Board.destroyEntity(projectile);
+      destroyEntity(projectile);
       return;
    }
    
@@ -61,7 +62,7 @@ function onTick(_projectileComponent: ProjectileComponent, projectile: EntityID)
    // @Hack
    // Destroy the arrow if it reaches the border
    if (transformComponent.position.x <= ARROW_DESTROY_DISTANCE || transformComponent.position.x >= Settings.BOARD_DIMENSIONS * Settings.TILE_SIZE - ARROW_DESTROY_DISTANCE || transformComponent.position.y <= ARROW_DESTROY_DISTANCE || transformComponent.position.y >= Settings.BOARD_DIMENSIONS * Settings.TILE_SIZE - ARROW_DESTROY_DISTANCE) {
-      Board.destroyEntity(projectile);
+      destroyEntity(projectile);
       return;
    }
 }

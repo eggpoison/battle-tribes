@@ -3,7 +3,7 @@ import { VisibleChunkBounds, RestrictedBuildingAreaData } from "battletribes-sha
 import { EntityType } from "battletribes-shared/entities";
 import { Settings } from "battletribes-shared/settings";
 import { Point } from "battletribes-shared/utils";
-import Board from "../Board";
+import Layer from "../Layer";
 import Tribe, { BuildingPlan, BuildingPlanType } from "../Tribe";
 import { SafetyNode, getSafetyNode } from "./ai-building";
 import { buildingIsInfrastructure, getBuildingSafety } from "./ai-building-heuristics";
@@ -17,7 +17,7 @@ export function getVisibleTribes(chunkBounds: VisibleChunkBounds): ReadonlyArray
    const visibleTribes = new Array<Tribe>();
    for (let chunkX = chunkBounds[0]; chunkX <= chunkBounds[1]; chunkX++) {
       for (let chunkY = chunkBounds[2]; chunkY <= chunkBounds[3]; chunkY++) {
-         const chunk = Board.getChunk(chunkX, chunkY);
+         const chunk = Layer.getChunk(chunkX, chunkY);
          for (let i = 0; i < chunk.entities.length; i++) {
             const entity = chunk.entities[i];
             if (TribeComponentArray.hasComponent(entity)) {
@@ -106,7 +106,7 @@ export function getVisibleBuildingPlans(visibleTribes: ReadonlyArray<Tribe>, chu
             }
             case BuildingPlanType.upgrade: {
                const building = plan.baseBuildingID;
-               if (!Board.hasEntity(building)) {
+               if (!Layer.hasEntity(building)) {
                   continue;
                }
                

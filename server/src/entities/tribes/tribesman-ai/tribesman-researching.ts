@@ -1,7 +1,6 @@
 import { TribesmanAIType } from "battletribes-shared/components";
 import { EntityID, LimbAction } from "battletribes-shared/entities";
 import { TechInfo } from "battletribes-shared/techs";
-import Board from "../../../Board";
 import { moveEntityToPosition, getDistanceFromPointToEntity } from "../../../ai-shared";
 import { InventoryUseComponentArray, setLimbActions } from "../../../components/InventoryUseComponent";
 import { PhysicsComponentArray } from "../../../components/PhysicsComponent";

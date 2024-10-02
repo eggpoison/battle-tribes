@@ -55,26 +55,18 @@ const createStoneBlueprintWorkParticleEffects = (originX: number, originY: numbe
 class BlueprintComponent extends ServerComponent {
    public readonly partialRenderParts = new Array<TexturedRenderPart>();
    
-   public readonly blueprintType: BlueprintType;
-   public lastBlueprintProgress: number;
-   public readonly associatedEntityID: number;
-
-   constructor(entity: Entity, reader: PacketReader) {
-      super(entity);
-
-      this.blueprintType = reader.readNumber();
-      this.lastBlueprintProgress = reader.readNumber();
-      this.associatedEntityID = reader.readNumber();
-   }
+   public blueprintType: BlueprintType = 0;
+   public lastBlueprintProgress = 0;
+   public associatedEntityID = 0;
 
    public padData(reader: PacketReader): void {
       reader.padOffset(3 * Float32Array.BYTES_PER_ELEMENT);
    }
 
    public updateFromData(reader: PacketReader): void {
-      reader.padOffset(Float32Array.BYTES_PER_ELEMENT);
+      this.blueprintType = reader.readNumber();
       const blueprintProgress = reader.readNumber();
-      reader.padOffset(Float32Array.BYTES_PER_ELEMENT);
+      this.associatedEntityID = reader.readNumber();
 
       if (blueprintProgress !== this.lastBlueprintProgress) {
          const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);

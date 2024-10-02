@@ -5,8 +5,8 @@ import TombstoneEpitaph from "./TombstoneEpitaph";
 import TribesmanInteractMenu from "./TribesmanInteractMenu";
 import AmmoBoxInventory from "./AmmoBoxInventory";
 import { deselectSelectedEntity, getSelectedEntityID } from "../../../entity-selection";
-import Board from "../../../Board";
-import { addMenuCloseFunction } from "../../../menus";
+import { addMenuCloseFunction }   from "../../../menus";
+import { entityExists } from "../../../world";
 
 export enum InventoryMenuType {
    none,
@@ -55,7 +55,7 @@ const InventorySelector = () => {
    }, [inventoryMenuType]);
 
    const selectedEntityID = getSelectedEntityID();
-   if (!Board.entityRecord.hasOwnProperty(selectedEntityID)) {
+   if (!entityExists(selectedEntityID)) {
       return null;
    }
 

@@ -2,17 +2,17 @@ import { HitData, PlayerKnockbackData, HealData, ResearchOrbCompleteData } from 
 import { BlueprintType, BuildingMaterial, MATERIAL_TO_ITEM_MAP, ServerComponentType } from "battletribes-shared/components";
 import { TechID, TechInfo, getTechByID } from "battletribes-shared/techs";
 import { TribesmanTitle } from "battletribes-shared/titles";
-import Board from "../Board";
+import Layer, { getTileX, getTileY } from "../Layer";
 import { registerCommand } from "../commands";
 import { acceptTitleOffer, forceAddTitle, rejectTitleOffer, removeTitle } from "../components/TribeMemberComponent";
 import { modifyBuilding } from "../entities/tribes/player";
-import { throwItem, placeBlueprint, getAvailableCraftingStations, useItem } from "../entities/tribes/tribe-member";
+import { placeBlueprint, getAvailableCraftingStations } from "../entities/tribes/tribe-member";
 import PlayerClient from "./PlayerClient";
 import { SERVER } from "./server";
 import { createInitialGameDataPacket } from "./game-data-packets";
 import { EntityID, EntityType } from "battletribes-shared/entities";
 import { TRIBE_INFO_RECORD, TribeType } from "battletribes-shared/tribes";
-import { InventoryComponentArray, addItemToInventory, addItemToSlot, consumeItemFromSlot, consumeItemTypeFromInventory, craftRecipe, getInventory, getInventoryFromCreationInfo, inventoryComponentCanAffordRecipe, recipeCraftingStationIsAvailable } from "../components/InventoryComponent";
+import { InventoryComponentArray, addItemToInventory, craftRecipe, getInventory, getInventoryFromCreationInfo, inventoryComponentCanAffordRecipe, recipeCraftingStationIsAvailable } from "../components/InventoryComponent";
 import { TribeComponentArray, recruitTribesman } from "../components/TribeComponent";
 import { createItem } from "../items";
 import { Point, randInt, randItem } from "battletribes-shared/utils";
@@ -36,6 +36,7 @@ import { TransformComponentArray } from "../components/TransformComponent";
 import { createEntityFromConfig } from "../Entity";
 import { createEntityConfig } from "../entity-creation";
 import { ComponentConfig } from "../components";
+import { destroyEntity, entityExists, getEntityLayer, getEntityType, getTribe } from "../world";
 
 // @Cleanup: see if a decorator can be used to cut down on the player entity check copy-n-paste
 
@@ -67,7 +68,7 @@ export function getPlayerFromUsername(username: string): EntityID | null {
    for (let i = 0; i < playerClients.length; i++) {
       const playerClient = playerClients[i];
 
-      if (playerClient.username === username && Board.hasEntity(playerClient.instance)) {
+      if (playerClient.username === username && entityExists(playerClient.instance)) {
          return playerClient.instance;
       }
    }
@@ -85,8 +86,8 @@ export function handlePlayerDisconnect(playerClient: PlayerClient): void {
    }
 
    // Kill the player
-   if (Board.hasEntity(playerClient.instance)) {
-      Board.destroyEntity(playerClient.instance);
+   if (entityExists(playerClient.instance)) {
+      destroyEntity(playerClient.instance);
    }
 }
 
@@ -104,8 +105,8 @@ export function generatePlayerSpawnPosition(tribeType: TribeType): Point {
 
       const tileIndex = randItem(biomeTiles);
 
-      const tileX = Board.getTileX(tileIndex);
-      const tileY = Board.getTileY(tileIndex);
+      const tileX = getTileX(tileIndex);
+      const tileY = getTileY(tileIndex);
       const x = (tileX + Math.random()) * Settings.TILE_SIZE;
       const y = (tileY + Math.random()) * Settings.TILE_SIZE;
 
@@ -124,7 +125,7 @@ export function generatePlayerSpawnPosition(tribeType: TribeType): Point {
 
 const processPlayerCraftingPacket = (playerClient: PlayerClient, recipeIndex: number): void => {
    const player = playerClient.instance;
-   if (!Board.hasEntity(player)) {
+   if (!entityExists(player)) {
       return;
    }
    
@@ -146,7 +147,7 @@ const processPlayerCraftingPacket = (playerClient: PlayerClient, recipeIndex: nu
 }
 
 const processCommandPacket = (playerClient: PlayerClient, command: string): void => {
-   if (!Board.hasEntity(playerClient.instance)) {
+   if (!entityExists(playerClient.instance)) {
       return;
    }
    
@@ -154,7 +155,7 @@ const processCommandPacket = (playerClient: PlayerClient, command: string): void
 }
 
 const processSelectTechPacket = (playerClient: PlayerClient, techID: TechID): void => {
-   if (!Board.hasEntity(playerClient.instance)) {
+   if (!entityExists(playerClient.instance)) {
       return;
    }
 
@@ -173,7 +174,7 @@ const itemIsNeededInTech = (tech: TechInfo, itemRequirements: ItemRequirements, 
 }
 
 const processTechUnlock = (playerClient: PlayerClient, techID: TechID): void => {
-   if (!Board.hasEntity(playerClient.instance)) {
+   if (!entityExists(playerClient.instance)) {
       return;
    }
 
@@ -221,7 +222,7 @@ const processTechUnlock = (playerClient: PlayerClient, techID: TechID): void => 
 }
 
 const processTechForceUnlock = (playerClient: PlayerClient, techID: TechID): void => {
-   if (!Board.hasEntity(playerClient.instance)) {
+   if (!entityExists(playerClient.instance)) {
       return;
    }
 
@@ -229,7 +230,7 @@ const processTechForceUnlock = (playerClient: PlayerClient, techID: TechID): voi
 }
 
 const processStudyPacket = (playerClient: PlayerClient, studyAmount: number): void => {
-   if (!Board.hasEntity(playerClient.instance)) {
+   if (!entityExists(playerClient.instance)) {
       return;
    }
 
@@ -256,7 +257,7 @@ const snapRotationToPlayer = (player: EntityID, placePosition: Point, rotation: 
 }
 
 const processPlaceBlueprintPacket = (playerClient: PlayerClient, structure: EntityID, buildingType: BlueprintType): void => {
-   if (!Board.hasEntity(playerClient.instance) || !Board.hasEntity(structure)) {
+   if (!entityExists(playerClient.instance) || !entityExists(structure)) {
       return;
    }
 
@@ -267,7 +268,7 @@ const processPlaceBlueprintPacket = (playerClient: PlayerClient, structure: Enti
 }
 
 const processModifyBuildingPacket = (playerClient: PlayerClient, structure: EntityID, data: number): void => {
-   if (!Board.hasEntity(playerClient.instance)) {
+   if (!entityExists(playerClient.instance)) {
       return;
    }
    
@@ -275,17 +276,17 @@ const processModifyBuildingPacket = (playerClient: PlayerClient, structure: Enti
 }
 
 const processDeconstructPacket = (playerClient: PlayerClient, structure: EntityID): void => {
-   if (!Board.hasEntity(structure)) {
+   if (!entityExists(structure)) {
       return;
    }
 
    // Deconstruct
-   Board.destroyEntity(structure);
+   destroyEntity(structure);
 
    if (BuildingMaterialComponentArray.hasComponent(structure)) {
       const materialComponent = BuildingMaterialComponentArray.getComponent(structure);
       
-      if (Board.getEntityType(structure) === EntityType.wall && materialComponent.material === BuildingMaterial.wood) {
+      if (getEntityType(structure) === EntityType.wall && materialComponent.material === BuildingMaterial.wood) {
          createItemsOverEntity(structure, ItemType.wooden_wall, 1, 40);
          return;
       }
@@ -296,11 +297,11 @@ const processDeconstructPacket = (playerClient: PlayerClient, structure: EntityI
 }
 
 const processStructureInteractPacket = (playerClient: PlayerClient, structure: EntityID, interactData: number): void => {
-   if (!Board.hasEntity(playerClient.instance) || !Board.hasEntity(structure)) {
+   if (!entityExists(playerClient.instance) || !entityExists(structure)) {
       return;
    }
 
-   switch (Board.getEntityType(structure)) {
+   switch (getEntityType(structure)) {
       case EntityType.door: {
          toggleDoor(structure);
          break;
@@ -322,11 +323,11 @@ const processStructureInteractPacket = (playerClient: PlayerClient, structure: E
 }
 
 const processStructureUninteractPacket = (playerClient: PlayerClient, structure: EntityID): void => {
-   if (!Board.hasEntity(playerClient.instance) || !Board.hasEntity(playerClient.instance)) {
+   if (!entityExists(playerClient.instance) || !entityExists(playerClient.instance)) {
       return;
    }
 
-   switch (Board.getEntityType(structure)) {
+   switch (getEntityType(structure)) {
       case EntityType.researchBench: {
          deoccupyResearchBench(structure, playerClient.instance);
          break;
@@ -335,7 +336,7 @@ const processStructureUninteractPacket = (playerClient: PlayerClient, structure:
 }
 
 const processRecruitTribesmanPacket = (playerClient: PlayerClient, tribesman: EntityID): void => {
-   if (!Board.hasEntity(playerClient.instance) || !Board.hasEntity(tribesman)) {
+   if (!entityExists(playerClient.instance) || !entityExists(tribesman)) {
       return;
    }
 
@@ -348,7 +349,7 @@ const processRecruitTribesmanPacket = (playerClient: PlayerClient, tribesman: En
    }
 }
 const processRespondToTitleOfferPacket = (playerClient: PlayerClient, title: TribesmanTitle, isAccepted: boolean): void => {
-   if (!Board.hasEntity(playerClient.instance)) {
+   if (!entityExists(playerClient.instance)) {
       return;
    }
    
@@ -360,7 +361,7 @@ const processRespondToTitleOfferPacket = (playerClient: PlayerClient, title: Tri
 }
 
 const devGiveItem = (playerClient: PlayerClient, itemType: ItemType, amount: number): void => {
-   if (!Board.hasEntity(playerClient.instance)) {
+   if (!entityExists(playerClient.instance)) {
       return;
    }
 
@@ -370,7 +371,7 @@ const devGiveItem = (playerClient: PlayerClient, itemType: ItemType, amount: num
 }
 
 const devSummonEntity = (playerClient: PlayerClient, summonPacket: EntitySummonPacket): void => {
-   if (!Board.hasEntity(playerClient.instance)) {
+   if (!entityExists(playerClient.instance)) {
       return;
    }
 
@@ -404,15 +405,15 @@ const devSummonEntity = (playerClient: PlayerClient, summonPacket: EntitySummonP
 
    const tribeComponentSummonData = summonPacket.summonData[ServerComponentType.tribe];
    if (typeof tribeComponentSummonData !== "undefined") {
-      config[ServerComponentType.tribe].tribe = Board.getTribeExpected(tribeComponentSummonData.tribeID);
+      config[ServerComponentType.tribe].tribe = getTribe(tribeComponentSummonData.tribeID);
    }
 
-   createEntityFromConfig(config);
+   createEntityFromConfig(config, getEntityLayer(playerClient.instance));
 }
 
 const devGiveTitle = (playerClient: PlayerClient, title: TribesmanTitle): void => {
    const player = playerClient.instance;
-   if (!Board.hasEntity(player)) {
+   if (!entityExists(player)) {
       return;
    }
 
@@ -421,19 +422,19 @@ const devGiveTitle = (playerClient: PlayerClient, title: TribesmanTitle): void =
 
 const devRemoveTitle = (playerClient: PlayerClient, title: TribesmanTitle): void => {
    const player = playerClient.instance;
-   if (!Board.hasEntity(player)) {
+   if (!entityExists(player)) {
       return;
    }
 
    removeTitle(player, title);
 }
 
-export function addPlayerClient(playerClient: PlayerClient, player: EntityID, playerConfig: ComponentConfig<ServerComponentType.transform>): void {
+export function addPlayerClient(playerClient: PlayerClient, player: EntityID, layer: Layer, playerConfig: ComponentConfig<ServerComponentType.transform>): void {
    playerClients.push(playerClient);
 
    const socket = playerClient.socket;
 
-   const initialGameDataPacket = createInitialGameDataPacket(player, playerConfig);
+   const initialGameDataPacket = createInitialGameDataPacket(player, layer, playerConfig);
    socket.send(initialGameDataPacket);
 
    socket.on("deactivate", () => {
@@ -535,7 +536,7 @@ export function addPlayerClient(playerClient: PlayerClient, player: EntityID, pl
    });
 
    socket.on("dev_change_tribe_type", (tribeID: number, newTribeType: TribeType): void => {
-      const tribe = Board.getTribeExpected(tribeID);
+      const tribe = getTribe(tribeID);
       if (tribe !== null) {
          tribe.tribeType = newTribeType;
       }

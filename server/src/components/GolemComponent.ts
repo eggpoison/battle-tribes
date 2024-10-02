@@ -1,5 +1,4 @@
 import { ServerComponentType } from "battletribes-shared/components";
-import Board from "../Board";
 import { BODY_GENERATION_RADIUS, GOLEM_WAKE_TIME_TICKS, GolemVars } from "../entities/mobs/golem";
 import { ComponentArray } from "./ComponentArray";
 import { EntityID } from "battletribes-shared/entities";
@@ -14,6 +13,7 @@ import { PhysicsComponentArray } from "./PhysicsComponent";
 import { TransformComponentArray } from "./TransformComponent";
 import { Hitbox } from "battletribes-shared/boxes/boxes";
 import CircularBox from "battletribes-shared/boxes/CircularBox";
+import { destroyEntity, entityExists, getEntityLayer, getGameTicks } from "../world";
 
 const enum Vars {
    TARGET_ENTITY_FORGET_TIME = 20,
@@ -109,7 +109,7 @@ const getTarget = (golemComponent: GolemComponent): EntityID => {
    for (const _targetID of Object.keys(golemComponent.attackingEntities)) {
       const target = Number(_targetID);
 
-      if (!Board.hasEntity(target)) {
+      if (!entityExists(target)) {
          continue;
       }
 
@@ -148,6 +148,7 @@ const shiftRocks = (golem: EntityID, golemComponent: GolemComponent): void => {
 
 const summonPebblums = (golem: EntityID, golemComponent: GolemComponent, target: EntityID): void => {
    const transformComponent = TransformComponentArray.getComponent(golem);
+   const layer = getEntityLayer(golem);
    
    const numPebblums = randInt(2, 3);
    for (let i = 0; i < numPebblums; i++) {
@@ -161,7 +162,7 @@ const summonPebblums = (golem: EntityID, golemComponent: GolemComponent, target:
       config[ServerComponentType.transform].position.y = y;
       config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
       config[ServerComponentType.pebblum].targetEntityID = target;
-      const pebblum = createEntityFromConfig(config);
+      const pebblum = createEntityFromConfig(config, layer);
       
       golemComponent.summonedPebblumIDs.push(pebblum);
    }
@@ -202,8 +203,8 @@ function onTick(golemComponent: GolemComponent, golem: EntityID): void {
       for (let i = 0; i < golemComponent.summonedPebblumIDs.length; i++) {
          const pebblumID = golemComponent.summonedPebblumIDs[i];
 
-         if (Board.hasEntity(pebblumID)) {
-            Board.destroyEntity(pebblumID);
+         if (entityExists(pebblumID)) {
+            destroyEntity(pebblumID);
          }
       }
       return;
@@ -220,8 +221,8 @@ function onTick(golemComponent: GolemComponent, golem: EntityID): void {
       for (let i = 0; i < golemComponent.summonedPebblumIDs.length; i++) {
          const pebblumID = golemComponent.summonedPebblumIDs[i];
 
-         if (Board.hasEntity(pebblumID)) {
-            Board.destroyEntity(pebblumID);
+         if (entityExists(pebblumID)) {
+            destroyEntity(pebblumID);
          }
       }
       return;
@@ -230,7 +231,7 @@ function onTick(golemComponent: GolemComponent, golem: EntityID): void {
    // Update summoned pebblums
    for (let i = 0; i < golemComponent.summonedPebblumIDs.length; i++) {
       const pebblumID = golemComponent.summonedPebblumIDs[i];
-      if (!Board.hasEntity(pebblumID)) {
+      if (!entityExists(pebblumID)) {
          golemComponent.summonedPebblumIDs.splice(i, 1);
          i--;
          continue;
@@ -286,7 +287,7 @@ function addDataToPacket(packet: Packet, entity: EntityID): void {
    const golemComponent = GolemComponentArray.getComponent(entity);
 
    packet.addNumber(golemComponent.wakeTimerTicks / GOLEM_WAKE_TIME_TICKS);
-   packet.addNumber(Board.ticks - golemComponent.lastWakeTicks);
+   packet.addNumber(getGameTicks() - golemComponent.lastWakeTicks);
    packet.addBoolean(golemComponent.wakeTimerTicks === GOLEM_WAKE_TIME_TICKS);
    packet.padOffset(3);
 }

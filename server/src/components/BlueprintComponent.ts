@@ -1,7 +1,6 @@
 import { BlueprintType, BuildingMaterial, ServerComponentType } from "battletribes-shared/components";
 import { EntityID } from "battletribes-shared/entities";
 import { ComponentArray } from "./ComponentArray";
-import Board from "../Board";
 import { placeVirtualBuilding } from "../ai-tribe-building/ai-building";
 import { getBlueprintEntityType } from "../entities/blueprint-entity";
 import { StructureComponentArray } from "./StructureComponent";
@@ -23,6 +22,7 @@ import { createFenceGateConfig } from "../entities/structures/fence-gate";
 import { createWarriorHutConfig } from "../entities/structures/warrior-hut";
 import { Packet } from "battletribes-shared/packets";
 import { createEntityHitboxes } from "battletribes-shared/boxes/entity-hitbox-creation";
+import { destroyEntity, getEntityLayer, getEntityType } from "../world";
 
 export interface BlueprintComponentParams {
    blueprintType: BlueprintType;
@@ -103,7 +103,7 @@ const upgradeBuilding = (building: EntityID): void => {
    if (materialComponent.material < BuildingMaterial.stone) {
       materialComponent.material++;
 
-      const health = getStructureHealth(Board.getEntityType(building)!, materialComponent.material);
+      const health = getStructureHealth(getEntityType(building)!, materialComponent.material);
       
       const healthComponent = HealthComponentArray.getComponent(building);
       healthComponent.maxHealth = health;
@@ -115,11 +115,12 @@ const completeBlueprint = (blueprintEntity: EntityID, blueprintComponent: Bluepr
    const transformComponent = TransformComponentArray.getComponent(blueprintEntity);
    const tribeComponent = TribeComponentArray.getComponent(blueprintEntity);
    
-   Board.destroyEntity(blueprintEntity);
+   destroyEntity(blueprintEntity);
 
    const entityType = getBlueprintEntityType(blueprintComponent.blueprintType);
    const position = transformComponent.position.copy();
-   const connectionInfo = calculateStructureConnectionInfo(position, transformComponent.rotation, entityType, Board.getWorldInfo());
+   const layer = getEntityLayer(blueprintEntity);
+   const connectionInfo = calculateStructureConnectionInfo(position, transformComponent.rotation, entityType, layer.getWorldInfo());
    
    // @Copynpaste
    switch (blueprintComponent.blueprintType) {
@@ -131,7 +132,7 @@ const completeBlueprint = (blueprintEntity: EntityID, blueprintComponent: Bluepr
          config[ServerComponentType.tribe].tribe = tribeComponent.tribe;
          config[ServerComponentType.structure].connectionInfo = connectionInfo;
          config[ServerComponentType.buildingMaterial].material = BuildingMaterial.wood;
-         createEntityFromConfig(config);
+         createEntityFromConfig(config, getEntityLayer(blueprintEntity));
          return;
       }
       case BlueprintType.stoneDoor: {
@@ -142,7 +143,7 @@ const completeBlueprint = (blueprintEntity: EntityID, blueprintComponent: Bluepr
          config[ServerComponentType.tribe].tribe = tribeComponent.tribe;
          config[ServerComponentType.structure].connectionInfo = connectionInfo;
          config[ServerComponentType.buildingMaterial].material = BuildingMaterial.stone;
-         createEntityFromConfig(config);
+         createEntityFromConfig(config, getEntityLayer(blueprintEntity));
          return;
       }
       case BlueprintType.woodenEmbrasure: {
@@ -153,7 +154,7 @@ const completeBlueprint = (blueprintEntity: EntityID, blueprintComponent: Bluepr
          config[ServerComponentType.tribe].tribe = tribeComponent.tribe;
          config[ServerComponentType.structure].connectionInfo = connectionInfo;
          config[ServerComponentType.buildingMaterial].material = BuildingMaterial.wood;
-         createEntityFromConfig(config);
+         createEntityFromConfig(config, getEntityLayer(blueprintEntity));
          return;
       }
       case BlueprintType.stoneEmbrasure: {
@@ -164,7 +165,7 @@ const completeBlueprint = (blueprintEntity: EntityID, blueprintComponent: Bluepr
          config[ServerComponentType.tribe].tribe = tribeComponent.tribe;
          config[ServerComponentType.structure].connectionInfo = connectionInfo;
          config[ServerComponentType.buildingMaterial].material = BuildingMaterial.stone;
-         createEntityFromConfig(config);
+         createEntityFromConfig(config, getEntityLayer(blueprintEntity));
          return;
       }
       case BlueprintType.ballista: {
@@ -174,7 +175,7 @@ const completeBlueprint = (blueprintEntity: EntityID, blueprintComponent: Bluepr
          config[ServerComponentType.transform].rotation = transformComponent.rotation;
          config[ServerComponentType.tribe].tribe = tribeComponent.tribe;
          config[ServerComponentType.structure].connectionInfo = connectionInfo;
-         createEntityFromConfig(config);
+         createEntityFromConfig(config, getEntityLayer(blueprintEntity));
          return;
       }
       case BlueprintType.slingTurret: {
@@ -184,7 +185,7 @@ const completeBlueprint = (blueprintEntity: EntityID, blueprintComponent: Bluepr
          config[ServerComponentType.transform].rotation = transformComponent.rotation;
          config[ServerComponentType.tribe].tribe = tribeComponent.tribe;
          config[ServerComponentType.structure].connectionInfo = connectionInfo;
-         createEntityFromConfig(config);
+         createEntityFromConfig(config, getEntityLayer(blueprintEntity));
          return;
       }
       case BlueprintType.woodenTunnel: {
@@ -195,7 +196,7 @@ const completeBlueprint = (blueprintEntity: EntityID, blueprintComponent: Bluepr
          config[ServerComponentType.tribe].tribe = tribeComponent.tribe;
          config[ServerComponentType.structure].connectionInfo = connectionInfo;
          config[ServerComponentType.buildingMaterial].material = BuildingMaterial.wood;
-         createEntityFromConfig(config);
+         createEntityFromConfig(config, getEntityLayer(blueprintEntity));
          return;
       }
       case BlueprintType.stoneTunnel: {
@@ -206,7 +207,7 @@ const completeBlueprint = (blueprintEntity: EntityID, blueprintComponent: Bluepr
          config[ServerComponentType.tribe].tribe = tribeComponent.tribe;
          config[ServerComponentType.structure].connectionInfo = connectionInfo;
          config[ServerComponentType.buildingMaterial].material = BuildingMaterial.stone;
-         createEntityFromConfig(config);
+         createEntityFromConfig(config, getEntityLayer(blueprintEntity));
          return;
       }
       case BlueprintType.fenceGate: {
@@ -218,9 +219,9 @@ const completeBlueprint = (blueprintEntity: EntityID, blueprintComponent: Bluepr
          config[ServerComponentType.structure].connectionInfo = connectionInfo;
          // @Incomplete
          // config[ServerComponentType.buildingMaterial].material = BuildingMaterial.stone;
-         createEntityFromConfig(config);
+         createEntityFromConfig(config, getEntityLayer(blueprintEntity));
 
-         Board.destroyEntity(blueprintComponent.associatedEntityID);
+         destroyEntity(blueprintComponent.associatedEntityID);
          
          return;
       }
@@ -231,10 +232,10 @@ const completeBlueprint = (blueprintEntity: EntityID, blueprintComponent: Bluepr
          config[ServerComponentType.transform].rotation = transformComponent.rotation;
          config[ServerComponentType.tribe].tribe = tribeComponent.tribe;
          config[ServerComponentType.structure].connectionInfo = connectionInfo;
-         const hut = createEntityFromConfig(config);
+         const hut = createEntityFromConfig(config, getEntityLayer(blueprintEntity));
 
          // Remove the previous hut
-         Board.destroyEntity(blueprintComponent.associatedEntityID);
+         destroyEntity(blueprintComponent.associatedEntityID);
 
          // @Cleanup @Incomplete: should this be done here? Probably should be done on join.
          // Transfer the worker to the warrior hut

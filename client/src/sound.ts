@@ -1,10 +1,11 @@
 import { Settings } from "battletribes-shared/settings";
-import { distance, Point, randInt } from "battletribes-shared/utils";
+import { Point, randInt } from "battletribes-shared/utils";
 import { TileType } from "battletribes-shared/tiles";
 import Camera from "./Camera";
-import Board from "./Board";
 import Entity from "./Entity";
 import { ServerComponentType } from "battletribes-shared/components";
+import { getEntityLayer } from "./world";
+import Player from "./entities/Player";
 
 // @Robustness: automatically detect from folder
 const AUDIO_FILE_PATHS = [
@@ -172,7 +173,26 @@ const AUDIO_FILE_PATHS = [
    "frostling-hurt-4.mp3",
    "frostling-die.mp3",
    "block.mp3",
-   "shield-block.mp3"
+   "shield-block.mp3",
+   "yeti-ambient-1.mp3",
+   "yeti-ambient-2.mp3",
+   "yeti-ambient-3.mp3",
+   "yeti-ambient-4.mp3",
+   "yeti-ambient-5.mp3",
+   "yeti-ambient-6.mp3",
+   "yeti-angry-1.mp3",
+   "yeti-angry-2.mp3",
+   "yeti-angry-3.mp3",
+   "yeti-angry-4.mp3",
+   "yeti-angry-5.mp3",
+   "yeti-death-1.mp3",
+   "yeti-death-2.mp3",
+   "yeti-hurt-1.mp3",
+   "yeti-hurt-2.mp3",
+   "yeti-hurt-3.mp3",
+   "yeti-hurt-4.mp3",
+   "yeti-hurt-5.mp3",
+   "layer-change.mp3"
 ] as const;
 
 export type AudioFilePath = typeof AUDIO_FILE_PATHS[number];
@@ -314,6 +334,8 @@ export function playBuildingHitSound(source: Point): void {
 }
 
 export function playRiverSounds(): void {
+   const layer = getEntityLayer(Player.instance!.id);
+   
    const minTileX = Camera.minVisibleChunkX * Settings.CHUNK_SIZE;
    const maxTileX = (Camera.maxVisibleChunkX + 1) * Settings.CHUNK_SIZE - 1;
    const minTileY = Camera.minVisibleChunkY * Settings.CHUNK_SIZE;
@@ -321,7 +343,7 @@ export function playRiverSounds(): void {
 
    for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
       for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
-         const tile = Board.getTile(tileX, tileY);
+         const tile = layer.getTileFromCoords(tileX, tileY);
          if (tile === null) {
             continue;
          }

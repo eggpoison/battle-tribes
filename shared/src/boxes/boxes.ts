@@ -4,8 +4,9 @@ import { Point } from "../utils";
 import { CircularBox } from "./CircularBox";
 import RectangularBox from "./RectangularBox";
 
-export const enum HitboxFlags {
-   NON_GRASS_BLOCKING = 1 << 0
+export const enum HitboxFlag {
+   NON_GRASS_BLOCKING = 0,
+   GUARDIAN_LIMB_HITBOX = 1
 }
 
 export const enum HitboxCollisionType {
@@ -35,7 +36,7 @@ export interface Hitbox<T extends BoxType = BoxType> extends BoxWrapper<T> {
    collisionType: HitboxCollisionType;
    readonly collisionBit: HitboxCollisionBit;
    readonly collisionMask: number;
-   readonly flags: number;
+   readonly flags: ReadonlyArray<HitboxFlag>;
 }
 
 export interface GenericCollisionBoxInfo<T extends BoxType = BoxType> extends BoxWrapper<T> {
@@ -58,7 +59,7 @@ export const enum GenericCollisionBoxType {
    block
 }
 
-export function createHitbox<T extends BoxType>(box: BoxFromType[T], mass: number, collisionType: HitboxCollisionType, collisionBit: HitboxCollisionBit, collisionMask: number, flags: number): Hitbox<T> {
+export function createHitbox<T extends BoxType>(box: BoxFromType[T], mass: number, collisionType: HitboxCollisionType, collisionBit: HitboxCollisionBit, collisionMask: number, flags: ReadonlyArray<HitboxFlag>): Hitbox<T> {
    return {
       box: box,
       mass: mass,

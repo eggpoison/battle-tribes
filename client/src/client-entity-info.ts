@@ -199,6 +199,9 @@ const CLIENT_ENTITY_INFO_RECORD: Record<EntityType, ClientEntityInfo> = {
    },
    [EntityType.fibrePlant]: {
       name: "Fibre Plant"
+   },
+   [EntityType.guardian]: {
+      name: "Fibre Plant"
    }
 };
 

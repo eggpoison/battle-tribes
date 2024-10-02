@@ -9,7 +9,7 @@ import { Biome } from "battletribes-shared/tiles";
 import { randFloat, TileIndex, UtilVars } from "battletribes-shared/utils";
 import { moveEntityToPosition, runHerdAI, entityHasReachedPosition, stopEntity } from "../ai-shared";
 import { shouldWander, getWanderTargetTile, wander } from "../ai/wander-ai";
-import Board from "../Board";
+import Layer, { getTileX, getTileY } from "../Layer";
 import { entitiesAreColliding, CollisionVars } from "../collision";
 import { AIHelperComponent, AIHelperComponentArray } from "./AIHelperComponent";
 import { healEntity, HealthComponentArray } from "./HealthComponent";
@@ -25,6 +25,7 @@ import { InventoryUseComponentArray } from "./InventoryUseComponent";
 import { TribeMemberComponentArray } from "./TribeMemberComponent";
 import { ZombieVars } from "../entities/mobs/zombie";
 import { beginSwing } from "../entities/tribes/limb-use";
+import { destroyEntity, entityExists, getEntityLayer, getEntityType, getGameTicks, isNight } from "../world";
 
 const enum Vars {
    TURN_SPEED = 3 * UtilVars.PI,
@@ -190,11 +191,11 @@ const doBiteAttack = (zombie: EntityID, target: EntityID): void => {
    const inventoryUseComponent = InventoryUseComponentArray.getComponent(zombie);
 
    const mainHandUseInfo = inventoryUseComponent.getLimbInfo(InventoryName.handSlot);
-   mainHandUseInfo.lastAttackTicks = Board.ticks;
+   mainHandUseInfo.lastAttackTicks = getGameTicks();
 
    if (inventoryUseComponent.hasUseInfo(InventoryName.offhand)) {
       const offhandUseInfo = inventoryUseComponent.getLimbInfo(InventoryName.offhand);
-      offhandUseInfo.lastAttackTicks = Board.ticks;
+      offhandUseInfo.lastAttackTicks = getGameTicks();
    }
 }
 
@@ -214,7 +215,7 @@ const findHerdMembers = (visibleEntities: ReadonlyArray<EntityID>): ReadonlyArra
    const herdMembers = new Array<EntityID>();
    for (let i = 0; i < visibleEntities.length; i++) {
       const entity = visibleEntities[i];
-      if (Board.getEntityType(entity) === EntityType.zombie) {
+      if (getEntityType(entity) === EntityType.zombie) {
          herdMembers.push(entity);
       }
    }
@@ -227,13 +228,13 @@ function onTick(zombieComponent: ZombieComponent, zombie: EntityID): void {
    // Update attacking entities
    // @Speed
    for (const attackingEntity of Object.keys(zombieComponent.attackingEntityIDs).map(idString => Number(idString))) {
-      if (!Board.hasEntity(attackingEntity) || --zombieComponent.attackingEntityIDs[attackingEntity]! <= 0) {
+      if (!entityExists(attackingEntity) || --zombieComponent.attackingEntityIDs[attackingEntity]! <= 0) {
          delete zombieComponent.attackingEntityIDs[attackingEntity];
       }
    }
 
    // If day time, ignite
-   if (!Board.isNight()) {
+   if (!isNight()) {
       // Ignite randomly or stay on fire if already on fire
       const statusEffectComponent = StatusEffectComponentArray.getComponent(zombie);
       if (hasStatusEffect(statusEffectComponent, StatusEffect.burning) || Math.random() < Vars.SPONTANEOUS_COMBUSTION_CHANCE / Settings.TPS) {
@@ -268,7 +269,7 @@ function onTick(zombieComponent: ZombieComponent, zombie: EntityID): void {
       let closestFoodItem: EntityID | null = null;
       for (let i = 0; i < aiHelperComponent.visibleEntities.length; i++) {
          const entity = aiHelperComponent.visibleEntities[i];
-         if (Board.getEntityType(entity) !== EntityType.itemEntity) {
+         if (getEntityType(entity) !== EntityType.itemEntity) {
             continue;
          }
 
@@ -290,7 +291,7 @@ function onTick(zombieComponent: ZombieComponent, zombie: EntityID): void {
 
          if (entitiesAreColliding(zombie, closestFoodItem) !== CollisionVars.NO_COLLISION) {
             healEntity(zombie, 3, zombie);
-            Board.destroyEntity(closestFoodItem);
+            destroyEntity(closestFoodItem);
          }
          return;
       }
@@ -299,7 +300,7 @@ function onTick(zombieComponent: ZombieComponent, zombie: EntityID): void {
    // Investigate hurt entities
    if (zombieComponent.visibleHurtEntityTicks < Vars.HURT_ENTITY_INVESTIGATE_TICKS) {
       const hurtEntity = zombieComponent.visibleHurtEntityID;
-      if (Board.hasEntity(hurtEntity)) {
+      if (entityExists(hurtEntity)) {
          const hurtEntityTransformComponent = TransformComponentArray.getComponent(hurtEntity);
          
          moveEntityToPosition(zombie, hurtEntityTransformComponent.position.x, hurtEntityTransformComponent.position.y, Vars.ACCELERATION_SLOW, Vars.TURN_SPEED);
@@ -322,6 +323,7 @@ function onTick(zombieComponent: ZombieComponent, zombie: EntityID): void {
    }
 
    // Wander AI
+   const layer = getEntityLayer(zombie);
    const physicsComponent = PhysicsComponentArray.getComponent(zombie);
    const wanderAIComponent = WanderAIComponentArray.getComponent(zombie);
    if (wanderAIComponent.targetPositionX !== -1) {
@@ -334,10 +336,10 @@ function onTick(zombieComponent: ZombieComponent, zombie: EntityID): void {
       let targetTile: TileIndex;
       do {
          targetTile = getWanderTargetTile(zombie, ZombieVars.VISION_RANGE);
-      } while (++attempts <= 50 && (Board.tileIsWalls[targetTile] === 1 || Board.tileBiomes[targetTile] !== Biome.grasslands));
+      } while (++attempts <= 50 && (layer.tileIsWalls[targetTile] === 1 || layer.tileBiomes[targetTile] !== Biome.grasslands));
 
-      const tileX = Board.getTileX(targetTile);
-      const tileY = Board.getTileY(targetTile);
+      const tileX = getTileX(targetTile);
+      const tileY = getTileY(targetTile);
       const x = (tileX + Math.random()) * Settings.TILE_SIZE;
       const y = (tileY + Math.random()) * Settings.TILE_SIZE;
       wander(zombie, x, y, Vars.ACCELERATION_SLOW, Vars.TURN_SPEED);

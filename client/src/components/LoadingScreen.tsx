@@ -60,16 +60,12 @@ const LoadingScreen = (props: LoadingScreenProps) => {
          // Initialise game
          // 
          
-         const initialGameDataPacket = await Client.getInitialGameDataPacket();
+         await Client.getInitialGameDataPacket();
+         
          setStatus(LoadingScreenStatus.initialisingGame);
          
-         Game.playerID = initialGameDataPacket.playerID;
-         
-         await Game.initialise(initialGameDataPacket);
+         await Game.initialise();
                
-         Camera.setPosition(initialGameDataPacket.spawnPosition[0], initialGameDataPacket.spawnPosition[1]);
-         Camera.setInitialVisibleChunkBounds();
-         
          definiteGameState.playerUsername = props.username;
          
          Client.sendActivatePacket();
@@ -83,8 +79,6 @@ const LoadingScreen = (props: LoadingScreenProps) => {
          // @Incomplete
          // const spawnPosition = Point.unpackage(initialGameDataPacket.spawnPosition);
          // Player.createInstancePlayer(spawnPosition, initialGameDataPacket.playerID);
-         
-         // Client.processGameDataPacket(gameDataPacket);
 
          Game.start();
 

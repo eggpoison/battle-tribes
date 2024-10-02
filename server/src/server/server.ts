@@ -4,8 +4,7 @@ import { TribeType } from "battletribes-shared/tribes";
 import { Point, randInt } from "battletribes-shared/utils";
 import { PacketReader, PacketType } from "battletribes-shared/packets";
 import WebSocket, { Server } from "ws";
-import Board from "../Board";
-import { runSpawnAttempt, spawnInitialEntities } from "../entity-spawning";
+import { populateEntitySpawnInfos, runSpawnAttempt, spawnInitialEntities } from "../entity-spawning";
 import Tribe from "../Tribe";
 import OPTIONS from "../options";
 import SRandom from "../SRandom";
@@ -26,10 +25,14 @@ import { TribeComponentArray } from "../components/TribeComponent";
 import { TransformComponentArray } from "../components/TransformComponent";
 import { generateDecorations } from "../world-generation/decoration-generation";
 import { generateReeds } from "../world-generation/reed-generation";
-import generateTerrain from "../world-generation/terrain-generation";
+import generateSurfaceTerrain from "../world-generation/surface-terrain-generation";
 import { generateLilypads } from "../world-generation/lilypad-generation";
 import { forceMaxGrowAllIceSpikes } from "../components/IceSpikesComponent";
 import { sortComponentArrays } from "../components/ComponentArray";
+import { createLayers, destroyFlaggedEntities, entityExists, getEntityLayer, getGameTicks, pushJoinBuffer, surfaceLayer, tickGameTime, undergroundLayer, updateEntities, updateTribes } from "../world";
+import { generateUndergroundTerrain } from "../world-generation/underground-terrain-generation";
+import { spawnGuardians } from "../world-generation/cave-entrance-generation";
+import { createGuardianConfig } from "../entities/mobs/guardian";
 
 /*
 
@@ -52,6 +55,8 @@ const entityIsHiddenFromPlayer = (entity: EntityID, playerTribe: Tribe): boolean
 }
 
 const getPlayerVisibleEntities = (playerClient: PlayerClient): Set<EntityID> => {
+   const layer = getEntityLayer(playerClient.instance);
+   
    const entities = new Set<EntityID>();
       
    // @Copynpaste
@@ -62,7 +67,7 @@ const getPlayerVisibleEntities = (playerClient: PlayerClient): Set<EntityID> => 
    
    for (let chunkX = playerClient.visibleChunkBounds[0]; chunkX <= playerClient.visibleChunkBounds[1]; chunkX++) {
       for (let chunkY = playerClient.visibleChunkBounds[2]; chunkY <= playerClient.visibleChunkBounds[3]; chunkY++) {
-         const chunk = Board.getChunk(chunkX, chunkY);
+         const chunk = layer.getChunk(chunkX, chunkY);
          for (const entity of chunk.entities) {
             if (entityIsHiddenFromPlayer(entity, playerClient.tribe)) {
                continue;
@@ -105,8 +110,6 @@ class GameServer {
    public isRunning = false;
    public isSimulating = true;
 
-   private nextTickTime = 0;
-   
    public setTrackedGameObject(id: number): void {
       SERVER.trackedEntityID = id;
    }
@@ -122,16 +125,20 @@ class GameServer {
       // Setup
       sortComponentArrays();
       console.log("Generating terrain...")
-      const generationInfo = generateTerrain();
-      Board.setup(generationInfo);
-      updateResourceDistributions();
+      const surfaceTerrainGenerationInfo = generateSurfaceTerrain();
+      const undergroundTerrainGenerationInfo = generateUndergroundTerrain();
+      createLayers(surfaceTerrainGenerationInfo, undergroundTerrainGenerationInfo);
+
       console.log("Spawning entities...");
+      populateEntitySpawnInfos();
+      updateResourceDistributions();
       spawnInitialEntities();
       forceMaxGrowAllIceSpikes();
       generateGrassStrands();
       generateDecorations();
-      generateReeds(generationInfo.riverMainTiles);
+      generateReeds(surfaceTerrainGenerationInfo.riverMainTiles);
       generateLilypads();
+      spawnGuardians();
 
       this.server = new Server({
          port: Settings.SERVER_PORT
@@ -146,7 +153,6 @@ class GameServer {
          });
          
          socket.on("message", (message: Buffer) => {
-            // 6 bytes are added on for some reason
             const reader = new PacketReader(message.buffer, message.byteOffset);
             const packetType = reader.readNumber() as PacketType;
 
@@ -168,10 +174,17 @@ class GameServer {
                   config[ServerComponentType.transform].position.y = spawnPosition.y;
                   config[ServerComponentType.tribe].tribe = tribe;
                   config[ServerComponentType.player].username = username;
-                  const player = createEntityFromConfig(config);
+                  const player = createEntityFromConfig(config, surfaceLayer);
       
                   playerClient = new PlayerClient(socket, tribe, screenWidth, screenHeight, spawnPosition, player, username);
-                  addPlayerClient(playerClient, player, config);
+                  addPlayerClient(playerClient, player, surfaceLayer, config);
+
+                  setTimeout(() => {
+                     const config = createGuardianConfig();
+                     config[ServerComponentType.transform].position.x = spawnPosition.x + 150;
+                     config[ServerComponentType.transform].position.y = spawnPosition.y;
+                     createEntityFromConfig(config, surfaceLayer);
+                  }, 500);
 
                   break;
                }
@@ -184,7 +197,7 @@ class GameServer {
                   break;
                }
                case PacketType.syncRequest: {
-                  if (Board.hasEntity(playerClient.instance)) {
+                  if (entityExists(playerClient.instance)) {
                      const buffer = createSyncDataPacket(playerClient);
                      socket.send(buffer);
                   } else {
@@ -246,39 +259,35 @@ class GameServer {
 
    private async tick(): Promise<void> {
       // These are done before each tick to account for player packets causing entities to be removed/added between ticks.
-      Board.pushJoinBuffer();
-      Board.destroyFlaggedEntities();
+      pushJoinBuffer();
+      destroyFlaggedEntities();
 
       if (SERVER.isSimulating) {
-         Board.updateTribes();
+         updateTribes();
          
          updateGrassBlockers();
          
-         Board.updateEntities();
+         updateEntities();
          updateDynamicPathfindingNodes();
-         Board.resolveEntityCollisions();
+         surfaceLayer.resolveEntityCollisions();
+         undergroundLayer.resolveEntityCollisions();
          
-         runSpawnAttempt();
+         if (getGameTicks() % Settings.TPS === 0) {
+            updateResourceDistributions();
+            runSpawnAttempt();
+         }
          
-         Board.pushJoinBuffer();
-         Board.destroyFlaggedEntities();
+         pushJoinBuffer();
+         destroyFlaggedEntities();
          // @Bug @Incomplete: Called twice!!!!
-         Board.updateTribes();
+         updateTribes();
       }
 
       SERVER.sendGameDataPackets();
 
       // Update server ticks and time
       // This is done at the end of the tick so that information sent by players is associated with the next tick to run
-      Board.ticks++;
-      Board.time += Settings.TIME_PASS_RATE / Settings.TPS / 3600;
-      if (Board.time >= 24) {
-         Board.time -= 24;
-      }
-
-      if (Board.ticks % Settings.TPS === 0) {
-         updateResourceDistributions();
-      }
+      tickGameTime();
    }
 
    // @Cleanup: maybe move this function to player-clients?
@@ -296,20 +305,11 @@ class GameServer {
          }
 
          // Update player client position if player is alive
-         if (Board.hasEntity(playerClient.instance)) {
+         if (entityExists(playerClient.instance)) {
             const transformComponent = TransformComponentArray.getComponent(playerClient.instance);
             playerClient.lastPlayerPositionX = transformComponent.position.x;
             playerClient.lastPlayerPositionY = transformComponent.position.y;
          }
-
-         // @Incomplete?
-         // @Speed @Memory
-         const extendedVisibleChunkBounds: VisibleChunkBounds = [
-            Math.max(playerClient.visibleChunkBounds[0] - 1, 0),
-            Math.min(playerClient.visibleChunkBounds[1] + 1, Settings.BOARD_SIZE - 1),
-            Math.max(playerClient.visibleChunkBounds[2] - 1, 0),
-            Math.min(playerClient.visibleChunkBounds[3] + 1, Settings.BOARD_SIZE - 1)
-         ];
       
          const visibleEntities = getPlayerVisibleEntities(playerClient);
          
@@ -326,13 +326,13 @@ class GameServer {
          // Send dirty entities
          for (const entity of playerClient.visibleDirtiedEntities) {
             // Sometimes entities are simultaneously removed from the board and on the visible dirtied list, this catches that
-            if (Board.hasEntity(entity)) {
+            if (entityExists(entity)) {
                entitiesToSend.add(entity);
             }
          }
 
          // Always send the player's data (if alive)
-         if (Board.hasEntity(playerClient.instance)) {
+         if (entityExists(playerClient.instance)) {
             entitiesToSend.add(playerClient.instance);
          }
          

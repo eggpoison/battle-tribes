@@ -9,17 +9,13 @@ import { createSmokeParticle, createEmberParticle } from "../particles";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 
 class CookingComponent extends ServerComponent {
-   public heatingProgress: number;
-   public isCooking: boolean;
+   public heatingProgress = 0;
+   public isCooking = false;
 
    public readonly light: Light;
 
-   constructor(entity: Entity, reader: PacketReader) {
+   constructor(entity: Entity) {
       super(entity);
-
-      this.heatingProgress = reader.readNumber();
-      this.isCooking = reader.readBoolean();
-      reader.padOffset(3);
 
       this.light = {
          offset: new Point(0, 0),

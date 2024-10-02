@@ -1,5 +1,4 @@
 import { Settings } from "battletribes-shared/settings";
-import Board from "../Board";
 import { TileType } from "battletribes-shared/tiles";
 import { isTooCloseToSteppingStone } from "../Chunk";
 import { createLilypadConfig } from "../entities/lilypad";
@@ -8,26 +7,28 @@ import { createEntityFromConfig } from "../Entity";
 import { randInt } from "battletribes-shared/utils";
 import { getEntitiesInRange } from "../ai-shared";
 import { EntityType } from "battletribes-shared/entities";
+import { getEntityType, pushJoinBuffer, surfaceLayer } from "../world";
+import Layer from "../Layer";
 
 const enum Vars {
    GROUP_DENSITY_PER_TILE = 0.03
 }
 
-const isTooCloseToReedOrLilypad = (x: number, y: number): boolean => {
+const isTooCloseToReedOrLilypad = (layer: Layer, x: number, y: number): boolean => {
    // Don't overlap with reeds at all
-   let entities = getEntitiesInRange(x, y, 24);
+   let entities = getEntitiesInRange(layer, x, y, 24);
    for (let i = 0; i < entities.length; i++) {
       const entity = entities[i];
-      if (Board.getEntityType(entity) === EntityType.reed) {
+      if (getEntityType(entity) === EntityType.reed) {
          return true;
       }
    }
 
    // Only allow overlapping slightly with other lilypads
-   entities = getEntitiesInRange(x, y, 24 - 6);
+   entities = getEntitiesInRange(layer, x, y, 24 - 6);
    for (let i = 0; i < entities.length; i++) {
       const entity = entities[i];
-      if (Board.getEntityType(entity) === EntityType.lilypad) {
+      if (getEntityType(entity) === EntityType.lilypad) {
          return true;
       }
    }
@@ -39,7 +40,7 @@ export function generateLilypads(): void {
    // @Incomplete: generate in edges
    for (let tileX = 0; tileX < Settings.BOARD_DIMENSIONS; tileX++) {
       for (let tileY = 0; tileY < Settings.BOARD_DIMENSIONS; tileY++) {
-         if (Board.getTileType(tileX, tileY) !== TileType.water) {
+         if (surfaceLayer.getTileType(tileX, tileY) !== TileType.water) {
             continue;
          }
 
@@ -52,7 +53,7 @@ export function generateLilypads(): void {
             const x = (tileX + Math.random()) * Settings.TILE_SIZE;
             const y = (tileY + Math.random()) * Settings.TILE_SIZE;
    
-            if (isTooCloseToSteppingStone(x, y, 50) || isTooCloseToReedOrLilypad(x, y)) {
+            if (isTooCloseToSteppingStone(x, y, 50) || isTooCloseToReedOrLilypad(surfaceLayer, x, y)) {
                continue;
             }
    
@@ -60,9 +61,10 @@ export function generateLilypads(): void {
             config[ServerComponentType.transform].position.x = x;
             config[ServerComponentType.transform].position.y = y;
             config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
-            createEntityFromConfig(config);
+            createEntityFromConfig(config, surfaceLayer);
 
-            Board.pushJoinBuffer();
+            // Immediately add the entity so that distance checks work
+            pushJoinBuffer();
          }
       }
    }

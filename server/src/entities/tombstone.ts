@@ -12,6 +12,7 @@ import { ComponentConfig } from "../components";
 import { createEntityFromConfig } from "../Entity";
 import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
 import RectangularBox from "battletribes-shared/boxes/RectangularBox";
+import { getEntityLayer } from "../world";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.health
@@ -29,7 +30,7 @@ export function createTombstoneConfig(): ComponentConfig<ComponentTypes> {
          type: EntityType.tombstone,
          collisionBit: COLLISION_BITS.default,
          collisionMask: DEFAULT_COLLISION_MASK,
-         hitboxes: [createHitbox(new RectangularBox(new Point(0, 0), WIDTH, HEIGHT, 0), 1.25, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0)]
+         hitboxes: [createHitbox(new RectangularBox(new Point(0, 0), WIDTH, HEIGHT, 0), 1.25, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, [])]
       },
       [ServerComponentType.health]: {
          maxHealth: 50
@@ -55,6 +56,6 @@ export function onTombstoneDeath(tombstone: EntityID, attackingEntity: EntityID 
       config[ServerComponentType.transform].position.y = tombstoneTransformComponent.position.y;
       config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
       config[ServerComponentType.zombie].tombstone = tombstone;
-      createEntityFromConfig(config);
+      createEntityFromConfig(config, getEntityLayer(tombstone));
    }
 }

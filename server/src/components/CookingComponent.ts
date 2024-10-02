@@ -4,9 +4,9 @@ import { EntityID, EntityType } from "battletribes-shared/entities";
 import { Packet } from "battletribes-shared/packets";
 import { InventoryName, ItemType, ItemTypeString } from "battletribes-shared/items/items";
 import { Settings } from "battletribes-shared/settings";
-import Board from "../Board";
 import { InventoryComponentArray, getInventory, consumeItemTypeFromInventory, addItemToInventory } from "./InventoryComponent";
 import { CookingIngredientItemType, FuelSourceItemType } from "battletribes-shared/items/cooking-info";
+import { getEntityType } from "../world";
 
 export interface CookingComponentParams {
    readonly remainingHeatSeconds: number;
@@ -100,7 +100,7 @@ function onTick(cookingComponent: CookingComponent, entity: EntityID): void {
    
    const ingredient = ingredientInventory.itemSlots[1];
    if (typeof ingredient !== "undefined") {
-      cookingComponent.currentRecipe = getHeatingRecipeByIngredientType(Board.getEntityType(entity)!, ingredient.type);
+      cookingComponent.currentRecipe = getHeatingRecipeByIngredientType(getEntityType(entity)!, ingredient.type);
    }
    
    if (cookingComponent.currentRecipe !== null) {

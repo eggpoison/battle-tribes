@@ -4,8 +4,8 @@ import { ComponentConfig } from "../components";
 import { EntityID } from "battletribes-shared/entities";
 import { Packet } from "battletribes-shared/packets";
 import { PhysicsComponentArray } from "./PhysicsComponent";
-import Board from "../Board";
 import RectangularBox from "battletribes-shared/boxes/RectangularBox";
+import { destroyEntity } from "../world";
 
 const enum Vars {
    BREAK_VELOCITY = 100
@@ -46,7 +46,7 @@ export function onTick(_slimeSpitComponent: SlimeSpitComponent, spit: EntityID):
    const vx = physicsComponent.selfVelocity.x + physicsComponent.externalVelocity.x;
    const vy = physicsComponent.selfVelocity.y + physicsComponent.externalVelocity.y;
    if (vx * vx + vy * vy <= Vars.BREAK_VELOCITY * Vars.BREAK_VELOCITY) {
-      Board.destroyEntity(spit);
+      destroyEntity(spit);
    }
 }
 

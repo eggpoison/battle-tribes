@@ -4,7 +4,7 @@ import { Biome } from "battletribes-shared/tiles";
 import { Point, randItem, TileIndex } from "battletribes-shared/utils";
 import { parseCommand } from "battletribes-shared/commands";
 import { getTilesOfBiome } from "./census";
-import Board from "./Board";
+import Layer, { getTileX, getTileY } from "./Layer";
 import { damageEntity, healEntity } from "./components/HealthComponent";
 import { getRandomPositionInEntity } from "./Entity";
 import { InventoryComponentArray, addItem } from "./components/InventoryComponent";
@@ -14,6 +14,7 @@ import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
 import { forcePlayerTeleport, getPlayerFromUsername } from "./server/player-clients";
 import { TribeComponentArray } from "./components/TribeComponent";
 import { ItemType, getItemTypeFromString } from "battletribes-shared/items/items";
+import { surfaceLayer } from "./world";
 
 const ENTITY_SPAWN_RANGE = 200;
 
@@ -28,7 +29,8 @@ const damagePlayer = (player: EntityID, damage: number): void => {
 }
 
 const setTime = (time: number): void => {
-   Board.time = time;
+   // @Incomplete
+   // Board.time = time;
 }
 
 const giveItem = (player: EntityID, itemType: ItemType, amount: number): void => {
@@ -59,10 +61,10 @@ const tpBiome = (player: EntityID, biomeName: Biome): void => {
       if (++numAttempts === 999) {
          return;
       }
-   } while (Board.tileIsWalls[tileIndex] === 1);
+   } while (surfaceLayer.tileIsWalls[tileIndex] === 1);
    
-   const tileX = Board.getTileX(tileIndex);
-   const tileY = Board.getTileY(tileIndex);
+   const tileX = getTileX(tileIndex);
+   const tileY = getTileY(tileIndex);
    const x = (tileX + Math.random()) * Settings.TILE_SIZE;
    const y = (tileY + Math.random()) * Settings.TILE_SIZE;
 

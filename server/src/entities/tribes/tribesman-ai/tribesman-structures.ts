@@ -4,7 +4,7 @@ import { PathfindingSettings } from "battletribes-shared/settings";
 import { calculateStructureConnectionInfo } from "battletribes-shared/structures";
 import { TribesmanTitle } from "battletribes-shared/titles";
 import { angle, getAngleDiff } from "battletribes-shared/utils";
-import Board from "../../../Board";
+import Layer from "../../../Layer";
 import Tribe from "../../../Tribe";
 import { getDistanceFromPointToEntity, stopEntity, willStopAtDesiredDistance } from "../../../ai-shared";
 import { HealthComponentArray } from "../../../components/HealthComponent";
@@ -16,9 +16,9 @@ import { awardTitle } from "../../../components/TribeMemberComponent";
 import { TribesmanAIComponentArray, TribesmanPathType } from "../../../components/TribesmanAIComponent";
 import { PathfindFailureDefault } from "../../../pathfinding";
 import { TITLE_REWARD_CHANCES } from "../../../tribesman-title-generation";
-import { placeBuilding, placeBlueprint, calculateRadialAttackTargets, repairBuilding } from "../tribe-member";
+import { placeBuilding, placeBlueprint } from "../tribe-member";
 import { TRIBESMAN_TURN_SPEED } from "./tribesman-ai";
-import { getBestToolItemSlot, getTribesmanAttackOffset, getTribesmanAttackRadius, getTribesmanDesiredAttackRange, getTribesmanRadius, getTribesmanSlowAcceleration, pathfindToPosition } from "./tribesman-ai-utils";
+import { getBestToolItemSlot, getTribesmanAttackRadius, getTribesmanDesiredAttackRange, getTribesmanRadius, getTribesmanSlowAcceleration, pathfindToPosition } from "./tribesman-ai-utils";
 import { huntEntity } from "./tribesman-combat-ai";
 import { TribesmanPlaceGoal, TribesmanUpgradeGoal } from "./tribesman-goals";
 import { AIHelperComponentArray } from "../../../components/AIHelperComponent";
@@ -27,6 +27,7 @@ import { Inventory, ITEM_INFO_RECORD, PlaceableItemInfo, InventoryName } from "b
 import { TransformComponentArray } from "../../../components/TransformComponent";
 import { createEntityHitboxes } from "battletribes-shared/boxes/entity-hitbox-creation";
 import { updateBox } from "battletribes-shared/boxes/boxes";
+import { getEntityLayer, getGameTicks } from "../../../world";
 
 const enum Vars {
    BUILDING_PLACE_DISTANCE = 80
@@ -42,7 +43,8 @@ export function goPlaceBuilding(tribesman: EntityID, hotbarInventory: Inventory,
       updateBox(hitbox.box, plan.position.x, plan.position.y, plan.rotation);
    }
    
-   const blockingEntities = getBoxesCollidingEntities(Board.getWorldInfo(), hitboxes);
+   const layer = getEntityLayer(tribesman);
+   const blockingEntities = getBoxesCollidingEntities(layer.getWorldInfo(), hitboxes);
    for (let i = 0; i < blockingEntities.length; i++) {
       const blockingEntity = blockingEntities[i];
       if (!HealthComponentArray.hasComponent(blockingEntity)) {
@@ -100,8 +102,8 @@ export function goPlaceBuilding(tribesman: EntityID, hotbarInventory: Inventory,
          const item = hotbarInventory.itemSlots[goal.placeableItemSlot]!;
          const placingEntityType = (ITEM_INFO_RECORD[item.type] as PlaceableItemInfo).entityType;
          
-         const connectionInfo = calculateStructureConnectionInfo(plan.position, plan.rotation, placingEntityType, Board.getWorldInfo());
-         placeBuilding(tribe, plan.position, plan.rotation, placingEntityType, connectionInfo);
+         const connectionInfo = calculateStructureConnectionInfo(plan.position, plan.rotation, placingEntityType, layer.getWorldInfo());
+         placeBuilding(tribe, getEntityLayer(tribesman), plan.position, plan.rotation, placingEntityType, connectionInfo);
 
          if (Math.random() < TITLE_REWARD_CHANCES.BUILDER_REWARD_CHANCE) {
             awardTitle(tribesman, TribesmanTitle.builder);
@@ -109,7 +111,7 @@ export function goPlaceBuilding(tribesman: EntityID, hotbarInventory: Inventory,
 
          consumeItemFromSlot(hotbarInventory, goal.placeableItemSlot, 1);
          
-         useInfo.lastAttackTicks = Board.ticks;
+         useInfo.lastAttackTicks = getGameTicks();
       } else {
          const physicsComponent = PhysicsComponentArray.getComponent(tribesman);
          

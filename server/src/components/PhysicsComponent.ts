@@ -5,10 +5,10 @@ import { TileType, TILE_MOVE_SPEED_MULTIPLIERS, TILE_FRICTIONS } from "battletri
 import { ComponentArray } from "./ComponentArray";
 import { addDirtyPathfindingEntity, entityCanBlockPathfinding, removeDirtyPathfindingEntity } from "../pathfinding";
 import { Point } from "battletribes-shared/utils";
-import Board from "../Board";
 import { registerDirtyEntity, registerPlayerKnockback } from "../server/player-clients";
 import { getEntityTile, TransformComponent, TransformComponentArray } from "./TransformComponent";
 import { Packet } from "battletribes-shared/packets";
+import { changeEntityLayer, getEntityLayer, getEntityType, undergroundLayer } from "../world";
 
 export interface PhysicsComponentParams {
    velocityX: number;
@@ -153,14 +153,16 @@ const applyPhysics = (entity: EntityID, physicsComponent: PhysicsComponent): voi
    
    // @Temporary @Hack
    if (isNaN(physicsComponent.selfVelocity.x) || isNaN(physicsComponent.selfVelocity.y)) {
-      console.warn("Entity type " + EntityTypeString[Board.getEntityType(entity)!] + " velocity was NaN.");
+      console.warn("Entity type " + EntityTypeString[getEntityType(entity)!] + " velocity was NaN.");
       physicsComponent.selfVelocity.x = 0;
       physicsComponent.selfVelocity.y = 0;
    }
 
    const transformComponent = TransformComponentArray.getComponent(entity);
+   const layer = getEntityLayer(entity);
+   
    const tileIndex = getEntityTile(transformComponent);
-   const tileType = Board.tileTypes[tileIndex];
+   const tileType = layer.tileTypes[tileIndex];
 
    // Apply acceleration
    if (physicsComponent.acceleration.x !== 0 || physicsComponent.acceleration.y !== 0) {
@@ -188,7 +190,7 @@ const applyPhysics = (entity: EntityID, physicsComponent: PhysicsComponent): voi
    // If the game object is in a river, push them in the flow direction of the river
    // The tileMoveSpeedMultiplier check is so that game objects on stepping stones aren't pushed
    if (transformComponent.isInRiver && !physicsComponent.overrideMoveSpeedMultiplier && physicsComponent.isAffectedByFriction) {
-      const flowDirectionIdx = Board.riverFlowDirections[tileIndex];
+      const flowDirectionIdx = layer.riverFlowDirections[tileIndex];
       physicsComponent.externalVelocity.x += 240 * Settings.I_TPS * a[flowDirectionIdx];
       physicsComponent.externalVelocity.y += 240 * Settings.I_TPS * b[flowDirectionIdx];
    }
@@ -270,6 +272,13 @@ const updatePosition = (entity: EntityID, physicsComponent: PhysicsComponent): v
    if (physicsComponent.positionIsDirty) {
       physicsComponent.positionIsDirty = false;
 
+      // Check to see if the entity has descended into the underground layer
+      const layer = getEntityLayer(entity);
+      const tileIndex = getEntityTile(transformComponent);
+      if (layer.tileTypes[tileIndex] === TileType.dropdown) {
+         changeEntityLayer(entity, undergroundLayer);
+      }
+
       transformComponent.resolveWallTileCollisions(entity);
 
       // If the object moved due to resolving wall tile collisions, recalculate
@@ -284,7 +293,7 @@ const updatePosition = (entity: EntityID, physicsComponent: PhysicsComponent): v
          transformComponent.cleanHitboxes(entity);
       }
 
-      transformComponent.checkIsInRiver(entity);
+      transformComponent.updateIsInRiver(entity);
    }
 }
 
@@ -311,7 +320,7 @@ export function applyKnockback(entity: EntityID, knockback: number, knockbackDir
    physicsComponent.externalVelocity.x += knockbackForce * Math.sin(knockbackDirection);
    physicsComponent.externalVelocity.y += knockbackForce * Math.cos(knockbackDirection);
 
-   if (Board.getEntityType(entity)! === EntityType.player) {
+   if (getEntityType(entity)! === EntityType.player) {
       registerPlayerKnockback(entity, knockback, knockbackDirection);
    }
 }

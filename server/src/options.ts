@@ -3,6 +3,7 @@ interface Options {
    readonly spawnTribes: boolean;
    readonly generateRivers: boolean;
    readonly generateWalls: boolean;
+   readonly generateCaves: boolean;
    readonly inBenchmarkMode: boolean
    readonly warp: boolean;
 }
@@ -13,6 +14,7 @@ const OPTIONS: Options = {
    spawnTribes: false,
    generateRivers: false,
    generateWalls: true,
+   generateCaves: true,
    inBenchmarkMode: false,
    warp: false
 };

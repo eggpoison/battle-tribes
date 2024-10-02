@@ -8,6 +8,9 @@ import Entity from "../../../Entity";
 import Board from "../../../Board";
 import { Tile } from "../../../Tile";
 import CLIENT_ENTITY_INFO_RECORD from "../../../client-entity-info";
+import Layer from "../../../Layer";
+import { getEntityByID, getEntityLayer } from "../../../world";
+import Player from "../../../entities/Player";
 
 export let updateDebugInfoTile: (tile: Tile | null) => void = () => {};
 
@@ -18,9 +21,10 @@ export let setDebugInfoDebugData: (debugData: EntityDebugData | null) => void = 
 export let refreshDebugInfo: () => void = () => {};
 
 interface TileDebugInfoProps {
+   readonly layer: Layer;
    readonly tile: Tile;
 }
-const TileDebugInfo = ({ tile }: TileDebugInfoProps) => {
+const TileDebugInfo = ({ layer, tile }: TileDebugInfoProps) => {
    const chunkX = Math.floor(tile.x / Settings.CHUNK_SIZE);
    const chunkY = Math.floor(tile.y / Settings.CHUNK_SIZE);
 
@@ -34,12 +38,12 @@ const TileDebugInfo = ({ tile }: TileDebugInfoProps) => {
       <p>Biome: <span className="highlight">{tile.biome}</span></p>
 
       {tile.type === TileType.water ? <>
-         <p>Flow direction: <span className="highlight">{Board.getRiverFlowDirection(tile.x, tile.y)}</span></p>
+         <p>Flow direction: <span className="highlight">{layer.getRiverFlowDirection(tile.x, tile.y)}</span></p>
       </> : undefined}
 
       {tile.type === TileType.grass ? <>
-         <p>Temperature: <span className="highlight">{Board.grassInfo[tile.x][tile.y].temperature}</span></p>
-         <p>Humidity: <span className="highlight">{Board.grassInfo[tile.x][tile.y].humidity}</span></p>
+         <p>Temperature: <span className="highlight">{layer.grassInfo[tile.x][tile.y].temperature}</span></p>
+         <p>Humidity: <span className="highlight">{layer.grassInfo[tile.x][tile.y].humidity}</span></p>
       </> : undefined}
 
       <br />
@@ -119,6 +123,9 @@ const DebugInfo = () => {
    const debugData = useRef<EntityDebugData | null>(null);
    const [, forceUpdate] = useReducer(x => x + 1, 0);
 
+   // @Incomplete @Bug: will crash when the player dies
+   const layer = getEntityLayer(Player.instance!.id);
+
    useEffect(() => {
       updateDebugInfoTile = (tile: Tile | null): void => {
          setTile(tile);
@@ -138,7 +145,7 @@ const DebugInfo = () => {
    }, []);
 
    return <div id="debug-info">
-      {tile !== null ? <TileDebugInfo tile={tile} /> : undefined}
+      {tile !== null ? <TileDebugInfo layer={layer} tile={tile} /> : undefined}
       {entity !== null ? <EntityDebugInfo entity={entity} debugData={debugData.current} /> : undefined}
    </div>;
 }

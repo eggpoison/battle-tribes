@@ -69,7 +69,7 @@ const BIOME_GENERATION_INFO: Record<Biome, BiomeGenerationInfo> = {
    [Biome.tundra]: {
       spawnRequirements: {
          maxTemperature: 0.4,
-         maxHumidity: 0.4
+         maxHumidity: 0.8
       },
       tiles: [
          {
@@ -78,6 +78,15 @@ const BIOME_GENERATION_INFO: Record<Biome, BiomeGenerationInfo> = {
             noiseRequirements: {
                scale: 8,
                minWeight: 0.2
+            },
+            minDist: 20
+         },
+         {
+            tileType: TileType.ice,
+            isWall: false,
+            noiseRequirements: {
+               scale: 5,
+               minWeight: 0.8,
             },
             minDist: 8
          },
@@ -88,7 +97,16 @@ const BIOME_GENERATION_INFO: Record<Biome, BiomeGenerationInfo> = {
                scale: 7,
                minWeight: 0.2,
             },
-            minDist: 4
+            minDist: 12
+         },
+         {
+            tileType: TileType.permafrost,
+            isWall: false,
+            noiseRequirements: {
+               scale: 7,
+               minWeight: 0.65,
+            },
+            minDist: 8
          },
          {
             tileType: TileType.ice,
@@ -132,14 +150,13 @@ const BIOME_GENERATION_INFO: Record<Biome, BiomeGenerationInfo> = {
       },
       tiles: [
          {
-            // tileType: TileType.rock,
             tileType: TileType.darkRock,
             isWall: true,
             noiseRequirements: {
                scale: 7,
                minWeight: 0.8,
             },
-            minDist: 2
+            minDist: 4
          },
          {
             tileType: TileType.rock,

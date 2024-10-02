@@ -3,7 +3,7 @@ import { lerp } from "battletribes-shared/utils";
 import { createWebGLProgram, gl } from "../../webgl";
 import Board from "../../Board";
 import OPTIONS from "../../options";
-import { getLightPosition, getLights } from "../../lights";
+import { getLightPositionMatrix, getLights } from "../../lights";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 
 const NIGHT_LIGHT = 0.4;
@@ -15,6 +15,75 @@ let vao: WebGLVertexArrayObject;
 let darkenFactorUniformLocation: WebGLUniformLocation;
 
 export function createNightShaders(): void {
+   const darknessVertexShaderText = `#version 300 es
+   precision mediump float;
+   
+   layout(std140) uniform Camera {
+      uniform vec2 u_playerPos;
+      uniform vec2 u_halfWindowSize;
+      uniform float u_zoom;
+   };
+   
+   layout(location = 0) in vec2 a_position;
+   
+   out vec2 v_position;
+   
+   void main() {
+      gl_Position = vec4(a_position, 0.0, 1.0);
+   
+      // Calculate and pass on game position
+      vec2 screenPos = (a_position + 1.0) * u_halfWindowSize;
+      v_position = (screenPos - u_halfWindowSize) / u_zoom + u_playerPos;
+   }
+   `;
+   const darknessFragmentShaderText = `#version 300 es
+   precision mediump float;
+   
+   #define MAX_LIGHTS 128
+   #define TILE_SIZE ${Settings.TILE_SIZE.toFixed(1)}
+   
+   // @Cleanup: UBO
+   
+   uniform int u_numLights;
+   uniform mat3 u_lightPositionMatrices[MAX_LIGHTS];
+   uniform float u_lightIntensities[MAX_LIGHTS];
+   uniform float u_lightStrengths[MAX_LIGHTS];
+   uniform float u_lightRadii[MAX_LIGHTS];
+   
+   uniform float u_darkenFactor;
+   
+   in vec2 v_position;
+   
+   out vec4 outputColour;
+    
+   void main() {
+      float totalLightIntensity = 0.0;
+      for (int i = 0; i < u_numLights; i++) {
+         mat3 positionMatrix = u_lightPositionMatrices[i];
+         vec2 lightPos = (positionMatrix * vec3(1.0, 1.0, 1.0)).xy;
+
+         float intensity = u_lightIntensities[i];
+         float strength = u_lightStrengths[i] * TILE_SIZE;
+         float radius = u_lightRadii[i];
+
+         float dist = distance(v_position, lightPos);
+         dist -= radius;
+         if (dist < 0.0) {
+            dist = 0.0;
+         }
+
+         float sampleIntensity = (1.0 - dist / strength) * intensity;
+         if (sampleIntensity > 0.0) {
+            float intensitySquared = sampleIntensity * sampleIntensity;
+            totalLightIntensity += intensitySquared;
+         }
+      }
+
+      float opacity = mix(1.0 - u_darkenFactor, 0.0, totalLightIntensity);
+      outputColour = vec4(0.0, 0.0, 0.0, opacity);
+   }
+   `;
+
    const colourVertexShaderText = `#version 300 es
    precision mediump float;
    
@@ -42,78 +111,11 @@ export function createNightShaders(): void {
    #define MAX_LIGHTS 128
    #define TILE_SIZE ${Settings.TILE_SIZE.toFixed(1)}
    
-   // @Cleanup: UBO
-   
-   uniform int u_numLights;
-   uniform vec2 u_lightPositions[MAX_LIGHTS];
-   uniform float u_lightIntensities[MAX_LIGHTS];
-   uniform float u_lightStrengths[MAX_LIGHTS];
-   uniform float u_lightRadii[MAX_LIGHTS];
-   
-   uniform float u_darkenFactor;
-   
-   in vec2 v_position;
-   
-   out vec4 outputColour;
-    
-   void main() {
-      float totalLightIntensity = 0.0;
-      for (int i = 0; i < u_numLights; i++) {
-         vec2 lightPos = u_lightPositions[i];
-         float intensity = u_lightIntensities[i];
-         float strength = u_lightStrengths[i] * TILE_SIZE;
-         float radius = u_lightRadii[i];
-
-         float dist = distance(v_position, lightPos);
-         dist -= radius;
-         if (dist < 0.0) {
-            dist = 0.0;
-         }
-
-         float sampleIntensity = (1.0 - dist / strength) * intensity;
-         if (sampleIntensity > 0.0) {
-            float intensitySquared = sampleIntensity * sampleIntensity;
-            totalLightIntensity += intensitySquared;
-         }
-      }
-
-      float opacity = mix(1.0 - u_darkenFactor, 0.0, totalLightIntensity);
-      outputColour = vec4(0.0, 0.0, 0.0, opacity);
-   }
-   `;
-
-   const darknessVertexShaderText = `#version 300 es
-   precision mediump float;
-   
-   layout(std140) uniform Camera {
-      uniform vec2 u_playerPos;
-      uniform vec2 u_halfWindowSize;
-      uniform float u_zoom;
-   };
-   
-   layout(location = 0) in vec2 a_position;
-   
-   out vec2 v_position;
-   
-   void main() {
-      gl_Position = vec4(a_position, 0.0, 1.0);
-   
-      // Calculate and pass on game position
-      vec2 screenPos1 = (a_position + 1.0) * u_halfWindowSize;
-      v_position = (screenPos1 - u_halfWindowSize) / u_zoom + u_playerPos;
-   }
-   `;
-   const darknessFragmentShaderText = `#version 300 es
-   precision mediump float;
-   
-   #define MAX_LIGHTS 128
-   #define TILE_SIZE ${Settings.TILE_SIZE.toFixed(1)}
-   
    // @Cleanup: Use a struct
    // @Cleanup: UBO
    
    uniform int u_numLights;
-   uniform vec2 u_lightPositions[MAX_LIGHTS];
+   uniform mat3 u_lightPositionMatrices[MAX_LIGHTS];
    uniform float u_lightIntensities[MAX_LIGHTS];
    uniform float u_lightStrengths[MAX_LIGHTS];
    uniform float u_lightRadii[MAX_LIGHTS];
@@ -128,7 +130,9 @@ export function createNightShaders(): void {
       float g = 0.0;
       float b = 0.0;
       for (int i = 0; i < u_numLights; i++) {
-         vec2 lightPos = u_lightPositions[i];
+         mat3 positionMatrix = u_lightPositionMatrices[i];
+         vec2 lightPos = (positionMatrix * vec3(1.0, 1.0, 1.0)).xy;
+
          float intensity = u_lightIntensities[i];
          float strength = u_lightStrengths[i] * TILE_SIZE;
          float radius = u_lightRadii[i];
@@ -153,10 +157,10 @@ export function createNightShaders(): void {
    }
    `;
 
-   darknessProgram = createWebGLProgram(gl, colourVertexShaderText, colourFragmentShaderText);
+   darknessProgram = createWebGLProgram(gl, darknessVertexShaderText, darknessFragmentShaderText);
    bindUBOToProgram(gl, darknessProgram, UBOBindingIndex.CAMERA);
 
-   colourProgram = createWebGLProgram(gl, darknessVertexShaderText, darknessFragmentShaderText);
+   colourProgram = createWebGLProgram(gl, colourVertexShaderText, colourFragmentShaderText);
    bindUBOToProgram(gl, colourProgram, UBOBindingIndex.CAMERA);
 
    darkenFactorUniformLocation = gl.getUniformLocation(darknessProgram, "u_darkenFactor")!;
@@ -184,7 +188,7 @@ export function createNightShaders(): void {
    gl.bindVertexArray(null);
 }
 
-export function renderNight(): void {
+export function renderLighting(): void {
    let ambientLight: number;
    if (Board.time >= 6 && Board.time < 18) {
       ambientLight = 1;
@@ -199,17 +203,25 @@ export function renderNight(): void {
    const lights = getLights();
 
    // @Speed
-   const lightPositions = new Array<number>();
+   const lightPositionMatrices = new Array<number>();
    const lightIntensities = new Array<number>();
    const lightStrengths = new Array<number>();
    const lightRadii = new Array<number>();
    const lightColours = new Array<number>();
    for (let i = 0; i < lights.length; i++) {
       const light = lights[i];
-      const position = getLightPosition(i);
+      const positionMatrix = getLightPositionMatrix(i);
       
-      lightPositions.push(position.x);
-      lightPositions.push(position.y);
+      lightPositionMatrices.push(positionMatrix[0]);
+      lightPositionMatrices.push(positionMatrix[1]);
+      lightPositionMatrices.push(positionMatrix[2]);
+      lightPositionMatrices.push(positionMatrix[3]);
+      lightPositionMatrices.push(positionMatrix[4]);
+      lightPositionMatrices.push(positionMatrix[5]);
+      lightPositionMatrices.push(positionMatrix[6]);
+      lightPositionMatrices.push(positionMatrix[7]);
+      lightPositionMatrices.push(positionMatrix[8]);
+
       lightIntensities.push(light.intensity);
       lightStrengths.push(light.strength);
       lightRadii.push(light.radius);
@@ -220,20 +232,20 @@ export function renderNight(): void {
    
    gl.enable(gl.BLEND);
 
+   gl.bindVertexArray(vao);
+
    if (!OPTIONS.nightVisionIsEnabled) {
       gl.useProgram(darknessProgram);
    
       gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-   
-      gl.bindVertexArray(vao);
    
       gl.uniform1f(darkenFactorUniformLocation, ambientLight);
 
       const darknessNumLightsLocation = gl.getUniformLocation(darknessProgram, "u_numLights")!;
       gl.uniform1i(darknessNumLightsLocation, lights.length);
       if (lights.length > 0) {
-         const lightPosLocation = gl.getUniformLocation(darknessProgram, "u_lightPositions")!;
-         gl.uniform2fv(lightPosLocation, new Float32Array(lightPositions));
+         const lightPosLocation = gl.getUniformLocation(darknessProgram, "u_lightPositionMatrices")!;
+         gl.uniformMatrix3fv(lightPosLocation, false, new Float32Array(lightPositionMatrices));
          const lightIntensityLocation = gl.getUniformLocation(darknessProgram, "u_lightIntensities")!;
          gl.uniform1fv(lightIntensityLocation, new Float32Array(lightIntensities));
          const lightStrengthLocation = gl.getUniformLocation(darknessProgram, "u_lightStrengths")!;
@@ -253,8 +265,8 @@ export function renderNight(): void {
    const colourNumLightsLocation = gl.getUniformLocation(colourProgram, "u_numLights")!;
    gl.uniform1i(colourNumLightsLocation, lights.length);
    if (lights.length > 0) {
-      const lightPosLocation = gl.getUniformLocation(colourProgram, "u_lightPositions")!;
-      gl.uniform2fv(lightPosLocation, new Float32Array(lightPositions));
+      const lightPosLocation = gl.getUniformLocation(colourProgram, "u_lightPositionMatrices")!;
+      gl.uniformMatrix3fv(lightPosLocation, false, new Float32Array(lightPositionMatrices));
       const lightIntensityLocation = gl.getUniformLocation(colourProgram, "u_lightIntensities")!;
       gl.uniform1fv(lightIntensityLocation, new Float32Array(lightIntensities));
       const lightStrengthLocation = gl.getUniformLocation(colourProgram, "u_lightStrengths")!;

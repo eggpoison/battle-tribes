@@ -93,7 +93,7 @@ const scaleMatrix = (matrix: Matrix3x3, sx: number, sy: number): void => {
    matrix[8] = b20 * a02 + b21 * a12 + b22 * a22;
 }
 
-const translateMatrix = (matrix: Matrix3x3, tx: number, ty: number): void => {
+export function translateMatrix(matrix: Matrix3x3, tx: number, ty: number): void {
    const a00 = 1;
    const a01 = 0;
    const a02 = 0;

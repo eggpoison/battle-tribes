@@ -23,6 +23,7 @@ import FishComponent from "./FishComponent";
 import FollowAIComponent from "./FollowAIComponent";
 import FrozenYetiComponent from "./FrozenYetiComponent";
 import GolemComponent from "./GolemComponent";
+import GuardianComponent from "./GuardianComponent";
 import HealingTotemComponent from "./HealingTotemComponent";
 import HealthComponent from "./HealthComponent";
 import HutComponent from "./HutComponent";
@@ -133,5 +134,6 @@ export function createComponent(entity: Entity, componentType: ServerComponentTy
       case ServerComponentType.spearProjectile: return new SpearProjectileComponent(entity);
       case ServerComponentType.krumblid: return new KrumblidComponent(entity);
       case ServerComponentType.damageBox: return new DamageBoxComponent(entity, reader);
+      case ServerComponentType.guardian: return new GuardianComponent(entity, reader);
    }
 }

@@ -149,16 +149,15 @@ const BIOME_GENERATION_INFO: Record<Biome, BiomeGenerationInfo> = {
          minHeight: 0.7
       },
       tiles: [
-         // @Temporary
-         // {
-         //    tileType: TileType.darkRock,
-         //    isWall: true,
-         //    noiseRequirements: {
-         //       scale: 7,
-         //       minWeight: 0.8,
-         //    },
-         //    minDist: 2
-         // },
+         {
+            tileType: TileType.darkRock,
+            isWall: true,
+            noiseRequirements: {
+               scale: 7,
+               minWeight: 0.8,
+            },
+            minDist: 4
+         },
          {
             tileType: TileType.rock,
             isWall: false

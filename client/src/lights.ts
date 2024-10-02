@@ -1,7 +1,8 @@
-import { Point, rotateXAroundOrigin, rotateYAroundOrigin } from "battletribes-shared/utils";
+import { Point } from "battletribes-shared/utils";
 import Board from "./Board";
-import { ServerComponentType } from "battletribes-shared/components";
 import { getEntityByID } from "./world";
+import { copyMatrix, createTranslationMatrix, Matrix3x3, matrixMultiplyInPlace } from "./rendering/matrices";
+import { translateMatrix } from "./rendering/render-part-matrices";
 
 type LightID = number;
 
@@ -124,33 +125,38 @@ export function removeLightsAttachedToRenderPart(renderPartID: number): void {
    }
 }
 
-export function getLightPosition(lightIdx: number): Point {
+export function getLightPositionMatrix(lightIdx: number): Matrix3x3 {
    const light = lights[lightIdx];
    const lightID = lightIDs[lightIdx];
    
    const attachedRenderPartID = lightToRenderPartRecord[lightID];
    if (typeof attachedRenderPartID !== "undefined") {
       const renderPart = Board.renderPartRecord[attachedRenderPartID];
-      const offset = light.offset;
 
-      const x = renderPart.renderPosition.x + rotateXAroundOrigin(offset.x, offset.y, renderPart.rotation + renderPart.totalParentRotation);
-      const y = renderPart.renderPosition.y + rotateYAroundOrigin(offset.x, offset.y, renderPart.rotation + renderPart.totalParentRotation);
-      return new Point(x, y);
+      // @Speed @Copynpaste
+      const matrix = createTranslationMatrix(light.offset.x, light.offset.y);
+      matrixMultiplyInPlace(renderPart.modelMatrix, matrix);
+      // const matrix = copyMatrix(renderPart.modelMatrix);
+      // // @Hack: why do we need to rotate the offset?
+      // translateMatrix(matrix, light.offset.x, light.offset.y);
+
+      return matrix;
    }
 
    const attachedEntityID = lightToEntityRecord[lightID];
    if (typeof attachedEntityID !== "undefined") {
       const attachedEntity = getEntityByID(attachedEntityID);
       if (typeof attachedEntity !== "undefined") {
-         const offset = light.offset;
+         // @Speed @Copynpaste
+         const matrix = createTranslationMatrix(light.offset.x, light.offset.y);
+         matrixMultiplyInPlace(attachedEntity.modelMatrix, matrix);
 
-         const transformComponent = attachedEntity.getServerComponent(ServerComponentType.transform);
-         
-         const x = attachedEntity.renderPosition.x + rotateXAroundOrigin(offset.x, offset.y, transformComponent.rotation);
-         const y = attachedEntity.renderPosition.y + rotateYAroundOrigin(offset.x, offset.y, transformComponent.rotation);
-         return new Point(x, y);
+         return matrix;
       }
    }
 
-   return light.offset;
+   // @Incomplete
+   // Make "attach light to world" logic
+   // return light.offset;
+   throw new Error();
 }

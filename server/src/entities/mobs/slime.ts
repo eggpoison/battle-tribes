@@ -66,7 +66,7 @@ export function createSlimeConfig(): ComponentConfig<ComponentTypes> {
          type: EntityType.slime,
          collisionBit: COLLISION_BITS.default,
          collisionMask: DEFAULT_COLLISION_MASK,
-         hitboxes: [createHitbox(new CircularBox(new Point(0, 0), 0, 0), 0, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0)]
+         hitboxes: [createHitbox(new CircularBox(new Point(0, 0), 0, 0), 0, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, [])]
       },
       [ServerComponentType.physics]: {
          velocityX: 0,

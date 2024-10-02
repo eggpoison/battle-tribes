@@ -66,7 +66,8 @@ export const enum EntityType {
    decoration,
    reed,
    lilypad,
-   fibrePlant
+   fibrePlant,
+   guardian
 }
 
 export const EntityTypeString: Record<EntityType, string> = {
@@ -134,7 +135,8 @@ export const EntityTypeString: Record<EntityType, string> = {
    [EntityType.decoration]: "decoration",
    [EntityType.reed]: "reed",
    [EntityType.lilypad]: "lilypad",
-   [EntityType.fibrePlant]: "fibre plant"
+   [EntityType.fibrePlant]: "fibre plant",
+   [EntityType.guardian]: "guardian"
 };
 
 export const NUM_ENTITY_TYPES = Object.keys(EntityTypeString).length;

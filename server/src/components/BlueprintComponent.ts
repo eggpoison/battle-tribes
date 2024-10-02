@@ -1,7 +1,6 @@
 import { BlueprintType, BuildingMaterial, ServerComponentType } from "battletribes-shared/components";
 import { EntityID } from "battletribes-shared/entities";
 import { ComponentArray } from "./ComponentArray";
-import Layer from "../Layer";
 import { placeVirtualBuilding } from "../ai-tribe-building/ai-building";
 import { getBlueprintEntityType } from "../entities/blueprint-entity";
 import { StructureComponentArray } from "./StructureComponent";

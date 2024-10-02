@@ -26,7 +26,7 @@ export function createSpearProjectileConfig(): ComponentConfig<ComponentTypes> {
          type: EntityType.spearProjectile,
          collisionBit: COLLISION_BITS.default,
          collisionMask: DEFAULT_COLLISION_MASK,
-         hitboxes: [createHitbox(new RectangularBox(new Point(0, 0), 12, 60, 0), 0.5, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0)]
+         hitboxes: [createHitbox(new RectangularBox(new Point(0, 0), 12, 60, 0), 0.5, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, [])]
       },
    [ServerComponentType.physics]: {
          velocityX: 0,

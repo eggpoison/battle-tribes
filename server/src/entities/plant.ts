@@ -27,7 +27,7 @@ export function createPlantConfig(): ComponentConfig<ComponentTypes> {
          type: EntityType.plant,
          collisionBit: COLLISION_BITS.plants,
          collisionMask: DEFAULT_COLLISION_MASK,
-         hitboxes: [createHitbox(new CircularBox(new Point(0, 0), 0, 28), 0.3, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0)]
+         hitboxes: [createHitbox(new CircularBox(new Point(0, 0), 0, 28), 0.3, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, [])]
       },
       [ServerComponentType.health]: {
          maxHealth: 0

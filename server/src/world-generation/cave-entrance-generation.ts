@@ -1,8 +1,14 @@
+import { ServerComponentType } from "../../../shared/src/components";
+import { EntityType } from "../../../shared/src/entities";
 import { Settings } from "../../../shared/src/settings";
 import { Biome, TileType } from "../../../shared/src/tiles";
-import { lerp, randInt, TileIndex } from "../../../shared/src/utils";
+import { lerp, randInt, randItem, TileIndex } from "../../../shared/src/utils";
+import { getEntitiesInRange } from "../ai-shared";
+import { createGuardianConfig } from "../entities/mobs/guardian";
+import { createEntityFromConfig } from "../Entity";
 import { markTileAsUnspawnable } from "../entity-spawning";
 import { getTileIndexIncludingEdges, getTileX, getTileY } from "../Layer";
+import { getEntityType, surfaceLayer } from "../world";
 import { getTileDist, LocalBiomeInfo } from "./surface-terrain-generation";
 
 const enum Vars {
@@ -11,12 +17,16 @@ const enum Vars {
    CAVE_ORIGIN_DIST = 5
 }
 
+const guardianSpawnZones = new Array<Array<TileIndex>>();
+
 export function generateCaveEntrances(tileTypes: Float32Array, tileBiomes: Float32Array, tileIsWalls: Float32Array, localBiomes: ReadonlyArray<LocalBiomeInfo>): void {
    for (let i = 0; i < localBiomes.length; i++) {
       const localBiome = localBiomes[i];
       if (localBiome.biome !== Biome.mountains || localBiome.tileIndexes.length < Vars.MIN_TILES_FOR_CAVE) {
          continue;
       }
+
+      for (let M = 0; M < 50; M++) {
 
       // Pick a random tile some distance away from other biomes to generate the cave
       let originTile: TileIndex | undefined;
@@ -162,7 +172,8 @@ export function generateCaveEntrances(tileTypes: Float32Array, tileBiomes: Float
             const tileX = Math.floor(x / Settings.TILE_SIZE);
             const tileY = Math.floor(y / Settings.TILE_SIZE);
             const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
-            if (!tileIsWalls[tileIndex]) {
+            // @Hack: Should use the layer isWall function
+            if (tileIsWalls[tileIndex] === 0) {
                tiles.push(tileIndex);
             }
          }
@@ -170,11 +181,42 @@ export function generateCaveEntrances(tileTypes: Float32Array, tileBiomes: Float
       for (const tileIndex of tiles) {
          markTileAsUnspawnable(tileIndex);
       }
+      guardianSpawnZones.push(tiles);
 
+      }
+
+   }
+}
+
+export function spawnGuardians(): void {
+   for (const tiles of guardianSpawnZones) {
       // Spawn 1-2 guardians in the cave
       for (let i = 0; i < randInt(1, 2); i++) {
          for (let attempts = 0; attempts < 50; attempts++) {
-            
+            const tileIndex = randItem(tiles);
+   
+            const tileX = getTileX(tileIndex);
+            const tileY = getTileY(tileIndex);
+            const x = (tileX + Math.random()) * Settings.TILE_SIZE;
+            const y = (tileY + Math.random()) * Settings.TILE_SIZE;
+   
+            const nearbyEntities = getEntitiesInRange(surfaceLayer, x, y, 30);
+            let isValid = true;
+            for (const entity of nearbyEntities) {
+               if (getEntityType(entity) === EntityType.guardian) {
+                  isValid = false;
+                  break;
+               }
+            }
+
+            if (isValid) {
+               const config = createGuardianConfig();
+               config[ServerComponentType.transform].position.x = x;
+               config[ServerComponentType.transform].position.y = y;
+               config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
+               createEntityFromConfig(config, surfaceLayer);
+               break;
+            }
          }
       }
    }

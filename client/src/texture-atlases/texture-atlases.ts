@@ -318,7 +318,10 @@ export const TEXTURE_SOURCES: Array<string> = [
    "entities/miscellaneous/tribesman-health-patch.png",
    "entities/lilypad/lilypad.png",
    "entities/fibre-plant/fibre-plant.png",
-   "entities/shield-items/wooden-shield.png"
+   "entities/shield-items/wooden-shield.png",
+   "entities/guardian/guardian-head.png",
+   "entities/guardian/guardian-body.png",
+   "entities/guardian/guardian-limb.png"
 ];
 
 const addTextureSource = (textureSource: string): void => {

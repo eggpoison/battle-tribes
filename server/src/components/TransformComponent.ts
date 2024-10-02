@@ -465,6 +465,7 @@ function getDataLength(entity: EntityID): number {
       } else {
          lengthBytes += 11 * Float32Array.BYTES_PER_ELEMENT;
       }
+      lengthBytes += hitbox.flags.length * Float32Array.BYTES_PER_ELEMENT;
    }
 
    return lengthBytes;
@@ -510,7 +511,11 @@ function addDataToPacket(packet: Packet, entity: EntityID): void {
       packet.addNumber(hitbox.collisionBit);
       packet.addNumber(hitbox.collisionMask);
       packet.addNumber(localID);
-      packet.addNumber(hitbox.flags);
+      // Flags
+      packet.addNumber(hitbox.flags.length);
+      for (const flag of hitbox.flags) {
+         packet.addNumber(flag);
+      }
       packet.addNumber(box.radius);
    }
    
@@ -532,7 +537,11 @@ function addDataToPacket(packet: Packet, entity: EntityID): void {
       packet.addNumber(hitbox.collisionBit);
       packet.addNumber(hitbox.collisionMask);
       packet.addNumber(localID);
-      packet.addNumber(hitbox.flags);
+      // Flags
+      packet.addNumber(hitbox.flags.length);
+      for (const flag of hitbox.flags) {
+         packet.addNumber(flag);
+      }
       packet.addNumber(box.width);
       packet.addNumber(box.height);
       packet.addNumber(box.relativeRotation);

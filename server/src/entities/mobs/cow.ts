@@ -42,7 +42,7 @@ export function createCowConfig(): ComponentConfig<ComponentTypes> {
          type: EntityType.cow,
          collisionBit: COLLISION_BITS.default,
          collisionMask: DEFAULT_COLLISION_MASK,
-         hitboxes: [createHitbox(new RectangularBox(new Point(0, 0), 50, 100, 0), 1.2, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0)]
+         hitboxes: [createHitbox(new RectangularBox(new Point(0, 0), 50, 100, 0), 1.2, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, [])]
       },
       [ServerComponentType.physics]: {
          velocityX: 0,

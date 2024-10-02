@@ -29,7 +29,7 @@ import Tribe from "./Tribe";
 import OPTIONS from "./options";
 import { RENDER_CHUNK_SIZE, createRenderChunks } from "./rendering/render-chunks";
 import { registerFrame, updateFrameGraph } from "./components/game/dev/FrameGraph";
-import { createNightShaders, renderNight } from "./rendering/webgl/light-rendering";
+import { createNightShaders, renderLighting } from "./rendering/webgl/lighting-rendering";
 import { createPlaceableItemProgram, renderGhostEntities } from "./rendering/webgl/entity-ghost-rendering";
 import { setupFrameGraph } from "./rendering/webgl/frame-graph-rendering";
 import { createTextureAtlases } from "./texture-atlases/texture-atlases";
@@ -65,6 +65,7 @@ import { refreshChunkedEntityRenderingBuffers } from "./rendering/webgl/chunked-
 import { getEntityByID, getEntityLayer, layers } from "./world";
 import Layer from "./Layer";
 import { createDarkeningShaders, renderDarkening } from "./rendering/webgl/darkening-rendering";
+import { createLightDebugShaders, renderLightingDebug } from "./rendering/webgl/light-debug-rendering";
 
 // @Cleanup: remove.
 let _frameProgress = Number.EPSILON;
@@ -372,6 +373,7 @@ abstract class Game {
             createWallConnectionShaders();
             createHealingBeamShaders();
             createGrassBlockerShaders();
+            createLightDebugShaders();
             if (isDev()) {
                setupFrameGraph();
             }
@@ -486,7 +488,10 @@ abstract class Game {
          }
       }
       
-      renderNight();
+      renderLighting();
+      if (OPTIONS.debugLights) {
+         renderLightingDebug();
+      }
 
       updateDebugScreenFPS();
       updateInspectHealthBar();

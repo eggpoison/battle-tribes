@@ -54,7 +54,7 @@ const BUILDING_SAFETY: Record<StructureType, number> = {
 
 export function createRestrictedBuildingArea(position: Point, width: number, height: number, rotation: number, associatedBuildingID: number): RestrictedBuildingArea {
    const box = new RectangularBox(new Point(0, 0), width, height, rotation);
-   const hitbox = createHitbox<BoxType.rectangular>(box, 0, 0, HitboxCollisionBit.DEFAULT, 0, 0);
+   const hitbox = createHitbox<BoxType.rectangular>(box, 0, 0, HitboxCollisionBit.DEFAULT, 0, []);
    box.position.x = position.x;
    box.position.y = position.y;
    

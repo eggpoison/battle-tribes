@@ -63,6 +63,7 @@ import Decoration from "./entities/Decoration";
 import Reed from "./entities/Reed";
 import Lilypad from "./entities/Lilypad";
 import FibrePlant from "./entities/FibrePlant";
+import Guardian from "./entities/Guardian";
 
 // @Cleanup: remove this and just have entities be a collection of components
 export function createEntity(entityID: EntityID, entityType: EntityType): Entity {
@@ -132,6 +133,7 @@ export function createEntity(entityID: EntityID, entityType: EntityType): Entity
       case EntityType.reed: return new Reed(entityID);
       case EntityType.lilypad: return new Lilypad(entityID);
       case EntityType.fibrePlant: return new FibrePlant(entityID);
+      case EntityType.guardian: return new Guardian(entityID);
       default: {
          const unreachable: never = entityType;
          return unreachable;

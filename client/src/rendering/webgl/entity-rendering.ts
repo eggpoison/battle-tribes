@@ -61,7 +61,7 @@ export function createEntityShaders(): void {
       uint word = ((state >> ((state >> 28u) + 4u)) ^ state) * 277803737u;
       return (word >> 22u) ^ word;
    }
-    
+   
    void main() {
       vec2 textureSize;
       if (a_textureArrayIndex == -1.0) {
@@ -441,12 +441,6 @@ export function renderEntities(entities: ReadonlyArray<Entity>): void {
 
    // renderPartIdx is now the idx of the final render part we want to render + 1. A.k.a the number of render parts we're rendering
    const numRenderParts = renderPartIdx;
-   
-   // @Speed: Can we avoid doing this using a parameter of bufferSubData?
-   // Clear any data from the previous render
-   for (let i = numRenderParts * 4 * Vars.ATTRIBUTES_PER_VERTEX; i < previousNumRenderParts * 4 * Vars.ATTRIBUTES_PER_VERTEX; i++) {
-      vertexData[i] = 0;
-   }
    
    if (numRenderParts > Vars.MAX_RENDER_PARTS) {
       console.warn("Exceeded maximum buffer size for non-chunked entity rendering.");

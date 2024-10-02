@@ -28,7 +28,7 @@ export function createIceShardConfig(): ComponentConfig<ComponentTypes> {
          type: EntityType.iceShardProjectile,
          collisionBit: COLLISION_BITS.default,
          collisionMask: DEFAULT_COLLISION_MASK & ~COLLISION_BITS.planterBox,
-         hitboxes: [createHitbox(new RectangularBox(new Point(0, 0), 24, 24, 0), 0.4, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0)]
+         hitboxes: [createHitbox(new RectangularBox(new Point(0, 0), 24, 24, 0), 0.4, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, [])]
       },
       [ServerComponentType.physics]: {
          velocityX: 0,

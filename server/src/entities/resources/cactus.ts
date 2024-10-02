@@ -82,7 +82,7 @@ const generateRandomLimbs = (): ReadonlyArray<CactusLimbData> => {
 export function createCactusConfig(): ComponentConfig<ComponentTypes> {
    const hitboxes = new Array<Hitbox>();
 
-   hitboxes.push(createHitbox(new CircularBox(new Point(0, 0), 0, RADIUS - HITBOX_PADDING), 1, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0));
+   hitboxes.push(createHitbox(new CircularBox(new Point(0, 0), 0, RADIUS - HITBOX_PADDING), 1, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, []));
 
    const flowers = generateRandomFlowers();
    const limbs = generateRandomLimbs();
@@ -92,7 +92,7 @@ export function createCactusConfig(): ComponentConfig<ComponentTypes> {
       const limb = limbs[i];
 
       const box = new CircularBox(Point.fromVectorForm(37, limb.direction), 0, 18);
-      const hitbox = createHitbox(box, 0.4, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0);
+      const hitbox = createHitbox(box, 0.4, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, []);
       hitboxes.push(hitbox);
    }
 

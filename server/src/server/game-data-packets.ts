@@ -1,6 +1,6 @@
 import { VisibleChunkBounds } from "battletribes-shared/client-server-types";
 import { ServerComponentType, ServerComponentTypeString } from "battletribes-shared/components";
-import { EntityID } from "battletribes-shared/entities";
+import { EntityID, EntityTypeString } from "battletribes-shared/entities";
 import { TechUnlockProgress } from "battletribes-shared/techs";
 import Layer, { getTileX, getTileY } from "../Layer";
 import { ComponentArrays } from "../components/ComponentArray";
@@ -86,7 +86,7 @@ export function addEntityDataToPacket(packet: Packet, entity: EntityID, player: 
 
          // @Speed
          if (packet.currentByteOffset - start !== componentArray.getDataLength(entity, player)) {
-            throw new Error(`Component type '${ServerComponentTypeString[componentArray.componentType]}' has wrong data length.`)
+            throw new Error(`Component type '${ServerComponentTypeString[componentArray.componentType]}' has wrong data length for entity type '${EntityTypeString[getEntityType(entity)!]}'.`)
          }
       }
    }

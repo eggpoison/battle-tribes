@@ -6,7 +6,7 @@ import { LimbAction } from "./entities";
 import { AttackEffectiveness } from "./entity-damage-types";
 import { EntityTickEvent } from "./entity-events";
 import { GrassBlocker } from "./grass-blockers";
-import { HitboxCollisionType } from "./boxes/boxes";
+import { HitboxCollisionType, HitboxFlag } from "./boxes/boxes";
 import { InventoryName, ItemType } from "./items/items";
 import { StatusEffect } from "./status-effects";
 import { EnemyTribeData, PlayerTribeData, TechID } from "./techs";
@@ -30,6 +30,7 @@ export type ServerTileUpdateData = {
    readonly isWall: boolean;
 }
 
+// @Cleanup: Remove these
 export interface BaseHitboxData {
    readonly mass: number;
    readonly offsetX: number;
@@ -38,7 +39,7 @@ export interface BaseHitboxData {
    readonly collisionBit: HitboxCollisionBit;
    readonly collisionMask: number;
    readonly localID: number;
-   readonly flags: number;
+   readonly flags: ReadonlyArray<HitboxFlag>;
 }
 
 export interface CircularHitboxData extends BaseHitboxData {

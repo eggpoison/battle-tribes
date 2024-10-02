@@ -31,6 +31,8 @@ import { forceMaxGrowAllIceSpikes } from "../components/IceSpikesComponent";
 import { sortComponentArrays } from "../components/ComponentArray";
 import { createLayers, destroyFlaggedEntities, entityExists, getEntityLayer, getGameTicks, pushJoinBuffer, surfaceLayer, tickGameTime, undergroundLayer, updateEntities, updateTribes } from "../world";
 import { generateUndergroundTerrain } from "../world-generation/underground-terrain-generation";
+import { spawnGuardians } from "../world-generation/cave-entrance-generation";
+import { createGuardianConfig } from "../entities/mobs/guardian";
 
 /*
 
@@ -136,6 +138,7 @@ class GameServer {
       generateDecorations();
       generateReeds(surfaceTerrainGenerationInfo.riverMainTiles);
       generateLilypads();
+      spawnGuardians();
 
       this.server = new Server({
          port: Settings.SERVER_PORT
@@ -175,6 +178,13 @@ class GameServer {
       
                   playerClient = new PlayerClient(socket, tribe, screenWidth, screenHeight, spawnPosition, player, username);
                   addPlayerClient(playerClient, player, surfaceLayer, config);
+
+                  setTimeout(() => {
+                     const config = createGuardianConfig();
+                     config[ServerComponentType.transform].position.x = spawnPosition.x + 150;
+                     config[ServerComponentType.transform].position.y = spawnPosition.y;
+                     createEntityFromConfig(config, surfaceLayer);
+                  }, 500);
 
                   break;
                }

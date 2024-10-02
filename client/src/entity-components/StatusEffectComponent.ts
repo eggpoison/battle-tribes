@@ -28,7 +28,9 @@ class StatusEffectComponent extends ServerComponent {
    constructor(entity: Entity, reader: PacketReader) {
       super(entity);
 
-      this.updateFromData(reader);
+      // @Incomplete!
+      // this.updateFromData(reader);
+      this.padData(reader);
    }
 
    public padData(reader: PacketReader): void {

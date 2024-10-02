@@ -280,6 +280,10 @@ const ENTITY_DAMAGE_INFO_RECORD: Record<EntityType, EntityDamageInfo> = {
    [EntityType.fibrePlant]: {
       effectiveDamageTypes: [],
       stoppedDamageTypes: []
+   },
+   [EntityType.guardian]: {
+      effectiveDamageTypes: [],
+      stoppedDamageTypes: []
    }
 };
 

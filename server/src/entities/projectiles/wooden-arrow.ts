@@ -26,7 +26,7 @@ export function createWoodenArrowConfig(): ComponentConfig<ComponentTypes> {
          type: EntityType.woodenArrow,
          collisionBit: COLLISION_BITS.default,
          collisionMask: DEFAULT_COLLISION_MASK,
-         hitboxes: [createHitbox(new RectangularBox(new Point(0, 0), 12, 64, 0), 0.5, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK & ~HitboxCollisionBit.ARROW_PASSABLE, 0)]
+         hitboxes: [createHitbox(new RectangularBox(new Point(0, 0), 12, 64, 0), 0.5, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK & ~HitboxCollisionBit.ARROW_PASSABLE, [])]
       },
       [ServerComponentType.physics]: {
          velocityX: 0,

@@ -3,7 +3,7 @@ import { GrassBlocker, GrassBlockerCircle, GrassBlockerRectangle, blockerIsCircl
 import Chunk from "./Chunk";
 import { EntityID } from "battletribes-shared/entities";
 import { TransformComponentArray } from "./components/TransformComponent";
-import { boxIsCircular, HitboxFlags } from "battletribes-shared/boxes/boxes";
+import { boxIsCircular, HitboxFlag } from "battletribes-shared/boxes/boxes";
 import { entityExists, surfaceLayer } from "./world";
 
 const blockers = new Array<GrassBlocker>();
@@ -87,7 +87,7 @@ export function createStructureGrassBlockers(structure: EntityID): void {
    
    for (let i = 0; i < transformComponent.hitboxes.length; i++) {
       const hitbox = transformComponent.hitboxes[i];
-      if ((hitbox.flags & HitboxFlags.NON_GRASS_BLOCKING) !== 0) {
+      if (hitbox.flags.includes(HitboxFlag.NON_GRASS_BLOCKING)) {
          continue;
       }
 

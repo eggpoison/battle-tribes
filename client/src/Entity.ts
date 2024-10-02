@@ -17,7 +17,6 @@ import ServerComponent from "./entity-components/ServerComponent";
 import { createIdentityMatrix } from "./rendering/matrices";
 import { getEntityRenderLayer } from "./render-layers";
 import { registerDirtyEntity } from "./rendering/render-part-matrices";
-import Layer from "./Layer";
 import { getEntityByID } from "./world";
 
 // Use prime numbers / 100 to ensure a decent distribution of different types of particles

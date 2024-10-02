@@ -54,7 +54,7 @@ export function createTribeWarriorConfig(): ComponentConfig<ComponentTypes> {
          type: EntityType.tribeWarrior,
          collisionBit: COLLISION_BITS.default,
          collisionMask: DEFAULT_COLLISION_MASK,
-         hitboxes: [createHitbox(new CircularBox(new Point(0, 0), 0, TRIBE_WARRIOR_RADIUS), 1.5, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0)]
+         hitboxes: [createHitbox(new CircularBox(new Point(0, 0), 0, TRIBE_WARRIOR_RADIUS), 1.5, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, [])]
       },
       [ServerComponentType.physics]: {
          velocityX: 0,

@@ -49,6 +49,7 @@ const GameInfoDisplay = () => {
    const [showRestrictedAreas, setShowRestrictedAreas] = useState(OPTIONS.showRestrictedAreas);
    const [showWallConnections, setShowWallConnections] = useState(OPTIONS.showWallConnections);
    const [maxGreenSafety, setMaxGreenSafety] = useState(OPTIONS.maxGreenSafety);
+   const [debugLights, setDebugLights] = useState(OPTIONS.debugLights);
    
    useEffect(() => {
       if (typeof Board.time !== "undefined") {
@@ -119,6 +120,11 @@ const GameInfoDisplay = () => {
       OPTIONS.showWallConnections = !showWallConnections;
       setShowWallConnections(!showWallConnections);
    }, [showWallConnections]);
+
+   const toggleDebugLights = useCallback(() => {
+      OPTIONS.debugLights = !debugLights;
+      setDebugLights(!debugLights);
+   }, [debugLights]);
 
    const toggleAIBuilding = useCallback(() => {
       const toggleResult = !showSafetyNodes || !showBuildingSafetys || !showBuildingPlans || !showRestrictedAreas || !showWallConnections;
@@ -206,6 +212,12 @@ const GameInfoDisplay = () => {
             <label className={showPathfindingNodes ? "enabled" : undefined}>
                <input checked={showPathfindingNodes} name="show-pathfinding-nodes-checkbox" type="checkbox" onChange={toggleShowPathfindingNodes} />
                Show pathfinding nodes
+            </label>
+         </li>
+         <li>
+            <label className={debugLights ? "enabled" : undefined}>
+               <input checked={debugLights} name="debug-lights-checkbox" type="checkbox" onChange={toggleDebugLights} />
+               Debug lights
             </label>
          </li>
       </ul>

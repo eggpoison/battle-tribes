@@ -30,7 +30,7 @@ export function createTombstoneConfig(): ComponentConfig<ComponentTypes> {
          type: EntityType.tombstone,
          collisionBit: COLLISION_BITS.default,
          collisionMask: DEFAULT_COLLISION_MASK,
-         hitboxes: [createHitbox(new RectangularBox(new Point(0, 0), WIDTH, HEIGHT, 0), 1.25, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, 0)]
+         hitboxes: [createHitbox(new RectangularBox(new Point(0, 0), WIDTH, HEIGHT, 0), 1.25, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, [])]
       },
       [ServerComponentType.health]: {
          maxHealth: 50

@@ -12,7 +12,7 @@ import { createCircularHitboxFromData, createRectangularHitboxFromData } from ".
 import { PacketReader } from "battletribes-shared/packets";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 import { ServerComponentType } from "battletribes-shared/components";
-import { boxIsCircular, createHitbox, hitboxIsCircular, Hitbox, updateBox } from "battletribes-shared/boxes/boxes";
+import { boxIsCircular, createHitbox, hitboxIsCircular, Hitbox, updateBox, HitboxFlag } from "battletribes-shared/boxes/boxes";
 import CircularBox from "battletribes-shared/boxes/CircularBox";
 import RectangularBox from "battletribes-shared/boxes/RectangularBox";
 import Layer, { getTileIndexIncludingEdges } from "../Layer";
@@ -77,7 +77,11 @@ class TransformComponent extends ServerComponent {
          const collisionBit = reader.readNumber();
          const collisionMask = reader.readNumber();
          const localID = reader.readNumber();
-         const flags = reader.readNumber();
+         const numFlags = reader.readNumber();
+         const flags = new Array<HitboxFlag>();
+         for (let i = 0; i < numFlags; i++) {
+            flags.push(reader.readNumber());
+         }
          const radius = reader.readNumber();
 
          const box = new CircularBox(new Point(offsetX, offsetY), 0, radius);
@@ -96,7 +100,11 @@ class TransformComponent extends ServerComponent {
          const collisionBit = reader.readNumber();
          const collisionMask = reader.readNumber();
          const localID = reader.readNumber();
-         const flags = reader.readNumber();
+         const numFlags = reader.readNumber();
+         const flags = new Array<HitboxFlag>();
+         for (let i = 0; i < numFlags; i++) {
+            flags.push(reader.readNumber());
+         }
          const width = reader.readNumber();
          const height = reader.readNumber();
          const rotation = reader.readNumber();
@@ -254,6 +262,8 @@ class TransformComponent extends ServerComponent {
       // @Hack
       // @Hack
       // @Hack
+
+      // @Speed: Garbage collection
       
       const circularHitboxes = new Array<CircularHitboxData>();
       const numCircularHitboxes = reader.readNumber();
@@ -265,7 +275,11 @@ class TransformComponent extends ServerComponent {
          const collisionBit = reader.readNumber();
          const collisionMask = reader.readNumber();
          const localID = reader.readNumber();
-         const flags = reader.readNumber();
+         const numFlags = reader.readNumber();
+         const flags = new Array<HitboxFlag>();
+         for (let i = 0; i < numFlags; i++) {
+            flags.push(reader.readNumber());
+         }
          const radius = reader.readNumber();
 
          const data: CircularHitboxData = {
@@ -292,7 +306,11 @@ class TransformComponent extends ServerComponent {
          const collisionBit = reader.readNumber();
          const collisionMask = reader.readNumber();
          const localID = reader.readNumber();
-         const flags = reader.readNumber();
+         const numFlags = reader.readNumber();
+         const flags = new Array<HitboxFlag>();
+         for (let i = 0; i < numFlags; i++) {
+            flags.push(reader.readNumber());
+         }
          const width = reader.readNumber();
          const height = reader.readNumber();
          const rotation = reader.readNumber();

@@ -70,6 +70,7 @@ import PunjiSticksComponent from "./PunjiSticksComponent";
 import IceArrowComponent from "./IceArrowComponent";
 import DamageBoxComponent from "./DamageBoxComponent";
 import RandomSoundComponent from "./client-components/RandomSoundComponent";
+import GuardianComponent from "./GuardianComponent";
 
 export enum ClientComponentType {
    equipment,
@@ -141,7 +142,8 @@ const ServerComponents = {
    [ServerComponentType.battleaxeProjectile]: (): BattleaxeProjectileComponent => 0 as any,
    [ServerComponentType.spearProjectile]: (): SpearProjectileComponent => 0 as any,
    [ServerComponentType.krumblid]: (): KrumblidComponent => 0 as any,
-   [ServerComponentType.damageBox]: (): DamageBoxComponent => 0 as any
+   [ServerComponentType.damageBox]: (): DamageBoxComponent => 0 as any,
+   [ServerComponentType.guardian]: (): GuardianComponent => 0 as any
 } satisfies Record<ServerComponentType, () => ServerComponent>;
 
 export const ClientComponents = {

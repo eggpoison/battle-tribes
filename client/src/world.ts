@@ -40,10 +40,12 @@ export function getEntityByID(entityID: number): Entity | undefined {
    return entityRecord[entityID];
 }
 
-export function addEntity(entity: Entity, layer: Layer): void {
+export function registerBasicEntityInfo(entity: Entity, layer: Layer): void {
    entityRecord[entity.id] = entity;
    entityLayers[entity.id] = layer;
+}
 
+export function addEntity(entity: Entity): void {
    entity.callOnLoadFunctions();
 
    // @Temporary? useless now?

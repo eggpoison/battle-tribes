@@ -20,7 +20,7 @@ abstract class ServerComponent extends Component {
    
    public abstract updateFromData(reader: PacketReader): void;
 
-   public updatePlayerFromData?(reader: PacketReader): void;
+   public updatePlayerFromData?(reader: PacketReader, isInitialData: boolean): void;
 }
 
 export default ServerComponent;

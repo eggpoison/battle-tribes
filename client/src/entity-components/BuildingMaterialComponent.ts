@@ -29,12 +29,11 @@ const getMaterialTextureSources = (entity: Entity): ReadonlyArray<string> => {
 
 class BuildingMaterialComponent extends ServerComponent {
    private readonly materialRenderPart: TexturedRenderPart;
-   public material: BuildingMaterial;
+   public material: BuildingMaterial = 0;
    
-   constructor(entity: Entity, reader: PacketReader) {
+   constructor(entity: Entity) {
       super(entity);
 
-      this.material = reader.readNumber();
       this.materialRenderPart = this.entity.getRenderThing("buildingMaterialComponent:material") as TexturedRenderPart;
    }
 

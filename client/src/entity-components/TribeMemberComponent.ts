@@ -78,32 +78,11 @@ class TribeMemberComponent extends ServerComponent {
    public bodyRenderPart!: RenderPart;
    public handRenderParts!: ReadonlyArray<RenderPart>;
    
-   public warPaintType: number | null;
+   public warPaintType: number | null = null;
    
    public titles: ReadonlyArray<TitleGenerationInfo> = [];
 
    public deathbringerEyeLights = new Array<Light>();
-   
-   constructor(entity: Entity, reader: PacketReader) {
-      super(entity);
-
-      this.warPaintType = this.readWarpaint(reader);
-
-      // @Temporary
-      const titles = new Array<TitleGenerationInfo>();
-      const numTitles = reader.readNumber();
-      for (let i = 0; i < numTitles; i++) {
-         const title = reader.readNumber() as TribesmanTitle;
-         const displayOption = reader.readNumber();
-         
-         titles.push({
-            title: title,
-            displayOption: displayOption
-         });
-      }
-
-      this.updateTitles(titles);
-   }
 
    private readWarpaint(reader: PacketReader): number | null {
       const rawWarpaintType = reader.readNumber();
@@ -342,7 +321,7 @@ class TribeMemberComponent extends ServerComponent {
    public updateFromData(reader: PacketReader): void {
       this.warPaintType = this.readWarpaint(reader);
 
-      // @Temporary
+      // @Temporary @Garbage
       const titles = new Array<TitleGenerationInfo>();
       const numTitles = reader.readNumber();
       for (let i = 0; i < numTitles; i++) {

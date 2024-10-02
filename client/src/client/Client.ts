@@ -149,8 +149,8 @@ abstract class Client {
 
    public static connectToServer(setAppState: (appState: AppState) => void, setLoadingScreenStatus: (status: LoadingScreenStatus) => void): Promise<boolean> {
       return new Promise(resolve => {
-         this.socket = new WebSocket(`ws://10.0.0.15:${Settings.SERVER_PORT}`);
-         // this.socket = new WebSocket(`ws://localhost:${Settings.SERVER_PORT}`);
+         // this.socket = new WebSocket(`ws://10.0.0.15:${Settings.SERVER_PORT}`);
+         this.socket = new WebSocket(`ws://localhost:${Settings.SERVER_PORT}`);
          this.socket.binaryType = "arraybuffer";
 
          this.socket.onopen = () => {

@@ -12,17 +12,19 @@ import { createCircularHitboxFromData, createRectangularHitboxFromData } from ".
 import { PacketReader } from "battletribes-shared/packets";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 import { ServerComponentType } from "battletribes-shared/components";
-import { boxIsCircular, createHitbox, hitboxIsCircular, Hitbox, updateBox, HitboxFlag } from "battletribes-shared/boxes/boxes";
+import { boxIsCircular, hitboxIsCircular, Hitbox, updateBox, HitboxFlag } from "battletribes-shared/boxes/boxes";
 import CircularBox from "battletribes-shared/boxes/CircularBox";
 import RectangularBox from "battletribes-shared/boxes/RectangularBox";
 import Layer, { getTileIndexIncludingEdges } from "../Layer";
 import { getEntityLayer } from "../world";
+import { EntityTypeString } from "../../../shared/src/entities";
 
 const getTile = (layer: Layer, position: Point): Tile => {
    const tileX = Math.floor(position.x / Settings.TILE_SIZE);
    const tileY = Math.floor(position.y / Settings.TILE_SIZE);
 
    if (tileX < 0 || tileX >= Settings.TILES_IN_WORLD_WIDTH || tileY < 0 || tileY >= Settings.TILES_IN_WORLD_WIDTH) {
+      console.log(position.x, position.y);
       throw new Error();
    }
    
@@ -179,6 +181,7 @@ class TransformComponent extends ServerComponent {
 
    public updatePosition(): void {
       const layer = getEntityLayer(this.entity.id);
+      console.log(EntityTypeString[this.entity.type]);
       this.tile = getTile(layer, this.position);
       this.updateHitboxes();
       this.updateContainingChunks();
@@ -190,13 +193,14 @@ class TransformComponent extends ServerComponent {
       const rotation = reader.readNumber();
 
       if (positionX !== this.position.x || positionY !== this.position.y || rotation !== this.rotation) {
+         this.position.x = positionX;
+         this.position.y = positionY;
+         this.rotation = rotation;
+         
          this.updatePosition();
          this.entity.dirty();
       }
       
-      this.position.x = positionX;
-      this.position.y = positionY;
-      this.rotation = rotation;
       this.ageTicks = reader.readNumber();
       this.collisionBit = reader.readNumber();
       this.collisionMask = reader.readNumber();
@@ -433,6 +437,15 @@ class TransformComponent extends ServerComponent {
          }
       }
    }
+
+   // @Temporary?
+   // public updatePlayerFromData(reader: PacketReader, isInitialData: boolean): void {
+   //    if (isInitialData) {
+   //       this.updateFromData(reader);
+   //    } else {
+   //       this.padData(reader);
+   //    }
+   // }
 
    public onRemove(): void {
       for (const chunk of this.chunks) {

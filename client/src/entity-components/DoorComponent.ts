@@ -1,21 +1,13 @@
 import { ServerComponentType } from "battletribes-shared/components";
 import { DoorToggleType } from "battletribes-shared/entities";
 import ServerComponent from "./ServerComponent";
-import Entity from "../Entity";
 import { playSound } from "../sound";
 import { PacketReader } from "battletribes-shared/packets";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 
 class DoorComponent extends ServerComponent {
-   public toggleType: DoorToggleType;
-   public openProgress: number;
-
-   constructor(entity: Entity, reader: PacketReader) {
-      super(entity);
-
-      this.toggleType = reader.readNumber();
-      this.openProgress = reader.readNumber();
-   }
+   public toggleType = DoorToggleType.close;
+   public openProgress = 0;
 
    public padData(reader: PacketReader): void {
       reader.padOffset(2 * Float32Array.BYTES_PER_ELEMENT);

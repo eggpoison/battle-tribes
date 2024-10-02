@@ -3,7 +3,6 @@ import { Point, lerp, randFloat, randItem } from "battletribes-shared/utils";
 import { ServerComponentType } from "battletribes-shared/components";
 import { Settings } from "battletribes-shared/settings";
 import ServerComponent from "./ServerComponent";
-import Entity from "../Entity";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import Board, { getElapsedTimeInSeconds, getSecondsSinceTickTimestamp } from "../Board";
 import CLIENT_ITEM_INFO_RECORD from "../client-item-info";
@@ -17,7 +16,7 @@ import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { PacketReader } from "battletribes-shared/packets";
 import { Hotbar_updateRightThrownBattleaxeItemID } from "../components/game/inventories/Hotbar";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
-import { BLOCKING_LIMB_STATE, LimbState, SHIELD_BASH_PUSHED_LIMB_STATE, SHIELD_BASH_WIND_UP_LIMB_STATE, SHIELD_BLOCKING_LIMB_STATE, SPEAR_CHARGED_LIMB_STATE, TRIBESMAN_RESTING_LIMB_STATE } from "battletribes-shared/attack-patterns";
+import { BLOCKING_LIMB_STATE, createZeroedLimbState, LimbState, SHIELD_BASH_PUSHED_LIMB_STATE, SHIELD_BASH_WIND_UP_LIMB_STATE, SHIELD_BLOCKING_LIMB_STATE, SPEAR_CHARGED_LIMB_STATE, TRIBESMAN_RESTING_LIMB_STATE } from "battletribes-shared/attack-patterns";
 import RenderAttachPoint from "../render-parts/RenderAttachPoint";
 import { playSound } from "../sound";
 import { BlockType } from "../../../shared/src/boxes/boxes";
@@ -181,6 +180,38 @@ const BOW_CHARGE_NON_DOMINANT_LIMB_STATE: LimbState = {
 };
 
 type InventoryUseEntityType = EntityType.player | EntityType.tribeWorker | EntityType.tribeWarrior | EntityType.zombie;
+
+const createZeroedLimbInfo = (inventoryName: InventoryName): LimbInfo => {
+   return {
+      selectedItemSlot: 0,
+      heldItemType: null,
+      inventoryName: inventoryName,
+      spearWindupCooldowns: {},
+      crossbowLoadProgressRecord: {},
+      foodEatingTimer: 0,
+      action: 0,
+      lastAttackTicks: 0,
+      lastEatTicks: 0,
+      lastBowChargeTicks: 0,
+      lastSpearChargeTicks: 0,
+      lastBattleaxeChargeTicks: 0,
+      lastCrossbowLoadTicks: 0,
+      lastCraftTicks: 0,
+      lastAttackWindupTicks: 0,
+      thrownBattleaxeItemID: 0,
+      lastAttackCooldown: 0,
+      currentActionElapsedTicks: 0,
+      currentActionDurationTicks: 0,
+      currentActionPauseTicksRemaining: 0,
+      currentActionRate: 0,
+      currentActionStartLimbState: createZeroedLimbState(),
+      currentActionEndLimbState: createZeroedLimbState(),
+      animationStartOffset: new Point(-1, -1),
+      animationEndOffset: new Point(-1, -1),
+      animationDurationTicks: 0,
+      animationTicksElapsed: 0
+   };
+}
 
 const readLimbStateFromPacket = (reader: PacketReader): LimbState => {
    const direction = reader.readNumber();
@@ -382,14 +413,22 @@ class InventoryUseComponent extends ServerComponent{
    public updateFromData(reader: PacketReader): void {
       const numUseInfos = reader.readNumber();
       for (let i = 0; i < numUseInfos; i++) {
-         const limbInfo = this.limbInfos[i];
-
          const usedInventoryName = reader.readNumber() as InventoryName;
-         if (limbInfo.inventoryName !== usedInventoryName) {
-            console.log("Limb info i=" + i);
-            console.log("Client inventory name: " + limbInfo.inventoryName);
-            console.log("Server used inventory name: " + usedInventoryName);
-            throw new Error();
+
+         let limbInfo: LimbInfo;
+         if (i >= this.limbInfos.length) {
+            // New limb info
+            limbInfo = createZeroedLimbInfo(usedInventoryName);
+         } else {
+            // Existing limb info
+            limbInfo = this.limbInfos[i];
+
+            if (limbInfo.inventoryName !== usedInventoryName) {
+               console.log("Limb info i=" + i);
+               console.log("Client inventory name: " + limbInfo.inventoryName);
+               console.log("Server used inventory name: " + usedInventoryName);
+               throw new Error();
+            }
          }
          
          const selectedItemSlot = reader.readNumber();
@@ -403,6 +442,7 @@ class InventoryUseComponent extends ServerComponent{
             spearWindupCooldowns[itemSlot] = cooldown;
          }
 
+         // @Garbage
          const crossbowLoadProgressRecord = readCrossbowLoadProgressRecord(reader);
 
          const foodEatingTimer = reader.readNumber();
@@ -475,11 +515,19 @@ class InventoryUseComponent extends ServerComponent{
    public updatePlayerFromData(reader: PacketReader): void {
       const numUseInfos = reader.readNumber();
       for (let i = 0; i < numUseInfos; i++) {
-         const limbInfo = this.limbInfos[i];
-
          const usedInventoryName = reader.readNumber() as InventoryName;
-         if (limbInfo.inventoryName !== usedInventoryName) {
-            throw new Error();
+
+         let limbInfo: LimbInfo;
+         if (i >= this.limbInfos.length) {
+            // New limb info
+            limbInfo = createZeroedLimbInfo(usedInventoryName);
+         } else {
+            // Existing limb info
+            limbInfo = this.limbInfos[i];
+
+            if (limbInfo.inventoryName !== usedInventoryName) {
+               throw new Error();
+            }
          }
 
          reader.padOffset(2 * Float32Array.BYTES_PER_ELEMENT);

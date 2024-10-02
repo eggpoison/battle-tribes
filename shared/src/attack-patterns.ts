@@ -223,6 +223,16 @@ export const SPEAR_DAMAGE_BOX_INFO: LimbHeldItemDamageBoxInfo = {
    showLargeTexture: true
 };
 
+export function createZeroedLimbState(): LimbState {
+   return {
+      direction: 0,
+      extraOffset: 0,
+      rotation: 0,
+      extraOffsetX: 0,
+      extraOffsetY: 0
+   };
+}
+
 export function copyLimbState(limbState: LimbState): LimbState {
    return {
       direction: limbState.direction,

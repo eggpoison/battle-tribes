@@ -5,7 +5,6 @@ import { RenderPart } from "../render-parts/render-parts";
 import ServerComponent from "./ServerComponent";
 import { Colour, hueShift, lerp, multiColourLerp } from "battletribes-shared/utils";
 import { Settings } from "battletribes-shared/settings";
-import Board from "../Board";
 import { PacketReader } from "battletribes-shared/packets";
 import { EntityID, EntityType } from "battletribes-shared/entities";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
@@ -112,30 +111,17 @@ const getLayerColour = (entity: Entity, r: number, g: number, b: number, layer: 
 class LayeredRodComponent extends ServerComponent {
    public readonly renderParts = new Array<RenderPart>();
 
-   public readonly numLayers: number;
+   public numLayers = 0;
    
-   public readonly naturalBendX: number;
-   public readonly naturalBendY: number;
+   public naturalBendX = 0;
+   public naturalBendY = 0;
    
    public bendX = 0;
    public bendY = 0;
 
-   private readonly r: number;
-   private readonly g: number;
-   private readonly b: number;
-   
-   constructor(entity: Entity, reader: PacketReader) {
-      super(entity);
-
-      this.numLayers = reader.readNumber();
-      this.naturalBendX = reader.readNumber();
-      this.naturalBendY = reader.readNumber();
-
-      // @Temporary
-      this.r = reader.readNumber();
-      this.g = reader.readNumber();
-      this.b = reader.readNumber();
-   }
+   private r = 0;
+   private g = 0;
+   private b = 0;
 
    public onLoad(): void {
       const bendX = this.naturalBendX;
@@ -205,7 +191,14 @@ class LayeredRodComponent extends ServerComponent {
    }
 
    public updateFromData(reader: PacketReader): void {
-      reader.padOffset(6 * Float32Array.BYTES_PER_ELEMENT);
+      this.numLayers = reader.readNumber();
+      this.naturalBendX = reader.readNumber();
+      this.naturalBendY = reader.readNumber();
+
+      // @Temporary
+      this.r = reader.readNumber();
+      this.g = reader.readNumber();
+      this.b = reader.readNumber();
    }
 }
 

@@ -14,31 +14,21 @@ const GOBLIN_ESCAPE_SOUNDS: ReadonlyArray<AudioFilePath> = ["goblin-escape-1.mp3
 const GOBLIN_AMBIENT_SOUNDS: ReadonlyArray<AudioFilePath> = ["goblin-ambient-1.mp3", "goblin-ambient-2.mp3", "goblin-ambient-3.mp3", "goblin-ambient-4.mp3", "goblin-ambient-5.mp3"];
 
 class TribesmanAIComponent extends ServerComponent {
-   public readonly name: number;
-   public readonly untitledDescriptor: number;
-   public aiType: TribesmanAIType;
-   public relationsWithPlayer: number;
+   public name = 0;
+   public untitledDescriptor = 0;
+   public aiType = TribesmanAIType.idle;
+   public relationsWithPlayer = 0;
 
-   public craftingItemType: ItemType;
-   public craftingProgress: number;
-
-   constructor(entity: Entity, reader: PacketReader) {
-      super(entity);
-
-      this.name = reader.readNumber();
-      this.untitledDescriptor = reader.readNumber();
-      this.aiType = reader.readNumber();
-      this.relationsWithPlayer = reader.readNumber();
-      this.craftingItemType = reader.readNumber();
-      this.craftingProgress = reader.readNumber();
-   }
+   public craftingItemType: ItemType = 0;
+   public craftingProgress = 0;
 
    public padData(reader: PacketReader): void {
       reader.padOffset(6 * Float32Array.BYTES_PER_ELEMENT);
    }
 
    public updateFromData(reader: PacketReader): void {
-      reader.padOffset(2 * Float32Array.BYTES_PER_ELEMENT);
+      this.name = reader.readNumber();
+      this.untitledDescriptor = reader.readNumber();
       this.aiType = reader.readNumber();
       this.relationsWithPlayer = reader.readNumber();
       this.craftingItemType = reader.readNumber();

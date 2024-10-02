@@ -1,6 +1,5 @@
 import { PlanterBoxPlant } from "battletribes-shared/components";
 import ServerComponent from "./ServerComponent";
-import Entity from "../Entity";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { ItemType } from "battletribes-shared/items/items";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
@@ -29,20 +28,10 @@ export const SEED_TO_PLANT_RECORD: Partial<Record<ItemType, PlanterBoxPlant>> = 
 };
 
 class PlantComponent extends ServerComponent {
-   public readonly plant: PlanterBoxPlant;
-   public growthProgress: number;
+   public plant: PlanterBoxPlant = 0;
+   public growthProgress = 0;
    
    private plantRenderPart: TexturedRenderPart | null = null;
-   
-   constructor(entity: Entity, reader: PacketReader) {
-      super(entity);
-
-      this.plant = reader.readNumber();
-      this.growthProgress = reader.readNumber();
-      const numFruit = reader.readNumber();
-
-      this.updatePlantRenderPart(this.plant, this.growthProgress, numFruit);
-   }
 
    private updatePlantRenderPart(plant: PlanterBoxPlant | null, growthProgress: number, numFruits: number): void {
       if (plant !== null) {
@@ -85,7 +74,8 @@ class PlantComponent extends ServerComponent {
    }
 
    public updateFromData(reader: PacketReader): void {
-      reader.padOffset(Float32Array.BYTES_PER_ELEMENT);
+
+      this.plant = reader.readNumber();
       this.growthProgress = reader.readNumber();
       const numFruit = reader.readNumber();
       

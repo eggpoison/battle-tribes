@@ -1,6 +1,5 @@
 import { PlanterBoxPlant, ServerComponentType } from "battletribes-shared/components";
 import ServerComponent from "./ServerComponent";
-import Entity from "../Entity";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { playSound } from "../sound";
 import { customTickIntervalHasPassed, randInt } from "battletribes-shared/utils";
@@ -14,39 +13,8 @@ import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 class PlanterBoxComponent extends ServerComponent {
    private moundRenderPart: RenderPart | null = null;
    
-   public hasPlant: boolean;
-   public isFertilised: boolean;
-   
-   constructor(entity: Entity, reader: PacketReader) {
-      super(entity);
-
-      const plantType = reader.readNumber();
-      this.hasPlant = plantType !== -1;
-      this.isFertilised = reader.readBoolean();
-      reader.padOffset(3);
-      
-      this.updateMoundRenderPart(plantType);
-   }
-
-   private updateMoundRenderPart(plantType: PlanterBoxPlant | -1): void {
-      if (plantType !== -1) {
-         if (this.moundRenderPart === null) {
-            // @Temporary
-            const textureSource = plantType === PlanterBoxPlant.iceSpikes ? "entities/plant/snow-clump.png" : "entities/plant/dirt-clump.png";
-            
-            this.moundRenderPart = new TexturedRenderPart(
-               null,
-               1,
-               Math.PI / 2 * randInt(0, 3),
-               getTextureArrayIndex(textureSource)
-            );
-            this.entity.attachRenderThing(this.moundRenderPart);
-         }
-      } else if (this.moundRenderPart !== null) {
-         this.entity.removeRenderPart(this.moundRenderPart);
-         this.moundRenderPart = null;
-      }
-   }
+   public hasPlant = false;
+   public isFertilised = false;
 
    public padData(reader: PacketReader): void {
       reader.padOffset(2 * Float32Array.BYTES_PER_ELEMENT);
@@ -75,7 +43,23 @@ class PlanterBoxComponent extends ServerComponent {
       }
       this.hasPlant = hasPlant;
 
-      this.updateMoundRenderPart(plantType);
+      if (plantType !== -1) {
+         if (this.moundRenderPart === null) {
+            // @Temporary
+            const textureSource = plantType === PlanterBoxPlant.iceSpikes ? "entities/plant/snow-clump.png" : "entities/plant/dirt-clump.png";
+            
+            this.moundRenderPart = new TexturedRenderPart(
+               null,
+               1,
+               Math.PI / 2 * randInt(0, 3),
+               getTextureArrayIndex(textureSource)
+            );
+            this.entity.attachRenderThing(this.moundRenderPart);
+         }
+      } else if (this.moundRenderPart !== null) {
+         this.entity.removeRenderPart(this.moundRenderPart);
+         this.moundRenderPart = null;
+      }
    }
 }
 

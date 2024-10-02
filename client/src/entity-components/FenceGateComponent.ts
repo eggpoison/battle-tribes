@@ -37,16 +37,12 @@ const getFenceGateDoorInfo = (openProgress: number): DoorInfo => {
 class FenceGateComponent extends ServerComponent {
    private readonly doorRenderPart: RenderPart;
 
-   public openProgress: number;
+   public openProgress = 0;
    
-   constructor(entity: Entity, reader: PacketReader) {
+   constructor(entity: Entity) {
       super(entity);
 
-      reader.padOffset(Float32Array.BYTES_PER_ELEMENT);
-      this.openProgress = reader.readNumber();
-
       this.doorRenderPart = this.entity.getRenderThing("fenceGateComponent:door") as RenderPart;
-      this.updateDoor();
    }
 
    private updateDoor(): void {
@@ -62,6 +58,7 @@ class FenceGateComponent extends ServerComponent {
    }
 
    public updateFromData(reader: PacketReader): void {
+      // @Incomplete?
       reader.padOffset(Float32Array.BYTES_PER_ELEMENT);
       this.openProgress = reader.readNumber();
       

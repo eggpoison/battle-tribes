@@ -38,19 +38,10 @@ const getTunnelDoorInfo = (doorBit: number, openProgress: number): TunnelDoorInf
 
 class TunnelComponent extends ServerComponent {
    private readonly doorRenderParts: Record<number, RenderPart> = {};
-   public doorBitset: number;
+   public doorBitset = 0;
 
-   public topDoorOpenProgress: number;
-   public bottomDoorOpenProgress: number;
-   
-   constructor(entity: Entity, reader: PacketReader) {
-      super(entity);
-
-      this.doorBitset = reader.readNumber();
-      this.topDoorOpenProgress = reader.readNumber();
-      this.bottomDoorOpenProgress = reader.readNumber();
-      this.updateFromData(reader);
-   }
+   public topDoorOpenProgress = 0;
+   public bottomDoorOpenProgress = 0;
 
    private addDoor(doorBit: number): void {
       const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);

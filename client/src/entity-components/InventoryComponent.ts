@@ -1,6 +1,5 @@
 import { InventoryComponentData, ServerComponentType } from "battletribes-shared/components";
 import ServerComponent from "./ServerComponent";
-import Entity from "../Entity";
 import { InventoryName, Inventory, Item, ITEM_TYPE_RECORD } from "battletribes-shared/items/items";
 import { PacketReader } from "battletribes-shared/packets";
 import { ItemType } from "battletribes-shared/items/items";

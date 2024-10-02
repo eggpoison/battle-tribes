@@ -26,12 +26,13 @@ import { gameScreenSetIsDead } from "../components/game/GameScreen";
 import { updateHealthBar } from "../components/game/HealthBar";
 import { selectItemSlot } from "../components/game/GameInteractableLayer";
 import { createComponent } from "../entity-components/component-creation";
-import { addEntity, addLayer, changeEntityLayer, entityExists, getEntityByID, getEntityLayer, layers, removeEntity, setCurrentLayer } from "../world";
+import { addEntity, addLayer, changeEntityLayer, entityExists, getEntityByID, getEntityLayer, layers, registerBasicEntityInfo, removeEntity, setCurrentLayer } from "../world";
 import { NEIGHBOUR_OFFSETS } from "../utils";
 import { createRiverSteppingStoneData } from "../rendering/webgl/river-rendering";
 import Layer, { getTileIndexIncludingEdges, tileIsWithinEdge } from "../Layer";
 import { TransformComponentArray } from "../entity-components/TransformComponent";
 import { playSound } from "../sound";
+import ServerComponent from "../entity-components/ServerComponent";
 
 export function processInitialGameDataPacket(reader: PacketReader): void {
    // Player ID
@@ -302,7 +303,7 @@ const processPlayerUpdateData = (reader: PacketReader): void => {
 
       const component = Player.instance.getServerComponent(componentType);
       if (typeof component.updatePlayerFromData !== "undefined") {
-         component.updatePlayerFromData(reader);
+         component.updatePlayerFromData(reader, false);
       } else {
          component.padData(reader);
       }
@@ -320,6 +321,9 @@ export function processEntityCreationData(entityID: EntityID, reader: PacketRead
 
    const entity = createEntity(entityID, entityType);
    const isPlayer = entityID === Game.playerID;
+
+   const layer = layers[layerIdx];
+   registerBasicEntityInfo(entity, layer)
    
    const numComponents = reader.readNumber();
    for (let i = 0; i < numComponents; i++) {
@@ -327,7 +331,7 @@ export function processEntityCreationData(entityID: EntityID, reader: PacketRead
       
       const component = createComponent(entity, componentType);
       if (isPlayer) {
-         component.updatePlayerFromData!(reader);
+         component.updatePlayerFromData!(reader, true);
       } else {
          component.updateFromData(reader);
       }
@@ -337,8 +341,7 @@ export function processEntityCreationData(entityID: EntityID, reader: PacketRead
       componentArray.addComponent(entity.id, component);
    }
 
-   const layer = layers[layerIdx];
-   addEntity(entity, layer);
+   addEntity(entity);
 
    // Set the player instance
    if (isPlayer) {

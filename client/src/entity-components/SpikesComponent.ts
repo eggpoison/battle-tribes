@@ -20,13 +20,10 @@ class SpikesComponent extends ServerComponent {
    
    private readonly leafRenderParts: ReadonlyArray<RenderPart>;
 
-   public isCovered: boolean;
+   public isCovered = false;
 
-   constructor(entity: Entity, reader: PacketReader) {
+   constructor(entity: Entity) {
       super(entity);
-
-      this.isCovered = reader.readBoolean();
-      reader.padOffset(3);
 
       const leafRenderParts = new Array<RenderPart>();
       for (let i = 0; i < NUM_SMALL_COVER_LEAVES; i++) {

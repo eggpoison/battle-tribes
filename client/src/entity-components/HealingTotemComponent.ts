@@ -2,7 +2,6 @@ import { HealingTotemTargetData, ServerComponentType } from "battletribes-shared
 import { Settings } from "battletribes-shared/settings";
 import { Point, angle, distance, lerp, randInt } from "battletribes-shared/utils";
 import ServerComponent from "./ServerComponent";
-import Entity from "../Entity";
 import { createHealingParticle } from "../particles";
 import { Light, addLight, attachLightToEntity, removeLight } from "../lights";
 import { PacketReader } from "battletribes-shared/packets";
@@ -17,14 +16,14 @@ class HealingTotemComponent extends ServerComponent {
    public ticksSpentHealing = 0;
 
    public eyeLights = new Array<Light>();
-   
-   constructor(entity: Entity, reader: PacketReader) {
-      super(entity);
 
-      this.updateHealingTargets(reader);
+   public padData(reader: PacketReader): void {
+      const numTargets = reader.readNumber();
+      reader.padOffset(4 * Float32Array.BYTES_PER_ELEMENT * numTargets);
    }
 
-   private updateHealingTargets(reader: PacketReader): void {
+   public updateFromData(reader: PacketReader): void {
+      // @Garbage
       const healTargets = new Array<HealingTotemTargetData>();
       const numTargets = reader.readNumber();
       for (let i = 0; i < numTargets; i++) {
@@ -42,15 +41,6 @@ class HealingTotemComponent extends ServerComponent {
       }
       
       this.healingTargetsData = healTargets;
-   }
-
-   public padData(reader: PacketReader): void {
-      const numTargets = reader.readNumber();
-      reader.padOffset(4 * Float32Array.BYTES_PER_ELEMENT * numTargets);
-   }
-
-   public updateFromData(reader: PacketReader): void {
-      this.updateHealingTargets(reader);
    }
 }
 

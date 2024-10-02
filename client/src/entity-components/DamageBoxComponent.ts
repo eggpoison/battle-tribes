@@ -1,6 +1,5 @@
 import ServerComponent from "./ServerComponent";
 import { PacketReader } from "battletribes-shared/packets";
-import Entity from "../Entity";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 import { ServerComponentType } from "battletribes-shared/components";
 import CircularBox from "battletribes-shared/boxes/CircularBox";
@@ -76,12 +75,6 @@ class DamageBoxComponent extends ServerComponent {
 
    public nextDamageBoxLocalID = 1;
    public nextBlockBoxLocalID = 1;
-   
-   constructor(entity: Entity, reader: PacketReader) {
-      super(entity);
-      
-      this.readInData(reader);
-   }
 
    public padData(reader: PacketReader): void {
       const numCircular = reader.readNumber();
@@ -90,8 +83,8 @@ class DamageBoxComponent extends ServerComponent {
       reader.padOffset(10 * Float32Array.BYTES_PER_ELEMENT * numRectangular);
    }
 
-   private readInData(reader: PacketReader): void {
-      // @Speed
+   public updateFromData(reader: PacketReader): void {
+      // @Speed @Garbage
       const missingDamageBoxLocalIDs = this.damageBoxLocalIDs.slice();
       
       const numCircularDamageBoxes = reader.readNumber();
@@ -247,10 +240,6 @@ class DamageBoxComponent extends ServerComponent {
          this.blockBoxLocalIDs.splice(idx, 1);
          delete this.blockBoxesRecord[localID];
       }
-   }
-
-   public updateFromData(reader: PacketReader): void {
-      this.readInData(reader);
    }
 
    public updatePlayerFromData(reader: PacketReader): void {

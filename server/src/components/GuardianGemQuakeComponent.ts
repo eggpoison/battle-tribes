@@ -1,11 +1,10 @@
-import { Hitbox, HitboxFlag } from "../../../shared/src/boxes/boxes";
+import { Hitbox } from "../../../shared/src/boxes/boxes";
 import { ServerComponentType } from "../../../shared/src/components";
 import { EntityID, PlayerCauseOfDeath } from "../../../shared/src/entities";
 import { AttackEffectiveness } from "../../../shared/src/entity-damage-types";
 import { Packet } from "../../../shared/src/packets";
 import { Settings } from "../../../shared/src/settings";
 import { Point } from "../../../shared/src/utils";
-import { registerDirtyEntity } from "../server/player-clients";
 import { destroyEntity, getEntityAgeTicks } from "../world";
 import { ComponentArray } from "./ComponentArray";
 import { HealthComponentArray, canDamageEntity, damageEntity, addLocalInvulnerabilityHash } from "./HealthComponent";
@@ -48,8 +47,6 @@ function onTick(_component: GuardianGemQuakeComponent, quake: EntityID): void {
       // @Hack: Shouldn't need a physics component to do this!
       const physicsComponent = PhysicsComponentArray.getComponent(quake);
       physicsComponent.hitboxesAreDirty = true;
-      // @Hack
-      registerDirtyEntity(quake);
 
       if (age >= Vars.LIFETIME_TICKS) {
          destroyEntity(quake);

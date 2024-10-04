@@ -67,6 +67,7 @@ import { createFibrePlantConfig } from "./entities/resources/fibre-plant";
 import { createGuardianConfig } from "./entities/mobs/guardian";
 import { createGuardianGemQuakeConfig } from "./entities/guardian-gem-quake";
 import { createGuardianGemFragmentProjectileConfig } from "./entities/projectiles/guardian-gem-fragment-projectile";
+import { createGuardianSpikyBallConfig } from "./entities/projectiles/guardian-spiky-ball";
 
 // @Robustness: from the given entity type, deduce which component params will be returned.
 // - Will require defining the component configs in a variable to be analysed at compile-time, not in functions
@@ -141,5 +142,6 @@ export function createEntityConfig(entityType: EntityType): ComponentConfig<Serv
       case EntityType.guardian: return createGuardianConfig() as any;
       case EntityType.guardianGemQuake: return createGuardianGemQuakeConfig() as any;
       case EntityType.guardianGemFragmentProjectile: return createGuardianGemFragmentProjectileConfig() as any;
+      case EntityType.guardianSpikyBall: return createGuardianSpikyBallConfig() as any;
    }
 }

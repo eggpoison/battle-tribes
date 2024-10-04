@@ -26,6 +26,7 @@ import GolemComponent from "./GolemComponent";
 import GuardianComponent from "./GuardianComponent";
 import { GuardianGemFragmentProjectileComponent } from "./GuardianGemFragmentProjectileComponent";
 import { GuardianGemQuakeComponent } from "./GuardianGemQuakeComponent";
+import { GuardianSpikyBallComponent } from "./GuardianSpikyBallComponent";
 import HealingTotemComponent from "./HealingTotemComponent";
 import HealthComponent from "./HealthComponent";
 import HutComponent from "./HutComponent";
@@ -139,5 +140,6 @@ export function createComponent(entity: Entity, componentType: ServerComponentTy
       case ServerComponentType.guardian: return new GuardianComponent(entity);
       case ServerComponentType.guardianGemQuake: return new GuardianGemQuakeComponent(entity);
       case ServerComponentType.guardianGemFragmentProjectile: return new GuardianGemFragmentProjectileComponent(entity);
+      case ServerComponentType.guardianSpikyBall: return new GuardianSpikyBallComponent(entity);
    }
 }

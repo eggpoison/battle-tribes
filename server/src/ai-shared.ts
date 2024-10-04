@@ -75,6 +75,10 @@ export function turnToPosition(entity: EntityID, targetPosition: Point, turnSpee
    physicsComponent.turnSpeed = turnSpeed;
 }
 
+export function stopTurning(physicsComponent: PhysicsComponent): void {
+   physicsComponent.turnSpeed = 0;
+}
+
 export function moveEntityToPosition(entity: EntityID, positionX: number, positionY: number, acceleration: number, turnSpeed: number): void {
    const transformComponent = TransformComponentArray.getComponent(entity);
    const physicsComponent = PhysicsComponentArray.getComponent(entity);

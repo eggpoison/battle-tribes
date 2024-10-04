@@ -14,7 +14,7 @@ import RectangularBox from "battletribes-shared/boxes/RectangularBox";
 import WanderAI from "../../ai/WanderAI";
 import { AIType } from "../../components/AIHelperComponent";
 import { Biome, TileType } from "../../../../shared/src/tiles";
-import Layer from "../../Layer";
+import Layer, { getTileIndexFromPos } from "../../Layer";
 import { Settings } from "../../../../shared/src/settings";
 import { TransformComponentArray } from "../../components/TransformComponent";
 
@@ -56,7 +56,7 @@ const positionIsOnlyNearWater = (layer: Layer, x: number, y: number): boolean =>
 }
 
 function tileIsValidCallback(entity: EntityID, layer: Layer, x: number, y: number): boolean {
-   const tileIndex = layer.getTileIndexFromPos(x, y);
+   const tileIndex = getTileIndexFromPos(x, y);
    if (layer.tileIsWall(tileIndex) || layer.getTileBiome(tileIndex) !== Biome.river) {
       return false;
    }

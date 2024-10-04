@@ -3,9 +3,7 @@ import { ServerComponentType } from "../../../shared/src/components";
 import { EntityID, PlayerCauseOfDeath } from "../../../shared/src/entities";
 import { AttackEffectiveness } from "../../../shared/src/entity-damage-types";
 import { Packet } from "../../../shared/src/packets";
-import { Settings } from "../../../shared/src/settings";
 import { Point, randFloat, randInt } from "../../../shared/src/utils";
-import { destroyEntity, getEntityAgeTicks } from "../world";
 import { ComponentArray } from "./ComponentArray";
 import { HealthComponentArray, canDamageEntity, damageEntity, addLocalInvulnerabilityHash } from "./HealthComponent";
 

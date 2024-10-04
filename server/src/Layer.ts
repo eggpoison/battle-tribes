@@ -52,6 +52,12 @@ export function positionIsInWorld(x: number, y: number): boolean {
    return x >= 0 && x < Settings.BOARD_DIMENSIONS * Settings.TILE_SIZE && y >= 0 && y < Settings.BOARD_DIMENSIONS * Settings.TILE_SIZE;
 }
 
+export function getTileIndexFromPos(x: number, y: number): TileIndex {
+   const tileX = Math.floor(x / Settings.TILE_SIZE);
+   const tileY = Math.floor(y / Settings.TILE_SIZE);
+   return getTileIndexIncludingEdges(tileX, tileY);
+}
+
 export default class Layer {
    public tileTypes: Float32Array;
    public tileBiomes: Float32Array;
@@ -139,12 +145,6 @@ export default class Layer {
       const previousCheck = (gameTicks - 1) / ticksPerInterval;
       const check = gameTicks / ticksPerInterval;
       return Math.floor(previousCheck) !== Math.floor(check);
-   }
-
-   public getTileIndexFromPos(x: number, y: number): TileIndex {
-      const tileX = Math.floor(x / Settings.TILE_SIZE);
-      const tileY = Math.floor(y / Settings.TILE_SIZE);
-      return getTileIndexIncludingEdges(tileX, tileY);
    }
 
    public getTileType(tileIndex: number): TileType {

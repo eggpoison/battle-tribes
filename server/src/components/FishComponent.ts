@@ -6,11 +6,10 @@ import { Packet } from "battletribes-shared/packets";
 import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
 import { InventoryName, ItemType } from "battletribes-shared/items/items";
 import { Settings } from "battletribes-shared/settings";
-import { TileType, Biome } from "battletribes-shared/tiles";
-import { customTickIntervalHasPassed, Point, randFloat, TileIndex, UtilVars } from "battletribes-shared/utils";
-import { stopEntity, runHerdAI, entityHasReachedPosition } from "../ai-shared";
+import { TileType } from "battletribes-shared/tiles";
+import { customTickIntervalHasPassed, Point, randFloat, UtilVars } from "battletribes-shared/utils";
+import { stopEntity, runHerdAI } from "../ai-shared";
 import { chooseEscapeEntity, runFromAttackingEntity } from "../ai/escape-ai";
-import Layer, { getTileX, getTileY } from "../Layer";
 import { entitiesAreColliding, CollisionVars } from "../collision";
 import { getRandomPositionInEntity } from "../Entity";
 import { AIHelperComponentArray } from "./AIHelperComponent";
@@ -19,7 +18,6 @@ import { damageEntity, HealthComponentArray, canDamageEntity, addLocalInvulnerab
 import { InventoryComponentArray, hasInventory, getInventory } from "./InventoryComponent";
 import { PhysicsComponentArray, applyKnockback } from "./PhysicsComponent";
 import { TransformComponentArray, getEntityTile } from "./TransformComponent";
-import { WanderAIComponentArray } from "./WanderAIComponent";
 import { TribeMemberComponentArray } from "./TribeMemberComponent";
 import { entityExists, getEntityLayer, getEntityType } from "../world";
 

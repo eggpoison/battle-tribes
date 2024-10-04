@@ -7,6 +7,7 @@ import { Point, TileIndex } from "../../../../shared/src/utils";
 import GuardianAI from "../../ai/GuardianAI";
 import GuardianCrystalBurstAI from "../../ai/GuardianCrystalBurstAI";
 import GuardianCrystalSlamAI from "../../ai/GuardianCrystalSlamAI";
+import GuardianSpikyBallSummonAI from "../../ai/GuardianSpikyBallSummonAI ";
 import WanderAI from "../../ai/WanderAI";
 import { ComponentConfig } from "../../components";
 import { AIType } from "../../components/AIHelperComponent";
@@ -74,10 +75,11 @@ export function createGuardianConfig(): ComponentConfig<ComponentTypes> {
          ignoreDecorativeEntities: true,
          visionRange: Vars.VISION_RANGE,
          ais: {
-            [AIType.wander]:               new WanderAI(200, Math.PI * 0.5, 0.6, tileIsValidCallback),
-            [AIType.guardian]:             new GuardianAI(280, Math.PI * 0.5),
-            [AIType.guardianCrystalSlam]:  new GuardianCrystalSlamAI(200, Math.PI * 0.3),
-            [AIType.guardianCrystalBurst]: new GuardianCrystalBurstAI(Math.PI * 0.5)
+            [AIType.wander]:                  new WanderAI(200, Math.PI * 0.5, 0.6, tileIsValidCallback),
+            [AIType.guardian]:                new GuardianAI(280, Math.PI * 0.5),
+            [AIType.guardianCrystalSlam]:     new GuardianCrystalSlamAI(200, Math.PI * 0.3),
+            [AIType.guardianCrystalBurst]:    new GuardianCrystalBurstAI(Math.PI * 0.5),
+            [AIType.guardianSpikyBallSummon]: new GuardianSpikyBallSummonAI()
          }
       },
       [ServerComponentType.wanderAI]: {},

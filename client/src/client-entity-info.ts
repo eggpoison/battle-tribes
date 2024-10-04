@@ -208,6 +208,9 @@ const CLIENT_ENTITY_INFO_RECORD: Record<EntityType, ClientEntityInfo> = {
    },
    [EntityType.guardianGemFragmentProjectile]: {
       name: "Guardian Gem Fragment Projectile"
+   },
+   [EntityType.guardianSpikyBall]: {
+      name: "Guardian Spiky Ball"
    }
 };
 

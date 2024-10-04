@@ -30,7 +30,8 @@ export const enum GuardianVars {
 const enum AttackType {
    none,
    crystalSlam,
-   crystalBurst
+   crystalBurst,
+   summonSpikyBalls
 }
 
 export interface GuardianComponentParams {
@@ -180,7 +181,7 @@ function onTick(guardianComponent: GuardianComponent, guardian: EntityID): void 
             guardianComponent.ticksUntilNextAttack--;
             if (guardianComponent.ticksUntilNextAttack === 0) {
                // guardianComponent.attackType = randInt(1, 2);
-               guardianComponent.attackType = 2 ;
+               guardianComponent.attackType = 3;
             }
          }
          // If just passed staging position, start attack
@@ -200,6 +201,11 @@ function onTick(guardianComponent: GuardianComponent, guardian: EntityID): void 
             case AttackType.crystalBurst: {
                const crystalBurstAI = aiHelperComponent.getGuardianCrystalBurstAI();
                crystalBurstAI.run(guardian, target);
+               return;
+            }
+            case AttackType.summonSpikyBalls: {
+               const spikyBallSummonAI = aiHelperComponent.getSpikyBallSummonAI();
+               spikyBallSummonAI.run(guardian, target);
                return;
             }
             default: {

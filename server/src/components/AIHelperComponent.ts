@@ -12,19 +12,22 @@ import WanderAI from "../ai/WanderAI";
 import GuardianAI from "../ai/GuardianAI";
 import GuardianCrystalSlamAI from "../ai/GuardianCrystalSlamAI";
 import GuardianCrystalBurstAI from "../ai/GuardianCrystalBurstAI";
+import GuardianSpikyBallSummonAI from "../ai/GuardianSpikyBallSummonAI ";
 
 export const enum AIType {
    wander,
    guardian,
    guardianCrystalSlam,
-   guardianCrystalBurst
+   guardianCrystalBurst,
+   guardianSpikyBallSummon
 }
 
 const _AIClasses = {
    [AIType.wander]: (): WanderAI => 0 as any,
    [AIType.guardian]: (): GuardianAI => 0 as any,
    [AIType.guardianCrystalSlam]: (): GuardianCrystalSlamAI => 0 as any,
-   [AIType.guardianCrystalBurst]: (): GuardianCrystalBurstAI => 0 as any
+   [AIType.guardianCrystalBurst]: (): GuardianCrystalBurstAI => 0 as any,
+   [AIType.guardianSpikyBallSummon]: (): GuardianSpikyBallSummonAI => 0 as any
 } satisfies Record<AIType, object>;
 type AIClasses = typeof _AIClasses;
 type AIClass<T extends AIType> = ReturnType<AIClasses[T]>;
@@ -74,6 +77,10 @@ export class AIHelperComponent implements AIHelperComponentParams {
 
    public getGuardianCrystalBurstAI(): GuardianCrystalBurstAI {
       return this.ais[AIType.guardianCrystalBurst]!;
+   }
+
+   public getSpikyBallSummonAI(): GuardianSpikyBallSummonAI {
+      return this.ais[AIType.guardianSpikyBallSummon]!;
    }
 }
 

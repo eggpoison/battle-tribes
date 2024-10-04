@@ -66,6 +66,7 @@ import { DamageBoxComponent, DamageBoxComponentParams } from "./components/Damag
 import { GuardianComponent, GuardianComponentParams } from "./components/GuardianComponent";
 import { GuardianGemQuakeComponent, GuardianGemQuakeComponentParams } from "./components/GuardianGemQuakeComponent";
 import { GuardianGemFragmentProjectileComponent, GuardianGemFragmentProjectileComponentParams } from "./components/GuardianGemFragmentProjectileComponent";
+import { GuardianSpikyBallComponent, GuardianSpikyBallComponentParams } from "./components/GuardianSpikyBallComponent";
 
 const ComponentParamsRecord = {
    [ServerComponentType.aiHelper]: (): AIHelperComponentParams => 0 as any,
@@ -134,7 +135,8 @@ const ComponentParamsRecord = {
    [ServerComponentType.damageBox]: (): DamageBoxComponentParams => 0 as any,
    [ServerComponentType.guardian]: (): GuardianComponentParams => 0 as any,
    [ServerComponentType.guardianGemQuake]: (): GuardianGemQuakeComponentParams => 0 as any,
-   [ServerComponentType.guardianGemFragmentProjectile]: (): GuardianGemFragmentProjectileComponentParams => 0 as any
+   [ServerComponentType.guardianGemFragmentProjectile]: (): GuardianGemFragmentProjectileComponentParams => 0 as any,
+   [ServerComponentType.guardianSpikyBall]: (): GuardianSpikyBallComponentParams => 0 as any
 } satisfies Record<ServerComponentType, object>;
 
 export type ComponentParams<T extends ServerComponentType> = ReturnType<typeof ComponentParamsRecord[T]>;
@@ -207,7 +209,8 @@ export const ComponentClassRecord = {
    [ServerComponentType.damageBox]: () => DamageBoxComponent,
    [ServerComponentType.guardian]: () => GuardianComponent,
    [ServerComponentType.guardianGemQuake]: () => GuardianGemQuakeComponent,
-   [ServerComponentType.guardianGemFragmentProjectile]: () => GuardianGemFragmentProjectileComponent
+   [ServerComponentType.guardianGemFragmentProjectile]: () => GuardianGemFragmentProjectileComponent,
+   [ServerComponentType.guardianSpikyBall]: () => GuardianSpikyBallComponent
 } satisfies {
    [T in ServerComponentType]: () => {
       new (args: ComponentParams<T>): unknown;

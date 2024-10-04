@@ -28,15 +28,15 @@ export interface InventoryCreationInfo {
    readonly items: Array<ItemCreationInfo>;
 }
 
-export interface InventoryComponentParams {
-   inventories: Array<InventoryCreationInfo>;
-}
-
 export interface InventoryOptions {
    readonly acceptsPickedUpItems: boolean;
    readonly isDroppedOnDeath: boolean;
    /** Whether or not the inventory is included in packets sent to enemy players. */
    readonly isSentToEnemyPlayers: boolean;
+}
+
+export interface InventoryComponentParams {
+   inventories: Array<InventoryCreationInfo>;
 }
 
 export class InventoryComponent {

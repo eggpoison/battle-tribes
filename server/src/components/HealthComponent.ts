@@ -25,7 +25,6 @@ import { onPlantDeath, onPlantHit } from "../entities/plant";
 import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
 import { registerEntityHeal, registerEntityHit } from "../server/player-clients";
 import { ComponentArray } from "./ComponentArray";
-import Layer from "../Layer";
 import { TransformComponentArray } from "./TransformComponent";
 import { Packet } from "battletribes-shared/packets";
 import { destroyEntity, getEntityType } from "../world";

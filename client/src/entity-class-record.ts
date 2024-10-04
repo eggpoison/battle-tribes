@@ -66,6 +66,7 @@ import FibrePlant from "./entities/FibrePlant";
 import Guardian from "./entities/Guardian";
 import GuardianGemQuake from "./entities/GuardianGemQuake";
 import GuardianGemFragmentProjectile from "./entities/GuardianGemFragmentProjectile";
+import GuardianSpikyBall from "./entities/GuardianSpikyBall";
 
 // @Cleanup: remove this and just have entities be a collection of components
 export function createEntity(entityID: EntityID, entityType: EntityType): Entity {
@@ -138,6 +139,7 @@ export function createEntity(entityID: EntityID, entityType: EntityType): Entity
       case EntityType.guardian: return new Guardian(entityID);
       case EntityType.guardianGemQuake: return new GuardianGemQuake(entityID);
       case EntityType.guardianGemFragmentProjectile: return new GuardianGemFragmentProjectile(entityID);
+      case EntityType.guardianSpikyBall: return new GuardianSpikyBall(entityID);
       default: {
          const unreachable: never = entityType;
          return unreachable;

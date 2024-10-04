@@ -297,7 +297,7 @@ export default class GuardianComponent extends ServerComponent {
             this.entity.attachRenderThing(cracksRenderPart);
             this.limbCrackRenderParts.push(cracksRenderPart);
 
-            let light: Light = {
+            const light: Light = {
                offset: new Point(0, 0),
                intensity: 0.5,
                strength: 0.3,
@@ -306,7 +306,7 @@ export default class GuardianComponent extends ServerComponent {
                g: 0,
                b: 0
             };
-            let lightID = addLight(light);
+            const lightID = addLight(light);
             attachLightToRenderPart(lightID, cracksRenderPart.id);
             this.limbCrackLights.push(light);
          }
@@ -353,14 +353,15 @@ export default class GuardianComponent extends ServerComponent {
          this.setColours(this.emeraldRenderParts, this.emeraldLights, actualEmeraldGemActivation, 0, actualEmeraldGemActivation, 0);
          this.entity.dirty();
       }
-      if (amethystGemActivation !== this.amethystGemActivation) {
-         this.setColours(this.amethystRenderParts, this.amethystLights, amethystGemActivation, amethystGemActivation * 0.9, amethystGemActivation * 0.2, amethystGemActivation * 0.9);
+      const actualAmethystGemActivation = lerp(amethystGemActivation, 1, limbAmethystGemActivation);
+      if (actualAmethystGemActivation !== this.amethystGemActivation) {
+         this.setColours(this.amethystRenderParts, this.amethystLights, actualAmethystGemActivation, actualAmethystGemActivation * 0.9, actualAmethystGemActivation * 0.2, actualAmethystGemActivation * 0.9);
          this.entity.dirty();
       }
 
       this.rubyGemActivation = actualRubyGemActivation;
       this.emeraldGemActivation = actualEmeraldGemActivation;
-      this.amethystGemActivation = amethystGemActivation;
+      this.amethystGemActivation = actualAmethystGemActivation;
 
       if (limbRubyGemActivation !== this.limbRubyGemActivation || limbEmeraldGemActivation !== this.limbEmeraldGemActivation || limbAmethystGemActivation !== this.limbAmethystGemActivation) {
          for (let i = 0; i < this.limbCrackRenderParts.length; i++) {

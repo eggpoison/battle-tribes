@@ -266,6 +266,7 @@ const dirtifyPathfindingNodes = (entity: EntityID, physicsComponent: PhysicsComp
 const updatePosition = (entity: EntityID, physicsComponent: PhysicsComponent): void => {
    const transformComponent = TransformComponentArray.getComponent(entity);
    
+   // @Cleanup: aren't both these the same?
    if (physicsComponent.hitboxesAreDirty) {
       // @Incomplete: if hitboxes are dirty, should still resolve wall tile collisions, etc.
       transformComponent.cleanHitboxes(entity);
@@ -273,28 +274,24 @@ const updatePosition = (entity: EntityID, physicsComponent: PhysicsComponent): v
       physicsComponent.hitboxesAreDirty = false;
       
       dirtifyPathfindingNodes(entity, physicsComponent);
+      registerDirtyEntity(entity);
    } else if (physicsComponent.positionIsDirty) {
       transformComponent.cleanHitboxes(entity);
       transformComponent.updateContainingChunks(entity);
 
       dirtifyPathfindingNodes(entity, physicsComponent);
+      registerDirtyEntity(entity);
    }
 
    if (physicsComponent.positionIsDirty) {
       physicsComponent.positionIsDirty = false;
-
-      // Check to see if the entity has descended into the underground layer
-      const layer = getEntityLayer(entity);
-      const tileIndex = getEntityTile(transformComponent);
-      if (layer.tileTypes[tileIndex] === TileType.dropdown) {
-         changeEntityLayer(entity, undergroundLayer);
-      }
 
       transformComponent.resolveWallTileCollisions(entity);
 
       // If the object moved due to resolving wall tile collisions, recalculate
       if (physicsComponent.positionIsDirty) {
          transformComponent.cleanHitboxes(entity);
+         registerDirtyEntity(entity);
       }
 
       transformComponent.resolveBorderCollisions(entity);
@@ -302,9 +299,17 @@ const updatePosition = (entity: EntityID, physicsComponent: PhysicsComponent): v
       // If the object moved due to resolving border collisions, recalculate
       if (physicsComponent.positionIsDirty) {
          transformComponent.cleanHitboxes(entity);
+         registerDirtyEntity(entity);
       }
 
       transformComponent.updateIsInRiver(entity);
+
+      // Check to see if the entity has descended into the underground layer
+      const layer = getEntityLayer(entity);
+      const tileIndex = getEntityTile(transformComponent);
+      if (layer.tileTypes[tileIndex] === TileType.dropdown) {
+         changeEntityLayer(entity, undergroundLayer);
+      }
    }
 }
 

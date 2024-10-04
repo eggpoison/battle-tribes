@@ -8,7 +8,6 @@ import { applyAbsoluteKnockback, PhysicsComponentArray } from "../components/Phy
 import { TransformComponentArray } from "../components/TransformComponent";
 import { createGuardianGemQuakeConfig } from "../entities/guardian-gem-quake";
 import { createEntityFromConfig } from "../Entity";
-import { registerDirtyEntity } from "../server/player-clients";
 import { getEntityLayer } from "../world";
 
 const enum Vars {
@@ -92,8 +91,6 @@ export default class GuardianCrystalSlamAI {
       // @Copynpaste
       const physicsComponent = PhysicsComponentArray.getComponent(guardian);
       physicsComponent.hitboxesAreDirty = true;
-      // @Hack: Shouldn't we do this when we undirty the hitboxes?
-      registerDirtyEntity(guardian);
    }
    
    public run(guardian: EntityID, target: EntityID): void {

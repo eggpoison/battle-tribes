@@ -34,7 +34,7 @@ export class GuardianGemFragmentProjectileComponent extends ServerComponent {
             renderPart.setFlipX(true);
          }
 
-         const tintMultiplier = 0.75 * baseTintMultiplier;
+         const tintMultiplier = 0.85 * baseTintMultiplier;
          switch (gemType) {
             // Ruby
             case 0: {

@@ -8,7 +8,6 @@ import { PhysicsComponentArray } from "../components/PhysicsComponent";
 import { TransformComponentArray } from "../components/TransformComponent";
 import { createGuardianGemFragmentProjectileConfig } from "../entities/projectiles/guardian-gem-fragment-projectile";
 import { createEntityFromConfig } from "../Entity";
-import { registerDirtyEntity } from "../server/player-clients";
 import { getEntityLayer } from "../world";
 
 const enum Vars {
@@ -38,7 +37,7 @@ const createFragmentProjectile = (guardian: EntityID): void => {
    const config = createGuardianGemFragmentProjectileConfig();
    config[ServerComponentType.transform].position.x = originX;
    config[ServerComponentType.transform].position.y = originY;
-   config[ServerComponentType.transform].rotation = offsetDirection;
+   config[ServerComponentType.transform].rotation = offsetDirection + randFloat(-0.7, 0.7);
    config[ServerComponentType.physics].velocityX = vx;
    config[ServerComponentType.physics].velocityY = vy;
    config[ServerComponentType.projectile].owner = guardian;
@@ -70,8 +69,6 @@ export default class GuardianCrystalBurstAI {
       // @Copynpaste
       const physicsComponent = PhysicsComponentArray.getComponent(guardian);
       physicsComponent.hitboxesAreDirty = true;
-      // @Hack: Shouldn't we do this when we undirty the hitboxes?
-      registerDirtyEntity(guardian);
    }
    
    public run(guardian: EntityID, target: EntityID): void {

@@ -5,7 +5,6 @@ import { AttackEffectiveness } from "../../../shared/src/entity-damage-types";
 import { Packet } from "../../../shared/src/packets";
 import { Settings } from "../../../shared/src/settings";
 import { getAngleDiff, lerp, Point, randInt, TileIndex, UtilVars } from "../../../shared/src/utils";
-import { registerDirtyEntity } from "../server/player-clients";
 import { AIHelperComponentArray } from "./AIHelperComponent";
 import { ComponentArray } from "./ComponentArray";
 import { HealthComponentArray, canDamageEntity, damageEntity, addLocalInvulnerabilityHash } from "./HealthComponent";
@@ -16,8 +15,8 @@ const enum Vars {
    VISION_RANGE = 250,
    LIMB_ORBIT_SPEED = UtilVars.PI * 0.8,
 
-   DEFAULT_GEM_ACTIVATION = 0.3,
-   ANGERED_GEM_ACTIVATION = 0.7,
+   DEFAULT_GEM_ACTIVATION = 0.25,
+   ANGERED_GEM_ACTIVATION = 0.55,
    ACTIVATION_MOVE_SPEED = 0.2,
 
    MIN_ATTACK_COOLDOWN_TICKS = (2 * Settings.TPS) | 0,
@@ -158,8 +157,6 @@ const updateOrbitingGuardianLimbs = (guardian: EntityID, guardianComponent: Guar
    
    const physicsComponent = PhysicsComponentArray.getComponent(guardian);
    physicsComponent.hitboxesAreDirty = true;
-   // @Hack: Shouldn't we do this when we undirty the hitboxes?
-   registerDirtyEntity(guardian);
 }
 
 const limbsAreInStagingPosition = (guardian: EntityID, guardianComponent: GuardianComponent): boolean => {
@@ -254,8 +251,6 @@ function onTick(guardianComponent: GuardianComponent, guardian: EntityID): void 
          // @Copynpaste
          const physicsComponent = PhysicsComponentArray.getComponent(guardian);
          physicsComponent.hitboxesAreDirty = true;
-         // @Hack: Shouldn't we do this when we undirty the hitboxes?
-         registerDirtyEntity(guardian);
       } else {
          // Orbit the limbs around the guardian
          guardianComponent.limbNormalDirection += Vars.LIMB_ORBIT_SPEED * Settings.I_TPS;
@@ -304,8 +299,6 @@ function onTick(guardianComponent: GuardianComponent, guardian: EntityID): void 
       // @Copynpaste
       const physicsComponent = PhysicsComponentArray.getComponent(guardian);
       physicsComponent.hitboxesAreDirty = true;
-      // @Hack: Shouldn't we do this when we undirty the hitboxes?
-      registerDirtyEntity(guardian);
    }
       
    // Wander AI

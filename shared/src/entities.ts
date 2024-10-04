@@ -69,7 +69,8 @@ export const enum EntityType {
    fibrePlant,
    guardian,
    guardianGemQuake,
-   guardianGemFragmentProjectile
+   guardianGemFragmentProjectile,
+   guardianSpikyBall
 }
 
 export const EntityTypeString: Record<EntityType, string> = {
@@ -140,7 +141,8 @@ export const EntityTypeString: Record<EntityType, string> = {
    [EntityType.fibrePlant]: "fibre plant",
    [EntityType.guardian]: "guardian",
    [EntityType.guardianGemQuake]: "guardian gem quake",
-   [EntityType.guardianGemFragmentProjectile]: "Guardian Gem Fragment Projectile"
+   [EntityType.guardianGemFragmentProjectile]: "Guardian Gem Fragment Projectile",
+   [EntityType.guardianSpikyBall]: "Guardian Spiky Ball"
 };
 
 export const NUM_ENTITY_TYPES = Object.keys(EntityTypeString).length;

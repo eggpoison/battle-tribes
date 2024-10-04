@@ -292,6 +292,10 @@ const ENTITY_DAMAGE_INFO_RECORD: Record<EntityType, EntityDamageInfo> = {
    [EntityType.guardianGemFragmentProjectile]: {
       effectiveDamageTypes: [],
       stoppedDamageTypes: []
+   },
+   [EntityType.guardianSpikyBall]: {
+      effectiveDamageTypes: [],
+      stoppedDamageTypes: []
    }
 };
 

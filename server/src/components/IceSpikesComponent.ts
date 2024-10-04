@@ -86,7 +86,7 @@ const grow = (iceSpikes: EntityID): void => {
    const tileX = Math.floor(position.x / Settings.TILE_SIZE);
    const tileY = Math.floor(position.y / Settings.TILE_SIZE);
    const layer = getEntityLayer(iceSpikes);
-   if (layer.getTileBiome(tileX, tileY) !== Biome.tundra) {
+   if (layer.getTileXYBiome(tileX, tileY) !== Biome.tundra) {
       return;
    }
 
@@ -99,7 +99,7 @@ const grow = (iceSpikes: EntityID): void => {
       config[ServerComponentType.transform].position.y = position.y;
       config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
       config[ServerComponentType.iceSpikes].rootIceSpike = iceSpikesComponent.rootIceSpike;
-      createEntityFromConfig(config, layer);
+      createEntityFromConfig(config, layer, 0);
       
       const rootIceSpikesComponent = IceSpikesComponentArray.getComponent(iceSpikesComponent.rootIceSpike);
       rootIceSpikesComponent.numChildrenIceSpikes++;

@@ -2,7 +2,7 @@ import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, 
 import { SlimeSize, EntityType, PlayerCauseOfDeath, EntityID } from "battletribes-shared/entities";
 import { Settings } from "battletribes-shared/settings";
 import { StatusEffect } from "battletribes-shared/status-effects";
-import { Point, lerp, randInt } from "battletribes-shared/utils";
+import { Point, TileIndex, lerp, randInt } from "battletribes-shared/utils";
 import { HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity, getEntityHealth, healEntity } from "../../components/HealthComponent";
 import { SlimeComponent, SlimeComponentArray } from "../../components/SlimeComponent";
 import { getEntitiesInRange } from "../../ai-shared";
@@ -19,6 +19,9 @@ import { createEntityFromConfig } from "../../Entity";
 import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
 import CircularBox from "battletribes-shared/boxes/CircularBox";
 import { destroyEntity, entityIsFlaggedForDestruction, getEntityLayer, getEntityType, getGameTicks } from "../../world";
+import { AIType } from "../../components/AIHelperComponent";
+import WanderAI from "../../ai/WanderAI";
+import { Biome } from "../../../../shared/src/tiles";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics
@@ -58,6 +61,10 @@ interface AngerPropagationInfo {
    readonly propagatedEntityIDs: Set<number>;
 }
 
+function tileIsValidCallback(_entity: EntityID, layer: Layer, tileIndex: TileIndex): boolean {
+   return !layer.tileIsWall(tileIndex) && layer.getTileBiome(tileIndex) === Biome.swamp;
+}
+
 export function createSlimeConfig(): ComponentConfig<ComponentTypes> {
    return {
       [ServerComponentType.transform]: {
@@ -74,7 +81,8 @@ export function createSlimeConfig(): ComponentConfig<ComponentTypes> {
          accelerationX: 0,
          accelerationY: 0,
          traction: 1,
-         isAffectedByFriction: true,
+         isAffectedByAirFriction: true,
+         isAffectedByGroundFriction: true,
          isImmovable: false
       },
       [ServerComponentType.health]: {
@@ -86,7 +94,11 @@ export function createSlimeConfig(): ComponentConfig<ComponentTypes> {
       [ServerComponentType.wanderAI]: {},
       [ServerComponentType.aiHelper]: {
          ignoreDecorativeEntities: true,
-         visionRange: 0
+         visionRange: 0,
+         ais: {
+            // @Hack: acceleration gets overridden
+            [AIType.wander]: new WanderAI(0, 2 * Math.PI, 0.5, tileIsValidCallback)
+         }
       },
       [ServerComponentType.slime]: {
          size: 0,
@@ -132,7 +144,7 @@ const merge = (slime1: EntityID, slime2: EntityID): void => {
       config[ServerComponentType.transform].position.y = (slime1TransformComponent.position.y + slime2TransformComponent.position.y) / 2;
       config[ServerComponentType.slime].size = slimeComponent1.size + 1;
       config[ServerComponentType.slime].orbSizes = orbSizes;
-      createEntityFromConfig(config, getEntityLayer(slime1));
+      createEntityFromConfig(config, getEntityLayer(slime1), 0);
       
       destroyEntity(slime1);
    } else {

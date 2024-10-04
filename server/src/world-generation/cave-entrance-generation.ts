@@ -189,6 +189,9 @@ export function generateCaveEntrances(tileTypes: Float32Array, tileBiomes: Float
 }
 
 export function spawnGuardians(): void {
+   // @Temporary
+   if (1+1===2)return;
+   
    for (const tiles of guardianSpawnZones) {
       // Spawn 1-2 guardians in the cave
       for (let i = 0; i < randInt(1, 2); i++) {
@@ -214,7 +217,8 @@ export function spawnGuardians(): void {
                config[ServerComponentType.transform].position.x = x;
                config[ServerComponentType.transform].position.y = y;
                config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
-               createEntityFromConfig(config, surfaceLayer);
+               config[ServerComponentType.guardian].homeTiles = tiles;
+               createEntityFromConfig(config, surfaceLayer, 0);
                break;
             }
          }

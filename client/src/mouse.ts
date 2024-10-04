@@ -9,9 +9,8 @@ import { Tile } from "./Tile";
 import Entity from "./Entity";
 import { updateCursorTooltip } from "./components/game/dev/CursorTooltip";
 import { TransformComponentArray } from "./entity-components/TransformComponent";
-import Player from "./entities/Player";
 import { getTileIndexIncludingEdges, tileIsInWorld } from "./Layer";
-import { getEntityByID, getEntityLayer } from "./world";
+import { getCurrentLayer, getEntityByID } from "./world";
 
 export let cursorX: number | null = null;
 export let cursorY: number | null = null;
@@ -51,9 +50,9 @@ export function getMouseTargetTile(): Tile | null {
    const tileY = Math.floor(Game.cursorPositionY / Settings.TILE_SIZE);
 
    if (tileIsInWorld(tileX, tileY)) {
-      const playerLayer = getEntityLayer(Player.instance!.id);
+      const layer = getCurrentLayer();
       const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
-      return playerLayer.getTile(tileIndex);
+      return layer.getTile(tileIndex);
    }
    return null;
 }
@@ -66,7 +65,7 @@ export function getMouseTargetTile(): Tile | null {
 export function getMouseTargetEntity(): Entity | null {
    if (Game.cursorPositionX === null || Game.cursorPositionY === null) return null;
 
-   const playerLayer = getEntityLayer(Player.instance!.id);
+   const layer = getCurrentLayer();
    
    const minChunkX = Math.max(Math.min(Math.floor((Game.cursorPositionX - CLIENT_SETTINGS.CURSOR_TOOLTIP_HOVER_RANGE / Camera.zoom) / Settings.CHUNK_SIZE / Settings.TILE_SIZE), Settings.BOARD_SIZE - 1), 0);
    const maxChunkX = Math.max(Math.min(Math.floor((Game.cursorPositionX + CLIENT_SETTINGS.CURSOR_TOOLTIP_HOVER_RANGE / Camera.zoom) / Settings.CHUNK_SIZE / Settings.TILE_SIZE), Settings.BOARD_SIZE - 1), 0);
@@ -77,7 +76,7 @@ export function getMouseTargetEntity(): Entity | null {
    let minDistance = Number.MAX_SAFE_INTEGER;
    for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
       for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
-         const chunk = playerLayer.getChunk(chunkX, chunkY);
+         const chunk = layer.getChunk(chunkX, chunkY);
          for (const entityID of chunk.nonGrassEntities) {
             const entity = getEntityByID(entityID)!;
 

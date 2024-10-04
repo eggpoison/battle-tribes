@@ -6,6 +6,7 @@ export enum RenderLayer {
    lowDecorations,
    grass,
    highDecorations,
+   quakes,
    // @Temporary?
    lowestEntities,
    fish,
@@ -58,6 +59,9 @@ export function getEntityRenderLayer(entity: Entity): RenderLayer {
       case EntityType.decoration: {
          const decorationComponent = entity.getServerComponent(ServerComponentType.decoration) 
          return decorationIsHigh(decorationComponent.decorationType) ? RenderLayer.highDecorations : RenderLayer.lowDecorations;
+      }
+      case EntityType.guardianGemQuake: {
+         return RenderLayer.quakes;
       }
       // Item entities
       case EntityType.itemEntity: {

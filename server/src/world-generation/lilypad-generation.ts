@@ -40,7 +40,7 @@ export function generateLilypads(): void {
    // @Incomplete: generate in edges
    for (let tileX = 0; tileX < Settings.BOARD_DIMENSIONS; tileX++) {
       for (let tileY = 0; tileY < Settings.BOARD_DIMENSIONS; tileY++) {
-         if (surfaceLayer.getTileType(tileX, tileY) !== TileType.water) {
+         if (surfaceLayer.getTileXYType(tileX, tileY) !== TileType.water) {
             continue;
          }
 
@@ -61,7 +61,7 @@ export function generateLilypads(): void {
             config[ServerComponentType.transform].position.x = x;
             config[ServerComponentType.transform].position.y = y;
             config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
-            createEntityFromConfig(config, surfaceLayer);
+            createEntityFromConfig(config, surfaceLayer, 0);
 
             // Immediately add the entity so that distance checks work
             pushJoinBuffer();

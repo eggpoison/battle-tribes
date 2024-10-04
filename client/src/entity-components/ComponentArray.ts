@@ -3,7 +3,6 @@ import { EntityID } from "battletribes-shared/entities";
 import Component from "./Component";
 import Entity from "../Entity";
 import { ClientComponentType } from "./components";
-import Player from "../entities/Player";
 
 export const enum ComponentArrayType {
    server,
@@ -11,6 +10,8 @@ export const enum ComponentArrayType {
 }
 
 interface ComponentArrayFunctions<T extends object> {
+   /** Called when the entity is spawned in, not when the client first becomes aware of the entity's existence */
+   onSpawn?(component: T, entity: EntityID): void;
    onTick?(component: T, entity: EntityID): void;
    onUpdate?(component: T, entity: EntityID): void;
 }
@@ -50,6 +51,7 @@ export class ComponentArray<T extends Component = Component, ArrayType extends C
 
    private deactivateBuffer = new Array<number>();
 
+   public onSpawn?(component: T, entity: EntityID): void;
    public onTick?: (component: T, entity: EntityID) => void;
    public onUpdate?: (component: T, entity: EntityID) => void;
 
@@ -60,6 +62,7 @@ export class ComponentArray<T extends Component = Component, ArrayType extends C
       };
       this.isActiveByDefault = isActiveByDefault;
       
+      this.onSpawn = functions.onSpawn;
       this.onTick = functions.onTick;
       this.onUpdate = functions.onUpdate;
 

@@ -42,7 +42,7 @@ function onTick(_spearProjectileComponent: SpearProjectileComponent, spear: Enti
       config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
       config[ServerComponentType.item].itemType = ItemType.spear;
       config[ServerComponentType.item].amount = 1;
-      createEntityFromConfig(config, getEntityLayer(spear));
+      createEntityFromConfig(config, getEntityLayer(spear), 0);
       
       destroyEntity(spear);
    }

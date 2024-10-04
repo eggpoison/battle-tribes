@@ -1,7 +1,7 @@
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "battletribes-shared/collision";
 import { EntityType, PlayerCauseOfDeath, EntityID } from "battletribes-shared/entities";
 import { StatusEffect } from "battletribes-shared/status-effects";
-import { Point, randInt } from "battletribes-shared/utils";
+import { Point, randInt, TileIndex } from "battletribes-shared/utils";
 import { HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
 import { createItemsOverEntity } from "../../entity-shared";
 import { FrozenYetiComponentArray } from "../../components/FrozenYetiComponent";
@@ -15,6 +15,9 @@ import { TransformComponentArray } from "../../components/TransformComponent";
 import { createHitbox, HitboxCollisionType, Hitbox } from "battletribes-shared/boxes/boxes";
 import CircularBox from "battletribes-shared/boxes/CircularBox";
 import { getEntityType } from "../../world";
+import Layer from "../../Layer";
+import { TileType } from "../../../../shared/src/tiles";
+import WanderAI from "../../ai/WanderAI";
 
 export const enum FrozenYetiVars {
    VISION_RANGE = 350,
@@ -53,6 +56,10 @@ export interface FrozenYetiRockSpikeInfo {
    readonly size: number;
 }
 
+function tileIsValidCallback(_entity: EntityID, layer: Layer, tileIndex: TileIndex): boolean {
+   return !layer.tileIsWall(tileIndex) && layer.getTileType(tileIndex) === TileType.fimbultur;
+}
+
 export function createFrozenYetiConfig(): ComponentConfig<ComponentTypes> {
    const hitboxes = new Array<Hitbox>();
 
@@ -84,7 +91,8 @@ export function createFrozenYetiConfig(): ComponentConfig<ComponentTypes> {
          accelerationX: 0,
          accelerationY: 0,
          traction: 1,
-         isAffectedByFriction: true,
+         isAffectedByAirFriction: true,
+         isAffectedByGroundFriction: true,
          isImmovable: false
       },
       [ServerComponentType.health]: {
@@ -95,7 +103,10 @@ export function createFrozenYetiConfig(): ComponentConfig<ComponentTypes> {
       },
       [ServerComponentType.aiHelper]: {
          ignoreDecorativeEntities: true,
-         visionRange: FrozenYetiVars.VISION_RANGE
+         visionRange: FrozenYetiVars.VISION_RANGE,
+         ais: [
+            new WanderAI(200, Math.PI * 0.7, 0.6, tileIsValidCallback)
+         ]
       },
       [ServerComponentType.wanderAI]: {},
       [ServerComponentType.frozenYeti]: {}

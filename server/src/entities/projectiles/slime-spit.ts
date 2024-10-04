@@ -38,7 +38,8 @@ export function createSlimeSpitConfig(): ComponentConfig<ComponentTypes> {
          accelerationX: 0,
          accelerationY: 0,
          traction: 1,
-         isAffectedByFriction: true,
+         isAffectedByAirFriction: true,
+         isAffectedByGroundFriction: true,
          isImmovable: false
       },
       [ServerComponentType.slimeSpit]: {
@@ -80,6 +81,6 @@ export function onSlimeSpitDeath(spit: EntityID): void {
       config[ServerComponentType.transform].position.x = transformComponent.position.x;
       config[ServerComponentType.transform].position.y = transformComponent.position.y;
       config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
-      createEntityFromConfig(config, getEntityLayer(spit));
+      createEntityFromConfig(config, getEntityLayer(spit), 0);
    }
 }

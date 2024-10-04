@@ -1,4 +1,4 @@
-import { Point, randFloat, randInt, TileIndex, UtilVars } from "battletribes-shared/utils";
+import { Point, randFloat, randInt, UtilVars } from "battletribes-shared/utils";
 import { EntityID, EntityType, FrozenYetiAttackType, PlayerCauseOfDeath, SnowballSize } from "battletribes-shared/entities";
 import { ServerComponentType } from "battletribes-shared/components";
 import { FROZEN_YETI_BITE_COOLDOWN, FROZEN_YETI_GLOBAL_ATTACK_COOLDOWN, FROZEN_YETI_ROAR_COOLDOWN, FROZEN_YETI_SNOWBALL_THROW_COOLDOWN, FROZEN_YETI_STOMP_COOLDOWN, FrozenYetiRockSpikeInfo, FrozenYetiTargetInfo, FrozenYetiVars } from "../entities/mobs/frozen-yeti";
@@ -7,10 +7,8 @@ import { Packet } from "battletribes-shared/packets";
 import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
 import { Settings } from "battletribes-shared/settings";
 import { StatusEffect } from "battletribes-shared/status-effects";
-import { Biome, TileType } from "battletribes-shared/tiles";
-import { getAngleDifference, entityIsInVisionRange, getEntitiesInRange, entityHasReachedPosition, stopEntity } from "../ai-shared";
-import { shouldWander, getWanderTargetTile, wander } from "../ai/wander-ai";
-import Layer, { getTileX, getTileY } from "../Layer";
+import { Biome } from "battletribes-shared/tiles";
+import { getAngleDifference, entityIsInVisionRange, getEntitiesInRange, stopEntity } from "../ai-shared";
 import { createRockSpikeConfig } from "../entities/projectiles/rock-spike";
 import { createSnowballConfig } from "../entities/snowball";
 import { createEntityFromConfig } from "../Entity";
@@ -20,7 +18,6 @@ import { PhysicsComponentArray, applyKnockback } from "./PhysicsComponent";
 import { ROCK_SPIKE_HITBOX_SIZES } from "./RockSpikeComponent";
 import { StatusEffectComponentArray, applyStatusEffect } from "./StatusEffectComponent";
 import { TransformComponentArray, getEntityTile } from "./TransformComponent";
-import { WanderAIComponentArray } from "./WanderAIComponent";
 import { entityExists, getEntityLayer, getEntityType } from "../world";
 
 const enum Vars {
@@ -288,7 +285,7 @@ const createRockSpikes = (frozenYeti: EntityID, frozenYetiComponent: FrozenYetiC
       config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
       config[ServerComponentType.rockSpike].size = info.size;
       config[ServerComponentType.rockSpike].frozenYetiID = frozenYeti;
-      createEntityFromConfig(config, getEntityLayer(frozenYeti));
+      createEntityFromConfig(config, getEntityLayer(frozenYeti), 0);
    }
    frozenYetiComponent.rockSpikeInfoArray = [];
 }
@@ -311,7 +308,7 @@ const spawnSnowball = (frozenYeti: EntityID, size: SnowballSize): void => {
    config[ServerComponentType.physics].velocityY = velocityMagnitude * Math.cos(angle);
    config[ServerComponentType.snowball].size = size;
    config[ServerComponentType.snowball].yetiID = frozenYeti;
-   createEntityFromConfig(config, getEntityLayer(frozenYeti));
+   createEntityFromConfig(config, getEntityLayer(frozenYeti), 0);
 }
 
 const throwSnow = (frozenYeti: EntityID): void => {
@@ -415,32 +412,9 @@ function onTick(frozenYetiComponent: FrozenYetiComponent, frozenYeti: EntityID):
       frozenYetiComponent.roarCooldownTimer = FROZEN_YETI_ROAR_COOLDOWN;
       frozenYetiComponent.stompCooldownTimer = FROZEN_YETI_STOMP_COOLDOWN;
 
-      const physicsComponent = PhysicsComponentArray.getComponent(frozenYeti);
-      
       // Wander AI
-      const layer = getEntityLayer(frozenYeti);
-      const wanderAIComponent = WanderAIComponentArray.getComponent(frozenYeti);
-      if (wanderAIComponent.targetPositionX !== -1) {
-         if (entityHasReachedPosition(frozenYeti, wanderAIComponent.targetPositionX, wanderAIComponent.targetPositionY)) {
-            wanderAIComponent.targetPositionX = -1;
-            stopEntity(physicsComponent);
-         }
-      } else if (shouldWander(physicsComponent, 0.6)) {
-         let attempts = 0;
-         let targetTile: TileIndex;
-         do {
-            targetTile = getWanderTargetTile(frozenYeti, FrozenYetiVars.VISION_RANGE);
-         } while (++attempts <= 50 && (layer.tileIsWalls[targetTile] === 1 || layer.tileBiomes[targetTile] !== TileType.fimbultur));
-
-         const tileX = getTileX(targetTile);
-         const tileY = getTileY(targetTile);
-         const x = (tileX + Math.random()) * Settings.TILE_SIZE;
-         const y = (tileY + Math.random()) * Settings.TILE_SIZE;
-         wander(frozenYeti, x, y, Vars.SLOW_ACCELERATION, Math.PI * 0.7);
-      } else {
-         stopEntity(physicsComponent);
-      }
-
+      const wanderAI = aiHelperComponent.getWanderAI();
+      wanderAI.run(frozenYeti);
       return;
    }
 

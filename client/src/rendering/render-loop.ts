@@ -120,6 +120,10 @@ export function removeRenderable(renderable: Renderable, renderLayer: RenderLaye
 }
 
 const renderRenderablesBatch = (renderableType: RenderableType, renderables: ReadonlyArray<Renderable>, renderLayer: RenderLayer): void => {
+   if (renderables.length === 0) {
+      return;
+   }
+   
    switch (renderableType) {
       case RenderableType.entity: {
          if (renderLayerIsChunkRendered(renderLayer)) {

@@ -1,7 +1,7 @@
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "battletribes-shared/collision";
 import { EntityType, PlayerCauseOfDeath, EntityID } from "battletribes-shared/entities";
 import { StatusEffect } from "battletribes-shared/status-effects";
-import { Point, randInt } from "battletribes-shared/utils";
+import { Point, randInt, TileIndex } from "battletribes-shared/utils";
 import { Settings } from "battletribes-shared/settings";
 import { HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
 import { YetiComponentArray } from "../../components/YetiComponent";
@@ -17,6 +17,9 @@ import { TransformComponentArray } from "../../components/TransformComponent";
 import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
 import CircularBox from "battletribes-shared/boxes/CircularBox";
 import { getEntityType } from "../../world";
+import WanderAI from "../../ai/WanderAI";
+import { AIType } from "../../components/AIHelperComponent";
+import { Biome } from "../../../../shared/src/tiles";
 
 export const enum YetiVars {
    VISION_RANGE = 500
@@ -42,6 +45,11 @@ export enum SnowThrowStage {
    return
 }
 
+function tileIsValidCallback(entity: EntityID, layer: Layer, tileIndex: TileIndex): boolean {
+   const yetiComponent = YetiComponentArray.getComponent(entity);
+   return !layer.tileIsWall(tileIndex) && layer.getTileBiome(tileIndex) === Biome.tundra && yetiComponent.territory.includes(tileIndex);
+}
+
 export function createYetiConfig(): ComponentConfig<ComponentTypes> {
    return {
       [ServerComponentType.transform]: {
@@ -58,7 +66,8 @@ export function createYetiConfig(): ComponentConfig<ComponentTypes> {
          accelerationX: 0,
          accelerationY: 0,
          traction: 1,
-         isAffectedByFriction: true,
+         isAffectedByAirFriction: true,
+         isAffectedByGroundFriction: true,
          isImmovable: false
       },
       [ServerComponentType.health]: {
@@ -70,7 +79,10 @@ export function createYetiConfig(): ComponentConfig<ComponentTypes> {
       [ServerComponentType.wanderAI]: {},
       [ServerComponentType.aiHelper]: {
          ignoreDecorativeEntities: true,
-         visionRange: YetiVars.VISION_RANGE
+         visionRange: YetiVars.VISION_RANGE,
+         ais: {
+            [AIType.wander]: new WanderAI(100, Math.PI * 1.5, 0.6, tileIsValidCallback)
+         }
       },
       [ServerComponentType.yeti]: {
          territory: []

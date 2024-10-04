@@ -30,8 +30,8 @@ import { escapeFromEnemies, tribesmanShouldEscape } from "./tribesman-escaping";
 import { continueTribesmanHealing, getHealingItemUseInfo } from "./tribesman-healing";
 import { tribesmanDoPatrol } from "./tribesman-patrolling";
 import { ItemType, InventoryName, Item, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, ConsumableItemInfo, Inventory } from "battletribes-shared/items/items";
-import { getAgeTicks, TransformComponentArray } from "../../../components/TransformComponent";
-import { destroyEntity, entityExists, getEntityLayer, getEntityType } from "../../../world";
+import { TransformComponentArray } from "../../../components/TransformComponent";
+import { destroyEntity, entityExists, getEntityAgeTicks, getEntityLayer, getEntityType } from "../../../world";
 
 // @Cleanup: Move all of this to the TribesmanComponent file
 
@@ -411,7 +411,7 @@ export function tickTribesman(tribesmanAIComponent: TribesmanAIComponent, tribes
    }
 
    const transformComponent = TransformComponentArray.getComponent(tribesman);
-   const ageTicks = getAgeTicks(transformComponent);
+   const ageTicks = getEntityAgeTicks(tribesman);
    
    // Escape from enemies when low on health
    const healthComponent = HealthComponentArray.getComponent(tribesman);

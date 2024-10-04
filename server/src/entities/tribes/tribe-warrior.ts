@@ -62,7 +62,8 @@ export function createTribeWarriorConfig(): ComponentConfig<ComponentTypes> {
          accelerationX: 0,
          accelerationY: 0,
          traction: 1,
-         isAffectedByFriction: true,
+         isAffectedByAirFriction: true,
+         isAffectedByGroundFriction: true,
          isImmovable: false
       },
       [ServerComponentType.health]: {
@@ -84,7 +85,8 @@ export function createTribeWarriorConfig(): ComponentConfig<ComponentTypes> {
       },
       [ServerComponentType.aiHelper]: {
          ignoreDecorativeEntities: true,
-         visionRange: TRIBE_WARRIOR_VISION_RANGE
+         visionRange: TRIBE_WARRIOR_VISION_RANGE,
+         ais: {}
       },
       [ServerComponentType.inventory]: {
          inventories: []

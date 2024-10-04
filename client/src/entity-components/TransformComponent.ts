@@ -17,7 +17,6 @@ import CircularBox from "battletribes-shared/boxes/CircularBox";
 import RectangularBox from "battletribes-shared/boxes/RectangularBox";
 import Layer, { getTileIndexIncludingEdges } from "../Layer";
 import { getEntityLayer } from "../world";
-import { EntityTypeString } from "../../../shared/src/entities";
 
 const getTile = (layer: Layer, position: Point): Tile => {
    const tileX = Math.floor(position.x / Settings.TILE_SIZE);
@@ -173,15 +172,14 @@ class TransformComponent extends ServerComponent {
       reader.padOffset(6 * Float32Array.BYTES_PER_ELEMENT);
 
       const numCircularHitboxes = reader.readNumber();
-      reader.padOffset(9 * Float32Array.BYTES_PER_ELEMENT * numCircularHitboxes);
+      reader.padOffset(10 * Float32Array.BYTES_PER_ELEMENT * numCircularHitboxes);
 
       const numRectangularHitboxes = reader.readNumber();
-      reader.padOffset(11 * Float32Array.BYTES_PER_ELEMENT * numRectangularHitboxes);
+      reader.padOffset(12 * Float32Array.BYTES_PER_ELEMENT * numRectangularHitboxes);
    }
 
    public updatePosition(): void {
       const layer = getEntityLayer(this.entity.id);
-      console.log(EntityTypeString[this.entity.type]);
       this.tile = getTile(layer, this.position);
       this.updateHitboxes();
       this.updateContainingChunks();
@@ -211,12 +209,14 @@ class TransformComponent extends ServerComponent {
 
       // @Speed: Garbage collection
       
+      // @Garbage
       const circularHitboxes = new Array<CircularHitboxData>();
       const numCircularHitboxes = reader.readNumber();
       for (let i = 0; i < numCircularHitboxes; i++) {
          const mass = reader.readNumber();
          const offsetX = reader.readNumber();
          const offsetY = reader.readNumber();
+         const scale = reader.readNumber();
          const collisionType = reader.readNumber();
          const collisionBit = reader.readNumber();
          const collisionMask = reader.readNumber();
@@ -232,6 +232,7 @@ class TransformComponent extends ServerComponent {
             mass: mass,
             offsetX: offsetX,
             offsetY: offsetY,
+            scale: scale,
             collisionType: collisionType,
             collisionBit: collisionBit,
             collisionMask: collisionMask,
@@ -242,12 +243,14 @@ class TransformComponent extends ServerComponent {
          circularHitboxes.push(data);
       }
 
+      // @Garbage
       const rectangularHitboxes = new Array<RectangularHitboxData>();
       const numRectangularHitboxes = reader.readNumber();
       for (let i = 0; i < numRectangularHitboxes; i++) {
          const mass = reader.readNumber();
          const offsetX = reader.readNumber();
          const offsetY = reader.readNumber();
+         const scale = reader.readNumber();
          const collisionType = reader.readNumber();
          const collisionBit = reader.readNumber();
          const collisionMask = reader.readNumber();
@@ -265,6 +268,7 @@ class TransformComponent extends ServerComponent {
             mass: mass,
             offsetX: offsetX,
             offsetY: offsetY,
+            scale: scale,
             collisionType: collisionType,
             collisionBit: collisionBit,
             collisionMask: collisionMask,
@@ -337,6 +341,7 @@ class TransformComponent extends ServerComponent {
             box.radius = hitboxData.radius;
             box.offset.x = hitboxData.offsetX;
             box.offset.y = hitboxData.offsetY;
+            box.scale = hitboxData.scale;
             hitbox.collisionType = hitboxData.collisionType;
             updateBox(box, this.position.x, this.position.y, this.rotation);
          } else {
@@ -375,6 +380,7 @@ class TransformComponent extends ServerComponent {
             box.relativeRotation = hitboxData.rotation;
             box.offset.x = hitboxData.offsetX;
             box.offset.y = hitboxData.offsetY;
+            box.scale = hitboxData.scale;
             hitbox.collisionType = hitboxData.collisionType;
             updateBox(box, this.position.x, this.position.y, this.rotation);
          } else {
@@ -437,15 +443,6 @@ class TransformComponent extends ServerComponent {
          }
       }
    }
-
-   // @Temporary?
-   // public updatePlayerFromData(reader: PacketReader, isInitialData: boolean): void {
-   //    if (isInitialData) {
-   //       this.updateFromData(reader);
-   //    } else {
-   //       this.padData(reader);
-   //    }
-   // }
 
    public onRemove(): void {
       for (const chunk of this.chunks) {

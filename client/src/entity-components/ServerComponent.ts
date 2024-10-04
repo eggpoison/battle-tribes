@@ -18,9 +18,13 @@ abstract class ServerComponent extends Component {
 
    public abstract padData(reader: PacketReader): void;
    
-   public abstract updateFromData(reader: PacketReader): void;
+   public abstract updateFromData(reader: PacketReader, isInitialData: boolean): void;
 
-   public updatePlayerFromData?(reader: PacketReader, isInitialData: boolean): void;
+   /** Updates the player instance from server data */
+   public updatePlayerFromData?(reader: PacketReader): void;
+   /** Called on the player instance after all components are updated from server data */
+   public updatePlayerAfterData?(): void;
+
 }
 
 export default ServerComponent;

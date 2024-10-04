@@ -91,7 +91,7 @@ const spawnZombie = (tombstone: EntityID, tombstoneComponent: TombstoneComponent
       config[ServerComponentType.zombie].zombieType = 3;
    }
    config[ServerComponentType.zombie].tombstone = tombstone;
-   createEntityFromConfig(config, getEntityLayer(tombstone));
+   createEntityFromConfig(config, getEntityLayer(tombstone), 0);
 
    tombstoneComponent.numZombies++;
    tombstoneComponent.isSpawningZombie = false;

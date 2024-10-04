@@ -86,6 +86,6 @@ export function createIceShardExplosion(layer: Layer, originX: number, originY: 
       config[ServerComponentType.transform].rotation = moveDirection;
       config[ServerComponentType.physics].velocityX += 700 * Math.sin(moveDirection);
       config[ServerComponentType.physics].velocityY += 700 * Math.cos(moveDirection);
-      createEntityFromConfig(config, layer);
+      createEntityFromConfig(config, layer, 0);
    }
 }

@@ -1,12 +1,12 @@
 import Entity from "../Entity";
-import { Matrix3x3, matrixMultiplyInPlace, overrideWithRotationMatrix } from "./matrices";
+import { createIdentityMatrix, Matrix3x3, matrixMultiplyInPlace, overrideWithRotationMatrix } from "./matrices";
 import { ServerComponentType } from "battletribes-shared/components";
 import { Settings } from "battletribes-shared/settings";
-import { RenderThing } from "../render-parts/render-parts";
-import Board from "../Board";
+import { RenderParent, RenderThing } from "../render-parts/render-parts";
 import { getEntityRenderLayer } from "../render-layers";
 import { renderLayerIsChunkRendered, updateChunkRenderedEntity } from "./webgl/chunked-entity-rendering";
 import { getEntityByID } from "../world";
+import { Hitbox } from "../../../shared/src/boxes/boxes";
 
 let dirtyEntities = new Array<Entity>();
 
@@ -191,6 +191,31 @@ const calculateAndOverrideRenderThingMatrix = (thing: RenderThing): void => {
    translateMatrix(matrix, tx, ty);
 }
 
+const calculateHitboxMatrix = (entityModelMatrix: Matrix3x3, hitbox: Hitbox): Matrix3x3 => {
+   const matrix = createIdentityMatrix();;
+
+   // Rotation
+   overrideWithRotationMatrix(matrix, hitbox.box.relativeRotation);
+   
+   // Scale
+   const scale = hitbox.box.scale;
+   scaleMatrix(matrix, scale, scale);
+   
+   // @Speed: Can probably get rid of this flip multiplication by doing the translation before scaling
+   let tx = hitbox.box.offset.x;
+   let ty = hitbox.box.offset.y;
+   
+   // Translation
+   translateMatrix(matrix, tx, ty);
+
+   matrixMultiplyInPlace(entityModelMatrix, matrix);
+   return matrix;
+}
+
+export function renderParentIsHitbox(parent: RenderParent): parent is Hitbox {
+   return parent !== null && typeof (parent as Hitbox).mass !== "undefined";
+}
+
 export function updateRenderPartMatrices(frameProgress: number): void {
    // @Bug: I don't think this will account for cases where the game is updated less than 60 times a second.
    // To fix: temporarily set Settings.TPS to like 10 or something and then fix the subsequent slideshow
@@ -215,7 +240,13 @@ export function updateRenderPartMatrices(frameProgress: number): void {
          calculateAndOverrideRenderThingMatrix(thing);
 
          if (thing.inheritParentRotation) {
-            const parentModelMatrix = thing.parent !== null ? thing.parent.modelMatrix : entity.modelMatrix;
+            let parentModelMatrix: Matrix3x3;
+            if (renderParentIsHitbox(thing.parent)) {
+               // @Speed?
+               parentModelMatrix = calculateHitboxMatrix(entity.modelMatrix, thing.parent);
+            } else {
+               parentModelMatrix = thing.parent !== null ? thing.parent.modelMatrix : entity.modelMatrix;
+            }
             matrixMultiplyInPlace(parentModelMatrix, thing.modelMatrix);
          } else {
             translateMatrix(thing.modelMatrix, entityRenderPosition.x, entityRenderPosition.y);

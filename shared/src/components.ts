@@ -80,7 +80,9 @@ export enum ServerComponentType {
    spearProjectile,
    krumblid,
    damageBox,
-   guardian
+   guardian,
+   guardianGemQuake,
+   guardianGemFragmentProjectile
 }
 
 export const ServerComponentTypeString: Record<ServerComponentType, string> = {
@@ -148,7 +150,9 @@ export const ServerComponentTypeString: Record<ServerComponentType, string> = {
    [ServerComponentType.spearProjectile]: "spear projectile",
    [ServerComponentType.krumblid]: "krumblid",
    [ServerComponentType.damageBox]: "damage box",
-   [ServerComponentType.guardian]: "guardian"
+   [ServerComponentType.guardian]: "guardian",
+   [ServerComponentType.guardianGemQuake]: "guardian gem quake",
+   [ServerComponentType.guardianGemFragmentProjectile]: "Guardian Gem Fragment Projectile"
 };
 
 export const NUM_COMPONENTS = Object.keys(ServerComponentTypeString).length;
@@ -220,7 +224,9 @@ export const EntityComponents = {
    [EntityType.reed]: [ServerComponentType.transform, ServerComponentType.layeredRod] as const,
    [EntityType.lilypad]: [ServerComponentType.transform] as const,
    [EntityType.fibrePlant]: [ServerComponentType.transform, ServerComponentType.statusEffect, ServerComponentType.health] as const,
-   [EntityType.guardian]: [ServerComponentType.transform, ServerComponentType.physics, ServerComponentType.statusEffect, ServerComponentType.health, ServerComponentType.aiHelper, ServerComponentType.guardian]
+   [EntityType.guardian]: [ServerComponentType.transform, ServerComponentType.physics, ServerComponentType.statusEffect, ServerComponentType.health, ServerComponentType.aiHelper, ServerComponentType.guardian],
+   [EntityType.guardianGemQuake]: [ServerComponentType.transform, ServerComponentType.guardianGemQuake],
+   [EntityType.guardianGemFragmentProjectile]: [ServerComponentType.transform, ServerComponentType.physics, ServerComponentType.guardianGemFragmentProjectile]
 } satisfies Record<EntityType, ReadonlyArray<ServerComponentType>>;
 
 export type EntityComponentTypes<T extends EntityType> = typeof EntityComponents[T];

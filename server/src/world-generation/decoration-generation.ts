@@ -28,7 +28,7 @@ const createDecoration = (x: number, y: number, decorationType: DecorationType):
    config[ServerComponentType.transform].position.y = y;
    config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
    config[ServerComponentType.decoration].decorationType = decorationType;
-   createEntityFromConfig(config, surfaceLayer);
+   createEntityFromConfig(config, surfaceLayer, 0);
 }
 
 const generateRiversideDecorations = (): void => {
@@ -44,7 +44,7 @@ const generateRiversideDecorations = (): void => {
 
       const tileX = Math.floor(x / Settings.TILE_SIZE);
       const tileY = Math.floor(y / Settings.TILE_SIZE);
-      const tileType = surfaceLayer.getTileType(tileX, tileY);
+      const tileType = surfaceLayer.getTileXYType(tileX, tileY);
       if (tileType === TileType.water) {
          continue;
       }
@@ -54,7 +54,7 @@ const generateRiversideDecorations = (): void => {
       for (const tileIndex of tilesInRange) {
          const tileX = getTileX(tileIndex);
          const tileY = getTileY(tileIndex);
-         if (surfaceLayer.getTileType(tileX, tileY) === TileType.water) {
+         if (surfaceLayer.getTileXYType(tileX, tileY) === TileType.water) {
             isGood = true;
             break;
          }

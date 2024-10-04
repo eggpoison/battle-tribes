@@ -410,7 +410,7 @@ class InventoryUseComponent extends ServerComponent{
       }
    }
    
-   public updateFromData(reader: PacketReader): void {
+   public updateFromData(reader: PacketReader, isInitialData: boolean): void {
       const numUseInfos = reader.readNumber();
       for (let i = 0; i < numUseInfos; i++) {
          const usedInventoryName = reader.readNumber() as InventoryName;
@@ -419,6 +419,7 @@ class InventoryUseComponent extends ServerComponent{
          if (i >= this.limbInfos.length) {
             // New limb info
             limbInfo = createZeroedLimbInfo(usedInventoryName);
+            this.limbInfos.push(limbInfo);
          } else {
             // Existing limb info
             limbInfo = this.limbInfos[i];
@@ -508,7 +509,10 @@ class InventoryUseComponent extends ServerComponent{
             this.playBlockEffects(blockPositionX, blockPositionY, blockType);
          }
          
-         updateLimb(this, i, limbInfo);
+         // If this is initial data, then the attach points won't have been gotten yet
+         if (!isInitialData) {
+            updateLimb(this, i, limbInfo);
+         }
       }
    }
 
@@ -521,6 +525,7 @@ class InventoryUseComponent extends ServerComponent{
          if (i >= this.limbInfos.length) {
             // New limb info
             limbInfo = createZeroedLimbInfo(usedInventoryName);
+            this.limbInfos.push(limbInfo);
          } else {
             // Existing limb info
             limbInfo = this.limbInfos[i];

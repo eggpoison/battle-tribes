@@ -1,7 +1,7 @@
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "battletribes-shared/collision";
 import { EntityID, EntityType } from "battletribes-shared/entities";
 import { Settings } from "battletribes-shared/settings";
-import { Point, randInt } from "battletribes-shared/utils";
+import { Point, randInt, TileIndex } from "battletribes-shared/utils";
 import { createItemsOverEntity } from "../../entity-shared";
 import { registerAttackingEntity } from "../../ai/escape-ai";
 import { ItemType } from "battletribes-shared/items/items";
@@ -9,6 +9,10 @@ import { ServerComponentType } from "battletribes-shared/components";
 import { ComponentConfig } from "../../components";
 import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
 import RectangularBox from "battletribes-shared/boxes/RectangularBox";
+import WanderAI from "../../ai/WanderAI";
+import { AIType } from "../../components/AIHelperComponent";
+import { Biome } from "../../../../shared/src/tiles";
+import Layer from "../../Layer";
 
 export const enum CowVars {
    VISION_RANGE = 256,
@@ -34,6 +38,10 @@ const FOLLOW_CHANCE_PER_SECOND = 0.2;
 
 export const COW_GRAZE_TIME_TICKS = 5 * Settings.TPS;
 
+function tileIsValidCallback(_entity: EntityID, layer: Layer, tileIndex: TileIndex): boolean {
+   return !layer.tileIsWall(tileIndex) && layer.getTileBiome(tileIndex) === Biome.grasslands;
+}
+
 export function createCowConfig(): ComponentConfig<ComponentTypes> {
    return {
       [ServerComponentType.transform]: {
@@ -50,7 +58,8 @@ export function createCowConfig(): ComponentConfig<ComponentTypes> {
          accelerationX: 0,
          accelerationY: 0,
          traction: 1,
-         isAffectedByFriction: true,
+         isAffectedByAirFriction: true,
+         isAffectedByGroundFriction: true,
          isImmovable: false
       },
       [ServerComponentType.health]: {
@@ -61,7 +70,10 @@ export function createCowConfig(): ComponentConfig<ComponentTypes> {
       },
       [ServerComponentType.aiHelper]: {
          ignoreDecorativeEntities: true,
-         visionRange: CowVars.VISION_RANGE
+         visionRange: CowVars.VISION_RANGE,
+         ais: {
+            [AIType.wander]: new WanderAI(200, Math.PI, 0.6, tileIsValidCallback)
+         }
       },
       [ServerComponentType.wanderAI]: {},
       [ServerComponentType.escapeAI]: {},

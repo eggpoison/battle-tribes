@@ -2,7 +2,6 @@ import { TribeType } from "battletribes-shared/tribes";
 import { EnemyTribeData } from "battletribes-shared/techs";
 import { ServerComponentType } from "battletribes-shared/components";
 import { randFloat } from "battletribes-shared/utils";
-import Entity from "../Entity";
 import ServerComponent from "./ServerComponent";
 import Game from "../Game";
 import { playSound } from "../sound";
@@ -39,11 +38,11 @@ class TribeComponent extends ServerComponent {
       reader.padOffset(Float32Array.BYTES_PER_ELEMENT);
    }
 
-   public updateFromData(reader: PacketReader): void {
+   public updateFromData(reader: PacketReader, isInitialData: boolean): void {
       const tribeID = reader.readNumber();
       
       // Tribesman conversion
-      if (tribeID !== this.tribeID && this.entity.hasServerComponent(ServerComponentType.tribeMember)) {
+      if (!isInitialData && tribeID !== this.tribeID && this.entity.hasServerComponent(ServerComponentType.tribeMember)) {
          const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
 
          playSound("conversion.mp3", 0.4, 1, transformComponent.position);
@@ -66,6 +65,11 @@ class TribeComponent extends ServerComponent {
       
       this.tribeID = tribeID;
       this.tribeType = getTribeType(tribeID);
+   }
+
+   public updatePlayerFromData(reader: PacketReader): void {
+      this.tribeID = reader.readNumber();
+      this.tribeType = getTribeType(this.tribeID);
    }
 }
 

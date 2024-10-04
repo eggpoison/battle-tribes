@@ -734,7 +734,7 @@ class Tribe {
       config[ServerComponentType.transform].rotation = transformComponent.rotation;
       config[ServerComponentType.tribe].tribe = this;
       config[ServerComponentType.tribesmanAI].hut = hut;
-      createEntityFromConfig(config, getEntityLayer(hut));
+      createEntityFromConfig(config, getEntityLayer(hut), 0);
    }
 
    // @Cleanup

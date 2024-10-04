@@ -56,6 +56,6 @@ export function onTombstoneDeath(tombstone: EntityID, attackingEntity: EntityID 
       config[ServerComponentType.transform].position.y = tombstoneTransformComponent.position.y;
       config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
       config[ServerComponentType.zombie].tombstone = tombstone;
-      createEntityFromConfig(config, getEntityLayer(tombstone));
+      createEntityFromConfig(config, getEntityLayer(tombstone), 0);
    }
 }

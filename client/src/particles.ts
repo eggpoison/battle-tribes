@@ -1790,3 +1790,40 @@ export function createBlockParticle(x: number, y: number, blockType: BlockType):
    );
    Board.highMonocolourParticles.push(particle);
 }
+
+export function createGemQuakeProjectile(transformComponent: TransformComponent): void {
+   const spawnOffsetDirection = 2 * Math.PI * Math.random();
+   const spawnPositionX = transformComponent.position.x + 4 * Math.sin(spawnOffsetDirection);
+   const spawnPositionY = transformComponent.position.y + 4 * Math.cos(spawnOffsetDirection);
+
+   const velocityMagnitude = randFloat(30, 60);
+   const velocityDirection = 2 * Math.PI * Math.random();
+   const velocityX = velocityMagnitude * Math.sin(velocityDirection);
+   const velocityY = velocityMagnitude * Math.cos(velocityDirection);
+   
+   const lifetime = randFloat(0.7, 1.1);
+   
+   const particle = new Particle(lifetime);
+   particle.getOpacity = () => {
+      return 1 - Math.pow(particle.age / particle.lifetime, 2);
+   }
+
+   const pixelSize = 4;
+
+   addMonocolourParticleToBufferContainer(
+      particle,
+      ParticleRenderLayer.low,
+      pixelSize,
+      pixelSize,
+      spawnPositionX, spawnPositionY,
+      velocityX, velocityY,
+      0, 0,
+      velocityMagnitude / lifetime * 1.5,
+      velocityDirection,
+      0,
+      0,
+      0,
+      230/255, 45/255, 51/255
+   );
+   Board.lowMonocolourParticles.push(particle);
+}

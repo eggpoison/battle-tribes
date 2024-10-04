@@ -24,8 +24,6 @@ let indicesData: Uint16Array;
 let vertexBuffer: WebGLBuffer;
 let vertexData: Float32Array;
 
-let previousNumRenderParts = 0;
-
 const entityRenderHeightMap = new WeakMap<Entity, number>();
 
 export function getEntityRenderingProgram(): WebGLProgram {
@@ -457,7 +455,8 @@ export function renderEntities(entities: ReadonlyArray<Entity>): void {
    gl.bindTexture(gl.TEXTURE_2D, textureAtlas.texture);
 
    gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-   const length = Math.max(previousNumRenderParts, numRenderParts) * EntityRenderingVars.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT;
+   // const length = Math.max(previousNumRenderParts, numRenderParts) * EntityRenderingVars.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT;
+   const length = numRenderParts * EntityRenderingVars.ATTRIBUTES_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT;
    gl.bufferSubData(gl.ARRAY_BUFFER, 0, vertexData, 0, length);
 
    gl.drawElements(gl.TRIANGLES, numRenderParts * 6, gl.UNSIGNED_SHORT, 0);
@@ -466,6 +465,4 @@ export function renderEntities(entities: ReadonlyArray<Entity>): void {
    gl.blendFunc(gl.ONE, gl.ZERO);
 
    gl.bindVertexArray(null);
-
-   previousNumRenderParts = numRenderParts;
 }

@@ -9,11 +9,10 @@ import { PhysicsComponentArray, applyKnockback } from "../components/PhysicsComp
 import { ComponentConfig } from "../components";
 import { ServerComponentType } from "battletribes-shared/components";
 import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
-import { getAgeTicks, TransformComponentArray } from "../components/TransformComponent";
-import Layer from "../Layer";
+import { TransformComponentArray } from "../components/TransformComponent";
 import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
 import CircularBox from "battletribes-shared/boxes/CircularBox";
-import { getEntityType } from "../world";
+import { getEntityAgeTicks, getEntityType } from "../world";
    
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics
@@ -39,7 +38,8 @@ export function createSnowballConfig(): ComponentConfig<ComponentTypes> {
          accelerationX: 0,
          accelerationY: 0,
          traction: 1,
-         isAffectedByFriction: true,
+         isAffectedByAirFriction: true,
+         isAffectedByGroundFriction: true,
          isImmovable: false
       },
       [ServerComponentType.health]: {
@@ -77,7 +77,7 @@ export function onSnowballCollision(snowball: EntityID, collidingEntity: EntityI
    const vy = physicsComponent.selfVelocity.y + physicsComponent.externalVelocity.y;
    const velocity = Math.sqrt(vx * vx + vy * vy);
 
-   const ageTicks = getAgeTicks(transformComponent);
+   const ageTicks = getEntityAgeTicks(snowball);
    if (velocity < DAMAGE_VELOCITY_THRESHOLD || ageTicks >= 2 * Settings.TPS) {
       return;
    }

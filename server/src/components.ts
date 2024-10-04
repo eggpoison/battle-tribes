@@ -64,6 +64,8 @@ import { PunjiSticksComponent, PunjiSticksComponentParams } from "./components/P
 import { IceArrowComponent, IceArrowComponentParams } from "./components/IceArrowComponent";
 import { DamageBoxComponent, DamageBoxComponentParams } from "./components/DamageBoxComponent";
 import { GuardianComponent, GuardianComponentParams } from "./components/GuardianComponent";
+import { GuardianGemQuakeComponent, GuardianGemQuakeComponentParams } from "./components/GuardianGemQuakeComponent";
+import { GuardianGemFragmentProjectileComponent, GuardianGemFragmentProjectileComponentParams } from "./components/GuardianGemFragmentProjectileComponent";
 
 const ComponentParamsRecord = {
    [ServerComponentType.aiHelper]: (): AIHelperComponentParams => 0 as any,
@@ -130,7 +132,9 @@ const ComponentParamsRecord = {
    [ServerComponentType.spearProjectile]: (): SpearProjectileComponentParams => 0 as any,
    [ServerComponentType.krumblid]: (): KrumblidComponentParams => 0 as any,
    [ServerComponentType.damageBox]: (): DamageBoxComponentParams => 0 as any,
-   [ServerComponentType.guardian]: (): GuardianComponentParams => 0 as any
+   [ServerComponentType.guardian]: (): GuardianComponentParams => 0 as any,
+   [ServerComponentType.guardianGemQuake]: (): GuardianGemQuakeComponentParams => 0 as any,
+   [ServerComponentType.guardianGemFragmentProjectile]: (): GuardianGemFragmentProjectileComponentParams => 0 as any
 } satisfies Record<ServerComponentType, object>;
 
 export type ComponentParams<T extends ServerComponentType> = ReturnType<typeof ComponentParamsRecord[T]>;
@@ -201,7 +205,9 @@ export const ComponentClassRecord = {
    [ServerComponentType.spearProjectile]: () => SpearProjectileComponent,
    [ServerComponentType.krumblid]: () => KrumblidComponent,
    [ServerComponentType.damageBox]: () => DamageBoxComponent,
-   [ServerComponentType.guardian]: () => GuardianComponent
+   [ServerComponentType.guardian]: () => GuardianComponent,
+   [ServerComponentType.guardianGemQuake]: () => GuardianGemQuakeComponent,
+   [ServerComponentType.guardianGemFragmentProjectile]: () => GuardianGemFragmentProjectileComponent
 } satisfies {
    [T in ServerComponentType]: () => {
       new (args: ComponentParams<T>): unknown;

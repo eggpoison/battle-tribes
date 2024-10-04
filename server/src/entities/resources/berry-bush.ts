@@ -68,7 +68,7 @@ export function dropBerryOverEntity(entity: EntityID): void {
    config[ServerComponentType.physics].velocityY = 40 * Math.cos(spawnDirection + velocityDirectionOffset);
    config[ServerComponentType.item].itemType = ItemType.berry;
    config[ServerComponentType.item].amount = 1;
-   createEntityFromConfig(config, getEntityLayer(entity));
+   createEntityFromConfig(config, getEntityLayer(entity), 0);
 }
 
 export function dropBerry(berryBush: EntityID, multiplier: number): void {

@@ -2,7 +2,6 @@ import { TribesmanAIType } from "battletribes-shared/components";
 import { EntityID, EntityType, LimbAction } from "battletribes-shared/entities";
 import { Settings, PathfindingSettings } from "battletribes-shared/settings";
 import { Point, distance } from "battletribes-shared/utils";
-import Layer from "../../../Layer";
 import { getDistanceFromPointToEntity, stopEntity, entityIsInLineOfSight, willStopAtDesiredDistance } from "../../../ai-shared";
 import { InventoryComponentArray, getInventory } from "../../../components/InventoryComponent";
 import { InventoryUseComponentArray, setLimbActions } from "../../../components/InventoryUseComponent";
@@ -15,9 +14,9 @@ import { TribeComponentArray } from "../../../components/TribeComponent";
 import { calculateAttackEffectiveness } from "battletribes-shared/entity-damage-types";
 import { clearTribesmanPath, getBestToolItemSlot, getTribesmanDesiredAttackRange, getTribesmanRadius, getTribesmanSlowAcceleration, pathfindToPosition, pathToEntityExists } from "./tribesman-ai-utils";
 import { attemptToRepairBuildings } from "./tribesman-structures";
-import { InventoryName, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, BowItemInfo, getItemAttackInfo, Item } from "battletribes-shared/items/items";
-import { getAgeTicks, TransformComponentArray } from "../../../components/TransformComponent";
-import { getEntityLayer, getEntityType, getGameTicks } from "../../../world";
+import { InventoryName, ITEM_TYPE_RECORD, getItemAttackInfo, Item } from "battletribes-shared/items/items";
+import { TransformComponentArray } from "../../../components/TransformComponent";
+import { getEntityAgeTicks, getEntityLayer, getEntityType, getGameTicks } from "../../../world";
 
 const enum Vars {
    BOW_LINE_OF_SIGHT_WAIT_TIME = 0.5 * Settings.TPS,
@@ -347,7 +346,7 @@ export function huntEntity(tribesman: EntityID, huntedEntity: EntityID, isAggres
    if (hammerItemSlot !== null) {
       // If there isn't a path to the entity, try to repair buildings
       // @Incomplete: This will cause a delay after the tribesman finishes repairing the building.
-      const ageTicks = getAgeTicks(transformComponent);
+      const ageTicks = getEntityAgeTicks(tribesman);
       if (ageTicks % (Settings.TPS / 2) === 0) {
          const tribeComponent = TribeComponentArray.getComponent(tribesman);
          const pathExists = pathToEntityExists(tribesman, huntedEntity, tribeComponent.tribe, getTribesmanRadius(tribesman));

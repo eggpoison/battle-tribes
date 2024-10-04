@@ -1,5 +1,4 @@
 import { PathfindingSettings, Settings } from "battletribes-shared/settings";
-import Layer from "../../../Layer";
 import Tribe from "../../../Tribe";
 import { getEntitiesInRange, stopEntity, willStopAtDesiredDistance } from "../../../ai-shared";
 import { PhysicsComponentArray } from "../../../components/PhysicsComponent";
@@ -18,8 +17,8 @@ import { SpikesComponentArray } from "../../../components/SpikesComponent";
 import { TRIBE_WARRIOR_VISION_RANGE } from "../tribe-warrior";
 import { TRIBE_WORKER_VISION_RANGE, TRIBE_WORKER_RADIUS } from "../tribe-worker";
 import { InventoryName, Inventory, ItemInfoRecord, ITEM_TYPE_RECORD, ITEM_INFO_RECORD, ToolItemInfo } from "battletribes-shared/items/items";
-import { getAgeTicks, TransformComponentArray } from "../../../components/TransformComponent";
-import { getEntityLayer, getEntityType, getGameTicks } from "../../../world";
+import { TransformComponentArray } from "../../../components/TransformComponent";
+import { getEntityAgeTicks, getEntityLayer, getEntityType, getGameTicks } from "../../../world";
 
 const enum Vars {
    BLOCKING_TRIBESMAN_DISTANCE = 80,
@@ -146,14 +145,13 @@ const shouldRecalculatePath = (tribesman: EntityID, goalX: number, goalY: number
    } else {
       // @Speed
       // Recalculate if the tribesman isn't making any progress
-      const transformComponent = TransformComponentArray.getComponent(tribesman);
       const physicsComponent = PhysicsComponentArray.getComponent(tribesman);
 
       const vx = physicsComponent.selfVelocity.x;
       const vy = physicsComponent.selfVelocity.y;
       const velocitySquare = vx * vx + vy * vy;
       
-      const ageTicks = getAgeTicks(transformComponent);
+      const ageTicks = getEntityAgeTicks(tribesman);
       if (tribesmanComponent.rawPath.length > 2 && ageTicks % Settings.TPS === 0 && velocitySquare < 10 * 10) {
          return true;
       }
@@ -253,7 +251,7 @@ const continueCurrentPath = (tribesman: EntityID, goalX: number, goalY: number):
 
       // @Speed: only do this if we know the path has a door in it
       // Open any doors in their way
-      const ageTicks = getAgeTicks(transformComponent);
+      const ageTicks = getEntityAgeTicks(tribesman);
       if (ageTicks % ((Settings.TPS / 6) | 0) === 0) {
          openDoors(tribesman, tribeComponent.tribe);
       }

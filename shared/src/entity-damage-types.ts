@@ -284,6 +284,14 @@ const ENTITY_DAMAGE_INFO_RECORD: Record<EntityType, EntityDamageInfo> = {
    [EntityType.guardian]: {
       effectiveDamageTypes: [],
       stoppedDamageTypes: []
+   },
+   [EntityType.guardianGemQuake]: {
+      effectiveDamageTypes: [],
+      stoppedDamageTypes: []
+   },
+   [EntityType.guardianGemFragmentProjectile]: {
+      effectiveDamageTypes: [],
+      stoppedDamageTypes: []
    }
 };
 

@@ -1,3 +1,4 @@
+import { Hitbox } from "../../../shared/src/boxes/boxes";
 import Entity from "../Entity";
 import ColouredRenderPart from "./ColouredRenderPart";
 import RenderAttachPoint from "./RenderAttachPoint";
@@ -17,6 +18,7 @@ export const enum RenderUnitType {
 }
 
 export type RenderThing = RenderPart | RenderAttachPoint;
+export type RenderParent = Hitbox | RenderThing | null;
 
 export function thingIsRenderPart(thing: RenderThing): thing is RenderPart {
    return typeof (thing as RenderPart).tintR !== "undefined";

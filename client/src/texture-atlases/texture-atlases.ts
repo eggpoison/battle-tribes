@@ -320,8 +320,18 @@ export const TEXTURE_SOURCES: Array<string> = [
    "entities/fibre-plant/fibre-plant.png",
    "entities/shield-items/wooden-shield.png",
    "entities/guardian/guardian-head.png",
+   "entities/guardian/guardian-head-rubies.png",
    "entities/guardian/guardian-body.png",
-   "entities/guardian/guardian-limb.png"
+   "entities/guardian/guardian-body-amethysts.png",
+   "entities/guardian/guardian-body-emeralds.png",
+   "entities/guardian/guardian-limb.png",
+   "entities/guardian/guardian-limb-gem-cracks.png",
+   "entities/guardian-gem-quake/gem-1.png",
+   "entities/guardian-gem-quake/gem-2.png",
+   "entities/guardian-gem-quake/gem-3.png",
+   "entities/guardian-gem-fragment-projectile/fragment-1.png",
+   "entities/guardian-gem-fragment-projectile/fragment-2.png",
+   "entities/guardian-gem-fragment-projectile/fragment-3.png"
 ];
 
 const addTextureSource = (textureSource: string): void => {

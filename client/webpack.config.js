@@ -82,6 +82,9 @@ const getStyleLoaders = (cssOptions, preProcessor) => {
 module.exports = {
    mode: process.env.NODE_ENV ?? "development",
    entry: "./src/index",
+   optimization: {
+      innerGraph: true
+   },
    module: {
       rules: [
          {

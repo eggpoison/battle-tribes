@@ -26,13 +26,12 @@ import { gameScreenSetIsDead } from "../components/game/GameScreen";
 import { updateHealthBar } from "../components/game/HealthBar";
 import { selectItemSlot } from "../components/game/GameInteractableLayer";
 import { createComponent } from "../entity-components/component-creation";
-import { addEntity, addLayer, changeEntityLayer, entityExists, getEntityByID, getEntityLayer, layers, registerBasicEntityInfo, removeEntity, setCurrentLayer } from "../world";
+import { addEntity, addLayer, changeEntityLayer, entityExists, getCurrentLayer, getEntityByID, getEntityLayer, layers, registerBasicEntityInfo, removeEntity, setCurrentLayer } from "../world";
 import { NEIGHBOUR_OFFSETS } from "../utils";
 import { createRiverSteppingStoneData } from "../rendering/webgl/river-rendering";
 import Layer, { getTileIndexIncludingEdges, tileIsWithinEdge } from "../Layer";
 import { TransformComponentArray } from "../entity-components/TransformComponent";
 import { playSound } from "../sound";
-import ServerComponent from "../entity-components/ServerComponent";
 
 export function processInitialGameDataPacket(reader: PacketReader): void {
    // Player ID
@@ -303,9 +302,17 @@ const processPlayerUpdateData = (reader: PacketReader): void => {
 
       const component = Player.instance.getServerComponent(componentType);
       if (typeof component.updatePlayerFromData !== "undefined") {
-         component.updatePlayerFromData(reader, false);
+         component.updatePlayerFromData(reader);
       } else {
          component.padData(reader);
+      }
+   }
+
+   const player = Player.instance!;
+   for (let i = 0; i < player.serverComponents.length; i++) {
+      const component = player.serverComponents[i];
+      if (typeof component.updatePlayerAfterData !== "undefined") {
+         component.updatePlayerAfterData();
       }
    }
 
@@ -316,6 +323,8 @@ const processPlayerUpdateData = (reader: PacketReader): void => {
 }
 
 export function processEntityCreationData(entityID: EntityID, reader: PacketReader): void {
+   // @Cleanup: might be able to be cleaned up by making a separate processPlayerCreationData
+   
    const entityType = reader.readNumber() as EntityType;
    const layerIdx = reader.readNumber();
 
@@ -330,24 +339,38 @@ export function processEntityCreationData(entityID: EntityID, reader: PacketRead
       const componentType = reader.readNumber() as ServerComponentType;
       
       const component = createComponent(entity, componentType);
-      if (isPlayer) {
-         component.updatePlayerFromData!(reader, true);
-      } else {
-         component.updateFromData(reader);
-      }
+      // @Incomplete?
+      component.updateFromData(reader, true);
+      // if (isPlayer) {
+      //    if (typeof component.updatePlayerFromData !== "undefined") {
+      //       component.updatePlayerFromData(reader);
+      //    } else {
+      //       component.padData(reader);
+      //    }
+      // } else {
+      //    component.updateFromData(reader);
+      // }
       entity.addServerComponent(componentType, component);
 
       const componentArray = getServerComponentArray(componentType);
       componentArray.addComponent(entity.id, component);
    }
 
-   addEntity(entity);
-
    // Set the player instance
    if (isPlayer) {
       Player.instance = entity as Player;
       Camera.setTrackedEntityID(entityID);
+
+      // @Copynpaste
+      for (let i = 0; i < entity.serverComponents.length; i++) {
+         const component = entity.serverComponents[i];
+         if (typeof component.updatePlayerAfterData !== "undefined") {
+            component.updatePlayerAfterData();
+         }
+      }
    }
+
+   addEntity(entity);
 }
 
 const processEntityUpdateData = (entityID: EntityID, reader: PacketReader): void => {
@@ -369,7 +392,7 @@ const processEntityUpdateData = (entityID: EntityID, reader: PacketReader): void
       const componentType = reader.readNumber() as ServerComponentType;
       
       const component = entity.getServerComponent(componentType);
-      component.updateFromData(reader);
+      component.updateFromData(reader, false);
    }
 
    // @Speed: Does this mean we can just collect all updated entities each tick and not have to do the dirty array bullshit?
@@ -392,9 +415,10 @@ export function processGameDataPacket(reader: PacketReader): void {
    const playerLayer = layers[layerIdx];
 
    // @hack @Temporary
-   const startLayer = Player.instance !== null ? getEntityLayer(Player.instance!.id) : layers[0];
+   const startLayer = getCurrentLayer();
 
    if (playerLayer !== startLayer) {
+      setCurrentLayer(layerIdx);
       playSound("layer-change.mp3", 0.55, 1, Camera.position.copy());
    }
 
@@ -514,7 +538,7 @@ export function processGameDataPacket(reader: PacketReader): void {
    const entitiesToRemove = new Set<Entity>();
 
    // @Hack @Speed: remove once carmack networking is in place
-   const newPlayerLayer = getEntityLayer(Player.instance!.id);
+   const newPlayerLayer = getCurrentLayer();
    if (newPlayerLayer !== startLayer) {
       for (let i = 0; i < TransformComponentArray.entities.length; i++) {
          const entity = TransformComponentArray.entities[i];

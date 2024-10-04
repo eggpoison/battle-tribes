@@ -78,9 +78,9 @@ class DamageBoxComponent extends ServerComponent {
 
    public padData(reader: PacketReader): void {
       const numCircular = reader.readNumber();
-      reader.padOffset(8 * Float32Array.BYTES_PER_ELEMENT * numCircular);
+      reader.padOffset(9 * Float32Array.BYTES_PER_ELEMENT * numCircular);
       const numRectangular = reader.readNumber();
-      reader.padOffset(10 * Float32Array.BYTES_PER_ELEMENT * numRectangular);
+      reader.padOffset(11 * Float32Array.BYTES_PER_ELEMENT * numRectangular);
    }
 
    public updateFromData(reader: PacketReader): void {
@@ -93,6 +93,7 @@ class DamageBoxComponent extends ServerComponent {
          const positionY = reader.readNumber();
          const offsetX = reader.readNumber();
          const offsetY = reader.readNumber();
+         const scale = reader.readNumber();
          const rotation = reader.readNumber();
          const localID = reader.readNumber();
          const radius = reader.readNumber();
@@ -114,6 +115,7 @@ class DamageBoxComponent extends ServerComponent {
          damageBox.box.position.y = positionY;
          damageBox.box.offset.x = offsetX;
          damageBox.box.offset.y = offsetY;
+         damageBox.box.scale = scale;
          damageBox.box.rotation = rotation;
          damageBox.box.radius = radius;
       }
@@ -124,6 +126,7 @@ class DamageBoxComponent extends ServerComponent {
          const positionY = reader.readNumber();
          const offsetX = reader.readNumber();
          const offsetY = reader.readNumber();
+         const scale = reader.readNumber();
          const rotation = reader.readNumber();
          const localID = reader.readNumber();
          const width = reader.readNumber();
@@ -147,6 +150,7 @@ class DamageBoxComponent extends ServerComponent {
          damageBox.box.position.y = positionY;
          damageBox.box.offset.x = offsetX;
          damageBox.box.offset.y = offsetY;
+         damageBox.box.scale = scale;
          damageBox.box.rotation = rotation;
          damageBox.box.width = width;
          damageBox.box.height = height;
@@ -162,6 +166,7 @@ class DamageBoxComponent extends ServerComponent {
          const positionY = reader.readNumber();
          const offsetX = reader.readNumber();
          const offsetY = reader.readNumber();
+         const scale = reader.readNumber();
          const rotation = reader.readNumber();
          const localID = reader.readNumber();
          const radius = reader.readNumber();
@@ -183,6 +188,7 @@ class DamageBoxComponent extends ServerComponent {
          blockBox.box.position.y = positionY;
          blockBox.box.offset.x = offsetX;
          blockBox.box.offset.y = offsetY;
+         blockBox.box.scale = scale;
          blockBox.box.rotation = rotation;
          blockBox.box.radius = radius;
       }
@@ -193,6 +199,7 @@ class DamageBoxComponent extends ServerComponent {
          const positionY = reader.readNumber();
          const offsetX = reader.readNumber();
          const offsetY = reader.readNumber();
+         const scale = reader.readNumber();
          const rotation = reader.readNumber();
          const localID = reader.readNumber();
          const width = reader.readNumber();
@@ -216,6 +223,7 @@ class DamageBoxComponent extends ServerComponent {
          blockBox.box.position.y = positionY;
          blockBox.box.offset.x = offsetX;
          blockBox.box.offset.y = offsetY;
+         blockBox.box.scale = scale;
          blockBox.box.rotation = rotation;
          blockBox.box.width = width;
          blockBox.box.height = height;

@@ -4,7 +4,6 @@ import { EntityID, LimbAction } from "battletribes-shared/entities";
 import { Packet } from "battletribes-shared/packets";
 import { boxIsCircular } from "battletribes-shared/boxes/boxes";
 import { getBoxesCollidingEntities } from "battletribes-shared/hitbox-collision";
-import Layer from "../Layer";
 import { ServerBlockBox, ServerDamageBox } from "../boxes";
 import { InventoryUseComponentArray, onBlockBoxCollisionWithDamageBox, onBlockBoxCollisionWithProjectile, onDamageBoxCollision } from "./InventoryUseComponent";
 import { Settings } from "battletribes-shared/settings";
@@ -172,9 +171,9 @@ function getDataLength(entity: EntityID): number {
       }
       
       if (boxIsCircular(damageBox.box)) {
-         lengthBytes += 8 * Float32Array.BYTES_PER_ELEMENT;
+         lengthBytes += 9 * Float32Array.BYTES_PER_ELEMENT;
       } else {
-         lengthBytes += 10 * Float32Array.BYTES_PER_ELEMENT;
+         lengthBytes += 11 * Float32Array.BYTES_PER_ELEMENT;
       }
    }
    for (const blockBox of damageBoxComponent.blockBoxes) {
@@ -183,9 +182,9 @@ function getDataLength(entity: EntityID): number {
       }
       
       if (boxIsCircular(blockBox.box)) {
-         lengthBytes += 8 * Float32Array.BYTES_PER_ELEMENT;
+         lengthBytes += 9 * Float32Array.BYTES_PER_ELEMENT;
       } else {
-         lengthBytes += 10 * Float32Array.BYTES_PER_ELEMENT;
+         lengthBytes += 11 * Float32Array.BYTES_PER_ELEMENT;
       }
    }
 
@@ -245,6 +244,7 @@ function addDataToPacket(packet: Packet, entity: EntityID): void {
       packet.addNumber(box.position.y);
       packet.addNumber(box.offset.x);
       packet.addNumber(box.offset.y);
+      packet.addNumber(box.scale);
       packet.addNumber(box.rotation);
       packet.addNumber(localID);
       packet.addNumber(box.radius);
@@ -271,6 +271,7 @@ function addDataToPacket(packet: Packet, entity: EntityID): void {
       packet.addNumber(box.position.y);
       packet.addNumber(box.offset.x);
       packet.addNumber(box.offset.y);
+      packet.addNumber(box.scale);
       packet.addNumber(box.rotation);
       packet.addNumber(localID);
       packet.addNumber(box.width);
@@ -299,6 +300,7 @@ function addDataToPacket(packet: Packet, entity: EntityID): void {
       packet.addNumber(box.position.y);
       packet.addNumber(box.offset.x);
       packet.addNumber(box.offset.y);
+      packet.addNumber(box.scale);
       packet.addNumber(box.rotation);
       packet.addNumber(localID);
       packet.addNumber(box.radius);
@@ -325,6 +327,7 @@ function addDataToPacket(packet: Packet, entity: EntityID): void {
       packet.addNumber(box.position.y);
       packet.addNumber(box.offset.x);
       packet.addNumber(box.offset.y);
+      packet.addNumber(box.scale);
       packet.addNumber(box.rotation);
       packet.addNumber(localID);
       packet.addNumber(box.width);

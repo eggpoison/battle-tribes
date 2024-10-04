@@ -19,7 +19,7 @@ export function createWarriorHutHitboxes(): ReadonlyArray<Hitbox> {
    const WARRIOR_HUT_SIZE = 104;
 
    const box = new RectangularBox(new Point(0, 0), WARRIOR_HUT_SIZE, WARRIOR_HUT_SIZE, 0);
-   const hitbox = createHitbox(box, 2,HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, []);
+   const hitbox = createHitbox(box, 2, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, []);
    
    return [hitbox];
 }

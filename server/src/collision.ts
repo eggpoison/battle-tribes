@@ -25,7 +25,6 @@ import { onEmbrasureCollision } from "./entities/structures/embrasure";
 import { onTribesmanCollision } from "./entities/tribes/tribe-member";
 import { CollisionPushInfo, collisionBitsAreCompatible, getCollisionPushInfo } from "battletribes-shared/hitbox-collision";
 import { TransformComponent, TransformComponentArray } from "./components/TransformComponent";
-import Layer from "./Layer";
 import { onBallistaWoodenBoltCollision } from "./entities/projectiles/ballista-wooden-bolt";
 import { onBallistaRockCollision } from "./entities/projectiles/ballista-rock";
 import { onBallistaSlimeballCollision } from "./entities/projectiles/ballista-slimeball";
@@ -134,9 +133,10 @@ export function collide(entity: EntityID, pushingEntity: EntityID, pushedHitboxI
       }
    }
 
+   // @Speed: runs for every component array. Not ideal!
    for (const componentArray of ComponentArrays) {
       if (componentArray.hasComponent(entity) && typeof componentArray.onCollision !== "undefined") {
-         componentArray.onCollision(entity, pushingEntity, pushedHitbox, pushingHitbox);
+         componentArray.onCollision(entity, pushingEntity, pushedHitbox, pushingHitbox, collisionPoint);
       }
    }
 

@@ -132,7 +132,7 @@ const completeBlueprint = (blueprintEntity: EntityID, blueprintComponent: Bluepr
          config[ServerComponentType.tribe].tribe = tribeComponent.tribe;
          config[ServerComponentType.structure].connectionInfo = connectionInfo;
          config[ServerComponentType.buildingMaterial].material = BuildingMaterial.wood;
-         createEntityFromConfig(config, getEntityLayer(blueprintEntity));
+         createEntityFromConfig(config, getEntityLayer(blueprintEntity), 0);
          return;
       }
       case BlueprintType.stoneDoor: {
@@ -143,7 +143,7 @@ const completeBlueprint = (blueprintEntity: EntityID, blueprintComponent: Bluepr
          config[ServerComponentType.tribe].tribe = tribeComponent.tribe;
          config[ServerComponentType.structure].connectionInfo = connectionInfo;
          config[ServerComponentType.buildingMaterial].material = BuildingMaterial.stone;
-         createEntityFromConfig(config, getEntityLayer(blueprintEntity));
+         createEntityFromConfig(config, getEntityLayer(blueprintEntity), 0);
          return;
       }
       case BlueprintType.woodenEmbrasure: {
@@ -154,7 +154,7 @@ const completeBlueprint = (blueprintEntity: EntityID, blueprintComponent: Bluepr
          config[ServerComponentType.tribe].tribe = tribeComponent.tribe;
          config[ServerComponentType.structure].connectionInfo = connectionInfo;
          config[ServerComponentType.buildingMaterial].material = BuildingMaterial.wood;
-         createEntityFromConfig(config, getEntityLayer(blueprintEntity));
+         createEntityFromConfig(config, getEntityLayer(blueprintEntity), 0);
          return;
       }
       case BlueprintType.stoneEmbrasure: {
@@ -165,7 +165,7 @@ const completeBlueprint = (blueprintEntity: EntityID, blueprintComponent: Bluepr
          config[ServerComponentType.tribe].tribe = tribeComponent.tribe;
          config[ServerComponentType.structure].connectionInfo = connectionInfo;
          config[ServerComponentType.buildingMaterial].material = BuildingMaterial.stone;
-         createEntityFromConfig(config, getEntityLayer(blueprintEntity));
+         createEntityFromConfig(config, getEntityLayer(blueprintEntity), 0);
          return;
       }
       case BlueprintType.ballista: {
@@ -175,7 +175,7 @@ const completeBlueprint = (blueprintEntity: EntityID, blueprintComponent: Bluepr
          config[ServerComponentType.transform].rotation = transformComponent.rotation;
          config[ServerComponentType.tribe].tribe = tribeComponent.tribe;
          config[ServerComponentType.structure].connectionInfo = connectionInfo;
-         createEntityFromConfig(config, getEntityLayer(blueprintEntity));
+         createEntityFromConfig(config, getEntityLayer(blueprintEntity), 0);
          return;
       }
       case BlueprintType.slingTurret: {
@@ -185,7 +185,7 @@ const completeBlueprint = (blueprintEntity: EntityID, blueprintComponent: Bluepr
          config[ServerComponentType.transform].rotation = transformComponent.rotation;
          config[ServerComponentType.tribe].tribe = tribeComponent.tribe;
          config[ServerComponentType.structure].connectionInfo = connectionInfo;
-         createEntityFromConfig(config, getEntityLayer(blueprintEntity));
+         createEntityFromConfig(config, getEntityLayer(blueprintEntity), 0);
          return;
       }
       case BlueprintType.woodenTunnel: {
@@ -196,7 +196,7 @@ const completeBlueprint = (blueprintEntity: EntityID, blueprintComponent: Bluepr
          config[ServerComponentType.tribe].tribe = tribeComponent.tribe;
          config[ServerComponentType.structure].connectionInfo = connectionInfo;
          config[ServerComponentType.buildingMaterial].material = BuildingMaterial.wood;
-         createEntityFromConfig(config, getEntityLayer(blueprintEntity));
+         createEntityFromConfig(config, getEntityLayer(blueprintEntity), 0);
          return;
       }
       case BlueprintType.stoneTunnel: {
@@ -207,7 +207,7 @@ const completeBlueprint = (blueprintEntity: EntityID, blueprintComponent: Bluepr
          config[ServerComponentType.tribe].tribe = tribeComponent.tribe;
          config[ServerComponentType.structure].connectionInfo = connectionInfo;
          config[ServerComponentType.buildingMaterial].material = BuildingMaterial.stone;
-         createEntityFromConfig(config, getEntityLayer(blueprintEntity));
+         createEntityFromConfig(config, getEntityLayer(blueprintEntity), 0);
          return;
       }
       case BlueprintType.fenceGate: {
@@ -219,7 +219,7 @@ const completeBlueprint = (blueprintEntity: EntityID, blueprintComponent: Bluepr
          config[ServerComponentType.structure].connectionInfo = connectionInfo;
          // @Incomplete
          // config[ServerComponentType.buildingMaterial].material = BuildingMaterial.stone;
-         createEntityFromConfig(config, getEntityLayer(blueprintEntity));
+         createEntityFromConfig(config, getEntityLayer(blueprintEntity), 0);
 
          destroyEntity(blueprintComponent.associatedEntityID);
          
@@ -232,7 +232,7 @@ const completeBlueprint = (blueprintEntity: EntityID, blueprintComponent: Bluepr
          config[ServerComponentType.transform].rotation = transformComponent.rotation;
          config[ServerComponentType.tribe].tribe = tribeComponent.tribe;
          config[ServerComponentType.structure].connectionInfo = connectionInfo;
-         const hut = createEntityFromConfig(config, getEntityLayer(blueprintEntity));
+         const hut = createEntityFromConfig(config, getEntityLayer(blueprintEntity), 0);
 
          // Remove the previous hut
          destroyEntity(blueprintComponent.associatedEntityID);

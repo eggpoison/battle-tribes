@@ -141,17 +141,35 @@ export default class Layer {
       return Math.floor(previousCheck) !== Math.floor(check);
    }
 
-   public getTileType(tileX: number, tileY: number): TileType {
+   public getTileIndexFromPos(x: number, y: number): TileIndex {
+      const tileX = Math.floor(x / Settings.TILE_SIZE);
+      const tileY = Math.floor(y / Settings.TILE_SIZE);
+      return getTileIndexIncludingEdges(tileX, tileY);
+   }
+
+   public getTileType(tileIndex: number): TileType {
+      return this.tileTypes[tileIndex];
+   }
+
+   public getTileXYType(tileX: number, tileY: number): TileType {
       const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
       return this.tileTypes[tileIndex];
    }
 
-   public tileIsWall(tileX: number, tileY: number): boolean {
+   public tileIsWall(tileIndex: TileIndex): boolean {
+      return this.tileIsWalls[tileIndex] === 1 ? true : false;
+   }
+
+   public tileXYIsWall(tileX: number, tileY: number): boolean {
       const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
       return this.tileIsWalls[tileIndex] === 1 ? true : false;
    }
 
-   public getTileBiome(tileX: number, tileY: number): Biome {
+   public getTileBiome(tileIndex: TileIndex): Biome {
+      return this.tileBiomes[tileIndex];
+   }
+
+   public getTileXYBiome(tileX: number, tileY: number): Biome {
       const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
       return this.tileBiomes[tileIndex];
    }
@@ -261,8 +279,8 @@ export default class Layer {
          tileUpdates.push({
             layerIdx: layers.indexOf(this),
             tileIndex: tileIndex,
-            type: this.getTileType(tileX, tileY),
-            isWall: this.tileIsWall(tileX, tileY)
+            type: this.getTileXYType(tileX, tileY),
+            isWall: this.tileXYIsWall(tileX, tileY)
          });
       }
 
@@ -453,7 +471,7 @@ export default class Layer {
       }
    
       for (; n > 0; n--) {
-         const tileType = this.getTileType(x, y);
+         const tileType = this.getTileXYType(x, y);
          if (!tileTypes.includes(tileType)) {
             return false;
          }
@@ -523,7 +541,7 @@ export default class Layer {
       }
    
       for (; n > 0; n--) {
-         const tileIsWall = this.tileIsWall(x, y);
+         const tileIsWall = this.tileXYIsWall(x, y);
          if (tileIsWall) {
             return true;
          }

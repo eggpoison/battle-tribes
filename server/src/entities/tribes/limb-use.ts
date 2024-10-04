@@ -127,7 +127,7 @@ const gatherPlant = (plant: EntityID, attacker: EntityID, gloves: Item | null): 
       config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
       config[ServerComponentType.item].itemType = ItemType.leaf;
       config[ServerComponentType.item].amount = 1;
-      createEntityFromConfig(config, getEntityLayer(plant));
+      createEntityFromConfig(config, getEntityLayer(plant), 0);
    }
 
    // @Hack

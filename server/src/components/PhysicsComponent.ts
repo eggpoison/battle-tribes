@@ -16,7 +16,8 @@ export interface PhysicsComponentParams {
    accelerationX: number;
    accelerationY: number;
    traction: number;
-   isAffectedByFriction: boolean;
+   isAffectedByAirFriction: boolean;
+   isAffectedByGroundFriction: boolean;
    isImmovable: boolean;
 }
 
@@ -29,7 +30,7 @@ for (let i = 0; i < 8; i++) {
    b.push(Math.cos(angle));
 }
 
-/** Anything to do with entities moving */
+/** Allows an entity to dynamically move its position around */
 export class PhysicsComponent {
    // @Cleanup: unbox all of these into x and y and make the component implement its params
    public selfVelocity: Point;
@@ -50,9 +51,8 @@ export class PhysicsComponent {
    // @Cleanup: Might be able to be put on the physics component
    public overrideMoveSpeedMultiplier = false;
 
-   // @Cleanup: maybe change into isAirborne?
-   /** If set to false, the game object will not experience friction from moving over tiles. */
-   public isAffectedByFriction: boolean;
+   public isAffectedByAirFriction: boolean;
+   public isAffectedByGroundFriction: boolean;
 
    /** If true, the entity will not be pushed around by collisions, but will still call any relevant events. */
    public readonly isImmovable: boolean;
@@ -70,7 +70,8 @@ export class PhysicsComponent {
       this.acceleration = new Point(params.accelerationX, params.accelerationY);
       this.traction = params.traction;
       
-      this.isAffectedByFriction = params.isAffectedByFriction;
+      this.isAffectedByAirFriction = params.isAffectedByAirFriction;
+      this.isAffectedByGroundFriction = params.isAffectedByGroundFriction;
       this.isImmovable = params.isImmovable;
    }
 }
@@ -168,7 +169,7 @@ const applyPhysics = (entity: EntityID, physicsComponent: PhysicsComponent): voi
    if (physicsComponent.acceleration.x !== 0 || physicsComponent.acceleration.y !== 0) {
       // @Speed: very complicated logic
       let moveSpeedMultiplier: number;
-      if (physicsComponent.overrideMoveSpeedMultiplier || !physicsComponent.isAffectedByFriction) {
+      if (physicsComponent.overrideMoveSpeedMultiplier || !physicsComponent.isAffectedByGroundFriction) {
          moveSpeedMultiplier = 1;
       } else if (tileType === TileType.water && !transformComponent.isInRiver) {
          moveSpeedMultiplier = physicsComponent.moveSpeedMultiplier;
@@ -189,7 +190,7 @@ const applyPhysics = (entity: EntityID, physicsComponent: PhysicsComponent): voi
 
    // If the game object is in a river, push them in the flow direction of the river
    // The tileMoveSpeedMultiplier check is so that game objects on stepping stones aren't pushed
-   if (transformComponent.isInRiver && !physicsComponent.overrideMoveSpeedMultiplier && physicsComponent.isAffectedByFriction) {
+   if (transformComponent.isInRiver && !physicsComponent.overrideMoveSpeedMultiplier && physicsComponent.isAffectedByGroundFriction) {
       const flowDirectionIdx = layer.riverFlowDirections[tileIndex];
       physicsComponent.externalVelocity.x += 240 * Settings.I_TPS * a[flowDirectionIdx];
       physicsComponent.externalVelocity.y += 240 * Settings.I_TPS * b[flowDirectionIdx];
@@ -201,16 +202,21 @@ const applyPhysics = (entity: EntityID, physicsComponent: PhysicsComponent): voi
    if (physicsComponent.selfVelocity.x !== 0 || physicsComponent.selfVelocity.y !== 0) {
       const friction = TILE_FRICTIONS[tileType];
       
-      // Apply air and ground friction to selfVelocity
-      physicsComponent.selfVelocity.x *= 1 - friction * Settings.I_TPS * 2;
-      physicsComponent.selfVelocity.y *= 1 - friction * Settings.I_TPS * 2;
+      if (physicsComponent.isAffectedByAirFriction) {
+         // Air friction
+         physicsComponent.selfVelocity.x *= 1 - friction * Settings.I_TPS * 2;
+         physicsComponent.selfVelocity.y *= 1 - friction * Settings.I_TPS * 2;
+      }
 
-      // @Incomplete @Bug: Doesn't take into acount the TPS. Would also be fixed by pre-multiplying the array
-      const selfVelocityMagnitude = physicsComponent.selfVelocity.length();
-      if (selfVelocityMagnitude > 0) {
-         const groundFriction = Math.min(friction, selfVelocityMagnitude);
-         physicsComponent.selfVelocity.x -= groundFriction * physicsComponent.selfVelocity.x / selfVelocityMagnitude;
-         physicsComponent.selfVelocity.y -= groundFriction * physicsComponent.selfVelocity.y / selfVelocityMagnitude;
+      if (physicsComponent.isAffectedByGroundFriction) {
+         // @Incomplete @Bug: Doesn't take into account the TPS. Would also be fixed by pre-multiplying the array
+         // Ground friction
+         const selfVelocityMagnitude = physicsComponent.selfVelocity.length();
+         if (selfVelocityMagnitude > 0) {
+            const groundFriction = Math.min(friction, selfVelocityMagnitude);
+            physicsComponent.selfVelocity.x -= groundFriction * physicsComponent.selfVelocity.x / selfVelocityMagnitude;
+            physicsComponent.selfVelocity.y -= groundFriction * physicsComponent.selfVelocity.y / selfVelocityMagnitude;
+         }
       }
 
       shouldUpdate = true;
@@ -220,16 +226,21 @@ const applyPhysics = (entity: EntityID, physicsComponent: PhysicsComponent): voi
    if (physicsComponent.externalVelocity.x !== 0 || physicsComponent.externalVelocity.y !== 0) {
       const friction = TILE_FRICTIONS[tileType];
       
-      // Apply air and ground friction to externalVelocity
-      physicsComponent.externalVelocity.x *= 1 - friction * Settings.I_TPS * 2;
-      physicsComponent.externalVelocity.y *= 1 - friction * Settings.I_TPS * 2;
+      if (physicsComponent.isAffectedByAirFriction) {
+         // Air friction
+         physicsComponent.externalVelocity.x *= 1 - friction * Settings.I_TPS * 2;
+         physicsComponent.externalVelocity.y *= 1 - friction * Settings.I_TPS * 2;
+      }
 
-      // @Incomplete @Bug: Doesn't take into acount the TPS. Would also be fixed by pre-multiplying the array
-      const externalVelocityMagnitude = physicsComponent.externalVelocity.length();
-      if (externalVelocityMagnitude > 0) {
-         const groundFriction = Math.min(friction, externalVelocityMagnitude);
-         physicsComponent.externalVelocity.x -= groundFriction * physicsComponent.externalVelocity.x / externalVelocityMagnitude;
-         physicsComponent.externalVelocity.y -= groundFriction * physicsComponent.externalVelocity.y / externalVelocityMagnitude;
+      if (physicsComponent.isAffectedByGroundFriction) {
+         // @Incomplete @Bug: Doesn't take into acount the TPS. Would also be fixed by pre-multiplying the array
+         // Ground friction
+         const externalVelocityMagnitude = physicsComponent.externalVelocity.length();
+         if (externalVelocityMagnitude > 0) {
+            const groundFriction = Math.min(friction, externalVelocityMagnitude);
+            physicsComponent.externalVelocity.x -= groundFriction * physicsComponent.externalVelocity.x / externalVelocityMagnitude;
+            physicsComponent.externalVelocity.y -= groundFriction * physicsComponent.externalVelocity.y / externalVelocityMagnitude;
+         }
       }
 
       shouldUpdate = true;
@@ -320,6 +331,26 @@ export function applyKnockback(entity: EntityID, knockback: number, knockbackDir
    physicsComponent.externalVelocity.x += knockbackForce * Math.sin(knockbackDirection);
    physicsComponent.externalVelocity.y += knockbackForce * Math.cos(knockbackDirection);
 
+   // @Hack?
+   if (getEntityType(entity)! === EntityType.player) {
+      registerPlayerKnockback(entity, knockback, knockbackDirection);
+   }
+}
+
+export function applyAbsoluteKnockback(entity: EntityID, knockback: number, knockbackDirection: number): void {
+   if (!PhysicsComponentArray.hasComponent(entity)) {
+      return;
+   }
+
+   const physicsComponent = PhysicsComponentArray.getComponent(entity);
+   if (physicsComponent.isImmovable) {
+      return;
+   }
+   
+   physicsComponent.externalVelocity.x += knockback * Math.sin(knockbackDirection);
+   physicsComponent.externalVelocity.y += knockback * Math.cos(knockbackDirection);
+
+   // @Hack?
    if (getEntityType(entity)! === EntityType.player) {
       registerPlayerKnockback(entity, knockback, knockbackDirection);
    }

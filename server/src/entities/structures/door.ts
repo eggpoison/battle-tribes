@@ -26,13 +26,15 @@ export function createDoorConfig(): ComponentConfig<ComponentTypes> {
          collisionMask: DEFAULT_COLLISION_MASK,
          hitboxes: createDoorHitboxes()
       },
+      // @Hack: Shouldn't need!
       [ServerComponentType.physics]: {
          velocityX: 0,
          velocityY: 0,
          accelerationX: 0,
          accelerationY: 0,
          traction: 1,
-         isAffectedByFriction: false,
+         isAffectedByAirFriction: false,
+         isAffectedByGroundFriction: false,
          isImmovable: true
       },
       [ServerComponentType.health]: {

@@ -6,7 +6,6 @@ import { Biome } from "battletribes-shared/tiles";
 import { randInt, TileIndex, UtilVars } from "battletribes-shared/utils";
 import { moveEntityToPosition, entityHasReachedPosition, stopEntity } from "../ai-shared";
 import { chooseEscapeEntity, runFromAttackingEntity } from "../ai/escape-ai";
-import { shouldWander, getWanderTargetTile, wander } from "../ai/wander-ai";
 import { getTileX, getTileY } from "../Layer";
 import { AIHelperComponentArray } from "./AIHelperComponent";
 import { EscapeAIComponentArray, updateEscapeAIComponent } from "./EscapeAIComponent";
@@ -69,31 +68,9 @@ function onTick(_krumblidComponent: KrumblidComponent, krumblid: EntityID): void
       }
    }
 
-   const physicsComponent = PhysicsComponentArray.getComponent(krumblid);
-
    // Wander AI
-   const layer = getEntityLayer(krumblid);
-   const wanderAIComponent = WanderAIComponentArray.getComponent(krumblid);
-   if (wanderAIComponent.targetPositionX !== -1) {
-      if (entityHasReachedPosition(krumblid, wanderAIComponent.targetPositionX, wanderAIComponent.targetPositionY)) {
-         wanderAIComponent.targetPositionX = -1;
-         stopEntity(physicsComponent);
-      }
-   } else if (shouldWander(physicsComponent, 0.25)) {
-      let attempts = 0;
-      let targetTile: TileIndex;
-      do {
-         targetTile = getWanderTargetTile(krumblid, KrumblidVars.VISION_RANGE);
-      } while (++attempts <= 50 && (layer.tileIsWalls[targetTile] === 1 || layer.tileBiomes[targetTile] !== Biome.desert));
-
-      const tileX = getTileX(targetTile);
-      const tileY = getTileY(targetTile);
-      const x = (tileX + Math.random()) * Settings.TILE_SIZE;
-      const y = (tileY + Math.random()) * Settings.TILE_SIZE;
-      wander(krumblid, x, y, 200, Vars.TURN_SPEED);
-   } else {
-      stopEntity(physicsComponent);
-   }
+   const wanderAI = aiHelperComponent.getWanderAI();
+   wanderAI.run(krumblid);
 }
 
 function getDataLength(): number {

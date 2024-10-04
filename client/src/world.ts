@@ -27,6 +27,10 @@ export function setCurrentLayer(layerIdx: number): void {
    currentLayer = layers[layerIdx];
 }
 
+export function getCurrentLayer(): Layer {
+   return currentLayer;
+}
+
 export function getEntityLayer(entity: EntityID): Layer {
    return entityLayers[entity]!;
 }
@@ -47,6 +51,20 @@ export function registerBasicEntityInfo(entity: Entity, layer: Layer): void {
 
 export function addEntity(entity: Entity): void {
    entity.callOnLoadFunctions();
+
+   // If the entity has first spawned in, call any spawn functions
+   const transformComponent = TransformComponentArray.getComponent(entity.id);
+   const ageTicks = transformComponent.ageTicks;
+   const componentArrays = getComponentArrays();
+   if (ageTicks === 0) {
+      for (let i = 0; i < componentArrays.length; i++) {
+         const componentArray = componentArrays[i];
+         if (componentArray.hasComponent(entity.id) && typeof componentArray.onSpawn !== "undefined") {
+            const component = componentArray.getComponent(entity.id);
+            componentArray.onSpawn(component, entity.id);
+         }
+      }
+   }
 
    // @Temporary? useless now?
    addEntityToRenderHeightMap(entity);

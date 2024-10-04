@@ -74,8 +74,8 @@ const addBoxVertices = (vertices: Array<number>, box: Box, adjustment: Point, r:
       // Rectangular
       
       const rotation = box.rotation;
-      const halfWidth = box.width / 2;
-      const halfHeight = box.height / 2;
+      const halfWidth = box.width * box.scale / 2;
+      const halfHeight = box.height * box.scale / 2;
       
       // Top
       {
@@ -164,12 +164,12 @@ const addBoxVertices = (vertices: Array<number>, box: Box, adjustment: Point, r:
       // Circular
 
       const step = 2 * Math.PI / CIRCLE_VERTEX_COUNT;
+      const radius = box.radius * box.scale;
 
       for (let i = 0; i < CIRCLE_VERTEX_COUNT; i++) {
          const radians = i * 2 * Math.PI / CIRCLE_VERTEX_COUNT;
          // @Speed: Garbage collection
          
-         const radius = box.radius;
          const bl = Point.fromVectorForm(radius, radians);
          const br = Point.fromVectorForm(radius, radians + step);
          const tl = Point.fromVectorForm(radius + BORDER_THICKNESS, radians);

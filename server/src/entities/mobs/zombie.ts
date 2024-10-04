@@ -1,7 +1,7 @@
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "battletribes-shared/collision";
 import { EntityID, EntityType, PlayerCauseOfDeath } from "battletribes-shared/entities";
 import { Settings } from "battletribes-shared/settings";
-import { Point, randInt } from "battletribes-shared/utils";
+import { Point, randInt, TileIndex } from "battletribes-shared/utils";
 import { HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
 import { ZombieComponentArray, zombieShouldAttackEntity } from "../../components/ZombieComponent";
 import { InventoryCreationInfo, pickupItemEntity } from "../../components/InventoryComponent";
@@ -17,6 +17,10 @@ import { TransformComponentArray } from "../../components/TransformComponent";
 import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
 import CircularBox from "battletribes-shared/boxes/CircularBox";
 import { getEntityType } from "../../world";
+import WanderAI from "../../ai/WanderAI";
+import { AIType } from "../../components/AIHelperComponent";
+import { Biome } from "../../../../shared/src/tiles";
+import Layer from "../../Layer";
 
 export const enum ZombieVars {
    CHASE_PURSUE_TIME_TICKS = 5 * Settings.TPS,
@@ -35,6 +39,9 @@ type ComponentTypes = ServerComponentType.transform
 
 const MAX_HEALTH = 20;
 
+function tileIsValidCallback(_entity: EntityID, layer: Layer, tileIndex: TileIndex): boolean {
+   return !layer.tileIsWall(tileIndex) && layer.getTileBiome(tileIndex) === Biome.grasslands;
+}
 
 export function createZombieConfig(): ComponentConfig<ComponentTypes> {
    const inventories = new Array<InventoryCreationInfo>();
@@ -74,7 +81,8 @@ export function createZombieConfig(): ComponentConfig<ComponentTypes> {
          accelerationX: 0,
          accelerationY: 0,
          traction: 1,
-         isAffectedByFriction: true,
+         isAffectedByAirFriction: true,
+         isAffectedByGroundFriction: true,
          isImmovable: false
       },
       [ServerComponentType.health]: {
@@ -90,11 +98,13 @@ export function createZombieConfig(): ComponentConfig<ComponentTypes> {
       [ServerComponentType.wanderAI]: {},
       [ServerComponentType.aiHelper]: {
          ignoreDecorativeEntities: true,
-         visionRange: ZombieVars.VISION_RANGE
+         visionRange: ZombieVars.VISION_RANGE,
+         ais: {
+            [AIType.wander]: new WanderAI(150, Math.PI * 3, 0.4, tileIsValidCallback)
+         }
       },
       [ServerComponentType.inventory]: {
-         inventories: [
-         ]
+         inventories: []
       },
       [ServerComponentType.inventoryUse]: {
          usedInventoryNames: usedInventoryNames

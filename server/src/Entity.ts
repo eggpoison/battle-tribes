@@ -24,7 +24,7 @@ const a = <ComponentTypes extends ServerComponentType>(componentConfig: Componen
 
 // @Cleanup: maybe rename once other generic one is reworked?
 // export function createEntityFromConfig<ComponentTypes extends ServerComponentType>(componentTypes: ReadonlyArray<ComponentTypes>, componentConfig: ComponentConfig<ComponentTypes>): void {
-export function createEntityFromConfig<ComponentTypes extends ServerComponentType>(componentConfig: ComponentConfig<ComponentTypes>, layer: Layer): EntityID {
+export function createEntityFromConfig<ComponentTypes extends ServerComponentType>(componentConfig: ComponentConfig<ComponentTypes>, layer: Layer, joinDelayTicks: number): EntityID {
    const id = getNextEntityID();
    // @Hack
    const componentTypes = a(componentConfig);
@@ -52,12 +52,12 @@ export function createEntityFromConfig<ComponentTypes extends ServerComponentTyp
       const component = new constructor(params) as typeof constructor;
 
       const componentArray = ComponentArrayRecord[componentType] as ComponentArray<object, ComponentTypes>;
-      componentArray.addComponent(id, component);
+      componentArray.addComponent(id, component, joinDelayTicks);
    }
 
    // @Hack: move type out of transform component
    const transformComponentParams = (componentConfig as ComponentConfig<ServerComponentType.transform>)[ServerComponentType.transform];
-   addEntityToJoinBuffer(id, transformComponentParams.type, layer);
+   addEntityToJoinBuffer(id, transformComponentParams.type, layer, joinDelayTicks);
 
    return id;
 }

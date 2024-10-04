@@ -4,7 +4,7 @@ import { TileType } from "battletribes-shared/tiles";
 import Camera from "./Camera";
 import Entity from "./Entity";
 import { ServerComponentType } from "battletribes-shared/components";
-import { getEntityLayer } from "./world";
+import { getCurrentLayer, getEntityLayer } from "./world";
 import Player from "./entities/Player";
 
 // @Robustness: automatically detect from folder
@@ -334,7 +334,7 @@ export function playBuildingHitSound(source: Point): void {
 }
 
 export function playRiverSounds(): void {
-   const layer = getEntityLayer(Player.instance!.id);
+   const layer = getCurrentLayer();
    
    const minTileX = Camera.minVisibleChunkX * Settings.CHUNK_SIZE;
    const maxTileX = (Camera.maxVisibleChunkX + 1) * Settings.CHUNK_SIZE - 1;

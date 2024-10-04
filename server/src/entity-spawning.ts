@@ -350,7 +350,7 @@ const spawnEntities = (spawnInfo: EntitySpawnInfo, spawnOriginX: number, spawnOr
    config[ServerComponentType.transform].position.x = spawnOriginX;
    config[ServerComponentType.transform].position.y = spawnOriginY;
    config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
-   const entity = createEntityFromConfig(config, layer);
+   const entity = createEntityFromConfig(config, layer, 0);
    
    addEntityToCensus(entity, spawnInfo.entityType);
    if (!SERVER.isRunning) {
@@ -406,7 +406,7 @@ const spawnEntities = (spawnInfo: EntitySpawnInfo, spawnOriginX: number, spawnOr
          config[ServerComponentType.transform].position.x = spawnPosition.x;
          config[ServerComponentType.transform].position.y = spawnPosition.y;
          config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
-         const entity = createEntityFromConfig(config, layer);
+         const entity = createEntityFromConfig(config, layer, 0);
 
          addEntityToCensus(entity, spawnInfo.entityType);
          if (!SERVER.isRunning) {

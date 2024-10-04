@@ -3,12 +3,11 @@ import { ComponentArray } from "./ComponentArray";
 import { EntityID } from "battletribes-shared/entities";
 import { Settings } from "battletribes-shared/settings";
 import { lerp } from "battletribes-shared/utils";
-import Layer from "../Layer";
 import { entitiesAreColliding, CollisionVars } from "../collision";
 import { PhysicsComponentArray } from "./PhysicsComponent";
 import { ThrowingProjectileComponentArray } from "./ThrowingProjectileComponent";
-import { getAgeTicks, TransformComponentArray } from "./TransformComponent";
-import { destroyEntity, entityExists } from "../world";
+import { TransformComponentArray } from "./TransformComponent";
+import { destroyEntity, entityExists, getEntityAgeTicks } from "../world";
 
 const enum Vars {
    RETURN_TIME_TICKS = 1 * Settings.TPS
@@ -28,10 +27,9 @@ export const BattleaxeProjectileComponentArray = new ComponentArray<BattleaxePro
 });
 
 function onTick(_battleaxeProjectileComponent: BattleaxeProjectileComponent, battleaxe: EntityID): void {
-   const transformComponent = TransformComponentArray.getComponent(battleaxe);
    const physicsComponent = PhysicsComponentArray.getComponent(battleaxe);
 
-   const ageTicks = getAgeTicks(transformComponent);
+   const ageTicks = getEntityAgeTicks(battleaxe);
    if (ageTicks < Vars.RETURN_TIME_TICKS) {
       physicsComponent.angularVelocity = -6 * Math.PI;
    } else {
@@ -49,9 +47,10 @@ function onTick(_battleaxeProjectileComponent: BattleaxeProjectileComponent, bat
          return;
       }
 
+      const transformComponent = TransformComponentArray.getComponent(battleaxe);
       const ownerTransformComponent = TransformComponentArray.getComponent(throwingProjectileComponent.tribeMember);
       
-      const ageTicks = getAgeTicks(transformComponent);
+      const ageTicks = getEntityAgeTicks(battleaxe);
       const ticksSinceReturn = ageTicks - Vars.RETURN_TIME_TICKS;
       transformComponent.rotation -= lerp(6 * Math.PI / Settings.TPS, 0, Math.min(ticksSinceReturn / Settings.TPS * 1.25, 1));
 

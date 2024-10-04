@@ -3,9 +3,8 @@ import { ServerComponentType } from "battletribes-shared/components";
 import { ComponentArray } from "./ComponentArray";
 import { ComponentConfig } from "../components";
 import { Packet } from "battletribes-shared/packets";
-import { getAgeTicks, TransformComponentArray } from "./TransformComponent";
 import CircularBox from "battletribes-shared/boxes/CircularBox";
-import { destroyEntity } from "../world";
+import { destroyEntity, getEntityAgeTicks } from "../world";
 
 export interface RockSpikeProjectileComponentParams {
    size: number;
@@ -50,8 +49,7 @@ function onInitialise(config: ComponentConfig<ServerComponentType.transform | Se
 }
 
 function onTick(rockSpikeComponent: RockSpikeComponent, rockSpike: EntityID): void {
-   const transformComponent = TransformComponentArray.getComponent(rockSpike);
-   const ageTicks = getAgeTicks(transformComponent);
+   const ageTicks = getEntityAgeTicks(rockSpike);
    
    // Remove if past lifetime
    if (ageTicks >= rockSpikeComponent.lifetimeTicks) {

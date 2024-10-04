@@ -201,7 +201,13 @@ const CLIENT_ENTITY_INFO_RECORD: Record<EntityType, ClientEntityInfo> = {
       name: "Fibre Plant"
    },
    [EntityType.guardian]: {
-      name: "Fibre Plant"
+      name: "Guardian"
+   },
+   [EntityType.guardianGemQuake]: {
+      name: "Guardian Gem Quake"
+   },
+   [EntityType.guardianGemFragmentProjectile]: {
+      name: "Guardian Gem Fragment Projectile"
    }
 };
 

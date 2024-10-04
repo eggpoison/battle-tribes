@@ -23,7 +23,7 @@ const getAdjacentWaterDist = (layer: Layer, tileX: number, tileY: number, grassT
       return 1;
    }
    
-   if (layer.getTileType(tileX, tileY) !== TileType.water) {
+   if (layer.getTileXYType(tileX, tileY) !== TileType.water) {
       return 1;
    }
 
@@ -40,7 +40,7 @@ const getDiagonalWaterDist = (layer: Layer, tileX: number, tileY: number, grassT
       return 1;
    }
    
-   if (layer.getTileType(tileX, tileY) !== TileType.water) {
+   if (layer.getTileXYType(tileX, tileY) !== TileType.water) {
       return 1;
    }
 
@@ -101,7 +101,7 @@ export function generateGrassStrands(): void {
             const config = createGrassStrandConfig();
             config[ServerComponentType.transform].position.x = x;
             config[ServerComponentType.transform].position.y = y;
-            createEntityFromConfig(config, surfaceLayer);
+            createEntityFromConfig(config, surfaceLayer, 0);
          }
       }
    }

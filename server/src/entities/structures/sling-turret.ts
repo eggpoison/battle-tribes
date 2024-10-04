@@ -47,7 +47,8 @@ export function createSlingTurretConfig(): ComponentConfig<ComponentTypes> {
       },
       [ServerComponentType.aiHelper]: {
          ignoreDecorativeEntities: true,
-         visionRange: VISION_RANGE
+         visionRange: VISION_RANGE,
+         ais: {}
       },
       [ServerComponentType.turret]: {
          fireCooldownTicks: SLING_TURRET_SHOT_COOLDOWN_TICKS + SLING_TURRET_RELOAD_TIME_TICKS

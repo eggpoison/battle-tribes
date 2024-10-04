@@ -46,7 +46,6 @@ import FenceComponent from "./FenceComponent";
 import FenceGateComponent from "./FenceGateComponent";
 import StructureComponent from "./StructureComponent";
 import CraftingStationComponent from "./CraftingStationComponent";
-import Entity from "../Entity";
 import BoulderComponent from "./BoulderComponent";
 import AIHelperComponent from "./AIHelperComponent";
 import WanderAIComponent from "./WanderAIComponent";
@@ -60,7 +59,6 @@ import ThrowingProjectileComponent from "./ThrowingProjectileComponent";
 import TribeWarriorComponent from "./TribeWarriorComponent";
 import TransformComponent from "./TransformComponent";
 import LayeredRodComponent from "./LayeredRodComponent";
-import { PacketReader } from "battletribes-shared/packets";
 import DecorationComponent from "./DecorationComponent";
 import BattleaxeProjectileComponent from "./BattleaxeProjectileComponent";
 import SpearProjectileComponent from "./SpearProjectileComponent";
@@ -71,6 +69,8 @@ import IceArrowComponent from "./IceArrowComponent";
 import DamageBoxComponent from "./DamageBoxComponent";
 import RandomSoundComponent from "./client-components/RandomSoundComponent";
 import GuardianComponent from "./GuardianComponent";
+import { GuardianGemQuakeComponent } from "./GuardianGemQuakeComponent";
+import { GuardianGemFragmentProjectileComponent } from "./GuardianGemFragmentProjectileComponent";
 
 export enum ClientComponentType {
    equipment,
@@ -143,7 +143,9 @@ const ServerComponents = {
    [ServerComponentType.spearProjectile]: (): SpearProjectileComponent => 0 as any,
    [ServerComponentType.krumblid]: (): KrumblidComponent => 0 as any,
    [ServerComponentType.damageBox]: (): DamageBoxComponent => 0 as any,
-   [ServerComponentType.guardian]: (): GuardianComponent => 0 as any
+   [ServerComponentType.guardian]: (): GuardianComponent => 0 as any,
+   [ServerComponentType.guardianGemQuake]: (): GuardianGemQuakeComponent => 0 as any,
+   [ServerComponentType.guardianGemFragmentProjectile]: (): GuardianGemFragmentProjectileComponent => 0 as any
 } satisfies Record<ServerComponentType, () => ServerComponent>;
 
 export const ClientComponents = {

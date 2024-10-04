@@ -62,7 +62,7 @@ import { resolveEntityCollisions, resolvePlayerCollisions } from "./collision";
 import { preloadTextureAtlasImages } from "./texture-atlases/texture-atlas-stitching";
 import { updatePlayerMovement, updatePlayerItems } from "./components/game/GameInteractableLayer";
 import { refreshChunkedEntityRenderingBuffers } from "./rendering/webgl/chunked-entity-rendering";
-import { getEntityByID, getEntityLayer, layers } from "./world";
+import { getCurrentLayer, getEntityByID, getEntityLayer, layers } from "./world";
 import Layer from "./Layer";
 import { createDarkeningShaders, renderDarkening } from "./rendering/webgl/darkening-rendering";
 import { createLightDebugShaders, renderLightingDebug } from "./rendering/webgl/light-debug-rendering";
@@ -462,8 +462,7 @@ abstract class Game {
          Camera.updateVisibleRenderChunkBounds();
       }
 
-      // @Incomplete: will this work when the player dies?
-      const playerLayer = getEntityLayer(Player.instance!.id);
+      const playerLayer = getCurrentLayer();
 
       updateUBOs();
 

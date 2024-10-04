@@ -12,13 +12,11 @@ import { onSlimeSpitDeath } from "./entities/projectiles/slime-spit";
 import { onCactusDeath } from "./entities/resources/cactus";
 import { onTribeWarriorDeath } from "./entities/tribes/tribe-warrior";
 import { onTribeWorkerDeath } from "./entities/tribes/tribe-worker";
-import { getPlayerClientFromInstanceID, registerEntityRemoval } from "./server/player-clients";
+import { registerEntityRemoval } from "./server/player-clients";
 import Tribe from "./Tribe";
-import generateSurfaceTerrain, { TerrainGenerationInfo } from "./world-generation/surface-terrain-generation";
-import { generateUndergroundTerrain } from "./world-generation/underground-terrain-generation";
+import { TerrainGenerationInfo } from "./world-generation/surface-terrain-generation";
 import Chunk from "./Chunk";
-import { TransformComponent, TransformComponentArray } from "./components/TransformComponent";
-import { PlayerComponentArray } from "./components/PlayerComponent";
+import { TransformComponentArray } from "./components/TransformComponent";
 
 const enum Vars {
    START_TIME = 6
@@ -33,6 +31,8 @@ interface EntityJoinInfo {
    readonly id: number;
    readonly entityType: EntityType;
    readonly layer: Layer;
+   /** Number of ticks remaining until the entity will be added. */
+   ticksRemaining: number;
 }
 
 export let surfaceLayer: Layer;
@@ -45,9 +45,11 @@ let time = Vars.START_TIME;
 
 const entityTypes: Partial<Record<EntityID, EntityType>> = {};
 const entityLayers: Partial<Record<EntityID, Layer>> = {};
+const entitySpawnTicks: Partial<Record<EntityID, number>> = {};
 
 const tribes = new Array<Tribe>();
 
+// Array of join infos, sorted by the ticks remaining until they join.
 const entityJoinBuffer = new Array<EntityJoinInfo>();
 const entityRemoveBuffer = new Array<EntityID>();
 
@@ -143,37 +145,67 @@ export function getEntityLayer(entity: EntityID): Layer {
    return layer;
 }
 
+export function getEntityAgeTicks(entity: EntityID): number {
+   if (typeof entitySpawnTicks[entity] === "undefined") {
+      throw new Error();
+   }
+   return ticks - entitySpawnTicks[entity]!;
+}
+
 export function pushJoinBuffer(): void {
+   // Push entities
+   let finalPushedIdx: number | undefined;
+   for (let i = 0; i < entityJoinBuffer.length; i++) {
+      const joinInfo = entityJoinBuffer[i];
+      if (joinInfo.ticksRemaining === 0) {
+         entityTypes[joinInfo.id] = joinInfo.entityType;
+         entityLayers[joinInfo.id] = joinInfo.layer;
+         entitySpawnTicks[joinInfo.id] = ticks;
+         finalPushedIdx = i;
+      } else {
+         joinInfo.ticksRemaining--;
+      }
+   }
+
+   if (typeof finalPushedIdx !== "undefined") {
+      // Clear pushed entities from queue
+      const numPushedEntities = finalPushedIdx + 1;
+      entityJoinBuffer.splice(0, numPushedEntities);
+   }
+   
+   
    // Push components
    for (let i = 0; i < ComponentArrays.length; i++) {
       const componentArray = ComponentArrays[i];
       componentArray.pushComponentsFromBuffer();
    }
 
-   // Push entities
-   for (const joinInfo of entityJoinBuffer) {
-      entityTypes[joinInfo.id] = joinInfo.entityType;
-      entityLayers[joinInfo.id] = joinInfo.layer;
-   }
-
-   // Call on join functions and clear buffers
+   // Once all new components are added, call on join functions and clear buffers
    for (let i = 0; i < ComponentArrays.length; i++) {
       const componentArray = ComponentArrays[i];
+
+      // @Cleanup: should probably do all of this in one function in the component array, including the clearing
 
       const onJoin = componentArray.onJoin;
       if (typeof onJoin !== "undefined") {
          const componentBufferIDs = componentArray.getComponentBufferIDs();
 
          for (let j = 0; j < componentBufferIDs.length; j++) {
+            const ticksRemaining = componentArray.bufferedComponentJoinTicksRemaining[j];
+            if (ticksRemaining > 0) {
+               break;
+            }
             const entityID = componentBufferIDs[j];
+            // @Temporary
+            if (!entityExists(entityID)) {
+               throw new Error("DSAJFHLDSJHF");
+            }
             onJoin(entityID);
          }
       }
 
-      componentArray.clearBuffer();
+      componentArray.clearJoinedComponents();
    }
-
-   entityJoinBuffer.length = 0;
 }
 
 /** Removes game objects flagged for deletion */
@@ -249,12 +281,26 @@ export function destroyEntity(entity: EntityID): void {
    }
 }
 
-export function addEntityToJoinBuffer(entity: EntityID, entityType: EntityType, layer: Layer): void {
-   entityJoinBuffer.push({
+export function addEntityToJoinBuffer(entity: EntityID, entityType: EntityType, layer: Layer, joinDelayTicks: number): void {
+   // Find a spot for the entity
+   
+   const joinInfo: EntityJoinInfo = {
       id: entity,
       entityType: entityType,
-      layer: layer
-   });
+      layer: layer,
+      ticksRemaining: joinDelayTicks
+   };
+
+   // @Speed
+   // Find a spot for the entity
+   let insertIdx = entityJoinBuffer.length;
+   for (let i = 0; i < entityJoinBuffer.length; i++) {
+      if (entityJoinBuffer[i].ticksRemaining > joinDelayTicks) {
+         insertIdx = i;
+         break;
+      }
+   }
+   entityJoinBuffer.splice(insertIdx, 0, joinInfo);
 }
 
 export function updateEntities(): void {

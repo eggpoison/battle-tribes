@@ -98,9 +98,9 @@ export function assertHitboxIsRectangular(hitbox: Hitbox): asserts hitbox is Hit
 }
 
 export function updateVertexPositionsAndSideAxes(box: RectangularBox): void {
-   const x1 = -box.width * 0.5;
-   const x2 = box.width * 0.5;
-   const y2 = box.height * 0.5;
+   const x1 = -box.width * box.scale * 0.5;
+   const x2 = box.width * box.scale * 0.5;
+   const y2 = box.height * box.scale * 0.5;
 
    const rotation = box.rotation;
    const sinRotation = Math.sin(rotation);
@@ -122,8 +122,10 @@ export function updateBox(box: Box, parentX: number, parentY: number, parentRota
    const cosRotation = Math.cos(parentRotation);
    const sinRotation = Math.sin(parentRotation);
    
-   box.position.x = parentX + cosRotation * box.offset.x + sinRotation * box.offset.y;
-   box.position.y = parentY + cosRotation * box.offset.y - sinRotation * box.offset.x;
+   const offsetX = box.offset.x * box.scale;
+   const offsetY = box.offset.y * box.scale;
+   box.position.x = parentX + cosRotation * offsetX + sinRotation * offsetY;
+   box.position.y = parentY + cosRotation * offsetY - sinRotation * offsetX;
 
    box.rotation = box.relativeRotation + parentRotation;
 
@@ -135,9 +137,9 @@ export function updateBox(box: Box, parentX: number, parentY: number, parentRota
 export function boxIsWithinRange(box: Box, position: Point, range: number): boolean {
    if (boxIsCircular(box)) {
       // Circular hitbox
-      return circlesDoIntersect(position, range, box.position, box.radius);
+      return circlesDoIntersect(position, range, box.position, box.radius * box.scale);
    } else {
       // Rectangular hitbox
-      return circleAndRectangleDoIntersect(position, range, box.position, box.width, box.height, box.rotation);
+      return circleAndRectangleDoIntersect(position, range, box.position, box.width * box.scale, box.height * box.scale, box.rotation);
    }
 }

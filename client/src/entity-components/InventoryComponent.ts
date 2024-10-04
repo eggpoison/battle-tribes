@@ -249,7 +249,9 @@ class InventoryComponent extends ServerComponent {
 
    public updatePlayerFromData(reader: PacketReader): void {
       this.updateInventories(reader, true);
+   }
 
+   public updatePlayerAfterData(): void {
       // Update held items
       // @Cleanup: this seems like it should be done in the inventoryusecomponent, but make sure that it's done after the inventorycomponent is updated
       const inventoryUseComponent = InventoryUseComponentArray.getComponent(this.entity.id);

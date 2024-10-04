@@ -1,6 +1,6 @@
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "battletribes-shared/collision";
 import { EntityID, EntityType } from "battletribes-shared/entities";
-import { Point, randInt } from "battletribes-shared/utils";
+import { Point, randInt, TileIndex } from "battletribes-shared/utils";
 import { HealthComponentArray } from "../../components/HealthComponent";
 import { FishComponentArray } from "../../components/FishComponent";
 import { createItemsOverEntity } from "../../entity-shared";
@@ -11,6 +11,16 @@ import { ServerComponentType } from "battletribes-shared/components";
 import { ComponentConfig } from "../../components";
 import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
 import RectangularBox from "battletribes-shared/boxes/RectangularBox";
+import WanderAI from "../../ai/WanderAI";
+import { AIType } from "../../components/AIHelperComponent";
+import { Biome, TileType } from "../../../../shared/src/tiles";
+import Layer from "../../Layer";
+import { Settings } from "../../../../shared/src/settings";
+import { TransformComponentArray } from "../../components/TransformComponent";
+
+const enum Vars {
+   TILE_VALIDATION_PADDING = 20
+}
 
 export const enum FishVars {
    VISION_RANGE = 200
@@ -28,6 +38,41 @@ type ComponentTypes = ServerComponentType.transform
 const FISH_WIDTH = 7 * 4;
 const FISH_HEIGHT = 14 * 4;
 
+const positionIsOnlyNearWater = (layer: Layer, x: number, y: number): boolean => {
+   const minTileX = Math.max(Math.floor((x - Vars.TILE_VALIDATION_PADDING) / Settings.TILE_SIZE), 0);
+   const maxTileX = Math.min(Math.floor((x + Vars.TILE_VALIDATION_PADDING) / Settings.TILE_SIZE), Settings.BOARD_DIMENSIONS - 1);
+   const minTileY = Math.max(Math.floor((y - Vars.TILE_VALIDATION_PADDING) / Settings.TILE_SIZE), 0);
+   const maxTileY = Math.min(Math.floor((y + Vars.TILE_VALIDATION_PADDING) / Settings.TILE_SIZE), Settings.BOARD_DIMENSIONS - 1);
+
+   for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
+      for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
+         if (layer.getTileXYBiome(tileX, tileY) !== Biome.river) {
+            return false;
+         }
+      }
+   }
+
+   return true;
+}
+
+function tileIsValidCallback(entity: EntityID, layer: Layer, x: number, y: number): boolean {
+   const tileIndex = layer.getTileIndexFromPos(x, y);
+   if (layer.tileIsWall(tileIndex) || layer.getTileBiome(tileIndex) !== Biome.river) {
+      return false;
+   }
+
+   if (!positionIsOnlyNearWater(layer, x, y)) {
+      return false;
+   }
+
+   const transformComponent = TransformComponentArray.getComponent(entity);
+   if (!layer.tileRaytraceMatchesTileTypes(transformComponent.position.x, transformComponent.position.y, x, y, [TileType.water])) {
+      return false;
+   }
+
+   return true;
+}
+
 export function createFishConfig(): ComponentConfig<ComponentTypes> {
    return {
       [ServerComponentType.transform]: {
@@ -44,7 +89,8 @@ export function createFishConfig(): ComponentConfig<ComponentTypes> {
          accelerationX: 0,
          accelerationY: 0,
          traction: 1,
-         isAffectedByFriction: true,
+         isAffectedByAirFriction: true,
+         isAffectedByGroundFriction: true,
          isImmovable: false
       },
       [ServerComponentType.health]: {
@@ -57,7 +103,10 @@ export function createFishConfig(): ComponentConfig<ComponentTypes> {
       [ServerComponentType.escapeAI]: {},
       [ServerComponentType.aiHelper]: {
          ignoreDecorativeEntities: true,
-         visionRange: FishVars.VISION_RANGE
+         visionRange: FishVars.VISION_RANGE,
+         ais: {
+            [AIType.wander]: new WanderAI(200, Math.PI, 0.6, tileIsValidCallback)
+         }
       },
       [ServerComponentType.fish]: {
          colour: randInt(0, 3)

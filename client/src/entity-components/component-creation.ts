@@ -24,6 +24,8 @@ import FollowAIComponent from "./FollowAIComponent";
 import FrozenYetiComponent from "./FrozenYetiComponent";
 import GolemComponent from "./GolemComponent";
 import GuardianComponent from "./GuardianComponent";
+import { GuardianGemFragmentProjectileComponent } from "./GuardianGemFragmentProjectileComponent";
+import { GuardianGemQuakeComponent } from "./GuardianGemQuakeComponent";
 import HealingTotemComponent from "./HealingTotemComponent";
 import HealthComponent from "./HealthComponent";
 import HutComponent from "./HutComponent";
@@ -135,5 +137,7 @@ export function createComponent(entity: Entity, componentType: ServerComponentTy
       case ServerComponentType.krumblid: return new KrumblidComponent(entity);
       case ServerComponentType.damageBox: return new DamageBoxComponent(entity);
       case ServerComponentType.guardian: return new GuardianComponent(entity);
+      case ServerComponentType.guardianGemQuake: return new GuardianGemQuakeComponent(entity);
+      case ServerComponentType.guardianGemFragmentProjectile: return new GuardianGemFragmentProjectileComponent(entity);
    }
 }

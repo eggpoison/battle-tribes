@@ -103,7 +103,7 @@ const dropInventory = (entity: EntityID, inventory: Inventory, dropRange: number
       config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
       config[ServerComponentType.item].itemType = item.type;
       config[ServerComponentType.item].amount = item.count;
-      createEntityFromConfig(config, getEntityLayer(entity));
+      createEntityFromConfig(config, getEntityLayer(entity), 0);
    }
 }
 

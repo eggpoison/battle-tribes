@@ -11,6 +11,8 @@ abstract class BaseBox {
    public relativeRotation: number;
    public rotation: number;
 
+   public scale = 1;
+
    constructor(offset: Point, rotation: number) {
       this.offset = offset;
       

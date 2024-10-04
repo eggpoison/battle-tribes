@@ -5,9 +5,8 @@ import { ComponentConfig } from "../components";
 import { PhysicsComponentArray } from "./PhysicsComponent";
 import { randFloat, randSign } from "battletribes-shared/utils";
 import { Packet } from "battletribes-shared/packets";
-import { getAgeTicks, TransformComponentArray } from "./TransformComponent";
 import CircularBox from "battletribes-shared/boxes/CircularBox";
-import { destroyEntity } from "../world";
+import { destroyEntity, getEntityAgeTicks } from "../world";
 
 export interface SnowballComponentParams {
    yetiID: number;
@@ -59,8 +58,7 @@ function onJoin(entity: EntityID): void {
 }
 
 function onTick(snowballComponent: SnowballComponent, snowball: EntityID): void {
-   const transformComponent = TransformComponentArray.getComponent(snowball);
-   const ageTicks = getAgeTicks(transformComponent);
+   const ageTicks = getEntityAgeTicks(snowball);
    
    // @Incomplete. we use physics component angular velocity now, but that doesn't decrease over time!
    // Angular velocity

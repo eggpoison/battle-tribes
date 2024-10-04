@@ -16,7 +16,7 @@ import { RenderPart, RenderThing, thingIsRenderPart } from "./render-parts/rende
 import ServerComponent from "./entity-components/ServerComponent";
 import { createIdentityMatrix } from "./rendering/matrices";
 import { getEntityRenderLayer } from "./render-layers";
-import { registerDirtyEntity } from "./rendering/render-part-matrices";
+import { registerDirtyEntity, renderParentIsHitbox } from "./rendering/render-part-matrices";
 import { getEntityByID } from "./world";
 
 // Use prime numbers / 100 to ensure a decent distribution of different types of particles
@@ -149,7 +149,7 @@ abstract class Entity {
       }
    }
 
-   public addServerComponent<T extends ServerComponentType>(componentType: T, component: ServerComponentClass<T>): void {
+   public addServerComponent(componentType: ServerComponentType, component: ServerComponent): void {
       this.components.push(component);
       this.serverComponents.push(component);
       // @Cleanup: Remove cast
@@ -212,7 +212,7 @@ abstract class Entity {
       }
       this.allRenderThings.splice(idx, 0, thing);
 
-      if (thing.parent !== null) {
+      if (thing.parent !== null && !renderParentIsHitbox(thing.parent)) {
          thing.parent.children.push(thing);
       }
       

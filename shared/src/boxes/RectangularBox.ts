@@ -41,15 +41,15 @@ export class RectangularBox extends BaseBox {
    public isColliding(otherHitbox: Box, epsilon: number = 0): boolean {
       if (boxIsCircular(otherHitbox)) {
          // Circular hitbox
-         return circleAndRectangleDoIntersect(otherHitbox.position, otherHitbox.radius - epsilon, this.position, this.width - epsilon * 0.5, this.height - epsilon * 0.5, this.rotation);
+         return circleAndRectangleDoIntersect(otherHitbox.position, otherHitbox.radius * otherHitbox.scale - epsilon, this.position, this.width * this.scale - epsilon * 0.5, this.height * this.scale - epsilon * 0.5, this.rotation);
       } else {
          // Rectangular hitbox
 
          const diffX = this.position.x - otherHitbox.position.x;
          const diffY = this.position.y - otherHitbox.position.y;
          
-         const width1Squared = this.width * this.width;
-         const height1Squared = this.height * this.height;
+         const width1Squared = this.width * this.scale * this.width * this.scale;
+         const height1Squared = this.height * this.scale * this.height * this.scale;
          const width2Squared = otherHitbox.width * otherHitbox.width;
          const height2Squared = otherHitbox.height * otherHitbox.height;
 

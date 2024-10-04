@@ -1,6 +1,6 @@
 import { CowSpecies, EntityID, EntityType } from "battletribes-shared/entities";
 import { Settings } from "battletribes-shared/settings";
-import { randFloat, randInt, TileIndex } from "battletribes-shared/utils";
+import { randFloat, randInt } from "battletribes-shared/utils";
 import { EntityTickEvent, EntityTickEventType } from "battletribes-shared/entity-events";
 import { ServerComponentType } from "battletribes-shared/components";
 import { COW_GRAZE_TIME_TICKS, CowVars } from "../entities/mobs/cow";
@@ -8,14 +8,13 @@ import { ComponentArray } from "./ComponentArray";
 import { ItemType } from "battletribes-shared/items/items";
 import { registerEntityTickEvent } from "../server/player-clients";
 import { getEntityTile, TransformComponentArray } from "./TransformComponent";
-import { getTileX, getTileY, positionIsInWorld } from "../Layer";
+import { positionIsInWorld } from "../Layer";
 import { createItemEntityConfig } from "../entities/item-entity";
 import { createEntityFromConfig } from "../Entity";
 import { Packet } from "battletribes-shared/packets";
-import { TileType, Biome } from "battletribes-shared/tiles";
-import { moveEntityToPosition, runHerdAI, entityHasReachedPosition, stopEntity } from "../ai-shared";
+import { TileType } from "battletribes-shared/tiles";
+import { moveEntityToPosition, runHerdAI, stopEntity } from "../ai-shared";
 import { chooseEscapeEntity, runFromAttackingEntity } from "../ai/escape-ai";
-import { shouldWander, getWanderTargetTile, wander } from "../ai/wander-ai";
 import { dropBerry } from "../entities/resources/berry-bush";
 import { AIHelperComponentArray } from "./AIHelperComponent";
 import { BerryBushComponentArray } from "./BerryBushComponent";
@@ -24,7 +23,6 @@ import { FollowAIComponentArray, updateFollowAIComponent, continueFollowingEntit
 import { healEntity, getEntityHealth } from "./HealthComponent";
 import { ItemComponentArray } from "./ItemComponent";
 import { PhysicsComponentArray } from "./PhysicsComponent";
-import { WanderAIComponentArray } from "./WanderAIComponent";
 import { GrassBlockerCircle } from "battletribes-shared/grass-blockers";
 import { entitiesAreColliding, CollisionVars } from "../collision";
 import { addGrassBlocker } from "../grass-blockers";
@@ -93,7 +91,7 @@ const poop = (cow: EntityID, cowComponent: CowComponent): void => {
    config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
    config[ServerComponentType.item].itemType = ItemType.poop;
    config[ServerComponentType.item].amount = 1;
-   createEntityFromConfig(config, getEntityLayer(cow));
+   createEntityFromConfig(config, getEntityLayer(cow), 0);
 
    // Let it out
    const event: EntityTickEvent<EntityTickEventType.cowFart> = {
@@ -350,27 +348,8 @@ function onTick(cowComponent: CowComponent, cow: EntityID): void {
    }
 
    // Wander AI
-   const wanderAIComponent = WanderAIComponentArray.getComponent(cow);
-   if (wanderAIComponent.targetPositionX !== -1) {
-      if (entityHasReachedPosition(cow, wanderAIComponent.targetPositionX, wanderAIComponent.targetPositionY)) {
-         wanderAIComponent.targetPositionX = -1;
-         stopEntity(physicsComponent);
-      }
-   } else if (shouldWander(physicsComponent, 0.6)) {
-      let attempts = 0;
-      let targetTile: TileIndex;
-      do {
-         targetTile = getWanderTargetTile(cow, CowVars.VISION_RANGE);
-      } while (++attempts <= 50 && (layer.tileIsWalls[targetTile] === 1 || layer.tileBiomes[targetTile] !== Biome.grasslands));
-
-      const tileX = getTileX(targetTile);
-      const tileY = getTileY(targetTile);
-      const x = (tileX + Math.random()) * Settings.TILE_SIZE;
-      const y = (tileY + Math.random()) * Settings.TILE_SIZE;
-      wander(cow, x, y, 200, Vars.TURN_SPEED);
-   } else {
-      stopEntity(physicsComponent);
-   }
+   const wanderAI = aiHelperComponent.getWanderAI();
+   wanderAI.run(cow);
 }
 
 function getDataLength(): number {

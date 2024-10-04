@@ -2,19 +2,15 @@ import { ServerComponentType } from "battletribes-shared/components";
 import { ComponentArray } from "./ComponentArray";
 import { EntityID, EntityType, SlimeSize } from "battletribes-shared/entities";
 import { Settings } from "battletribes-shared/settings";
-import { TileType, Biome } from "battletribes-shared/tiles";
-import { TileIndex, UtilVars } from "battletribes-shared/utils";
-import { moveEntityToPosition, entityHasReachedPosition, stopEntity } from "../ai-shared";
-import { shouldWander, getWanderTargetTile, wander } from "../ai/wander-ai";
-import Layer, { getTileX, getTileY } from "../Layer";
+import { TileType } from "battletribes-shared/tiles";
+import { UtilVars } from "battletribes-shared/utils";
+import { moveEntityToPosition } from "../ai-shared";
 import { entitiesAreColliding, CollisionVars } from "../collision";
 import { createSlimeConfig } from "../entities/mobs/slime";
 import { createEntityFromConfig } from "../Entity";
 import { AIHelperComponentArray } from "./AIHelperComponent";
 import { PhysicsComponentArray } from "./PhysicsComponent";
 import { TransformComponentArray, getEntityTile } from "./TransformComponent";
-import { WanderAIComponentArray } from "./WanderAIComponent";
-import { SlimewispVars } from "../entities/mobs/slimewisp";
 import { destroyEntity, entityIsFlaggedForDestruction, getEntityLayer, getEntityType } from "../world";
 
 const enum Vars {
@@ -69,7 +65,7 @@ function onTick(slimewispComponent: SlimewispComponent, slimewisp: EntityID): vo
                config[ServerComponentType.transform].position.y = (transformComponent.position.y + mergingSlimewispTransformComponent.position.y) / 2;
                config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
                config[ServerComponentType.slime].size = SlimeSize.small;
-               createEntityFromConfig(config, layer);
+               createEntityFromConfig(config, layer, 0);
             
                destroyEntity(slimewisp);
                destroyEntity(mergingSlimewisp);
@@ -80,27 +76,8 @@ function onTick(slimewispComponent: SlimewispComponent, slimewisp: EntityID): vo
    }
    
    // Wander AI
-   const wanderAIComponent = WanderAIComponentArray.getComponent(slimewisp);
-   if (wanderAIComponent.targetPositionX !== -1) {
-      if (entityHasReachedPosition(slimewisp, wanderAIComponent.targetPositionX, wanderAIComponent.targetPositionY)) {
-         wanderAIComponent.targetPositionX = -1;
-         stopEntity(physicsComponent);
-      }
-   } else if (shouldWander(physicsComponent, 99999)) {
-      let attempts = 0;
-      let targetTile: TileIndex;
-      do {
-         targetTile = getWanderTargetTile(slimewisp, SlimewispVars.VISION_RANGE);
-      } while (++attempts <= 50 && (layer.tileIsWalls[targetTile] === 1 || layer.tileBiomes[targetTile] !== Biome.swamp));
-
-      const tileX = getTileX(targetTile);
-      const tileY = getTileY(targetTile);
-      const x = (tileX + Math.random()) * Settings.TILE_SIZE;
-      const y = (tileY + Math.random()) * Settings.TILE_SIZE;
-      wander(slimewisp, x, y, Vars.ACCELERATION, Vars.TURN_SPEED);
-   } else {
-      stopEntity(physicsComponent);
-   }
+   const wanderAI = aiHelperComponent.getWanderAI();
+   wanderAI.run(slimewisp);
 }
 
 function getDataLength(): number {

@@ -181,7 +181,7 @@ export function processRespawnPacket(playerClient: PlayerClient): void {
    config[ServerComponentType.transform].position.y = spawnPosition.y;
    config[ServerComponentType.tribe].tribe = playerClient.tribe;
    config[ServerComponentType.player].username = playerClient.username;
-   const player = createEntityFromConfig(config, layer);
+   const player = createEntityFromConfig(config, layer, 0);
 
    playerClient.instance = player;
 

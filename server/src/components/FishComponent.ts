@@ -10,7 +10,6 @@ import { TileType, Biome } from "battletribes-shared/tiles";
 import { customTickIntervalHasPassed, Point, randFloat, TileIndex, UtilVars } from "battletribes-shared/utils";
 import { stopEntity, runHerdAI, entityHasReachedPosition } from "../ai-shared";
 import { chooseEscapeEntity, runFromAttackingEntity } from "../ai/escape-ai";
-import { shouldWander, getWanderTargetTile, wander } from "../ai/wander-ai";
 import Layer, { getTileX, getTileY } from "../Layer";
 import { entitiesAreColliding, CollisionVars } from "../collision";
 import { getRandomPositionInEntity } from "../Entity";
@@ -35,7 +34,6 @@ const enum Vars {
    COHESION_INFLUENCE = 0.3,
    MIN_SEPARATION_DISTANCE = 40,
 
-   TILE_VALIDATION_PADDING = 20,
    
    LUNGE_FORCE = 200,
    LUNGE_INTERVAL = 1
@@ -68,23 +66,6 @@ export const FishComponentArray = new ComponentArray<FishComponent>(ServerCompon
    getDataLength: getDataLength,
    addDataToPacket: addDataToPacket
 });
-
-const isValidWanderPosition = (layer: Layer, x: number, y: number): boolean => {
-   const minTileX = Math.max(Math.floor((x - Vars.TILE_VALIDATION_PADDING) / Settings.TILE_SIZE), 0);
-   const maxTileX = Math.min(Math.floor((x + Vars.TILE_VALIDATION_PADDING) / Settings.TILE_SIZE), Settings.BOARD_DIMENSIONS - 1);
-   const minTileY = Math.max(Math.floor((y - Vars.TILE_VALIDATION_PADDING) / Settings.TILE_SIZE), 0);
-   const maxTileY = Math.min(Math.floor((y + Vars.TILE_VALIDATION_PADDING) / Settings.TILE_SIZE), Settings.BOARD_DIMENSIONS - 1);
-
-   for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
-      for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
-         if (layer.getTileBiome(tileX, tileY) !== Biome.river) {
-            return false;
-         }
-      }
-   }
-
-   return true;
-}
 
 const move = (fish: EntityID, direction: number): void => {
    const transformComponent = TransformComponentArray.getComponent(fish);
@@ -262,51 +243,8 @@ function onTick(fishComponent: FishComponent, fish: EntityID): void {
    }
 
    // Wander AI
-   const wanderAIComponent = WanderAIComponentArray.getComponent(fish);
-   if (wanderAIComponent.targetPositionX !== -1) {
-      if (entityHasReachedPosition(fish, wanderAIComponent.targetPositionX, wanderAIComponent.targetPositionY)) {
-         wanderAIComponent.targetPositionX = -1;
-         stopEntity(physicsComponent);
-      }
-   } else if (shouldWander(physicsComponent, 1)) {
-      let attempts = 0;
-      let targetTile: TileIndex;
-      do {
-         targetTile = getWanderTargetTile(fish, FishVars.VISION_RANGE);
-      } while (++attempts <= 50 && (layer.tileIsWalls[targetTile] === 1 || layer.tileBiomes[targetTile] !== Biome.river));
-
-      if (attempts > 50) {
-         stopEntity(physicsComponent);
-         return;
-      }
-      
-      // Find a position not too close to land
-      let x: number;
-      let y: number;
-      do {
-         const tileX = getTileX(targetTile);
-         const tileY = getTileY(targetTile);
-         x = (tileX + Math.random()) * Settings.TILE_SIZE;
-         y = (tileY + Math.random()) * Settings.TILE_SIZE;
-      } while (!isValidWanderPosition(layer, x, y));
-
-      // Find a path which doesn't cross land
-      attempts = 0;
-      while (++attempts <= 10 && !layer.tileRaytraceMatchesTileTypes(transformComponent.position.x, transformComponent.position.y, x, y, [TileType.water])) {
-         const tileX = getTileX(targetTile);
-         const tileY = getTileY(targetTile);
-         x = (tileX + Math.random()) * Settings.TILE_SIZE;
-         y = (tileY + Math.random()) * Settings.TILE_SIZE;
-      }
-
-      if (attempts <= 10) {
-         wander(fish, x, y, Vars.ACCELERATION, Vars.TURN_SPEED);
-      } else {
-         stopEntity(physicsComponent);
-      }
-   } else {
-      stopEntity(physicsComponent);
-   }
+   const wanderAI = aiHelperComponent.getWanderAI();
+   wanderAI.run(fish);
 }
 
 function onRemove(entity: EntityID): void {

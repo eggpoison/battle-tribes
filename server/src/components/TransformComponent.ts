@@ -13,7 +13,7 @@ import { clearEntityPathfindingNodes, entityCanBlockPathfinding, updateEntityPat
 import { resolveEntityTileCollision } from "../collision";
 import { Packet } from "battletribes-shared/packets";
 import { boxIsCircular, Hitbox, updateBox } from "battletribes-shared/boxes/boxes";
-import { getEntityLayer, getEntityType, getGameTicks } from "../world";
+import { getEntityAgeTicks, getEntityLayer, getEntityType } from "../world";
 
 // @Cleanup: move mass/hitbox related stuff out? (Are there any entities which would make use of that?)
 
@@ -31,10 +31,6 @@ export interface TransformComponentParams {
 export class TransformComponent {
    /** Combined mass of all the entity's hitboxes */
    public totalMass = 0;
-
-   // @Cleanup: should this be here? (Do all entities need this property regardless)
-   /** The tick when the entity with this component was spawned */
-   public readonly spawnTicks = getGameTicks();
 
    /** Position of the entity in the world */
    public position: Point;
@@ -96,7 +92,7 @@ export class TransformComponent {
 
       if (PhysicsComponentArray.hasComponent(entity)) {
          const physicsComponent = PhysicsComponentArray.getComponent(entity);
-         if (!physicsComponent.isAffectedByFriction) {
+         if (!physicsComponent.isAffectedByGroundFriction) {
             this.isInRiver = false;
             return;
          }
@@ -362,7 +358,7 @@ export class TransformComponent {
 
          for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
             for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
-               const isWall = layer.tileIsWall(tileX, tileY);
+               const isWall = layer.tileXYIsWall(tileX, tileY);
                if (isWall) {
                   resolveEntityTileCollision(entity, hitbox, tileX, tileY);
                }
@@ -461,9 +457,9 @@ function getDataLength(entity: EntityID): number {
    
    for (const hitbox of transformComponent.hitboxes) {
       if (boxIsCircular(hitbox.box)) {
-         lengthBytes += 9 * Float32Array.BYTES_PER_ELEMENT;
+         lengthBytes += 10 * Float32Array.BYTES_PER_ELEMENT;
       } else {
-         lengthBytes += 11 * Float32Array.BYTES_PER_ELEMENT;
+         lengthBytes += 12 * Float32Array.BYTES_PER_ELEMENT;
       }
       lengthBytes += hitbox.flags.length * Float32Array.BYTES_PER_ELEMENT;
    }
@@ -480,7 +476,8 @@ function addDataToPacket(packet: Packet, entity: EntityID): void {
    packet.addNumber(transformComponent.position.x);
    packet.addNumber(transformComponent.position.y);
    packet.addNumber(transformComponent.rotation);
-   packet.addNumber(getAgeTicks(transformComponent));
+   // @Hack
+   packet.addNumber(getEntityAgeTicks(entity));
    packet.addNumber(transformComponent.collisionBit);
    packet.addNumber(transformComponent.collisionMask);
    
@@ -507,6 +504,7 @@ function addDataToPacket(packet: Packet, entity: EntityID): void {
       packet.addNumber(hitbox.mass);
       packet.addNumber(box.offset.x);
       packet.addNumber(box.offset.y);
+      packet.addNumber(box.scale);
       packet.addNumber(hitbox.collisionType);
       packet.addNumber(hitbox.collisionBit);
       packet.addNumber(hitbox.collisionMask);
@@ -533,6 +531,7 @@ function addDataToPacket(packet: Packet, entity: EntityID): void {
       packet.addNumber(hitbox.mass);
       packet.addNumber(box.offset.x);
       packet.addNumber(box.offset.y);
+      packet.addNumber(box.scale);
       packet.addNumber(hitbox.collisionType);
       packet.addNumber(hitbox.collisionBit);
       packet.addNumber(hitbox.collisionMask);
@@ -546,8 +545,4 @@ function addDataToPacket(packet: Packet, entity: EntityID): void {
       packet.addNumber(box.height);
       packet.addNumber(box.relativeRotation);
    }
-}
-
-export function getAgeTicks(transformComponent: TransformComponent): number {
-   return getGameTicks() - transformComponent.spawnTicks;
 }

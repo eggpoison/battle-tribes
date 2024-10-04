@@ -9,10 +9,9 @@ import { Settings } from "battletribes-shared/settings";
 import { Biome, TileType } from "battletribes-shared/tiles";
 import { TileIndex, UtilVars } from "battletribes-shared/utils";
 import { turnAngle, stopEntity, entityHasReachedPosition } from "../ai-shared";
-import { shouldWander, getWanderTargetTile, wander } from "../ai/wander-ai";
 import { createSlimeSpitConfig } from "../entities/projectiles/slime-spit";
 import { createEntityFromConfig } from "../Entity";
-import { AIHelperComponentArray } from "./AIHelperComponent";
+import { AIHelperComponentArray, AIType } from "./AIHelperComponent";
 import { HealthComponentArray, healEntity } from "./HealthComponent";
 import { PhysicsComponentArray } from "./PhysicsComponent";
 import { TransformComponentArray, getEntityTile } from "./TransformComponent";
@@ -89,6 +88,8 @@ function onInitialise(config: ComponentConfig<ServerComponentType.transform | Se
    config[ServerComponentType.health].maxHealth = MAX_HEALTH[size];
    config[ServerComponentType.aiHelper].visionRange = SLIME_VISION_RANGES[size];
    config[ServerComponentType.slime].mergeWeight = SLIME_MERGE_WEIGHTS[size];
+   // @Hack
+   config[ServerComponentType.aiHelper].ais[AIType.wander]!.acceleration = 150 * SPEED_MULTIPLIERS[size];
 }
 
 const updateAngerTarget = (slime: EntityID): EntityID | null => {
@@ -140,7 +141,7 @@ const createSpit = (slime: EntityID, slimeComponent: SlimeComponent): void => {
    config[ServerComponentType.physics].velocityX = 500 * Math.sin(transformComponent.rotation);
    config[ServerComponentType.physics].velocityY = 500 * Math.cos(transformComponent.rotation);
    config[ServerComponentType.slimeSpit].size = slimeComponent.size === SlimeSize.large ? 1 : 0;
-   createEntityFromConfig(config, getEntityLayer(slime));
+   createEntityFromConfig(config, getEntityLayer(slime), 0);
 }
 
 // @Incomplete @Speed: Figure out why this first faster function seemingly gets called way less than the second one
@@ -304,30 +305,9 @@ function onTick(slimeComponent: SlimeComponent, slime: EntityID): void {
    }
 
    // Wander AI
-   const wanderAIComponent = WanderAIComponentArray.getComponent(slime);
-   if (wanderAIComponent.targetPositionX !== -1) {
-      if (entityHasReachedPosition(slime, wanderAIComponent.targetPositionX, wanderAIComponent.targetPositionY)) {
-         wanderAIComponent.targetPositionX = -1;
-         stopEntity(physicsComponent);
-      }
-   } else if (shouldWander(physicsComponent, 0.5)) {
-      const visionRange = SLIME_VISION_RANGES[slimeComponent.size];
-
-      let attempts = 0;
-      let targetTile: TileIndex;
-      do {
-         targetTile = getWanderTargetTile(slime, visionRange);
-      } while (++attempts <= 50 && (layer.tileIsWalls[targetTile] === 1 || layer.tileBiomes[targetTile] !== Biome.swamp));
-
-      const tileX = getTileX(targetTile);
-      const tileY = getTileY(targetTile);
-      const x = (tileX + Math.random()) * Settings.TILE_SIZE;
-      const y = (tileY + Math.random()) * Settings.TILE_SIZE;
-      const speedMultiplier = SPEED_MULTIPLIERS[slimeComponent.size];
-      wander(slime, x, y, Vars.ACCELERATION * speedMultiplier, Vars.TURN_SPEED);
-   } else {
-      stopEntity(physicsComponent);
-   }
+   const aiHelperComponent = AIHelperComponentArray.getComponent(slime);
+   const wanderAI = aiHelperComponent.getWanderAI();
+   wanderAI.run(slime);
 }
 
 function getDataLength(entity: EntityID): number {

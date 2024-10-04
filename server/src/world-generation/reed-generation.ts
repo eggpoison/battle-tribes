@@ -38,7 +38,7 @@ export function generateReeds(riverMainTiles: ReadonlyArray<WaterTileGenerationI
    // @Incomplete: generate in edges
    for (let tileX = 0; tileX < Settings.BOARD_DIMENSIONS; tileX++) {
       for (let tileY = 0; tileY < Settings.BOARD_DIMENSIONS; tileY++) {
-         if (surfaceLayer.getTileType(tileX, tileY) !== TileType.water) {
+         if (surfaceLayer.getTileXYType(tileX, tileY) !== TileType.water) {
             continue;
          }
 
@@ -70,7 +70,7 @@ export function generateReeds(riverMainTiles: ReadonlyArray<WaterTileGenerationI
             const config = createReedConfig();
             config[ServerComponentType.transform].position.x = x;
             config[ServerComponentType.transform].position.y = y;
-            createEntityFromConfig(config, surfaceLayer);
+            createEntityFromConfig(config, surfaceLayer, 0);
          }
       }
    }

@@ -55,16 +55,17 @@ const resolveHardCollision = (entity: Entity, pushInfo: CollisionPushInfo): void
 }
 
 const resolveSoftCollision = (entity: EntityID, pushingHitbox: Hitbox, pushInfo: CollisionPushInfo): void => {
-   const physicsComponent = PhysicsComponentArray.getComponent(entity);
    const transformComponent = TransformComponentArray.getComponent(entity);
-   
-   // Force gets greater the further into each other the entities are
-   const distMultiplier = Math.pow(pushInfo.amountIn, 1.1);
-   // @Incomplete: divide by total mass not just pushed hitbox mass
-   const pushForce = Settings.ENTITY_PUSH_FORCE * Settings.I_TPS * distMultiplier * pushingHitbox.mass / transformComponent.totalMass;
-   
-   physicsComponent.externalVelocity.x += pushForce * Math.sin(pushInfo.direction);
-   physicsComponent.externalVelocity.y += pushForce * Math.cos(pushInfo.direction);
+   if (transformComponent.totalMass !== 0) {
+      const physicsComponent = PhysicsComponentArray.getComponent(entity);
+      
+      // Force gets greater the further into each other the entities are
+      const distMultiplier = Math.pow(pushInfo.amountIn, 1.1);
+      const pushForce = Settings.ENTITY_PUSH_FORCE * Settings.I_TPS * distMultiplier * pushingHitbox.mass / transformComponent.totalMass;
+      
+      physicsComponent.externalVelocity.x += pushForce * Math.sin(pushInfo.direction);
+      physicsComponent.externalVelocity.y += pushForce * Math.cos(pushInfo.direction);
+   }
 }
 
 export function collide(entity: Entity, collidingEntity: Entity, pushedHitbox: Hitbox, pushingHitbox: Hitbox, isPushed: boolean): void {

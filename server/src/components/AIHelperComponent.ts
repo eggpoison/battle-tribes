@@ -8,11 +8,36 @@ import { TransformComponent, TransformComponentArray } from "./TransformComponen
 import { Packet } from "battletribes-shared/packets";
 import { Box, boxIsCircular } from "battletribes-shared/boxes/boxes";
 import { getEntityLayer, getEntityType } from "../world";
+import WanderAI from "../ai/WanderAI";
+import GuardianAI from "../ai/GuardianAI";
+import GuardianCrystalSlamAI from "../ai/GuardianCrystalSlamAI";
+import GuardianCrystalBurstAI from "../ai/GuardianCrystalBurstAI";
+
+export const enum AIType {
+   wander,
+   guardian,
+   guardianCrystalSlam,
+   guardianCrystalBurst
+}
+
+const _AIClasses = {
+   [AIType.wander]: (): WanderAI => 0 as any,
+   [AIType.guardian]: (): GuardianAI => 0 as any,
+   [AIType.guardianCrystalSlam]: (): GuardianCrystalSlamAI => 0 as any,
+   [AIType.guardianCrystalBurst]: (): GuardianCrystalBurstAI => 0 as any
+} satisfies Record<AIType, object>;
+type AIClasses = typeof _AIClasses;
+type AIClass<T extends AIType> = ReturnType<AIClasses[T]>;
+
+type AIRecord = Partial<{
+   [T in AIType]: AIClass<T>;
+}>;
 
 export interface AIHelperComponentParams {
    /** If enabled, ignores all decorative entities. Enable if possible for performance */
    ignoreDecorativeEntities: boolean;
    visionRange: number;
+   ais: AIRecord;
 }
 
 export class AIHelperComponent implements AIHelperComponentParams {
@@ -27,9 +52,28 @@ export class AIHelperComponent implements AIHelperComponentParams {
    public readonly visionRange: number;
    public visibleEntities = new Array<EntityID>();
 
+   public readonly ais: AIRecord;
+
    constructor(params: AIHelperComponentParams) {
       this.ignoreDecorativeEntities = params.ignoreDecorativeEntities;
       this.visionRange = params.visionRange;
+      this.ais = params.ais;
+   }
+
+   public getWanderAI(): WanderAI {
+      return this.ais[AIType.wander]!;
+   }
+
+   public getGuardianAI(): GuardianAI {
+      return this.ais[AIType.guardian]!;
+   }
+
+   public getGuardianCrystalSlamAI(): GuardianCrystalSlamAI {
+      return this.ais[AIType.guardianCrystalSlam]!;
+   }
+
+   public getGuardianCrystalBurstAI(): GuardianCrystalBurstAI {
+      return this.ais[AIType.guardianCrystalBurst]!;
    }
 }
 

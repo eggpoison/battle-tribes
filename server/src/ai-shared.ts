@@ -324,13 +324,13 @@ export function getPositionRadialTiles(layer: Layer, position: Point, radius: nu
    for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
       for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
          // Don't try to wander to wall tiles
-         const isWall = layer.tileIsWall(tileX, tileY);
+         const isWall = layer.tileXYIsWall(tileX, tileY);
          if (isWall) {
             continue;
          }
          
          // Don't try to wander to water
-         const tileType = layer.getTileType(tileX, tileY);
+         const tileType = layer.getTileXYType(tileX, tileY);
          if (tileType === TileType.water) {
             continue;
          }
@@ -360,13 +360,13 @@ export function getAllowedPositionRadialTiles(layer: Layer, position: Point, rad
    for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
       for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
          // Don't try to wander to wall tiles
-         const isWall = layer.tileIsWall(tileX, tileY);
+         const isWall = layer.tileXYIsWall(tileX, tileY);
          if (isWall) {
             continue;
          }
          
          // Don't try to wander to disallowed tiles
-         const tileType = layer.getTileType(tileX, tileY);
+         const tileType = layer.getTileXYType(tileX, tileY);
          if (validTileTargets.indexOf(tileType) === -1) {
             continue;
          }

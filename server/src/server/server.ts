@@ -1,7 +1,7 @@
 import { VisibleChunkBounds } from "battletribes-shared/client-server-types";
 import { Settings } from "battletribes-shared/settings";
 import { TribeType } from "battletribes-shared/tribes";
-import { Point, randInt } from "battletribes-shared/utils";
+import { Point, randInt, TileIndex } from "battletribes-shared/utils";
 import { PacketReader, PacketType } from "battletribes-shared/packets";
 import WebSocket, { Server } from "ws";
 import { populateEntitySpawnInfos, runSpawnAttempt, spawnInitialEntities } from "../entity-spawning";
@@ -33,6 +33,7 @@ import { createLayers, destroyFlaggedEntities, entityExists, getEntityLayer, get
 import { generateUndergroundTerrain } from "../world-generation/underground-terrain-generation";
 import { spawnGuardians } from "../world-generation/cave-entrance-generation";
 import { createGuardianConfig } from "../entities/mobs/guardian";
+import { getTileIndexIncludingEdges } from "../Layer";
 
 /*
 
@@ -174,16 +175,30 @@ class GameServer {
                   config[ServerComponentType.transform].position.y = spawnPosition.y;
                   config[ServerComponentType.tribe].tribe = tribe;
                   config[ServerComponentType.player].username = username;
-                  const player = createEntityFromConfig(config, surfaceLayer);
+                  const player = createEntityFromConfig(config, surfaceLayer, 0);
       
                   playerClient = new PlayerClient(socket, tribe, screenWidth, screenHeight, spawnPosition, player, username);
                   addPlayerClient(playerClient, player, surfaceLayer, config);
 
                   setTimeout(() => {
+                     const range = 600;
+                     const minTileX = Math.max(Math.floor((spawnPosition.x - range) / Settings.TILE_SIZE), 0);
+                     const maxTileX = Math.min(Math.floor((spawnPosition.x + range) / Settings.TILE_SIZE), Settings.BOARD_DIMENSIONS - 1);
+                     const minTileY = Math.max(Math.floor((spawnPosition.y - range) / Settings.TILE_SIZE), 0);
+                     const maxTileY = Math.min(Math.floor((spawnPosition.y + range) / Settings.TILE_SIZE), Settings.BOARD_DIMENSIONS - 1);
+                     const tiles = new Array<TileIndex>();
+                     for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
+                        for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
+                           const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
+                           tiles.push(tileIndex);
+                        }
+                     }
+                     
                      const config = createGuardianConfig();
                      config[ServerComponentType.transform].position.x = spawnPosition.x + 150;
                      config[ServerComponentType.transform].position.y = spawnPosition.y;
-                     createEntityFromConfig(config, surfaceLayer);
+                     config[ServerComponentType.guardian].homeTiles = tiles;
+                     createEntityFromConfig(config, surfaceLayer, 0);
                   }, 500);
 
                   break;

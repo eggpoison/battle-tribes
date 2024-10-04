@@ -1,17 +1,16 @@
 import { ServerComponentType } from "battletribes-shared/components";
-import { SnowThrowStage, YETI_SNOW_THROW_COOLDOWN, YetiVars } from "../entities/mobs/yeti";
+import { SnowThrowStage, YETI_SNOW_THROW_COOLDOWN } from "../entities/mobs/yeti";
 import { ComponentArray } from "./ComponentArray";
 import { EntityID, EntityType, SnowballSize } from "battletribes-shared/entities";
 import { Settings } from "battletribes-shared/settings";
 import { Biome } from "battletribes-shared/tiles";
 import { randFloat, randItem, TileIndex, UtilVars } from "battletribes-shared/utils";
-import Layer, { getTileIndexIncludingEdges, getTileX, getTileY, tileIsInWorld } from "../Layer";
+import { getTileIndexIncludingEdges, getTileX, getTileY, tileIsInWorld } from "../Layer";
 import { getEntityTile, TransformComponentArray } from "./TransformComponent";
 import { Packet } from "battletribes-shared/packets";
 import { ItemType } from "battletribes-shared/items/items";
 import { TribeType } from "battletribes-shared/tribes";
-import { stopEntity, moveEntityToPosition, entityHasReachedPosition } from "../ai-shared";
-import { shouldWander, getWanderTargetTile, wander } from "../ai/wander-ai";
+import { stopEntity, moveEntityToPosition } from "../ai-shared";
 import { entitiesAreColliding, CollisionVars } from "../collision";
 import { createSnowballConfig } from "../entities/snowball";
 import { createEntityFromConfig } from "../Entity";
@@ -20,7 +19,6 @@ import { HealthComponentArray, healEntity } from "./HealthComponent";
 import { ItemComponentArray } from "./ItemComponent";
 import { PhysicsComponentArray } from "./PhysicsComponent";
 import { TribeComponentArray } from "./TribeComponent";
-import { WanderAIComponentArray } from "./WanderAIComponent";
 import { destroyEntity, entityExists, getEntityLayer, getEntityType, surfaceLayer } from "../world";
 
 const enum Vars {
@@ -213,7 +211,7 @@ const throwSnowball = (yeti: EntityID, size: SnowballSize, throwAngle: number): 
    config[ServerComponentType.physics].velocityY += velocityMagnitude * Math.cos(angle);
    config[ServerComponentType.snowball].size = size;
    config[ServerComponentType.snowball].yetiID = yeti;
-   createEntityFromConfig(config, getEntityLayer(yeti));
+   createEntityFromConfig(config, getEntityLayer(yeti), 0);
 }
 
 const throwSnow = (yeti: EntityID, target: EntityID): void => {
@@ -408,31 +406,9 @@ function onTick(yetiComponent: YetiComponent, yeti: EntityID): void {
       }
    }
    
-   const physicsComponent = PhysicsComponentArray.getComponent(yeti);
-
    // Wander AI
-   const layer = getEntityLayer(yeti);
-   const wanderAIComponent = WanderAIComponentArray.getComponent(yeti);
-   if (wanderAIComponent.targetPositionX !== -1) {
-      if (entityHasReachedPosition(yeti, wanderAIComponent.targetPositionX, wanderAIComponent.targetPositionY)) {
-         wanderAIComponent.targetPositionX = -1;
-         stopEntity(physicsComponent);
-      }
-   } else if (shouldWander(physicsComponent, 0.6)) {
-      let attempts = 0;
-      let targetTile: TileIndex;
-      do {
-         targetTile = getWanderTargetTile(yeti, YetiVars.VISION_RANGE);
-      } while (++attempts <= 50 && (layer.tileIsWalls[targetTile] === 1 || layer.tileBiomes[targetTile] !== Biome.tundra || !yetiComponent.territory.includes(targetTile)));
-
-      const tileX = getTileX(targetTile);
-      const tileY = getTileY(targetTile);
-      const x = (tileX + Math.random()) * Settings.TILE_SIZE;
-      const y = (tileY + Math.random()) * Settings.TILE_SIZE;
-      wander(yeti, x, y, 100, Vars.TURN_SPEED);
-   } else {
-      stopEntity(physicsComponent);
-   }
+   const wanderAI = aiHelperComponent.getWanderAI();
+   wanderAI.run(yeti);
 }
 
 function onRemove(yeti: EntityID): void {

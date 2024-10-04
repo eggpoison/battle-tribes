@@ -35,6 +35,7 @@ export interface BaseHitboxData {
    readonly mass: number;
    readonly offsetX: number;
    readonly offsetY: number;
+   readonly scale: number;
    readonly collisionType: HitboxCollisionType;
    readonly collisionBit: HitboxCollisionBit;
    readonly collisionMask: number;

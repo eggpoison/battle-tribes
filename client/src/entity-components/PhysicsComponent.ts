@@ -1,6 +1,5 @@
 import { ServerComponentType } from "battletribes-shared/components";
 import ServerComponent from "./ServerComponent";
-import Entity from "../Entity";
 import { Point, customTickIntervalHasPassed, lerp, randInt } from "battletribes-shared/utils";
 import { Settings } from "battletribes-shared/settings";
 import { TILE_MOVE_SPEED_MULTIPLIERS, TileType, TILE_FRICTIONS } from "battletribes-shared/tiles";
@@ -18,8 +17,22 @@ import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 import { getEntityLayer } from "../world";
 
 const applyPhysics = (physicsComponent: PhysicsComponent): void => {
+   if (isNaN(physicsComponent.selfVelocity.x)) {
+      throw new Error("Self velocity was NaN.");
+   }
+   if (isNaN(physicsComponent.externalVelocity.x)) {
+      throw new Error("External velocity was NaN.");
+   }
+   if (!isFinite(physicsComponent.externalVelocity.x)) {
+      throw new Error("External velocity is infinite.");
+   }
+
    const transformComponent = physicsComponent.entity.getServerComponent(ServerComponentType.transform);
    const layer = getEntityLayer(physicsComponent.entity.id);
+   
+   if (isNaN(transformComponent.position.x)) {
+      throw new Error("Position was NaN.");
+   }
    
    // Apply acceleration (to self-velocity)
    if (physicsComponent.acceleration.x !== 0 || physicsComponent.acceleration.y !== 0) {
@@ -97,6 +110,7 @@ const applyPhysics = (physicsComponent: PhysicsComponent): void => {
    }
 
    if (isNaN(transformComponent.position.x)) {
+      console.log(physicsComponent.selfVelocity.x, physicsComponent.externalVelocity.x);
       throw new Error("Position was NaN.");
    }
 }

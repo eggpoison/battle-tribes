@@ -49,7 +49,8 @@ export function createBallistaConfig(): ComponentConfig<ComponentTypes> {
       },
       [ServerComponentType.aiHelper]: {
          ignoreDecorativeEntities: true,
-         visionRange: VISION_RANGE
+         visionRange: VISION_RANGE,
+         ais: {}
       },
       [ServerComponentType.ammoBox]: {},
       [ServerComponentType.inventory]: {

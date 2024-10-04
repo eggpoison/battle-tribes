@@ -1,6 +1,6 @@
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "battletribes-shared/collision";
 import { EntityID, EntityType } from "battletribes-shared/entities";
-import { Point, randInt } from "battletribes-shared/utils";
+import { Point, randInt, TileIndex } from "battletribes-shared/utils";
 import { createItemsOverEntity } from "../../entity-shared";
 import { registerAttackingEntity } from "../../ai/escape-ai";
 import { ItemType } from "battletribes-shared/items/items";
@@ -8,6 +8,9 @@ import { ServerComponentType } from "battletribes-shared/components";
 import { ComponentConfig } from "../../components";
 import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
 import CircularBox from "battletribes-shared/boxes/CircularBox";
+import WanderAI from "../../ai/WanderAI";
+import { Biome } from "../../../../shared/src/tiles";
+import Layer from "../../Layer";
 
 export const enum KrumblidVars {
    VISION_RANGE = 224,
@@ -30,6 +33,10 @@ const KRUMBLID_SIZE = 48;
 
 const FOLLOW_CHANCE_PER_SECOND = 0.3;
 
+function tileIsValidCallback(_entity: EntityID, layer: Layer, tileIndex: TileIndex): boolean {
+   return layer.tileIsWalls[tileIndex] === 0 && layer.tileBiomes[tileIndex] === Biome.desert;
+}
+
 export function createKrumblidConfig(): ComponentConfig<ComponentTypes> {
    return {
       [ServerComponentType.transform]: {
@@ -46,7 +53,8 @@ export function createKrumblidConfig(): ComponentConfig<ComponentTypes> {
          accelerationX: 0,
          accelerationY: 0,
          traction: 1,
-         isAffectedByFriction: true,
+         isAffectedByAirFriction: true,
+         isAffectedByGroundFriction: true,
          isImmovable: false
       },
       [ServerComponentType.health]: {
@@ -57,7 +65,10 @@ export function createKrumblidConfig(): ComponentConfig<ComponentTypes> {
       },
       [ServerComponentType.aiHelper]: {
          ignoreDecorativeEntities: true,
-         visionRange: KrumblidVars.VISION_RANGE
+         visionRange: KrumblidVars.VISION_RANGE,
+         ais: [
+            new WanderAI(200, 2 * Math.PI, 0.25, tileIsValidCallback)
+         ]
       },
       [ServerComponentType.wanderAI]: {},
       [ServerComponentType.escapeAI]: {},

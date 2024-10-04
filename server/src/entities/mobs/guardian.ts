@@ -2,10 +2,16 @@ import { createHitbox, Hitbox, HitboxCollisionType, HitboxFlag } from "../../../
 import CircularBox from "../../../../shared/src/boxes/CircularBox";
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "../../../../shared/src/collision";
 import { ServerComponentType } from "../../../../shared/src/components";
-import { EntityType } from "../../../../shared/src/entities";
-import { Point } from "../../../../shared/src/utils";
+import { EntityID, EntityType } from "../../../../shared/src/entities";
+import { Point, TileIndex } from "../../../../shared/src/utils";
+import GuardianAI from "../../ai/GuardianAI";
+import GuardianCrystalBurstAI from "../../ai/GuardianCrystalBurstAI";
+import GuardianCrystalSlamAI from "../../ai/GuardianCrystalSlamAI";
+import WanderAI from "../../ai/WanderAI";
 import { ComponentConfig } from "../../components";
-import { getGuardianLimbOrbitRadius } from "../../components/GuardianComponent";
+import { AIType } from "../../components/AIHelperComponent";
+import { getGuardianLimbOrbitRadius, GuardianComponentArray } from "../../components/GuardianComponent";
+import Layer from "../../Layer";
 
 const enum Vars {
    VISION_RANGE = 300
@@ -15,7 +21,9 @@ type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics
    | ServerComponentType.health
    | ServerComponentType.statusEffect
-   | ServerComponentType.aiHelper;
+   | ServerComponentType.aiHelper
+   | ServerComponentType.wanderAI
+   | ServerComponentType.guardian;
 
 const createGuardianHitboxes = (): Array<Hitbox> => {
    const hitboxes = new Array<Hitbox>();
@@ -29,6 +37,11 @@ const createGuardianHitboxes = (): Array<Hitbox> => {
    }
 
    return hitboxes;
+}
+
+function tileIsValidCallback(entity: EntityID, _layer: Layer, tileIndex: TileIndex): boolean {
+   const guardianComponent = GuardianComponentArray.getComponent(entity);
+   return guardianComponent.homeTiles.includes(tileIndex);
 }
 
 export function createGuardianConfig(): ComponentConfig<ComponentTypes> {
@@ -47,7 +60,8 @@ export function createGuardianConfig(): ComponentConfig<ComponentTypes> {
          accelerationX: 0,
          accelerationY: 0,
          traction: 1,
-         isAffectedByFriction: true,
+         isAffectedByAirFriction: true,
+         isAffectedByGroundFriction: true,
          isImmovable: false
       },
       [ServerComponentType.health]: {
@@ -58,7 +72,17 @@ export function createGuardianConfig(): ComponentConfig<ComponentTypes> {
       },
       [ServerComponentType.aiHelper]: {
          ignoreDecorativeEntities: true,
-         visionRange: Vars.VISION_RANGE
+         visionRange: Vars.VISION_RANGE,
+         ais: {
+            [AIType.wander]:               new WanderAI(200, Math.PI * 0.5, 0.6, tileIsValidCallback),
+            [AIType.guardian]:             new GuardianAI(280, Math.PI * 0.5),
+            [AIType.guardianCrystalSlam]:  new GuardianCrystalSlamAI(200, Math.PI * 0.3),
+            [AIType.guardianCrystalBurst]: new GuardianCrystalBurstAI(Math.PI * 0.5)
+         }
+      },
+      [ServerComponentType.wanderAI]: {},
+      [ServerComponentType.guardian]: {
+         homeTiles: []
       }
    };
 }

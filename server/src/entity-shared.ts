@@ -26,6 +26,6 @@ export function createItemsOverEntity(entity: EntityID, itemType: ItemType, amou
       config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
       config[ServerComponentType.item].itemType = itemType;
       config[ServerComponentType.item].amount = 1;
-      createEntityFromConfig(config, getEntityLayer(entity));
+      createEntityFromConfig(config, getEntityLayer(entity), 0);
    }
 }

@@ -3,6 +3,7 @@ import { EntityID, EntityType } from "battletribes-shared/entities";
 import { ComponentConfig } from "../components";
 import { Packet } from "battletribes-shared/packets";
 import { Hitbox } from "battletribes-shared/boxes/boxes";
+import { Point } from "../../../shared/src/utils";
 
 const enum ComponentArrayPriority {
    low,
@@ -20,7 +21,7 @@ interface ComponentArrayFunctions<T extends object> {
    onInitialise?(config: ComponentConfig<ServerComponentType>, entity: EntityID, entityType: EntityType): void;
    onJoin?(entity: EntityID): void;
    readonly onTick?: ComponentArrayTickFunction<T>;
-   onCollision?(entity: EntityID, collidingEntity: EntityID, pushedHitbox: Hitbox, pushingHitbox: Hitbox): void;
+   onCollision?(entity: EntityID, collidingEntity: EntityID, pushedHitbox: Hitbox, pushingHitbox: Hitbox, collisionPoint: Point): void;
    onRemove?(entity: EntityID): void;
    // @Cleanup: make getDataLength not return an extra float length
    /** Returns the length of the data that would be added to the packet */
@@ -37,6 +38,7 @@ export class ComponentArray<T extends object = object, C extends ServerComponent
    
    public components = new Array<T>();
    private componentBuffer = new Array<T>();
+   public bufferedComponentJoinTicksRemaining = new Array<number>();
 
    /** Maps entity IDs to component indexes */
    private entityToIndexMap: Partial<Record<EntityID, number>> = {};
@@ -59,7 +61,7 @@ export class ComponentArray<T extends object = object, C extends ServerComponent
    public onInitialise?(config: ComponentConfig<ServerComponentType>, entity: EntityID, entityType: EntityType): void;
    public onJoin?(entity: EntityID): void;
    public onTick?: ComponentArrayTickFunction<T>;
-   public onCollision?(entity: EntityID, collidingEntity: EntityID, pushedHitbox: Hitbox, pushingHitbox: Hitbox): void;
+   public onCollision?(entity: EntityID, collidingEntity: EntityID, pushedHitbox: Hitbox, pushingHitbox: Hitbox, collisionPoint: Point): void;
    public onRemove?(entity: EntityID): void;
    public getDataLength: (entity: EntityID, player: EntityID | null) => number;
    public addDataToPacket: (packet: Packet, entity: EntityID, player: EntityID | null) => void;
@@ -81,17 +83,33 @@ export class ComponentArray<T extends object = object, C extends ServerComponent
       ComponentArrayRecord[componentType] = this as any;
    }
    
-   public addComponent(entity: EntityID, component: T): void {
+   public addComponent(entity: EntityID, component: T, joinDelayTicks: number): void {
       if (typeof this.entityToIndexMap[entity] !== "undefined") {
          throw new Error("Component added to same entity twice.");
       }
 
-      this.componentBuffer.push(component);
-      this.componentBufferIDs.push(entity);
+      // @Speed
+      // Find a spot for the component
+      let insertIdx = this.bufferedComponentJoinTicksRemaining.length;
+      for (let i = 0; i < this.bufferedComponentJoinTicksRemaining.length; i++) {
+         if (this.bufferedComponentJoinTicksRemaining[i] > joinDelayTicks) {
+            insertIdx = i;
+            break;
+         }
+      }
+
+      this.componentBuffer.splice(insertIdx, 0, component);
+      this.componentBufferIDs.splice(insertIdx, 0, entity);
+      this.bufferedComponentJoinTicksRemaining.splice(insertIdx, 0, joinDelayTicks);
    }
 
    public pushComponentsFromBuffer(): void {
       for (let i = 0; i < this.componentBuffer.length; i++) {
+         const ticksRemaining = this.bufferedComponentJoinTicksRemaining[i];
+         if (ticksRemaining > 0) {
+            break;
+         }
+         
          const component = this.componentBuffer[i];
          const entityID = this.componentBufferIDs[i];
       
@@ -115,9 +133,24 @@ export class ComponentArray<T extends object = object, C extends ServerComponent
       return this.componentBufferIDs;
    }
 
-   public clearBuffer(): void {
-      this.componentBuffer = [];
-      this.componentBufferIDs = [];
+   public clearJoinedComponents(): void {
+      let finalPushedIdx: number | undefined;
+      for (let i = 0; i < this.componentBufferIDs.length; i++) {
+         const ticksRemaining = this.bufferedComponentJoinTicksRemaining[i];
+         if (ticksRemaining > 0) {
+            this.bufferedComponentJoinTicksRemaining[i]--;
+            continue;
+         } else {
+            finalPushedIdx = i;
+         }
+      }
+
+      if (typeof finalPushedIdx !== "undefined") {
+         const numPushedEntities = finalPushedIdx + 1;
+         this.componentBuffer.splice(0, numPushedEntities);
+         this.componentBufferIDs.splice(0, numPushedEntities);
+         this.bufferedComponentJoinTicksRemaining.splice(0, numPushedEntities);
+      }
    }
 
    public getComponent(entity: EntityID): T {
@@ -259,6 +292,8 @@ export function sortComponentArrays(): void {
       [ServerComponentType.spearProjectile]: ComponentArrayPriority.medium,
       [ServerComponentType.krumblid]: ComponentArrayPriority.medium,
       [ServerComponentType.guardian]: ComponentArrayPriority.medium,
+      [ServerComponentType.guardianGemQuake]: ComponentArrayPriority.medium,
+      [ServerComponentType.guardianGemFragmentProjectile]: ComponentArrayPriority.medium,
       [ServerComponentType.health]: ComponentArrayPriority.high,
       // The physics component ticking must be done at the end so there is time for the positionIsDirty and hitboxesAreDirty flags to collect
       [ServerComponentType.physics]: ComponentArrayPriority.high

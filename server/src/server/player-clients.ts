@@ -408,7 +408,7 @@ const devSummonEntity = (playerClient: PlayerClient, summonPacket: EntitySummonP
       config[ServerComponentType.tribe].tribe = getTribe(tribeComponentSummonData.tribeID);
    }
 
-   createEntityFromConfig(config, getEntityLayer(playerClient.instance));
+   createEntityFromConfig(config, getEntityLayer(playerClient.instance), 0);
 }
 
 const devGiveTitle = (playerClient: PlayerClient, title: TribesmanTitle): void => {

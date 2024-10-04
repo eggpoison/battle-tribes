@@ -263,7 +263,7 @@ export function placeBuilding(tribe: Tribe, layer: Layer, position: Point, rotat
    config[ServerComponentType.transform].rotation = rotation;
    config[ServerComponentType.tribe].tribe = tribe;
    config[ServerComponentType.structure].connectionInfo = connectionInfo;
-   createEntityFromConfig(config, layer);
+   createEntityFromConfig(config, layer, 0);
 }
 
 export function useItem(tribeMember: EntityID, item: Item, inventoryName: InventoryName, itemSlot: number): void {
@@ -422,7 +422,7 @@ export function useItem(tribeMember: EntityID, item: Item, inventoryName: Invent
          config[ServerComponentType.physics].velocityY = itemInfo.projectileSpeed * Math.cos(transformComponent.rotation);
          config[ServerComponentType.tribe].tribe = tribeComponent.tribe;
          config[ServerComponentType.projectile].owner = tribeMember;
-         createEntityFromConfig(config, getEntityLayer(tribeMember));
+         createEntityFromConfig(config, getEntityLayer(tribeMember), 0);
 
          for (let i = 0; i < 2; i++) {
             const limb = inventoryUseComponent.getLimbInfo(i === 0 ? InventoryName.hotbar : InventoryName.offhand);
@@ -468,7 +468,7 @@ export function useItem(tribeMember: EntityID, item: Item, inventoryName: Invent
          config[ServerComponentType.transform].rotation = transformComponent.rotation;
          config[ServerComponentType.physics].velocityX = itemInfo.projectileSpeed * Math.sin(transformComponent.rotation);
          config[ServerComponentType.physics].velocityY = itemInfo.projectileSpeed * Math.cos(transformComponent.rotation);
-         createEntityFromConfig(config, getEntityLayer(tribeMember));
+         createEntityFromConfig(config, getEntityLayer(tribeMember), 0);
 
          delete useInfo.crossbowLoadProgressRecord[itemSlot];
          
@@ -501,7 +501,7 @@ export function useItem(tribeMember: EntityID, item: Item, inventoryName: Invent
          config[ServerComponentType.physics].velocityX = entityPhysicsComponent.selfVelocity.x + entityPhysicsComponent.externalVelocity.x + velocityMagnitude * Math.sin(transformComponent.rotation);
          config[ServerComponentType.physics].velocityY = entityPhysicsComponent.selfVelocity.y + entityPhysicsComponent.externalVelocity.y + velocityMagnitude * Math.cos(transformComponent.rotation);
          config[ServerComponentType.throwingProjectile].tribeMember = tribeMember;
-         createEntityFromConfig(config, getEntityLayer(tribeMember));
+         createEntityFromConfig(config, getEntityLayer(tribeMember), 0);
 
          consumeItemFromSlot(inventory, itemSlot, 1);
 
@@ -539,7 +539,7 @@ export function useItem(tribeMember: EntityID, item: Item, inventoryName: Invent
          config[ServerComponentType.tribe].tribe = tribeComponent.tribe;
          config[ServerComponentType.throwingProjectile].tribeMember = tribeMember;
          config[ServerComponentType.throwingProjectile].itemID = item.id;
-         createEntityFromConfig(config, getEntityLayer(tribeMember));
+         createEntityFromConfig(config, getEntityLayer(tribeMember), 0);
 
          useInfo.lastBattleaxeChargeTicks = getGameTicks();
          useInfo.thrownBattleaxeItemID = item.id;
@@ -692,7 +692,7 @@ export function placeBlueprint(tribeMember: EntityID, structure: EntityID, bluep
          config[ServerComponentType.transform].rotation = dynamicRotation;
          config[ServerComponentType.blueprint].blueprintType = blueprintType;
          config[ServerComponentType.tribe].tribe = tribeComponent.tribe;
-         createEntityFromConfig(config, getEntityLayer(tribeMember));
+         createEntityFromConfig(config, getEntityLayer(tribeMember), 0);
          
          destroyEntity(structure);
          break;
@@ -722,7 +722,7 @@ export function placeBlueprint(tribeMember: EntityID, structure: EntityID, bluep
          config[ServerComponentType.blueprint].blueprintType = blueprintType;
          config[ServerComponentType.blueprint].associatedEntityID = structure;
          config[ServerComponentType.tribe].tribe = tribeComponent.tribe;
-         createEntityFromConfig(config, getEntityLayer(tribeMember));
+         createEntityFromConfig(config, getEntityLayer(tribeMember), 0);
          
          consumeItemType(inventoryComponent, upgradeMaterialItemType, 5);
          break;
@@ -746,7 +746,7 @@ export function placeBlueprint(tribeMember: EntityID, structure: EntityID, bluep
          config[ServerComponentType.blueprint].blueprintType = blueprintType;
          config[ServerComponentType.blueprint].associatedEntityID = structure;
          config[ServerComponentType.tribe].tribe = tribeComponent.tribe;
-         createEntityFromConfig(config, getEntityLayer(tribeMember));
+         createEntityFromConfig(config, getEntityLayer(tribeMember), 0);
 
          consumeItemType(inventoryComponent, ItemType.rock, 25);
          consumeItemType(inventoryComponent, ItemType.wood, 15);
@@ -781,7 +781,7 @@ export function placeBlueprint(tribeMember: EntityID, structure: EntityID, bluep
          config[ServerComponentType.blueprint].blueprintType = blueprintType;
          config[ServerComponentType.blueprint].associatedEntityID = structure;
          config[ServerComponentType.tribe].tribe = tribeComponent.tribe;
-         createEntityFromConfig(config, getEntityLayer(tribeMember));
+         createEntityFromConfig(config, getEntityLayer(tribeMember), 0);
 
          consumeItemType(inventoryComponent, ItemType.wood, 5);
       }
@@ -887,7 +887,7 @@ export function throwItem(tribesman: EntityID, inventoryName: InventoryName, ite
    config[ServerComponentType.item].itemType = itemType;
    config[ServerComponentType.item].amount = amountRemoved;
    config[ServerComponentType.item].throwingEntity = tribesman;
-   createEntityFromConfig(config, getEntityLayer(tribesman));
+   createEntityFromConfig(config, getEntityLayer(tribesman), 0);
 
    if (TribesmanAIComponentArray.hasComponent(tribesman)) {
       const tribesmanComponent = TribesmanAIComponentArray.getComponent(tribesman);

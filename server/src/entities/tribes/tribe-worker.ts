@@ -36,7 +36,7 @@ const getTribeType = (layer: Layer, workerPosition: Point): TribeType => {
    
    const tileX = Math.floor(workerPosition.x / Settings.TILE_SIZE);
    const tileY = Math.floor(workerPosition.y / Settings.TILE_SIZE);
-   const tileType = layer.getTileType(tileX, tileY);
+   const tileType = layer.getTileXYType(tileX, tileY);
    switch (tileType) {
       case TileType.grass: {
          return TribeType.plainspeople;
@@ -87,7 +87,8 @@ export function createTribeWorkerConfig(): ComponentConfig<ComponentTypes> {
          accelerationX: 0,
          accelerationY: 0,
          traction: 1,
-         isAffectedByFriction: true,
+         isAffectedByAirFriction: true,
+         isAffectedByGroundFriction: true,
          isImmovable: false
       },
       [ServerComponentType.health]: {
@@ -109,7 +110,8 @@ export function createTribeWorkerConfig(): ComponentConfig<ComponentTypes> {
       },
       [ServerComponentType.aiHelper]: {
          ignoreDecorativeEntities: true,
-         visionRange: TRIBE_WORKER_VISION_RANGE
+         visionRange: TRIBE_WORKER_VISION_RANGE,
+         ais: {}
       },
       [ServerComponentType.inventory]: {
          inventories: []

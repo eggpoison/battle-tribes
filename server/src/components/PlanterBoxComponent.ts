@@ -81,7 +81,7 @@ export function placePlantInPlanterBox(planterBox: EntityID, plantType: PlanterB
    config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
    config[ServerComponentType.plant].plantType = plantType;
    config[ServerComponentType.plant].planterBox = planterBox;
-   const plant = createEntityFromConfig(config, getEntityLayer(planterBox));
+   const plant = createEntityFromConfig(config, getEntityLayer(planterBox), 0);
 
    planterBoxComponent.plantEntity = plant;
    planterBoxComponent.replantType = plantType;

@@ -5,11 +5,8 @@ import { Packet } from "battletribes-shared/packets";
 import { InventoryName, ItemType } from "battletribes-shared/items/items";
 import { Settings } from "battletribes-shared/settings";
 import { StatusEffect } from "battletribes-shared/status-effects";
-import { Biome } from "battletribes-shared/tiles";
-import { randFloat, TileIndex, UtilVars } from "battletribes-shared/utils";
-import { moveEntityToPosition, runHerdAI, entityHasReachedPosition, stopEntity } from "../ai-shared";
-import { shouldWander, getWanderTargetTile, wander } from "../ai/wander-ai";
-import Layer, { getTileX, getTileY } from "../Layer";
+import { randFloat, UtilVars } from "battletribes-shared/utils";
+import { moveEntityToPosition, runHerdAI } from "../ai-shared";
 import { entitiesAreColliding, CollisionVars } from "../collision";
 import { AIHelperComponent, AIHelperComponentArray } from "./AIHelperComponent";
 import { healEntity, HealthComponentArray } from "./HealthComponent";
@@ -17,7 +14,6 @@ import { ItemComponentArray } from "./ItemComponent";
 import { PhysicsComponentArray } from "./PhysicsComponent";
 import { StatusEffectComponentArray, hasStatusEffect, applyStatusEffect } from "./StatusEffectComponent";
 import { TransformComponentArray } from "./TransformComponent";
-import { WanderAIComponentArray } from "./WanderAIComponent";
 import { calculateRadialAttackTargets } from "../entities/tribes/tribe-member";
 import { entityIsStructure } from "../Entity";
 import { InventoryComponentArray, getInventory } from "./InventoryComponent";
@@ -25,7 +21,7 @@ import { InventoryUseComponentArray } from "./InventoryUseComponent";
 import { TribeMemberComponentArray } from "./TribeMemberComponent";
 import { ZombieVars } from "../entities/mobs/zombie";
 import { beginSwing } from "../entities/tribes/limb-use";
-import { destroyEntity, entityExists, getEntityLayer, getEntityType, getGameTicks, isNight } from "../world";
+import { destroyEntity, entityExists, getEntityType, getGameTicks, isNight } from "../world";
 
 const enum Vars {
    TURN_SPEED = 3 * UtilVars.PI,
@@ -323,29 +319,8 @@ function onTick(zombieComponent: ZombieComponent, zombie: EntityID): void {
    }
 
    // Wander AI
-   const layer = getEntityLayer(zombie);
-   const physicsComponent = PhysicsComponentArray.getComponent(zombie);
-   const wanderAIComponent = WanderAIComponentArray.getComponent(zombie);
-   if (wanderAIComponent.targetPositionX !== -1) {
-      if (entityHasReachedPosition(zombie, wanderAIComponent.targetPositionX, wanderAIComponent.targetPositionY)) {
-         wanderAIComponent.targetPositionX = -1;
-         stopEntity(physicsComponent);
-      }
-   } else if (shouldWander(physicsComponent, 0.4)) {
-      let attempts = 0;
-      let targetTile: TileIndex;
-      do {
-         targetTile = getWanderTargetTile(zombie, ZombieVars.VISION_RANGE);
-      } while (++attempts <= 50 && (layer.tileIsWalls[targetTile] === 1 || layer.tileBiomes[targetTile] !== Biome.grasslands));
-
-      const tileX = getTileX(targetTile);
-      const tileY = getTileY(targetTile);
-      const x = (tileX + Math.random()) * Settings.TILE_SIZE;
-      const y = (tileY + Math.random()) * Settings.TILE_SIZE;
-      wander(zombie, x, y, Vars.ACCELERATION_SLOW, Vars.TURN_SPEED);
-   } else {
-      stopEntity(physicsComponent);
-   }
+   const wanderAI = aiHelperComponent.getWanderAI();
+   wanderAI.run(zombie);
 }
 
 function getDataLength(): number {

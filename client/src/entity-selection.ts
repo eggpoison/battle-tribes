@@ -420,7 +420,13 @@ const updateHighlightedEntity = (entity: Entity | null): void => {
 }
 
 export function updateHighlightedAndHoveredEntities(): void {
-   if (Player.instance === null || Game.cursorPositionX === null || Game.cursorPositionY === null) {
+   if (Game.cursorPositionX === null || Game.cursorPositionY === null) {
+      return;
+   }
+
+   // @Hack
+   if (Player.instance === null) {
+      hoveredEntityID = -1;
       return;
    }
 
@@ -435,7 +441,7 @@ export function updateHighlightedAndHoveredEntities(): void {
    }
 
    // If the player is interacting with an inventory, only consider the distance from the player not the cursor
-   if (entityExists(selectedEntityID) && (isHoveringInBlueprintMenu() || InventorySelector_inventoryIsOpen())) {
+   if (Player.instance !== null && entityExists(selectedEntityID) && (isHoveringInBlueprintMenu() || InventorySelector_inventoryIsOpen())) {
       const selectedEntity = getSelectedEntity();
 
       const playerTransformComponent = Player.instance.getServerComponent(ServerComponentType.transform);

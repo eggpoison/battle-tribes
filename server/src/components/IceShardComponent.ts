@@ -3,8 +3,7 @@ import { ComponentArray } from "./ComponentArray";
 import { randFloat } from "battletribes-shared/utils";
 import { EntityID } from "battletribes-shared/entities";
 import { Settings } from "battletribes-shared/settings";
-import { getAgeTicks, TransformComponentArray } from "./TransformComponent";
-import { destroyEntity } from "../world";
+import { destroyEntity, getEntityAgeTicks } from "../world";
 
 export interface IceShardComponentParams {}
 
@@ -22,8 +21,7 @@ export const IceShardComponentArray = new ComponentArray<IceShardComponent>(Serv
 });
 
 function onTick(iceShardComponent: IceShardComponent, iceShard: EntityID): void {
-   const transformComponent = TransformComponentArray.getComponent(iceShard);
-   const ageTicks = getAgeTicks(transformComponent);
+   const ageTicks = getEntityAgeTicks(iceShard);
    
    // @Cleanup @Speed: Don't even need a component for this, just do it based on age with a random chance
    if (ageTicks / Settings.TPS >= iceShardComponent.lifetime) {

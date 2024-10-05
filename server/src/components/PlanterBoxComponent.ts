@@ -1,6 +1,5 @@
 import { PlanterBoxPlant, ServerComponentType } from "battletribes-shared/components";
 import { ComponentArray } from "./ComponentArray";
-import Layer from "../Layer";
 import { PlantComponentArray } from "./PlantComponent";
 import { Settings } from "battletribes-shared/settings";
 import { EntityID } from "battletribes-shared/entities";
@@ -13,8 +12,6 @@ import { destroyEntity, entityExists, getEntityLayer } from "../world";
 const enum Vars {
    FERTILISER_DURATION_TICKS = 300 * Settings.TPS
 }
-
-export interface PlanterBoxComponentParams {}
 
 export class PlanterBoxComponent {
    public plantEntity: EntityID = 0;
@@ -75,12 +72,10 @@ export function placePlantInPlanterBox(planterBox: EntityID, plantType: PlanterB
    const transformComponent = TransformComponentArray.getComponent(planterBox);
 
    // Create plant
-   const config = createPlantConfig();
-   config[ServerComponentType.transform].position.x = transformComponent.position.x;
-   config[ServerComponentType.transform].position.y = transformComponent.position.y;
-   config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
-   config[ServerComponentType.plant].plantType = plantType;
-   config[ServerComponentType.plant].planterBox = planterBox;
+   const config = createPlantConfig(plantType, planterBox);
+   config.components[ServerComponentType.transform].position.x = transformComponent.position.x;
+   config.components[ServerComponentType.transform].position.y = transformComponent.position.y;
+   config.components[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
    const plant = createEntityFromConfig(config, getEntityLayer(planterBox), 0);
 
    planterBoxComponent.plantEntity = plant;

@@ -1,34 +1,34 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "battletribes-shared/collision";
+import { DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "battletribes-shared/collision";
 import { EntityID, EntityType, PlayerCauseOfDeath } from "battletribes-shared/entities";
-import { Settings } from "battletribes-shared/settings";
-import { Point, randFloat } from "battletribes-shared/utils";
-import { RockSpikeComponentArray } from "../../components/RockSpikeComponent";
+import { Point } from "battletribes-shared/utils";
+import { RockSpikeComponent, RockSpikeComponentArray } from "../../components/RockSpikeComponent";
 import { HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
 import { applyKnockback } from "../../components/PhysicsComponent";
 import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
 import { ServerComponentType } from "battletribes-shared/components";
-import { ComponentConfig } from "../../components";
-import { TransformComponentArray } from "../../components/TransformComponent";
+import { EntityConfig } from "../../components";
+import { TransformComponent, TransformComponentArray } from "../../components/TransformComponent";
 import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
 import CircularBox from "battletribes-shared/boxes/CircularBox";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.rockSpike;
 
-export function createRockSpikeConfig(): ComponentConfig<ComponentTypes> {
+const MASSES = [1, 1.75, 2.5];
+export const ROCK_SPIKE_HITBOX_SIZES = [12 * 2, 16 * 2, 20 * 2];
+
+export function createRockSpikeConfig(size: number, frozenYeti: EntityID): EntityConfig<ComponentTypes> {
+   const transformComponent = new TransformComponent();
+   const hitbox = createHitbox(new CircularBox(new Point(0, 0), 0, ROCK_SPIKE_HITBOX_SIZES[size]), MASSES[size], HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, []);
+   transformComponent.addHitbox(hitbox, null);
+   
+   const rockSpikeComponent = new RockSpikeComponent(size, frozenYeti);
+   
    return {
-      [ServerComponentType.transform]: {
-         position: new Point(0, 0),
-         rotation: 0,
-         type: EntityType.rockSpikeProjectile,
-         collisionBit: COLLISION_BITS.default,
-         collisionMask: DEFAULT_COLLISION_MASK,
-         hitboxes: [createHitbox(new CircularBox(new Point(0, 0), 0, 0), 0, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, [])]
-      },
-      [ServerComponentType.rockSpike]: {
-         size: 0,
-         lifetimeTicks: Math.floor(randFloat(3.5, 4.5) * Settings.TPS),
-         frozenYetiID: 0
+      entityType: EntityType.rockSpikeProjectile,
+      components: {
+         [ServerComponentType.transform]: transformComponent,
+         [ServerComponentType.rockSpike]: rockSpikeComponent
       }
    };
 }

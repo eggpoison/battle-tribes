@@ -32,12 +32,33 @@ import { EntityTickEvent, EntityTickEventType } from "battletribes-shared/entity
 import { registerEntityTickEvent } from "../../server/player-clients";
 import { TransformComponentArray } from "../../components/TransformComponent";
 import { createWoodenArrowConfig } from "../projectiles/wooden-arrow";
-import { ComponentConfig } from "../../components";
+import { EntityConfig } from "../../components";
 import { createSpearProjectileConfig } from "../projectiles/spear-projectile";
 import { createBlueprintEntityConfig } from "../blueprint-entity";
-import { createEntityConfig } from "../../entity-creation";
 import { AttackVars } from "../../../../shared/src/attack-patterns";
 import { destroyEntity, getEntityLayer, getEntityType, getGameTicks } from "../../world";
+import { createWallConfig } from "../structures/wall";
+import { createDoorConfig } from "../structures/door";
+import { createEmbrasureConfig } from "../structures/embrasure";
+import { createFloorSpikesConfig, createWallSpikesConfig } from "../structures/spikes";
+import { createFloorPunjiSticksConfig, createWallPunjiSticksConfig } from "../structures/punji-sticks";
+import { createBallistaConfig } from "../structures/ballista";
+import { createSlingTurretConfig } from "../structures/sling-turret";
+import { createTunnelConfig } from "../structures/tunnel";
+import { createTribeTotemConfig } from "../structures/tribe-totem";
+import { createWorkerHutConfig } from "../structures/worker-hut";
+import { createWarriorHutConfig } from "../structures/warrior-hut";
+import { createBarrelConfig } from "../structures/barrel";
+import { createWorkbenchConfig } from "../structures/workbench";
+import { createResearchBenchConfig } from "../structures/research-bench";
+import { createHealingTotemConfig } from "../structures/healing-totem";
+import { createPlanterBoxConfig } from "../structures/planter-box";
+import { createFurnaceConfig } from "../structures/cooking-entities/furnace";
+import { createCampfireConfig } from "../structures/cooking-entities/campfire";
+import { createFenceConfig } from "../structures/fence";
+import { createFenceGateConfig } from "../structures/fence-gate";
+import { createFrostshaperConfig } from "../structures/frostshaper";
+import { createStonecarvingTableConfig } from "../structures/stonecarving-table";
 
 const enum Vars {
    ITEM_THROW_FORCE = 100,
@@ -257,12 +278,41 @@ export function calculateRadialAttackTargets(entity: EntityID, attackOffset: num
 }
 
 export function placeBuilding(tribe: Tribe, layer: Layer, position: Point, rotation: number, entityType: StructureType, connectionInfo: StructureConnectionInfo): void {
-   const config = createEntityConfig(entityType);
-   config[ServerComponentType.transform].position.x = position.x;
-   config[ServerComponentType.transform].position.y = position.y;
-   config[ServerComponentType.transform].rotation = rotation;
-   config[ServerComponentType.tribe].tribe = tribe;
-   config[ServerComponentType.structure].connectionInfo = connectionInfo;
+   let config: EntityConfig<ServerComponentType.transform>;
+   switch (entityType) {
+      case EntityType.wall: config = createWallConfig(tribe, BuildingMaterial.wood, connectionInfo); break;
+      case EntityType.door: config = createDoorConfig(tribe, BuildingMaterial.wood, connectionInfo); break;
+      case EntityType.embrasure: config = createEmbrasureConfig(tribe, BuildingMaterial.wood, connectionInfo); break;
+      case EntityType.floorSpikes: config = createFloorSpikesConfig(tribe, BuildingMaterial.wood, connectionInfo); break;
+      case EntityType.wallSpikes: config = createWallSpikesConfig(tribe, BuildingMaterial.wood, connectionInfo); break;
+      case EntityType.tunnel: config = createTunnelConfig(tribe, BuildingMaterial.wood, connectionInfo); break;
+      case EntityType.floorPunjiSticks: config = createFloorPunjiSticksConfig(tribe, connectionInfo); break;
+      case EntityType.wallPunjiSticks: config = createWallPunjiSticksConfig(tribe, connectionInfo); break;
+      case EntityType.ballista: config = createBallistaConfig(tribe, connectionInfo); break;
+      case EntityType.slingTurret: config = createSlingTurretConfig(tribe, connectionInfo); break;
+      case EntityType.tribeTotem: config = createTribeTotemConfig(tribe, connectionInfo); break;
+      case EntityType.workerHut: config = createWorkerHutConfig(tribe, connectionInfo); break;
+      case EntityType.warriorHut: config = createWarriorHutConfig(tribe, connectionInfo); break;
+      case EntityType.barrel: config = createBarrelConfig(tribe, connectionInfo); break;
+      case EntityType.workbench: config = createWorkbenchConfig(tribe, connectionInfo); break;
+      case EntityType.researchBench: config = createResearchBenchConfig(tribe, connectionInfo); break;
+      case EntityType.healingTotem: config = createHealingTotemConfig(tribe, connectionInfo); break;
+      case EntityType.planterBox: config = createPlanterBoxConfig(tribe, connectionInfo); break;
+      case EntityType.furnace: config = createFurnaceConfig(tribe, connectionInfo); break;
+      case EntityType.campfire: config = createCampfireConfig(tribe, connectionInfo); break;
+      case EntityType.fence: config = createFenceConfig(tribe, connectionInfo); break;
+      case EntityType.fenceGate: config = createFenceGateConfig(tribe, connectionInfo); break;
+      case EntityType.frostshaper: config = createFrostshaperConfig(tribe, connectionInfo); break;
+      case EntityType.stonecarvingTable: config = createStonecarvingTableConfig(tribe, connectionInfo); break;
+      default: {
+         const unreachable: never = entityType;
+         return unreachable;
+      }
+   }
+   
+   config.components[ServerComponentType.transform].position.x = position.x;
+   config.components[ServerComponentType.transform].position.y = position.y;
+   config.components[ServerComponentType.transform].rotation = rotation;
    createEntityFromConfig(config, layer, 0);
 }
 
@@ -399,15 +449,15 @@ export function useItem(tribeMember: EntityID, item: Item, inventoryName: Invent
 
          const tribeComponent = TribeComponentArray.getComponent(tribeMember);
 
-         let config: ComponentConfig<ServerComponentType.transform | ServerComponentType.physics | ServerComponentType.tribe | ServerComponentType.projectile>;
+         let config: EntityConfig<ServerComponentType.transform | ServerComponentType.physics | ServerComponentType.tribe | ServerComponentType.projectile>;
          switch (item.type) {
             case ItemType.wooden_bow:
             case ItemType.reinforced_bow: {
-               config = createWoodenArrowConfig();
+               config = createWoodenArrowConfig(tribeComponent.tribe, tribeMember);
                break;
             }
             case ItemType.ice_bow: {
-               config = createIceArrowConfig();
+               config = createIceArrowConfig(tribeComponent.tribe, tribeMember);
                break;
             }
             // @Robustness
@@ -415,13 +465,11 @@ export function useItem(tribeMember: EntityID, item: Item, inventoryName: Invent
                throw new Error("No case for bow type " + item.type);
             }
          }
-         config[ServerComponentType.transform].position.x = spawnPosition.x;
-         config[ServerComponentType.transform].position.y = spawnPosition.y;
-         config[ServerComponentType.transform].rotation = transformComponent.rotation;
-         config[ServerComponentType.physics].velocityX = itemInfo.projectileSpeed * Math.sin(transformComponent.rotation);
-         config[ServerComponentType.physics].velocityY = itemInfo.projectileSpeed * Math.cos(transformComponent.rotation);
-         config[ServerComponentType.tribe].tribe = tribeComponent.tribe;
-         config[ServerComponentType.projectile].owner = tribeMember;
+         config.components[ServerComponentType.transform].position.x = spawnPosition.x;
+         config.components[ServerComponentType.transform].position.y = spawnPosition.y;
+         config.components[ServerComponentType.transform].rotation = transformComponent.rotation;
+         config.components[ServerComponentType.physics].externalVelocity.x = itemInfo.projectileSpeed * Math.sin(transformComponent.rotation);
+         config.components[ServerComponentType.physics].externalVelocity.y = itemInfo.projectileSpeed * Math.cos(transformComponent.rotation);
          createEntityFromConfig(config, getEntityLayer(tribeMember), 0);
 
          for (let i = 0; i < 2; i++) {
@@ -461,13 +509,15 @@ export function useItem(tribeMember: EntityID, item: Item, inventoryName: Invent
          
          const itemInfo = ITEM_INFO_RECORD[item.type] as BowItemInfo;
 
+         const tribeComponent = TribeComponentArray.getComponent(tribeMember);
+         
          // @Copynpaste from bow above
-         const config = createWoodenArrowConfig();
-         config[ServerComponentType.transform].position.x = spawnPosition.x;
-         config[ServerComponentType.transform].position.y = spawnPosition.y;
-         config[ServerComponentType.transform].rotation = transformComponent.rotation;
-         config[ServerComponentType.physics].velocityX = itemInfo.projectileSpeed * Math.sin(transformComponent.rotation);
-         config[ServerComponentType.physics].velocityY = itemInfo.projectileSpeed * Math.cos(transformComponent.rotation);
+         const config = createWoodenArrowConfig(tribeComponent.tribe, tribeMember);
+         config.components[ServerComponentType.transform].position.x = spawnPosition.x;
+         config.components[ServerComponentType.transform].position.y = spawnPosition.y;
+         config.components[ServerComponentType.transform].rotation = transformComponent.rotation;
+         config.components[ServerComponentType.physics].externalVelocity.x = itemInfo.projectileSpeed * Math.sin(transformComponent.rotation);
+         config.components[ServerComponentType.physics].externalVelocity.y = itemInfo.projectileSpeed * Math.cos(transformComponent.rotation);
          createEntityFromConfig(config, getEntityLayer(tribeMember), 0);
 
          delete useInfo.crossbowLoadProgressRecord[itemSlot];
@@ -494,13 +544,12 @@ export function useItem(tribeMember: EntityID, item: Item, inventoryName: Invent
          const secondsSinceLastAction = limbInfo.currentActionElapsedTicks / Settings.TPS;
          const velocityMagnitude = lerp(1000, 1700, Math.min(secondsSinceLastAction / 3, 1));
 
-         const config = createSpearProjectileConfig();
-         config[ServerComponentType.transform].position.x = x;
-         config[ServerComponentType.transform].position.y = y;
-         config[ServerComponentType.transform].rotation = transformComponent.rotation;
-         config[ServerComponentType.physics].velocityX = entityPhysicsComponent.selfVelocity.x + entityPhysicsComponent.externalVelocity.x + velocityMagnitude * Math.sin(transformComponent.rotation);
-         config[ServerComponentType.physics].velocityY = entityPhysicsComponent.selfVelocity.y + entityPhysicsComponent.externalVelocity.y + velocityMagnitude * Math.cos(transformComponent.rotation);
-         config[ServerComponentType.throwingProjectile].tribeMember = tribeMember;
+         const config = createSpearProjectileConfig(tribeMember, null);
+         config.components[ServerComponentType.transform].position.x = x;
+         config.components[ServerComponentType.transform].position.y = y;
+         config.components[ServerComponentType.transform].rotation = transformComponent.rotation;
+         config.components[ServerComponentType.physics].externalVelocity.x = entityPhysicsComponent.selfVelocity.x + entityPhysicsComponent.externalVelocity.x + velocityMagnitude * Math.sin(transformComponent.rotation);
+         config.components[ServerComponentType.physics].externalVelocity.y = entityPhysicsComponent.selfVelocity.y + entityPhysicsComponent.externalVelocity.y + velocityMagnitude * Math.cos(transformComponent.rotation);
          createEntityFromConfig(config, getEntityLayer(tribeMember), 0);
 
          consumeItemFromSlot(inventory, itemSlot, 1);
@@ -530,15 +579,12 @@ export function useItem(tribeMember: EntityID, item: Item, inventoryName: Invent
          const secondsSinceLastAction = ticksSinceLastAction / Settings.TPS;
          const velocityMagnitude = lerp(600, 1100, Math.min(secondsSinceLastAction / 3, 1));
 
-         const config = createBattleaxeProjectileConfig();
-         config[ServerComponentType.transform].position.x = x;
-         config[ServerComponentType.transform].position.y = y;
-         config[ServerComponentType.transform].rotation = transformComponent.rotation;
-         config[ServerComponentType.physics].velocityX = physicsComponent.selfVelocity.x + physicsComponent.externalVelocity.x + velocityMagnitude * Math.sin(transformComponent.rotation)
-         config[ServerComponentType.physics].velocityY = physicsComponent.selfVelocity.y + physicsComponent.externalVelocity.y + velocityMagnitude * Math.cos(transformComponent.rotation)
-         config[ServerComponentType.tribe].tribe = tribeComponent.tribe;
-         config[ServerComponentType.throwingProjectile].tribeMember = tribeMember;
-         config[ServerComponentType.throwingProjectile].itemID = item.id;
+         const config = createBattleaxeProjectileConfig(tribeComponent.tribe, tribeMember, item.id);
+         config.components[ServerComponentType.transform].position.x = x;
+         config.components[ServerComponentType.transform].position.y = y;
+         config.components[ServerComponentType.transform].rotation = transformComponent.rotation;
+         config.components[ServerComponentType.physics].externalVelocity.x = physicsComponent.selfVelocity.x + physicsComponent.externalVelocity.x + velocityMagnitude * Math.sin(transformComponent.rotation)
+         config.components[ServerComponentType.physics].externalVelocity.y = physicsComponent.selfVelocity.y + physicsComponent.externalVelocity.y + velocityMagnitude * Math.cos(transformComponent.rotation)
          createEntityFromConfig(config, getEntityLayer(tribeMember), 0);
 
          useInfo.lastBattleaxeChargeTicks = getGameTicks();
@@ -686,12 +732,10 @@ export function placeBlueprint(tribeMember: EntityID, structure: EntityID, bluep
          
          const tribeComponent = TribeComponentArray.getComponent(tribeMember);
 
-         const config = createBlueprintEntityConfig();
-         config[ServerComponentType.transform].position.x = position.x;
-         config[ServerComponentType.transform].position.y = position.y;
-         config[ServerComponentType.transform].rotation = dynamicRotation;
-         config[ServerComponentType.blueprint].blueprintType = blueprintType;
-         config[ServerComponentType.tribe].tribe = tribeComponent.tribe;
+         const config = createBlueprintEntityConfig(tribeComponent.tribe, blueprintType, 0);
+         config.components[ServerComponentType.transform].position.x = position.x;
+         config.components[ServerComponentType.transform].position.y = position.y;
+         config.components[ServerComponentType.transform].rotation = dynamicRotation;
          createEntityFromConfig(config, getEntityLayer(tribeMember), 0);
          
          destroyEntity(structure);
@@ -715,13 +759,10 @@ export function placeBlueprint(tribeMember: EntityID, structure: EntityID, bluep
 
          const tribeComponent = TribeComponentArray.getComponent(tribeMember);
 
-         const config = createBlueprintEntityConfig();
-         config[ServerComponentType.transform].position.x = structureTransformComponent.position.x;
-         config[ServerComponentType.transform].position.y = structureTransformComponent.position.y;
-         config[ServerComponentType.transform].rotation = structureTransformComponent.rotation;
-         config[ServerComponentType.blueprint].blueprintType = blueprintType;
-         config[ServerComponentType.blueprint].associatedEntityID = structure;
-         config[ServerComponentType.tribe].tribe = tribeComponent.tribe;
+         const config = createBlueprintEntityConfig(tribeComponent.tribe, blueprintType, structure);
+         config.components[ServerComponentType.transform].position.x = structureTransformComponent.position.x;
+         config.components[ServerComponentType.transform].position.y = structureTransformComponent.position.y;
+         config.components[ServerComponentType.transform].rotation = structureTransformComponent.rotation;
          createEntityFromConfig(config, getEntityLayer(tribeMember), 0);
          
          consumeItemType(inventoryComponent, upgradeMaterialItemType, 5);
@@ -739,13 +780,10 @@ export function placeBlueprint(tribeMember: EntityID, structure: EntityID, bluep
 
          const tribeComponent = TribeComponentArray.getComponent(tribeMember);
 
-         const config = createBlueprintEntityConfig();
-         config[ServerComponentType.transform].position.x = structureTransformComponent.position.x;
-         config[ServerComponentType.transform].position.y = structureTransformComponent.position.y;
-         config[ServerComponentType.transform].rotation = structureTransformComponent.rotation;
-         config[ServerComponentType.blueprint].blueprintType = blueprintType;
-         config[ServerComponentType.blueprint].associatedEntityID = structure;
-         config[ServerComponentType.tribe].tribe = tribeComponent.tribe;
+         const config = createBlueprintEntityConfig(tribeComponent.tribe, blueprintType, structure);
+         config.components[ServerComponentType.transform].position.x = structureTransformComponent.position.x;
+         config.components[ServerComponentType.transform].position.y = structureTransformComponent.position.y;
+         config.components[ServerComponentType.transform].rotation = structureTransformComponent.rotation;
          createEntityFromConfig(config, getEntityLayer(tribeMember), 0);
 
          consumeItemType(inventoryComponent, ItemType.rock, 25);
@@ -774,13 +812,10 @@ export function placeBlueprint(tribeMember: EntityID, structure: EntityID, bluep
          
          const tribeComponent = TribeComponentArray.getComponent(tribeMember);
 
-         const config = createBlueprintEntityConfig();
-         config[ServerComponentType.transform].position.x = structureTransformComponent.position.x;
-         config[ServerComponentType.transform].position.y = structureTransformComponent.position.y;
-         config[ServerComponentType.transform].rotation = rotation;
-         config[ServerComponentType.blueprint].blueprintType = blueprintType;
-         config[ServerComponentType.blueprint].associatedEntityID = structure;
-         config[ServerComponentType.tribe].tribe = tribeComponent.tribe;
+         const config = createBlueprintEntityConfig(tribeComponent.tribe, blueprintType, structure);
+         config.components[ServerComponentType.transform].position.x = structureTransformComponent.position.x;
+         config.components[ServerComponentType.transform].position.y = structureTransformComponent.position.y;
+         config.components[ServerComponentType.transform].rotation = rotation;
          createEntityFromConfig(config, getEntityLayer(tribeMember), 0);
 
          consumeItemType(inventoryComponent, ItemType.wood, 5);
@@ -877,16 +912,13 @@ export function throwItem(tribesman: EntityID, inventoryName: InventoryName, ite
    dropPosition.y += Vars.ITEM_THROW_OFFSET * Math.cos(throwDirection);
 
    // Create the item entity
-   const config = createItemEntityConfig();
-   config[ServerComponentType.transform].position.x = dropPosition.x;
-   config[ServerComponentType.transform].position.y = dropPosition.y;
-   config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
+   const config = createItemEntityConfig(itemType, amountRemoved, tribesman);
+   config.components[ServerComponentType.transform].position.x = dropPosition.x;
+   config.components[ServerComponentType.transform].position.y = dropPosition.y;
+   config.components[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
    // Throw the dropped item away from the player
-   config[ServerComponentType.physics].velocityX = tribesmanPhysicsComponent.selfVelocity.x + tribesmanPhysicsComponent.externalVelocity.x + Vars.ITEM_THROW_FORCE * Math.sin(throwDirection);
-   config[ServerComponentType.physics].velocityY = tribesmanPhysicsComponent.selfVelocity.y + tribesmanPhysicsComponent.externalVelocity.y + Vars.ITEM_THROW_FORCE * Math.cos(throwDirection);
-   config[ServerComponentType.item].itemType = itemType;
-   config[ServerComponentType.item].amount = amountRemoved;
-   config[ServerComponentType.item].throwingEntity = tribesman;
+   config.components[ServerComponentType.physics].externalVelocity.x = tribesmanPhysicsComponent.selfVelocity.x + tribesmanPhysicsComponent.externalVelocity.x + Vars.ITEM_THROW_FORCE * Math.sin(throwDirection);
+   config.components[ServerComponentType.physics].externalVelocity.y = tribesmanPhysicsComponent.selfVelocity.y + tribesmanPhysicsComponent.externalVelocity.y + Vars.ITEM_THROW_FORCE * Math.cos(throwDirection);
    createEntityFromConfig(config, getEntityLayer(tribesman), 0);
 
    if (TribesmanAIComponentArray.hasComponent(tribesman)) {

@@ -2,16 +2,16 @@ import { randInt } from "battletribes-shared/utils";
 import { ServerComponentType } from "battletribes-shared/components";
 import { ComponentArray } from "./ComponentArray";
 import { EntityID } from "battletribes-shared/entities";
-import { ComponentConfig } from "../components";
 import { Settings } from "battletribes-shared/settings";
 import { Biome } from "battletribes-shared/tiles";
-import Layer, { positionIsInWorld } from "../Layer";
+import { positionIsInWorld } from "../Layer";
 import { createIceShardExplosion, createIceSpikesConfig } from "../entities/resources/ice-spikes";
 import { createEntityFromConfig } from "../Entity";
 import { TransformComponentArray } from "./TransformComponent";
 import { ItemType } from "../../../shared/src/items/items";
 import { createItemsOverEntity } from "../entity-shared";
 import { entityExists, getEntityLayer } from "../world";
+import { EntityConfig } from "../components";
 
 const enum Vars {
    TICKS_TO_GROW = 1/5 * Settings.TPS,
@@ -28,15 +28,10 @@ export class IceSpikesComponent {
    public readonly maxChildren = randInt(0, 3);
    public numChildrenIceSpikes = 0;
    public iceSpikeGrowProgressTicks = 0;
-   public readonly rootIceSpike: EntityID;
+   public rootIceSpike: EntityID;
 
-   constructor(params: IceSpikesComponentParams) {
-      if (params.rootIceSpike === null) {
-         console.warn("Root ice spike was null! Defaulting to 0");
-         this.rootIceSpike = 0;
-      } else {
-         this.rootIceSpike = params.rootIceSpike;
-      }
+   constructor(rootIceSpikes: EntityID) {
+      this.rootIceSpike = rootIceSpikes;
    }
 }
 
@@ -51,9 +46,9 @@ export const IceSpikesComponentArray = new ComponentArray<IceSpikesComponent>(Se
    addDataToPacket: addDataToPacket
 });
 
-function onInitialise(config: ComponentConfig<ServerComponentType.iceSpikes>, entity: EntityID): void {
-   if (config[ServerComponentType.iceSpikes].rootIceSpike === null) {
-      config[ServerComponentType.iceSpikes].rootIceSpike = entity;
+function onInitialise(config: EntityConfig<ServerComponentType.iceSpikes>, entity: EntityID): void {
+   if (config.components[ServerComponentType.iceSpikes].rootIceSpike === 0) {
+      config.components[ServerComponentType.iceSpikes].rootIceSpike = entity;
    }
 }
 
@@ -94,11 +89,10 @@ const grow = (iceSpikes: EntityID): void => {
    if (minDistanceToEntity >= 40) {
       const iceSpikesComponent = IceSpikesComponentArray.getComponent(iceSpikes);
 
-      const config = createIceSpikesConfig();
-      config[ServerComponentType.transform].position.x = position.x;
-      config[ServerComponentType.transform].position.y = position.y;
-      config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
-      config[ServerComponentType.iceSpikes].rootIceSpike = iceSpikesComponent.rootIceSpike;
+      const config = createIceSpikesConfig(iceSpikesComponent.rootIceSpike);
+      config.components[ServerComponentType.transform].position.x = position.x;
+      config.components[ServerComponentType.transform].position.y = position.y;
+      config.components[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
       createEntityFromConfig(config, layer, 0);
       
       const rootIceSpikesComponent = IceSpikesComponentArray.getComponent(iceSpikesComponent.rootIceSpike);

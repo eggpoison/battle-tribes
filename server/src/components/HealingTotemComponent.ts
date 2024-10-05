@@ -13,8 +13,6 @@ const enum Vars {
    HEALING_PER_SECOND = 1
 }
 
-export interface HealingTotemComponentParams {}
-
 export class HealingTotemComponent {
    public readonly healTargetIDs = new Array<number>();
    public readonly healTargetsTicksHealed = new Array<number>();

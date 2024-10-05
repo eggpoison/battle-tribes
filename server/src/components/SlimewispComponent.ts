@@ -19,8 +19,6 @@ const enum Vars {
    SLIMEWISP_MERGE_TIME = 2
 }
 
-export interface SlimewispComponentParams {}
-
 export class SlimewispComponent {
    public mergeTimer = Vars.SLIMEWISP_MERGE_TIME;
 }
@@ -60,11 +58,10 @@ function onTick(slimewispComponent: SlimewispComponent, slimewisp: EntityID): vo
             slimewispComponent.mergeTimer -= Settings.I_TPS;
             if (slimewispComponent.mergeTimer <= 0 && !entityIsFlaggedForDestruction(mergingSlimewisp)) {
                // Create a slime between the two wisps
-               const config = createSlimeConfig();
-               config[ServerComponentType.transform].position.x = (transformComponent.position.x + mergingSlimewispTransformComponent.position.x) / 2;
-               config[ServerComponentType.transform].position.y = (transformComponent.position.y + mergingSlimewispTransformComponent.position.y) / 2;
-               config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
-               config[ServerComponentType.slime].size = SlimeSize.small;
+               const config = createSlimeConfig(SlimeSize.small);
+               config.components[ServerComponentType.transform].position.x = (transformComponent.position.x + mergingSlimewispTransformComponent.position.x) / 2;
+               config.components[ServerComponentType.transform].position.y = (transformComponent.position.y + mergingSlimewispTransformComponent.position.y) / 2;
+               config.components[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
                createEntityFromConfig(config, layer, 0);
             
                destroyEntity(slimewisp);

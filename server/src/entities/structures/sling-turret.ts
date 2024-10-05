@@ -1,12 +1,18 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "battletribes-shared/collision";
 import { EntityType } from "battletribes-shared/entities";
 import { Settings } from "battletribes-shared/settings";
 import { StatusEffect } from "battletribes-shared/status-effects";
-import { Point } from "battletribes-shared/utils";
 import { ServerComponentType } from "battletribes-shared/components";
-import { createEmptyStructureConnectionInfo } from "battletribes-shared/structures";
+import { StructureConnectionInfo } from "battletribes-shared/structures";
 import { createSlingTurretHitboxes } from "battletribes-shared/boxes/entity-hitbox-creation";
-import { ComponentConfig } from "../../components";
+import { EntityConfig } from "../../components";
+import { AIHelperComponent } from "../../components/AIHelperComponent";
+import { HealthComponent } from "../../components/HealthComponent";
+import { StatusEffectComponent } from "../../components/StatusEffectComponent";
+import { StructureComponent } from "../../components/StructureComponent";
+import { TransformComponent } from "../../components/TransformComponent";
+import { TribeComponent } from "../../components/TribeComponent";
+import { TurretComponent } from "../../components/TurretComponent";
+import Tribe from "../../Tribe";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.health
@@ -16,42 +22,35 @@ type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.aiHelper
    | ServerComponentType.turret;
 
-// @Cleanup: A lot of copy and paste from ballista.ts
-
 export const SLING_TURRET_SHOT_COOLDOWN_TICKS = 1.5 * Settings.TPS;
 export const SLING_TURRET_RELOAD_TIME_TICKS = Math.floor(0.4 * Settings.TPS);
-const VISION_RANGE = 400;
 
-export function createSlingTurretConfig(): ComponentConfig<ComponentTypes> {
+export function createSlingTurretConfig(tribe: Tribe, connectionInfo: StructureConnectionInfo): EntityConfig<ComponentTypes> {
+   const transformComponent = new TransformComponent()
+   transformComponent.addHitboxes(createSlingTurretHitboxes(), null);
+   
+   const healthComponent = new HealthComponent(25);
+   
+   const statusEffectComponent = new StatusEffectComponent(StatusEffect.poisoned | StatusEffect.bleeding);
+   
+   const structureComponent = new StructureComponent(connectionInfo);
+   
+   const tribeComponent = new TribeComponent(tribe);
+
+   const turretComponent = new TurretComponent(SLING_TURRET_SHOT_COOLDOWN_TICKS + SLING_TURRET_RELOAD_TIME_TICKS);
+   
+   const aiHelperComponent = new AIHelperComponent(400);
+   
    return {
-      [ServerComponentType.transform]: {
-         position: new Point(0, 0),
-         rotation: 0,
-         type: EntityType.slingTurret,
-         collisionBit: COLLISION_BITS.default,
-         collisionMask: DEFAULT_COLLISION_MASK,
-         hitboxes: createSlingTurretHitboxes()
-      },
-      [ServerComponentType.health]: {
-         maxHealth: 25
-      },
-      [ServerComponentType.statusEffect]: {
-         statusEffectImmunityBitset: StatusEffect.bleeding | StatusEffect.poisoned
-      },
-      [ServerComponentType.structure]: {
-         connectionInfo: createEmptyStructureConnectionInfo()
-      },
-      [ServerComponentType.tribe]: {
-         tribe: null,
-         tribeType: 0
-      },
-      [ServerComponentType.aiHelper]: {
-         ignoreDecorativeEntities: true,
-         visionRange: VISION_RANGE,
-         ais: {}
-      },
-      [ServerComponentType.turret]: {
-         fireCooldownTicks: SLING_TURRET_SHOT_COOLDOWN_TICKS + SLING_TURRET_RELOAD_TIME_TICKS
+      entityType: EntityType.slingTurret,
+      components: {
+         [ServerComponentType.transform]: transformComponent,
+         [ServerComponentType.health]: healthComponent,
+         [ServerComponentType.statusEffect]: statusEffectComponent,
+         [ServerComponentType.structure]: structureComponent,
+         [ServerComponentType.tribe]: tribeComponent,
+         [ServerComponentType.turret]: turretComponent,
+         [ServerComponentType.aiHelper]: aiHelperComponent
       }
    };
 }

@@ -3,9 +3,9 @@ import { ComponentArray } from "./ComponentArray";
 import { EntityID } from "battletribes-shared/entities";
 import { Packet } from "battletribes-shared/packets";
 
-export interface EscapeAIComponentParams {}
+// @Incomplete: Remove this component
 
-export class EscapeAIComponent implements EscapeAIComponentParams {
+export class EscapeAIComponent {
    /** IDs of all entities attacking the entity */
    public readonly attackingEntities = new Array<number>();
    public readonly attackEntityTicksSinceLastAttack = new Array<number>();

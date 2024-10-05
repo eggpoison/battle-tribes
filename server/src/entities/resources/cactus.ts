@@ -1,18 +1,20 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "battletribes-shared/collision";
+import { COLLISION_BITS, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "battletribes-shared/collision";
 import { CactusBodyFlowerData, CactusLimbData, CactusLimbFlowerData, EntityID, EntityType, PlayerCauseOfDeath } from "battletribes-shared/entities";
 import { randInt, lerp, randFloat, Point } from "battletribes-shared/utils";
-import { HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
+import { HealthComponent, HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
 import { createItemsOverEntity } from "../../entity-shared";
 import { applyKnockback } from "../../components/PhysicsComponent";
 import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
 import { ItemType } from "battletribes-shared/items/items";
 import { ServerComponentType } from "battletribes-shared/components";
-import { ComponentConfig } from "../../components";
+import { EntityConfig } from "../../components";
 import { StatusEffect } from "battletribes-shared/status-effects";
-import { TransformComponentArray } from "../../components/TransformComponent";
+import { TransformComponent, TransformComponentArray } from "../../components/TransformComponent";
 import { createHitbox, HitboxCollisionType, Hitbox } from "battletribes-shared/boxes/boxes";
 import CircularBox from "battletribes-shared/boxes/CircularBox";
 import { destroyEntity, getEntityType } from "../../world";
+import { StatusEffectComponent } from "../../components/StatusEffectComponent";
+import { CactusComponent } from "../../components/CactusComponent";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.health
@@ -79,10 +81,12 @@ const generateRandomLimbs = (): ReadonlyArray<CactusLimbData> => {
    return limbs;
 }
 
-export function createCactusConfig(): ComponentConfig<ComponentTypes> {
-   const hitboxes = new Array<Hitbox>();
-
-   hitboxes.push(createHitbox(new CircularBox(new Point(0, 0), 0, RADIUS - HITBOX_PADDING), 1, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, []));
+export function createCactusConfig(): EntityConfig<ComponentTypes> {
+   const transformComponent = new TransformComponent();
+   transformComponent.collisionBit = COLLISION_BITS.cactus;
+   
+   const hitbox = createHitbox(new CircularBox(new Point(0, 0), 0, RADIUS - HITBOX_PADDING), 1, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, []);
+   transformComponent.addHitbox(hitbox, null);
 
    const flowers = generateRandomFlowers();
    const limbs = generateRandomLimbs();
@@ -93,27 +97,22 @@ export function createCactusConfig(): ComponentConfig<ComponentTypes> {
 
       const box = new CircularBox(Point.fromVectorForm(37, limb.direction), 0, 18);
       const hitbox = createHitbox(box, 0.4, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, []);
-      hitboxes.push(hitbox);
+      transformComponent.addHitbox(hitbox, null);
    }
 
+   const healthComponent = new HealthComponent(15);
+
+   const statusEffectComponent = new StatusEffectComponent(StatusEffect.bleeding);
+
+   const cactusComponent = new CactusComponent(flowers, limbs);
+
    return {
-      [ServerComponentType.transform]: {
-         position: new Point(0, 0),
-         rotation: 0,
-         type: EntityType.cactus,
-         collisionBit: COLLISION_BITS.cactus,
-         collisionMask: DEFAULT_COLLISION_MASK,
-         hitboxes: hitboxes
-      },
-      [ServerComponentType.health]: {
-         maxHealth: 15
-      },
-      [ServerComponentType.statusEffect]: {
-         statusEffectImmunityBitset: StatusEffect.bleeding
-      },
-      [ServerComponentType.cactus]: {
-         flowers: flowers,
-         limbs: limbs
+      entityType: EntityType.cactus,
+      components: {
+         [ServerComponentType.transform]: transformComponent,
+         [ServerComponentType.health]: healthComponent,
+         [ServerComponentType.statusEffect]: statusEffectComponent,
+         [ServerComponentType.cactus]: cactusComponent
       }
    };
 }

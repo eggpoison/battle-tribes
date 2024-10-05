@@ -121,12 +121,10 @@ const gatherPlant = (plant: EntityID, attacker: EntityID, gloves: Item | null): 
       const x = plantTransformComponent.position.x + (plantRadius - 7) * Math.sin(offsetDirection);
       const y = plantTransformComponent.position.y + (plantRadius - 7) * Math.cos(offsetDirection);
    
-      const config = createItemEntityConfig();
-      config[ServerComponentType.transform].position.x = x;
-      config[ServerComponentType.transform].position.y = y;
-      config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
-      config[ServerComponentType.item].itemType = ItemType.leaf;
-      config[ServerComponentType.item].amount = 1;
+      const config = createItemEntityConfig(ItemType.leaf, 1, null);
+      config.components[ServerComponentType.transform].position.x = x;
+      config.components[ServerComponentType.transform].position.y = y;
+      config.components[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
       createEntityFromConfig(config, getEntityLayer(plant), 0);
    }
 

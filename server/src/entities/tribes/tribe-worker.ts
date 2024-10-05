@@ -1,19 +1,25 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "battletribes-shared/collision";
+import { DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "battletribes-shared/collision";
 import { EntityID, EntityType } from "battletribes-shared/entities";
-import { Settings } from "battletribes-shared/settings";
-import { TileType } from "battletribes-shared/tiles";
-import { TribeType } from "battletribes-shared/tribes";
-import { Point, randInt } from "battletribes-shared/utils";
+import { TRIBE_INFO_RECORD } from "battletribes-shared/tribes";
+import { Point } from "battletribes-shared/utils";
 import Tribe from "../../Tribe";
-import { TribesmanAIComponentArray } from "../../components/TribesmanAIComponent";
-import Layer from "../../Layer";
-import { TribeComponentArray } from "../../components/TribeComponent";
+import { TribesmanAIComponent, TribesmanAIComponentArray } from "../../components/TribesmanAIComponent";
+import { TribeComponent, TribeComponentArray } from "../../components/TribeComponent";
 import { HutComponentArray } from "../../components/HutComponent";
 import { ServerComponentType } from "battletribes-shared/components";
-import { ComponentConfig } from "../../components";
+import { EntityConfig } from "../../components";
 import CircularBox from "battletribes-shared/boxes/CircularBox";
 import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
-import { entityExists, getTribe } from "../../world";
+import { entityExists } from "../../world";
+import { AIHelperComponent } from "../../components/AIHelperComponent";
+import { DamageBoxComponent } from "../../components/DamageBoxComponent";
+import { HealthComponent } from "../../components/HealthComponent";
+import { InventoryComponent } from "../../components/InventoryComponent";
+import { InventoryUseComponent } from "../../components/InventoryUseComponent";
+import { PhysicsComponent } from "../../components/PhysicsComponent";
+import { StatusEffectComponent } from "../../components/StatusEffectComponent";
+import { TransformComponent } from "../../components/TransformComponent";
+import { TribeMemberComponent } from "../../components/TribeMemberComponent";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics
@@ -24,100 +30,53 @@ type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.tribesmanAI
    | ServerComponentType.aiHelper
    | ServerComponentType.inventoryUse
-   | ServerComponentType.inventory;
+   | ServerComponentType.inventory
+   | ServerComponentType.damageBox;
 
 export const TRIBE_WORKER_RADIUS = 28;
 export const TRIBE_WORKER_VISION_RANGE = 500;
 
-const getTribeType = (layer: Layer, workerPosition: Point): TribeType => {
-   if (Math.random() < 0.2) {
-      return TribeType.goblins;
-   }
+export function createTribeWorkerConfig(tribe: Tribe): EntityConfig<ComponentTypes> {
+   const transformComponent = new TransformComponent();
+   const hitbox = createHitbox(new CircularBox(new Point(0, 0), 0, TRIBE_WORKER_RADIUS), 1, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, []);
+   transformComponent.addHitbox(hitbox, null);
    
-   const tileX = Math.floor(workerPosition.x / Settings.TILE_SIZE);
-   const tileY = Math.floor(workerPosition.y / Settings.TILE_SIZE);
-   const tileType = layer.getTileXYType(tileX, tileY);
-   switch (tileType) {
-      case TileType.grass: {
-         return TribeType.plainspeople;
-      }
-      case TileType.sand: {
-         return TribeType.barbarians;
-      }
-      case TileType.snow:
-      case TileType.ice: {
-         return TribeType.frostlings;
-      }
-      case TileType.rock: {
-         return TribeType.goblins;
-      }
-      default: {
-         return randInt(0, 3);
-      }
-   }
-}
+   const physicsComponent = new PhysicsComponent();
+   physicsComponent.traction = 1.4;
 
-// @Cleanup: unused?
-const findTribe = (tribeID: number, layer: Layer, position: Point): Tribe => {
-   if (tribeID !== -1) {
-      const tribe = getTribe(tribeID);
-      if (tribe !== null) {
-         return tribe;
-      }
-   }
+   const tribeInfo = TRIBE_INFO_RECORD[tribe.tribeType];
+   const healthComponent = new HealthComponent(tribeInfo.maxHealthWorker);
 
-   // Fallback: establish its own tribe
-   const tribeType = getTribeType(layer, position);
-   return new Tribe(tribeType, true);
-}
+   const statusEffectComponent = new StatusEffectComponent(0);
 
-export function createTribeWorkerConfig(): ComponentConfig<ComponentTypes> {
+   const tribeComponent = new TribeComponent(tribe);
+
+   const tribeMemberComponent = new TribeMemberComponent();
+
+   const tribesmanAIComponent = new TribesmanAIComponent();
+
+   const aiHelperComponent = new AIHelperComponent(TRIBE_WORKER_VISION_RANGE);
+   
+   const inventoryComponent = new InventoryComponent();
+
+   const inventoryUseComponent = new InventoryUseComponent();
+
+   const damageBoxComponent = new DamageBoxComponent();
+
    return {
-      [ServerComponentType.transform]: {
-         position: new Point(0, 0),
-         rotation: 0,
-         type: EntityType.tribeWorker,
-         collisionBit: COLLISION_BITS.default,
-         collisionMask: DEFAULT_COLLISION_MASK,
-         hitboxes: [createHitbox(new CircularBox(new Point(0, 0), 0, TRIBE_WORKER_RADIUS), 1, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, [])]
-      },
-      [ServerComponentType.physics]: {
-         velocityX: 0,
-         velocityY: 0,
-         accelerationX: 0,
-         accelerationY: 0,
-         traction: 1,
-         isAffectedByAirFriction: true,
-         isAffectedByGroundFriction: true,
-         isImmovable: false
-      },
-      [ServerComponentType.health]: {
-         maxHealth: 0
-      },
-      [ServerComponentType.statusEffect]: {
-         statusEffectImmunityBitset: 0
-      },
-      [ServerComponentType.tribe]: {
-         tribe: null,
-         tribeType: 0
-      },
-      [ServerComponentType.tribeMember]: {
-         tribeType: TribeType.plainspeople,
-         entityType: EntityType.tribeWorker
-      },
-      [ServerComponentType.tribesmanAI]: {
-         hut: 0
-      },
-      [ServerComponentType.aiHelper]: {
-         ignoreDecorativeEntities: true,
-         visionRange: TRIBE_WORKER_VISION_RANGE,
-         ais: {}
-      },
-      [ServerComponentType.inventory]: {
-         inventories: []
-      },
-      [ServerComponentType.inventoryUse]: {
-         usedInventoryNames: []
+      entityType: EntityType.tribeWorker,
+      components: {
+         [ServerComponentType.transform]: transformComponent,
+         [ServerComponentType.physics]: physicsComponent,
+         [ServerComponentType.health]: healthComponent,
+         [ServerComponentType.statusEffect]: statusEffectComponent,
+         [ServerComponentType.tribe]: tribeComponent,
+         [ServerComponentType.tribeMember]: tribeMemberComponent,
+         [ServerComponentType.tribesmanAI]: tribesmanAIComponent,
+         [ServerComponentType.aiHelper]: aiHelperComponent,
+         [ServerComponentType.inventory]: inventoryComponent,
+         [ServerComponentType.inventoryUse]: inventoryUseComponent,
+         [ServerComponentType.damageBox]: damageBoxComponent
       }
    };
 }
@@ -131,15 +90,15 @@ export function onTribeWorkerDeath(worker: EntityID): void {
    const tribesmanComponent = TribesmanAIComponentArray.getComponent(worker);
 
    // Only respawn the tribesman if their hut is alive
-   if (!entityExists(tribesmanComponent.hutID)) {
+   if (!entityExists(tribesmanComponent.hut)) {
       return;
    }
    
-   const hutComponent = HutComponentArray.getComponent(tribesmanComponent.hutID);
+   const hutComponent = HutComponentArray.getComponent(tribesmanComponent.hut);
    if (hutComponent.isRecalling) {
       hutComponent.hasSpawnedTribesman = false;
    } else {
       const tribeComponent = TribeComponentArray.getComponent(worker);
-      tribeComponent.tribe.respawnTribesman(tribesmanComponent.hutID);
+      tribeComponent.tribe.respawnTribesman(tribesmanComponent.hut);
    }
 }

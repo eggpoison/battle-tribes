@@ -29,10 +29,6 @@ import { TransformComponentArray } from "./TransformComponent";
 import { Packet } from "battletribes-shared/packets";
 import { destroyEntity, getEntityType } from "../world";
 
-export interface HealthComponentParams {
-   maxHealth: number;
-}
-
 export class HealthComponent {
    public maxHealth: number;
    public health: number;
@@ -44,9 +40,9 @@ export class HealthComponent {
    public readonly localIframeHashes = new Array<string>();
    public readonly localIframeDurations = new Array<number>();
 
-   constructor(params: HealthComponentParams) {
-      this.maxHealth = params.maxHealth;
-      this.health = params.maxHealth;
+   constructor(maxHealth: number) {
+      this.maxHealth = maxHealth;
+      this.health = maxHealth;
    }
 }
 

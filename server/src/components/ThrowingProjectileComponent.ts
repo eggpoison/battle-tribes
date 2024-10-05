@@ -4,18 +4,13 @@ import { EntityID } from "battletribes-shared/entities";
 import { InventoryComponentArray } from "./InventoryComponent";
 import { entityExists } from "../world";
 
-export interface ThrowingProjectileComponentParams {
-   tribeMember: EntityID;
-   itemID: number | null;
-}
-
-export class ThrowingProjectileComponent implements ThrowingProjectileComponentParams {
+export class ThrowingProjectileComponent {
    readonly tribeMember: EntityID;
    readonly itemID: number | null;
 
-   constructor(params: ThrowingProjectileComponentParams) {
-      this.tribeMember = params.tribeMember;
-      this.itemID = params.itemID;
+   constructor(tribeMember: EntityID, itemID: number | null) {
+      this.tribeMember = tribeMember;
+      this.itemID = itemID;
    }
 }
 

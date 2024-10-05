@@ -36,10 +36,6 @@ const enum Vars {
    TURN_SPEED = UtilVars.PI * 3/2,
 }
 
-export interface YetiComponentParams {
-   readonly territory: ReadonlyArray<TileIndex>;
-}
-
 export interface YetiTargetInfo {
    remainingPursueTicks: number;
    totalDamageDealt: number;
@@ -64,8 +60,8 @@ export class YetiComponent {
    public snowThrowCooldown = YETI_SNOW_THROW_COOLDOWN;
    public snowThrowHoldTimer = 0;
 
-   constructor(params: YetiComponentParams) {
-      this.territory = params.territory;
+   constructor(territory: ReadonlyArray<TileIndex>) {
+      this.territory = territory;
    }
 }
 export const YetiComponentArray = new ComponentArray<YetiComponent>(ServerComponentType.yeti, true, {
@@ -204,13 +200,11 @@ const throwSnowball = (yeti: EntityID, size: SnowballSize, throwAngle: number): 
       velocityMagnitude = randFloat(Vars.LARGE_SNOWBALL_THROW_SPEED_MIN, Vars.LARGE_SNOWBALL_THROW_SPEED_MAX);
    }
 
-   const config = createSnowballConfig();
-   config[ServerComponentType.transform].position.x = position.x;
-   config[ServerComponentType.transform].position.y = position.y;
-   config[ServerComponentType.physics].velocityX += velocityMagnitude * Math.sin(angle);
-   config[ServerComponentType.physics].velocityY += velocityMagnitude * Math.cos(angle);
-   config[ServerComponentType.snowball].size = size;
-   config[ServerComponentType.snowball].yetiID = yeti;
+   const config = createSnowballConfig(yeti, size);
+   config.components[ServerComponentType.transform].position.x = position.x;
+   config.components[ServerComponentType.transform].position.y = position.y;
+   config.components[ServerComponentType.physics].externalVelocity.x += velocityMagnitude * Math.sin(angle);
+   config.components[ServerComponentType.physics].externalVelocity.y += velocityMagnitude * Math.cos(angle);
    createEntityFromConfig(config, getEntityLayer(yeti), 0);
 }
 

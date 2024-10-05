@@ -1,22 +1,23 @@
 import { ServerComponentType } from "battletribes-shared/components";
-import { ComponentConfig } from "../components";
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK, HitboxCollisionBit, DEFAULT_HITBOX_COLLISION_MASK } from "battletribes-shared/collision";
-import { EntityType } from "battletribes-shared/entities";
+import { EntityConfig } from "../components";
+import { HitboxCollisionBit, DEFAULT_HITBOX_COLLISION_MASK } from "battletribes-shared/collision";
 import { Point } from "battletribes-shared/utils";
 import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
 import CircularBox from "battletribes-shared/boxes/CircularBox";
+import { TransformComponent } from "../components/TransformComponent";
+import { EntityType } from "../../../shared/src/entities";
 
 type ComponentTypes = ServerComponentType.transform;
 
-export function createLilypadConfig(): ComponentConfig<ComponentTypes> {
+export function createLilypadConfig(): EntityConfig<ComponentTypes> {
+   const transformComponent = new TransformComponent();
+   const hitbox = createHitbox(new CircularBox(new Point(0, 0), 0, 24), 0, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, []);
+   transformComponent.addHitbox(hitbox, null);
+
    return {
-      [ServerComponentType.transform]: {
-         position: new Point(0, 0),
-         rotation: 0,
-         type: EntityType.lilypad,
-         collisionBit: COLLISION_BITS.default,
-         collisionMask: DEFAULT_COLLISION_MASK,
-         hitboxes: [createHitbox(new CircularBox(new Point(0, 0), 0, 24), 0, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, [])]
+      entityType: EntityType.lilypad,
+      components: {
+         [ServerComponentType.transform]: transformComponent
       }
    };
 }

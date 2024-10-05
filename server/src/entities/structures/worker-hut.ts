@@ -1,11 +1,16 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "battletribes-shared/collision";
 import { EntityType } from "battletribes-shared/entities";
 import { StatusEffect } from "battletribes-shared/status-effects";
-import { Point } from "battletribes-shared/utils";
-import { createEmptyStructureConnectionInfo } from "battletribes-shared/structures";
+import { StructureConnectionInfo } from "battletribes-shared/structures";
 import { createWorkerHutHitboxes } from "battletribes-shared/boxes/entity-hitbox-creation";
 import { ServerComponentType } from "battletribes-shared/components";
-import { ComponentConfig } from "../../components";
+import { EntityConfig } from "../../components";
+import { HealthComponent } from "../../components/HealthComponent";
+import { HutComponent } from "../../components/HutComponent";
+import { StatusEffectComponent } from "../../components/StatusEffectComponent";
+import { StructureComponent } from "../../components/StructureComponent";
+import { TransformComponent } from "../../components/TransformComponent";
+import { TribeComponent } from "../../components/TribeComponent";
+import Tribe from "../../Tribe";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.health
@@ -14,29 +19,29 @@ type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.tribe
    | ServerComponentType.hut;
 
-export function createWorkerHutConfig(): ComponentConfig<ComponentTypes> {
+export function createWorkerHutConfig(tribe: Tribe, connectionInfo: StructureConnectionInfo): EntityConfig<ComponentTypes> {
+   const transformComponent = new TransformComponent();
+   transformComponent.addHitboxes(createWorkerHutHitboxes(), null);
+   
+   const healthComponent = new HealthComponent(50);
+   
+   const statusEffectComponent = new StatusEffectComponent(StatusEffect.bleeding | StatusEffect.poisoned);
+   
+   const structrureComponent = new StructureComponent(connectionInfo);
+
+   const tribeComponent = new TribeComponent(tribe);
+
+   const hutComponent = new HutComponent();
+   
    return {
-      [ServerComponentType.transform]: {
-         position: new Point(0, 0),
-         rotation: 0,
-         type: EntityType.workerHut,
-         collisionBit: COLLISION_BITS.default,
-         collisionMask: DEFAULT_COLLISION_MASK,
-         hitboxes: createWorkerHutHitboxes()
-      },
-      [ServerComponentType.health]: {
-         maxHealth: 50
-      },
-      [ServerComponentType.statusEffect]: {
-         statusEffectImmunityBitset: StatusEffect.bleeding | StatusEffect.poisoned
-      },
-      [ServerComponentType.structure]: {
-         connectionInfo: createEmptyStructureConnectionInfo()
-      },
-      [ServerComponentType.tribe]: {
-         tribe: null,
-         tribeType: 0
-      },
-      [ServerComponentType.hut]: {}
+      entityType: EntityType.workerHut,
+      components: {
+         [ServerComponentType.transform]: transformComponent,
+         [ServerComponentType.health]: healthComponent,
+         [ServerComponentType.statusEffect]: statusEffectComponent,
+         [ServerComponentType.structure]: structrureComponent,
+         [ServerComponentType.tribe]: tribeComponent,
+         [ServerComponentType.hut]: hutComponent
+      }
    };
 }

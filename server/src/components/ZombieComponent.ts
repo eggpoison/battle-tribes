@@ -49,11 +49,6 @@ const enum Vars {
    HURT_ENTITY_INVESTIGATE_TICKS = (1 * Settings.TPS) | 0
 }
 
-export interface ZombieComponentParams {
-   zombieType: number;
-   tombstone: EntityID;
-}
-
 export class ZombieComponent {
    /** The type of the zombie, 0-3 */
    public readonly zombieType: number;
@@ -69,9 +64,9 @@ export class ZombieComponent {
    /** Ticks since the visible hurt entity was last hit */
    public visibleHurtEntityTicks = 0;
    
-   constructor(params: ZombieComponentParams) {
-      this.zombieType = params.zombieType;
-      this.tombstone = params.tombstone;
+   constructor(zombieType: number, tombstone: EntityID) {
+      this.zombieType = zombieType;
+      this.tombstone = tombstone;
    }
 }
 

@@ -11,15 +11,11 @@ const enum Vars {
    TURN_SPEED = UtilVars.PI * 2
 }
 
-export interface PebblumComponentParams {
-   targetEntityID: number;
-}
-
 export class PebblumComponent {
    public targetEntityID: number;
    
-   constructor(params: PebblumComponentParams) {
-      this.targetEntityID = params.targetEntityID
+   constructor(targetEntity: EntityID) {
+      this.targetEntityID = targetEntity;
    }
 }
 

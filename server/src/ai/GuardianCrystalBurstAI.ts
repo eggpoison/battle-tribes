@@ -34,13 +34,12 @@ const createFragmentProjectile = (guardian: EntityID): void => {
    const vx = velocityMagnitude * Math.sin(velocityDirection);
    const vy = velocityMagnitude * Math.cos(velocityDirection);
    
-   const config = createGuardianGemFragmentProjectileConfig();
-   config[ServerComponentType.transform].position.x = originX;
-   config[ServerComponentType.transform].position.y = originY;
-   config[ServerComponentType.transform].rotation = offsetDirection + randFloat(-0.7, 0.7);
-   config[ServerComponentType.physics].velocityX = vx;
-   config[ServerComponentType.physics].velocityY = vy;
-   config[ServerComponentType.projectile].owner = guardian;
+   const config = createGuardianGemFragmentProjectileConfig(guardian);
+   config.components[ServerComponentType.transform].position.x = originX;
+   config.components[ServerComponentType.transform].position.y = originY;
+   config.components[ServerComponentType.transform].rotation = offsetDirection + randFloat(-0.7, 0.7);
+   config.components[ServerComponentType.physics].externalVelocity.x = vx;
+   config.components[ServerComponentType.physics].externalVelocity.y = vy;
    createEntityFromConfig(config, getEntityLayer(guardian), 0);
 }
 

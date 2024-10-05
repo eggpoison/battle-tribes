@@ -6,8 +6,6 @@ import { TransformComponentArray } from "./TransformComponent";
 import CircularBox from "battletribes-shared/boxes/CircularBox";
 import { destroyEntity } from "../world";
 
-export interface SpitPoisonAreaComponentParams {}
-
 export class SpitPoisonAreaComponent {}
 
 export const SpitPoisonAreaComponentArray = new ComponentArray<SpitPoisonAreaComponent>(ServerComponentType.spitPoisonArea, true, {

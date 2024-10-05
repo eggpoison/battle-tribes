@@ -7,9 +7,7 @@ import { Point, randFloat, randInt } from "../../../shared/src/utils";
 import { ComponentArray } from "./ComponentArray";
 import { HealthComponentArray, canDamageEntity, damageEntity, addLocalInvulnerabilityHash } from "./HealthComponent";
 
-export interface GuardianGemFragmentProjectileComponentParams {}
-
-export class GuardianGemFragmentProjectileComponent implements GuardianGemFragmentProjectileComponentParams {
+export class GuardianGemFragmentProjectileComponent {
    public readonly fragmentShape = randInt(0, 2);
    public readonly gemType = randInt(0, 2);
    public readonly tintMultiplier = randFloat(0.5, 1);

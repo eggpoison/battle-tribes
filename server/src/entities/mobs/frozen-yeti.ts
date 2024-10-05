@@ -2,22 +2,24 @@ import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, 
 import { EntityType, PlayerCauseOfDeath, EntityID } from "battletribes-shared/entities";
 import { StatusEffect } from "battletribes-shared/status-effects";
 import { Point, randInt, TileIndex } from "battletribes-shared/utils";
-import { HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
+import { HealthComponent, HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
 import { createItemsOverEntity } from "../../entity-shared";
-import { FrozenYetiComponentArray } from "../../components/FrozenYetiComponent";
-import { applyKnockback } from "../../components/PhysicsComponent";
+import { FrozenYetiComponent, FrozenYetiComponentArray } from "../../components/FrozenYetiComponent";
+import { applyKnockback, PhysicsComponent } from "../../components/PhysicsComponent";
 import { wasTribeMemberKill } from "../tribes/tribe-member";
 import { ServerComponentType } from "battletribes-shared/components";
 import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
 import { ItemType } from "battletribes-shared/items/items";
-import { ComponentConfig } from "../../components";
-import { TransformComponentArray } from "../../components/TransformComponent";
+import { EntityConfig } from "../../components";
+import { TransformComponent, TransformComponentArray } from "../../components/TransformComponent";
 import { createHitbox, HitboxCollisionType, Hitbox } from "battletribes-shared/boxes/boxes";
 import CircularBox from "battletribes-shared/boxes/CircularBox";
 import { getEntityType } from "../../world";
 import Layer from "../../Layer";
 import { TileType } from "../../../../shared/src/tiles";
 import WanderAI from "../../ai/WanderAI";
+import { StatusEffectComponent } from "../../components/StatusEffectComponent";
+import { AIHelperComponent, AIType } from "../../components/AIHelperComponent";
 
 export const enum FrozenYetiVars {
    VISION_RANGE = 350,
@@ -29,7 +31,6 @@ type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.health
    | ServerComponentType.statusEffect
    | ServerComponentType.aiHelper
-   | ServerComponentType.wanderAI
    | ServerComponentType.frozenYeti;
 
 const HEAD_HITBOX_SIZE = 72;
@@ -60,56 +61,43 @@ function tileIsValidCallback(_entity: EntityID, layer: Layer, tileIndex: TileInd
    return !layer.tileIsWall(tileIndex) && layer.getTileType(tileIndex) === TileType.fimbultur;
 }
 
-export function createFrozenYetiConfig(): ComponentConfig<ComponentTypes> {
-   const hitboxes = new Array<Hitbox>();
-
+export function createFrozenYetiConfig(): EntityConfig<ComponentTypes> {
+   const transformComponent = new TransformComponent();
+   
    const bodyHitbox = createHitbox(new CircularBox(new Point(0, 0), 0, FrozenYetiVars.FROZEN_YETI_SIZE / 2), 4, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, []);
-   hitboxes.push(bodyHitbox);
+   transformComponent.addHitbox(bodyHitbox, null);
 
    const headHitbox = createHitbox(new CircularBox(new Point(0, HEAD_DISTANCE), 0, HEAD_HITBOX_SIZE / 2), 0.8, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, []);
-   hitboxes.push(headHitbox);
+   transformComponent.addHitbox(headHitbox, null);
 
    // Paw hitboxes
    for (let i = 0; i < 2; i++) {
       const pawDirection = PAW_RESTING_ANGLE * (i === 0 ? -1 : 1);
       const hitbox = createHitbox(new CircularBox(Point.fromVectorForm(PAW_OFFSET, pawDirection), 0, PAW_SIZE / 2), 0.6, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, []);
-      hitboxes.push(hitbox);
+      transformComponent.addHitbox(hitbox, null);
    }
+
+   const physicsComponent = new PhysicsComponent();
+   
+   const healthComponent = new HealthComponent(250);
+   
+   const statusEffectComponent = new StatusEffectComponent(StatusEffect.freezing);
+   
+   const aiHelperComponent = new AIHelperComponent(FrozenYetiVars.VISION_RANGE);
+   aiHelperComponent.ais[AIType.wander] = new WanderAI(200, Math.PI * 0.7, 0.6, tileIsValidCallback);
+   
+   const frozenYetiComponent = new FrozenYetiComponent();
    
    return {
-      [ServerComponentType.transform]: {
-         position: new Point(0, 0),
-         rotation: 0,
-         type: EntityType.frozenYeti,
-         collisionBit: COLLISION_BITS.default,
-         collisionMask: DEFAULT_COLLISION_MASK,
-         hitboxes: hitboxes
-      },
-      [ServerComponentType.physics]: {
-         velocityX: 0,
-         velocityY: 0,
-         accelerationX: 0,
-         accelerationY: 0,
-         traction: 1,
-         isAffectedByAirFriction: true,
-         isAffectedByGroundFriction: true,
-         isImmovable: false
-      },
-      [ServerComponentType.health]: {
-         maxHealth: 250
-      },
-      [ServerComponentType.statusEffect]: {
-         statusEffectImmunityBitset: StatusEffect.freezing
-      },
-      [ServerComponentType.aiHelper]: {
-         ignoreDecorativeEntities: true,
-         visionRange: FrozenYetiVars.VISION_RANGE,
-         ais: [
-            new WanderAI(200, Math.PI * 0.7, 0.6, tileIsValidCallback)
-         ]
-      },
-      [ServerComponentType.wanderAI]: {},
-      [ServerComponentType.frozenYeti]: {}
+      entityType: EntityType.frozenYeti,
+      components: {
+         [ServerComponentType.transform]: transformComponent,
+         [ServerComponentType.physics]: physicsComponent,
+         [ServerComponentType.health]: healthComponent,
+         [ServerComponentType.statusEffect]: statusEffectComponent,
+         [ServerComponentType.aiHelper]: aiHelperComponent,
+         [ServerComponentType.frozenYeti]: frozenYetiComponent
+      }
    };
 }
 

@@ -5,8 +5,6 @@ import { ComponentArray } from "./ComponentArray";
 import { TRIBE_TOTEM_POSITIONS } from "../entities/structures/tribe-totem";
 import { Packet } from "battletribes-shared/packets";
 
-export interface TotemBannerComponentParams {}
-
 export interface TotemBannerPosition {
    readonly layer: number;
    readonly direction: number;   

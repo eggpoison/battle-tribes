@@ -9,13 +9,12 @@ import { Settings } from "battletribes-shared/settings";
 import { StatusEffect } from "battletribes-shared/status-effects";
 import { Biome } from "battletribes-shared/tiles";
 import { getAngleDifference, entityIsInVisionRange, getEntitiesInRange, stopEntity } from "../ai-shared";
-import { createRockSpikeConfig } from "../entities/projectiles/rock-spike";
+import { createRockSpikeConfig, ROCK_SPIKE_HITBOX_SIZES } from "../entities/projectiles/rock-spike";
 import { createSnowballConfig } from "../entities/snowball";
 import { createEntityFromConfig } from "../Entity";
 import { AIHelperComponentArray } from "./AIHelperComponent";
 import { HealthComponentArray, damageEntity } from "./HealthComponent";
 import { PhysicsComponentArray, applyKnockback } from "./PhysicsComponent";
-import { ROCK_SPIKE_HITBOX_SIZES } from "./RockSpikeComponent";
 import { StatusEffectComponentArray, applyStatusEffect } from "./StatusEffectComponent";
 import { TransformComponentArray, getEntityTile } from "./TransformComponent";
 import { entityExists, getEntityLayer, getEntityType } from "../world";
@@ -38,8 +37,6 @@ const enum Vars {
    SNOWBALL_THROW_SPEED_MIN = 590,
    SNOWBALL_THROW_SPEED_MAX = 750
 }
-
-export interface FrozenYetiComponentParams {}
 
 export class FrozenYetiComponent {
    public readonly attackingEntities: Partial<Record<number, FrozenYetiTargetInfo>> = {};
@@ -279,12 +276,10 @@ const createRockSpikes = (frozenYeti: EntityID, frozenYetiComponent: FrozenYetiC
    for (const info of frozenYetiComponent.rockSpikeInfoArray) {
       const position = new Point(info.positionX, info.positionY);
 
-      const config = createRockSpikeConfig();
-      config[ServerComponentType.transform].position.x = position.x;
-      config[ServerComponentType.transform].position.y = position.y;
-      config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
-      config[ServerComponentType.rockSpike].size = info.size;
-      config[ServerComponentType.rockSpike].frozenYetiID = frozenYeti;
+      const config = createRockSpikeConfig(info.size, frozenYeti);
+      config.components[ServerComponentType.transform].position.x = position.x;
+      config.components[ServerComponentType.transform].position.y = position.y;
+      config.components[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
       createEntityFromConfig(config, getEntityLayer(frozenYeti), 0);
    }
    frozenYetiComponent.rockSpikeInfoArray = [];
@@ -301,13 +296,11 @@ const spawnSnowball = (frozenYeti: EntityID, size: SnowballSize): void => {
 
    const velocityMagnitude = randFloat(Vars.SNOWBALL_THROW_SPEED_MIN, Vars.SNOWBALL_THROW_SPEED_MAX);
 
-   const config = createSnowballConfig();
-   config[ServerComponentType.transform].position.x = position.x;
-   config[ServerComponentType.transform].position.y = position.y;
-   config[ServerComponentType.physics].velocityX = velocityMagnitude * Math.sin(angle);
-   config[ServerComponentType.physics].velocityY = velocityMagnitude * Math.cos(angle);
-   config[ServerComponentType.snowball].size = size;
-   config[ServerComponentType.snowball].yetiID = frozenYeti;
+   const config = createSnowballConfig(size, frozenYeti);
+   config.components[ServerComponentType.transform].position.x = position.x;
+   config.components[ServerComponentType.transform].position.y = position.y;
+   config.components[ServerComponentType.physics].externalVelocity.x = velocityMagnitude * Math.sin(angle);
+   config.components[ServerComponentType.physics].externalVelocity.y = velocityMagnitude * Math.cos(angle);
    createEntityFromConfig(config, getEntityLayer(frozenYeti), 0);
 }
 

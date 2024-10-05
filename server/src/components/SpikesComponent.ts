@@ -3,8 +3,6 @@ import { ComponentArray } from "./ComponentArray";
 import { EntityID } from "battletribes-shared/entities";
 import { Packet } from "battletribes-shared/packets";
 
-export interface SpikesComponentParams {}
-
 export class SpikesComponent {
    public isCovered = false;
 }

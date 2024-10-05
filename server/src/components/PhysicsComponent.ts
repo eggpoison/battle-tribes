@@ -33,8 +33,8 @@ for (let i = 0; i < 8; i++) {
 /** Allows an entity to dynamically move its position around */
 export class PhysicsComponent {
    // @Cleanup: unbox all of these into x and y and make the component implement its params
-   public selfVelocity: Point;
-   public acceleration: Point;
+   public selfVelocity = new Point(0, 0);
+   public acceleration = new Point(0, 0);
    public externalVelocity = new Point(0, 0);
 
    public turnSpeed = 0;
@@ -46,16 +46,16 @@ export class PhysicsComponent {
    public moveSpeedMultiplier = 1;
 
    /** The higher this number is the faster the entity reaches its maximum speed. 1 = normal */
-   public traction: number;
+   public traction = 1;
 
    // @Cleanup: Might be able to be put on the physics component
    public overrideMoveSpeedMultiplier = false;
 
-   public isAffectedByAirFriction: boolean;
-   public isAffectedByGroundFriction: boolean;
+   public isAffectedByAirFriction = true;
+   public isAffectedByGroundFriction = true;
 
    /** If true, the entity will not be pushed around by collisions, but will still call any relevant events. */
-   public readonly isImmovable: boolean;
+   public isImmovable = false;
 
    /** Whether the game object's position has changed during the current tick or not. Used during collision detection to avoid unnecessary collision checks */
    public positionIsDirty = false;
@@ -64,16 +64,6 @@ export class PhysicsComponent {
    public hitboxesAreDirty = false;
 
    public pathfindingNodesAreDirty = false;
-   
-   constructor(params: PhysicsComponentParams) {
-      this.selfVelocity = new Point(params.velocityX, params.velocityY);
-      this.acceleration = new Point(params.accelerationX, params.accelerationY);
-      this.traction = params.traction;
-      
-      this.isAffectedByAirFriction = params.isAffectedByAirFriction;
-      this.isAffectedByGroundFriction = params.isAffectedByGroundFriction;
-      this.isImmovable = params.isImmovable;
-   }
 }
 
 export const PhysicsComponentArray = new ComponentArray<PhysicsComponent>(ServerComponentType.physics, true, {

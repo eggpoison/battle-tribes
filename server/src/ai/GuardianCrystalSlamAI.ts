@@ -70,9 +70,9 @@ export default class GuardianCrystalSlamAI {
             y += offsetMagnitude * Math.cos(offsetDirection);
             
             const config = createGuardianGemQuakeConfig();
-            config[ServerComponentType.transform].position.x = x;
-            config[ServerComponentType.transform].position.y = y;
-            config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
+            config.components[ServerComponentType.transform].position.x = x;
+            config.components[ServerComponentType.transform].position.y = y;
+            config.components[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
             createEntityFromConfig(config, layer, spawnDelayTicks);
          }
       }

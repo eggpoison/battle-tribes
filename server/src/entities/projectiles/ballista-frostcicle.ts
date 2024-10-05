@@ -1,52 +1,46 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "battletribes-shared/collision";
+import { DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "battletribes-shared/collision";
 import { AMMO_INFO_RECORD, ServerComponentType } from "battletribes-shared/components";
 import { EntityType, PlayerCauseOfDeath, EntityID } from "battletribes-shared/entities";
 import { Point } from "battletribes-shared/utils";
 import { HealthComponentArray, damageEntity } from "../../components/HealthComponent";
-import Layer from "../../Layer";
-import { applyKnockback } from "../../components/PhysicsComponent";
-import { EntityRelationship, TribeComponentArray, getEntityRelationship } from "../../components/TribeComponent";
+import { applyKnockback, PhysicsComponent } from "../../components/PhysicsComponent";
+import { EntityRelationship, TribeComponent, TribeComponentArray, getEntityRelationship } from "../../components/TribeComponent";
 import { StatusEffectComponentArray, applyStatusEffect } from "../../components/StatusEffectComponent";
-import { ComponentConfig } from "../../components";
+import { EntityConfig } from "../../components";
 import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
-import { TransformComponentArray } from "../../components/TransformComponent";
-import { ProjectileComponentArray } from "../../components/ProjectileComponent";
+import { TransformComponent, TransformComponentArray } from "../../components/TransformComponent";
+import { ProjectileComponent, ProjectileComponentArray } from "../../components/ProjectileComponent";
 import { ItemType } from "battletribes-shared/items/items";
 import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
 import RectangularBox from "battletribes-shared/boxes/RectangularBox";
 import { destroyEntity, getEntityType, validateEntity } from "../../world";
+import Tribe from "../../Tribe";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics
    | ServerComponentType.tribe
    | ServerComponentType.projectile;
 
-export function createBallistaFrostcicleConfig(): ComponentConfig<ComponentTypes> {
+export function createBallistaFrostcicleConfig(tribe: Tribe, creator: EntityID): EntityConfig<ComponentTypes> {
+   const transformComponent = new TransformComponent();
+   const hitbox = createHitbox(new RectangularBox(new Point(0, 0), 12, 80, 0), 0.5, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK & ~HitboxCollisionBit.ARROW_PASSABLE, []);
+   transformComponent.addHitbox(hitbox, null);
+
+   const physicsComponent = new PhysicsComponent();
+   physicsComponent.isAffectedByGroundFriction = false;
+   physicsComponent.isImmovable = true;
+
+   const tribeComponent = new TribeComponent(tribe);
+
+   const projectileComponent = new ProjectileComponent(creator);
+   
    return {
-      [ServerComponentType.transform]: {
-         position: new Point(0, 0),
-         rotation: 0,
-         type: EntityType.ballistaWoodenBolt,
-         collisionBit: COLLISION_BITS.default,
-         collisionMask: DEFAULT_COLLISION_MASK,
-         hitboxes: [createHitbox(new RectangularBox(new Point(0, 0), 12, 80, 0), 0.5, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK & ~HitboxCollisionBit.ARROW_PASSABLE, [])]
-      },
-      [ServerComponentType.physics]: {
-         velocityX: 0,
-         velocityY: 0,
-         accelerationX: 0,
-         accelerationY: 0,
-         traction: 1,
-         isAffectedByAirFriction: true,
-         isAffectedByGroundFriction: false,
-         isImmovable: true
-      },
-      [ServerComponentType.tribe]: {
-         tribe: null,
-         tribeType: 0
-      },
-      [ServerComponentType.projectile]: {
-         owner: 0
+      entityType: EntityType.ballistaFrostcicle,
+      components: {
+         [ServerComponentType.transform]: transformComponent,
+         [ServerComponentType.physics]: physicsComponent,
+         [ServerComponentType.tribe]: tribeComponent,
+         [ServerComponentType.projectile]: projectileComponent
       }
    };
 }
@@ -87,7 +81,7 @@ export function onBallistaFrostcicleCollision(arrow: EntityID, collidingEntity: 
 
       const ammoInfo = AMMO_INFO_RECORD[ItemType.frostcicle];
 
-      const owner = validateEntity(projectileComponent.owner);
+      const owner = validateEntity(projectileComponent.creator);
       const hitDirection = transformComponent.position.calculateAngleBetween(collidingEntityTransformComponent.position);
       
       damageEntity(collidingEntity, owner, ammoInfo.damage, PlayerCauseOfDeath.arrow, AttackEffectiveness.effective, collisionPoint, 0);

@@ -6,41 +6,38 @@ import { StatusEffect } from "battletribes-shared/status-effects";
 import { Point } from "battletribes-shared/utils";
 import { HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
 import { StatusEffectComponentArray, applyStatusEffect } from "../../components/StatusEffectComponent";
-import { applyKnockback } from "../../components/PhysicsComponent";
-import { ComponentConfig } from "../../components";
+import { applyKnockback, PhysicsComponent } from "../../components/PhysicsComponent";
+import { EntityConfig } from "../../components";
 import { PlantComponentArray } from "../../components/PlantComponent";
 import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
-import { TransformComponentArray } from "../../components/TransformComponent";
-import Layer from "../../Layer";
+import { TransformComponent, TransformComponentArray } from "../../components/TransformComponent";
 import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
 import RectangularBox from "battletribes-shared/boxes/RectangularBox";
 import { destroyEntity, getEntityType } from "../../world";
+import { IceShardComponent } from "../../components/IceShardComponent";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics
    | ServerComponentType.iceShard;
 
-export function createIceShardConfig(): ComponentConfig<ComponentTypes> {
+export function createIceShardConfig(): EntityConfig<ComponentTypes> {
+   const transformComponent = new TransformComponent();
+   transformComponent.collisionMask = DEFAULT_COLLISION_MASK & ~COLLISION_BITS.planterBox;
+   const hitbox = createHitbox(new RectangularBox(new Point(0, 0), 24, 24, 0), 0.4, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, []);
+   transformComponent.addHitbox(hitbox, null);
+   
+   const physicsComponent = new PhysicsComponent();
+   physicsComponent.isAffectedByGroundFriction = false;
+
+   const iceShardComponent = new IceShardComponent();
+   
    return {
-      [ServerComponentType.transform]: {
-         position: new Point(0, 0),
-         rotation: 0,
-         type: EntityType.iceShardProjectile,
-         collisionBit: COLLISION_BITS.default,
-         collisionMask: DEFAULT_COLLISION_MASK & ~COLLISION_BITS.planterBox,
-         hitboxes: [createHitbox(new RectangularBox(new Point(0, 0), 24, 24, 0), 0.4, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, [])]
-      },
-      [ServerComponentType.physics]: {
-         velocityX: 0,
-         velocityY: 0,
-         accelerationX: 0,
-         accelerationY: 0,
-         traction: 1,
-         isAffectedByAirFriction: true,
-         isAffectedByGroundFriction: true,
-         isImmovable: false
-      },
-      [ServerComponentType.iceShard]: {}
+      entityType: EntityType.iceShardProjectile,
+      components: {
+         [ServerComponentType.transform]: transformComponent,
+         [ServerComponentType.physics]: physicsComponent,
+         [ServerComponentType.iceShard]: iceShardComponent
+      }
    };
 }
 

@@ -4,11 +4,6 @@ import { ServerComponentType } from "battletribes-shared/components";
 import { EntityID } from "battletribes-shared/entities";
 import { Packet } from "battletribes-shared/packets";
 
-export interface LayeredRodComponentParams {
-   readonly numLayers: number;
-   readonly colour: Colour;
-}
-
 export class LayeredRodComponent {
    public readonly numLayers: number;
    // @Memory: Can be removed and just use a hash on the entity ID
@@ -19,11 +14,11 @@ export class LayeredRodComponent {
    public readonly g: number;
    public readonly b: number;
    
-   constructor(params: LayeredRodComponentParams) {
-      this.numLayers = params.numLayers;
-      this.r = params.colour.r;
-      this.g = params.colour.g;
-      this.b = params.colour.b;
+   constructor(numLayers: number, colour: Colour) {
+      this.numLayers = numLayers;
+      this.r = colour.r;
+      this.g = colour.g;
+      this.b = colour.b;
    }
 }
 

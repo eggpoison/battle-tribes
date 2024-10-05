@@ -1,12 +1,17 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "battletribes-shared/collision";
 import { BuildingMaterial, ServerComponentType } from "battletribes-shared/components";
 import { EntityID, EntityType } from "battletribes-shared/entities";
 import { StatusEffect } from "battletribes-shared/status-effects";
-import { Point } from "battletribes-shared/utils";
-import { createEmptyStructureConnectionInfo } from "battletribes-shared/structures";
+import { StructureConnectionInfo } from "battletribes-shared/structures";
 import { createEmbrasureHitboxes } from "battletribes-shared/boxes/entity-hitbox-creation";
-import { ComponentConfig } from "../../components";
+import { EntityConfig } from "../../components";
 import { destroyEntity, getEntityType } from "../../world";
+import { TransformComponent } from "../../components/TransformComponent";
+import { HealthComponent } from "../../components/HealthComponent";
+import { StatusEffectComponent } from "../../components/StatusEffectComponent";
+import { StructureComponent } from "../../components/StructureComponent";
+import { TribeComponent } from "../../components/TribeComponent";
+import Tribe from "../../Tribe";
+import { BuildingMaterialComponent } from "../../components/BuildingMaterialComponent";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.health
@@ -15,33 +20,33 @@ type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.tribe
    | ServerComponentType.buildingMaterial;
 
-export function createEmbrasureConfig(): ComponentConfig<ComponentTypes> {
+const HEALTHS = [15, 45];
+
+export function createEmbrasureConfig(tribe: Tribe, material: BuildingMaterial, connectionInfo: StructureConnectionInfo): EntityConfig<ComponentTypes> {
+   const transformComponent = new TransformComponent();
+   transformComponent.addHitboxes(createEmbrasureHitboxes(), null);
+   
+   const healthComponent = new HealthComponent(HEALTHS[material]);
+   
+   const statusEffectComponent = new StatusEffectComponent(StatusEffect.bleeding | StatusEffect.poisoned);
+   
+   const structureComponent = new StructureComponent(connectionInfo);
+   
+   const tribeComponent = new TribeComponent(tribe);
+   
+   const buildingMaterialComponent = new BuildingMaterialComponent(material, HEALTHS);
+   
    return {
-      [ServerComponentType.transform]: {
-         position: new Point(0, 0),
-         rotation: 0,
-         type: EntityType.embrasure,
-         collisionBit: COLLISION_BITS.default,
-         collisionMask: DEFAULT_COLLISION_MASK,
-         hitboxes: createEmbrasureHitboxes()
-      },
-      [ServerComponentType.health]: {
-         maxHealth: 0
-      },
-      [ServerComponentType.statusEffect]: {
-         statusEffectImmunityBitset: StatusEffect.bleeding | StatusEffect.poisoned
-      },
-      [ServerComponentType.structure]: {
-         connectionInfo: createEmptyStructureConnectionInfo()
-      },
-      [ServerComponentType.tribe]: {
-         tribe: null,
-         tribeType: 0
-      },
-      [ServerComponentType.buildingMaterial]: {
-         material: BuildingMaterial.wood
+      entityType: EntityType.embrasure,
+      components: {
+         [ServerComponentType.transform]: transformComponent,
+         [ServerComponentType.health]: healthComponent,
+         [ServerComponentType.statusEffect]: statusEffectComponent,
+         [ServerComponentType.structure]: structureComponent,
+         [ServerComponentType.tribe]: tribeComponent,
+         [ServerComponentType.buildingMaterial]: buildingMaterialComponent
       }
-   }
+   };
 }
 
 export function onEmbrasureCollision(collidingEntity: EntityID, pushedHitboxIdx: number): void {

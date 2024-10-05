@@ -46,15 +46,10 @@ const enum Vars {
    COHESION_INFLUENCE = 0.3
 }
 
-export interface CowComponentParams {
-   readonly species: CowSpecies;
-   readonly grazeCooldownTicks: number;
-}
-
 export class CowComponent {
-   public readonly species: CowSpecies;
+   public readonly species: CowSpecies = randInt(0, 1);
    public grazeProgressTicks = 0;
-   public grazeCooldownTicks: number;
+   public grazeCooldownTicks = randInt(CowVars.MIN_GRAZE_COOLDOWN, CowVars.MAX_GRAZE_COOLDOWN);
 
    // For shaking berry bushes
    public targetBushID = 0;
@@ -63,11 +58,6 @@ export class CowComponent {
    /** Used when producing poop. */
    public bowelFullness = 0;
    public poopProductionCooldownTicks = 0;
-
-   constructor(params: CowComponentParams) {
-      this.species = params.species;
-      this.grazeCooldownTicks = params.grazeCooldownTicks;
-   }
 }
 
 export const CowComponentArray = new ComponentArray<CowComponent>(ServerComponentType.cow, true, {
@@ -85,12 +75,10 @@ const poop = (cow: EntityID, cowComponent: CowComponent): void => {
    // Shit it out
    const transformComponent = TransformComponentArray.getComponent(cow);
    const poopPosition = transformComponent.position.offset(randFloat(0, 16), 2 * Math.PI * Math.random());
-   const config = createItemEntityConfig();
-   config[ServerComponentType.transform].position.x = poopPosition.x;
-   config[ServerComponentType.transform].position.y = poopPosition.y;
-   config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
-   config[ServerComponentType.item].itemType = ItemType.poop;
-   config[ServerComponentType.item].amount = 1;
+   const config = createItemEntityConfig(ItemType.poop, 1, null);
+   config.components[ServerComponentType.transform].position.x = poopPosition.x;
+   config.components[ServerComponentType.transform].position.y = poopPosition.y;
+   config.components[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
    createEntityFromConfig(config, getEntityLayer(cow), 0);
 
    // Let it out

@@ -1,4 +1,4 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "battletribes-shared/collision";
+import { DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "battletribes-shared/collision";
 import { EntityID, EntityType, PlayerCauseOfDeath } from "battletribes-shared/entities";
 import { Settings } from "battletribes-shared/settings";
 import { StatusEffect } from "battletribes-shared/status-effects";
@@ -7,28 +7,32 @@ import { HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, dam
 import { StatusEffectComponentArray, applyStatusEffect } from "../../components/StatusEffectComponent";
 import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
 import { ServerComponentType } from "battletribes-shared/components";
-import { ComponentConfig } from "../../components";
+import { EntityConfig } from "../../components";
 import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
 import CircularBox from "battletribes-shared/boxes/CircularBox";
 import { getEntityType } from "../../world";
+import { TransformComponent } from "../../components/TransformComponent";
+import { SpitPoisonAreaComponent } from "../../components/SpitPoisonAreaComponent";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.spitPoisonArea;
 
 const RADIUS = 55;
 
-export function createSpitPoisonAreaConfig(): ComponentConfig<ComponentTypes> {
+export function createSpitPoisonAreaConfig(): EntityConfig<ComponentTypes> {
+   const transformComponent = new TransformComponent();
+   // @Hack mass
+   const hitbox = createHitbox(new CircularBox(new Point(0, 0), 0, RADIUS), Number.EPSILON, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, []);
+   transformComponent.addHitbox(hitbox, null);
+   
+   const spitPoisonAreaComponent = new SpitPoisonAreaComponent();
+   
    return {
-      [ServerComponentType.transform]: {
-         position: new Point(0, 0),
-         rotation: 0,
-         type: EntityType.spitPoisonArea,
-         collisionBit: COLLISION_BITS.default,
-         collisionMask: DEFAULT_COLLISION_MASK,
-         // @Hack mass
-         hitboxes: [createHitbox(new CircularBox(new Point(0, 0), 0, RADIUS), Number.EPSILON, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, [])]
-      },
-      [ServerComponentType.spitPoisonArea]: {}
+      entityType: EntityType.spitPoisonArea,
+      components: {
+         [ServerComponentType.transform]: transformComponent,
+         [ServerComponentType.spitPoisonArea]: spitPoisonAreaComponent
+      }
    }
 }
 

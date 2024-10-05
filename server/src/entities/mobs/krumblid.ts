@@ -1,16 +1,24 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "battletribes-shared/collision";
+import { DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "battletribes-shared/collision";
 import { EntityID, EntityType } from "battletribes-shared/entities";
 import { Point, randInt, TileIndex } from "battletribes-shared/utils";
 import { createItemsOverEntity } from "../../entity-shared";
 import { registerAttackingEntity } from "../../ai/escape-ai";
 import { ItemType } from "battletribes-shared/items/items";
 import { ServerComponentType } from "battletribes-shared/components";
-import { ComponentConfig } from "../../components";
+import { EntityConfig } from "../../components";
 import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
 import CircularBox from "battletribes-shared/boxes/CircularBox";
 import WanderAI from "../../ai/WanderAI";
 import { Biome } from "../../../../shared/src/tiles";
 import Layer from "../../Layer";
+import { TransformComponent } from "../../components/TransformComponent";
+import { PhysicsComponent } from "../../components/PhysicsComponent";
+import { HealthComponent } from "../../components/HealthComponent";
+import { StatusEffectComponent } from "../../components/StatusEffectComponent";
+import { AIHelperComponent, AIType } from "../../components/AIHelperComponent";
+import { EscapeAIComponent } from "../../components/EscapeAIComponent";
+import { FollowAIComponent } from "../../components/FollowAIComponent";
+import { KrumblidComponent } from "../../components/KrumblidComponent";
 
 export const enum KrumblidVars {
    VISION_RANGE = 224,
@@ -23,7 +31,6 @@ type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.health
    | ServerComponentType.statusEffect
    | ServerComponentType.aiHelper
-   | ServerComponentType.wanderAI
    | ServerComponentType.escapeAI
    | ServerComponentType.followAI
    | ServerComponentType.krumblid;
@@ -37,47 +44,38 @@ function tileIsValidCallback(_entity: EntityID, layer: Layer, tileIndex: TileInd
    return layer.tileIsWalls[tileIndex] === 0 && layer.tileBiomes[tileIndex] === Biome.desert;
 }
 
-export function createKrumblidConfig(): ComponentConfig<ComponentTypes> {
+export function createKrumblidConfig(): EntityConfig<ComponentTypes> {
+   const transformComponent = new TransformComponent();
+   const hitbox = createHitbox(new CircularBox(new Point(0, 0), 0, KRUMBLID_SIZE / 2), 0.75, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, []);
+   transformComponent.addHitbox(hitbox, null);
+   
+   const physicsComponent = new PhysicsComponent();
+   
+   const healthComponent = new HealthComponent(MAX_HEALTH);
+   
+   const statusEffectComponent = new StatusEffectComponent(0);
+
+   const aiHelperComponent = new AIHelperComponent(KrumblidVars.VISION_RANGE);
+   aiHelperComponent.ais[AIType.wander] = new WanderAI(200, 2 * Math.PI, 0.25, tileIsValidCallback);
+
+   const escapeAIComponent = new EscapeAIComponent();
+   
+   const followAIComponent = new FollowAIComponent(randInt(KrumblidVars.MIN_FOLLOW_COOLDOWN, KrumblidVars.MAX_FOLLOW_COOLDOWN), FOLLOW_CHANCE_PER_SECOND, 50);
+   
+   const krumblidComponent = new KrumblidComponent();
+   
    return {
-      [ServerComponentType.transform]: {
-         position: new Point(0, 0),
-         rotation: 0,
-         type: EntityType.krumblid,
-         collisionBit: COLLISION_BITS.default,
-         collisionMask: DEFAULT_COLLISION_MASK,
-         hitboxes: [createHitbox(new CircularBox(new Point(0, 0), 0, KRUMBLID_SIZE / 2), 0.75, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, [])]
-      },
-      [ServerComponentType.physics]: {
-         velocityX: 0,
-         velocityY: 0,
-         accelerationX: 0,
-         accelerationY: 0,
-         traction: 1,
-         isAffectedByAirFriction: true,
-         isAffectedByGroundFriction: true,
-         isImmovable: false
-      },
-      [ServerComponentType.health]: {
-         maxHealth: MAX_HEALTH
-      },
-      [ServerComponentType.statusEffect]: {
-         statusEffectImmunityBitset: 0
-      },
-      [ServerComponentType.aiHelper]: {
-         ignoreDecorativeEntities: true,
-         visionRange: KrumblidVars.VISION_RANGE,
-         ais: [
-            new WanderAI(200, 2 * Math.PI, 0.25, tileIsValidCallback)
-         ]
-      },
-      [ServerComponentType.wanderAI]: {},
-      [ServerComponentType.escapeAI]: {},
-      [ServerComponentType.followAI]: {
-         followCooldownTicks: randInt(KrumblidVars.MIN_FOLLOW_COOLDOWN, KrumblidVars.MAX_FOLLOW_COOLDOWN),
-         followChancePerSecond: FOLLOW_CHANCE_PER_SECOND,
-         followDistance: 50
-      },
-      [ServerComponentType.krumblid]: {}
+      entityType: EntityType.krumblid,
+      components: {
+         [ServerComponentType.transform]: transformComponent,
+         [ServerComponentType.physics]: physicsComponent,
+         [ServerComponentType.health]: healthComponent,
+         [ServerComponentType.statusEffect]: statusEffectComponent,
+         [ServerComponentType.aiHelper]: aiHelperComponent,
+         [ServerComponentType.escapeAI]: escapeAIComponent,
+         [ServerComponentType.followAI]: followAIComponent,
+         [ServerComponentType.krumblid]: krumblidComponent
+      }
    };
 }
 

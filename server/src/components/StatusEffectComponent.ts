@@ -10,10 +10,6 @@ import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
 import { TransformComponentArray } from "./TransformComponent";
 import { Packet } from "battletribes-shared/packets";
 
-export interface StatusEffectComponentParams {
-   readonly statusEffectImmunityBitset: number;
-}
-
 export class StatusEffectComponent {
    public readonly activeStatusEffectTypes = new Array<StatusEffect>();
    public readonly activeStatusEffectTicksRemaining = new Array<number>();
@@ -21,8 +17,8 @@ export class StatusEffectComponent {
 
    public readonly statusEffectImmunityBitset: number;
 
-   constructor(params: StatusEffectComponentParams) {
-      this.statusEffectImmunityBitset = params.statusEffectImmunityBitset;
+   constructor(statusEffectImmunityBitset: number) {
+      this.statusEffectImmunityBitset = statusEffectImmunityBitset;
    }
 }
 

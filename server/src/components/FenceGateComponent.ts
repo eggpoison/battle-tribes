@@ -14,8 +14,6 @@ const enum Vars {
    DOOR_SWING_SPEED = 5 / Settings.TPS
 }
 
-export interface FenceGateComponentParams {}
-
 export class FenceGateComponent {
    public toggleType = DoorToggleType.none;
    public openProgress = 0;

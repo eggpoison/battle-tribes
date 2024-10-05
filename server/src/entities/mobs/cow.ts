@@ -1,4 +1,4 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "battletribes-shared/collision";
+import { DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "battletribes-shared/collision";
 import { EntityID, EntityType } from "battletribes-shared/entities";
 import { Settings } from "battletribes-shared/settings";
 import { Point, randInt, TileIndex } from "battletribes-shared/utils";
@@ -6,13 +6,20 @@ import { createItemsOverEntity } from "../../entity-shared";
 import { registerAttackingEntity } from "../../ai/escape-ai";
 import { ItemType } from "battletribes-shared/items/items";
 import { ServerComponentType } from "battletribes-shared/components";
-import { ComponentConfig } from "../../components";
+import { EntityConfig } from "../../components";
 import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
 import RectangularBox from "battletribes-shared/boxes/RectangularBox";
 import WanderAI from "../../ai/WanderAI";
-import { AIType } from "../../components/AIHelperComponent";
+import { AIHelperComponent, AIType } from "../../components/AIHelperComponent";
 import { Biome } from "../../../../shared/src/tiles";
 import Layer from "../../Layer";
+import { TransformComponent } from "../../components/TransformComponent";
+import { PhysicsComponent } from "../../components/PhysicsComponent";
+import { HealthComponent } from "../../components/HealthComponent";
+import { StatusEffectComponent } from "../../components/StatusEffectComponent";
+import { EscapeAIComponent } from "../../components/EscapeAIComponent";
+import { CowComponent } from "../../components/CowComponent";
+import { FollowAIComponent } from "../../components/FollowAIComponent";
 
 export const enum CowVars {
    VISION_RANGE = 256,
@@ -28,7 +35,6 @@ type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.health
    | ServerComponentType.statusEffect
    | ServerComponentType.aiHelper
-   | ServerComponentType.wanderAI
    | ServerComponentType.escapeAI
    | ServerComponentType.followAI
    | ServerComponentType.cow;
@@ -42,49 +48,37 @@ function tileIsValidCallback(_entity: EntityID, layer: Layer, tileIndex: TileInd
    return !layer.tileIsWall(tileIndex) && layer.getTileBiome(tileIndex) === Biome.grasslands;
 }
 
-export function createCowConfig(): ComponentConfig<ComponentTypes> {
+export function createCowConfig(): EntityConfig<ComponentTypes> {
+   const transformComponent = new TransformComponent();
+   const hitbox = createHitbox(new RectangularBox(new Point(0, 0), 50, 100, 0), 1.2, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, []);
+   transformComponent.addHitbox(hitbox, null);
+
+   const physicsComponent = new PhysicsComponent();
+
+   const healthComponent = new HealthComponent(CowVars.MAX_HEALTH);
+
+   const statusEffectComponent = new StatusEffectComponent(0);
+
+   const aiHelperComponent = new AIHelperComponent(CowVars.VISION_RANGE);
+   aiHelperComponent.ais[AIType.wander] = new WanderAI(200, Math.PI, 0.6, tileIsValidCallback)
+   
+   const escapeAIComponent = new EscapeAIComponent();
+
+   const followAIComponent = new FollowAIComponent(randInt(CowVars.MIN_FOLLOW_COOLDOWN, CowVars.MAX_FOLLOW_COOLDOWN), FOLLOW_CHANCE_PER_SECOND, 60);
+   
+   const cowComponent = new CowComponent();
+   
    return {
-      [ServerComponentType.transform]: {
-         position: new Point(0, 0),
-         rotation: 0,
-         type: EntityType.cow,
-         collisionBit: COLLISION_BITS.default,
-         collisionMask: DEFAULT_COLLISION_MASK,
-         hitboxes: [createHitbox(new RectangularBox(new Point(0, 0), 50, 100, 0), 1.2, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, [])]
-      },
-      [ServerComponentType.physics]: {
-         velocityX: 0,
-         velocityY: 0,
-         accelerationX: 0,
-         accelerationY: 0,
-         traction: 1,
-         isAffectedByAirFriction: true,
-         isAffectedByGroundFriction: true,
-         isImmovable: false
-      },
-      [ServerComponentType.health]: {
-         maxHealth: CowVars.MAX_HEALTH
-      },
-      [ServerComponentType.statusEffect]: {
-         statusEffectImmunityBitset: 0
-      },
-      [ServerComponentType.aiHelper]: {
-         ignoreDecorativeEntities: true,
-         visionRange: CowVars.VISION_RANGE,
-         ais: {
-            [AIType.wander]: new WanderAI(200, Math.PI, 0.6, tileIsValidCallback)
-         }
-      },
-      [ServerComponentType.wanderAI]: {},
-      [ServerComponentType.escapeAI]: {},
-      [ServerComponentType.followAI]: {
-         followCooldownTicks: randInt(CowVars.MIN_FOLLOW_COOLDOWN, CowVars.MAX_FOLLOW_COOLDOWN),
-         followChancePerSecond: FOLLOW_CHANCE_PER_SECOND,
-         followDistance: 60
-      },
-      [ServerComponentType.cow]: {
-         species: randInt(0, 1),
-         grazeCooldownTicks: randInt(CowVars.MIN_GRAZE_COOLDOWN, CowVars.MAX_GRAZE_COOLDOWN)
+      entityType: EntityType.cow,
+      components: {
+         [ServerComponentType.transform]: transformComponent,
+         [ServerComponentType.physics]: physicsComponent,
+         [ServerComponentType.health]: healthComponent,
+         [ServerComponentType.statusEffect]: statusEffectComponent,
+         [ServerComponentType.aiHelper]: aiHelperComponent,
+         [ServerComponentType.escapeAI]: escapeAIComponent,
+         [ServerComponentType.followAI]: followAIComponent,
+         [ServerComponentType.cow]: cowComponent
       }
    };
 }

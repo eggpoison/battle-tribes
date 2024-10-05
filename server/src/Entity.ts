@@ -4,7 +4,7 @@ import Layer from "./Layer";
 import { STRUCTURE_TYPES, StructureType } from "battletribes-shared/structures";
 import { TransformComponentArray } from "./components/TransformComponent";
 import { ServerComponentType } from "battletribes-shared/components";
-import { ComponentClassRecord, ComponentConfig, ComponentParams } from "./components";
+import { EntityConfig } from "./components";
 import { ComponentArray, ComponentArrayRecord } from "./components/ComponentArray";
 import { boxIsCircular } from "battletribes-shared/boxes/boxes";
 import { addEntityToJoinBuffer, getEntityType } from "./world";
@@ -17,21 +17,18 @@ export function getNextEntityID(): EntityID {
    return idCounter++;
 }
 
-// @Hack @Cleanup
-const a = <ComponentTypes extends ServerComponentType>(componentConfig: ComponentConfig<ComponentTypes>): ReadonlyArray<ComponentTypes> => {
-   return Object.keys(componentConfig).map(Number) as Array<ComponentTypes>;
+// @Hack @Cleanup ?@Speed
+const a = <ComponentTypes extends ServerComponentType>(componentConfig: EntityConfig<ComponentTypes>): ReadonlyArray<ComponentTypes> => {
+   return Object.keys(componentConfig.components).map(Number) as Array<ComponentTypes>;
 }
 
 // @Cleanup: maybe rename once other generic one is reworked?
 // export function createEntityFromConfig<ComponentTypes extends ServerComponentType>(componentTypes: ReadonlyArray<ComponentTypes>, componentConfig: ComponentConfig<ComponentTypes>): void {
-export function createEntityFromConfig<ComponentTypes extends ServerComponentType>(componentConfig: ComponentConfig<ComponentTypes>, layer: Layer, joinDelayTicks: number): EntityID {
+export function createEntityFromConfig<ComponentTypes extends ServerComponentType>(entityConfig: EntityConfig<ComponentTypes>, layer: Layer, joinDelayTicks: number): EntityID {
    const id = getNextEntityID();
    // @Hack
-   const componentTypes = a(componentConfig);
+   const componentTypes = a(entityConfig);
 
-   // @Hack
-   const entityType = (componentConfig as ComponentConfig<ServerComponentType.transform>)[ServerComponentType.transform]!.type;
-   
    // Run initialise functions
    for (let i = 0; i < componentTypes.length; i++) {
       const componentType = componentTypes[i];
@@ -39,25 +36,20 @@ export function createEntityFromConfig<ComponentTypes extends ServerComponentTyp
 
       if (typeof componentArray.onInitialise !== "undefined") {
          // @Cleanup: remove need for cast
-         componentArray.onInitialise(componentConfig as ComponentConfig<ServerComponentType>, id, entityType);
+         componentArray.onInitialise(entityConfig as EntityConfig<ServerComponentType>, id);
       }
    }
    
    for (let i = 0; i < componentTypes.length; i++) {
       const componentType = componentTypes[i];
       
-      const params = componentConfig[componentType];
-
-      const constructor = ComponentClassRecord[componentType]() as { new (args: ComponentParams<ComponentTypes>): unknown };
-      const component = new constructor(params) as typeof constructor;
+      const component = entityConfig.components[componentType];
 
       const componentArray = ComponentArrayRecord[componentType] as ComponentArray<object, ComponentTypes>;
       componentArray.addComponent(id, component, joinDelayTicks);
    }
 
-   // @Hack: move type out of transform component
-   const transformComponentParams = (componentConfig as ComponentConfig<ServerComponentType.transform>)[ServerComponentType.transform];
-   addEntityToJoinBuffer(id, transformComponentParams.type, layer, joinDelayTicks);
+   addEntityToJoinBuffer(id, entityConfig.entityType, layer, joinDelayTicks);
 
    return id;
 }

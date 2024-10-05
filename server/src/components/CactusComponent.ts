@@ -1,20 +1,15 @@
-import { CactusComponentData, ServerComponentType } from "battletribes-shared/components";
+import { ServerComponentType } from "battletribes-shared/components";
 import { CactusBodyFlowerData, CactusLimbData, EntityID } from "battletribes-shared/entities";
 import { ComponentArray } from "./ComponentArray";
 import { Packet } from "battletribes-shared/packets";
-
-export interface CactusComponentParams {
-   readonly flowers: ReadonlyArray<CactusBodyFlowerData>;
-   readonly limbs: ReadonlyArray<CactusLimbData>;
-}
 
 export class CactusComponent {
    public readonly flowers: ReadonlyArray<CactusBodyFlowerData>;
    public readonly limbs: ReadonlyArray<CactusLimbData>;
 
-   constructor(params: CactusComponentParams) {
-      this.flowers = params.flowers;
-      this.limbs = params.limbs;
+   constructor(flowers: ReadonlyArray<CactusBodyFlowerData>, limbs: ReadonlyArray<CactusLimbData>) {
+      this.flowers = flowers;
+      this.limbs = limbs;
    }
 }
 

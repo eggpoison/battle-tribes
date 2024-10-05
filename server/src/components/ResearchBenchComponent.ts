@@ -5,7 +5,6 @@ import { TechInfo } from "battletribes-shared/techs";
 import { TribesmanTitle } from "battletribes-shared/titles";
 import { RESEARCH_ORB_AMOUNTS, RESEARCH_ORB_COMPLETE_TIME, getRandomResearchOrbSize } from "battletribes-shared/research";
 import { ComponentArray } from "./ComponentArray";
-import Layer from "../Layer";
 import { InventoryUseComponentArray } from "./InventoryUseComponent";
 import { TITLE_REWARD_CHANCES } from "../tribesman-title-generation";
 import { TribeMemberComponentArray, awardTitle, hasTitle } from "./TribeMemberComponent";
@@ -15,8 +14,6 @@ import { InventoryName } from "battletribes-shared/items/items";
 import { TransformComponentArray } from "./TransformComponent";
 import { Packet } from "battletribes-shared/packets";
 import { getEntityType, getGameTicks } from "../world";
-
-export interface ResearchBenchComponentParams {}
 
 const ORB_COMPLETE_TICKS = Math.floor(RESEARCH_ORB_COMPLETE_TIME * Settings.TPS);
 

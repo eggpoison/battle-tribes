@@ -16,7 +16,6 @@ import { registerDirtyEntity } from "../server/player-clients";
 import RectangularBox from "battletribes-shared/boxes/RectangularBox";
 import { HealthComponentArray } from "./HealthComponent";
 import { attemptAttack, calculateItemKnockback } from "../entities/tribes/limb-use";
-import Layer from "../Layer";
 import { ProjectileComponentArray } from "./ProjectileComponent";
 import { applyKnockback } from "./PhysicsComponent";
 import { destroyEntity, getGameTicks } from "../world";
@@ -146,13 +145,6 @@ export class InventoryUseComponent {
 
    public hasUseInfo(inventoryName: InventoryName): boolean {
       return typeof this.inventoryUseInfoRecord[inventoryName] !== "undefined";
-   }
-
-   constructor(params: InventoryUseComponentParams) {
-      for (let i = 0; i < params.usedInventoryNames.length; i++) {
-         const inventoryName = params.usedInventoryNames[i];
-         this.associatedInventoryNames.push(inventoryName);
-      }
    }
 }
 

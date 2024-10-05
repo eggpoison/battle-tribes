@@ -6,7 +6,6 @@ import { TribesmanAIComponentArray, getTribesmanRelationship } from "./Tribesman
 import { TribeMemberComponentArray } from "./TribeMemberComponent";
 import { PlantComponentArray } from "./PlantComponent";
 import { GolemComponentArray } from "./GolemComponent";
-import { TribeType } from "battletribes-shared/tribes";
 import { StructureComponentArray } from "./StructureComponent";
 import { Packet } from "battletribes-shared/packets";
 import { getEntityType } from "../world";
@@ -22,22 +21,11 @@ export const enum EntityRelationship {
    enemy = 1 << 6
 }
 
-export interface TribeComponentParams {
-   tribe: Tribe | null;
-   /** Tribe type of the new tribe in case a tribe isn't specified */
-   tribeType: TribeType;
-}
-
 export class TribeComponent {
    public tribe: Tribe;
 
-   constructor(params: TribeComponentParams) {
-      if (params.tribe === null) {
-         // Default to creating a new tribe
-         this.tribe = new Tribe(params.tribeType, true);
-      } else {
-         this.tribe = params.tribe;
-      }
+   constructor(tribe: Tribe) {
+      this.tribe = tribe;
    }
 }
 

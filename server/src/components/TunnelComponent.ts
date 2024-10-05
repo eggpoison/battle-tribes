@@ -16,8 +16,6 @@ const enum DoorType {
    bottom
 }
 
-export interface TunnelComponentParams {}
-
 const DOOR_HITBOX_MASS = 1;
 const DOOR_HITBOX_WIDTH = 48;
 const DOOR_HITBOX_HEIGHT = 16;

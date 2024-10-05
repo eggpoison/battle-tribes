@@ -16,8 +16,6 @@ const enum Vars {
    LIFETIME_TICKS = (Settings.TPS * 0.6) | 0
 }
 
-export interface GuardianGemQuakeComponentParams {}
-
 export class GuardianGemQuakeComponent {}
 
 export const GuardianGemQuakeComponentArray = new ComponentArray<GuardianGemQuakeComponent>(ServerComponentType.guardianGemQuake, true, {

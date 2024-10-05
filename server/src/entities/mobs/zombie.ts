@@ -1,26 +1,28 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "battletribes-shared/collision";
+import { DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "battletribes-shared/collision";
 import { EntityID, EntityType, PlayerCauseOfDeath } from "battletribes-shared/entities";
 import { Settings } from "battletribes-shared/settings";
 import { Point, randInt, TileIndex } from "battletribes-shared/utils";
-import { HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
-import { ZombieComponentArray, zombieShouldAttackEntity } from "../../components/ZombieComponent";
-import { InventoryCreationInfo, pickupItemEntity } from "../../components/InventoryComponent";
+import { HealthComponent, HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
+import { ZombieComponent, ZombieComponentArray, zombieShouldAttackEntity } from "../../components/ZombieComponent";
+import { addInventoryToInventoryComponent, InventoryComponent, pickupItemEntity } from "../../components/InventoryComponent";
 import { wasTribeMemberKill } from "../tribes/tribe-member";
-import { PhysicsComponentArray, applyKnockback } from "../../components/PhysicsComponent";
+import { PhysicsComponent, PhysicsComponentArray, applyKnockback } from "../../components/PhysicsComponent";
 import { createItemsOverEntity } from "../../entity-shared";
 import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
 import { TombstoneComponentArray } from "../../components/TombstoneComponent";
-import { InventoryName, ItemType } from "battletribes-shared/items/items";
+import { Inventory, InventoryName, ItemType } from "battletribes-shared/items/items";
 import { ServerComponentType } from "battletribes-shared/components";
-import { ComponentConfig } from "../../components";
-import { TransformComponentArray } from "../../components/TransformComponent";
+import { EntityConfig } from "../../components";
+import { TransformComponent, TransformComponentArray } from "../../components/TransformComponent";
 import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
 import CircularBox from "battletribes-shared/boxes/CircularBox";
 import { getEntityType } from "../../world";
 import WanderAI from "../../ai/WanderAI";
-import { AIType } from "../../components/AIHelperComponent";
+import { AIHelperComponent, AIType } from "../../components/AIHelperComponent";
 import { Biome } from "../../../../shared/src/tiles";
 import Layer from "../../Layer";
+import { StatusEffectComponent } from "../../components/StatusEffectComponent";
+import { InventoryUseComponent } from "../../components/InventoryUseComponent";
 
 export const enum ZombieVars {
    CHASE_PURSUE_TIME_TICKS = 5 * Settings.TPS,
@@ -32,7 +34,6 @@ type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.health
    | ServerComponentType.statusEffect
    | ServerComponentType.zombie
-   | ServerComponentType.wanderAI
    | ServerComponentType.aiHelper
    | ServerComponentType.inventory
    | ServerComponentType.inventoryUse;
@@ -43,71 +44,48 @@ function tileIsValidCallback(_entity: EntityID, layer: Layer, tileIndex: TileInd
    return !layer.tileIsWall(tileIndex) && layer.getTileBiome(tileIndex) === Biome.grasslands;
 }
 
-export function createZombieConfig(): ComponentConfig<ComponentTypes> {
-   const inventories = new Array<InventoryCreationInfo>();
-   const usedInventoryNames = new Array<InventoryName>();
+export function createZombieConfig(isGolden: boolean, tombstone: EntityID): EntityConfig<ComponentTypes> {
+   const zombieType = isGolden ? 3 : randInt(0, 2);
 
-   inventories.push({
-      inventoryName: InventoryName.handSlot,
-      width: 1,
-      height: 1,
-      options: { acceptsPickedUpItems: true, isDroppedOnDeath: true, isSentToEnemyPlayers: false },
-      items: []
-   });
+   const transformComponent = new TransformComponent();
+   const hitbox = createHitbox(new CircularBox(new Point(0, 0), 0, 32), 1, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, []);
+   transformComponent.addHitbox(hitbox, null);
+
+   const physicsComponent = new PhysicsComponent();
+   
+   const healthComponent = new HealthComponent(MAX_HEALTH);
+   
+   const statusEffectComponent = new StatusEffectComponent(0);
+
+   const zombieComponent = new ZombieComponent(zombieType, tombstone);
+
+   const aiHelperComponent = new AIHelperComponent(ZombieVars.VISION_RANGE);
+   aiHelperComponent.ais[AIType.wander] = new WanderAI(150, Math.PI * 3, 0.4, tileIsValidCallback);
+   
+   const inventoryComponent = new InventoryComponent();
+   const inventoryUseComponent = new InventoryUseComponent();
+   
+   const handSlot = new Inventory(1, 1, InventoryName.handSlot);
+   addInventoryToInventoryComponent(inventoryComponent, handSlot, { acceptsPickedUpItems: true, isDroppedOnDeath: true, isSentToEnemyPlayers: false });
+   inventoryUseComponent.associatedInventoryNames.push(handSlot.name);
 
    if (Math.random() < 0.7) {
-      usedInventoryNames.push(InventoryName.offhand);
-      inventories.push({
-         inventoryName: InventoryName.offhand,
-         width: 0,
-         height: 0,
-         options: { acceptsPickedUpItems: true, isDroppedOnDeath: true, isSentToEnemyPlayers: false },
-         items: []
-      });
+      const offhand = new Inventory(0, 0, InventoryName.offhand);
+      addInventoryToInventoryComponent(inventoryComponent, offhand, { acceptsPickedUpItems: true, isDroppedOnDeath: true, isSentToEnemyPlayers: false });
+      inventoryUseComponent.associatedInventoryNames.push(offhand.name);
    }
    
    return {
-      [ServerComponentType.transform]: {
-         position: new Point(0, 0),
-         rotation: 0,
-         type: EntityType.zombie,
-         collisionBit: COLLISION_BITS.default,
-         collisionMask: DEFAULT_COLLISION_MASK,
-         hitboxes: [createHitbox(new CircularBox(new Point(0, 0), 0, 32), 1, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, [])]
-      },
-      [ServerComponentType.physics]: {
-         velocityX: 0,
-         velocityY: 0,
-         accelerationX: 0,
-         accelerationY: 0,
-         traction: 1,
-         isAffectedByAirFriction: true,
-         isAffectedByGroundFriction: true,
-         isImmovable: false
-      },
-      [ServerComponentType.health]: {
-         maxHealth: MAX_HEALTH
-      },
-      [ServerComponentType.statusEffect]: {
-         statusEffectImmunityBitset: 0
-      },
-      [ServerComponentType.zombie]: {
-         zombieType: randInt(0, 2),
-         tombstone: 0
-      },
-      [ServerComponentType.wanderAI]: {},
-      [ServerComponentType.aiHelper]: {
-         ignoreDecorativeEntities: true,
-         visionRange: ZombieVars.VISION_RANGE,
-         ais: {
-            [AIType.wander]: new WanderAI(150, Math.PI * 3, 0.4, tileIsValidCallback)
-         }
-      },
-      [ServerComponentType.inventory]: {
-         inventories: []
-      },
-      [ServerComponentType.inventoryUse]: {
-         usedInventoryNames: usedInventoryNames
+      entityType: EntityType.zombie,
+      components: {
+         [ServerComponentType.transform]: transformComponent,
+         [ServerComponentType.physics]: physicsComponent,
+         [ServerComponentType.health]: healthComponent,
+         [ServerComponentType.statusEffect]: statusEffectComponent,
+         [ServerComponentType.zombie]: zombieComponent,
+         [ServerComponentType.aiHelper]: aiHelperComponent,
+         [ServerComponentType.inventory]: inventoryComponent,
+         [ServerComponentType.inventoryUse]: inventoryUseComponent
       }
    };
 }

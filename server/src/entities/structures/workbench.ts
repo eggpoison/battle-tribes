@@ -1,12 +1,17 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "battletribes-shared/collision";
 import { EntityType } from "battletribes-shared/entities";
-import { Point } from "battletribes-shared/utils";
-import { createEmptyStructureConnectionInfo } from "battletribes-shared/structures";
+import { StructureConnectionInfo } from "battletribes-shared/structures";
 import { createWorkbenchHitboxes } from "battletribes-shared/boxes/entity-hitbox-creation";
 import { CraftingStation } from "battletribes-shared/items/crafting-recipes";
 import { ServerComponentType } from "battletribes-shared/components";
-import { ComponentConfig } from "../../components";
+import { EntityConfig } from "../../components";
 import { StatusEffect } from "battletribes-shared/status-effects";
+import { TransformComponent } from "../../components/TransformComponent";
+import { HealthComponent } from "../../components/HealthComponent";
+import { StatusEffectComponent } from "../../components/StatusEffectComponent";
+import Tribe from "../../Tribe";
+import { StructureComponent } from "../../components/StructureComponent";
+import { TribeComponent } from "../../components/TribeComponent";
+import { CraftingStationComponent } from "../../components/CraftingStationComponent";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.health
@@ -15,31 +20,29 @@ type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.tribe
    | ServerComponentType.craftingStation;
 
-export function createWorkbenchConfig(): ComponentConfig<ComponentTypes> {
+export function createWorkbenchConfig(tribe: Tribe, connectionInfo: StructureConnectionInfo): EntityConfig<ComponentTypes> {
+   const transformComponent = new TransformComponent();
+   transformComponent.addHitboxes(createWorkbenchHitboxes(), null);
+   
+   const healthComponent = new HealthComponent(15);
+   
+   const statusEffectComponent = new StatusEffectComponent(StatusEffect.bleeding | StatusEffect.poisoned);
+   
+   const structureComponent = new StructureComponent(connectionInfo);
+
+   const tribeComponent = new TribeComponent(tribe);
+   
+   const craftingStationComponent = new CraftingStationComponent(CraftingStation.workbench);
+   
    return {
-      [ServerComponentType.transform]: {
-         position: new Point(0, 0),
-         rotation: 0,
-         type: EntityType.workbench,
-         collisionBit: COLLISION_BITS.default,
-         collisionMask: DEFAULT_COLLISION_MASK,
-         hitboxes: createWorkbenchHitboxes()
-      },
-      [ServerComponentType.health]: {
-         maxHealth: 15
-      },
-      [ServerComponentType.statusEffect]: {
-         statusEffectImmunityBitset: StatusEffect.bleeding | StatusEffect.poisoned
-      },
-      [ServerComponentType.structure]: {
-         connectionInfo: createEmptyStructureConnectionInfo()
-      },
-      [ServerComponentType.tribe]: {
-         tribe: null,
-         tribeType: 0
-      },
-      [ServerComponentType.craftingStation]: {
-         craftingStation: CraftingStation.workbench
+      entityType: EntityType.workbench,
+      components: {
+         [ServerComponentType.transform]: transformComponent,
+         [ServerComponentType.health]: healthComponent,
+         [ServerComponentType.statusEffect]: statusEffectComponent,
+         [ServerComponentType.structure]: structureComponent,
+         [ServerComponentType.tribe]: tribeComponent,
+         [ServerComponentType.craftingStation]: craftingStationComponent
       }
    };
 }

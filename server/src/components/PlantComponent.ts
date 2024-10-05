@@ -2,20 +2,8 @@ import { PlanterBoxPlant, ServerComponentType } from "battletribes-shared/compon
 import { Settings } from "battletribes-shared/settings";
 import { ComponentArray } from "./ComponentArray";
 import { PlanterBoxComponentArray } from "./PlanterBoxComponent";
-import { ComponentConfig } from "../components";
 import { EntityID } from "battletribes-shared/entities";
 import { Packet } from "battletribes-shared/packets";
-
-export interface PlantComponentParams {
-   planterBox: EntityID;
-   plantType: PlanterBoxPlant;
-}
-
-const PLANT_HEALTHS: Record<PlanterBoxPlant, number> = {
-   [PlanterBoxPlant.tree]: 10,
-   [PlanterBoxPlant.berryBush]: 10,
-   [PlanterBoxPlant.iceSpikes]: 5,
-};
 
 export const PLANT_GROWTH_TICKS: Record<PlanterBoxPlant, number> = {
    // @Temporary
@@ -37,14 +25,13 @@ export class PlantComponent {
    public numFruit = 0;
    public fruitRandomGrowthTicks = 0;
 
-   constructor(params: PlantComponentParams) {
-      this.planterBox = params.planterBox;
-      this.plantType = params.plantType;
+   constructor(plantType: PlanterBoxPlant, planterBox: EntityID) {
+      this.plantType = plantType;
+      this.planterBox = planterBox;
    }
 }
 
 export const PlantComponentArray = new ComponentArray<PlantComponent>(ServerComponentType.plant, true, {
-   onInitialise: onInitialise,
    onTick: {
       tickInterval: 1,
       func: onTick
@@ -53,12 +40,6 @@ export const PlantComponentArray = new ComponentArray<PlantComponent>(ServerComp
    getDataLength: getDataLength,
    addDataToPacket: addDataToPacket
 });
-
-function onInitialise(config: ComponentConfig<ServerComponentType.health | ServerComponentType.plant>): void {
-   const plantType = config[ServerComponentType.plant].plantType;
-
-   config[ServerComponentType.health].maxHealth = PLANT_HEALTHS[plantType];
-}
 
 function onRemove(entity: EntityID): void {
    // Register in the planter box that the plant has been removed

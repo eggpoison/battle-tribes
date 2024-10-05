@@ -18,11 +18,13 @@ import { HutComponentArray } from "./components/HutComponent";
 import { CraftingRecipe } from "battletribes-shared/items/crafting-recipes";
 import { ItemType, InventoryName } from "battletribes-shared/items/items";
 import { TransformComponentArray } from "./components/TransformComponent";
-import { createEntityConfig } from "./entity-creation";
 import { createEntityFromConfig } from "./Entity";
 import { BoxType, Hitbox } from "battletribes-shared/boxes/boxes";
 import { addTribe, destroyEntity, entityExists, getEntityLayer, getEntityType, getGameTicks, LayerType, removeTribe } from "./world";
 import Layer, { getTileIndexIncludingEdges } from "./Layer";
+import { EntityConfig } from "./components";
+import { createTribeWorkerConfig } from "./entities/tribes/tribe-worker";
+import { createTribeWarriorConfig } from "./entities/tribes/tribe-warrior";
 
 export interface TribeLayerBuildingInfo {
    safetyRecord: Record<SafetyNode, number>;
@@ -726,14 +728,25 @@ class Tribe {
       // Offset the spawn position so the tribesman comes out of the correct side of the hut
       const position = new Point(transformComponent.position.x + 10 * Math.sin(transformComponent.rotation), transformComponent.position.y + 10 * Math.cos(transformComponent.rotation));
       
-      const tribesmanEntityType = getEntityType(hut) === EntityType.workerHut ? EntityType.tribeWorker : EntityType.tribeWarrior;
+      let config: EntityConfig<ServerComponentType.transform | ServerComponentType.tribesmanAI>;
+      switch (getEntityType(hut)) {
+         case EntityType.workerHut: {
+            config = createTribeWorkerConfig(this);
+            break;
+         }
+         case EntityType.warriorHut: {
+            config = createTribeWarriorConfig(this);
+            break;
+         }
+         default: {
+            throw new Error();
+         }
+      }
 
-      const config = createEntityConfig(tribesmanEntityType);
-      config[ServerComponentType.transform].position.x = position.x;
-      config[ServerComponentType.transform].position.y = position.y;
-      config[ServerComponentType.transform].rotation = transformComponent.rotation;
-      config[ServerComponentType.tribe].tribe = this;
-      config[ServerComponentType.tribesmanAI].hut = hut;
+      config.components[ServerComponentType.transform].position.x = position.x;
+      config.components[ServerComponentType.transform].position.y = position.y;
+      config.components[ServerComponentType.transform].rotation = transformComponent.rotation;
+      config.components[ServerComponentType.tribesmanAI].hut = hut;
       createEntityFromConfig(config, getEntityLayer(hut), 0);
    }
 

@@ -1,17 +1,16 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "battletribes-shared/collision";
+import { DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "battletribes-shared/collision";
 import { EntityID, EntityType, PlayerCauseOfDeath } from "battletribes-shared/entities";
 import { Settings } from "battletribes-shared/settings";
 import { StatusEffect } from "battletribes-shared/status-effects";
 import { Point } from "battletribes-shared/utils";
-import { SlimeSpitComponentArray } from "../../components/SlimeSpitComponent";
+import { SlimeSpitComponent, SlimeSpitComponentArray } from "../../components/SlimeSpitComponent";
 import { HealthComponentArray, damageEntity } from "../../components/HealthComponent";
 import { StatusEffectComponentArray, applyStatusEffect } from "../../components/StatusEffectComponent";
-import { applyKnockback } from "../../components/PhysicsComponent";
-import { ComponentConfig } from "../../components";
+import { applyKnockback, PhysicsComponent } from "../../components/PhysicsComponent";
+import { EntityConfig } from "../../components";
 import { ServerComponentType } from "battletribes-shared/components";
 import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
-import Layer from "../../Layer";
-import { TransformComponentArray } from "../../components/TransformComponent";
+import { TransformComponent, TransformComponentArray } from "../../components/TransformComponent";
 import { createSpitPoisonAreaConfig } from "./spit-poison-area";
 import { createEntityFromConfig } from "../../Entity";
 import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
@@ -22,28 +21,24 @@ type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics
    | ServerComponentType.slimeSpit;
 
-export function createSlimeSpitConfig(): ComponentConfig<ComponentTypes> {
+const HITBOX_SIZES = [20, 30];
+
+export function createSlimeSpitConfig(size: number): EntityConfig<ComponentTypes> {
+   const transformComponent = new TransformComponent();
+   const hitboxSize = HITBOX_SIZES[size];
+   const hitbox = createHitbox(new RectangularBox(new Point(0, 0), hitboxSize, hitboxSize, 0), 0.2, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, []);
+   transformComponent.addHitbox(hitbox, null);
+   
+   const physicsComponent = new PhysicsComponent();
+   
+   const slimeSpitComponent = new SlimeSpitComponent(size);
+   
    return {
-      [ServerComponentType.transform]: {
-         position: new Point(0, 0),
-         rotation: 0,
-         type: EntityType.slimeSpit,
-         collisionBit: COLLISION_BITS.default,
-         collisionMask: DEFAULT_COLLISION_MASK,
-         hitboxes: [createHitbox(new RectangularBox(new Point(0, 0), 0, 0, 0), 0.2, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, [])]
-      },
-      [ServerComponentType.physics]: {
-         velocityX: 0,
-         velocityY: 0,
-         accelerationX: 0,
-         accelerationY: 0,
-         traction: 1,
-         isAffectedByAirFriction: true,
-         isAffectedByGroundFriction: true,
-         isImmovable: false
-      },
-      [ServerComponentType.slimeSpit]: {
-         size: 0
+      entityType: EntityType.slimeSpit,
+      components: {
+         [ServerComponentType.transform]: transformComponent,
+         [ServerComponentType.physics]: physicsComponent,
+         [ServerComponentType.slimeSpit]: slimeSpitComponent
       }
    };
 }
@@ -78,9 +73,9 @@ export function onSlimeSpitDeath(spit: EntityID): void {
       const transformComponent = TransformComponentArray.getComponent(spit);
 
       const config = createSpitPoisonAreaConfig();
-      config[ServerComponentType.transform].position.x = transformComponent.position.x;
-      config[ServerComponentType.transform].position.y = transformComponent.position.y;
-      config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
+      config.components[ServerComponentType.transform].position.x = transformComponent.position.x;
+      config.components[ServerComponentType.transform].position.y = transformComponent.position.y;
+      config.components[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
       createEntityFromConfig(config, getEntityLayer(spit), 0);
    }
 }

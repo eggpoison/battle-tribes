@@ -1,18 +1,19 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "battletribes-shared/collision";
-import { SnowballSize, EntityType, PlayerCauseOfDeath, EntityID } from "battletribes-shared/entities";
+import { DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "battletribes-shared/collision";
+import { SnowballSize, EntityType, PlayerCauseOfDeath, EntityID, SNOWBALL_SIZES } from "battletribes-shared/entities";
 import { Settings } from "battletribes-shared/settings";
 import { StatusEffect } from "battletribes-shared/status-effects";
-import { Point, randFloat } from "battletribes-shared/utils";
-import { HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../components/HealthComponent";
-import { SnowballComponentArray } from "../components/SnowballComponent";
-import { PhysicsComponentArray, applyKnockback } from "../components/PhysicsComponent";
-import { ComponentConfig } from "../components";
+import { Point } from "battletribes-shared/utils";
+import { HealthComponent, HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../components/HealthComponent";
+import { SnowballComponent, SnowballComponentArray } from "../components/SnowballComponent";
+import { PhysicsComponent, PhysicsComponentArray, applyKnockback } from "../components/PhysicsComponent";
+import { EntityConfig } from "../components";
 import { ServerComponentType } from "battletribes-shared/components";
 import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
-import { TransformComponentArray } from "../components/TransformComponent";
+import { TransformComponent, TransformComponentArray } from "../components/TransformComponent";
 import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
 import CircularBox from "battletribes-shared/boxes/CircularBox";
 import { getEntityAgeTicks, getEntityType } from "../world";
+import { StatusEffectComponent } from "../components/StatusEffectComponent";
    
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics
@@ -21,37 +22,29 @@ type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.snowball;
 
 const DAMAGE_VELOCITY_THRESHOLD = 100;
+const MAX_HEALTHS: ReadonlyArray<number> = [1, 3];
 
-export function createSnowballConfig(): ComponentConfig<ComponentTypes> {
+export function createSnowballConfig(yeti: EntityID, size: SnowballSize): EntityConfig<ComponentTypes> {
+   const transformComponent = new TransformComponent();
+   const hitbox = createHitbox(new CircularBox(new Point(0, 0), 0, SNOWBALL_SIZES[size] / 2), size === SnowballSize.small ? 1 : 1.5, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, []);
+   transformComponent.addHitbox(hitbox, null);
+   
+   const physicsComponent = new PhysicsComponent();
+
+   const healthComponent = new HealthComponent(MAX_HEALTHS[size]);
+
+   const statusEffectComponent = new StatusEffectComponent(StatusEffect.poisoned | StatusEffect.freezing);
+   
+   const snowballComponent = new SnowballComponent(yeti, size);
+   
    return {
-      [ServerComponentType.transform]: {
-         position: new Point(0, 0),
-         rotation: 0,
-         type: EntityType.snowball,
-         collisionBit: COLLISION_BITS.default,
-         collisionMask: DEFAULT_COLLISION_MASK,
-         hitboxes: [createHitbox(new CircularBox(new Point(0, 0), 0, 0), 0, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, [])]
-      },
-      [ServerComponentType.physics]: {
-         velocityX: 0,
-         velocityY: 0,
-         accelerationX: 0,
-         accelerationY: 0,
-         traction: 1,
-         isAffectedByAirFriction: true,
-         isAffectedByGroundFriction: true,
-         isImmovable: false
-      },
-      [ServerComponentType.health]: {
-         maxHealth: 0
-      },
-      [ServerComponentType.statusEffect]: {
-         statusEffectImmunityBitset: StatusEffect.poisoned | StatusEffect.freezing
-      },
-      [ServerComponentType.snowball]: {
-         yetiID: 0,
-         size: SnowballSize.small,
-         lifetime: Math.floor(randFloat(10, 15) * Settings.TPS)
+      entityType: EntityType.snowball,
+      components: {
+         [ServerComponentType.transform]: transformComponent,
+         [ServerComponentType.physics]: physicsComponent,
+         [ServerComponentType.health]: healthComponent,
+         [ServerComponentType.statusEffect]: statusEffectComponent,
+         [ServerComponentType.snowball]: snowballComponent
       }
    };
 }
@@ -65,7 +58,7 @@ export function onSnowballCollision(snowball: EntityID, collidingEntity: EntityI
    // Don't let the snowball damage the yeti which threw it
    if (collidingEntityType === EntityType.yeti) {
       const snowballComponent = SnowballComponentArray.getComponent(snowball);
-      if (collidingEntity === snowballComponent.yetiID) {
+      if (collidingEntity === snowballComponent.yeti) {
          return;
       }
    }

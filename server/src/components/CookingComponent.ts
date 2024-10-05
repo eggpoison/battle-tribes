@@ -8,10 +8,6 @@ import { InventoryComponentArray, getInventory, consumeItemTypeFromInventory, ad
 import { CookingIngredientItemType, FuelSourceItemType } from "battletribes-shared/items/cooking-info";
 import { getEntityType } from "../world";
 
-export interface CookingComponentParams {
-   readonly remainingHeatSeconds: number;
-}
-
 export interface HeatingRecipe {
    readonly ingredientType: CookingIngredientItemType;
    readonly ingredientAmount: number;
@@ -60,8 +56,8 @@ export class CookingComponent {
 
    public remainingHeatSeconds = 0;
 
-   constructor(params: CookingComponentParams) {
-      this.remainingHeatSeconds = params.remainingHeatSeconds;
+   constructor(remainingHeatSeconds: number) {
+      this.remainingHeatSeconds = remainingHeatSeconds;
    }
 }
 

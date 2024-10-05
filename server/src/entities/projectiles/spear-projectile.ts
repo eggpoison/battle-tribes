@@ -1,48 +1,44 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "battletribes-shared/collision";
+import { DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "battletribes-shared/collision";
 import { EntityID, EntityType, PlayerCauseOfDeath } from "battletribes-shared/entities";
 import { Point } from "battletribes-shared/utils";
 import { HealthComponentArray, damageEntity } from "../../components/HealthComponent";
-import { ThrowingProjectileComponentArray } from "../../components/ThrowingProjectileComponent";
-import { PhysicsComponentArray, applyKnockback } from "../../components/PhysicsComponent";
+import { ThrowingProjectileComponent, ThrowingProjectileComponentArray } from "../../components/ThrowingProjectileComponent";
+import { PhysicsComponent, PhysicsComponentArray, applyKnockback } from "../../components/PhysicsComponent";
 import { EntityRelationship, getEntityRelationship } from "../../components/TribeComponent";
 import { ServerComponentType } from "battletribes-shared/components";
-import { ComponentConfig } from "../../components";
+import { EntityConfig } from "../../components";
 import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
-import { TransformComponentArray } from "../../components/TransformComponent";
+import { TransformComponent, TransformComponentArray } from "../../components/TransformComponent";
 import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
 import RectangularBox from "battletribes-shared/boxes/RectangularBox";
 import { destroyEntity, entityExists } from "../../world";
+import { SpearProjectileComponent } from "../../components/SpearProjectileComponent";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics
    | ServerComponentType.throwingProjectile
    | ServerComponentType.spearProjectile;
 
-export function createSpearProjectileConfig(): ComponentConfig<ComponentTypes> {
+export function createSpearProjectileConfig(tribeMember: EntityID, itemID: number | null): EntityConfig<ComponentTypes> {
+   const transformComponent = new TransformComponent();
+   const hitbox = createHitbox(new RectangularBox(new Point(0, 0), 12, 60, 0), 0.5, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, []);
+   transformComponent.addHitbox(hitbox, null);
+   
+   const physicsComponent = new PhysicsComponent();
+   physicsComponent.isAffectedByGroundFriction = false;
+   
+   const throwingProjectileComponent = new ThrowingProjectileComponent(tribeMember, itemID);
+   
+   const spearProjectileComponent = new SpearProjectileComponent();
+   
    return {
-      [ServerComponentType.transform]: {
-         position: new Point(0, 0),
-         rotation: 0,
-         type: EntityType.spearProjectile,
-         collisionBit: COLLISION_BITS.default,
-         collisionMask: DEFAULT_COLLISION_MASK,
-         hitboxes: [createHitbox(new RectangularBox(new Point(0, 0), 12, 60, 0), 0.5, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, [])]
-      },
-   [ServerComponentType.physics]: {
-         velocityX: 0,
-         velocityY: 0,
-         accelerationX: 0,
-         accelerationY: 0,
-         traction: 1,
-         isAffectedByAirFriction: true,
-         isAffectedByGroundFriction: true,
-         isImmovable: false
-      },
-      [ServerComponentType.throwingProjectile]: {
-         tribeMember: 0,
-         itemID: null
-      },
-      [ServerComponentType.spearProjectile]: {}
+      entityType: EntityType.spearProjectile,
+      components: {
+         [ServerComponentType.transform]: transformComponent,
+         [ServerComponentType.physics]: physicsComponent,
+         [ServerComponentType.throwingProjectile]: throwingProjectileComponent,
+         [ServerComponentType.spearProjectile]: spearProjectileComponent
+      }
    };
 }
 

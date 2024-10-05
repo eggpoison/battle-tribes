@@ -3,8 +3,6 @@ import { ComponentArray } from "./ComponentArray";
 import { ItemType } from "battletribes-shared/items/items";
 import { Packet } from "battletribes-shared/packets";
 
-export interface AmmoBoxComponentParams {}
-
 export class AmmoBoxComponent {
    public ammoType: TurretAmmoType = ItemType.wood;
    public ammoRemaining = 0;

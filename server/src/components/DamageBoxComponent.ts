@@ -10,14 +10,12 @@ import { Settings } from "battletribes-shared/settings";
 import { ProjectileComponentArray } from "./ProjectileComponent";
 import { getEntityLayer } from "../world";
 
-export interface DamageBoxComponentParams {}
-
 interface DamageBoxCollisionInfo {
    readonly collidingEntity: EntityID;
    readonly collidingDamageBox: ServerDamageBox;
 }
 
-export class DamageBoxComponent implements DamageBoxComponentParams {
+export class DamageBoxComponent {
    public damageBoxes = new Array<ServerDamageBox>();
    public blockBoxes = new Array<ServerBlockBox>();
 

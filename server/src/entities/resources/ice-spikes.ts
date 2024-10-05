@@ -5,19 +5,18 @@ import { Settings } from "battletribes-shared/settings";
 import { StatusEffect } from "battletribes-shared/status-effects";
 import { Point, randInt } from "battletribes-shared/utils";
 import { createEntityFromConfig } from "../../Entity";
-import { HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
-import { StatusEffectComponentArray, applyStatusEffect } from "../../components/StatusEffectComponent";
+import { HealthComponent, HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
+import { StatusEffectComponent, StatusEffectComponentArray, applyStatusEffect } from "../../components/StatusEffectComponent";
 import { createIceShardConfig } from "../projectiles/ice-shard";
 import Layer from "../../Layer";
-import { createItemsOverEntity } from "../../entity-shared";
 import { applyKnockback } from "../../components/PhysicsComponent";
 import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
-import { ItemType } from "battletribes-shared/items/items";
-import { ComponentConfig } from "../../components";
-import { TransformComponentArray } from "../../components/TransformComponent";
+import { EntityConfig } from "../../components";
+import { TransformComponent, TransformComponentArray } from "../../components/TransformComponent";
 import CircularBox from "battletribes-shared/boxes/CircularBox";
 import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
 import { getEntityType } from "../../world";
+import { IceSpikesComponent } from "../../components/IceSpikesComponent";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.health
@@ -26,24 +25,25 @@ type ComponentTypes = ServerComponentType.transform
 
 const ICE_SPIKE_RADIUS = 40;
 
-export function createIceSpikesConfig(): ComponentConfig<ComponentTypes> {
+export function createIceSpikesConfig(rootIceSpikes: EntityID): EntityConfig<ComponentTypes> {
+   const transformComponent = new TransformComponent();
+   const hitbox = createHitbox(new CircularBox(new Point(0, 0), 0, ICE_SPIKE_RADIUS), 1, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, []);
+   transformComponent.addHitbox(hitbox, null);
+   transformComponent.collisionMask = DEFAULT_COLLISION_MASK & ~COLLISION_BITS.iceSpikes;
+   
+   const healthComponent = new HealthComponent(5);
+   
+   const statusEffectComponent = new StatusEffectComponent(StatusEffect.poisoned | StatusEffect.freezing | StatusEffect.bleeding);
+   
+   const iceSpikesComponent = new IceSpikesComponent(rootIceSpikes);
+   
    return {
-      [ServerComponentType.transform]: {
-         position: new Point(0, 0),
-         rotation: 0,
-         type: EntityType.iceSpikes,
-         collisionBit: COLLISION_BITS.iceSpikes,
-         collisionMask: DEFAULT_COLLISION_MASK & ~COLLISION_BITS.iceSpikes,
-         hitboxes: [createHitbox(new CircularBox(new Point(0, 0), 0, ICE_SPIKE_RADIUS), 1, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, [])]
-      },
-      [ServerComponentType.health]: {
-         maxHealth: 5
-      },
-      [ServerComponentType.statusEffect]: {
-         statusEffectImmunityBitset: StatusEffect.poisoned | StatusEffect.freezing | StatusEffect.bleeding
-      },
-      [ServerComponentType.iceSpikes]: {
-         rootIceSpike: null
+      entityType: EntityType.iceSpikes,
+      components: {
+         [ServerComponentType.transform]: transformComponent,
+         [ServerComponentType.health]: healthComponent,
+         [ServerComponentType.statusEffect]: statusEffectComponent,
+         [ServerComponentType.iceSpikes]: iceSpikesComponent
       }
    };
 }
@@ -81,11 +81,11 @@ export function createIceShardExplosion(layer: Layer, originX: number, originY: 
       const position = new Point(x, y);
 
       const config = createIceShardConfig();
-      config[ServerComponentType.transform].position.x = position.x;
-      config[ServerComponentType.transform].position.y = position.y;
-      config[ServerComponentType.transform].rotation = moveDirection;
-      config[ServerComponentType.physics].velocityX += 700 * Math.sin(moveDirection);
-      config[ServerComponentType.physics].velocityY += 700 * Math.cos(moveDirection);
+      config.components[ServerComponentType.transform].position.x = position.x;
+      config.components[ServerComponentType.transform].position.y = position.y;
+      config.components[ServerComponentType.transform].rotation = moveDirection;
+      config.components[ServerComponentType.physics].externalVelocity.x += 700 * Math.sin(moveDirection);
+      config.components[ServerComponentType.physics].externalVelocity.y += 700 * Math.cos(moveDirection);
       createEntityFromConfig(config, layer, 0);
    }
 }

@@ -99,8 +99,8 @@ export function generateGrassStrands(): void {
             }
 
             const config = createGrassStrandConfig();
-            config[ServerComponentType.transform].position.x = x;
-            config[ServerComponentType.transform].position.y = y;
+            config.components[ServerComponentType.transform].position.x = x;
+            config.components[ServerComponentType.transform].position.y = y;
             createEntityFromConfig(config, surfaceLayer, 0);
          }
       }

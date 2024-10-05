@@ -11,10 +11,6 @@ import { TransformComponentArray } from "./TransformComponent";
 import { Packet } from "battletribes-shared/packets";
 import { destroyEntity, getEntityLayer } from "../world";
 
-export interface StructureComponentParams {
-   connectionInfo: StructureConnectionInfo;
-}
-
 export class StructureComponent implements Mutable<StructureConnectionInfo> {
    /** The blueprint currently placed on the structure. 0 if none is present */
    public activeBlueprint = 0;
@@ -22,9 +18,9 @@ export class StructureComponent implements Mutable<StructureConnectionInfo> {
    public connectedSidesBitset: number;
    public connectedEntityIDs: ConnectedEntityIDs;
 
-   constructor(params: StructureComponentParams) {
-      this.connectedSidesBitset = params.connectionInfo.connectedSidesBitset;
-      this.connectedEntityIDs = params.connectionInfo.connectedEntityIDs;
+   constructor(connectionInfo: StructureConnectionInfo) {
+      this.connectedSidesBitset = connectionInfo.connectedSidesBitset;
+      this.connectedEntityIDs = connectionInfo.connectedEntityIDs;
    }
 }
 

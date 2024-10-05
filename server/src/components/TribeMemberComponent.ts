@@ -5,18 +5,17 @@ import { TRIBE_INFO_RECORD, TribeType } from "battletribes-shared/tribes";
 import { lerp, randInt } from "battletribes-shared/utils";
 import { ComponentArray } from "./ComponentArray";
 import { generateTitle, TITLE_REWARD_CHANCES } from "../tribesman-title-generation";
-import Layer from "../Layer";
 import { Settings } from "battletribes-shared/settings";
 import { TribeComponentArray } from "./TribeComponent";
 import { PlayerComponentArray } from "./PlayerComponent";
-import { ArmourItemInfo, BackpackItemInfo, ConsumableItemInfo, InventoryName, ITEM_INFO_RECORD, ITEM_TYPE_RECORD, ItemType } from "battletribes-shared/items/items";
-import { ComponentConfig } from "../components";
+import { ArmourItemInfo, BackpackItemInfo, ConsumableItemInfo, Inventory, InventoryName, ITEM_INFO_RECORD, ITEM_TYPE_RECORD, ItemType } from "battletribes-shared/items/items";
+import { EntityConfig } from "../components";
 import { tribeMemberCanPickUpItem, useItem, VACUUM_RANGE } from "../entities/tribes/tribe-member";
 import { Packet } from "battletribes-shared/packets";
 import { COLLISION_BITS } from "battletribes-shared/collision";
 import { itemEntityCanBePickedUp } from "../entities/item-entity";
 import { HealthComponentArray, addDefence, removeDefence } from "./HealthComponent";
-import { InventoryComponentArray, getInventory, resizeInventory } from "./InventoryComponent";
+import { InventoryComponentArray, addInventoryToInventoryComponent, getInventory, resizeInventory } from "./InventoryComponent";
 import { InventoryUseComponentArray, LimbInfo } from "./InventoryUseComponent";
 import { ItemComponentArray } from "./ItemComponent";
 import { PhysicsComponentArray } from "./PhysicsComponent";
@@ -28,16 +27,10 @@ const enum Vars {
    VACUUM_STRENGTH = 25
 }
 
-export interface TribeMemberComponentParams {
-   // @Cleanup: this all sucks
-   readonly tribeType: TribeType;
-   readonly entityType: EntityType;
-}
-
 type TribesmanEntityType = EntityType.player | EntityType.tribeWorker | EntityType.tribeWarrior;
 
 export class TribeMemberComponent {
-   public readonly warPaintType: number | null;
+   public warPaintType: number | null = null;
 
    public readonly fishFollowerIDs = new Array<number>();
 
@@ -47,18 +40,6 @@ export class TribeMemberComponent {
    // Used to give movement penalty while wearing the leaf suit.
    // @Cleanup: would be great to not store a variable to do this.
    public lastPlantCollisionTicks = getGameTicks();
-
-   constructor(params: TribeMemberComponentParams) {
-      if (params.tribeType === TribeType.goblins) {
-         if (params.entityType === EntityType.tribeWarrior) {
-            this.warPaintType = randInt(1, 1);
-         } else {
-            this.warPaintType = randInt(1, 5);
-         }
-      } else {
-         this.warPaintType = null;
-      }
-   }
 }
 
 export const TribeMemberComponentArray = new ComponentArray<TribeMemberComponent>(ServerComponentType.tribeMember, true, {
@@ -81,100 +62,61 @@ const getHotbarSize = (entityType: TribesmanEntityType): number => {
    }
 }
 
-function onInitialise(config: ComponentConfig<ServerComponentType.health | ServerComponentType.tribe | ServerComponentType.inventory | ServerComponentType.inventoryUse>, _: unknown, entityType: EntityType): void {
+function onInitialise(config: EntityConfig<ServerComponentType.health | ServerComponentType.tribe | ServerComponentType.tribeMember | ServerComponentType.inventory | ServerComponentType.inventoryUse>, _: unknown): void {
+   // War paint type
+   const tribeMemberComponent = config.components[ServerComponentType.tribeMember];
+   const tribeComponent = config.components[ServerComponentType.tribe];
+   if (tribeComponent.tribe.tribeType === TribeType.goblins) {
+      if (config.entityType === EntityType.tribeWarrior) {
+         tribeMemberComponent.warPaintType = randInt(1, 1);
+      } else {
+         tribeMemberComponent.warPaintType = randInt(1, 5);
+      }
+   } else {
+      tribeMemberComponent.warPaintType = null;
+   }
+   
    // 
    // Create inventories
    // 
 
+   const inventoryComponent = config.components[ServerComponentType.inventory];
+
    // Hotbar
-   config[ServerComponentType.inventory].inventories.push({
-      inventoryName: InventoryName.hotbar,
-      width: getHotbarSize(entityType as TribesmanEntityType),
-      height: 1,
-      options: { acceptsPickedUpItems: true, isDroppedOnDeath: true, isSentToEnemyPlayers: false },
-      items: []
-   });
+   const hotbarInventory = new Inventory(getHotbarSize(config.entityType as TribesmanEntityType), 1, InventoryName.hotbar);
+   addInventoryToInventoryComponent(inventoryComponent, hotbarInventory, { acceptsPickedUpItems: true, isDroppedOnDeath: true, isSentToEnemyPlayers: false });
    
    // Offhand
-   config[ServerComponentType.inventory].inventories.push({
-      inventoryName: InventoryName.offhand,
-      width: 1,
-      height: 1,
-      options: { acceptsPickedUpItems: false, isDroppedOnDeath: true, isSentToEnemyPlayers: false },
-      items: []
-   });
+   const offhandInventory = new Inventory(1, 1, InventoryName.offhand);
+   addInventoryToInventoryComponent(inventoryComponent, offhandInventory, { acceptsPickedUpItems: false, isDroppedOnDeath: true, isSentToEnemyPlayers: false });
    
    // Crafting output slot
-   config[ServerComponentType.inventory].inventories.push({
-      inventoryName: InventoryName.craftingOutputSlot,
-      width: 1,
-      height: 1,
-      options: { acceptsPickedUpItems: false, isDroppedOnDeath: true, isSentToEnemyPlayers: false },
-      items: []
-   });
+   const craftingOutputInventory = new Inventory(1, 1, InventoryName.craftingOutputSlot);
+   addInventoryToInventoryComponent(inventoryComponent, craftingOutputInventory, { acceptsPickedUpItems: false, isDroppedOnDeath: true, isSentToEnemyPlayers: false });
    
    // Held item slot
-   config[ServerComponentType.inventory].inventories.push({
-      inventoryName: InventoryName.heldItemSlot,
-      width: 1,
-      height: 1,
-      options: { acceptsPickedUpItems: false, isDroppedOnDeath: true, isSentToEnemyPlayers: false },
-      items: []
-   });
+   const heldItemInventory = new Inventory(1, 1, InventoryName.heldItemSlot);
+   addInventoryToInventoryComponent(inventoryComponent, heldItemInventory, { acceptsPickedUpItems: false, isDroppedOnDeath: true, isSentToEnemyPlayers: false });
    
    // Armour slot
-   config[ServerComponentType.inventory].inventories.push({
-      inventoryName: InventoryName.armourSlot,
-      width: 1,
-      height: 1,
-      options: { acceptsPickedUpItems: false, isDroppedOnDeath: true, isSentToEnemyPlayers: true },
-      items: []
-   });
+   const armourSlotInventory = new Inventory(1, 1, InventoryName.armourSlot);
+   addInventoryToInventoryComponent(inventoryComponent, armourSlotInventory, { acceptsPickedUpItems: false, isDroppedOnDeath: true, isSentToEnemyPlayers: false });
    
    // Backpack slot
-   config[ServerComponentType.inventory].inventories.push({
-      inventoryName: InventoryName.backpackSlot,
-      width: 1,
-      height: 1,
-      options: { acceptsPickedUpItems: false, isDroppedOnDeath: true, isSentToEnemyPlayers: false },
-      items: []
-   });
+   const backpackSlotInventory = new Inventory(1, 1, InventoryName.backpackSlot);
+   addInventoryToInventoryComponent(inventoryComponent, backpackSlotInventory, { acceptsPickedUpItems: false, isDroppedOnDeath: true, isSentToEnemyPlayers: false });
    
    // Glove slot
-   config[ServerComponentType.inventory].inventories.push({
-      inventoryName: InventoryName.gloveSlot,
-      width: 1,
-      height: 1,
-      options: { acceptsPickedUpItems: false, isDroppedOnDeath: true, isSentToEnemyPlayers: true },
-      items: []
-   });
+   const gloveSlotInventory = new Inventory(1, 1, InventoryName.gloveSlot);
+   addInventoryToInventoryComponent(inventoryComponent, gloveSlotInventory, { acceptsPickedUpItems: false, isDroppedOnDeath: true, isSentToEnemyPlayers: false });
    
    // Backpack
-   config[ServerComponentType.inventory].inventories.push({
-      inventoryName: InventoryName.backpack,
-      width: 0,
-      height: 0,
-      options: { acceptsPickedUpItems: false, isDroppedOnDeath: true, isSentToEnemyPlayers: false },
-      items: []
-   });
+   const backpackInventory = new Inventory(1, 1, InventoryName.backpack);
+   addInventoryToInventoryComponent(inventoryComponent, backpackInventory, { acceptsPickedUpItems: false, isDroppedOnDeath: true, isSentToEnemyPlayers: false });
 
-   config[ServerComponentType.inventoryUse].usedInventoryNames.push(InventoryName.hotbar);
-   config[ServerComponentType.inventoryUse].usedInventoryNames.push(InventoryName.offhand);
-
-   // @Hack
-   const tribe = config[ServerComponentType.tribe].tribe!;
-   const tribeInfo = TRIBE_INFO_RECORD[tribe.tribeType];
-   switch (entityType) {
-      case EntityType.player:
-      case EntityType.tribeWarrior: {
-         config[ServerComponentType.health].maxHealth = tribeInfo.maxHealthPlayer;
-         break;
-      }
-      case EntityType.tribeWorker: {
-         config[ServerComponentType.health].maxHealth = tribeInfo.maxHealthWorker;
-         break;
-      }
-   }
+   const inventoryUseComponent = config.components[ServerComponentType.inventoryUse];
+   inventoryUseComponent.associatedInventoryNames.push(InventoryName.hotbar);
+   inventoryUseComponent.associatedInventoryNames.push(InventoryName.offhand);
 }
 
 function onJoin(entity: EntityID): void {

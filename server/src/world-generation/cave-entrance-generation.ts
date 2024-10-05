@@ -213,11 +213,10 @@ export function spawnGuardians(): void {
             }
 
             if (isValid) {
-               const config = createGuardianConfig();
-               config[ServerComponentType.transform].position.x = x;
-               config[ServerComponentType.transform].position.y = y;
-               config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
-               config[ServerComponentType.guardian].homeTiles = tiles;
+               const config = createGuardianConfig(tiles);
+               config.components[ServerComponentType.transform].position.x = x;
+               config.components[ServerComponentType.transform].position.y = y;
+               config.components[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
                createEntityFromConfig(config, surfaceLayer, 0);
                break;
             }

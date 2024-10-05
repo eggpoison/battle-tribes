@@ -1,9 +1,7 @@
-// @Incomplete: why do we have this packet?
+// @Incomplete: why do we have this component?
 
 import { ServerComponentType } from "battletribes-shared/components";
 import { ComponentArray } from "./ComponentArray";
-
-export interface FenceComponentParams {}
 
 export class FenceComponent {}
 

@@ -10,8 +10,6 @@ const enum Vars {
    BERRY_GROW_TIME = 30
 }
 
-export interface BerryBushComponentParams {}
-
 export class BerryBushComponent {
    public numBerries = 0;
    public berryGrowTimer = 0;

@@ -12,7 +12,7 @@ import { SERVER } from "./server";
 import { createInitialGameDataPacket } from "./game-data-packets";
 import { EntityID, EntityType } from "battletribes-shared/entities";
 import { TRIBE_INFO_RECORD, TribeType } from "battletribes-shared/tribes";
-import { InventoryComponentArray, addItemToInventory, craftRecipe, getInventory, getInventoryFromCreationInfo, inventoryComponentCanAffordRecipe, recipeCraftingStationIsAvailable } from "../components/InventoryComponent";
+import { InventoryComponentArray, addItemToInventory, craftRecipe, getInventory, inventoryComponentCanAffordRecipe, recipeCraftingStationIsAvailable } from "../components/InventoryComponent";
 import { TribeComponentArray, recruitTribesman } from "../components/TribeComponent";
 import { createItem } from "../items";
 import { Point, randInt, randItem } from "battletribes-shared/utils";
@@ -29,13 +29,12 @@ import { TurretComponentArray } from "../components/TurretComponent";
 import { TribesmanAIComponentArray } from "../components/TribesmanAIComponent";
 import { EntitySummonPacket } from "battletribes-shared/dev-packets";
 import { CRAFTING_RECIPES, ItemRequirements } from "battletribes-shared/items/crafting-recipes";
-import { InventoryName, Item, ItemType } from "battletribes-shared/items/items";
+import { Inventory, InventoryName, Item, ItemType } from "battletribes-shared/items/items";
 import Tribe from "../Tribe";
 import { EntityTickEvent } from "battletribes-shared/entity-events";
 import { TransformComponentArray } from "../components/TransformComponent";
 import { createEntityFromConfig } from "../Entity";
-import { createEntityConfig } from "../entity-creation";
-import { ComponentConfig } from "../components";
+import { EntityConfig } from "../components";
 import { destroyEntity, entityExists, getEntityLayer, getEntityType, getTribe } from "../world";
 
 // @Cleanup: see if a decorator can be used to cut down on the player entity check copy-n-paste
@@ -375,40 +374,46 @@ const devSummonEntity = (playerClient: PlayerClient, summonPacket: EntitySummonP
       return;
    }
 
-   const config = createEntityConfig(summonPacket.entityType);
-   config[ServerComponentType.transform].position.x = summonPacket.position[0];
-   config[ServerComponentType.transform].position.y = summonPacket.position[1];
-   config[ServerComponentType.transform].rotation = summonPacket.rotation;
+   // @Incomplete
 
-   const inventoryComponentSummonData = summonPacket.summonData[ServerComponentType.inventory];
-   if (typeof inventoryComponentSummonData !== "undefined") {
-      config[ServerComponentType.inventory].inventories
+   // const config = createEntityConfig(summonPacket.entityType);
+   // config.components[ServerComponentType.transform].position.x = summonPacket.position[0];
+   // config.components[ServerComponentType.transform].position.y = summonPacket.position[1];
+   // config.components[ServerComponentType.transform].rotation = summonPacket.rotation;
+
+   // const inventoryComponentSummonData = summonPacket.summonData[ServerComponentType.inventory];
+   // if (typeof inventoryComponentSummonData !== "undefined") {
+   //    config.components[ServerComponentType.inventory].inventories
       
-      const inventoryNames = Object.keys(inventoryComponentSummonData.itemSlots).map(Number) as Array<InventoryName>;
-      for (let i = 0; i < inventoryNames.length; i++) {
-         const inventoryName = inventoryNames[i];
+   //    const inventoryNames = Object.keys(inventoryComponentSummonData.itemSlots).map(Number) as Array<InventoryName>;
+   //    for (let i = 0; i < inventoryNames.length; i++) {
+   //       const inventoryName = inventoryNames[i];
 
-         const creationInfo = getInventoryFromCreationInfo(config[ServerComponentType.inventory].inventories, inventoryName);
+   //       let inventory!: Inventory;
+   //       const inventories = config.components[ServerComponentType.inventory].inventories;
+   //       for (let i = 0; i < inventories.length; i++) {
+   //          const currentInventory = inventories[i];
+   //          if (currentInventory.name === inventoryName) {
+   //             inventory =  currentInventory;
+   //          }
+   //       }
          
-         const itemSlots = inventoryComponentSummonData.itemSlots[inventoryName]!;
-         for (const [itemSlotString, itemData] of Object.entries(itemSlots) as Array<[string, Item]>) {
-            const itemSlot = Number(itemSlotString);
+   //       const itemSlots = inventoryComponentSummonData.itemSlots[inventoryName]!;
+   //       for (const [itemSlotString, itemData] of Object.entries(itemSlots) as Array<[string, Item]>) {
+   //          const itemSlot = Number(itemSlotString);
             
-            const item = createItem(itemData.type, itemData.count);
-            creationInfo.items.push({
-               itemSlot: itemSlot,
-               item: item
-            });
-         }
-      }
-   }
+   //          const item = createItem(itemData.type, itemData.count);
+   //          inventory.addItem(item, itemSlot);
+   //       }
+   //    }
+   // }
 
-   const tribeComponentSummonData = summonPacket.summonData[ServerComponentType.tribe];
-   if (typeof tribeComponentSummonData !== "undefined") {
-      config[ServerComponentType.tribe].tribe = getTribe(tribeComponentSummonData.tribeID);
-   }
+   // const tribeComponentSummonData = summonPacket.summonData[ServerComponentType.tribe];
+   // if (typeof tribeComponentSummonData !== "undefined") {
+   //    config.components[ServerComponentType.tribe].tribe = getTribe(tribeComponentSummonData.tribeID);
+   // }
 
-   createEntityFromConfig(config, getEntityLayer(playerClient.instance), 0);
+   // createEntityFromConfig(config, getEntityLayer(playerClient.instance), 0);
 }
 
 const devGiveTitle = (playerClient: PlayerClient, title: TribesmanTitle): void => {
@@ -429,7 +434,7 @@ const devRemoveTitle = (playerClient: PlayerClient, title: TribesmanTitle): void
    removeTitle(player, title);
 }
 
-export function addPlayerClient(playerClient: PlayerClient, player: EntityID, layer: Layer, playerConfig: ComponentConfig<ServerComponentType.transform>): void {
+export function addPlayerClient(playerClient: PlayerClient, player: EntityID, layer: Layer, playerConfig: EntityConfig<ServerComponentType.transform>): void {
    playerClients.push(playerClient);
 
    const socket = playerClient.socket;

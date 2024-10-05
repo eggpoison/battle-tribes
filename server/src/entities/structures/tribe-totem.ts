@@ -1,12 +1,16 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "battletribes-shared/collision";
 import { EntityType } from "battletribes-shared/entities";
 import { StatusEffect } from "battletribes-shared/status-effects";
-import { Point } from "battletribes-shared/utils";
-import { TotemBannerPosition } from "../../components/TotemBannerComponent";
-import { createEmptyStructureConnectionInfo } from "battletribes-shared/structures";
+import { TotemBannerComponent, TotemBannerPosition } from "../../components/TotemBannerComponent";
+import { StructureConnectionInfo } from "battletribes-shared/structures";
 import { createTribeTotemHitboxes } from "battletribes-shared/boxes/entity-hitbox-creation";
 import { ServerComponentType } from "battletribes-shared/components";
-import { ComponentConfig } from "../../components";
+import { EntityConfig } from "../../components";
+import Tribe from "../../Tribe";
+import { HealthComponent } from "../../components/HealthComponent";
+import { StatusEffectComponent } from "../../components/StatusEffectComponent";
+import { StructureComponent } from "../../components/StructureComponent";
+import { TransformComponent } from "../../components/TransformComponent";
+import { TribeComponent } from "../../components/TribeComponent";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.health
@@ -29,29 +33,29 @@ for (let layerIdx = 0; layerIdx < 3; layerIdx++) {
    }
 }
 
-export function createTribeTotemConfig(): ComponentConfig<ComponentTypes> {
+export function createTribeTotemConfig(tribe: Tribe, connectionInfo: StructureConnectionInfo): EntityConfig<ComponentTypes> {
+   const transformComponent = new TransformComponent();
+   transformComponent.addHitboxes(createTribeTotemHitboxes(), null);
+   
+   const healthComponent = new HealthComponent(50);
+   
+   const statusEffectComponent = new StatusEffectComponent(StatusEffect.bleeding | StatusEffect.poisoned);
+   
+   const structureComponent = new StructureComponent(connectionInfo);
+   
+   const tribeComponent = new TribeComponent(tribe);
+   
+   const totemBannerComponent = new TotemBannerComponent();
+   
    return {
-      [ServerComponentType.transform]: {
-         position: new Point(0, 0),
-         rotation: 0,
-         type: EntityType.tribeTotem,
-         collisionBit: COLLISION_BITS.default,
-         collisionMask: DEFAULT_COLLISION_MASK,
-         hitboxes: createTribeTotemHitboxes()
-      },
-      [ServerComponentType.health]: {
-         maxHealth: 50
-      },
-      [ServerComponentType.statusEffect]: {
-         statusEffectImmunityBitset: StatusEffect.bleeding | StatusEffect.poisoned
-      },
-      [ServerComponentType.structure]: {
-         connectionInfo: createEmptyStructureConnectionInfo()
-      },
-      [ServerComponentType.tribe]: {
-         tribe: null,
-         tribeType: 0
-      },
-      [ServerComponentType.totemBanner]: {}
+      entityType: EntityType.barrel,
+      components: {
+         [ServerComponentType.transform]: transformComponent,
+         [ServerComponentType.health]: healthComponent,
+         [ServerComponentType.statusEffect]: statusEffectComponent,
+         [ServerComponentType.structure]: structureComponent,
+         [ServerComponentType.tribe]: tribeComponent,
+         [ServerComponentType.totemBanner]: totemBannerComponent
+      }
    };
 }

@@ -3,33 +3,29 @@ import { EntityType, PlayerCauseOfDeath, EntityID } from "battletribes-shared/en
 import { StatusEffect } from "battletribes-shared/status-effects";
 import { Point, randInt, TileIndex } from "battletribes-shared/utils";
 import { Settings } from "battletribes-shared/settings";
-import { HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
-import { YetiComponentArray } from "../../components/YetiComponent";
+import { HealthComponent, HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
+import { YetiComponent, YetiComponentArray } from "../../components/YetiComponent";
 import Layer from "../../Layer";
 import { createItemsOverEntity } from "../../entity-shared";
-import { applyKnockback } from "../../components/PhysicsComponent";
+import { applyKnockback, PhysicsComponent } from "../../components/PhysicsComponent";
 import { ServerComponentType } from "battletribes-shared/components";
 import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
 import { SnowballComponentArray } from "../../components/SnowballComponent";
 import { ItemType } from "battletribes-shared/items/items";
-import { ComponentConfig } from "../../components";
-import { TransformComponentArray } from "../../components/TransformComponent";
+import { EntityConfig } from "../../components";
+import { TransformComponent, TransformComponentArray } from "../../components/TransformComponent";
 import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
 import CircularBox from "battletribes-shared/boxes/CircularBox";
 import { getEntityType } from "../../world";
 import WanderAI from "../../ai/WanderAI";
-import { AIType } from "../../components/AIHelperComponent";
+import { AIHelperComponent, AIType } from "../../components/AIHelperComponent";
 import { Biome } from "../../../../shared/src/tiles";
-
-export const enum YetiVars {
-   VISION_RANGE = 500
-}
+import { StatusEffectComponent } from "../../components/StatusEffectComponent";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics
    | ServerComponentType.health
    | ServerComponentType.statusEffect
-   | ServerComponentType.wanderAI
    | ServerComponentType.aiHelper
    | ServerComponentType.yeti;
 
@@ -50,42 +46,32 @@ function tileIsValidCallback(entity: EntityID, layer: Layer, tileIndex: TileInde
    return !layer.tileIsWall(tileIndex) && layer.getTileBiome(tileIndex) === Biome.tundra && yetiComponent.territory.includes(tileIndex);
 }
 
-export function createYetiConfig(): ComponentConfig<ComponentTypes> {
+export function createYetiConfig(): EntityConfig<ComponentTypes> {
+   const transformComponent = new TransformComponent();
+   const hitbox = createHitbox(new CircularBox(new Point(0, 0), 0, YETI_SIZE / 2), 3, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, []);
+   transformComponent.addHitbox(hitbox, null);
+   
+   const physicsComponent = new PhysicsComponent();
+   
+   const healthComponent = new HealthComponent(100);
+   
+   const statusEffectComponent = new StatusEffectComponent(0);
+   
+   const aiHelperComponent = new AIHelperComponent(500);
+   aiHelperComponent.ais[AIType.wander] = new WanderAI(100, Math.PI * 1.5, 0.6, tileIsValidCallback);
+   
+   // @Incomplete?
+   const yetiComponent = new YetiComponent([]);
+   
    return {
-      [ServerComponentType.transform]: {
-         position: new Point(0, 0),
-         rotation: 0,
-         type: EntityType.yeti,
-         collisionBit: COLLISION_BITS.default,
-         collisionMask: DEFAULT_COLLISION_MASK,
-         hitboxes: [createHitbox(new CircularBox(new Point(0, 0), 0, YETI_SIZE / 2), 3, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, [])]
-      },
-      [ServerComponentType.physics]: {
-         velocityX: 0,
-         velocityY: 0,
-         accelerationX: 0,
-         accelerationY: 0,
-         traction: 1,
-         isAffectedByAirFriction: true,
-         isAffectedByGroundFriction: true,
-         isImmovable: false
-      },
-      [ServerComponentType.health]: {
-         maxHealth: 100
-      },
-      [ServerComponentType.statusEffect]: {
-         statusEffectImmunityBitset: StatusEffect.freezing
-      },
-      [ServerComponentType.wanderAI]: {},
-      [ServerComponentType.aiHelper]: {
-         ignoreDecorativeEntities: true,
-         visionRange: YetiVars.VISION_RANGE,
-         ais: {
-            [AIType.wander]: new WanderAI(100, Math.PI * 1.5, 0.6, tileIsValidCallback)
-         }
-      },
-      [ServerComponentType.yeti]: {
-         territory: []
+      entityType: EntityType.yeti,
+      components: {
+         [ServerComponentType.transform]: transformComponent,
+         [ServerComponentType.physics]: physicsComponent,
+         [ServerComponentType.health]: healthComponent,
+         [ServerComponentType.statusEffect]: statusEffectComponent,
+         [ServerComponentType.aiHelper]: aiHelperComponent,
+         [ServerComponentType.yeti]: yetiComponent
       }
    };
 }
@@ -99,7 +85,7 @@ export function onYetiCollision(yeti: EntityID, collidingEntity: EntityID, colli
    // Don't damage snowballs thrown by the yeti
    if (collidingEntityType === EntityType.snowball) {
       const snowballComponent = SnowballComponentArray.getComponent(collidingEntity);
-      if (snowballComponent.yetiID === yeti) {
+      if (snowballComponent.yeti === yeti) {
          return;
       }
    }

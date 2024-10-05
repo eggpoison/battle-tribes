@@ -1,11 +1,18 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "battletribes-shared/collision";
 import { BuildingMaterial, ServerComponentType } from "battletribes-shared/components";
 import { EntityType } from "battletribes-shared/entities";
-import { Point } from "battletribes-shared/utils";
-import { createEmptyStructureConnectionInfo } from "battletribes-shared/structures";
+import { StructureConnectionInfo } from "battletribes-shared/structures";
 import { createDoorHitboxes } from "battletribes-shared/boxes/entity-hitbox-creation";
-import { ComponentConfig } from "../../components";
+import { EntityConfig } from "../../components";
 import { StatusEffect } from "battletribes-shared/status-effects";
+import { TransformComponent } from "../../components/TransformComponent";
+import { PhysicsComponent } from "../../components/PhysicsComponent";
+import { HealthComponent } from "../../components/HealthComponent";
+import { StatusEffectComponent } from "../../components/StatusEffectComponent";
+import { StructureComponent } from "../../components/StructureComponent";
+import Tribe from "../../Tribe";
+import { TribeComponent } from "../../components/TribeComponent";
+import { BuildingMaterialComponent } from "../../components/BuildingMaterialComponent";
+import { DoorComponent } from "../../components/DoorComponent";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics
@@ -16,47 +23,41 @@ type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.buildingMaterial
    | ServerComponentType.door;
 
-export function createDoorConfig(): ComponentConfig<ComponentTypes> {
+const HEALTHS = [15, 45];
+
+export function createDoorConfig(tribe: Tribe, material: BuildingMaterial, connectionInfo: StructureConnectionInfo): EntityConfig<ComponentTypes> {
+   const transformComponent = new TransformComponent();
+   transformComponent.addHitboxes(createDoorHitboxes(), null);
+   
+   // @Hack: Shouldn't need!
+   const physicsComponent = new PhysicsComponent();
+   physicsComponent.isAffectedByAirFriction = false;
+   physicsComponent.isAffectedByGroundFriction = false;
+   physicsComponent.isImmovable = true;
+
+   const healthComponent = new HealthComponent(HEALTHS[material]);
+
+   const statusEffectComponent = new StatusEffectComponent(StatusEffect.bleeding | StatusEffect.poisoned);
+   
+   const structureComponent = new StructureComponent(connectionInfo);
+   
+   const tribeComponent = new TribeComponent(tribe);
+
+   const buildingMaterialComponent = new BuildingMaterialComponent(material, HEALTHS);
+
+   const doorComponent = new DoorComponent();
+   
    return {
-      [ServerComponentType.transform]: {
-         position: new Point(0, 0),
-         rotation: 0,
-         type: EntityType.door,
-         collisionBit: COLLISION_BITS.default,
-         collisionMask: DEFAULT_COLLISION_MASK,
-         hitboxes: createDoorHitboxes()
-      },
-      // @Hack: Shouldn't need!
-      [ServerComponentType.physics]: {
-         velocityX: 0,
-         velocityY: 0,
-         accelerationX: 0,
-         accelerationY: 0,
-         traction: 1,
-         isAffectedByAirFriction: false,
-         isAffectedByGroundFriction: false,
-         isImmovable: true
-      },
-      [ServerComponentType.health]: {
-         maxHealth: 0
-      },
-      [ServerComponentType.statusEffect]: {
-         statusEffectImmunityBitset: StatusEffect.bleeding | StatusEffect.poisoned
-      },
-      [ServerComponentType.structure]: {
-         connectionInfo: createEmptyStructureConnectionInfo()
-      },
-      [ServerComponentType.tribe]: {
-         tribe: null,
-         tribeType: 0
-      },
-      [ServerComponentType.buildingMaterial]: {
-         material: BuildingMaterial.wood
-      },
-      [ServerComponentType.door]: {
-         originX: 0,
-         originY: 0,
-         closedRotation: 0
+      entityType: EntityType.door,
+      components: {
+         [ServerComponentType.transform]: transformComponent,
+         [ServerComponentType.physics]: physicsComponent,
+         [ServerComponentType.health]: healthComponent,
+         [ServerComponentType.statusEffect]: statusEffectComponent,
+         [ServerComponentType.structure]: structureComponent,
+         [ServerComponentType.tribe]: tribeComponent,
+         [ServerComponentType.buildingMaterial]: buildingMaterialComponent,
+         [ServerComponentType.door]: doorComponent
       }
    };
 }

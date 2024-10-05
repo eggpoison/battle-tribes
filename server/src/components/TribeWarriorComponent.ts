@@ -3,15 +3,11 @@ import { ComponentArray } from "./ComponentArray";
 import { EntityID } from "battletribes-shared/entities";
 import { Packet } from "battletribes-shared/packets";
 
-export interface TribeWarriorComponentParams {
-   readonly scars: ReadonlyArray<ScarInfo>;
-}
-
 export class TribeWarriorComponent {
    public readonly scars: ReadonlyArray<ScarInfo>;
 
-   constructor(params: TribeWarriorComponentParams) {
-      this.scars = params.scars;
+   constructor(scars: ReadonlyArray<ScarInfo>) {
+      this.scars = scars;
    }
 }
 

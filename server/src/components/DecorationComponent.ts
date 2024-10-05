@@ -3,15 +3,11 @@ import { ComponentArray } from "./ComponentArray";
 import { EntityID } from "battletribes-shared/entities";
 import { Packet } from "battletribes-shared/packets";
 
-export interface DecorationComponentParams {
-   decorationType: DecorationType;
-}
-
 export class DecorationComponent {
-   public readonly decorationType: DecorationType;
+   public decorationType: DecorationType;
 
-   constructor(params: DecorationComponentParams) {
-      this.decorationType = params.decorationType;
+   constructor(decorationType: DecorationType) {
+      this.decorationType = decorationType;
    }
 }
 

@@ -34,11 +34,7 @@ const enum AttackType {
    summonSpikyBalls
 }
 
-export interface GuardianComponentParams {
-   homeTiles: ReadonlyArray<TileIndex>;
-}
-
-export class GuardianComponent implements GuardianComponentParams {
+export class GuardianComponent {
    public readonly homeTiles: ReadonlyArray<TileIndex>;
    public limbHitboxes = new Array<Hitbox>();
 
@@ -58,10 +54,6 @@ export class GuardianComponent implements GuardianComponentParams {
    public ticksUntilNextAttack = randInt(Vars.MIN_ATTACK_COOLDOWN_TICKS, Vars.MAX_ATTACK_COOLDOWN_TICKS);
    public attackType = AttackType.none;
 
-   constructor(params: GuardianComponentParams) {
-      this.homeTiles = params.homeTiles;
-   }
-
    public resetAttackType(guardian: EntityID): void {
       this.attackType = AttackType.none;
       this.isAttacking = false;
@@ -77,6 +69,10 @@ export class GuardianComponent implements GuardianComponentParams {
       this.limbRubyGemActivation = rubyActivation;
       this.limbEmeraldGemActivation = emeraldActivation;
       this.limbAmethystGemActivation = amethystActivation;
+   }
+
+   constructor(homeTiles: ReadonlyArray<TileIndex>) {
+      this.homeTiles = homeTiles;
    }
 }
 

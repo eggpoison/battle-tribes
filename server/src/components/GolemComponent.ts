@@ -20,11 +20,6 @@ const enum Vars {
    ROCK_SHIFT_INTERVAL = (0.225 * Settings.TPS) | 0
 }
 
-export interface GolemComponentParams {
-   readonly hitboxes: ReadonlyArray<Hitbox>;
-   readonly pebblumSummonCooldownTicks: number;
-}
-
 export interface RockInfo {
    /** The hitbox corresponding to the rock info */
    readonly hitbox: Hitbox;
@@ -80,9 +75,9 @@ export class GolemComponent {
    public summonedPebblumIDs = new Array<number>();
    public pebblumSummonCooldownTicks: number;
    
-   constructor(params: GolemComponentParams) {
-      this.rockInfoArray = generateRockInfoArray(params.hitboxes);
-      this.pebblumSummonCooldownTicks = params.pebblumSummonCooldownTicks;
+   constructor(hitboxes: ReadonlyArray<Hitbox>, pebblumSummonCooldownTicks: number) {
+      this.rockInfoArray = generateRockInfoArray(hitboxes);
+      this.pebblumSummonCooldownTicks = pebblumSummonCooldownTicks;
    }
 }
 
@@ -158,10 +153,10 @@ const summonPebblums = (golem: EntityID, golemComponent: GolemComponent, target:
       const y = transformComponent.position.y + offsetMagnitude * Math.cos(offsetDirection);
       
       const config = createPebblumConfig();
-      config[ServerComponentType.transform].position.x = x;
-      config[ServerComponentType.transform].position.y = y;
-      config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
-      config[ServerComponentType.pebblum].targetEntityID = target;
+      config.components[ServerComponentType.transform].position.x = x;
+      config.components[ServerComponentType.transform].position.y = y;
+      config.components[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
+      config.components[ServerComponentType.pebblum].targetEntityID = target;
       const pebblum = createEntityFromConfig(config, layer, 0);
       
       golemComponent.summonedPebblumIDs.push(pebblum);

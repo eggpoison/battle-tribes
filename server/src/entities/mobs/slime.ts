@@ -1,9 +1,9 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "battletribes-shared/collision";
+import { DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "battletribes-shared/collision";
 import { SlimeSize, EntityType, PlayerCauseOfDeath, EntityID } from "battletribes-shared/entities";
 import { Settings } from "battletribes-shared/settings";
 import { StatusEffect } from "battletribes-shared/status-effects";
 import { Point, TileIndex, lerp, randInt } from "battletribes-shared/utils";
-import { HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity, getEntityHealth, healEntity } from "../../components/HealthComponent";
+import { HealthComponent, HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity, getEntityHealth, healEntity } from "../../components/HealthComponent";
 import { SlimeComponent, SlimeComponentArray } from "../../components/SlimeComponent";
 import { getEntitiesInRange } from "../../ai-shared";
 import { createItemsOverEntity } from "../../entity-shared";
@@ -13,43 +13,26 @@ import { ServerComponentType } from "battletribes-shared/components";
 import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
 import { CraftingStation } from "battletribes-shared/items/crafting-recipes";
 import { ItemType } from "battletribes-shared/items/items";
-import { ComponentConfig } from "../../components";
-import { TransformComponentArray } from "../../components/TransformComponent";
+import { EntityConfig } from "../../components";
+import { TransformComponent, TransformComponentArray } from "../../components/TransformComponent";
 import { createEntityFromConfig } from "../../Entity";
 import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
 import CircularBox from "battletribes-shared/boxes/CircularBox";
 import { destroyEntity, entityIsFlaggedForDestruction, getEntityLayer, getEntityType, getGameTicks } from "../../world";
-import { AIType } from "../../components/AIHelperComponent";
+import { AIHelperComponent, AIType } from "../../components/AIHelperComponent";
 import WanderAI from "../../ai/WanderAI";
 import { Biome } from "../../../../shared/src/tiles";
+import { PhysicsComponent } from "../../components/PhysicsComponent";
+import { StatusEffectComponent } from "../../components/StatusEffectComponent";
+import { CraftingStationComponent } from "../../components/CraftingStationComponent";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics
    | ServerComponentType.health
    | ServerComponentType.statusEffect
-   | ServerComponentType.wanderAI
    | ServerComponentType.aiHelper
    | ServerComponentType.slime
    | ServerComponentType.craftingStation;
-
-export const SLIME_RADII: ReadonlyArray<number> = [32, 44, 60];
-const CONTACT_DAMAGE: ReadonlyArray<number> = [1, 2, 3];
-export const SLIME_MERGE_WEIGHTS: ReadonlyArray<number> = [2, 5, 11];
-const SLIME_DROP_AMOUNTS: ReadonlyArray<[minDropAmount: number, maxDropAmount: number]> = [
-   [1, 2], // small slime
-   [3, 5], // medium slime
-   [6, 9] // large slime
-];
-export const SLIME_MAX_MERGE_WANT: ReadonlyArray<number> = [15 * Settings.TPS, 40 * Settings.TPS, 75 * Settings.TPS];
-
-export const SLIME_VISION_RANGES = [200, 250, 300];
-
-export const SLIME_MERGE_TIME = 7.5;
-
-const MAX_ANGER_PROPAGATION_CHAIN_LENGTH = 5;
-
-export const SPIT_COOLDOWN_TICKS = 4 * Settings.TPS;
-export const SPIT_CHARGE_TIME_TICKS = SPIT_COOLDOWN_TICKS + Math.floor(0.8 * Settings.TPS);
 
 export interface SlimeEntityAnger {
    angerAmount: number;
@@ -61,52 +44,59 @@ interface AngerPropagationInfo {
    readonly propagatedEntityIDs: Set<number>;
 }
 
+export const SLIME_RADII: ReadonlyArray<number> = [32, 44, 60];
+const CONTACT_DAMAGE: ReadonlyArray<number> = [1, 2, 3];
+export const SLIME_MERGE_WEIGHTS: ReadonlyArray<number> = [2, 5, 11];
+const SLIME_DROP_AMOUNTS: ReadonlyArray<[minDropAmount: number, maxDropAmount: number]> = [
+   [1, 2], // small slime
+   [3, 5], // medium slime
+   [6, 9] // large slime
+];
+export const SLIME_MAX_MERGE_WANT: ReadonlyArray<number> = [15 * Settings.TPS, 40 * Settings.TPS, 75 * Settings.TPS];
+
+export const SLIME_MERGE_TIME = 7.5;
+
+const MAX_ANGER_PROPAGATION_CHAIN_LENGTH = 5;
+
+export const SPIT_COOLDOWN_TICKS = 4 * Settings.TPS;
+export const SPIT_CHARGE_TIME_TICKS = SPIT_COOLDOWN_TICKS + Math.floor(0.8 * Settings.TPS);
+
+const MAX_HEALTH: ReadonlyArray<number> = [10, 20, 35];
+export const SLIME_SPEED_MULTIPLIERS: ReadonlyArray<number> = [2.5, 1.75, 1];
+const VISION_RANGES = [200, 250, 300];
+
 function tileIsValidCallback(_entity: EntityID, layer: Layer, tileIndex: TileIndex): boolean {
    return !layer.tileIsWall(tileIndex) && layer.getTileBiome(tileIndex) === Biome.swamp;
 }
 
-export function createSlimeConfig(): ComponentConfig<ComponentTypes> {
+export function createSlimeConfig(size: SlimeSize): EntityConfig<ComponentTypes> {
+   const transformComponent = new TransformComponent();
+   const hitbox = createHitbox(new CircularBox(new Point(0, 0), 0, SLIME_RADII[size]), 1 + size * 0.5, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, []);
+   transformComponent.addHitbox(hitbox, null);
+   
+   const physicsComponent = new PhysicsComponent();
+   
+   const healthComponent = new HealthComponent(MAX_HEALTH[size]);
+
+   const statusEffectComponent = new StatusEffectComponent(StatusEffect.poisoned);
+   
+   const aiHelperComponent = new AIHelperComponent(VISION_RANGES[size])
+   aiHelperComponent.ais[AIType.wander] = new WanderAI(150 * SLIME_SPEED_MULTIPLIERS[size], 2 * Math.PI, 0.5, tileIsValidCallback)
+   
+   const slimeComponent = new SlimeComponent(size);
+
+   const craftingStationComponent = new CraftingStationComponent(CraftingStation.slime);
+   
    return {
-      [ServerComponentType.transform]: {
-         position: new Point(0, 0),
-         rotation: 0,
-         type: EntityType.slime,
-         collisionBit: COLLISION_BITS.default,
-         collisionMask: DEFAULT_COLLISION_MASK,
-         hitboxes: [createHitbox(new CircularBox(new Point(0, 0), 0, 0), 0, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, [])]
-      },
-      [ServerComponentType.physics]: {
-         velocityX: 0,
-         velocityY: 0,
-         accelerationX: 0,
-         accelerationY: 0,
-         traction: 1,
-         isAffectedByAirFriction: true,
-         isAffectedByGroundFriction: true,
-         isImmovable: false
-      },
-      [ServerComponentType.health]: {
-         maxHealth: 0
-      },
-      [ServerComponentType.statusEffect]: {
-         statusEffectImmunityBitset: StatusEffect.poisoned
-      },
-      [ServerComponentType.wanderAI]: {},
-      [ServerComponentType.aiHelper]: {
-         ignoreDecorativeEntities: true,
-         visionRange: 0,
-         ais: {
-            // @Hack: acceleration gets overridden
-            [AIType.wander]: new WanderAI(0, 2 * Math.PI, 0.5, tileIsValidCallback)
-         }
-      },
-      [ServerComponentType.slime]: {
-         size: 0,
-         mergeWeight: 0,
-         orbSizes: []
-      },
-      [ServerComponentType.craftingStation]: {
-         craftingStation: CraftingStation.slime
+      entityType: EntityType.slime,
+      components: {
+         [ServerComponentType.transform]: transformComponent,
+         [ServerComponentType.physics]: physicsComponent,
+         [ServerComponentType.health]: healthComponent,
+         [ServerComponentType.statusEffect]: statusEffectComponent,
+         [ServerComponentType.aiHelper]: aiHelperComponent,
+         [ServerComponentType.slime]: slimeComponent,
+         [ServerComponentType.craftingStation]: craftingStationComponent
       }
    };
 }
@@ -139,11 +129,10 @@ const merge = (slime1: EntityID, slime2: EntityID): void => {
       const slime1TransformComponent = TransformComponentArray.getComponent(slime1);
       const slime2TransformComponent = TransformComponentArray.getComponent(slime2);
       
-      const config = createSlimeConfig();
-      config[ServerComponentType.transform].position.x = (slime1TransformComponent.position.x + slime2TransformComponent.position.x) / 2;
-      config[ServerComponentType.transform].position.y = (slime1TransformComponent.position.y + slime2TransformComponent.position.y) / 2;
-      config[ServerComponentType.slime].size = slimeComponent1.size + 1;
-      config[ServerComponentType.slime].orbSizes = orbSizes;
+      const config = createSlimeConfig(slimeComponent1.size + 1);
+      config.components[ServerComponentType.transform].position.x = (slime1TransformComponent.position.x + slime2TransformComponent.position.x) / 2;
+      config.components[ServerComponentType.transform].position.y = (slime1TransformComponent.position.y + slime2TransformComponent.position.y) / 2;
+      config.components[ServerComponentType.slime].orbSizes = orbSizes;
       createEntityFromConfig(config, getEntityLayer(slime1), 0);
       
       destroyEntity(slime1);
@@ -236,7 +225,7 @@ const propagateAnger = (slime: EntityID, angeredEntity: EntityID, amount: number
    const transformComponent = TransformComponentArray.getComponent(slime);
    const slimeComponent = SlimeComponentArray.getComponent(slime);
 
-   const visionRange = SLIME_VISION_RANGES[slimeComponent.size];
+   const visionRange = VISION_RANGES[slimeComponent.size];
    // @Speed
    const layer = getEntityLayer(slime);
    const visibleEntities = getEntitiesInRange(layer, transformComponent.position.x, transformComponent.position.y, visionRange);

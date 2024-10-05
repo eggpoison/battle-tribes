@@ -1,43 +1,51 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "battletribes-shared/collision";
+import { COLLISION_BITS, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "battletribes-shared/collision";
 import { PlanterBoxPlant, ServerComponentType } from "battletribes-shared/components";
 import { EntityID, EntityType } from "battletribes-shared/entities";
 import { Point, randInt } from "battletribes-shared/utils";
-import { PLANT_GROWTH_TICKS, PlantComponentArray } from "../components/PlantComponent";
+import { PLANT_GROWTH_TICKS, PlantComponent, PlantComponentArray } from "../components/PlantComponent";
 import { dropBerryOverEntity } from "./resources/berry-bush";
 import { createItemsOverEntity } from "../entity-shared";
 import { createIceShardExplosion } from "./resources/ice-spikes";
 import { ItemType } from "battletribes-shared/items/items";
-import { ComponentConfig } from "../components";
+import { EntityConfig } from "../components";
 import { StatusEffect } from "battletribes-shared/status-effects";
-import { TransformComponentArray } from "../components/TransformComponent";
+import { TransformComponent, TransformComponentArray } from "../components/TransformComponent";
 import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
 import CircularBox from "battletribes-shared/boxes/CircularBox";
 import { getEntityLayer } from "../world";
+import { HealthComponent } from "../components/HealthComponent";
+import { StatusEffectComponent } from "../components/StatusEffectComponent";
    
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.health
    | ServerComponentType.statusEffect
    | ServerComponentType.plant;
 
-export function createPlantConfig(): ComponentConfig<ComponentTypes> {
+const PLANT_HEALTHS: Record<PlanterBoxPlant, number> = {
+   [PlanterBoxPlant.tree]: 10,
+   [PlanterBoxPlant.berryBush]: 10,
+   [PlanterBoxPlant.iceSpikes]: 5,
+};
+
+export function createPlantConfig(plantType: PlanterBoxPlant, planterBox: EntityID): EntityConfig<ComponentTypes> {
+   const transformComponent = new TransformComponent();
+   const hitbox = createHitbox(new CircularBox(new Point(0, 0), 0, 28), 0.3, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, []);
+   transformComponent.addHitbox(hitbox, null);
+   transformComponent.collisionBit = COLLISION_BITS.plants;
+
+   const healthComponent = new HealthComponent(PLANT_HEALTHS[plantType]);
+
+   const statusEffectComponent = new StatusEffectComponent(StatusEffect.bleeding);
+
+   const plantComponent = new PlantComponent(plantType, planterBox);
+   
    return {
-      [ServerComponentType.transform]: {
-         position: new Point(0, 0),
-         rotation: 0,
-         type: EntityType.plant,
-         collisionBit: COLLISION_BITS.plants,
-         collisionMask: DEFAULT_COLLISION_MASK,
-         hitboxes: [createHitbox(new CircularBox(new Point(0, 0), 0, 28), 0.3, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, [])]
-      },
-      [ServerComponentType.health]: {
-         maxHealth: 0
-      },
-      [ServerComponentType.statusEffect]: {
-         statusEffectImmunityBitset: StatusEffect.bleeding
-      },
-      [ServerComponentType.plant]: {
-         planterBox: 0,
-         plantType: PlanterBoxPlant.tree
+      entityType: EntityType.plant,
+      components: {
+         [ServerComponentType.transform]: transformComponent,
+         [ServerComponentType.health]: healthComponent,
+         [ServerComponentType.statusEffect]: statusEffectComponent,
+         [ServerComponentType.plant]: plantComponent
       }
    };
 }

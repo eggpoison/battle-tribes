@@ -5,8 +5,6 @@ import { EntityID } from "battletribes-shared/entities";
 import { Settings } from "battletribes-shared/settings";
 import { destroyEntity, getEntityAgeTicks } from "../world";
 
-export interface IceShardComponentParams {}
-
 export class IceShardComponent {
    public readonly lifetime = randFloat(0.1, 0.2);
 }

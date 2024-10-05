@@ -1,22 +1,19 @@
 import { ServerComponentType } from "battletribes-shared/components";
 import { EntityID, EntityType, SlimeSize } from "battletribes-shared/entities";
-import { SLIME_MAX_MERGE_WANT, SLIME_MERGE_TIME, SLIME_MERGE_WEIGHTS, SLIME_RADII, SLIME_VISION_RANGES, SPIT_CHARGE_TIME_TICKS, SPIT_COOLDOWN_TICKS, SlimeEntityAnger } from "../entities/mobs/slime";
-import Layer, { getTileX, getTileY } from "../Layer";
+import { SLIME_MAX_MERGE_WANT, SLIME_MERGE_TIME, SLIME_MERGE_WEIGHTS, SLIME_RADII, SLIME_SPEED_MULTIPLIERS, SPIT_CHARGE_TIME_TICKS, SPIT_COOLDOWN_TICKS, SlimeEntityAnger } from "../entities/mobs/slime";
+import Layer from "../Layer";
 import { ComponentArray } from "./ComponentArray";
-import { ComponentConfig } from "../components";
 import { Packet } from "battletribes-shared/packets";
 import { Settings } from "battletribes-shared/settings";
 import { Biome, TileType } from "battletribes-shared/tiles";
-import { TileIndex, UtilVars } from "battletribes-shared/utils";
-import { turnAngle, stopEntity, entityHasReachedPosition } from "../ai-shared";
+import { UtilVars } from "battletribes-shared/utils";
+import { turnAngle, stopEntity } from "../ai-shared";
 import { createSlimeSpitConfig } from "../entities/projectiles/slime-spit";
 import { createEntityFromConfig } from "../Entity";
-import { AIHelperComponentArray, AIType } from "./AIHelperComponent";
+import { AIHelperComponentArray } from "./AIHelperComponent";
 import { HealthComponentArray, healEntity } from "./HealthComponent";
 import { PhysicsComponentArray } from "./PhysicsComponent";
 import { TransformComponentArray, getEntityTile } from "./TransformComponent";
-import { WanderAIComponentArray } from "./WanderAIComponent";
-import CircularBox from "battletribes-shared/boxes/CircularBox";
 import { entityExists, getEntityLayer, getEntityType, getGameTicks } from "../world";
 
 const enum Vars {
@@ -32,15 +29,12 @@ const enum Vars {
    HEALING_PROC_INTERVAL = 0.1
 }
 
-const SPEED_MULTIPLIERS: ReadonlyArray<number> = [2.5, 1.75, 1];
 
 export interface SlimeComponentParams {
    size: SlimeSize;
    mergeWeight: number;
    orbSizes: Array<SlimeSize>;
 }
-
-const MAX_HEALTH: ReadonlyArray<number> = [10, 20, 35];
 
 export class SlimeComponent {
    public readonly size: SlimeSize;
@@ -56,18 +50,16 @@ export class SlimeComponent {
    public lastMergeTicks: number;
    public readonly angeredEntities = new Array<SlimeEntityAnger>();
 
-   public orbSizes: Array<SlimeSize>;
+   public orbSizes = new Array<SlimeSize>();
 
-   constructor(params: SlimeComponentParams) {
-      this.size = params.size;
-      this.mergeWeight = params.mergeWeight;
-      this.orbSizes = params.orbSizes;
+   constructor(size: SlimeSize) {
+      this.size = size;
+      this.mergeWeight = SLIME_MERGE_WEIGHTS[size];
       this.lastMergeTicks = getGameTicks();
    }
 }
 
 export const SlimeComponentArray = new ComponentArray<SlimeComponent>(ServerComponentType.slime, true, {
-   onInitialise: onInitialise,
    onTick: {
       tickInterval: 1,
       func: onTick
@@ -75,22 +67,6 @@ export const SlimeComponentArray = new ComponentArray<SlimeComponent>(ServerComp
    getDataLength: getDataLength,
    addDataToPacket: addDataToPacket
 });
-
-function onInitialise(config: ComponentConfig<ServerComponentType.transform | ServerComponentType.health | ServerComponentType.aiHelper | ServerComponentType.slime>): void {
-   const size = config[ServerComponentType.slime].size;
-
-   const hitbox = config[ServerComponentType.transform].hitboxes[0];
-   const box = hitbox.box as CircularBox;
-   
-   hitbox.mass = 1 + size * 0.5;
-   box.radius = SLIME_RADII[size];
-
-   config[ServerComponentType.health].maxHealth = MAX_HEALTH[size];
-   config[ServerComponentType.aiHelper].visionRange = SLIME_VISION_RANGES[size];
-   config[ServerComponentType.slime].mergeWeight = SLIME_MERGE_WEIGHTS[size];
-   // @Hack
-   config[ServerComponentType.aiHelper].ais[AIType.wander]!.acceleration = 150 * SPEED_MULTIPLIERS[size];
-}
 
 const updateAngerTarget = (slime: EntityID): EntityID | null => {
    const slimeComponent = SlimeComponentArray.getComponent(slime);
@@ -134,13 +110,12 @@ const createSpit = (slime: EntityID, slimeComponent: SlimeComponent): void => {
    const x = transformComponent.position.x + SLIME_RADII[slimeComponent.size] * Math.sin(transformComponent.rotation);
    const y = transformComponent.position.y + SLIME_RADII[slimeComponent.size] * Math.cos(transformComponent.rotation);
 
-   const config = createSlimeSpitConfig();
-   config[ServerComponentType.transform].position.x = x;
-   config[ServerComponentType.transform].position.y = y;
-   config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
-   config[ServerComponentType.physics].velocityX = 500 * Math.sin(transformComponent.rotation);
-   config[ServerComponentType.physics].velocityY = 500 * Math.cos(transformComponent.rotation);
-   config[ServerComponentType.slimeSpit].size = slimeComponent.size === SlimeSize.large ? 1 : 0;
+   const config = createSlimeSpitConfig(slimeComponent.size === SlimeSize.large ? 1 : 0);
+   config.components[ServerComponentType.transform].position.x = x;
+   config.components[ServerComponentType.transform].position.y = y;
+   config.components[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
+   config.components[ServerComponentType.physics].selfVelocity.x = 500 * Math.sin(transformComponent.rotation);
+   config.components[ServerComponentType.physics].selfVelocity.y = 500 * Math.cos(transformComponent.rotation);
    createEntityFromConfig(config, getEntityLayer(slime), 0);
 }
 
@@ -274,7 +249,8 @@ function onTick(slimeComponent: SlimeComponent, slime: EntityID): void {
          }
       }
 
-      const speedMultiplier = SPEED_MULTIPLIERS[slimeComponent.size];
+      // @Hack
+      const speedMultiplier = SLIME_SPEED_MULTIPLIERS[slimeComponent.size];
       physicsComponent.acceleration.x = Vars.ACCELERATION * speedMultiplier * Math.sin(transformComponent.rotation);
       physicsComponent.acceleration.y = Vars.ACCELERATION * speedMultiplier * Math.cos(transformComponent.rotation);
       return;
@@ -295,7 +271,7 @@ function onTick(slimeComponent: SlimeComponent, slime: EntityID): void {
       const targetDirection = transformComponent.position.calculateAngleBetween(chaseTargetTransformComponent.position);
       slimeComponent.eyeRotation = turnAngle(slimeComponent.eyeRotation, targetDirection, 5 * Math.PI);
 
-      const speedMultiplier = SPEED_MULTIPLIERS[slimeComponent.size];
+      const speedMultiplier = SLIME_SPEED_MULTIPLIERS[slimeComponent.size];
       physicsComponent.acceleration.x = Vars.ACCELERATION * speedMultiplier * Math.sin(transformComponent.rotation);
       physicsComponent.acceleration.y = Vars.ACCELERATION * speedMultiplier * Math.cos(transformComponent.rotation);
 

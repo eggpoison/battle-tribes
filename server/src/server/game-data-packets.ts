@@ -16,7 +16,7 @@ import PlayerClient from "./PlayerClient";
 import { PlayerComponentArray } from "../components/PlayerComponent";
 import { Inventory, InventoryName, ItemType } from "battletribes-shared/items/items";
 import { TransformComponentArray } from "../components/TransformComponent";
-import { ComponentConfig } from "../components";
+import { EntityConfig } from "../components";
 import { alignLengthBytes, Packet, PacketType } from "battletribes-shared/packets";
 import { entityExists, getEntityLayer, getEntityType, getGameTicks, getGameTime, getTribes, layers, surfaceLayer } from "../world";
 
@@ -453,7 +453,7 @@ export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend:
    return packet.buffer;
 }
 
-export function createInitialGameDataPacket(player: EntityID, spawnLayer: Layer, playerConfig: ComponentConfig<ServerComponentType.transform>): ArrayBuffer {
+export function createInitialGameDataPacket(player: EntityID, spawnLayer: Layer, playerConfig: EntityConfig<ServerComponentType.transform>): ArrayBuffer {
    let lengthBytes = Float32Array.BYTES_PER_ELEMENT * 5;
    // Layers
    lengthBytes += Float32Array.BYTES_PER_ELEMENT;
@@ -469,7 +469,7 @@ export function createInitialGameDataPacket(player: EntityID, spawnLayer: Layer,
    packet.addNumber(layers.indexOf(spawnLayer));
    
    // Spawn position
-   const spawnPosition = playerConfig[ServerComponentType.transform].position;
+   const spawnPosition = playerConfig.components[ServerComponentType.transform].position;
    packet.addNumber(spawnPosition.x);
    packet.addNumber(spawnPosition.y);
    

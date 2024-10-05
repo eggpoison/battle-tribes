@@ -1,22 +1,25 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "battletribes-shared/collision";
+import { DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "battletribes-shared/collision";
 import { EntityID, EntityType } from "battletribes-shared/entities";
-import { Point, randInt, TileIndex } from "battletribes-shared/utils";
-import { HealthComponentArray } from "../../components/HealthComponent";
-import { FishComponentArray } from "../../components/FishComponent";
+import { Point } from "battletribes-shared/utils";
+import { HealthComponent, HealthComponentArray } from "../../components/HealthComponent";
+import { FishComponent, FishComponentArray } from "../../components/FishComponent";
 import { createItemsOverEntity } from "../../entity-shared";
 import { registerAttackingEntity } from "../../ai/escape-ai";
 import { TribeMemberComponentArray } from "../../components/TribeMemberComponent";
 import { ItemType } from "battletribes-shared/items/items";
 import { ServerComponentType } from "battletribes-shared/components";
-import { ComponentConfig } from "../../components";
+import { EntityConfig } from "../../components";
 import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
 import RectangularBox from "battletribes-shared/boxes/RectangularBox";
 import WanderAI from "../../ai/WanderAI";
-import { AIType } from "../../components/AIHelperComponent";
+import { AIHelperComponent, AIType } from "../../components/AIHelperComponent";
 import { Biome, TileType } from "../../../../shared/src/tiles";
 import Layer, { getTileIndexFromPos } from "../../Layer";
 import { Settings } from "../../../../shared/src/settings";
-import { TransformComponentArray } from "../../components/TransformComponent";
+import { TransformComponent, TransformComponentArray } from "../../components/TransformComponent";
+import { PhysicsComponent } from "../../components/PhysicsComponent";
+import { StatusEffectComponent } from "../../components/StatusEffectComponent";
+import { EscapeAIComponent } from "../../components/EscapeAIComponent";
 
 const enum Vars {
    TILE_VALIDATION_PADDING = 20
@@ -30,9 +33,8 @@ type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics
    | ServerComponentType.health
    | ServerComponentType.statusEffect
-   | ServerComponentType.wanderAI
-   | ServerComponentType.escapeAI
    | ServerComponentType.aiHelper
+   | ServerComponentType.escapeAI
    | ServerComponentType.fish;
 
 const FISH_WIDTH = 7 * 4;
@@ -73,43 +75,34 @@ function tileIsValidCallback(entity: EntityID, layer: Layer, x: number, y: numbe
    return true;
 }
 
-export function createFishConfig(): ComponentConfig<ComponentTypes> {
+export function createFishConfig(): EntityConfig<ComponentTypes> {
+   const transformComponent = new TransformComponent();
+   const hitbox = createHitbox(new RectangularBox(new Point(0, 0), FISH_WIDTH, FISH_HEIGHT, 0), 0.5, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, []);
+   transformComponent.addHitbox(hitbox, null);
+
+   const physicsComponent = new PhysicsComponent();
+
+   const healthComponent = new HealthComponent(5);
+
+   const statusEffectComponent = new StatusEffectComponent(0);
+
+   const aiHelperComponent = new AIHelperComponent(FishVars.VISION_RANGE);
+   aiHelperComponent.ais[AIType.wander] = new WanderAI(200, Math.PI, 0.6, tileIsValidCallback);
+
+   const escapeAIComponent = new EscapeAIComponent();
+
+   const fishComponent = new FishComponent();
+
    return {
-      [ServerComponentType.transform]: {
-         position: new Point(0, 0),
-         rotation: 0,
-         type: EntityType.fish,
-         collisionBit: COLLISION_BITS.default,
-         collisionMask: DEFAULT_COLLISION_MASK,
-         hitboxes: [createHitbox(new RectangularBox(new Point(0, 0), FISH_WIDTH, FISH_HEIGHT, 0), 0.5, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, [])]
-      },
-      [ServerComponentType.physics]: {
-         velocityX: 0,
-         velocityY: 0,
-         accelerationX: 0,
-         accelerationY: 0,
-         traction: 1,
-         isAffectedByAirFriction: true,
-         isAffectedByGroundFriction: true,
-         isImmovable: false
-      },
-      [ServerComponentType.health]: {
-         maxHealth: 5
-      },
-      [ServerComponentType.statusEffect]: {
-         statusEffectImmunityBitset: 0
-      },
-      [ServerComponentType.wanderAI]: {},
-      [ServerComponentType.escapeAI]: {},
-      [ServerComponentType.aiHelper]: {
-         ignoreDecorativeEntities: true,
-         visionRange: FishVars.VISION_RANGE,
-         ais: {
-            [AIType.wander]: new WanderAI(200, Math.PI, 0.6, tileIsValidCallback)
-         }
-      },
-      [ServerComponentType.fish]: {
-         colour: randInt(0, 3)
+      entityType: EntityType.fish,
+      components: {
+         [ServerComponentType.transform]: transformComponent,
+         [ServerComponentType.physics]: physicsComponent,
+         [ServerComponentType.health]: healthComponent,
+         [ServerComponentType.statusEffect]: statusEffectComponent,
+         [ServerComponentType.aiHelper]: aiHelperComponent,
+         [ServerComponentType.escapeAI]: escapeAIComponent,
+         [ServerComponentType.fish]: fishComponent
       }
    };
 }

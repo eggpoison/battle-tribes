@@ -18,22 +18,21 @@ export interface ItemComponentParams {
 }
 
 export class ItemComponent {
-   readonly itemType: ItemType;
-   amount: number;
+   public readonly itemType: ItemType;
+   public amount: number;
    
    /** Stores which entities are on cooldown to pick up the item, and their remaining cooldowns */
    readonly entityPickupCooldowns: Partial<Record<number, number>> = {};
 
-   public readonly throwingEntity: EntityID | null;
+   public throwingEntity: EntityID | null = null;
 
-   constructor(params: ItemComponentParams) {
-      this.itemType = params.itemType;
-      this.amount = params.amount;
-      this.throwingEntity = params.throwingEntity;
+   constructor(itemType: ItemType, amount: number, throwingEntity: EntityID | null) {
+      this.itemType = itemType;
+      this.amount = amount;
 
-      if (params.throwingEntity !== null) {
+      if (throwingEntity !== null) {
          // Add a pickup cooldown so the item isn't picked up immediately
-         this.entityPickupCooldowns[params.throwingEntity] = 1;
+         this.entityPickupCooldowns[throwingEntity] = 1;
       }
    }
 }

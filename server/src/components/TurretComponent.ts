@@ -7,7 +7,7 @@ import { Packet } from "battletribes-shared/packets";
 import { InventoryName, ItemType } from "battletribes-shared/items/items";
 import { Settings } from "battletribes-shared/settings";
 import { getMinAngleToCircularBox, getMaxAngleToCircularBox, getMinAngleToRectangularBox, getMaxAngleToRectangularBox, angleIsInRange, getClockwiseAngleDistance } from "../ai-shared";
-import { ComponentConfig } from "../components";
+import { EntityConfig } from "../components";
 import { createBallistaFrostcicleConfig } from "../entities/projectiles/ballista-frostcicle";
 import { createBallistaRockConfig } from "../entities/projectiles/ballista-rock";
 import { createBallistaSlimeballConfig } from "../entities/projectiles/ballista-slimeball";
@@ -15,22 +15,18 @@ import { createBallistaWoodenBoltConfig } from "../entities/projectiles/ballista
 import { AIHelperComponentArray } from "./AIHelperComponent";
 import { InventoryComponentArray, getInventory, getFirstOccupiedItemSlotInInventory, consumeItemTypeFromInventory } from "./InventoryComponent";
 import { TransformComponentArray, TransformComponent } from "./TransformComponent";
-import { getEntityRelationship, EntityRelationship } from "./TribeComponent";
+import { getEntityRelationship, EntityRelationship, TribeComponentArray } from "./TribeComponent";
 import { UtilVars } from "battletribes-shared/utils";
 import { boxIsCircular, boxIsWithinRange } from "battletribes-shared/boxes/boxes";
 import { getEntityType } from "../world";
-
-export interface TurretComponentParams {
-   readonly fireCooldownTicks: number;
-}
 
 export class TurretComponent {
    public aimDirection = 0;
    public fireCooldownTicks: number;
    public hasTarget = false;
 
-   constructor(params: TurretComponentParams) {
-      this.fireCooldownTicks = params.fireCooldownTicks;
+   constructor(fireCooldownTicks: number) {
+      this.fireCooldownTicks = fireCooldownTicks;
    }
 }
 
@@ -181,37 +177,40 @@ const attemptAmmoLoad = (ballista: EntityID): void => {
    }
 }
 
-const createProjectile = (transformComponent: TransformComponent, fireDirection: number, ammoType: TurretAmmoType): void => {
+const createProjectile = (turret: EntityID, transformComponent: TransformComponent, fireDirection: number, ammoType: TurretAmmoType): void => {
+   const tribeComponent = TribeComponentArray.getComponent(turret);
+   const tribe = tribeComponent.tribe;
+   
    const ammoInfo = AMMO_INFO_RECORD[ammoType];
 
-   let config: ComponentConfig<ServerComponentType.transform | ServerComponentType.physics>;
+   let config: EntityConfig<ServerComponentType.transform | ServerComponentType.physics>;
    
    switch (ammoType) {
       case ItemType.wood: {
-         config = createBallistaWoodenBoltConfig();
+         config = createBallistaWoodenBoltConfig(tribe, turret);
          break;
       }
       case ItemType.rock: {
-         config = createBallistaRockConfig();
+         config = createBallistaRockConfig(tribe, turret);
          break;
       }
       case ItemType.slimeball: {
-         config = createBallistaSlimeballConfig();
+         config = createBallistaSlimeballConfig(tribe, turret);
          break;
       }
       case ItemType.frostcicle: {
-         config = createBallistaFrostcicleConfig();
+         config = createBallistaFrostcicleConfig(tribe, turret);
          break;
       }
    }
 
    const rotation = ammoType === ItemType.rock || ammoType === ItemType.slimeball ? 2 * Math.PI * Math.random() : fireDirection;
 
-   config[ServerComponentType.transform].position.x = transformComponent.position.x;
-   config[ServerComponentType.transform].position.y = transformComponent.position.y;
-   config[ServerComponentType.transform].rotation = rotation;
-   config[ServerComponentType.physics].velocityX = ammoInfo.projectileSpeed * Math.sin(fireDirection);
-   config[ServerComponentType.physics].velocityY = ammoInfo.projectileSpeed * Math.cos(fireDirection);
+   config.components[ServerComponentType.transform].position.x = transformComponent.position.x;
+   config.components[ServerComponentType.transform].position.y = transformComponent.position.y;
+   config.components[ServerComponentType.transform].rotation = rotation;
+   config.components[ServerComponentType.physics].externalVelocity.x = ammoInfo.projectileSpeed * Math.sin(fireDirection);
+   config.components[ServerComponentType.physics].externalVelocity.y = ammoInfo.projectileSpeed * Math.cos(fireDirection);
 }
 
 const fire = (turret: EntityID, ammoType: TurretAmmoType): void => {
@@ -225,7 +224,7 @@ const fire = (turret: EntityID, ammoType: TurretAmmoType): void => {
       let fireDirection = turretComponent.aimDirection + transformComponent.rotation;
       fireDirection += projectileCount > 1 ? (i / (ammoInfo.ammoMultiplier - 1) - 0.5) * Math.PI * 0.5 : 0;
 
-      createProjectile(transformComponent, fireDirection, ammoType);
+      createProjectile(turret, transformComponent, fireDirection, ammoType);
    }
 
    // Consume ammo

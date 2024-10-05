@@ -4,7 +4,7 @@ import { Point, TileIndex } from "battletribes-shared/utils";
 import Layer, { getTileIndexIncludingEdges, getTileX, getTileY } from "./Layer";
 import { TransformComponentArray } from "./components/TransformComponent";
 import { getEntityType, surfaceLayer, undergroundLayer } from "./world";
-import { getEntitySpawnInfo } from "./entity-spawning";
+import { getEntitySpawnableTiles, getEntitySpawnInfo, SpawningEntityType } from "./entity-spawning";
 
 const enum Vars {
    /** Size of each sample in tiles */
@@ -77,7 +77,7 @@ export function updateResourceDistributions(): void {
       }
       
       const samples = distributions[entityType];
-      const spawnableTiles = spawnInfo.spawnableTiles;
+      const spawnableTiles = getEntitySpawnableTiles(spawnInfo.entityType as SpawningEntityType);
 
       let totalDensity = 0;
       
@@ -152,11 +152,11 @@ const getRandomSpawnableTileIndex = (sampleIdx: number, spawnableTiles: Readonly
    return spawnableTileIndexes[Math.floor(spawnableTileIndexes.length * Math.random())];
 }
 
-export function getDistributionWeightedSpawnPosition(entityType: EntityType): Point {
+export function getDistributionWeightedSpawnPosition(entityType: SpawningEntityType): Point {
    const sampleIdx = getDistributionWeightedSampleIndex(entityType);
 
-   const spawnInfo = getEntitySpawnInfo(entityType)!;
-   const tileIndex = getRandomSpawnableTileIndex(sampleIdx, spawnInfo.spawnableTiles);
+   const spawnableTiles = getEntitySpawnableTiles(entityType)
+   const tileIndex = getRandomSpawnableTileIndex(sampleIdx, spawnableTiles);
 
    const tileX = getTileX(tileIndex);
    const tileY = getTileY(tileIndex);

@@ -1,9 +1,7 @@
 import { ServerComponentType } from "battletribes-shared/components";
 import { ComponentArray } from "./ComponentArray";
 
-export interface IceArrowComponentParams {}
-
-export class IceArrowComponent implements IceArrowComponentParams {}
+export class IceArrowComponent {}
 
 export const IceArrowComponentArray = new ComponentArray<IceArrowComponent>(ServerComponentType.iceArrow, true, {
    getDataLength: getDataLength,

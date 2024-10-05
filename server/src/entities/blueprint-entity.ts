@@ -1,9 +1,14 @@
 import { COLLISION_BITS } from "battletribes-shared/collision";
 import { BlueprintType, ServerComponentType } from "battletribes-shared/components";
-import { EntityType } from "battletribes-shared/entities";
+import { EntityID, EntityType } from "battletribes-shared/entities";
 import { StructureType } from "battletribes-shared/structures";
-import { Point } from "battletribes-shared/utils";
-import { ComponentConfig } from "../components";
+import { EntityConfig } from "../components";
+import { TransformComponent } from "../components/TransformComponent";
+import { HealthComponent } from "../components/HealthComponent";
+import { BlueprintComponent } from "../components/BlueprintComponent";
+import Tribe from "../Tribe";
+import { TribeComponent } from "../components/TribeComponent";
+import { createEntityHitboxes } from "../../../shared/src/boxes/entity-hitbox-creation";
    
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.health
@@ -33,26 +38,28 @@ export function getBlueprintEntityType(blueprintType: BlueprintType): StructureT
    }
 }
 
-export function createBlueprintEntityConfig(): ComponentConfig<ComponentTypes> {
+export function createBlueprintEntityConfig(tribe: Tribe, blueprintType: BlueprintType, associatedEntityID: EntityID): EntityConfig<ComponentTypes> {
+   const transformComponent = new TransformComponent();
+   transformComponent.collisionBit = COLLISION_BITS.none;
+   transformComponent.collisionMask = 0;
+
+   const entityType = getBlueprintEntityType(blueprintType);
+   const hitboxes = createEntityHitboxes(entityType);
+   transformComponent.addHitboxes(hitboxes, null);
+   
+   const healthComponent = new HealthComponent(5);
+   
+   const blueprintComponent = new BlueprintComponent(blueprintType, associatedEntityID);
+
+   const tribeComponent = new TribeComponent(tribe);
+   
    return {
-      [ServerComponentType.transform]: {
-         position: new Point(0, 0),
-         rotation: 0,
-         type: EntityType.plant,
-         collisionBit: COLLISION_BITS.none,
-         collisionMask: 0,
-         hitboxes: []
-      },
-      [ServerComponentType.health]: {
-         maxHealth: 5
-      },
-      [ServerComponentType.blueprint]: {
-         blueprintType: BlueprintType.stoneDoor,
-         associatedEntityID: 0,
-      },
-      [ServerComponentType.tribe]: {
-         tribe: null,
-         tribeType: 0
+      entityType: EntityType.blueprintEntity,
+      components: {
+         [ServerComponentType.transform]: transformComponent,
+         [ServerComponentType.health]: healthComponent,
+         [ServerComponentType.blueprint]: blueprintComponent,
+         [ServerComponentType.tribe]: tribeComponent
       }
    };
 }

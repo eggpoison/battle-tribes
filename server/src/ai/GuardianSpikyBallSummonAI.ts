@@ -52,11 +52,11 @@ const createSpikyBalls = (guardian: EntityID, target: EntityID): void => {
          const vy = velocityMagnitude * Math.cos(velocityDirection);
          
          const config = createGuardianSpikyBallConfig();
-         config[ServerComponentType.transform].position.x = x!;
-         config[ServerComponentType.transform].position.y = y!;
-         config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
-         config[ServerComponentType.physics].velocityX = vx;
-         config[ServerComponentType.physics].velocityY = vy;
+         config.components[ServerComponentType.transform].position.x = x!;
+         config.components[ServerComponentType.transform].position.y = y!;
+         config.components[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
+         config.components[ServerComponentType.physics].externalVelocity.x = vx;
+         config.components[ServerComponentType.physics].externalVelocity.y = vy;
          createEntityFromConfig(config, layer, spawnDelayTicks);
       }
    }

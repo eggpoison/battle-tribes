@@ -1,12 +1,17 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "battletribes-shared/collision";
 import { EntityType } from "battletribes-shared/entities";
 import { StatusEffect } from "battletribes-shared/status-effects";
-import { createEmptyStructureConnectionInfo } from "battletribes-shared/structures";
-import { Point } from "battletribes-shared/utils";
+import { StructureConnectionInfo } from "battletribes-shared/structures";
 import { createFrostshaperHitboxes } from "battletribes-shared/boxes/entity-hitbox-creation";
 import { CraftingStation } from "battletribes-shared/items/crafting-recipes";
 import { ServerComponentType } from "battletribes-shared/components";
-import { ComponentConfig } from "../../components";
+import { EntityConfig } from "../../components";
+import { CraftingStationComponent } from "../../components/CraftingStationComponent";
+import { HealthComponent } from "../../components/HealthComponent";
+import { StatusEffectComponent } from "../../components/StatusEffectComponent";
+import { StructureComponent } from "../../components/StructureComponent";
+import { TransformComponent } from "../../components/TransformComponent";
+import { TribeComponent } from "../../components/TribeComponent";
+import Tribe from "../../Tribe";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.health
@@ -15,31 +20,29 @@ type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.tribe
    | ServerComponentType.craftingStation;
 
-export function createFrostshaperConfig(): ComponentConfig<ComponentTypes> {
+export function createFrostshaperConfig(tribe: Tribe, connectionInfo: StructureConnectionInfo): EntityConfig<ComponentTypes> {
+   const transformComponent = new TransformComponent();
+   transformComponent.addHitboxes(createFrostshaperHitboxes(), null);
+   
+   const healthComponent = new HealthComponent(20);
+   
+   const statusEffectComponent = new StatusEffectComponent(StatusEffect.bleeding | StatusEffect.poisoned | StatusEffect.freezing);
+   
+   const structureComponent = new StructureComponent(connectionInfo);
+   
+   const tribeComponent = new TribeComponent(tribe);
+   
+   const craftingStationComponent = new CraftingStationComponent(CraftingStation.frostshaper);
+   
    return {
-      [ServerComponentType.transform]: {
-         position: new Point(0, 0),
-         rotation: 0,
-         type: EntityType.frostshaper,
-         collisionBit: COLLISION_BITS.default,
-         collisionMask: DEFAULT_COLLISION_MASK,
-         hitboxes: createFrostshaperHitboxes()
-      },
-      [ServerComponentType.health]: {
-         maxHealth: 20
-      },
-      [ServerComponentType.statusEffect]: {
-         statusEffectImmunityBitset: StatusEffect.bleeding | StatusEffect.poisoned | StatusEffect.freezing
-      },
-      [ServerComponentType.structure]: {
-         connectionInfo: createEmptyStructureConnectionInfo()
-      },
-      [ServerComponentType.tribe]: {
-         tribe: null,
-         tribeType: 0
-      },
-      [ServerComponentType.craftingStation]: {
-         craftingStation: CraftingStation.frostshaper
+      entityType: EntityType.frostshaper,
+      components: {
+         [ServerComponentType.transform]: transformComponent,
+         [ServerComponentType.health]: healthComponent,
+         [ServerComponentType.statusEffect]: statusEffectComponent,
+         [ServerComponentType.structure]: structureComponent,
+         [ServerComponentType.tribe]: tribeComponent,
+         [ServerComponentType.craftingStation]: craftingStationComponent
       }
    };
 }

@@ -1,10 +1,10 @@
 import { EntityID, RockSpikeProjectileSize } from "battletribes-shared/entities";
 import { ServerComponentType } from "battletribes-shared/components";
 import { ComponentArray } from "./ComponentArray";
-import { ComponentConfig } from "../components";
 import { Packet } from "battletribes-shared/packets";
-import CircularBox from "battletribes-shared/boxes/CircularBox";
 import { destroyEntity, getEntityAgeTicks } from "../world";
+import { Settings } from "../../../shared/src/settings";
+import { randFloat } from "../../../shared/src/utils";
 
 export interface RockSpikeProjectileComponentParams {
    size: number;
@@ -12,24 +12,18 @@ export interface RockSpikeProjectileComponentParams {
    frozenYetiID: number;
 }
 
-// @Cleanup: why do we have to export these?
-export const ROCK_SPIKE_HITBOX_SIZES = [12 * 2, 16 * 2, 20 * 2];
-export const ROCK_SPIKE_MASSES = [1, 1.75, 2.5];
-
 export class RockSpikeComponent {
    public readonly size: RockSpikeProjectileSize;
-   public readonly lifetimeTicks: number;
+   public readonly lifetimeTicks = Math.floor(randFloat(3.5, 4.5) * Settings.TPS);
    public readonly frozenYeti: EntityID;
 
-   constructor(params: RockSpikeProjectileComponentParams) {
-      this.size = params.size;
-      this.lifetimeTicks = params.lifetimeTicks;
-      this.frozenYeti = params.frozenYetiID;
+   constructor(size: number, frozenYeti: EntityID) {
+      this.size = size;
+      this.frozenYeti = frozenYeti;
    }
 }
 
 export const RockSpikeComponentArray = new ComponentArray<RockSpikeComponent>(ServerComponentType.rockSpike, true, {
-   onInitialise: onInitialise,
    onTick: {
       tickInterval: 1,
       func: onTick
@@ -37,16 +31,6 @@ export const RockSpikeComponentArray = new ComponentArray<RockSpikeComponent>(Se
    getDataLength: getDataLength,
    addDataToPacket: addDataToPacket
 });
-
-function onInitialise(config: ComponentConfig<ServerComponentType.transform | ServerComponentType.rockSpike>): void {
-   const size = config[ServerComponentType.rockSpike].size;
-
-   const hitbox = config[ServerComponentType.transform].hitboxes[0];
-   const box = hitbox.box as CircularBox;
-   
-   hitbox.mass = ROCK_SPIKE_MASSES[size];
-   box.radius = ROCK_SPIKE_HITBOX_SIZES[size];
-}
 
 function onTick(rockSpikeComponent: RockSpikeComponent, rockSpike: EntityID): void {
    const ageTicks = getEntityAgeTicks(rockSpike);

@@ -1,24 +1,30 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "battletribes-shared/collision";
+import { DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "battletribes-shared/collision";
 import { PlanterBoxPlant, ServerComponentType } from "battletribes-shared/components";
 import { EntityID, EntityType, EntityTypeString, LimbAction } from "battletribes-shared/entities";
-import { TribeType } from "battletribes-shared/tribes";
 import { Point } from "battletribes-shared/utils";
 import { onTribeMemberHurt } from "./tribe-member";
-import { consumeItemFromSlot, consumeItemType, countItemType, getInventory, pickupItemEntity, InventoryComponentArray } from "../../components/InventoryComponent";
-import Layer from "../../Layer";
-import { InventoryUseComponentArray } from "../../components/InventoryUseComponent";
-import { TribeComponentArray } from "../../components/TribeComponent";
+import { consumeItemFromSlot, consumeItemType, countItemType, getInventory, pickupItemEntity, InventoryComponentArray, InventoryComponent } from "../../components/InventoryComponent";
+import { InventoryUseComponent, InventoryUseComponentArray } from "../../components/InventoryUseComponent";
+import { TribeComponent, TribeComponentArray } from "../../components/TribeComponent";
 import { TunnelComponentArray, updateTunnelDoorBitset } from "../../components/TunnelComponent";
 import { PlanterBoxComponentArray, fertilisePlanterBox, placePlantInPlanterBox } from "../../components/PlanterBoxComponent";
 import { registerPlayerDroppedItemPickup } from "../../server/player-clients";
 import { HutComponentArray } from "../../components/HutComponent";
 import { SpikesComponentArray } from "../../components/SpikesComponent";
 import { InventoryName, ItemType } from "battletribes-shared/items/items";
-import { ComponentConfig } from "../../components";
-import { TransformComponentArray } from "../../components/TransformComponent";
+import { EntityConfig } from "../../components";
+import { TransformComponent, TransformComponentArray } from "../../components/TransformComponent";
 import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
 import CircularBox from "battletribes-shared/boxes/CircularBox";
 import { entityExists, getEntityType, getGameTicks } from "../../world";
+import { PhysicsComponent } from "../../components/PhysicsComponent";
+import { HealthComponent } from "../../components/HealthComponent";
+import { StatusEffectComponent } from "../../components/StatusEffectComponent";
+import Tribe from "../../Tribe";
+import { TribeMemberComponent } from "../../components/TribeMemberComponent";
+import { PlayerComponent } from "../../components/PlayerComponent";
+import { DamageBoxComponent } from "../../components/DamageBoxComponent";
+import { TRIBE_INFO_RECORD } from "../../../../shared/src/tribes";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics
@@ -31,50 +37,45 @@ type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.inventoryUse
    | ServerComponentType.damageBox;
 
-export function createPlayerConfig(): ComponentConfig<ComponentTypes> {
+export function createPlayerConfig(tribe: Tribe, username: string): EntityConfig<ComponentTypes> {
+   const transformComponent = new TransformComponent();
+   const hitbox = createHitbox(new CircularBox(new Point(0, 0), 0, 32), 1.25, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, []);
+   transformComponent.addHitbox(hitbox, null);
+   
+   const physicsComponent = new PhysicsComponent();
+   physicsComponent.traction = 1.4;
+
+   const tribeInfo = TRIBE_INFO_RECORD[tribe.tribeType];
+   const healthComponent = new HealthComponent(tribeInfo.maxHealthPlayer);
+
+   const statusEffectComponent = new StatusEffectComponent(0);
+
+   const tribeComponent = new TribeComponent(tribe);
+
+   const tribeMemberComponent = new TribeMemberComponent();
+
+   const playerComponent = new PlayerComponent(username);
+   
+   const inventoryComponent = new InventoryComponent();
+
+   const inventoryUseComponent = new InventoryUseComponent();
+
+   const damageBoxComponent = new DamageBoxComponent();
+
    return {
-      [ServerComponentType.transform]: {
-         position: new Point(0, 0),
-         rotation: 0,
-         type: EntityType.player,
-         collisionBit: COLLISION_BITS.default,
-         collisionMask: DEFAULT_COLLISION_MASK,
-         hitboxes: [createHitbox(new CircularBox(new Point(0, 0), 0, 32), 1.25, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, [])]
-      },
-      [ServerComponentType.physics]: {
-         velocityX: 0,
-         velocityY: 0,
-         accelerationX: 0,
-         accelerationY: 0,
-         traction: 1.4,
-         isAffectedByAirFriction: true,
-         isAffectedByGroundFriction: true,
-         isImmovable: false
-      },
-      [ServerComponentType.health]: {
-         maxHealth: 0
-      },
-      [ServerComponentType.statusEffect]: {
-         statusEffectImmunityBitset: 0
-      },
-      [ServerComponentType.tribe]: {
-         tribe: null,
-         tribeType: 0
-      },
-      [ServerComponentType.tribeMember]: {
-         tribeType: TribeType.plainspeople,
-         entityType: EntityType.player
-      },
-      [ServerComponentType.player]: {
-         username: ""
-      },
-      [ServerComponentType.inventory]: {
-         inventories: []
-      },
-      [ServerComponentType.inventoryUse]: {
-         usedInventoryNames: []
-      },
-      [ServerComponentType.damageBox]: {}
+      entityType: EntityType.player,
+      components: {
+         [ServerComponentType.transform]: transformComponent,
+         [ServerComponentType.physics]: physicsComponent,
+         [ServerComponentType.health]: healthComponent,
+         [ServerComponentType.statusEffect]: statusEffectComponent,
+         [ServerComponentType.tribe]: tribeComponent,
+         [ServerComponentType.tribeMember]: tribeMemberComponent,
+         [ServerComponentType.player]: playerComponent,
+         [ServerComponentType.inventory]: inventoryComponent,
+         [ServerComponentType.inventoryUse]: inventoryUseComponent,
+         [ServerComponentType.damageBox]: damageBoxComponent
+      }
    };
 }
 

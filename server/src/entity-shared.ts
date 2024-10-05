@@ -20,12 +20,10 @@ export function createItemsOverEntity(entity: EntityID, itemType: ItemType, amou
       position.y += magnitude * Math.cos(direction);
 
       // Create item entity
-      const config = createItemEntityConfig();
-      config[ServerComponentType.transform].position.x = position.x;
-      config[ServerComponentType.transform].position.y = position.y;
-      config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
-      config[ServerComponentType.item].itemType = itemType;
-      config[ServerComponentType.item].amount = 1;
+      const config = createItemEntityConfig(itemType, 1, null);
+      config.components[ServerComponentType.transform].position.x = position.x;
+      config.components[ServerComponentType.transform].position.y = position.y;
+      config.components[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
       createEntityFromConfig(config, getEntityLayer(entity), 0);
    }
 }

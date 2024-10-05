@@ -6,10 +6,6 @@ import { Packet } from "battletribes-shared/packets";
 import { getPlayerClientFromInstanceID } from "../server/player-clients";
 import { sendRespawnDataPacket } from "../server/packet-processing";
 
-export interface PlayerComponentParams {
-   username: string;
-}
-
 export class PlayerComponent {
    public readonly username: string;
    
@@ -18,8 +14,8 @@ export class PlayerComponent {
 
    public titleOffer: TribesmanTitle | null = null;
 
-   constructor(params: PlayerComponentParams) {
-      this.username = params.username;
+   constructor(username: string) {
+      this.username = username;
    }
 }
 

@@ -7,7 +7,7 @@ import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
 import { InventoryName, ItemType } from "battletribes-shared/items/items";
 import { Settings } from "battletribes-shared/settings";
 import { TileType } from "battletribes-shared/tiles";
-import { customTickIntervalHasPassed, Point, randFloat, UtilVars } from "battletribes-shared/utils";
+import { customTickIntervalHasPassed, Point, randFloat, randInt, UtilVars } from "battletribes-shared/utils";
 import { stopEntity, runHerdAI } from "../ai-shared";
 import { chooseEscapeEntity, runFromAttackingEntity } from "../ai/escape-ai";
 import { entitiesAreColliding, CollisionVars } from "../collision";
@@ -42,17 +42,13 @@ export interface FishComponentParams {
 }
 
 export class FishComponent {
-   public readonly colour: FishColour;
+   public readonly colour: FishColour = randInt(0, 3);
 
    public flailTimer = 0;
    public secondsOutOfWater = 0;
 
    public leader: EntityID | null = null;
    public attackTargetID = 0;
-
-   constructor(params: FishComponentParams) {
-      this.colour = params.colour;
-   }
 }
 
 export const FishComponentArray = new ComponentArray<FishComponent>(ServerComponentType.fish, true, {

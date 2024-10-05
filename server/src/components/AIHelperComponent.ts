@@ -12,7 +12,7 @@ import WanderAI from "../ai/WanderAI";
 import GuardianAI from "../ai/GuardianAI";
 import GuardianCrystalSlamAI from "../ai/GuardianCrystalSlamAI";
 import GuardianCrystalBurstAI from "../ai/GuardianCrystalBurstAI";
-import GuardianSpikyBallSummonAI from "../ai/GuardianSpikyBallSummonAI ";
+import GuardianSpikyBallSummonAI from "../ai/GuardianSpikyBallSummonAI";
 
 export const enum AIType {
    wander,
@@ -51,16 +51,14 @@ export class AIHelperComponent implements AIHelperComponentParams {
    /** The number of times each potential visible game object appears in the mob's visible chunks */
    public readonly potentialVisibleEntityAppearances = new Array<number>();
 
-   public readonly ignoreDecorativeEntities: boolean;
-   public readonly visionRange: number;
+   public readonly ignoreDecorativeEntities = true;
+   public visionRange: number;
    public visibleEntities = new Array<EntityID>();
 
-   public readonly ais: AIRecord;
+   public readonly ais: AIRecord = {};
 
-   constructor(params: AIHelperComponentParams) {
-      this.ignoreDecorativeEntities = params.ignoreDecorativeEntities;
-      this.visionRange = params.visionRange;
-      this.ais = params.ais;
+   constructor(visionRange: number) {
+      this.visionRange = visionRange;
    }
 
    public getWanderAI(): WanderAI {

@@ -1,16 +1,20 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "battletribes-shared/collision";
 import { BuildingMaterial, ServerComponentType } from "battletribes-shared/components";
 import { EntityID, EntityType, PlayerCauseOfDeath } from "battletribes-shared/entities";
 import { StatusEffect } from "battletribes-shared/status-effects";
 import { Point } from "battletribes-shared/utils";
-import { HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
-import { EntityRelationship, getEntityRelationship } from "../../components/TribeComponent";
-import { SpikesComponentArray } from "../../components/SpikesComponent";
-import { createEmptyStructureConnectionInfo } from "battletribes-shared/structures";
+import { HealthComponent, HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
+import { EntityRelationship, getEntityRelationship, TribeComponent } from "../../components/TribeComponent";
+import { SpikesComponent, SpikesComponentArray } from "../../components/SpikesComponent";
+import { StructureConnectionInfo } from "battletribes-shared/structures";
 import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
 import { createWallSpikesHitboxes, createFloorSpikesHitboxes } from "battletribes-shared/boxes/entity-hitbox-creation";
-import { ComponentConfig } from "../../components";
+import { EntityConfig } from "../../components";
 import { getEntityType } from "../../world";
+import { TransformComponent } from "../../components/TransformComponent";
+import { StatusEffectComponent } from "../../components/StatusEffectComponent";
+import { StructureComponent } from "../../components/StructureComponent";
+import Tribe from "../../Tribe";
+import { BuildingMaterialComponent } from "../../components/BuildingMaterialComponent";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.health
@@ -20,63 +24,65 @@ type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.buildingMaterial
    | ServerComponentType.spikes;
 
-export function createFloorSpikesConfig(): ComponentConfig<ComponentTypes> {
+const HEALTHS = [15, 45];
+
+export function createFloorSpikesConfig(tribe: Tribe, material: BuildingMaterial, connectionInfo: StructureConnectionInfo): EntityConfig<ComponentTypes> {
+   const transformComponent = new TransformComponent();
+   transformComponent.addHitboxes(createFloorSpikesHitboxes(), null);
+
+   const healthComponent = new HealthComponent(HEALTHS[material]);
+   
+   const statusEffectComponent = new StatusEffectComponent(StatusEffect.bleeding | StatusEffect.poisoned);
+   
+   const structureComponent = new StructureComponent(connectionInfo);
+   
+   const tribeComponent = new TribeComponent(tribe);
+   
+   const buildingMaterialComponent = new BuildingMaterialComponent(material, HEALTHS);
+   
+   const spikesComponent = new SpikesComponent();
+   
    return {
-      [ServerComponentType.transform]: {
-         position: new Point(0, 0),
-         rotation: 0,
-         type: EntityType.floorSpikes,
-         collisionBit: COLLISION_BITS.default,
-         collisionMask: DEFAULT_COLLISION_MASK,
-         hitboxes: createFloorSpikesHitboxes()
-      },
-      [ServerComponentType.health]: {
-         maxHealth: 0
-      },
-      [ServerComponentType.statusEffect]: {
-         statusEffectImmunityBitset: StatusEffect.bleeding | StatusEffect.poisoned
-      },
-      [ServerComponentType.structure]: {
-         connectionInfo: createEmptyStructureConnectionInfo()
-      },
-      [ServerComponentType.tribe]: {
-         tribe: null,
-         tribeType: 0
-      },
-      [ServerComponentType.buildingMaterial]: {
-         material: BuildingMaterial.wood
-      },
-      [ServerComponentType.spikes]: {}
+      entityType: EntityType.floorSpikes,
+      components: {
+         [ServerComponentType.transform]: transformComponent,
+         [ServerComponentType.health]: healthComponent,
+         [ServerComponentType.statusEffect]: statusEffectComponent,
+         [ServerComponentType.structure]: structureComponent,
+         [ServerComponentType.tribe]: tribeComponent,
+         [ServerComponentType.buildingMaterial]: buildingMaterialComponent,
+         [ServerComponentType.spikes]: spikesComponent
+      }
    };
 }
 
-export function createWallSpikesConfig(): ComponentConfig<ComponentTypes> {
+export function createWallSpikesConfig(tribe: Tribe, material: BuildingMaterial, connectionInfo: StructureConnectionInfo): EntityConfig<ComponentTypes> {
+   const transformComponent = new TransformComponent();
+   transformComponent.addHitboxes(createWallSpikesHitboxes(), null);
+
+   const healthComponent = new HealthComponent(HEALTHS[material]);
+   
+   const statusEffectComponent = new StatusEffectComponent(StatusEffect.bleeding | StatusEffect.poisoned);
+   
+   const structureComponent = new StructureComponent(connectionInfo);
+   
+   const tribeComponent = new TribeComponent(tribe);
+   
+   const buildingMaterialComponent = new BuildingMaterialComponent(material, HEALTHS);
+   
+   const spikesComponent = new SpikesComponent();
+   
    return {
-      [ServerComponentType.transform]: {
-         position: new Point(0, 0),
-         rotation: 0,
-         type: EntityType.wallSpikes,
-         collisionBit: COLLISION_BITS.default,
-         collisionMask: DEFAULT_COLLISION_MASK,
-         hitboxes: createWallSpikesHitboxes()
-      },
-      [ServerComponentType.health]: {
-         maxHealth: 0
-      },
-      [ServerComponentType.statusEffect]: {
-         statusEffectImmunityBitset: StatusEffect.bleeding | StatusEffect.poisoned
-      },
-      [ServerComponentType.structure]: {
-         connectionInfo: createEmptyStructureConnectionInfo()
-      },
-      [ServerComponentType.tribe]: {
-         tribe: null,
-         tribeType: 0
-      },
-      [ServerComponentType.buildingMaterial]: {
-         material: BuildingMaterial.wood
-      },
-      [ServerComponentType.spikes]: {}
+      entityType: EntityType.wallSpikes,
+      components: {
+         [ServerComponentType.transform]: transformComponent,
+         [ServerComponentType.health]: healthComponent,
+         [ServerComponentType.statusEffect]: statusEffectComponent,
+         [ServerComponentType.structure]: structureComponent,
+         [ServerComponentType.tribe]: tribeComponent,
+         [ServerComponentType.buildingMaterial]: buildingMaterialComponent,
+         [ServerComponentType.spikes]: spikesComponent
+      }
    };
 }
 

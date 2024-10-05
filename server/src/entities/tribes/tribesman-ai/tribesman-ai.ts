@@ -326,10 +326,10 @@ export function tickTribesman(tribesmanAIComponent: TribesmanAIComponent, tribes
    }
 
    // If recalled, go back to hut
-   const hut = tribesmanAIComponent.hutID;
+   const hut = tribesmanAIComponent.hut;
    if (hut !== 0) {
       if (!entityExists(hut)) {
-         tribesmanAIComponent.hutID = 0;
+         tribesmanAIComponent.hut = 0;
       } else {
          const hutComponent = HutComponentArray.getComponent(hut);
          if (hutComponent.isRecalling) {
@@ -466,7 +466,7 @@ export function tickTribesman(tribesmanAIComponent: TribesmanAIComponent, tribes
    }
 
    // If the tribesman doesn't have a hut, try to look for one
-   if (tribesmanAIComponent.hutID === 0) {
+   if (tribesmanAIComponent.hut === 0) {
       const availableHut = getAvailableHut(tribeComponent.tribe);
       if (availableHut !== null) {
          const hutTransformComponent = TransformComponentArray.getComponent(availableHut);
@@ -474,7 +474,7 @@ export function tickTribesman(tribesmanAIComponent: TribesmanAIComponent, tribes
          const isPathfinding = pathfindToPosition(tribesman, hutTransformComponent.position.x, hutTransformComponent.position.y, availableHut, TribesmanPathType.default, Math.floor(32 / PathfindingSettings.NODE_SEPARATION), PathfindFailureDefault.returnEmpty);
 
          if (entitiesAreColliding(tribesman, availableHut) !== CollisionVars.NO_COLLISION) {
-            tribesmanAIComponent.hutID = availableHut;
+            tribesmanAIComponent.hut = availableHut;
             
             const hutComponent = HutComponentArray.getComponent(availableHut);
             hutComponent.hasTribesman = true;

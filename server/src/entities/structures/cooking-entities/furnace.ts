@@ -1,12 +1,18 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "battletribes-shared/collision";
 import { EntityType } from "battletribes-shared/entities";
 import { StatusEffect } from "battletribes-shared/status-effects";
-import { Point } from "battletribes-shared/utils";
-import { createEmptyStructureConnectionInfo } from "battletribes-shared/structures";
+import { StructureConnectionInfo } from "battletribes-shared/structures";
 import { createFurnaceHitboxes } from "battletribes-shared/boxes/entity-hitbox-creation";
-import { InventoryName } from "battletribes-shared/items/items";
+import { Inventory, InventoryName } from "battletribes-shared/items/items";
 import { ServerComponentType } from "battletribes-shared/components";
-import { ComponentConfig } from "../../../components";
+import { EntityConfig } from "../../../components";
+import Tribe from "../../../Tribe";
+import { CookingComponent } from "../../../components/CookingComponent";
+import { HealthComponent } from "../../../components/HealthComponent";
+import { InventoryComponent, addInventoryToInventoryComponent } from "../../../components/InventoryComponent";
+import { StatusEffectComponent } from "../../../components/StatusEffectComponent";
+import { StructureComponent } from "../../../components/StructureComponent";
+import { TransformComponent } from "../../../components/TransformComponent";
+import { TribeComponent } from "../../../components/TribeComponent";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.health
@@ -16,57 +22,43 @@ type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.inventory
    | ServerComponentType.cooking;
 
-export function createFurnaceConfig(): ComponentConfig<ComponentTypes> {
+export function createFurnaceConfig(tribe: Tribe, connectionInfo: StructureConnectionInfo): EntityConfig<ComponentTypes> {
+   const transformComponent = new TransformComponent();
+   transformComponent.addHitboxes(createFurnaceHitboxes(), null);
+   
+   const healthComponent = new HealthComponent(25);
+
+   const statusEffectComponent = new StatusEffectComponent(StatusEffect.poisoned | StatusEffect.bleeding);
+
+   const structureComponent = new StructureComponent(connectionInfo);
+
+   const tribeComponent = new TribeComponent(tribe);
+
+   const inventoryComponent = new InventoryComponent();
+
+   // @Copynpaste @Cleanup: don't add here, add in cooking component
+   
+   const fuelInventory = new Inventory(1, 1, InventoryName.fuelInventory);
+   addInventoryToInventoryComponent(inventoryComponent, fuelInventory, { acceptsPickedUpItems: false, isDroppedOnDeath: true, isSentToEnemyPlayers: false });
+   
+   const ingredientInventory = new Inventory(1, 1, InventoryName.ingredientInventory);
+   addInventoryToInventoryComponent(inventoryComponent, ingredientInventory, { acceptsPickedUpItems: false, isDroppedOnDeath: true, isSentToEnemyPlayers: false });
+
+   const outputInventory = new Inventory(1, 1, InventoryName.outputInventory);
+   addInventoryToInventoryComponent(inventoryComponent, outputInventory, { acceptsPickedUpItems: false, isDroppedOnDeath: true, isSentToEnemyPlayers: false });
+   
+   const cookingComponent = new CookingComponent(0);
+   
    return {
-      [ServerComponentType.transform]: {
-         position: new Point(0, 0),
-         rotation: 0,
-         type: EntityType.furnace,
-         collisionBit: COLLISION_BITS.default,
-         collisionMask: DEFAULT_COLLISION_MASK,
-         hitboxes: createFurnaceHitboxes()
-      },
-      [ServerComponentType.health]: {
-         maxHealth: 25
-      },
-      [ServerComponentType.statusEffect]: {
-         statusEffectImmunityBitset: StatusEffect.poisoned | StatusEffect.bleeding
-      },
-      [ServerComponentType.structure]: {
-         connectionInfo: createEmptyStructureConnectionInfo()
-      },
-      [ServerComponentType.tribe]: {
-         tribe: null,
-         tribeType: 0
-      },
-      [ServerComponentType.inventory]: {
-         // @Copynpaste @Cleanup: don't add here, add in cooking component
-         inventories: [
-            {
-               inventoryName: InventoryName.fuelInventory,
-               width: 1,
-               height: 1,
-               options: { acceptsPickedUpItems: false, isDroppedOnDeath: true, isSentToEnemyPlayers: false },
-               items: []
-            },
-            {
-               inventoryName: InventoryName.ingredientInventory,
-               width: 1,
-               height: 1,
-               options: { acceptsPickedUpItems: false, isDroppedOnDeath: true, isSentToEnemyPlayers: false },
-               items: []
-            },
-            {
-               inventoryName: InventoryName.outputInventory,
-               width: 1,
-               height: 1,
-               options: { acceptsPickedUpItems: false, isDroppedOnDeath: true, isSentToEnemyPlayers: false },
-               items: []
-            }
-         ]
-      },
-      [ServerComponentType.cooking]: {
-         remainingHeatSeconds: 0
+      entityType: EntityType.furnace,
+      components: {
+         [ServerComponentType.transform]: transformComponent,
+         [ServerComponentType.health]: healthComponent,
+         [ServerComponentType.statusEffect]: statusEffectComponent,
+         [ServerComponentType.structure]: structureComponent,
+         [ServerComponentType.tribe]: tribeComponent,
+         [ServerComponentType.inventory]: inventoryComponent,
+         [ServerComponentType.cooking]: cookingComponent
       }
    };
 }

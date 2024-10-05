@@ -4,32 +4,20 @@ import { Settings } from "battletribes-shared/settings";
 import { angle, lerp } from "battletribes-shared/utils";
 import { PhysicsComponentArray } from "./PhysicsComponent";
 import { ComponentArray } from "./ComponentArray";
-import { ComponentConfig } from "../components";
+import { EntityConfig } from "../components";
 import { TransformComponentArray } from "./TransformComponent";
 import { Packet } from "battletribes-shared/packets";
 import { HitboxCollisionType } from "battletribes-shared/boxes/boxes";
 
-export interface DoorComponentParams {
-   originX: number;
-   originY: number;
-   closedRotation: number;
-}
-
 const DOOR_SWING_SPEED = 5 / Settings.TPS;
 
 export class DoorComponent {
-   public readonly originX: number;
-   public readonly originY: number;
-   public readonly closedRotation: number;
+   public originX = 0;
+   public originY = 0;
+   public closedRotation = 0;
    
    public toggleType = DoorToggleType.none;
    public openProgress = 0;
-
-   constructor(params: DoorComponentParams) {
-      this.originX = params.originX;
-      this.originY = params.originY;
-      this.closedRotation = params.closedRotation;
-   }
 }
 
 export const DoorComponentArray = new ComponentArray<DoorComponent>(ServerComponentType.door, true, {
@@ -110,10 +98,10 @@ export function toggleDoor(door: EntityID): void {
 }
 
 // @Hack
-function onInitialise(config: ComponentConfig<ServerComponentType.transform | ServerComponentType.door>): void {
-   config[ServerComponentType.door].originX = config[ServerComponentType.transform].position.x;
-   config[ServerComponentType.door].originY = config[ServerComponentType.transform].position.y;
-   config[ServerComponentType.door].closedRotation = config[ServerComponentType.transform].rotation;
+function onInitialise(config: EntityConfig<ServerComponentType.transform | ServerComponentType.door>): void {
+   config.components[ServerComponentType.door].originX = config.components[ServerComponentType.transform].position.x;
+   config.components[ServerComponentType.door].originY = config.components[ServerComponentType.transform].position.y;
+   config.components[ServerComponentType.door].closedRotation = config.components[ServerComponentType.transform].rotation;
 }
 
 function getDataLength(): number {

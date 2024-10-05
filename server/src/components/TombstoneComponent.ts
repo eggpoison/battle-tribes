@@ -4,11 +4,11 @@ import { ComponentArray } from "./ComponentArray";
 import { Packet } from "battletribes-shared/packets";
 import { Settings } from "battletribes-shared/settings";
 import { Point, randInt } from "battletribes-shared/utils";
-import Layer from "../Layer";
 import { createZombieConfig } from "../entities/mobs/zombie";
 import { createEntityFromConfig } from "../Entity";
 import { TransformComponentArray } from "./TransformComponent";
 import { destroyEntity, getEntityLayer, getGameTime, isNight } from "../world";
+import TombstoneDeathManager from "../tombstone-deaths";
 
 const enum Vars {
    /** Average number of zombies that are created by the tombstone in a second */
@@ -27,7 +27,7 @@ export interface TombstoneComponentParams {
 }
 
 export class TombstoneComponent {
-   public readonly tombstoneType: number;
+   public readonly tombstoneType = randInt(0, 2);
 
    /** Amount of spawned zombies that are alive currently */
    public numZombies = 0;
@@ -37,12 +37,7 @@ export class TombstoneComponent {
    public zombieSpawnPositionY = -1;
 
    // @Speed: Polymorphism
-   public readonly deathInfo: DeathInfo | null;
-
-   constructor(params: TombstoneComponentParams) {
-      this.tombstoneType = params.tombstoneType;
-      this.deathInfo = params.deathInfo;
-   }
+   public readonly deathInfo = TombstoneDeathManager.popDeath();
 }
 
 export const TombstoneComponentArray = new ComponentArray<TombstoneComponent>(ServerComponentType.tombstone, true, {
@@ -83,14 +78,10 @@ const spawnZombie = (tombstone: EntityID, tombstoneComponent: TombstoneComponent
    const isGolden = tombstoneComponent.tombstoneType === 0 && Math.random() < 0.005;
    
    // Spawn zombie
-   const config = createZombieConfig();
-   config[ServerComponentType.transform].position.x = tombstoneComponent.zombieSpawnPositionX;
-   config[ServerComponentType.transform].position.y = tombstoneComponent.zombieSpawnPositionY;
-   config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
-   if (isGolden) {
-      config[ServerComponentType.zombie].zombieType = 3;
-   }
-   config[ServerComponentType.zombie].tombstone = tombstone;
+   const config = createZombieConfig(isGolden, tombstone);
+   config.components[ServerComponentType.transform].position.x = tombstoneComponent.zombieSpawnPositionX;
+   config.components[ServerComponentType.transform].position.y = tombstoneComponent.zombieSpawnPositionY;
+   config.components[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
    createEntityFromConfig(config, getEntityLayer(tombstone), 0);
 
    tombstoneComponent.numZombies++;

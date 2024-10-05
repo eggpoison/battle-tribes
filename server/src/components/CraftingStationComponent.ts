@@ -4,15 +4,11 @@ import { ServerComponentType } from "battletribes-shared/components";
 import { Packet } from "battletribes-shared/packets";
 import { EntityID } from "battletribes-shared/entities";
 
-export interface CraftingStationComponentParams {
-   readonly craftingStation: CraftingStation;
-}
-
 export class CraftingStationComponent {
    public readonly craftingStation: CraftingStation;
    
-   constructor(params: CraftingStationComponentParams) {
-      this.craftingStation = params.craftingStation;
+   constructor(craftingStation: CraftingStation) {
+      this.craftingStation = craftingStation;
    }
 }
 

@@ -2,7 +2,7 @@ import { DecorationType, ServerComponentType } from "battletribes-shared/compone
 import { Settings } from "battletribes-shared/settings";
 import { TileType } from "battletribes-shared/tiles";
 import { randInt, randFloat, TileIndex } from "battletribes-shared/utils";
-import Layer, { getTileIndexIncludingEdges, getTilesInRange, getTileX, getTileY, tileIsInWorldIncludingEdges } from "../Layer";
+import { getTileIndexIncludingEdges, getTilesInRange, getTileX, getTileY, tileIsInWorldIncludingEdges } from "../Layer";
 import { createDecorationConfig } from "../entities/decoration";
 import { createEntityFromConfig } from "../Entity";
 import { surfaceLayer } from "../world";
@@ -23,11 +23,11 @@ interface DecorationGenerationInfo {
 }
 
 const createDecoration = (x: number, y: number, decorationType: DecorationType): void => {
-   const config = createDecorationConfig();
-   config[ServerComponentType.transform].position.x = x;
-   config[ServerComponentType.transform].position.y = y;
-   config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
-   config[ServerComponentType.decoration].decorationType = decorationType;
+   const config = createDecorationConfig(decorationType);
+   config.components[ServerComponentType.transform].position.x = x;
+   config.components[ServerComponentType.transform].position.y = y;
+   config.components[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
+   config.components[ServerComponentType.decoration].decorationType = decorationType;
    createEntityFromConfig(config, surfaceLayer, 0);
 }
 

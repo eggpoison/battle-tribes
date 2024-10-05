@@ -176,11 +176,10 @@ export function processRespawnPacket(playerClient: PlayerClient): void {
       layer = surfaceLayer;
    }
 
-   const config = createPlayerConfig();
-   config[ServerComponentType.transform].position.x = spawnPosition.x;
-   config[ServerComponentType.transform].position.y = spawnPosition.y;
-   config[ServerComponentType.tribe].tribe = playerClient.tribe;
-   config[ServerComponentType.player].username = playerClient.username;
+   const config = createPlayerConfig(playerClient.tribe, playerClient.username);
+   config.components[ServerComponentType.transform].position.x = spawnPosition.x;
+   config.components[ServerComponentType.transform].position.y = spawnPosition.y;
+   config.components[ServerComponentType.tribe].tribe = playerClient.tribe;
    const player = createEntityFromConfig(config, layer, 0);
 
    playerClient.instance = player;

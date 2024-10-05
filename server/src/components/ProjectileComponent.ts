@@ -5,10 +5,6 @@ import { TransformComponentArray } from "./TransformComponent";
 import { Settings } from "battletribes-shared/settings";
 import { destroyEntity, getEntityAgeTicks } from "../world";
 
-export interface ProjectileComponentParams {
-   owner: EntityID;
-}
-
 const ARROW_WIDTH = 12;
 const ARROW_HEIGHT = 64;
 // @Incomplete: Use width and height from generic arrow info
@@ -16,11 +12,11 @@ const ARROW_DESTROY_DISTANCE = Math.sqrt(Math.pow(ARROW_WIDTH / 2, 2) + Math.pow
 
 /** Add to projectiles to make them not damage their owner and be able to be blocked. */
 export class ProjectileComponent {
-   public readonly owner: EntityID;
+   public readonly creator: EntityID;
    public isBlocked = false;
 
-   constructor(params: ProjectileComponentParams) {
-      this.owner = params.owner;
+   constructor(creator: EntityID) {
+      this.creator = creator;
    }
 }
 

@@ -3,7 +3,6 @@ import { ServerComponentType, TribesmanAIType } from "battletribes-shared/compon
 import { Settings } from "battletribes-shared/settings";
 import { randInt } from "battletribes-shared/utils";
 import { ComponentArray } from "./ComponentArray";
-import Layer from "../Layer";
 import Tribe, { BuildingPlan } from "../Tribe";
 import { EntityRelationship, TribeComponentArray } from "./TribeComponent";
 import { TribesmanGoal } from "../entities/tribes/tribesman-ai/tribesman-goals";
@@ -21,10 +20,6 @@ const enum Vars {
    MAX_ENEMY_RELATION_THRESHOLD = -30,
    MIN_ACQUAINTANCE_RELATION_THRESOLD = 50,
    ITEM_THROW_COOLDOWN_TICKS = (0.2 * Settings.TPS) | 0
-}
-
-export interface TribesmanAIComponentParams {
-   hut: EntityID;
 }
 
 /** Stores how much gifting an item to a tribesman increases your relations with them */
@@ -107,7 +102,7 @@ export const enum TribesmanPathType {
 
 export class TribesmanAIComponent {
    /** ID of the hut which spawned the tribesman */
-   public hutID: number;
+   public hut: EntityID = 0;
 
    public currentAIType = TribesmanAIType.idle;
    
@@ -128,7 +123,7 @@ export class TribesmanAIComponent {
    public extraBowCooldownTicks = 0;
 
    /** The number of ticks that had occured when the tribesman last had line of sight to an enemy */
-   public lastEnemyLineOfSightTicks: number;
+   public lastEnemyLineOfSightTicks = 0;
 
    // @Cleanup: name
    public helpX = 0;
@@ -141,7 +136,7 @@ export class TribesmanAIComponent {
    public tribesmanRelations: Partial<Record<number, number>> = {};
 
    // @Cleanup: Unify with player username in tribemember component
-   public readonly name: number;
+   public readonly name = randInt(0, 99);
    // @Bug: will favour certain names more.
    public untitledDescriptor = randInt(0, 99);
 
@@ -151,16 +146,10 @@ export class TribesmanAIComponent {
    public currentCraftingTicks = 0;
 
    public lastItemThrowTicks = 0;
-
-   constructor(params: TribesmanAIComponentParams) {
-      this.hutID = params.hut;
-      this.lastEnemyLineOfSightTicks = getGameTicks();
-      // @Bug: will favour certain names more.
-      this.name = randInt(0, 99);
-   }
 }
 
 export const TribesmanAIComponentArray = new ComponentArray<TribesmanAIComponent>(ServerComponentType.tribesmanAI, true, {
+   onJoin: onJoin,
    onTick: {
       tickInterval: 1,
       func: tickTribesman
@@ -168,6 +157,11 @@ export const TribesmanAIComponentArray = new ComponentArray<TribesmanAIComponent
    getDataLength: getDataLength,
    addDataToPacket: addDataToPacket
 });
+
+function onJoin(entity: EntityID): void {
+   const tribesmanAIComponent = TribesmanAIComponentArray.getComponent(entity);
+   tribesmanAIComponent.lastEnemyLineOfSightTicks = getGameTicks();
+}
 
 function getDataLength(): number {
    return 7 * Float32Array.BYTES_PER_ELEMENT;

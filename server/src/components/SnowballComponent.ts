@@ -1,35 +1,24 @@
-import { EntityID, SNOWBALL_SIZES, SnowballSize } from "battletribes-shared/entities";
+import { EntityID, SnowballSize } from "battletribes-shared/entities";
 import { ServerComponentType } from "battletribes-shared/components";
 import { ComponentArray } from "./ComponentArray";
-import { ComponentConfig } from "../components";
 import { PhysicsComponentArray } from "./PhysicsComponent";
 import { randFloat, randSign } from "battletribes-shared/utils";
 import { Packet } from "battletribes-shared/packets";
-import CircularBox from "battletribes-shared/boxes/CircularBox";
 import { destroyEntity, getEntityAgeTicks } from "../world";
-
-export interface SnowballComponentParams {
-   yetiID: number;
-   size: SnowballSize;
-   readonly lifetime: number;
-}
-
-const MAX_HEALTHS: ReadonlyArray<number> = [1, 3];
+import { Settings } from "../../../shared/src/settings";
 
 export class SnowballComponent {
-   public readonly yetiID: number;
+   public readonly yeti: EntityID;
    public readonly size: SnowballSize;
-   public readonly lifetimeTicks: number;
+   public readonly lifetimeTicks = Math.floor(randFloat(10, 15) * Settings.TPS);
 
-   constructor(params: SnowballComponentParams) {
-      this.yetiID = params.yetiID;
-      this.size = params.size;
-      this.lifetimeTicks = params.lifetime;
+   constructor(yeti: EntityID, size: SnowballSize) {
+      this.yeti = yeti;
+      this.size = size;
    }
 }
 
 export const SnowballComponentArray = new ComponentArray<SnowballComponent>(ServerComponentType.snowball, true, {
-   onInitialise: onInitialise,
    onJoin: onJoin,
    onTick: {
       tickInterval: 1,
@@ -38,18 +27,6 @@ export const SnowballComponentArray = new ComponentArray<SnowballComponent>(Serv
    getDataLength: getDataLength,
    addDataToPacket: addDataToPacket
 });
-
-function onInitialise(config: ComponentConfig<ServerComponentType.transform | ServerComponentType.health | ServerComponentType.snowball>): void {
-   const size = config[ServerComponentType.snowball].size;
-
-   config[ServerComponentType.health].maxHealth = MAX_HEALTHS[size];
-   
-   const hitbox = config[ServerComponentType.transform].hitboxes[0];
-   const box = hitbox.box as CircularBox;
-
-   hitbox.mass = size === SnowballSize.small ? 1 : 1.5;
-   box.radius = SNOWBALL_SIZES[size] / 2;
-}
 
 function onJoin(entity: EntityID): void {
    /** Set the snowball to spin */

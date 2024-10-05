@@ -2,7 +2,6 @@ import { ServerComponentType } from "battletribes-shared/components";
 import { createItemEntityConfig, itemEntityCanBePickedUp } from "../entities/item-entity";
 import { ComponentArray } from "./ComponentArray";
 import { createItem } from "../items";
-import Layer from "../Layer";
 import { ItemComponentArray } from "./ItemComponent";
 import { CraftingRecipe, CraftingStation } from "battletribes-shared/items/crafting-recipes";
 import { ItemTally2, tallyInventoryItems } from "battletribes-shared/items/ItemTally";
@@ -15,28 +14,11 @@ import { addInventoryDataToPacket, getInventoryDataLength } from "../server/game
 import { EntityRelationship, getEntityRelationship } from "./TribeComponent";
 import { destroyEntity, getEntityLayer } from "../world";
 
-export interface ItemCreationInfo {
-   readonly itemSlot: number;
-   readonly item: Item;
-}
-
-export interface InventoryCreationInfo {
-   readonly inventoryName: InventoryName;
-   readonly width: number;
-   readonly height: number;
-   readonly options: InventoryOptions;
-   readonly items: Array<ItemCreationInfo>;
-}
-
 export interface InventoryOptions {
    readonly acceptsPickedUpItems: boolean;
    readonly isDroppedOnDeath: boolean;
    /** Whether or not the inventory is included in packets sent to enemy players. */
    readonly isSentToEnemyPlayers: boolean;
-}
-
-export interface InventoryComponentParams {
-   inventories: Array<InventoryCreationInfo>;
 }
 
 export class InventoryComponent {
@@ -52,20 +34,6 @@ export class InventoryComponent {
    public readonly droppableInventories = new Array<Inventory>();
 
    public readonly absentItemIDs = new Array<number>();
-
-   constructor(params: InventoryComponentParams) {
-      for (let i = 0; i < params.inventories.length; i++) {
-         const inventoryCreationInfo = params.inventories[i];
-
-         const inventory = createNewInventory(this, inventoryCreationInfo.inventoryName, inventoryCreationInfo.width, inventoryCreationInfo.height, inventoryCreationInfo.options);
-
-         // @Cleanup: do in create inventory function
-         for (let j = 0; j < inventoryCreationInfo.items.length; j++) {
-            const itemCreationInfo = inventoryCreationInfo.items[j];
-            inventory.addItem(itemCreationInfo.item, itemCreationInfo.itemSlot);
-         }
-      }
-   }
 }
 
 export const InventoryComponentArray = new ComponentArray<InventoryComponent>(ServerComponentType.inventory, true, {
@@ -73,17 +41,6 @@ export const InventoryComponentArray = new ComponentArray<InventoryComponent>(Se
    getDataLength: getDataLength,
    addDataToPacket: addDataToPacket
 });
-
-export function getInventoryFromCreationInfo(inventories: ReadonlyArray<InventoryCreationInfo>, inventoryName: InventoryName): InventoryCreationInfo {
-   for (let i = 0; i < inventories.length; i++) {
-      const inventory = inventories[i];
-      if (inventory.inventoryName === inventoryName) {
-         return inventory;
-      }
-   }
-
-   throw new Error();
-}
 
 const dropInventory = (entity: EntityID, inventory: Inventory, dropRange: number): void => {
    const transformComponent = TransformComponentArray.getComponent(entity);
@@ -97,12 +54,10 @@ const dropInventory = (entity: EntityID, inventory: Inventory, dropRange: number
       position.x += spawnOffsetMagnitude * Math.sin(spawnOffsetDirection);
       position.y += spawnOffsetMagnitude * Math.cos(spawnOffsetDirection);
       
-      const config = createItemEntityConfig();
-      config[ServerComponentType.transform].position.x = position.x;
-      config[ServerComponentType.transform].position.y = position.y;
-      config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
-      config[ServerComponentType.item].itemType = item.type;
-      config[ServerComponentType.item].amount = item.count;
+      const config = createItemEntityConfig(item.type, item.count, null);
+      config.components[ServerComponentType.transform].position.x = position.x;
+      config.components[ServerComponentType.transform].position.y = position.y;
+      config.components[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
       createEntityFromConfig(config, getEntityLayer(entity), 0);
    }
 }
@@ -119,14 +74,12 @@ function onRemove(entity: EntityID): void {
 }
 
 /** Creates and stores a new inventory in the component. */
-export function createNewInventory(inventoryComponent: InventoryComponent, inventoryName: InventoryName, width: number, height: number, options: InventoryOptions): Inventory {
-   if (typeof inventoryComponent.inventoryRecord[inventoryName] !== "undefined") {
-      throw new Error(`Tried to create an inventory when an inventory by the name of '${inventoryName}' already exists.`);
+export function addInventoryToInventoryComponent(inventoryComponent: InventoryComponent, inventory: Inventory, options: InventoryOptions): Inventory {
+   if (typeof inventoryComponent.inventoryRecord[inventory.name] !== "undefined") {
+      throw new Error(`Tried to create an inventory when an inventory by the name of '${inventory.name}' already exists.`);
    }
    
-   const inventory = new Inventory(width, height, inventoryName);
-
-   inventoryComponent.inventoryRecord[inventoryName] = inventory;
+   inventoryComponent.inventoryRecord[inventory.name] = inventory;
    inventoryComponent.inventories.push(inventory);
    inventoryComponent.inventoryIsSentToEnemyPlayersArray.push(options.isSentToEnemyPlayers);
 

@@ -24,10 +24,10 @@ export class FollowAIComponent {
    public readonly followChancePerSecond: number;
    public readonly followDistance: number;
 
-   constructor(params: FollowAIComponentParams) {
-      this.followCooldownTicks = params.followCooldownTicks;
-      this.followChancePerSecond = params.followChancePerSecond;
-      this.followDistance = params.followDistance;
+   constructor(followCooldownTicks: number, followChancePerSecond: number, followDistance: number) {
+      this.followCooldownTicks = followCooldownTicks;
+      this.followChancePerSecond = followChancePerSecond;
+      this.followDistance = followDistance;
    }
 }
 

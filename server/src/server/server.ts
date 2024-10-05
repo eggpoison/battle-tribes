@@ -4,7 +4,7 @@ import { TribeType } from "battletribes-shared/tribes";
 import { Point, randInt, TileIndex } from "battletribes-shared/utils";
 import { PacketReader, PacketType } from "battletribes-shared/packets";
 import WebSocket, { Server } from "ws";
-import { populateEntitySpawnInfos, runSpawnAttempt, spawnInitialEntities } from "../entity-spawning";
+import { noteSpawnableTiles, runSpawnAttempt, spawnInitialEntities } from "../entity-spawning";
 import Tribe from "../Tribe";
 import OPTIONS from "../options";
 import SRandom from "../SRandom";
@@ -131,7 +131,7 @@ class GameServer {
       createLayers(surfaceTerrainGenerationInfo, undergroundTerrainGenerationInfo);
 
       console.log("Spawning entities...");
-      populateEntitySpawnInfos();
+      noteSpawnableTiles();
       updateResourceDistributions();
       spawnInitialEntities();
       forceMaxGrowAllIceSpikes();
@@ -170,11 +170,9 @@ class GameServer {
       
                   const tribe = new Tribe(tribeType, false);
       
-                  const config = createPlayerConfig();
-                  config[ServerComponentType.transform].position.x = spawnPosition.x;
-                  config[ServerComponentType.transform].position.y = spawnPosition.y;
-                  config[ServerComponentType.tribe].tribe = tribe;
-                  config[ServerComponentType.player].username = username;
+                  const config = createPlayerConfig(tribe, username);
+                  config.components[ServerComponentType.transform].position.x = spawnPosition.x;
+                  config.components[ServerComponentType.transform].position.y = spawnPosition.y;
                   const player = createEntityFromConfig(config, surfaceLayer, 0);
       
                   playerClient = new PlayerClient(socket, tribe, screenWidth, screenHeight, spawnPosition, player, username);
@@ -194,10 +192,9 @@ class GameServer {
                         }
                      }
                      
-                     const config = createGuardianConfig();
-                     config[ServerComponentType.transform].position.x = spawnPosition.x + 150;
-                     config[ServerComponentType.transform].position.y = spawnPosition.y;
-                     config[ServerComponentType.guardian].homeTiles = tiles;
+                     const config = createGuardianConfig(tiles);
+                     config.components[ServerComponentType.transform].position.x = spawnPosition.x + 150;
+                     config.components[ServerComponentType.transform].position.y = spawnPosition.y;
                      createEntityFromConfig(config, surfaceLayer, 0);
                   }, 500);
 

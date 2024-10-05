@@ -1,4 +1,4 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "battletribes-shared/collision";
+import { DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "battletribes-shared/collision";
 import { EntityID, EntityType } from "battletribes-shared/entities";
 import { StatusEffect } from "battletribes-shared/status-effects";
 import { Point, randInt } from "battletribes-shared/utils";
@@ -6,9 +6,13 @@ import { createItemsOverEntity } from "../../entity-shared";
 import { wasTribeMemberKill } from "../tribes/tribe-member";
 import { ItemType } from "battletribes-shared/items/items";
 import { ServerComponentType } from "battletribes-shared/components";
-import { ComponentConfig } from "../../components";
+import { EntityConfig } from "../../components";
 import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
 import CircularBox from "battletribes-shared/boxes/CircularBox";
+import { TransformComponent } from "../../components/TransformComponent";
+import { HealthComponent } from "../../components/HealthComponent";
+import { StatusEffectComponent } from "../../components/StatusEffectComponent";
+import { BoulderComponent } from "../../components/BoulderComponent";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.health
@@ -17,23 +21,25 @@ type ComponentTypes = ServerComponentType.transform
 
 const RADIUS = 40;
 
-export function createBoulderConfig(): ComponentConfig<ComponentTypes> {
+export function createBoulderConfig(): EntityConfig<ComponentTypes> {
+   const transformComponent = new TransformComponent();
+   const hitbox = createHitbox(new CircularBox(new Point(0, 0), 0, RADIUS), 1.25, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, []);
+   transformComponent.addHitbox(hitbox, null);
+   
+   const healthComponent = new HealthComponent(40);
+
+   const statusEffectComponent = new StatusEffectComponent(StatusEffect.poisoned);
+   
+   const boulderComponent = new BoulderComponent();
+   
    return {
-      [ServerComponentType.transform]: {
-         position: new Point(0, 0),
-         rotation: 0,
-         type: EntityType.boulder,
-         collisionBit: COLLISION_BITS.default,
-         collisionMask: DEFAULT_COLLISION_MASK,
-         hitboxes: [createHitbox(new CircularBox(new Point(0, 0), 0, RADIUS), 1.25, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, [])]
-      },
-      [ServerComponentType.health]: {
-         maxHealth: 40
-      },
-      [ServerComponentType.statusEffect]: {
-         statusEffectImmunityBitset: StatusEffect.poisoned
-      },
-      [ServerComponentType.boulder]: {}
+      entityType: EntityType.boulder,
+      components: {
+         [ServerComponentType.transform]: transformComponent,
+         [ServerComponentType.health]: healthComponent,
+         [ServerComponentType.statusEffect]: statusEffectComponent,
+         [ServerComponentType.boulder]: boulderComponent
+      }
    };
 }
 

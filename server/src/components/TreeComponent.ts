@@ -2,21 +2,14 @@ import { EntityID, TreeSize } from "battletribes-shared/entities";
 import { ComponentArray } from "./ComponentArray";
 import { GrassBlockerCircle } from "battletribes-shared/grass-blockers";
 import { ServerComponentType } from "battletribes-shared/components";
-import { ComponentConfig } from "../components";
 import { TransformComponentArray } from "./TransformComponent";
 import { addGrassBlocker } from "../grass-blockers";
 import { Packet } from "battletribes-shared/packets";
 import { ItemType } from "battletribes-shared/items/items";
 import { randInt } from "battletribes-shared/utils";
 import { createItemsOverEntity } from "../entity-shared";
-import CircularBox from "battletribes-shared/boxes/CircularBox";
-
-export interface TreeComponentParams {
-   readonly treeSize: TreeSize;
-}
 
 export const TREE_RADII: ReadonlyArray<number> = [40, 50];
-const TREE_MAX_HEALTHS = [10, 15];
 
 const SEED_DROP_CHANCES: ReadonlyArray<number> = [0.25, 0.5];
 
@@ -33,31 +26,17 @@ const TREE_TRUNK_RADII: Record<TreeSize, number> = {
 export class TreeComponent {
    readonly treeSize: TreeSize;
 
-   constructor(params: TreeComponentParams) {
-      this.treeSize = params.treeSize;
+   constructor(size: number) {
+      this.treeSize = size;
    }
 }
 
 export const TreeComponentArray = new ComponentArray<TreeComponent>(ServerComponentType.tree, true, {
-   onInitialise: onInitialise,
    onJoin: onJoin,
    onRemove: onRemove,
    getDataLength: getDataLength,
    addDataToPacket: addDataToPacket
 });
-
-function onInitialise(config: ComponentConfig<ServerComponentType.transform | ServerComponentType.health | ServerComponentType.tree>): void {
-   const treeSize = config[ServerComponentType.tree].treeSize;
-
-   config[ServerComponentType.health].maxHealth = TREE_MAX_HEALTHS[treeSize];
-
-   const hitbox = config[ServerComponentType.transform].hitboxes[0];
-   const box = hitbox.box as CircularBox;
-   
-   hitbox.mass = 1.25 + treeSize * 0.25;
-   box.radius = TREE_RADII[treeSize];
-}
-
 function onJoin(entity: EntityID): void {
    const treeComponent = TreeComponentArray.getComponent(entity);
    const transformComponent = TransformComponentArray.getComponent(entity);

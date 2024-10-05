@@ -14,6 +14,7 @@ import { resolveEntityTileCollision } from "../collision";
 import { Packet } from "battletribes-shared/packets";
 import { boxIsCircular, Hitbox, updateBox } from "battletribes-shared/boxes/boxes";
 import { getEntityAgeTicks, getEntityLayer, getEntityType } from "../world";
+import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "../../../shared/src/collision";
 
 // @Cleanup: move mass/hitbox related stuff out? (Are there any entities which would make use of that?)
 
@@ -33,10 +34,10 @@ export class TransformComponent {
    public totalMass = 0;
 
    /** Position of the entity in the world */
-   public position: Point;
+   public position = new Point(0, 0);
 
    /** Direction the entity is facing in radians */
-   public rotation: number;
+   public rotation = 0;
 
    // @Cleanup: unused?
    public collisionPushForceMultiplier = 1;
@@ -55,29 +56,15 @@ export class TransformComponent {
    public boundingAreaMinY = Number.MAX_SAFE_INTEGER;
    public boundingAreaMaxY = Number.MIN_SAFE_INTEGER;
 
-   public readonly collisionBit: number;
-   public collisionMask: number;
+   public collisionBit = COLLISION_BITS.default;
+   public collisionMask = DEFAULT_COLLISION_MASK;
 
    public occupiedPathfindingNodes = new Set<PathfindingNodeIndex>();
 
    public nextHitboxLocalID = 1;
-   
-   constructor(params: TransformComponentParams) {
-      this.position = params.position;
-      this.rotation = params.rotation;
-      this.collisionBit = params.collisionBit;
-      this.collisionMask = params.collisionMask;
 
-      for (let i = 0; i < params.hitboxes.length; i++) {
-         const hitbox = params.hitboxes[i];
-         this.addHitbox(hitbox, null);
-      }
-
-      // Clamp the game object's position to within the world
-      if (this.position.x < 0) this.position.x = 0;
-      if (this.position.x >= Settings.BOARD_UNITS) this.position.x = Settings.BOARD_UNITS - 1;
-      if (this.position.y < 0) this.position.y = 0;
-      if (this.position.y >= Settings.BOARD_UNITS) this.position.y = Settings.BOARD_UNITS - 1;
+   constructor() {
+      
    }
 
    public updateIsInRiver(entity: EntityID): void {
@@ -115,6 +102,8 @@ export class TransformComponent {
       this.isInRiver = true;
    }
 
+   // @Cleanup: is there a way to avoid having this be optionally null? Or having the entity parameter here entirely?
+   // Note: entity is null if the hitbox hasn't been created yet
    public addHitbox(hitbox: Hitbox, entity: EntityID | null): void {
       const box = hitbox.box;
       
@@ -148,6 +137,13 @@ export class TransformComponent {
       // If the hitbox is clipping into a border, clean the entities' position so that it doesn't clip
       if (boundsMinX < 0 || boundsMaxX >= Settings.BOARD_UNITS || boundsMinY < 0 || boundsMaxY >= Settings.BOARD_UNITS) {
          this.cleanHitboxes(entity);
+      }
+   }
+
+   public addHitboxes(hitboxes: ReadonlyArray<Hitbox>, entity: EntityID | null): void {
+      for (let i = 0; i < hitboxes.length; i++) {
+         const hitbox = hitboxes[i];
+         this.addHitbox(hitbox, entity);
       }
    }
 

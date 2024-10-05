@@ -1,6 +1,6 @@
 import { ServerComponentType } from "battletribes-shared/components";
 import { EntityID, EntityType } from "battletribes-shared/entities";
-import { ComponentConfig } from "../components";
+import { EntityConfig } from "../components";
 import { Packet } from "battletribes-shared/packets";
 import { Hitbox } from "battletribes-shared/boxes/boxes";
 import { Point } from "../../../shared/src/utils";
@@ -18,7 +18,7 @@ interface ComponentArrayTickFunction<T extends object> {
 
 interface ComponentArrayFunctions<T extends object> {
    /** Called after all the components for an entity are created, before the entity has joined the world. */
-   onInitialise?(config: ComponentConfig<ServerComponentType>, entity: EntityID, entityType: EntityType): void;
+   onInitialise?(config: EntityConfig<ServerComponentType>, entity: EntityID): void;
    onJoin?(entity: EntityID): void;
    readonly onTick?: ComponentArrayTickFunction<T>;
    onCollision?(entity: EntityID, collidingEntity: EntityID, pushedHitbox: Hitbox, pushingHitbox: Hitbox, collisionPoint: Point): void;
@@ -58,7 +58,7 @@ export class ComponentArray<T extends object = object, C extends ServerComponent
    private deactivateBuffer = new Array<number>();
 
    // @Bug @Incomplete: This function shouldn't create an entity, as that will cause a crash. (Can't add components to the join buffer while iterating it). solution: make it not crash
-   public onInitialise?(config: ComponentConfig<ServerComponentType>, entity: EntityID, entityType: EntityType): void;
+   public onInitialise?(config: EntityConfig<ServerComponentType>, entity: EntityID): void;
    public onJoin?(entity: EntityID): void;
    public onTick?: ComponentArrayTickFunction<T>;
    public onCollision?(entity: EntityID, collidingEntity: EntityID, pushedHitbox: Hitbox, pushingHitbox: Hitbox, collisionPoint: Point): void;

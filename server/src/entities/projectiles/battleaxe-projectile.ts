@@ -1,17 +1,19 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "battletribes-shared/collision";
+import { DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "battletribes-shared/collision";
 import { EntityID, EntityType, PlayerCauseOfDeath } from "battletribes-shared/entities";
 import { Point } from "battletribes-shared/utils";
 import { HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
-import { ThrowingProjectileComponentArray } from "../../components/ThrowingProjectileComponent";
-import { applyKnockback } from "../../components/PhysicsComponent";
-import { EntityRelationship, getEntityRelationship } from "../../components/TribeComponent";
+import { ThrowingProjectileComponent, ThrowingProjectileComponentArray } from "../../components/ThrowingProjectileComponent";
+import { applyKnockback, PhysicsComponent } from "../../components/PhysicsComponent";
+import { EntityRelationship, getEntityRelationship, TribeComponent } from "../../components/TribeComponent";
 import { ServerComponentType } from "battletribes-shared/components";
-import { ComponentConfig } from "../../components";
+import { EntityConfig } from "../../components";
 import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
-import { TransformComponentArray } from "../../components/TransformComponent";
+import { TransformComponent, TransformComponentArray } from "../../components/TransformComponent";
 import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
 import CircularBox from "battletribes-shared/boxes/CircularBox";
 import { validateEntity } from "../../world";
+import Tribe from "../../Tribe";
+import { BattleaxeProjectileComponent } from "../../components/BattleaxeProjectileComponent";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics
@@ -19,35 +21,30 @@ type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.throwingProjectile
    | ServerComponentType.battleaxeProjectile;
 
-export function createBattleaxeProjectileConfig(): ComponentConfig<ComponentTypes> {
+export function createBattleaxeProjectileConfig(tribe: Tribe, tribeMember: EntityID, itemID: number | null): EntityConfig<ComponentTypes> {
+   const transformComponent = new TransformComponent();
+   const hitbox = createHitbox(new CircularBox(new Point(0, 0), 0, 32), 0.6, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, []);
+   transformComponent.addHitbox(hitbox, null);
+   
+   const physicsComponent = new PhysicsComponent();
+   physicsComponent.isAffectedByGroundFriction = false;
+   physicsComponent.isImmovable = true;
+   
+   const tribeComponent = new TribeComponent(tribe);
+   
+   const throwingProjectileComponent = new ThrowingProjectileComponent(tribeMember, itemID);
+   
+   const battleaxeProjectileComponent = new BattleaxeProjectileComponent();
+   
    return {
-      [ServerComponentType.transform]: {
-         position: new Point(0, 0),
-         rotation: 0,
-         type: EntityType.battleaxeProjectile,
-         collisionBit: COLLISION_BITS.default,
-         collisionMask: DEFAULT_COLLISION_MASK,
-         hitboxes: [createHitbox(new CircularBox(new Point(0, 0), 0, 32), 0.6, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, [])]
-      },
-      [ServerComponentType.physics]: {
-         velocityX: 0,
-         velocityY: 0,
-         accelerationX: 0,
-         accelerationY: 0,
-         traction: 1,
-         isAffectedByAirFriction: true,
-         isAffectedByGroundFriction: true,
-         isImmovable: true
-      },
-      [ServerComponentType.tribe]: {
-         tribe: null,
-         tribeType: 0
-      },
-      [ServerComponentType.throwingProjectile]: {
-         tribeMember: 0,
-         itemID: null
-      },
-      [ServerComponentType.battleaxeProjectile]: {}
+      entityType: EntityType.battleaxeProjectile,
+      components: {
+         [ServerComponentType.transform]: transformComponent,
+         [ServerComponentType.physics]: physicsComponent,
+         [ServerComponentType.tribe]: tribeComponent,
+         [ServerComponentType.throwingProjectile]: throwingProjectileComponent,
+         [ServerComponentType.battleaxeProjectile]: battleaxeProjectileComponent
+      }
    };
 }
 

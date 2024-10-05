@@ -58,9 +58,9 @@ export function generateLilypads(): void {
             }
    
             const config = createLilypadConfig();
-            config[ServerComponentType.transform].position.x = x;
-            config[ServerComponentType.transform].position.y = y;
-            config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
+            config.components[ServerComponentType.transform].position.x = x;
+            config.components[ServerComponentType.transform].position.y = y;
+            config.components[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
             createEntityFromConfig(config, surfaceLayer, 0);
 
             // Immediately add the entity so that distance checks work

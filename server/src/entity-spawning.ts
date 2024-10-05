@@ -12,9 +12,25 @@ import { getDistributionWeightedSpawnPosition } from "./resource-distributions";
 import { entityIsTribesman } from "./entities/tribes/tribe-member";
 import { TransformComponentArray } from "./components/TransformComponent";
 import { yetiSpawnPositionIsValid } from "./components/YetiComponent";
-import { createEntityConfig } from "./entity-creation";
 import { ServerComponentType } from "battletribes-shared/components";
 import { getEntityType, getLayerByType, isNight, LayerType, pushJoinBuffer } from "./world";
+import { EntityConfig } from "./components";
+import { createCowConfig } from "./entities/mobs/cow";
+import { createBerryBushConfig } from "./entities/resources/berry-bush";
+import { createTombstoneConfig } from "./entities/tombstone";
+import { createBoulderConfig } from "./entities/resources/boulder";
+import { createCactusConfig } from "./entities/resources/cactus";
+import { createYetiConfig } from "./entities/mobs/yeti";
+import { createIceSpikesConfig } from "./entities/resources/ice-spikes";
+import { createSlimewispConfig } from "./entities/mobs/slimewisp";
+import { createKrumblidConfig } from "./entities/mobs/krumblid";
+import { createFrozenYetiConfig } from "./entities/mobs/frozen-yeti";
+import { createFishConfig } from "./entities/mobs/fish";
+import { createLilypadConfig } from "./entities/lilypad";
+import { createGolemConfig } from "./entities/mobs/golem";
+import { createTribeWorkerConfig } from "./entities/tribes/tribe-worker";
+import { TribeType } from "../../shared/src/tribes";
+import Tribe from "./Tribe";
 
 const PACK_SPAWN_RANGE = 200;
 
@@ -30,7 +46,7 @@ export interface EntitySpawnInfo {
    readonly spawnRate: number;
    /** Maximum global density per tile the entity type can have. */
    readonly maxDensity: number;
-   readonly spawnableTiles: ReadonlySet<TileIndex>;
+   readonly spawnableTileTypes: ReadonlyArray<TileType>;
    readonly minPackSize: number;
    readonly maxPackSize: number;
    readonly onlySpawnsInNight: boolean;
@@ -40,7 +56,204 @@ export interface EntitySpawnInfo {
 }
 
 const unspawnableTiles = new Set<TileIndex>();
-let SPAWN_INFOS: ReadonlyArray<EntitySpawnInfo>;
+const SPAWN_INFOS = [
+   {
+      layerType: LayerType.surface,
+      entityType: EntityType.cow,
+      spawnRate: 0.01,
+      maxDensity: 0.004,
+      spawnableTileTypes: [TileType.grass],
+      minPackSize: 2,
+      maxPackSize: 5,
+      onlySpawnsInNight: false,
+      minSpawnDistance: 150,
+      usesSpawnDistribution: false
+   },
+   {
+      layerType: LayerType.surface,
+      entityType: EntityType.berryBush,
+      spawnRate: 0.001,
+      maxDensity: 0.0025,
+      spawnableTileTypes: [TileType.grass],
+      minPackSize: 1,
+      maxPackSize: 1,
+      onlySpawnsInNight: false,
+      minSpawnDistance: 150,
+      usesSpawnDistribution: true
+   },
+   {
+      layerType: LayerType.surface,
+      entityType: EntityType.tree,
+      spawnRate: 0.013,
+      maxDensity: 0.02,
+      spawnableTileTypes: [TileType.grass],
+      minPackSize: 1,
+      maxPackSize: 1,
+      onlySpawnsInNight: false,
+      minSpawnDistance: 75,
+      usesSpawnDistribution: true
+   },
+   // {
+   //    entityType: EntityType.fibrePlant,
+   //    spawnRate: 0.001,
+   //    maxDensity: 0.0015,
+   //    minPackSize: 1,
+   //    maxPackSize: 1,
+   //    onlySpawnsInNight: false,
+   //    minSpawnDistance: 45,
+   //    usesSpawnDistribution: true
+   // },
+   // @Temporary
+   {
+      layerType: LayerType.surface,
+      entityType: EntityType.tombstone,
+      spawnRate: 0.01,
+      maxDensity: 0.003,
+      spawnableTileTypes: [TileType.grass],
+      minPackSize: 1,
+      maxPackSize: 1,
+      onlySpawnsInNight: true,
+      minSpawnDistance: 150,
+      usesSpawnDistribution: false
+   },
+   {
+      layerType: LayerType.surface,
+      entityType: EntityType.boulder,
+      spawnRate: 0.005,
+      maxDensity: 0.025,
+      spawnableTileTypes: [TileType.rock],
+      minPackSize: 1,
+      maxPackSize: 1,
+      onlySpawnsInNight: false,
+      minSpawnDistance: 60,
+      usesSpawnDistribution: true
+   },
+   {
+      layerType: LayerType.surface,
+      entityType: EntityType.cactus,
+      spawnRate: 0.005,
+      maxDensity: 0.03,
+      spawnableTileTypes: [TileType.sand],
+      minPackSize: 1,
+      maxPackSize: 1,
+      onlySpawnsInNight: false,
+      minSpawnDistance: 75,
+      usesSpawnDistribution: true
+   },
+   {
+      layerType: LayerType.surface,
+      entityType: EntityType.yeti,
+      spawnRate: 0.004,
+      maxDensity: 0.008,
+      spawnableTileTypes: [TileType.snow],
+      minPackSize: 1,
+      maxPackSize: 1,
+      onlySpawnsInNight: false,
+      minSpawnDistance: 150,
+      usesSpawnDistribution: false
+   },
+   {
+      layerType: LayerType.surface,
+      entityType: EntityType.iceSpikes,
+      spawnRate: 0.015,
+      maxDensity: 0.06,
+      spawnableTileTypes: [TileType.ice, TileType.permafrost],
+      minPackSize: 1,
+      maxPackSize: 1,
+      onlySpawnsInNight: false,
+      minSpawnDistance: 150,
+      usesSpawnDistribution: false
+   },
+   {
+      layerType: LayerType.surface,
+      entityType: EntityType.slimewisp,
+      spawnRate: 0.2,
+      maxDensity: 0.3,
+      spawnableTileTypes: [TileType.slime],
+      minPackSize: 1,
+      maxPackSize: 1,
+      onlySpawnsInNight: false,
+      minSpawnDistance: 50,
+      usesSpawnDistribution: false
+   },
+   {
+      layerType: LayerType.surface,
+      entityType: EntityType.krumblid,
+      spawnRate: 0.005,
+      maxDensity: 0.015,
+      spawnableTileTypes: [TileType.sand],
+      minPackSize: 1,
+      maxPackSize: 1,
+      onlySpawnsInNight: false,
+      minSpawnDistance: 150,
+      usesSpawnDistribution: false
+   },
+   // @Temporary
+   {
+      layerType: LayerType.surface,
+      entityType: EntityType.frozenYeti,
+      spawnRate: 0.004,
+      maxDensity: 0.008,
+      spawnableTileTypes: [TileType.fimbultur],
+      minPackSize: 1,
+      maxPackSize: 1,
+      onlySpawnsInNight: false,
+      minSpawnDistance: 150,
+      usesSpawnDistribution: false
+   },
+   {
+      layerType: LayerType.surface,
+      entityType: EntityType.fish,
+      spawnRate: 0.015,
+      maxDensity: 0.03,
+      spawnableTileTypes: [TileType.water],
+      minPackSize: 3,
+      maxPackSize: 4,
+      onlySpawnsInNight: false,
+      minSpawnDistance: 150,
+      usesSpawnDistribution: false
+   },
+   {
+      layerType: LayerType.surface,
+      entityType: EntityType.lilypad,
+      spawnRate: 0,
+      maxDensity: 0.03,
+      spawnableTileTypes: [TileType.water],
+      minPackSize: 2,
+      maxPackSize: 3,
+      onlySpawnsInNight: false,
+      minSpawnDistance: 0,
+      usesSpawnDistribution: false
+   },
+   {
+      layerType: LayerType.surface,
+      entityType: EntityType.golem,
+      spawnRate: 0.002,
+      maxDensity: 0.004,
+      spawnableTileTypes: [TileType.rock],
+      minPackSize: 1,
+      maxPackSize: 1,
+      onlySpawnsInNight: false,
+      minSpawnDistance: 150,
+      usesSpawnDistribution: true
+   },
+   {
+      layerType: LayerType.surface,
+      entityType: EntityType.tribeWorker,
+      spawnRate: 0.002,
+      maxDensity: 0.002,
+      spawnableTileTypes: [TileType.grass, TileType.rock, TileType.sand, TileType.snow, TileType.ice],
+      minPackSize: 1,
+      maxPackSize: 1,
+      onlySpawnsInNight: false,
+      minSpawnDistance: 100,
+      usesSpawnDistribution: false
+   }
+] satisfies ReadonlyArray<EntitySpawnInfo>;
+
+export type SpawningEntityType = (typeof SPAWN_INFOS)[number]["entityType"];
+
+let entitySpawnableTiles: Record<SpawningEntityType, ReadonlySet<TileIndex>>;
 
 /** Prevents entities from spawning on the specified tile. */
 export function markTileAsUnspawnable(tile: TileIndex): void {
@@ -64,201 +277,17 @@ const findSpawnableTiles = (spawnableTileTypes: ReadonlyArray<TileType>): Readon
 }
 
 /** Creates the spawn info array and fills their spawnable tiles */
-export function populateEntitySpawnInfos(): void {
-   SPAWN_INFOS = [
-      {
-         layerType: LayerType.surface,
-         entityType: EntityType.cow,
-         spawnRate: 0.01,
-         maxDensity: 0.004,
-         spawnableTiles: findSpawnableTiles([TileType.grass]),
-         minPackSize: 2,
-         maxPackSize: 5,
-         onlySpawnsInNight: false,
-         minSpawnDistance: 150,
-         usesSpawnDistribution: false
-      },
-      {
-         layerType: LayerType.surface,
-         entityType: EntityType.berryBush,
-         spawnRate: 0.001,
-         maxDensity: 0.0025,
-         spawnableTiles: findSpawnableTiles([TileType.grass]),
-         minPackSize: 1,
-         maxPackSize: 1,
-         onlySpawnsInNight: false,
-         minSpawnDistance: 150,
-         usesSpawnDistribution: true
-      },
-      {
-         layerType: LayerType.surface,
-         entityType: EntityType.tree,
-         spawnRate: 0.013,
-         maxDensity: 0.02,
-         spawnableTiles: findSpawnableTiles([TileType.grass]),
-         minPackSize: 1,
-         maxPackSize: 1,
-         onlySpawnsInNight: false,
-         minSpawnDistance: 75,
-         usesSpawnDistribution: true
-      },
-      // {
-      //    entityType: EntityType.fibrePlant,
-      //    spawnRate: 0.001,
-      //    maxDensity: 0.0015,
-      //    minPackSize: 1,
-      //    maxPackSize: 1,
-      //    onlySpawnsInNight: false,
-      //    minSpawnDistance: 45,
-      //    usesSpawnDistribution: true
-      // },
-      // @Temporary
-      {
-         layerType: LayerType.surface,
-         entityType: EntityType.tombstone,
-         spawnRate: 0.01,
-         maxDensity: 0.003,
-         spawnableTiles: findSpawnableTiles([TileType.grass]),
-         minPackSize: 1,
-         maxPackSize: 1,
-         onlySpawnsInNight: true,
-         minSpawnDistance: 150,
-         usesSpawnDistribution: false
-      },
-      {
-         layerType: LayerType.surface,
-         entityType: EntityType.boulder,
-         spawnRate: 0.005,
-         maxDensity: 0.025,
-         spawnableTiles: findSpawnableTiles([TileType.rock]),
-         minPackSize: 1,
-         maxPackSize: 1,
-         onlySpawnsInNight: false,
-         minSpawnDistance: 60,
-         usesSpawnDistribution: true
-      },
-      {
-         layerType: LayerType.surface,
-         entityType: EntityType.cactus,
-         spawnRate: 0.005,
-         maxDensity: 0.03,
-         spawnableTiles: findSpawnableTiles([TileType.sand]),
-         minPackSize: 1,
-         maxPackSize: 1,
-         onlySpawnsInNight: false,
-         minSpawnDistance: 75,
-         usesSpawnDistribution: true
-      },
-      {
-         layerType: LayerType.surface,
-         entityType: EntityType.yeti,
-         spawnRate: 0.004,
-         maxDensity: 0.008,
-         spawnableTiles: findSpawnableTiles([TileType.snow]),
-         minPackSize: 1,
-         maxPackSize: 1,
-         onlySpawnsInNight: false,
-         minSpawnDistance: 150,
-         usesSpawnDistribution: false
-      },
-      {
-         layerType: LayerType.surface,
-         entityType: EntityType.iceSpikes,
-         spawnRate: 0.015,
-         maxDensity: 0.06,
-         spawnableTiles: findSpawnableTiles([TileType.ice, TileType.permafrost]),
-         minPackSize: 1,
-         maxPackSize: 1,
-         onlySpawnsInNight: false,
-         minSpawnDistance: 150,
-         usesSpawnDistribution: false
-      },
-      {
-         layerType: LayerType.surface,
-         entityType: EntityType.slimewisp,
-         spawnRate: 0.2,
-         maxDensity: 0.3,
-         spawnableTiles: findSpawnableTiles([TileType.slime]),
-         minPackSize: 1,
-         maxPackSize: 1,
-         onlySpawnsInNight: false,
-         minSpawnDistance: 50,
-         usesSpawnDistribution: false
-      },
-      {
-         layerType: LayerType.surface,
-         entityType: EntityType.krumblid,
-         spawnRate: 0.005,
-         maxDensity: 0.015,
-         spawnableTiles: findSpawnableTiles([TileType.sand]),
-         minPackSize: 1,
-         maxPackSize: 1,
-         onlySpawnsInNight: false,
-         minSpawnDistance: 150,
-         usesSpawnDistribution: false
-      },
-      // @Temporary
-      {
-         layerType: LayerType.surface,
-         entityType: EntityType.frozenYeti,
-         spawnRate: 0.004,
-         maxDensity: 0.008,
-         spawnableTiles: findSpawnableTiles([TileType.fimbultur]),
-         minPackSize: 1,
-         maxPackSize: 1,
-         onlySpawnsInNight: false,
-         minSpawnDistance: 150,
-         usesSpawnDistribution: false
-      },
-      {
-         layerType: LayerType.surface,
-         entityType: EntityType.fish,
-         spawnRate: 0.015,
-         maxDensity: 0.03,
-         spawnableTiles: findSpawnableTiles([TileType.water]),
-         minPackSize: 3,
-         maxPackSize: 4,
-         onlySpawnsInNight: false,
-         minSpawnDistance: 150,
-         usesSpawnDistribution: false
-      },
-      {
-         layerType: LayerType.surface,
-         entityType: EntityType.lilypad,
-         spawnRate: 0,
-         maxDensity: 0.03,
-         spawnableTiles: findSpawnableTiles([TileType.water]),
-         minPackSize: 2,
-         maxPackSize: 3,
-         onlySpawnsInNight: false,
-         minSpawnDistance: 0,
-         usesSpawnDistribution: false
-      },
-      {
-         layerType: LayerType.surface,
-         entityType: EntityType.golem,
-         spawnRate: 0.002,
-         maxDensity: 0.004,
-         spawnableTiles: findSpawnableTiles([TileType.rock]),
-         minPackSize: 1,
-         maxPackSize: 1,
-         onlySpawnsInNight: false,
-         minSpawnDistance: 150,
-         usesSpawnDistribution: true
-      },
-      {
-         layerType: LayerType.surface,
-         entityType: EntityType.tribeWorker,
-         spawnRate: 0.002,
-         maxDensity: 0.002,
-         spawnableTiles: findSpawnableTiles([TileType.grass, TileType.rock, TileType.sand, TileType.snow, TileType.ice]),
-         minPackSize: 1,
-         maxPackSize: 1,
-         onlySpawnsInNight: false,
-         minSpawnDistance: 100,
-         usesSpawnDistribution: false
-      }
-   ];
+export function noteSpawnableTiles(): void {
+   const tempEntitySpawnableTiles: Partial<Record<SpawningEntityType, ReadonlySet<TileIndex>>> = {};
+   for (let i = 0; i < SPAWN_INFOS.length; i++) {
+      const spawnInfo = SPAWN_INFOS[i];
+      tempEntitySpawnableTiles[spawnInfo.entityType] = findSpawnableTiles(spawnInfo.spawnableTileTypes);
+   }
+   entitySpawnableTiles = tempEntitySpawnableTiles as Record<SpawningEntityType, ReadonlySet<TileIndex>>;
+}
+
+export function getEntitySpawnableTiles(entityType: SpawningEntityType): ReadonlySet<TileIndex> {
+   return entitySpawnableTiles[entityType];
 }
 
 export function getEntitySpawnInfo(entityType: EntityType): EntitySpawnInfo | null {
@@ -321,7 +350,8 @@ const customSpawnConditionsAreMet = (spawnInfo: EntitySpawnInfo, spawnOriginX: n
 
 const spawnConditionsAreMet = (spawnInfo: EntitySpawnInfo): boolean => {
    // If there are no tiles upon which the entity is able to be spawned, the spawn conditions aren't valid
-   const numEligibleTiles = spawnInfo.spawnableTiles.size;
+   const spawnableTiles = getEntitySpawnableTiles(spawnInfo.entityType as SpawningEntityType);
+   const numEligibleTiles = spawnableTiles.size;
    if (numEligibleTiles === 0) return false;
    
    // Check if the entity density is right
@@ -339,6 +369,68 @@ const spawnConditionsAreMet = (spawnInfo: EntitySpawnInfo): boolean => {
    return true;
 }
 
+const getTribeType = (layer: Layer, x: number, y: number): TribeType => {
+   if (Math.random() < 0.2) {
+      return TribeType.goblins;
+   }
+   
+   const tileX = Math.floor(x / Settings.TILE_SIZE);
+   const tileY = Math.floor(y / Settings.TILE_SIZE);
+   const tileType = layer.getTileXYType(tileX, tileY);
+   switch (tileType) {
+      case TileType.grass: {
+         return TribeType.plainspeople;
+      }
+      case TileType.sand: {
+         return TribeType.barbarians;
+      }
+      case TileType.snow:
+      case TileType.ice: {
+         return TribeType.frostlings;
+      }
+      case TileType.rock: {
+         return TribeType.goblins;
+      }
+      default: {
+         return randInt(0, 3);
+      }
+   }
+}
+
+const spawnEntity = (entityType: SpawningEntityType, layer: Layer, x: number, y: number): void => {
+   let config: EntityConfig<ServerComponentType.transform>;
+   switch (entityType) {
+      case EntityType.cow: config = createCowConfig(); break;
+      case EntityType.berryBush: config = createBerryBushConfig(); break;
+      case EntityType.tombstone: config = createTombstoneConfig(); break;
+      case EntityType.boulder: config = createBoulderConfig(); break;
+      case EntityType.cactus: config = createCactusConfig(); break;
+      case EntityType.yeti: config = createYetiConfig(); break;
+      case EntityType.iceSpikes: config = createIceSpikesConfig(0); break;
+      case EntityType.slimewisp: config = createSlimewispConfig(); break;
+      case EntityType.krumblid: config = createKrumblidConfig(); break;
+      case EntityType.frozenYeti: config = createFrozenYetiConfig(); break;
+      case EntityType.fish: config = createFishConfig(); break;
+      case EntityType.lilypad: config = createLilypadConfig(); break;
+      case EntityType.golem: config = createGolemConfig(); break;
+      case EntityType.tribeWorker: config = createTribeWorkerConfig(new Tribe(getTribeType(layer, x, y), true)); break;
+      // @Robustness
+      default: {
+         throw new Error();
+      }
+   }
+
+   config.components[ServerComponentType.transform].position.x = x;
+   config.components[ServerComponentType.transform].position.y = y;
+   config.components[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
+   const entity = createEntityFromConfig(config, layer, 0);
+
+   addEntityToCensus(entity, entityType);
+   if (!SERVER.isRunning) {
+      pushJoinBuffer();
+   }
+}
+
 const spawnEntities = (spawnInfo: EntitySpawnInfo, spawnOriginX: number, spawnOriginY: number): void => {
    // @Incomplete @Cleanup: Make all cows spawn with the same type,
    // and make fish spawn with the same colour
@@ -346,16 +438,7 @@ const spawnEntities = (spawnInfo: EntitySpawnInfo, spawnOriginX: number, spawnOr
    // const cowSpecies = randInt(0, 1);
    const layer = getLayerByType(spawnInfo.layerType);
    
-   const config = createEntityConfig(spawnInfo.entityType);
-   config[ServerComponentType.transform].position.x = spawnOriginX;
-   config[ServerComponentType.transform].position.y = spawnOriginY;
-   config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
-   const entity = createEntityFromConfig(config, layer, 0);
-   
-   addEntityToCensus(entity, spawnInfo.entityType);
-   if (!SERVER.isRunning) {
-      pushJoinBuffer();
-   }
+   spawnEntity(spawnInfo.entityType as SpawningEntityType, layer, spawnOriginX, spawnOriginY);
 
    // Pack spawning
  
@@ -373,6 +456,7 @@ const spawnEntities = (spawnInfo: EntitySpawnInfo, spawnOriginX: number, spawnOr
       spawnCount = randInt(spawnInfo.minPackSize, spawnInfo.maxPackSize) - 1;
    }
 
+   const spawnableTiles = getEntitySpawnableTiles(spawnInfo.entityType as SpawningEntityType);
    for (let i = 0; i < spawnCount - 1;) {
       if (++totalSpawnAttempts === 100) {
          break;
@@ -394,24 +478,16 @@ const spawnEntities = (spawnInfo: EntitySpawnInfo, spawnOriginX: number, spawnOr
       const tileX = Math.floor(spawnPositionX / Settings.TILE_SIZE);
       const tileY = Math.floor(spawnPositionY / Settings.TILE_SIZE);
       const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
-      if (!spawnInfo.spawnableTiles.has(tileIndex)) {
+      if (!spawnableTiles.has(tileIndex)) {
          continue;
       }
 
       if (spawnPositionIsValid(spawnInfo, spawnPositionX, spawnPositionY)) {
-         const spawnPosition = new Point(randInt(minX, maxX), randInt(minY, maxY));
+         const x = randInt(minX, maxX);
+         const y = randInt(minY, maxY);
 
-         // @Copynpaste
-         const config = createEntityConfig(spawnInfo.entityType);
-         config[ServerComponentType.transform].position.x = spawnPosition.x;
-         config[ServerComponentType.transform].position.y = spawnPosition.y;
-         config[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
-         const entity = createEntityFromConfig(config, layer, 0);
-
-         addEntityToCensus(entity, spawnInfo.entityType);
-         if (!SERVER.isRunning) {
-            pushJoinBuffer();
-         }
+         spawnEntity(spawnInfo.entityType as SpawningEntityType, layer, x, y);
+         
          i++;
       }
    }
@@ -450,12 +526,13 @@ const runSpawnEvent = (spawnInfo: EntitySpawnInfo): void => {
    const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
 
    // If the tile is a valid tile for the spawn info, continue with the spawn event
-   if (spawnInfo.spawnableTiles.has(tileIndex)) {
+   const spawnableTiles = getEntitySpawnableTiles(spawnInfo.entityType as SpawningEntityType);
+   if (spawnableTiles.has(tileIndex)) {
       // Calculate a random position in that tile to run the spawn at
       let x: number;
       let y: number;
       if (spawnInfo.usesSpawnDistribution) {
-         const position = getDistributionWeightedSpawnPosition(spawnInfo.entityType);
+         const position = getDistributionWeightedSpawnPosition(spawnInfo.entityType as SpawningEntityType);
          x = position.x;
          y = position.y;
       } else {

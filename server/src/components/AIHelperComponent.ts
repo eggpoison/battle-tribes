@@ -36,14 +36,7 @@ type AIRecord = Partial<{
    [T in AIType]: AIClass<T>;
 }>;
 
-export interface AIHelperComponentParams {
-   /** If enabled, ignores all decorative entities. Enable if possible for performance */
-   ignoreDecorativeEntities: boolean;
-   visionRange: number;
-   ais: AIRecord;
-}
-
-export class AIHelperComponent implements AIHelperComponentParams {
+export class AIHelperComponent {
    public visibleChunkBounds = [999, 999, 999, 999];
    public visibleChunks = new Array<Chunk>();
 

@@ -11,12 +11,6 @@ const enum Vars {
    TICKS_TO_DESPAWN = 300 * Settings.TPS
 }
 
-export interface ItemComponentParams {
-   itemType: ItemType;
-   amount: number;
-   throwingEntity: EntityID | null;
-}
-
 export class ItemComponent {
    public readonly itemType: ItemType;
    public amount: number;

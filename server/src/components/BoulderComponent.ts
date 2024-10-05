@@ -1,10 +1,8 @@
-import { BoulderComponentData, ServerComponentType } from "battletribes-shared/components";
+import { ServerComponentType } from "battletribes-shared/components";
 import { randInt } from "battletribes-shared/utils";
 import { ComponentArray } from "./ComponentArray";
 import { EntityID } from "battletribes-shared/entities";
 import { Packet } from "battletribes-shared/packets";
-
-export interface BoulderComponentParams {}
 
 export class BoulderComponent {
    public readonly boulderType = randInt(0, 1);

@@ -3,9 +3,7 @@ import { ComponentArray } from "./ComponentArray";
 import { EntityID } from "battletribes-shared/entities";
 import { Packet } from "battletribes-shared/packets";
 
-export interface GuardianSpikyBallComponentParams {}
-
-export class GuardianSpikyBallComponent implements GuardianSpikyBallComponentParams {}
+export class GuardianSpikyBallComponent {}
 
 export const GuardianSpikyBallComponentArray = new ComponentArray<GuardianSpikyBallComponent>(ServerComponentType.guardianSpikyBall, true, {
    getDataLength: getDataLength,

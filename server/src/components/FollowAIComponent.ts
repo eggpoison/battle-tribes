@@ -8,12 +8,6 @@ import { TransformComponentArray } from "./TransformComponent";
 import { Packet } from "battletribes-shared/packets";
 import { entityExists } from "../world";
 
-export interface FollowAIComponentParams {
-   readonly followCooldownTicks: number;
-   readonly followChancePerSecond: number;
-   readonly followDistance: number;
-}
-
 export class FollowAIComponent {
    /** ID of the followed entity */
    public followTargetID = 0;

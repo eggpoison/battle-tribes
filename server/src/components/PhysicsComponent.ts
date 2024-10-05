@@ -10,17 +10,6 @@ import { getEntityTile, TransformComponent, TransformComponentArray } from "./Tr
 import { Packet } from "battletribes-shared/packets";
 import { changeEntityLayer, getEntityLayer, getEntityType, undergroundLayer } from "../world";
 
-export interface PhysicsComponentParams {
-   velocityX: number;
-   velocityY: number;
-   accelerationX: number;
-   accelerationY: number;
-   traction: number;
-   isAffectedByAirFriction: boolean;
-   isAffectedByGroundFriction: boolean;
-   isImmovable: boolean;
-}
-
 // @Cleanup: Variable names
 const a = new Array<number>();
 const b = new Array<number>();

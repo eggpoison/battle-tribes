@@ -45,7 +45,6 @@ const SUMMON_DATA_RECORD = {
    [ServerComponentType.yeti]: {},
    [ServerComponentType.zombie]: {},
    [ServerComponentType.ammoBox]: {},
-   [ServerComponentType.wanderAI]: {},
    [ServerComponentType.escapeAI]: {},
    [ServerComponentType.followAI]: {},
    [ServerComponentType.researchBench]: {},

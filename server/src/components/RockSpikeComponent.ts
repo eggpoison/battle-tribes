@@ -6,12 +6,6 @@ import { destroyEntity, getEntityAgeTicks } from "../world";
 import { Settings } from "../../../shared/src/settings";
 import { randFloat } from "../../../shared/src/utils";
 
-export interface RockSpikeProjectileComponentParams {
-   size: number;
-   readonly lifetimeTicks: number;
-   frozenYetiID: number;
-}
-
 export class RockSpikeComponent {
    public readonly size: RockSpikeProjectileSize;
    public readonly lifetimeTicks = Math.floor(randFloat(3.5, 4.5) * Settings.TPS);

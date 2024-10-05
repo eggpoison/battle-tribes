@@ -67,7 +67,6 @@ import TribesmanAIComponent from "./TribesmanAIComponent";
 import TribeWarriorComponent from "./TribeWarriorComponent";
 import TunnelComponent from "./TunnelComponent";
 import TurretComponent from "./TurretComponent";
-import WanderAIComponent from "./WanderAIComponent";
 import YetiComponent from "./YetiComponent";
 import ZombieComponent from "./ZombieComponent";
 
@@ -121,7 +120,6 @@ export function createComponent(entity: Entity, componentType: ServerComponentTy
       case ServerComponentType.craftingStation: return new CraftingStationComponent(entity);
       case ServerComponentType.boulder: return new BoulderComponent(entity);
       case ServerComponentType.aiHelper: return new AIHelperComponent(entity);
-      case ServerComponentType.wanderAI: return new WanderAIComponent(entity);
       case ServerComponentType.escapeAI: return new EscapeAIComponent(entity);
       case ServerComponentType.iceSpikes: return new IceSpikesComponent(entity);
       case ServerComponentType.followAI: return new FollowAIComponent(entity);

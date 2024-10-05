@@ -19,11 +19,6 @@ const enum Vars {
    GROWTH_OFFSET = 60
 }
 
-export interface IceSpikesComponentParams {
-   /** Root ice spike. If null, defaults to the ice spike itself. */
-   rootIceSpike: EntityID | null;
-}
-
 export class IceSpikesComponent {
    public readonly maxChildren = randInt(0, 3);
    public numChildrenIceSpikes = 0;

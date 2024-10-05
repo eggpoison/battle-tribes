@@ -54,7 +54,6 @@ export enum ServerComponentType {
    yeti,
    zombie,
    ammoBox,
-   wanderAI,
    escapeAI,
    followAI,
    researchBench,
@@ -125,7 +124,6 @@ export const ServerComponentTypeString: Record<ServerComponentType, string> = {
    [ServerComponentType.yeti]: "yeti",
    [ServerComponentType.zombie]: "zombie",
    [ServerComponentType.ammoBox]: "ammo box",
-   [ServerComponentType.wanderAI]: "wander ai",
    [ServerComponentType.escapeAI]: "escape ai",
    [ServerComponentType.followAI]: "follow ai",
    [ServerComponentType.researchBench]: "research bench",
@@ -161,18 +159,18 @@ export const NUM_COMPONENTS = Object.keys(ServerComponentTypeString).length;
 
 // @Hack: shouldn't be hardcoded
 export const EntityComponents = {
-   [EntityType.cow]: [ServerComponentType.transform, ServerComponentType.physics, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.aiHelper, ServerComponentType.wanderAI, ServerComponentType.escapeAI, ServerComponentType.followAI, ServerComponentType.cow] as const,
-   [EntityType.zombie]: [ServerComponentType.transform, ServerComponentType.physics, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.zombie, ServerComponentType.wanderAI, ServerComponentType.aiHelper, ServerComponentType.inventory, ServerComponentType.inventoryUse] as const,
+   [EntityType.cow]: [ServerComponentType.transform, ServerComponentType.physics, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.aiHelper, ServerComponentType.escapeAI, ServerComponentType.followAI, ServerComponentType.cow] as const,
+   [EntityType.zombie]: [ServerComponentType.transform, ServerComponentType.physics, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.zombie, ServerComponentType.aiHelper, ServerComponentType.inventory, ServerComponentType.inventoryUse] as const,
    [EntityType.tombstone]: [ServerComponentType.transform, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.tombstone] as const,
    [EntityType.tree]: [ServerComponentType.transform, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.tree] as const,
    [EntityType.workbench]: [ServerComponentType.transform, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.tribe] as const,
    [EntityType.boulder]: [ServerComponentType.transform, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.boulder] as const,
    [EntityType.berryBush]: [ServerComponentType.transform, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.berryBush] as const,
    [EntityType.cactus]: [ServerComponentType.transform, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.cactus] as const,
-   [EntityType.yeti]: [ServerComponentType.transform, ServerComponentType.physics, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.wanderAI, ServerComponentType.aiHelper, ServerComponentType.yeti] as const,
+   [EntityType.yeti]: [ServerComponentType.transform, ServerComponentType.physics, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.aiHelper, ServerComponentType.yeti] as const,
    [EntityType.iceSpikes]: [ServerComponentType.transform, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.iceSpikes] as const,
-   [EntityType.slime]: [ServerComponentType.transform, ServerComponentType.physics, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.slime, ServerComponentType.wanderAI, ServerComponentType.aiHelper] as const,
-   [EntityType.slimewisp]: [ServerComponentType.transform, ServerComponentType.physics, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.slimewisp, ServerComponentType.wanderAI, ServerComponentType.aiHelper] as const,
+   [EntityType.slime]: [ServerComponentType.transform, ServerComponentType.physics, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.slime, ServerComponentType.aiHelper] as const,
+   [EntityType.slimewisp]: [ServerComponentType.transform, ServerComponentType.physics, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.slimewisp, ServerComponentType.aiHelper] as const,
    [EntityType.player]: [ServerComponentType.transform, ServerComponentType.physics, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.tribe, ServerComponentType.tribeMember, ServerComponentType.inventory, ServerComponentType.inventoryUse, ServerComponentType.player, ServerComponentType.damageBox] as const,
    [EntityType.tribeWorker]: [ServerComponentType.transform, ServerComponentType.physics, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.tribe, ServerComponentType.tribeMember, ServerComponentType.inventory, ServerComponentType.inventoryUse, ServerComponentType.tribesmanAI, ServerComponentType.damageBox] as const,
    [EntityType.tribeWarrior]: [ServerComponentType.transform, ServerComponentType.physics, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.tribe, ServerComponentType.tribeMember, ServerComponentType.inventory, ServerComponentType.inventoryUse, ServerComponentType.tribesmanAI, ServerComponentType.tribeWarrior, ServerComponentType.damageBox] as const,
@@ -183,9 +181,9 @@ export const EntityComponents = {
    [EntityType.campfire]: [ServerComponentType.transform, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.tribe, ServerComponentType.inventory, ServerComponentType.cooking] as const,
    [EntityType.furnace]: [ServerComponentType.transform, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.structure, ServerComponentType.tribe, ServerComponentType.inventory, ServerComponentType.cooking] as const,
    [EntityType.snowball]: [ServerComponentType.transform, ServerComponentType.physics, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.snowball] as const,
-   [EntityType.krumblid]: [ServerComponentType.transform, ServerComponentType.physics, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.wanderAI, ServerComponentType.followAI, ServerComponentType.escapeAI, ServerComponentType.aiHelper, ServerComponentType.krumblid] as const,
-   [EntityType.frozenYeti]: [ServerComponentType.transform, ServerComponentType.physics, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.wanderAI, ServerComponentType.frozenYeti, ServerComponentType.aiHelper] as const,
-   [EntityType.fish]: [ServerComponentType.transform, ServerComponentType.physics, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.wanderAI, ServerComponentType.escapeAI, ServerComponentType.aiHelper, ServerComponentType.fish] as const,
+   [EntityType.krumblid]: [ServerComponentType.transform, ServerComponentType.physics, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.followAI, ServerComponentType.escapeAI, ServerComponentType.aiHelper, ServerComponentType.krumblid] as const,
+   [EntityType.frozenYeti]: [ServerComponentType.transform, ServerComponentType.physics, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.frozenYeti, ServerComponentType.aiHelper] as const,
+   [EntityType.fish]: [ServerComponentType.transform, ServerComponentType.physics, ServerComponentType.health, ServerComponentType.statusEffect, ServerComponentType.escapeAI, ServerComponentType.aiHelper, ServerComponentType.fish] as const,
    [EntityType.itemEntity]: [ServerComponentType.transform, ServerComponentType.physics, ServerComponentType.item] as const,
    [EntityType.woodenArrow]: [ServerComponentType.transform, ServerComponentType.physics, ServerComponentType.tribe] as const,
    [EntityType.ballistaWoodenBolt]: [ServerComponentType.transform, ServerComponentType.physics, ServerComponentType.tribe] as const,
@@ -567,14 +565,6 @@ export interface AmmoBoxComponentData extends BaseComponentData {
    readonly componentType: ServerComponentType.ammoBox;
    readonly ammoType: TurretAmmoType;
    readonly ammoRemaining: number;
-}
-
-/* Wander AI Component */
-
-export interface WanderAIComponentData extends BaseComponentData {
-   readonly componentType: ServerComponentType.wanderAI;
-   readonly targetPositionX: number;
-   readonly targetPositionY: number;
 }
 
 /* Escape AI Component */

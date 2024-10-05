@@ -1,5 +1,5 @@
 import { ServerComponentType } from "battletribes-shared/components";
-import { DeathInfo, EntityID } from "battletribes-shared/entities";
+import { EntityID } from "battletribes-shared/entities";
 import { ComponentArray } from "./ComponentArray";
 import { Packet } from "battletribes-shared/packets";
 import { Settings } from "battletribes-shared/settings";
@@ -19,11 +19,6 @@ const enum Vars {
    MAX_SPAWNED_ZOMBIES = 4,
    /** Seconds it takes for a tombstone to spawn a zombie */
    ZOMBIE_SPAWN_TIME = 3
-}
-
-export interface TombstoneComponentParams {
-   readonly tombstoneType: number;
-   readonly deathInfo: DeathInfo | null;
 }
 
 export class TombstoneComponent {

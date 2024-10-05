@@ -20,10 +20,6 @@ import { ProjectileComponentArray } from "./ProjectileComponent";
 import { applyKnockback } from "./PhysicsComponent";
 import { destroyEntity, getGameTicks } from "../world";
 
-export interface InventoryUseComponentParams {
-   usedInventoryNames: Array<InventoryName>;
-}
-
 // @Cleanup: Make into class Limb with getHeldItem method
 export interface LimbInfo {
    readonly associatedInventory: Inventory;

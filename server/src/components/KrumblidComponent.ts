@@ -2,27 +2,21 @@ import { ServerComponentType } from "battletribes-shared/components";
 import { ComponentArray } from "./ComponentArray";
 import { EntityID, EntityType } from "battletribes-shared/entities";
 import { Settings } from "battletribes-shared/settings";
-import { Biome } from "battletribes-shared/tiles";
-import { randInt, TileIndex, UtilVars } from "battletribes-shared/utils";
-import { moveEntityToPosition, entityHasReachedPosition, stopEntity } from "../ai-shared";
+import { randInt, UtilVars } from "battletribes-shared/utils";
+import { moveEntityToPosition } from "../ai-shared";
 import { chooseEscapeEntity, runFromAttackingEntity } from "../ai/escape-ai";
-import { getTileX, getTileY } from "../Layer";
 import { AIHelperComponentArray } from "./AIHelperComponent";
 import { EscapeAIComponentArray, updateEscapeAIComponent } from "./EscapeAIComponent";
 import { FollowAIComponentArray, updateFollowAIComponent, entityWantsToFollow, startFollowingEntity } from "./FollowAIComponent";
-import { PhysicsComponentArray } from "./PhysicsComponent";
 import { TransformComponentArray } from "./TransformComponent";
-import { WanderAIComponentArray } from "./WanderAIComponent";
 import { KrumblidVars } from "../entities/mobs/krumblid";
-import { entityExists, getEntityLayer, getEntityType } from "../world";
+import { entityExists, getEntityType } from "../world";
 
 const enum Vars {
    TURN_SPEED = UtilVars.PI * 2
 }
 
-export interface KrumblidComponentParams {}
-
-export class KrumblidComponent implements KrumblidComponentParams {}
+export class KrumblidComponent {}
 
 export const KrumblidComponentArray = new ComponentArray<KrumblidComponent>(ServerComponentType.krumblid, true, {
    onTick: {

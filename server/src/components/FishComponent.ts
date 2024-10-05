@@ -37,10 +37,6 @@ const enum Vars {
    LUNGE_INTERVAL = 1
 }
 
-export interface FishComponentParams {
-   readonly colour: FishColour;
-}
-
 export class FishComponent {
    public readonly colour: FishColour = randInt(0, 3);
 

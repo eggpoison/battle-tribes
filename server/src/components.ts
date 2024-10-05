@@ -45,7 +45,6 @@ import { IceSpikesComponent } from "./components/IceSpikesComponent";
 import { PebblumComponent } from "./components/PebblumComponent";
 import { SlimewispComponent } from "./components/SlimewispComponent";
 import { ThrowingProjectileComponent } from "./components/ThrowingProjectileComponent";
-import { WanderAIComponent } from "./components/WanderAIComponent";
 import { EscapeAIComponent } from "./components/EscapeAIComponent";
 import { FollowAIComponent } from "./components/FollowAIComponent";
 import { TribeWarriorComponent } from "./components/TribeWarriorComponent";
@@ -121,7 +120,6 @@ const ComponentClassRecord = {
    [ServerComponentType.pebblum]: () => PebblumComponent,
    [ServerComponentType.slimewisp]: () => SlimewispComponent,
    [ServerComponentType.throwingProjectile]: () => ThrowingProjectileComponent,
-   [ServerComponentType.wanderAI]: () => WanderAIComponent,
    [ServerComponentType.escapeAI]: () => EscapeAIComponent,
    [ServerComponentType.followAI]: () => FollowAIComponent,
    [ServerComponentType.tribeWarrior]: () => TribeWarriorComponent,

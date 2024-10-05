@@ -13,8 +13,6 @@ const enum Vars {
    RETURN_TIME_TICKS = 1 * Settings.TPS
 }
 
-export interface BattleaxeProjectileComponentParams {}
-
 export class BattleaxeProjectileComponent {}
 
 export const BattleaxeProjectileComponentArray = new ComponentArray<BattleaxeProjectileComponent>(ServerComponentType.battleaxeProjectile, true, {

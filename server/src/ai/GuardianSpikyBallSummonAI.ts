@@ -46,7 +46,7 @@ const createSpikyBalls = (guardian: EntityID, target: EntityID): void => {
          const timeOffsetFactor = (i + 1) / (numSpikyBalls + 2);
          const spawnDelayTicks = Math.round(Vars.FOCUS_DURATION_TICKS * timeOffsetFactor);
 
-         const velocityMagnitude = 100;
+         const velocityMagnitude = 150;
          const velocityDirection = 2 * Math.PI * Math.random();
          const vx = velocityMagnitude * Math.sin(velocityDirection);
          const vy = velocityMagnitude * Math.cos(velocityDirection);
@@ -57,6 +57,7 @@ const createSpikyBalls = (guardian: EntityID, target: EntityID): void => {
          config.components[ServerComponentType.transform].rotation = 2 * Math.PI * Math.random();
          config.components[ServerComponentType.physics].externalVelocity.x = vx;
          config.components[ServerComponentType.physics].externalVelocity.y = vy;
+         config.components[ServerComponentType.physics].angularVelocity = Math.PI;
          createEntityFromConfig(config, layer, spawnDelayTicks);
       }
    }
@@ -66,22 +67,6 @@ export default class GuardianSpikyBallSummonAI {
    private windupProgressTicks = 0;
    private focusProgressTicks = 0;
    private returnProgressTicks = 0;
-
-   // @Copynpaste
-   private setLimbDirection(guardian: EntityID, direction: number, offset: number, guardianComponent: GuardianComponent): void {
-      for (let i = 0; i < guardianComponent.limbHitboxes.length; i++) {
-         const hitbox = guardianComponent.limbHitboxes[i];
-         const box = hitbox.box;
-
-         const limbDirection = direction * (i === 0 ? 1 : -1);
-         box.offset.x = offset * Math.sin(limbDirection);
-         box.offset.y = offset * Math.cos(limbDirection);
-      }
-
-      // @Copynpaste
-      const physicsComponent = PhysicsComponentArray.getComponent(guardian);
-      physicsComponent.hitboxesAreDirty = true;
-   }
 
    public run(guardian: EntityID, target: EntityID): void {
       const physicsComponent = PhysicsComponentArray.getComponent(guardian);

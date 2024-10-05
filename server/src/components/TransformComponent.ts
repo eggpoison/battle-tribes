@@ -3,7 +3,7 @@ import { Settings } from "battletribes-shared/settings";
 import { clampToBoardDimensions, Point, TileIndex } from "battletribes-shared/utils";
 import { getTileIndexIncludingEdges } from "../Layer";
 import Chunk, { entityIsCollisionRelevant } from "../Chunk";
-import { EntityID, EntityType, EntityTypeString } from "battletribes-shared/entities";
+import { EntityID, EntityTypeString } from "battletribes-shared/entities";
 import { ComponentArray } from "./ComponentArray";
 import { ServerComponentType } from "battletribes-shared/components";
 import { AIHelperComponentArray, entityIsNoticedByAI } from "./AIHelperComponent";
@@ -17,17 +17,6 @@ import { getEntityAgeTicks, getEntityLayer, getEntityType } from "../world";
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "../../../shared/src/collision";
 
 // @Cleanup: move mass/hitbox related stuff out? (Are there any entities which would make use of that?)
-
-export interface TransformComponentParams {
-   readonly position: Point;
-   rotation: number;
-   // @Hack. Shouldn't be here
-   readonly type: EntityType;
-   readonly collisionBit: number;
-   readonly collisionMask: number;
-   // @Cleanup: should this instead be hitbox info?
-   hitboxes: ReadonlyArray<Hitbox>;
-}
 
 export class TransformComponent {
    /** Combined mass of all the entity's hitboxes */

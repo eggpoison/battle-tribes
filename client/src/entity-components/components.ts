@@ -48,7 +48,6 @@ import StructureComponent from "./StructureComponent";
 import CraftingStationComponent from "./CraftingStationComponent";
 import BoulderComponent from "./BoulderComponent";
 import AIHelperComponent from "./AIHelperComponent";
-import WanderAIComponent from "./WanderAIComponent";
 import EscapeAIComponent from "./EscapeAIComponent";
 import IceSpikesComponent from "./IceSpikesComponent";
 import FollowAIComponent from "./FollowAIComponent";
@@ -133,7 +132,6 @@ const ServerComponents = {
    [ServerComponentType.pebblum]: (): PebblumComponent => 0 as any,
    [ServerComponentType.slimewisp]: (): SlimewispComponent => 0 as any,
    [ServerComponentType.throwingProjectile]: (): ThrowingProjectileComponent => 0 as any,
-   [ServerComponentType.wanderAI]: (): WanderAIComponent => 0 as any,
    [ServerComponentType.escapeAI]: (): EscapeAIComponent => 0 as any,
    [ServerComponentType.followAI]: (): FollowAIComponent => 0 as any,
    [ServerComponentType.tribeWarrior]: (): TribeWarriorComponent => 0 as any,

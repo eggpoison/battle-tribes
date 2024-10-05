@@ -1,11 +1,11 @@
 import { EntityID } from "../../../shared/src/entities";
 import { Settings } from "../../../shared/src/settings";
-import { randInt, TileIndex } from "../../../shared/src/utils";
+import { randInt } from "../../../shared/src/utils";
 import { entityHasReachedPosition, moveEntityToPosition, stopEntity } from "../ai-shared";
 import { AIHelperComponentArray } from "../components/AIHelperComponent";
 import { PhysicsComponent, PhysicsComponentArray } from "../components/PhysicsComponent";
 import { TransformComponentArray } from "../components/TransformComponent";
-import Layer, { getTileIndexIncludingEdges } from "../Layer";
+import Layer from "../Layer";
 import { getEntityLayer } from "../world";
 
 export type WanderAITileIsValidCallback = (entity: EntityID, layer: Layer, x: number, y: number) => boolean;

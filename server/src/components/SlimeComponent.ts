@@ -30,12 +30,6 @@ const enum Vars {
 }
 
 
-export interface SlimeComponentParams {
-   size: SlimeSize;
-   mergeWeight: number;
-   orbSizes: Array<SlimeSize>;
-}
-
 export class SlimeComponent {
    public readonly size: SlimeSize;
 

@@ -1,3 +1,4 @@
+import RectangularBox from "./boxes/RectangularBox";
 import { Settings } from "./settings";
 
 export const enum UtilVars {
@@ -370,10 +371,10 @@ export function smoothstep(value: number): number {
    return clamped * clamped * (3 - 2 * clamped);
 }
 
-export function distBetweenPointAndRectangle(point: Point, rectPos: Point, rectWidth: number, rectHeight: number, rectRotation: number): number {
+export function distBetweenPointAndRectangle(pointX: number, pointY: number, rectPos: Point, rectWidth: number, rectHeight: number, rectRotation: number): number {
    // Rotate point around rect to make the situation axis-aligned
-   const alignedPointX = rotateXAroundPoint(point.x, point.y, rectPos.x, rectPos.y, -rectRotation);
-   const alignedPointY = rotateYAroundPoint(point.x, point.y, rectPos.x, rectPos.y, -rectRotation);
+   const alignedPointX = rotateXAroundPoint(pointX, pointY, rectPos.x, rectPos.y, -rectRotation);
+   const alignedPointY = rotateYAroundPoint(pointX, pointY, rectPos.x, rectPos.y, -rectRotation);
 
    const rectMinX = rectPos.x - rectWidth * 0.5;
    const rectMaxX = rectPos.x + rectWidth * 0.5;
@@ -383,6 +384,10 @@ export function distBetweenPointAndRectangle(point: Point, rectPos: Point, rectW
    var dx = Math.max(rectMinX - alignedPointX, 0, alignedPointX - rectMaxX);
    var dy = Math.max(rectMinY - alignedPointY, 0, alignedPointY - rectMaxY);
    return Math.sqrt(dx * dx + dy * dy);
+}
+
+export function distBetweenPointAndRectangularBox(pointX: number, pointY: number, rect: RectangularBox): number {
+   return distBetweenPointAndRectangle(pointX, pointY, rect.position, rect.width, rect.height, rect.rotation);
 }
 
 export function assertUnreachable(x: never): never {

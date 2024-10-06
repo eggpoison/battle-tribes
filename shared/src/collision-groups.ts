@@ -7,9 +7,14 @@
 export const enum CollisionGroup {
    default,
    none,
+   /** Static entities which don't have any collision events. */
+   boring,
    decoration,
-   /** For static non-pushing entities whose only purpose is to damage other entities */
+   /** Resources such as cacti and ice spikes which are stationary and can damage other entities (have collision events). */
+   damagingResource,
+   /** For static non-pushing entities whose only purpose is to damage other entities. */
    exclusiveDamaging,
+   
    _LENGTH_
 }
 
@@ -22,11 +27,13 @@ export const enum CollisionGroup {
 // Top group: pushed
 
 const COLLISION_MATRIX: ReadonlyArray<boolean> = [
-//                      Default None   Decoration ExclusiveDamaging
-/* Default           */ true,   false, false,     false,
-/* None              */ false,  false, false,     false,
-/* Decoration        */ false,  false, false,     false,
-/* ExclusiveDamaging */ true,   false, false,     false
+//                      Default None   Boring Decoration DamagingResource ExclusiveDamaging
+/* Default           */ true,   false, true,  false,     true,            false,
+/* None              */ false,  false, false, false,     false,           false,
+/* Boring            */ false,  false, false, false,     false,           false,
+/* Decoration        */ false,  false, false, false,     false,           false,
+/* DamagingResource  */ true,   false, true,  false,     false,           false,
+/* ExclusiveDamaging */ true,   false, true,  false,     true,            false
 ];
 
 export function collisionGroupsCanCollide(pushingEntityCollisionGroup: CollisionGroup, pushedEntityCollisionGroup: CollisionGroup): boolean {

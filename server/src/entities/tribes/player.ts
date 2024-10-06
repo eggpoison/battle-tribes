@@ -80,15 +80,6 @@ export function createPlayerConfig(tribe: Tribe, username: string): EntityConfig
    };
 }
 
-export function onPlayerCollision(player: EntityID, collidingEntity: EntityID): void {
-   if (getEntityType(collidingEntity) === EntityType.itemEntity) {
-      const wasPickedUp = pickupItemEntity(player, collidingEntity);
-      if (wasPickedUp) {
-         registerPlayerDroppedItemPickup(player);
-      }
-   }
-}
-
 export function onPlayerHurt(player: EntityID, attackingEntity: EntityID): void {
    onTribeMemberHurt(player, attackingEntity);
 }

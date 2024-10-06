@@ -173,6 +173,14 @@ class PhysicsComponent extends ServerComponent {
       this.acceleration.y = reader.readNumber();
       this.traction = reader.readNumber();
    }
+
+   public updatePlayerFromData(reader: PacketReader, isInitialData: boolean): void {
+      if (isInitialData) {
+         this.updateFromData(reader);
+      } else {
+         this.padData(reader);
+      }
+   }
 }
 
 export default PhysicsComponent;

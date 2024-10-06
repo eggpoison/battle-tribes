@@ -1,6 +1,6 @@
 import { WaterRockData, RiverSteppingStoneData, GrassTileInfo, RiverFlowDirectionsRecord, WaterRockSize, RiverSteppingStoneSize, GameDataPacket, HitData, PlayerKnockbackData, HealData, ResearchOrbCompleteData, ServerTileUpdateData, EntityDebugData, LineDebugData, CircleDebugData, TileHighlightData, PathData, PathfindingNodeIndex, RIVER_STEPPING_STONE_SIZES } from "battletribes-shared/client-server-types";
-import { ServerComponentType } from "battletribes-shared/components";
-import { EntityID, EntityType } from "battletribes-shared/entities";
+import { ServerComponentType, ServerComponentTypeString } from "battletribes-shared/components";
+import { EntityID, EntityType, EntityTypeString } from "battletribes-shared/entities";
 import { ItemType } from "battletribes-shared/items/items";
 import { PacketReader } from "battletribes-shared/packets";
 import { Settings } from "battletribes-shared/settings";
@@ -302,7 +302,7 @@ const processPlayerUpdateData = (reader: PacketReader): void => {
 
       const component = Player.instance.getServerComponent(componentType);
       if (typeof component.updatePlayerFromData !== "undefined") {
-         component.updatePlayerFromData(reader);
+         component.updatePlayerFromData(reader, false);
       } else {
          component.padData(reader);
       }
@@ -329,6 +329,7 @@ export function processEntityCreationData(entityID: EntityID, reader: PacketRead
    const layerIdx = reader.readNumber();
 
    const entity = createEntity(entityID, entityType);
+   // @Hack?
    const isPlayer = entityID === Game.playerID;
 
    const layer = layers[layerIdx];
@@ -339,17 +340,15 @@ export function processEntityCreationData(entityID: EntityID, reader: PacketRead
       const componentType = reader.readNumber() as ServerComponentType;
       
       const component = createComponent(entity, componentType);
-      // @Incomplete?
-      component.updateFromData(reader, true);
-      // if (isPlayer) {
-      //    if (typeof component.updatePlayerFromData !== "undefined") {
-      //       component.updatePlayerFromData(reader);
-      //    } else {
-      //       component.padData(reader);
-      //    }
-      // } else {
-      //    component.updateFromData(reader);
-      // }
+      if (isPlayer) {
+         if (typeof component.updatePlayerFromData !== "undefined") {
+            component.updatePlayerFromData(reader, true);
+         } else {
+            component.padData(reader);
+         }
+      } else {
+         component.updateFromData(reader, true);
+      }
       entity.addServerComponent(componentType, component);
 
       const componentArray = getServerComponentArray(componentType);

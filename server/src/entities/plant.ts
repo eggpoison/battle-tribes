@@ -5,7 +5,6 @@ import { Point, randInt } from "battletribes-shared/utils";
 import { PLANT_GROWTH_TICKS, PlantComponent, PlantComponentArray } from "../components/PlantComponent";
 import { dropBerryOverEntity } from "./resources/berry-bush";
 import { createItemsOverEntity } from "../entity-shared";
-import { createIceShardExplosion } from "./resources/ice-spikes";
 import { ItemType } from "battletribes-shared/items/items";
 import { EntityConfig } from "../components";
 import { StatusEffect } from "battletribes-shared/status-effects";
@@ -16,6 +15,7 @@ import { getEntityLayer } from "../world";
 import { HealthComponent } from "../components/HealthComponent";
 import { StatusEffectComponent } from "../components/StatusEffectComponent";
 import { CollisionGroup } from "../../../shared/src/collision-groups";
+import { createIceShardExplosion } from "../components/IceSpikesComponent";
    
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.health

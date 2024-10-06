@@ -3,7 +3,7 @@ import { ServerComponentType } from "battletribes-shared/components";
 import { Settings } from "battletribes-shared/settings";
 import Chunk from "../Chunk";
 import { ComponentArray } from "./ComponentArray";
-import { EntityID, EntityType } from "battletribes-shared/entities";
+import { EntityID, EntityType, EntityTypeString } from "battletribes-shared/entities";
 import { TransformComponent, TransformComponentArray } from "./TransformComponent";
 import { Packet } from "battletribes-shared/packets";
 import { Box, boxIsCircular } from "battletribes-shared/boxes/boxes";
@@ -123,6 +123,7 @@ const entityIsVisible = (transformComponent: TransformComponent, checkEntity: En
    return false;
 }
 
+// @Speed: I'd say a good 70% of the entities here are ice spikes and decorations - unnecessary
 const calculateVisibleEntities = (entity: EntityID, aiHelperComponent: AIHelperComponent): Array<EntityID> => {
    const transformComponent = TransformComponentArray.getComponent(entity);
    

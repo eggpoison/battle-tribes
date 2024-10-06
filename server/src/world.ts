@@ -17,6 +17,7 @@ import Tribe from "./Tribe";
 import { TerrainGenerationInfo } from "./world-generation/surface-terrain-generation";
 import Chunk from "./Chunk";
 import { TransformComponentArray } from "./components/TransformComponent";
+import { ServerComponentType } from "../../shared/src/components";
 
 const enum Vars {
    START_TIME = 6
@@ -31,6 +32,7 @@ interface EntityJoinInfo {
    readonly id: number;
    readonly entityType: EntityType;
    readonly layer: Layer;
+   readonly entityComponentTypes: ReadonlyArray<ServerComponentType>;
    /** Number of ticks remaining until the entity will be added. */
    ticksRemaining: number;
 }
@@ -46,6 +48,7 @@ let time = Vars.START_TIME;
 const entityTypes: Partial<Record<EntityID, EntityType>> = {};
 const entityLayers: Partial<Record<EntityID, Layer>> = {};
 const entitySpawnTicks: Partial<Record<EntityID, number>> = {};
+const entityComponentTypes: Partial<Record<EntityID, ReadonlyArray<ServerComponentType>>> = {};
 
 const tribes = new Array<Tribe>();
 
@@ -152,6 +155,10 @@ export function getEntityAgeTicks(entity: EntityID): number {
    return ticks - entitySpawnTicks[entity]!;
 }
 
+export function getEntityComponentTypes(entity: EntityID): ReadonlyArray<ServerComponentType> {
+   return entityComponentTypes[entity]!;
+}
+
 export function pushJoinBuffer(): void {
    // Push entities
    let finalPushedIdx: number | undefined;
@@ -160,6 +167,7 @@ export function pushJoinBuffer(): void {
       if (joinInfo.ticksRemaining === 0) {
          entityTypes[joinInfo.id] = joinInfo.entityType;
          entityLayers[joinInfo.id] = joinInfo.layer;
+         entityComponentTypes[joinInfo.id] = joinInfo.entityComponentTypes;
          entitySpawnTicks[joinInfo.id] = ticks;
          finalPushedIdx = i;
       } else {
@@ -196,10 +204,6 @@ export function pushJoinBuffer(): void {
                break;
             }
             const entityID = componentBufferIDs[j];
-            // @Temporary
-            if (!entityExists(entityID)) {
-               throw new Error("DSAJFHLDSJHF");
-            }
             onJoin(entityID);
          }
       }
@@ -236,6 +240,7 @@ export function destroyFlaggedEntities(): void {
       delete entityTypes[entity];
       delete entityLayers[entity];
       delete entitySpawnTicks[entity];
+      delete entityComponentTypes[entity];
    }
 
    entityRemoveBuffer.length = 0;
@@ -284,13 +289,14 @@ export function destroyEntity(entity: EntityID): void {
    }
 }
 
-export function addEntityToJoinBuffer(entity: EntityID, entityType: EntityType, layer: Layer, joinDelayTicks: number): void {
+export function addEntityToJoinBuffer(entity: EntityID, entityType: EntityType, layer: Layer, entityComponentTypes: ReadonlyArray<ServerComponentType>, joinDelayTicks: number): void {
    // Find a spot for the entity
    
    const joinInfo: EntityJoinInfo = {
       id: entity,
       entityType: entityType,
       layer: layer,
+      entityComponentTypes: entityComponentTypes,
       ticksRemaining: joinDelayTicks
    };
 
@@ -323,10 +329,6 @@ export function updateEntities(): void {
 }
 
 export function changeEntityLayer(entity: EntityID, newLayer: Layer): void {
-   // @Temporary
-   console.log("change");
-   if(1+1===2)throw new Error();
-   
    const transformComponent = TransformComponentArray.getComponent(entity);
    const previousLayer = getEntityLayer(entity);
 

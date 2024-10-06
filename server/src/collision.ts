@@ -4,10 +4,10 @@ import { Point } from "battletribes-shared/utils";
 import { PhysicsComponent, PhysicsComponentArray } from "./components/PhysicsComponent";
 import { CollisionPushInfo, collisionBitsAreCompatible, getCollisionPushInfo } from "battletribes-shared/hitbox-collision";
 import { TransformComponent, TransformComponentArray } from "./components/TransformComponent";
-import { ComponentArrays } from "./components/ComponentArray";
+import { ComponentArrays, getComponentArrayRecord } from "./components/ComponentArray";
 import { HitboxCollisionType, Hitbox, updateBox } from "battletribes-shared/boxes/boxes";
 import RectangularBox from "battletribes-shared/boxes/RectangularBox";
-import { getEntityType } from "./world";
+import { getEntityComponentTypes, getEntityType } from "./world";
 import { HitboxCollisionPair } from "./collision-detection";
 import { ServerComponentType } from "../../shared/src/components";
 
@@ -81,6 +81,14 @@ export function collide(pushedEntity: EntityID, pushingEntity: EntityID, collidi
    const pushedEntityTransformComponent = TransformComponentArray.getComponent(pushedEntity);
    const pushingEntityTransformComponent = TransformComponentArray.getComponent(pushingEntity);
    
+   // The pushing entity is acting on the pushed entity, so the pushing entity is the one which should have events called
+   const componentTypes = getEntityComponentTypes(pushingEntity);
+   const componentArrayRecord = getComponentArrayRecord();
+   
+   // @SPEED: This 1 line is about 0.3% of CPU usage
+   // @Hack @Temporary
+   const collisionPoint = new Point((pushedEntityTransformComponent.position.x + pushingEntityTransformComponent.position.x) / 2, (pushedEntityTransformComponent.position.y + pushingEntityTransformComponent.position.y) / 2);
+   
    for (let i = 0; i < collidingHitboxPairs.length; i++) {
       const pair = collidingHitboxPairs[i];
       const pushingHitboxIdx = pair[0];
@@ -89,47 +97,43 @@ export function collide(pushedEntity: EntityID, pushingEntity: EntityID, collidi
       const pushedHitbox = pushedEntityTransformComponent.hitboxes[pushedHitboxIdx];
       const pushingHitbox = pushingEntityTransformComponent.hitboxes[pushingHitboxIdx];
       
-      const pushInfo = getCollisionPushInfo(pushedHitbox.box, pushingHitbox.box);
-      // if (getEntityType(pushingEntity) === EntityType.guardianGemQuake && getEntityType(pushedEntity) === EntityType.player) {
-      //    console.log("pushing player");
-      // }
+      if (PhysicsComponentArray.hasComponent(pushedEntity)) {
+         const physicsComponent = PhysicsComponentArray.getComponent(pushedEntity);
+         if (!physicsComponent.isImmovable) {
+            const pushInfo = getCollisionPushInfo(pushedHitbox.box, pushingHitbox.box);
+
+            if (pushingHitbox.collisionType === HitboxCollisionType.hard) {
+               resolveHardCollision(pushedEntityTransformComponent, physicsComponent, pushInfo);
+            } else {
+               resolveSoftCollision(pushedEntityTransformComponent, physicsComponent, pushingHitbox, pushInfo);
+            }
    
-      const physicsComponent = PhysicsComponentArray.getComponent(pushedEntity);
-      if (!physicsComponent.isImmovable) {
-         if (pushingHitbox.collisionType === HitboxCollisionType.hard) {
-            resolveHardCollision(pushedEntityTransformComponent, physicsComponent, pushInfo);
-         } else {
-            resolveSoftCollision(pushedEntityTransformComponent, physicsComponent, pushingHitbox, pushInfo);
+            // @Cleanup: Should we just clean it immediately here?
+            physicsComponent.positionIsDirty = true;
          }
-
-         // @Cleanup: Should we just clean it immediately here?
-         physicsComponent.positionIsDirty = true;
       }
-   
-      // @Hack @Temporary
-      const collisionPoint = new Point((pushedEntityTransformComponent.position.x + pushingEntityTransformComponent.position.x) / 2, (pushedEntityTransformComponent.position.y + pushingEntityTransformComponent.position.y) / 2);
 
-      // @Speed: runs for every component array. Not ideal!
-      for (const componentArray of ComponentArrays) {
-         // The pushing entity is acting on the pushed entity, so the pushing entity is the one which should have events called
-         if (componentArray.hasComponent(pushingEntity) && typeof componentArray.onHitboxCollision !== "undefined") {
+      for (let i = 0; i < componentTypes.length; i++) {
+         const componentType = componentTypes[i];
+         const componentArray = componentArrayRecord[componentType];
+
+         if (typeof componentArray.onHitboxCollision !== "undefined") {
             componentArray.onHitboxCollision(pushingEntity, pushedEntity, pushingHitbox, pushedHitbox, collisionPoint);
          }
       }
    }
 
-   // @Speed: runs for every component array. Not ideal!
-   for (const componentArray of ComponentArrays) {
-      if (componentArray.hasComponent(pushingEntity) && typeof componentArray.onEntityCollision !== "undefined") {
+   for (let i = 0; i < componentTypes.length; i++) {
+      const componentType = componentTypes[i];
+      const componentArray = componentArrayRecord[componentType];
+
+      if (typeof componentArray.onEntityCollision !== "undefined") {
          componentArray.onEntityCollision(pushingEntity, pushedEntity);
       }
    }
 
    // @Incomplete
    // switch (entityType) {
-   //    case EntityType.player: onPlayerCollision(entity, pushingEntity); break;
-   //    case EntityType.tribeWorker:
-   //    case EntityType.tribeWarrior: onTribesmanCollision(entity, pushingEntity); break;
    //    case EntityType.iceSpikes: onIceSpikesCollision(entity, pushingEntity, collisionPoint); break;
    //    case EntityType.cactus: onCactusCollision(entity, pushingEntity, collisionPoint); break;
    //    case EntityType.zombie: onZombieCollision(entity, pushingEntity, collisionPoint); break;

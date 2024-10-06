@@ -121,7 +121,10 @@ export function removeRenderable(renderable: Renderable, renderLayer: RenderLaye
 
 const renderRenderablesBatch = (renderableType: RenderableType, renderables: ReadonlyArray<Renderable>, renderLayer: RenderLayer): void => {
    if (renderables.length === 0) {
-      return;
+      // @Hack: chunk-rendered entities don't use renderables. The ideal fix for this would be to not create the renderables array for chunk rendered entities
+      if (!renderLayerIsChunkRendered(renderLayer)) {
+         return;
+      }
    }
    
    switch (renderableType) {

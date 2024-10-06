@@ -5,7 +5,7 @@ import { createGrassStrandConfig } from "../entities/grass-strand";
 import { ServerComponentType } from "battletribes-shared/components";
 import { createEntityFromConfig } from "../Entity";
 import { distance, TileIndex } from "battletribes-shared/utils";
-import { surfaceLayer } from "../world";
+import { pushJoinBuffer, surfaceLayer } from "../world";
 
 const enum Vars {
    /** Average number of grass strands per tile in a fully humidified area. */
@@ -102,6 +102,9 @@ export function generateGrassStrands(): void {
             config.components[ServerComponentType.transform].position.x = x;
             config.components[ServerComponentType.transform].position.y = y;
             createEntityFromConfig(config, surfaceLayer, 0);
+
+            // Since the entity spawning has to find a place to insert the entity, we force push it to prevent it from taking forever
+            pushJoinBuffer();
          }
       }
    }

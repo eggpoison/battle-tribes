@@ -42,27 +42,29 @@ class CactusComponent extends ServerComponent {
    public updateFromData(reader: PacketReader): void {
       const flowers = new Array<CactusBodyFlowerData>();
       const numFlowers = reader.readNumber();
-      for (let i = this.flowerData.length; i < numFlowers; i++) {
+      for (let i = 0; i < numFlowers; i++) {
          const flowerType = reader.readNumber();
          const height = reader.readNumber();
          const rotation = reader.readNumber();
          const size = reader.readNumber();
          const column = reader.readNumber();
 
-         const flower: CactusBodyFlowerData = {
-            type: flowerType,
-            height: height,
-            rotation: rotation,
-            size: size,
-            column: column
-         };
-         flowers.push(flower);
-         this.flowerData.push(flower);
+         if (i >= this.flowerData.length) {
+            const flower: CactusBodyFlowerData = {
+               type: flowerType,
+               height: height,
+               rotation: rotation,
+               size: size,
+               column: column
+            };
+            flowers.push(flower);
+            this.flowerData.push(flower);
+         }
       }
    
       const limbs = new Array<CactusLimbData>();
       const numLimbs = reader.readNumber();
-      for (let i = this.limbData.length; i < numLimbs; i++) {
+      for (let i = 0; i < numLimbs; i++) {
          const limbDirection = reader.readNumber();
          const hasFlower = reader.readBoolean();
          reader.padOffset(3);
@@ -82,12 +84,14 @@ class CactusComponent extends ServerComponent {
             };
          }
 
-         const limbData: CactusLimbData = {
-            direction: limbDirection,
-            flower: flower
-         };
-         limbs.push(limbData);
-         this.limbData.push(limbData);
+         if (i >= this.limbData.length) {
+            const limbData: CactusLimbData = {
+               direction: limbDirection,
+               flower: flower
+            };
+            limbs.push(limbData);
+            this.limbData.push(limbData);
+         }
       }
 
       // Attach flower render parts

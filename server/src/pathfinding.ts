@@ -1,7 +1,7 @@
 import { PathfindingNodeIndex, VisibleChunkBounds } from "battletribes-shared/client-server-types";
 import { EntityID, EntityType } from "battletribes-shared/entities";
 import { PathfindingSettings, Settings } from "battletribes-shared/settings";
-import { distBetweenPointAndRectangle, angle, calculateDistanceSquared, Point } from "battletribes-shared/utils";
+import { distBetweenPointAndRectangle, angle, calculateDistanceSquared, Point, distBetweenPointAndRectangularBox } from "battletribes-shared/utils";
 import PathfindingHeap from "./PathfindingHeap";
 import OPTIONS from "./options";
 import { PhysicsComponentArray } from "./components/PhysicsComponent";
@@ -213,7 +213,7 @@ const nodeIsAccessibleForEntity = (node: PathfindingNodeIndex, ignoredGroupID: n
    return slowAccessibilityCheck(node, ignoredGroupID, pathfindingEntityFootprint);
 }
 
-const getCircularHitboxOccupiedNodes = (hitbox: Hitbox): ReadonlyArray<PathfindingNodeIndex> => {
+const addCircularHitboxOccupiedNodes = (occupiedPathfindingNodes: Set<PathfindingNodeIndex>, pathfindingGroupID: number, hitbox: Hitbox): void => {
    const box = hitbox.box as CircularBox;
    
    const minX = box.calculateBoundsMinX();
@@ -247,21 +247,23 @@ const getCircularHitboxOccupiedNodes = (hitbox: Hitbox): ReadonlyArray<Pathfindi
    const hitboxNodeRadius = box.radius / PathfindingSettings.NODE_SEPARATION + radiusOffset;
    const hitboxNodeRadiusSquared = hitboxNodeRadius * hitboxNodeRadius;
 
-   const occupiedNodes = new Array<PathfindingNodeIndex>();
    for (let nodeX = minNodeX; nodeX <= maxNodeX; nodeX++) {
       for (let nodeY = minNodeY; nodeY <= maxNodeY; nodeY++) {
          const xDiff = nodeX - centerX;
          const yDiff = nodeY - centerY;
          if (xDiff * xDiff + yDiff * yDiff <= hitboxNodeRadiusSquared) {
             const node = getNode(nodeX, nodeY);
-            occupiedNodes.push(node);
+            // Add
+            if (!occupiedPathfindingNodes.has(node)) {
+               markPathfindingNodeOccupance(node, pathfindingGroupID);
+               occupiedPathfindingNodes.add(node);
+            }
          }
       }
    }
-   return occupiedNodes;
 }
 
-const getRectangularHitboxOccupiedNodes = (hitbox: Hitbox): ReadonlyArray<PathfindingNodeIndex> => {
+const addRectangularHitboxOccupiedNodes = (occupiedPathfindingNodes: Set<PathfindingNodeIndex>, pathfindingGroupID: number, hitbox: Hitbox): void => {
    const box = hitbox.box as RectangularBox;
    
    const minX = box.calculateBoundsMinX();
@@ -292,31 +294,33 @@ const getRectangularHitboxOccupiedNodes = (hitbox: Hitbox): ReadonlyArray<Pathfi
    const nodeClearance = hitbox.collisionType === HitboxCollisionType.hard ? PathfindingSettings.NODE_SEPARATION * 0.5 : 0;
    // const nodeClearance = hitbox.collisionType === HitboxCollisionType.hard ? PathfindingSettings.NODE_SEPARATION * 1 : PathfindingSettings.NODE_SEPARATION * 0.5;
 
-   const occupiedNodes = new Array<PathfindingNodeIndex>();
    for (let nodeX = minNodeX; nodeX <= maxNodeX; nodeX++) {
       for (let nodeY = minNodeY; nodeY <= maxNodeY; nodeY++) {
          const x = nodeX * PathfindingSettings.NODE_SEPARATION;
          const y = nodeY * PathfindingSettings.NODE_SEPARATION;
-         const nodePos = new Point(x, y);
          
-         if (distBetweenPointAndRectangle(nodePos, box.position, box.width, box.height, box.rotation) <= nodeClearance) {
+         if (distBetweenPointAndRectangularBox(x, y, box) <= nodeClearance) {
             const node = getNode(nodeX, nodeY);
             // @Temporary
             if (node >= PathfindingSettings.NODES_IN_WORLD_WIDTH*PathfindingSettings.NODES_IN_WORLD_WIDTH) {
                throw new Error();
             }
-            occupiedNodes.push(node);
+
+            // Add
+            if (!occupiedPathfindingNodes.has(node)) {
+               markPathfindingNodeOccupance(node, pathfindingGroupID);
+               occupiedPathfindingNodes.add(node);
+            }
          }
       }
    }
-   return occupiedNodes;
 }
 
-export function getHitboxOccupiedNodes(hitbox: Hitbox): ReadonlyArray<PathfindingNodeIndex> {
+const addHitboxOccupiedNodes = (occupiedPathfindingNodes: Set<PathfindingNodeIndex>, pathfindingGroupID: number, hitbox: Hitbox): void => {
    if (boxIsCircular(hitbox.box)) {
-      return getCircularHitboxOccupiedNodes(hitbox);
+      addCircularHitboxOccupiedNodes(occupiedPathfindingNodes, pathfindingGroupID, hitbox);
    } else {
-      return getRectangularHitboxOccupiedNodes(hitbox);
+      addRectangularHitboxOccupiedNodes(occupiedPathfindingNodes, pathfindingGroupID, hitbox);
    }
 }
 
@@ -789,6 +793,7 @@ export function getEntityPathfindingGroupID(entity: EntityID): number {
 
 export function updateEntityPathfindingNodeOccupance(entity: EntityID): void {
    const pathfindingGroupID = getEntityPathfindingGroupID(entity);
+
    const transformComponent = TransformComponentArray.getComponent(entity);
 
    for (const node of transformComponent.occupiedPathfindingNodes) {
@@ -796,18 +801,14 @@ export function updateEntityPathfindingNodeOccupance(entity: EntityID): void {
    }
    transformComponent.occupiedPathfindingNodes = new Set();
 
-   for (let i = 0; i < transformComponent.hitboxes.length; i++) {
-      const hitbox = transformComponent.hitboxes[i];
+   const occupiedPathfindingNodes = transformComponent.occupiedPathfindingNodes;
+
+   const hitboxes = transformComponent.hitboxes;
+   for (let i = 0; i < hitboxes.length; i++) {
+      const hitbox = hitboxes[i];
    
       // Add to occupied pathfinding nodes
-      const occupiedNodes = getHitboxOccupiedNodes(hitbox);
-      for (let i = 0; i < occupiedNodes.length; i++) {
-         const node = occupiedNodes[i];
-         if (!transformComponent.occupiedPathfindingNodes.has(node)) {
-            markPathfindingNodeOccupance(node, pathfindingGroupID);
-            transformComponent.occupiedPathfindingNodes.add(node);
-         }
-      }
+      addHitboxOccupiedNodes(occupiedPathfindingNodes, pathfindingGroupID, hitbox);
    }
 }
 

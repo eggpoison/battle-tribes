@@ -23,6 +23,7 @@ function getDataLength(entity: EntityID): number {
 
    let lengthBytes = 2 * Float32Array.BYTES_PER_ELEMENT;
    lengthBytes += 5 * Float32Array.BYTES_PER_ELEMENT * cactusComponent.flowers.length;
+   
    lengthBytes += Float32Array.BYTES_PER_ELEMENT;
    for (const limb of cactusComponent.limbs) {
       if (typeof limb.flower !== "undefined") {

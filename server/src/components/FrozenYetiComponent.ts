@@ -1,5 +1,5 @@
 import { Point, randFloat, randInt, UtilVars } from "battletribes-shared/utils";
-import { EntityID, EntityType, FrozenYetiAttackType, PlayerCauseOfDeath, SnowballSize } from "battletribes-shared/entities";
+import { EntityID, EntityType, EntityTypeString, FrozenYetiAttackType, PlayerCauseOfDeath, SnowballSize } from "battletribes-shared/entities";
 import { ServerComponentType } from "battletribes-shared/components";
 import { FROZEN_YETI_BITE_COOLDOWN, FROZEN_YETI_GLOBAL_ATTACK_COOLDOWN, FROZEN_YETI_ROAR_COOLDOWN, FROZEN_YETI_SNOWBALL_THROW_COOLDOWN, FROZEN_YETI_STOMP_COOLDOWN, FrozenYetiRockSpikeInfo, FrozenYetiTargetInfo, FrozenYetiVars } from "../entities/mobs/frozen-yeti";
 import { ComponentArray } from "./ComponentArray";
@@ -18,6 +18,7 @@ import { PhysicsComponentArray, applyKnockback } from "./PhysicsComponent";
 import { StatusEffectComponentArray, applyStatusEffect } from "./StatusEffectComponent";
 import { TransformComponentArray, getEntityTile } from "./TransformComponent";
 import { entityExists, getEntityLayer, getEntityType } from "../world";
+import Layer from "../Layer";
 
 const enum Vars {
    TARGET_ENTITY_FORGET_TIME = 10,
@@ -67,6 +68,18 @@ export const FrozenYetiComponentArray = new ComponentArray<FrozenYetiComponent>(
    addDataToPacket: addDataToPacket
 });
 
+const shouldTargetEntity = (layer: Layer, entity: EntityID): boolean => {
+   if (!HealthComponentArray.hasComponent(entity)) {
+      return false;
+   }
+   
+   const entityTransformComponent = TransformComponentArray.getComponent(entity);
+   const entityTileIndex = getEntityTile(entityTransformComponent);
+
+   const entityType = getEntityType(entity);
+   return layer.tileBiomes[entityTileIndex] === Biome.tundra && entityType !== EntityType.itemEntity && entityType !== EntityType.frozenYeti && entityType !== EntityType.yeti && entityType !== EntityType.iceSpikes && entityType !== EntityType.snowball
+}
+
 const findTargets = (frozenYeti: EntityID, visibleEntities: ReadonlyArray<EntityID>): ReadonlyArray<EntityID> => {
    const layer = getEntityLayer(frozenYeti);
    
@@ -74,11 +87,7 @@ const findTargets = (frozenYeti: EntityID, visibleEntities: ReadonlyArray<Entity
    for (let i = 0; i < visibleEntities.length; i++) {
       const entity = visibleEntities[i];
 
-      const entityTransformComponent = TransformComponentArray.getComponent(entity);
-      const entityTileIndex = getEntityTile(entityTransformComponent);
-
-      const entityType = getEntityType(entity);
-      if (layer.tileBiomes[entityTileIndex] === Biome.tundra && entityType !== EntityType.itemEntity && entityType !== EntityType.frozenYeti && entityType !== EntityType.iceSpikes && entityType !== EntityType.snowball) {
+      if (shouldTargetEntity(layer, entity)) {
          targets.push(entity);
       }
    }
@@ -296,7 +305,7 @@ const spawnSnowball = (frozenYeti: EntityID, size: SnowballSize): void => {
 
    const velocityMagnitude = randFloat(Vars.SNOWBALL_THROW_SPEED_MIN, Vars.SNOWBALL_THROW_SPEED_MAX);
 
-   const config = createSnowballConfig(size, frozenYeti);
+   const config = createSnowballConfig(frozenYeti, size);
    config.components[ServerComponentType.transform].position.x = position.x;
    config.components[ServerComponentType.transform].position.y = position.y;
    config.components[ServerComponentType.physics].externalVelocity.x = velocityMagnitude * Math.sin(angle);

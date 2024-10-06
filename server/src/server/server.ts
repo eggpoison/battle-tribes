@@ -9,7 +9,7 @@ import Tribe from "../Tribe";
 import OPTIONS from "../options";
 import SRandom from "../SRandom";
 import { updateDynamicPathfindingNodes } from "../pathfinding";
-import { updateResourceDistributions } from "../resource-distributions";
+import { countTileTypesForResourceDistributions, updateResourceDistributions } from "../resource-distributions";
 import { updateGrassBlockers } from "../grass-blockers";
 import { createGameDataPacket, createSyncDataPacket, createSyncPacket } from "./game-data-packets";
 import PlayerClient, { PlayerClientVars } from "./PlayerClient";
@@ -130,10 +130,12 @@ class GameServer {
       const surfaceTerrainGenerationInfo = generateSurfaceTerrain();
       const undergroundTerrainGenerationInfo = generateUndergroundTerrain();
       createLayers(surfaceTerrainGenerationInfo, undergroundTerrainGenerationInfo);
+      
+      noteSpawnableTiles();
+      countTileTypesForResourceDistributions();
+      updateResourceDistributions();
 
       console.log("Spawning entities...");
-      noteSpawnableTiles();
-      updateResourceDistributions();
       spawnInitialEntities();
       forceMaxGrowAllIceSpikes();
       generateGrassStrands();
@@ -180,25 +182,25 @@ class GameServer {
                   playerClient = new PlayerClient(socket, tribe, layer, screenWidth, screenHeight, spawnPosition, player, username);
                   addPlayerClient(playerClient, player, surfaceLayer, config);
 
-                  setTimeout(() => {
-                     const range = 600;
-                     const minTileX = Math.max(Math.floor((spawnPosition.x - range) / Settings.TILE_SIZE), 0);
-                     const maxTileX = Math.min(Math.floor((spawnPosition.x + range) / Settings.TILE_SIZE), Settings.BOARD_DIMENSIONS - 1);
-                     const minTileY = Math.max(Math.floor((spawnPosition.y - range) / Settings.TILE_SIZE), 0);
-                     const maxTileY = Math.min(Math.floor((spawnPosition.y + range) / Settings.TILE_SIZE), Settings.BOARD_DIMENSIONS - 1);
-                     const tiles = new Array<TileIndex>();
-                     for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
-                        for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
-                           const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
-                           tiles.push(tileIndex);
-                        }
-                     }
+                  // setTimeout(() => {
+                  //    const range = 600;
+                  //    const minTileX = Math.max(Math.floor((spawnPosition.x - range) / Settings.TILE_SIZE), 0);
+                  //    const maxTileX = Math.min(Math.floor((spawnPosition.x + range) / Settings.TILE_SIZE), Settings.BOARD_DIMENSIONS - 1);
+                  //    const minTileY = Math.max(Math.floor((spawnPosition.y - range) / Settings.TILE_SIZE), 0);
+                  //    const maxTileY = Math.min(Math.floor((spawnPosition.y + range) / Settings.TILE_SIZE), Settings.BOARD_DIMENSIONS - 1);
+                  //    const tiles = new Array<TileIndex>();
+                  //    for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
+                  //       for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
+                  //          const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
+                  //          tiles.push(tileIndex);
+                  //       }
+                  //    }
                      
-                     const config = createGuardianConfig(tiles);
-                     config.components[ServerComponentType.transform].position.x = spawnPosition.x + 150;
-                     config.components[ServerComponentType.transform].position.y = spawnPosition.y;
-                     createEntityFromConfig(config, surfaceLayer, 0);
-                  }, 500);
+                  //    const config = createGuardianConfig(tiles);
+                  //    config.components[ServerComponentType.transform].position.x = spawnPosition.x + 150;
+                  //    config.components[ServerComponentType.transform].position.y = spawnPosition.y;
+                  //    createEntityFromConfig(config, surfaceLayer, 0);
+                  // }, 500);
 
                   break;
                }

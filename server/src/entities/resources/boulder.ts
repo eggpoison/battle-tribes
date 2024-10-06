@@ -23,7 +23,7 @@ type ComponentTypes = ServerComponentType.transform
 const RADIUS = 40;
 
 export function createBoulderConfig(): EntityConfig<ComponentTypes> {
-   const transformComponent = new TransformComponent(CollisionGroup.default);
+   const transformComponent = new TransformComponent(CollisionGroup.boring);
    const hitbox = createHitbox(new CircularBox(new Point(0, 0), 0, RADIUS), 1.25, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, []);
    transformComponent.addHitbox(hitbox, null);
    

@@ -31,6 +31,7 @@ import { createGolemConfig } from "./entities/mobs/golem";
 import { createTribeWorkerConfig } from "./entities/tribes/tribe-worker";
 import { TribeType } from "../../shared/src/tribes";
 import Tribe from "./Tribe";
+import { createTreeConfig } from "./entities/resources/tree";
 
 const PACK_SPAWN_RANGE = 200;
 
@@ -401,6 +402,7 @@ const spawnEntity = (entityType: SpawningEntityType, layer: Layer, x: number, y:
    let config: EntityConfig<ServerComponentType.transform>;
    switch (entityType) {
       case EntityType.cow: config = createCowConfig(); break;
+      case EntityType.tree: config = createTreeConfig(); break;
       case EntityType.berryBush: config = createBerryBushConfig(); break;
       case EntityType.tombstone: config = createTombstoneConfig(); break;
       case EntityType.boulder: config = createBoulderConfig(); break;
@@ -416,6 +418,7 @@ const spawnEntity = (entityType: SpawningEntityType, layer: Layer, x: number, y:
       case EntityType.tribeWorker: config = createTribeWorkerConfig(new Tribe(getTribeType(layer, x, y), true)); break;
       // @Robustness
       default: {
+         console.log(EntityTypeString[entityType])
          throw new Error();
       }
    }

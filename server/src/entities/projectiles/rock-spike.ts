@@ -19,7 +19,7 @@ const MASSES = [1, 1.75, 2.5];
 export const ROCK_SPIKE_HITBOX_SIZES = [12 * 2, 16 * 2, 20 * 2];
 
 export function createRockSpikeConfig(size: number, frozenYeti: EntityID): EntityConfig<ComponentTypes> {
-   const transformComponent = new TransformComponent(CollisionGroup.default);
+   const transformComponent = new TransformComponent(CollisionGroup.exclusiveDamaging);
    const hitbox = createHitbox(new CircularBox(new Point(0, 0), 0, ROCK_SPIKE_HITBOX_SIZES[size]), MASSES[size], HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, []);
    transformComponent.addHitbox(hitbox, null);
    

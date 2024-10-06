@@ -85,23 +85,8 @@ class GolemComponent extends ServerComponent {
 
    public wakeProgress = 0;
 
-   public padData(reader: PacketReader): void {
-      reader.padOffset(3 * Float32Array.BYTES_PER_ELEMENT);
-   }
-   
-   public updateFromData(reader: PacketReader): void {
-      const wakeProgress = reader.readNumber();
-      const ticksAwake = reader.readNumber();
-      const isAwake = reader.readBoolean();
-      reader.padOffset(3);
-
+   public onLoad(): void {
       const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
-
-      if (isAwake && ticksAwake % ANGRY_SOUND_INTERVAL_TICKS === 0) {
-         playSound("golem-angry.mp3", 0.4, 1, transformComponent.position);
-      }
-      
-      this.wakeProgress = wakeProgress;
 
       // Add new rocks
       for (let i = this.rockRenderParts.length; i < transformComponent.hitboxes.length; i++) {
@@ -152,21 +137,43 @@ class GolemComponent extends ServerComponent {
             }
          }
       }
+   }
+   
+   public padData(reader: PacketReader): void {
+      reader.padOffset(3 * Float32Array.BYTES_PER_ELEMENT);
+   }
+   
+   public updateFromData(reader: PacketReader, isInitialData: boolean): void {
+      const wakeProgress = reader.readNumber();
+      const ticksAwake = reader.readNumber();
+      const isAwake = reader.readBoolean();
+      reader.padOffset(3);
 
-      const shakeAmount = this.wakeProgress > 0 && this.wakeProgress < 1 ? 1 : 0;
-      for (let i = 0; i < transformComponent.hitboxes.length; i++) {
-         const hitbox = transformComponent.hitboxes[i];
-         const box = hitbox.box;
-         const renderPart = this.rockRenderParts[i];
-
-         renderPart.offset.x = box.offset.x;
-         renderPart.offset.y = box.offset.y;
-         renderPart.shakeAmount = shakeAmount;
-      }
-
-      for (let i = 0; i < 2; i++) {
-         this.eyeRenderParts[i].opacity = this.wakeProgress;
-         this.eyeLights[i].intensity = this.wakeProgress;
+      if (!isInitialData) {
+         const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
+   
+         if (isAwake && ticksAwake % ANGRY_SOUND_INTERVAL_TICKS === 0) {
+            playSound("golem-angry.mp3", 0.4, 1, transformComponent.position);
+         }
+         
+         this.wakeProgress = wakeProgress;
+   
+   
+         const shakeAmount = this.wakeProgress > 0 && this.wakeProgress < 1 ? 1 : 0;
+         for (let i = 0; i < transformComponent.hitboxes.length; i++) {
+            const hitbox = transformComponent.hitboxes[i];
+            const box = hitbox.box;
+            const renderPart = this.rockRenderParts[i];
+   
+            renderPart.offset.x = box.offset.x;
+            renderPart.offset.y = box.offset.y;
+            renderPart.shakeAmount = shakeAmount;
+         }
+   
+         for (let i = 0; i < 2; i++) {
+            this.eyeRenderParts[i].opacity = this.wakeProgress;
+            this.eyeLights[i].intensity = this.wakeProgress;
+         }
       }
    }
 }

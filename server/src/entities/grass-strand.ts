@@ -13,7 +13,7 @@ type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.layeredRod;
    
 export function createGrassStrandConfig(): EntityConfig<ComponentTypes> {
-   const transformComponent = new TransformComponent(CollisionGroup.default);
+   const transformComponent = new TransformComponent(CollisionGroup.decoration);
    const hitbox = createHitbox(new RectangularBox(new Point(0, 0), 4, 4, 0), 0, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, []);
    transformComponent.addHitbox(hitbox, null);
    

@@ -31,7 +31,11 @@ interface ComponentArrayFunctions<T extends object> {
 }
 
 export const ComponentArrays = new Array<ComponentArray>();
-export const ComponentArrayRecord = {} as { [T in ServerComponentType]: ComponentArray<object, T> };
+const ComponentArrayRecord = {} as { [T in ServerComponentType]: ComponentArray<object, T> };
+
+export function getComponentArrayRecord(): typeof ComponentArrayRecord {
+   return ComponentArrayRecord;
+}
 
 export class ComponentArray<T extends object = object, C extends ServerComponentType = ServerComponentType> implements ComponentArrayFunctions<T> {
    public readonly componentType: ServerComponentType;

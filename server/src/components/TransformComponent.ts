@@ -2,7 +2,7 @@ import { PathfindingNodeIndex, RIVER_STEPPING_STONE_SIZES } from "battletribes-s
 import { Settings } from "battletribes-shared/settings";
 import { CollisionGroup } from "battletribes-shared/collision-groups";
 import { clampToBoardDimensions, Point, TileIndex } from "battletribes-shared/utils";
-import Layer, { getChunkIndex, getTileIndexIncludingEdges } from "../Layer";
+import Layer, { getTileIndexIncludingEdges } from "../Layer";
 import Chunk from "../Chunk";
 import { EntityID, EntityTypeString } from "battletribes-shared/entities";
 import { ComponentArray } from "./ComponentArray";
@@ -17,7 +17,7 @@ import { boxIsCircular, Hitbox, updateBox } from "battletribes-shared/boxes/boxe
 import { getEntityAgeTicks, getEntityLayer, getEntityType } from "../world";
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "../../../shared/src/collision";
 
-// @Cleanup: move mass/hitbox related stuff out? (Are there any entities which would make use of that?)
+// @Cleanup: move mass/hitbox related stuff out? (Are there any entities which could take advantage of that extraction?)
 
 export class TransformComponent {
    /** Combined mass of all the entity's hitboxes */
@@ -102,38 +102,41 @@ export class TransformComponent {
    // @Cleanup: is there a way to avoid having this be optionally null? Or having the entity parameter here entirely?
    // Note: entity is null if the hitbox hasn't been created yet
    public addHitbox(hitbox: Hitbox, entity: EntityID | null): void {
-      const box = hitbox.box;
-      
-      updateBox(box, this.position.x, this.position.y, this.rotation);
-   
+      this.hitboxes.push(hitbox);
+
       const localID = this.nextHitboxLocalID++;
       this.hitboxLocalIDs.push(localID);
       
-      this.hitboxes.push(hitbox);
       this.totalMass += hitbox.mass;
-   
-      const boundsMinX = box.calculateBoundsMinX();
-      const boundsMaxX = box.calculateBoundsMaxX();
-      const boundsMinY = box.calculateBoundsMinY();
-      const boundsMaxY = box.calculateBoundsMaxY();
-   
-      // Update bounding area
-      if (boundsMinX < this.boundingAreaMinX) {
-         this.boundingAreaMinX = boundsMinX;
-      }
-      if (boundsMaxX > this.boundingAreaMaxX) {
-         this.boundingAreaMaxX = boundsMaxX;
-      }
-      if (boundsMinY < this.boundingAreaMinY) {
-         this.boundingAreaMinY = boundsMinY;
-      }
-      if (boundsMaxY > this.boundingAreaMaxY) {
-         this.boundingAreaMaxY = boundsMaxY;
-      }
-   
-      // If the hitbox is clipping into a border, clean the entities' position so that it doesn't clip
-      if (boundsMinX < 0 || boundsMaxX >= Settings.BOARD_UNITS || boundsMinY < 0 || boundsMaxY >= Settings.BOARD_UNITS) {
-         this.cleanHitboxes(entity);
+
+      // Only update the transform stuff if the entity is created, as if it isn't created then the position of the entity will just be 0,0 (default).
+      if (entity !== null) {
+         const box = hitbox.box;
+         updateBox(box, this.position.x, this.position.y, this.rotation);
+      
+         const boundsMinX = box.calculateBoundsMinX();
+         const boundsMaxX = box.calculateBoundsMaxX();
+         const boundsMinY = box.calculateBoundsMinY();
+         const boundsMaxY = box.calculateBoundsMaxY();
+      
+         // Update bounding area
+         if (boundsMinX < this.boundingAreaMinX) {
+            this.boundingAreaMinX = boundsMinX;
+         }
+         if (boundsMaxX > this.boundingAreaMaxX) {
+            this.boundingAreaMaxX = boundsMaxX;
+         }
+         if (boundsMinY < this.boundingAreaMinY) {
+            this.boundingAreaMinY = boundsMinY;
+         }
+         if (boundsMaxY > this.boundingAreaMaxY) {
+            this.boundingAreaMaxY = boundsMaxY;
+         }
+      
+         // If the hitbox is clipping into a border, clean the entities' position so that it doesn't clip
+         if (boundsMinX < 0 || boundsMaxX >= Settings.BOARD_UNITS || boundsMinY < 0 || boundsMaxY >= Settings.BOARD_UNITS) {
+            this.cleanHitboxes(entity);
+         }
       }
    }
 
@@ -144,8 +147,12 @@ export class TransformComponent {
       }
    }
 
-   /** Recalculates the game objects' bounding area, hitbox positions and bounds, and the hasPotentialWallTileCollisions flag */
+   /** Recalculates the entities' miscellaneous transforms stuff to match their position */
    public cleanHitboxes(entity: EntityID | null): void {
+      if (this.hitboxes.length === 0) {
+         throw new Error();
+      }
+      
       this.boundingAreaMinX = Number.MAX_SAFE_INTEGER;
       this.boundingAreaMaxX = Number.MIN_SAFE_INTEGER;
       this.boundingAreaMinY = Number.MAX_SAFE_INTEGER;
@@ -414,6 +421,9 @@ export function getEntityTile(transformComponent: TransformComponent): TileIndex
 function onJoin(entity: EntityID): void {
    const transformComponent = TransformComponentArray.getComponent(entity);
 
+   // Hitboxes added before the entity joined the world haven't affected the transform yet, so we update them now
+   transformComponent.cleanHitboxes(entity);
+   
    transformComponent.updateIsInRiver(entity);
    
    // Add to chunks

@@ -115,7 +115,7 @@ export function addRectangularSafetyNodePositions(rectPosition: Point, rectWidth
       for (let nodeY = minNodeY; nodeY <= maxNodeY; nodeY++) {
          const x = nodeX * Settings.SAFETY_NODE_SEPARATION;
          const y = nodeY * Settings.SAFETY_NODE_SEPARATION;
-         if (distBetweenPointAndRectangle(new Point(x, y), rectPosition, rectWidth, rectHeight, rectRotation) <= Settings.SAFETY_NODE_SEPARATION * 0.5) {
+         if (distBetweenPointAndRectangle(x, y, rectPosition, rectWidth, rectHeight, rectRotation) <= Settings.SAFETY_NODE_SEPARATION * 0.5) {
             const node = getSafetyNode(nodeX, nodeY);
             positions.add(node);
          }

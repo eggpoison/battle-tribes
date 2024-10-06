@@ -1,5 +1,5 @@
 import { CollisionGroup, collisionGroupsCanCollide } from "../../shared/src/collision-groups";
-import { EntityID, EntityType } from "../../shared/src/entities";
+import { EntityID, EntityType, EntityTypeString } from "../../shared/src/entities";
 import { collisionBitsAreCompatible } from "../../shared/src/hitbox-collision";
 import { Settings } from "../../shared/src/settings";
 import { collide } from "./collision";
@@ -107,9 +107,6 @@ export function resolveEntityCollisions(layer: Layer): void {
 
             for (let k = 0; k < pushedChunk.entities.length; k++) {
                const pushedEntity = pushedChunk.entities[k];
-               // if (getEntityType(pushingEntity) === EntityType.guardianGemQuake && getEntityType(pushedEntity) === EntityType.player) {
-               //    console.log("pushing player");
-               // }
 
                // @Speed: This check is only needed if the pushingGroup is the pushedGroup.
                if (pushingEntity === pushedEntity) {

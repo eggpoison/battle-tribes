@@ -3,7 +3,6 @@ import { StatusEffectData } from "battletribes-shared/client-server-types";
 import { StatusEffect } from "battletribes-shared/status-effects";
 import { Point, customTickIntervalHasPassed, lerp, randFloat, randItem } from "battletribes-shared/utils";
 import ServerComponent from "./ServerComponent";
-import Entity from "../Entity";
 import { playSound } from "../sound";
 import Board from "../Board";
 import Particle from "../Particle";
@@ -30,7 +29,7 @@ class StatusEffectComponent extends ServerComponent {
       reader.padOffset(2 * Float32Array.BYTES_PER_ELEMENT * numStatusEffects);
    }
 
-   public updateFromData(reader: PacketReader): void {
+   public updateFromData(reader: PacketReader, isInitialData: boolean): void {
       // @Temporary @Speed
       const statusEffects = new Array<StatusEffectData>();
       const numStatusEffects = reader.readNumber();
@@ -45,13 +44,15 @@ class StatusEffectComponent extends ServerComponent {
          statusEffects.push(statusEffectData);
       }
       
-      for (const statusEffectData of statusEffects) {
-         if (!this.hasStatusEffect(statusEffectData.type)) {
-            switch (statusEffectData.type) {
-               case StatusEffect.freezing: {
-                  const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
-                  playSound("freezing.mp3", 0.4, 1, transformComponent.position)
-                  break;
+      if (!isInitialData) {
+         for (const statusEffectData of statusEffects) {
+            if (!this.hasStatusEffect(statusEffectData.type)) {
+               switch (statusEffectData.type) {
+                  case StatusEffect.freezing: {
+                     const transformComponent = this.entity.getServerComponent(ServerComponentType.transform);
+                     playSound("freezing.mp3", 0.4, 1, transformComponent.position)
+                     break;
+                  }
                }
             }
          }
@@ -60,8 +61,8 @@ class StatusEffectComponent extends ServerComponent {
       this.statusEffects = statusEffects;
    }
 
-   public updatePlayerFromData(reader: PacketReader): void {
-      this.updateFromData(reader);
+   public updatePlayerFromData(reader: PacketReader, isInitialData: boolean): void {
+      this.updateFromData(reader, isInitialData);
    }
 
    public hasStatusEffect(type: StatusEffect): boolean {

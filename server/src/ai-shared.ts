@@ -105,14 +105,12 @@ export function entityHasReachedPosition(entity: EntityID, positionX: number, po
    const transformComponent = TransformComponentArray.getComponent(entity);
    const physicsComponent = PhysicsComponentArray.getComponent(entity);
    
-   // @Speed: garbage
-   const relativeTargetPosition = transformComponent.position.copy();
-   relativeTargetPosition.x -= positionX;
-   relativeTargetPosition.y -= positionY;
+   const relativeX = transformComponent.position.x - positionX;
+   const relativeY = transformComponent.position.y - positionY;
 
    const vx = physicsComponent.selfVelocity.x + physicsComponent.externalVelocity.x;
    const vy = physicsComponent.selfVelocity.y + physicsComponent.externalVelocity.y;
-   const dotProduct = vx * relativeTargetPosition.x + vy * relativeTargetPosition.y;
+   const dotProduct = vx * relativeX + vy * relativeY;
    
    return dotProduct > 0;
 }
@@ -709,7 +707,7 @@ export function getDistanceFromPointToEntity(point: Point, entity: EntityID): nu
             minDistance = hitboxDistance;
          }
       } else {
-         const dist = distBetweenPointAndRectangle(point, box.position, box.width, box.height, box.rotation);
+         const dist = distBetweenPointAndRectangle(point.x, point.y, box.position, box.width, box.height, box.rotation);
          if (dist < minDistance) {
             minDistance = dist;
          }

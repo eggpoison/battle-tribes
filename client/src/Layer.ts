@@ -10,6 +10,10 @@ import { Tile } from "./Tile";
 import { getEntityByID } from "./world";
 
 export function getTileIndexIncludingEdges(tileX: number, tileY: number): TileIndex {
+   if (tileX < -Settings.EDGE_GENERATION_DISTANCE || tileX >= Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE || tileY < -Settings.EDGE_GENERATION_DISTANCE || tileY >= Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE) {
+      throw new Error("Outside of world bounds!");
+   }
+   
    return (tileY + Settings.EDGE_GENERATION_DISTANCE) * (Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE * 2) + tileX + Settings.EDGE_GENERATION_DISTANCE;
 }
 

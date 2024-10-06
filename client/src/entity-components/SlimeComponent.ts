@@ -2,7 +2,6 @@ import { lerp, randFloat, randInt } from "battletribes-shared/utils";
 import { SlimeSize } from "battletribes-shared/entities";
 import { Settings } from "battletribes-shared/settings";
 import ServerComponent from "./ServerComponent";
-import Entity from "../Entity";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { RenderPart } from "../render-parts/render-parts";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
@@ -49,37 +48,6 @@ class SlimeComponent extends ServerComponent {
 
    private internalTickCounter = 0;
 
-   public onLoad(): void {
-      const sizeString = SIZE_STRINGS[this.size];
-
-      // Body
-      this.bodyRenderPart = new TexturedRenderPart(
-         null,
-         2,
-         0,
-         getTextureArrayIndex(`entities/slime/slime-${sizeString}-body.png`)
-      );
-      this.entity.attachRenderThing(this.bodyRenderPart);
-
-      // Shading
-      this.entity.attachRenderThing(new TexturedRenderPart(
-         null,
-         0,
-         0,
-         getTextureArrayIndex(`entities/slime/slime-${sizeString}-shading.png`)
-      ));
-
-      // Eye
-      this.eyeRenderPart = new TexturedRenderPart(
-         null,
-         3,
-         0,
-         getTextureArrayIndex(`entities/slime/slime-${sizeString}-eye.png`)
-      );
-      this.eyeRenderPart.inheritParentRotation = false;
-      this.entity.attachRenderThing(this.eyeRenderPart);
-   }
-
    private createOrb(size: SlimeSize): void {
       const orbInfo: SlimeOrbInfo = {
          size: size,
@@ -114,11 +82,43 @@ class SlimeComponent extends ServerComponent {
       reader.padOffset(Float32Array.BYTES_PER_ELEMENT * numOrbs);
    }
 
-   public updateFromData(reader: PacketReader): void {
+   public updateFromData(reader: PacketReader, isInitialData: boolean): void {
       this.size = reader.readNumber();
       const eyeRotation = reader.readNumber();
       const anger = reader.readNumber();
       const spitChargeProgress = reader.readNumber();
+
+      if (isInitialData) {
+         const sizeString = SIZE_STRINGS[this.size];
+
+         // Body
+         this.bodyRenderPart = new TexturedRenderPart(
+            null,
+            2,
+            0,
+            getTextureArrayIndex(`entities/slime/slime-${sizeString}-body.png`)
+         );
+         this.entity.attachRenderThing(this.bodyRenderPart);
+
+         // Shading
+         this.entity.attachRenderThing(new TexturedRenderPart(
+            null,
+            0,
+            0,
+            getTextureArrayIndex(`entities/slime/slime-${sizeString}-shading.png`)
+         ));
+
+         // Eye
+         this.eyeRenderPart = new TexturedRenderPart(
+            null,
+            3,
+            0,
+            getTextureArrayIndex(`entities/slime/slime-${sizeString}-eye.png`)
+         );
+         this.eyeRenderPart.inheritParentRotation = false;
+         this.entity.attachRenderThing(this.eyeRenderPart);
+      }
+      
       // 
       // Update the eye's rotation
       // 

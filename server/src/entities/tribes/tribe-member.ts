@@ -876,22 +876,6 @@ export function onTribeMemberCollision(tribesman: EntityID, collidingEntity: Ent
    }
 }
 
-// @Cleanup: not for player. reflect in function name
-export function onTribesmanCollision(tribesman: EntityID, collidingEntity: EntityID): void {
-   if (getEntityType(collidingEntity) === EntityType.itemEntity) {
-      const itemComponent = ItemComponentArray.getComponent(collidingEntity);
-
-      // Keep track of it beforehand as the amount variable gets changed when being picked up
-      const itemAmount = itemComponent.amount;
-
-      const wasPickedUp = pickupItemEntity(tribesman, collidingEntity);
-
-      if (wasPickedUp && itemComponent.throwingEntity !== null && itemComponent.throwingEntity !== tribesman) {
-         adjustTribesmanRelationsAfterGift(tribesman, itemComponent.throwingEntity, itemComponent.itemType, itemAmount);
-      }
-   }
-}
-
 export function throwItem(tribesman: EntityID, inventoryName: InventoryName, itemSlot: number, dropAmount: number, throwDirection: number): void {
    const inventoryComponent = InventoryComponentArray.getComponent(tribesman);
    const inventory = getInventory(inventoryComponent, inventoryName);

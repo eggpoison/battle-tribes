@@ -230,6 +230,7 @@ const throwSnow = (yeti: EntityID, target: EntityID): void => {
    physicsComponent.externalVelocity.y += Vars.SNOW_THROW_KICKBACK_AMOUNT * Math.cos(throwAngle * Math.PI);
 }
 
+// @Speed: hasComponent in here takes up about 1% of CPU time
 const getYetiTarget = (yeti: EntityID, visibleEntities: ReadonlyArray<EntityID>): EntityID | null => {
    const yetiComponent = YetiComponentArray.getComponent(yeti);
 

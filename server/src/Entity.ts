@@ -5,20 +5,19 @@ import { STRUCTURE_TYPES, StructureType } from "battletribes-shared/structures";
 import { TransformComponentArray } from "./components/TransformComponent";
 import { ServerComponentType } from "battletribes-shared/components";
 import { EntityConfig } from "./components";
-import { ComponentArray, ComponentArrayRecord } from "./components/ComponentArray";
+import { ComponentArray, getComponentArrayRecord } from "./components/ComponentArray";
 import { boxIsCircular } from "battletribes-shared/boxes/boxes";
 import { addEntityToJoinBuffer, getEntityType } from "./world";
 
 let idCounter = 1;
 
-// @Cleanup: file?
 /** Finds a unique available ID for an entity */
-export function getNextEntityID(): EntityID {
+const getNextEntityID = (): EntityID => {
    return idCounter++;
 }
 
 // @Hack @Cleanup ?@Speed
-const a = <ComponentTypes extends ServerComponentType>(componentConfig: EntityConfig<ComponentTypes>): ReadonlyArray<ComponentTypes> => {
+const getComponentTypes = <ComponentTypes extends ServerComponentType>(componentConfig: EntityConfig<ComponentTypes>): ReadonlyArray<ComponentTypes> => {
    return Object.keys(componentConfig.components).map(Number) as Array<ComponentTypes>;
 }
 
@@ -27,12 +26,13 @@ const a = <ComponentTypes extends ServerComponentType>(componentConfig: EntityCo
 export function createEntityFromConfig<ComponentTypes extends ServerComponentType>(entityConfig: EntityConfig<ComponentTypes>, layer: Layer, joinDelayTicks: number): EntityID {
    const id = getNextEntityID();
    // @Hack
-   const componentTypes = a(entityConfig);
+   const componentTypes = getComponentTypes(entityConfig);
+   const componentArrayRecord = getComponentArrayRecord();
 
    // Run initialise functions
    for (let i = 0; i < componentTypes.length; i++) {
       const componentType = componentTypes[i];
-      const componentArray = ComponentArrayRecord[componentType] as ComponentArray<object, ComponentTypes>;
+      const componentArray = componentArrayRecord[componentType] as ComponentArray<object, ComponentTypes>;
 
       if (typeof componentArray.onInitialise !== "undefined") {
          // @Cleanup: remove need for cast
@@ -45,11 +45,11 @@ export function createEntityFromConfig<ComponentTypes extends ServerComponentTyp
       
       const component = entityConfig.components[componentType];
 
-      const componentArray = ComponentArrayRecord[componentType] as ComponentArray<object, ComponentTypes>;
+      const componentArray = componentArrayRecord[componentType] as ComponentArray<object, ComponentTypes>;
       componentArray.addComponent(id, component, joinDelayTicks);
    }
 
-   addEntityToJoinBuffer(id, entityConfig.entityType, layer, joinDelayTicks);
+   addEntityToJoinBuffer(id, entityConfig.entityType, layer, componentTypes, joinDelayTicks);
 
    return id;
 }

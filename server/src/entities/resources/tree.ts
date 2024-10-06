@@ -21,7 +21,7 @@ const TREE_MAX_HEALTHS = [10, 15];
 export function createTreeConfig(): EntityConfig<ComponentTypes> {
    const size: TreeSize = Math.random() > 1/3 ? 1 : 0;
    
-   const transformComponent = new TransformComponent(CollisionGroup.default);
+   const transformComponent = new TransformComponent(CollisionGroup.boring);
    const hitbox = createHitbox(new CircularBox(new Point(0, 0), 0, TREE_RADII[size]), 1.25 + size * 0.25, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, []);
    transformComponent.addHitbox(hitbox, null);
    transformComponent.collisionBit = COLLISION_BITS.plants;

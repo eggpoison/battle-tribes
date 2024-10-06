@@ -19,6 +19,8 @@ type SampleDensity = number;
 const distributions: Record<number, Array<SampleDensity>> = {};
 const totalSampleDensities: Record<number, number> = {};
 
+const sampleNumSpawnableTilesRecord: Partial<Record<SpawningEntityType, ReadonlyArray<number>>> = {};
+
 for (let entityType: EntityType = 0; entityType < NUM_ENTITY_TYPES; entityType++) {
    const samples = new Array<number>();
    for (let i = 0; i < Vars.SAMPLES_IN_WORLD_SIZE * Vars.SAMPLES_IN_WORLD_SIZE; i++) {
@@ -52,12 +54,34 @@ const countNumSpawnableTiles = (layer: Layer, sampleX: number, sampleY: number, 
    return count;
 }
 
-export function updateResourceDistributions(): void {
-   // Reset distributions
+export function countTileTypesForResourceDistributions(): void {
    for (let entityType: EntityType = 0; entityType < NUM_ENTITY_TYPES; entityType++) {
-      resetDistributions(entityType);
-   }
+      const spawnInfo = getEntitySpawnInfo(entityType);
+      if (spawnInfo === null) {
+         continue;
+      }
 
+      const numSpawnableTilesArray = new Array<number>();
+
+      const spawnableTiles = getEntitySpawnableTiles(spawnInfo.entityType as SpawningEntityType);
+
+      let idx = 0;
+      for (let sampleX = 0; sampleX < Vars.SAMPLES_IN_WORLD_SIZE; sampleX++) {
+         for (let sampleY = 0; sampleY < Vars.SAMPLES_IN_WORLD_SIZE; sampleY++) {
+            let numSpawnableTiles = countNumSpawnableTiles(surfaceLayer, sampleX, sampleY, spawnableTiles);
+            numSpawnableTiles += countNumSpawnableTiles(undergroundLayer, sampleX, sampleY, spawnableTiles);
+
+            numSpawnableTilesArray.push(numSpawnableTiles);
+            
+            idx++;
+         }
+      }
+
+      sampleNumSpawnableTilesRecord[entityType as SpawningEntityType] = numSpawnableTilesArray;
+   }
+}
+
+const a = (): void => {
    for (let i = 0; i < TransformComponentArray.activeEntities.length; i++) {
       const entity = TransformComponentArray.activeEntities[i];
 
@@ -68,6 +92,14 @@ export function updateResourceDistributions(): void {
       const sampleIdx = sampleY * Vars.SAMPLES_IN_WORLD_SIZE + sampleX;
       distributions[getEntityType(entity)!][sampleIdx]++;
    }
+}
+
+// @Speed: this is reaaaally slow. 8% of CPU usage (should be way less), and causes CPU spikes.
+export function updateResourceDistributions(): void {
+   // Reset distributions
+   for (let entityType: EntityType = 0; entityType < NUM_ENTITY_TYPES; entityType++) {
+      resetDistributions(entityType);
+   }
 
    // Weight the distributions to the amount of tiles
    for (let entityType: EntityType = 0; entityType < NUM_ENTITY_TYPES; entityType++) {
@@ -77,26 +109,27 @@ export function updateResourceDistributions(): void {
       }
       
       const samples = distributions[entityType];
-      const spawnableTiles = getEntitySpawnableTiles(spawnInfo.entityType as SpawningEntityType);
 
       let totalDensity = 0;
+
+      const numSpawnableTilesArray = sampleNumSpawnableTilesRecord[entityType as SpawningEntityType]!;
       
+      let idx = 0;
       for (let sampleX = 0; sampleX < Vars.SAMPLES_IN_WORLD_SIZE; sampleX++) {
          for (let sampleY = 0; sampleY < Vars.SAMPLES_IN_WORLD_SIZE; sampleY++) {
-            const sampleIndex = sampleY * Vars.SAMPLES_IN_WORLD_SIZE + sampleX;
-
-            const entityCount = samples[sampleIndex];
-            let numSpawnableTiles = countNumSpawnableTiles(surfaceLayer, sampleX, sampleY, spawnableTiles);
-            numSpawnableTiles += countNumSpawnableTiles(undergroundLayer, sampleX, sampleY, spawnableTiles);
+            const entityCount = samples[idx];
+            const numSpawnableTiles = numSpawnableTilesArray[idx];
 
             if (numSpawnableTiles === 0) {
-               samples[sampleIndex] = -1;
+               samples[idx] = -1;
             } else {
-               const density = (entityCount + 0.15) / numSpawnableTiles;
+               const inverseDensity = numSpawnableTiles / (entityCount + 0.15);
                
-               samples[sampleIndex] = 1 / density;
-               totalDensity += 1 / density;
+               samples[idx] = inverseDensity;
+               totalDensity += inverseDensity;
             }
+
+            idx++;
          }
       }
 

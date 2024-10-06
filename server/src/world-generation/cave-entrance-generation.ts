@@ -26,7 +26,7 @@ export function generateCaveEntrances(tileTypes: Float32Array, tileBiomes: Float
          continue;
       }
 
-      for (let M = 0; M < 50; M++) {
+      // for (let M = 0; M < 50; M++) {
 
       // Pick a random tile some distance away from other biomes to generate the cave
       let originTile: TileIndex | undefined;
@@ -183,7 +183,7 @@ export function generateCaveEntrances(tileTypes: Float32Array, tileBiomes: Float
       }
       guardianSpawnZones.push(tiles);
 
-      }
+      // }
 
    }
 }

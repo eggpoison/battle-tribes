@@ -21,11 +21,6 @@ import { getEntityLayer } from "../world";
 const getTile = (layer: Layer, position: Point): Tile => {
    const tileX = Math.floor(position.x / Settings.TILE_SIZE);
    const tileY = Math.floor(position.y / Settings.TILE_SIZE);
-
-   if (tileX < 0 || tileX >= Settings.TILES_IN_WORLD_WIDTH || tileY < 0 || tileY >= Settings.TILES_IN_WORLD_WIDTH) {
-      console.log(position.x, position.y);
-      throw new Error();
-   }
    
    const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
    return layer.getTile(tileIndex);
@@ -441,6 +436,14 @@ class TransformComponent extends ServerComponent {
             chunk.addEntity(this.entity);
             this.chunks.add(chunk);
          }
+      }
+   }
+
+   public updatePlayerFromData(reader: PacketReader, isInitialData: boolean): void {
+      if (isInitialData) {
+         this.updateFromData(reader);
+      } else {
+         this.padData(reader);
       }
    }
 

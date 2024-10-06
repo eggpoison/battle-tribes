@@ -4,9 +4,6 @@ import { randFloat, randInt } from "battletribes-shared/utils";
 import { LeafParticleSize, createLeafParticle, createLeafSpeckParticle } from "../particles";
 import { AudioFilePath, playSound } from "../sound";
 import Entity from "../Entity";
-import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
-import { BERRY_BUSH_TEXTURE_SOURCES } from "../entity-components/BerryBushComponent";
-import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 class BerryBush extends Entity {
    private static readonly RADIUS = 40;
@@ -16,19 +13,6 @@ class BerryBush extends Entity {
 
    constructor(id: number) {
       super(id, EntityType.berryBush);
-   }
-
-   public onLoad(): void {
-      const berryBushComponent = this.getServerComponent(ServerComponentType.berryBush);
-      
-      const renderPart = new TexturedRenderPart(
-         null,
-         0,
-         0,
-         getTextureArrayIndex(BERRY_BUSH_TEXTURE_SOURCES[berryBushComponent.numBerries])
-      );
-      renderPart.addTag("berryBushComponent:renderPart");
-      this.attachRenderThing(renderPart);
    }
 
    protected onHit(): void {

@@ -14,7 +14,6 @@ import { EntityID, EntityType } from "battletribes-shared/entities";
 import { TRIBE_INFO_RECORD, TribeType } from "battletribes-shared/tribes";
 import { InventoryComponentArray, addItemToInventory, craftRecipe, getInventory, inventoryComponentCanAffordRecipe, recipeCraftingStationIsAvailable } from "../components/InventoryComponent";
 import { TribeComponentArray, recruitTribesman } from "../components/TribeComponent";
-import { createItem } from "../items";
 import { Point, randInt, randItem } from "battletribes-shared/utils";
 import { Settings } from "battletribes-shared/settings";
 import { getTilesOfBiome } from "../census";
@@ -29,13 +28,12 @@ import { TurretComponentArray } from "../components/TurretComponent";
 import { TribesmanAIComponentArray } from "../components/TribesmanAIComponent";
 import { EntitySummonPacket } from "battletribes-shared/dev-packets";
 import { CRAFTING_RECIPES, ItemRequirements } from "battletribes-shared/items/crafting-recipes";
-import { Inventory, InventoryName, Item, ItemType } from "battletribes-shared/items/items";
+import { InventoryName, ItemType } from "battletribes-shared/items/items";
 import Tribe from "../Tribe";
 import { EntityTickEvent } from "battletribes-shared/entity-events";
 import { TransformComponentArray } from "../components/TransformComponent";
-import { createEntityFromConfig } from "../Entity";
 import { EntityConfig } from "../components";
-import { destroyEntity, entityExists, getEntityLayer, getEntityType, getTribe } from "../world";
+import { destroyEntity, entityExists, getEntityType, getTribe } from "../world";
 
 // @Cleanup: see if a decorator can be used to cut down on the player entity check copy-n-paste
 

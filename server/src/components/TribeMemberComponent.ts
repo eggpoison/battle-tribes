@@ -15,13 +15,14 @@ import { Packet } from "battletribes-shared/packets";
 import { COLLISION_BITS } from "battletribes-shared/collision";
 import { itemEntityCanBePickedUp } from "../entities/item-entity";
 import { HealthComponentArray, addDefence, removeDefence } from "./HealthComponent";
-import { InventoryComponentArray, addInventoryToInventoryComponent, getInventory, resizeInventory } from "./InventoryComponent";
+import { InventoryComponentArray, addInventoryToInventoryComponent, getInventory, pickupItemEntity, resizeInventory } from "./InventoryComponent";
 import { InventoryUseComponentArray, LimbInfo } from "./InventoryUseComponent";
 import { ItemComponentArray } from "./ItemComponent";
 import { PhysicsComponentArray } from "./PhysicsComponent";
 import { TransformComponentArray } from "./TransformComponent";
-import { TribesmanAIComponentArray } from "./TribesmanAIComponent";
+import { adjustTribesmanRelationsAfterGift, TribesmanAIComponentArray } from "./TribesmanAIComponent";
 import { getEntityLayer, getEntityType, getGameTicks } from "../world";
+import { registerPlayerDroppedItemPickup } from "../server/player-clients";
 
 const enum Vars {
    VACUUM_STRENGTH = 25
@@ -50,6 +51,7 @@ export const TribeMemberComponentArray = new ComponentArray<TribeMemberComponent
       tickInterval: 1,
       func: onTick
    },
+   onEntityCollision: onEntityCollision,
    getDataLength: getDataLength,
    addDataToPacket: addDataToPacket
 });
@@ -100,7 +102,7 @@ function onInitialise(config: EntityConfig<ServerComponentType.health | ServerCo
    
    // Armour slot
    const armourSlotInventory = new Inventory(1, 1, InventoryName.armourSlot);
-   addInventoryToInventoryComponent(inventoryComponent, armourSlotInventory, { acceptsPickedUpItems: false, isDroppedOnDeath: true, isSentToEnemyPlayers: false });
+   addInventoryToInventoryComponent(inventoryComponent, armourSlotInventory, { acceptsPickedUpItems: false, isDroppedOnDeath: true, isSentToEnemyPlayers: true });
    
    // Backpack slot
    const backpackSlotInventory = new Inventory(1, 1, InventoryName.backpackSlot);
@@ -108,7 +110,7 @@ function onInitialise(config: EntityConfig<ServerComponentType.health | ServerCo
    
    // Glove slot
    const gloveSlotInventory = new Inventory(1, 1, InventoryName.gloveSlot);
-   addInventoryToInventoryComponent(inventoryComponent, gloveSlotInventory, { acceptsPickedUpItems: false, isDroppedOnDeath: true, isSentToEnemyPlayers: false });
+   addInventoryToInventoryComponent(inventoryComponent, gloveSlotInventory, { acceptsPickedUpItems: false, isDroppedOnDeath: true, isSentToEnemyPlayers: true });
    
    // Backpack
    const backpackInventory = new Inventory(1, 1, InventoryName.backpack);
@@ -398,5 +400,24 @@ function onTick(_tribeMemberComponent: TribeMemberComponent, tribeMember: Entity
       }
    } else {
       removeDefence(healthComponent, "armour");
+   }
+}
+
+function onEntityCollision(tribeMember: EntityID, collidingEntity: EntityID): void {
+   if (getEntityType(collidingEntity) === EntityType.itemEntity) {
+      const itemComponent = ItemComponentArray.getComponent(collidingEntity);
+      
+      // Keep track of it beforehand as the amount variable gets changed when being picked up
+      const itemAmount = itemComponent.amount;
+
+      const wasPickedUp = pickupItemEntity(tribeMember, collidingEntity);
+
+      if (wasPickedUp) {
+         if (getEntityType(tribeMember) === EntityType.player) {
+            registerPlayerDroppedItemPickup(tribeMember);
+         } else if (itemComponent.throwingEntity !== null && itemComponent.throwingEntity !== tribeMember) {
+            adjustTribesmanRelationsAfterGift(tribeMember, itemComponent.throwingEntity, itemComponent.itemType, itemAmount);
+         }
+      }
    }
 }

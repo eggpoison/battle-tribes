@@ -1,17 +1,24 @@
-import { randInt } from "battletribes-shared/utils";
+import { Point, randInt } from "battletribes-shared/utils";
 import { ServerComponentType } from "battletribes-shared/components";
 import { ComponentArray } from "./ComponentArray";
-import { EntityID } from "battletribes-shared/entities";
+import { EntityID, EntityType, PlayerCauseOfDeath } from "battletribes-shared/entities";
 import { Settings } from "battletribes-shared/settings";
 import { Biome } from "battletribes-shared/tiles";
-import { positionIsInWorld } from "../Layer";
-import { createIceShardExplosion, createIceSpikesConfig } from "../entities/resources/ice-spikes";
+import Layer, { positionIsInWorld } from "../Layer";
+import { createIceSpikesConfig } from "../entities/resources/ice-spikes";
 import { createEntityFromConfig } from "../Entity";
 import { TransformComponentArray } from "./TransformComponent";
 import { ItemType } from "../../../shared/src/items/items";
 import { createItemsOverEntity } from "../entity-shared";
-import { entityExists, getEntityLayer } from "../world";
+import { entityExists, getEntityLayer, getEntityType } from "../world";
 import { EntityConfig } from "../components";
+import { Hitbox } from "../../../shared/src/boxes/boxes";
+import { AttackEffectiveness } from "../../../shared/src/entity-damage-types";
+import { StatusEffect } from "../../../shared/src/status-effects";
+import { createIceShardConfig } from "../entities/projectiles/ice-shard";
+import { HealthComponentArray, canDamageEntity, damageEntity, addLocalInvulnerabilityHash } from "./HealthComponent";
+import { applyKnockback } from "./PhysicsComponent";
+import { StatusEffectComponentArray, applyStatusEffect } from "./StatusEffectComponent";
 
 const enum Vars {
    TICKS_TO_GROW = 1/5 * Settings.TPS,
@@ -37,6 +44,7 @@ export const IceSpikesComponentArray = new ComponentArray<IceSpikesComponent>(Se
       func: onTick
    },
    onRemove: onRemove,
+   onHitboxCollision: onHitboxCollision,
    getDataLength: getDataLength,
    addDataToPacket: addDataToPacket
 });
@@ -138,5 +146,47 @@ export function forceMaxGrowAllIceSpikes(): void {
    for (let i = 0; i < IceSpikesComponentArray.activeEntities.length; i++) {
       const entity = IceSpikesComponentArray.activeEntities[i];
       forceMaxGrowIceSpike(entity);
+   }
+}
+
+export function createIceShardExplosion(layer: Layer, originX: number, originY: number, numProjectiles: number): void {
+   for (let i = 0; i < numProjectiles; i++) {
+      const moveDirection = 2 * Math.PI * Math.random();
+      const x = originX + 10 * Math.sin(moveDirection);
+      const y = originY + 10 * Math.cos(moveDirection);
+      const position = new Point(x, y);
+
+      const config = createIceShardConfig();
+      config.components[ServerComponentType.transform].position.x = position.x;
+      config.components[ServerComponentType.transform].position.y = position.y;
+      config.components[ServerComponentType.transform].rotation = moveDirection;
+      config.components[ServerComponentType.physics].externalVelocity.x += 700 * Math.sin(moveDirection);
+      config.components[ServerComponentType.physics].externalVelocity.y += 700 * Math.cos(moveDirection);
+      createEntityFromConfig(config, layer, 0);
+   }
+}
+
+function onHitboxCollision(iceSpikes: EntityID, collidingEntity: EntityID, _pushedHitbox: Hitbox, _pushingHitbox: Hitbox, collisionPoint: Point): void {
+   const collidingEntityType = getEntityType(collidingEntity);
+   if (collidingEntityType === EntityType.yeti || collidingEntityType === EntityType.frozenYeti || collidingEntityType === EntityType.snowball) {
+      return;
+   }
+
+   if (HealthComponentArray.hasComponent(collidingEntity)) {
+      const healthComponent = HealthComponentArray.getComponent(collidingEntity);
+      if (canDamageEntity(healthComponent, "ice_spikes")) {
+         const transformComponent = TransformComponentArray.getComponent(iceSpikes);
+         const collidingEntityTransformComponent = TransformComponentArray.getComponent(collidingEntity);
+
+         const hitDirection = transformComponent.position.calculateAngleBetween(collidingEntityTransformComponent.position);
+         
+         damageEntity(collidingEntity, iceSpikes, 1, PlayerCauseOfDeath.ice_spikes, AttackEffectiveness.effective, collisionPoint, 0);
+         applyKnockback(collidingEntity, 180, hitDirection);
+         addLocalInvulnerabilityHash(healthComponent, "ice_spikes", 0.3);
+   
+         if (StatusEffectComponentArray.hasComponent(collidingEntity)) {
+            applyStatusEffect(collidingEntity, StatusEffect.freezing, 5 * Settings.TPS);
+         }
+      }
    }
 }

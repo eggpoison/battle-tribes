@@ -1,6 +1,7 @@
 import { createHitbox, HitboxCollisionType, HitboxFlag } from "../../../../shared/src/boxes/boxes";
 import CircularBox from "../../../../shared/src/boxes/CircularBox";
 import { DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "../../../../shared/src/collision";
+import { CollisionGroup } from "../../../../shared/src/collision-groups";
 import { ServerComponentType } from "../../../../shared/src/components";
 import { EntityID, EntityType } from "../../../../shared/src/entities";
 import { Point, TileIndex } from "../../../../shared/src/utils";
@@ -31,7 +32,7 @@ function tileIsValidCallback(entity: EntityID, _layer: Layer, tileIndex: TileInd
 }
 
 export function createGuardianConfig(homeTiles: ReadonlyArray<TileIndex>): EntityConfig<ComponentTypes> {
-   const transformComponent = new TransformComponent();
+   const transformComponent = new TransformComponent(CollisionGroup.default);
 
    // Head
    transformComponent.addHitbox(createHitbox(new CircularBox(new Point(0, 0), 0, 40), 1.5, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, []), null);

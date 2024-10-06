@@ -82,7 +82,7 @@ export const GuardianComponentArray = new ComponentArray<GuardianComponent>(Serv
       tickInterval: 1,
       func: onTick
    },
-   onCollision: onCollision,
+   onHitboxCollision: onHitboxCollision,
    getDataLength: getDataLength,
    addDataToPacket: addDataToPacket
 });
@@ -176,8 +176,7 @@ function onTick(guardianComponent: GuardianComponent, guardian: EntityID): void 
          if (guardianComponent.attackType === AttackType.none) {
             guardianComponent.ticksUntilNextAttack--;
             if (guardianComponent.ticksUntilNextAttack === 0) {
-               // guardianComponent.attackType = randInt(1, 2);
-               guardianComponent.attackType = 3;
+               guardianComponent.attackType = randInt(1, 2) * 0 + 1;
             }
          }
          // If just passed staging position, start attack
@@ -324,9 +323,9 @@ function addDataToPacket(packet: Packet, entity: EntityID): void {
    packet.addNumber(guardianComponent.limbAmethystGemActivation);
 }
 
-function onCollision(guardian: EntityID, collidingEntity: EntityID, pushedHitbox: Hitbox, pushingHitbox: Hitbox, collisionPoint: Point): void {
+function onHitboxCollision(guardian: EntityID, collidingEntity: EntityID, actingHitbox: Hitbox, _receivingHitbox: Hitbox, collisionPoint: Point): void {
    // Only the limbs can damage entities
-   if (!pushedHitbox.flags.includes(HitboxFlag.GUARDIAN_LIMB_HITBOX)) {
+   if (!actingHitbox.flags.includes(HitboxFlag.GUARDIAN_LIMB_HITBOX)) {
       return;
    }
    

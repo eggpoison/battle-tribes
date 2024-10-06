@@ -1,7 +1,7 @@
 import { EntityID, EntityType } from "../../shared/src/entities";
 import { Settings } from "../../shared/src/settings";
 import { tickTribes } from "./ai-tribe-building/ai-building";
-import Layer from "./Layer";
+import Layer, { getChunkIndex } from "./Layer";
 import { removeEntityFromCensus } from "./census";
 import { ComponentArrays } from "./components/ComponentArray";
 import { onCowDeath } from "./entities/mobs/cow";
@@ -140,7 +140,7 @@ export function entityExists(entity: EntityID): boolean {
 export function getEntityLayer(entity: EntityID): Layer {
    const layer = entityLayers[entity];
    if (typeof layer === "undefined") {
-      throw new Error();
+      throw new Error("Entity doesn't exist!");
    }
    return layer;
 }
@@ -232,7 +232,10 @@ export function destroyFlaggedEntities(): void {
       }
 
       removeEntityFromCensus(entity);
+
       delete entityTypes[entity];
+      delete entityLayers[entity];
+      delete entitySpawnTicks[entity];
    }
 
    entityRemoveBuffer.length = 0;
@@ -320,6 +323,10 @@ export function updateEntities(): void {
 }
 
 export function changeEntityLayer(entity: EntityID, newLayer: Layer): void {
+   // @Temporary
+   console.log("change");
+   if(1+1===2)throw new Error();
+   
    const transformComponent = TransformComponentArray.getComponent(entity);
    const previousLayer = getEntityLayer(entity);
 
@@ -334,11 +341,11 @@ export function changeEntityLayer(entity: EntityID, newLayer: Layer): void {
          const chunk = previousLayer.getChunk(chunkX, chunkY);
          const idx = transformComponent.chunks.indexOf(chunk);
          if (idx !== -1) {
-            transformComponent.removeFromChunk(entity, chunk);
+            transformComponent.removeFromChunk(entity, previousLayer, chunk);
             transformComponent.chunks.splice(idx, 1);
 
             const newChunk = newLayer.getChunk(chunkX, chunkY);
-            transformComponent.addToChunk(entity, newChunk)
+            transformComponent.addToChunk(entity, newLayer, newChunk);
             newChunks.push(newChunk);
          }
       }

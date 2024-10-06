@@ -29,11 +29,12 @@ import generateSurfaceTerrain from "../world-generation/surface-terrain-generati
 import { generateLilypads } from "../world-generation/lilypad-generation";
 import { forceMaxGrowAllIceSpikes } from "../components/IceSpikesComponent";
 import { sortComponentArrays } from "../components/ComponentArray";
-import { createLayers, destroyFlaggedEntities, entityExists, getEntityLayer, getGameTicks, pushJoinBuffer, surfaceLayer, tickGameTime, undergroundLayer, updateEntities, updateTribes } from "../world";
+import { createLayers, destroyFlaggedEntities, entityExists, getEntityLayer, getGameTicks, layers, pushJoinBuffer, surfaceLayer, tickGameTime, updateEntities, updateTribes } from "../world";
 import { generateUndergroundTerrain } from "../world-generation/underground-terrain-generation";
 import { spawnGuardians } from "../world-generation/cave-entrance-generation";
 import { createGuardianConfig } from "../entities/mobs/guardian";
 import { getTileIndexIncludingEdges } from "../Layer";
+import { resolveEntityCollisions } from "../collision-detection";
 
 /*
 
@@ -56,7 +57,7 @@ const entityIsHiddenFromPlayer = (entity: EntityID, playerTribe: Tribe): boolean
 }
 
 const getPlayerVisibleEntities = (playerClient: PlayerClient): Set<EntityID> => {
-   const layer = getEntityLayer(playerClient.instance);
+   const layer = playerClient.lastLayer;
    
    const entities = new Set<EntityID>();
       
@@ -169,13 +170,14 @@ class GameServer {
                   const visibleChunkBounds = estimateVisibleChunkBounds(spawnPosition, screenWidth, screenHeight);
       
                   const tribe = new Tribe(tribeType, false);
+                  const layer = surfaceLayer;
       
                   const config = createPlayerConfig(tribe, username);
                   config.components[ServerComponentType.transform].position.x = spawnPosition.x;
                   config.components[ServerComponentType.transform].position.y = spawnPosition.y;
-                  const player = createEntityFromConfig(config, surfaceLayer, 0);
+                  const player = createEntityFromConfig(config, layer, 0);
       
-                  playerClient = new PlayerClient(socket, tribe, screenWidth, screenHeight, spawnPosition, player, username);
+                  playerClient = new PlayerClient(socket, tribe, layer, screenWidth, screenHeight, spawnPosition, player, username);
                   addPlayerClient(playerClient, player, surfaceLayer, config);
 
                   setTimeout(() => {
@@ -281,8 +283,10 @@ class GameServer {
          
          updateEntities();
          updateDynamicPathfindingNodes();
-         surfaceLayer.resolveEntityCollisions();
-         undergroundLayer.resolveEntityCollisions();
+
+         for (const layer of layers) {
+            resolveEntityCollisions(layer);
+         }
          
          if (getGameTicks() % Settings.TPS === 0) {
             updateResourceDistributions();
@@ -316,11 +320,13 @@ class GameServer {
             continue;
          }
 
-         // Update player client position if player is alive
+         // Update player client info
          if (entityExists(playerClient.instance)) {
             const transformComponent = TransformComponentArray.getComponent(playerClient.instance);
             playerClient.lastPlayerPositionX = transformComponent.position.x;
             playerClient.lastPlayerPositionY = transformComponent.position.y;
+
+            playerClient.lastLayer = getEntityLayer(playerClient.instance);
          }
       
          const visibleEntities = getPlayerVisibleEntities(playerClient);

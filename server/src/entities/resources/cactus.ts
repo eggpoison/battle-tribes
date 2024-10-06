@@ -15,6 +15,7 @@ import CircularBox from "battletribes-shared/boxes/CircularBox";
 import { destroyEntity, getEntityType } from "../../world";
 import { StatusEffectComponent } from "../../components/StatusEffectComponent";
 import { CactusComponent } from "../../components/CactusComponent";
+import { CollisionGroup } from "../../../../shared/src/collision-groups";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.health
@@ -82,7 +83,7 @@ const generateRandomLimbs = (): ReadonlyArray<CactusLimbData> => {
 }
 
 export function createCactusConfig(): EntityConfig<ComponentTypes> {
-   const transformComponent = new TransformComponent();
+   const transformComponent = new TransformComponent(CollisionGroup.default);
    transformComponent.collisionBit = COLLISION_BITS.cactus;
    
    const hitbox = createHitbox(new CircularBox(new Point(0, 0), 0, RADIUS - HITBOX_PADDING), 1, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, []);

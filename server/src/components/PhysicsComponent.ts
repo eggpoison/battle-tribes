@@ -284,10 +284,12 @@ const updatePosition = (entity: EntityID, physicsComponent: PhysicsComponent): v
       transformComponent.updateIsInRiver(entity);
 
       // Check to see if the entity has descended into the underground layer
-      const layer = getEntityLayer(entity);
-      const tileIndex = getEntityTile(transformComponent);
-      if (layer.tileTypes[tileIndex] === TileType.dropdown) {
-         changeEntityLayer(entity, undergroundLayer);
+      if (getEntityType(entity) !== EntityType.guardian) {
+         const layer = getEntityLayer(entity);
+         const tileIndex = getEntityTile(transformComponent);
+         if (layer.tileTypes[tileIndex] === TileType.dropdown) {
+            changeEntityLayer(entity, undergroundLayer);
+         }
       }
    }
 }

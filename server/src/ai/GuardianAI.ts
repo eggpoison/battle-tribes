@@ -9,6 +9,11 @@ const entityIsTargetted = (guardianComponent: GuardianComponent, target: EntityI
    if (!HealthComponentArray.hasComponent(target)) {
       return false;
    }
+
+   // Don't attack other guardians
+   if (GuardianComponentArray.hasComponent(target)) {
+      return false;
+   }
    
    const entityTile = getEntityTile(targetTransformComponent);
    return guardianComponent.homeTiles.includes(entityTile);

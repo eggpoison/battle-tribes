@@ -12,6 +12,7 @@ import { ProjectileComponent, ProjectileComponentArray } from "../../components/
 import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
 import RectangularBox from "battletribes-shared/boxes/RectangularBox";
 import { destroyEntity, getEntityType, validateEntity } from "../../world";
+import { CollisionGroup } from "../../../../shared/src/collision-groups";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics
@@ -19,7 +20,7 @@ type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.projectile;
 
 export function createSlingTurretRockConfig(owner: EntityID): EntityConfig<ComponentTypes> {
-   const transformComponent = new TransformComponent()
+   const transformComponent = new TransformComponent(CollisionGroup.default)
    const hitbox = createHitbox(new RectangularBox(new Point(0, 0), 12, 64, 0), 0.5, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK & ~HitboxCollisionBit.ARROW_PASSABLE, []);
    transformComponent.addHitbox(hitbox, null);
    

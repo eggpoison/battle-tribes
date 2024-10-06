@@ -1,4 +1,4 @@
-import { COLLISION_BITS, DEFAULT_COLLISION_MASK, DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "battletribes-shared/collision";
+import { DEFAULT_HITBOX_COLLISION_MASK, HitboxCollisionBit } from "battletribes-shared/collision";
 import { EntityType, PlayerCauseOfDeath, EntityID } from "battletribes-shared/entities";
 import { StatusEffect } from "battletribes-shared/status-effects";
 import { Point, randInt, TileIndex } from "battletribes-shared/utils";
@@ -12,7 +12,7 @@ import { AttackEffectiveness } from "battletribes-shared/entity-damage-types";
 import { ItemType } from "battletribes-shared/items/items";
 import { EntityConfig } from "../../components";
 import { TransformComponent, TransformComponentArray } from "../../components/TransformComponent";
-import { createHitbox, HitboxCollisionType, Hitbox } from "battletribes-shared/boxes/boxes";
+import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
 import CircularBox from "battletribes-shared/boxes/CircularBox";
 import { getEntityType } from "../../world";
 import Layer from "../../Layer";
@@ -20,6 +20,7 @@ import { TileType } from "../../../../shared/src/tiles";
 import WanderAI from "../../ai/WanderAI";
 import { StatusEffectComponent } from "../../components/StatusEffectComponent";
 import { AIHelperComponent, AIType } from "../../components/AIHelperComponent";
+import { CollisionGroup } from "../../../../shared/src/collision-groups";
 
 export const enum FrozenYetiVars {
    VISION_RANGE = 350,
@@ -62,7 +63,7 @@ function tileIsValidCallback(_entity: EntityID, layer: Layer, tileIndex: TileInd
 }
 
 export function createFrozenYetiConfig(): EntityConfig<ComponentTypes> {
-   const transformComponent = new TransformComponent();
+   const transformComponent = new TransformComponent(CollisionGroup.default);
    
    const bodyHitbox = createHitbox(new CircularBox(new Point(0, 0), 0, FrozenYetiVars.FROZEN_YETI_SIZE / 2), 4, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, []);
    transformComponent.addHitbox(bodyHitbox, null);

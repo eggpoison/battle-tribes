@@ -73,10 +73,10 @@ export function getTribesmanRadius(tribesman: EntityID): number {
 
 const isCollidingWithCoveredSpikes = (tribesman: EntityID): boolean => {
    const layer = getEntityLayer(tribesman);
-   const collidingEntityIDs = layer.getEntityCollisions(tribesman);
+   const collisionPairs = layer.getEntityCollisionPairs(tribesman);
 
-   for (let i = 0; i < collidingEntityIDs.length; i++) {
-      const entityID = collidingEntityIDs[i];
+   for (let i = 0; i < collisionPairs.length; i++) {
+      const entityID = collisionPairs[i].pushedEntity;
 
       if (SpikesComponentArray.hasComponent(entityID)) {
          const spikesComponent = SpikesComponentArray.getComponent(entityID);

@@ -1,5 +1,5 @@
 import { ServerComponentType } from "battletribes-shared/components";
-import { EntityID, EntityType } from "battletribes-shared/entities";
+import { EntityID } from "battletribes-shared/entities";
 import { EntityConfig } from "../components";
 import { Packet } from "battletribes-shared/packets";
 import { Hitbox } from "battletribes-shared/boxes/boxes";
@@ -21,7 +21,8 @@ interface ComponentArrayFunctions<T extends object> {
    onInitialise?(config: EntityConfig<ServerComponentType>, entity: EntityID): void;
    onJoin?(entity: EntityID): void;
    readonly onTick?: ComponentArrayTickFunction<T>;
-   onCollision?(entity: EntityID, collidingEntity: EntityID, pushedHitbox: Hitbox, pushingHitbox: Hitbox, collisionPoint: Point): void;
+   onEntityCollision?(actingEntity: EntityID, receivingEntity: EntityID): void;
+   onHitboxCollision?(actingEntity: EntityID, receivingEntity: EntityID, pushedHitbox: Hitbox, pushingHitbox: Hitbox, collisionPoint: Point): void;
    onRemove?(entity: EntityID): void;
    // @Cleanup: make getDataLength not return an extra float length
    /** Returns the length of the data that would be added to the packet */
@@ -61,7 +62,8 @@ export class ComponentArray<T extends object = object, C extends ServerComponent
    public onInitialise?(config: EntityConfig<ServerComponentType>, entity: EntityID): void;
    public onJoin?(entity: EntityID): void;
    public onTick?: ComponentArrayTickFunction<T>;
-   public onCollision?(entity: EntityID, collidingEntity: EntityID, pushedHitbox: Hitbox, pushingHitbox: Hitbox, collisionPoint: Point): void;
+   public onEntityCollision?(entity: EntityID, collidingEntity: EntityID): void;
+   public onHitboxCollision?(entity: EntityID, collidingEntity: EntityID, pushedHitbox: Hitbox, pushingHitbox: Hitbox, collisionPoint: Point): void;
    public onRemove?(entity: EntityID): void;
    public getDataLength: (entity: EntityID, player: EntityID | null) => number;
    public addDataToPacket: (packet: Packet, entity: EntityID, player: EntityID | null) => void;
@@ -73,7 +75,8 @@ export class ComponentArray<T extends object = object, C extends ServerComponent
       this.onInitialise = functions.onInitialise;
       this.onJoin = functions.onJoin;
       this.onTick = functions.onTick;
-      this.onCollision = functions.onCollision;
+      this.onEntityCollision = functions.onEntityCollision;
+      this.onHitboxCollision = functions.onHitboxCollision;
       this.onRemove = functions.onRemove;
       this.getDataLength = functions.getDataLength;
       this.addDataToPacket = functions.addDataToPacket;
@@ -266,7 +269,6 @@ export function sortComponentArrays(): void {
       [ServerComponentType.yeti]: ComponentArrayPriority.medium,
       [ServerComponentType.zombie]: ComponentArrayPriority.medium,
       [ServerComponentType.ammoBox]: ComponentArrayPriority.medium,
-      [ServerComponentType.wanderAI]: ComponentArrayPriority.medium,
       [ServerComponentType.escapeAI]: ComponentArrayPriority.medium,
       [ServerComponentType.followAI]: ComponentArrayPriority.medium,
       [ServerComponentType.researchBench]: ComponentArrayPriority.medium,

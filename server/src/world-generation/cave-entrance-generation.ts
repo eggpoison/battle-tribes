@@ -189,9 +189,6 @@ export function generateCaveEntrances(tileTypes: Float32Array, tileBiomes: Float
 }
 
 export function spawnGuardians(): void {
-   // @Temporary
-   if (1+1===2)return;
-   
    for (const tiles of guardianSpawnZones) {
       // Spawn 1-2 guardians in the cave
       for (let i = 0; i < randInt(1, 2); i++) {

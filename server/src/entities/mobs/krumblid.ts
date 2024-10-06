@@ -19,6 +19,7 @@ import { AIHelperComponent, AIType } from "../../components/AIHelperComponent";
 import { EscapeAIComponent } from "../../components/EscapeAIComponent";
 import { FollowAIComponent } from "../../components/FollowAIComponent";
 import { KrumblidComponent } from "../../components/KrumblidComponent";
+import { CollisionGroup } from "../../../../shared/src/collision-groups";
 
 export const enum KrumblidVars {
    VISION_RANGE = 224,
@@ -45,7 +46,7 @@ function tileIsValidCallback(_entity: EntityID, layer: Layer, tileIndex: TileInd
 }
 
 export function createKrumblidConfig(): EntityConfig<ComponentTypes> {
-   const transformComponent = new TransformComponent();
+   const transformComponent = new TransformComponent(CollisionGroup.default);
    const hitbox = createHitbox(new CircularBox(new Point(0, 0), 0, KRUMBLID_SIZE / 2), 0.75, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, []);
    transformComponent.addHitbox(hitbox, null);
    

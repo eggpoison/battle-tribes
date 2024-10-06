@@ -5,6 +5,7 @@ import { EntityID } from "battletribes-shared/entities";
 import WebSocket from "ws";
 import { Settings } from "battletribes-shared/settings";
 import { Point } from "battletribes-shared/utils";
+import Layer from "../Layer";
 
 export const enum PlayerClientVars {
    VIEW_PADDING = 128
@@ -23,6 +24,7 @@ class PlayerClient {
    // When the player is dead, we need to remember where their final position is so they can receive updates while dead
    public lastPlayerPositionX = 0;
    public lastPlayerPositionY = 0;
+   public lastLayer: Layer;
    public screenWidth: number;
    public screenHeight: number;
    public visibleChunkBounds: VisibleChunkBounds;
@@ -45,9 +47,10 @@ class PlayerClient {
    public visibleDirtiedEntities = new Array<EntityID>();
    public visibleRemovedEntities = new Array<EntityID>();
 
-   constructor(socket: WebSocket, tribe: Tribe, screenWidth: number, screenHeight: number, playerPosition: Point, instance: EntityID, username: string) {
+   constructor(socket: WebSocket, tribe: Tribe, layer: Layer, screenWidth: number, screenHeight: number, playerPosition: Point, instance: EntityID, username: string) {
       this.socket = socket;
       this.tribe = tribe;
+      this.lastLayer = layer;
       this.screenWidth = screenWidth;
       this.screenHeight = screenHeight;
       this.visibleChunkBounds = this.getVisibleChunkBounds(playerPosition, screenWidth, screenHeight);

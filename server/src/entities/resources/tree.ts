@@ -9,6 +9,7 @@ import { TransformComponent } from "../../components/TransformComponent";
 import { HealthComponent } from "../../components/HealthComponent";
 import { TREE_RADII, TreeComponent } from "../../components/TreeComponent";
 import { StatusEffectComponent } from "../../components/StatusEffectComponent";
+import { CollisionGroup } from "../../../../shared/src/collision-groups";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.health
@@ -20,7 +21,7 @@ const TREE_MAX_HEALTHS = [10, 15];
 export function createTreeConfig(): EntityConfig<ComponentTypes> {
    const size: TreeSize = Math.random() > 1/3 ? 1 : 0;
    
-   const transformComponent = new TransformComponent();
+   const transformComponent = new TransformComponent(CollisionGroup.default);
    const hitbox = createHitbox(new CircularBox(new Point(0, 0), 0, TREE_RADII[size]), 1.25 + size * 0.25, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, []);
    transformComponent.addHitbox(hitbox, null);
    transformComponent.collisionBit = COLLISION_BITS.plants;

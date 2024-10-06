@@ -43,7 +43,7 @@ const createSpikyBalls = (guardian: EntityID, target: EntityID): void => {
       }
       
       if (hasFound) {
-         const timeOffsetFactor = (i + 1) / (numSpikyBalls + 2);
+         const timeOffsetFactor = (i + 1) / (numSpikyBalls + 1);
          const spawnDelayTicks = Math.round(Vars.FOCUS_DURATION_TICKS * timeOffsetFactor);
 
          const velocityMagnitude = 150;

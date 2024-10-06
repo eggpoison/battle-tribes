@@ -13,6 +13,7 @@ import Tribe from "../../Tribe";
 import { TribeComponent } from "../../components/TribeComponent";
 import { BuildingMaterialComponent } from "../../components/BuildingMaterialComponent";
 import { DoorComponent } from "../../components/DoorComponent";
+import { CollisionGroup } from "../../../../shared/src/collision-groups";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics
@@ -26,7 +27,7 @@ type ComponentTypes = ServerComponentType.transform
 const HEALTHS = [15, 45];
 
 export function createDoorConfig(tribe: Tribe, material: BuildingMaterial, connectionInfo: StructureConnectionInfo): EntityConfig<ComponentTypes> {
-   const transformComponent = new TransformComponent();
+   const transformComponent = new TransformComponent(CollisionGroup.default);
    transformComponent.addHitboxes(createDoorHitboxes(), null);
    
    // @Hack: Shouldn't need!

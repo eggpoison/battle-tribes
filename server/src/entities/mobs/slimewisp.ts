@@ -15,6 +15,7 @@ import { PhysicsComponent } from "../../components/PhysicsComponent";
 import { HealthComponent } from "../../components/HealthComponent";
 import { StatusEffectComponent } from "../../components/StatusEffectComponent";
 import { SlimewispComponent } from "../../components/SlimewispComponent";
+import { CollisionGroup } from "../../../../shared/src/collision-groups";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics
@@ -30,7 +31,7 @@ function tileIsValidCallback(_entity: EntityID, layer: Layer, tileIndex: TileInd
 }
 
 export function createSlimewispConfig(): EntityConfig<ComponentTypes> {
-   const transformComponent = new TransformComponent();
+   const transformComponent = new TransformComponent(CollisionGroup.default);
    const hitbox = createHitbox(new CircularBox(new Point(0, 0), 0, RADIUS), 0.5, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, []);
    transformComponent.addHitbox(hitbox, null);
 

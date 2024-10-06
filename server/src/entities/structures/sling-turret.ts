@@ -13,6 +13,7 @@ import { TransformComponent } from "../../components/TransformComponent";
 import { TribeComponent } from "../../components/TribeComponent";
 import { TurretComponent } from "../../components/TurretComponent";
 import Tribe from "../../Tribe";
+import { CollisionGroup } from "../../../../shared/src/collision-groups";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.health
@@ -26,7 +27,7 @@ export const SLING_TURRET_SHOT_COOLDOWN_TICKS = 1.5 * Settings.TPS;
 export const SLING_TURRET_RELOAD_TIME_TICKS = Math.floor(0.4 * Settings.TPS);
 
 export function createSlingTurretConfig(tribe: Tribe, connectionInfo: StructureConnectionInfo): EntityConfig<ComponentTypes> {
-   const transformComponent = new TransformComponent()
+   const transformComponent = new TransformComponent(CollisionGroup.default)
    transformComponent.addHitboxes(createSlingTurretHitboxes(), null);
    
    const healthComponent = new HealthComponent(25);

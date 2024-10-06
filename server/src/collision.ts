@@ -2,38 +2,14 @@ import { EntityID, EntityType } from "battletribes-shared/entities";
 import { Settings } from "battletribes-shared/settings";
 import { Point } from "battletribes-shared/utils";
 import { PhysicsComponent, PhysicsComponentArray } from "./components/PhysicsComponent";
-import { onFrozenYetiCollision } from "./entities/mobs/frozen-yeti";
-import { onGolemCollision } from "./entities/mobs/golem";
-import { onPebblumCollision } from "./entities/mobs/pebblum";
-import { onSlimeCollision } from "./entities/mobs/slime";
-import { onYetiCollision } from "./entities/mobs/yeti";
-import { onZombieCollision } from "./entities/mobs/zombie";
-import { onBattleaxeProjectileCollision } from "./entities/projectiles/battleaxe-projectile";
-import { onIceArrowCollision } from "./entities/projectiles/ice-arrow";
-import { onIceShardCollision } from "./entities/projectiles/ice-shard";
-import { onRockSpikeProjectileCollision } from "./entities/projectiles/rock-spike";
-import { onSlimeSpitCollision } from "./entities/projectiles/slime-spit";
-import { onSpearProjectileCollision } from "./entities/projectiles/spear-projectile";
-import { onSpitPoisonCollision } from "./entities/projectiles/spit-poison-area";
-import { onCactusCollision } from "./entities/resources/cactus";
-import { onIceSpikesCollision } from "./entities/resources/ice-spikes";
-import { onSnowballCollision } from "./entities/snowball";
-import { onPunjiSticksCollision } from "./entities/structures/punji-sticks";
-import { onSpikesCollision } from "./entities/structures/spikes";
-import { onPlayerCollision } from "./entities/tribes/player";
-import { onEmbrasureCollision } from "./entities/structures/embrasure";
-import { onTribesmanCollision } from "./entities/tribes/tribe-member";
 import { CollisionPushInfo, collisionBitsAreCompatible, getCollisionPushInfo } from "battletribes-shared/hitbox-collision";
 import { TransformComponent, TransformComponentArray } from "./components/TransformComponent";
-import { onBallistaWoodenBoltCollision } from "./entities/projectiles/ballista-wooden-bolt";
-import { onBallistaRockCollision } from "./entities/projectiles/ballista-rock";
-import { onBallistaSlimeballCollision } from "./entities/projectiles/ballista-slimeball";
-import { onBallistaFrostcicleCollision } from "./entities/projectiles/ballista-frostcicle";
-import { onWoodenArrowCollision } from "./entities/projectiles/wooden-arrow";
 import { ComponentArrays } from "./components/ComponentArray";
 import { HitboxCollisionType, Hitbox, updateBox } from "battletribes-shared/boxes/boxes";
 import RectangularBox from "battletribes-shared/boxes/RectangularBox";
 import { getEntityType } from "./world";
+import { HitboxCollisionPair } from "./collision-detection";
+import { ServerComponentType } from "../../shared/src/components";
 
 export const enum CollisionVars {
    NO_COLLISION = 0xFFFF
@@ -101,21 +77,24 @@ const resolveSoftCollision = (transformComponent: TransformComponent, physicsCom
    physicsComponent.externalVelocity.y += pushForce * Math.cos(pushInfo.direction);
 }
 
-export function collide(entity: EntityID, pushingEntity: EntityID, pushedHitboxIdx: number, pushingHitboxIdx: number): void {
-   const pushedEntityTransformComponent = TransformComponentArray.getComponent(entity);
+export function collide(pushedEntity: EntityID, pushingEntity: EntityID, collidingHitboxPairs: ReadonlyArray<HitboxCollisionPair>): void {
+   const pushedEntityTransformComponent = TransformComponentArray.getComponent(pushedEntity);
    const pushingEntityTransformComponent = TransformComponentArray.getComponent(pushingEntity);
    
-   const pushedHitbox = pushedEntityTransformComponent.hitboxes[pushedHitboxIdx];
-   const pushingHitbox = pushingEntityTransformComponent.hitboxes[pushingHitboxIdx];
+   for (let i = 0; i < collidingHitboxPairs.length; i++) {
+      const pair = collidingHitboxPairs[i];
+      const pushingHitboxIdx = pair[0];
+      const pushedHitboxIdx = pair[1];
    
-   const pushInfo = getCollisionPushInfo(pushedHitbox.box, pushingHitbox.box);
-
-   // @Hack @Temporary
-   const collisionPoint = new Point((pushedEntityTransformComponent.position.x + pushingEntityTransformComponent.position.x) / 2, (pushedEntityTransformComponent.position.y + pushingEntityTransformComponent.position.y) / 2);
-   const entityType = getEntityType(entity)!;
+      const pushedHitbox = pushedEntityTransformComponent.hitboxes[pushedHitboxIdx];
+      const pushingHitbox = pushingEntityTransformComponent.hitboxes[pushingHitboxIdx];
+      
+      const pushInfo = getCollisionPushInfo(pushedHitbox.box, pushingHitbox.box);
+      // if (getEntityType(pushingEntity) === EntityType.guardianGemQuake && getEntityType(pushedEntity) === EntityType.player) {
+      //    console.log("pushing player");
+      // }
    
-   if (collisionBitsAreCompatible(pushedEntityTransformComponent.collisionMask, pushedEntityTransformComponent.collisionBit, pushingEntityTransformComponent.collisionMask, pushingEntityTransformComponent.collisionBit) && PhysicsComponentArray.hasComponent(entity)) {
-      const physicsComponent = PhysicsComponentArray.getComponent(entity);
+      const physicsComponent = PhysicsComponentArray.getComponent(pushedEntity);
       if (!physicsComponent.isImmovable) {
          if (pushingHitbox.collisionType === HitboxCollisionType.hard) {
             resolveHardCollision(pushedEntityTransformComponent, physicsComponent, pushInfo);
@@ -126,51 +105,58 @@ export function collide(entity: EntityID, pushingEntity: EntityID, pushedHitboxI
          // @Cleanup: Should we just clean it immediately here?
          physicsComponent.positionIsDirty = true;
       }
+   
+      // @Hack @Temporary
+      const collisionPoint = new Point((pushedEntityTransformComponent.position.x + pushingEntityTransformComponent.position.x) / 2, (pushedEntityTransformComponent.position.y + pushingEntityTransformComponent.position.y) / 2);
 
-      // @Hack: should be down there!
-      switch (entityType) {
-         case EntityType.iceShardProjectile: onIceShardCollision(entity, pushingEntity, collisionPoint); break;
+      // @Speed: runs for every component array. Not ideal!
+      for (const componentArray of ComponentArrays) {
+         // The pushing entity is acting on the pushed entity, so the pushing entity is the one which should have events called
+         if (componentArray.hasComponent(pushingEntity) && typeof componentArray.onHitboxCollision !== "undefined") {
+            componentArray.onHitboxCollision(pushingEntity, pushedEntity, pushingHitbox, pushedHitbox, collisionPoint);
+         }
       }
    }
 
    // @Speed: runs for every component array. Not ideal!
    for (const componentArray of ComponentArrays) {
-      if (componentArray.hasComponent(entity) && typeof componentArray.onCollision !== "undefined") {
-         componentArray.onCollision(entity, pushingEntity, pushedHitbox, pushingHitbox, collisionPoint);
+      if (componentArray.hasComponent(pushingEntity) && typeof componentArray.onEntityCollision !== "undefined") {
+         componentArray.onEntityCollision(pushingEntity, pushedEntity);
       }
    }
 
-   switch (entityType) {
-      case EntityType.player: onPlayerCollision(entity, pushingEntity); break;
-      case EntityType.tribeWorker:
-      case EntityType.tribeWarrior: onTribesmanCollision(entity, pushingEntity); break;
-      case EntityType.iceSpikes: onIceSpikesCollision(entity, pushingEntity, collisionPoint); break;
-      case EntityType.cactus: onCactusCollision(entity, pushingEntity, collisionPoint); break;
-      case EntityType.zombie: onZombieCollision(entity, pushingEntity, collisionPoint); break;
-      case EntityType.slime: onSlimeCollision(entity, pushingEntity, collisionPoint); break;
-      // @Cleanup:
-      case EntityType.woodenArrow: onWoodenArrowCollision(entity, pushingEntity, collisionPoint); break;
-      case EntityType.ballistaWoodenBolt: onBallistaWoodenBoltCollision(entity, pushingEntity, collisionPoint); break;
-      case EntityType.ballistaRock: onBallistaRockCollision(entity, pushingEntity, collisionPoint); break;
-      case EntityType.ballistaSlimeball: onBallistaSlimeballCollision(entity, pushingEntity, collisionPoint); break;
-      case EntityType.ballistaFrostcicle: onBallistaFrostcicleCollision(entity, pushingEntity, collisionPoint); break;
-      case EntityType.yeti: onYetiCollision(entity, pushingEntity, collisionPoint); break;
-      case EntityType.snowball: onSnowballCollision(entity, pushingEntity, collisionPoint); break;
-      case EntityType.frozenYeti: onFrozenYetiCollision(entity, pushingEntity, collisionPoint); break;
-      case EntityType.rockSpikeProjectile: onRockSpikeProjectileCollision(entity, pushingEntity, collisionPoint); break;
-      case EntityType.spearProjectile: onSpearProjectileCollision(entity, pushingEntity, collisionPoint); break;
-      case EntityType.slimeSpit: onSlimeSpitCollision(entity, pushingEntity, collisionPoint); break;
-      case EntityType.spitPoisonArea: onSpitPoisonCollision(entity, pushingEntity, collisionPoint); break;
-      case EntityType.battleaxeProjectile: onBattleaxeProjectileCollision(entity, pushingEntity, collisionPoint); break;
-      case EntityType.iceArrow: onIceArrowCollision(entity, pushingEntity); break;
-      case EntityType.pebblum: onPebblumCollision(entity, pushingEntity, collisionPoint); break;
-      case EntityType.golem: onGolemCollision(entity, pushingEntity, collisionPoint); break;
-      case EntityType.floorSpikes:
-      case EntityType.wallSpikes: onSpikesCollision(entity, pushingEntity, collisionPoint); break;
-      case EntityType.floorPunjiSticks:
-      case EntityType.wallPunjiSticks: onPunjiSticksCollision(entity, pushingEntity, collisionPoint); break;
-      case EntityType.embrasure: onEmbrasureCollision(pushingEntity, pushedHitboxIdx); break;
-   }
+   // @Incomplete
+   // switch (entityType) {
+   //    case EntityType.player: onPlayerCollision(entity, pushingEntity); break;
+   //    case EntityType.tribeWorker:
+   //    case EntityType.tribeWarrior: onTribesmanCollision(entity, pushingEntity); break;
+   //    case EntityType.iceSpikes: onIceSpikesCollision(entity, pushingEntity, collisionPoint); break;
+   //    case EntityType.cactus: onCactusCollision(entity, pushingEntity, collisionPoint); break;
+   //    case EntityType.zombie: onZombieCollision(entity, pushingEntity, collisionPoint); break;
+   //    case EntityType.slime: onSlimeCollision(entity, pushingEntity, collisionPoint); break;
+   //    // @Cleanup:
+   //    case EntityType.woodenArrow: onWoodenArrowCollision(entity, pushingEntity, collisionPoint); break;
+   //    case EntityType.ballistaWoodenBolt: onBallistaWoodenBoltCollision(entity, pushingEntity, collisionPoint); break;
+   //    case EntityType.ballistaRock: onBallistaRockCollision(entity, pushingEntity, collisionPoint); break;
+   //    case EntityType.ballistaSlimeball: onBallistaSlimeballCollision(entity, pushingEntity, collisionPoint); break;
+   //    case EntityType.ballistaFrostcicle: onBallistaFrostcicleCollision(entity, pushingEntity, collisionPoint); break;
+   //    case EntityType.yeti: onYetiCollision(entity, pushingEntity, collisionPoint); break;
+   //    case EntityType.snowball: onSnowballCollision(entity, pushingEntity, collisionPoint); break;
+   //    case EntityType.frozenYeti: onFrozenYetiCollision(entity, pushingEntity, collisionPoint); break;
+   //    case EntityType.rockSpikeProjectile: onRockSpikeProjectileCollision(entity, pushingEntity, collisionPoint); break;
+   //    case EntityType.spearProjectile: onSpearProjectileCollision(entity, pushingEntity, collisionPoint); break;
+   //    case EntityType.slimeSpit: onSlimeSpitCollision(entity, pushingEntity, collisionPoint); break;
+   //    case EntityType.spitPoisonArea: onSpitPoisonCollision(entity, pushingEntity, collisionPoint); break;
+   //    case EntityType.battleaxeProjectile: onBattleaxeProjectileCollision(entity, pushingEntity, collisionPoint); break;
+   //    case EntityType.iceArrow: onIceArrowCollision(entity, pushingEntity); break;
+   //    case EntityType.pebblum: onPebblumCollision(entity, pushingEntity, collisionPoint); break;
+   //    case EntityType.golem: onGolemCollision(entity, pushingEntity, collisionPoint); break;
+   //    case EntityType.floorSpikes:
+   //    case EntityType.wallSpikes: onSpikesCollision(entity, pushingEntity, collisionPoint); break;
+   //    case EntityType.floorPunjiSticks:
+   //    case EntityType.wallPunjiSticks: onPunjiSticksCollision(entity, pushingEntity, collisionPoint); break;
+   //    case EntityType.embrasure: onEmbrasureCollision(pushingEntity, pushedHitboxIdx); break;
+   // }
 }
 
 /** If no collision is found, does nothing. */

@@ -23,6 +23,7 @@ import { Biome } from "../../../../shared/src/tiles";
 import Layer from "../../Layer";
 import { StatusEffectComponent } from "../../components/StatusEffectComponent";
 import { InventoryUseComponent } from "../../components/InventoryUseComponent";
+import { CollisionGroup } from "../../../../shared/src/collision-groups";
 
 export const enum ZombieVars {
    CHASE_PURSUE_TIME_TICKS = 5 * Settings.TPS,
@@ -47,7 +48,7 @@ function tileIsValidCallback(_entity: EntityID, layer: Layer, tileIndex: TileInd
 export function createZombieConfig(isGolden: boolean, tombstone: EntityID): EntityConfig<ComponentTypes> {
    const zombieType = isGolden ? 3 : randInt(0, 2);
 
-   const transformComponent = new TransformComponent();
+   const transformComponent = new TransformComponent(CollisionGroup.default);
    const hitbox = createHitbox(new CircularBox(new Point(0, 0), 0, 32), 1, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, []);
    transformComponent.addHitbox(hitbox, null);
 

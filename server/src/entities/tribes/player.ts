@@ -25,6 +25,7 @@ import { TribeMemberComponent } from "../../components/TribeMemberComponent";
 import { PlayerComponent } from "../../components/PlayerComponent";
 import { DamageBoxComponent } from "../../components/DamageBoxComponent";
 import { TRIBE_INFO_RECORD } from "../../../../shared/src/tribes";
+import { CollisionGroup } from "../../../../shared/src/collision-groups";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics
@@ -38,7 +39,7 @@ type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.damageBox;
 
 export function createPlayerConfig(tribe: Tribe, username: string): EntityConfig<ComponentTypes> {
-   const transformComponent = new TransformComponent();
+   const transformComponent = new TransformComponent(CollisionGroup.default);
    const hitbox = createHitbox(new CircularBox(new Point(0, 0), 0, 32), 1.25, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, []);
    transformComponent.addHitbox(hitbox, null);
    

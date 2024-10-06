@@ -8,18 +8,14 @@ import { addTileToCensus } from "./census";
 import { TerrainGenerationInfo } from "./world-generation/surface-terrain-generation";
 import { markWallTileInPathfinding } from "./pathfinding";
 import OPTIONS from "./options";
-import { CollisionVars, collide, entitiesAreColliding } from "./collision";
 import { TransformComponentArray } from "./components/TransformComponent";
 import { WorldInfo } from "battletribes-shared/structures";
 import { EntityInfo } from "battletribes-shared/board-interface";
 import { boxIsWithinRange } from "battletribes-shared/boxes/boxes";
 import { getEntityType, getGameTicks, layers } from "./world";
-
-interface CollisionPair {
-   readonly entity1: EntityID;
-   readonly entity2: EntityID;
-   readonly collisionNum: number;
-}
+import { CollisionGroup } from "../../shared/src/collision-groups";
+import CollisionChunk from "./CollisionChunk";
+import { EntityPairCollisionInfo, GlobalCollisionInfo } from "./collision-detection";
 
 // @Cleanup: same as WaterTileGenerationInfo
 export interface RiverFlowDirection {
@@ -58,6 +54,25 @@ export function getTileIndexFromPos(x: number, y: number): TileIndex {
    return getTileIndexIncludingEdges(tileX, tileY);
 }
 
+export function getChunkIndex(chunkX: number, chunkY: number): number {
+   return chunkY * Settings.BOARD_SIZE + chunkX;
+}
+
+const createCollisionGroupChunks = (): Record<CollisionGroup, ReadonlyArray<CollisionChunk>> => {
+   const collisionGroupChunks: Partial<Record<CollisionGroup, ReadonlyArray<CollisionChunk>>>= {};
+
+   for (let collisionGroup: CollisionGroup = 0; collisionGroup < CollisionGroup._LENGTH_; collisionGroup++) {
+      const chunks = new Array<CollisionChunk>();
+      for (let i = 0; i < Settings.BOARD_SIZE * Settings.BOARD_SIZE; i++) {
+         const chunk = new CollisionChunk();
+         chunks.push(chunk);
+      }
+      collisionGroupChunks[collisionGroup] = chunks;
+   }
+
+   return collisionGroupChunks as Record<CollisionGroup, ReadonlyArray<CollisionChunk>>;
+}
+
 export default class Layer {
    public tileTypes: Float32Array;
    public tileBiomes: Float32Array;
@@ -71,9 +86,12 @@ export default class Layer {
 
    private tileUpdateCoordinates: Set<number>;
 
-   public chunks = new Array<Chunk>();
+   /** Stores all entities collectively in each chunk */
+   private chunks = new Array<Chunk>();
 
-   public globalCollisionData: Partial<Record<number, ReadonlyArray<number>>> = {};
+   public readonly collisionGroupChunks = createCollisionGroupChunks();
+
+   public globalCollisionInfo: GlobalCollisionInfo = {};
 
    constructor(generationInfo: TerrainGenerationInfo) {
       this.tileTypes = generationInfo.tileTypes;
@@ -179,87 +197,25 @@ export default class Layer {
       return this.chunks[chunkIndex];
    }
 
-   public getEntityCollisions(entityID: number): ReadonlyArray<number> {
-      const collidingEntityIDs = this.globalCollisionData[entityID];
-      return typeof collidingEntityIDs !== "undefined" ? collidingEntityIDs : [];
+   // @Temporary
+   public getChunkIndex(chunk: Chunk): number {
+      const idx = this.chunks.indexOf(chunk);
+      if (idx === -1) {
+         throw new Error();
+      }
+      return idx;
    }
 
-   // @Cleanup: Split into collision detection and resolution
-   public resolveEntityCollisions(): void {
-      // @Incomplete: allow multiple collisions between entities for different render parts
+   public getChunkByIndex(chunkIndex: number): Chunk {
+      return this.chunks[chunkIndex];
+   }
 
-      const collisionPairs = new Array<CollisionPair>();
+   public getCollisionChunkByIndex(collisionGroup: CollisionGroup, chunkIndex: number): CollisionChunk {
+      return this.collisionGroupChunks[collisionGroup][chunkIndex];
+   }
 
-      const globalCollisionData: Partial<Record<number, Array<number>>> = {};
-      
-      const numChunks = Settings.BOARD_SIZE * Settings.BOARD_SIZE;
-      for (let i = 0; i < numChunks; i++) {
-         const chunk = this.chunks[i];
-
-         // @Speed: physics-physics comparisons happen twice
-         // For all physics entities, check for collisions with all other entities in the chunk
-         for (let j = 0; j < chunk.collisionRelevantPhysicsEntities.length; j++) {
-            const entity1 = chunk.collisionRelevantPhysicsEntities[j];
-            
-            for (let k = 0; k < chunk.collisionRelevantEntities.length; k++) {
-               const entity2 = chunk.collisionRelevantEntities[k];
-
-               // @Speed
-               if (entity1 === entity2) {
-                  continue;
-               }
-
-               const collisionNum = entitiesAreColliding(entity1, entity2);
-               if (collisionNum !== CollisionVars.NO_COLLISION) {
-                  collisionPairs.push({
-                     entity1: entity1,
-                     entity2: entity2,
-                     collisionNum: collisionNum
-                  });
-               }
-            }
-         }
-      }
-
-      for (let i = 0; i < collisionPairs.length; i++) {
-         const test = collisionPairs[i];
-
-         // Check for duplicates
-         // @Speed O(n^2)
-         let isDupe = false;
-         for (let j = 0; j < i; j++) {
-            const test2 = collisionPairs[j];
-            if (((test.entity1 === test2.entity1 && test.entity2 === test2.entity2) || (test.entity1 === test2.entity2 && test.entity2 === test2.entity1)) && test.collisionNum === test2.collisionNum) {
-               isDupe = true;
-               break;
-            }
-         }
-         if (isDupe) {
-            continue;
-         }
-         
-         const entity1Collisions = globalCollisionData[test.entity1];
-         if (typeof entity1Collisions !== "undefined") {
-            entity1Collisions.push(test.entity2);
-         } else {
-            globalCollisionData[test.entity1] = [test.entity2];
-         }
-         
-         const entity2Collisions = globalCollisionData[test.entity2];
-         if (typeof entity2Collisions !== "undefined") {
-            entity2Collisions.push(test.entity1);
-         } else {
-            globalCollisionData[test.entity2] = [test.entity1];
-         }
-         
-         const entity1HitboxIndex = test.collisionNum & 0xFF;
-         const entity2HitboxIndex = (test.collisionNum & 0xFF00) >> 8;
-         
-         collide(test.entity1, test.entity2, entity1HitboxIndex, entity2HitboxIndex);
-         collide(test.entity2, test.entity1, entity2HitboxIndex, entity1HitboxIndex);
-      }
-
-      this.globalCollisionData = globalCollisionData;
+   public getEntityCollisionPairs(entity: EntityID): ReadonlyArray<EntityPairCollisionInfo> {
+      return this.globalCollisionInfo[entity] || [];
    }
 
    /** Registers a tile update to be sent to the clients */

@@ -116,7 +116,7 @@ const getVisibleGrassBlockers = (layer: Layer, visibleChunkBounds: VisibleChunkB
 export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend: Set<EntityID>): ArrayBuffer {
    const playerIsAlive = entityExists(playerClient.instance);
    const player = playerClient.instance;
-   const layer = getEntityLayer(player);
+   const layer = playerClient.lastLayer;
 
    let hotbarInventory: Inventory | undefined;
    let backpackInventory: Inventory | undefined;
@@ -236,7 +236,7 @@ export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend:
    packet.addNumber(getGameTicks());
    packet.addNumber(getGameTime());
 
-   packet.addNumber(layers.indexOf(getEntityLayer(player)));
+   packet.addNumber(layers.indexOf(layer));
 
    packet.addBoolean(playerIsAlive);
    packet.padOffset(3);

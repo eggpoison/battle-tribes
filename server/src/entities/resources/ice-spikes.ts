@@ -3,7 +3,7 @@ import { ServerComponentType } from "battletribes-shared/components";
 import { EntityID, EntityType, PlayerCauseOfDeath } from "battletribes-shared/entities";
 import { Settings } from "battletribes-shared/settings";
 import { StatusEffect } from "battletribes-shared/status-effects";
-import { Point, randInt } from "battletribes-shared/utils";
+import { Point } from "battletribes-shared/utils";
 import { createEntityFromConfig } from "../../Entity";
 import { HealthComponent, HealthComponentArray, addLocalInvulnerabilityHash, canDamageEntity, damageEntity } from "../../components/HealthComponent";
 import { StatusEffectComponent, StatusEffectComponentArray, applyStatusEffect } from "../../components/StatusEffectComponent";
@@ -17,6 +17,7 @@ import CircularBox from "battletribes-shared/boxes/CircularBox";
 import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
 import { getEntityType } from "../../world";
 import { IceSpikesComponent } from "../../components/IceSpikesComponent";
+import { CollisionGroup } from "../../../../shared/src/collision-groups";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.health
@@ -26,7 +27,7 @@ type ComponentTypes = ServerComponentType.transform
 const ICE_SPIKE_RADIUS = 40;
 
 export function createIceSpikesConfig(rootIceSpikes: EntityID): EntityConfig<ComponentTypes> {
-   const transformComponent = new TransformComponent();
+   const transformComponent = new TransformComponent(CollisionGroup.default);
    const hitbox = createHitbox(new CircularBox(new Point(0, 0), 0, ICE_SPIKE_RADIUS), 1, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, []);
    transformComponent.addHitbox(hitbox, null);
    transformComponent.collisionMask = DEFAULT_COLLISION_MASK & ~COLLISION_BITS.iceSpikes;

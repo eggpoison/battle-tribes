@@ -20,6 +20,7 @@ import { TransformComponent, TransformComponentArray } from "../../components/Tr
 import { PhysicsComponent } from "../../components/PhysicsComponent";
 import { StatusEffectComponent } from "../../components/StatusEffectComponent";
 import { EscapeAIComponent } from "../../components/EscapeAIComponent";
+import { CollisionGroup } from "../../../../shared/src/collision-groups";
 
 const enum Vars {
    TILE_VALIDATION_PADDING = 20
@@ -76,7 +77,7 @@ function tileIsValidCallback(entity: EntityID, layer: Layer, x: number, y: numbe
 }
 
 export function createFishConfig(): EntityConfig<ComponentTypes> {
-   const transformComponent = new TransformComponent();
+   const transformComponent = new TransformComponent(CollisionGroup.default);
    const hitbox = createHitbox(new RectangularBox(new Point(0, 0), FISH_WIDTH, FISH_HEIGHT, 0), 0.5, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, []);
    transformComponent.addHitbox(hitbox, null);
 

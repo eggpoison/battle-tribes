@@ -23,7 +23,7 @@ export const GuardianGemQuakeComponentArray = new ComponentArray<GuardianGemQuak
       tickInterval: 1,
       func: onTick
    },
-   onCollision: onCollision,
+   onHitboxCollision: onHitboxCollision,
    getDataLength: getDataLength,
    addDataToPacket: addDataToPacket
 });
@@ -52,7 +52,7 @@ function onTick(_component: GuardianGemQuakeComponent, quake: EntityID): void {
    }
 }
 
-function onCollision(guardian: EntityID, collidingEntity: EntityID, pushedHitbox: Hitbox, pushingHitbox: Hitbox, collisionPoint: Point): void {
+function onHitboxCollision(guardian: EntityID, collidingEntity: EntityID, _pushedHitbox: Hitbox, _pushingHitbox: Hitbox, collisionPoint: Point): void {
    if (HealthComponentArray.hasComponent(collidingEntity)) {
       const healthComponent = HealthComponentArray.getComponent(collidingEntity);
       if (!canDamageEntity(healthComponent, "gemQuake")) {

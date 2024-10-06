@@ -1,8 +1,9 @@
 import { PathfindingNodeIndex, RIVER_STEPPING_STONE_SIZES } from "battletribes-shared/client-server-types";
 import { Settings } from "battletribes-shared/settings";
+import { CollisionGroup } from "battletribes-shared/collision-groups";
 import { clampToBoardDimensions, Point, TileIndex } from "battletribes-shared/utils";
-import { getTileIndexIncludingEdges } from "../Layer";
-import Chunk, { entityIsCollisionRelevant } from "../Chunk";
+import Layer, { getChunkIndex, getTileIndexIncludingEdges } from "../Layer";
+import Chunk from "../Chunk";
 import { EntityID, EntityTypeString } from "battletribes-shared/entities";
 import { ComponentArray } from "./ComponentArray";
 import { ServerComponentType } from "battletribes-shared/components";
@@ -33,6 +34,8 @@ export class TransformComponent {
 
    /** Set of all chunks the entity is contained in */
    public chunks = new Array<Chunk>();
+   // @Hack: used just so we can get chunk chunkIndex of a chunk in the addChunk function. Cursed. Remove this
+   // public chunkIndexes = new Array<number>();
 
    public isInRiver = false;
 
@@ -45,15 +48,20 @@ export class TransformComponent {
    public boundingAreaMinY = Number.MAX_SAFE_INTEGER;
    public boundingAreaMaxY = Number.MIN_SAFE_INTEGER;
 
+   // @Deprecated: Only used by client
    public collisionBit = COLLISION_BITS.default;
+   // @Deprecated: Only used by client
    public collisionMask = DEFAULT_COLLISION_MASK;
 
+   // Doesn't change as that would require updating the entity and where it is in which chunks
+   public readonly collisionGroup: CollisionGroup;
+   
    public occupiedPathfindingNodes = new Set<PathfindingNodeIndex>();
 
    public nextHitboxLocalID = 1;
 
-   constructor() {
-      
+   constructor(collisionGroup: CollisionGroup) {
+      this.collisionGroup = collisionGroup;
    }
 
    public updateIsInRiver(entity: EntityID): void {
@@ -228,7 +236,7 @@ export class TransformComponent {
       for (let i = 0; i < containingChunks.length; i++) {
          const chunk = containingChunks[i];
          if (this.chunks.indexOf(chunk) === -1) {
-            this.addToChunk(entity, chunk);
+            this.addToChunk(entity, layer, chunk);
             this.chunks.push(chunk);
          }
       }
@@ -237,21 +245,19 @@ export class TransformComponent {
       for (let i = 0; i < this.chunks.length; i++) {
          const chunk = this.chunks[i]
          if (containingChunks.indexOf(chunk) === -1) {
-            this.removeFromChunk(entity, chunk);
+            this.removeFromChunk(entity, layer, chunk);
             this.chunks.splice(i, 1);
             i--;
          }
       }
    }
 
-   public addToChunk(entity: EntityID, chunk: Chunk): void {
+   public addToChunk(entity: EntityID, layer: Layer, chunk: Chunk): void {
       chunk.entities.push(entity);
-      if (entityIsCollisionRelevant(entity)) {
-         chunk.collisionRelevantEntities.push(entity);
-         if (PhysicsComponentArray.hasComponent(entity)) {
-            chunk.collisionRelevantPhysicsEntities.push(entity);
-         }
-      }
+
+      const chunkIndex = layer.getChunkIndex(chunk);
+      const collisionChunk = layer.getCollisionChunkByIndex(this.collisionGroup, chunkIndex);
+      collisionChunk.entities.push(entity);
    
       const numViewingMobs = chunk.viewingEntities.length;
       for (let i = 0; i < numViewingMobs; i++) {
@@ -270,18 +276,17 @@ export class TransformComponent {
       }
    }
    
-   public removeFromChunk(entity: EntityID, chunk: Chunk): void {
+   public removeFromChunk(entity: EntityID, layer: Layer, chunk: Chunk): void {
       let idx = chunk.entities.indexOf(entity);
       if (idx !== -1) {
          chunk.entities.splice(idx, 1);
       }
-      idx = chunk.collisionRelevantEntities.indexOf(entity);
+
+      const chunkIndex = layer.getChunkIndex(chunk);
+      const collisionChunk = layer.getCollisionChunkByIndex(this.collisionGroup, chunkIndex);
+      idx = collisionChunk.entities.indexOf(entity);
       if (idx !== -1) {
-         chunk.collisionRelevantEntities.splice(idx, 1);
-      }
-      idx = chunk.collisionRelevantPhysicsEntities.indexOf(entity);
-      if (idx !== -1) {
-         chunk.collisionRelevantPhysicsEntities.splice(idx, 1);
+         collisionChunk.entities.splice(idx, 1);
       }
    
       // @Incomplete
@@ -424,9 +429,10 @@ function onRemove(entity: EntityID): void {
    const transformComponent = TransformComponentArray.getComponent(entity);
 
    // Remove from chunks
+   const layer = getEntityLayer(entity);
    for (let i = 0; i < transformComponent.chunks.length; i++) {
       const chunk = transformComponent.chunks[i];
-      transformComponent.removeFromChunk(entity, chunk);
+      transformComponent.removeFromChunk(entity, layer, chunk);
    }
 
    // @Cleanup: Same as above. should we make a separate PathfindingOccupancyComponent?

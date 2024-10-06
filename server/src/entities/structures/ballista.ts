@@ -15,6 +15,7 @@ import { TurretComponent } from "../../components/TurretComponent";
 import { AIHelperComponent } from "../../components/AIHelperComponent";
 import { AmmoBoxComponent } from "../../components/AmmoBoxComponent";
 import { addInventoryToInventoryComponent, InventoryComponent } from "../../components/InventoryComponent";
+import { CollisionGroup } from "../../../../shared/src/collision-groups";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.health
@@ -27,7 +28,7 @@ type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.inventory;
 
 export function createBallistaConfig(tribe: Tribe, connectionInfo: StructureConnectionInfo): EntityConfig<ComponentTypes> {
-   const transformComponent = new TransformComponent()
+   const transformComponent = new TransformComponent(CollisionGroup.default)
    transformComponent.addHitboxes(createBallistaHitboxes(), null);
    
    const healthComponent = new HealthComponent(100);

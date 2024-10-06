@@ -20,6 +20,7 @@ import { StatusEffectComponent } from "../../components/StatusEffectComponent";
 import { EscapeAIComponent } from "../../components/EscapeAIComponent";
 import { CowComponent } from "../../components/CowComponent";
 import { FollowAIComponent } from "../../components/FollowAIComponent";
+import { CollisionGroup } from "../../../../shared/src/collision-groups";
 
 export const enum CowVars {
    VISION_RANGE = 256,
@@ -49,7 +50,7 @@ function tileIsValidCallback(_entity: EntityID, layer: Layer, tileIndex: TileInd
 }
 
 export function createCowConfig(): EntityConfig<ComponentTypes> {
-   const transformComponent = new TransformComponent();
+   const transformComponent = new TransformComponent(CollisionGroup.default);
    const hitbox = createHitbox(new RectangularBox(new Point(0, 0), 50, 100, 0), 1.2, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, []);
    transformComponent.addHitbox(hitbox, null);
 

@@ -14,11 +14,12 @@ export class GuardianGemFragmentProjectileComponent {
 }
 
 export const GuardianGemFragmentProjectileComponentArray = new ComponentArray<GuardianGemFragmentProjectileComponent>(ServerComponentType.guardianGemFragmentProjectile, true, {
-   onCollision: onCollision,
+   onHitboxCollision: onHitboxCollision,
    getDataLength: getDataLength,
    addDataToPacket: addDataToPacket
 });
 
+// @Incomplete?
 // function onTick(_component: GuardianGemFragmentProjectileComponent, fragment: EntityID): void {
 //    const age = getEntityAgeTicks(fragment);
 //    if (age >= Settings.TPS * 1.5) {
@@ -26,7 +27,7 @@ export const GuardianGemFragmentProjectileComponentArray = new ComponentArray<Gu
 //    }
 // }
 
-function onCollision(guardian: EntityID, collidingEntity: EntityID, pushedHitbox: Hitbox, pushingHitbox: Hitbox, collisionPoint: Point): void {
+function onHitboxCollision(guardian: EntityID, collidingEntity: EntityID, _pushedHitbox: Hitbox, _pushingHitbox: Hitbox, collisionPoint: Point): void {
    if (HealthComponentArray.hasComponent(collidingEntity)) {
       const healthComponent = HealthComponentArray.getComponent(collidingEntity);
       if (!canDamageEntity(healthComponent, "gemFragmentProjectile")) {

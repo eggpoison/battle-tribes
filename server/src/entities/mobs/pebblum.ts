@@ -12,6 +12,7 @@ import { TransformComponent, TransformComponentArray } from "../../components/Tr
 import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/boxes";
 import CircularBox from "battletribes-shared/boxes/CircularBox";
 import { StatusEffectComponent } from "../../components/StatusEffectComponent";
+import { CollisionGroup } from "../../../../shared/src/collision-groups";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics
@@ -20,7 +21,7 @@ type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.pebblum;
 
 export function createPebblumConfig(): EntityConfig<ComponentTypes> {
-   const transformComponent = new TransformComponent();
+   const transformComponent = new TransformComponent(CollisionGroup.default);
    
    // Body
    const bodyHitbox = createHitbox(new CircularBox(new Point(0, -4), 0, 10 * 2), 0.4, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, []);
@@ -68,6 +69,6 @@ export function onPebblumCollision(pebblum: EntityID, collidingEntity: EntityID,
 
    // @Incomplete: Cause of death
    damageEntity(collidingEntity, pebblum, 1, PlayerCauseOfDeath.yeti, AttackEffectiveness.effective, collisionPoint, 0);
-   applyKnockback(collidingEntity, 100, hitDirection);
+   applyKnockback(collidingEntity, 150, hitDirection);
    addLocalInvulnerabilityHash(healthComponent, "pebblum", 0.3);
 }

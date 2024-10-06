@@ -12,6 +12,7 @@ import { StructureComponent } from "../../components/StructureComponent";
 import { TransformComponent } from "../../components/TransformComponent";
 import { TribeComponent } from "../../components/TribeComponent";
 import Tribe from "../../Tribe";
+import { CollisionGroup } from "../../../../shared/src/collision-groups";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.health
@@ -21,7 +22,7 @@ type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.craftingStation;
 
 export function createFrostshaperConfig(tribe: Tribe, connectionInfo: StructureConnectionInfo): EntityConfig<ComponentTypes> {
-   const transformComponent = new TransformComponent();
+   const transformComponent = new TransformComponent(CollisionGroup.default);
    transformComponent.addHitboxes(createFrostshaperHitboxes(), null);
    
    const healthComponent = new HealthComponent(20);

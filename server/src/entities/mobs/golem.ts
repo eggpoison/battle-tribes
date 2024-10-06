@@ -16,6 +16,7 @@ import { createHitbox, HitboxCollisionType, Hitbox } from "battletribes-shared/b
 import CircularBox from "battletribes-shared/boxes/CircularBox";
 import { getGameTicks } from "../../world";
 import { StatusEffectComponent } from "../../components/StatusEffectComponent";
+import { CollisionGroup } from "../../../../shared/src/collision-groups";
 
 export const enum GolemVars {
    PEBBLUM_SUMMON_COOLDOWN_TICKS = 10 * Settings.TPS
@@ -66,7 +67,7 @@ const getMinSeparationFromOtherHitboxes = (hitboxes: ReadonlyArray<Hitbox>, hitb
 }
 
 export function createGolemConfig(): EntityConfig<ComponentTypes> {
-   const transformComponent = new TransformComponent();
+   const transformComponent = new TransformComponent(CollisionGroup.default);
    
    // Create core hitbox
    const hitbox = createHitbox(new CircularBox(new Point(0, 0), 0, 36), ROCK_MASSIVE_MASS, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, []);

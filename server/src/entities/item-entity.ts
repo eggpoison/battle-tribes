@@ -10,13 +10,14 @@ import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/box
 import RectangularBox from "battletribes-shared/boxes/RectangularBox";
 import { TransformComponent } from "../components/TransformComponent";
 import { PhysicsComponent } from "../components/PhysicsComponent";
+import { CollisionGroup } from "../../../shared/src/collision-groups";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics
    | ServerComponentType.item;
 
 export function createItemEntityConfig(itemType: ItemType, amount: number, throwingEntity: EntityID | null): EntityConfig<ComponentTypes> {
-   const transformComponent = new TransformComponent();
+   const transformComponent = new TransformComponent(CollisionGroup.default);
    const hitbox = createHitbox(new RectangularBox(new Point(0, 0), Settings.ITEM_SIZE, Settings.ITEM_SIZE, 0), 0.2, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, []);
    transformComponent.addHitbox(hitbox, null);
    transformComponent.collisionMask = DEFAULT_COLLISION_MASK & ~COLLISION_BITS.planterBox

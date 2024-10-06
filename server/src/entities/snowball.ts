@@ -14,6 +14,7 @@ import { createHitbox, HitboxCollisionType } from "battletribes-shared/boxes/box
 import CircularBox from "battletribes-shared/boxes/CircularBox";
 import { getEntityAgeTicks, getEntityType } from "../world";
 import { StatusEffectComponent } from "../components/StatusEffectComponent";
+import { CollisionGroup } from "../../../shared/src/collision-groups";
    
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics
@@ -25,7 +26,7 @@ const DAMAGE_VELOCITY_THRESHOLD = 100;
 const MAX_HEALTHS: ReadonlyArray<number> = [1, 3];
 
 export function createSnowballConfig(yeti: EntityID, size: SnowballSize): EntityConfig<ComponentTypes> {
-   const transformComponent = new TransformComponent();
+   const transformComponent = new TransformComponent(CollisionGroup.default);
    const hitbox = createHitbox(new CircularBox(new Point(0, 0), 0, SNOWBALL_SIZES[size] / 2), size === SnowballSize.small ? 1 : 1.5, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, []);
    transformComponent.addHitbox(hitbox, null);
    

@@ -3,30 +3,12 @@ import { GrassBlocker } from "battletribes-shared/grass-blockers";
 import { EntityID } from "battletribes-shared/entities";
 import { Settings } from "battletribes-shared/settings";
 import { distance } from "battletribes-shared/utils";
-import { PhysicsComponentArray } from "./components/PhysicsComponent";
-import { TransformComponentArray } from "./components/TransformComponent";
 import { surfaceLayer } from "./world";
 
-// @Cleanup: location
-export function entityIsCollisionRelevant(entity: EntityID): boolean {
-   // @Incomplete: account for entities which have no physics component but have collision events
-
-   if (PhysicsComponentArray.hasComponent(entity)) {
-      return true;
-   }
-
-   const transformComponent = TransformComponentArray.getComponent(entity);
-   return transformComponent.totalMass > 0;
-}
-
+// @Cleanup @Memory: A lot of these properties aren't used by collision chunks
 class Chunk {
    /** Stores all entities inside the chunk */
    public readonly entities = new Array<EntityID>();
-
-   /** All collision relevant entities in the chunk */
-   public readonly collisionRelevantEntities = new Array<EntityID>();
-   /** All collision relevant entities in the chunk with a physics component */
-   public readonly collisionRelevantPhysicsEntities = new Array<EntityID>();
 
    /** Stores all mobs which have the chunk in their vision range */
    public readonly viewingEntities = new Array<EntityID>();

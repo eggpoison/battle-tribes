@@ -9,6 +9,7 @@ import { BlueprintComponent } from "../components/BlueprintComponent";
 import Tribe from "../Tribe";
 import { TribeComponent } from "../components/TribeComponent";
 import { createEntityHitboxes } from "../../../shared/src/boxes/entity-hitbox-creation";
+import { CollisionGroup } from "../../../shared/src/collision-groups";
    
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.health
@@ -39,7 +40,7 @@ export function getBlueprintEntityType(blueprintType: BlueprintType): StructureT
 }
 
 export function createBlueprintEntityConfig(tribe: Tribe, blueprintType: BlueprintType, associatedEntityID: EntityID): EntityConfig<ComponentTypes> {
-   const transformComponent = new TransformComponent();
+   const transformComponent = new TransformComponent(CollisionGroup.none);
    transformComponent.collisionBit = COLLISION_BITS.none;
    transformComponent.collisionMask = 0;
 

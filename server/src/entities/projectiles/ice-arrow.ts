@@ -16,6 +16,7 @@ import { PhysicsComponent } from "../../components/PhysicsComponent";
 import Tribe from "../../Tribe";
 import { ProjectileComponent } from "../../components/ProjectileComponent";
 import { IceArrowComponent } from "../../components/IceArrowComponent";
+import { CollisionGroup } from "../../../../shared/src/collision-groups";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.physics
@@ -27,7 +28,7 @@ const ARROW_WIDTH = 5 * 4;
 const ARROW_HEIGHT = 14 * 4;
 
 export function createIceArrowConfig(tribe: Tribe, creator: EntityID): EntityConfig<ComponentTypes> {
-   const transformComponent = new TransformComponent();
+   const transformComponent = new TransformComponent(CollisionGroup.default);
    const hitbox = createHitbox(new RectangularBox(new Point(0, 0), ARROW_WIDTH, ARROW_HEIGHT, 0), 0.4, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, []);
    transformComponent.addHitbox(hitbox, null);
    

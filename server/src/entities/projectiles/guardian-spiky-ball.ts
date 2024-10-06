@@ -1,6 +1,7 @@
 import { createHitbox, HitboxCollisionType } from "../../../../shared/src/boxes/boxes";
 import CircularBox from "../../../../shared/src/boxes/CircularBox";
 import { HitboxCollisionBit, DEFAULT_HITBOX_COLLISION_MASK } from "../../../../shared/src/collision";
+import { CollisionGroup } from "../../../../shared/src/collision-groups";
 import { ServerComponentType } from "../../../../shared/src/components";
 import { EntityType } from "../../../../shared/src/entities";
 import { StatusEffect } from "../../../../shared/src/status-effects";
@@ -19,8 +20,8 @@ type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.guardianSpikyBall;
 
 export function createGuardianSpikyBallConfig(): EntityConfig<ComponentTypes> {
-   const transformComponent = new TransformComponent();
-   const hitbox = createHitbox(new CircularBox(new Point(0, 0), 0, 20), 0, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, []);
+   const transformComponent = new TransformComponent(CollisionGroup.default);
+   const hitbox = createHitbox(new CircularBox(new Point(0, 0), 0, 20), 0.5, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, []);
    transformComponent.addHitbox(hitbox, null);
    
    const physicsComponent = new PhysicsComponent();

@@ -1,6 +1,7 @@
 import { createHitbox, HitboxCollisionType } from "../../../../shared/src/boxes/boxes";
 import RectangularBox from "../../../../shared/src/boxes/RectangularBox";
 import { HitboxCollisionBit, DEFAULT_HITBOX_COLLISION_MASK } from "../../../../shared/src/collision";
+import { CollisionGroup } from "../../../../shared/src/collision-groups";
 import { ServerComponentType } from "../../../../shared/src/components";
 import { EntityID, EntityType } from "../../../../shared/src/entities";
 import { Point } from "../../../../shared/src/utils";
@@ -16,7 +17,7 @@ type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.guardianGemFragmentProjectile;
 
 export function createGuardianGemFragmentProjectileConfig(creator: EntityID): EntityConfig<ComponentTypes> {
-   const transformComponent = new TransformComponent();
+   const transformComponent = new TransformComponent(CollisionGroup.default);
    const hitbox = createHitbox(new RectangularBox(new Point(0, 0), 8, 16, 0), 0.3, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, []);
    transformComponent.addHitbox(hitbox, null);
    

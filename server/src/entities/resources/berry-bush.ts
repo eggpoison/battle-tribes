@@ -16,6 +16,7 @@ import { registerDirtyEntity } from "../../server/player-clients";
 import { getEntityLayer } from "../../world";
 import { HealthComponent } from "../../components/HealthComponent";
 import { StatusEffectComponent } from "../../components/StatusEffectComponent";
+import { CollisionGroup } from "../../../../shared/src/collision-groups";
 
 type ComponentTypes = ServerComponentType.transform
    | ServerComponentType.health
@@ -25,7 +26,7 @@ type ComponentTypes = ServerComponentType.transform
 export const BERRY_BUSH_RADIUS = 40;
 
 export function createBerryBushConfig(): EntityConfig<ComponentTypes> {
-   const transformComponent = new TransformComponent();
+   const transformComponent = new TransformComponent(CollisionGroup.default);
    const hitbox = createHitbox(new CircularBox(new Point(0, 0), 0, BERRY_BUSH_RADIUS), 1, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, []);
    transformComponent.addHitbox(hitbox, null);
    transformComponent.collisionBit = COLLISION_BITS.plants;

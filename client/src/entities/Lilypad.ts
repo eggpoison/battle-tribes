@@ -5,7 +5,7 @@ import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 
 class Lilypad extends Entity {
    constructor(entityID: EntityID) {
-      super(entityID, EntityType.lilypad);
+      super(entityID);
 
       this.attachRenderThing(
          new TexturedRenderPart(

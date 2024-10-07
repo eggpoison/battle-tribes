@@ -5,11 +5,10 @@ import { TileType, TileTypeString } from "battletribes-shared/tiles";
 import { Settings } from "battletribes-shared/settings";
 import { useEffect, useReducer, useRef, useState } from "react";
 import Entity from "../../../Entity";
-import Board from "../../../Board";
 import { Tile } from "../../../Tile";
 import CLIENT_ENTITY_INFO_RECORD from "../../../client-entity-info";
 import Layer from "../../../Layer";
-import { getEntityByID, getEntityLayer } from "../../../world";
+import { getEntityLayer, getEntityType } from "../../../world";
 import Player from "../../../entities/Player";
 
 export let updateDebugInfoTile: (tile: Tile | null) => void = () => {};
@@ -86,7 +85,7 @@ const EntityDebugInfo = ({ entity, debugData }: EntityDebugInfoProps) => {
    }, [] as Array<JSX.Element | string>);
 
    return <>
-      <div className="title">{CLIENT_ENTITY_INFO_RECORD[entity.type].name}<span className="id">#{entity.id}</span></div>
+      <div className="title">{CLIENT_ENTITY_INFO_RECORD[getEntityType(entity.id)].name}<span className="id">#{entity.id}</span></div>
       
       <p>x: <span className="highlight">{displayX}</span>, y: <span className="highlight">{displayY}</span></p>
 

@@ -7,7 +7,7 @@ import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 class PlanterBox extends Entity {
    constructor(id: number) {
-      super(id, EntityType.planterBox);
+      super(id);
 
       this.attachRenderThing(
          new TexturedRenderPart(

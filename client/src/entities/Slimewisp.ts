@@ -10,7 +10,7 @@ class Slimewisp extends Entity {
    private static readonly RADIUS = 16;
 
    constructor(id: number) {
-      super(id, EntityType.slimewisp);
+      super(id);
 
       const renderPart = new TexturedRenderPart(
          null,

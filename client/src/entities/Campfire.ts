@@ -9,7 +9,7 @@ class Campfire extends Entity {
    public static readonly SIZE = 104;
 
    constructor(id: number) {
-      super(id, EntityType.campfire);
+      super(id);
 
       this.attachRenderThing(
          new TexturedRenderPart(

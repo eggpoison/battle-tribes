@@ -7,7 +7,7 @@ import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 class SpearProjectile extends Entity {
    constructor(id: number) {
-      super(id, EntityType.spearProjectile);
+      super(id);
 
       this.attachRenderThing(
          new TexturedRenderPart(

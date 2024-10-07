@@ -22,7 +22,7 @@ const getTextureSource = (size: SnowballSize): string => {
 
 class Snowball extends Entity {
    constructor(id: number) {
-      super(id, EntityType.snowball);
+      super(id);
    }
 
    public onLoad(): void {

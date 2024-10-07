@@ -5,7 +5,7 @@ import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 class StonecarvingTable extends Entity {
    constructor(id: number) {
-      super(id, EntityType.stonecarvingTable);
+      super(id);
 
       this.attachRenderThing(
          new TexturedRenderPart(

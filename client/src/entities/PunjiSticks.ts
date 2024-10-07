@@ -4,14 +4,15 @@ import Entity from "../Entity";
 import { ServerComponentType } from "battletribes-shared/components";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
+import { getEntityType } from "../world";
 
 class PunjiSticks extends Entity {
-   constructor(id: number, entityType: EntityType) {
-      super(id, entityType);
+   constructor(id: number) {
+      super(id);
    }
 
    public onLoad(): void {
-      const isAttachedToWall = this.type === EntityType.wallPunjiSticks;
+      const isAttachedToWall = getEntityType(this.id) === EntityType.wallPunjiSticks;
       let textureArrayIndex: number;
       if (isAttachedToWall) {
          textureArrayIndex = getTextureArrayIndex("entities/wall-punji-sticks/wall-punji-sticks.png");

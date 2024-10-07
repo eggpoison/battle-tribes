@@ -42,7 +42,7 @@ import CircularBox from "battletribes-shared/boxes/CircularBox";
 import RectangularBox from "battletribes-shared/boxes/RectangularBox";
 import { AppState } from "../components/App";
 import { LoadingScreenStatus } from "../components/LoadingScreen";
-import { getEntityByID, layers, removeEntity } from "../world";
+import { getEntityByID, getEntityType, layers, removeEntity } from "../world";
 import { getTileIndexIncludingEdges } from "../Layer";
 
 export type GameData = {
@@ -374,7 +374,7 @@ abstract class Client {
             healedEntity.createHealingParticles(healData.healAmount);
 
             // @Hack @Incomplete: This will trigger the repair sound effect even if a hammer isn't the one healing the structure
-            if (STRUCTURE_TYPES.includes(healedEntity.type as any)) { // @Cleanup
+            if (STRUCTURE_TYPES.includes(getEntityType(healedEntity.id) as any)) { // @Cleanup
                playSound("repair.mp3", 0.4, 1, new Point(healData.entityPositionX, healData.entityPositionY));
             }
          }

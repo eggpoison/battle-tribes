@@ -7,7 +7,7 @@ import OPTIONS from "./options";
 import { calculatePotentialPlanIdealness, getHoveredBuildingPlan, getPotentialPlanStats, getVisibleBuildingPlans } from "./client/Client";
 import Player from "./entities/Player";
 import { PlayerComponentArray } from "./entity-components/PlayerComponent";
-import { getEntityByID } from "./world";
+import { getCurrentLayer, getEntityByID, getEntityLayer } from "./world";
 
 // @Cleanup: The logic for damage, research and heal numbers is extremely similar, can probably be combined
 
@@ -296,9 +296,10 @@ const renderPlayerNames = (): void => {
    ctx.lineJoin = "round";
    ctx.miterLimit = 2;
 
+   const currentLayer = getCurrentLayer();
    for (let i = 0; i < PlayerComponentArray.entities.length; i++) {
       const entityID = PlayerComponentArray.entities[i];
-      if (Player.instance !== null && entityID === Player.instance.id) {
+      if (Player.instance !== null && entityID === Player.instance.id || getEntityLayer(entityID) !== currentLayer) {
          continue;
       }
 

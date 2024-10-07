@@ -7,7 +7,7 @@ import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 class Tunnel extends Entity {
    constructor(id: number) {
-      super(id, EntityType.tunnel);
+      super(id);
    }
 
    public onLoad(): void {

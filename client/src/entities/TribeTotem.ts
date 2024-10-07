@@ -9,7 +9,7 @@ class TribeTotem extends Entity {
    public static readonly SIZE = 120;
 
    constructor(id: number) {
-      super(id, EntityType.tribeTotem);
+      super(id);
 
       const renderPart = new TexturedRenderPart(
          null,

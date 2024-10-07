@@ -10,7 +10,7 @@ import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 class Door extends Entity {
    constructor(id: number) {
-      super(id, EntityType.door);
+      super(id);
    }
 
    public onLoad(): void {

@@ -7,6 +7,7 @@ import { createImage } from "../../textures";
 import { RenderableType, addRenderable } from "../render-loop";
 import { RenderPart, renderPartIsTextured } from "../../render-parts/render-parts";
 import { getEntityRenderLayer } from "../../render-layers";
+import { getEntityLayer } from "../../world";
 
 const enum Vars {
    ATTRIBUTES_PER_VERTEX = 8
@@ -37,9 +38,9 @@ export function createRenderPartOverlayGroup(entity: Entity, textureSource: stri
       renderParts: renderParts
    };
 
-   const renderLayer = getEntityRenderLayer(entity);
+   const renderLayer = getEntityRenderLayer(entity.id);
    // @Cleanup: Side effect
-   addRenderable(RenderableType.overlay, overlay, renderLayer);
+   addRenderable(getEntityLayer(entity.id), RenderableType.overlay, overlay, renderLayer);
 
    return overlay;
 }

@@ -5,7 +5,7 @@ import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 class HealingTotem extends Entity {
    constructor(id: number) {
-      super(id, EntityType.healingTotem);
+      super(id);
 
       this.attachRenderThing(
          new TexturedRenderPart(

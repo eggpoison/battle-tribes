@@ -1,7 +1,7 @@
 import { RiverSteppingStoneData } from "battletribes-shared/client-server-types";
 import { EntityID, EntityType } from "battletribes-shared/entities";
-import Entity from "./Entity";
-import { ServerComponentType } from "battletribes-shared/components";
+import { PhysicsComponentArray } from "./entity-components/PhysicsComponent";
+import { getEntityType } from "./world";
 
 class Chunk {
    public readonly x: number;
@@ -18,29 +18,29 @@ class Chunk {
       this.y = y;
    }
 
-   public addEntity(entity: Entity): void {
-      this.entities.push(entity.id);
+   public addEntity(entity: EntityID): void {
+      this.entities.push(entity);
 
-      if (entity.hasServerComponent(ServerComponentType.physics)) {
-         this.physicsEntities.push(entity.id);
+      if (PhysicsComponentArray.hasComponent(entity)) {
+         this.physicsEntities.push(entity);
       }
 
-      if (entity.type !== EntityType.grassStrand) {
-         this.nonGrassEntities.push(entity.id);
+      if (getEntityType(entity) !== EntityType.grassStrand) {
+         this.nonGrassEntities.push(entity);
       }
    }
 
-   public removeEntity(entity: Entity): void {
-      const idx = this.entities.indexOf(entity.id);
+   public removeEntity(entity: EntityID): void {
+      const idx = this.entities.indexOf(entity);
       this.entities.splice(idx, 1);
 
-      if (entity.hasServerComponent(ServerComponentType.physics)) {
-         const idx = this.physicsEntities.indexOf(entity.id);
+      if (PhysicsComponentArray.hasComponent(entity)) {
+         const idx = this.physicsEntities.indexOf(entity);
          this.physicsEntities.splice(idx, 1);
       }
 
-      if (entity.type !== EntityType.grassStrand) {
-         const idx = this.nonGrassEntities.indexOf(entity.id);
+      if (getEntityType(entity) !== EntityType.grassStrand) {
+         const idx = this.nonGrassEntities.indexOf(entity);
          this.nonGrassEntities.splice(idx, 1);
       }
    }

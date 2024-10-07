@@ -11,6 +11,7 @@ import { RenderPart } from "../render-parts/render-parts";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { PacketReader } from "battletribes-shared/packets";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
+import { getEntityType } from "../world";
 
 export const WORKER_HUT_SIZE = 88;
 export const WARRIOR_HUT_SIZE = 104;
@@ -75,7 +76,7 @@ class HutComponent extends ServerComponent {
       for (let i = 0; i < this.doorRenderParts.length; i++) {
          const renderPart = this.doorRenderParts[i];
          
-         const hutType = this.entity.type as HutType;
+         const hutType = getEntityType(this.entity.id) as HutType;
          const hutSize = getHutSize(hutType);
          const doorHeight = getHutDoorHeight(hutType);
          const doorXOffset = getDoorXOffset(hutType, i);

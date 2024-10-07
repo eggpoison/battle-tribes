@@ -1,6 +1,5 @@
-import { EntityID } from "../../shared/src/entities";
+import { EntityID, EntityType, EntityTypeString } from "../../shared/src/entities";
 import { Settings } from "../../shared/src/settings";
-import Board from "./Board";
 import Chunk from "./Chunk";
 import Entity from "./Entity";
 import { getComponentArrays } from "./entity-components/ComponentArray";
@@ -17,6 +16,7 @@ export const layers = new Array<Layer>();
 let currentLayer: Layer;
 
 const entityRecord: Partial<Record<number, Entity>> = {};
+const entityTypes: Partial<Record<EntityID, EntityType>> = {};
 const entityLayers: Partial<Record<EntityID, Layer>> = {};
 
 export function addLayer(layer: Layer): void {
@@ -35,6 +35,14 @@ export function getEntityLayer(entity: EntityID): Layer {
    return entityLayers[entity]!;
 }
 
+export function getEntityType(entity: EntityID): EntityType {
+   const entityType = entityTypes[entity];
+   if (typeof entityType === "undefined") {
+      throw new Error("Entity '" + entity + "' does not exist");
+   }
+   return entityType;
+}
+
 export function entityExists(entity: EntityID): boolean {
    return typeof entityLayers[entity] !== "undefined";
 }
@@ -44,8 +52,9 @@ export function getEntityByID(entityID: number): Entity | undefined {
    return entityRecord[entityID];
 }
 
-export function registerBasicEntityInfo(entity: Entity, layer: Layer): void {
+export function registerBasicEntityInfo(entity: Entity, entityType: EntityType, layer: Layer): void {
    entityRecord[entity.id] = entity;
+   entityTypes[entity.id] = entityType;
    entityLayers[entity.id] = layer;
 }
 
@@ -69,25 +78,13 @@ export function addEntity(entity: Entity): void {
    // @Temporary? useless now?
    addEntityToRenderHeightMap(entity);
 
-   const renderLayer = getEntityRenderLayer(entity);
-   if (renderLayerIsChunkRendered(renderLayer)) {
-      registerChunkRenderedEntity(entity, renderLayer);
-   } else {
-      addRenderable(RenderableType.entity, entity, renderLayer);
-   }
+   const layer = getEntityLayer(entity.id);
+   layer.addEntity(entity);
 }
 
 export function removeEntity(entity: Entity, isDeath: boolean): void {
-   const renderLayer = getEntityRenderLayer(entity);
-   if (renderLayerIsChunkRendered(renderLayer)) {
-      removeChunkRenderedEntity(entity, renderLayer);
-   } else {
-      removeRenderable(entity, renderLayer);
-   }
-   removeEntityFromDirtyArray(entity);
-
-   delete entityRecord[entity.id];
-   delete entityLayers[entity.id];
+   const layer = getEntityLayer(entity.id);
+   layer.removeEntity(entity);
 
    if (isDeath) {
       entity.die();
@@ -109,11 +106,19 @@ export function removeEntity(entity: Entity, isDeath: boolean): void {
          componentArray.removeComponent(entity.id);
       }
    }
+
+   delete entityRecord[entity.id];
+   delete entityTypes[entity.id];
+   delete entityLayers[entity.id];
 }
 
-export function changeEntityLayer(entity: EntityID, newLayer: Layer): void {
-   const transformComponent = TransformComponentArray.getComponent(entity);
-   const previousLayer = getEntityLayer(entity);
+export function changeEntityLayer(entityID: EntityID, newLayer: Layer): void {
+   const transformComponent = TransformComponentArray.getComponent(entityID);
+   const previousLayer = getEntityLayer(entityID);
+
+   const entity = getEntityByID(entityID)!;
+   previousLayer.removeEntity(entity);
+   newLayer.addEntity(entity);
 
    // Remove from all previous chunks and add to new ones
    const newChunks = new Set<Chunk>();
@@ -126,16 +131,16 @@ export function changeEntityLayer(entity: EntityID, newLayer: Layer): void {
          const chunk = previousLayer.getChunk(chunkX, chunkY);
 
          if (transformComponent.chunks.has(chunk)) {
-            chunk.removeEntity(getEntityByID(entity)!);
+            chunk.removeEntity(entityID);
             transformComponent.chunks.delete(chunk);
 
             const newChunk = newLayer.getChunk(chunkX, chunkY);
-            newChunk.addEntity(getEntityByID(entity)!);
+            newChunk.addEntity(entityID);
             newChunks.add(newChunk);
          }
       }
    }
    transformComponent.chunks = newChunks;
 
-   entityLayers[entity] = newLayer;
+   entityLayers[entityID] = newLayer;
 }

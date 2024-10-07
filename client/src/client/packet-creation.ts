@@ -9,7 +9,7 @@ import { windowHeight, windowWidth } from "../webgl";
 import { InventoryName, ItemType } from "battletribes-shared/items/items";
 import Client from "./Client";
 import { getHotbarSelectedItemSlot, getInstancePlayerAction } from "../components/game/GameInteractableLayer";
-import { getEntityByID } from "../world";
+import { getEntityByID, getEntityType } from "../world";
 
 export function createPlayerDataPacket(): ArrayBuffer {
    let lengthBytes = 4 * Float32Array.BYTES_PER_ELEMENT;
@@ -49,7 +49,8 @@ export function createPlayerDataPacket(): ArrayBuffer {
 
    const selectedEntity = getEntityByID(selectedEntityID);
    if (typeof selectedEntity !== "undefined") {
-      if (selectedEntity.type === EntityType.tribeWorker || selectedEntity.type === EntityType.tribeWarrior) {
+      const entityType = getEntityType(selectedEntityID);
+      if (entityType === EntityType.tribeWorker || entityType === EntityType.tribeWarrior) {
          interactingEntityID = selectedEntity.id;
       }
    }

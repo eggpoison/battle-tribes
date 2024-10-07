@@ -7,7 +7,7 @@ import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 class WorkerHut extends Entity {
    constructor(id: number) {
-      super(id, EntityType.workerHut);
+      super(id);
 
       // Hut
       const hutRenderPart = new TexturedRenderPart(

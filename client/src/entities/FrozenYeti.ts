@@ -13,7 +13,7 @@ class FrozenYeti extends Entity {
    private static readonly SIZE = 152;
    
    constructor(id: number) {
-      super(id, EntityType.frozenYeti);
+      super(id);
 
       this.attachRenderThing(new TexturedRenderPart(
          null,

@@ -23,7 +23,7 @@ class RockSpikeProjectile extends Entity {
    public static readonly EXIT_SHAKE_AMOUNTS = [1.25, 2.25, 3.25];
 
    constructor(id: number) {
-      super(id, EntityType.rockSpikeProjectile);
+      super(id);
    }
 
    public onLoad(): void {

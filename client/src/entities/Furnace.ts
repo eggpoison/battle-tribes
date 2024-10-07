@@ -11,7 +11,7 @@ class Furnace extends Entity {
    public static readonly SIZE = 80;
 
    constructor(id: number) {
-      super(id, EntityType.furnace);
+      super(id);
 
       this.attachRenderThing(
          new TexturedRenderPart(

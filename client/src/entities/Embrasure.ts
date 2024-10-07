@@ -11,7 +11,7 @@ import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 class Embrasure extends Entity {
    constructor(id: number) {
-      super(id, EntityType.embrasure);
+      super(id);
    }
 
    public onLoad(): void {

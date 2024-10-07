@@ -10,7 +10,7 @@ import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 class Cactus extends Entity {
    constructor(id: number) {
-      super(id, EntityType.cactus);
+      super(id);
 
       const baseRenderPart = new TexturedRenderPart(
          null,

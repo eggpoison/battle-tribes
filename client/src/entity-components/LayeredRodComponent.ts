@@ -9,7 +9,8 @@ import { PacketReader } from "battletribes-shared/packets";
 import { EntityID, EntityType } from "battletribes-shared/entities";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 import { Hitbox } from "battletribes-shared/boxes/boxes";
-import { getEntityLayer } from "../world";
+import { getEntityLayer, getEntityType } from "../world";
+import { TransformComponentArray } from "./TransformComponent";
 
 const enum Vars {
    NATURAL_DRIFT = 20 / Settings.TPS
@@ -55,17 +56,17 @@ const pushAmountToBend = (pushAmount: number): number => {
    return bend;
 }
 
-const getLayerColour = (entity: Entity, r: number, g: number, b: number, layer: number, numLayers: number): RenderPartColour => {
-   switch (entity.type as EntityType.grassStrand | EntityType.reed) {
+const getLayerColour = (entity: EntityID, r: number, g: number, b: number, layer: number, numLayers: number): RenderPartColour => {
+   switch (getEntityType(entity) as EntityType.grassStrand | EntityType.reed) {
       case EntityType.grassStrand: {
          // @Speed: a lot of this is shared for all strands
          
-         const transformComponent = entity.getServerComponent(ServerComponentType.transform);
+         const transformComponent = TransformComponentArray.getComponent(entity);
    
          const tileX = Math.floor(transformComponent.position.x / Settings.TILE_SIZE);
          const tileY = Math.floor(transformComponent.position.y / Settings.TILE_SIZE);
    
-         const entityLayer = getEntityLayer(entity.id);
+         const entityLayer = getEntityLayer(entity);
          const grassInfo = entityLayer.grassInfo[tileX][tileY];
    
          let humidity = grassInfo.humidity;
@@ -129,7 +130,7 @@ class LayeredRodComponent extends ServerComponent {
       
       // Create layers
       for (let layer = 1; layer <= this.numLayers; layer++) {
-         const colour = getLayerColour(this.entity, this.r, this.g, this.b, layer, this.numLayers);
+         const colour = getLayerColour(this.entity.id, this.r, this.g, this.b, layer, this.numLayers);
 
          const zIndex = layer / 10;
          const renderPart = new ColouredRenderPart(
@@ -148,7 +149,7 @@ class LayeredRodComponent extends ServerComponent {
    }
 
    public onCollision(collidingEntity: Entity, _pushedHitbox: Hitbox, pushingHitbox: Hitbox): void {
-      if (collidingEntity.type === EntityType.tree) {
+      if (getEntityType(collidingEntity.id) === EntityType.tree) {
          return;
       }
       

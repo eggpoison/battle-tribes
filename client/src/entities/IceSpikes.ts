@@ -15,7 +15,7 @@ class IceSpikes extends Entity {
    private static readonly SIZE = 80;
 
    constructor(id: number) {
-      super(id, EntityType.iceSpikes);
+      super(id);
 
       this.attachRenderThing(
          new TexturedRenderPart(

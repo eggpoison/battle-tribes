@@ -9,7 +9,7 @@ import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 class SlingTurretRock extends Entity {
    constructor(id: number) {
-      super(id, EntityType.slingTurretRock);
+      super(id);
 
       this.attachRenderThing(
          new TexturedRenderPart(

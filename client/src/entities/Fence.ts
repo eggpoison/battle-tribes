@@ -5,7 +5,7 @@ import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 class Fence extends Entity {
    constructor(id: number) {
-      super(id, EntityType.fence);
+      super(id);
 
       this.attachRenderThing(
          new TexturedRenderPart(

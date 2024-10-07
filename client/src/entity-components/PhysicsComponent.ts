@@ -14,7 +14,7 @@ import { resolveWallTileCollisions } from "../collision";
 import { PacketReader } from "battletribes-shared/packets";
 import { createWaterSplashParticle } from "../particles";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
-import { getEntityLayer } from "../world";
+import { getEntityLayer, getEntityType } from "../world";
 
 const applyPhysics = (physicsComponent: PhysicsComponent): void => {
    if (isNaN(physicsComponent.selfVelocity.x)) {
@@ -195,13 +195,13 @@ function onTick(physicsComponent: PhysicsComponent): void {
 
    // Water droplet particles
    // @Cleanup: Don't hardcode fish condition
-   if (transformComponent.isInRiver() && customTickIntervalHasPassed(Board.clientTicks, 0.05) && (physicsComponent.entity.type !== EntityType.fish)) {
+   if (transformComponent.isInRiver() && customTickIntervalHasPassed(Board.clientTicks, 0.05) && (getEntityType(physicsComponent.entity.id) !== EntityType.fish)) {
       createWaterSplashParticle(transformComponent.position.x, transformComponent.position.y);
    }
    
    // Water splash particles
    // @Cleanup: Move to particles file
-   if (transformComponent.isInRiver() && customTickIntervalHasPassed(Board.clientTicks, 0.15) && (physicsComponent.acceleration.x !== 0 || physicsComponent.acceleration.y !== 0) && physicsComponent.entity.type !== EntityType.fish) {
+   if (transformComponent.isInRiver() && customTickIntervalHasPassed(Board.clientTicks, 0.15) && (physicsComponent.acceleration.x !== 0 || physicsComponent.acceleration.y !== 0) && getEntityType(physicsComponent.entity.id) !== EntityType.fish) {
       const lifetime = 2.5;
 
       const particle = new Particle(lifetime);

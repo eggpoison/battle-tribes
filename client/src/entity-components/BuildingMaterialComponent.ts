@@ -5,6 +5,7 @@ import Entity from "../Entity";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { PacketReader } from "battletribes-shared/packets";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
+import { getEntityType } from "../world";
 
 export const WALL_TEXTURE_SOURCES = ["entities/wall/wooden-wall.png", "entities/wall/stone-wall.png"];
 export const DOOR_TEXTURE_SOURCES = ["entities/door/wooden-door.png", "entities/door/stone-door.png"];
@@ -13,8 +14,8 @@ export const TUNNEL_TEXTURE_SOURCES = ["entities/tunnel/wooden-tunnel.png", "ent
 export const FLOOR_SPIKE_TEXTURE_SOURCES = ["entities/spikes/wooden-floor-spikes.png", "entities/spikes/stone-floor-spikes.png"];
 export const WALL_SPIKE_TEXTURE_SOURCES = ["entities/spikes/wooden-wall-spikes.png", "entities/spikes/stone-wall-spikes.png"];
 
-const getMaterialTextureSources = (entity: Entity): ReadonlyArray<string> => {
-   switch (entity.type) {
+const getMaterialTextureSources = (entityType: EntityType): ReadonlyArray<string> => {
+   switch (entityType) {
       case EntityType.wall: return WALL_TEXTURE_SOURCES;
       case EntityType.door: return DOOR_TEXTURE_SOURCES;
       case EntityType.embrasure: return EMBRASURE_TEXTURE_SOURCES;
@@ -45,7 +46,7 @@ class BuildingMaterialComponent extends ServerComponent {
       const material = reader.readNumber();
       
       if (material !== this.material) {
-         const textureSources = getMaterialTextureSources(this.entity);
+         const textureSources = getMaterialTextureSources(getEntityType(this.entity.id));
 
          const textureSource = textureSources[material];
       this.materialRenderPart.switchTextureSource(textureSource);

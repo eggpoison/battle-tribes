@@ -7,7 +7,7 @@ import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 class IceArrow extends Entity {
    constructor(id: number) {
-      super(id, EntityType.iceArrow);
+      super(id);
 
       this.attachRenderThing(
          new TexturedRenderPart(

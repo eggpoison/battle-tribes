@@ -8,7 +8,7 @@ import { RenderPart } from "../render-parts/render-parts";
 
 class WarriorHut extends Entity {
    constructor(id: number) {
-      super(id, EntityType.warriorHut);
+      super(id);
       
       // Hut
       const hutRenderPart = new TexturedRenderPart(

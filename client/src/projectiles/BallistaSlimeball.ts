@@ -7,7 +7,7 @@ import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 class BallistaSlimeball extends Entity {
    constructor(id: number) {
-      super(id, EntityType.ballistaSlimeball);
+      super(id);
 
       this.attachRenderThing(
          new TexturedRenderPart(

@@ -7,7 +7,7 @@ import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 class Pebblum extends Entity {
    constructor(id: number) {
-      super(id, EntityType.pebblum);
+      super(id);
 
       // Nose
       const nose = new TexturedRenderPart(

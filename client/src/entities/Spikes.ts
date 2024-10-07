@@ -5,17 +5,18 @@ import { playSound } from "../sound";
 import Entity from "../Entity";
 import { FLOOR_SPIKE_TEXTURE_SOURCES, WALL_SPIKE_TEXTURE_SOURCES } from "../entity-components/BuildingMaterialComponent";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
+import { getEntityType } from "../world";
 
 // @Cleanup: split into floor spikes and wall spikes
 class Spikes extends Entity {
-   constructor(id: number, entityType: EntityType) {
-      super(id, entityType);
+   constructor(id: number) {
+      super(id);
    }
 
    public onLoad(): void {
       const materialComponent = this.getServerComponent(ServerComponentType.buildingMaterial);
 
-      const isAttachedToWall = this.type === EntityType.wallSpikes;
+      const isAttachedToWall = getEntityType(this.id) === EntityType.wallSpikes;
       let textureArrayIndex: number;
       if (isAttachedToWall) {
          textureArrayIndex = getTextureArrayIndex(WALL_SPIKE_TEXTURE_SOURCES[materialComponent.material]);

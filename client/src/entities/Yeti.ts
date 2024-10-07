@@ -15,7 +15,7 @@ class Yeti extends Entity {
    private static readonly BLOOD_FOUNTAIN_INTERVAL = 0.15;
 
    constructor(id: number) {
-      super(id, EntityType.yeti);
+      super(id);
 
       this.addClientComponent(ClientComponentType.randomSound, new RandomSoundComponent(this));
 

@@ -158,7 +158,9 @@ const main = (currentTime: number): void => {
 }
 
 const renderLayer = (layer: Layer, frameProgress: number): void => {
-   renderText();
+   if (layer === getCurrentLayer()) {
+      renderText();
+   }
 
    renderTileShadows(layer, TileShadowType.dropdownShadow);
 
@@ -188,14 +190,14 @@ const renderLayer = (layer: Layer, frameProgress: number): void => {
 
    renderLowerRiverFeatures(visibleRiverRenderChunks);
    // Render everything up to fish
-   renderNextRenderables(RenderLayer.fish);
+   renderNextRenderables(layer, RenderLayer.fish);
    renderUpperRiverFeatures(visibleRiverRenderChunks);
    if (OPTIONS.showParticles) {
       renderMonocolourParticles(ParticleRenderLayer.low);
       renderTexturedParticles(ParticleRenderLayer.low);
    }
    // Render the rest
-   renderNextRenderables(MAX_RENDER_LAYER);
+   renderNextRenderables(layer, MAX_RENDER_LAYER);
 
    renderTileShadows(layer, TileShadowType.wallShadow);
    renderSolidTiles(layer, true);

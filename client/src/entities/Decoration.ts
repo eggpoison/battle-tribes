@@ -21,7 +21,7 @@ const DECORATION_RENDER_INFO: Record<DecorationType, string> = {
 
 class Decoration extends Entity {
    constructor(id: number) {
-      super(id, EntityType.decoration);
+      super(id);
    }
 
    public onLoad(): void {

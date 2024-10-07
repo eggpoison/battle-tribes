@@ -1,5 +1,5 @@
 import { Point, randFloat } from "battletribes-shared/utils";
-import { EntityID, EntityType, EntityTypeString } from "battletribes-shared/entities";
+import { EntityID, EntityTypeString } from "battletribes-shared/entities";
 import { Settings } from "battletribes-shared/settings";
 import { HitData, HitFlags } from "battletribes-shared/client-server-types";
 import { ServerComponentType, ServerComponentTypeString } from "battletribes-shared/components";
@@ -17,7 +17,7 @@ import ServerComponent from "./entity-components/ServerComponent";
 import { createIdentityMatrix } from "./rendering/matrices";
 import { getEntityRenderLayer } from "./render-layers";
 import { registerDirtyEntity, renderParentIsHitbox } from "./rendering/render-part-matrices";
-import { getEntityByID } from "./world";
+import { getEntityByID, getEntityLayer, getEntityType } from "./world";
 
 // Use prime numbers / 100 to ensure a decent distribution of different types of particles
 const HEALING_PARTICLE_AMOUNTS = [0.05, 0.37, 1.01];
@@ -31,8 +31,6 @@ type ClientComponentsType = Partial<{
 
 abstract class Entity {
    public readonly id: number;
-
-   public readonly type: EntityType;
 
    public renderPosition = new Point(0, 0);
 
@@ -59,10 +57,8 @@ abstract class Entity {
    public tintG = 0;
    public tintB = 0;
 
-   constructor(id: EntityID, entityType: EntityType) {
+   constructor(id: EntityID) {
       this.id = id;
-
-      this.type = entityType;
 
       // @Temporary? @Cleanup: should be done using the dirty function probs
       registerDirtyEntity(this);
@@ -103,7 +99,7 @@ abstract class Entity {
          }
       }
 
-      throw new Error("No render part with tag '" + tag + "' could be found on entity type " + EntityTypeString[this.type]);
+      throw new Error("No render part with tag '" + tag + "' could be found on entity type " + EntityTypeString[getEntityType(this.id)]);
    }
 
    public getRenderThings(tag: string, expectedAmount?: number): Array<RenderThing> {
@@ -117,7 +113,7 @@ abstract class Entity {
       }
 
       if (typeof expectedAmount !== "undefined" && renderThings.length !== expectedAmount) {
-         throw new Error("Expected " + expectedAmount + " render parts with tag '" + tag + "' on " + EntityTypeString[this.type] + " but got " + renderThings.length);
+         throw new Error("Expected " + expectedAmount + " render parts with tag '" + tag + "' on " + EntityTypeString[getEntityType(this.id)] + " but got " + renderThings.length);
       }
       
       return renderThings;
@@ -130,8 +126,8 @@ abstract class Entity {
       }
       
       // @Hack
-      const renderLayer = getEntityRenderLayer(this);
-      removeRenderable(overlayGroup, renderLayer);
+      const renderLayer = getEntityRenderLayer(this.id);
+      removeRenderable(getEntityLayer(this.id), overlayGroup, renderLayer);
    }
 
    public onLoad?(): void;
@@ -166,7 +162,7 @@ abstract class Entity {
       const component = this.serverComponentsRecord[componentType];
 
       if (typeof component === "undefined") {
-         throw new Error("Entity type '" + EntityTypeString[this.type] + "' does not have component of type '" + ServerComponentTypeString[componentType] + "'");
+         throw new Error("Entity type '" + EntityTypeString[getEntityType(this.id)] + "' does not have component of type '" + ServerComponentTypeString[componentType] + "'");
       }
       
       // @Cleanup: why is exclamation mark required?

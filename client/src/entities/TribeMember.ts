@@ -15,6 +15,7 @@ import { InventoryName, ItemType } from "battletribes-shared/items/items";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 import { RenderPart } from "../render-parts/render-parts";
 import RenderAttachPoint from "../render-parts/RenderAttachPoint";
+import { getEntityType } from "../world";
 
 export const TRIBE_MEMBER_Z_INDEXES: Record<string, number> = {
    hand: 1,
@@ -27,8 +28,9 @@ const GOBLIN_EAR_ANGLE = Math.PI / 3;
 const GOBLIN_HURT_SOUNDS: ReadonlyArray<AudioFilePath> = ["goblin-hurt-1.mp3", "goblin-hurt-2.mp3", "goblin-hurt-3.mp3", "goblin-hurt-4.mp3", "goblin-hurt-5.mp3"];
 const GOBLIN_DIE_SOUNDS: ReadonlyArray<AudioFilePath> = ["goblin-die-1.mp3", "goblin-die-2.mp3", "goblin-die-3.mp3", "goblin-die-4.mp3"];
 
-const getFistTextureSource = (tribesman: Entity, tribeType: TribeType): string => {
-   switch (tribesman.type) {
+const getFistTextureSource = (entityType: EntityType, tribeType: TribeType): string => {
+   switch (entityType) {
+      // @Robustness
       case EntityType.player:
       case EntityType.tribeWorker:
       case EntityType.tribeWarrior: {
@@ -55,39 +57,39 @@ const getFistTextureSource = (tribesman: Entity, tribeType: TribeType): string =
    }
 }
 
-const getBodyTextureSource = (entity: Entity, tribeType: TribeType): string => {
+const getBodyTextureSource = (entityType: EntityType, tribeType: TribeType): string => {
    switch (tribeType) {
       case TribeType.plainspeople: {
-         if (entity.type === EntityType.tribeWarrior) {
+         if (entityType === EntityType.tribeWarrior) {
             return "entities/plainspeople/warrior.png";
-         } else if (entity.type === EntityType.player) {
+         } else if (entityType === EntityType.player) {
             return "entities/plainspeople/player.png";
          } else {
             return "entities/plainspeople/worker.png";
          }
       }
       case TribeType.goblins: {
-         if (entity.type === EntityType.tribeWarrior) {
+         if (entityType === EntityType.tribeWarrior) {
             return "entities/goblins/warrior.png";
-         } else if (entity.type === EntityType.player) {
+         } else if (entityType === EntityType.player) {
             return "entities/goblins/player.png";
          } else {
             return "entities/goblins/worker.png";
          }
       }
       case TribeType.frostlings: {
-         if (entity.type === EntityType.tribeWarrior) {
+         if (entityType === EntityType.tribeWarrior) {
             return "entities/frostlings/warrior.png";
-         } else if (entity.type === EntityType.player) {
+         } else if (entityType === EntityType.player) {
             return "entities/frostlings/player.png";
          } else {
             return "entities/frostlings/worker.png";
          }
       }
       case TribeType.barbarians: {
-         if (entity.type === EntityType.tribeWarrior) {
+         if (entityType === EntityType.tribeWarrior) {
             return "entities/barbarians/warrior.png";
-         } else if (entity.type === EntityType.player) {
+         } else if (entityType === EntityType.player) {
             return "entities/barbarians/player.png";
          } else {
             return "entities/barbarians/worker.png";
@@ -98,14 +100,12 @@ const getBodyTextureSource = (entity: Entity, tribeType: TribeType): string => {
 
 // @Cleanup: sucks
 export function addTribeMemberRenderParts(tribesman: Entity): void {
-   let warPaintType: number | null;
-   let tribeType: TribeType;
-   
    const tribeComponentData = TribeComponentArray.getComponent(tribesman.id);
    const tribeMemberComponentData = TribeMemberComponentArray.getComponent(tribesman.id);
 
-   tribeType = getTribeType(tribeComponentData.tribeID);
-   warPaintType = tribeMemberComponentData.warPaintType;
+   const entityType = getEntityType(tribesman.id);
+   const tribeType = getTribeType(tribeComponentData.tribeID);
+   const warPaintType = tribeMemberComponentData.warPaintType;
 
    // @Temporary
    // const radius = tribesman.type === EntityType.player || tribesman.type === EntityType.tribeWarrior ? 32 : 28;
@@ -119,7 +119,7 @@ export function addTribeMemberRenderParts(tribesman: Entity): void {
       null,
       2,
       0,
-      getTextureArrayIndex(getBodyTextureSource(tribesman, tribeType))
+      getTextureArrayIndex(getBodyTextureSource(entityType, tribeType))
    );
    bodyRenderPart.addTag("tribeMemberComponent:body");
    tribesman.attachRenderThing(bodyRenderPart);
@@ -127,7 +127,7 @@ export function addTribeMemberRenderParts(tribesman: Entity): void {
    if (tribeType === TribeType.goblins) {
       if (warPaintType !== null) {
          let textureSource: string;
-         if (tribesman.type === EntityType.tribeWarrior) {
+         if (entityType === EntityType.tribeWarrior) {
             textureSource = `entities/goblins/warrior-warpaint-${warPaintType}.png`;
          } else {
             textureSource = `entities/goblins/goblin-warpaint-${warPaintType}.png`;
@@ -150,12 +150,12 @@ export function addTribeMemberRenderParts(tribesman: Entity): void {
       const leftEarRenderPart = new TexturedRenderPart(
          null,
          3,
-         Math.PI/2 - GOBLIN_EAR_ANGLE,
+         -Math.PI/2 + GOBLIN_EAR_ANGLE,
          getTextureArrayIndex("entities/goblins/goblin-ear.png")
       );
       leftEarRenderPart.addTag("tribeMemberComponent:ear");
-      leftEarRenderPart.offset.x = (radius + GOBLIN_EAR_OFFSET) * Math.sin(-GOBLIN_EAR_ANGLE);
-      leftEarRenderPart.offset.y = (radius + GOBLIN_EAR_OFFSET) * Math.cos(-GOBLIN_EAR_ANGLE);
+      leftEarRenderPart.offset.x = (radius + GOBLIN_EAR_OFFSET) * Math.sin(GOBLIN_EAR_ANGLE);
+      leftEarRenderPart.offset.y = (radius + GOBLIN_EAR_OFFSET) * Math.cos(GOBLIN_EAR_ANGLE);
       leftEarRenderPart.setFlipX(true);
       tribesman.attachRenderThing(leftEarRenderPart);
 
@@ -189,7 +189,7 @@ export function addTribeMemberRenderParts(tribesman: Entity): void {
          attachPoint,
          1.2,
          0,
-         getTextureArrayIndex(getFistTextureSource(tribesman, tribeType))
+         getTextureArrayIndex(getFistTextureSource(entityType, tribeType))
       );
       handRenderPart.addTag("tribeMemberComponent:hand")
       handRenderPart.addTag("inventoryUseComponent:hand");
@@ -200,11 +200,13 @@ export function addTribeMemberRenderParts(tribesman: Entity): void {
 const switchTribeMemberRenderParts = (tribesman: Entity): void => {
    // @Robustness: don't do this. instead remove all and add them back
    
+   const entityType = getEntityType(tribesman.id);
+   
    const tribeComponent = tribesman.getServerComponent(ServerComponentType.tribe);
    const tribeType = tribeComponent.tribeType;
    
    // Switch hand texture sources
-   const handTextureSource = getFistTextureSource(tribesman, tribeType);
+   const handTextureSource = getFistTextureSource(entityType, tribeType);
    const handRenderParts = tribesman.getRenderThings("tribeMemberComponent:hand", 2) as Array<TexturedRenderPart>;
    for (let i = 0; i < handRenderParts.length; i++) {
       const renderPart = handRenderParts[i];
@@ -212,7 +214,7 @@ const switchTribeMemberRenderParts = (tribesman: Entity): void => {
    }
 
    // Switch body texture source
-   const bodyTextureSource = getBodyTextureSource(tribesman, tribeType);
+   const bodyTextureSource = getBodyTextureSource(entityType, tribeType);
    const handRenderPart = tribesman.getRenderThing("tribeMemberComponent:body") as TexturedRenderPart;
    handRenderPart.switchTextureSource(bodyTextureSource);
 

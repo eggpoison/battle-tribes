@@ -5,7 +5,7 @@ import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 class IceShardsProjectile extends Entity {
    constructor(id: number) {
-      super(id, EntityType.iceShardProjectile);
+      super(id);
 
       this.attachRenderThing(
          new TexturedRenderPart(

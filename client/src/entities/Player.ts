@@ -104,7 +104,7 @@ export default class Player extends TribeMember {
    public static instance: Player | null = null;
    
    constructor(id: number) {
-      super(id, EntityType.player);
+      super(id);
       
       this.addClientComponent(ClientComponentType.footprint, new FootprintComponent(this, 0.2, 20, 64, 4, 64));
       this.addClientComponent(ClientComponentType.equipment, new EquipmentComponent(this));

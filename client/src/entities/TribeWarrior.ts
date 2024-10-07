@@ -10,7 +10,7 @@ import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 class TribeWarrior extends Tribesman {
    constructor(id: number) {
-      super(id, EntityType.tribeWarrior);
+      super(id);
       
       this.addClientComponent(ClientComponentType.footprint, new FootprintComponent(this, 0.15, 20, 64, 4, 64));
       this.addClientComponent(ClientComponentType.equipment, new EquipmentComponent(this));

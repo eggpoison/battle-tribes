@@ -1,5 +1,5 @@
 import { BlueprintType, BuildingMaterial, ServerComponentType } from "battletribes-shared/components";
-import { EntityType, EntityTypeString } from "battletribes-shared/entities";
+import { EntityID, EntityType, EntityTypeString } from "battletribes-shared/entities";
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { deselectSelectedEntity, getSelectedEntityID } from "../../entity-selection";
 import Camera from "../../Camera";
@@ -15,7 +15,10 @@ import { InventoryName, ITEM_TYPE_RECORD, ItemType } from "battletribes-shared/i
 import { addMenuCloseFunction } from "../../menus";
 import { InventoryComponentArray } from "../../entity-components/InventoryComponent";
 import { getPlayerSelectedItem } from "./GameInteractableLayer";
-import { getEntityByID } from "../../world";
+import { getEntityByID, getEntityType } from "../../world";
+import { StructureComponentArray } from "../../entity-components/StructureComponent";
+import { TribeComponentArray } from "../../entity-components/TribeComponent";
+import { BuildingMaterialComponentArray } from "../../entity-components/BuildingMaterialComponent";
 
 /*
 // @Incomplete
@@ -119,33 +122,35 @@ const playerIsHoldingHammer = (): boolean => {
    return heldItem !== null && ITEM_TYPE_RECORD[heldItem.type] === "hammer";
 }
 
-const getMenuOptions = (entity: Entity): ReadonlyArray<MenuOption> => {
-   if (!entity.hasServerComponent(ServerComponentType.structure) || !entity.hasServerComponent(ServerComponentType.tribe)) {
+const getMenuOptions = (entity: EntityID): ReadonlyArray<MenuOption> => {
+   if (!StructureComponentArray.hasComponent(entity) || !TribeComponentArray.hasComponent(entity)) {
       return [];
    }
    
    // Enemy buildings can't be selected
-   const tribeComponent = entity.getServerComponent(ServerComponentType.tribe);
+   const tribeComponent = TribeComponentArray.getComponent(entity);
    if (tribeComponent.tribeID !== Game.tribe.id) {
       return [];
    }
 
    // Buildings with active blueprints can't access the build menu
-   const structureComponent = entity.getServerComponent(ServerComponentType.structure);
+   const structureComponent = StructureComponentArray.getComponent(entity);
    if (structureComponent.hasActiveBlueprint) {
       return [];
    }
    
    const options = new Array<MenuOption>();
 
+   const entityType = getEntityType(entity);
+
    // Material upgrade option
-   if (playerIsHoldingHammer() && entity.hasServerComponent(ServerComponentType.buildingMaterial)) {
-      const wallComponent = entity.getServerComponent(ServerComponentType.buildingMaterial);
+   if (playerIsHoldingHammer() && BuildingMaterialComponentArray.hasComponent(entity)) {
+      const wallComponent = BuildingMaterialComponentArray.getComponent(entity);
       if (wallComponent.material < BuildingMaterial.stone) {
-         const imageSource = MATERIAL_UPGRADE_IMAGE_SOURCES[entity.type as UpgradeableEntityType];
-         const ghostType = MATERIAL_UPGRADE_GHOST_TYPES[entity.type as UpgradeableEntityType];
-         const imageSize = MATERIAL_UPGRADE_IMAGE_SIZES[entity.type as UpgradeableEntityType];
-         const blueprintType = MATERIAL_UPGRADE_BLUEPRINT_TYPES[entity.type as UpgradeableEntityType];
+         const imageSource = MATERIAL_UPGRADE_IMAGE_SOURCES[entityType as UpgradeableEntityType];
+         const ghostType = MATERIAL_UPGRADE_GHOST_TYPES[entityType as UpgradeableEntityType];
+         const imageSize = MATERIAL_UPGRADE_IMAGE_SIZES[entityType as UpgradeableEntityType];
+         const blueprintType = MATERIAL_UPGRADE_BLUEPRINT_TYPES[entityType as UpgradeableEntityType];
          
          options.push({
             name: "UPGRADE",
@@ -165,8 +170,8 @@ const getMenuOptions = (entity: Entity): ReadonlyArray<MenuOption> => {
    }
 
    // Wall shaping options
-   if (playerIsHoldingHammer() && entity.type === EntityType.wall) {
-      const wallComponent = entity.getServerComponent(ServerComponentType.buildingMaterial);
+   if (playerIsHoldingHammer() && entityType === EntityType.wall) {
+      const wallComponent = BuildingMaterialComponentArray.getComponent(entity);
 
       options.push({
          name: "DOOR",
@@ -213,7 +218,7 @@ const getMenuOptions = (entity: Entity): ReadonlyArray<MenuOption> => {
    }
 
    // Tunnel doors
-   if (playerIsHoldingHammer() && entity.type === EntityType.tunnel) {
+   if (playerIsHoldingHammer() && entityType === EntityType.tunnel) {
       options.push({
          name: "DOOR",
          imageSource: require("../../images/entities/tunnel/tunnel-door.png"),
@@ -236,7 +241,7 @@ const getMenuOptions = (entity: Entity): ReadonlyArray<MenuOption> => {
    }
 
    // Spike cover option
-   if (entity.type === EntityType.floorSpikes) {
+   if (entityType === EntityType.floorSpikes) {
      options.push({
          name: "COVER",
          imageSource: require("../../images/miscellaneous/cover-spikes.png"),
@@ -273,7 +278,7 @@ const getMenuOptions = (entity: Entity): ReadonlyArray<MenuOption> => {
    }
 
    // Hut options
-   if (entity.type === EntityType.workerHut) {
+   if (entityType === EntityType.workerHut) {
       if (playerIsHoldingHammer()) {
          options.push({
             name: "WARRIOR HUT",
@@ -315,7 +320,7 @@ const getMenuOptions = (entity: Entity): ReadonlyArray<MenuOption> => {
    }
 
    // Planter box options
-   if (entity.type === EntityType.planterBox) {
+   if (entityType === EntityType.planterBox) {
       // @Incomplete
       options.push({
          name: "REMOVE PLANT",
@@ -335,7 +340,7 @@ const getMenuOptions = (entity: Entity): ReadonlyArray<MenuOption> => {
    }
 
    // Fence gate option
-   if (playerIsHoldingHammer() && entity.type === EntityType.fence) {
+   if (playerIsHoldingHammer() && entityType === EntityType.fence) {
       options.push({
          name: "FENCE GATE",
          imageSource: require("../../images/miscellaneous/full-fence-gate.png"),
@@ -355,7 +360,7 @@ const getMenuOptions = (entity: Entity): ReadonlyArray<MenuOption> => {
    return options;
 }
 
-export function entityCanOpenBuildMenu(entity: Entity): boolean {
+export function entityCanOpenBuildMenu(entity: EntityID): boolean {
    const menuOptions = getMenuOptions(entity);
    return menuOptions.length > 0;
 }
@@ -579,10 +584,10 @@ const BuildMenu = () => {
       return null;
    }
 
-   const options = getMenuOptions(building);
+   const options = getMenuOptions(buildingID);
 
    if (options.length === 0) {
-      console.warn("0 options for entity type " + EntityTypeString[building.type]);
+      console.warn("0 options for entity type " + EntityTypeString[getEntityType(buildingID)]);
       return null;
    }
 

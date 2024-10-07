@@ -1,13 +1,18 @@
 import { EntityInfo } from "../../shared/src/board-interface";
 import { GrassTileInfo, RiverFlowDirectionsRecord, RiverSteppingStoneData, WaterRockData } from "../../shared/src/client-server-types";
-import { ServerComponentType } from "../../shared/src/components";
 import { EntityID } from "../../shared/src/entities";
 import { Settings } from "../../shared/src/settings";
 import { WorldInfo } from "../../shared/src/structures";
 import { TileIndex } from "../../shared/src/utils";
 import Chunk from "./Chunk";
+import Entity from "./Entity";
+import { TransformComponentArray } from "./entity-components/TransformComponent";
+import { getEntityRenderLayer } from "./render-layers";
+import { addRenderable, removeRenderable, RenderableType } from "./rendering/render-loop";
+import { removeEntityFromDirtyArray } from "./rendering/render-part-matrices";
+import { renderLayerIsChunkRendered, registerChunkRenderedEntity, removeChunkRenderedEntity } from "./rendering/webgl/chunked-entity-rendering";
 import { Tile } from "./Tile";
-import { getEntityByID } from "./world";
+import { getEntityType } from "./world";
 
 export function getTileIndexIncludingEdges(tileX: number, tileY: number): TileIndex {
    if (tileX < -Settings.EDGE_GENERATION_DISTANCE || tileX >= Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE || tileY < -Settings.EDGE_GENERATION_DISTANCE || tileY >= Settings.BOARD_DIMENSIONS + Settings.EDGE_GENERATION_DISTANCE) {
@@ -26,6 +31,8 @@ export function tileIsInWorld(tileX: number, tileY: number): boolean {
 }
 
 export default class Layer {
+   public readonly idx: number;
+   
    public readonly tiles: ReadonlyArray<Tile>;
    public readonly riverFlowDirections: RiverFlowDirectionsRecord;
    public readonly waterRocks: Array<WaterRockData>;
@@ -34,7 +41,8 @@ export default class Layer {
 
    public readonly chunks: ReadonlyArray<Chunk>;
 
-   constructor(tiles: ReadonlyArray<Tile>, riverFlowDirections: RiverFlowDirectionsRecord, waterRocks: Array<WaterRockData>, riverSteppingStones: Array<RiverSteppingStoneData>, grassInfo: Record<number, Record<number, GrassTileInfo>>) {
+   constructor(idx: number, tiles: ReadonlyArray<Tile>, riverFlowDirections: RiverFlowDirectionsRecord, waterRocks: Array<WaterRockData>, riverSteppingStones: Array<RiverSteppingStoneData>, grassInfo: Record<number, Record<number, GrassTileInfo>>) {
+      this.idx = idx;
       this.tiles = tiles;
       this.riverFlowDirections = riverFlowDirections;
       this.waterRocks = waterRocks;
@@ -89,18 +97,36 @@ export default class Layer {
       return direction;
    }
 
+   public addEntity(entity: Entity): void {
+      const renderLayer = getEntityRenderLayer(entity.id);
+      if (renderLayerIsChunkRendered(renderLayer)) {
+         registerChunkRenderedEntity(entity, renderLayer);
+      } else {
+         addRenderable(this, RenderableType.entity, entity, renderLayer);
+      }
+   }
+
+   public removeEntity(entity: Entity): void {
+      const renderLayer = getEntityRenderLayer(entity.id);
+      if (renderLayerIsChunkRendered(renderLayer)) {
+         removeChunkRenderedEntity(entity, renderLayer);
+      } else {
+         removeRenderable(this, entity, renderLayer);
+      }
+      removeEntityFromDirtyArray(entity);
+   }
+
    public getWorldInfo(): WorldInfo {
       return {
          chunks: this.chunks,
-         getEntityCallback: (entityID: EntityID): EntityInfo => {
-            const entity = getEntityByID(entityID)!;
-            const transformComponent = entity.getServerComponent(ServerComponentType.transform);
+         getEntityCallback: (entity: EntityID): EntityInfo => {
+            const transformComponent = TransformComponentArray.getComponent(entity);
 
             return {
-               type: entity.type,
+               type: getEntityType(entity),
                position: transformComponent.position,
                rotation: transformComponent.rotation,
-               id: entityID,
+               id: entity,
                hitboxes: transformComponent.hitboxes
             };
          }

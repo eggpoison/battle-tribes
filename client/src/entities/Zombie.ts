@@ -18,7 +18,7 @@ class Zombie extends Entity {
    private static readonly BLOOD_FOUNTAIN_INTERVAL = 0.1;
 
    constructor(id: number) {
-      super(id, EntityType.zombie);
+      super(id);
 
    }
 

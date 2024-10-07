@@ -1,4 +1,3 @@
-import { EntityType } from "battletribes-shared/entities";
 import { ServerComponentType } from "battletribes-shared/components";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import Entity from "../Entity";
@@ -7,7 +6,7 @@ import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 class WoodenArrowProjectile extends Entity {
    constructor(id: number) {
-      super(id, EntityType.woodenArrow);
+      super(id);
 
       this.attachRenderThing(
          new TexturedRenderPart(

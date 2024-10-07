@@ -1,4 +1,3 @@
-import { EntityType } from "battletribes-shared/entities";
 import { randItem } from "battletribes-shared/utils";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { ROCK_DESTROY_SOUNDS, ROCK_HIT_SOUNDS, playSound } from "../sound";
@@ -10,7 +9,7 @@ import { RenderPart } from "../render-parts/render-parts";
 
 class Ballista extends Entity {
    constructor(id: number) {
-      super(id, EntityType.ballista);
+      super(id);
 
       // Base
       this.attachRenderThing(

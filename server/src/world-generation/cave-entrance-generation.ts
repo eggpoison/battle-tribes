@@ -20,6 +20,7 @@ const enum Vars {
 const guardianSpawnZones = new Array<Array<TileIndex>>();
 
 export function generateCaveEntrances(tileTypes: Float32Array, tileBiomes: Float32Array, tileIsWalls: Float32Array, localBiomes: ReadonlyArray<LocalBiomeInfo>): void {
+   let first = true;
    for (let i = 0; i < localBiomes.length; i++) {
       const localBiome = localBiomes[i];
       if (localBiome.biome !== Biome.mountains || localBiome.tileIndexes.length < Vars.MIN_TILES_FOR_CAVE) {
@@ -49,8 +50,14 @@ export function generateCaveEntrances(tileTypes: Float32Array, tileBiomes: Float
 
       const originTileX = getTileX(originTile);
       const originTileY = getTileY(originTile);
-      const originX = (originTileX + Math.random()) * Settings.TILE_SIZE;
-      const originY = (originTileY + Math.random()) * Settings.TILE_SIZE;
+      // @Temporary
+      let originX = (originTileX + Math.random()) * Settings.TILE_SIZE;
+      let originY = (originTileY + Math.random()) * Settings.TILE_SIZE;
+      if (first) {
+         originX = Settings.BOARD_UNITS * 0.5 + 600;
+         originY = Settings.BOARD_UNITS * 0.5;
+         first = false;
+      }
 
       const caveDirection = 2 * Math.PI * Math.random();
 

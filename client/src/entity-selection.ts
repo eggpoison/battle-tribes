@@ -1,4 +1,4 @@
-import { EntityType } from "battletribes-shared/entities";
+import { EntityID, EntityType } from "battletribes-shared/entities";
 import { Point } from "battletribes-shared/utils";
 import { PlanterBoxPlant, ServerComponentType, TunnelDoorSide } from "battletribes-shared/components";
 import { Settings } from "battletribes-shared/settings";
@@ -18,7 +18,8 @@ import { CraftingStation } from "battletribes-shared/items/crafting-recipes";
 import { ItemType, InventoryName } from "battletribes-shared/items/items";
 import { boxIsWithinRange } from "battletribes-shared/boxes/boxes";
 import { getPlayerSelectedItem } from "./components/game/GameInteractableLayer";
-import { entityExists, getEntityByID, getEntityLayer } from "./world";
+import { entityExists, getEntityByID, getEntityLayer, getEntityType } from "./world";
+import { TombstoneComponentArray } from "./entity-components/TombstoneComponent";
 
 const enum InteractActionType {
    openBuildMenu,
@@ -81,15 +82,15 @@ let hoveredEntityID = -1;
 let highlightedEntityID = -1;
 let selectedEntityID = -1;
 
-const getInventoryMenuType = (entity: Entity): InventoryMenuType | null => {
-   switch (entity.type) {
+const getInventoryMenuType = (entity: EntityID): InventoryMenuType | null => {
+   switch (getEntityType(entity)) {
       case EntityType.barrel: return InventoryMenuType.barrel;
       case EntityType.tribeWorker:
       case EntityType.tribeWarrior: return InventoryMenuType.tribesman;
       case EntityType.campfire: return InventoryMenuType.campfire;
       case EntityType.furnace: return InventoryMenuType.furnace;
       case EntityType.tombstone: {
-         const tombstoneComponent = entity.getServerComponent(ServerComponentType.tombstone);
+         const tombstoneComponent = TombstoneComponentArray.getComponent(entity);
          if (tombstoneComponent.deathInfo !== null) {
             return InventoryMenuType.tombstone;
          } else {
@@ -145,21 +146,22 @@ const getEntityInteractAction = (entity: Entity): InteractAction | null => {
    }
    
    // See if the entity can be used in the build menu
-   if (entityCanOpenBuildMenu(entity)) {
+   if (entityCanOpenBuildMenu(entity.id)) {
       return {
          type: InteractActionType.openBuildMenu
       };
    }
 
    // Start researching
-   if (entity.type === EntityType.researchBench) {
+   const entityType = getEntityType(entity.id);
+   if (entityType === EntityType.researchBench) {
       return {
          type: InteractActionType.startResearching
       };
    }
 
    // Toggle door
-   if (entity.type === EntityType.door || entity.type === EntityType.fenceGate) {
+   if (entityType === EntityType.door || entityType === EntityType.fenceGate) {
       return {
          type: InteractActionType.toggleDoor
       };
@@ -174,7 +176,7 @@ const getEntityInteractAction = (entity: Entity): InteractAction | null => {
       };
    }
 
-   const inventoryMenuType = getInventoryMenuType(entity);
+   const inventoryMenuType = getInventoryMenuType(entity.id);
    if (inventoryMenuType !== null) {
       return {
          type: InteractActionType.openInventory,

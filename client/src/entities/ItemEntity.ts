@@ -7,7 +7,7 @@ import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 class ItemEntity extends Entity {
    constructor(id: number) {
-      super(id, EntityType.itemEntity);
+      super(id);
    }
 
    public onLoad(): void {

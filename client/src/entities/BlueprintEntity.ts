@@ -324,7 +324,7 @@ export function getCurrentBlueprintProgressTexture(blueprintType: BlueprintType,
 
 class BlueprintEntity extends Entity {
    constructor(id: number) {
-      super(id, EntityType.blueprintEntity);
+      super(id);
    }
 
    public onLoad(): void {

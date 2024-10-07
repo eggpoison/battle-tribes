@@ -7,7 +7,7 @@ import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 class BallistaWoodenBolt extends Entity {
    constructor(id: number) {
-      super(id, EntityType.ballistaWoodenBolt);
+      super(id);
 
       this.attachRenderThing(
          new TexturedRenderPart(

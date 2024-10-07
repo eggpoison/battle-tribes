@@ -25,7 +25,7 @@ class Tree extends Entity {
    public static readonly LEAF_SPECK_COLOUR_HIGH = [35/255, 158/255, 88/255] as const;
    
    constructor(id: number) {
-      super(id, EntityType.tree);
+      super(id);
    }
 
    public onLoad(): void {

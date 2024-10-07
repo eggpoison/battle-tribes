@@ -117,10 +117,10 @@ export function createEntity(entityID: EntityID, entityType: EntityType): Entity
       case EntityType.iceArrow: return new IceArrow(entityID);
       case EntityType.pebblum: return new Pebblum(entityID);
       case EntityType.embrasure: return new Embrasure(entityID);
-      case EntityType.floorSpikes: return new Spikes(entityID, entityType);
-      case EntityType.wallSpikes: return new Spikes(entityID, entityType);
-      case EntityType.floorPunjiSticks: return new PunjiSticks(entityID, entityType);
-      case EntityType.wallPunjiSticks: return new PunjiSticks(entityID, entityType);
+      case EntityType.floorSpikes: return new Spikes(entityID);
+      case EntityType.wallSpikes: return new Spikes(entityID);
+      case EntityType.floorPunjiSticks: return new PunjiSticks(entityID);
+      case EntityType.wallPunjiSticks: return new PunjiSticks(entityID);
       case EntityType.blueprintEntity: return new BlueprintEntity(entityID);
       case EntityType.ballista: return new Ballista(entityID);
       case EntityType.slingTurret: return new SlingTurret(entityID);

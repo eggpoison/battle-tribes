@@ -17,7 +17,7 @@ class Boulder extends Entity {
    ];
 
    constructor(id: number) {
-      super(id, EntityType.boulder);
+      super(id);
    }
 
    public onLoad(): void {

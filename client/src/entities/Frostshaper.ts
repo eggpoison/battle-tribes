@@ -5,7 +5,7 @@ import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 class Frostshaper extends Entity {
    constructor(id: number) {
-      super(id, EntityType.frostshaper);
+      super(id);
 
       this.attachRenderThing(
          new TexturedRenderPart(

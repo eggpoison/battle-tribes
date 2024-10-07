@@ -32,6 +32,7 @@ import { createRiverSteppingStoneData } from "../rendering/webgl/river-rendering
 import Layer, { getTileIndexIncludingEdges, tileIsWithinEdge } from "../Layer";
 import { TransformComponentArray } from "../entity-components/TransformComponent";
 import { playSound } from "../sound";
+import { initialiseRenderables } from "../rendering/render-loop";
 
 export function processInitialGameDataPacket(reader: PacketReader): void {
    // Player ID
@@ -117,9 +118,12 @@ export function processInitialGameDataPacket(reader: PacketReader): void {
          }
       }
 
-      const layer = new Layer(tiles, flowDirections, [], [], grassInfoRecord);
+      const layer = new Layer(i, tiles, flowDirections, [], [], grassInfoRecord);
       addLayer(layer);
    }
+
+   // Relies on the number of layers
+   initialiseRenderables();
 
    // Set the initial camera position
    Camera.setPosition(spawnPositionX, spawnPositionY);
@@ -333,7 +337,7 @@ export function processEntityCreationData(entityID: EntityID, reader: PacketRead
    const isPlayer = entityID === Game.playerID;
 
    const layer = layers[layerIdx];
-   registerBasicEntityInfo(entity, layer)
+   registerBasicEntityInfo(entity, entityType, layer);
    
    const numComponents = reader.readNumber();
    for (let i = 0; i < numComponents; i++) {

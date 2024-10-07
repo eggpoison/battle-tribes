@@ -5,7 +5,7 @@ import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 class SlingTurret extends Entity {
    constructor(id: number) {
-      super(id, EntityType.slingTurret);
+      super(id);
 
       // Base
       this.attachRenderThing(

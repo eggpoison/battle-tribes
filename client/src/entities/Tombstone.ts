@@ -13,7 +13,7 @@ class Tombstone extends Entity {
    private static readonly HITBOX_HEIGHT = 88;
    
    constructor(id: number) {
-      super(id, EntityType.tombstone);
+      super(id);
    }
 
    public onLoad(): void {

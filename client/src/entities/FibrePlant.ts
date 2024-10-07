@@ -5,7 +5,7 @@ import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 
 class FibrePlant extends Entity {
    constructor(id: EntityID) {
-      super(id, EntityType.fibrePlant);
+      super(id);
 
       const renderPart = new TexturedRenderPart(
          null,

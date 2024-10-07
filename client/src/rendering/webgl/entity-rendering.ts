@@ -207,7 +207,7 @@ export function createEntityShaders(): void {
 }
 
 export function addEntityToRenderHeightMap(entity: Entity): void {
-   const renderHeight = calculateEntityRenderHeight(entity);
+   const renderHeight = calculateEntityRenderHeight(entity.id);
    entityRenderHeightMap.set(entity, renderHeight);
 }
 

@@ -7,7 +7,7 @@ import TexturedRenderPart from "../render-parts/TexturedRenderPart";
 
 class ResearchBench extends Entity {
    constructor(id: number) {
-      super(id, EntityType.researchBench);
+      super(id);
 
       this.attachRenderThing(
          new TexturedRenderPart(

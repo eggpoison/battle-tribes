@@ -9,6 +9,8 @@ import { createLightWoodSpeckParticle, createWoodShardParticle } from "../partic
 import { WALL_TEXTURE_SOURCES } from "../entity-components/BuildingMaterialComponent";
 import Board from "../Board";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
+import { getEntityByID, getEntityType } from "../world";
+import { TransformComponentArray } from "../entity-components/TransformComponent";
 
 class Wall extends Entity {
    private static readonly NUM_DAMAGE_STAGES = 6;
@@ -16,7 +18,7 @@ class Wall extends Entity {
    private damageRenderPart: TexturedRenderPart | null = null;
 
    constructor(id: number) {
-      super(id, EntityType.wall);
+      super(id);
    }
 
    public onLoad(): void {
@@ -101,13 +103,12 @@ class Wall extends Entity {
       // @Speed @Hack
       // Don't play death effects if the wall was replaced by a blueprint
       for (const chunk of transformComponent.chunks) {
-         for (const entityID of chunk.entities) {
-            const entity = getEntityByID(entityID)!;
-            if (entity.type !== EntityType.blueprintEntity) {
+         for (const entity of chunk.entities) {
+            if (getEntityType(entity) !== EntityType.blueprintEntity) {
                continue;
             }
 
-            const entityTransformComponent = entity.getServerComponent(ServerComponentType.transform);
+            const entityTransformComponent = TransformComponentArray.getComponent(entity);
 
             const dist = transformComponent.position.calculateDistanceBetween(entityTransformComponent.position);
             if (dist < 1) {

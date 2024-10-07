@@ -20,6 +20,7 @@ import { BLOCKING_LIMB_STATE, createZeroedLimbState, LimbState, SHIELD_BASH_PUSH
 import RenderAttachPoint from "../render-parts/RenderAttachPoint";
 import { playSound } from "../sound";
 import { BlockType } from "../../../shared/src/boxes/boxes";
+import { getEntityType } from "../world";
 
 export interface LimbInfo {
    selectedItemSlot: number;
@@ -1127,7 +1128,7 @@ const updateLimb = (inventoryUseComponent: InventoryUseComponent, limbIdx: numbe
 
          const insetAmount = lerp(0, 17, eatIntervalProgress);
 
-         const handRestingOffset = getHandRestingOffset(inventoryUseComponent.entity.type as InventoryUseEntityType);
+         const handRestingOffset = getHandRestingOffset(getEntityType(inventoryUseComponent.entity.id) as InventoryUseEntityType);
          const handOffsetAmount = handRestingOffset + 4 - insetAmount;
          attachPoint.offset.x = handOffsetAmount * Math.sin(activeItemDirection);
          attachPoint.offset.y = handOffsetAmount * Math.cos(activeItemDirection);

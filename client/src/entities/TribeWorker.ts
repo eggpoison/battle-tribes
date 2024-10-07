@@ -7,7 +7,7 @@ import { addTribeMemberRenderParts } from "./TribeMember";
 
 class TribeWorker extends Tribesman {
    constructor(id: number) {
-      super(id, EntityType.tribeWorker);
+      super(id);
       
       this.addClientComponent(ClientComponentType.footprint, new FootprintComponent(this, 0.15, 20, 64, 4, 50));
       this.addClientComponent(ClientComponentType.equipment, new EquipmentComponent(this));

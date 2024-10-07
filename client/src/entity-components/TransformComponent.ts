@@ -149,7 +149,7 @@ class TransformComponent extends ServerComponent {
       // Find all chunks which aren't present in the new chunks and remove them
       for (const chunk of this.chunks) {
          if (!containingChunks.has(chunk)) {
-            chunk.removeEntity(this.entity);
+            chunk.removeEntity(this.entity.id);
             this.chunks.delete(chunk);
          }
       }
@@ -157,7 +157,7 @@ class TransformComponent extends ServerComponent {
       // Add all new chunks
       for (const chunk of containingChunks) {
          if (!this.chunks.has(chunk)) {
-            chunk.addEntity(this.entity);
+            chunk.addEntity(this.entity.id);
             this.chunks.add(chunk);
          }
       }
@@ -425,7 +425,7 @@ class TransformComponent extends ServerComponent {
       // Find all chunks which aren't present in the new chunks and remove them
       for (const chunk of this.chunks) {
          if (!containingChunks.has(chunk)) {
-            chunk.removeEntity(this.entity);
+            chunk.removeEntity(this.entity.id);
             this.chunks.delete(chunk);
          }
       }
@@ -433,7 +433,7 @@ class TransformComponent extends ServerComponent {
       // Add all new chunks
       for (const chunk of containingChunks) {
          if (!this.chunks.has(chunk)) {
-            chunk.addEntity(this.entity);
+            chunk.addEntity(this.entity.id);
             this.chunks.add(chunk);
          }
       }
@@ -449,7 +449,7 @@ class TransformComponent extends ServerComponent {
 
    public onRemove(): void {
       for (const chunk of this.chunks) {
-         chunk.removeEntity(this.entity);
+         chunk.removeEntity(this.entity.id);
       }
    }
 }

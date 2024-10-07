@@ -14,7 +14,7 @@ class Slime extends Entity {
    private static readonly NUM_SPECK_PARTICLES_ON_DEATH: ReadonlyArray<number> = [6, 10, 15];
 
    constructor(id: number) {
-      super(id, EntityType.slime);
+      super(id);
    }
 
    public overrideTileMoveSpeedMultiplier(): number | null {

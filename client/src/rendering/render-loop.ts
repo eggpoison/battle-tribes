@@ -4,6 +4,8 @@ import { calculateRenderPartDepth, getEntityHeight, renderEntities } from "./web
 import { RenderPartOverlayGroup, renderEntityOverlay } from "./webgl/overlay-rendering";
 import { NUM_RENDER_LAYERS, RenderLayer } from "../render-layers";
 import { renderChunkedEntities, renderLayerIsChunkRendered } from "./webgl/chunked-entity-rendering";
+import { layers } from "../world";
+import Layer from "../Layer";
 
 export const enum RenderableType {
    entity,
@@ -13,6 +15,8 @@ export const enum RenderableType {
 
 type Renderable = Entity | Particle | RenderPartOverlayGroup;
 
+type RenderableArrays = Array<Array<RenderableInfo>>;
+
 // @Incomplete: z-index
 interface RenderableInfo {
    readonly type: RenderableType;
@@ -20,9 +24,16 @@ interface RenderableInfo {
 }
 
 let currentRenderLayer: RenderLayer = 0;
-const renderableArrays = new Array<Array<RenderableInfo>>();
-for (let i = 0; i < NUM_RENDER_LAYERS; i++) {
-   renderableArrays.push([]);
+const layerRenderableArrays = new Array<RenderableArrays>();
+
+export function initialiseRenderables(): void {
+   for (let i = 0; i < layers.length; i++) {
+      const renderableArrays: RenderableArrays = [];
+      for (let i = 0; i < NUM_RENDER_LAYERS; i++) {
+         renderableArrays.push([]);
+      }
+      layerRenderableArrays.push(renderableArrays);
+   }
 }
 
 const getRenderableRenderHeight = (type: RenderableType, renderable: Renderable): number => {
@@ -75,7 +86,8 @@ const getRenderableInsertIdx = (type: RenderableType, renderable: Renderable, re
    return left;
 }
 
-export function addRenderable(type: RenderableType, renderable: Renderable, renderLayer: RenderLayer): void {
+export function addRenderable(layer: Layer, type: RenderableType, renderable: Renderable, renderLayer: RenderLayer): void {
+   const renderableArrays = layerRenderableArrays[layer.idx];
    const renderables = renderableArrays[renderLayer];
    
    // Use binary search to find index in array
@@ -98,7 +110,8 @@ export function addRenderable(type: RenderableType, renderable: Renderable, rend
    }
 }
 
-export function removeRenderable(renderable: Renderable, renderLayer: RenderLayer): void {
+export function removeRenderable(layer: Layer, renderable: Renderable, renderLayer: RenderLayer): void {
+   const renderableArrays = layerRenderableArrays[layer.idx];
    const renderables = renderableArrays[renderLayer];
 
    // @Speed
@@ -157,11 +170,13 @@ export function resetRenderOrder(): void {
    currentRenderLayer = 0;
 }
 
-export function renderNextRenderables(maxRenderLayer: RenderLayer): void {
+export function renderNextRenderables(layer: Layer, maxRenderLayer: RenderLayer): void {
    if (currentRenderLayer >= NUM_RENDER_LAYERS) {
       return;
    }
 
+   const renderableArrays = layerRenderableArrays[layer.idx];
+   
    for (; currentRenderLayer <= maxRenderLayer; currentRenderLayer++) {
       const renderables = renderableArrays[currentRenderLayer];
 

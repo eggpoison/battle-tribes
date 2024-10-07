@@ -13,7 +13,7 @@ import { playSound } from "./sound";
 import { createMagicParticle, createStarParticle } from "./particles";
 import Entity from "./Entity";
 import { getRandomPointInEntity } from "./entity-components/TransformComponent";
-import { getEntityByID } from "./world";
+import { getEntityByID, getEntityType } from "./world";
 
 export interface ResearchOrb {
    /* X position of the node in the world */
@@ -67,7 +67,7 @@ export function updateActiveResearchBench(): void {
       return;
    }
 
-   if (structure.type !== EntityType.researchBench) {
+   if (getEntityType(structure.id) !== EntityType.researchBench) {
       return;
    }
 

@@ -9,7 +9,7 @@ import { createPoisonParticle } from "../particles";
 
 class SlimeSpit extends Entity {
    constructor(id: number) {
-      super(id, EntityType.slimeSpit);
+      super(id);
 
       const renderParts = new Array<RenderPart>();
 

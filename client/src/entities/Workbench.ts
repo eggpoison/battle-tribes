@@ -7,7 +7,7 @@ class Workbench extends Entity {
    public static readonly SIZE = 80;
    
    constructor(id: number) {
-      super(id, EntityType.workbench);
+      super(id);
 
       this.attachRenderThing(
          new TexturedRenderPart(

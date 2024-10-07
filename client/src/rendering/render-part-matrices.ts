@@ -253,7 +253,7 @@ export function updateRenderPartMatrices(frameProgress: number): void {
          }
       }
 
-      const renderLayer = getEntityRenderLayer(entity);
+      const renderLayer = getEntityRenderLayer(entity.id);
       if (renderLayerIsChunkRendered(renderLayer)) {
          updateChunkRenderedEntity(entity, renderLayer);
       }

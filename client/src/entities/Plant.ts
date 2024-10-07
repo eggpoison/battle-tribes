@@ -12,7 +12,7 @@ class Plant extends Entity {
    public static readonly SIZE = 80;
 
    constructor(id: number) {
-      super(id, EntityType.plant);
+      super(id);
    }
 
    public onLoad(): void {

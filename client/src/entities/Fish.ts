@@ -19,7 +19,7 @@ const TEXTURE_SOURCES: Record<FishColour, string> = {
 
 class Fish extends Entity {
    constructor(id: number) {
-      super(id, EntityType.fish);
+      super(id);
    }
 
    public onLoad(): void {

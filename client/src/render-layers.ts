@@ -1,6 +1,7 @@
-import { EntityType } from "battletribes-shared/entities";
-import Entity from "./Entity";
-import { DecorationType, ServerComponentType } from "battletribes-shared/components";
+import { EntityID, EntityType } from "battletribes-shared/entities";
+import { DecorationType } from "battletribes-shared/components";
+import { getEntityType } from "./world";
+import { DecorationComponentArray } from "./entity-components/DecorationComponent";
 
 export enum RenderLayer {
    lowDecorations,
@@ -49,15 +50,15 @@ const decorationIsHigh = (decorationType: DecorationType): boolean => {
        || decorationType === DecorationType.flower4;
 }
 
-export function getEntityRenderLayer(entity: Entity): RenderLayer {
-   switch (entity.type) {
+export function getEntityRenderLayer(entity: EntityID): RenderLayer {
+   switch (getEntityType(entity)) {
       // Grass
       case EntityType.grassStrand: {
          return RenderLayer.grass;
       }
       // Decorations
       case EntityType.decoration: {
-         const decorationComponent = entity.getServerComponent(ServerComponentType.decoration) 
+         const decorationComponent = DecorationComponentArray.getComponent(entity);
          return decorationIsHigh(decorationComponent.decorationType) ? RenderLayer.highDecorations : RenderLayer.lowDecorations;
       }
       case EntityType.guardianGemQuake: {
@@ -127,7 +128,7 @@ export function getEntityRenderLayer(entity: Entity): RenderLayer {
    }
 }
 
-export function calculateEntityRenderHeight(entity: Entity): number {
+export function calculateEntityRenderHeight(entity: EntityID): number {
    const renderLayer = getEntityRenderLayer(entity);
    return calculateRenderDepthFromLayer(renderLayer);
 }

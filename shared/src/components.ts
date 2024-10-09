@@ -843,3 +843,47 @@ export const AMMO_INFO_RECORD: Record<TurretAmmoType, GenericAmmoInfo> = {
       }
    }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// @Cleanup: Should be defined in server
+export const enum GuardianAttackType {
+   none,
+   crystalSlam,
+   crystalBurst,
+   summonSpikyBalls
+}
+
+// @Cleanup: Should be defined in server
+export const enum GuardianCrystalSlamStage {
+   windup,
+   slam,
+   return
+}
+
+// @Cleanup: Should be defined in server
+export const enum GuardianCrystalBurstStage {
+   windup,
+   burst,
+   return
+}
+
+// @Cleanup: Should be defined in server
+export const enum GuardianSpikyBallSummonStage {
+   windup,
+   focus,
+   return
+}

@@ -1,12 +1,15 @@
 import { Hitbox, HitboxFlag } from "../../../shared/src/boxes/boxes";
-import { ServerComponentType } from "../../../shared/src/components";
+import { GuardianAttackType, ServerComponentType } from "../../../shared/src/components";
 import { EntityID, PlayerCauseOfDeath } from "../../../shared/src/entities";
 import { AttackEffectiveness } from "../../../shared/src/entity-damage-types";
 import { Packet } from "../../../shared/src/packets";
 import { Settings } from "../../../shared/src/settings";
 import { getAngleDiff, lerp, Point, randInt, TileIndex, UtilVars } from "../../../shared/src/utils";
-import { AIHelperComponentArray } from "./AIHelperComponent";
+import { stopEntity } from "../ai-shared";
+import { registerDirtyEntity } from "../server/player-clients";
+import { AIHelperComponentArray, AIType } from "./AIHelperComponent";
 import { ComponentArray } from "./ComponentArray";
+import { GuardianSpikyBallComponentArray } from "./GuardianSpikyBallComponent";
 import { HealthComponentArray, canDamageEntity, damageEntity, addLocalInvulnerabilityHash } from "./HealthComponent";
 import { applyKnockback, PhysicsComponentArray } from "./PhysicsComponent";
 import { TransformComponentArray } from "./TransformComponent";
@@ -27,20 +30,15 @@ export const enum GuardianVars {
    LIMB_ORBIT_RADIUS = 68,
 }
 
-const enum AttackType {
-   none,
-   crystalSlam,
-   crystalBurst,
-   summonSpikyBalls
-}
-
 export class GuardianComponent {
    public readonly homeTiles: ReadonlyArray<TileIndex>;
    public limbHitboxes = new Array<Hitbox>();
 
+   public lastTargetX = -1;
+   public lastTargetY = -1;
+   
    public limbNormalDirection = 0;
    public limbsAreOrbiting = false;
-   public isAttacking = false;
    public limbMoveProgress = 0;
 
    public rubyGemActivation = Vars.DEFAULT_GEM_ACTIVATION;
@@ -52,20 +50,29 @@ export class GuardianComponent {
    public limbAmethystGemActivation = 0;
 
    public ticksUntilNextAttack = randInt(Vars.MIN_ATTACK_COOLDOWN_TICKS, Vars.MAX_ATTACK_COOLDOWN_TICKS);
-   public attackType = AttackType.none;
+   public queuedAttackType = GuardianAttackType.none;
 
-   public resetAttackType(guardian: EntityID): void {
-      this.attackType = AttackType.none;
-      this.isAttacking = false;
+   public stopSpecialAttack(guardian: EntityID): void {
+      this.queuedAttackType = GuardianAttackType.none;
       this.ticksUntilNextAttack = randInt(Vars.MIN_ATTACK_COOLDOWN_TICKS, Vars.MAX_ATTACK_COOLDOWN_TICKS);
-      this.setLimbGemActivations(0, 0, 0);
+      this.setLimbGemActivations(guardian, 0, 0, 0);
 
       // @Hack
       const transformComponent = TransformComponentArray.getComponent(guardian);
       this.limbNormalDirection = transformComponent.rotation;
+
+      const physicsComponent = PhysicsComponentArray.getComponent(guardian);
+      stopEntity(physicsComponent);
+
+      const aiHelperComponent = AIHelperComponentArray.getComponent(guardian);
+      aiHelperComponent.currentAIType = null;
    }
 
-   public setLimbGemActivations(rubyActivation: number, emeraldActivation: number, amethystActivation: number): void {
+   public setLimbGemActivations(guardian: EntityID, rubyActivation: number, emeraldActivation: number, amethystActivation: number): void {
+      if (rubyActivation !== this.limbRubyGemActivation || emeraldActivation !== this.limbEmeraldGemActivation || amethystActivation !== this.limbAmethystGemActivation) {
+         registerDirtyEntity(guardian);
+      }
+      
       this.limbRubyGemActivation = rubyActivation;
       this.limbEmeraldGemActivation = emeraldActivation;
       this.limbAmethystGemActivation = amethystActivation;
@@ -167,50 +174,63 @@ const limbsAreInStagingPosition = (guardian: EntityID, guardianComponent: Guardi
 function onTick(guardianComponent: GuardianComponent, guardian: EntityID): void {
    const aiHelperComponent = AIHelperComponentArray.getComponent(guardian);
    
-   // Guardian AI
    const guardianAI = aiHelperComponent.getGuardianAI();
    const target = guardianAI.getTarget(guardian);
    if (target !== null) {
-      if (!guardianComponent.isAttacking) {
+      const targetTransformComponent = TransformComponentArray.getComponent(target);
+      guardianComponent.lastTargetX = targetTransformComponent.position.x;
+      guardianComponent.lastTargetY = targetTransformComponent.position.y;
+
+      // Randomly start special attacks
+      if (aiHelperComponent.currentAIType === null) {
          // Randomly set to attack
-         if (guardianComponent.attackType === AttackType.none) {
+         if (guardianComponent.queuedAttackType === GuardianAttackType.none) {
             guardianComponent.ticksUntilNextAttack--;
             if (guardianComponent.ticksUntilNextAttack === 0) {
-               guardianComponent.attackType = randInt(1, 2) * 0 + 1;
+               guardianComponent.queuedAttackType = randInt(1, 3);
             }
          }
          // If just passed staging position, start attack
-         if (guardianComponent.attackType !== AttackType.none && limbsAreInStagingPosition(guardian, guardianComponent)) {
-            guardianComponent.isAttacking = true;
+         if (guardianComponent.queuedAttackType !== GuardianAttackType.none && limbsAreInStagingPosition(guardian, guardianComponent)) {
+            switch (guardianComponent.queuedAttackType) {
+               case GuardianAttackType.crystalBurst: {
+                  aiHelperComponent.currentAIType = AIType.guardianCrystalBurst;
+                  break;
+               }
+               case GuardianAttackType.crystalSlam: {
+                  aiHelperComponent.currentAIType = AIType.guardianCrystalSlam;
+                  break;
+               }
+               case GuardianAttackType.summonSpikyBalls: {
+                  aiHelperComponent.currentAIType = AIType.guardianSpikyBallSummon;
+                  break;
+               }
+            }
          }
       }
+   }
          
-      // Special attacks
-      if (guardianComponent.isAttacking) {
-         switch (guardianComponent.attackType) {
-            case AttackType.crystalSlam: {
-               const crystalSlamAI = aiHelperComponent.getGuardianCrystalSlamAI();
-               crystalSlamAI.run(guardian, target);
-               return;
-            }
-            case AttackType.crystalBurst: {
-               const crystalBurstAI = aiHelperComponent.getGuardianCrystalBurstAI();
-               crystalBurstAI.run(guardian, target);
-               return;
-            }
-            case AttackType.summonSpikyBalls: {
-               const spikyBallSummonAI = aiHelperComponent.getSpikyBallSummonAI();
-               spikyBallSummonAI.run(guardian, target);
-               return;
-            }
-            default: {
-               throw new Error();
-            }
-         }
+   // Special attacks
+   switch (aiHelperComponent.currentAIType) {
+      case AIType.guardianCrystalSlam: {
+         const crystalSlamAI = aiHelperComponent.getGuardianCrystalSlamAI();
+         crystalSlamAI.run(guardian, guardianComponent.lastTargetX, guardianComponent.lastTargetY);
+         return;
       }
-      
-      // Chase the target
-
+      case AIType.guardianCrystalBurst: {
+         const crystalBurstAI = aiHelperComponent.getGuardianCrystalBurstAI();
+         crystalBurstAI.run(guardian, guardianComponent.lastTargetX, guardianComponent.lastTargetY);
+         return;
+      }
+      case AIType.guardianSpikyBallSummon: {
+         const spikyBallSummonAI = aiHelperComponent.getSpikyBallSummonAI();
+         spikyBallSummonAI.run(guardian, guardianComponent.lastTargetX, guardianComponent.lastTargetY);
+         return;
+      }
+   }
+   
+   // Chase the target
+   if (target !== null) {
       moveGemActivation(guardianComponent, Vars.ANGERED_GEM_ACTIVATION);
 
       guardianAI.run(guardian, target);
@@ -308,7 +328,7 @@ function onTick(guardianComponent: GuardianComponent, guardian: EntityID): void 
 }
 
 function getDataLength(): number {
-   return 7 * Float32Array.BYTES_PER_ELEMENT;
+   return 10 * Float32Array.BYTES_PER_ELEMENT;
 }
 
 function addDataToPacket(packet: Packet, entity: EntityID): void {
@@ -321,11 +341,51 @@ function addDataToPacket(packet: Packet, entity: EntityID): void {
    packet.addNumber(guardianComponent.limbRubyGemActivation);
    packet.addNumber(guardianComponent.limbEmeraldGemActivation);
    packet.addNumber(guardianComponent.limbAmethystGemActivation);
+
+   const aiHelperComponent = AIHelperComponentArray.getComponent(entity);
+   
+   // Attack type and stage
+   const attackType = aiHelperComponent.currentAIType !== null ? guardianComponent.queuedAttackType : GuardianAttackType.none;
+   packet.addNumber(attackType);
+
+   let stageProgress: number;
+   switch (guardianComponent.queuedAttackType) {
+      case GuardianAttackType.crystalSlam: {
+         const crystalSlamAI = aiHelperComponent.getGuardianCrystalSlamAI();
+         packet.addNumber(crystalSlamAI.stage);
+         stageProgress = crystalSlamAI.stageProgress;
+         break;
+      }
+      case GuardianAttackType.crystalBurst: {
+         const crystalBurstAI = aiHelperComponent.getGuardianCrystalBurstAI();
+         packet.addNumber(crystalBurstAI.stage);
+         stageProgress = crystalBurstAI.stageProgress;
+         break;
+      }
+      case GuardianAttackType.summonSpikyBalls: {
+         const spikyBallSummonAI = aiHelperComponent.getSpikyBallSummonAI();
+         packet.addNumber(spikyBallSummonAI.stage);
+         stageProgress = spikyBallSummonAI.stageProgress;
+         break;
+      }
+      default: {
+         packet.padOffset(Float32Array.BYTES_PER_ELEMENT);
+         stageProgress = 0;
+         break;
+      }
+   }
+
+   packet.addNumber(stageProgress);
 }
 
 function onHitboxCollision(guardian: EntityID, collidingEntity: EntityID, actingHitbox: Hitbox, _receivingHitbox: Hitbox, collisionPoint: Point): void {
    // Only the limbs can damage entities
    if (!actingHitbox.flags.includes(HitboxFlag.GUARDIAN_LIMB_HITBOX)) {
+      return;
+   }
+
+   // Don't attack spiky balls
+   if (GuardianSpikyBallComponentArray.hasComponent(collidingEntity)) {
       return;
    }
    

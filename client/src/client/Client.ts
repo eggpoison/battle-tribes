@@ -600,12 +600,6 @@ abstract class Client {
       }
    }
 
-   public static sendEntitySummonPacket(summonPacket: EntitySummonPacket): void {
-      if (Game.isRunning && this.socket !== null) {
-         // this.socket.emit("dev_summon_entity", summonPacket);
-      }
-   }
-
    public static sendDevGiveTitlePacket(title: TribesmanTitle): void {
       if (Game.isRunning && this.socket !== null) {
          // this.socket.emit("dev_give_title", title);
@@ -615,18 +609,6 @@ abstract class Client {
    public static sendDevRemoveTitlePacket(title: TribesmanTitle): void {
       if (Game.isRunning && this.socket !== null) {
          // this.socket.emit("dev_remove_title", title);
-      }
-   }
-
-   public static sendDevPauseSimulation(): void {
-      if (Game.isRunning && this.socket !== null) {
-         // this.socket.emit("dev_pause_simulation");
-      }
-   }
-
-   public static sendDevUnpauseSimulation(): void {
-      if (Game.isRunning && this.socket !== null) {
-         // this.socket.emit("dev_unpause_simulation");
       }
    }
 

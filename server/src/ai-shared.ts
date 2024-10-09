@@ -65,11 +65,11 @@ export function stopEntity(physicsComponent: PhysicsComponent): void {
    physicsComponent.acceleration.y = 0;
 }
 
-export function turnToPosition(entity: EntityID, targetPosition: Point, turnSpeed: number): void {
+export function turnToPosition(entity: EntityID, x: number, y: number, turnSpeed: number): void {
    const transformComponent = TransformComponentArray.getComponent(entity);
    const physicsComponent = PhysicsComponentArray.getComponent(entity);
 
-   const targetDirection = angle(targetPosition.x - transformComponent.position.x, targetPosition.y - transformComponent.position.y);
+   const targetDirection = angle(x - transformComponent.position.x, y - transformComponent.position.y);
 
    physicsComponent.targetRotation = targetDirection;
    physicsComponent.turnSpeed = turnSpeed;
@@ -92,7 +92,7 @@ export function moveEntityToPosition(entity: EntityID, positionX: number, positi
 }
 export function turnEntityToEntity(entity: EntityID, targetEntity: EntityID, turnSpeed: number): void {
    const targetTransformComponent = TransformComponentArray.getComponent(targetEntity);
-   turnToPosition(entity, targetTransformComponent.position, turnSpeed);
+   turnToPosition(entity, targetTransformComponent.position.x, targetTransformComponent.position.y, turnSpeed);
 }
 
 // @Cleanup: unused?
@@ -715,8 +715,6 @@ export function getDistanceFromPointToEntity(point: Point, entity: EntityID): nu
    }
    return minDistance;
 }
-
-
 
 export function snapRotationToOtherAngle(rotation: number, snapAngle: number): number {
    let snapRotation = snapAngle - rotation;

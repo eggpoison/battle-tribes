@@ -6,6 +6,7 @@ import Camera from "../../../Camera";
 import Client from "../../../client/Client";
 import { TransformComponentArray } from "../../../entity-components/TransformComponent";
 import Game from "../../../Game";
+import { sendToggleSimulationPacket } from "../../../client/packet-creation";
 
 // @Cleanup: shouldn't be able to interact with the info display, all the interactable stuff should be in tabs
 
@@ -164,9 +165,9 @@ const GameInfoDisplay = () => {
 
    const toggleSimulation = useCallback((): void => {
       if (isPaused) {
-         Client.sendDevUnpauseSimulation();
+         sendToggleSimulationPacket(true);
       } else {
-         Client.sendDevPauseSimulation();
+         sendToggleSimulationPacket(false);
       }
    }, [isPaused]);
    

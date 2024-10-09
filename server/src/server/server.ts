@@ -18,7 +18,7 @@ import { createPlayerConfig } from "../entities/tribes/player";
 import { ServerComponentType } from "battletribes-shared/components";
 import { createEntityFromConfig } from "../Entity";
 import { generateGrassStrands } from "../world-generation/grass-generation";
-import { processDevGiveItemPacket, processItemDropPacket, processItemPickupPacket, processItemReleasePacket, processPlayerAttackPacket, processPlayerDataPacket, processRespawnPacket, processStartItemUsePacket, processStopItemUsePacket, processUseItemPacket } from "./packet-processing";
+import { processDevGiveItemPacket, processEntitySummonPacket, processItemDropPacket, processItemPickupPacket, processItemReleasePacket, processPlayerAttackPacket, processPlayerDataPacket, processRespawnPacket, processStartItemUsePacket, processStopItemUsePacket, processToggleSimulationPacket, processUseItemPacket } from "./packet-processing";
 import { EntityID } from "battletribes-shared/entities";
 import { SpikesComponentArray } from "../components/SpikesComponent";
 import { TribeComponentArray } from "../components/TribeComponent";
@@ -128,9 +128,9 @@ class GameServer {
       sortComponentArrays();
       console.log("Generating terrain...")
       const surfaceTerrainGenerationInfo = generateSurfaceTerrain();
-      const undergroundTerrainGenerationInfo = generateUndergroundTerrain();
+      const undergroundTerrainGenerationInfo = generateUndergroundTerrain(surfaceTerrainGenerationInfo);
       createLayers(surfaceTerrainGenerationInfo, undergroundTerrainGenerationInfo);
-      
+
       noteSpawnableTiles();
       countTileTypesForResourceDistributions();
       updateResourceDistributions();
@@ -258,6 +258,14 @@ class GameServer {
                   processItemReleasePacket(playerClient, reader);
                   break;
                }
+               case PacketType.summonEntity: {
+                  processEntitySummonPacket(playerClient, reader);
+                  break;
+               }
+               case PacketType.toggleSimulation: {
+                  processToggleSimulationPacket(playerClient, reader);
+                  break;
+               }
                default: {
                   console.log("Unknown packet type: " + packetType);
                }
@@ -275,7 +283,7 @@ class GameServer {
 
    private async tick(): Promise<void> {
       // These are done before each tick to account for player packets causing entities to be removed/added between ticks.
-      pushJoinBuffer();
+      pushJoinBuffer(false);
       destroyFlaggedEntities();
 
       if (SERVER.isSimulating) {
@@ -295,7 +303,7 @@ class GameServer {
             runSpawnAttempt();
          }
          
-         pushJoinBuffer();
+         pushJoinBuffer(true);
          destroyFlaggedEntities();
          // @Bug @Incomplete: Called twice!!!!
          updateTribes();

@@ -473,7 +473,7 @@ export function createInitialGameDataPacket(player: EntityID, spawnLayer: Layer,
    packet.addNumber(spawnPosition.x);
    packet.addNumber(spawnPosition.y);
    
-   // Layers
+   // Layers and their terrain data
    packet.addNumber(layers.length);
    for (let layerIdx = 0; layerIdx < layers.length; layerIdx++) {
       const layer = layers[layerIdx];

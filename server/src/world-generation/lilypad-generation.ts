@@ -64,7 +64,7 @@ export function generateLilypads(): void {
             createEntityFromConfig(config, surfaceLayer, 0);
 
             // Immediately add the entity so that distance checks work
-            pushJoinBuffer();
+            pushJoinBuffer(false);
          }
       }
    }

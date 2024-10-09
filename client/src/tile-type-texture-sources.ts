@@ -1,3 +1,4 @@
+// @Cleanup
 export const TILE_TYPE_TEXTURE_SOURCES: ReadonlyArray<string> = [
    // @Temporary?
    "tiles/grass.png",
@@ -15,5 +16,8 @@ export const TILE_TYPE_TEXTURE_SOURCES: ReadonlyArray<string> = [
    "tiles/grass.png",
    "tiles/grass.png",
    "tiles/fimbultur.png",
-   "tiles/stone.png"
+   // Dropdown
+   "tiles/dirt.png",
+   "tiles/stone.png",
+   "tiles/stone-wall-1.png"
 ];

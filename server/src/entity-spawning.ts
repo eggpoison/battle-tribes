@@ -430,7 +430,7 @@ const spawnEntity = (entityType: SpawningEntityType, layer: Layer, x: number, y:
 
    addEntityToCensus(entity, entityType);
    if (!SERVER.isRunning) {
-      pushJoinBuffer();
+      pushJoinBuffer(false);
    }
 }
 

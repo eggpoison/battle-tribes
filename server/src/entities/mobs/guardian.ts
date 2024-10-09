@@ -40,7 +40,8 @@ export function createGuardianConfig(homeTiles: ReadonlyArray<TileIndex>): Entit
    // Limbs
    const limbOrbitRadius = getGuardianLimbOrbitRadius();
    for (let i = 0; i < 2; i++) {
-      transformComponent.addHitbox(createHitbox(new CircularBox(new Point(limbOrbitRadius * (i === 0 ? 1 : -1), 0), 0, 14), 0.7, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, [HitboxFlag.GUARDIAN_LIMB_HITBOX]), null);
+      const hitbox = createHitbox(new CircularBox(new Point(limbOrbitRadius * (i === 0 ? 1 : -1), 0), 0, 14), 0.7, HitboxCollisionType.soft, HitboxCollisionBit.DEFAULT, DEFAULT_HITBOX_COLLISION_MASK, [HitboxFlag.GUARDIAN_LIMB_HITBOX, HitboxFlag.IGNORES_WALL_COLLISIONS]);
+      transformComponent.addHitbox(hitbox, null);
    }
    
    const physicsComponent = new PhysicsComponent();
@@ -54,7 +55,7 @@ export function createGuardianConfig(homeTiles: ReadonlyArray<TileIndex>): Entit
    aiHelperComponent.ais[AIType.guardian] =                new GuardianAI(280, Math.PI * 0.5),
    aiHelperComponent.ais[AIType.guardianCrystalSlam] =     new GuardianCrystalSlamAI(200, Math.PI * 0.3),
    aiHelperComponent.ais[AIType.guardianCrystalBurst] =    new GuardianCrystalBurstAI(Math.PI * 0.5),
-   aiHelperComponent.ais[AIType.guardianSpikyBallSummon] = new GuardianSpikyBallSummonAI()
+   aiHelperComponent.ais[AIType.guardianSpikyBallSummon] = new GuardianSpikyBallSummonAI(Math.PI * 0.5)
    
    const guardianComponent = new GuardianComponent(homeTiles);
    

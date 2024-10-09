@@ -159,7 +159,7 @@ export function getEntityComponentTypes(entity: EntityID): ReadonlyArray<ServerC
    return entityComponentTypes[entity]!;
 }
 
-export function pushJoinBuffer(): void {
+export function pushJoinBuffer(shouldTickJoinInfos: boolean): void {
    // Push entities
    let finalPushedIdx: number | undefined;
    for (let i = 0; i < entityJoinBuffer.length; i++) {
@@ -170,7 +170,7 @@ export function pushJoinBuffer(): void {
          entityComponentTypes[joinInfo.id] = joinInfo.entityComponentTypes;
          entitySpawnTicks[joinInfo.id] = ticks;
          finalPushedIdx = i;
-      } else {
+      } else if (shouldTickJoinInfos) {
          joinInfo.ticksRemaining--;
       }
    }
@@ -208,7 +208,7 @@ export function pushJoinBuffer(): void {
          }
       }
 
-      componentArray.clearJoinedComponents();
+      componentArray.clearJoinedComponents(shouldTickJoinInfos);
    }
 }
 

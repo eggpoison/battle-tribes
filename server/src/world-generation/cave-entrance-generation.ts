@@ -20,6 +20,7 @@ const enum Vars {
 const guardianSpawnZones = new Array<Array<TileIndex>>();
 
 export function generateCaveEntrances(tileTypes: Float32Array, tileBiomes: Float32Array, tileIsWalls: Float32Array, localBiomes: ReadonlyArray<LocalBiomeInfo>): void {
+   // @Temporary
    let first = true;
    for (let i = 0; i < localBiomes.length; i++) {
       const localBiome = localBiomes[i];
@@ -27,7 +28,7 @@ export function generateCaveEntrances(tileTypes: Float32Array, tileBiomes: Float
          continue;
       }
 
-      // for (let M = 0; M < 50; M++) {
+      for (let M = 0; M < 150; M++) {
 
       // Pick a random tile some distance away from other biomes to generate the cave
       let originTile: TileIndex | undefined;
@@ -57,6 +58,8 @@ export function generateCaveEntrances(tileTypes: Float32Array, tileBiomes: Float
          originX = Settings.BOARD_UNITS * 0.5 + 600;
          originY = Settings.BOARD_UNITS * 0.5;
          first = false;
+      } else {
+         continue;
       }
 
       const caveDirection = 2 * Math.PI * Math.random();
@@ -165,8 +168,8 @@ export function generateCaveEntrances(tileTypes: Float32Array, tileBiomes: Float
 
       // Mark cave tiles
       const tiles = new Array<TileIndex>();
-      for (let xOffset = -3; xOffset <= 3; xOffset++) {
-         for (let yOffset = -3; yOffset <= 19; yOffset++) {
+      for (let xOffset = -4; xOffset <= 3; xOffset++) {
+         for (let yOffset = -4; yOffset <= 13; yOffset++) {
             let x = originX;
             let y = originY;
             // X offset
@@ -190,7 +193,7 @@ export function generateCaveEntrances(tileTypes: Float32Array, tileBiomes: Float
       }
       guardianSpawnZones.push(tiles);
 
-      // }
+      }
 
    }
 }

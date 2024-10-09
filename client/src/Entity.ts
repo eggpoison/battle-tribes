@@ -18,6 +18,7 @@ import { createIdentityMatrix } from "./rendering/matrices";
 import { getEntityRenderLayer } from "./render-layers";
 import { registerDirtyEntity, renderParentIsHitbox } from "./rendering/render-part-matrices";
 import { getEntityByID, getEntityLayer, getEntityType } from "./world";
+import { getClientComponentArray } from "./entity-components/ComponentArray";
 
 // Use prime numbers / 100 to ensure a decent distribution of different types of particles
 const HEALING_PARTICLE_AMOUNTS = [0.05, 0.37, 1.01];
@@ -156,6 +157,10 @@ abstract class Entity {
       this.components.push(component);
       // @Cleanup: Remove cast
       this.clientComponents[componentType] = component as any;
+
+      // @Hack
+      const componentArray = getClientComponentArray(componentType);
+      componentArray.addComponent(this.id, component);
    }
 
    public getServerComponent<T extends ServerComponentType>(componentType: T): ServerComponentClass<T> {

@@ -50,6 +50,8 @@ export class AIHelperComponent {
 
    public readonly ais: AIRecord = {};
 
+   public currentAIType: AIType | null = null;
+
    constructor(visionRange: number) {
       this.visionRange = visionRange;
    }

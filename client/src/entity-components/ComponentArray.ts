@@ -27,6 +27,7 @@ interface ComponentArrayTypeObject<ArrayType extends ComponentArrayType> {
 }
 
 let componentArrays = new Array<ComponentArray>();
+let clientComponentArrayRecord: Record<ClientComponentType, ComponentArray> = {} as any;
 let serverComponentArrayRecord: Record<ServerComponentType, ComponentArray> = {} as any;
 
 export class ComponentArray<T extends Component = Component, ArrayType extends ComponentArrayType = ComponentArrayType, ComponentType extends ComponentTypeForArray[ArrayType] = ComponentTypeForArray[ArrayType]> implements ComponentArrayFunctions<T> {
@@ -68,7 +69,11 @@ export class ComponentArray<T extends Component = Component, ArrayType extends C
 
       componentArrays.push(this as unknown as ComponentArray);
       if (arrayType === ComponentArrayType.server) {
+         // @Cleanup: casts
          serverComponentArrayRecord[componentType as ServerComponentType] = this as unknown as ComponentArray;
+      } else {
+         // @Cleanup: casts
+         clientComponentArrayRecord[componentType as ClientComponentType] = this as unknown as ComponentArray;
       }
    }
 
@@ -164,6 +169,10 @@ export function getComponentArrays(): ReadonlyArray<ComponentArray> {
    return componentArrays;
 }
 
+export function getClientComponentArray(componentType: ClientComponentType): ComponentArray {
+   return clientComponentArrayRecord[componentType];
+}
+
 export function getServerComponentArray(componentType: ServerComponentType): ComponentArray {
    return serverComponentArrayRecord[componentType];
 }
@@ -175,7 +184,6 @@ export function updateEntity(entity: Entity): void {
          continue;
       }
       
-      // if (componentArray.typeObject.type === ComponentArrayType.server && entity.hasServerComponent(componentArray.typeObject.componentType as ServerComponentType) || (componentArray.typeObject.type === ComponentArrayType.client && entity.hasClientComponent(componentArray.typeObject.componentType as ClientComponentType))) {
       if (componentArray.hasComponent(entity.id)) {
          const component = componentArray.getComponent(entity.id);
          componentArray.onUpdate(component, entity.id);

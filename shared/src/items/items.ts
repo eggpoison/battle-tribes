@@ -70,7 +70,8 @@ export const enum ItemType {
    fertiliser,
    frostshaper,
    stonecarvingTable,
-   woodenShield
+   woodenShield,
+   slingshot
 }
 
 export const ItemTypeString: Record<ItemType, string> = {
@@ -140,7 +141,8 @@ export const ItemTypeString: Record<ItemType, string> = {
    [ItemType.fertiliser]: "fertiliser",
    [ItemType.frostshaper]: "frostshaper",
    [ItemType.stonecarvingTable]: "stonecarving_table",
-   [ItemType.woodenShield]: "Wooden Shield"
+   [ItemType.woodenShield]: "Wooden Shield",
+   [ItemType.slingshot]: "Slingshot"
 };
 
 const numItemTypes = Object.keys(ItemTypeString).length;
@@ -247,6 +249,8 @@ export interface BattleaxeItemInfo extends ToolItemInfo {}
 
 export interface ShieldItemInfo extends BaseItemInfo {}
 
+export interface SlingshotItemInfo extends BaseItemInfo {}
+
 export interface ItemInfoRecord {
    material: MaterialItemInfo;
    healing: ConsumableItemInfo;
@@ -263,6 +267,7 @@ export interface ItemInfoRecord {
    battleaxe: BattleaxeItemInfo;
    crossbow: CrossbowItemInfo;
    shield: ShieldItemInfo;
+   slingshot: SlingshotItemInfo;
 }
 
 export interface AttackInfo {
@@ -361,6 +366,11 @@ const ITEM_CATEGORY_ATTACK_INFO_RECORD: Record<keyof ItemInfoRecord, AttackInfo>
       },
       heldItemDamageBoxInfo: SHIELD_BLOCKING_DAMAGE_BOX_INFO
    },
+   slingshot: {
+      attackPattern: DEFAULT_ATTACK_PATTERN,
+      attackTimings: DEFAULT_ATTACK_TIMINGS,
+      heldItemDamageBoxInfo: DEFAULT_ITEM_DAMAGE_BOX_INFO
+   }
 };
 
 export const ITEM_TYPE_RECORD = {
@@ -430,7 +440,8 @@ export const ITEM_TYPE_RECORD = {
    [ItemType.fertiliser]: "material",
    [ItemType.frostshaper]: "placeable",
    [ItemType.stonecarvingTable]: "placeable",
-   [ItemType.woodenShield]: "shield"
+   [ItemType.woodenShield]: "shield",
+   [ItemType.slingshot]: "slingshot"
 } satisfies Record<ItemType, keyof ItemInfoRecord>;
 
 export type ItemInfo<T extends ItemType> = ItemInfoRecord[typeof ITEM_TYPE_RECORD[T]];
@@ -793,7 +804,8 @@ export const ITEM_INFO_RECORD = {
       stackSize: 99,
       entityType: EntityType.stonecarvingTable
    },
-   [ItemType.woodenShield]: {}
+   [ItemType.woodenShield]: {},
+   [ItemType.slingshot]: {}
 } satisfies { [T in ItemType]: ItemInfo<T> };
 
 // Some typescript wizardry

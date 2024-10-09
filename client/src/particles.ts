@@ -1827,3 +1827,45 @@ export function createGemQuakeProjectile(transformComponent: TransformComponent)
    );
    Board.lowMonocolourParticles.push(particle);
 }
+
+export function createGenericGemParticle(transformComponent: TransformComponent, spawnOffsetRange: number, r: number, g: number, b: number): void {
+   const spawnOffsetDirection = 2 * Math.PI * Math.random();
+   const spawnPositionX = transformComponent.position.x + spawnOffsetRange * Math.sin(spawnOffsetDirection);
+   const spawnPositionY = transformComponent.position.y + spawnOffsetRange * Math.cos(spawnOffsetDirection);
+
+   const velocityMagnitude = randFloat(30, 60);
+   const velocityDirection = 2 * Math.PI * Math.random();
+   const velocityX = velocityMagnitude * Math.sin(velocityDirection);
+   const velocityY = velocityMagnitude * Math.cos(velocityDirection);
+   
+   const lifetime = randFloat(0.7, 1.1);
+   
+   const particle = new Particle(lifetime);
+   particle.getOpacity = () => {
+      return 1 - Math.pow(particle.age / particle.lifetime, 2);
+   }
+
+   const pixelSize = 4;
+
+   const lightness = randFloat(0, 0.6);
+   r = lerp(r, 1, lightness);
+   g = lerp(g, 1, lightness);
+   b = lerp(b, 1, lightness);
+
+   addMonocolourParticleToBufferContainer(
+      particle,
+      ParticleRenderLayer.low,
+      pixelSize,
+      pixelSize,
+      spawnPositionX, spawnPositionY,
+      velocityX, velocityY,
+      0, 0,
+      velocityMagnitude / lifetime * 1.5,
+      velocityDirection,
+      0,
+      0,
+      0,
+      r, g, b
+   );
+   Board.lowMonocolourParticles.push(particle);
+}

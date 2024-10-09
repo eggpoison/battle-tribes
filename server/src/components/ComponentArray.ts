@@ -21,6 +21,8 @@ interface ComponentArrayFunctions<T extends object> {
    onInitialise?(config: EntityConfig<ServerComponentType>, entity: EntityID): void;
    onJoin?(entity: EntityID): void;
    readonly onTick?: ComponentArrayTickFunction<T>;
+   /** Called whenever the entity collides with a wall */
+   onWallCollision?(entity: EntityID): void;
    onEntityCollision?(actingEntity: EntityID, receivingEntity: EntityID): void;
    onHitboxCollision?(actingEntity: EntityID, receivingEntity: EntityID, pushedHitbox: Hitbox, pushingHitbox: Hitbox, collisionPoint: Point): void;
    onRemove?(entity: EntityID): void;
@@ -66,6 +68,7 @@ export class ComponentArray<T extends object = object, C extends ServerComponent
    public onInitialise?(config: EntityConfig<ServerComponentType>, entity: EntityID): void;
    public onJoin?(entity: EntityID): void;
    public onTick?: ComponentArrayTickFunction<T>;
+   public onWallCollision?(entity: EntityID): void;
    public onEntityCollision?(entity: EntityID, collidingEntity: EntityID): void;
    public onHitboxCollision?(entity: EntityID, collidingEntity: EntityID, pushedHitbox: Hitbox, pushingHitbox: Hitbox, collisionPoint: Point): void;
    public onRemove?(entity: EntityID): void;
@@ -79,6 +82,7 @@ export class ComponentArray<T extends object = object, C extends ServerComponent
       this.onInitialise = functions.onInitialise;
       this.onJoin = functions.onJoin;
       this.onTick = functions.onTick;
+      this.onWallCollision = functions.onWallCollision;
       this.onEntityCollision = functions.onEntityCollision;
       this.onHitboxCollision = functions.onHitboxCollision;
       this.onRemove = functions.onRemove;
@@ -140,12 +144,14 @@ export class ComponentArray<T extends object = object, C extends ServerComponent
       return this.componentBufferIDs;
    }
 
-   public clearJoinedComponents(): void {
+   public clearJoinedComponents(shouldTickJoinInfos: boolean): void {
       let finalPushedIdx: number | undefined;
       for (let i = 0; i < this.componentBufferIDs.length; i++) {
          const ticksRemaining = this.bufferedComponentJoinTicksRemaining[i];
          if (ticksRemaining > 0) {
-            this.bufferedComponentJoinTicksRemaining[i]--;
+            if (shouldTickJoinInfos) {
+               this.bufferedComponentJoinTicksRemaining[i]--;
+            }
             continue;
          } else {
             finalPushedIdx = i;

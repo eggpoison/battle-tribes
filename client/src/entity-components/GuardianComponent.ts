@@ -1,15 +1,20 @@
 import { HitboxFlag } from "../../../shared/src/boxes/boxes";
-import { ServerComponentType } from "../../../shared/src/components";
+import { GuardianAttackType, GuardianCrystalBurstStage, GuardianCrystalSlamStage, GuardianSpikyBallSummonStage, ServerComponentType } from "../../../shared/src/components";
 import { PacketReader } from "../../../shared/src/packets";
 import { lerp, Point } from "../../../shared/src/utils";
 import Entity from "../Entity";
 import { Light, addLight, attachLightToRenderPart } from "../lights";
 import RenderPart from "../render-parts/RenderPart";
 import TexturedRenderPart from "../render-parts/TexturedRenderPart";
+import { playSound } from "../sound";
 import { getTextureArrayIndex } from "../texture-atlases/texture-atlases";
 import { ComponentArray, ComponentArrayType } from "./ComponentArray";
 import ServerComponent from "./ServerComponent";
 import { TransformComponentArray } from "./TransformComponent";
+
+const enum Vars {
+   SPIKY_BALL_SUMMON_SHAKE_AMOUNT = 2
+}
 
 export default class GuardianComponent extends ServerComponent {
    private rubyRenderParts = new Array<RenderPart>();
@@ -24,12 +29,16 @@ export default class GuardianComponent extends ServerComponent {
    private emeraldGemActivation = 0;
    private amethystGemActivation = 0;
 
+   private limbRenderParts = new Array<RenderPart>();
    private limbCrackRenderParts = new Array<RenderPart>();
    private limbCrackLights = new Array<Light>();
 
    private limbRubyGemActivation = 0;
    private limbEmeraldGemActivation = 0;
    private limbAmethystGemActivation = 0;
+
+   private attackType = GuardianAttackType.none;
+   private attackStage = 0;
 
    constructor(entity: Entity) {
       super(entity);
@@ -280,16 +289,17 @@ export default class GuardianComponent extends ServerComponent {
       for (let i = 0; i < transformComponent.hitboxes.length; i++) {
          const hitbox = transformComponent.hitboxes[i];
          if (hitbox.flags.includes(HitboxFlag.GUARDIAN_LIMB_HITBOX)) {
-            const renderPart = new TexturedRenderPart(
+            const limbRenderPart = new TexturedRenderPart(
                hitbox,
                0,
                0,
                getTextureArrayIndex("entities/guardian/guardian-limb.png")
             );
-            this.entity.attachRenderThing(renderPart);
+            this.entity.attachRenderThing(limbRenderPart);
+            this.limbRenderParts.push(limbRenderPart);
 
             const cracksRenderPart = new TexturedRenderPart(
-               renderPart,
+               limbRenderPart,
                0,
                0,
                getTextureArrayIndex("entities/guardian/guardian-limb-gem-cracks.png")
@@ -314,7 +324,7 @@ export default class GuardianComponent extends ServerComponent {
    }
    
    public padData(reader: PacketReader): void {
-      reader.padOffset(6 * Float32Array.BYTES_PER_ELEMENT);
+      reader.padOffset(9 * Float32Array.BYTES_PER_ELEMENT);
    }
 
    private setColours(renderParts: ReadonlyArray<RenderPart>, lights: ReadonlyArray<[number, Light]>, activation: number, tintR: number, tintG: number, tintB: number): void {
@@ -342,6 +352,10 @@ export default class GuardianComponent extends ServerComponent {
       const limbRubyGemActivation = reader.readNumber();
       const limbEmeraldGemActivation = reader.readNumber();
       const limbAmethystGemActivation = reader.readNumber();
+
+      const attackType = reader.readNumber();
+      const attackStage = reader.readNumber();
+      const stageProgress = reader.readNumber();
 
       const actualRubyGemActivation = lerp(rubyGemActivation, 1, limbRubyGemActivation);
       if (actualRubyGemActivation !== this.rubyGemActivation) {
@@ -409,6 +423,84 @@ export default class GuardianComponent extends ServerComponent {
       this.limbRubyGemActivation = limbRubyGemActivation;
       this.limbEmeraldGemActivation = limbEmeraldGemActivation;
       this.limbAmethystGemActivation = limbAmethystGemActivation;
+
+      for (let i = 0; i < this.limbRenderParts.length; i++) {
+         const renderPart = this.limbRenderParts[i];
+         renderPart.shakeAmount = 0;
+      }
+      
+      switch (attackType) {
+         case GuardianAttackType.crystalSlam: {
+            // If just starting the slam, play charge sound
+            if (this.attackType !== GuardianAttackType.crystalSlam) {
+               const transformComponent = TransformComponentArray.getComponent(this.entity.id);
+               playSound("guardian-rock-smash-charge.mp3", 0.4, 1, transformComponent.position);
+            }
+
+            // If starting slam, play start sound
+            if (this.attackStage === GuardianCrystalSlamStage.windup && attackStage === GuardianCrystalSlamStage.slam) {
+               const transformComponent = TransformComponentArray.getComponent(this.entity.id);
+               playSound("guardian-rock-smash-start.mp3", 0.2, 1, transformComponent.position);
+            }
+            
+            // If going from slam to return, then play the slam sound
+            if (this.attackStage === GuardianCrystalSlamStage.slam && attackStage === GuardianCrystalSlamStage.return) {
+               const transformComponent = TransformComponentArray.getComponent(this.entity.id);
+               playSound("guardian-rock-smash-impact.mp3", 0.65, 1, transformComponent.position);
+            }
+            break;
+         }
+         case GuardianAttackType.crystalBurst: {
+            // If just starting, play charge sound
+            if (this.attackType !== GuardianAttackType.crystalBurst) {
+               const transformComponent = TransformComponentArray.getComponent(this.entity.id);
+               playSound("guardian-rock-burst-charge.mp3", 0.4, 1, transformComponent.position);
+            }
+
+            // If starting burst, play burst sound
+            if (this.attackStage === GuardianCrystalBurstStage.windup && attackStage === GuardianCrystalBurstStage.burst) {
+               const transformComponent = TransformComponentArray.getComponent(this.entity.id);
+               playSound("guardian-rock-burst.mp3", 0.7, 1, transformComponent.position);
+            }
+            break;
+         }
+         case GuardianAttackType.summonSpikyBalls: {
+            // If just starting, play focus sound
+            if (attackStage === GuardianSpikyBallSummonStage.focus && this.attackStage === GuardianSpikyBallSummonStage.windup) {
+               const transformComponent = TransformComponentArray.getComponent(this.entity.id);
+               playSound("guardian-summon-focus.mp3", 0.55, 1, transformComponent.position);
+            }
+
+            for (let i = 0; i < this.limbRenderParts.length; i++) {
+               const renderPart = this.limbRenderParts[i];
+
+               let shakeAmount: number;
+               switch (attackStage) {
+                  case GuardianSpikyBallSummonStage.windup: {
+                     shakeAmount = Vars.SPIKY_BALL_SUMMON_SHAKE_AMOUNT * stageProgress;
+                     break;
+                  }
+                  case GuardianSpikyBallSummonStage.focus: {
+                     shakeAmount = Vars.SPIKY_BALL_SUMMON_SHAKE_AMOUNT;
+                     break;
+                  }
+                  case GuardianSpikyBallSummonStage.return: {
+                     shakeAmount = Vars.SPIKY_BALL_SUMMON_SHAKE_AMOUNT * (1 - stageProgress);
+                     break;
+                  }
+                  default: {
+                     throw new Error();
+                  }
+               }
+
+               renderPart.shakeAmount = shakeAmount;
+            }
+            break;
+         }
+      }
+      
+      this.attackType = attackType;
+      this.attackStage = attackStage;
    }
 }
 

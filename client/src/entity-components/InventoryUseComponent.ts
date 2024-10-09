@@ -1127,7 +1127,7 @@ const updateLimb = (inventoryUseComponent: InventoryUseComponent, limbIdx: numbe
          activeItemDirection -= lerp(0, Math.PI/5, eatIntervalProgress);
 
          const insetAmount = lerp(0, 17, eatIntervalProgress);
-
+         
          const handRestingOffset = getHandRestingOffset(getEntityType(inventoryUseComponent.entity.id) as InventoryUseEntityType);
          const handOffsetAmount = handRestingOffset + 4 - insetAmount;
          attachPoint.offset.x = handOffsetAmount * Math.sin(activeItemDirection);

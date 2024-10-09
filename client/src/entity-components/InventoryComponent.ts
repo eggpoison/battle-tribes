@@ -65,7 +65,6 @@ const validatePlayerAction = (inventoryName: InventoryName, item: Item | null): 
 
    const limb = inventoryUseComponent.getLimbInfoByInventoryName(inventoryName);
    if (!playerActionIsLegal(limb, item)) {
-      console.log("reset");
       // Reset the action
       limb.action = LimbAction.none;
    }

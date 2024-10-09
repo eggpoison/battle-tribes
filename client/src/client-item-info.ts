@@ -481,7 +481,14 @@ const CLIENT_ITEM_INFO_RECORD: Record<ItemType, ClientItemInfo> = {
       textureSource: "items/large/wooden-shield.png",
       toolTextureSource: "entities/shield-items/wooden-shield.png",
       name: "Wooden Shield",
-      description: "Blocks projectiles and melee attack, poorly."
+      description: "Blocks projectiles and melee attacks, poorly."
+   },
+   [ItemType.slingshot]: {
+      entityTextureSource: "items/small/wooden-shield.png",
+      textureSource: "items/large/slingshot.png",
+      toolTextureSource: "entities/shield-items/wooden-shield.png",
+      name: "Slingshot",
+      description: "Slings rocks at people you don't like."
    }
 };
 

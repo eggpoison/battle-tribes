@@ -11,9 +11,9 @@ import { AIHelperComponentArray, entityIsNoticedByAI } from "./AIHelperComponent
 import { TileType } from "battletribes-shared/tiles";
 import { PhysicsComponentArray } from "./PhysicsComponent";
 import { clearEntityPathfindingNodes, entityCanBlockPathfinding, updateEntityPathfindingNodeOccupance } from "../pathfinding";
-import { resolveEntityTileCollision } from "../collision";
+import { resolveWallTileCollision } from "../collision";
 import { Packet } from "battletribes-shared/packets";
-import { boxIsCircular, Hitbox, updateBox } from "battletribes-shared/boxes/boxes";
+import { boxIsCircular, Hitbox, HitboxFlag, updateBox } from "battletribes-shared/boxes/boxes";
 import { getEntityAgeTicks, getEntityLayer, getEntityType } from "../world";
 import { COLLISION_BITS, DEFAULT_COLLISION_MASK } from "../../../shared/src/collision";
 
@@ -341,6 +341,10 @@ export class TransformComponent {
       
       for (let i = 0; i < this.hitboxes.length; i++) {
          const hitbox = this.hitboxes[i];
+         if (hitbox.flags.includes(HitboxFlag.IGNORES_WALL_COLLISIONS)) {
+            continue;
+         }
+         
          const box = hitbox.box;
 
          const boundsMinX = box.calculateBoundsMinX();
@@ -357,7 +361,7 @@ export class TransformComponent {
             for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
                const isWall = layer.tileXYIsWall(tileX, tileY);
                if (isWall) {
-                  resolveEntityTileCollision(entity, hitbox, tileX, tileY);
+                  resolveWallTileCollision(entity, hitbox, tileX, tileY);
                }
             }
          }

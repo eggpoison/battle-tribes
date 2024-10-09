@@ -30,7 +30,7 @@ const createDecoration = (x: number, y: number, decorationType: DecorationType):
    config.components[ServerComponentType.decoration].decorationType = decorationType;
    createEntityFromConfig(config, surfaceLayer, 0);
 
-   pushJoinBuffer();
+   pushJoinBuffer(false);
 }
 
 const generateRiversideDecorations = (): void => {

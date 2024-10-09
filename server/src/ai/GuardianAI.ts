@@ -2,6 +2,7 @@ import { EntityID } from "../../../shared/src/entities";
 import { moveEntityToEntity } from "../ai-shared";
 import { AIHelperComponent, AIHelperComponentArray } from "../components/AIHelperComponent";
 import { GuardianComponent, GuardianComponentArray } from "../components/GuardianComponent";
+import { GuardianSpikyBallComponentArray } from "../components/GuardianSpikyBallComponent";
 import { HealthComponentArray } from "../components/HealthComponent";
 import { getEntityTile, TransformComponent, TransformComponentArray } from "../components/TransformComponent";
 
@@ -12,6 +13,11 @@ const entityIsTargetted = (guardianComponent: GuardianComponent, target: EntityI
 
    // Don't attack other guardians
    if (GuardianComponentArray.hasComponent(target)) {
+      return false;
+   }
+
+   // Don't attack spiky balls
+   if (GuardianSpikyBallComponentArray.hasComponent(target)) {
       return false;
    }
    

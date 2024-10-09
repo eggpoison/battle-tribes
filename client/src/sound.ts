@@ -4,8 +4,7 @@ import { TileType } from "battletribes-shared/tiles";
 import Camera from "./Camera";
 import Entity from "./Entity";
 import { ServerComponentType } from "battletribes-shared/components";
-import { getCurrentLayer, getEntityLayer } from "./world";
-import Player from "./entities/Player";
+import { getCurrentLayer } from "./world";
 
 // @Robustness: automatically detect from folder
 const AUDIO_FILE_PATHS = [
@@ -192,7 +191,16 @@ const AUDIO_FILE_PATHS = [
    "yeti-hurt-3.mp3",
    "yeti-hurt-4.mp3",
    "yeti-hurt-5.mp3",
-   "layer-change.mp3"
+   "layer-change.mp3",
+   "guardian-rock-smash-charge.mp3",
+   "guardian-rock-smash-impact.mp3",
+   "guardian-rock-smash-start.mp3",
+   "guardian-rock-burst.mp3",
+   "guardian-rock-burst-charge.mp3",
+   "guardian-gem-fragment-death.mp3",
+   "guardian-spiky-ball-spawn.mp3",
+   "guardian-spiky-ball-death.mp3",
+   "guardian-summon-focus.mp3"
 ] as const;
 
 export type AudioFilePath = typeof AUDIO_FILE_PATHS[number];
